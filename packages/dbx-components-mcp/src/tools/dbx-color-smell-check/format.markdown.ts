@@ -8,10 +8,7 @@ import type { ColorSmellCheckResult, ColorSmellFinding } from './types.js';
  * @returns the markdown body
  */
 export function formatResultAsMarkdown(result: ColorSmellCheckResult): string {
-  const lines: string[] = ['# Color smell check', ''];
-  lines.push(`Files scanned: ${result.summary.filesScanned}`);
-  lines.push(`Literals found: ${result.summary.literalsFound}`);
-  lines.push(`Duplicate groups: ${result.summary.duplicateGroups}`);
+  const lines: string[] = ['# Color smell check', '', `Files scanned: ${result.summary.filesScanned}`, `Literals found: ${result.summary.literalsFound}`, `Duplicate groups: ${result.summary.duplicateGroups}`];
   if (result.summary.dynamicLiteralsSkipped > 0) {
     lines.push(`Dynamic literals skipped: ${result.summary.dynamicLiteralsSkipped} (spread / computed / non-literal value).`);
   }
@@ -33,8 +30,7 @@ function formatFindingBlock(finding: ColorSmellFinding, index: number): string {
   } else if (finding.suggestion.proposedTemplateKey !== undefined) {
     rows.push(`- Proposed template key: \`${finding.suggestion.proposedTemplateKey}\``);
   }
-  rows.push(`- ${finding.suggestion.rationale}`);
-  rows.push(`- Occurrences (${finding.equivalent.length}):`);
+  rows.push(`- ${finding.suggestion.rationale}`, `- Occurrences (${finding.equivalent.length}):`);
   for (const location of finding.equivalent) {
     rows.push(`  - \`${location.file}:${location.line}:${location.column}\` (${location.source}) — \`${location.snippet}\``);
   }

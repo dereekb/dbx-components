@@ -97,6 +97,37 @@ const DEFAULT_READ_FILE: ManifestReadFile = (path) => nodeReadFile(path, 'utf-8'
 const SUPPORTED_VERSION = 1;
 
 // MARK: Source loading
+type ParseRawResult = { readonly kind: 'parsed'; readonly value: unknown } | { readonly kind: 'error'; readonly error: string };
+
+function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<string | null> {
+  return readFile(path).then(
+    (raw) => raw,
+    () => null
+  );
+}
+
+function tryParseRaw(raw: string): ParseRawResult {
+  try {
+    return { kind: 'parsed', value: JSON.parse(raw) };
+  } catch (err) {
+    return { kind: 'error', error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+function validateParsedManifest(path: string, parsed: unknown): LoadFromSourceResult {
+  const candidateVersion = (parsed as { readonly version?: unknown } | null | undefined)?.version;
+  if (candidateVersion !== SUPPORTED_VERSION) {
+    return { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
+  }
+
+  const validated = SemanticTypeManifest(parsed);
+  if (validated instanceof type.errors) {
+    return { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
+  }
+
+  return { kind: 'success', manifest: validated };
+}
+
 /**
  * Reads, parses, and validates a single manifest source. Failures are
  * surfaced as {@link LoaderWarning} values; the caller decides whether
@@ -107,43 +138,17 @@ const SUPPORTED_VERSION = 1;
  * @returns either the validated manifest or a typed failure warning
  */
 async function loadFromSource(source: ManifestSource, readFile: ManifestReadFile): Promise<LoadFromSourceResult> {
-  let raw: string | null = null;
-  try {
-    raw = await readFile(source.path);
-  } catch {
-    // read errors currently informational only — surfaced via the manifest-missing warning kind.
-  }
-
-  let result: LoadFromSourceResult;
+  const raw = await tryReadRaw(source.path, readFile);
   if (raw === null) {
-    result = { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
-  } else {
-    let parsed: unknown;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parseError = err instanceof Error ? err.message : String(err);
-    }
-
-    if (parseError === null) {
-      const candidateVersion = (parsed as { readonly version?: unknown } | null | undefined)?.version;
-      if (candidateVersion === SUPPORTED_VERSION) {
-        const validated = SemanticTypeManifest(parsed);
-        if (validated instanceof type.errors) {
-          result = { kind: 'failure', warning: { kind: 'manifest-schema-failed', path: source.path, error: validated.summary } };
-        } else {
-          result = { kind: 'success', manifest: validated };
-        }
-      } else {
-        result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path: source.path, version: candidateVersion } };
-      }
-    } else {
-      result = { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseError } };
-    }
+    return { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
   }
 
-  return result;
+  const parseResult = tryParseRaw(raw);
+  if (parseResult.kind === 'error') {
+    return { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseResult.error } };
+  }
+
+  return validateParsedManifest(source.path, parseResult.value);
 }
 
 /**
@@ -240,6 +245,94 @@ function warningSortKey(warning: LoaderWarning): string {
 }
 
 // MARK: Entry point
+interface SourceLoadAccumulator {
+  readonly successes: { readonly source: ManifestSource; readonly manifest: SemanticTypeManifest }[];
+  readonly warnings: LoaderWarning[];
+}
+
+async function collectSourceOutcomes(sources: readonly ManifestSource[], readFile: ManifestReadFile): Promise<SourceLoadAccumulator> {
+  const successes: { readonly source: ManifestSource; readonly manifest: SemanticTypeManifest }[] = [];
+  const warnings: LoaderWarning[] = [];
+
+  for (const source of sources) {
+    const outcome = await loadFromSource(source, readFile);
+    if (outcome.kind === 'success') {
+      successes.push({ source, manifest: outcome.manifest });
+    } else if (isStrictSource(source)) {
+      throw new Error(`loadSemanticTypeManifests: strict source failed (${outcome.warning.kind}): ${source.path}`);
+    } else {
+      warnings.push(outcome.warning);
+    }
+  }
+
+  return { successes, warnings };
+}
+
+interface MergeEntryContext {
+  readonly manifest: SemanticTypeManifest;
+  readonly entry: SemanticTypeEntry;
+  readonly mergedEntries: Map<string, SemanticTypeEntry>;
+  readonly entryProvenance: Map<string, string>;
+  readonly warnings: LoaderWarning[];
+}
+
+function mergeEntry(context: MergeEntryContext): void {
+  const { manifest, entry, mergedEntries, entryProvenance, warnings } = context;
+  const entryKey = `${entry.package}::${entry.name}`;
+  const filtered = filterEntryTopics({ entryKey, topics: entry.topics, topicNamespace: manifest.topicNamespace });
+  warnings.push(...filtered.warnings);
+
+  const mergedEntry: SemanticTypeEntry = { ...entry, topics: [...filtered.topics] };
+  const previousSource = entryProvenance.get(entryKey);
+  if (previousSource !== undefined) {
+    warnings.push({ kind: 'entry-collision', entryKey, winningSource: manifest.source, losingSource: previousSource });
+  }
+  mergedEntries.set(entryKey, mergedEntry);
+  entryProvenance.set(entryKey, manifest.source);
+}
+
+interface MergeManifestContext {
+  readonly source: ManifestSource;
+  readonly manifest: SemanticTypeManifest;
+  readonly seenSources: Map<string, string>;
+  readonly loadedSources: string[];
+  readonly mergedEntries: Map<string, SemanticTypeEntry>;
+  readonly entryProvenance: Map<string, string>;
+  readonly warnings: LoaderWarning[];
+}
+
+function mergeManifest(context: MergeManifestContext): void {
+  const { source, manifest, seenSources, loadedSources, mergedEntries, entryProvenance, warnings } = context;
+  const existingPath = seenSources.get(manifest.source);
+  if (existingPath !== undefined) {
+    warnings.push({ kind: 'source-label-collision', source: manifest.source, existingPath, droppedPath: source.path });
+    return;
+  }
+  seenSources.set(manifest.source, source.path);
+  loadedSources.push(manifest.source);
+
+  for (const entry of manifest.entries) {
+    mergeEntry({ manifest, entry, mergedEntries, entryProvenance, warnings });
+  }
+}
+
+function buildTopicsIndex(mergedEntries: ReadonlyMap<string, SemanticTypeEntry>): Map<string, readonly string[]> {
+  const topicsIndex = new Map<string, readonly string[]>();
+  for (const [entryKey, entry] of mergedEntries) {
+    for (const topic of entry.topics) {
+      const existing = topicsIndex.get(topic);
+      topicsIndex.set(topic, existing === undefined ? [entryKey] : [...existing, entryKey]);
+    }
+  }
+  for (const [topic, keys] of topicsIndex) {
+    topicsIndex.set(
+      topic,
+      [...keys].sort((a, b) => a.localeCompare(b))
+    );
+  }
+  return topicsIndex;
+}
+
 /**
  * Loads, validates, and merges the supplied manifest sources into a single
  * registry suitable for the (future) `lookup-semantic-type` /
@@ -255,84 +348,22 @@ function warningSortKey(warning: LoaderWarning): string {
  */
 export async function loadSemanticTypeManifests(input: LoadSemanticTypeManifestsInput): Promise<LoadSemanticTypeManifestsResult> {
   const { sources, readFile = DEFAULT_READ_FILE } = input;
-  const successes: { readonly source: ManifestSource; readonly manifest: SemanticTypeManifest }[] = [];
-  const warnings: LoaderWarning[] = [];
-
-  for (const source of sources) {
-    const outcome = await loadFromSource(source, readFile);
-    if (outcome.kind === 'success') {
-      successes.push({ source, manifest: outcome.manifest });
-    } else if (isStrictSource(source)) {
-      throw new Error(`loadSemanticTypeManifests: strict source failed (${outcome.warning.kind}): ${source.path}`);
-    } else {
-      warnings.push(outcome.warning);
-    }
-  }
+  const { successes, warnings } = await collectSourceOutcomes(sources, readFile);
 
   if (successes.length === 0) {
     throw new Error('loadSemanticTypeManifests: zero manifests loaded successfully');
   }
 
-  // Merge phase
   const seenSources = new Map<string, string>();
   const mergedEntries = new Map<string, SemanticTypeEntry>();
   const entryProvenance = new Map<string, string>();
   const loadedSources: string[] = [];
 
   for (const { source, manifest } of successes) {
-    const existingPath = seenSources.get(manifest.source);
-    if (existingPath !== undefined) {
-      warnings.push({
-        kind: 'source-label-collision',
-        source: manifest.source,
-        existingPath,
-        droppedPath: source.path
-      });
-      continue;
-    }
-    seenSources.set(manifest.source, source.path);
-    loadedSources.push(manifest.source);
-
-    for (const entry of manifest.entries) {
-      const entryKey = `${entry.package}::${entry.name}`;
-      const filtered = filterEntryTopics({ entryKey, topics: entry.topics, topicNamespace: manifest.topicNamespace });
-      warnings.push(...filtered.warnings);
-
-      const mergedEntry: SemanticTypeEntry = { ...entry, topics: [...filtered.topics] };
-
-      const previousSource = entryProvenance.get(entryKey);
-      if (previousSource !== undefined) {
-        warnings.push({
-          kind: 'entry-collision',
-          entryKey,
-          winningSource: manifest.source,
-          losingSource: previousSource
-        });
-      }
-      mergedEntries.set(entryKey, mergedEntry);
-      entryProvenance.set(entryKey, manifest.source);
-    }
+    mergeManifest({ source, manifest, seenSources, loadedSources, mergedEntries, entryProvenance, warnings });
   }
 
-  // Topic index — built after all merging so collisions/overrides are reflected
-  const topicsIndex = new Map<string, readonly string[]>();
-  for (const [entryKey, entry] of mergedEntries) {
-    for (const topic of entry.topics) {
-      const existing = topicsIndex.get(topic);
-      if (existing === undefined) {
-        topicsIndex.set(topic, [entryKey]);
-      } else {
-        topicsIndex.set(topic, [...existing, entryKey]);
-      }
-    }
-  }
-  for (const [topic, keys] of topicsIndex) {
-    topicsIndex.set(
-      topic,
-      [...keys].sort((a, b) => a.localeCompare(b))
-    );
-  }
-
+  const topicsIndex = buildTopicsIndex(mergedEntries);
   warnings.sort((a, b) => warningSortKey(a).localeCompare(warningSortKey(b)));
 
   return {

@@ -116,49 +116,83 @@ function peelTypeNode(node: TypeNode): string | undefined {
   return result;
 }
 
+interface MutableInterfaceTagState {
+  dbxModel: boolean;
+  dbxModelSubObject: boolean;
+  dbxModelOrganizationalGroupRoot: boolean;
+  dbxModelCompositeKey: ExtractedCompositeKeyTag | undefined;
+  readonly dbxModelArchetypes: ExtractedArchetypeTag[];
+  readonly dbxModelAggregatesFrom: string[];
+}
+
 function readInterfaceTags(jsDocs: readonly JSDoc[]): ExtractedInterfaceTags {
-  let dbxModel = false;
-  let dbxModelSubObject = false;
-  let dbxModelOrganizationalGroupRoot = false;
-  let dbxModelCompositeKey: ExtractedCompositeKeyTag | undefined;
-  const dbxModelArchetypes: ExtractedArchetypeTag[] = [];
-  const dbxModelAggregatesFrom: string[] = [];
+  const state: MutableInterfaceTagState = {
+    dbxModel: false,
+    dbxModelSubObject: false,
+    dbxModelOrganizationalGroupRoot: false,
+    dbxModelCompositeKey: undefined,
+    dbxModelArchetypes: [],
+    dbxModelAggregatesFrom: []
+  };
   for (const jsDoc of jsDocs) {
     for (const tag of jsDoc.getTags()) {
-      const tagName = tag.getTagName();
-      if (tagName === 'dbxModel') {
-        dbxModel = true;
-      } else if (tagName === 'dbxModelSubObject') {
-        dbxModelSubObject = true;
-      } else if (tagName === 'dbxModelOrganizationalGroupRoot') {
-        dbxModelOrganizationalGroupRoot = true;
-      } else if (tagName === 'dbxModelArchetype') {
-        const value = tag.getCommentText()?.trim();
-        if (value !== undefined) {
-          const parsed = parseArchetypeTagValue(value);
-          if (parsed) dbxModelArchetypes.push(parsed);
-        }
-      } else if (tagName === 'dbxModelAggregatesFrom') {
-        const value = tag.getCommentText()?.trim();
-        if (value !== undefined && value.length > 0) {
-          // Reject comma-separated names — one tag per model name.
-          const name = value.split(/\s+/)[0];
-          if (/^[A-Z][A-Za-z0-9_$]*$/.test(name)) {
-            dbxModelAggregatesFrom.push(name);
-          }
-        }
-      } else if (tagName === 'dbxModelCompositeKey') {
-        // At most one tag per interface — only the first captured. Validators
-        // surface duplicates as findings using the JSDoc source positions.
-        if (dbxModelCompositeKey === undefined) {
-          const value = tag.getCommentText()?.trim();
-          dbxModelCompositeKey = parseCompositeKeyTagValue(value ?? '');
-        }
-      }
+      applyInterfaceTag(state, tag.getTagName(), tag.getCommentText()?.trim());
     }
   }
-  const tags: ExtractedInterfaceTags = { dbxModel, dbxModelSubObject, dbxModelArchetypes, dbxModelAggregatesFrom, dbxModelOrganizationalGroupRoot, ...(dbxModelCompositeKey ? { dbxModelCompositeKey } : {}) };
-  return tags;
+  return {
+    dbxModel: state.dbxModel,
+    dbxModelSubObject: state.dbxModelSubObject,
+    dbxModelArchetypes: state.dbxModelArchetypes,
+    dbxModelAggregatesFrom: state.dbxModelAggregatesFrom,
+    dbxModelOrganizationalGroupRoot: state.dbxModelOrganizationalGroupRoot,
+    ...(state.dbxModelCompositeKey ? { dbxModelCompositeKey: state.dbxModelCompositeKey } : {})
+  };
+}
+
+const AGGREGATES_FROM_NAME_RE = /^[A-Z][A-Za-z0-9_$]*$/;
+
+function applyInterfaceTag(state: MutableInterfaceTagState, tagName: string, value: string | undefined): void {
+  switch (tagName) {
+    case 'dbxModel':
+      state.dbxModel = true;
+      return;
+    case 'dbxModelSubObject':
+      state.dbxModelSubObject = true;
+      return;
+    case 'dbxModelOrganizationalGroupRoot':
+      state.dbxModelOrganizationalGroupRoot = true;
+      return;
+    case 'dbxModelArchetype':
+      applyArchetypeTag(state, value);
+      return;
+    case 'dbxModelAggregatesFrom':
+      applyAggregatesFromTag(state, value);
+      return;
+    case 'dbxModelCompositeKey':
+      applyCompositeKeyTag(state, value);
+      return;
+    default:
+      return;
+  }
+}
+
+function applyArchetypeTag(state: MutableInterfaceTagState, value: string | undefined): void {
+  if (value === undefined) return;
+  const parsed = parseArchetypeTagValue(value);
+  if (parsed) state.dbxModelArchetypes.push(parsed);
+}
+
+function applyAggregatesFromTag(state: MutableInterfaceTagState, value: string | undefined): void {
+  if (value === undefined || value.length === 0) return;
+  const name = value.split(/\s+/)[0];
+  if (AGGREGATES_FROM_NAME_RE.test(name)) {
+    state.dbxModelAggregatesFrom.push(name);
+  }
+}
+
+function applyCompositeKeyTag(state: MutableInterfaceTagState, value: string | undefined): void {
+  if (state.dbxModelCompositeKey !== undefined) return;
+  state.dbxModelCompositeKey = parseCompositeKeyTagValue(value ?? '');
 }
 
 const ARCHETYPE_SLUG_RE = /^[a-z][a-z0-9-]*$/;

@@ -277,40 +277,53 @@ interface RefineModelInput {
   readonly referencedAsParent: ReadonlySet<string>;
 }
 
+function resolveTreeRole(input: { readonly model: FirebaseModel; readonly referencedAsParent: ReadonlySet<string> }): 'root' | 'intermediate' | 'leaf' {
+  const { model, referencedAsParent } = input;
+  if (!model.parentIdentityConst) {
+    return 'root';
+  }
+  return referencedAsParent.has(model.identityConst) ? 'intermediate' : 'leaf';
+}
+
 function refineModel(input: RefineModelInput): FirebaseModel {
   const { model, modelsByName, referencedAsParent } = input;
+  const archetypeAxesBySlug = refineTreeNodeAxes({ model, referencedAsParent });
+  const siblingAggregatesFrom = resolveSiblingAggregatesFrom({ model, modelsByName });
+
+  if (archetypeAxesBySlug === model.archetypeAxesBySlug && siblingAggregatesFrom === undefined) {
+    return model;
+  }
+  return {
+    ...model,
+    ...(archetypeAxesBySlug ? { archetypeAxesBySlug } : {}),
+    ...(siblingAggregatesFrom ? { siblingAggregatesFrom: true } : {})
+  };
+}
+
+function refineTreeNodeAxes(input: { readonly model: FirebaseModel; readonly referencedAsParent: ReadonlySet<string> }): FirebaseModel['archetypeAxesBySlug'] {
+  const { model, referencedAsParent } = input;
   const isTreeNode = model.archetypes?.includes('model-tree-node') ?? false;
-  let archetypeAxesBySlug = model.archetypeAxesBySlug;
-  if (isTreeNode) {
-    const role = !model.parentIdentityConst ? 'root' : referencedAsParent.has(model.identityConst) ? 'intermediate' : 'leaf';
-    const existing = archetypeAxesBySlug?.['model-tree-node'] ?? {};
-    const nextSlugAxes = { ...existing, treeRole: role };
-    archetypeAxesBySlug = { ...(archetypeAxesBySlug ?? {}), 'model-tree-node': nextSlugAxes };
+  if (!isTreeNode) {
+    return model.archetypeAxesBySlug;
   }
+  const role = resolveTreeRole({ model, referencedAsParent });
+  const existing = model.archetypeAxesBySlug?.['model-tree-node'] ?? {};
+  const nextSlugAxes = { ...existing, treeRole: role };
+  return { ...model.archetypeAxesBySlug, 'model-tree-node': nextSlugAxes };
+}
 
-  let siblingAggregatesFrom: boolean | undefined;
-  if (model.aggregatesFrom && model.aggregatesFrom.length > 0 && model.modelGroup) {
-    let allSibling = true;
-    for (const name of model.aggregatesFrom) {
-      const peer = modelsByName.get(name);
-      if (!peer || peer.modelGroup !== model.modelGroup) {
-        allSibling = false;
-        break;
-      }
+function resolveSiblingAggregatesFrom(input: { readonly model: FirebaseModel; readonly modelsByName: ReadonlyMap<string, FirebaseModel> }): boolean | undefined {
+  const { model, modelsByName } = input;
+  if (!model.aggregatesFrom || model.aggregatesFrom.length === 0 || !model.modelGroup) {
+    return undefined;
+  }
+  for (const name of model.aggregatesFrom) {
+    const peer = modelsByName.get(name);
+    if (peer?.modelGroup !== model.modelGroup) {
+      return undefined;
     }
-    if (allSibling) siblingAggregatesFrom = true;
   }
-
-  let result = model;
-  if (archetypeAxesBySlug !== model.archetypeAxesBySlug || siblingAggregatesFrom !== undefined) {
-    const next: FirebaseModel = {
-      ...model,
-      ...(archetypeAxesBySlug ? { archetypeAxesBySlug } : {}),
-      ...(siblingAggregatesFrom ? { siblingAggregatesFrom: true } : {})
-    };
-    result = next;
-  }
-  return result;
+  return true;
 }
 
 async function listTsFiles(rootDir: string, reserved: ReadonlySet<string>): Promise<readonly string[]> {

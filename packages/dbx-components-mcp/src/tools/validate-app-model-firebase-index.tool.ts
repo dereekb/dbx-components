@@ -162,6 +162,40 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
 };
 
 // MARK: Tool factory
+async function runValidateAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolResult> {
+  const parsed = ValidateAppArgsType(rawArgs);
+  if (parsed instanceof type.errors) {
+    return toolError(`Invalid arguments: ${parsed.summary}`);
+  }
+  const cwd = process.cwd();
+  try {
+    ensurePathInsideCwd(parsed.componentDir, cwd);
+    if (parsed.indexesFile !== undefined) {
+      ensurePathInsideCwd(parsed.indexesFile, cwd);
+    }
+  } catch (err) {
+    return toolError(err instanceof Error ? err.message : String(err));
+  }
+
+  const indexesRelative = parsed.indexesFile ?? 'firestore.indexes.json';
+  const componentAbs = resolve(cwd, parsed.componentDir);
+  const indexesAbs = resolve(cwd, indexesRelative);
+
+  let report: ModelFirebaseIndexValidateAppReport;
+  try {
+    report = await buildValidateAppReport({ componentDir: parsed.componentDir, componentAbs, indexesRelative, indexesAbs });
+  } catch (err) {
+    return toolError(`Failed to validate component firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+  const result: ToolResult = { content: [{ type: 'text', text }] };
+  if (report.drift) {
+    return { ...result, isError: true };
+  }
+  return result;
+}
+
 /**
  * Builds the `dbx_model_firebase_index_validate_app` tool.
  *
@@ -169,41 +203,7 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
  * @__NO_SIDE_EFFECTS__
  */
 export function createValidateAppModelFirebaseIndexTool(): DbxTool {
-  async function run(rawArgs: unknown): Promise<ToolResult> {
-    const parsed = ValidateAppArgsType(rawArgs);
-    if (parsed instanceof type.errors) {
-      return toolError(`Invalid arguments: ${parsed.summary}`);
-    }
-    const cwd = process.cwd();
-    try {
-      ensurePathInsideCwd(parsed.componentDir, cwd);
-      if (parsed.indexesFile !== undefined) {
-        ensurePathInsideCwd(parsed.indexesFile, cwd);
-      }
-    } catch (err) {
-      return toolError(err instanceof Error ? err.message : String(err));
-    }
-
-    const indexesRelative = parsed.indexesFile ?? 'firestore.indexes.json';
-    const componentAbs = resolve(cwd, parsed.componentDir);
-    const indexesAbs = resolve(cwd, indexesRelative);
-
-    let report: ModelFirebaseIndexValidateAppReport;
-    try {
-      report = await buildValidateAppReport({ componentDir: parsed.componentDir, componentAbs, indexesRelative, indexesAbs });
-    } catch (err) {
-      return toolError(`Failed to validate component firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
-    }
-
-    const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-    const result: ToolResult = { content: [{ type: 'text', text }] };
-    if (report.drift) {
-      return { ...result, isError: true };
-    }
-    return result;
-  }
-
-  return { definition: DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL, run };
+  return { definition: DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL, run: runValidateAppModelFirebaseIndex };
 }
 
 // MARK: Walking
@@ -439,10 +439,10 @@ function formatReportAsMarkdown(report: ModelFirebaseIndexValidateAppReport): st
   const lines: string[] = [];
   const status = formatStatusLabel(report.errorCount, report.warningCount);
   lines.push(`# Firebase indexes validation: \`${report.componentDir}\` — ${status}`, '');
-  if (!report.indexesFileExists) {
-    lines.push(`> \`${report.indexesFile}\` does not exist. Run \`dbx-components-mcp generate-firestore-indexes --component ${report.componentDir}\` to create it.`, '');
-  } else {
+  if (report.indexesFileExists) {
     lines.push(`Indexes file: \`${report.indexesFile}\``, '');
+  } else {
+    lines.push(`> \`${report.indexesFile}\` does not exist. Run \`dbx-components-mcp generate-firestore-indexes --component ${report.componentDir}\` to create it.`, '');
   }
   if (report.drift) {
     lines.push('## ❌ Drift detected', '');

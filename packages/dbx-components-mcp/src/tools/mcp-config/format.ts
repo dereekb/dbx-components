@@ -23,6 +23,46 @@ const CLUSTER_LABEL: Record<DownstreamCluster, string> = {
   filters: 'Filters'
 };
 
+function appendConfigWarnings(lines: string[], snapshot: WorkspaceSnapshot): void {
+  if (snapshot.configWarnings.length === 0) return;
+  lines.push(`## Config warnings`, '');
+  for (const w of snapshot.configWarnings) {
+    lines.push(`- **${w.kind}** \`${w.path}\` — ${w.error}`);
+  }
+  lines.push('');
+}
+
+function appendClusterSection(lines: string[], snapshot: WorkspaceSnapshot, cluster: DownstreamCluster): void {
+  const sources = snapshot.registeredSources.filter((s) => s.cluster === cluster);
+  const candidatePackages = snapshot.packages.filter((ps) => ps.pkg.candidateClusters.includes(cluster) && ps.registeredClusters.get(cluster) !== true);
+  if (sources.length + candidatePackages.length === 0) return;
+
+  lines.push(`## ${CLUSTER_LABEL[cluster]}`, '');
+  if (sources.length > 0) {
+    lines.push(`**Registered sources:**`);
+    for (const s of sources) {
+      lines.push(`- \`${s.relativePath}\` ${s.exists ? '✓' : '✗ missing'}`);
+    }
+    lines.push('');
+  }
+  if (candidatePackages.length > 0) {
+    lines.push(`**Candidate packages without registration:**`);
+    for (const ps of candidatePackages) {
+      lines.push(`- \`${ps.pkg.relDir}\` (${ps.pkg.packageName})`);
+    }
+    lines.push('');
+  }
+}
+
+function appendPackagesList(lines: string[], snapshot: WorkspaceSnapshot): void {
+  if (snapshot.packages.length === 0) return;
+  lines.push(`## Packages`, '');
+  for (const ps of snapshot.packages) {
+    lines.push(formatPackageBullet(ps));
+  }
+  lines.push('');
+}
+
 /**
  * `dbx_mcp_config op="status"` renderer.
  *
@@ -33,44 +73,11 @@ export function formatStatus(snapshot: WorkspaceSnapshot): string {
   const configLabel = snapshot.configPath === null ? '_not present_' : `\`${snapshot.configPath}\``;
   const lines: string[] = [`# dbx-mcp config status`, '', `- **Workspace:** \`${snapshot.workspaceRoot}\``, `- **Config file:** ${configLabel}`, `- **Downstream packages:** ${snapshot.packages.length}`, ''];
 
-  if (snapshot.configWarnings.length > 0) {
-    lines.push(`## Config warnings`, '');
-    for (const w of snapshot.configWarnings) {
-      lines.push(`- **${w.kind}** \`${w.path}\` — ${w.error}`);
-    }
-    lines.push('');
-  }
-
+  appendConfigWarnings(lines, snapshot);
   for (const cluster of DOWNSTREAM_CLUSTERS) {
-    const sources = snapshot.registeredSources.filter((s) => s.cluster === cluster);
-    const candidatePackages = snapshot.packages.filter((ps) => ps.pkg.candidateClusters.includes(cluster) && ps.registeredClusters.get(cluster) !== true);
-    const anyContent = sources.length + candidatePackages.length;
-    if (anyContent === 0) continue;
-
-    lines.push(`## ${CLUSTER_LABEL[cluster]}`, '');
-    if (sources.length > 0) {
-      lines.push(`**Registered sources:**`);
-      for (const s of sources) {
-        lines.push(`- \`${s.relativePath}\` ${s.exists ? '✓' : '✗ missing'}`);
-      }
-      lines.push('');
-    }
-    if (candidatePackages.length > 0) {
-      lines.push(`**Candidate packages without registration:**`);
-      for (const ps of candidatePackages) {
-        lines.push(`- \`${ps.pkg.relDir}\` (${ps.pkg.packageName})`);
-      }
-      lines.push('');
-    }
+    appendClusterSection(lines, snapshot, cluster);
   }
-
-  if (snapshot.packages.length > 0) {
-    lines.push(`## Packages`, '');
-    for (const ps of snapshot.packages) {
-      lines.push(formatPackageBullet(ps));
-    }
-    lines.push('');
-  }
+  appendPackagesList(lines, snapshot);
 
   if (hasUnregisteredCandidates(snapshot)) {
     lines.push(`## Next steps`, '', 'Run `dbx_mcp_config op="init"` to write conventional defaults, then `op="refresh"` to populate `.tmp/dbx-mcp/`.', '');

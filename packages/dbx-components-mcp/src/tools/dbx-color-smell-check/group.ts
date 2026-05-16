@@ -99,16 +99,16 @@ interface BuildSuggestionInput {
 function buildSuggestion(input: BuildSuggestionInput): ColorSmellSuggestion {
   const existing = input.templateBySignature.get(input.signature);
   let result: ColorSmellSuggestion;
-  if (existing !== undefined) {
-    result = {
-      existingTemplateKey: existing.key,
-      rationale: `Existing template \`${existing.key}\` (registered at \`${existing.sourceFile}:${existing.sourceLine}\`) already matches this signature.`
-    };
-  } else {
+  if (existing === undefined) {
     const proposed = proposeTemplateKey(input.locations[0].normalized);
     result = {
       proposedTemplateKey: proposed,
       rationale: `No existing template matches this signature. Register one (e.g. \`{ key: '${proposed}', config: {...} }\`) in \`provideDbxStyleService({ dbxColorServiceConfig: { templates: [...] } })\`.`
+    };
+  } else {
+    result = {
+      existingTemplateKey: existing.key,
+      rationale: `Existing template \`${existing.key}\` (registered at \`${existing.sourceFile}:${existing.sourceLine}\`) already matches this signature.`
     };
   }
   return result;
@@ -118,14 +118,14 @@ function proposeTemplateKey(normalized: NormalizedColorConfig): string {
   let result = 'brand-color';
   if (normalized.color !== undefined) {
     const hex = /^#([0-9a-f]{6})$/i.exec(normalized.color);
-    if (hex !== null) {
-      result = `brand-${hex[1].toLowerCase()}`;
-    } else {
+    if (hex === null) {
       const sanitized = normalized.color
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
       if (sanitized.length > 0) result = `brand-${sanitized}`.slice(0, 40);
+    } else {
+      result = `brand-${hex[1].toLowerCase()}`;
     }
   }
   return result;

@@ -111,31 +111,35 @@ function findConverters(sourceFile: SourceFile): readonly ExtractedConverter[] {
   for (const stmt of sourceFile.getVariableStatements()) {
     const exported = stmt.isExported();
     for (const decl of stmt.getDeclarations()) {
-      const typeNode = decl.getTypeNode();
-      if (!typeNode) continue;
-      if (!Node.isTypeReference(typeNode)) continue;
-      const typeName = typeNode.getTypeName().getText();
-      if (typeName !== CONVERTER_CONFIG_TYPE) continue;
-      const typeArgs = typeNode.getTypeArguments();
-      let dataTypeArgument: string | undefined;
-      if (typeArgs.length >= 1) {
-        const arg = typeArgs[0];
-        if (Node.isTypeReference(arg)) {
-          dataTypeArgument = arg.getTypeName().getText();
-        } else {
-          dataTypeArgument = arg.getText();
-        }
+      const entry = tryBuildConverter(decl, exported);
+      if (entry) {
+        out.push(entry);
       }
-      const entry: ExtractedConverter = {
-        name: decl.getName(),
-        exported,
-        line: decl.getStartLineNumber(),
-        dataTypeArgument
-      };
-      out.push(entry);
     }
   }
   return out;
+}
+
+function tryBuildConverter(decl: VariableDeclaration, exported: boolean): ExtractedConverter | undefined {
+  const typeNode = decl.getTypeNode();
+  if (!typeNode) return undefined;
+  if (!Node.isTypeReference(typeNode)) return undefined;
+  if (typeNode.getTypeName().getText() !== CONVERTER_CONFIG_TYPE) return undefined;
+  return {
+    name: decl.getName(),
+    exported,
+    line: decl.getStartLineNumber(),
+    dataTypeArgument: readConverterDataTypeArgument(typeNode.getTypeArguments())
+  };
+}
+
+function readConverterDataTypeArgument(typeArgs: readonly Node[]): string | undefined {
+  if (typeArgs.length === 0) return undefined;
+  const arg = typeArgs[0];
+  if (Node.isTypeReference(arg)) {
+    return arg.getTypeName().getText();
+  }
+  return arg.getText();
 }
 
 // MARK: Converter map

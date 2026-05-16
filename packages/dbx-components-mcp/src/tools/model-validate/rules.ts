@@ -367,38 +367,13 @@ function checkSubObjectParentNotTagged(input: CheckSubObjectParentNotTaggedInput
 
 // MARK: File-level checks
 function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
-  const { groupInterface, groupTypes, firstModelLine, models, name } = file;
+  checkGroupInterfaceFileLevel(file, violations);
+  checkGroupTypesFileLevel(file, violations);
+}
 
-  if (groupInterface) {
-    if (!groupInterface.exported) {
-      pushViolation(violations, {
-        code: 'FILE_GROUP_INTERFACE_NOT_EXPORTED',
-        message: `Interface \`${groupInterface.name}\` must be exported.`,
-        file: name,
-        line: groupInterface.line,
-        model: undefined
-      });
-    }
-    if (firstModelLine !== undefined && groupInterface.line > firstModelLine) {
-      pushViolation(violations, {
-        code: 'FILE_GROUP_INTERFACE_AFTER_MODEL',
-        message: `Interface \`${groupInterface.name}\` must be declared before the first model (currently at line ${groupInterface.line}; first model at line ${firstModelLine}).`,
-        file: name,
-        line: groupInterface.line,
-        model: undefined
-      });
-    }
-    if (groupInterface.dbxModelGroupTag === undefined) {
-      pushViolation(violations, {
-        code: 'MODEL_GROUP_INTERFACE_MISSING_TAG',
-        message: `Interface \`${groupInterface.name}\` is missing its \`@dbxModelGroup\` JSDoc tag. Add \`@dbxModelGroup <Group>\` so the catalog and downstream traversal can register the group.`,
-        file: name,
-        line: groupInterface.line,
-        model: undefined
-      });
-    }
-    checkGroupInterfaceCoverage(file, violations);
-  } else {
+function checkGroupInterfaceFileLevel(file: ExtractedFile, violations: Violation[]): void {
+  const { groupInterface, firstModelLine, name } = file;
+  if (!groupInterface) {
     pushViolation(violations, {
       code: 'FILE_MISSING_GROUP_INTERFACE',
       message: 'Missing exported `<Group>FirestoreCollections` interface. Declare one interface ending in `FirestoreCollections` before the first model.',
@@ -406,29 +381,41 @@ function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
       line: undefined,
       model: undefined
     });
+    return;
   }
+  if (!groupInterface.exported) {
+    pushViolation(violations, {
+      code: 'FILE_GROUP_INTERFACE_NOT_EXPORTED',
+      message: `Interface \`${groupInterface.name}\` must be exported.`,
+      file: name,
+      line: groupInterface.line,
+      model: undefined
+    });
+  }
+  if (firstModelLine !== undefined && groupInterface.line > firstModelLine) {
+    pushViolation(violations, {
+      code: 'FILE_GROUP_INTERFACE_AFTER_MODEL',
+      message: `Interface \`${groupInterface.name}\` must be declared before the first model (currently at line ${groupInterface.line}; first model at line ${firstModelLine}).`,
+      file: name,
+      line: groupInterface.line,
+      model: undefined
+    });
+  }
+  if (groupInterface.dbxModelGroupTag === undefined) {
+    pushViolation(violations, {
+      code: 'MODEL_GROUP_INTERFACE_MISSING_TAG',
+      message: `Interface \`${groupInterface.name}\` is missing its \`@dbxModelGroup\` JSDoc tag. Add \`@dbxModelGroup <Group>\` so the catalog and downstream traversal can register the group.`,
+      file: name,
+      line: groupInterface.line,
+      model: undefined
+    });
+  }
+  checkGroupInterfaceCoverage(file, violations);
+}
 
-  if (groupTypes) {
-    if (!groupTypes.exported) {
-      pushViolation(violations, {
-        code: 'FILE_GROUP_TYPES_NOT_EXPORTED',
-        message: `Type alias \`${groupTypes.name}\` must be exported.`,
-        file: name,
-        line: groupTypes.line,
-        model: undefined
-      });
-    }
-    if (firstModelLine !== undefined && groupTypes.line > firstModelLine) {
-      pushViolation(violations, {
-        code: 'FILE_GROUP_TYPES_AFTER_MODEL',
-        message: `Type alias \`${groupTypes.name}\` must be declared before the first model (currently at line ${groupTypes.line}; first model at line ${firstModelLine}).`,
-        file: name,
-        line: groupTypes.line,
-        model: undefined
-      });
-    }
-    checkGroupTypesCoverage(file, models, violations);
-  } else {
+function checkGroupTypesFileLevel(file: ExtractedFile, violations: Violation[]): void {
+  const { groupTypes, firstModelLine, models, name } = file;
+  if (!groupTypes) {
     pushViolation(violations, {
       code: 'FILE_MISSING_GROUP_TYPES',
       message: 'Missing exported `<Group>Types` type alias. Declare a union of `typeof <identity>` covering every model in the file.',
@@ -436,7 +423,27 @@ function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
       line: undefined,
       model: undefined
     });
+    return;
   }
+  if (!groupTypes.exported) {
+    pushViolation(violations, {
+      code: 'FILE_GROUP_TYPES_NOT_EXPORTED',
+      message: `Type alias \`${groupTypes.name}\` must be exported.`,
+      file: name,
+      line: groupTypes.line,
+      model: undefined
+    });
+  }
+  if (firstModelLine !== undefined && groupTypes.line > firstModelLine) {
+    pushViolation(violations, {
+      code: 'FILE_GROUP_TYPES_AFTER_MODEL',
+      message: `Type alias \`${groupTypes.name}\` must be declared before the first model (currently at line ${groupTypes.line}; first model at line ${firstModelLine}).`,
+      file: name,
+      line: groupTypes.line,
+      model: undefined
+    });
+  }
+  checkGroupTypesCoverage(file, models, violations);
 }
 
 function checkGroupInterfaceCoverage(file: ExtractedFile, violations: Violation[]): void {

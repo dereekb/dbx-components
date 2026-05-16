@@ -106,29 +106,41 @@ function collectAbstractMethods(input: CollectMethodsInput): void {
   const { sourceFile, sourceFileRel, methodsByParams } = input;
   for (const cls of sourceFile.getClasses()) {
     const className = cls.getName();
-    if (!className) continue;
-    if (!cls.isAbstract()) continue;
-    if (!className.endsWith('ServerActions')) continue;
+    if (!isServerActionsClass(cls, className)) continue;
     for (const method of cls.getMethods()) {
-      const methodName = method.getName();
-      const params = method.getParameters();
-      if (params.length === 0) continue;
-      const firstParam = params[0];
-      const paramTypeNode = firstParam.getTypeNode();
-      if (!paramTypeNode) continue;
-      const paramsTypeName = paramTypeNode.getText();
-      const jsDoc = readJsDoc(method.getJsDocs());
-      if (!methodsByParams.has(paramsTypeName)) {
-        methodsByParams.set(paramsTypeName, {
-          className,
-          methodName,
-          sourceFile: sourceFileRel,
-          line: method.getStartLineNumber(),
-          jsDoc
-        });
-      }
+      addMethodEntryIfAbsent({ className: className as string, method, sourceFileRel, methodsByParams });
     }
   }
+}
+
+function isServerActionsClass(cls: ReturnType<SourceFile['getClasses']>[number], className: string | undefined): boolean {
+  if (!className) return false;
+  if (!cls.isAbstract()) return false;
+  return className.endsWith('ServerActions');
+}
+
+interface AddMethodEntryInput {
+  readonly className: string;
+  readonly method: ReturnType<ReturnType<SourceFile['getClasses']>[number]['getMethods']>[number];
+  readonly sourceFileRel: string;
+  readonly methodsByParams: Map<string, ActionResolution>;
+}
+
+function addMethodEntryIfAbsent(input: AddMethodEntryInput): void {
+  const { className, method, sourceFileRel, methodsByParams } = input;
+  const params = method.getParameters();
+  if (params.length === 0) return;
+  const paramTypeNode = params[0].getTypeNode();
+  if (!paramTypeNode) return;
+  const paramsTypeName = paramTypeNode.getText();
+  if (methodsByParams.has(paramsTypeName)) return;
+  methodsByParams.set(paramsTypeName, {
+    className,
+    methodName: method.getName(),
+    sourceFile: sourceFileRel,
+    line: method.getStartLineNumber(),
+    jsDoc: readJsDoc(method.getJsDocs())
+  });
 }
 
 interface CollectFactoriesInput {

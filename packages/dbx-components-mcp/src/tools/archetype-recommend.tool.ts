@@ -203,25 +203,12 @@ export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResul
   }
 
   const cwd = process.cwd();
-  if (args.componentDirs) {
-    try {
-      for (const dir of args.componentDirs) ensurePathInsideCwd(dir, cwd);
-    } catch (err) {
-      return toolError(err instanceof Error ? err.message : String(err));
-    }
-  }
+  const pathCheck = ensureComponentDirsValid(args.componentDirs, cwd);
+  if (pathCheck !== undefined) return pathCheck;
 
   const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
-
   const scoreResult = scoreCatalog(args.questionnaire);
-  let top = scoreResult.top;
-  if (args.archetypeHint) {
-    const resolved = resolveModelArchetype(args.archetypeHint);
-    if (resolved) {
-      const hinted = scoreResult.ranked.find((r) => r.archetype.slug === resolved.archetype.slug);
-      if (hinted) top = hinted;
-    }
-  }
+  const top = pickTopArchetype(scoreResult, args.archetypeHint);
 
   const axes = deriveAxes(top.archetype, args.questionnaire);
   const axisAlternatives = deriveAxisAlternatives(top.archetype, args.questionnaire);
@@ -249,6 +236,24 @@ export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResul
     shortCircuited: scoreResult.shortCircuited && top.archetype.slug === scoreResult.top.archetype.slug
   });
   return { content: [{ type: 'text', text }] };
+}
+
+function ensureComponentDirsValid(componentDirs: readonly string[] | undefined, cwd: string): ToolResult | undefined {
+  if (componentDirs === undefined) return undefined;
+  try {
+    for (const dir of componentDirs) ensurePathInsideCwd(dir, cwd);
+  } catch (err) {
+    return toolError(err instanceof Error ? err.message : String(err));
+  }
+  return undefined;
+}
+
+function pickTopArchetype(scoreResult: ReturnType<typeof scoreCatalog>, archetypeHint: string | undefined): ScoredArchetype {
+  if (archetypeHint === undefined) return scoreResult.top;
+  const resolved = resolveModelArchetype(archetypeHint);
+  if (!resolved) return scoreResult.top;
+  const hinted = scoreResult.ranked.find((r) => r.archetype.slug === resolved.archetype.slug);
+  return hinted ?? scoreResult.top;
 }
 
 export const archetypeRecommendTool: DbxTool = {

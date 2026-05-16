@@ -181,24 +181,31 @@ function extractTemplateInfoAggregates(sources: readonly SourceFile[]): readonly
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const name = decl.getName();
-        if (!name.startsWith('ALL_') || !name.endsWith(ALL_TEMPLATE_INFO_ARRAY_SUFFIX)) continue;
-        const typeText = typeAnnotationText(decl);
-        if (typeText !== NOTIF_TEMPLATE_TYPE_INFO_ARRAY) continue;
-        const arr = asArrayLiteral(decl.getInitializer());
-        if (!arr) continue;
-        const ids: string[] = [];
-        for (const el of arr.getElements()) {
-          const inner = unwrapAsExpressions(el);
-          if (inner && Node.isIdentifier(inner)) {
-            ids.push(inner.getText());
-          }
-        }
-        out.push({ symbolName: name, infoIdentifiers: ids, sourceFile: rel });
+        tryExtractTemplateInfoAggregate(decl, rel, out);
       }
     }
   }
   return out;
+}
+
+function tryExtractTemplateInfoAggregate(decl: VariableDeclaration, rel: string, out: ExtractedTemplateInfoAggregateArray[]): void {
+  const name = decl.getName();
+  if (!name.startsWith('ALL_') || !name.endsWith(ALL_TEMPLATE_INFO_ARRAY_SUFFIX)) return;
+  if (typeAnnotationText(decl) !== NOTIF_TEMPLATE_TYPE_INFO_ARRAY) return;
+  const arr = asArrayLiteral(decl.getInitializer());
+  if (!arr) return;
+  out.push({ symbolName: name, infoIdentifiers: collectIdentifierElements(arr), sourceFile: rel });
+}
+
+function collectIdentifierElements(arr: ArrayLiteralExpression): string[] {
+  const ids: string[] = [];
+  for (const el of arr.getElements()) {
+    const inner = unwrapAsExpressions(el);
+    if (inner && Node.isIdentifier(inner)) {
+      ids.push(inner.getText());
+    }
+  }
+  return ids;
 }
 
 // MARK: Task type constants
@@ -229,25 +236,21 @@ function extractTaskAllTypesAggregates(sources: readonly SourceFile[]): readonly
     const rel = componentRelPath(sf);
     for (const stmt of sf.getVariableStatements()) {
       for (const decl of stmt.getDeclarations()) {
-        const name = decl.getName();
-        const nameMatches = name.startsWith('ALL_') && name.endsWith(ALL_TASK_TYPES_ARRAY_SUFFIX);
-        const typeText = typeAnnotationText(decl);
-        const typeMatches = typeText === NOTIF_TASK_TYPE_ARRAY;
-        if (!nameMatches && !typeMatches) continue;
-        const arr = asArrayLiteral(decl.getInitializer());
-        if (!arr) continue;
-        const ids: string[] = [];
-        for (const el of arr.getElements()) {
-          const inner = unwrapAsExpressions(el);
-          if (inner && Node.isIdentifier(inner)) {
-            ids.push(inner.getText());
-          }
-        }
-        out.push({ symbolName: name, taskTypeIdentifiers: ids, sourceFile: rel });
+        tryExtractTaskAllTypesAggregate(decl, rel, out);
       }
     }
   }
   return out;
+}
+
+function tryExtractTaskAllTypesAggregate(decl: VariableDeclaration, rel: string, out: ExtractedTaskTypeAggregateArray[]): void {
+  const name = decl.getName();
+  const nameMatches = name.startsWith('ALL_') && name.endsWith(ALL_TASK_TYPES_ARRAY_SUFFIX);
+  const typeMatches = typeAnnotationText(decl) === NOTIF_TASK_TYPE_ARRAY;
+  if (!nameMatches && !typeMatches) return;
+  const arr = asArrayLiteral(decl.getInitializer());
+  if (!arr) return;
+  out.push({ symbolName: name, taskTypeIdentifiers: collectIdentifierElements(arr), sourceFile: rel });
 }
 
 // MARK: Checkpoint aliases + data interfaces
@@ -453,24 +456,32 @@ function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex
   const map = new Map<string, ApiFunctionEntry>();
   for (const sf of sources) {
     const rel = apiRelPath(sf);
-    for (const fn of sf.getFunctions()) {
-      const name = fn.getName();
-      if (name) {
-        map.set(name, { node: fn, sourceFile: sf, relPath: rel });
-      }
-    }
-    for (const stmt of sf.getVariableStatements()) {
-      for (const decl of stmt.getDeclarations()) {
-        const initializer = unwrapAsExpressions(decl.getInitializer());
-        if (!initializer) continue;
-        if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
-          map.set(decl.getName(), { node: initializer, sourceFile: sf, relPath: rel });
-        }
-      }
-    }
+    indexFunctionDeclarations(sf, rel, map);
+    indexFunctionVariableDeclarations(sf, rel, map);
   }
   const result: ApiFunctionIndex = { functionsByName: map };
   return result;
+}
+
+function indexFunctionDeclarations(sf: SourceFile, rel: string, map: Map<string, ApiFunctionEntry>): void {
+  for (const fn of sf.getFunctions()) {
+    const name = fn.getName();
+    if (name) {
+      map.set(name, { node: fn, sourceFile: sf, relPath: rel });
+    }
+  }
+}
+
+function indexFunctionVariableDeclarations(sf: SourceFile, rel: string, map: Map<string, ApiFunctionEntry>): void {
+  for (const stmt of sf.getVariableStatements()) {
+    for (const decl of stmt.getDeclarations()) {
+      const initializer = unwrapAsExpressions(decl.getInitializer());
+      if (!initializer) continue;
+      if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
+        map.set(decl.getName(), { node: initializer, sourceFile: sf, relPath: rel });
+      }
+    }
+  }
 }
 
 function extractTemplateConfigsArrayFactory(sources: readonly SourceFile[], index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {

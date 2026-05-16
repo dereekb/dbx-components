@@ -105,13 +105,7 @@ export interface FormatRecommendationInput {
  * @returns the markdown body
  */
 export function formatRecommendation(input: FormatRecommendationInput): string {
-  const lines: string[] = [];
-  lines.push(...formatRecommendationHeader(input));
-  lines.push(...formatRecommendationWhy(input.top));
-  lines.push(...formatRecommendationShape(input));
-  lines.push(...formatRecommendationPeers(input));
-  lines.push(...formatRecommendationPointers(input.top.archetype));
-  lines.push(...formatRecommendationAlternatives(input.alternatives));
+  const lines: string[] = [...formatRecommendationHeader(input), ...formatRecommendationWhy(input.top), ...formatRecommendationShape(input), ...formatRecommendationPeers(input), ...formatRecommendationPointers(input.top.archetype), ...formatRecommendationAlternatives(input.alternatives)];
   return lines.join('\n').trimEnd();
 }
 
@@ -169,40 +163,14 @@ function formatRecommendationShape(input: FormatRecommendationInput): readonly s
   const archetype = top.archetype;
   const lines: string[] = ['', '## Shape', ''];
 
-  if (archetype.expected.parentRelation && archetype.expected.parentRelation.length > 0) {
-    const parents = archetype.expected.parentRelation.map(wrapBacktick).join(' / ');
-    lines.push(`- **Parent:** ${parents}`);
-  } else {
-    lines.push('- **Parent:** —');
-  }
+  appendParentLine(lines, archetype.expected.parentRelation);
   lines.push(`- **collectionKind:** ${wrapBacktick(archetype.collectionKind)}`);
-
-  if (archetype.expected.docIdSource && archetype.expected.docIdSource.length > 0) {
-    const docIds = archetype.expected.docIdSource.map(wrapBacktick).join(' / ');
-    lines.push(`- **Doc ID source:** ${docIds}`);
-  }
-  if (archetype.expected.syncMode && archetype.expected.syncMode.length > 0) {
-    const syncModes = archetype.expected.syncMode.map(wrapBacktick).join(' / ');
-    lines.push(`- **Sync mode:** ${syncModes}`);
-  }
+  appendExpectedList(lines, 'Doc ID source', archetype.expected.docIdSource);
+  appendExpectedList(lines, 'Sync mode', archetype.expected.syncMode);
 
   const alternatives = axisAlternatives ?? {};
-  for (const [k, v] of Object.entries(axes)) {
-    const altList = alternatives[k];
-    if (altList && altList.length > 0) {
-      const allValues = [v, ...altList].map(wrapBacktick).join(' OR ');
-      lines.push(`- **${k}:** ${allValues}  _(ambiguous — flag the choice in the design doc)_`);
-    } else {
-      lines.push(`- **${k}:** ${wrapBacktick(v)}`);
-    }
-  }
-  // Surface alternatives that don't have a primary value (rare, but possible)
-  for (const [k, alts] of Object.entries(alternatives)) {
-    if (axes[k] === undefined && alts.length > 0) {
-      const allValues = alts.map(wrapBacktick).join(' OR ');
-      lines.push(`- **${k}:** ${allValues}  _(ambiguous — flag the choice in the design doc)_`);
-    }
-  }
+  appendAxisLines(lines, axes, alternatives);
+  appendUnpairedAlternatives(lines, axes, alternatives);
 
   if (addons.length > 0) {
     const addonsList = addons.map(wrapBacktick).join(', ');
@@ -212,6 +180,42 @@ function formatRecommendationShape(input: FormatRecommendationInput): readonly s
     lines.push(`- **Extension cluster:** ${wrapBacktick(archetype.extensionCluster)}`);
   }
   return lines;
+}
+
+function appendParentLine(lines: string[], parentRelation: readonly string[] | undefined): void {
+  if (parentRelation && parentRelation.length > 0) {
+    const parents = parentRelation.map(wrapBacktick).join(' / ');
+    lines.push(`- **Parent:** ${parents}`);
+  } else {
+    lines.push('- **Parent:** —');
+  }
+}
+
+function appendExpectedList(lines: string[], label: string, values: readonly string[] | undefined): void {
+  if (values === undefined || values.length === 0) return;
+  const formatted = values.map(wrapBacktick).join(' / ');
+  lines.push(`- **${label}:** ${formatted}`);
+}
+
+function appendAxisLines(lines: string[], axes: ResolvedAxes, alternatives: ResolvedAxisAlternatives): void {
+  for (const [k, v] of Object.entries(axes)) {
+    const altList = alternatives[k];
+    if (altList && altList.length > 0) {
+      const allValues = [v, ...altList].map(wrapBacktick).join(' OR ');
+      lines.push(`- **${k}:** ${allValues}  _(ambiguous — flag the choice in the design doc)_`);
+    } else {
+      lines.push(`- **${k}:** ${wrapBacktick(v)}`);
+    }
+  }
+}
+
+function appendUnpairedAlternatives(lines: string[], axes: ResolvedAxes, alternatives: ResolvedAxisAlternatives): void {
+  for (const [k, alts] of Object.entries(alternatives)) {
+    if (axes[k] === undefined && alts.length > 0) {
+      const allValues = alts.map(wrapBacktick).join(' OR ');
+      lines.push(`- **${k}:** ${allValues}  _(ambiguous — flag the choice in the design doc)_`);
+    }
+  }
 }
 
 function formatRecommendationPeers(input: FormatRecommendationInput): readonly string[] {

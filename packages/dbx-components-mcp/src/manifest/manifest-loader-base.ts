@@ -112,42 +112,49 @@ const DEFAULT_READ_FILE: ManifestReadFile = (path) => nodeReadFile(path, 'utf-8'
 const SUPPORTED_VERSION = 1;
 
 // MARK: Source loading
-async function loadFromSource<TManifest>(source: ManifestSource, readFile: ManifestReadFile, schema: (parsed: unknown) => TManifest | type.errors): Promise<LoadFromSourceResult<TManifest>> {
-  let raw: string | null = null;
+type ParseRawResult = { readonly kind: 'parsed'; readonly value: unknown } | { readonly kind: 'error'; readonly error: string };
+
+function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<string | null> {
+  return readFile(path).then(
+    (raw) => raw,
+    () => null
+  );
+}
+
+function tryParseRaw(raw: string): ParseRawResult {
   try {
-    raw = await readFile(source.path);
-  } catch {
-    raw = null;
+    return { kind: 'parsed', value: JSON.parse(raw) };
+  } catch (err) {
+    return { kind: 'error', error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+function validateParsedManifest<TManifest>(path: string, parsed: unknown, schema: (parsed: unknown) => TManifest | type.errors): LoadFromSourceResult<TManifest> {
+  const candidateVersion = (parsed as { readonly version?: unknown } | null | undefined)?.version;
+  if (candidateVersion !== SUPPORTED_VERSION) {
+    return { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
   }
 
-  let result: LoadFromSourceResult<TManifest>;
-  if (raw === null) {
-    result = { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
-  } else {
-    let parsed: unknown;
-    let parseError: string | null = null;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      parseError = err instanceof Error ? err.message : String(err);
-    }
-    if (parseError === null) {
-      const candidateVersion = (parsed as { readonly version?: unknown } | null | undefined)?.version;
-      if (candidateVersion === SUPPORTED_VERSION) {
-        const validated = schema(parsed);
-        if (validated instanceof type.errors) {
-          result = { kind: 'failure', warning: { kind: 'manifest-schema-failed', path: source.path, error: validated.summary } };
-        } else {
-          result = { kind: 'success', manifest: validated };
-        }
-      } else {
-        result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path: source.path, version: candidateVersion } };
-      }
-    } else {
-      result = { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseError } };
-    }
+  const validated = schema(parsed);
+  if (validated instanceof type.errors) {
+    return { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
   }
-  return result;
+
+  return { kind: 'success', manifest: validated };
+}
+
+async function loadFromSource<TManifest>(source: ManifestSource, readFile: ManifestReadFile, schema: (parsed: unknown) => TManifest | type.errors): Promise<LoadFromSourceResult<TManifest>> {
+  const raw = await tryReadRaw(source.path, readFile);
+  if (raw === null) {
+    return { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
+  }
+
+  const parseResult = tryParseRaw(raw);
+  if (parseResult.kind === 'error') {
+    return { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseResult.error } };
+  }
+
+  return validateParsedManifest(source.path, parseResult.value, schema);
 }
 
 function isStrictSource(source: ManifestSource): boolean {
@@ -177,6 +184,78 @@ function warningSortKey(warning: ManifestLoaderWarning): string {
 }
 
 // MARK: Entry point
+interface SourceLoadAccumulator<TManifest> {
+  readonly successes: { readonly source: ManifestSource; readonly manifest: TManifest }[];
+  readonly warnings: ManifestLoaderWarning[];
+}
+
+async function collectSourceOutcomes<TManifest>(config: { readonly sources: readonly ManifestSource[]; readonly readFile: ManifestReadFile; readonly schema: (parsed: unknown) => TManifest | type.errors; readonly name: string }): Promise<SourceLoadAccumulator<TManifest>> {
+  const { sources, readFile, schema, name } = config;
+  const successes: { readonly source: ManifestSource; readonly manifest: TManifest }[] = [];
+  const warnings: ManifestLoaderWarning[] = [];
+
+  for (const source of sources) {
+    const outcome = await loadFromSource(source, readFile, schema);
+    if (outcome.kind === 'success') {
+      successes.push({ source, manifest: outcome.manifest });
+    } else if (isStrictSource(source)) {
+      throw new Error(`${name}: strict source failed (${outcome.warning.kind}): ${source.path}`);
+    } else {
+      warnings.push(outcome.warning);
+    }
+  }
+
+  return { successes, warnings };
+}
+
+interface MergeManifestContext<TManifest extends BaseManifest<TEntry>, TEntry> {
+  readonly source: ManifestSource;
+  readonly manifest: TManifest;
+  readonly buildEntryKey: (manifest: TManifest, entry: TEntry) => string;
+  readonly seenSources: Map<string, string>;
+  readonly loadedSources: string[];
+  readonly mergedEntries: Map<string, TEntry>;
+  readonly entryProvenance: Map<string, string>;
+  readonly warnings: ManifestLoaderWarning[];
+}
+
+function mergeManifest<TManifest extends BaseManifest<TEntry>, TEntry>(context: MergeManifestContext<TManifest, TEntry>): void {
+  const { source, manifest, buildEntryKey, seenSources, loadedSources, mergedEntries, entryProvenance, warnings } = context;
+  const existingPath = seenSources.get(manifest.source);
+  if (existingPath !== undefined) {
+    warnings.push({ kind: 'source-label-collision', source: manifest.source, existingPath, droppedPath: source.path });
+    return;
+  }
+  seenSources.set(manifest.source, source.path);
+  loadedSources.push(manifest.source);
+
+  for (const entry of manifest.entries) {
+    const entryKey = buildEntryKey(manifest, entry);
+    const previousSource = entryProvenance.get(entryKey);
+    if (previousSource !== undefined) {
+      warnings.push({ kind: 'entry-collision', entryKey, winningSource: manifest.source, losingSource: previousSource });
+    }
+    mergedEntries.set(entryKey, entry);
+    entryProvenance.set(entryKey, manifest.source);
+  }
+}
+
+function buildIndexMap<TEntry>(mergedEntries: ReadonlyMap<string, TEntry>, extractIndexValue: (entry: TEntry) => string): Map<string, readonly string[]> {
+  const indexMap = new Map<string, readonly string[]>();
+  for (const [entryKey, entry] of mergedEntries) {
+    const indexValue = extractIndexValue(entry);
+    const existing = indexMap.get(indexValue);
+    indexMap.set(indexValue, existing === undefined ? [entryKey] : [...existing, entryKey]);
+  }
+  for (const [indexValue, keys] of indexMap) {
+    indexMap.set(
+      indexValue,
+      [...keys].sort((a, b) => a.localeCompare(b))
+    );
+  }
+  return indexMap;
+}
+
 /**
  * Loads, validates, and merges the supplied manifest sources into a single
  * registry. Strict sources fail loud; non-strict sources fail soft. If
@@ -195,19 +274,7 @@ export async function loadManifestsBase<TManifest extends BaseManifest<TEntry>, 
   const { sources, readFile = DEFAULT_READ_FILE } = input;
   const { name, schema, extractIndexValue, buildEntryKey } = config;
 
-  const successes: { readonly source: ManifestSource; readonly manifest: TManifest }[] = [];
-  const warnings: ManifestLoaderWarning[] = [];
-
-  for (const source of sources) {
-    const outcome = await loadFromSource(source, readFile, schema);
-    if (outcome.kind === 'success') {
-      successes.push({ source, manifest: outcome.manifest });
-    } else if (isStrictSource(source)) {
-      throw new Error(`${name}: strict source failed (${outcome.warning.kind}): ${source.path}`);
-    } else {
-      warnings.push(outcome.warning);
-    }
-  }
+  const { successes, warnings } = await collectSourceOutcomes({ sources, readFile, schema, name });
 
   if (successes.length === 0) {
     throw new Error(`${name}: zero manifests loaded successfully`);
@@ -219,52 +286,10 @@ export async function loadManifestsBase<TManifest extends BaseManifest<TEntry>, 
   const loadedSources: string[] = [];
 
   for (const { source, manifest } of successes) {
-    const existingPath = seenSources.get(manifest.source);
-    if (existingPath !== undefined) {
-      warnings.push({
-        kind: 'source-label-collision',
-        source: manifest.source,
-        existingPath,
-        droppedPath: source.path
-      });
-      continue;
-    }
-    seenSources.set(manifest.source, source.path);
-    loadedSources.push(manifest.source);
-
-    for (const entry of manifest.entries) {
-      const entryKey = buildEntryKey(manifest, entry);
-      const previousSource = entryProvenance.get(entryKey);
-      if (previousSource !== undefined) {
-        warnings.push({
-          kind: 'entry-collision',
-          entryKey,
-          winningSource: manifest.source,
-          losingSource: previousSource
-        });
-      }
-      mergedEntries.set(entryKey, entry);
-      entryProvenance.set(entryKey, manifest.source);
-    }
+    mergeManifest({ source, manifest, buildEntryKey, seenSources, loadedSources, mergedEntries, entryProvenance, warnings });
   }
 
-  const indexMap = new Map<string, readonly string[]>();
-  for (const [entryKey, entry] of mergedEntries) {
-    const indexValue = extractIndexValue(entry);
-    const existing = indexMap.get(indexValue);
-    if (existing === undefined) {
-      indexMap.set(indexValue, [entryKey]);
-    } else {
-      indexMap.set(indexValue, [...existing, entryKey]);
-    }
-  }
-  for (const [indexValue, keys] of indexMap) {
-    indexMap.set(
-      indexValue,
-      [...keys].sort((a, b) => a.localeCompare(b))
-    );
-  }
-
+  const indexMap = buildIndexMap(mergedEntries, extractIndexValue);
   warnings.sort((a, b) => warningSortKey(a).localeCompare(warningSortKey(b)));
 
   return {

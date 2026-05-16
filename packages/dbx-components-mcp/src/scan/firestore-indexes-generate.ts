@@ -26,7 +26,7 @@
  * `unchanged`) so the CLI / MCP tool can render a clear CI report.
  */
 
-import { type DerivedComposite, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder , DEFAULT_FIRESTORE_INDEX_DENSITY } from '../manifest/model-firebase-index-schema.js';
+import { type DerivedComposite, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder, DEFAULT_FIRESTORE_INDEX_DENSITY } from '../manifest/model-firebase-index-schema.js';
 import type { ModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
 
 // MARK: firestore.indexes.json shape
@@ -130,35 +130,8 @@ export interface GenerateFirestoreIndexesJsonResult {
 export function generateFirestoreIndexesJson(input: GenerateFirestoreIndexesJsonInput): GenerateFirestoreIndexesJsonResult {
   const { entries, existingJson } = input;
 
-  const manualSlugs = new Set<string>();
-  const generatedComposites: FirestoreIndexJsonEntry[] = [];
-  const overrideVariants = new Map<string, DerivedFieldOverrideVariant[]>();
+  const { generatedComposites, overrideVariants } = collectDerivedEntries(entries);
 
-  for (const entry of entries) {
-    if (entry.skip) {
-      continue;
-    }
-    if (entry.manual) {
-      manualSlugs.add(entry.slug);
-      continue;
-    }
-    for (const composite of entry.derivedComposites) {
-      generatedComposites.push(buildCompositeJson(composite));
-    }
-    for (const fieldOverride of entry.derivedFieldOverrides) {
-      const key = `${fieldOverride.collectionGroup}::${fieldOverride.fieldPath}`;
-      const list = overrideVariants.get(key) ?? [];
-      for (const variant of fieldOverride.variants) {
-        if (!list.some((v) => variantsEqual(v, variant))) {
-          list.push(variant);
-        }
-      }
-      overrideVariants.set(key, list);
-    }
-  }
-
-  // Drop duplicate composites the generator produced (multiple factories
-  // can require the same index — only emit one entry).
   const dedupedComposites = dedupeCompositesPreservingFirst(generatedComposites);
 
   // Build field overrides from the analyzed variants, padding with the
@@ -206,6 +179,39 @@ export function generateFirestoreIndexesJson(input: GenerateFirestoreIndexesJson
  */
 export function serializeFirestoreIndexesJson(json: FirestoreIndexesJson): string {
   return `${JSON.stringify(json, null, 2)}\n`;
+}
+
+interface CollectedDerivedEntries {
+  readonly generatedComposites: FirestoreIndexJsonEntry[];
+  readonly overrideVariants: Map<string, DerivedFieldOverrideVariant[]>;
+}
+
+function collectDerivedEntries(entries: readonly ModelFirebaseIndexEntryInfo[]): CollectedDerivedEntries {
+  const generatedComposites: FirestoreIndexJsonEntry[] = [];
+  const overrideVariants = new Map<string, DerivedFieldOverrideVariant[]>();
+  for (const entry of entries) {
+    if (entry.skip || entry.manual) {
+      continue;
+    }
+    for (const composite of entry.derivedComposites) {
+      generatedComposites.push(buildCompositeJson(composite));
+    }
+    for (const fieldOverride of entry.derivedFieldOverrides) {
+      mergeFieldOverrideVariants(overrideVariants, fieldOverride);
+    }
+  }
+  return { generatedComposites, overrideVariants };
+}
+
+function mergeFieldOverrideVariants(overrideVariants: Map<string, DerivedFieldOverrideVariant[]>, fieldOverride: ModelFirebaseIndexEntryInfo['derivedFieldOverrides'][number]): void {
+  const key = `${fieldOverride.collectionGroup}::${fieldOverride.fieldPath}`;
+  const list = overrideVariants.get(key) ?? [];
+  for (const variant of fieldOverride.variants) {
+    if (!list.some((v) => variantsEqual(v, variant))) {
+      list.push(variant);
+    }
+  }
+  overrideVariants.set(key, list);
 }
 
 // MARK: Internals - composite construction
@@ -407,12 +413,19 @@ function computeDiff(input: ComputeDiffInput): FirestoreIndexesDiff {
       fieldOverridesRemoved.push(key);
     }
   }
+  const byLocale = (a: string, b: string): number => a.localeCompare(b);
+  added.sort(byLocale);
+  removed.sort(byLocale);
+  unchanged.sort(byLocale);
+  fieldOverridesAdded.sort(byLocale);
+  fieldOverridesRemoved.sort(byLocale);
+  fieldOverridesUnchanged.sort(byLocale);
   return {
-    added: added.sort((a, b) => a.localeCompare(b)),
-    removed: removed.sort((a, b) => a.localeCompare(b)),
-    unchanged: unchanged.sort((a, b) => a.localeCompare(b)),
-    fieldOverridesAdded: fieldOverridesAdded.sort((a, b) => a.localeCompare(b)),
-    fieldOverridesRemoved: fieldOverridesRemoved.sort((a, b) => a.localeCompare(b)),
-    fieldOverridesUnchanged: fieldOverridesUnchanged.sort((a, b) => a.localeCompare(b))
+    added,
+    removed,
+    unchanged,
+    fieldOverridesAdded,
+    fieldOverridesRemoved,
+    fieldOverridesUnchanged
   };
 }

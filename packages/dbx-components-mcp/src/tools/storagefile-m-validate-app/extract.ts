@@ -207,24 +207,32 @@ interface ApiFunctionIndex {
 function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex {
   const map = new Map<string, { readonly node: ApiFunctionNode; readonly sourceFile: SourceFile }>();
   for (const sf of sources) {
-    for (const fn of sf.getFunctions()) {
-      const name = fn.getName();
-      if (name) {
-        map.set(name, { node: fn, sourceFile: sf });
-      }
-    }
-    for (const stmt of sf.getVariableStatements()) {
-      for (const decl of stmt.getDeclarations()) {
-        const initializer = unwrapAsExpressions(decl.getInitializer());
-        if (!initializer) continue;
-        if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
-          map.set(decl.getName(), { node: initializer, sourceFile: sf });
-        }
-      }
-    }
+    indexStorageFileApiFunctions(sf, map);
+    indexStorageFileApiVariableFunctions(sf, map);
   }
   const result: ApiFunctionIndex = { functionsByName: map };
   return result;
+}
+
+function indexStorageFileApiFunctions(sf: SourceFile, map: Map<string, { readonly node: ApiFunctionNode; readonly sourceFile: SourceFile }>): void {
+  for (const fn of sf.getFunctions()) {
+    const name = fn.getName();
+    if (name) {
+      map.set(name, { node: fn, sourceFile: sf });
+    }
+  }
+}
+
+function indexStorageFileApiVariableFunctions(sf: SourceFile, map: Map<string, { readonly node: ApiFunctionNode; readonly sourceFile: SourceFile }>): void {
+  for (const stmt of sf.getVariableStatements()) {
+    for (const decl of stmt.getDeclarations()) {
+      const initializer = unwrapAsExpressions(decl.getInitializer());
+      if (!initializer) continue;
+      if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
+        map.set(decl.getName(), { node: initializer, sourceFile: sf });
+      }
+    }
+  }
 }
 
 /**
