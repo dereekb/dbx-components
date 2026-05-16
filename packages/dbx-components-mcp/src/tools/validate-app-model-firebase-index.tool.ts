@@ -71,18 +71,60 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     '',
     'Optional tags:',
     '- `@dbxModelFirebaseIndexScope COLLECTION | COLLECTION_GROUP` — overrides the default (COLLECTION for root models, COLLECTION_GROUP for nested).',
-    '- `@dbxModelFirebaseIndexPath <field>, <field>, ...` — one tag per call pattern. Use when the body has conditional branches (`if (foo) constraints.push(...)`) or when the deployed index has a field order that differs from body source order. Listed fields are selected from the body in path order. Repeat the tag for each distinct call pattern (e.g. one tag for the always-on shape, another for the with-extra-filter shape).',
+    '- `@dbxModelFirebaseIndexDispatcher` — marks a function as a *dispatcher*: it must only delegate to other tagged query functions via `switch`/`if`/`return` and must NOT call `where`, `orderBy`, or any helper itself. Dispatchers emit no index of their own; they exist so callers have a single entry-point that picks the right per-index function based on a mode/type parameter. See "Dispatcher pattern" below.',
+    '- `@dbxModelFirebaseIndexPath <field>, <field>, ...` — one sequence per tag, filtered to the listed fields (preserves declared order). Use when a static body has multiple `where`/`orderBy` calls and you want to emit multiple composites from it. NOTE: as of this version the body must be branch-free; previously this tag was the escape hatch for `if`-branched bodies, but those now error with `complex-query-body`.',
     "- `@dbxModelFirebaseIndexSkip` — do not emit this factory's own index. Its body still contributes constraints to callers via transitive splicing.",
     '- `@dbxModelFirebaseIndexManual` — author manages this index by hand; the generator skips it but the deployed shape is treated as expected (no `removed` drift).',
     '- `@dbxModelFirebaseIndexCategory`, `@dbxModelFirebaseIndexTags`, `@dbxModelFirebaseIndexSlug`, `@dbxModelFirebaseIndexRelated`, `@dbxModelFirebaseIndexSkillRefs` — lookup/search metadata; no effect on index generation.',
+    '',
+    '## One query function per target index',
+    '',
+    'Tagged query bodies must be **branch-free**: no `if` / `else`, no `switch`, no ternary (`?:`), no `for` / `while` / `do` loops. Each tagged function produces exactly one constraint shape and therefore exactly one composite/fieldOverride. Express variation by writing multiple tagged functions and routing between them with a dispatcher.',
+    '',
+    '```ts',
+    '/**',
+    ' * @dbxModelFirebaseIndex',
+    ' * @dbxModelFirebaseIndexModel JobDigest',
+    ' */',
+    'export function jobDigestsQuery(params: JobDigestsQueryParams): FirestoreQueryConstraint[] {',
+    '  const { now, type } = params;',
+    "  return [where<JobDigest>('t', 'in', type), ...whereDateIsBeforeWithSort<JobDigest>('dat', now ?? undefined, 'asc')];",
+    '}',
+    '```',
+    '',
+    '## Dispatcher pattern',
+    '',
+    'When the calling code needs a single entry-point that picks between several per-index query functions, write a dispatcher:',
+    '',
+    '```ts',
+    '/**',
+    ' * @dbxModelFirebaseIndex',
+    ' * @dbxModelFirebaseIndexModel Job',
+    ' * @dbxModelFirebaseIndexDispatcher',
+    ' */',
+    'export function jobsQuery(params: JobsQueryParams): FirestoreQueryConstraint[] {',
+    '  switch (params.kind) {',
+    "    case 'byDistrict': return jobsByDistrictQuery(params);",
+    "    case 'byWeek':     return jobsByWeekQuery(params);",
+    '    default:           return jobsByStatusQuery(params);',
+    '  }',
+    '}',
+    '```',
+    '',
+    'Each `case` returns the result of a per-index query function. The dispatcher itself never calls `where`/`orderBy` and emits no index.',
     '',
     '## Transitive composition',
     '',
     "When a tagged factory `A` calls another exported function `B` that returns `FirestoreQueryConstraint` / `FirestoreQueryConstraint[]`, the extractor splices `B`'s body into `A`'s sequence at the call site. `B` must also be tagged `@dbxModelFirebaseIndex` (or marked `@dbxModelFirebaseIndexSkip` when it's a shared helper that shouldn't emit its own composite). Untagged constraint helpers raise `unannotated-query-helper`.",
     '',
-    '## Warning quick-reference',
+    '## Diagnostic reference',
     '',
-    '- `missing-paths` — body has conditional constraints but no `@dbxModelFirebaseIndexPath` tag. Add one path tag per call pattern.',
+    'Errors (validation fails when any are present):',
+    '- `complex-query-body` — a tagged query body uses `if` / `switch` / ternary / loop. Split into one tagged function per target index (each must be branch-free), or — if this function is only routing to other tagged queries — add `@dbxModelFirebaseIndexDispatcher`. See "Dispatcher pattern" above.',
+    '- `non-delegating-dispatcher` — a `@dbxModelFirebaseIndexDispatcher`-tagged function calls `where` / `orderBy` / a registered helper directly. Move the constraint construction into a sibling tagged function and have the dispatcher branch return its result instead.',
+    '',
+    'Warnings (advisory, do not fail the run):',
+    '- `missing-paths` — legacy: a body has conditional fields without `@dbxModelFirebaseIndexPath`. New code paths now error with `complex-query-body` first; this warning only fires when a tagged body somehow has conditional fields after the structural check skipped it.',
     '- `unknown-path-field` — a path tag references a field no `where`/`orderBy`/helper call produces. Fix the field list or extend the body.',
     "- `unannotated-query-helper` — a transitive callee returns `FirestoreQueryConstraint(s)` but isn't tagged. Tag the callee or mark it `@dbxModelFirebaseIndexSkip`.",
     '- `transitive-cycle` — `A → B → A` (or longer); break the recursion in source.',
@@ -112,6 +154,7 @@ interface ValidateAppReport {
   readonly generatedFieldOverrides: number;
   readonly existingComposites: number;
   readonly existingFieldOverrides: number;
+  readonly errors: readonly string[];
   readonly warnings: readonly string[];
 }
 
@@ -181,7 +224,16 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
   }
 
   const { existingJson, exists: indexesFileExists, readError } = await readExistingIndexesJson(indexesAbs);
-  const warnings = buildOutcome.extractWarnings.map(formatBuildWarning);
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  for (const buildWarning of buildOutcome.extractWarnings) {
+    const message = formatBuildWarning(buildWarning);
+    if (isErrorSeverity(buildWarning)) {
+      errors.push(message);
+    } else {
+      warnings.push(message);
+    }
+  }
   if (readError !== undefined) {
     warnings.push(`Could not read existing \`${indexesRelative}\`: ${readError}`);
   }
@@ -190,7 +242,7 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
   const registry = createModelFirebaseIndexRegistryFromEntries({ entries, loadedSources: [buildOutcome.manifest.source] });
   const { json, diff } = generateFirestoreIndexesJson({ entries: registry.all, existingJson });
 
-  const drift = diff.added.length > 0 || diff.removed.length > 0 || diff.fieldOverridesAdded.length > 0 || diff.fieldOverridesRemoved.length > 0;
+  const drift = errors.length > 0 || diff.added.length > 0 || diff.removed.length > 0 || diff.fieldOverridesAdded.length > 0 || diff.fieldOverridesRemoved.length > 0;
 
   const report: ValidateAppReport = {
     componentDir,
@@ -202,9 +254,14 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
     generatedFieldOverrides: json.fieldOverrides.length,
     existingComposites: existingJson?.indexes.length ?? 0,
     existingFieldOverrides: existingJson?.fieldOverrides.length ?? 0,
+    errors,
     warnings
   };
   return report;
+}
+
+function isErrorSeverity(buildWarning: ModelFirebaseIndexBuildWarning): boolean {
+  return buildWarning.stage === 'extract' && buildWarning.warning.severity === 'error';
 }
 
 async function readExistingIndexesJson(indexesAbs: string): Promise<{ readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string }> {
@@ -277,6 +334,7 @@ function emptyReport(componentDir: string, indexesRelative: string, warning: str
     generatedFieldOverrides: 0,
     existingComposites: 0,
     existingFieldOverrides: 0,
+    errors: [],
     warnings: [warning]
   };
 }
@@ -309,6 +367,19 @@ function formatBuildWarning(warning: ModelFirebaseIndexBuildWarning): string {
         return `${w.name} (${w.filePath}:${w.line}) transitive call to ${w.callee} would re-enter a factory already on the resolution stack — skipped to avoid infinite recursion`;
       case 'unresolvable-transitive-callee':
         return `${w.name} (${w.filePath}:${w.line}) could not locate the source for transitive callee ${w.callee} (likely a cross-package .d.ts import) — splice skipped`;
+      case 'complex-query-body':
+        return [
+          `${w.name} (${w.filePath}:${w.line}) tagged query body contains a \`${w.branchKind}\` construct.`,
+          `Tagged @dbxModelFirebaseIndex functions must be branch-free (no if/else, switch, ternary, or loops) so each maps to exactly one Firestore index.`,
+          `Fix: Either (a) split this function into one tagged factory per target index — each branch becomes its own function with a static constraint shape — or (b) if this function only routes to other per-index functions, mark it \`@dbxModelFirebaseIndexDispatcher\` and have each branch \`return <perIndexFn>(...)\` instead of building constraints inline.`,
+          `Run \`dbx_mcp_tool dbx_model_firebase_index_validate_app\` for the full dispatcher pattern in the tool description.`
+        ].join(' ');
+      case 'non-delegating-dispatcher':
+        return [
+          `${w.name} (${w.filePath}:${w.line}) is tagged \`@dbxModelFirebaseIndexDispatcher\` but calls \`${w.callee}\` directly.`,
+          `Dispatchers must only delegate to other tagged query functions (via \`return <perIndexQuery>(...)\` in each branch) and may not call \`where\`, \`orderBy\`, or any constraint helper themselves.`,
+          `Fix: Move the \`${w.callee}\` call into a sibling \`@dbxModelFirebaseIndex\`-tagged function (e.g. \`${w.name}_<variant>Query\`), then have this dispatcher \`return\` that function. If this function shouldn't be a dispatcher, remove the \`@dbxModelFirebaseIndexDispatcher\` tag instead — it will then validate as a regular branch-free query.`
+        ].join(' ');
     }
   }
   const w = warning.warning;
@@ -343,6 +414,13 @@ function formatReportAsMarkdown(report: ValidateAppReport): string {
   appendDiffSection(lines, 'fieldOverrides added (required, missing from JSON)', report.diff.fieldOverridesAdded);
   appendDiffSection(lines, 'fieldOverrides removed (in JSON, no factory requires it)', report.diff.fieldOverridesRemoved);
 
+  if (report.errors.length > 0) {
+    lines.push('## Errors', '');
+    for (const error of report.errors) {
+      lines.push(`- ${error}`);
+    }
+    lines.push('');
+  }
   if (report.warnings.length > 0) {
     lines.push('## Warnings', '');
     for (const warning of report.warnings) {

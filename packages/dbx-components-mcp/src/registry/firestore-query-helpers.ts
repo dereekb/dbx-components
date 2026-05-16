@@ -157,6 +157,25 @@ export const FIRESTORE_QUERY_HELPERS: readonly FirestoreQueryHelperDescriptor[] 
     ]
   },
 
+  // Dynamic single-field helper. The body branches on which DateRange bounds
+  // are present, but every branch operates on the same fieldPath argument and
+  // produces some subset of orderBy(field) + where(field,'>=') + where(field,'<=').
+  // For Firestore composite-index purposes the worst-case set collapses to a
+  // single ordered range index on that field — so the descriptor emits the
+  // worst case unconditionally. The body's internal conditionals are NOT
+  // scanned (helpers are opaque to the extractor; only tagged callers are).
+  {
+    name: 'filterWithDateRange',
+    fieldArgIndex: 0,
+    directionArgIndex: 2,
+    defaultDirection: 'asc',
+    parts: [
+      { kind: 'where', operator: '>=' },
+      { kind: 'where', operator: '<=' },
+      { kind: 'orderBy', useCallSiteDirection: true, direction: 'asc' }
+    ]
+  },
+
   // Prefix-string and child-doc helpers — range where + orderBy.
   {
     name: 'whereStringValueHasPrefix',

@@ -29,13 +29,14 @@
  */
 
 import { Node, SyntaxKind, type CallExpression, type FunctionDeclaration, type Identifier, type JSDoc, type ParameterDeclaration, type Project, type SourceFile } from 'ts-morph';
-import { type ConstraintSequence, type ConstraintSequenceEntry, type FirestoreQueryScope, type FirestoreWhereOperator, type ModelFirebaseIndexParamEntry , FIRESTORE_WHERE_OPERATORS } from '../manifest/model-firebase-index-schema.js';
+import { type ConstraintSequence, type ConstraintSequenceEntry, type FirestoreQueryScope, type FirestoreWhereOperator, type ModelFirebaseIndexParamEntry, FIRESTORE_WHERE_OPERATORS } from '../manifest/model-firebase-index-schema.js';
 import { type FirestoreModelIdentityResolver, type ResolvedFirestoreModelIdentity } from './firestore-model-identity-resolver.js';
 import { expandFirestoreQueryHelper, getFirestoreQueryHelperDescriptor } from '../registry/firestore-query-helpers.js';
 import { splitListTagText, unwrapFenced } from './scan-extract-utils.js';
 
 // MARK: Tag names
 const INDEX_MARKER = 'dbxModelFirebaseIndex';
+const INDEX_DISPATCHER_TAG = 'dbxModelFirebaseIndexDispatcher';
 const INDEX_MODEL_TAG = 'dbxModelFirebaseIndexModel';
 const INDEX_SCOPE_TAG = 'dbxModelFirebaseIndexScope';
 const INDEX_MANUAL_TAG = 'dbxModelFirebaseIndexManual';
@@ -46,6 +47,23 @@ const INDEX_RELATED_TAG = 'dbxModelFirebaseIndexRelated';
 const INDEX_SKILL_REFS_TAG = 'dbxModelFirebaseIndexSkillRefs';
 const INDEX_SLUG_TAG = 'dbxModelFirebaseIndexSlug';
 const INDEX_PATH_TAG = 'dbxModelFirebaseIndexPath';
+
+/**
+ * SyntaxKind values that disqualify a tagged query function from the
+ * "one factory per target index, no branching" convention. Each tagged
+ * non-dispatcher factory whose body contains any of these emits a
+ * `complex-query-body` error and skips constraint extraction.
+ */
+const COMPLEX_BODY_SYNTAX_KINDS: ReadonlyMap<SyntaxKind, ComplexQueryBranchKind> = new Map<SyntaxKind, ComplexQueryBranchKind>([
+  [SyntaxKind.IfStatement, 'if'],
+  [SyntaxKind.SwitchStatement, 'switch'],
+  [SyntaxKind.ConditionalExpression, 'ternary'],
+  [SyntaxKind.ForStatement, 'loop'],
+  [SyntaxKind.ForOfStatement, 'loop'],
+  [SyntaxKind.ForInStatement, 'loop'],
+  [SyntaxKind.WhileStatement, 'loop'],
+  [SyntaxKind.DoStatement, 'loop']
+]);
 
 // MARK: Public types
 /**
@@ -84,19 +102,28 @@ export interface ExtractedModelFirebaseIndexEntry {
  * Discriminated union of the non-fatal events the extractor emits when an
  * entry can't be assembled cleanly.
  */
+export type ModelFirebaseIndexExtractWarningSeverity = 'error' | 'warning';
+
+/**
+ * The branch construct that disqualified a tagged query factory's body.
+ */
+export type ComplexQueryBranchKind = 'if' | 'switch' | 'ternary' | 'loop';
+
 export type ModelFirebaseIndexExtractWarning =
-  | { readonly kind: 'missing-name'; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'missing-model-tag'; readonly name: string; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'unresolved-model'; readonly name: string; readonly model: string; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'unsupported-scope'; readonly name: string; readonly scope: string; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'duplicate-slug'; readonly name: string; readonly slug: string; readonly previousName: string; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'unknown-helper'; readonly name: string; readonly helper: string; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'unresolved-field'; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'missing-paths'; readonly name: string; readonly conditionalFields: readonly string[]; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'unknown-path-field'; readonly name: string; readonly field: string; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'unannotated-query-helper'; readonly name: string; readonly callee: string; readonly calleeFilePath: string; readonly calleeLine: number; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'transitive-cycle'; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'unresolvable-transitive-callee'; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number };
+  | { readonly kind: 'missing-name'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'missing-model-tag'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unresolved-model'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly model: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unsupported-scope'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly scope: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'duplicate-slug'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly slug: string; readonly previousName: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unknown-helper'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly helper: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unresolved-field'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'missing-paths'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly conditionalFields: readonly string[]; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unknown-path-field'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly field: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unannotated-query-helper'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly calleeFilePath: string; readonly calleeLine: number; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'transitive-cycle'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'unresolvable-transitive-callee'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'complex-query-body'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly branchKind: ComplexQueryBranchKind; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'non-delegating-dispatcher'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number };
 
 /**
  * Input to {@link extractModelFirebaseIndexEntries}.
@@ -147,7 +174,7 @@ export function extractModelFirebaseIndexEntries(input: ExtractModelFirebaseInde
           slugProvenance.set(built.entry.slug, { name: built.entry.name, filePath, line: built.entry.line });
           entries.push(built.entry);
         } else {
-          warnings.push({ kind: 'duplicate-slug', name: built.entry.name, slug: built.entry.slug, previousName: previous.name, filePath, line: built.entry.line });
+          warnings.push({ kind: 'duplicate-slug', severity: 'warning', name: built.entry.name, slug: built.entry.slug, previousName: previous.name, filePath, line: built.entry.line });
         }
       }
       for (const warning of built.warnings) {
@@ -199,6 +226,7 @@ interface ParsedIndexTags {
   readonly scope?: string;
   readonly manual: boolean;
   readonly skip: boolean;
+  readonly dispatcher: boolean;
   readonly category?: string;
   readonly explicitTags: readonly string[];
   readonly relatedSlugs: readonly string[];
@@ -223,6 +251,7 @@ interface MutableTagState {
   scope: string | undefined;
   manual: boolean;
   skip: boolean;
+  dispatcher: boolean;
   category: string | undefined;
   readonly explicitTags: string[];
   readonly relatedSlugs: string[];
@@ -243,6 +272,7 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     scope: undefined,
     manual: false,
     skip: false,
+    dispatcher: false,
     category: undefined,
     explicitTags: [],
     relatedSlugs: [],
@@ -281,6 +311,7 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     scope: state.scope,
     manual: state.manual,
     skip: state.skip,
+    dispatcher: state.dispatcher,
     category: state.category,
     explicitTags: state.explicitTags,
     relatedSlugs: state.relatedSlugs,
@@ -312,6 +343,9 @@ function applyTag(state: MutableTagState, name: string, text: string): void {
       break;
     case INDEX_SKIP_TAG:
       state.skip = parseBooleanTag(text) ?? true;
+      break;
+    case INDEX_DISPATCHER_TAG:
+      state.dispatcher = parseBooleanTag(text) ?? true;
       break;
     case INDEX_CATEGORY_TAG:
       state.category = text;
@@ -390,20 +424,20 @@ function buildEntry(input: BuildEntryInput): BuildEntryResult {
   const name = candidate.decl.getName();
   const line = candidate.decl.getStartLineNumber();
   if (name === undefined || name.length === 0) {
-    warnings.push({ kind: 'missing-name', filePath, line });
+    warnings.push({ kind: 'missing-name', severity: 'warning', filePath, line });
     return { kind: 'skipped', warnings };
   }
 
   const tags = readJsDocTags(candidate.jsDocs);
 
   if (tags.model === undefined || tags.model.length === 0) {
-    warnings.push({ kind: 'missing-model-tag', name, filePath, line });
+    warnings.push({ kind: 'missing-model-tag', severity: 'warning', name, filePath, line });
     return { kind: 'skipped', warnings };
   }
 
   const resolved = identityResolver.lookupByTypeName(tags.model);
   if (resolved === undefined) {
-    warnings.push({ kind: 'unresolved-model', name, model: tags.model, filePath, line });
+    warnings.push({ kind: 'unresolved-model', severity: 'warning', name, model: tags.model, filePath, line });
     return { kind: 'skipped', warnings };
   }
 
@@ -421,22 +455,23 @@ function buildEntry(input: BuildEntryInput): BuildEntryResult {
   const category = tags.category && tags.category.length > 0 ? tags.category : 'misc';
   const tagSet = buildTagSet({ name, slug, summary: tags.summary, explicit: tags.explicitTags, category, model: tags.model });
 
-  const bodyResult = extractConstraintsFromBody({ decl: candidate.decl, factoryName: name, filePath });
+  const bodyResult = extractConstraintsFromBody({ decl: candidate.decl, factoryName: name, filePath, dispatcher: tags.dispatcher });
   for (const warning of bodyResult.warnings) {
     warnings.push(warning);
   }
 
-  const constraintSequences: readonly ConstraintSequence[] = tags.skip
-    ? []
-    : buildConstraintSequences({
-        bodyEntries: bodyResult.entries,
-        conditionalFields: bodyResult.conditionalFields,
-        paths: tags.paths,
-        factoryName: name,
-        filePath,
-        line,
-        warnings
-      });
+  const constraintSequences: readonly ConstraintSequence[] =
+    tags.skip || tags.dispatcher || bodyResult.skipped
+      ? []
+      : buildConstraintSequences({
+          bodyEntries: bodyResult.entries,
+          conditionalFields: bodyResult.conditionalFields,
+          paths: tags.paths,
+          factoryName: name,
+          filePath,
+          line,
+          warnings
+        });
 
   const entry: ExtractedModelFirebaseIndexEntry = {
     slug,
@@ -483,7 +518,7 @@ function resolveScope(input: ResolveScopeInput): FirestoreQueryScope | undefined
   } else if (VALID_SCOPE_TAG_VALUES.has(tags.scope)) {
     result = tags.scope as FirestoreQueryScope;
   } else {
-    warnings.push({ kind: 'unsupported-scope', name, scope: tags.scope, filePath, line });
+    warnings.push({ kind: 'unsupported-scope', severity: 'warning', name, scope: tags.scope, filePath, line });
     result = undefined;
   }
   return result;
@@ -532,7 +567,7 @@ function buildConstraintSequences(input: BuildConstraintSequencesInput): readonl
 
   if (paths.length === 0) {
     if (conditionalFields.length > 0) {
-      warnings.push({ kind: 'missing-paths', name: factoryName, conditionalFields, filePath, line });
+      warnings.push({ kind: 'missing-paths', severity: 'warning', name: factoryName, conditionalFields, filePath, line });
     }
     return [{ pathLabel: 'all', entries: [...bodyEntries] }];
   }
@@ -558,7 +593,7 @@ function buildConstraintSequences(input: BuildConstraintSequencesInput): readonl
     for (const field of path) {
       const entriesForField = entriesByField.get(field);
       if (entriesForField === undefined) {
-        warnings.push({ kind: 'unknown-path-field', name: factoryName, field, filePath, line });
+        warnings.push({ kind: 'unknown-path-field', severity: 'warning', name: factoryName, field, filePath, line });
         continue;
       }
       matchedAnyField = true;
@@ -582,6 +617,7 @@ interface ExtractConstraintsFromBodyInput {
   readonly decl: FunctionDeclaration;
   readonly factoryName: string;
   readonly filePath: string;
+  readonly dispatcher: boolean;
 }
 
 interface ExtractConstraintsFromBodyResult {
@@ -594,13 +630,36 @@ interface ExtractConstraintsFromBodyResult {
    */
   readonly conditionalFields: readonly string[];
   readonly warnings: readonly ModelFirebaseIndexExtractWarning[];
+  /**
+   * True when the body failed a structural check (complex body, or a
+   * dispatcher that emits constraints directly) and the caller should treat
+   * the entries as unusable.
+   */
+  readonly skipped: boolean;
 }
 
 function extractConstraintsFromBody(input: ExtractConstraintsFromBodyInput): ExtractConstraintsFromBodyResult {
-  const { decl, factoryName, filePath } = input;
+  const { decl, factoryName, filePath, dispatcher } = input;
   const entries: ConstraintSequenceEntry[] = [];
   const conditionalFieldSet = new Set<string>();
   const warnings: ModelFirebaseIndexExtractWarning[] = [];
+  const body = decl.getBody();
+
+  if (dispatcher) {
+    const violation = body !== undefined ? findFirstConstraintCall(body) : undefined;
+    if (violation !== undefined) {
+      warnings.push({ kind: 'non-delegating-dispatcher', severity: 'error', name: factoryName, callee: violation.callee, filePath, line: violation.line });
+    }
+    return { entries, conditionalFields: [], warnings, skipped: true };
+  }
+
+  if (body !== undefined) {
+    const branch = findFirstBranchNode(body);
+    if (branch !== undefined) {
+      warnings.push({ kind: 'complex-query-body', severity: 'error', name: factoryName, branchKind: branch.branchKind, filePath, line: branch.line });
+      return { entries, conditionalFields: [], warnings, skipped: true };
+    }
+  }
 
   const initialVisited = new Set<string>([buildDeclKey(decl)]);
   walkBodyInto({
@@ -624,7 +683,7 @@ function extractConstraintsFromBody(input: ExtractConstraintsFromBodyInput): Ext
     }
   }
 
-  return { entries, conditionalFields, warnings };
+  return { entries, conditionalFields, warnings, skipped: false };
 }
 
 // MARK: Recursive body walker
@@ -682,7 +741,7 @@ function walkBodyInto(input: WalkBodyIntoInput): void {
     if (calleeName === 'where') {
       const parsed = parseWhereCall(call);
       if (parsed === undefined) {
-        warnings.push({ kind: 'unresolved-field', name: factoryName, callee: 'where', filePath, line: call.getStartLineNumber() });
+        warnings.push({ kind: 'unresolved-field', severity: 'warning', name: factoryName, callee: 'where', filePath, line: call.getStartLineNumber() });
         continue;
       }
       entries.push(parsed);
@@ -695,7 +754,7 @@ function walkBodyInto(input: WalkBodyIntoInput): void {
     if (calleeName === 'orderBy') {
       const parsed = parseOrderByCall(call);
       if (parsed === undefined) {
-        warnings.push({ kind: 'unresolved-field', name: factoryName, callee: 'orderBy', filePath, line: call.getStartLineNumber() });
+        warnings.push({ kind: 'unresolved-field', severity: 'warning', name: factoryName, callee: 'orderBy', filePath, line: call.getStartLineNumber() });
         continue;
       }
       entries.push(parsed);
@@ -710,7 +769,7 @@ function walkBodyInto(input: WalkBodyIntoInput): void {
       const fieldArg = call.getArguments()[descriptor.fieldArgIndex];
       const fieldPath = fieldArg !== undefined ? readStringLiteral(fieldArg) : undefined;
       if (fieldPath === undefined) {
-        warnings.push({ kind: 'unresolved-field', name: factoryName, callee: calleeName, filePath, line: call.getStartLineNumber() });
+        warnings.push({ kind: 'unresolved-field', severity: 'warning', name: factoryName, callee: calleeName, filePath, line: call.getStartLineNumber() });
         continue;
       }
       const direction = descriptor.directionArgIndex !== undefined ? readDirectionLiteral(call.getArguments()[descriptor.directionArgIndex]) : undefined;
@@ -777,13 +836,13 @@ function tryTransitiveResolution(input: TryTransitiveResolutionInput): void {
 
   // Constraint-related callee without a reachable body (cross-package .d.ts).
   if (!resolved.hasBody) {
-    warnings.push({ kind: 'unresolvable-transitive-callee', name: factoryName, callee: calleeName, filePath, line: call.getStartLineNumber() });
+    warnings.push({ kind: 'unresolvable-transitive-callee', severity: 'warning', name: factoryName, callee: calleeName, filePath, line: call.getStartLineNumber() });
     return;
   }
 
   const calleeKey = buildDeclKey(resolved.decl);
   if (visited.has(calleeKey)) {
-    warnings.push({ kind: 'transitive-cycle', name: factoryName, callee: calleeName, filePath, line: call.getStartLineNumber() });
+    warnings.push({ kind: 'transitive-cycle', severity: 'warning', name: factoryName, callee: calleeName, filePath, line: call.getStartLineNumber() });
     return;
   }
 
@@ -793,7 +852,7 @@ function tryTransitiveResolution(input: TryTransitiveResolutionInput): void {
   if (!isIndexTagged(resolved.decl)) {
     const calleeFilePath = resolved.decl.getSourceFile().getFilePath();
     const calleeLine = resolved.decl.getStartLineNumber();
-    warnings.push({ kind: 'unannotated-query-helper', name: factoryName, callee: calleeName, calleeFilePath, calleeLine, filePath, line: call.getStartLineNumber() });
+    warnings.push({ kind: 'unannotated-query-helper', severity: 'warning', name: factoryName, callee: calleeName, calleeFilePath, calleeLine, filePath, line: call.getStartLineNumber() });
   }
 
   const nextVisited = new Set([...visited, calleeKey]);
@@ -896,6 +955,62 @@ function buildDeclKey(decl: FunctionDeclaration): string {
  * @param bodyNode - the outer function body block
  * @returns whether `call` is inside a conditional branch within the body
  */
+/**
+ * Walks the body looking for the first branching syntax node disallowed by the
+ * "one query per index" convention. Returns the branch kind and starting line
+ * so the warning can point the author at the offending construct.
+ *
+ * Note: `BinaryExpression` (`&&`/`||`) and `NullishCoalescing` (`??`) are NOT
+ * flagged. `??` is commonly used to default an argument value (`now ?? new Date()`),
+ * and the strict-shape rule does not need to police every short-circuit. The
+ * branching constructs in {@link COMPLEX_BODY_SYNTAX_KINDS} cover the cases
+ * authors actually use to build different constraint sets per call.
+ *
+ * @param bodyNode - the outer function body block
+ * @returns the first disallowed branch's kind + line, or undefined when clean
+ */
+function findFirstBranchNode(bodyNode: Node): { readonly branchKind: ComplexQueryBranchKind; readonly line: number } | undefined {
+  let result: { readonly branchKind: ComplexQueryBranchKind; readonly line: number } | undefined;
+  for (const [syntaxKind, branchKind] of COMPLEX_BODY_SYNTAX_KINDS) {
+    const nodes = bodyNode.getDescendantsOfKind(syntaxKind);
+    if (nodes.length > 0) {
+      const first = nodes.sort((a, b) => a.getStart() - b.getStart())[0];
+      const line = first.getStartLineNumber();
+      if (result === undefined || line < result.line) {
+        result = { branchKind, line };
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Walks the body looking for the first call to `where`, `orderBy`, or any
+ * registered Firestore query helper. Used to enforce that dispatcher-tagged
+ * factories only delegate to other query functions and never emit constraints
+ * directly.
+ *
+ * @param bodyNode - the outer function body block
+ * @returns the offending call's callee name + line, or undefined when clean
+ */
+function findFirstConstraintCall(bodyNode: Node): { readonly callee: string; readonly line: number } | undefined {
+  const calls = bodyNode.getDescendantsOfKind(SyntaxKind.CallExpression);
+  calls.sort((a, b) => a.getStart() - b.getStart());
+  let result: { readonly callee: string; readonly line: number } | undefined;
+  for (const call of calls) {
+    const expression = call.getExpression();
+    const calleeName = Node.isIdentifier(expression) ? expression.getText() : Node.isPropertyAccessExpression(expression) ? (expression as { getName: () => string }).getName() : undefined;
+    if (calleeName === undefined) {
+      continue;
+    }
+    if (calleeName === 'where' || calleeName === 'orderBy' || getFirestoreQueryHelperDescriptor(calleeName) !== undefined) {
+      result = { callee: calleeName, line: call.getStartLineNumber() };
+      break;
+    }
+  }
+  return result;
+}
+
 function isWithinConditionalBranch(call: CallExpression, bodyNode: Node): boolean {
   let node: Node | undefined = call.getParent();
   let result = false;

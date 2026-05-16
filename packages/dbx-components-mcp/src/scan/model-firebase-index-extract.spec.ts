@@ -220,7 +220,7 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
     expect(result.entries[0].constraintSequences).toEqual([]);
   });
 
-  it('warns missing-paths when constraints sit inside if-branches and no @dbxModelFirebaseIndexPath is set', () => {
+  it('errors with complex-query-body when constraints sit inside if-branches', () => {
     const project = projectWith({
       '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
       '/proj/src/lib/model/job/dynamic.query.ts': `
@@ -240,11 +240,15 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
       `
     });
     const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
-    const warning = result.warnings.find((w) => w.kind === 'missing-paths');
-    expect(warning).toBeDefined();
-    if (warning?.kind === 'missing-paths') {
-      expect(warning.conditionalFields).toEqual(['s', 'pr']);
+    const error = result.warnings.find((w) => w.kind === 'complex-query-body');
+    expect(error).toBeDefined();
+    if (error?.kind === 'complex-query-body') {
+      expect(error.severity).toBe('error');
+      expect(error.branchKind).toBe('if');
+      expect(error.name).toBe('jobDynamicQuery');
     }
+    // Constraint extraction is skipped on a structural failure.
+    expect(result.entries[0].constraintSequences).toEqual([]);
   });
 
   it('uses one constraint sequence per @dbxModelFirebaseIndexPath tag, filtered to listed fields', () => {
@@ -261,13 +265,13 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
          * @dbxModelFirebaseIndexPath pr, s
          * @dbxModelFirebaseIndexPath s, pr, sy
          */
-        export function jobDynamicQuery(state?: string, sy?: boolean, payroll?: string, bat?: Date): unknown[] {
-          const out: unknown[] = [];
-          if (state != null) out.push(where<Job>('s', '==', state));
-          if (sy != null) out.push(where<Job>('sy', '==', sy));
-          if (payroll != null) out.push(where<Job>('pr', '==', payroll));
-          if (bat != null) out.push(where<Job>('bat', '<=', bat));
-          return out;
+        export function jobDynamicQuery(state: string, sy: boolean, payroll: string, bat: Date): unknown[] {
+          return [
+            where<Job>('s', '==', state),
+            where<Job>('sy', '==', sy),
+            where<Job>('pr', '==', payroll),
+            where<Job>('bat', '<=', bat)
+          ];
         }
       `
     });
@@ -295,10 +299,8 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
          * @dbxModelFirebaseIndexModel Job
          * @dbxModelFirebaseIndexPath s, nope
          */
-        export function jobDynamicQuery(state?: string): unknown[] {
-          const out: unknown[] = [];
-          if (state != null) out.push(where<Job>('s', '==', state));
-          return out;
+        export function jobDynamicQuery(state: string): unknown[] {
+          return [where<Job>('s', '==', state)];
         }
       `
     });
@@ -335,13 +337,10 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
          * @dbxModelFirebaseIndexPath d, c, l, v, cat
          * @dbxModelFirebaseIndexPath d, f, c, l, v, cat
          */
-        export function digestableQuery(fullRangeOnly?: boolean): FirestoreQueryConstraint[] {
-          const constraints: FirestoreQueryConstraint[] = [where<JobApplication>('d', '==', true)];
-          if (fullRangeOnly != null) {
-            constraints.push(jobApplicationsWithFullRangeQuery(fullRangeOnly));
-          }
+        export function digestableQuery(fullRangeOnly: boolean): FirestoreQueryConstraint[] {
           return [
-            ...constraints,
+            where<JobApplication>('d', '==', true),
+            jobApplicationsWithFullRangeQuery(fullRangeOnly),
             orderBy<JobApplication>('c', 'asc'),
             orderBy<JobApplication>('l', 'desc'),
             orderBy<JobApplication>('v', 'asc'),
@@ -495,5 +494,229 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
     const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
     expect(result.entries.length).toBe(1);
     expect(result.warnings.find((w) => w.kind === 'duplicate-slug')).toBeDefined();
+  });
+});
+
+describe('extractModelFirebaseIndexEntries — body complexity rules', () => {
+  it('emits no warning for a simple straight-line query body', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        function orderBy<T>(_a: keyof T, _d: 'asc' | 'desc'): unknown { return {}; }
+        type Job = { t: string; dat: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function jobDigestsQuery(now: Date, type: string): unknown[] {
+          return [where<Job>('t', 'in', type), orderBy<Job>('dat', 'asc')];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.warnings.find((w) => w.kind === 'complex-query-body')).toBeUndefined();
+    expect(result.entries[0].constraintSequences[0].entries.map((e) => e.fieldPath)).toEqual(['t', 'dat']);
+  });
+
+  it('errors with complex-query-body when the body contains a switch statement', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/switch.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { s: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function jobSwitchQuery(mode: string): unknown[] {
+          const out: unknown[] = [];
+          switch (mode) {
+            case 'a':
+              out.push(where<Job>('s', '==', 'a'));
+              break;
+            default:
+              out.push(where<Job>('s', '==', 'b'));
+          }
+          return out;
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    const error = result.warnings.find((w) => w.kind === 'complex-query-body');
+    expect(error).toBeDefined();
+    if (error?.kind === 'complex-query-body') {
+      expect(error.branchKind).toBe('switch');
+      expect(error.severity).toBe('error');
+    }
+  });
+
+  it('errors with complex-query-body when the body uses a ternary in an array spread', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/ternary.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { s: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function jobTernaryQuery(active: boolean): unknown[] {
+          return [...(active ? [where<Job>('s', '==', 'a')] : [])];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    const error = result.warnings.find((w) => w.kind === 'complex-query-body');
+    expect(error).toBeDefined();
+    if (error?.kind === 'complex-query-body') {
+      expect(error.branchKind).toBe('ternary');
+    }
+  });
+
+  it('errors with complex-query-body when the body iterates with for-of to push constraints', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/loop.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { s: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function jobLoopQuery(states: string[]): unknown[] {
+          const out: unknown[] = [];
+          for (const s of states) {
+            out.push(where<Job>('s', '==', s));
+          }
+          return out;
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    const error = result.warnings.find((w) => w.kind === 'complex-query-body');
+    expect(error).toBeDefined();
+    if (error?.kind === 'complex-query-body') {
+      expect(error.branchKind).toBe('loop');
+    }
+  });
+
+  it('allows nullish coalescing (??) for argument defaults without flagging the body', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/coalesce.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        function orderBy<T>(_a: keyof T, _d: 'asc' | 'desc'): unknown { return {}; }
+        type Job = { t: string; dat: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function jobDigestsQuery(params: { now?: Date; type: string }): unknown[] {
+          const { now, type } = params;
+          const sinceDate = now ?? new Date();
+          return [where<Job>('t', '==', type), where<Job>('dat', '<', sinceDate), orderBy<Job>('dat', 'asc')];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.warnings.find((w) => w.kind === 'complex-query-body')).toBeUndefined();
+    expect(result.entries[0].constraintSequences[0].entries.map((e) => e.fieldPath)).toEqual(['t', 'dat', 'dat']);
+  });
+});
+
+describe('extractModelFirebaseIndexEntries — dispatcher tag', () => {
+  it('skips body extraction and emits no constraints for a correctly tagged dispatcher', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/dispatch.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { t: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function jobsByStatusQuery(s: string): unknown[] {
+          return [where<Job>('t', '==', s)];
+        }
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexDispatcher
+         */
+        export function jobsDispatcher(mode: string, s: string): unknown[] {
+          switch (mode) {
+            case 'byStatus':
+              return jobsByStatusQuery(s);
+            default:
+              return jobsByStatusQuery('default');
+          }
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.warnings.find((w) => w.kind === 'complex-query-body')).toBeUndefined();
+    expect(result.warnings.find((w) => w.kind === 'non-delegating-dispatcher')).toBeUndefined();
+    const dispatcher = result.entries.find((e) => e.name === 'jobsDispatcher');
+    expect(dispatcher).toBeDefined();
+    expect(dispatcher?.constraintSequences).toEqual([]);
+  });
+
+  it('errors with non-delegating-dispatcher when a dispatcher calls where() directly', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/dispatch.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { t: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexDispatcher
+         */
+        export function jobsBadDispatcher(s: string): unknown[] {
+          return [where<Job>('t', '==', s)];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    const error = result.warnings.find((w) => w.kind === 'non-delegating-dispatcher');
+    expect(error).toBeDefined();
+    if (error?.kind === 'non-delegating-dispatcher') {
+      expect(error.callee).toBe('where');
+      expect(error.severity).toBe('error');
+    }
+  });
+
+  it('errors with non-delegating-dispatcher when a dispatcher calls a registered helper directly', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/dispatch.query.ts': `
+        function whereDateIsBeforeWithSort<T>(_a: keyof T, _d?: Date, _dir?: 'asc' | 'desc'): unknown[] { return []; }
+        type Job = { dat: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexDispatcher
+         */
+        export function jobsHelperDispatcher(): unknown[] {
+          return [...whereDateIsBeforeWithSort<Job>('dat', new Date(), 'asc')];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    const error = result.warnings.find((w) => w.kind === 'non-delegating-dispatcher');
+    expect(error).toBeDefined();
+    if (error?.kind === 'non-delegating-dispatcher') {
+      expect(error.callee).toBe('whereDateIsBeforeWithSort');
+    }
   });
 });

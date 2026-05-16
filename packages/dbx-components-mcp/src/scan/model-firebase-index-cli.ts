@@ -85,5 +85,9 @@ function formatExtractWarning(warning: ModelFirebaseIndexBuildWarning): string {
       return `${w.name} (${w.filePath}:${w.line}) transitive constraint resolution hit a cycle through "${w.callee}"`;
     case 'unresolvable-transitive-callee':
       return `${w.name} (${w.filePath}:${w.line}) could not resolve transitive callee "${w.callee}"`;
+    case 'complex-query-body':
+      return `${w.name} (${w.filePath}:${w.line}) tagged query body contains a "${w.branchKind}" construct — split into one factory per target index or mark as @dbxModelFirebaseIndexDispatcher`;
+    case 'non-delegating-dispatcher':
+      return `${w.name} (${w.filePath}:${w.line}) @dbxModelFirebaseIndexDispatcher calls "${w.callee}" directly — dispatchers must only delegate to other tagged query functions`;
   }
 }
