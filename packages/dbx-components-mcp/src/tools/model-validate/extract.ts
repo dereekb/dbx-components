@@ -398,9 +398,7 @@ function readDbxModelCompositeKeyTag(jsDocs: readonly JSDoc[]): ExtractedComposi
               fromValue = parts.filter((p) => VALIDATOR_COMPOSITE_KEY_MODEL_NAME_RE.test(p));
             }
           }
-        } else if (key === 'encoding') {
-          if (v === 'two-way' || v === 'one-way') encoding = v;
-        }
+        } else if (key === 'encoding' && (v === 'two-way' || v === 'one-way')) encoding = v;
       }
       result = { from: fromValue, encoding, line: tag.getStartLineNumber() };
     }

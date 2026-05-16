@@ -12,6 +12,8 @@
  * and emits the `external-id-keyed-entity-root` archetype on the model.
  */
 export interface ExternalRelatedById<TId extends string = string> {
-  /** Phantom type discriminator; never persisted. */
+  /**
+   * Phantom type discriminator; never persisted.
+   */
   readonly __externalIdType?: TId;
 }

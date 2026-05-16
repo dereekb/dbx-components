@@ -269,9 +269,7 @@ function parseCompositeKeyTagValue(value: string): ExtractedCompositeKeyTag {
           fromValue = parts.filter((p) => COMPOSITE_KEY_MODEL_NAME_RE.test(p));
         }
       }
-    } else if (key === 'encoding') {
-      if (v === 'two-way' || v === 'one-way') encoding = v;
-    }
+    } else if (key === 'encoding' && (v === 'two-way' || v === 'one-way')) encoding = v;
   }
   return { from: fromValue, encoding };
 }
