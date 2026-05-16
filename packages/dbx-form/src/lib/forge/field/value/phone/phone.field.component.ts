@@ -240,6 +240,11 @@ export function phoneFieldMapper(fieldDef: { key: string }): Signal<Record<strin
   const defaultValidationMessages = inject(DEFAULT_VALIDATION_MESSAGES);
 
   return computed(() => {
-    return buildValueFieldInputs(fieldDef as any, ctx, defaultProps?.(), defaultValidationMessages?.());
+    const inputs = buildValueFieldInputs(fieldDef as any, ctx, defaultProps?.());
+    const dvm = defaultValidationMessages?.();
+    if (dvm !== undefined) {
+      inputs['defaultValidationMessages'] = dvm;
+    }
+    return inputs;
   });
 }

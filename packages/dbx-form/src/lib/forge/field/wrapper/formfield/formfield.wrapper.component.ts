@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
-import { DynamicTextPipe, type FieldWrapperContract, interpolateParams, type ValidationError, type WrapperFieldInputs } from '@ng-forge/dynamic-forms';
+import { DynamicTextPipe, type FieldWrapper, interpolateParams, type ValidationError, type WrapperFieldInputs } from '@ng-forge/dynamic-forms';
 import { AsyncPipe } from '@angular/common';
 import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
 
@@ -156,7 +156,7 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
     '[class]': 'classNameSignal()'
   }
 })
-export class DbxForgeFormFieldWrapperComponent implements FieldWrapperContract {
+export class DbxForgeFormFieldWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
   // Props from wrapper config

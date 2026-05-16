@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild,
 import { CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { type DynamicText, type FieldWrapperContract, type WrapperFieldInputs, ARRAY_CONTEXT } from '@ng-forge/dynamic-forms';
+import { type DynamicText, type FieldWrapper, type WrapperFieldInputs, ARRAY_CONTEXT } from '@ng-forge/dynamic-forms';
 import { type IndexNumber } from '@dereekb/util';
 import { type DbxButtonDisplayStylePair, type DbxButtonStyle, type DbxChipDisplay, DbxButtonComponent, DbxButtonSpacerDirective, DbxChipDirective } from '@dereekb/dbx-web';
 import { dbxForgeFieldDisabled } from '../../field.util';
@@ -39,7 +39,7 @@ const DEFAULT_DUPLICATE_BUTTON: DbxButtonDisplayStylePair = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeArrayFieldElementWrapperComponent implements FieldWrapperContract {
+export class DbxForgeArrayFieldElementWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
   private readonly parent = inject(DbxForgeArrayFieldWrapperComponent);
