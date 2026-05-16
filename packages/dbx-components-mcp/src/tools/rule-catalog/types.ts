@@ -22,7 +22,7 @@ export type RuleSeverity = 'error' | 'warning';
  * grep / mass rename keeps the catalog and the tool dispatch table in
  * sync.
  */
-export type RuleSource = 'dbx_model_validate' | 'dbx_model_validate_api' | 'dbx_model_validate_folder' | 'dbx_model_fixture_validate_app' | 'dbx_model_api_validate_app' | 'dbx_storagefile_m_validate_app' | 'dbx_storagefile_m_validate_folder' | 'dbx_notification_m_validate_app' | 'dbx_notification_m_validate_folder' | 'dbx_system_m_validate_folder' | 'dbx_asset_validate_app' | 'dbx_asset_validate_folder';
+export type RuleSource = 'dbx_model_validate' | 'dbx_model_validate_api' | 'dbx_model_validate_folder' | 'dbx_model_fixture_validate_app' | 'dbx_model_api_validate_app' | 'dbx_model_firebase_index_validate_app' | 'dbx_storagefile_m_validate_app' | 'dbx_storagefile_m_validate_folder' | 'dbx_notification_m_validate_app' | 'dbx_notification_m_validate_folder' | 'dbx_system_m_validate_folder' | 'dbx_asset_validate_app' | 'dbx_asset_validate_folder';
 
 /**
  * Cross-reference target attached to a rule. The `kind` discriminator

@@ -15,6 +15,13 @@
  *   - **unchanged**: indexes/fieldOverrides that match → reported for
  *     completeness in JSON mode only.
  *
+ * Every diagnostic (extract warning, analyze warning, diff drift,
+ * build-config failure) is emitted as a structured violation with a
+ * stable code from `model-firebase-index-validate-app/codes.ts`. The
+ * code feeds `dbx_explain_rule`; the canonical fix + template + see-also
+ * block auto-attaches from the rule catalog so the markdown output
+ * surfaces the same remediation prose as other validators.
+ *
  * `firestore.indexes.json` is resolved relative to the workspace root
  * (defaults to `firestore.indexes.json` at the workspace root, the
  * canonical hellosubs layout).
@@ -26,9 +33,14 @@ import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { buildModelFirebaseIndexManifest, type ModelFirebaseIndexBuildWarning } from '../scan/model-firebase-index-build-manifest.js';
+import { buildModelFirebaseIndexManifest } from '../scan/model-firebase-index-build-manifest.js';
 import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
-import { generateFirestoreIndexesJson, type FirestoreIndexesJson, type FirestoreIndexesDiff } from '../scan/firestore-indexes-generate.js';
+import { generateFirestoreIndexesJson, type FirestoreIndexesJson } from '../scan/firestore-indexes-generate.js';
+import { ModelFirebaseIndexValidateAppCode } from './model-firebase-index-validate-app/codes.js';
+import { buildFirebaseIndexValidateAppViolation, mapModelFirebaseIndexBuildWarning } from './model-firebase-index-validate-app/format-warnings.js';
+import type { ModelFirebaseIndexValidateAppReport, ModelFirebaseIndexValidateAppViolation } from './model-firebase-index-validate-app/types.js';
+import { attachRemediation } from './rule-catalog/index.js';
+import { formatStatusLabel, formatViolationLine, groupViolations, type ViolationSeverity } from './validate-format.js';
 
 // MARK: Args
 const ValidateAppArgsType = type({
@@ -55,6 +67,8 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     '',
     'Paths escaping the server cwd are rejected.',
     '',
+    'Every diagnostic surfaces a stable code (e.g. `MODEL_FIREBASE_INDEX_COMPLEX_QUERY_BODY`, `MODEL_FIREBASE_INDEX_UNANNOTATED_QUERY_HELPER`, `MODEL_FIREBASE_INDEX_COMPOSITE_ADDED`). Pass any of those codes to `dbx_explain_rule` for the canonical fix, template, and see-also references — the markdown output already inlines the same block.',
+    '',
     '## Tagging a query factory',
     '',
     'The extractor only sees exported `function` declarations marked with `@dbxModelFirebaseIndex`. Tag every constraint factory whose composite or fieldOverride should appear in `firestore.indexes.json`:',
@@ -72,7 +86,7 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     'Optional tags:',
     '- `@dbxModelFirebaseIndexScope COLLECTION | COLLECTION_GROUP` — overrides the default (COLLECTION for root models, COLLECTION_GROUP for nested).',
     '- `@dbxModelFirebaseIndexDispatcher` — marks a function as a *dispatcher*: it must only delegate to other tagged query functions via `switch`/`if`/`return` and must NOT call `where`, `orderBy`, or any helper itself. Dispatchers emit no index of their own; they exist so callers have a single entry-point that picks the right per-index function based on a mode/type parameter. See "Dispatcher pattern" below.',
-    '- `@dbxModelFirebaseIndexPath <field>, <field>, ...` — one sequence per tag, filtered to the listed fields (preserves declared order). Use when a static body has multiple `where`/`orderBy` calls and you want to emit multiple composites from it. NOTE: as of this version the body must be branch-free; previously this tag was the escape hatch for `if`-branched bodies, but those now error with `complex-query-body`.',
+    '- `@dbxModelFirebaseIndexPath <field>, <field>, ...` — one sequence per tag, filtered to the listed fields (preserves declared order). Use when a static body has multiple `where`/`orderBy` calls and you want to emit multiple composites from it. NOTE: as of this version the body must be branch-free; previously this tag was the escape hatch for `if`-branched bodies, but those now error with `MODEL_FIREBASE_INDEX_COMPLEX_QUERY_BODY`.',
     "- `@dbxModelFirebaseIndexSkip` — do not emit this factory's own index. Its body still contributes constraints to callers via transitive splicing.",
     '- `@dbxModelFirebaseIndexManual` — author manages this index by hand; the generator skips it but the deployed shape is treated as expected (no `removed` drift).',
     '- `@dbxModelFirebaseIndexCategory`, `@dbxModelFirebaseIndexTags`, `@dbxModelFirebaseIndexSlug`, `@dbxModelFirebaseIndexRelated`, `@dbxModelFirebaseIndexSkillRefs` — lookup/search metadata; no effect on index generation.',
@@ -115,22 +129,26 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     '',
     '## Transitive composition',
     '',
-    "When a tagged factory `A` calls another exported function `B` that returns `FirestoreQueryConstraint` / `FirestoreQueryConstraint[]`, the extractor splices `B`'s body into `A`'s sequence at the call site. `B` must also be tagged `@dbxModelFirebaseIndex` (or marked `@dbxModelFirebaseIndexSkip` when it's a shared helper that shouldn't emit its own composite). Untagged constraint helpers raise `unannotated-query-helper`.",
+    "When a tagged factory `A` calls another exported function `B` that returns `FirestoreQueryConstraint` / `FirestoreQueryConstraint[]`, the extractor splices `B`'s body into `A`'s sequence at the call site. `B` must also be tagged `@dbxModelFirebaseIndex` (or marked `@dbxModelFirebaseIndexSkip` when it's a shared helper that shouldn't emit its own composite). Untagged constraint helpers raise `MODEL_FIREBASE_INDEX_UNANNOTATED_QUERY_HELPER`.",
     '',
-    '## Diagnostic reference',
+    '## Diagnostic codes (for `dbx_explain_rule`)',
     '',
     'Errors (validation fails when any are present):',
-    '- `complex-query-body` — a tagged query body uses `if` / `switch` / ternary / loop. Split into one tagged function per target index (each must be branch-free), or — if this function is only routing to other tagged queries — add `@dbxModelFirebaseIndexDispatcher`. See "Dispatcher pattern" above.',
-    '- `non-delegating-dispatcher` — a `@dbxModelFirebaseIndexDispatcher`-tagged function calls `where` / `orderBy` / a registered helper directly. Move the constraint construction into a sibling tagged function and have the dispatcher branch return its result instead.',
+    '- `MODEL_FIREBASE_INDEX_COMPLEX_QUERY_BODY` — tagged body uses `if` / `switch` / ternary / loop.',
+    '- `MODEL_FIREBASE_INDEX_NON_DELEGATING_DISPATCHER` — `@dbxModelFirebaseIndexDispatcher` calls `where` / `orderBy` / a helper directly.',
+    '- `MODEL_FIREBASE_INDEX_COMPOSITE_ADDED`, `MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_ADDED` — required by factories, missing from JSON.',
     '',
-    'Warnings (advisory, do not fail the run):',
-    '- `missing-paths` — legacy: a body has conditional fields without `@dbxModelFirebaseIndexPath`. New code paths now error with `complex-query-body` first; this warning only fires when a tagged body somehow has conditional fields after the structural check skipped it.',
-    '- `unknown-path-field` — a path tag references a field no `where`/`orderBy`/helper call produces. Fix the field list or extend the body.',
-    "- `unannotated-query-helper` — a transitive callee returns `FirestoreQueryConstraint(s)` but isn't tagged. Tag the callee or mark it `@dbxModelFirebaseIndexSkip`.",
-    '- `transitive-cycle` — `A → B → A` (or longer); break the recursion in source.',
-    "- `unresolvable-transitive-callee` — callee's declaration isn't reachable (likely a cross-package `.d.ts` import). Inline the constraint locally or extend `FIRESTORE_QUERY_HELPERS` in `dbx-components-mcp`.",
-    '- `unresolved-field` — a `where`/`orderBy` call uses a non-literal field-path argument; switch to a string literal so the extractor can read it.',
-    '- `unsupported-array-contains-any`, `multiple-range-fields`, `orderby-conflict` — Firestore index-shape issues; restructure the query.'
+    'Warnings (advisory):',
+    '- `MODEL_FIREBASE_INDEX_MISSING_PATHS` — legacy fallback for conditional fields without `@dbxModelFirebaseIndexPath`.',
+    '- `MODEL_FIREBASE_INDEX_UNKNOWN_PATH_FIELD` — path tag references a field no body call produces.',
+    "- `MODEL_FIREBASE_INDEX_UNANNOTATED_QUERY_HELPER` — transitive callee isn't tagged.",
+    '- `MODEL_FIREBASE_INDEX_TRANSITIVE_CYCLE` — recursion in the resolution graph.',
+    "- `MODEL_FIREBASE_INDEX_UNRESOLVABLE_TRANSITIVE_CALLEE` — callee's source isn't reachable.",
+    '- `MODEL_FIREBASE_INDEX_UNRESOLVED_FIELD` — non-literal field-path argument.',
+    '- `MODEL_FIREBASE_INDEX_MULTIPLE_RANGE_FIELDS`, `MODEL_FIREBASE_INDEX_ORDERBY_CONFLICT`, `MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY` — Firestore index-shape issues.',
+    '- `MODEL_FIREBASE_INDEX_COMPOSITE_REMOVED`, `MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_REMOVED` — stale entries in JSON.',
+    '',
+    'Pass any code to `dbx_explain_rule` for the canonical fix and template.'
   ].join('\n'),
   inputSchema: {
     type: 'object',
@@ -142,21 +160,6 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     required: ['componentDir']
   }
 };
-
-// MARK: Report shapes
-interface ValidateAppReport {
-  readonly componentDir: string;
-  readonly indexesFile: string;
-  readonly indexesFileExists: boolean;
-  readonly drift: boolean;
-  readonly diff: FirestoreIndexesDiff;
-  readonly generatedComposites: number;
-  readonly generatedFieldOverrides: number;
-  readonly existingComposites: number;
-  readonly existingFieldOverrides: number;
-  readonly errors: readonly string[];
-  readonly warnings: readonly string[];
-}
 
 // MARK: Tool factory
 /**
@@ -185,7 +188,7 @@ export function createValidateAppModelFirebaseIndexTool(): DbxTool {
     const componentAbs = resolve(cwd, parsed.componentDir);
     const indexesAbs = resolve(cwd, indexesRelative);
 
-    let report: ValidateAppReport;
+    let report: ModelFirebaseIndexValidateAppReport;
     try {
       report = await buildValidateAppReport({ componentDir: parsed.componentDir, componentAbs, indexesRelative, indexesAbs });
     } catch (err) {
@@ -211,8 +214,49 @@ interface BuildValidateAppReportInput {
   readonly indexesAbs: string;
 }
 
-async function buildValidateAppReport(input: BuildValidateAppReportInput): Promise<ValidateAppReport> {
+interface ViolationBuffer {
+  readonly violations: ModelFirebaseIndexValidateAppViolation[];
+  errorCount: number;
+  warningCount: number;
+}
+
+function newBuffer(): ViolationBuffer {
+  return { violations: [], errorCount: 0, warningCount: 0 };
+}
+
+function pushViolation(buffer: ViolationBuffer, violation: ModelFirebaseIndexValidateAppViolation): void {
+  buffer.violations.push(violation);
+  if (violation.severity === 'error') {
+    buffer.errorCount += 1;
+  } else {
+    buffer.warningCount += 1;
+  }
+}
+
+interface PushDiffViolationInput {
+  readonly buffer: ViolationBuffer;
+  readonly code: ModelFirebaseIndexValidateAppCode;
+  readonly severity: ViolationSeverity;
+  readonly message: string;
+  readonly file: string;
+}
+
+function pushDiffViolation(input: PushDiffViolationInput): void {
+  const { buffer, code, severity, message, file } = input;
+  pushViolation(buffer, {
+    code,
+    severity,
+    message,
+    file,
+    line: undefined,
+    factory: undefined,
+    remediation: attachRemediation(code)
+  });
+}
+
+async function buildValidateAppReport(input: BuildValidateAppReportInput): Promise<ModelFirebaseIndexValidateAppReport> {
   const { componentDir, componentAbs, indexesRelative, indexesAbs } = input;
+  const buffer = newBuffer();
 
   const buildOutcome = await buildModelFirebaseIndexManifest({
     projectRoot: componentAbs,
@@ -220,31 +264,78 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
   });
 
   if (buildOutcome.kind !== 'success') {
-    return emptyReport(componentDir, indexesRelative, formatBuildFailure(buildOutcome));
+    pushViolation(buffer, {
+      code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_BUILD_FAILED,
+      severity: 'warning',
+      message: formatBuildFailure(buildOutcome),
+      file: undefined,
+      line: undefined,
+      factory: undefined,
+      remediation: attachRemediation(ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_BUILD_FAILED)
+    });
+    return emptyReport({ componentDir, indexesRelative, buffer });
   }
 
   const { existingJson, exists: indexesFileExists, readError } = await readExistingIndexesJson(indexesAbs);
-  const errors: string[] = [];
-  const warnings: string[] = [];
   for (const buildWarning of buildOutcome.extractWarnings) {
-    const message = formatBuildWarning(buildWarning);
-    if (isErrorSeverity(buildWarning)) {
-      errors.push(message);
-    } else {
-      warnings.push(message);
-    }
+    pushViolation(buffer, buildFirebaseIndexValidateAppViolation(mapModelFirebaseIndexBuildWarning(buildWarning)));
   }
   if (readError !== undefined) {
-    warnings.push(`Could not read existing \`${indexesRelative}\`: ${readError}`);
+    pushViolation(buffer, {
+      code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_INDEXES_FILE_INVALID,
+      severity: 'warning',
+      message: `Could not read existing \`${indexesRelative}\`: ${readError}`,
+      file: indexesRelative,
+      line: undefined,
+      factory: undefined,
+      remediation: attachRemediation(ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_INDEXES_FILE_INVALID)
+    });
   }
 
   const entries = buildOutcome.manifest.entries.map(toModelFirebaseIndexEntryInfo);
   const registry = createModelFirebaseIndexRegistryFromEntries({ entries, loadedSources: [buildOutcome.manifest.source] });
   const { json, diff } = generateFirestoreIndexesJson({ entries: registry.all, existingJson });
 
-  const drift = errors.length > 0 || diff.added.length > 0 || diff.removed.length > 0 || diff.fieldOverridesAdded.length > 0 || diff.fieldOverridesRemoved.length > 0;
+  for (const composite of diff.added) {
+    pushDiffViolation({
+      buffer,
+      code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_COMPOSITE_ADDED,
+      severity: 'error',
+      message: `Required composite missing from \`${indexesRelative}\`: ${composite}`,
+      file: indexesRelative
+    });
+  }
+  for (const composite of diff.removed) {
+    pushDiffViolation({
+      buffer,
+      code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_COMPOSITE_REMOVED,
+      severity: 'warning',
+      message: `Stale composite in \`${indexesRelative}\` (no factory requires it): ${composite}`,
+      file: indexesRelative
+    });
+  }
+  for (const fieldOverride of diff.fieldOverridesAdded) {
+    pushDiffViolation({
+      buffer,
+      code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_ADDED,
+      severity: 'error',
+      message: `Required fieldOverride missing from \`${indexesRelative}\`: ${fieldOverride}`,
+      file: indexesRelative
+    });
+  }
+  for (const fieldOverride of diff.fieldOverridesRemoved) {
+    pushDiffViolation({
+      buffer,
+      code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_REMOVED,
+      severity: 'warning',
+      message: `Stale fieldOverride in \`${indexesRelative}\` (no factory requires it): ${fieldOverride}`,
+      file: indexesRelative
+    });
+  }
 
-  const report: ValidateAppReport = {
+  const drift = buffer.errorCount > 0 || diff.added.length > 0 || diff.removed.length > 0 || diff.fieldOverridesAdded.length > 0 || diff.fieldOverridesRemoved.length > 0;
+
+  return {
     componentDir,
     indexesFile: indexesRelative,
     indexesFileExists,
@@ -254,14 +345,10 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
     generatedFieldOverrides: json.fieldOverrides.length,
     existingComposites: existingJson?.indexes.length ?? 0,
     existingFieldOverrides: existingJson?.fieldOverrides.length ?? 0,
-    errors,
-    warnings
+    violations: buffer.violations,
+    errorCount: buffer.errorCount,
+    warningCount: buffer.warningCount
   };
-  return report;
-}
-
-function isErrorSeverity(buildWarning: ModelFirebaseIndexBuildWarning): boolean {
-  return buildWarning.stage === 'extract' && buildWarning.warning.severity === 'error';
 }
 
 async function readExistingIndexesJson(indexesAbs: string): Promise<{ readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string }> {
@@ -316,7 +403,14 @@ function formatBuildFailure(buildOutcome: Exclude<Awaited<ReturnType<typeof buil
   return message;
 }
 
-function emptyReport(componentDir: string, indexesRelative: string, warning: string): ValidateAppReport {
+interface EmptyReportInput {
+  readonly componentDir: string;
+  readonly indexesRelative: string;
+  readonly buffer: ViolationBuffer;
+}
+
+function emptyReport(input: EmptyReportInput): ModelFirebaseIndexValidateAppReport {
+  const { componentDir, indexesRelative, buffer } = input;
   return {
     componentDir,
     indexesFile: indexesRelative,
@@ -334,69 +428,17 @@ function emptyReport(componentDir: string, indexesRelative: string, warning: str
     generatedFieldOverrides: 0,
     existingComposites: 0,
     existingFieldOverrides: 0,
-    errors: [],
-    warnings: [warning]
+    violations: buffer.violations,
+    errorCount: buffer.errorCount,
+    warningCount: buffer.warningCount
   };
 }
 
-function formatBuildWarning(warning: ModelFirebaseIndexBuildWarning): string {
-  if (warning.stage === 'extract') {
-    const w = warning.warning;
-    switch (w.kind) {
-      case 'missing-name':
-        return `(anonymous) (${w.filePath}:${w.line}) tagged export has no resolvable name`;
-      case 'missing-model-tag':
-        return `${w.name} (${w.filePath}:${w.line}) missing required @dbxModelFirebaseIndexModel tag`;
-      case 'unresolved-model':
-        return `${w.name} (${w.filePath}:${w.line}) could not resolve model "${w.model}" to a Firestore identity`;
-      case 'unsupported-scope':
-        return `${w.name} (${w.filePath}:${w.line}) unsupported @dbxModelFirebaseIndexScope value "${w.scope}"`;
-      case 'duplicate-slug':
-        return `${w.name} (${w.filePath}:${w.line}) duplicate slug "${w.slug}" — already used by ${w.previousName}`;
-      case 'unknown-helper':
-        return `${w.name} (${w.filePath}:${w.line}) unknown constraint helper "${w.helper}"`;
-      case 'unresolved-field':
-        return `${w.name} (${w.filePath}:${w.line}) could not resolve field-path argument to "${w.callee}"`;
-      case 'missing-paths':
-        return `${w.name} (${w.filePath}:${w.line}) has conditional constraints on [${w.conditionalFields.join(', ')}] but no \`@dbxModelFirebaseIndexPath\` declarations — add one path tag per call pattern (e.g. \`@dbxModelFirebaseIndexPath ${w.conditionalFields.join(', ')}\`)`;
-      case 'unknown-path-field':
-        return `${w.name} (${w.filePath}:${w.line}) \`@dbxModelFirebaseIndexPath\` references field "${w.field}" which no where/orderBy/helper call in the body produces`;
-      case 'unannotated-query-helper':
-        return `${w.name} (${w.filePath}:${w.line}) calls ${w.callee} (${w.calleeFilePath}:${w.calleeLine}) which returns FirestoreQueryConstraint(s) but is not tagged with @dbxModelFirebaseIndex — tag the callee or mark it @dbxModelFirebaseIndexSkip if it should be excluded.`;
-      case 'transitive-cycle':
-        return `${w.name} (${w.filePath}:${w.line}) transitive call to ${w.callee} would re-enter a factory already on the resolution stack — skipped to avoid infinite recursion`;
-      case 'unresolvable-transitive-callee':
-        return `${w.name} (${w.filePath}:${w.line}) could not locate the source for transitive callee ${w.callee} (likely a cross-package .d.ts import) — splice skipped`;
-      case 'complex-query-body':
-        return [
-          `${w.name} (${w.filePath}:${w.line}) tagged query body contains a \`${w.branchKind}\` construct.`,
-          `Tagged @dbxModelFirebaseIndex functions must be branch-free (no if/else, switch, ternary, or loops) so each maps to exactly one Firestore index.`,
-          `Fix: Either (a) split this function into one tagged factory per target index — each branch becomes its own function with a static constraint shape — or (b) if this function only routes to other per-index functions, mark it \`@dbxModelFirebaseIndexDispatcher\` and have each branch \`return <perIndexFn>(...)\` instead of building constraints inline.`,
-          `Run \`dbx_mcp_tool dbx_model_firebase_index_validate_app\` for the full dispatcher pattern in the tool description.`
-        ].join(' ');
-      case 'non-delegating-dispatcher':
-        return [
-          `${w.name} (${w.filePath}:${w.line}) is tagged \`@dbxModelFirebaseIndexDispatcher\` but calls \`${w.callee}\` directly.`,
-          `Dispatchers must only delegate to other tagged query functions (via \`return <perIndexQuery>(...)\` in each branch) and may not call \`where\`, \`orderBy\`, or any constraint helper themselves.`,
-          `Fix: Move the \`${w.callee}\` call into a sibling \`@dbxModelFirebaseIndex\`-tagged function (e.g. \`${w.name}_<variant>Query\`), then have this dispatcher \`return\` that function. If this function shouldn't be a dispatcher, remove the \`@dbxModelFirebaseIndexDispatcher\` tag instead — it will then validate as a regular branch-free query.`
-        ].join(' ');
-    }
-  }
-  const w = warning.warning;
-  switch (w.kind) {
-    case 'multiple-range-fields':
-      return `${w.factoryName} multiple range-field constraints on [${w.fields.join(', ')}] — Firestore allows only one range field per query`;
-    case 'orderby-conflict':
-      return `${w.factoryName} field "${w.field}" has conflicting orderBy directions [${w.directions.join(', ')}]`;
-    case 'unsupported-array-contains-any':
-      return `${w.factoryName} field "${w.field}" uses array-contains-any — index support is partial`;
-  }
-}
-
 // MARK: Formatting
-function formatReportAsMarkdown(report: ValidateAppReport): string {
+function formatReportAsMarkdown(report: ModelFirebaseIndexValidateAppReport): string {
   const lines: string[] = [];
-  lines.push(`# Firebase indexes validation: \`${report.componentDir}\``, '');
+  const status = formatStatusLabel(report.errorCount, report.warningCount);
+  lines.push(`# Firebase indexes validation: \`${report.componentDir}\` — ${status}`, '');
   if (!report.indexesFileExists) {
     lines.push(`> \`${report.indexesFile}\` does not exist. Run \`dbx-components-mcp generate-firestore-indexes --component ${report.componentDir}\` to create it.`, '');
   } else {
@@ -407,42 +449,48 @@ function formatReportAsMarkdown(report: ValidateAppReport): string {
   } else {
     lines.push('## ✅ In sync', '');
   }
-  lines.push(`- generated composites: ${report.generatedComposites}`, `- existing composites: ${report.existingComposites}`, `- generated fieldOverrides: ${report.generatedFieldOverrides}`, `- existing fieldOverrides: ${report.existingFieldOverrides}`, '');
+  lines.push(`- generated composites: ${report.generatedComposites}`, `- existing composites: ${report.existingComposites}`, `- generated fieldOverrides: ${report.generatedFieldOverrides}`, `- existing fieldOverrides: ${report.existingFieldOverrides}`, `- ${report.errorCount} error(s), ${report.warningCount} warning(s)`, '');
 
-  appendDiffSection(lines, 'Composite indexes added (required, missing from JSON)', report.diff.added);
-  appendDiffSection(lines, 'Composite indexes removed (in JSON, no factory requires it)', report.diff.removed);
-  appendDiffSection(lines, 'fieldOverrides added (required, missing from JSON)', report.diff.fieldOverridesAdded);
-  appendDiffSection(lines, 'fieldOverrides removed (in JSON, no factory requires it)', report.diff.fieldOverridesRemoved);
+  if (report.violations.length > 0) {
+    appendViolationSection(
+      lines,
+      'Errors',
+      report.violations.filter((v) => v.severity === 'error')
+    );
+    appendViolationSection(
+      lines,
+      'Warnings',
+      report.violations.filter((v) => v.severity === 'warning')
+    );
+  }
 
-  if (report.errors.length > 0) {
-    lines.push('## Errors', '');
-    for (const error of report.errors) {
-      lines.push(`- ${error}`);
-    }
-    lines.push('');
-  }
-  if (report.warnings.length > 0) {
-    lines.push('## Warnings', '');
-    for (const warning of report.warnings) {
-      lines.push(`- ${warning}`);
-    }
-    lines.push('');
-  }
   return lines.join('\n').trimEnd();
 }
 
-function appendDiffSection(lines: string[], heading: string, items: readonly string[]): void {
-  if (items.length === 0) return;
-  lines.push(`### ${heading} (${items.length})`, '');
-  for (const item of items) {
-    lines.push(`- \`${item}\``);
+function appendViolationSection(lines: string[], heading: string, violations: readonly ModelFirebaseIndexValidateAppViolation[]): void {
+  if (violations.length === 0) return;
+  lines.push(`## ${heading} (${violations.length})`, '');
+  const byCode = groupViolations(violations, (v) => v.code);
+  for (const [code, codeViolations] of byCode) {
+    lines.push(`### ${code} (${codeViolations.length})`, '');
+    for (const v of codeViolations) {
+      lines.push(formatViolationLine(v, formatLocation(v)));
+    }
+    lines.push('');
   }
-  lines.push('');
 }
 
-function formatReportAsJson(report: ValidateAppReport): string {
+function formatLocation(violation: ModelFirebaseIndexValidateAppViolation): string {
+  if (violation.file === undefined) {
+    return '';
+  }
+  const tail = violation.line === undefined ? '' : `:${violation.line}`;
+  return ` _(${violation.file}${tail})_`;
+}
+
+function formatReportAsJson(report: ModelFirebaseIndexValidateAppReport): string {
   return JSON.stringify(report, null, 2);
 }
 
 // Re-export for tests / external consumers.
-export type { ValidateAppReport };
+export type { ModelFirebaseIndexValidateAppReport, ModelFirebaseIndexValidateAppViolation };

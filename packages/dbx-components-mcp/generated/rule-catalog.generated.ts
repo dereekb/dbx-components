@@ -235,6 +235,268 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     ]
   },
   {
+    code: 'MODEL_FIREBASE_INDEX_BUILD_FAILED',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'The scan could not run — missing config, missing package.json, or an invalid manifest',
+    whatItFlags: 'The scan could not run — missing config, missing package.json, or an invalid manifest.',
+    whenItApplies: 'When `buildModelFirebaseIndexManifest` returns any outcome other than `success` (no-config, invalid-scan-config, no-package, invalid-package, invalid-manifest).',
+    whenItDoesNotApply: 'Components that successfully build a manifest — their downstream warnings get specific codes.',
+    canonicalFix: 'Read the embedded message; add or fix `dbx-mcp.scan.json`, ensure the component has a `package.json`, or correct the manifest shape so extraction can complete.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_COMPLEX_QUERY_BODY',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'error',
+    title: 'A tagged query body uses `if` / `switch` / ternary / loop — not branch-free',
+    whatItFlags: 'A tagged query body uses `if` / `switch` / ternary / loop — not branch-free.',
+    whenItApplies: 'Every `@dbxModelFirebaseIndex`-tagged factory whose body contains a branching construct, except those tagged `@dbxModelFirebaseIndexDispatcher`.',
+    whenItDoesNotApply: 'Bodies that only use `??` / `&&` / `||` for argument defaulting — those are still considered branch-free.',
+    canonicalFix: 'Split the function into one tagged factory per target index (each branch-free), or — if it only routes between other tagged queries — mark it `@dbxModelFirebaseIndexDispatcher` and return per-index results from each branch.',
+    canonicalFixTemplate: '```ts\n/**\n*',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_model_firebase_index_validate_app'
+      }
+    ]
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_COMPOSITE_ADDED',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'error',
+    title: 'A composite index required by tagged factories is missing from the committed `firestore.indexes.json`',
+    whatItFlags: 'A composite index required by tagged factories is missing from the committed `firestore.indexes.json`.',
+    whenItApplies: 'Every entry in the generated composite set that has no equal entry in the committed JSON.',
+    whenItDoesNotApply: 'Factories tagged `@dbxModelFirebaseIndexManual` — their shapes are author-managed and excluded from drift.',
+    canonicalFix: 'Run the `scan-model-firebase-indexes` / `generate-firestore-indexes` CLIs and commit the regenerated `firestore.indexes.json`.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_COMPOSITE_REMOVED',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A composite index in the committed `firestore.indexes.json` has no factory backing it',
+    whatItFlags: 'A composite index in the committed `firestore.indexes.json` has no factory backing it.',
+    whenItApplies: 'Every entry in the committed JSON that has no equal entry in the generated set.',
+    whenItDoesNotApply: 'Composites managed by hand — tag the corresponding factory with `@dbxModelFirebaseIndexManual` so the validator treats the deployed shape as expected.',
+    canonicalFix: 'Either delete the stale composite, or add a `@dbxModelFirebaseIndexManual` factory describing its shape so the validator treats it as expected.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_DUPLICATE_SLUG',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'Two tagged factories resolve to the same slug — the second is dropped from the manifest',
+    whatItFlags: 'Two tagged factories resolve to the same slug — the second is dropped from the manifest.',
+    whenItApplies: 'When two `@dbxModelFirebaseIndex` exports share the same `@dbxModelFirebaseIndexSlug` (or the same auto-derived slug from their names).',
+    whenItDoesNotApply: 'Intentional aliases — they should target the same composite, in which case keep one factory.',
+    canonicalFix: 'Pick distinct slugs (or distinct function names) so each factory is addressable.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_ADDED',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'error',
+    title: 'A `fieldOverrides` entry required by tagged factories is missing from the committed `firestore.indexes.json`',
+    whatItFlags: 'A `fieldOverrides` entry required by tagged factories is missing from the committed `firestore.indexes.json`.',
+    whenItApplies: 'Every fieldOverride required by an analyzed factory and absent from the committed JSON.',
+    whenItDoesNotApply: 'fieldOverrides covered by an `@dbxModelFirebaseIndexManual` factory.',
+    canonicalFix: 'Regenerate `firestore.indexes.json` via the scan + generate CLIs and commit.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_REMOVED',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A `fieldOverrides` entry exists in the committed JSON but no factory requires it',
+    whatItFlags: 'A `fieldOverrides` entry exists in the committed JSON but no factory requires it.',
+    whenItApplies: 'Every fieldOverride in the committed JSON without a matching generated entry.',
+    whenItDoesNotApply: 'fieldOverrides covered by a hand-managed `@dbxModelFirebaseIndexManual` factory.',
+    canonicalFix: 'Either delete the stale entry or add a `@dbxModelFirebaseIndexManual` factory so the validator treats it as expected.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_INDEXES_FILE_INVALID',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'The committed `firestore.indexes.json` exists but could not be parsed',
+    whatItFlags: 'The committed `firestore.indexes.json` exists but could not be parsed.',
+    whenItApplies: 'When `readFile` succeeds but `JSON.parse` fails, or the top-level value is not an object.',
+    whenItDoesNotApply: 'Components whose indexes file is absent — that path emits the missing-file note in the header instead.',
+    canonicalFix: 'Restore the file to valid JSON with a top-level `{ "indexes": [...], "fieldOverrides": [...] }` object — re-run `firebase init firestore` or restore from git history.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_MISSING_MODEL_TAG',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A tagged factory is missing the required `@dbxModelFirebaseIndexModel <Type>` tag',
+    whatItFlags: 'A tagged factory is missing the required `@dbxModelFirebaseIndexModel <Type>` tag.',
+    whenItApplies: 'Every `@dbxModelFirebaseIndex`-tagged export.',
+    whenItDoesNotApply: "Helpers that opt out of index emission via `@dbxModelFirebaseIndexSkip` and aren't tagged themselves.",
+    canonicalFix: 'Add `@dbxModelFirebaseIndexModel <TypeName>` referencing the Firestore model whose collection the query targets.',
+    canonicalFixTemplate: '```ts\n/**\n*',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_model_firebase_index_validate_app'
+      }
+    ]
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_MISSING_NAME',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A `@dbxModelFirebaseIndex`-tagged export has no resolvable function name',
+    whatItFlags: 'A `@dbxModelFirebaseIndex`-tagged export has no resolvable function name.',
+    whenItApplies: 'When the JSDoc marker sits above a default export or an arrow assigned to a non-identifier binding.',
+    whenItDoesNotApply: 'Named `export function ...` declarations — the extractor reads the name directly.',
+    canonicalFix: 'Convert the export to `export function <name>(...) {}` so the slug + lookup table get a stable identifier.',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_model_firebase_index_validate_app'
+      }
+    ]
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_MISSING_PATHS',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A tagged body has conditional fields but no `@dbxModelFirebaseIndexPath` declarations',
+    whatItFlags: 'A tagged body has conditional fields but no `@dbxModelFirebaseIndexPath` declarations.',
+    whenItApplies: 'Legacy fallback when a tagged body somehow has conditional fields after the structural check skipped it. New code paths surface `MODEL_FIREBASE_INDEX_COMPLEX_QUERY_BODY` first.',
+    whenItDoesNotApply: 'Branch-free bodies — no path tag is necessary when every constraint executes unconditionally.',
+    canonicalFix: 'Add one `@dbxModelFirebaseIndexPath <fields>` tag per call pattern, or restructure into one branch-free factory per target index.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_MULTIPLE_RANGE_FIELDS',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A constraint sequence has more than one range-filtered field',
+    whatItFlags: 'A constraint sequence has more than one range-filtered field.',
+    whenItApplies: 'Every analyzed sequence whose `where` calls put `<`, `<=`, `>`, `>=`, `!=`, or `not-in` on more than one field path.',
+    whenItDoesNotApply: "Sequences that range-filter at most one field — Firestore's standard composite-index shape.",
+    canonicalFix: 'Restructure the query so only one field has a range filter; convert the others to equality filters or move them into a separate factory.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_NON_DELEGATING_DISPATCHER',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'error',
+    title: 'A `@dbxModelFirebaseIndexDispatcher` calls `where` / `orderBy` / a registered helper directly',
+    whatItFlags: 'A `@dbxModelFirebaseIndexDispatcher` calls `where` / `orderBy` / a registered helper directly.',
+    whenItApplies: 'Every dispatcher whose body emits its own constraints instead of delegating to other tagged query functions.',
+    whenItDoesNotApply: 'Dispatchers whose every branch is `return <perIndexQuery>(...)` — the canonical shape.',
+    canonicalFix: 'Move the constraint construction into a sibling `@dbxModelFirebaseIndex` factory and have the dispatcher `return` its result. If the function should not be a dispatcher, drop the `@dbxModelFirebaseIndexDispatcher` tag.',
+    seeAlso: [
+      {
+        kind: 'tool',
+        target: 'dbx_model_firebase_index_validate_app'
+      }
+    ]
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_ORDERBY_CONFLICT',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'Two `orderBy` calls in the same constraint sequence disagree on direction for the same field',
+    whatItFlags: 'Two `orderBy` calls in the same constraint sequence disagree on direction for the same field.',
+    whenItApplies: 'When the same field path appears in multiple `orderBy` calls with both `asc` and `desc`.',
+    whenItDoesNotApply: 'Sequences with at most one direction per field.',
+    canonicalFix: 'Pick one direction per field, or split into two factories — Firestore can only deploy one direction at a time per composite.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_TRANSITIVE_CYCLE',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'Transitive constraint resolution hit a cycle (`A → B → A`)',
+    whatItFlags: 'Transitive constraint resolution hit a cycle (`A → B → A`).',
+    whenItApplies: 'When a tagged factory transitively calls itself through one or more other tagged factories.',
+    whenItDoesNotApply: 'Composition graphs without back-edges — those resolve cleanly.',
+    canonicalFix: 'Break the recursion in source — split the shared constraints into a leaf factory that neither caller re-enters.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_UNANNOTATED_QUERY_HELPER',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A transitive callee returns `FirestoreQueryConstraint(s)` but is not `@dbxModelFirebaseIndex`-tagged',
+    whatItFlags: 'A transitive callee returns `FirestoreQueryConstraint(s)` but is not `@dbxModelFirebaseIndex`-tagged.',
+    whenItApplies: 'When a tagged factory inlines an untagged helper that returns query constraints — constraints still splice, but the helper escapes the catalog.',
+    whenItDoesNotApply: 'Helpers explicitly marked `@dbxModelFirebaseIndexSkip` — they opt out of emitting their own composite while still contributing to callers.',
+    canonicalFix: 'Tag the callee with `@dbxModelFirebaseIndex` (giving it its own composite) or mark it `@dbxModelFirebaseIndexSkip` (excluded but still spliced into callers).'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_UNKNOWN_HELPER',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A constraint helper is called that the extractor does not recognise',
+    whatItFlags: 'A constraint helper is called that the extractor does not recognise.',
+    whenItApplies: 'When a tagged body invokes a function named like a helper but absent from `FIRESTORE_QUERY_HELPERS`.',
+    whenItDoesNotApply: 'Helpers that resolve via transitive resolution to another tagged factory — those go through `MODEL_FIREBASE_INDEX_UNANNOTATED_QUERY_HELPER` instead.',
+    canonicalFix: 'Either swap to a registered helper (e.g. `whereDateIsBeforeWithSort`) or extend `FIRESTORE_QUERY_HELPERS` in `dbx-components-mcp` with a descriptor.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_UNKNOWN_PATH_FIELD',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: '`@dbxModelFirebaseIndexPath` references a field no `where` / `orderBy` / helper call in the body produces',
+    whatItFlags: '`@dbxModelFirebaseIndexPath` references a field no `where` / `orderBy` / helper call in the body produces.',
+    whenItApplies: 'Every path tag whose field list contains an unknown identifier.',
+    whenItDoesNotApply: 'Path tags whose fields all map to body calls.',
+    canonicalFix: 'Either fix the field name in the path tag or extend the body to produce that constraint.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_UNRESOLVABLE_TRANSITIVE_CALLEE',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A transitive callee returns constraints but its declaration is not reachable (likely a cross-package `.d.ts` import)',
+    whatItFlags: 'A transitive callee returns constraints but its declaration is not reachable (likely a cross-package `.d.ts` import).',
+    whenItApplies: 'When the resolved callee has no body (declaration-only) and so its constraints cannot be spliced.',
+    whenItDoesNotApply: 'Callees declared in the scanned source tree — those resolve normally.',
+    canonicalFix: 'Inline the constraint sequence locally, or extend `FIRESTORE_QUERY_HELPERS` in `dbx-components-mcp` with a descriptor for the helper.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_UNRESOLVED_FIELD',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: "A `where` / `orderBy` / helper call's field-path argument is not a string literal",
+    whatItFlags: "A `where` / `orderBy` / helper call's field-path argument is not a string literal.",
+    whenItApplies: 'When the extractor sees an identifier, template, or computed expression in the field-path slot.',
+    whenItDoesNotApply: "Calls whose field path is a plain `'literal'` string — those parse cleanly.",
+    canonicalFix: 'Replace the dynamic expression with a string literal. If the path varies, split the factory and use `@dbxModelFirebaseIndexPath` tags.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_UNRESOLVED_MODEL',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: '`@dbxModelFirebaseIndexModel` references a type the identity resolver does not know about',
+    whatItFlags: '`@dbxModelFirebaseIndexModel` references a type the identity resolver does not know about.',
+    whenItApplies: 'When the model name on the tag does not resolve to a `firestoreModelIdentity(...)` declaration in the scanned project.',
+    whenItDoesNotApply: 'Models whose identity lives in an upstream package not included in the scan globs — extend the scan config instead.',
+    canonicalFix: "Either fix the typo or add a `firestoreModelIdentity('<short>', '<plural>')` declaration in the component.",
+    seeAlso: [
+      {
+        kind: 'doc',
+        target: 'dbx__guide__new-model'
+      }
+    ]
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: 'A field uses the `array-contains-any` operator — index support is partial',
+    whatItFlags: 'A field uses the `array-contains-any` operator — index support is partial.',
+    whenItApplies: 'Every constraint sequence with at least one `array-contains-any` `where`.',
+    whenItDoesNotApply: 'Queries using `array-contains` (singular) — those have full composite support.',
+    canonicalFix: 'Confirm the deployed composite supports `array-contains-any` for the field set, or restructure to `array-contains` with a denormalised flag.'
+  },
+  {
+    code: 'MODEL_FIREBASE_INDEX_UNSUPPORTED_SCOPE',
+    source: 'dbx_model_firebase_index_validate_app',
+    severity: 'warning',
+    title: '`@dbxModelFirebaseIndexScope` was set to an unsupported value',
+    whatItFlags: '`@dbxModelFirebaseIndexScope` was set to an unsupported value.',
+    whenItApplies: 'Every tagged factory that declares an explicit scope tag.',
+    whenItDoesNotApply: 'Factories that omit the tag — scope falls back to COLLECTION_GROUP for nested models, COLLECTION for root models.',
+    canonicalFix: 'Set the tag value to exactly `COLLECTION` or `COLLECTION_GROUP`.'
+  },
+  {
     code: 'archetype-inconsistent',
     source: 'dbx_model_fixture_validate_app',
     severity: 'error',
