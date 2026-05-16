@@ -1,3 +1,30 @@
+## [13.11.13](https://github.com/dereekb/dbx-components/compare/v13.11.12-dev...v13.11.13) (2026-05-16)
+
+
+### Bug Fixes
+
+- **dbx-web:** ship eslint/package.json in npm tarball ([86a31aed](https://github.com/dereekb/dbx-components/commit/86a31aed1a756e3a74191acb8bd195e6af70425a))
+
+
+### Build System
+
+- lint fix + mcp regeneration ([dedf4b41](https://github.com/dereekb/dbx-components/commit/dedf4b4183b29af0cc3fb4fe644c43c4f4be4745))
+
+
+### Code Refactoring
+
+- added vitest retry config ([567e895d](https://github.com/dereekb/dbx-components/commit/567e895d3cfd83207cc1c2a45dff288ac7cbb479))
+- **dbx-components-mcp:** add model archetype tool cluster ([2a7de7a8](https://github.com/dereekb/dbx-components/commit/2a7de7a8fa468874e47070d54e311837794d45d9))
+- **dbx-components-mcp:** composite-key-root archetype + tag ([197810ef](https://github.com/dereekb/dbx-components/commit/197810ef3e11380356ef179aea82dcecd521a6a7))
+- **dbx-components-mcp:** enforce branch-free query bodies ([dd5f4571](https://github.com/dereekb/dbx-components/commit/dd5f457189c437162173454f6386cb6bae387db9))
+- **dbx-components-mcp:** refine archetype tool cluster ([1e121355](https://github.com/dereekb/dbx-components/commit/1e1213550a63a4cb6e4b2eeac00ec7eba7adf323))
+- **dbx-components-mcp:** resolve sonarqube findings ([6053b81d](https://github.com/dereekb/dbx-components/commit/6053b81d609a8963500963ece6c3a4e2069bb734))
+- **dbx-components-mcp:** wire firebase-index rule catalog ([1e501487](https://github.com/dereekb/dbx-components/commit/1e501487901a2536da2ed5902298d9d5d835586a))
+- **dbx-form:** silence forge.registry bare-import warning ([976b7f68](https://github.com/dereekb/dbx-components/commit/976b7f6810f71ad2ad6d910fc8bb4e0394bf4821))
+- **dbx-form:** updated ng-forge ([db2544e9](https://github.com/dereekb/dbx-components/commit/db2544e95d44e6ba7e90a858babb4b7930352710))
+- **firebase:** typed return tuples for constraint helpers ([fb59382a](https://github.com/dereekb/dbx-components/commit/fb59382a3c22e843163391d59763692191416dbc))
+- **util:** added HourOfDay semantic type and isHourOfDay ([e9eb0c91](https://github.com/dereekb/dbx-components/commit/e9eb0c91e83f9b9cc995f24f9283db2cdb24f2c0))
+
 ## [13.11.12](https://github.com/dereekb/dbx-components/compare/v13.11.11-dev...v13.11.12) (2026-05-15)
 
 
