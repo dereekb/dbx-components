@@ -2,7 +2,32 @@ import { type DateRange, dateRange, type DateRangeInput } from '@dereekb/date';
 import { type StringKeyPropertyKeys, UTF_8_START_CHARACTER, UTF_PRIVATE_USAGE_AREA_START } from '@dereekb/util';
 import { type RootFirestoreModelIdentity } from '../collection/collection';
 import { type DocumentReference, type FieldPathOrStringPath, type FieldPathOrStringPathOf } from '../types';
-import { endAtValue, type FirestoreQueryConstraint, orderByDocumentId, startAtValue, orderBy, type OrderByDirection, where } from './constraint';
+import { endAtValue, type EndAtValueQueryConstraintData, type FirestoreQueryConstraint, orderByDocumentId, type OrderByDocumentIdQueryConstraintData, type OrderByQueryConstraintData, startAtValue, type StartAtValueQueryConstraintData, orderBy, type OrderByDirection, where, type WhereQueryConstraintData } from './constraint';
+
+// MARK: Tuple types
+/**
+ * Fixed-shape tuple returned by helpers that combine `orderBy` with `startAtValue` + `endAtValue`
+ * range bounds on the same field (e.g. {@link whereStringValueHasPrefix}, {@link allChildDocumentsUnderRelativePath}).
+ */
+export type FirestoreQueryOrderByRangeBoundsTuple = [FirestoreQueryConstraint<OrderByQueryConstraintData>, FirestoreQueryConstraint<StartAtValueQueryConstraintData>, FirestoreQueryConstraint<EndAtValueQueryConstraintData>];
+
+/**
+ * Fixed-shape tuple returned by helpers that combine `orderByDocumentId` with `startAtValue` + `endAtValue`
+ * range bounds on the document id (e.g. {@link allChildDocumentsUnderParentPath}).
+ */
+export type FirestoreQueryOrderByDocumentIdRangeBoundsTuple = [FirestoreQueryConstraint<OrderByDocumentIdQueryConstraintData>, FirestoreQueryConstraint<StartAtValueQueryConstraintData>, FirestoreQueryConstraint<EndAtValueQueryConstraintData>];
+
+/**
+ * Fixed-shape tuple returned by helpers that pair an `orderBy` with a single `where` comparison
+ * on the same field (e.g. the `whereDateIs*WithSort` family).
+ */
+export type FirestoreQueryOrderByAndWhereTuple = [FirestoreQueryConstraint<OrderByQueryConstraintData>, FirestoreQueryConstraint<WhereQueryConstraintData>];
+
+/**
+ * Fixed-shape tuple returned by helpers that pair an `orderBy` with two `where` comparisons
+ * on the same field, defining a closed range (e.g. {@link whereDateIsBetween}).
+ */
+export type FirestoreQueryOrderByAndRangeWhereTuple = [FirestoreQueryConstraint<OrderByQueryConstraintData>, FirestoreQueryConstraint<WhereQueryConstraintData>, FirestoreQueryConstraint<WhereQueryConstraintData>];
 
 // MARK: Parents
 /**
@@ -22,7 +47,7 @@ import { endAtValue, type FirestoreQueryConstraint, orderByDocumentId, startAtVa
  * const query = collectionGroup(firestore, 'comments')
  *   .where(...allChildDocumentsUnderParent(postRef));
  */
-export function allChildDocumentsUnderParent<P>(parentRef: DocumentReference<P>): FirestoreQueryConstraint[] {
+export function allChildDocumentsUnderParent<P>(parentRef: DocumentReference<P>): FirestoreQueryOrderByDocumentIdRangeBoundsTuple {
   return allChildDocumentsUnderParentPath(parentRef.path);
 }
 
@@ -41,7 +66,7 @@ export function allChildDocumentsUnderParent<P>(parentRef: DocumentReference<P>)
  * const query = collectionGroup(firestore, 'comments')
  *   .where(...allChildDocumentsUnderParentPath('posts/abc123'));
  */
-export function allChildDocumentsUnderParentPath(parentPath: string): FirestoreQueryConstraint[] {
+export function allChildDocumentsUnderParentPath(parentPath: string): FirestoreQueryOrderByDocumentIdRangeBoundsTuple {
   // https://medium.com/firebase-developers/how-to-query-collections-in-firestore-under-a-certain-path-6a0d686cebd2
   // https://medium.com/firelayer/save-money-on-the-list-query-in-firestore-26ef9bee5474 for restricting
   return [orderByDocumentId(), startAtValue(parentPath), endAtValue(parentPath + UTF_8_START_CHARACTER)];
@@ -68,9 +93,9 @@ export function allChildDocumentsUnderParentPath(parentPath: string): FirestoreQ
  * const query = collectionGroup(firestore, 'tasks')
  *   .where(...allChildDocumentsUnderRelativePath('parentPath', 'organizations/org123/'));
  */
-export function allChildDocumentsUnderRelativePath<T>(orderByFieldPath: StringKeyPropertyKeys<T>, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function allChildDocumentsUnderRelativePath(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function allChildDocumentsUnderRelativePath<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+export function allChildDocumentsUnderRelativePath<T>(orderByFieldPath: StringKeyPropertyKeys<T>, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryOrderByRangeBoundsTuple;
+export function allChildDocumentsUnderRelativePath(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryOrderByRangeBoundsTuple;
+export function allChildDocumentsUnderRelativePath<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryOrderByRangeBoundsTuple {
   return [orderBy(orderByFieldPath as FieldPathOrStringPath, sortDirection), startAtValue(parentValue), endAtValue(parentValue + UTF_PRIVATE_USAGE_AREA_START)];
 }
 
@@ -92,7 +117,7 @@ export function allChildDocumentsUnderRelativePath<T = object>(orderByFieldPath:
  * const query = collection(firestore, 'documents')
  *   .where(...whereStringHasRootIdentityModelKey('reference', { collectionType: 'users' }));
  */
-export function whereStringHasRootIdentityModelKey<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, value: RootFirestoreModelIdentity, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+export function whereStringHasRootIdentityModelKey<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, value: RootFirestoreModelIdentity, sortDirection?: OrderByDirection): FirestoreQueryOrderByRangeBoundsTuple {
   return whereStringValueHasPrefix(orderByFieldPath as FieldPathOrStringPath, `${value.collectionType}/`, sortDirection);
 }
 
@@ -114,9 +139,9 @@ export function whereStringHasRootIdentityModelKey<T = object>(orderByFieldPath:
  * const query = collection(firestore, 'users')
  *   .where(...whereStringValueHasPrefix('email', 'admin@'));
  */
-export function whereStringValueHasPrefix<T>(orderByFieldPath: StringKeyPropertyKeys<T>, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereStringValueHasPrefix(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereStringValueHasPrefix<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, value: string, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+export function whereStringValueHasPrefix<T>(orderByFieldPath: StringKeyPropertyKeys<T>, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryOrderByRangeBoundsTuple;
+export function whereStringValueHasPrefix(orderByFieldPath: FieldPathOrStringPath, parentValue: string, sortDirection?: OrderByDirection): FirestoreQueryOrderByRangeBoundsTuple;
+export function whereStringValueHasPrefix<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, value: string, sortDirection?: OrderByDirection): FirestoreQueryOrderByRangeBoundsTuple {
   return [orderBy(orderByFieldPath as FieldPathOrStringPath, sortDirection), startAtValue(value), endAtValue(value + UTF_PRIVATE_USAGE_AREA_START)];
 }
 
@@ -177,9 +202,9 @@ export function filterWithDateRange<T = object>(fieldPath: FieldPathOrStringPath
  * const query = collection(firestore, 'documents')
  *   .where(...whereDateIsInRange('createdAt', { month: 0, year: 2023 }));
  */
-export function whereDateIsInRange<T>(field: StringKeyPropertyKeys<T>, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsInRange(field: FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsInRange<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+export function whereDateIsInRange<T>(field: StringKeyPropertyKeys<T>, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndRangeWhereTuple;
+export function whereDateIsInRange(field: FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndRangeWhereTuple;
+export function whereDateIsInRange<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, rangeInput: DateRangeInput, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndRangeWhereTuple {
   const range = dateRange(rangeInput);
   return whereDateIsBetween(fieldPath as FieldPathOrStringPath, range, sortDirection);
 }
@@ -195,9 +220,9 @@ export function whereDateIsInRange<T = object>(fieldPath: FieldPathOrStringPathO
  * @param sortDirection - Direction to sort results (default: 'asc')
  * @returns Array of query constraints for the date range filter and sort
  */
-export function whereDateIsBetween<T>(field: StringKeyPropertyKeys<T>, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsBetween(field: FieldPathOrStringPath, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsBetween<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+export function whereDateIsBetween<T>(field: StringKeyPropertyKeys<T>, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndRangeWhereTuple;
+export function whereDateIsBetween(field: FieldPathOrStringPath, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndRangeWhereTuple;
+export function whereDateIsBetween<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, range: DateRange, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndRangeWhereTuple {
   const { start, end } = range;
   return [orderBy(fieldPath as FieldPathOrStringPath, sortDirection ?? 'asc'), where(fieldPath as FieldPathOrStringPath, '>=', start.toISOString()), where(fieldPath as FieldPathOrStringPath, '<', end.toISOString())];
 }
@@ -223,9 +248,9 @@ export function whereDateIsBetween<T = object>(fieldPath: FieldPathOrStringPathO
  * const query = collection(firestore, 'documents')
  *   .where(whereDateIsOnOrAfter('createdAt', startOfYear));
  */
-export function whereDateIsOnOrAfter<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
-export function whereDateIsOnOrAfter(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
-export function whereDateIsOnOrAfter<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint {
+export function whereDateIsOnOrAfter<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint<WhereQueryConstraintData>;
+export function whereDateIsOnOrAfter(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint<WhereQueryConstraintData>;
+export function whereDateIsOnOrAfter<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint<WhereQueryConstraintData> {
   return where(fieldPath as FieldPathOrStringPath, '>=', date.toISOString());
 }
 
@@ -247,9 +272,9 @@ export function whereDateIsOnOrAfter<T = object>(fieldPath: FieldPathOrStringPat
  * const query = collection(firestore, 'documents')
  *   .where(...whereDateIsOnOrAfterWithSort('createdAt', new Date(), 'desc'));
  */
-export function whereDateIsOnOrAfterWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsOnOrAfterWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsOnOrAfterWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+export function whereDateIsOnOrAfterWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple;
+export function whereDateIsOnOrAfterWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple;
+export function whereDateIsOnOrAfterWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple {
   return [orderBy(fieldPath as FieldPathOrStringPath, sortDirection ?? 'asc'), whereDateIsOnOrAfter(fieldPath as FieldPathOrStringPath, date)];
 }
 
@@ -262,9 +287,9 @@ export function whereDateIsOnOrAfterWithSort<T = object>(fieldPath: FieldPathOrS
  * @param date - The maximum date to include (default: current date/time)
  * @returns A query constraint for dates on or before the specified date
  */
-export function whereDateIsOnOrBefore<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
-export function whereDateIsOnOrBefore(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
-export function whereDateIsOnOrBefore<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint {
+export function whereDateIsOnOrBefore<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint<WhereQueryConstraintData>;
+export function whereDateIsOnOrBefore(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint<WhereQueryConstraintData>;
+export function whereDateIsOnOrBefore<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint<WhereQueryConstraintData> {
   return where(fieldPath as FieldPathOrStringPath, '<=', date.toISOString());
 }
 
@@ -280,9 +305,9 @@ export function whereDateIsOnOrBefore<T = object>(fieldPath: FieldPathOrStringPa
  * @param sortDirection - Direction to sort results (default: 'desc')
  * @returns Array of query constraints for filtering and sorting
  */
-export function whereDateIsOnOrBeforeWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsOnOrBeforeWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsOnOrBeforeWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+export function whereDateIsOnOrBeforeWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple;
+export function whereDateIsOnOrBeforeWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple;
+export function whereDateIsOnOrBeforeWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple {
   return [orderBy(fieldPath as FieldPathOrStringPath, sortDirection ?? 'desc'), whereDateIsOnOrBefore(fieldPath as FieldPathOrStringPath, date)];
 }
 
@@ -295,9 +320,9 @@ export function whereDateIsOnOrBeforeWithSort<T = object>(fieldPath: FieldPathOr
  * @param date - The exclusive lower bound date (default: current date/time)
  * @returns A query constraint for dates strictly after the specified date
  */
-export function whereDateIsAfter<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
-export function whereDateIsAfter(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
-export function whereDateIsAfter<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint {
+export function whereDateIsAfter<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint<WhereQueryConstraintData>;
+export function whereDateIsAfter(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint<WhereQueryConstraintData>;
+export function whereDateIsAfter<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint<WhereQueryConstraintData> {
   return where(fieldPath as FieldPathOrStringPath, '>', date.toISOString());
 }
 
@@ -312,9 +337,9 @@ export function whereDateIsAfter<T = object>(fieldPath: FieldPathOrStringPathOf<
  * @param sortDirection - Direction to sort results (default: 'asc')
  * @returns Array of query constraints for filtering and sorting
  */
-export function whereDateIsAfterWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsAfterWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsAfterWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+export function whereDateIsAfterWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple;
+export function whereDateIsAfterWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple;
+export function whereDateIsAfterWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple {
   return [orderBy(fieldPath as FieldPathOrStringPath, sortDirection ?? 'asc'), whereDateIsAfter(fieldPath as FieldPathOrStringPath, date)];
 }
 
@@ -327,9 +352,9 @@ export function whereDateIsAfterWithSort<T = object>(fieldPath: FieldPathOrStrin
  * @param date - The exclusive upper bound date (default: current date/time)
  * @returns A query constraint for dates strictly before the specified date
  */
-export function whereDateIsBefore<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint;
-export function whereDateIsBefore(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint;
-export function whereDateIsBefore<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint {
+export function whereDateIsBefore<T>(field: StringKeyPropertyKeys<T>, date?: Date): FirestoreQueryConstraint<WhereQueryConstraintData>;
+export function whereDateIsBefore(field: FieldPathOrStringPath, date?: Date): FirestoreQueryConstraint<WhereQueryConstraintData>;
+export function whereDateIsBefore<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date()): FirestoreQueryConstraint<WhereQueryConstraintData> {
   return where(fieldPath as FieldPathOrStringPath, '<', date.toISOString());
 }
 
@@ -345,8 +370,8 @@ export function whereDateIsBefore<T = object>(fieldPath: FieldPathOrStringPathOf
  * @param sortDirection - Direction to sort results (default: 'desc')
  * @returns Array of query constraints for filtering and sorting
  */
-export function whereDateIsBeforeWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsBeforeWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryConstraint[];
-export function whereDateIsBeforeWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryConstraint[] {
+export function whereDateIsBeforeWithSort<T>(field: StringKeyPropertyKeys<T>, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple;
+export function whereDateIsBeforeWithSort(field: FieldPathOrStringPath, date?: Date, sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple;
+export function whereDateIsBeforeWithSort<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, date: Date = new Date(), sortDirection?: OrderByDirection): FirestoreQueryOrderByAndWhereTuple {
   return [orderBy(fieldPath as FieldPathOrStringPath, sortDirection ?? 'desc'), whereDateIsBefore(fieldPath as FieldPathOrStringPath, date)];
 }
