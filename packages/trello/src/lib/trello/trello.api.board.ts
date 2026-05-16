@@ -3,7 +3,7 @@ import { type TrelloContext } from './trello.factory';
 import { type TrelloBoardId, type TrelloMemberId } from '../trello.type';
 import { type CreateBoardBody, type TrelloBoard, type UpdateBoardBody } from './trello.api.board.type';
 import { type TrelloList } from './trello.api.list.type';
-import { type TrelloCard } from './trello.api.card.type';
+import { type TrelloCard, type TrelloLabel } from './trello.api.card.type';
 import { type TrelloMember } from './trello.api.member.type';
 
 export interface GetBoardInput {
@@ -114,6 +114,30 @@ export function listBoardCards(context: TrelloContext): ListBoardCardsFunction {
     const { boardId, ...query } = input;
     const queryString = makeUrlSearchParams(query);
     return context.fetchJson(`/boards/${boardId}/cards?${queryString}`, 'GET');
+  };
+}
+
+export interface ListBoardLabelsInput {
+  readonly boardId: TrelloBoardId;
+  /**
+   * Maximum number of labels to return. Defaults to 50 server-side; max is 1000.
+   */
+  readonly limit?: number;
+}
+
+export type ListBoardLabelsFunction = (input: ListBoardLabelsInput) => Promise<ReadonlyArray<TrelloLabel>>;
+
+/**
+ * https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-id-labels-get
+ *
+ * @param context The Trello API context.
+ * @returns A function that lists every label defined on a board.
+ */
+export function listBoardLabels(context: TrelloContext): ListBoardLabelsFunction {
+  return (input) => {
+    const { boardId, ...query } = input;
+    const queryString = makeUrlSearchParams(query);
+    return context.fetchJson(`/boards/${boardId}/labels?${queryString}`, 'GET');
   };
 }
 

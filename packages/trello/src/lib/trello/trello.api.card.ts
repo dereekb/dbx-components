@@ -1,7 +1,7 @@
 import { makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type TrelloContext } from './trello.factory';
 import { type TrelloCardId, type TrelloLabelId, type TrelloMemberId } from '../trello.type';
-import { type CreateCardBody, type TrelloCard, type TrelloCommentCardAction, type UpdateCardBody } from './trello.api.card.type';
+import { type CreateCardBody, type TrelloAction, type TrelloCard, type TrelloCommentCardAction, type UpdateCardBody } from './trello.api.card.type';
 
 export interface GetCardInput {
   readonly cardId: TrelloCardId;
@@ -85,6 +85,52 @@ export type DeleteCardFunction = (input: GetCardInput) => Promise<void>;
 export function deleteCard(context: TrelloContext): DeleteCardFunction {
   return async (input) => {
     await context.fetchJson(`/cards/${input.cardId}`, 'DELETE');
+  };
+}
+
+/**
+ * Known Trello action type. Trello supports many more (40+) — pass any string for filters not enumerated here.
+ *
+ * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/action-types/
+ */
+export type TrelloActionType = 'commentCard' | 'updateCard' | 'createCard' | 'deleteCard' | 'addMemberToCard' | 'removeMemberFromCard' | 'addAttachmentToCard' | 'deleteAttachmentFromCard' | 'addChecklistToCard' | 'removeChecklistFromCard' | 'updateCheckItemStateOnCard' | 'addLabelToCard' | 'removeLabelFromCard' | string;
+
+export interface ListCardActionsInput {
+  readonly cardId: TrelloCardId;
+  /**
+   * Comma-separated list of action types to include, or `all`. Defaults to `commentCard,updateCard:idList` server-side.
+   */
+  readonly filter?: TrelloActionType;
+  /**
+   * Maximum number of actions to return. Defaults to 50 server-side; max is 1000.
+   */
+  readonly limit?: number;
+  /**
+   * Cursor: return actions before this action id (older).
+   */
+  readonly before?: string;
+  /**
+   * Cursor: return actions since this action id (newer).
+   */
+  readonly since?: string;
+}
+
+export type ListCardActionsFunction = <D = unknown>(input: ListCardActionsInput) => Promise<ReadonlyArray<TrelloAction<D>>>;
+
+/**
+ * https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-actions-get
+ *
+ * Comments are returned as actions with `type === 'commentCard'`; pass `filter: 'commentCard'` and the generic
+ * type parameter `TrelloCommentCardActionData` to get a comment-typed result.
+ *
+ * @param context The Trello API context.
+ * @returns A function that lists actions on a card.
+ */
+export function listCardActions(context: TrelloContext): ListCardActionsFunction {
+  return (input) => {
+    const { cardId, ...query } = input;
+    const queryString = makeUrlSearchParams(query);
+    return context.fetchJson(`/cards/${cardId}/actions?${queryString}`, 'GET');
   };
 }
 

@@ -9,6 +9,7 @@ export type TrelloCardId = TrelloId;
 export type TrelloMemberId = TrelloId;
 export type TrelloLabelId = TrelloId;
 export type TrelloActionId = TrelloId;
+export type TrelloChecklistId = TrelloId;
 export type TrelloWebhookId = TrelloId;
 export type TrelloOrganizationId = TrelloId;
 export type TrelloEnterpriseId = TrelloId;

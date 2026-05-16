@@ -1,6 +1,7 @@
 import { type Maybe } from '@dereekb/util';
-import { type TrelloActionId, type TrelloBoardId, type TrelloCardId, type TrelloLabelId, type TrelloListId, type TrelloMemberId } from '../trello.type';
+import { type TrelloActionId, type TrelloBoardId, type TrelloCardId, type TrelloChecklistId, type TrelloLabelId, type TrelloListId, type TrelloMemberId } from '../trello.type';
 import { type TrelloLabelColor, type TrelloMaybeDateString, type TrelloPosition } from '../shared/trello.type';
+import { type TrelloMember } from './trello.api.member.type';
 
 /**
  * Trello label.
@@ -13,7 +14,25 @@ export interface TrelloLabel {
 }
 
 /**
+ * Card `badges` summary block. Trello populates ~12 fields here; only the
+ * most commonly-read ones are typed. Cast for additional fields.
+ *
+ * @see https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-get
+ */
+export interface TrelloCardBadges {
+  readonly attachments?: number;
+  readonly comments?: number;
+  readonly checkItems?: number;
+  readonly checkItemsChecked?: number;
+  readonly description?: boolean;
+  readonly subscribed?: boolean;
+  readonly votes?: number;
+}
+
+/**
  * Trello card.
+ *
+ * Only the most commonly-used fields are typed. Use `fields=all` and a custom cast when more are required.
  *
  * @see https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-get
  */
@@ -26,6 +45,7 @@ export interface TrelloCard {
   readonly idList: TrelloListId;
   readonly idMembers: ReadonlyArray<TrelloMemberId>;
   readonly idLabels: ReadonlyArray<TrelloLabelId>;
+  readonly idChecklists: ReadonlyArray<TrelloChecklistId>;
   readonly labels: ReadonlyArray<TrelloLabel>;
   readonly pos: number;
   readonly due: TrelloMaybeDateString;
@@ -34,6 +54,8 @@ export interface TrelloCard {
   readonly url: string;
   readonly shortUrl: string;
   readonly shortLink: string;
+  readonly dateLastActivity: TrelloMaybeDateString;
+  readonly badges?: TrelloCardBadges;
   readonly subscribed?: boolean;
 }
 
@@ -100,6 +122,11 @@ export interface TrelloAction<D = unknown> {
   readonly type: string;
   readonly date: string;
   readonly data: D;
+  /**
+   * Member who created the action. Populated when the request includes
+   * `member=true` (the default). Omitted otherwise.
+   */
+  readonly memberCreator?: TrelloMember;
 }
 
 export interface TrelloCommentCardActionData {
