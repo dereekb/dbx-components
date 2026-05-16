@@ -1,0 +1,96 @@
+{
+  "name": "trello",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/trello/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "implicitDependencies": ["util-fetch", "!util-test"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/trello"],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run trello:build-base"
+          },
+          {
+            "command": "npx nx run trello-nestjs:build-base"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/trello",
+        "outputPath": "dist/packages/trello",
+        "main": "packages/trello/src/index.ts",
+        "tsConfig": "packages/trello/tsconfig.lib.json",
+        "compiler": "swc",
+        "project": "packages/trello/package.json",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "assets": [
+          {
+            "glob": "packages/trello/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"]
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run trello tests",
+            "command": "npx nx test trello"
+          },
+          {
+            "description": "run trello-nestjs tests",
+            "command": "npx nx test trello-nestjs"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "ci-publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/trello && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../coverage/packages/trello"
+      }
+    }
+  }
+}
