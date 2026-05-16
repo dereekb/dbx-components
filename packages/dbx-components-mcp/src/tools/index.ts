@@ -43,6 +43,9 @@
  * | dbx_model_fixture_forward           | Generation    | "Add the missing Fixture forwarders for instance methods" |
  * | dbx_model_test_tree                 | Discovery     | "Show me the describe/fixture structure of this spec file."  |
  * | dbx_model_test_search               | Discovery     | "Find every place this spec uses model X / chain Y."         |
+ * | dbx_model_archetype_recommend       | Decision      | "Given a questionnaire, which archetype best fits this proposed model?" |
+ * | dbx_model_archetype_lookup          | Documentation | "Tell me about archetype X (and any v1/v2 aliases)."                    |
+ * | dbx_model_archetype_search          | Discovery     | "Find peer models that already use archetype X (optionally filtered by axes)." |
  * | dbx_storagefile_m_validate_app      | Verification  | "Is every storagefile purpose wired end-to-end?"       |
  * | dbx_storagefile_m_list_app          | Discovery     | "What storagefile purposes does this app configure?"   |
  * | dbx_storagefile_m_validate_folder   | Verification  | "Does this storagefile folder follow the convention?"  |
@@ -121,6 +124,9 @@ import { modelFixtureScaffoldTool } from './model-fixture-scaffold.tool.js';
 import { modelFixtureForwardTool } from './model-fixture-forward.tool.js';
 import { modelTestTreeTool } from './model-test-tree.tool.js';
 import { modelTestSearchTool } from './model-test-search.tool.js';
+import { archetypeRecommendTool } from './archetype-recommend.tool.js';
+import { archetypeLookupTool } from './archetype-lookup.tool.js';
+import { archetypeSearchTool } from './archetype-search.tool.js';
 import { modelHierarchyTool } from './model-hierarchy.tool.js';
 import type { FixtureModelRegistry } from './model-fixture-shared/index.js';
 import { storageFileMValidateAppTool } from './storagefile-m-validate-app.tool.js';
@@ -218,6 +224,9 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   modelFixtureForwardTool,
   modelTestTreeTool,
   modelTestSearchTool,
+  archetypeRecommendTool,
+  archetypeLookupTool,
+  archetypeSearchTool,
   // storagefile_m (model extension)
   storageFileMValidateAppTool,
   storageFileMListAppTool,

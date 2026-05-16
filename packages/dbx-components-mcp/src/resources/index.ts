@@ -5,7 +5,8 @@
  * grow its own subpaths without colliding. Currently registered:
  *
  *   dbx://form/fields[/{slug} | /produces/{produces} | /tier/{tier} | /array-output/{arrayOutput}]
- *   dbx://model/firebase[/{name} | /prefix/{prefix} | /subcollections/{parent} | /user-keyed-by-id | /user-related]
+ *   dbx://model/firebase[/{name} | /prefix/{prefix} | /subcollections/{parent} | /user-keyed-by-id | /user-related | /region-keyed-by-id | /district-keyed-by-id | /external-id-keyed-by-id | /bucket-keyed-by-id]
+ *   dbx://model-archetype/entries[/{slug} | /by-sync-mode/{mode} | /by-axis/{axisName}/{axisValue} | /by-collection-kind/{kind}]
  *   dbx://action/entries[/{slug} | /role/{role}]
  *   dbx://ui/components[/{slug} | /category/{category} | /kind/{kind}]
  *   dbx://pipe/entries[/{slug} | /category/{category}]
@@ -43,6 +44,7 @@ import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
 import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
 import { registerFormFieldsResource } from './form-fields.resource.js';
 import { registerFirebaseModelsResource } from './firebase-models.resource.js';
+import { registerModelArchetypesResource } from './archetypes.resource.js';
 import { registerActionsResource } from './actions.resource.js';
 import { registerUiComponentsResource } from './ui-components.resource.js';
 import { registerPipesResource } from './pipes.resource.js';
@@ -89,6 +91,7 @@ export function registerResources(server: McpServer, options: RegisterResourcesO
     registerFormFieldsResource(server, { registry: options.forgeFieldRegistry });
   }
   registerFirebaseModelsResource(server);
+  registerModelArchetypesResource(server);
   if (options.actionRegistry !== undefined) {
     registerActionsResource(server, { registry: options.actionRegistry });
   }

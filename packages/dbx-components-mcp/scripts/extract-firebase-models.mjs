@@ -42,6 +42,26 @@ const USER_KEYED_BY_ID_MARKER = 'UserRelatedById';
 /** Marker-interface name for documents that carry an explicit `uid` field. */
 const USER_RELATED_MARKER = 'UserRelated';
 
+/** Marker-interface name for documents whose id IS a region key. */
+const REGION_KEYED_BY_ID_MARKER = 'RegionRelatedById';
+
+/** Marker-interface name for documents whose id IS a district key. */
+const DISTRICT_KEYED_BY_ID_MARKER = 'DistrictRelatedById';
+
+/**
+ * Marker-interface name suffix for documents keyed by an external vendor id.
+ * Matched as a suffix (`*ExternalIdRelatedById`) so per-vendor markers like
+ * `ZohoExternalIdRelatedById` are picked up alongside the canonical one.
+ */
+const EXTERNAL_ID_KEYED_BY_ID_SUFFIX = 'ExternalIdRelatedById';
+
+/**
+ * Marker-interface name suffixes for documents keyed by a temporal bucket
+ * code (year-week, year-month, …). Matched as suffixes so per-bucket markers
+ * like `YearWeekRelatedById` and `WeekRelatedById` are picked up.
+ */
+const BUCKET_KEYED_BY_ID_SUFFIXES = ['YearWeekRelatedById', 'YearMonthRelatedById', 'WeekRelatedById', 'MonthRelatedById', 'BucketKeyRelatedById'];
+
 /** Shape of an identifier acceptable as a `@dbxModelVariable` long name. */
 const LONG_NAME_RE = /^[a-z][a-zA-Z0-9]*$/;
 
@@ -188,6 +208,21 @@ function extractFromFile(file, content) {
     const extendedNames = collectExtendedNames(iface, interfaceByName);
     if (extendedNames.has(USER_KEYED_BY_ID_MARKER)) entry.userKeyedById = true;
     if (extendedNames.has(USER_RELATED_MARKER)) entry.hasUserUidField = true;
+    if (extendedNames.has(REGION_KEYED_BY_ID_MARKER)) entry.regionKeyedById = true;
+    if (extendedNames.has(DISTRICT_KEYED_BY_ID_MARKER)) entry.districtKeyedById = true;
+    if (hasNameWithSuffix(extendedNames, EXTERNAL_ID_KEYED_BY_ID_SUFFIX)) entry.externalIdKeyedById = true;
+    if (BUCKET_KEYED_BY_ID_SUFFIXES.some((s) => hasNameWithSuffix(extendedNames, s))) entry.bucketKeyedById = true;
+    const archetypeTag = iface.tags.dbxModelArchetype;
+    if (typeof archetypeTag === 'object' && archetypeTag) {
+      entry.archetype = archetypeTag.slug;
+      if (Object.keys(archetypeTag.axes).length > 0) entry.archetypeAxes = archetypeTag.axes;
+    } else {
+      const inferred = inferArchetype(entry);
+      if (inferred) {
+        entry.archetype = inferred.slug;
+        if (Object.keys(inferred.axes).length > 0) entry.archetypeAxes = inferred.axes;
+      }
+    }
     models.push(entry);
   }
 
@@ -244,6 +279,63 @@ function collectExtendedNames(iface, interfaceByName) {
     }
   }
   return out;
+}
+
+/**
+ * Returns `true` when at least one entry in `names` ends with `suffix`. Used
+ * to match per-vendor `*ExternalIdRelatedById` and per-bucket
+ * `*YearWeekRelatedById` markers without requiring an exact name match.
+ */
+function hasNameWithSuffix(names, suffix) {
+  let result = false;
+  for (const name of names) {
+    if (name.endsWith(suffix)) {
+      result = true;
+      break;
+    }
+  }
+  return result;
+}
+
+/**
+ * Heuristic that derives an archetype slug from the partially-built model entry.
+ *
+ * Signals consulted (in priority order):
+ *   1. Doc-id keying / parent fields (`userKeyedById`, `regionKeyedById`,
+ *      `districtKeyedById`, `externalIdKeyedById`, `bucketKeyedById`).
+ *   2. Collection kind (`root-singleton` → `system-state-singleton` /
+ *      `root-singleton-aggregate`; `singleton-sub` → `single-item-sub`;
+ *      `sub-collection` → `sub-collection-entity` baseline).
+ *   3. Whether the model is a root collection vs. subcollection.
+ *
+ * Returns `{ slug, axes }` when the heuristic finds a high-confidence
+ * archetype, or `undefined` when it cannot tag — at which point the model is
+ * emitted without an `archetype` field and a maintainer is expected to add
+ * `@dbxModelArchetype <slug>` to the interface JSDoc.
+ */
+function inferArchetype(entry) {
+  let result;
+  const isRoot = !entry.parentIdentityConst;
+  const isSubcollection = Boolean(entry.parentIdentityConst);
+  const kind = entry.collectionKind;
+  if (entry.bucketKeyedById && isRoot) {
+    result = { slug: 'denormalised-aggregate', axes: { keying: 'bucket-code' } };
+  } else if (entry.userKeyedById && isRoot) {
+    result = { slug: 'user-keyed-entity-root', axes: {} };
+  } else if (entry.externalIdKeyedById && isRoot) {
+    result = { slug: 'external-id-keyed-entity-root', axes: {} };
+  } else if ((entry.regionKeyedById || entry.districtKeyedById) && isRoot) {
+    result = { slug: 'geo-key-entity-root', axes: {} };
+  } else if (kind === 'root-singleton') {
+    result = { slug: 'system-state-singleton', axes: {} };
+  } else if (kind === 'singleton-sub') {
+    result = { slug: 'single-item-sub', axes: {} };
+  } else if (kind === 'sub-collection' && isSubcollection) {
+    result = { slug: 'sub-collection-entity', axes: {} };
+  } else if (kind === 'root' && isRoot) {
+    result = { slug: 'root-entity', axes: {} };
+  }
+  return result;
 }
 
 /**
@@ -628,9 +720,46 @@ function parseJsdocBlock(body) {
       if (value.length > 0) {
         tags.dbxModelVariableSyncFlag = value;
       }
+    } else if (tag === 'dbxModelArchetype') {
+      // `@dbxModelArchetype <slug>[ axisKey=val,axisKey=val,...]` — explicit override
+      // for the heuristic-driven archetype tag. Parses the value into `{ slug, axes }`
+      // so the extractor can emit it unchanged on the model entry.
+      const parsed = parseArchetypeTagValue(value);
+      if (parsed) {
+        tags.dbxModelArchetype = parsed;
+      }
     }
   }
   return { description: description && description.length > 0 ? description : undefined, tags };
+}
+
+/**
+ * Parses a `@dbxModelArchetype <slug>[ axisKey=val,axisKey=val,...]` tag value
+ * into `{ slug, axes }`. Slug must be hyphen-lowercase identifier; axes are
+ * pulled from a comma-separated `key=value` list following an optional space.
+ * Returns `undefined` when the tag has no slug.
+ *
+ * @param value - raw tag value text (everything after `@dbxModelArchetype`)
+ * @returns parsed override, or `undefined` when the slug is missing
+ */
+function parseArchetypeTagValue(value) {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+  const spaceIdx = trimmed.indexOf(' ');
+  const slug = spaceIdx >= 0 ? trimmed.slice(0, spaceIdx).trim() : trimmed;
+  if (!/^[a-z][a-z0-9-]*$/.test(slug)) return undefined;
+  const axes = {};
+  if (spaceIdx >= 0) {
+    const rest = trimmed.slice(spaceIdx + 1).trim();
+    for (const pair of rest.split(',')) {
+      const eq = pair.indexOf('=');
+      if (eq <= 0) continue;
+      const key = pair.slice(0, eq).trim();
+      const v = pair.slice(eq + 1).trim();
+      if (key.length > 0 && v.length > 0) axes[key] = v;
+    }
+  }
+  return { slug, axes };
 }
 
 function parseEnumValue(raw) {

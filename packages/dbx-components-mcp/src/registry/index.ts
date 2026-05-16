@@ -53,6 +53,10 @@ import { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS, type FirebaseModel, type Fireba
 export { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS } from './firebase-models.js';
 export type { FirebaseModel, FirebaseModelGroup, FirebaseEnum, FirebaseEnumValue, FirebaseField } from './firebase-models.js';
 
+// MARK: Model Archetypes
+export { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, MODEL_ARCHETYPE_ADDON_SLUGS, getModelArchetypeBySlug, findModelArchetypeByAlias, resolveModelArchetype, getModelArchetypesBySyncMode, getModelArchetypesByCollectionKind, getModelArchetypesByAxisValue } from './archetypes.js';
+export type { ModelArchetypeInfo, ModelArchetypeSlug, ModelArchetypeSyncMode, ModelArchetypeDocIdSource, ModelArchetypeParentRelation, ModelArchetypeUserRelation, ModelArchetypeMutability, ModelArchetypeSingleItemSubPurpose, ModelArchetypeDenormalisedAggregateKeying, ModelArchetypeExpectedAnswers } from './archetypes.js';
+
 // MARK: Downstream Firebase Models (runtime)
 export { getDownstreamCatalog, clearDownstreamCatalogCache } from './downstream-models-runtime.js';
 export type { DownstreamCatalog, DownstreamCatalogError, GetDownstreamCatalogInput } from './downstream-models-runtime.js';
@@ -125,6 +129,57 @@ export function getFirebaseUserKeyedByIdModels(): readonly FirebaseModel[] {
  */
 export function getFirebaseUserRelatedModels(): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.hasUserUidField === true);
+}
+
+/**
+ * Returns every model whose Firestore document id IS a region key (interface
+ * extends `RegionRelatedById`).
+ *
+ * @returns each region-keyed model in registry order
+ */
+export function getFirebaseRegionKeyedByIdModels(): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.regionKeyedById === true);
+}
+
+/**
+ * Returns every model whose Firestore document id IS a district key (interface
+ * extends `DistrictRelatedById`).
+ *
+ * @returns each district-keyed model in registry order
+ */
+export function getFirebaseDistrictKeyedByIdModels(): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.districtKeyedById === true);
+}
+
+/**
+ * Returns every model whose Firestore document id IS an external vendor id
+ * (interface extends a `*ExternalIdRelatedById` marker).
+ *
+ * @returns each external-id-keyed model in registry order
+ */
+export function getFirebaseExternalIdKeyedByIdModels(): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.externalIdKeyedById === true);
+}
+
+/**
+ * Returns every model whose Firestore document id IS a temporal bucket code
+ * (year-week / year-month / …).
+ *
+ * @returns each bucket-keyed model in registry order
+ */
+export function getFirebaseBucketKeyedByIdModels(): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.bucketKeyedById === true);
+}
+
+/**
+ * Returns every model whose `archetype` matches the given slug. Used by
+ * `dbx_model_archetype_search` peer search.
+ *
+ * @param archetype - the v3 archetype slug to filter by
+ * @returns each matching model in registry order
+ */
+export function getFirebaseModelsByArchetype(archetype: string): readonly FirebaseModel[] {
+  return FIREBASE_MODELS.filter((m) => m.archetype === archetype);
 }
 
 /**

@@ -7,7 +7,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { FIREBASE_MODELS, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseSubcollectionsOf, getFirebaseUserKeyedByIdModels, getFirebaseUserRelatedModels } from '../registry/index.js';
+import { FIREBASE_MODELS, getFirebaseBucketKeyedByIdModels, getFirebaseDistrictKeyedByIdModels, getFirebaseExternalIdKeyedByIdModels, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseRegionKeyedByIdModels, getFirebaseSubcollectionsOf, getFirebaseUserKeyedByIdModels, getFirebaseUserRelatedModels, type FirebaseModel } from '../registry/index.js';
 import { buildModelHierarchy } from '../tools/model-hierarchy.formatter.js';
 
 const FIREBASE_MODELS_URI = 'dbx://model/firebase';
@@ -18,6 +18,40 @@ const FIREBASE_HIERARCHY_URI = 'dbx://model/firebase/hierarchy';
 const FIREBASE_HIERARCHY_TEMPLATE = 'dbx://model/firebase/hierarchy/{root}';
 const FIREBASE_USER_KEYED_BY_ID_URI = 'dbx://model/firebase/user-keyed-by-id';
 const FIREBASE_USER_RELATED_URI = 'dbx://model/firebase/user-related';
+const FIREBASE_REGION_KEYED_BY_ID_URI = 'dbx://model/firebase/region-keyed-by-id';
+const FIREBASE_DISTRICT_KEYED_BY_ID_URI = 'dbx://model/firebase/district-keyed-by-id';
+const FIREBASE_EXTERNAL_ID_KEYED_BY_ID_URI = 'dbx://model/firebase/external-id-keyed-by-id';
+const FIREBASE_BUCKET_KEYED_BY_ID_URI = 'dbx://model/firebase/bucket-keyed-by-id';
+
+interface KeyedByIdResourceConfig {
+  readonly uri: string;
+  readonly title: string;
+  readonly description: string;
+  readonly marker: string;
+  readonly resolver: () => readonly FirebaseModel[];
+}
+
+function registerKeyedByIdResource(server: McpServer, config: KeyedByIdResourceConfig): void {
+  server.registerResource(config.title, config.uri, { title: config.title, description: config.description, mimeType: 'application/json' }, async () => {
+    const models = config.resolver();
+    const payload = {
+      description: config.description,
+      marker: config.marker,
+      models: models.map((m) => ({
+        name: m.name,
+        identityConst: m.identityConst,
+        modelType: m.modelType,
+        collectionPrefix: m.collectionPrefix,
+        parentIdentityConst: m.parentIdentityConst,
+        sourcePackage: m.sourcePackage,
+        sourceFile: m.sourceFile,
+        archetype: m.archetype,
+        archetypeAxes: m.archetypeAxes
+      }))
+    };
+    return { contents: [{ uri: config.uri, mimeType: 'application/json', text: JSON.stringify(payload, null, 2) }] };
+  });
+}
 
 /**
  * Registers the Firebase-model MCP resources (catalog, per-name lookup, prefix
@@ -303,4 +337,36 @@ export function registerFirebaseModelsResource(server: McpServer): void {
       };
     }
   );
+
+  registerKeyedByIdResource(server, {
+    uri: FIREBASE_REGION_KEYED_BY_ID_URI,
+    title: 'dbx-components Firebase Region-Keyed Models',
+    description: 'Models whose Firestore document id IS a region key (interface extends RegionRelatedById).',
+    marker: 'RegionRelatedById',
+    resolver: getFirebaseRegionKeyedByIdModels
+  });
+
+  registerKeyedByIdResource(server, {
+    uri: FIREBASE_DISTRICT_KEYED_BY_ID_URI,
+    title: 'dbx-components Firebase District-Keyed Models',
+    description: 'Models whose Firestore document id IS a district key (interface extends DistrictRelatedById).',
+    marker: 'DistrictRelatedById',
+    resolver: getFirebaseDistrictKeyedByIdModels
+  });
+
+  registerKeyedByIdResource(server, {
+    uri: FIREBASE_EXTERNAL_ID_KEYED_BY_ID_URI,
+    title: 'dbx-components Firebase External-Id-Keyed Models',
+    description: 'Models whose Firestore document id IS an external vendor id (interface extends *ExternalIdRelatedById).',
+    marker: '*ExternalIdRelatedById',
+    resolver: getFirebaseExternalIdKeyedByIdModels
+  });
+
+  registerKeyedByIdResource(server, {
+    uri: FIREBASE_BUCKET_KEYED_BY_ID_URI,
+    title: 'dbx-components Firebase Bucket-Keyed Models',
+    description: 'Models whose Firestore document id IS a temporal bucket code (year-week, year-month, …).',
+    marker: '*BucketKeyRelatedById',
+    resolver: getFirebaseBucketKeyedByIdModels
+  });
 }

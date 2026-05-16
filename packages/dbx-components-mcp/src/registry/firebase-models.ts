@@ -228,6 +228,54 @@ export interface FirebaseModel {
    * {@link userKeyedById}: a model can have either, both, or neither.
    */
   readonly hasUserUidField?: boolean;
+  /**
+   * `true` when the model's interface (or one of its same-file ancestors)
+   * extends `RegionRelatedById` — i.e. the Firestore document id IS the
+   * region key. Parallel signal to {@link userKeyedById} used by the model
+   * archetype recommender and by the `dbx://model/firebase/region-keyed-by-id`
+   * resource.
+   */
+  readonly regionKeyedById?: boolean;
+  /**
+   * `true` when the model's interface extends `DistrictRelatedById` — doc id
+   * IS the district key. Parallel signal to {@link regionKeyedById}.
+   */
+  readonly districtKeyedById?: boolean;
+  /**
+   * `true` when the model's interface (or one of its same-file ancestors)
+   * extends one of the `*ExternalIdRelatedById` marker interfaces — meaning
+   * the Firestore document id IS an external vendor id (Zoho candidate id,
+   * etc.). Used by the model archetype recommender to disambiguate
+   * `external-id-keyed-entity-root` from `external-mirror`.
+   */
+  readonly externalIdKeyedById?: boolean;
+  /**
+   * `true` when the model's interface (or one of its same-file ancestors)
+   * extends a `*BucketKeyRelatedById` / `*YearWeekRelatedById` marker — i.e.
+   * the Firestore document id IS a temporal bucket code (year-week, year-month,
+   * …). Drives the `denormalised-aggregate.keying = bucket-code` axis on the
+   * archetype recommender.
+   */
+  readonly bucketKeyedById?: boolean;
+  /**
+   * Primary archetype slug for this model when known. Populated by the
+   * `extract-firebase-models` heuristic (or pinned by an explicit
+   * `@dbxModelArchetype <slug>` JSDoc tag on the model interface). Absent
+   * when the heuristic cannot tag the model with high enough confidence.
+   *
+   * The slug values are the v3 catalog keys from
+   * `src/registry/archetypes.ts:MODEL_ARCHETYPES`. Surfaced through
+   * `dbx_model_lookup` and consumed by `dbx_model_archetype_search` peer
+   * search.
+   */
+  readonly archetype?: string;
+  /**
+   * Optional axis refinements for {@link archetype} (e.g. `{ subPurpose: 'private' }`
+   * for `single-item-sub` or `{ keying: 'bucket-code', syncMode: 'flag-eventual' }`
+   * for `denormalised-aggregate`). Populated from the same JSDoc override or
+   * heuristic that fills {@link archetype}.
+   */
+  readonly archetypeAxes?: { readonly [axisName: string]: string };
 }
 
 /**
