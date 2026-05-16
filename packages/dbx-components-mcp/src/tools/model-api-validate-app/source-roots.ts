@@ -231,41 +231,64 @@ function toWorkspaceRel(workspaceRoot: string, abs: string): string {
  * @returns The same source with comments replaced by whitespace.
  */
 function stripJsonComments(value: string): string {
-  let out = '';
-  let i = 0;
-  let inString: '"' | "'" | null = null;
-  while (i < value.length) {
-    const ch = value[i];
-    const next = value[i + 1];
-    if (inString) {
-      out += ch;
-      if (ch === '\\' && i + 1 < value.length) {
-        out += next;
-        i += 2;
-        continue;
-      }
-      if (ch === inString) inString = null;
-      i += 1;
+  const state: StripJsonState = { value, out: '', i: 0, inString: null };
+  while (state.i < value.length) {
+    if (state.inString) {
+      consumeStringChar(state);
       continue;
     }
-    if (ch === '"' || ch === "'") {
-      inString = ch;
-      out += ch;
-      i += 1;
-      continue;
-    }
-    if (ch === '/' && next === '/') {
-      while (i < value.length && value[i] !== '\n') i += 1;
-      continue;
-    }
-    if (ch === '/' && next === '*') {
-      i += 2;
-      while (i < value.length && !(value[i] === '*' && value[i + 1] === '/')) i += 1;
-      i += 2;
-      continue;
-    }
-    out += ch;
-    i += 1;
+    if (tryEnterString(state)) continue;
+    if (tryConsumeLineComment(state)) continue;
+    if (tryConsumeBlockComment(state)) continue;
+    state.out += value[state.i];
+    state.i += 1;
   }
-  return out;
+  return state.out;
+}
+
+interface StripJsonState {
+  readonly value: string;
+  out: string;
+  i: number;
+  inString: '"' | "'" | null;
+}
+
+function consumeStringChar(state: StripJsonState): void {
+  const { value, i } = state;
+  const ch = value[i];
+  state.out += ch;
+  if (ch === '\\' && i + 1 < value.length) {
+    state.out += value[i + 1];
+    state.i = i + 2;
+    return;
+  }
+  if (ch === state.inString) state.inString = null;
+  state.i = i + 1;
+}
+
+function tryEnterString(state: StripJsonState): boolean {
+  const ch = state.value[state.i];
+  if (ch !== '"' && ch !== "'") return false;
+  state.inString = ch;
+  state.out += ch;
+  state.i += 1;
+  return true;
+}
+
+function tryConsumeLineComment(state: StripJsonState): boolean {
+  const { value, i } = state;
+  if (value[i] !== '/' || value[i + 1] !== '/') return false;
+  let j = i;
+  while (j < value.length && value[j] !== '\n') j += 1;
+  state.i = j;
+  return true;
+}
+
+function tryConsumeBlockComment(state: StripJsonState): boolean {
+  const { value, i } = state;
+  if (value[i] !== '/' || value[i + 1] !== '*') return false;
+  let j = i + 2;
+  while (j < value.length && !(value[j] === '*' && value[j + 1] === '/')) j += 1;
+  state.i = j + 2;
+  return true;
 }

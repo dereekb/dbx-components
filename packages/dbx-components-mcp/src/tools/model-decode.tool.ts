@@ -117,41 +117,52 @@ interface DetectionResult {
 }
 
 function detectModel(doc: Readonly<Record<string, unknown>>, extraKey: string | undefined, hint: string | undefined): DetectionResult | undefined {
-  if (hint) {
-    const byNameOrIdentity = getFirebaseModel(hint);
-    if (byNameOrIdentity) {
-      const result: DetectionResult = { model: byNameOrIdentity, strategy: 'hint' };
-      return result;
-    }
-    const byPrefix = getFirebaseModelByPrefix(hint);
-    if (byPrefix) {
-      const result: DetectionResult = { model: byPrefix, strategy: 'hint' };
-      return result;
+  const byHint = detectModelByHint(hint);
+  if (byHint) return byHint;
+  const byKey = detectModelByKey(extraKey);
+  if (byKey) return byKey;
+  return detectModelByFieldScore(doc);
+}
+
+function detectModelByHint(hint: string | undefined): DetectionResult | undefined {
+  if (!hint) return undefined;
+  const byNameOrIdentity = getFirebaseModel(hint);
+  if (byNameOrIdentity) {
+    return { model: byNameOrIdentity, strategy: 'hint' };
+  }
+  const byPrefix = getFirebaseModelByPrefix(hint);
+  if (byPrefix) {
+    return { model: byPrefix, strategy: 'hint' };
+  }
+  return undefined;
+}
+
+function detectModelByKey(extraKey: string | undefined): DetectionResult | undefined {
+  if (!extraKey) return undefined;
+  const candidates = keyPrefixCandidates(extraKey);
+  for (const candidate of candidates) {
+    const model = getFirebaseModelByPrefix(candidate);
+    if (model) {
+      return { model, strategy: 'key-prefix' };
     }
   }
+  return undefined;
+}
 
-  if (extraKey) {
-    const slashIdx = extraKey.indexOf('/');
-    const underscoreIdx = extraKey.indexOf('_');
-    const candidates: string[] = [];
-    if (slashIdx > 0) candidates.push(extraKey.slice(0, slashIdx));
-    if (underscoreIdx > 0) candidates.push(extraKey.slice(0, underscoreIdx));
-    for (const candidate of candidates) {
-      const model = getFirebaseModelByPrefix(candidate);
-      if (model) {
-        const result: DetectionResult = { model, strategy: 'key-prefix' };
-        return result;
-      }
-    }
-  }
+function keyPrefixCandidates(extraKey: string): readonly string[] {
+  const candidates: string[] = [];
+  const slashIdx = extraKey.indexOf('/');
+  const underscoreIdx = extraKey.indexOf('_');
+  if (slashIdx > 0) candidates.push(extraKey.slice(0, slashIdx));
+  if (underscoreIdx > 0) candidates.push(extraKey.slice(0, underscoreIdx));
+  return candidates;
+}
 
+function detectModelByFieldScore(doc: Readonly<Record<string, unknown>>): DetectionResult | undefined {
   const docKeys = new Set(Object.keys(doc));
   let best: DetectionResult | undefined;
   for (const model of FIREBASE_MODELS) {
-    let matches = 0;
-    for (const hint of model.detectionHints) {
-      if (docKeys.has(hint)) matches++;
-    }
+    const matches = countDetectionHintMatches(model, docKeys);
     if (matches === 0) continue;
     const converterCoverage = model.fields.filter((f) => docKeys.has(f.name)).length;
     const score = matches * 10 + converterCoverage;
@@ -160,6 +171,14 @@ function detectModel(doc: Readonly<Record<string, unknown>>, extraKey: string | 
     }
   }
   return best;
+}
+
+function countDetectionHintMatches(model: (typeof FIREBASE_MODELS)[number], docKeys: ReadonlySet<string>): number {
+  let matches = 0;
+  for (const hint of model.detectionHints) {
+    if (docKeys.has(hint)) matches++;
+  }
+  return matches;
 }
 
 function buildPrefixMap(): Map<string, string> {

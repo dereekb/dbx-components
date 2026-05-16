@@ -444,35 +444,52 @@ function checkInterfaceReadonly(options: CheckInterfaceReadonlyOptions): void {
 
 // MARK: Maybe without clearable
 function checkMaybeWithoutClearable(file: ExtractedFile, violations: Violation[]): void {
-  const validatorByBase = new Map<string, ExtractedParamsValidator>();
-  for (const v of file.paramsValidators) {
-    const base = validatorBaseName(v.name);
-    if (base) {
-      validatorByBase.set(base, v);
-    }
-  }
+  const validatorByBase = indexValidatorsByBase(file.paramsValidators);
   for (const decl of file.paramsDecls) {
     if (!decl.isInterface) continue;
     const validator = validatorByBase.get(decl.name);
     if (!validator || validator.properties.length === 0) continue;
-    const propByName = new Map<string, (typeof validator.properties)[number]>();
-    for (const p of validator.properties) {
-      propByName.set(p.name, p);
+    checkDeclMaybeFields({ file, decl, validator, violations });
+  }
+}
+
+function indexValidatorsByBase(validators: readonly ExtractedParamsValidator[]): ReadonlyMap<string, ExtractedParamsValidator> {
+  const out = new Map<string, ExtractedParamsValidator>();
+  for (const v of validators) {
+    const base = validatorBaseName(v.name);
+    if (base) {
+      out.set(base, v);
     }
-    for (const field of decl.fields) {
-      if (!field.hasMaybeType) continue;
-      const prop = propByName.get(field.name);
-      if (!prop) continue; // field in interface but not in validator (merged from base type); skip.
-      if (prop.hasClearable) continue;
-      pushViolation(violations, {
-        code: 'PARAMS_MAYBE_WITHOUT_CLEARABLE',
-        severity: 'warning',
-        message: `Field \`${field.name}\` on \`${decl.name}\` is \`Maybe<...>\` but \`${validator.name}\` does not wrap its value in \`clearable(...)\`. Use \`clearable(...)\` to allow explicit clearing.`,
-        file: file.name,
-        line: prop.line,
-        group: file.groupName
-      });
-    }
+  }
+  return out;
+}
+
+interface CheckDeclMaybeFieldsInput {
+  readonly file: ExtractedFile;
+  readonly decl: ExtractedParamsDecl;
+  readonly validator: ExtractedParamsValidator;
+  readonly violations: Violation[];
+}
+
+function checkDeclMaybeFields(input: CheckDeclMaybeFieldsInput): void {
+  const { file, decl, validator, violations } = input;
+  const propByName = new Map<string, (typeof validator.properties)[number]>();
+  for (const p of validator.properties) {
+    propByName.set(p.name, p);
+  }
+  for (const field of decl.fields) {
+    if (!field.hasMaybeType) continue;
+    const prop = propByName.get(field.name);
+    if (!prop) continue; // field in interface but not in validator (merged from base type); skip.
+    if (prop.hasClearable) continue;
+    pushViolation(violations, {
+      code: 'PARAMS_MAYBE_WITHOUT_CLEARABLE',
+      severity: 'warning',
+      message: `Field \`${field.name}\` on \`${decl.name}\` is \`Maybe<...>\` but \`${validator.name}\` does not wrap its value in \`clearable(...)\`. Use \`clearable(...)\` to allow explicit clearing.`,
+      file: file.name,
+      line: prop.line,
+      group: file.groupName
+    });
   }
 }
 

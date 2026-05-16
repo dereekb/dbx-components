@@ -12,7 +12,7 @@
 import type { FirebaseField, FirebaseModel, FirebaseModelGroup, FirebaseSubObject } from '../../registry/firebase-models.js';
 import type { FirestoreCollectionKind } from '../../tools/model-validate/types.js';
 import { collectInheritedProps } from './collect-inherited.js';
-import type { ExtractedConverter, ExtractedEnum, ExtractedIdentity, ExtractedInterface, ExtractedInterfaceProp, ExtractedModelGroup } from './types.js';
+import type { ExtractedConverter, ExtractedEnum, ExtractedIdentity, ExtractedInterface, ExtractedInterfaceProp, ExtractedInterfaceTags, ExtractedModelGroup } from './types.js';
 
 /**
  * Field names that show up on many models and shouldn't seed
@@ -35,6 +35,32 @@ export const USER_KEYED_BY_ID_MARKER = 'UserRelatedById';
  * `user.ts`; alias of `FirebaseAuthUserIdRef`).
  */
 export const USER_RELATED_MARKER = 'UserRelated';
+
+/**
+ * Marker-interface name for documents whose Firestore id IS a region key.
+ * Mirrors `REGION_KEYED_BY_ID_MARKER` in the `.mjs` extractor.
+ */
+export const REGION_KEYED_BY_ID_MARKER = 'RegionRelatedById';
+
+/**
+ * Marker-interface name for documents whose Firestore id IS a district key.
+ * Mirrors `DISTRICT_KEYED_BY_ID_MARKER` in the `.mjs` extractor.
+ */
+export const DISTRICT_KEYED_BY_ID_MARKER = 'DistrictRelatedById';
+
+/**
+ * Marker-interface name for documents whose Firestore id IS an external
+ * vendor's id, regardless of which vendor. Models extend
+ * `ExternalRelatedById<TId>` from `@dereekb/firebase`.
+ */
+export const EXTERNAL_ID_KEYED_BY_ID_MARKER = 'ExternalRelatedById';
+
+/**
+ * Marker-interface name suffixes for documents keyed by a temporal bucket
+ * code (year-week, year-month, …). Matched as suffixes so per-bucket markers
+ * like `YearWeekRelatedById` and `WeekRelatedById` are picked up.
+ */
+export const BUCKET_KEYED_BY_ID_SUFFIXES: readonly string[] = ['YearWeekRelatedById', 'YearMonthRelatedById', 'WeekRelatedById', 'MonthRelatedById', 'BucketKeyRelatedById'];
 
 /**
  * Result of assembling one source file's models + groups.
@@ -172,15 +198,14 @@ function buildModelEntry(args: BuildModelEntryInput): FirebaseModel | undefined 
     subObjectConstIndex: input.subObjectConstIndex,
     subObjectInterfaceIndex: input.subObjectInterfaceIndex
   });
-  const referencedEnums = new Set(fields.flatMap((f) => (f.enumRef ? [f.enumRef] : [])));
-  const relevantEnums = input.enums.filter((e) => referencedEnums.has(e.name));
+  const relevantEnums = filterRelevantEnums(fields, input.enums);
   const detectionHints = fields.map((f) => f.name).filter((n) => !COMMON_FIELDS.has(n));
   const factoryFnName = id.parentIdentityConst ? `${id.modelType}FirestoreCollectionFactory` : `${id.modelType}FirestoreCollection`;
   const collectionKind = input.factoryKinds.get(factoryFnName);
   const groupName = groupByModelName.get(modelName);
-  const extendedNames = collectExtendedNames(iface, interfaceByName);
-  const userKeyedById = extendedNames.has(USER_KEYED_BY_ID_MARKER);
-  const hasUserUidField = extendedNames.has(USER_RELATED_MARKER);
+  const markers = computeMarkerFlags(iface, interfaceByName, id);
+  const archetypeInfo = computeArchetypeInfo({ iface, markers, collectionKind });
+  const compositeKey = resolveCompositeKey(iface.tags.dbxModelCompositeKey);
 
   return {
     name: modelName,
@@ -200,9 +225,185 @@ function buildModelEntry(args: BuildModelEntryInput): FirebaseModel | undefined 
     detectionHints,
     ...(groupName ? { modelGroup: groupName } : {}),
     ...(collectionKind ? { collectionKind } : {}),
-    ...(userKeyedById ? { userKeyedById: true } : {}),
-    ...(hasUserUidField ? { hasUserUidField: true } : {})
+    ...(markers.userKeyedById ? { userKeyedById: true } : {}),
+    ...(markers.hasUserUidField ? { hasUserUidField: true } : {}),
+    ...(markers.regionKeyedById ? { regionKeyedById: true } : {}),
+    ...(markers.districtKeyedById ? { districtKeyedById: true } : {}),
+    ...(markers.externalIdKeyedById ? { externalIdKeyedById: true } : {}),
+    ...(markers.bucketKeyedById ? { bucketKeyedById: true } : {}),
+    ...(markers.organizationalGroupRoot ? { organizationalGroupRoot: true } : {}),
+    ...(markers.aggregatesFromNonEmpty ? { aggregatesFrom: markers.aggregatesFrom } : {}),
+    ...(archetypeInfo.archetypes.length > 0 ? { archetypes: archetypeInfo.archetypes } : {}),
+    ...(archetypeInfo.archetypeAxesBySlug ? { archetypeAxesBySlug: archetypeInfo.archetypeAxesBySlug } : {}),
+    ...(compositeKey ? { compositeKey } : {})
   };
+}
+
+function filterRelevantEnums(fields: readonly FirebaseField[], enums: readonly ExtractedEnum[]): readonly ExtractedEnum[] {
+  const referenced = new Set(fields.flatMap((f) => (f.enumRef ? [f.enumRef] : [])));
+  return enums.filter((e) => referenced.has(e.name));
+}
+
+interface MarkerFlags {
+  readonly isRoot: boolean;
+  readonly userKeyedById: boolean;
+  readonly hasUserUidField: boolean;
+  readonly regionKeyedById: boolean;
+  readonly districtKeyedById: boolean;
+  readonly externalIdKeyedById: boolean;
+  readonly bucketKeyedById: boolean;
+  readonly organizationalGroupRoot: boolean;
+  readonly aggregatesFrom: readonly string[];
+  readonly aggregatesFromNonEmpty: boolean;
+}
+
+function computeMarkerFlags(iface: ExtractedInterface, interfaceByName: ReadonlyMap<string, ExtractedInterface>, id: ExtractedIdentity): MarkerFlags {
+  const extendedNames = collectExtendedNames(iface, interfaceByName);
+  const aggregatesFrom = iface.tags.dbxModelAggregatesFrom;
+  return {
+    isRoot: !id.parentIdentityConst,
+    userKeyedById: extendedNames.has(USER_KEYED_BY_ID_MARKER),
+    hasUserUidField: extendedNames.has(USER_RELATED_MARKER),
+    regionKeyedById: extendedNames.has(REGION_KEYED_BY_ID_MARKER),
+    districtKeyedById: extendedNames.has(DISTRICT_KEYED_BY_ID_MARKER),
+    externalIdKeyedById: extendedNames.has(EXTERNAL_ID_KEYED_BY_ID_MARKER),
+    bucketKeyedById: BUCKET_KEYED_BY_ID_SUFFIXES.some((s) => hasNameWithSuffix(extendedNames, s)),
+    organizationalGroupRoot: iface.tags.dbxModelOrganizationalGroupRoot,
+    aggregatesFrom,
+    aggregatesFromNonEmpty: aggregatesFrom.length > 0
+  };
+}
+
+interface ArchetypeInfo {
+  readonly archetypes: readonly string[];
+  readonly archetypeAxesBySlug: { readonly [slug: string]: { readonly [key: string]: string } } | undefined;
+}
+
+interface ComputeArchetypeInfoInput {
+  readonly iface: ExtractedInterface;
+  readonly markers: MarkerFlags;
+  readonly collectionKind: FirestoreCollectionKind | undefined;
+}
+
+function computeArchetypeInfo(input: ComputeArchetypeInfoInput): ArchetypeInfo {
+  const { iface, markers, collectionKind } = input;
+  const overrideTags = iface.tags.dbxModelArchetypes;
+  const inferred = inferArchetype({
+    isRoot: markers.isRoot,
+    collectionKind,
+    userKeyedById: markers.userKeyedById,
+    regionKeyedById: markers.regionKeyedById,
+    districtKeyedById: markers.districtKeyedById,
+    externalIdKeyedById: markers.externalIdKeyedById,
+    bucketKeyedById: markers.bucketKeyedById,
+    organizationalGroupRoot: markers.organizationalGroupRoot,
+    aggregatesFromNonEmpty: markers.aggregatesFromNonEmpty
+  });
+  const finalArchetypes: readonly InferredArchetype[] = overrideTags.length > 0 ? overrideTags.map((t) => ({ slug: t.slug, axes: t.axes })) : inferred;
+  const archetypes = finalArchetypes.map((a) => a.slug);
+  const archetypeAxesEntries = finalArchetypes.filter((a) => Object.keys(a.axes).length > 0).map((a) => [a.slug, a.axes] as const);
+  const archetypeAxesBySlug = archetypeAxesEntries.length > 0 ? Object.fromEntries(archetypeAxesEntries) : undefined;
+  return { archetypes, archetypeAxesBySlug };
+}
+
+function resolveCompositeKey(rawCompositeKey: ExtractedInterfaceTags['dbxModelCompositeKey']): { readonly from: readonly string[] | '*'; readonly encoding: 'two-way' | 'one-way' } | undefined {
+  if (rawCompositeKey?.encoding === undefined) {
+    return undefined;
+  }
+  const from = rawCompositeKey.from;
+  if (from === '*') {
+    return { from: '*', encoding: rawCompositeKey.encoding };
+  }
+  if (Array.isArray(from) && from.length > 0 && !from.includes('*')) {
+    return { from: from as readonly string[], encoding: rawCompositeKey.encoding };
+  }
+  return undefined;
+}
+
+function hasNameWithSuffix(names: ReadonlySet<string>, suffix: string): boolean {
+  let result = false;
+  for (const name of names) {
+    if (name.endsWith(suffix)) {
+      result = true;
+      break;
+    }
+  }
+  return result;
+}
+
+interface InferArchetypeInput {
+  readonly isRoot: boolean;
+  readonly collectionKind: FirestoreCollectionKind | undefined;
+  readonly userKeyedById: boolean;
+  readonly regionKeyedById: boolean;
+  readonly districtKeyedById: boolean;
+  readonly externalIdKeyedById: boolean;
+  readonly bucketKeyedById: boolean;
+  readonly organizationalGroupRoot: boolean;
+  readonly aggregatesFromNonEmpty: boolean;
+}
+
+interface InferredArchetype {
+  readonly slug: string;
+  readonly axes: { readonly [key: string]: string };
+}
+
+/**
+ * Mirrors `scripts/extract-firebase-models.mjs:inferArchetype`. Returns a
+ * high-confidence archetype tag list derived from doc-id keying +
+ * collection-kind + JSDoc-marker signals, or an empty array when no obvious
+ * tag applies. The `.mjs` script's heuristic is canonical — keep this in sync
+ * if either changes.
+ *
+ * Each rule emits a single slug. A root collection whose doc id is itself a
+ * geo key (`regionKey` / `districtKey`) falls through to `root-entity` — the
+ * composite-key / tree-node distinctions require explicit `@dbxModelArchetype`
+ * tagging since the heuristic can't infer composite-flat-key encoding or
+ * tree-chain participation from pure-key signals alone.
+ *
+ * @param input - the signals the heuristic consumes (root vs. sub, marker-interface flags, collection kind, JSDoc markers)
+ * @returns the inferred archetypes (possibly empty)
+ */
+function inferArchetype(input: InferArchetypeInput): readonly InferredArchetype[] {
+  const slug = resolveArchetypeSlug(input);
+  if (slug === undefined) {
+    return [];
+  }
+  return [slug];
+}
+
+function resolveArchetypeSlug(input: InferArchetypeInput): InferredArchetype | undefined {
+  if (input.isRoot) {
+    const rootSlug = resolveRootArchetypeSlug(input);
+    if (rootSlug !== undefined) return rootSlug;
+  }
+  return resolveCollectionKindSlug(input);
+}
+
+function resolveRootArchetypeSlug(input: InferArchetypeInput): InferredArchetype | undefined {
+  if (input.bucketKeyedById) return { slug: 'denormalised-aggregate', axes: { keying: 'bucket-code' } };
+  if (input.userKeyedById) return { slug: 'user-keyed-entity-root', axes: {} };
+  if (input.externalIdKeyedById) return { slug: 'external-id-keyed-entity-root', axes: {} };
+  return undefined;
+}
+
+function resolveCollectionKindSlug(input: InferArchetypeInput): InferredArchetype | undefined {
+  if (input.collectionKind === 'root-singleton') {
+    return { slug: input.aggregatesFromNonEmpty ? 'root-singleton-aggregate' : 'system-state-singleton', axes: {} };
+  }
+  if (input.collectionKind === 'singleton-sub') {
+    return { slug: 'single-item-sub', axes: {} };
+  }
+  if (input.collectionKind === 'sub-collection' && !input.isRoot) {
+    return { slug: 'sub-collection-entity', axes: {} };
+  }
+  if (input.isRoot && input.organizationalGroupRoot) {
+    return { slug: 'group-root', axes: {} };
+  }
+  if (input.collectionKind === 'root' && input.isRoot) {
+    return { slug: 'root-entity', axes: {} };
+  }
+  return undefined;
 }
 
 interface BuildFieldsInput {

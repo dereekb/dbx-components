@@ -172,6 +172,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
   let forceIsolate: boolean | undefined;
   let maxWorkers: number | undefined;
   let pool: VitestTestConfig['pool'] | undefined;
+  let retry: VitestTestConfig['retry'] | undefined;
 
   const plugins: PluginOption[] = [nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])];
 
@@ -223,6 +224,18 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
        */
       pool = 'forks';
     }
+
+    /**
+     * Firebase emulator tests can be flaky due to emulator startup timing and network latency.
+     * Retry only on vitest test/hook timeouts (matches "Test timed out in 5000ms." and
+     * "Hook timed out in 10000ms.") so genuine assertion failures and other errors surface
+     * immediately. Consumers can override via `test.retry`.
+     */
+    retry = {
+      count: 2,
+      delay: 1000,
+      condition: /timed out in \d+ms/i
+    };
 
     // TODO: Also check that Firebase is currently running via env variables
   }
@@ -279,6 +292,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
         globals: true,
         pool,
         maxWorkers,
+        retry,
         ...testConfig,
         env,
         name: projectName,

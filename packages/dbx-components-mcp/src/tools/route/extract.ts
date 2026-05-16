@@ -388,30 +388,45 @@ function collectResolveKeys(literal: ObjectLiteralExpression): readonly string[]
   if (!initializer) {
     return [];
   }
-  const keys: string[] = [];
   if (Node.isObjectLiteralExpression(initializer)) {
-    for (const member of initializer.getProperties()) {
-      if (Node.isPropertyAssignment(member) || Node.isShorthandPropertyAssignment(member) || Node.isMethodDeclaration(member)) {
-        const nameNode = member.getNameNode();
-        if (nameNode) {
-          keys.push(nameNode.getText());
-        }
-      }
-    }
-  } else if (Node.isArrayLiteralExpression(initializer)) {
-    for (const element of initializer.getElements()) {
-      if (Node.isObjectLiteralExpression(element)) {
-        const tokenProp = element.getProperty('token');
-        if (tokenProp && Node.isPropertyAssignment(tokenProp)) {
-          const tokenInit = tokenProp.getInitializer();
-          if (tokenInit && (Node.isStringLiteral(tokenInit) || Node.isIdentifier(tokenInit))) {
-            keys.push(tokenInit.getText().replaceAll(/^['"]|['"]$/g, ''));
-          }
-        }
-      }
+    return collectResolveKeysFromObject(initializer);
+  }
+  if (Node.isArrayLiteralExpression(initializer)) {
+    return collectResolveKeysFromArray(initializer);
+  }
+  return [];
+}
+
+function collectResolveKeysFromObject(initializer: ObjectLiteralExpression): readonly string[] {
+  const keys: string[] = [];
+  for (const member of initializer.getProperties()) {
+    if (!Node.isPropertyAssignment(member) && !Node.isShorthandPropertyAssignment(member) && !Node.isMethodDeclaration(member)) continue;
+    const nameNode = member.getNameNode();
+    if (nameNode) {
+      keys.push(nameNode.getText());
     }
   }
   return keys;
+}
+
+function collectResolveKeysFromArray(initializer: ArrayLiteralExpression): readonly string[] {
+  const keys: string[] = [];
+  for (const element of initializer.getElements()) {
+    if (!Node.isObjectLiteralExpression(element)) continue;
+    const token = readResolveTokenValue(element);
+    if (token !== undefined) {
+      keys.push(token);
+    }
+  }
+  return keys;
+}
+
+function readResolveTokenValue(element: ObjectLiteralExpression): string | undefined {
+  const tokenProp = element.getProperty('token');
+  if (!tokenProp || !Node.isPropertyAssignment(tokenProp)) return undefined;
+  const tokenInit = tokenProp.getInitializer();
+  if (!tokenInit || (!Node.isStringLiteral(tokenInit) && !Node.isIdentifier(tokenInit))) return undefined;
+  return tokenInit.getText().replaceAll(/^['"]|['"]$/g, '');
 }
 
 // MARK: Imports for transitive resolution

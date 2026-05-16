@@ -40,6 +40,59 @@ export function checkManifestIdentityDuplicates(models: readonly FirebaseModel[]
   return violations;
 }
 
+/**
+ * Manifest-level resolution of `@dbxModelCompositeKey from=...` entries. For
+ * each model carrying a well-formed composite-key tag with a concrete `from`
+ * list (wildcard `'*'` is skipped — open by design), every entry must match
+ * a model in the merged manifest by interface name, identity const (with the
+ * `Identity` suffix dropped), or `modelType`. Case-insensitive. Per-file
+ * issues (missing `from`, invalid encoding, wildcard mixed with concrete
+ * entries) are handled by the per-file rule pass in `rules.ts`; this rule is
+ * the cross-package resolver.
+ *
+ * Emits one `MODEL_COMPOSITE_KEY_UNKNOWN_MODEL` violation per unresolved
+ * entry, anchored at the declaring model's source file with no line (the
+ * line lives on the source's per-file rule pass, not the manifest entry).
+ *
+ * @param models - every model from the merged manifest (upstream + downstream)
+ * @returns one violation per unresolved `from=` entry
+ */
+export function checkManifestCompositeKeyFrom(models: readonly FirebaseModel[]): readonly Violation[] {
+  const violations: Violation[] = [];
+  const resolver = buildManifestNameResolver(models);
+  for (const model of models) {
+    const tag = model.compositeKey;
+    if (tag === undefined || tag.from === '*') continue;
+    for (const entry of tag.from) {
+      if (!resolver(entry)) {
+        violations.push({
+          code: 'MODEL_COMPOSITE_KEY_UNKNOWN_MODEL',
+          severity: 'error',
+          message: `Composite-key source \`${entry}\` (declared on \`${model.name}\` in ${model.sourcePackage} — ${model.sourceFile}) does not resolve to any model in the merged manifest. Names match interface, identity const (with \`Identity\` suffix dropped), or \`modelType\` — fix the typo or add the missing model to a discovered component.`,
+          file: model.sourceFile,
+          line: undefined,
+          model: model.name,
+          remediation: attachRemediation('MODEL_COMPOSITE_KEY_UNKNOWN_MODEL')
+        });
+      }
+    }
+  }
+  return violations;
+}
+
+function buildManifestNameResolver(models: readonly FirebaseModel[]): (name: string) => boolean {
+  const index = new Set<string>();
+  for (const m of models) {
+    index.add(m.name.toLowerCase());
+    index.add(m.modelType.toLowerCase());
+    index.add(m.identityConst.toLowerCase());
+    if (m.identityConst.endsWith('Identity')) {
+      index.add(m.identityConst.slice(0, -'Identity'.length).toLowerCase());
+    }
+  }
+  return (name: string) => index.has(name.toLowerCase());
+}
+
 // MARK: Helpers
 type DuplicateKey = 'collectionPrefix' | 'modelType';
 

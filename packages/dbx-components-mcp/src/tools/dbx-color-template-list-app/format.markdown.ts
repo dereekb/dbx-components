@@ -10,10 +10,10 @@ import type { ColorTemplateConfig, ColorTemplateEntry, ColorTemplateListAppRepor
  */
 export function formatReportAsMarkdown(report: ColorTemplateListAppReport): string {
   const lines: string[] = [`# Color templates — ${report.apiDir}`, '', `App: \`${report.apiDir}\``];
-  if (report.provideCallLocation !== undefined) {
-    lines.push(`\`provideDbxStyleService(...)\`: \`${report.provideCallLocation.file}:${report.provideCallLocation.line}\``);
-  } else {
+  if (report.provideCallLocation === undefined) {
     lines.push('`provideDbxStyleService(...)`: _not found in any root config file_');
+  } else {
+    lines.push(`\`provideDbxStyleService(...)\`: \`${report.provideCallLocation.file}:${report.provideCallLocation.line}\``);
   }
   lines.push('', `## Templates (${report.templates.length})`);
   if (report.templates.length === 0) {
@@ -39,9 +39,7 @@ export function formatReportAsMarkdown(report: ColorTemplateListAppReport): stri
 
 function formatTemplateBlock(template: ColorTemplateEntry): string {
   const heading = `### \`${template.key}\``;
-  const rows: string[] = [heading];
-  rows.push(`- Config: ${formatConfigInline(template.config)}`);
-  rows.push(`- Source: \`${template.sourceFile}:${template.sourceLine}\``);
+  const rows: string[] = [heading, `- Config: ${formatConfigInline(template.config)}`, `- Source: \`${template.sourceFile}:${template.sourceLine}\``];
   return rows.join('\n');
 }
 

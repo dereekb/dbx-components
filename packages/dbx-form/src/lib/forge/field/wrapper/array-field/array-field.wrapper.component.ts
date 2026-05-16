@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
-import { arrayEvent, type ArrayItemDefinitionTemplate, EventDispatcher, type FieldWrapperContract, type WrapperFieldInputs, DynamicTextPipe } from '@ng-forge/dynamic-forms';
+import { arrayEvent, type ArrayItemDefinitionTemplate, EventDispatcher, type FieldWrapper, type WrapperFieldInputs, DynamicTextPipe } from '@ng-forge/dynamic-forms';
 import { AsyncPipe } from '@angular/common';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { type DbxButtonStyle, DbxButtonComponent } from '@dereekb/dbx-web';
@@ -24,7 +24,7 @@ import { DbxForgeFormContextService } from '../../../form/forge.context.service'
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeArrayFieldWrapperComponent implements FieldWrapperContract {
+export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
   readonly fieldInputs = input<WrapperFieldInputs>();

@@ -635,53 +635,60 @@ function skipNestedBlock(body: string, fromIndex: number): number {
 
 function parseDeclarations(body: string): readonly ExtractedCssDeclaration[] {
   const declarations: ExtractedCssDeclaration[] = [];
-  // Walk the body character-by-character so we can ignore content inside
-  // nested rules and balance parentheses for things like `calc(100% - 8px)`.
   const state: DeclScanState = { parenDepth: 0, buffer: '', inLineComment: false, inBlockComment: false, index: 0 };
 
   while (state.index < body.length) {
-    const char = body[state.index];
-    const next = body[state.index + 1];
-
-    if (state.inLineComment) {
-      advanceInLineComment(state, char);
+    if (advanceCommentState(state, body)) {
       continue;
     }
-    if (state.inBlockComment) {
-      advanceInBlockComment(state, char, next);
+    if (consumeDeclarationChar(state, body, declarations)) {
       continue;
     }
-    if (tryEnterComment(state, char, next)) {
-      continue;
-    }
-
-    if (char === '(') state.parenDepth += 1;
-    else if (char === ')' && state.parenDepth > 0) state.parenDepth -= 1;
-
-    if (state.parenDepth === 0 && char === '{') {
-      // Entering a nested rule — skip until matching `}` at depth-0.
-      state.index = skipNestedBlock(body, state.index + 1);
-      state.buffer = '';
-      continue;
-    }
-
-    if (state.parenDepth === 0 && char === ';') {
-      const decl = parseSingleDeclaration(state.buffer);
-      if (decl !== null) declarations.push(decl);
-      state.buffer = '';
-      state.index += 1;
-      continue;
-    }
-
-    state.buffer += char;
+    state.buffer += body[state.index];
     state.index += 1;
   }
 
-  // Trailing declaration without semicolon
   const trailing = parseSingleDeclaration(state.buffer);
   if (trailing !== null) declarations.push(trailing);
 
   return declarations;
+}
+
+function advanceCommentState(state: DeclScanState, body: string): boolean {
+  const char = body[state.index];
+  const next = body[state.index + 1];
+  if (state.inLineComment) {
+    advanceInLineComment(state, char);
+    return true;
+  }
+  if (state.inBlockComment) {
+    advanceInBlockComment(state, char, next);
+    return true;
+  }
+  return tryEnterComment(state, char, next);
+}
+
+function consumeDeclarationChar(state: DeclScanState, body: string, declarations: ExtractedCssDeclaration[]): boolean {
+  const char = body[state.index];
+  if (char === '(') state.parenDepth += 1;
+  else if (char === ')' && state.parenDepth > 0) state.parenDepth -= 1;
+
+  if (state.parenDepth !== 0) {
+    return false;
+  }
+  if (char === '{') {
+    state.index = skipNestedBlock(body, state.index + 1);
+    state.buffer = '';
+    return true;
+  }
+  if (char === ';') {
+    const decl = parseSingleDeclaration(state.buffer);
+    if (decl !== null) declarations.push(decl);
+    state.buffer = '';
+    state.index += 1;
+    return true;
+  }
+  return false;
 }
 
 function parseSingleDeclaration(raw: string): ExtractedCssDeclaration | null {

@@ -39,7 +39,7 @@ import { inspectAppFixtures, validateAppFixtures, type FixtureDiagnostic } from 
 import { RESERVED_MODEL_FOLDERS } from './model-validate-folder/types.js';
 import { inspectFolder as inspectModelFolder, validateModelFolders } from './model-validate-folder/index.js';
 import { inspectFolder as inspectSystemFolder, validateSystemFolders } from './system-m-validate-folder/index.js';
-import { checkManifestIdentityDuplicates } from './model-validate/manifest-rules.js';
+import { checkManifestCompositeKeyFrom, checkManifestIdentityDuplicates } from './model-validate/manifest-rules.js';
 import { inspectAppAssets, validateAppAssets } from './dbx-asset-validate-app/index.js';
 import { validateAppModelApi } from './model-api-validate-app/index.js';
 import { FIREBASE_MODELS } from '../registry/firebase-models.js';
@@ -132,26 +132,9 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
-  try {
-    ensurePathInsideCwd(parsed.componentDir, cwd);
-    ensurePathInsideCwd(parsed.apiDir, cwd);
-  } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
-  }
-  if (parsed.webDir !== undefined) {
-    try {
-      ensurePathInsideCwd(parsed.webDir, cwd);
-    } catch (err) {
-      return toolError(err instanceof Error ? err.message : String(err));
-    }
-  }
-  if (parsed.indexesFile !== undefined) {
-    try {
-      ensurePathInsideCwd(parsed.indexesFile, cwd);
-    } catch (err) {
-      return toolError(err instanceof Error ? err.message : String(err));
-    }
-  }
+  const pathCheck = ensureArgPaths(parsed, cwd);
+  if (pathCheck !== undefined) return pathCheck;
+
   const componentAbs = resolve(cwd, parsed.componentDir);
   const apiAbs = resolve(cwd, parsed.apiDir);
   const webAbs = parsed.webDir === undefined ? undefined : resolve(cwd, parsed.webDir);
@@ -163,15 +146,19 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   const skipped: ClusterName[] = [];
   const clusterErrors: { cluster: ClusterName; message: string }[] = [];
 
-  await runStorageFileM({ componentAbs, apiAbs, componentRel: parsed.componentDir, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors });
-  await runNotificationM({ componentAbs, apiAbs, componentRel: parsed.componentDir, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors });
-  await runFixture({ apiAbs, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors });
-  await runModelFolders({ componentAbs, componentRel: parsed.componentDir, skip, skipped, findings, clusterErrors });
-  await runSystemFolder({ componentAbs, componentRel: parsed.componentDir, skip, skipped, findings, clusterErrors });
-  await runManifest({ workspaceRoot: cwd, skip, skipped, findings, clusterErrors });
-  await runModelApi({ componentAbs, apiAbs, componentRel: parsed.componentDir, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors });
-  await runFirebaseIndex({ componentAbs, componentRel: parsed.componentDir, indexesAbs, indexesRel, skip, skipped, findings, clusterErrors });
-  await runAsset({ componentAbs, componentRel: parsed.componentDir, webAbs, webRel: parsed.webDir, skip, skipped, findings, clusterErrors });
+  await runAllClusters({
+    parsed,
+    cwd,
+    componentAbs,
+    apiAbs,
+    webAbs,
+    indexesAbs,
+    indexesRel,
+    skip,
+    skipped,
+    findings,
+    clusterErrors
+  });
 
   const errorCount = findings.filter((f) => f.severity === 'error').length;
   const warningCount = findings.length - errorCount;
@@ -179,6 +166,57 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   const text = parsed.format === 'json' ? formatJson(report) : formatMarkdown(report);
   const result: ToolResult = { content: [{ type: 'text', text }], isError: errorCount > 0 || clusterErrors.length > 0 };
   return result;
+}
+
+interface ParsedAppValidateArgs {
+  readonly componentDir: string;
+  readonly apiDir: string;
+  readonly webDir?: string;
+  readonly indexesFile?: string;
+  readonly format?: 'markdown' | 'json';
+  readonly skip?: readonly ClusterName[];
+}
+
+function ensureArgPaths(parsed: ParsedAppValidateArgs, cwd: string): ToolResult | undefined {
+  const candidates: (string | undefined)[] = [parsed.componentDir, parsed.apiDir, parsed.webDir, parsed.indexesFile];
+  try {
+    for (const candidate of candidates) {
+      if (candidate !== undefined) ensurePathInsideCwd(candidate, cwd);
+    }
+  } catch (err) {
+    return toolError(err instanceof Error ? err.message : String(err));
+  }
+  return undefined;
+}
+
+interface RunAllClustersInput {
+  readonly parsed: ParsedAppValidateArgs;
+  readonly cwd: string;
+  readonly componentAbs: string;
+  readonly apiAbs: string;
+  readonly webAbs: string | undefined;
+  readonly indexesAbs: string;
+  readonly indexesRel: string;
+  readonly skip: ReadonlySet<ClusterName>;
+  readonly skipped: ClusterName[];
+  readonly findings: AggregatedFinding[];
+  readonly clusterErrors: { cluster: ClusterName; message: string }[];
+}
+
+async function runAllClusters(input: RunAllClustersInput): Promise<void> {
+  const { parsed, cwd, componentAbs, apiAbs, webAbs, indexesAbs, indexesRel, skip, skipped, findings, clusterErrors } = input;
+  const componentApiCtx: ComponentApiCtx = { componentAbs, apiAbs, componentRel: parsed.componentDir, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors };
+  const componentOnlyCtx: ComponentOnlyCtx = { componentAbs, componentRel: parsed.componentDir, skip, skipped, findings, clusterErrors };
+
+  await runStorageFileM(componentApiCtx);
+  await runNotificationM(componentApiCtx);
+  await runFixture({ apiAbs, apiRel: parsed.apiDir, skip, skipped, findings, clusterErrors });
+  await runModelFolders(componentOnlyCtx);
+  await runSystemFolder(componentOnlyCtx);
+  await runManifest({ workspaceRoot: cwd, skip, skipped, findings, clusterErrors });
+  await runModelApi(componentApiCtx);
+  await runFirebaseIndex({ ...componentOnlyCtx, indexesAbs, indexesRel });
+  await runAsset({ ...componentOnlyCtx, webAbs, webRel: parsed.webDir });
 }
 
 interface FanOutCtx {
@@ -309,7 +347,7 @@ async function runManifest(ctx: ManifestCtx): Promise<void> {
   try {
     const downstream = await getDownstreamCatalog({ workspaceRoot: ctx.workspaceRoot });
     const merged = [...FIREBASE_MODELS, ...downstream.models];
-    const violations = checkManifestIdentityDuplicates(merged);
+    const violations = [...checkManifestIdentityDuplicates(merged), ...checkManifestCompositeKeyFrom(merged)];
     for (const v of violations) {
       ctx.findings.push(toFinding({ cluster: 'manifest', code: v.code, severity: v.severity, message: v.message, file: v.file, line: v.line }));
     }

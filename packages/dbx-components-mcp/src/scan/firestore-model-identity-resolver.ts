@@ -148,10 +148,7 @@ function parseFirestoreModelIdentityCall(call: CallExpression): ParsedFirestoreM
   if (firstArg.getKind() === SyntaxKind.Identifier || firstArg.getKind() === SyntaxKind.PropertyAccessExpression) {
     isNested = true;
     stringArgsStart = 1;
-  } else if (firstArg.getKind() === SyntaxKind.StringLiteral || firstArg.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral) {
-    isNested = false;
-    stringArgsStart = 0;
-  } else {
+  } else if (firstArg.getKind() !== SyntaxKind.StringLiteral && firstArg.getKind() !== SyntaxKind.NoSubstitutionTemplateLiteral) {
     return undefined;
   }
 
@@ -188,9 +185,7 @@ function buildResolverFromRecords(records: readonly ResolvedFirestoreModelIdenti
   function lookupByTypeName(typeName: string): ResolvedFirestoreModelIdentity | undefined {
     const camel = toCamelCase(typeName);
     let result = byModelType.get(camel);
-    if (result === undefined) {
-      result = byIdentityConst.get(`${camel}Identity`);
-    }
+    result ??= byIdentityConst.get(`${camel}Identity`);
     if (result === undefined) {
       // Fallback: scan all records for a case-insensitive modelType match.
       const lower = camel.toLowerCase();

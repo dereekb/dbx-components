@@ -78,54 +78,69 @@ interface ParseObjectLiteralInput {
   readonly obj: ObjectLiteralExpression;
 }
 
+interface TsParseState {
+  readonly raw: { -readonly [K in keyof NormalizedColorConfig]: NormalizedColorConfig[K] };
+  dynamic: boolean;
+  hasTemplate: boolean;
+  hasKnownField: boolean;
+  hasUnknownKey: boolean;
+}
+
+function processTsObjectProperty(prop: ReturnType<ObjectLiteralExpression['getProperties']>[number], state: TsParseState): void {
+  if (Node.isSpreadAssignment(prop)) {
+    state.dynamic = true;
+    return;
+  }
+  if (!Node.isPropertyAssignment(prop) && !Node.isShorthandPropertyAssignment(prop)) {
+    state.dynamic = true;
+    return;
+  }
+  const name = prop.getName();
+  if (!KNOWN_CONFIG_KEYS.has(name)) {
+    state.hasUnknownKey = true;
+    return;
+  }
+  state.hasKnownField = true;
+  if (name === 'template') {
+    state.hasTemplate = true;
+    return;
+  }
+  if (!Node.isPropertyAssignment(prop)) {
+    state.dynamic = true;
+    return;
+  }
+  const value = prop.getInitializer();
+  if (value === undefined) return;
+  assignRawField({
+    raw: state.raw,
+    name,
+    value,
+    onDynamic: () => {
+      state.dynamic = true;
+    }
+  });
+}
+
 function parseObjectLiteral(input: ParseObjectLiteralInput): ExtractedLiteral | undefined {
   const { filePath, obj } = input;
-  let dynamic = false;
-  let hasTemplate = false;
-  let hasKnownField = false;
-  const raw: { -readonly [K in keyof NormalizedColorConfig]: NormalizedColorConfig[K] } = {};
+  const state: TsParseState = {
+    raw: {},
+    dynamic: false,
+    hasTemplate: false,
+    hasKnownField: false,
+    hasUnknownKey: false
+  };
   for (const prop of obj.getProperties()) {
-    if (Node.isSpreadAssignment(prop)) {
-      dynamic = true;
-      continue;
-    }
-    if (!Node.isPropertyAssignment(prop) && !Node.isShorthandPropertyAssignment(prop)) {
-      dynamic = true;
-      continue;
-    }
-    const name = prop.getName();
-    if (!KNOWN_CONFIG_KEYS.has(name)) {
-      return undefined; // not a color config — has unknown keys
-    }
-    hasKnownField = true;
-    if (name === 'template') {
-      hasTemplate = true;
-      continue;
-    }
-    if (!Node.isPropertyAssignment(prop)) {
-      dynamic = true;
-      continue;
-    }
-    const value = prop.getInitializer();
-    if (value === undefined) continue;
-    assignRawField({
-      raw,
-      name,
-      value,
-      onDynamic: () => {
-        dynamic = true;
-      }
-    });
+    processTsObjectProperty(prop, state);
+    if (state.hasUnknownKey) return undefined;
   }
-  if (!hasKnownField) return undefined;
-  if (hasTemplate) {
-    return undefined;
-  }
+  if (!state.hasKnownField) return undefined;
+  if (state.hasTemplate) return undefined;
   const start = obj.getStart();
   const sf = obj.getSourceFile();
   const { line, column } = sf.getLineAndColumnAtPos(start);
   const snippet = collapseSnippet(obj.getText());
-  const literal: ExtractedLiteral = { file: filePath, line, column, source: 'ts', snippet, raw, hasTemplate: false, dynamic };
+  const literal: ExtractedLiteral = { file: filePath, line, column, source: 'ts', snippet, raw: state.raw, hasTemplate: false, dynamic: state.dynamic };
   return literal;
 }
 
@@ -158,28 +173,28 @@ function assignRawField(input: AssignRawFieldInput): void {
   onDynamic();
 }
 
+function hasColorTypedTypeNode(parent: { getTypeNode: () => { getText: () => string } | undefined }): boolean {
+  const tn = parent.getTypeNode();
+  return tn !== undefined && COLOR_TYPE_NAMES.has(tn.getText());
+}
+
 function isInColorPosition(obj: ObjectLiteralExpression): boolean {
   const parent = obj.getParent();
   if (parent === undefined) return false;
   if (Node.isVariableDeclaration(parent)) {
-    const tn = parent.getTypeNode();
-    return tn !== undefined && COLOR_TYPE_NAMES.has(tn.getText());
+    return hasColorTypedTypeNode(parent);
   }
   if (Node.isPropertyAssignment(parent)) {
-    const name = parent.getName();
-    if (COLOR_INPUT_NAMES.has(name)) return true;
+    return COLOR_INPUT_NAMES.has(parent.getName());
   }
   if (Node.isPropertyDeclaration(parent) || Node.isPropertySignature(parent)) {
-    const tn = parent.getTypeNode();
-    if (tn !== undefined && COLOR_TYPE_NAMES.has(tn.getText())) return true;
+    return hasColorTypedTypeNode(parent);
   }
   if (Node.isParameterDeclaration(parent)) {
-    const tn = parent.getTypeNode();
-    if (tn !== undefined && COLOR_TYPE_NAMES.has(tn.getText())) return true;
+    return hasColorTypedTypeNode(parent);
   }
   if (Node.isAsExpression(parent) || Node.isTypeAssertion(parent)) {
-    const tn = parent.getTypeNode();
-    if (tn !== undefined && COLOR_TYPE_NAMES.has(tn.getText())) return true;
+    return hasColorTypedTypeNode(parent);
   }
   return false;
 }
@@ -263,46 +278,72 @@ interface ParseObjectInnerResult {
 
 const HTML_FIELD_RE = /([A-Za-z_$][A-Za-z0-9_$]*)\s*:\s*([^,]+)/g;
 
+interface HtmlParseState {
+  readonly raw: { -readonly [K in keyof NormalizedColorConfig]: NormalizedColorConfig[K] };
+  hasKnownField: boolean;
+  hasTemplate: boolean;
+  hasUnknownKey: boolean;
+  dynamic: boolean;
+}
+
+function processHtmlField(key: string, rawValue: string, state: HtmlParseState): void {
+  if (!KNOWN_CONFIG_KEYS.has(key)) {
+    state.hasUnknownKey = true;
+    return;
+  }
+  state.hasKnownField = true;
+  if (key === 'template') {
+    state.hasTemplate = true;
+    return;
+  }
+  if (key === 'tonal') {
+    assignHtmlTonal(rawValue, state);
+    return;
+  }
+  if (key === 'tone') {
+    assignHtmlTone(rawValue, state);
+    return;
+  }
+  assignHtmlStringField(key, rawValue, state);
+}
+
+function assignHtmlTonal(rawValue: string, state: HtmlParseState): void {
+  if (rawValue === 'true') state.raw.tonal = true;
+  else if (rawValue === 'false') state.raw.tonal = false;
+  else state.dynamic = true;
+}
+
+function assignHtmlTone(rawValue: string, state: HtmlParseState): void {
+  const num = Number(rawValue);
+  if (Number.isFinite(num) && /^\d+(\.\d+)?$/.test(rawValue)) state.raw.tone = num;
+  else state.dynamic = true;
+}
+
+function assignHtmlStringField(key: string, rawValue: string, state: HtmlParseState): void {
+  const stringValue = readHtmlStringLiteral(rawValue);
+  if (stringValue === undefined) {
+    state.dynamic = true;
+    return;
+  }
+  if (key === 'color') state.raw.color = stringValue;
+  else if (key === 'contrast') state.raw.contrast = stringValue;
+}
+
 function parseObjectInner(inner: string): ParseObjectInnerResult | undefined {
-  const raw: { -readonly [K in keyof NormalizedColorConfig]: NormalizedColorConfig[K] } = {};
-  let hasKnownField = false;
-  let hasTemplate = false;
-  let hasUnknownKey = false;
-  let dynamic = false;
+  const state: HtmlParseState = {
+    raw: {},
+    hasKnownField: false,
+    hasTemplate: false,
+    hasUnknownKey: false,
+    dynamic: false
+  };
   const matches = inner.matchAll(HTML_FIELD_RE);
   for (const match of matches) {
     const key = match[1];
     const rawValue = match[2].trim().replace(/,?$/, '').trim();
-    if (!KNOWN_CONFIG_KEYS.has(key)) {
-      hasUnknownKey = true;
-      continue;
-    }
-    hasKnownField = true;
-    if (key === 'template') {
-      hasTemplate = true;
-      continue;
-    }
-    if (key === 'tonal') {
-      if (rawValue === 'true') raw.tonal = true;
-      else if (rawValue === 'false') raw.tonal = false;
-      else dynamic = true;
-      continue;
-    }
-    if (key === 'tone') {
-      const num = Number(rawValue);
-      if (Number.isFinite(num) && /^\d+(\.\d+)?$/.test(rawValue)) raw.tone = num;
-      else dynamic = true;
-      continue;
-    }
-    const stringValue = readHtmlStringLiteral(rawValue);
-    if (stringValue === undefined) {
-      dynamic = true;
-      continue;
-    }
-    if (key === 'color') raw.color = stringValue;
-    else if (key === 'contrast') raw.contrast = stringValue;
+    processHtmlField(key, rawValue, state);
   }
-  return { raw, hasKnownField, hasTemplate, hasUnknownKey, dynamic };
+  return { raw: state.raw, hasKnownField: state.hasKnownField, hasTemplate: state.hasTemplate, hasUnknownKey: state.hasUnknownKey, dynamic: state.dynamic };
 }
 
 function readHtmlStringLiteral(value: string): string | undefined {
@@ -310,7 +351,7 @@ function readHtmlStringLiteral(value: string): string | undefined {
   let result: string | undefined;
   if (trimmed.length >= 2) {
     const first = trimmed[0];
-    const last = trimmed[trimmed.length - 1];
+    const last = trimmed.at(-1);
     if ((first === "'" && last === "'") || (first === '"' && last === '"')) {
       result = trimmed.slice(1, -1);
     }
@@ -327,7 +368,7 @@ function positionAt(text: string, offset: number): FilePosition {
   let line = 1;
   let lastNewline = -1;
   for (let i = 0; i < offset; i++) {
-    if (text.charCodeAt(i) === 10) {
+    if (text.codePointAt(i) === 10) {
       line += 1;
       lastNewline = i;
     }

@@ -108,13 +108,7 @@ function appendDeprecationNotice(lines: string[], entry: ModelFirebaseIndexEntry
   lines.push(`> ⚠️ Deprecated: ${deprecationNote}`, '');
 }
 
-function appendFullEntrySections(lines: string[], entry: ModelFirebaseIndexEntryInfo): void {
-  if (entry.params.length > 0) {
-    lines.push('## Params', '', formatParamsTable(entry.params), '');
-  }
-  if (entry.returns.length > 0) {
-    lines.push(`**Returns:** \`${entry.returns}\``, '');
-  }
+function appendIndexBody(lines: string[], entry: ModelFirebaseIndexEntryInfo): void {
   if (entry.derivedComposites.length > 0) {
     lines.push('## Composite indexes required', '', entry.derivedComposites.map(formatComposite).join('\n\n'), '');
   }
@@ -124,6 +118,9 @@ function appendFullEntrySections(lines: string[], entry: ModelFirebaseIndexEntry
   if (entry.derivedComposites.length === 0 && entry.derivedFieldOverrides.length === 0 && !entry.skip) {
     lines.push("_This factory requires no composite index or fieldOverride — Firestore's automatic single-field COLLECTION-scope index covers it._", '');
   }
+}
+
+function appendEntryFooter(lines: string[], entry: ModelFirebaseIndexEntryInfo): void {
   if (entry.example.length > 0) {
     lines.push('## Example', '', '```ts', entry.example, '```', '');
   }
@@ -136,6 +133,17 @@ function appendFullEntrySections(lines: string[], entry: ModelFirebaseIndexEntry
   if (entry.skillRefs.length > 0) {
     lines.push(`→ Skills: ${entry.skillRefs.map((s) => code(s)).join(', ')}`);
   }
+}
+
+function appendFullEntrySections(lines: string[], entry: ModelFirebaseIndexEntryInfo): void {
+  if (entry.params.length > 0) {
+    lines.push('## Params', '', formatParamsTable(entry.params), '');
+  }
+  if (entry.returns.length > 0) {
+    lines.push(`**Returns:** \`${entry.returns}\``, '');
+  }
+  appendIndexBody(lines, entry);
+  appendEntryFooter(lines, entry);
 }
 
 function formatEntry(entry: ModelFirebaseIndexEntryInfo, depth: LookupDepth): string {
@@ -188,7 +196,9 @@ function formatCatalog(entries: readonly ModelFirebaseIndexEntryInfo[]): string 
     const flagBadge = `${entry.skip ? ' *skip*' : ''}${entry.manual ? ' *manual*' : ''}`;
     const compositeCount = entry.derivedComposites.length;
     const overrideCount = entry.derivedFieldOverrides.reduce((sum, f) => sum + f.variants.length, 0);
-    const indexNote = compositeCount === 0 && overrideCount === 0 ? 'auto-indexed' : `${compositeCount} composite${compositeCount === 1 ? '' : 's'} • ${overrideCount} override${overrideCount === 1 ? '' : 's'}`;
+    const compositeLabel = `${compositeCount} composite${compositeCount === 1 ? '' : 's'}`;
+    const overrideLabel = `${overrideCount} override${overrideCount === 1 ? '' : 's'}`;
+    const indexNote = compositeCount === 0 && overrideCount === 0 ? 'auto-indexed' : `${compositeLabel} • ${overrideLabel}`;
     lines.push(`- \`${entry.slug}\` → \`${entry.name}\`${scopeBadge}${flagBadge} — ${indexNote}`);
   }
   return lines.join('\n').trimEnd();

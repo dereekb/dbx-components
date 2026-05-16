@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, viewChild, ViewContainerRef } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { FIELD_SIGNAL_CONTEXT, type FieldSignalContext, type FieldWrapperContract } from '@ng-forge/dynamic-forms';
+import { FIELD_SIGNAL_CONTEXT, type FieldSignalContext, type FieldWrapper } from '@ng-forge/dynamic-forms';
 
 /**
  * Forge wrapper component that renders child fields with a loading
  * indicator shown during async validation.
  *
- * Implements {@link FieldWrapperContract} and monitors the field tree's
+ * Implements {@link FieldWrapper} and monitors the field tree's
  * pending signal to detect when async validators are running.
  */
 @Component({
@@ -23,7 +23,7 @@ import { FIELD_SIGNAL_CONTEXT, type FieldSignalContext, type FieldWrapperContrac
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeWorkingWrapperComponent implements FieldWrapperContract {
+export class DbxForgeWorkingWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
   private readonly fieldSignalContext = inject(FIELD_SIGNAL_CONTEXT) as FieldSignalContext;

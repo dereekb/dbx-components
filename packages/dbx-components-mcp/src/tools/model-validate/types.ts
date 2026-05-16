@@ -248,6 +248,47 @@ export interface ExtractedDataInterface {
    */
   readonly extendsNames: readonly string[];
   readonly fields: readonly ExtractedField[];
+  /**
+   * Every `@dbxModelArchetype <slug>[ axisKey=val,...]` tag found on this
+   * interface, in source order. Empty when the interface carries no archetype
+   * override. Captured here so per-file rules can cross-reference the
+   * composite-key tag against the declared archetypes.
+   */
+  readonly dbxModelArchetypeTags: readonly ExtractedArchetypeTagInfo[];
+  /**
+   * Parsed `@dbxModelCompositeKey from=... encoding=...` tag (at most one
+   * per interface). `undefined` when no tag is present. The validator
+   * inspects the captured `from` and `encoding` fields to emit
+   * `MODEL_COMPOSITE_KEY_*` findings; the tag's source line is preserved
+   * so violations anchor at the tag, not the interface declaration.
+   */
+  readonly dbxModelCompositeKeyTag?: ExtractedCompositeKeyTagInfo;
+}
+
+/**
+ * One `@dbxModelArchetype` tag occurrence on an interface, captured by the
+ * validator's extractor. Distinct from {@link ExtractedArchetypeTag} (used by
+ * the rich model registry) because the validator additionally needs the tag's
+ * source line for anchored violations.
+ */
+export interface ExtractedArchetypeTagInfo {
+  readonly slug: string;
+  readonly axes: { readonly [key: string]: string };
+  readonly line: number;
+}
+
+/**
+ * Parsed `@dbxModelCompositeKey` tag for the validator. `from` is `'*'` for
+ * the wildcard form, or an ordered list of source-model names. Mixed (`'*'`
+ * present alongside concrete entries) preserves the literal list so the
+ * `MODEL_COMPOSITE_KEY_WILDCARD_MIXED` rule can flag it. `encoding` is
+ * `undefined` when missing or invalid — flagged by
+ * `MODEL_COMPOSITE_KEY_INVALID_ENCODING`.
+ */
+export interface ExtractedCompositeKeyTagInfo {
+  readonly from: readonly string[] | '*';
+  readonly encoding: 'two-way' | 'one-way' | undefined;
+  readonly line: number;
 }
 
 export interface ExtractedField {

@@ -152,10 +152,9 @@ interface AssembleEntryInput {
 
 function assembleEntry(input: AssembleEntryInput): FilterEntry {
   const { entry, moduleName } = input;
-
-  let out: FilterEntry;
+  const shared = buildSharedFilterEntryFields(entry);
   if (entry.kind === 'directive') {
-    out = {
+    return {
       kind: 'directive',
       slug: entry.slug,
       selector: entry.selector,
@@ -165,26 +164,42 @@ function assembleEntry(input: AssembleEntryInput): FilterEntry {
       inputs: entry.inputs.map((i) => ({ ...i })),
       outputs: entry.outputs.map((o) => ({ ...o })),
       example: entry.example,
-      ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),
-      ...(entry.skillRefs && entry.skillRefs.length > 0 ? { skillRefs: [...entry.skillRefs] } : {}),
-      ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
-      ...(entry.since === undefined ? {} : { since: entry.since })
-    };
-  } else {
-    out = {
-      kind: 'pattern',
-      slug: entry.slug,
-      className: entry.className,
-      module: moduleName,
-      description: entry.description,
-      example: entry.example,
-      ...(entry.relatedSlugs && entry.relatedSlugs.length > 0 ? { relatedSlugs: [...entry.relatedSlugs] } : {}),
-      ...(entry.skillRefs && entry.skillRefs.length > 0 ? { skillRefs: [...entry.skillRefs] } : {}),
-      ...(entry.deprecated === undefined ? {} : { deprecated: entry.deprecated }),
-      ...(entry.since === undefined ? {} : { since: entry.since })
+      ...shared
     };
   }
-  return out;
+  return {
+    kind: 'pattern',
+    slug: entry.slug,
+    className: entry.className,
+    module: moduleName,
+    description: entry.description,
+    example: entry.example,
+    ...shared
+  };
+}
+
+function buildSharedFilterEntryFields(entry: ExtractedFilterEntry): SharedFilterEntryFields {
+  const result: { -readonly [K in keyof SharedFilterEntryFields]?: SharedFilterEntryFields[K] } = {};
+  if (entry.relatedSlugs && entry.relatedSlugs.length > 0) {
+    result.relatedSlugs = [...entry.relatedSlugs];
+  }
+  if (entry.skillRefs && entry.skillRefs.length > 0) {
+    result.skillRefs = [...entry.skillRefs];
+  }
+  if (entry.deprecated !== undefined) {
+    result.deprecated = entry.deprecated;
+  }
+  if (entry.since !== undefined) {
+    result.since = entry.since;
+  }
+  return result as SharedFilterEntryFields;
+}
+
+interface SharedFilterEntryFields {
+  readonly relatedSlugs?: string[];
+  readonly skillRefs?: string[];
+  readonly deprecated?: boolean | string;
+  readonly since?: string;
 }
 
 // MARK: Stable serialization

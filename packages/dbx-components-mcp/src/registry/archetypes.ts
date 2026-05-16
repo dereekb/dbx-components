@@ -1,0 +1,685 @@
+/**
+ * Model archetype catalog.
+ *
+ * Canonical metadata for the 17 Firestore-model archetypes plus 3 field-level
+ * add-ons that the `dbx_model_archetype_*` tool cluster recommends, looks up,
+ * and filters peers by. Pure data — no imports, no state — so it can be
+ * consumed from tools, resources, and tests without bootstrap overhead.
+ *
+ * Each archetype carries its `slug`, the implied
+ * {@link FirestoreCollectionKind}, a short narrative description, a structured
+ * "answer template" (`expected`) used by the recommender's scoring algorithm,
+ * and the discrete axis values that further refine the slug.
+ *
+ * The recommender's scoring algorithm walks {@link MODEL_ARCHETYPES} once per
+ * call and never mutates the array, so the entire table is frozen at
+ * compile-time through `readonly` types. New archetypes are added by appending
+ * a {@link ModelArchetypeInfo} entry — the tool cluster picks it up
+ * automatically.
+ */
+
+import type { FirestoreCollectionKind } from './firebase-models.js';
+
+// MARK: Sync mode
+
+/**
+ * First-class sync-mode taxonomy attached to every model archetype. Mirrors the
+ * vocabulary documented in the planning doc (`§3 Sync-Mode Vocabulary`) so the
+ * recommender's questionnaire, the catalog UI, and the heuristic extractor all
+ * use one set of values.
+ *
+ * - `always-in-sync` – source of truth or updated synchronously alongside its dependency.
+ * - `trigger-eventual` – patched by an `onWrite` / `onCreate` Firestore trigger.
+ * - `flag-eventual` – source carries a `@dbxModelVariableSyncFlag` boolean flag walked by a scheduler.
+ * - `scheduled-rebuild` – periodic full/partial rebuild on a cron; no per-source flag.
+ * - `append-only` – never updated after creation; new docs supersede old.
+ * - `pull-on-demand` – read by code when needed; nothing watches it.
+ * - `external-bidirectional` – webhook patches in, scheduled reconciler patches out.
+ */
+export type ModelArchetypeSyncMode = 'always-in-sync' | 'trigger-eventual' | 'flag-eventual' | 'scheduled-rebuild' | 'append-only' | 'pull-on-demand' | 'external-bidirectional';
+
+/**
+ * Every recognised sync-mode in declaration order. Exported so resources can
+ * surface a stable list (`dbx://model-archetype/by-sync-mode/{mode}`) without
+ * re-deriving it from {@link MODEL_ARCHETYPES}.
+ */
+export const MODEL_ARCHETYPE_SYNC_MODES: readonly ModelArchetypeSyncMode[] = ['always-in-sync', 'trigger-eventual', 'flag-eventual', 'scheduled-rebuild', 'append-only', 'pull-on-demand', 'external-bidirectional'];
+
+// MARK: Doc id source / parent / user relation
+
+/**
+ * Discrete values for the `docIdSource` questionnaire field. Used both by the
+ * recommender (top-tier discriminator, weight 3) and by the `denormalised-aggregate`
+ * archetype's `keying` axis. Keep in sync with the canonical schema in
+ * the planning doc (`§4.1`).
+ */
+export type ModelArchetypeDocIdSource = 'auto' | 'parent-id' | 'user-uid' | 'external-vendor-id' | 'geo-key' | 'bucket-code' | 'composite-flat-key' | 'numeric-short-id' | 'fixed';
+
+/**
+ * Discrete values for the `parentRelation` questionnaire field. Captures both
+ * the structural parent (one / many parents, no parent) AND the meta-parent
+ * cases the recommender uses to disambiguate user-keyed, external-id-keyed,
+ * geo-key roots.
+ */
+export type ModelArchetypeParentRelation = 'none' | 'one-parent' | 'many-parents' | 'user-uid' | 'external-vendor-id' | 'region-key' | 'district-key' | 'composite-key';
+
+/**
+ * Discrete values for the `userRelation` questionnaire field. Independent of
+ * {@link ModelArchetypeDocIdSource}: a model can have `uid-is-doc-id` AND a
+ * field reference (`references-user-key`) in tandem.
+ */
+export type ModelArchetypeUserRelation = 'none' | 'owned-by-uid' | 'uid-is-doc-id' | 'references-user-key' | 'external-vendor-id-is-doc-id';
+
+/**
+ * Discrete values for the `mutability` questionnaire field. The `append-only`
+ * case lives on `syncMode`, not here — once a doc is created it can still be
+ * `mutable` or `immutable` across its lifetime independently.
+ */
+export type ModelArchetypeMutability = 'mutable' | 'immutable';
+
+// MARK: Slugs
+
+/**
+ * Every recognised archetype slug. Axis values (e.g.
+ * `single-item-sub.subPurpose`, `denormalised-aggregate.keying`) further refine
+ * a slug rather than introducing separate slugs.
+ */
+export type ModelArchetypeSlug =
+  | 'root-entity'
+  | 'sub-collection-entity'
+  | 'single-item-sub'
+  | 'user-keyed-entity-root'
+  | 'user-keyed-index-root'
+  | 'external-id-keyed-entity-root'
+  | 'group-root'
+  | 'group-member'
+  | 'composite-key-root'
+  | 'denormalised-aggregate'
+  | 'root-singleton-aggregate'
+  | 'external-mirror'
+  | 'audit-log'
+  | 'lifecycle-item'
+  | 'reference-registry'
+  | 'model-tree-node'
+  | 'system-state-singleton'
+  | 'storagefile-purpose'
+  | 'notification-template'
+  | 'notification-task'
+  | 'state-machine-item'
+  | 'embedded-sub-objects'
+  | 'active-vs-archive-split';
+
+/**
+ * Field-level add-on slugs that never appear as the primary archetype answer —
+ * always returned alongside a "real" archetype on the recommender's "Field-level
+ * add-ons" list.
+ */
+export const MODEL_ARCHETYPE_ADDON_SLUGS: readonly ModelArchetypeSlug[] = ['state-machine-item', 'embedded-sub-objects', 'active-vs-archive-split'];
+
+// MARK: Axis values
+
+/**
+ * Discrete values for `single-item-sub.subPurpose`. Captures why this 1:1
+ * subcollection exists — sensitive split, permission table, parent config,
+ * parent state, denormalised summary, member-count summary.
+ */
+export type ModelArchetypeSingleItemSubPurpose = 'private' | 'permission' | 'config' | 'state' | 'summary' | 'member-summary';
+
+/**
+ * Discrete values for `denormalised-aggregate.keying`. Combined with
+ * `syncMode`, these distinguish parent-keyed digests, bucketed temporal
+ * summaries, composite-keyed indexes, and short-id subcollection summaries.
+ */
+export type ModelArchetypeDenormalisedAggregateKeying = 'parent-id' | 'bucket-code' | 'composite-flat-key' | 'numeric-short-id';
+
+// MARK: Expected answer template
+
+/**
+ * Canonical answer template for one archetype. Each field is the *expected*
+ * value the recommender looks for on a matching questionnaire; the scoring
+ * algorithm sums weighted matches across these dimensions.
+ *
+ * Each property is optional because not every archetype constrains every
+ * dimension — `root-entity` allows any `userRelation`, so its template omits
+ * the field rather than forcing one value. Unset answers contribute zero to
+ * the score on either side (see `§5.2 Scoring algorithm`).
+ */
+export interface ModelArchetypeExpectedAnswers {
+  readonly docIdSource?: readonly ModelArchetypeDocIdSource[];
+  readonly parentRelation?: readonly ModelArchetypeParentRelation[];
+  readonly userRelation?: readonly ModelArchetypeUserRelation[];
+  readonly syncMode?: readonly ModelArchetypeSyncMode[];
+  readonly isDenormalization?: boolean;
+  readonly isExternalMirror?: boolean;
+  readonly isEventLog?: boolean;
+  readonly hasInheritance?: boolean;
+  readonly isSiblingAggregate?: boolean;
+  readonly isSubsystemSingleton?: boolean;
+  readonly involvesFileUpload?: boolean;
+  readonly sendsMessageToUser?: boolean;
+  readonly isMultiCheckpointWorkflow?: boolean;
+  readonly hasLifecycleStates?: boolean;
+  readonly hasSensitiveFields?: boolean;
+  readonly needsFineGrainedPermissions?: boolean;
+  readonly hasArchiveCounterpart?: boolean;
+  readonly mutability?: readonly ModelArchetypeMutability[];
+  readonly instancesPerParent?: readonly ('one' | 'many')[];
+  readonly aggregatesFromNonEmpty?: boolean;
+  readonly isGroupRoot?: boolean;
+  readonly isTreeNode?: boolean;
+}
+
+// MARK: Archetype info
+
+/**
+ * Catalog entry for one archetype. Shared by the recommender, lookup, search,
+ * resource, and heuristic extractor so they all read from one source of truth.
+ */
+export interface ModelArchetypeInfo {
+  readonly slug: ModelArchetypeSlug;
+  /**
+   * Family the archetype belongs to (`'standalone-entity'`, `'user-external-root'`, …).
+   * Surfaced in the catalog group headers and `_lookup` output so users can see
+   * sibling archetypes alongside the matched one.
+   */
+  readonly family: string;
+  /**
+   * Implied {@link FirestoreCollectionKind}. Some archetypes (e.g.
+   * `denormalised-aggregate`) accept more than one kind depending on axis
+   * values — the dominant kind is listed here and the alternative is recorded
+   * in `description`. The recommender's "Shape" block prints whichever value
+   * the questionnaire actually implies; this field is used by
+   * `dbx://model-archetype/by-collection-kind/{kind}` to filter the catalog.
+   */
+  readonly collectionKind: FirestoreCollectionKind;
+  /**
+   * First-paragraph narrative description, also printed by `_lookup`.
+   */
+  readonly description: string;
+  /**
+   * One-line guidance for "when to pick this" — appears in the catalog and
+   * single-entry views.
+   */
+  readonly whenToUse: string;
+  /**
+   * Optional extension-cluster name when this archetype hooks into one of the
+   * `_m` model-extension clusters (`storagefile_m`, `notification_m`,
+   * `system_m`). Absent for plain archetypes.
+   */
+  readonly extensionCluster?: 'storagefile_m' | 'notification_m' | 'system_m';
+  /**
+   * Canonical answer template the scorer compares each questionnaire against.
+   */
+  readonly expected: ModelArchetypeExpectedAnswers;
+  /**
+   * Axis name → allowed values. The recommender returns the resolved axis on
+   * its output; `_search` accepts an axes filter on these names.
+   */
+  readonly axes: { readonly [axisName: string]: readonly string[] };
+  /**
+   * Implementation pointers — skill names, sync-flag conventions, peer-search
+   * notes. Surfaced verbatim on the recommender's "Implementation pointers"
+   * bullet list.
+   */
+  readonly implementationPointers: readonly string[];
+  /**
+   * Optional comment shown alongside the slug — used to capture the
+   * "is/isn't" disambiguation hints (`external-id-keyed-entity-root` vs.
+   * `external-mirror`, `root-singleton-aggregate` vs.
+   * `system-state-singleton`, …).
+   */
+  readonly disambiguation?: string;
+}
+
+// MARK: Catalog
+
+/**
+ * Full ordered catalog of every archetype. Order follows the planning doc's
+ * §2 grouping (standalone-entity → user/external roots → group → aggregate
+ * families → mirror/log/registry → framework → add-ons) so the catalog renders
+ * predictably.
+ */
+export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
+  // === Standalone Entity family ===
+  {
+    slug: 'root-entity',
+    family: 'standalone-entity',
+    collectionKind: 'root',
+    description: 'Plain root collection — the top-level anchor of a domain.',
+    whenToUse: 'Top-level model with no special parent / user / external-id keying.',
+    expected: {
+      docIdSource: ['auto'],
+      parentRelation: ['none'],
+      syncMode: ['always-in-sync'],
+      isDenormalization: false,
+      isExternalMirror: false,
+      isEventLog: false
+    },
+    axes: {},
+    implementationPointers: ['Read: `dbx__guide__new-model`', 'Use the `root` collection-factory shape (`firestoreContext.firestoreCollection`).']
+  },
+  {
+    slug: 'sub-collection-entity',
+    family: 'standalone-entity',
+    collectionKind: 'sub-collection',
+    description: 'Child of one parent, many-per-parent.',
+    whenToUse: 'Entity that always exists under a parent and there are many per parent.',
+    expected: {
+      docIdSource: ['auto', 'numeric-short-id'],
+      parentRelation: ['one-parent'],
+      instancesPerParent: ['many'],
+      syncMode: ['always-in-sync'],
+      isDenormalization: false,
+      isExternalMirror: false,
+      isEventLog: false
+    },
+    axes: {},
+    implementationPointers: ['Use the `sub-collection` collection-factory shape (`firestoreContext.firestoreCollectionWithParent`).', 'Read: `dbx__guide__new-model`']
+  },
+  {
+    slug: 'single-item-sub',
+    family: 'standalone-entity',
+    collectionKind: 'singleton-sub',
+    description: "1:1 with parent; the parent's `side-table.` Sub-purpose is an axis, not a separate archetype.",
+    whenToUse: 'Exactly one of these per parent — split because of sensitivity, permission scope, config, state, or aggregated summary.',
+    expected: {
+      docIdSource: ['parent-id', 'fixed'],
+      parentRelation: ['one-parent'],
+      instancesPerParent: ['one'],
+      isExternalMirror: false,
+      isEventLog: false
+    },
+    axes: {
+      subPurpose: ['private', 'permission', 'config', 'state', 'summary', 'member-summary']
+    },
+    implementationPointers: ['Use the `singleton-sub` collection-factory shape (`firestoreContext.singleItemFirestoreCollection`).', 'Pick `subPurpose` based on what differentiates this side-table from the parent (sensitive fields → private, role-grant map → permission, …).']
+  },
+
+  // === User / External-Id Roots family ===
+  {
+    slug: 'user-keyed-entity-root',
+    family: 'user-external-root',
+    collectionKind: 'root',
+    description: 'Root collection keyed by user uid, holding authoritative user state.',
+    whenToUse: 'Per-user document whose Firestore id IS the Firebase Auth uid AND the doc carries authoritative state (not a denormalised slice).',
+    expected: {
+      docIdSource: ['user-uid'],
+      parentRelation: ['user-uid'],
+      userRelation: ['uid-is-doc-id'],
+      syncMode: ['always-in-sync'],
+      isDenormalization: false,
+      isExternalMirror: false
+    },
+    axes: {},
+    implementationPointers: ['Extend `UserRelatedById` on the interface so the registry auto-tags it.', 'Doc id = the Firebase Auth uid; convention: store `uid` on every related doc that references this user.']
+  },
+  {
+    slug: 'user-keyed-index-root',
+    family: 'user-external-root',
+    collectionKind: 'root',
+    description: 'Root collection keyed by user uid, holding a denormalised slice of related models.',
+    whenToUse: 'Per-user rollup or index keyed by uid — eventual consistency, source of truth lives elsewhere.',
+    expected: {
+      docIdSource: ['user-uid'],
+      parentRelation: ['user-uid'],
+      userRelation: ['uid-is-doc-id'],
+      syncMode: ['flag-eventual', 'trigger-eventual'],
+      isDenormalization: true
+    },
+    axes: {},
+    implementationPointers: ['Extend `UserRelatedById` on the interface.', 'Document the source models the index denormalises in the interface JSDoc.', 'Pick `syncMode = flag-eventual` if source docs carry a `@dbxModelVariableSyncFlag`; otherwise use `trigger-eventual`.']
+  },
+  {
+    slug: 'external-id-keyed-entity-root',
+    family: 'user-external-root',
+    collectionKind: 'root',
+    description: "Root collection keyed by an external system's id, holding authoritative HelloSubs state about that record.",
+    whenToUse: 'Doc id IS the vendor id AND the doc carries authoritative HelloSubs state (not a vendor-shaped cached payload — that is `external-mirror`).',
+    disambiguation: 'If this is a mirror of the external record, switch to `external-mirror`.',
+    expected: {
+      docIdSource: ['external-vendor-id'],
+      parentRelation: ['external-vendor-id', 'none'],
+      userRelation: ['external-vendor-id-is-doc-id', 'none'],
+      syncMode: ['external-bidirectional'],
+      isExternalMirror: false
+    },
+    axes: {},
+    implementationPointers: ['Doc id = external vendor id (e.g. Zoho candidate id).', 'Webhook patches in; scheduled reconciler patches out.']
+  },
+  // === Group / Membership family ===
+  {
+    slug: 'group-root',
+    family: 'group',
+    collectionKind: 'root',
+    description: 'Organization / tenant root.',
+    whenToUse: 'Top-level tenant boundary that owns many other models as subcollections.',
+    expected: {
+      docIdSource: ['auto'],
+      parentRelation: ['none'],
+      syncMode: ['always-in-sync'],
+      isGroupRoot: true
+    },
+    axes: {},
+    implementationPointers: ['Use the `root` collection-factory shape and tag the interface with `@dbxModelGroup`.', 'Add `@dbxModelOrganizationalGroupRoot` to the model interface so the extractor auto-tags this archetype.']
+  },
+  {
+    slug: 'group-member',
+    family: 'group',
+    collectionKind: 'sub-collection',
+    description: 'One doc per (group, user). Carries per-group role + cached user fields.',
+    whenToUse: 'Membership rows under a group root, keyed per-user.',
+    expected: {
+      parentRelation: ['one-parent'],
+      instancesPerParent: ['many'],
+      userRelation: ['references-user-key', 'uid-is-doc-id', 'owned-by-uid'],
+      syncMode: ['trigger-eventual', 'always-in-sync']
+    },
+    axes: {},
+    implementationPointers: ['Cached user fields resync on profile change via a trigger (`trigger-eventual`).']
+  },
+  {
+    slug: 'composite-key-root',
+    family: 'group',
+    collectionKind: 'root',
+    description: 'Root collection whose doc id is a flat-encoded model key — either a single source key (e.g. `flatFirestoreModelKey(regionKey)`) or a composite of multiple model keys (e.g. `(group, region)`) — making the encoded scope queryable at the root level. Orthogonal to source-of-truth role: stack with `denormalised-aggregate` when the same doc is also a projection.',
+    whenToUse: 'Root collection keyed by a flat encoding of one or more model keys. Single-source flat keys cover overlays like `WorkerRegion` / `JobDistrict` (doc id = flat-encoded region/district key) and framework models like `NotificationBox` / `NotificationSummary` (doc id = flat key of any source model). Multi-source flat keys cover (parent, secondary-scope) overlays where the collection needs to stay query-addressable at the root.',
+    disambiguation: 'Pick the encoding based on whether the source key(s) must be recoverable from the doc id. `twoWayFlatFirestoreModelKey` (slashes → `_`, round-tripped via `inferKeyFromTwoWayFlatFirestoreModelKey`) lets you recover the source keys when iterating the collection. `flatFirestoreModelKey` (one-way, slashes stripped) is appropriate when the source key is already stored as a field on the doc and the id only needs to be unique.',
+    expected: {
+      docIdSource: ['composite-flat-key'],
+      parentRelation: ['composite-key', 'none']
+    },
+    axes: {},
+    implementationPointers: [
+      'Encode the doc id with `twoWayFlatFirestoreModelKey` (recoverable via `inferKeyFromTwoWayFlatFirestoreModelKey`) when iterating the collection should yield the source keys without reading any field. Use `flatFirestoreModelKey` (one-way, slashes stripped) when the source key is already stored as a field.',
+      'Pair the model with a `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` JSDoc tag so the catalog records which models contribute keys and which encoding is used. A single-element `from` is valid for single-source flat keys (e.g. `from=Region encoding=one-way` for `WorkerRegion`). Use `from=*` for framework models like `NotificationBox` / `NotificationSummary` that accept any source identity.',
+      'Cross-reference: `OneWayFlatFirestoreModelKey` / `TwoWayFlatFirestoreModelKey` in `@dereekb/firebase`.'
+    ]
+  },
+
+  // === Denormalised-Aggregate family ===
+  {
+    slug: 'denormalised-aggregate',
+    family: 'denormalised-aggregate',
+    collectionKind: 'sub-collection',
+    description: 'Read-optimised denormalised projection over one or more source models. Two axes: `keying` and `syncMode`. May render as a `root` collection when keyed by `composite-flat-key`.',
+    whenToUse: 'Periodic / bucketed / parent-keyed projection over source docs that benefits from being read independently.',
+    expected: {
+      docIdSource: ['parent-id', 'bucket-code', 'composite-flat-key', 'numeric-short-id'],
+      isDenormalization: true,
+      syncMode: ['trigger-eventual', 'flag-eventual', 'scheduled-rebuild'],
+      isExternalMirror: false,
+      isEventLog: false
+    },
+    axes: {
+      keying: ['parent-id', 'bucket-code', 'composite-flat-key', 'numeric-short-id'],
+      syncMode: ['trigger-eventual', 'flag-eventual', 'scheduled-rebuild']
+    },
+    implementationPointers: ['When `syncMode = flag-eventual`: source carries a `<targetShort>ss` boolean (`SyncedToTargetIfTrue`) annotated with `@dbxModelVariableSyncFlag <description>`.', 'Scheduled reconciler walks flagged docs and patches the target.', 'Read: `dbx__guide__scheduled-function`.']
+  },
+  {
+    slug: 'root-singleton-aggregate',
+    family: 'denormalised-aggregate',
+    collectionKind: 'root-singleton',
+    description: 'Root-level singleton doc aggregating a sibling root collection. Distinct from `single-item-sub:summary` (parented) and from `system-state-singleton` (subsystem state).',
+    whenToUse: 'A single root-singleton doc that aggregates a sibling root collection.',
+    disambiguation: 'If this is subsystem state with a typed payload, switch to `system-state-singleton`.',
+    expected: {
+      docIdSource: ['fixed'],
+      parentRelation: ['none'],
+      isDenormalization: true,
+      isSiblingAggregate: true,
+      aggregatesFromNonEmpty: true,
+      isSubsystemSingleton: false,
+      syncMode: ['trigger-eventual']
+    },
+    axes: {},
+    implementationPointers: ['Use the `root-singleton` collection-factory shape (`firestoreContext.rootSingleItemFirestoreCollection`).', 'Trigger from the source collection writes patches the singleton.']
+  },
+
+  // === Mirror / Integration family ===
+  {
+    slug: 'external-mirror',
+    family: 'mirror-integration',
+    collectionKind: 'sub-collection',
+    description: 'Holds tokens / state / cached payloads for an external system (Zoho, CheckHQ, VAPI, Typeform).',
+    whenToUse: 'Vendor-shaped cached payload (not authoritative HelloSubs state).',
+    disambiguation: 'If this carries authoritative HelloSubs state keyed by vendor id, switch to `external-id-keyed-entity-root`.',
+    expected: {
+      docIdSource: ['parent-id', 'external-vendor-id'],
+      isExternalMirror: true,
+      syncMode: ['external-bidirectional']
+    },
+    axes: {},
+    implementationPointers: ['Webhook patches in; scheduled reconciler patches out.', 'Document the vendor in the interface JSDoc.']
+  },
+
+  // === Event / Log family ===
+  {
+    slug: 'audit-log',
+    family: 'event-log',
+    collectionKind: 'sub-collection',
+    description: 'Append-only sequence of events / instructions with state transitions per entry (`INIT → RUNNING → COMPLETE/FAILED`).',
+    whenToUse: 'Per-event row beneath a parent entity that records what happened, with per-row lifecycle states.',
+    expected: {
+      docIdSource: ['auto', 'numeric-short-id'],
+      isEventLog: true,
+      mutability: ['immutable'],
+      syncMode: ['append-only'],
+      isExternalMirror: false
+    },
+    axes: {},
+    implementationPointers: ['New rows supersede old; existing rows are not mutated after their terminal state.', 'Read: `hellosubs__ref__job-instructions` for the canonical instruction-runner pattern.']
+  },
+  {
+    slug: 'lifecycle-item',
+    family: 'event-log',
+    collectionKind: 'sub-collection',
+    description: 'Sub-collection of derivative workflow rows under a parent state-machine-item. Each row carries its own state-enum field(s) (`INIT → RUNNING → COMPLETE/FAILED`) and is mutated in place through that lifecycle, then typically retired.',
+    whenToUse: 'Parent entity spawns per-row workers / requirements / instructions that own their own state machine and are updated in place until terminal.',
+    disambiguation: 'If the doc is a stable top-level entity whose own state-enum field defines its lifecycle, use `state-machine-item`. If rows are never mutated after creation (one row per event), use `audit-log`.',
+    expected: {
+      docIdSource: ['auto', 'numeric-short-id'],
+      hasLifecycleStates: true,
+      mutability: ['mutable'],
+      syncMode: ['trigger-eventual', 'pull-on-demand', 'always-in-sync'],
+      isExternalMirror: false,
+      isEventLog: false
+    },
+    axes: {},
+    implementationPointers: ['Declare the state enum and reference it from the converter.', 'Each transition updates the row in place.', 'Read: `hellosubs__guide__job-requirement-processor`.']
+  },
+
+  // === Registry / Reference family ===
+  {
+    slug: 'reference-registry',
+    family: 'registry-reference',
+    collectionKind: 'root',
+    description: 'Admin-curated lookup data. Two axes: `hasChildren` (registry has child docs by short numeric id, counter on parent) and `hasInheritance` (overlay graph via `parentIndexes[]`).',
+    whenToUse: 'Admin-curated registry of records (with optional inheritance overlay through `parentIndexes[]`).',
+    expected: {
+      docIdSource: ['auto', 'numeric-short-id'],
+      parentRelation: ['none', 'one-parent'],
+      hasInheritance: true,
+      syncMode: ['append-only', 'always-in-sync']
+    },
+    axes: {
+      hasChildren: ['true', 'false'],
+      hasInheritance: ['true', 'false']
+    },
+    implementationPointers: ['Children use `numeric-short-id`; the parent carries a counter.', 'When `hasInheritance = true`, model the parent overlay graph via `parentIndexes: number[]`.']
+  },
+  {
+    slug: 'model-tree-node',
+    family: 'registry-reference',
+    collectionKind: 'root',
+    description: 'One level of a multi-collection hierarchical chain. Each level is a separate model. `treeRole` (root/intermediate/leaf) is auto-derived from the parent-child scan.',
+    whenToUse: 'Model occupies one level of a hierarchical taxonomy whose levels are split across collections (geo hierarchies, org hierarchies, etc).',
+    expected: {
+      docIdSource: ['auto', 'geo-key', 'numeric-short-id', 'fixed'],
+      parentRelation: ['none', 'one-parent', 'region-key', 'district-key'],
+      syncMode: ['always-in-sync', 'append-only'],
+      isTreeNode: true
+    },
+    axes: { treeRole: ['root', 'intermediate', 'leaf'] },
+    implementationPointers: ['Each level declares its own `firestoreModelIdentity`, chained via parent identity.', '`treeRole` is auto-derived from the parent-child scan; never declared manually.', 'Read: `hellosubs__ref__region-models`.']
+  },
+  {
+    slug: 'system-state-singleton',
+    family: 'registry-reference',
+    collectionKind: 'root-singleton',
+    description: 'Standalone subsystem singleton with no relationship to other models — holds a typed payload (`firestorePassThroughField()`) per subsystem id (`@dereekb/firebase` `SystemState`).',
+    whenToUse: 'Subsystem needs to persist a typed payload that is not derived from or related to any other model — register a converter through the `system_m` cluster.',
+    extensionCluster: 'system_m',
+    disambiguation: 'If this aggregates a sibling root collection, switch to `root-singleton-aggregate`.',
+    expected: {
+      docIdSource: ['fixed'],
+      parentRelation: ['none'],
+      isSubsystemSingleton: true,
+      syncMode: ['pull-on-demand']
+    },
+    axes: {},
+    implementationPointers: ['Use the `system_m` cluster to register the converter + `*SystemData` interface.', 'Read: `dbx__guide__new-model-checklist`.']
+  },
+
+  // === Framework family — dbx-lib reference patterns ===
+  {
+    slug: 'storagefile-purpose',
+    family: 'framework',
+    collectionKind: 'root',
+    description: 'Adopt `StorageFile` + register a `StorageFilePurpose` for uploads + processing.',
+    whenToUse: 'Need a file upload + processing surface — register a purpose through the `storagefile_m` cluster.',
+    extensionCluster: 'storagefile_m',
+    expected: {
+      involvesFileUpload: true,
+      syncMode: ['trigger-eventual']
+    },
+    axes: {},
+    implementationPointers: ['Read: `dbx__guide__storagefile-purpose`.', 'Wire the purpose through `storagefile_m` cluster validators.']
+  },
+  {
+    slug: 'notification-template',
+    family: 'framework',
+    collectionKind: 'sub-collection',
+    description: 'Register a `NotificationTemplateType` for a new outbound message.',
+    whenToUse: 'Need to send a notification to a user — register a template through the `notification_m` cluster.',
+    extensionCluster: 'notification_m',
+    expected: {
+      sendsMessageToUser: true,
+      syncMode: ['always-in-sync']
+    },
+    axes: {},
+    implementationPointers: ['Read: `dbx__guide__notification-task` for the broader notification pipeline.', 'Wire the template through `notification_m` cluster validators.']
+  },
+  {
+    slug: 'notification-task',
+    family: 'framework',
+    collectionKind: 'root',
+    description: 'Register a `NotificationTaskType` for a multi-checkpoint async workflow.',
+    whenToUse: 'Multi-checkpoint async workflow with delay / re-queue semantics.',
+    extensionCluster: 'notification_m',
+    expected: {
+      isMultiCheckpointWorkflow: true
+    },
+    axes: {},
+    implementationPointers: ['Read: `dbx__guide__notification-task`.', 'Wire the task through `notification_m` cluster validators.']
+  },
+
+  // === Field-level add-ons ===
+  {
+    slug: 'state-machine-item',
+    family: 'addon',
+    collectionKind: 'root',
+    description: 'The doc carries one or more state-enum fields (e.g. `StorageFile.fs` / `ps`, `Notification.st`) — the document itself is an item in a finite state machine and mutates in place over its lifetime.',
+    whenToUse: 'Stable, top-level (root or sub-collection) entity whose lifecycle is recorded as enum fields on the doc — not via spawning derivative rows.',
+    disambiguation: "If the doc is a transient derivative row spawned under a parent to run part of the parent's workflow, use `lifecycle-item`.",
+    expected: {
+      hasLifecycleStates: true
+    },
+    axes: {},
+    implementationPointers: ['Declare each state enum in the model source file; reference it from the converter.', 'Drive transitions through dedicated server actions rather than ad-hoc field writes.']
+  },
+  {
+    slug: 'embedded-sub-objects',
+    family: 'addon',
+    collectionKind: 'root',
+    description: '`firestoreObjectArray` / `firestoreSubObject` on an existing model.',
+    whenToUse: 'Small (<20–50), always-read-with-parent, no independent queries / access / lifecycle.',
+    expected: {},
+    axes: {},
+    implementationPointers: ['Use `@dbxModelSubObject` on the embedded interface.']
+  },
+  {
+    slug: 'active-vs-archive-split',
+    family: 'addon',
+    collectionKind: 'sub-collection',
+    description: 'Two sibling subcollections under the same parent — one `active,` one `archived/finalized` — to keep active queries small while preserving history.',
+    whenToUse: 'Model has a clear finalised state; archival improves query cost.',
+    expected: {
+      hasArchiveCounterpart: true
+    },
+    axes: {},
+    implementationPointers: ['Active sub keeps mutable rows; archive sub keeps immutable rows after a clear terminal state.']
+  }
+];
+
+// MARK: Lookup helpers
+
+const ARCHETYPES_BY_SLUG: ReadonlyMap<ModelArchetypeSlug, ModelArchetypeInfo> = new Map(MODEL_ARCHETYPES.map((a) => [a.slug, a]));
+
+/**
+ * Resolves a slug to its archetype entry. Returns `undefined` for unknown
+ * slugs.
+ *
+ * @param slug - archetype slug (`'root-entity'`, `'denormalised-aggregate'`, …)
+ * @returns the matching catalog entry, or `undefined` when no archetype uses the slug
+ */
+export function getModelArchetypeBySlug(slug: ModelArchetypeSlug): ModelArchetypeInfo | undefined {
+  return ARCHETYPES_BY_SLUG.get(slug);
+}
+
+/**
+ * Resolves a slug (case-insensitive) to its archetype entry. The canonical
+ * entry point for lookup tools.
+ *
+ * @param slug - archetype slug
+ * @returns the matching catalog entry, or `undefined` when no archetype uses the slug
+ */
+export function resolveModelArchetype(slug: string): { readonly archetype: ModelArchetypeInfo } | undefined {
+  const trimmed = slug.trim();
+  const lower = trimmed.toLowerCase();
+  const archetype = ARCHETYPES_BY_SLUG.get(trimmed as ModelArchetypeSlug) ?? ARCHETYPES_BY_SLUG.get(lower as ModelArchetypeSlug);
+  return archetype ? { archetype } : undefined;
+}
+
+/**
+ * Returns every catalog entry whose `expected.syncMode` includes the given
+ * sync mode. Useful for browsing by sync semantics
+ * (`dbx://model-archetype/by-sync-mode/{mode}`).
+ *
+ * @param mode - sync mode to filter by
+ * @returns matching archetypes in declaration order
+ */
+export function getModelArchetypesBySyncMode(mode: ModelArchetypeSyncMode): readonly ModelArchetypeInfo[] {
+  return MODEL_ARCHETYPES.filter((a) => a.expected.syncMode?.includes(mode) === true);
+}
+
+/**
+ * Returns every catalog entry whose implied `collectionKind` matches.
+ *
+ * @param kind - {@link FirestoreCollectionKind} to filter by
+ * @returns matching archetypes in declaration order
+ */
+export function getModelArchetypesByCollectionKind(kind: FirestoreCollectionKind): readonly ModelArchetypeInfo[] {
+  return MODEL_ARCHETYPES.filter((a) => a.collectionKind === kind);
+}
+
+/**
+ * Returns every catalog entry whose `axes[axisName]` includes the given value.
+ *
+ * @param axisName - axis to filter on (e.g. `'subPurpose'`, `'keying'`)
+ * @param axisValue - the value to filter by
+ * @returns matching archetypes in declaration order
+ */
+export function getModelArchetypesByAxisValue(axisName: string, axisValue: string): readonly ModelArchetypeInfo[] {
+  return MODEL_ARCHETYPES.filter((a) => a.axes[axisName]?.includes(axisValue) === true);
+}

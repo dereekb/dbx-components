@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkManifestIdentityDuplicates } from './manifest-rules.js';
+import { checkManifestCompositeKeyFrom, checkManifestIdentityDuplicates } from './manifest-rules.js';
 import type { FirebaseModel } from '../../registry/firebase-models.js';
 
 function makeModel(overrides: Partial<FirebaseModel> & Pick<FirebaseModel, 'name' | 'identityConst' | 'modelType' | 'collectionPrefix'>): FirebaseModel {
@@ -71,6 +71,66 @@ describe('checkManifestIdentityDuplicates', () => {
   it('skips entries with empty collectionPrefix or modelType', () => {
     const models: FirebaseModel[] = [makeModel({ name: 'A', identityConst: 'aIdentity', modelType: '', collectionPrefix: '' }), makeModel({ name: 'B', identityConst: 'bIdentity', modelType: '', collectionPrefix: '' })];
     const result = checkManifestIdentityDuplicates(models);
+    expect(result).toEqual([]);
+  });
+});
+
+describe('checkManifestCompositeKeyFrom', () => {
+  const schoolGroup = makeModel({ name: 'SchoolGroup', identityConst: 'schoolGroupIdentity', modelType: 'schoolGroup', collectionPrefix: 'sg' });
+  const region = makeModel({ name: 'Region', identityConst: 'regionIdentity', modelType: 'region', collectionPrefix: 'rcsr' });
+
+  it('returns no violations for a tag whose every from= entry resolves', () => {
+    const tagged: FirebaseModel = makeModel({
+      name: 'SchoolGroupRegion',
+      identityConst: 'schoolGroupRegionIdentity',
+      modelType: 'schoolGroupRegion',
+      collectionPrefix: 'sgr',
+      compositeKey: { from: ['SchoolGroup', 'Region'], encoding: 'two-way' }
+    });
+    const result = checkManifestCompositeKeyFrom([schoolGroup, region, tagged]);
+    expect(result).toEqual([]);
+  });
+
+  it('returns no violations for the wildcard form (open by design)', () => {
+    const notificationBox: FirebaseModel = makeModel({
+      name: 'NotificationBox',
+      identityConst: 'notificationBoxIdentity',
+      modelType: 'notificationBox',
+      collectionPrefix: 'nb',
+      compositeKey: { from: '*', encoding: 'two-way' }
+    });
+    const result = checkManifestCompositeKeyFrom([notificationBox]);
+    expect(result).toEqual([]);
+  });
+
+  it('emits MODEL_COMPOSITE_KEY_UNKNOWN_MODEL for each unresolved entry', () => {
+    const tagged: FirebaseModel = makeModel({
+      name: 'SchoolGroupRegion',
+      identityConst: 'schoolGroupRegionIdentity',
+      modelType: 'schoolGroupRegion',
+      collectionPrefix: 'sgr',
+      compositeKey: { from: ['SchoolGroup', 'Typo'], encoding: 'two-way' }
+    });
+    const result = checkManifestCompositeKeyFrom([schoolGroup, region, tagged]);
+    expect(result.map((v) => v.code)).toEqual(['MODEL_COMPOSITE_KEY_UNKNOWN_MODEL']);
+    expect(result[0].message).toContain('Typo');
+    expect(result[0].model).toBe('SchoolGroupRegion');
+  });
+
+  it('resolves entries case-insensitively and via identity-const without the Identity suffix', () => {
+    const tagged: FirebaseModel = makeModel({
+      name: 'SchoolGroupRegion',
+      identityConst: 'schoolGroupRegionIdentity',
+      modelType: 'schoolGroupRegion',
+      collectionPrefix: 'sgr',
+      compositeKey: { from: ['schoolgroup', 'regionIdentity'], encoding: 'two-way' }
+    });
+    const result = checkManifestCompositeKeyFrom([schoolGroup, region, tagged]);
+    expect(result).toEqual([]);
+  });
+
+  it('skips models without a compositeKey tag', () => {
+    const result = checkManifestCompositeKeyFrom([schoolGroup, region]);
     expect(result).toEqual([]);
   });
 });

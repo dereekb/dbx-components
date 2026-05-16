@@ -228,6 +228,93 @@ export interface FirebaseModel {
    * {@link userKeyedById}: a model can have either, both, or neither.
    */
   readonly hasUserUidField?: boolean;
+  /**
+   * `true` when the model's interface (or one of its same-file ancestors)
+   * extends `RegionRelatedById` — i.e. the Firestore document id IS the
+   * region key. Parallel signal to {@link userKeyedById} used by the model
+   * archetype recommender and by the `dbx://model/firebase/region-keyed-by-id`
+   * resource.
+   */
+  readonly regionKeyedById?: boolean;
+  /**
+   * `true` when the model's interface extends `DistrictRelatedById` — doc id
+   * IS the district key. Parallel signal to {@link regionKeyedById}.
+   */
+  readonly districtKeyedById?: boolean;
+  /**
+   * `true` when the model's interface (or one of its same-file ancestors)
+   * extends the `ExternalRelatedById` marker — meaning the Firestore document
+   * id IS an external vendor id (Zoho candidate id, etc.). Used by the model
+   * archetype recommender to disambiguate `external-id-keyed-entity-root` from
+   * `external-mirror`.
+   */
+  readonly externalIdKeyedById?: boolean;
+  /**
+   * `true` when the model's interface (or one of its same-file ancestors)
+   * extends a `*BucketKeyRelatedById` / `*YearWeekRelatedById` marker — i.e.
+   * the Firestore document id IS a temporal bucket code (year-week, year-month,
+   * …). Drives the `denormalised-aggregate.keying = bucket-code` axis on the
+   * archetype recommender.
+   */
+  readonly bucketKeyedById?: boolean;
+  /**
+   * Archetype slugs for this model. Multiple slugs are emitted when one model
+   * legitimately belongs to several catalog entries simultaneously (e.g. a
+   * composite-key root that is both `composite-key-root` AND
+   * `denormalised-aggregate`).
+   * Populated by the `extract-firebase-models` heuristic, or replaced wholesale
+   * by one-or-more `@dbxModelArchetype <slug>` JSDoc tags on the model
+   * interface. Absent when the heuristic cannot tag the model with high enough
+   * confidence.
+   *
+   * The slug values are the catalog keys from
+   * `src/registry/archetypes.ts:MODEL_ARCHETYPES`. Surfaced through
+   * `dbx_model_lookup` and consumed by `dbx_model_archetype_search` peer
+   * search.
+   */
+  readonly archetypes?: readonly string[];
+  /**
+   * Optional axis refinements keyed by archetype slug — e.g.
+   * `{ 'single-item-sub': { subPurpose: 'private' } }` or
+   * `{ 'denormalised-aggregate': { keying: 'bucket-code', syncMode: 'flag-eventual' } }`.
+   * Populated from the same JSDoc override or heuristic that fills
+   * {@link archetypes}. Slugs without refinements are simply absent from the
+   * map.
+   */
+  readonly archetypeAxesBySlug?: { readonly [slug: string]: { readonly [axisName: string]: string } };
+  /**
+   * Names of upstream models this model aggregates from. Populated from
+   * `@dbxModelAggregatesFrom <ModelName>` JSDoc tags on the model interface
+   * (repeatable). Used by the archetype recommender to derive
+   * `aggregatesFromNonEmpty` and `siblingAggregatesFrom` signals.
+   */
+  readonly aggregatesFrom?: readonly string[];
+  /**
+   * `true` when every name in {@link aggregatesFrom} resolves to a model in
+   * the same {@link modelGroup}. Derived by the extractor's post-pass so the
+   * recommender can decisively boost `root-singleton-aggregate`.
+   */
+  readonly siblingAggregatesFrom?: boolean;
+  /**
+   * `true` when the interface carries the `@dbxModelOrganizationalGroupRoot`
+   * tag — i.e. the root collection serves as an organizational / tenant
+   * boundary that owns subordinate models. Surfaced through the recommender
+   * as a signal for the `group-root` archetype.
+   */
+  readonly organizationalGroupRoot?: boolean;
+  /**
+   * Parsed `@dbxModelCompositeKey from=<ModelA>,<ModelB> encoding=<two-way|one-way>`
+   * tag — present when the interface declares one. Records which source models
+   * the doc id composites from, and which flat-key encoding is used. `from`
+   * is `'*'` for framework models (`NotificationBox`, `NotificationSummary`)
+   * that accept any source identity. Validators use this to confirm the
+   * model's archetype tagging matches the composite-key declaration; the
+   * archetype recommender / search use it to surface peer composite-key roots.
+   */
+  readonly compositeKey?: {
+    readonly from: readonly string[] | '*';
+    readonly encoding: 'two-way' | 'one-way';
+  };
 }
 
 /**

@@ -143,6 +143,8 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
   lines.push(`**Package:** \`${model.sourcePackage}\``, `**Identity:** ${identityLine}`, `**Collection:** \`${model.modelType}\` · prefix \`${model.collectionPrefix}\``, `**Store shape:** ${shapeLabel} (see \`dbx_model_lookup topic="shapes"\` for the full taxonomy)`);
   const keyingLabel = formatUserKeyingLabel(model);
   if (keyingLabel) lines.push(`**User keying:** ${keyingLabel}`);
+  const archetypeLabel = formatArchetypeLabel(model);
+  if (archetypeLabel) lines.push(`**Archetype:** ${archetypeLabel}`);
   lines.push(`**Source:** \`${model.sourceFile}\``, '', fieldsHeader, '');
 
   if (filtered) {
@@ -266,6 +268,35 @@ function describeField(field: FirebaseField): string {
  * @param model - the registry entry to inspect
  * @returns the human-readable label, or `undefined` for non-user models
  */
+/**
+ * Renders the inline "Archetype" label for a model when one was populated by
+ * the extractor (heuristic or `@dbxModelArchetype` JSDoc override). Returns
+ * `undefined` when no archetype is tagged so the caller can skip the line.
+ *
+ * @param model - the registry entry to inspect
+ * @returns the human-readable label, or `undefined` for un-archetype models
+ */
+function formatArchetypeLabel(model: FirebaseModel): string | undefined {
+  let result: string | undefined;
+  const slugs = model.archetypes ?? [];
+  if (slugs.length > 0) {
+    const labels = slugs.map((slug) => {
+      const axesParts: string[] = [];
+      const slugAxes = model.archetypeAxesBySlug?.[slug];
+      if (slugAxes) {
+        for (const [k, v] of Object.entries(slugAxes)) {
+          axesParts.push(`${k}=\`${v}\``);
+        }
+      }
+      const axesText = axesParts.length > 0 ? ` (${axesParts.join(', ')})` : '';
+      return `\`${slug}\`${axesText}`;
+    });
+    const lookupHints = slugs.map((slug) => `\`dbx_model_archetype_lookup slug="${slug}"\``).join(' / ');
+    result = `${labels.join(' + ')} — call ${lookupHints} for catalog details`;
+  }
+  return result;
+}
+
 function formatUserKeyingLabel(model: FirebaseModel): string | undefined {
   let result: string | undefined;
   if (model.userKeyedById && model.hasUserUidField) {

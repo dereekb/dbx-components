@@ -1,7 +1,7 @@
 import { startOfDay } from 'date-fns';
 import { range } from '../array/array.number';
 import { MINUTES_IN_HOUR } from './date';
-import { asMinuteOfDay, computeNextFractionalHour, dateFromMinuteOfDay, dateToHoursAndMinutes, dateToMinuteOfDay, fractionalHoursToMinutes, hourToFractionalHour, hoursAndMinutesToString, isMinuteOfDay, minutesToFractionalHours, minutesToHoursAndMinutes, toMinuteOfDay } from './hour';
+import { asMinuteOfDay, computeNextFractionalHour, dateFromMinuteOfDay, dateToHoursAndMinutes, dateToMinuteOfDay, fractionalHoursToMinutes, hourToFractionalHour, hoursAndMinutesToString, isHourOfDay, isMinuteOfDay, minutesToFractionalHours, minutesToHoursAndMinutes, toMinuteOfDay } from './hour';
 
 describe('fractionalHoursToMinutes()', () => {
   it('should convert the fractional hours to minutes.', () => {
@@ -197,6 +197,20 @@ describe('asMinuteOfDay()', () => {
   it('should convert 2000 minutes to 560', () => {
     const result = asMinuteOfDay(2000);
     expect(result).toBe(560);
+  });
+});
+
+describe('isHourOfDay()', () => {
+  it('should return true for numbers within the valid range (0-23)', () => {
+    expect(isHourOfDay(0)).toBe(true);
+    expect(isHourOfDay(12)).toBe(true);
+    expect(isHourOfDay(23)).toBe(true);
+  });
+
+  it('should return false for numbers outside the valid range', () => {
+    expect(isHourOfDay(-1)).toBe(false);
+    expect(isHourOfDay(24)).toBe(false);
+    expect(isHourOfDay(100)).toBe(false);
   });
 });
 

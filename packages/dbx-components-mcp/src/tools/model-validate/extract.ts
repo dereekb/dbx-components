@@ -9,7 +9,7 @@
  */
 
 import { Node, Project, SyntaxKind, type ClassDeclaration, type GetAccessorDeclaration, type InterfaceDeclaration, type JSDoc, type SourceFile, type TypeAliasDeclaration } from 'ts-morph';
-import { SUB_OBJECT_FACTORY_NAMES, type ExtractedDataInterface, type ExtractedDecl, type ExtractedDocumentClass, type ExtractedField, type ExtractedFile, type ExtractedGroupInterface, type ExtractedGroupTypes, type ExtractedIdentity, type ExtractedModel, type ExtractedSubObjectFactoryCall, type FirestoreCollectionKind, type ModelVariant, type SubObjectFactoryName, type ValidatorSource } from './types.js';
+import { SUB_OBJECT_FACTORY_NAMES, type ExtractedArchetypeTagInfo, type ExtractedCompositeKeyTagInfo, type ExtractedDataInterface, type ExtractedDecl, type ExtractedDocumentClass, type ExtractedField, type ExtractedFile, type ExtractedGroupInterface, type ExtractedGroupTypes, type ExtractedIdentity, type ExtractedModel, type ExtractedSubObjectFactoryCall, type FirestoreCollectionKind, type ModelVariant, type SubObjectFactoryName, type ValidatorSource } from './types.js';
 
 // MARK: Entry
 /**
@@ -122,7 +122,18 @@ function findDataInterfaces(sourceFile: SourceFile, groupInterface: ExtractedGro
     const dbxModelTag = readDbxModelTag(iface.getJsDocs());
     const dbxModelSubObjectTag = readDbxModelSubObjectTag(iface.getJsDocs());
     const extendsNames = readExtendsNames(iface);
-    out.push({ name, line: iface.getStartLineNumber(), dbxModelTag, dbxModelSubObjectTag, extendsNames, fields });
+    const dbxModelArchetypeTags = readDbxModelArchetypeTags(iface.getJsDocs());
+    const dbxModelCompositeKeyTag = readDbxModelCompositeKeyTag(iface.getJsDocs());
+    out.push({
+      name,
+      line: iface.getStartLineNumber(),
+      dbxModelTag,
+      dbxModelSubObjectTag,
+      extendsNames,
+      fields,
+      dbxModelArchetypeTags,
+      ...(dbxModelCompositeKeyTag ? { dbxModelCompositeKeyTag } : {})
+    });
   }
   return out;
 }
@@ -301,6 +312,95 @@ function readDbxModelSubObjectTag(jsDocs: readonly JSDoc[]): boolean {
       if (tag.getTagName() === 'dbxModelSubObject') {
         result = true;
       }
+    }
+  }
+  return result;
+}
+
+const VALIDATOR_ARCHETYPE_SLUG_RE = /^[a-z][a-z0-9-]*$/;
+const VALIDATOR_COMPOSITE_KEY_MODEL_NAME_RE = /^[A-Za-z][A-Za-z0-9_$]*$/;
+
+/**
+ * Reads every `@dbxModelArchetype <slug>[ axisKey=val,...]` tag off the
+ * JSDoc blocks attached to an interface, preserving each tag's source line
+ * for downstream rule emissions. Mirrors the rich extractor's
+ * `parseArchetypeTagValue`, but keeps the line number — the validator emits
+ * findings anchored at the tag rather than at the interface declaration.
+ *
+ * @param jsDocs - JSDoc blocks attached to the interface declaration
+ * @returns one {@link ExtractedArchetypeTagInfo} per occurrence, in source order
+ */
+function readDbxModelArchetypeTags(jsDocs: readonly JSDoc[]): readonly ExtractedArchetypeTagInfo[] {
+  const out: ExtractedArchetypeTagInfo[] = [];
+  for (const jsDoc of jsDocs) {
+    for (const tag of jsDoc.getTags()) {
+      if (tag.getTagName() !== 'dbxModelArchetype') continue;
+      const value = tag.getCommentText()?.trim() ?? '';
+      if (value.length === 0) continue;
+      const spaceIdx = value.indexOf(' ');
+      const slug = spaceIdx >= 0 ? value.slice(0, spaceIdx).trim() : value;
+      if (!VALIDATOR_ARCHETYPE_SLUG_RE.test(slug)) continue;
+      const axes: { [key: string]: string } = {};
+      if (spaceIdx >= 0) {
+        for (const pair of value
+          .slice(spaceIdx + 1)
+          .trim()
+          .split(',')) {
+          const eq = pair.indexOf('=');
+          if (eq <= 0) continue;
+          const key = pair.slice(0, eq).trim();
+          const v = pair.slice(eq + 1).trim();
+          if (key.length > 0 && v.length > 0) axes[key] = v;
+        }
+      }
+      out.push({ slug, axes, line: tag.getStartLineNumber() });
+    }
+  }
+  return out;
+}
+
+/**
+ * Reads the first `@dbxModelCompositeKey` tag off the JSDoc blocks attached
+ * to an interface. Captures the raw `from=` and `encoding=` values along
+ * with the tag's source line so rule emissions anchor at the tag, not the
+ * interface. Permissive on bad input — the validator's rules layer flags
+ * specific findings (missing `from`, invalid encoding, wildcard mixed, etc.)
+ * rather than the extractor silently dropping malformed tags.
+ *
+ * @param jsDocs - JSDoc blocks attached to the interface declaration
+ * @returns the parsed tag, or `undefined` when no tag is present
+ */
+function readDbxModelCompositeKeyTag(jsDocs: readonly JSDoc[]): ExtractedCompositeKeyTagInfo | undefined {
+  let result: ExtractedCompositeKeyTagInfo | undefined;
+  for (const jsDoc of jsDocs) {
+    for (const tag of jsDoc.getTags()) {
+      if (tag.getTagName() !== 'dbxModelCompositeKey') continue;
+      if (result !== undefined) continue; // first-tag-wins; extra tags ignored
+      const value = tag.getCommentText()?.trim() ?? '';
+      let fromValue: readonly string[] | '*' = [];
+      let encoding: 'two-way' | 'one-way' | undefined;
+      for (const token of value.split(/\s+/).filter((t) => t.length > 0)) {
+        const eq = token.indexOf('=');
+        if (eq <= 0) continue;
+        const key = token.slice(0, eq).trim();
+        const v = token.slice(eq + 1).trim();
+        if (key === 'from') {
+          if (v === '*') {
+            fromValue = '*';
+          } else if (v.length > 0) {
+            const parts = v
+              .split(',')
+              .map((p) => p.trim())
+              .filter((p) => p.length > 0);
+            if (parts.includes('*')) {
+              fromValue = parts;
+            } else {
+              fromValue = parts.filter((p) => VALIDATOR_COMPOSITE_KEY_MODEL_NAME_RE.test(p));
+            }
+          }
+        } else if (key === 'encoding' && (v === 'two-way' || v === 'one-way')) encoding = v;
+      }
+      result = { from: fromValue, encoding, line: tag.getStartLineNumber() };
     }
   }
   return result;

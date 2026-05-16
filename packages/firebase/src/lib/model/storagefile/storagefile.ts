@@ -320,6 +320,8 @@ export type StorageFileDownloadUrl = StorageFilePublicDownloadUrl | StorageFileS
  *
  * @template M - type of the arbitrary metadata stored in the `d` field
  * @dbxModel
+ * @dbxModelArchetype root-entity
+ * @dbxModelArchetype state-machine-item
  */
 export interface StorageFile<M extends StorageFileMetadata = StorageFileMetadata> extends StoragePath {
   /**

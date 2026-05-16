@@ -1,6 +1,6 @@
 import { NgClass, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, viewChild, ViewContainerRef } from '@angular/core';
-import { type FieldWrapperContract } from '@ng-forge/dynamic-forms';
+import { type FieldWrapper } from '@ng-forge/dynamic-forms';
 import { type MaybeObservableOrValue, valueFromObservableOrValue } from '@dereekb/rxjs';
 import type { DbxForgeStyleObject } from './style.wrapper';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -20,7 +20,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeStyleWrapperComponent implements FieldWrapperContract {
+export class DbxForgeStyleWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
   readonly classGetter = input<MaybeObservableOrValue<string>>();

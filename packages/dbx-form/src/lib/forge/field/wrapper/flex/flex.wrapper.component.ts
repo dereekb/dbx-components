@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, viewChild, ViewContainerRef } from '@angular/core';
 import { DbxFlexGroupDirective, type ScreenMediaWidthType } from '@dereekb/dbx-web';
-import { type FieldWrapperContract } from '@ng-forge/dynamic-forms';
+import { type FieldWrapper } from '@ng-forge/dynamic-forms';
 
 /**
  * Forge wrapper component that arranges child fields in a responsive flex layout
@@ -19,7 +19,7 @@ import { type FieldWrapperContract } from '@ng-forge/dynamic-forms';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeFlexWrapperComponent implements FieldWrapperContract {
+export class DbxForgeFlexWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
   readonly breakpoint = input<ScreenMediaWidthType | undefined>();

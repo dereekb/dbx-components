@@ -33,16 +33,64 @@ export interface ExtractedInterfaceProp {
 }
 
 /**
+ * Parsed `@dbxModelArchetype <slug>[ axisKey=val,...]` JSDoc override.
+ * Mirrors the `.mjs` extractor's `parseArchetypeTagValue` output.
+ */
+export interface ExtractedArchetypeTag {
+  readonly slug: string;
+  readonly axes: { readonly [key: string]: string };
+}
+
+/**
+ * Parsed `@dbxModelCompositeKey from=<ModelA>,<ModelB> encoding=<two-way|one-way>`
+ * JSDoc tag, applied to interfaces whose Firestore doc id is a composite-flat-key
+ * encoding of one or more source model keys. `from=*` is the wildcard form used
+ * by framework models that accept any source identity (e.g. `NotificationBox`).
+ */
+export interface ExtractedCompositeKeyTag {
+  /**
+   * `'*'` for the wildcard form, or an ordered list of source-model names
+   * (interface name, identity const name, or modelType — same resolution as
+   * `getFirebaseModel`). Empty array when the tag is malformed (missing `from=`).
+   */
+  readonly from: readonly string[] | '*';
+  /**
+   * `'two-way'` for `twoWayFlatFirestoreModelKey` encoding, `'one-way'` for
+   * `flatFirestoreModelKey`. `undefined` when the tag is malformed.
+   */
+  readonly encoding: 'two-way' | 'one-way' | undefined;
+}
+
+/**
+ * JSDoc-derived tag bag attached to one `export interface` declaration.
+ * `dbxModelArchetypes` is repeatable — every `@dbxModelArchetype` occurrence
+ * appends to the array. `dbxModelAggregatesFrom` is also repeatable.
+ * `dbxModelOrganizationalGroupRoot` is a boolean presence flag.
+ * `dbxModelCompositeKey` is at most one per interface — if multiple are
+ * declared, only the first is captured and the rest produce validation
+ * findings.
+ */
+export interface ExtractedInterfaceTags {
+  readonly dbxModel: boolean;
+  readonly dbxModelSubObject: boolean;
+  readonly dbxModelArchetypes: readonly ExtractedArchetypeTag[];
+  readonly dbxModelAggregatesFrom: readonly string[];
+  readonly dbxModelOrganizationalGroupRoot: boolean;
+  readonly dbxModelCompositeKey?: ExtractedCompositeKeyTag;
+}
+
+/**
  * One `export interface` declaration. The `tags` flags drive model
  * detection (`@dbxModel`) and embedded-sub-object detection
  * (`@dbxModelSubObject` — interfaces persisted as part of a parent
  * model's converter via `firestoreSubObject<T>`, lacking their own
- * `firestoreModelIdentity`).
+ * `firestoreModelIdentity`). `dbxModelArchetypes` carries any explicit
+ * archetype-slug overrides; the heuristic only runs when the array is empty.
  */
 export interface ExtractedInterface {
   readonly name: string;
   readonly description: string | undefined;
-  readonly tags: { readonly dbxModel: boolean; readonly dbxModelSubObject: boolean };
+  readonly tags: ExtractedInterfaceTags;
   readonly extendsNames: readonly string[];
   readonly props: readonly ExtractedInterfaceProp[];
 }

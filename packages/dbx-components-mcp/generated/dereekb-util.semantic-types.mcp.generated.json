@@ -458,6 +458,22 @@
       "notes": "A number that represents hours and rounded to the nearest minute.\n\nIt has only three decimal places max.\n\nFractional hours are safe to add together.\n\nFor example:\n\n- 10 minutes: 0.16\n- 15 minutes : 0.25"
     },
     {
+      "name": "HourOfDay",
+      "package": "@dereekb/util",
+      "module": "src/lib/date/hour",
+      "kind": "semantic-type",
+      "definition": "number",
+      "baseType": "number",
+      "topics": [
+        "date",
+        "numeric"
+      ],
+      "guards": [
+        "isHourOfDay"
+      ],
+      "notes": "The hour of the day.\n\nNumber from 0-23."
+    },
+    {
       "name": "MinuteOfDay",
       "package": "@dereekb/util",
       "module": "src/lib/date/hour",

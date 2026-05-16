@@ -484,7 +484,62 @@ export enum ModelValidateCode {
    * @dbxRuleFix Rename one of the conflicting identities so the `modelName` arg of `firestoreModelIdentity(modelName, collectionName)` is globally unique. Update every downstream reference to the renamed `modelType`.
    * @dbxRuleSeeAlso artifact:firestore-model
    */
-  MODEL_IDENTITY_MODEL_TYPE_DUPLICATE = 'MODEL_IDENTITY_MODEL_TYPE_DUPLICATE'
+  MODEL_IDENTITY_MODEL_TYPE_DUPLICATE = 'MODEL_IDENTITY_MODEL_TYPE_DUPLICATE',
+
+  /**
+   * The `@dbxModelCompositeKey` tag is missing its `from=` argument. The tag must declare either a concrete list of source models (`from=ModelA,ModelB`) or the wildcard form (`from=*`) used by framework models that accept any source identity.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every `@dbxModelCompositeKey` tag.
+   * @dbxRuleNotApplies Models without the tag.
+   * @dbxRuleFix Add `from=<ModelA>,<ModelB>` (concrete list) or `from=*` (wildcard for framework models like `NotificationBox`).
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_COMPOSITE_KEY_MISSING_FROM = 'MODEL_COMPOSITE_KEY_MISSING_FROM',
+
+  /**
+   * A `from=` entry on the `@dbxModelCompositeKey` tag does not resolve to any model in the merged manifest (`@dereekb/firebase` plus every discovered `*-firebase` component). Names are matched case-insensitively against interface name, identity const name (with `Identity` suffix dropped), and `modelType`.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Each concrete name in the `from=` list. Skipped entirely when the tag uses `from=*`.
+   * @dbxRuleNotApplies Wildcard tags (`from=*`) since their source set is open by design.
+   * @dbxRuleFix Fix the typo, or add the missing model to a component the merged manifest scan picks up. The resolver matches interface name, identity const, and modelType.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_COMPOSITE_KEY_UNKNOWN_MODEL = 'MODEL_COMPOSITE_KEY_UNKNOWN_MODEL',
+
+  /**
+   * The `@dbxModelCompositeKey` tag mixes the `*` wildcard with concrete model names in its `from=` list (e.g. `from=*,Group`). The wildcard is exclusive — a tag is either fully open (`from=*`) or fully enumerated.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every `@dbxModelCompositeKey` tag whose `from=` list contains both `*` and at least one other entry.
+   * @dbxRuleNotApplies Tags using only `from=*` or only concrete names.
+   * @dbxRuleFix Pick one: replace the list with `from=*` for framework-style models, or remove the `*` and enumerate every contributing model.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_COMPOSITE_KEY_WILDCARD_MIXED = 'MODEL_COMPOSITE_KEY_WILDCARD_MIXED',
+
+  /**
+   * The `@dbxModelCompositeKey` tag has an invalid (or missing) `encoding=` argument. Allowed values are `two-way` (round-trips via `inferKeyFromTwoWayFlatFirestoreModelKey`) and `one-way` (slashes stripped, not recoverable).
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every `@dbxModelCompositeKey` tag.
+   * @dbxRuleNotApplies Models without the tag.
+   * @dbxRuleFix Set `encoding=two-way` when the source keys must be recoverable from the doc id (the common case). Use `encoding=one-way` only when the source keys are also stored as fields and the doc id only needs to be unique.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_COMPOSITE_KEY_INVALID_ENCODING = 'MODEL_COMPOSITE_KEY_INVALID_ENCODING',
+
+  /**
+   * The model carries `@dbxModelCompositeKey` but no archetype tag that justifies the composite-flat-key shape — i.e. neither `@dbxModelArchetype composite-key-root` nor `@dbxModelArchetype denormalised-aggregate` (with `keying=composite-flat-key`) appears on the interface.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every `@dbxModelCompositeKey` tag on a model interface.
+   * @dbxRuleNotApplies Interfaces tagged `composite-key-root` or `denormalised-aggregate keying=composite-flat-key`.
+   * @dbxRuleFix Either add the matching `@dbxModelArchetype` tag, or remove the composite-key tag if the model's doc id is not actually a composite-flat-key.
+   * @dbxRuleSeeAlso artifact:firestore-model
+   */
+  MODEL_COMPOSITE_KEY_WITHOUT_ARCHETYPE = 'MODEL_COMPOSITE_KEY_WITHOUT_ARCHETYPE'
 }
 
 /**

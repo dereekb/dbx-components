@@ -96,6 +96,31 @@ interface ListAppReport {
 }
 
 // MARK: Tool factory
+async function runListAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolResult> {
+  const parsed = ListAppArgsType(rawArgs);
+  if (parsed instanceof type.errors) {
+    return toolError(`Invalid arguments: ${parsed.summary}`);
+  }
+  const cwd = process.cwd();
+  try {
+    ensurePathInsideCwd(parsed.componentDir, cwd);
+  } catch (err) {
+    return toolError(err instanceof Error ? err.message : String(err));
+  }
+
+  const componentAbs = resolve(cwd, parsed.componentDir);
+
+  let report: ListAppReport;
+  try {
+    report = await buildListAppReport({ componentDir: parsed.componentDir, componentAbs });
+  } catch (err) {
+    return toolError(`Failed to walk component for firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
+  }
+
+  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+  return { content: [{ type: 'text', text }] };
+}
+
 /**
  * Builds the `dbx_model_firebase_index_list_app` tool.
  *
@@ -103,32 +128,7 @@ interface ListAppReport {
  * @__NO_SIDE_EFFECTS__
  */
 export function createListAppModelFirebaseIndexTool(): DbxTool {
-  async function run(rawArgs: unknown): Promise<ToolResult> {
-    const parsed = ListAppArgsType(rawArgs);
-    if (parsed instanceof type.errors) {
-      return toolError(`Invalid arguments: ${parsed.summary}`);
-    }
-    const cwd = process.cwd();
-    try {
-      ensurePathInsideCwd(parsed.componentDir, cwd);
-    } catch (err) {
-      return toolError(err instanceof Error ? err.message : String(err));
-    }
-
-    const componentAbs = resolve(cwd, parsed.componentDir);
-
-    let report: ListAppReport;
-    try {
-      report = await buildListAppReport({ componentDir: parsed.componentDir, componentAbs });
-    } catch (err) {
-      return toolError(`Failed to walk component for firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
-    }
-
-    const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-    return { content: [{ type: 'text', text }] };
-  }
-
-  return { definition: DBX_MODEL_FIREBASE_INDEX_LIST_APP_TOOL, run };
+  return { definition: DBX_MODEL_FIREBASE_INDEX_LIST_APP_TOOL, run: runListAppModelFirebaseIndex };
 }
 
 // MARK: Walking
@@ -368,42 +368,58 @@ function appendMarkdownHeader(lines: string[], report: ListAppReport): void {
   lines.push(summary, '');
 }
 
-function appendTaggedSections(lines: string[], tagged: readonly TaggedFactoryUsage[]): void {
-  if (tagged.length === 0) return;
+function groupTaggedByCollection(tagged: readonly TaggedFactoryUsage[]): readonly (readonly [string, readonly TaggedFactoryUsage[]])[] {
   const byCollection = new Map<string, TaggedFactoryUsage[]>();
   for (const t of tagged) {
     const list = byCollection.get(t.collection) ?? [];
     list.push(t);
     byCollection.set(t.collection, list);
   }
-  const sortedCollections = Array.from(byCollection.keys()).sort((a, b) => a.localeCompare(b));
-  for (const collection of sortedCollections) {
-    const group = byCollection.get(collection)!;
+  return Array.from(byCollection.entries()).sort(([a], [b]) => a.localeCompare(b));
+}
+
+function appendFactoryHeaderLine(lines: string[], t: TaggedFactoryUsage): void {
+  const flags = [t.skip ? '`skip`' : null, t.manual ? '`manual`' : null].filter((v) => v !== null);
+  const flagsText = flags.length > 0 ? `${flags.join(', ')} · ` : '';
+  const categoryLabel = t.category.length > 0 ? t.category : '—';
+  lines.push(`- ${flagsText}scope \`${t.scope}\`${t.isNested ? ' (nested)' : ''} · category \`${categoryLabel}\``);
+}
+
+function appendFactoryComposites(lines: string[], composites: readonly DerivedComposite[]): void {
+  if (composites.length === 0) return;
+  lines.push(`- **composites:** ${composites.length}`);
+  for (const composite of composites) {
+    lines.push(`  - ${composite.queryScope} \`${composite.collectionGroup}\` [${composite.fields.map(formatCompositeField).join(', ')}]`);
+  }
+}
+
+function appendFactoryFieldOverrides(lines: string[], fieldOverrides: readonly DerivedFieldOverride[]): void {
+  if (fieldOverrides.length === 0) return;
+  const variantCount = fieldOverrides.reduce((acc, f) => acc + f.variants.length, 0);
+  lines.push(`- **fieldOverrides:** ${fieldOverrides.length} field${fieldOverrides.length === 1 ? '' : 's'} (${variantCount} variant${variantCount === 1 ? '' : 's'})`);
+  for (const fieldOverride of fieldOverrides) {
+    lines.push(`  - \`${fieldOverride.collectionGroup}.${fieldOverride.fieldPath}\` ${fieldOverride.variants.map(formatVariant).join(', ')}`);
+  }
+}
+
+function appendFactoryEntry(lines: string[], t: TaggedFactoryUsage): void {
+  lines.push(`### \`${t.slug}\` · \`${t.name}\``, `_${t.subpath}_`, '');
+  appendFactoryHeaderLine(lines, t);
+  appendFactoryComposites(lines, t.composites);
+  appendFactoryFieldOverrides(lines, t.fieldOverrides);
+  if (t.composites.length === 0 && t.fieldOverrides.length === 0 && !t.skip) {
+    lines.push('- _auto-indexed by Firestore (no composite or fieldOverride required)_');
+  }
+  lines.push('');
+}
+
+function appendTaggedSections(lines: string[], tagged: readonly TaggedFactoryUsage[]): void {
+  if (tagged.length === 0) return;
+  const grouped = groupTaggedByCollection(tagged);
+  for (const [collection, group] of grouped) {
     lines.push(`## \`${collection}\`  *(${group[0].model})*`, '');
     for (const t of group) {
-      lines.push(`### \`${t.slug}\` · \`${t.name}\``);
-      lines.push(`_${t.subpath}_`);
-      lines.push('');
-      const flags = [t.skip ? '`skip`' : null, t.manual ? '`manual`' : null].filter((v) => v !== null);
-      const flagsText = flags.length > 0 ? `${flags.join(', ')} · ` : '';
-      lines.push(`- ${flagsText}scope \`${t.scope}\`${t.isNested ? ' (nested)' : ''} · category \`${t.category.length > 0 ? t.category : '—'}\``);
-      if (t.composites.length > 0) {
-        lines.push(`- **composites:** ${t.composites.length}`);
-        for (const composite of t.composites) {
-          lines.push(`  - ${composite.queryScope} \`${composite.collectionGroup}\` [${composite.fields.map(formatCompositeField).join(', ')}]`);
-        }
-      }
-      if (t.fieldOverrides.length > 0) {
-        const variantCount = t.fieldOverrides.reduce((acc, f) => acc + f.variants.length, 0);
-        lines.push(`- **fieldOverrides:** ${t.fieldOverrides.length} field${t.fieldOverrides.length === 1 ? '' : 's'} (${variantCount} variant${variantCount === 1 ? '' : 's'})`);
-        for (const fieldOverride of t.fieldOverrides) {
-          lines.push(`  - \`${fieldOverride.collectionGroup}.${fieldOverride.fieldPath}\` ${fieldOverride.variants.map(formatVariant).join(', ')}`);
-        }
-      }
-      if (t.composites.length === 0 && t.fieldOverrides.length === 0 && !t.skip) {
-        lines.push('- _auto-indexed by Firestore (no composite or fieldOverride required)_');
-      }
-      lines.push('');
+      appendFactoryEntry(lines, t);
     }
   }
 }
@@ -428,20 +444,20 @@ function appendWarningsSection(lines: string[], warnings: readonly string[]): vo
 
 function formatCompositeField(field: { readonly fieldPath: string; readonly order?: 'ASCENDING' | 'DESCENDING'; readonly arrayConfig?: 'CONTAINS' }): string {
   let token: string;
-  if (field.arrayConfig !== undefined) {
-    token = `${field.fieldPath} array-contains`;
-  } else {
+  if (field.arrayConfig === undefined) {
     token = `${field.fieldPath} ${field.order === 'DESCENDING' ? 'DESC' : 'ASC'}`;
+  } else {
+    token = `${field.fieldPath} array-contains`;
   }
   return token;
 }
 
 function formatVariant(variant: { readonly queryScope: 'COLLECTION' | 'COLLECTION_GROUP'; readonly order?: 'ASCENDING' | 'DESCENDING'; readonly arrayConfig?: 'CONTAINS' }): string {
   let token: string;
-  if (variant.arrayConfig !== undefined) {
-    token = `${variant.queryScope} array-contains`;
-  } else {
+  if (variant.arrayConfig === undefined) {
     token = `${variant.queryScope} ${variant.order === 'DESCENDING' ? 'DESC' : 'ASC'}`;
+  } else {
+    token = `${variant.queryScope} array-contains`;
   }
   return token;
 }

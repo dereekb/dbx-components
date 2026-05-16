@@ -54,6 +54,7 @@ export function runRules(file: ExtractedFile, options?: RuleOptions, context?: C
   checkSubObjectInterfaceTags(file, violations);
   checkSubObjectFactoryCallSites(file, violations, context);
   checkSubObjectParentNotTagged({ file, violations, context, options });
+  checkCompositeKeyTags(file, violations);
   return violations;
 }
 
@@ -366,38 +367,13 @@ function checkSubObjectParentNotTagged(input: CheckSubObjectParentNotTaggedInput
 
 // MARK: File-level checks
 function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
-  const { groupInterface, groupTypes, firstModelLine, models, name } = file;
+  checkGroupInterfaceFileLevel(file, violations);
+  checkGroupTypesFileLevel(file, violations);
+}
 
-  if (groupInterface) {
-    if (!groupInterface.exported) {
-      pushViolation(violations, {
-        code: 'FILE_GROUP_INTERFACE_NOT_EXPORTED',
-        message: `Interface \`${groupInterface.name}\` must be exported.`,
-        file: name,
-        line: groupInterface.line,
-        model: undefined
-      });
-    }
-    if (firstModelLine !== undefined && groupInterface.line > firstModelLine) {
-      pushViolation(violations, {
-        code: 'FILE_GROUP_INTERFACE_AFTER_MODEL',
-        message: `Interface \`${groupInterface.name}\` must be declared before the first model (currently at line ${groupInterface.line}; first model at line ${firstModelLine}).`,
-        file: name,
-        line: groupInterface.line,
-        model: undefined
-      });
-    }
-    if (groupInterface.dbxModelGroupTag === undefined) {
-      pushViolation(violations, {
-        code: 'MODEL_GROUP_INTERFACE_MISSING_TAG',
-        message: `Interface \`${groupInterface.name}\` is missing its \`@dbxModelGroup\` JSDoc tag. Add \`@dbxModelGroup <Group>\` so the catalog and downstream traversal can register the group.`,
-        file: name,
-        line: groupInterface.line,
-        model: undefined
-      });
-    }
-    checkGroupInterfaceCoverage(file, violations);
-  } else {
+function checkGroupInterfaceFileLevel(file: ExtractedFile, violations: Violation[]): void {
+  const { groupInterface, firstModelLine, name } = file;
+  if (!groupInterface) {
     pushViolation(violations, {
       code: 'FILE_MISSING_GROUP_INTERFACE',
       message: 'Missing exported `<Group>FirestoreCollections` interface. Declare one interface ending in `FirestoreCollections` before the first model.',
@@ -405,29 +381,41 @@ function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
       line: undefined,
       model: undefined
     });
+    return;
   }
+  if (!groupInterface.exported) {
+    pushViolation(violations, {
+      code: 'FILE_GROUP_INTERFACE_NOT_EXPORTED',
+      message: `Interface \`${groupInterface.name}\` must be exported.`,
+      file: name,
+      line: groupInterface.line,
+      model: undefined
+    });
+  }
+  if (firstModelLine !== undefined && groupInterface.line > firstModelLine) {
+    pushViolation(violations, {
+      code: 'FILE_GROUP_INTERFACE_AFTER_MODEL',
+      message: `Interface \`${groupInterface.name}\` must be declared before the first model (currently at line ${groupInterface.line}; first model at line ${firstModelLine}).`,
+      file: name,
+      line: groupInterface.line,
+      model: undefined
+    });
+  }
+  if (groupInterface.dbxModelGroupTag === undefined) {
+    pushViolation(violations, {
+      code: 'MODEL_GROUP_INTERFACE_MISSING_TAG',
+      message: `Interface \`${groupInterface.name}\` is missing its \`@dbxModelGroup\` JSDoc tag. Add \`@dbxModelGroup <Group>\` so the catalog and downstream traversal can register the group.`,
+      file: name,
+      line: groupInterface.line,
+      model: undefined
+    });
+  }
+  checkGroupInterfaceCoverage(file, violations);
+}
 
-  if (groupTypes) {
-    if (!groupTypes.exported) {
-      pushViolation(violations, {
-        code: 'FILE_GROUP_TYPES_NOT_EXPORTED',
-        message: `Type alias \`${groupTypes.name}\` must be exported.`,
-        file: name,
-        line: groupTypes.line,
-        model: undefined
-      });
-    }
-    if (firstModelLine !== undefined && groupTypes.line > firstModelLine) {
-      pushViolation(violations, {
-        code: 'FILE_GROUP_TYPES_AFTER_MODEL',
-        message: `Type alias \`${groupTypes.name}\` must be declared before the first model (currently at line ${groupTypes.line}; first model at line ${firstModelLine}).`,
-        file: name,
-        line: groupTypes.line,
-        model: undefined
-      });
-    }
-    checkGroupTypesCoverage(file, models, violations);
-  } else {
+function checkGroupTypesFileLevel(file: ExtractedFile, violations: Violation[]): void {
+  const { groupTypes, firstModelLine, models, name } = file;
+  if (!groupTypes) {
     pushViolation(violations, {
       code: 'FILE_MISSING_GROUP_TYPES',
       message: 'Missing exported `<Group>Types` type alias. Declare a union of `typeof <identity>` covering every model in the file.',
@@ -435,7 +423,27 @@ function checkFileLevel(file: ExtractedFile, violations: Violation[]): void {
       line: undefined,
       model: undefined
     });
+    return;
   }
+  if (!groupTypes.exported) {
+    pushViolation(violations, {
+      code: 'FILE_GROUP_TYPES_NOT_EXPORTED',
+      message: `Type alias \`${groupTypes.name}\` must be exported.`,
+      file: name,
+      line: groupTypes.line,
+      model: undefined
+    });
+  }
+  if (firstModelLine !== undefined && groupTypes.line > firstModelLine) {
+    pushViolation(violations, {
+      code: 'FILE_GROUP_TYPES_AFTER_MODEL',
+      message: `Type alias \`${groupTypes.name}\` must be declared before the first model (currently at line ${groupTypes.line}; first model at line ${firstModelLine}).`,
+      file: name,
+      line: groupTypes.line,
+      model: undefined
+    });
+  }
+  checkGroupTypesCoverage(file, models, violations);
 }
 
 function checkGroupInterfaceCoverage(file: ExtractedFile, violations: Violation[]): void {
@@ -945,6 +953,89 @@ function declarationLine(model: ExtractedModel, kind: DeclarationKind): number |
     case 'collectionGroupFn':
       return model.collectionGroupFn?.line;
   }
+}
+
+// MARK: Composite-key tag
+/**
+ * Per-file rules that fire on `@dbxModelCompositeKey` tags:
+ *
+ * - `MODEL_COMPOSITE_KEY_MISSING_FROM` — tag present but `from=` was not
+ *   supplied (or resolved to an empty list after filtering).
+ * - `MODEL_COMPOSITE_KEY_WILDCARD_MIXED` — `*` mixed with concrete entries.
+ * - `MODEL_COMPOSITE_KEY_INVALID_ENCODING` — `encoding=` missing or not
+ *   `two-way` / `one-way`.
+ * - `MODEL_COMPOSITE_KEY_WITHOUT_ARCHETYPE` (warning) — tag applied to an
+ *   interface not tagged with `composite-key-root` or
+ *   `denormalised-aggregate keying=composite-flat-key`.
+ *
+ * Cross-manifest resolution of concrete `from=` entries
+ * (`MODEL_COMPOSITE_KEY_UNKNOWN_MODEL`) runs as a manifest-level rule in
+ * `manifest-rules.ts` — the per-file pass cannot see other packages.
+ *
+ * @param file - the extracted file
+ * @param violations - the mutable violation buffer
+ */
+function checkCompositeKeyTags(file: ExtractedFile, violations: Violation[]): void {
+  for (const iface of file.dataInterfaces) {
+    const tag = iface.dbxModelCompositeKeyTag;
+    if (tag === undefined) continue;
+    const fromIsWildcard = tag.from === '*';
+    const fromList = Array.isArray(tag.from) ? tag.from : [];
+    const fromIsMissing = !fromIsWildcard && fromList.length === 0;
+    const fromMixesWildcard = !fromIsWildcard && fromList.includes('*');
+    if (fromIsMissing) {
+      pushViolation(violations, {
+        code: 'MODEL_COMPOSITE_KEY_MISSING_FROM',
+        message: `Interface \`${iface.name}\` has \`@dbxModelCompositeKey\` without a \`from=\` argument. Declare either a concrete list (\`from=ModelA,ModelB\`) or the wildcard form (\`from=*\`).`,
+        file: file.name,
+        line: tag.line,
+        model: iface.name
+      });
+    }
+    if (fromMixesWildcard) {
+      pushViolation(violations, {
+        code: 'MODEL_COMPOSITE_KEY_WILDCARD_MIXED',
+        message: `Interface \`${iface.name}\` mixes \`*\` with concrete model names in \`@dbxModelCompositeKey from=\`. The wildcard is exclusive — use \`from=*\` for framework models, or enumerate every contributing model.`,
+        file: file.name,
+        line: tag.line,
+        model: iface.name
+      });
+    }
+    if (tag.encoding === undefined) {
+      pushViolation(violations, {
+        code: 'MODEL_COMPOSITE_KEY_INVALID_ENCODING',
+        message: `Interface \`${iface.name}\` has \`@dbxModelCompositeKey\` without a valid \`encoding=\` argument. Allowed values: \`two-way\` (round-trips via \`inferKeyFromTwoWayFlatFirestoreModelKey\`) or \`one-way\` (slashes stripped, not recoverable).`,
+        file: file.name,
+        line: tag.line,
+        model: iface.name
+      });
+    }
+    if (!hasMatchingCompositeKeyArchetype(iface.dbxModelArchetypeTags)) {
+      pushViolation(violations, {
+        severity: 'warning',
+        code: 'MODEL_COMPOSITE_KEY_WITHOUT_ARCHETYPE',
+        message: `Interface \`${iface.name}\` carries \`@dbxModelCompositeKey\` but no archetype tag justifies the composite-flat-key shape. Add \`@dbxModelArchetype composite-key-root\`, or \`@dbxModelArchetype denormalised-aggregate keying=composite-flat-key\` when the doc is a projection.`,
+        file: file.name,
+        line: tag.line,
+        model: iface.name
+      });
+    }
+  }
+}
+
+function hasMatchingCompositeKeyArchetype(tags: readonly { readonly slug: string; readonly axes: { readonly [key: string]: string } }[]): boolean {
+  let matched = false;
+  for (const t of tags) {
+    if (t.slug === 'composite-key-root') {
+      matched = true;
+      break;
+    }
+    if (t.slug === 'denormalised-aggregate' && t.axes['keying'] === 'composite-flat-key') {
+      matched = true;
+      break;
+    }
+  }
+  return matched;
 }
 
 // MARK: Helpers

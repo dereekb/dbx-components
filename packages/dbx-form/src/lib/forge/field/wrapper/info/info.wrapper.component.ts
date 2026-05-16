@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { type FieldWrapperContract } from '@ng-forge/dynamic-forms';
+import { type FieldWrapper } from '@ng-forge/dynamic-forms';
 
 /**
  * Forge wrapper component that renders child fields inside a flex layout
  * with an info icon button beside them.
  *
- * Implements {@link FieldWrapperContract} and receives configuration
+ * Implements {@link FieldWrapper} and receives configuration
  * via component inputs.
  */
 @Component({
@@ -28,7 +28,7 @@ import { type FieldWrapperContract } from '@ng-forge/dynamic-forms';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxForgeInfoWrapperComponent implements FieldWrapperContract {
+export class DbxForgeInfoWrapperComponent implements FieldWrapper {
   readonly fieldComponent = viewChild.required('fieldComponent', { read: ViewContainerRef });
 
   readonly onInfoClick = input<() => void>();

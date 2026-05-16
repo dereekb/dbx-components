@@ -109,7 +109,7 @@ interface RunListInput {
   readonly format: 'markdown' | 'json' | undefined;
 }
 
-function runList(input: RunListInput): ToolResult {
+function applyListFilters(input: RunListInput): readonly RuleEntry[] {
   const filters: ((entry: RuleEntry) => boolean)[] = [];
   if (input.source !== undefined) {
     const wanted = input.source as RuleSource;
@@ -118,22 +118,18 @@ function runList(input: RunListInput): ToolResult {
   if (input.severity !== undefined) {
     filters.push((entry) => entry.severity === input.severity);
   }
-  const filtered = filters.length === 0 ? RULE_CATALOG : RULE_CATALOG.filter((entry) => filters.every((f) => f(entry)));
-  if (filtered.length === 0) {
-    const filterParts: string[] = [];
-    if (input.source !== undefined) filterParts.push(`source=\`${input.source}\``);
-    if (input.severity !== undefined) filterParts.push(`severity=\`${input.severity}\``);
-    const filterSummary = filterParts.length === 0 ? '' : ` (filters: ${filterParts.join(', ')})`;
-    return toolError(`No rules match${filterSummary}. The catalog has ${RULE_CATALOG.length} entries — try omitting filters to list all rules.`);
-  }
-  if (input.format === 'json') {
-    const text = JSON.stringify({ entries: filtered.map(({ code, source, severity, title }) => ({ code, source, severity, title })) }, null, 2);
-    return { content: [{ type: 'text', text }] };
-  }
-  const lines: string[] = [];
+  return filters.length === 0 ? RULE_CATALOG : RULE_CATALOG.filter((entry) => filters.every((f) => f(entry)));
+}
+
+function describeListFilters(input: RunListInput): readonly string[] {
   const filterParts: string[] = [];
   if (input.source !== undefined) filterParts.push(`source=\`${input.source}\``);
   if (input.severity !== undefined) filterParts.push(`severity=\`${input.severity}\``);
+  return filterParts;
+}
+
+function renderListMarkdown(filtered: readonly RuleEntry[], filterParts: readonly string[]): string {
+  const lines: string[] = [];
   const heading = filterParts.length === 0 ? `Rule catalog (${filtered.length} entries)` : `Rule catalog — ${filterParts.join(', ')} (${filtered.length} of ${RULE_CATALOG.length} entries)`;
   lines.push(`# ${heading}`, '');
   const grouped = groupBySource(filtered);
@@ -145,7 +141,21 @@ function runList(input: RunListInput): ToolResult {
     lines.push('');
   }
   lines.push(`Re-run \`dbx_explain_rule code="<code>"\` for the full doc on any rule.`);
-  return { content: [{ type: 'text', text: lines.join('\n').trimEnd() }] };
+  return lines.join('\n').trimEnd();
+}
+
+function runList(input: RunListInput): ToolResult {
+  const filtered = applyListFilters(input);
+  const filterParts = describeListFilters(input);
+  if (filtered.length === 0) {
+    const filterSummary = filterParts.length === 0 ? '' : ` (filters: ${filterParts.join(', ')})`;
+    return toolError(`No rules match${filterSummary}. The catalog has ${RULE_CATALOG.length} entries — try omitting filters to list all rules.`);
+  }
+  if (input.format === 'json') {
+    const text = JSON.stringify({ entries: filtered.map(({ code, source, severity, title }) => ({ code, source, severity, title })) }, null, 2);
+    return { content: [{ type: 'text', text }] };
+  }
+  return { content: [{ type: 'text', text: renderListMarkdown(filtered, filterParts) }] };
 }
 
 function groupBySource(entries: readonly RuleEntry[]): readonly (readonly [RuleSource, readonly RuleEntry[]])[] {

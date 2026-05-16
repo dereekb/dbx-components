@@ -204,7 +204,7 @@ function assembleEntry(input: AssembleEntryInput): ModelFirebaseIndexEntry {
     returns: entry.returns,
     tags: [...entry.tags],
     constraintSequences: entry.constraintSequences.map((s) => ({
-      ...(s.pathLabel !== undefined ? { pathLabel: s.pathLabel } : {}),
+      ...(s.pathLabel === undefined ? {} : { pathLabel: s.pathLabel }),
       entries: s.entries.map((e) => ({ ...e }))
     })),
     derivedComposites: analyzedEntry.derivedComposites.map((c) => ({ ...c, fields: c.fields.map((f) => ({ ...f })) })),

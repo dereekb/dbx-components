@@ -83,5 +83,5 @@ function buildCrossFileRuleContext(extracteds: readonly ExtractedFile[]): CrossF
 }
 
 export { formatResult } from './format.js';
-export { checkManifestIdentityDuplicates } from './manifest-rules.js';
+export { checkManifestIdentityDuplicates, checkManifestCompositeKeyFrom } from './manifest-rules.js';
 export type { RuleOptions, ValidationResult, ValidatorSource, Violation, ViolationCode, ViolationSeverity } from './types.js';

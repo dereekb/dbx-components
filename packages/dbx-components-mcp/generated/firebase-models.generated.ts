@@ -73,7 +73,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     detectionHints: ['m', 'r', 'w'],
     description: 'Root notification container for a model. The document ID is the two-way flat key of the model it represents (see {@link notificationBoxIdForModel} in `notification.id.ts`).',
     modelGroup: 'Notification',
-    collectionKind: 'root'
+    collectionKind: 'root',
+    archetypes: ['composite-key-root']
   },
   {
     name: 'NotificationSummary',
@@ -152,7 +153,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     detectionHints: ['m', 'n', 'lat', 'rat'],
     description: 'Aggregated notification feed for a specific model. Holds embedded {@link NotificationItem} entries that summarize recent notifications, similar to an activity feed.',
     modelGroup: 'Notification',
-    collectionKind: 'root'
+    collectionKind: 'root',
+    archetypes: ['root-singleton-aggregate', 'composite-key-root']
   },
   {
     name: 'NotificationUser',
@@ -223,7 +225,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     modelGroup: 'Notification',
     collectionKind: 'root',
     userKeyedById: true,
-    hasUserUidField: true
+    hasUserUidField: true,
+    archetypes: ['user-keyed-entity-root']
   },
   {
     name: 'OidcEntry',
@@ -318,7 +321,14 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     detectionHints: ['type', 'payload', 'grantId', 'clientId', 'userCode', 'consumed', 'createdAt', 'expiresAt'],
     description: 'oidc-provider adapter entry stored in Firestore.',
     modelGroup: 'OidcModel',
-    collectionKind: 'root'
+    collectionKind: 'root',
+    archetypes: ['reference-registry'],
+    archetypeAxesBySlug: {
+      'reference-registry': {
+        hasChildren: 'false',
+        hasInheritance: 'false'
+      }
+    }
   },
   {
     name: 'StorageFile',
@@ -578,7 +588,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     detectionHints: ['bucketId', 'pathString', 'n', 'ct', 'fs', 'ps', 'pn', 'pat', 'pcat', 'uby', 'p', 'pg', 'sdat', 'g', 'gs'],
     description: 'A StorageFile Firestore document that references a file in Google Cloud Storage.',
     modelGroup: 'StorageFile',
-    collectionKind: 'root'
+    collectionKind: 'root',
+    archetypes: ['root-entity', 'state-machine-item']
   },
   {
     name: 'StorageFileGroup',
@@ -673,7 +684,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     detectionHints: ['f', 'z', 'zsf', 'zat', 're', 'c'],
     description: 'A group of {@link StorageFile}s aggregated around a related model or common identifier.',
     modelGroup: 'StorageFile',
-    collectionKind: 'root'
+    collectionKind: 'root',
+    archetypes: ['root-entity']
   },
   {
     name: 'SystemState',
@@ -696,7 +708,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     detectionHints: ['data'],
     description: 'A singleton Firestore document storing the current state of a system subcomponent.',
     modelGroup: 'SystemState',
-    collectionKind: 'root'
+    collectionKind: 'root',
+    archetypes: ['system-state-singleton']
   },
   {
     name: 'Notification',
@@ -984,7 +997,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'Individual notification document, stored as a subcollection of {@link NotificationBox}.',
     parentIdentityConst: 'notificationBoxIdentity',
     modelGroup: 'Notification',
-    collectionKind: 'sub-collection'
+    collectionKind: 'sub-collection',
+    archetypes: ['sub-collection-entity']
   },
   {
     name: 'NotificationLoggedEventDay',
@@ -1008,7 +1022,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: "Day-keyed wrapper document for a single day's worth of archived logged-event notifications under a {@link NotificationBox}.",
     parentIdentityConst: 'notificationBoxIdentity',
     modelGroup: 'Notification',
-    collectionKind: 'sub-collection'
+    collectionKind: 'sub-collection',
+    archetypes: ['sub-collection-entity']
   },
   {
     name: 'NotificationWeek',
@@ -1040,7 +1055,8 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'Weekly archive of delivered notification items within a {@link NotificationBox}.',
     parentIdentityConst: 'notificationBoxIdentity',
     modelGroup: 'Notification',
-    collectionKind: 'sub-collection'
+    collectionKind: 'sub-collection',
+    archetypes: ['sub-collection-entity']
   }
 ];
 
