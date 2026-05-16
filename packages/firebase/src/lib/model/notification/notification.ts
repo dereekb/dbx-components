@@ -269,6 +269,8 @@ export const NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH 
  *
  * @dbxModel
  * @dbxModelArchetype root-singleton-aggregate
+ * @dbxModelArchetype composite-key-root
+ * @dbxModelCompositeKey from=* encoding=two-way
  */
 export interface NotificationSummary extends InitializedNotificationModel {
   /**
@@ -397,6 +399,8 @@ export const notificationBoxIdentity = firestoreModelIdentity('notificationBox',
  * @see `NotificationServerActions.createNotificationBox` in `@dereekb/firebase-server/model` for creation logic
  *
  * @dbxModel
+ * @dbxModelArchetype composite-key-root
+ * @dbxModelCompositeKey from=* encoding=two-way
  */
 export interface NotificationBox extends InitializedNotificationModel {
   /**

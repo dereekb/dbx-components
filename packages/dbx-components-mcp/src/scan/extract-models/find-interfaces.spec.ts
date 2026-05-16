@@ -79,13 +79,13 @@ describe('findInterfaces() JSDoc tag parsing', () => {
     const result = interfaces(`
       /**
        * @dbxModel
-       * @dbxModelArchetype geo-key-entity-root
-       * @dbxModelArchetype model-tree-node
+       * @dbxModelArchetype composite-key-root
+       * @dbxModelArchetype denormalised-aggregate
        */
       export interface CountryState { a: string; }
     `);
     const iface = result.find((i) => i.name === 'CountryState');
-    expect(iface?.tags.dbxModelArchetypes.map((t) => t.slug)).toEqual(['geo-key-entity-root', 'model-tree-node']);
+    expect(iface?.tags.dbxModelArchetypes.map((t) => t.slug)).toEqual(['composite-key-root', 'denormalised-aggregate']);
   });
 
   it('collects repeated @dbxModelAggregatesFrom tags into a string array', () => {
@@ -111,6 +111,57 @@ describe('findInterfaces() JSDoc tag parsing', () => {
     `);
     const iface = result.find((i) => i.name === 'SchoolGroup');
     expect(iface?.tags.dbxModelOrganizationalGroupRoot).toBe(true);
+  });
+
+  it('parses @dbxModelCompositeKey with concrete model list and two-way encoding', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelArchetype composite-key-root
+       * @dbxModelCompositeKey from=SchoolGroup,Region encoding=two-way
+       */
+      export interface SchoolGroupRegion { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'SchoolGroupRegion');
+    expect(iface?.tags.dbxModelCompositeKey).toEqual({ from: ['SchoolGroup', 'Region'], encoding: 'two-way' });
+  });
+
+  it('parses @dbxModelCompositeKey with from=* wildcard', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelArchetype composite-key-root
+       * @dbxModelCompositeKey from=* encoding=two-way
+       */
+      export interface NotificationBox { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'NotificationBox');
+    expect(iface?.tags.dbxModelCompositeKey).toEqual({ from: '*', encoding: 'two-way' });
+  });
+
+  it('captures a malformed @dbxModelCompositeKey for the validator to flag', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelCompositeKey encoding=triple-way
+       */
+      export interface SomeRoot { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'SomeRoot');
+    // from defaulted to empty list, encoding undefined — validator flags both.
+    expect(iface?.tags.dbxModelCompositeKey).toEqual({ from: [], encoding: undefined });
+  });
+
+  it('preserves * mixed with concrete entries so the validator can flag the mix', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelCompositeKey from=*,Group encoding=one-way
+       */
+      export interface Bad { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'Bad');
+    expect(iface?.tags.dbxModelCompositeKey).toEqual({ from: ['*', 'Group'], encoding: 'one-way' });
   });
 
   it('skips invalid (non-camelCase) names on @dbxModelAggregatesFrom', () => {

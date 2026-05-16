@@ -231,6 +231,21 @@ function buildModelEntry(args: BuildModelEntryInput): FirebaseModel | undefined 
   const archetypes = finalArchetypes.map((a) => a.slug);
   const archetypeAxesEntries = finalArchetypes.filter((a) => Object.keys(a.axes).length > 0).map((a) => [a.slug, a.axes] as const);
   const archetypeAxesBySlug = archetypeAxesEntries.length > 0 ? Object.fromEntries(archetypeAxesEntries) : undefined;
+  // Only surface a fully well-formed compositeKey on the registry entry —
+  // malformed tags (missing `from`, invalid encoding, wildcard mixed with
+  // concrete names) are left for the validator to flag against source.
+  const rawCompositeKey = iface.tags.dbxModelCompositeKey;
+  let compositeKey: { readonly from: readonly string[] | '*'; readonly encoding: 'two-way' | 'one-way' } | undefined;
+  if (rawCompositeKey !== undefined && rawCompositeKey.encoding !== undefined) {
+    const from = rawCompositeKey.from;
+    const fromIsWildcard = from === '*';
+    const fromIsClosedList = Array.isArray(from) && from.length > 0 && !from.includes('*');
+    if (fromIsWildcard) {
+      compositeKey = { from: '*', encoding: rawCompositeKey.encoding };
+    } else if (fromIsClosedList) {
+      compositeKey = { from: from as readonly string[], encoding: rawCompositeKey.encoding };
+    }
+  }
 
   return {
     name: modelName,
@@ -259,7 +274,8 @@ function buildModelEntry(args: BuildModelEntryInput): FirebaseModel | undefined 
     ...(organizationalGroupRoot ? { organizationalGroupRoot: true } : {}),
     ...(aggregatesFromNonEmpty ? { aggregatesFrom } : {}),
     ...(archetypes.length > 0 ? { archetypes } : {}),
-    ...(archetypeAxesBySlug ? { archetypeAxesBySlug } : {})
+    ...(archetypeAxesBySlug ? { archetypeAxesBySlug } : {}),
+    ...(compositeKey ? { compositeKey } : {})
   };
 }
 
@@ -298,9 +314,11 @@ interface InferredArchetype {
  * tag applies. The `.mjs` script's heuristic is canonical — keep this in sync
  * if either changes.
  *
- * Most rules emit a single slug; the geo branch emits two
- * (`geo-key-entity-root` AND `model-tree-node`) because every realistic geo
- * root is simultaneously a tree level.
+ * Each rule emits a single slug. A root collection whose doc id is itself a
+ * geo key (`regionKey` / `districtKey`) falls through to `root-entity` — the
+ * composite-key / tree-node distinctions require explicit `@dbxModelArchetype`
+ * tagging since the heuristic can't infer composite-flat-key encoding or
+ * tree-chain participation from pure-key signals alone.
  *
  * @param input - the signals the heuristic consumes (root vs. sub, marker-interface flags, collection kind, JSDoc markers)
  * @returns the inferred archetypes (possibly empty)
@@ -313,11 +331,6 @@ function inferArchetype(input: InferArchetypeInput): readonly InferredArchetype[
     result = [{ slug: 'user-keyed-entity-root', axes: {} }];
   } else if (input.externalIdKeyedById && input.isRoot) {
     result = [{ slug: 'external-id-keyed-entity-root', axes: {} }];
-  } else if ((input.regionKeyedById || input.districtKeyedById) && input.isRoot) {
-    result = [
-      { slug: 'geo-key-entity-root', axes: {} },
-      { slug: 'model-tree-node', axes: {} }
-    ];
   } else if (input.collectionKind === 'root-singleton' && input.aggregatesFromNonEmpty) {
     result = [{ slug: 'root-singleton-aggregate', axes: {} }];
   } else if (input.collectionKind === 'root-singleton') {

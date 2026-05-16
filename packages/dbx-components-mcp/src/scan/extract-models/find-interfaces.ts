@@ -10,7 +10,7 @@
  */
 
 import { Node, type ExpressionWithTypeArguments, type InterfaceDeclaration, type JSDoc, type SourceFile, type TypeNode } from 'ts-morph';
-import type { ExtractedArchetypeTag, ExtractedInterface, ExtractedInterfaceProp, ExtractedInterfaceTags } from './types.js';
+import type { ExtractedArchetypeTag, ExtractedCompositeKeyTag, ExtractedInterface, ExtractedInterfaceProp, ExtractedInterfaceTags } from './types.js';
 
 /**
  * TS utility/structural wrappers that don't change the field surface for
@@ -120,6 +120,7 @@ function readInterfaceTags(jsDocs: readonly JSDoc[]): ExtractedInterfaceTags {
   let dbxModel = false;
   let dbxModelSubObject = false;
   let dbxModelOrganizationalGroupRoot = false;
+  let dbxModelCompositeKey: ExtractedCompositeKeyTag | undefined;
   const dbxModelArchetypes: ExtractedArchetypeTag[] = [];
   const dbxModelAggregatesFrom: string[] = [];
   for (const jsDoc of jsDocs) {
@@ -146,10 +147,18 @@ function readInterfaceTags(jsDocs: readonly JSDoc[]): ExtractedInterfaceTags {
             dbxModelAggregatesFrom.push(name);
           }
         }
+      } else if (tagName === 'dbxModelCompositeKey') {
+        // At most one tag per interface — only the first captured. Validators
+        // surface duplicates as findings using the JSDoc source positions.
+        if (dbxModelCompositeKey === undefined) {
+          const value = tag.getCommentText()?.trim();
+          dbxModelCompositeKey = parseCompositeKeyTagValue(value ?? '');
+        }
       }
     }
   }
-  return { dbxModel, dbxModelSubObject, dbxModelArchetypes, dbxModelAggregatesFrom, dbxModelOrganizationalGroupRoot };
+  const tags: ExtractedInterfaceTags = { dbxModel, dbxModelSubObject, dbxModelArchetypes, dbxModelAggregatesFrom, dbxModelOrganizationalGroupRoot, ...(dbxModelCompositeKey ? { dbxModelCompositeKey } : {}) };
+  return tags;
 }
 
 const ARCHETYPE_SLUG_RE = /^[a-z][a-z0-9-]*$/;
@@ -179,6 +188,58 @@ function parseArchetypeTagValue(value: string): ExtractedArchetypeTag | undefine
     }
   }
   return { slug, axes };
+}
+
+const COMPOSITE_KEY_MODEL_NAME_RE = /^[A-Za-z][A-Za-z0-9_$]*$/;
+
+/**
+ * Parses `@dbxModelCompositeKey from=<ModelA>,<ModelB>[,<ModelC>...] encoding=<two-way|one-way>`
+ * (or the wildcard form `from=* encoding=<...>`) into a structured
+ * {@link ExtractedCompositeKeyTag}.
+ *
+ * The parser is intentionally permissive — it captures whatever the author
+ * wrote and lets validators surface specific findings (missing `from=`,
+ * unresolved model name, invalid encoding, wildcard mixed with concrete
+ * entries). A completely missing `from=` produces `from: []` so the validator
+ * can flag `MODEL_COMPOSITE_KEY_MISSING_FROM`. An unrecognised encoding leaves
+ * `encoding` undefined for `MODEL_COMPOSITE_KEY_INVALID_ENCODING`.
+ *
+ * @param value - raw tag value text after `@dbxModelCompositeKey`
+ * @returns parsed tag — always present, even when malformed; validators
+ *   inspect the fields to emit findings.
+ */
+function parseCompositeKeyTagValue(value: string): ExtractedCompositeKeyTag {
+  const trimmed = value.trim();
+  let fromValue: readonly string[] | '*' = [];
+  let encoding: 'two-way' | 'one-way' | undefined;
+  if (trimmed.length === 0) return { from: fromValue, encoding };
+  for (const token of trimmed.split(/\s+/)) {
+    const eq = token.indexOf('=');
+    if (eq <= 0) continue;
+    const key = token.slice(0, eq).trim();
+    const v = token.slice(eq + 1).trim();
+    if (key === 'from') {
+      if (v === '*') {
+        fromValue = '*';
+      } else if (v.length > 0) {
+        // Tolerate the wildcard mixed with concrete entries here; the
+        // validator emits MODEL_COMPOSITE_KEY_WILDCARD_MIXED when it sees both.
+        const parts = v
+          .split(',')
+          .map((p) => p.trim())
+          .filter((p) => p.length > 0);
+        if (parts.includes('*')) {
+          // Preserve the literal list so the validator can flag the mix.
+          fromValue = parts;
+        } else {
+          fromValue = parts.filter((p) => COMPOSITE_KEY_MODEL_NAME_RE.test(p));
+        }
+      }
+    } else if (key === 'encoding') {
+      if (v === 'two-way' || v === 'one-way') encoding = v;
+    }
+  }
+  return { from: fromValue, encoding };
 }
 
 interface PropertyTags {

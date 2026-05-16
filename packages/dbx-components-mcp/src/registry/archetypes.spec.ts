@@ -3,8 +3,8 @@ import { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, getModelArchetypeBySlug, 
 
 describe('model archetypes registry', () => {
   it('exposes the planned primary archetypes plus 3 add-ons', () => {
-    // 21 primary archetypes (incl. lifecycle-item + model-tree-node) + 3 add-ons.
-    expect(MODEL_ARCHETYPES.length).toBe(24);
+    // 20 primary archetypes (incl. lifecycle-item, model-tree-node, composite-key-root) + 3 add-ons.
+    expect(MODEL_ARCHETYPES.length).toBe(23);
   });
 
   it('keeps slugs unique', () => {

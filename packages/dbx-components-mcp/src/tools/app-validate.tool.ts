@@ -39,7 +39,7 @@ import { inspectAppFixtures, validateAppFixtures, type FixtureDiagnostic } from 
 import { RESERVED_MODEL_FOLDERS } from './model-validate-folder/types.js';
 import { inspectFolder as inspectModelFolder, validateModelFolders } from './model-validate-folder/index.js';
 import { inspectFolder as inspectSystemFolder, validateSystemFolders } from './system-m-validate-folder/index.js';
-import { checkManifestIdentityDuplicates } from './model-validate/manifest-rules.js';
+import { checkManifestCompositeKeyFrom, checkManifestIdentityDuplicates } from './model-validate/manifest-rules.js';
 import { inspectAppAssets, validateAppAssets } from './dbx-asset-validate-app/index.js';
 import { validateAppModelApi } from './model-api-validate-app/index.js';
 import { FIREBASE_MODELS } from '../registry/firebase-models.js';
@@ -309,7 +309,7 @@ async function runManifest(ctx: ManifestCtx): Promise<void> {
   try {
     const downstream = await getDownstreamCatalog({ workspaceRoot: ctx.workspaceRoot });
     const merged = [...FIREBASE_MODELS, ...downstream.models];
-    const violations = checkManifestIdentityDuplicates(merged);
+    const violations = [...checkManifestIdentityDuplicates(merged), ...checkManifestCompositeKeyFrom(merged)];
     for (const v of violations) {
       ctx.findings.push(toFinding({ cluster: 'manifest', code: v.code, severity: v.severity, message: v.message, file: v.file, line: v.line }));
     }

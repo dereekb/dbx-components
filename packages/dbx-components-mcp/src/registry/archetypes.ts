@@ -91,10 +91,9 @@ export type ModelArchetypeSlug =
   | 'user-keyed-entity-root'
   | 'user-keyed-index-root'
   | 'external-id-keyed-entity-root'
-  | 'geo-key-entity-root'
   | 'group-root'
   | 'group-member'
-  | 'region-variant-root'
+  | 'composite-key-root'
   | 'denormalised-aggregate'
   | 'root-singleton-aggregate'
   | 'external-mirror'
@@ -347,21 +346,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
     axes: {},
     implementationPointers: ['Doc id = external vendor id (e.g. Zoho candidate id).', 'Webhook patches in; scheduled reconciler patches out.']
   },
-  {
-    slug: 'geo-key-entity-root',
-    family: 'user-external-root',
-    collectionKind: 'root',
-    description: 'Root collection whose doc id IS a geographic key (region/district/...), holding the per-geo overlay of another model.',
-    whenToUse: 'Per-region or per-district overlay keyed directly by the geo key.',
-    expected: {
-      docIdSource: ['geo-key'],
-      parentRelation: ['region-key', 'district-key', 'none'],
-      syncMode: ['flag-eventual', 'trigger-eventual']
-    },
-    axes: {},
-    implementationPointers: ['Doc id = the geo key (`regionKey`, `districtKey`).', 'Pair with `RegionRelatedById` / `DistrictRelatedById` so the registry auto-tags.']
-  },
-
   // === Group / Membership family ===
   {
     slug: 'group-root',
@@ -394,18 +378,22 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
     implementationPointers: ['Cached user fields resync on profile change via a trigger (`trigger-eventual`).']
   },
   {
-    slug: 'region-variant-root',
+    slug: 'composite-key-root',
     family: 'group',
     collectionKind: 'root',
-    description: 'Per-region overlay of a root group, keyed by `(group, region)` composite. Distinct from `geo-key-entity-root` (single-key) and from a subcollection.',
-    whenToUse: 'Per-region overlay where the doc id is `groupKey_regionKey` (composite-flat-key).',
+    description: 'Root collection whose doc id is a flat-encoded model key — either a single source key (e.g. `flatFirestoreModelKey(regionKey)`) or a composite of multiple model keys (e.g. `(group, region)`) — making the encoded scope queryable at the root level. Orthogonal to source-of-truth role: stack with `denormalised-aggregate` when the same doc is also a projection.',
+    whenToUse: 'Root collection keyed by a flat encoding of one or more model keys. Single-source flat keys cover overlays like `WorkerRegion` / `JobDistrict` (doc id = flat-encoded region/district key) and framework models like `NotificationBox` / `NotificationSummary` (doc id = flat key of any source model). Multi-source flat keys cover (parent, secondary-scope) overlays where the collection needs to stay query-addressable at the root.',
+    disambiguation: 'Pick the encoding based on whether the source key(s) must be recoverable from the doc id. `twoWayFlatFirestoreModelKey` (slashes → `_`, round-tripped via `inferKeyFromTwoWayFlatFirestoreModelKey`) lets you recover the source keys when iterating the collection. `flatFirestoreModelKey` (one-way, slashes stripped) is appropriate when the source key is already stored as a field on the doc and the id only needs to be unique.',
     expected: {
       docIdSource: ['composite-flat-key'],
-      parentRelation: ['composite-key', 'none'],
-      syncMode: ['always-in-sync']
+      parentRelation: ['composite-key', 'none']
     },
     axes: {},
-    implementationPointers: ['Doc id encodes both keys via a composite-flat-key factory.']
+    implementationPointers: [
+      'Encode the doc id with `twoWayFlatFirestoreModelKey` (recoverable via `inferKeyFromTwoWayFlatFirestoreModelKey`) when iterating the collection should yield the source keys without reading any field. Use `flatFirestoreModelKey` (one-way, slashes stripped) when the source key is already stored as a field.',
+      'Pair the model with a `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` JSDoc tag so the catalog records which models contribute keys and which encoding is used. A single-element `from` is valid for single-source flat keys (e.g. `from=Region encoding=one-way` for `WorkerRegion`). Use `from=*` for framework models like `NotificationBox` / `NotificationSummary` that accept any source identity.',
+      'Cross-reference: `OneWayFlatFirestoreModelKey` / `TwoWayFlatFirestoreModelKey` in `@dereekb/firebase`.'
+    ]
   },
 
   // === Denormalised-Aggregate family ===

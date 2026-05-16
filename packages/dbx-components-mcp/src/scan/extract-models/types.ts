@@ -42,10 +42,33 @@ export interface ExtractedArchetypeTag {
 }
 
 /**
+ * Parsed `@dbxModelCompositeKey from=<ModelA>,<ModelB> encoding=<two-way|one-way>`
+ * JSDoc tag, applied to interfaces whose Firestore doc id is a composite-flat-key
+ * encoding of one or more source model keys. `from=*` is the wildcard form used
+ * by framework models that accept any source identity (e.g. `NotificationBox`).
+ */
+export interface ExtractedCompositeKeyTag {
+  /**
+   * `'*'` for the wildcard form, or an ordered list of source-model names
+   * (interface name, identity const name, or modelType — same resolution as
+   * `getFirebaseModel`). Empty array when the tag is malformed (missing `from=`).
+   */
+  readonly from: readonly string[] | '*';
+  /**
+   * `'two-way'` for `twoWayFlatFirestoreModelKey` encoding, `'one-way'` for
+   * `flatFirestoreModelKey`. `undefined` when the tag is malformed.
+   */
+  readonly encoding: 'two-way' | 'one-way' | undefined;
+}
+
+/**
  * JSDoc-derived tag bag attached to one `export interface` declaration.
  * `dbxModelArchetypes` is repeatable — every `@dbxModelArchetype` occurrence
  * appends to the array. `dbxModelAggregatesFrom` is also repeatable.
  * `dbxModelOrganizationalGroupRoot` is a boolean presence flag.
+ * `dbxModelCompositeKey` is at most one per interface — if multiple are
+ * declared, only the first is captured and the rest produce validation
+ * findings.
  */
 export interface ExtractedInterfaceTags {
   readonly dbxModel: boolean;
@@ -53,6 +76,7 @@ export interface ExtractedInterfaceTags {
   readonly dbxModelArchetypes: readonly ExtractedArchetypeTag[];
   readonly dbxModelAggregatesFrom: readonly string[];
   readonly dbxModelOrganizationalGroupRoot: boolean;
+  readonly dbxModelCompositeKey?: ExtractedCompositeKeyTag;
 }
 
 /**

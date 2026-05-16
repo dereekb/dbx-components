@@ -260,7 +260,8 @@ export interface FirebaseModel {
   /**
    * Archetype slugs for this model. Multiple slugs are emitted when one model
    * legitimately belongs to several catalog entries simultaneously (e.g. a
-   * geo root that is both `geo-key-entity-root` AND `model-tree-node`).
+   * composite-key root that is both `composite-key-root` AND
+   * `denormalised-aggregate`).
    * Populated by the `extract-firebase-models` heuristic, or replaced wholesale
    * by one-or-more `@dbxModelArchetype <slug>` JSDoc tags on the model
    * interface. Absent when the heuristic cannot tag the model with high enough
@@ -301,6 +302,19 @@ export interface FirebaseModel {
    * as a signal for the `group-root` archetype.
    */
   readonly organizationalGroupRoot?: boolean;
+  /**
+   * Parsed `@dbxModelCompositeKey from=<ModelA>,<ModelB> encoding=<two-way|one-way>`
+   * tag — present when the interface declares one. Records which source models
+   * the doc id composites from, and which flat-key encoding is used. `from`
+   * is `'*'` for framework models (`NotificationBox`, `NotificationSummary`)
+   * that accept any source identity. Validators use this to confirm the
+   * model's archetype tagging matches the composite-key declaration; the
+   * archetype recommender / search use it to surface peer composite-key roots.
+   */
+  readonly compositeKey?: {
+    readonly from: readonly string[] | '*';
+    readonly encoding: 'two-way' | 'one-way';
+  };
 }
 
 /**

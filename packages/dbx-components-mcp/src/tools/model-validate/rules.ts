@@ -54,6 +54,7 @@ export function runRules(file: ExtractedFile, options?: RuleOptions, context?: C
   checkSubObjectInterfaceTags(file, violations);
   checkSubObjectFactoryCallSites(file, violations, context);
   checkSubObjectParentNotTagged({ file, violations, context, options });
+  checkCompositeKeyTags(file, violations);
   return violations;
 }
 
@@ -945,6 +946,89 @@ function declarationLine(model: ExtractedModel, kind: DeclarationKind): number |
     case 'collectionGroupFn':
       return model.collectionGroupFn?.line;
   }
+}
+
+// MARK: Composite-key tag
+/**
+ * Per-file rules that fire on `@dbxModelCompositeKey` tags:
+ *
+ * - `MODEL_COMPOSITE_KEY_MISSING_FROM` — tag present but `from=` was not
+ *   supplied (or resolved to an empty list after filtering).
+ * - `MODEL_COMPOSITE_KEY_WILDCARD_MIXED` — `*` mixed with concrete entries.
+ * - `MODEL_COMPOSITE_KEY_INVALID_ENCODING` — `encoding=` missing or not
+ *   `two-way` / `one-way`.
+ * - `MODEL_COMPOSITE_KEY_WITHOUT_ARCHETYPE` (warning) — tag applied to an
+ *   interface not tagged with `composite-key-root` or
+ *   `denormalised-aggregate keying=composite-flat-key`.
+ *
+ * Cross-manifest resolution of concrete `from=` entries
+ * (`MODEL_COMPOSITE_KEY_UNKNOWN_MODEL`) runs as a manifest-level rule in
+ * `manifest-rules.ts` — the per-file pass cannot see other packages.
+ *
+ * @param file - the extracted file
+ * @param violations - the mutable violation buffer
+ */
+function checkCompositeKeyTags(file: ExtractedFile, violations: Violation[]): void {
+  for (const iface of file.dataInterfaces) {
+    const tag = iface.dbxModelCompositeKeyTag;
+    if (tag === undefined) continue;
+    const fromIsWildcard = tag.from === '*';
+    const fromList = Array.isArray(tag.from) ? tag.from : [];
+    const fromIsMissing = !fromIsWildcard && fromList.length === 0;
+    const fromMixesWildcard = !fromIsWildcard && fromList.includes('*');
+    if (fromIsMissing) {
+      pushViolation(violations, {
+        code: 'MODEL_COMPOSITE_KEY_MISSING_FROM',
+        message: `Interface \`${iface.name}\` has \`@dbxModelCompositeKey\` without a \`from=\` argument. Declare either a concrete list (\`from=ModelA,ModelB\`) or the wildcard form (\`from=*\`).`,
+        file: file.name,
+        line: tag.line,
+        model: iface.name
+      });
+    }
+    if (fromMixesWildcard) {
+      pushViolation(violations, {
+        code: 'MODEL_COMPOSITE_KEY_WILDCARD_MIXED',
+        message: `Interface \`${iface.name}\` mixes \`*\` with concrete model names in \`@dbxModelCompositeKey from=\`. The wildcard is exclusive — use \`from=*\` for framework models, or enumerate every contributing model.`,
+        file: file.name,
+        line: tag.line,
+        model: iface.name
+      });
+    }
+    if (tag.encoding === undefined) {
+      pushViolation(violations, {
+        code: 'MODEL_COMPOSITE_KEY_INVALID_ENCODING',
+        message: `Interface \`${iface.name}\` has \`@dbxModelCompositeKey\` without a valid \`encoding=\` argument. Allowed values: \`two-way\` (round-trips via \`inferKeyFromTwoWayFlatFirestoreModelKey\`) or \`one-way\` (slashes stripped, not recoverable).`,
+        file: file.name,
+        line: tag.line,
+        model: iface.name
+      });
+    }
+    if (!hasMatchingCompositeKeyArchetype(iface.dbxModelArchetypeTags)) {
+      pushViolation(violations, {
+        severity: 'warning',
+        code: 'MODEL_COMPOSITE_KEY_WITHOUT_ARCHETYPE',
+        message: `Interface \`${iface.name}\` carries \`@dbxModelCompositeKey\` but no archetype tag justifies the composite-flat-key shape. Add \`@dbxModelArchetype composite-key-root\`, or \`@dbxModelArchetype denormalised-aggregate keying=composite-flat-key\` when the doc is a projection.`,
+        file: file.name,
+        line: tag.line,
+        model: iface.name
+      });
+    }
+  }
+}
+
+function hasMatchingCompositeKeyArchetype(tags: readonly { readonly slug: string; readonly axes: { readonly [key: string]: string } }[]): boolean {
+  let matched = false;
+  for (const t of tags) {
+    if (t.slug === 'composite-key-root') {
+      matched = true;
+      break;
+    }
+    if (t.slug === 'denormalised-aggregate' && t.axes['keying'] === 'composite-flat-key') {
+      matched = true;
+      break;
+    }
+  }
+  return matched;
 }
 
 // MARK: Helpers

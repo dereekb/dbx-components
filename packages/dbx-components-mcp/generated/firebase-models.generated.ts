@@ -74,7 +74,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'Root notification container for a model. The document ID is the two-way flat key of the model it represents (see {@link notificationBoxIdForModel} in `notification.id.ts`).',
     modelGroup: 'Notification',
     collectionKind: 'root',
-    archetypes: ['root-entity']
+    archetypes: ['composite-key-root']
   },
   {
     name: 'NotificationSummary',
@@ -154,7 +154,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'Aggregated notification feed for a specific model. Holds embedded {@link NotificationItem} entries that summarize recent notifications, similar to an activity feed.',
     modelGroup: 'Notification',
     collectionKind: 'root',
-    archetypes: ['root-singleton-aggregate']
+    archetypes: ['root-singleton-aggregate', 'composite-key-root']
   },
   {
     name: 'NotificationUser',
