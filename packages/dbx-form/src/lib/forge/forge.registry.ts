@@ -8,6 +8,8 @@
  * @see https://www.ng-forge.com/dynamic-forms/custom/building-an-adapter
  */
 
+export type DbxForgeFieldRegistryAugmentation = void;
+
 // Value field types
 import { type FORGE_PHONE_FIELD_TYPE, type DbxForgePhoneFieldDef } from './field/value/phone/phone.field';
 import { type FORGE_DATETIME_FIELD_TYPE, type DbxForgeDateTimeFieldDef } from './field/value/date/datetime.field';
