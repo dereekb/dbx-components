@@ -1,6 +1,6 @@
 import { cutValueToPrecisionFunction } from '../number/round';
 import { type Maybe } from '../value/maybe.type';
-import { type Hours, type Minutes, MINUTES_IN_HOUR, MINUTES_IN_DAY } from './date';
+import { type Hours, type Minutes, MINUTES_IN_HOUR, MINUTES_IN_DAY, HOURS_IN_DAY } from './date';
 
 /**
  * A number that represents hours and rounded to the nearest minute.
@@ -87,6 +87,30 @@ export function computeNextFractionalHour(input: FractionalHour, change: Compute
 }
 
 /**
+ * The hour of the day.
+ *
+ * Number from 0-23.
+ *
+ * @semanticType
+ * @semanticTopic date
+ * @semanticTopic numeric
+ */
+export type HourOfDay = number;
+
+export const HOUR_OF_DAY_MINIUMUM = 0;
+export const HOUR_OF_DAY_MAXMIMUM = HOURS_IN_DAY - 1;
+
+/**
+ * Returns true if the input value is a valid HourOfDay (0-23).
+ *
+ * @param input - The number to validate
+ * @returns True if the input is within the valid HourOfDay range
+ */
+export function isHourOfDay(input: number): input is HourOfDay {
+  return input >= HOUR_OF_DAY_MINIUMUM && input <= HOUR_OF_DAY_MAXMIMUM;
+}
+
+/**
  * The minute of the day.
  *
  * Number from 0-1439.
@@ -114,8 +138,8 @@ export function isMinuteOfDay(input: number): input is MinuteOfDay {
  * A pair of hours and minutes.
  */
 export interface HoursAndMinutes {
-  readonly hour: number;
-  readonly minute: number;
+  readonly hour: Hours;
+  readonly minute: Minutes;
 }
 
 /**
