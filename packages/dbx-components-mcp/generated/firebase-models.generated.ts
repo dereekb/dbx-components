@@ -74,7 +74,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'Root notification container for a model. The document ID is the two-way flat key of the model it represents (see {@link notificationBoxIdForModel} in `notification.id.ts`).',
     modelGroup: 'Notification',
     collectionKind: 'root',
-    archetype: 'root-entity'
+    archetypes: ['root-entity']
   },
   {
     name: 'NotificationSummary',
@@ -154,7 +154,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'Aggregated notification feed for a specific model. Holds embedded {@link NotificationItem} entries that summarize recent notifications, similar to an activity feed.',
     modelGroup: 'Notification',
     collectionKind: 'root',
-    archetype: 'root-entity'
+    archetypes: ['root-singleton-aggregate']
   },
   {
     name: 'NotificationUser',
@@ -226,7 +226,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     collectionKind: 'root',
     userKeyedById: true,
     hasUserUidField: true,
-    archetype: 'user-keyed-entity-root'
+    archetypes: ['user-keyed-entity-root']
   },
   {
     name: 'OidcEntry',
@@ -322,7 +322,13 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'oidc-provider adapter entry stored in Firestore.',
     modelGroup: 'OidcModel',
     collectionKind: 'root',
-    archetype: 'root-entity'
+    archetypes: ['reference-registry'],
+    archetypeAxesBySlug: {
+      'reference-registry': {
+        hasChildren: 'false',
+        hasInheritance: 'false'
+      }
+    }
   },
   {
     name: 'StorageFile',
@@ -583,7 +589,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'A StorageFile Firestore document that references a file in Google Cloud Storage.',
     modelGroup: 'StorageFile',
     collectionKind: 'root',
-    archetype: 'root-entity'
+    archetypes: ['root-entity', 'state-machine-item']
   },
   {
     name: 'StorageFileGroup',
@@ -679,7 +685,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'A group of {@link StorageFile}s aggregated around a related model or common identifier.',
     modelGroup: 'StorageFile',
     collectionKind: 'root',
-    archetype: 'root-entity'
+    archetypes: ['root-entity']
   },
   {
     name: 'SystemState',
@@ -703,7 +709,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     description: 'A singleton Firestore document storing the current state of a system subcomponent.',
     modelGroup: 'SystemState',
     collectionKind: 'root',
-    archetype: 'root-entity'
+    archetypes: ['system-state-singleton']
   },
   {
     name: 'Notification',
@@ -992,7 +998,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     parentIdentityConst: 'notificationBoxIdentity',
     modelGroup: 'Notification',
     collectionKind: 'sub-collection',
-    archetype: 'sub-collection-entity'
+    archetypes: ['sub-collection-entity']
   },
   {
     name: 'NotificationLoggedEventDay',
@@ -1017,7 +1023,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     parentIdentityConst: 'notificationBoxIdentity',
     modelGroup: 'Notification',
     collectionKind: 'sub-collection',
-    archetype: 'sub-collection-entity'
+    archetypes: ['sub-collection-entity']
   },
   {
     name: 'NotificationWeek',
@@ -1050,7 +1056,7 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
     parentIdentityConst: 'notificationBoxIdentity',
     modelGroup: 'Notification',
     collectionKind: 'sub-collection',
-    archetype: 'sub-collection-entity'
+    archetypes: ['sub-collection-entity']
   }
 ];
 

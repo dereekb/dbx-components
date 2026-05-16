@@ -34,7 +34,7 @@ export function registerModelArchetypesResource(server: McpServer): void {
     ARCHETYPES_URI,
     {
       title: 'Model Archetype Entries',
-      description: 'Catalog of Firestore-model archetypes with declared axes, aliases, and implied `collectionKind`.',
+      description: 'Catalog of Firestore-model archetypes with declared axes and implied `collectionKind`.',
       mimeType: 'application/json'
     },
     async () => {
@@ -49,7 +49,6 @@ export function registerModelArchetypesResource(server: McpServer): void {
           whenToUse: a.whenToUse,
           extensionCluster: a.extensionCluster,
           axes: a.axes,
-          aliases: a.aliases,
           disambiguation: a.disambiguation
         }))
       };
@@ -70,7 +69,7 @@ export function registerModelArchetypesResource(server: McpServer): void {
     new ResourceTemplate(ARCHETYPE_TEMPLATE, { list: undefined }),
     {
       title: 'Model Archetype Details',
-      description: 'Full metadata for a single archetype by v3 slug or v1/v2 alias.',
+      description: 'Full metadata for a single archetype by slug.',
       mimeType: 'application/json'
     },
     async (uri, variables) => {
@@ -78,10 +77,7 @@ export function registerModelArchetypesResource(server: McpServer): void {
       const slug = Array.isArray(raw) ? raw[0] : raw;
       let text: string;
       let mimeType = 'application/json';
-      if (!slug) {
-        text = 'No slug supplied.';
-        mimeType = 'text/plain';
-      } else {
+      if (slug) {
         const direct = getModelArchetypeBySlug(slug as ModelArchetypeSlug);
         const resolved = direct ?? resolveModelArchetype(slug)?.archetype;
         if (resolved) {
@@ -90,6 +86,9 @@ export function registerModelArchetypesResource(server: McpServer): void {
           text = `Archetype '${slug}' not found. Try \`dbx://model-archetype/entries\` for the catalog.`;
           mimeType = 'text/plain';
         }
+      } else {
+        text = 'No slug supplied.';
+        mimeType = 'text/plain';
       }
       return { contents: [{ uri: uri.href, mimeType, text }] };
     }

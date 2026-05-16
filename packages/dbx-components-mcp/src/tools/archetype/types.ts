@@ -62,6 +62,7 @@ export interface ArchetypeQuestionnaire {
   readonly isGroupRoot?: boolean;
   readonly hasMembers?: boolean;
   readonly needsMemberSummary?: boolean;
+  readonly isTreeNode?: boolean;
 
   // === Section I: Extension-cluster signals ===
   readonly involvesFileUpload?: boolean;

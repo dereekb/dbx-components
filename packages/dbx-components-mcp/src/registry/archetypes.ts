@@ -9,8 +9,7 @@
  * Each archetype carries its `slug`, the implied
  * {@link FirestoreCollectionKind}, a short narrative description, a structured
  * "answer template" (`expected`) used by the recommender's scoring algorithm,
- * the discrete axis values that further refine the slug, and any v1/v2
- * `aliases` so callers passing legacy slugs still resolve to a v3 successor.
+ * and the discrete axis values that further refine the slug.
  *
  * The recommender's scoring algorithm walks {@link MODEL_ARCHETYPES} once per
  * call and never mutates the array, so the entire table is frozen at
@@ -81,11 +80,9 @@ export type ModelArchetypeMutability = 'mutable' | 'immutable';
 // MARK: Slugs
 
 /**
- * Every recognised v3 archetype slug. Slugs collapse the v1/v2 catalog onto a
- * smaller set by promoting `axes` to first-class refinements rather than
- * separate slugs (see `single-item-sub.subPurpose`,
- * `denormalised-aggregate.keying`). The full migration table from v1/v2 is in
- * the planning doc (`§2.10`).
+ * Every recognised archetype slug. Axis values (e.g.
+ * `single-item-sub.subPurpose`, `denormalised-aggregate.keying`) further refine
+ * a slug rather than introducing separate slugs.
  */
 export type ModelArchetypeSlug =
   | 'root-entity'
@@ -102,14 +99,14 @@ export type ModelArchetypeSlug =
   | 'root-singleton-aggregate'
   | 'external-mirror'
   | 'audit-log'
+  | 'lifecycle-item'
   | 'reference-registry'
-  | 'geo-hierarchy-root'
+  | 'model-tree-node'
   | 'system-state-singleton'
-  | 'oidc-entry'
   | 'storagefile-purpose'
   | 'notification-template'
   | 'notification-task'
-  | 'state-machine-field'
+  | 'state-machine-item'
   | 'embedded-sub-objects'
   | 'active-vs-archive-split';
 
@@ -118,7 +115,7 @@ export type ModelArchetypeSlug =
  * always returned alongside a "real" archetype on the recommender's "Field-level
  * add-ons" list.
  */
-export const MODEL_ARCHETYPE_ADDON_SLUGS: readonly ModelArchetypeSlug[] = ['state-machine-field', 'embedded-sub-objects', 'active-vs-archive-split'];
+export const MODEL_ARCHETYPE_ADDON_SLUGS: readonly ModelArchetypeSlug[] = ['state-machine-item', 'embedded-sub-objects', 'active-vs-archive-split'];
 
 // MARK: Axis values
 
@@ -130,9 +127,9 @@ export const MODEL_ARCHETYPE_ADDON_SLUGS: readonly ModelArchetypeSlug[] = ['stat
 export type ModelArchetypeSingleItemSubPurpose = 'private' | 'permission' | 'config' | 'state' | 'summary' | 'member-summary';
 
 /**
- * Discrete values for `denormalised-aggregate.keying`. Reproduces the four v1
- * variants (`digest`, `temporal-summary`, `sync-flagged-composition-index`,
- * subcollection `summary`) by combining `keying` with `syncMode`.
+ * Discrete values for `denormalised-aggregate.keying`. Combined with
+ * `syncMode`, these distinguish parent-keyed digests, bucketed temporal
+ * summaries, composite-keyed indexes, and short-id subcollection summaries.
  */
 export type ModelArchetypeDenormalisedAggregateKeying = 'parent-id' | 'bucket-code' | 'composite-flat-key' | 'numeric-short-id';
 
@@ -169,6 +166,8 @@ export interface ModelArchetypeExpectedAnswers {
   readonly mutability?: readonly ModelArchetypeMutability[];
   readonly instancesPerParent?: readonly ('one' | 'many')[];
   readonly aggregatesFromNonEmpty?: boolean;
+  readonly isGroupRoot?: boolean;
+  readonly isTreeNode?: boolean;
 }
 
 // MARK: Archetype info
@@ -219,12 +218,6 @@ export interface ModelArchetypeInfo {
    */
   readonly axes: { readonly [axisName: string]: readonly string[] };
   /**
-   * v1/v2 slugs that resolve to this archetype. Surfaced on the lookup tool's
-   * deprecation note, accepted as `archetypeHint` overrides and as
-   * `_search.archetype` arguments.
-   */
-  readonly aliases: readonly string[];
-  /**
    * Implementation pointers — skill names, sync-flag conventions, peer-search
    * notes. Surfaced verbatim on the recommender's "Implementation pointers"
    * bullet list.
@@ -264,7 +257,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       isEventLog: false
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Read: `dbx__guide__new-model`', 'Use the `root` collection-factory shape (`firestoreContext.firestoreCollection`).']
   },
   {
@@ -283,7 +275,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       isEventLog: false
     },
     axes: {},
-    aliases: ['subcollection-entity'],
     implementationPointers: ['Use the `sub-collection` collection-factory shape (`firestoreContext.firestoreCollectionWithParent`).', 'Read: `dbx__guide__new-model`']
   },
   {
@@ -302,7 +293,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
     axes: {
       subPurpose: ['private', 'permission', 'config', 'state', 'summary', 'member-summary']
     },
-    aliases: ['entity-private', 'permission-table', 'group-member-summary'],
     implementationPointers: ['Use the `singleton-sub` collection-factory shape (`firestoreContext.singleItemFirestoreCollection`).', 'Pick `subPurpose` based on what differentiates this side-table from the parent (sensitive fields → private, role-grant map → permission, …).']
   },
 
@@ -322,7 +312,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       isExternalMirror: false
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Extend `UserRelatedById` on the interface so the registry auto-tags it.', 'Doc id = the Firebase Auth uid; convention: store `uid` on every related doc that references this user.']
   },
   {
@@ -339,7 +328,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       isDenormalization: true
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Extend `UserRelatedById` on the interface.', 'Document the source models the index denormalises in the interface JSDoc.', 'Pick `syncMode = flag-eventual` if source docs carry a `@dbxModelVariableSyncFlag`; otherwise use `trigger-eventual`.']
   },
   {
@@ -357,7 +345,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       isExternalMirror: false
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Doc id = external vendor id (e.g. Zoho candidate id).', 'Webhook patches in; scheduled reconciler patches out.']
   },
   {
@@ -372,7 +359,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       syncMode: ['flag-eventual', 'trigger-eventual']
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Doc id = the geo key (`regionKey`, `districtKey`).', 'Pair with `RegionRelatedById` / `DistrictRelatedById` so the registry auto-tags.']
   },
 
@@ -386,11 +372,11 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
     expected: {
       docIdSource: ['auto'],
       parentRelation: ['none'],
-      syncMode: ['always-in-sync']
+      syncMode: ['always-in-sync'],
+      isGroupRoot: true
     },
     axes: {},
-    aliases: [],
-    implementationPointers: ['Use the `root` collection-factory shape and tag the interface with `@dbxModelGroup`.']
+    implementationPointers: ['Use the `root` collection-factory shape and tag the interface with `@dbxModelGroup`.', 'Add `@dbxModelOrganizationalGroupRoot` to the model interface so the extractor auto-tags this archetype.']
   },
   {
     slug: 'group-member',
@@ -405,7 +391,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       syncMode: ['trigger-eventual', 'always-in-sync']
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Cached user fields resync on profile change via a trigger (`trigger-eventual`).']
   },
   {
@@ -420,7 +405,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       syncMode: ['always-in-sync']
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Doc id encodes both keys via a composite-flat-key factory.']
   },
 
@@ -442,7 +426,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       keying: ['parent-id', 'bucket-code', 'composite-flat-key', 'numeric-short-id'],
       syncMode: ['trigger-eventual', 'flag-eventual', 'scheduled-rebuild']
     },
-    aliases: ['digest', 'temporal-summary', 'sync-flagged-composition-index'],
     implementationPointers: ['When `syncMode = flag-eventual`: source carries a `<targetShort>ss` boolean (`SyncedToTargetIfTrue`) annotated with `@dbxModelVariableSyncFlag <description>`.', 'Scheduled reconciler walks flagged docs and patches the target.', 'Read: `dbx__guide__scheduled-function`.']
   },
   {
@@ -462,7 +445,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       syncMode: ['trigger-eventual']
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Use the `root-singleton` collection-factory shape (`firestoreContext.rootSingleItemFirestoreCollection`).', 'Trigger from the source collection writes patches the singleton.']
   },
 
@@ -480,7 +462,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       syncMode: ['external-bidirectional']
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Webhook patches in; scheduled reconciler patches out.', 'Document the vendor in the interface JSDoc.']
   },
 
@@ -499,8 +480,25 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       isExternalMirror: false
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['New rows supersede old; existing rows are not mutated after their terminal state.', 'Read: `hellosubs__ref__job-instructions` for the canonical instruction-runner pattern.']
+  },
+  {
+    slug: 'lifecycle-item',
+    family: 'event-log',
+    collectionKind: 'sub-collection',
+    description: 'Sub-collection of derivative workflow rows under a parent state-machine-item. Each row carries its own state-enum field(s) (`INIT → RUNNING → COMPLETE/FAILED`) and is mutated in place through that lifecycle, then typically retired.',
+    whenToUse: 'Parent entity spawns per-row workers / requirements / instructions that own their own state machine and are updated in place until terminal.',
+    disambiguation: 'If the doc is a stable top-level entity whose own state-enum field defines its lifecycle, use `state-machine-item`. If rows are never mutated after creation (one row per event), use `audit-log`.',
+    expected: {
+      docIdSource: ['auto', 'numeric-short-id'],
+      hasLifecycleStates: true,
+      mutability: ['mutable'],
+      syncMode: ['trigger-eventual', 'pull-on-demand', 'always-in-sync'],
+      isExternalMirror: false,
+      isEventLog: false
+    },
+    axes: {},
+    implementationPointers: ['Declare the state enum and reference it from the converter.', 'Each transition updates the row in place.', 'Read: `hellosubs__guide__job-requirement-processor`.']
   },
 
   // === Registry / Reference family ===
@@ -520,30 +518,29 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       hasChildren: ['true', 'false'],
       hasInheritance: ['true', 'false']
     },
-    aliases: ['hierarchical-registry'],
     implementationPointers: ['Children use `numeric-short-id`; the parent carries a counter.', 'When `hasInheritance = true`, model the parent overlay graph via `parentIndexes: number[]`.']
   },
   {
-    slug: 'geo-hierarchy-root',
+    slug: 'model-tree-node',
     family: 'registry-reference',
     collectionKind: 'root',
-    description: 'Chain of root collections (Country → State → Region → District) where each doc ID IS the geographic key.',
-    whenToUse: 'Geographic taxonomy with stable admin-curated entries at each level.',
+    description: 'One level of a multi-collection hierarchical chain. Each level is a separate model. `treeRole` (root/intermediate/leaf) is auto-derived from the parent-child scan.',
+    whenToUse: 'Model occupies one level of a hierarchical taxonomy whose levels are split across collections (geo hierarchies, org hierarchies, etc).',
     expected: {
-      docIdSource: ['geo-key'],
-      parentRelation: ['none', 'region-key', 'district-key'],
-      syncMode: ['always-in-sync']
+      docIdSource: ['auto', 'geo-key', 'numeric-short-id', 'fixed'],
+      parentRelation: ['none', 'one-parent', 'region-key', 'district-key'],
+      syncMode: ['always-in-sync', 'append-only'],
+      isTreeNode: true
     },
-    axes: {},
-    aliases: [],
-    implementationPointers: ['Each level is a separate root collection keyed directly by its geo key.']
+    axes: { treeRole: ['root', 'intermediate', 'leaf'] },
+    implementationPointers: ['Each level declares its own `firestoreModelIdentity`, chained via parent identity.', '`treeRole` is auto-derived from the parent-child scan; never declared manually.', 'Read: `hellosubs__ref__region-models`.']
   },
   {
     slug: 'system-state-singleton',
     family: 'registry-reference',
     collectionKind: 'root-singleton',
-    description: 'Generic typed container per subsystem (`@dereekb/firebase` `SystemState`).',
-    whenToUse: 'Subsystem state singleton with a typed payload — register a converter through the `system_m` cluster.',
+    description: 'Standalone subsystem singleton with no relationship to other models — holds a typed payload (`firestorePassThroughField()`) per subsystem id (`@dereekb/firebase` `SystemState`).',
+    whenToUse: 'Subsystem needs to persist a typed payload that is not derived from or related to any other model — register a converter through the `system_m` cluster.',
     extensionCluster: 'system_m',
     disambiguation: 'If this aggregates a sibling root collection, switch to `root-singleton-aggregate`.',
     expected: {
@@ -553,23 +550,7 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       syncMode: ['pull-on-demand']
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Use the `system_m` cluster to register the converter + `*SystemData` interface.', 'Read: `dbx__guide__new-model-checklist`.']
-  },
-  {
-    slug: 'oidc-entry',
-    family: 'registry-reference',
-    collectionKind: 'root',
-    description: 'Per-provider OIDC config (admin-curated).',
-    whenToUse: 'OIDC provider record with claim / scope augmentation.',
-    expected: {
-      docIdSource: ['fixed'],
-      parentRelation: ['none'],
-      syncMode: ['append-only']
-    },
-    axes: {},
-    aliases: [],
-    implementationPointers: ['Read: `dbx__guide__add-oidc`.']
   },
 
   // === Framework family — dbx-lib reference patterns ===
@@ -585,7 +566,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       syncMode: ['trigger-eventual']
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Read: `dbx__guide__storagefile-purpose`.', 'Wire the purpose through `storagefile_m` cluster validators.']
   },
   {
@@ -600,7 +580,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       syncMode: ['always-in-sync']
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Read: `dbx__guide__notification-task` for the broader notification pipeline.', 'Wire the template through `notification_m` cluster validators.']
   },
   {
@@ -614,23 +593,22 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       isMultiCheckpointWorkflow: true
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Read: `dbx__guide__notification-task`.', 'Wire the task through `notification_m` cluster validators.']
   },
 
   // === Field-level add-ons ===
   {
-    slug: 'state-machine-field',
+    slug: 'state-machine-item',
     family: 'addon',
     collectionKind: 'root',
-    description: 'Enum field on an existing model.',
-    whenToUse: 'Entity has a lifecycle (draft/published/archived, pending/approved/rejected).',
+    description: 'The doc carries one or more state-enum fields (e.g. `StorageFile.fs` / `ps`, `Notification.st`) — the document itself is an item in a finite state machine and mutates in place over its lifetime.',
+    whenToUse: 'Stable, top-level (root or sub-collection) entity whose lifecycle is recorded as enum fields on the doc — not via spawning derivative rows.',
+    disambiguation: "If the doc is a transient derivative row spawned under a parent to run part of the parent's workflow, use `lifecycle-item`.",
     expected: {
       hasLifecycleStates: true
     },
     axes: {},
-    aliases: [],
-    implementationPointers: ['Declare the enum in the model source file; reference it from the converter.']
+    implementationPointers: ['Declare each state enum in the model source file; reference it from the converter.', 'Drive transitions through dedicated server actions rather than ad-hoc field writes.']
   },
   {
     slug: 'embedded-sub-objects',
@@ -640,7 +618,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
     whenToUse: 'Small (<20–50), always-read-with-parent, no independent queries / access / lifecycle.',
     expected: {},
     axes: {},
-    aliases: [],
     implementationPointers: ['Use `@dbxModelSubObject` on the embedded interface.']
   },
   {
@@ -653,7 +630,6 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
       hasArchiveCounterpart: true
     },
     axes: {},
-    aliases: [],
     implementationPointers: ['Active sub keeps mutable rows; archive sub keeps immutable rows after a clear terminal state.']
   }
 ];
@@ -661,62 +637,30 @@ export const MODEL_ARCHETYPES: readonly ModelArchetypeInfo[] = [
 // MARK: Lookup helpers
 
 const ARCHETYPES_BY_SLUG: ReadonlyMap<ModelArchetypeSlug, ModelArchetypeInfo> = new Map(MODEL_ARCHETYPES.map((a) => [a.slug, a]));
-const ARCHETYPES_BY_ALIAS: ReadonlyMap<string, ModelArchetypeInfo> = buildAliasMap();
-
-function buildAliasMap(): ReadonlyMap<string, ModelArchetypeInfo> {
-  const map = new Map<string, ModelArchetypeInfo>();
-  for (const archetype of MODEL_ARCHETYPES) {
-    for (const alias of archetype.aliases) {
-      map.set(alias.toLowerCase(), archetype);
-    }
-  }
-  return map;
-}
 
 /**
- * Resolves a v3 slug to its archetype entry. Returns `undefined` for unknown
- * slugs — callers should fall back to {@link findModelArchetypeByAlias} or
- * report the slug as not found.
+ * Resolves a slug to its archetype entry. Returns `undefined` for unknown
+ * slugs.
  *
- * @param slug - v3 archetype slug (`'root-entity'`, `'denormalised-aggregate'`, …)
- * @returns the matching catalog entry, or `undefined` when no v3 archetype uses the slug
+ * @param slug - archetype slug (`'root-entity'`, `'denormalised-aggregate'`, …)
+ * @returns the matching catalog entry, or `undefined` when no archetype uses the slug
  */
 export function getModelArchetypeBySlug(slug: ModelArchetypeSlug): ModelArchetypeInfo | undefined {
   return ARCHETYPES_BY_SLUG.get(slug);
 }
 
 /**
- * Resolves a v1/v2 alias (case-insensitive) to its v3 archetype. Returns
- * `undefined` when neither a v3 slug nor a registered alias matches.
+ * Resolves a slug (case-insensitive) to its archetype entry. The canonical
+ * entry point for lookup tools.
  *
- * @param alias - any case form of a v1/v2 slug (`'entity-private'`, `'digest'`, …)
- * @returns the v3 successor catalog entry, or `undefined`
+ * @param slug - archetype slug
+ * @returns the matching catalog entry, or `undefined` when no archetype uses the slug
  */
-export function findModelArchetypeByAlias(alias: string): ModelArchetypeInfo | undefined {
-  return ARCHETYPES_BY_ALIAS.get(alias.toLowerCase());
-}
-
-/**
- * Resolves a slug or alias (case-insensitive) to its archetype entry. The
- * canonical entry point for lookup tools: tries v3 first, then aliases.
- *
- * @param slugOrAlias - any v3 slug or v1/v2 alias
- * @returns the matching catalog entry plus a flag indicating whether the input was a deprecated alias
- */
-export function resolveModelArchetype(slugOrAlias: string): { readonly archetype: ModelArchetypeInfo; readonly viaAlias: boolean } | undefined {
-  const trimmed = slugOrAlias.trim();
+export function resolveModelArchetype(slug: string): { readonly archetype: ModelArchetypeInfo } | undefined {
+  const trimmed = slug.trim();
   const lower = trimmed.toLowerCase();
-  const v3 = ARCHETYPES_BY_SLUG.get(trimmed as ModelArchetypeSlug) ?? ARCHETYPES_BY_SLUG.get(lower as ModelArchetypeSlug);
-  let result: { readonly archetype: ModelArchetypeInfo; readonly viaAlias: boolean } | undefined;
-  if (v3) {
-    result = { archetype: v3, viaAlias: false };
-  } else {
-    const alias = ARCHETYPES_BY_ALIAS.get(lower);
-    if (alias) {
-      result = { archetype: alias, viaAlias: true };
-    }
-  }
-  return result;
+  const archetype = ARCHETYPES_BY_SLUG.get(trimmed as ModelArchetypeSlug) ?? ARCHETYPES_BY_SLUG.get(lower as ModelArchetypeSlug);
+  return archetype ? { archetype } : undefined;
 }
 
 /**

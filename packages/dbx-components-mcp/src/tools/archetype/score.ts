@@ -96,12 +96,13 @@ function scoreDimension(input: DimensionScoreInput): ScoredArchetypeMatch | unde
   const { dimension, weight, answer, expected } = input;
   if (answer === undefined || answer === null) return undefined;
   if (!expected || expected.length === 0) return undefined;
+  const answerLabel = JSON.stringify(answer);
   if (expected.includes(answer)) {
     result = {
       dimension,
       weight,
       contribution: weight,
-      note: `answer \`${String(answer)}\` matched expected ${JSON.stringify(expected)}`
+      note: `answer \`${answerLabel}\` matched expected ${JSON.stringify(expected)}`
     };
   } else if (weight >= 2) {
     // Mismatch on a 2+-weight dimension subtracts the weight.
@@ -109,7 +110,7 @@ function scoreDimension(input: DimensionScoreInput): ScoredArchetypeMatch | unde
       dimension,
       weight,
       contribution: -weight,
-      note: `answer \`${String(answer)}\` did not match expected ${JSON.stringify(expected)}`
+      note: `answer \`${answerLabel}\` did not match expected ${JSON.stringify(expected)}`
     };
   }
   return result;
@@ -161,7 +162,7 @@ export function scoreArchetypeAgainstQuestionnaire(archetype: ModelArchetypeInfo
   tally(scoreDimension({ dimension: 'parentRelation', weight: 3, answer: q.parentRelation, expected: archetype.expected.parentRelation }));
   // syncMode special case: event log gets weight 3 when paired with immutable + append-only
   const isEventLogCombo = archetype.slug === 'audit-log' && q.mutability === 'immutable' && q.syncMode === 'append-only';
-  tally(scoreDimension({ dimension: 'syncMode', weight: isEventLogCombo ? 3 : 3, answer: q.syncMode, expected: archetype.expected.syncMode }));
+  tally(scoreDimension({ dimension: 'syncMode', weight: 3, answer: q.syncMode, expected: archetype.expected.syncMode }));
 
   // 2-weight dimensions
   tally(scoreDimension({ dimension: 'userRelation', weight: 2, answer: q.userRelation, expected: archetype.expected.userRelation }));
@@ -171,6 +172,8 @@ export function scoreArchetypeAgainstQuestionnaire(archetype: ModelArchetypeInfo
   const isEventLogWeight = isEventLogCombo ? 3 : 2;
   tally(scoreBoolDimension({ dimension: 'isEventLog', weight: isEventLogWeight, answer: q.isEventLog, expected: archetype.expected.isEventLog }));
   tally(scoreBoolDimension({ dimension: 'hasInheritance', weight: 2, answer: q.hasInheritance, expected: archetype.expected.hasInheritance }));
+  tally(scoreBoolDimension({ dimension: 'isGroupRoot', weight: 2, answer: q.isGroupRoot, expected: archetype.expected.isGroupRoot }));
+  tally(scoreBoolDimension({ dimension: 'isTreeNode', weight: 2, answer: q.isTreeNode, expected: archetype.expected.isTreeNode }));
 
   // 1-weight dimensions
   tally(scoreBoolDimension({ dimension: 'hasLifecycleStates', weight: 1, answer: q.hasLifecycleStates, expected: archetype.expected.hasLifecycleStates }));
@@ -212,7 +215,7 @@ export function scoreArchetypeAgainstQuestionnaire(archetype: ModelArchetypeInfo
 
 /**
  * Scores every archetype in the catalog against the questionnaire and ranks
- * them. Add-on archetypes (`state-machine-field`, `embedded-sub-objects`,
+ * them. Add-on archetypes (`state-machine-item`, `embedded-sub-objects`,
  * `active-vs-archive-split`) are excluded from the primary ranking — they are
  * returned separately by the recommender.
  *

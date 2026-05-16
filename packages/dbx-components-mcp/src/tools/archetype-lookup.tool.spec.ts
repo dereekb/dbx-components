@@ -15,21 +15,9 @@ describe('dbx_model_archetype_lookup', () => {
     expect(text).toContain('denormalised-aggregate');
   });
 
-  it('renders a v3 archetype', () => {
+  it('renders an archetype', () => {
     const { text } = runLookup({ slug: 'root-entity' });
     expect(text).toContain('# Archetype: `root-entity`');
-  });
-
-  it('resolves entity-private alias to single-item-sub with deprecation note', () => {
-    const { text } = runLookup({ slug: 'entity-private' });
-    expect(text).toContain('# Archetype: `single-item-sub`');
-    expect(text).toContain('Deprecated alias `entity-private`');
-  });
-
-  it('resolves subcollection-entity alias to sub-collection-entity', () => {
-    const { text } = runLookup({ slug: 'subcollection-entity' });
-    expect(text).toContain('# Archetype: `sub-collection-entity`');
-    expect(text).toContain('Deprecated alias `subcollection-entity`');
   });
 
   it('reports unknown slug', () => {

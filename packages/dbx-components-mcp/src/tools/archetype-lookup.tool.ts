@@ -1,11 +1,9 @@
 /**
  * `dbx_model_archetype_lookup` tool.
  *
- * Read-only browser for the archetype catalog. Accepts a slug (v3 or any
- * v1/v2 alias) or the literal `"list"` and returns markdown documentation
- * for the matched archetype — shape, sync mode, when-to-use, axes, aliases,
- * and implementation pointers. When the input is a v1/v2 alias, the output
- * leads with a deprecation note pointing at the v3 successor.
+ * Read-only browser for the archetype catalog. Accepts a slug or the literal
+ * `"list"` and returns markdown documentation for the matched archetype —
+ * shape, sync mode, when-to-use, axes, and implementation pointers.
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
@@ -16,19 +14,11 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DBX_MODEL_ARCHETYPE_LOOKUP_TOOL: Tool = {
   name: 'dbx_model_archetype_lookup',
-  description: [
-    'Look up an archetype in the model-archetype catalog. Accepts:',
-    '  • a v3 slug (`"root-entity"`, `"denormalised-aggregate"`, …);',
-    '  • a v1/v2 alias (`"entity-private"`, `"digest"`, `"temporal-summary"`, `"subcollection-entity"`, …) — returns the v3 successor with a deprecation note;',
-    '  • the literal `"list"` for the full catalog grouped by family.',
-    '',
-    'Optional inputs:',
-    '  • `axes`: optional axis filter (`{ "subPurpose": "private" }`) — when set, the description shifts to focus on the matched axis.'
-  ].join('\n'),
+  description: ['Look up an archetype in the model-archetype catalog. Accepts:', '  • a slug (`"root-entity"`, `"denormalised-aggregate"`, …);', '  • the literal `"list"` for the full catalog grouped by family.', '', 'Optional inputs:', '  • `axes`: optional axis filter (`{ "subPurpose": "private" }`) — when set, the description shifts to focus on the matched axis.'].join('\n'),
   inputSchema: {
     type: 'object',
     properties: {
-      slug: { type: 'string', description: 'v3 archetype slug, any v1/v2 alias, or "list".' },
+      slug: { type: 'string', description: 'Archetype slug, or "list".' },
       axes: {
         type: 'object',
         description: 'Optional axis filter — e.g. `{ "subPurpose": "private" }`.',
@@ -60,7 +50,7 @@ function parseArgs(raw: unknown): ParsedLookupArgs {
 }
 
 function formatNotFound(slug: string): string {
-  const candidates = MODEL_ARCHETYPES.filter((a) => a.slug.includes(slug.toLowerCase()) || a.aliases.some((al) => al.includes(slug.toLowerCase())))
+  const candidates = MODEL_ARCHETYPES.filter((a) => a.slug.includes(slug.toLowerCase()))
     .slice(0, 5)
     .map((a) => `\`${a.slug}\``);
   const lines: string[] = [`No archetype matched \`${slug}\`.`];
@@ -92,19 +82,19 @@ export function runArchetypeLookup(rawArgs: unknown): ToolResult {
     text = formatArchetypeCatalog(MODEL_ARCHETYPES);
   } else {
     const resolved = resolveModelArchetype(args.slug);
-    if (!resolved) {
+    if (resolved) {
+      text = formatLookup(resolved.archetype, args.axes);
+    } else {
       text = formatNotFound(args.slug);
       isError = true;
-    } else {
-      text = formatLookup(resolved.archetype, resolved.viaAlias ? args.slug : undefined, args.axes);
     }
   }
   return { content: [{ type: 'text', text }], isError };
 }
 
-function formatLookup(archetype: ModelArchetypeInfo, deprecatedAlias: string | undefined, axesFilter: { readonly [k: string]: string } | undefined): string {
+function formatLookup(archetype: ModelArchetypeInfo, axesFilter: { readonly [k: string]: string } | undefined): string {
   const axes = axesFilter ?? undefined;
-  return formatArchetypeEntry(archetype, { axes, deprecatedAlias, showFullAxes: true });
+  return formatArchetypeEntry(archetype, { axes, showFullAxes: true });
 }
 
 export const archetypeLookupTool: DbxTool = {

@@ -278,15 +278,21 @@ function describeField(field: FirebaseField): string {
  */
 function formatArchetypeLabel(model: FirebaseModel): string | undefined {
   let result: string | undefined;
-  if (model.archetype) {
-    const axesParts: string[] = [];
-    if (model.archetypeAxes) {
-      for (const [k, v] of Object.entries(model.archetypeAxes)) {
-        axesParts.push(`${k}=\`${v}\``);
+  const slugs = model.archetypes ?? [];
+  if (slugs.length > 0) {
+    const labels = slugs.map((slug) => {
+      const axesParts: string[] = [];
+      const slugAxes = model.archetypeAxesBySlug?.[slug];
+      if (slugAxes) {
+        for (const [k, v] of Object.entries(slugAxes)) {
+          axesParts.push(`${k}=\`${v}\``);
+        }
       }
-    }
-    const axesText = axesParts.length > 0 ? ` (${axesParts.join(', ')})` : '';
-    result = `\`${model.archetype}\`${axesText} — call \`dbx_model_archetype_lookup slug="${model.archetype}"\` for catalog details`;
+      const axesText = axesParts.length > 0 ? ` (${axesParts.join(', ')})` : '';
+      return `\`${slug}\`${axesText}`;
+    });
+    const lookupHints = slugs.map((slug) => `\`dbx_model_archetype_lookup slug="${slug}"\``).join(' / ');
+    result = `${labels.join(' + ')} — call ${lookupHints} for catalog details`;
   }
   return result;
 }

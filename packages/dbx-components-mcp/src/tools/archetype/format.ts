@@ -10,14 +10,13 @@
 import type { FirebaseModel } from '../../registry/firebase-models.js';
 import type { ModelArchetypeInfo } from '../../registry/archetypes.js';
 import type { ScoredArchetype } from './score.js';
-import type { ResolvedAxes } from './axes.js';
+import type { ResolvedAxes, ResolvedAxisAlternatives } from './axes.js';
 
 /**
  * Optional knobs for {@link formatArchetypeEntry}.
  */
 export interface FormatArchetypeEntryOptions {
   readonly axes?: ResolvedAxes;
-  readonly deprecatedAlias?: string;
   readonly showFullAxes?: boolean;
 }
 
@@ -26,25 +25,17 @@ export interface FormatArchetypeEntryOptions {
  * recommender (for the matched archetype) and the lookup tool.
  *
  * @param archetype - the archetype catalog entry to render
- * @param options - optional axis values, deprecated-alias note, and section toggles
+ * @param options - optional axis values and section toggles
  * @returns the markdown body
  */
 export function formatArchetypeEntry(archetype: ModelArchetypeInfo, options: FormatArchetypeEntryOptions = {}): string {
   const lines: string[] = [`# Archetype: \`${archetype.slug}\``, ''];
-  if (options.deprecatedAlias) {
-    lines.push(`> Deprecated alias \`${options.deprecatedAlias}\` resolved to v3 slug \`${archetype.slug}\`.`, '');
-  }
-  lines.push(archetype.description, '');
-  lines.push(`- **Family:** \`${archetype.family}\``);
-  lines.push(`- **Implied collectionKind:** \`${archetype.collectionKind}\``);
+  lines.push(archetype.description, '', `- **Family:** \`${archetype.family}\``, `- **Implied collectionKind:** \`${archetype.collectionKind}\``);
   if (archetype.extensionCluster) {
     lines.push(`- **Extension cluster:** \`${archetype.extensionCluster}\``);
   }
   const axesNote = formatAxesLine(archetype, options.axes, options.showFullAxes ?? false);
   if (axesNote) lines.push(axesNote);
-  if (archetype.aliases.length > 0) {
-    lines.push(`- **Aliases (v1/v2):** ${archetype.aliases.map((a) => `\`${a}\``).join(', ')}`);
-  }
   if (archetype.disambiguation) {
     lines.push(`- **Disambiguation:** ${archetype.disambiguation}`);
   }
@@ -52,7 +43,8 @@ export function formatArchetypeEntry(archetype: ModelArchetypeInfo, options: For
   if (options.showFullAxes && Object.keys(archetype.axes).length > 0) {
     lines.push('## Axes', '');
     for (const [axisName, values] of Object.entries(archetype.axes)) {
-      lines.push(`- \`${axisName}\`: ${values.map((v) => `\`${v}\``).join(' | ')}`);
+      const valueParts = values.map(wrapBacktick).join(' | ');
+      lines.push(`- \`${axisName}\`: ${valueParts}`);
     }
     lines.push('');
   }
@@ -65,14 +57,17 @@ export function formatArchetypeEntry(archetype: ModelArchetypeInfo, options: For
   return lines.join('\n').trimEnd();
 }
 
+function wrapBacktick(value: string): string {
+  return '`' + value + '`';
+}
+
 function formatAxesLine(archetype: ModelArchetypeInfo, resolved: ResolvedAxes | undefined, showFullAxes: boolean): string | undefined {
   let result: string | undefined;
   const archetypeAxisNames = Object.keys(archetype.axes);
   if (archetypeAxisNames.length === 0) {
-    // No axes for this archetype.
     result = undefined;
   } else if (resolved && Object.keys(resolved).length > 0) {
-    const parts = Object.entries(resolved).map(([k, v]) => `${k}=\`${v}\``);
+    const parts = Object.entries(resolved).map(([k, v]) => `${k}=${wrapBacktick(v)}`);
     result = `- **Axes:** ${parts.join(', ')}`;
   } else if (!showFullAxes) {
     const parts = archetypeAxisNames.map((k) => `${k}=?`);
@@ -83,11 +78,18 @@ function formatAxesLine(archetype: ModelArchetypeInfo, resolved: ResolvedAxes | 
 
 /**
  * Render input for {@link formatRecommendation}.
+ *
+ * `axisAlternatives` carries axis values the questionnaire could *also*
+ * legitimately resolve to — e.g. `denormalised-aggregate` under a user-keyed
+ * sub can key either `bucket-code` or `composite-flat-key`. When present,
+ * the formatter renders both in the Shape block instead of silently picking
+ * the value already in `axes`.
  */
 export interface FormatRecommendationInput {
   readonly top: ScoredArchetype;
   readonly tied: readonly ScoredArchetype[];
   readonly axes: ResolvedAxes;
+  readonly axisAlternatives?: ResolvedAxisAlternatives;
   readonly addons: readonly string[];
   readonly peers: readonly FirebaseModel[];
   readonly alternatives: readonly ScoredArchetype[];
@@ -103,105 +105,161 @@ export interface FormatRecommendationInput {
  * @returns the markdown body
  */
 export function formatRecommendation(input: FormatRecommendationInput): string {
-  const { top, tied, axes, addons, peers, alternatives, scopeLabel, shortCircuited } = input;
-  const archetype = top.archetype;
+  const lines: string[] = [];
+  lines.push(...formatRecommendationHeader(input));
+  lines.push(...formatRecommendationWhy(input.top));
+  lines.push(...formatRecommendationShape(input));
+  lines.push(...formatRecommendationPeers(input));
+  lines.push(...formatRecommendationPointers(input.top.archetype));
+  lines.push(...formatRecommendationAlternatives(input.alternatives));
+  return lines.join('\n').trimEnd();
+}
+
+function formatRecommendationHeader(input: FormatRecommendationInput): readonly string[] {
+  const { top, tied, axes, shortCircuited } = input;
+  const lines: string[] = [];
+  const slugLine = '# Recommended Archetype: ' + wrapBacktick(top.archetype.slug);
+  lines.push(slugLine);
 
   const axesTitleParts: string[] = [];
   for (const [k, v] of Object.entries(axes)) {
-    axesTitleParts.push(`${k}=\`${v}\``);
+    axesTitleParts.push(`${k}=${wrapBacktick(v)}`);
   }
-  const axesTitle = axesTitleParts.length > 0 ? `# Axes: ${axesTitleParts.join('  ')}` : undefined;
-
-  const lines: string[] = [];
-  lines.push(`# Recommended Archetype: \`${archetype.slug}\``);
-  if (axesTitle) lines.push(axesTitle);
+  if (axesTitleParts.length > 0) {
+    lines.push(`# Axes: ${axesTitleParts.join('  ')}`);
+  }
   lines.push('');
+
   const confidencePct = `${Math.round(top.confidence * 100)}%`;
   const shortNote = shortCircuited ? ' (framework / singleton short-circuit)' : '';
   const matched = top.matches
     .slice(0, 6)
     .map((m) => m.dimension)
     .join(', ');
-  lines.push(`**Confidence:** ${top.confidence.toFixed(2)} (${confidencePct})${shortNote} (matched on ${matched || '—'})`);
+  const matchedDisplay = matched || '—';
+  lines.push(`**Confidence:** ${top.confidence.toFixed(2)} (${confidencePct})${shortNote} (matched on ${matchedDisplay})`);
+
   if (tied.length > 0) {
-    const tiedNames = tied.map((s) => `\`${s.archetype.slug}\``).join(', ');
+    const tiedNames = tied.map((s) => wrapBacktick(s.archetype.slug)).join(', ');
     lines.push('', `> **Tied with** ${tiedNames} (within 0.10 confidence). Disambiguate using the questions below.`);
   }
-  lines.push('', '## Why', '');
+  return lines;
+}
+
+function formatRecommendationWhy(top: ScoredArchetype): readonly string[] {
+  const lines: string[] = ['', '## Why', ''];
   if (top.matches.length === 0 && top.mismatches.length === 0) {
     lines.push('- No dimensions in the questionnaire were filled in. Returning the lowest-cost archetype.');
-  } else {
-    for (const m of top.matches.slice(0, 8)) {
+    return lines;
+  }
+  for (const m of top.matches.slice(0, 8)) {
+    lines.push(`- ${m.note}`);
+  }
+  if (top.mismatches.length > 0) {
+    lines.push('', 'Mismatches:');
+    for (const m of top.mismatches.slice(0, 4)) {
       lines.push(`- ${m.note}`);
     }
-    if (top.mismatches.length > 0) {
-      lines.push('');
-      lines.push('Mismatches:');
-      for (const m of top.mismatches.slice(0, 4)) {
-        lines.push(`- ${m.note}`);
-      }
-    }
   }
+  return lines;
+}
 
-  lines.push('', '## Shape', '');
+function formatRecommendationShape(input: FormatRecommendationInput): readonly string[] {
+  const { top, axes, axisAlternatives, addons } = input;
+  const archetype = top.archetype;
+  const lines: string[] = ['', '## Shape', ''];
+
   if (archetype.expected.parentRelation && archetype.expected.parentRelation.length > 0) {
-    lines.push(`- **Parent:** ${archetype.expected.parentRelation.map((p) => `\`${p}\``).join(' / ')}`);
+    const parents = archetype.expected.parentRelation.map(wrapBacktick).join(' / ');
+    lines.push(`- **Parent:** ${parents}`);
   } else {
     lines.push('- **Parent:** —');
   }
-  lines.push(`- **collectionKind:** \`${archetype.collectionKind}\``);
+  lines.push(`- **collectionKind:** ${wrapBacktick(archetype.collectionKind)}`);
+
   if (archetype.expected.docIdSource && archetype.expected.docIdSource.length > 0) {
-    lines.push(`- **Doc ID source:** ${archetype.expected.docIdSource.map((s) => `\`${s}\``).join(' / ')}`);
+    const docIds = archetype.expected.docIdSource.map(wrapBacktick).join(' / ');
+    lines.push(`- **Doc ID source:** ${docIds}`);
   }
   if (archetype.expected.syncMode && archetype.expected.syncMode.length > 0) {
-    lines.push(`- **Sync mode:** ${archetype.expected.syncMode.map((s) => `\`${s}\``).join(' / ')}`);
-  }
-  for (const [k, v] of Object.entries(axes)) {
-    lines.push(`- **${k}:** \`${v}\``);
-  }
-  if (addons.length > 0) {
-    lines.push(`- **Field-level add-ons:** ${addons.map((a) => `\`${a}\``).join(', ')}`);
-  }
-  if (archetype.extensionCluster) {
-    lines.push(`- **Extension cluster:** \`${archetype.extensionCluster}\``);
+    const syncModes = archetype.expected.syncMode.map(wrapBacktick).join(' / ');
+    lines.push(`- **Sync mode:** ${syncModes}`);
   }
 
-  lines.push('', `## Peer models (${scopeLabel})`, '');
-  if (peers.length === 0) {
-    lines.push(`_No peer models tagged \`${archetype.slug}\` in scope._`);
-  } else {
-    lines.push('| Model | Prefix | modelType | Notes |', '|---|---|---|---|');
-    for (const peer of peers) {
-      const axesParts: string[] = [];
-      if (peer.archetypeAxes) {
-        for (const [k, v] of Object.entries(peer.archetypeAxes)) {
-          axesParts.push(`${k}=${v}`);
-        }
-      }
-      const notes = axesParts.length > 0 ? axesParts.join(', ') : (peer.description ?? '—');
-      lines.push(`| \`${peer.name}\` | \`${peer.collectionPrefix}\` | \`${peer.modelType}\` | ${escapePipes(notes)} |`);
+  const alternatives = axisAlternatives ?? {};
+  for (const [k, v] of Object.entries(axes)) {
+    const altList = alternatives[k];
+    if (altList && altList.length > 0) {
+      const allValues = [v, ...altList].map(wrapBacktick).join(' OR ');
+      lines.push(`- **${k}:** ${allValues}  _(ambiguous — flag the choice in the design doc)_`);
+    } else {
+      lines.push(`- **${k}:** ${wrapBacktick(v)}`);
+    }
+  }
+  // Surface alternatives that don't have a primary value (rare, but possible)
+  for (const [k, alts] of Object.entries(alternatives)) {
+    if (axes[k] === undefined && alts.length > 0) {
+      const allValues = alts.map(wrapBacktick).join(' OR ');
+      lines.push(`- **${k}:** ${allValues}  _(ambiguous — flag the choice in the design doc)_`);
     }
   }
 
-  lines.push('', '## Implementation pointers', '');
+  if (addons.length > 0) {
+    const addonsList = addons.map(wrapBacktick).join(', ');
+    lines.push(`- **Field-level add-ons:** ${addonsList}`);
+  }
+  if (archetype.extensionCluster) {
+    lines.push(`- **Extension cluster:** ${wrapBacktick(archetype.extensionCluster)}`);
+  }
+  return lines;
+}
+
+function formatRecommendationPeers(input: FormatRecommendationInput): readonly string[] {
+  const { peers, top, scopeLabel } = input;
+  const slug = top.archetype.slug;
+  const lines: string[] = ['', `## Peer models (${scopeLabel})`, ''];
+  if (peers.length === 0) {
+    lines.push(`_No peer models tagged ${wrapBacktick(slug)} in scope._`);
+    return lines;
+  }
+  lines.push('| Model | Prefix | modelType | Notes |', '|---|---|---|---|');
+  for (const peer of peers) {
+    const axesParts: string[] = [];
+    const slugAxes = peer.archetypeAxesBySlug?.[slug];
+    if (slugAxes) {
+      for (const [k, v] of Object.entries(slugAxes)) {
+        axesParts.push(`${k}=${v}`);
+      }
+    }
+    const notes = axesParts.length > 0 ? axesParts.join(', ') : (peer.description ?? '—');
+    lines.push(`| ${wrapBacktick(peer.name)} | ${wrapBacktick(peer.collectionPrefix)} | ${wrapBacktick(peer.modelType)} | ${escapePipes(notes)} |`);
+  }
+  return lines;
+}
+
+function formatRecommendationPointers(archetype: ModelArchetypeInfo): readonly string[] {
+  const lines: string[] = ['', '## Implementation pointers', ''];
   for (const pointer of archetype.implementationPointers) {
     lines.push(`- ${pointer}`);
   }
+  return lines;
+}
 
-  if (alternatives.length > 0) {
-    lines.push('', '## Alternatives considered', '');
-    lines.push('| Archetype | Score | Confidence | Why not |', '|---|---|---|---|');
-    for (const alt of alternatives) {
-      const why = alt.mismatches[0]?.note ?? '—';
-      lines.push(`| \`${alt.archetype.slug}\` | ${alt.score} | ${alt.confidence.toFixed(2)} | ${escapePipes(why)} |`);
-    }
+function formatRecommendationAlternatives(alternatives: readonly ScoredArchetype[]): readonly string[] {
+  if (alternatives.length === 0) {
+    return [];
   }
-
-  return lines.join('\n').trimEnd();
+  const lines: string[] = ['', '## Alternatives considered', ''];
+  lines.push('| Archetype | Score | Confidence | Why not |', '|---|---|---|---|');
+  for (const alt of alternatives) {
+    const why = alt.mismatches[0]?.note ?? '—';
+    lines.push(`| ${wrapBacktick(alt.archetype.slug)} | ${alt.score} | ${alt.confidence.toFixed(2)} | ${escapePipes(why)} |`);
+  }
+  return lines;
 }
 
 function escapePipes(s: string): string {
-  return s.replaceAll('|', '\\|').replaceAll('\n', ' ');
+  return s.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
 }
 
 /**
@@ -225,8 +283,9 @@ export function formatArchetypeCatalog(archetypes: readonly ModelArchetypeInfo[]
   for (const [family, entries] of byFamily) {
     lines.push(`## ${family} (${entries.length})`, '');
     for (const a of entries) {
-      const axes = Object.keys(a.axes).length > 0 ? ` _(axes: ${Object.keys(a.axes).join(', ')})_` : '';
-      lines.push(`- \`${a.slug}\` — ${a.description}${axes}`);
+      const axisKeys = Object.keys(a.axes);
+      const axes = axisKeys.length > 0 ? ` _(axes: ${axisKeys.join(', ')})_` : '';
+      lines.push(`- ${wrapBacktick(a.slug)} — ${a.description}${axes}`);
     }
     lines.push('');
   }

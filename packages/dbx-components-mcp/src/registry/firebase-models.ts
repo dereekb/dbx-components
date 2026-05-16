@@ -243,10 +243,10 @@ export interface FirebaseModel {
   readonly districtKeyedById?: boolean;
   /**
    * `true` when the model's interface (or one of its same-file ancestors)
-   * extends one of the `*ExternalIdRelatedById` marker interfaces — meaning
-   * the Firestore document id IS an external vendor id (Zoho candidate id,
-   * etc.). Used by the model archetype recommender to disambiguate
-   * `external-id-keyed-entity-root` from `external-mirror`.
+   * extends the `ExternalRelatedById` marker — meaning the Firestore document
+   * id IS an external vendor id (Zoho candidate id, etc.). Used by the model
+   * archetype recommender to disambiguate `external-id-keyed-entity-root` from
+   * `external-mirror`.
    */
   readonly externalIdKeyedById?: boolean;
   /**
@@ -258,24 +258,49 @@ export interface FirebaseModel {
    */
   readonly bucketKeyedById?: boolean;
   /**
-   * Primary archetype slug for this model when known. Populated by the
-   * `extract-firebase-models` heuristic (or pinned by an explicit
-   * `@dbxModelArchetype <slug>` JSDoc tag on the model interface). Absent
-   * when the heuristic cannot tag the model with high enough confidence.
+   * Archetype slugs for this model. Multiple slugs are emitted when one model
+   * legitimately belongs to several catalog entries simultaneously (e.g. a
+   * geo root that is both `geo-key-entity-root` AND `model-tree-node`).
+   * Populated by the `extract-firebase-models` heuristic, or replaced wholesale
+   * by one-or-more `@dbxModelArchetype <slug>` JSDoc tags on the model
+   * interface. Absent when the heuristic cannot tag the model with high enough
+   * confidence.
    *
-   * The slug values are the v3 catalog keys from
+   * The slug values are the catalog keys from
    * `src/registry/archetypes.ts:MODEL_ARCHETYPES`. Surfaced through
    * `dbx_model_lookup` and consumed by `dbx_model_archetype_search` peer
    * search.
    */
-  readonly archetype?: string;
+  readonly archetypes?: readonly string[];
   /**
-   * Optional axis refinements for {@link archetype} (e.g. `{ subPurpose: 'private' }`
-   * for `single-item-sub` or `{ keying: 'bucket-code', syncMode: 'flag-eventual' }`
-   * for `denormalised-aggregate`). Populated from the same JSDoc override or
-   * heuristic that fills {@link archetype}.
+   * Optional axis refinements keyed by archetype slug — e.g.
+   * `{ 'single-item-sub': { subPurpose: 'private' } }` or
+   * `{ 'denormalised-aggregate': { keying: 'bucket-code', syncMode: 'flag-eventual' } }`.
+   * Populated from the same JSDoc override or heuristic that fills
+   * {@link archetypes}. Slugs without refinements are simply absent from the
+   * map.
    */
-  readonly archetypeAxes?: { readonly [axisName: string]: string };
+  readonly archetypeAxesBySlug?: { readonly [slug: string]: { readonly [axisName: string]: string } };
+  /**
+   * Names of upstream models this model aggregates from. Populated from
+   * `@dbxModelAggregatesFrom <ModelName>` JSDoc tags on the model interface
+   * (repeatable). Used by the archetype recommender to derive
+   * `aggregatesFromNonEmpty` and `siblingAggregatesFrom` signals.
+   */
+  readonly aggregatesFrom?: readonly string[];
+  /**
+   * `true` when every name in {@link aggregatesFrom} resolves to a model in
+   * the same {@link modelGroup}. Derived by the extractor's post-pass so the
+   * recommender can decisively boost `root-singleton-aggregate`.
+   */
+  readonly siblingAggregatesFrom?: boolean;
+  /**
+   * `true` when the interface carries the `@dbxModelOrganizationalGroupRoot`
+   * tag — i.e. the root collection serves as an organizational / tenant
+   * boundary that owns subordinate models. Surfaced through the recommender
+   * as a signal for the `group-root` archetype.
+   */
+  readonly organizationalGroupRoot?: boolean;
 }
 
 /**

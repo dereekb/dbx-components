@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, findModelArchetypeByAlias, getModelArchetypeBySlug, getModelArchetypesByAxisValue, getModelArchetypesByCollectionKind, getModelArchetypesBySyncMode, resolveModelArchetype } from './archetypes.js';
+import { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, getModelArchetypeBySlug, getModelArchetypesByAxisValue, getModelArchetypesByCollectionKind, getModelArchetypesBySyncMode, resolveModelArchetype } from './archetypes.js';
 
 describe('model archetypes registry', () => {
-  it('exposes the planned 17 archetypes plus 3 add-ons', () => {
+  it('exposes the planned primary archetypes plus 3 add-ons', () => {
+    // 21 primary archetypes (incl. lifecycle-item + model-tree-node) + 3 add-ons.
     expect(MODEL_ARCHETYPES.length).toBe(24);
   });
 
@@ -14,38 +15,15 @@ describe('model archetypes registry', () => {
     }
   });
 
-  it('keeps aliases unique across the catalog', () => {
-    const aliasMap = new Map<string, string>();
-    for (const a of MODEL_ARCHETYPES) {
-      for (const alias of a.aliases) {
-        const lower = alias.toLowerCase();
-        expect(aliasMap.has(lower), `duplicate alias ${alias} on ${a.slug} (already owned by ${aliasMap.get(lower)})`).toBe(false);
-        aliasMap.set(lower, a.slug);
-      }
-    }
-  });
-
-  it('resolves v3 slugs', () => {
+  it('resolves slugs', () => {
     expect(getModelArchetypeBySlug('root-entity')?.slug).toBe('root-entity');
     expect(getModelArchetypeBySlug('denormalised-aggregate')?.slug).toBe('denormalised-aggregate');
   });
 
-  it('resolves v1/v2 aliases (case-insensitive) to their v3 successors', () => {
-    expect(findModelArchetypeByAlias('entity-private')?.slug).toBe('single-item-sub');
-    expect(findModelArchetypeByAlias('PERMISSION-TABLE')?.slug).toBe('single-item-sub');
-    expect(findModelArchetypeByAlias('digest')?.slug).toBe('denormalised-aggregate');
-    expect(findModelArchetypeByAlias('temporal-summary')?.slug).toBe('denormalised-aggregate');
-    expect(findModelArchetypeByAlias('hierarchical-registry')?.slug).toBe('reference-registry');
-    expect(findModelArchetypeByAlias('subcollection-entity')?.slug).toBe('sub-collection-entity');
-  });
-
-  it('resolves both v3 slug and v1/v2 alias through resolveModelArchetype with viaAlias flag', () => {
-    const v3 = resolveModelArchetype('root-entity');
-    expect(v3?.viaAlias).toBe(false);
-    expect(v3?.archetype.slug).toBe('root-entity');
-    const alias = resolveModelArchetype('subcollection-entity');
-    expect(alias?.viaAlias).toBe(true);
-    expect(alias?.archetype.slug).toBe('sub-collection-entity');
+  it('resolves slugs case-insensitively through resolveModelArchetype', () => {
+    expect(resolveModelArchetype('root-entity')?.archetype.slug).toBe('root-entity');
+    expect(resolveModelArchetype('ROOT-ENTITY')?.archetype.slug).toBe('root-entity');
+    expect(resolveModelArchetype('not-a-slug')).toBeUndefined();
   });
 
   it('returns archetypes filtered by sync mode', () => {

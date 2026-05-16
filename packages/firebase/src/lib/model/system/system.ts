@@ -72,6 +72,7 @@ export type SystemStateStoredData = Record<string, any>;
  *
  * @template T - shape of the stored data record
  * @dbxModel
+ * @dbxModelArchetype system-state-singleton
  */
 export interface SystemState<T extends SystemStateStoredData = SystemStateStoredData> {
   /**

@@ -17,7 +17,7 @@ import { FIREBASE_MODELS, getDownstreamCatalog, resolveModelArchetype, type Down
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { scoreCatalog, type ScoredArchetype } from './archetype/score.js';
-import { deriveAddons, deriveAxes, type ResolvedAxes } from './archetype/axes.js';
+import { deriveAddons, deriveAxes, deriveAxisAlternatives, type ResolvedAxes } from './archetype/axes.js';
 import { formatRecommendation } from './archetype/format.js';
 import type { ArchetypeQuestionnaire } from './archetype/types.js';
 
@@ -56,6 +56,7 @@ const QuestionnaireType = type({
   'isGroupRoot?': 'boolean',
   'hasMembers?': 'boolean',
   'needsMemberSummary?': 'boolean',
+  'isTreeNode?': 'boolean',
   'involvesFileUpload?': 'boolean',
   'sendsMessageToUser?': 'boolean',
   'isMultiCheckpointWorkflow?': 'boolean',
@@ -84,7 +85,7 @@ const DBX_MODEL_ARCHETYPE_RECOMMEND_TOOL: Tool = {
     'Optional inputs:',
     '  • `scope`: `"all"` (default), `"upstream"`, or `"downstream"` for the peer-model search.',
     '  • `componentDirs`: explicit downstream component directories — overrides the default `components/*-firebase` discovery.',
-    '  • `archetypeHint`: free-form override (any v3 slug or v1/v2 alias). Scoring still runs; the recommender compares the hint against the data-driven answer.',
+    '  • `archetypeHint`: free-form override (any archetype slug). Scoring still runs; the recommender compares the hint against the data-driven answer.',
     '  • `peerCount`: max peer models to surface (default 5).',
     '  • `maxResults`: max alternatives to surface (default 3).',
     '  • `includeFieldLevelAddons`: emit the `Field-level add-ons` line (default true).'
@@ -99,7 +100,7 @@ const DBX_MODEL_ARCHETYPE_RECOMMEND_TOOL: Tool = {
       },
       archetypeHint: {
         type: 'string',
-        description: 'Optional override (any v3 slug or v1/v2 alias) to bias toward a known answer.'
+        description: 'Optional override (any archetype slug) to bias toward a known answer.'
       },
       scope: {
         type: 'string',
@@ -157,15 +158,17 @@ function buildPeerPool(input: BuildPeerPoolInput): readonly FirebaseModel[] {
   const pool: FirebaseModel[] = [];
   if (input.scope !== 'downstream') pool.push(...FIREBASE_MODELS);
   if (input.scope !== 'upstream') pool.push(...input.downstream.models);
-  const matched = pool.filter((m) => m.archetype === input.archetype.slug);
+  const slug = input.archetype.slug;
+  const matched = pool.filter((m) => m.archetypes?.includes(slug) === true);
   // Try axis-tightened filter first; fall back to slug-only if the tightened filter is empty.
   const axisFilter = Object.entries(input.axes);
   let final = matched;
   if (axisFilter.length > 0) {
     const tightened = matched.filter((m) => {
       let ok = true;
+      const slugAxes = m.archetypeAxesBySlug?.[slug];
       for (const [k, v] of axisFilter) {
-        if (m.archetypeAxes?.[k] !== v) {
+        if (slugAxes?.[k] !== v) {
           ok = false;
           break;
         }
@@ -221,6 +224,7 @@ export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResul
   }
 
   const axes = deriveAxes(top.archetype, args.questionnaire);
+  const axisAlternatives = deriveAxisAlternatives(top.archetype, args.questionnaire);
   const addons = args.includeFieldLevelAddons ? deriveAddons(args.questionnaire) : [];
   const peers = buildPeerPool({
     archetype: top.archetype,
@@ -237,6 +241,7 @@ export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResul
     top,
     tied: scoreResult.tied,
     axes,
+    axisAlternatives,
     addons,
     peers,
     alternatives,

@@ -17,9 +17,4 @@ describe('dbx_model_archetype_search', () => {
     const { text } = await runSearch({ archetype: 'audit-log', scope: 'upstream' });
     expect(text).toContain('# Peer models for `audit-log`');
   });
-
-  it('resolves alias to the v3 slug in the header', async () => {
-    const { text } = await runSearch({ archetype: 'entity-private', scope: 'upstream' });
-    expect(text).toContain('alias `entity-private` → `single-item-sub`');
-  });
 });

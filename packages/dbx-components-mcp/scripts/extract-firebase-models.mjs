@@ -49,11 +49,11 @@ const REGION_KEYED_BY_ID_MARKER = 'RegionRelatedById';
 const DISTRICT_KEYED_BY_ID_MARKER = 'DistrictRelatedById';
 
 /**
- * Marker-interface name suffix for documents keyed by an external vendor id.
- * Matched as a suffix (`*ExternalIdRelatedById`) so per-vendor markers like
- * `ZohoExternalIdRelatedById` are picked up alongside the canonical one.
+ * Marker-interface name for documents whose Firestore id IS an external
+ * vendor's id, regardless of which vendor. Models extend
+ * `ExternalRelatedById<TId>` from `@dereekb/firebase`.
  */
-const EXTERNAL_ID_KEYED_BY_ID_SUFFIX = 'ExternalIdRelatedById';
+const EXTERNAL_ID_KEYED_BY_ID_MARKER = 'ExternalRelatedById';
 
 /**
  * Marker-interface name suffixes for documents keyed by a temporal bucket
@@ -76,6 +76,8 @@ async function main() {
     for (const m of extracted.models) models.push(m);
     for (const g of extracted.modelGroups) modelGroups.push(g);
   }
+
+  applyArchetypePostPass(models);
 
   // Sort for stable output: root collections first, then subcollections; alphabetical within.
   models.sort((a, b) => {
@@ -210,18 +212,22 @@ function extractFromFile(file, content) {
     if (extendedNames.has(USER_RELATED_MARKER)) entry.hasUserUidField = true;
     if (extendedNames.has(REGION_KEYED_BY_ID_MARKER)) entry.regionKeyedById = true;
     if (extendedNames.has(DISTRICT_KEYED_BY_ID_MARKER)) entry.districtKeyedById = true;
-    if (hasNameWithSuffix(extendedNames, EXTERNAL_ID_KEYED_BY_ID_SUFFIX)) entry.externalIdKeyedById = true;
+    if (extendedNames.has(EXTERNAL_ID_KEYED_BY_ID_MARKER)) entry.externalIdKeyedById = true;
     if (BUCKET_KEYED_BY_ID_SUFFIXES.some((s) => hasNameWithSuffix(extendedNames, s))) entry.bucketKeyedById = true;
-    const archetypeTag = iface.tags.dbxModelArchetype;
-    if (typeof archetypeTag === 'object' && archetypeTag) {
-      entry.archetype = archetypeTag.slug;
-      if (Object.keys(archetypeTag.axes).length > 0) entry.archetypeAxes = archetypeTag.axes;
+    if (iface.tags.dbxModelOrganizationalGroupRoot) entry.organizationalGroupRoot = true;
+    const aggregatesFrom = Array.isArray(iface.tags.dbxModelAggregatesFrom) ? iface.tags.dbxModelAggregatesFrom : [];
+    if (aggregatesFrom.length > 0) entry.aggregatesFrom = aggregatesFrom;
+    const archetypeOverrides = Array.isArray(iface.tags.dbxModelArchetypes) ? iface.tags.dbxModelArchetypes : [];
+    let finalArchetypes;
+    if (archetypeOverrides.length > 0) {
+      finalArchetypes = archetypeOverrides.map((t) => ({ slug: t.slug, axes: t.axes }));
     } else {
-      const inferred = inferArchetype(entry);
-      if (inferred) {
-        entry.archetype = inferred.slug;
-        if (Object.keys(inferred.axes).length > 0) entry.archetypeAxes = inferred.axes;
-      }
+      finalArchetypes = inferArchetype(entry);
+    }
+    if (finalArchetypes.length > 0) {
+      entry.archetypes = finalArchetypes.map((a) => a.slug);
+      const axesEntries = finalArchetypes.filter((a) => Object.keys(a.axes).length > 0).map((a) => [a.slug, a.axes]);
+      if (axesEntries.length > 0) entry.archetypeAxesBySlug = Object.fromEntries(axesEntries);
     }
     models.push(entry);
   }
@@ -283,8 +289,8 @@ function collectExtendedNames(iface, interfaceByName) {
 
 /**
  * Returns `true` when at least one entry in `names` ends with `suffix`. Used
- * to match per-vendor `*ExternalIdRelatedById` and per-bucket
- * `*YearWeekRelatedById` markers without requiring an exact name match.
+ * to match per-bucket `*YearWeekRelatedById` markers without requiring an
+ * exact name match.
  */
 function hasNameWithSuffix(names, suffix) {
   let result = false;
@@ -314,28 +320,70 @@ function hasNameWithSuffix(names, suffix) {
  * `@dbxModelArchetype <slug>` to the interface JSDoc.
  */
 function inferArchetype(entry) {
-  let result;
+  let result = [];
   const isRoot = !entry.parentIdentityConst;
   const isSubcollection = Boolean(entry.parentIdentityConst);
   const kind = entry.collectionKind;
+  const aggregatesFromNonEmpty = Array.isArray(entry.aggregatesFrom) && entry.aggregatesFrom.length > 0;
   if (entry.bucketKeyedById && isRoot) {
-    result = { slug: 'denormalised-aggregate', axes: { keying: 'bucket-code' } };
+    result = [{ slug: 'denormalised-aggregate', axes: { keying: 'bucket-code' } }];
   } else if (entry.userKeyedById && isRoot) {
-    result = { slug: 'user-keyed-entity-root', axes: {} };
+    result = [{ slug: 'user-keyed-entity-root', axes: {} }];
   } else if (entry.externalIdKeyedById && isRoot) {
-    result = { slug: 'external-id-keyed-entity-root', axes: {} };
+    result = [{ slug: 'external-id-keyed-entity-root', axes: {} }];
   } else if ((entry.regionKeyedById || entry.districtKeyedById) && isRoot) {
-    result = { slug: 'geo-key-entity-root', axes: {} };
+    result = [
+      { slug: 'geo-key-entity-root', axes: {} },
+      { slug: 'model-tree-node', axes: {} }
+    ];
+  } else if (kind === 'root-singleton' && aggregatesFromNonEmpty) {
+    result = [{ slug: 'root-singleton-aggregate', axes: {} }];
   } else if (kind === 'root-singleton') {
-    result = { slug: 'system-state-singleton', axes: {} };
+    result = [{ slug: 'system-state-singleton', axes: {} }];
   } else if (kind === 'singleton-sub') {
-    result = { slug: 'single-item-sub', axes: {} };
+    result = [{ slug: 'single-item-sub', axes: {} }];
   } else if (kind === 'sub-collection' && isSubcollection) {
-    result = { slug: 'sub-collection-entity', axes: {} };
+    result = [{ slug: 'sub-collection-entity', axes: {} }];
+  } else if (isRoot && entry.organizationalGroupRoot) {
+    result = [{ slug: 'group-root', axes: {} }];
   } else if (kind === 'root' && isRoot) {
-    result = { slug: 'root-entity', axes: {} };
+    result = [{ slug: 'root-entity', axes: {} }];
   }
   return result;
+}
+
+/**
+ * Mirrors `applyArchetypePostPass` in `src/scan/extract-models/index.ts`.
+ * Mutates each entry in place to add `treeRole` axis values for tree nodes
+ * and the `siblingAggregatesFrom` flag when every aggregated peer lives in
+ * the same model group.
+ */
+function applyArchetypePostPass(models) {
+  const modelsByName = new Map(models.map((m) => [m.name, m]));
+  const referencedAsParent = new Set();
+  for (const m of models) {
+    if (m.parentIdentityConst) referencedAsParent.add(m.parentIdentityConst);
+  }
+  for (const m of models) {
+    const isTreeNode = Array.isArray(m.archetypes) && m.archetypes.includes('model-tree-node');
+    if (isTreeNode) {
+      const role = !m.parentIdentityConst ? 'root' : referencedAsParent.has(m.identityConst) ? 'intermediate' : 'leaf';
+      const existing = (m.archetypeAxesBySlug && m.archetypeAxesBySlug['model-tree-node']) || {};
+      const nextSlugAxes = { ...existing, treeRole: role };
+      m.archetypeAxesBySlug = { ...(m.archetypeAxesBySlug || {}), 'model-tree-node': nextSlugAxes };
+    }
+    if (Array.isArray(m.aggregatesFrom) && m.aggregatesFrom.length > 0 && m.modelGroup) {
+      let allSibling = true;
+      for (const name of m.aggregatesFrom) {
+        const peer = modelsByName.get(name);
+        if (!peer || peer.modelGroup !== m.modelGroup) {
+          allSibling = false;
+          break;
+        }
+      }
+      if (allSibling) m.siblingAggregatesFrom = true;
+    }
+  }
 }
 
 /**
@@ -687,7 +735,7 @@ function readPrecedingJsdoc(content, pos) {
  * matches the existing first-paragraph behaviour.
  */
 function parseJsdocBlock(body) {
-  const tags = {};
+  const tags = { dbxModelArchetypes: [], dbxModelAggregatesFrom: [] };
   if (!body) return { description: undefined, tags };
   const stripped = body.split('\n').map((l) => l.replace(/^\s*\*\s?/, '').trim());
   // Description paragraph: lines until the first blank or first @-tag.
@@ -720,13 +768,19 @@ function parseJsdocBlock(body) {
       if (value.length > 0) {
         tags.dbxModelVariableSyncFlag = value;
       }
+    } else if (tag === 'dbxModelOrganizationalGroupRoot') {
+      tags.dbxModelOrganizationalGroupRoot = true;
     } else if (tag === 'dbxModelArchetype') {
       // `@dbxModelArchetype <slug>[ axisKey=val,axisKey=val,...]` — explicit override
-      // for the heuristic-driven archetype tag. Parses the value into `{ slug, axes }`
-      // so the extractor can emit it unchanged on the model entry.
+      // for the heuristic-driven archetype tag. Repeatable; one occurrence per slug.
       const parsed = parseArchetypeTagValue(value);
-      if (parsed) {
-        tags.dbxModelArchetype = parsed;
+      if (parsed) tags.dbxModelArchetypes.push(parsed);
+    } else if (tag === 'dbxModelAggregatesFrom') {
+      // `@dbxModelAggregatesFrom <ModelName>` — repeatable. Captures the upstream
+      // model names whose data this model aggregates from.
+      if (value.length > 0) {
+        const name = value.split(/\s+/)[0];
+        if (/^[A-Z][A-Za-z0-9_$]*$/.test(name)) tags.dbxModelAggregatesFrom.push(name);
       }
     }
   }

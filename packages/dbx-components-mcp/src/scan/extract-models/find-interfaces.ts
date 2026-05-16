@@ -10,7 +10,7 @@
  */
 
 import { Node, type ExpressionWithTypeArguments, type InterfaceDeclaration, type JSDoc, type SourceFile, type TypeNode } from 'ts-morph';
-import type { ExtractedInterface, ExtractedInterfaceProp } from './types.js';
+import type { ExtractedArchetypeTag, ExtractedInterface, ExtractedInterfaceProp, ExtractedInterfaceTags } from './types.js';
 
 /**
  * TS utility/structural wrappers that don't change the field surface for
@@ -116,14 +116,12 @@ function peelTypeNode(node: TypeNode): string | undefined {
   return result;
 }
 
-interface InterfaceTags {
-  readonly dbxModel: boolean;
-  readonly dbxModelSubObject: boolean;
-}
-
-function readInterfaceTags(jsDocs: readonly JSDoc[]): InterfaceTags {
+function readInterfaceTags(jsDocs: readonly JSDoc[]): ExtractedInterfaceTags {
   let dbxModel = false;
   let dbxModelSubObject = false;
+  let dbxModelOrganizationalGroupRoot = false;
+  const dbxModelArchetypes: ExtractedArchetypeTag[] = [];
+  const dbxModelAggregatesFrom: string[] = [];
   for (const jsDoc of jsDocs) {
     for (const tag of jsDoc.getTags()) {
       const tagName = tag.getTagName();
@@ -131,10 +129,56 @@ function readInterfaceTags(jsDocs: readonly JSDoc[]): InterfaceTags {
         dbxModel = true;
       } else if (tagName === 'dbxModelSubObject') {
         dbxModelSubObject = true;
+      } else if (tagName === 'dbxModelOrganizationalGroupRoot') {
+        dbxModelOrganizationalGroupRoot = true;
+      } else if (tagName === 'dbxModelArchetype') {
+        const value = tag.getCommentText()?.trim();
+        if (value !== undefined) {
+          const parsed = parseArchetypeTagValue(value);
+          if (parsed) dbxModelArchetypes.push(parsed);
+        }
+      } else if (tagName === 'dbxModelAggregatesFrom') {
+        const value = tag.getCommentText()?.trim();
+        if (value !== undefined && value.length > 0) {
+          // Reject comma-separated names — one tag per model name.
+          const name = value.split(/\s+/)[0];
+          if (/^[A-Z][A-Za-z0-9_$]*$/.test(name)) {
+            dbxModelAggregatesFrom.push(name);
+          }
+        }
       }
     }
   }
-  return { dbxModel, dbxModelSubObject };
+  return { dbxModel, dbxModelSubObject, dbxModelArchetypes, dbxModelAggregatesFrom, dbxModelOrganizationalGroupRoot };
+}
+
+const ARCHETYPE_SLUG_RE = /^[a-z][a-z0-9-]*$/;
+
+/**
+ * Parses `@dbxModelArchetype <slug>[ axisKey=val,axisKey=val,...]` into
+ * `{ slug, axes }`. Mirrors the `.mjs` extractor's `parseArchetypeTagValue`.
+ *
+ * @param value - raw tag value text after `@dbxModelArchetype`
+ * @returns parsed override, or `undefined` when the slug is missing or invalid
+ */
+function parseArchetypeTagValue(value: string): ExtractedArchetypeTag | undefined {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+  const spaceIdx = trimmed.indexOf(' ');
+  const slug = spaceIdx >= 0 ? trimmed.slice(0, spaceIdx).trim() : trimmed;
+  if (!ARCHETYPE_SLUG_RE.test(slug)) return undefined;
+  const axes: { [key: string]: string } = {};
+  if (spaceIdx >= 0) {
+    const rest = trimmed.slice(spaceIdx + 1).trim();
+    for (const pair of rest.split(',')) {
+      const eq = pair.indexOf('=');
+      if (eq <= 0) continue;
+      const key = pair.slice(0, eq).trim();
+      const v = pair.slice(eq + 1).trim();
+      if (key.length > 0 && v.length > 0) axes[key] = v;
+    }
+  }
+  return { slug, axes };
 }
 
 interface PropertyTags {

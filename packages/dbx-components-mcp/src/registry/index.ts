@@ -54,7 +54,7 @@ export { FIREBASE_MODELS, FIREBASE_MODEL_GROUPS } from './firebase-models.js';
 export type { FirebaseModel, FirebaseModelGroup, FirebaseEnum, FirebaseEnumValue, FirebaseField } from './firebase-models.js';
 
 // MARK: Model Archetypes
-export { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, MODEL_ARCHETYPE_ADDON_SLUGS, getModelArchetypeBySlug, findModelArchetypeByAlias, resolveModelArchetype, getModelArchetypesBySyncMode, getModelArchetypesByCollectionKind, getModelArchetypesByAxisValue } from './archetypes.js';
+export { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, MODEL_ARCHETYPE_ADDON_SLUGS, getModelArchetypeBySlug, resolveModelArchetype, getModelArchetypesBySyncMode, getModelArchetypesByCollectionKind, getModelArchetypesByAxisValue } from './archetypes.js';
 export type { ModelArchetypeInfo, ModelArchetypeSlug, ModelArchetypeSyncMode, ModelArchetypeDocIdSource, ModelArchetypeParentRelation, ModelArchetypeUserRelation, ModelArchetypeMutability, ModelArchetypeSingleItemSubPurpose, ModelArchetypeDenormalisedAggregateKeying, ModelArchetypeExpectedAnswers } from './archetypes.js';
 
 // MARK: Downstream Firebase Models (runtime)
@@ -153,7 +153,7 @@ export function getFirebaseDistrictKeyedByIdModels(): readonly FirebaseModel[] {
 
 /**
  * Returns every model whose Firestore document id IS an external vendor id
- * (interface extends a `*ExternalIdRelatedById` marker).
+ * (interface extends `ExternalRelatedById`).
  *
  * @returns each external-id-keyed model in registry order
  */
@@ -175,11 +175,11 @@ export function getFirebaseBucketKeyedByIdModels(): readonly FirebaseModel[] {
  * Returns every model whose `archetype` matches the given slug. Used by
  * `dbx_model_archetype_search` peer search.
  *
- * @param archetype - the v3 archetype slug to filter by
+ * @param archetype - the archetype slug to filter by
  * @returns each matching model in registry order
  */
 export function getFirebaseModelsByArchetype(archetype: string): readonly FirebaseModel[] {
-  return FIREBASE_MODELS.filter((m) => m.archetype === archetype);
+  return FIREBASE_MODELS.filter((m) => m.archetypes?.includes(archetype) === true);
 }
 
 /**

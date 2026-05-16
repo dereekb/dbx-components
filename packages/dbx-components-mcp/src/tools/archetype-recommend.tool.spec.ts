@@ -112,4 +112,46 @@ describe('dbx_model_archetype_recommend', () => {
     const result = await archetypeRecommendTool.run({ questionnaire: 'not-an-object' });
     expect(result.isError).toBe(true);
   });
+
+  it('flags both keying options when denormalised-aggregate is ambiguous under a user-keyed sub', async () => {
+    // Per planning doc §8.6: when the doc id can legitimately be bucket-code
+    // OR composite-flat-key, the recommender should render both rather than
+    // silently picking one.
+    const { text } = await runRecommend({
+      questionnaire: {
+        candidateName: 'WorkerPayoutWeekAmbiguous',
+        docIdSource: 'bucket-code',
+        parentRelation: 'user-uid',
+        userRelation: 'uid-is-doc-id',
+        isDenormalization: true,
+        denormalizesFrom: ['jobWorkerTimesheet'],
+        syncMode: 'flag-eventual',
+        hasSyncFlag: true,
+        mutability: 'mutable'
+      },
+      scope: 'upstream'
+    });
+    expect(text).toContain('Recommended Archetype: `denormalised-aggregate`');
+    expect(text).toContain('`bucket-code` OR `composite-flat-key`');
+    expect(text).toContain('ambiguous');
+  });
+
+  it('does not flag ambiguity when keying is unambiguous', async () => {
+    const { text } = await runRecommend({
+      questionnaire: {
+        candidateName: 'SchoolGroupSchoolSummary',
+        docIdSource: 'parent-id',
+        parentRelation: 'one-parent',
+        parentModelType: 'schoolGroup',
+        isDenormalization: true,
+        denormalizesFrom: ['school'],
+        syncMode: 'trigger-eventual',
+        mutability: 'mutable'
+      },
+      scope: 'upstream'
+    });
+    expect(text).toContain('Recommended Archetype: `denormalised-aggregate`');
+    expect(text).not.toContain('OR `composite-flat-key`');
+    expect(text).not.toContain('OR `bucket-code`');
+  });
 });

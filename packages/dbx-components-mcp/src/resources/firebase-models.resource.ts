@@ -45,8 +45,8 @@ function registerKeyedByIdResource(server: McpServer, config: KeyedByIdResourceC
         parentIdentityConst: m.parentIdentityConst,
         sourcePackage: m.sourcePackage,
         sourceFile: m.sourceFile,
-        archetype: m.archetype,
-        archetypeAxes: m.archetypeAxes
+        archetypes: m.archetypes,
+        archetypeAxesBySlug: m.archetypeAxesBySlug
       }))
     };
     return { contents: [{ uri: config.uri, mimeType: 'application/json', text: JSON.stringify(payload, null, 2) }] };
@@ -357,8 +357,8 @@ export function registerFirebaseModelsResource(server: McpServer): void {
   registerKeyedByIdResource(server, {
     uri: FIREBASE_EXTERNAL_ID_KEYED_BY_ID_URI,
     title: 'dbx-components Firebase External-Id-Keyed Models',
-    description: 'Models whose Firestore document id IS an external vendor id (interface extends *ExternalIdRelatedById).',
-    marker: '*ExternalIdRelatedById',
+    description: 'Models whose Firestore document id IS an external vendor id (interface extends ExternalRelatedById).',
+    marker: 'ExternalRelatedById',
     resolver: getFirebaseExternalIdKeyedByIdModels
   });
 

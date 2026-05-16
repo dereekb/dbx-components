@@ -156,4 +156,38 @@ describe('archetype scoring', () => {
       expect(Number.isFinite(scored.confidence)).toBe(true);
     }
   });
+
+  it('prefers lifecycle-item over audit-log when rows mutate through a state machine', () => {
+    const q: ArchetypeQuestionnaire = {
+      docIdSource: 'auto',
+      parentRelation: 'one-parent',
+      hasLifecycleStates: true,
+      mutability: 'mutable',
+      syncMode: 'trigger-eventual'
+    };
+    const result = scoreCatalog(q);
+    expect(result.top.archetype.slug).toBe('lifecycle-item');
+  });
+
+  it('prefers group-root when isGroupRoot is asserted on a plain root', () => {
+    const q: ArchetypeQuestionnaire = {
+      docIdSource: 'auto',
+      parentRelation: 'none',
+      syncMode: 'always-in-sync',
+      isGroupRoot: true
+    };
+    const result = scoreCatalog(q);
+    expect(result.top.archetype.slug).toBe('group-root');
+  });
+
+  it('prefers model-tree-node when isTreeNode is asserted on a root', () => {
+    const q: ArchetypeQuestionnaire = {
+      docIdSource: 'geo-key',
+      parentRelation: 'none',
+      syncMode: 'always-in-sync',
+      isTreeNode: true
+    };
+    const result = scoreCatalog(q);
+    expect(result.top.archetype.slug).toBe('model-tree-node');
+  });
 });

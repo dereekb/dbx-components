@@ -73,3 +73,56 @@ describe('findInterfaces() extends-name peeling', () => {
     expect(child?.extendsNames).toEqual(['Base']);
   });
 });
+
+describe('findInterfaces() JSDoc tag parsing', () => {
+  it('collects repeated @dbxModelArchetype tags into the dbxModelArchetypes array', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelArchetype geo-key-entity-root
+       * @dbxModelArchetype model-tree-node
+       */
+      export interface CountryState { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'CountryState');
+    expect(iface?.tags.dbxModelArchetypes.map((t) => t.slug)).toEqual(['geo-key-entity-root', 'model-tree-node']);
+  });
+
+  it('collects repeated @dbxModelAggregatesFrom tags into a string array', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelAggregatesFrom Agent
+       * @dbxModelAggregatesFrom Worker
+       */
+      export interface AgentSummary { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'AgentSummary');
+    expect([...iface!.tags.dbxModelAggregatesFrom]).toEqual(['Agent', 'Worker']);
+  });
+
+  it('captures @dbxModelOrganizationalGroupRoot as a boolean flag', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelOrganizationalGroupRoot
+       */
+      export interface SchoolGroup { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'SchoolGroup');
+    expect(iface?.tags.dbxModelOrganizationalGroupRoot).toBe(true);
+  });
+
+  it('skips invalid (non-camelCase) names on @dbxModelAggregatesFrom', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelAggregatesFrom lowercaseInvalid
+       * @dbxModelAggregatesFrom ValidModel
+       */
+      export interface X { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'X');
+    expect([...iface!.tags.dbxModelAggregatesFrom]).toEqual(['ValidModel']);
+  });
+});

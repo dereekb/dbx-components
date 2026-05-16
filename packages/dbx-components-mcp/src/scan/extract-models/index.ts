@@ -230,14 +230,87 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
   const parsePass = await parseAndIndexFiles({ files, baseDir, project, subObjectConstIndex, subObjectInterfaceIndex });
   const assemblePass = assembleAllParsedFiles({ parsedFiles: parsePass.parsedFiles, sourcePackage, subObjectConstIndex, subObjectInterfaceIndex });
 
-  const models: FirebaseModel[] = [...assemblePass.models];
+  const assembled: FirebaseModel[] = [...assemblePass.models];
   const modelGroups: FirebaseModelGroup[] = [...assemblePass.modelGroups];
   const errors: ExtractError[] = [...parsePass.errors, ...assemblePass.errors];
+
+  const models = applyArchetypePostPass(assembled);
 
   sortModels(models);
   modelGroups.sort((a, b) => a.name.localeCompare(b.name));
 
   return { models, modelGroups, errors };
+}
+
+/**
+ * Cross-model post-pass for archetype refinements that can only be computed
+ * once every model in the same scan is known:
+ *
+ *   - `model-tree-node` axes: derives `treeRole` (`root` / `intermediate` /
+ *     `leaf`) by inspecting each tree-node model's `parentIdentityConst`
+ *     against the full identity set.
+ *   - `siblingAggregatesFrom`: `true` when every name in `aggregatesFrom`
+ *     resolves to a model in the same `modelGroup`.
+ *
+ * @param models - the assembled models in scan order
+ * @returns the models with refined `archetypeAxesBySlug` and
+ *          `siblingAggregatesFrom` fields where applicable
+ */
+function applyArchetypePostPass(models: readonly FirebaseModel[]): FirebaseModel[] {
+  const modelsByName = new Map<string, FirebaseModel>();
+  for (const m of models) modelsByName.set(m.name, m);
+  const referencedAsParent = new Set<string>();
+  for (const m of models) {
+    if (m.parentIdentityConst) referencedAsParent.add(m.parentIdentityConst);
+  }
+
+  const out: FirebaseModel[] = [];
+  for (const m of models) {
+    out.push(refineModel({ model: m, modelsByName, referencedAsParent }));
+  }
+  return out;
+}
+
+interface RefineModelInput {
+  readonly model: FirebaseModel;
+  readonly modelsByName: ReadonlyMap<string, FirebaseModel>;
+  readonly referencedAsParent: ReadonlySet<string>;
+}
+
+function refineModel(input: RefineModelInput): FirebaseModel {
+  const { model, modelsByName, referencedAsParent } = input;
+  const isTreeNode = model.archetypes?.includes('model-tree-node') ?? false;
+  let archetypeAxesBySlug = model.archetypeAxesBySlug;
+  if (isTreeNode) {
+    const role = !model.parentIdentityConst ? 'root' : referencedAsParent.has(model.identityConst) ? 'intermediate' : 'leaf';
+    const existing = archetypeAxesBySlug?.['model-tree-node'] ?? {};
+    const nextSlugAxes = { ...existing, treeRole: role };
+    archetypeAxesBySlug = { ...(archetypeAxesBySlug ?? {}), 'model-tree-node': nextSlugAxes };
+  }
+
+  let siblingAggregatesFrom: boolean | undefined;
+  if (model.aggregatesFrom && model.aggregatesFrom.length > 0 && model.modelGroup) {
+    let allSibling = true;
+    for (const name of model.aggregatesFrom) {
+      const peer = modelsByName.get(name);
+      if (!peer || peer.modelGroup !== model.modelGroup) {
+        allSibling = false;
+        break;
+      }
+    }
+    if (allSibling) siblingAggregatesFrom = true;
+  }
+
+  let result = model;
+  if (archetypeAxesBySlug !== model.archetypeAxesBySlug || siblingAggregatesFrom !== undefined) {
+    const next: FirebaseModel = {
+      ...model,
+      ...(archetypeAxesBySlug ? { archetypeAxesBySlug } : {}),
+      ...(siblingAggregatesFrom ? { siblingAggregatesFrom: true } : {})
+    };
+    result = next;
+  }
+  return result;
 }
 
 async function listTsFiles(rootDir: string, reserved: ReadonlySet<string>): Promise<readonly string[]> {

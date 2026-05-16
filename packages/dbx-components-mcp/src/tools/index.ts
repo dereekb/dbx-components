@@ -44,7 +44,7 @@
  * | dbx_model_test_tree                 | Discovery     | "Show me the describe/fixture structure of this spec file."  |
  * | dbx_model_test_search               | Discovery     | "Find every place this spec uses model X / chain Y."         |
  * | dbx_model_archetype_recommend       | Decision      | "Given a questionnaire, which archetype best fits this proposed model?" |
- * | dbx_model_archetype_lookup          | Documentation | "Tell me about archetype X (and any v1/v2 aliases)."                    |
+ * | dbx_model_archetype_lookup          | Documentation | "Tell me about archetype X."                                            |
  * | dbx_model_archetype_search          | Discovery     | "Find peer models that already use archetype X (optionally filtered by axes)." |
  * | dbx_storagefile_m_validate_app      | Verification  | "Is every storagefile purpose wired end-to-end?"       |
  * | dbx_storagefile_m_list_app          | Discovery     | "What storagefile purposes does this app configure?"   |

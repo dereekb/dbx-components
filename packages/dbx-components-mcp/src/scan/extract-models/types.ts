@@ -33,16 +33,40 @@ export interface ExtractedInterfaceProp {
 }
 
 /**
+ * Parsed `@dbxModelArchetype <slug>[ axisKey=val,...]` JSDoc override.
+ * Mirrors the `.mjs` extractor's `parseArchetypeTagValue` output.
+ */
+export interface ExtractedArchetypeTag {
+  readonly slug: string;
+  readonly axes: { readonly [key: string]: string };
+}
+
+/**
+ * JSDoc-derived tag bag attached to one `export interface` declaration.
+ * `dbxModelArchetypes` is repeatable — every `@dbxModelArchetype` occurrence
+ * appends to the array. `dbxModelAggregatesFrom` is also repeatable.
+ * `dbxModelOrganizationalGroupRoot` is a boolean presence flag.
+ */
+export interface ExtractedInterfaceTags {
+  readonly dbxModel: boolean;
+  readonly dbxModelSubObject: boolean;
+  readonly dbxModelArchetypes: readonly ExtractedArchetypeTag[];
+  readonly dbxModelAggregatesFrom: readonly string[];
+  readonly dbxModelOrganizationalGroupRoot: boolean;
+}
+
+/**
  * One `export interface` declaration. The `tags` flags drive model
  * detection (`@dbxModel`) and embedded-sub-object detection
  * (`@dbxModelSubObject` — interfaces persisted as part of a parent
  * model's converter via `firestoreSubObject<T>`, lacking their own
- * `firestoreModelIdentity`).
+ * `firestoreModelIdentity`). `dbxModelArchetypes` carries any explicit
+ * archetype-slug overrides; the heuristic only runs when the array is empty.
  */
 export interface ExtractedInterface {
   readonly name: string;
   readonly description: string | undefined;
-  readonly tags: { readonly dbxModel: boolean; readonly dbxModelSubObject: boolean };
+  readonly tags: ExtractedInterfaceTags;
   readonly extendsNames: readonly string[];
   readonly props: readonly ExtractedInterfaceProp[];
 }

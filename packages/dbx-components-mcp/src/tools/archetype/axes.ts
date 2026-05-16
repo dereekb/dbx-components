@@ -18,6 +18,17 @@ import type { ArchetypeQuestionnaire } from './types.js';
 export type ResolvedAxes = { readonly [axisName: string]: string };
 
 /**
+ * Sibling map carrying *alternative* axis values that the questionnaire could
+ * legitimately also resolve to. Surfaced when the recommender wants to flag a
+ * choice rather than silently picking one.
+ *
+ * Currently populated for `denormalised-aggregate` under a user-keyed sub
+ * where both `keying: 'bucket-code'` and `keying: 'composite-flat-key'` are
+ * valid (see planning doc `§8.6`).
+ */
+export type ResolvedAxisAlternatives = { readonly [axisName: string]: readonly string[] };
+
+/**
  * Derives axis values from the questionnaire for the matched archetype.
  *
  * Rules:
@@ -81,6 +92,33 @@ function deriveSingleItemSubPurpose(q: ArchetypeQuestionnaire): string | undefin
 }
 
 /**
+ * Returns axis values the questionnaire could *also* legitimately resolve to
+ * for the matched archetype. The recommender uses this to flag ambiguous
+ * choices instead of silently picking one.
+ *
+ * Today this fires for `denormalised-aggregate` under a user-keyed sub where
+ * the doc id can be either a `bucket-code` (e.g. `<YearWeekCode>`) or a
+ * `composite-flat-key` (e.g. `<uid>_<yearweek>`). The recommender's `axes`
+ * holds the questionnaire's stated `docIdSource`; this function returns the
+ * other valid option so the Shape block renders both.
+ *
+ * @param archetype - the matched archetype catalog entry
+ * @param q - the caller's filled questionnaire
+ * @returns the alternative axis-value map, possibly empty
+ */
+export function deriveAxisAlternatives(archetype: ModelArchetypeInfo, q: ArchetypeQuestionnaire): ResolvedAxisAlternatives {
+  const alternatives: { [axisName: string]: string[] } = {};
+  if (archetype.slug === 'denormalised-aggregate' && q.parentRelation === 'user-uid') {
+    if (q.docIdSource === 'bucket-code') {
+      alternatives.keying = ['composite-flat-key'];
+    } else if (q.docIdSource === 'composite-flat-key') {
+      alternatives.keying = ['bucket-code'];
+    }
+  }
+  return alternatives;
+}
+
+/**
  * Field-level add-on detection. Returns the add-on slugs the questionnaire
  * triggers — surfaced on the recommender's "Field-level add-ons" line.
  *
@@ -89,7 +127,7 @@ function deriveSingleItemSubPurpose(q: ArchetypeQuestionnaire): string | undefin
  */
 export function deriveAddons(q: ArchetypeQuestionnaire): readonly string[] {
   const addons: string[] = [];
-  if (q.hasLifecycleStates === true) addons.push('state-machine-field');
+  if (q.hasLifecycleStates === true) addons.push('state-machine-item');
   if (q.alwaysReadWithParent === true && (q.estimatedItemsPerParent === '0-50' || q.estimatedItemsPerParent === 'unknown')) {
     addons.push('embedded-sub-objects');
   }
