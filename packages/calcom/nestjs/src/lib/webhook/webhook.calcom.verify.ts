@@ -14,7 +14,7 @@ export type CalcomWebhookEventVerifier = (rawBody: Buffer, headers: Record<strin
 /**
  * Verifies a Cal.com webhook event using HMAC-SHA256 signature.
  *
- * @param secret The webhook signing secret.
+ * @param secret - The webhook signing secret.
  * @returns A function that verifies a Cal.com webhook event.
  */
 export function calcomWebhookEventVerifier(secret: string): CalcomWebhookEventVerifier {

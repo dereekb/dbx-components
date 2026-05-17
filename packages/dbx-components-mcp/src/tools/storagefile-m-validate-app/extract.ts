@@ -32,8 +32,8 @@ const PROCESSING_SUBTASK_ALIAS_SUFFIX = 'ProcessingSubtask';
  * factories, and reachable bindings — in a single pass so the rules run
  * against a stable snapshot.
  *
- * @param inspection - the prepared component + api file snapshot
- * @returns the structured extraction used by the rules layer
+ * @param inspection - The prepared component + api file snapshot.
+ * @returns The structured extraction used by the rules layer.
  */
 export function extractAppStorageFiles(inspection: AppStorageFilesInspection): ExtractedAppStorageFiles {
   const { componentSources, apiSources } = buildInMemoryProject(inspection);
@@ -377,8 +377,8 @@ interface UploadInitializerArrayCollectorOptions {
  * direct/spread buckets and chasing identifier references through
  * {@link collectInitializerBindingsFromIdentifier}.
  *
- * @param options - the array literal, source file, function index, and the
- *   mutable bucket arrays to populate
+ * @param options - The array literal, source file, function index, and the
+ *   mutable bucket arrays to populate.
  */
 function collectUploadInitializerArray(options: UploadInitializerArrayCollectorOptions): void {
   const visited = new Set<string>();
@@ -534,10 +534,10 @@ function extractProcessingConfigs(sources: readonly SourceFile[]): readonly Extr
  * declaration, returning `undefined` for declarations that aren't typed as a
  * `ProcessingConfig` or that don't carry the required `target` identifier.
  *
- * @param decl - the variable declaration to inspect
- * @param rel - the relative source file path used in the result record
- * @returns the extracted processing config, or `undefined` when the
- *   declaration is not a recognisable processing config
+ * @param decl - The variable declaration to inspect.
+ * @param rel - The relative source file path used in the result record.
+ * @returns The extracted processing config, or `undefined` when the
+ *   declaration is not a recognisable processing config.
  */
 function extractProcessingConfigFromDecl(decl: VariableDeclaration, rel: string): ExtractedProcessingConfig | undefined {
   const typeNode = decl.getTypeNode();
@@ -561,8 +561,8 @@ function extractProcessingConfigFromDecl(decl: VariableDeclaration, rel: string)
  * Reads the `subtask` identifiers from a `flow: [{ subtask: ... }, ...]`
  * property of a processing config object literal.
  *
- * @param obj - the processing config object literal
- * @returns the collected subtask identifiers (empty when no `flow` array is
+ * @param obj - The processing config object literal.
+ * @returns The collected subtask identifiers (empty when no `flow` array is
  *   present or no entries declare a `subtask`)
  */
 function readFlowSubtasks(obj: ObjectLiteralExpression): string[] {
@@ -612,9 +612,9 @@ function extractProcessingHandlerCalls(sources: readonly SourceFile[]): readonly
  * identifier references, supporting both bare identifiers and call
  * expressions whose callee is an identifier.
  *
- * @param processorsArr - the resolved `processors` array literal
- * @param direct - mutable buffer that receives directly referenced names
- * @param spreads - mutable buffer that receives spread-referenced names
+ * @param processorsArr - The resolved `processors` array literal.
+ * @param direct - Mutable buffer that receives directly referenced names.
+ * @param spreads - Mutable buffer that receives spread-referenced names.
  */
 function collectProcessorArrayElements(processorsArr: ArrayLiteralExpression, direct: string[], spreads: string[]): void {
   for (const el of processorsArr.getElements()) {
@@ -633,8 +633,8 @@ function collectProcessorArrayElements(processorsArr: ArrayLiteralExpression, di
  * Pushes the identifier name onto `bucket` when `node` is itself an identifier
  * or a call expression whose callee is an identifier; otherwise no-op.
  *
- * @param node - the node to inspect
- * @param bucket - the mutable buffer to push the resolved name into
+ * @param node - The node to inspect.
+ * @param bucket - The mutable buffer to push the resolved name into.
  */
 function addProcessorIdentifierName(node: Node | undefined, bucket: string[]): void {
   if (!node) return;

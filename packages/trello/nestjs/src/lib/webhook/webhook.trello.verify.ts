@@ -34,9 +34,9 @@ export interface TrelloWebhookEventVerifierConfig {
  *
  * Exported for testability.
  *
- * @param appSecret The Trello app secret.
- * @param rawBody The raw request body bytes.
- * @param callbackUrl The exact callback URL configured for this webhook.
+ * @param appSecret - The Trello app secret.
+ * @param rawBody - The raw request body bytes.
+ * @param callbackUrl - The exact callback URL configured for this webhook.
  * @returns The expected base64 signature value.
  */
 export function trelloWebhookExpectedSignature(appSecret: TrelloAppSecret, rawBody: Buffer, callbackUrl: string): string {
@@ -49,10 +49,10 @@ export function trelloWebhookExpectedSignature(appSecret: TrelloAppSecret, rawBo
 /**
  * Verifies a Trello webhook event header.
  *
- * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#webhook-signatures
- *
- * @param config The verifier configuration.
+ * @param config - The verifier configuration.
  * @returns A function that verifies a Trello webhook event.
+ *
+ * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#webhook-signatures
  */
 export function trelloWebhookEventVerifier(config: TrelloWebhookEventVerifierConfig): TrelloWebhookEventVerifier {
   const { appSecret, callbackUrl } = config;

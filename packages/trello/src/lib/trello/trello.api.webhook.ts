@@ -10,7 +10,7 @@ export type CreateWebhookFunction = (input: CreateWebhookBody) => Promise<Trello
  *
  * https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#creating-a-webhook
  *
- * @param context The Trello API context.
+ * @param context - The Trello API context.
  * @returns A function that registers a new webhook.
  */
 export function createWebhook(context: TrelloContext): CreateWebhookFunction {
@@ -27,9 +27,9 @@ export interface GetWebhookInput {
 export type GetWebhookFunction = (input: GetWebhookInput) => Promise<TrelloWebhook>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#retrieving-a-webhook
+ * Https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#retrieving-a-webhook.
  *
- * @param context The Trello API context.
+ * @param context - The Trello API context.
  * @returns A function that retrieves a webhook by id.
  */
 export function getWebhook(context: TrelloContext): GetWebhookFunction {
@@ -43,9 +43,9 @@ export interface UpdateWebhookInput extends UpdateWebhookBody {
 export type UpdateWebhookFunction = (input: UpdateWebhookInput) => Promise<TrelloWebhook>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#updating-a-webhook
+ * Https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#updating-a-webhook.
  *
- * @param context The Trello API context.
+ * @param context - The Trello API context.
  * @returns A function that updates an existing webhook.
  */
 export function updateWebhook(context: TrelloContext): UpdateWebhookFunction {
@@ -58,9 +58,9 @@ export function updateWebhook(context: TrelloContext): UpdateWebhookFunction {
 export type DeleteWebhookFunction = (input: GetWebhookInput) => Promise<void>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#deleting-a-webhook
+ * Https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#deleting-a-webhook.
  *
- * @param context The Trello API context.
+ * @param context - The Trello API context.
  * @returns A function that deletes a webhook.
  */
 export function deleteWebhook(context: TrelloContext): DeleteWebhookFunction {
@@ -79,9 +79,9 @@ export interface ListWebhooksForTokenInput {
 export type ListWebhooksForTokenFunction = (input?: ListWebhooksForTokenInput) => Promise<ReadonlyArray<TrelloWebhook>>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/
+ * Https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/.
  *
- * @param context The Trello API context.
+ * @param context - The Trello API context.
  * @returns A function that lists all webhooks registered for a token.
  */
 export function listWebhooksForToken(context: TrelloContext): ListWebhooksForTokenFunction {

@@ -193,7 +193,7 @@ export interface CalendarScheduleSelectionState extends PartialCalendarScheduleS
  * Creates the default initial state for the calendar schedule selection store,
  * using the current system timezone and all days of the week enabled.
  *
- * @returns A fresh CalendarScheduleSelectionState with default values
+ * @returns A fresh CalendarScheduleSelectionState with default values.
  */
 export function initialCalendarScheduleSelectionState(): CalendarScheduleSelectionState {
   const defaultScheduleDays = new Set([DateCellScheduleDayCode.WEEKDAY, DateCellScheduleDayCode.WEEKEND]);
@@ -250,8 +250,8 @@ function calendarScheduleMinAndMaxDateRangeRelativeToFilter(x: Pick<CalendarSche
 /**
  * Computes the effective min and max date range by combining the filter and the explicit minMaxDateRange constraints.
  *
- * @param x - State containing filter and minMaxDateRange to compute from
- * @returns A partial date range with the effective start and end boundaries
+ * @param x - State containing filter and minMaxDateRange to compute from.
+ * @returns A partial date range with the effective start and end boundaries.
  */
 export function calendarScheduleMinAndMaxDateRange(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Partial<DateRange> {
   return {
@@ -263,8 +263,8 @@ export function calendarScheduleMinAndMaxDateRange(x: Pick<CalendarScheduleSelec
 /**
  * Returns the effective minimum date by taking the latest start date between the filter and minMaxDateRange.
  *
- * @param x - State containing filter and minMaxDateRange
- * @returns The latest start date, or undefined if none
+ * @param x - State containing filter and minMaxDateRange.
+ * @returns The latest start date, or undefined if none.
  */
 export function calendarScheduleMinDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
   return findMaxDate([x.filter?.start, x.minMaxDateRange?.start]);
@@ -273,8 +273,8 @@ export function calendarScheduleMinDate(x: Pick<CalendarScheduleSelectionState, 
 /**
  * Returns the effective maximum date by taking the earliest end date between the filter and minMaxDateRange.
  *
- * @param x - State containing filter and minMaxDateRange
- * @returns The earliest end date, or undefined if none
+ * @param x - State containing filter and minMaxDateRange.
+ * @returns The earliest end date, or undefined if none.
  */
 export function calendarScheduleMaxDate(x: Pick<CalendarScheduleSelectionState, 'filter' | 'minMaxDateRange'>): Maybe<Date> {
   return findMinDate([x.filter?.end, x.minMaxDateRange?.end]);
@@ -283,8 +283,8 @@ export function calendarScheduleMaxDate(x: Pick<CalendarScheduleSelectionState, 
 /**
  * Returns whether the filter's start date is being used as the effective start for the selection result computation.
  *
- * @param x - State containing filter and computeSelectionResultRelativeToFilter
- * @returns True if the filter start is being used for the selection result
+ * @param x - State containing filter and computeSelectionResultRelativeToFilter.
+ * @returns True if the filter start is being used for the selection result.
  */
 export function calendarScheduleStartBeingUsedFromFilter(x: Pick<CalendarScheduleSelectionState, 'filter' | 'computeSelectionResultRelativeToFilter'>) {
   return x.computeSelectionResultRelativeToFilter && x.filter?.start != null; // may be using either
@@ -607,9 +607,9 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
 /**
  * Updates the state with an initial selection (all or none) and applies it when no dates are currently toggled.
  *
- * @param state - The current selection state
+ * @param state - The current selection state.
  * @param initialSelectionState - The initial selection mode ('all' or 'none')
- * @returns The updated selection state
+ * @returns The updated selection state.
  */
 export function updateStateWithInitialSelectionState(state: CalendarScheduleSelectionState, initialSelectionState: Maybe<AllOrNoneSelection>): CalendarScheduleSelectionState {
   const { toggledIndexes } = state;
@@ -624,9 +624,9 @@ export function updateStateWithInitialSelectionState(state: CalendarScheduleSele
 /**
  * Updates the computeSelectionResultRelativeToFilter flag and recalculates the state if the value changed.
  *
- * @param currentState - The current selection state
- * @param computeSelectionResultRelativeToFilter - Whether to compute results relative to the filter
- * @returns The updated selection state
+ * @param currentState - The current selection state.
+ * @param computeSelectionResultRelativeToFilter - Whether to compute results relative to the filter.
+ * @returns The updated selection state.
  */
 export function updateStateWithComputeSelectionResultRelativeToFilter(currentState: CalendarScheduleSelectionState, computeSelectionResultRelativeToFilter: Maybe<boolean>): CalendarScheduleSelectionState {
   let state: CalendarScheduleSelectionState = { ...currentState, computeSelectionResultRelativeToFilter };
@@ -641,9 +641,9 @@ export function updateStateWithComputeSelectionResultRelativeToFilter(currentSta
 /**
  * Updates the state with date exclusions, converting input dates/ranges to cell indexes and reapplying the filter.
  *
- * @param state - The current selection state
- * @param inputExclusions - Dates, date ranges, or cell indexes to exclude
- * @returns The updated selection state with exclusions applied
+ * @param state - The current selection state.
+ * @param inputExclusions - Dates, date ranges, or cell indexes to exclude.
+ * @returns The updated selection state with exclusions applied.
  */
 export function updateStateWithExclusions(state: CalendarScheduleSelectionState, inputExclusions: Maybe<ArrayOrValue<DateOrDateRangeOrDateCellIndexOrDateCellRange>>): CalendarScheduleSelectionState {
   let computedExclusions: Maybe<DateCellIndex[]>;
@@ -661,9 +661,9 @@ export function updateStateWithExclusions(state: CalendarScheduleSelectionState,
 /**
  * Sets the min/max date range constraint on the state, normalizing start to startOfDay and end to endOfDay.
  *
- * @param state - The current selection state
- * @param minMaxDateRange - The min/max boundary dates to enforce
- * @returns The updated selection state with the boundary applied
+ * @param state - The current selection state.
+ * @param minMaxDateRange - The min/max boundary dates to enforce.
+ * @returns The updated selection state with the boundary applied.
  */
 export function updateStateWithMinMaxDateRange(state: CalendarScheduleSelectionState, minMaxDateRange: Maybe<Partial<DateRange>>): CalendarScheduleSelectionState {
   if (minMaxDateRange != null && !isInfiniteDateRange(minMaxDateRange)) {
@@ -693,9 +693,9 @@ export function updateStateWithMinMaxDateRange(state: CalendarScheduleSelectionS
  * Applies a date cell schedule filter to the selection state, computing the enabled day function
  * from the filter, exclusions, and min/max date range constraints.
  *
- * @param currentState - The current selection state
- * @param inputFilter - The filter configuration to apply
- * @returns The updated selection state with the filter applied
+ * @param currentState - The current selection state.
+ * @param inputFilter - The filter configuration to apply.
+ * @returns The updated selection state with the filter applied.
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export function updateStateWithFilter(currentState: CalendarScheduleSelectionState, inputFilter: Maybe<DateCellScheduleDateFilterConfig>): CalendarScheduleSelectionState {
@@ -831,9 +831,9 @@ export function updateStateWithFilter(currentState: CalendarScheduleSelectionSta
 /**
  * Updates the output timezone and transforms the current selection value to reflect the new timezone.
  *
- * @param state - The current selection state
- * @param timezone - The target timezone string
- * @returns The updated selection state with timezone-adjusted values
+ * @param state - The current selection state.
+ * @param timezone - The target timezone string.
+ * @returns The updated selection state with timezone-adjusted values.
  */
 export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionState, timezone: Maybe<TimezoneString>): CalendarScheduleSelectionState {
   const { currentSelectionValue } = state;
@@ -864,9 +864,9 @@ export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionSta
  * Updates the state from an external date cell schedule range value, converting timezone-aware inputs
  * to system time and synchronizing the internal selection indexes.
  *
- * @param state - The current selection state
- * @param inputChange - The date cell schedule range to apply
- * @returns The updated selection state
+ * @param state - The current selection state.
+ * @param inputChange - The date cell schedule range to apply.
+ * @returns The updated selection state.
  */
 export function updateStateWithDateCellScheduleRangeValue(state: CalendarScheduleSelectionState, inputChange: Maybe<FullDateCellScheduleRangeInputDateRange>): CalendarScheduleSelectionState {
   const { currentSelectionValue, systemTimezone } = state;
@@ -925,32 +925,30 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
 /**
  * Updates the default schedule day codes (used when no explicit schedule days are set) and recalculates allowed days.
  *
- * @param state - The current selection state
- * @param change - The new default schedule day codes
- * @returns The updated selection state
+ * @param state - The current selection state.
+ * @param change - The new default schedule day codes.
+ * @returns The updated selection state.
  */
 export function updateStateWithChangedDefaultScheduleDays(state: CalendarScheduleSelectionState, change: Maybe<Iterable<DateCellScheduleDayCode>>): CalendarScheduleSelectionState {
   const { defaultScheduleDays: currentDefaultScheduleDays } = state;
   const defaultScheduleDays = new Set(change ?? fullWeekDateCellScheduleDayCodes());
-  const result = dateCellScheduleDayCodesAreSetsEquivalent(defaultScheduleDays, currentDefaultScheduleDays)
+  return dateCellScheduleDayCodesAreSetsEquivalent(defaultScheduleDays, currentDefaultScheduleDays)
     ? state // no change
     : finalizeUpdateStateWithChangedScheduleDays(state, { ...state, defaultScheduleDays });
-
-  return result;
 }
 
 /**
  * Updates the explicit schedule day codes override and recalculates allowed days of the week.
  *
- * @param state - The current selection state
- * @param change - The new schedule day codes, or null/undefined to clear the override
- * @returns The updated selection state
+ * @param state - The current selection state.
+ * @param change - The new schedule day codes, or null/undefined to clear the override.
+ * @returns The updated selection state.
  */
 export function updateStateWithChangedScheduleDays(state: CalendarScheduleSelectionState, change: Maybe<Iterable<DateCellScheduleDayCode>>): CalendarScheduleSelectionState {
   const { scheduleDays: currentScheduleDays } = state;
   const scheduleDays = new Set(change ?? []);
 
-  let newScheduleDays: Set<DateCellScheduleDayCode> | null | undefined;
+  let newScheduleDays: Maybe<Set<DateCellScheduleDayCode>>;
 
   if (currentScheduleDays != null && change != null) {
     if (dateCellScheduleDayCodesAreSetsEquivalent(scheduleDays, currentScheduleDays)) {
@@ -962,16 +960,15 @@ export function updateStateWithChangedScheduleDays(state: CalendarScheduleSelect
     newScheduleDays = change ? scheduleDays : null; // set the new one, or clear it
   }
 
-  const result = newScheduleDays === undefined ? state : finalizeUpdateStateWithChangedScheduleDays(state, { ...state, scheduleDays: newScheduleDays ?? undefined });
-  return result;
+  return newScheduleDays === undefined ? state : finalizeUpdateStateWithChangedScheduleDays(state, { ...state, scheduleDays: newScheduleDays ?? undefined });
 }
 
 /**
  * Switches between single and multiple selection mode, trimming the selection to a single value when switching to single mode.
  *
- * @param state - The current selection state
- * @param selectionMode - The new selection mode
- * @returns The updated selection state
+ * @param state - The current selection state.
+ * @param selectionMode - The new selection mode.
+ * @returns The updated selection state.
  */
 export function updateStateWithSelectionMode(state: CalendarScheduleSelectionState, selectionMode: DbxCalendarScheduleSelectionStoreSelectionMode): CalendarScheduleSelectionState {
   const { selectionMode: currentSelectionMode } = state;
@@ -996,9 +993,9 @@ export function updateStateWithSelectionMode(state: CalendarScheduleSelectionSta
 /**
  * Finalizes a schedule days change by recalculating allowed days of the week and updating toggled indexes accordingly.
  *
- * @param previousState - The state before the schedule days change
- * @param nextState - The state with updated schedule day codes
- * @returns The finalized selection state with recalculated allowed days and toggled indexes
+ * @param previousState - The state before the schedule days change.
+ * @param nextState - The state with updated schedule day codes.
+ * @returns The finalized selection state with recalculated allowed days and toggled indexes.
  */
 export function finalizeUpdateStateWithChangedScheduleDays(previousState: CalendarScheduleSelectionState, nextState: CalendarScheduleSelectionState): CalendarScheduleSelectionState {
   const previousScheduleDays = previousState.effectiveScheduleDays;
@@ -1049,9 +1046,9 @@ export interface CalendarScheduleSelectionStateDatesChange {
  * Applies date changes (toggle, add, remove, set, selectAll, or reset) to the calendar selection state,
  * updating toggled indexes and input start/end accordingly.
  *
- * @param state - The current selection state
- * @param change - The date changes to apply
- * @returns The updated selection state
+ * @param state - The current selection state.
+ * @param change - The date changes to apply.
+ * @returns The updated selection state.
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export function updateStateWithChangedDates(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionStateDatesChange): CalendarScheduleSelectionState {
@@ -1205,19 +1202,17 @@ export function updateStateWithChangedDates(state: CalendarScheduleSelectionStat
   // Recalculate the range and simplified to exclusions
   const rangeAndExclusion = computeScheduleSelectionRangeAndExclusion(nextState);
 
-  const result = rangeAndExclusion
+  return rangeAndExclusion
     ? finalizeNewCalendarScheduleSelectionState({ ...nextState, toggledIndexes: new Set(rangeAndExclusion.excluded), inputStart: rangeAndExclusion.start, inputEnd: rangeAndExclusion.end })
     : // no selected days
       noSelectionCalendarScheduleSelectionState(nextState);
-
-  return result;
 }
 
 /**
  * Clears all date selections from the state, retaining other configuration like schedule days and filter.
  *
- * @param state - The current selection state
- * @returns The state with all selections cleared
+ * @param state - The current selection state.
+ * @returns The state with all selections cleared.
  */
 export function noSelectionCalendarScheduleSelectionState(state: CalendarScheduleSelectionState): CalendarScheduleSelectionState {
   return finalizeNewCalendarScheduleSelectionState({ ...state, toggledIndexes: new Set(), inputStart: null, inputEnd: null });
@@ -1226,9 +1221,9 @@ export function noSelectionCalendarScheduleSelectionState(state: CalendarSchedul
 /**
  * Updates the selection state with a new start/end date range, retaining toggled indexes within the new range bounds.
  *
- * @param state - The current selection state
- * @param change - The new input start and end dates
- * @returns The updated selection state
+ * @param state - The current selection state.
+ * @param change - The new input start and end dates.
+ * @returns The updated selection state.
  */
 export function updateStateWithChangedRange(state: CalendarScheduleSelectionState, change: CalendarScheduleSelectionInputDateRange): CalendarScheduleSelectionState {
   const { inputStart: currentInputStart, inputEnd: currentInputEnd, indexFactory } = state;
@@ -1262,8 +1257,8 @@ export function updateStateWithChangedRange(state: CalendarScheduleSelectionStat
 /**
  * Finalizes a partially-built state by recomputing the isEnabledDay function and the current selection value.
  *
- * @param nextState - The partially-built selection state to finalize
- * @returns The finalized selection state
+ * @param nextState - The partially-built selection state to finalize.
+ * @returns The finalized selection state.
  */
 export function finalizeNewCalendarScheduleSelectionState(nextState: Building<CalendarScheduleSelectionState>): CalendarScheduleSelectionState {
   nextState.isEnabledDay = isEnabledDayInCalendarScheduleSelectionState(nextState as CalendarScheduleSelectionState);
@@ -1274,8 +1269,8 @@ export function finalizeNewCalendarScheduleSelectionState(nextState: Building<Ca
 /**
  * Builds a decision function that determines whether a given day index is enabled (selected) in the current state.
  *
- * @param state - The selection state to derive the enabled-day function from
- * @returns A function that returns true if the given day is enabled/selected
+ * @param state - The selection state to derive the enabled-day function from.
+ * @returns A function that returns true if the given day is enabled/selected.
  */
 export function isEnabledDayInCalendarScheduleSelectionState(state: CalendarScheduleSelectionState): DecisionFunction<DateCellTimingRelativeIndexFactoryInput> {
   const { allowedDaysOfWeek, indexFactory, inputStart, inputEnd, indexDayOfWeek, systemTimezone } = state;
@@ -1303,8 +1298,8 @@ export function isEnabledDayInCalendarScheduleSelectionState(state: CalendarSche
  * Computes the output DateCellScheduleDateRange value from the current selection state,
  * applying timezone offsets and filter-relative computations as needed.
  *
- * @param state - The current selection state to compute from
- * @returns The computed selection value, or null if nothing is selected
+ * @param state - The current selection state to compute from.
+ * @returns The computed selection value, or null if nothing is selected.
  */
 export function computeScheduleSelectionValue(state: CalendarScheduleSelectionState): Maybe<CalendarScheduleSelectionValue> {
   const { indexFactory: systemIndexFactory, allowedDaysOfWeek, effectiveScheduleDays, indexDayOfWeek, computeSelectionResultRelativeToFilter, filter, systemTimezone } = state;
@@ -1396,8 +1391,8 @@ export interface CalendarScheduleSelectionRangeAndExclusion extends DateRange {
  * Computes the selected date range with its corresponding cell range and all excluded day indexes.
  * Returns null if no days are selected.
  *
- * @param state - The current selection state
- * @returns The range and exclusion data, or null if nothing is selected
+ * @param state - The current selection state.
+ * @returns The range and exclusion data, or null if nothing is selected.
  */
 export function computeScheduleSelectionRangeAndExclusion(state: CalendarScheduleSelectionState): Maybe<CalendarScheduleSelectionRangeAndExclusion> {
   const { start: currentStart, isEnabledDay, isEnabledFilterDay, systemTimezone } = state;
@@ -1430,8 +1425,8 @@ export function computeScheduleSelectionRangeAndExclusion(state: CalendarSchedul
 /**
  * Computes the selected date range (start and end dates) from the current selection state.
  *
- * @param state - The current selection state
- * @returns The selected date range, or undefined if nothing is selected
+ * @param state - The current selection state.
+ * @returns The selected date range, or undefined if nothing is selected.
  */
 export function computeCalendarScheduleSelectionRange(state: CalendarScheduleSelectionState): Maybe<DateRange> {
   const dateFactory = dateCellTimingDateFactory({ startsAt: state.start, timezone: state.systemTimezone });
@@ -1443,8 +1438,8 @@ export function computeCalendarScheduleSelectionRange(state: CalendarScheduleSel
 /**
  * Computes the date cell index range (i, to) that spans all selected and toggled days in the current state.
  *
- * @param state - The current selection state
- * @returns The cell range spanning all selected days, or undefined if nothing is selected
+ * @param state - The current selection state.
+ * @returns The cell range spanning all selected days, or undefined if nothing is selected.
  */
 export function computeCalendarScheduleSelectionDateCellRange(state: CalendarScheduleSelectionState): Maybe<DateCellRangeWithRange> {
   const { allowedDaysOfWeek, indexFactory, inputStart, inputEnd, indexDayOfWeek, isEnabledDay, isEnabledFilterDay } = state;

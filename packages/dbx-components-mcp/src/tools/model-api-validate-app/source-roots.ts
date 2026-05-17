@@ -10,6 +10,7 @@
  * component's `@dereekb/*` dependencies and walk those packages too.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
@@ -48,7 +49,7 @@ export interface ResolveSourceRootsResult {
  * each upstream package's `src/lib` so its `*.api.ts` files contribute
  * declarations.
  *
- * @param input - the component path and (optional) cached workspace root.
+ * @param input - The component path and (optional) cached workspace root.
  * @returns The resolved source roots and detected workspace root.
  */
 export async function resolveApiSourceRoots(input: ResolveSourceRootsInput): Promise<ResolveSourceRootsResult> {
@@ -192,7 +193,7 @@ interface ResolvePackageRootInput {
  * package name and treats the package root as the directory two segments
  * above the resolved `src/index.ts` target.
  *
- * @param input - package name, parsed paths map, and workspace root.
+ * @param input - Package name, parsed paths map, and workspace root.
  * @returns The absolute package root, or `undefined` when no mapping is found.
  */
 function resolvePackageRoot(input: ResolvePackageRootInput): string | undefined {
@@ -250,7 +251,7 @@ interface StripJsonState {
   readonly value: string;
   out: string;
   i: number;
-  inString: '"' | "'" | null;
+  inString: Maybe<'"' | "'">;
 }
 
 function consumeStringChar(state: StripJsonState): void {

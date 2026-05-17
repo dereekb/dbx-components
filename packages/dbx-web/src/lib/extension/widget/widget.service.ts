@@ -33,9 +33,9 @@ export class DbxWidgetService {
   /**
    * Used to register an entry. If an entry with the same type is already registered, this will override it by default.
    *
-   * @param entry - The widget entry mapping a type identifier to its component class
+   * @param entry - The widget entry mapping a type identifier to its component class.
    * @param override - Whether to replace an existing entry with the same type. Defaults to true.
-   * @returns True if the entry was registered, false if an entry with the same type already exists and override is false
+   * @returns True if the entry was registered, false if an entry with the same type already exists and override is false.
    */
   register(entry: DbxWidgetEntry, override: boolean = true): boolean {
     let registered = false;

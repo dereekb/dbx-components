@@ -5,6 +5,7 @@
  * wires registered resources and tools to a stdio transport.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { findAndLoadConfig } from './config/load-config.js';
@@ -168,8 +169,8 @@ export interface DownstreamHint {
  * (or to `options.onLoaderResult` when supplied) so test harnesses can
  * assert on them.
  *
- * @param options - bootstrap inputs (cwd, pre-built registry, observer hook)
- * @returns a configured server ready to be connected to a transport
+ * @param options - Bootstrap inputs (cwd, pre-built registry, observer hook)
+ * @returns A configured server ready to be connected to a transport.
  */
 export async function createServer(options: CreateServerOptions = {}): Promise<McpServer> {
   const server = new McpServer(
@@ -380,8 +381,8 @@ interface ResolveOptionalRegistryArgs<TRegistry, TResult> {
  * Catches and logs loader failures when `catchErrors` is set so non-critical
  * registries don't abort server startup.
  *
- * @param args - injected registry / loader / observer plus failure policy
- * @returns the resolved registry, or `undefined` when not injected and the
+ * @param args - Injected registry / loader / observer plus failure policy.
+ * @returns The resolved registry, or `undefined` when not injected and the
  *   loader failed under `catchErrors: true`.
  */
 async function resolveOptionalRegistry<TRegistry, TResult>(args: ResolveOptionalRegistryArgs<TRegistry, TResult>): Promise<TRegistry | undefined> {
@@ -408,10 +409,10 @@ async function resolveOptionalRegistry<TRegistry, TResult>(args: ResolveOptional
  * suitable for the firebase-model rule pipeline. Returns `undefined` when
  * no override is present (the validator falls back to its defaults).
  *
- * @param config - the parsed `dbx-mcp.config.json`, or `null` when missing
- * @returns the rule overrides, or `undefined` when none are configured
+ * @param config - The parsed `dbx-mcp.config.json`, or `null` when missing.
+ * @returns The rule overrides, or `undefined` when none are configured.
  */
-function resolveModelValidateRuleOptions(config: { readonly modelValidate?: { readonly maxFieldNameLength?: number; readonly ignoredFieldNames?: readonly string[]; readonly ignoredExternalParents?: readonly string[] } } | null): RuleOptions | undefined {
+function resolveModelValidateRuleOptions(config: Maybe<{ readonly modelValidate?: { readonly maxFieldNameLength?: number; readonly ignoredFieldNames?: readonly string[]; readonly ignoredExternalParents?: readonly string[] } }>): RuleOptions | undefined {
   const block = config?.modelValidate;
   if (block === undefined) {
     return undefined;
@@ -443,7 +444,7 @@ export async function runStdioServer(): Promise<void> {
  */
 interface RegistryLoaderResultLike {
   readonly registry: { readonly loadedSources: readonly string[]; readonly all: readonly unknown[] };
-  readonly configPath: string | null;
+  readonly configPath: Maybe<string>;
   readonly configWarnings: readonly { readonly kind: string; readonly path: string }[];
   readonly loaderWarnings: readonly { readonly kind: string }[];
   readonly externalSourceCount: number;
@@ -455,12 +456,12 @@ interface RegistryLoaderResultLike {
  * loaded and how many warnings were collected, plus one line per warning so
  * operators can spot misconfiguration without paging through stdio frames.
  *
- * @param label - registry display label (e.g. `semantic-types`, `ui-components`)
- * @param warningPrefix - prefix prepended to `config-warning`/`loader-warning`
+ * @param label - Registry display label (e.g. `semantic-types`, `ui-components`)
+ * @param warningPrefix - Prefix prepended to `config-warning`/`loader-warning`
  *   tags so operators can tell which loader emitted each line. Empty for the
  *   semantic-types loader (historical baseline); short identifier (`ui-`,
  *   `forge-`, …) for the others.
- * @param result - the loader output to summarise
+ * @param result - The loader output to summarise.
  */
 function reportRegistryLoaderResult(label: string, warningPrefix: string, result: RegistryLoaderResultLike): void {
   const { registry, configPath, configWarnings, loaderWarnings, externalSourceCount } = result;
@@ -487,8 +488,8 @@ interface ResolveAuthRegistryInput {
  * forwards the result to the supplied observer (or the default stderr
  * reporter when none is provided).
  *
- * @param input - injected registry plus loader cwd / observer
- * @returns the resolved auth registry
+ * @param input - Injected registry plus loader cwd / observer.
+ * @returns The resolved auth registry.
  */
 async function resolveAuthRegistry(input: ResolveAuthRegistryInput): Promise<AuthRegistry> {
   const { injected, cwd, onAuthLoaderResult } = input;
@@ -509,7 +510,7 @@ async function resolveAuthRegistry(input: ResolveAuthRegistryInput): Promise<Aut
  * one line per warning so operators can spot misconfigured downstream
  * `claims.ts` files.
  *
- * @param result - the auth loader result to summarise
+ * @param result - The auth loader result to summarise.
  */
 function reportAuthLoaderResult(result: LoadAuthRegistryResult): void {
   const { registry, scannedFiles, fileWarnings, extractWarnings, extractedAppCount, extractedClaimCount } = result;
@@ -575,7 +576,7 @@ interface EmitDownstreamHintsInput {
  * Default observer prints a single line per cluster on stderr; tests pass
  * `onDownstreamHints` to capture the structured hints instead.
  *
- * @param input - the cwd, the per-cluster external counts, and an optional observer
+ * @param input - The cwd, the per-cluster external counts, and an optional observer.
  */
 async function emitDownstreamHints(input: EmitDownstreamHintsInput): Promise<void> {
   const { cwd, externalCounts, onDownstreamHints } = input;

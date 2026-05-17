@@ -84,7 +84,7 @@ export function onCallDevelopmentFunction<N>(map: OnCallDevelopmentFunctionMap<N
 /**
  * Creates a bad-request error indicating the provided development function specifier is not recognized.
  *
- * @param specifier - the unrecognized specifier string from the client request.
+ * @param specifier - The unrecognized specifier string from the client request.
  * @returns A bad-request error with the unknown specifier details.
  */
 export function developmentUnknownSpecifierError(specifier: DevelopmentFirebaseFunctionSpecifier) {

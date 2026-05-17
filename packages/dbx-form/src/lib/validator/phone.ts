@@ -1,15 +1,15 @@
 import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@angular/forms';
-import { e164PhoneNumberExtensionPair, isE164PhoneNumber as isE164PhoneNumberFunction, isValidPhoneExtensionNumber } from '@dereekb/util';
+import { type Maybe, e164PhoneNumberExtensionPair, isE164PhoneNumber as isE164PhoneNumberFunction, isValidPhoneExtensionNumber } from '@dereekb/util';
 import { INVALID_PHONE_NUMBER_EXTENSION_MESSAGE, INVALID_PHONE_NUMBER_MESSAGE } from '../formly/config/validation';
 
 /**
  * Angular form validator that checks whether the control value is a valid E.164 phone number.
  *
- * @param allowExtension - Whether to allow phone number extensions in the value
- * @returns A ValidatorFn that validates E.164 phone numbers
+ * @param allowExtension - Whether to allow phone number extensions in the value.
+ * @returns A ValidatorFn that validates E.164 phone numbers.
  */
 export function isE164PhoneNumber(allowExtension: boolean): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
+  return (control: AbstractControl): Maybe<ValidationErrors> => {
     const value: string | undefined = control.value;
 
     if (value != null && !isE164PhoneNumberFunction(value, allowExtension)) {
@@ -25,10 +25,10 @@ export function isE164PhoneNumber(allowExtension: boolean): ValidatorFn {
 /**
  * Angular Form ValidationFn for checking the input is a valid phone extension. Empty values return true.
  *
- * @returns A ValidatorFn that validates phone extension numbers
+ * @returns A ValidatorFn that validates phone extension numbers.
  */
 export function isPhoneExtension(): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
+  return (control: AbstractControl): Maybe<ValidationErrors> => {
     const value: string | number | undefined = control.value;
 
     if (value != null) {
@@ -48,10 +48,10 @@ export function isPhoneExtension(): ValidatorFn {
 /**
  * Angular form validator that checks the value is a valid E.164 phone number with a valid extension (if present).
  *
- * @returns A ValidatorFn that validates E.164 phone numbers with optional extensions
+ * @returns A ValidatorFn that validates E.164 phone numbers with optional extensions.
  */
 export function isE164PhoneNumberWithValidExtension(): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
+  return (control: AbstractControl): Maybe<ValidationErrors> => {
     const value: string | undefined = control.value;
 
     if (value != null) {

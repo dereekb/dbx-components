@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { type Maybe, separateValues } from '@dereekb/util';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from '@dereekb/dbx-form';
 import { type OidcScope } from '@dereekb/firebase';
-import { separateValues } from '@dereekb/util';
 import { DbxFirebaseOidcConfigService } from '../../service/oidc.configuration.service';
 import { type DbxFirebaseOAuthConsentScopesViewData } from './oauth.consent.scope.view.component';
 import { type OAuthConsentScope } from './oauth.consent.scope';
@@ -65,7 +65,7 @@ export class DbxFirebaseOAuthConsentScopeDefaultViewComponent {
     return this.mappedScopes().filter((scope) => !requiredSet.has(scope.name));
   });
 
-  readonly alwaysGrantedLabel = computed<string | null>(() => {
+  readonly alwaysGrantedLabel = computed<Maybe<string>>(() => {
     const required = this._data.requiredScopes ?? [];
     return required.length > 0 ? required.join(', ') : null;
   });

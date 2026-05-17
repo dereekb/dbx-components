@@ -38,7 +38,7 @@ export class DbxHelpContextService {
   /**
    * Registers a help context reference, adding its keys to the active set.
    *
-   * @param reference - The help context reference to register
+   * @param reference - The help context reference to register.
    */
   register(reference: DbxHelpContextReference): void {
     const referenceSet = this._contextReferences.value;
@@ -49,7 +49,7 @@ export class DbxHelpContextService {
   /**
    * Unregisters a help context reference, removing its keys from the active set.
    *
-   * @param reference - The help context reference to unregister
+   * @param reference - The help context reference to unregister.
    */
   unregister(reference: DbxHelpContextReference): void {
     const referenceSet = this._contextReferences.value;

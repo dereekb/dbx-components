@@ -115,8 +115,8 @@ export interface SubObjectConstEntry {
  * Combines the per-file extraction outputs into ready-to-publish
  * {@link FirebaseModel} / {@link FirebaseModelGroup} entries.
  *
- * @param input - the per-file extraction outputs
- * @returns the assembled models and groups for the file
+ * @param input - The per-file extraction outputs.
+ * @returns The assembled models and groups for the file.
  */
 export function assembleFile(input: AssembleFileInput): AssembledFile {
   const interfaceByName = buildInterfaceIndex(input.interfaces);
@@ -361,8 +361,8 @@ interface InferredArchetype {
  * tagging since the heuristic can't infer composite-flat-key encoding or
  * tree-chain participation from pure-key signals alone.
  *
- * @param input - the signals the heuristic consumes (root vs. sub, marker-interface flags, collection kind, JSDoc markers)
- * @returns the inferred archetypes (possibly empty)
+ * @param input - The signals the heuristic consumes (root vs. sub, marker-interface flags, collection kind, JSDoc markers)
+ * @returns The inferred archetypes (possibly empty)
  */
 function inferArchetype(input: InferArchetypeInput): readonly InferredArchetype[] {
   const slug = resolveArchetypeSlug(input);
@@ -470,8 +470,8 @@ interface ResolveFieldSubObjectInput {
  * {@link subObjectInterfaceIndex}, the sub-object's own fields are
  * built recursively so nested embedded structures surface end-to-end.
  *
- * @param input - converter expression + cross-file indices
- * @returns the sub-object metadata, or `undefined` when the converter doesn't reference a known sub-object
+ * @param input - Converter expression + cross-file indices.
+ * @returns The sub-object metadata, or `undefined` when the converter doesn't reference a known sub-object.
  */
 function resolveFieldSubObject(input: ResolveFieldSubObjectInput): FirebaseSubObject | undefined {
   const { converter, subObjectConstIndex, subObjectInterfaceIndex, enumNames } = input;
@@ -547,8 +547,8 @@ interface BuildSubObjectFieldsInput {
  * Cycle protection via the `visited` set guards against a
  * self-referential sub-object chain that would otherwise stack-overflow.
  *
- * @param input - interface + cross-file indices + cycle-detection set
- * @returns the sub-object's own fields with nested sub-objects resolved
+ * @param input - Interface + cross-file indices + cycle-detection set.
+ * @returns The sub-object's own fields with nested sub-objects resolved.
  */
 function buildSubObjectFields(input: BuildSubObjectFieldsInput): readonly FirebaseField[] {
   const out: FirebaseField[] = [];
@@ -596,8 +596,8 @@ interface ResolveNestedSubObjectFromTypeInput {
  * {@link subObjectInterfaceIndex}. Returns `undefined` for non-sub-object
  * types or when the chain would revisit an already-walked interface.
  *
- * @param input - the type string plus the same indices the parent walk uses
- * @returns the resolved sub-object, or `undefined` when no resolution applies
+ * @param input - The type string plus the same indices the parent walk uses.
+ * @returns The resolved sub-object, or `undefined` when no resolution applies.
  */
 function resolveNestedSubObjectFromType(input: ResolveNestedSubObjectFromTypeInput): FirebaseSubObject | undefined {
   const { tsType, subObjectInterfaceIndex, visited } = input;
@@ -687,9 +687,9 @@ function capitalize(s: string): string {
  * some descendant's `extendsNames` list, which is what we need for
  * marker-name detection.
  *
- * @param iface - the interface to start from
- * @param interfaceByName - lookup map of interfaces in the same file
- * @returns the set of every transitively extended interface name
+ * @param iface - The interface to start from.
+ * @param interfaceByName - Lookup map of interfaces in the same file.
+ * @returns The set of every transitively extended interface name.
  */
 function collectExtendedNames(iface: ExtractedInterface, interfaceByName: ReadonlyMap<string, ExtractedInterface>): ReadonlySet<string> {
   const out = new Set<string>();

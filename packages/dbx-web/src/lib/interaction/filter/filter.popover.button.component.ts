@@ -39,9 +39,7 @@ export class DbxFilterPopoverButtonComponent<F extends object = object> extends 
   readonly buttonDisplaySignal = computed(() => {
     const pairDisplay = this.buttonDisplayStyle()?.display;
     const directDisplay = this.buttonDisplay();
-    const result = !pairDisplay && !directDisplay ? undefined : { ...pairDisplay, ...directDisplay };
-
-    return result;
+    return !pairDisplay && !directDisplay ? undefined : { ...pairDisplay, ...directDisplay };
   });
 
   readonly buttonStyleSignal = computed(() => this.buttonDisplayStyle()?.style);

@@ -43,8 +43,8 @@ export type DbxTableViewElement<T, G> = DbxTableViewGroupElement<T, G> | DbxTabl
 /**
  * Type guard that checks whether a table view element is a group element (header or footer).
  *
- * @param element - the table view element to check
- * @returns `true` if the element represents a group header or footer row
+ * @param element - The table view element to check.
+ * @returns `true` if the element represents a group header or footer row.
  */
 export function isDbxTableViewGroupElement<T, G>(element: DbxTableViewElement<T, G>): element is DbxTableViewGroupElement<T, G> {
   return element.type === 'group';
@@ -53,8 +53,8 @@ export function isDbxTableViewGroupElement<T, G>(element: DbxTableViewElement<T,
 /**
  * Type guard that checks whether a table view element is an item data element.
  *
- * @param element - the table view element to check
- * @returns `true` if the element represents an item data row
+ * @param element - The table view element to check.
+ * @returns `true` if the element represents an item data row.
  */
 export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, G>): element is DbxTableViewItemElement<T, G> {
   return element.type === 'item';

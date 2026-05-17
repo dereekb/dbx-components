@@ -33,14 +33,14 @@ export type CompactModeOption = CompactMode | boolean;
  * Converts a boolean or `CompactMode` value into a normalized `CompactMode`.
  * `true` maps to `CompactMode.COMPACT`, `false` maps to `CompactMode.FULL`.
  *
+ * @param input - A boolean or CompactMode value to normalize.
+ * @returns The normalized CompactMode enum value.
+ *
  * @example
  * ```ts
  * compactModeFromInput(true);  // CompactMode.COMPACT
  * compactModeFromInput(CompactMode.FULL);  // CompactMode.FULL
  * ```
- *
- * @param input - a boolean or CompactMode value to normalize
- * @returns the normalized CompactMode enum value
  */
 export function compactModeFromInput(input: CompactMode | boolean): CompactMode {
   if (typeof input === 'boolean') {
@@ -54,6 +54,10 @@ export function compactModeFromInput(input: CompactMode | boolean): CompactMode 
  * Maps an observable compact mode stream to the corresponding value from the config.
  * Falls back to the config's `defaultMode` (or `FULL`) when the observable is nullish.
  *
+ * @param mode$ - An observable of the current compact mode, or nullish to use the default.
+ * @param config - The mapping configuration containing values for each mode and an optional default.
+ * @returns An observable emitting the mapped value corresponding to the current compact mode.
+ *
  * @example
  * ```ts
  * const value$ = mapCompactModeObs(mode$, {
@@ -62,10 +66,6 @@ export function compactModeFromInput(input: CompactMode | boolean): CompactMode 
  *   defaultMode: CompactMode.FULL
  * });
  * ```
- *
- * @param mode$ - an observable of the current compact mode, or nullish to use the default
- * @param config - the mapping configuration containing values for each mode and an optional default
- * @returns an observable emitting the mapped value corresponding to the current compact mode
  */
 export function mapCompactModeObs<T>(mode$: Maybe<Observable<CompactMode>>, config: CompactModeDefaultOptions<T>): Observable<Maybe<T>> {
   const modeObs = mode$ ?? of(config.defaultMode ?? CompactMode.FULL);

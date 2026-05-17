@@ -29,8 +29,8 @@ interface MappedBuildWarning {
  * Translates one {@link ModelFirebaseIndexBuildWarning} into the shape
  * the validator pushes as a violation.
  *
- * @param warning - the union variant emitted by the extractor or analyzer
- * @returns the catalog code, severity, message, and location metadata
+ * @param warning - The union variant emitted by the extractor or analyzer.
+ * @returns The catalog code, severity, message, and location metadata.
  */
 export function mapModelFirebaseIndexBuildWarning(warning: ModelFirebaseIndexBuildWarning): MappedBuildWarning {
   if (warning.stage === 'extract') {
@@ -216,8 +216,8 @@ function mapAnalyzeWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
  * Materialises a {@link ModelFirebaseIndexValidateAppViolation} from a
  * mapped warning, attaching the catalog-driven remediation hint.
  *
- * @param mapped - the warning translated by {@link mapModelFirebaseIndexBuildWarning}
- * @returns a violation ready to push onto the report buffer
+ * @param mapped - The warning translated by {@link mapModelFirebaseIndexBuildWarning}
+ * @returns A violation ready to push onto the report buffer.
  */
 export function buildFirebaseIndexValidateAppViolation(mapped: MappedBuildWarning): ModelFirebaseIndexValidateAppViolation {
   return {

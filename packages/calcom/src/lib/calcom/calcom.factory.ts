@@ -32,8 +32,9 @@ export type CalcomFactory = (config: CalcomConfig) => Calcom;
  * Sets up rate limiting, error handling, OAuth token management, and both server
  * and per-user fetch contexts.
  *
- * @param factoryConfig - configuration including OAuth context, rate limiter, and optional fetch/logging overrides
- * @returns a factory function that accepts a CalcomConfig and produces a Calcom instance
+ * @param factoryConfig - Configuration including OAuth context, rate limiter, and optional fetch/logging overrides.
+ * @returns A factory function that accepts a CalcomConfig and produces a Calcom instance.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function calcomFactory(factoryConfig: CalcomFactoryConfig): CalcomFactory {

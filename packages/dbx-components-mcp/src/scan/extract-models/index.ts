@@ -210,8 +210,8 @@ function sortModels(models: FirebaseModel[]): void {
  * model-group entry. Per-file errors are aggregated rather than thrown so
  * a single malformed file never blocks the rest of the scan.
  *
- * @param input - the scan configuration
- * @returns the assembled models, groups, and per-file errors
+ * @param input - The scan configuration.
+ * @returns The assembled models, groups, and per-file errors.
  */
 export async function extractModels(input: ExtractModelsInput): Promise<ExtractModelsResult> {
   const { rootDir, sourcePackage, workspaceRoot, skipReservedFolders } = input;
@@ -244,7 +244,7 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
 
 /**
  * Cross-model post-pass for archetype refinements that can only be computed
- * once every model in the same scan is known:
+ * once every model in the same scan is known:.
  *
  *   - `model-tree-node` axes: derives `treeRole` (`root` / `intermediate` /
  *     `leaf`) by inspecting each tree-node model's `parentIdentityConst`
@@ -252,9 +252,9 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
  *   - `siblingAggregatesFrom`: `true` when every name in `aggregatesFrom`
  *     resolves to a model in the same `modelGroup`.
  *
- * @param models - the assembled models in scan order
- * @returns the models with refined `archetypeAxesBySlug` and
- *          `siblingAggregatesFrom` fields where applicable
+ * @param models - The assembled models in scan order.
+ * @returns The models with refined `archetypeAxesBySlug` and
+ *          `siblingAggregatesFrom` fields where applicable.
  */
 function applyArchetypePostPass(models: readonly FirebaseModel[]): FirebaseModel[] {
   const modelsByName = new Map<string, FirebaseModel>();

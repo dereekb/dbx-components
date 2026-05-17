@@ -19,7 +19,7 @@ export interface RepeatArrayFieldConfig<T = unknown> extends DbxFormRepeatArrayC
  *
  * Users can dynamically add, remove, duplicate, and rearrange entries.
  *
- * @param config - Repeat array configuration including the template field group
+ * @param config - Repeat array configuration including the template field group.
  * @returns A validated {@link FormlyFieldConfig} with type `'repeatarray'`
  *
  * @example

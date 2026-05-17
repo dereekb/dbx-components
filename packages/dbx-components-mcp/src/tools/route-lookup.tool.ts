@@ -177,8 +177,8 @@ function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string)
 /**
  * Appends the parent-chain section (root → … → node) to the markdown buffer.
  *
- * @param lines - the markdown buffer being built
- * @param node - the node whose ancestor chain to render
+ * @param lines - The markdown buffer being built.
+ * @param node - The node whose ancestor chain to render.
  */
 function appendParentChainSection(lines: string[], node: RouteTreeNode): void {
   const chain = ancestors(node);
@@ -190,9 +190,9 @@ function appendParentChainSection(lines: string[], node: RouteTreeNode): void {
  * Appends a heading and a bullet list of code-formatted keys, or `_None._` when
  * the list is empty.
  *
- * @param lines - the markdown buffer being built
- * @param title - the section heading title
- * @param keys - the list of identifier keys to render
+ * @param lines - The markdown buffer being built.
+ * @param title - The section heading title.
+ * @param keys - The list of identifier keys to render.
  */
 function appendKeyListSection(lines: string[], title: string, keys: readonly string[]): void {
   lines.push('', `## ${title}`);
@@ -209,9 +209,9 @@ function appendKeyListSection(lines: string[], title: string, keys: readonly str
  * Appends a heading plus one bullet per node showing its URL and component, or
  * `_None._` when the list is empty.
  *
- * @param lines - the markdown buffer being built
- * @param title - the section heading title
- * @param nodes - the related nodes (siblings or children) to render
+ * @param lines - The markdown buffer being built.
+ * @param title - The section heading title.
+ * @param nodes - The related nodes (siblings or children) to render.
  */
 function appendRelatedNodesSection(lines: string[], title: string, nodes: readonly RouteTreeNode[]): void {
   lines.push('', `## ${title}`);
@@ -271,8 +271,8 @@ function code(value: string): string {
  * topic against the resolved app sources and renders the matching state
  * details, child summary, or not-found suggestion list.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted lookup, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The formatted lookup, or an error result when args fail validation.
  */
 export async function runRouteLookup(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedLookupArgs;

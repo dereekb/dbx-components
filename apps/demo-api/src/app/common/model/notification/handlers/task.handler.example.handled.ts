@@ -11,8 +11,8 @@ import { type DemoFirebaseServerActionsContext } from '../../../firebase/action.
  * `dbx_validate_app_notifications` tools have a real-tree fixture
  * for the multi-file pattern.
  *
- * @param _context - server actions context (unused; kept for factory signature consistency).
- * @returns the task-handler config registered into `NotificationTaskService`.
+ * @param _context - Server actions context (unused; kept for factory signature consistency).
+ * @returns The task-handler config registered into `NotificationTaskService`.
  */
 export function demoExampleHandledNotificationTaskHandler(_context: DemoFirebaseServerActionsContext): NotificationTaskServiceTaskHandlerConfig<ExampleHandledNotificationTaskData, ExampleHandledNotificationTaskCheckpoint> {
   const handler: NotificationTaskServiceTaskHandlerConfig<ExampleHandledNotificationTaskData, ExampleHandledNotificationTaskCheckpoint> = {

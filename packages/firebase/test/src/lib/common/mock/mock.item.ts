@@ -142,14 +142,14 @@ export type MockItemFirestoreCollection = FirestoreCollection<MockItem, MockItem
 /**
  * Creates a {@link MockItemFirestoreCollection} bound to the given {@link FirestoreContext}.
  *
+ * @param firestoreContext - The Firestore context (test or production) used to resolve the underlying collection reference.
+ * @returns A {@link MockItemFirestoreCollection} wired with the {@link mockItemConverter} and {@link mockItemIdentity}.
+ *
  * @example
  * ```ts
  * const collection = mockItemFirestoreCollection(firestoreContext);
  * const doc = collection.documentAccessor().newDocument();
  * ```
- *
- * @param firestoreContext - The Firestore context (test or production) used to resolve the underlying collection reference.
- * @returns A {@link MockItemFirestoreCollection} wired with the {@link mockItemConverter} and {@link mockItemIdentity}.
  */
 export function mockItemFirestoreCollection(firestoreContext: FirestoreContext): MockItemFirestoreCollection {
   return firestoreContext.firestoreCollection({

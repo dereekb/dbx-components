@@ -17,9 +17,9 @@ export interface CollectOptions {
  * each template/task with its corresponding type-info record so callers see a
  * single combined row per notification kind.
  *
- * @param extracted - the validator extraction to reshape
- * @param options - workspace directories used to relativise emitted paths
- * @returns the listing report
+ * @param extracted - The validator extraction to reshape.
+ * @param options - Workspace directories used to relativise emitted paths.
+ * @returns The listing report.
  */
 export function collectAppNotifications(extracted: ExtractedAppNotifications, options: CollectOptions): AppNotificationsReport {
   const templates = buildTemplateSummaries(extracted);
@@ -44,8 +44,8 @@ export function collectAppNotifications(extracted: ExtractedAppNotifications, op
  * Builds the {@link TemplateSummary} list for every notification template
  * type-constant by joining template-info and handler entries.
  *
- * @param extracted - the validator extraction
- * @returns one summary per template type-constant
+ * @param extracted - The validator extraction.
+ * @returns One summary per template type-constant.
  */
 function buildTemplateSummaries(extracted: ExtractedAppNotifications): TemplateSummary[] {
   const infoByTypeConstant = new Map<string, ExtractedTemplateTypeInfo>();
@@ -87,8 +87,8 @@ function buildTemplateSummaries(extracted: ExtractedAppNotifications): TemplateS
  * type-constant by joining checkpoint, data-interface, handler, and
  * validate-list lookups.
  *
- * @param extracted - the validator extraction
- * @returns one summary per task type-constant
+ * @param extracted - The validator extraction.
+ * @returns One summary per task type-constant.
  */
 function buildTaskSummaries(extracted: ExtractedAppNotifications): TaskSummary[] {
   const indices = buildTaskIndices(extracted);

@@ -135,10 +135,10 @@ export type ZohoRecruitUpsertSingleRecordFunction = <T>(input: ZohoRecruitUpsert
  * When a single record is provided, the function returns the change details directly or throws on error.
  * When multiple records are provided, it returns a paired success/error result.
  *
- * @param context - Zoho Recruit API context providing fetch and authentication
+ * @param context - Zoho Recruit API context providing fetch and authentication.
  * @param fetchUrlPrefix - URL path suffix for the endpoint (empty for insert/update, '/upsert' for upsert)
- * @param fetchMethod - HTTP method to use for the request
- * @returns Factory function that inserts, updates, or upserts records
+ * @param fetchMethod - HTTP method to use for the request.
+ * @returns Factory function that inserts, updates, or upserts records.
  */
 function updateRecordLikeFunction(context: ZohoRecruitContext, fetchUrlPrefix: '' | '/upsert', fetchMethod: 'POST' | 'PUT'): ZohoRecruitUpdateRecordLikeFunction {
   return (<T>({ data, module }: ZohoRecruitUpdateRecordInput<T>) =>
@@ -177,8 +177,10 @@ export type ZohoRecruitInsertRecordFunction = ZohoRecruitCreateRecordLikeFunctio
  *
  * Maximum of {@link ZOHO_RECRUIT_CRUD_FUNCTION_MAX_RECORDS_LIMIT} records per call.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that inserts records into the specified module
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that inserts records into the specified module.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/insert-records.html
  *
  * @example
  * ```typescript
@@ -199,8 +201,6 @@ export type ZohoRecruitInsertRecordFunction = ZohoRecruitCreateRecordLikeFunctio
  *   ]
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/insert-records.html
  */
 export function zohoRecruitInsertRecord(context: ZohoRecruitContext): ZohoRecruitInsertRecordFunction {
   return updateRecordLikeFunction(context, '', 'POST') as ZohoRecruitInsertRecordFunction;
@@ -222,8 +222,10 @@ export type ZohoRecruitUpsertRecordFunction = ZohoRecruitUpsertRecordLikeFunctio
  *
  * Maximum of {@link ZOHO_RECRUIT_CRUD_FUNCTION_MAX_RECORDS_LIMIT} records per call.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that upserts records in the specified module
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that upserts records in the specified module.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/upsert-records.html
  *
  * @example
  * ```typescript
@@ -250,8 +252,6 @@ export type ZohoRecruitUpsertRecordFunction = ZohoRecruitUpsertRecordLikeFunctio
  *   ]
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/upsert-records.html
  */
 export function zohoRecruitUpsertRecord(context: ZohoRecruitContext): ZohoRecruitUpsertRecordFunction {
   return updateRecordLikeFunction(context, '/upsert', 'POST') as ZohoRecruitUpsertRecordFunction;
@@ -269,8 +269,10 @@ export type ZohoRecruitUpdateRecordFunction = ZohoRecruitUpdateRecordLikeFunctio
  *
  * Maximum of {@link ZOHO_RECRUIT_CRUD_FUNCTION_MAX_RECORDS_LIMIT} records per call.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that updates records in the specified module
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that updates records in the specified module.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/update-records.html
  *
  * @example
  * ```typescript
@@ -291,8 +293,6 @@ export type ZohoRecruitUpdateRecordFunction = ZohoRecruitUpdateRecordLikeFunctio
  *   ]
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/update-records.html
  */
 export function zohoRecruitUpdateRecord(context: ZohoRecruitContext): ZohoRecruitUpdateRecordFunction {
   return updateRecordLikeFunction(context, '', 'PUT') as ZohoRecruitUpdateRecordFunction;
@@ -344,8 +344,10 @@ export type ZohoRecruitDeleteRecordResult = ZohoRecruitChangeObjectResponseSucce
  * an optional `wf_trigger` flag to execute workflow rules on deletion. Returns
  * a response with separated success and error entries.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that deletes records from the specified module
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that deletes records from the specified module.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/delete-records.html
  *
  * @example
  * ```typescript
@@ -356,8 +358,6 @@ export type ZohoRecruitDeleteRecordResult = ZohoRecruitChangeObjectResponseSucce
  *   ids: candidateId
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/delete-records.html
  */
 export function zohoRecruitDeleteRecord(context: ZohoRecruitContext): ZohoRecruitDeleteRecordFunction {
   return ({ ids, module, wf_trigger }: ZohoRecruitDeleteRecordInput) => {
@@ -396,8 +396,10 @@ export type ZohoRecruitGetRecordByIdFunction = <T = ZohoRecruitRecord>(input: Zo
  * unwrapped from the standard data array, returning the record directly.
  * Throws if the record is not found.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that retrieves a record by module name and ID
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that retrieves a record by module name and ID.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-records.html
  *
  * @example
  * ```typescript
@@ -408,8 +410,6 @@ export type ZohoRecruitGetRecordByIdFunction = <T = ZohoRecruitRecord>(input: Zo
  *   id: candidateId
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-records.html
  */
 export function zohoRecruitGetRecordById(context: ZohoRecruitContext): ZohoRecruitGetRecordByIdFunction {
   return <T>(input: ZohoRecruitGetRecordByIdInput) =>
@@ -458,8 +458,10 @@ export type ZohoRecruitGetRecordsFunction = <T = ZohoRecruitRecord>(input: ZohoR
  * selection, sorting, custom view filtering, territory filtering, and
  * conversion/approval status filters via {@link ZohoRecruitGetRecordsInput}.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that retrieves paginated records from a module
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that retrieves paginated records from a module.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-records.html
  *
  * @example
  * ```typescript
@@ -470,8 +472,6 @@ export type ZohoRecruitGetRecordsFunction = <T = ZohoRecruitRecord>(input: ZohoR
  *   per_page: 10
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-records.html
  */
 export function zohoRecruitGetRecords(context: ZohoRecruitContext): ZohoRecruitGetRecordsFunction {
   return ((input: ZohoRecruitGetRecordsInput) => context.fetchJson<ZohoRecruitGetRecordsResponse>(`/v2/${input.module}?${zohoRecruitUrlSearchParamsMinusModule(input).toString()}`, zohoRecruitApiFetchJsonInput('GET'))) as ZohoRecruitGetRecordsFunction;
@@ -512,9 +512,11 @@ export type ZohoRecruitSearchRecordsFunction = <T = ZohoRecruitRecord>(input: Zo
  * At least one search parameter must be provided. Returns a paginated result,
  * defaulting to an empty data array when no matches are found.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that searches records in the specified module
- * @throws {Error} If none of `criteria`, `email`, `phone`, or `word` are provided
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that searches records in the specified module.
+ * @throws {Error} If none of `criteria`, `email`, `phone`, or `word` are provided.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/search-records.html
  *
  * @example
  * ```typescript
@@ -533,8 +535,6 @@ export type ZohoRecruitSearchRecordsFunction = <T = ZohoRecruitRecord>(input: Zo
  *   word: 'engineer'
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/search-records.html
  */
 export function zohoRecruitSearchRecords(context: ZohoRecruitContext): ZohoRecruitSearchRecordsFunction {
   function searchRecordsUrlSearchParams<T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) {
@@ -568,8 +568,8 @@ export type ZohoRecruitSearchRecordsPageFactory = <T = ZohoRecruitRecord>(input:
  * Returns a page factory that automatically handles Zoho Recruit's pagination,
  * making it easy to iterate through all search results across multiple pages.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Page factory for iterating over search results
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Page factory for iterating over search results.
  *
  * @example
  * ```typescript
@@ -584,6 +584,7 @@ export type ZohoRecruitSearchRecordsPageFactory = <T = ZohoRecruitRecord>(input:
  * const firstPage = await fetchPage.fetchNext();
  * const secondPage = await firstPage.fetchNext();
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitSearchRecordsPageFactory(context: ZohoRecruitContext): ZohoRecruitSearchRecordsPageFactory {
@@ -648,8 +649,10 @@ export type ZohoRecruitGetRelatedRecordsFunction<T = ZohoRecruitRecord> = (input
  * target module and empty-result behavior. By default, returns an empty page
  * result instead of null when no records are found.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Factory that creates typed related-records retrieval functions
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Factory that creates typed related-records retrieval functions.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  *
  * @example
  * ```typescript
@@ -666,7 +669,6 @@ export type ZohoRecruitGetRelatedRecordsFunction<T = ZohoRecruitRecord> = (input
  * });
  * ```
  *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetRelatedRecordsFunctionFactory(context: ZohoRecruitContext): ZohoRecruitGetRelatedRecordsFunctionFactory {
@@ -701,8 +703,10 @@ export type ZohoRecruitGetEmailsForRecordFunction = (input: ZohoRecruitGetEmails
  * {@link ZohoRecruitRecordEmailMetadata} entries. When no emails exist for the
  * record, the result contains an empty data array rather than null.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that retrieves emails for a record
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that retrieves emails for a record.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  *
  * @example
  * ```typescript
@@ -713,8 +717,6 @@ export type ZohoRecruitGetEmailsForRecordFunction = (input: ZohoRecruitGetEmails
  *   module: ZOHO_RECRUIT_CANDIDATES_MODULE
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  */
 export function zohoRecruitGetEmailsForRecord(context: ZohoRecruitContext): ZohoRecruitGetEmailsForRecordFunction {
   return zohoRecruitGetRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordEmailMetadata>({ targetModule: ZOHO_RECRUIT_EMAILS_MODULE });
@@ -732,8 +734,10 @@ export type ZohoRecruitGetEmailsForRecordPageFactory = FetchPageFactory<ZohoRecr
  * multiple pages. Wraps {@link zohoRecruitGetEmailsForRecord} with automatic
  * pagination handling via {@link zohoFetchPageFactory}.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Page factory for iterating over record emails
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Page factory for iterating over record emails.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  *
  * @example
  * ```typescript
@@ -752,7 +756,6 @@ export type ZohoRecruitGetEmailsForRecordPageFactory = FetchPageFactory<ZohoRecr
  * }
  * ```
  *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetEmailsForRecordPageFactory(context: ZohoRecruitContext): ZohoRecruitGetEmailsForRecordPageFactory {
@@ -787,8 +790,10 @@ export type ZohoRecruitGetAttachmentsForRecordFunction = (input: ZohoRecruitGetA
  * Each attachment entry includes a `$type` field that distinguishes between
  * directly uploaded attachments (`'Attachment'`) and linked attachments.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that retrieves attachments for a record
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that retrieves attachments for a record.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  *
  * @example
  * ```typescript
@@ -802,8 +807,6 @@ export type ZohoRecruitGetAttachmentsForRecordFunction = (input: ZohoRecruitGetA
  * // Filter to only directly uploaded attachments (downloadable):
  * const downloadable = result.data.filter((x) => x.$type === 'Attachment');
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  */
 export function zohoRecruitGetAttachmentsForRecord(context: ZohoRecruitContext): ZohoRecruitGetAttachmentsForRecordFunction {
   return zohoRecruitGetRelatedRecordsFunctionFactory(context)<ZohoRecruitRecordAttachmentMetadata>({ targetModule: ZOHO_RECRUIT_ATTACHMENTS_MODULE });
@@ -821,8 +824,10 @@ export type ZohoRecruitGetAttachmentsForRecordPageFactory = FetchPageFactory<Zoh
  * across multiple pages. Wraps {@link zohoRecruitGetAttachmentsForRecord} with
  * automatic pagination handling via {@link zohoFetchPageFactory}.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Page factory for iterating over record attachments
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Page factory for iterating over record attachments.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  *
  * @example
  * ```typescript
@@ -841,7 +846,6 @@ export type ZohoRecruitGetAttachmentsForRecordPageFactory = FetchPageFactory<Zoh
  * }
  * ```
  *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-related-records.html
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetAttachmentsForRecordPageFactory(context: ZohoRecruitContext): ZohoRecruitGetAttachmentsForRecordPageFactory {
@@ -905,10 +909,12 @@ export type ZohoRecruitUploadAttachmentForRecordFunction = (input: ZohoRecruitUp
  * will fetch the file. An attachment category must be specified by ID or name.
  * Maximum file size is {@link ZOHO_RECRUIT_ATTACHMENT_MAX_SIZE} (20MB).
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that uploads an attachment to a record
- * @throws {Error} If neither `file` nor `attachmentUrl` is provided
- * @throws {Error} If neither `attachmentCategoryId` nor `attachmentCategoryName` is provided
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that uploads an attachment to a record.
+ * @throws {Error} If neither `file` nor `attachmentUrl` is provided.
+ * @throws {Error} If neither `attachmentCategoryId` nor `attachmentCategoryName` is provided.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/upload-attachment.html
  *
  * @example
  * ```typescript
@@ -930,8 +936,6 @@ export type ZohoRecruitUploadAttachmentForRecordFunction = (input: ZohoRecruitUp
  *   attachmentCategoryName: 'Others'
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/upload-attachment.html
  */
 export function zohoRecruitUploadAttachmentForRecord(context: ZohoRecruitContext): ZohoRecruitUploadAttachmentForRecordFunction {
   return (input: ZohoRecruitUploadAttachmentForRecordRequest) => {
@@ -991,8 +995,10 @@ export type ZohoRecruitDownloadAttachmentForRecordFunction = (input: ZohoRecruit
  * {@link FetchFileResponse} containing the file data and metadata extracted
  * from the response headers.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that downloads an attachment by record and attachment ID
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that downloads an attachment by record and attachment ID.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/download-attachments.html
  *
  * @example
  * ```typescript
@@ -1004,8 +1010,6 @@ export type ZohoRecruitDownloadAttachmentForRecordFunction = (input: ZohoRecruit
  *   attachment_id: attachmentId
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/download-attachments.html
  */
 export function zohoRecruitDownloadAttachmentForRecord(context: ZohoRecruitContext): ZohoRecruitDownloadAttachmentForRecordFunction {
   return (input: ZohoRecruitDownloadAttachmentForRecordRequest) => context.fetch(`/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'GET' }).then(parseFetchFileResponse);
@@ -1034,8 +1038,10 @@ export type ZohoRecruitDeleteAttachmentFromRecordFunction = (input: ZohoRecruitD
  * Deletes a specific attachment from a record by its attachment ID.
  * Returns the raw {@link Response}.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that deletes an attachment by record and attachment ID
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that deletes an attachment by record and attachment ID.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/delete-attachments.html
  *
  * @example
  * ```typescript
@@ -1047,8 +1053,6 @@ export type ZohoRecruitDeleteAttachmentFromRecordFunction = (input: ZohoRecruitD
  *   attachment_id: attachmentId
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/delete-attachments.html
  */
 export function zohoRecruitDeleteAttachmentFromRecord(context: ZohoRecruitContext): ZohoRecruitDeleteAttachmentFromRecordFunction {
   return (input: ZohoRecruitDeleteAttachmentFromRecordRequest) => context.fetch(`/v2/${input.module}/${input.id}/${ZOHO_RECRUIT_ATTACHMENTS_MODULE}/${input.attachment_id}`, { method: 'DELETE' });
@@ -1153,9 +1157,9 @@ export type ZohoRecruitExecuteRestApiFunctionFunction = (input: ZohoRecruitExecu
  * - There is no documentation for ZohoRecruit specifically, but it seems to behave the same way
  * - You will need the following scopes: ZohoRecruit.functions.execute.READ,ZohoRecruit.functions.execute.CREATE
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that executes serverless functions via the REST API
- * @throws {ZohoRecruitExecuteRestApiFunctionError} If the function execution fails
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that executes serverless functions via the REST API.
+ * @throws {ZohoRecruitExecuteRestApiFunctionError} If the function execution fails.
  *
  * @example
  * ```typescript
@@ -1177,6 +1181,7 @@ export type ZohoRecruitExecuteRestApiFunctionFunction = (input: ZohoRecruitExecu
  *   apiUrl: 'production'
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitExecuteRestApiFunction(context: ZohoRecruitContext): ZohoRecruitExecuteRestApiFunctionFunction {
@@ -1205,8 +1210,8 @@ export function zohoRecruitExecuteRestApiFunction(context: ZohoRecruitContext): 
 /**
  * Builds URL search params from input objects, omitting the `module` key since it is used in the URL path rather than query string.
  *
- * @param input - One or more objects whose key-value pairs become query parameters
- * @returns URLSearchParams with the `module` key excluded
+ * @param input - One or more objects whose key-value pairs become query parameters.
+ * @returns URLSearchParams with the `module` key excluded.
  */
 export function zohoRecruitUrlSearchParamsMinusModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: 'module' });
@@ -1215,8 +1220,8 @@ export function zohoRecruitUrlSearchParamsMinusModule(...input: Maybe<object | R
 /**
  * Builds URL search params from input objects, omitting both `id` and `module` keys since they are used in the URL path.
  *
- * @param input - One or more objects whose key-value pairs become query parameters
- * @returns URLSearchParams with `id` and `module` keys excluded
+ * @param input - One or more objects whose key-value pairs become query parameters.
+ * @returns URLSearchParams with `id` and `module` keys excluded.
  */
 export function zohoRecruitUrlSearchParamsMinusIdAndModule(...input: Maybe<object | Record<string, string | number>>[]) {
   return makeUrlSearchParams(input, { omitKeys: ['id', 'module'] });
@@ -1230,9 +1235,9 @@ export const zohoRecruitUrlSearchParams = makeUrlSearchParams;
 /**
  * Constructs a standard {@link FetchJsonInput} for Zoho Recruit API calls with the given HTTP method and optional body.
  *
- * @param method - HTTP method for the request
- * @param body - Optional JSON body to include in the request
- * @returns Configured fetch JSON input
+ * @param method - HTTP method for the request.
+ * @param body - Optional JSON body to include in the request.
+ * @returns Configured fetch JSON input.
  */
 export function zohoRecruitApiFetchJsonInput(method: string, body?: Maybe<FetchJsonBody>): FetchJsonInput {
   return {
@@ -1282,8 +1287,8 @@ export type ZohoRecruitChangeObjectLikeResponseSuccessAndErrorPairs<T extends Zo
  * Used internally by {@link zohoRecruitDeleteRecord} and similar functions to provide
  * convenient access to separated success/error results.
  *
- * @param response - Raw change operation response containing mixed success/error entries
- * @returns The response augmented with pre-separated `successItems` and `errorItems` arrays
+ * @param response - Raw change operation response containing mixed success/error entries.
+ * @returns The response augmented with pre-separated `successItems` and `errorItems` arrays.
  *
  * @example
  * ```typescript
@@ -1366,9 +1371,9 @@ export interface ZohoRecruitMultiRecordResultItem {
  * Used internally by {@link updateRecordLikeFunction} to pair input data with API outcomes
  * for insert, update, and upsert operations.
  *
- * @param input - Array of input records that were submitted to the API
+ * @param input - Array of input records that were submitted to the API.
  * @param results - Array of per-record results returned by the API, positionally aligned with `input`
- * @returns Object with `successItems` and `errorItems`, each containing paired `{ input, result }` entries
+ * @returns Object with `successItems` and `errorItems`, each containing paired `{ input, result }` entries.
  */
 export function zohoRecruitMultiRecordResult<I, OS extends ZohoRecruitMultiRecordResultItem, OE extends ZohoRecruitMultiRecordResultItem>(input: I[], results: (OS | OE)[]): ZohoRecruitMultiRecordResult<I, OS, OE> {
   const successItems: ZohoRecruitMultiRecordResultEntry<I, OS>[] = [];

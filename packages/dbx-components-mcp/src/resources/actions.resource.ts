@@ -29,8 +29,8 @@ export interface RegisterActionsResourceOptions {
  * filter) on the given server. Splitting into three URIs lets clients browse
  * the full registry, drill into a single entry, or page by role classification.
  *
- * @param server - the MCP server to register resources against
- * @param options - registry the resources read from
+ * @param server - The MCP server to register resources against.
+ * @param options - Registry the resources read from.
  */
 export function registerActionsResource(server: McpServer, options: RegisterActionsResourceOptions): void {
   const { registry } = options;

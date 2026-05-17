@@ -5,8 +5,8 @@ import type { ColorTemplateListAppReport } from './types.js';
  * callers that want machine-readable output. Keeps key ordering
  * deterministic so snapshot tests are stable.
  *
- * @param report - the listing report to serialise
- * @returns the JSON body
+ * @param report - The listing report to serialise.
+ * @returns The JSON body.
  */
 export function formatReportAsJson(report: ColorTemplateListAppReport): string {
   return JSON.stringify(report, null, 2);

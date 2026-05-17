@@ -20,10 +20,10 @@ export const FIXTURE_RELATIVE_PATH = 'src/test/fixture.ts';
 /**
  * Reads `<apiDir>/src/test/fixture.ts` and returns the parsed extraction.
  *
- * @param apiAbs - absolute path to the API app root
- * @param apiRel - caller-supplied relative path (used for messages and
+ * @param apiAbs - Absolute path to the API app root.
+ * @param apiRel - Caller-supplied relative path (used for messages and
  *   path metadata; unused for I/O)
- * @returns the parsed extraction
+ * @returns The parsed extraction.
  */
 export async function inspectAppFixtures(apiAbs: string, apiRel: string): Promise<AppFixturesExtraction> {
   const absolutePath = join(apiAbs, FIXTURE_RELATIVE_PATH);

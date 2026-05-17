@@ -113,8 +113,8 @@ export interface DbxTableReader<C, T, O, G = any> extends DbxTableReaderConfig<C
 /**
  * Creates a {@link DbxTableReader} that provides reactive access to cell data across all columns and items in the table.
  *
- * @param config The reader configuration containing the delegate and table store
- * @returns A {@link DbxTableReader} instance with observable accessors for cell data
+ * @param config - The reader configuration containing the delegate and table store.
+ * @returns A {@link DbxTableReader} instance with observable accessors for cell data.
  */
 export function dbxTableReader<C, T, O, G = any>(config: DbxTableReaderConfig<C, T, O, G>): DbxTableReader<C, T, O, G> {
   const { delegate, tableStore } = config;

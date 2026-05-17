@@ -152,10 +152,9 @@ export type PartialPotentialFieldConfig = Partial<FieldConfig> & Partial<Labeled
 /**
  * Validates the configuration on the input field.
  *
- * @param fieldConfig - The Formly field configuration to validate
- * @returns The validated field configuration
- *
- * @param fieldConfig - The Formly field configuration to validate
+ * @param fieldConfig - The Formly field configuration to validate.
+ * @param fieldConfig - The Formly field configuration to validate.
+ * @returns The validated field configuration.
  */
 export function formlyField<T extends FormlyFieldConfig = FormlyFieldConfig>(fieldConfig: T): T {
   if (!fieldConfig.key) {
@@ -214,8 +213,8 @@ export const filterPartialPotentialFieldConfigValuesFromObject = filterFromPOJOF
  * Merges label, placeholder, required, readonly, description, attributes, and autocomplete
  * settings. When autocomplete is `false`, disables browser autofill via special attributes.
  *
- * @param fieldConfig - Base field configuration
- * @param override - Optional property overrides
+ * @param fieldConfig - Base field configuration.
+ * @param override - Optional property overrides.
  * @returns Merged props object suitable for use in a {@link FormlyFieldConfig}
  */
 export function propsValueForFieldConfig<T extends FormlyFieldProps, O extends object = object>(fieldConfig: PartialPotentialFieldConfig, override?: PartialPotentialFieldConfig & O): Partial<T> & O {
@@ -295,8 +294,8 @@ export type ValidatorsForFieldConfig = {
  * Converts Angular validators, async validators, and validation messages into the
  * Formly-compatible validator configuration format.
  *
- * @param input - Validators, async validators, and messages to convert
- * @returns A Formly-compatible validator config, or undefined if no validators provided
+ * @param input - Validators, async validators, and messages to convert.
+ * @returns A Formly-compatible validator config, or undefined if no validators provided.
  *
  * @example
  * ```typescript

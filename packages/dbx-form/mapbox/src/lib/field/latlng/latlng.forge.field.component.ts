@@ -315,9 +315,9 @@ export class DbxForgeMapboxLatLngFieldComponent {
 /**
  * Custom mapper for the forge mapbox lat/lng field.
  *
- * @param fieldDef - Field definition configuration
- * @param fieldDef.key - Form model key for the field
- * @returns Signal containing a Record of input names to values for ngComponentOutlet
+ * @param fieldDef - Field definition configuration.
+ * @param fieldDef.key - Form model key for the field.
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet.
  */
 export function mapboxLatLngFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

@@ -256,6 +256,9 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  * (same effect as optionalAuthContext). This avoids the composition issue where
  * optionalAuthContext(withApiDetails(...)) would lose the _apiDetails.
  *
+ * @param config - The API details configuration including the handler function.
+ * @returns The handler function with _apiDetails attached.
+ *
  * @example
  * ```typescript
  * // Handler with api details (auth required by default)
@@ -274,9 +277,6 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  *   fn: async (request) => { ... }
  * });
  * ```
- *
- * @param config - The API details configuration including the handler function.
- * @returns The handler function with _apiDetails attached.
  */
 export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef {
   const { optionalAuth, fn, ...apiDetails } = config;
@@ -437,7 +437,7 @@ export interface ModelApiDetailsModelEntry {
  * pivots it to modelType → CRUD, which is the natural shape for MCP tool generation
  * and schema introspection.
  *
- * @param callModelFn The function returned by onCallModel(), or any object with _apiDetails.
+ * @param callModelFn - The function returned by onCallModel(), or any object with _apiDetails.
  * @returns Model-first API details, or undefined if no _apiDetails are present.
  *
  * @example

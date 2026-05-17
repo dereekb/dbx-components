@@ -28,9 +28,9 @@ import type { HandlerEntry, ValidateIssue } from './types.js';
 /**
  * Returns the accepted handler names for a given CRUD cell.
  *
- * @param model - camelCase model key as it appears in the verb-map.
+ * @param model - CamelCase model key as it appears in the verb-map.
  * @param verb - CRUD verb the handler is registered under.
- * @param specifier - specifier under the verb-map (or `undefined` / `_` for the bare handler).
+ * @param specifier - Specifier under the verb-map (or `undefined` / `_` for the bare handler).
  * @returns Ordered list of accepted names, with the canonical form first.
  */
 export function expectedHandlerNames(model: string, verb: CrudVerb, specifier: string | undefined): readonly string[] {
@@ -47,7 +47,7 @@ export function expectedHandlerNames(model: string, verb: CrudVerb, specifier: s
  * Returns a `HANDLER_NAMING_MISMATCH` issue when `handler.handlerName` does
  * not match any accepted form, otherwise `undefined`.
  *
- * @param handler - the discovered handler entry.
+ * @param handler - The discovered handler entry.
  * @returns The naming issue, or `undefined` when the name is acceptable.
  */
 export function checkHandlerNaming(handler: HandlerEntry): ValidateIssue | undefined {

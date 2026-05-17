@@ -30,9 +30,9 @@ export interface ListComponentModelsOptions {
  * Walks `<componentAbs>/src/lib/model/`, optionally cross-references
  * the API app's fixture file, and returns the listing report.
  *
- * @param componentAbs - absolute path to the component root
- * @param options - relative paths + optional API dir for fixture coverage
- * @returns the populated listing report
+ * @param componentAbs - Absolute path to the component root.
+ * @param options - Relative paths + optional API dir for fixture coverage.
+ * @returns The populated listing report.
  */
 export async function listComponentModels(componentAbs: string, options: ListComponentModelsOptions): Promise<ComponentModelReport> {
   const extraction = await extractComponentModels(componentAbs);

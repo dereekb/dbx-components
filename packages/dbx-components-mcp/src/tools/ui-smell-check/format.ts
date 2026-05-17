@@ -9,6 +9,7 @@
  *   • `## Informational notes` — list of info-severity findings.
  */
 
+import type { Maybe } from '@dereekb/util';
 import type { TokenRegistry } from '../../registry/tokens-runtime.js';
 import type { DetectSmellsResult, SmellMatch, SmellMatchWithExtras } from './smells.js';
 
@@ -28,13 +29,13 @@ export interface SmellResultFile {
  * Renders the detected smells as markdown. Walks the matches and collects
  * any recommended tokens into a single "Tokens to use" table.
  *
- * @param input - the original tool inputs (for echoing context)
- * @param input.html - the HTML snippet (may be empty)
- * @param input.scss - the SCSS snippet (may be empty)
- * @param input.context - optional caller-supplied context one-liner
- * @param matchesOrResult - either a flat list of matches (legacy) or the full {@link DetectSmellsResult}
- * @param tokenRegistry - the token registry used to resolve recommended vars
- * @returns the markdown body
+ * @param input - The original tool inputs (for echoing context)
+ * @param matchesOrResult - Either a flat list of matches (legacy) or the full {@link DetectSmellsResult}
+ * @param tokenRegistry - The token registry used to resolve recommended vars.
+ * @param input.html - The HTML snippet (may be empty)
+ * @param input.scss - The SCSS snippet (may be empty)
+ * @param input.context - Optional caller-supplied context one-liner.
+ * @returns The markdown body.
  */
 export function formatSmellResult(input: { readonly html: string; readonly scss: string; readonly context?: string }, matchesOrResult: readonly SmellMatch[] | DetectSmellsResult, tokenRegistry: TokenRegistry): string {
   const result: DetectSmellsResult = Array.isArray(matchesOrResult) ? { matches: matchesOrResult as readonly SmellMatch[], suppressedByCascade: 0, suppressedByDirective: 0, duplicatesMerged: 0 } : (matchesOrResult as DetectSmellsResult);
@@ -77,9 +78,9 @@ export function formatSmellResult(input: { readonly html: string; readonly scss:
  * path as the heading; suppresses files that produced zero findings unless
  * every file did, in which case a one-line "all clean" summary is emitted.
  *
- * @param files - per-file results to render
- * @param tokenRegistry - registry used by the per-file formatter
- * @returns the combined markdown body
+ * @param files - Per-file results to render.
+ * @param tokenRegistry - Registry used by the per-file formatter.
+ * @returns The combined markdown body.
  */
 export function formatBatchSmellResult(files: readonly SmellResultFile[], tokenRegistry: TokenRegistry): string {
   const sections: string[] = ['# UI smell check (batch)'];
@@ -166,8 +167,8 @@ function formatMatch(match: SmellMatchWithExtras): string {
  * @param scss - Raw SCSS/CSS source for the inspected component.
  * @returns A formatted markdown block, or `null` when both inputs are empty.
  */
-function formatGoodSignals(html: string, scss: string): string | null {
-  let result: string | null = null;
+function formatGoodSignals(html: string, scss: string): Maybe<string> {
+  let result: Maybe<string> = null;
   if (html.length > 0 || scss.length > 0) {
     const lines: string[] = [];
     if (html.length > 0) {
@@ -231,7 +232,7 @@ function countScssVarReferences(scss: string): { readonly dbx: number; readonly 
  * @param matches - The smell matches with line/extras metadata.
  * @returns A formatted markdown digest, or `null` when there are no info-severity findings.
  */
-function formatInfoDigest(matches: readonly SmellMatchWithExtras[]): string | null {
+function formatInfoDigest(matches: readonly SmellMatchWithExtras[]): Maybe<string> {
   const byId = new Map<string, number[]>();
   for (const match of matches) {
     if (match.severity !== 'info') continue;
@@ -260,7 +261,7 @@ function formatInfoDigest(matches: readonly SmellMatchWithExtras[]): string | nu
   return rows.join('\n');
 }
 
-function formatTokenTable(matches: readonly SmellMatch[], _tokenRegistry: TokenRegistry): string | null {
+function formatTokenTable(matches: readonly SmellMatch[], _tokenRegistry: TokenRegistry): Maybe<string> {
   const rows: string[] = [];
   const seen = new Set<string>();
   for (const match of matches) {
@@ -270,7 +271,7 @@ function formatTokenTable(matches: readonly SmellMatch[], _tokenRegistry: TokenR
       rows.push(`| ${match.id} | \`var(${token})\` |`);
     }
   }
-  let result: string | null;
+  let result: Maybe<string>;
   if (rows.length === 0) {
     result = null;
   } else {

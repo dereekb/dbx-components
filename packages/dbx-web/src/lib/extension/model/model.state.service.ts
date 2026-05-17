@@ -14,9 +14,9 @@ export class DbxModelObjectStateService {
   /**
    * Emit a model viewed event.
    *
-   * @param params - The model viewed event parameters
-   * @param params.modelKeyTypeNamePair - Identifies the model that was viewed
-   * @param params.context - Optional context describing how the model was viewed
+   * @param params - The model viewed event parameters.
+   * @param params.modelKeyTypeNamePair - Identifies the model that was viewed.
+   * @param params.context - Optional context describing how the model was viewed.
    */
   emitModelViewEvent({ modelKeyTypeNamePair, context }: DbxModelObjectViewedParams): void {
     this.store.dispatch(onDbxModel.DbxModelStateModelActions.emitObjectViewEvent({ modelKeyTypeNamePair, context }));

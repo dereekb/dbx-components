@@ -15,7 +15,7 @@ export type ZoomWebhookEventValidationFunction = (event: ZoomWebhookUrlValidatio
 /**
  * Creates a ZoomWebhookEventValidationFunction.
  *
- * @param zoomSecretToken The secret token used to validate the event.
+ * @param zoomSecretToken - The secret token used to validate the event.
  * @returns A ZoomWebhookEventValidationFunction.
  */
 export function zoomWebhookEventValidationFunction(zoomSecretToken: ZoomSecretToken): ZoomWebhookEventValidationFunction {

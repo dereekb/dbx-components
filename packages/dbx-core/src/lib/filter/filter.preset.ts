@@ -29,7 +29,7 @@ export interface ClickableFilterPreset<F extends FilterWithPreset<P>, P extends 
    *
    * A null value or empty object is used for reset.
    */
-  readonly presetValue: GetterOrValue<FilterWithPresetOptional<F>> | EmptyObject | null;
+  readonly presetValue: Maybe<GetterOrValue<FilterWithPresetOptional<F>> | EmptyObject>;
 }
 
 /**
@@ -56,7 +56,7 @@ export interface ClickablePartialFilterPreset<F> extends Pick<ClickableAnchorLin
    *
    * A null value or empty object is used for no change.
    */
-  readonly partialPresetValue: GetterOrValue<Partial<F>> | EmptyObject | null;
+  readonly partialPresetValue: Maybe<GetterOrValue<Partial<F>> | EmptyObject>;
   /**
    * The current value to test against. Returns true if this partial preset is considered active.
    */

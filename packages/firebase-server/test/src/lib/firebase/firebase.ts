@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 let adminEnvironmentInitialized = false;
 
 /**
@@ -23,9 +24,9 @@ export type FirebaseAdminTestEnvironmentHost = string;
  * accidental connections to production services.
  */
 export interface FirebaseAdminTestEnvironmentEmulatorsConfig {
-  readonly auth: FirebaseAdminTestEnvironmentHost | null;
-  readonly storage: FirebaseAdminTestEnvironmentHost | null;
-  readonly firestore: FirebaseAdminTestEnvironmentHost | null;
+  readonly auth: Maybe<FirebaseAdminTestEnvironmentHost>;
+  readonly storage: Maybe<FirebaseAdminTestEnvironmentHost>;
+  readonly firestore: Maybe<FirebaseAdminTestEnvironmentHost>;
 }
 
 /**

@@ -8,6 +8,7 @@
  * `dbxDocsUiExamples.sources`. Mirrors `load-ui-components-registry.ts`.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,7 +27,7 @@ export interface LoadDbxDocsUiExamplesRegistryInput {
 
 export interface LoadDbxDocsUiExamplesRegistryResult {
   readonly registry: DbxDocsUiExamplesRegistry;
-  readonly configPath: string | null;
+  readonly configPath: Maybe<string>;
   readonly configWarnings: readonly ConfigWarning[];
   readonly loaderWarnings: readonly DbxDocsUiExamplesLoaderWarning[];
   readonly externalSourceCount: number;

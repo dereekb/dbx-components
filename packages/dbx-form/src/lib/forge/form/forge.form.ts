@@ -33,8 +33,8 @@ export interface DbxForgeFieldFormConfig extends Partial<Pick<FormConfig, 'schem
  *
  * Keys whose merged value is empty are dropped from the result (no empty `{}` or `[]` fields).
  *
- * @param input - field form configs to merge, from lowest to highest priority
- * @returns a merged config with only populated fields retained
+ * @param input - Field form configs to merge, from lowest to highest priority.
+ * @returns A merged config with only populated fields retained.
  */
 export function mergeDbxForgeFieldFormConfig(...input: DbxForgeFieldFormConfig[]): DbxForgeFieldFormConfig {
   const schemas: NonNullable<FormConfig['schemas']> = [];
@@ -78,8 +78,8 @@ const CUSTOM_FN_CONFIG_KEYS: (keyof NonNullable<FormConfig['customFnConfig']>)[]
  * (validators, derivations, etc.) so downstream merges can mutate the result without
  * leaking writes back to the original form config.
  *
- * @param input - the customFnConfig to copy, or undefined
- * @returns a new customFnConfig containing only the known buckets, each one a fresh object
+ * @param input - The customFnConfig to copy, or undefined.
+ * @returns A new customFnConfig containing only the known buckets, each one a fresh object.
  */
 export function copyFormConfigCustomFnConfig(input: FormConfig['customFnConfig']): FormConfig['customFnConfig'] {
   const customFnConfig: FormConfig['customFnConfig'] = {};
@@ -132,8 +132,8 @@ export interface DbxForgeFinalizeFormConfigResult {
  * traversed here so that `_formConfig` declared on a deeply-nested field still gets pulled
  * up to the form level.
  *
- * @param fields - the top-level fields to walk
- * @returns a flat list of every field reachable from the inputs, in pre-order
+ * @param fields - The top-level fields to walk.
+ * @returns A flat list of every field reachable from the inputs, in pre-order.
  */
 function flattenForgeFields(fields: readonly FieldDef<any>[]): DbxForgeField<FieldDef<any>>[] {
   const out: DbxForgeField<FieldDef<any>>[] = [];
@@ -199,9 +199,9 @@ function flattenForgeFields(fields: readonly FieldDef<any>[]): DbxForgeField<Fie
  * then each field's `_formConfig` in pre-order traversal — so a later field can override an
  * earlier field's default validation message.
  *
- * @param input - the FormConfig authored by the caller
- * @param globalDefaults - seed values for workspace-wide defaults (e.g. validation messages)
- * @returns the original input, the extracted field form configs, and the finalized config
+ * @param input - The FormConfig authored by the caller.
+ * @param globalDefaults - Seed values for workspace-wide defaults (e.g. validation messages)
+ * @returns The original input, the extracted field form configs, and the finalized config.
  */
 export function dbxForgeFinalizeFormConfig(input: FormConfig, globalDefaults?: DbxForgeGlobalFormConfigDefaults): DbxForgeFinalizeFormConfigResult {
   const { fields } = input;

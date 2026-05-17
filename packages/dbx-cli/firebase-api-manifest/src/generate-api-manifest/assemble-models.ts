@@ -35,10 +35,10 @@ export interface AssembleModelsInput {
  * list the generator emits. De-duplicates models by `identityConst` (first
  * file wins, matching the converter walker's stable ordering across packages).
  *
- * @param input - one entry per source file, with the package label and
+ * @param input - One entry per source file, with the package label and
  *   workspace-relative source path that should be stamped on every produced
  *   manifest entry.
- * @returns the assembled manifest entries, sorted by `modelType` for stable
+ * @returns The assembled manifest entries, sorted by `modelType` for stable
  *   diffs.
  */
 export function assembleModels(input: AssembleModelsInput): readonly CliModelManifestEntry[] {

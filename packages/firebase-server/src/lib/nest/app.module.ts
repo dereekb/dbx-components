@@ -137,8 +137,9 @@ export interface NestServerRootModuleResult {
  * - `GlobalRoutePrefixConfig` token
  * - Optional webhook and AppCheck middleware modules
  *
- * @param config - Shared configuration
- * @returns The root module and resolved prefix config
+ * @param config - Shared configuration.
+ * @returns The root module and resolved prefix config.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildNestServerRootModule(config: NestServerRootModuleConfig): NestServerRootModuleResult {

@@ -37,7 +37,7 @@ export class OidcService {
   /**
    * Returns the oidc-provider instance, initializing it on first access.
    *
-   * @returns the lazily-initialized oidc-provider instance
+   * @returns The lazily-initialized oidc-provider instance.
    */
   getProvider(): Promise<Provider> {
     return this._getProvider();
@@ -143,8 +143,8 @@ export class OidcService {
    * referencing the grant is gone — `verifyAccessToken` returns `undefined`
    * and a `grant_type=refresh_token` exchange fails with `invalid_grant`.
    *
-   * @param grantId - the grant id (and Grant adapter entry id) to revoke
-   * @throws when the Grant entry does not exist
+   * @param grantId - The grant id (and Grant adapter entry id) to revoke.
+   * @throws When the Grant entry does not exist.
    */
   async revokeGrant(grantId: string): Promise<void> {
     const provider = await this.getProvider();
@@ -203,8 +203,8 @@ export class OidcService {
    * Does NOT include `adapter`, `findAccount`, or `jwks` — those require async
    * setup and are handled by {@link OidcService}.
    *
-   * @param cookieKeys - the signing keys for oidc-provider session cookies
-   * @returns the oidc-provider configuration options
+   * @param cookieKeys - The signing keys for oidc-provider session cookies.
+   * @returns The oidc-provider configuration options.
    */
   buildProviderConfiguration(cookieKeys: string[]): Configuration {
     const config = this.config;

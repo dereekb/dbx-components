@@ -25,8 +25,8 @@ export interface ValidatorSource {
  * Used by tool wrappers to enforce the "no paths outside the server cwd"
  * security check before any file I/O.
  *
- * @param relative - the caller-supplied relative path
- * @param cwd - the server cwd to bound the path against
+ * @param relative - The caller-supplied relative path.
+ * @param cwd - The server cwd to bound the path against.
  */
 export function ensurePathInsideCwd(relative: string, cwd: string): void {
   const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
@@ -42,11 +42,11 @@ export function ensurePathInsideCwd(relative: string, cwd: string): void {
  * only — non-directory matches are silently skipped, matching the
  * behaviour each tool wrapper previously implemented inline.
  *
- * @param config - shared call config
- * @param config.paths - explicit relative paths supplied by the caller (may be undefined)
- * @param config.glob - single glob pattern resolved against `cwd` (may be undefined)
- * @param config.cwd - the server cwd to bound the resolved paths against
- * @returns the deduplicated list of relative folder paths
+ * @param config - Shared call config.
+ * @param config.paths - Explicit relative paths supplied by the caller (may be undefined)
+ * @param config.glob - Single glob pattern resolved against `cwd` (may be undefined)
+ * @param config.cwd - The server cwd to bound the resolved paths against.
+ * @returns The deduplicated list of relative folder paths.
  */
 export async function resolveFolderPaths(config: { readonly paths: readonly string[] | undefined; readonly glob: string | undefined; readonly cwd: string }): Promise<readonly string[]> {
   const { paths, glob, cwd } = config;
@@ -90,12 +90,12 @@ export async function resolveFolderPaths(config: { readonly paths: readonly stri
  * relative path used as the source `name`. Paths escaping `cwd` are
  * rejected via {@link ensurePathInsideCwd}.
  *
- * @param config - shared call config
- * @param config.sources - inline `{ name, text }` records (may be undefined)
- * @param config.paths - explicit relative file paths supplied by the caller (may be undefined)
- * @param config.glob - single glob pattern resolved against `cwd` (may be undefined)
- * @param config.cwd - the server cwd to bound the resolved paths against
- * @returns the deduplicated source list (inline first, then path / glob)
+ * @param config - Shared call config.
+ * @param config.sources - Inline `{ name, text }` records (may be undefined)
+ * @param config.paths - Explicit relative file paths supplied by the caller (may be undefined)
+ * @param config.glob - Single glob pattern resolved against `cwd` (may be undefined)
+ * @param config.cwd - The server cwd to bound the resolved paths against.
+ * @returns The deduplicated source list (inline first, then path / glob)
  */
 export async function resolveValidatorSources(config: { readonly sources: readonly ValidatorSource[] | undefined; readonly paths: readonly string[] | undefined; readonly glob: string | undefined; readonly cwd: string }): Promise<readonly ValidatorSource[]> {
   const { sources, paths, glob, cwd } = config;

@@ -172,7 +172,7 @@ export class AbstractDbxFirebaseCollectionStore<T, D extends FirestoreDocument<T
   readonly allDocuments$: Observable<D[]> = this.loader$.pipe(switchMap((x) => x.allDocuments$));
   readonly allDocumentData$: Observable<DocumentDataWithIdAndKey<T>[]> = this.loader$.pipe(switchMap((x) => x.allDocumentData$));
 
-  readonly setFirestoreCollection = this.updater((state, firestoreCollection: FirestoreCollectionLike<T, D> | null | undefined) => ({ ...state, firestoreCollection }));
+  readonly setFirestoreCollection = this.updater((state, firestoreCollection: Maybe<FirestoreCollectionLike<T, D>>) => ({ ...state, firestoreCollection }));
 
   loadToPage(page: PageNumber): Observable<PageNumber> {
     return this.loader$.pipe(switchMap((x) => x.loadToPage(page)));

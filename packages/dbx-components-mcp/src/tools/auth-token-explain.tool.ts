@@ -14,6 +14,7 @@
  * catalog when the same key appears in multiple apps.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import type { AuthClaimInfo, AuthRegistry } from '../registry/auth-runtime.js';
@@ -91,9 +92,9 @@ interface DecodedJwt {
   readonly signature: string | undefined;
 }
 
-function decodeJwt(token: string): DecodedJwt | null {
+function decodeJwt(token: string): Maybe<DecodedJwt> {
   const parts = token.trim().split('.');
-  let result: DecodedJwt | null = null;
+  let result: Maybe<DecodedJwt> = null;
   if (parts.length === 3) {
     const [headerSegment, payloadSegment, signature] = parts;
     const header = decodeJwtSegment(headerSegment);
@@ -105,8 +106,8 @@ function decodeJwt(token: string): DecodedJwt | null {
   return result;
 }
 
-function decodeJwtSegment(segment: string): Record<string, unknown> | null {
-  let result: Record<string, unknown> | null = null;
+function decodeJwtSegment(segment: string): Maybe<Record<string, unknown>> {
+  let result: Maybe<Record<string, unknown>> = null;
   try {
     const padded = segment.padEnd(segment.length + ((4 - (segment.length % 4)) % 4), '=');
     const base64 = padded.replaceAll('-', '+').replaceAll('_', '/');

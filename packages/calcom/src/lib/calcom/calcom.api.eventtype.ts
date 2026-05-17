@@ -1,4 +1,4 @@
-import { type Minutes } from '@dereekb/util';
+import { type Minutes, type Maybe } from '@dereekb/util';
 import { type CalcomContext } from './calcom.config';
 import { type CalcomEventTypeId, type CalcomEventTypeSlug, type CalcomResponseStatus } from '../calcom.type';
 import { CALCOM_API_VERSION_EVENT_TYPES, calcomApiVersionHeaders } from '../shared/calcom.api-version';
@@ -7,7 +7,7 @@ export interface CalcomEventType {
   readonly id: CalcomEventTypeId;
   readonly title: string;
   readonly slug: CalcomEventTypeSlug;
-  readonly description: string | null;
+  readonly description: Maybe<string>;
   readonly lengthInMinutes: Minutes;
   readonly locations: unknown[];
 }
@@ -43,10 +43,10 @@ export interface CalcomUpdateEventTypeInput {
 /**
  * Retrieves all event types for the authenticated user.
  *
- * @see https://cal.com/docs/api-reference/v2/event-types/get-all-event-types
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns A function that retrieves all event types.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that retrieves all event types
+ * @see https://cal.com/docs/api-reference/v2/event-types/get-all-event-types
  *
  * @example
  * ```ts
@@ -61,10 +61,10 @@ export function getEventTypes(context: CalcomContext): () => Promise<CalcomGetEv
 /**
  * Creates a new event type for the authenticated user.
  *
- * @see https://cal.com/docs/api-reference/v2/event-types/create-an-event-type
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns A function that creates a new event type from the given input.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that creates a new event type from the given input
+ * @see https://cal.com/docs/api-reference/v2/event-types/create-an-event-type
  *
  * @example
  * ```ts
@@ -75,6 +75,7 @@ export function getEventTypes(context: CalcomContext): () => Promise<CalcomGetEv
  * });
  * console.log(response.data.id);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createEventType(context: CalcomContext): (input: CalcomCreateEventTypeInput) => Promise<CalcomEventTypeResponse> {
@@ -89,10 +90,10 @@ export function createEventType(context: CalcomContext): (input: CalcomCreateEve
 /**
  * Updates an existing event type by ID.
  *
- * @see https://cal.com/docs/api-reference/v2/event-types/update-an-event-type
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns A function that updates an event type by ID.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that updates an event type by ID
+ * @see https://cal.com/docs/api-reference/v2/event-types/update-an-event-type
  *
  * @example
  * ```ts
@@ -111,10 +112,10 @@ export function updateEventType(context: CalcomContext): (eventTypeId: CalcomEve
 /**
  * Deletes an event type by ID.
  *
- * @see https://cal.com/docs/api-reference/v2/event-types/delete-an-event-type
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns A function that deletes an event type by ID.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that deletes an event type by ID
+ * @see https://cal.com/docs/api-reference/v2/event-types/delete-an-event-type
  *
  * @example
  * ```ts

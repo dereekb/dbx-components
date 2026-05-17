@@ -52,8 +52,8 @@ const ARRAY_OPERATORS: ReadonlySet<FirestoreWhereOperator> = new Set(['array-con
 /**
  * Runs the analyzer over every extracted entry.
  *
- * @param entries - the extracted entries to analyze
- * @returns one analyzed result per input entry
+ * @param entries - The extracted entries to analyze.
+ * @returns One analyzed result per input entry.
  */
 export function analyzeModelFirebaseIndexEntries(entries: readonly ExtractedModelFirebaseIndexEntry[]): readonly AnalyzedEntry[] {
   const out: AnalyzedEntry[] = [];
@@ -66,8 +66,8 @@ export function analyzeModelFirebaseIndexEntries(entries: readonly ExtractedMode
 /**
  * Runs the analyzer over a single extracted entry.
  *
- * @param entry - the extracted entry to analyze
- * @returns the analyzed result
+ * @param entry - The extracted entry to analyze.
+ * @returns The analyzed result.
  */
 export function analyzeEntry(entry: ExtractedModelFirebaseIndexEntry): AnalyzedEntry {
   if (entry.skip || entry.manual || entry.excluded || entry.constraintSequences.length === 0) {

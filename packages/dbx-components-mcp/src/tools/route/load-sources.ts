@@ -40,8 +40,8 @@ const TRY_EXTENSIONS: readonly string[] = ['.ts', '.tsx', '/index.ts', '/index.t
  * snapshots the route core consumes. Centralises path-traversal guarding and
  * extension fallback so the route tools share one filesystem layer.
  *
- * @param args - glob/file list, optional cwd, and source-resolution flags
- * @returns the materialised sources alongside the resolved cwd used
+ * @param args - Glob/file list, optional cwd, and source-resolution flags.
+ * @returns The materialised sources alongside the resolved cwd used.
  */
 export async function loadRouteSources(args: LoadSourcesArgs): Promise<LoadedSources> {
   const cwdResolved = args.cwd ? resolve(process.cwd(), args.cwd) : process.cwd();
@@ -76,8 +76,8 @@ export async function loadRouteSources(args: LoadSourcesArgs): Promise<LoadedSou
  * Throws when an explicit cwd input resolves outside the server cwd, mirroring
  * the path-traversal guard the rest of the loader applies.
  *
- * @param requestedCwd - the original cwd argument from the caller
- * @param resolvedCwd - the resolved absolute path
+ * @param requestedCwd - The original cwd argument from the caller.
+ * @param resolvedCwd - The resolved absolute path.
  */
 function guardCwdInsideServer(requestedCwd: string | undefined, resolvedCwd: string): void {
   if (!requestedCwd) {
@@ -94,9 +94,9 @@ function guardCwdInsideServer(requestedCwd: string | undefined, resolvedCwd: str
  * Concatenates explicit `paths` with the matches of an optional `glob`, both
  * relative to the resolved cwd.
  *
- * @param args - the loader arguments providing `paths` and/or `glob`
- * @param cwdResolved - the resolved cwd used as glob base
- * @returns the combined relative path list to load directly
+ * @param args - The loader arguments providing `paths` and/or `glob`
+ * @param cwdResolved - The resolved cwd used as glob base.
+ * @returns The combined relative path list to load directly.
  */
 async function collectInitialPaths(args: LoadSourcesArgs, cwdResolved: string): Promise<string[]> {
   const initialPaths: string[] = [];
@@ -117,8 +117,8 @@ async function collectInitialPaths(args: LoadSourcesArgs, cwdResolved: string): 
  * Performs a BFS through relative imports starting from every source already
  * present in `collected`, adding newly resolved sources to the same map.
  *
- * @param collected - the source map to extend in place
- * @param cwdResolved - the resolved cwd used to build absolute paths
+ * @param collected - The source map to extend in place.
+ * @param cwdResolved - The resolved cwd used to build absolute paths.
  */
 async function walkRelativeImports(collected: Map<string, RouteSource>, cwdResolved: string): Promise<void> {
   const queue = Array.from(collected.values());

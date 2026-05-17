@@ -70,8 +70,8 @@ const DEFAULT_GLOBBER: BuildModelFirebaseIndexGlobber = defaultGlobber;
  * root. The function is pure with respect to the injected I/O hooks, so
  * unit tests can drive every branch without disk access.
  *
- * @param input - the project root + injection hooks for testing
- * @returns a discriminated outcome describing the result
+ * @param input - The project root + injection hooks for testing.
+ * @returns A discriminated outcome describing the result.
  */
 export async function buildModelFirebaseIndexManifest(input: BuildModelFirebaseIndexManifestInput): Promise<BuildModelFirebaseIndexManifestOutcome> {
   const { projectRoot, generator, readFile = DEFAULT_READ_FILE, globber = DEFAULT_GLOBBER, now = () => new Date() } = input;
@@ -231,8 +231,8 @@ function assembleEntry(input: AssembleEntryInput): ModelFirebaseIndexEntry {
  * newline so `--check` mode can byte-compare against a committed file
  * without false-positive diffs from key reordering.
  *
- * @param manifest - the manifest to serialise
- * @returns the canonical string form
+ * @param manifest - The manifest to serialise.
+ * @returns The canonical string form.
  */
 export function serializeModelFirebaseIndexManifest(manifest: ModelFirebaseIndexManifest): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;

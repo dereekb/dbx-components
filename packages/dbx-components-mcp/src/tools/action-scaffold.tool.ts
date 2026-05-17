@@ -320,8 +320,8 @@ function renderScaffold(args: ParsedScaffoldArgs): string {
  * scaffold output for the requested action role, and packages it as tool
  * content.
  *
- * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
- * @returns the rendered scaffold, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments object from the MCP runtime.
+ * @returns The rendered scaffold, or an error result when args fail validation.
  */
 export function runActionScaffold(rawArgs: unknown): ToolResult {
   let args: ParsedScaffoldArgs;

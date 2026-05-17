@@ -15,6 +15,7 @@
  * runs cheaply on in-memory fixtures.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { Node, type InterfaceDeclaration, type JSDoc, type Project, type PropertySignature, type SourceFile, type TypeAliasDeclaration, type TypeNode, type TypeReferenceNode, type UnionTypeNode } from 'ts-morph';
 import { type ForgeFieldEntry, type ForgeFieldPropertyEntry } from '../manifest/forge-fields-schema.js';
@@ -114,8 +115,8 @@ const VALID_SUFFIXES: ReadonlySet<string> = new Set(['Row', 'Group', 'Fields', '
  * `@dbxFormField` JSDoc marker. Order is stable: source files in the order
  * ts-morph reports them, declarations within a file in source order.
  *
- * @param input - the ts-morph project to scan
- * @returns the extracted entries plus any non-fatal warnings
+ * @param input - The ts-morph project to scan.
+ * @returns The extracted entries plus any non-fatal warnings.
  */
 export function extractForgeFieldEntries(input: ExtractForgeFieldEntriesInput): ExtractForgeFieldEntriesResult {
   const { project } = input;
@@ -698,7 +699,7 @@ interface CollectContext {
   readonly interfaceLookup: InterfaceLookup;
   readonly visited: Set<string>;
   readonly omit: ReadonlySet<string>;
-  readonly pick: ReadonlySet<string> | null;
+  readonly pick: Maybe<ReadonlySet<string>>;
   readonly forceOptional: boolean;
   readonly warningSink?: CollectWarningSink;
 }
@@ -774,9 +775,9 @@ function collectFromTypeNode(typeNode: TypeNode, context: CollectContext): reado
  * nothing structured to walk — a `union-config-not-walked` warning is emitted
  * via the context's warning sink.
  *
- * @param typeNode - the union type node whose members should be merged
- * @param context - the active walker context (warning sink + visited / omit / pick / forceOptional state)
- * @returns merged properties from all object/reference members, with primitives skipped
+ * @param typeNode - The union type node whose members should be merged.
+ * @param context - The active walker context (warning sink + visited / omit / pick / forceOptional state)
+ * @returns Merged properties from all object/reference members, with primitives skipped.
  */
 function collectFromUnionTypeNode(typeNode: UnionTypeNode, context: CollectContext): readonly ForgeFieldPropertyEntry[] {
   const memberContext: CollectContext = { ...context, forceOptional: true };

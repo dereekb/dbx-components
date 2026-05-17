@@ -44,8 +44,8 @@ export type ZohoRecruitCreateTagsFunction = (input: ZohoRecruitCreateTagsRequest
  * (which are often non-fatal) from other errors, making it easy to handle the common
  * case where a tag already exists.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that creates tags in the specified module
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that creates tags in the specified module.
  *
  * @example
  * ```typescript
@@ -103,8 +103,10 @@ export type ZohoRecruitGetTagsFunction = (input: ZohoRecruitGetTagsRequest) => P
  * Returns the list of tags within a module. Normalizes the non-standard API response
  * that returns data under a `tags` key instead of the standard `data` key.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that retrieves tags for a module
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that retrieves tags for a module.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-tag-list.html
  *
  * @example
  * ```typescript
@@ -114,8 +116,6 @@ export type ZohoRecruitGetTagsFunction = (input: ZohoRecruitGetTagsRequest) => P
  *   module: ZOHO_RECRUIT_CANDIDATES_MODULE
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/get-tag-list.html
  */
 export function zohoRecruitGetTagsForModule(context: ZohoRecruitContext): ZohoRecruitGetTagsFunction {
   return (input: ZohoRecruitGetTagsRequest) =>
@@ -140,8 +140,9 @@ export type ZohoRecruitGetTagsForModulePageFactory = (input: ZohoRecruitGetTagsR
  * Returns a page factory for iterating over tags in a module across multiple pages.
  * Wraps {@link zohoRecruitGetTagsForModule} with automatic pagination handling.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Page factory for iterating over module tags
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Page factory for iterating over module tags.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetTagsForModulePageFactory(context: ZohoRecruitContext): ZohoRecruitGetTagsForModulePageFactory {
@@ -212,9 +213,11 @@ export type ZohoRecruitAddTagsToRecordsFunction = (input: ZohoRecruitAddTagsToRe
  * Adds one or more tags to one or more records. Returns a paired success/error result
  * for each record. Maximum of {@link ZOHO_RECRUIT_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED} (100) record IDs per call.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that adds tags to records
- * @throws {Error} If more than 100 record IDs are provided
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that adds tags to records.
+ * @throws {Error} If more than 100 record IDs are provided.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/add-tags.html
  *
  * @example
  * ```typescript
@@ -226,8 +229,6 @@ export type ZohoRecruitAddTagsToRecordsFunction = (input: ZohoRecruitAddTagsToRe
  *   ids: [candidateId1, candidateId2]
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/add-tags.html
  */
 export function zohoRecruitAddTagsToRecords(context: ZohoRecruitContext): ZohoRecruitAddTagsToRecordsFunction {
   return (input: ZohoRecruitAddTagsToRecordsRequest) => {
@@ -279,9 +280,11 @@ export type ZohoRecruitRemoveTagsFromRecordsFunction = (input: ZohoRecruitRemove
  * Removes one or more tags from one or more records. Returns a paired success/error result
  * for each record. Maximum of {@link ZOHO_RECRUIT_REMOVE_TAGS_FROM_RECORDS_MAX_IDS_ALLOWED} (100) record IDs per call.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that removes tags from records
- * @throws {Error} If more than 100 record IDs are provided
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that removes tags from records.
+ * @throws {Error} If more than 100 record IDs are provided.
+ *
+ * @see https://www.zoho.com/recruit/developer-guide/apiv2/remove-tags.html
  *
  * @example
  * ```typescript
@@ -293,8 +296,6 @@ export type ZohoRecruitRemoveTagsFromRecordsFunction = (input: ZohoRecruitRemove
  *   ids: candidateId
  * });
  * ```
- *
- * @see https://www.zoho.com/recruit/developer-guide/apiv2/remove-tags.html
  */
 export function zohoRecruitRemoveTagsFromRecords(context: ZohoRecruitContext): ZohoRecruitRemoveTagsFromRecordsFunction {
   return (input: ZohoRecruitRemoveTagsFromRecordsRequest) => {

@@ -46,9 +46,9 @@ export interface HandlerExtractionResult {
  * Reads `<apiDir>/src/app/function/model/crud.functions.ts` and returns one
  * handler entry per `(verb, model, specifier)` cell.
  *
- * @param apiAbs - absolute path to the API package root
- * @param apiDir - relative path used in source citations
- * @returns the populated handler entries plus the parse status
+ * @param apiAbs - Absolute path to the API package root.
+ * @param apiDir - Relative path used in source citations.
+ * @returns The populated handler entries plus the parse status.
  */
 export async function extractHandlerEntries(apiAbs: string, apiDir: string): Promise<HandlerExtractionResult> {
   const fullPath = join(apiAbs, HANDLER_MAP_REL);

@@ -65,7 +65,7 @@ export type { DownstreamFirebasePackage } from '../scan/discover-firebase-packag
 /**
  * Returns every registered Firebase model entry.
  *
- * @returns the full Firebase model registry list in declaration order
+ * @returns The full Firebase model registry list in declaration order.
  */
 export function getFirebaseModels(): readonly FirebaseModel[] {
   return FIREBASE_MODELS;
@@ -75,8 +75,8 @@ export function getFirebaseModels(): readonly FirebaseModel[] {
  * Looks up a model by its interface name (`'StorageFile'`) or identity const
  * (`'storageFileIdentity'`). Case-insensitive.
  *
- * @param key - the interface name, identity const, or model type to resolve
- * @returns the matching model entry, or `undefined` when no candidate matches
+ * @param key - The interface name, identity const, or model type to resolve.
+ * @returns The matching model entry, or `undefined` when no candidate matches.
  */
 export function getFirebaseModel(key: string): FirebaseModel | undefined {
   const lowered = key.toLowerCase();
@@ -87,8 +87,8 @@ export function getFirebaseModel(key: string): FirebaseModel | undefined {
  * PRIMARY INDEX. Returns the model with the given collection prefix
  * (`'sf'` → StorageFile). Case-insensitive exact match.
  *
- * @param prefix - the short collection prefix used by the model
- * @returns the matching model entry, or `undefined` when no model uses the prefix
+ * @param prefix - The short collection prefix used by the model.
+ * @returns The matching model entry, or `undefined` when no model uses the prefix.
  */
 export function getFirebaseModelByPrefix(prefix: string): FirebaseModel | undefined {
   const lowered = prefix.toLowerCase();
@@ -99,8 +99,8 @@ export function getFirebaseModelByPrefix(prefix: string): FirebaseModel | undefi
  * Returns every subcollection model whose parent identity matches
  * `parentIdentityConst` (e.g. `'notificationBoxIdentity'`).
  *
- * @param parentIdentityConst - identity const of the parent collection to scan beneath
- * @returns each subcollection model nested under the given parent, in registry order
+ * @param parentIdentityConst - Identity const of the parent collection to scan beneath.
+ * @returns Each subcollection model nested under the given parent, in registry order.
  */
 export function getFirebaseSubcollectionsOf(parentIdentityConst: string): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.parentIdentityConst === parentIdentityConst);
@@ -112,7 +112,7 @@ export function getFirebaseSubcollectionsOf(parentIdentityConst: string): readon
  * `UserRelatedById`. Useful for enumerating the per-user document set when
  * reasoning about ownership and permissions.
  *
- * @returns each user-keyed model in registry order
+ * @returns Each user-keyed model in registry order.
  */
 export function getFirebaseUserKeyedByIdModels(): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.userKeyedById === true);
@@ -125,7 +125,7 @@ export function getFirebaseUserKeyedByIdModels(): readonly FirebaseModel[] {
  * {@link getFirebaseUserKeyedByIdModels}: a model can appear in either,
  * both, or neither list.
  *
- * @returns each user-related model in registry order
+ * @returns Each user-related model in registry order.
  */
 export function getFirebaseUserRelatedModels(): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.hasUserUidField === true);
@@ -135,7 +135,7 @@ export function getFirebaseUserRelatedModels(): readonly FirebaseModel[] {
  * Returns every model whose Firestore document id IS a region key (interface
  * extends `RegionRelatedById`).
  *
- * @returns each region-keyed model in registry order
+ * @returns Each region-keyed model in registry order.
  */
 export function getFirebaseRegionKeyedByIdModels(): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.regionKeyedById === true);
@@ -145,7 +145,7 @@ export function getFirebaseRegionKeyedByIdModels(): readonly FirebaseModel[] {
  * Returns every model whose Firestore document id IS a district key (interface
  * extends `DistrictRelatedById`).
  *
- * @returns each district-keyed model in registry order
+ * @returns Each district-keyed model in registry order.
  */
 export function getFirebaseDistrictKeyedByIdModels(): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.districtKeyedById === true);
@@ -155,7 +155,7 @@ export function getFirebaseDistrictKeyedByIdModels(): readonly FirebaseModel[] {
  * Returns every model whose Firestore document id IS an external vendor id
  * (interface extends `ExternalRelatedById`).
  *
- * @returns each external-id-keyed model in registry order
+ * @returns Each external-id-keyed model in registry order.
  */
 export function getFirebaseExternalIdKeyedByIdModels(): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.externalIdKeyedById === true);
@@ -165,7 +165,7 @@ export function getFirebaseExternalIdKeyedByIdModels(): readonly FirebaseModel[]
  * Returns every model whose Firestore document id IS a temporal bucket code
  * (year-week / year-month / …).
  *
- * @returns each bucket-keyed model in registry order
+ * @returns Each bucket-keyed model in registry order.
  */
 export function getFirebaseBucketKeyedByIdModels(): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.bucketKeyedById === true);
@@ -175,8 +175,8 @@ export function getFirebaseBucketKeyedByIdModels(): readonly FirebaseModel[] {
  * Returns every model whose `archetype` matches the given slug. Used by
  * `dbx_model_archetype_search` peer search.
  *
- * @param archetype - the archetype slug to filter by
- * @returns each matching model in registry order
+ * @param archetype - The archetype slug to filter by.
+ * @returns Each matching model in registry order.
  */
 export function getFirebaseModelsByArchetype(archetype: string): readonly FirebaseModel[] {
   return FIREBASE_MODELS.filter((m) => m.archetypes?.includes(archetype) === true);
@@ -185,7 +185,7 @@ export function getFirebaseModelsByArchetype(archetype: string): readonly Fireba
 /**
  * Returns the catalog of distinct collection prefixes in the registry.
  *
- * @returns the unique set of collection prefixes, sorted alphabetically
+ * @returns The unique set of collection prefixes, sorted alphabetically.
  */
 export function getFirebasePrefixCatalog(): readonly string[] {
   const set = new Set<string>();
@@ -199,7 +199,7 @@ export function getFirebasePrefixCatalog(): readonly string[] {
  * Returns every registered Firebase model-group container (e.g.
  * `NotificationFirestoreCollections`).
  *
- * @returns the full model-group registry list in declaration order
+ * @returns The full model-group registry list in declaration order.
  */
 export function getFirebaseModelGroups(): readonly FirebaseModelGroup[] {
   return FIREBASE_MODEL_GROUPS;
@@ -209,8 +209,8 @@ export function getFirebaseModelGroups(): readonly FirebaseModelGroup[] {
  * Looks up a model group by its `<Name>FirestoreCollections` class/interface
  * name (e.g. `'NotificationFirestoreCollections'`). Case-insensitive.
  *
- * @param name - the group container name to resolve
- * @returns the matching group entry, or `undefined` when no group matches
+ * @param name - The group container name to resolve.
+ * @returns The matching group entry, or `undefined` when no group matches.
  */
 export function getFirebaseModelGroup(name: string): FirebaseModelGroup | undefined {
   const lowered = name.toLowerCase();

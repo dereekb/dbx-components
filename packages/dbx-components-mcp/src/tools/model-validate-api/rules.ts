@@ -14,8 +14,8 @@ import { FUNCTIONS_BLOCK_ORDER, NON_CRUD_API_BASENAMES, type ExtractedFile, type
  * aggregated diagnostics. Rules accumulate into a buffer so they can short-
  * circuit early when a structural prerequisite is missing.
  *
- * @param file - the extracted facts for one api source
- * @returns the violations the rules emit for that file
+ * @param file - The extracted facts for one api source.
+ * @returns The violations the rules emit for that file.
  */
 export function runRules(file: ExtractedFile): readonly Violation[] {
   const violations: Violation[] = [];

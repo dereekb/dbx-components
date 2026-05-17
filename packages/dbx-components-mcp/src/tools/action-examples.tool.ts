@@ -104,8 +104,8 @@ function code(value: string): string {
  * from the registry, formats it at the requested depth, and packages the
  * result as a tool content payload.
  *
- * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
- * @returns the formatted pattern text, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments object from the MCP runtime.
+ * @returns The formatted pattern text, or an error result when args fail validation.
  */
 export function runActionExamples(rawArgs: unknown): ToolResult {
   let args: ParsedActionExamplesArgs;

@@ -51,7 +51,7 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
    *
    * Events are only sent when the Segment configuration is marked as active.
    *
-   * @returns subscription to the combined Segment API and analytics event stream
+   * @returns Subscription to the combined Segment API and analytics event stream.
    */
   protected _initializeServiceSubscription() {
     return combineLatest([this._segmentApi.service$, this.analyticsEvents$]).subscribe(([segment, streamEvent]: [SegmentAnalytics.AnalyticsJS, DbxAnalyticsStreamEvent]) => {
@@ -68,8 +68,8 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
   /**
    * Routes an analytics stream event to the appropriate Segment API method based on event type.
    *
-   * @param api - The Segment analytics SDK instance
-   * @param streamEvent - The analytics event to process
+   * @param api - The Segment analytics SDK instance.
+   * @param streamEvent - The analytics event to process.
    */
   protected handleStreamEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent): void {
     switch (streamEvent.type) {
@@ -106,8 +106,8 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
   /**
    * Handles a new user registration event by identifying the user in Segment.
    *
-   * @param api - The Segment analytics SDK instance
-   * @param streamEvent - The event containing the new user data
+   * @param api - The Segment analytics SDK instance.
+   * @param streamEvent - The event containing the new user data.
    */
   protected updateWithNewUserEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent): void {
     this.changeUser(api, streamEvent.user);
@@ -116,9 +116,9 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
   /**
    * Sends a track event to Segment with the event name, value, and additional data properties.
    *
-   * @param api - The Segment analytics SDK instance
-   * @param streamEvent - The analytics event containing name, value, and data
-   * @param name - Optional override for the event name
+   * @param api - The Segment analytics SDK instance.
+   * @param streamEvent - The analytics event containing name, value, and data.
+   * @param name - Optional override for the event name.
    */
   protected updateWithEvent(api: SegmentAnalytics.AnalyticsJS, streamEvent: DbxAnalyticsStreamEvent, name?: string): void {
     const event = streamEvent.event;

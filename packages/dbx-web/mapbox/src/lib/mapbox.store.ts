@@ -861,7 +861,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
           this._renderingTimer.pipe(
             map(() => {
               const bound = x.getBounds();
-              let result: LatLngBound | null = null;
+              let result: Maybe<LatLngBound> = null;
 
               if (bound != null) {
                 const boundSw = bound.getSouthWest();

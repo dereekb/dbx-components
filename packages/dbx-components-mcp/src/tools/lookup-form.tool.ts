@@ -69,8 +69,8 @@ const LookupFormArgsType = type({
  * Parses and validates the caller's args via arktype. Throws a user-facing
  * error string when validation fails — the handler catches and formats it.
  *
- * @param raw - the unvalidated tool arguments from the MCP runtime
- * @returns the canonical args with `depth` defaulted to `'full'`
+ * @param raw - The unvalidated tool arguments from the MCP runtime.
+ * @returns The canonical args with `depth` defaulted to `'full'`
  */
 function parseLookupFormArgs(raw: unknown): { readonly topic: string; readonly depth: 'brief' | 'full' } {
   const parsed = LookupFormArgsType(raw);
@@ -117,8 +117,9 @@ export interface CreateLookupFormToolConfig {
  * Builds the `dbx_form_lookup` tool against a forge-fields registry. Called by
  * {@link registerTools} once the registry has loaded at server startup.
  *
- * @param config - the registry the tool should resolve against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry the tool should resolve against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxTool {
@@ -158,8 +159,8 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
    *   5. form `produces` value match → form group
    *   6. fuzzy substring search over form slug/factoryName/description
    *
-   * @param rawTopic - the caller-supplied topic, untrimmed
-   * @returns the resolved match describing how to render the response
+   * @param rawTopic - The caller-supplied topic, untrimmed.
+   * @returns The resolved match describing how to render the response.
    */
   function resolveTopic(rawTopic: string): LookupFormMatch {
     const lowered = rawTopic.trim().toLowerCase();
@@ -171,8 +172,8 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
    * Case-insensitive exact match against the catalog of `produces` values.
    * Returns the catalog value with its original casing when found.
    *
-   * @param topic - the lookup topic to test against the produces catalog
-   * @returns the matching catalog value with its original casing, or `undefined`
+   * @param topic - The lookup topic to test against the produces catalog.
+   * @returns The matching catalog value with its original casing, or `undefined`
    */
   function findProducesMatch(topic: string): string | undefined {
     const lowered = topic.trim().toLowerCase();
@@ -184,8 +185,8 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
    * Returns up to five entries whose slug / factory name / description contains
    * the query. Good enough at registry size <100 — revisit if it grows.
    *
-   * @param query - the unmatched lookup topic to fuzzy-search
-   * @returns up to five candidate entries ordered by descending score
+   * @param query - The unmatched lookup topic to fuzzy-search.
+   * @returns Up to five candidate entries ordered by descending score.
    */
   function fuzzyCandidates(query: string): readonly FormFieldInfo[] {
     const q = query.trim().toLowerCase();

@@ -4,6 +4,7 @@ import type { AnalyticsEventName, AnalyticsUserId, AnalyticsUserProperties, Anal
 export type { AnalyticsEventName, AnalyticsUserId, AnalyticsUserProperties, AnalyticsUser, AnalyticsEventData, AnalyticsEvent, UserAnalyticsEvent, NewUserRegistrationMethod, NewUserAnalyticsEventData } from '@dereekb/analytics';
 
 // MARK: Compat - Deprecated Dbx-prefixed aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use {@link AnalyticsEventName} from `@dereekb/analytics` instead.
  */

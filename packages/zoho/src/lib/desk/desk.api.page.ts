@@ -62,9 +62,9 @@ export type ZohoDeskFetchPageFetchFunction<I extends ZohoDeskPageFilter, R exten
  * against the requested `limit`. If `data.length >= limit`, more records are assumed to exist.
  * The `from` offset is automatically advanced by `limit` for subsequent requests.
  *
- * @param fetch - The Zoho Desk fetch function to paginate over
- * @param defaults - Optional default configuration for the page factory
- * @returns A page factory that produces iterable page fetchers
+ * @param fetch - The Zoho Desk fetch function to paginate over.
+ * @param defaults - Optional default configuration for the page factory.
+ * @returns A page factory that produces iterable page fetchers.
  *
  * @example
  * ```typescript
@@ -77,6 +77,7 @@ export type ZohoDeskFetchPageFetchFunction<I extends ZohoDeskPageFilter, R exten
  *   const secondPage = await firstPage.fetchNext();
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskFetchPageFactory<I extends ZohoDeskPageFilter, R extends ZohoDeskPageResult<any>>(fetch: ZohoDeskFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {

@@ -7,14 +7,15 @@ import { forwardRef, type Provider, type Type } from '@angular/core';
  * @param sourceType - The concrete filter source class to provide.
  * @returns An array of Angular providers for the filter source.
  *
- * @example
- * ```typescript
- * @Directive({
+ * @Directive ({
  *   selector: '[myFilterSource]',
  *   providers: provideFilterSource(MyFilterSourceDirective),
  * })
  * export class MyFilterSourceDirective { ... }
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function provideFilterSource<S extends FilterSource>(sourceType: Type<S>): Provider[] {
   return [

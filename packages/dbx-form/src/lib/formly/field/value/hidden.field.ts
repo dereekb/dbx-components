@@ -11,10 +11,10 @@ export type HiddenFieldConfig = Pick<LabeledFieldConfig, 'key' | 'required'>;
  *
  * Useful for passing programmatic values through the form model without user interaction.
  *
- * @param config - Key and optional required flag
- * @param config.key - The form model key for this hidden field
+ * @param config - Key and optional required flag.
+ * @param config.key - The form model key for this hidden field.
  * @param config.required - Whether the hidden field must have a value; defaults to `false`
- * @returns A validated {@link FormlyFieldConfig} with no visible type
+ * @returns A validated {@link FormlyFieldConfig} with no visible type.
  *
  * @example
  * ```typescript

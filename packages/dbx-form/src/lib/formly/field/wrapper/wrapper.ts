@@ -25,10 +25,10 @@ export type WrapperFormlyFieldConfig<P, C extends FormlyFieldConfig> = FormlyFie
 /**
  * Wraps a Formly field config with a named wrapper and its associated props.
  *
- * @param fieldConfig - The field config to wrap
- * @param wrapperKey - The registered wrapper key
- * @param wrapperProps - Configuration props for the wrapper
- * @returns A new field config with the wrapper applied
+ * @param fieldConfig - The field config to wrap.
+ * @param wrapperKey - The registered wrapper key.
+ * @param wrapperProps - Configuration props for the wrapper.
+ * @returns A new field config with the wrapper applied.
  *
  * @example
  * ```typescript
@@ -46,12 +46,11 @@ export function formlyAddWrapperToFormlyFieldConfig<C extends FormlyFieldConfig,
 /**
  * Wraps a field with the auto-touch wrapper that marks the control as touched on value change.
  *
- * @param fieldConfig - The field configuration to wrap
- * @param autoTouchWrapper - Optional expand wrapper configuration
- * @returns A wrapped field configuration with auto-touch behavior
- *
- * @param fieldConfig - The field configuration to wrap
- * @param autoTouchWrapper - Optional expand wrapper configuration
+ * @param fieldConfig - The field configuration to wrap.
+ * @param fieldConfig - The field configuration to wrap.
+ * @param autoTouchWrapper - Optional expand wrapper configuration.
+ * @param autoTouchWrapper - Optional expand wrapper configuration.
+ * @returns A wrapped field configuration with auto-touch behavior.
  */
 export function formlyAutoTouchWrapper<T extends object, C extends FormlyFieldConfig>(fieldConfig: C, autoTouchWrapper: DbxFormExpandWrapperConfig<T> = {}) {
   return formlyAddWrapperToFormlyFieldConfig<C, DbxFormExpandWrapperConfig<T>>(fieldConfig, AUTO_TOUCH_WRAPPER_KEY, autoTouchWrapper);
@@ -60,12 +59,11 @@ export function formlyAutoTouchWrapper<T extends object, C extends FormlyFieldCo
 /**
  * Wraps a field with the expand wrapper that shows/hides the field based on value or user click.
  *
- * @param fieldConfig - The field configuration to wrap
- * @param expandWrapper - Optional expand wrapper configuration
- * @returns A wrapped field configuration with expand/collapse behavior
- *
- * @param fieldConfig - The field configuration to wrap
- * @param expandWrapper - Optional expand wrapper configuration
+ * @param fieldConfig - The field configuration to wrap.
+ * @param fieldConfig - The field configuration to wrap.
+ * @param expandWrapper - Optional expand wrapper configuration.
+ * @param expandWrapper - Optional expand wrapper configuration.
+ * @returns A wrapped field configuration with expand/collapse behavior.
  */
 export function formlyExpandWrapper<T extends object, C extends FormlyFieldConfig>(fieldConfig: C, expandWrapper: DbxFormExpandWrapperConfig<T> = {}) {
   return formlyAddWrapperToFormlyFieldConfig<C, DbxFormExpandWrapperConfig<T>>(fieldConfig, EXPAND_WRAPPER_KEY, expandWrapper);
@@ -74,12 +72,11 @@ export function formlyExpandWrapper<T extends object, C extends FormlyFieldConfi
 /**
  * Wraps a field with the toggle wrapper that uses a slide toggle to show/hide content.
  *
- * @param fieldConfig - The field configuration to wrap
- * @param toggleWrapper - Optional toggle wrapper configuration
- * @returns A wrapped field configuration with toggle show/hide behavior
- *
- * @param fieldConfig - The field configuration to wrap
- * @param toggleWrapper - Optional toggle wrapper configuration
+ * @param fieldConfig - The field configuration to wrap.
+ * @param fieldConfig - The field configuration to wrap.
+ * @param toggleWrapper - Optional toggle wrapper configuration.
+ * @param toggleWrapper - Optional toggle wrapper configuration.
+ * @returns A wrapped field configuration with toggle show/hide behavior.
  */
 export function formlyToggleWrapper<C extends FormlyFieldConfig>(fieldConfig: C, toggleWrapper: DbxFormToggleWrapperConfig = {}) {
   return formlyAddWrapperToFormlyFieldConfig<C, DbxFormToggleWrapperConfig>(fieldConfig, TOGGLE_WRAPPER_KEY, toggleWrapper);
@@ -88,12 +85,11 @@ export function formlyToggleWrapper<C extends FormlyFieldConfig>(fieldConfig: C,
 /**
  * Wraps a field group in a section layout with an optional header and hint.
  *
- * @param fieldConfig - The field configuration to wrap
- * @param sectionWrapper - Optional section configuration with header and hint
- * @returns A wrapped field configuration with section layout
- *
- * @param fieldConfig - The field configuration to wrap
- * @param sectionWrapper - Optional section configuration with header and hint
+ * @param fieldConfig - The field configuration to wrap.
+ * @param fieldConfig - The field configuration to wrap.
+ * @param sectionWrapper - Optional section configuration with header and hint.
+ * @param sectionWrapper - Optional section configuration with header and hint.
+ * @returns A wrapped field configuration with section layout.
  */
 export function formlySectionWrapper<C extends FormlyFieldConfig>(fieldConfig: C, sectionWrapper: DbxFormSectionConfig = {}) {
   return formlyAddWrapperToFormlyFieldConfig<C, DbxFormSectionConfig>(fieldConfig, SECTION_WRAPPER_KEY, sectionWrapper);
@@ -102,12 +98,11 @@ export function formlySectionWrapper<C extends FormlyFieldConfig>(fieldConfig: C
 /**
  * Wraps a field group in a subsection layout with an optional header and hint.
  *
- * @param fieldConfig - The field configuration to wrap
- * @param subsectionWrapper - Optional subsection configuration with header and hint
- * @returns A wrapped field configuration with subsection layout
- *
- * @param fieldConfig - The field configuration to wrap
- * @param subsectionWrapper - Optional subsection configuration with header and hint
+ * @param fieldConfig - The field configuration to wrap.
+ * @param fieldConfig - The field configuration to wrap.
+ * @param subsectionWrapper - Optional subsection configuration with header and hint.
+ * @param subsectionWrapper - Optional subsection configuration with header and hint.
+ * @returns A wrapped field configuration with subsection layout.
  */
 export function formlySubsectionWrapper<C extends FormlyFieldConfig>(fieldConfig: C, subsectionWrapper: DbxFormSubsectionConfig = {}) {
   return formlyAddWrapperToFormlyFieldConfig<C, DbxFormSubsectionConfig>(fieldConfig, SUBSECTION_WRAPPER_KEY, subsectionWrapper);
@@ -116,12 +111,11 @@ export function formlySubsectionWrapper<C extends FormlyFieldConfig>(fieldConfig
 /**
  * Wraps a field with an info button that triggers a callback when clicked.
  *
- * @param fieldConfig - The field configuration to wrap
- * @param infoWrapper - Info wrapper configuration with callback
- * @returns A wrapped field configuration with info button
- *
- * @param fieldConfig - The field configuration to wrap
- * @param infoWrapper - Info wrapper configuration with callback
+ * @param fieldConfig - The field configuration to wrap.
+ * @param fieldConfig - The field configuration to wrap.
+ * @param infoWrapper - Info wrapper configuration with callback.
+ * @param infoWrapper - Info wrapper configuration with callback.
+ * @returns A wrapped field configuration with info button.
  */
 export function formlyInfoWrapper<C extends FormlyFieldConfig>(fieldConfig: C, infoWrapper: DbxFormInfoConfig) {
   return formlyAddWrapperToFormlyFieldConfig<C, DbxFormInfoConfig>(fieldConfig, INFO_WRAPPER_KEY, infoWrapper);
@@ -130,12 +124,11 @@ export function formlyInfoWrapper<C extends FormlyFieldConfig>(fieldConfig: C, i
 /**
  * Wraps a field with dynamic CSS class and style bindings.
  *
- * @param fieldConfig - The field configuration to wrap
- * @param styleWrapper - Style wrapper configuration with CSS classes and styles
- * @returns A wrapped field configuration with dynamic styling
- *
- * @param fieldConfig - The field configuration to wrap
- * @param styleWrapper - Style wrapper configuration with CSS classes and styles
+ * @param fieldConfig - The field configuration to wrap.
+ * @param fieldConfig - The field configuration to wrap.
+ * @param styleWrapper - Style wrapper configuration with CSS classes and styles.
+ * @param styleWrapper - Style wrapper configuration with CSS classes and styles.
+ * @returns A wrapped field configuration with dynamic styling.
  */
 export function formlyStyleWrapper<C extends FormlyFieldConfig>(fieldConfig: C, styleWrapper: DbxFormStyleWrapperConfig) {
   return formlyAddWrapperToFormlyFieldConfig<C, DbxFormStyleWrapperConfig>(fieldConfig, STYLE_WRAPPER_KEY, styleWrapper);
@@ -144,12 +137,11 @@ export function formlyStyleWrapper<C extends FormlyFieldConfig>(fieldConfig: C, 
 /**
  * Wraps a field with a loading indicator that shows during async validation.
  *
- * @param fieldConfig - The field configuration to wrap
- * @param workingWrapper - Optional working wrapper configuration
- * @returns A wrapped field configuration with loading indicator
- *
- * @param fieldConfig - The field configuration to wrap
- * @param workingWrapper - Optional working wrapper configuration
+ * @param fieldConfig - The field configuration to wrap.
+ * @param fieldConfig - The field configuration to wrap.
+ * @param workingWrapper - Optional working wrapper configuration.
+ * @param workingWrapper - Optional working wrapper configuration.
+ * @returns A wrapped field configuration with loading indicator.
  */
 export function formlyWorkingWrapper<C extends FormlyFieldConfig>(fieldConfig: C, workingWrapper: DbxFormWorkingWrapperConfig = {}) {
   return formlyAddWrapperToFormlyFieldConfig<C, DbxFormWorkingWrapperConfig>(fieldConfig, WORKING_WRAPPER_KEY, workingWrapper);
@@ -177,10 +169,9 @@ export interface DbxFlexLayoutWrapperGroupFieldConfigDefaults extends DbxFlexWra
  * Type guard that checks if the input is a {@link DbxFlexLayoutWrapperGroupFieldConfig}
  * (has a `field` property) rather than a plain {@link FormlyFieldConfig}.
  *
- * @param input - The field config or wrapper group config to check
- * @returns True if the input has a `field` property identifying it as a wrapper group config
- *
- * @param input - The field config or wrapper group config to check
+ * @param input - The field config or wrapper group config to check.
+ * @param input - The field config or wrapper group config to check.
+ * @returns True if the input has a `field` property identifying it as a wrapper group config.
  */
 export function formlyCheckIsFieldFlexLayoutGroupFieldConfig(input: FormlyFieldConfig | DbxFlexLayoutWrapperGroupFieldConfig): input is DbxFlexLayoutWrapperGroupFieldConfig {
   return (input as DbxFlexLayoutWrapperGroupFieldConfig).field != null;
@@ -190,13 +181,13 @@ export function formlyCheckIsFieldFlexLayoutGroupFieldConfig(input: FormlyFieldC
  * Creates a flex-layout-wrapped field group that arranges child fields horizontally
  * with configurable sizing, breakpoints, and responsive behavior.
  *
- * @param fieldConfigs - Array of field configs or field config pairs with size overrides
- * @param options - Flex layout defaults including breakpoint, relative sizing, and default size
- * @param options.relative - Whether sizes are relative to the container
- * @param options.breakpoint - Responsive breakpoint at which to stack fields vertically
- * @param options.breakToColumn - Whether to break to column layout at the breakpoint
- * @param options.size - Default flex size for fields without an explicit size; defaults to 2
- * @returns A {@link FormlyFieldConfig} with flex wrapper applied
+ * @param fieldConfigs - Array of field configs or field config pairs with size overrides.
+ * @param options - Flex layout defaults including breakpoint, relative sizing, and default size.
+ * @param options.relative - Whether sizes are relative to the container.
+ * @param options.breakpoint - Responsive breakpoint at which to stack fields vertically.
+ * @param options.breakToColumn - Whether to break to column layout at the breakpoint.
+ * @param options.size - Default flex size for fields without an explicit size; defaults to 2.
+ * @returns A {@link FormlyFieldConfig} with flex wrapper applied.
  *
  * @example
  * ```typescript

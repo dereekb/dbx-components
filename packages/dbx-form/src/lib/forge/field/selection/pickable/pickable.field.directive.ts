@@ -79,7 +79,7 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
   protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
   protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
   protected readonly ariaDescribedBy = computed(() => {
-    let result: string | null = null;
+    let result: Maybe<string> = null;
 
     if (this.errorsToDisplay().length > 0) {
       result = this.errorId();

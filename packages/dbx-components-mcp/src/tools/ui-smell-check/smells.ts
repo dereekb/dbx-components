@@ -7,6 +7,7 @@
  * appending one entry to {@link UI_SMELLS}.
  */
 
+import type { Maybe } from '@dereekb/util';
 import type { TokenEntry } from '../../manifest/tokens-schema.js';
 import type { TokenRegistry } from '../../registry/tokens-runtime.js';
 import type { UiComponentRegistry } from '../../registry/ui-components-runtime.js';
@@ -208,10 +209,10 @@ interface CardSurfaceScanState {
   blockStart: number;
   blockHeaderStart: number;
   lastBoundary: number;
-  result: CardSurfaceHit | null;
+  result: Maybe<CardSurfaceHit>;
 }
 
-function findCardSurface(scss: string): CardSurfaceHit | null {
+function findCardSurface(scss: string): Maybe<CardSurfaceHit> {
   // Walk SCSS rule blocks: anything between `{` and matching `}`. Then look
   // for the conjunction of `padding`, `background:` (white-ish), and a
   // `border-radius`.
@@ -254,7 +255,7 @@ function handleCardSurfaceCloseBrace(state: CardSurfaceScanState, scss: string, 
   }
 }
 
-function tryMatchCardSurface(input: { scss: string; blockHeaderStart: number; blockStart: number; blockEnd: number }): CardSurfaceHit | null {
+function tryMatchCardSurface(input: { scss: string; blockHeaderStart: number; blockStart: number; blockEnd: number }): Maybe<CardSurfaceHit> {
   const { scss, blockHeaderStart, blockStart, blockEnd } = input;
   const block = scss.slice(blockStart, blockEnd);
   if (!looksLikeCardSurface(block)) return null;
@@ -612,9 +613,9 @@ const CARD_LIKE_CHILD_RE = /(mat-card|dbx-card|dbx-content-box|dbx-content-pit|\
  * @param offset - Character offset whose enclosing rule body is needed.
  * @returns The substring between the rule's matching braces, or `null` when no rule encloses the offset.
  */
-function findEnclosingRuleBody(scss: string, offset: number): string | null {
+function findEnclosingRuleBody(scss: string, offset: number): Maybe<string> {
   const openAt = findEnclosingOpenBrace(scss, offset);
-  let result: string | null = null;
+  let result: Maybe<string> = null;
   if (openAt >= 0) {
     const close = findMatchingCloseBrace(scss, openAt);
     if (close > openAt) result = scss.slice(openAt + 1, close);
@@ -1039,7 +1040,7 @@ const IGNORE_DIRECTIVE_RE = /(?:\/\/|\/\*|<!--)\s*dbx-smell-ignore(?:\s*:\s*([^\
 
 interface IgnoreEntry {
   readonly line: number;
-  readonly ids: readonly string[] | null;
+  readonly ids: Maybe<readonly string[]>;
 }
 
 function collectIgnoreEntries(text: string): readonly IgnoreEntry[] {
@@ -1048,7 +1049,7 @@ function collectIgnoreEntries(text: string): readonly IgnoreEntry[] {
     if (match.index === undefined) continue;
     const line = lineNumberOf(text, match.index);
     const idsRaw = match[1]?.trim();
-    let ids: readonly string[] | null;
+    let ids: Maybe<readonly string[]>;
     if (idsRaw === undefined || idsRaw.length === 0) {
       ids = null;
     } else {
@@ -1135,8 +1136,8 @@ function consolidate(matches: readonly SmellMatch[]): { readonly out: readonly S
  * Runs every detector against the input, applies cascade and ignore-directive
  * suppression, and consolidates duplicate findings.
  *
- * @param input - the smell-detector input bundle
- * @returns every surfaced smell match plus telemetry counters
+ * @param input - The smell-detector input bundle.
+ * @returns Every surfaced smell match plus telemetry counters.
  */
 export function detectSmellsDetailed(input: SmellInput): DetectSmellsResult {
   const raw = runAllDetectors(input);
@@ -1219,8 +1220,8 @@ function isSuppressedByCardCascade(match: SmellMatch, cardRanges: readonly CardR
  * Backwards-compatible flat list — the historical entry point. Internally
  * delegates to {@link detectSmellsDetailed} and drops the counters.
  *
- * @param input - the smell-detector input bundle
- * @returns every surfaced smell match in catalog order
+ * @param input - The smell-detector input bundle.
+ * @returns Every surfaced smell match in catalog order.
  */
 export function detectSmells(input: SmellInput): readonly SmellMatch[] {
   return detectSmellsDetailed(input).matches;

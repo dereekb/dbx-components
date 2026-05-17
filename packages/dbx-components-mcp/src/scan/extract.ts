@@ -192,9 +192,9 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedJsDocTags {
  * single-line case and the outer function's cognitive complexity stays
  * low.
  *
- * @param state - mutable tag-state being accumulated across one declaration
- * @param name - the JSDoc tag name (without the `@`)
- * @param text - the tag's comment text, already trimmed
+ * @param state - Mutable tag-state being accumulated across one declaration.
+ * @param name - The JSDoc tag name (without the `@`)
+ * @param text - The tag's comment text, already trimmed.
  */
 function applyJsDocTag(state: MutableTagState, name: string, text: string): void {
   switch (name) {
@@ -237,8 +237,8 @@ function applyJsDocTag(state: MutableTagState, name: string, text: string): void
  * whitespace-separated entries so authors can write `@semanticTopic a, b`
  * or `@semanticTopic a b`.
  *
- * @param text - the raw tag comment text
- * @returns the trimmed, non-empty entries
+ * @param text - The raw tag comment text.
+ * @returns The trimmed, non-empty entries.
  */
 function splitListTagText(text: string): readonly string[] {
   const out: string[] = [];
@@ -256,8 +256,8 @@ function splitListTagText(text: string): readonly string[] {
  * is: optional first line is a caption, remaining lines are code. Fenced
  * code blocks (```ts ... ```) are unwrapped if present.
  *
- * @param text - the raw `@example` body
- * @returns the parsed example
+ * @param text - The raw `@example` body.
+ * @returns The parsed example.
  */
 function parseExampleTag(text: string): { readonly caption?: string; readonly code: string } {
   const trimmed = text.trim();
@@ -362,8 +362,8 @@ interface ResolveGuardsInput {
  * same file and was not already declared. Result is deduplicated and
  * preserves declaration order with auto-detected entries appended.
  *
- * @param input - the type's name plus the declared guards and same-file exports
- * @returns the merged guards list
+ * @param input - The type's name plus the declared guards and same-file exports.
+ * @returns The merged guards list.
  */
 function resolveGuards(input: ResolveGuardsInput): readonly string[] {
   const { name, declaredGuardNames, sameFileExports } = input;
@@ -395,8 +395,8 @@ interface ResolveFactoriesInput {
  * still consulted to filter out declared names that don't actually
  * resolve to an export.
  *
- * @param input - the declared factories and same-file exports
- * @returns the resolved factories list
+ * @param input - The declared factories and same-file exports.
+ * @returns The resolved factories list.
  */
 function resolveFactories(input: ResolveFactoriesInput): readonly string[] {
   const { declaredFactoryNames, sameFileExports } = input;
@@ -419,8 +419,8 @@ function resolveFactories(input: ResolveFactoriesInput): readonly string[] {
  * source file. Used to filter declared / auto-detected guards and
  * factories down to symbols that actually exist.
  *
- * @param sourceFile - the source file to scan
- * @returns the set of exported binding names
+ * @param sourceFile - The source file to scan.
+ * @returns The set of exported binding names.
  */
 function collectSameFileExports(sourceFile: SourceFile): ReadonlySet<string> {
   const names = new Set<string>();
@@ -436,8 +436,8 @@ function collectSameFileExports(sourceFile: SourceFile): ReadonlySet<string> {
  * categories. Conservative — anything we don't recognise becomes
  * `'other'` rather than guessing.
  *
- * @param typeNode - the type alias's right-hand-side node, or undefined
- * @returns the corresponding manifest baseType
+ * @param typeNode - The type alias's right-hand-side node, or undefined.
+ * @returns The corresponding manifest baseType.
  */
 function detectBaseType(typeNode: TypeNode | undefined): SemanticTypeEntry['baseType'] {
   let result: SemanticTypeEntry['baseType'] = 'other';

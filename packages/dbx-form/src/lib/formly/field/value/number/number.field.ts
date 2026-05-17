@@ -40,8 +40,8 @@ export interface NumberFieldConfig extends LabeledFieldConfig, DescriptionFieldC
  * Builds an array of value parsers for a number field, incorporating any configured
  * number transformation (e.g., precision, rounding) as a parser prepended to existing parsers.
  *
- * @param config - Parser and transform configuration
- * @returns Array of value parsers, or undefined if none configured
+ * @param config - Parser and transform configuration.
+ * @returns Array of value parsers, or undefined if none configured.
  *
  * @example
  * ```typescript
@@ -69,7 +69,7 @@ export function formlyNumberFieldTransformParser(config: Partial<FieldConfigPars
  *
  * Adds a divisibility validator when both `step` and `enforceStep` are set.
  *
- * @param config - Number field configuration
+ * @param config - Number field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'input'` and input type `'number'`
  *
  * @example
@@ -139,7 +139,7 @@ export interface NumberSliderFieldConfig extends NumberFieldConfig {
 /**
  * Creates a Formly field configuration for a Material slider input.
  *
- * @param config - Slider field configuration including max (required), thumb label, and tick interval
+ * @param config - Slider field configuration including max (required), thumb label, and tick interval.
  * @returns A validated {@link FormlyFieldConfig} with type `'slider'`
  *
  * @example
@@ -195,7 +195,7 @@ export type DollarAmountFieldConfig = Omit<NumberFieldConfig, 'roundToStep' | 'p
  * Creates a number field pre-configured for dollar amount input with cent-level precision.
  *
  * @param config - Number field configuration (precision is overridden to dollar amount precision)
- * @returns A {@link FormlyFieldConfig} for dollar amount input
+ * @returns A {@link FormlyFieldConfig} for dollar amount input.
  *
  * @example
  * ```typescript

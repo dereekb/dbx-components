@@ -17,7 +17,7 @@ import type { SpecFileTree, SpecNode, SpecSearchHit, SpecSearchQuery, SpecSearch
 
 /**
  * Searches a parsed spec tree against a single query. Behaviour by
- * `query.mode`:
+ * `query.mode`:.
  *
  * - `'model'` — case-insensitive equality match on every `fixture` node's
  *   {@link SpecNode.model} (e.g. `Job`).
@@ -29,9 +29,9 @@ import type { SpecFileTree, SpecNode, SpecSearchHit, SpecSearchQuery, SpecSearch
  * - `'it'` — case-insensitive substring match against every `it` node's
  *   title.
  *
- * @param tree - the parsed spec tree
- * @param query - the search criterion
- * @returns the search hits (possibly empty)
+ * @param tree - The parsed spec tree.
+ * @param query - The search criterion.
+ * @returns The search hits (possibly empty)
  */
 export function searchSpecTree(tree: SpecFileTree, query: SpecSearchQuery): SpecSearchResult {
   const hits: SpecSearchHit[] = [];
@@ -108,8 +108,8 @@ function matchNode(input: MatchNodeInput): void {
  * Splits a `>`-delimited chain query into its trimmed model names. Empty
  * tokens (from leading/trailing separators) are dropped.
  *
- * @param value - the raw chain query
- * @returns the parsed model names
+ * @param value - The raw chain query.
+ * @returns The parsed model names.
  */
 function parseChainQuery(value: string): readonly string[] {
   return value
@@ -123,9 +123,9 @@ function parseChainQuery(value: string): readonly string[] {
  * `true` when {@link sequence} appears as a contiguous subsequence inside
  * {@link chain} (case-insensitive). Empty sequences match everything.
  *
- * @param chain - the fixture chain (model names from root to leaf)
- * @param sequence - the parsed query sequence
- * @returns `true` when the sequence is contained in the chain
+ * @param chain - The fixture chain (model names from root to leaf)
+ * @param sequence - The parsed query sequence.
+ * @returns `true` when the sequence is contained in the chain.
  */
 function chainContainsSequence(chain: readonly string[], sequence: readonly string[]): boolean {
   if (sequence.length === 0) return true;

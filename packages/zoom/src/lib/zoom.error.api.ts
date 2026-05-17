@@ -69,8 +69,9 @@ export type LogZoomServerErrorFunction = (error: FetchRequestFactoryError | Zoom
 /**
  * Creates a logZoomServerErrorFunction that logs the error to console.
  *
- * @param zoomApiNamePrefix Prefix to use when logging. I.E. ZoomError, etc.
+ * @param zoomApiNamePrefix - Prefix to use when logging. I.E. ZoomError, etc.
  * @returns
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function logZoomServerErrorFunction(zoomApiNamePrefix: string): LogZoomServerErrorFunction {
@@ -99,9 +100,10 @@ export type ParseZoomFetchResponseErrorFunction = (responseError: FetchResponseE
 /**
  * Wraps a ConfiguredFetch to support handling errors returned by fetch.
  *
- * @param parseZoomError Function to parse fetch response errors into typed Zoom errors
- * @param defaultLogError Default error logging function
- * @returns A factory that wraps ConfiguredFetch with error handling
+ * @param parseZoomError - Function to parse fetch response errors into typed Zoom errors.
+ * @param defaultLogError - Default error logging function.
+ * @returns A factory that wraps ConfiguredFetch with error handling.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function handleZoomErrorFetchFactory(parseZoomError: ParseZoomFetchResponseErrorFunction, defaultLogError: LogZoomServerErrorFunction): HandleZoomErrorFetchFactory {
@@ -182,8 +184,8 @@ export interface ZoomRateLimitHeaderDetails {
 /**
  * Parses rate limit header details from a Zoom API response.
  *
- * @param headers The response headers to parse
- * @returns Parsed rate limit details, or null if required headers are missing
+ * @param headers - The response headers to parse.
+ * @returns Parsed rate limit details, or null if required headers are missing.
  */
 export function zoomRateLimitHeaderDetails(headers: Headers): Maybe<ZoomRateLimitHeaderDetails> {
   const limitHeader = headers.get(ZOOM_RATE_LIMIT_LIMIT_HEADER);
@@ -217,9 +219,9 @@ export class ZoomTooManyRequestsError extends ZoomServerFetchResponseError {
 /**
  * Function that parses/transforms a ZoomServerErrorData into a general ZoomServerError or other known error type.
  *
- * @param zoomServerError The error data from the Zoom API
- * @param responseError The original fetch response error
- * @returns A typed ZoomServerFetchResponseError, or undefined
+ * @param zoomServerError - The error data from the Zoom API.
+ * @param responseError - The original fetch response error.
+ * @returns A typed ZoomServerFetchResponseError, or undefined.
  */
 export function parseZoomServerErrorData(zoomServerError: ZoomServerErrorData, responseError: FetchResponseError): ZoomServerFetchResponseError | undefined {
   let result: ZoomServerFetchResponseError | undefined;
@@ -256,8 +258,8 @@ export interface SilenceZoomErrorConfig {
  *
  * If other options are input, it merges those two options together and adds silenceError to the omitted keys.
  *
- * @param options Optional additional MakeUrlSearchParamsOptions to merge
- * @returns A MakeUrlSearchParamsOptions that omits silenceError
+ * @param options - Optional additional MakeUrlSearchParamsOptions to merge.
+ * @returns A MakeUrlSearchParamsOptions that omits silenceError.
  */
 export function omitSilenceZoomErrorKeys(options?: MakeUrlSearchParamsOptions): MakeUrlSearchParamsOptions {
   const omitKeys = ['silenceError'];

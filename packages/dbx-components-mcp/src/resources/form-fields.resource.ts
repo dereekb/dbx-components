@@ -31,8 +31,8 @@ export interface RegisterFormFieldsResourceConfig {
  * filtered views by produces/tier/array-output) on the given server. The
  * separate URIs reflect the same primary indexes that the lookup tools use.
  *
- * @param server - the MCP server to register resources against
- * @param config - registry the resources should read from
+ * @param server - The MCP server to register resources against.
+ * @param config - Registry the resources should read from.
  */
 export function registerFormFieldsResource(server: McpServer, config: RegisterFormFieldsResourceConfig): void {
   const { registry } = config;

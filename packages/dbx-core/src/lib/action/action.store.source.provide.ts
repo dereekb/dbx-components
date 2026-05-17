@@ -1,4 +1,5 @@
 import { forwardRef, type Provider, type Type } from '@angular/core';
+import type { Maybe } from '@dereekb/util';
 import { ActionContextStoreSource, DbxActionContextStoreSourceInstance, SecondaryActionContextStoreSource } from './action.store.source';
 import { DbxActionContextMachineAsService } from './action.machine';
 import { clean } from '../rxjs/clean';
@@ -9,19 +10,20 @@ import { clean } from '../rxjs/clean';
  * When `sourceType` is provided, the existing class is registered as the source. When `null`,
  * a standalone {@link DbxActionContextMachineAsService} is created as the default implementation.
  *
- * @param sourceType - The concrete source class to register, or `null` to use the default machine-based implementation
- * @returns An array of Angular providers
+ * @param sourceType - The concrete source class to register, or `null` to use the default machine-based implementation.
+ * @returns An array of Angular providers.
  *
- * @example
- * ```typescript
- * @Directive({
+ * @Directive ({
  *   selector: '[myAction]',
  *   providers: provideActionStoreSource(MyActionDirective),
  * })
  * export class MyActionDirective extends ActionContextStoreSource { ... }
  * ```
+ *
+ * @example
+ * ```typescript
  */
-export function provideActionStoreSource<S extends ActionContextStoreSource>(sourceType: Type<S> | null): Provider[] {
+export function provideActionStoreSource<S extends ActionContextStoreSource>(sourceType: Maybe<Type<S>>): Provider[] {
   const storeSourceProvider: Provider =
     sourceType != null
       ? {
@@ -47,8 +49,8 @@ export function provideActionStoreSource<S extends ActionContextStoreSource>(sou
  * Creates Angular DI providers for a {@link SecondaryActionContextStoreSource} along with
  * the standard {@link ActionContextStoreSource} and {@link DbxActionContextStoreSourceInstance} providers.
  *
- * @param sourceType - The concrete secondary source class to register
- * @returns An array of Angular providers
+ * @param sourceType - The concrete secondary source class to register.
+ * @returns An array of Angular providers.
  */
 export function provideSecondaryActionStoreSource<S extends SecondaryActionContextStoreSource>(sourceType: Type<S>): Provider[] {
   return [

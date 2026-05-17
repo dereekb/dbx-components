@@ -94,8 +94,8 @@ const cache = new Map<string, Promise<DownstreamCatalog>>();
  * Cached for the server lifetime. Concurrent callers get the same in-flight
  * promise and share the underlying ts-morph parses.
  *
- * @param input - the scope to scan
- * @returns the assembled downstream catalog
+ * @param input - The scope to scan.
+ * @returns The assembled downstream catalog.
  */
 export function getDownstreamCatalog(input: GetDownstreamCatalogInput): Promise<DownstreamCatalog> {
   const key = cacheKey(input);
@@ -174,8 +174,7 @@ async function buildCatalog(input: GetDownstreamCatalogInput): Promise<Downstrea
     return result;
   });
   modelGroups.sort((a, b) => {
-    const result = a.sourcePackage !== b.sourcePackage ? a.sourcePackage.localeCompare(b.sourcePackage) : a.name.localeCompare(b.name);
-    return result;
+    return a.sourcePackage !== b.sourcePackage ? a.sourcePackage.localeCompare(b.sourcePackage) : a.name.localeCompare(b.name);
   });
 
   return {

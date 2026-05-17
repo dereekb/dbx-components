@@ -36,8 +36,8 @@ export interface IsWebsiteUrlValidatorConfig {
  * Angular form validator that checks whether the control value is a valid website URL,
  * optionally requiring an http/https prefix, allowing port numbers, and restricting to specific domains.
  *
- * @param config - Optional validation configuration for prefix, port, and domain requirements
- * @returns A ValidatorFn that validates website URLs
+ * @param config - Optional validation configuration for prefix, port, and domain requirements.
+ * @returns A ValidatorFn that validates website URLs.
  */
 export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): ValidatorFn {
   const { requirePrefix, allowPorts, validDomains: inputValidDomains } = config ?? {};
@@ -65,7 +65,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
 
   const portNumbersMessagePart = isAllowPorts ? '' : ' Urls with port numbers (e.g. localhost:8080) are not allowed.';
 
-  const validateWebsiteValue: (details: WebsiteUrlDetails) => ValidationErrors | null = isPrefixRequired
+  const validateWebsiteValue: (details: WebsiteUrlDetails) => Maybe<ValidationErrors> = isPrefixRequired
     ? (details: WebsiteUrlDetails) => {
         return isValidUrl(details)
           ? null
@@ -89,7 +89,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
             };
       };
 
-  const validateWebsiteDomain: (details: WebsiteUrlDetails) => ValidationErrors | null = (details: WebsiteUrlDetails) => {
+  const validateWebsiteDomain: (details: WebsiteUrlDetails) => Maybe<ValidationErrors> = (details: WebsiteUrlDetails) => {
     let pass = validDomainsSet.size === 0;
 
     if (details.hasWebsiteDomain && validateDomains) {
@@ -108,7 +108,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
         };
   };
 
-  return (control: AbstractControl): ValidationErrors | null => {
+  return (control: AbstractControl): Maybe<ValidationErrors> => {
     const value: string | undefined = control.value;
 
     if (value != null) {

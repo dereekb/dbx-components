@@ -39,8 +39,8 @@ export interface RegisterSemanticTypesResourceConfig {
  * per-topic listing, per-package listing) on the given server. Mirrors the
  * pattern used by {@link registerFirebaseModelsResource}.
  *
- * @param server - the MCP server to register resources against
- * @param config - the registry to expose
+ * @param server - The MCP server to register resources against.
+ * @param config - The registry to expose.
  */
 export function registerSemanticTypesResource(server: McpServer, config: RegisterSemanticTypesResourceConfig): void {
   const { registry } = config;

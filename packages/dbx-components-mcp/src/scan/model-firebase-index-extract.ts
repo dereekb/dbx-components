@@ -176,8 +176,8 @@ const WHERE_OPERATOR_SET: ReadonlySet<string> = new Set(FIRESTORE_WHERE_OPERATOR
  * the order ts-morph reports them, declarations within a file in source
  * order.
  *
- * @param input - the ts-morph project, identity resolver, and project root
- * @returns the extracted entries plus any non-fatal warnings
+ * @param input - The ts-morph project, identity resolver, and project root.
+ * @returns The extracted entries plus any non-fatal warnings.
  */
 export function extractModelFirebaseIndexEntries(input: ExtractModelFirebaseIndexEntriesInput): ExtractModelFirebaseIndexEntriesResult {
   const { project, identityResolver } = input;
@@ -658,8 +658,8 @@ interface BuildConstraintSequencesInput {
  * the body sits inside an `if` branch (a strong signal the factory needs
  * explicit path declarations).
  *
- * @param input - extracted body entries, JSDoc-declared paths, warning sink
- * @returns the sequences to feed the analyzer
+ * @param input - Extracted body entries, JSDoc-declared paths, warning sink.
+ * @returns The sequences to feed the analyzer.
  */
 function buildConstraintSequences(input: BuildConstraintSequencesInput): readonly ConstraintSequence[] {
   const { bodyEntries, conditionalFields, paths, factoryName, filePath, line, warnings } = input;
@@ -1018,8 +1018,8 @@ interface ResolvedCallee {
  * TypeScript symbol table. Returns `undefined` for arrow-function variables,
  * methods, or unresolvable names.
  *
- * @param identifier - the call expression's bare-identifier callee
- * @returns the resolved declaration and whether it has a body
+ * @param identifier - The call expression's bare-identifier callee.
+ * @returns The resolved declaration and whether it has a body.
  */
 function resolveCalleeDeclaration(identifier: Identifier): ResolvedCallee | undefined {
   const symbol = identifier.getSymbol();
@@ -1045,9 +1045,9 @@ function resolveCalleeDeclaration(identifier: Identifier): ResolvedCallee | unde
  * `<T>`, or `Maker` suffix) so generic instantiations and reasonable aliases
  * are caught without compile-time type evaluation.
  *
- * @param returnType - the resolved return-type text
- * @returns true when the type looks like a Firestore-query-constraint
- *   return
+ * @param returnType - The resolved return-type text.
+ * @returns True when the type looks like a Firestore-query-constraint
+ *   return.
  */
 function isConstraintRelatedReturnType(returnType: string): boolean {
   if (returnType.length === 0) {
@@ -1105,8 +1105,8 @@ function buildDeclKey(decl: FunctionDeclaration): string {
  * branching constructs in {@link COMPLEX_BODY_SYNTAX_KINDS} cover the cases
  * authors actually use to build different constraint sets per call.
  *
- * @param bodyNode - the outer function body block
- * @returns the first disallowed branch's kind + line, or undefined when clean
+ * @param bodyNode - The outer function body block.
+ * @returns The first disallowed branch's kind + line, or undefined when clean.
  */
 function findFirstBranchNode(bodyNode: Node): { readonly branchKind: ComplexQueryBranchKind; readonly line: number } | undefined {
   let result: { readonly branchKind: ComplexQueryBranchKind; readonly line: number } | undefined;
@@ -1129,8 +1129,8 @@ function findFirstBranchNode(bodyNode: Node): { readonly branchKind: ComplexQuer
  * factories only delegate to other query functions and never emit constraints
  * directly.
  *
- * @param bodyNode - the outer function body block
- * @returns the offending call's callee name + line, or undefined when clean
+ * @param bodyNode - The outer function body block.
+ * @returns The offending call's callee name + line, or undefined when clean.
  */
 function getCallExpressionName(expression: Node): string | undefined {
   if (Node.isIdentifier(expression)) {
@@ -1234,8 +1234,8 @@ function readDirectionLiteral(node: Node | undefined): 'asc' | 'desc' | undefine
  * camelCase (`jobLocationWeeksDirty` → `job-location-weeks-dirty`) and
  * SCREAMING_SNAKE_CASE; already-kebab inputs pass through unchanged.
  *
- * @param name - the export identifier
- * @returns the kebab-case slug
+ * @param name - The export identifier.
+ * @returns The kebab-case slug.
  */
 export function toKebabCase(name: string): string {
   if (name.length === 0) {

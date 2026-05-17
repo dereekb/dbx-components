@@ -149,8 +149,9 @@ export class QuizStore extends ComponentStore<QuizStoreState> {
   /**
    * Returns a reactive observable of the answer for a given question, looked up by id, index, or the current question.
    *
-   * @param lookupInput - Lookup criteria specifying which question's answer to retrieve
-   * @returns An observable that emits the current answer for the specified question, or undefined if not answered
+   * @param lookupInput - Lookup criteria specifying which question's answer to retrieve.
+   * @param lookupInput - Lookup criteria specifying which question's answer to retrieve.
+   * @returns An observable that emits the current answer for the specified question, or undefined if not answered.
    *
    * @example
    * ```ts
@@ -159,8 +160,6 @@ export class QuizStore extends ComponentStore<QuizStoreState> {
    * // By question id:
    * store.answerForQuestion({ id: 'q1' }).subscribe(answer => console.log(answer));
    * ```
-   *
-   * @param lookupInput - Lookup criteria specifying which question's answer to retrieve
    */
   answerForQuestion(lookupInput: ObservableOrValue<QuizStoreAnswerLookupInput>): Observable<Maybe<QuizAnswer>> {
     return asObservable(lookupInput).pipe(

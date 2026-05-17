@@ -17,8 +17,8 @@ const FUNCTION_NAME = 'snapshotConverterFunctions';
  * the converter consts whose initializer is a `snapshotConverterFunctions`
  * call.
  *
- * @param sf - the parsed source file to inspect
- * @returns one entry per detected converter
+ * @param sf - The parsed source file to inspect.
+ * @returns One entry per detected converter.
  */
 export function findConverters(sf: SourceFile): readonly ExtractedConverter[] {
   const out: ExtractedConverter[] = [];

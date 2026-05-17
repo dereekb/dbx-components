@@ -10,10 +10,10 @@ const TEXT_DECODER = new TextDecoder('latin1');
  * @param file - File picked from the upload component.
  * @returns The classified kind, or `null` if the file is not a supported PDF/PNG/JPEG.
  */
-export function classifyPdfMergeFile(file: File): PdfMergeEntryKind | null {
+export function classifyPdfMergeFile(file: File): Maybe<PdfMergeEntryKind> {
   const mimeType = (file.type ?? '').toLowerCase();
   const lower = file.name.toLowerCase();
-  let kind: PdfMergeEntryKind | null;
+  let kind: Maybe<PdfMergeEntryKind>;
 
   if (mimeType === PDF_MIME_TYPE || lower.endsWith('.pdf')) {
     kind = 'pdf';
@@ -73,11 +73,11 @@ export interface BuildPdfMergeEntryConfig {
  * @returns The new entry with `validating` status, or `null` when the file is not a supported PDF/PNG/JPEG.
  * @__NO_SIDE_EFFECTS__
  */
-export function buildPdfMergeEntry(file: File, config?: Maybe<BuildPdfMergeEntryConfig>): PdfMergeEntry | null {
+export function buildPdfMergeEntry(file: File, config?: Maybe<BuildPdfMergeEntryConfig>): Maybe<PdfMergeEntry> {
   const kind = classifyPdfMergeFile(file);
   const idFactory = config?.idFactory ?? DEFAULT_ENTRY_ID_FACTORY;
   const slotId = config?.slotId;
-  let entry: PdfMergeEntry | null;
+  let entry: Maybe<PdfMergeEntry>;
 
   if (kind == null) {
     entry = null;

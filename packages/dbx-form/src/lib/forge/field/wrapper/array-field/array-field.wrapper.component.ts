@@ -83,7 +83,7 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
   /**
    * Returns the array field key from the wrapper's field inputs.
    *
-   * @returns the array field key, or an empty string if not available
+   * @returns The array field key, or an empty string if not available.
    */
   private _arrayKey(): string {
     return this.fieldInputs()?.key ?? '';
@@ -96,7 +96,7 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
    * The template is the container field definition (with element wrappers)
    * built by {@link dbxForgeArrayField} and passed via wrapper props.
    *
-   * @returns the array item definition template, or undefined if not configured
+   * @returns The array item definition template, or undefined if not configured.
    */
   private _itemTemplate(): ArrayItemDefinitionTemplate | undefined {
     return this.props()?.itemTemplate;
@@ -112,7 +112,7 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
    * undefined in some render phases — so we source the value from the
    * DynamicForm signal instead.
    *
-   * @returns the current array items, or an empty array if unavailable
+   * @returns The current array items, or an empty array if unavailable.
    */
   private _readArrayValue(): unknown[] {
     const key = this._arrayKey();
@@ -134,8 +134,8 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
    * 2. Remove the original item at fromIndex (adjusted for the insertion shift)
    * 3. Patch the form value so the moved item's data ends up at the correct position
    *
-   * @param fromIndex - the source index of the item to move
-   * @param toIndex - the destination index for the item
+   * @param fromIndex - The source index of the item to move.
+   * @param toIndex - The destination index for the item.
    */
   move(fromIndex: number, toIndex: number): void {
     const template = this._itemTemplate();
@@ -167,7 +167,7 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
   /**
    * Removes an item at the given index.
    *
-   * @param index - the index of the item to remove
+   * @param index - The index of the item to remove.
    */
   removeItem(index: number): void {
     const key = this._arrayKey();
@@ -189,8 +189,8 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
    * so the slot is registered AND initialized with the duplicated values in a
    * single event (back-to-back dispatches don't settle reliably).
    *
-   * @param fromIndex - the index of the item to duplicate
-   * @param toIndex - the index at which to insert the duplicated item
+   * @param fromIndex - The index of the item to duplicate.
+   * @param toIndex - The index at which to insert the duplicated item.
    */
   duplicateItem(fromIndex: IndexNumber, toIndex: IndexNumber): void {
     const template = this._itemTemplate();

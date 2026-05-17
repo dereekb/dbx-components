@@ -104,6 +104,11 @@ const SETUP_SHIM_FILES: Record<string, string> = {
  * in `node_modules`. During workspace development, resolves to the root-level shim
  * file which re-exports from the package source via vite's tsconfig path resolution.
  *
+ * @param name - The setup file entry point name (e.g., 'setup-firebase', 'setup-angular').
+ * @param rootDir - Absolute path to the workspace root directory.
+ * @param pathFromRoot - Relative path from the workspace root to the consuming project.
+ * @returns Absolute or relative file path to the resolved setup file.
+ *
  * @example
  * ```typescript
  * // When @dereekb/vitest is installed from npm:
@@ -113,11 +118,6 @@ const SETUP_SHIM_FILES: Record<string, string> = {
  * //   returns '/path/to/workspace/vitest.setup.firebase.ts'
  * resolveVitestSetupFile('setup-firebase', rootDir, pathFromRoot);
  * ```
- *
- * @param name - The setup file entry point name (e.g., 'setup-firebase', 'setup-angular').
- * @param rootDir - Absolute path to the workspace root directory.
- * @param pathFromRoot - Relative path from the workspace root to the consuming project.
- * @returns Absolute or relative file path to the resolved setup file.
  */
 function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: string): string {
   const _require = createRequire(path.resolve(rootDir, 'noop.js'));

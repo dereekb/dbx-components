@@ -42,8 +42,8 @@ export interface FieldAutocompleteAttributes {
  * (matching the Chrome autofill workaround). When a string, sets the `autocomplete` attribute
  * to that value.
  *
- * @param autocomplete - the autocomplete option to convert into HTML attributes
- * @returns the corresponding attributes, or undefined when no autocomplete option is provided
+ * @param autocomplete - The autocomplete option to convert into HTML attributes.
+ * @returns The corresponding attributes, or undefined when no autocomplete option is provided.
  */
 export function fieldAutocompleteAttributeValue(autocomplete?: Maybe<FieldAutocompleteAttributeOption>): Maybe<FieldAutocompleteAttributes> {
   let result: Maybe<FieldAutocompleteAttributes>;
@@ -63,8 +63,9 @@ export function fieldAutocompleteAttributeValue(autocomplete?: Maybe<FieldAutoco
 /**
  * Returns the attributes to disable autofill on an input element.
  *
+ * @returns Attributes that disable browser autofill when applied to an input element.
+ *
  * @see https://stackoverflow.com/questions/15738259/disabling-chrome-autofill
- * @returns attributes that disable browser autofill when applied to an input element
  */
 export function disableAutofillAttributes(): FieldAutocompleteAttributes {
   return {

@@ -53,8 +53,8 @@ export type DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory = (
  * Creates a factory that produces a beforeMonthViewRender handler for the schedule selection calendar.
  * The handler applies CSS classes and metadata to each day cell based on the current selection state.
  *
- * @param inputModifyFn - Optional function to further customize each day cell after default processing
- * @returns A factory function that accepts a state observable and produces a render handler
+ * @param inputModifyFn - Optional function to further customize each day cell after default processing.
+ * @returns A factory function that accepts a state observable and produces a render handler.
  */
 export function dbxScheduleSelectionCalendarBeforeMonthViewRenderFactory(inputModifyFn?: Maybe<DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction>): DbxScheduleSelectionCalendarBeforeMonthViewRenderFunctionFactory {
   // eslint-disable-next-line @typescript-eslint/no-empty-function

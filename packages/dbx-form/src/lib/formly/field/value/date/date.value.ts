@@ -34,15 +34,16 @@ export enum DbxDateTimeValueMode {
  *
  * Handles timezone conversion when a timezone instance is provided and the mode requires it.
  *
- * @param mode - Determines how the input value is interpreted
- * @param timezoneInstance - Optional timezone converter for UTC-normal date handling
- * @returns A function that parses input values to Date objects
+ * @param mode - Determines how the input value is interpreted.
+ * @param timezoneInstance - Optional timezone converter for UTC-normal date handling.
+ * @returns A function that parses input values to Date objects.
  *
  * @example
  * ```typescript
  * const parser = dbxDateTimeInputValueParseFactory(DbxDateTimeValueMode.DATE_STRING, timezoneInstance);
  * const date = parser('2024-01-15T10:00:00Z');
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date | string | number>) => Maybe<Date> {
@@ -122,15 +123,16 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
  *
  * Handles timezone conversion when a timezone instance is provided and the mode requires it.
  *
- * @param mode - Determines the output format
- * @param timezoneInstance - Optional timezone converter for UTC-normal date handling
- * @returns A function that formats Date objects to the target output type
+ * @param mode - Determines the output format.
+ * @param timezoneInstance - Optional timezone converter for UTC-normal date handling.
+ * @returns A function that formats Date objects to the target output type.
  *
  * @example
  * ```typescript
  * const formatter = dbxDateTimeOutputValueFactory(DbxDateTimeValueMode.DAY_STRING, null);
  * const dayString = formatter(new Date()); // e.g., '2024-01-15'
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezoneInstance: Maybe<DateTimezoneUtcNormalInstance>): (date: Maybe<Date>) => Maybe<Date | string | number> {
@@ -179,9 +181,9 @@ export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezo
  *
  * For string and number types, performs strict equality. For Date objects, compares hours and minutes.
  *
- * @param a - First date-time value
- * @param b - Second date-time value
- * @returns Whether the two values represent the same date-time
+ * @param a - First date-time value.
+ * @param b - Second date-time value.
+ * @returns Whether the two values represent the same date-time.
  */
 export function dbxDateTimeIsSameDateTimeFieldValue(a: Maybe<Date | ISO8601DayString | number>, b: Maybe<Date | ISO8601DayString | number>) {
   const typeofA = typeof a;
@@ -191,9 +193,9 @@ export function dbxDateTimeIsSameDateTimeFieldValue(a: Maybe<Date | ISO8601DaySt
 /**
  * Compares two date range field values for equality by comparing both start and end values.
  *
- * @param a - First date range value
- * @param b - Second date range value
- * @returns Whether the two date ranges represent the same range
+ * @param a - First date range value.
+ * @param b - Second date range value.
+ * @returns Whether the two date ranges represent the same range.
  */
 export function dbxDateRangeIsSameDateRangeFieldValue(a: Maybe<DateRangeWithDateOrStringValue>, b: Maybe<DateRangeWithDateOrStringValue>) {
   return a && b ? dbxDateTimeIsSameDateTimeFieldValue(a.start, b.start) && dbxDateTimeIsSameDateTimeFieldValue(a.end, b.end) : a == b;

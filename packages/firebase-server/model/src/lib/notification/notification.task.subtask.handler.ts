@@ -1,4 +1,3 @@
- 
 import {
   type NotificationTaskSubtaskTarget,
   type NotificationTask,
@@ -264,8 +263,8 @@ export interface NotificationTaskSubtaskNotificationTaskHandlerConfig<I extends 
  * This is the primary entry point for building complex, multi-step notification task handlers
  * such as storage file processing or other async workflows.
  *
- * @param factoryConfig - shared configuration including the input function, cleanup logic, and task type
- * @returns a factory function that produces {@link NotificationTaskServiceTaskHandlerConfig} entries
+ * @param factoryConfig - Shared configuration including the input function, cleanup logic, and task type.
+ * @returns A factory function that produces {@link NotificationTaskServiceTaskHandlerConfig} entries.
  *
  * @example
  * ```ts
@@ -313,8 +312,8 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<I extends 
     /**
      * Structure is similar to notificationTaskService(), but contained to handle the subtasks.
      *
-     * @param processorConfig - the processor configuration with target, flow, and cleanup
-     * @returns a processor with process and optional cleanup functions
+     * @param processorConfig - The processor configuration with target, flow, and cleanup.
+     * @returns A processor with process and optional cleanup functions.
      */
     function processorFunctionForConfig(processorConfig: NotificationTaskSubtaskProcessorConfig<I, CUI, D, M, S>): NotificationTaskSubtaskProcessor<I, CUI, D, M, S> {
       const { flow: inputFlows, cleanup, allowRunMultipleParts: processorAllowRunMultipleParts } = processorConfig;
@@ -574,7 +573,7 @@ export class NotificationTaskSubTaskMissingRequiredDataTermination extends BaseE
 /**
  * Creates a NotificationTaskSubTaskMissingRequiredDataTermination.
  *
- * @returns a new {@link NotificationTaskSubTaskMissingRequiredDataTermination} error instance
+ * @returns A new {@link NotificationTaskSubTaskMissingRequiredDataTermination} error instance.
  */
 export function notificationTaskSubTaskMissingRequiredDataTermination() {
   return new NotificationTaskSubTaskMissingRequiredDataTermination();

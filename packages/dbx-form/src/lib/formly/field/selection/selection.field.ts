@@ -34,7 +34,7 @@ export interface ValueSelectionFieldConfig<T> extends LabeledFieldConfig, Descri
  * Creates a Formly select field configuration with support for native/material select,
  * clear option, multiple selection, and "select all".
  *
- * @param config - Selection field configuration
+ * @param config - Selection field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'select'` or `'native-select'`
  *
  * @example
@@ -78,8 +78,9 @@ export function formlyValueSelectionField<T>(config: ValueSelectionFieldConfig<T
  * Creates a function that prepends a "clear" option to the selection options array
  * if one doesn't already exist.
  *
- * @param label - Optional label for the clear option
- * @returns A function that transforms selection options by prepending a clear option
+ * @param label - Optional label for the clear option.
+ * @returns A function that transforms selection options by prepending a clear option.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function formlyAddValueSelectionOptionFunction<T>(label?: string | undefined): (options: ValueSelectionOption<T>[]) => ValueSelectionOption<T>[] {

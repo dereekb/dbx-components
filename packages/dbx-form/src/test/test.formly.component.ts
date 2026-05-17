@@ -16,7 +16,7 @@ export const INVALID_TEST_STRING = 'INVALID_TEST_STRING';
 /**
  * Creates a required text field with a custom validator that rejects the INVALID_TEST_STRING value.
  *
- * @returns A Formly field configuration for a validated text input
+ * @returns A Formly field configuration for a validated text input.
  */
 export function testTextField(): FormlyFieldConfig {
   return formlyField({

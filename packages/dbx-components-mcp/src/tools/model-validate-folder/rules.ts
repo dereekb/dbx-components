@@ -13,11 +13,11 @@ import { buildRequiredFiles, RESERVED_MODEL_FOLDERS, type FolderInspection, type
  * aggregated diagnostics. Rules short-circuit on missing/invalid folders so a
  * stat failure does not cascade into spurious downstream warnings.
  *
- * @param inspection - the prepared folder inspection
- * @param options - optional per-call overrides forwarded to the per-file
+ * @param inspection - The prepared folder inspection.
+ * @param options - Optional per-call overrides forwarded to the per-file
  *   content validator (field-name length limit, ignored field names,
  *   ignored external sub-object parents)
- * @returns the violations the rules emit for that folder
+ * @returns The violations the rules emit for that folder.
  */
 export function runRules(inspection: FolderInspection, options?: RuleOptions): readonly Violation[] {
   const violations: Violation[] = [];

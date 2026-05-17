@@ -11,7 +11,7 @@ import { FORM_OPTIONS } from '@ng-forge/dynamic-forms';
  *
  * Must be called in an injection context (constructor, field initializer, or inject()-capable context).
  *
- * @returns A computed signal that is `true` when the form is disabled
+ * @returns A computed signal that is `true` when the form is disabled.
  *
  * @example
  * ```typescript

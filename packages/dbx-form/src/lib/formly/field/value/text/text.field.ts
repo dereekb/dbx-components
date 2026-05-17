@@ -43,8 +43,8 @@ export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldCon
  * Builds an array of value parsers for a text field, incorporating any configured
  * string transformation (e.g., trim, lowercase) as a parser prepended to existing parsers.
  *
- * @param config - Parser and transform configuration
- * @returns Array of value parsers, or undefined if none configured
+ * @param config - Parser and transform configuration.
+ * @returns Array of value parsers, or undefined if none configured.
  *
  * @example
  * ```typescript
@@ -70,7 +70,7 @@ export function formlyTextFieldTransformParser(config: Partial<FieldConfigParser
 /**
  * Creates a Formly field configuration for a single-line text input.
  *
- * @param config - Text field configuration including key, label, validation, and transform options
+ * @param config - Text field configuration including key, label, validation, and transform options.
  * @returns A validated {@link FormlyFieldConfig} with type `'input'`
  *
  * @example
@@ -109,7 +109,7 @@ export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFiel
 /**
  * Creates a Formly field configuration for a multi-line textarea input.
  *
- * @param config - Textarea field configuration including key, label, rows, and validation options
+ * @param config - Textarea field configuration including key, label, rows, and validation options.
  * @returns A validated {@link FormlyFieldConfig} with type `'textarea'`
  *
  * @example

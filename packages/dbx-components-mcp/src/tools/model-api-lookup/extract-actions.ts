@@ -31,8 +31,8 @@ export interface ActionLookupResult {
  * Walks the API app's action.server.ts files and builds a lookup map keyed
  * by params-type name.
  *
- * @param apiAbs - absolute path to the API package root
- * @returns the populated lookup maps and file count
+ * @param apiAbs - Absolute path to the API package root.
+ * @returns The populated lookup maps and file count.
  */
 export async function buildActionLookup(apiAbs: string): Promise<ActionLookupResult> {
   const modelRoot = join(apiAbs, COMMON_MODEL_SUBPATH);
@@ -57,8 +57,8 @@ export async function buildActionLookup(apiAbs: string): Promise<ActionLookupRes
  * Reads a directory's `Dirent` entries; returns an empty list when the
  * path is unreadable.
  *
- * @param path - absolute directory path
- * @returns the directory entries or `[]` on failure
+ * @param path - Absolute directory path.
+ * @returns The directory entries or `[]` on failure.
  */
 async function readDirSafe(path: string): Promise<readonly Dirent[]> {
   try {

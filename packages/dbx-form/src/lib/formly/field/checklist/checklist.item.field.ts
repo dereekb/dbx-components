@@ -17,7 +17,7 @@ export type ChecklistItemFieldBuilderInput<T = unknown> = Partial<ChecklistItemF
  * Creates a Formly field configuration for a single checklist item with a checkbox
  * and display content (label, sublabel, description, anchor).
  *
- * @param config - Checklist item configuration with key and display content
+ * @param config - Checklist item configuration with key and display content.
  * @returns A validated {@link FormlyFieldConfig} with type `'checklistitem'`
  *
  * @example

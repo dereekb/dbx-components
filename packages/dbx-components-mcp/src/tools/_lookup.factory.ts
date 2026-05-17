@@ -47,8 +47,8 @@ const LOOKUP_ARGS_TYPE = type({
  * Validates and defaults a lookup tool's raw input. Throws when the
  * topic is missing or the depth is not one of the canonical levels.
  *
- * @param raw - the unvalidated tool arguments from the MCP runtime
- * @returns the parsed args with `depth` defaulted to `'full'`
+ * @param raw - The unvalidated tool arguments from the MCP runtime.
+ * @returns The parsed args with `depth` defaulted to `'full'`
  */
 export function parseLookupArgs(raw: unknown): ParsedLookupArgs {
   const parsed = LOOKUP_ARGS_TYPE(raw);
@@ -127,10 +127,10 @@ export interface LookupToolConfig<TEntry> {
  * chain → fuzzy fallback pipeline, then dispatches to the caller-supplied
  * formatter for the matched shape.
  *
- * @param config - the lookup tool configuration
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns a `ToolResult` with the rendered markdown, or an `isError`
- *   result when `topic` cannot be resolved or args fail validation
+ * @param config - The lookup tool configuration.
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns A `ToolResult` with the rendered markdown, or an `isError`
+ *   result when `topic` cannot be resolved or args fail validation.
  */
 function runLookup<TEntry>(config: LookupToolConfig<TEntry>, rawArgs: unknown): ToolResult {
   let args: ParsedLookupArgs;
@@ -163,9 +163,9 @@ function runLookup<TEntry>(config: LookupToolConfig<TEntry>, rawArgs: unknown): 
 /**
  * Resolves a raw topic string against the catalog → resolver → fuzzy chain.
  *
- * @param config - the lookup tool configuration
- * @param rawTopic - the unsanitized topic string from the input
- * @returns the resolved match
+ * @param config - The lookup tool configuration.
+ * @param rawTopic - The unsanitized topic string from the input.
+ * @returns The resolved match.
  */
 function resolveLookup<TEntry>(config: LookupToolConfig<TEntry>, rawTopic: string): LookupMatch<TEntry> {
   const trimmed = rawTopic.trim();
@@ -202,9 +202,9 @@ function firstResolverHit<TEntry>(resolvers: readonly LookupResolver<TEntry>[], 
  * the sum of `weight` for every field whose lowercased value contains the
  * lowercased query. Entries with score 0 are dropped.
  *
- * @param config - the lookup tool configuration
- * @param query - the lowercased query (already trimmed by {@link resolveLookup})
- * @returns up to `fuzzyLimit` entries sorted descending by score
+ * @param config - The lookup tool configuration.
+ * @param query - The lowercased query (already trimmed by {@link resolveLookup})
+ * @returns Up to `fuzzyLimit` entries sorted descending by score.
  */
 function fuzzyCandidates<TEntry>(config: LookupToolConfig<TEntry>, query: string): readonly TEntry[] {
   const q = query.trim().toLowerCase();
@@ -239,8 +239,9 @@ function scoreEntry(fields: readonly FuzzyField[], q: string): number {
  * `run` walks the catalog → resolver → fuzzy chain and dispatches to the
  * caller-supplied formatters; the tool definition is taken verbatim.
  *
- * @param config - the lookup tool configuration
- * @returns the assembled {@link DbxTool}
+ * @param config - The lookup tool configuration.
+ * @returns The assembled {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createLookupTool<TEntry>(config: LookupToolConfig<TEntry>): DbxTool {

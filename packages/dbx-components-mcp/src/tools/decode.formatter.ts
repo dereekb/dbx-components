@@ -40,8 +40,8 @@ export interface DecodeContext {
 /**
  * Produces the markdown body for a successful decode.
  *
- * @param context - the resolved model, document, prefixes, and optional extra key
- * @returns the rendered markdown that the tool emits as content
+ * @param context - The resolved model, document, prefixes, and optional extra key.
+ * @returns The rendered markdown that the tool emits as content.
  */
 export function formatDecode(context: DecodeContext): string {
   const { model, doc, prefixes, extraKey } = context;
@@ -163,9 +163,9 @@ function collectReferencedEnums(fields: readonly DecodedField[], enums: readonly
  * start with a known collection prefix. The resulting hints let callers see
  * which other models this document relates to.
  *
- * @param doc - the raw decoded Firestore document being inspected
- * @param prefixes - map of `prefix -> targetModelName` for the active registry
- * @returns the inferred outbound relationships in document order
+ * @param doc - The raw decoded Firestore document being inspected.
+ * @param prefixes - Map of `prefix -> targetModelName` for the active registry.
+ * @returns The inferred outbound relationships in document order.
  */
 export function detectRelationships(doc: Readonly<Record<string, unknown>>, prefixes: ReadonlyMap<string, string>): readonly DecodedRelationship[] {
   const out: DecodedRelationship[] = [];

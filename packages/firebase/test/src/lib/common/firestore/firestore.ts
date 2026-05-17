@@ -29,14 +29,14 @@ export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver 
  * each other's documents. The mapping from original to fuzzed names is retrievable via
  * {@link TestingFirestoreAccessorDriver.getFuzzedCollectionsNameMap}.
  *
+ * @param driver - The base driver to wrap with fuzzing behavior.
+ * @returns A {@link TestingFirestoreAccessorDriver} with `collection`, `subcollection`, and `collectionGroup` rewired to use fuzzed paths, plus helpers to inspect the fuzz map.
+ *
  * @example
  * ```ts
  * const testDriver = makeTestingFirestoreAccesorDriver(productionDriver);
  * // "mockItems" -> "1678901234_42_mockItems_1"
  * ```
- *
- * @param driver - The base driver to wrap with fuzzing behavior.
- * @returns A {@link TestingFirestoreAccessorDriver} with `collection`, `subcollection`, and `collectionGroup` rewired to use fuzzed paths, plus helpers to inspect the fuzz map.
  */
 export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDriver): TestingFirestoreAccessorDriver {
   let fuzzerKey = 0;

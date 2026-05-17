@@ -4,14 +4,14 @@ import { where, type FirestoreQueryConstraint, type DocumentReference, allChildD
 /**
  * Creates a Firestore query constraint that filters {@link MockItem} documents by their `value` field.
  *
+ * @param value - The exact `value` to match.
+ * @returns A `where('value', '==', value)` constraint typed for {@link MockItem}.
+ *
  * @example
  * ```ts
  * const constraint = mockItemWithValue('hello');
  * const results = await collection.query(constraint);
  * ```
- *
- * @param value - The exact `value` to match.
- * @returns A `where('value', '==', value)` constraint typed for {@link MockItem}.
  */
 export function mockItemWithValue(value: string): FirestoreQueryConstraint {
   return where<MockItem>('value', '==', value);

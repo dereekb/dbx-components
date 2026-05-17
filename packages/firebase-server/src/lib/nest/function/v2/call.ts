@@ -27,6 +27,9 @@ export type OnCallHandlerWithNestApplicationFactory = <I = unknown, O = unknown>
  * The `defaultOpts` are merged with per-function options, allowing shared configuration (e.g., CORS settings,
  * memory allocation) to be set once at the factory level.
  *
+ * @param defaultOpts - Default {@link https.CallableOptions} applied to all functions created by this factory.
+ * @returns A factory that creates nest-application-aware callable functions.
+ *
  * @example
  * ```ts
  * const callFactory = onCallHandlerWithNestApplicationFactory({ cors: true });
@@ -36,8 +39,6 @@ export type OnCallHandlerWithNestApplicationFactory = <I = unknown, O = unknown>
  * );
  * ```
  *
- * @param defaultOpts - Default {@link https.CallableOptions} applied to all functions created by this factory.
- * @returns A factory that creates nest-application-aware callable functions.
  * @__NO_SIDE_EFFECTS__
  */
 export function onCallHandlerWithNestApplicationFactory(defaultOpts: https.CallableOptions = {}): OnCallHandlerWithNestApplicationFactory {
@@ -66,6 +67,10 @@ export type OnCallHandlerWithNestContextFactory<C> = <I = unknown, O = unknown>(
  * This is the standard way to create callable functions that receive a domain-specific context
  * (e.g., `MyApiNestContext`) rather than the raw NestJS application context.
  *
+ * @param appFactory - The base application-level callable factory.
+ * @param makeNestContext - Factory that creates the typed context from the application context.
+ * @returns A factory that creates typed-context-aware callable functions.
+ *
  * @example
  * ```ts
  * const appFactory = onCallHandlerWithNestApplicationFactory();
@@ -76,9 +81,6 @@ export type OnCallHandlerWithNestContextFactory<C> = <I = unknown, O = unknown>(
  * });
  * ```
  *
- * @param appFactory - The base application-level callable factory.
- * @param makeNestContext - Factory that creates the typed context from the application context.
- * @returns A factory that creates typed-context-aware callable functions.
  * @__NO_SIDE_EFFECTS__
  */
 export function onCallHandlerWithNestContextFactory<C>(appFactory: OnCallHandlerWithNestApplicationFactory, makeNestContext: MakeNestContext<C>): OnCallHandlerWithNestContextFactory<C> {

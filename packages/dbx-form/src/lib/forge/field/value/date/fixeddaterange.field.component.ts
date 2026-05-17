@@ -245,7 +245,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
   protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
   protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
   protected readonly ariaDescribedBy = computed(() => {
-    let result: string | null = null;
+    let result: Maybe<string> = null;
 
     if (this.errorsToDisplay().length > 0) {
       result = this.errorId();
@@ -357,19 +357,19 @@ export class DbxForgeFixedDateRangeFieldComponent {
     shareReplay(1)
   );
 
-  readonly pickerFilter$: Observable<DecisionFunction<Date | null>> = this.config$.pipe(
+  readonly pickerFilter$: Observable<DecisionFunction<Maybe<Date>>> = this.config$.pipe(
     distinctUntilChanged(),
     map((x) => {
       if (x && Object.keys(x).length > 0) {
         const dateFilter = dateTimeMinuteWholeDayDecisionFunction(x, false);
-        return (d: Date | null) => (d == null ? true : dateFilter(d));
+        return (d: Maybe<Date>) => (d == null ? true : dateFilter(d));
       }
       return () => true;
     }),
     shareReplay(1)
   );
 
-  readonly defaultPickerFilter: DecisionFunction<Date | null> = () => true;
+  readonly defaultPickerFilter: DecisionFunction<Maybe<Date>> = () => true;
 
   // MARK: Date range selection
 
@@ -541,7 +541,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
 
   readonly dateRangeSelection$: Observable<Maybe<DateRange>> = this.selectionMode$.pipe(switchMap((mode) => this.dateRangeSelectionForMode(mode)));
 
-  readonly calendarSelection$: Observable<DatePickerDateRange<Date> | null> = this.valueInSystemTimezone$.pipe(
+  readonly calendarSelection$: Observable<Maybe<DatePickerDateRange<Date>>> = this.valueInSystemTimezone$.pipe(
     map((x) => (x ? new DatePickerDateRange<Date>(x.start, x.end) : null)),
     shareReplay(1)
   );
@@ -776,11 +776,11 @@ export class DbxForgeFixedDateRangeFieldSelectionStrategy<D> implements MatDateR
   private readonly _dateAdapter = inject(DateAdapter<D>);
   readonly component = inject(DbxForgeFixedDateRangeFieldComponent);
 
-  selectionFinished(date: D | null, currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
+  selectionFinished(date: Maybe<D>, currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
     return currentRange;
   }
 
-  createPreview(activeDate: D | null, _currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
+  createPreview(activeDate: Maybe<D>, _currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
     const { currentSelectionModeSignal, latestBoundarySignal } = this.component;
     const currentSelectionMode = currentSelectionModeSignal();
     let result: DatePickerDateRange<D> | undefined;
@@ -797,7 +797,7 @@ export class DbxForgeFixedDateRangeFieldSelectionStrategy<D> implements MatDateR
     return result ?? this._createDateRangeWithDate(activeDate);
   }
 
-  private _createDateRangeWithDate(input: D | null): DatePickerDateRange<D> {
+  private _createDateRangeWithDate(input: Maybe<D>): DatePickerDateRange<D> {
     let range: Maybe<DateRange>;
 
     if (input) {
@@ -834,9 +834,9 @@ export class DbxForgeFixedDateRangeFieldSelectionStrategy<D> implements MatDateR
  *
  * Uses the standard valueFieldMapper pattern from ng-forge/integration.
  *
- * @param fieldDef - Field definition configuration
- * @param fieldDef.key - Form model key for the field
- * @returns Signal containing a Record of input names to values for ngComponentOutlet
+ * @param fieldDef - Field definition configuration.
+ * @param fieldDef.key - Form model key for the field.
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet.
  */
 export function fixedDateRangeFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

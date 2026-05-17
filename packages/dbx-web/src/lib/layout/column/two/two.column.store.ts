@@ -186,15 +186,16 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> {
 /**
  * Creates Angular providers for a new {@link TwoColumnsContextStore} instance.
  *
- * @example
- * ```typescript
- * @Component({
+ * @returns An array of Angular providers that supply a new {@link TwoColumnsContextStore}
+ *
+ * @Component ({
  *   providers: provideTwoColumnsContext(),
  * })
  * export class MyColumnLayoutComponent { }
  * ```
  *
- * @returns an array of Angular providers that supply a new {@link TwoColumnsContextStore}
+ * @example
+ * ```typescript
  */
 export function provideTwoColumnsContext(): Provider[] {
   return [

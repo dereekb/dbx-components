@@ -26,7 +26,7 @@ export class OidcProviderController {
   }
 
   /**
-   * GET /oidc/login/client
+   * GET /oidc/login/client.
    *
    * Convenience redirect from the API issuer path back to the frontend app's
    * OAuth login page. Lets a user who lands on the API host get bounced to the

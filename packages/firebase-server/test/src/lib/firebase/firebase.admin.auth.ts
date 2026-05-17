@@ -244,13 +244,13 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
   }
 
   /**
-   * @deprecated gen 1
-   *
    * @param fn
    * @param params
    * @param contextOptions
    * @param skipJsonConversion
    * @returns
+   *
+   * @deprecated gen 1
    */
   // eslint-disable-next-line @typescript-eslint/max-params -- deprecated gen 1 signature kept for downstream compatibility
   callEventCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, contextOptions?: CallEventFunctionEventContext, skipJsonConversion = false): Promise<O> {

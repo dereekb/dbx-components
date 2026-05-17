@@ -20,6 +20,7 @@
  * cross-referencing on supporting types.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { type } from 'arktype';
 import { type ClassDeclaration, type Decorator, type JSDoc, type Project, type SourceFile, type FunctionDeclaration, type InterfaceDeclaration, type TypeAliasDeclaration, type VariableDeclaration, Node } from 'ts-morph';
@@ -113,15 +114,15 @@ const VALID_CATEGORIES: ReadonlySet<string> = new Set(['layout', 'list', 'button
  * order ts-morph reports them, declarations within a file in source
  * order.
  *
- * @param input - the ts-morph project plus a readFile for resolving
- *   supporting sources referenced by `@dbxDocsUiExampleUses` tags
- * @returns the extracted entries plus any non-fatal warnings
+ * @param input - The ts-morph project plus a readFile for resolving
+ *   supporting sources referenced by `@dbxDocsUiExampleUses` tags.
+ * @returns The extracted entries plus any non-fatal warnings.
  */
 export async function extractDbxDocsUiExampleEntries(input: ExtractDbxDocsUiExampleEntriesInput): Promise<ExtractDbxDocsUiExampleEntriesResult> {
   const { project, readFile } = input;
   const entries: ExtractedDbxDocsUiExampleEntry[] = [];
   const warnings: DbxDocsUiExamplesExtractWarning[] = [];
-  const sourceFileCache = new Map<string, SourceFile | null>();
+  const sourceFileCache = new Map<string, Maybe<SourceFile>>();
 
   for (const sourceFile of project.getSourceFiles()) {
     const filePath = sourceFile.getFilePath();
@@ -276,7 +277,7 @@ interface BuildEntryFromClassInput {
   readonly sourceFile: SourceFile;
   readonly project: Project;
   readonly readFile: ScanReadFile;
-  readonly sourceFileCache: Map<string, SourceFile | null>;
+  readonly sourceFileCache: Map<string, Maybe<SourceFile>>;
 }
 
 type BuildEntryResult = { readonly kind: 'ok'; readonly entry: ExtractedDbxDocsUiExampleEntry; readonly warnings: readonly DbxDocsUiExamplesExtractWarning[] } | { readonly kind: 'skipped'; readonly warnings: readonly DbxDocsUiExamplesExtractWarning[] };
@@ -352,7 +353,7 @@ interface ResolveUsesInput {
   readonly line: number;
   readonly project: Project;
   readonly readFile: ScanReadFile;
-  readonly sourceFileCache: Map<string, SourceFile | null>;
+  readonly sourceFileCache: Map<string, Maybe<SourceFile>>;
 }
 
 interface ResolveUsesResult {
@@ -591,7 +592,7 @@ interface ResolveUseEntryInput {
   readonly filePath: string;
   readonly project: Project;
   readonly readFile: ScanReadFile;
-  readonly sourceFileCache: Map<string, SourceFile | null>;
+  readonly sourceFileCache: Map<string, Maybe<SourceFile>>;
 }
 
 async function resolveUseEntry(input: ResolveUseEntryInput): Promise<DbxDocsUiExampleUseEntry | undefined> {
@@ -655,10 +656,10 @@ interface LoadSourceFileInput {
   readonly absolutePath: string;
   readonly project: Project;
   readonly readFile: ScanReadFile;
-  readonly sourceFileCache: Map<string, SourceFile | null>;
+  readonly sourceFileCache: Map<string, Maybe<SourceFile>>;
 }
 
-async function loadSourceFile(input: LoadSourceFileInput): Promise<SourceFile | null> {
+async function loadSourceFile(input: LoadSourceFileInput): Promise<Maybe<SourceFile>> {
   const { absolutePath, project, readFile, sourceFileCache } = input;
   const cached = sourceFileCache.get(absolutePath);
   if (cached !== undefined) {
@@ -669,7 +670,7 @@ async function loadSourceFile(input: LoadSourceFileInput): Promise<SourceFile | 
     sourceFileCache.set(absolutePath, existing);
     return existing;
   }
-  let text: string | null = null;
+  let text: Maybe<string> = null;
   try {
     text = await readFile(absolutePath);
   } catch {

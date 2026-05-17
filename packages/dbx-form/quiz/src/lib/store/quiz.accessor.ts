@@ -40,11 +40,11 @@ export abstract class QuizQuestionAccessor<T = unknown> {
 /**
  * Provides QuizQuestionAccessor bound to the current question in QuizStore.
  *
- * @returns An Angular provider that binds QuizQuestionAccessor to the current quiz question
+ * @returns An Angular provider that binds QuizQuestionAccessor to the current quiz question.
  *
  * @usage
  * ```typescript
- * @Component({
+ * @Component ({
  *   providers: [QuizStore, provideCurrentQuestionQuizQuestionAccessor()]
  * })
  * ```

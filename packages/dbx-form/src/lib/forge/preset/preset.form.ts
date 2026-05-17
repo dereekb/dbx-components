@@ -23,7 +23,7 @@ export interface DbxFormSearchFormFieldsConfig {
 /**
  * Creates a forge field array for a simple search form with a single text input.
  *
- * @param config - Optional search field configuration with label and placeholder
+ * @param config - Optional search field configuration with label and placeholder.
  * @returns An array of forge field defs for the search form
  *
  * TODO(migrate): Will be renamed in a future release to dbxForgePresetSearchFormFields.

@@ -17,8 +17,8 @@ import type { ExtractedCrudConfigConst, ExtractedCrudConfigType, ExtractedField,
  * rules module consumes. Extraction is best-effort — when a section is missing
  * the rules treat the absence as the diagnostic instead of crashing here.
  *
- * @param source - the in-memory source name + text pair to extract
- * @returns the structured extraction used by the rules layer
+ * @param source - The in-memory source name + text pair to extract.
+ * @returns The structured extraction used by the rules layer.
  */
 export function extractFile(source: ValidatorSource): ExtractedFile {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
@@ -157,9 +157,9 @@ function pickMostCommonPascal(candidates: readonly GroupCandidate[]): string | u
  * Returns the leading stem of `name` when it ends in the given suffix, or
  * `undefined` when the suffix is absent or consumes the entire name.
  *
- * @param name - the candidate identifier
- * @param suffix - the trailing fragment to strip
- * @returns the stem, or `undefined` when no usable stem remains
+ * @param name - The candidate identifier.
+ * @param suffix - The trailing fragment to strip.
+ * @returns The stem, or `undefined` when no usable stem remains.
  */
 function stripSuffix(name: string, suffix: string): string | undefined {
   if (!name.endsWith(suffix)) {
@@ -173,8 +173,8 @@ function stripSuffix(name: string, suffix: string): string | undefined {
  * Capitalises the first character of a camel-case identifier so it can be
  * compared to its pascal-case sibling.
  *
- * @param camel - the camel-cased input
- * @returns the same identifier with the first character uppercased
+ * @param camel - The camel-cased input.
+ * @returns The same identifier with the first character uppercased.
  */
 function pascalCase(camel: string): string {
   if (camel.length === 0) {
@@ -187,8 +187,8 @@ function pascalCase(camel: string): string {
  * Lowercases the first character of a pascal-case identifier so it can be
  * compared to its camel-case sibling.
  *
- * @param pascal - the pascal-cased input
- * @returns the same identifier with the first character lowercased
+ * @param pascal - The pascal-cased input.
+ * @returns The same identifier with the first character lowercased.
  */
 function camelCase(pascal: string): string {
   if (pascal.length === 0) {
@@ -580,8 +580,8 @@ function readAsExpressionTarget(expr: Node): AsExpressionOutcome {
  * Picks up the `?` optional marker and detects `clearable(...)` wrappers so
  * the rules layer can compare against the matching params interface.
  *
- * @param initializer - the variable initializer node (typically a `type(...)` call)
- * @returns the parsed property descriptors in source order
+ * @param initializer - The variable initializer node (typically a `type(...)` call)
+ * @returns The parsed property descriptors in source order.
  */
 function extractValidatorProperties(initializer: Node): readonly ExtractedValidatorProperty[] {
   const obj = findArktypeObjectLiteral(initializer);
@@ -626,8 +626,8 @@ function isClearableCall(valueNode: Node | undefined): boolean {
  *   - `baseParamsType.merge({...}) as Type<X>` / with `as unknown as`
  *   - `baseParamsType as Type<X>` → returns `undefined` (no object literal).
  *
- * @param initializer - the variable initializer node to unwrap
- * @returns the underlying arktype object literal, or `undefined` when the initializer is a re-export
+ * @param initializer - The variable initializer node to unwrap.
+ * @returns The underlying arktype object literal, or `undefined` when the initializer is a re-export.
  */
 function findArktypeObjectLiteral(initializer: Node): ObjectLiteralExpression | undefined {
   let current: Node | undefined = initializer;

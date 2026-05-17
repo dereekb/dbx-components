@@ -27,8 +27,8 @@ export interface RegisterTokensResourceOptions {
  * Registers the tokens MCP resources (catalog, per-source, per-role, per-var
  * details). Keeps in lockstep with the other domain resources.
  *
- * @param server - the MCP server to register resources against
- * @param options - registry the resources read from
+ * @param server - The MCP server to register resources against.
+ * @param options - Registry the resources read from.
  */
 export function registerTokensResource(server: McpServer, options: RegisterTokensResourceOptions): void {
   const { registry } = options;

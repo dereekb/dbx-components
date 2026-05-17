@@ -36,14 +36,15 @@ export type ProvideFilterSourceDirectiveDefaultFilterFactoryFunction<F = unknown
  * @param defaultFilterFactory - Optional factory to provide an initial filter value via DI.
  * @returns An array of Angular providers for the filter source directive.
  *
- * @example
- * ```typescript
- * @Directive({
+ * @Directive ({
  *   selector: '[myFilterSource]',
  *   providers: provideFilterSourceDirective(MyFilterSourceDirective),
  * })
  * export class MyFilterSourceDirective extends AbstractFilterSourceDirective<MyFilter> {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function provideFilterSourceDirective<S extends FilterSourceDirective<F>, F = unknown>(sourceType: Type<S>, defaultFilterFactory?: ProvideFilterSourceDirectiveDefaultFilterFactoryFunction): Provider[] {
   const providers = [

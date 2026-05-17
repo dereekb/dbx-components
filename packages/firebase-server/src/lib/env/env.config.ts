@@ -62,13 +62,14 @@ export function firebaseServerEnvTokenProvider<T extends FirebaseServerEnvironme
  * @param env - The Firebase server environment configuration.
  * @returns An array of providers binding the config to both Firebase and base server env tokens.
  *
- * @example
- * ```typescript
- * @Module({
+ * @Module ({
  *   providers: [...firebaseServerEnvTokenProviders(myEnvConfig)]
  * })
  * export class AppModule {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function firebaseServerEnvTokenProviders<T extends FirebaseServerEnvironmentConfig = FirebaseServerEnvironmentConfig>(env: T): Provider[] {
   return [

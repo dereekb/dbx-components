@@ -25,9 +25,9 @@ const IO_VIOLATION_MESSAGES: IoViolationMessages = {
  * diagnostics. I/O-level rules (missing folders) short-circuit the content
  * checks so the report stays focused on the root cause.
  *
- * @param inspection - the on-disk snapshot used for I/O-level rules
- * @param extracted - the pre-extracted facts the content rules consume
- * @returns the violations the rules emit for the snapshot
+ * @param inspection - The on-disk snapshot used for I/O-level rules.
+ * @param extracted - The pre-extracted facts the content rules consume.
+ * @returns The violations the rules emit for the snapshot.
  */
 export function runRules(inspection: AppNotificationsInspection, extracted: ExtractedAppNotifications): readonly Violation[] {
   const violations: Violation[] = [];
@@ -268,8 +268,8 @@ function checkTasks(extracted: ExtractedAppNotifications, violations: Violation[
  * Flags every declared `NotificationTaskType` constant that does not appear in
  * any `ALL_*_NOTIFICATION_TASK_TYPES` aggregate array.
  *
- * @param extracted - the validator extraction
- * @param violations - the mutable violations buffer to append to
+ * @param extracted - The validator extraction.
+ * @param violations - The mutable violations buffer to append to.
  */
 function flagTasksMissingFromAllArrays(extracted: ExtractedAppNotifications, violations: Violation[]): void {
   const aggregateMembers = new Set<string>();
@@ -294,9 +294,9 @@ function flagTasksMissingFromAllArrays(extracted: ExtractedAppNotifications, vio
  * the lenient set of every extracted handler's `type:` identifier (used by
  * the validate-vs-handlers parity warning).
  *
- * @param extracted - the validator extraction
- * @param violations - the mutable violations buffer to append to
- * @returns the lenient set of all handler-config type identifiers
+ * @param extracted - The validator extraction.
+ * @param violations - The mutable violations buffer to append to.
+ * @returns The lenient set of all handler-config type identifiers.
  */
 function flagOrphanTaskHandlers(extracted: ExtractedAppNotifications, violations: Violation[]): Set<string> {
   const taskConstantNames = new Set(extracted.taskTypeConstants.map((c) => c.symbolName));
@@ -319,8 +319,8 @@ function flagOrphanTaskHandlers(extracted: ExtractedAppNotifications, violations
  * Collects the union of every binding name resolved from
  * `notificationTaskService({ handlers })` array elements.
  *
- * @param extracted - the validator extraction
- * @returns the reachable-binding set
+ * @param extracted - The validator extraction.
+ * @returns The reachable-binding set.
  */
 function collectReachableHandlerBindings(extracted: ExtractedAppNotifications): Set<string> {
   const reachableBindings = new Set<string>();
@@ -340,7 +340,7 @@ interface FlagTaskHandlerCoverageOptions {
  * Flags each declared task type whose handler config is either missing or
  * present-but-unreachable (binding-name mismatch).
  *
- * @param options - extraction, violations buffer, and reachable bindings set
+ * @param options - Extraction, violations buffer, and reachable bindings set.
  */
 function flagTaskHandlerCoverage(options: FlagTaskHandlerCoverageOptions): void {
   const { extracted, violations, reachableBindings } = options;
@@ -406,7 +406,7 @@ interface FlagUnresolvedHandlerIdentifiersOptions {
  * Flags handler-array identifiers that the binding tracer could not follow
  * locally, are not reachable as bindings, and aren't trust-listed.
  *
- * @param options - extraction, violations buffer, and reachable bindings set
+ * @param options - Extraction, violations buffer, and reachable bindings set.
  */
 function flagUnresolvedHandlerIdentifiers(options: FlagUnresolvedHandlerIdentifiersOptions): void {
   const { extracted, violations, reachableBindings } = options;
@@ -437,7 +437,7 @@ interface FlagValidateWithoutHandlerOptions {
  * declared-but-unreachable handler still counts as "exists" here; strict
  * reachability is covered separately.
  *
- * @param options - extraction, violations buffer, and lenient handler-type set
+ * @param options - Extraction, violations buffer, and lenient handler-type set.
  */
 function flagValidateWithoutHandler(options: FlagValidateWithoutHandlerOptions): void {
   const { extracted, violations, lenientHandlerTypeIdentifiers } = options;
@@ -554,9 +554,9 @@ function buildIoViolation(code: ViolationCode, message: string, side: 'component
  * trusted-handler matcher logic when computing `hasFactory` /
  * `hasHandler` booleans without re-running rules.
  *
- * @param entries - the resolved template-handler entries to scan
- * @param typeIdentifier - the template-type identifier to look for coverage of
- * @returns `true` when at least one entry handles the type
+ * @param entries - The resolved template-handler entries to scan.
+ * @param typeIdentifier - The template-type identifier to look for coverage of.
+ * @returns `true` when at least one entry handles the type.
  */
 export function templateHandlerCoversType(entries: readonly ExtractedTemplateHandlerEntry[], typeIdentifier: string): boolean {
   return entries.some((e) => e.typeIdentifier === typeIdentifier);

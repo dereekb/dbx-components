@@ -240,18 +240,19 @@ export abstract class DbxAnchor<T extends ClickableAnchor = ClickableAnchor> {
 /**
  * Creates Angular DI providers that register the given source type as a {@link DbxAnchor} provider using `forwardRef`.
  *
- * @typeParam S - The concrete {@link DbxAnchor} subclass to provide.
  * @param sourceType - The class type to register as the anchor provider.
  * @returns An array of Angular providers.
  *
- * @example
- * ```ts
- * @Directive({
+ * @typeParam S - The concrete {@link DbxAnchor} subclass to provide.
+ * @Directive ({
  *   selector: '[myAnchor]',
  *   providers: provideDbxAnchor(MyAnchorDirective)
  * })
  * class MyAnchorDirective extends DbxAnchor { ... }
  * ```
+ *
+ * @example
+ * ```ts
  */
 export function provideDbxAnchor<S extends DbxAnchor>(sourceType: Type<S>): Provider[] {
   return [

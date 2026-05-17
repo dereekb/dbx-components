@@ -28,7 +28,7 @@ export const UNKNOWN_SCHEDULED_FUNCTION_DEVELOPMENT_FUNCTION_NAME_CODE = 'UNKNOW
  * Creates a bad-request error for when the requested scheduled function name
  * is not found in the registered function map.
  *
- * @param name - the unrecognized function name from the client request.
+ * @param name - The unrecognized function name from the client request.
  * @returns A bad-request error with the unknown function name details.
  */
 export function unknownScheduledFunctionDevelopmentFunctionName(name: unknown) {
@@ -50,7 +50,7 @@ export const UNKNOWN_SCHEDULED_FUNCTION_DEVELOPMENT_FUNCTION_TYPE_CODE = 'UNKNOW
  * Creates a bad-request error for when the request `type` field does not match
  * any supported operation ('run' or 'list').
  *
- * @param type - the unrecognized type value from the client request.
+ * @param type - The unrecognized type value from the client request.
  * @returns A bad-request error with the unknown type details.
  */
 export function unknownScheduledFunctionDevelopmentFunctionType(type: unknown) {

@@ -1,4 +1,4 @@
-import { type ISO8601DateString, type UniqueModelWithId } from '@dereekb/util';
+import { type ISO8601DateString, type UniqueModelWithId, type Maybe } from '@dereekb/util';
 import { type ZohoCrmReferenceData, type ZohoCrmParentReferenceData, type ZohoCrmTypeId, type ZohoCrmModuleName, type ZohoCrmCreatedByData, type ZohoCrmModifiedByData, type ZohoCrmId } from './crm';
 
 // MARK: Notes
@@ -57,7 +57,7 @@ export interface ZohoCrmNoteData {
   readonly Note_Owner: ZohoCrmNoteOwnerData;
   readonly Created_By: ZohoCrmCreatedByData;
   readonly Modified_By: ZohoCrmModifiedByData;
-  readonly $size: ZohoCrmNoteFileSize | null;
+  readonly $size: Maybe<ZohoCrmNoteFileSize>;
   readonly $voice_note: boolean;
   readonly $status: ZohoCrmNoteStatus;
 }

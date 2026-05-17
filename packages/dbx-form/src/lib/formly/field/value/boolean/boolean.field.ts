@@ -12,7 +12,7 @@ export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder
  *
  * Defaults to `false` when no default value is specified. Uses auto-touch and style wrappers.
  *
- * @param config - Toggle field configuration
+ * @param config - Toggle field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'toggle'`
  *
  * @example
@@ -46,7 +46,7 @@ export interface CheckboxFieldConfig extends LabeledFieldConfig, DefaultValueFie
  *
  * Defaults to `false` when no default value is specified. Uses a style wrapper.
  *
- * @param config - Checkbox field configuration
+ * @param config - Checkbox field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'checkbox'`
  *
  * @example

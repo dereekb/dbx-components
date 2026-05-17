@@ -65,8 +65,8 @@ export type MailgunNotificationEmailSendService = NotificationEmailSendService;
  * converts each batch to a {@link MailgunTemplateEmailRequest} using the configured template builders,
  * and dispatches them through the Mailgun API.
  *
- * @param config - service configuration including the Mailgun service, template builders, and batch size
- * @returns a {@link NotificationEmailSendService} that batches and sends emails through Mailgun
+ * @param config - Service configuration including the Mailgun service, template builders, and batch size.
+ * @returns A {@link NotificationEmailSendService} that batches and sends emails through Mailgun.
  *
  * @example
  * ```ts

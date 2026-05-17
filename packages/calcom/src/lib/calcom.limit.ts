@@ -44,8 +44,8 @@ export type CalcomRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodP
  * Creates a rate-limited fetch handler configured for Cal.com API rate limits.
  * Automatically adjusts based on rate limit response headers and retries on 429 responses.
  *
- * @param config - optional rate limiter configuration overrides
- * @returns a CalcomRateLimitedFetchHandler that enforces rate limiting
+ * @param config - Optional rate limiter configuration overrides.
+ * @returns A CalcomRateLimitedFetchHandler that enforces rate limiting.
  */
 export function calcomRateLimitedFetchHandler(config?: Maybe<CalcomRateLimitedFetchHandlerConfig>): CalcomRateLimitedFetchHandler {
   const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_CALCOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;

@@ -1,5 +1,6 @@
 import { type TestFixtureInstance, type TestFixture, type TestContextFixtureClearInstanceFunction, type TestContextFixture, AbstractTestContextFixture, AbstractChildTestContextFixture, type BuildTestsWithContextFunction, type TestContextFactory, type TestContextBuilderFunction, type TestContextBuilderConfig, testContextBuilder, type UseContextFixture, useTestContextFixture } from '../shared/shared';
 
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use TestFixtureInstance from shared instead. This is kept for backwards compatibility.
  */

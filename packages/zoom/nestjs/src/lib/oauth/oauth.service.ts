@@ -38,7 +38,7 @@ function buildZoomReadAdapter(cache: ZoomAccessTokenCache): AsyncValueCache<Zoom
   };
 }
 
-function updateZoomCacheCapturingError(cache: ZoomAccessTokenCache, accessToken: ZoomAccessToken): Promise<null | readonly [ZoomAccessTokenCache, unknown]> {
+function updateZoomCacheCapturingError(cache: ZoomAccessTokenCache, accessToken: ZoomAccessToken): Promise<Maybe<readonly [ZoomAccessTokenCache, unknown]>> {
   return cache
     .updateCachedToken(accessToken)
     .then(() => null)
@@ -50,7 +50,7 @@ export type LogMergeZoomOAuthAccessTokenCacheServiceErrorFunction = (failedUpdat
 /**
  * Default error logging function for merged cache service update failures.
  *
- * @param failedUpdates Array of failed cache update results with their errors
+ * @param failedUpdates - Array of failed cache update results with their errors.
  */
 export function logMergeZoomOAuthAccessTokenCacheServiceErrorFunction(failedUpdates: (readonly [ZoomAccessTokenCache, unknown])[]) {
   console.warn(`mergeZoomOAuthAccessTokenCacheServices(): failed updating ${failedUpdates.length} caches.`);
@@ -71,9 +71,9 @@ export function logMergeZoomOAuthAccessTokenCacheServiceErrorFunction(failedUpda
  * never short-circuits the lookup. Updates run across all services in parallel via
  * `Promise.allSettled`, mirroring the previous behavior, with optional error logging.
  *
- * @param inputServicesToMerge Must include at least one service. Empty arrays will throw an error.
- * @param logError Optional error logging configuration. Pass a function, true for default logging, or false to disable.
- * @returns A merged ZoomOAuthAccessTokenCacheService
+ * @param inputServicesToMerge - Must include at least one service. Empty arrays will throw an error.
+ * @param logError - Optional error logging configuration. Pass a function, true for default logging, or false to disable.
+ * @returns A merged ZoomOAuthAccessTokenCacheService.
  */
 export function mergeZoomOAuthAccessTokenCacheServices(inputServicesToMerge: ZoomOAuthAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeZoomOAuthAccessTokenCacheServiceErrorFunction>): ZoomOAuthAccessTokenCacheService {
   const allServices = [...inputServicesToMerge];
@@ -129,9 +129,9 @@ export function mergeZoomOAuthAccessTokenCacheServices(inputServicesToMerge: Zoo
  *
  * Backed by {@link inMemoryAsyncValueCache} so all consumers share the same single token slot.
  *
- * @param existingToken Optional initial token to seed the cache with
- * @param logAccessToConsole Whether to log token access to console
- * @returns A memory-backed ZoomOAuthAccessTokenCacheService
+ * @param existingToken - Optional initial token to seed the cache with.
+ * @param logAccessToConsole - Whether to log token access to console.
+ * @returns A memory-backed ZoomOAuthAccessTokenCacheService.
  */
 export function memoryZoomOAuthAccessTokenCacheService(existingToken?: Maybe<ZoomAccessToken>, logAccessToConsole?: boolean): ZoomOAuthAccessTokenCacheService {
   const cache = inMemoryAsyncValueCache<ZoomAccessToken>(existingToken);
@@ -180,8 +180,8 @@ export type ZoomOAuthAccessTokenCacheFileContent = {
  * Reviver applied to the cached file payload on load so `expiresAt` is always a `Date`
  * regardless of how it was serialized.
  *
- * @param raw - the raw JSON-parsed file payload
- * @returns the revived ZoomAccessToken, or undefined when the payload is empty/invalid
+ * @param raw - The raw JSON-parsed file payload.
+ * @returns The revived ZoomAccessToken, or undefined when the payload is empty/invalid.
  */
 function reviveZoomAccessTokenFile(raw: unknown): Maybe<ZoomAccessToken> {
   let result: Maybe<ZoomAccessToken>;
@@ -213,9 +213,9 @@ function reviveZoomAccessTokenFile(raw: unknown): Maybe<ZoomAccessToken> {
  *
  * Useful for testing.
  *
- * @param filename Path to the token cache file
- * @param useMemoryCache Whether to also cache tokens in memory for faster access
- * @returns A file-system-backed ZoomOAuthAccessTokenCacheService
+ * @param filename - Path to the token cache file.
+ * @param useMemoryCache - Whether to also cache tokens in memory for faster access.
+ * @returns A file-system-backed ZoomOAuthAccessTokenCacheService.
  */
 export function fileZoomOAuthAccessTokenCacheService(filename: string = DEFAULT_FILE_ZOOM_ACCOUNTS_ACCESS_TOKEN_CACHE_SERVICE_PATH, useMemoryCache = true): FileSystemZoomOAuthAccessTokenCacheService {
   const innerCacheInput = {

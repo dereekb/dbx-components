@@ -38,8 +38,8 @@ export type ZohoSignWebhookEventVerifier = (req: Request, rawBody: Buffer) => Pr
  * in the `X-ZS-WEBHOOK-SIGNATURE` header. This verifier recomputes the signature
  * from the raw request body and compares using timing-safe equality.
  *
- * @param config - Configuration containing the webhook secret key
- * @returns A function that verifies webhook requests
+ * @param config - Configuration containing the webhook secret key.
+ * @returns A function that verifies webhook requests.
  *
  * @example
  * ```typescript

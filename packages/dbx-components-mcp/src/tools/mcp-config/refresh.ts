@@ -46,8 +46,8 @@ export interface RefreshResult {
  * Skips packages that don't have a `dbx-mcp.scan.json` (those have nothing to
  * refresh) and clusters that don't appear in their declared list.
  *
- * @param snapshot - the workspace snapshot listing the packages to refresh
- * @returns one outcome per package/cluster pair plus a roll-up
+ * @param snapshot - The workspace snapshot listing the packages to refresh.
+ * @returns One outcome per package/cluster pair plus a roll-up.
  */
 export async function refreshSnapshot(snapshot: WorkspaceSnapshot): Promise<RefreshResult> {
   const outcomes: RefreshOutcome[] = [];

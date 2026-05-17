@@ -41,9 +41,9 @@ export interface DeclaredEntriesSourceRoot {
  * `callModelFirebaseFunctionMapFactory` marker so unrelated `.api.ts`
  * files aren't parsed.
  *
- * @param fileAbs - absolute path to the API source file
- * @param root - source root used to compute the relative path string
- * @returns the declared CRUD entries from this file (empty when none)
+ * @param fileAbs - Absolute path to the API source file.
+ * @param root - Source root used to compute the relative path string.
+ * @returns The declared CRUD entries from this file (empty when none)
  */
 async function extractDeclaredEntriesFromFile(fileAbs: string, root: DeclaredEntriesSourceRoot): Promise<readonly DeclaredEntry[]> {
   const text = await readFile(fileAbs, 'utf8');
@@ -93,8 +93,8 @@ export async function extractDeclaredEntries(roots: readonly DeclaredEntriesSour
  * Reads a directory's `Dirent` entries; returns an empty list when the
  * path is unreadable (e.g. permission denied, race-condition removal).
  *
- * @param path - absolute directory path
- * @returns the directory entries or `[]` on failure
+ * @param path - Absolute directory path.
+ * @returns The directory entries or `[]` on failure.
  */
 async function readDirSafe(path: string): Promise<readonly Dirent[]> {
   try {

@@ -55,8 +55,8 @@ export type TestStringSearchFunction = (text: string) => string[];
 /**
  * Creates a searchable value field search function with a random delay for demo loading state.
  *
- * @param obs - Observable of the string search function to use
- * @returns A search function that delegates to the provided observable
+ * @param obs - Observable of the string search function to use.
+ * @returns A search function that delegates to the provided observable.
  */
 export function makeSearchForStringValue(obs: Observable<TestStringSearchFunction>): SearchableValueFieldStringSearchFn<string> {
   const makeRandomDelay = randomNumberFactory(1000); // use to show the loading bar.

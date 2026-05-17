@@ -39,8 +39,9 @@ export type TrelloRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodP
  *
  * Backs off after 429 responses and respects the documented per-token rate limit.
  *
- * @param config Optional configuration for rate limiting behavior.
+ * @param config - Optional configuration for rate limiting behavior.
  * @returns A configured rate-limited fetch handler.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function trelloRateLimitedFetchHandler(config?: Maybe<TrelloRateLimitedFetchHandlerConfig>): TrelloRateLimitedFetchHandler {
@@ -61,8 +62,7 @@ export function trelloRateLimitedFetchHandler(config?: Maybe<TrelloRateLimitedFe
     updateWithResponse: (response: Response) => {
       // Trello does not document rate limit headers, but it does return 429 when exceeded.
       // Schedule a retry after the rate limiter cooldown when a 429 is observed.
-      const shouldRetry = response.status === 429;
-      return shouldRetry;
+      return response.status === 429;
     }
   });
 }

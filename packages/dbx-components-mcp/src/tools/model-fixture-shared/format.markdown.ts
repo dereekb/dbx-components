@@ -11,8 +11,8 @@ import type { AppFixturesExtraction, FixtureEntry, FixtureMethod, FixtureValidat
 /**
  * Renders the listing report for `dbx_model_fixture_list_app`.
  *
- * @param extraction - the parsed fixture file
- * @returns the markdown body
+ * @param extraction - The parsed fixture file.
+ * @returns The markdown body.
  */
 export function formatListAsMarkdown(extraction: AppFixturesExtraction): string {
   const lines: string[] = [`# App fixtures — ${extraction.fixturePath}`, '', `Detected workspace prefix: \`${extraction.prefix ?? '(none)'}\``, `Identity imports: ${extraction.identityImports.length === 0 ? '_None._' : extraction.identityImports.map((s) => '`' + s + '`').join(', ')}`, '', `## Fixtures (${extraction.entries.length})`];
@@ -43,9 +43,9 @@ export function formatListAsMarkdown(extraction: AppFixturesExtraction): string 
 /**
  * Renders the per-model lookup report for `dbx_model_fixture_lookup`.
  *
- * @param extraction - the parsed fixture file
- * @param entry - the matched entry
- * @returns the markdown body
+ * @param extraction - The parsed fixture file.
+ * @param entry - The matched entry.
+ * @returns The markdown body.
  */
 export function formatLookupAsMarkdown(extraction: AppFixturesExtraction, entry: FixtureEntry): string {
   const lines: string[] = [];
@@ -125,8 +125,8 @@ function appendLookupParams(lines: string[], entry: FixtureEntry): void {
 /**
  * Renders the validation report for `dbx_model_fixture_validate_app`.
  *
- * @param result - the validation result
- * @returns the markdown body
+ * @param result - The validation result.
+ * @returns The markdown body.
  */
 export function formatValidationAsMarkdown(result: FixtureValidationResult): string {
   const lines: string[] = [`# Fixture validation — ${result.fixturePath}`, '', `Errors: ${result.errorCount}`, `Warnings: ${result.warningCount}`];

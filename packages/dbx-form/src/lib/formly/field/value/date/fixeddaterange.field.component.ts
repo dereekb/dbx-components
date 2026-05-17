@@ -452,7 +452,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
 
   readonly dateRangeSelection$: Observable<Maybe<DateRange>> = this.selectionMode$.pipe(switchMap((mode) => this.dateRangeSelectionForMode(mode)));
 
-  readonly calendarSelection$: Observable<DatePickerDateRange<Date> | null> = this.valueInSystemTimezone$.pipe(
+  readonly calendarSelection$: Observable<Maybe<DatePickerDateRange<Date>>> = this.valueInSystemTimezone$.pipe(
     map((x) => (x ? new DatePickerDateRange<Date>(x.start, x.end) : null)),
     shareReplay(1)
   );
@@ -519,7 +519,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
     shareReplay(1)
   );
 
-  readonly pickerFilter$: Observable<DecisionFunction<Date | null>> = this.config$.pipe(
+  readonly pickerFilter$: Observable<DecisionFunction<Maybe<Date>>> = this.config$.pipe(
     distinctUntilChanged(),
     map((x) => {
       if (!x) {
@@ -527,12 +527,12 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
       }
 
       const filter = dateTimeMinuteWholeDayDecisionFunction(x, false);
-      return (x: Date | null) => (x != null ? filter(x) : true);
+      return (x: Maybe<Date>) => (x != null ? filter(x) : true);
     }),
     shareReplay(1)
   );
 
-  readonly defaultPickerFilter: DecisionFunction<Date | null> = () => true;
+  readonly defaultPickerFilter: DecisionFunction<Maybe<Date>> = () => true;
 
   readonly minDateSignal = toSignal(this.min$, { initialValue: null });
   readonly maxDateSignal = toSignal(this.max$, { initialValue: null });
@@ -706,12 +706,12 @@ export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeS
   private readonly _dateAdapter = inject(DateAdapter<D>);
   readonly dbxFixedDateRangeFieldComponent = inject(DbxFixedDateRangeFieldComponent);
 
-  selectionFinished(date: D | null, currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
+  selectionFinished(date: Maybe<D>, currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
     // unused
     return currentRange;
   }
 
-  createPreview(activeDate: D | null, _currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
+  createPreview(activeDate: Maybe<D>, _currentRange: DatePickerDateRange<D>, _event: Event): DatePickerDateRange<D> {
     const { currentSelectionModeSignal, latestBoundarySignal } = this.dbxFixedDateRangeFieldComponent;
     const currentSelectionMode = currentSelectionModeSignal();
 
@@ -727,7 +727,7 @@ export class DbxFixedDateRangeFieldSelectionStrategy<D> implements MatDateRangeS
     return this._createDateRangeWithDate(activeDate);
   }
 
-  private _createDateRangeWithDate(input: D | null): DatePickerDateRange<D> {
+  private _createDateRangeWithDate(input: Maybe<D>): DatePickerDateRange<D> {
     let dateRange: Maybe<DateRange>;
 
     if (input) {

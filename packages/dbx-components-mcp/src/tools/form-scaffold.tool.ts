@@ -231,8 +231,9 @@ export interface CreateFormScaffoldToolConfig {
  * Builds the `dbx_form_scaffold` tool against a forge-fields registry. Called by
  * {@link registerTools} once the registry has loaded at server startup.
  *
- * @param config - the registry to resolve slugs / factory names against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry to resolve slugs / factory names against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createFormScaffoldTool(config: CreateFormScaffoldToolConfig): DbxTool {

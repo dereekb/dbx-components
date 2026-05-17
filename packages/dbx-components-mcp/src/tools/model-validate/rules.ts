@@ -21,10 +21,10 @@ import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, typ
  * a sibling sub-file (e.g. `worker.pay.ts`) can declare and consume
  * `firestoreSubObject<T>` without itself anchoring a model.
  *
- * @param file - the extracted facts for one model source
- * @param options - optional rule overrides (field-name length limit, ignore list)
- * @param context - optional cross-file context for rules needing access to interfaces declared in sibling files
- * @returns the violations the rules emit for that file
+ * @param file - The extracted facts for one model source.
+ * @param options - Optional rule overrides (field-name length limit, ignore list)
+ * @param context - Optional cross-file context for rules needing access to interfaces declared in sibling files.
+ * @returns The violations the rules emit for that file.
  */
 export function runRules(file: ExtractedFile, options?: RuleOptions, context?: CrossFileRuleContext): readonly Violation[] {
   const violations: Violation[] = [];
@@ -121,7 +121,7 @@ interface CheckFieldInput {
  * Emits `MODEL_FIELD_MISSING_JSDOC` for fields whose first JSDoc line
  * is empty. Acts on a single field via the shared {@link CheckFieldInput}.
  *
- * @param input - the field + violations buffer
+ * @param input - The field + violations buffer.
  */
 function checkFieldJsDocDescription(input: CheckFieldInput): void {
   const { file, iface, field, violations } = input;
@@ -142,7 +142,7 @@ function checkFieldJsDocDescription(input: CheckFieldInput): void {
  * `MODEL_FIELD_LONG_NAME_EQUALS_NAME` when the tag value matches the
  * field's short name.
  *
- * @param input - the field, ignored-name set, and violations buffer
+ * @param input - The field, ignored-name set, and violations buffer.
  */
 function checkFieldVariableTag(input: CheckFieldInput): void {
   const { file, iface, field, ignored, violations } = input;
@@ -221,9 +221,9 @@ function checkSubObjectInterfaceTags(file: ExtractedFile, violations: Violation[
  * anchored at the interface declaration site (not the call site) so the
  * fix lands on the JSDoc block needing the new tag.
  *
- * @param file - the extracted facts for the source file being checked
- * @param violations - the buffer the rule appends violations to
- * @param context - cross-file index + dedup state shared across all files in the validation run; when absent the rule is a no-op
+ * @param file - The extracted facts for the source file being checked.
+ * @param violations - The buffer the rule appends violations to.
+ * @param context - Cross-file index + dedup state shared across all files in the validation run; when absent the rule is a no-op.
  */
 function checkSubObjectFactoryCallSites(file: ExtractedFile, violations: Violation[], context: CrossFileRuleContext | undefined): void {
   if (!context) {
@@ -299,8 +299,8 @@ interface CheckSubObjectParentInput {
  * lives in the validated source set but lacks the `@dbxModel` /
  * `@dbxModelSubObject` JSDoc tag.
  *
- * @param input - the iface + parentName + dedup key + buffers
- * @param entry - the resolved in-package parent interface entry
+ * @param input - The iface + parentName + dedup key + buffers.
+ * @param entry - The resolved in-package parent interface entry.
  */
 function emitInPackageParent(input: CheckSubObjectParentInput, entry: CrossFileInterfaceEntry): void {
   const { iface, parentName, dedupKey, context, violations } = input;
@@ -322,7 +322,7 @@ function emitInPackageParent(input: CheckSubObjectParentInput, entry: CrossFileI
  * lives outside the validated source set (and therefore can't be tagged
  * from this package), respecting the `ignoredExternalParents` config.
  *
- * @param input - the iface + parentName + dedup key + buffers + ignored set
+ * @param input - The iface + parentName + dedup key + buffers + ignored set.
  */
 function emitExternalParent(input: CheckSubObjectParentInput): void {
   const { file, iface, parentName, dedupKey, context, violations, ignoredExternal } = input;
@@ -805,8 +805,8 @@ const COLLECTION_FACTORY_FN_NAME: Record<FirestoreCollectionKind, string> = {
  * `RootSingleItemFirestoreCollection` overlap on substring — the longer one
  * is checked first.
  *
- * @param typeText - the type alias right-hand side as written in the source
- * @returns the matched kind, or `undefined` when no recognised constructor leads the expression
+ * @param typeText - The type alias right-hand side as written in the source.
+ * @returns The matched kind, or `undefined` when no recognised constructor leads the expression.
  */
 function detectAliasKind(typeText: string): FirestoreCollectionKind | undefined {
   const normalized = typeText.replaceAll(/\s+/g, '');
@@ -829,9 +829,9 @@ function detectAliasKind(typeText: string): FirestoreCollectionKind | undefined 
  * Builds the canonical type-alias text for a given kind — used both as the
  * source-of-truth for validation and in error messages.
  *
- * @param kind - the collection kind whose canonical alias text to render
- * @param model - the extracted model providing names + parent identity for generic args
- * @returns the canonical right-hand side of `<Model>FirestoreCollection = ...`
+ * @param kind - The collection kind whose canonical alias text to render.
+ * @param model - The extracted model providing names + parent identity for generic args.
+ * @returns The canonical right-hand side of `<Model>FirestoreCollection = ...`
  */
 function expectedCollectionTypeText(kind: FirestoreCollectionKind, model: ExtractedModel): string {
   const ctor = COLLECTION_TYPE_NAME[kind];
@@ -957,7 +957,7 @@ function declarationLine(model: ExtractedModel, kind: DeclarationKind): number |
 
 // MARK: Composite-key tag
 /**
- * Per-file rules that fire on `@dbxModelCompositeKey` tags:
+ * Per-file rules that fire on `@dbxModelCompositeKey` tags:.
  *
  * - `MODEL_COMPOSITE_KEY_MISSING_FROM` — tag present but `from=` was not
  *   supplied (or resolved to an empty list after filtering).
@@ -972,8 +972,8 @@ function declarationLine(model: ExtractedModel, kind: DeclarationKind): number |
  * (`MODEL_COMPOSITE_KEY_UNKNOWN_MODEL`) runs as a manifest-level rule in
  * `manifest-rules.ts` — the per-file pass cannot see other packages.
  *
- * @param file - the extracted file
- * @param violations - the mutable violation buffer
+ * @param file - The extracted file.
+ * @param violations - The mutable violation buffer.
  */
 function checkCompositeKeyTags(file: ExtractedFile, violations: Violation[]): void {
   for (const iface of file.dataInterfaces) {
@@ -1043,8 +1043,8 @@ function hasMatchingCompositeKeyArchetype(tags: readonly { readonly slug: string
  * Accepts violations with an optional `severity` to keep the majority of
  * call sites (all hard-error rules) terse — defaults to `'error'`.
  *
- * @param buffer - the mutable violation buffer the rule is appending to
- * @param violation - the violation payload, with severity defaulting to `'error'`
+ * @param buffer - The mutable violation buffer the rule is appending to.
+ * @param violation - The violation payload, with severity defaulting to `'error'`
  */
 function pushViolation(buffer: Violation[], violation: Omit<Violation, 'severity' | 'remediation'> & { readonly severity?: ViolationSeverity }): void {
   const severity: ViolationSeverity = violation.severity ?? 'error';

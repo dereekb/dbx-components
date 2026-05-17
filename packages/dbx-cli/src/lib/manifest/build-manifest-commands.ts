@@ -202,7 +202,7 @@ interface BuilderContext {
  * Returns true if `--data-help` (with or without a value) appears anywhere in
  * the supplied argv. Used to opt into focused help mode.
  *
- * @param argv - argv to scan (defaults to `process.argv`).
+ * @param argv - Argv to scan (defaults to `process.argv`).
  * @returns Whether the user passed `--data-help`.
  */
 function hasDataHelpFlag(argv: readonly string[] = process.argv): boolean {
@@ -214,7 +214,7 @@ function hasDataHelpFlag(argv: readonly string[] = process.argv): boolean {
  * as an explicit opt-out of focused help mode — `--data-help --all-help`
  * shows the schema sections AND the full options table.
  *
- * @param argv - argv to scan (defaults to `process.argv`).
+ * @param argv - Argv to scan (defaults to `process.argv`).
  * @returns Whether the user passed `--all-help`.
  */
 function hasAllHelpFlag(argv: readonly string[] = process.argv): boolean {
@@ -229,7 +229,7 @@ function hasAllHelpFlag(argv: readonly string[] = process.argv): boolean {
  * value is needed when each command's builder runs — which is before yargs
  * parses argv. Unrecognized values fall back to the default.
  *
- * @param argv - argv to inspect (defaults to `process.argv`).
+ * @param argv - Argv to inspect (defaults to `process.argv`).
  * @returns The detected format, or {@link DEFAULT_MANIFEST_HELP_DATA_FORMAT}.
  */
 export function detectDataHelpFormat(argv: readonly string[] = process.argv): ManifestHelpDataFormat {
@@ -265,7 +265,7 @@ function parseDataHelpFormat(value: string): ManifestHelpDataFormat | undefined 
  * value is needed when each command's builder runs — which is before yargs
  * parses argv.
  *
- * @param argv - argv to inspect (defaults to `process.argv`).
+ * @param argv - Argv to inspect (defaults to `process.argv`).
  * @returns The detected mode, or {@link DEFAULT_MANIFEST_HELP_MODE}.
  */
 export function detectHelpMode(argv: readonly string[] = process.argv): ManifestHelpMode {

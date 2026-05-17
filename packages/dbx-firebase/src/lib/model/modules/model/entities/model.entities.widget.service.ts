@@ -90,8 +90,8 @@ export class DbxFirebaseModelEntitiesWidgetService {
    *
    * If an entry with the same identity is already registered, this will override it by default.
    *
-   * @param entries The entries to register
-   * @param override Whether to override existing entries (default: true)
+   * @param entries - The entries to register.
+   * @param override - Whether to override existing entries (default: true)
    */
   register(entries: ArrayOrValue<DbxFirebaseModelEntitiesWidgetEntry>, override: boolean = true): void {
     useIterableOrValue(entries, (entry) => {

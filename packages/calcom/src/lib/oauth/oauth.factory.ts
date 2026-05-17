@@ -27,8 +27,9 @@ export type CalcomOAuthFactory = (config: CalcomOAuthConfig) => CalcomOAuth;
  * Supports both API key authentication (static token, no refresh) and full OAuth
  * refresh token flow with automatic token rotation.
  *
- * @param factoryConfig - configuration including optional fetch factory and error logging
- * @returns a factory function that accepts a CalcomOAuthConfig and produces a CalcomOAuth instance
+ * @param factoryConfig - Configuration including optional fetch factory and error logging.
+ * @returns A factory function that accepts a CalcomOAuthConfig and produces a CalcomOAuth instance.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): CalcomOAuthFactory {
@@ -180,8 +181,9 @@ export interface CalcomOAuthAccessTokenFactoryConfig {
  * Checks the in-memory cache first, then the external cache, and finally refreshes
  * from the token refresher if no valid token is available.
  *
- * @param config - configuration including the token refresher, optional cache, and expiration buffer
- * @returns a CalcomAccessTokenFactory that returns a valid access token on each call
+ * @param config - Configuration including the token refresher, optional cache, and expiration buffer.
+ * @returns A CalcomAccessTokenFactory that returns a valid access token on each call.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function calcomOAuthAccessTokenFactory(config: CalcomOAuthAccessTokenFactoryConfig): CalcomAccessTokenFactory {

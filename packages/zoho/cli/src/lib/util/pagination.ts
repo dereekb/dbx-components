@@ -69,8 +69,7 @@ export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
   hasMorePagesAvailable: (input, r) => {
     const limit = (input as { limit?: number }).limit ?? 25;
     const count = r.data?.length ?? 0;
-    const hasMore = limit > 0 && count >= limit;
-    return hasMore;
+    return limit > 0 && count >= limit;
   }
 };
 
@@ -97,9 +96,9 @@ export interface RunZohoPaginatedListInput<TInput, TResponse extends ZohoPaginat
  * those CLIs uses. Multi-page invocations are streamed/printed by
  * `runPaginatedList` itself so this helper is a no-op in that branch.
  *
- * @param input - argv (the yargs-typed handler argv), the per-command
+ * @param input - Argv (the yargs-typed handler argv), the per-command
  *   `initialInput` payload, and the fetcher that issues the underlying API
- *   call
+ *   call.
  */
 export async function runZohoPaginatedList<TInput, TResponse extends ZohoPaginatedResponse>(input: RunZohoPaginatedListInput<TInput, TResponse>): Promise<void> {
   const { argv, initialInput, fetchPage } = input;

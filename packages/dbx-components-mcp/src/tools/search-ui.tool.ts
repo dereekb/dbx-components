@@ -97,8 +97,8 @@ interface UiSearchHit {
 /**
  * Tokenizes the query into lowercase non-empty tokens. Duplicates collapse.
  *
- * @param query - the raw multi-word search query
- * @returns the unique tokens in original-query order
+ * @param query - The raw multi-word search query.
+ * @returns The unique tokens in original-query order.
  */
 function tokenize(query: string): readonly string[] {
   const raw = query
@@ -175,9 +175,9 @@ function scoreClassName(className: string, token: string): number {
  *   relatedSlugs membership: 2
  *   description includes: 1
  *
- * @param entry - the UI registry entry being scored
- * @param token - the lowercase token to score against
- * @returns the additive score for this token/entry pair (`0` when there's no hit)
+ * @param entry - The UI registry entry being scored.
+ * @param token - The lowercase token to score against.
+ * @returns The additive score for this token/entry pair (`0` when there's no hit)
  */
 function scoreEntryAgainstToken(entry: UiComponentEntry, token: string): number {
   const slug = entry.slug.toLowerCase();
@@ -326,8 +326,9 @@ export interface CreateSearchUiToolInput {
  * a fixture registry; the production server passes the merged registry from
  * {@link loadUiComponentRegistry}.
  *
- * @param input - the registry the tool reads from
- * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @param input - The registry the tool reads from.
+ * @returns A {@link DbxTool} ready to register with the dispatcher.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSearchUiTool(input: CreateSearchUiToolInput): DbxTool {

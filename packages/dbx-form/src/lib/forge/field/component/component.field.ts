@@ -50,7 +50,7 @@ const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldCon
  * into the form. Generates a unique key when none is provided so that ng-forge's
  * field reconciliation treats each config change as a new field instance.
  *
- * @param config - Component field configuration
+ * @param config - Component field configuration.
  * @returns A validated {@link DbxForgeComponentFieldDef}
  *
  * @dbxFormField

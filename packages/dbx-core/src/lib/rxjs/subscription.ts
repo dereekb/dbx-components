@@ -9,16 +9,17 @@ import { clean } from './clean';
  *
  * Must be run within an Angular injection context.
  *
+ * @param sub - Optional subscription or getter to wrap.
+ * @returns A SubscriptionObject that is automatically destroyed when the context is destroyed.
+ *
  * @example
+ * ```ts
  * // Pass a subscription directly - it will be cleaned up automatically:
  * cleanSubscription(obs$.subscribe(handler));
- *
  * // Or create first, then set the subscription later:
  * readonly _sub = cleanSubscription();
  * this._sub.subscription = obs$.subscribe(handler);
- *
- * @param sub - Optional subscription or getter to wrap.
- * @returns A SubscriptionObject that is automatically destroyed when the context is destroyed.
+ * ```
  */
 export function cleanSubscription<T extends Unsubscribable = Unsubscribable>(sub?: Maybe<GetterOrValue<T>>): SubscriptionObject<T> {
   const subscription = getValueFromGetter(sub);

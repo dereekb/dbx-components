@@ -10,6 +10,7 @@
  * unit tests can drive the entire control flow without disk access.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile, writeFile as nodeWriteFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { buildManifest, serializeManifest, type BuildManifestGlobber, type BuildManifestOutcome } from './build-manifest.js';
@@ -80,8 +81,8 @@ const DEFAULT_WRITE_FILE: ScanCliWriteFile = (path, data) => nodeWriteFile(path,
  * exit code so callers can wire this into `process.exit` without
  * try/catch.
  *
- * @param input - argv plus injectable I/O hooks
- * @returns the CLI's exit code (0 on success, 1 on drift / build failure, 2 on usage error)
+ * @param input - Argv plus injectable I/O hooks.
+ * @returns The CLI's exit code (0 on success, 1 on drift / build failure, 2 on usage error)
  */
 export async function runScanCli(input: RunScanCliInput): Promise<RunScanCliResult> {
   const { argv, cwd, generator, readFile = DEFAULT_READ_FILE, writeFile = DEFAULT_WRITE_FILE, globber, now, log = console.log, errorLog = console.error } = input;
@@ -214,7 +215,7 @@ async function handleSuccessOutcome(input: HandleOutcomeInput & { readonly outco
 
 async function checkManifest(input: { readonly finalOutPath: string; readonly serialized: string; readonly outcome: Extract<BuildManifestOutcome, { kind: 'success' }>; readonly projectArg: string; readonly readFile: ScanCliReadFile; readonly log: ScanCliLogger; readonly errorLog: ScanCliLogger }): Promise<RunScanCliResult> {
   const { finalOutPath, serialized, outcome, projectArg, readFile, log, errorLog } = input;
-  let existing: string | null;
+  let existing: Maybe<string>;
   try {
     existing = await readFile(finalOutPath);
   } catch {

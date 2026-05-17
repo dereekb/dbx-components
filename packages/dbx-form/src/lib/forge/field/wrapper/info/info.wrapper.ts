@@ -36,8 +36,8 @@ export interface DbxForgeInfoWrapper {
 /**
  * Creates an info wrapper config for use in a field's `wrappers` array.
  *
- * @param config - the info wrapper configuration without the `type` property
- * @returns a complete {@link DbxForgeInfoWrapper} config with the type set
+ * @param config - The info wrapper configuration without the `type` property.
+ * @returns A complete {@link DbxForgeInfoWrapper} config with the type set.
  *
  * @example
  * ```typescript

@@ -42,8 +42,8 @@ export const INTENT_SYNONYMS: ReadonlyMap<string, readonly string[]> = new Map([
  * includes the original term first so callers can preserve the user's
  * phrasing in any output.
  *
- * @param query - the user-typed intent term
- * @returns the original term followed by any registered synonyms
+ * @param query - The user-typed intent term.
+ * @returns The original term followed by any registered synonyms.
  */
 export function expandIntentQuery(query: string): readonly string[] {
   const trimmed = query.trim().toLowerCase();

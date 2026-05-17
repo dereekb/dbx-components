@@ -106,8 +106,9 @@ export interface CreateListAppModelSnapshotFieldsToolInput {
  * Builds the `dbx_model_snapshot_field_list_app` tool wired to the
  * supplied registry.
  *
- * @param input - the registry the tool resolves identifiers against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param input - The registry the tool resolves identifiers against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createListAppModelSnapshotFieldsTool(input: CreateListAppModelSnapshotFieldsToolInput): DbxTool {
@@ -304,8 +305,8 @@ function extractFieldUsages(fieldsObj: ObjectLiteralExpression, registry: ModelS
  * `undefined` for property accesses, computed expressions, and other
  * shapes the registry can't resolve syntactically.
  *
- * @param text - the converter expression source text
- * @returns the leading identifier, or undefined if the head can't be parsed
+ * @param text - The converter expression source text.
+ * @returns The leading identifier, or undefined if the head can't be parsed.
  */
 export function parseHeadIdentifier(text: string): string | undefined {
   const trimmed = text.trim();
@@ -319,9 +320,9 @@ export function parseHeadIdentifier(text: string): string | undefined {
  * Counts how many times each registry-resolved snapshot field appears across
  * the given models. Returns rows sorted by descending count, then slug.
  *
- * @param models - the per-model usage rows
- * @param registry - the snapshot-field registry used to attach `name` to each slug
- * @returns frequency rows ready for the markdown / JSON formatter
+ * @param models - The per-model usage rows.
+ * @param registry - The snapshot-field registry used to attach `name` to each slug.
+ * @returns Frequency rows ready for the markdown / JSON formatter.
  */
 function aggregateFactoryFrequency(models: readonly ModelUsage[], registry: ModelSnapshotFieldRegistry): readonly { readonly slug: string; readonly name: string; readonly count: number }[] {
   const counts = new Map<string, number>();
@@ -346,8 +347,8 @@ function aggregateFactoryFrequency(models: readonly ModelUsage[], registry: Mode
  * Counts each unmatched ("external") head identifier across the given models.
  * Returns rows sorted by descending count, then identifier.
  *
- * @param models - the per-model usage rows
- * @returns external-identifier rows ready for the formatter
+ * @param models - The per-model usage rows.
+ * @returns External-identifier rows ready for the formatter.
  */
 function aggregateExternalIdentifiers(models: readonly ModelUsage[]): readonly { readonly identifier: string; readonly count: number }[] {
   const counts = new Map<string, number>();

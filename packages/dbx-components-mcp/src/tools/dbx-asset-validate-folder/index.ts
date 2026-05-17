@@ -27,8 +27,8 @@ export interface ValidateAssetFolderOptions {
  * component directory, a missing `assets.ts`, missing exports, or a
  * barrel that doesn't re-export `./assets`.
  *
- * @param inspection - the prepared two-side inspection
- * @returns the collected violations (severities filled in by the pusher)
+ * @param inspection - The prepared two-side inspection.
+ * @returns The collected violations (severities filled in by the pusher)
  */
 function collectComponentViolations(inspection: AppAssetsInspection): Violation[] {
   const violations: Violation[] = [];
@@ -77,9 +77,9 @@ function collectComponentViolations(inspection: AppAssetsInspection): Violation[
  * exists under `src/lib/`, exports at least one ref or aggregator, and
  * the `src/lib/index.ts` barrel re-exports it.
  *
- * @param inspection - the prepared two-side inspection
- * @param options - workspace directories used to relativise emitted paths
- * @returns the aggregated validation outcome with counts and violations
+ * @param inspection - The prepared two-side inspection.
+ * @param options - Workspace directories used to relativise emitted paths.
+ * @returns The aggregated validation outcome with counts and violations.
  */
 export function validateAssetFolder(inspection: AppAssetsInspection, options: ValidateAssetFolderOptions): ValidationResult {
   const violations = collectComponentViolations(inspection);

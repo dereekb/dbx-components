@@ -41,7 +41,7 @@ export class DbxTableDateHeaderComponent {
  *
  * The factory initializes each {@link DbxTableDateHeaderComponent} with the column's date metadata.
  *
- * @returns a factory function that maps a date column to its header injection config
+ * @returns A factory function that maps a date column to its header injection config.
  */
 export function dbxTableDateHeaderInjectionFactory(): DbxInjectionComponentConfigFactory<DbxTableColumn<Date>, DbxTableDateHeaderComponent> {
   return (column: DbxTableColumn<Date>) => {

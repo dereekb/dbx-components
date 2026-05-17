@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
+import type { Maybe } from '@dereekb/util';
 import { FormField, type FieldTree } from '@angular/forms/signals';
 import { MatError, MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatOption, MatSelect } from '@angular/material/select';
@@ -21,7 +22,7 @@ import type { ValueSelectionOption, ValueSelectionOptionClear } from '../../../f
  */
 export interface DbxForgeResolvedSelectionOption<T> {
   readonly label: string;
-  readonly value: T | null;
+  readonly value: Maybe<T>;
   readonly disabled?: boolean;
 }
 
@@ -68,9 +69,9 @@ export interface DbxForgeValueSelectionFieldDef<T = unknown> extends BaseValueFi
  * Maps `ValueSelectionOptionClear` (`{ clear: true }`) to `{ label, value: null }`.
  * Optionally prepends a clear option if `addClearOption` is configured and no clear option exists.
  *
- * @param options - Source selection options
- * @param addClearOption - Whether to prepend a clear option
- * @returns Resolved options ready for rendering
+ * @param options - Source selection options.
+ * @param addClearOption - Whether to prepend a clear option.
+ * @returns Resolved options ready for rendering.
  */
 export function resolveForgeSelectionOptions<T>(options: ValueSelectionOption<T>[], addClearOption: boolean | string): DbxForgeResolvedSelectionOption<T>[] {
   const hasClear = options.some((x) => (x as ValueSelectionOptionClear).clear);

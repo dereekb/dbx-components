@@ -8,6 +8,7 @@ import { type TestDoneCallback, failWithTestDoneCallback, type TestProvidesCallb
 import { ExpectedFailError, UnexpectedSuccessFailureError, failDueToSuccessError, ExpectedErrorOfSpecificTypeError, type ExpectFailAssertionFunction, expectFailAssertErrorType, type ShouldFailDoneCallback, type ShouldFailProvidesCallbackWithDone, type ShouldFailProvidesCallbackWithResult, type ShouldFailProvidesCallback, type FakeDoneHandler } from '../shared/shared.fail';
 
 // MARK: Types
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use TestDoneCallback from shared instead. This is kept for backwards compatibility.
  */

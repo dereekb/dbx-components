@@ -33,8 +33,8 @@ const BARREL_RE_EXPORT_RE = /export\s*\*\s*from\s*['"]\.\/assets['"]/;
  * builder bindings, the aggregator export, and trust-listed external
  * identifiers — in a single pass.
  *
- * @param inspection - the prepared component + app inspection
- * @returns the structured extraction used by the rules layer
+ * @param inspection - The prepared component + app inspection.
+ * @returns The structured extraction used by the rules layer.
  */
 export function extractAppAssets(inspection: AppAssetsInspection): ExtractedAppAssets {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });

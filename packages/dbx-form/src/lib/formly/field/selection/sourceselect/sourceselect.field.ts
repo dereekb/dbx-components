@@ -13,7 +13,7 @@ export interface SourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, 
  * Creates a Formly field configuration for a source-select field that loads and
  * displays selectable values from one or more external data sources.
  *
- * @param config - Source-select field configuration
+ * @param config - Source-select field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'sourceselectfield'`
  *
  * @example

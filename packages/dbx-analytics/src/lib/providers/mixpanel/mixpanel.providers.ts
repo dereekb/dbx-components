@@ -30,8 +30,8 @@ export interface ProvideDbxAnalyticsMixpanelModuleConfig {
  * Use alongside {@link provideDbxAnalyticsService} to wire Mixpanel as an analytics listener that
  * handles session-replay start/stop/pause/resume events.
  *
- * @param config - Mixpanel-specific configuration
- * @returns environment providers for Mixpanel analytics
+ * @param config - Mixpanel-specific configuration.
+ * @returns Environment providers for Mixpanel analytics.
  *
  * @example
  * ```ts
@@ -57,6 +57,7 @@ export interface ProvideDbxAnalyticsMixpanelModuleConfig {
  *   ]
  * };
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxAnalyticsMixpanelApiService(config: ProvideDbxAnalyticsMixpanelModuleConfig): EnvironmentProviders {

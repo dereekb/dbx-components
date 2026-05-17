@@ -15,8 +15,8 @@ export interface DbxZipPreviewDialogConfig extends Omit<MatDialogConfig, 'data'>
 /**
  * Opens a dialog with DbxZipPreviewComponent.
  *
- * @param matDialog The MatDialog instance to use.
- * @param config The configuration for the dialog.
+ * @param matDialog - The MatDialog instance to use.
+ * @param config - The configuration for the dialog.
  * @returns The MatDialogRef for the dialog.
  */
 export function openZipPreviewDialog(matDialog: MatDialog, config: DbxZipPreviewDialogConfig): MatDialogRef<DbxInjectionDialogComponent<DbxZipPreviewComponent>, void> {

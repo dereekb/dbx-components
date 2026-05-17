@@ -241,8 +241,8 @@ function decodeKeyPath(key: string, hint: string | undefined): DecodedKeyPath | 
  * Renders the "Leaf" section markdown for the resolved (or unresolved)
  * tail segment of a decoded key path.
  *
- * @param leaf - the resolved tail segment (model may be undefined)
- * @returns the markdown lines describing the leaf
+ * @param leaf - The resolved tail segment (model may be undefined)
+ * @returns The markdown lines describing the leaf.
  */
 function formatLeaf(leaf: DecodedSegment): readonly string[] {
   const out: string[] = [];
@@ -266,8 +266,8 @@ function formatLeaf(leaf: DecodedSegment): readonly string[] {
  * Returns an empty array when there are no ancestors so the caller can
  * splice it unconditionally.
  *
- * @param ancestors - the resolved ancestor segments (root to penultimate)
- * @returns the markdown lines, or `[]` when no ancestors are present
+ * @param ancestors - The resolved ancestor segments (root to penultimate)
+ * @returns The markdown lines, or `[]` when no ancestors are present.
  */
 function formatAncestors(ancestors: readonly DecodedSegment[]): readonly string[] {
   if (ancestors.length === 0) return [];
@@ -286,8 +286,8 @@ function formatAncestors(ancestors: readonly DecodedSegment[]): readonly string[
  * Renders the unresolved-prefix footer when at least one segment's
  * prefix wasn't registered in the catalog.
  *
- * @param unresolvedPrefixes - the prefixes that failed to resolve
- * @returns the markdown lines, or `[]` when every prefix resolved
+ * @param unresolvedPrefixes - The prefixes that failed to resolve.
+ * @returns The markdown lines, or `[]` when every prefix resolved.
  */
 function formatUnresolved(unresolvedPrefixes: readonly string[]): readonly string[] {
   if (unresolvedPrefixes.length === 0) return [];
@@ -306,8 +306,8 @@ function formatKeyDecode(input: DecodedKeyPath, rawKey: string): string {
  * Executes a decode request against the firebase-models registry. Exported so
  * it can be tested without the MCP transport.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted decode, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The formatted decode, or an error result when args fail validation.
  */
 export function runModelDecode(rawArgs: unknown): ToolResult {
   let args: ParsedDecodeArgs;

@@ -28,8 +28,8 @@ export interface RegisterCssUtilityResourceOptions {
  * Registers the css-utility MCP resources. Keeps in lockstep with the
  * other domain resources.
  *
- * @param server - the MCP server to register resources against
- * @param options - registry the resources read from
+ * @param server - The MCP server to register resources against.
+ * @param options - Registry the resources read from.
  */
 export function registerCssUtilityResource(server: McpServer, options: RegisterCssUtilityResourceOptions): void {
   const { registry } = options;

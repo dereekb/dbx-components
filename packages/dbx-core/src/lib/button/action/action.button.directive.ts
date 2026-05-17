@@ -67,15 +67,15 @@ export const DBX_ACTION_BUTTON_ECHO_CONFIG = new InjectionToken<DbxActionButtonE
 /**
  * Creates a provider for the app-wide {@link DbxActionButtonEchoConfig}.
  *
+ * @param config - The echo configuration controlling success/error icon behavior.
+ * @returns An Angular provider that registers the given echo config for all action buttons.
+ *
  * @example
  * ```typescript
  * providers: [
  *   provideDbxActionButtonEchoConfig({ onSuccess: { icon: 'done', color: 'ok' }, onError: false })
  * ]
  * ```
- *
- * @param config - The echo configuration controlling success/error icon behavior.
- * @returns An Angular provider that registers the given echo config for all action buttons.
  */
 export function provideDbxActionButtonEchoConfig(config: DbxActionButtonEchoConfig): Provider {
   return { provide: DBX_ACTION_BUTTON_ECHO_CONFIG, useValue: config };

@@ -207,7 +207,7 @@ export class DbxForgeDateTimeFieldComponent {
 
   // MARK: Error state matcher
   readonly timeErrorStateMatcher: ErrorStateMatcher = {
-    isErrorState: (control: AbstractControl | null) => {
+    isErrorState: (control: Maybe<AbstractControl>) => {
       if (control) {
         return (control.invalid && (control.dirty || control.touched)) || this.hasErrorSignal() === true;
       }
@@ -396,7 +396,7 @@ export class DbxForgeDateTimeFieldComponent {
     shareReplay(1)
   );
 
-  private _syncConfigValueObs(type: DbxDateTimeFieldSyncType): Observable<Date | null> {
+  private _syncConfigValueObs(type: DbxDateTimeFieldSyncType): Observable<Maybe<Date>> {
     return this.parsedSyncConfigs$.pipe(
       switchMap((configs) => {
         const config = configs.find((c) => c.syncType === type);
@@ -433,15 +433,15 @@ export class DbxForgeDateTimeFieldComponent {
     shareReplay(1)
   );
 
-  readonly dateInputMin$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
-    map((x) => (x?.limits?.min ?? null) as Date | null),
-    distinctUntilChanged<Date | null>(isSameDate),
+  readonly dateInputMin$: Observable<Maybe<Date>> = this.dateTimePickerConfig$.pipe(
+    map((x) => (x?.limits?.min ?? null) as Maybe<Date>),
+    distinctUntilChanged<Maybe<Date>>(isSameDate),
     shareReplay(1)
   );
 
-  readonly dateInputMax$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
-    map((x) => (x?.limits?.max ?? null) as Date | null),
-    distinctUntilChanged<Date | null>(isSameDate),
+  readonly dateInputMax$: Observable<Maybe<Date>> = this.dateTimePickerConfig$.pipe(
+    map((x) => (x?.limits?.max ?? null) as Maybe<Date>),
+    distinctUntilChanged<Maybe<Date>>(isSameDate),
     shareReplay(1)
   );
 
@@ -451,11 +451,11 @@ export class DbxForgeDateTimeFieldComponent {
     shareReplay(1)
   );
 
-  readonly pickerFilter$: Observable<(d: Date | null) => boolean> = this.dateTimePickerConfig$.pipe(
+  readonly pickerFilter$: Observable<(d: Maybe<Date>) => boolean> = this.dateTimePickerConfig$.pipe(
     map((x) => {
       if (x) {
         const fn = dateTimeMinuteWholeDayDecisionFunction(x, false);
-        return (d: Date | null) => (d == null ? true : fn(d));
+        return (d: Maybe<Date>) => (d == null ? true : fn(d));
       }
       return () => true;
     }),
@@ -576,7 +576,7 @@ export class DbxForgeDateTimeFieldComponent {
    * inbound sync (form source) and user picks. Returns null when cleared.
    */
   readonly dateValueSignal = computed(() => {
-    let result: Date | null = null;
+    let result: Maybe<Date> = null;
 
     if (!this._isCleared()) {
       const raw = this.fieldValue();
@@ -621,7 +621,7 @@ export class DbxForgeDateTimeFieldComponent {
   protected readonly ariaInvalid = computed(() => (this.hasErrorSignal() ? 'true' : null));
   protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
   protected readonly ariaDescribedBy = computed(() => {
-    let result: string | null = null;
+    let result: Maybe<string> = null;
 
     if (this.hasErrorSignal()) {
       result = this.errorId();
@@ -1008,9 +1008,9 @@ export class DbxForgeDateTimeFieldComponent {
  * Custom mapper for the datetime field type.
  * Called by ng-forge's DynamicForm to create the inputs for the component.
  *
- * @param fieldDef - Field definition configuration
- * @param fieldDef.key - Form model key for the field
- * @returns Signal containing a Record of input names to values for ngComponentOutlet
+ * @param fieldDef - Field definition configuration.
+ * @param fieldDef.key - Form model key for the field.
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet.
  */
 export function dateTimeFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

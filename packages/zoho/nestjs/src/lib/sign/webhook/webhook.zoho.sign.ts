@@ -119,8 +119,8 @@ export type ZohoSignWebhookEvent<T extends ZohoSignWebhookOperationType = ZohoSi
 /**
  * Creates a {@link ZohoSignWebhookEvent} from a raw payload.
  *
- * @param payload - the raw Zoho Sign webhook payload to convert
- * @returns a webhook event with the operation type extracted for convenience
+ * @param payload - The raw Zoho Sign webhook payload to convert.
+ * @returns A webhook event with the operation type extracted for convenience.
  */
 export function zohoSignWebhookEvent(payload: ZohoSignWebhookPayload): ZohoSignWebhookEvent {
   return {

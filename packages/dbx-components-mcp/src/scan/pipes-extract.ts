@@ -87,8 +87,8 @@ const VALID_CATEGORIES: ReadonlySet<string> = new Set(['value', 'date', 'async',
  * `@dbxPipe` JSDoc marker. Order is stable: source files in the order
  * ts-morph reports them, declarations within a file in source order.
  *
- * @param input - the ts-morph project to scan
- * @returns the extracted entries plus any non-fatal warnings
+ * @param input - The ts-morph project to scan.
+ * @returns The extracted entries plus any non-fatal warnings.
  */
 export function extractPipeEntries(input: ExtractPipeEntriesInput): ExtractPipeEntriesResult {
   const { project } = input;

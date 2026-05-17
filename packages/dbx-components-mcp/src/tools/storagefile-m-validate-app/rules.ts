@@ -38,9 +38,9 @@ const IO_VIOLATION_MESSAGES: IoViolationMessages = {
  * diagnostics. I/O-level rules (missing folders) short-circuit content checks
  * so the report stays focused on the root cause.
  *
- * @param inspection - the on-disk snapshot used for I/O-level rules
- * @param extracted - the pre-extracted facts the content rules consume
- * @returns the violations the rules emit for the snapshot
+ * @param inspection - The on-disk snapshot used for I/O-level rules.
+ * @param extracted - The pre-extracted facts the content rules consume.
+ * @returns The violations the rules emit for the snapshot.
  */
 export function runRules(inspection: AppStorageFilesInspection, extracted: ExtractedAppStorageFiles): readonly Violation[] {
   const violations: Violation[] = [];
@@ -120,8 +120,8 @@ function checkUploadService(extracted: ExtractedAppStorageFiles, violations: Vio
  * whose target identifier could not be resolved to an array binding or factory
  * call (and isn't trust-listed).
  *
- * @param extracted - the validator extraction
- * @param violations - the mutable violations buffer to append to
+ * @param extracted - The validator extraction.
+ * @param violations - The mutable violations buffer to append to.
  */
 function flagUnresolvedUploadSpreads(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
   for (const call of extracted.uploadServiceCalls) {
@@ -142,8 +142,8 @@ function flagUnresolvedUploadSpreads(extracted: ExtractedAppStorageFiles, violat
  * Flags every initializer whose `type:` field references an identifier that
  * isn't a declared `UploadedFileTypeIdentifier` constant or trust-listed name.
  *
- * @param extracted - the validator extraction
- * @param violations - the mutable violations buffer to append to
+ * @param extracted - The validator extraction.
+ * @param violations - The mutable violations buffer to append to.
  */
 function flagUploadInitializerOrphans(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
   const fileTypeNames = new Set(extracted.fileTypeIdentifierConstants.map((c) => c.symbolName));
@@ -165,8 +165,8 @@ function flagUploadInitializerOrphans(extracted: ExtractedAppStorageFiles, viola
  * call. When an unreachable initializer literal exists for that type, a more
  * actionable name-mismatch violation is emitted instead.
  *
- * @param extracted - the validator extraction
- * @param violations - the mutable violations buffer to append to
+ * @param extracted - The validator extraction.
+ * @param violations - The mutable violations buffer to append to.
  */
 function flagUploadCoverageGaps(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
   const reachableTypeIdentifiers = collectReachableTypeIdentifiers(extracted);
@@ -229,8 +229,8 @@ function flagUncoveredFileTypeIdentifier(symbolName: string, entries: readonly E
  * Verifies that at least one NestJS provider wires the upload-service factory
  * via `useFactory: <factoryName>`. Trust-listed factory names also count.
  *
- * @param extracted - the validator extraction
- * @param violations - the mutable violations buffer to append to
+ * @param extracted - The validator extraction.
+ * @param violations - The mutable violations buffer to append to.
  */
 function flagUploadServiceWiring(extracted: ExtractedAppStorageFiles, violations: Violation[]): void {
   const factoryNames = new Set<string>();

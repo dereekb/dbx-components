@@ -128,7 +128,7 @@ export type DbxForgeDollarAmountFieldConfig = Omit<DbxForgeNumberFieldConfig, 'r
  * Forge number field pre-configured for dollar amount input with cent-level precision. Pre-sets `transform.precision` to `DOLLAR_AMOUNT_PRECISION` so values round to whole cents.
  *
  * @param config - Number field configuration (precision is overridden to dollar amount precision)
- * @returns A {@link MatInputField} for dollar amount input
+ * @returns A {@link MatInputField} for dollar amount input.
  *
  * @dbxFormField
  * @dbxFormSlug dollar-amount
@@ -136,6 +136,7 @@ export type DbxForgeDollarAmountFieldConfig = Omit<DbxForgeNumberFieldConfig, 'r
  * @dbxFormArrayOutput no
  * @dbxFormFieldDerivative number
  * @dbxFormConfigInterface DbxForgeDollarAmountFieldConfig
+ *
  * @example
  * ```typescript
  * const field = dbxForgeDollarAmountField({ key: 'price', label: 'Price', min: 0, required: true });

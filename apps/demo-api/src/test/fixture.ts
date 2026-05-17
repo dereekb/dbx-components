@@ -834,7 +834,7 @@ export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunct
   /**
    * Sends the notification.
    *
-   * @returns the result of sending all queued notifications
+   * @returns The result of sending all queued notifications.
    */
   async sendAllQueuedNotifications() {
     const sendAllQueuedNotifications = await this.testContext.notificationServerActions.sendQueuedNotifications({});
@@ -842,9 +842,9 @@ export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunct
   }
 
   /**
-   * Cleanup all sent notifications
+   * Cleanup all sent notifications.
    *
-   * @returns the result of the cleanup operation
+   * @returns The result of the cleanup operation.
    */
   async cleanupAllSentNotifications() {
     const params: CleanupSentNotificationsParams = {};
@@ -855,8 +855,8 @@ export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunct
   /**
    * Sends the notification.
    *
-   * @param params - optional send parameters (key is automatically set from the test context document)
-   * @returns the result of sending the notification
+   * @param params - Optional send parameters (key is automatically set from the test context document)
+   * @returns The result of sending the notification.
    */
   async sendNotification(params?: Maybe<Omit<SendNotificationParams, 'key'>>) {
     const sendNotification = await this.testContext.notificationServerActions.sendNotification({ ...params, key: this.documentKey });

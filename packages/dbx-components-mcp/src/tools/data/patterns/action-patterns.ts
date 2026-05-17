@@ -57,8 +57,8 @@ export const ACTION_EXAMPLE_PATTERNS: readonly ActionExamplePattern[] = [ACTION_
 /**
  * Looks up an action example pattern by its slug.
  *
- * @param slug - the pattern slug to resolve, case-insensitive and trimmed
- * @returns the matching pattern, or `undefined` when no slug matches
+ * @param slug - The pattern slug to resolve, case-insensitive and trimmed.
+ * @returns The matching pattern, or `undefined` when no slug matches.
  */
 export function getActionExamplePattern(slug: string): ActionExamplePattern | undefined {
   const lowered = slug.trim().toLowerCase();

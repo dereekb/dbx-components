@@ -35,8 +35,8 @@ export class DbxColorService {
   /**
    * Registers one or more {@link DbxColorConfigTemplate} entries.
    *
-   * @param templates - the template(s) to register
-   * @param override - whether existing entries with the same key should be replaced (default true)
+   * @param templates - The template(s) to register.
+   * @param override - Whether existing entries with the same key should be replaced (default true)
    */
   register(templates: ArrayOrValue<DbxColorConfigTemplate>, override: boolean = true): void {
     useIterableOrValue(templates, (template) => {
@@ -49,8 +49,8 @@ export class DbxColorService {
   /**
    * Returns whether a template with the given key has been registered.
    *
-   * @param key - the template key to check
-   * @returns true when a template is registered under the given key
+   * @param key - The template key to check.
+   * @returns True when a template is registered under the given key.
    */
   hasTemplate(key: DbxColorConfigTemplateKey): boolean {
     return this._templates.has(key);
@@ -59,8 +59,8 @@ export class DbxColorService {
   /**
    * Returns the {@link DbxColorConfigTemplate} registered under the given key, or undefined if none.
    *
-   * @param key - the template key to look up
-   * @returns the registered template, or undefined when no template matches
+   * @param key - The template key to look up.
+   * @returns The registered template, or undefined when no template matches.
    */
   getTemplate(key: DbxColorConfigTemplateKey): Maybe<DbxColorConfigTemplate> {
     return this._templates.get(key);
@@ -69,7 +69,7 @@ export class DbxColorService {
   /**
    * Returns all currently registered template keys.
    *
-   * @returns array of all registered template keys
+   * @returns Array of all registered template keys.
    */
   getAllRegisteredTemplateKeys(): DbxColorConfigTemplateKey[] {
     return [...this._templates.keys()];
@@ -81,6 +81,9 @@ export class DbxColorService {
    *
    * Returns the input unchanged when no template is set or when the template key is unknown.
    *
+   * @param config - The input config to expand.
+   * @returns An expanded config, or the input unchanged when no expansion applies.
+   *
    * @example
    * ```ts
    * service.register({ key: 'brand-positive', config: { color: '#1f9b59', contrast: 'white', tone: 18 } });
@@ -89,9 +92,6 @@ export class DbxColorService {
    * service.expandColorConfig({ template: 'brand-positive', tone: 60 });
    * // -> { template: 'brand-positive', color: '#1f9b59', contrast: 'white', tone: 60 }
    * ```
-   *
-   * @param config - the input config to expand
-   * @returns an expanded config, or the input unchanged when no expansion applies
    */
   expandColorConfig(config: Maybe<DbxColorConfig>): Maybe<DbxColorConfig> {
     let result: Maybe<DbxColorConfig> = config;

@@ -118,7 +118,7 @@ export class JwksService {
    * Returns both the stored {@link JwksKey} and the unencrypted private JWK
    * so callers can use the signing key immediately without a decryption round-trip.
    *
-   * @returns the generated key pair result containing the stored JwksKey and signing key
+   * @returns The generated key pair result containing the stored JwksKey and signing key.
    */
   async generateKeyPair(): Promise<GenerateKeyPairResult> {
     const { publicKey, privateKey } = generateKeyPairSync('rsa' as any, {
@@ -163,7 +163,7 @@ export class JwksService {
   /**
    * Returns the currently active signing key's private JWK.
    *
-   * @returns the active signing key's private JWK, or undefined if no active key exists
+   * @returns The active signing key's private JWK, or undefined if no active key exists.
    */
   async getActiveSigningKey(): Promise<JsonWebKeyWithKid | undefined> {
     const results = await this.jwksKeyCollection.query(activeJwksKeysQuery()).getDocs();
@@ -187,7 +187,7 @@ export class JwksService {
    * Returns undefined if storage is not configured or `serveJwksFromStorage` is false.
    * Returns null if an error occured while trying to setup.
    *
-   * @returns the public URL, or null/undefined if unavailable
+   * @returns The public URL, or null/undefined if unavailable.
    */
   async getJwksStoragePublicUrl(): Promise<Maybe<WebsiteUrlWithPrefix>> {
     return this._jwksStoragePublicUrl();
@@ -196,7 +196,7 @@ export class JwksService {
   /**
    * Returns the public JWKS (all non-retired keys) by querying Firestore.
    *
-   * @returns the public JWKS containing all non-retired signing keys
+   * @returns The public JWKS containing all non-retired signing keys.
    */
   async getLatestPublicJwks(): Promise<{ keys: JsonWebKeyWithKid[] }> {
     const keys: JsonWebKeyWithKid[] = [];
@@ -216,7 +216,7 @@ export class JwksService {
   /**
    * Rotates keys: marks the current active key as rotated and generates a new active key.
    *
-   * @returns the newly generated active JwksKey
+   * @returns The newly generated active JwksKey.
    */
   async rotateKeys(): Promise<JwksKey> {
     const now = new Date();
@@ -273,7 +273,7 @@ export class JwksService {
   /**
    * Retires rotated keys whose expiresAt has passed.
    *
-   * @returns the number of keys retired
+   * @returns The number of keys retired.
    */
   async retireExpiredKeys(): Promise<number> {
     const now = new Date();

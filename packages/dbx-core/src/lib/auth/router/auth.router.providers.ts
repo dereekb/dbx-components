@@ -23,6 +23,8 @@ export interface ProvideDbxAppAuthRouterConfig {
  * @param config - Configuration containing the auth routes to register.
  * @returns Angular `EnvironmentProviders` for the auth router.
  *
+ * @see {@link provideDbxAppAuth} for the all-in-one provider that includes this.
+ *
  * @example
  * ```ts
  * provideDbxAppAuthRouter({
@@ -32,8 +34,6 @@ export interface ProvideDbxAppAuthRouterConfig {
  *   }
  * });
  * ```
- *
- * @see {@link provideDbxAppAuth} for the all-in-one provider that includes this.
  */
 export function provideDbxAppAuthRouter(config: ProvideDbxAppAuthRouterConfig): EnvironmentProviders {
   const { dbxAppAuthRoutes } = config;

@@ -8,7 +8,7 @@ import { FIREBASE_FIRESTORE_TOKEN } from '../firebase/firebase.tokens';
 /**
  * Provider factory for the SystemStateFirestoreCollections.
  *
- * @param appCollection The app collection class to use.
+ * @param appCollection - The app collection class to use.
  * @returns Provider factory for the SystemStateFirestoreCollections.
  */
 export function provideSystemStateFirestoreCollections(appCollection: SystemStateFirestoreCollections): SystemStateFirestoreCollections {
@@ -22,7 +22,7 @@ export function provideSystemStateFirestoreCollections(appCollection: SystemStat
 /**
  * Provider factory for the NotificationFirestoreCollections.
  *
- * @param appCollection The app collection class to use.
+ * @param appCollection - The app collection class to use.
  * @returns Provider factory for the NotificationFirestoreCollections.
  */
 export function provideNotificationFirestoreCollections(appCollection: NotificationFirestoreCollections): NotificationFirestoreCollections {
@@ -36,7 +36,7 @@ export function provideNotificationFirestoreCollections(appCollection: Notificat
 /**
  * Provider factory for the StorageFileFirestoreCollections.
  *
- * @param appCollection The app collection class to use.
+ * @param appCollection - The app collection class to use.
  * @returns Provider factory for the StorageFileFirestoreCollections.
  */
 export function provideStorageFileFirestoreCollections(appCollection: StorageFileFirestoreCollections): StorageFileFirestoreCollections {
@@ -100,8 +100,8 @@ export interface ProvideDbxFirebaseFirestoreCollectionConfig<T> {
 /**
  * Creates EnvironmentProviders for the DBX_FIRESTORE_CONTEXT_TOKEN, appCollectionClass, and optionally the SystemStateFirestoreCollections and NotificationFirestoreCollections.
  *
- * @param config Configuration for the providers.
- * @returns EnvironmentProviders
+ * @param config - Configuration for the providers.
+ * @returns EnvironmentProviders.
  */
 export function provideDbxFirestoreCollection<T>(config: ProvideDbxFirebaseFirestoreCollectionConfig<T>): EnvironmentProviders {
   const params = config.firestoreContextCacheFactory ? { firestoreContextCacheFactory: config.firestoreContextCacheFactory } : undefined;

@@ -40,11 +40,11 @@ export interface ParsedSearchArgs {
  * Validates and clamps a search tool's raw input. Throws when the query is
  * missing.
  *
- * @param raw - the unvalidated tool arguments from the MCP runtime
- * @param config - the domain's default/max limit pair
- * @param config.defaultLimit - applied when `limit` is omitted from `raw`
- * @param config.maxLimit - upper bound; values above this clamp down
- * @returns the parsed args with `limit` clamped to `[1, maxLimit]`
+ * @param raw - The unvalidated tool arguments from the MCP runtime.
+ * @param config - The domain's default/max limit pair.
+ * @param config.defaultLimit - Applied when `limit` is omitted from `raw`
+ * @param config.maxLimit - Upper bound; values above this clamp down.
+ * @returns The parsed args with `limit` clamped to `[1, maxLimit]`
  */
 export function parseSearchArgs(raw: unknown, config: { readonly defaultLimit: number; readonly maxLimit: number }): ParsedSearchArgs {
   const parsed = SEARCH_ARGS_TYPE(raw);
@@ -84,9 +84,9 @@ export interface QueryToken {
  * this so `"datepicker"` tokens both alias-match `date` slugs and substring-
  * match unrelated entries.
  *
- * @param query - the raw multi-word search query
- * @param aliasResolver - optional `(token) => alias-or-same-token`
- * @returns the unique tokens in original-query order
+ * @param query - The raw multi-word search query.
+ * @param aliasResolver - Optional `(token) => alias-or-same-token`
+ * @returns The unique tokens in original-query order.
  */
 export function tokenize(query: string, aliasResolver?: (token: string) => string): readonly QueryToken[] {
   const raw = query
@@ -161,7 +161,7 @@ function scoreEntryForTokens<TEntry>(input: ScoreEntryForTokensInput<TEntry>): S
 /**
  * Scores every entry against every token. The score is summed; the
  * matched-token display strings (`token` or `token → alias`) are accumulated
- * for the formatter. Token-match policy is controlled by `mode`:
+ * for the formatter. Token-match policy is controlled by `mode`:.
  *
  *   - `'all'` (default): every token must contribute > 0.
  *   - `'any'`: at least one token must contribute > 0.
@@ -171,14 +171,14 @@ function scoreEntryForTokens<TEntry>(input: ScoreEntryForTokensInput<TEntry>): S
  * `'all'` mode (every hit has the same count) and ensures full-token matches
  * outrank partial ones in `'any'` mode.
  *
- * @param config - the per-domain scoring configuration
- * @param config.entries - the registry entries to score
- * @param config.tokens - the parsed query tokens
- * @param config.scoreFn - per-(entry, raw-token) scorer; called twice when an
- *   alias exists (once for raw, once for alias) and the larger score is taken
- * @param config.tieBreaker - extracts the lexicographic tie-breaker key
- * @param config.mode - token-match policy; defaults to `'all'`
- * @returns hits sorted by match-count, then score, then `tieBreaker`
+ * @param config - The per-domain scoring configuration.
+ * @param config.entries - The registry entries to score.
+ * @param config.tokens - The parsed query tokens.
+ * @param config.scoreFn - Per-(entry, raw-token) scorer; called twice when an
+ *   alias exists (once for raw, once for alias) and the larger score is taken.
+ * @param config.tieBreaker - Extracts the lexicographic tie-breaker key.
+ * @param config.mode - Token-match policy; defaults to `'all'`
+ * @returns Hits sorted by match-count, then score, then `tieBreaker`
  */
 export function searchEntries<TEntry>(config: { readonly entries: readonly TEntry[]; readonly tokens: readonly QueryToken[]; readonly scoreFn: (entry: TEntry, token: string) => number; readonly tieBreaker: (entry: TEntry) => string; readonly mode?: TokenMatchMode }): readonly SearchHit<TEntry>[] {
   const { entries, tokens, scoreFn, tieBreaker, mode = 'all' } = config;
@@ -248,9 +248,9 @@ export interface SearchToolConfig<TEntry> {
  * limit → format. Returns the rendered markdown wrapped in a `ToolResult`,
  * or an `isError` result when the args fail validation.
  *
- * @param config - the search tool configuration
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the search tool result
+ * @param config - The search tool configuration.
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The search tool result.
  */
 export function runSearchTool<TEntry>(config: SearchToolConfig<TEntry>, rawArgs: unknown): ToolResult {
   let args: ParsedSearchArgs;

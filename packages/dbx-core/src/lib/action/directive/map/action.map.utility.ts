@@ -44,10 +44,11 @@ export interface ActionContextStoreSourceMapReader<T = unknown, O = unknown> {
  * The reader provides reactive utility functions to aggregate data across all stores
  * in the map (e.g., checking if any store is working, or reducing values from all stores).
  *
- * @typeParam T - The input value type for the actions.
- * @typeParam O - The output result type for the actions.
  * @param actionKeySourceMap$ - Observable (or static value) of the action key to source map.
  * @returns A reader with aggregate query functions over the map's stores.
+ *
+ * @typeParam T - The input value type for the actions.
+ * @typeParam O - The output result type for the actions.
  */
 export function actionContextStoreSourceMapReader<T = unknown, O = unknown>(actionKeySourceMap$: ObservableOrValue<Map<ActionKey, ActionContextStoreSource<T, O>>>): ActionContextStoreSourceMapReader<T, O> {
   const sourceMap$ = asObservable(actionKeySourceMap$);
@@ -75,8 +76,8 @@ export function actionContextStoreSourceMapReader<T = unknown, O = unknown>(acti
 /**
  * Returns an Observable of the results of the mapFn for each source in the actionKeySourceMap$.
  *
- * @param actionKeySourceMap$ Observable of the action key source map.
- * @param mapFn Function to apply to each source.
+ * @param actionKeySourceMap$ - Observable of the action key source map.
+ * @param mapFn - Function to apply to each source.
  * @returns Observable of the results of the mapFn for each source.
  */
 export function fromAllActionContextStoreSourceMapSources<O>(actionKeySourceMap$: ObservableOrValue<ActionContextStoreSourceMap>, mapFn: (input: ActionContextStore) => Observable<O>): Observable<O[]> {

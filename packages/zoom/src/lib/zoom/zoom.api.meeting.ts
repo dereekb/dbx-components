@@ -16,10 +16,10 @@ export type GetMeetingResponse = ZoomMeeting;
 export type GetMeetingFunction = (input: GetMeetingInput) => Promise<GetMeetingResponse>;
 
 /**
- * https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meeting
+ * Https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meeting.
  *
- * @param context The Zoom API context
- * @returns A function that retrieves a meeting by ID
+ * @param context - The Zoom API context.
+ * @returns A function that retrieves a meeting by ID.
  */
 export function getMeeting(context: ZoomContext): GetMeetingFunction {
   return (input) => context.fetchJson(`/meetings/${input.meetingId}`, 'GET');
@@ -35,10 +35,10 @@ export type ListMeetingsForUserResponse = ZoomPageResult<ZoomMeeting>;
 export type ListMeetingsForUserFunction = (input: ListMeetingsForUserInput) => Promise<ListMeetingsForUserResponse>;
 
 /**
- * https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meetings
+ * Https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meetings.
  *
- * @param context The Zoom API context
- * @returns A function that lists meetings for a user
+ * @param context - The Zoom API context.
+ * @returns A function that lists meetings for a user.
  */
 export function listMeetingsForUser(context: ZoomContext): ListMeetingsForUserFunction {
   return (input) => context.fetchJson(`/users/${input.user}/meetings`, 'GET').then(mapToZoomPageResult('meetings'));
@@ -49,8 +49,9 @@ export type ListMeetingsForUserPageFactory = FetchPageFactory<ListMeetingsForUse
 /**
  * Creates a page factory for listing meetings for a user.
  *
- * @param context The Zoom API context
- * @returns A page factory for paginated meeting listing
+ * @param context - The Zoom API context.
+ * @returns A page factory for paginated meeting listing.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function listMeetingsForUserPageFactory(context: ZoomContext): ListMeetingsForUserPageFactory {
@@ -168,10 +169,11 @@ export interface CreateMeetingForUserInput {
 export type CreateMeetingForUserResponse = ZoomMeeting;
 
 /**
- * https://developers.zoom.us/docs/api/meetings/#tag/meetings/POST/users/{userId}/meetings
+ * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/POST/users/{userId}/meetings.
  *
- * @param context The Zoom API context
- * @returns A function that creates a meeting for a user
+ * @param context - The Zoom API context.
+ * @returns A function that creates a meeting for a user.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createMeetingForUser(context: ZoomContext): (input: CreateMeetingForUserInput) => Promise<CreateMeetingForUserResponse> {
@@ -206,10 +208,10 @@ export type UpdateMeetingResponse = unknown;
 export type UpdateMeetingFunction = (input: UpdateMeetingInput) => Promise<UpdateMeetingResponse>;
 
 /**
- * https://developers.zoom.us/docs/api/meetings/#tag/meetings/PUT/meetings/{meetingId}
+ * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/PUT/meetings/{meetingId}
  *
- * @param context The Zoom API context
- * @returns A function that updates a meeting
+ * @param context - The Zoom API context.
+ * @returns A function that updates a meeting.
  */
 export function updateMeeting(context: ZoomContext): UpdateMeetingFunction {
   return (input) =>
@@ -247,9 +249,9 @@ export type DeleteMeetingFunction = (input: DeleteMeetingInput) => Promise<Delet
 export const DELETE_MEETING_DOES_NOT_EXIST_ERROR_CODE = 3001;
 
 /**
- * https://developers.zoom.us/docs/api/meetings/#tag/meetings/DELETE/meetings/{meetingId}
+ * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/DELETE/meetings/{meetingId}
  *
- * @param context The Zoom API context
+ * @param context - The Zoom API context.
  * @returns A function that deletes a meeting (silences 3001 "not found" errors by default)
  */
 export function deleteMeeting(context: ZoomContext): DeleteMeetingFunction {
@@ -267,10 +269,10 @@ export type GetPastMeetingResponse = PastZoomMeeting;
 export type GetPastMeetingFunction = (input: GetPastMeetingInput) => Promise<GetPastMeetingResponse>;
 
 /**
- * https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}
+ * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}
  *
- * @param context The Zoom API context
- * @returns A function that retrieves a past meeting
+ * @param context - The Zoom API context.
+ * @returns A function that retrieves a past meeting.
  */
 export function getPastMeeting(context: ZoomContext): GetPastMeetingFunction {
   return (input) => context.fetchJson(`/past_meetings/${input.meetingId}`, 'GET');
@@ -286,10 +288,10 @@ export type GetPastMeetingParticipantsResponse = ZoomPageResult<PastZoomMeeting>
 export type GetPastMeetingParticipantsFunction = (input: GetPastMeetingParticipantsInput) => Promise<GetPastMeetingParticipantsResponse>;
 
 /**
- * https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}/participants
+ * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}/participants.
  *
- * @param context The Zoom API context
- * @returns A function that retrieves participants from a past meeting
+ * @param context - The Zoom API context.
+ * @returns A function that retrieves participants from a past meeting.
  */
 export function getPastMeetingParticipants(context: ZoomContext): GetPastMeetingParticipantsFunction {
   return (input) => context.fetchJson(`/past_meetings/${input.meetingId}/participants`, 'GET').then(mapToZoomPageResult('participants'));
@@ -300,8 +302,9 @@ export type GetPastMeetingParticipantsPageFactory = FetchPageFactory<GetPastMeet
 /**
  * Creates a page factory for listing past meeting participants.
  *
- * @param context The Zoom API context
- * @returns A page factory for paginated participant listing
+ * @param context - The Zoom API context.
+ * @returns A page factory for paginated participant listing.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function getPastMeetingParticipantsPageFactory(context: ZoomContext): GetPastMeetingParticipantsPageFactory {

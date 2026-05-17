@@ -36,9 +36,9 @@ export const DEFAULT_NORMALIZED_TONAL = false;
  * the same shape used to compute the grouping signature so callers can
  * stash the normalised view on the finding for display.
  *
- * @param raw - the as-authored color config (subset that the parser captured)
- * @param mode - equivalence mode controlling default expansion
- * @returns the normalised config used for signature comparison
+ * @param raw - The as-authored color config (subset that the parser captured)
+ * @param mode - Equivalence mode controlling default expansion.
+ * @returns The normalised config used for signature comparison.
  */
 export function normalizeColorConfig(raw: NormalizedColorConfig, mode: ColorSmellEquivalenceMode): NormalizedColorConfig {
   const result: { -readonly [K in keyof NormalizedColorConfig]: NormalizedColorConfig[K] } = {};
@@ -59,8 +59,8 @@ export function normalizeColorConfig(raw: NormalizedColorConfig, mode: ColorSmel
  * signature is stable across runs because the keys are sorted and
  * undefined fields are omitted.
  *
- * @param normalized - the normalised config produced by {@link normalizeColorConfig}
- * @returns the signature string (`color=#ff0066|contrast=white|tone=100|tonal=false`)
+ * @param normalized - The normalised config produced by {@link normalizeColorConfig}
+ * @returns The signature string (`color=#ff0066|contrast=white|tone=100|tonal=false`)
  */
 export function signatureFor(normalized: NormalizedColorConfig): string {
   const parts: string[] = [];

@@ -98,8 +98,9 @@ export const FILTER_KIND_ORDER: readonly FilterKind[] = ['directive', 'pattern']
 /**
  * Builds a {@link FilterRegistry} from a loader result.
  *
- * @param loaded - the merged registry returned by `loadFilterManifests`
- * @returns a domain-friendly read API over the merged entries
+ * @param loaded - The merged registry returned by `loadFilterManifests`
+ * @returns A domain-friendly read API over the merged entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createFilterRegistry(loaded: LoadFilterManifestsResult): FilterRegistry {
@@ -112,10 +113,11 @@ export function createFilterRegistry(loaded: LoadFilterManifestsResult): FilterR
  * Used by tests that need to drive the tool without going through the loader
  * pipeline.
  *
- * @param input - the entries plus the source labels to advertise
- * @param input.entries - the full entry list
- * @param input.loadedSources - source labels reported via `registry.loadedSources`
- * @returns a domain-friendly read API over the supplied entries
+ * @param input - The entries plus the source labels to advertise.
+ * @param input.entries - The full entry list.
+ * @param input.loadedSources - Source labels reported via `registry.loadedSources`
+ * @returns A domain-friendly read API over the supplied entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createFilterRegistryFromEntries(input: { readonly entries: readonly FilterEntryInfo[]; readonly loadedSources: readonly string[] }): FilterRegistry {
@@ -180,8 +182,8 @@ export const EMPTY_FILTER_REGISTRY: FilterRegistry = createFilterRegistryFromEnt
  * tool consumes. Pattern entries (no `@Directive` decorator) carry an
  * `undefined` selector and empty inputs/outputs.
  *
- * @param entry - the manifest entry to convert
- * @returns the matching FilterEntryInfo
+ * @param entry - The manifest entry to convert.
+ * @returns The matching FilterEntryInfo.
  */
 export function toFilterEntryInfo(entry: FilterEntry): FilterEntryInfo {
   let result: FilterEntryInfo;

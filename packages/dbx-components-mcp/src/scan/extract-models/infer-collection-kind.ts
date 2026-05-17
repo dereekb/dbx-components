@@ -10,6 +10,7 @@
  * inner factory closure.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { type FunctionDeclaration, type SourceFile } from 'ts-morph';
 import type { FirestoreCollectionKind } from '../../tools/model-validate/types.js';
 
@@ -27,8 +28,8 @@ const KIND_BY_METHOD: Readonly<Record<string, FirestoreCollectionKind>> = {
  * {@link FirestoreCollectionKind}. Functions that don't make a recognised
  * `firestoreContext.*` call are omitted.
  *
- * @param sf - the parsed source file to inspect
- * @returns the factory-name → kind map (may be empty)
+ * @param sf - The parsed source file to inspect.
+ * @returns The factory-name → kind map (may be empty)
  */
 export function findCollectionFactoryCalls(sf: SourceFile): ReadonlyMap<string, FirestoreCollectionKind> {
   const out = new Map<string, FirestoreCollectionKind>();
@@ -47,7 +48,7 @@ function detectKind(fn: FunctionDeclaration): FirestoreCollectionKind | undefine
   const body = fn.getBody()?.getText() ?? '';
   let result: FirestoreCollectionKind | undefined;
   COLLECTION_CALL_RE.lastIndex = 0;
-  let match: RegExpExecArray | null;
+  let match: Maybe<RegExpExecArray>;
   while ((match = COLLECTION_CALL_RE.exec(body)) !== null) {
     const kind = KIND_BY_METHOD[match[1]];
     if (kind) {

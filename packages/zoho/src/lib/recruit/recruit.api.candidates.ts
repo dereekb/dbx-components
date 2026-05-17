@@ -1,5 +1,5 @@
 import { type ZohoRecruitContext } from './recruit.config';
-import { type ArrayOrValue, asArray, separateValues } from '@dereekb/util';
+import { type Maybe, type ArrayOrValue, asArray, separateValues } from '@dereekb/util';
 import { type ZohoRecruitJobOpeningId, type ZohoRecruitCandidateId, ZOHO_RECRUIT_CANDIDATES_MODULE, type ZohoRecruitCandidateStatus, type ZohoRecruitJobOpeningPostingTitle, type ZohoRecruitModuleNameRef, type ZohoRecruitRecord, ZOHO_RECRUIT_JOB_OPENINGS_MODULE } from './recruit';
 import { zohoRecruitApiFetchJsonInput, type ZohoRecruitChangeObjectLikeResponse, type ZohoRecruitChangeObjectLikeResponseSuccessEntryMeta, type ZohoRecruitChangeObjectResponseErrorEntry, type ZohoRecruitGetRecordsPageFilter, zohoRecruitMultiRecordResult, type ZohoRecruitMultiRecordResult, type ZohoRecruitMultiRecordResultEntry, type ZohoRecruitSearchRecordsResponse, zohoRecruitUrlSearchParamsMinusIdAndModule } from './recruit.api';
 import { ZOHO_FAILURE_ERROR_CODE, type ZohoServerErrorDataWithDetails } from '../zoho.error.api';
@@ -72,10 +72,10 @@ export type ZohoRecruitAssociateCandidateRecordsWithJobOpeningsFunction = (input
  *
  * The result separates "already associated" errors from other errors, allowing callers to treat duplicate associations as non-fatal.
  *
- * @param context - Zoho Recruit API context providing fetch and authentication
+ * @param context - Zoho Recruit API context providing fetch and authentication.
  * @returns Factory function that associates candidates with job openings
  *
- * https://www.zoho.com/recruit/developer-guide/apiv2/associate-candidate.html
+ * https://www.zoho.com/recruit/developer-guide/apiv2/associate-candidate.html.
  */
 export function zohoRecruitAssociateCandidateRecordsWithJobOpenings(context: ZohoRecruitContext): ZohoRecruitAssociateCandidateRecordsWithJobOpeningsFunction {
   return (input: ZohoRecruitAssociateCandidateRecordsWithJobOpeningsInput) =>
@@ -118,12 +118,12 @@ export type ZohoRecruitSearchAssociatedRecordsFunction<R extends ZohoRecruitSear
 /**
  * Searches for records associated with a given candidate or job opening. Returns an empty page result when no records are found.
  *
- * @param context - Zoho Recruit API context providing fetch and authentication
- * @returns Factory function that searches for associated records
+ * @param context - Zoho Recruit API context providing fetch and authentication.
+ * @returns Factory function that searches for associated records.
  */
 export function zohoRecruitSearchAssociatedRecords<R extends ZohoRecruitSearchAssociatedRecordsResponse>(context: ZohoRecruitContext): ZohoRecruitSearchAssociatedRecordsFunction<R> {
   return (input: ZohoRecruitSearchAssociatedRecordsInput) => {
-    return context.fetchJson<R | null>(`/v2/${input.module}/${input.id}/associate?${zohoRecruitUrlSearchParamsMinusIdAndModule(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => {
+    return context.fetchJson<Maybe<R>>(`/v2/${input.module}/${input.id}/associate?${zohoRecruitUrlSearchParamsMinusIdAndModule(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => {
       const result: R = x ?? (emptyZohoPageResult<R['data']['0']>() as R);
       return result;
     });
@@ -139,8 +139,8 @@ export type ZohoRecruitSearchCandidateAssociatedJobOpeningRecordsFunction<T exte
 /**
  * Searches for job openings associated with a specific candidate.
  *
- * @param context - Zoho Recruit API context providing fetch and authentication
- * @returns Factory function that searches for job openings associated with a candidate
+ * @param context - Zoho Recruit API context providing fetch and authentication.
+ * @returns Factory function that searches for job openings associated with a candidate.
  */
 export function zohoRecruitSearchCandidateAssociatedJobOpeningRecords<T extends ZohoRecruitRecord>(context: ZohoRecruitContext): ZohoRecruitSearchCandidateAssociatedJobOpeningRecordsFunction<T> {
   const searchAssociatedRecordsFactory = zohoRecruitSearchAssociatedRecords<ZohoRecruitSearchAssociatedRecordsResponse<T>>(context);
@@ -155,8 +155,9 @@ export function zohoRecruitSearchCandidateAssociatedJobOpeningRecords<T extends 
 /**
  * Creates a page factory for paginating over job openings associated with a candidate.
  *
- * @param context - Zoho Recruit API context providing fetch and authentication
- * @returns Page factory for iterating through associated job openings
+ * @param context - Zoho Recruit API context providing fetch and authentication.
+ * @returns Page factory for iterating through associated job openings.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory<T extends ZohoRecruitRecord>(context: ZohoRecruitContext) {
@@ -172,9 +173,9 @@ export type ZohoRecruitSearchJobOpeningAssociatedCandidateRecordsFunction<T exte
 /**
  * Searches for candidates associated with a specific job opening.
  *
- * @param context - Zoho Recruit API context providing fetch and authentication
- * @param jobOpeningModuleName - Module name for job openings, defaults to the standard module
- * @returns Factory function that searches for candidates associated with a job opening
+ * @param context - Zoho Recruit API context providing fetch and authentication.
+ * @param jobOpeningModuleName - Module name for job openings, defaults to the standard module.
+ * @returns Factory function that searches for candidates associated with a job opening.
  */
 export function zohoRecruitSearchJobOpeningAssociatedCandidateRecords<T extends ZohoRecruitRecord>(context: ZohoRecruitContext, jobOpeningModuleName = ZOHO_RECRUIT_JOB_OPENINGS_MODULE): ZohoRecruitSearchJobOpeningAssociatedCandidateRecordsFunction<T> {
   const searchAssociatedRecordsFactory = zohoRecruitSearchAssociatedRecords<ZohoRecruitSearchAssociatedRecordsResponse<T>>(context);
@@ -189,8 +190,9 @@ export function zohoRecruitSearchJobOpeningAssociatedCandidateRecords<T extends 
 /**
  * Creates a page factory for paginating over candidates associated with a job opening.
  *
- * @param context - Zoho Recruit API context providing fetch and authentication
- * @returns Page factory for iterating through associated candidates
+ * @param context - Zoho Recruit API context providing fetch and authentication.
+ * @returns Page factory for iterating through associated candidates.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory<T extends ZohoRecruitRecord>(context: ZohoRecruitContext) {

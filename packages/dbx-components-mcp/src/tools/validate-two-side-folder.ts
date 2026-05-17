@@ -17,6 +17,7 @@
  * per-domain `inspect.ts` + `rules.ts` split (now collapsed here).
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { attachRemediation } from './rule-catalog/index.js';
@@ -203,8 +204,9 @@ const REEXPORT_PATTERN = /^\s*export\s+\*\s+from\s+['"]\.\/([^'"\n]+)['"]\s*;?\s
  * `validateXFolder` signatures so callers (tool wrappers, specs) need
  * no edits beyond the import path.
  *
- * @param config - the domain-specific labels, paths, and codes
- * @returns the bound {@link TwoSideFolderValidator}
+ * @param config - The domain-specific labels, paths, and codes.
+ * @returns The bound {@link TwoSideFolderValidator}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createTwoSideFolderValidator<TCode extends string>(config: TwoSideFolderValidatorConfig<TCode>): TwoSideFolderValidator<TCode> {
@@ -438,7 +440,7 @@ function checkBarrelReexports<TCode extends string>(config: TwoSideFolderValidat
   const entrySet = new Set(side.entries);
   const seen = new Set<string>();
   REEXPORT_PATTERN.lastIndex = 0;
-  let match: RegExpExecArray | null = REEXPORT_PATTERN.exec(source);
+  let match: Maybe<RegExpExecArray> = REEXPORT_PATTERN.exec(source);
   while (match !== null) {
     const target = match[1].replace(/\.js$/, '');
     const normalized = target.replace(/\/+$/, '');

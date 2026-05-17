@@ -1,4 +1,5 @@
 import { type AstNode, CLEAN_HELPER, CLEAN_SUBSCRIPTION_HELPER, COMPLETE_ON_DESTROY_HELPER, createImportRegistry, findAngularComponentDecorator, findNgOnDestroyMethod, findOnDestroyImplementsClause, getClassMemberName, getImplementsSpecifierRemovalRange, type ImportRegistry, isCalledIdentifier, isDeclareProperty, isStaticProperty, isThisMemberAccess, trackImportDeclaration } from './util';
+import type { Maybe } from '@dereekb/util';
 import { getStatementRangeWithLeadingWhitespace } from './require-clean-subscription.rule';
 
 /**
@@ -204,7 +205,7 @@ function collectWrappedFieldNames(classNode: AstNode): Map<string, string> {
  * @param expression - The initializer expression, or null/undefined.
  * @returns The wrapper helper name (`cleanSubscription` etc.) or null.
  */
-function wrapperNameFromInitializer(expression: AstNode | null | undefined): string | null {
+function wrapperNameFromInitializer(expression: Maybe<AstNode>): Maybe<string> {
   return expression ? isCalledIdentifier(expression, HELPER_NAMES) : null;
 }
 
@@ -216,8 +217,8 @@ function wrapperNameFromInitializer(expression: AstNode | null | undefined): str
  * @param wrappedFields - Map of class field names to their wrapper helper names.
  * @returns Match details, or null.
  */
-function matchRedundantCleanupStatement(statement: AstNode, wrappedFields: Map<string, string>): RedundantStatementMatch | null {
-  let result: RedundantStatementMatch | null = null;
+function matchRedundantCleanupStatement(statement: AstNode, wrappedFields: Map<string, string>): Maybe<RedundantStatementMatch> {
+  let result: Maybe<RedundantStatementMatch> = null;
 
   if (statement.type === 'ExpressionStatement') {
     const call = statement.expression;

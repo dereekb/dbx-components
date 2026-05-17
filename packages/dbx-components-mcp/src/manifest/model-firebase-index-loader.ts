@@ -54,10 +54,10 @@ export interface LoadModelFirebaseIndexManifestsResult {
  * single registry suitable for the `dbx_model_firebase_index_*` MCP
  * tools.
  *
- * @param input - manifest sources plus an optional injected `readFile`
- * @returns merged entries, collection index, deterministic warnings, and
- *   the list of source labels that loaded
- * @throws when a strict source fails or when zero manifests load successfully
+ * @param input - Manifest sources plus an optional injected `readFile`
+ * @returns Merged entries, collection index, deterministic warnings, and
+ *   the list of source labels that loaded.
+ * @throws When a strict source fails or when zero manifests load successfully.
  */
 export async function loadModelFirebaseIndexManifests(input: LoadModelFirebaseIndexManifestsInput): Promise<LoadModelFirebaseIndexManifestsResult> {
   const { entries, indexMap, warnings, loadedSources } = await loadManifestsBase<ModelFirebaseIndexManifest, ModelFirebaseIndexEntry>(input, {

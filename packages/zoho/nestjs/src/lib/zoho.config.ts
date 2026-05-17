@@ -99,7 +99,7 @@ export function readZohoConfigFromConfigService(configOrService: ReadZohoConfigF
 /**
  * Asserts that the provided ZohoConfig has a valid API URL configured.
  *
- * @param config - the Zoho config to validate
+ * @param config - The Zoho config to validate.
  */
 export function assertValidZohoConfig(config: ZohoConfig) {
   if (!config.apiUrl) {

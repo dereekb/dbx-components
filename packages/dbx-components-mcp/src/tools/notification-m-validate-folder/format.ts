@@ -12,8 +12,8 @@ import type { ValidationResult } from './types.js';
  * to callers, grouping violations by side (component / api) so each report
  * row points at the directory needing the fix.
  *
- * @param result - the aggregated folder-validation outcome
- * @returns the markdown report
+ * @param result - The aggregated folder-validation outcome.
+ * @returns The markdown report.
  */
 export function formatResult(result: ValidationResult): string {
   return formatTwoSideResult({ title: 'Notification folder validation', result });

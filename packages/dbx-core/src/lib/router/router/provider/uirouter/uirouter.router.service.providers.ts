@@ -12,6 +12,9 @@ import { DbxUIRouterService } from './uirouter.router.service';
  *
  * @returns Angular `EnvironmentProviders` for the UIRouter-based router service.
  *
+ * @see {@link DbxUIRouterService}
+ * @see {@link DbxCoreAngularRouterSegueModule} for the Angular Router alternative
+ *
  * @example
  * ```ts
  * bootstrapApplication(AppComponent, {
@@ -21,8 +24,6 @@ import { DbxUIRouterService } from './uirouter.router.service';
  * });
  * ```
  *
- * @see {@link DbxUIRouterService}
- * @see {@link DbxCoreAngularRouterSegueModule} for the Angular Router alternative
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxUIRouterService(): EnvironmentProviders {

@@ -15,8 +15,8 @@ import type { EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactResult } from 
  * name tokens and asks the renderer to emit each file plus its wiring steps.
  * The MCP wrapper applies filesystem idempotency on the returned result.
  *
- * @param input - the validated scaffold request
- * @returns the rendered file list, wiring steps, and summary
+ * @param input - The validated scaffold request.
+ * @returns The rendered file list, wiring steps, and summary.
  */
 export function scaffoldArtifact(input: ScaffoldArtifactInput): ScaffoldArtifactResult {
   const tokens = deriveNameTokens(input.name);
@@ -39,9 +39,9 @@ export type EmittedFileExistenceChecker = (relativePath: string) => boolean | Pr
  * defer to the user (no overwrite risk), and pre-skipped emissions are
  * idempotent on a second pass.
  *
- * @param result - the scaffold result whose `files` array should be re-classified
- * @param exists - callback that reports whether the relative path already exists on disk
- * @returns a new result with `'new'` emissions downgraded to `'exists-skipped'` where appropriate
+ * @param result - The scaffold result whose `files` array should be re-classified.
+ * @param exists - Callback that reports whether the relative path already exists on disk.
+ * @returns A new result with `'new'` emissions downgraded to `'exists-skipped'` where appropriate.
  */
 export async function applyIdempotency(result: ScaffoldArtifactResult, exists: EmittedFileExistenceChecker): Promise<ScaffoldArtifactResult> {
   const updated: EmittedFile[] = [];
@@ -64,8 +64,8 @@ export async function applyIdempotency(result: ScaffoldArtifactResult, exists: E
  * file plus a wiring-instructions block — for return through MCP tool
  * content.
  *
- * @param result - the scaffold result to format
- * @returns the trimmed markdown report
+ * @param result - The scaffold result to format.
+ * @returns The trimmed markdown report.
  */
 export function formatResult(result: ScaffoldArtifactResult): string {
   const lines: string[] = [];

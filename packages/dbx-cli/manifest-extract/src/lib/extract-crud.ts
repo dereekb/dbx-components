@@ -35,8 +35,8 @@ export interface ExtractCrudInput {
  * callable leaf (CRUD or standalone). Best-effort: malformed configs return
  * fewer entries rather than throwing.
  *
- * @param source - in-memory source name + text pair to extract
- * @returns the CRUD extraction with group name, model keys, entries, and
+ * @param source - In-memory source name + text pair to extract.
+ * @returns The CRUD extraction with group name, model keys, entries, and
  *   `*Functions` class name (when present).
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity

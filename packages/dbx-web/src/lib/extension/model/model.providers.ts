@@ -12,13 +12,14 @@ import { DbxModelObjectStateService } from './model.state.service';
 /**
  * Creates a {@link StorageAccessor} for persisting model view tracker events using the `mtvs` storage prefix.
  *
+ * @param storageAccessorFactory - The factory used to create typed storage accessors.
+ * @returns A storage accessor configured with the `mtvs` prefix for model view tracker events.
+ *
  * @example
  * ```typescript
  * const accessor = defaultDbxModelViewTrackerStorageAccessorFactory(storageAccessorFactory);
  * ```
  *
- * @param storageAccessorFactory - The factory used to create typed storage accessors
- * @returns A storage accessor configured with the `mtvs` prefix for model view tracker events
  * @__NO_SIDE_EFFECTS__
  */
 export function defaultDbxModelViewTrackerStorageAccessorFactory(storageAccessorFactory: SimpleStorageAccessorFactory): StorageAccessor<DbxModelViewTrackerEventSet> {
@@ -30,7 +31,8 @@ export function defaultDbxModelViewTrackerStorageAccessorFactory(storageAccessor
 /**
  * Creates EnvironmentProviders for providing DbxModelTrackerService, DbxModelObjectStateService and sets up the NgRx store for DbxModelTrackerEffects.
  *
- * @returns EnvironmentProviders
+ * @returns EnvironmentProviders.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxModelService(): EnvironmentProviders {

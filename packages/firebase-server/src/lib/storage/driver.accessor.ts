@@ -30,8 +30,8 @@ import { isArrayBuffer, isUint8Array } from 'util/types';
 /**
  * Resolves a Google Cloud Storage {@link Bucket} from a {@link StoragePath}.
  *
- * @param storage - the Google Cloud Storage client instance.
- * @param path - the storage path containing the bucket ID.
+ * @param storage - The Google Cloud Storage client instance.
+ * @param path - The storage path containing the bucket ID.
  * @returns The resolved Google Cloud Storage bucket.
  */
 export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): Bucket {
@@ -41,8 +41,8 @@ export function googleCloudStorageBucketForStorageFilePath(storage: GoogleCloudS
 /**
  * Resolves a Google Cloud Storage {@link GoogleCloudFile} from a {@link StoragePath}.
  *
- * @param storage - the Google Cloud Storage client instance.
- * @param path - the storage path containing bucket ID and file path.
+ * @param storage - The Google Cloud Storage client instance.
+ * @param path - The storage path containing bucket ID and file path.
  * @returns The resolved Google Cloud Storage file reference.
  */
 export function googleCloudStorageFileForStorageFilePath(storage: GoogleCloudStorage, path: StoragePath): GoogleCloudFile {
@@ -57,8 +57,8 @@ export type GoogleCloudStorageAccessorFile = FirebaseStorageAccessorFile<GoogleC
 /**
  * Converts Google Cloud Storage {@link FileMetadata} into the normalized {@link StorageMetadata} format.
  *
- * @param file - the Google Cloud Storage file reference.
- * @param metadata - the raw file metadata from the Google Cloud SDK.
+ * @param file - The Google Cloud Storage file reference.
+ * @param metadata - The raw file metadata from the Google Cloud SDK.
  * @returns Normalized storage metadata.
  */
 export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, metadata: FileMetadata): StorageMetadata {
@@ -93,8 +93,8 @@ export function googleCloudFileMetadataToStorageMetadata(file: GoogleCloudFile, 
  *
  * Handles emulator-specific edge cases (e.g., signing errors, atomic move fallback).
  *
- * @param storage - the Google Cloud Storage client instance.
- * @param storagePath - the storage path identifying the file's bucket and path.
+ * @param storage - The Google Cloud Storage client instance.
+ * @param storagePath - The storage path identifying the file's bucket and path.
  * @returns A file accessor with CRUD, streaming, and ACL operations.
  */
 export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFile {
@@ -363,8 +363,8 @@ export const googleCloudStorageListFilesResultFactory = storageListFilesResultFa
  * Creates a {@link GoogleCloudStorageAccessorFolder} that supports checking folder existence
  * and listing files/subfolders with pagination.
  *
- * @param storage - the Google Cloud Storage client instance.
- * @param storagePath - the storage path identifying the folder's bucket and prefix.
+ * @param storage - The Google Cloud Storage client instance.
+ * @param storagePath - The storage path identifying the folder's bucket and prefix.
  * @returns A folder accessor with existence checking and listing operations.
  */
 export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, storagePath: StoragePath): GoogleCloudStorageAccessorFolder {

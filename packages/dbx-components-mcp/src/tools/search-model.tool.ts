@@ -261,8 +261,8 @@ function parseArgs(rawArgs: unknown): ParsedSearchModelArgs {
  * downstream catalog when `scope` requires it, builds the entry pool, and
  * dispatches to the shared search pipeline.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted search result, or an error result on validation failure
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The formatted search result, or an error result on validation failure.
  */
 export async function runSearchModel(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedSearchModelArgs;

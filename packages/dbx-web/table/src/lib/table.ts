@@ -69,8 +69,8 @@ export interface DefaultDbxTableItemGroup<T, G = unknown> extends DbxTableItemGr
  *
  * Used when no explicit grouping function is provided to the table.
  *
- * @param items - the array of items to include in the default group
- * @returns a default group containing all the provided items
+ * @param items - The array of items to include in the default group.
+ * @returns A default group containing all the provided items.
  */
 export function defaultDbxTableItemGroup<T, G = unknown>(items: T[]): DefaultDbxTableItemGroup<T, G> {
   return {
@@ -86,7 +86,7 @@ export type DbxTableGroupByFunction<T, G = unknown> = (items: T[]) => Observable
 /**
  * Delegate used for generating view configurations given the input.
  */
- 
+
 export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G = unknown> {
   /**
    * Track by
@@ -167,4 +167,3 @@ export interface DbxTableViewDelegate<I = unknown, C = unknown, T = unknown, G =
    */
   tableClasses?: CssClassesArray;
 }
- 

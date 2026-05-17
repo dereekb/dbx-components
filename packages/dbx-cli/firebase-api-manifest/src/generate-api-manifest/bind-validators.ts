@@ -9,6 +9,7 @@
  * is `export const <name>ParamsType = ... as Type<<Name>Params>`.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 
@@ -97,7 +98,7 @@ function findIdentifierInBarrelChain(filePath: string, identifier: string, visit
 function collectReExportTargets(text: string): string[] {
   const out: string[] = [];
   const re = /export\s*(?:\*|\{[^}]*\})\s*from\s*['"]([^'"]+)['"]/g;
-  let match: RegExpExecArray | null;
+  let match: Maybe<RegExpExecArray>;
   while ((match = re.exec(text)) !== null) {
     out.push(match[1]);
   }

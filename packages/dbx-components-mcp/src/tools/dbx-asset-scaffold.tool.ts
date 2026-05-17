@@ -223,8 +223,8 @@ function renderScaffold(args: ParsedScaffoldArgs): string {
  * Tool handler for `dbx_asset_scaffold`. Validates the request, renders
  * the scaffold output, and packages it as tool content.
  *
- * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
- * @returns the rendered scaffold, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments object from the MCP runtime.
+ * @returns The rendered scaffold, or an error result when args fail validation.
  */
 export function runAssetScaffold(rawArgs: unknown): ToolResult {
   let args: ParsedScaffoldArgs;

@@ -43,8 +43,8 @@ import { notificationUserBlockedFromBeingAddedToRecipientsError, notificationUse
  * Sets the creation timestamp to now, associates the summary with the given model key,
  * and initializes with an empty notifications array.
  *
- * @param model - the model key to associate the summary with
- * @returns a blank {@link NotificationSummary} with creation timestamp and empty notifications
+ * @param model - The model key to associate the summary with.
+ * @returns A blank {@link NotificationSummary} with creation timestamp and empty notifications.
  *
  * @example
  * ```ts
@@ -199,8 +199,8 @@ export interface ExpandNotificationRecipientsResult {
  *
  * Recipients are each configurable and may be defined with as little info as a single contact info, or have multiple contact info pieces associated with them.
  *
- * @param input - the notification, box, auth service, and recipient configuration
- * @returns channel-specific recipient lists (email, text, notification summary) ready for delivery
+ * @param input - The notification, box, auth service, and recipient configuration.
+ * @returns Channel-specific recipient lists (email, text, notification summary) ready for delivery.
  */
 export async function expandNotificationRecipients(input: ExpandNotificationRecipientsInput): Promise<ExpandNotificationRecipientsResult> {
   const { notificationUserAccessor, authService, notification, notificationBox, globalRecipients: inputGlobalRecipients, recipientFlagOverride, notificationSummaryIdForUid: inputNotificationSummaryIdForUid, onlySendToExplicitlyEnabledRecipients: inputOnlySendToExplicitlyEnabledRecipients, onlyTextExplicitlyEnabledRecipients: inputOnlyTextExplicitlyEnabledRecipients } = input;
@@ -716,10 +716,10 @@ export interface UpdateNotificationUserNotificationBoxRecipientConfigResult {
  *
  * Also re-applies send exclusions to the updated config array.
  *
- * @param input - the current state and intended change
- * @returns the updated box config array and notification box recipient, if changes occurred
- * @throws notificationUserBlockedFromBeingAddedToRecipientsError when inserting a blocked user
- * @throws notificationUserLockedConfigFromBeingUpdatedError when updating a locked user's config
+ * @param input - The current state and intended change.
+ * @returns The updated box config array and notification box recipient, if changes occurred.
+ * @throws NotificationUserBlockedFromBeingAddedToRecipientsError when inserting a blocked user.
+ * @throws NotificationUserLockedConfigFromBeingUpdatedError when updating a locked user's config.
  */
 export function updateNotificationUserNotificationBoxRecipientConfig(input: UpdateNotificationUserNotificationBoxRecipientConfigInput): UpdateNotificationUserNotificationBoxRecipientConfigResult {
   const { notificationBoxId, notificationUserId, notificationUser, insertingRecipientIntoNotificationBox, removeRecipientFromNotificationBox, notificationBoxRecipient } = input;

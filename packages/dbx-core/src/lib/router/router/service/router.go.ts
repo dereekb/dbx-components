@@ -21,13 +21,13 @@ export type GoWithRouter = (route: ObservableOrValue<SegueRef>) => Promise<boole
  * @param dbxRouterService - The router service to use for navigation.
  * @returns A function that navigates to the given route and returns a promise resolving to the navigation result.
  *
+ * @see {@link GoWithRouter}
+ *
  * @example
  * ```ts
  * const navigate = goWithRouter(routerService);
  * await navigate({ ref: 'app.dashboard' });
  * ```
- *
- * @see {@link GoWithRouter}
  */
 export function goWithRouter(dbxRouterService: DbxRouterService): (route: ObservableOrValue<SegueRefOrSegueRefRouterLink>) => Promise<boolean> {
   return (route) => {

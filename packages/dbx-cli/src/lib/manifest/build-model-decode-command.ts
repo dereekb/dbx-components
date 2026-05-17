@@ -170,8 +170,9 @@ function toSegment(prefix: string, id: string, entry: CliModelManifestEntry | un
  * MCP `dbx_model_decode` key-mode output for consistency between agent and
  * shell consumers.
  *
- * @param decoded - the decoded key returned by {@link decodeFirestoreModelKey}.
- * @returns the formatted block with a trailing newline.
+ * @param decoded - The decoded key returned by {@link decodeFirestoreModelKey}.
+ * @returns The formatted block with a trailing newline.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function renderDecodedKey(decoded: DecodedKey): string {
@@ -209,6 +210,5 @@ function renderLeafLines(leaf: DecodedKeySegment): string[] {
 }
 
 function renderAncestorLine(ancestor: DecodedKeySegment): string {
-  const result = ancestor.modelName ? `- ${ancestor.modelName} — prefix ${ancestor.prefix}, id ${ancestor.id}` : `- <unknown> — prefix ${ancestor.prefix}, id ${ancestor.id}`;
-  return result;
+  return ancestor.modelName ? `- ${ancestor.modelName} — prefix ${ancestor.prefix}, id ${ancestor.id}` : `- <unknown> — prefix ${ancestor.prefix}, id ${ancestor.id}`;
 }

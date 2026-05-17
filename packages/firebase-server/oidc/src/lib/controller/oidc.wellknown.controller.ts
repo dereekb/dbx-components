@@ -21,7 +21,7 @@ export class OidcWellKnownController {
    * Returns the provider metadata so clients can auto-discover endpoints,
    * supported scopes, signing algorithms, etc.
    *
-   * @returns the OIDC discovery metadata document
+   * @returns The OIDC discovery metadata document.
    */
   @Get('openid-configuration')
   async getOpenIdConfiguration(): Promise<OidcDiscoveryMetadata> {
@@ -34,7 +34,7 @@ export class OidcWellKnownController {
    *
    * This endpoint is typically skipped if the JwksServiceStorageConfig is provided.
    *
-   * @returns the public JWKS containing all non-retired signing keys
+   * @returns The public JWKS containing all non-retired signing keys.
    */
   @Get('jwks.json')
   async getJwks() {
@@ -47,7 +47,7 @@ export class OidcWellKnownController {
    * Returns the authorization server(s) that protect this resource,
    * allowing clients to discover which authorization server to use.
    *
-   * @returns the protected resource metadata with authorization server URLs
+   * @returns The protected resource metadata with authorization server URLs.
    */
   @Get('oauth-protected-resource')
   getProtectedResource() {

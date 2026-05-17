@@ -15,8 +15,8 @@
  * or `undefined` (when omitted entirely). Callers usually want the first
  * scalar, so this normalises the three cases in one place.
  *
- * @param value - the raw variable from `ResourceTemplate` callbacks
- * @returns the first scalar value, or `undefined` when none was supplied
+ * @param value - The raw variable from `ResourceTemplate` callbacks.
+ * @returns The first scalar value, or `undefined` when none was supplied.
  */
 export function pickFirstVariable(value: string | string[] | undefined): string | undefined {
   let result: string | undefined;

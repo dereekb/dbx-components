@@ -13,7 +13,7 @@ export type DbxForgeNameFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * Pre-configured text field for capturing a full name with sensible min/max length defaults.
  *
  * @param config - Optional overrides; defaults to key `'name'`, label `'Name'`
- * @returns A {@link MatInputField} for name input
+ * @returns A {@link MatInputField} for name input.
  *
  * @dbxFormField
  * @dbxFormSlug name
@@ -21,6 +21,7 @@ export type DbxForgeNameFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @dbxFormArrayOutput no
  * @dbxFormFieldDerivative text
  * @dbxFormConfigInterface DbxForgeNameFieldConfig
+ *
  * @example
  * ```typescript
  * dbxForgeNameField({ key: 'fullName', label: 'Full Name', required: true })
@@ -63,7 +64,7 @@ export interface DbxForgeEmailFieldConfig {
  * Uses the `'email'` input type for built-in browser validation.
  *
  * @param config - Optional overrides; defaults to key `'email'`, label `'Email Address'`
- * @returns A {@link MatInputField} with email input type
+ * @returns A {@link MatInputField} with email input type.
  *
  * @dbxFormField
  * @dbxFormSlug email
@@ -71,6 +72,7 @@ export interface DbxForgeEmailFieldConfig {
  * @dbxFormArrayOutput no
  * @dbxFormFieldDerivative text
  * @dbxFormConfigInterface DbxForgeEmailFieldConfig
+ *
  * @example
  * ```typescript
  * dbxForgeEmailField({ key: 'email', label: 'Email', required: true })
@@ -101,7 +103,7 @@ export type DbxForgeCityFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * City name input enforcing `ADDRESS_CITY_MAX_LENGTH`. Typically used inside the address composite set.
  *
  * @param config - Optional overrides; defaults to key `'city'`, label `'City'`
- * @returns A {@link MatInputField} for city input
+ * @returns A {@link MatInputField} for city input.
  *
  * @dbxFormField
  * @dbxFormSlug city
@@ -109,6 +111,7 @@ export type DbxForgeCityFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @dbxFormArrayOutput no
  * @dbxFormFieldDerivative text
  * @dbxFormConfigInterface DbxForgeCityFieldConfig
+ *
  * @example
  * ```typescript
  * dbxForgeCityField({ required: true })
@@ -142,7 +145,7 @@ export interface DbxForgeStateFieldConfig extends Partial<DbxForgeTextFieldConfi
  * US state input. When `asCode: true`, validates two-letter codes and auto-uppercases input via an idempotent transform.
  *
  * @param config - Optional overrides; defaults to key `'state'`, label `'State'`
- * @returns A {@link MatInputField} for state input
+ * @returns A {@link MatInputField} for state input.
  *
  * @dbxFormField
  * @dbxFormSlug state
@@ -150,6 +153,7 @@ export interface DbxForgeStateFieldConfig extends Partial<DbxForgeTextFieldConfi
  * @dbxFormArrayOutput no
  * @dbxFormFieldDerivative text
  * @dbxFormConfigInterface DbxForgeStateFieldConfig
+ *
  * @example
  * ```typescript
  * dbxForgeStateField({ asCode: true, required: true })
@@ -184,7 +188,7 @@ export type DbxForgeCountryFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * Country name input enforcing `ADDRESS_COUNTRY_MAX_LENGTH`. Typically used inside the address composite set.
  *
  * @param config - Optional overrides; defaults to key `'country'`, label `'Country'`
- * @returns A {@link MatInputField} for country input
+ * @returns A {@link MatInputField} for country input.
  *
  * @dbxFormField
  * @dbxFormSlug country
@@ -192,6 +196,7 @@ export type DbxForgeCountryFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @dbxFormArrayOutput no
  * @dbxFormFieldDerivative text
  * @dbxFormConfigInterface DbxForgeCountryFieldConfig
+ *
  * @example
  * ```typescript
  * dbxForgeCountryField({ required: true })
@@ -220,7 +225,7 @@ export type DbxForgeZipCodeFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * US zip code input with pattern validation and max-length enforcement.
  *
  * @param config - Optional overrides; defaults to key `'zip'`, label `'Zip Code'`
- * @returns A {@link MatInputField} for zip code input
+ * @returns A {@link MatInputField} for zip code input.
  *
  * @dbxFormField
  * @dbxFormSlug zip-code
@@ -228,6 +233,7 @@ export type DbxForgeZipCodeFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @dbxFormArrayOutput no
  * @dbxFormFieldDerivative text
  * @dbxFormConfigInterface DbxForgeZipCodeFieldConfig
+ *
  * @example
  * ```typescript
  * dbxForgeZipCodeField({ required: true })
@@ -262,7 +268,7 @@ export type DbxForgeLatLngTextFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * Latitude/longitude coordinate input with decimal-degree pattern validation.
  *
  * @param config - Optional overrides; defaults to key `'latLng'`
- * @returns A {@link MatInputField} for coordinate input
+ * @returns A {@link MatInputField} for coordinate input.
  *
  * @dbxFormField
  * @dbxFormSlug lat-lng
@@ -270,6 +276,7 @@ export type DbxForgeLatLngTextFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @dbxFormArrayOutput no
  * @dbxFormFieldDerivative text
  * @dbxFormConfigInterface DbxForgeLatLngTextFieldConfig
+ *
  * @example
  * ```typescript
  * dbxForgeLatLngTextField({ key: 'coords', label: 'Coordinates' })

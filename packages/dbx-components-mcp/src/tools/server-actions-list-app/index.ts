@@ -15,9 +15,9 @@ export interface ListServerActionsOptions {
  * cross-references each with its sibling NestJS module, the common
  * barrel, and the test fixture file.
  *
- * @param apiAbs - absolute path to the API package root
- * @param options - relative path used in the report
- * @returns the populated report
+ * @param apiAbs - Absolute path to the API package root.
+ * @param options - Relative path used in the report.
+ * @returns The populated report.
  */
 export async function listAppServerActions(apiAbs: string, options: ListServerActionsOptions): Promise<ServerActionsReport> {
   const extraction = await extractServerActions(apiAbs, options.apiDir);

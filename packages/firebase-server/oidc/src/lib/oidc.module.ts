@@ -87,7 +87,7 @@ export const FIREBASE_SERVER_OIDC_ROUTES_FOR_GLOBAL_ROUTE_EXCLUDE: string[] = ['
  * caller then falls back to `appUrl` (the single-origin default). The compare is on the parsed
  * URL origin so a default `appApiUrl = "${appUrl}/api"` is treated as the same origin.
  *
- * @param envService - the Firebase server environment service.
+ * @param envService - The Firebase server environment service.
  * @returns The API origin (no trailing slash) when distinct from the frontend origin, otherwise `undefined`.
  *
  * @example
@@ -131,9 +131,9 @@ function resolveOidcIssuerOriginFromEnv(envService: FirebaseServerEnvService): s
  * The issuer can also be overridden directly by passing `issuer` on the `config` block to
  * {@link oidcModuleMetadata}; the override wins over the factory-derived value.
  *
- * @param configService - the NestJS ConfigService for reading environment variables
- * @param envService - the Firebase server environment service for app URL and env detection
- * @returns the constructed OidcModuleConfig
+ * @param configService - The NestJS ConfigService for reading environment variables.
+ * @param envService - The Firebase server environment service for app URL and env detection.
+ * @returns The constructed OidcModuleConfig.
  * @throws {Error} When `appUrl` is missing, the resolved issuer lacks an HTTP prefix, or the encryption secret is invalid.
  */
 export function oidcModuleConfigFactory(configService: ConfigService, envService: FirebaseServerEnvService): OidcModuleConfig {
@@ -192,9 +192,9 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
  * Factory that creates {@link OidcServerFirestoreCollections} using the provided Firestore context
  * and JWKS encryption config from {@link OidcModuleConfig}.
  *
- * @param firestoreContext - the Firestore context for collection creation
- * @param oidcModuleConfig - the OIDC module config containing JWKS encryption settings
- * @returns the configured OidcServerFirestoreCollections
+ * @param firestoreContext - The Firestore context for collection creation.
+ * @param oidcModuleConfig - The OIDC module config containing JWKS encryption settings.
+ * @returns The configured OidcServerFirestoreCollections.
  */
 export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreContext, oidcModuleConfig: OidcModuleConfig): OidcServerFirestoreCollections {
   return {
@@ -231,8 +231,8 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
  * Additionally, the following may be optionally provided:
  * - JwksServiceStorageConfig
  *
- * @param metadataConfig - the configuration for generating the OIDC module metadata
- * @returns the NestJS module metadata for the OIDC module
+ * @param metadataConfig - The configuration for generating the OIDC module metadata.
+ * @returns The NestJS module metadata for the OIDC module.
  */
 export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataConfig): ModuleMetadata {
   const { dependencyModule, config, imports, exports, providers } = metadataConfig;

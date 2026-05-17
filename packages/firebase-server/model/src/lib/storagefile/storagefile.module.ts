@@ -10,9 +10,9 @@ import { STORAGE_FILE_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, storageFileInitS
  * Factory that assembles the full {@link StorageFileServerActionsContext} by combining
  * the base context with the upload initialization service.
  *
- * @param context - the base server actions context providing Firebase infrastructure
- * @param storageFileInitializeFromUploadService - the service for initializing storage files from uploads
- * @returns the fully assembled StorageFileServerActionsContext
+ * @param context - The base server actions context providing Firebase infrastructure.
+ * @param storageFileInitializeFromUploadService - The service for initializing storage files from uploads.
+ * @returns The fully assembled StorageFileServerActionsContext.
  */
 export function storageFileServerActionsContextFactory(context: BaseStorageFileServerActionsContext, storageFileInitializeFromUploadService: StorageFileInitializeFromUploadService): StorageFileServerActionsContext {
   return { ...context, storageFileInitializeFromUploadService };
@@ -21,8 +21,8 @@ export function storageFileServerActionsContextFactory(context: BaseStorageFileS
 /**
  * Factory that creates a {@link StorageFileServerActions} instance from the assembled context.
  *
- * @param context - the fully assembled storage file server actions context
- * @returns a concrete StorageFileServerActions instance
+ * @param context - The fully assembled storage file server actions context.
+ * @returns A concrete StorageFileServerActions instance.
  */
 export function storageFileServerActionsFactory(context: StorageFileServerActionsContext) {
   return storageFileServerActions(context);
@@ -32,9 +32,9 @@ export function storageFileServerActionsFactory(context: StorageFileServerAction
  * Factory that creates a {@link StorageFileInitServerActions} instance by merging the
  * server actions context with the init-specific configuration.
  *
- * @param context - the storage file server actions context
- * @param storageFileInitServerActionsContextConfig - init-specific configuration with the template function
- * @returns a concrete StorageFileInitServerActions instance
+ * @param context - The storage file server actions context.
+ * @param storageFileInitServerActionsContextConfig - Init-specific configuration with the template function.
+ * @returns A concrete StorageFileInitServerActions instance.
  */
 export function storageFileInitServerActionsFactory(context: StorageFileServerActionsContext, storageFileInitServerActionsContextConfig: StorageFileInitServerActionsContextConfig) {
   return storageFileInitServerActions({
@@ -66,8 +66,8 @@ export interface ProvideAppStorageFileMetadataConfig extends Pick<ModuleMetadata
  *
  * Be sure the class that delares the module using this function also extends AbstractAppStorageFileModule.
  *
- * @param config - the module configuration including optional dependency module, imports, exports, and providers
- * @returns the assembled {@link ModuleMetadata} for the storage file module
+ * @param config - The module configuration including optional dependency module, imports, exports, and providers.
+ * @returns The assembled {@link ModuleMetadata} for the storage file module.
  */
 export function appStorageFileModuleMetadata(config: ProvideAppStorageFileMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

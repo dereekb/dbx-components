@@ -260,13 +260,13 @@ export function firebaseAdminCloudFunctionWrapper(instance: FeaturesList): Fireb
  * @param getter - Lazy accessor for the gen 1 cloud function under test; re-evaluated on every getter call.
  * @returns A getter that, when invoked, returns a freshly wrapped gen 1 cloud function ready for invocation in tests.
  *
+ * @deprecated Prefer gen 2 functions and {@link wrapCloudFunctionV2ForTests} or {@link wrapCloudFunctionTests}.
+ *
  * @example
  * ```ts
  * const getWrapped = wrapCloudFunctionV1ForTests(wrapper, () => myV1Function);
  * const result = await getWrapped()({ /* event data *\/ });
  * ```
- *
- * @deprecated Prefer gen 2 functions and {@link wrapCloudFunctionV2ForTests} or {@link wrapCloudFunctionTests}.
  */
 export function wrapCloudFunctionV1ForTests<I, T extends WrapCloudFunctionV1Input<I> = WrapCloudFunctionV1Input<I>>(wrapper: FirebaseAdminCloudFunctionWrapper, getter: Getter<T>): Getter<WrappedCloudFunctionV1<I>> {
   return () => wrapper.wrapV1CloudFunction(getter());

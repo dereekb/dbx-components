@@ -119,8 +119,8 @@ export class DbxScreenMediaService implements Destroyable {
   /**
    * Returns an observable that emits `true` when the current screen width is at least as wide as the given breakpoint.
    *
-   * @param inputBreakpoint - the minimum width type or an observable of it
-   * @returns observable of whether the breakpoint is currently active
+   * @param inputBreakpoint - The minimum width type or an observable of it.
+   * @returns Observable of whether the breakpoint is currently active.
    */
   isBreakpointActive(inputBreakpoint: ObservableOrValue<ScreenMediaWidthType>): Observable<boolean> {
     return combineLatest([this.widthType$, asObservable(inputBreakpoint)]).pipe(

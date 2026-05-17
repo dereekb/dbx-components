@@ -40,14 +40,15 @@ export interface AnalyticsEventInterceptorConfig<T> {
  * @param config - The analytics event configuration specifying the event name and optional data extractor.
  * @returns A method decorator that attaches analytics metadata.
  *
- * @example
- * ```ts
- * @EmitAnalyticsEvent({ name: 'User Registered', fn: (result) => ({ userId: result.id }) })
- * @Post('register')
+ * @EmitAnalyticsEvent ({ name: 'User Registered', fn: (result) => ({ userId: result.id }) })
+ * @Post ('register')
  * async register(@Body() body: RegisterDto) {
  *   return this.authService.register(body);
  * }
  * ```
+ *
+ * @example
+ * ```ts
  */
 export const EmitAnalyticsEvent = <T>(config: AnalyticsEventInterceptorConfig<T>) => {
   if (!config.name) {

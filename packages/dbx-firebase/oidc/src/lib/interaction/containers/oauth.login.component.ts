@@ -45,7 +45,7 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
   readonly isLoggedIn: Signal<Maybe<boolean>> = toSignal(this.dbxFirebaseAuthService.isLoggedIn$);
 
   readonly submitting = signal(false);
-  readonly errorMessage = signal<string | null>(null);
+  readonly errorMessage = signal<Maybe<string>>(null);
 
   readonly loginStateCase = computed<OidcLoginStateCase>(() => {
     let result: OidcLoginStateCase;

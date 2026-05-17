@@ -106,13 +106,14 @@ export abstract class DbxDetachController<I = unknown> {
  * @param sourceType - The concrete class to provide as the controller.
  * @returns An array of Angular providers that bind the source type to {@link DbxDetachController}.
  *
- * @example
- * ```typescript
- * @Component({
+ * @Component ({
  *   providers: provideDbxDetachController(MyDetachController),
  * })
  * export class MyComponent {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function provideDbxDetachController<S extends DbxDetachController>(sourceType: Type<S>): Provider[] {
   return [

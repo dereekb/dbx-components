@@ -25,9 +25,8 @@ export class SegmentService {
    *
    * In log-only mode, events are logged to the console instead of being sent to Segment.
    *
-   * @param userId - the user to associate with the event
-   * @param event - the track event containing event name, properties, and optional context
-   *
+   * @param userId - The user to associate with the event.
+   * @param event - The track event containing event name, properties, and optional context.
    * @throws {Error} When userId is falsy.
    *
    * @example
@@ -64,8 +63,8 @@ export class SegmentService {
    *
    * Convenience wrapper around {@link track} for cases where the user may not be authenticated.
    *
-   * @param userId - the user to associate with the event, or nullish to skip
-   * @param event - the track event containing event name, properties, and optional context
+   * @param userId - The user to associate with the event, or nullish to skip.
+   * @param event - The track event containing event name, properties, and optional context.
    */
   tryTrack(userId: Maybe<AnalyticsUserId>, event: SegmentTrackEvent): void {
     if (userId) {
@@ -78,7 +77,7 @@ export class SegmentService {
    *
    * In log-only mode, the identify call is logged to the console instead of being sent.
    *
-   * @param params - the identify parameters including userId and optional traits
+   * @param params - The identify parameters including userId and optional traits.
    *
    * @example
    * ```ts

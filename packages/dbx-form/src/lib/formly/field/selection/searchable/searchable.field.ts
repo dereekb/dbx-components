@@ -9,10 +9,10 @@ import { type SearchableTextValueFieldsFieldProps } from './searchable.text.fiel
 /**
  * Used to create a SearchableValueFieldDisplayFn function that will retrieve the metadata for items that are missing their metadata so they can be displayed properly.
  *
- * @param param0 - Configuration object
- * @param param0.loadMetaForValues - Function to load metadata for values that are missing it
- * @param param0.makeDisplayForValues - Function to convert values with metadata into display values
- * @returns A display function that lazily loads metadata before generating display values
+ * @param param0 - Configuration object.
+ * @param param0.loadMetaForValues - Function to load metadata for values that are missing it.
+ * @param param0.makeDisplayForValues - Function to convert values with metadata into display values.
+ * @returns A display function that lazily loads metadata before generating display values.
  */
 export function formlyMakeMetaFilterSearchableFieldValueDisplayFn<T extends string | number = string | number, M = unknown>({ loadMetaForValues, makeDisplayForValues }: { loadMetaForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldValue<T, M>[]>; makeDisplayForValues: (values: SearchableValueFieldValue<T, M>[]) => Observable<SearchableValueFieldDisplayValue<T, M>[]> }): SearchableValueFieldDisplayFn<T, M> {
   return (values: SearchableValueFieldValue<T, M>[]) => {
@@ -57,7 +57,7 @@ export type StringSearchableChipFieldConfig<M = unknown> = Omit<SearchableChipFi
 /**
  * Creates a searchable chip field pre-configured for string values.
  *
- * @param config - String-specific searchable chip field configuration
+ * @param config - String-specific searchable chip field configuration.
  * @returns A {@link FormlyFieldConfig} with type `'searchablechipfield'`
  *
  * @example
@@ -82,7 +82,7 @@ export interface SearchableChipFieldConfig<T = unknown, M = unknown, H extends P
  * Creates a Formly field configuration for a searchable chip field where users
  * can search for and select values displayed as Material chips.
  *
- * @param config - Searchable chip field configuration
+ * @param config - Searchable chip field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'searchablechipfield'`
  *
  * @example
@@ -114,7 +114,7 @@ export interface SearchableTextFieldConfig<T = unknown, M = unknown, H extends P
  * Creates a Formly field configuration for a searchable text field with autocomplete
  * dropdown for selecting values.
  *
- * @param config - Searchable text field configuration
+ * @param config - Searchable text field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'searchabletextfield'`
  *
  * @example

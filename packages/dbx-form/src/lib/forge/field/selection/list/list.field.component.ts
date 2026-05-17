@@ -63,7 +63,7 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
    * `--dbx-forge-list-item-field-height` custom property. Returns `null` when
    * the prop is absent so the existing 300px default in `_list.scss` wins.
    */
-  readonly maxHeightCssVarSignal = computed<string | null>(() => {
+  readonly maxHeightCssVarSignal = computed<Maybe<string>>(() => {
     const raw = this.props()?.maxHeight;
 
     if (raw == null) {

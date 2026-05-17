@@ -18,8 +18,8 @@ const USER_AVATAR_TARGET_SIZE_BYTES = 500 * 1024;
  * Configures upload handlers for user test files and user avatar images,
  * including Sharp-based image resizing for avatars.
  *
- * @param demoFirebaseServerActionsContext - server actions context providing storage, profile, and storage file collections
- * @returns a configured upload service with determiners and initializers for all supported file types
+ * @param demoFirebaseServerActionsContext - Server actions context providing storage, profile, and storage file collections.
+ * @returns A configured upload service with determiners and initializers for all supported file types.
  */
 export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): StorageFileInitializeFromUploadService {
   const { storageService, profileCollection, storageFileCollection } = demoFirebaseServerActionsContext;

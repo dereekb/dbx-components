@@ -64,8 +64,8 @@ export interface DbxForgeFlexLayoutConfig extends Omit<DbxForgeFlexWrapper, 'typ
  * Type guard that checks if the input is a {@link DbxForgeFlexLayoutFieldConfig}
  * (has a `field` property) rather than a plain {@link FieldDef}.
  *
- * @param input - the field definition or flex layout field config to check
- * @returns true if the input is a {@link DbxForgeFlexLayoutFieldConfig} with a `field` property
+ * @param input - The field definition or flex layout field config to check.
+ * @returns True if the input is a {@link DbxForgeFlexLayoutFieldConfig} with a `field` property.
  */
 function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig): input is DbxForgeFlexLayoutFieldConfig {
   return (input as DbxForgeFlexLayoutFieldConfig).field != null;
@@ -105,7 +105,7 @@ export function dbxForgeFlexLayout(fields: readonly (FieldDef<unknown> | DbxForg
  * @param input - {@link DbxForgeFlexLayoutConfig} with a `fields` property and layout defaults.
  *   For backwards compatibility, may also be passed as a deprecated array of fields paired with an optional config.
  * @param legacyConfig - Only consulted when `input` is the deprecated array form; supplies the layout defaults that would otherwise live on the config object.
- * @returns A {@link ContainerField} with the flex wrapper applied and sized children
+ * @returns A {@link ContainerField} with the flex wrapper applied and sized children.
  *
  * @dbxFormField
  * @dbxFormSlug flex-layout

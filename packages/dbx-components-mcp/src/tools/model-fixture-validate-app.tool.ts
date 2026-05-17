@@ -78,8 +78,9 @@ export interface CreateModelFixtureValidateAppToolConfig {
  * Builds the `dbx_model_fixture_validate_app` tool. Centralised here so the
  * dispatcher can lazily inject a model registry from `RegisterToolsOptions`.
  *
- * @param config - registry configuration
- * @returns the registered {@link DbxTool}
+ * @param config - Registry configuration.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createModelFixtureValidateAppTool(config: CreateModelFixtureValidateAppToolConfig = {}): DbxTool {

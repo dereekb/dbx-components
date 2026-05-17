@@ -191,7 +191,8 @@ async function runListAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolResul
 /**
  * Builds the `dbx_model_firebase_index_list_app` tool.
  *
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createListAppModelFirebaseIndexTool(): DbxTool {
@@ -308,8 +309,8 @@ function emptyReport(componentDir: string, warning: string, filters: ListAppFilt
  * state, not "unused"). Matches the validator's rule for emitting
  * `MODEL_FIREBASE_INDEX_UNUSED_FACTORY`.
  *
- * @param t - usage record to test.
- * @returns true when the factory is a candidate for the unused warning.
+ * @param t - Usage record to test.
+ * @returns True when the factory is a candidate for the unused warning.
  */
 function isUnused(t: TaggedFactoryUsage): boolean {
   if (t.skip || t.manual) {
@@ -325,8 +326,8 @@ function isUnused(t: TaggedFactoryUsage): boolean {
  * Returns true when a `@dbxModelFirebaseIndexSpecFilesOnly` factory has
  * any non-spec callers (an error condition the validator escalates).
  *
- * @param t - usage record to test.
- * @returns true when the spec-only contract is violated.
+ * @param t - Usage record to test.
+ * @returns True when the spec-only contract is violated.
  */
 function isSpecOnlyViolation(t: TaggedFactoryUsage): boolean {
   return t.specOnly && t.productionReferenceCount > 0;

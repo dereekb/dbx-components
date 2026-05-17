@@ -63,8 +63,8 @@ export class DbxTextChipsComponent {
   /**
    * Returns the themed background CSS class for a chip's color.
    *
-   * @param chip - the chip to get the color class for
-   * @returns the CSS class name for the chip's background color, or empty string if no color
+   * @param chip - The chip to get the color class for.
+   * @returns The CSS class name for the chip's background color, or empty string if no color.
    */
   chipColorClass(chip: TextChip): string {
     return chip.color ? dbxColorBackground(chip.color) : '';
@@ -73,8 +73,8 @@ export class DbxTextChipsComponent {
   /**
    * Returns the inline `--dbx-bg-color-current` value for a chip when its color is a {@link DbxColorConfig}; otherwise null.
    *
-   * @param chip - the chip
-   * @returns the background color CSS value, or null for named-color strings
+   * @param chip - The chip.
+   * @returns The background color CSS value, or null for named-color strings.
    */
   chipBgColorStyle(chip: TextChip): Maybe<string> {
     return this._expandedChipConfig(chip)?.color ?? null;
@@ -83,8 +83,8 @@ export class DbxTextChipsComponent {
   /**
    * Returns the inline `--dbx-color-current` value for a chip when its color is a {@link DbxColorConfig}; otherwise null.
    *
-   * @param chip - the chip
-   * @returns the contrast color CSS value, or null for named-color strings
+   * @param chip - The chip.
+   * @returns The contrast color CSS value, or null for named-color strings.
    */
   chipColorStyle(chip: TextChip): Maybe<string> {
     return this._expandedChipConfig(chip)?.contrast ?? null;

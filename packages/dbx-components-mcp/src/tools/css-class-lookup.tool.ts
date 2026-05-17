@@ -117,8 +117,9 @@ export interface CreateCssClassLookupToolInput {
 /**
  * Creates the `dbx_css_class_lookup` tool wired to the supplied registry.
  *
- * @param input - the registry the tool reads from
- * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @param input - The registry the tool reads from.
+ * @returns A {@link DbxTool} ready to register with the dispatcher.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createCssClassLookupTool(input: CreateCssClassLookupToolInput): DbxTool {

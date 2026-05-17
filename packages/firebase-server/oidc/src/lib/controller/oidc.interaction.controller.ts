@@ -37,14 +37,14 @@ export class OidcInteractionController {
   ) {}
 
   /**
-   * GET /interaction/:uid
+   * GET /interaction/:uid.
    *
    * Detects the interaction type and redirects to the appropriate frontend page.
    *
-   * @param uid - the interaction UID from the URL path
-   * @param req - the incoming Express request
-   * @param res - the Express response used for redirecting
-   * @returns a redirect response to the appropriate frontend page
+   * @param uid - The interaction UID from the URL path.
+   * @param req - The incoming Express request.
+   * @param res - The Express response used for redirecting.
+   * @returns A redirect response to the appropriate frontend page.
    * @throws {HttpException} 404 when the interaction UID is not found or has expired.
    */
   @Get(':uid')
@@ -61,14 +61,14 @@ export class OidcInteractionController {
   }
 
   /**
-   * POST /interaction/:uid/login
+   * POST /interaction/:uid/login.
    *
    * Verifies the Firebase Auth ID token sent by the frontend, extracts the
    * user's UID, and completes the oidc-provider login interaction.
    *
-   * @param uid - the interaction UID from the URL path
-   * @param body - the login request containing the Firebase ID token
-   * @param res - the Express response used for sending JSON
+   * @param uid - The interaction UID from the URL path.
+   * @param body - The login request containing the Firebase ID token.
+   * @param res - The Express response used for sending JSON.
    * @throws {HttpException} 401 when the Firebase ID token is invalid.
    * @throws {HttpException} 400 when the login interaction cannot be completed.
    */
@@ -93,14 +93,14 @@ export class OidcInteractionController {
   }
 
   /**
-   * POST /interaction/:uid/consent
+   * POST /interaction/:uid/consent.
    *
    * Receives consent decision from frontend. Grants missing OIDC scopes and claims
    * when approved, or returns `access_denied` when rejected.
    *
-   * @param uid - the interaction UID from the URL path
-   * @param body - the consent request containing approval decision and Firebase ID token
-   * @param res - the Express response used for sending JSON
+   * @param uid - The interaction UID from the URL path.
+   * @param body - The consent request containing approval decision and Firebase ID token.
+   * @param res - The Express response used for sending JSON.
    * @throws {HttpException} 400 when the consent interaction cannot be completed.
    */
   @Post(':uid/consent')
@@ -216,8 +216,8 @@ export class OidcInteractionController {
   /**
    * Verifies a Firebase Auth ID token and returns the user's UID.
    *
-   * @param idToken - the Firebase Auth ID token to verify
-   * @returns the user's UID extracted from the decoded token
+   * @param idToken - The Firebase Auth ID token to verify.
+   * @returns The user's UID extracted from the decoded token.
    * @throws {HttpException} 401 when the token is invalid or expired.
    */
   private async _verifyIdToken(idToken: string): Promise<string> {

@@ -173,6 +173,9 @@ export const DBX_FORGE_FIELD_WRAPPER_TYPES: WrapperTypeDefinition[] = [
  *
  * Add this to your app's providers alongside provideDbxFormConfiguration().
  *
+ * @param additionalFieldTypes - Extra field type definitions from extension packages to register alongside the built-in types.
+ * @returns An array of providers that register all forge field types with ng-forge's dynamic form system.
+ *
  * @example
  * ```typescript
  * provideDbxForgeFormFieldDeclarations(
@@ -180,9 +183,6 @@ export const DBX_FORGE_FIELD_WRAPPER_TYPES: WrapperTypeDefinition[] = [
  *   ...DBX_FORGE_MAPBOX_FIELD_TYPES
  * )
  * ```
- *
- * @param additionalFieldTypes - Extra field type definitions from extension packages to register alongside the built-in types
- * @returns An array of providers that register all forge field types with ng-forge's dynamic form system
  */
 export function provideDbxForgeFormFieldDeclarations(...additionalFieldTypes: FieldTypeDefinition[]) {
   return provideDynamicForm(...withMaterialFields(), ...DBX_FORGE_FIELD_TYPES, ...DBX_FORGE_FIELD_WRAPPER_TYPES, ...additionalFieldTypes);

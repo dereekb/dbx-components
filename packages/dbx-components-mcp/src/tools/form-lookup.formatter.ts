@@ -14,9 +14,9 @@ type Depth = 'brief' | 'full';
 /**
  * Formats a single form entry as markdown at the requested depth.
  *
- * @param field - the registry entry to render
- * @param depth - `'brief'` for a tight summary or `'full'` for the config table and example
- * @returns the markdown body the tool emits as content
+ * @param field - The registry entry to render.
+ * @param depth - `'brief'` for a tight summary or `'full'` for the config table and example.
+ * @returns The markdown body the tool emits as content.
  */
 export function formatFormFieldEntry(field: FormFieldInfo, depth: Depth): string {
   return depth === 'brief' ? formatBrief(field) : formatFull(field);
@@ -127,9 +127,9 @@ function formatExampleSection(field: FormFieldInfo): string {
  * Formats a list of form entries — used when a query (slug/alias that
  * matches a produces value, or `list` topic) returns multiple candidates.
  *
- * @param fields - the entries to render, grouped by tier internally
- * @param title - heading shown at the top of the rendered list
- * @returns the markdown body the tool emits as content
+ * @param fields - The entries to render, grouped by tier internally.
+ * @param title - Heading shown at the top of the rendered list.
+ * @returns The markdown body the tool emits as content.
  */
 export function formatFormFieldGroup(fields: readonly FormFieldInfo[], title: string): string {
   if (fields.length === 0) {

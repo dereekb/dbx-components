@@ -13,6 +13,7 @@
  * caller imports the source or the bundled binary.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -44,7 +45,7 @@ export interface LoadSemanticTypeRegistryInput {
  */
 export interface LoadSemanticTypeRegistryResult {
   readonly registry: SemanticTypeRegistry;
-  readonly configPath: string | null;
+  readonly configPath: Maybe<string>;
   readonly configWarnings: readonly ConfigWarning[];
   readonly loaderWarnings: readonly LoaderWarning[];
   readonly externalSourceCount: number;
@@ -59,9 +60,9 @@ const DEFAULT_BUNDLED_FILENAMES = ['dereekb-util.semantic-types.mcp.generated.js
  * package is consumed from source (`packages/dbx-components-mcp/src/...`) or
  * from the bundled output (`dist/packages/dbx-components-mcp/dbx-components-mcp.js`).
  *
- * @param startUrl - file URL to start the walk from (typically `import.meta.url`)
- * @returns the absolute path of the directory that contains `package.json`
- * @throws when no `package.json` is found before reaching the filesystem root
+ * @param startUrl - File URL to start the walk from (typically `import.meta.url`)
+ * @returns The absolute path of the directory that contains `package.json`
+ * @throws When no `package.json` is found before reaching the filesystem root.
  */
 function findPackageRoot(startUrl: string): string {
   const startPath = fileURLToPath(startUrl);
@@ -101,8 +102,8 @@ const DEFAULT_BUNDLED_PATHS: BundledManifestPathsFactory = () => {
  * the loader's "zero successful manifests" guard. The caller is responsible
  * for deciding whether an empty registry is a fatal startup error.
  *
- * @param input - cwd plus optional injected bundled-path factory and reader
- * @returns the registry, the resolved config path (if any), and any warnings
+ * @param input - Cwd plus optional injected bundled-path factory and reader.
+ * @returns The registry, the resolved config path (if any), and any warnings.
  */
 export async function loadSemanticTypeRegistry(input: LoadSemanticTypeRegistryInput): Promise<LoadSemanticTypeRegistryResult> {
   const { cwd, bundledManifestPaths = DEFAULT_BUNDLED_PATHS, readFile } = input;
@@ -144,7 +145,7 @@ export async function loadSemanticTypeRegistry(input: LoadSemanticTypeRegistryIn
  * Re-exported so callers can build a deterministic test fixture pointing at
  * the package's bundled manifests without touching `import.meta.url`.
  *
- * @returns the absolute paths of the bundled `@dereekb/*` manifests
+ * @returns The absolute paths of the bundled `@dereekb/*` manifests.
  */
 export function getDefaultBundledManifestPaths(): readonly string[] {
   return DEFAULT_BUNDLED_PATHS();
@@ -154,7 +155,7 @@ export function getDefaultBundledManifestPaths(): readonly string[] {
  * Returns the package's `generated/` directory. Useful for callers that want
  * to derive sibling paths without re-deriving the package root themselves.
  *
- * @returns the absolute path of the bundled manifests directory
+ * @returns The absolute path of the bundled manifests directory.
  */
 export function getBundledManifestsDirectory(): string {
   return resolve(findPackageRoot(import.meta.url), 'generated');

@@ -101,9 +101,9 @@ export type ZohoSignFetchPageFetchFunction<I extends ZohoSignPageFilter, R exten
  * The factory reads `page_context.has_more_rows` from each response to determine if additional
  * pages exist, and automatically advances `start_index` by `row_count` for subsequent requests.
  *
- * @param fetch - The Zoho Sign fetch function to paginate over
- * @param defaults - Optional default configuration for the page factory
- * @returns A page factory that produces iterable page fetchers
+ * @param fetch - The Zoho Sign fetch function to paginate over.
+ * @param defaults - Optional default configuration for the page factory.
+ * @returns A page factory that produces iterable page fetchers.
  *
  * @example
  * ```typescript
@@ -116,6 +116,7 @@ export type ZohoSignFetchPageFetchFunction<I extends ZohoSignPageFilter, R exten
  *   const secondPage = await firstPage.fetchNext();
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoSignFetchPageFactory<I extends ZohoSignPageFilter, R extends ZohoSignPageResult<any>>(fetch: ZohoSignFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {

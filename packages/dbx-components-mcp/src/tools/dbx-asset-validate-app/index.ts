@@ -20,9 +20,9 @@ export interface ValidateAppAssetsOptions {
  * cross-file rules over a single snapshot so the listing and validation
  * reports stay in sync.
  *
- * @param inspection - the prepared component + app inspection
- * @param options - workspace directories used to relativise emitted paths
- * @returns the aggregated validation outcome with counts and violations
+ * @param inspection - The prepared component + app inspection.
+ * @param options - Workspace directories used to relativise emitted paths.
+ * @returns The aggregated validation outcome with counts and violations.
  */
 export function validateAppAssets(inspection: AppAssetsInspection, options: ValidateAppAssetsOptions): ValidationResult {
   const extracted = extractAppAssets(inspection);

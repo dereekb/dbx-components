@@ -19,7 +19,7 @@ export type ZohoRateLimitedTooManyRequestsLogFunction = (headers: ZohoRateLimitH
 /**
  * Default handler that logs a warning to the console when the Zoho API rate limit is exceeded.
  *
- * @param details - Rate limit details extracted from the Zoho API response headers
+ * @param details - Rate limit details extracted from the Zoho API response headers.
  */
 export const DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION = (details: ZohoRateLimitHeaderDetails | ZohoRateLimitResponseDetails) => {
   const limit = 'limit' in details ? details.limit : undefined;
@@ -126,8 +126,9 @@ export interface MakeZohoRateLimitedFetchHandlerConfig extends ZohoRateLimitedFe
  * - On 429 responses, the request is automatically retried after the rate limiter delay
  * - The limiter is disabled when responses lack rate limit headers (e.g., error responses)
  *
- * @param config - Configuration including the service-specific header reader, rate limit, reset period, and 429 handling
+ * @param config - Configuration including the service-specific header reader, rate limit, reset period, and 429 handling.
  * @returns A rate-limited fetch handler with the underlying rate limiter accessible via `_rateLimiter`
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeZohoRateLimitedFetchHandler(config: MakeZohoRateLimitedFetchHandlerConfig): ZohoRateLimitedFetchHandler {
@@ -141,9 +142,9 @@ export function makeZohoRateLimitedFetchHandler(config: MakeZohoRateLimitedFetch
    * Called once at initialization with `defaultLimit`, and again dynamically
    * when the API's response headers report a different limit value.
    *
-   * @param limit - Maximum number of requests allowed per reset period
-   * @param resetAt - Optional date when the rate limit window resets
-   * @returns Rate limiter configuration scaled to the given limit
+   * @param limit - Maximum number of requests allowed per reset period.
+   * @param resetAt - Optional date when the rate limit window resets.
+   * @returns Rate limiter configuration scaled to the given limit.
    */
   function configForLimit(limit: number, resetAt?: Date): ResetPeriodPromiseRateLimiterConfig {
     return {
@@ -217,7 +218,7 @@ export function makeZohoRateLimitedFetchHandler(config: MakeZohoRateLimitedFetch
  * This is a convenience wrapper around {@link makeZohoRateLimitedFetchHandler} pre-configured
  * with the standard Zoho rate limit header reader.
  *
- * @param config - Optional configuration for rate limit, reset period, and 429 handling
+ * @param config - Optional configuration for rate limit, reset period, and 429 handling.
  * @returns A rate-limited fetch handler with the underlying rate limiter accessible via `_rateLimiter`
  */
 export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchHandlerConfig>): ZohoRateLimitedFetchHandler {
@@ -231,8 +232,8 @@ export function zohoRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchH
  * Reads rate limit details from standard Zoho API response headers (`X-RATELIMIT-*`).
  * Used by CRM, Recruit, and Sign services.
  *
- * @param headers - HTTP response headers
- * @returns Parsed rate limit details, or null if headers are absent
+ * @param headers - HTTP response headers.
+ * @returns Parsed rate limit details, or null if headers are absent.
  */
 export function zohoStandardRateLimitDetailsReader(headers: Headers): Maybe<ZohoRateLimitResponseDetails> {
   const details = zohoRateLimitHeaderDetails(headers);

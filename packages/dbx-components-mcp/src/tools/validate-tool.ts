@@ -57,8 +57,9 @@ export interface CreateFolderValidateToolConfig<TInspection extends { readonly p
  *
  * Used by `dbx_model_validate_folder` and `dbx_system_m_validate_folder`.
  *
- * @param config - the domain-specific hooks and tool definition
- * @returns the registered {@link DbxTool}
+ * @param config - The domain-specific hooks and tool definition.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createFolderValidateTool<TInspection extends { readonly path: string }, TResult extends { readonly errorCount: number }>(config: CreateFolderValidateToolConfig<TInspection, TResult>): DbxTool {
@@ -153,8 +154,9 @@ export interface CreateSourceValidateToolConfig<TResult extends { readonly error
  *
  * Used by `dbx_model_validate` and `dbx_model_validate_api`.
  *
- * @param config - the domain-specific hooks and tool definition
- * @returns the registered {@link DbxTool}
+ * @param config - The domain-specific hooks and tool definition.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSourceValidateTool<TResult extends { readonly errorCount: number }>(config: CreateSourceValidateToolConfig<TResult>): DbxTool {
@@ -257,10 +259,10 @@ export interface CreateTwoSideValidateToolConfig<TResult extends { readonly erro
  * factories. Returns the resolved input or a {@link toolError} payload
  * when either path escapes `cwd`.
  *
- * @param parsed - the parsed-args envelope
- * @param parsed.componentDir - the relative path to the component package root
- * @param parsed.apiDir - the relative path to the API app root
- * @returns the absolute + relative quad, or an error `ToolResult`
+ * @param parsed - The parsed-args envelope.
+ * @param parsed.componentDir - The relative path to the component package root.
+ * @param parsed.apiDir - The relative path to the API app root.
+ * @returns The absolute + relative quad, or an error `ToolResult`
  */
 function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly apiDir: string }): TwoSideInspectAndValidateInput | ToolResult {
   const cwd = process.cwd();
@@ -290,8 +292,9 @@ function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly a
  * Used by `dbx_notification_m_validate_folder`, `dbx_notification_m_validate_app`,
  * `dbx_storagefile_m_validate_folder`, and `dbx_storagefile_m_validate_app`.
  *
- * @param config - the domain-specific hooks and tool definition
- * @returns the registered {@link DbxTool}
+ * @param config - The domain-specific hooks and tool definition.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createTwoSideValidateTool<TResult extends { readonly errorCount: number }>(config: CreateTwoSideValidateToolConfig<TResult>): DbxTool {
@@ -367,8 +370,9 @@ export interface CreateListAppToolConfig<TReport> {
  *
  * Used by `dbx_notification_m_list_app` and `dbx_storagefile_m_list_app`.
  *
- * @param config - the domain-specific hooks and tool definition
- * @returns the registered {@link DbxTool}
+ * @param config - The domain-specific hooks and tool definition.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createListAppTool<TReport>(config: CreateListAppToolConfig<TReport>): DbxTool {

@@ -83,8 +83,9 @@ export interface CreateSemanticTypeLookupToolConfig {
  * Builds the `dbx_semantic_type_lookup` tool against a registry. Called by
  * {@link registerTools} once the registry has been loaded at server startup.
  *
- * @param config - the registry the tool should resolve against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry the tool should resolve against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSemanticTypeLookupTool(config: CreateSemanticTypeLookupToolConfig): DbxTool {

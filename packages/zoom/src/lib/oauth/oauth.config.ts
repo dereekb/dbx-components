@@ -52,6 +52,7 @@ export interface ZoomOAuthContextRef {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use ZoomOAuthFetchFactoryParams instead.
  */

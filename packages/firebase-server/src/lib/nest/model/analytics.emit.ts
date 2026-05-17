@@ -30,15 +30,15 @@ export type OnCallAnalyticsEmitterInstance = (lifecycle: OnCallModelAnalyticsEve
  * Creates an {@link OnCallAnalyticsEmitterInstance} that produces {@link OnCallAnalyticsEmitter} instances
  * for each lifecycle stage, pre-bound to the given service and context.
  *
+ * @param config - The service and context to bind to the emitter factory.
+ * @returns A factory function that creates lifecycle-stage-specific emitters.
+ *
  * @example
  * ```typescript
  * const emitter = onCallAnalyticsEmitterInstance({ service, context });
  * emitter('triggered').sendEventType('Handler Starting');
  * emitter('success').sendEvent('Widget Created', { id: result.id });
  * ```
- *
- * @param config - The service and context to bind to the emitter factory.
- * @returns A factory function that creates lifecycle-stage-specific emitters.
  */
 export function onCallAnalyticsEmitterInstance(config: OnCallAnalyticsEmitterInstanceConfig): OnCallAnalyticsEmitterInstance {
   const { service, context } = config;
@@ -90,8 +90,8 @@ export interface CallWithAnalyticsConfig<O> {
  * Analytics callback errors are caught and logged but never propagate — the handler result
  * or error is always returned/thrown unmodified.
  *
- * @param config - the handler, analytics details, service, and context
- * @returns the handler's return value
+ * @param config - The handler, analytics details, service, and context.
+ * @returns The handler's return value.
  *
  * @example
  * ```ts

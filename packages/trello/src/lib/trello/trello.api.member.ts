@@ -11,9 +11,9 @@ export interface GetMemberInput {
 export type GetMemberFunction = (input: GetMemberInput) => Promise<TrelloMember>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/rest/api-group-members/#api-members-id-get
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-members/#api-members-id-get.
  *
- * @param context The Trello API context.
+ * @param context - The Trello API context.
  * @returns A function that retrieves a member by id (or `me`).
  */
 export function getMember(context: TrelloContext): GetMemberFunction {
@@ -25,7 +25,7 @@ export type GetMeFunction = () => Promise<TrelloMember>;
 /**
  * Convenience wrapper around `getMember({ memberId: 'me' })`.
  *
- * @param context The Trello API context.
+ * @param context - The Trello API context.
  * @returns A function that retrieves the authenticated user.
  */
 export function getMe(context: TrelloContext): GetMeFunction {

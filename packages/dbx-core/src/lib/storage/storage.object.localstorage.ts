@@ -58,7 +58,7 @@ export class FullLocalStorageObject implements FullStorageObject {
     this._localStorage.removeItem(key);
   }
 
-  key(index: number): string | null {
+  key(index: number): Maybe<string> {
     return this._localStorage.key(index);
   }
 

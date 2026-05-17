@@ -56,9 +56,9 @@ export interface WrappedPhoneAndLabelFieldConfig {
  * Creates a flex-layout-wrapped pair of a phone number field and a label text field,
  * useful for collecting named phone numbers (e.g., "Work", "Home").
  *
- * @param config - Optional phone and label field configurations
- * @param config.phoneField - Optional configuration overrides for the phone number input
- * @param config.labelField - Optional configuration overrides for the label text input
+ * @param config - Optional phone and label field configurations.
+ * @param config.phoneField - Optional configuration overrides for the phone number input.
+ * @param config.labelField - Optional configuration overrides for the label text input.
  * @returns A flex-layout-wrapped {@link FormlyFieldConfig}
  *
  * @example
@@ -98,11 +98,11 @@ export interface PhoneAndLabelFieldSectionConfig extends DbxFormSectionConfig, W
  * Creates a section-wrapped phone + label field pair with a configurable header.
  *
  * @param config - Optional overrides; defaults to header `'Phone Number'`
- * @param config.key - Optional form model key for the section group
+ * @param config.key - Optional form model key for the section group.
  * @param config.header - Section header text; defaults to `'Phone Number'`
- * @param config.hint - Optional hint text displayed below the section header
- * @param config.phoneField - Optional phone field configuration overrides
- * @param config.labelField - Optional label field configuration overrides
+ * @param config.hint - Optional hint text displayed below the section header.
+ * @param config.phoneField - Optional phone field configuration overrides.
+ * @param config.labelField - Optional label field configuration overrides.
  * @returns A section-wrapped {@link FormlyFieldConfig}
  *
  * @example
@@ -135,7 +135,7 @@ export interface PhoneListFieldConfig extends Omit<RepeatArrayFieldConfig, 'repe
  * Creates a repeat-array field that allows the user to add multiple phone number entries.
  *
  * @param repeatConfig - Optional overrides; defaults to key `'phones'`, label `'Phone Numbers'`
- * @returns A {@link FormlyFieldConfig} with repeat-array type for multiple phone entries
+ * @returns A {@link FormlyFieldConfig} with repeat-array type for multiple phone entries.
  *
  * @example
  * ```typescript

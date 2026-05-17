@@ -159,8 +159,8 @@ function renderSearchOutput(input: RenderSearchOutputInput): string {
 /**
  * Handler for `dbx_model_archetype_search`.
  *
- * @param rawArgs - the unvalidated tool arguments
- * @returns the rendered peer-model table
+ * @param rawArgs - The unvalidated tool arguments.
+ * @returns The rendered peer-model table.
  */
 export async function runArchetypeSearch(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedSearchArgs;

@@ -50,8 +50,8 @@ export interface ExtractModelsFromSourceInput {
  * Best-effort: a malformed call shape leaves the corresponding entry out
  * rather than throwing.
  *
- * @param input - in-memory `{ name, text }` source pair.
- * @returns the per-file extraction. Aggregation across files happens in the
+ * @param input - In-memory `{ name, text }` source pair.
+ * @returns The per-file extraction. Aggregation across files happens in the
  *   firebase-api-manifest orchestrator so cross-file converter consts can be
  *   resolved against a global registry.
  */
@@ -161,8 +161,8 @@ function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
  * through utility-wrapped declarations like
  * `extends Partial<MaybeMap<Omit<Base, '…'>>>`.
  *
- * @param expr - the `ExpressionWithTypeArguments` produced by `getExtends()`
- * @returns the resolved interface name, or the original leftmost identifier when no inner reference is reachable
+ * @param expr - The `ExpressionWithTypeArguments` produced by `getExtends()`
+ * @returns The resolved interface name, or the original leftmost identifier when no inner reference is reachable.
  */
 function resolveExtendsName(expr: ExpressionWithTypeArguments): string {
   const head = expr.getExpression().getText();

@@ -91,8 +91,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
  * Maps a `firestoreModelIdentity` const name to the bare PascalCase model
  * name. Strips the trailing `Identity` suffix (case-insensitive).
  *
- * @param identity - the identity const string (e.g. `profileIdentity`)
- * @returns the bare PascalCase model name (e.g. `Profile`)
+ * @param identity - The identity const string (e.g. `profileIdentity`)
+ * @returns The bare PascalCase model name (e.g. `Profile`)
  */
 function identityToModel(identity: string): string {
   const stem = identity.replace(/Identity$/i, '');

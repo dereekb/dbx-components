@@ -20,6 +20,7 @@
  * factory (round-tripped verbatim from the existing file).
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile, writeFile as nodeWriteFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { buildModelFirebaseIndexManifest, type BuildModelFirebaseIndexManifestOutcome } from './model-firebase-index-build-manifest.js';
@@ -117,8 +118,8 @@ interface ParsedArgs {
  * user errors — every failure path returns a structured exit code so
  * callers can wire this into `process.exit` without try/catch.
  *
- * @param input - argv plus injectable I/O hooks
- * @returns the CLI's exit code (0 on success / no drift, 1 on drift / failure, 2 on usage error)
+ * @param input - Argv plus injectable I/O hooks.
+ * @returns The CLI's exit code (0 on success / no drift, 1 on drift / failure, 2 on usage error)
  */
 export async function runGenerateFirestoreIndexesCli(input: RunGenerateFirestoreIndexesCliInput): Promise<RunGenerateFirestoreIndexesCliResult> {
   const { argv, cwd, generator, readFile = (path) => nodeReadFile(path, 'utf-8'), writeFile = nodeWriteFile, stdout = (m) => console.log(m), stderr = (m) => console.error(m) } = input;
@@ -236,7 +237,7 @@ interface ReadExistingIndexesInput {
 
 async function readExistingIndexes(input: ReadExistingIndexesInput): Promise<FirestoreIndexesJson | undefined> {
   const { outputAbs, readFile, stderr } = input;
-  let text: string | null = null;
+  let text: Maybe<string> = null;
   try {
     text = await readFile(outputAbs);
   } catch (err) {

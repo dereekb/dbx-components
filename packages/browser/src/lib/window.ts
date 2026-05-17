@@ -12,14 +12,15 @@ export function isLocalhost(): boolean {
 /**
  * Constructs a full URL by combining the current window's base URL with the given relative path.
  *
- * @param path - Relative path to append to the base URL
- * @returns Full URL string
+ * @param path - Relative path to append to the base URL.
+ * @returns Full URL string.
  *
  * @example
  * ```typescript
  * // On https://example.com:3000
  * const url = makeWindowPath('/api/users'); // "https://example.com:3000/api/users"
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeWindowPath(path: string): string {
@@ -29,7 +30,7 @@ export function makeWindowPath(path: string): string {
 /**
  * Returns the base URL of the current window, including protocol, hostname, and port (if present).
  *
- * @returns Base URL string without trailing slash
+ * @returns Base URL string without trailing slash.
  *
  * @example
  * ```typescript

@@ -24,7 +24,7 @@ export const SEARCH_STRING_MAX_LENGTH = 100;
  * Creates a text field pre-configured for a person's full name.
  *
  * @param config - Optional overrides; defaults to key `'name'`, label `'Name'`
- * @returns A {@link FormlyFieldConfig} for name input
+ * @returns A {@link FormlyFieldConfig} for name input.
  *
  * @example
  * ```typescript
@@ -58,7 +58,7 @@ export interface EmailFieldConfig extends Partial<LabeledFieldConfig>, Descripti
  * Creates a text field pre-configured for email address input with built-in email validation.
  *
  * @param config - Optional overrides; defaults to key `'email'`, label `'Email Address'`
- * @returns A {@link FormlyFieldConfig} with email validation
+ * @returns A {@link FormlyFieldConfig} with email validation.
  *
  * @example
  * ```typescript
@@ -95,7 +95,7 @@ export type CityFieldConfig = Partial<TextFieldConfig>;
  * Creates a text field pre-configured for city name input with autocomplete support.
  *
  * @param config - Optional overrides; defaults to key `'city'`, label `'City'`
- * @returns A {@link FormlyFieldConfig} for city input
+ * @returns A {@link FormlyFieldConfig} for city input.
  *
  * @example
  * ```typescript
@@ -132,7 +132,7 @@ export interface StateFieldConfig extends Partial<TextFieldConfig> {
  * When `asCode` is true, enforces the 2-letter state code pattern and auto-uppercases input.
  *
  * @param config - Optional overrides; defaults to key `'state'`, label `'State'`
- * @returns A {@link FormlyFieldConfig} for state input
+ * @returns A {@link FormlyFieldConfig} for state input.
  *
  * @example
  * ```typescript
@@ -167,7 +167,7 @@ export type CountryFieldConfig = Partial<TextFieldConfig>;
  * Creates a text field pre-configured for country name input with autocomplete support.
  *
  * @param config - Optional overrides; defaults to key `'country'`, label `'Country'`
- * @returns A {@link FormlyFieldConfig} for country input
+ * @returns A {@link FormlyFieldConfig} for country input.
  *
  * @example
  * ```typescript
@@ -197,7 +197,7 @@ export type ZipCodeFieldConfig = Partial<TextFieldConfig>;
  * Creates a text field pre-configured for US zip code input with pattern validation.
  *
  * @param config - Optional overrides; defaults to key `'zip'`, label `'Zip Code'`
- * @returns A {@link FormlyFieldConfig} for zip code input
+ * @returns A {@link FormlyFieldConfig} for zip code input.
  *
  * @example
  * ```typescript
@@ -233,7 +233,7 @@ export const DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE = `Invalid/unknown coord
  *
  * @param config - Optional overrides; defaults to key `'latLng'`
  * @param config.key - The form model key; defaults to `'latLng'`
- * @returns A {@link FormlyFieldConfig} for coordinate input
+ * @returns A {@link FormlyFieldConfig} for coordinate input.
  *
  * @example
  * ```typescript

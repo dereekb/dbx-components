@@ -34,7 +34,7 @@ export function safeZohoDateTimeString(date: Maybe<Date>): Maybe<ZohoDateTimeStr
  * Converts a {@link Date} to a {@link ZohoDateTimeString} by stripping milliseconds
  * from the ISO 8601 representation.
  *
- * @param date - Date to convert
+ * @param date - Date to convert.
  * @returns Zoho-formatted date-time string (e.g. `'2019-05-02T11:17:33Z'`)
  *
  * @example

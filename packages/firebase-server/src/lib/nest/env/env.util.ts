@@ -7,7 +7,7 @@ import { type NestAppPromiseGetter } from '../app';
  *
  * Useful for conditionally enabling production-only Cloud Functions (e.g., scheduled tasks).
  *
- * @param nest - getter for the NestJS application context promise.
+ * @param nest - Getter for the NestJS application context promise.
  * @returns An async decision function that resolves to `true` in production.
  *
  * @example
@@ -25,7 +25,7 @@ export function nestAppIsProductionEnvironment(nest: NestAppPromiseGetter): Asyn
  *
  * The development scheduler is enabled in non-production, non-testing environments.
  *
- * @param nest - getter for the NestJS application context promise.
+ * @param nest - Getter for the NestJS application context promise.
  * @returns An async decision function that resolves to `true` when the development scheduler is enabled.
  */
 export function nestAppHasDevelopmentSchedulerEnabled(nest: NestAppPromiseGetter): AsyncDecisionFunction<void> {

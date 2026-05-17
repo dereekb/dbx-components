@@ -53,10 +53,10 @@ export interface DateTimePreset {
 }
 
 /**
- * Creates a DateTimePreset from a DateTimePresetConfiguration
+ * Creates a DateTimePreset from a DateTimePresetConfiguration.
  *
- * @param config - The preset configuration with label and value getter
- * @returns A DateTimePreset with a lazy value getter
+ * @param config - The preset configuration with label and value getter.
+ * @returns A DateTimePreset with a lazy value getter.
  */
 export function dateTimePreset(config: DateTimePresetConfiguration): DateTimePreset {
   let value: Getter<DateTimePresetValue>;

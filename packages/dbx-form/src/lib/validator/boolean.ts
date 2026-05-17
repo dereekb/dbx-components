@@ -1,12 +1,13 @@
+import type { Maybe } from '@dereekb/util';
 import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@angular/forms';
 
 /**
  * Angular form validator that requires the control value to be truthy.
  *
- * @returns A ValidatorFn that fails when the value is falsy
+ * @returns A ValidatorFn that fails when the value is falsy.
  */
 export function isTruthy(): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
+  return (control: AbstractControl): Maybe<ValidationErrors> => {
     const value: boolean | undefined = control.value;
 
     if (!value) {

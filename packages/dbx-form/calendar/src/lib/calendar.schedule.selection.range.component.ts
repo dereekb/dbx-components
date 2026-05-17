@@ -62,7 +62,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
   });
 
   readonly errorStateMatcher: ErrorStateMatcher = {
-    isErrorState: (control: AbstractControl | null, _form) => {
+    isErrorState: (control: Maybe<AbstractControl>, _form) => {
       return control ? (control.invalid && (control.dirty || control.touched)) || (control.touched && this.range.invalid) : false;
     }
   };
@@ -110,7 +110,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
 
   readonly datePickerFilter$: Observable<DateFilterFn<Date>> = combineLatest([this.dbxCalendarScheduleSelectionStore.isEnabledFilterDayFunction$, this.dbxCalendarScheduleSelectionStore.isInAllowedDaysOfWeekFunction$]).pipe(
     map(([isEnabled, isAllowedDayOfWeek]) => {
-      const fn = (date: Date | null) => {
+      const fn = (date: Maybe<Date>) => {
         return date ? isAllowedDayOfWeek(date) && isEnabled(date) : true;
       };
 
@@ -132,8 +132,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
       ? [
           (control: AbstractControl) => {
             const range = control.value;
-            const result = !range?.start || !range.end ? { required: true } : null;
-            return result;
+            return !range?.start || !range.end ? { required: true } : null;
           }
         ]
       : [];

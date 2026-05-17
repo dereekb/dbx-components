@@ -14,6 +14,7 @@
  * meaningful duplication.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile } from 'node:fs/promises';
 import { type } from 'arktype';
 
@@ -114,7 +115,7 @@ const SUPPORTED_VERSION = 1;
 // MARK: Source loading
 type ParseRawResult = { readonly kind: 'parsed'; readonly value: unknown } | { readonly kind: 'error'; readonly error: string };
 
-function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<string | null> {
+function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<Maybe<string>> {
   return readFile(path).then(
     (raw) => raw,
     () => null
@@ -132,7 +133,7 @@ function tryParseRaw(raw: string): ParseRawResult {
 }
 
 function validateParsedManifest<TManifest>(path: string, parsed: unknown, schema: (parsed: unknown) => TManifest | type.errors): LoadFromSourceResult<TManifest> {
-  const candidateVersion = (parsed as { readonly version?: unknown } | null | undefined)?.version;
+  const candidateVersion = (parsed as Maybe<{ readonly version?: unknown }>)?.version;
   let result: LoadFromSourceResult<TManifest>;
 
   if (candidateVersion !== SUPPORTED_VERSION) {
@@ -275,10 +276,10 @@ function buildIndexMap<TEntry>(mergedEntries: ReadonlyMap<string, TEntry>, extra
  * Domain wrappers translate the generic result fields into their named
  * shape (e.g. `indexMap` → `roleIndex`).
  *
- * @param input - manifest sources plus an optional injected `readFile`
- * @param config - per-domain schema + key extractors + name for error messages
- * @returns merged entries, generic index map, deterministic warnings, and the list of source labels that loaded
- * @throws when a strict source fails or when zero manifests load successfully
+ * @param input - Manifest sources plus an optional injected `readFile`
+ * @param config - Per-domain schema + key extractors + name for error messages.
+ * @returns Merged entries, generic index map, deterministic warnings, and the list of source labels that loaded.
+ * @throws When a strict source fails or when zero manifests load successfully.
  */
 export async function loadManifestsBase<TManifest extends BaseManifest<TEntry>, TEntry>(input: ManifestLoaderInput, config: ManifestLoaderConfig<TManifest, TEntry>): Promise<ManifestLoaderBaseResult<TEntry>> {
   const { sources, readFile = DEFAULT_READ_FILE } = input;

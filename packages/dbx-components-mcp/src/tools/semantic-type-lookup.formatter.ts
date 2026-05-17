@@ -21,9 +21,9 @@ import type { SemanticTypeEntry } from '../manifest/semantic-types-schema.js';
 /**
  * Renders one semantic-type entry at the requested depth.
  *
- * @param entry - the entry to render
- * @param depth - `'brief'` for a compact section, `'full'` for the long form
- * @returns markdown text starting with a level-2 heading
+ * @param entry - The entry to render.
+ * @param depth - `'brief'` for a compact section, `'full'` for the long form.
+ * @returns Markdown text starting with a level-2 heading.
  */
 export function formatSemanticTypeEntry(entry: SemanticTypeEntry, depth: 'brief' | 'full'): string {
   let result: string;
@@ -130,9 +130,9 @@ function formatExamples(examples: readonly { readonly caption?: string; readonly
  * Each entry renders in brief form and gets a callout banner so the caller
  * understands it has to disambiguate.
  *
- * @param name - the name that resolved to multiple entries
- * @param entries - the colliding entries (typically two; rarely more)
- * @returns markdown text combining every entry's brief shape
+ * @param name - The name that resolved to multiple entries.
+ * @param entries - The colliding entries (typically two; rarely more)
+ * @returns Markdown text combining every entry's brief shape.
  */
 export function formatSemanticTypeCollision(name: string, entries: readonly SemanticTypeEntry[]): string {
   const lines: string[] = [`# \`${name}\` — multiple matches`, '', `\`${name}\` is exported from ${entries.length} packages. Pass \`name\` plus the package via \`dbx_semantic_type_search\` if you need a single answer.`, ''];
@@ -146,10 +146,10 @@ export function formatSemanticTypeCollision(name: string, entries: readonly Sema
 /**
  * Renders a list of search results.
  *
- * @param config - the rendering inputs
- * @param config.query - the search descriptor for the heading (e.g. `topic:duration`)
- * @param config.entries - matched entries, already in display order
- * @returns markdown text starting with a top-level heading
+ * @param config - The rendering inputs.
+ * @param config.query - The search descriptor for the heading (e.g. `topic:duration`)
+ * @param config.entries - Matched entries, already in display order.
+ * @returns Markdown text starting with a top-level heading.
  */
 export function formatSemanticTypeSearchResults(config: { readonly query: string; readonly entries: readonly SemanticTypeEntry[] }): string {
   const { query, entries } = config;
@@ -171,13 +171,13 @@ export function formatSemanticTypeSearchResults(config: { readonly query: string
  * Renders a catalog summary of the registry — total count plus distinct
  * topics, packages, baseTypes — for the not-found / "no filters" cases.
  *
- * @param config - the registry summary
- * @param config.total - total entry count
- * @param config.topics - distinct topics (sorted)
- * @param config.packages - distinct packages (sorted)
- * @param config.baseTypes - distinct baseTypes (sorted)
- * @param config.loadedSources - source labels that loaded successfully
- * @returns markdown text describing what the registry contains
+ * @param config - The registry summary.
+ * @param config.total - Total entry count.
+ * @param config.topics - Distinct topics (sorted)
+ * @param config.packages - Distinct packages (sorted)
+ * @param config.baseTypes - Distinct baseTypes (sorted)
+ * @param config.loadedSources - Source labels that loaded successfully.
+ * @returns Markdown text describing what the registry contains.
  */
 export function formatSemanticTypeCatalog(config: { readonly total: number; readonly topics: readonly string[]; readonly packages: readonly string[]; readonly baseTypes: readonly string[]; readonly loadedSources: readonly string[] }): string {
   const lines: string[] = ['# Semantic-types registry', ''];

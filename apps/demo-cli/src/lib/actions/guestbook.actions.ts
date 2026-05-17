@@ -30,6 +30,9 @@ export interface QueryGuestbookEntriesForGuestbookOutput {
  * {@link queryGuestbookEntriesForGuestbookAction} is a thin yargs adapter that
  * delegates to this function.
  *
+ * @param input - The function inputs.
+ * @returns Aggregated entries for the Guestbook.
+ *
  * @example
  * ```ts
  * const { count, entries } = await queryGuestbookEntriesForGuestbook({
@@ -38,9 +41,6 @@ export interface QueryGuestbookEntriesForGuestbookOutput {
  *   published: true
  * });
  * ```
- *
- * @param input - The function inputs.
- * @returns Aggregated entries for the Guestbook.
  */
 export async function queryGuestbookEntriesForGuestbook(input: QueryGuestbookEntriesForGuestbookInput): Promise<QueryGuestbookEntriesForGuestbookOutput> {
   const { context, guestbook, published, limit } = input;
@@ -104,14 +104,14 @@ export interface QueryAllPublishedGuestbookEntriesOutput {
  * {@link queryGuestbookEntriesForGuestbook} to gather its published entries —
  * demonstrating two-level action composition without a `callAction` registry.
  *
+ * @param input - The function inputs.
+ * @returns Aggregate counts plus the per-Guestbook breakdown.
+ *
  * @example
  * ```ts
  * const summary = await queryAllPublishedGuestbookEntries({ context, parallel: 4 });
  * console.log(summary.guestbookCount, summary.entryCount);
  * ```
- *
- * @param input - The function inputs.
- * @returns Aggregate counts plus the per-Guestbook breakdown.
  */
 export async function queryAllPublishedGuestbookEntries(input: QueryAllPublishedGuestbookEntriesInput): Promise<QueryAllPublishedGuestbookEntriesOutput> {
   const { context, limit, parallel } = input;

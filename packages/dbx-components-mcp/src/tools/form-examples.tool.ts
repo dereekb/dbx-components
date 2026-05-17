@@ -101,8 +101,8 @@ function code(value: string): string {
  * Tool handler for `dbx_form_examples`. Resolves a form example pattern from
  * the registry and renders it at the requested depth.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted pattern text, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The formatted pattern text, or an error result when args fail validation.
  */
 export function runFormExamples(rawArgs: unknown): ToolResult {
   let args: ParsedExamplesArgs;

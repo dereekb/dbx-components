@@ -191,8 +191,8 @@ const EMPTY_DOWNSTREAM_CATALOG: DownstreamCatalog = {
 /**
  * Handler for `dbx_model_archetype_recommend`.
  *
- * @param rawArgs - the unvalidated tool arguments
- * @returns the rendered recommendation, or an error result on validation failure
+ * @param rawArgs - The unvalidated tool arguments.
+ * @returns The rendered recommendation, or an error result on validation failure.
  */
 export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedRecommendArgs;

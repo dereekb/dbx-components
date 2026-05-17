@@ -20,8 +20,9 @@ export interface ProvideDbxHelpServicesConfig {
 /**
  * Creates EnvironmentProviders for the help context system.
  *
- * @param config Optional configuration
- * @returns EnvironmentProviders
+ * @param config - Optional configuration.
+ * @returns EnvironmentProviders.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxHelpServices(config?: ProvideDbxHelpServicesConfig): EnvironmentProviders {

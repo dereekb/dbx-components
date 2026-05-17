@@ -81,8 +81,9 @@ export interface CreateModelValidateToolOptions {
  * exported as {@link modelValidateTool} below for callers (and tests)
  * that don't need config.
  *
- * @param options - optional rule overrides
- * @returns the registered MCP tool wrapper
+ * @param options - Optional rule overrides.
+ * @returns The registered MCP tool wrapper.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createModelValidateTool(options: CreateModelValidateToolOptions = {}): DbxTool {

@@ -25,7 +25,7 @@ export abstract class ZohoCrmServiceConfig {
   /**
    * Validates that the required Zoho CRM connection fields are present and well-formed.
    *
-   * @param config - the CRM service config to validate
+   * @param config - The CRM service config to validate.
    */
   static assertValidConfig(config: ZohoCrmServiceConfig) {
     assertValidZohoConfig(config.zohoCrm);

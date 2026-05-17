@@ -12,7 +12,8 @@ import { DbxFirebaseRegisterEmailComponent } from './register.email.component';
 /**
  * Factory function for creating the default Firebase auth login providers.
  *
- * @returns Array of DbxFirebaseAuthLoginProvider
+ * @returns Array of DbxFirebaseAuthLoginProvider.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLoginProvider[] {

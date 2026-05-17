@@ -113,7 +113,7 @@ export class DbxLoadingComponent {
   /**
    * Sets/overrides the context directly.
    *
-   * @param context Context source to use as an override.
+   * @param context - Context source to use as an override.
    */
   setContext(context: MaybeObservableOrValue<LoadingContext>) {
     this._contextOverrideSignal.set(context);

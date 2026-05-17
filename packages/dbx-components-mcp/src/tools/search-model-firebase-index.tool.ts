@@ -136,9 +136,9 @@ function scoreTagsMatch(tags: readonly string[], token: string): number {
 /**
  * Scores a single firebase-index entry against a single token.
  *
- * @param entry - the registry entry being scored
- * @param token - the lowercase token to score against
- * @returns the additive score for this token/entry pair (`0` when there's no hit)
+ * @param entry - The registry entry being scored.
+ * @param token - The lowercase token to score against.
+ * @returns The additive score for this token/entry pair (`0` when there's no hit)
  */
 function scoreIndexAgainstToken(entry: ModelFirebaseIndexEntryInfo, token: string): number {
   const slug = entry.slug.toLowerCase();
@@ -239,8 +239,9 @@ export interface CreateSearchModelFirebaseIndexToolConfig {
  * model-firebase-index registry. Called by `registerTools` once the
  * registry has loaded at server startup.
  *
- * @param config - the registry the tool should rank against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry the tool should rank against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSearchModelFirebaseIndexTool(config: CreateSearchModelFirebaseIndexToolConfig): DbxTool {

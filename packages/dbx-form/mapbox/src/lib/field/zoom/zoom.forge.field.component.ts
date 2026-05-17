@@ -78,7 +78,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
 
   // Internal number form control for the zoom input
-  readonly numberCtrl = new FormControl<number | null>(null);
+  readonly numberCtrl = new FormControl<Maybe<number>>(null);
   readonly placeholderText = '';
 
   private _undoZoomLimit = false;
@@ -205,9 +205,9 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
 /**
  * Custom mapper for the forge mapbox zoom field.
  *
- * @param fieldDef - Field definition configuration
- * @param fieldDef.key - Form model key for the field
- * @returns Signal containing a Record of input names to values for ngComponentOutlet
+ * @param fieldDef - Field definition configuration.
+ * @param fieldDef.key - Form model key for the field.
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet.
  */
 export function mapboxZoomFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

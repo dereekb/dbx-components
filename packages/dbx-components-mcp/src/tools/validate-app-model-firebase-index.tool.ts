@@ -27,6 +27,7 @@
  * canonical hellosubs layout).
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
@@ -206,7 +207,8 @@ async function runValidateAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolR
 /**
  * Builds the `dbx_model_firebase_index_validate_app` tool.
  *
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createValidateAppModelFirebaseIndexTool(): DbxTool {
@@ -278,7 +280,7 @@ interface PushFactoryCallerViolationsInput {
  * no production callers (and, for spec-only factories, no spec callers
  * either).
  *
- * @param input - the validator's buffer, the manifest entry, scanner refs, and the factory's source file.
+ * @param input - The validator's buffer, the manifest entry, scanner refs, and the factory's source file.
  */
 function pushFactoryCallerViolations(input: PushFactoryCallerViolationsInput): void {
   const { buffer, entry, references, filePath } = input;
@@ -459,7 +461,7 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
 }
 
 async function readExistingIndexesJson(indexesAbs: string): Promise<{ readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string }> {
-  let text: string | null = null;
+  let text: Maybe<string> = null;
   let readError: string | undefined;
   try {
     text = await readFile(indexesAbs, 'utf-8');

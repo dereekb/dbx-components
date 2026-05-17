@@ -130,8 +130,8 @@ async function fileExists(absolutePath: string): Promise<boolean> {
  * the requested artifact (writing files within the workspace), and reports
  * existing-file conflicts before any write happens.
  *
- * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
- * @returns the scaffold report, or an error result when validation or write fails
+ * @param rawArgs - The unvalidated tool arguments object from the MCP runtime.
+ * @returns The scaffold report, or an error result when validation or write fails.
  */
 export async function runArtifactScaffold(rawArgs: unknown): Promise<ToolResult> {
   let input: ScaffoldArtifactInput;

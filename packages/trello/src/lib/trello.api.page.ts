@@ -60,7 +60,7 @@ export type TrelloPageItemIdReader<T> = (item: T) => TrelloId;
 /**
  * Default reader that pulls `id` off the item. Works for most Trello resource types.
  *
- * @param item The page item whose id to read.
+ * @param item - The page item whose id to read.
  * @returns The item's id.
  */
 export const defaultTrelloPageItemIdReader = <T extends { readonly id: TrelloId }>(item: T): TrelloId => item.id;
@@ -68,7 +68,7 @@ export const defaultTrelloPageItemIdReader = <T extends { readonly id: TrelloId 
 /**
  * Reader that pulls the action id off a Trello action item.
  *
- * @param item The action page item whose id to read.
+ * @param item - The action page item whose id to read.
  * @returns The item's action id.
  */
 export const trelloActionIdReader = <T extends { readonly id: TrelloActionId }>(item: T): TrelloActionId => item.id;
@@ -76,10 +76,11 @@ export const trelloActionIdReader = <T extends { readonly id: TrelloActionId }>(
 /**
  * Wraps a raw Trello collection fetch into a {@link TrelloPageResult}.
  *
- * @param input The page filter that was used.
- * @param data The raw page items.
- * @param idReader Function to read the id from the last item.
+ * @param input - The page filter that was used.
+ * @param data - The raw page items.
+ * @param idReader - Function to read the id from the last item.
  * @returns A page result with the data and a cursor for the next page.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildTrelloPageResult<T>(input: TrelloCursorPageFilter, data: ReadonlyArray<T>, idReader: TrelloPageItemIdReader<T>): TrelloPageResult<T> {
@@ -100,9 +101,10 @@ export type TrelloFetchPageFetchFunction<I extends TrelloCursorPageFilter, R ext
 /**
  * Creates a FetchPageFactory using the input TrelloFetchPageFetchFunction.
  *
- * @param fetch Function that fetches a single page of results from the Trello API.
- * @param defaults Optional default pagination configuration.
+ * @param fetch - Function that fetches a single page of results from the Trello API.
+ * @param defaults - Optional default pagination configuration.
  * @returns A configured FetchPageFactory that handles Trello's cursor-based pagination using `before`.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function trelloFetchPageFactory<I extends TrelloCursorPageFilter, R extends TrelloPageResult<unknown>>(fetch: TrelloFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>): FetchPageFactory<I, R> {

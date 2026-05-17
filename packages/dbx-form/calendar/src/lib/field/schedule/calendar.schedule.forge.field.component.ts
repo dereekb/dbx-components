@@ -110,8 +110,7 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent {
   readonly allowCustomizeWithoutDateRangeSignal = computed(() => this.props()?.allowCustomizeWithoutDateRange ?? false);
 
   readonly disableCustomizeSignal = computed(() => {
-    const result = this.allowCustomizeWithoutDateRangeSignal() ? false : !this.fieldValue();
-    return result;
+    return this.allowCustomizeWithoutDateRangeSignal() ? false : !this.fieldValue();
   });
 
   private _setFieldValue(value: unknown): void {
@@ -196,9 +195,9 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent {
  * Uses the standard buildValueFieldInputs to bridge the ng-forge field definition
  * to the component's input signals.
  *
- * @param fieldDef - Field definition configuration
- * @param fieldDef.key - Form model key for the field
- * @returns Signal containing a Record of input names to values for ngComponentOutlet
+ * @param fieldDef - Field definition configuration.
+ * @param fieldDef.key - Form model key for the field.
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet.
  */
 export function calendarDateScheduleRangeFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

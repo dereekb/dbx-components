@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 /**
  * Module that holds Angular component decorators.
  */
@@ -86,7 +87,7 @@ export interface ImportRegistry {
   /**
    * The last ImportDeclaration node in the file. Used to insert brand-new imports.
    */
-  lastImportDeclaration: AstNode | null;
+  lastImportDeclaration: Maybe<AstNode>;
 }
 
 /**
@@ -186,9 +187,9 @@ export function getDecoratorName(decorator: AstNode): string {
  *   identifier really came from `@angular/core` (and not a local alias).
  * @returns The matching decorator and its name, or null.
  */
-export function findAngularComponentDecorator(classNode: AstNode, registry: ImportRegistry): { readonly decorator: AstNode; readonly name: string } | null {
+export function findAngularComponentDecorator(classNode: AstNode, registry: ImportRegistry): Maybe<{ readonly decorator: AstNode; readonly name: string }> {
   const decorators = classNode?.decorators;
-  let result: { readonly decorator: AstNode; readonly name: string } | null = null;
+  let result: Maybe<{ readonly decorator: AstNode; readonly name: string }> = null;
 
   if (decorators && decorators.length > 0) {
     for (const decorator of decorators) {
@@ -212,9 +213,9 @@ export function findAngularComponentDecorator(classNode: AstNode, registry: Impo
  * @param member - A ClassBody member AST node.
  * @returns The property name, or null when not a simple key.
  */
-export function getClassMemberName(member: AstNode): string | null {
+export function getClassMemberName(member: AstNode): Maybe<string> {
   const key = member?.key;
-  let result: string | null = null;
+  let result: Maybe<string> = null;
 
   if (key && !member.computed) {
     if (key.type === 'Identifier') {
@@ -233,9 +234,9 @@ export function getClassMemberName(member: AstNode): string | null {
  * @param classNode - The ClassDeclaration / ClassExpression AST node.
  * @returns The MethodDefinition AST node for `ngOnDestroy`, or null.
  */
-export function findNgOnDestroyMethod(classNode: AstNode): AstNode | null {
+export function findNgOnDestroyMethod(classNode: AstNode): Maybe<AstNode> {
   const members = classNode?.body?.body;
-  let result: AstNode | null = null;
+  let result: Maybe<AstNode> = null;
 
   if (members) {
     for (const member of members) {
@@ -253,17 +254,17 @@ export function findNgOnDestroyMethod(classNode: AstNode): AstNode | null {
  * If the given expression is a `CallExpression` whose callee is one of the
  * accepted identifier names, returns the matching name. Otherwise null.
  *
+ * @param node - The expression AST node.
+ * @param names - The accepted identifier names.
+ * @returns The matched name, or null.
+ *
  * @example
  * ```
  * isCalledIdentifier(node, ['cleanSubscription', 'clean']) // returns 'cleanSubscription'
  * ```
- *
- * @param node - The expression AST node.
- * @param names - The accepted identifier names.
- * @returns The matched name, or null.
  */
-export function isCalledIdentifier(node: AstNode, names: ReadonlySet<string>): string | null {
-  let result: string | null = null;
+export function isCalledIdentifier(node: AstNode, names: ReadonlySet<string>): Maybe<string> {
+  let result: Maybe<string> = null;
 
   if (node?.type === 'CallExpression') {
     const callee = node.callee;
@@ -319,10 +320,10 @@ export interface EnsureNamedImportFixInput {
  * @param input - The fixer, registry, and import names.
  * @returns A fix operation, or null when the import is already present.
  */
-export function ensureNamedImportFix(input: EnsureNamedImportFixInput): AstNode | null {
+export function ensureNamedImportFix(input: EnsureNamedImportFixInput): Maybe<AstNode> {
   const { fixer, registry, importName, fromSource } = input;
   const existing = registry.bySource.get(fromSource);
-  let result: AstNode | null = null;
+  let result: Maybe<AstNode> = null;
 
   if (!existing?.has(importName)) {
     const declaration = registry.sourceToDeclaration.get(fromSource);
@@ -402,9 +403,9 @@ export interface OnDestroyImplementsMatch {
  * @param registry - The file's import registry.
  * @returns The match details, or null.
  */
-export function findOnDestroyImplementsClause(classNode: AstNode, registry: ImportRegistry): OnDestroyImplementsMatch | null {
+export function findOnDestroyImplementsClause(classNode: AstNode, registry: ImportRegistry): Maybe<OnDestroyImplementsMatch> {
   const allImplements: readonly AstNode[] = classNode?.implements ?? [];
-  let result: OnDestroyImplementsMatch | null = null;
+  let result: Maybe<OnDestroyImplementsMatch> = null;
 
   for (let index = 0; index < allImplements.length; index += 1) {
     const clauseSpecifier = allImplements[index];

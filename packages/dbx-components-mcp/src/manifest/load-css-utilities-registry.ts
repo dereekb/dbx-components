@@ -14,6 +14,7 @@
  * disk.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -44,7 +45,7 @@ export interface LoadCssUtilityRegistryInput {
  */
 export interface LoadCssUtilityRegistryResult {
   readonly registry: CssUtilityRegistry;
-  readonly configPath: string | null;
+  readonly configPath: Maybe<string>;
   readonly configWarnings: readonly ConfigWarning[];
   readonly loaderWarnings: readonly CssUtilityLoaderWarning[];
   readonly externalSourceCount: number;
@@ -89,8 +90,8 @@ const DEFAULT_BUNDLED_PATHS: BundledCssUtilityManifestPathsFactory = () => {
  * Returns an {@link EMPTY_CSS_UTILITY_REGISTRY} with surfaced warnings
  * when neither bundled nor external manifests yield any successful load.
  *
- * @param input - cwd plus optional injected bundled-path factory and reader
- * @returns the registry, the resolved config path (if any), and any warnings
+ * @param input - Cwd plus optional injected bundled-path factory and reader.
+ * @returns The registry, the resolved config path (if any), and any warnings.
  */
 export async function loadCssUtilityRegistry(input: LoadCssUtilityRegistryInput): Promise<LoadCssUtilityRegistryResult> {
   const { cwd, bundledManifestPaths = DEFAULT_BUNDLED_PATHS, readFile } = input;
@@ -146,7 +147,7 @@ function collectExternalCssUtilitySources(configResult: LoadConfigResult): CssUt
  * Re-exported so callers can build a deterministic test fixture pointing
  * at the package's bundled manifests without touching `import.meta.url`.
  *
- * @returns the absolute paths of the bundled css-utility manifests
+ * @returns The absolute paths of the bundled css-utility manifests.
  */
 export function getDefaultBundledCssUtilityManifestPaths(): readonly string[] {
   return DEFAULT_BUNDLED_PATHS();

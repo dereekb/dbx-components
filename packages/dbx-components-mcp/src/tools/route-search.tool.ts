@@ -156,8 +156,8 @@ function formatHits(options: FormatHitsOptions): string {
  * and ranks states by query, returning the top hits with matched-on metadata
  * for callers exploring an unfamiliar app.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted search results, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The formatted search results, or an error result when args fail validation.
  */
 export async function runRouteSearch(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedSearchArgs;

@@ -5,9 +5,10 @@ import type { CliModelField, CliModelManifest, CliModelManifestEntry } from '../
  * `modelType` first, then falls back to `identityConst` and `collectionPrefix`
  * so callers can pass any of the three forms a user might type at the CLI.
  *
- * @param modelType - identifier to look up.
- * @param manifest - generated model manifest.
- * @returns the matching entry, or `undefined` when none exists.
+ * @param modelType - Identifier to look up.
+ * @param manifest - Generated model manifest.
+ * @returns The matching entry, or `undefined` when none exists.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function findCliModelManifestEntry(modelType: string, manifest: CliModelManifest): CliModelManifestEntry | undefined {
@@ -31,12 +32,13 @@ export function findCliModelManifestEntry(modelType: string, manifest: CliModelM
  * Unknown keys, primitives, `Date`, `null`, and `undefined` pass through
  * unchanged.
  *
- * @param modelType - the model identifier (`modelType`, `identityConst`,
+ * @param modelType - The model identifier (`modelType`, `identityConst`,
  *   or `collectionPrefix`) used to look up the rewrite map.
- * @param data - the value to rewrite (typically a `read`/`query` response
+ * @param data - The value to rewrite (typically a `read`/`query` response
  *   payload).
- * @param manifest - generated model manifest.
- * @returns the rewritten value, or `data` unchanged when no rewrite applies.
+ * @param manifest - Generated model manifest.
+ * @returns The rewritten value, or `data` unchanged when no rewrite applies.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function expandModelKeys(modelType: string, data: unknown, manifest: CliModelManifest): unknown {

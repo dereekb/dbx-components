@@ -21,8 +21,8 @@ export interface ProvideDbxAnalyticsConfig {
  * Call this in your application's `providers` array to set up analytics with a custom configuration factory
  * that resolves listeners, user sources, and environment flags at runtime.
  *
- * @param config - contains the factory function that produces a {@link DbxAnalyticsServiceConfiguration}
- * @returns environment providers for the analytics service
+ * @param config - Contains the factory function that produces a {@link DbxAnalyticsServiceConfiguration}
+ * @returns Environment providers for the analytics service.
  *
  * @example
  * ```ts
@@ -40,6 +40,7 @@ export interface ProvideDbxAnalyticsConfig {
  *   ]
  * };
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxAnalyticsService(config: ProvideDbxAnalyticsConfig): EnvironmentProviders {

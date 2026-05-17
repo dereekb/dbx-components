@@ -11,8 +11,8 @@ import type { ValidationResult } from './types.js';
  * to callers. Violations are grouped by folder so readers see one section per
  * model directory.
  *
- * @param result - the aggregated folder-validation outcome
- * @returns the markdown report
+ * @param result - The aggregated folder-validation outcome.
+ * @returns The markdown report.
  */
 export function formatResult(result: ValidationResult): string {
   return formatFolderGroupedResult({ title: 'Model folder validation', result });

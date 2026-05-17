@@ -8,14 +8,15 @@ import { type DestroyFunction } from '@dereekb/util';
  * Registers the given help context keys observable with the {@link DbxHelpContextService}. Must be called within an Angular injection context.
  * Automatically unregisters on destroy, but also returns a destroy function for manual cleanup.
  *
+ * @param helpContextKeys - Observable or static array of help context keys to register with the service.
+ * @returns A destroy function that unregisters the help context keys when called.
+ *
  * @example
  * ```typescript
  * // In a component or directive constructor
  * const destroy = registerHelpContextKeysWithDbxHelpContextService(of(['feature-help', 'general-help']));
  * ```
  *
- * @param helpContextKeys - Observable or static array of help context keys to register with the service
- * @returns A destroy function that unregisters the help context keys when called
  * @__NO_SIDE_EFFECTS__
  */
 export function registerHelpContextKeysWithDbxHelpContextService(helpContextKeys: ObservableOrValue<DbxHelpContextKey[]>): DestroyFunction {

@@ -72,8 +72,9 @@ export interface TokenRegistry {
  * source / role buckets so each lookup is O(n) at worst and subsequent
  * calls hit the cached bucket lists.
  *
- * @param loaded - the merged registry returned by `loadTokenManifests`
- * @returns a domain-friendly read API over the merged entries
+ * @param loaded - The merged registry returned by `loadTokenManifests`
+ * @returns A domain-friendly read API over the merged entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createTokenRegistry(loaded: LoadTokenManifestsResult): TokenRegistry {
@@ -86,10 +87,11 @@ export function createTokenRegistry(loaded: LoadTokenManifestsResult): TokenRegi
  * by callers that want to drive the tools without going through the loader
  * pipeline.
  *
- * @param input - the entries plus the source labels to advertise
- * @param input.entries - the full entry list (will be sorted by cssVariable)
- * @param input.loadedSources - source labels reported via `registry.loadedSources`
- * @returns a domain-friendly read API over the supplied entries
+ * @param input - The entries plus the source labels to advertise.
+ * @param input.entries - The full entry list (will be sorted by cssVariable)
+ * @param input.loadedSources - Source labels reported via `registry.loadedSources`
+ * @returns A domain-friendly read API over the supplied entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createTokenRegistryFromEntries(input: { readonly entries: readonly TokenEntry[]; readonly loadedSources: readonly string[] }): TokenRegistry {

@@ -14,14 +14,14 @@ export interface ServerErrorParams {
 /**
  * Converts an HTTP error response into {@link ServerErrorParams} suitable for dispatching as an NgRx action prop.
  *
+ * @param httpError - The HTTP error response or generic error object to convert.
+ * @returns A {@link ServerErrorParams} object wrapping the converted server error.
+ *
  * @example
  * ```typescript
  * const params = convertServerErrorParams(httpErrorResponse);
  * store.dispatch(myErrorAction(params));
  * ```
- *
- * @param httpError - The HTTP error response or generic error object to convert.
- * @returns A {@link ServerErrorParams} object wrapping the converted server error.
  */
 export function convertServerErrorParams(httpError: HttpErrorResponse | object): ServerErrorParams {
   const error: ServerError = convertToPOJOServerErrorResponse(httpError);
@@ -30,6 +30,10 @@ export function convertServerErrorParams(httpError: HttpErrorResponse | object):
 
 /**
  * RxJS operator that catches HTTP errors, converts them to {@link ServerErrorParams}, and dispatches the given NgRx action.
+ *
+ * @param action - The NgRx action creator to dispatch with the converted error params.
+ * @param mapError - Optional function to transform the {@link ServerErrorParams} before dispatching. Defaults to identity.
+ * @returns An RxJS operator that catches errors and emits the corresponding error action.
  *
  * @example
  * ```typescript
@@ -40,10 +44,6 @@ export function convertServerErrorParams(httpError: HttpErrorResponse | object):
  *   ))
  * );
  * ```
- *
- * @param action - The NgRx action creator to dispatch with the converted error params.
- * @param mapError - Optional function to transform the {@link ServerErrorParams} before dispatching. Defaults to identity.
- * @returns An RxJS operator that catches errors and emits the corresponding error action.
  */
 export function catchErrorServerParams<E extends ServerErrorParams, T extends string>(action: ActionCreator<T, (props: E) => E & Action<T>>, mapError: (error: ServerErrorParams) => E = (error) => error as E): MonoTypeOperatorFunction<E & Action<T>> {
   return catchError((error: HttpErrorResponse | object) => {

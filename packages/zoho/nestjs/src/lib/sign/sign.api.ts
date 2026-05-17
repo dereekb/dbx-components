@@ -19,7 +19,7 @@ export class ZohoSignApi {
   /**
    * The authenticated Sign context used by all operation accessors.
    *
-   * @returns the Sign context from the underlying client
+   * @returns The Sign context from the underlying client.
    */
   get signContext(): ZohoSignContext {
     return this.zohoSign.signContext;
@@ -28,7 +28,7 @@ export class ZohoSignApi {
   /**
    * Rate limiter shared across all Sign requests to respect Zoho API quotas.
    *
-   * @returns the shared rate limiter instance
+   * @returns The shared rate limiter instance.
    */
   get zohoRateLimiter() {
     return this.zohoSign.signContext.zohoRateLimiter;
@@ -38,8 +38,8 @@ export class ZohoSignApi {
    * Initializes the Sign client by combining the service config with the
    * accounts context for OAuth token management.
    *
-   * @param config - Zoho Sign service configuration
-   * @param zohoAccountsApi - accounts API used for OAuth token management
+   * @param config - Zoho Sign service configuration.
+   * @param zohoAccountsApi - Accounts API used for OAuth token management.
    */
   constructor(
     @Inject(ZohoSignServiceConfig) readonly config: ZohoSignServiceConfig,
@@ -55,7 +55,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignGetDocument}.
    *
-   * @returns bound get document function
+   * @returns Bound get document function.
    */
   get getDocument() {
     return zohoSignGetDocument(this.signContext);
@@ -64,7 +64,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignGetDocuments}.
    *
-   * @returns bound get documents function
+   * @returns Bound get documents function.
    */
   get getDocuments() {
     return zohoSignGetDocuments(this.signContext);
@@ -73,7 +73,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignGetDocumentsPageFactory}.
    *
-   * @returns bound get documents page factory function
+   * @returns Bound get documents page factory function.
    */
   get getDocumentsPageFactory() {
     return zohoSignGetDocumentsPageFactory(this.signContext);
@@ -82,7 +82,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignGetDocumentFormData}.
    *
-   * @returns bound get document form data function
+   * @returns Bound get document form data function.
    */
   get getDocumentFormData() {
     return zohoSignGetDocumentFormData(this.signContext);
@@ -91,7 +91,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignRetrieveFieldTypes}.
    *
-   * @returns bound retrieve field types function
+   * @returns Bound retrieve field types function.
    */
   get retrieveFieldTypes() {
     return zohoSignRetrieveFieldTypes(this.signContext);
@@ -100,7 +100,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignDownloadPdf}.
    *
-   * @returns bound download PDF function
+   * @returns Bound download PDF function.
    */
   get downloadPdf() {
     return zohoSignDownloadPdf(this.signContext);
@@ -109,7 +109,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignDownloadCompletionCertificate}.
    *
-   * @returns bound download completion certificate function
+   * @returns Bound download completion certificate function.
    */
   get downloadCompletionCertificate() {
     return zohoSignDownloadCompletionCertificate(this.signContext);
@@ -118,7 +118,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignCreateDocument}.
    *
-   * @returns bound create document function
+   * @returns Bound create document function.
    */
   get createDocument() {
     return zohoSignCreateDocument(this.signContext);
@@ -127,7 +127,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignUpdateDocument}.
    *
-   * @returns bound update document function
+   * @returns Bound update document function.
    */
   get updateDocument() {
     return zohoSignUpdateDocument(this.signContext);
@@ -136,7 +136,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignSendDocumentForSignature}.
    *
-   * @returns bound send document for signature function
+   * @returns Bound send document for signature function.
    */
   get sendDocumentForSignature() {
     return zohoSignSendDocumentForSignature(this.signContext);
@@ -145,7 +145,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignExtendDocument}.
    *
-   * @returns bound extend document function
+   * @returns Bound extend document function.
    */
   get extendDocument() {
     return zohoSignExtendDocument(this.signContext);
@@ -154,7 +154,7 @@ export class ZohoSignApi {
   /**
    * Configured pass-through for {@link zohoSignDeleteDocument}.
    *
-   * @returns bound delete document function
+   * @returns Bound delete document function.
    */
   get deleteDocument() {
     return zohoSignDeleteDocument(this.signContext);

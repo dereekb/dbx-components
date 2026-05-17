@@ -21,6 +21,7 @@
  * sections `init` writes and which startup hints fire.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { glob as fsGlob, readFile, stat } from 'node:fs/promises';
 import { basename, join, resolve, sep } from 'node:path';
 
@@ -75,8 +76,8 @@ export interface DiscoverDownstreamPackagesInput {
  * Globs the workspace for downstream packages and returns one entry per
  * package with the heuristic candidate-cluster list attached.
  *
- * @param input - workspace root (absolute) plus optional explicit override
- * @returns the discovered packages sorted by `packageName`
+ * @param input - Workspace root (absolute) plus optional explicit override.
+ * @returns The discovered packages sorted by `packageName`
  */
 export async function discoverDownstreamPackages(input: DiscoverDownstreamPackagesInput): Promise<readonly DownstreamPackage[]> {
   const { workspaceRoot, explicitDirs } = input;
@@ -186,8 +187,8 @@ async function readPackageName(absDir: string, relDir: string): Promise<string> 
  * manifest filename. `@dereekb/dbx-form` becomes `dereekb-dbx-form`; bare
  * names become themselves lowered.
  *
- * @param packageName - the raw package.json `name` value to slugify
- * @returns the lowered, scope-stripped, separator-normalised slug
+ * @param packageName - The raw package.json `name` value to slugify.
+ * @returns The lowered, scope-stripped, separator-normalised slug.
  */
 export function packageNameToSlug(packageName: string): string {
   return packageName
@@ -211,7 +212,7 @@ interface ScanConfigShape {
 }
 
 async function readDeclaredClusters(scanConfigPath: string): Promise<readonly DownstreamCluster[]> {
-  let parsed: ScanConfigShape | null = null;
+  let parsed: Maybe<ScanConfigShape> = null;
   try {
     const text = await readFile(scanConfigPath, 'utf8');
     parsed = JSON.parse(text) as ScanConfigShape;

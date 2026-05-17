@@ -58,7 +58,7 @@ function registerKeyedByIdResource(server: McpServer, config: KeyedByIdResourceC
  * lookup, subcollection lookup) on the given server. The four URIs together
  * reproduce the `dbx_model_decode` access patterns for browsing clients.
  *
- * @param server - the MCP server to register resources against
+ * @param server - The MCP server to register resources against.
  */
 export function registerFirebaseModelsResource(server: McpServer): void {
   server.registerResource(

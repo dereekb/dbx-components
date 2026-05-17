@@ -27,6 +27,7 @@
  * naming convention already rules out in practice.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { relative, resolve as resolvePath } from 'node:path';
 import { defaultGlobber, defaultReadFile, type ScanGlobber, type ScanReadFile } from './scan-io.js';
 import type { ExtractedModelFirebaseIndexEntry } from './model-firebase-index-extract.js';
@@ -163,8 +164,8 @@ export async function scanFactoryReferences(input: ScanFactoryReferencesInput): 
  * {@link FactoryReferenceSite} so the validator can enforce
  * `@dbxModelFirebaseIndexSpecFilesOnly` semantics.
  *
- * @param subpath - workspace-relative file path (forward slashes)
- * @returns true when the file ends with `.spec.ts` or `.spec.tsx`
+ * @param subpath - Workspace-relative file path (forward slashes)
+ * @returns True when the file ends with `.spec.ts` or `.spec.tsx`
  */
 function isSpecSubpath(subpath: string): boolean {
   return subpath.endsWith('.spec.ts') || subpath.endsWith('.spec.tsx');
@@ -191,7 +192,7 @@ async function scanOneFile(input: ScanOneFileInput): Promise<void> {
   const slugByName = invertNameLookup(namesBySlug);
   const lineOffsets = computeLineOffsets(contents);
   combinedPattern.lastIndex = 0;
-  let match: RegExpExecArray | null;
+  let match: Maybe<RegExpExecArray>;
   const subpath = toSubpath(absolutePath, projectRoot);
   const isSpec = isSpecSubpath(subpath);
   while ((match = combinedPattern.exec(contents)) !== null) {

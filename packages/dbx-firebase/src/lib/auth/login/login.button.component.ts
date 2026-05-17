@@ -163,7 +163,7 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
 
   private readonly _injectionData = inject<DbxFirebaseLoginButtonInjectionData>(DBX_INJECTION_COMPONENT_DATA, { optional: true });
 
-  private readonly _config = signal<DbxFirebaseLoginButtonConfig | null>(null);
+  private readonly _config = signal<Maybe<DbxFirebaseLoginButtonConfig>>(null);
   readonly configSignal = computed(() => this._config());
 
   /**

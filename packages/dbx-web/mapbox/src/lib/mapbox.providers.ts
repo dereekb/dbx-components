@@ -13,8 +13,8 @@ export interface ProvideDbxMapboxConfig {
 /**
  * Creates EnvironmentProviders for providing DbxMapboxConfig and configuring the NgxMapboxGLModule.
  *
- * @param config Configuration
- * @returns EnvironmentProviders
+ * @param config - Configuration.
+ * @returns EnvironmentProviders.
  */
 export function provideDbxMapbox(config: ProvideDbxMapboxConfig): EnvironmentProviders {
   const { dbxMapboxConfig, ngxMapboxGLModuleConfig } = config;

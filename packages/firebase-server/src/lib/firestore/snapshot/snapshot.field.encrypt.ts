@@ -39,6 +39,11 @@ export interface OptionalFirestoreEncryptedFieldConfig<T> {
  * The encryption key is resolved from the configured secret source on each read/write,
  * allowing for key rotation via environment variable changes.
  *
+ * @param config - Encryption field configuration.
+ * @returns A field mapping configuration for encrypted values.
+ *
+ * @template T - The JSON-serializable value type.
+ *
  * @example
  * ```typescript
  * const jwksField = firestoreEncryptedField<JWKSet>({
@@ -47,9 +52,6 @@ export interface OptionalFirestoreEncryptedFieldConfig<T> {
  * });
  * ```
  *
- * @template T - The JSON-serializable value type.
- * @param config - Encryption field configuration.
- * @returns A field mapping configuration for encrypted values.
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<T, string> {
@@ -73,6 +75,11 @@ export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig
  * When the value is null/undefined, it is stored/read as null. When present, it is
  * encrypted/decrypted using AES-256-GCM.
  *
+ * @param config - Encryption field configuration.
+ * @returns A field mapping configuration for optional encrypted values.
+ *
+ * @template T - The JSON-serializable value type.
+ *
  * @example
  * ```typescript
  * const optionalSecretField = optionalFirestoreEncryptedField<OAuthClientSecret>({
@@ -80,9 +87,6 @@ export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig
  * });
  * ```
  *
- * @template T - The JSON-serializable value type.
- * @param config - Encryption field configuration.
- * @returns A field mapping configuration for optional encrypted values.
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreEncryptedField<T>(config: OptionalFirestoreEncryptedFieldConfig<T>): FirestoreModelFieldMapFunctionsConfig<Maybe<T>, Maybe<string>> {

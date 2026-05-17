@@ -28,7 +28,7 @@ import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
  * Factory for the Segment API service configuration, activating analytics only in production.
  *
  * @param _injector - Angular injector (unused)
- * @returns Configured Segment API service config
+ * @returns Configured Segment API service config.
  */
 export function dbxAnalyticsSegmentApiServiceConfigFactory(_injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
   const config = new DbxAnalyticsSegmentApiServiceConfig(environment.analytics.segment);
@@ -40,8 +40,8 @@ export function dbxAnalyticsSegmentApiServiceConfigFactory(_injector: Injector):
 /**
  * Factory for the analytics service configuration with Segment listener and Firebase user source.
  *
- * @param injector - Angular injector used to resolve Segment and Firebase analytics dependencies
- * @returns Configured analytics service configuration
+ * @param injector - Angular injector used to resolve Segment and Firebase analytics dependencies.
+ * @returns Configured analytics service configuration.
  */
 export function dbxAnalyticsServiceConfigurationFactory(injector: Injector): DbxAnalyticsServiceConfiguration {
   const segmentListener: DbxAnalyticsSegmentServiceListener = injector.get(DbxAnalyticsSegmentServiceListener);
@@ -61,10 +61,10 @@ export function dbxAnalyticsServiceConfigurationFactory(injector: Injector): Dbx
 /**
  * Configures the UIRouter with analytics page view tracking, auth transition hooks, and debug tracing.
  *
- * @param router - The UIRouter instance to configure
- * @param injector - Angular injector for resolving the analytics service
+ * @param router - The UIRouter instance to configure.
+ * @param injector - Angular injector for resolving the analytics service.
  * @param _module - The states module (unused)
- * @returns undefined
+ * @returns Undefined.
  */
 export function routerConfigFn(router: UIRouter, injector: Injector, _module: StatesModule): any {
   const transitionService = router.transitionService;
@@ -102,8 +102,8 @@ export function routerConfigFn(router: UIRouter, injector: Injector, _module: St
  * Overrides `sendPasswordReset` and `completePasswordReset` to use the profile CRUD API
  * instead of Firebase's built-in methods.
  *
- * @param injector - Angular injector used to resolve ProfileFunctions
- * @returns Configured auth service delegate
+ * @param injector - Angular injector used to resolve ProfileFunctions.
+ * @returns Configured auth service delegate.
  */
 export function demoAuthDelegateFactory(injector: Injector): DbxFirebaseAuthServiceDelegate {
   const profileFunctions = injector.get(ProfileFunctions);
@@ -130,7 +130,7 @@ export function demoAuthDelegateFactory(injector: Injector): DbxFirebaseAuthServ
 /**
  * Registers the demo model types (guestbook) for the Firebase model types service.
  *
- * @returns Configured model types service config
+ * @returns Configured model types service config.
  */
 export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTypesServiceConfig {
   const guestbook: DbxFirebaseModelTypesServiceEntry<Guestbook> = {
@@ -163,7 +163,7 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 /**
  * Registers the demo entity widgets (guestbook) with a debug component for the model entities widget service.
  *
- * @returns Configured model entities widget service config
+ * @returns Configured model entities widget service config.
  */
 export function dbxFirebaseModelEntitiesWidgetServiceConfigFactory(): DbxFirebaseModelEntitiesWidgetServiceConfig {
   const guestbook: DbxFirebaseModelEntitiesWidgetEntry = {

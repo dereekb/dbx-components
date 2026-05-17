@@ -26,8 +26,8 @@ export type ZohoDeskGetTicketTagsFunction = (input: ZohoDeskGetTicketTagsInput) 
 /**
  * Creates a {@link ZohoDeskGetTicketTagsFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves tags for a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves tags for a ticket.
  */
 export function zohoDeskGetTicketTags(context: ZohoDeskContext): ZohoDeskGetTicketTagsFunction {
   return (input: ZohoDeskGetTicketTagsInput) => context.fetchJson<ZohoDeskTicketTag[]>(`/tickets/${input.ticketId}/tags`, zohoDeskTagApiFetchJsonInput('GET')).then((x) => x ?? []);
@@ -52,8 +52,8 @@ export type ZohoDeskAssociateTicketTagsFunction = (input: ZohoDeskAssociateTicke
  *
  * Associates one or more tags with a ticket. If the tag does not exist, it will be created.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that associates tags with a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that associates tags with a ticket.
  */
 export function zohoDeskAssociateTicketTags(context: ZohoDeskContext): ZohoDeskAssociateTicketTagsFunction {
   return (input: ZohoDeskAssociateTicketTagsInput) => {
@@ -79,8 +79,8 @@ export type ZohoDeskDissociateTicketTagFunction = (input: ZohoDeskDissociateTick
 /**
  * Creates a {@link ZohoDeskDissociateTicketTagFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that removes a tag from a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that removes a tag from a ticket.
  */
 export function zohoDeskDissociateTicketTag(context: ZohoDeskContext): ZohoDeskDissociateTicketTagFunction {
   return (input: ZohoDeskDissociateTicketTagInput) => context.fetchJson<void>(`/tickets/${input.ticketId}/tags/${input.tagId}`, zohoDeskTagApiFetchJsonInput('DELETE'));
@@ -103,8 +103,8 @@ export type ZohoDeskSearchTagsFunction = (input: ZohoDeskSearchTagsInput) => Pro
 /**
  * Creates a {@link ZohoDeskSearchTagsFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that searches for tags
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that searches for tags.
  */
 export function zohoDeskSearchTags(context: ZohoDeskContext): ZohoDeskSearchTagsFunction {
   return (input: ZohoDeskSearchTagsInput) => {
@@ -137,8 +137,8 @@ export type ZohoDeskGetAllTagsFunction = (input: ZohoDeskGetAllTagsInput) => Pro
 /**
  * Creates a {@link ZohoDeskGetAllTagsFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves all tags
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves all tags.
  */
 export function zohoDeskGetAllTags(context: ZohoDeskContext): ZohoDeskGetAllTagsFunction {
   return (input: ZohoDeskGetAllTagsInput) => {

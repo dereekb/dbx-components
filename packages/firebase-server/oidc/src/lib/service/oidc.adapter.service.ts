@@ -22,15 +22,15 @@ const GRANTABLE_MODELS: ReadonlySet<string> = new Set(GRANTABLE_MODEL_NAMES);
  * Sensitive payload fields (`client_secret`, `registration_access_token`) are selectively
  * encrypted via the {@link OidcEncryptionService}.
  *
+ * @param collections - Firestore collection access for adapter entries.
+ * @param encryptionService - Encryption service for sensitive payload fields.
+ * @returns An oidc-provider adapter constructor backed by Firestore.
+ *
  * @example
  * ```ts
  * const adapter = createAdapterFactory(collections, encryptionService);
  * new Provider('issuer', { adapter });
  * ```
- *
- * @param collections - Firestore collection access for adapter entries.
- * @param encryptionService - Encryption service for sensitive payload fields.
- * @returns an oidc-provider adapter constructor backed by Firestore
  */
 export function createAdapterFactory(collections: OidcServerFirestoreCollections, encryptionService: OidcEncryptionService): AdapterConstructor {
   class FirestoreAdapter implements Adapter {
@@ -141,8 +141,8 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
      * Converts a Firestore document into an oidc-provider payload,
      * returning `undefined` if the entry has expired.
      *
-     * @param data - the Firestore document data to convert
-     * @returns the decrypted adapter payload, or undefined if the entry has expired
+     * @param data - The Firestore document data to convert.
+     * @returns The decrypted adapter payload, or undefined if the entry has expired.
      */
     private _toPayload(data: OidcEntry): AdapterPayload | undefined {
       let expiresDate: Date | undefined;

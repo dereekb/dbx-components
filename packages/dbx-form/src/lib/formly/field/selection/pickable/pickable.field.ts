@@ -11,7 +11,7 @@ export interface PickableItemFieldConfig<T = unknown, M = unknown> extends Label
  * Creates a Formly field configuration for a pickable chip field that displays
  * selected values as Material chips.
  *
- * @param config - Pickable item configuration including load and display functions
+ * @param config - Pickable item configuration including load and display functions.
  * @returns A validated {@link FormlyFieldConfig} with type `'pickablechipfield'`
  *
  * @example
@@ -41,7 +41,7 @@ export function formlyPickableItemChipField<T = unknown, M = unknown>(config: Pi
  * Creates a Formly field configuration for a pickable list field that displays
  * selected values in a selection list.
  *
- * @param config - Pickable item configuration including load and display functions
+ * @param config - Pickable item configuration including load and display functions.
  * @returns A validated {@link FormlyFieldConfig} with type `'pickablelistfield'`
  *
  * @example

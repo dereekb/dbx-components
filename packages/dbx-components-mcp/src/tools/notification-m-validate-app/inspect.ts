@@ -25,9 +25,9 @@ const API_NOTIFICATION_SUBPATHS: readonly string[] = ['src/app/common/model/noti
  * snapshot the validator/lister consume. Centralising the I/O here keeps the
  * pure layers free of file-system concerns.
  *
- * @param componentDir - absolute path to the component package root
- * @param apiDir - absolute path to the api package root
- * @returns the prepared inspection containing both sides' files
+ * @param componentDir - Absolute path to the component package root.
+ * @param apiDir - Absolute path to the api package root.
+ * @returns The prepared inspection containing both sides' files.
  */
 export async function inspectAppNotifications(componentDir: string, apiDir: string): Promise<AppNotificationsInspection> {
   const component = await inspectSide(componentDir, [COMPONENT_NOTIFICATION_SUBPATH]);

@@ -140,11 +140,12 @@ export interface FirebaseServerStorageModuleMetadataConfig<T extends FirebaseSer
  * @param config - Optional configuration including a custom service provider and additional module metadata.
  * @returns NestJS module metadata ready to be passed to the `@Module()` decorator.
  *
- * @example
- * ```typescript
- * @Module(firebaseServerStorageModuleMetadata())
+ * @Module (firebaseServerStorageModuleMetadata())
  * export class AppStorageModule {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function firebaseServerStorageModuleMetadata<T extends FirebaseServerStorageService = FirebaseServerStorageService>(config?: FirebaseServerStorageModuleMetadataConfig<T>): ModuleMetadata {
   const serviceProvider = config?.serviceProvider ?? defaultProvideFirebaseServerStorageServiceSimple();

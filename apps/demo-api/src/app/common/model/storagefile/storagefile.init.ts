@@ -8,8 +8,8 @@ import { profileIdentity } from 'demo-firebase';
  * how to create StorageFileGroup documents for demo models (currently Profile).
  * Determines whether zip files should be created for storage file groups.
  *
- * @param context - server actions context providing Firestore collection accessors
- * @returns a config with the initialization function for storage file groups
+ * @param context - Server actions context providing Firestore collection accessors.
+ * @returns A config with the initialization function for storage file groups.
  */
 export function demoStorageFileInitServerActionsContextConfig(context: DemoFirebaseServerActionsContext): StorageFileInitServerActionsContextConfig {
   const { profileCollection: _profileCollection } = context;

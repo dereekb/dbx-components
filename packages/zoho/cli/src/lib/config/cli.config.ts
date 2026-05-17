@@ -289,8 +289,7 @@ export async function clearCliConfig(): Promise<void> {
 export function configuredProducts(config: ZohoCliConfig): ZohoCliProduct[] {
   return ZOHO_CLI_PRODUCTS.filter((p) => {
     const resolved = resolveProductCredentials(config, p);
-    const valid = resolved != null && (p !== 'desk' || resolved.orgId != null);
-    return valid;
+    return resolved != null && (p !== 'desk' || resolved.orgId != null);
   });
 }
 

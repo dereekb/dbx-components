@@ -14,9 +14,9 @@ export interface ListAppModelApiOptions {
  * Walks a firebase-component package's `<model>.api.ts` files and returns a
  * flat list of CRUD / standalone entries with per-file summaries.
  *
- * @param componentAbs - absolute path to the firebase-component package root
- * @param options - relative path used in the report and optional model filter
- * @returns the populated report
+ * @param componentAbs - Absolute path to the firebase-component package root.
+ * @param options - Relative path used in the report and optional model filter.
+ * @returns The populated report.
  */
 export async function listAppModelApi(componentAbs: string, options: ListAppModelApiOptions): Promise<ApiListReport> {
   const extraction = await extractApiList({ componentAbs, componentDir: options.componentDir, modelFilter: options.modelFilter });

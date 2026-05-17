@@ -162,9 +162,9 @@ export interface DbxAnalyticsStreamEventAnalyticsEventWrapper extends DbxAnalyti
  * Wraps a {@link UserAnalyticsEvent} into a {@link DbxAnalyticsStreamEventAnalyticsEventWrapper},
  * extracting the user ID for convenient access by listeners.
  *
- * @param event - the analytics event with optional user context
- * @param type - the stream event type classification; defaults to `Event`
- * @returns a wrapper combining the event, type, user, and extracted userId
+ * @param event - The analytics event with optional user context.
+ * @param type - The stream event type classification; defaults to `Event`
+ * @returns A wrapper combining the event, type, user, and extracted userId.
  *
  * @example
  * ```ts
@@ -250,7 +250,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    *
    * Pass `undefined` to clear the current user (e.g., on logout).
    *
-   * @param user - the user to identify, or undefined to clear
+   * @param user - The user to identify, or undefined to clear.
    */
   public setUser(user: Maybe<AnalyticsUser>): void {
     let source: Maybe<DbxAnalyticsUserSource>;
@@ -269,7 +269,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   /**
    * Sets the reactive user source that automatically updates the analytics user as auth state changes.
    *
-   * @param source - the user source providing an observable of the current analytics user
+   * @param source - The user source providing an observable of the current analytics user.
    */
   public setUserSource(source: DbxAnalyticsUserSource): void {
     this._userSource.next(source);
@@ -279,8 +279,8 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   /**
    * Emits a new user registration event, typically sent once after account creation.
    *
-   * @param user - the newly registered user
-   * @param data - registration-specific data including the signup method
+   * @param user - The newly registered user.
+   * @param data - Registration-specific data including the signup method.
    */
   public sendNewUserEvent(user: AnalyticsUser, data: NewUserAnalyticsEventData): void {
     this.sendNextEvent(
@@ -296,8 +296,8 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   /**
    * Emits a user login event, identifying the user in analytics providers.
    *
-   * @param user - the user who logged in
-   * @param data - optional additional event data
+   * @param user - The user who logged in.
+   * @param data - Optional additional event data.
    */
   public sendUserLoginEvent(user: AnalyticsUser, data?: AnalyticsEventData): void {
     this.sendNextEvent(
@@ -313,8 +313,8 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   /**
    * Emits a user logout event and optionally clears the current analytics user.
    *
-   * @param data - optional additional event data
-   * @param clearUser - whether to reset the analytics user identity; defaults to `true`
+   * @param data - Optional additional event data.
+   * @param clearUser - Whether to reset the analytics user identity; defaults to `true`
    */
   public sendUserLogoutEvent(data?: AnalyticsEventData, clearUser = true): void {
     this.sendNextEvent(
@@ -333,8 +333,8 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   /**
    * Emits a user properties update event, used to sync user traits to analytics providers.
    *
-   * @param user - the user whose properties are being updated
-   * @param data - optional additional event data
+   * @param user - The user whose properties are being updated.
+   * @param data - Optional additional event data.
    */
   public sendUserPropertiesEvent(user: AnalyticsUser, data?: AnalyticsEventData): void {
     this.sendNextEvent(
@@ -356,8 +356,8 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    *
    * This is the primary method for tracking custom events with associated properties.
    *
-   * @param name - the event name (e.g., `'Interview Ended'`)
-   * @param data - key-value data attached to the event
+   * @param name - The event name (e.g., `'Interview Ended'`)
+   * @param data - Key-value data attached to the event.
    *
    * @example
    * ```ts
@@ -378,7 +378,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   /**
    * Sends a named event with no additional data, useful for simple occurrence tracking.
    *
-   * @param eventType - the event name to track
+   * @param eventType - The event name to track.
    *
    * @example
    * ```ts
@@ -397,7 +397,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   /**
    * Sends a fully constructed analytics event object.
    *
-   * @param event - the event containing name, optional value, and data
+   * @param event - The event containing name, optional value, and data.
    */
   public sendEvent(event: AnalyticsEvent): void {
     this.sendNextEvent(event, DbxAnalyticsStreamEventType.Event);
@@ -406,7 +406,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
   /**
    * Sends a page view event, typically called on successful route transitions.
    *
-   * @param page - optional page name/path override; if omitted, the provider determines the current page
+   * @param page - Optional page name/path override; if omitted, the provider determines the current page.
    *
    * @example
    * ```ts
@@ -467,7 +467,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    *
    * @param event
    * @param type
-   * @param userOverride Uses this user if set as null or an override value. If undefined the current analytics user is used.
+   * @param userOverride - Uses this user if set as null or an override value. If undefined the current analytics user is used.
    */
   protected sendNextEvent(event: AnalyticsEvent = {}, type: DbxAnalyticsStreamEventType, userOverride?: Maybe<AnalyticsUser>): void {
     this.user$.pipe(first()).subscribe((analyticsUser) => {

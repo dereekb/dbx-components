@@ -64,8 +64,8 @@ function formatNotFound(slug: string): string {
 /**
  * Handler for `dbx_model_archetype_lookup`.
  *
- * @param rawArgs - the unvalidated tool arguments
- * @returns the rendered archetype entry / catalog / not-found message
+ * @param rawArgs - The unvalidated tool arguments.
+ * @returns The rendered archetype entry / catalog / not-found message.
  */
 export function runArchetypeLookup(rawArgs: unknown): ToolResult {
   let args: ParsedLookupArgs;

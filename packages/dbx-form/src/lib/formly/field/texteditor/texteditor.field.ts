@@ -12,7 +12,7 @@ export interface TextEditorFieldConfig extends LabeledFieldConfig, DescriptionFi
  *
  * The field defaults to an empty string and updates the model on blur events.
  *
- * @param config - Text editor field configuration
+ * @param config - Text editor field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'texteditor'`
  *
  * @example

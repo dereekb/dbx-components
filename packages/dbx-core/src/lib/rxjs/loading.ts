@@ -6,17 +6,20 @@ import { clean } from './clean';
  *
  * Must be run within an Angular injection context.
  *
- * @example
- * // Create with an observable source:
- * readonly context = cleanLoadingContext<MyData>(this.data$);
+ * @param input - Optional loading state context input configuration.
+ * @returns A mutable loading state context that is automatically destroyed on cleanup.
  *
  * @example
+ * ```ts
+ * // Create with an observable source:
+ * readonly context = cleanLoadingContext<MyData>(this.data$);
+ * ```
+ * @example
+ * ```ts
  * // Create empty, then set the observable source later:
  * readonly context = cleanLoadingContext<MyData>();
  * this.context.obs = this.data$;
- *
- * @param input - Optional loading state context input configuration.
- * @returns A mutable loading state context that is automatically destroyed on cleanup.
+ * ```
  */
 export function cleanLoadingContext<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingContextEvent = LoadingContextEvent & S>(input?: LoadingStateContextInput<T, S, E>): MutableLoadingStateContext<T, S, E> {
   return clean(loadingStateContext(input));
@@ -27,17 +30,20 @@ export function cleanLoadingContext<T = unknown, S extends LoadingState<T> = Loa
  *
  * Must be run within an Angular injection context.
  *
- * @example
- * // Create with an observable source:
- * readonly listContext = cleanListLoadingContext<MyItem>(this.items$);
+ * @param input - Optional list loading state context input configuration.
+ * @returns A mutable list loading state context that is automatically destroyed on cleanup.
  *
  * @example
+ * ```ts
+ * // Create with an observable source:
+ * readonly listContext = cleanListLoadingContext<MyItem>(this.items$);
+ * ```
+ * @example
+ * ```ts
  * // Create empty, then set the observable source later:
  * readonly listContext = cleanListLoadingContext<MyItem>();
  * this.listContext.obs = this.items$;
- *
- * @param input - Optional list loading state context input configuration.
- * @returns A mutable list loading state context that is automatically destroyed on cleanup.
+ * ```
  */
 export function cleanListLoadingContext<L = unknown, S extends ListLoadingState<L> = ListLoadingState<L>>(input?: ListLoadingStateContextInput<L, S>): MutableListLoadingStateContext<L, S> {
   return clean(listLoadingStateContext(input));

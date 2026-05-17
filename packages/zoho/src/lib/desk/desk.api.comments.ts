@@ -43,8 +43,8 @@ export type ZohoDeskGetTicketCommentsFunction = (input: ZohoDeskGetTicketComment
 /**
  * Creates a {@link ZohoDeskGetTicketCommentsFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves comments for a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves comments for a ticket.
  */
 export function zohoDeskGetTicketComments(context: ZohoDeskContext): ZohoDeskGetTicketCommentsFunction {
   return (input: ZohoDeskGetTicketCommentsInput) => {
@@ -72,8 +72,8 @@ export type ZohoDeskGetTicketCommentByIdFunction = (input: ZohoDeskGetTicketComm
 /**
  * Creates a {@link ZohoDeskGetTicketCommentByIdFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves a single comment
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves a single comment.
  */
 export function zohoDeskGetTicketCommentById(context: ZohoDeskContext): ZohoDeskGetTicketCommentByIdFunction {
   return (input: ZohoDeskGetTicketCommentByIdInput) => {
@@ -105,8 +105,8 @@ export type ZohoDeskCreateTicketCommentFunction = (input: ZohoDeskCreateTicketCo
 /**
  * Creates a {@link ZohoDeskCreateTicketCommentFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that creates a comment on a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that creates a comment on a ticket.
  */
 export function zohoDeskCreateTicketComment(context: ZohoDeskContext): ZohoDeskCreateTicketCommentFunction {
   return (input: ZohoDeskCreateTicketCommentInput) => {
@@ -132,8 +132,8 @@ export type ZohoDeskDeleteTicketCommentFunction = (input: ZohoDeskDeleteTicketCo
 /**
  * Creates a {@link ZohoDeskDeleteTicketCommentFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that deletes a comment from a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that deletes a comment from a ticket.
  */
 export function zohoDeskDeleteTicketComment(context: ZohoDeskContext): ZohoDeskDeleteTicketCommentFunction {
   return (input: ZohoDeskDeleteTicketCommentInput) => context.fetchJson<void>(`/tickets/${input.ticketId}/comments/${input.commentId}`, zohoDeskCommentApiFetchJsonInput('DELETE'));

@@ -5,7 +5,7 @@ import { type Configurable, separateValues } from '@dereekb/util';
 /**
  * A checkpoint/function pair used for responding to a specific checkpoint.
  */
- 
+
 export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   /**
    * Checkpoint this flow entry represents.
@@ -17,7 +17,6 @@ export interface NotificationTaskServiceTaskHandlerFlowEntry<D extends Notificat
   readonly fn: NotificationTaskServiceTaskHandlerFunction<D>;
 }
 
- 
 export interface NotificationTaskServiceTaskHandlerConfig<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString> {
   readonly type: NotificationTaskType;
   /**
@@ -53,8 +52,8 @@ export interface NotificationTaskServiceConfig {
  * finds the next uncompleted checkpoint in the flow and executes its handler function.
  * If all checkpoints are complete, the task is marked as done.
  *
- * @param config - handler configurations and optional validation list
- * @returns a {@link NotificationTaskService} that dispatches tasks to the registered handlers
+ * @param config - Handler configurations and optional validation list.
+ * @returns A {@link NotificationTaskService} that dispatches tasks to the registered handlers.
  *
  * @example
  * ```ts

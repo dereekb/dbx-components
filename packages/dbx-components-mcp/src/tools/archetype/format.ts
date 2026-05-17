@@ -24,9 +24,9 @@ export interface FormatArchetypeEntryOptions {
  * Renders a single archetype catalog entry as markdown — used by both the
  * recommender (for the matched archetype) and the lookup tool.
  *
- * @param archetype - the archetype catalog entry to render
- * @param options - optional axis values and section toggles
- * @returns the markdown body
+ * @param archetype - The archetype catalog entry to render.
+ * @param options - Optional axis values and section toggles.
+ * @returns The markdown body.
  */
 export function formatArchetypeEntry(archetype: ModelArchetypeInfo, options: FormatArchetypeEntryOptions = {}): string {
   const lines: string[] = [`# Archetype: \`${archetype.slug}\``, ''];
@@ -101,8 +101,8 @@ export interface FormatRecommendationInput {
  * Renders the recommender's full markdown output. Mirrors the shape described
  * in `§5.1` of the planning doc.
  *
- * @param input - the structured recommendation payload
- * @returns the markdown body
+ * @param input - The structured recommendation payload.
+ * @returns The markdown body.
  */
 export function formatRecommendation(input: FormatRecommendationInput): string {
   const lines: string[] = [...formatRecommendationHeader(input), ...formatRecommendationWhy(input.top), ...formatRecommendationShape(input), ...formatRecommendationPeers(input), ...formatRecommendationPointers(input.top.archetype), ...formatRecommendationAlternatives(input.alternatives)];
@@ -270,8 +270,8 @@ function escapePipes(s: string): string {
  * Renders the archetype catalog as a grouped markdown list. Used by the
  * lookup tool when called with `topic="list"`.
  *
- * @param archetypes - the catalog entries to list
- * @returns the markdown body
+ * @param archetypes - The catalog entries to list.
+ * @returns The markdown body.
  */
 export function formatArchetypeCatalog(archetypes: readonly ModelArchetypeInfo[]): string {
   const byFamily = new Map<string, ModelArchetypeInfo[]>();

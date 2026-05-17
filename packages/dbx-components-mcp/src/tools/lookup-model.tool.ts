@@ -225,10 +225,10 @@ const EMPTY_DOWNSTREAM_CATALOG: DownstreamCatalog = {
  * Renders one resolved lookup match to its markdown body (catalog, store
  * shape taxonomy, single-entry detail, or not-found suggestion list).
  *
- * @param match - the resolved topic to render
- * @param args - the parsed lookup arguments (scope, depth, fields)
- * @param downstream - the resolved downstream catalog (may be empty)
- * @returns the markdown body to surface to the caller
+ * @param match - The resolved topic to render.
+ * @param args - The parsed lookup arguments (scope, depth, fields)
+ * @param downstream - The resolved downstream catalog (may be empty)
+ * @returns The markdown body to surface to the caller.
  */
 function renderMatch(match: LookupModelMatch, args: ParsedLookupModelArgs, downstream: DownstreamCatalog): string {
   switch (match.kind) {
@@ -249,8 +249,8 @@ function renderMatch(match: LookupModelMatch, args: ParsedLookupModelArgs, downs
  * renders the matching catalog, store-shape taxonomy, single entry, or
  * not-found suggestion list.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the rendered match, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The rendered match, or an error result when args fail validation.
  */
 export async function runLookupModel(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedLookupModelArgs;

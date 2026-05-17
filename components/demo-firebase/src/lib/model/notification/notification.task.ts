@@ -67,7 +67,7 @@ export interface ExampleNotificationTaskWithNoModelInput extends Pick<ExampleNot
 /**
  * Same as exampleNotificationTaskTemplate but the created template has no notification model.
  *
- * @param input Same
+ * @param input - Same.
  * @returns
  */
 export function exampleNotificationTaskWithNoModelTemplate(input: ExampleNotificationTaskWithNoModelInput): CreateNotificationTaskTemplate {

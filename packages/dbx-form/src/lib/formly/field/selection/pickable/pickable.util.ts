@@ -16,9 +16,9 @@ export const filterPickableItemFieldValuesByLabelFilterFunction: SearchStringFil
  *
  * Returns all values when filter text is empty.
  *
- * @param filterText - Text to filter by
- * @param values - Display values to filter
- * @returns Observable emitting the filtered value array
+ * @param filterText - Text to filter by.
+ * @param values - Display values to filter.
+ * @returns Observable emitting the filtered value array.
  */
 export function filterPickableItemFieldValuesByLabel<T>(filterText: Maybe<string>, values: PickableValueFieldDisplayValue<T>[]): Observable<T[]> {
   let filteredValues: PickableValueFieldDisplayValue<T>[];
@@ -40,7 +40,7 @@ export const sortPickableItemsByLabelStringFunction = sortByStringFunction<Picka
 /**
  * Sorts pickable items alphabetically by their label.
  *
- * @param chips - Items to sort
+ * @param chips - Items to sort.
  * @returns The sorted array (mutated in place)
  */
 export function sortPickableItemsByLabel<T>(chips: PickableItemFieldItem<T>[]): PickableItemFieldItem<T>[] {
@@ -66,8 +66,8 @@ export interface PickableValueFieldValuesConfigForStaticLabeledValuesConfig<T, M
  *
  * Simplifies pickable field setup when all options are known upfront.
  *
- * @param input - Array of labeled values or a config object with options and unknown label
- * @returns Props subset for configuring a pickable field
+ * @param input - Array of labeled values or a config object with options and unknown label.
+ * @returns Props subset for configuring a pickable field.
  *
  * @example
  * ```typescript

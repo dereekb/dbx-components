@@ -306,6 +306,9 @@ function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; rea
  * Concurrency: pages are fetched serially (cursor dependency); items within a page can run
  * in parallel via `maxParallelPerPage` (forwarded to `performAsyncTasks`).
  *
+ * @param config - Iterator configuration.
+ * @returns The aggregate result.
+ *
  * @example
  * ```ts
  * // Exhaust every published Guestbook entry for a single Guestbook.
@@ -315,7 +318,6 @@ function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; rea
  *   params: { guestbook: 'gb/abc', published: true }
  * });
  * ```
- *
  * @example
  * ```ts
  * // Fan out to a child action per Guestbook, with 4-way parallelism per page.
@@ -327,9 +329,6 @@ function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; rea
  *   iterateItem: ({ context, key }) => queryGuestbookEntriesForGuestbook({ context, guestbook: key, published: true })
  * });
  * ```
- *
- * @param config - Iterator configuration.
- * @returns The aggregate result.
  */
 export async function iterateDbxCliCallModel<TParams, TItem, TRaw = OnCallQueryModelResult<TItem>, TItemResult = void, TPageResult = void>(config: IterateDbxCliCallModelConfig<TParams, TItem, TRaw, TItemResult, TPageResult>): Promise<IterateDbxCliCallModelResult<TItem, TItemResult, TPageResult>> {
   const { context, modelType, call, specifier, params, buildRequestData = _defaultBuildRequestData<TParams>, responseAdapter = _defaultResponseAdapter as unknown as IterateDbxCliCallModelResponseAdapter<TRaw, TItem>, limitPerPage, totalItemsLimit, maxPages, iterateItem, iteratePage, itemPerformTasksConfig, maxParallelPerPage, collectItems = true, collectItemResults = iterateItem != null, collectPageResults = iteratePage != null } = config;

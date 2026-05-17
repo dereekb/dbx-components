@@ -16,8 +16,8 @@ import type { FolderInspectionStatus, SystemFolderInspection } from './types.js'
  * `<name>.system.ts` text into memory so the rule layer can inspect it
  * without further I/O.
  *
- * @param path - absolute path to the system folder to inspect
- * @returns the inspection record describing the folder's status, files, and source text
+ * @param path - Absolute path to the system folder to inspect.
+ * @returns The inspection record describing the folder's status, files, and source text.
  */
 export async function inspectFolder(path: string): Promise<SystemFolderInspection> {
   const name = basename(path);

@@ -230,9 +230,9 @@ export class DbxForgePhoneFieldComponent {
  * Uses the standard valueFieldMapper pattern from ng-forge/integration to resolve
  * the field tree and build the standard inputs for the component.
  *
- * @param fieldDef - The phone field definition with a key property
- * @param fieldDef.key - The field key used to resolve the FieldTree from the form context
- * @returns Signal containing Record of input names to values for ngComponentOutlet
+ * @param fieldDef - The phone field definition with a key property.
+ * @param fieldDef.key - The field key used to resolve the FieldTree from the form context.
+ * @returns Signal containing Record of input names to values for ngComponentOutlet.
  */
 export function phoneFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

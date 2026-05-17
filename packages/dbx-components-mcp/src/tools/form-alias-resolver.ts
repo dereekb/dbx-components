@@ -99,8 +99,8 @@ const ALIASES: Record<string, string> = {
  * alias matches, returns the normalized topic unchanged so downstream lookups
  * can try the topic as a slug / factory name / produces value directly.
  *
- * @param topic - the raw caller-supplied topic to normalise
- * @returns the canonical slug, or the normalised topic when no alias applies
+ * @param topic - The raw caller-supplied topic to normalise.
+ * @returns The canonical slug, or the normalised topic when no alias applies.
  */
 export function resolveTopicAlias(topic: string): string {
   const normalized = topic.trim().toLowerCase();
@@ -110,7 +110,7 @@ export function resolveTopicAlias(topic: string): string {
 /**
  * Returns every alias → canonical-slug mapping. Useful for docs/introspection.
  *
- * @returns the readonly alias table keyed by alias to canonical slug
+ * @returns The readonly alias table keyed by alias to canonical slug.
  */
 export function getAliasMap(): Readonly<Record<string, string>> {
   return ALIASES;

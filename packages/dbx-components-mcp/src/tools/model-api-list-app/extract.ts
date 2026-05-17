@@ -33,8 +33,8 @@ export interface ExtractApiListResult {
  * each `<model>.api.ts` source. Best-effort: missing factory calls produce
  * empty entries lists rather than throwing.
  *
- * @param input - component absolute path, relative path, and optional filter
- * @returns the entries and per-file summaries
+ * @param input - Component absolute path, relative path, and optional filter.
+ * @returns The entries and per-file summaries.
  */
 export async function extractApiList(input: ExtractApiListInput): Promise<ExtractApiListResult> {
   const modelRoot = join(input.componentAbs, MODEL_SUBPATH);
@@ -76,8 +76,8 @@ export async function extractApiList(input: ExtractApiListInput): Promise<Extrac
  * Reads a directory's `Dirent` entries; returns an empty list when the
  * path is unreadable.
  *
- * @param path - absolute directory path
- * @returns the directory entries or `[]` on failure
+ * @param path - Absolute directory path.
+ * @returns The directory entries or `[]` on failure.
  */
 async function readDirSafe(path: string): Promise<readonly Dirent[]> {
   try {

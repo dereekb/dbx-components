@@ -44,8 +44,8 @@ export interface ExtractAppFixturesInput {
  * Pure entry point used by inspect.ts and tests. Parses the supplied fixture
  * text and returns the structured extraction; never touches disk.
  *
- * @param input - the raw fixture text + caller-relative path metadata
- * @returns the parsed extraction
+ * @param input - The raw fixture text + caller-relative path metadata.
+ * @returns The parsed extraction.
  */
 export function extractAppFixturesFromText(input: ExtractAppFixturesInput): AppFixturesExtraction {
   const { text, fixturePath } = input;
@@ -129,8 +129,8 @@ export function extractAppFixturesFromText(input: ExtractAppFixturesInput): AppF
  * — that's the canonical anchor every fixture file declares once
  * (`DemoApiContextFixture`, `HellosubsApiContextFixture`).
  *
- * @param sourceFile - the parsed fixture file
- * @returns the detected prefix, or `undefined` when no base class is found
+ * @param sourceFile - The parsed fixture file.
+ * @returns The detected prefix, or `undefined` when no base class is found.
  */
 function detectPrefix(sourceFile: SourceFile): string | undefined {
   for (const cls of sourceFile.getClasses()) {
@@ -148,9 +148,9 @@ function detectPrefix(sourceFile: SourceFile): string | undefined {
  * Returns `true` when {@link cls}'s `extends` clause references the base
  * class named {@link baseName}.
  *
- * @param cls - the class declaration to inspect
- * @param baseName - the expected base class identifier
- * @returns `true` when the class extends the target name
+ * @param cls - The class declaration to inspect.
+ * @param baseName - The expected base class identifier.
+ * @returns `true` when the class extends the target name.
  */
 function extendsByName(cls: ClassDeclaration, baseName: string): boolean {
   const extendsClause = cls.getExtends();
@@ -176,9 +176,9 @@ interface ClassCollectionBuckets {
  * map by name suffix, and pushes anything that matches the suffix but
  * doesn't fit the prefix into {@link ClassCollectionBuckets.unrecognized}.
  *
- * @param sourceFile - the parsed fixture file
- * @param prefix - the workspace prefix detected by {@link detectPrefix}
- * @param buckets - mutable accumulator
+ * @param sourceFile - The parsed fixture file.
+ * @param prefix - The workspace prefix detected by {@link detectPrefix}
+ * @param buckets - Mutable accumulator.
  */
 function collectClasses(sourceFile: SourceFile, prefix: string | undefined, buckets: ClassCollectionBuckets): void {
   for (const cls of sourceFile.getClasses()) {
@@ -205,10 +205,10 @@ function collectClasses(sourceFile: SourceFile, prefix: string | undefined, buck
  * model name when both ends match. Falls back to suffix-only matching when
  * the workspace prefix is unknown.
  *
- * @param className - the class name to parse
- * @param suffix - the expected name suffix
- * @param prefix - the optional workspace prefix
- * @returns the bare model name, or `undefined` when the class doesn't match
+ * @param className - The class name to parse.
+ * @param suffix - The expected name suffix.
+ * @param prefix - The optional workspace prefix.
+ * @returns The bare model name, or `undefined` when the class doesn't match.
  */
 function bareModel(className: string, suffix: string, prefix: string | undefined): string | undefined {
   if (!className.endsWith(suffix)) return undefined;
@@ -230,9 +230,9 @@ function bareModel(className: string, suffix: string, prefix: string | undefined
  * list with each field's resolved fixture-model dependency (when the field
  * type is a sibling fixture class).
  *
- * @param sourceFile - the parsed fixture file
- * @param prefix - the workspace prefix
- * @returns map of bare model name → params type metadata
+ * @param sourceFile - The parsed fixture file.
+ * @param prefix - The workspace prefix.
+ * @returns Map of bare model name → params type metadata.
  */
 function collectParamsTypes(sourceFile: SourceFile, prefix: string | undefined): Map<string, FixtureParamsType> {
   const out = new Map<string, FixtureParamsType>();
@@ -255,10 +255,10 @@ function collectParamsTypes(sourceFile: SourceFile, prefix: string | undefined):
  * Parses one `<Prefix><Model>TestContextParams` interface into the structured
  * {@link FixtureParamsType}.
  *
- * @param i - the interface declaration
- * @param _model - the bare model name extracted from the interface name (reserved for future cross-checks)
- * @param prefix - the workspace prefix used to resolve fixture-typed fields
- * @returns the parsed metadata
+ * @param i - The interface declaration.
+ * @param _model - The bare model name extracted from the interface name (reserved for future cross-checks)
+ * @param prefix - The workspace prefix used to resolve fixture-typed fields.
+ * @returns The parsed metadata.
  */
 function readParamsInterface(i: InterfaceDeclaration, _model: string, prefix: string | undefined): FixtureParamsType {
   const extendsClauses = i.getExtends().map((e) => e.getText());
@@ -299,9 +299,9 @@ function readParamsInterface(i: InterfaceDeclaration, _model: string, prefix: st
  * {@link FixtureParamsType}. Only `type Foo = Partial<Bar>` and similar
  * alias-only shapes are supported — alias types don't carry a field list.
  *
- * @param a - the type alias declaration
- * @param _model - the bare model name extracted from the alias name (reserved for future cross-checks)
- * @returns the parsed metadata
+ * @param a - The type alias declaration.
+ * @param _model - The bare model name extracted from the alias name (reserved for future cross-checks)
+ * @returns The parsed metadata.
  */
 function readParamsAlias(a: TypeAliasDeclaration, _model: string): FixtureParamsType {
   const typeText = a.getTypeNode()?.getText() ?? '';
@@ -327,10 +327,10 @@ function readParamsAlias(a: TypeAliasDeclaration, _model: string): FixtureParams
  * arguments (e.g. `<F>`), and basic type compositions by looking for the
  * fixture-suffix substring inside the text.
  *
- * @param typeText - the raw type annotation text
- * @param prefix - the workspace prefix
- * @returns the bare model name, or `undefined` when the field doesn't
- *   reference a fixture class
+ * @param typeText - The raw type annotation text.
+ * @param prefix - The workspace prefix.
+ * @returns The bare model name, or `undefined` when the field doesn't
+ *   reference a fixture class.
  */
 function resolveFixtureFieldModel(typeText: string, prefix: string | undefined): string | undefined {
   const match = /([A-Z]\w*)TestContextFixture/.exec(typeText);
@@ -346,7 +346,7 @@ function resolveFixtureFieldModel(typeText: string, prefix: string | undefined):
  * Walks every variable statement that initializes via a
  * `() => modelTestContextFactory<...>(...)` arrow (or a recognized
  * framework non-model factory like `authorizedUserContextFactory`) and
- * returns:
+ * returns:.
  *
  * - `factoriesByModel` — parsed {@link FactoryCall} metadata keyed by bare
  *   model name (derived from the factory variable name
@@ -355,8 +355,8 @@ function resolveFixtureFieldModel(typeText: string, prefix: string | undefined):
  *   framework non-model factory, the matched family entry. Used downstream
  *   to set `FixtureEntry.kind`.
  *
- * @param sourceFile - the parsed fixture file
- * @param prefix - the workspace prefix
+ * @param sourceFile - The parsed fixture file.
+ * @param prefix - The workspace prefix.
  * @returns The parsed factory metadata keyed by model and the matched framework non-model family map.
  */
 function collectFactories(sourceFile: SourceFile, prefix: string | undefined): { factoriesByModel: Map<string, FactoryCall>; nonModelFamiliesByModel: Map<string, FrameworkNonModelFixtureFamily> } {
@@ -383,8 +383,8 @@ function collectFactories(sourceFile: SourceFile, prefix: string | undefined): {
  * framework non-model factories (see `framework-fixtures.ts`). Returns
  * `undefined` when the declaration doesn't match a recognized factory.
  *
- * @param decl - the variable declaration to inspect
- * @returns the parsed factory metadata plus the matched framework family
+ * @param decl - The variable declaration to inspect.
+ * @returns The parsed factory metadata plus the matched framework family
  *   (when the call resolved to a non-model factory), or `undefined`
  */
 function readContextFactory(decl: VariableDeclaration): { factory: FactoryCall; family: FrameworkNonModelFixtureFamily | undefined } | undefined {
@@ -452,7 +452,7 @@ function readFactoryArgInfo(args: readonly Node[]): FactoryArgInfo {
 }
 
 /**
- * Decides the {@link FixtureKind} for a Fixture/Instance pair. Precedence:
+ * Decides the {@link FixtureKind} for a Fixture/Instance pair. Precedence:.
  *
  * 1. `@dbxFixtureNotModel` JSDoc tag on either class → `non-model`.
  * 2. Inheritance from a known framework non-model base class → that
@@ -465,8 +465,8 @@ function readFactoryArgInfo(args: readonly Node[]): FactoryArgInfo {
  * @param input.fixtureClass - The TestContextFixture class declaration.
  * @param input.instanceClass - The TestContextInstance class declaration paired with the fixture.
  * @param input.nonModelFamily - The framework non-model family matched while collecting factories, if any.
- * @returns the resolved kind plus a `nonModelFamily` indicator surfaced in
- *   lookup/list output
+ * @returns The resolved kind plus a `nonModelFamily` indicator surfaced in
+ *   lookup/list output.
  */
 function classifyFixtureKind(input: { fixtureClass: ClassDeclaration; instanceClass: ClassDeclaration; nonModelFamily: FrameworkNonModelFixtureFamily | undefined }): { kind: FixtureKind; nonModelFamily?: 'authorized-user' | 'jsdoc-tag' } {
   if (hasNonModelJsDoc(input.fixtureClass) || hasNonModelJsDoc(input.instanceClass)) {
@@ -484,7 +484,7 @@ function classifyFixtureKind(input: { fixtureClass: ClassDeclaration; instanceCl
  * Returns `true` when {@link cls} has a JSDoc block carrying the
  * `@dbxFixtureNotModel` tag.
  *
- * @param cls - the class declaration to inspect
+ * @param cls - The class declaration to inspect.
  * @returns `true` if the class is annotated with the non-model tag.
  */
 function hasNonModelJsDoc(cls: ClassDeclaration): boolean {
@@ -500,7 +500,7 @@ function hasNonModelJsDoc(cls: ClassDeclaration): boolean {
  * Looks up the framework family matching the Fixture/Instance class's
  * `extends` clause base name.
  *
- * @param cls - the class declaration to inspect
+ * @param cls - The class declaration to inspect.
  * @returns The matching framework family, or `undefined` if the class extends nothing recognized.
  */
 function familyFromExtends(cls: ClassDeclaration): FrameworkNonModelFixtureFamily | undefined {
@@ -523,8 +523,8 @@ function familyFromExtends(cls: ClassDeclaration): FrameworkNonModelFixtureFamil
  * Returns the `return` expression of a function/arrow body, falling through
  * to the body itself for concise arrows.
  *
- * @param fn - the arrow or function expression to walk
- * @returns the inner return expression, or `undefined` when not present
+ * @param fn - The arrow or function expression to walk.
+ * @returns The inner return expression, or `undefined` when not present.
  */
 function readSingleReturnExpression(fn: ArrowFunction | FunctionExpression): Node | undefined {
   const body = fn.getBody();
@@ -543,8 +543,8 @@ function readSingleReturnExpression(fn: ArrowFunction | FunctionExpression): Nod
 /**
  * Counts the parameter arity of an arrow / function expression initializer.
  *
- * @param fn - the initializer node (or `undefined`)
- * @returns the parameter count, or `0` when the node isn't a function-like
+ * @param fn - The initializer node (or `undefined`)
+ * @returns The parameter count, or `0` when the node isn't a function-like.
  */
 function readArrowParameterCount(fn: Node | undefined): number {
   if (!fn) return 0;
@@ -559,8 +559,8 @@ function readArrowParameterCount(fn: Node | undefined): number {
  * `getCollection` arrow body. Used to surface the parent fixture field name
  * that drives sub-collection wiring.
  *
- * @param fn - the `getCollection` initializer node
- * @returns the parent field name, or `undefined` when none is found
+ * @param fn - The `getCollection` initializer node.
+ * @returns The parent field name, or `undefined` when none is found.
  */
 function readParamsAccessFieldName(fn: Node | undefined): string | undefined {
   if (!fn) return undefined;
@@ -585,9 +585,9 @@ function readParamsAccessFieldName(fn: Node | undefined): string | undefined {
  * prefix (`DemoApi` → `demoApi`, `HellosubsApi` → `hellosubsApi`). When the
  * workspace prefix isn't known, falls back to suffix-only matching.
  *
- * @param factoryName - the variable name of the factory
- * @param prefix - the upper-camel workspace prefix
- * @returns the bare model name, or `undefined` when the name doesn't match
+ * @param factoryName - The variable name of the factory.
+ * @param prefix - The upper-camel workspace prefix.
+ * @returns The bare model name, or `undefined` when the name doesn't match.
  */
 function factoryNameToModel(factoryName: string, prefix: string | undefined): string | undefined {
   const suffix = 'ContextFactory';
@@ -615,8 +615,8 @@ function factoryNameToModel(factoryName: string, prefix: string | undefined): st
  * are written as either `demoApi<Model>` or the shortened `demo<Model>`
  * (used by `apps/demo-api`). We try both forms.
  *
- * @param prefix - the PascalCase workspace prefix
- * @returns the candidate factory prefixes, in match priority order
+ * @param prefix - The PascalCase workspace prefix.
+ * @returns The candidate factory prefixes, in match priority order.
  */
 function factoryPrefixesFromWorkspacePrefix(prefix: string): readonly string[] {
   const lower = prefix.charAt(0).toLowerCase() + prefix.slice(1);
@@ -636,8 +636,8 @@ function factoryPrefixesFromWorkspacePrefix(prefix: string): readonly string[] {
  * demoFooContextFactory();`) and maps the factory name to the singleton
  * variable name.
  *
- * @param sourceFile - the parsed fixture file
- * @returns map of factory variable name → singleton variable name
+ * @param sourceFile - The parsed fixture file.
+ * @returns Map of factory variable name → singleton variable name.
  */
 function collectSingletonsByFactory(sourceFile: SourceFile): Map<string, string> {
   const out = new Map<string, string>();
@@ -657,9 +657,9 @@ function collectSingletonsByFactory(sourceFile: SourceFile): Map<string, string>
  * Walks every fixture / instance class collected and returns the union of
  * their model keys, sorted by appearance line in the file.
  *
- * @param fixtures - fixture-class map
- * @param instances - instance-class map
- * @returns the deduplicated, line-sorted list of model names
+ * @param fixtures - Fixture-class map.
+ * @param instances - Instance-class map.
+ * @returns The deduplicated, line-sorted list of model names.
  */
 function collectAllModels(fixtures: Map<string, ClassDeclaration>, instances: Map<string, ClassDeclaration>): readonly string[] {
   const all = new Set<string>();
@@ -681,8 +681,8 @@ function collectAllModels(fixtures: Map<string, ClassDeclaration>, instances: Ma
  * Constructors and accessors are skipped — they're not part of the
  * forwarder surface.
  *
- * @param cls - the class declaration to walk
- * @returns the parsed method list (declaration order)
+ * @param cls - The class declaration to walk.
+ * @returns The parsed method list (declaration order)
  */
 function readClassMethods(cls: ClassDeclaration): readonly FixtureMethod[] {
   const out: FixtureMethod[] = [];
@@ -699,8 +699,8 @@ function readClassMethods(cls: ClassDeclaration): readonly FixtureMethod[] {
  * forward tool can reproduce the exact signature without re-rendering each
  * type node.
  *
- * @param m - the method declaration
- * @returns the parsed metadata
+ * @param m - The method declaration.
+ * @returns The parsed metadata.
  */
 function readMethod(m: MethodDeclaration): FixtureMethod {
   const visibility = readVisibility(m);
@@ -729,8 +729,8 @@ function readMethod(m: MethodDeclaration): FixtureMethod {
  * Returns the declared visibility of a class method, defaulting to
  * `public` when no modifier is present.
  *
- * @param m - the method declaration
- * @returns the resolved visibility enum
+ * @param m - The method declaration.
+ * @returns The resolved visibility enum.
  */
 function readVisibility(m: MethodDeclaration): 'public' | 'private' | 'protected' {
   if (m.hasModifier(SyntaxKind.PrivateKeyword)) return 'private';
@@ -742,8 +742,8 @@ function readVisibility(m: MethodDeclaration): 'public' | 'private' | 'protected
  * Reads the generic args of a class's `extends` clause, e.g.
  * `extends ModelTestContextFixture<A, B, C>` → `['A', 'B', 'C']`.
  *
- * @param cls - the class declaration
- * @returns the generic args (empty when no `extends` clause exists or it
+ * @param cls - The class declaration.
+ * @returns The generic args (empty when no `extends` clause exists or it
  *   carries no type arguments)
  */
 function readExtendsGenerics(cls: ClassDeclaration): readonly string[] {
@@ -757,8 +757,8 @@ function readExtendsGenerics(cls: ClassDeclaration): readonly string[] {
  * imports ending in `Identity` — the `firestoreModelIdentity(...)` aliases
  * the validator can use to cross-reference parent-fixture field names.
  *
- * @param sourceFile - the parsed fixture file
- * @returns the deduplicated, sorted identity import names
+ * @param sourceFile - The parsed fixture file.
+ * @returns The deduplicated, sorted identity import names.
  */
 function collectIdentityImports(sourceFile: SourceFile): readonly string[] {
   const out = new Set<string>();

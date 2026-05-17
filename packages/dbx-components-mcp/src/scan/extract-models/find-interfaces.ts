@@ -31,8 +31,8 @@ const PASSTHROUGH_TYPE_WRAPPERS: ReadonlySet<string> = new Set(['Partial', 'Requ
  * upstream registry only considers exported model interfaces (matching the
  * `.mjs` extractor's `export interface` regex).
  *
- * @param sf - the parsed source file to inspect
- * @returns the interfaces in source order
+ * @param sf - The parsed source file to inspect.
+ * @returns The interfaces in source order.
  */
 export function findInterfaces(sf: SourceFile): readonly ExtractedInterface[] {
   const out: ExtractedInterface[] = [];
@@ -78,8 +78,8 @@ function buildInterface(decl: InterfaceDeclaration): ExtractedInterface {
  * through utility-wrapped declarations like
  * `extends Partial<MaybeMap<Omit<Base, '…'>>>`.
  *
- * @param expr - the `ExpressionWithTypeArguments` produced by `getExtends()`
- * @returns the resolved interface name, or the original leftmost identifier when no inner reference is reachable
+ * @param expr - The `ExpressionWithTypeArguments` produced by `getExtends()`
+ * @returns The resolved interface name, or the original leftmost identifier when no inner reference is reachable.
  */
 function resolveExtendsName(expr: ExpressionWithTypeArguments): string {
   const head = expr.getExpression().getText();
@@ -201,8 +201,8 @@ const ARCHETYPE_SLUG_RE = /^[a-z][a-z0-9-]*$/;
  * Parses `@dbxModelArchetype <slug>[ axisKey=val,axisKey=val,...]` into
  * `{ slug, axes }`. Mirrors the `.mjs` extractor's `parseArchetypeTagValue`.
  *
- * @param value - raw tag value text after `@dbxModelArchetype`
- * @returns parsed override, or `undefined` when the slug is missing or invalid
+ * @param value - Raw tag value text after `@dbxModelArchetype`
+ * @returns Parsed override, or `undefined` when the slug is missing or invalid.
  */
 function parseArchetypeTagValue(value: string): ExtractedArchetypeTag | undefined {
   const trimmed = value.trim();
@@ -238,8 +238,8 @@ const COMPOSITE_KEY_MODEL_NAME_RE = /^[A-Za-z][A-Za-z0-9_$]*$/;
  * can flag `MODEL_COMPOSITE_KEY_MISSING_FROM`. An unrecognised encoding leaves
  * `encoding` undefined for `MODEL_COMPOSITE_KEY_INVALID_ENCODING`.
  *
- * @param value - raw tag value text after `@dbxModelCompositeKey`
- * @returns parsed tag — always present, even when malformed; validators
+ * @param value - Raw tag value text after `@dbxModelCompositeKey`
+ * @returns Parsed tag — always present, even when malformed; validators
  *   inspect the fields to emit findings.
  */
 function parseCompositeKeyTagValue(value: string): ExtractedCompositeKeyTag {
@@ -306,8 +306,8 @@ function readPropertyTags(jsDocs: readonly JSDoc[]): PropertyTags {
  * Mirrors the `.mjs` `parseJsdocBlock` that splits on the first blank line
  * before the first `@`-tag.
  *
- * @param jsDocs - the JSDoc blocks attached to a declaration
- * @returns the description paragraph, or `undefined` when none exists
+ * @param jsDocs - The JSDoc blocks attached to a declaration.
+ * @returns The description paragraph, or `undefined` when none exists.
  */
 export function readDescription(jsDocs: readonly JSDoc[]): string | undefined {
   let result: string | undefined;

@@ -24,8 +24,8 @@ export type DbxActionWorkOrWorkProgress = boolean | DbxActionWorkProgress;
 /**
  * Creates a working progress value from an array of working progress values.
  *
- * @param workOrWorkProgress The array of working progress values to use.
- * @param progressPercent An optional progress percent value to use if the working progress is a boolean.
+ * @param workOrWorkProgress - The array of working progress values to use.
+ * @param progressPercent - An optional progress percent value to use if the working progress is a boolean.
  * @returns The working progress value.
  */
 export function dbxActionWorkProgress(workOrWorkProgress: Maybe<DbxActionWorkOrWorkProgress>[], progressPercent?: Maybe<DbxActionWorkProgress>) {

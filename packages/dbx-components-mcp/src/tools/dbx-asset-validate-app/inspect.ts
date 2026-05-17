@@ -22,9 +22,9 @@ const APP_ASSETS_SUBPATH = 'src/assets';
  * (`assets.ts` and `index.ts`) plus the Angular app's
  * `src/root.app.config.ts` and `src/assets/` listing.
  *
- * @param componentDir - absolute path to the component package root
- * @param appDir - absolute path to the Angular app root
- * @returns the prepared two-side inspection
+ * @param componentDir - Absolute path to the component package root.
+ * @param appDir - Absolute path to the Angular app root.
+ * @returns The prepared two-side inspection.
  */
 export async function inspectAppAssets(componentDir: string, appDir: string): Promise<AppAssetsInspection> {
   const component = await inspectComponentLib(componentDir);
@@ -122,8 +122,8 @@ async function readFileIfExists(absPath: string): Promise<string | undefined> {
  * to test whether a `localAsset(path)` reference has a matching file in
  * the Angular app's `src/assets/` tree.
  *
- * @param absRoot - absolute path to walk (e.g. `<appDir>/src/assets`)
- * @returns the set of POSIX-relative file paths
+ * @param absRoot - Absolute path to walk (e.g. `<appDir>/src/assets`)
+ * @returns The set of POSIX-relative file paths.
  */
 async function collectFilesUnder(absRoot: string): Promise<ReadonlySet<string>> {
   const out = new Set<string>();

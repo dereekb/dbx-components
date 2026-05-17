@@ -17,9 +17,9 @@ export interface ListAppAssetsOptions {
  * reshapes the output into the listing report so listing and validator
  * findings stay in sync.
  *
- * @param inspection - the prepared filesystem inspection
- * @param options - workspace directories used to relativise emitted paths
- * @returns the listing report
+ * @param inspection - The prepared filesystem inspection.
+ * @param options - Workspace directories used to relativise emitted paths.
+ * @returns The listing report.
  */
 export function listAppAssets(inspection: AppAssetsInspection, options: ListAppAssetsOptions): AppAssetsReport {
   const extracted = extractAppAssets(inspection);

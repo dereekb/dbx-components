@@ -84,9 +84,9 @@ function isCategory(value: string): value is UiComponentCategoryValue {
  * Returns up to five entries whose slug / className / selector / description
  * contains the query.
  *
- * @param registry - the registry whose entries to search
- * @param query - the unmatched lookup topic to fuzzy-search
- * @returns up to five candidate entries ordered by descending score
+ * @param registry - The registry whose entries to search.
+ * @param query - The unmatched lookup topic to fuzzy-search.
+ * @returns Up to five candidate entries ordered by descending score.
  */
 function fuzzyCandidates(registry: UiComponentRegistry, query: string): readonly UiComponentEntry[] {
   const q = query.trim().toLowerCase();
@@ -333,8 +333,9 @@ export interface CreateLookupUiToolInput {
  * a fixture registry; the production server passes the merged registry from
  * {@link loadUiComponentRegistry}.
  *
- * @param input - the registry the tool reads from
- * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @param input - The registry the tool reads from.
+ * @returns A {@link DbxTool} ready to register with the dispatcher.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createLookupUiTool(input: CreateLookupUiToolInput): DbxTool {

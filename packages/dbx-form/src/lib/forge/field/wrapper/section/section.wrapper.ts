@@ -43,8 +43,8 @@ export interface DbxForgeSectionWrapper {
 /**
  * Section wrapper config — attach via a field's `wrappers: []` array for a semantic section with header and optional card elevation.
  *
- * @param config - the section wrapper configuration without the `type` property
- * @returns a complete {@link DbxForgeSectionWrapper} config with the type set
+ * @param config - The section wrapper configuration without the `type` property.
+ * @returns A complete {@link DbxForgeSectionWrapper} config with the type set.
  *
  * @dbxFormField
  * @dbxFormSlug section-wrapper
@@ -66,8 +66,8 @@ export function dbxForgeSectionWrapper(config: Omit<DbxForgeSectionWrapper, 'typ
 /**
  * Subsection variant of `section-wrapper` — defaults to heading level 4 and `subsection: true`.
  *
- * @param config - the subsection wrapper configuration without the `type` and `subsection` properties
- * @returns a complete {@link DbxForgeSectionWrapper} config with `type` and `subsection: true` set
+ * @param config - The subsection wrapper configuration without the `type` and `subsection` properties.
+ * @returns A complete {@link DbxForgeSectionWrapper} config with `type` and `subsection: true` set.
  *
  * @dbxFormField
  * @dbxFormSlug subsection-wrapper

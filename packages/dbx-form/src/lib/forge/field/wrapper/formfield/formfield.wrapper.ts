@@ -51,7 +51,7 @@ export interface DbxForgeFormFieldWrapperDef {
  * the builder instance's wrapper chain so the rendered field is surrounded by the shared
  * label / hint / error chrome.
  *
- * @param instance - the field builder instance to mutate
+ * @param instance - The field builder instance to mutate.
  */
 export function configureDbxForgeFormFieldWrapper<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>): void {
   instance.addWrappers({

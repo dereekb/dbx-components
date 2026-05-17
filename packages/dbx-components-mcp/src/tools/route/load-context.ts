@@ -59,9 +59,9 @@ export type RouteContextResult = RouteContextSuccess | RouteContextFailure;
  * for any of the three known failure modes (empty input, source-load throw,
  * zero matched files).
  *
- * @param input - the `sources` / `paths` / `glob` / `cwd` quad from a tool's
- *   parsed args
- * @returns either the loaded `tree` + `sources`, or an error `ToolResult`
+ * @param input - The `sources` / `paths` / `glob` / `cwd` quad from a tool's
+ *   parsed args.
+ * @returns Either the loaded `tree` + `sources`, or an error `ToolResult`
  */
 export async function loadRouteContext(input: RouteContextInput): Promise<RouteContextResult> {
   const hasAny = (input.sources && input.sources.length > 0) || (input.paths && input.paths.length > 0) || input.glob;

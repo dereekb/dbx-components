@@ -36,6 +36,7 @@ export interface ParsedGetManyArgs {
  * @param input.key - The optional second positional from yargs.
  * @param input.manifest - The generated model manifest (for prefix lookup).
  * @returns The parsed `{ modelType, key }` pair.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function parseGetArgs(input: { readonly modelOrKey: string | undefined; readonly key: string | undefined; readonly manifest?: CliModelManifest }): ParsedGetArgs {
@@ -101,6 +102,7 @@ export function parseGetArgs(input: { readonly modelOrKey: string | undefined; r
  * @param input.rest - The remaining positionals from yargs.
  * @param input.manifest - The generated model manifest (used only in the inferred-key branch).
  * @returns The parsed `{ modelType, keys }` pair.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function parseGetManyArgs(input: { readonly firstArg: string | undefined; readonly rest: ReadonlyArray<string>; readonly manifest?: CliModelManifest }): ParsedGetManyArgs {

@@ -36,8 +36,8 @@ export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldC
  *
  * Defaults to the key `'password'` and label `'Password'` unless overridden.
  *
- * @param config - Optional configuration for the password field
- * @returns A {@link MatInputField} with password input type
+ * @param config - Optional configuration for the password field.
+ * @returns A {@link MatInputField} with password input type.
  *
  * @dbxFormField
  * @dbxFormSlug password-field
@@ -67,8 +67,8 @@ export function dbxForgeTextPasswordField(config?: DbxForgeTextPasswordFieldConf
  *
  * Defaults to the key `'verifyPassword'` and label `'Verify Password'` unless overridden.
  *
- * @param config - Optional configuration for the verify password field
- * @returns A {@link MatInputField} with password input type
+ * @param config - Optional configuration for the verify password field.
+ * @returns A {@link MatInputField} with password input type.
  *
  * @dbxFormField
  * @dbxFormSlug verify-password-field
@@ -113,7 +113,7 @@ export interface DbxForgeTextPasswordWithVerifyFieldConfig {
  * The verify password field uses an expression-based custom validator that compares the
  * verify field value against the primary password field's value via `formValue`.
  *
- * @param config - Configuration for the password and verify password fields
+ * @param config - Configuration for the password and verify password fields.
  * @returns A tuple of `[passwordField, verifyPasswordField]`
  *
  * @dbxFormField
@@ -211,8 +211,8 @@ export interface DbxForgeUsernameLoginFieldsConfig {
  * When `verifyPassword` is provided, a second password field is added with a custom
  * validator that ensures both password values match.
  *
- * @param config - Login fields configuration
- * @returns An array of forge field definitions for the login form
+ * @param config - Login fields configuration.
+ * @returns An array of forge field definitions for the login form.
  *
  * @dbxFormField
  * @dbxFormSlug username-password-login-fields
@@ -252,8 +252,8 @@ export function dbxForgeUsernamePasswordLoginFields(config: DbxForgeUsernameLogi
  *
  * Supports email or plain text input based on the provided configuration.
  *
- * @param username - Either `'email'`, `'username'`, or a full config object
- * @returns A forge field definition for the username input
+ * @param username - Either `'email'`, `'username'`, or a full config object.
+ * @returns A forge field definition for the username input.
  *
  * @dbxFormField
  * @dbxFormSlug username-login-field

@@ -13,6 +13,7 @@
  * category, related slugs, skill refs, content projection summary).
  */
 
+import type { Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { type ClassDeclaration, type Decorator, type JSDoc, type ObjectLiteralExpression, type Project, type PropertyDeclaration, type SourceFile, Node } from 'ts-morph';
 import { type UiComponentEntry, type UiComponentInputEntry, type UiComponentOutputEntry } from '../manifest/ui-components-schema.js';
@@ -95,8 +96,8 @@ const VALID_KINDS: ReadonlySet<string> = new Set(['component', 'directive', 'pip
  * order ts-morph reports them, declarations within a file in source
  * order.
  *
- * @param input - the ts-morph project to scan
- * @returns the extracted entries plus any non-fatal warnings
+ * @param input - The ts-morph project to scan.
+ * @returns The extracted entries plus any non-fatal warnings.
  */
 export function extractUiEntries(input: ExtractUiEntriesInput): ExtractUiEntriesResult {
   const { project } = input;
@@ -433,7 +434,7 @@ function detectContentProjection(obj: ObjectLiteralExpression): string | undefin
 function collectNgContentSelectors(template: string): readonly string[] {
   const result: string[] = [];
   const regex = /<ng-content(?:\s+select=(?:"([^"]*)"|'([^']*)'))?\s*\/?>(?:<\/ng-content>)?/g;
-  let match: RegExpExecArray | null;
+  let match: Maybe<RegExpExecArray>;
   while ((match = regex.exec(template)) !== null) {
     const selector = match[1] ?? match[2] ?? '';
     result.push(selector);

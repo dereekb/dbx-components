@@ -184,8 +184,8 @@ function formatNotFound(rawTopic: string, candidates: readonly FirebaseModel[]):
  * model, walks the parent/child index assembled from upstream + downstream
  * registries, and renders the requested representation.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the rendered hierarchy, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The rendered hierarchy, or an error result when args fail validation.
  */
 export async function runModelHierarchy(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedHierarchyArgs;

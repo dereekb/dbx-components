@@ -52,8 +52,9 @@ export type LogCalcomServerErrorFunction = (error: FetchRequestFactoryError | Ca
 /**
  * Creates a logCalcomServerErrorFunction that logs the error to console.
  *
- * @param calcomApiNamePrefix Prefix to use when logging. I.E. CalcomError, etc.
- * @returns a LogCalcomServerErrorFunction that logs errors with the given prefix
+ * @param calcomApiNamePrefix - Prefix to use when logging. I.E. CalcomError, etc.
+ * @returns A LogCalcomServerErrorFunction that logs errors with the given prefix.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function logCalcomServerErrorFunction(calcomApiNamePrefix: string): LogCalcomServerErrorFunction {
@@ -79,9 +80,10 @@ export type ParseCalcomFetchResponseErrorFunction = (responseError: FetchRespons
 /**
  * Wraps a ConfiguredFetch to support handling errors returned by fetch.
  *
- * @param parseCalcomError - function to parse a FetchResponseError into a CalcomServerError
- * @param defaultLogError - default error logging function used when no override is provided
- * @returns a factory that wraps any ConfiguredFetch with Cal.com error handling
+ * @param parseCalcomError - Function to parse a FetchResponseError into a CalcomServerError.
+ * @param defaultLogError - Default error logging function used when no override is provided.
+ * @returns A factory that wraps any ConfiguredFetch with Cal.com error handling.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function handleCalcomErrorFetchFactory(parseCalcomError: ParseCalcomFetchResponseErrorFunction, defaultLogError: LogCalcomServerErrorFunction): HandleCalcomErrorFetchFactory {
@@ -136,8 +138,8 @@ export interface CalcomRateLimitHeaderDetails {
 /**
  * Extracts Cal.com rate limit information from HTTP response headers.
  *
- * @param headers - the HTTP response headers to parse
- * @returns parsed rate limit details, or null if no rate limit headers are present
+ * @param headers - The HTTP response headers to parse.
+ * @returns Parsed rate limit details, or null if no rate limit headers are present.
  */
 export function calcomRateLimitHeaderDetails(headers: Headers): Maybe<CalcomRateLimitHeaderDetails> {
   const limitHeader = headers.get(CALCOM_RATE_LIMIT_LIMIT_HEADER);
@@ -166,9 +168,9 @@ export class CalcomTooManyRequestsError extends CalcomServerFetchResponseError {
 /**
  * Function that parses/transforms a CalcomServerErrorData into a general CalcomServerError or other known error type.
  *
- * @param calcomServerError - the parsed error data from the Cal.com response body
- * @param responseError - the original FetchResponseError containing the HTTP response
- * @returns a CalcomServerFetchResponseError (or subclass like CalcomTooManyRequestsError), or undefined if unrecognized
+ * @param calcomServerError - The parsed error data from the Cal.com response body.
+ * @param responseError - The original FetchResponseError containing the HTTP response.
+ * @returns A CalcomServerFetchResponseError (or subclass like CalcomTooManyRequestsError), or undefined if unrecognized.
  */
 export function parseCalcomServerErrorData(calcomServerError: CalcomServerErrorData, responseError: FetchResponseError): CalcomServerFetchResponseError | undefined {
   let result: CalcomServerFetchResponseError | undefined;

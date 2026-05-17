@@ -13,10 +13,10 @@ const INDENT = '  ';
 /**
  * Renders the tree report for `dbx_model_test_tree`.
  *
- * @param tree - the parsed spec tree
- * @param view - the requested view (defaults to `all`)
- * @param filters - optional model / describe-path filters
- * @returns the markdown body
+ * @param tree - The parsed spec tree.
+ * @param view - The requested view (defaults to `all`)
+ * @param filters - Optional model / describe-path filters.
+ * @returns The markdown body.
  */
 export function formatTreeAsMarkdown(tree: SpecFileTree, view: SpecTreeView = 'all', filters: SpecTreeFilters = {}): string {
   const lines: string[] = [];
@@ -47,9 +47,9 @@ export function formatTreeAsMarkdown(tree: SpecFileTree, view: SpecTreeView = 'a
 /**
  * Renders the search report for `dbx_model_test_search`.
  *
- * @param tree - the parsed spec tree (used for the header)
- * @param result - the search outcome
- * @returns the markdown body
+ * @param tree - The parsed spec tree (used for the header)
+ * @param result - The search outcome.
+ * @returns The markdown body.
  */
 export function formatSearchAsMarkdown(tree: SpecFileTree, result: SpecSearchResult): string {
   const lines: string[] = [`# Spec search — ${tree.specPath}`, '', `Query: \`${result.query.mode}\` = \`${result.query.value}\``, `Matches: ${result.hits.length}`];
@@ -213,10 +213,10 @@ function nodeLabel(node: SpecNode): string {
  * - `filterByDescribePath` — keep only the deepest subtree whose ancestor
  *   describe-path equals or starts with the supplied `>`-delimited path.
  *
- * @param root - the root node from the parsed tree
- * @param view - the requested view
- * @param filters - the optional model / describe-path filters
- * @returns a new root node with the view + filters applied
+ * @param root - The root node from the parsed tree.
+ * @param view - The requested view.
+ * @param filters - The optional model / describe-path filters.
+ * @returns A new root node with the view + filters applied.
  */
 function applyViewToRoot(root: SpecNode, view: SpecTreeView): SpecNode {
   if (view === 'describes') return collapseTo(root, ['describe', 'it', 'hook', 'helperCall']);

@@ -17,15 +17,15 @@ import type { InspectedFile, SideInspection, SideStatus } from './inspection.typ
  * subpath in {@link subpaths} is checked relative to {@link rootDir};
  * present subpaths are walked recursively for non-spec `.ts` files,
  * and the joined list of present subpaths becomes the
- * {@link SideInspection.folder} field. The returned status is:
+ * {@link SideInspection.folder} field. The returned status is:.
  *
  * - `'dir-not-found'` — root does not exist or is not a directory.
  * - `'folder-missing'` — root exists but none of {@link subpaths} did.
  * - `'ok'` — root exists and at least one subpath was present.
  *
- * @param rootDir - absolute path to the side's package root
- * @param subpaths - relative paths to consider under {@link rootDir}
- * @returns the prepared inspection
+ * @param rootDir - Absolute path to the side's package root.
+ * @param subpaths - Relative paths to consider under {@link rootDir}
+ * @returns The prepared inspection.
  */
 export async function inspectSide(rootDir: string, subpaths: readonly string[]): Promise<SideInspection> {
   const rootStatus = await readRootStatus(rootDir);
@@ -60,8 +60,8 @@ export async function inspectSide(rootDir: string, subpaths: readonly string[]):
  * continue. `ENOENT` / `ENOTDIR` errors are treated as "not found";
  * other errors propagate.
  *
- * @param rootDir - absolute path to the side's package root
- * @returns the short-circuit status, or `undefined`
+ * @param rootDir - Absolute path to the side's package root.
+ * @returns The short-circuit status, or `undefined`
  */
 async function readRootStatus(rootDir: string): Promise<SideStatus | undefined> {
   try {
@@ -81,8 +81,8 @@ async function readRootStatus(rootDir: string): Promise<SideStatus | undefined> 
  * swallowing any stat error so the caller can fall through to the next
  * subpath without throwing.
  *
- * @param absPath - absolute path to check
- * @returns `true` when the path is a directory
+ * @param absPath - Absolute path to check.
+ * @returns `true` when the path is a directory.
  */
 async function isDirectory(absPath: string): Promise<boolean> {
   try {
@@ -99,9 +99,9 @@ async function isDirectory(absPath: string): Promise<boolean> {
  * {@link rootDir} (POSIX-style, sep-normalised) and sorted by relPath
  * so the inspection is deterministic across platforms.
  *
- * @param absFolder - absolute path to walk
- * @param rootDir - absolute path used to compute the relPath
- * @returns the collected inspected files
+ * @param absFolder - Absolute path to walk.
+ * @param rootDir - Absolute path used to compute the relPath.
+ * @returns The collected inspected files.
  */
 export async function collectTsFiles(absFolder: string, rootDir: string): Promise<readonly InspectedFile[]> {
   const out: InspectedFile[] = [];

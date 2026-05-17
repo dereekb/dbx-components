@@ -358,8 +358,8 @@ export interface RegisterToolsOptions {
  * pure handler — the dispatcher routes calls by name and converts thrown
  * errors into `isError` tool results.
  *
- * @param server - the MCP server whose underlying transport handlers to register
- * @param options - optional registry handles passed to tool factories
+ * @param server - The MCP server whose underlying transport handlers to register.
+ * @param options - Optional registry handles passed to tool factories.
  */
 export function registerTools(server: McpServer, options: RegisterToolsOptions = {}): void {
   const underlyingServer = server.server;

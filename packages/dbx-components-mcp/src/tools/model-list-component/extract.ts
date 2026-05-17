@@ -43,8 +43,8 @@ export interface ExtractionOutcome {
  * `firestoreModelIdentity(...)` call land in
  * {@link ExtractionOutcome.unidentifiedFolders}.
  *
- * @param componentAbs - absolute path to the component package root
- * @returns the extraction result (folders + models + skipped list)
+ * @param componentAbs - Absolute path to the component package root.
+ * @returns The extraction result (folders + models + skipped list)
  */
 export async function extractComponentModels(componentAbs: string): Promise<ExtractionOutcome> {
   const modelRoot = join(componentAbs, MODEL_SUBPATH);
@@ -254,9 +254,9 @@ function stringLiteralValue(node: Node): string | undefined {
  * back to a PascalCased folder name when the const name doesn't
  * follow the `<camelName>Identity` convention.
  *
- * @param constName - the identity constant name (e.g. `profileIdentity`)
- * @param folder - the folder basename used as a fallback
- * @returns the PascalCase model name
+ * @param constName - The identity constant name (e.g. `profileIdentity`)
+ * @param folder - The folder basename used as a fallback.
+ * @returns The PascalCase model name.
  */
 export function deriveModelName(constName: string, folder: string): string {
   const stem = constName.replace(/Identity$/, '');

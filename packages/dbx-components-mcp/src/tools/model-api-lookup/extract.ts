@@ -36,8 +36,8 @@ interface ApiSource {
 /**
  * Builds the lookup report for one model filter.
  *
- * @param input - the absolute / relative paths and the model filter
- * @returns the populated report
+ * @param input - The absolute / relative paths and the model filter.
+ * @returns The populated report.
  */
 export async function extractApiLookup(input: ExtractApiLookupInput): Promise<ApiLookupReport> {
   const apiSources = await collectApiSources(input.componentAbs);

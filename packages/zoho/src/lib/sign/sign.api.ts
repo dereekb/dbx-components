@@ -8,9 +8,9 @@ import { type ZohoSignPageFilter, type ZohoSignPageResult, type ZohoSignSearchCo
 /**
  * Builds a {@link FetchJsonInput} for Zoho Sign API calls.
  *
- * @param method - HTTP method for the request
- * @param body - Optional JSON body to include in the request
- * @returns Configured fetch JSON input
+ * @param method - HTTP method for the request.
+ * @param body - Optional JSON body to include in the request.
+ * @returns Configured fetch JSON input.
  */
 function zohoSignApiFetchJsonInput(method: string, body?: Maybe<FetchJsonBody>): FetchJsonInput {
   return {
@@ -75,16 +75,16 @@ export type ZohoSignGetDocumentFunction = (input: ZohoSignGetDocumentInput) => P
  * Fetches the full details of a single Zoho Sign request (envelope) by its ID,
  * including actions, documents, and field data.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that retrieves a document by request ID
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that retrieves a document by request ID.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/get-details-of-a-particular-document.html
  *
  * @example
  * ```typescript
  * const getDocument = zohoSignGetDocument(context);
  * const response = await getDocument({ requestId: '12345' });
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/get-details-of-a-particular-document.html
  */
 export function zohoSignGetDocument(context: ZohoSignContext): ZohoSignGetDocumentFunction {
   return ({ requestId }: ZohoSignGetDocumentInput) => context.fetchJson<ZohoSignGetDocumentResponse>(`/requests/${requestId}`, zohoSignApiFetchJsonInput('GET'));
@@ -105,16 +105,16 @@ export type ZohoSignGetDocumentsFunction = (input: ZohoSignGetDocumentsInput) =>
  * Pagination parameters (`start_index`, `row_count`) are serialized as a
  * JSON `data` query parameter per the Zoho Sign API convention.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that retrieves a paginated list of documents
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that retrieves a paginated list of documents.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/get-document-list.html
  *
  * @example
  * ```typescript
  * const getDocuments = zohoSignGetDocuments(context);
  * const response = await getDocuments({ start_index: 1, row_count: 10 });
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/get-document-list.html
  */
 export function zohoSignGetDocuments(context: ZohoSignContext): ZohoSignGetDocumentsFunction {
   return (input: ZohoSignGetDocumentsInput) => {
@@ -143,8 +143,8 @@ export function zohoSignGetDocuments(context: ZohoSignContext): ZohoSignGetDocum
  * `start_index`/`row_count` pagination, making it easy to iterate
  * through all documents across multiple pages.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Page factory for iterating through documents
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Page factory for iterating through documents.
  *
  * @example
  * ```typescript
@@ -154,6 +154,7 @@ export function zohoSignGetDocuments(context: ZohoSignContext): ZohoSignGetDocum
  * const firstPage = await fetchPage.fetchNext();
  * const secondPage = await firstPage.fetchNext();
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoSignGetDocumentsPageFactory(context: ZohoSignContext) {
@@ -175,16 +176,16 @@ export type ZohoSignGetDocumentFormDataFunction = (input: ZohoSignGetDocumentFor
  * returns data after all recipients have signed. The response includes
  * field labels and values grouped by recipient action.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that retrieves form data for a completed document
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that retrieves form data for a completed document.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/get-document-form-data.html
  *
  * @example
  * ```typescript
  * const getFormData = zohoSignGetDocumentFormData(context);
  * const response = await getFormData({ requestId: '12345' });
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/get-document-form-data.html
  */
 export function zohoSignGetDocumentFormData(context: ZohoSignContext): ZohoSignGetDocumentFormDataFunction {
   return ({ requestId }: ZohoSignGetDocumentFormDataInput) => context.fetchJson<ZohoSignGetDocumentFormDataResponse>(`/requests/${requestId}/fielddata`, zohoSignApiFetchJsonInput('GET'));
@@ -200,16 +201,16 @@ export type ZohoSignRetrieveFieldTypesFunction = () => Promise<ZohoSignRetrieveF
  * that can be placed on documents. Useful for dynamically building document
  * templates or validating field configurations.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that retrieves all available field types
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that retrieves all available field types.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/retrieve-field-type.html
  *
  * @example
  * ```typescript
  * const retrieveFieldTypes = zohoSignRetrieveFieldTypes(context);
  * const response = await retrieveFieldTypes();
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/retrieve-field-type.html
  */
 export function zohoSignRetrieveFieldTypes(context: ZohoSignContext): ZohoSignRetrieveFieldTypesFunction {
   return () => context.fetchJson<ZohoSignRetrieveFieldTypesResponse>(`/fieldtypes`, zohoSignApiFetchJsonInput('GET'));
@@ -243,8 +244,10 @@ export type ZohoSignDownloadPdfFunction = (input: ZohoSignDownloadPdfInput) => P
  * completion certificate, merge all documents, or provide a password for
  * protected files.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that downloads signed PDFs by request ID
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that downloads signed PDFs by request ID.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/download-pdf.html
  *
  * @example
  * ```typescript
@@ -259,8 +262,6 @@ export type ZohoSignDownloadPdfFunction = (input: ZohoSignDownloadPdfInput) => P
  *
  * const blob = await response.blob();
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/download-pdf.html
  */
 export function zohoSignDownloadPdf(context: ZohoSignContext): ZohoSignDownloadPdfFunction {
   return ({ requestId, ...params }: ZohoSignDownloadPdfInput) => {
@@ -286,8 +287,10 @@ export type ZohoSignDownloadCompletionCertificateFunction = (input: ZohoSignDown
  * certificate contains an audit trail of the signing process including
  * timestamps and recipient details. Returns a raw {@link Response}.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that downloads the completion certificate by request ID
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that downloads the completion certificate by request ID.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/download-completion-certificate.html
  *
  * @example
  * ```typescript
@@ -295,8 +298,6 @@ export type ZohoSignDownloadCompletionCertificateFunction = (input: ZohoSignDown
  * const response = await downloadCert({ requestId: '12345' });
  * const blob = await response.blob();
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/download-completion-certificate.html
  */
 export function zohoSignDownloadCompletionCertificate(context: ZohoSignContext): ZohoSignDownloadCompletionCertificateFunction {
   return ({ requestId }: ZohoSignDownloadCompletionCertificateInput) => context.fetch(`/requests/${requestId}/completioncertificate`, { method: 'GET' });
@@ -324,8 +325,10 @@ export type ZohoSignCreateDocumentFunction = (input: ZohoSignCreateDocumentInput
  * The created document starts in draft status and must be submitted
  * separately via {@link zohoSignSendDocumentForSignature}.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that creates a new document draft
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that creates a new document draft.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/create-document.html
  *
  * @example
  * ```typescript
@@ -348,8 +351,6 @@ export type ZohoSignCreateDocumentFunction = (input: ZohoSignCreateDocumentInput
  *
  * const draftId = response.requests.request_id;
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/create-document.html
  */
 export function zohoSignCreateDocument(context: ZohoSignContext): ZohoSignCreateDocumentFunction {
   return ({ requestData, file }: ZohoSignCreateDocumentInput) => {
@@ -378,8 +379,10 @@ export type ZohoSignUpdateDocumentFunction = (input: ZohoSignUpdateDocumentInput
  * expiration settings. Cannot be used on documents that have already been
  * submitted for signature.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that updates a draft document by request ID
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that updates a draft document by request ID.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/update-document.html
  *
  * @example
  * ```typescript
@@ -390,8 +393,6 @@ export type ZohoSignUpdateDocumentFunction = (input: ZohoSignUpdateDocumentInput
  *   data: { notes: 'Updated notes for this document' }
  * });
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/update-document.html
  */
 export function zohoSignUpdateDocument(context: ZohoSignContext): ZohoSignUpdateDocumentFunction {
   return ({ requestId, data }: ZohoSignUpdateDocumentInput) => context.fetchJson<ZohoSignDocumentOperationResponse>(`/requests/${requestId}`, zohoSignApiFetchJsonInput('PUT', { requests: data }));
@@ -413,8 +414,10 @@ export type ZohoSignSendDocumentForSignatureFunction = (input: ZohoSignSendDocum
  * submission. Once submitted, the document transitions from draft to
  * "inprogress" status and recipients receive signing notifications.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that sends a document for signature by request ID
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that sends a document for signature by request ID.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/send-document-for-signature.html
  *
  * @example
  * ```typescript
@@ -429,8 +432,6 @@ export type ZohoSignSendDocumentForSignatureFunction = (input: ZohoSignSendDocum
  *   data: { expiration_days: 30 }
  * });
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/send-document-for-signature.html
  */
 export function zohoSignSendDocumentForSignature(context: ZohoSignContext): ZohoSignSendDocumentForSignatureFunction {
   return ({ requestId, data }: ZohoSignSendDocumentForSignatureInput) => {
@@ -459,16 +460,16 @@ export type ZohoSignExtendDocumentFunction = (input: ZohoSignExtendDocumentInput
  * provided as a human-readable string (e.g. "30 November 2024"). Useful for
  * giving recipients additional time to complete signing.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that extends a document's expiration by request ID
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that extends a document's expiration by request ID.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/extend-document.html
  *
  * @example
  * ```typescript
  * const extendDocument = zohoSignExtendDocument(context);
  * await extendDocument({ requestId: '12345', expire_by: '30 November 2024' });
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/extend-document.html
  */
 export function zohoSignExtendDocument(context: ZohoSignContext): ZohoSignExtendDocumentFunction {
   return ({ requestId, expire_by }: ZohoSignExtendDocumentInput) => context.fetchJson<ZohoSignApiResponse>(`/requests/${requestId}/extend`, zohoSignApiFetchJsonInput('PUT', { expire_by }));
@@ -497,8 +498,10 @@ export type ZohoSignDeleteDocumentFunction = (input: ZohoSignDeleteDocumentInput
  * from recipients before deletion. An optional `reason` can be provided
  * to explain the recall. Sends the parameters as URL-encoded form data.
  *
- * @param context - Authenticated Zoho Sign context providing fetch and rate limiting
- * @returns Function that deletes a document by request ID
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that deletes a document by request ID.
+ *
+ * @see https://www.zoho.com/sign/api/document-managment/delete-document.html
  *
  * @example
  * ```typescript
@@ -514,8 +517,6 @@ export type ZohoSignDeleteDocumentFunction = (input: ZohoSignDeleteDocumentInput
  *   reason: 'Contract terms changed'
  * });
  * ```
- *
- * @see https://www.zoho.com/sign/api/document-managment/delete-document.html
  */
 export function zohoSignDeleteDocument(context: ZohoSignContext): ZohoSignDeleteDocumentFunction {
   return ({ requestId, recall_inprogress, reason }: ZohoSignDeleteDocumentInput) => {

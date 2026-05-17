@@ -3,6 +3,7 @@ import { LAT_LNG_PATTERN } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormMapboxLatLngComponentFieldProps } from './latlng.field.component';
 
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use DbxForgeMapboxLatLngFieldConfig instead.
  */
@@ -11,9 +12,10 @@ export interface MapboxLatLngFieldConfig extends Omit<LabeledBaseFieldConfig, 'k
 /**
  * Creates a Formly field configuration for a Mapbox-powered latitude/longitude picker with optional map display.
  *
+ * @param config - Optional field configuration overrides.
+ * @returns A validated Formly field configuration for the Mapbox lat/lng picker.
+ *
  * @deprecated Use dbxForgeMapboxLatLngField() from the forge API instead.
- * @param config - Optional field configuration overrides
- * @returns A validated Formly field configuration for the Mapbox lat/lng picker
  */
 export function mapboxLatLngField(config: MapboxLatLngFieldConfig = {}): FormlyFieldConfig {
   const { key = 'latLng', latLngConfig, showMap, zoom, recenterTime, showCenterButton, setCenterOnLocationSet, selectLocationOnMapDrag, selectLocationOnMapClick, markerConfig } = config;

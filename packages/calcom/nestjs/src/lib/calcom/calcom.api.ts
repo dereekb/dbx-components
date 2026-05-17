@@ -49,7 +49,7 @@ export class CalcomApi {
    * Returns the cached {@link CalcomApiContextInstance} for the server context.
    * All API functions are available through this instance.
    *
-   * @returns the server context instance
+   * @returns The server context instance.
    */
   get serverContextInstance(): CalcomApiContextInstance {
     return this._serverInstance();
@@ -59,7 +59,7 @@ export class CalcomApi {
   /**
    * Configured pass-through for {@link getAvailableSlots} using the public (unauthenticated) context.
    *
-   * @returns function to query available slots without authentication
+   * @returns Function to query available slots without authentication.
    */
   get getAvailableSlots() {
     return getAvailableSlots(this._publicContext());
@@ -74,8 +74,8 @@ export class CalcomApi {
    * resolved from the cache service using an md5 hash of the refresh token as the key.
    * This ensures tokens persist across requests and server restarts without collisions.
    *
-   * @param input - the user context factory input containing the refresh token and optional cache
-   * @returns a new CalcomApiContextInstance scoped to the user
+   * @param input - The user context factory input containing the refresh token and optional cache.
+   * @returns A new CalcomApiContextInstance scoped to the user.
    *
    * @example
    * ```ts
@@ -110,8 +110,8 @@ export class CalcomApi {
   /**
    * Creates a {@link CalcomApiContextInstance} from any {@link CalcomContext}.
    *
-   * @param context - the CalcomContext (server or user) to wrap
-   * @returns a new CalcomApiContextInstance bound to the given context
+   * @param context - The CalcomContext (server or user) to wrap.
+   * @returns A new CalcomApiContextInstance bound to the given context.
    */
   makeContextInstance(context: CalcomContext): CalcomApiContextInstance {
     return new CalcomApiContextInstance(this, context);
@@ -121,8 +121,8 @@ export class CalcomApi {
    * Creates a raw {@link CalcomUserContext} from a refresh token, without wrapping in a {@link CalcomApiContextInstance}.
    * Prefer {@link makeUserContextInstance} unless you need direct context access.
    *
-   * @param input - the user context factory input containing the refresh token and optional cache
-   * @returns a CalcomUserContext for the given user
+   * @param input - The user context factory input containing the refresh token and optional cache.
+   * @returns A CalcomUserContext for the given user.
    */
   makeUserContext(input: CalcomUserContextFactoryInput) {
     return this.calcom.calcomServerContext.makeUserContext(input);
@@ -159,7 +159,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link getMe}.
    *
-   * @returns function to retrieve the authenticated user's profile
+   * @returns Function to retrieve the authenticated user's profile.
    */
   get getMe() {
     return getMe(this.context);
@@ -169,7 +169,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link getSchedules}.
    *
-   * @returns function to retrieve all schedules for the authenticated user
+   * @returns Function to retrieve all schedules for the authenticated user.
    */
   get getSchedules() {
     return getSchedules(this.context);
@@ -179,7 +179,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link createBooking}.
    *
-   * @returns function to create a new booking
+   * @returns Function to create a new booking.
    */
   get createBooking() {
     return createBooking(this.context);
@@ -188,7 +188,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link getBooking}.
    *
-   * @returns function to retrieve a booking by UID
+   * @returns Function to retrieve a booking by UID.
    */
   get getBooking() {
     return getBooking(this.context);
@@ -197,7 +197,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link cancelBooking}.
    *
-   * @returns function to cancel a booking by UID
+   * @returns Function to cancel a booking by UID.
    */
   get cancelBooking() {
     return cancelBooking(this.context);
@@ -207,7 +207,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link getEventTypes}.
    *
-   * @returns function to retrieve all event types for the authenticated user
+   * @returns Function to retrieve all event types for the authenticated user.
    */
   get getEventTypes() {
     return getEventTypes(this.context);
@@ -216,7 +216,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link createEventType}.
    *
-   * @returns function to create a new event type
+   * @returns Function to create a new event type.
    */
   get createEventType() {
     return createEventType(this.context);
@@ -225,7 +225,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link updateEventType}.
    *
-   * @returns function to update an existing event type by ID
+   * @returns Function to update an existing event type by ID.
    */
   get updateEventType() {
     return updateEventType(this.context);
@@ -234,7 +234,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link deleteEventType}.
    *
-   * @returns function to delete an event type by ID
+   * @returns Function to delete an event type by ID.
    */
   get deleteEventType() {
     return deleteEventType(this.context);
@@ -244,7 +244,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link getCalendars}.
    *
-   * @returns function to retrieve all connected calendars
+   * @returns Function to retrieve all connected calendars.
    */
   get getCalendars() {
     return getCalendars(this.context);
@@ -253,7 +253,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link getBusyTimes}.
    *
-   * @returns function to retrieve busy time ranges across connected calendars
+   * @returns Function to retrieve busy time ranges across connected calendars.
    */
   get getBusyTimes() {
     return getBusyTimes(this.context);
@@ -263,7 +263,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link createWebhook}.
    *
-   * @returns function to create a webhook subscription
+   * @returns Function to create a webhook subscription.
    */
   get createWebhook() {
     return createWebhook(this.context);
@@ -272,7 +272,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link getWebhooks}.
    *
-   * @returns function to retrieve all webhooks
+   * @returns Function to retrieve all webhooks.
    */
   get getWebhooks() {
     return getWebhooks(this.context);
@@ -281,7 +281,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link getWebhook}.
    *
-   * @returns function to retrieve a specific webhook by ID
+   * @returns Function to retrieve a specific webhook by ID.
    */
   get getWebhook() {
     return getWebhook(this.context);
@@ -290,7 +290,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link updateWebhook}.
    *
-   * @returns function to update an existing webhook by ID
+   * @returns Function to update an existing webhook by ID.
    */
   get updateWebhook() {
     return updateWebhook(this.context);
@@ -299,7 +299,7 @@ export class CalcomApiContextInstance {
   /**
    * Configured pass-through for {@link deleteWebhook}.
    *
-   * @returns function to delete a webhook by ID
+   * @returns Function to delete a webhook by ID.
    */
   get deleteWebhook() {
     return deleteWebhook(this.context);

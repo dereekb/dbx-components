@@ -7,11 +7,11 @@ import { type Maybe } from '@dereekb/util';
  *
  * Wraps the detection call in a `setTimeout` to avoid triggering it during change detection cycles.
  *
- * @deprecated Use Angular signals instead.
- *
  * @param cdRef - The change detector to trigger. If `null`/`undefined`, the operator is a no-op.
  * @param timeout - Delay in milliseconds before calling `detectChanges`.
  * @returns An RxJS operator that triggers change detection on each emission.
+ *
+ * @deprecated Use Angular signals instead.
  *
  * @example
  * ```typescript
@@ -26,9 +26,9 @@ export function tapDetectChanges<T>(cdRef: Maybe<ChangeDetectorRef>, timeout = 0
 /**
  * Safely calls `detectChanges()` on a `ChangeDetectorRef`, skipping the call if the view is already destroyed.
  *
- * @deprecated Use Angular signals instead.
- *
  * @param cdRef - The change detector to trigger.
+ *
+ * @deprecated Use Angular signals instead.
  */
 export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
@@ -41,11 +41,11 @@ export function safeDetectChanges(cdRef: ChangeDetectorRef): void {
  * Intended for components using `OnPush` change detection that subscribe to observables
  * outside of the `async` pipe. Not needed when using the `async` pipe.
  *
- * @deprecated Use Angular signals instead.
- *
  * @param cdRef - The change detector to mark. If `null`/`undefined`, the operator is a no-op.
  * @param timeout - Delay in milliseconds before calling `markForCheck`.
  * @returns An RxJS operator that marks the view for check on each emission.
+ *
+ * @deprecated Use Angular signals instead.
  *
  * @example
  * ```typescript
@@ -60,9 +60,9 @@ export function tapSafeMarkForCheck<T>(cdRef: Maybe<ChangeDetectorRef>, timeout 
 /**
  * Safely calls `markForCheck()` on a `ChangeDetectorRef`, skipping the call if the view is already destroyed.
  *
- * @deprecated Use Angular signals instead.
- *
  * @param cdRef - The change detector to mark.
+ *
+ * @deprecated Use Angular signals instead.
  */
 export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
@@ -72,10 +72,10 @@ export function safeMarkForCheck(cdRef: ChangeDetectorRef): void {
 /**
  * Executes a callback with the given `ChangeDetectorRef` only if its view has not been destroyed.
  *
- * @deprecated Use Angular signals instead.
- *
  * @param cdRef - The change detector to guard.
  * @param use - Callback to invoke with the change detector.
+ *
+ * @deprecated Use Angular signals instead.
  */
 export function safeUseCdRef(cdRef: ChangeDetectorRef, use: (cdRef: ChangeDetectorRef) => void): void {
   if (!(cdRef as ViewRef).destroyed) {
@@ -92,16 +92,16 @@ export function safeUseCdRef(cdRef: ChangeDetectorRef, use: (cdRef: ChangeDetect
  * @param ref - Reference to the wrapper element around `ng-content`.
  * @returns `true` if the wrapper element has any child nodes.
  *
- * @example
- * ```typescript
- * // In the component class:
- * @ViewChild('contentWrapper', { static: false }) contentRef: ElementRef;
+ * @ViewChild ('contentWrapper', { static: false }) contentRef: ElementRef;
  *
  * get hasContent(): boolean {
  *   return checkNgContentWrapperHasContent(this.contentRef);
  * }
  * ```
  *
+ * @example
+ * ```typescript
+ * // In the component class:
  * @example
  * ```html
  * <!-- In the component template: -->

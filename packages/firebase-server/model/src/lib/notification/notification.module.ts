@@ -13,12 +13,12 @@ import { exportMutableNotificationExpediteService, MutableNotificationExpediteSe
  * Factory that assembles the full {@link NotificationServerActionsContext} by combining
  * the base context with the template, send, task, and expedite services.
  *
- * @param context - the base server actions context
- * @param notificationTemplateService - resolves message factories for notification template types
- * @param notificationSendService - handles sending notification messages
- * @param notificationTaskService - handles notification task dispatch
- * @param notificationsExpediteService - expedites immediate notification delivery
- * @returns the assembled {@link NotificationServerActionsContext}
+ * @param context - The base server actions context.
+ * @param notificationTemplateService - Resolves message factories for notification template types.
+ * @param notificationSendService - Handles sending notification messages.
+ * @param notificationTaskService - Handles notification task dispatch.
+ * @param notificationsExpediteService - Expedites immediate notification delivery.
+ * @returns The assembled {@link NotificationServerActionsContext}
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function notificationServerActionsContextFactory(context: BaseNotificationServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService, notificationsExpediteService: NotificationExpediteService) {
@@ -28,8 +28,8 @@ export function notificationServerActionsContextFactory(context: BaseNotificatio
 /**
  * Factory that creates a {@link NotificationServerActions} instance from the assembled context.
  *
- * @param context - the assembled notification server actions context
- * @returns a new {@link NotificationServerActions} instance
+ * @param context - The assembled notification server actions context.
+ * @returns A new {@link NotificationServerActions} instance.
  */
 export function notificationServerActionsFactory(context: NotificationServerActionsContext) {
   return notificationServerActions(context);
@@ -39,9 +39,9 @@ export function notificationServerActionsFactory(context: NotificationServerActi
  * Factory that creates a {@link NotificationInitServerActions} instance by merging the
  * server actions context with the init-specific configuration.
  *
- * @param context - the assembled notification server actions context
- * @param notificationInitServerActionsContextConfig - init-specific configuration
- * @returns a new {@link NotificationInitServerActions} instance
+ * @param context - The assembled notification server actions context.
+ * @param notificationInitServerActionsContextConfig - Init-specific configuration.
+ * @returns A new {@link NotificationInitServerActions} instance.
  */
 export function notificationInitServerActionsFactory(context: NotificationServerActionsContext, notificationInitServerActionsContextConfig: NotificationInitServerActionsContextConfig) {
   return notificationInitServerActions({
@@ -78,8 +78,8 @@ export interface ProvideAppNotificationMetadataConfig extends Pick<ModuleMetadat
  *
  * Be sure the class that delares the module using this function also extends AbstractAppNotificationModule.
  *
- * @param config - module metadata configuration including dependency module and additional providers
- * @returns the assembled {@link ModuleMetadata} for the notification module
+ * @param config - Module metadata configuration including dependency module and additional providers.
+ * @returns The assembled {@link ModuleMetadata} for the notification module.
  */
 export function appNotificationModuleMetadata(config: ProvideAppNotificationMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

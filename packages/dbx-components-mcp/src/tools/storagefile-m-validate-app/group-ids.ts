@@ -22,7 +22,7 @@ export const GROUP_IDS_FUNCTION_SUFFIXES: readonly string[] = ['StorageFileGroup
  * recognised group-ids suffix stripped, or the input unchanged when
  * no recognised suffix is present.
  *
- * @param name The helper-function name to inspect.
+ * @param name - The helper-function name to inspect.
  * @returns The stripped prefix, or the input unchanged.
  */
 export function stripGroupIdsSuffix(name: string): string {

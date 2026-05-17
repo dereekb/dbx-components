@@ -23,6 +23,7 @@ import type { ArrayItemDefinitionTemplate } from '@ng-forge/dynamic-forms';
  * @returns A new `ArrayItemDefinitionTemplate` with `value` populated on each leaf field, or the input `template` reference when `sourceItem` is not an object.
  *
  * @example
+ * ```ts
  * // Duplicate an existing item by cloning its template with its values stamped in
  * const template = [
  *   { key: 'name', type: 'input', value: '' },
@@ -30,6 +31,7 @@ import type { ArrayItemDefinitionTemplate } from '@ng-forge/dynamic-forms';
  * ];
  * const duplicated = dbxForgeArrayFieldTemplateWithItemValues(template, { name: 'hello', disabled: true });
  * // duplicated[0].value === 'hello', duplicated[1].value === true
+ * ```
  */
 export function dbxForgeArrayFieldTemplateWithItemValues(template: ArrayItemDefinitionTemplate, sourceItem: unknown): ArrayItemDefinitionTemplate {
   let result: ArrayItemDefinitionTemplate = template;

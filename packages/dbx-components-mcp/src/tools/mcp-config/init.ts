@@ -21,6 +21,7 @@
  * preserved when present.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { writeFile as nodeWriteFile, mkdir as nodeMkdir, readFile as nodeReadFile } from 'node:fs/promises';
 import { dirname, relative, resolve } from 'node:path';
 import { DOWNSTREAM_CLUSTERS, type DownstreamCluster } from '../../scan/discover-downstream-packages.js';
@@ -51,7 +52,7 @@ export type InitReadFile = (absolutePath: string) => Promise<string>;
 export interface InitFileChange {
   readonly absolutePath: string;
   readonly relativePath: string;
-  readonly before: string | null;
+  readonly before: Maybe<string>;
   readonly after: string;
   readonly reason: 'new' | 'updated' | 'unchanged';
 }
@@ -86,7 +87,7 @@ const CLUSTER_FILENAME_SEGMENT: Record<DownstreamCluster, string> = {
   filters: 'filters'
 };
 
-function changeReason(before: string | null, after: string): InitFileChange['reason'] {
+function changeReason(before: Maybe<string>, after: string): InitFileChange['reason'] {
   if (before === null) return 'new';
   if (after === before) return 'unchanged';
   return 'updated';
@@ -137,10 +138,10 @@ const DEFAULT_EXCLUDE: readonly string[] = ['**/*.spec.ts', '**/*.test.ts', '**/
  * never touches disk. The caller passes the result into {@link applyInitPlan}
  * (or just renders the diff for `dryRun`).
  *
- * @param input - the snapshot to plan against plus an optional reader hook
- * @param input.snapshot - the workspace snapshot
- * @param input.readFile - injectable file reader (defaults to node:fs/promises.readFile)
- * @returns a planned set of file changes (may be empty)
+ * @param input - The snapshot to plan against plus an optional reader hook.
+ * @param input.snapshot - The workspace snapshot.
+ * @param input.readFile - Injectable file reader (defaults to node:fs/promises.readFile)
+ * @returns A planned set of file changes (may be empty)
  */
 export async function buildInitPlan(input: { readonly snapshot: WorkspaceSnapshot; readonly readFile?: InitReadFile }): Promise<InitPlan> {
   const { snapshot } = input;
@@ -166,10 +167,10 @@ export async function buildInitPlan(input: { readonly snapshot: WorkspaceSnapsho
  * Writes every change in `plan` to disk via the injected `writeFile`. Skips
  * `unchanged` entries.
  *
- * @param plan - the planned set of changes from {@link buildInitPlan}
- * @param opts - injectable writers (default to node:fs/promises)
- * @param opts.writeFile - replaces the default file writer
- * @param opts.mkdir - replaces the default directory creator
+ * @param plan - The planned set of changes from {@link buildInitPlan}
+ * @param opts - Injectable writers (default to node:fs/promises)
+ * @param opts.writeFile - Replaces the default file writer.
+ * @param opts.mkdir - Replaces the default directory creator.
  */
 export async function applyInitPlan(plan: InitPlan, opts?: { readonly writeFile?: InitWriteFile; readonly mkdir?: InitMkdir }): Promise<void> {
   const writeFile = opts?.writeFile ?? defaultWriteFile;
@@ -326,7 +327,7 @@ function serializeJson(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-function parseExisting(text: string | null): ScanFileShape | null {
+function parseExisting(text: Maybe<string>): Maybe<ScanFileShape> {
   if (text === null) return null;
   try {
     return JSON.parse(text) as ScanFileShape;
@@ -346,7 +347,7 @@ function cloneConfig(config: NonNullable<WorkspaceSnapshot['config']>): MutableC
   return out;
 }
 
-async function tryRead(path: string, readFile: InitReadFile): Promise<string | null> {
+async function tryRead(path: string, readFile: InitReadFile): Promise<Maybe<string>> {
   try {
     return await readFile(path);
   } catch {

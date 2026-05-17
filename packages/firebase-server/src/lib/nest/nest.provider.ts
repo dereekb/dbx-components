@@ -52,8 +52,9 @@ export abstract class AbstractNestContext {
   /**
    * Returns the NestJS application context.
    *
-   * @deprecated use nestApplication instead.
    * @returns The NestJS application context.
+   *
+   * @deprecated use nestApplication instead.
    */
   get nest(): INestApplicationContext {
     return this._nestApplication;
@@ -150,12 +151,11 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
    * When called without a `use` function, returns the {@link ContextGrantedModelRolesReader}
    * which provides access to the document and its granted roles.
    *
-   * @throws Throws {@link nestFirebaseDoesNotExistError} if the document does not exist.
-   * @throws Throws {@link nestFirebaseForbiddenPermissionError} if the caller lacks the requested roles.
-   *
    * @param type - The model type string (e.g., 'profile', 'guestbook').
    * @param select - Selection params including key, roles, and optional use function.
    * @returns The result of the `use` function, or the roles reader if no `use` function is provided.
+   * @throws Throws {@link nestFirebaseDoesNotExistError} if the document does not exist.
+   * @throws Throws {@link nestFirebaseForbiddenPermissionError} if the caller lacks the requested roles.
    */
   async useModel<T extends FirebaseModelsServiceTypes<Y>, O>(type: T, select: UseModelInput<FirebaseAppModelContext<A>, Y, T, O>): Promise<O>;
   async useModel<T extends FirebaseModelsServiceTypes<Y>>(type: T, select: UseModelInputForRolesReader<FirebaseAppModelContext<A>, Y, T>): Promise<FirebaseModelsServiceSelectionResultRolesReader<Y, T>>;
@@ -183,9 +183,9 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
    * {@link nestFirebaseForbiddenPermissionError}. These errors are captured per-key
    * and passed to the `use` function via the failure array (unless `throwOnFirstError` is true).
    *
-   * @param type - the model type to load
-   * @param select - selection params including keys array, roles, and use function
-   * @returns the result of the use function
+   * @param type - The model type to load.
+   * @param select - Selection params including keys array, roles, and use function.
+   * @returns The result of the use function.
    *
    * @example
    * ```ts

@@ -27,10 +27,9 @@ export interface AbstractFormExpandSectionConfig<T extends object = object> exte
 /**
  * Default value existence check that returns `true` if the object is non-empty.
  *
- * @param x - The object to check for non-emptiness
- * @returns True if the object has at least one own property
- *
- * @param x - The object to check for non-emptiness
+ * @param x - The object to check for non-emptiness.
+ * @param x - The object to check for non-emptiness.
+ * @returns True if the object has at least one own property.
  */
 export const DEFAULT_HAS_VALUE_FN = (x: object) => !objectIsEmpty(x);
 

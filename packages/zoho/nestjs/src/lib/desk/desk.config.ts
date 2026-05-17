@@ -25,7 +25,7 @@ export abstract class ZohoDeskServiceConfig {
   /**
    * Validates that the required Zoho Desk connection fields are present and well-formed.
    *
-   * @param config - the Desk service config to validate
+   * @param config - The Desk service config to validate.
    */
   static assertValidConfig(config: ZohoDeskServiceConfig) {
     assertValidZohoConfig(config.zohoDesk);

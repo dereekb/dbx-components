@@ -50,7 +50,7 @@ interface ReconcileDeclaredInput {
  * appends a {@link ReconciledEntry}, and emits `MISSING_HANDLER` issues
  * for entries the app does not wire.
  *
- * @param input - declared entries, handler lookup, plus output buffers
+ * @param input - Declared entries, handler lookup, plus output buffers.
  */
 function reconcileDeclared(input: ReconcileDeclaredInput): void {
   const { declared, handlerMap, seenKeys, entries, issues } = input;
@@ -85,7 +85,7 @@ interface FlagOrphanHandlersInput {
  * cell was not consumed by a declaration. Appends a synthetic
  * {@link ReconciledEntry} so the output table stays exhaustive.
  *
- * @param input - handlers to flag plus output buffers
+ * @param input - Handlers to flag plus output buffers.
  */
 function flagOrphanHandlers(input: FlagOrphanHandlersInput): void {
   const { handlers, seenKeys, entries, issues } = input;

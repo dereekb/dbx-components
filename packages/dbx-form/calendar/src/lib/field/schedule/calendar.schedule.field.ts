@@ -2,6 +2,7 @@ import { type DescriptionFieldConfig, type FieldConfig, formlyField, type Labele
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormCalendarDateCellScheduleRangeFieldProps } from './calendar.schedule.field.component';
 
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use DbxForgeCalendarDateScheduleRangeFieldConfig instead.
  */
@@ -10,9 +11,10 @@ export interface DateScheduleRangeFieldConfig extends Omit<LabeledBaseFieldConfi
 /**
  * Creates a Formly field configuration for a date schedule range picker with calendar-based selection.
  *
+ * @param config - Optional schedule range field configuration overrides.
+ * @returns A validated Formly field configuration for date schedule range selection.
+ *
  * @deprecated Use dbxForgeDateScheduleRangeField() from the forge API instead.
- * @param config - Optional schedule range field configuration overrides
- * @returns A validated Formly field configuration for date schedule range selection
  */
 export function dateScheduleRangeField(config: DateScheduleRangeFieldConfig = {}): FormlyFieldConfig {
   const { key = 'schedule', appearance, hideCustomize, allowTextInput, filter, outputTimezone, initialSelectionState, computeSelectionResultRelativeToFilter, exclusions, defaultScheduleDays, minMaxDateRange, cellContentFactory, dialogContentConfig, customDetailsConfig } = config;

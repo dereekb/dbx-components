@@ -6,17 +6,20 @@ import { clean } from './clean';
  *
  * Must be run within an Angular injection context.
  *
- * @example
- * // Pass a destroy function directly:
- * cleanDestroy(() => resource.release());
+ * @param input - Optional destroy function to wrap.
+ * @returns A DestroyFunctionObject that will be automatically destroyed when the context is destroyed.
  *
  * @example
+ * ```ts
+ * // Pass a destroy function directly:
+ * cleanDestroy(() => resource.release());
+ * ```
+ * @example
+ * ```ts
  * // Create first, then set the destroy function later:
  * readonly _destroy = cleanDestroy();
  * this._destroy.setDestroyFunction(() => resource.release());
- *
- * @param input - Optional destroy function to wrap.
- * @returns A DestroyFunctionObject that will be automatically destroyed when the context is destroyed.
+ * ```
  */
 export function cleanDestroy(input?: Maybe<DestroyFunction>): DestroyFunctionObject {
   const destroyFunction = new DestroyFunctionObject(input);

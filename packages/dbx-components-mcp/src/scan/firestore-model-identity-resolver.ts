@@ -77,8 +77,8 @@ export interface FirestoreModelIdentityResolver {
  * Calls that don't match any of these shapes are skipped silently — the
  * extractor only consumes successful matches.
  *
- * @param project - the ts-morph project whose source files to scan
- * @returns the resolver
+ * @param project - The ts-morph project whose source files to scan.
+ * @returns The resolver.
  */
 export function buildIdentityResolverFromProject(project: Project): FirestoreModelIdentityResolver {
   const records: ResolvedFirestoreModelIdentity[] = [];
@@ -110,8 +110,8 @@ export function buildIdentityResolverFromProject(project: Project): FirestoreMod
  * MCP tool runtime has access to {@link FIREBASE_MODELS} + the downstream
  * catalog and doesn't need to rescan source files.
  *
- * @param records - the resolved identity records
- * @returns the resolver
+ * @param records - The resolved identity records.
+ * @returns The resolver.
  */
 export function buildIdentityResolverFromRecords(records: readonly ResolvedFirestoreModelIdentity[]): FirestoreModelIdentityResolver {
   return buildResolverFromRecords(records);
@@ -206,8 +206,8 @@ function buildResolverFromRecords(records: readonly ResolvedFirestoreModelIdenti
  * Converts `JobLocationWeek` → `jobLocationWeek`. Pass-through when the
  * input is already camelCase.
  *
- * @param typeName - the TypeScript type name
- * @returns the lowerCamelCase identifier
+ * @param typeName - The TypeScript type name.
+ * @returns The lowerCamelCase identifier.
  */
 export function toCamelCase(typeName: string): string {
   if (typeName.length === 0) {

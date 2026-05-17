@@ -18,8 +18,8 @@ export interface ChipTextFieldConfig extends LabeledFieldConfig, StringValueFiel
  * Creates a searchable chip field for freeform text entry where each entered string
  * becomes a chip. Values are lowercased by default unless `caseSensitive` is true.
  *
- * @param config - Text chip field configuration
- * @returns A {@link FormlyFieldConfig} for text chip input
+ * @param config - Text chip field configuration.
+ * @returns A {@link FormlyFieldConfig} for text chip input.
  *
  * @example
  * ```typescript

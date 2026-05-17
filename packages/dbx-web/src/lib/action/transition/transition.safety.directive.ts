@@ -83,7 +83,7 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
       combineLatest([this.source.isModified$, this.safetyType$]).pipe(
         first(),
         mergeMap(([isModified, safetyType]) => {
-          const obs = isModified
+          return isModified
             ? race([
                 // Watch for success to occur. At that point, close everything.
                 this.source.success$.pipe(
@@ -102,8 +102,6 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
                 delay(10) // Delay to allow dialog to close before transition.
               )
             : of(true);
-
-          return obs;
         })
       )
     ).then((x) => x); // Resolve/Flatten potential promise result.

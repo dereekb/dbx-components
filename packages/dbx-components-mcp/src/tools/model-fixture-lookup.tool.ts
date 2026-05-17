@@ -88,8 +88,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
  * model name used as the fixture entry key. Strips the trailing
  * `Identity` suffix (case-insensitive) and PascalCases the remainder.
  *
- * @param identity - the identity const string (e.g. `profileIdentity`)
- * @returns the bare PascalCase model name (e.g. `Profile`)
+ * @param identity - The identity const string (e.g. `profileIdentity`)
+ * @returns The bare PascalCase model name (e.g. `Profile`)
  */
 function identityToModel(identity: string): string {
   const stem = identity.replace(/Identity$/i, '');

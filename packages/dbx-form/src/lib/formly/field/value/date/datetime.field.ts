@@ -20,7 +20,7 @@ export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate' | 'timeOnly'>
  * Factory that returns an observable of a date-time picker configuration
  * that automatically selects the next upcoming time, rounded down to the nearest minute.
  *
- * @returns An observable emitting a picker configuration with takeNextUpcomingTime and roundDownToMinute enabled
+ * @returns An observable emitting a picker configuration with takeNextUpcomingTime and roundDownToMinute enabled.
  */
 export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DbxDateTimePickerConfiguration> = () =>
   of({
@@ -31,10 +31,9 @@ export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DbxDateTimePic
 /**
  * Same as DateTime field but with the Date input hidden by default.
  *
- * @param config - Optional time field configuration overrides
- * @returns A {@link FormlyFieldConfig} configured as a time-only input
- *
- * @param config - Optional time field configuration overrides
+ * @param config - Optional time field configuration overrides.
+ * @param config - Optional time field configuration overrides.
+ * @returns A {@link FormlyFieldConfig} configured as a time-only input.
  */
 export function formlyTimeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFieldConfig {
   return formlyDateTimeField({
@@ -111,8 +110,8 @@ export interface DateDateRangeFieldConfig extends Pick<DateTimeFieldConfig, 'tim
  * Creates a pair of date pickers for selecting a date range (start and end dates)
  * arranged in a flex layout. The pickers are synchronized so the start date stays before the end date.
  *
- * @param config - Date range configuration with optional start/end overrides
- * @returns A {@link FormlyFieldConfig} containing the start and end date field pair
+ * @param config - Date range configuration with optional start/end overrides.
+ * @returns A {@link FormlyFieldConfig} containing the start and end date field pair.
  *
  * @example
  * ```typescript
@@ -182,8 +181,8 @@ export interface DateDateTimeRangeFieldConfig extends Pick<DateTimeFieldConfig, 
  * Creates a pair of time-only pickers for selecting a time range (start and end times)
  * arranged in a flex layout.
  *
- * @param inputConfig - Time range configuration with optional start/end overrides
- * @returns A {@link FormlyFieldConfig} containing the start and end time field pair
+ * @param inputConfig - Time range configuration with optional start/end overrides.
+ * @returns A {@link FormlyFieldConfig} containing the start and end time field pair.
  *
  * @example
  * ```typescript
