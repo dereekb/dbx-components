@@ -57,6 +57,20 @@ export const oldName = NEW_NAME;
       expect(errors).toHaveLength(0);
     });
 
+    it('deprecated overload signature kept adjacent to its implementation passes', () => {
+      const errors = lintCode(`
+export function foo(a: number): string;
+/**
+ * @deprecated use the object form.
+ */
+export function foo(a: number, b: number): string;
+export function foo(a: number, b?: number): string {
+  return String(a) + (b ?? '');
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+
     it('two deprecated aliases stacked under the marker pass', () => {
       const errors = lintCode(`
 export const A = 1;

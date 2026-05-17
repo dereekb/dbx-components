@@ -80,7 +80,11 @@ function isAnalyzableExportLike(node: AstNode): boolean {
   let analyzable = false;
 
   if (node.type === 'ExportNamedDeclaration' && node.declaration) {
-    analyzable = true;
+    // Overload signatures (TSDeclareFunction) must stay adjacent to their implementation;
+    // do not classify the deprecated overload as a free-standing alias the rule can relocate.
+    if (node.declaration.type !== 'TSDeclareFunction') {
+      analyzable = true;
+    }
   } else if (node.type === 'ExportDefaultDeclaration') {
     analyzable = true;
   } else if (node.type === 'VariableDeclaration' || node.type === 'FunctionDeclaration' || node.type === 'ClassDeclaration' || node.type === 'TSInterfaceDeclaration' || node.type === 'TSTypeAliasDeclaration' || node.type === 'TSEnumDeclaration') {
