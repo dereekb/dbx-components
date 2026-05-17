@@ -121,7 +121,18 @@ export default [
       'dereekb-util/no-inline-type-import': 'warn', // dbx__note__typescript-programming → No Inline Type Imports
       'dereekb-util/require-deprecated-alias-placement': 'warn', // dbx__note__typescript-programming → Deprecated Alias Placement
       'dereekb-util/prefer-canonical-jsdoc': 'warn', // dbx__note__typescript-jsdocs → canonical JSDoc shape (description format, tag order, @param/@returns/@throws style, fenced @example, anti-type-restating)
-      'dereekb-util/require-dbx-util-companion-tags': 'warn' // dbx-components-mcp util registry: enforce @dbxUtilCategory + valid @dbxUtilKind / @dbxUtilRelated / @dbxUtilTags formats on @dbxUtil-tagged exports
+      'dereekb-util/require-dbx-util-companion-tags': 'warn', // dbx-components-mcp util registry: enforce @dbxUtilCategory + valid @dbxUtilKind / @dbxUtilRelated / @dbxUtilTags formats on @dbxUtil-tagged exports
+      'dereekb-util/require-dbx-pipe-companion-tags': 'warn', // dbx-components-mcp pipes registry: enforce @dbxPipeSlug + @dbxPipeCategory enum on @dbxPipe-tagged classes
+      'dereekb-util/require-dbx-filter-companion-tags': 'warn', // dbx-components-mcp filters registry: enforce @dbxFilterSlug on @dbxFilter-tagged directives/patterns
+      'dereekb-util/require-dbx-web-companion-tags': 'warn', // dbx-components-mcp ui-components registry: enforce @dbxWebSlug + @dbxWebCategory enum on @dbxWebComponent-tagged classes
+      'dereekb-util/require-dbx-docs-ui-example-companion-tags': 'warn', // dbx-components-mcp docs-ui-examples registry: enforce @dbxDocsUiExampleSlug + Category + Summary on @dbxDocsUiExample-tagged classes
+      'dereekb-util/require-dbx-model-snapshot-field-companion-tags': 'warn', // dbx-components-mcp snapshot-fields registry: validate @dbxModelSnapshotField* companion formats
+      'dereekb-util/require-dbx-model-firebase-index-companion-tags': 'warn', // dbx-components-mcp firebase-index registry: enforce @dbxModelFirebaseIndexModel on @dbxModelFirebaseIndex-tagged factories
+      'dereekb-util/require-dbx-action-companion-tags': 'warn', // dbx-components-mcp actions registry: enforce @dbxActionSlug + state enum on @dbxAction-tagged classes/enums
+      'dereekb-util/require-dbx-form-field-companion-tags': 'warn', // dbx-components-mcp forge-fields registry: enforce tier-specific @dbxForm* tags on @dbxFormField-tagged factories
+      'dereekb-util/require-dbx-model-companion-tags': 'warn', // dbx-components-mcp model registry: enforce @dbxModel marker semantics, archetype/aggregatesFrom/compositeKey formats
+      'dereekb-util/require-dbx-auth-companion-tags': 'warn', // dbx-components-mcp auth registry: enforce @dbxAuthClaimsApp / @dbxAuthClaim / @dbxAuthClaimsService location + slug formats
+      'dereekb-util/require-dbx-rule-companion-tags': 'warn' // dbx-components-mcp rule catalog: enforce @dbxRuleSeverity/Applies/NotApplies/Fix on @dbxRule-tagged enum members
     }
   },
   {

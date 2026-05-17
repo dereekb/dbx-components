@@ -1,5 +1,6 @@
-import { getStatementAnchor } from './comments';
-import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
+import { getStatementAnchor, leadingJsdocFor } from './comments';
+import { parseJsdocComment } from './jsdoc-parser';
+import { buildLowercaseTagsFix, checkDbxTagFamily, findFamilyTags, reportOnJsdocLine, type DbxCompanionTagSpec, type DbxTagFamilySpec, type DbxTagViolation } from './dbx-tag-families';
 
 type AstNode = any;
 
@@ -14,12 +15,6 @@ const DEFAULT_KNOWN_COMPANIONS: readonly string[] = ['Category', 'Kind', 'Tags',
  * `packages/dbx-components-mcp/src/scan/utils-extract.ts`.
  */
 const DEFAULT_ALLOWED_KINDS: readonly string[] = ['function', 'class', 'const', 'factory'];
-
-/**
- * Kebab-case slug pattern: lowercase letters and digits, words separated by single hyphens,
- * starts with a letter. Used to validate `@dbxUtilCategory` and `@dbxUtilRelated` values.
- */
-const KEBAB_SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
 /**
  * Options for the require-dbx-util-companion-tags rule.
@@ -60,36 +55,6 @@ export interface UtilRequireDbxUtilCompanionTagsRuleDefinition {
     readonly schema: readonly object[];
   };
   create(context: { options: UtilRequireDbxUtilCompanionTagsRuleOptions[]; report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => AstNode | AstNode[] | null }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
-}
-
-/**
- * Returns the source-text offset of an offset-within-comment-value, given a Block comment node.
- *
- * @param commentNode - The ESLint Block comment AST node.
- * @param valueOffset - The character offset within `comment.value`.
- * @returns The character offset in the source file.
- */
-function commentValueToSourceOffset(commentNode: AstNode, valueOffset: number): number {
-  return commentNode.range[0] + 2 + valueOffset;
-}
-
-/**
- * Splits a comma-separated tag-value string into trimmed items, preserving order.
- *
- * @param value - The raw text after the tag name on a single line.
- * @returns An array of non-empty trimmed items.
- *
- * @example
- * ```ts
- * splitCommaSeparated('boolean, array, reduce'); // ['boolean', 'array', 'reduce']
- * splitCommaSeparated('  '); // []
- * ```
- */
-function splitCommaSeparated(value: string): string[] {
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
 }
 
 /**
@@ -150,183 +115,120 @@ export const utilRequireDbxUtilCompanionTagsRule: UtilRequireDbxUtilCompanionTag
     const knownCompanions = options.knownCompanions ?? DEFAULT_KNOWN_COMPANIONS;
     const requireBareMarker = options.requireBareMarker !== false;
 
-    function reportOnLine(commentNode: AstNode, parsed: ParsedJsdoc, lineIndex: number, messageId: string, data?: Record<string, string>, fix?: (fixer: AstNode) => AstNode | AstNode[] | null): void {
-      const line = parsed.lines[lineIndex];
-      const startInValue = line?.textOffsetStart ?? 0;
-      const endInValue = startInValue + (line?.text?.length ?? 0);
-      const start = commentValueToSourceOffset(commentNode, startInValue);
-      const end = commentValueToSourceOffset(commentNode, endInValue);
-      context.report({
-        loc: {
-          start: sourceCode.getLocFromIndex(start),
-          end: sourceCode.getLocFromIndex(end)
-        },
-        messageId,
-        data,
-        fix
-      });
-    }
-
-    function dbxUtilFamilyTags(parsed: ParsedJsdoc): readonly ParsedJsdocTag[] {
-      return parsed.tags.filter((t) => t.tag === 'dbxUtil' || t.tag.startsWith('dbxUtil'));
-    }
+    const allCompanions: readonly DbxCompanionTagSpec[] = [
+      { suffix: 'Category', required: true, format: { kind: 'kebab-slug' } },
+      { suffix: 'Kind', format: { kind: 'enum', values: allowedKinds } },
+      { suffix: 'Tags', format: { kind: 'comma-list-lowercase' } },
+      { suffix: 'Related', format: { kind: 'comma-list-kebab-slug' } }
+    ];
+    const spec: DbxTagFamilySpec = {
+      marker: 'dbxUtil',
+      companions: allCompanions.filter((c) => knownCompanions.includes(c.suffix))
+    };
 
     function checkJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
-      const family = dbxUtilFamilyTags(parsed);
-      if (family.length === 0) return;
-
-      const markerTag = parsed.tags.find((t) => t.tag === 'dbxUtil');
+      const { markerTag, familyTags } = findFamilyTags(parsed, spec.marker);
+      if (familyTags.length === 0) return;
       if (requireBareMarker && !markerTag) return;
-      const triggerTag = markerTag ?? family[0];
+      const triggerTag = markerTag ?? familyTags[0];
 
-      const companionByName = new Map<string, ParsedJsdocTag[]>();
-      for (const tag of family) {
-        if (tag.tag === 'dbxUtil') continue;
-        const companionName = tag.tag.slice('dbxUtil'.length);
-        const list = companionByName.get(companionName) ?? [];
-        list.push(tag);
-        companionByName.set(companionName, list);
-      }
+      const violations: DbxTagViolation[] = [];
+      checkDbxTagFamily({ parsed, spec, markerTag: triggerTag, familyTags, emit: (v) => violations.push(v) });
 
-      // Unknown companions.
-      for (const [companionName, instances] of companionByName.entries()) {
-        if (!knownCompanions.includes(companionName)) {
-          for (const tag of instances) {
-            reportOnLine(commentNode, parsed, tag.startLineIndex, 'unknownDbxUtilTag', { name: companionName, known: knownCompanions.join(', ') });
+      let kebabFailedForCategory = false;
+      for (const v of violations) {
+        const isCategory = v.suffix === 'Category';
+        switch (v.kind) {
+          case 'missing': {
+            if (isCategory) {
+              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'missingCategory', report: context.report });
+            }
+            break;
           }
-        }
-      }
-
-      // Duplicates.
-      for (const [companionName, instances] of companionByName.entries()) {
-        if (companionName === 'Category') continue; // reported separately as multipleCategoryTags
-        if (instances.length > 1) {
-          for (let i = 1; i < instances.length; i += 1) {
-            reportOnLine(commentNode, parsed, instances[i].startLineIndex, 'duplicateCompanionTag', { name: companionName });
+          case 'empty': {
+            if (isCategory) {
+              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'emptyCategory', report: context.report });
+            }
+            break;
           }
-        }
-      }
-
-      // Category presence + format.
-      const categoryTags = companionByName.get('Category') ?? [];
-      if (categoryTags.length === 0) {
-        reportOnLine(commentNode, parsed, triggerTag.startLineIndex, 'missingCategory');
-      } else {
-        if (categoryTags.length > 1) {
-          for (let i = 1; i < categoryTags.length; i += 1) {
-            reportOnLine(commentNode, parsed, categoryTags[i].startLineIndex, 'multipleCategoryTags');
+          case 'invalid-kebab': {
+            if (isCategory) {
+              kebabFailedForCategory = true;
+              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidCategoryFormat', data: { value: v.value }, report: context.report });
+            }
+            break;
           }
-        }
-        const value = categoryTags[0].description.trim();
-        if (value.length === 0) {
-          reportOnLine(commentNode, parsed, categoryTags[0].startLineIndex, 'emptyCategory');
-        } else if (!KEBAB_SLUG_PATTERN.test(value)) {
-          reportOnLine(commentNode, parsed, categoryTags[0].startLineIndex, 'invalidCategoryFormat', { value });
-        } else if (allowedCategories && !allowedCategories.includes(value)) {
-          reportOnLine(commentNode, parsed, categoryTags[0].startLineIndex, 'invalidCategoryFormat', { value });
-        }
-      }
-
-      // Kind enum.
-      const kindTags = companionByName.get('Kind') ?? [];
-      for (const tag of kindTags) {
-        const value = tag.description.trim();
-        if (value.length > 0 && !allowedKinds.includes(value)) {
-          reportOnLine(commentNode, parsed, tag.startLineIndex, 'invalidKind', { value, allowed: allowedKinds.join(', ') });
-        }
-      }
-
-      // Related slugs.
-      const relatedTags = companionByName.get('Related') ?? [];
-      for (const tag of relatedTags) {
-        const items = splitCommaSeparated(tag.description);
-        for (const item of items) {
-          if (!KEBAB_SLUG_PATTERN.test(item)) {
-            reportOnLine(commentNode, parsed, tag.startLineIndex, 'relatedNotKebab', { value: item });
+          case 'invalid-enum': {
+            if (v.suffix === 'Kind') {
+              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidKind', data: { value: v.value, allowed: v.allowed.join(', ') }, report: context.report });
+            }
+            break;
           }
+          case 'comma-item-not-kebab': {
+            if (v.suffix === 'Related') {
+              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'relatedNotKebab', data: { value: v.value }, report: context.report });
+            }
+            break;
+          }
+          case 'tags-not-lowercase': {
+            if (v.suffix === 'Tags') {
+              const fix = buildLowercaseTagsFix({ commentNode, parsed, sourceCode, tag: v.raw });
+              const fixer = fix ? (fixer2: AstNode) => fixer2.replaceTextRange([fix.startOffset, fix.endOffset], fix.replacement) : undefined;
+              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'tagsNotLowercase', data: { value: v.value }, report: context.report, fix: fixer });
+            }
+            break;
+          }
+          case 'unknown': {
+            reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'unknownDbxUtilTag', data: { name: v.suffix, known: knownCompanions.join(', ') }, report: context.report });
+            break;
+          }
+          case 'duplicate': {
+            if (isCategory) {
+              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'multipleCategoryTags', report: context.report });
+            } else {
+              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'duplicateCompanionTag', data: { name: v.suffix }, report: context.report });
+            }
+            break;
+          }
+          default:
+            break;
         }
       }
 
-      // Tags lowercase — fixable: lowercase the offending tokens on the tag line.
-      const tagsTags = companionByName.get('Tags') ?? [];
-      for (const tag of tagsTags) {
-        const items = splitCommaSeparated(tag.description);
-        const hasUppercase = items.some((item) => /[A-Z]/.test(item));
-        if (!hasUppercase) continue;
-
-        const tagLine = parsed.lines[tag.startLineIndex];
-        const tagLineSourceStart = commentValueToSourceOffset(commentNode, tagLine.textOffsetStart);
-        const tagLineSourceEnd = tagLineSourceStart + tagLine.text.length;
-        const sourceText = sourceCode.getText();
-        const lineSource = sourceText.slice(tagLineSourceStart, tagLineSourceEnd);
-        const lowered = lineSource.replace(/(@dbxUtilTags\s+)(.*)$/, (_match: string, prefix: string, body: string) => `${prefix}${body.toLowerCase()}`);
-
-        for (const item of items) {
-          if (/[A-Z]/.test(item)) {
-            context.report({
-              loc: {
-                start: sourceCode.getLocFromIndex(tagLineSourceStart),
-                end: sourceCode.getLocFromIndex(tagLineSourceEnd)
-              },
-              messageId: 'tagsNotLowercase',
-              data: { value: item },
-              fix: lowered === lineSource ? undefined : (fixer: AstNode) => fixer.replaceTextRange([tagLineSourceStart, tagLineSourceEnd], lowered)
-            });
+      // Apply the allowedCategories option on top of the kebab-format result.
+      // Skipped when the kebab check already flagged the category — the original
+      // semantics used `else if` so only one invalidCategoryFormat fires.
+      if (allowedCategories && !kebabFailedForCategory) {
+        const categoryTags = familyTags.filter((t) => t.tag === 'dbxUtilCategory');
+        if (categoryTags.length > 0) {
+          const first = categoryTags[0];
+          const value = first.description.trim();
+          if (value.length > 0 && !allowedCategories.includes(value)) {
+            reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: first.startLineIndex, messageId: 'invalidCategoryFormat', data: { value }, report: context.report });
           }
         }
       }
     }
 
-    function leadingJsdocFor(anchor: AstNode): AstNode | null {
-      const comments: AstNode[] = sourceCode.getCommentsBefore(anchor) || [];
-      let result: AstNode | null = null;
-
-      for (const comment of comments) {
-        if (comment.type === 'Block' && typeof comment.value === 'string' && comment.value.startsWith('*')) {
-          result = comment;
-        }
-      }
-
-      return result;
-    }
-
-    function visitFunctionDeclaration(node: AstNode): void {
-      if (!node.body) return;
-      const jsdoc = leadingJsdocFor(getStatementAnchor(node));
+    function visit(node: AstNode, anchorParentTypes: readonly string[]): void {
+      const anchor = node.parent && anchorParentTypes.includes(node.parent.type) ? node.parent : node;
+      const jsdoc = leadingJsdocFor(sourceCode, anchor);
       if (jsdoc) checkJsdoc(jsdoc);
     }
 
-    function visitVariableDeclaration(node: AstNode): void {
-      const anchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
-      const jsdoc = leadingJsdocFor(anchor);
-      if (jsdoc) checkJsdoc(jsdoc);
-    }
-
-    function visitClassDeclaration(node: AstNode): void {
-      const anchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
-      const jsdoc = leadingJsdocFor(anchor);
-      if (jsdoc) checkJsdoc(jsdoc);
-    }
-
-    function visitInterfaceDeclaration(node: AstNode): void {
-      const anchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
-      const jsdoc = leadingJsdocFor(anchor);
-      if (jsdoc) checkJsdoc(jsdoc);
-    }
-
-    function visitTypeAlias(node: AstNode): void {
-      const anchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
-      const jsdoc = leadingJsdocFor(anchor);
-      if (jsdoc) checkJsdoc(jsdoc);
-    }
+    const exportAnchors: readonly string[] = ['ExportNamedDeclaration', 'ExportDefaultDeclaration'];
 
     return {
-      FunctionDeclaration: visitFunctionDeclaration,
-      VariableDeclaration: visitVariableDeclaration,
-      ClassDeclaration: visitClassDeclaration,
-      TSInterfaceDeclaration: visitInterfaceDeclaration,
-      TSTypeAliasDeclaration: visitTypeAlias
+      FunctionDeclaration: (node: AstNode) => {
+        if (!node.body) return;
+        const jsdoc = leadingJsdocFor(sourceCode, getStatementAnchor(node));
+        if (jsdoc) checkJsdoc(jsdoc);
+      },
+      VariableDeclaration: (node: AstNode) => visit(node, exportAnchors),
+      ClassDeclaration: (node: AstNode) => visit(node, exportAnchors),
+      TSInterfaceDeclaration: (node: AstNode) => visit(node, exportAnchors),
+      TSTypeAliasDeclaration: (node: AstNode) => visit(node, exportAnchors)
     };
   }
 };

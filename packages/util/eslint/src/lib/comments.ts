@@ -99,6 +99,28 @@ export function getStatementAnchor(node: AstNode): AstNode {
 }
 
 /**
+ * Returns the JSDoc Block comment immediately preceding `anchor`, or `null` when
+ * the anchor has no JSDoc leader. Used by the `@dbx<Family>` companion-tag rules
+ * to locate the tagged declaration's documentation.
+ *
+ * @param sourceCode - The ESLint `SourceCode` object.
+ * @param anchor - The statement-level node ESLint attaches leading comments to.
+ * @returns The JSDoc block comment, or null when none is present.
+ */
+export function leadingJsdocFor(sourceCode: AstNode, anchor: AstNode): AstNode | null {
+  const comments: AstNode[] = sourceCode.getCommentsBefore(anchor) || [];
+  let result: AstNode | null = null;
+
+  for (const comment of comments) {
+    if (comment.type === 'Block' && typeof comment.value === 'string' && comment.value.startsWith('*')) {
+      result = comment;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Returns true if the statement is an overload signature (TSDeclareFunction) sharing the given name.
  *
  * @param stmt - The statement node to check (may be an export wrapper).
@@ -134,8 +156,10 @@ function isOverloadSignature(stmt: AstNode, name: string): boolean {
  * @returns The leading JSDoc (if any) and any orphan side-effect annotation comments.
  */
 export function findFunctionLeadingContext(sourceCode: AstNode, implNode: AstNode): FunctionLeadingContext {
+  let result: FunctionLeadingContext;
+
   if (implNode.id?.type !== 'Identifier') {
-    return {
+    result = {
       jsdoc: null,
       orphanLineComments: [],
       hasOverloads: false,
@@ -143,96 +167,98 @@ export function findFunctionLeadingContext(sourceCode: AstNode, implNode: AstNod
       implHasSurvivingAnnotation: false,
       chainStartStatement: getStatementAnchor(implNode)
     };
-  }
-
-  const name: string = implNode.id.name;
-  const implStmt = getStatementAnchor(implNode);
-  const container = implStmt.parent;
-
-  let chainStartIdx = -1;
-  let implIdx = -1;
-
-  if (container && Array.isArray(container.body)) {
-    implIdx = container.body.indexOf(implStmt);
-
-    if (implIdx >= 0) {
-      chainStartIdx = implIdx;
-      for (let i = implIdx - 1; i >= 0; i -= 1) {
-        if (isOverloadSignature(container.body[i], name)) {
-          chainStartIdx = i;
-        } else {
-          break;
-        }
-      }
-    }
-  }
-
-  const hasOverloads = chainStartIdx >= 0 && implIdx >= 0 && chainStartIdx < implIdx;
-
-  let firstJsdoc: JsdocCommentInfo | null = null;
-  let anyJsdocHasNoSideEffects = false;
-  let implJsdocHasNoSideEffects = false;
-  const orphanLineComments: AstNode[] = [];
-  // For overloaded functions, the `// @__NO_SIDE_EFFECTS__` directly above the implementation
-  // declaration is required (TS erases overload signatures, so only this annotation survives).
-  // Track it separately so callers don't accidentally remove it.
-  let implLineComment: AstNode | null = null;
-
-  function processCommentsForStatement(stmt: AstNode, isImplStatement: boolean): void {
-    const comments = sourceCode.getCommentsBefore(stmt) || [];
-
-    for (const comment of comments) {
-      if (comment.type === 'Block' && comment.value.startsWith('*')) {
-        const hasMarker = commentContainsNoSideEffects(comment.value);
-
-        if (hasMarker) {
-          anyJsdocHasNoSideEffects = true;
-          if (isImplStatement) {
-            implJsdocHasNoSideEffects = true;
-          }
-        }
-        // Auto-fix target: the first JSDoc in the chain (where the function's docs conventionally live).
-        firstJsdoc ??= { node: comment, text: comment.value, hasNoSideEffects: hasMarker };
-      } else if (commentContainsNoSideEffects(comment.value)) {
-        // Only the impl-leading annotation on an overloaded function is "required"; others are orphans.
-        // When multiple line/block comments stack above the impl, keep the closest one (last in source
-        // order) as the canonical impl annotation and treat the rest as orphans to consolidate.
-        if (isImplStatement && hasOverloads) {
-          if (implLineComment) {
-            orphanLineComments.push(implLineComment);
-          }
-          implLineComment = comment;
-        } else {
-          orphanLineComments.push(comment);
-        }
-      }
-    }
-  }
-
-  if (chainStartIdx >= 0 && implIdx >= 0) {
-    for (let i = chainStartIdx; i <= implIdx; i += 1) {
-      processCommentsForStatement(container.body[i], i === implIdx);
-    }
   } else {
-    // Fallback: no container body found; just look at comments before the implementation.
-    processCommentsForStatement(implStmt, false);
+    const name: string = implNode.id.name;
+    const implStmt = getStatementAnchor(implNode);
+    const container = implStmt.parent;
+
+    let chainStartIdx = -1;
+    let implIdx = -1;
+
+    if (container && Array.isArray(container.body)) {
+      implIdx = container.body.indexOf(implStmt);
+
+      if (implIdx >= 0) {
+        chainStartIdx = implIdx;
+        for (let i = implIdx - 1; i >= 0; i -= 1) {
+          if (isOverloadSignature(container.body[i], name)) {
+            chainStartIdx = i;
+          } else {
+            break;
+          }
+        }
+      }
+    }
+
+    const hasOverloads = chainStartIdx >= 0 && implIdx >= 0 && chainStartIdx < implIdx;
+
+    let firstJsdoc: JsdocCommentInfo | null = null;
+    let anyJsdocHasNoSideEffects = false;
+    let implJsdocHasNoSideEffects = false;
+    const orphanLineComments: AstNode[] = [];
+    // For overloaded functions, the `// @__NO_SIDE_EFFECTS__` directly above the implementation
+    // declaration is required (TS erases overload signatures, so only this annotation survives).
+    // Track it separately so callers don't accidentally remove it.
+    let implLineComment: AstNode | null = null;
+
+    function processCommentsForStatement(stmt: AstNode, isImplStatement: boolean): void {
+      const comments = sourceCode.getCommentsBefore(stmt) || [];
+
+      for (const comment of comments) {
+        if (comment.type === 'Block' && comment.value.startsWith('*')) {
+          const hasMarker = commentContainsNoSideEffects(comment.value);
+
+          if (hasMarker) {
+            anyJsdocHasNoSideEffects = true;
+            if (isImplStatement) {
+              implJsdocHasNoSideEffects = true;
+            }
+          }
+          // Auto-fix target: the first JSDoc in the chain (where the function's docs conventionally live).
+          firstJsdoc ??= { node: comment, text: comment.value, hasNoSideEffects: hasMarker };
+        } else if (commentContainsNoSideEffects(comment.value)) {
+          // Only the impl-leading annotation on an overloaded function is "required"; others are orphans.
+          // When multiple line/block comments stack above the impl, keep the closest one (last in source
+          // order) as the canonical impl annotation and treat the rest as orphans to consolidate.
+          if (isImplStatement && hasOverloads) {
+            if (implLineComment) {
+              orphanLineComments.push(implLineComment);
+            }
+            implLineComment = comment;
+          } else {
+            orphanLineComments.push(comment);
+          }
+        }
+      }
+    }
+
+    if (chainStartIdx >= 0 && implIdx >= 0) {
+      for (let i = chainStartIdx; i <= implIdx; i += 1) {
+        processCommentsForStatement(container.body[i], i === implIdx);
+      }
+    } else {
+      // Fallback: no container body found; just look at comments before the implementation.
+      processCommentsForStatement(implStmt, false);
+    }
+
+    // Report the first JSDoc as the canonical jsdoc, but reflect any-in-chain satisfaction
+    // so callers don't re-annotate when the marker is already present elsewhere in the chain.
+    let resolved: JsdocCommentInfo | null = null;
+    const captured = firstJsdoc as JsdocCommentInfo | null;
+
+    if (captured) {
+      resolved = { node: captured.node, text: captured.text, hasNoSideEffects: anyJsdocHasNoSideEffects };
+    }
+
+    // The implementation's emitted JS carries the marker when:
+    //   - non-overloaded: the function's (only) JSDoc has the tag (it's directly attached to the impl), OR
+    //   - overloaded: a line/block comment sits above the impl, OR the impl has its own tagged JSDoc.
+    const implHasSurvivingAnnotation = hasOverloads ? implLineComment !== null || implJsdocHasNoSideEffects : anyJsdocHasNoSideEffects;
+
+    const chainStartStatement = chainStartIdx >= 0 && container && Array.isArray(container.body) ? container.body[chainStartIdx] : implStmt;
+
+    result = { jsdoc: resolved, orphanLineComments, hasOverloads, implLineComment, implHasSurvivingAnnotation, chainStartStatement };
   }
 
-  // Report the first JSDoc as the canonical jsdoc, but reflect any-in-chain satisfaction
-  // so callers don't re-annotate when the marker is already present elsewhere in the chain.
-  let resolved: JsdocCommentInfo | null = null;
-  const captured = firstJsdoc as JsdocCommentInfo | null;
-
-  if (captured) {
-    resolved = { node: captured.node, text: captured.text, hasNoSideEffects: anyJsdocHasNoSideEffects };
-  }
-
-  // The implementation's emitted JS carries the marker when:
-  //   - non-overloaded: the function's (only) JSDoc has the tag (it's directly attached to the impl), OR
-  //   - overloaded: a line/block comment sits above the impl, OR the impl has its own tagged JSDoc.
-  const implHasSurvivingAnnotation = hasOverloads ? implLineComment !== null || implJsdocHasNoSideEffects : anyJsdocHasNoSideEffects;
-
-  const chainStartStatement = chainStartIdx >= 0 && container && Array.isArray(container.body) ? container.body[chainStartIdx] : implStmt;
-
-  return { jsdoc: resolved, orphanLineComments, hasOverloads, implLineComment, implHasSurvivingAnnotation, chainStartStatement };
+  return result;
 }
