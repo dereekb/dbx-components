@@ -193,10 +193,10 @@ export enum ModelFirebaseIndexValidateAppCode {
   MODEL_FIREBASE_INDEX_EXCLUDED = 'MODEL_FIREBASE_INDEX_EXCLUDED',
 
   /**
-   * A tagged factory has zero external references across the component's `src/`.
+   * A tagged factory has zero callers anywhere in the workspace.
    *
    * @dbxRuleSeverity warning
-   * @dbxRuleApplies Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any other `.ts` file under the scanned `src/`. The check uses word-boundary text scanning so renames + stale exports surface here.
+   * @dbxRuleApplies Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any `.ts` file under `apps/`, `components/`, or `packages/` (excluding tests, `*.d.ts`, `node_modules/`, and build outputs). The check uses word-boundary text scanning so renames + stale exports surface here.
    * @dbxRuleNotApplies Factories marked `@dbxModelFirebaseIndexSkip` (the author already opted out of emission) or `@dbxModelFirebaseIndexManual` (author-managed index, not necessarily wired through normal call sites).
    * @dbxRuleFix Either delete the factory (and its `*.query.ts` file if empty) or wire up the missing caller. If retention is intentional pending a future caller, add `@dbxModelFirebaseIndexSkip` to silence both the index generation and this warning.
    * @dbxRuleSeeAlso tool:dbx_model_firebase_index_list_app

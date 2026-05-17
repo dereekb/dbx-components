@@ -11,7 +11,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { scanFactoryReferences } from './model-firebase-index-reference-scan.js';
+import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE } from './model-firebase-index-reference-scan.js';
+import { globToRegex } from './scan-io.js';
 
 interface FakeFs {
   readonly globber: (input: { readonly projectRoot: string; readonly include: readonly string[]; readonly exclude: readonly string[] }) => Promise<readonly string[]>;
@@ -27,10 +28,15 @@ function fakeFs(projectRoot: string, files: Record<string, string>): FakeFs {
     entries.set(`${root}/${relNorm}`, contents);
   }
   return {
-    globber: async () => {
+    globber: async (input) => {
+      const includeMatchers = input.include.map(globToRegex);
+      const excludeMatchers = input.exclude.map(globToRegex);
       const result: string[] = [];
       for (const abs of entries.keys()) {
-        result.push(abs.slice(root.length + 1));
+        const rel = abs.slice(root.length + 1);
+        if (!includeMatchers.some((rx) => rx.test(rel))) continue;
+        if (excludeMatchers.some((rx) => rx.test(rel))) continue;
+        result.push(rel);
       }
       return result;
     },
@@ -147,6 +153,47 @@ describe('scanFactoryReferences', () => {
     });
     expect(result.get('a')?.count).toBe(3);
     expect(result.get('b')?.count).toBe(2);
+  });
+
+  it('counts callers across apps/, components/, and packages/ when given workspace-wide globs', async () => {
+    const fs = fakeFs('/workspace', {
+      'components/foo-firebase/src/lib/model/job/job.query.ts': `
+        export function jobsActiveQuery() { return []; }
+      `,
+      'apps/foo-api/src/lib/run.action.ts': `
+        import { jobsActiveQuery } from '@org/foo-firebase';
+        const constraints = jobsActiveQuery();
+      `,
+      'components/foo-shared/src/lib/derived.ts': `
+        import { jobsActiveQuery } from '@org/foo-firebase';
+        const x = jobsActiveQuery();
+      `,
+      'packages/util-helpers/src/lib/wrapper.ts': `
+        import { jobsActiveQuery } from '@org/foo-firebase';
+        export const wrapped = () => jobsActiveQuery();
+      `,
+      'apps/foo-api/src/lib/run.action.spec.ts': `
+        import { jobsActiveQuery } from '@org/foo-firebase';
+        it('runs', () => { jobsActiveQuery(); });
+      `,
+      'apps/foo-api/node_modules/leaked-dep/src/index.ts': `
+        import { jobsActiveQuery } from '@org/foo-firebase';
+        export const leaked = () => jobsActiveQuery();
+      `
+    });
+    const result = await scanFactoryReferences({
+      projectRoot: '/workspace',
+      entries: [{ slug: 'jobs-active', name: 'jobsActiveQuery', filePath: '/workspace/components/foo-firebase/src/lib/model/job/job.query.ts' }],
+      include: WORKSPACE_FACTORY_SCAN_INCLUDE,
+      exclude: WORKSPACE_FACTORY_SCAN_EXCLUDE,
+      globber: fs.globber,
+      readFile: fs.readFile
+    });
+    const info = result.get('jobs-active');
+    expect(info).toBeDefined();
+    expect(info?.count).toBe(6);
+    const files = (info?.referencedBy ?? []).map((r) => r.file).sort();
+    expect(files).toEqual(['apps/foo-api/src/lib/run.action.ts', 'apps/foo-api/src/lib/run.action.ts', 'components/foo-shared/src/lib/derived.ts', 'components/foo-shared/src/lib/derived.ts', 'packages/util-helpers/src/lib/wrapper.ts', 'packages/util-helpers/src/lib/wrapper.ts']);
   });
 
   it('captures the 1-based line number of each reference', async () => {

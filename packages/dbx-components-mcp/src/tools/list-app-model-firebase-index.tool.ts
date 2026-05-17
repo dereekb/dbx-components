@@ -29,7 +29,7 @@ import { buildModelFirebaseIndexManifest, type BuildModelFirebaseIndexManifestOu
 import type { DerivedComposite, DerivedFieldOverride, ModelFirebaseIndexEntry } from '../manifest/model-firebase-index-schema.js';
 import { buildScanProject, defaultGlobber, defaultReadFile } from '../scan/scan-io.js';
 import { MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME } from '../scan/model-firebase-index-scan-config-schema.js';
-import { scanFactoryReferences, type FactoryReferenceCount, type FactoryReferenceSite } from '../scan/model-firebase-index-reference-scan.js';
+import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount, type FactoryReferenceSite } from '../scan/model-firebase-index-reference-scan.js';
 
 // MARK: Args
 const ListAppArgsType = type({
@@ -53,14 +53,14 @@ const DBX_MODEL_FIREBASE_INDEX_LIST_APP_TOOL: Tool = {
     '',
     'For each *untagged* exported function whose return type is `FirestoreQueryConstraint[]` the report surfaces it as a candidate that should likely opt in via `@dbxModelFirebaseIndex` (or `@dbxModelFirebaseIndexSkip` to record that it was considered).',
     '',
-    'Each tagged entry also carries `excluded` (true when `@dbxModelFirebaseIndexExclude` suppresses index emission), `referenceCount` (count of external `.ts` files referencing the factory name), and `referencedBy` (sample call-sites).',
+    'Each tagged entry also carries `excluded` (true when `@dbxModelFirebaseIndexExclude` suppresses index emission), `referenceCount` (count of workspace-wide call-sites referencing the factory name — scanned across `apps/`, `components/`, and `packages/`), and `referencedBy` (sample call-sites, paths relative to the workspace root).',
     '',
     'Provide:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/hellosubs-firebase`).',
     '- `format` (optional): `markdown` (default) or `json`.',
     '- `model` / `category` / `tag` (optional): server-side filters on tagged entries — exact model/identity match, category match, or tag-membership match (case-insensitive).',
     '- `excludedOnly` (optional, default false): keep only tagged entries carrying `@dbxModelFirebaseIndexExclude`.',
-    '- `unusedOnly` (optional, default false): keep only tagged entries with `referenceCount === 0` (and skip `manual` / `skip` factories, which are intentionally retained).',
+    '- `unusedOnly` (optional, default false): keep only tagged entries with zero workspace-wide callers (and skip `manual` / `skip` factories, which are intentionally retained).',
     '- `includeUntagged` (optional, default true): set to `false` to omit the untagged-candidate section.',
     '',
     'Paths escaping the server cwd are rejected.'
@@ -99,11 +99,11 @@ interface TaggedFactoryUsage {
   readonly category: string;
   readonly tags: readonly string[];
   /**
-   * Number of `.ts` files under the component's `src/` (excluding the factory's own declaration file and `*.spec.ts`) that reference the factory by name. Zero ⇒ `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` candidate.
+   * Workspace-wide caller count for the factory. Scans every `.ts` file under `apps/`, `components/`, and `packages/` (excluding tests, `*.d.ts`, `node_modules/`, and build outputs) and counts word-boundary occurrences of the factory name. The factory's own declaration file is skipped so self-references in the body don't inflate the count. Zero ⇒ `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` candidate.
    */
   readonly referenceCount: number;
   /**
-   * Sample call-sites for the factory. Each site is the `subpath` of the consumer file plus the 1-based line number of the textual reference. Capped to keep payloads bounded; the precise reference count lives in `referenceCount`.
+   * Sample call-sites for the factory. Each `file` is workspace-root-relative (e.g. `apps/hellosubs-api/src/lib/.../foo.ts`) and `line` is the 1-based line of the textual reference. Capped to keep payloads bounded; the precise reference count lives in `referenceCount`.
    */
   readonly referencedBy: readonly FactoryReferenceSite[];
   readonly composites: readonly DerivedComposite[];
@@ -165,7 +165,7 @@ async function runListAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolResul
 
   let report: ListAppReport;
   try {
-    report = await buildListAppReport({ componentDir: parsed.componentDir, componentAbs, filters });
+    report = await buildListAppReport({ componentDir: parsed.componentDir, componentAbs, workspaceRoot: cwd, filters });
   } catch (err) {
     return toolError(`Failed to walk component for firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
   }
@@ -188,35 +188,39 @@ export function createListAppModelFirebaseIndexTool(): DbxTool {
 interface BuildListAppReportInput {
   readonly componentDir: string;
   readonly componentAbs: string;
+  readonly workspaceRoot: string;
   readonly filters: ListAppFilters;
 }
 
 async function buildListAppReport(input: BuildListAppReportInput): Promise<ListAppReport> {
-  const { componentDir, componentAbs, filters } = input;
+  const { componentDir, componentAbs, workspaceRoot, filters } = input;
   const buildOutcome = await buildModelFirebaseIndexManifest({
     projectRoot: componentAbs,
     generator: 'dbx_model_firebase_index_list_app'
   });
 
-  return resolveBuildOutcome({ buildOutcome, componentDir, componentAbs, filters });
+  return resolveBuildOutcome({ buildOutcome, componentDir, componentAbs, workspaceRoot, filters });
 }
 
 interface ResolveBuildOutcomeInput {
   readonly buildOutcome: BuildModelFirebaseIndexManifestOutcome;
   readonly componentDir: string;
   readonly componentAbs: string;
+  readonly workspaceRoot: string;
   readonly filters: ListAppFilters;
 }
 
 async function resolveBuildOutcome(input: ResolveBuildOutcomeInput): Promise<ListAppReport> {
-  const { buildOutcome, componentDir, componentAbs, filters } = input;
+  const { buildOutcome, componentDir, componentAbs, workspaceRoot, filters } = input;
 
   let report: ListAppReport;
   switch (buildOutcome.kind) {
     case 'success': {
       const references = await scanFactoryReferences({
-        projectRoot: componentAbs,
-        entries: buildOutcome.manifest.entries.map((e) => ({ slug: e.slug, name: e.name, filePath: buildOutcome.entryFilePathsBySlug.get(e.slug) ?? '' }))
+        projectRoot: workspaceRoot,
+        entries: buildOutcome.manifest.entries.map((e) => ({ slug: e.slug, name: e.name, filePath: buildOutcome.entryFilePathsBySlug.get(e.slug) ?? '' })),
+        include: WORKSPACE_FACTORY_SCAN_INCLUDE,
+        exclude: WORKSPACE_FACTORY_SCAN_EXCLUDE
       });
       const taggedAll = buildOutcome.manifest.entries.map((entry) => toTaggedFactoryUsage(entry, references.get(entry.slug)));
       const tagged = applyTaggedFilters(taggedAll, filters);

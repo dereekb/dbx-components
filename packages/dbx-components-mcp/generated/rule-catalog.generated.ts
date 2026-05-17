@@ -516,9 +516,9 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     code: 'MODEL_FIREBASE_INDEX_UNUSED_FACTORY',
     source: 'dbx_model_firebase_index_validate_app',
     severity: 'warning',
-    title: "A tagged factory has zero external references across the component's `src/`",
-    whatItFlags: "A tagged factory has zero external references across the component's `src/`.",
-    whenItApplies: 'Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any other `.ts` file under the scanned `src/`. The check uses word-boundary text scanning so renames + stale exports surface here.',
+    title: 'A tagged factory has zero callers anywhere in the workspace',
+    whatItFlags: 'A tagged factory has zero callers anywhere in the workspace.',
+    whenItApplies: 'Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any `.ts` file under `apps/`, `components/`, or `packages/` (excluding tests, `*.d.ts`, `node_modules/`, and build outputs). The check uses word-boundary text scanning so renames + stale exports surface here.',
     whenItDoesNotApply: 'Factories marked `@dbxModelFirebaseIndexSkip` (the author already opted out of emission) or `@dbxModelFirebaseIndexManual` (author-managed index, not necessarily wired through normal call sites).',
     canonicalFix: 'Either delete the factory (and its `*.query.ts` file if empty) or wire up the missing caller. If retention is intentional pending a future caller, add `@dbxModelFirebaseIndexSkip` to silence both the index generation and this warning.',
     seeAlso: [

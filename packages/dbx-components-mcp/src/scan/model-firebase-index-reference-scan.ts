@@ -1,13 +1,19 @@
 /**
  * Reference scanner for `@dbxModelFirebaseIndex`-tagged factories.
  *
- * Given a list of extracted entries and a glob of consumer `.ts` files in
- * a `-firebase` component, counts the external references to each factory
- * by name. Used by `dbx_model_firebase_index_list_app` to surface the
- * `referenceCount` + `referencedBy` columns, and by
- * `dbx_model_firebase_index_validate_app` to emit
- * `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` when a non-skip / non-manual
- * factory has zero external references.
+ * Given a list of extracted entries and a glob of consumer `.ts` files,
+ * counts the external references to each factory by name. Used by
+ * `dbx_model_firebase_index_list_app` to surface the `referenceCount` +
+ * `referencedBy` columns, and by `dbx_model_firebase_index_validate_app`
+ * to emit `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` when a non-skip /
+ * non-manual factory has zero external references.
+ *
+ * Scope: the consumers (`*_list_app`, `*_validate_app`) point the scan at
+ * the workspace root (`process.cwd()`) with workspace-wide globs covering
+ * `apps/**`, `components/**`, and `packages/**` so callers in sibling
+ * components, downstream apps, or shared packages are counted alongside
+ * intra-component references. {@link WORKSPACE_FACTORY_SCAN_INCLUDE} and
+ * {@link WORKSPACE_FACTORY_SCAN_EXCLUDE} are the canonical defaults.
  *
  * Implementation note: deliberately text-based rather than AST-based. The
  * extractor's in-memory ts-morph project only contains `*.query.ts`
@@ -58,6 +64,23 @@ export interface ScanFactoryReferencesInput {
 // MARK: Defaults
 const DEFAULT_INCLUDE: readonly string[] = ['src/**/*.ts'];
 const DEFAULT_EXCLUDE: readonly string[] = ['**/*.spec.ts', '**/*.d.ts'];
+
+/**
+ * Canonical include-glob set the tool layer hands to {@link scanFactoryReferences}
+ * when the projectRoot is the workspace root. Covers every place a downstream
+ * project may call a tagged factory: apps, sibling components, and shared
+ * packages. Keep these aligned with the Nx workspace layout — the validator's
+ * `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` warning is only useful if it sees
+ * every plausible call-site.
+ */
+export const WORKSPACE_FACTORY_SCAN_INCLUDE: readonly string[] = ['apps/**/*.ts', 'components/**/*.ts', 'packages/**/*.ts'];
+
+/**
+ * Canonical exclude-glob set paired with {@link WORKSPACE_FACTORY_SCAN_INCLUDE}.
+ * Strips test files, ambient typings, build outputs, and `node_modules` so the
+ * workspace-wide scan stays fast and counts only real source references.
+ */
+export const WORKSPACE_FACTORY_SCAN_EXCLUDE: readonly string[] = ['**/*.spec.ts', '**/*.d.ts', '**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**'];
 
 // MARK: Entry point
 /**

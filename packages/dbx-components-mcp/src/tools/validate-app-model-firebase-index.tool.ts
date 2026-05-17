@@ -34,7 +34,7 @@ import { type } from 'arktype';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { buildModelFirebaseIndexManifest } from '../scan/model-firebase-index-build-manifest.js';
-import { scanFactoryReferences } from '../scan/model-firebase-index-reference-scan.js';
+import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE } from '../scan/model-firebase-index-reference-scan.js';
 import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
 import { generateFirestoreIndexesJson, type FirestoreIndexesJson } from '../scan/firestore-indexes-generate.js';
 import { ModelFirebaseIndexValidateAppCode } from './model-firebase-index-validate-app/codes.js';
@@ -150,7 +150,7 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     '- `MODEL_FIREBASE_INDEX_MULTIPLE_RANGE_FIELDS`, `MODEL_FIREBASE_INDEX_ORDERBY_CONFLICT`, `MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY` — Firestore index-shape issues.',
     '- `MODEL_FIREBASE_INDEX_COMPOSITE_REMOVED`, `MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_REMOVED` — stale entries in JSON.',
     '- `MODEL_FIREBASE_INDEX_EXCLUDED` — `@dbxModelFirebaseIndexExclude` is suppressing index emission for an audited factory.',
-    '- `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` — tagged factory has no external `.ts` references; delete it or mark `@dbxModelFirebaseIndexSkip`.',
+    '- `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` — tagged factory has no callers anywhere in the workspace (`apps/`, `components/`, `packages/`); delete it or mark `@dbxModelFirebaseIndexSkip`.',
     '',
     'Pass any code to `dbx_explain_rule` for the canonical fix and template.'
   ].join('\n'),
@@ -187,7 +187,7 @@ async function runValidateAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolR
 
   let report: ModelFirebaseIndexValidateAppReport;
   try {
-    report = await buildValidateAppReport({ componentDir: parsed.componentDir, componentAbs, indexesRelative, indexesAbs });
+    report = await buildValidateAppReport({ componentDir: parsed.componentDir, componentAbs, workspaceRoot: cwd, indexesRelative, indexesAbs });
   } catch (err) {
     return toolError(`Failed to validate component firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
   }
@@ -214,6 +214,7 @@ export function createValidateAppModelFirebaseIndexTool(): DbxTool {
 interface BuildValidateAppReportInput {
   readonly componentDir: string;
   readonly componentAbs: string;
+  readonly workspaceRoot: string;
   readonly indexesRelative: string;
   readonly indexesAbs: string;
 }
@@ -259,7 +260,7 @@ function pushDiffViolation(input: PushDiffViolationInput): void {
 }
 
 async function buildValidateAppReport(input: BuildValidateAppReportInput): Promise<ModelFirebaseIndexValidateAppReport> {
-  const { componentDir, componentAbs, indexesRelative, indexesAbs } = input;
+  const { componentDir, componentAbs, workspaceRoot, indexesRelative, indexesAbs } = input;
   const buffer = newBuffer();
 
   const buildOutcome = await buildModelFirebaseIndexManifest({
@@ -286,8 +287,10 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
   }
 
   const references = await scanFactoryReferences({
-    projectRoot: componentAbs,
-    entries: buildOutcome.manifest.entries.map((e) => ({ slug: e.slug, name: e.name, filePath: buildOutcome.entryFilePathsBySlug.get(e.slug) ?? '' }))
+    projectRoot: workspaceRoot,
+    entries: buildOutcome.manifest.entries.map((e) => ({ slug: e.slug, name: e.name, filePath: buildOutcome.entryFilePathsBySlug.get(e.slug) ?? '' })),
+    include: WORKSPACE_FACTORY_SCAN_INCLUDE,
+    exclude: WORKSPACE_FACTORY_SCAN_EXCLUDE
   });
   for (const entry of buildOutcome.manifest.entries) {
     if (entry.skip || entry.manual) continue;
@@ -297,7 +300,7 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
     pushViolation(buffer, {
       code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNUSED_FACTORY,
       severity: 'warning',
-      message: `${entry.name} has no external references in the component's \`src/\` — delete the factory or add \`@dbxModelFirebaseIndexSkip\` if retention is intentional.`,
+      message: `${entry.name} has no callers anywhere in the workspace (\`apps/\`, \`components/\`, \`packages/\`) — delete the factory or add \`@dbxModelFirebaseIndexSkip\` if retention is intentional.`,
       file: filePath,
       line: undefined,
       factory: entry.name,
