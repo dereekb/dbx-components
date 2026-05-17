@@ -119,7 +119,9 @@ export default [
       'dereekb-util/prefer-config-object': 'warn', // dbx__note__typescript-programming → Prefer Single Config Object
       'dereekb-util/prefer-maybe-type': 'warn', // dbx__note__typescript-programming → Maybe<T> Usage
       'dereekb-util/no-inline-type-import': 'warn', // dbx__note__typescript-programming → No Inline Type Imports
-      'dereekb-util/require-deprecated-alias-placement': 'warn' // dbx__note__typescript-programming → Deprecated Alias Placement
+      'dereekb-util/require-deprecated-alias-placement': 'warn', // dbx__note__typescript-programming → Deprecated Alias Placement
+      'dereekb-util/prefer-canonical-jsdoc': 'warn', // dbx__note__typescript-jsdocs → canonical JSDoc shape (description format, tag order, @param/@returns/@throws style, fenced @example, anti-type-restating)
+      'dereekb-util/require-dbx-util-companion-tags': 'warn' // dbx-components-mcp util registry: enforce @dbxUtilCategory + valid @dbxUtilKind / @dbxUtilRelated / @dbxUtilTags formats on @dbxUtil-tagged exports
     }
   },
   {

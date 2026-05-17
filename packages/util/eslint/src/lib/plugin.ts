@@ -7,6 +7,8 @@ import { type UtilPreferConfigObjectRuleDefinition, utilPreferConfigObjectRule }
 import { type UtilPreferMaybeTypeRuleDefinition, utilPreferMaybeTypeRule } from './prefer-maybe-type.rule';
 import { type UtilNoInlineTypeImportRuleDefinition, utilNoInlineTypeImportRule } from './no-inline-type-import.rule';
 import { type UtilRequireDeprecatedAliasPlacementRuleDefinition, utilRequireDeprecatedAliasPlacementRule } from './require-deprecated-alias-placement.rule';
+import { type UtilPreferCanonicalJsdocRuleDefinition, utilPreferCanonicalJsdocRule } from './prefer-canonical-jsdoc.rule';
+import { type UtilRequireDbxUtilCompanionTagsRuleDefinition, utilRequireDbxUtilCompanionTagsRule } from './require-dbx-util-companion-tags.rule';
 
 /**
  * ESLint plugin interface for @dereekb/util rules.
@@ -22,6 +24,8 @@ export interface UtilEslintPlugin {
     readonly 'prefer-maybe-type': UtilPreferMaybeTypeRuleDefinition;
     readonly 'no-inline-type-import': UtilNoInlineTypeImportRuleDefinition;
     readonly 'require-deprecated-alias-placement': UtilRequireDeprecatedAliasPlacementRuleDefinition;
+    readonly 'prefer-canonical-jsdoc': UtilPreferCanonicalJsdocRuleDefinition;
+    readonly 'require-dbx-util-companion-tags': UtilRequireDbxUtilCompanionTagsRuleDefinition;
   };
 }
 
@@ -41,6 +45,8 @@ export const utilEslintPlugin: UtilEslintPlugin = {
     'prefer-config-object': utilPreferConfigObjectRule,
     'prefer-maybe-type': utilPreferMaybeTypeRule,
     'no-inline-type-import': utilNoInlineTypeImportRule,
-    'require-deprecated-alias-placement': utilRequireDeprecatedAliasPlacementRule
+    'require-deprecated-alias-placement': utilRequireDeprecatedAliasPlacementRule,
+    'prefer-canonical-jsdoc': utilPreferCanonicalJsdocRule,
+    'require-dbx-util-companion-tags': utilRequireDbxUtilCompanionTagsRule
   }
 };

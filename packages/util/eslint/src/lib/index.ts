@@ -7,4 +7,6 @@ export { utilPreferConfigObjectRule, type UtilPreferConfigObjectRuleOptions, typ
 export { utilPreferMaybeTypeRule, type UtilPreferMaybeTypeRuleOptions, type UtilPreferMaybeTypeRuleDefinition } from './prefer-maybe-type.rule';
 export { utilNoInlineTypeImportRule, type UtilNoInlineTypeImportRuleDefinition } from './no-inline-type-import.rule';
 export { utilRequireDeprecatedAliasPlacementRule, type UtilRequireDeprecatedAliasPlacementRuleDefinition } from './require-deprecated-alias-placement.rule';
+export { utilPreferCanonicalJsdocRule, type UtilPreferCanonicalJsdocRuleOptions, type UtilPreferCanonicalJsdocRuleDefinition } from './prefer-canonical-jsdoc.rule';
+export { utilRequireDbxUtilCompanionTagsRule, type UtilRequireDbxUtilCompanionTagsRuleOptions, type UtilRequireDbxUtilCompanionTagsRuleDefinition } from './require-dbx-util-companion-tags.rule';
 export { utilEslintPlugin, type UtilEslintPlugin } from './plugin';
