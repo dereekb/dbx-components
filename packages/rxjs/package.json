@@ -1,9 +1,9 @@
 {
   "name": "@dereekb/rxjs",
-  "version": "13.11.13",
+  "version": "13.11.14",
   "sideEffects": false,
   "peerDependencies": {
     "rxjs": "^7.8.2",
-    "@dereekb/util": "13.11.13"
+    "@dereekb/util": "13.11.14"
   }
 }

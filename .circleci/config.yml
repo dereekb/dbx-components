@@ -160,6 +160,9 @@ jobs:
           name: run calcom tests
           command: npx nx run-all-tests calcom
       - run:
+          name: run trello tests
+          command: npx nx run-all-tests trello
+      - run:
           name: run analytics tests
           command: npx nx run-all-tests analytics
       - store_test_results:

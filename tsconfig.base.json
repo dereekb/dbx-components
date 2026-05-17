@@ -66,6 +66,8 @@
       "@dereekb/util/eslint": ["packages/util/eslint/src/index.ts"],
       "@dereekb/util/fetch": ["packages/util/fetch/src/index.ts"],
       "@dereekb/util/test": ["packages/util/test/src/index.ts"],
+      "@dereekb/trello": ["packages/trello/src/index.ts"],
+      "@dereekb/trello/nestjs": ["packages/trello/nestjs/src/index.ts"],
       "@dereekb/zoho": ["packages/zoho/src/index.ts"],
       "@dereekb/zoho/nestjs": ["packages/zoho/nestjs/src/index.ts"],
       "@dereekb/zoom": ["packages/zoom/src/index.ts"],
