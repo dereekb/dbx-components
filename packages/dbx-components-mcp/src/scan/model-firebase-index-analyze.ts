@@ -70,7 +70,7 @@ export function analyzeModelFirebaseIndexEntries(entries: readonly ExtractedMode
  * @returns the analyzed result
  */
 export function analyzeEntry(entry: ExtractedModelFirebaseIndexEntry): AnalyzedEntry {
-  if (entry.skip || entry.manual || entry.constraintSequences.length === 0) {
+  if (entry.skip || entry.manual || entry.excluded || entry.constraintSequences.length === 0) {
     return {
       extractedEntry: entry,
       derivedComposites: [],

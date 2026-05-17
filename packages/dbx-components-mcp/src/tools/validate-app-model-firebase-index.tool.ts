@@ -34,6 +34,7 @@ import { type } from 'arktype';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { buildModelFirebaseIndexManifest } from '../scan/model-firebase-index-build-manifest.js';
+import { scanFactoryReferences } from '../scan/model-firebase-index-reference-scan.js';
 import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
 import { generateFirestoreIndexesJson, type FirestoreIndexesJson } from '../scan/firestore-indexes-generate.js';
 import { ModelFirebaseIndexValidateAppCode } from './model-firebase-index-validate-app/codes.js';
@@ -148,6 +149,8 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     '- `MODEL_FIREBASE_INDEX_UNRESOLVED_FIELD` — non-literal field-path argument.',
     '- `MODEL_FIREBASE_INDEX_MULTIPLE_RANGE_FIELDS`, `MODEL_FIREBASE_INDEX_ORDERBY_CONFLICT`, `MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY` — Firestore index-shape issues.',
     '- `MODEL_FIREBASE_INDEX_COMPOSITE_REMOVED`, `MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_REMOVED` — stale entries in JSON.',
+    '- `MODEL_FIREBASE_INDEX_EXCLUDED` — `@dbxModelFirebaseIndexExclude` is suppressing index emission for an audited factory.',
+    '- `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` — tagged factory has no external `.ts` references; delete it or mark `@dbxModelFirebaseIndexSkip`.',
     '',
     'Pass any code to `dbx_explain_rule` for the canonical fix and template.'
   ].join('\n'),
@@ -280,6 +283,26 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
   const { existingJson, exists: indexesFileExists, readError } = await readExistingIndexesJson(indexesAbs);
   for (const buildWarning of buildOutcome.extractWarnings) {
     pushViolation(buffer, buildFirebaseIndexValidateAppViolation(mapModelFirebaseIndexBuildWarning(buildWarning)));
+  }
+
+  const references = await scanFactoryReferences({
+    projectRoot: componentAbs,
+    entries: buildOutcome.manifest.entries.map((e) => ({ slug: e.slug, name: e.name, filePath: buildOutcome.entryFilePathsBySlug.get(e.slug) ?? '' }))
+  });
+  for (const entry of buildOutcome.manifest.entries) {
+    if (entry.skip || entry.manual) continue;
+    const count = references.get(entry.slug)?.count ?? 0;
+    if (count > 0) continue;
+    const filePath = buildOutcome.entryFilePathsBySlug.get(entry.slug);
+    pushViolation(buffer, {
+      code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNUSED_FACTORY,
+      severity: 'warning',
+      message: `${entry.name} has no external references in the component's \`src/\` — delete the factory or add \`@dbxModelFirebaseIndexSkip\` if retention is intentional.`,
+      file: filePath,
+      line: undefined,
+      factory: entry.name,
+      remediation: attachRemediation(ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNUSED_FACTORY)
+    });
   }
   if (readError !== undefined) {
     pushViolation(buffer, {

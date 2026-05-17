@@ -54,7 +54,7 @@ export interface BuildModelFirebaseIndexManifestInput {
  * Outcome of one generator run.
  */
 export type BuildModelFirebaseIndexManifestOutcome =
-  | { readonly kind: 'success'; readonly manifest: ModelFirebaseIndexManifest; readonly outPath: string; readonly scannedFileCount: number; readonly extractWarnings: readonly ModelFirebaseIndexBuildWarning[] }
+  | { readonly kind: 'success'; readonly manifest: ModelFirebaseIndexManifest; readonly outPath: string; readonly scannedFileCount: number; readonly extractWarnings: readonly ModelFirebaseIndexBuildWarning[]; readonly entryFilePathsBySlug: ReadonlyMap<string, string> }
   | { readonly kind: 'no-config'; readonly configPath: string }
   | { readonly kind: 'invalid-scan-config'; readonly configPath: string; readonly error: string }
   | { readonly kind: 'no-package'; readonly packagePath: string }
@@ -142,12 +142,17 @@ export async function buildModelFirebaseIndexManifest(input: BuildModelFirebaseI
     outcome = { kind: 'invalid-manifest', error: validated.summary };
   } else {
     const outPath = resolve(projectRoot, scanSection.out ?? DEFAULT_MODEL_FIREBASE_INDEX_SCAN_OUT_PATH);
+    const entryFilePathsBySlug = new Map<string, string>();
+    for (const analyzedEntry of analyzed) {
+      entryFilePathsBySlug.set(analyzedEntry.extractedEntry.slug, analyzedEntry.extractedEntry.filePath);
+    }
     outcome = {
       kind: 'success',
       manifest: validated,
       outPath,
       scannedFileCount: filePaths.length,
-      extractWarnings: buildWarnings
+      extractWarnings: buildWarnings,
+      entryFilePathsBySlug
     };
   }
   return outcome;
@@ -199,6 +204,7 @@ function assembleEntry(input: AssembleEntryInput): ModelFirebaseIndexEntry {
     scope: entry.scope,
     manual: entry.manual,
     skip: entry.skip,
+    ...(entry.excluded ? { excluded: true } : {}),
     category: entry.category,
     params: entry.params.map((p) => ({ ...p })),
     returns: entry.returns,

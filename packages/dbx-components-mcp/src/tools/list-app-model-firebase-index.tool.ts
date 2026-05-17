@@ -29,11 +29,18 @@ import { buildModelFirebaseIndexManifest, type BuildModelFirebaseIndexManifestOu
 import type { DerivedComposite, DerivedFieldOverride, ModelFirebaseIndexEntry } from '../manifest/model-firebase-index-schema.js';
 import { buildScanProject, defaultGlobber, defaultReadFile } from '../scan/scan-io.js';
 import { MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME } from '../scan/model-firebase-index-scan-config-schema.js';
+import { scanFactoryReferences, type FactoryReferenceCount, type FactoryReferenceSite } from '../scan/model-firebase-index-reference-scan.js';
 
 // MARK: Args
 const ListAppArgsType = type({
   componentDir: 'string',
-  'format?': "'markdown' | 'json'"
+  'format?': "'markdown' | 'json'",
+  'model?': 'string',
+  'category?': 'string',
+  'tag?': 'string',
+  'excludedOnly?': 'boolean',
+  'unusedOnly?': 'boolean',
+  'includeUntagged?': 'boolean'
 });
 
 // MARK: Tool definition
@@ -46,9 +53,15 @@ const DBX_MODEL_FIREBASE_INDEX_LIST_APP_TOOL: Tool = {
     '',
     'For each *untagged* exported function whose return type is `FirestoreQueryConstraint[]` the report surfaces it as a candidate that should likely opt in via `@dbxModelFirebaseIndex` (or `@dbxModelFirebaseIndexSkip` to record that it was considered).',
     '',
+    'Each tagged entry also carries `excluded` (true when `@dbxModelFirebaseIndexExclude` suppresses index emission), `referenceCount` (count of external `.ts` files referencing the factory name), and `referencedBy` (sample call-sites).',
+    '',
     'Provide:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/hellosubs-firebase`).',
     '- `format` (optional): `markdown` (default) or `json`.',
+    '- `model` / `category` / `tag` (optional): server-side filters on tagged entries — exact model/identity match, category match, or tag-membership match (case-insensitive).',
+    '- `excludedOnly` (optional, default false): keep only tagged entries carrying `@dbxModelFirebaseIndexExclude`.',
+    '- `unusedOnly` (optional, default false): keep only tagged entries with `referenceCount === 0` (and skip `manual` / `skip` factories, which are intentionally retained).',
+    '- `includeUntagged` (optional, default true): set to `false` to omit the untagged-candidate section.',
     '',
     'Paths escaping the server cwd are rejected.'
   ].join('\n'),
@@ -56,7 +69,13 @@ const DBX_MODEL_FIREBASE_INDEX_LIST_APP_TOOL: Tool = {
     type: 'object',
     properties: {
       componentDir: { type: 'string', description: 'Relative path to the `-firebase` component package.' },
-      format: { type: 'string', enum: ['markdown', 'json'], description: 'Output format. Defaults to markdown.' }
+      format: { type: 'string', enum: ['markdown', 'json'], description: 'Output format. Defaults to markdown.' },
+      model: { type: 'string', description: 'Filter tagged entries to those whose model identity or name matches exactly (case-sensitive).' },
+      category: { type: 'string', description: 'Filter tagged entries to those whose @dbxModelFirebaseIndexCategory matches (case-sensitive).' },
+      tag: { type: 'string', description: 'Filter tagged entries to those whose `tags[]` includes the supplied value (case-insensitive).' },
+      excludedOnly: { type: 'boolean', description: 'Keep only entries carrying @dbxModelFirebaseIndexExclude.' },
+      unusedOnly: { type: 'boolean', description: 'Keep only entries with zero external references (skip / manual factories are still excluded).' },
+      includeUntagged: { type: 'boolean', description: 'Set to false to omit the untagged-candidates section. Defaults to true.' }
     },
     required: ['componentDir']
   }
@@ -73,7 +92,20 @@ interface TaggedFactoryUsage {
   readonly isNested: boolean;
   readonly skip: boolean;
   readonly manual: boolean;
+  /**
+   * True when the factory carries `@dbxModelFirebaseIndexExclude`. Composites + fieldOverrides are intentionally suppressed; the validator surfaces an auditable `MODEL_FIREBASE_INDEX_EXCLUDED` warning per scan.
+   */
+  readonly excluded: boolean;
   readonly category: string;
+  readonly tags: readonly string[];
+  /**
+   * Number of `.ts` files under the component's `src/` (excluding the factory's own declaration file and `*.spec.ts`) that reference the factory by name. Zero ⇒ `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` candidate.
+   */
+  readonly referenceCount: number;
+  /**
+   * Sample call-sites for the factory. Each site is the `subpath` of the consumer file plus the 1-based line number of the textual reference. Capped to keep payloads bounded; the precise reference count lives in `referenceCount`.
+   */
+  readonly referencedBy: readonly FactoryReferenceSite[];
   readonly composites: readonly DerivedComposite[];
   readonly fieldOverrides: readonly DerivedFieldOverride[];
 }
@@ -84,6 +116,15 @@ interface UntaggedCandidate {
   readonly line: number;
 }
 
+interface ListAppFilters {
+  readonly model: string | undefined;
+  readonly category: string | undefined;
+  readonly tag: string | undefined;
+  readonly excludedOnly: boolean;
+  readonly unusedOnly: boolean;
+  readonly includeUntagged: boolean;
+}
+
 interface ListAppReport {
   readonly componentDir: string;
   readonly source: string;
@@ -92,6 +133,9 @@ interface ListAppReport {
   readonly untagged: readonly UntaggedCandidate[];
   readonly compositeCount: number;
   readonly fieldOverrideCount: number;
+  readonly unusedCount: number;
+  readonly excludedCount: number;
+  readonly filters: ListAppFilters;
   readonly warnings: readonly string[];
 }
 
@@ -110,9 +154,18 @@ async function runListAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolResul
 
   const componentAbs = resolve(cwd, parsed.componentDir);
 
+  const filters: ListAppFilters = {
+    model: parsed.model,
+    category: parsed.category,
+    tag: parsed.tag,
+    excludedOnly: parsed.excludedOnly ?? false,
+    unusedOnly: parsed.unusedOnly ?? false,
+    includeUntagged: parsed.includeUntagged ?? true
+  };
+
   let report: ListAppReport;
   try {
-    report = await buildListAppReport({ componentDir: parsed.componentDir, componentAbs });
+    report = await buildListAppReport({ componentDir: parsed.componentDir, componentAbs, filters });
   } catch (err) {
     return toolError(`Failed to walk component for firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
   }
@@ -135,34 +188,43 @@ export function createListAppModelFirebaseIndexTool(): DbxTool {
 interface BuildListAppReportInput {
   readonly componentDir: string;
   readonly componentAbs: string;
+  readonly filters: ListAppFilters;
 }
 
 async function buildListAppReport(input: BuildListAppReportInput): Promise<ListAppReport> {
-  const { componentDir, componentAbs } = input;
+  const { componentDir, componentAbs, filters } = input;
   const buildOutcome = await buildModelFirebaseIndexManifest({
     projectRoot: componentAbs,
     generator: 'dbx_model_firebase_index_list_app'
   });
 
-  return resolveBuildOutcome({ buildOutcome, componentDir, componentAbs });
+  return resolveBuildOutcome({ buildOutcome, componentDir, componentAbs, filters });
 }
 
 interface ResolveBuildOutcomeInput {
   readonly buildOutcome: BuildModelFirebaseIndexManifestOutcome;
   readonly componentDir: string;
   readonly componentAbs: string;
+  readonly filters: ListAppFilters;
 }
 
 async function resolveBuildOutcome(input: ResolveBuildOutcomeInput): Promise<ListAppReport> {
-  const { buildOutcome, componentDir, componentAbs } = input;
+  const { buildOutcome, componentDir, componentAbs, filters } = input;
 
   let report: ListAppReport;
   switch (buildOutcome.kind) {
     case 'success': {
-      const tagged = buildOutcome.manifest.entries.map(toTaggedFactoryUsage);
-      const untagged = await collectUntaggedCandidates({ componentAbs, tagged: buildOutcome.manifest.entries });
+      const references = await scanFactoryReferences({
+        projectRoot: componentAbs,
+        entries: buildOutcome.manifest.entries.map((e) => ({ slug: e.slug, name: e.name, filePath: buildOutcome.entryFilePathsBySlug.get(e.slug) ?? '' }))
+      });
+      const taggedAll = buildOutcome.manifest.entries.map((entry) => toTaggedFactoryUsage(entry, references.get(entry.slug)));
+      const tagged = applyTaggedFilters(taggedAll, filters);
+      const untagged = filters.includeUntagged ? await collectUntaggedCandidates({ componentAbs, tagged: buildOutcome.manifest.entries }) : [];
       const compositeCount = tagged.reduce((acc, t) => acc + t.composites.length, 0);
       const fieldOverrideCount = tagged.reduce((acc, t) => acc + t.fieldOverrides.length, 0);
+      const unusedCount = tagged.filter((t) => isUnused(t)).length;
+      const excludedCount = tagged.filter((t) => t.excluded).length;
       const warnings = buildOutcome.extractWarnings.map(formatBuildWarning);
       report = {
         componentDir,
@@ -172,30 +234,33 @@ async function resolveBuildOutcome(input: ResolveBuildOutcomeInput): Promise<Lis
         untagged,
         compositeCount,
         fieldOverrideCount,
+        unusedCount,
+        excludedCount,
+        filters,
         warnings
       };
       break;
     }
     case 'no-config':
-      report = emptyReport(componentDir, `No \`${MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME}\` found at ${buildOutcome.configPath}.`);
+      report = emptyReport(componentDir, `No \`${MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME}\` found at ${buildOutcome.configPath}.`, filters);
       break;
     case 'invalid-scan-config':
-      report = emptyReport(componentDir, `Invalid scan config at ${buildOutcome.configPath}: ${buildOutcome.error}`);
+      report = emptyReport(componentDir, `Invalid scan config at ${buildOutcome.configPath}: ${buildOutcome.error}`, filters);
       break;
     case 'no-package':
-      report = emptyReport(componentDir, `No \`package.json\` found at ${buildOutcome.packagePath}.`);
+      report = emptyReport(componentDir, `No \`package.json\` found at ${buildOutcome.packagePath}.`, filters);
       break;
     case 'invalid-package':
-      report = emptyReport(componentDir, `Invalid package.json at ${buildOutcome.packagePath}: ${buildOutcome.error}`);
+      report = emptyReport(componentDir, `Invalid package.json at ${buildOutcome.packagePath}: ${buildOutcome.error}`, filters);
       break;
     case 'invalid-manifest':
-      report = emptyReport(componentDir, `Manifest validation failed: ${buildOutcome.error}`);
+      report = emptyReport(componentDir, `Manifest validation failed: ${buildOutcome.error}`, filters);
       break;
   }
   return report;
 }
 
-function emptyReport(componentDir: string, warning: string): ListAppReport {
+function emptyReport(componentDir: string, warning: string, filters: ListAppFilters): ListAppReport {
   return {
     componentDir,
     source: '',
@@ -204,11 +269,43 @@ function emptyReport(componentDir: string, warning: string): ListAppReport {
     untagged: [],
     compositeCount: 0,
     fieldOverrideCount: 0,
+    unusedCount: 0,
+    excludedCount: 0,
+    filters,
     warnings: [warning]
   };
 }
 
-function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry): TaggedFactoryUsage {
+/**
+ * Tagged factory is "unused" when zero external references AND the
+ * author has not opted out via `skip`/`manual`. Matches the rule for
+ * emitting `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` so the validator + list
+ * tool agree on what counts as unused.
+ *
+ * @param t - usage record to test.
+ * @returns true when the factory is a candidate for the unused warning.
+ */
+function isUnused(t: TaggedFactoryUsage): boolean {
+  return t.referenceCount === 0 && !t.skip && !t.manual;
+}
+
+function applyTaggedFilters(tagged: readonly TaggedFactoryUsage[], filters: ListAppFilters): readonly TaggedFactoryUsage[] {
+  const tagLower = filters.tag?.toLowerCase();
+  return tagged.filter((t) => {
+    if (filters.model !== undefined && t.model !== filters.model) return false;
+    if (filters.category !== undefined && t.category !== filters.category) return false;
+    if (tagLower !== undefined && !t.tags.some((tag) => tag.toLowerCase() === tagLower)) return false;
+    if (filters.excludedOnly && !t.excluded) return false;
+    if (filters.unusedOnly && !isUnused(t)) return false;
+    return true;
+  });
+}
+
+const MAX_REFERENCE_SAMPLES = 10;
+
+function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry, references: FactoryReferenceCount | undefined): TaggedFactoryUsage {
+  const referenceCount = references?.count ?? 0;
+  const referencedBy = (references?.referencedBy ?? []).slice(0, MAX_REFERENCE_SAMPLES).map((r) => ({ ...r }));
   return {
     slug: entry.slug,
     name: entry.name,
@@ -219,7 +316,11 @@ function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry): TaggedFactoryUsag
     isNested: entry.isNested,
     skip: entry.skip,
     manual: entry.manual,
+    excluded: entry.excluded ?? false,
     category: entry.category,
+    tags: [...entry.tags],
+    referenceCount,
+    referencedBy,
     composites: entry.derivedComposites.map((c) => ({ ...c, fields: c.fields.map((f) => ({ ...f })) })),
     fieldOverrides: entry.derivedFieldOverrides.map((f) => ({ ...f, variants: f.variants.map((v) => ({ ...v })) }))
   };
@@ -243,6 +344,8 @@ function formatBuildWarning(warning: ModelFirebaseIndexBuildWarning): string {
         return `${w.name} (${w.filePath}:${w.line}) unknown constraint helper "${w.helper}"`;
       case 'unresolved-field':
         return `${w.name} (${w.filePath}:${w.line}) could not resolve field-path argument to "${w.callee}"`;
+      case 'excluded-factory':
+        return `${w.name} (${w.filePath}:${w.line}) tagged @dbxModelFirebaseIndexExclude — analyzer is suppressing composites + fieldOverrides for this factory`;
     }
   }
   const w = warning.warning;
@@ -364,8 +467,23 @@ function appendMarkdownHeader(lines: string[], report: ListAppReport): void {
   if (report.source.length > 0) {
     lines.push(`Source \`${report.source}\` · module \`${report.module}\``, '');
   }
-  const summary = [`${report.tagged.length} tagged factor${report.tagged.length === 1 ? 'y' : 'ies'}`, `${report.untagged.length} untagged candidate${report.untagged.length === 1 ? '' : 's'}`, `${report.compositeCount} composite${report.compositeCount === 1 ? '' : 's'}`, `${report.fieldOverrideCount} fieldOverride contribution${report.fieldOverrideCount === 1 ? '' : 's'}`].join(' · ');
+  const summary = [`${report.tagged.length} tagged factor${report.tagged.length === 1 ? 'y' : 'ies'}`, `${report.untagged.length} untagged candidate${report.untagged.length === 1 ? '' : 's'}`, `${report.compositeCount} composite${report.compositeCount === 1 ? '' : 's'}`, `${report.fieldOverrideCount} fieldOverride contribution${report.fieldOverrideCount === 1 ? '' : 's'}`, `${report.unusedCount} unused`, `${report.excludedCount} excluded`].join(' · ');
   lines.push(summary, '');
+  const activeFilters = describeActiveFilters(report.filters);
+  if (activeFilters.length > 0) {
+    lines.push(`Filters: ${activeFilters.join(', ')}`, '');
+  }
+}
+
+function describeActiveFilters(filters: ListAppFilters): readonly string[] {
+  const out: string[] = [];
+  if (filters.model !== undefined) out.push(`model=\`${filters.model}\``);
+  if (filters.category !== undefined) out.push(`category=\`${filters.category}\``);
+  if (filters.tag !== undefined) out.push(`tag=\`${filters.tag}\``);
+  if (filters.excludedOnly) out.push('excludedOnly');
+  if (filters.unusedOnly) out.push('unusedOnly');
+  if (!filters.includeUntagged) out.push('includeUntagged=false');
+  return out;
 }
 
 function groupTaggedByCollection(tagged: readonly TaggedFactoryUsage[]): readonly (readonly [string, readonly TaggedFactoryUsage[]])[] {
@@ -379,10 +497,10 @@ function groupTaggedByCollection(tagged: readonly TaggedFactoryUsage[]): readonl
 }
 
 function appendFactoryHeaderLine(lines: string[], t: TaggedFactoryUsage): void {
-  const flags = [t.skip ? '`skip`' : null, t.manual ? '`manual`' : null].filter((v) => v !== null);
+  const flags = [t.skip ? '`skip`' : null, t.manual ? '`manual`' : null, t.excluded ? '`excluded`' : null, isUnused(t) ? '`unused`' : null].filter((v) => v !== null);
   const flagsText = flags.length > 0 ? `${flags.join(', ')} · ` : '';
   const categoryLabel = t.category.length > 0 ? t.category : '—';
-  lines.push(`- ${flagsText}scope \`${t.scope}\`${t.isNested ? ' (nested)' : ''} · category \`${categoryLabel}\``);
+  lines.push(`- ${flagsText}scope \`${t.scope}\`${t.isNested ? ' (nested)' : ''} · category \`${categoryLabel}\` · refs ${t.referenceCount}`);
 }
 
 function appendFactoryComposites(lines: string[], composites: readonly DerivedComposite[]): void {
@@ -407,10 +525,19 @@ function appendFactoryEntry(lines: string[], t: TaggedFactoryUsage): void {
   appendFactoryHeaderLine(lines, t);
   appendFactoryComposites(lines, t.composites);
   appendFactoryFieldOverrides(lines, t.fieldOverrides);
-  if (t.composites.length === 0 && t.fieldOverrides.length === 0 && !t.skip) {
+  appendFactoryReferences(lines, t);
+  if (t.composites.length === 0 && t.fieldOverrides.length === 0 && !t.skip && !t.excluded) {
     lines.push('- _auto-indexed by Firestore (no composite or fieldOverride required)_');
   }
   lines.push('');
+}
+
+function appendFactoryReferences(lines: string[], t: TaggedFactoryUsage): void {
+  if (t.referencedBy.length === 0) return;
+  lines.push(`- **referenced by:** ${t.referenceCount} site${t.referenceCount === 1 ? '' : 's'}`);
+  for (const ref of t.referencedBy) {
+    lines.push(`  - \`${ref.file}:${ref.line}\``);
+  }
 }
 
 function appendTaggedSections(lines: string[], tagged: readonly TaggedFactoryUsage[]): void {

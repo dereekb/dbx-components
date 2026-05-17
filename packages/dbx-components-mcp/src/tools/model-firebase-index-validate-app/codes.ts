@@ -181,6 +181,28 @@ export enum ModelFirebaseIndexValidateAppCode {
    */
   MODEL_FIREBASE_INDEX_NON_DELEGATING_DISPATCHER = 'MODEL_FIREBASE_INDEX_NON_DELEGATING_DISPATCHER',
 
+  /**
+   * A tagged factory carries `@dbxModelFirebaseIndexExclude` — its constraints are parsed but the analyzer suppresses composite + fieldOverride emission.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every `@dbxModelFirebaseIndex`-tagged factory that also declares `@dbxModelFirebaseIndexExclude`. The warning fires on every scan so the deliberate exclusion stays auditable in CI logs.
+   * @dbxRuleNotApplies Factories using `@dbxModelFirebaseIndexSkip` (silent — no warning emitted) or `@dbxModelFirebaseIndexManual` (composites are author-managed, no audit signal needed).
+   * @dbxRuleFix If the exclusion is no longer required, delete the `@dbxModelFirebaseIndexExclude` tag and let the analyzer emit the implied composite. If the factory should be permanently silent, switch to `@dbxModelFirebaseIndexSkip` and document the rationale next to the tag.
+   * @dbxRuleSeeAlso tool:dbx_model_firebase_index_validate_app
+   */
+  MODEL_FIREBASE_INDEX_EXCLUDED = 'MODEL_FIREBASE_INDEX_EXCLUDED',
+
+  /**
+   * A tagged factory has zero external references across the component's `src/`.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any other `.ts` file under the scanned `src/`. The check uses word-boundary text scanning so renames + stale exports surface here.
+   * @dbxRuleNotApplies Factories marked `@dbxModelFirebaseIndexSkip` (the author already opted out of emission) or `@dbxModelFirebaseIndexManual` (author-managed index, not necessarily wired through normal call sites).
+   * @dbxRuleFix Either delete the factory (and its `*.query.ts` file if empty) or wire up the missing caller. If retention is intentional pending a future caller, add `@dbxModelFirebaseIndexSkip` to silence both the index generation and this warning.
+   * @dbxRuleSeeAlso tool:dbx_model_firebase_index_list_app
+   */
+  MODEL_FIREBASE_INDEX_UNUSED_FACTORY = 'MODEL_FIREBASE_INDEX_UNUSED_FACTORY',
+
   // MARK: Analyze — Firestore shape
   /**
    * A constraint sequence has more than one range-filtered field.

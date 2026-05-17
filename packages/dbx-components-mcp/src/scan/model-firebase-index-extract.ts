@@ -41,6 +41,7 @@ const INDEX_MODEL_TAG = 'dbxModelFirebaseIndexModel';
 const INDEX_SCOPE_TAG = 'dbxModelFirebaseIndexScope';
 const INDEX_MANUAL_TAG = 'dbxModelFirebaseIndexManual';
 const INDEX_SKIP_TAG = 'dbxModelFirebaseIndexSkip';
+const INDEX_EXCLUDE_TAG = 'dbxModelFirebaseIndexExclude';
 const INDEX_ALLOW_ARRAY_CONTAINS_ANY_TAG = 'dbxModelFirebaseIndexAllowArrayContainsAny';
 const INDEX_CATEGORY_TAG = 'dbxModelFirebaseIndexCategory';
 const INDEX_TAGS_TAG = 'dbxModelFirebaseIndexTags';
@@ -83,6 +84,15 @@ export interface ExtractedModelFirebaseIndexEntry {
   readonly scope: FirestoreQueryScope;
   readonly manual: boolean;
   readonly skip: boolean;
+  /**
+   * True when the factory carries `@dbxModelFirebaseIndexExclude`. The
+   * constraint sequence is still parsed (unlike `skip`, which empties it)
+   * so the list-app / lookup tools can display the would-be query shape;
+   * the analyzer suppresses composite + fieldOverride emission. Every
+   * excluded factory also produces an `excluded-factory` warning so the
+   * exclusion is auditable.
+   */
+  readonly excluded: boolean;
   readonly allowArrayContainsAny: boolean;
   readonly category: string;
   readonly signature: string;
@@ -125,7 +135,8 @@ export type ModelFirebaseIndexExtractWarning =
   | { readonly kind: 'transitive-cycle'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
   | { readonly kind: 'unresolvable-transitive-callee'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
   | { readonly kind: 'complex-query-body'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly branchKind: ComplexQueryBranchKind; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'non-delegating-dispatcher'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number };
+  | { readonly kind: 'non-delegating-dispatcher'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'excluded-factory'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly filePath: string; readonly line: number };
 
 /**
  * Input to {@link extractModelFirebaseIndexEntries}.
@@ -228,6 +239,7 @@ interface ParsedIndexTags {
   readonly scope?: string;
   readonly manual: boolean;
   readonly skip: boolean;
+  readonly excluded: boolean;
   readonly dispatcher: boolean;
   readonly allowArrayContainsAny: boolean;
   readonly category?: string;
@@ -254,6 +266,7 @@ interface MutableTagState {
   scope: string | undefined;
   manual: boolean;
   skip: boolean;
+  excluded: boolean;
   dispatcher: boolean;
   allowArrayContainsAny: boolean;
   category: string | undefined;
@@ -276,6 +289,7 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     scope: undefined,
     manual: false,
     skip: false,
+    excluded: false,
     dispatcher: false,
     allowArrayContainsAny: false,
     category: undefined,
@@ -316,6 +330,7 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     scope: state.scope,
     manual: state.manual,
     skip: state.skip,
+    excluded: state.excluded,
     dispatcher: state.dispatcher,
     allowArrayContainsAny: state.allowArrayContainsAny,
     category: state.category,
@@ -349,6 +364,9 @@ function applyTag(state: MutableTagState, name: string, text: string): void {
       break;
     case INDEX_SKIP_TAG:
       state.skip = parseBooleanTag(text) ?? true;
+      break;
+    case INDEX_EXCLUDE_TAG:
+      state.excluded = parseBooleanTag(text) ?? true;
       break;
     case INDEX_DISPATCHER_TAG:
       state.dispatcher = parseBooleanTag(text) ?? true;
@@ -504,6 +522,10 @@ function composeEntry(input: ComposeEntryInput): ExtractedModelFirebaseIndexEntr
 
   const constraintSequences = resolveConstraintSequences({ candidate, tags, name, line, filePath, warnings });
 
+  if (tags.excluded) {
+    warnings.push({ kind: 'excluded-factory', severity: 'warning', name, filePath, line });
+  }
+
   return {
     slug,
     name,
@@ -513,6 +535,7 @@ function composeEntry(input: ComposeEntryInput): ExtractedModelFirebaseIndexEntr
     scope,
     manual: tags.manual,
     skip: tags.skip,
+    excluded: tags.excluded,
     allowArrayContainsAny: tags.allowArrayContainsAny,
     category,
     signature,

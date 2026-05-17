@@ -168,6 +168,15 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+    case 'excluded-factory':
+      return {
+        code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_EXCLUDED,
+        severity,
+        message: `${w.name} is tagged \`@dbxModelFirebaseIndexExclude\` — constraints are parsed but the analyzer is suppressing composite + fieldOverride emission. Remove the tag to restore index generation, or switch to \`@dbxModelFirebaseIndexSkip\` to silence the audit warning.`,
+        file: w.filePath,
+        line: w.line,
+        factory: w.name
+      };
   }
 }
 

@@ -89,5 +89,7 @@ function formatExtractWarning(warning: ModelFirebaseIndexBuildWarning): string {
       return `${w.name} (${w.filePath}:${w.line}) tagged query body contains a "${w.branchKind}" construct — split into one factory per target index or mark as @dbxModelFirebaseIndexDispatcher`;
     case 'non-delegating-dispatcher':
       return `${w.name} (${w.filePath}:${w.line}) @dbxModelFirebaseIndexDispatcher calls "${w.callee}" directly — dispatchers must only delegate to other tagged query functions`;
+    case 'excluded-factory':
+      return `${w.name} (${w.filePath}:${w.line}) tagged @dbxModelFirebaseIndexExclude — analyzer is suppressing composites + fieldOverrides for this factory`;
   }
 }
