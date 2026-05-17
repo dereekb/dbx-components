@@ -25,13 +25,17 @@ export class DbxScheduleSelectionCalendarDatePopoverButtonComponent {
   readonly disabled$ = this.dbxCalendarScheduleSelectionStore.isViewReadonly$;
   readonly buttonText$ = this.dbxCalendarScheduleSelectionStore.currentDateRange$.pipe(
     map((x) => {
+      let result: string;
+
       if (x?.start && x.end) {
         const startString = formatToMonthDayString(x.start);
         const endString = formatToMonthDayString(x.end);
-        return startString === endString ? startString : `${formatToMonthDayString(x.start)} - ${formatToMonthDayString(x.end)}`;
+        result = startString === endString ? startString : `${formatToMonthDayString(x.start)} - ${formatToMonthDayString(x.end)}`;
+      } else {
+        result = 'Pick a Date Range';
       }
 
-      return 'Pick a Date Range';
+      return result;
     }),
     shareReplay(1)
   );

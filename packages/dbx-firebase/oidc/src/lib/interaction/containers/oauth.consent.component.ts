@@ -120,16 +120,17 @@ export class DbxOAuthConsentComponent implements OnDestroy {
 
   readonly consentStateCase = computed<OidcConsentStateCase>(() => {
     const isLoggedIn = this.isLoggedIn();
+    let result: OidcConsentStateCase;
 
     if (isLoggedIn === undefined) {
-      return 'unknown';
+      result = 'unknown';
+    } else if (!isLoggedIn) {
+      result = 'no_user';
+    } else {
+      result = 'user';
     }
 
-    if (!isLoggedIn) {
-      return 'no_user';
-    }
-
-    return 'user';
+    return result;
   });
 
   ngOnDestroy(): void {

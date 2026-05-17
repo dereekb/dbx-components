@@ -112,11 +112,11 @@ export interface FetchJsonRequestInitFunctionConfig {
    *
    * Defaults to GET
    */
-  defaultMethod?: string;
+  readonly defaultMethod?: string;
   /**
    * Optional map function to modify the FetchJsonInput before it is finalized into a RequestInit value.
    */
-  mapFetchJsonInput?: FetchJsonInputMapFunction;
+  readonly mapFetchJsonInput?: FetchJsonInputMapFunction;
 }
 
 export type FetchJsonRequestInitFunction = (methodOrInput?: string | FetchJsonInput | undefined, body?: FetchJsonBody) => RequestInit;

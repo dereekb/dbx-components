@@ -221,15 +221,15 @@ export function roundNumberUpToStep(value: number, step: number): number {
  * roundNumberToStepFunction()
  */
 export interface RoundNumberToStepFunctionConfig {
-  step: StepNumber;
+  readonly step: StepNumber;
   /**
    * Type of rounding to use.
    */
-  round: Omit<NumberRounding, 'none'>;
+  readonly round: Omit<NumberRounding, 'none'>;
   /**
    * Offset to apply to each input number. Defaults to zero.
    */
-  origin?: StepOrigin;
+  readonly origin?: StepOrigin;
 }
 
 export type RoundNumberToStepFunctionInput = RoundNumberToStepFunctionConfig | StepNumber;

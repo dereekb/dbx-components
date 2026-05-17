@@ -34,10 +34,14 @@ export function limitArray<T>(array: T[], { limit, limitFromEnd }: Partial<Limit
 export function limitArray<T>(array: Maybe<T[]>, { limit, limitFromEnd }: Partial<LimitArrayConfig>): Maybe<T[]>;
 export function limitArray<T>(array: Maybe<T[]>, config: Maybe<Partial<LimitArrayConfig>>): Maybe<T[]>;
 export function limitArray<T>(array: Maybe<T[]>, inputConfig: Maybe<Partial<LimitArrayConfig>>): Maybe<T[]> {
+  let result: Maybe<T[]>;
+
   if (array && inputConfig?.limit != null) {
     const { limit, limitFromEnd } = inputConfig;
-    return limitFromEnd ? takeLast(array, limit) : takeFront(array, limit);
+    result = limitFromEnd ? takeLast(array, limit) : takeFront(array, limit);
+  } else {
+    result = array;
   }
 
-  return array;
+  return result;
 }

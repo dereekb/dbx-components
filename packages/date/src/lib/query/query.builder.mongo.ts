@@ -59,7 +59,7 @@ export function mergeMongoDBLikeRangeFilters(startsAt: Maybe<MongoDBLikeDateRang
 }
 
 export interface MakeMongoDBLikeDateQueryBuilderConfig {
-  fields: TimeFieldsNameSet;
+  readonly fields: TimeFieldsNameSet;
 }
 
 /**

@@ -15,21 +15,21 @@ import { loginMethodTypeToFirebaseProviderId } from './login.provider.id';
  * Configuration for a login button's appearance and action handler.
  */
 export interface DbxFirebaseLoginButtonConfig {
-  text: string;
-  iconUrl?: string;
-  icon?: string;
-  iconFilter?: string;
-  buttonColor?: string;
-  buttonTextColor?: string;
+  readonly text: string;
+  readonly iconUrl?: string;
+  readonly icon?: string;
+  readonly iconFilter?: string;
+  readonly buttonColor?: string;
+  readonly buttonTextColor?: string;
   /**
    * Material theme color or {@link DbxColorConfig} to apply to the underlying button (e.g., 'warn', 'primary').
    */
-  color?: DbxColorInput;
+  readonly color?: DbxColorInput;
   /**
    * Optional confirmation dialog config. When set, the action will prompt the user before executing.
    */
-  confirmConfig?: DbxActionConfirmConfig;
-  handleLogin: () => Promise<unknown>;
+  readonly confirmConfig?: DbxActionConfirmConfig;
+  readonly handleLogin: () => Promise<unknown>;
 }
 
 /**

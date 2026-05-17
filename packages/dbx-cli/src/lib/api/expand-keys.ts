@@ -41,49 +41,60 @@ export function findCliModelManifestEntry(modelType: string, manifest: CliModelM
  */
 export function expandModelKeys(modelType: string, data: unknown, manifest: CliModelManifest): unknown {
   const entry = findCliModelManifestEntry(modelType, manifest);
-  if (!entry) return data;
-  return rewriteWithFields(data, entry.fields);
+  return entry ? rewriteWithFields(data, entry.fields) : data;
 }
 
 function rewriteWithFields(value: unknown, fields: readonly CliModelField[]): unknown {
+  let result: unknown;
   if (Array.isArray(value)) {
-    return value.map((item) => rewriteWithFields(item, fields));
-  }
-  if (!isPlainObject(value)) return value;
+    result = value.map((item) => rewriteWithFields(item, fields));
+  } else if (!isPlainObject(value)) {
+    result = value;
+  } else {
+    const fieldByName = new Map<string, CliModelField>();
+    for (const field of fields) fieldByName.set(field.name, field);
 
-  const fieldByName = new Map<string, CliModelField>();
-  for (const field of fields) fieldByName.set(field.name, field);
-
-  const out: Record<string, unknown> = {};
-  for (const [key, raw] of Object.entries(value)) {
-    const field = fieldByName.get(key);
-    if (!field) {
-      out[key] = raw;
-      continue;
+    const out: Record<string, unknown> = {};
+    for (const [key, raw] of Object.entries(value)) {
+      const field = fieldByName.get(key);
+      if (!field) {
+        out[key] = raw;
+        continue;
+      }
+      const longKey = field.longName.length > 0 ? field.longName : key;
+      out[longKey] = rewriteFieldValue(raw, field);
     }
-    const longKey = field.longName.length > 0 ? field.longName : key;
-    out[longKey] = rewriteFieldValue(raw, field);
+    result = out;
   }
-  return out;
+  return result;
 }
 
 function rewriteFieldValue(value: unknown, field: CliModelField): unknown {
   const nested = field.nestedFields;
-  if (!nested || nested.length === 0) return value;
-  if (field.nestedIsArray) {
-    if (!Array.isArray(value)) return value;
-    return value.map((item) => rewriteWithFields(item, nested));
+  let result: unknown;
+  if (!nested || nested.length === 0) {
+    result = value;
+  } else if (field.nestedIsArray) {
+    result = Array.isArray(value) ? value.map((item) => rewriteWithFields(item, nested)) : value;
+  } else if (!isPlainObject(value)) {
+    result = value;
+  } else {
+    result = rewriteWithFields(value, nested);
   }
-  if (!isPlainObject(value)) return value;
-  return rewriteWithFields(value, nested);
+  return result;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (value === null || typeof value !== 'object') return false;
-  if (Array.isArray(value)) return false;
-  if (value instanceof Date) return false;
-  // Objects from JSON.parse have Object.prototype as their proto. Anything
-  // exotic (Map, Set, Buffer, class instances) we leave untouched.
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || proto === null;
+  let result: boolean;
+  if (value === null || typeof value !== 'object') {
+    result = false;
+  } else if (Array.isArray(value) || value instanceof Date) {
+    result = false;
+  } else {
+    // Objects from JSON.parse have Object.prototype as their proto. Anything
+    // exotic (Map, Set, Buffer, class instances) we leave untouched.
+    const proto = Object.getPrototypeOf(value);
+    result = proto === Object.prototype || proto === null;
+  }
+  return result;
 }

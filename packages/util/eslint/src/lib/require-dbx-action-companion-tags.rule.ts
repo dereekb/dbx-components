@@ -95,8 +95,7 @@ export const utilRequireDbxActionCompanionTagsRule: UtilRequireDbxActionCompanio
     function checkClassJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
       const { markerTag, companions } = collectFamilyTags(parsed);
-      if (!markerTag && companions.size === 0) return;
-      if (requireBareMarker && !markerTag) return;
+      if ((!markerTag && companions.size === 0) || (requireBareMarker && !markerTag)) return;
       const triggerLine = (markerTag ?? Array.from(companions.values())[0]?.[0])?.startLineIndex ?? 0;
 
       // Unknown companions.

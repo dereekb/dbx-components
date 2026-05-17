@@ -98,8 +98,7 @@ export const utilRequireDbxWebCompanionTagsRule: UtilRequireDbxWebCompanionTagsR
       // `dbxWebComponent` as the trigger, then reads `@dbxWeb<Suffix>` companions.
       const markerTag = parsed.tags.find((t) => t.tag === 'dbxWebComponent');
       const companionTags = parsed.tags.filter((t) => t.tag.startsWith('dbxWeb') && t.tag !== 'dbxWebComponent');
-      if (!markerTag && companionTags.length === 0) return;
-      if (requireBareMarker && !markerTag) return;
+      if ((!markerTag && companionTags.length === 0) || (requireBareMarker && !markerTag)) return;
       const triggerTag = markerTag ?? companionTags[0];
 
       // Pass only the companion tags (those starting with `dbxWeb` but not the

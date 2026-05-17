@@ -73,18 +73,14 @@ export function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
     writeFile(input.filePath, JSON.stringify(input.data, null, 2), { mode: input.mode }, (err) => {
       if (err) {
         reject(err);
-        return;
-      }
-
-      if (input.mode == null) {
+      } else if (input.mode == null) {
         resolve();
-        return;
+      } else {
+        chmod(input.filePath, input.mode, (chmodErr) => {
+          if (chmodErr) reject(chmodErr);
+          else resolve();
+        });
       }
-
-      chmod(input.filePath, input.mode, (chmodErr) => {
-        if (chmodErr) reject(chmodErr);
-        else resolve();
-      });
     });
   });
 }

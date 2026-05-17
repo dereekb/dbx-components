@@ -85,7 +85,8 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
       // download the file
       const fileBytes = await input.fileDetailsAccessor.loadFileBytes();
 
-      let newImageBytes: Buffer;
+      let newImageBytes: Buffer | undefined;
+      let failureResult: StorageFileInitializeFromUploadServiceInitializerResult | undefined;
 
       try {
         // crop to a square at the avatar dimensions, then let the shared compressor
@@ -110,43 +111,51 @@ export function demoStorageFileUploadServiceFactory(demoFirebaseServerActionsCon
         newImageBytes = compressed.buffer;
       } catch (e) {
         // if sharp fails to initialize, then the uploaded file is probably unsupported.
-        return storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(e);
+        failureResult = storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(e);
       }
 
-      const fileMimeType = mimeTypeForImageFileExtension('jpeg');
+      let result: StorageFileInitializeFromUploadServiceInitializerResult;
 
-      // create the new file at /avatar/u/{userId}/avatar
-      const newPath = makeUserAvatarFileStoragePath(userId);
-      const createdFile = storageService.file(newPath);
+      if (failureResult != null || newImageBytes == null) {
+        result = failureResult as StorageFileInitializeFromUploadServiceInitializerResult;
+      } else {
+        const fileMimeType = mimeTypeForImageFileExtension('jpeg');
 
-      await createdFile.upload(newImageBytes, { contentType: fileMimeType });
+        // create the new file at /avatar/u/{userId}/avatar
+        const newPath = makeUserAvatarFileStoragePath(userId);
+        const createdFile = storageService.file(newPath);
 
-      // create the StorageFileDocument and reference the new file
-      const createStorageFileResult = await createStorageFileDocumentPair({
-        accessor: storageFileDocumentAccessor,
-        file: createdFile,
-        user: userId,
-        purpose: USER_AVATAR_PURPOSE,
-        storageFileGroupIds: userAvatarFileGroupIds(userId),
-        shouldBeProcessed: false // no processing
-      });
+        await createdFile.upload(newImageBytes, { contentType: fileMimeType });
 
-      const profileDocument = profileCollection.documentAccessor().loadDocumentForId(userId);
-      const profileExists = await profileDocument.exists();
-
-      if (profileExists) {
-        const avatarDownloadUrl = await createdFile.getDownloadUrl();
-
-        await profileDocument.update({
-          avatarStorageFile: createStorageFileResult.storageFileDocument.key,
-          avatar: avatarDownloadUrl
+        // create the StorageFileDocument and reference the new file
+        const createStorageFileResult = await createStorageFileDocumentPair({
+          accessor: storageFileDocumentAccessor,
+          file: createdFile,
+          user: userId,
+          purpose: USER_AVATAR_PURPOSE,
+          storageFileGroupIds: userAvatarFileGroupIds(userId),
+          shouldBeProcessed: false // no processing
         });
+
+        const profileDocument = profileCollection.documentAccessor().loadDocumentForId(userId);
+        const profileExists = await profileDocument.exists();
+
+        if (profileExists) {
+          const avatarDownloadUrl = await createdFile.getDownloadUrl();
+
+          await profileDocument.update({
+            avatarStorageFile: createStorageFileResult.storageFileDocument.key,
+            avatar: avatarDownloadUrl
+          });
+        }
+
+        result = {
+          createStorageFileResult,
+          flagPreviousForDelete: true
+        };
       }
 
-      return {
-        createStorageFileResult,
-        flagPreviousForDelete: true
-      };
+      return result;
     },
     determiner: userTestAvatarDeterminer
   };

@@ -177,15 +177,19 @@ export const DEFAULT_FILE_ZOHO_ACCOUNTS_ACCESS_TOKEN_CACHE_SERVICE_PATH = '.tmp/
  * @returns the parsed ZohoAccessToken with `expiresAt` coerced to a Date, or undefined when the input is not an object
  */
 function reviveZohoAccessToken(raw: unknown): Maybe<ZohoAccessToken> {
+  let result: Maybe<ZohoAccessToken>;
+
   if (raw == null || typeof raw !== 'object') {
-    return undefined;
+    result = undefined;
+  } else {
+    const value = raw as ZohoAccessToken & { expiresAt?: unknown };
+    const rawExpiresAt = value.expiresAt;
+    const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
+
+    result = { ...(value as ZohoAccessToken), expiresAt: expiresAt as Date };
   }
 
-  const value = raw as ZohoAccessToken & { expiresAt?: unknown };
-  const rawExpiresAt = value.expiresAt;
-  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
-
-  return { ...(value as ZohoAccessToken), expiresAt: expiresAt as Date };
+  return result;
 }
 
 /**
@@ -230,14 +234,16 @@ export function fileZohoAccountsAccessTokenCacheService(filename: string = DEFAU
 
   async function readTokenFile(): Promise<Maybe<ZohoAccountsAccessTokenCacheRecord>> {
     const raw = await readJsonFile<Record<string, unknown>>(filename);
+    let result: Maybe<ZohoAccountsAccessTokenCacheRecord>;
 
     if (raw == null) {
-      return undefined;
-    }
-
-    const result: ZohoAccountsAccessTokenCacheRecord = {};
-    for (const key of Object.keys(raw)) {
-      result[key] = reviveZohoAccessToken(raw[key]);
+      result = undefined;
+    } else {
+      const revived: ZohoAccountsAccessTokenCacheRecord = {};
+      for (const key of Object.keys(raw)) {
+        revived[key] = reviveZohoAccessToken(raw[key]);
+      }
+      result = revived;
     }
 
     return result;

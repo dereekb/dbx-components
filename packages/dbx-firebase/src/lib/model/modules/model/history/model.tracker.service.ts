@@ -65,6 +65,8 @@ export class DbxFirebaseModelTrackerService {
    * @returns
    */
   filterHistoryPairs(filter?: Maybe<DbxFirebaseModelTrackerHistoryFilter>): Observable<DbxFirebaseModelTypesServiceInstancePair[]> {
+    let result: Observable<DbxFirebaseModelTypesServiceInstancePair[]>;
+
     if (filter && (filter?.identity || filter?.filterItem)) {
       const { invertFilter = false, identity, filterItem } = filter;
       const allowedIdentities = new Set(asArray(identity));
@@ -77,14 +79,16 @@ export class DbxFirebaseModelTrackerService {
         return isAllowedIdentityFn(x.identity) ? baseFilterItemFn(x) : of(false);
       };
 
-      return this.filterItemHistoryPairs$.pipe(
+      result = this.filterItemHistoryPairs$.pipe(
         filterItemsWithObservableDecision(filterItemFn),
         map((x) => x.map((y) => y.instancePair)),
         shareReplay(1)
       );
+    } else {
+      result = this.historyPairs$;
     }
 
-    return this.historyPairs$;
+    return result;
   }
 
   loadHistoryKeys() {

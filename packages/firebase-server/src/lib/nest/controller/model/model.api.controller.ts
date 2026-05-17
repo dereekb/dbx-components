@@ -188,13 +188,17 @@ export class ModelApiController {
   }
 
   private _toHttpException(error: any): HttpException {
+    let result: HttpException;
+
     if (error instanceof HttpException) {
-      return error;
+      result = error;
+    } else {
+      const status = error?.status ?? error?.httpErrorCode?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
+      const message = error?.message ?? 'Internal server error';
+
+      result = new HttpException({ statusCode: status, message, code: error?.code }, status);
     }
 
-    const status = error?.status ?? error?.httpErrorCode?.status ?? HttpStatus.INTERNAL_SERVER_ERROR;
-    const message = error?.message ?? 'Internal server error';
-
-    return new HttpException({ statusCode: status, message, code: error?.code }, status);
+    return result;
   }
 }

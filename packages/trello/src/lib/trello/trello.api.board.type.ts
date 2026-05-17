@@ -30,9 +30,11 @@ export interface TrelloBoard {
 export type TrelloBoardPermissionLevel = 'private' | 'org' | 'public';
 
 /**
- * Background preset name. Custom backgrounds use ids returned by the API.
+ * Background preset name or custom background id returned by the API.
+ *
+ * Common preset values: `blue`, `orange`, `green`, `red`, `purple`, `pink`, `lime`, `sky`, `grey`.
  */
-export type TrelloBoardBackground = 'blue' | 'orange' | 'green' | 'red' | 'purple' | 'pink' | 'lime' | 'sky' | 'grey' | string;
+export type TrelloBoardBackground = string;
 
 export interface CreateBoardBody {
   /**

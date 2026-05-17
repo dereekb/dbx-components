@@ -61,7 +61,7 @@ function getImportName(node: AstNode): string {
       // Walk to the right-most identifier.
       let cursor = qualifier;
 
-      while (cursor && cursor.type === 'TSQualifiedName') {
+      while (cursor?.type === 'TSQualifiedName') {
         cursor = cursor.right;
       }
 

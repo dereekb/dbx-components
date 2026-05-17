@@ -19,12 +19,16 @@ export interface ZohoPaginatedResponse extends PaginatedResponse {
  */
 export const zohoPagePaginationAdapter: PaginationAdapter<any, ZohoPaginatedResponse> = {
   nextInput: (input, last) => {
+    let next: typeof input | undefined;
+
     if (!last.info?.more_records) {
-      return undefined;
+      next = undefined;
+    } else {
+      const currentPage = (input as { page?: number }).page ?? 1;
+      next = { ...input, page: currentPage + 1 };
     }
 
-    const currentPage = (input as { page?: number }).page ?? 1;
-    return { ...input, page: currentPage + 1 };
+    return next;
   },
   countOf: (r) => r.data?.length ?? 0,
   metaOf: (input, r) => ({
@@ -44,19 +48,17 @@ export const zohoPagePaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
 export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResponse> = {
   nextInput: (input, last) => {
     const limit = (input as { limit?: number }).limit ?? 25;
-
-    if (limit <= 0) {
-      return undefined;
-    }
-
     const count = last.data?.length ?? 0;
+    let next: typeof input | undefined;
 
-    if (count < limit) {
-      return undefined;
+    if (limit <= 0 || count < limit) {
+      next = undefined;
+    } else {
+      const currentFrom = (input as { from?: number }).from ?? 1;
+      next = { ...input, from: currentFrom + limit };
     }
 
-    const currentFrom = (input as { from?: number }).from ?? 1;
-    return { ...input, from: currentFrom + limit };
+    return next;
   },
   countOf: (r) => r.data?.length ?? 0,
   metaOf: (input, r) => ({
@@ -66,13 +68,9 @@ export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
   }),
   hasMorePagesAvailable: (input, r) => {
     const limit = (input as { limit?: number }).limit ?? 25;
-
-    if (limit <= 0) {
-      return false;
-    }
-
     const count = r.data?.length ?? 0;
-    return count >= limit;
+    const hasMore = limit > 0 && count >= limit;
+    return hasMore;
   }
 };
 
@@ -85,7 +83,6 @@ export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
  * them to {@link runPaginatedList}, which validates them.
  */
 export interface RunZohoPaginatedListInput<TInput, TResponse extends ZohoPaginatedResponse> {
-   
   readonly argv: any;
   readonly initialInput: TInput;
   readonly fetchPage: (input: TInput) => Promise<TResponse>;

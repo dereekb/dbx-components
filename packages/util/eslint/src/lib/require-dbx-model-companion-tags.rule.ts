@@ -111,8 +111,7 @@ export const utilRequireDbxModelCompanionTagsRule: UtilRequireDbxModelCompanionT
     function checkInterfaceJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
       const { markers, companions } = collectInterfaceTags(parsed);
-      if (markers.length === 0 && companions.size === 0) return;
-      if (requireBareMarker && markers.length === 0) return;
+      if ((markers.length === 0 && companions.size === 0) || (requireBareMarker && markers.length === 0)) return;
 
       // Mutually exclusive markers.
       const exclusiveMarkers = markers.filter((m) => m.tag === 'dbxModel' || m.tag === 'dbxModelSubObject' || m.tag === 'dbxModelOrganizationalGroupRoot');

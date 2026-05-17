@@ -109,23 +109,26 @@ export class DbxFirebaseOidcEntryClientTestComponent {
     const state = this.state();
     const nonce = this.nonce();
     const formValue = this.formValue();
+    let result: Maybe<string>;
 
     if (!clientId || !codeChallenge || !formValue?.redirect_uri) {
-      return undefined;
+      result = undefined;
+    } else {
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        redirect_uri: formValue.redirect_uri,
+        scope: (formValue.scopes ?? ['openid']).join(' '),
+        state,
+        nonce,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256'
+      });
+
+      result = `${this.resolvedAuthorizationEndpointPath()}?${params.toString()}`;
     }
 
-    const params = new URLSearchParams({
-      response_type: 'code',
-      client_id: clientId,
-      redirect_uri: formValue.redirect_uri,
-      scope: (formValue.scopes ?? ['openid']).join(' '),
-      state,
-      nonce,
-      code_challenge: codeChallenge,
-      code_challenge_method: 'S256'
-    });
-
-    return `${this.resolvedAuthorizationEndpointPath()}?${params.toString()}`;
+    return result;
   });
 
   constructor() {

@@ -226,11 +226,7 @@ export function isExpired<T extends Expires = Expires>(input: Maybe<ExpirationDe
  * @returns True if the threshold has not passed since the next run time, compared to now.
  */
 export function isUnderThreshold(threshold: Milliseconds, nextRunAt: Maybe<DateOrUnixDateTimeMillisecondsNumber>, now?: Maybe<Date>): boolean {
-  if (nextRunAt == null) {
-    return false;
-  }
-
-  return !isThrottled(-threshold, nextRunAt, now);
+  return nextRunAt == null ? false : !isThrottled(-threshold, nextRunAt, now);
 }
 
 /**
@@ -288,10 +284,14 @@ export function checkAtleastOneNotExpired(details: ExpirationDetails<Expires>[])
  * @returns True if any item has expired, or the defaultIfEmpty value for an empty list
  */
 export function checkAnyHaveExpired(details: ExpirationDetails<Expires>[], defaultIfEmpty: boolean = true): boolean {
+  let result: boolean;
+
   if (details.length === 0) {
-    return defaultIfEmpty;
+    result = defaultIfEmpty;
+  } else {
+    const firstExpired = details.findIndex((detail) => detail.hasExpired());
+    result = firstExpired !== -1;
   }
 
-  const firstExpired = details.findIndex((detail) => detail.hasExpired());
-  return firstExpired !== -1;
+  return result;
 }

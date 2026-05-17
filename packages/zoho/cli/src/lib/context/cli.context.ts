@@ -35,23 +35,25 @@ export function createCliContext(config: ZohoCliConfig): ZohoCliContext {
   function getAccountsApi(creds: ZohoCliResolvedProductCredentials, serviceKey: string): ZohoAccountsApi {
     const key = credentialKey(creds);
     const existing = accountsApiCache.get(key);
+    let api: ZohoAccountsApi;
 
     if (existing) {
-      return existing;
+      api = existing;
+    } else {
+      const accountsConfig: ZohoAccountsServiceConfig = {
+        zohoAccounts: {
+          serviceAccessTokenKey: serviceKey,
+          refreshToken: creds.refreshToken,
+          clientId: creds.clientId,
+          clientSecret: creds.clientSecret,
+          apiUrl: creds.region ?? 'us'
+        }
+      };
+
+      api = new ZohoAccountsApi(accountsConfig, cacheService);
+      accountsApiCache.set(key, api);
     }
 
-    const accountsConfig: ZohoAccountsServiceConfig = {
-      zohoAccounts: {
-        serviceAccessTokenKey: serviceKey,
-        refreshToken: creds.refreshToken,
-        clientId: creds.clientId,
-        clientSecret: creds.clientSecret,
-        apiUrl: creds.region ?? 'us'
-      }
-    };
-
-    const api = new ZohoAccountsApi(accountsConfig, cacheService);
-    accountsApiCache.set(key, api);
     return api;
   }
 

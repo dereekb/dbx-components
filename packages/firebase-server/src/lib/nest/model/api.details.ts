@@ -449,33 +449,36 @@ export interface ModelApiDetailsModelEntry {
  */
 export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): Maybe<ModelApiDetailsResult> {
   const topDetails = readApiDetails(callModelFn) as Maybe<OnCallModelApiDetails>;
+  let result: Maybe<ModelApiDetailsResult>;
 
-  if (topDetails == null) {
-    return undefined;
-  }
+  if (topDetails != null) {
+    const models: { [modelType: string]: { calls: { [call: string]: ModelCallApiDetails | undefined } } } = {};
 
-  const models: { [modelType: string]: { calls: { [call: string]: ModelCallApiDetails | undefined } } } = {};
-
-  // Pivot: iterate CRUD types, then model types within each
-  for (const [callType, crudDetails] of Object.entries(topDetails)) {
-    if (crudDetails == null) {
-      continue;
-    }
-
-    for (const [modelType, modelDetails] of Object.entries(crudDetails.modelTypes)) {
-      if (modelDetails == null) {
+    // Pivot: iterate CRUD types, then model types within each
+    for (const [callType, crudDetails] of Object.entries(topDetails)) {
+      if (crudDetails == null) {
         continue;
       }
 
-      if (!(modelType in models)) {
-        models[modelType] = { calls: {} };
-      }
+      for (const [modelType, modelDetails] of Object.entries(crudDetails.modelTypes)) {
+        if (modelDetails == null) {
+          continue;
+        }
 
-      models[modelType].calls[callType] = modelDetails;
+        if (!(modelType in models)) {
+          models[modelType] = { calls: {} };
+        }
+
+        models[modelType].calls[callType] = modelDetails;
+      }
+    }
+
+    if (Object.keys(models).length > 0) {
+      result = { models };
     }
   }
 
-  return Object.keys(models).length > 0 ? { models } : undefined;
+  return result;
 }
 
 // MARK: Analytics Resolution
@@ -494,15 +497,16 @@ export function getModelApiDetails(callModelFn: Maybe<OnCallApiDetailsRef>): May
 // eslint-disable-next-line @typescript-eslint/max-params
 export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OnCallModelFunctionAnalyticsDetails> {
   const modelDetails = apiDetails[call]?.modelTypes[modelType];
+  let result: Maybe<OnCallModelFunctionAnalyticsDetails>;
 
   if (modelDetails) {
     // All entries are now OnCallModelTypeApiDetails. For non-specifier handlers,
     // the details are under the `_` key.
     const key = specifier ?? '_';
-    return modelDetails.specifiers[key]?.analytics;
+    result = modelDetails.specifiers[key]?.analytics;
   }
 
-  return undefined;
+  return result;
 }
 
 // MARK: Compat

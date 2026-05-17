@@ -219,10 +219,10 @@ export function createCli(input: CreateCliInput): Argv {
     .alias('help', 'h')
     .wrap(Math.min(120, process.stdout.columns || 80));
 
-  if (input.version != null) {
-    parser = parser.version(input.version);
-  } else {
+  if (input.version == null) {
     parser = parser.version(false);
+  } else {
+    parser = parser.version(input.version);
   }
 
   if (input.completionCommandName !== false) {
@@ -250,14 +250,15 @@ export async function runCli(input: CreateCliInput): Promise<void> {
 
 function commandName(cmd: CommandModule): string {
   const raw = cmd.command;
+  let result: string;
 
   if (typeof raw === 'string') {
-    return raw.split(' ')[0];
+    result = raw.split(' ')[0];
+  } else if (Array.isArray(raw) && raw.length > 0) {
+    result = raw[0].split(' ')[0];
+  } else {
+    result = '';
   }
 
-  if (Array.isArray(raw) && raw.length > 0) {
-    return raw[0].split(' ')[0];
-  }
-
-  return '';
+  return result;
 }

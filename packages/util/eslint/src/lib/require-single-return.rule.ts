@@ -59,36 +59,24 @@ function getFunctionDisplayName(node: AstNode): string {
  * @param out - The accumulator array that receives matching `ReturnStatement` nodes.
  */
 function collectReturnsExcludingNested(node: AstNode, out: AstNode[]): void {
-  if (node === null || typeof node !== 'object') {
-    return;
-  }
+  if (node !== null && typeof node === 'object') {
+    if (Array.isArray(node)) {
+      for (const child of node) {
+        collectReturnsExcludingNested(child, out);
+      }
+    } else if (typeof node.type === 'string') {
+      if (node.type === 'ReturnStatement') {
+        out.push(node);
+      } else if (!NESTED_FUNCTION_TYPES.has(node.type)) {
+        for (const key of Object.keys(node)) {
+          if (key === 'parent' || key === 'loc' || key === 'range') {
+            continue;
+          }
 
-  if (Array.isArray(node)) {
-    for (const child of node) {
-      collectReturnsExcludingNested(child, out);
+          collectReturnsExcludingNested(node[key], out);
+        }
+      }
     }
-    return;
-  }
-
-  if (typeof node.type !== 'string') {
-    return;
-  }
-
-  if (node.type === 'ReturnStatement') {
-    out.push(node);
-    return;
-  }
-
-  if (NESTED_FUNCTION_TYPES.has(node.type)) {
-    return;
-  }
-
-  for (const key of Object.keys(node)) {
-    if (key === 'parent' || key === 'loc' || key === 'range') {
-      continue;
-    }
-
-    collectReturnsExcludingNested(node[key], out);
   }
 }
 
@@ -114,7 +102,7 @@ export const utilRequireSingleReturnRule: UtilRequireSingleReturnRuleDefinition 
   },
   create(context) {
     function checkFunction(node: AstNode): void {
-      if (!node.body || node.body.type !== 'BlockStatement') {
+      if (node.body?.type !== 'BlockStatement') {
         return;
       }
 

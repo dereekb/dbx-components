@@ -74,7 +74,7 @@ export interface FirebaseAdminFunctionTestConfig {
    *
    * @deprecated Is false by default to allow a new app to be defined each time. Usage of the singleton does not make sense. Remove later, and require that tests be run in serial if testing framework isn't behaving.
    */
-  useFunctionSingletonContext: boolean;
+  readonly useFunctionSingletonContext: boolean;
 }
 
 /**

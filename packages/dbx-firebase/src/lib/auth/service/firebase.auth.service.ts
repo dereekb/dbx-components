@@ -248,12 +248,16 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   }
 
   rolesForClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaims<T>): AuthRoleSet {
+    let result: AuthRoleSet;
+
     if (this._authRoleClaimsService) {
-      return this._authRoleClaimsService.toRoles(claims);
+      result = this._authRoleClaimsService.toRoles(claims);
+    } else {
+      console.warn('DbxFirebaseAuthService: rolesForClaims called with no authRoleClaimsService provided. An empty set is returned.');
+      result = new Set();
     }
 
-    console.warn('DbxFirebaseAuthService: rolesForClaims called with no authRoleClaimsService provided. An empty set is returned.');
-    return new Set();
+    return result;
   }
 
   getAuthContextInfo(): Promise<Maybe<DbxFirebaseAuthContextInfo>> {

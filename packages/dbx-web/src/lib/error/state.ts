@@ -8,7 +8,7 @@ import { type ServerError } from '@dereekb/util';
  * Wrapper for a {@link ServerError} used as NgRx action props.
  */
 export interface ServerErrorParams {
-  error: ServerError;
+  readonly error: ServerError;
 }
 
 /**

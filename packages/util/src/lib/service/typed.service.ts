@@ -56,7 +56,7 @@ export interface TypedServiceRegistrySetupConfig<S, T extends string = string> {
   /**
    * A record mapping type keys to their service instances.
    */
-  services: {
+  readonly services: {
     [K in T]: S;
   };
 }

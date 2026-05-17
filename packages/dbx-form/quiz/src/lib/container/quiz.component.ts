@@ -91,8 +91,10 @@ export class QuizComponent {
 
   readonly viewConfig$: Observable<QuizComponentViewConfig> = this.startedQuiz$.pipe(
     switchMap((started) => {
+      let result: Observable<QuizComponentViewConfig>;
+
       if (!started) {
-        return this.quiz$.pipe(
+        result = this.quiz$.pipe(
           map((quiz) => {
             const viewConfig: QuizComponentViewPreQuizConfig = {
               state: 'pre-quiz',
@@ -102,28 +104,30 @@ export class QuizComponent {
             return viewConfig;
           })
         );
+      } else {
+        result = combineLatest([this.quiz$, this.currentQuestion$, this.quizStore.isAtEndOfQuestions$]).pipe(
+          map(([quiz, currentQuestion, isAtEndOfQuestions]) => {
+            let viewConfig: QuizComponentViewConfig;
+
+            if (isAtEndOfQuestions) {
+              viewConfig = {
+                state: 'post-quiz',
+                resultsComponent: quiz?.resultsComponentConfig
+              };
+            } else {
+              viewConfig = {
+                state: 'quiz',
+                questionComponent: currentQuestion?.questionComponentConfig,
+                answerComponent: currentQuestion?.answerComponentConfig
+              };
+            }
+
+            return viewConfig;
+          })
+        );
       }
 
-      return combineLatest([this.quiz$, this.currentQuestion$, this.quizStore.isAtEndOfQuestions$]).pipe(
-        map(([quiz, currentQuestion, isAtEndOfQuestions]) => {
-          let viewConfig: QuizComponentViewConfig;
-
-          if (isAtEndOfQuestions) {
-            viewConfig = {
-              state: 'post-quiz',
-              resultsComponent: quiz?.resultsComponentConfig
-            };
-          } else {
-            viewConfig = {
-              state: 'quiz',
-              questionComponent: currentQuestion?.questionComponentConfig,
-              answerComponent: currentQuestion?.answerComponentConfig
-            };
-          }
-
-          return viewConfig;
-        })
-      );
+      return result;
     })
   );
 

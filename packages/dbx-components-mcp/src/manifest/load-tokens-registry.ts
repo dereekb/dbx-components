@@ -126,18 +126,19 @@ type LoadConfigResult = Awaited<ReturnType<typeof findAndLoadConfig>>;
 
 function collectExternalTokenSources(configResult: LoadConfigResult): TokenManifestSource[] {
   const externalSources: TokenManifestSource[] = [];
-  if (configResult.config === null || configResult.configPath === null) return externalSources;
-  const baseDir = dirname(configResult.configPath);
-  const tokensCluster = configResult.config.tokens;
-  for (const source of tokensCluster?.sources ?? []) {
-    const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
-    externalSources.push({ origin: 'external', path: absolute });
-  }
-  for (const scan of tokensCluster?.scan ?? []) {
-    const out = scan.out;
-    if (typeof out === 'string' && out.length > 0) {
-      const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
+  if (configResult.config !== null && configResult.configPath !== null) {
+    const baseDir = dirname(configResult.configPath);
+    const tokensCluster = configResult.config.tokens;
+    for (const source of tokensCluster?.sources ?? []) {
+      const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
       externalSources.push({ origin: 'external', path: absolute });
+    }
+    for (const scan of tokensCluster?.scan ?? []) {
+      const out = scan.out;
+      if (typeof out === 'string' && out.length > 0) {
+        const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
+        externalSources.push({ origin: 'external', path: absolute });
+      }
     }
   }
   return externalSources;

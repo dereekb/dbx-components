@@ -65,33 +65,31 @@ export function applyOidcAuthMiddleware(nestApp: INestApplication): void {
     const isProtected = protectedPaths.some((prefix) => req.path.startsWith(prefix));
 
     if (!isProtected) {
-      return next();
+      next();
+    } else {
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader?.startsWith('Bearer ')) {
+        res.status(401).json({ statusCode: 401, message: 'Missing or invalid Authorization header' });
+      } else {
+        const token = authHeader.slice(7);
+
+        oidcService
+          .verifyAccessToken(token)
+          .then((oauthAuth) => {
+            if (!oauthAuth) {
+              res.status(401).json({ statusCode: 401, message: 'Invalid or expired access token' });
+            } else {
+              (req as Configurable<OidcAuthenticatedRequest>).auth = oauthAuth;
+              next();
+            }
+          })
+          .catch((err) => {
+            logger.error('Bearer token verification failed', err);
+            res.status(401).json({ statusCode: 401, message: 'Token verification failed' });
+          });
+      }
     }
-
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader?.startsWith('Bearer ')) {
-      res.status(401).json({ statusCode: 401, message: 'Missing or invalid Authorization header' });
-      return;
-    }
-
-    const token = authHeader.slice(7);
-
-    oidcService
-      .verifyAccessToken(token)
-      .then((oauthAuth) => {
-        if (!oauthAuth) {
-          res.status(401).json({ statusCode: 401, message: 'Invalid or expired access token' });
-          return;
-        }
-
-        (req as Configurable<OidcAuthenticatedRequest>).auth = oauthAuth;
-        next();
-      })
-      .catch((err) => {
-        logger.error('Bearer token verification failed', err);
-        res.status(401).json({ statusCode: 401, message: 'Token verification failed' });
-      });
   });
 
   _logger.debug(`Applied OAuth bearer token middleware for paths: ${protectedPaths.join(', ')}`);

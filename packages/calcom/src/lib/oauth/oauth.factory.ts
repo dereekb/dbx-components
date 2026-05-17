@@ -13,11 +13,11 @@ export interface CalcomOAuthFactoryConfig {
   /**
    * Creates a new fetch instance to use when making calls.
    */
-  fetchFactory?: CalcomOAuthFetchFactory;
+  readonly fetchFactory?: CalcomOAuthFetchFactory;
   /**
    * Custom log error function.
    */
-  logCalcomServerErrorFunction?: LogCalcomServerErrorFunction;
+  readonly logCalcomServerErrorFunction?: LogCalcomServerErrorFunction;
 }
 
 export type CalcomOAuthFactory = (config: CalcomOAuthConfig) => CalcomOAuth;

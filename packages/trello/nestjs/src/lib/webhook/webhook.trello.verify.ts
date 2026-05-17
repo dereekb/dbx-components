@@ -59,7 +59,14 @@ export function trelloWebhookEventVerifier(config: TrelloWebhookEventVerifierCon
 
   return (request: Request, rawBody: Buffer) => {
     const headerValue = request.headers['x-trello-webhook'];
-    const signature = typeof headerValue === 'string' ? headerValue : Array.isArray(headerValue) ? headerValue[0] : undefined;
+
+    let signature: string | undefined;
+
+    if (typeof headerValue === 'string') {
+      signature = headerValue;
+    } else if (Array.isArray(headerValue)) {
+      signature = headerValue[0];
+    }
 
     let valid = false;
 
@@ -72,15 +79,19 @@ export function trelloWebhookEventVerifier(config: TrelloWebhookEventVerifierCon
     }
 
     let event: UntypedTrelloWebhookEvent | undefined;
+    let result: TrelloWebhookEventVerificationResult;
 
     if (valid) {
       try {
         event = JSON.parse(rawBody.toString('utf8')) as UntypedTrelloWebhookEvent;
+        result = { valid, event };
       } catch {
-        return { valid: false };
+        result = { valid: false };
       }
+    } else {
+      result = { valid, event };
     }
 
-    return { valid, event };
+    return result;
   };
 }

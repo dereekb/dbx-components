@@ -85,7 +85,8 @@ export const trelloActionIdReader = <T extends { readonly id: TrelloActionId }>(
 export function buildTrelloPageResult<T>(input: TrelloCursorPageFilter, data: ReadonlyArray<T>, idReader: TrelloPageItemIdReader<T>): TrelloPageResult<T> {
   const limit = input.limit ?? data.length;
   const hasMore = data.length === limit && data.length > 0;
-  const nextBefore = hasMore ? idReader(data[data.length - 1]) : undefined;
+  const lastItem = hasMore ? data.at(-1) : undefined;
+  const nextBefore = lastItem !== undefined ? idReader(lastItem) : undefined;
 
   return {
     data,

@@ -37,34 +37,38 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
 
   return {
     load: () => {
+      let result: Promise<Maybe<T>>;
+
       if (loaded != null) {
-        return Promise.resolve(loaded.value);
+        result = Promise.resolve(loaded.value);
+      } else {
+        if (inFlight == null) {
+          // Cache the in-flight promise so concurrent callers share the same load instead
+          // of each firing an independent inner.load(). Cleared on settle so a failed load
+          // doesn't permanently poison the memo. The captured generation lets a slow
+          // resolve detect a concurrent update()/clear() and skip clobbering newer state.
+          const startGen = generation;
+          inFlight = inner.load().then(
+            (value) => {
+              if (generation === startGen) {
+                loaded = { value };
+                inFlight = undefined;
+              }
+              return value;
+            },
+            (error) => {
+              if (generation === startGen) {
+                inFlight = undefined;
+              }
+              throw error;
+            }
+          );
+        }
+
+        result = inFlight;
       }
 
-      if (inFlight == null) {
-        // Cache the in-flight promise so concurrent callers share the same load instead
-        // of each firing an independent inner.load(). Cleared on settle so a failed load
-        // doesn't permanently poison the memo. The captured generation lets a slow
-        // resolve detect a concurrent update()/clear() and skip clobbering newer state.
-        const startGen = generation;
-        inFlight = inner.load().then(
-          (value) => {
-            if (generation === startGen) {
-              loaded = { value };
-              inFlight = undefined;
-            }
-            return value;
-          },
-          (error) => {
-            if (generation === startGen) {
-              inFlight = undefined;
-            }
-            throw error;
-          }
-        );
-      }
-
-      return inFlight;
+      return result;
     },
     update: async (next) => {
       generation += 1;
@@ -121,30 +125,34 @@ export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): 
   let generation = 0;
 
   function ensureLoaded(): Promise<Record<string, T>> {
+    let result: Promise<Record<string, T>>;
+
     if (loaded != null) {
-      return Promise.resolve(loaded.entries);
+      result = Promise.resolve(loaded.entries);
+    } else {
+      if (inFlight == null) {
+        const startGen = generation;
+        inFlight = inner.load().then(
+          (entries) => {
+            if (generation === startGen) {
+              loaded = { entries };
+              inFlight = undefined;
+            }
+            return entries;
+          },
+          (error) => {
+            if (generation === startGen) {
+              inFlight = undefined;
+            }
+            throw error;
+          }
+        );
+      }
+
+      result = inFlight;
     }
 
-    if (inFlight == null) {
-      const startGen = generation;
-      inFlight = inner.load().then(
-        (entries) => {
-          if (generation === startGen) {
-            loaded = { entries };
-            inFlight = undefined;
-          }
-          return entries;
-        },
-        (error) => {
-          if (generation === startGen) {
-            inFlight = undefined;
-          }
-          throw error;
-        }
-      );
-    }
-
-    return inFlight;
+    return result;
   }
 
   return {

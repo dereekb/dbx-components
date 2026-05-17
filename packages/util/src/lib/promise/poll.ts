@@ -10,17 +10,17 @@ export interface PollConfig {
    *
    * Defaults to 250.
    */
-  wait?: number;
+  readonly wait?: number;
   /**
    * Predicate function that returns `true` when the polling condition has been met.
    */
-  check: () => boolean;
+  readonly check: () => boolean;
   /**
    * Maximum number of polling iterations before giving up.
    *
    * Defaults to `Number.MAX_SAFE_INTEGER`.
    */
-  timesToGiveup?: number;
+  readonly timesToGiveup?: number;
 }
 
 /**

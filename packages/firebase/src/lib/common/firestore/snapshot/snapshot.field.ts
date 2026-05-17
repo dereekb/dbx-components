@@ -114,15 +114,15 @@ export interface BaseFirestoreFieldConfig<V, D = unknown> {
   /**
    * Function to convert from Firestore data (D) to model value (V)
    */
-  fromData: ModelFieldMapConvertFunction<D, V>;
+  readonly fromData: ModelFieldMapConvertFunction<D, V>;
   /**
    * Function to convert from model value (V) to Firestore data (D)
    */
-  toData: ModelFieldMapConvertFunction<V, D>;
+  readonly toData: ModelFieldMapConvertFunction<V, D>;
   /**
    * Optional default value to use before saving if the value is null/undefined
    */
-  defaultBeforeSave?: GetterOrValue<D | null>;
+  readonly defaultBeforeSave?: GetterOrValue<D | null>;
 }
 
 /**
@@ -1905,7 +1905,7 @@ export function firestoreSubObject<T extends object, O extends object = Firestor
 }
 
 export interface FirestoreLatLngStringConfig extends DefaultMapConfiguredFirestoreFieldConfig<LatLngString, LatLngString> {
-  precision?: LatLngPrecision;
+  readonly precision?: LatLngPrecision;
 }
 
 /**

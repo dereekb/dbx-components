@@ -23,9 +23,9 @@ export type FirebaseAdminTestEnvironmentHost = string;
  * accidental connections to production services.
  */
 export interface FirebaseAdminTestEnvironmentEmulatorsConfig {
-  auth: FirebaseAdminTestEnvironmentHost | null;
-  storage: FirebaseAdminTestEnvironmentHost | null;
-  firestore: FirebaseAdminTestEnvironmentHost | null;
+  readonly auth: FirebaseAdminTestEnvironmentHost | null;
+  readonly storage: FirebaseAdminTestEnvironmentHost | null;
+  readonly firestore: FirebaseAdminTestEnvironmentHost | null;
 }
 
 /**
@@ -34,7 +34,7 @@ export interface FirebaseAdminTestEnvironmentEmulatorsConfig {
  * Passed to {@link initFirebaseAdminTestEnvironment} to configure which emulators the test suite connects to.
  */
 export interface FirebaseAdminTestEnvironmentConfig {
-  emulators: FirebaseAdminTestEnvironmentEmulatorsConfig;
+  readonly emulators: FirebaseAdminTestEnvironmentEmulatorsConfig;
 }
 
 /**

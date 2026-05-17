@@ -41,14 +41,17 @@ export function transformAndValidateObject<T extends object, O, I extends object
 
   return async (input: I, context?: C) => {
     const x = await transformToResult(input, context);
+    let output: { object: T; result: O };
 
     if (x.success) {
-      return { object: x.object, result: x.result };
+      output = { object: x.object, result: x.result };
+    } else {
+      // Error handler is expected to throw. If it doesn't, there is no validated object to return.
+      const result = await handleValidationError(x.validationErrors);
+      output = { object: undefined as unknown as T, result };
     }
 
-    // Error handler is expected to throw. If it doesn't, there is no validated object to return.
-    const result = await handleValidationError(x.validationErrors);
-    return { object: undefined as unknown as T, result };
+    return output;
   };
 }
 
@@ -139,13 +142,16 @@ export function transformAndValidateObjectResult<T extends object, O, I extends 
 
   return async (input: I) => {
     const out = schema(input as unknown);
+    let output: TransformAndValidateObjectResultOutput<T, O>;
 
     if (out instanceof type.errors) {
-      return { validationErrors: out as ArkErrors, success: false as const };
+      output = { validationErrors: out as ArkErrors, success: false as const };
+    } else {
+      const object = out as T;
+      const result = await fn(object);
+      output = { object, result, success: true as const };
     }
 
-    const object = out as T;
-    const result = await fn(object);
-    return { object, result, success: true as const };
+    return output;
   };
 }

@@ -161,13 +161,21 @@ async function buildCatalog(input: GetDownstreamCatalogInput): Promise<Downstrea
   models.sort((a, b) => {
     const aRoot = a.parentIdentityConst ? 1 : 0;
     const bRoot = b.parentIdentityConst ? 1 : 0;
-    if (aRoot !== bRoot) return aRoot - bRoot;
-    if (a.sourcePackage !== b.sourcePackage) return a.sourcePackage.localeCompare(b.sourcePackage);
-    return a.name.localeCompare(b.name);
+    let result: number;
+
+    if (aRoot !== bRoot) {
+      result = aRoot - bRoot;
+    } else if (a.sourcePackage !== b.sourcePackage) {
+      result = a.sourcePackage.localeCompare(b.sourcePackage);
+    } else {
+      result = a.name.localeCompare(b.name);
+    }
+
+    return result;
   });
   modelGroups.sort((a, b) => {
-    if (a.sourcePackage !== b.sourcePackage) return a.sourcePackage.localeCompare(b.sourcePackage);
-    return a.name.localeCompare(b.name);
+    const result = a.sourcePackage !== b.sourcePackage ? a.sourcePackage.localeCompare(b.sourcePackage) : a.name.localeCompare(b.name);
+    return result;
   });
 
   return {

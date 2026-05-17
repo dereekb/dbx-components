@@ -249,13 +249,16 @@ async function readPageInto<T>(input: ReadPageInput<T>): Promise<T[]> {
   const accessor: FirestoreDocumentDataAccessor<unknown> = context.accessorFactory.accessorFor(pageRef);
   const snapshot = await accessor.get();
   const data = snapshot.data() as Maybe<PagedItemPageData<T>>;
+  let result: T[];
 
   if (!data) {
-    return [];
+    result = [];
+  } else {
+    const items = data.i ?? [];
+    result = itemConverter ? items.map((raw) => itemConverter.fromData(raw as object)) : items;
   }
 
-  const items = data.i ?? [];
-  return itemConverter ? items.map((raw) => itemConverter.fromData(raw as object)) : items;
+  return result;
 }
 
 // MARK: Extension
@@ -289,33 +292,40 @@ export function extendFirestoreCollectionWithPagedItemAccessor<X extends Firesto
   }
 
   async function loadItemsForPagesWithContext(pageIds: string[], context: FirestoreDocumentContext<unknown>): Promise<T[]> {
+    let result: T[];
+
     if (pageIds.length === 0) {
-      return [];
+      result = [];
+    } else {
+      const pageReads = pageIds.map((pageId) =>
+        readPageInto<T>({
+          pageId,
+          collectionRef,
+          firestoreAccessorDriver,
+          context,
+          itemConverter
+        })
+      );
+
+      const pageResults = await Promise.all(pageReads);
+      result = pageResults.flat();
     }
 
-    const pageReads = pageIds.map((pageId) =>
-      readPageInto<T>({
-        pageId,
-        collectionRef,
-        firestoreAccessorDriver,
-        context,
-        itemConverter
-      })
-    );
-
-    const pageResults = await Promise.all(pageReads);
-    return pageResults.flat();
+    return result;
   }
 
   async function loadAllItems(): Promise<T[]> {
     const index = await loadIndex();
+    let result: T[];
 
     if (!index) {
-      return [];
+      result = [];
+    } else {
+      const context = firestoreAccessorDriver.defaultContextFactory<unknown>();
+      result = await loadItemsForPagesWithContext(index.p, context);
     }
 
-    const context = firestoreAccessorDriver.defaultContextFactory<unknown>();
-    return loadItemsForPagesWithContext(index.p, context);
+    return result;
   }
 
   async function loadItemsForPages(pageIds: string[]): Promise<T[]> {

@@ -13,15 +13,15 @@ export interface DocFormExampleChecklistValues {
 export type DocFormExampleChecklistDisplayWithDataFn = (builder: DocFormExampleChecklistItemFieldDataSetBuilder) => Observable<ChecklistItemDisplayContent>;
 
 export interface DocFormExampleChecklistFieldsCustomDisplayFieldConfig {
-  displayWithData?: DocFormExampleChecklistDisplayWithDataFn;
+  readonly displayWithData?: DocFormExampleChecklistDisplayWithDataFn;
 }
 
 export type DocFormExampleChecklistFieldsCustomDisplayConfig = KeyValueTransformMap<DocFormExampleChecklistValues, DocFormExampleChecklistFieldsCustomDisplayFieldConfig>;
 export type DocFormExampleChecklistItemFieldDataSetBuilder = ChecklistItemFieldDataSetBuilder<DocFormExampleChecklistValues, ChecklistType<DocFormExampleChecklistValues>>;
 
 export interface DocFormExampleChecklistFieldsConfig {
-  dataObs: Observable<DocFormExampleChecklistValues>;
-  display?: DocFormExampleChecklistFieldsCustomDisplayConfig;
+  readonly dataObs: Observable<DocFormExampleChecklistValues>;
+  readonly display?: DocFormExampleChecklistFieldsCustomDisplayConfig;
 }
 
 /**

@@ -35,13 +35,17 @@ export type MapFilterWithPresetFn<F extends FilterWithPreset> = (filter: F) => F
  */
 export function makeMapFilterWithPresetFn<F extends FilterWithPreset>(fn: MapFilterWithPresetFn<F>): MapFilterWithPresetFn<F> {
   return (filter: F) => {
+    let result: FilterWithoutPresetString<F>;
+
     if (filter.preset) {
-      const result = fn(filter) as F;
-      delete result.preset;
-      return result;
+      const expanded = fn(filter) as F;
+      delete expanded.preset;
+      result = expanded;
+    } else {
+      result = filter;
     }
 
-    return filter;
+    return result;
   };
 }
 

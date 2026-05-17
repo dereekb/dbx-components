@@ -52,17 +52,18 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
   const functionsClassName = findFunctionsClassName(sourceFile);
   const typeDocsCache = new Map<string, TypeDocs>();
   const resolveTypeDocs = (typeName: string | undefined): TypeDocs | undefined => {
-    if (!typeName) {
-      return undefined;
+    let result: TypeDocs | undefined;
+    if (typeName) {
+      if (typeDocsCache.has(typeName)) {
+        result = typeDocsCache.get(typeName);
+      } else {
+        result = readTypeDocs(sourceFile, typeName);
+        if (result) {
+          typeDocsCache.set(typeName, result);
+        }
+      }
     }
-    if (typeDocsCache.has(typeName)) {
-      return typeDocsCache.get(typeName);
-    }
-    const docs = readTypeDocs(sourceFile, typeName);
-    if (docs) {
-      typeDocsCache.set(typeName, docs);
-    }
-    return docs;
+    return result;
   };
 
   if (crudConfigType) {
@@ -136,57 +137,67 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
 }
 
 function findTypeAliasByEnding(sourceFile: SourceFile, ending: string): TypeAliasDeclaration | undefined {
+  let result: TypeAliasDeclaration | undefined;
   for (const alias of sourceFile.getTypeAliases()) {
     if (alias.getName().endsWith(ending) && alias.getTypeNode()) {
-      return alias;
+      result = alias;
+      break;
     }
   }
-  return undefined;
+  return result;
 }
 
 function findFunctionsClassName(sourceFile: SourceFile): string | undefined {
+  let result: string | undefined;
   for (const cls of sourceFile.getClasses()) {
     if (!cls.isAbstract()) {
       continue;
     }
     const name = cls.getName();
     if (name?.endsWith('Functions')) {
-      return name;
+      result = name;
+      break;
     }
   }
-  return undefined;
+  return result;
 }
 
 function inferGroupName(sourceFile: SourceFile): string | undefined {
+  let result: string | undefined;
   for (const alias of sourceFile.getTypeAliases()) {
     const name = alias.getName();
     if (name.endsWith('ModelCrudFunctionsConfig')) {
       const stem = name.slice(0, -'ModelCrudFunctionsConfig'.length);
       if (stem.length > 0) {
-        return stem;
+        result = stem;
+        break;
       }
     }
   }
-  for (const alias of sourceFile.getTypeAliases()) {
-    const name = alias.getName();
-    if (name.endsWith('FunctionTypeMap')) {
-      const stem = name.slice(0, -'FunctionTypeMap'.length);
-      if (stem.length > 0) {
-        return stem;
+  if (result === undefined) {
+    for (const alias of sourceFile.getTypeAliases()) {
+      const name = alias.getName();
+      if (name.endsWith('FunctionTypeMap')) {
+        const stem = name.slice(0, -'FunctionTypeMap'.length);
+        if (stem.length > 0) {
+          result = stem;
+          break;
+        }
       }
     }
   }
-  return undefined;
+  return result;
 }
 
 function isNullLiteralType(node: TypeNode): boolean {
+  let result = false;
   if (Node.isLiteralTypeNode(node)) {
     const literal = node.getLiteral();
     if (Node.isNullLiteral(literal)) {
-      return true;
+      result = true;
     }
   }
-  return false;
+  return result;
 }
 
 interface CollectVerbEntriesInput {
@@ -250,33 +261,33 @@ interface ParamsResultPair {
 }
 
 function readTupleParamsResult(node: TypeNode): ParamsResultPair | undefined {
-  if (!Node.isTupleTypeNode(node)) {
-    return undefined;
+  let pair: ParamsResultPair | undefined;
+  if (Node.isTupleTypeNode(node)) {
+    const elements = node.getElements();
+    if (elements.length > 0) {
+      const params = elements[0] ? typeNodeName(elements[0]) : undefined;
+      const result = elements[1] ? typeNodeName(elements[1]) : undefined;
+      pair = { params, result };
+    }
   }
-  const elements = node.getElements();
-  if (elements.length === 0) {
-    return undefined;
-  }
-  const params = elements[0] ? typeNodeName(elements[0]) : undefined;
-  const result = elements[1] ? typeNodeName(elements[1]) : undefined;
-  return { params, result };
+  return pair;
 }
 
 function readBareParams(node: TypeNode): ParamsResultPair | undefined {
   const params = typeNodeName(node);
-  if (!params) {
-    return undefined;
-  }
-  return { params, result: undefined };
+  return params ? { params, result: undefined } : undefined;
 }
 
 function typeNodeName(node: TypeNode): string | undefined {
+  let result: string | undefined;
   if (Node.isTypeReference(node)) {
-    return node.getTypeName().getText();
+    result = node.getTypeName().getText();
+  } else {
+    // Fall back to the raw text for primitive / inline types like `boolean`.
+    const text = node.getText().trim();
+    result = text.length > 0 ? text : undefined;
   }
-  // Fall back to the raw text for primitive / inline types like `boolean`.
-  const text = node.getText().trim();
-  return text.length > 0 ? text : undefined;
+  return result;
 }
 
 interface TypeDocs {
@@ -285,6 +296,7 @@ interface TypeDocs {
 }
 
 function readTypeDocs(sourceFile: SourceFile, typeName: string): TypeDocs | undefined {
+  let result: TypeDocs | undefined;
   const interfaceDecl = sourceFile.getInterface(typeName);
   if (interfaceDecl) {
     const typeDescription = readJsDocSummary(interfaceDecl);
@@ -297,25 +309,30 @@ function readTypeDocs(sourceFile: SourceFile, typeName: string): TypeDocs | unde
       const field: CrudEntryDocField = description ? { name: fieldName, typeText, description } : { name: fieldName, typeText };
       fields.push(field);
     }
-    if (!typeDescription && fields.length === 0) {
-      return undefined;
+    if (typeDescription || fields.length > 0) {
+      result = { typeDescription, fields: fields.length > 0 ? fields : undefined };
     }
-    return { typeDescription, fields: fields.length > 0 ? fields : undefined };
+  } else {
+    const typeAlias = sourceFile.getTypeAlias(typeName);
+    if (typeAlias) {
+      const typeDescription = readJsDocSummary(typeAlias);
+      if (typeDescription) {
+        result = { typeDescription };
+      }
+    }
   }
-  const typeAlias = sourceFile.getTypeAlias(typeName);
-  if (typeAlias) {
-    const typeDescription = readJsDocSummary(typeAlias);
-    return typeDescription ? { typeDescription } : undefined;
-  }
-  return undefined;
+  return result;
 }
 
 function readJsDocSummary(node: JSDocableNode): string | undefined {
+  let result: string | undefined;
   const docs = node.getJsDocs();
-  if (docs.length === 0) {
-    return undefined;
+  if (docs.length > 0) {
+    const last = docs[docs.length - 1];
+    const description = last.getDescription().trim();
+    if (description.length > 0) {
+      result = description;
+    }
   }
-  const last = docs[docs.length - 1];
-  const description = last.getDescription().trim();
-  return description.length > 0 ? description : undefined;
+  return result;
 }

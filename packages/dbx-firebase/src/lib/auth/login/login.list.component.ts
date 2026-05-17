@@ -53,16 +53,24 @@ export class DbxFirebaseLoginListComponent {
   readonly providerCategories = input<Maybe<ArrayOrValue<FirebaseLoginMethodCategory>>>();
 
   readonly loginModeAriaLabelSignal = computed(() => {
+    let result: string;
+
     switch (this.loginMode()) {
       case 'register':
-        return 'Registration options';
+        result = 'Registration options';
+        break;
       case 'link':
-        return 'Link account options';
+        result = 'Link account options';
+        break;
       case 'unlink':
-        return 'Unlink account options';
+        result = 'Unlink account options';
+        break;
       default:
-        return 'Login options';
+        result = 'Login options';
+        break;
     }
+
+    return result;
   });
 
   get loginModeAriaLabel(): string {

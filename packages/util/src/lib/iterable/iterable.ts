@@ -101,15 +101,17 @@ export function iterableToMap<T, K extends PrimativeKey = PrimativeKey>(values: 
  * @returns True if the value is iterable
  */
 export function isIterable<T = unknown>(values: unknown, treatStringAsIterable = false): values is Iterable<T> {
+  let result: boolean;
+
   if (typeof values === 'string') {
-    return treatStringAsIterable;
+    result = treatStringAsIterable;
+  } else if (values != null && typeof values === 'object' && Symbol.iterator in values) {
+    result = true;
+  } else {
+    result = false;
   }
 
-  if (values != null && typeof values === 'object' && Symbol.iterator in values) {
-    return true;
-  }
-
-  return false;
+  return result;
 }
 
 /**
@@ -124,11 +126,14 @@ export function isIterable<T = unknown>(values: unknown, treatStringAsIterable =
  * @returns True if the iterable is empty
  */
 export function isEmptyIterable<T = unknown>(values: Iterable<T>): boolean {
+  let empty = true;
+
   for (const _ of values) {
-    return false;
+    empty = false;
+    break;
   }
 
-  return true;
+  return empty;
 }
 
 /**
@@ -138,11 +143,14 @@ export function isEmptyIterable<T = unknown>(values: Iterable<T>): boolean {
  * @returns The first value, or undefined if empty
  */
 export function firstValueFromIterable<T>(values: Iterable<T>): Maybe<T> {
+  let result: Maybe<T> = undefined;
+
   for (const value of values) {
-    return value;
+    result = value;
+    break;
   }
 
-  return undefined;
+  return result;
 }
 
 /**
@@ -204,13 +212,16 @@ export function useIterableOrValue<T>(values: Maybe<IterableOrValue<T>>, fn: (va
  * @returns The first matching value, or undefined
  */
 export function findInIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>): Maybe<T> {
+  let result: Maybe<T> = undefined;
+
   for (const value of values) {
     if (fn(value)) {
-      return value;
+      result = value;
+      break;
     }
   }
 
-  return undefined;
+  return result;
 }
 
 /**
@@ -221,13 +232,16 @@ export function findInIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>):
  * @returns True if at least one value matches
  */
 export function existsInIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>): boolean {
+  let exists = false;
+
   for (const value of values) {
     if (fn(value)) {
-      return true;
+      exists = true;
+      break;
     }
   }
 
-  return false;
+  return exists;
 }
 
 /**

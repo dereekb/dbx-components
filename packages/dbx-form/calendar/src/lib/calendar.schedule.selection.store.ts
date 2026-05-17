@@ -838,6 +838,7 @@ export function updateStateWithFilter(currentState: CalendarScheduleSelectionSta
 export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionState, timezone: Maybe<TimezoneString>): CalendarScheduleSelectionState {
   const { currentSelectionValue } = state;
   const timezoneNormal = timezone ? dateTimezoneUtcNormal({ timezone }) : undefined;
+  let result: CalendarScheduleSelectionState;
 
   if (timezoneNormal && currentSelectionValue) {
     // update the selection value to reflect the timezone changes.
@@ -851,10 +852,12 @@ export function updateStateWithTimezoneValue(state: CalendarScheduleSelectionSta
       end
     };
 
-    return updateStateWithDateCellScheduleRangeValue({ ...state, outputTimezone: timezone, outputTimezoneNormal: timezoneNormal }, newRange);
+    result = updateStateWithDateCellScheduleRangeValue({ ...state, outputTimezone: timezone, outputTimezoneNormal: timezoneNormal }, newRange);
+  } else {
+    result = { ...state, outputTimezone: timezone, outputTimezoneNormal: timezoneNormal }; // no change in value
   }
 
-  return { ...state, outputTimezone: timezone, outputTimezoneNormal: timezoneNormal }; // no change in value
+  return result;
 }
 
 /**
@@ -898,12 +901,11 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
   }
 
   const isSameValue = isSameDateCellScheduleDateRange(currentDateCellScheduleRange, change);
+  let result: CalendarScheduleSelectionState;
 
   if (isSameValue) {
-    return state;
-  }
-
-  if (change != null) {
+    result = state;
+  } else if (change != null) {
     // After the legacy-restored output anchor, change.ex is already state-anchored
     // (change.start equals state.start for filter-relative outputs), so no offset
     // is applied. inputStart is clamped to state.minMaxDateRange.start when set so
@@ -912,10 +914,12 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
     const minMaxStart = state.minMaxDateRange?.start;
     const clampedInputStart = minMaxStart && minMaxStart.getTime() > change.start.getTime() ? minMaxStart : change.start;
     const nextState: CalendarScheduleSelectionState = { ...state, inputStart: clampedInputStart, inputEnd: change.end, toggledIndexes: new Set(change.ex ?? []) };
-    return updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || ('89' as const)));
+    result = updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || ('89' as const)));
+  } else {
+    result = noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
   }
 
-  return noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
+  return result;
 }
 
 /**
@@ -928,12 +932,11 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
 export function updateStateWithChangedDefaultScheduleDays(state: CalendarScheduleSelectionState, change: Maybe<Iterable<DateCellScheduleDayCode>>): CalendarScheduleSelectionState {
   const { defaultScheduleDays: currentDefaultScheduleDays } = state;
   const defaultScheduleDays = new Set(change ?? fullWeekDateCellScheduleDayCodes());
+  const result = dateCellScheduleDayCodesAreSetsEquivalent(defaultScheduleDays, currentDefaultScheduleDays)
+    ? state // no change
+    : finalizeUpdateStateWithChangedScheduleDays(state, { ...state, defaultScheduleDays });
 
-  if (dateCellScheduleDayCodesAreSetsEquivalent(defaultScheduleDays, currentDefaultScheduleDays)) {
-    return state; // no change
-  }
-
-  return finalizeUpdateStateWithChangedScheduleDays(state, { ...state, defaultScheduleDays });
+  return result;
 }
 
 /**
@@ -959,11 +962,8 @@ export function updateStateWithChangedScheduleDays(state: CalendarScheduleSelect
     newScheduleDays = change ? scheduleDays : null; // set the new one, or clear it
   }
 
-  if (newScheduleDays === undefined) {
-    return state;
-  }
-
-  return finalizeUpdateStateWithChangedScheduleDays(state, { ...state, scheduleDays: newScheduleDays ?? undefined });
+  const result = newScheduleDays === undefined ? state : finalizeUpdateStateWithChangedScheduleDays(state, { ...state, scheduleDays: newScheduleDays ?? undefined });
+  return result;
 }
 
 /**
@@ -975,19 +975,22 @@ export function updateStateWithChangedScheduleDays(state: CalendarScheduleSelect
  */
 export function updateStateWithSelectionMode(state: CalendarScheduleSelectionState, selectionMode: DbxCalendarScheduleSelectionStoreSelectionMode): CalendarScheduleSelectionState {
   const { selectionMode: currentSelectionMode } = state;
+  let result: CalendarScheduleSelectionState;
 
   if (currentSelectionMode !== selectionMode) {
     const nextState = { ...state, selectionMode };
 
     if (selectionMode === 'multiple') {
-      return nextState;
+      result = nextState;
+    } else {
+      const currentSelectionRange = computeCalendarScheduleSelectionDateCellRange(nextState);
+      result = currentSelectionRange ? updateStateWithChangedDates(nextState, { set: [currentSelectionRange.i], invertSetBehavior: true }) : nextState;
     }
-
-    const currentSelectionRange = computeCalendarScheduleSelectionDateCellRange(nextState);
-    return currentSelectionRange ? updateStateWithChangedDates(nextState, { set: [currentSelectionRange.i], invertSetBehavior: true }) : nextState;
+  } else {
+    result = state;
   }
 
-  return state;
+  return result;
 }
 
 /**
@@ -1000,20 +1003,23 @@ export function updateStateWithSelectionMode(state: CalendarScheduleSelectionSta
 export function finalizeUpdateStateWithChangedScheduleDays(previousState: CalendarScheduleSelectionState, nextState: CalendarScheduleSelectionState): CalendarScheduleSelectionState {
   const previousScheduleDays = previousState.effectiveScheduleDays;
   const nextScheduleDays = nextState.scheduleDays ?? nextState.defaultScheduleDays;
+  let result: CalendarScheduleSelectionState;
 
   if (dateCellScheduleDayCodesAreSetsEquivalent(nextScheduleDays, previousScheduleDays)) {
-    return nextState; // the default or input schedule changed but the schedule is still the same, so no need for an update.
+    result = nextState; // the default or input schedule changed but the schedule is still the same, so no need for an update.
+  } else {
+    const effectiveScheduleDays = new Set(simplifyDateCellScheduleDayCodes(nextScheduleDays));
+    const allowedDaysOfWeek = expandDateCellScheduleDayCodesToDayOfWeekSet(nextScheduleDays);
+
+    result = finalizeNewCalendarScheduleSelectionState({
+      ...nextState,
+      // update the effective schedule days and allowed days of week
+      effectiveScheduleDays,
+      allowedDaysOfWeek
+    });
   }
 
-  const effectiveScheduleDays = new Set(simplifyDateCellScheduleDayCodes(nextScheduleDays));
-  const allowedDaysOfWeek = expandDateCellScheduleDayCodesToDayOfWeekSet(nextScheduleDays);
-
-  return finalizeNewCalendarScheduleSelectionState({
-    ...nextState,
-    // update the effective schedule days and allowed days of week
-    effectiveScheduleDays,
-    allowedDaysOfWeek
-  });
+  return result;
 }
 
 export interface CalendarScheduleSelectionStateDatesChange {
@@ -1199,12 +1205,12 @@ export function updateStateWithChangedDates(state: CalendarScheduleSelectionStat
   // Recalculate the range and simplified to exclusions
   const rangeAndExclusion = computeScheduleSelectionRangeAndExclusion(nextState);
 
-  if (rangeAndExclusion) {
-    return finalizeNewCalendarScheduleSelectionState({ ...nextState, toggledIndexes: new Set(rangeAndExclusion.excluded), inputStart: rangeAndExclusion.start, inputEnd: rangeAndExclusion.end });
-  }
+  const result = rangeAndExclusion
+    ? finalizeNewCalendarScheduleSelectionState({ ...nextState, toggledIndexes: new Set(rangeAndExclusion.excluded), inputStart: rangeAndExclusion.start, inputEnd: rangeAndExclusion.end })
+    : // no selected days
+      noSelectionCalendarScheduleSelectionState(nextState);
 
-  // no selected days
-  return noSelectionCalendarScheduleSelectionState(nextState);
+  return result;
 }
 
 /**
@@ -1232,22 +1238,25 @@ export function updateStateWithChangedRange(state: CalendarScheduleSelectionStat
   const inputEnd: Date = startOfDay(change.inputEnd); // midnight of the last day
 
   const isValidRange = minDate != null || maxDate != null ? isDateInDateRangeFunction({ start: minDate ?? undefined, end: maxDate ?? undefined }) : () => true;
+  let result: CalendarScheduleSelectionState;
 
   if (!isValidRange(inputStart) || !isValidRange(inputEnd) || (isSameDateDay(inputStart, currentInputStart) && isSameDateDay(inputEnd, currentInputEnd))) {
-    return state; // if no change, return the current state.
+    result = state; // if no change, return the current state.
+  } else {
+    // retain all indexes that are within the new range
+    const minIndex = indexFactory(inputStart);
+    const maxIndex = indexFactory(inputEnd) + 1;
+
+    const currentIndexes: DateCellIndex[] = [...state.toggledIndexes];
+    const isInCurrentRange = isIndexNumberInIndexRangeFunction({ minIndex, maxIndex });
+    const excludedIndexesInNewRange = currentIndexes.filter(isInCurrentRange);
+    const toggledIndexes = new Set(excludedIndexesInNewRange);
+
+    const nextState = { ...state, toggledIndexes, inputStart, inputEnd };
+    result = finalizeNewCalendarScheduleSelectionState(nextState);
   }
 
-  // retain all indexes that are within the new range
-  const minIndex = indexFactory(inputStart);
-  const maxIndex = indexFactory(inputEnd) + 1;
-
-  const currentIndexes: DateCellIndex[] = [...state.toggledIndexes];
-  const isInCurrentRange = isIndexNumberInIndexRangeFunction({ minIndex, maxIndex });
-  const excludedIndexesInNewRange = currentIndexes.filter(isInCurrentRange);
-  const toggledIndexes = new Set(excludedIndexesInNewRange);
-
-  const nextState = { ...state, toggledIndexes, inputStart, inputEnd };
-  return finalizeNewCalendarScheduleSelectionState(nextState);
+  return result;
 }
 
 /**
@@ -1301,69 +1310,72 @@ export function computeScheduleSelectionValue(state: CalendarScheduleSelectionSt
   const { indexFactory: systemIndexFactory, allowedDaysOfWeek, effectiveScheduleDays, indexDayOfWeek, computeSelectionResultRelativeToFilter, filter, systemTimezone } = state;
   let timezone = systemTimezone;
   const rangeAndExclusion = computeScheduleSelectionRangeAndExclusion(state);
+  let result: Maybe<CalendarScheduleSelectionValue>;
 
   if (rangeAndExclusion == null) {
-    return null;
-  }
+    result = null;
+  } else {
+    const { start: rangeStart, end: rangeEnd, excluded: allExcluded, dateCellRange } = rangeAndExclusion;
+    let filterOffsetExcludedRange: DateCellIndex[] = [];
+    let indexOffset = dateCellRange.i;
 
-  const { start: rangeStart, end: rangeEnd, excluded: allExcluded, dateCellRange } = rangeAndExclusion;
-  let filterOffsetExcludedRange: DateCellIndex[] = [];
-  let indexOffset = dateCellRange.i;
+    let start = rangeStart;
+    let end = rangeEnd;
 
-  let start = rangeStart;
-  let end = rangeEnd;
+    // If computeSelectionResultRelativeToFilter is true, then we need to offset the values to be relative to that start.
+    if (computeSelectionResultRelativeToFilter && filter?.start) {
+      start = filter.start; // start at the filter's start date
+      let startInSystemTimezone = start;
 
-  // If computeSelectionResultRelativeToFilter is true, then we need to offset the values to be relative to that start.
-  if (computeSelectionResultRelativeToFilter && filter?.start) {
-    start = filter.start; // start at the filter's start date
-    let startInSystemTimezone = start;
+      if (filter.timezone) {
+        timezone = filter.timezone;
+        const filterNormal = dateTimezoneUtcNormal(timezone);
+        end = filterNormal.startOfDayInTargetTimezone(end);
+        startInSystemTimezone = filterNormal.systemDateToTargetDate(start); // convert the start to the system timezone normal for deriving the index
+      }
 
-    if (filter.timezone) {
-      timezone = filter.timezone;
-      const filterNormal = dateTimezoneUtcNormal(timezone);
-      end = filterNormal.startOfDayInTargetTimezone(end);
-      startInSystemTimezone = filterNormal.systemDateToTargetDate(start); // convert the start to the system timezone normal for deriving the index
+      const rangeStartIndex = systemIndexFactory(rangeStart);
+      const startIndex = systemIndexFactory(startInSystemTimezone);
+      const filterStartIndexOffset = rangeStartIndex - startIndex;
+      filterOffsetExcludedRange = range(0, filterStartIndexOffset);
+      indexOffset = indexOffset - filterStartIndexOffset;
     }
 
-    const rangeStartIndex = systemIndexFactory(rangeStart);
-    const startIndex = systemIndexFactory(startInSystemTimezone);
-    const filterStartIndexOffset = rangeStartIndex - startIndex;
-    filterOffsetExcludedRange = range(0, filterStartIndexOffset);
-    indexOffset = indexOffset - filterStartIndexOffset;
+    const excluded = computeSelectionResultRelativeToFilter
+      ? allExcluded.filter((x) => {
+          // ???
+          return allowedDaysOfWeek.has(indexDayOfWeek(x));
+        })
+      : allExcluded;
+
+    const offsetExcluded: DateCellIndex[] = excluded.map((x) => x - indexOffset); // set to the proper offset
+
+    const ex = [...filterOffsetExcludedRange, ...offsetExcluded];
+
+    const w: DateCellScheduleEncodedWeek = dateCellScheduleEncodedWeek(effectiveScheduleDays);
+    const d: DateCellIndex[] = []; // "included" blocks are never used/calculated.
+
+    // Always ensure the end is after or equal to the start.
+    if (isBefore(end, start)) {
+      end = start; // end is start
+    }
+
+    const dateScheduleRange: DateCellScheduleDateRange = {
+      timezone,
+      start,
+      end,
+      w,
+      d,
+      ex
+    };
+
+    result = {
+      dateScheduleRange,
+      minMaxRange: { start, end }
+    };
   }
 
-  const excluded = computeSelectionResultRelativeToFilter
-    ? allExcluded.filter((x) => {
-        // ???
-        return allowedDaysOfWeek.has(indexDayOfWeek(x));
-      })
-    : allExcluded;
-
-  const offsetExcluded: DateCellIndex[] = excluded.map((x) => x - indexOffset); // set to the proper offset
-
-  const ex = [...filterOffsetExcludedRange, ...offsetExcluded];
-
-  const w: DateCellScheduleEncodedWeek = dateCellScheduleEncodedWeek(effectiveScheduleDays);
-  const d: DateCellIndex[] = []; // "included" blocks are never used/calculated.
-
-  // Always ensure the end is after or equal to the start.
-  if (isBefore(end, start)) {
-    end = start; // end is start
-  }
-
-  const dateScheduleRange: DateCellScheduleDateRange = {
-    timezone,
-    start,
-    end,
-    w,
-    d,
-    ex
-  };
-
-  return {
-    dateScheduleRange,
-    minMaxRange: { start, end }
-  };
+  return result;
 }
 
 /**
@@ -1392,24 +1404,25 @@ export function computeScheduleSelectionRangeAndExclusion(state: CalendarSchedul
 
   const dateFactory = dateCellTimingStartDateFactory({ startsAt: currentStart, timezone: systemTimezone });
   const dateCellRange = computeCalendarScheduleSelectionDateCellRange(state);
+  let result: Maybe<CalendarScheduleSelectionRangeAndExclusion>;
 
   if (dateCellRange == null) {
-    return null; // returns null if no items are selected.
+    result = null; // returns null if no items are selected.
+  } else {
+    const start = dateFactory(dateCellRange.i);
+    const end = dateFactory(dateCellRange.to);
+
+    const excluded: DateCellIndex[] = range(dateCellRange.i, dateCellRange.to + 1).filter((x) => {
+      return !isEnabledDay(x) || !isEnabledFilterDay(x);
+    });
+
+    result = {
+      dateCellRange,
+      start,
+      end,
+      excluded
+    };
   }
-
-  const start = dateFactory(dateCellRange.i);
-  const end = dateFactory(dateCellRange.to);
-
-  const excluded: DateCellIndex[] = range(dateCellRange.i, dateCellRange.to + 1).filter((x) => {
-    return !isEnabledDay(x) || !isEnabledFilterDay(x);
-  });
-
-  const result: CalendarScheduleSelectionRangeAndExclusion = {
-    dateCellRange,
-    start,
-    end,
-    excluded
-  };
 
   return result;
 }

@@ -30,7 +30,7 @@ export function profileBioField() {
 }
 
 export interface ProfileUsernameFieldConfig {
-  checkUsernameIsAvailable: DbxForgeFieldValueIsAvailableCheckFn<string>;
+  readonly checkUsernameIsAvailable: DbxForgeFieldValueIsAvailableCheckFn<string>;
 }
 
 /**

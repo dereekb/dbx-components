@@ -136,45 +136,39 @@ export const utilRequireReadonlyConfigParamsRule: UtilRequireReadonlyConfigParam
     }
 
     function checkInterface(node: AstNode): void {
-      if (node.id?.type !== 'Identifier') {
-        return;
-      }
+      if (node.id?.type === 'Identifier') {
+        const interfaceName: string = node.id.name;
 
-      const interfaceName: string = node.id.name;
+        if (interfaceNameMatches(interfaceName)) {
+          // Allow opt-out via JSDoc tag (Firestore model data interfaces).
+          // Check the leading JSDoc of the interface OR its enclosing `export` statement.
+          const exportAnchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
 
-      if (!interfaceNameMatches(interfaceName)) {
-        return;
-      }
+          if (!hasExemptJsdoc(sourceCode, exportAnchor, exemptTag)) {
+            const members: AstNode[] = node.body?.body ?? [];
 
-      // Allow opt-out via JSDoc tag (Firestore model data interfaces).
-      // Check the leading JSDoc of the interface OR its enclosing `export` statement.
-      const exportAnchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
+            for (const member of members) {
+              if (member.type !== 'TSPropertySignature') {
+                continue;
+              }
 
-      if (hasExemptJsdoc(sourceCode, exportAnchor, exemptTag)) {
-        return;
-      }
+              if (member.readonly === true) {
+                continue;
+              }
 
-      const members: AstNode[] = node.body?.body ?? [];
+              const propertyName = getPropertyName(member);
 
-      for (const member of members) {
-        if (member.type !== 'TSPropertySignature') {
-          continue;
-        }
-
-        if (member.readonly === true) {
-          continue;
-        }
-
-        const propertyName = getPropertyName(member);
-
-        context.report({
-          node: member,
-          messageId: 'missingReadonly',
-          data: { property: propertyName, interface: interfaceName },
-          fix(fixer: AstNode) {
-            return fixer.insertTextBefore(member, 'readonly ');
+              context.report({
+                node: member,
+                messageId: 'missingReadonly',
+                data: { property: propertyName, interface: interfaceName },
+                fix(fixer: AstNode) {
+                  return fixer.insertTextBefore(member, 'readonly ');
+                }
+              });
+            }
           }
-        });
+        }
       }
     }
 

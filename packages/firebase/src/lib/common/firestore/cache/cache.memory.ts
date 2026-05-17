@@ -444,28 +444,28 @@ function makeFirestoreCollectionCacheInstance<T>(parentCache: FirestoreCollectio
     async getOrFetch(key: FirestoreModelKey, fetchFn: () => Promise<FirestoreCacheEntry<T>>): Promise<FirestoreCacheEntry<T>> {
       // Check local cache first
       const cached = localEntries.get(key);
-
-      if (cached) {
-        return cached;
-      }
-
       // Check for in-flight request
       const existing = inFlight.get(key);
+      let result: Promise<FirestoreCacheEntry<T>>;
 
-      if (existing) {
-        return existing;
+      if (cached) {
+        result = Promise.resolve(cached);
+      } else if (existing) {
+        result = existing;
+      } else {
+        // Start new fetch
+        const fetchPromise = fetchFn().then((entry) => {
+          localEntries.set(key, entry);
+          parentCache.set(key, entry);
+          inFlight.delete(key);
+          return entry;
+        });
+
+        inFlight.set(key, fetchPromise);
+        result = fetchPromise;
       }
 
-      // Start new fetch
-      const fetchPromise = fetchFn().then((entry) => {
-        localEntries.set(key, entry);
-        parentCache.set(key, entry);
-        inFlight.delete(key);
-        return entry;
-      });
-
-      inFlight.set(key, fetchPromise);
-      return fetchPromise;
+      return result;
     }
   };
 

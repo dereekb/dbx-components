@@ -8,22 +8,22 @@ export interface FactoryTimerConfig<T> {
   /**
    * How long to wait before the first emission.
    */
-  wait?: number;
+  readonly wait?: number;
 
   /**
    * Interval period
    */
-  interval?: number;
+  readonly interval?: number;
 
   /**
    * Max number of iterations.
    */
-  limit?: number;
+  readonly limit?: number;
 
   /**
    * Factory for values.
    */
-  factory: FactoryWithInput<T, number>;
+  readonly factory: FactoryWithInput<T, number>;
 }
 
 export const DEFAULT_FACTORY_TIMER_INTERVAL = 1000;

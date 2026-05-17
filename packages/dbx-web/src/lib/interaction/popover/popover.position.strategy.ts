@@ -6,9 +6,9 @@ import { type NgOverlayContainerConfiguration } from 'ng-overlay-container';
  * Configuration for creating a popover position strategy.
  */
 export interface PopoverPositionStrategyConfig {
-  overlay: Overlay;
-  elementRef: ElementRef;
-  config: NgOverlayContainerConfiguration;
+  readonly overlay: Overlay;
+  readonly elementRef: ElementRef;
+  readonly config: NgOverlayContainerConfiguration;
 }
 
 /**

@@ -11,7 +11,7 @@
  * Each level can enable/disable delivery per channel (email, text, push, summary) per template type.
  * Configs are stored efficiently using bitwise encoding via {@link EncodedNotificationBoxRecipientTemplateConfig}.
  */
-import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, type NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, mergeObjectsFunction, KeyValueTypleValueFilter, mergeObjects } from '@dereekb/util';
+import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, type NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, mergeObjectsFunction, KeyValueTypleValueFilter, mergeObjects, Building } from '@dereekb/util';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString, type SavedToFirestoreIfTrue, firestoreModelIdString } from '../../common';
 
@@ -32,23 +32,23 @@ export interface NotificationBoxRecipientTemplateConfig {
   /**
    * Master toggle. When set, acts as the default for all channels that aren't individually configured.
    */
-  sd?: Maybe<boolean>;
+  readonly sd?: Maybe<boolean>;
   /**
    * Email channel enabled/disabled.
    */
-  se?: Maybe<boolean>;
+  readonly se?: Maybe<boolean>;
   /**
    * Text/SMS channel enabled/disabled.
    */
-  st?: Maybe<boolean>;
+  readonly st?: Maybe<boolean>;
   /**
    * Push notification channel enabled/disabled.
    */
-  sp?: Maybe<boolean>;
+  readonly sp?: Maybe<boolean>;
   /**
    * In-app notification summary channel enabled/disabled.
    */
-  sn?: Maybe<boolean>;
+  readonly sn?: Maybe<boolean>;
 }
 
 /**
@@ -277,11 +277,11 @@ export interface NotificationUserDefaultNotificationBoxRecipientConfig extends O
   /**
    * Locked flag. Prevents the NotificationBox from modifying this user's recipient config.
    */
-  lk?: Maybe<SavedToFirestoreIfTrue>;
+  readonly lk?: Maybe<SavedToFirestoreIfTrue>;
   /**
    * Blocked flag. Prevents the NotificationBox from re-adding this user as a recipient.
    */
-  bk?: Maybe<SavedToFirestoreIfTrue>;
+  readonly bk?: Maybe<SavedToFirestoreIfTrue>;
 }
 
 /**
@@ -420,7 +420,7 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
     return set;
   },
   fromSetFunction: (x) => {
-    const object: NotificationBoxRecipientTemplateConfig = {};
+    const object: Building<NotificationBoxRecipientTemplateConfig> = {};
 
     if (x.has(NotificationBoxRecipientTemplateConfigBoolean.SEND_ALL_ON)) {
       object.sd = true;
@@ -452,7 +452,7 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
       object.sn = false;
     }
 
-    return object;
+    return object as NotificationBoxRecipientTemplateConfig;
   }
 });
 

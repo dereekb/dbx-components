@@ -126,7 +126,7 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
    * Accepts a {@link KeyValueTypleValueFilter} enum value or a {@link KeyValueTupleFilter} object.
    * When not provided, the default filter removes `undefined` values (i.e., `KeyValueTypleValueFilter.UNDEFINED`).
    */
-  filter?: FilterKeyValueTuplesInput<T>;
+  readonly filter?: FilterKeyValueTuplesInput<T>;
   /**
    * Whether or not to return a copy of the input value, rather than change it directly.
    * If true, a copy of the input object will be returned.
@@ -134,7 +134,7 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
    *
    * False by default.
    */
-  copy?: boolean;
+  readonly copy?: boolean;
   /**
    * Whether or not the template being applied to objects should be recalculated each time.
    *
@@ -142,7 +142,7 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
    *
    * False by default.
    */
-  dynamic?: boolean;
+  readonly dynamic?: boolean;
 }
 
 /**

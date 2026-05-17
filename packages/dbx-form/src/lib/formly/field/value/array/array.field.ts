@@ -11,7 +11,7 @@ export interface RepeatArrayFieldConfig<T = unknown> extends DbxFormRepeatArrayC
   /**
    * Field group template that is repeated for each array entry.
    */
-  repeatFieldGroup: ArrayOrValue<FormlyFieldConfig>;
+  readonly repeatFieldGroup: ArrayOrValue<FormlyFieldConfig>;
 }
 
 /**

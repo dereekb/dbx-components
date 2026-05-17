@@ -106,8 +106,8 @@ export type ProvideAppFirestoreCollectionsFactory<T> = (context: FirestoreContex
  * Configuration for providing an app's Firestore collections class via NestJS DI.
  */
 export interface ProvideAppFirestoreCollectionsConfig<T> {
-  provide: ClassLikeType<T>;
-  useFactory: ProvideAppFirestoreCollectionsFactory<T>;
+  readonly provide: ClassLikeType<T>;
+  readonly useFactory: ProvideAppFirestoreCollectionsFactory<T>;
 }
 
 /**

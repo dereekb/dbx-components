@@ -25,20 +25,22 @@ export function objectKeysEqualityComparatorFunction<T, K extends PrimativeKey =
   const readKeysArray = readKeysFunction(readKey);
 
   return safeEqualityComparatorFunction((a: T[], b: T[]) => {
+    let result = false;
+
     if (a.length === b.length) {
       if (a.length === 0) {
-        return true; // both the same/empty arrays
-      }
+        result = true; // both the same/empty arrays
+      } else {
+        const aKeys = readKeysSet(a);
+        const bKeys = readKeysArray(b);
 
-      const aKeys = readKeysSet(a);
-      const bKeys = readKeysArray(b);
-
-      if (aKeys.size === bKeys.length) {
-        return setContainsAllValues(aKeys, bKeys);
+        if (aKeys.size === bKeys.length) {
+          result = setContainsAllValues(aKeys, bKeys);
+        }
       }
     }
 
-    return false;
+    return result;
   });
 }
 

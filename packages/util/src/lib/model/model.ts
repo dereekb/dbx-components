@@ -92,8 +92,8 @@ export interface ModelKeyNamePair extends Pick<ModelKeyTypePair, 'key'> {
 export interface ModelKeyTypeNamePair<M extends ModelTypeString = ModelTypeString> extends ModelKeyNamePair, ModelKeyTypePair<M> {}
 
 export interface ReadModelKeyParams<T> {
-  required?: boolean;
-  read: ReadModelKeyFunction<T>;
+  readonly required?: boolean;
+  readonly read: ReadModelKeyFunction<T>;
 }
 
 export type ReadModelKeyFunction<T> = ReadKeyFunction<T, ModelKey>;
@@ -358,12 +358,7 @@ export function readModelKeyFromObject<T extends UniqueModel>(input: T, required
  * @returns `true` if the input is a string key
  */
 export function isModelKey<T extends UniqueModel>(input: ModelOrKey<T>): input is ModelKey {
-  switch (typeof input) {
-    case 'string':
-      return true;
-    default:
-      return false;
-  }
+  return typeof input === 'string';
 }
 
 /**

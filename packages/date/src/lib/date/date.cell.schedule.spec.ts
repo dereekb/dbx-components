@@ -24,7 +24,10 @@ import {
   dateCellScheduleDateRange,
   fullDateCellScheduleRange,
   type DateCellScheduleDateRangeInput,
-  isFullDateCellScheduleDateRange
+  isFullDateCellScheduleDateRange,
+  isDateCellSchedule,
+  isDateCellScheduleDateRange,
+  isDateCellScheduleStartOfDayDateRange
 } from './date.cell.schedule';
 import { addDays, addHours, addMinutes, differenceInDays, differenceInMinutes, startOfDay, startOfHour } from 'date-fns';
 import { Day, range, UTC_TIMEZONE_STRING, lastValue, type TimezoneString, MINUTES_IN_HOUR, MINUTES_IN_DAY, type ISO8601DayString } from '@dereekb/util';
@@ -879,6 +882,83 @@ wrapDateTests(() => {
     it('should be false when the sets are not set equivalent', () => {
       const result = dateCellScheduleDayCodesAreSetsEquivalent(weekendDateCellScheduleDayCodes(), [DateCellScheduleDayCode.WEEKDAY]);
       expect(result).toBe(false);
+    });
+  });
+
+  describe('isDateCellSchedule()', () => {
+    it('should return true for a schedule with only "w"', () => {
+      expect(isDateCellSchedule({ w: '89' })).toBe(true);
+    });
+
+    it('should return true for a schedule with "ex" and no "d"', () => {
+      expect(isDateCellSchedule({ ex: [0, 1] })).toBe(true);
+    });
+
+    it('should return true for a schedule with "d"', () => {
+      expect(isDateCellSchedule({ d: [2] })).toBe(true);
+    });
+
+    it('should return true when "w" present and "ex" also present (matches the "ex" clause)', () => {
+      expect(isDateCellSchedule({ w: '89', ex: [0, 1] })).toBe(true);
+    });
+
+    it('should return false for an empty object', () => {
+      expect(isDateCellSchedule({})).toBe(false);
+    });
+
+    it('should return false when only an unrelated field is set', () => {
+      expect(isDateCellSchedule({ foo: 'bar' } as unknown as object)).toBe(false);
+    });
+  });
+
+  describe('isDateCellScheduleDateRange()', () => {
+    const schedule: DateCellSchedule = { w: '89', ex: [0, 1], d: [2] };
+    const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z');
+    const timing = dateCellTiming({ startsAt: utc2022Week2StartDate, duration: 60 }, 7, 'UTC');
+    const validRange = { ...timing, ...schedule };
+
+    it('should return true for a valid DateCellScheduleDateRange', () => {
+      expect(isDateCellScheduleDateRange(validRange)).toBe(true);
+    });
+
+    it('should return false when start is not a Date', () => {
+      expect(isDateCellScheduleDateRange({ ...validRange, start: 'not a date' as unknown as Date })).toBe(false);
+    });
+
+    it('should return false when end is not a Date', () => {
+      expect(isDateCellScheduleDateRange({ ...validRange, end: 'not a date' as unknown as Date })).toBe(false);
+    });
+
+    it('should return false when schedule is missing', () => {
+      expect(isDateCellScheduleDateRange({ ...timing })).toBe(false);
+    });
+  });
+
+  describe('isDateCellScheduleStartOfDayDateRange()', () => {
+    const schedule: DateCellSchedule = { w: '89', ex: [0, 1], d: [2] };
+    const utc2022Week2StartDate = new Date('2022-01-02T00:00:00Z');
+    const timing = dateCellTiming({ startsAt: utc2022Week2StartDate, duration: 60 }, 7, 'UTC');
+    const startOfDayRange: DateCellScheduleDateRange = {
+      ...schedule,
+      start: timing.start,
+      end: new Date('2022-01-09T00:00:00Z'),
+      timezone: 'UTC'
+    };
+
+    it('should return true for a start-of-day DateCellScheduleDateRange (no duration/startsAt)', () => {
+      expect(isDateCellScheduleStartOfDayDateRange(startOfDayRange)).toBe(true);
+    });
+
+    it('should return false when duration is present', () => {
+      expect(isDateCellScheduleStartOfDayDateRange({ ...startOfDayRange, duration: 60 } as unknown as object)).toBe(false);
+    });
+
+    it('should return false when startsAt is present', () => {
+      expect(isDateCellScheduleStartOfDayDateRange({ ...startOfDayRange, startsAt: utc2022Week2StartDate } as unknown as object)).toBe(false);
+    });
+
+    it('should return false for an invalid schedule date range', () => {
+      expect(isDateCellScheduleStartOfDayDateRange({})).toBe(false);
     });
   });
 

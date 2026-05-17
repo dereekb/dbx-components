@@ -14,7 +14,7 @@ export interface MakeTestingFirebaseStorageAccessorDriverConfig {
    * original driver's default bucket is preserved. When omitted, a test bucket is
    * generated only if the base driver does not already define a default bucket.
    */
-  useTestDefaultBucket?: boolean;
+  readonly useTestDefaultBucket?: boolean;
 }
 
 /**

@@ -33,25 +33,29 @@ const DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE: SearchableValueFieldDisplayFn<
 export class DbxFirebaseDevelopmentPopupContentForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseDevelopmentPopupContentFormValue, DbxFirebaseDevelopmentPopupContentFormInput> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => {
+      let result: Maybe<FormConfig>;
+
       if (!config) {
-        return undefined;
+        result = undefined;
+      } else {
+        result = {
+          fields: [
+            dbxForgePickableChipField<string, DbxFirebaseDevelopmentWidgetEntry>({
+              key: 'specifier',
+              hint: 'Pick a tool to get started.',
+              props: {
+                filterLabel: 'Tools',
+                filterValues: filterPickableItemFieldValuesByLabel,
+                loadValues: () => of(config.entries.map((y) => ({ value: y.widget.type, meta: y }))),
+                displayForValue: DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE,
+                asArrayValue: false
+              }
+            })
+          ]
+        };
       }
 
-      return {
-        fields: [
-          dbxForgePickableChipField<string, DbxFirebaseDevelopmentWidgetEntry>({
-            key: 'specifier',
-            hint: 'Pick a tool to get started.',
-            props: {
-              filterLabel: 'Tools',
-              filterValues: filterPickableItemFieldValuesByLabel,
-              loadValues: () => of(config.entries.map((y) => ({ value: y.widget.type, meta: y }))),
-              displayForValue: DISPLAY_FOR_DEVELOPMENT_POPUP_STRING_VALUE,
-              asArrayValue: false
-            }
-          })
-        ]
-      };
+      return result;
     })
   );
 }

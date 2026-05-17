@@ -230,11 +230,9 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
     }
 
     // useOnFirstError: call use() with empty successes and abortedEarly: true on first error
-    if (hasErrors && useOnFirstError) {
-      return use([], { errors, abortedEarly: true });
-    }
+    const result = hasErrors && useOnFirstError ? use([], { errors, abortedEarly: true }) : use(successful, { errors, abortedEarly: false });
 
-    return use(successful, { errors, abortedEarly: false });
+    return result;
   }
 }
 

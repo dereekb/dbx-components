@@ -31,14 +31,19 @@ export type ZohoRecruitConfigApiUrlInput = ZohoRecruitApiUrlKey | ZohoRecruitApi
  * @returns The resolved Zoho Recruit API URL
  */
 export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): ZohoApiUrl {
+  let result: ZohoApiUrl;
   switch (input) {
     case 'sandbox':
-      return 'https://recruitsandbox.zoho.com/recruit';
+      result = 'https://recruitsandbox.zoho.com/recruit';
+      break;
     case 'production':
-      return 'https://recruit.zoho.com/recruit';
+      result = 'https://recruit.zoho.com/recruit';
+      break;
     default:
-      return input;
+      result = input;
+      break;
   }
+  return result;
 }
 
 /**

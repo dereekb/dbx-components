@@ -134,13 +134,16 @@ export class DbxAppAuthRouterService implements OnDestroy {
   }
 
   private _checkCurrentRouteIgnored(ignoredRefs: Set<SegueRefOrSegueRefRouterLink>): boolean {
+    let result = false;
+
     for (const ref of ignoredRefs) {
       if (this.dbxRouterService.isActive(ref)) {
-        return true;
+        result = true;
+        break;
       }
     }
 
-    return false;
+    return result;
   }
 
   // MARK: Navigate

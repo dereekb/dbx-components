@@ -8,8 +8,8 @@ import { IS_NOT_WEBSITE_URL_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_EXPECTED_DOM
  * Configuration for {@link dbxForgePatternValidator}.
  */
 export interface DbxForgePatternValidatorConfig {
-  pattern: string | RegExp;
-  message?: ValidationMessages['pattern'];
+  readonly pattern: string | RegExp;
+  readonly message?: ValidationMessages['pattern'];
 }
 
 /**
@@ -44,7 +44,7 @@ export function dbxForgePatternValidator(config: DbxForgePatternValidatorConfig)
  * Configuration for {@link dbxForgeEmailValidator}.
  */
 export interface DbxForgeEmailValidatorConfig {
-  message?: ValidationMessages['email'];
+  readonly message?: ValidationMessages['email'];
 }
 
 /**

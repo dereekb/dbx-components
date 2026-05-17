@@ -80,29 +80,24 @@ function runHandler(manifest: CliModelManifest, argv: ModelInfoArgv): void {
   if (!query) {
     if (argv.json) {
       outputResult(manifest);
-      return;
+    } else {
+      process.stdout.write(renderModelManifestList(manifest));
     }
-    process.stdout.write(renderModelManifestList(manifest));
-    return;
-  }
+  } else {
+    const entry = resolveCliModel(manifest, query);
+    if (!entry) {
+      throw new CliError({
+        message: `No model matches '${query}'. Run \`model-info\` without an argument to list available models.`,
+        code: 'MODEL_INFO_NOT_FOUND'
+      });
+    }
 
-  const entry = resolveCliModel(manifest, query);
-  if (!entry) {
-    throw new CliError({
-      message: `No model matches '${query}'. Run \`model-info\` without an argument to list available models.`,
-      code: 'MODEL_INFO_NOT_FOUND'
-    });
+    if (argv.json) {
+      outputResult(entry);
+    } else if (argv.fields) {
+      process.stdout.write(renderModelManifestFields(entry));
+    } else {
+      process.stdout.write(renderModelManifestEntry(entry));
+    }
   }
-
-  if (argv.json) {
-    outputResult(entry);
-    return;
-  }
-
-  if (argv.fields) {
-    process.stdout.write(renderModelManifestFields(entry));
-    return;
-  }
-
-  process.stdout.write(renderModelManifestEntry(entry));
 }

@@ -290,12 +290,12 @@ export interface DateRangeParams {
   /**
    * Type of range.
    */
-  type: DateRangeType;
+  readonly type: DateRangeType;
   /**
    * Date to filter on. If not provided, assumes now.
    */
-  date: Date;
-  distance?: number;
+  readonly date: Date;
+  readonly distance?: number;
 }
 
 export interface DateRangeTypedInput {

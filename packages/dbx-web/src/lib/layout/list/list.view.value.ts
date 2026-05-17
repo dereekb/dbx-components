@@ -89,7 +89,7 @@ export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T>
   /**
    * @see DbxListViewMetaIconComponent.metaConfig()
    */
-  metaConfig?: DbxInjectionComponentConfig<any>;
+  readonly metaConfig?: DbxInjectionComponentConfig<any>;
   /**
    * Whether group headers should stick to the top of the scroll container.
    *

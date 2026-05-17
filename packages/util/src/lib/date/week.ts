@@ -167,13 +167,13 @@ export interface DayOfWeekNamesTransformConfig {
    *
    * I.E. Mon, Tue, etc.
    */
-  abbreviation?: boolean;
+  readonly abbreviation?: boolean;
   /**
    * Whether or not to uppercase the days.
    *
    * I.E. MONDAY, TUE, etc.
    */
-  uppercase?: boolean;
+  readonly uppercase?: boolean;
 }
 
 /**

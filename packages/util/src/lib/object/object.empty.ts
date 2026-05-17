@@ -14,6 +14,8 @@ import { hasValueOrNotEmpty } from '../value/maybe';
  * @returns `true` if the object is considered empty
  */
 export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
+  let empty = true;
+
   if (obj != null && typeof obj === 'object') {
     const keys = Object.keys(obj);
 
@@ -23,11 +25,12 @@ export function objectIsEmpty<T extends object>(obj: Maybe<T>): boolean {
         const isEmpty = typeof value === 'object' ? objectIsEmpty<object>(value as unknown as Maybe<object>) : !hasValueOrNotEmpty(value);
 
         if (!isEmpty) {
-          return false;
+          empty = false;
+          break;
         }
       }
     }
   }
 
-  return true;
+  return empty;
 }

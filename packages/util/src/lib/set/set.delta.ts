@@ -58,11 +58,11 @@ export interface SetDeltaFunctionConfig<T, K extends PrimativeKey = PrimativeKey
   /**
    * Reads the identifying key from each input value.
    */
-  readKey: ReadKeyFunction<T, K>;
+  readonly readKey: ReadKeyFunction<T, K>;
   /**
    * Whether or not the value is modified.
    */
-  isModifiedFunction?: SetValueIsModifiedFunction<T>;
+  readonly isModifiedFunction?: SetValueIsModifiedFunction<T>;
 }
 
 /**

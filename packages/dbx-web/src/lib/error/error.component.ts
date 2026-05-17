@@ -80,6 +80,7 @@ export class DbxErrorComponent {
   readonly state = computed<DbxErrorComponentState>(() => {
     const rawError = this.errorSignal();
     const iconOnly = this.iconOnly();
+    let result: DbxErrorComponentState;
 
     if (rawError != null) {
       const error = toReadableError(rawError);
@@ -111,10 +112,12 @@ export class DbxErrorComponent {
         }
       }
 
-      return state;
+      result = state;
+    } else {
+      result = { viewType: 'none' };
     }
 
-    return { viewType: 'none' };
+    return result;
   });
 
   readonly viewTypeSignal = computed(() => this.state().viewType);

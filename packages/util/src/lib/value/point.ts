@@ -498,31 +498,31 @@ export interface LatLngPointFunctionConfig {
   /**
    * LatLngPrecision to use
    */
-  precision?: LatLngPrecision | null;
+  readonly precision?: LatLngPrecision | null;
   /**
    * Precision rounding to use.
    */
-  precisionRounding?: RoundToPrecisionFunctionType;
+  readonly precisionRounding?: RoundToPrecisionFunctionType;
   /**
    * Whether or not to wrap invalid LatLng values. If false, the values are validated and a default value is used instead.
    *
    * Is true by default.
    */
-  wrap?: boolean;
+  readonly wrap?: boolean;
   /**
    * Whether or not to valiate the input. Is ignored if wrap is not false.
    */
-  validate?: boolean;
+  readonly validate?: boolean;
   /**
    * The default LatLngPoint to return if an invalid point is entered. Only used if validate is true.
    */
-  default?: Factory<LatLngPoint>;
+  readonly default?: Factory<LatLngPoint>;
   /**
    * Treat tuples as LonLat instead of LatLng.
    *
    * False by default
    */
-  readLonLatTuples?: boolean;
+  readonly readLonLatTuples?: boolean;
 }
 
 /**
@@ -720,15 +720,15 @@ export interface RandomLatLngFactoryConfig {
   /**
    * South-west corner of the bounding box for random generation. Partial values default to the minimum valid coordinates.
    */
-  sw?: Partial<LatLngPoint>;
+  readonly sw?: Partial<LatLngPoint>;
   /**
    * North-east corner of the bounding box for random generation. Partial values default to the maximum valid coordinates.
    */
-  ne?: Partial<LatLngPoint>;
+  readonly ne?: Partial<LatLngPoint>;
   /**
    * Precision of the LatLng to keep.
    */
-  precision?: LatLngPrecision;
+  readonly precision?: LatLngPrecision;
 }
 
 /**
@@ -769,15 +769,15 @@ export interface RandomLatLngFromCenterFactoryConfig extends Pick<RandomLatLngFa
   /**
    * Center from which a rectangle is generated to pick random
    */
-  center: LatLngPoint;
+  readonly center: LatLngPoint;
   /**
    * Max distance from the center.
    */
-  latDistance: number;
+  readonly latDistance: number;
   /**
    * Max lng distance from the center.
    */
-  lngDistance: number;
+  readonly lngDistance: number;
 }
 
 /**

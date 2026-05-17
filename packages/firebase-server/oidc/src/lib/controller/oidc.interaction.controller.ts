@@ -52,12 +52,9 @@ export class OidcInteractionController {
     try {
       const interaction = await this.oidcInteractionService.getInteractionDetails(req, res);
       const { prompt } = interaction;
+      const redirectUrl = prompt.name === 'login' ? `${this.oidcProviderConfigService.appLoginUrl}?uid=${uid}` : `${this.oidcProviderConfigService.appConsentUrl}?uid=${uid}`;
 
-      if (prompt.name === 'login') {
-        return res.redirect(`${this.oidcProviderConfigService.appLoginUrl}?uid=${uid}`);
-      }
-
-      return res.redirect(`${this.oidcProviderConfigService.appConsentUrl}?uid=${uid}`);
+      return res.redirect(redirectUrl);
     } catch {
       throw new HttpException('Interaction not found', HttpStatus.NOT_FOUND);
     }

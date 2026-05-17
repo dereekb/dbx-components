@@ -1,12 +1,11 @@
 import { type TrelloContext } from './trello.factory';
-import { type TrelloMemberId } from '../trello.type';
 import { type TrelloMember } from './trello.api.member.type';
 
 export interface GetMemberInput {
   /**
    * Member id, username, or the literal `me` (the authenticated user).
    */
-  readonly memberId: TrelloMemberId | 'me' | string;
+  readonly memberId: string;
 }
 
 export type GetMemberFunction = (input: GetMemberInput) => Promise<TrelloMember>;

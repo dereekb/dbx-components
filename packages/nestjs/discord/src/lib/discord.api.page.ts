@@ -130,18 +130,22 @@ export function discordFetchMessagePageFactory<I extends DiscordMessagePageFilte
       const effectiveLimit = options.maxItemsPerPage ?? input.limit ?? DISCORD_DEFAULT_MESSAGES_PER_PAGE;
       const resultCount = pageResult.result?.data.length ?? 0;
 
+      let nextInput: Maybe<Partial<I>>;
+
       // Discord signals no more results when fewer items than the limit are returned
       if (!nextCursor || resultCount < effectiveLimit) {
-        return undefined;
+        nextInput = undefined;
+      } else {
+        nextInput = {
+          ...input,
+          before: nextCursor,
+          after: undefined,
+          around: undefined,
+          limit: effectiveLimit
+        } as Partial<I>;
       }
 
-      return {
-        ...input,
-        before: nextCursor,
-        after: undefined,
-        around: undefined,
-        limit: effectiveLimit
-      } as Partial<I>;
+      return nextInput;
     }
   });
 }

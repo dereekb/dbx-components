@@ -28,12 +28,16 @@ export type ZohoAccountsConfigApiUrlInput = ZohoAccountsApiUrlKey | ZohoAccounts
  * @returns The resolved full Zoho Accounts API base URL
  */
 export function zohoAccountsConfigApiUrl(input: ZohoAccountsConfigApiUrlInput): ZohoApiUrl {
+  let result: ZohoApiUrl;
   switch (input) {
     case 'us':
-      return ZOHO_ACCOUNTS_US_API_URL;
+      result = ZOHO_ACCOUNTS_US_API_URL;
+      break;
     default:
-      return input;
+      result = input;
+      break;
   }
+  return result;
 }
 
 /**

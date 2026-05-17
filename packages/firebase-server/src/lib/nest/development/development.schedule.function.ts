@@ -61,6 +61,7 @@ export function makeScheduledFunctionDevelopmentFunction(config: MakeScheduledFu
   return async (request) => {
     const { data } = request;
     const { type } = data;
+    let result: ScheduledFunctionDevelopmentFirebaseFunctionResult;
 
     switch (type) {
       case ScheduledFunctionDevelopmentFunctionTypeEnum.RUN: {
@@ -83,16 +84,20 @@ export function makeScheduledFunctionDevelopmentFunction(config: MakeScheduledFu
           throw e;
         }
 
-        return {
+        result = {
           type: 'run',
           success: true
         };
+        break;
       }
       case ScheduledFunctionDevelopmentFunctionTypeEnum.LIST:
-        return {
+        result = {
           type: 'list',
           list: getListValues()
         };
+        break;
     }
+
+    return result;
   };
 }

@@ -34,11 +34,7 @@ type AstNode = any;
  * @returns The function's identifier name, or `null` for anonymous functions.
  */
 function getFunctionName(node: AstNode): string | null {
-  if (node.id?.type === 'Identifier') {
-    return node.id.name;
-  }
-
-  return null;
+  return node.id?.type === 'Identifier' ? node.id.name : null;
 }
 
 /**
@@ -48,12 +44,16 @@ function getFunctionName(node: AstNode): string | null {
  * @returns The combined default + additional regex patterns, or an empty list when name-pattern matching is disabled.
  */
 function buildNamePatterns(options: UtilRequireNoSideEffectsRuleOptions): readonly RegExp[] {
+  let result: readonly RegExp[];
+
   if (!options.checkNamePatterns) {
-    return [];
+    result = [];
+  } else {
+    const additional = (options.additionalNamePatterns ?? []).map((source) => new RegExp(source));
+    result = [...DEFAULT_NAME_PATTERNS, ...additional];
   }
 
-  const additional = (options.additionalNamePatterns ?? []).map((source) => new RegExp(source));
-  return [...DEFAULT_NAME_PATTERNS, ...additional];
+  return result;
 }
 
 /**
@@ -141,127 +141,117 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
 
     function checkFunction(node: AstNode): void {
       // Skip overload signatures (TSDeclareFunction) and bodyless declarations.
-      if (node.type !== 'FunctionDeclaration' || !node.body) {
-        return;
-      }
+      if (node.type === 'FunctionDeclaration' && node.body) {
+        const name = getFunctionName(node);
 
-      const name = getFunctionName(node);
+        if (name) {
+          // Walks the overload chain (if any) so we read the JSDoc on the first overload,
+          // any orphan annotations placed between overloads, and the (preserved) impl-leading annotation.
+          const { jsdoc, orphanLineComments: redundantLineComments, hasOverloads, implLineComment, implHasSurvivingAnnotation, chainStartStatement } = findFunctionLeadingContext(sourceCode, node);
 
-      if (!name) {
-        return;
-      }
+          const taggedAsFactory = jsdoc?.text?.includes(FACTORY_JSDOC_TAG) === true;
+          const matchedByName = !taggedAsFactory && namePatterns.length > 0 && nameMatchesFactoryPattern(name);
 
-      // Walks the overload chain (if any) so we read the JSDoc on the first overload,
-      // any orphan annotations placed between overloads, and the (preserved) impl-leading annotation.
-      const { jsdoc, orphanLineComments: redundantLineComments, hasOverloads, implLineComment, implHasSurvivingAnnotation, chainStartStatement } = findFunctionLeadingContext(sourceCode, node);
+          // The bundled implementation already carries the marker — passing. This covers:
+          //   - non-overloaded with the tag in the (only) JSDoc, AND
+          //   - overloaded with either a `// @__NO_SIDE_EFFECTS__` above the impl or its own tagged JSDoc.
+          if ((taggedAsFactory || matchedByName) && !implHasSurvivingAnnotation) {
+            // Choose the most specific message:
+            //   - overloaded + JSDoc with the tag on first overload but no impl annotation → impl-specific.
+            //   - has any JSDoc → JSDoc tag missing.
+            //   - no JSDoc → JSDoc must be created.
+            let messageId: 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory';
 
-      const taggedAsFactory = jsdoc?.text?.includes(FACTORY_JSDOC_TAG) === true;
-      const matchedByName = !taggedAsFactory && namePatterns.length > 0 && nameMatchesFactoryPattern(name);
-
-      if (!taggedAsFactory && !matchedByName) {
-        return;
-      }
-
-      // The bundled implementation already carries the marker — passing. This covers:
-      //   - non-overloaded with the tag in the (only) JSDoc, AND
-      //   - overloaded with either a `// @__NO_SIDE_EFFECTS__` above the impl or its own tagged JSDoc.
-      if (implHasSurvivingAnnotation) {
-        return;
-      }
-
-      // Choose the most specific message:
-      //   - overloaded + JSDoc with the tag on first overload but no impl annotation → impl-specific.
-      //   - has any JSDoc → JSDoc tag missing.
-      //   - no JSDoc → JSDoc must be created.
-      let messageId: 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory';
-
-      if (hasOverloads && jsdoc?.hasNoSideEffects) {
-        messageId = 'missingImplAnnotationOverloaded';
-      } else if (jsdoc) {
-        messageId = 'missingNoSideEffectsJsdoc';
-      } else {
-        messageId = 'missingJsdocForFactory';
-      }
-
-      context.report({
-        node: node.id,
-        messageId,
-        data: { name },
-        fix(fixer: AstNode) {
-          const fixes: AstNode[] = [];
-
-          // Add the JSDoc tag (or create the JSDoc) so consumer-facing docs reflect the marker.
-          // Skipped when the existing JSDoc already carries the tag — only the impl-line comment
-          // would be missing in that case (handled below).
-          if (jsdoc && !jsdoc.hasNoSideEffects) {
-            const jsdocText = jsdoc.text; // text excludes /* and */
-            const jsdocStart = jsdoc.node.range[0];
-            const jsdocEnd = jsdoc.node.range[1];
-
-            // Determine the column the JSDoc starts at to align the new line.
-            const jsdocIndent = getLineIndent(sourceText, jsdocStart);
-
-            // If the JSDoc is single-line (e.g. `/** @dbxUtilKind factory */`),
-            // expand it to multi-line. Detect by absence of newline in the body.
-            if (jsdocText.includes('\n')) {
-              // Multi-line JSDoc: insert a new line `${indent} * @__NO_SIDE_EFFECTS__\n`
-              // immediately before the line containing the closing `*/`, so the closing line
-              // and existing body lines remain untouched.
-              const closingMarkerStart = jsdocEnd - 2; // start of `*/`
-              let closingLineStart = closingMarkerStart;
-              while (closingLineStart > 0 && sourceText.charAt(closingLineStart - 1) !== '\n') {
-                closingLineStart -= 1;
-              }
-              const insertion = `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`;
-              fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], insertion));
+            if (hasOverloads && jsdoc?.hasNoSideEffects) {
+              messageId = 'missingImplAnnotationOverloaded';
+            } else if (jsdoc) {
+              messageId = 'missingNoSideEffectsJsdoc';
             } else {
-              const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
-              const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
-              fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
+              messageId = 'missingJsdocForFactory';
             }
-          } else if (!jsdoc) {
-            // No JSDoc anywhere — create one above the FIRST statement in the chain. For overloaded
-            // functions the canonical doc placement is on the first overload, not the implementation.
-            const nodeStart = chainStartStatement.range[0];
-            const indent = getLineIndent(sourceText, nodeStart);
 
-            const newJsdoc = `/**\n${indent} * @dbxUtilKind factory\n${indent} * ${NO_SIDE_EFFECTS_TAG}\n${indent} */\n${indent}`;
-            fixes.push(fixer.insertTextBeforeRange([nodeStart, nodeStart], newJsdoc));
+            context.report({
+              node: node.id,
+              messageId,
+              data: { name },
+              fix(fixer: AstNode) {
+                const fixes: AstNode[] = [];
+
+                // Add the JSDoc tag (or create the JSDoc) so consumer-facing docs reflect the marker.
+                // Skipped when the existing JSDoc already carries the tag — only the impl-line comment
+                // would be missing in that case (handled below).
+                if (jsdoc && !jsdoc.hasNoSideEffects) {
+                  const jsdocText = jsdoc.text; // text excludes /* and */
+                  const jsdocStart = jsdoc.node.range[0];
+                  const jsdocEnd = jsdoc.node.range[1];
+
+                  // Determine the column the JSDoc starts at to align the new line.
+                  const jsdocIndent = getLineIndent(sourceText, jsdocStart);
+
+                  // If the JSDoc is single-line (e.g. `/** @dbxUtilKind factory */`),
+                  // expand it to multi-line. Detect by absence of newline in the body.
+                  if (jsdocText.includes('\n')) {
+                    // Multi-line JSDoc: insert a new line `${indent} * @__NO_SIDE_EFFECTS__\n`
+                    // immediately before the line containing the closing `*/`, so the closing line
+                    // and existing body lines remain untouched.
+                    const closingMarkerStart = jsdocEnd - 2; // start of `*/`
+                    let closingLineStart = closingMarkerStart;
+                    while (closingLineStart > 0 && sourceText.charAt(closingLineStart - 1) !== '\n') {
+                      closingLineStart -= 1;
+                    }
+                    const insertion = `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`;
+                    fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], insertion));
+                  } else {
+                    const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
+                    const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
+                    fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
+                  }
+                } else if (!jsdoc) {
+                  // No JSDoc anywhere — create one above the FIRST statement in the chain. For overloaded
+                  // functions the canonical doc placement is on the first overload, not the implementation.
+                  const nodeStart = chainStartStatement.range[0];
+                  const indent = getLineIndent(sourceText, nodeStart);
+
+                  const newJsdoc = `/**\n${indent} * @dbxUtilKind factory\n${indent} * ${NO_SIDE_EFFECTS_TAG}\n${indent} */\n${indent}`;
+                  fixes.push(fixer.insertTextBeforeRange([nodeStart, nodeStart], newJsdoc));
+                }
+
+                // Overloaded functions need a `// @__NO_SIDE_EFFECTS__` line comment directly above the
+                // implementation so the marker survives TypeScript's overload-signature erasure and reaches
+                // the bundled JavaScript. Skipped when one is already in place.
+                if (hasOverloads && !implLineComment) {
+                  const implAnchor = getStatementAnchor(node);
+                  const implStart = implAnchor.range[0];
+                  const indent = getLineIndent(sourceText, implStart);
+
+                  fixes.push(fixer.insertTextBeforeRange([implStart, implStart], `// ${NO_SIDE_EFFECTS_TAG}\n${indent}`));
+                }
+
+                // Remove any redundant adjacent annotation comments now that JSDoc carries the tag.
+                for (const redundant of redundantLineComments) {
+                  const [start, end] = redundant.range;
+                  // Extend the removal to include the trailing newline + indent so we don't leave a blank line.
+                  let removeEnd = end;
+                  while (removeEnd < sourceText.length && (sourceText.charAt(removeEnd) === ' ' || sourceText.charAt(removeEnd) === '\t')) {
+                    removeEnd += 1;
+                  }
+                  if (sourceText.charAt(removeEnd) === '\n') {
+                    removeEnd += 1;
+                  }
+                  // Also drop leading indent on the comment's line.
+                  let removeStart = start;
+                  while (removeStart > 0 && (sourceText.charAt(removeStart - 1) === ' ' || sourceText.charAt(removeStart - 1) === '\t')) {
+                    removeStart -= 1;
+                  }
+                  fixes.push(fixer.removeRange([removeStart, removeEnd]));
+                }
+
+                return fixes;
+              }
+            });
           }
-
-          // Overloaded functions need a `// @__NO_SIDE_EFFECTS__` line comment directly above the
-          // implementation so the marker survives TypeScript's overload-signature erasure and reaches
-          // the bundled JavaScript. Skipped when one is already in place.
-          if (hasOverloads && !implLineComment) {
-            const implAnchor = getStatementAnchor(node);
-            const implStart = implAnchor.range[0];
-            const indent = getLineIndent(sourceText, implStart);
-
-            fixes.push(fixer.insertTextBeforeRange([implStart, implStart], `// ${NO_SIDE_EFFECTS_TAG}\n${indent}`));
-          }
-
-          // Remove any redundant adjacent annotation comments now that JSDoc carries the tag.
-          for (const redundant of redundantLineComments) {
-            const [start, end] = redundant.range;
-            // Extend the removal to include the trailing newline + indent so we don't leave a blank line.
-            let removeEnd = end;
-            while (removeEnd < sourceText.length && (sourceText.charAt(removeEnd) === ' ' || sourceText.charAt(removeEnd) === '\t')) {
-              removeEnd += 1;
-            }
-            if (sourceText.charAt(removeEnd) === '\n') {
-              removeEnd += 1;
-            }
-            // Also drop leading indent on the comment's line.
-            let removeStart = start;
-            while (removeStart > 0 && (sourceText.charAt(removeStart - 1) === ' ' || sourceText.charAt(removeStart - 1) === '\t')) {
-              removeStart -= 1;
-            }
-            fixes.push(fixer.removeRange([removeStart, removeEnd]));
-          }
-
-          return fixes;
         }
-      });
+      }
     }
 
     return {

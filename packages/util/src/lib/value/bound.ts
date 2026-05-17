@@ -293,11 +293,11 @@ export interface LatLngBoundFunctionConfig {
   /**
    * Point function to use for calculations.
    */
-  pointFunction?: LatLngPointFunction;
+  readonly pointFunction?: LatLngPointFunction;
   /**
    * LatLngPrecision to use if pointFunction is not provided.
    */
-  precision?: LatLngPrecision;
+  readonly precision?: LatLngPrecision;
 }
 
 /**

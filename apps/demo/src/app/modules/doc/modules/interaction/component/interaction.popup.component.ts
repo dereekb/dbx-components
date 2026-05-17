@@ -6,8 +6,8 @@ import { DocInteractionExamplePopupContentComponent } from './interaction.popup.
 export const DEFAULT_INTERACTION_POPUP_COMPOSER_POPUP_KEY = 'popup';
 
 export interface DocInteractionPopupConfig {
-  isDraggable?: boolean;
-  position?: PopupPosition;
+  readonly isDraggable?: boolean;
+  readonly position?: PopupPosition;
 }
 
 @Component({

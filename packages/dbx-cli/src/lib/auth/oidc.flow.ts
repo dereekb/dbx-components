@@ -281,9 +281,6 @@ export function parsePastedRedirect(input: ParsePastedRedirectInput): ParsedRedi
     throw new CliError({ message: 'No code or redirect URL was provided.', code: 'AUTH_NO_CODE' });
   }
 
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('urn:')) {
-    return parseUrlRedirect(trimmed, input.expectedState);
-  }
-
-  return { code: trimmed };
+  const isUrl = trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('urn:');
+  return isUrl ? parseUrlRedirect(trimmed, input.expectedState) : { code: trimmed };
 }

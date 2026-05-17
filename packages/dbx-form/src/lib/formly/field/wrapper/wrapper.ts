@@ -160,11 +160,11 @@ export function formlyWorkingWrapper<C extends FormlyFieldConfig>(fieldConfig: C
  * pairing a field config with an optional flex size.
  */
 export interface DbxFlexLayoutWrapperGroupFieldConfig {
-  field: FormlyFieldConfig;
+  readonly field: FormlyFieldConfig;
   /**
    * Flex space sizing for the field. If undefined it will default to the provided default size.
    */
-  size?: DbxFlexSize;
+  readonly size?: DbxFlexSize;
 }
 
 /**

@@ -19,11 +19,11 @@ export interface BuildConfig<T extends object> {
   /**
    * Optional pre-existing partial object to build upon. If omitted, an empty object is used.
    */
-  base?: Building<T>;
+  readonly base?: Building<T>;
   /**
    * Function that mutates the base to populate it with the desired values.
    */
-  build: BuildFunction<T>;
+  readonly build: BuildFunction<T>;
 }
 
 /**

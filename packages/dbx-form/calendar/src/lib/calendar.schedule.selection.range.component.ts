@@ -132,12 +132,8 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
       ? [
           (control: AbstractControl) => {
             const range = control.value;
-
-            if (!range?.start || !range.end) {
-              return { required: true };
-            }
-
-            return null;
+            const result = !range?.start || !range.end ? { required: true } : null;
+            return result;
           }
         ]
       : [];

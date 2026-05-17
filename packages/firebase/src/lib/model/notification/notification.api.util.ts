@@ -4,7 +4,7 @@
  * Utility functions for applying {@link UpdateNotificationUserParams} changes to notification config objects.
  * Used by the server action service when processing user config update requests.
  */
-import { type Maybe, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
+import { type Maybe, type Building, ModelRelationUtility, UNSET_INDEX_NUMBER, areEqualPOJOValuesUsingPojoFilter, filterKeysOnPOJOFunction, filterOnlyUndefinedValues, makeModelMap, updateMaybeValue } from '@dereekb/util';
 import { type NotificationBoxRecipientTemplateConfigRecord, type NotificationUserDefaultNotificationBoxRecipientConfig, type NotificationUserNotificationBoxRecipientConfig, notificationBoxRecipientTemplateConfigArrayToRecord, notificationBoxRecipientTemplateConfigRecordToArray, updateNotificationRecipient } from './notification.config';
 import { type NotificationBoxRecipientTemplateConfigArrayEntryParam, type UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, type UpdateNotificationUserNotificationBoxRecipientParams } from './notification.api';
 import { type AppNotificationTemplateTypeInfoRecordService } from './notification.details';
@@ -77,7 +77,7 @@ export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a:
   const { configs: inputC, rm: inputRm, lk: inputLk, bk: inputBk } = b;
   const c = (inputC != null ? updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes) : undefined) ?? a.c;
 
-  const nextConfig: NotificationUserNotificationBoxRecipientConfig = {
+  const nextConfig: Building<NotificationUserNotificationBoxRecipientConfig> = {
     ...updateNotificationRecipient(a, b),
     c,
     rm: updateMaybeValue(a.rm, inputRm),
@@ -94,7 +94,7 @@ export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a:
 
   if (configChanged) {
     nextConfig.ns = a.i !== UNSET_INDEX_NUMBER; // needs sync unless i is unset
-    result = nextConfig;
+    result = nextConfig as NotificationUserNotificationBoxRecipientConfig;
   }
 
   return result;

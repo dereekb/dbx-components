@@ -97,69 +97,60 @@ export const dbxWebNoRedundantOnDestroyRule: DbxWebNoRedundantOnDestroyRuleDefin
     const visitClass = (classNode: AstNode): void => {
       const matchedDecorator = findAngularComponentDecorator(classNode, registry);
 
-      if (!matchedDecorator) {
-        return;
-      }
+      if (matchedDecorator) {
+        const ngOnDestroy = findNgOnDestroyMethod(classNode);
+        const body = ngOnDestroy?.value?.body?.body;
 
-      const ngOnDestroy = findNgOnDestroyMethod(classNode);
-      const body = ngOnDestroy?.value?.body?.body;
+        if (!ngOnDestroy || !body) {
+          const implementsMatch = findOnDestroyImplementsClause(classNode, registry);
 
-      if (!ngOnDestroy || !body) {
-        const implementsMatch = findOnDestroyImplementsClause(classNode, registry);
-
-        if (implementsMatch) {
+          if (implementsMatch) {
+            context.report({
+              node: implementsMatch.clauseSpecifier,
+              messageId: 'orphanedImplementsOnDestroy',
+              fix: (fixer: AstNode) => [fixer.removeRange(getImplementsSpecifierRemovalRange(implementsMatch, sourceCode))]
+            });
+          }
+        } else if (body.length === 0) {
           context.report({
-            node: implementsMatch.clauseSpecifier,
-            messageId: 'orphanedImplementsOnDestroy',
-            fix: (fixer: AstNode) => [fixer.removeRange(getImplementsSpecifierRemovalRange(implementsMatch, sourceCode))]
+            node: ngOnDestroy,
+            messageId: 'emptyNgOnDestroy',
+            fix: (fixer: AstNode) => buildRemoveNgOnDestroyFixes({ fixer, ngOnDestroy, classNode, registry, sourceCode })
           });
-        }
-
-        return;
-      }
-
-      if (body.length === 0) {
-        context.report({
-          node: ngOnDestroy,
-          messageId: 'emptyNgOnDestroy',
-          fix: (fixer: AstNode) => buildRemoveNgOnDestroyFixes({ fixer, ngOnDestroy, classNode, registry, sourceCode })
-        });
-        return;
-      }
-
-      const wrappedFields = collectWrappedFieldNames(classNode);
-      const redundantStatements: RedundantStatementMatch[] = [];
-      let hasNonRedundantStatement = false;
-
-      for (const statement of body) {
-        const match = matchRedundantCleanupStatement(statement, wrappedFields);
-
-        if (match) {
-          redundantStatements.push(match);
         } else {
-          hasNonRedundantStatement = true;
-        }
-      }
+          const wrappedFields = collectWrappedFieldNames(classNode);
+          const redundantStatements: RedundantStatementMatch[] = [];
+          let hasNonRedundantStatement = false;
 
-      if (redundantStatements.length === 0) {
-        return;
-      }
+          for (const statement of body) {
+            const match = matchRedundantCleanupStatement(statement, wrappedFields);
 
-      if (hasNonRedundantStatement) {
-        for (const entry of redundantStatements) {
-          context.report({
-            node: entry.statement,
-            messageId: 'redundantCleanupCall',
-            data: { name: entry.fieldName, method: entry.method, wrapper: entry.wrapper },
-            fix: (fixer: AstNode) => [fixer.removeRange(getStatementRangeWithLeadingWhitespace(entry.statement, sourceCode))]
-          });
+            if (match) {
+              redundantStatements.push(match);
+            } else {
+              hasNonRedundantStatement = true;
+            }
+          }
+
+          if (redundantStatements.length > 0) {
+            if (hasNonRedundantStatement) {
+              for (const entry of redundantStatements) {
+                context.report({
+                  node: entry.statement,
+                  messageId: 'redundantCleanupCall',
+                  data: { name: entry.fieldName, method: entry.method, wrapper: entry.wrapper },
+                  fix: (fixer: AstNode) => [fixer.removeRange(getStatementRangeWithLeadingWhitespace(entry.statement, sourceCode))]
+                });
+              }
+            } else {
+              context.report({
+                node: ngOnDestroy,
+                messageId: 'redundantNgOnDestroy',
+                fix: (fixer: AstNode) => buildRemoveNgOnDestroyFixes({ fixer, ngOnDestroy, classNode, registry, sourceCode })
+              });
+            }
+          }
         }
-      } else {
-        context.report({
-          node: ngOnDestroy,
-          messageId: 'redundantNgOnDestroy',
-          fix: (fixer: AstNode) => buildRemoveNgOnDestroyFixes({ fixer, ngOnDestroy, classNode, registry, sourceCode })
-        });
       }
     };
 

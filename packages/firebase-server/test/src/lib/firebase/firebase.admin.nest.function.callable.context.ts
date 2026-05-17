@@ -51,7 +51,7 @@ export interface CallableRequestTestMultipleConfig<I, T extends CallableRequestT
   /**
    * Map of named callable function factories to wrap for testing.
    */
-  fns: T;
+  readonly fns: T;
 }
 
 /**

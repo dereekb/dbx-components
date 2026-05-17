@@ -64,7 +64,7 @@ export interface DbxPopoverComponentConfig<O, I, T> {
  * Full popover configuration including overlay container settings. Used internally.
  */
 export interface FullDbxPopoverComponentConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T> {
-  configuration: NgOverlayContainerConfiguration;
+  readonly configuration: NgOverlayContainerConfiguration;
 }
 
 /**

@@ -17,11 +17,11 @@ export interface AbstractFormExpandSectionConfig<T extends object = object> exte
   /**
    * Label shown on the expand trigger. Falls back to the field label or first child field label.
    */
-  expandLabel?: string;
+  readonly expandLabel?: string;
   /**
    * Optional function to use for checking value existence.
    */
-  hasValueFn?: (value: T) => boolean;
+  readonly hasValueFn?: (value: T) => boolean;
 }
 
 /**

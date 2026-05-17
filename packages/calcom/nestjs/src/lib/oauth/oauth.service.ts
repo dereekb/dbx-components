@@ -218,21 +218,25 @@ export interface FileSystemCalcomOAuthAccessTokenCacheService extends CalcomOAut
  * @returns the revived CalcomAccessToken, or undefined when the payload is empty/invalid
  */
 function reviveCalcomAccessTokenFile(raw: unknown): Maybe<CalcomAccessToken> {
+  let result: Maybe<CalcomAccessToken>;
+
   if (raw == null || typeof raw !== 'object') {
-    return undefined;
+    result = undefined;
+  } else {
+    const wrapper = raw as CalcomOAuthAccessTokenCacheFileContent;
+    const token = wrapper.token;
+
+    if (token == null) {
+      result = undefined;
+    } else {
+      const rawExpiresAt = (token as CalcomAccessToken & { expiresAt?: unknown }).expiresAt;
+      const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
+
+      result = { ...token, expiresAt: expiresAt as Date };
+    }
   }
 
-  const wrapper = raw as CalcomOAuthAccessTokenCacheFileContent;
-  const token = wrapper.token;
-
-  if (token == null) {
-    return undefined;
-  }
-
-  const rawExpiresAt = (token as CalcomAccessToken & { expiresAt?: unknown }).expiresAt;
-  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
-
-  return { ...token, expiresAt: expiresAt as Date };
+  return result;
 }
 
 /**

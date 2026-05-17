@@ -100,20 +100,21 @@ export class OidcAccountServiceUserContext<S extends OidcScope = OidcScope, U ex
   async findAccount(): Promise<OidcAccount | undefined> {
     const authUserContext = this.authUserContext;
     const exists = await authUserContext.exists();
+    let result: OidcAccount | undefined;
 
-    if (!exists) {
-      return undefined;
+    if (exists) {
+      const delegate = this._service.delegate;
+
+      result = {
+        accountId: this._uid,
+        async claims(_use: string, scope: string): Promise<OidcAccountClaims> {
+          const scopes = new Set(scope.split(' ')) as Set<S>;
+          return delegate.buildClaimsForUser(authUserContext, scopes);
+        }
+      };
     }
 
-    const delegate = this._service.delegate;
-
-    return {
-      accountId: this._uid,
-      async claims(_use: string, scope: string): Promise<OidcAccountClaims> {
-        const scopes = new Set(scope.split(' ')) as Set<S>;
-        return delegate.buildClaimsForUser(authUserContext, scopes);
-      }
-    };
+    return result;
   }
 }
 

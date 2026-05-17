@@ -24,6 +24,7 @@ export class DbxFirebaseNotificationItemWidgetService {
   register(provider: DbxFirebaseNotificationItemWidgetEntryRegistration, override: boolean = true): boolean {
     const { componentClass, notificationTemplateType } = provider;
     const widgetType = dbxWidgetTypeForNotificationTemplateType(notificationTemplateType);
+    let result = false;
 
     if (override || !this._entries.has(notificationTemplateType)) {
       const notificationTemplateTypeInfo = this.dbxFirebaseNotificationTemplateService.appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[notificationTemplateType];
@@ -42,11 +43,11 @@ export class DbxFirebaseNotificationItemWidgetService {
 
         this._entries.set(notificationTemplateType, entry);
         this.dbxWidgetService.register(entry.widget, override);
-        return true;
+        result = true;
       }
     }
 
-    return false;
+    return result;
   }
 
   registerDefaultWidget(entry: Omit<DbxWidgetEntry, 'type'>, override: boolean = true): boolean {

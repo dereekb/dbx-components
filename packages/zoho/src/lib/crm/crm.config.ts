@@ -31,14 +31,19 @@ export type ZohoCrmConfigApiUrlInput = ZohoCrmApiUrlKey | ZohoCrmApiUrl;
  * @returns The resolved full Zoho CRM API base URL
  */
 export function zohoCrmConfigApiUrl(input: ZohoCrmConfigApiUrlInput): ZohoApiUrl {
+  let result: ZohoApiUrl;
   switch (input) {
     case 'sandbox':
-      return 'https://crmsandbox.zoho.com/crm';
+      result = 'https://crmsandbox.zoho.com/crm';
+      break;
     case 'production':
-      return 'https://www.zohoapis.com/crm';
+      result = 'https://www.zohoapis.com/crm';
+      break;
     default:
-      return input;
+      result = input;
+      break;
   }
+  return result;
 }
 
 /**

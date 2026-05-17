@@ -89,8 +89,7 @@ export const utilRequireDbxRuleCompanionTagsRule: UtilRequireDbxRuleCompanionTag
         list.push(tag);
         companions.set(suffix, list);
       }
-      if (!markerTag && companions.size === 0) return;
-      if (requireBareMarker && !markerTag) return;
+      if ((!markerTag && companions.size === 0) || (requireBareMarker && !markerTag)) return;
       const triggerLine = markerTag?.startLineIndex ?? 0;
 
       // Unknown companions.

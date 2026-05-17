@@ -13,13 +13,13 @@ export interface IsSelectedDecisionFunctionConfig<T, K extends PrimativeKey = Pr
   /**
    * Reads the key from the input value.
    */
-  readKey: ReadKeyFunction<T, K>;
+  readonly readKey: ReadKeyFunction<T, K>;
   /**
    * Default value to use if readKey returns no key.
    *
    * Defaults to false.
    */
-  defaultIfKeyNull?: boolean;
+  readonly defaultIfKeyNull?: boolean;
 }
 
 /**

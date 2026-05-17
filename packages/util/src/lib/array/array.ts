@@ -257,10 +257,11 @@ export function mergeArraysIntoArray<T>(target: Maybe<T[]>, ...arrays: Maybe<T[]
  */
 export function pushItemOrArrayItemsIntoArray<T>(target: T[], value: ArrayOrValue<T>): T[] {
   if (Array.isArray(value)) {
-    return pushArrayItemsIntoArray(target, value);
+    pushArrayItemsIntoArray(target, value);
+  } else {
+    target.push(value);
   }
 
-  target.push(value);
   return target;
 }
 

@@ -268,25 +268,31 @@ async function _processPage<TItem, TRaw, TItemResult, TPageResult>(input: {
 
 function _computeEffectiveLimit(totalItemsLimit: Maybe<number>, limitPerPage: Maybe<number>, totalItems: number): Maybe<number> {
   const remainingBudget = totalItemsLimit == null ? undefined : totalItemsLimit - totalItems;
+  let result: Maybe<number>;
 
   if (limitPerPage != null && remainingBudget != null) {
-    return Math.min(limitPerPage, remainingBudget);
+    result = Math.min(limitPerPage, remainingBudget);
+  } else {
+    result = limitPerPage ?? remainingBudget;
   }
 
-  return limitPerPage ?? remainingBudget;
+  return result;
 }
 
 function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; readonly maxPages: Maybe<number>; readonly totalItems: number; readonly pageIndex: number; readonly hasMore: boolean; readonly cursorDocumentKey: Maybe<string> }): { readonly stop: boolean; readonly hitLimit: boolean } {
   const { totalItemsLimit, maxPages, totalItems, pageIndex, hasMore, cursorDocumentKey } = input;
   const reachedItemsLimit = totalItemsLimit != null && totalItems >= totalItemsLimit;
   const reachedPagesLimit = maxPages != null && pageIndex >= maxPages;
+  let result: { readonly stop: boolean; readonly hitLimit: boolean };
 
   if (reachedItemsLimit || reachedPagesLimit) {
-    return { stop: true, hitLimit: true };
+    result = { stop: true, hitLimit: true };
+  } else {
+    const exhausted = hasMore === false || cursorDocumentKey == null;
+    result = { stop: exhausted, hitLimit: false };
   }
 
-  const exhausted = hasMore === false || cursorDocumentKey == null;
-  return { stop: exhausted, hitLimit: false };
+  return result;
 }
 
 /**

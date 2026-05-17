@@ -18,14 +18,19 @@ export type ZohoSignConfigApiUrlInput = ZohoSignApiUrlKey | ZohoSignApiUrl;
  * @returns The resolved Zoho Sign API URL
  */
 export function zohoSignConfigApiUrl(input: ZohoSignConfigApiUrlInput): ZohoApiUrl {
+  let result: ZohoApiUrl;
   switch (input) {
     case 'sandbox':
-      return 'https://signsandbox.zoho.com/api/v1';
+      result = 'https://signsandbox.zoho.com/api/v1';
+      break;
     case 'production':
-      return 'https://sign.zoho.com/api/v1';
+      result = 'https://sign.zoho.com/api/v1';
+      break;
     default:
-      return input;
+      result = input;
+      break;
   }
+  return result;
 }
 
 export type ZohoSignConfig = ZohoConfig;

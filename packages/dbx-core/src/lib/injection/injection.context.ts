@@ -27,12 +27,12 @@ export interface DbxInjectionContextConfig<T = unknown, O = unknown> {
   /**
    * The {@link DbxInjectionComponentConfig} describing which component to create and how to configure it.
    */
-  config: DbxInjectionComponentConfig<T>;
+  readonly config: DbxInjectionComponentConfig<T>;
   /**
    * Callback invoked with the created component instance. The returned promise controls how long
    * the injected view remains visible; the original content is restored once it resolves.
    */
-  use: (instance: T) => Promise<O>;
+  readonly use: (instance: T) => Promise<O>;
 }
 
 /**

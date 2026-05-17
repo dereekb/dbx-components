@@ -15,32 +15,27 @@ configureCliSecretPatterns([...DEFAULT_CLI_SECRET_PATTERNS, /1000\.\w{20,}/g]);
  * @returns A structured CLI error output envelope safe to JSON-serialize for stdout.
  */
 export function buildErrorOutput(error: unknown): CliErrorOutput {
+  let result: CliErrorOutput;
+
   if (error instanceof ZohoInvalidTokenError) {
-    return { ok: false, error: sanitizeString(error.message), code: 'TOKEN_EXPIRED', suggestion: 'Run: zoho-cli auth check' };
+    result = { ok: false, error: sanitizeString(error.message), code: 'TOKEN_EXPIRED', suggestion: 'Run: zoho-cli auth check' };
+  } else if (error instanceof ZohoInvalidAuthorizationError) {
+    result = { ok: false, error: sanitizeString(error.message), code: 'AUTH_ERROR', suggestion: 'Check your client ID, secret, and refresh token.' };
+  } else if (error instanceof ZohoTooManyRequestsError) {
+    result = { ok: false, error: sanitizeString(error.message), code: 'RATE_LIMITED', suggestion: 'Wait and retry. Zoho rate limit exceeded.' };
+  } else if (error instanceof ZohoServerFetchResponseError) {
+    result = { ok: false, error: sanitizeString(error.message), code: 'API_ERROR' };
+  } else {
+    result = defaultBuildErrorOutput(error);
   }
 
-  if (error instanceof ZohoInvalidAuthorizationError) {
-    return { ok: false, error: sanitizeString(error.message), code: 'AUTH_ERROR', suggestion: 'Check your client ID, secret, and refresh token.' };
-  }
-
-  if (error instanceof ZohoTooManyRequestsError) {
-    return { ok: false, error: sanitizeString(error.message), code: 'RATE_LIMITED', suggestion: 'Wait and retry. Zoho rate limit exceeded.' };
-  }
-
-  if (error instanceof ZohoServerFetchResponseError) {
-    return { ok: false, error: sanitizeString(error.message), code: 'API_ERROR' };
-  }
-
-  return defaultBuildErrorOutput(error);
+  return result;
 }
 
 // Register the Zoho mapper so dbx-cli's `outputError` produces Zoho-aware envelopes everywhere.
 configureCliErrorMapper((error) => {
-  if (error instanceof ZohoInvalidTokenError || error instanceof ZohoInvalidAuthorizationError || error instanceof ZohoTooManyRequestsError || error instanceof ZohoServerFetchResponseError) {
-    return buildErrorOutput(error);
-  }
-
-  return undefined;
+  const isZohoError = error instanceof ZohoInvalidTokenError || error instanceof ZohoInvalidAuthorizationError || error instanceof ZohoTooManyRequestsError || error instanceof ZohoServerFetchResponseError;
+  return isZohoError ? buildErrorOutput(error) : undefined;
 });
 
 /**

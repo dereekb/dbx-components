@@ -124,18 +124,19 @@ type LoadConfigResult = Awaited<ReturnType<typeof findAndLoadConfig>>;
 
 function collectExternalCssUtilitySources(configResult: LoadConfigResult): CssUtilityManifestSource[] {
   const externalSources: CssUtilityManifestSource[] = [];
-  if (configResult.config === null || configResult.configPath === null) return externalSources;
-  const baseDir = dirname(configResult.configPath);
-  const cluster = configResult.config.cssUtilities;
-  for (const source of cluster?.sources ?? []) {
-    const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
-    externalSources.push({ origin: 'external', path: absolute });
-  }
-  for (const scan of cluster?.scan ?? []) {
-    const out = scan.out;
-    if (typeof out === 'string' && out.length > 0) {
-      const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
+  if (configResult.config !== null && configResult.configPath !== null) {
+    const baseDir = dirname(configResult.configPath);
+    const cluster = configResult.config.cssUtilities;
+    for (const source of cluster?.sources ?? []) {
+      const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
       externalSources.push({ origin: 'external', path: absolute });
+    }
+    for (const scan of cluster?.scan ?? []) {
+      const out = scan.out;
+      if (typeof out === 'string' && out.length > 0) {
+        const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
+        externalSources.push({ origin: 'external', path: absolute });
+      }
     }
   }
   return externalSources;

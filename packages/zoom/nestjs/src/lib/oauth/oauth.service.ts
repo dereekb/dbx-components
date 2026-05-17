@@ -184,21 +184,25 @@ export type ZoomOAuthAccessTokenCacheFileContent = {
  * @returns the revived ZoomAccessToken, or undefined when the payload is empty/invalid
  */
 function reviveZoomAccessTokenFile(raw: unknown): Maybe<ZoomAccessToken> {
+  let result: Maybe<ZoomAccessToken>;
+
   if (raw == null || typeof raw !== 'object') {
-    return undefined;
+    result = undefined;
+  } else {
+    const wrapper = raw as ZoomOAuthAccessTokenCacheFileContent;
+    const token = wrapper.token;
+
+    if (token == null) {
+      result = undefined;
+    } else {
+      const rawExpiresAt = (token as ZoomAccessToken & { expiresAt?: unknown }).expiresAt;
+      const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
+
+      result = { ...token, expiresAt: expiresAt as Date };
+    }
   }
 
-  const wrapper = raw as ZoomOAuthAccessTokenCacheFileContent;
-  const token = wrapper.token;
-
-  if (token == null) {
-    return undefined;
-  }
-
-  const rawExpiresAt = (token as ZoomAccessToken & { expiresAt?: unknown }).expiresAt;
-  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
-
-  return { ...token, expiresAt: expiresAt as Date };
+  return result;
 }
 
 /**
@@ -237,13 +241,16 @@ export function fileZoomOAuthAccessTokenCacheService(filename: string = DEFAULT_
 
   async function readTokenFile(): Promise<Maybe<ZoomOAuthAccessTokenCacheFileContent>> {
     const raw = await readJsonFile<ZoomOAuthAccessTokenCacheFileContent>(filename);
+    let result: Maybe<ZoomOAuthAccessTokenCacheFileContent>;
 
     if (raw == null) {
-      return undefined;
+      result = undefined;
+    } else {
+      const token = reviveZoomAccessTokenFile(raw);
+      result = { token };
     }
 
-    const token = reviveZoomAccessTokenFile(raw);
-    return { token };
+    return result;
   }
 
   // Route the file-mutation helpers through the same `cache` instance used by

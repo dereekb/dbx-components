@@ -161,17 +161,23 @@ export const DEFAULT_ACTION_DISABLED_KEY = 'dbx_action_disabled';
  * @returns `true` if the state is idle-like, `false` if the action is in-progress.
  */
 export function isIdleActionState(actionState: DbxActionState): boolean {
+  let result: boolean;
+
   switch (actionState) {
     case DbxActionState.IDLE:
     case DbxActionState.DISABLED:
     case DbxActionState.REJECTED:
     case DbxActionState.RESOLVED:
-      return true;
+      result = true;
+      break;
     case DbxActionState.TRIGGERED:
     case DbxActionState.VALUE_READY:
     case DbxActionState.WORKING:
-      return false;
+      result = false;
+      break;
   }
+
+  return result;
 }
 
 /**

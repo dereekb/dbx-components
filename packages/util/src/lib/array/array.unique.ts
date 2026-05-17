@@ -141,13 +141,14 @@ export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(r
 
     const result: T[] = input.filter((x) => {
       const key: Maybe<K> = readKey(x);
+      let keep = false;
 
       if (!keys.has(key)) {
         keys.add(key);
-        return true;
+        keep = true;
       }
 
-      return false;
+      return keep;
     });
 
     return result;
@@ -249,13 +250,14 @@ export function allowValueOnceFilter<T, K extends PrimativeKey = PrimativeKey>(i
 
   const fn = ((x: T) => {
     const key: Maybe<K> = readKey(x);
+    let allowed = false;
 
     if (!visitedKeys.has(key)) {
       visitedKeys.add(key);
-      return true;
+      allowed = true;
     }
 
-    return false;
+    return allowed;
   }) as Building<AllowValueOnceFilter<T, K>>;
 
   fn._readKey = readKey;

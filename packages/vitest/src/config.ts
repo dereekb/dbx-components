@@ -227,9 +227,10 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
 
     /**
      * Firebase emulator tests can be flaky due to emulator startup timing and network latency.
-     * Retry only on vitest test/hook timeouts (matches "Test timed out in 5000ms." and
-     * "Hook timed out in 10000ms.") so genuine assertion failures and other errors surface
-     * immediately. Consumers can override via `test.retry`.
+     * Retry only on vitest test/hook timeouts so genuine assertion failures and other errors
+     * surface immediately. The pattern matches any duration, e.g. "Test timed out in 5000ms.",
+     * "Hook timed out in 10000ms.", and "Error: Hook timed out in 30000ms.". Consumers can
+     * override via `test.retry`.
      */
     retry = {
       count: 2,

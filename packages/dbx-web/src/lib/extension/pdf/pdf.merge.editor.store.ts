@@ -174,13 +174,17 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   readonly removeEntriesBySlotId = this.updater((state, slotId: string) => ({ ...state, rawEntries: state.rawEntries.filter((entry) => entry.slotId !== slotId) }));
 
   readonly moveEntry = this.updater((state, move: PdfMergeEntryMove) => {
+    let nextState: PdfMergeEditorState;
+
     if (move.previousIndex === move.currentIndex) {
-      return state;
+      nextState = state;
+    } else {
+      const next = [...state.rawEntries];
+      moveItemInArray(next, move.previousIndex, move.currentIndex);
+      nextState = { ...state, rawEntries: next };
     }
 
-    const next = [...state.rawEntries];
-    moveItemInArray(next, move.previousIndex, move.currentIndex);
-    return { ...state, rawEntries: next };
+    return nextState;
   });
 
   /**

@@ -38,12 +38,14 @@ export class DbxWidgetService {
    * @returns True if the entry was registered, false if an entry with the same type already exists and override is false
    */
   register(entry: DbxWidgetEntry, override: boolean = true): boolean {
+    let registered = false;
+
     if (override || !this._entries.has(entry.type)) {
       this._entries.set(entry.type, entry);
-      return true;
+      registered = true;
     }
 
-    return false;
+    return registered;
   }
 
   // MARK: Get

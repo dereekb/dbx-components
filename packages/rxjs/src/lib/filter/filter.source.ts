@@ -154,16 +154,20 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
     this._initialFilterSub.subscription ??= this._initialFilterTakesPriority
       .pipe(
         switchMap((clearFilterOnInitialFilterPush) => {
+          let result: Observable<boolean>;
+
           if (clearFilterOnInitialFilterPush) {
-            return this._initialFilter.pipe(
+            result = this._initialFilter.pipe(
               switchMap((x) => x ?? EMPTY),
               filterMaybe(),
               map(() => true),
               skip(1) // skip the first emission
             );
+          } else {
+            result = EMPTY;
           }
 
-          return EMPTY;
+          return result;
         }),
         defaultIfEmpty(false)
       )

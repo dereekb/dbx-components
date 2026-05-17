@@ -14,34 +14,39 @@ export function createFileTokenCache(filePath: string): ZohoAccessTokenCache {
   const inner = createMemoizedJsonFileAsyncValueCache<ZohoAccessToken>({
     filePath,
     reviver: (raw) => {
+      let result: ZohoAccessToken | undefined;
+
       if (raw == null || typeof raw !== 'object') {
-        return undefined;
-      }
-      const value = raw as Partial<ZohoAccessToken> & { expiresAt?: unknown };
-
-      // Validate the required ZohoAccessToken shape so a corrupt or partial file is treated
-      // as a cache miss rather than re-emitted as a malformed token. expiresIn must be a
-      // finite positive number — NaN, ±Infinity, and zero/negative durations are nonsense
-      // for a TTL and should fail validation.
-      if (typeof value.accessToken !== 'string' || typeof value.scope !== 'string' || typeof value.apiDomain !== 'string' || typeof value.expiresIn !== 'number' || !Number.isFinite(value.expiresIn) || value.expiresIn <= 0) {
-        return undefined;
-      }
-
-      const rawExpiresAt = value.expiresAt;
-      let expiresAt: Date | undefined;
-      if (rawExpiresAt instanceof Date) {
-        expiresAt = rawExpiresAt;
-      } else if (rawExpiresAt == null) {
-        expiresAt = undefined;
+        result = undefined;
       } else {
-        expiresAt = new Date(rawExpiresAt as string | number);
+        const value = raw as Partial<ZohoAccessToken> & { expiresAt?: unknown };
+
+        // Validate the required ZohoAccessToken shape so a corrupt or partial file is treated
+        // as a cache miss rather than re-emitted as a malformed token. expiresIn must be a
+        // finite positive number — NaN, ±Infinity, and zero/negative durations are nonsense
+        // for a TTL and should fail validation.
+        if (typeof value.accessToken !== 'string' || typeof value.scope !== 'string' || typeof value.apiDomain !== 'string' || typeof value.expiresIn !== 'number' || !Number.isFinite(value.expiresIn) || value.expiresIn <= 0) {
+          result = undefined;
+        } else {
+          const rawExpiresAt = value.expiresAt;
+          let expiresAt: Date | undefined;
+          if (rawExpiresAt instanceof Date) {
+            expiresAt = rawExpiresAt;
+          } else if (rawExpiresAt == null) {
+            expiresAt = undefined;
+          } else {
+            expiresAt = new Date(rawExpiresAt as string | number);
+          }
+
+          if (expiresAt == null || Number.isNaN(expiresAt.getTime())) {
+            result = undefined;
+          } else {
+            result = { ...(value as ZohoAccessToken), expiresAt };
+          }
+        }
       }
 
-      if (expiresAt == null || Number.isNaN(expiresAt.getTime())) {
-        return undefined;
-      }
-
-      return { ...(value as ZohoAccessToken), expiresAt };
+      return result;
     }
   });
 

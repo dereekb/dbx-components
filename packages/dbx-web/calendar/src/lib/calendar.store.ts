@@ -361,12 +361,15 @@ export function updateCalendarStateWithTappedDate(state: CalendarState, date: Da
  */
 export function updateCalendarStateWithNavigationRangeLimit(state: CalendarState, navigationRangeLimit: Maybe<Partial<DateRange>>) {
   const { date } = state;
+  let result: CalendarState;
 
   // cap the date if it doesn't fall within the range.
   if (navigationRangeLimit && !isDateInDateRange(date, navigationRangeLimit)) {
     const clampedDate = clampDateToDateRange(date, navigationRangeLimit);
-    return { ...state, date: clampedDate, navigationRangeLimit };
+    result = { ...state, date: clampedDate, navigationRangeLimit };
+  } else {
+    result = { ...state, navigationRangeLimit };
   }
 
-  return { ...state, navigationRangeLimit };
+  return result;
 }

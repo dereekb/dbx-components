@@ -89,11 +89,15 @@ export function deleteCard(context: TrelloContext): DeleteCardFunction {
 }
 
 /**
- * Known Trello action type. Trello supports many more (40+) — pass any string for filters not enumerated here.
+ * Trello action type identifier.
+ *
+ * Trello supports many action types (40+). Common card-related values: `commentCard`, `updateCard`, `createCard`,
+ * `deleteCard`, `addMemberToCard`, `removeMemberFromCard`, `addAttachmentToCard`, `deleteAttachmentFromCard`,
+ * `addChecklistToCard`, `removeChecklistFromCard`, `updateCheckItemStateOnCard`, `addLabelToCard`, `removeLabelFromCard`.
  *
  * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/action-types/
  */
-export type TrelloActionType = 'commentCard' | 'updateCard' | 'createCard' | 'deleteCard' | 'addMemberToCard' | 'removeMemberFromCard' | 'addAttachmentToCard' | 'deleteAttachmentFromCard' | 'addChecklistToCard' | 'removeChecklistFromCard' | 'updateCheckItemStateOnCard' | 'addLabelToCard' | 'removeLabelFromCard' | string;
+export type TrelloActionType = string;
 
 export interface ListCardActionsInput {
   readonly cardId: TrelloCardId;

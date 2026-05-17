@@ -31,13 +31,13 @@ export interface DateTimezoneConversionConfig {
    *
    * This will convert between UTC and the current system's timezone.
    */
-  useSystemTimezone?: boolean;
+  readonly useSystemTimezone?: boolean;
   /**
    * Timezone to be relative to. If not defined, values are returned in UTC.
    *
    * Ignored if useSystemTimezone is true.
    */
-  timezone?: Maybe<TimezoneString>;
+  readonly timezone?: Maybe<TimezoneString>;
   /**
    * Custom timezone offset (in ms) between the "normal" and the base date.
    *
@@ -46,11 +46,11 @@ export interface DateTimezoneConversionConfig {
    * Examples:
    * - UTC-6 is negative 6 hours, in milliseconds.
    */
-  timezoneOffset?: Milliseconds;
+  readonly timezoneOffset?: Milliseconds;
   /**
    * Does not convert anything.
    */
-  noConversion?: true;
+  readonly noConversion?: true;
 }
 
 /**

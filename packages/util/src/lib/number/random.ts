@@ -15,15 +15,15 @@ export interface RandomNumberFactoryConfig {
    *
    * No rounding by default.
    */
-  round?: RoundingInput;
+  readonly round?: RoundingInput;
   /**
    * Minimum number (inclusive)
    */
-  min?: number;
+  readonly min?: number;
   /**
    * Max number (exclusive)
    */
-  max: number;
+  readonly max: number;
 }
 
 export type RandomNumberFactoryInput = number | RandomNumberFactoryConfig;

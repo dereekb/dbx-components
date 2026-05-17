@@ -89,8 +89,7 @@ export const utilRequireDbxDocsUiExampleCompanionTagsRule: UtilRequireDbxDocsUiE
     function checkJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
       const { markerTag, familyTags } = findFamilyTags(parsed, spec.marker);
-      if (familyTags.length === 0) return;
-      if (requireBareMarker && !markerTag) return;
+      if (familyTags.length === 0 || (requireBareMarker && !markerTag)) return;
       const triggerTag = markerTag ?? familyTags[0];
 
       checkDbxTagFamily({

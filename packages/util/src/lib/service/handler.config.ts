@@ -139,7 +139,7 @@ export interface HandlerConfigurerFactoryConfig<C extends HandlerBindAccessor<T,
   /**
    * Creates a typed configurer from a bind accessor.
    */
-  configurerForAccessor: (accessor: HandlerBindAccessor<T, K, R>) => C;
+  readonly configurerForAccessor: (accessor: HandlerBindAccessor<T, K, R>) => C;
 }
 
 /**

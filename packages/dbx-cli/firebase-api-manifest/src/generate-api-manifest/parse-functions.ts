@@ -52,15 +52,21 @@ function collectGroupsFromConfig(initializer: ObjectLiteralExpression, importIde
 }
 
 function readGroupFromProperty(property: ObjectLiteralElementLike, importIdentToModule: ReadonlyMap<string, string>): FunctionsGroup | undefined {
-  if (!Node.isPropertyAssignment(property)) return undefined;
-  const valueExpr = property.getInitializer();
-  if (!valueExpr || !Node.isArrayLiteralExpression(valueExpr)) return undefined;
-  const first = valueExpr.getElements()[0];
-  if (!first || !Node.isIdentifier(first)) return undefined;
-  const className = first.getText();
-  const importedFromModule = importIdentToModule.get(className);
-  if (!importedFromModule) return undefined;
-  return { groupKey: property.getName(), className, importedFromModule };
+  let result: FunctionsGroup | undefined;
+  if (Node.isPropertyAssignment(property)) {
+    const valueExpr = property.getInitializer();
+    if (valueExpr && Node.isArrayLiteralExpression(valueExpr)) {
+      const first = valueExpr.getElements()[0];
+      if (first && Node.isIdentifier(first)) {
+        const className = first.getText();
+        const importedFromModule = importIdentToModule.get(className);
+        if (importedFromModule) {
+          result = { groupKey: property.getName(), className, importedFromModule };
+        }
+      }
+    }
+  }
+  return result;
 }
 
 function isFunctionsConfigVariable(variable: VariableDeclaration): boolean {

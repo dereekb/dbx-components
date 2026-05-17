@@ -70,79 +70,89 @@ export function areEqualPOJOValuesUsingPojoFilter<F>(a: F, b: F, pojoFilter: Fil
 }
 
 function _compareIterables<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  let result: boolean;
+
   if (Array.isArray(a)) {
-    return _compareArrays(a, b as unknown[], pojoFilter);
+    result = _compareArrays(a, b as unknown[], pojoFilter);
+  } else if (a instanceof Set) {
+    result = setsAreEquivalent(a, b as Set<unknown>);
+  } else if (a instanceof Map) {
+    result = _compareMaps(a, b as Map<unknown, unknown>, pojoFilter);
+  } else {
+    result = false;
   }
 
-  if (a instanceof Set) {
-    return setsAreEquivalent(a, b as Set<unknown>);
-  }
-
-  if (a instanceof Map) {
-    return _compareMaps(a, b as Map<unknown, unknown>, pojoFilter);
-  }
-
-  return false;
+  return result;
 }
 
 function _compareArrays<F>(a: unknown[], b: unknown[], pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  let result: boolean;
+
   if (a.length !== b.length) {
-    return false;
+    result = false;
+  } else {
+    const firstInequalityIndex = a.findIndex((aValue, i) => {
+      const bValue = b[i];
+      return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
+    });
+
+    result = firstInequalityIndex === -1;
   }
 
-  const firstInequalityIndex = a.findIndex((aValue, i) => {
-    const bValue = b[i];
-    return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
-  });
-
-  return firstInequalityIndex === -1;
+  return result;
 }
 
 function _compareMaps<F>(a: Map<unknown, unknown>, b: Map<unknown, unknown>, pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  let result: boolean;
+
   if (a.size !== b.size) {
-    return false;
+    result = false;
+  } else {
+    const firstInequalityIndex = Array.from(a.entries()).findIndex(([key, aValue]) => {
+      const bValue = b.get(key);
+      return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
+    });
+
+    result = firstInequalityIndex === -1;
   }
 
-  const firstInequalityIndex = Array.from(a.entries()).findIndex(([key, aValue]) => {
-    const bValue = b.get(key);
-    return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
-  });
-
-  return firstInequalityIndex === -1;
+  return result;
 }
 
 function _compareObjects<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  let result: boolean;
+
   // check constructors/types
   const firstType = (a as object).constructor.name;
   const secondType = (b as object).constructor.name;
 
   if (firstType !== secondType) {
-    return false;
+    result = false;
+  } else if (isDate(a)) {
+    // check Date comparison
+    result = isEqualDate(a, b as Date);
+  } else {
+    // check object comparison via keys
+    const aObject = a as Record<string, any>;
+    const bObject = b as Record<string, any>;
+
+    const aKeys = Object.keys(aObject);
+    const bKeys = Object.keys(bObject);
+
+    if (aKeys.length !== bKeys.length) {
+      result = false;
+    } else {
+      const firstInequalityIndex = aKeys.findIndex((key) => {
+        const aKeyValue = aObject[key];
+        const bKeyValue = bObject[key];
+        return !areEqualPOJOValuesUsingPojoFilter(aKeyValue, bKeyValue, pojoFilter);
+      });
+
+      result = firstInequalityIndex === -1;
+    }
   }
 
-  // check Date comparison
-  if (isDate(a)) {
-    return isEqualDate(a, b as Date);
-  }
-
-  // check object comparison via keys
-  const aObject = a as Record<string, any>;
-  const bObject = b as Record<string, any>;
-
-  const aKeys = Object.keys(aObject);
-  const bKeys = Object.keys(bObject);
-
-  if (aKeys.length !== bKeys.length) {
-    return false;
-  }
-
-  const firstInequalityIndex = aKeys.findIndex((key) => {
-    const aKeyValue = aObject[key];
-    const bKeyValue = bObject[key];
-    return !areEqualPOJOValuesUsingPojoFilter(aKeyValue, bKeyValue, pojoFilter);
-  });
-
-  return firstInequalityIndex === -1;
+  return result;
 }
 
 // MARK: ObjectFieldEqualityChecker

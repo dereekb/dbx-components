@@ -8,22 +8,22 @@ export interface LimitDateTimeConfig {
   /**
    * The relative instant to use when deriving limits.
    */
-  instant?: Date;
+  readonly instant?: Date;
 
   /**
    * Whether or not to take the next upcoming time of the input.
    */
-  takeNextUpcomingTime?: boolean;
+  readonly takeNextUpcomingTime?: boolean;
 
   /**
    * Whether or not to round the date down to the nearest minute.
    */
-  roundDownToMinute?: boolean;
+  readonly roundDownToMinute?: boolean;
 
   /**
    * Limits to use for this configuration.
    */
-  limits?: {
+  readonly limits?: {
     /**
      * The minimum date allowed.
      */

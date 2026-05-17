@@ -23,7 +23,7 @@ export interface MappedItemIterationInstanceMapConfig<O, I, M extends LoadingSta
    * Whether destroying the mapped instance also destroys the underlying iteration.
    * Defaults to `true`.
    */
-  forwardDestroy?: boolean;
+  readonly forwardDestroy?: boolean;
 }
 
 /**

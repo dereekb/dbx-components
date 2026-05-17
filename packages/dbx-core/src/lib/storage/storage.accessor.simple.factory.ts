@@ -12,8 +12,8 @@ import { type FullStorageObject, type StoredDataString } from '@dereekb/util';
  * @typeParam T - The type of values the created accessor will store.
  */
 export interface StorageAccessorFactoryConfig<T> extends SimpleStorageAccessorConfig {
-  storage?: StorageAccessor<StoredDataString>;
-  converter?: SimpleStorageAccessorConverter<T>;
+  readonly storage?: StorageAccessor<StoredDataString>;
+  readonly converter?: SimpleStorageAccessorConverter<T>;
 }
 
 /**

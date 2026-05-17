@@ -107,25 +107,31 @@ function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<string | 
 }
 
 function tryParseRaw(raw: string): ParseRawResult {
+  let result: ParseRawResult;
   try {
-    return { kind: 'parsed', value: JSON.parse(raw) };
+    result = { kind: 'parsed', value: JSON.parse(raw) };
   } catch (err) {
-    return { kind: 'error', error: err instanceof Error ? err.message : String(err) };
+    result = { kind: 'error', error: err instanceof Error ? err.message : String(err) };
   }
+  return result;
 }
 
 function validateParsedManifest(path: string, parsed: unknown): LoadFromSourceResult {
   const candidateVersion = (parsed as { readonly version?: unknown } | null | undefined)?.version;
+  let result: LoadFromSourceResult;
+
   if (candidateVersion !== SUPPORTED_VERSION) {
-    return { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
+    result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
+  } else {
+    const validated = SemanticTypeManifest(parsed);
+    if (validated instanceof type.errors) {
+      result = { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
+    } else {
+      result = { kind: 'success', manifest: validated };
+    }
   }
 
-  const validated = SemanticTypeManifest(parsed);
-  if (validated instanceof type.errors) {
-    return { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
-  }
-
-  return { kind: 'success', manifest: validated };
+  return result;
 }
 
 /**
@@ -139,16 +145,20 @@ function validateParsedManifest(path: string, parsed: unknown): LoadFromSourceRe
  */
 async function loadFromSource(source: ManifestSource, readFile: ManifestReadFile): Promise<LoadFromSourceResult> {
   const raw = await tryReadRaw(source.path, readFile);
+  let result: LoadFromSourceResult;
+
   if (raw === null) {
-    return { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
+    result = { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
+  } else {
+    const parseResult = tryParseRaw(raw);
+    if (parseResult.kind === 'error') {
+      result = { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseResult.error } };
+    } else {
+      result = validateParsedManifest(source.path, parseResult.value);
+    }
   }
 
-  const parseResult = tryParseRaw(raw);
-  if (parseResult.kind === 'error') {
-    return { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseResult.error } };
-  }
-
-  return validateParsedManifest(source.path, parseResult.value);
+  return result;
 }
 
 /**

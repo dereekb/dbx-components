@@ -25,8 +25,8 @@ export type DevelopmentFirebaseFunctionSpecifierRef = {
  * Routes the call to a specific function via `specifier` and passes arbitrary data.
  */
 export interface OnCallDevelopmentParams<T = unknown> {
-  specifier: string;
-  data: T;
+  readonly specifier: string;
+  readonly data: T;
 }
 
 /**

@@ -379,7 +379,7 @@ export interface BaseIterateFetchPagesConfig<I, O, R> extends FetchPageFactoryIn
    * @param pageResult - The complete iteration result for the most recent page
    * @returns `true` to stop iteration after this page
    */
-  endEarly?: DecisionFunction<IterateFetchPagesIterationResult<I, O, R>>;
+  readonly endEarly?: DecisionFunction<IterateFetchPagesIterationResult<I, O, R>>;
 }
 
 /**
@@ -471,22 +471,24 @@ export async function iterateFetchPages<I, O, R>(config: IterateFetchPagesConfig
   let currentNextPage: Maybe<FetchNextPage<I, O>>;
 
   async function taskInputFactory() {
+    let result: { i: IndexNumber; fetchPageResult: FetchPageResultWithInput<I, O> } | null;
+
     if (hasReachedEnd) {
-      return null; // issue no more tasks
-    }
-
-    if (currentNextPage != null && (currentNextPage.isAtMaxPage || !currentNextPage.hasNext)) {
+      result = null; // issue no more tasks
+    } else if (currentNextPage != null && (currentNextPage.isAtMaxPage || !currentNextPage.hasNext)) {
       hasReachedEnd = true;
-      return null;
+      result = null;
+    } else {
+      currentNextPage = await fetchPage.fetchNext();
+      fetchPage = currentNextPage;
+
+      result = {
+        i: currentNextPage.page,
+        fetchPageResult: currentNextPage
+      };
     }
 
-    currentNextPage = await fetchPage.fetchNext();
-    fetchPage = currentNextPage;
-
-    return {
-      i: currentNextPage.page,
-      fetchPageResult: currentNextPage
-    };
+    return result;
   }
 
   const performTaskFn = performTasksFromFactoryInParallelFunction({

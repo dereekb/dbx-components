@@ -335,12 +335,16 @@ export interface LowercaseTagsFixResult {
 export function buildLowercaseTagsFix(input: BuildLowercaseTagsFixInput): LowercaseTagsFixResult | undefined {
   const { commentNode, parsed, sourceCode, tag } = input;
   const tagLine = parsed.lines[tag.startLineIndex];
-  if (!tagLine) return undefined;
-  const tagLineSourceStart = commentValueToSourceOffset(commentNode, tagLine.textOffsetStart);
-  const tagLineSourceEnd = tagLineSourceStart + tagLine.text.length;
-  const sourceText = sourceCode.getText();
-  const lineSource = sourceText.slice(tagLineSourceStart, tagLineSourceEnd);
-  const lowered = lineSource.replace(/^(@[A-Za-z]+\s+)(.*)$/, (_match: string, prefix: string, body: string) => `${prefix}${body.toLowerCase()}`);
-  if (lowered === lineSource) return undefined;
-  return { startOffset: tagLineSourceStart, endOffset: tagLineSourceEnd, replacement: lowered };
+  let result: LowercaseTagsFixResult | undefined;
+  if (tagLine) {
+    const tagLineSourceStart = commentValueToSourceOffset(commentNode, tagLine.textOffsetStart);
+    const tagLineSourceEnd = tagLineSourceStart + tagLine.text.length;
+    const sourceText = sourceCode.getText();
+    const lineSource = sourceText.slice(tagLineSourceStart, tagLineSourceEnd);
+    const lowered = lineSource.replace(/^(@[A-Za-z]+\s+)(.*)$/, (_match: string, prefix: string, body: string) => `${prefix}${body.toLowerCase()}`);
+    if (lowered !== lineSource) {
+      result = { startOffset: tagLineSourceStart, endOffset: tagLineSourceEnd, replacement: lowered };
+    }
+  }
+  return result;
 }

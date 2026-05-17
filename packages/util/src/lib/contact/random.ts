@@ -17,15 +17,15 @@ export interface RandomEmailFactoryConfig {
   /**
    * Set of email prefixes to use
    */
-  prefixes?: ArrayOrValue<string>;
+  readonly prefixes?: ArrayOrValue<string>;
   /**
    * domains to use
    */
-  domains?: ArrayOrValue<EmailAddressDomain>;
+  readonly domains?: ArrayOrValue<EmailAddressDomain>;
   /**
    * Random number generator. Negative numbers are treated as an "ignored" value.
    */
-  numberFactory?: NumberFactory;
+  readonly numberFactory?: NumberFactory;
 }
 
 /**
@@ -76,11 +76,11 @@ export interface RandomPhoneNumberFactoryConfig {
   /**
    * Set of interntional numbers to use.
    */
-  internationalAreaCodes?: ArrayOrValue<number>;
+  readonly internationalAreaCodes?: ArrayOrValue<number>;
   /**
    * Random number generator. Should generate a 10-digit number. Generated numbers are not validated.
    */
-  numberFactory?: NumberFactory;
+  readonly numberFactory?: NumberFactory;
 }
 
 /**

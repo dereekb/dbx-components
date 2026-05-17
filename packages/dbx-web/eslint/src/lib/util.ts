@@ -159,26 +159,21 @@ export function isImportedFrom(registry: ImportRegistry, localName: string, from
  */
 export function getDecoratorName(decorator: AstNode): string {
   const expression = decorator?.expression;
+  let result = '';
 
-  if (!expression) {
-    return '';
-  }
-
-  if (expression.type === 'CallExpression') {
-    if (expression.callee?.type === 'Identifier') {
-      return expression.callee.name;
+  if (expression) {
+    if (expression.type === 'CallExpression') {
+      if (expression.callee?.type === 'Identifier') {
+        result = expression.callee.name;
+      } else if (expression.callee?.type === 'MemberExpression' && expression.callee.property?.type === 'Identifier') {
+        result = expression.callee.property.name;
+      }
+    } else if (expression.type === 'Identifier') {
+      result = expression.name;
     }
-
-    if (expression.callee?.type === 'MemberExpression' && expression.callee.property?.type === 'Identifier') {
-      return expression.callee.property.name;
-    }
   }
 
-  if (expression.type === 'Identifier') {
-    return expression.name;
-  }
-
-  return '';
+  return result;
 }
 
 /**
@@ -219,20 +214,17 @@ export function findAngularComponentDecorator(classNode: AstNode, registry: Impo
  */
 export function getClassMemberName(member: AstNode): string | null {
   const key = member?.key;
+  let result: string | null = null;
 
-  if (!key || member.computed) {
-    return null;
+  if (key && !member.computed) {
+    if (key.type === 'Identifier') {
+      result = key.name;
+    } else if (key.type === 'Literal' && typeof key.value === 'string') {
+      result = key.value;
+    }
   }
 
-  if (key.type === 'Identifier') {
-    return key.name;
-  }
-
-  if (key.type === 'Literal' && typeof key.value === 'string') {
-    return key.value;
-  }
-
-  return null;
+  return result;
 }
 
 /**
@@ -271,17 +263,17 @@ export function findNgOnDestroyMethod(classNode: AstNode): AstNode | null {
  * @returns The matched name, or null.
  */
 export function isCalledIdentifier(node: AstNode, names: ReadonlySet<string>): string | null {
-  if (node?.type !== 'CallExpression') {
-    return null;
+  let result: string | null = null;
+
+  if (node?.type === 'CallExpression') {
+    const callee = node.callee;
+
+    if (callee?.type === 'Identifier' && names.has(callee.name)) {
+      result = callee.name;
+    }
   }
 
-  const callee = node.callee;
-
-  if (callee?.type === 'Identifier' && names.has(callee.name)) {
-    return callee.name;
-  }
-
-  return null;
+  return result;
 }
 
 /**
@@ -330,30 +322,28 @@ export interface EnsureNamedImportFixInput {
 export function ensureNamedImportFix(input: EnsureNamedImportFixInput): AstNode | null {
   const { fixer, registry, importName, fromSource } = input;
   const existing = registry.bySource.get(fromSource);
-
-  if (existing?.has(importName)) {
-    return null;
-  }
-
-  const declaration = registry.sourceToDeclaration.get(fromSource);
   let result: AstNode | null = null;
 
-  if (declaration) {
-    const lastSpecifier = declaration.specifiers?.[declaration.specifiers.length - 1];
+  if (!existing?.has(importName)) {
+    const declaration = registry.sourceToDeclaration.get(fromSource);
 
-    if (lastSpecifier) {
+    if (declaration) {
+      const lastSpecifier = declaration.specifiers?.[declaration.specifiers.length - 1];
+
+      if (lastSpecifier) {
+        const updatedSet = existing ?? new Set<string>();
+        updatedSet.add(importName);
+        registry.bySource.set(fromSource, updatedSet);
+        registry.localToSource.set(importName, fromSource);
+        result = fixer.insertTextAfter(lastSpecifier, `, ${importName}`);
+      }
+    } else if (registry.lastImportDeclaration) {
       const updatedSet = existing ?? new Set<string>();
       updatedSet.add(importName);
       registry.bySource.set(fromSource, updatedSet);
       registry.localToSource.set(importName, fromSource);
-      result = fixer.insertTextAfter(lastSpecifier, `, ${importName}`);
+      result = fixer.insertTextAfter(registry.lastImportDeclaration, `\nimport { ${importName} } from '${fromSource}';`);
     }
-  } else if (registry.lastImportDeclaration) {
-    const updatedSet = existing ?? new Set<string>();
-    updatedSet.add(importName);
-    registry.bySource.set(fromSource, updatedSet);
-    registry.localToSource.set(importName, fromSource);
-    result = fixer.insertTextAfter(registry.lastImportDeclaration, `\nimport { ${importName} } from '${fromSource}';`);
   }
 
   return result;

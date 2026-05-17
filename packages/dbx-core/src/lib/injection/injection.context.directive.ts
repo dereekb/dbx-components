@@ -147,7 +147,15 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
       if (error instanceof Error) {
         throw error;
       }
-      const message = typeof error === 'object' ? JSON.stringify(error) : String(error);
+
+      let message: string;
+
+      if (typeof error === 'object') {
+        message = JSON.stringify(error);
+      } else {
+        message = String(error);
+      }
+
       throw new Error(message);
     }
 

@@ -222,12 +222,16 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
   const retriesAllowed = inputRetriesAllowed || 0;
 
   async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [Error | unknown, false]> {
+    let outcome: [O, true] | [Error | unknown, false];
+
     try {
       const result: O = await taskFn(value, tryNumber);
-      return [result, true];
+      outcome = [result, true];
     } catch (e) {
-      return [e, false];
+      outcome = [e, false];
     }
+
+    return outcome;
   }
 
   async function iterateTask(value: I, tryNumber: number): Promise<[I, O, boolean]> {
@@ -244,22 +248,26 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
       return iterateTask(value, tryNumber + 1);
     }
 
+    let iterationResult: [I, O, boolean];
+
     if (success) {
-      return [value, ...result];
+      iterationResult = [value, ...result];
+    } else {
+      const retriesRemaining = retriesAllowed - tryNumber;
+
+      if (retriesRemaining > 0) {
+        iterationResult = await (retryWait ? waitForMs(retryWait).then(() => doNextTry()) : doNextTry());
+      } else {
+        // Error out.
+        if (throwError) {
+          throw result[0];
+        }
+
+        iterationResult = [value, undefined as unknown as O, false];
+      }
     }
 
-    const retriesRemaining = retriesAllowed - tryNumber;
-
-    if (retriesRemaining > 0) {
-      return retryWait ? waitForMs(retryWait).then(() => doNextTry()) : doNextTry();
-    }
-
-    // Error out.
-    if (throwError) {
-      throw result[0];
-    }
-
-    return [value, undefined as unknown as O, false];
+    return iterationResult;
   }
 
   return iterateTask(value, 0);
@@ -488,19 +496,21 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
       }
 
       async function requestMoreTasks(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {
-        if (isOutOfTasks) {
-          return;
+        let result: NextIncompleteTask;
+
+        if (!isOutOfTasks) {
+          const promiseRef = promiseReference<NextIncompleteTask>();
+
+          if (isFulfillingTask) {
+            requestTasksQueue.push([parallelIndex, promiseRef]);
+          } else {
+            void fulfillRequestMoreTasks(parallelIndex, promiseRef);
+          }
+
+          result = await promiseRef.promise;
         }
 
-        const promiseRef = promiseReference<NextIncompleteTask>();
-
-        if (isFulfillingTask) {
-          requestTasksQueue.push([parallelIndex, promiseRef]);
-        } else {
-          void fulfillRequestMoreTasks(parallelIndex, promiseRef);
-        }
-
-        return promiseRef.promise;
+        return result;
       }
 
       let currentRunIndex = 0;
@@ -516,21 +526,24 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 
       function tryAcquireTask(candidate: NonNullable<NextIncompleteTask>): 'skip' | 'defer' | 'acquired' {
         const candidateIndex = candidate[2];
+        let outcome: 'skip' | 'defer' | 'acquired';
 
         if (visitedTaskIndexes.has(candidateIndex)) {
-          return 'skip';
+          outcome = 'skip';
+        } else {
+          const keys = candidate[1];
+          const keyOfTaskCurrentlyInUse = setContainsAnyValue(currentParellelTaskKeys, keys);
+
+          if (keyOfTaskCurrentlyInUse) {
+            keys.forEach((key) => waitingConcurrentTasks.addTuples(key, candidate));
+            outcome = 'defer';
+          } else {
+            addToSet(currentParellelTaskKeys, keys);
+            outcome = 'acquired';
+          }
         }
 
-        const keys = candidate[1];
-        const keyOfTaskCurrentlyInUse = setContainsAnyValue(currentParellelTaskKeys, keys);
-
-        if (keyOfTaskCurrentlyInUse) {
-          keys.forEach((key) => waitingConcurrentTasks.addTuples(key, candidate));
-          return 'defer';
-        }
-
-        addToSet(currentParellelTaskKeys, keys);
-        return 'acquired';
+        return outcome;
       }
 
       async function getNextTask(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {

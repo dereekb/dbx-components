@@ -64,27 +64,28 @@ export function isValidDateCellRange(input: DateCellRange): boolean {
  * @returns true if the array is sorted in ascending order with no overlapping or duplicate indexes
  */
 export function isValidDateCellRangeSeries(input: DateCellRange[]): boolean {
+  let result: boolean;
+
   if (!Array.isArray(input)) {
-    return false;
-  }
+    result = false;
+  } else {
+    const invalidRange = input.findIndex((range) => !isValidDateCellRange(range));
 
-  const invalidRange = input.findIndex((range) => !isValidDateCellRange(range));
-
-  if (invalidRange !== -1) {
-    return false;
-  }
-
-  let greatestIndex = -1;
-
-  let result = true;
-
-  for (const range of input) {
-    if (range.i <= greatestIndex) {
+    if (invalidRange !== -1) {
       result = false;
-      break;
     } else {
-      const nextGreatestIndex = range.to ?? range.i; // to is greater than or equal to i in a valid date block range.
-      greatestIndex = nextGreatestIndex;
+      let greatestIndex = -1;
+      result = true;
+
+      for (const range of input) {
+        if (range.i <= greatestIndex) {
+          result = false;
+          break;
+        } else {
+          const nextGreatestIndex = range.to ?? range.i; // to is greater than or equal to i in a valid date block range.
+          greatestIndex = nextGreatestIndex;
+        }
+      }
     }
   }
 
@@ -147,36 +148,40 @@ export interface LeastAndGreatestDateCellIndexResult<T> {
  * @returns an object with the least and greatest indexes and their source items, or null if the input is empty
  */
 export function getLeastAndGreatestDateCellIndexInDateCellRanges<T extends DateCellRange>(input: T[]): Maybe<LeastAndGreatestDateCellIndexResult<T>> {
+  let result: Maybe<LeastAndGreatestDateCellIndexResult<T>>;
+
   if (!input.length) {
-    return null;
-  }
+    result = null;
+  } else {
+    let leastIndex = Number.MAX_SAFE_INTEGER;
+    let greatestIndex = 0;
+    let leastIndexItem: T = input[0];
+    let greatestIndexItem: T = input[0];
 
-  let leastIndex = Number.MAX_SAFE_INTEGER;
-  let greatestIndex = 0;
-  let leastIndexItem: T = input[0];
-  let greatestIndexItem: T = input[0];
+    for (const range of input) {
+      const leastRangeIndex = range.i;
+      const greatestRangeIndex = (range as DateCellRange).to ?? range.i;
 
-  for (const range of input) {
-    const leastRangeIndex = range.i;
-    const greatestRangeIndex = (range as DateCellRange).to ?? range.i;
+      if (leastRangeIndex < leastIndex) {
+        leastIndex = leastRangeIndex;
+        leastIndexItem = range;
+      }
 
-    if (leastRangeIndex < leastIndex) {
-      leastIndex = leastRangeIndex;
-      leastIndexItem = range;
+      if (greatestRangeIndex > greatestIndex) {
+        greatestIndex = greatestRangeIndex;
+        greatestIndexItem = range;
+      }
     }
 
-    if (greatestRangeIndex > greatestIndex) {
-      greatestIndex = greatestRangeIndex;
-      greatestIndexItem = range;
-    }
+    result = {
+      leastIndex,
+      leastIndexItem,
+      greatestIndex,
+      greatestIndexItem
+    };
   }
 
-  return {
-    leastIndex,
-    leastIndexItem,
-    greatestIndex,
-    greatestIndexItem
-  };
+  return result;
 }
 
 /**
@@ -331,41 +336,43 @@ export type DateCellRangeWithRange = Omit<DateCellRange, 'to'> & { to: DateCellI
  * ```
  */
 export function groupToDateCellRanges(input: (DateCell | DateCellRange)[]): DateCellRangeWithRange[] {
+  let results: DateCellRangeWithRange[];
+
   if (input.length === 0) {
-    return [];
-  }
+    results = [];
+  } else {
+    // sort by index in ascending order
+    const blocks = sortDateCellRanges(input);
 
-  // sort by index in ascending order
-  const blocks = sortDateCellRanges(input);
-
-  function newBlockFromBlocksArrayIndex(blocksArrayIndex: number): DateCellRangeWithRange {
-    const { i, to } = blocks[blocksArrayIndex] as DateCellRange;
-    return {
-      i,
-      to: to ?? i
-    };
-  }
-
-  // start at the first block
-  let current: DateCellRangeWithRange = newBlockFromBlocksArrayIndex(0);
-
-  const results: DateCellRangeWithRange[] = [];
-
-  for (let i = 1; i < blocks.length; i += 1) {
-    const block = blocks[i];
-    const isContinuous = block.i <= current.to + 1;
-
-    if (isContinuous) {
-      // extend the current block.
-      current.to = (blocks[i] as DateCellRange).to ?? blocks[i].i;
-    } else {
-      // complete/create new block.
-      results.push(current);
-      current = newBlockFromBlocksArrayIndex(i);
+    function newBlockFromBlocksArrayIndex(blocksArrayIndex: number): DateCellRangeWithRange {
+      const { i, to } = blocks[blocksArrayIndex] as DateCellRange;
+      return {
+        i,
+        to: to ?? i
+      };
     }
-  }
 
-  results.push(current);
+    // start at the first block
+    let current: DateCellRangeWithRange = newBlockFromBlocksArrayIndex(0);
+
+    results = [];
+
+    for (let i = 1; i < blocks.length; i += 1) {
+      const block = blocks[i];
+      const isContinuous = block.i <= current.to + 1;
+
+      if (isContinuous) {
+        // extend the current block.
+        current.to = (blocks[i] as DateCellRange).to ?? blocks[i].i;
+      } else {
+        // complete/create new block.
+        results.push(current);
+        current = newBlockFromBlocksArrayIndex(i);
+      }
+    }
+
+    results.push(current);
+  }
 
   return results;
 }
@@ -448,12 +455,16 @@ export function isDateCellWithinDateCellRangeFunction(inputRange: IsDateCellWith
       input = { i: input };
     }
 
+    let result: boolean;
+
     if (input.i >= range.i) {
       const to = (input as DateCellRange).to ?? input.i;
-      return to <= range.to;
+      result = to <= range.to;
+    } else {
+      result = false;
     }
 
-    return false;
+    return result;
   };
 }
 
@@ -797,17 +808,17 @@ export interface ExpandUniqueDateCellsConfig<B extends DateCellRange | UniqueDat
    *
    * If provided, will expand the first block to start at this index, and filter out any blocks that end before this index.
    */
-  startAtIndex?: number;
+  readonly startAtIndex?: number;
   /**
    * The expected end index, inclusive.
    *
    * If provided, will expand the final block to end at this index, and filter out any blocks that start past this index.
    */
-  endAtIndex?: number;
+  readonly endAtIndex?: number;
   /**
    * Determines how to fill empty ranges.
    */
-  fillOption: ExpandUniqueDateCellsFillOption;
+  readonly fillOption: ExpandUniqueDateCellsFillOption;
   /**
    * (Optional) Determines how to handle overwrites.
    *
@@ -816,11 +827,11 @@ export interface ExpandUniqueDateCellsConfig<B extends DateCellRange | UniqueDat
    *
    * Defaults to next
    */
-  retainOnOverlap?: ExpandUniqueDateCellsRetainOverlapOption;
+  readonly retainOnOverlap?: ExpandUniqueDateCellsRetainOverlapOption;
   /**
    * Used to create new items to fill empty block sets. Required when mode is set to "fill".
    */
-  fillFactory?: FactoryWithRequiredInput<B, DateCellRangeWithRange>;
+  readonly fillFactory?: FactoryWithRequiredInput<B, DateCellRangeWithRange>;
 }
 
 /**

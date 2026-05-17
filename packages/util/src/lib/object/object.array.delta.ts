@@ -72,41 +72,43 @@ export function objectDeltaArrayCompressor<T extends object>(config: ObjectDelta
 
   function compress(uncompressed: T[]) {
     // return an empty array if there is nothing to compress
-    if (uncompressed.length === 0) {
-      return [];
-    }
+    let result: CompressedObjectDeltaArray<T> | EmptyArray = [];
 
-    let current = assignKnownValuesToCopy({} as T, uncompressed[0]);
-    const result: CompressedObjectDeltaArray<T> = [current];
+    if (uncompressed.length !== 0) {
+      let current = assignKnownValuesToCopy({} as T, uncompressed[0]);
+      const built: CompressedObjectDeltaArray<T> = [current];
 
-    uncompressed.slice(1).forEach((next) => {
-      const compressed = {} as Building<CompressedObjectDeltaArrayDeltaEntry<T>>;
-      const fieldEqualityResult = _equalityChecker(current, next);
+      uncompressed.slice(1).forEach((next) => {
+        const compressed = {} as Building<CompressedObjectDeltaArrayDeltaEntry<T>>;
+        const fieldEqualityResult = _equalityChecker(current, next);
 
-      // only append unequal fields
-      fieldEqualityResult.unequalFields.forEach((field) => {
-        const nextValue = next[field];
-        let saveValue: Maybe<typeof nextValue>;
+        // only append unequal fields
+        fieldEqualityResult.unequalFields.forEach((field) => {
+          const nextValue = next[field];
+          let saveValue: Maybe<typeof nextValue>;
 
-        if (nextValue == null) {
-          // if null or undefined, check previous value
-          const previousValue = current[field];
+          if (nextValue == null) {
+            // if null or undefined, check previous value
+            const previousValue = current[field];
 
-          if (previousValue == null) {
-            saveValue = undefined; // "no change"
+            if (previousValue == null) {
+              saveValue = undefined; // "no change"
+            } else {
+              saveValue = null; // "clear"
+            }
           } else {
-            saveValue = null; // "clear"
+            saveValue = nextValue;
           }
-        } else {
-          saveValue = nextValue;
-        }
 
-        (compressed as unknown as Record<string, unknown>)[field as string] = saveValue;
+          (compressed as unknown as Record<string, unknown>)[field as string] = saveValue;
+        });
+
+        built.push(compressed as CompressedObjectDeltaArrayDeltaEntry<T>);
+        current = next;
       });
 
-      result.push(compressed as CompressedObjectDeltaArrayDeltaEntry<T>);
-      current = next;
-    });
+      result = built;
+    }
 
     return result;
   }
@@ -114,38 +116,40 @@ export function objectDeltaArrayCompressor<T extends object>(config: ObjectDelta
   const allKeys = [..._equalityChecker._fields.keys()];
 
   function expand(compressed: CompressedObjectDeltaArray<T>): T[] {
+    let result: T[];
+
     if (compressed.length === 0) {
-      return [];
-    }
+      result = [];
+    } else {
+      let current = assignKnownValuesToCopy({} as T, compressed[0]); // first one is never compressed.
+      result = [current];
 
-    let current = assignKnownValuesToCopy({} as T, compressed[0]); // first one is never compressed.
-    const result: T[] = [current];
+      compressed.slice(1).forEach((next) => {
+        const uncompressed = {} as Building<T>;
 
-    compressed.slice(1).forEach((next) => {
-      const uncompressed = {} as Building<T>;
+        allKeys.forEach((key) => {
+          let setValue: unknown;
 
-      allKeys.forEach((key) => {
-        let setValue: unknown;
+          if (objectHasKey(next as T, key)) {
+            const nextValue = (next as CompressedObjectDeltaArrayDeltaEntry<T> as unknown as Record<string, unknown>)[key as string];
 
-        if (objectHasKey(next as T, key)) {
-          const nextValue = (next as CompressedObjectDeltaArrayDeltaEntry<T> as unknown as Record<string, unknown>)[key as string];
-
-          if (nextValue === null) {
-            // do nothing, since the value should be "undefined"
-            setValue = undefined;
+            if (nextValue === null) {
+              // do nothing, since the value should be "undefined"
+              setValue = undefined;
+            } else {
+              setValue = nextValue;
+            }
           } else {
-            setValue = nextValue;
+            setValue = current[key];
           }
-        } else {
-          setValue = current[key];
-        }
 
-        (uncompressed as unknown as Record<string, unknown>)[key as string] = setValue;
+          (uncompressed as unknown as Record<string, unknown>)[key as string] = setValue;
+        });
+
+        result.push(uncompressed as T);
+        current = uncompressed as T;
       });
-
-      result.push(uncompressed as T);
-      current = uncompressed as T;
-    });
+    }
 
     return result;
   }

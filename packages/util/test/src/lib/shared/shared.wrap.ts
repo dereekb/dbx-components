@@ -32,7 +32,7 @@ export interface WrapTestContextConfig<W, F, E = any> {
   /**
    * Wraps the fixture. This occurs once before any tests execute.
    */
-  wrapFixture: (fixture: F) => W;
+  readonly wrapFixture: (fixture: F) => W;
 
   /**
    * Use for doing any setup that may be required on a per-test basis.
@@ -41,14 +41,14 @@ export interface WrapTestContextConfig<W, F, E = any> {
    *
    * The setup can return an effect. This effect is passed to the teardown function later, if provided.
    */
-  setupWrap?: (wrap: W) => Promise<E>;
+  readonly setupWrap?: (wrap: W) => Promise<E>;
 
   /**
    * Use for cleaning up the instance before the next function.
    *
    * This occurs after every test, but after the fixture's instance has already been configured.
    */
-  teardownWrap?: (wrap: W, effect: E) => Promise<void>;
+  readonly teardownWrap?: (wrap: W, effect: E) => Promise<void>;
 }
 
 /**
@@ -92,21 +92,21 @@ export interface InstanceWrapTestContextConfig<I, W extends AbstractWrappedFixtu
   /**
    * Creates a new instance for the tests.
    */
-  makeInstance: (wrap: W) => I | Promise<I>;
+  readonly makeInstance: (wrap: W) => I | Promise<I>;
 
   /**
    * Use for doing any setup that may be required on a per-test basis.
    *
    * This occurs before every test, but after the fixture's instance has already been configured.
    */
-  setupInstance?: (instance: I, wrap: W) => void | Promise<void>;
+  readonly setupInstance?: (instance: I, wrap: W) => void | Promise<void>;
 
   /**
    * Use for cleaning up the instance before the next function.
    *
    * This occurs after every test, but after the fixture's instance has already been configured.
    */
-  teardownInstance?: (instance: I) => void | Promise<void>;
+  readonly teardownInstance?: (instance: I) => void | Promise<void>;
 }
 
 /**

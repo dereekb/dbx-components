@@ -147,46 +147,50 @@ export class DbxDetachService {
     const key = config.key ?? DBX_DETACH_DEFAULT_KEY;
 
     const existing = this._entries.get(key);
+    let instance: DbxDetachInstance<T>;
+
     if (existing) {
-      return new DbxDetachInstanceImpl(existing as DbxDetachEntryState<T>);
+      instance = new DbxDetachInstanceImpl(existing as DbxDetachEntryState<T>);
+    } else {
+      const controller = new DbxDetachEntryController(key, config.data, this);
+
+      // Build injector using shared utility, adding DbxDetachController provider
+      const elementInjector = createInjectorForInjectionComponentConfig({
+        config: {
+          ...config,
+          providers: [{ provide: DbxDetachController, useValue: controller }, ...(config.providers ?? [])]
+        },
+        parentInjector: this._injector
+      });
+
+      // Create component imperatively (not in any VCR)
+      const componentRef = createComponent(config.componentClass, {
+        environmentInjector: this._envInjector,
+        elementInjector
+      });
+
+      // Run init callback
+      initInjectionComponent(componentRef, config);
+
+      // Attach view to ApplicationRef for change detection
+      this._appRef.attachView(componentRef.hostView);
+
+      const overlayConfig: DbxDetachOverlayConfig = config.overlay ?? {};
+
+      const entry: DbxDetachEntryState<T> = {
+        key,
+        componentRef,
+        controller,
+        overlayConfig
+      };
+
+      this._entries.set(key, entry);
+      this._entries$.next(this._entries);
+
+      instance = new DbxDetachInstanceImpl(entry);
     }
 
-    const controller = new DbxDetachEntryController(key, config.data, this);
-
-    // Build injector using shared utility, adding DbxDetachController provider
-    const elementInjector = createInjectorForInjectionComponentConfig({
-      config: {
-        ...config,
-        providers: [{ provide: DbxDetachController, useValue: controller }, ...(config.providers ?? [])]
-      },
-      parentInjector: this._injector
-    });
-
-    // Create component imperatively (not in any VCR)
-    const componentRef = createComponent(config.componentClass, {
-      environmentInjector: this._envInjector,
-      elementInjector
-    });
-
-    // Run init callback
-    initInjectionComponent(componentRef, config);
-
-    // Attach view to ApplicationRef for change detection
-    this._appRef.attachView(componentRef.hostView);
-
-    const overlayConfig: DbxDetachOverlayConfig = config.overlay ?? {};
-
-    const entry: DbxDetachEntryState<T> = {
-      key,
-      componentRef,
-      controller,
-      overlayConfig
-    };
-
-    this._entries.set(key, entry);
-    this._entries$.next(this._entries);
-
-    return new DbxDetachInstanceImpl(entry);
+    return instance;
   }
 
   /**
@@ -225,21 +229,19 @@ export class DbxDetachService {
    */
   attachToOutlet(key: DbxDetachKey, outletElement?: Element): void {
     const entry = this._entries.get(key);
-    if (!entry) {
-      return;
-    }
 
-    const target = outletElement ?? entry.lastOutlet;
-    if (!target?.isConnected) {
-      // No outlet available or it's been removed from the DOM
-      return;
-    }
+    if (entry) {
+      const target = outletElement ?? entry.lastOutlet;
 
-    this._closeOverlay(entry);
-    this._moveDomTo(entry, target);
-    entry.currentOutlet = target;
-    entry.lastOutlet = target;
-    entry.controller.setWindowState(DbxDetachWindowState.ATTACHED);
+      // No outlet available or it's been removed from the DOM → skip
+      if (target?.isConnected) {
+        this._closeOverlay(entry);
+        this._moveDomTo(entry, target);
+        entry.currentOutlet = target;
+        entry.lastOutlet = target;
+        entry.controller.setWindowState(DbxDetachWindowState.ATTACHED);
+      }
+    }
   }
 
   /**

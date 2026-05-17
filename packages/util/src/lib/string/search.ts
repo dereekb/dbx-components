@@ -21,13 +21,13 @@ export interface SearchStringFilterConfig<T> {
   /**
    * Reads the search value(s) from the input item to compare against the filter text.
    */
-  readStrings: ReadKeyFunction<T, string> | ReadMultipleKeysFunction<T, string>;
+  readonly readStrings: ReadKeyFunction<T, string> | ReadMultipleKeysFunction<T, string>;
   /**
    * Optional decision function factory for matching logic.
    *
    * Defaults to {@link caseInsensitiveFilterByIndexOfDecisionFactory} if not defined.
    */
-  decisionFactory?: SearchStringDecisionFunctionFactory;
+  readonly decisionFactory?: SearchStringDecisionFunctionFactory;
 }
 
 /**

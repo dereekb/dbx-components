@@ -140,7 +140,16 @@ export async function tracedFetch(fetcher: typeof fetch | undefined, input: stri
   const fetchImpl = fetcher ?? fetch;
   const timeoutMs = _timeoutMs;
   const method = init?.method ?? 'GET';
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+
+  let url: string;
+
+  if (typeof input === 'string') {
+    url = input;
+  } else if (input instanceof URL) {
+    url = input.toString();
+  } else {
+    url = input.url;
+  }
 
   verboseLog(`${method} ${url}`);
 
@@ -152,7 +161,7 @@ export async function tracedFetch(fetcher: typeof fetch | undefined, input: stri
     const localController = new AbortController();
     controller = localController;
     timeoutHandle = setTimeout(() => localController.abort(), timeoutMs);
-    finalInit = { ...(init ?? {}), signal: localController.signal };
+    finalInit = { ...init, signal: localController.signal };
   }
 
   try {
@@ -253,19 +262,22 @@ export function dumpTimestamp(): string {
  */
 export function buildDumpFilePath(extension: 'json' | 'ndjson', suffix?: string): Maybe<string> {
   const { dumpDir, commandPath } = _outputOptions;
+  let result: Maybe<string>;
 
   if (!dumpDir) {
-    return undefined;
+    result = undefined;
+  } else {
+    if (!existsSync(dumpDir)) {
+      mkdirSync(dumpDir, { recursive: true });
+    }
+
+    const prefix = commandPath?.length ? commandPath.join('_') : 'response';
+    const stamp = dumpTimestamp();
+    const base = suffix ? `${prefix}_${stamp}_${suffix}` : `${prefix}_${stamp}`;
+    result = join(dumpDir, `${base}.${extension}`);
   }
 
-  if (!existsSync(dumpDir)) {
-    mkdirSync(dumpDir, { recursive: true });
-  }
-
-  const prefix = commandPath?.length ? commandPath.join('_') : 'response';
-  const stamp = dumpTimestamp();
-  const base = suffix ? `${prefix}_${stamp}_${suffix}` : `${prefix}_${stamp}`;
-  return join(dumpDir, `${base}.${extension}`);
+  return result;
 }
 
 function dumpResponse<T>(data: T, meta: Record<string, unknown> | undefined): void {
@@ -288,29 +300,34 @@ function dumpResponse<T>(data: T, meta: Record<string, unknown> | undefined): vo
  */
 export function pickFields<T>(data: T, pick: string): T {
   const fields = pick.split(',').map((f) => f.trim());
+  let result: T;
 
   if (Array.isArray(data)) {
-    return data.map((item) => pickFromObject(item, fields)) as T;
+    result = data.map((item) => pickFromObject(item, fields)) as T;
+  } else if (data != null && typeof data === 'object') {
+    result = pickFromObject(data, fields) as T;
+  } else {
+    result = data;
   }
 
-  if (data != null && typeof data === 'object') {
-    return pickFromObject(data, fields) as T;
-  }
-
-  return data;
+  return result;
 }
 
 function pickFromObject(obj: unknown, fields: string[]): unknown {
+  let result: unknown;
+
   if (obj == null || typeof obj !== 'object') {
-    return obj;
-  }
+    result = obj;
+  } else {
+    const picked: Record<string, unknown> = {};
 
-  const result: Record<string, unknown> = {};
-
-  for (const field of fields) {
-    if (field in (obj as Record<string, unknown>)) {
-      result[field] = (obj as Record<string, unknown>)[field];
+    for (const field of fields) {
+      if (field in (obj as Record<string, unknown>)) {
+        picked[field] = (obj as Record<string, unknown>)[field];
+      }
     }
+
+    result = picked;
   }
 
   return result;
@@ -383,21 +400,18 @@ export class CliError extends Error {
  * @__NO_SIDE_EFFECTS__
  */
 export function buildErrorOutput(error: unknown): CliErrorOutput {
-  if (_errorMapper) {
-    const mapped = _errorMapper(error);
+  const mapped = _errorMapper ? _errorMapper(error) : undefined;
+  let result: CliErrorOutput;
 
-    if (mapped) {
-      return mapped;
-    }
+  if (mapped) {
+    result = mapped;
+  } else if (error instanceof CliError) {
+    result = { ok: false, error: sanitizeString(error.message), code: error.code, ...(error.suggestion ? { suggestion: error.suggestion } : {}) };
+  } else if (error instanceof Error) {
+    result = { ok: false, error: sanitizeString(error.message), code: 'ERROR' };
+  } else {
+    result = { ok: false, error: sanitizeString(String(error)), code: 'UNKNOWN_ERROR' };
   }
 
-  if (error instanceof CliError) {
-    return { ok: false, error: sanitizeString(error.message), code: error.code, ...(error.suggestion ? { suggestion: error.suggestion } : {}) };
-  }
-
-  if (error instanceof Error) {
-    return { ok: false, error: sanitizeString(error.message), code: 'ERROR' };
-  }
-
-  return { ok: false, error: sanitizeString(String(error)), code: 'UNKNOWN_ERROR' };
+  return result;
 }

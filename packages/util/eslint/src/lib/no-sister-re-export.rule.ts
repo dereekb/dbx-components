@@ -72,17 +72,21 @@ function isRelative(source: string): boolean {
  * @returns Whether the declaration is purely type-only.
  */
 function isNamedExportPurelyTypeOnly(node: AstNode): boolean {
+  let result: boolean;
+
   if (node.exportKind === 'type') {
-    return true;
+    result = true;
+  } else {
+    const specifiers = node.specifiers ?? [];
+
+    if (specifiers.length === 0) {
+      result = false;
+    } else {
+      result = specifiers.every((s: AstNode) => s.exportKind === 'type');
+    }
   }
 
-  const specifiers = node.specifiers ?? [];
-
-  if (specifiers.length === 0) {
-    return false;
-  }
-
-  return specifiers.every((s: AstNode) => s.exportKind === 'type');
+  return result;
 }
 
 /**
@@ -141,51 +145,41 @@ export const utilNoSisterReExportRule: UtilNoSisterReExportRuleDefinition = {
     const allowTypeOnly = options.allowTypeOnly === true;
 
     function sourceMatchesSister(source: string): boolean {
+      let result: boolean;
+
       if (isRelative(source) || allow.has(source)) {
-        return false;
+        result = false;
+      } else {
+        result = patterns.some((pattern) => pattern.test(source));
       }
 
-      return patterns.some((pattern) => pattern.test(source));
+      return result;
     }
 
     return {
       ExportNamedDeclaration(node: AstNode): void {
-        if (!node.source) {
-          return;
+        if (node.source) {
+          const source = node.source.value;
+
+          if (typeof source === 'string' && sourceMatchesSister(source) && !(allowTypeOnly && isNamedExportPurelyTypeOnly(node))) {
+            context.report({
+              node: node.source,
+              messageId: 'noSisterReExport',
+              data: { source }
+            });
+          }
         }
-
-        const source = node.source.value;
-
-        if (typeof source !== 'string' || !sourceMatchesSister(source)) {
-          return;
-        }
-
-        if (allowTypeOnly && isNamedExportPurelyTypeOnly(node)) {
-          return;
-        }
-
-        context.report({
-          node: node.source,
-          messageId: 'noSisterReExport',
-          data: { source }
-        });
       },
       ExportAllDeclaration(node: AstNode): void {
         const source = node.source?.value;
 
-        if (typeof source !== 'string' || !sourceMatchesSister(source)) {
-          return;
+        if (typeof source === 'string' && sourceMatchesSister(source) && !(allowTypeOnly && node.exportKind === 'type')) {
+          context.report({
+            node: node.source,
+            messageId: 'noSisterReExportAll',
+            data: { source }
+          });
         }
-
-        if (allowTypeOnly && node.exportKind === 'type') {
-          return;
-        }
-
-        context.report({
-          node: node.source,
-          messageId: 'noSisterReExportAll',
-          data: { source }
-        });
       }
     };
   }

@@ -6,15 +6,15 @@ import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, typ
  * Configuration for minimum and maximum text length constraints.
  */
 export interface TextFieldLengthConfig {
-  minLength?: number;
-  maxLength?: number;
+  readonly minLength?: number;
+  readonly maxLength?: number;
 }
 
 /**
  * Configuration for regex pattern validation on a text field.
  */
 export interface TextFieldPatternConfig {
-  pattern?: string | RegExp;
+  readonly pattern?: string | RegExp;
 }
 
 /**
@@ -32,11 +32,11 @@ export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldCon
   /**
    * HTML input type. Defaults to `'text'`.
    */
-  inputType?: TextFieldInputType;
+  readonly inputType?: TextFieldInputType;
   /**
    * String transformation applied as a value parser (e.g., trim, uppercase).
    */
-  transform?: TransformStringFunctionConfig;
+  readonly transform?: TransformStringFunctionConfig;
 }
 
 /**
@@ -103,7 +103,7 @@ export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFiel
   /**
    * Number of visible text rows. Defaults to 3.
    */
-  rows?: number;
+  readonly rows?: number;
 }
 
 /**

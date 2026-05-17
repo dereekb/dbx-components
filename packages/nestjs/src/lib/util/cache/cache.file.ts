@@ -59,10 +59,15 @@ export function createJsonFileAsyncValueCache<T>(input: CreateJsonFileAsyncValue
   return {
     load: async () => {
       const raw = await readJsonFile<unknown>(filePath);
+      let result: Maybe<T>;
+
       if (raw == null) {
-        return undefined;
+        result = undefined;
+      } else {
+        result = reviver == null ? (raw as T) : reviver(raw);
       }
-      return reviver == null ? (raw as T) : reviver(raw);
+
+      return result;
     },
     update: async (value) => {
       const data = replacer == null ? value : replacer(value);
@@ -139,19 +144,22 @@ export function createJsonFileAsyncKeyedValueCache<T>(input: CreateJsonFileAsync
 
   async function readEntries(): Promise<Record<string, T>> {
     const raw = await readJsonFile<Record<string, unknown>>(filePath);
+    let result: Record<string, T>;
+
     if (raw == null) {
-      return {};
-    }
-    if (reviver == null) {
-      return raw as Record<string, T>;
-    }
-    const result: Record<string, T> = {};
-    for (const key of Object.keys(raw)) {
-      const revived = reviver(raw[key]);
-      if (revived != null) {
-        result[key] = revived;
+      result = {};
+    } else if (reviver == null) {
+      result = raw as Record<string, T>;
+    } else {
+      result = {};
+      for (const key of Object.keys(raw)) {
+        const revived = reviver(raw[key]);
+        if (revived != null) {
+          result[key] = revived;
+        }
       }
     }
+
     return result;
   }
 

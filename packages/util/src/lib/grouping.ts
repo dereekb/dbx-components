@@ -44,28 +44,28 @@ export interface ArrayContentsDifferentParams<T, K extends PrimativeKey = Primat
   /**
    * Extracts a unique key from each item for pairing items across arrays.
    */
-  groupKeyFn: ReadKeyFunction<T, K>;
+  readonly groupKeyFn: ReadKeyFunction<T, K>;
   /**
    * Compares two paired items for equality.
    */
-  isEqual: EqualityComparatorFunction<T>;
+  readonly isEqual: EqualityComparatorFunction<T>;
 }
 
 /**
  * Configuration for RestoreOrderParams.
  */
 export interface RestoreOrderParams<T, K extends number | string = number | string> {
-  readKey: ReadKeyFunction<T, K>;
+  readonly readKey: ReadKeyFunction<T, K>;
   /**
    * Optional function used to decide which value should be retained.
    */
-  chooseRetainedValue?: (values: T[]) => T;
+  readonly chooseRetainedValue?: (values: T[]) => T;
   /**
    * Whether or not new items should be excluded. If false, the new items are appended to the end of the result in the order they are accessed.
    *
    * By default this is false.
    */
-  excludeNewItems?: boolean;
+  readonly excludeNewItems?: boolean;
 }
 
 // MARK: Functions

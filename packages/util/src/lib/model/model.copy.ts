@@ -11,7 +11,7 @@ export interface CopyModelFieldConfig<V = unknown> {
   /**
    * Default value if not presented. If default is not defined and there is no value, the key will be ignored entirely.
    */
-  default?: V;
+  readonly default?: V;
 }
 
 /**

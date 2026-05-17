@@ -121,12 +121,16 @@ function createCookieJar() {
  * @returns The space-separated scope string to pass to the `/oidc/auth` endpoint.
  */
 async function resolveScopes(nestApp: INestApplication, config?: OAuthTestFlowConfig): Promise<string> {
+  let result: string;
+
   if (config?.scopes) {
-    return config.scopes;
+    result = config.scopes;
+  } else {
+    const accountService = nestApp.get(OidcAccountService);
+    result = Object.keys(accountService.providerConfig.claims).join(' ');
   }
 
-  const accountService = nestApp.get(OidcAccountService);
-  return Object.keys(accountService.providerConfig.claims).join(' ');
+  return result;
 }
 
 // MARK: Flow

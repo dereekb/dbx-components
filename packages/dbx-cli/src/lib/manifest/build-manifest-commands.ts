@@ -156,35 +156,39 @@ export function buildManifestCommands(manifest: CliApiManifest, options?: BuildM
     }
   }
 
+  let result: CommandModule[];
+
   if (byModel.size === 0) {
-    return [];
+    result = [];
+  } else {
+    const argv = options?.argv ?? process.argv;
+    const dataHelpFormat = options?.dataHelpFormat ?? detectDataHelpFormat(argv);
+    const helpMode = options?.helpMode ?? detectHelpMode(argv);
+    const focusHelp = (options?.focusHelpOnDataHelp ?? true) && hasDataHelpFlag(argv) && !hasAllHelpFlag(argv);
+    const hideOnFocus = focusHelp ? (options?.hiddenWhenFocused ?? STANDARD_GLOBAL_OPTION_NAMES) : [];
+    const modelCommandName = options?.modelCommandName ?? DEFAULT_MANIFEST_MODEL_COMMAND_NAME;
+    const sortedModels = [...byModel.entries()].sort(([a], [b]) => a.localeCompare(b));
+    const context: BuilderContext = { dataHelpFormat, helpMode, hideOnFocus, modelManifest: options?.modelManifest };
+
+    result = [
+      {
+        command: `${modelCommandName} <model>`,
+        describe: `Call typed model APIs (${byModel.size} model${byModel.size === 1 ? '' : 's'}). Use \`${modelCommandName} --help\` to list them.`,
+        builder: (yargs: Argv) => {
+          for (const [model, entries] of sortedModels) {
+            yargs.command(buildModelCommand(model, entries, context));
+          }
+
+          hideGlobalOptions(yargs, hideOnFocus);
+
+          return yargs.demandCommand(1, 'Please specify a model.');
+        },
+        handler: () => undefined
+      }
+    ];
   }
 
-  const argv = options?.argv ?? process.argv;
-  const dataHelpFormat = options?.dataHelpFormat ?? detectDataHelpFormat(argv);
-  const helpMode = options?.helpMode ?? detectHelpMode(argv);
-  const focusHelp = (options?.focusHelpOnDataHelp ?? true) && hasDataHelpFlag(argv) && !hasAllHelpFlag(argv);
-  const hideOnFocus = focusHelp ? (options?.hiddenWhenFocused ?? STANDARD_GLOBAL_OPTION_NAMES) : [];
-  const modelCommandName = options?.modelCommandName ?? DEFAULT_MANIFEST_MODEL_COMMAND_NAME;
-  const sortedModels = [...byModel.entries()].sort(([a], [b]) => a.localeCompare(b));
-  const context: BuilderContext = { dataHelpFormat, helpMode, hideOnFocus, modelManifest: options?.modelManifest };
-
-  return [
-    {
-      command: `${modelCommandName} <model>`,
-      describe: `Call typed model APIs (${byModel.size} model${byModel.size === 1 ? '' : 's'}). Use \`${modelCommandName} --help\` to list them.`,
-      builder: (yargs: Argv) => {
-        for (const [model, entries] of sortedModels) {
-          yargs.command(buildModelCommand(model, entries, context));
-        }
-
-        hideGlobalOptions(yargs, hideOnFocus);
-
-        return yargs.demandCommand(1, 'Please specify a model.');
-      },
-      handler: () => undefined
-    }
-  ];
+  return result;
 }
 
 interface BuilderContext {
@@ -437,7 +441,11 @@ function buildEntryCommand(entry: CliApiManifestEntry, context: BuilderContext):
       return epilogue ? y.epilogue(epilogue) : y;
     },
     handler: wrapCommandHandler(async (argv: any) => {
-      const rawData = typeof argv.data === 'string' ? (isStdinSentinel(argv.data) ? (await readAllStdin()).trim() : argv.data) : undefined;
+      let rawData: string | undefined;
+
+      if (typeof argv.data === 'string') {
+        rawData = isStdinSentinel(argv.data) ? (await readAllStdin()).trim() : argv.data;
+      }
 
       await callEntry(entry, rawData, {
         expandKeys: expandKeysAvailable && argv.expandKeys === true,
@@ -448,9 +456,14 @@ function buildEntryCommand(entry: CliApiManifestEntry, context: BuilderContext):
 }
 
 function oneLineDescription(description: string | undefined): string | undefined {
-  if (!description) return undefined;
-  const firstLine = description.split('\n', 1)[0]?.trim();
-  return firstLine && firstLine.length > 0 ? firstLine : undefined;
+  let result: string | undefined;
+  if (description) {
+    const firstLine = description.split('\n', 1)[0]?.trim();
+    if (firstLine && firstLine.length > 0) {
+      result = firstLine;
+    }
+  }
+  return result;
 }
 
 function hideGlobalOptions(yargs: Argv, names: readonly string[]): void {
@@ -519,62 +532,61 @@ function buildEntryEpilogue(entry: CliApiManifestEntry, context: BuilderContext)
 }
 
 function buildActionSection(entry: CliApiManifestEntry): string | undefined {
-  if (!entry.description) return undefined;
-  return `About:\n${indentLines(entry.description, '  ')}`;
+  return entry.description ? `About:\n${indentLines(entry.description, '  ')}` : undefined;
 }
 
 function buildParamsSection(entry: CliApiManifestEntry): string | undefined {
-  if (!entry.paramsTypeName && !entry.paramsTypeDescription && !(entry.paramsFields && entry.paramsFields.length > 0)) {
-    return undefined;
-  }
+  let result: string | undefined;
+  if (entry.paramsTypeName || entry.paramsTypeDescription || (entry.paramsFields && entry.paramsFields.length > 0)) {
+    const lines: string[] = [];
+    if (entry.paramsTypeName) {
+      lines.push(`Params: ${entry.paramsTypeName}`);
+    }
+    if (entry.paramsTypeDescription) {
+      lines.push(indentLines(entry.paramsTypeDescription, '  '));
+    }
 
-  const lines: string[] = [];
-  if (entry.paramsTypeName) {
-    lines.push(`Params: ${entry.paramsTypeName}`);
-  }
-  if (entry.paramsTypeDescription) {
-    lines.push(indentLines(entry.paramsTypeDescription, '  '));
-  }
-
-  if (entry.paramsFields && entry.paramsFields.length > 0) {
-    lines.push('', 'Fields:');
-    for (const field of entry.paramsFields) {
-      const header = `  - ${field.name}: ${field.typeText}`;
-      lines.push(header);
-      if (field.description) {
-        lines.push(indentLines(field.description, '      '));
+    if (entry.paramsFields && entry.paramsFields.length > 0) {
+      lines.push('', 'Fields:');
+      for (const field of entry.paramsFields) {
+        const header = `  - ${field.name}: ${field.typeText}`;
+        lines.push(header);
+        if (field.description) {
+          lines.push(indentLines(field.description, '      '));
+        }
       }
     }
-  }
 
-  return lines.join('\n');
+    result = lines.join('\n');
+  }
+  return result;
 }
 
 function buildResultSection(entry: CliApiManifestEntry): string | undefined {
-  if (!entry.resultTypeDescription && !(entry.resultFields && entry.resultFields.length > 0)) {
-    return undefined;
-  }
+  let result: string | undefined;
+  if (entry.resultTypeDescription || (entry.resultFields && entry.resultFields.length > 0)) {
+    const lines: string[] = [];
+    if (entry.resultTypeName) {
+      lines.push(`Result: ${entry.resultTypeName}`);
+    }
+    if (entry.resultTypeDescription) {
+      lines.push(indentLines(entry.resultTypeDescription, '  '));
+    }
 
-  const lines: string[] = [];
-  if (entry.resultTypeName) {
-    lines.push(`Result: ${entry.resultTypeName}`);
-  }
-  if (entry.resultTypeDescription) {
-    lines.push(indentLines(entry.resultTypeDescription, '  '));
-  }
-
-  if (entry.resultFields && entry.resultFields.length > 0) {
-    lines.push('', 'Fields:');
-    for (const field of entry.resultFields) {
-      const header = `  - ${field.name}: ${field.typeText}`;
-      lines.push(header);
-      if (field.description) {
-        lines.push(indentLines(field.description, '      '));
+    if (entry.resultFields && entry.resultFields.length > 0) {
+      lines.push('', 'Fields:');
+      for (const field of entry.resultFields) {
+        const header = `  - ${field.name}: ${field.typeText}`;
+        lines.push(header);
+        if (field.description) {
+          lines.push(indentLines(field.description, '      '));
+        }
       }
     }
-  }
 
-  return lines.join('\n');
+    result = lines.join('\n');
+  }
+  return result;
 }
 
 function indentLines(text: string, indent: string): string {
@@ -587,33 +599,31 @@ function indentLines(text: string, indent: string): string {
 function renderParamsSchemaSections(entry: CliApiManifestEntry, dataHelpFormat: ManifestHelpDataFormat): string[] {
   const sections: string[] = [];
 
-  if (!entry.paramsValidator) {
-    return sections;
-  }
+  if (entry.paramsValidator) {
+    if (dataHelpFormat === 'jsonschema' || dataHelpFormat === 'both') {
+      const jsonSchemaSection = renderJsonSchemaSection(entry);
 
-  if (dataHelpFormat === 'jsonschema' || dataHelpFormat === 'both') {
-    const jsonSchemaSection = renderJsonSchemaSection(entry);
-
-    if (jsonSchemaSection) {
-      sections.push(jsonSchemaSection);
+      if (jsonSchemaSection) {
+        sections.push(jsonSchemaSection);
+      }
     }
-  }
 
-  if (dataHelpFormat === 'arktype' || dataHelpFormat === 'both') {
-    const arktypeSection = renderArktypeExpressionSection(entry);
+    if (dataHelpFormat === 'arktype' || dataHelpFormat === 'both') {
+      const arktypeSection = renderArktypeExpressionSection(entry);
 
-    if (arktypeSection) {
-      sections.push(arktypeSection);
+      if (arktypeSection) {
+        sections.push(arktypeSection);
+      }
     }
-  }
 
-  if (sections.length === 0) {
-    // Last-ditch fallback when the requested format produced nothing usable
-    // (e.g. arktype was requested but the bound validator has no expression).
-    const expression = readArktypeExpression(entry);
+    if (sections.length === 0) {
+      // Last-ditch fallback when the requested format produced nothing usable
+      // (e.g. arktype was requested but the bound validator has no expression).
+      const expression = readArktypeExpression(entry);
 
-    if (expression) {
-      sections.push(`Params Schema (arktype): ${expression}`);
+      if (expression) {
+        sections.push(`Params Schema (arktype): ${expression}`);
+      }
     }
   }
 
@@ -621,45 +631,43 @@ function renderParamsSchemaSections(entry: CliApiManifestEntry, dataHelpFormat: 
 }
 
 function renderJsonSchemaSection(entry: CliApiManifestEntry): string | undefined {
-  if (!entry.paramsValidator) {
-    return undefined;
-  }
-
   let result: string | undefined;
 
-  try {
-    // arktype's default `toJsonSchema` throws on any sub-schema that has no
-    // JSON Schema equivalent (custom predicates, morphs, `undefined`/symbol/
-    // bigint units or domains, etc.). Provide targeted fallbacks so help
-    // output stays useful:
-    //   - `predicate` / `morph`: drop the lossy part, keep the JSON-shaped
-    //     base — e.g. `string > 0 & narrow(isFirestoreModelKey)` becomes
-    //     `{ type: 'string', minLength: 1 }`.
-    //   - everything else (e.g. the `undefined` unit in `clearable(T)`):
-    //     return `false` (matches nothing). It's a no-op inside `anyOf`, and
-    //     we strip it below so `T | null | undefined` reads as `T | null`.
-    const raw = entry.paramsValidator.toJsonSchema({
-      fallback: {
-        predicate: (ctx) => ctx.base,
-        morph: (ctx) => ctx.base,
-        // `false` is a valid JSON Schema value ("matches nothing"), but
-        // arktype's TS types reject `false` for the fallback return — cast
-        // through `unknown` to keep the runtime behavior we want.
-        default: (() => false) as unknown as (ctx: unknown) => never
+  if (entry.paramsValidator) {
+    try {
+      // arktype's default `toJsonSchema` throws on any sub-schema that has no
+      // JSON Schema equivalent (custom predicates, morphs, `undefined`/symbol/
+      // bigint units or domains, etc.). Provide targeted fallbacks so help
+      // output stays useful:
+      //   - `predicate` / `morph`: drop the lossy part, keep the JSON-shaped
+      //     base — e.g. `string > 0 & narrow(isFirestoreModelKey)` becomes
+      //     `{ type: 'string', minLength: 1 }`.
+      //   - everything else (e.g. the `undefined` unit in `clearable(T)`):
+      //     return `false` (matches nothing). It's a no-op inside `anyOf`, and
+      //     we strip it below so `T | null | undefined` reads as `T | null`.
+      const raw = entry.paramsValidator.toJsonSchema({
+        fallback: {
+          predicate: (ctx) => ctx.base,
+          morph: (ctx) => ctx.base,
+          // `false` is a valid JSON Schema value ("matches nothing"), but
+          // arktype's TS types reject `false` for the fallback return — cast
+          // through `unknown` to keep the runtime behavior we want.
+          default: (() => false) as unknown as (ctx: unknown) => never
+        }
+      });
+      // arktype's fallback returns boxed schema nodes (objects with a `toJSON()`
+      // method that emits the bare JSON Schema value, e.g. `false`). Round-trip
+      // through JSON to invoke those `toJSON()` callbacks before pruning;
+      // `structuredClone` would not call them.
+      // NOSONAR (typescript:S7784): structuredClone bypasses toJSON()
+      const normalized = JSON.parse(JSON.stringify(raw));
+      const pruned = pruneFalseUnionBranches(normalized);
+      result = `Params Schema (JSON Schema):\n${JSON.stringify(pruned, null, 2)}`;
+    } catch {
+      const expression = readArktypeExpression(entry);
+      if (expression) {
+        result = `Params Schema (arktype): ${expression}`;
       }
-    });
-    // arktype's fallback returns boxed schema nodes (objects with a `toJSON()`
-    // method that emits the bare JSON Schema value, e.g. `false`). Round-trip
-    // through JSON to invoke those `toJSON()` callbacks before pruning;
-    // `structuredClone` would not call them.
-    // NOSONAR (typescript:S7784): structuredClone bypasses toJSON()
-    const normalized = JSON.parse(JSON.stringify(raw));
-    const pruned = pruneFalseUnionBranches(normalized);
-    result = `Params Schema (JSON Schema):\n${JSON.stringify(pruned, null, 2)}`;
-  } catch {
-    const expression = readArktypeExpression(entry);
-    if (expression) {
-      result = `Params Schema (arktype): ${expression}`;
     }
   }
 
@@ -735,35 +743,40 @@ async function callEntry(entry: CliApiManifestEntry, rawData: string | undefined
 
 function parseAndValidate(entry: CliApiManifestEntry, rawData: string | undefined): unknown {
   const parsed = parseJsonData(rawData);
+  let result: unknown;
 
   if (!entry.paramsValidator) {
-    return parsed;
+    result = parsed;
+  } else {
+    const validated = entry.paramsValidator(parsed);
+
+    if (validated instanceof Error) {
+      const action = entry.specifier && entry.specifier !== '_' ? `${entry.verb}-${entry.specifier}` : entry.verb;
+      throw new CliError({
+        message: `Invalid --data for ${entry.model} ${action}: ${validated.message}`,
+        code: 'VALIDATION_ERROR'
+      });
+    }
+
+    result = validated;
   }
 
-  const validated = entry.paramsValidator(parsed);
-
-  if (validated instanceof Error) {
-    const action = entry.specifier && entry.specifier !== '_' ? `${entry.verb}-${entry.specifier}` : entry.verb;
-    throw new CliError({
-      message: `Invalid --data for ${entry.model} ${action}: ${validated.message}`,
-      code: 'VALIDATION_ERROR'
-    });
-  }
-
-  return validated;
+  return result;
 }
 
 function parseJsonData(rawData: string | undefined): unknown {
+  let result: unknown;
   if (typeof rawData !== 'string' || rawData.length === 0) {
-    return {};
+    result = {};
+  } else {
+    try {
+      result = JSON.parse(rawData);
+    } catch (e) {
+      throw new CliError({
+        message: `--data must be valid JSON: ${e instanceof Error ? e.message : String(e)}`,
+        code: 'INVALID_DATA_JSON'
+      });
+    }
   }
-
-  try {
-    return JSON.parse(rawData);
-  } catch (e) {
-    throw new CliError({
-      message: `--data must be valid JSON: ${e instanceof Error ? e.message : String(e)}`,
-      code: 'INVALID_DATA_JSON'
-    });
-  }
+  return result;
 }

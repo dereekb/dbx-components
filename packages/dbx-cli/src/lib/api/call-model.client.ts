@@ -206,14 +206,15 @@ interface RequestJsonInput {
 }
 
 async function requestJson<R>(input: RequestJsonInput): Promise<R> {
+  const hasJsonBody = input.jsonBody !== undefined;
   const init: RequestInit = {
     method: input.method,
     headers: {
       Accept: 'application/json',
       Authorization: `Bearer ${input.accessToken}`,
-      ...(input.jsonBody !== undefined ? { 'Content-Type': 'application/json' } : {})
+      ...(hasJsonBody ? { 'Content-Type': 'application/json' } : null)
     },
-    ...(input.jsonBody !== undefined ? { body: JSON.stringify(input.jsonBody) } : {})
+    ...(hasJsonBody ? { body: JSON.stringify(input.jsonBody) } : null)
   };
 
   const res = await tracedFetch(input.fetcher, input.url, init);
@@ -258,13 +259,23 @@ function extractMessage(body: unknown, fallback: string, res: Response): string 
 }
 
 function codeForStatus(status: number): string {
-  if (status === 401) return 'AUTH_UNAUTHORIZED';
-  if (status === 403) return 'AUTH_FORBIDDEN';
-  if (status === 404) return 'NOT_FOUND';
-  if (status === 422) return 'VALIDATION_ERROR';
-  if (status === 429) return 'RATE_LIMITED';
-  if (status >= 500) return 'SERVER_ERROR';
-  return 'API_ERROR';
+  let result: string;
+  if (status === 401) {
+    result = 'AUTH_UNAUTHORIZED';
+  } else if (status === 403) {
+    result = 'AUTH_FORBIDDEN';
+  } else if (status === 404) {
+    result = 'NOT_FOUND';
+  } else if (status === 422) {
+    result = 'VALIDATION_ERROR';
+  } else if (status === 429) {
+    result = 'RATE_LIMITED';
+  } else if (status >= 500) {
+    result = 'SERVER_ERROR';
+  } else {
+    result = 'API_ERROR';
+  }
+  return result;
 }
 
 function trimSlash(url: string): string {

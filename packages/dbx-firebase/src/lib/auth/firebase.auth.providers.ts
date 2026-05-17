@@ -12,7 +12,7 @@ export interface ProvideDbxFirebaseAuthConfig {
    * @param injector
    * @returns
    */
-  delegateFactory?: (injector: Injector) => DbxFirebaseAuthServiceDelegate;
+  readonly delegateFactory?: (injector: Injector) => DbxFirebaseAuthServiceDelegate;
 }
 
 /**

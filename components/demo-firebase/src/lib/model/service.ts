@@ -292,19 +292,22 @@ export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<
 
       // Client entries: full access for the owner (uses ownership key `o`).
       const isClientOwner = ownerKey != null && data?.o === ownerKey;
-      if (isClientOwner) {
-        return fullAccessRoleMap();
-      }
-
       // Grant entries: full access for the user the grant was issued to (uses `uid`).
       // Other token types (AccessToken / RefreshToken / Session / ...) are intentionally
       // not exposed at the model layer — they cascade through grant revocation instead.
       const isGrantOwner = uid != null && data?.type === 'Grant' && data?.uid === uid;
-      if (isGrantOwner) {
-        return fullAccessRoleMap();
+
+      let roleMap: GrantedRoleMap<OidcEntryRoles>;
+
+      if (isClientOwner) {
+        roleMap = fullAccessRoleMap();
+      } else if (isGrantOwner) {
+        roleMap = fullAccessRoleMap();
+      } else {
+        roleMap = noAccessRoleMap();
       }
 
-      return noAccessRoleMap();
+      return roleMap;
     });
   },
   getFirestoreCollection: (c) => c.app.oidcEntryCollection

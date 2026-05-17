@@ -190,14 +190,10 @@ function tallyProp(input: TallyPropInput): void {
       tally.weightedIntersect += weight;
       tally.matched.push(prop);
     }
-    return;
-  }
-  if (inputValue !== undefined) {
+  } else if (inputValue !== undefined) {
     tally.weightedUnion += weight;
     tally.missingInput.push(prop);
-    return;
-  }
-  if (entryValue !== undefined) {
+  } else if (entryValue !== undefined) {
     tally.weightedUnion += weight;
     tally.extraEntry.push(prop);
   }
@@ -287,9 +283,14 @@ export function createCssUtilityRegistryFromEntries(input: { readonly entries: r
     findByName(name) {
       const trimmed = name.trim();
       const direct = byName.get(trimmed);
-      if (direct !== undefined) return direct;
-      const stripped = trimmed.replace(/^\./, '');
-      return byName.get(stripped);
+      let found: CssUtilityEntry | undefined;
+      if (direct !== undefined) {
+        found = direct;
+      } else {
+        const stripped = trimmed.replace(/^\./, '');
+        found = byName.get(stripped);
+      }
+      return found;
     },
     findChildrenOf(parent) {
       return byParentImmutable.get(parent) ?? [];

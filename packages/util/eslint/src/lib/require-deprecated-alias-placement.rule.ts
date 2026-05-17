@@ -87,10 +87,8 @@ function findCompatMarkerOffset(sourceCode: AstNode): number {
   let offset: number = -1;
 
   for (const comment of allComments) {
-    if (comment.type === 'Line' && comment.value.includes(COMPAT_MARKER_TEXT)) {
-      if (offset === -1) {
-        offset = comment.range[0];
-      }
+    if (comment.type === 'Line' && comment.value.includes(COMPAT_MARKER_TEXT) && offset === -1) {
+      offset = comment.range[0];
     }
   }
 
@@ -138,44 +136,41 @@ export const utilRequireDeprecatedAliasPlacementRule: UtilRequireDeprecatedAlias
         }
       }
 
-      if (deprecatedStatements.length === 0) {
-        return;
-      }
+      if (deprecatedStatements.length !== 0) {
+        const markerOffset = findCompatMarkerOffset(sourceCode);
 
-      const markerOffset = findCompatMarkerOffset(sourceCode);
-
-      if (markerOffset === -1) {
-        // Report once on the first deprecated export — pinpoints the file for the developer.
-        context.report({
-          node: deprecatedStatements[0],
-          messageId: 'missingCompatMarker'
-        });
-        return;
-      }
-
-      // Check every analyzable statement against the marker:
-      //   - deprecated statement positioned BEFORE the marker → wrong placement.
-      //   - non-deprecated statement positioned AFTER the marker → wrong placement.
-      let reportedAliasAboveMarker = false;
-      let reportedNonDeprecatedBelowMarker = false;
-
-      for (const stmt of analyzable) {
-        const stmtStart: number = stmt.range[0];
-        const isAfterMarker = stmtStart > markerOffset;
-        const isDeprecated = statementIsDeprecated(sourceCode, stmt);
-
-        if (isDeprecated && !isAfterMarker && !reportedAliasAboveMarker) {
+        if (markerOffset === -1) {
+          // Report once on the first deprecated export — pinpoints the file for the developer.
           context.report({
-            node: stmt,
-            messageId: 'deprecatedAliasNotAtBottom'
+            node: deprecatedStatements[0],
+            messageId: 'missingCompatMarker'
           });
-          reportedAliasAboveMarker = true;
-        } else if (!isDeprecated && isAfterMarker && !reportedNonDeprecatedBelowMarker) {
-          context.report({
-            node: stmt,
-            messageId: 'nonDeprecatedAfterMarker'
-          });
-          reportedNonDeprecatedBelowMarker = true;
+        } else {
+          // Check every analyzable statement against the marker:
+          //   - deprecated statement positioned BEFORE the marker → wrong placement.
+          //   - non-deprecated statement positioned AFTER the marker → wrong placement.
+          let reportedAliasAboveMarker = false;
+          let reportedNonDeprecatedBelowMarker = false;
+
+          for (const stmt of analyzable) {
+            const stmtStart: number = stmt.range[0];
+            const isAfterMarker = stmtStart > markerOffset;
+            const isDeprecated = statementIsDeprecated(sourceCode, stmt);
+
+            if (isDeprecated && !isAfterMarker && !reportedAliasAboveMarker) {
+              context.report({
+                node: stmt,
+                messageId: 'deprecatedAliasNotAtBottom'
+              });
+              reportedAliasAboveMarker = true;
+            } else if (!isDeprecated && isAfterMarker && !reportedNonDeprecatedBelowMarker) {
+              context.report({
+                node: stmt,
+                messageId: 'nonDeprecatedAfterMarker'
+              });
+              reportedNonDeprecatedBelowMarker = true;
+            }
+          }
         }
       }
     }

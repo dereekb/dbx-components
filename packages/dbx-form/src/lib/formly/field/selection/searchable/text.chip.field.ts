@@ -11,7 +11,7 @@ export interface ChipTextFieldConfig extends LabeledFieldConfig, StringValueFiel
   /**
    * Whether text values are case-sensitive. Defaults to false (lowercased).
    */
-  caseSensitive?: boolean;
+  readonly caseSensitive?: boolean;
 }
 
 /**

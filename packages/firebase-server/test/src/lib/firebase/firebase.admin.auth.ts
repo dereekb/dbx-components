@@ -283,33 +283,33 @@ export interface AuthorizedUserTestContextDetailsTemplate {
  * authorizedUserContext/authorizedUserContextFactory parameters.
  */
 export interface AuthorizedUserTestContextParams<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>, C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>> {
-  f: PF;
+  readonly f: PF;
 
   /**
    * uid value/getter to use. If not provided, a random one will be generated.
    */
-  uid?: GetterOrValue<FirebaseAuthUserId>;
+  readonly uid?: GetterOrValue<FirebaseAuthUserId>;
 
   /**
    * Additional user details to attach to the create request.
    */
-  makeUserDetails?: (uid: FirebaseAuthUserId, params: C) => AuthorizedUserTestContextDetailsTemplate;
+  readonly makeUserDetails?: (uid: FirebaseAuthUserId, params: C) => AuthorizedUserTestContextDetailsTemplate;
 
   /**
    * Creates the custom fixture. If not defined, a AuthorizedUserTestContextFixture is created.
    */
-  makeFixture?: (parent: PF) => F;
+  readonly makeFixture?: (parent: PF) => F;
 
   /**
    * Custom make instance function. If not defined, a AuthorizedUserTestContextInstance will be generated.
    */
   // eslint-disable-next-line @typescript-eslint/max-params -- public callback signature used widely by downstream test fixtures
-  makeInstance?: (uid: FirebaseAuthUserId, testInstance: PI, params: C, userRecord: UserRecord) => PromiseOrValue<I>;
+  readonly makeInstance?: (uid: FirebaseAuthUserId, testInstance: PI, params: C, userRecord: UserRecord) => PromiseOrValue<I>;
 
   /**
    * Optional function to initialize the user for this instance.
    */
-  initUser?: (instance: I, params: C) => Promise<void>;
+  readonly initUser?: (instance: I, params: C) => Promise<void>;
 }
 
 /**

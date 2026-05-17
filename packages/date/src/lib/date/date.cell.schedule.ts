@@ -411,12 +411,16 @@ export interface DateCellSchedule {
  * @returns whether the input matches the DateCellSchedule structure
  */
 export function isDateCellSchedule(input: object): input is DateCellSchedule {
+  let result: boolean;
+
   if (typeof input === 'object') {
     const asRange = input as DateCellSchedule;
-    return (typeof asRange.w === 'string' && !asRange.ex) || (Array.isArray(asRange.ex) && !asRange.d) || Array.isArray(asRange.d);
+    result = (typeof asRange.w === 'string' && !asRange.ex) || (Array.isArray(asRange.ex) && !asRange.d) || Array.isArray(asRange.d);
+  } else {
+    result = false;
   }
 
-  return false;
+  return result;
 }
 
 /**
@@ -449,12 +453,16 @@ export type DateCellScheduleStartOfDayDateRange = DateCellScheduleDateRange;
  * @returns whether the input has the structure of a DateCellScheduleDateRange
  */
 export function isDateCellScheduleDateRange(input: object): input is DateCellScheduleDateRange {
+  let result: boolean;
+
   if (typeof input === 'object') {
     const asRange = input as FullDateCellScheduleRange;
-    return isDateCellSchedule(asRange) && isDate(asRange.end) && isDate(asRange.start);
+    result = isDateCellSchedule(asRange) && isDate(asRange.end) && isDate(asRange.start);
+  } else {
+    result = false;
   }
 
-  return false;
+  return result;
 }
 
 /**
@@ -882,10 +890,10 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   let maxAllowedIndex: number;
   if (end != null) {
     maxAllowedIndex = _dateCellTimingRelativeIndexFactory(end);
-  } else if (minMaxDateRange?.end != null) {
-    maxAllowedIndex = Math.max(indexFloor, _minMaxDateRangeDateOrIndexToIndex(minMaxDateRange.end));
-  } else {
+  } else if (minMaxDateRange?.end == null) {
     maxAllowedIndex = Number.MAX_SAFE_INTEGER;
+  } else {
+    maxAllowedIndex = Math.max(indexFloor, _minMaxDateRangeDateOrIndexToIndex(minMaxDateRange.end));
   }
 
   const includedIndexes = new Set(config.d);
@@ -1001,45 +1009,45 @@ export interface DateCellScheduleDateCellTimingFilterConfig {
   /**
    * Timing to filter with.
    */
-  timing: DateCellTiming;
+  readonly timing: DateCellTiming;
   /**
    * Schedule to filter with.
    */
-  schedule: DateCellSchedule;
+  readonly schedule: DateCellSchedule;
   /**
    * Wether or not to expand on the inverse of the schedule, returning blocks that are not in the schedule.
    *
    * Other date filtering behaves the same (I.E. onlyBlocksNotYetStarted, etc.)
    */
-  invertSchedule?: boolean;
+  readonly invertSchedule?: boolean;
   /**
    * (Optional) date to use when filtering from now.
    */
-  now?: Date;
+  readonly now?: Date;
   /**
    * (Optional) filters in blocks that have started. Can be combined with the other filters.
    */
-  onlyBlocksThatHaveStarted?: boolean;
+  readonly onlyBlocksThatHaveStarted?: boolean;
   /**
    * (Optional) filters in blocks that have ended. Can be combined with the other filters.
    */
-  onlyBlocksThatHaveEnded?: boolean;
+  readonly onlyBlocksThatHaveEnded?: boolean;
   /**
    * (Optional) filters in blocks that have not yet started. Can be combined with the other filters.
    */
-  onlyBlocksNotYetStarted?: boolean;
+  readonly onlyBlocksNotYetStarted?: boolean;
   /**
    * (Optional) filters in blocks that have not yet ended. Can be combined with the other filters.
    */
-  onlyBlocksNotYetEnded?: boolean;
+  readonly onlyBlocksNotYetEnded?: boolean;
   /**
    * (Optional) custom filter function. Can be combined with the other filters.
    */
-  durationSpanFilter?: FilterFunction<DateCellDurationSpan<DateCell>>;
+  readonly durationSpanFilter?: FilterFunction<DateCellDurationSpan<DateCell>>;
   /**
    * (Optional) Maximum number of blocks to return.
    */
-  maxDateCellsToReturn?: number;
+  readonly maxDateCellsToReturn?: number;
 }
 
 /**

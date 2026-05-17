@@ -20,13 +20,15 @@ import type * as admin from 'firebase-admin';
  * ```
  */
 export async function getAuthUserOrUndefined(promise: Promise<admin.auth.UserRecord>): Promise<Maybe<admin.auth.UserRecord>> {
-  try {
-    return await promise;
-  } catch (error: unknown) {
-    if ((error as FirebaseAuthError).code === FIREBASE_AUTH_USER_NOT_FOUND_ERROR) {
-      return undefined;
-    }
+  let result: Maybe<admin.auth.UserRecord>;
 
-    throw error;
+  try {
+    result = await promise;
+  } catch (error: unknown) {
+    if ((error as FirebaseAuthError).code !== FIREBASE_AUTH_USER_NOT_FOUND_ERROR) {
+      throw error;
+    }
   }
+
+  return result;
 }

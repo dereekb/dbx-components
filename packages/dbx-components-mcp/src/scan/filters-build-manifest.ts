@@ -192,7 +192,7 @@ function buildSharedFilterEntryFields(entry: ExtractedFilterEntry): SharedFilter
   if (entry.since !== undefined) {
     result.since = entry.since;
   }
-  return result as SharedFilterEntryFields;
+  return result;
 }
 
 interface SharedFilterEntryFields {

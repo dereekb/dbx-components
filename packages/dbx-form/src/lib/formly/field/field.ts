@@ -11,12 +11,12 @@ import { type DisableAutocompleteForField, disableAutofillAttributes } from '../
  * @deprecated
  */
 export interface LabeledBaseFieldConfig extends BaseFieldConfig {
-  label?: string;
-  placeholder?: string;
+  readonly label?: string;
+  readonly placeholder?: string;
   /**
    * Sets the autocomplete values. Pass `false` to disable autocomplete.
    */
-  autocomplete?: string | DisableAutocompleteForField;
+  readonly autocomplete?: string | DisableAutocompleteForField;
 }
 
 /**
@@ -25,7 +25,7 @@ export interface LabeledBaseFieldConfig extends BaseFieldConfig {
  * @deprecated
  */
 export interface DefaultValueFieldConfig<T = unknown> {
-  defaultValue?: T;
+  readonly defaultValue?: T;
 }
 
 /**
@@ -39,11 +39,11 @@ export interface HintFieldConfig extends Partial<DescriptionFieldConfig> {
    *
    * @deprecated use hint instead.
    */
-  description?: string;
+  readonly description?: string;
   /**
    * Hint text.
    */
-  hint?: string;
+  readonly hint?: string;
 }
 
 /**
@@ -62,9 +62,9 @@ export type BasePartialPotentialFieldConfig = Partial<BaseFieldConfig> & Partial
  */
 
 export interface BaseFieldConfig {
-  key: string;
-  required?: boolean;
-  readonly?: boolean;
+  readonly key: string;
+  readonly required?: boolean;
+  readonly readonly?: boolean;
 }
 
 /**
@@ -104,7 +104,7 @@ export type FieldValueParser<I = any, O = any> = MapFunction<I, O>;
  */
 
 export interface AttributesFieldConfig {
-  attributes?: {
+  readonly attributes?: {
     [key: string]: string | number;
   };
 }
@@ -118,7 +118,7 @@ export interface DescriptionFieldConfig {
   /**
    * Description text.
    */
-  description?: string;
+  readonly description?: string;
 }
 
 /**
@@ -133,12 +133,12 @@ export interface FieldConfig extends BaseFieldConfig, Pick<FormlyFieldConfig, 'e
  * Extends the Formly-specific {@link FieldConfig} to include expressions and parsers.
  */
 export interface LabeledFieldConfig extends FieldConfig {
-  label?: string;
-  placeholder?: string;
+  readonly label?: string;
+  readonly placeholder?: string;
   /**
    * Sets the autocomplete values. Pass `false` to disable autocomplete.
    */
-  autocomplete?: string | false;
+  readonly autocomplete?: string | false;
 }
 
 /**

@@ -7,23 +7,23 @@ export interface OnMatchDeltaConfig<T> {
   /**
    * The first from value.
    */
-  from: T;
+  readonly from: T;
   /**
    * The target value to receive after the first.
    */
-  to: T;
+  readonly to: T;
   /**
    * Comparison function to compare equality between the emission and the target values.
    *
    * isMatch is checked for each value, and at the time a match is found, allowing a double check to occur on the from target value.
    */
-  isMatch?: (a: T, b: T) => boolean;
+  readonly isMatch?: (a: T, b: T) => boolean;
   /**
    * Whether or not the two values must be emitted consecutively.
    *
    * For example, if requiredConsecutive=true and we are waiting for 1 -> 2, and the emissions are 1,0,2, the observable function will not emit 2.
    */
-  requireConsecutive?: boolean;
+  readonly requireConsecutive?: boolean;
 }
 
 interface OnMatchDeltaScan<T> {

@@ -11,7 +11,7 @@ export const DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN = new InjectionToken('DOC_FOR
 export interface DocFormExampleComponentFormValue {}
 
 export interface DocFormExampleComponentFormConfig {
-  componentClass: Type<any>;
+  readonly componentClass: Type<any>;
   readonly allowDisabledEffects?: Maybe<boolean>;
 }
 

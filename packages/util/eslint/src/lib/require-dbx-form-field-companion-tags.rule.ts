@@ -118,15 +118,14 @@ export const utilRequireDbxFormFieldCompanionTagsRule: UtilRequireDbxFormFieldCo
         if (m.tag === 'dbxFormFieldDerivative') derived = 'field-derivative';
         else if (m.tag === 'dbxFormFieldTemplate') derived = 'template-builder';
       }
-      if (derived !== undefined) return derived;
-      return tierTags.length > 0 ? tierTags[0].description.trim() : undefined;
+      const result = derived !== undefined ? derived : tierTags.length > 0 ? tierTags[0].description.trim() : undefined;
+      return result;
     }
 
     function checkJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
       const { markers, companions } = collectFormTags(parsed);
-      if (markers.length === 0 && companions.size === 0) return;
-      if (requireBareMarker && markers.length === 0) return;
+      if ((markers.length === 0 && companions.size === 0) || (requireBareMarker && markers.length === 0)) return;
       const triggerLine = markers[0]?.startLineIndex ?? 0;
 
       // Mutually-exclusive markers.

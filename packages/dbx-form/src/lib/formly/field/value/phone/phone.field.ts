@@ -127,8 +127,8 @@ export function formlyPhoneAndLabelSectionField({ key, header = 'Phone Number', 
  * Configuration for a repeatable list of phone + label field pairs.
  */
 export interface PhoneListFieldConfig extends Omit<RepeatArrayFieldConfig, 'repeatFieldGroup'> {
-  phoneAndLabel?: WrappedPhoneAndLabelFieldConfig;
-  repeatFieldGroup?: FormlyFieldConfig[];
+  readonly phoneAndLabel?: WrappedPhoneAndLabelFieldConfig;
+  readonly repeatFieldGroup?: FormlyFieldConfig[];
 }
 
 /**

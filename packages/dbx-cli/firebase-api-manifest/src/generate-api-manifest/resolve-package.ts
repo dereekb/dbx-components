@@ -39,20 +39,25 @@ let _pathsCache: Map<string, string> | undefined;
  * @returns Cached map of canonical specifiers to absolute index paths.
  */
 export function loadTsconfigPaths(workspaceRoot: string): Map<string, string> {
-  if (_pathsCache) return _pathsCache;
-  const tsconfigPath = join(workspaceRoot, 'tsconfig.base.json');
-  const raw = readFileSync(tsconfigPath, 'utf8');
-  const cleaned = stripJsonComments(raw);
-  const tsconfig = JSON.parse(cleaned) as { compilerOptions?: { paths?: Record<string, readonly string[]> } };
-  const paths = tsconfig.compilerOptions?.paths ?? {};
-  const map = new Map<string, string>();
-  for (const [key, value] of Object.entries(paths)) {
-    if (Array.isArray(value) && value[0]) {
-      map.set(key, resolve(workspaceRoot, value[0]));
+  let result: Map<string, string>;
+  if (_pathsCache) {
+    result = _pathsCache;
+  } else {
+    const tsconfigPath = join(workspaceRoot, 'tsconfig.base.json');
+    const raw = readFileSync(tsconfigPath, 'utf8');
+    const cleaned = stripJsonComments(raw);
+    const tsconfig = JSON.parse(cleaned) as { compilerOptions?: { paths?: Record<string, readonly string[]> } };
+    const paths = tsconfig.compilerOptions?.paths ?? {};
+    const map = new Map<string, string>();
+    for (const [key, value] of Object.entries(paths)) {
+      if (Array.isArray(value) && value[0]) {
+        map.set(key, resolve(workspaceRoot, value[0]));
+      }
     }
+    _pathsCache = map;
+    result = map;
   }
-  _pathsCache = map;
-  return map;
+  return result;
 }
 
 /**
@@ -63,18 +68,23 @@ export function loadTsconfigPaths(workspaceRoot: string): Map<string, string> {
  */
 export function resolveModuleToPackage(input: ResolveModuleInput): PackageRef | undefined {
   const { workspaceRoot, importingFile, moduleSpecifier } = input;
+  let result: PackageRef | undefined;
 
   if (moduleSpecifier.startsWith('.')) {
     const importingDir = dirname(importingFile);
     const candidatePath = resolve(importingDir, moduleSpecifier);
-    return locatePackageForPath(workspaceRoot, candidatePath);
+    result = locatePackageForPath(workspaceRoot, candidatePath);
+  } else {
+    const paths = loadTsconfigPaths(workspaceRoot);
+    const indexFile = paths.get(moduleSpecifier);
+    if (indexFile) {
+      result = locatePackageForPath(workspaceRoot, indexFile);
+    } else {
+      result = locatePackageInNodeModules({ workspaceRoot, importingFile, moduleSpecifier });
+    }
   }
 
-  const paths = loadTsconfigPaths(workspaceRoot);
-  const indexFile = paths.get(moduleSpecifier);
-  if (indexFile) return locatePackageForPath(workspaceRoot, indexFile);
-
-  return locatePackageInNodeModules({ workspaceRoot, importingFile, moduleSpecifier });
+  return result;
 }
 
 /**
@@ -90,22 +100,25 @@ export function resolveModuleToPackage(input: ResolveModuleInput): PackageRef | 
 export function locatePackageInNodeModules(input: ResolveModuleInput): PackageRef | undefined {
   const { importingFile, moduleSpecifier } = input;
   let current = dirname(importingFile);
+  let result: PackageRef | undefined;
 
-  while (current && current !== dirname(current)) {
+  while (!result && current && current !== dirname(current)) {
     const candidateRoot = join(current, 'node_modules', moduleSpecifier);
     const pkgJson = join(candidateRoot, 'package.json');
     if (existsSync(pkgJson)) {
       try {
         const pkg = JSON.parse(readFileSync(pkgJson, 'utf8')) as { name?: string };
-        if (pkg.name) return { packageName: pkg.name, packageRoot: candidateRoot };
+        if (pkg.name) {
+          result = { packageName: pkg.name, packageRoot: candidateRoot };
+        }
       } catch {
         // ignore malformed package.json and keep walking
       }
     }
-    current = dirname(current);
+    if (!result) current = dirname(current);
   }
 
-  return undefined;
+  return result;
 }
 
 /**
@@ -118,20 +131,23 @@ export function locatePackageInNodeModules(input: ResolveModuleInput): PackageRe
  */
 export function locatePackageForPath(workspaceRoot: string, startPath: string): PackageRef | undefined {
   let current = startPath;
+  let result: PackageRef | undefined;
 
-  while (current && current !== workspaceRoot && current !== dirname(current)) {
+  while (!result && current && current !== workspaceRoot && current !== dirname(current)) {
     if (existsSync(join(current, 'package.json'))) {
       try {
         const pkg = JSON.parse(readFileSync(join(current, 'package.json'), 'utf8')) as { name?: string };
-        if (pkg.name) return { packageName: pkg.name, packageRoot: current };
+        if (pkg.name) {
+          result = { packageName: pkg.name, packageRoot: current };
+        }
       } catch {
         // fall through and keep walking
       }
     }
-    current = dirname(current);
+    if (!result) current = dirname(current);
   }
 
-  return undefined;
+  return result;
 }
 
 /**

@@ -48,25 +48,25 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
   readonly errorMessage = signal<string | null>(null);
 
   readonly loginStateCase = computed<OidcLoginStateCase>(() => {
+    let result: OidcLoginStateCase;
+
     if (this.submitting()) {
-      return 'submitting';
+      result = 'submitting';
+    } else if (this.errorMessage()) {
+      result = 'error';
+    } else {
+      const isLoggedIn = this.isLoggedIn();
+
+      if (isLoggedIn === undefined) {
+        result = 'unknown';
+      } else if (!isLoggedIn) {
+        result = 'no_user';
+      } else {
+        result = 'user';
+      }
     }
 
-    if (this.errorMessage()) {
-      return 'error';
-    }
-
-    const isLoggedIn = this.isLoggedIn();
-
-    if (isLoggedIn === undefined) {
-      return 'unknown';
-    }
-
-    if (!isLoggedIn) {
-      return 'no_user';
-    }
-
-    return 'user';
+    return result;
   });
 
   constructor() {

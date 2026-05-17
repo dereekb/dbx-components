@@ -85,50 +85,51 @@ export class OidcService {
   async verifyAccessToken(rawToken: string): Promise<OidcAuthData | undefined> {
     const provider = await this.getProvider();
     const accessToken = await provider.AccessToken.find(rawToken);
+    let result: OidcAuthData | undefined;
 
-    if (!accessToken) {
-      return undefined;
-    }
+    if (accessToken) {
+      // Extract account claims baked into the access token at issuance time.
+      // These are the claims built by OidcAccountServiceDelegate.buildClaimsForUser()
+      // (e.g., `a` for admin, `o` for onboarded) based on the granted scopes.
+      // Read the account claims baked into the token at issuance time via extraAccessTokenClaims.
+      const accountClaims = (accessToken as any).extra ?? {};
 
-    // Extract account claims baked into the access token at issuance time.
-    // These are the claims built by OidcAccountServiceDelegate.buildClaimsForUser()
-    // (e.g., `a` for admin, `o` for onboarded) based on the granted scopes.
-    // Read the account claims baked into the token at issuance time via extraAccessTokenClaims.
-    const accountClaims = (accessToken as any).extra ?? {};
-
-    const token: DecodedIdToken = {
-      // Account claims from the token (e.g., admin, onboarded)
-      ...accountClaims,
-      // Standard JWT claims — sourced from the access token
-      aud: firstValue(accessToken.aud),
-      iss: this.config.issuer,
-      sub: accessToken.accountId,
-      iat: accessToken.iat,
-      exp: accessToken.exp ?? unixDateTimeSecondsNumberForNow() + accessToken.expiration,
-      auth_time: accessToken.iat,
-      // Firebase UID (copied from sub)
-      uid: accessToken.accountId,
-      // OIDC-specific claims carried on the token
-      scope: accessToken.scope,
-      client_id: accessToken.clientId,
-      // Firebase sign-in info — marked as OIDC provider
-      firebase: {
-        identities: {},
-        sign_in_provider: 'dbx_oidc'
-      }
-    };
-
-    return {
-      uid: accessToken.accountId,
-      token,
-      rawToken,
-      oidcValidatedToken: {
+      const token: DecodedIdToken = {
+        // Account claims from the token (e.g., admin, onboarded)
+        ...accountClaims,
+        // Standard JWT claims — sourced from the access token
+        aud: firstValue(accessToken.aud),
+        iss: this.config.issuer,
         sub: accessToken.accountId,
+        iat: accessToken.iat,
+        exp: accessToken.exp ?? unixDateTimeSecondsNumberForNow() + accessToken.expiration,
+        auth_time: accessToken.iat,
+        // Firebase UID (copied from sub)
+        uid: accessToken.accountId,
+        // OIDC-specific claims carried on the token
         scope: accessToken.scope,
         client_id: accessToken.clientId,
-        ...accountClaims
-      }
-    };
+        // Firebase sign-in info — marked as OIDC provider
+        firebase: {
+          identities: {},
+          sign_in_provider: 'dbx_oidc'
+        }
+      };
+
+      result = {
+        uid: accessToken.accountId,
+        token,
+        rawToken,
+        oidcValidatedToken: {
+          sub: accessToken.accountId,
+          scope: accessToken.scope,
+          client_id: accessToken.clientId,
+          ...accountClaims
+        }
+      };
+    }
+
+    return result;
   }
 
   // MARK: Grant Revocation
@@ -237,20 +238,14 @@ export class OidcService {
       extraClientMetadata: {
         properties: [DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA],
         validator: (_ctx, key, value) => {
-          if (key !== DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA) {
-            return;
-          }
+          if (key === DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA && value !== undefined && value !== null) {
+            if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+              throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} must be a positive integer (seconds).`);
+            }
 
-          if (value === undefined || value === null) {
-            return;
-          }
-
-          if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
-            throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} must be a positive integer (seconds).`);
-          }
-
-          if (value > serverMaxSeconds) {
-            throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} cannot exceed the server max of ${serverMaxSeconds} seconds.`);
+            if (value > serverMaxSeconds) {
+              throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} cannot exceed the server max of ${serverMaxSeconds} seconds.`);
+            }
           }
         }
       },
@@ -320,6 +315,7 @@ export class OidcService {
       extraTokenClaims: async (_ctx: unknown, token: any) => {
         const accountId = token.accountId;
         const scope = token.scope;
+        let result: Record<string, unknown> = {};
 
         if (accountId && scope) {
           const account = await this.accountService.userContext(accountId).findAccount();
@@ -329,11 +325,11 @@ export class OidcService {
             const { sub: _sub, ...extraClaims } = claims;
 
             // Filter out undefined values — the Firestore adapter cannot serialize them.
-            return filterUndefinedValues(extraClaims);
+            result = filterUndefinedValues(extraClaims);
           }
         }
 
-        return {};
+        return result;
       }
     };
   }

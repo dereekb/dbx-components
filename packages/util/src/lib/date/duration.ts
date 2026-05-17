@@ -107,11 +107,7 @@ export function millisecondsToTimeUnit(ms: Milliseconds, unit: TimeUnit): number
  * ```
  */
 export function convertTimeDuration(amount: number, fromUnit: TimeUnit, toUnit: TimeUnit): number {
-  if (fromUnit === toUnit) {
-    return amount;
-  }
-
-  return millisecondsToTimeUnit(timeUnitToMilliseconds(amount, fromUnit), toUnit);
+  return fromUnit === toUnit ? amount : millisecondsToTimeUnit(timeUnitToMilliseconds(amount, fromUnit), toUnit);
 }
 
 // MARK: TimeDuration

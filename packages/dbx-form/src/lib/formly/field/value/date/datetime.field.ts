@@ -102,9 +102,9 @@ export type DateDateRangeFieldDateConfig = Omit<DateTimeFieldConfig, 'dateLabel'
  * Configuration for a date range field with separate start and end date pickers.
  */
 export interface DateDateRangeFieldConfig extends Pick<DateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
-  required?: boolean;
-  start?: Partial<DateDateRangeFieldDateConfig>;
-  end?: Partial<DateDateRangeFieldDateConfig>;
+  readonly required?: boolean;
+  readonly start?: Partial<DateDateRangeFieldDateConfig>;
+  readonly end?: Partial<DateDateRangeFieldDateConfig>;
 }
 
 /**
@@ -173,9 +173,9 @@ export type DateTimeRangeFieldTimeConfig = Omit<DateDateRangeFieldDateConfig, 'a
  * Configuration for a date-time range field with separate start and end time pickers.
  */
 export interface DateDateTimeRangeFieldConfig extends Pick<DateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
-  required?: boolean;
-  start?: Partial<DateTimeRangeFieldTimeConfig>;
-  end?: Partial<DateTimeRangeFieldTimeConfig>;
+  readonly required?: boolean;
+  readonly start?: Partial<DateTimeRangeFieldTimeConfig>;
+  readonly end?: Partial<DateTimeRangeFieldTimeConfig>;
 }
 
 /**

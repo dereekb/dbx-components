@@ -28,11 +28,8 @@ export class DbxCalendarComponent<T> {
   readonly activeDayIsOpen$ = this.calendarStore.eventsForDateState$.pipe(
     withLatestFrom(this.calendarStore.date$),
     map(([x, date]) => {
-      if (x.events.length && isSameMonth(x.date, date)) {
-        return !x.dateTappedTwice;
-      }
-
-      return false;
+      const result = x.events.length && isSameMonth(x.date, date) ? !x.dateTappedTwice : false;
+      return result;
     }),
     distinctUntilChanged(),
     shareReplay(1)

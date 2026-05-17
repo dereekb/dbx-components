@@ -139,11 +139,8 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit {
 
   readonly showButtons$ = this.showButtonsOnReadonly$.pipe(
     switchMap((x) => {
-      if (x) {
-        return of(true);
-      }
-
-      return this.readonly$.pipe(map((x) => !x));
+      const result: Observable<boolean> = x ? of(true) : this.readonly$.pipe(map((readonly) => !readonly));
+      return result;
     }),
     distinctUntilChanged(),
     shareReplay(1)

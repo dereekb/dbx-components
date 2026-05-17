@@ -61,11 +61,8 @@ export function trelloRateLimitedFetchHandler(config?: Maybe<TrelloRateLimitedFe
     updateWithResponse: (response: Response) => {
       // Trello does not document rate limit headers, but it does return 429 when exceeded.
       // Schedule a retry after the rate limiter cooldown when a 429 is observed.
-      if (response.status === 429) {
-        return true;
-      }
-
-      return false;
+      const shouldRetry = response.status === 429;
+      return shouldRetry;
     }
   });
 }

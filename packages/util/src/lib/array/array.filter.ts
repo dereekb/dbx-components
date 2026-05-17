@@ -64,27 +64,28 @@ export function filterValuesByDistanceNoOrder<T>(input: T[], minDistance: number
  * @returns A filtered array with only values that are at least minDistance apart
  */
 function _filterValuesByDistance<T, Y>(values: [T, number][], minDistance: number, toOutputValue: (value: [T, number]) => Y): Y[] {
+  let filtered: Y[];
+
   // Exit if nothing to do.
-  switch (values.length) {
-    case 0:
-      return [];
-    case 1:
-      return [toOutputValue(values[0])];
-  }
+  if (values.length === 0) {
+    filtered = [];
+  } else if (values.length === 1) {
+    filtered = [toOutputValue(values[0])];
+  } else {
+    // Sort values
+    values.sort(sortByNumberFunction((x) => x[1]));
 
-  // Sort values
-  values.sort(sortByNumberFunction((x) => x[1]));
+    let prev = values[0];
+    filtered = [toOutputValue(prev)];
 
-  let prev = values[0];
-  const filtered: Y[] = [toOutputValue(prev)];
+    for (let i = 1, n = values.length; i < n; i += 1) {
+      const current = values[i];
+      const distance = Math.abs(current[1] - prev[1]);
 
-  for (let i = 1, n = values.length; i < n; i += 1) {
-    const current = values[i];
-    const distance = Math.abs(current[1] - prev[1]);
-
-    if (distance >= minDistance) {
-      filtered.push(toOutputValue(current));
-      prev = current;
+      if (distance >= minDistance) {
+        filtered.push(toOutputValue(current));
+        prev = current;
+      }
     }
   }
 

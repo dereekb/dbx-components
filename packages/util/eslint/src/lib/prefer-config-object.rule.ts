@@ -155,45 +155,35 @@ export const utilPreferConfigObjectRule: UtilPreferConfigObjectRuleDefinition = 
     const sourceCode = context.sourceCode;
 
     function checkFunction(node: AstNode): void {
-      if (isConstructor(node)) {
-        return;
+      if (!isConstructor(node)) {
+        const params: AstNode[] = node.params ?? [];
+
+        // Decorated parameters indicate framework-driven signatures (NestJS handlers, Angular DI inside
+        // constructors which we already skip — but standalone decorated functions exist too).
+        if (!params.some(paramHasDecorator) && params.length > maxParams) {
+          // Anchor for JSDoc lookup: prefer the enclosing export statement, then a VariableDeclaration
+          // (for `const fn = () => ...`), otherwise the function node itself.
+          let anchor: AstNode = node;
+
+          if (node.parent?.type === 'VariableDeclarator' && node.parent.parent?.type === 'VariableDeclaration') {
+            anchor = node.parent.parent;
+          }
+
+          if (anchor.parent && (anchor.parent.type === 'ExportNamedDeclaration' || anchor.parent.type === 'ExportDefaultDeclaration')) {
+            anchor = anchor.parent;
+          }
+
+          if (!hasAllowJsdoc(sourceCode, anchor, allowTag)) {
+            const name = getFunctionDisplayName(node);
+
+            context.report({
+              node: node.id ?? node,
+              messageId: 'tooManyParams',
+              data: { name, count: String(params.length) }
+            });
+          }
+        }
       }
-
-      const params: AstNode[] = node.params ?? [];
-
-      // Decorated parameters indicate framework-driven signatures (NestJS handlers, Angular DI inside
-      // constructors which we already skip — but standalone decorated functions exist too).
-      if (params.some(paramHasDecorator)) {
-        return;
-      }
-
-      if (params.length <= maxParams) {
-        return;
-      }
-
-      // Anchor for JSDoc lookup: prefer the enclosing export statement, then a VariableDeclaration
-      // (for `const fn = () => ...`), otherwise the function node itself.
-      let anchor: AstNode = node;
-
-      if (node.parent?.type === 'VariableDeclarator' && node.parent.parent?.type === 'VariableDeclaration') {
-        anchor = node.parent.parent;
-      }
-
-      if (anchor.parent && (anchor.parent.type === 'ExportNamedDeclaration' || anchor.parent.type === 'ExportDefaultDeclaration')) {
-        anchor = anchor.parent;
-      }
-
-      if (hasAllowJsdoc(sourceCode, anchor, allowTag)) {
-        return;
-      }
-
-      const name = getFunctionDisplayName(node);
-
-      context.report({
-        node: node.id ?? node,
-        messageId: 'tooManyParams',
-        data: { name, count: String(params.length) }
-      });
     }
 
     return {

@@ -9,11 +9,11 @@ export interface PerformTaskLoopConfig<O> {
   /**
    * Produces the next value given the iteration index and the previous value.
    */
-  next: (i: number, prev: Maybe<O>) => Promise<O>;
+  readonly next: (i: number, prev: Maybe<O>) => Promise<O>;
   /**
    * Returns whether to continue looping. Called after each iteration with the current value and next index.
    */
-  checkContinue: (prev: Maybe<O>, i: number) => PromiseOrValue<boolean>;
+  readonly checkContinue: (prev: Maybe<O>, i: number) => PromiseOrValue<boolean>;
 }
 
 /**
@@ -23,15 +23,15 @@ export interface PerformTaskLoopWithInitConfig<O> {
   /**
    * The initial value to start the loop with.
    */
-  initValue: O;
+  readonly initValue: O;
   /**
    * Produces the next value given the iteration index and the previous value.
    */
-  next: (i: number, prev: O) => Promise<O>;
+  readonly next: (i: number, prev: O) => Promise<O>;
   /**
    * Returns whether to continue looping. Called after each iteration with the current value and next index.
    */
-  checkContinue: (prev: O, i: number) => PromiseOrValue<boolean>;
+  readonly checkContinue: (prev: O, i: number) => PromiseOrValue<boolean>;
 }
 
 // MARK: Loop
@@ -78,7 +78,7 @@ export interface PerformTaskCountLoopConfig<O> extends Omit<PerformTaskLoopConfi
   /**
    * The number of iterations to perform.
    */
-  count: number;
+  readonly count: number;
 }
 
 /**
@@ -88,7 +88,7 @@ export interface PerformTaskCountLoopWithInitConfig<O> extends Omit<PerformTaskL
   /**
    * The number of iterations to perform.
    */
-  count: number;
+  readonly count: number;
 }
 
 /**
@@ -124,11 +124,11 @@ export interface PerformMakeLoopConfig<O> {
   /**
    * The factory function to create each item.
    */
-  make: PerformMakeLoopFunction<O>;
+  readonly make: PerformMakeLoopFunction<O>;
   /**
    * The total number of items to create.
    */
-  count: number;
+  readonly count: number;
 }
 
 /**
@@ -167,7 +167,7 @@ export interface PerformBatchLoopConfig<O> extends BatchCount {
   /**
    * Factory function that creates a batch of items given the requested count.
    */
-  make: PerformBatchLoopFunction<O>;
+  readonly make: PerformBatchLoopFunction<O>;
 }
 
 /**

@@ -22,21 +22,24 @@ export class AbstractDbxFirebaseDocumentWithParentStore<T, PT, D extends Firesto
     return input.pipe(
       switchMap((parent) => {
         this._setParentDocument(parent);
+        let result: Observable<unknown>;
 
         if (parent) {
-          return this.collectionFactory$.pipe(
+          result = this.collectionFactory$.pipe(
             tap((collectionFactory) => {
               const collection = collectionFactory(parent);
               this.setFirestoreCollection(collection);
             })
           );
+        } else {
+          // clear the current collection
+          this.setFirestoreCollection(undefined);
+
+          // do nothing until a parent is returned.
+          result = NEVER;
         }
 
-        // clear the current collection
-        this.setFirestoreCollection(undefined);
-
-        // do nothing until a parent is returned.
-        return NEVER;
+        return result;
       })
     );
   });
@@ -96,16 +99,21 @@ export class AbstractSingleItemDbxFirebaseDocument<T, PT, D extends FirestoreDoc
    * Sets the SingleItemFirestoreCollection to use.
    */
   override readonly setFirestoreCollection = this.updater((state, firestoreCollection: Maybe<FirestoreCollection<T, D>>) => {
+    let result: typeof state;
+
     if (firestoreCollection != null) {
       const id = (firestoreCollection as SingleItemFirestoreCollection<T, PT, D, PD>).singleItemIdentifier;
 
       if (id != null) {
-        return { ...state, firestoreCollection, id };
+        result = { ...state, firestoreCollection, id };
+      } else {
+        throw new Error('AbstractSingleItemDbxFirebaseDocument only accepts SingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
       }
-      throw new Error('AbstractSingleItemDbxFirebaseDocument only accepts SingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
     } else {
-      return { ...state, firestoreCollection: null };
+      result = { ...state, firestoreCollection: null };
     }
+
+    return result;
   });
 
   /**

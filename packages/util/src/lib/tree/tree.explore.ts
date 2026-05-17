@@ -80,16 +80,16 @@ export interface ExploreTreeFunctionConfig<N extends TreeNode<unknown>, V = N> {
   /**
    * Custom traversal strategy (e.g., breadth-first). Defaults to depth-first.
    */
-  traverseFunctionFactory?: ExploreTreeTraversalFactoryFunction<N, V>;
+  readonly traverseFunctionFactory?: ExploreTreeTraversalFactoryFunction<N, V>;
   /**
    * Transforms each node into a value before visiting. Defaults to identity.
    */
-  mapNodeFunction?: (node: N) => V;
+  readonly mapNodeFunction?: (node: N) => V;
   /**
    * Controls whether each node is visited, skipped, or has only its children visited.
    * Defaults to visiting all nodes.
    */
-  shouldVisitNodeFunction?: Maybe<ExploreTreeVisitNodeDecisionFunction<N, V>>;
+  readonly shouldVisitNodeFunction?: Maybe<ExploreTreeVisitNodeDecisionFunction<N, V>>;
 }
 
 /**

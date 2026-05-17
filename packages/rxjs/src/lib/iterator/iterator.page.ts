@@ -211,6 +211,8 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
         first(),
         map(([hasNextAndCanLoadMore, prevResult]: [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>]) => [itemPageIteratorShouldLoadNextPage(request, hasNextAndCanLoadMore, prevResult), prevResult] as [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>]),
         mergeMap(([shouldLoadNextPage, prevResult]: [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>]) => {
+          let outputObs: Observable<Maybe<PageLoadingState<ItemPageIteratorResult<V>>>>;
+
           if (shouldLoadNextPage) {
             const nextPageNumber = nextIteratorPageNumber(prevResult); // retry number if error occured
             const page = filteredPage(nextPageNumber, this._config);
@@ -228,25 +230,31 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
             const stateObs: Observable<PageLoadingState<ItemPageIteratorResult<V>>> = iteratorResultObs.pipe(
               first(),
               map((result) => {
+                let mappedState: PageLoadingState<ItemPageIteratorResult<V>>;
+
                 if (result.error != null) {
-                  return {
+                  mappedState = {
                     loading: false,
                     page: nextPageNumber,
                     error: result.error,
                     value: result
                   };
+                } else {
+                  mappedState = successPageResult(nextPageNumber, result);
                 }
 
-                return successPageResult(nextPageNumber, result);
+                return mappedState;
               }),
               startWithBeginLoading(page),
               shareReplay(1)
             );
 
-            return stateObs;
+            outputObs = stateObs;
+          } else {
+            outputObs = of(prevResult).pipe();
           }
 
-          return of(prevResult).pipe();
+          return outputObs;
         }),
         map((inputState) => {
           let state: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
@@ -514,15 +522,17 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
  * @returns `true` if this result indicates no more pages are available
  */
 export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorResult<V>) {
+  let isEnd: boolean;
+
   if (result.error != null) {
-    return false;
+    isEnd = false;
+  } else if (result.end != null) {
+    isEnd = result.end;
+  } else {
+    isEnd = !hasValueOrNotEmpty(result);
   }
 
-  if (result.end != null) {
-    return result.end;
-  }
-
-  return !hasValueOrNotEmpty(result);
+  return isEnd;
 }
 
 function itemPageIteratorShouldLoadNextPage<V = unknown>(request: ItemIteratorNextRequest, hasNextAndCanLoadMore: boolean, prevResult: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>): boolean {

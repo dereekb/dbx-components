@@ -163,7 +163,7 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     const isWebhooksEnabled = config.envConfig.isWebhooksEnabled ?? (appUrl != null && Boolean(config.configureWebhooks));
     let apiPrefixPath: Maybe<WebsitePath>;
     if (apiPrefix) {
-      apiPrefixPath = apiPrefix.startsWith('/') ? (apiPrefix as WebsitePath) : (`/${apiPrefix}` as WebsitePath);
+      apiPrefixPath = apiPrefix.startsWith('/') ? (apiPrefix as WebsitePath) : `/${apiPrefix}`;
     }
     const appApiUrl = config.envConfig.appApiUrl ?? (isApiEnabled && appUrl && apiPrefixPath ? websiteUrlFromPaths(appUrl, apiPrefixPath) : undefined);
     const webhookPaths: WebsitePath[] = apiPrefixPath ? [apiPrefixPath, DEFAULT_BASE_WEBHOOK_PATH as WebsitePath] : [DEFAULT_BASE_WEBHOOK_PATH as WebsitePath];

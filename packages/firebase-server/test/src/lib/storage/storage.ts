@@ -8,8 +8,8 @@ import { type FirebaseStorage, firebaseStorageContextFactory } from '@dereekb/fi
  * Configuration for connecting to a Google Cloud Storage emulator in tests.
  */
 export interface GoogleCloudTestFirebaseStorageConfig {
-  host: string;
-  port: number;
+  readonly host: string;
+  readonly port: number;
 }
 
 /**

@@ -194,34 +194,34 @@ export interface TestContextBuilderConfig<I, F extends TestContextFixture<I>, C>
   /**
    * Builds a config given the optional, partial input config. This is used across all tests.
    */
-  buildConfig: (config?: Partial<C>) => C;
+  readonly buildConfig: (config?: Partial<C>) => C;
 
   /**
    * Builds a new fixture to use across all encapsulated tests.
    */
-  buildFixture: (config: C) => F;
+  readonly buildFixture: (config: C) => F;
 
   /**
    * Arbitrary before each function, called before the instance is setup.
    */
-  beforeEach?: () => Promise<void>;
+  readonly beforeEach?: () => Promise<void>;
 
   /**
    * Use for building an instance.
    *
    * When the promise resolves it should be ready to be used by the test being executed.
    */
-  setupInstance: (config: C) => Promise<I>;
+  readonly setupInstance: (config: C) => Promise<I>;
 
   /**
    * Use for cleaning up the instance before the next test.
    */
-  teardownInstance: (instance: I, config: C) => Promise<void>;
+  readonly teardownInstance: (instance: I, config: C) => Promise<void>;
 
   /**
    * Arbitrary after each function.
    */
-  afterEach?: () => Promise<void>;
+  readonly afterEach?: () => Promise<void>;
 }
 
 /**

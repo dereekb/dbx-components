@@ -37,80 +37,88 @@ export function defaultDoctorChecks(): DoctorCheck[] {
     async ({ config }) => ({ name: 'config-file-present', ok: !!config, ...(config ? {} : { suggestion: 'Run `<cli> auth setup --env <name>`.' }) }),
     async ({ envName, env }) => ({ name: 'active-env-resolved', ok: !!envName && !!env, detail: { envName }, ...(envName && env ? {} : { suggestion: 'Run `<cli> env add <name>` and `<cli> env use <name>`, or pass `--env <name>`.' }) }),
     async ({ env }) => {
+      let result: DoctorCheckResult;
       if (!env?.oidcIssuer) {
-        return { name: 'oidc-issuer-set', ok: false, suggestion: 'Set `oidcIssuer` via `<cli> auth setup`.' };
-      }
+        result = { name: 'oidc-issuer-set', ok: false, suggestion: 'Set `oidcIssuer` via `<cli> auth setup`.' };
+      } else {
+        const candidates = buildOidcDiscoveryCandidates({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
 
-      const candidates = buildOidcDiscoveryCandidates({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-
-      try {
-        const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-        return { name: 'oidc-discovery-reachable', ok: true, detail: { candidates, authorization_endpoint: meta.authorization_endpoint, token_endpoint: meta.token_endpoint } };
-      } catch (e) {
-        return { name: 'oidc-discovery-reachable', ok: false, detail: { candidates, error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the env oidcIssuer URL and that the API is running.' };
+        try {
+          const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
+          result = { name: 'oidc-discovery-reachable', ok: true, detail: { candidates, authorization_endpoint: meta.authorization_endpoint, token_endpoint: meta.token_endpoint } };
+        } catch (e) {
+          result = { name: 'oidc-discovery-reachable', ok: false, detail: { candidates, error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the env oidcIssuer URL and that the API is running.' };
+        }
       }
+      return result;
     },
     async ({ cliName, envName, env }) => {
+      let result: DoctorCheckResult;
       if (!envName || !env) {
-        return { name: 'token-cache-fresh', ok: false, suggestion: 'No env to check.' };
+        result = { name: 'token-cache-fresh', ok: false, suggestion: 'No env to check.' };
+      } else {
+        const paths = buildCliPaths({ cliName });
+        const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
+        const entry = await tokens.get(envName);
+
+        if (!entry) {
+          result = { name: 'token-cache-fresh', ok: false, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
+        } else {
+          const expired = isTokenExpired(entry);
+          result = { name: 'token-cache-fresh', ok: !expired, detail: { expiresAt: entry.expiresAt, expired }, ...(expired ? { suggestion: `Run \`${cliName} auth check --env ${envName}\` to refresh.` } : {}) };
+        }
       }
-
-      const paths = buildCliPaths({ cliName });
-      const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
-      const entry = await tokens.get(envName);
-
-      if (!entry) {
-        return { name: 'token-cache-fresh', ok: false, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
-      }
-
-      const expired = isTokenExpired(entry);
-      return { name: 'token-cache-fresh', ok: !expired, detail: { expiresAt: entry.expiresAt, expired }, ...(expired ? { suggestion: `Run \`${cliName} auth check --env ${envName}\` to refresh.` } : {}) };
+      return result;
     },
     async ({ cliName, envName, env }) => {
+      let result: DoctorCheckResult;
       if (!envName || !env?.clientId || !env?.clientSecret) {
-        return { name: 'token-refresh-round-trip', ok: false, suggestion: 'Env credentials are incomplete.' };
-      }
+        result = { name: 'token-refresh-round-trip', ok: false, suggestion: 'Env credentials are incomplete.' };
+      } else {
+        const paths = buildCliPaths({ cliName });
+        const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
+        const entry = await tokens.get(envName);
 
-      const paths = buildCliPaths({ cliName });
-      const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
-      const entry = await tokens.get(envName);
-
-      if (!entry?.refreshToken) {
-        return {
-          name: 'token-refresh-round-trip',
-          ok: false,
-          detail: { reason: 'no-refresh-token' },
-          suggestion: `No refresh token cached for env "${envName}". Run \`${cliName} auth login --env ${envName}\` — if the env's scopes omit \`offline_access\`, the OIDC provider may not issue one.`
-        };
+        if (!entry?.refreshToken) {
+          result = {
+            name: 'token-refresh-round-trip',
+            ok: false,
+            detail: { reason: 'no-refresh-token' },
+            suggestion: `No refresh token cached for env "${envName}". Run \`${cliName} auth login --env ${envName}\` — if the env's scopes omit \`offline_access\`, the OIDC provider may not issue one.`
+          };
+        } else {
+          try {
+            const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
+            await refreshAccessToken({
+              tokenEndpoint: meta.token_endpoint,
+              clientId: env.clientId,
+              clientSecret: env.clientSecret,
+              refreshToken: entry.refreshToken
+            });
+            result = { name: 'token-refresh-round-trip', ok: true };
+          } catch (e) {
+            result = { name: 'token-refresh-round-trip', ok: false, detail: { error: e instanceof Error ? e.message : String(e) }, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
+          }
+        }
       }
-
-      try {
-        const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-        await refreshAccessToken({
-          tokenEndpoint: meta.token_endpoint,
-          clientId: env.clientId,
-          clientSecret: env.clientSecret,
-          refreshToken: entry.refreshToken
-        });
-        return { name: 'token-refresh-round-trip', ok: true };
-      } catch (e) {
-        return { name: 'token-refresh-round-trip', ok: false, detail: { error: e instanceof Error ? e.message : String(e) }, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
-      }
+      return result;
     },
     async ({ env }) => {
+      let result: DoctorCheckResult;
       if (!env?.apiBaseUrl) {
-        return { name: 'api-base-url-reachable', ok: false, suggestion: 'Set `apiBaseUrl` via `<cli> auth setup`.' };
-      }
+        result = { name: 'api-base-url-reachable', ok: false, suggestion: 'Set `apiBaseUrl` via `<cli> auth setup`.' };
+      } else {
+        const url = `${env.apiBaseUrl.replace(/\/+$/, '')}${CALL_MODEL_API_PATH}`;
 
-      const url = `${env.apiBaseUrl.replace(/\/+$/, '')}${CALL_MODEL_API_PATH}`;
-
-      try {
-        // Probe with OPTIONS to avoid auth errors clouding reachability
-        const res = await tracedFetch(undefined, url, { method: 'OPTIONS' });
-        return { name: 'api-base-url-reachable', ok: res.status < 500, detail: { url, status: res.status } };
-      } catch (e) {
-        return { name: 'api-base-url-reachable', ok: false, detail: { url, error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the API is running at apiBaseUrl.' };
+        try {
+          // Probe with OPTIONS to avoid auth errors clouding reachability
+          const res = await tracedFetch(undefined, url, { method: 'OPTIONS' });
+          result = { name: 'api-base-url-reachable', ok: res.status < 500, detail: { url, status: res.status } };
+        } catch (e) {
+          result = { name: 'api-base-url-reachable', ok: false, detail: { url, error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the API is running at apiBaseUrl.' };
+        }
       }
+      return result;
     }
   ];
 }

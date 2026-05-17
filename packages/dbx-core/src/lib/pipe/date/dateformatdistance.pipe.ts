@@ -31,6 +31,8 @@ export class DateFormatDistancePipe implements PipeTransform {
   private readonly locale = inject(LOCALE_ID);
 
   transform(input: Maybe<DateOrDateString>, format: string, includeSeconds = false): Maybe<string> {
+    let result: Maybe<string> = undefined;
+
     if (input) {
       const date = toJsDate(input);
 
@@ -42,10 +44,10 @@ export class DateFormatDistancePipe implements PipeTransform {
           addSuffix: true
         });
 
-        return `${dateString} (${distance})`;
+        result = `${dateString} (${distance})`;
       }
     }
 
-    return undefined;
+    return result;
   }
 }

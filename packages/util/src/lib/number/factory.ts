@@ -9,11 +9,11 @@ export interface IncrementingNumberFactoryConfig {
   /**
    * Value to start at. Defaults to 0.
    */
-  startAt?: number;
+  readonly startAt?: number;
   /**
    * Getter to increase by. Defaults to 1.
    */
-  increaseBy?: GetterOrValue<number>;
+  readonly increaseBy?: GetterOrValue<number>;
 }
 
 /**

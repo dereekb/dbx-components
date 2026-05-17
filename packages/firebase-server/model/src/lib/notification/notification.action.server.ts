@@ -284,27 +284,32 @@ export function updateNotificationUserFactory(context: NotificationServerActions
 
             // iterate and update any box config that has the effective recipient change
             updateTemplate.bc = notificationUser.bc.map((currentConfig) => {
+              let updatedConfig = currentConfig;
+
               // check item isn't already marked for sync or marked as removed
-              if (currentConfig.ns === true || currentConfig.rm === true) {
-                return currentConfig;
+              if (currentConfig.ns !== true && currentConfig.rm !== true) {
+                const currentEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
+                  uid: notificationUser.uid,
+                  appNotificationTemplateTypeInfoRecordService,
+                  gc: notificationUser.gc,
+                  boxConfig: currentConfig
+                });
+
+                const nextEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
+                  uid: notificationUser.uid,
+                  appNotificationTemplateTypeInfoRecordService,
+                  gc: nextGc,
+                  boxConfig: currentConfig
+                });
+
+                const effectiveConfigChanged = !areEqualPOJOValues(currentEffectiveRecipient, nextEffectiveRecipient);
+
+                if (effectiveConfigChanged) {
+                  updatedConfig = { ...currentConfig, ns: true };
+                }
               }
 
-              const currentEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
-                uid: notificationUser.uid,
-                appNotificationTemplateTypeInfoRecordService,
-                gc: notificationUser.gc,
-                boxConfig: currentConfig
-              });
-
-              const nextEffectiveRecipient: NotificationBoxRecipient = effectiveNotificationBoxRecipientConfig({
-                uid: notificationUser.uid,
-                appNotificationTemplateTypeInfoRecordService,
-                gc: nextGc,
-                boxConfig: currentConfig
-              });
-
-              const effectiveConfigChanged = !areEqualPOJOValues(currentEffectiveRecipient, nextEffectiveRecipient);
-              return effectiveConfigChanged ? { ...currentConfig, ns: true } : currentConfig;
+              return updatedConfig;
             });
           }
         }

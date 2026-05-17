@@ -8,7 +8,7 @@ export interface HashSetConfig<K extends PrimativeKey, T> {
   /**
    * Extracts the unique key used for equality comparison from each value.
    */
-  readKey: ReadKeyFunction<T, K>;
+  readonly readKey: ReadKeyFunction<T, K>;
 }
 
 /**

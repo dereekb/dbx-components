@@ -21,19 +21,26 @@ export class DocExtensionQuizComponent {
   readonly storeStateSignal = toSignal(
     toObservable(this.quizComponentRef).pipe(
       switchMap((quizComponent) => {
-        if (!quizComponent) return of(null);
-        const store = quizComponent.quizStore;
-        return combineLatest([store.startedQuiz$, store.submittedQuiz$, store.questionIndex$, store.answers$, store.completedQuestions$, store.unansweredQuestions$, store.lockQuizNavigation$]).pipe(
-          map(([startedQuiz, submittedQuiz, questionIndex, answers, completedQuestions, unansweredQuestions, lockQuizNavigation]) => ({
-            startedQuiz,
-            submittedQuiz,
-            questionIndex,
-            answers: Object.fromEntries(answers),
-            completedQuestions,
-            unansweredQuestions,
-            lockQuizNavigation
-          }))
-        );
+        let result;
+
+        if (!quizComponent) {
+          result = of(null);
+        } else {
+          const store = quizComponent.quizStore;
+          result = combineLatest([store.startedQuiz$, store.submittedQuiz$, store.questionIndex$, store.answers$, store.completedQuestions$, store.unansweredQuestions$, store.lockQuizNavigation$]).pipe(
+            map(([startedQuiz, submittedQuiz, questionIndex, answers, completedQuestions, unansweredQuestions, lockQuizNavigation]) => ({
+              startedQuiz,
+              submittedQuiz,
+              questionIndex,
+              answers: Object.fromEntries(answers),
+              completedQuestions,
+              unansweredQuestions,
+              lockQuizNavigation
+            }))
+          );
+        }
+
+        return result;
       })
     )
   );

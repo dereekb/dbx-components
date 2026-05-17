@@ -24,13 +24,17 @@ export class DbxTableDateRangeDayDistanceInputCellInputRangeSelectionStrategy<D>
   }
 
   private _createFiveDayRange(date: D | null): DateRange<D> {
+    let result: DateRange<D>;
+
     if (date) {
       const start = date;
       const end = this._dateAdapter.addCalendarDays(date, this.dbxTableDateRangeDayDistanceInputCellInputComponent.daysDistance);
-      return new DateRange<D>(start, end);
+      result = new DateRange<D>(start, end);
+    } else {
+      result = new DateRange<D>(null, null);
     }
 
-    return new DateRange<D>(null, null);
+    return result;
   }
 }
 

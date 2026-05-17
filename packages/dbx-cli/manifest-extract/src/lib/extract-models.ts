@@ -242,22 +242,28 @@ function readGenericInterfaceName(call: CallExpression): string | undefined {
 function readConverterFields(call: CallExpression): readonly ModelExtractionConverterField[] | undefined {
   const fnName = call.getExpression().getText();
   const args = call.getArguments();
-  if (args.length === 0) return undefined;
-  const config = args[0];
-  if (!Node.isObjectLiteralExpression(config)) return undefined;
+  let result: readonly ModelExtractionConverterField[] | undefined;
 
-  let fieldsLiteral: ObjectLiteralExpression | undefined;
-  if (fnName === SNAPSHOT_FN) {
-    fieldsLiteral = readObjectProperty(config, FIELDS_LITERAL_KEY);
-  } else {
-    const objectField = readPropertyValue(config, OBJECT_FIELD_KEY);
-    if (objectField && Node.isObjectLiteralExpression(objectField)) {
-      fieldsLiteral = readObjectProperty(objectField, FIELDS_LITERAL_KEY);
+  if (args.length > 0) {
+    const config = args[0];
+    if (Node.isObjectLiteralExpression(config)) {
+      let fieldsLiteral: ObjectLiteralExpression | undefined;
+      if (fnName === SNAPSHOT_FN) {
+        fieldsLiteral = readObjectProperty(config, FIELDS_LITERAL_KEY);
+      } else {
+        const objectField = readPropertyValue(config, OBJECT_FIELD_KEY);
+        if (objectField && Node.isObjectLiteralExpression(objectField)) {
+          fieldsLiteral = readObjectProperty(objectField, FIELDS_LITERAL_KEY);
+        }
+      }
+
+      if (fieldsLiteral) {
+        result = readFieldEntries(fieldsLiteral);
+      }
     }
   }
 
-  if (!fieldsLiteral) return undefined;
-  return readFieldEntries(fieldsLiteral);
+  return result;
 }
 
 function readFieldEntries(fields: ObjectLiteralExpression): readonly ModelExtractionConverterField[] {
@@ -289,33 +295,38 @@ interface NestedConverterMatch {
 }
 
 function readNestedFromExpression(expr: Node): NestedConverterMatch | undefined {
-  if (!Node.isCallExpression(expr)) return undefined;
-  const fnName = expr.getExpression().getText();
-  if (fnName !== SUB_OBJECT_FN && fnName !== OBJECT_ARRAY_FN) return undefined;
-  const args = expr.getArguments();
-  if (args.length === 0) return undefined;
-  const config = args[0];
-  if (!Node.isObjectLiteralExpression(config)) return undefined;
-  const objectField = readPropertyValue(config, OBJECT_FIELD_KEY);
-  if (!objectField) return undefined;
-  const isArray = fnName === OBJECT_ARRAY_FN;
   let result: NestedConverterMatch | undefined;
-  if (Node.isIdentifier(objectField)) {
-    result = { ref: objectField.getText(), isArray };
-  } else if (Node.isObjectLiteralExpression(objectField)) {
-    const fieldsLiteral = readObjectProperty(objectField, FIELDS_LITERAL_KEY);
-    if (fieldsLiteral) {
-      const inlineFields = readFieldEntries(fieldsLiteral);
-      result = {
-        inline: {
-          converterConst: undefined,
-          factory: fnName,
-          interfaceName: readGenericInterfaceName(expr),
-          fields: inlineFields,
-          line: expr.getStartLineNumber()
-        },
-        isArray
-      };
+  if (Node.isCallExpression(expr)) {
+    const fnName = expr.getExpression().getText();
+    if (fnName === SUB_OBJECT_FN || fnName === OBJECT_ARRAY_FN) {
+      const args = expr.getArguments();
+      if (args.length > 0) {
+        const config = args[0];
+        if (Node.isObjectLiteralExpression(config)) {
+          const objectField = readPropertyValue(config, OBJECT_FIELD_KEY);
+          if (objectField) {
+            const isArray = fnName === OBJECT_ARRAY_FN;
+            if (Node.isIdentifier(objectField)) {
+              result = { ref: objectField.getText(), isArray };
+            } else if (Node.isObjectLiteralExpression(objectField)) {
+              const fieldsLiteral = readObjectProperty(objectField, FIELDS_LITERAL_KEY);
+              if (fieldsLiteral) {
+                const inlineFields = readFieldEntries(fieldsLiteral);
+                result = {
+                  inline: {
+                    converterConst: undefined,
+                    factory: fnName,
+                    interfaceName: readGenericInterfaceName(expr),
+                    fields: inlineFields,
+                    line: expr.getStartLineNumber()
+                  },
+                  isArray
+                };
+              }
+            }
+          }
+        }
+      }
     }
   }
   return result;

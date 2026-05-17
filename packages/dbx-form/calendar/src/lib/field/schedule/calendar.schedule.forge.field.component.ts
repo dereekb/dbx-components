@@ -110,10 +110,8 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent {
   readonly allowCustomizeWithoutDateRangeSignal = computed(() => this.props()?.allowCustomizeWithoutDateRange ?? false);
 
   readonly disableCustomizeSignal = computed(() => {
-    if (this.allowCustomizeWithoutDateRangeSignal()) {
-      return false;
-    }
-    return !this.fieldValue();
+    const result = this.allowCustomizeWithoutDateRangeSignal() ? false : !this.fieldValue();
+    return result;
   });
 
   private _setFieldValue(value: unknown): void {
