@@ -51,32 +51,77 @@ function getFunctionDisplayName(node: AstNode): string {
   return name;
 }
 
+const SKIP_KEYS = new Set(['parent', 'loc', 'range']);
+
 /**
- * Recursively collects every `ReturnStatement` reachable from `node` without crossing into nested
- * function-like scopes (those scopes have their own return-count check applied independently).
+ * Recursively walks `node`, pushing each non-ignored `ReturnStatement` onto `out`. A `ReturnStatement` is
+ * considered an "early-exit guard" (and skipped) when it is the consequent — or the last statement of the
+ * consequent `BlockStatement` — of an `IfStatement` that has no `else` branch. Nested function-likes are
+ * skipped entirely (they are analyzed independently as their own functions).
  *
  * @param node - The AST node to traverse.
- * @param out - The accumulator array that receives matching `ReturnStatement` nodes.
+ * @param out - The accumulator array that receives counted `ReturnStatement` nodes.
  */
-function collectReturnsExcludingNested(node: AstNode, out: AstNode[]): void {
-  if (node !== null && typeof node === 'object') {
-    if (Array.isArray(node)) {
-      for (const child of node) {
-        collectReturnsExcludingNested(child, out);
-      }
-    } else if (typeof node.type === 'string') {
-      if (node.type === 'ReturnStatement') {
-        out.push(node);
-      } else if (!NESTED_FUNCTION_TYPES.has(node.type)) {
-        for (const key of Object.keys(node)) {
-          if (key === 'parent' || key === 'loc' || key === 'range') {
-            continue;
-          }
+function collectCountedReturns(node: AstNode, out: AstNode[]): void {
+  if (node === null || typeof node !== 'object') {
+    return;
+  }
 
-          collectReturnsExcludingNested(node[key], out);
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      collectCountedReturns(child, out);
+    }
+    return;
+  }
+
+  if (typeof node.type !== 'string') {
+    return;
+  }
+
+  if (node.type === 'ReturnStatement') {
+    out.push(node);
+    return;
+  }
+
+  if (NESTED_FUNCTION_TYPES.has(node.type)) {
+    return;
+  }
+
+  if (node.type === 'IfStatement' && node.alternate == null) {
+    // Test expression rarely contains returns, but recurse to be safe.
+    collectCountedReturns(node.test, out);
+
+    const consequent = node.consequent;
+
+    if (consequent != null) {
+      if (consequent.type === 'ReturnStatement') {
+        // `if (...) return X;` — early-exit, do not count.
+      } else if (consequent.type === 'BlockStatement') {
+        const body = consequent.body;
+        const lastIndex = body.length - 1;
+
+        for (let i = 0; i < body.length; i += 1) {
+          const stmt = body[i];
+          const isLastReturn = i === lastIndex && stmt?.type === 'ReturnStatement';
+
+          if (!isLastReturn) {
+            collectCountedReturns(stmt, out);
+          }
         }
+      } else {
+        collectCountedReturns(consequent, out);
       }
     }
+
+    return;
+  }
+
+  for (const key of Object.keys(node)) {
+    if (SKIP_KEYS.has(key)) {
+      continue;
+    }
+
+    collectCountedReturns(node[key], out);
   }
 }
 
@@ -86,17 +131,22 @@ function collectReturnsExcludingNested(node: AstNode, out: AstNode[]): void {
  * it once. Nested function-likes are analyzed independently — only returns inside the current function
  * scope (and the blocks that share it) count toward its tally.
  *
+ * Simple early-exit guard clauses are exempt: a `ReturnStatement` that is the consequent — or the last
+ * statement of the consequent `BlockStatement` — of an `IfStatement` with no `else` does not count
+ * toward the tally. This permits the standard guard-clause idiom while still flagging if/else, switch,
+ * try/catch, and returns mixed into main logic.
+ *
  * @see `dbx__note__typescript-programming` → Single Return Per Function
  */
 export const utilRequireSingleReturnRule: UtilRequireSingleReturnRuleDefinition = {
   meta: {
     type: 'suggestion',
     docs: {
-      description: 'Require functions to have a single return statement. Assign to a result variable and return it once instead of using early returns.',
+      description: 'Require functions to have a single return statement. Simple early-exit guard clauses (`if (...) return X;` with no else) are exempt. Otherwise, assign to a result variable and return it once.',
       recommended: true
     },
     messages: {
-      multipleReturns: "Function '{{name}}' has {{count}} return statements; convention is a single return per function. Assign to a result variable and return it once."
+      multipleReturns: "Function '{{name}}' has {{count}} non-guard return statements; convention is a single return per function (early-exit guard clauses are exempt). Assign to a result variable and return it once."
     },
     schema: []
   },
@@ -107,7 +157,7 @@ export const utilRequireSingleReturnRule: UtilRequireSingleReturnRuleDefinition 
       }
 
       const returns: AstNode[] = [];
-      collectReturnsExcludingNested(node.body, returns);
+      collectCountedReturns(node.body, returns);
 
       if (returns.length > 1) {
         const name = getFunctionDisplayName(node);

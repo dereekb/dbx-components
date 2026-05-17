@@ -75,23 +75,6 @@ function outer() {
       expect(errors).toHaveLength(0);
     });
 
-    it('arrow callback inside a function with its own returns does not count', () => {
-      const errors = lintCode(`
-function outer(items: number[]) {
-  const mapped = items.map((x) => {
-    if (x > 0) {
-      return x * 2;
-    }
-    return 0;
-  });
-  return mapped;
-}
-`);
-      // Outer has 1 return; the arrow has 2 returns — the arrow itself should be flagged independently.
-      expect(errors).toHaveLength(1);
-      expect(errors[0].message).toContain('2 return statements');
-    });
-
     it('method on a class with a single return passes', () => {
       const errors = lintCode(`
 class Foo {
@@ -102,24 +85,43 @@ class Foo {
 `);
       expect(errors).toHaveLength(0);
     });
-  });
 
-  describe('invalid', () => {
-    it('flags a function with two returns', () => {
+    it('single-line early-exit guard (`if (...) return X;`) is exempt', () => {
       const errors = lintCode(`
-function foo(x: number) {
-  if (x > 0) {
-    return x;
-  }
-  return 0;
+function removeSuffix(input: string, suffix: string) {
+  if (!input.endsWith(suffix)) return undefined;
+  return input.slice(0, -suffix.length);
 }
 `);
-      expect(errors).toHaveLength(1);
-      expect(errors[0].message).toContain('foo');
-      expect(errors[0].message).toContain('2 return');
+      expect(errors).toHaveLength(0);
     });
 
-    it('flags a function with three returns (reports each extra return)', () => {
+    it('block-form early-exit guard with only a return is exempt', () => {
+      const errors = lintCode(`
+function joinStrings(input: unknown) {
+  if (input == null) {
+    return input;
+  }
+  return String(input);
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('block-form early-exit guard whose last statement is a return is exempt', () => {
+      const errors = lintCode(`
+function telUrlString(phone: string) {
+  if (phone.startsWith('+')) {
+    const formatted = phone.replace(/\\s+/g, '');
+    return 'tel:' + formatted;
+  }
+  return 'tel:' + phone;
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('stacked top-level guards followed by a single main return are exempt', () => {
       const errors = lintCode(`
 function classify(x: number) {
   if (x < 0) {
@@ -131,11 +133,22 @@ function classify(x: number) {
   return 1;
 }
 `);
-      expect(errors).toHaveLength(2);
-      expect(errors.every((e) => e.message.includes('3 return'))).toBe(true);
+      expect(errors).toHaveLength(0);
     });
 
-    it('flags arrow function with multiple explicit returns', () => {
+    it('early-exit guard nested inside a loop is exempt', () => {
+      const errors = lintCode(`
+function findItem<T>(items: T[], predicate: (x: T) => boolean) {
+  for (const item of items) {
+    if (predicate(item)) return item;
+  }
+  return undefined;
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('arrow function with a single guard followed by a final return is exempt', () => {
       const errors = lintCode(`
 const fn = (x: number) => {
   if (x > 0) {
@@ -144,18 +157,67 @@ const fn = (x: number) => {
   return 0;
 };
 `);
-      expect(errors).toHaveLength(1);
-      expect(errors[0].message).toContain('fn');
+      expect(errors).toHaveLength(0);
     });
 
-    it('flags class methods with multiple returns', () => {
+    it('arrow callback inside a function with a guard + final return does not count', () => {
+      const errors = lintCode(`
+function outer(items: number[]) {
+  const mapped = items.map((x) => {
+    if (x > 0) {
+      return x * 2;
+    }
+    return 0;
+  });
+  return mapped;
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe('invalid', () => {
+    it('flags if/else where both branches return', () => {
+      const errors = lintCode(`
+function foo(x: number) {
+  if (x > 0) {
+    return x;
+  } else {
+    return 0;
+  }
+}
+`);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain('foo');
+    });
+
+    it('flags returns from if/else-if/else chains', () => {
+      const errors = lintCode(`
+function classify(x: number) {
+  if (x < 0) {
+    return -1;
+  } else if (x === 0) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+`);
+      // 3 returns total, none qualify as bare-guard (each if has an else),
+      // so 2 extras are reported.
+      expect(errors).toHaveLength(2);
+      expect(errors.every((e) => e.message.includes('3 non-guard return'))).toBe(true);
+    });
+
+    it('flags a class method with non-guard multiple returns', () => {
       const errors = lintCode(`
 class Foo {
   bar(x: number) {
     if (x > 0) {
       return x;
+    } else {
+      return 0;
     }
-    return 0;
   }
 }
 `);
@@ -189,6 +251,37 @@ function safeRun(fn: () => number) {
   }
 }
 `);
+      expect(errors).toHaveLength(1);
+    });
+
+    it('flags non-last returns inside an if-guard block (return mixed into main logic)', () => {
+      const errors = lintCode(`
+function foo(x: number) {
+  if (x > 0) {
+    if (x > 10) {
+      return 100;
+    }
+    return x;
+  }
+  return 0;
+}
+`);
+      // Both inner returns are last-in-their-block within if-no-else and exempt.
+      // Outer `return 0` is the only counted return — passes.
+      expect(errors).toHaveLength(0);
+    });
+
+    it('flags a return that is not the last statement of an if-block', () => {
+      const errors = lintCode(`
+function foo(x: number, log: (s: string) => void) {
+  if (x > 0) {
+    return x;
+    log('unreachable');
+  }
+  return 0;
+}
+`);
+      // The return is not the last statement of the consequent block, so it is counted.
       expect(errors).toHaveLength(1);
     });
   });
