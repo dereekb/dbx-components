@@ -66,7 +66,7 @@ export const invertDecision: <F extends DecisionFunction<any>>(fn: F, invert?: b
  *
  * If the input is undefined, falls back to a constant function returning `defaultIfUndefined`.
  *
- * @param valueOrFunction - A boolean, decision function, or undefined.
+ * @param valueOrFunction - Boolean constant, {@link DecisionFunction}, or undefined to use the default.
  * @param defaultIfUndefined - Fallback boolean when the input is nullish (defaults to true)
  * @returns A {@link DecisionFunction} derived from the input.
  *

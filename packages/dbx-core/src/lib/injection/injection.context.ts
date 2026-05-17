@@ -79,7 +79,7 @@ export abstract class DbxInjectionContext {
  * the specific directive or service implementation.
  *
  * @param type - The concrete class to register as the existing provider.
- * @returns An array of Angular providers.
+ * @returns Array of Angular providers.
  *
  * @typeParam T - The concrete type that extends {@link DbxInjectionContext}.
  */

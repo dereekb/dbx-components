@@ -18,7 +18,7 @@ export abstract class DbxValueListItemModifier<T = unknown, I extends DbxValueLi
  * Registers a directive as a {@link DbxValueListItemModifier} provider for dependency injection.
  *
  * @param sourceType - The directive class to register as the DbxValueListItemModifier provider.
- * @returns An array of Angular providers that wire up the directive as a DbxValueListItemModifier.
+ * @returns Array of Angular providers that wire up the directive as a DbxValueListItemModifier.
  *
  * @Directive ({
  *   providers: provideDbxValueListViewModifier(MyModifierDirective)

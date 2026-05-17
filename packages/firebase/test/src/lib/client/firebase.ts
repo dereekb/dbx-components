@@ -167,7 +167,7 @@ export class RulesUnitTestFirebaseTestingContextFixture extends TestFirebaseCont
  * can momentarily leave the emulator in a transitional state that causes `storage/unauthorized` errors.
  *
  * @param inputConfig - Optional partial config; `testEnvironment` defaults to an empty object and `rulesContext` defaults to undefined (unauthenticated).
- * @returns A function that, given a `buildTests` callback, registers Vitest hooks (`beforeAll`/`afterAll`/`beforeEach`/`afterEach`) and invokes the callback with a {@link RulesUnitTestFirebaseTestingContextFixture}.
+ * @returns Function that, given a `buildTests` callback, registers Vitest hooks (`beforeAll`/`afterAll`/`beforeEach`/`afterEach`) and invokes the callback with a {@link RulesUnitTestFirebaseTestingContextFixture}.
  */
 export const firebaseRulesUnitTestBuilder: TestContextBuilderFunction<RulesUnitTestTestFirebaseInstance, RulesUnitTestFirebaseTestingContextFixture, RulesUnitTestingConfig> = (inputConfig?: Partial<RulesUnitTestingConfig>) => {
   const config: RulesUnitTestingConfig = {

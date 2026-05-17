@@ -186,7 +186,7 @@ export class TwoColumnsContextStore extends ComponentStore<TwoColumnsState> {
 /**
  * Creates Angular providers for a new {@link TwoColumnsContextStore} instance.
  *
- * @returns An array of Angular providers that supply a new {@link TwoColumnsContextStore}
+ * @returns Array of Angular providers that supply a new {@link TwoColumnsContextStore}
  *
  * @Component ({
  *   providers: provideTwoColumnsContext(),

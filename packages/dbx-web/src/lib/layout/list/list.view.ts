@@ -75,7 +75,7 @@ export abstract class DbxListView<T, S extends ListLoadingState<T> = ListLoading
  * Registers a component as a {@link DbxListView} provider so it can be injected by parent list components.
  *
  * @param sourceType - The component class to register as the DbxListView provider.
- * @returns An array of Angular providers that wire up the component as a DbxListView.
+ * @returns Array of Angular providers that wire up the component as a DbxListView.
  *
  * @Component ({
  *   providers: provideDbxListView(MyCustomListViewComponent)

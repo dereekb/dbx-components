@@ -11,7 +11,7 @@ export type UsePromiseFunction<I> = <O>(useFn: UseAsync<I, O>) => Promise<O>;
  * Creates a {@link UsePromiseFunction} that resolves the input promise and passes the result
  * to any consumer function provided at call time.
  *
- * @param input - A Promise or a getter that returns a Promise, whose resolved value will be passed to consumers.
+ * @param input - Promise or a getter that returns a Promise, whose resolved value will be passed to consumers.
  * @returns Accepts an async consumer and returns the consumer's result.
  */
 export function usePromise<I>(input: GetterOrValue<Promise<I>>): UsePromiseFunction<I> {

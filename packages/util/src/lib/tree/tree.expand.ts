@@ -118,7 +118,7 @@ export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any
  *
  * @param values - The root values of type T to expand.
  * @param expandFn - An ExpandTreeFunction<T, N> used to expand each value into a tree.
- * @returns An array of N, where each N is the root node of an expanded tree.
+ * @returns Array of N, where each N is the root node of an expanded tree.
  *
  * @dbxUtil
  * @dbxUtilCategory tree

@@ -104,7 +104,7 @@ export interface AbstractDbxValueListViewConfig<T, I extends DbxValueListItem<T>
  *
  * @param itemValue - The raw value to extract a key from.
  * @param index - The item's position index, used as fallback.
- * @returns A string key for tracking the item.
+ * @returns Key for tracking the item. (string)
  *
  * @example
  * ```ts
@@ -200,7 +200,7 @@ export abstract class DbxValueListView<T, I extends DbxValueListItem<T> = DbxVal
  * Registers a component as a {@link DbxValueListView} provider for dependency injection.
  *
  * @param sourceType - The component class type to register as the list view provider.
- * @returns An array of Angular providers that bind the given component to {@link DbxValueListView}
+ * @returns Array of Angular providers that bind the given component to {@link DbxValueListView}
  *
  * @Component ({
  *   providers: provideDbxValueListView(MyValueListViewComponent)

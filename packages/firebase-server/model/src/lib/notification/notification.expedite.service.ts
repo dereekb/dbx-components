@@ -150,7 +150,7 @@ export class MutableNotificationExpediteService implements NotificationExpediteS
  *
  * This should generally be used in the global module of an app.
  *
- * @returns An array of NestJS providers for both MutableNotificationExpediteService and NotificationExpediteService.
+ * @returns Array of NestJS providers for both MutableNotificationExpediteService and NotificationExpediteService.
  */
 export function provideMutableNotificationExpediteService(): Provider[] {
   return [

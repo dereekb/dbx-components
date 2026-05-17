@@ -171,7 +171,7 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
    * @param fn - Wrapped gen 2 callable request to invoke.
    * @param params - Request payload to pass to the callable, simulating the JSON body of an HTTP call.
    * @param skipJsonConversion - When `true`, skip the JSON serialize/parse round-trip applied to `params` (default `false`).
-   * @returns A promise resolving to the callable's return value.
+   * @returns Promise resolving to the callable's return value.
    */
   callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>> {
     // Parse to JSON then back to simulate sending JSON to the server, and the server parsing it as a POJO.
@@ -362,7 +362,7 @@ export const AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY = randomPhoneNumberFact
  * custom claims, and post-create initialization) and tear it down afterward.
  *
  * @param config - Factory configuration: optional uid generator, custom fixture/instance constructors, user-detail builder, and `initUser` hook.
- * @returns A function that, given runtime params and a `buildTests` callback, wires the authorized-user fixture into the active test context.
+ * @returns Function that, given runtime params and a `buildTests` callback, wires the authorized-user fixture into the active test context.
  */
 export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>, C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>>(
   config: AuthorizedUserTestContextFactoryConfig<PI, PF, I, F>

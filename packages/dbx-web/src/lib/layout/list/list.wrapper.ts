@@ -24,7 +24,7 @@ export abstract class DbxListViewWrapper<T = unknown, S extends ListLoadingState
  * Registers a component as a {@link DbxListViewWrapper} provider for dependency injection.
  *
  * @param sourceType - The component class to register as the DbxListViewWrapper provider.
- * @returns An array of Angular providers that wire up the component as a DbxListViewWrapper.
+ * @returns Array of Angular providers that wire up the component as a DbxListViewWrapper.
  *
  * @Component ({
  *   providers: provideDbxListViewWrapper(MyListWrapperComponent)

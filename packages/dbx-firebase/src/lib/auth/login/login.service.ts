@@ -214,7 +214,7 @@ export class DbxFirebaseAuthLoginService {
   /**
    * Returns all registered provider assets.
    *
-   * @returns A map of login method types to their asset configurations.
+   * @returns Map of login method types to their asset configurations.
    */
   getAllProviderAssets(): Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets> {
     return new Map(this._assets);

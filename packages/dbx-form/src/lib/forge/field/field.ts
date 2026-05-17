@@ -567,7 +567,7 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
      * composite key to allow multiple validators of the same type with different function names.
      *
      * @param v - The validator input to generate a deduplication key for.
-     * @returns A string key unique to the validator's type and identity.
+     * @returns Key unique to the validator's type and identity. (string)
      */
     function _validatorDeduplicationKey(v: DbxForgeFieldValidatorInput): string {
       let result: string;

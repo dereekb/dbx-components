@@ -133,7 +133,7 @@ export abstract class DbxMutableForm<T = unknown> extends DbxForm<T> {
  * Provides the given type as a {@link DbxForm} in Angular's dependency injection system.
  *
  * @param sourceType - The concrete form type to register as a provider.
- * @returns An array of Angular providers.
+ * @returns Array of Angular providers.
  */
 export function provideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider[] {
   return [{ provide: DbxForm, useExisting: forwardRef(() => sourceType) }];
@@ -143,7 +143,7 @@ export function provideDbxForm<S extends DbxForm>(sourceType: Type<S>): Provider
  * Provides the given type as both a {@link DbxForm} and {@link DbxMutableForm} in Angular's dependency injection system.
  *
  * @param sourceType - The concrete mutable form type to register as a provider.
- * @returns An array of Angular providers.
+ * @returns Array of Angular providers.
  */
 export function provideDbxMutableForm<S extends DbxMutableForm>(sourceType: Type<S>): Provider[] {
   return [...provideDbxForm(sourceType), { provide: DbxMutableForm, useExisting: forwardRef(() => sourceType) }];

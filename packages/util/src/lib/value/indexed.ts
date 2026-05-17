@@ -48,7 +48,7 @@ export interface IndexRef {
  * Convenience function for calling readKeysToMap() and keying the values by their index number.
  *
  * @param items - Array of IndexRef items to index.
- * @returns A Map keyed by each item's index number.
+ * @returns Map keyed by each item's index number.
  */
 export function indexRefMap<T extends IndexRef>(items: T[]): Map<IndexNumber, T> {
   return readKeysToMap(items, (item) => item.i);

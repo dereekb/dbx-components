@@ -6,7 +6,7 @@ import { getDaysOfWeekNames } from '@dereekb/util';
  * Creates form fields for selecting which days of the week are enabled in a schedule selection calendar,
  * wrapped in a responsive flex layout.
  *
- * @returns An array of Formly field configs with toggle fields for each day of the week.
+ * @returns Array of Formly field configs with toggle fields for each day of the week.
  *
  * @deprecated Use dbxScheduleSelectionCalendarDateDaysForgeFormFields() instead.
  */

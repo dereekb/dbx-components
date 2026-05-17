@@ -81,7 +81,7 @@ export function testDoneCallbackRef(): TestDoneCallbackRef {
  * This also supports calling the input test with async, but still only returns when done is called.
  *
  * @param testFn - The callback-based test function that receives a done callback.
- * @returns A Promise-based wrapper function suitable for Vitest or other async test runners.
+ * @returns Promise-based wrapper function suitable for Vitest or other async test runners.
  *
  * @example
  * ```ts

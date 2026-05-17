@@ -81,7 +81,7 @@ export function defaultDbxValueListViewGroupDelegate<T, I extends DbxValueListIt
  * Registers a class as a {@link DbxValueListViewGroupDelegate} provider for dependency injection.
  *
  * @param sourceType - The class type to register as the group delegate provider.
- * @returns An array of Angular providers that bind the given class to {@link DbxValueListViewGroupDelegate}
+ * @returns Array of Angular providers that bind the given class to {@link DbxValueListViewGroupDelegate}
  *
  * @Directive ({
  *   providers: provideDbxValueListViewGroupDelegate(MyGroupDelegate)

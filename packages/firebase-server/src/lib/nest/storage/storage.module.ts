@@ -107,7 +107,7 @@ export type ProvideFirebaseServerStorageService<T extends FirebaseServerStorageS
  * so the service can also be injected by the abstract type.
  *
  * @param provider - The storage service provider configuration.
- * @returns An array of NestJS providers for the storage service.
+ * @returns Array of NestJS providers for the storage service.
  * @__NO_SIDE_EFFECTS__
  */
 export function provideFirebaseServerStorageService<T extends FirebaseServerStorageService = FirebaseServerStorageService>(provider: ProvideFirebaseServerStorageService<T>): Provider<T>[] {

@@ -284,7 +284,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    *
    * @param provider - The auth provider to link.
    * @param resolver - Optional popup redirect resolver.
-   * @returns A promise resolving to the user credential after linking.
+   * @returns Promise resolving to the user credential after linking.
    *
    * @example
    * ```ts
@@ -310,7 +310,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    * when a credential-already-in-use error provides an {@link AuthCredential}.
    *
    * @param credential - The auth credential to link.
-   * @returns A promise resolving to the user credential after linking.
+   * @returns Promise resolving to the user credential after linking.
    *
    * @example
    * ```ts
@@ -335,7 +335,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    * Unlinks an authentication provider from the current user.
    *
    * @param providerId - The provider ID to unlink (e.g., 'google.com').
-   * @returns A promise resolving to the updated user.
+   * @returns Promise resolving to the updated user.
    *
    * @example
    * ```ts

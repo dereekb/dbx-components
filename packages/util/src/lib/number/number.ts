@@ -97,7 +97,7 @@ export type AsNumberInput = Maybe<NumberOrNumberString>;
  *
  * Strings are parsed via `Number()`. Null/undefined returns 0.
  *
- * @param input - A number, number string, or null/undefined.
+ * @param input - Numeric value, numeric string, or null/undefined.
  * @returns The numeric value, or 0 for null/undefined.
  *
  * @dbxUtil

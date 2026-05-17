@@ -11,7 +11,7 @@ import { clean } from '../rxjs/clean';
  * a standalone {@link DbxActionContextMachineAsService} is created as the default implementation.
  *
  * @param sourceType - The concrete source class to register, or `null` to use the default machine-based implementation.
- * @returns An array of Angular providers.
+ * @returns Array of Angular providers.
  *
  * @Directive ({
  *   selector: '[myAction]',
@@ -50,7 +50,7 @@ export function provideActionStoreSource<S extends ActionContextStoreSource>(sou
  * the standard {@link ActionContextStoreSource} and {@link DbxActionContextStoreSourceInstance} providers.
  *
  * @param sourceType - The concrete secondary source class to register.
- * @returns An array of Angular providers.
+ * @returns Array of Angular providers.
  */
 export function provideSecondaryActionStoreSource<S extends SecondaryActionContextStoreSource>(sourceType: Type<S>): Provider[] {
   return [

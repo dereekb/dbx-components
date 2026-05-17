@@ -152,7 +152,7 @@ export type UseAsync<I, O = void> = MapFunction<I, PromiseOrValue<O>>;
  * @param input - The possibly null/undefined value to consume.
  * @param use - Async-capable consumer function.
  * @param defaultValue - Fallback value or getter when input is null/undefined.
- * @returns A Promise resolving to the consumer result or the default value.
+ * @returns Promise resolving to the consumer result or the default value.
  *
  * @example
  * ```ts

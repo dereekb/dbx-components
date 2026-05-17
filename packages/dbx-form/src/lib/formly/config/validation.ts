@@ -123,7 +123,7 @@ export const DURATION_MAX_VALIDATION_MESSAGE = { name: 'durationMax', message: d
  *
  * Includes messages for: required, minLength, maxLength, min, max, phone number, phone number extension, and duration min/max.
  *
- * @returns An array of {@link ValidationMessageOption} objects.
+ * @returns Array of {@link ValidationMessageOption} objects.
  */
 export function defaultValidationMessages(): ValidationMessageOption[] {
   return [REQUIRED_VALIDATION_MESSAGE, MIN_LENGTH_VALIDATION_MESSAGE, MAX_LENGTH_VALIDATION_MESSAGE, MIN_VALIDATION_MESSAGE, MAX_VALIDATION_MESSAGE, INVALID_PHONE_NUMBER_MESSAGE, INVALID_PHONE_NUMBER_EXTENSION_MESSAGE, DURATION_MIN_VALIDATION_MESSAGE, DURATION_MAX_VALIDATION_MESSAGE];

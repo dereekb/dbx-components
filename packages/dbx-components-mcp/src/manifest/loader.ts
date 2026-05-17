@@ -222,7 +222,7 @@ function filterEntryTopics(config: { readonly entryKey: string; readonly topics:
  * warnings in deterministic order regardless of how they were collected.
  *
  * @param warning - The warning to derive a sort key for.
- * @returns A string ordered first by `kind` then by the warning's primary identifiers.
+ * @returns Ordered first by `kind` then by the warning's primary identifiers. (string)
  */
 function warningSortKey(warning: LoaderWarning): string {
   let key: string;

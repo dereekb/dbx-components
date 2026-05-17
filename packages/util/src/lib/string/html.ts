@@ -129,7 +129,7 @@ export function spaceSeparatedCssClasses(cssClasses: Maybe<CssClassesArray>): Sp
  * Space-separated class strings are split into individual class names.
  *
  * @param cssClasses - One or more CSS class values or arrays of class values.
- * @returns A Set of unique CSS class names, or an empty Set if input is null/undefined.
+ * @returns Set of unique CSS class names, or an empty Set if input is null/undefined.
  */
 export function cssClassesSet(cssClasses: Maybe<CssClassesArray>): Set<CssClass> {
   let result: Set<CssClass>;

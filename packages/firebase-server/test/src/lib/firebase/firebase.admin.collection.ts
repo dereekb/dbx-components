@@ -181,7 +181,7 @@ export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext 
  * build the test context instance, optionally initialize the document, and clean up after each test.
  *
  * @param config - Factory configuration that resolves the collection, optionally produces document refs, builds fixtures/instances, and tears down state.
- * @returns A function that, given runtime params and a `buildTests` callback, registers the model fixture hooks against the active test context.
+ * @returns Function that, given runtime params and a `buildTests` callback, registers the model fixture hooks against the active test context.
  *
  * @see {@link ModelTestContextFactoryParams} for configuration options
  */

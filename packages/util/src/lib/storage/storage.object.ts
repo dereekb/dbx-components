@@ -84,7 +84,7 @@ export class StorageObjectUtility {
    *
    * @param storageObject - The StorageObject to retrieve keys from.
    * @param prefix - Optional prefix to filter keys by.
-   * @returns An array of StoredDataStorageKey.
+   * @returns Array of StoredDataStorageKey.
    */
   static allKeysFromStorageObject(storageObject: StorageObject, prefix?: string): StoredDataStorageKey[] {
     const length = storageObject.length;

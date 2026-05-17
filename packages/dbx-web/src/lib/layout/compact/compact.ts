@@ -33,7 +33,7 @@ export type CompactModeOption = CompactMode | boolean;
  * Converts a boolean or `CompactMode` value into a normalized `CompactMode`.
  * `true` maps to `CompactMode.COMPACT`, `false` maps to `CompactMode.FULL`.
  *
- * @param input - A boolean or CompactMode value to normalize.
+ * @param input - Boolean or CompactMode value to normalize.
  * @returns The normalized CompactMode enum value.
  *
  * @example

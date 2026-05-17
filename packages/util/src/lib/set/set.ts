@@ -177,7 +177,7 @@ export function symmetricDifferenceArrayBetweenSets<T>(a: Set<Maybe<T>>, b: Set<
  * Flattens a two-dimensional array into a Set of unique values.
  *
  * @param array - The nested array to flatten.
- * @returns A Set containing all values from the nested arrays.
+ * @returns Set of unique values pulled from every nested array.
  */
 export function flattenArrayToSet<T>(array: T[][]): Set<T> {
   return new Set(flattenArray(array));
@@ -189,7 +189,7 @@ export function flattenArrayToSet<T>(array: T[][]): Set<T> {
  *
  * @param set - The reference set to check membership against.
  * @param values - The values to filter.
- * @returns A Set of values that exist in both inputs.
+ * @returns Intersection between the input values and the reference set.
  */
 export function keepFromSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>): Set<T> {
   return values != null ? filterValuesToSet(asIterable(values), (x) => set.has(x)) : new Set();
@@ -246,7 +246,7 @@ export function filterValuesUsingSet<T>(values: T[], set: Set<T>, exclude = fals
  *
  * @param values - The iterable to filter.
  * @param fn - The decision function that determines inclusion.
- * @returns A Set of values that passed the filter.
+ * @returns Set of values for which `fn` returned `true`.
  */
 export function filterValuesToSet<T>(values: Iterable<T>, fn: DecisionFunction<T>): Set<T> {
   const keep = new Set<T>();
@@ -301,7 +301,7 @@ export function separateValuesToSets<T>(values: Iterable<T>, fn: DecisionFunctio
  *
  * @param values - The iterable to map.
  * @param mapFn - The mapping function.
- * @returns A Set of mapped values.
+ * @returns Mapped values collected into a Set (duplicates collapse).
  */
 export function mapValuesToSet<I, O>(values: Iterable<I>, mapFn: MapFunction<I, O>): Set<O> {
   const set = new Set<O>();

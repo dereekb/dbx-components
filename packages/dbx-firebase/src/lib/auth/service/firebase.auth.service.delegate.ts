@@ -28,7 +28,7 @@ export interface AuthRolesObsWithClaimsServiceConfig<T extends AuthClaimsObject>
  * Optionally adds the current AuthUserState to the role set.
  *
  * @param config - Configuration specifying the claims service and optional auth user state inclusion.
- * @returns A function that, given a DbxFirebaseAuthService, returns an Observable of the decoded AuthRoleSet.
+ * @returns Function that, given a DbxFirebaseAuthService, returns an Observable of the decoded AuthRoleSet.
  * @__NO_SIDE_EFFECTS__
  */
 export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config: AuthRolesObsWithClaimsServiceConfig<T>): (dbxFirebaseAuthService: DbxFirebaseAuthService) => Observable<AuthRoleSet> {

@@ -148,7 +148,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    *
    * Subclasses can override to attempt an alternative loading strategy or return a fallback promise.
    *
-   * @returns A promise resolving with the service if recovery succeeds, or `void` to reject.
+   * @returns Promise resolving with the service if recovery succeeds, or `void` to reject.
    */
   protected _onLoadServiceFailure(): Promise<T> | void {
     // override in parent if needed.

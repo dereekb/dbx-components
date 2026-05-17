@@ -44,7 +44,7 @@ export class CalcomOAuthApi {
    * @param input - Contains the user's refresh token and optional access token cache.
    * @param input.refreshToken - The user's OAuth refresh token.
    * @param input.userAccessTokenCache - Optional cache to store/retrieve the user's access token.
-   * @returns A promise resolving to the user's CalcomAccessToken.
+   * @returns Promise resolving to the user's CalcomAccessToken.
    */
   userAccessToken(input: { refreshToken: string; userAccessTokenCache?: Maybe<CalcomAccessTokenCache> }) {
     const factory = this.oauthContext.makeUserAccessTokenFactory(input);

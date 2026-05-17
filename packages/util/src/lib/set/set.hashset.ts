@@ -99,7 +99,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
    * Returns key-value entry pairs for each of the given keys. Missing values appear as undefined.
    *
    * @param keys - The keys to look up.
-   * @returns An array of [key, value] tuples.
+   * @returns Array of [key, value] tuples.
    */
   valueKeyEntriesForKeys(keys: Maybe<K>[]): [Maybe<K>, Maybe<T>][] {
     const values: [Maybe<K>, Maybe<T>][] = [];

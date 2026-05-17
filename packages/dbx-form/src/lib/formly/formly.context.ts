@@ -24,7 +24,7 @@ export interface DbxFormlyContextDelegate<T = unknown> extends Omit<DbxMutableFo
 /**
  * Allows a directive to provide a formly context and form.
  *
- * @returns An array of Angular providers that register DbxFormlyContext and its mutable form delegate.
+ * @returns Array of Angular providers that register DbxFormlyContext and its mutable form delegate.
  */
 export function provideFormlyContext(): Provider[] {
   return [DbxFormlyContext, ...provideDbxMutableForm(DbxFormlyContext)];

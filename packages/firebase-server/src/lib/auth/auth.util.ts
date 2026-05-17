@@ -8,7 +8,7 @@ import type * as admin from 'firebase-admin';
  *
  * Any error other than {@link FIREBASE_AUTH_USER_NOT_FOUND_ERROR} is re-thrown.
  *
- * @param promise - A promise resolving to a UserRecord (e.g., from `auth.getUser(uid)`).
+ * @param promise - Promise resolving to a UserRecord (e.g., from `auth.getUser(uid)`).
  * @returns The user record, or `undefined` if the user does not exist.
  *
  * @example

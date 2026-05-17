@@ -305,7 +305,7 @@ export const mockItemPrivateConverter = snapshotConverterFunctions({
  * subcollections under a given {@link MockItemDocument} parent.
  *
  * @param context - The Firestore context used to resolve subcollections.
- * @returns A function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemPrivate subcollection.
+ * @returns Function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemPrivate subcollection.
  */
 export function mockItemPrivateCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemPrivate> {
   return (parent: MockItemDocument) => {
@@ -435,7 +435,7 @@ export const mockItemUserConverter = snapshotConverterFunctions({
  * subcollections under a given {@link MockItemDocument} parent.
  *
  * @param context - The Firestore context used to resolve subcollections.
- * @returns A function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemUser subcollection.
+ * @returns Function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemUser subcollection.
  */
 export function mockItemUserCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemUser> {
   return (parent: MockItemDocument) => {
@@ -565,7 +565,7 @@ export const mockItemSubItemConverter = snapshotConverterFunctions<MockItemSubIt
  * subcollections under a given {@link MockItemDocument} parent.
  *
  * @param context - The Firestore context used to resolve subcollections.
- * @returns A function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItem subcollection.
+ * @returns Function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItem subcollection.
  */
 export function mockItemSubItemCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemSubItem> {
   return (parent: MockItemDocument) => {
@@ -688,7 +688,7 @@ export const mockItemSubItemDeepConverter = snapshotConverterFunctions<MockItemS
  * subcollections under a given {@link MockItemSubItemDocument} parent.
  *
  * @param context - The Firestore context used to resolve subcollections.
- * @returns A function that, given a parent {@link MockItemSubItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItemDeep subcollection.
+ * @returns Function that, given a parent {@link MockItemSubItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItemDeep subcollection.
  */
 export function mockItemSubItemDeepCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemSubItemDocument) => CollectionReference<MockItemSubItemDeep> {
   return (parent: MockItemSubItemDocument) => {
