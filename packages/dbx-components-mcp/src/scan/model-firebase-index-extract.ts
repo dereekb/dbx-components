@@ -41,6 +41,7 @@ const INDEX_MODEL_TAG = 'dbxModelFirebaseIndexModel';
 const INDEX_SCOPE_TAG = 'dbxModelFirebaseIndexScope';
 const INDEX_MANUAL_TAG = 'dbxModelFirebaseIndexManual';
 const INDEX_SKIP_TAG = 'dbxModelFirebaseIndexSkip';
+const INDEX_SPEC_FILES_ONLY_TAG = 'dbxModelFirebaseIndexSpecFilesOnly';
 const INDEX_EXCLUDE_TAG = 'dbxModelFirebaseIndexExclude';
 const INDEX_ALLOW_ARRAY_CONTAINS_ANY_TAG = 'dbxModelFirebaseIndexAllowArrayContainsAny';
 const INDEX_CATEGORY_TAG = 'dbxModelFirebaseIndexCategory';
@@ -84,6 +85,14 @@ export interface ExtractedModelFirebaseIndexEntry {
   readonly scope: FirestoreQueryScope;
   readonly manual: boolean;
   readonly skip: boolean;
+  /**
+   * True when the factory carries `@dbxModelFirebaseIndexSpecFilesOnly`. The
+   * factory is intentionally for `.spec.ts` use only — the analyzer suppresses
+   * composite + fieldOverride emission (mirroring `skip`), and the validator
+   * raises `MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION` (error) if a
+   * non-spec file references the factory by name.
+   */
+  readonly specOnly: boolean;
   /**
    * True when the factory carries `@dbxModelFirebaseIndexExclude`. The
    * constraint sequence is still parsed (unlike `skip`, which empties it)
@@ -239,6 +248,7 @@ interface ParsedIndexTags {
   readonly scope?: string;
   readonly manual: boolean;
   readonly skip: boolean;
+  readonly specOnly: boolean;
   readonly excluded: boolean;
   readonly dispatcher: boolean;
   readonly allowArrayContainsAny: boolean;
@@ -266,6 +276,7 @@ interface MutableTagState {
   scope: string | undefined;
   manual: boolean;
   skip: boolean;
+  specOnly: boolean;
   excluded: boolean;
   dispatcher: boolean;
   allowArrayContainsAny: boolean;
@@ -289,6 +300,7 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     scope: undefined,
     manual: false,
     skip: false,
+    specOnly: false,
     excluded: false,
     dispatcher: false,
     allowArrayContainsAny: false,
@@ -330,6 +342,7 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     scope: state.scope,
     manual: state.manual,
     skip: state.skip,
+    specOnly: state.specOnly,
     excluded: state.excluded,
     dispatcher: state.dispatcher,
     allowArrayContainsAny: state.allowArrayContainsAny,
@@ -364,6 +377,9 @@ function applyTag(state: MutableTagState, name: string, text: string): void {
       break;
     case INDEX_SKIP_TAG:
       state.skip = parseBooleanTag(text) ?? true;
+      break;
+    case INDEX_SPEC_FILES_ONLY_TAG:
+      state.specOnly = parseBooleanTag(text) ?? true;
       break;
     case INDEX_EXCLUDE_TAG:
       state.excluded = parseBooleanTag(text) ?? true;
@@ -535,6 +551,7 @@ function composeEntry(input: ComposeEntryInput): ExtractedModelFirebaseIndexEntr
     scope,
     manual: tags.manual,
     skip: tags.skip,
+    specOnly: tags.specOnly,
     excluded: tags.excluded,
     allowArrayContainsAny: tags.allowArrayContainsAny,
     category,
@@ -569,7 +586,7 @@ function resolveConstraintSequences(input: ResolveConstraintSequencesInput): rea
   for (const warning of bodyResult.warnings) {
     warnings.push(warning);
   }
-  if (tags.skip || tags.dispatcher || bodyResult.skipped) {
+  if (tags.skip || tags.specOnly || tags.dispatcher || bodyResult.skipped) {
     return [];
   }
   return buildConstraintSequences({

@@ -38,14 +38,27 @@ import type { ExtractedModelFirebaseIndexEntry } from './model-firebase-index-ex
 export interface FactoryReferenceSite {
   readonly file: string;
   readonly line: number;
+  /**
+   * True when the consumer file is a `*.spec.ts` (test) file. Used by the
+   * validator to enforce `@dbxModelFirebaseIndexSpecFilesOnly` semantics —
+   * spec-only factories may only have spec callers, and a regular factory's
+   * "unused" check still counts only non-spec callers.
+   */
+  readonly isSpec: boolean;
 }
 
 /**
  * Per-factory reference report. Keyed by the entry's `slug` in the
- * scanner's return value.
+ * scanner's return value. `count` is the total site count;
+ * `productionCount` / `specCount` partition it by whether the site lives
+ * in a `*.spec.ts` file. `referencedBy` carries every site (each tagged
+ * with `isSpec`) so consumers can render the full breakdown without
+ * re-counting.
  */
 export interface FactoryReferenceCount {
   readonly count: number;
+  readonly productionCount: number;
+  readonly specCount: number;
   readonly referencedBy: readonly FactoryReferenceSite[];
 }
 
@@ -77,10 +90,14 @@ export const WORKSPACE_FACTORY_SCAN_INCLUDE: readonly string[] = ['apps/**/*.ts'
 
 /**
  * Canonical exclude-glob set paired with {@link WORKSPACE_FACTORY_SCAN_INCLUDE}.
- * Strips test files, ambient typings, build outputs, and `node_modules` so the
- * workspace-wide scan stays fast and counts only real source references.
+ * Strips ambient typings, build outputs, and `node_modules` so the
+ * workspace-wide scan stays fast. `*.spec.ts` files are intentionally KEPT
+ * so the scanner can flag spec callers (`isSpec: true`) — the validator
+ * uses that to enforce `@dbxModelFirebaseIndexSpecFilesOnly` and to treat
+ * spec-only references as "not a production caller" for the unused-factory
+ * warning.
  */
-export const WORKSPACE_FACTORY_SCAN_EXCLUDE: readonly string[] = ['**/*.spec.ts', '**/*.d.ts', '**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**'];
+export const WORKSPACE_FACTORY_SCAN_EXCLUDE: readonly string[] = ['**/*.d.ts', '**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**'];
 
 // MARK: Entry point
 /**
@@ -99,7 +116,7 @@ export async function scanFactoryReferences(input: ScanFactoryReferencesInput): 
   const result = new Map<string, FactoryReferenceCount>();
 
   for (const entry of entries) {
-    result.set(entry.slug, { count: 0, referencedBy: [] });
+    result.set(entry.slug, { count: 0, productionCount: 0, specCount: 0, referencedBy: [] });
   }
   if (entries.length === 0) {
     return result;
@@ -129,9 +146,28 @@ export async function scanFactoryReferences(input: ScanFactoryReferencesInput): 
   }
 
   for (const [slug, sites] of sitesBySlug) {
-    result.set(slug, { count: sites.length, referencedBy: sites });
+    let specCount = 0;
+    for (const site of sites) {
+      if (site.isSpec) {
+        specCount += 1;
+      }
+    }
+    result.set(slug, { count: sites.length, productionCount: sites.length - specCount, specCount, referencedBy: sites });
   }
   return result;
+}
+
+/**
+ * Returns true when the supplied workspace-relative subpath looks like a
+ * Vitest/Jest spec file. The scanner uses this to tag each
+ * {@link FactoryReferenceSite} so the validator can enforce
+ * `@dbxModelFirebaseIndexSpecFilesOnly` semantics.
+ *
+ * @param subpath - workspace-relative file path (forward slashes)
+ * @returns true when the file ends with `.spec.ts` or `.spec.tsx`
+ */
+function isSpecSubpath(subpath: string): boolean {
+  return subpath.endsWith('.spec.ts') || subpath.endsWith('.spec.tsx');
 }
 
 // MARK: One-file scan
@@ -157,6 +193,7 @@ async function scanOneFile(input: ScanOneFileInput): Promise<void> {
   combinedPattern.lastIndex = 0;
   let match: RegExpExecArray | null;
   const subpath = toSubpath(absolutePath, projectRoot);
+  const isSpec = isSpecSubpath(subpath);
   while ((match = combinedPattern.exec(contents)) !== null) {
     const captured = match[0];
     const slug = slugByName.get(captured);
@@ -165,7 +202,7 @@ async function scanOneFile(input: ScanOneFileInput): Promise<void> {
     }
     const line = lineOffsets.findLineFor(match.index);
     const sites = sitesBySlug.get(slug);
-    sites?.push({ file: subpath, line });
+    sites?.push({ file: subpath, line, isSpec });
   }
 }
 

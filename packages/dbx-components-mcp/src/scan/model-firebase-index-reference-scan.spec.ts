@@ -155,7 +155,7 @@ describe('scanFactoryReferences', () => {
     expect(result.get('b')?.count).toBe(2);
   });
 
-  it('counts callers across apps/, components/, and packages/ when given workspace-wide globs', async () => {
+  it('counts callers across apps/, components/, and packages/ when given workspace-wide globs and partitions spec vs production sites', async () => {
     const fs = fakeFs('/workspace', {
       'components/foo-firebase/src/lib/model/job/job.query.ts': `
         export function jobsActiveQuery() { return []; }
@@ -191,9 +191,19 @@ describe('scanFactoryReferences', () => {
     });
     const info = result.get('jobs-active');
     expect(info).toBeDefined();
-    expect(info?.count).toBe(6);
+    expect(info?.count).toBe(8);
+    expect(info?.productionCount).toBe(6);
+    expect(info?.specCount).toBe(2);
     const files = (info?.referencedBy ?? []).map((r) => r.file).sort();
-    expect(files).toEqual(['apps/foo-api/src/lib/run.action.ts', 'apps/foo-api/src/lib/run.action.ts', 'components/foo-shared/src/lib/derived.ts', 'components/foo-shared/src/lib/derived.ts', 'packages/util-helpers/src/lib/wrapper.ts', 'packages/util-helpers/src/lib/wrapper.ts']);
+    expect(files).toEqual(['apps/foo-api/src/lib/run.action.spec.ts', 'apps/foo-api/src/lib/run.action.spec.ts', 'apps/foo-api/src/lib/run.action.ts', 'apps/foo-api/src/lib/run.action.ts', 'components/foo-shared/src/lib/derived.ts', 'components/foo-shared/src/lib/derived.ts', 'packages/util-helpers/src/lib/wrapper.ts', 'packages/util-helpers/src/lib/wrapper.ts']);
+    const specSites = (info?.referencedBy ?? []).filter((r) => r.isSpec).map((r) => r.file);
+    expect(specSites).toEqual(['apps/foo-api/src/lib/run.action.spec.ts', 'apps/foo-api/src/lib/run.action.spec.ts']);
+    const productionSites = (info?.referencedBy ?? [])
+      .filter((r) => !r.isSpec)
+      .map((r) => r.file)
+      .sort();
+    expect(productionSites.every((p) => !p.endsWith('.spec.ts'))).toBe(true);
+    expect(productionSites.length).toBe(6);
   });
 
   it('captures the 1-based line number of each reference', async () => {

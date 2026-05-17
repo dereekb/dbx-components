@@ -53,14 +53,14 @@ const DBX_MODEL_FIREBASE_INDEX_LIST_APP_TOOL: Tool = {
     '',
     'For each *untagged* exported function whose return type is `FirestoreQueryConstraint[]` the report surfaces it as a candidate that should likely opt in via `@dbxModelFirebaseIndex` (or `@dbxModelFirebaseIndexSkip` to record that it was considered).',
     '',
-    'Each tagged entry also carries `excluded` (true when `@dbxModelFirebaseIndexExclude` suppresses index emission), `referenceCount` (count of workspace-wide call-sites referencing the factory name — scanned across `apps/`, `components/`, and `packages/`), and `referencedBy` (sample call-sites, paths relative to the workspace root).',
+    'Each tagged entry also carries `specOnly` (true when `@dbxModelFirebaseIndexSpecFilesOnly` opts the factory into test-only callers), `excluded` (true when `@dbxModelFirebaseIndexExclude` suppresses index emission), `referenceCount` / `productionReferenceCount` / `specReferenceCount` (workspace-wide call-site counts split by whether the consumer is a `*.spec.ts` file — the scan covers `apps/`, `components/`, and `packages/`), and `referencedBy` (sample call-sites with each `isSpec` flag set; paths are workspace-root relative).',
     '',
     'Provide:',
     '- `componentDir`: relative path to the `-firebase` component package (e.g. `components/hellosubs-firebase`).',
     '- `format` (optional): `markdown` (default) or `json`.',
     '- `model` / `category` / `tag` (optional): server-side filters on tagged entries — exact model/identity match, category match, or tag-membership match (case-insensitive).',
     '- `excludedOnly` (optional, default false): keep only tagged entries carrying `@dbxModelFirebaseIndexExclude`.',
-    '- `unusedOnly` (optional, default false): keep only tagged entries with zero workspace-wide callers (and skip `manual` / `skip` factories, which are intentionally retained).',
+    '- `unusedOnly` (optional, default false): keep only tagged entries with zero production callers anywhere in the workspace (and, for `@dbxModelFirebaseIndexSpecFilesOnly` factories, zero spec callers too — spec-only factories with at least one spec caller are intentionally retained). `manual` / `skip` factories are always excluded from this filter.',
     '- `includeUntagged` (optional, default true): set to `false` to omit the untagged-candidate section.',
     '',
     'Paths escaping the server cwd are rejected.'
@@ -93,15 +93,27 @@ interface TaggedFactoryUsage {
   readonly skip: boolean;
   readonly manual: boolean;
   /**
+   * True when the factory carries `@dbxModelFirebaseIndexSpecFilesOnly`. Composites + fieldOverrides are intentionally suppressed (mirroring `skip`), and the validator raises `MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION` (error) if any non-spec file references the factory by name.
+   */
+  readonly specOnly: boolean;
+  /**
    * True when the factory carries `@dbxModelFirebaseIndexExclude`. Composites + fieldOverrides are intentionally suppressed; the validator surfaces an auditable `MODEL_FIREBASE_INDEX_EXCLUDED` warning per scan.
    */
   readonly excluded: boolean;
   readonly category: string;
   readonly tags: readonly string[];
   /**
-   * Workspace-wide caller count for the factory. Scans every `.ts` file under `apps/`, `components/`, and `packages/` (excluding tests, `*.d.ts`, `node_modules/`, and build outputs) and counts word-boundary occurrences of the factory name. The factory's own declaration file is skipped so self-references in the body don't inflate the count. Zero ⇒ `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` candidate.
+   * Total workspace-wide caller count for the factory. Scans every `.ts` file under `apps/`, `components/`, and `packages/` (excluding `*.d.ts`, `node_modules/`, and build outputs) and counts word-boundary occurrences of the factory name. The factory's own declaration file is skipped so self-references in the body don't inflate the count. Equals `productionReferenceCount + specReferenceCount`.
    */
   readonly referenceCount: number;
+  /**
+   * Caller count restricted to non-spec files (anything not ending in `.spec.ts` / `.spec.tsx`). Zero production callers ⇒ `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` candidate when the factory is not `@dbxModelFirebaseIndexSpecFilesOnly`.
+   */
+  readonly productionReferenceCount: number;
+  /**
+   * Caller count restricted to `*.spec.ts` / `*.spec.tsx` files. For `@dbxModelFirebaseIndexSpecFilesOnly` factories this is the expected location of every caller; for other factories spec-only references still count as "unused" since they imply a production caller is missing.
+   */
+  readonly specReferenceCount: number;
   /**
    * Sample call-sites for the factory. Each `file` is workspace-root-relative (e.g. `apps/hellosubs-api/src/lib/.../foo.ts`) and `line` is the 1-based line of the textual reference. Capped to keep payloads bounded; the precise reference count lives in `referenceCount`.
    */
@@ -135,6 +147,8 @@ interface ListAppReport {
   readonly fieldOverrideCount: number;
   readonly unusedCount: number;
   readonly excludedCount: number;
+  readonly specOnlyCount: number;
+  readonly specOnlyViolationCount: number;
   readonly filters: ListAppFilters;
   readonly warnings: readonly string[];
 }
@@ -229,6 +243,8 @@ async function resolveBuildOutcome(input: ResolveBuildOutcomeInput): Promise<Lis
       const fieldOverrideCount = tagged.reduce((acc, t) => acc + t.fieldOverrides.length, 0);
       const unusedCount = tagged.filter((t) => isUnused(t)).length;
       const excludedCount = tagged.filter((t) => t.excluded).length;
+      const specOnlyCount = tagged.filter((t) => t.specOnly).length;
+      const specOnlyViolationCount = tagged.filter((t) => isSpecOnlyViolation(t)).length;
       const warnings = buildOutcome.extractWarnings.map(formatBuildWarning);
       report = {
         componentDir,
@@ -240,6 +256,8 @@ async function resolveBuildOutcome(input: ResolveBuildOutcomeInput): Promise<Lis
         fieldOverrideCount,
         unusedCount,
         excludedCount,
+        specOnlyCount,
+        specOnlyViolationCount,
         filters,
         warnings
       };
@@ -275,22 +293,43 @@ function emptyReport(componentDir: string, warning: string, filters: ListAppFilt
     fieldOverrideCount: 0,
     unusedCount: 0,
     excludedCount: 0,
+    specOnlyCount: 0,
+    specOnlyViolationCount: 0,
     filters,
     warnings: [warning]
   };
 }
 
 /**
- * Tagged factory is "unused" when zero external references AND the
- * author has not opted out via `skip`/`manual`. Matches the rule for
- * emitting `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` so the validator + list
- * tool agree on what counts as unused.
+ * Tagged factory is "unused" when the author has not opted out via
+ * `skip`/`manual` AND there are no production callers (and, for
+ * `@dbxModelFirebaseIndexSpecFilesOnly` factories, no spec callers
+ * either — spec-only with at least one spec caller is the intended
+ * state, not "unused"). Matches the validator's rule for emitting
+ * `MODEL_FIREBASE_INDEX_UNUSED_FACTORY`.
  *
  * @param t - usage record to test.
  * @returns true when the factory is a candidate for the unused warning.
  */
 function isUnused(t: TaggedFactoryUsage): boolean {
-  return t.referenceCount === 0 && !t.skip && !t.manual;
+  if (t.skip || t.manual) {
+    return false;
+  }
+  if (t.specOnly) {
+    return t.productionReferenceCount === 0 && t.specReferenceCount === 0;
+  }
+  return t.productionReferenceCount === 0;
+}
+
+/**
+ * Returns true when a `@dbxModelFirebaseIndexSpecFilesOnly` factory has
+ * any non-spec callers (an error condition the validator escalates).
+ *
+ * @param t - usage record to test.
+ * @returns true when the spec-only contract is violated.
+ */
+function isSpecOnlyViolation(t: TaggedFactoryUsage): boolean {
+  return t.specOnly && t.productionReferenceCount > 0;
 }
 
 function applyTaggedFilters(tagged: readonly TaggedFactoryUsage[], filters: ListAppFilters): readonly TaggedFactoryUsage[] {
@@ -309,6 +348,8 @@ const MAX_REFERENCE_SAMPLES = 10;
 
 function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry, references: FactoryReferenceCount | undefined): TaggedFactoryUsage {
   const referenceCount = references?.count ?? 0;
+  const productionReferenceCount = references?.productionCount ?? 0;
+  const specReferenceCount = references?.specCount ?? 0;
   const referencedBy = (references?.referencedBy ?? []).slice(0, MAX_REFERENCE_SAMPLES).map((r) => ({ ...r }));
   return {
     slug: entry.slug,
@@ -320,10 +361,13 @@ function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry, references: Factor
     isNested: entry.isNested,
     skip: entry.skip,
     manual: entry.manual,
+    specOnly: entry.specOnly ?? false,
     excluded: entry.excluded ?? false,
     category: entry.category,
     tags: [...entry.tags],
     referenceCount,
+    productionReferenceCount,
+    specReferenceCount,
     referencedBy,
     composites: entry.derivedComposites.map((c) => ({ ...c, fields: c.fields.map((f) => ({ ...f })) })),
     fieldOverrides: entry.derivedFieldOverrides.map((f) => ({ ...f, variants: f.variants.map((v) => ({ ...v })) }))
@@ -471,7 +515,16 @@ function appendMarkdownHeader(lines: string[], report: ListAppReport): void {
   if (report.source.length > 0) {
     lines.push(`Source \`${report.source}\` · module \`${report.module}\``, '');
   }
-  const summary = [`${report.tagged.length} tagged factor${report.tagged.length === 1 ? 'y' : 'ies'}`, `${report.untagged.length} untagged candidate${report.untagged.length === 1 ? '' : 's'}`, `${report.compositeCount} composite${report.compositeCount === 1 ? '' : 's'}`, `${report.fieldOverrideCount} fieldOverride contribution${report.fieldOverrideCount === 1 ? '' : 's'}`, `${report.unusedCount} unused`, `${report.excludedCount} excluded`].join(' · ');
+  const specOnlySuffix = report.specOnlyViolationCount > 0 ? ` (${report.specOnlyViolationCount} violating)` : '';
+  const summary = [
+    `${report.tagged.length} tagged factor${report.tagged.length === 1 ? 'y' : 'ies'}`,
+    `${report.untagged.length} untagged candidate${report.untagged.length === 1 ? '' : 's'}`,
+    `${report.compositeCount} composite${report.compositeCount === 1 ? '' : 's'}`,
+    `${report.fieldOverrideCount} fieldOverride contribution${report.fieldOverrideCount === 1 ? '' : 's'}`,
+    `${report.unusedCount} unused`,
+    `${report.excludedCount} excluded`,
+    `${report.specOnlyCount} spec-only${specOnlySuffix}`
+  ].join(' · ');
   lines.push(summary, '');
   const activeFilters = describeActiveFilters(report.filters);
   if (activeFilters.length > 0) {
@@ -501,10 +554,11 @@ function groupTaggedByCollection(tagged: readonly TaggedFactoryUsage[]): readonl
 }
 
 function appendFactoryHeaderLine(lines: string[], t: TaggedFactoryUsage): void {
-  const flags = [t.skip ? '`skip`' : null, t.manual ? '`manual`' : null, t.excluded ? '`excluded`' : null, isUnused(t) ? '`unused`' : null].filter((v) => v !== null);
+  const flags = [t.skip ? '`skip`' : null, t.manual ? '`manual`' : null, t.specOnly ? '`spec-only`' : null, t.excluded ? '`excluded`' : null, isUnused(t) ? '`unused`' : null, isSpecOnlyViolation(t) ? '`spec-only-violation`' : null].filter((v) => v !== null);
   const flagsText = flags.length > 0 ? `${flags.join(', ')} · ` : '';
   const categoryLabel = t.category.length > 0 ? t.category : '—';
-  lines.push(`- ${flagsText}scope \`${t.scope}\`${t.isNested ? ' (nested)' : ''} · category \`${categoryLabel}\` · refs ${t.referenceCount}`);
+  const refsText = t.specReferenceCount > 0 ? `${t.referenceCount} (prod ${t.productionReferenceCount}, spec ${t.specReferenceCount})` : `${t.referenceCount}`;
+  lines.push(`- ${flagsText}scope \`${t.scope}\`${t.isNested ? ' (nested)' : ''} · category \`${categoryLabel}\` · refs ${refsText}`);
 }
 
 function appendFactoryComposites(lines: string[], composites: readonly DerivedComposite[]): void {
@@ -538,9 +592,11 @@ function appendFactoryEntry(lines: string[], t: TaggedFactoryUsage): void {
 
 function appendFactoryReferences(lines: string[], t: TaggedFactoryUsage): void {
   if (t.referencedBy.length === 0) return;
-  lines.push(`- **referenced by:** ${t.referenceCount} site${t.referenceCount === 1 ? '' : 's'}`);
+  const breakdown = t.specReferenceCount > 0 ? ` (prod ${t.productionReferenceCount}, spec ${t.specReferenceCount})` : '';
+  lines.push(`- **referenced by:** ${t.referenceCount} site${t.referenceCount === 1 ? '' : 's'}${breakdown}`);
   for (const ref of t.referencedBy) {
-    lines.push(`  - \`${ref.file}:${ref.line}\``);
+    const tag = ref.isSpec ? ' _(spec)_' : '';
+    lines.push(`  - \`${ref.file}:${ref.line}\`${tag}`);
   }
 }
 

@@ -204,6 +204,7 @@ function assembleEntry(input: AssembleEntryInput): ModelFirebaseIndexEntry {
     scope: entry.scope,
     manual: entry.manual,
     skip: entry.skip,
+    ...(entry.specOnly ? { specOnly: true } : {}),
     ...(entry.excluded ? { excluded: true } : {}),
     category: entry.category,
     params: entry.params.map((p) => ({ ...p })),

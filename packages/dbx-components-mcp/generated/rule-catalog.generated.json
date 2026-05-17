@@ -412,6 +412,22 @@
     "canonicalFix": "Pick one direction per field, or split into two factories — Firestore can only deploy one direction at a time per composite."
   },
   {
+    "code": "MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION",
+    "source": "dbx_model_firebase_index_validate_app",
+    "severity": "error",
+    "title": "A factory tagged `@dbxModelFirebaseIndexSpecFilesOnly` is referenced from at least one non-spec file",
+    "whatItFlags": "A factory tagged `@dbxModelFirebaseIndexSpecFilesOnly` is referenced from at least one non-spec file.",
+    "whenItApplies": "Every `@dbxModelFirebaseIndexSpecFilesOnly` factory whose name appears in a `.ts` file under `apps/`, `components/`, or `packages/` that is NOT a `*.spec.ts` / `*.spec.tsx` file. The tag is a contract that the factory exists for tests only; a production caller breaks that contract and would leak a query shape the index generator deliberately skipped.",
+    "whenItDoesNotApply": "Spec-only factories whose references are confined to `*.spec.ts` / `*.spec.tsx` files (the intended state), or factories not tagged `@dbxModelFirebaseIndexSpecFilesOnly`.",
+    "canonicalFix": "Either move the production call-site into a tagged, non-spec-only factory (and update its callers), or remove the `@dbxModelFirebaseIndexSpecFilesOnly` tag and ensure the produced composite/fieldOverride is declared so the generator emits the required Firestore index.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_firebase_index_list_app"
+      }
+    ]
+  },
+  {
     "code": "MODEL_FIREBASE_INDEX_TRANSITIVE_CYCLE",
     "source": "dbx_model_firebase_index_validate_app",
     "severity": "warning",
@@ -513,9 +529,9 @@
     "severity": "warning",
     "title": "A tagged factory has zero callers anywhere in the workspace",
     "whatItFlags": "A tagged factory has zero callers anywhere in the workspace.",
-    "whenItApplies": "Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any `.ts` file under `apps/`, `components/`, or `packages/` (excluding tests, `*.d.ts`, `node_modules/`, and build outputs). The check uses word-boundary text scanning so renames + stale exports surface here.",
-    "whenItDoesNotApply": "Factories marked `@dbxModelFirebaseIndexSkip` (the author already opted out of emission) or `@dbxModelFirebaseIndexManual` (author-managed index, not necessarily wired through normal call sites).",
-    "canonicalFix": "Either delete the factory (and its `*.query.ts` file if empty) or wire up the missing caller. If retention is intentional pending a future caller, add `@dbxModelFirebaseIndexSkip` to silence both the index generation and this warning.",
+    "whenItApplies": "Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any `.ts` file under `apps/`, `components/`, or `packages/` (excluding `*.d.ts`, `node_modules/`, and build outputs). For regular factories only non-spec callers count toward \"used\" — a factory whose only references are inside `*.spec.ts` files still triggers this warning unless it is opted in via `@dbxModelFirebaseIndexSpecFilesOnly`. The check uses word-boundary text scanning so renames + stale exports surface here.",
+    "whenItDoesNotApply": "Factories marked `@dbxModelFirebaseIndexSkip` (the author already opted out of emission), `@dbxModelFirebaseIndexManual` (author-managed index, not necessarily wired through normal call sites), or `@dbxModelFirebaseIndexSpecFilesOnly` that have at least one `*.spec.ts` caller (the intended state for test-only helpers).",
+    "canonicalFix": "Either delete the factory (and its `*.query.ts` file if empty), wire up a production caller, or — if the factory is intentionally a `*.spec.ts`-only helper — tag it `@dbxModelFirebaseIndexSpecFilesOnly`. `@dbxModelFirebaseIndexSkip` still works for \"retain pending a future caller\".",
     "seeAlso": [
       {
         "kind": "tool",

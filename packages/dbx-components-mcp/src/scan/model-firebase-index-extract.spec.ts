@@ -220,6 +220,51 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
     expect(result.entries[0].constraintSequences).toEqual([]);
   });
 
+  it('sets specOnly = true and empties constraintSequences when @dbxModelFirebaseIndexSpecFilesOnly is set', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { status: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexSpecFilesOnly
+         */
+        export function specOnlyQuery(): unknown[] {
+          return [where<Job>('status', '==', 'active')];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].specOnly).toBe(true);
+    expect(result.entries[0].skip).toBe(false);
+    expect(result.entries[0].constraintSequences).toEqual([]);
+  });
+
+  it('defaults specOnly to false when @dbxModelFirebaseIndexSpecFilesOnly is absent', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { status: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function normalQuery(): unknown {
+          return where<Job>('status', '==', 'active');
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].specOnly).toBe(false);
+  });
+
   it('keeps constraintSequences populated but emits excluded-factory warning when @dbxModelFirebaseIndexExclude is set', () => {
     const project = projectWith({
       '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
