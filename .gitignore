@@ -84,3 +84,4 @@ setup/.tmp
 
 .claude/worktrees
 .agents
+scheduled_tasks.lock

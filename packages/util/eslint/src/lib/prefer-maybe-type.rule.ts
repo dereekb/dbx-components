@@ -22,6 +22,13 @@ export interface UtilPreferMaybeTypeRuleOptions {
    * `Maybe<Maybe<T>>`-style nesting.
    */
   readonly allowedTypeNames?: readonly string[];
+  /**
+   * When true, the rule still reports `T | null` unions but skips the auto-fix entirely and emits a
+   * message instructing the developer to import `Maybe` via a relative path. Used inside the
+   * `@dereekb/util` package itself, where the default auto-fix would insert
+   * `import type { Maybe } from '@dereekb/util';` — a circular self-import. Defaults to `false`.
+   */
+  readonly noAutoImport?: boolean;
 }
 
 /**
@@ -37,6 +44,7 @@ export interface UtilPreferMaybeTypeRuleDefinition {
     };
     readonly messages: {
       readonly preferMaybe: string;
+      readonly preferMaybeNoAutoImport: string;
     };
     readonly schema: readonly object[];
   };
@@ -210,6 +218,11 @@ function buildMaybeReplacement(sourceCode: AstNode, unionTypes: readonly AstNode
  * `import/no-duplicates` rule (configured with `prefer-inline: true`) consolidates the new
  * import with any existing `@dereekb/util` import on subsequent fix passes.
  *
+ * When the `noAutoImport` option is `true`, the rule still reports the union but skips the auto-fix
+ * and emits a message instructing the developer to import `Maybe` via a relative path. This is the
+ * configuration used inside the `@dereekb/util` package itself, where the default auto-fix would
+ * insert a circular self-import.
+ *
  * @see `dbx__note__typescript-programming` → Maybe<T> Usage
  */
 export const utilPreferMaybeTypeRule: UtilPreferMaybeTypeRuleDefinition = {
@@ -221,7 +234,8 @@ export const utilPreferMaybeTypeRule: UtilPreferMaybeTypeRuleDefinition = {
       recommended: true
     },
     messages: {
-      preferMaybe: "Type '{{union}}' should use 'Maybe<T>' from '@dereekb/util' instead of an explicit '| null' union."
+      preferMaybe: "Type '{{union}}' should use 'Maybe<T>' from '@dereekb/util' instead of an explicit '| null' union.",
+      preferMaybeNoAutoImport: "Type '{{union}}' should use 'Maybe<T>' instead of an explicit '| null' union. Import `Maybe` from a relative path (e.g. `'../value/maybe.type'`) — `@dereekb/util` self-imports are not allowed inside this package, so this rule does not auto-fix here."
     },
     schema: [
       {
@@ -231,6 +245,10 @@ export const utilPreferMaybeTypeRule: UtilPreferMaybeTypeRuleDefinition = {
             type: 'array' as const,
             items: { type: 'string' as const },
             description: 'Type names left untouched when present in an explicit null/undefined union.'
+          },
+          noAutoImport: {
+            type: 'boolean' as const,
+            description: 'When true, skip the auto-fix and emit a relative-import message. Used inside the `@dereekb/util` package to avoid self-imports.'
           }
         },
         additionalProperties: false
@@ -240,6 +258,7 @@ export const utilPreferMaybeTypeRule: UtilPreferMaybeTypeRuleDefinition = {
   create(context) {
     const options = context.options[0] ?? {};
     const allowedTypeNames = new Set(options.allowedTypeNames ?? []);
+    const noAutoImport = options.noAutoImport ?? false;
     const sourceCode = context.sourceCode;
 
     let programNode: AstNode = null;
@@ -270,11 +289,11 @@ export const utilPreferMaybeTypeRule: UtilPreferMaybeTypeRuleDefinition = {
           if (!anyAllowed) {
             // Skip auto-fix when there are no non-null members (e.g. `null | undefined`) — there's no
             // sensible `Maybe<T>` form. Still report, but without a fix.
-            const canAutoFix = nonNullMembers.length > 0;
+            const canAutoFix = !noAutoImport && nonNullMembers.length > 0;
 
             context.report({
               node,
-              messageId: 'preferMaybe',
+              messageId: noAutoImport ? 'preferMaybeNoAutoImport' : 'preferMaybe',
               data: { union: renderUnionLabel(types) },
               fix: canAutoFix
                 ? (fixer: AstNode) => {

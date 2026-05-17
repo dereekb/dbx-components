@@ -4,6 +4,7 @@ import { utilEslintPlugin } from './plugin';
 
 interface LintOptions {
   readonly allowedTypeNames?: readonly string[];
+  readonly noAutoImport?: boolean;
 }
 
 function buildConfig(options?: LintOptions): Linter.Config[] {
@@ -219,6 +220,38 @@ type C = boolean | null;
       const input = `type Foo = Array<string> | null;\n`;
       const output = fixCode(input);
       expect(output).toContain('type Foo = Maybe<Array<string>>;');
+    });
+  });
+
+  describe('noAutoImport option', () => {
+    it('still reports T | null when noAutoImport is true', () => {
+      const errors = lintCode(`type Foo = string | null;\n`, { noAutoImport: true });
+      expect(errors).toHaveLength(1);
+    });
+
+    it('emits the relative-path message when noAutoImport is true', () => {
+      const errors = lintCode(`type Foo = string | null;\n`, { noAutoImport: true });
+      expect(errors[0].messageId).toBe('preferMaybeNoAutoImport');
+      expect(errors[0].message).toContain('relative path');
+      expect(errors[0].message).toContain("'../value/maybe.type'");
+    });
+
+    it('does not auto-fix when noAutoImport is true', () => {
+      const input = `type Foo = string | null;\n`;
+      const output = fixCode(input, { noAutoImport: true });
+      expect(output).toBe(input);
+      expect(output).not.toContain('Maybe<string>');
+      expect(output).not.toContain("from '@dereekb/util'");
+    });
+
+    it('does not affect T | undefined (still untouched with noAutoImport)', () => {
+      const errors = lintCode(`type Foo = string | undefined;\n`, { noAutoImport: true });
+      expect(errors).toHaveLength(0);
+    });
+
+    it('uses the default messageId when noAutoImport is unset', () => {
+      const errors = lintCode(`type Foo = string | null;\n`);
+      expect(errors[0].messageId).toBe('preferMaybe');
     });
   });
 });
