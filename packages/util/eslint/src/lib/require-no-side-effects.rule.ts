@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 import { findFunctionLeadingContext, getLineIndent, getStatementAnchor, NO_SIDE_EFFECTS_TAG } from './comments';
 
 /**
@@ -33,7 +34,7 @@ type AstNode = any;
  * @param node - The FunctionDeclaration AST node.
  * @returns The function's identifier name, or `null` for anonymous functions.
  */
-function getFunctionName(node: AstNode): string | null {
+function getFunctionName(node: AstNode): Maybe<string> {
   return node.id?.type === 'Identifier' ? node.id.name : null;
 }
 

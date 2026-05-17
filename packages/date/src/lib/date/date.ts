@@ -47,8 +47,8 @@ export type ReadISO8601DateStringUTCFullFunction<T> = MapFunction<T, ISO8601Date
 /**
  * Type guard that checks whether the input is a Date instance.
  *
- * @param input - value to check
- * @returns whether the input is a Date
+ * @param input - Value to check.
+ * @returns Whether the input is a Date.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -67,8 +67,8 @@ export function isDate(input: unknown): input is Date {
 /**
  * Converts milliseconds to minutes.
  *
- * @param milliseconds - duration in milliseconds
- * @returns equivalent duration in minutes
+ * @param milliseconds - Duration in milliseconds.
+ * @returns Equivalent duration in minutes.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -88,8 +88,8 @@ export function msToMinutes(milliseconds: number): Minutes {
 /**
  * Converts milliseconds to seconds.
  *
- * @param milliseconds - duration in milliseconds
- * @returns equivalent duration in seconds
+ * @param milliseconds - Duration in milliseconds.
+ * @returns Equivalent duration in seconds.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -109,8 +109,8 @@ export function msToSeconds(milliseconds: number): Seconds {
 /**
  * Converts hours to milliseconds.
  *
- * @param hours - number of hours (defaults to 1)
- * @returns equivalent duration in milliseconds
+ * @param hours - Number of hours (defaults to 1)
+ * @returns Equivalent duration in milliseconds.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -130,8 +130,8 @@ export function hoursToMs(hours: number = 1): Minutes {
 /**
  * Converts minutes to milliseconds.
  *
- * @param minutes - number of minutes (defaults to 1)
- * @returns equivalent duration in milliseconds
+ * @param minutes - Number of minutes (defaults to 1)
+ * @returns Equivalent duration in milliseconds.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -151,8 +151,8 @@ export function minutesToMs(minutes: number = 1): Minutes {
 /**
  * Converts days to minutes.
  *
- * @param days - number of days (defaults to 1)
- * @returns equivalent duration in minutes
+ * @param days - Number of days (defaults to 1)
+ * @returns Equivalent duration in minutes.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -174,7 +174,7 @@ export function daysToMinutes(days: number = 1): Minutes {
  *
  * Useful as a default for "no expiration" comparisons.
  *
- * @returns the MAX_FUTURE_DATE sentinel
+ * @returns The MAX_FUTURE_DATE sentinel.
  *
  * @example
  * ```ts
@@ -189,8 +189,8 @@ export function maxFutureDate(): Date {
 /**
  * Checks whether the given date matches the {@link MAX_FUTURE_DATE} sentinel.
  *
- * @param date - date to check
- * @returns whether the date is the max future sentinel
+ * @param date - Date to check.
+ * @returns Whether the date is the max future sentinel.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -212,8 +212,8 @@ export function isMaxFutureDate(date: Date): boolean {
  *
  * Defaults to the current time if no input is provided.
  *
- * @param time - date to truncate (defaults to now)
- * @returns date rounded down to the start of the minute
+ * @param time - Date to truncate (defaults to now)
+ * @returns Date rounded down to the start of the minute.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -233,8 +233,8 @@ export function latestMinute(time = new Date()): Date {
 /**
  * Converts the input to an ISO 8601 date string.
  *
- * @param input - date or date string to convert
- * @returns the ISO 8601 string representation
+ * @param input - Date or date string to convert.
+ * @returns The ISO 8601 string representation.
  * @throws {Error} When the input cannot be parsed as a valid date.
  *
  * @dbxUtil
@@ -261,7 +261,7 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
 /**
  * Guesses the current system's timezone using the Intl API.
  *
- * @returns the IANA timezone string (e.g. "America/Chicago"), or undefined if detection fails
+ * @returns The IANA timezone string (e.g. "America/Chicago"), or undefined if detection fails.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -274,7 +274,7 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
  * // tz === 'America/New_York' (or similar)
  * ```
  */
-export function guessCurrentTimezone(): TimezoneString | undefined {
+export function guessCurrentTimezone(): Maybe<TimezoneString> {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 
@@ -283,7 +283,7 @@ export function guessCurrentTimezone(): TimezoneString | undefined {
  *
  * Convenience wrapper around {@link guessCurrentTimezone} for contexts where a timezone is required.
  *
- * @returns the IANA timezone string
+ * @returns The IANA timezone string.
  * @throws {Error} When the timezone cannot be detected from the Intl API.
  *
  * @dbxUtil
@@ -310,8 +310,8 @@ export function requireCurrentTimezone(): TimezoneString {
 /**
  * Null-safe variant of {@link toJsDate} that returns undefined for null/undefined input.
  *
- * @param input - date, date string, or null/undefined
- * @returns the parsed Date or undefined if input was nullish
+ * @param input - Date, date string, or null/undefined.
+ * @returns The parsed Date or undefined if input was nullish.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -331,8 +331,8 @@ export function safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Ma
 /**
  * Converts the input to a JavaScript Date instance. Accepts Date objects, ISO 8601 strings, UTC date strings, and unix millisecond timestamps.
  *
- * @param input - value to convert
- * @returns the parsed Date
+ * @param input - Value to convert.
+ * @returns The parsed Date.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -355,8 +355,8 @@ export function toJsDate(input: DateOrDateString | UTCDateString | UnixDateTimeM
  *
  * Prefers `parseISO` for ISO 8601 strings to avoid browser inconsistencies with `new Date()`.
  *
- * @param input - ISO 8601 string, UTC date string, or unix milliseconds
- * @returns the parsed Date, or undefined if invalid
+ * @param input - ISO 8601 string, UTC date string, or unix milliseconds.
+ * @returns The parsed Date, or undefined if invalid.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -579,8 +579,8 @@ export function isSameDateDay(a: Maybe<Date>, b: Maybe<Date>, defaultValue: Mayb
  *
  * Useful for normalizing dates to UTC day boundaries when comparing calendar days across timezones.
  *
- * @param date - local date to convert
- * @returns a UTC Date at midnight for the same calendar day
+ * @param date - Local date to convert.
+ * @returns A UTC Date at midnight for the same calendar day.
  *
  * @example
  * ```ts
@@ -598,10 +598,10 @@ export function utcDayForDate(date: Date): Date {
  *
  * Optionally zeroes out seconds and milliseconds when `roundDownToMinute` is true.
  *
- * @param target - date providing the UTC year/month/day
- * @param fromDate - date providing the UTC hours/minutes
- * @param roundDownToMinute - whether to zero out seconds and milliseconds
- * @returns a new UTC Date combining the target's day with the source's time
+ * @param target - Date providing the UTC year/month/day.
+ * @param fromDate - Date providing the UTC hours/minutes.
+ * @param roundDownToMinute - Whether to zero out seconds and milliseconds.
+ * @returns A new UTC Date combining the target's day with the source's time.
  *
  * @example
  * ```ts
@@ -616,15 +616,21 @@ export function copyHoursAndMinutesFromUTCDate(target: Date, fromDate: Date, rou
 }
 
 /**
+ * Hour/minute values plus seconds-handling flags accepted by {@link copyHoursAndMinutesToDate}.
+ */
+export interface CopyHoursAndMinutesToDateValues {
+  readonly hours: number;
+  readonly minutes?: number;
+  readonly removeSeconds?: boolean;
+  readonly roundDownToMinute?: boolean;
+}
+
+/**
  * Sets the hours and optionally minutes on a target date (defaults to now), with optional rounding to strip seconds/milliseconds.
  *
- * @param config - hours, optional minutes, and rounding options
- * @param config.hours - the hours value to set
- * @param config.minutes - optional minutes value to set
- * @param config.removeSeconds - whether to zero out seconds
- * @param config.roundDownToMinute - whether to zero out seconds and milliseconds (defaults to true)
- * @param target - date to modify (defaults to the current date/time)
- * @returns a new Date with the specified time values applied
+ * @param values - Hour/minute values to apply and seconds-handling flags.
+ * @param target - Date to modify (defaults to the current date/time)
+ * @returns Copy of the target with the requested hour/minute values applied.
  *
  * @example
  * ```ts
@@ -633,7 +639,8 @@ export function copyHoursAndMinutesFromUTCDate(target: Date, fromDate: Date, rou
  * // result has hours=14, minutes=30, seconds=0, milliseconds=0
  * ```
  */
-export function copyHoursAndMinutesToDate({ hours, minutes, removeSeconds, roundDownToMinute = true }: { hours: number; minutes?: number; removeSeconds?: boolean; roundDownToMinute?: boolean }, target?: Maybe<Date>): Date {
+export function copyHoursAndMinutesToDate(values: CopyHoursAndMinutesToDateValues, target?: Maybe<Date>): Date {
+  const { hours, minutes, removeSeconds, roundDownToMinute = true } = values;
   return setDateValues(target ?? new Date(), {
     hours,
     ...(minutes != null
@@ -659,8 +666,8 @@ export const copyHoursAndMinutesToToday = copyHoursAndMinutesToDate;
 /**
  * Truncates seconds and milliseconds from the input date, effectively rounding down to the start of the minute.
  *
- * @param date - date to round (defaults to now)
- * @returns the date with seconds and milliseconds set to zero
+ * @param date - Moment to round; defaults to the current date/time.
+ * @returns Copy of the input with seconds and milliseconds set to zero.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -680,8 +687,8 @@ export function roundDownToMinute(date = new Date()): Date {
 /**
  * Truncates minutes, seconds, and milliseconds from the input date, effectively rounding down to the start of the hour.
  *
- * @param date - date to round (defaults to now)
- * @returns the date with minutes, seconds, and milliseconds set to zero
+ * @param date - Moment to round; defaults to the current date/time.
+ * @returns Copy of the input with minutes, seconds, and milliseconds set to zero.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -701,9 +708,9 @@ export function roundDownToHour(date: Date = new Date()): Date {
 /**
  * Convenience function that rounds a date down (floor) to the specified unit.
  *
- * @param date - date to round
- * @param roundToUnit - time unit to round to ('hour', 'minute', or 'second')
- * @returns a new Date rounded down to the unit boundary
+ * @param date - Date to round.
+ * @param roundToUnit - Time unit to round to ('hour', 'minute', or 'second')
+ * @returns A new Date rounded down to the unit boundary.
  */
 export function roundDateDownTo(date: Date, roundToUnit: DateHourMinuteOrSecond): Date {
   return roundDateToDate(date, roundToUnit, 'floor');
@@ -733,10 +740,10 @@ export function roundDateTo(date: DateOrUnixDateTimeMillisecondsNumber, roundToU
 /**
  * Rounds a date or unix timestamp to the nearest unit boundary, always returning a Date.
  *
- * @param date - date or unix millisecond timestamp to round
- * @param roundToUnit - time unit to round to ('hour', 'minute', or 'second')
- * @param roundType - rounding direction ('floor' or 'ceil', defaults to 'floor')
- * @returns a new Date rounded to the unit boundary
+ * @param date - Date or unix millisecond timestamp to round.
+ * @param roundToUnit - Time unit to round to ('hour', 'minute', or 'second')
+ * @param roundType - Rounding direction ('floor' or 'ceil', defaults to 'floor')
+ * @returns A new Date rounded to the unit boundary.
  *
  * @example
  * ```ts
@@ -755,10 +762,10 @@ export function roundDateToDate(date: DateOrUnixDateTimeMillisecondsNumber, roun
  * This approach avoids DST issues that can occur with date-fns `set()` or native `Date.setMinutes()`, which may produce
  * incorrect results during fall-back transitions.
  *
- * @param date - date or unix millisecond timestamp to round
- * @param roundToUnit - time unit to round to ('hour', 'minute', or 'second')
- * @param roundType - rounding direction ('floor' truncates, 'ceil' rounds up)
- * @returns the rounded unix millisecond timestamp
+ * @param date - Date or unix millisecond timestamp to round.
+ * @param roundToUnit - Time unit to round to ('hour', 'minute', or 'second')
+ * @param roundType - Rounding direction ('floor' truncates, 'ceil' rounds up)
+ * @returns The rounded unix millisecond timestamp.
  *
  * @example
  * ```ts
@@ -809,8 +816,8 @@ export type ReduceDatesFunction = (inputDates: ArrayOrValue<Maybe<Date>>) => May
  *
  * Returns undefined if no valid dates are present in the input.
  *
- * @param reduceDates - reducer function applied to the non-null dates array
- * @returns a function that accepts an array or single date value and returns the reduced result
+ * @param reduceDates - Reducer function applied to the non-null dates array.
+ * @returns Reducer that filters null/undefined inputs before delegating to the supplied reducer.
  *
  * @example
  * ```ts
@@ -819,6 +826,7 @@ export type ReduceDatesFunction = (inputDates: ArrayOrValue<Maybe<Date>>) => May
  * findMin([new Date('2024-01-01'), new Date('2024-06-01')]); // Jan 1
  * findMin([null, undefined]); // undefined
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function reduceDatesFunction(reduceDates: (dates: Date[]) => Maybe<Date>): ReduceDatesFunction {
@@ -859,9 +867,9 @@ export const findMaxDate = reduceDatesFunction(maxDate);
 /**
  * Collects the unique days of the week present among the given values, short-circuiting once all 7 days are found.
  *
- * @param values - items to extract dates from
- * @param readDate - function to extract a Date from each value
- * @returns a Set of DayOfWeek values (0=Sunday through 6=Saturday)
+ * @param values - Items to extract dates from.
+ * @param readDate - Function to extract a Date from each value.
+ * @returns Set of distinct DayOfWeek values touched by the inputs (0=Sunday through 6=Saturday).
  *
  * @example
  * ```ts
@@ -892,10 +900,10 @@ export function readDaysOfWeek<T>(values: T[], readDate: ReadDateFunction<T>): S
 /**
  * Returns the display names of the unique days of the week present among the values, sorted by day number (Sunday first).
  *
- * @param values - items to extract dates from
- * @param readDate - function to extract a Date from each value
- * @param nameFunction - function that converts a DayOfWeek to its display name
- * @returns sorted array of day name strings
+ * @param values - Items to extract dates from.
+ * @param readDate - Function to extract a Date from each value.
+ * @param nameFunction - Function that converts a DayOfWeek to its display name.
+ * @returns Sorted array of day name strings.
  *
  * @example
  * ```ts
@@ -911,8 +919,8 @@ export function readDaysOfWeekNames<T>(values: T[], readDate: ReadDateFunction<T
 /**
  * Checks whether the given date falls exactly at midnight (00:00:00.000) in UTC.
  *
- * @param date - date to check
- * @returns whether all UTC time components are zero
+ * @param date - Date to check.
+ * @returns Whether all UTC time components are zero.
  *
  * @example
  * ```ts
@@ -927,9 +935,9 @@ export function isStartOfDayInUTC(date: Date): boolean {
 /**
  * Checks whether the given date falls at the end of the day (23:59:59.999) in UTC.
  *
- * @param date - date to check
- * @param minutesOnly - if true, only checks hours and minutes (23:59), ignoring seconds and milliseconds
- * @returns whether the date represents end-of-day in UTC
+ * @param date - Date to check.
+ * @param minutesOnly - If true, only checks hours and minutes (23:59), ignoring seconds and milliseconds.
+ * @returns Whether the date represents end-of-day in UTC.
  *
  * @example
  * ```ts
@@ -944,8 +952,8 @@ export function isEndOfDayInUTC(date: Date, minutesOnly: boolean = false): boole
 /**
  * Checks whether the given date falls exactly at midnight (00:00:00.000) in the system's local timezone.
  *
- * @param date - date to check
- * @returns whether all local time components are zero
+ * @param date - Date to check.
+ * @returns Whether all local time components are zero.
  *
  * @example
  * ```ts

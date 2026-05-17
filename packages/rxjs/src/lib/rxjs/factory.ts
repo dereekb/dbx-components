@@ -34,6 +34,9 @@ export const DEFAULT_FACTORY_TIMER_INTERVAL = 1000;
  * Wraps `timer()` internally and maps each tick index through the factory. Optionally limits
  * the total number of emissions.
  *
+ * @param config - Timer configuration including factory, interval, wait, and limit.
+ * @returns An observable of factory-produced values.
+ *
  * @example
  * ```ts
  * const countdown$ = factoryTimer({
@@ -43,9 +46,6 @@ export const DEFAULT_FACTORY_TIMER_INTERVAL = 1000;
  * });
  * // emits 10, 9, 8, ... 0
  * ```
- *
- * @param config - timer configuration including factory, interval, wait, and limit
- * @returns an observable of factory-produced values
  */
 export function factoryTimer<T>(config: FactoryTimerConfig<T>): Observable<T> {
   const { wait = 0, interval = DEFAULT_FACTORY_TIMER_INTERVAL, limit, factory } = config;

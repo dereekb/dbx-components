@@ -83,8 +83,8 @@ export type ScanBuildArrayConfigFn<S, T> = (seedState: S) => ScanBuildArrayConfi
  * are incrementally appended. Useful when loading large datasets where the initial page and
  * subsequent pages come from different sources.
  *
- * @param init - function that receives the seed state and returns the accumulator config
- * @returns an operator that emits the growing array
+ * @param init - Function that receives the seed state and returns the accumulator config.
+ * @returns An operator that emits the growing array.
  */
 export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): OperatorFunction<S, T[]> {
   return exhaustMap((seedState: S) => {
@@ -114,8 +114,8 @@ export function scanBuildArray<S, T>(init: ScanBuildArrayConfigFn<S, T>): Operat
 /**
  * RxJS operator that executes a side-effect on each element of the emitted array, then passes the array through.
  *
- * @param forEach - callback to run for each element, or null/undefined to pass through unchanged
- * @returns an operator that taps each element in emitted arrays
+ * @param forEach - Callback to run for each element, or null/undefined to pass through unchanged.
+ * @returns An operator that taps each element in emitted arrays.
  */
 export function mapForEach<T>(forEach: Maybe<(value: T) => void>): MonoTypeOperatorFunction<T[]> {
   return forEach ? map((x) => forEachWithArray(x, forEach)) : map((x) => x);
@@ -135,25 +135,29 @@ export interface MapEachAsyncConfig {
  *
  * Emits `[]` for empty arrays. When `onlyFirst` is true, takes only the first combined emission.
  *
- * @param mapFunction - function that maps each item to an ObservableInput
- * @param config - optional config (e.g., `onlyFirst`)
- * @returns an operator that async-maps each array element
+ * @param mapFunction - Function that maps each item to an ObservableInput.
+ * @param config - Optional config (e.g., `onlyFirst`)
+ * @returns An operator that async-maps each array element.
  */
 export function mapEachAsync<I, O>(mapFunction: MapFunction<I, ObservableInput<O>>, config?: MapEachAsyncConfig): OperatorFunction<I[], O[]> {
   const { onlyFirst = false } = config ?? {};
 
   return switchMap((values: I[]) => {
+    let result: Observable<O[]>;
+
     if (values.length) {
       const mappedObs = values.map(mapFunction);
-      let result = combineLatest(mappedObs);
+      let combined = combineLatest(mappedObs);
 
       if (onlyFirst) {
-        result = result.pipe(first());
+        combined = combined.pipe(first());
       }
 
-      return result;
+      result = combined;
+    } else {
+      result = of([]);
     }
 
-    return of([]);
+    return result;
   });
 }

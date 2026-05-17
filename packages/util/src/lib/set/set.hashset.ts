@@ -1,4 +1,5 @@
 import { type PrimativeKey, type ReadKeyFunction } from '../key';
+import type { Maybe } from '@dereekb/util';
 import { type Maybe } from '../value/maybe.type';
 
 /**
@@ -91,7 +92,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
    * @param key - The key to look up.
    * @returns The value, or undefined.
    */
-  valueForKey(key: Maybe<K>): T | undefined {
+  valueForKey(key: Maybe<K>): Maybe<T> {
     return this._map.get(key);
   }
 

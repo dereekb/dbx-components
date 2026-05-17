@@ -54,8 +54,8 @@ export interface WrapTestContextConfig<W, F, E = any> {
 /**
  * Wraps the input TestContextFactory to emit another type of Fixture for tests.
  *
- * @param config - configuration specifying how to wrap fixtures and optional setup/teardown hooks
- * @returns a function that transforms a {@link TestContextFactory} of type `F` into one of type `W`
+ * @param config - Configuration specifying how to wrap fixtures and optional setup/teardown hooks.
+ * @returns A function that transforms a {@link TestContextFactory} of type `F` into one of type `W`
  */
 export function wrapTestContextFactory<W, F, E = any>(config: WrapTestContextConfig<W, F, E>): (factory: TestContextFactory<F>) => TestContextFactory<W> {
   return (factory: TestContextFactory<F>) => {
@@ -115,8 +115,8 @@ export interface InstanceWrapTestContextConfig<I, W extends AbstractWrappedFixtu
  * Built on top of {@link wrapTestContextFactory}, this variant automatically creates, sets, and tears down
  * an instance on the wrapped fixture for each test, using the provided {@link InstanceWrapTestContextConfig}.
  *
- * @param config - configuration for wrapping the fixture and managing instance lifecycle
- * @returns a function that transforms a {@link TestContextFactory} of type `F` into one of type `W`
+ * @param config - Configuration for wrapping the fixture and managing instance lifecycle.
+ * @returns A function that transforms a {@link TestContextFactory} of type `F` into one of type `W`
  */
 export function instanceWrapTestContextFactory<I, W extends AbstractWrappedFixtureWithInstance<I, F>, F>(config: InstanceWrapTestContextConfig<I, W, F>): (factory: TestContextFactory<F>) => TestContextFactory<W> {
   return wrapTestContextFactory<W, F, TestContextFixtureClearInstanceFunction>({

@@ -62,6 +62,9 @@ export type ListLoadingStateContextInput<L, S extends ListLoadingState<L> = List
  * Extends {@link loadingStateContext} with list-aware behavior, including optional array length limiting
  * via {@link LimitArrayConfig} and empty-state detection streams.
  *
+ * @param input - Optional observable or config to initialize the context.
+ * @returns A mutable list loading state context.
+ *
  * @example
  * ```ts
  * const context = listLoadingStateContext<string>();
@@ -79,9 +82,6 @@ export type ListLoadingStateContextInput<L, S extends ListLoadingState<L> = List
  *
  * context.destroy();
  * ```
- *
- * @param input - optional observable or config to initialize the context
- * @returns a mutable list loading state context
  */
 export function listLoadingStateContext<L, S extends ListLoadingState<L> = ListLoadingState<L>>(input?: ListLoadingStateContextInput<L, S>): MutableListLoadingStateContext<L, S> {
   const limitArrayConfig = (typeof input === 'object' ? input : undefined) as Maybe<Partial<LimitArrayConfig>>;

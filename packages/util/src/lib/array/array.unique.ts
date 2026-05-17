@@ -10,13 +10,13 @@ import { type DecisionFunction } from '../value/decision';
 /**
  * Concatenates multiple arrays and returns only unique values.
  *
+ * @param arrays - Arrays to concatenate. Null/undefined arrays are ignored.
+ * @returns Array containing only unique values from all input arrays.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilTags array, unique, concat, distinct, dedupe, deduplicate
  * @dbxUtilRelated unique, flatten-array-unique, concat-arrays
- *
- * @param arrays - Arrays to concatenate. Null/undefined arrays are ignored.
- * @returns Array containing only unique values from all input arrays.
  */
 export function concatArraysUnique<T extends PrimativeKey = PrimativeKey>(...arrays: Maybe<T[]>[]): T[] {
   return unique(concatArrays(...arrays));
@@ -25,13 +25,13 @@ export function concatArraysUnique<T extends PrimativeKey = PrimativeKey>(...arr
 /**
  * Flattens a 2D array and returns only unique values.
  *
+ * @param array - Two-dimensional array to flatten and deduplicate.
+ * @returns Array containing only unique values from the flattened input.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilTags array, flatten, unique, distinct, dedupe, nested
  * @dbxUtilRelated unique, concat-arrays-unique, flatten-array
- *
- * @param array - Two-dimensional array to flatten and deduplicate.
- * @returns Array containing only unique values from the flattened input.
  */
 export function flattenArrayUnique<T extends PrimativeKey = PrimativeKey>(array: T[][]): T[] {
   return unique(flattenArray(array));
@@ -40,14 +40,14 @@ export function flattenArrayUnique<T extends PrimativeKey = PrimativeKey>(array:
 /**
  * Filters the input values and only returns unique values.
  *
+ * @param values - Array of primitive-key values to deduplicate.
+ * @param excludeInput - Optional keys or values to exclude from the result.
+ * @returns Array containing only unique values with exclusions removed.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilTags array, unique, distinct, dedupe, deduplicate, set
  * @dbxUtilRelated filter-unique-values, filter-unique-function, concat-arrays-unique
- *
- * @param values - Array of primitive-key values to deduplicate.
- * @param excludeInput - Optional keys or values to exclude from the result.
- * @returns Array containing only unique values with exclusions removed.
  */
 export function unique<T extends PrimativeKey = PrimativeKey>(values: T[], excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, T>): T[] {
   const unique = new Set(values);
@@ -116,15 +116,16 @@ export function readKeysFromFilterUniqueFunctionAdditionalKeys<T, K extends Prim
 /**
  * Creates a {@link FilterUniqueFunction} that deduplicates items by their computed key.
  *
+ * @param readKey - Function to extract a unique key from each item.
+ * @param additionalKeysInput - Optional keys or values to pre-seed as already seen, causing them to be excluded.
+ * @returns A reusable filter function that removes duplicate items from arrays.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, unique, distinct, dedupe, factory, key, filter
  * @dbxUtilRelated filter-unique-values, unique, allow-value-once-filter
  *
- * @param readKey - Function to extract a unique key from each item.
- * @param additionalKeysInput - Optional keys or values to pre-seed as already seen, causing them to be excluded.
- * @returns A reusable filter function that removes duplicate items from arrays.
  * @__NO_SIDE_EFFECTS__
  */
 export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>, additionalKeysInput?: FilterUniqueFunctionAdditionalKeysInput<T, K>): FilterUniqueFunction<T, K> {
@@ -158,15 +159,15 @@ export function filterUniqueFunction<T, K extends PrimativeKey = PrimativeKey>(r
 /**
  * Filters an array to contain only items with unique keys.
  *
- * @dbxUtil
- * @dbxUtilCategory array
- * @dbxUtilTags array, unique, filter, dedupe, key, distinct
- * @dbxUtilRelated filter-unique-function, unique, is-unique-keyed-function
- *
  * @param values - Array of items to deduplicate.
  * @param readKey - Function to extract a unique key from each item.
  * @param additionalKeys - Optional keys to pre-seed as already seen, excluding matching items.
  * @returns Array containing only the first occurrence of each uniquely-keyed item.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, unique, filter, dedupe, key, distinct
+ * @dbxUtilRelated filter-unique-function, unique, is-unique-keyed-function
  */
 export function filterUniqueValues<T, K extends PrimativeKey = PrimativeKey>(values: T[], readKey: ReadKeyFunction<T, K>, additionalKeys: K[] = []): T[] {
   return filterUniqueFunction(readKey, additionalKeys)(values);
@@ -180,14 +181,15 @@ export type IsUniqueKeyedFunction<T> = DecisionFunction<T[]>;
 /**
  * Creates an {@link IsUniqueKeyedFunction} that checks whether all items in an array have unique keys.
  *
+ * @param readKey - Function to extract a unique key from each item.
+ * @returns A decision function that returns true if all items have distinct keys.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, unique, validation, distinct, key, decision, factory
  * @dbxUtilRelated filter-unique-function, unique
  *
- * @param readKey - Function to extract a unique key from each item.
- * @returns A decision function that returns true if all items have distinct keys.
  * @__NO_SIDE_EFFECTS__
  */
 export function isUniqueKeyedFunction<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>): IsUniqueKeyedFunction<T> {

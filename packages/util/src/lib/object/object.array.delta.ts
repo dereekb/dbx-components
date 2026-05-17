@@ -56,14 +56,15 @@ export interface ObjectDeltaArrayCompressor<T extends object> {
  * The first object is stored fully. Subsequent objects store only fields that changed from the previous entry.
  * Null in a delta entry means the field was cleared. Undefined (missing key) means no change.
  *
+ * @param config - Configuration with the equality checker that defines which fields to track.
+ * @returns A compressor with `compress` and `expand` methods.
+ *
  * @dbxUtil
  * @dbxUtilCategory object
  * @dbxUtilKind factory
  * @dbxUtilTags object, delta, array, compress, expand, factory
  * @dbxUtilRelated equality-comparator-function, object-keys-equality-comparator-function
  *
- * @param config - Configuration with the equality checker that defines which fields to track
- * @returns A compressor with `compress` and `expand` methods
  * @__NO_SIDE_EFFECTS__
  */
 export function objectDeltaArrayCompressor<T extends object>(config: ObjectDeltaArrayCompressorConfig<T>): ObjectDeltaArrayCompressor<T> {

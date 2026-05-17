@@ -50,8 +50,8 @@ export type CalendarDateFactory = (day: ISO8601DayString, days?: number) => Cale
  * The factory converts an ISO 8601 day string to a UTC date, then applies timezone normalization
  * so the resulting `startsAt` represents the correct moment for the target timezone.
  *
- * @param config - optional timezone configuration
- * @returns a factory function that creates CalendarDate objects
+ * @param config - Optional timezone configuration.
+ * @returns A factory function that creates CalendarDate objects.
  *
  * @example
  * ```ts
@@ -60,6 +60,7 @@ export type CalendarDateFactory = (day: ISO8601DayString, days?: number) => Cale
  * // event.type === CalendarDateType.DAYS
  * // event.duration === daysToMinutes(3)
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function calendarDateFactory(config?: CalendarDateConfig): CalendarDateFactory {
@@ -84,9 +85,9 @@ export function calendarDateFactory(config?: CalendarDateConfig): CalendarDateFa
  * Shorthand for creating a factory and immediately invoking it.
  *
  * @param day - ISO 8601 day string (e.g. '2024-01-15')
- * @param days - number of days the event spans
- * @param timezone - IANA timezone string, false for UTC, or undefined for system timezone
- * @returns a CalendarDate with type DAYS
+ * @param days - Number of days the event spans.
+ * @param timezone - IANA timezone string, false for UTC, or undefined for system timezone.
+ * @returns A CalendarDate with type DAYS.
  *
  * @example
  * ```ts
@@ -101,8 +102,8 @@ export function calendarDate(day: ISO8601DayString, days?: number, timezone?: Ti
 /**
  * Wraps an existing {@link DateDurationSpan} as a time-based {@link CalendarDate}.
  *
- * @param dateDurationSpan - the duration span to wrap
- * @returns a CalendarDate with type TIME
+ * @param dateDurationSpan - The duration span to wrap.
+ * @returns A CalendarDate with type TIME.
  *
  * @example
  * ```ts

@@ -76,8 +76,7 @@ export const utilRequireDbxAuthCompanionTagsRule: UtilRequireDbxAuthCompanionTag
       const claimTags = parsed.tags.filter((t) => t.tag === 'dbxAuthClaim');
       if (appTags.length === 0 && claimTags.length === 0) return;
 
-      for (let i = 0; i < appTags.length; i += 1) {
-        const tag = appTags[i];
+      for (const [i, tag] of appTags.entries()) {
         const value = tag.description.trim();
         if (value.length === 0) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'appKeyMissing', report: context.report });
         else if (!KEBAB_SLUG_PATTERN.test(value)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'appKeyNotKebab', data: { value }, report: context.report });
@@ -120,8 +119,7 @@ export const utilRequireDbxAuthCompanionTagsRule: UtilRequireDbxAuthCompanionTag
       const serviceTags = parsed.tags.filter((t) => t.tag === 'dbxAuthClaimsService');
       if (serviceTags.length === 0) return;
 
-      for (let i = 0; i < serviceTags.length; i += 1) {
-        const tag = serviceTags[i];
+      for (const [i, tag] of serviceTags.entries()) {
         const value = tag.description.trim();
         if (value.length === 0) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'serviceKeyMissing', report: context.report });
         else if (!KEBAB_SLUG_PATTERN.test(value)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'serviceKeyNotKebab', data: { value }, report: context.report });

@@ -1,4 +1,5 @@
 import { leadingJsdocFor } from './comments';
+import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 import { PASCAL_IDENTIFIER_PATTERN, reportOnJsdocLine } from './dbx-tag-families';
 
@@ -177,7 +178,7 @@ export const utilRequireDbxModelCompanionTagsRule: UtilRequireDbxModelCompanionT
           continue;
         }
         let hasFrom = false;
-        let encoding: string | undefined;
+        let encoding: Maybe<string>;
         for (const token of text.split(/\s+/)) {
           const eq = token.indexOf('=');
           if (eq <= 0) continue;

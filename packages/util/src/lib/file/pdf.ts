@@ -34,7 +34,7 @@ export const PDF_ENCRYPT_MARKER = '/Encrypt';
  * the expected start/end markers are present.
  *
  * @param buffer - Buffer-like object to check. Only requires the `lastIndexOf` method.
- * @returns true if both PDF markers are found in the expected positions.
+ * @returns True if both PDF markers are found in the expected positions.
  */
 export function bufferHasValidPdfMarkings(buffer: Pick<Buffer<ArrayBuffer>, 'lastIndexOf' | 'includes'>) {
   return buffer.lastIndexOf(PDF_HEADER) === 0 && buffer.includes(PDF_EOF_MARKER);
@@ -54,6 +54,9 @@ export function bufferHasValidPdfMarkings(buffer: Pick<Buffer<ArrayBuffer>, 'las
  * Note: this returns true for both fully-encrypted PDFs and write-protected-only PDFs.
  * Use `detectPdfEncryption` from `@dereekb/nestjs` when that distinction matters.
  *
+ * @param buffer - Buffer-like object to check. Only requires the `includes` method.
+ * @returns True if the buffer contains a `/Encrypt` entry indicating password protection.
+ *
  * @example
  * ```ts
  * const pdfBytes = await readFile('protected.pdf');
@@ -63,9 +66,6 @@ export function bufferHasValidPdfMarkings(buffer: Pick<Buffer<ArrayBuffer>, 'las
  *   throw new Error('Password-protected PDFs are not supported.');
  * }
  * ```
- *
- * @param buffer - Buffer-like object to check. Only requires the `includes` method.
- * @returns true if the buffer contains a `/Encrypt` entry indicating password protection.
  */
 export function isPdfPasswordProtected(buffer: Pick<Buffer<ArrayBuffer>, 'includes'>) {
   return buffer.includes(PDF_ENCRYPT_MARKER);

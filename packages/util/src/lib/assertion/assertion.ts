@@ -37,10 +37,10 @@ export class PropertyDescriptorUtility {
    * Creates a property descriptor interceptor that validates values using an assertion function
    * before allowing them to be set. Optionally maps the value after validation.
    *
-   * @param assertValueFn - Function that returns true if the value is valid
+   * @param assertValueFn - Function that returns true if the value is valid.
    * @param options - Custom assertion options (message, map function)
-   * @param defaultOptions - Default options merged under the custom options
-   * @returns A property descriptor interceptor function
+   * @param defaultOptions - Default options merged under the custom options.
+   * @returns A property descriptor interceptor function.
    */
   static makePropertyDescriptorAssertion<T>(assertValueFn: AccessorValueAssertion<T>, options?: MapDescriptorAssertionOptions<T>, defaultOptions?: MapDescriptorAssertionOptions<T>) {
     // Build options
@@ -68,8 +68,8 @@ export class PropertyDescriptorUtility {
    * Creates a low-level property descriptor interceptor that replaces the setter
    * of a property with a custom function produced by the given factory.
    *
-   * @param makeSetValueInterceptorFn - Factory that produces the replacement setter function
-   * @returns A property descriptor interceptor function
+   * @param makeSetValueInterceptorFn - Factory that produces the replacement setter function.
+   * @returns A property descriptor interceptor function.
    */
   static makeSetPropertyDescriptorInterceptor<T>(makeSetValueInterceptorFn: SetValueInterceptorFunctionFactory<T>) {
     const interceptor = (target: object, propertyKey: string, descriptor: TypedPropertyDescriptor<T>) => {

@@ -37,7 +37,7 @@ export const EMPTY_ARKTYPE_TYPE: Type<{}> = type({}) as Type<{}>;
  * Returns the shared {@link EMPTY_ARKTYPE_TYPE} cast to the requested type, providing a typed empty-object schema
  * without creating a new ArkType instance each time.
  *
- * @returns the singleton empty type schema typed as `Type<T>`
+ * @returns The singleton empty type schema typed as `Type<T>`
  *
  * @example
  * ```typescript
@@ -76,8 +76,8 @@ export function emptyType<T = {}>(): Type<T> {
  * @param definition The ArkType definition string or Type instance to make clearable.
  * @returns An ArkType schema that accepts the defined type, null, or undefined.
  */
-export function clearable<const def extends string>(definition: def): Type<type.infer<def> | null | undefined>;
-export function clearable<T>(definition: Type<T>): Type<T | null | undefined>;
+export function clearable<const def extends string>(definition: def): Type<Maybe<type.infer<def>>>;
+export function clearable<T>(definition: Type<T>): Type<Maybe<T>>;
 export function clearable(definition: string | Type): any {
   let result: any;
 

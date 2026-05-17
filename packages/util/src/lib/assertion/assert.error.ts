@@ -46,7 +46,7 @@ export class AssertionError extends BaseError implements ReadableError {
   /**
    * Gets the target object that failed the assertion.
    *
-   * @returns The target object
+   * @returns The target object.
    */
   get target() {
     return this._target;
@@ -55,7 +55,7 @@ export class AssertionError extends BaseError implements ReadableError {
   /**
    * Gets the property key that failed the assertion.
    *
-   * @returns The property key as a string
+   * @returns The property key as a string.
    */
   get propertyKey(): string {
     return this._property;
@@ -69,8 +69,8 @@ export class AssertionIssueHandler {
   /**
    * Handles an assertion issue by throwing an appropriate exception.
    *
-   * @param error - The assertion issue to handle
-   * @throws AssertionError
+   * @param error - The assertion issue to handle.
+   * @throws {AssertionError} Always — wraps the issue and rethrows it.
    */
   public handle(error: AssertionIssue) {
     throw this.buildException(error);
@@ -79,8 +79,8 @@ export class AssertionIssueHandler {
   /**
    * Builds an AssertionError from an AssertionIssue.
    *
-   * @param error - The assertion issue to build an exception from
-   * @returns A new AssertionError instance
+   * @param error - The assertion issue to build an exception from.
+   * @returns A new AssertionError instance.
    */
   public buildException(error: AssertionIssue): AssertionError {
     const message: string = this.buildExceptionString(error);
@@ -91,8 +91,8 @@ export class AssertionIssueHandler {
    * Builds an error message string from an AssertionIssue.
    * Uses the custom message if provided, otherwise creates a default message.
    *
-   * @param error - The assertion issue to build a message for
-   * @returns The error message string
+   * @param error - The assertion issue to build a message for.
+   * @returns The error message string.
    */
   protected buildExceptionString(error: AssertionIssue): string {
     let message: string;

@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 import { type UnixDateTimeMillisecondsNumber } from '../date/date';
 
 /**
@@ -26,7 +27,7 @@ export interface StoredData {
    * The Unix timestamp (in milliseconds) when the data was stored.
    * Undefined if the storage time is not known or not applicable.
    */
-  readonly storedAt: UnixDateTimeMillisecondsNumber | undefined;
+  readonly storedAt: Maybe<UnixDateTimeMillisecondsNumber>;
   /**
    * The actual data stored, as a string.
    */

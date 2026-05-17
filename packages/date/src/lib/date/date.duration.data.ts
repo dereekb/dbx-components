@@ -1,4 +1,4 @@
-import { type Milliseconds, type TimeUnit, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, MS_IN_SECOND, MS_IN_WEEK } from '@dereekb/util';
+import { type Maybe, type Milliseconds, type TimeUnit, MS_IN_DAY, MS_IN_HOUR, MS_IN_MINUTE, MS_IN_SECOND, MS_IN_WEEK } from '@dereekb/util';
 
 // MARK: TimeDurationData
 /**
@@ -19,13 +19,13 @@ export interface TimeDurationData {
 /**
  * Returns true if the input TimeDurationData has no meaningful values (all zero or undefined).
  *
+ * @param data - The duration data to check.
+ * @returns True if empty.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, empty, check, time, zero
  * @dbxUtilRelated duration-data-to-milliseconds, milliseconds-to-duration-data
- *
- * @param data - The duration data to check
- * @returns True if empty
  *
  * @example
  * ```typescript
@@ -42,13 +42,13 @@ export function timeDurationDataIsEmpty(data: TimeDurationData): boolean {
 /**
  * Converts a TimeDurationData to total milliseconds by summing all fields.
  *
+ * @param data - The duration data to convert.
+ * @returns Total milliseconds.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, milliseconds, convert, sum, time, total
  * @dbxUtilRelated milliseconds-to-duration-data, parse-duration-string-to-milliseconds, time-duration-data-is-empty
- *
- * @param data - The duration data to convert
- * @returns Total milliseconds
  *
  * @example
  * ```typescript
@@ -101,14 +101,14 @@ const UNIT_MS_VALUES: ReadonlyArray<{ readonly unit: TimeUnit; readonly ms: Mill
  *
  * Breaks down from largest to smallest unit, only using units in the provided list.
  *
+ * @param ms - The total milliseconds to decompose.
+ * @param units - Which units to decompose into (defaults to days, hours, minutes, seconds)
+ * @returns A TimeDurationData with the decomposed values.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, milliseconds, decompose, convert, breakdown, units, time
  * @dbxUtilRelated duration-data-to-milliseconds, parse-duration-string, format-duration-string
- *
- * @param ms - The total milliseconds to decompose
- * @param units - Which units to decompose into (defaults to days, hours, minutes, seconds)
- * @returns A TimeDurationData with the decomposed values
  *
  * @example
  * ```typescript
@@ -136,14 +136,14 @@ export function millisecondsToDurationData(ms: Milliseconds, units?: readonly Ti
 /**
  * Reads a specific time unit value from a TimeDurationData object.
  *
+ * @param data - The duration data.
+ * @param unit - The time unit to read.
+ * @returns The value for that unit, or 0 if not set.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, get, read, value, unit, time, field
  * @dbxUtilRelated set-duration-data-value, duration-data-to-milliseconds
- *
- * @param data - The duration data
- * @param unit - The time unit to read
- * @returns The value for that unit, or 0 if not set
  */
 export function getDurationDataValue(data: TimeDurationData, unit: TimeUnit): number {
   return data[TIME_UNIT_TO_FIELD_MAP[unit]] ?? 0;
@@ -152,15 +152,15 @@ export function getDurationDataValue(data: TimeDurationData, unit: TimeUnit): nu
 /**
  * Returns a new TimeDurationData with the specified unit set to the given value.
  *
+ * @param data - The original duration data.
+ * @param unit - The time unit to set.
+ * @param value - The new value.
+ * @returns A new TimeDurationData with the updated value.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, set, update, value, unit, time, field, immutable
  * @dbxUtilRelated get-duration-data-value, duration-data-to-milliseconds
- *
- * @param data - The original duration data
- * @param unit - The time unit to set
- * @param value - The new value
- * @returns A new TimeDurationData with the updated value
  */
 export function setDurationDataValue(data: TimeDurationData, unit: TimeUnit, value: number): TimeDurationData {
   return { ...data, [TIME_UNIT_TO_FIELD_MAP[unit]]: value };
@@ -182,32 +182,21 @@ const DURATION_COMPONENT_REGEX = /(\d+(?:\.\d+)?)\s*(w|wk|weeks?|d|days?|h|hr|ho
  */
 function normalizeUnitString(unitStr: string): TimeUnit {
   const lower = unitStr.toLowerCase();
-
-  if (lower === 'ms' || lower === 'milliseconds' || lower === 'millisecond') {
-    return 'ms';
-  }
+  let result: TimeUnit = 'ms';
 
   if (lower === 's' || lower === 'sec' || lower === 'second' || lower === 'seconds') {
-    return 's';
+    result = 's';
+  } else if (lower === 'm' || lower === 'min' || lower === 'minute' || lower === 'minutes') {
+    result = 'min';
+  } else if (lower === 'h' || lower === 'hr' || lower === 'hour' || lower === 'hours') {
+    result = 'h';
+  } else if (lower === 'd' || lower === 'day' || lower === 'days') {
+    result = 'd';
+  } else if (lower === 'w' || lower === 'wk' || lower === 'week' || lower === 'weeks') {
+    result = 'w';
   }
 
-  if (lower === 'm' || lower === 'min' || lower === 'minute' || lower === 'minutes') {
-    return 'min';
-  }
-
-  if (lower === 'h' || lower === 'hr' || lower === 'hour' || lower === 'hours') {
-    return 'h';
-  }
-
-  if (lower === 'd' || lower === 'day' || lower === 'days') {
-    return 'd';
-  }
-
-  if (lower === 'w' || lower === 'wk' || lower === 'week' || lower === 'weeks') {
-    return 'w';
-  }
-
-  return 'ms';
+  return result;
 }
 
 /**
@@ -220,13 +209,13 @@ function normalizeUnitString(unitStr: string): TimeUnit {
  * If the string contains only a number with no unit, it is treated as the
  * smallest unit that would make sense (milliseconds by default).
  *
+ * @param input - The duration string to parse.
+ * @returns A TimeDurationData object with the parsed values.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, parse, string, time, human-readable, decode
  * @dbxUtilRelated parse-duration-string-to-milliseconds, format-duration-string, format-duration-string-long, milliseconds-to-duration-data
- *
- * @param input - The duration string to parse
- * @returns A TimeDurationData object with the parsed values
  *
  * @example
  * ```typescript
@@ -239,7 +228,7 @@ function normalizeUnitString(unitStr: string): TimeUnit {
 export function parseDurationString(input: string): TimeDurationData {
   const result: Record<string, number> = {};
 
-  let match: RegExpExecArray | null;
+  let match: Maybe<RegExpExecArray>;
   let hasMatches = false;
 
   // Reset regex lastIndex for global regex
@@ -271,13 +260,13 @@ export function parseDurationString(input: string): TimeDurationData {
 /**
  * Parses a duration string directly to milliseconds.
  *
+ * @param input - The duration string to parse.
+ * @returns Total milliseconds.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, parse, string, milliseconds, convert, decode
  * @dbxUtilRelated parse-duration-string, duration-data-to-milliseconds, format-duration-string
- *
- * @param input - The duration string to parse
- * @returns Total milliseconds
  *
  * @example
  * ```typescript
@@ -306,13 +295,13 @@ const COMPACT_UNIT_LABELS: ReadonlyArray<{ readonly field: keyof TimeDurationDat
  *
  * Omits zero-value units. Returns "0s" if all fields are zero or empty.
  *
+ * @param data - The duration data to format.
+ * @returns A compact duration string.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, format, string, compact, encode, time
  * @dbxUtilRelated format-duration-string-long, parse-duration-string, duration-data-to-milliseconds
- *
- * @param data - The duration data to format
- * @returns A compact duration string
  *
  * @example
  * ```typescript
@@ -352,13 +341,13 @@ const LONG_UNIT_LABELS: ReadonlyArray<{ readonly field: keyof TimeDurationData; 
  *
  * Omits zero-value units. Returns "0 seconds" if all fields are zero or empty.
  *
+ * @param data - The duration data to format.
+ * @returns A human-readable duration string.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, format, string, long, human-readable, encode, time
  * @dbxUtilRelated format-duration-string, parse-duration-string, duration-data-to-milliseconds
- *
- * @param data - The duration data to format
- * @returns A human-readable duration string
  *
  * @example
  * ```typescript

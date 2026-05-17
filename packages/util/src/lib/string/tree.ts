@@ -1,4 +1,5 @@
 import { type ArrayOrValue, asArray, lastValue } from '../array/array';
+import type { Maybe } from '@dereekb/util';
 import { type Configurable } from '../type';
 import { type Building } from '../value/build';
 import { type Maybe } from '../value/maybe.type';
@@ -102,14 +103,15 @@ export type SplitStringTreeFactoryConfig<M = unknown> = AddToSplitStringTreeInpu
 /**
  * Creates a {@link SplitStringTreeFactory} that builds tree structures by splitting strings on the configured separator.
  *
+ * @param config - Configuration specifying the separator and optional metadata merge strategy.
+ * @returns A factory function that creates or extends split string trees.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, tree, split, separator, factory, hierarchy
  * @dbxUtilRelated add-to-split-string-tree, find-best-split-string-tree-match
  *
- * @param config - Configuration specifying the separator and optional metadata merge strategy.
- * @returns A factory function that creates or extends split string trees.
  * @__NO_SIDE_EFFECTS__
  */
 export function splitStringTreeFactory<M = unknown>(config: SplitStringTreeFactoryConfig<M>): SplitStringTreeFactory<M> {
@@ -226,7 +228,7 @@ export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inpu
   const { separator, mergeMeta } = config;
   const { value, leafMeta, nodeMeta } = inputValue;
 
-  function nextMeta(node: SplitStringTree<M>, nextMeta: M): M | undefined {
+  function nextMeta(node: SplitStringTree<M>, nextMeta: M): Maybe<M> {
     return mergeMeta && node.meta != null ? mergeMeta(node.meta, nextMeta) : nextMeta;
   }
 
@@ -234,7 +236,7 @@ export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inpu
   let currentNode: Configurable<SplitStringTree<M>> = tree;
 
   parts.forEach((nodeValue) => {
-    const existingChildNode = currentNode.children[nodeValue] as SplitStringTree<M> | undefined; // may be undefined for new paths
+    const existingChildNode = currentNode.children[nodeValue] as Maybe<SplitStringTree<M>>; // may be undefined for new paths
     const childNode = (existingChildNode ?? { nodeValue, children: {} }) as Configurable<SplitStringTree<M>>; // use the existing node or create a new node
 
     if (!existingChildNode) {

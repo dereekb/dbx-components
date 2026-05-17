@@ -1,4 +1,5 @@
 import { type Factory } from '../getter/getter';
+import type { Maybe } from '@dereekb/util';
 import { randomNumberFactory } from '../number';
 import { boundNumberFunction, wrapNumberFunction } from '../number/bound';
 import { cutValueToPrecisionFunction, type NumberPrecision, type RoundToPrecisionFunctionType } from '../number/round';
@@ -78,8 +79,8 @@ export interface LonLatPoint {
 /**
  * Type guard that checks whether the input is a {@link LatLngPoint} by testing for `lat` and `lng` properties.
  *
- * @param input - the value to test
- * @returns `true` if the input has both `lat` and `lng` properties
+ * @param input - The value to test.
+ * @returns `true` if the input has both `lat` and `lng` properties.
  */
 export function isLatLngPoint(input: LatLngPoint | unknown): input is LatLngPoint {
   return typeof input === 'object' && input != null && 'lat' in input && 'lng' in input;
@@ -88,8 +89,8 @@ export function isLatLngPoint(input: LatLngPoint | unknown): input is LatLngPoin
 /**
  * Creates a shallow copy of the point so that mutations to the copy do not affect the original.
  *
- * @param input - point to copy
- * @returns a new point with the same coordinates
+ * @param input - Point to copy.
+ * @returns A new point with the same coordinates.
  */
 export function copyLatLngPoint(input: LatLngPoint): LatLngPoint {
   return { lat: input.lat, lng: input.lng };
@@ -98,9 +99,9 @@ export function copyLatLngPoint(input: LatLngPoint): LatLngPoint {
 /**
  * Checks whether two points have identical coordinates. Handles `null`/`undefined` by returning `true` only if both are nullish.
  *
- * @param a - first point
- * @param b - second point
- * @returns `true` if both points have the same `lat` and `lng`, or both are nullish
+ * @param a - First point.
+ * @param b - Second point.
+ * @returns `true` if both points have the same `lat` and `lng`, or both are nullish.
  */
 export function isSameLatLngPoint(a: Maybe<LatLngPoint>, b: Maybe<LatLngPoint>) {
   return a && b ? a.lat === b.lat && a.lng === b.lng : a == b;
@@ -109,10 +110,10 @@ export function isSameLatLngPoint(a: Maybe<LatLngPoint>, b: Maybe<LatLngPoint>) 
 /**
  * Computes the difference between two points (`a - b`), optionally wrapping the result to valid lat/lng ranges.
  *
- * @param a - the point to subtract from
- * @param b - the point to subtract
- * @param wrap - whether to wrap the result to valid lat/lng ranges; defaults to `true`
- * @returns a point representing the difference
+ * @param a - The point to subtract from.
+ * @param b - The point to subtract.
+ * @param wrap - Whether to wrap the result to valid lat/lng ranges; defaults to `true`
+ * @returns A point representing the difference.
  */
 export function diffLatLngPoints(a: LatLngPoint, b: LatLngPoint, wrap = true) {
   const point = { lat: a.lat - b.lat, lng: a.lng - b.lng };
@@ -122,10 +123,10 @@ export function diffLatLngPoints(a: LatLngPoint, b: LatLngPoint, wrap = true) {
 /**
  * Computes the sum of two points (`a + b`), optionally wrapping the result to valid lat/lng ranges.
  *
- * @param a - the first point
- * @param b - the second point
- * @param wrap - whether to wrap the result to valid lat/lng ranges; defaults to `true`
- * @returns a point representing the sum
+ * @param a - The first point.
+ * @param b - The second point.
+ * @param wrap - Whether to wrap the result to valid lat/lng ranges; defaults to `true`
+ * @returns A point representing the sum.
  */
 export function addLatLngPoints(a: LatLngPoint, b: LatLngPoint, wrap = true) {
   const point = { lat: a.lat + b.lat, lng: a.lng + b.lng };
@@ -135,8 +136,8 @@ export function addLatLngPoints(a: LatLngPoint, b: LatLngPoint, wrap = true) {
 /**
  * Wraps a point so its latitude is capped to [-90, 90] and its longitude wraps around [-180, 180].
  *
- * @param a - point to wrap
- * @returns a new point with valid coordinates
+ * @param a - Point to wrap.
+ * @returns A new point with valid coordinates.
  */
 export function wrapLatLngPoint(a: LatLngPoint): LatLngPoint {
   return { lat: capLatValue(a.lat), lng: wrapLngValue(a.lng) };
@@ -164,8 +165,8 @@ export const wrapLngValue = wrapNumberFunction<Longitude>({ min: MIN_LONGITUDE_V
 /**
  * Checks whether a latitude value is within the valid range [-90, 90].
  *
- * @param lat - latitude value to validate
- * @returns `true` if the value is a valid latitude
+ * @param lat - Latitude value to validate.
+ * @returns `true` if the value is a valid latitude.
  */
 export function isValidLatitude(lat: Latitude): boolean {
   return lat >= MIN_LATITUDE_VALUE && lat <= MAX_LATITUDE_VALUE;
@@ -174,8 +175,8 @@ export function isValidLatitude(lat: Latitude): boolean {
 /**
  * Checks whether a longitude value is within the valid range [-180, 180].
  *
- * @param lat - longitude value to validate
- * @returns `true` if the value is a valid longitude
+ * @param lat - Longitude value to validate.
+ * @returns `true` if the value is a valid longitude.
  */
 export function isValidLongitude(lat: Longitude): boolean {
   return lat >= MIN_LONGITUDE_VALUE && lat <= MAX_LONGITUDE_VALUE;
@@ -184,7 +185,7 @@ export function isValidLongitude(lat: Longitude): boolean {
 /**
  * Returns the default {@link LatLngPoint} at the origin (0, 0).
  *
- * @returns a point at latitude 0, longitude 0
+ * @returns A point at latitude 0, longitude 0.
  */
 export function defaultLatLngPoint(): LatLngPoint {
   return { lat: 0, lng: 0 };
@@ -194,8 +195,8 @@ export function defaultLatLngPoint(): LatLngPoint {
  * Checks whether a point or string represents the default (0, 0) location.
  * Treats empty strings as the default.
  *
- * @param point - a point or lat/lng string to check
- * @returns `true` if the input represents the default location
+ * @param point - A point or lat/lng string to check.
+ * @returns `true` if the input represents the default location.
  */
 export function isDefaultLatLngPoint(point: LatLngPoint | LatLngString | '') {
   return typeof point === 'string' ? !point || point === DEFAULT_LAT_LNG_STRING_VALUE : isDefaultLatLngPointValue(point);
@@ -204,8 +205,8 @@ export function isDefaultLatLngPoint(point: LatLngPoint | LatLngString | '') {
 /**
  * Checks whether a point has coordinates of exactly (0, 0).
  *
- * @param point - point to check
- * @returns `true` if both `lat` and `lng` are 0
+ * @param point - Point to check.
+ * @returns `true` if both `lat` and `lng` are 0.
  */
 export function isDefaultLatLngPointValue(point: LatLngPoint) {
   return point.lat === 0 && point.lng === 0;
@@ -214,7 +215,7 @@ export function isDefaultLatLngPointValue(point: LatLngPoint) {
 /**
  * Returns the south-west-most possible point (-90, -180).
  *
- * @returns the minimum corner of the valid coordinate space
+ * @returns The minimum corner of the valid coordinate space.
  */
 export function swMostLatLngPoint(): LatLngPoint {
   return { lat: MIN_LATITUDE_VALUE, lng: MIN_LONGITUDE_VALUE };
@@ -223,7 +224,7 @@ export function swMostLatLngPoint(): LatLngPoint {
 /**
  * Returns the north-east-most possible point (90, 180).
  *
- * @returns the maximum corner of the valid coordinate space
+ * @returns The maximum corner of the valid coordinate space.
  */
 export function neMostLatLngPoint(): LatLngPoint {
   return { lat: MAX_LATITUDE_VALUE, lng: MAX_LONGITUDE_VALUE };
@@ -232,8 +233,8 @@ export function neMostLatLngPoint(): LatLngPoint {
 /**
  * Returns true if the input point's lat/lng values are within the acceptable values range.
  *
- * @param input - point to validate
- * @returns `true` if both lat and lng are within valid ranges
+ * @param input - Point to validate.
+ * @returns `true` if both lat and lng are within valid ranges.
  */
 export function isValidLatLngPoint(input: LatLngPoint): boolean {
   return isValidLatitude(input.lat) && isValidLongitude(input.lng);
@@ -252,9 +253,9 @@ export type LonLatTuple = [Longitude, Latitude];
 /**
  * Converts the input to a {@link LatLngTuple} using the default configuration.
  *
- * @param lat - a latitude value or any lat/lng point input
- * @param lng - optional longitude when `lat` is a numeric latitude
- * @returns a `[lat, lng]` tuple
+ * @param lat - A latitude value or any lat/lng point input.
+ * @param lng - Optional longitude when `lat` is a numeric latitude.
+ * @returns A `[lat, lng]` tuple.
  */
 export function latLngTuple(lat: LatLngPointInput, lng?: Longitude): LatLngTuple {
   return latLngTupleFunction()(lat, lng);
@@ -263,9 +264,9 @@ export function latLngTuple(lat: LatLngPointInput, lng?: Longitude): LatLngTuple
 /**
  * Converts the input to a {@link LonLatTuple} (longitude-first ordering), useful for interop with libraries like Mapbox.
  *
- * @param lat - a latitude value or any lat/lng point input
- * @param lng - optional longitude when `lat` is a numeric latitude
- * @returns a `[lng, lat]` tuple
+ * @param lat - A latitude value or any lat/lng point input.
+ * @param lng - Optional longitude when `lat` is a numeric latitude.
+ * @returns A `[lng, lat]` tuple.
  *
  * @example
  * ```ts
@@ -288,14 +289,15 @@ export type LatLngTupleFunctionConfig = LatLngPointFunctionConfig;
  * Creates a {@link LatLngTupleFunction} that converts various input formats into `[lat, lng]` tuples,
  * applying optional precision configuration.
  *
+ * @param config - Optional configuration for precision and wrapping behavior.
+ * @returns A function that produces lat/lng tuples from flexible inputs.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, tuple, factory, geographic, normalize
  * @dbxUtilRelated lat-lng-point-function, lat-lng-string-function
  *
- * @param config - optional configuration for precision and wrapping behavior
- * @returns a function that produces lat/lng tuples from flexible inputs
  * @__NO_SIDE_EFFECTS__
  */
 export function latLngTupleFunction(config?: LatLngTupleFunctionConfig): LatLngTupleFunction {
@@ -319,7 +321,7 @@ export const DEFAULT_LAT_LNG_STRING_VALUE = '0,0';
 /**
  * Returns the default {@link LatLngString} value (`'0,0'`).
  *
- * @returns the default lat/lng string
+ * @returns The default lat/lng string.
  */
 export function defaultLatLngString(): typeof DEFAULT_LAT_LNG_STRING_VALUE {
   return DEFAULT_LAT_LNG_STRING_VALUE;
@@ -366,8 +368,8 @@ export const LAT_LNG_PATTERN = /(?<lat>^[-+]?(?:[1-8]?\d(?:\.\d{0,15})?|90(?:\.0
 /**
  * Checks whether the input string matches the expected lat/lng pattern (e.g., `"30.5,-96.3"`).
  *
- * @param input - string to test
- * @returns `true` if the string is a valid lat/lng format
+ * @param input - String to test.
+ * @returns `true` if the string is a valid lat/lng format.
  */
 export function isLatLngString(input: string): input is LatLngString {
   return LAT_LNG_PATTERN.test(input);
@@ -436,15 +438,16 @@ export type LatLngPointPrecisionFunction = (latLngPoint: LatLngPoint) => LatLngP
  * Creates a {@link LatLngPointPrecisionFunction} that rounds both lat and lng values
  * to the specified number of decimal places.
  *
+ * @param precision - Number of decimal places to retain.
+ * @param precisionRounding - Optional rounding strategy (e.g., floor, ceil, round)
+ * @returns A function that rounds points to the given precision.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, precision, round, factory, geographic
  * @dbxUtilRelated lat-lng-point-function, cut-value-to-precision-function
  *
- * @param precision - number of decimal places to retain
- * @param precisionRounding - optional rounding strategy (e.g., floor, ceil, round)
- * @returns a function that rounds points to the given precision
  * @__NO_SIDE_EFFECTS__
  */
 export function latLngPointPrecisionFunction(precision: LatLngPrecision, precisionRounding?: RoundToPrecisionFunctionType): LatLngPointPrecisionFunction {
@@ -468,14 +471,15 @@ export type LatLngStringFunctionConfig = LatLngPointFunctionConfig;
  * Creates a {@link LatLngStringFunction} that converts various input formats into comma-separated lat/lng strings,
  * applying optional precision configuration.
  *
+ * @param config - Optional configuration for precision and wrapping behavior.
+ * @returns A function that produces lat/lng strings from flexible inputs.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, string, factory, geographic, normalize
  * @dbxUtilRelated lat-lng-point-function, lat-lng-tuple-function
  *
- * @param config - optional configuration for precision and wrapping behavior
- * @returns a function that produces lat/lng strings from flexible inputs
  * @__NO_SIDE_EFFECTS__
  */
 export function latLngStringFunction(config?: LatLngStringFunctionConfig): LatLngStringFunction {
@@ -498,7 +502,7 @@ export interface LatLngPointFunctionConfig {
   /**
    * LatLngPrecision to use
    */
-  readonly precision?: LatLngPrecision | null;
+  readonly precision?: Maybe<LatLngPrecision>;
   /**
    * Precision rounding to use.
    */
@@ -528,9 +532,9 @@ export interface LatLngPointFunctionConfig {
 /**
  * Creates a {@link LatLngPoint} using the default configuration. Convenience wrapper around {@link latLngPointFunction}.
  *
- * @param lat - a latitude value or any lat/lng point input
- * @param lng - optional longitude when `lat` is a numeric latitude
- * @returns the parsed and normalized point
+ * @param lat - A latitude value or any lat/lng point input.
+ * @param lng - Optional longitude when `lat` is a numeric latitude.
+ * @returns The parsed and normalized point.
  *
  * @example
  * ```ts
@@ -546,9 +550,9 @@ export function latLngPoint(lat: LatLngPointInput, lng?: Longitude): LatLngPoint
  * Creates a {@link LatLngPointFunction} that normalizes various input formats (numbers, strings, tuples, objects)
  * into a {@link LatLngPoint}, with configurable precision, wrapping, and validation.
  *
- * @param config - optional configuration for precision, wrapping, validation, and tuple ordering
- * @returns a function that produces points from flexible inputs
- * @throws {Error} when the input cannot be parsed into a valid point
+ * @param config - Optional configuration for precision, wrapping, validation, and tuple ordering.
+ * @returns A function that produces points from flexible inputs.
+ * @throws {Error} When the input cannot be parsed into a valid point.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -562,6 +566,7 @@ export function latLngPoint(lat: LatLngPointInput, lng?: Longitude): LatLngPoint
  * const result = fn(30.59929, -96.38315);
  * // result.lat === 30.599, result.lng === -96.383
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngPointFunction {
@@ -599,8 +604,8 @@ export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngP
 /**
  * Parses a comma-separated lat/lng string into a {@link LatLngPoint}. Invalid numeric values default to 0.
  *
- * @param latLngString - string in the format `"lat,lng"`
- * @returns the parsed point
+ * @param latLngString - String in the format `"lat,lng"`
+ * @returns The parsed point.
  */
 export function latLngPointFromString(latLngString: LatLngString | string): LatLngPoint {
   const [latString, lngString] = latLngString.split(',');
@@ -612,9 +617,9 @@ export function latLngPointFromString(latLngString: LatLngString | string): LatL
 /**
  * Validates a point and returns it if valid, or a default point otherwise.
  *
- * @param latLngPoint - point to validate
- * @param defaultValue - optional factory for the fallback point; defaults to `defaultLatLngPoint`
- * @returns the original point if valid, or the default
+ * @param latLngPoint - Point to validate.
+ * @param defaultValue - Optional factory for the fallback point; defaults to `defaultLatLngPoint`
+ * @returns The original point if valid, or the default.
  */
 export function validLatLngPoint(latLngPoint: LatLngPoint, defaultValue?: Factory<LatLngPoint>): LatLngPoint {
   return validLatLngPointFunction(defaultValue)(latLngPoint);
@@ -628,14 +633,15 @@ export type ValidLatLngPointFunction = (latLngPoint: LatLngPoint) => LatLngPoint
 /**
  * Creates a {@link ValidLatLngPointFunction} that returns the input point when valid, or a default point otherwise.
  *
+ * @param defaultValue - Factory for the fallback point; defaults to `defaultLatLngPoint`
+ * @returns A validation function.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, validate, fallback, factory, geographic
  * @dbxUtilRelated valid-lat-lng-point, is-valid-lat-lng-point
  *
- * @param defaultValue - factory for the fallback point; defaults to `defaultLatLngPoint`
- * @returns a validation function
  * @__NO_SIDE_EFFECTS__
  */
 export function validLatLngPointFunction(defaultValue: Factory<LatLngPoint> = defaultLatLngPoint): ValidLatLngPointFunction {
@@ -691,14 +697,15 @@ export type LatLngDataPointFunction<T extends LatLngRef> = (data: T) => LatLngDa
 /**
  * Creates a {@link LatLngDataPointFunction} that wraps a {@link LatLngRef} object with its resolved point coordinates.
  *
+ * @param config - Optional configuration for precision and wrapping behavior.
+ * @returns A function that produces data points from lat/lng references.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, data-point, factory, geographic, ref
  * @dbxUtilRelated lat-lng-point-function
  *
- * @param config - optional configuration for precision and wrapping behavior
- * @returns a function that produces data points from lat/lng references
  * @__NO_SIDE_EFFECTS__
  */
 export function latLngDataPointFunction<T extends LatLngRef>(config?: LatLngPointFunctionConfig): LatLngDataPointFunction<T> {
@@ -740,14 +747,15 @@ export type RandomLatLngFactory = () => LatLngPoint;
  * Creates a {@link RandomLatLngFactory} that generates random points within the specified bounding box.
  * The bounding box corners are capped/wrapped to valid coordinate ranges.
  *
+ * @param config - Optional bounding box and precision configuration.
+ * @returns A factory that produces random points within the bounds.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, random, factory, geographic, bounding-box
  * @dbxUtilRelated random-lat-lng-from-center-factory, random-number-factory
  *
- * @param config - optional bounding box and precision configuration
- * @returns a factory that produces random points within the bounds
  * @__NO_SIDE_EFFECTS__
  */
 export function randomLatLngFactory(config?: RandomLatLngFactoryConfig): RandomLatLngFactory {
@@ -784,14 +792,15 @@ export interface RandomLatLngFromCenterFactoryConfig extends Pick<RandomLatLngFa
  * Creates a {@link RandomLatLngFactory} that generates random points within a rectangle
  * centered on the given point, extending by `latDistance` and `lngDistance` in each direction.
  *
+ * @param config - Center point, distances, and optional precision.
+ * @returns A factory that produces random points near the center.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, random, factory, geographic, center
  * @dbxUtilRelated random-lat-lng-factory, random-number-factory
  *
- * @param config - center point, distances, and optional precision
- * @returns a factory that produces random points near the center
  * @__NO_SIDE_EFFECTS__
  */
 export function randomLatLngFromCenterFactory(config: RandomLatLngFromCenterFactoryConfig): RandomLatLngFactory {

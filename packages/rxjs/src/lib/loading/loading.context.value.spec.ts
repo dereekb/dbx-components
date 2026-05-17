@@ -57,7 +57,7 @@ describe('ValuesLoadingContext', () => {
       'should keep loading true when some check values are undefined',
       callbackTest((done) => {
         const valueA: string | undefined = 'hello';
-        let valueB: string | undefined;
+        const valueB: string | undefined = undefined;
 
         context = new ValuesLoadingContext({
           checkDone: () => [valueA, valueB]

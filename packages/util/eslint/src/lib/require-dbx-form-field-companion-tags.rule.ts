@@ -1,4 +1,5 @@
 import { getStatementAnchor, leadingJsdocFor } from './comments';
+import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 import { KEBAB_SLUG_PATTERN, reportOnJsdocLine, splitCommaSeparated } from './dbx-tag-families';
 
@@ -110,16 +111,15 @@ export const utilRequireDbxFormFieldCompanionTagsRule: UtilRequireDbxFormFieldCo
       return { markers, companions };
     }
 
-    function determineTier(markers: readonly ParsedJsdocTag[], tierTags: readonly ParsedJsdocTag[]): string | undefined {
+    function determineTier(markers: readonly ParsedJsdocTag[], tierTags: readonly ParsedJsdocTag[]): Maybe<string> {
       // Marker-derived tier takes precedence; `@dbxFormFieldDerivative` → 'field-derivative', `@dbxFormFieldTemplate` → 'template-builder'.
       // `@dbxFormField` requires an explicit `@dbxFormTier`.
-      let derived: string | undefined;
+      let derived: Maybe<string>;
       for (const m of markers) {
         if (m.tag === 'dbxFormFieldDerivative') derived = 'field-derivative';
         else if (m.tag === 'dbxFormFieldTemplate') derived = 'template-builder';
       }
-      const result = derived !== undefined ? derived : tierTags.length > 0 ? tierTags[0].description.trim() : undefined;
-      return result;
+      return derived !== undefined ? derived : tierTags.length > 0 ? tierTags[0].description.trim() : undefined;
     }
 
     function checkJsdoc(commentNode: AstNode): void {

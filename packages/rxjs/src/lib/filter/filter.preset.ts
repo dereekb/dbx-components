@@ -14,8 +14,8 @@ export type MapFilterWithPresetFn<F extends FilterWithPreset> = (filter: F) => F
  * into concrete filter values, then the `preset` field is removed from the result.
  * Filters without a preset are passed through unchanged.
  *
- * @param fn - function that expands a preset into concrete filter values
- * @returns mapping function that resolves presets and strips the preset field
+ * @param fn - Function that expands a preset into concrete filter values.
+ * @returns Mapping function that resolves presets and strips the preset field.
  *
  * @example
  * ```ts
@@ -31,6 +31,7 @@ export type MapFilterWithPresetFn<F extends FilterWithPreset> = (filter: F) => F
  * const result = resolve({ preset: 'active' });
  * // result === { active: true }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeMapFilterWithPresetFn<F extends FilterWithPreset>(fn: MapFilterWithPresetFn<F>): MapFilterWithPresetFn<F> {
@@ -52,8 +53,8 @@ export function makeMapFilterWithPresetFn<F extends FilterWithPreset>(fn: MapFil
 /**
  * RxJS operator that resolves preset references in a filter stream using the provided mapping function.
  *
- * @param fn - function that expands a preset into concrete filter values
- * @returns operator that maps filter emissions, resolving any preset references
+ * @param fn - Function that expands a preset into concrete filter values.
+ * @returns Operator that maps filter emissions, resolving any preset references.
  */
 export function mapFilterWithPreset<F extends FilterWithPreset>(fn: MapFilterWithPresetFn<F>): OperatorFunction<F, FilterWithoutPresetString<F>> {
   return map(makeMapFilterWithPresetFn(fn));

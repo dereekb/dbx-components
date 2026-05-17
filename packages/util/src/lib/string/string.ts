@@ -1,4 +1,5 @@
 import { type ArrayOrValue, asArray } from '../array/array';
+import type { Maybe } from '@dereekb/util';
 import { type Configurable } from '../type';
 import { type MapFunction } from '../value/map';
 import { type MaybeNot, type Maybe } from '../value/maybe.type';
@@ -84,15 +85,15 @@ export function joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, joiner: s
  * Splits a string like {@link String.prototype.split}, but joins overflow segments back together
  * instead of discarding them. Useful when you only want to split on the first N-1 occurrences.
  *
+ * @param input - String to split.
+ * @param separator - Delimiter to split on.
+ * @param limit - Maximum number of resulting segments; overflow segments are rejoined with the separator.
+ * @returns Array of string segments, with length at most equal to limit.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, split, limit, separator, parts, segments
  * @dbxUtilRelated join-strings, string-split-join-instance
- *
- * @param input - string to split
- * @param separator - delimiter to split on
- * @param limit - maximum number of resulting segments; overflow segments are rejoined with the separator
- * @returns array of string segments, with length at most equal to limit
  */
 export function splitJoinRemainder(input: string, separator: string, limit: number): string[] {
   let result: string[];
@@ -173,15 +174,15 @@ export interface JoinStringsInstanceConfig {
 /**
  * Creates a {@link JoinStringsInstance} that joins arrays of strings using the configured delimiter.
  *
+ * @param config - Configuration for the delimiter and default trim behavior.
+ * @returns A new callable {@link JoinStringsInstance}
+ *
  * @example
  * ```ts
  * const joinWithPipe = joinStringsInstance({ joiner: '|' });
  * joinWithPipe(['a', 'b']); // 'a|b'
  * joinWithPipe(null); // null
  * ```
- *
- * @param config - configuration for the delimiter and default trim behavior
- * @returns a new callable {@link JoinStringsInstance}
  */
 export function joinStringsInstance<T extends string = string>(config: JoinStringsInstanceConfig): JoinStringsInstance<T> {
   const { joiner, trimByDefault = false } = config;
@@ -245,15 +246,15 @@ export type StringSplitJoinInstanceConfig = JoinStringsInstanceConfig;
 /**
  * Creates a {@link StringSplitJoinInstance} that splits and joins strings using the configured delimiter.
  *
+ * @param config - Configuration for the delimiter and default trim behavior.
+ * @returns A new {@link StringSplitJoinInstance}
+ *
  * @example
  * ```ts
  * const pipeSplitJoin = stringSplitJoinInstance({ joiner: '|' });
  * pipeSplitJoin.joinStrings(['a', 'b']); // 'a|b'
  * pipeSplitJoin.splitStrings('a|b'); // ['a', 'b']
  * ```
- *
- * @param config - configuration for the delimiter and default trim behavior
- * @returns a new {@link StringSplitJoinInstance}
  */
 export function stringSplitJoinInstance<T extends string = string>(config: StringSplitJoinInstanceConfig): StringSplitJoinInstance<T> {
   const { joiner } = config;
@@ -311,11 +312,11 @@ export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
  *
  * Undefined is returned if a null/undefined value is input.
  *
- * @param value - the number to prefix
- * @param prefix - the prefix character to use for positive numbers; defaults to '+'
- * @returns the prefixed string, or undefined if the input is null/undefined
+ * @param value - The number to prefix.
+ * @param prefix - The prefix character to use for positive numbers; defaults to '+'.
+ * @returns The prefixed string, or undefined if the input is null/undefined.
  */
-export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): string | undefined {
+export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): Maybe<string> {
   if (value == null) {
     return undefined;
   }
@@ -326,13 +327,13 @@ export function addPlusPrefixToNumber(value?: Maybe<number>, prefix = '+'): stri
 /**
  * Capitalizes the first letter of the input string.
  *
+ * @param value - String to capitalize.
+ * @returns The input string with its first character uppercased.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, capitalize, case, uppercase, first
  * @dbxUtilRelated lowercase-first-letter, case-insensitive-string
- *
- * @param value - string to capitalize
- * @returns the input string with its first character uppercased
  */
 export function capitalizeFirstLetter(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -341,13 +342,13 @@ export function capitalizeFirstLetter(value: string): string {
 /**
  * Lowercases the first letter of the input string.
  *
+ * @param value - String to modify.
+ * @returns The input string with its first character lowercased.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, lowercase, case, first, decapitalize
  * @dbxUtilRelated capitalize-first-letter, case-insensitive-string
- *
- * @param value - string to modify
- * @returns the input string with its first character lowercased
  */
 export function lowercaseFirstLetter(value: string): string {
   return value.charAt(0).toLowerCase() + value.slice(1);
@@ -356,19 +357,19 @@ export function lowercaseFirstLetter(value: string): string {
 /**
  * A tuple of [firstName, lastName] where lastName may be undefined if the input has no space.
  */
-export type FirstNameLastNameTuple = [string, string | undefined];
+export type FirstNameLastNameTuple = [string, Maybe<string>];
 
 /**
  * Splits the input string into a first name and last name tuple using a space as the delimiter.
  * If the name contains more than one space, the remainder is treated as the last name.
  *
+ * @param input - Full name string to split.
+ * @returns A tuple of [firstName, lastName], where lastName includes all text after the first space.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, name, split, first, last, person, parse
  * @dbxUtilRelated split-join-remainder
- *
- * @param input - full name string to split
- * @returns a tuple of [firstName, lastName], where lastName includes all text after the first space
  */
 export function splitJoinNameString(input: string): FirstNameLastNameTuple {
   return SPACE_STRING_SPLIT_JOIN.splitJoinRemainder(input, 2) as FirstNameLastNameTuple;
@@ -377,13 +378,13 @@ export function splitJoinNameString(input: string): FirstNameLastNameTuple {
 /**
  * Creates a string that repeats the given string a specified number of times.
  *
+ * @param string - The string to repeat.
+ * @param reapeat - Number of times to repeat the string.
+ * @returns The repeated string concatenation.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, repeat, build, generate, fill
- *
- * @param string - the string to repeat
- * @param reapeat - number of times to repeat the string
- * @returns the repeated string concatenation
  */
 export function repeatString(string: string, reapeat: number): string {
   let result = '';
@@ -430,13 +431,14 @@ export type CutStringFunction = ((input: string) => string) & ((input: Maybe<str
 /**
  * Creates a {@link CutStringFunction} that truncates strings exceeding the configured maximum length.
  *
+ * @param config - Configuration controlling max length and end text behavior.
+ * @returns A reusable function that truncates input strings.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, cut, truncate, ellipsis, max-length, factory, abbreviate
  *
- * @param config - configuration controlling max length and end text behavior
- * @returns a reusable function that truncates input strings
  * @__NO_SIDE_EFFECTS__
  */
 export function cutStringFunction(config: CutStringFunctionConfig): CutStringFunction {
@@ -464,15 +466,15 @@ export function cutStringFunction(config: CutStringFunctionConfig): CutStringFun
 /**
  * Truncates a string to the given maximum length, appending end text (defaults to "...") if truncated.
  *
+ * @param input - The string to truncate, or null/undefined.
+ * @param maxLength - Maximum allowed length for the output string.
+ * @param endText - Text to append when truncated; defaults to "...".
+ * @returns The truncated string, or null/undefined if the input is null/undefined.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, cut, truncate, ellipsis, max-length, abbreviate, shorten
  * @dbxUtilRelated cut-string-function
- *
- * @param input - the string to truncate, or null/undefined
- * @param maxLength - maximum allowed length for the output string
- * @param endText - text to append when truncated; defaults to "..."
- * @returns the truncated string, or null/undefined if the input is null/undefined
  */
 export function cutString(input: Maybe<string>, maxLength: number, endText?: Maybe<string>): Maybe<string> {
   return cutStringFunction({ maxLength, endText })(input);
@@ -483,13 +485,13 @@ export function cutString(input: Maybe<string>, maxLength: number, endText?: May
  *
  * Newlines are preserved.
  *
+ * @param input - String to flatten.
+ * @returns The string with collapsed whitespace.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, whitespace, flatten, collapse, normalize, trim
  * @dbxUtilRelated simplify-whitespace
- *
- * @param input - string to flatten
- * @returns the string with collapsed whitespace
  */
 export function flattenWhitespace(input: string): string {
   return input.replaceAll(/[^\S\r\n]+/g, ' ').trim();
@@ -498,13 +500,13 @@ export function flattenWhitespace(input: string): string {
 /**
  * Reduces multiple consecutive newlines to a single newline and collapses multiple whitespace characters to a single space.
  *
+ * @param input - String to simplify.
+ * @returns The string with simplified whitespace and newlines.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, whitespace, simplify, normalize, newline, trim
  * @dbxUtilRelated flatten-whitespace
- *
- * @param input - string to simplify
- * @returns the string with simplified whitespace and newlines
  */
 export function simplifyWhitespace(input: string): string {
   return input.split(/\r?\n/).filter(Boolean).map(flattenWhitespace).join('\n');

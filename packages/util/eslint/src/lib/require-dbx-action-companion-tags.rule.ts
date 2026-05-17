@@ -1,4 +1,5 @@
 import { leadingJsdocFor } from './comments';
+import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 import { KEBAB_SLUG_PATTERN, reportOnJsdocLine, splitCommaSeparated } from './dbx-tag-families';
 
@@ -79,7 +80,7 @@ export const utilRequireDbxActionCompanionTagsRule: UtilRequireDbxActionCompanio
     const requireBareMarker = options.requireBareMarker !== false;
     const propertyOnlyCompanions: ReadonlySet<string> = new Set(['StateTransitionsFrom', 'StateTransitionsTo']);
 
-    function collectFamilyTags(parsed: ParsedJsdoc): { readonly markerTag: ParsedJsdocTag | undefined; readonly companions: ReadonlyMap<string, ParsedJsdocTag[]> } {
+    function collectFamilyTags(parsed: ParsedJsdoc): { readonly markerTag: Maybe<ParsedJsdocTag>; readonly companions: ReadonlyMap<string, ParsedJsdocTag[]> } {
       const markerTag = parsed.tags.find((t) => t.tag === 'dbxAction');
       const groups = new Map<string, ParsedJsdocTag[]>();
       for (const tag of parsed.tags) {

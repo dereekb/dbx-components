@@ -26,14 +26,15 @@ export interface IsSelectedDecisionFunctionConfig<T, K extends PrimativeKey = Pr
  * Creates an {@link IsSelectedDecisionFunctionFactory} that produces decision functions
  * checking whether a value's key is included in a set of selected values.
  *
+ * @param config - Configuration with the key reader and default behavior.
+ * @returns A factory that creates decision functions from a set of selected keys.
+ *
  * @dbxUtil
  * @dbxUtilCategory set
  * @dbxUtilKind factory
  * @dbxUtilTags set, selection, decision, predicate, factory, key
  * @dbxUtilRelated is-in-set-decision-function
  *
- * @param config - Configuration with the key reader and default behavior.
- * @returns A factory that creates decision functions from a set of selected keys.
  * @__NO_SIDE_EFFECTS__
  */
 export function isSelectedDecisionFunctionFactory<T, K extends PrimativeKey = PrimativeKey>(config: IsSelectedDecisionFunctionConfig<T, K>): IsSelectedDecisionFunctionFactory<T, K> {

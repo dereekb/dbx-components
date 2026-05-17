@@ -42,14 +42,15 @@ export type RandomEmailFactory = Factory<EmailAddress>;
 /**
  * Creates a factory that generates random email addresses using configurable prefixes, domains, and number generators.
  *
+ * @param inputConfig - Optional configuration overrides.
+ * @returns A factory function that produces random email address strings.
+ *
  * @dbxUtil
  * @dbxUtilCategory contact
  * @dbxUtilKind factory
  * @dbxUtilTags contact, email, random, factory, generate
  * @dbxUtilRelated random-phone-number-factory, incrementing-number-factory
  *
- * @param inputConfig - Optional configuration overrides
- * @returns A factory function that produces random email address strings
  * @__NO_SIDE_EFFECTS__
  */
 export function randomEmailFactory(inputConfig?: RandomEmailFactoryConfig): RandomEmailFactory {
@@ -100,14 +101,15 @@ export type RandomPhoneNumberFactory = Factory<E164PhoneNumber>;
 /**
  * Creates a factory that generates random E.164 phone numbers using configurable area codes and number generators.
  *
+ * @param inputConfig - Optional configuration overrides.
+ * @returns A factory function that produces random E.164 phone number strings.
+ *
  * @dbxUtil
  * @dbxUtilCategory contact
  * @dbxUtilKind factory
  * @dbxUtilTags contact, phone, e164, random, factory, generate
  * @dbxUtilRelated random-email-factory, random-number-factory
  *
- * @param inputConfig - Optional configuration overrides
- * @returns A factory function that produces random E.164 phone number strings
  * @__NO_SIDE_EFFECTS__
  */
 export function randomPhoneNumberFactory(inputConfig?: RandomPhoneNumberFactoryConfig): RandomPhoneNumberFactory {

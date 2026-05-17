@@ -21,8 +21,8 @@ export interface TransformAndValidateObject<T extends object, O, C = unknown> ex
  *
  * On validation success, calls the configured handler function. On validation failure, delegates to the error handler.
  *
- * @param config - schema, handler function, and validation error handler
- * @returns a function that validates and processes input objects
+ * @param config - Schema, handler function, and validation error handler.
+ * @returns Wrapped function that runs validation then either invokes the handler or routes failures to the error handler.
  *
  * @example
  * ```typescript
@@ -74,8 +74,9 @@ export type TransformAndValidateObjectFactory<C = unknown> = <T extends object, 
  * The factory pre-configures error handling so individual function calls
  * only need to specify the schema and handler.
  *
- * @param defaults - default error handler
- * @returns a factory function that creates TransformAndValidateObjectFunction instances
+ * @param defaults - Default error handler.
+ * @returns A factory function that creates TransformAndValidateObjectFunction instances.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function transformAndValidateObjectFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateObjectFactory<C> {
@@ -119,8 +120,8 @@ export interface TransformAndValidateObjectResultFunctionConfig<T extends object
  * Returns `{ success: true, object, result }` on valid input, or `{ success: false, validationErrors }` on failure.
  * The caller is responsible for handling the error case.
  *
- * @param config - schema and handler function
- * @returns a function that returns a success/error discriminated result
+ * @param config - Schema and handler function.
+ * @returns Wrapped function that yields a discriminated result so the caller can branch on success or validation failure.
  *
  * @example
  * ```typescript

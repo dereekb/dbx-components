@@ -33,14 +33,15 @@ export interface ModelMapFunctions<V extends object, D extends object> {
  *
  * The `to` function converts from the model (V) to data (D), while `from` converts back from data (D) to model (V).
  *
+ * @param fields - Field conversion definitions for each key in the model.
+ * @returns Object with `from` and `to` mapping functions.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, conversion, map, factory, bidirectional, fields
  * @dbxUtilRelated to-model-map-functions, modify-model-map-functions, model-field-conversions
  *
- * @param fields - Field conversion definitions for each key in the model
- * @returns Object with `from` and `to` mapping functions
  * @__NO_SIDE_EFFECTS__
  */
 export function makeModelMapFunctions<V extends object, D extends object>(fields: ModelFieldConversions<V, D>): ModelMapFunctions<V, D> {
@@ -82,14 +83,15 @@ export type ModelConversionFieldValuesFunction<I extends object, O extends objec
  *
  * Supports optional filtering by field names and skipping undefined values via {@link ModelConversionOptions}.
  *
+ * @param fields - Array of `[key, convertFn]` tuples defining how each field is converted.
+ * @returns Reusable converter that applies the per-field transforms to any input record.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, conversion, factory, fields, map, transform
  * @dbxUtilRelated make-model-map-functions, model-field-map-functions
  *
- * @param fields - Array of `[key, convertFn]` tuples defining how each field is converted
- * @returns A function that converts an input object to an output object
  * @__NO_SIDE_EFFECTS__
  */
 export function makeModelConversionFieldValuesFunction<I extends object, O extends object>(fields: ModelConversionFieldValuesConfig<I>): ModelConversionFieldValuesFunction<I, O> {
@@ -136,8 +138,8 @@ export type ModelFieldConversionsConfig<V extends object, D extends object> = Re
 /**
  * Converts a {@link ModelFieldConversionsConfig} (with raw config per field) into resolved {@link ModelFieldConversions} (with compiled map functions per field).
  *
- * @param config - Configuration object with a conversion config for each model field
- * @returns Resolved field conversions with compiled `from` and `to` functions
+ * @param config - Configuration object with a conversion config for each model field.
+ * @returns Resolved field conversions with compiled `from` and `to` functions.
  */
 export function modelFieldConversions<V extends object, D extends object>(config: ModelFieldConversionsConfig<V, D>): ModelFieldConversions<V, D> {
   return mapObjectMap(config, (x) => modelFieldMapFunctions(x) as any);
@@ -161,14 +163,15 @@ export type ModelFieldMapFunctionsWithDefaultsConfig<I = unknown, O = unknown> =
 /**
  * Compiles a {@link ModelFieldMapFunctionsConfig} into resolved {@link ModelFieldMapFunctions} with `from` and `to` mapping functions.
  *
+ * @param config - Configuration with `from` and `to` field map configs.
+ * @returns Compiled field map functions.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, field, map, factory, conversion, bidirectional
  * @dbxUtilRelated model-field-map-function, make-model-map-functions
  *
- * @param config - Configuration with `from` and `to` field map configs
- * @returns Compiled field map functions
  * @__NO_SIDE_EFFECTS__
  */
 export function modelFieldMapFunctions<I = unknown, O = unknown>(config: ModelFieldMapFunctionsConfig<I, O>): ModelFieldMapFunctions<I, O> {
@@ -227,14 +230,15 @@ export type ModelFieldMapToFunction<I, O> = ModelFieldMapFunction<I, O>;
  * - Null/undefined input with `convertMaybe`: delegates to that function
  * - Null/undefined input with `default` or `defaultInput`: uses the appropriate fallback
  *
+ * @param config - Configuration specifying how to convert values and handle null/undefined.
+ * @returns Reusable mapper that handles concrete and nullish inputs via the configured fallbacks.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, field, map, factory, maybe, default, convert
  * @dbxUtilRelated model-field-map-functions, make-model-map-functions
  *
- * @param config - Configuration specifying how to convert values and handle null/undefined
- * @returns A function that maps Maybe input values to output values
  * @__NO_SIDE_EFFECTS__
  */
 export function modelFieldMapFunction<I, O>(config: ModelFieldMapConfig<I, O>): ModelFieldMapFunction<I, O> {
@@ -283,8 +287,8 @@ export type ToModelFieldConversionsInput<T extends object, O extends object> = M
  *
  * Accepts either a pre-built `fieldConversions` reference or a `fields` config that will be compiled.
  *
- * @param input - Either a config ref or a pre-built conversions ref
- * @returns Resolved field conversions
+ * @param input - Either a config ref or a pre-built conversions ref.
+ * @returns Resolved field conversions.
  */
 export function toModelFieldConversions<T extends object, O extends object>(input: ToModelFieldConversionsInput<T, O>) {
   const conversions: ModelFieldConversions<T, O> = 'fieldConversions' in input ? input.fieldConversions : modelFieldConversions<T, O>(input.fields);
@@ -302,14 +306,15 @@ export type ToModelMapFunctionsInput<T extends object, O extends object> = ToMod
  *
  * Accepts a pre-built `mapFunctions` reference, a `fieldConversions` ref, or a `fields` config.
  *
+ * @param input - Input that can be resolved to model map functions.
+ * @returns Bidirectional model map functions.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, conversion, map, factory, normalize, resolve
  * @dbxUtilRelated make-model-map-functions, to-model-field-conversions
  *
- * @param input - Input that can be resolved to model map functions
- * @returns Bidirectional model map functions
  * @__NO_SIDE_EFFECTS__
  */
 export function toModelMapFunctions<T extends object, O extends object>(input: ToModelMapFunctionsInput<T, O>): ModelMapFunctions<T, O> {

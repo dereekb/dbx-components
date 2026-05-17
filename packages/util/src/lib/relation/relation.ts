@@ -174,11 +174,11 @@ export class ModelRelationUtility {
    *
    * Order from the "current" is retained. Anything in currentRetain overrides modifiedResults.
    *
-   * @param current - the original array whose ordering is preserved
-   * @param currentRetain - items from `current` that were excluded from modification and take precedence in the merge
-   * @param modifiedResults - items that were modified or added during the relation change
-   * @param readKey - function that extracts the relation key from each item for ordering
-   * @returns the merged array with original ordering restored
+   * @param current - The original array whose ordering is preserved.
+   * @param currentRetain - Items from `current` that were excluded from modification and take precedence in the merge.
+   * @param modifiedResults - Items that were modified or added during the relation change.
+   * @param readKey - Function that extracts the relation key from each item for ordering.
+   * @returns The merged array with original ordering restored.
    */
   // eslint-disable-next-line @typescript-eslint/max-params
   private static _mergeMaskResults<T extends RelationObject>(current: T[], currentRetain: T[], modifiedResults: T[], readKey: ReadRelationKeyFn<T>) {
@@ -270,11 +270,11 @@ export class ModelRelationUtility {
   /**
    * Used to modify a collection which may be multi-type. If readType is provided, the collection is handled as a multi-type map.
    *
-   * @param current - the current collection of relation objects
-   * @param mods - the modifications to apply to the collection
-   * @param modifyCollection - function that applies modifications to a single-type subset of the collection
-   * @param readType - optional function to read the type from each relation object, enabling multi-type handling
-   * @returns the modified collection with all changes applied
+   * @param current - The current collection of relation objects.
+   * @param mods - The modifications to apply to the collection.
+   * @param modifyCollection - Function that applies modifications to a single-type subset of the collection.
+   * @param readType - Optional function to read the type from each relation object, enabling multi-type handling.
+   * @returns The modified collection with all changes applied.
    */
   // eslint-disable-next-line @typescript-eslint/max-params
   private static _modifyCollection<T extends RelationObject>(current: T[], mods: T[], modifyCollection: (subSetCurrent: T[], mods: T[]) => T[], readType?: Maybe<ReadRelationModelTypeFn<T>>): T[] {

@@ -15,13 +15,13 @@ export type EmailAddressDomain = string;
 /**
  * Extracts unique domain names from a list of email addresses (case-insensitive).
  *
+ * @param addresses - Array of email addresses to extract domains from.
+ * @returns Array of unique lowercase domain strings.
+ *
  * @dbxUtil
  * @dbxUtilCategory contact
  * @dbxUtilTags email, domain, extract, unique, dedupe, case-insensitive
  * @dbxUtilRelated read-domain-from-email-address, read-email-domain-from-url-or-email-address
- *
- * @param addresses - Array of email addresses to extract domains from
- * @returns Array of unique lowercase domain strings
  */
 export function readDomainsFromEmailAddresses(addresses: EmailAddress[]): EmailAddressDomain[] {
   return uniqueCaseInsensitiveStrings(addresses.map(readDomainFromEmailAddress));
@@ -30,13 +30,13 @@ export function readDomainsFromEmailAddresses(addresses: EmailAddress[]): EmailA
 /**
  * Extracts the domain portion from a single email address.
  *
+ * @param address - The email address to extract the domain from.
+ * @returns The lowercase domain string.
+ *
  * @dbxUtil
  * @dbxUtilCategory contact
  * @dbxUtilTags email, domain, extract, parse, lowercase
  * @dbxUtilRelated read-domains-from-email-addresses, read-email-domain-from-url-or-email-address
- *
- * @param address - The email address to extract the domain from
- * @returns The lowercase domain string
  */
 export function readDomainFromEmailAddress(address: EmailAddress): EmailAddressDomain {
   const split = address.split('@');
@@ -55,13 +55,13 @@ export function readDomainFromEmailAddress(address: EmailAddress): EmailAddressD
  *
  * The "www." prefix is stripped from URL-style inputs since emails typically don't use it.
  *
+ * @param urlLikeInput - A URL, email address, or domain string.
+ * @returns The extracted domain.
+ *
  * @dbxUtil
  * @dbxUtilCategory contact
  * @dbxUtilTags email, domain, url, extract, normalize, parse, www
  * @dbxUtilRelated read-domain-from-email-address, read-domains-from-email-addresses
- *
- * @param urlLikeInput - A URL, email address, or domain string
- * @returns The extracted domain
  */
 export function readEmailDomainFromUrlOrEmailAddress(urlLikeInput: string | EmailAddress | EmailAddressDomain): EmailAddressDomain {
   const emailSplit = urlLikeInput.split('@');

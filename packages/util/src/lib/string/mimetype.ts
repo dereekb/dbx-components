@@ -130,8 +130,8 @@ export function mimeTypeForImageFileExtension(extension: Maybe<ImageFileExtensio
 /**
  * Returns the image file extension for the given MIME type, or undefined if the MIME type is not a known image type.
  *
- * @param mimeType - the MIME type to look up
- * @returns the corresponding image file extension, or undefined if not recognized
+ * @param mimeType - The MIME type to look up.
+ * @returns The corresponding image file extension, or undefined if not recognized.
  */
 export function imageFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<ImageFileExtension> {
   return mimeType ? IMAGE_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD[mimeType] : undefined;
@@ -220,7 +220,7 @@ export function mimeTypeForDocumentFileExtension(extension: Maybe<DocumentFileEx
 /**
  * Returns the document file extension for the given mimetype, or undefined if the mimetype is not known/recognized.
  *
- * @param mimeType The mimetype to get the document file extension for.
+ * @param mimeType - The mimetype to get the document file extension for.
  * @returns The document file extension for the given mimetype, or undefined if the mimetype is not known.
  */
 export function documentFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<DocumentFileExtension> {
@@ -265,8 +265,8 @@ export function mimeTypeForApplicationFileExtension(extension: Maybe<Application
 /**
  * Returns the application file extension for the given MIME type, or undefined if the MIME type is not a known application type.
  *
- * @param mimeType - the MIME type to look up
- * @returns the corresponding application file extension, or undefined if not recognized
+ * @param mimeType - The MIME type to look up.
+ * @returns The corresponding application file extension, or undefined if not recognized.
  */
 export function applicationFileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<ApplicationFileExtension> {
   return mimeType ? APPLICATION_MIME_TYPES_TO_FILE_EXTENSIONS_RECORD[mimeType] : undefined;
@@ -296,8 +296,8 @@ export function mimeTypeForFileExtension(extension: Maybe<DbxComponentsKnownFile
 /**
  * Returns the file extension for the given MIME type by checking image, document, and application types in order.
  *
- * @param mimeType - the MIME type to look up
- * @returns the corresponding file extension, or undefined if the MIME type is not recognized
+ * @param mimeType - The MIME type to look up.
+ * @returns The corresponding file extension, or undefined if the MIME type is not recognized.
  */
 export function fileExtensionForMimeType(mimeType: Maybe<MimeTypeWithoutParameters>): Maybe<DbxComponentsKnownFileExtension> {
   const result: Maybe<DbxComponentsKnownFileExtension> = imageFileExtensionForMimeType(mimeType) ?? documentFileExtensionForMimeType(mimeType) ?? applicationFileExtensionForMimeType(mimeType);

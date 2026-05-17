@@ -61,14 +61,15 @@ export interface RunNamedAsyncTasksResult<T = void> {
 /**
  * Creates a new RunNamedAsyncTasksFunction.
  *
+ * @param config - Optional configuration.
+ * @returns A new RunNamedAsyncTasksFunction.
+ *
  * @dbxUtil
  * @dbxUtilCategory promise
  * @dbxUtilKind factory
  * @dbxUtilTags promise, async, task, factory, named, parallel
  * @dbxUtilRelated try-with-promise-factories-function
  *
- * @param config Optional configuration.
- * @returns A new RunNamedAsyncTasksFunction.
  * @__NO_SIDE_EFFECTS__
  */
 export function runNamedAsyncTasksFunction<T = void>(config?: RunNamedAsyncTasksFunctionConfig<T>): RunNamedAsyncTasksFunction<T> {

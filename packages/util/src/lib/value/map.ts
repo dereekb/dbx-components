@@ -21,8 +21,8 @@ export type ReadValueFunction<I, O> = MapFunction<I, O>;
  * Wraps a MapFunction so that null/undefined inputs are passed through without invoking the map,
  * avoiding errors on nullable values.
  *
- * @param mapFunction - function to apply only when the input is defined
- * @returns a new function that short-circuits on null/undefined inputs
+ * @param mapFunction - Function to apply only when the input is defined.
+ * @returns A new function that short-circuits on null/undefined inputs.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -39,6 +39,7 @@ export type ReadValueFunction<I, O> = MapFunction<I, O>;
  * maybeDouble(undefined); // undefined
  * maybeDouble(null);      // null
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function mapMaybeFunction<I, O>(mapFunction: MapFunction<I, O>): MapFunction<Maybe<I>, Maybe<O>> {
@@ -76,14 +77,15 @@ export type ApplyMapFunctionWithOptions<I, O, C> = (input: I, target?: Maybe<Par
 /**
  * Lifts a per-element MapFunction into one that operates on arrays, applying the mapping to each element.
  *
+ * @param mapFunction - Per-element transformation.
+ * @returns A function that maps entire arrays.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags map, transform, array, lift, factory
  * @dbxUtilRelated map-maybe-function, chain-map-functions
  *
- * @param mapFunction - per-element transformation
- * @returns a function that maps entire arrays
  * @__NO_SIDE_EFFECTS__
  */
 export function mapArrayFunction<I, O>(mapFunction: MapFunction<I, O>): MapArrayFunction<MapFunction<I, O>> {
@@ -110,12 +112,13 @@ export const MAP_IDENTITY: <T>(input: T) => T = ((input: unknown) => input) as <
 /**
  * Returns the shared {@link MAP_IDENTITY} function cast to the requested type, useful for providing a typed no-op transformation.
  *
+ * @returns The singleton identity function typed as `MapFunction<T, T>`
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilTags map, identity, no-op, typed
  * @dbxUtilRelated map-identity, is-map-identity-function
  *
- * @returns the singleton identity function typed as `MapFunction<T, T>`
  * @__NO_SIDE_EFFECTS__
  */
 export function mapIdentityFunction<T>(): MapFunction<T, T> {
@@ -125,13 +128,14 @@ export function mapIdentityFunction<T>(): MapFunction<T, T> {
 /**
  * Checks whether the given function is the singleton {@link MAP_IDENTITY} reference.
  *
+ * @param fn - The function to check.
+ * @returns `true` if the function is the identity singleton.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilTags map, identity, type-guard, sentinel
  * @dbxUtilRelated map-identity, map-identity-function
  *
- * @param fn - the function to check
- * @returns `true` if the function is the identity singleton
  * @__NO_SIDE_EFFECTS__
  */
 export function isMapIdentityFunction(fn: unknown): fn is typeof MAP_IDENTITY {
@@ -150,8 +154,8 @@ export type MapFunctionOutputPair<O, I = unknown> = {
 /**
  * Wraps a MapFunction so that each invocation returns a {@link MapFunctionOutputPair} containing both the original input and the computed output.
  *
- * @param fn - the map function to wrap
- * @returns a new function that returns input/output pairs
+ * @param fn - The map function to wrap.
+ * @returns A new function that returns input/output pairs.
  */
 export function mapFunctionOutputPair<O, I = unknown>(fn: MapFunction<I, O>): MapFunction<I, MapFunctionOutputPair<O, I>> {
   return (input: I) => {
@@ -174,8 +178,8 @@ export type MapFunctionOutput<O extends object, I = unknown> = O & { readonly _i
  * Wraps a MapFunction so that its object output is augmented with a readonly `_input` property referencing the original input.
  * Useful for retaining provenance through a transformation pipeline.
  *
- * @param fn - the map function whose output will be augmented
- * @returns a new function that returns a {@link MapFunctionOutput} with the `_input` reference attached
+ * @param fn - The map function whose output will be augmented.
+ * @returns A new function that returns a {@link MapFunctionOutput} with the `_input` reference attached.
  */
 export function wrapMapFunctionOutput<O extends object, I = unknown>(fn: MapFunction<I, O>): MapFunction<I, MapFunctionOutput<O, I>> {
   return (input: I) => {
@@ -187,9 +191,9 @@ export function wrapMapFunctionOutput<O extends object, I = unknown>(fn: MapFunc
 /**
  * Attaches a readonly `_input` property to the given output object, creating a {@link MapFunctionOutput}.
  *
- * @param output - the computed output object
- * @param input - the original input value to attach
- * @returns the output augmented with `_input`
+ * @param output - The computed output object.
+ * @param input - The original input value to attach.
+ * @returns The output augmented with `_input`
  */
 export function mapFunctionOutput<O extends object, I = unknown>(output: O, input: I): MapFunctionOutput<O, I> {
   return build<MapFunctionOutput<O, I>>({
@@ -206,8 +210,8 @@ export function mapFunctionOutput<O extends object, I = unknown>(output: O, inpu
  * Null/undefined entries and identity functions are automatically removed for efficiency.
  * Returns the identity function if no meaningful functions remain.
  *
- * @param input - one or more optional same-type map functions to chain
- * @returns a single composed function that runs all provided functions in order
+ * @param input - One or more optional same-type map functions to chain.
+ * @returns A single composed function that runs all provided functions in order.
  *
  * @dbxUtil
  * @dbxUtilCategory value

@@ -47,14 +47,15 @@ export interface TryWithPromiseFactoriesFunctionConfig<I, O> extends TryWithProm
  * Creates a {@link TryWithPromiseFactoriesFunction} that sequentially tries each promise factory
  * until one returns a non-null value (or a Maybe value if `successOnMaybe` is true).
  *
+ * @param config - Configuration including the array of promise factories and default behavior options.
+ * @returns A function that tries each factory in order for a given input.
+ *
  * @dbxUtil
  * @dbxUtilCategory promise
  * @dbxUtilKind factory
  * @dbxUtilTags promise, factory, try, sequential, fallback, async
  * @dbxUtilRelated run-named-async-tasks-function
  *
- * @param config - Configuration including the array of promise factories and default behavior options.
- * @returns A function that tries each factory in order for a given input.
  * @__NO_SIDE_EFFECTS__
  */
 export function tryWithPromiseFactoriesFunction<I, O>(config: TryWithPromiseFactoriesFunctionConfig<I, O>): TryWithPromiseFactoriesFunction<I, O> {

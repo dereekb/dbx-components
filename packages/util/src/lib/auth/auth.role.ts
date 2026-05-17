@@ -43,9 +43,9 @@ export const AUTH_USER_ROLE = 'user';
 /**
  * Checks if an AuthRoleSet contains all of the specified roles.
  *
- * @param authRolesSet - The set of auth roles to check against
- * @param roles - An iterable of roles to check for, or null/undefined
- * @returns True if the authRolesSet contains all the specified roles, or if roles is empty/null
+ * @param authRolesSet - Granted roles that must satisfy the required-roles check.
+ * @param roles - Roles that must all be present; nullish or empty is treated as vacuously true.
+ * @returns True when every required role appears in the granted set; otherwise false.
  */
 export function authRolesSetHasRoles(authRolesSet: AuthRoleSet, roles: Maybe<Iterable<AuthRole>>) {
   return setContainsAllValues(authRolesSet, roles ?? []);

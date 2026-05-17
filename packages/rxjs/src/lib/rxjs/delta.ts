@@ -49,6 +49,9 @@ interface OnMatchDeltaScan<T> {
  * The `from` value must be seen first; only then is the `to` value emitted. When `requireConsecutive`
  * is true, the two values must be adjacent emissions.
  *
+ * @param config - From/to values, optional comparator, and consecutive requirement.
+ * @returns An operator that emits on value transitions.
+ *
  * @example
  * ```ts
  * // Emit when transitioning from true to false
@@ -56,9 +59,6 @@ interface OnMatchDeltaScan<T> {
  *   onMatchDelta({ from: true, to: false, requireConsecutive: true })
  * ).subscribe((val) => console.log('Transitioned to false'));
  * ```
- *
- * @param config - from/to values, optional comparator, and consecutive requirement
- * @returns an operator that emits on value transitions
  */
 export function onMatchDelta<T>(config: OnMatchDeltaConfig<T>): MonoTypeOperatorFunction<T> {
   const { isMatch: inputIsSame, from, to, requireConsecutive } = config;

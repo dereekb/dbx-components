@@ -19,9 +19,9 @@ export type VectorTuple = [number, number];
  * If both values are non-nullish, delegates to {@link vectorsAreEqual}.
  * If both are nullish, uses strict equality (`===`).
  *
- * @param a - first vector
- * @param b - second vector
- * @returns `true` if both vectors are equal or both are nullish
+ * @param a - First vector.
+ * @param b - Second vector.
+ * @returns `true` if both vectors are equal or both are nullish.
  */
 export function isSameVector(a: Maybe<Partial<Vector>>, b: Maybe<Partial<Vector>>): boolean {
   return a && b ? vectorsAreEqual(a, b) : a === b;
@@ -30,9 +30,9 @@ export function isSameVector(a: Maybe<Partial<Vector>>, b: Maybe<Partial<Vector>
 /**
  * Returns `true` if both vectors have the same `x` and `y` values using strict equality.
  *
- * @param a - first vector
- * @param b - second vector
- * @returns `true` if both vectors have identical `x` and `y` values
+ * @param a - First vector.
+ * @param b - Second vector.
+ * @returns `true` if both vectors have identical `x` and `y` values.
  */
 export function vectorsAreEqual(a: Partial<Vector>, b: Partial<Vector>): boolean {
   return a.x === b.x && a.y === b.y;
@@ -49,8 +49,8 @@ export type VectorResizeFunction = (input: Vector) => Vector;
  * For each axis, if a minimum is specified, the result uses whichever value is larger (input or minimum).
  * If a minimum is not specified for an axis, the input value is passed through unchanged.
  *
- * @param minSize - the minimum dimensions to enforce
- * @returns a resize function that clamps each axis to the specified minimum
+ * @param minSize - The minimum dimensions to enforce.
+ * @returns A resize function that clamps each axis to the specified minimum.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -64,6 +64,7 @@ export type VectorResizeFunction = (input: Vector) => Vector;
  * resize({ x: 3, y: 10 });
  * // { x: 5, y: 10 }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function vectorMinimumSizeResizeFunction(minSize: Partial<Vector>): VectorResizeFunction {
@@ -109,9 +110,9 @@ export interface Rectangle {
  *
  * Degenerate rectangles (where corners coincide on an axis) are considered non-overlapping.
  *
- * @param a - first rectangle
- * @param b - second rectangle
- * @returns `true` if the rectangles share any interior area
+ * @param a - First rectangle.
+ * @param b - Second rectangle.
+ * @returns `true` if the rectangles share any interior area.
  *
  * @example
  * ```ts
@@ -146,9 +147,9 @@ export function rectangleOverlapsRectangle(a: Rectangle, b: Rectangle): boolean 
  * Returns the overlapping {@link Rectangle} if the two inputs intersect,
  * or `undefined` if they do not overlap.
  *
- * @param a - first rectangle
- * @param b - second rectangle
- * @returns the overlapping {@link Rectangle}, or `undefined` if the rectangles do not intersect
+ * @param a - First rectangle.
+ * @param b - Second rectangle.
+ * @returns The overlapping {@link Rectangle}, or `undefined` if the rectangles do not intersect.
  */
 export function getOverlappingRectangle(a: Rectangle, b: Rectangle): Maybe<Rectangle> {
   const xl = Math.max(a.bl.x, b.bl.x);

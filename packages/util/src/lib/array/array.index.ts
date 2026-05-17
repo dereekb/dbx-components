@@ -27,9 +27,9 @@ export interface IndexSetPair<T> extends IndexRef {
 /**
  * Runs a filter on an array and returns an {@link IndexSet} containing the indices of values that match.
  *
- * @param input - array to search through
- * @param filter - predicate function to test each value
- * @returns an {@link IndexSet} of indices for matching values
+ * @param input - Array to search through.
+ * @param filter - Predicate function to test each value.
+ * @returns An {@link IndexSet} of indices for matching values.
  */
 export function findToIndexSet<T>(input: T[], filter: (value: T) => boolean): IndexSet {
   const filterIndexes: IndexNumber[] = [];
@@ -46,9 +46,9 @@ export function findToIndexSet<T>(input: T[], filter: (value: T) => boolean): In
 /**
  * Expands an {@link IndexSet} into an {@link IndexSetPairSet} by pairing each index with the corresponding item from the input array.
  *
- * @param input - source array to retrieve items from
- * @param indexSet - set of indices to expand
- * @returns an {@link IndexSetPairSet} pairing each index with its corresponding item
+ * @param input - Source array to retrieve items from.
+ * @param indexSet - Set of indices to expand.
+ * @returns An {@link IndexSetPairSet} pairing each index with its corresponding item.
  */
 export function expandIndexSet<T>(input: T[], indexSet: IndexSet): IndexSetPairSet<T> {
   return indexSet.map((i) => ({ i, item: input[i] }));
@@ -60,9 +60,9 @@ export function expandIndexSet<T>(input: T[], indexSet: IndexSet): IndexSetPairS
  * The comparison follows ascending sort conventions: a negative return value from the compare function
  * indicates the second argument is "better" than the first.
  *
- * @param input - array of items to search through
- * @param compare - comparison function used to determine the best item
- * @returns an {@link IndexSetPair} containing the best item and its index
+ * @param input - Array of items to search through.
+ * @param compare - Comparison function used to determine the best item.
+ * @returns An {@link IndexSetPair} containing the best item and its index.
  */
 export function findBest<T>(input: T[], compare: (a: T, b: T) => number): IndexSetPair<T> {
   let bestIndex = 0;
@@ -88,9 +88,9 @@ export function findBest<T>(input: T[], compare: (a: T, b: T) => number): IndexS
  *
  * Pairs with null/undefined items are skipped in favor of pairs with defined items.
  *
- * @param input - set of index-item pairs to search through
- * @param compare - ascending sort comparison function used to determine the best item
- * @returns the {@link IndexSetPair} containing the best item
+ * @param input - Set of index-item pairs to search through.
+ * @param compare - Ascending sort comparison function used to determine the best item.
+ * @returns The {@link IndexSetPair} containing the best item.
  */
 export function findBestIndexSetPair<T>(input: IndexSetPairSet<T>, compare: AscendingSortCompareFunction<T>): IndexSetPair<T> {
   let best = input[0];
@@ -118,14 +118,15 @@ export type SliceIndexRangeFunction<T> = (input: T[]) => T[];
 /**
  * Creates a {@link SliceIndexRangeFunction} that slices the specified index range from any input array.
  *
+ * @param inputRange - Range boundaries to bake into the returned slicer.
+ * @returns Reusable slicer that extracts the configured range from any input array.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, slice, index, range, factory
  * @dbxUtilRelated index-range, find-to-index-set
  *
- * @param inputRange - the index range configuration to use for slicing
- * @returns a function that slices the configured range from an input array
  * @__NO_SIDE_EFFECTS__
  */
 export function sliceIndexRangeFunction<T>(inputRange: IndexRangeInput): SliceIndexRangeFunction<T> {

@@ -40,15 +40,16 @@ export type HandlerSetFunction<T, R = HandleResult> = (handlerFunction: Internal
 /**
  * Creates a {@link HandlerSetFunction} that registers a handler function on a pre-defined key.
  *
+ * @param accessor - The handler set accessor to register on.
+ * @param key - The key (or keys) to associate the handler with.
+ * @returns A function that accepts a handler function and registers it for the given key.
+ *
  * @dbxUtil
  * @dbxUtilCategory service
  * @dbxUtilKind factory
  * @dbxUtilTags service, handler, set, factory, register
  * @dbxUtilRelated handler-mapped-set-function, handler-factory
  *
- * @param accessor - The handler set accessor to register on.
- * @param key - The key (or keys) to associate the handler with.
- * @returns A function that accepts a handler function and registers it for the given key.
  * @__NO_SIDE_EFFECTS__
  */
 export function handlerSetFunction<T, K extends PrimativeKey = string, R = HandleResult>(accessor: HandlerSetAccessor<T, K, R>, key: ArrayOrValue<K>): HandlerSetFunction<T, R> {
@@ -71,16 +72,17 @@ export type HandlerMappedSetFunction<I, R = HandleResult> = (handlerFunction: In
  * Creates a {@link HandlerMappedSetFunction} that maps the handler's native input type to a different
  * type before invoking the registered handler function.
  *
+ * @param accessor - The handler set accessor to register on.
+ * @param key - The key (or keys) to associate the handler with.
+ * @param mapFn - Function to map from the handler's native type to the handler function's expected type.
+ * @returns A function that accepts a mapped handler function and registers it.
+ *
  * @dbxUtil
  * @dbxUtilCategory service
  * @dbxUtilKind factory
  * @dbxUtilTags service, handler, set, mapped, factory, transform
  * @dbxUtilRelated handler-set-function, handler-mapped-set-function-factory
  *
- * @param accessor - The handler set accessor to register on.
- * @param key - The key (or keys) to associate the handler with.
- * @param mapFn - Function to map from the handler's native type to the handler function's expected type.
- * @returns A function that accepts a mapped handler function and registers it.
  * @__NO_SIDE_EFFECTS__
  */
 export function handlerMappedSetFunction<I, T, K extends PrimativeKey = string, R = HandleResult>(accessor: HandlerSetAccessor<T, K, R>, key: ArrayOrValue<K>, mapFn: MapFunction<T, I>): HandlerMappedSetFunction<I, R> {
@@ -102,15 +104,16 @@ export type HandlerMappedSetFunctionFactory<I, K extends PrimativeKey = string, 
 /**
  * Creates a {@link HandlerMappedSetFunctionFactory} that produces mapped set functions for any given key.
  *
+ * @param accessor - The handler set accessor to register on.
+ * @param mapFn - Function to map from the handler's native type to the handler function's expected type.
+ * @returns A factory that creates HandlerMappedSetFunctions for specific keys.
+ *
  * @dbxUtil
  * @dbxUtilCategory service
  * @dbxUtilKind factory
  * @dbxUtilTags service, handler, mapped, factory, dispatch
  * @dbxUtilRelated handler-mapped-set-function, handler-set-function
  *
- * @param accessor - The handler set accessor to register on.
- * @param mapFn - Function to map from the handler's native type to the handler function's expected type.
- * @returns A factory that creates HandlerMappedSetFunctions for specific keys.
  * @__NO_SIDE_EFFECTS__
  */
 export function handlerMappedSetFunctionFactory<I, T, K extends PrimativeKey = string, R = HandleResult>(accessor: HandlerSetAccessor<T, K, R>, mapFn: MapFunction<T, I>): HandlerMappedSetFunctionFactory<I, K, R> {
@@ -146,14 +149,15 @@ export interface HandlerConfigurerFactoryConfig<C extends HandlerBindAccessor<T,
  * Creates a {@link HandlerConfigurerFactory} that produces configurers for binding handler functions
  * to a handler instance with automatic `this` binding.
  *
+ * @param config - Configuration providing the accessor-to-configurer mapping.
+ * @returns A factory that creates HandlerConfigurers for specific handlers.
+ *
  * @dbxUtil
  * @dbxUtilCategory service
  * @dbxUtilKind factory
  * @dbxUtilTags service, handler, configurer, factory, bind
  * @dbxUtilRelated handler-bind-accessor, handler-factory
  *
- * @param config - Configuration providing the accessor-to-configurer mapping.
- * @returns A factory that creates HandlerConfigurers for specific handlers.
  * @__NO_SIDE_EFFECTS__
  */
 export function handlerConfigurerFactory<C extends HandlerBindAccessor<T, K, R>, T, K extends PrimativeKey = string, R = HandleResult>(config: HandlerConfigurerFactoryConfig<C, T, K, R>): HandlerConfigurerFactory<C, T, K, R> {

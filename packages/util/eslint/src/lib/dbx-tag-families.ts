@@ -9,6 +9,7 @@
  * visitors and message map; all value-format validation lives here.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 
 type AstNode = any;
@@ -76,8 +77,8 @@ export type DbxTagViolation =
 /**
  * Splits a comma-separated tag-value string into trimmed items, preserving order.
  *
- * @param value - The raw text after the tag name on a single line.
- * @returns An array of non-empty trimmed items.
+ * @param value - Raw text following the tag name on a single line.
+ * @returns Non-empty trimmed segments in declaration order.
  */
 export function splitCommaSeparated(value: string): string[] {
   return value
@@ -93,9 +94,9 @@ export function splitCommaSeparated(value: string): string[] {
  * @param text - The trimmed tag value text.
  * @returns The parsed boolean, or `undefined` when the text is not in the vocabulary.
  */
-export function parseBooleanTagValue(text: string): boolean | undefined {
+export function parseBooleanTagValue(text: string): Maybe<boolean> {
   const lowered = text.trim().toLowerCase();
-  let result: boolean | undefined;
+  let result: Maybe<boolean>;
   if (TRUE_TAG_VALUES.has(lowered)) {
     result = true;
   } else if (FALSE_TAG_VALUES.has(lowered)) {
@@ -123,7 +124,7 @@ export function commentValueToSourceOffset(commentNode: AstNode, valueOffset: nu
  * @param marker - The bare family marker (e.g. `'dbxPipe'`).
  * @returns The marker tag (if present), and all companion tags in source order.
  */
-export function findFamilyTags(parsed: ParsedJsdoc, marker: string): { readonly markerTag: ParsedJsdocTag | undefined; readonly familyTags: readonly ParsedJsdocTag[] } {
+export function findFamilyTags(parsed: ParsedJsdoc, marker: string): { readonly markerTag: Maybe<ParsedJsdocTag>; readonly familyTags: readonly ParsedJsdocTag[] } {
   const familyTags = parsed.tags.filter((t) => t.tag === marker || t.tag.startsWith(marker));
   const markerTag = parsed.tags.find((t) => t.tag === marker);
   return { markerTag, familyTags };
@@ -134,7 +135,7 @@ export function findFamilyTags(parsed: ParsedJsdoc, marker: string): { readonly 
  *
  * @param familyTags - The family tag list from {@link findFamilyTags}.
  * @param marker - The bare family marker.
- * @returns A map from companion-suffix to the matching tags in source order.
+ * @returns Lookup keyed by companion-suffix listing matching tags in declaration order.
  */
 export function groupCompanionsBySuffix(familyTags: readonly ParsedJsdocTag[], marker: string): Map<string, ParsedJsdocTag[]> {
   const result = new Map<string, ParsedJsdocTag[]>();
@@ -235,6 +236,18 @@ export interface CheckDbxTagFamilyInput {
   readonly emit: (violation: DbxTagViolation) => void;
 }
 
+/**
+ * Validates a `@dbx<Family>` marker plus its companion tags against the supplied spec.
+ * Reports unknown companions, missing required companions, duplicates, and per-companion
+ * value violations through `input.emit`.
+ *
+ * @param input - Parsed JSDoc, family spec, resolved marker/companion tags, and emit sink.
+ *
+ * @example
+ * ```ts
+ * checkDbxTagFamily({ parsed, spec, markerTag, familyTags, emit });
+ * ```
+ */
 export function checkDbxTagFamily(input: CheckDbxTagFamilyInput): void {
   const { spec, markerTag, familyTags, emit } = input;
   const knownSuffixes = new Set(spec.companions.map((c) => c.suffix));
@@ -275,10 +288,21 @@ export interface ReportOnLineInput {
   readonly lineIndex: number;
   readonly messageId: string;
   readonly data?: Record<string, string>;
-  readonly report: (descriptor: { loc: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => AstNode | AstNode[] | null }) => void;
-  readonly fix?: (fixer: AstNode) => AstNode | AstNode[] | null;
+  readonly report: (descriptor: { loc: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]> }) => void;
+  readonly fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]>;
 }
 
+/**
+ * Translates a JSDoc-line violation into an ESLint `context.report()` call by computing the
+ * source range of the offending line and attaching the supplied message + optional fixer.
+ *
+ * @param input - Reporting context (comment node, parsed JSDoc, source code, line index, message id, optional data + fixer, report sink).
+ *
+ * @example
+ * ```ts
+ * reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknown', report: context.report });
+ * ```
+ */
 export function reportOnJsdocLine(input: ReportOnLineInput): void {
   const { commentNode, parsed, sourceCode, lineIndex, messageId, data, report, fix } = input;
   const line = parsed.lines[lineIndex];
@@ -309,7 +333,7 @@ export type DbxFamilyVisitorKind = 'FunctionDeclaration' | 'VariableDeclaration'
  * messageId + data, or `null` when the violation should be silently dropped
  * (e.g. when the rule does not require the missing companion).
  */
-export type DbxFamilyViolationMapper = (violation: DbxTagViolation) => { readonly messageId: string; readonly data?: Record<string, string>; readonly fixable?: boolean } | null;
+export type DbxFamilyViolationMapper = (violation: DbxTagViolation) => Maybe<{ readonly messageId: string; readonly data?: Record<string, string>; readonly fixable?: boolean }>;
 
 /**
  * Produces an auto-fix for a `@dbx<Family>Tags ...` line that lowercases every
@@ -332,10 +356,22 @@ export interface LowercaseTagsFixResult {
   readonly replacement: string;
 }
 
-export function buildLowercaseTagsFix(input: BuildLowercaseTagsFixInput): LowercaseTagsFixResult | undefined {
+/**
+ * Computes an auto-fix descriptor that lowercases every token after a `@dbx<Family>Tags` tag
+ * name. Returns `undefined` when the line is already canonical so the caller can short-circuit.
+ *
+ * @param input - Fix context (comment node, parsed JSDoc, source code, target tag).
+ * @returns Replacement range + text when a rewrite is needed; otherwise `undefined`.
+ *
+ * @example
+ * ```ts
+ * const fix = buildLowercaseTagsFix({ commentNode, parsed, sourceCode, tag });
+ * ```
+ */
+export function buildLowercaseTagsFix(input: BuildLowercaseTagsFixInput): Maybe<LowercaseTagsFixResult> {
   const { commentNode, parsed, sourceCode, tag } = input;
   const tagLine = parsed.lines[tag.startLineIndex];
-  let result: LowercaseTagsFixResult | undefined;
+  let result: Maybe<LowercaseTagsFixResult>;
   if (tagLine) {
     const tagLineSourceStart = commentValueToSourceOffset(commentNode, tagLine.textOffsetStart);
     const tagLineSourceEnd = tagLineSourceStart + tagLine.text.length;

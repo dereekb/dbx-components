@@ -59,13 +59,13 @@ export type StringOrGetter = GetterOrValue<string>;
 /**
  * Returns true if the input value is a non-class function (i.e., likely a Getter).
  *
+ * @param value - The value to check.
+ * @returns True if the value is a non-class function.
+ *
  * @dbxUtil
  * @dbxUtilCategory getter
  * @dbxUtilTags getter, type-guard, function, callable, check
  * @dbxUtilRelated as-getter, get-value-from-getter
- *
- * @param value - The value to check
- * @returns True if the value is a non-class function
  */
 export function isGetter<T = unknown>(value: unknown): value is Getter<T> {
   return isNonClassFunction(value);
@@ -94,13 +94,13 @@ export function getValueFromGetter<T, A>(this: unknown, input: unknown, args?: A
 /**
  * Wraps the input as a Getter function. If it's already a function, returns it directly.
  *
+ * @param input - A value or getter function.
+ * @returns A Getter function that returns the value.
+ *
  * @dbxUtil
  * @dbxUtilCategory getter
  * @dbxUtilTags getter, factory, wrap, ensure, normalize
  * @dbxUtilRelated get-value-from-getter, is-getter
- *
- * @param input - A value or getter function
- * @returns A Getter function that returns the value
  */
 export function asGetter<T>(input: GetterOrValue<T>): Getter<T> {
   return isNonClassFunction(input) ? input : () => input;
@@ -114,15 +114,16 @@ export type ObjectCopyFactory<T> = Factory<T>;
 /**
  * Creates a factory that returns a shallow copy of the input value on each call.
  *
+ * @param value - Source whose contents the factory should reproduce.
+ * @param copyFunction - Override for the per-call copy behavior; defaults to `copyObject`.
+ * @returns Stable producer that yields a fresh copy of `value` per invocation.
+ *
  * @dbxUtil
  * @dbxUtilCategory getter
  * @dbxUtilKind factory
  * @dbxUtilTags getter, factory, copy, clone, object
  * @dbxUtilRelated as-object-copy-factory, copy-object
  *
- * @param value - The object to copy
- * @param copyFunction - Optional custom copy function (defaults to copyObject)
- * @returns A factory that produces copies of the value
  * @__NO_SIDE_EFFECTS__
  */
 export function objectCopyFactory<T extends object>(value: T, copyFunction: CopyObjectFunction<T> = copyObject): ObjectCopyFactory<T> {
@@ -133,15 +134,16 @@ export function objectCopyFactory<T extends object>(value: T, copyFunction: Copy
  * Converts the input to an ObjectCopyFactory. If the input is an object, wraps it with objectCopyFactory.
  * If it's already a function (Getter), it's returned directly.
  *
+ * @param input - An object value or a getter function.
+ * @param copyFunction - Optional custom copy function.
+ * @returns An ObjectCopyFactory for the input.
+ *
  * @dbxUtil
  * @dbxUtilCategory getter
  * @dbxUtilKind factory
  * @dbxUtilTags getter, factory, copy, clone, object, normalize
  * @dbxUtilRelated object-copy-factory, as-getter
  *
- * @param input - An object value or a getter function
- * @param copyFunction - Optional custom copy function
- * @returns An ObjectCopyFactory for the input
  * @__NO_SIDE_EFFECTS__
  */
 export function asObjectCopyFactory<T>(input: T | ObjectCopyFactory<T>, copyFunction?: CopyObjectFunction<T>): ObjectCopyFactory<T> {
@@ -151,14 +153,15 @@ export function asObjectCopyFactory<T>(input: T | ObjectCopyFactory<T>, copyFunc
 /**
  * Wraps the input value in a Getter function that always returns it.
  *
+ * @param input - The value to wrap.
+ * @returns A Getter that returns the input value.
+ *
  * @dbxUtil
  * @dbxUtilCategory getter
  * @dbxUtilKind factory
  * @dbxUtilTags getter, factory, wrap, constant
  * @dbxUtilRelated as-getter, get-value-from-getter
  *
- * @param input - The value to wrap
- * @returns A Getter that returns the input value
  * @__NO_SIDE_EFFECTS__
  */
 export function makeGetter<T>(input: T): Getter<T> {
@@ -173,14 +176,15 @@ export type FactoryWithIndex<T> = FactoryWithInput<T, number> | FactoryWithRequi
 /**
  * Calls a factory function the specified number of times and returns the results as an array.
  *
+ * @param factory - Per-item producer invoked with the running index.
+ * @param count - Total number of items to materialize.
+ * @returns Materialized output collected from each `factory` call.
+ *
  * @dbxUtil
  * @dbxUtilCategory getter
  * @dbxUtilTags getter, factory, generate, array, count
  * @dbxUtilRelated make-with-factory-input, array-factory
  *
- * @param factory - The factory function to call (receives the current index as argument)
- * @param count - The number of items to create
- * @returns An array of produced values
  * @__NO_SIDE_EFFECTS__
  */
 export function makeWithFactory<T>(factory: Factory<T> | FactoryWithIndex<T>, count: number): T[] {
@@ -217,14 +221,15 @@ export function makeWithFactoryInput<T, A>(factory: FactoryWithRequiredInput<T, 
  * Wraps a factory so that no arguments are forwarded when it's called.
  * Useful for protecting a factory from accidentally receiving arguments.
  *
+ * @param factory - The factory to wrap.
+ * @returns A new factory that calls the original with no arguments.
+ *
  * @dbxUtil
  * @dbxUtilCategory getter
  * @dbxUtilKind factory
  * @dbxUtilTags getter, factory, protect, wrap, no-args
  * @dbxUtilRelated as-getter, make-getter
  *
- * @param factory - The factory to wrap
- * @returns A new factory that calls the original with no arguments
  * @__NO_SIDE_EFFECTS__
  */
 export function protectedFactory<T>(factory: Factory<T>): Factory<T> {

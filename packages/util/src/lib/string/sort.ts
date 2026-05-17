@@ -47,14 +47,15 @@ export const compareStringsNumeric: SortByStringFunction<string> = (a, b) => a.l
 /**
  * Creates a {@link SortByStringFunction} that sorts values in ascending alphabetical order using `localeCompare`.
  *
+ * @param readStringFn - Function to extract a string from each value for comparison.
+ * @returns A comparator function suitable for use with `Array.sort()`.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, sort, compare, alphabetical, factory, locale
  * @dbxUtilRelated sort-by-label-function, compare-strings
  *
- * @param readStringFn - Function to extract a string from each value for comparison.
- * @returns A comparator function suitable for use with `Array.sort()`.
  * @__NO_SIDE_EFFECTS__
  */
 export function sortByStringFunction<T>(readStringFn: ReadStringFunction<T>): SortByStringFunction<T> {

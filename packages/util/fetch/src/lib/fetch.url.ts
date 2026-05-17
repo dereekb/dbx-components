@@ -36,9 +36,9 @@ export interface MakeUrlSearchParamsOptions {
 /**
  * Creates URLSearchParams from the input objects. The input objects are merged together.
  *
- * @param input - one or more objects (or nullish values) whose key-value pairs become search parameters
- * @param options - optional configuration for filtering, omitting keys, and space encoding
- * @returns a URLSearchParams instance built from the merged and filtered input
+ * @param input - One or more objects (or nullish values) whose key-value pairs become search parameters.
+ * @param options - Optional configuration for filtering, omitting keys, and space encoding.
+ * @returns A URLSearchParams instance built from the merged and filtered input.
  */
 export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>) {
   const { omitKeys, filterEmptyValues: filterValues } = options ?? {};
@@ -61,9 +61,9 @@ export function makeUrlSearchParams(input: Maybe<ArrayOrValue<Maybe<object | Rec
  * RFC 3986 percent-encoded output (`%20` for spaces) instead of the
  * `application/x-www-form-urlencoded` default (`+` for spaces).
  *
- * @param input - objects to encode as query parameters
- * @param options - encoding options
- * @returns the encoded query string (without a leading `?`)
+ * @param input - Objects to encode as query parameters.
+ * @param options - Encoding options.
+ * @returns The encoded query string (without a leading `?`)
  */
 export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): string {
   const params = makeUrlSearchParams(input, options);
@@ -79,6 +79,11 @@ export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object
  * {@link MakeUrlSearchParamsOptions} such as `omitKeys`, `filterEmptyValues`, and
  * `useUrlSearchSpaceHandling`.
  *
+ * @param url - The URL string to update.
+ * @param params - New search parameters to merge into the URL.
+ * @param options - Optional configuration for filtering, omitting keys, and space encoding.
+ * @returns The URL string with updated query parameters.
+ *
  * @example
  * ```typescript
  * // Add params to a URL with no query string
@@ -93,11 +98,6 @@ export function makeUrlSearchParamsString(input: Maybe<ArrayOrValue<Maybe<object
  * updateUrlSearchParams('https://example.com', { scope: 'openid profile' }, { useUrlSearchSpaceHandling: true });
  * // => 'https://example.com?scope=openid%20profile'
  * ```
- *
- * @param url - the URL string to update
- * @param params - new search parameters to merge into the URL
- * @param options - optional configuration for filtering, omitting keys, and space encoding
- * @returns the URL string with updated query parameters
  */
 export function updateUrlSearchParams(url: string, params: Maybe<ArrayOrValue<Maybe<object | Record<string, string | number>>>>, options?: Maybe<MakeUrlSearchParamsOptions>): string {
   const [basePath, existingQuery] = url.split('?', 2);
@@ -126,8 +126,8 @@ export function updateUrlSearchParams(url: string, params: Maybe<ArrayOrValue<Ma
 /**
  * Merges an array of MakeUrlSearchParamsOptions into a single MakeUrlSearchParamsOptions value.
  *
- * @param options - one or more options objects whose omitKeys sets are combined
- * @returns a single MakeUrlSearchParamsOptions with the union of all omitKeys
+ * @param options - One or more options objects whose omitKeys sets are combined.
+ * @returns A single MakeUrlSearchParamsOptions with the union of all omitKeys.
  */
 export function mergeMakeUrlSearchParamsOptions(options: ArrayOrValue<Maybe<MakeUrlSearchParamsOptions>>): MakeUrlSearchParamsOptions {
   const omitKeys = new Set<ObjectKey>();

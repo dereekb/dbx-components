@@ -16,8 +16,8 @@ export interface ServerError<T = ServerErrorResponseData> extends ReadableDataEr
 /**
  * Type guard that checks if the input is a ServerError (has both status and code properties).
  *
- * @param input - The value to check
- * @returns True if the input is a ServerError
+ * @param input - The value to check.
+ * @returns True if the input is a ServerError.
  */
 export function isServerError(input: unknown): input is ServerError {
   return input != null && typeof input === 'object' && 'status' in input && 'code' in input;
@@ -59,8 +59,8 @@ export interface ServerErrorMakeConfig<T> extends ServerError<T>, Partial<CodedE
 /**
  * Creates a ServerError from the given configuration.
  *
- * @param config - The server error configuration
- * @returns A ServerError object
+ * @param config - The server error configuration.
+ * @returns A ServerError object.
  */
 export function serverError<T>(config: ServerErrorMakeConfig<T>): ServerError<T> {
   return {

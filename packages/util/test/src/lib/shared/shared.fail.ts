@@ -15,8 +15,8 @@ export class ExpectedFailError extends BaseError {}
 /**
  * Creates an {@link ExpectedFailError} without throwing it, for use in deferred error handling.
  *
- * @param message - optional error message
- * @returns a new {@link ExpectedFailError} instance
+ * @param message - Optional error message.
+ * @returns A new {@link ExpectedFailError} instance.
  */
 export function failSuccessfullyError(message?: string): ExpectedFailError {
   return new ExpectedFailError(message);
@@ -29,7 +29,7 @@ export function failSuccessfullyError(message?: string): ExpectedFailError {
  * which catch `ExpectedFailError` and convert it into a passing test. Calling it inside a plain
  * `it()` block causes the test to fail because the error propagates uncaught.
  *
- * @param message - optional error message
+ * @param message - Optional error message.
  */
 export function failSuccessfully(message?: string): never {
   throw failSuccessfullyError(message);
@@ -43,8 +43,8 @@ export class UnexpectedSuccessFailureError extends BaseError {}
 /**
  * Creates an {@link UnexpectedSuccessFailureError} without throwing it.
  *
- * @param message - optional error message; defaults to a standard "expected an error" message
- * @returns a new {@link UnexpectedSuccessFailureError} instance
+ * @param message - Optional error message; defaults to a standard "expected an error" message.
+ * @returns A new {@link UnexpectedSuccessFailureError} instance.
  */
 export function failDueToSuccessError(message?: string): UnexpectedSuccessFailureError {
   return new UnexpectedSuccessFailureError(message ?? 'expected an error to occur but was successful instead');
@@ -66,7 +66,7 @@ export class ExpectedErrorOfSpecificTypeError extends BaseError {
  * Fails the current test by throwing an {@link UnexpectedSuccessFailureError}.
  * Use when a code path should not have been reached.
  *
- * @param message - optional error message
+ * @param message - Optional error message.
  */
 export function failTest(message?: string): never {
   throw failDueToSuccessError(message);
@@ -84,7 +84,7 @@ export function failDueToSuccess(): never {
  * Default error handler for {@link expectSuccessfulFail} that passes through {@link ExpectedFailError}
  * instances and re-throws all other errors.
  *
- * @param e - the caught error to evaluate
+ * @param e - The caught error to evaluate.
  */
 export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
   if (e instanceof ExpectedFailError) {
@@ -107,8 +107,8 @@ export type ExpectFailAssertionFunction = (error: unknown) => PromiseOrValue<May
  *
  * Throws an ExpectedErrorOfSpecificTypeError on failures.
  *
- * @param expectedType - the class or constructor function that the error should be an instance of
- * @returns an assertion function that validates the error type via instanceof
+ * @param expectedType - The class or constructor function that the error should be an instance of.
+ * @returns An assertion function that validates the error type via instanceof.
  */
 export function expectFailAssertErrorType(expectedType: ClassType | ClassLikeType | typeof Error | any): ExpectFailAssertionFunction {
   return (error: unknown) => {
@@ -126,9 +126,9 @@ export function expectFailAssertErrorType(expectedType: ClassType | ClassLikeTyp
  * the thrown `ExpectedFailError` propagates and fails the test even though `errorFn` rejected
  * as expected — for that case use vitest's `await expect(...).rejects.toThrow(...)` instead.
  *
- * @param errorFn - function expected to throw an error (sync or async)
- * @param assertFailType - optional assertion to validate the type or content of the thrown error
- * @returns a promise that rejects with {@link ExpectedFailError} when the expected failure is verified, or with {@link UnexpectedSuccessFailureError} when `errorFn` resolves successfully
+ * @param errorFn - Function expected to throw an error (sync or async)
+ * @param assertFailType - Optional assertion to validate the type or content of the thrown error.
+ * @returns A promise that rejects with {@link ExpectedFailError} when the expected failure is verified, or with {@link UnexpectedSuccessFailureError} when `errorFn` resolves successfully.
  *
  * @example
  * ```ts
@@ -216,7 +216,7 @@ export interface ShouldFailDoneCallback extends TestDoneCallback {
 /**
  * A test function for {@link shouldFail} that receives a {@link ShouldFailDoneCallback} to signal failure outcomes.
  */
-export type ShouldFailProvidesCallbackWithDone = (cb: ShouldFailDoneCallback) => void | undefined;
+export type ShouldFailProvidesCallbackWithDone = (cb: ShouldFailDoneCallback) => Maybe<void>;
 
 /**
  * A test function for {@link shouldFail} that returns its result directly (sync or async), without using a done callback.
@@ -233,8 +233,8 @@ export type ShouldFailProvidesCallback = ShouldFailProvidesCallbackWithDone | Sh
  *
  * This is typically used in conjunction with failSuccessfully(), expectSuccessfulFail(), or expectFail().
  *
- * @param fn - the test function that is expected to throw an {@link ExpectedFailError}
- * @returns an async test function suitable for use with `it()`
+ * @param fn - The test function that is expected to throw an {@link ExpectedFailError}
+ * @returns An async test function suitable for use with `it()`
  */
 export function shouldFail(fn: ShouldFailProvidesCallback): () => Promise<unknown> {
   const usesDoneCallback = fn.length > 0;
@@ -334,7 +334,7 @@ export interface FakeDoneHandler extends TestDoneCallback, PromiseReference {
  * Calling the returned function with no arguments resolves the promise;
  * calling it with an error (or calling `.fail()`) rejects the promise.
  *
- * @returns a new {@link FakeDoneHandler} backed by a promise reference
+ * @returns A new {@link FakeDoneHandler} backed by a promise reference.
  */
 export function fakeDoneHandler(): FakeDoneHandler {
   const promiseRef = promiseReference();

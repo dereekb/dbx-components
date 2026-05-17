@@ -145,8 +145,8 @@ export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemP
   /**
    * Creates a new iteration instance with the given configuration.
    *
-   * @param config - filter and page limit configuration for this iteration session
-   * @returns new iteration instance ready to begin loading pages
+   * @param config - Filter and page limit configuration for this iteration session.
+   * @returns New iteration instance ready to begin loading pages.
    */
   instance(config: C): ItemPageIterationInstance<V, F, C> {
     return new ItemPageIterationInstance(this, config);
@@ -518,8 +518,8 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
  * - `end` is not explicitly `false` and the result value is empty/null (via `hasValueOrNotEmpty`)
  * - Error results are never considered the end
  *
- * @param result - the page result to check
- * @returns `true` if this result indicates no more pages are available
+ * @param result - The page result to check.
+ * @returns `true` if this result indicates no more pages are available.
  */
 export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorResult<V>) {
   let isEnd: boolean;

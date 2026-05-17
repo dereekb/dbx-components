@@ -24,6 +24,10 @@ export interface LoadingErrorPair {
 /**
  * Compares two {@link LoadingState} instances for shallow equality across all key properties.
  *
+ * @param a - First loading state.
+ * @param b - Second loading state.
+ * @returns True if loading, loadingProgress, error, and value are all strictly equal.
+ *
  * @example
  * ```ts
  * const a = successResult('hello');
@@ -33,10 +37,6 @@ export interface LoadingErrorPair {
  * const c = beginLoading();
  * isLoadingStateEqual(a, c); // false
  * ```
- *
- * @param a - first loading state
- * @param b - second loading state
- * @returns true if loading, loadingProgress, error, and value are all strictly equal
  */
 export function isLoadingStateEqual<T extends LoadingState>(a: T, b: T): boolean {
   return a.loading === b.loading && a.loadingProgress === b.loadingProgress && a.error === b.error && a.value === b.value;
@@ -48,9 +48,9 @@ export function isLoadingStateEqual<T extends LoadingState>(a: T, b: T): boolean
  *
  * Does not compare the `value` property — only structural metadata.
  *
- * @param a - first loading error pair
- * @param b - second loading error pair
- * @returns true if both pairs have equivalent metadata
+ * @param a - First loading error pair.
+ * @param b - Second loading error pair.
+ * @returns True if both pairs have equivalent metadata.
  */
 export function isLoadingStateMetadataEqual(a: Partial<LoadingErrorPair>, b: Partial<LoadingErrorPair>): boolean {
   return a.loading == b.loading && valuesAreBothNullishOrEquivalent(a.loadingProgress, b.loadingProgress) && valuesAreBothNullishOrEquivalent(a.error, b.error);
@@ -153,6 +153,9 @@ export enum LoadingStateType {
  * Returns `LOADING` if still loading, `SUCCESS` if finished with a value key,
  * `ERROR` if finished with an error key, or `IDLE` if finished with neither.
  *
+ * @param loadingState - The loading state to classify.
+ * @returns The corresponding {@link LoadingStateType}
+ *
  * @example
  * ```ts
  * loadingStateType(beginLoading()); // LoadingStateType.LOADING
@@ -160,9 +163,6 @@ export enum LoadingStateType {
  * loadingStateType(errorResult(new Error())); // LoadingStateType.ERROR
  * loadingStateType({ loading: false }); // LoadingStateType.IDLE
  * ```
- *
- * @param loadingState - the loading state to classify
- * @returns the corresponding {@link LoadingStateType}
  */
 export function loadingStateType(loadingState: LoadingState): LoadingStateType {
   const isLoading = !isLoadingStateFinishedLoading(loadingState);
@@ -189,6 +189,9 @@ export function loadingStateType(loadingState: LoadingState): LoadingStateType {
  * Returns `true` when `loading` is explicitly `false`, or when `loading` is not `true`
  * and either a value, error, or `null` value is present.
  *
+ * @param state - The loading state to check (may be null/undefined)
+ * @returns True if loading is complete.
+ *
  * @example
  * ```ts
  * isLoadingStateFinishedLoading(successResult('done')); // true
@@ -196,9 +199,6 @@ export function loadingStateType(loadingState: LoadingState): LoadingStateType {
  * isLoadingStateFinishedLoading({ loading: false }); // true
  * isLoadingStateFinishedLoading(null); // false
  * ```
- *
- * @param state - the loading state to check (may be null/undefined)
- * @returns true if loading is complete
  */
 export function isLoadingStateFinishedLoading<L extends LoadingState>(state: Maybe<L>): boolean {
   let result = false;
@@ -220,14 +220,14 @@ export function isLoadingStateFinishedLoading<L extends LoadingState>(state: May
  *
  * Represents a state where no loading has been initiated yet.
  *
+ * @returns A loading state with `loading: false` and no value or error.
+ *
  * @example
  * ```ts
  * const state = idleLoadingState();
  * // { loading: false }
  * loadingStateType(state); // LoadingStateType.IDLE
  * ```
- *
- * @returns a loading state with `loading: false` and no value or error
  */
 export function idleLoadingState<T>(): LoadingState<T> {
   return { loading: false };
@@ -258,9 +258,9 @@ export function beginLoading<T>(state?: Partial<LoadingState<T>>): LoadingState<
 /**
  * Creates a {@link PageLoadingState} that is loading for the given page number.
  *
- * @param page - the page number being loaded
- * @param state - optional partial state to merge
- * @returns a page loading state with `loading: true`
+ * @param page - The page number being loaded.
+ * @param state - Optional partial state to merge.
+ * @returns A page loading state with `loading: true`
  */
 export function beginLoadingPage<T>(page: PageNumber, state?: Partial<PageLoadingState<T>>): PageLoadingState<T> {
   return state ? { page, ...state, loading: true } : { page, loading: true };
@@ -269,14 +269,14 @@ export function beginLoadingPage<T>(page: PageNumber, state?: Partial<PageLoadin
 /**
  * Creates a successful {@link LoadingState} with the given value and `loading: false`.
  *
+ * @param value - The loaded value.
+ * @returns A loading state representing a successful result.
+ *
  * @example
  * ```ts
  * const state = successResult({ name: 'Alice' });
  * // { value: { name: 'Alice' }, loading: false }
  * ```
- *
- * @param value - the loaded value
- * @returns a loading state representing a successful result
  */
 export function successResult<T>(value: T): LoadingStateWithValue<T> {
   return { value, loading: false };
@@ -285,9 +285,9 @@ export function successResult<T>(value: T): LoadingStateWithValue<T> {
 /**
  * Creates a successful {@link PageLoadingState} for a specific page.
  *
- * @param page - the page number
- * @param value - the loaded value
- * @returns a page loading state representing success
+ * @param page - The page number.
+ * @param value - The loaded value.
+ * @returns A page loading state representing success.
  */
 export function successPageResult<T>(page: PageNumber, value: T): PageLoadingState<T> {
   return { ...successResult(value), page };
@@ -298,14 +298,14 @@ export function successPageResult<T>(page: PageNumber, value: T): PageLoadingSta
  *
  * Converts the input error to a {@link ReadableError} via {@link toReadableError}.
  *
+ * @param error - The error to wrap (string, Error, or ReadableError)
+ * @returns A loading state representing an error.
+ *
  * @example
  * ```ts
  * const state = errorResult(new Error('Not found'));
  * // { error: { message: 'Not found', ... }, loading: false }
  * ```
- *
- * @param error - the error to wrap (string, Error, or ReadableError)
- * @returns a loading state representing an error
  */
 export function errorResult<T>(error?: Maybe<ErrorInput>): LoadingState<T> {
   return { error: toReadableError(error), loading: false };
@@ -314,9 +314,9 @@ export function errorResult<T>(error?: Maybe<ErrorInput>): LoadingState<T> {
 /**
  * Creates a {@link PageLoadingState} representing an error for a specific page.
  *
- * @param page - the page number
- * @param error - the error to include
- * @returns a page loading state representing an error
+ * @param page - The page number.
+ * @param error - The error to include.
+ * @returns A page loading state representing an error.
  */
 export function errorPageResult<T>(page: PageNumber, error?: Maybe<ReadableError | ReadableDataError>): PageLoadingState<T> {
   return { ...errorResult(error), page };
@@ -325,14 +325,14 @@ export function errorPageResult<T>(page: PageNumber, error?: Maybe<ReadableError
 /**
  * Whether any of the given {@link LoadingState} instances are currently loading.
  *
+ * @param states - Array of loading states to check.
+ * @returns True if at least one state is loading.
+ *
  * @example
  * ```ts
  * isAnyLoadingStateInLoadingState([successResult(1), beginLoading()]); // true
  * isAnyLoadingStateInLoadingState([successResult(1), successResult(2)]); // false
  * ```
- *
- * @param states - array of loading states to check
- * @returns true if at least one state is loading
  */
 export function isAnyLoadingStateInLoadingState(states: LoadingState[]): boolean {
   return reduceBooleansWithOr(states.map(isLoadingStateLoading), false);
@@ -341,14 +341,14 @@ export function isAnyLoadingStateInLoadingState(states: LoadingState[]): boolean
 /**
  * Whether all given {@link LoadingState} instances have finished loading.
  *
+ * @param states - Array of loading states to check.
+ * @returns True if every state has finished loading.
+ *
  * @example
  * ```ts
  * areAllLoadingStatesFinishedLoading([successResult(1), successResult(2)]); // true
  * areAllLoadingStatesFinishedLoading([successResult(1), beginLoading()]); // false
  * ```
- *
- * @param states - array of loading states to check
- * @returns true if every state has finished loading
  */
 export function areAllLoadingStatesFinishedLoading(states: LoadingState[]): boolean {
   return reduceBooleansWithAnd(states.map(isLoadingStateFinishedLoading), true);
@@ -359,8 +359,8 @@ export function areAllLoadingStatesFinishedLoading(states: LoadingState[]): bool
  *
  * When the target type is `IDLE`, returns `true` for null/undefined states.
  *
- * @param type - the loading state type to match against
- * @returns a predicate function for the given type
+ * @param type - The loading state type to match against.
+ * @returns A predicate function for the given type.
  */
 export function isLoadingStateWithStateType(type: LoadingStateType) {
   const defaultResult = type === LoadingStateType.IDLE;
@@ -409,15 +409,15 @@ export const isLoadingStateInErrorState = isLoadingStateWithStateType(LoadingSta
 /**
  * Type guard that checks whether a {@link LoadingState} has a non-undefined value, regardless of loading status.
  *
+ * @param state - The loading state to check.
+ * @returns True if the state has a defined (non-undefined) value.
+ *
  * @example
  * ```ts
  * isLoadingStateWithDefinedValue(successResult('hello')); // true
  * isLoadingStateWithDefinedValue(successResult(null)); // true (null is defined)
  * isLoadingStateWithDefinedValue(beginLoading()); // false
  * ```
- *
- * @param state - the loading state to check
- * @returns true if the state has a defined (non-undefined) value
  */
 export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
   return state ? state.value !== undefined : false;
@@ -426,14 +426,14 @@ export function isLoadingStateWithDefinedValue<L extends LoadingState>(state: Ma
 /**
  * Type guard that checks whether a {@link LoadingState} has a non-null error, regardless of loading status.
  *
+ * @param state - The loading state to check.
+ * @returns True if the state has an error.
+ *
  * @example
  * ```ts
  * isLoadingStateWithError(errorResult(new Error('fail'))); // true
  * isLoadingStateWithError(successResult('ok')); // false
  * ```
- *
- * @param state - the loading state to check
- * @returns true if the state has an error
  */
 export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
   return state ? state.error != null : false;
@@ -442,8 +442,8 @@ export function isLoadingStateWithError<L extends LoadingState>(state: Maybe<L> 
 /**
  * Type guard that checks whether a {@link LoadingState} has finished loading and has a defined value.
  *
- * @param state - the loading state to check
- * @returns true if finished loading with a non-undefined value
+ * @param state - The loading state to check.
+ * @returns True if finished loading with a non-undefined value.
  */
 export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingState>(state: Maybe<L> | LoadingStateWithDefinedValue<LoadingStateValue<L>>): state is LoadingStateWithDefinedValue<LoadingStateValue<L>> {
   return state ? isLoadingStateFinishedLoading(state) && state.value !== undefined : false;
@@ -452,8 +452,8 @@ export function isLoadingStateFinishedLoadingWithDefinedValue<L extends LoadingS
 /**
  * Type guard that checks whether a {@link LoadingState} has finished loading and has an error.
  *
- * @param state - the loading state to check
- * @returns true if finished loading with an error
+ * @param state - The loading state to check.
+ * @returns True if finished loading with an error.
  */
 export function isLoadingStateFinishedLoadingWithError<L extends LoadingState>(state: Maybe<L> | LoadingState<LoadingStateValue<L>>): state is LoadingStateWithError<LoadingStateValue<L>> {
   return state ? isLoadingStateFinishedLoading(state) && state.error != null : false;
@@ -463,6 +463,10 @@ export function isLoadingStateFinishedLoadingWithError<L extends LoadingState>(s
  * Compares the metadata (page, loading, error) of two {@link PageLoadingState} instances for equivalence.
  *
  * Does not compare values — only structural metadata.
+ *
+ * @param a - First page loading state.
+ * @param b - Second page loading state.
+ * @returns True if metadata is equivalent.
  *
  * @example
  * ```ts
@@ -476,10 +480,6 @@ export function isLoadingStateFinishedLoadingWithError<L extends LoadingState>(s
  *   { page: 2 }
  * ); // false
  * ```
- *
- * @param a - first page loading state
- * @param b - second page loading state
- * @returns true if metadata is equivalent
  */
 export function isPageLoadingStateMetadataEqual(a: Partial<PageLoadingState>, b: Partial<PageLoadingState>) {
   return valuesAreBothNullishOrEquivalent(a.page, b.page) && a.loading == b.loading && valuesAreBothNullishOrEquivalent(a.error, b.error);
@@ -580,9 +580,9 @@ export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
  *
  * Useful for resetting a state back to loading or idle without losing other metadata (e.g., page).
  *
- * @param state - the state to copy metadata from
- * @param loading - whether to mark as loading (defaults to true)
- * @returns a new state with value/error cleared
+ * @param state - The state to copy metadata from.
+ * @param loading - Whether to mark as loading (defaults to true)
+ * @returns A new state with value/error cleared.
  */
 export function mergeLoadingStateWithLoading<S extends LoadingState>(state: S, loading = true): S {
   return {
@@ -596,11 +596,11 @@ export function mergeLoadingStateWithLoading<S extends LoadingState>(state: S, l
 /**
  * Returns a copy of the state with the given value, `loading: false`, and error cleared.
  *
- * @param state - the state to copy metadata from
- * @param value - the new value to set
- * @returns a new state representing success
+ * @param state - The state to copy metadata from.
+ * @param value - The new value to set.
+ * @returns A new state representing success.
  */
-export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, value: LoadingStateValue<S> | undefined): S {
+export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, value: Maybe<LoadingStateValue<S>>): S {
   return {
     ...state,
     value: value ?? undefined,
@@ -612,9 +612,9 @@ export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, val
 /**
  * Returns a copy of the state with the given error and `loading: false`.
  *
- * @param state - the state to copy metadata from
- * @param error - the error to set
- * @returns a new state representing an error
+ * @param state - The state to copy metadata from.
+ * @param error - The error to set.
+ * @returns A new state representing an error.
  */
 export function mergeLoadingStateWithError<S extends LoadingState = LoadingState>(state: S, error?: ReadableDataError): S {
   return {
@@ -636,10 +636,9 @@ export interface MapMultipleLoadingStateResultsConfiguration<T, X, L extends Loa
  *
  * Returns `undefined` if any input is still loading or has an error.
  *
- * @param input - array of loading states to combine
- * @param config - mapping configuration with either `mapValues` or `mapState`
- * @returns the combined loading state, or undefined if inputs are not ready
- *
+ * @param input - Array of loading states to combine.
+ * @param config - Mapping configuration with either `mapValues` or `mapState`
+ * @returns The combined loading state, or undefined if inputs are not ready.
  * @throws {Error} When neither `mapValues` nor `mapState` is provided in the config.
  */
 export function mapMultipleLoadingStateResults<T, X, L extends LoadingState<X>[], R extends LoadingState<T>>(input: L, config: MapMultipleLoadingStateResultsConfiguration<T, X, L, R>): Maybe<R> {
@@ -728,8 +727,9 @@ export type MapLoadingStateValueMapFunction<O, I, L extends LoadingState<I> = Lo
  * Creates a function that extracts and maps the value from a {@link LoadingState}, returning undefined
  * when the state has no value.
  *
- * @param mapFn - function to transform the value and state into the output type
- * @returns a function that accepts a loading state and returns the mapped value or undefined
+ * @param mapFn - Function to transform the value and state into the output type.
+ * @returns Mapper that yields the transformed value when present, or undefined when the state has none.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function mapLoadingStateValueFunction<O, I, L extends LoadingState<I> = LoadingState<I>>(mapFn: MapLoadingStateValueMapFunction<O, I, L>): MapLoadingStateValueFunction<O, I, L> {

@@ -9,8 +9,8 @@ export type SortByDateFunction<T> = SortCompareFunction<T>;
 /**
  * Creates a sort comparison function that orders items in ascending date order using the provided reader.
  *
- * @param readDateFn - extracts a Date from each item
- * @returns a comparison function for use with Array.sort()
+ * @param readDateFn - Extracts a Date from each item.
+ * @returns A comparison function for use with Array.sort()
  *
  * @example
  * ```ts
@@ -18,6 +18,7 @@ export type SortByDateFunction<T> = SortCompareFunction<T>;
  * events.sort(sortByDateFunction((e) => e.at));
  * // events[0].at === '2024-01-01'
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function sortByDateFunction<T>(readDateFn: ReadDateFunction<T>): SortByDateFunction<T> {
@@ -36,8 +37,8 @@ export type SortByISO8601DateStringFunction<T> = SortCompareFunction<T>;
 /**
  * Creates a sort comparison function that orders items in ascending order by lexicographic comparison of ISO 8601 date strings.
  *
- * @param readDateFn - extracts an ISO 8601 date string from each item
- * @returns a comparison function for use with Array.sort()
+ * @param readDateFn - Extracts an ISO 8601 date string from each item.
+ * @returns A comparison function for use with Array.sort()
  *
  * @example
  * ```ts
@@ -45,6 +46,7 @@ export type SortByISO8601DateStringFunction<T> = SortCompareFunction<T>;
  * items.sort(sortByISO8601DateStringFunction((x) => x.d));
  * // items[0].d === '2024-01-01T00:00:00Z'
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function sortByISO8601DateStringFunction<T>(readDateFn: ReadISO8601DateStringUTCFullFunction<T>): SortByISO8601DateStringFunction<T> {
@@ -70,10 +72,10 @@ export function sortByISO8601DateStringFunction<T>(readDateFn: ReadISO8601DateSt
 /**
  * Returns a sorted copy of the input array, ordered by ISO 8601 date strings extracted from each item.
  *
- * @param values - the items to sort
- * @param readDate - extracts an ISO 8601 date string from each item
- * @param order - optional sorting order ('asc' or 'desc', defaults to ascending)
- * @returns a new sorted array (does not mutate the original)
+ * @param values - The items to sort.
+ * @param readDate - Extracts an ISO 8601 date string from each item.
+ * @param order - Optional sorting order ('asc' or 'desc', defaults to ascending)
+ * @returns A new sorted array (does not mutate the original)
  *
  * @example
  * ```ts

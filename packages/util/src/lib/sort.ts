@@ -1,4 +1,5 @@
 import { firstValueFromIterable, forEachInIterable } from './iterable/iterable';
+import type { Maybe } from '@dereekb/util';
 import { type MapFunction, mapIdentityFunction, type MapSameFunction } from './value/map';
 import { type Maybe, type MaybeMap } from './value/maybe.type';
 
@@ -72,14 +73,14 @@ export function reverseCompareFn<T>(compareFn: SortCompareFunction<T>): SortComp
  *
  * The input comparison function must be in ascending order.
  *
+ * @param ascendingCompareFn - A comparison function that sorts in ascending order.
+ * @param order - The desired sort direction; defaults to 'asc'.
+ * @returns The original function if ascending, or a reversed version if descending.
+ *
  * @dbxUtil
  * @dbxUtilCategory sort
  * @dbxUtilTags sort, order, ascending, descending, compare, direction
  * @dbxUtilRelated reverse-compare-fn, compare-with-mapped-values-function
- *
- * @param ascendingCompareFn - a comparison function that sorts in ascending order
- * @param order - the desired sort direction; defaults to 'asc'
- * @returns the original function if ascending, or a reversed version if descending
  */
 export function compareFnOrder<T>(ascendingCompareFn: AscendingSortCompareFunction<T>, order: SortingOrder = 'asc'): SortCompareFunction<T> {
   return order === 'asc' ? ascendingCompareFn : reverseCompareFn(ascendingCompareFn);
@@ -183,9 +184,9 @@ export function sortValuesFunctionWithSortRef<T>(sortRef: Maybe<Partial<SortComp
 /**
  * Creates a SortValuesFunction using the input. If the input is not defined, or it's sort function is not defined, then returns mapIdentityFunction().
  *
- * @param sortRef - optional reference containing the sort comparison function
- * @param sortOnCopyDefault - whether to sort on a copy by default
- * @returns a sort function that sorts arrays, or the identity function if no sort comparison is configured
+ * @param sortRef - Optional reference containing the sort comparison function.
+ * @param sortOnCopyDefault - Whether to sort on a copy by default.
+ * @returns A sort function that sorts arrays, or the identity function if no sort comparison is configured.
  */
 export function sortValuesFunctionOrMapIdentityWithSortRef<T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault?: boolean): SortValuesFunction<T> {
   const sortWith = sortRef?.sortWith;
@@ -207,7 +208,7 @@ export interface MinAndMax<T> {
   max: T;
 }
 
-export type MinAndMaxFunctionResult<T> = MinAndMax<T> | null;
+export type MinAndMaxFunctionResult<T> = Maybe<MinAndMax<T>>;
 
 /**
  * Returns the min and maximum value from the input values.

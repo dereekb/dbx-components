@@ -46,9 +46,9 @@ export interface SequentialIncrementingNumberStringModelIdFactoryConfig {
  * {@link NumberStringDencoder} (defaults to base-64). Supports starting from a specific index or continuing
  * from a current index, and an optional transform for post-processing (e.g., padding).
  *
- * @param config - Configuration for the starting index, increment step, dencoder, and transform
- * @returns A factory function that returns the next encoded string identifier on each call
- * @throws Error if `increaseBy` is 0
+ * @param config - Configuration for the starting index, increment step, dencoder, and transform.
+ * @returns A factory function that returns the next encoded string identifier on each call.
+ * @throws {Error} If `increaseBy` is 0.
  *
  * @dbxUtil
  * @dbxUtilCategory model
@@ -62,6 +62,7 @@ export interface SequentialIncrementingNumberStringModelIdFactoryConfig {
  * const first = factory(); // encoded representation of 0
  * const second = factory(); // encoded representation of 1
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function sequentialIncrementingNumberStringModelIdFactory(config: SequentialIncrementingNumberStringModelIdFactoryConfig = {}): ModelIdFactory {

@@ -1,4 +1,5 @@
 import { type AuthRole, type AuthRoleSet } from './auth.role';
+import type { Maybe } from '@dereekb/util';
 import { objectHasKey } from '../object/object';
 import { filterFromPOJO, forEachKeyValueOnPOJOFunction } from '../object/object.filter.pojo';
 import { KeyValueTypleValueFilter } from '../object/object.filter.tuple';
@@ -98,12 +99,12 @@ export interface AuthRoleClaimsFactoryConfigEntryEncodeOptions<V extends AuthCla
    *
    * If not defined, will defer to role for finding matches and pull from value.
    */
-  encodeValueFromRoles: (roles: AuthRoleSet) => V | undefined;
+  encodeValueFromRoles: (roles: AuthRoleSet) => Maybe<V>;
 
   /**
    * (Optional) Auth roles associated with this claims. If not defined, the claims key is used.
    */
-  decodeRolesFromValue: (value: Maybe<V>) => AuthRole[] | undefined;
+  decodeRolesFromValue: (value: Maybe<V>) => Maybe<AuthRole[]>;
 }
 
 export type IgnoreAuthRoleClaimsEntry = null;
@@ -178,15 +179,16 @@ interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfi
  * Each key in the config maps a claim key to role(s). Simple entries map a claim value to one or more roles,
  * while encode/decode entries allow custom bidirectional conversion logic.
  *
+ * @param config - Mapping of claim keys to their role configuration entries (or null to ignore)
+ * @param defaults - Optional default values for claim presence and absence.
+ * @returns A service with `toClaims` and `toRoles` conversion functions.
+ *
  * @dbxUtil
  * @dbxUtilCategory auth
  * @dbxUtilKind factory
  * @dbxUtilTags auth, role, claims, jwt, factory, bidirectional
  * @dbxUtilRelated auth-role
  *
- * @param config - Mapping of claim keys to their role configuration entries (or null to ignore)
- * @param defaults - Optional default values for claim presence and absence
- * @returns A service with `toClaims` and `toRoles` conversion functions
  * @__NO_SIDE_EFFECTS__
  */
 export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRoleClaimsFactoryConfig<T>, defaults: AuthRoleClaimsFactoryDefaults = {}): AuthRoleClaimsService<T> {
@@ -324,8 +326,8 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
  * Useful for cleaning up a claims update before persisting or comparing, since update objects
  * use `null` to indicate claim removal.
  *
- * @param authClaimsUpdate - The claims update object potentially containing null values
- * @returns A clean claims object with all null entries removed
+ * @param authClaimsUpdate - The claims update object potentially containing null values.
+ * @returns A clean claims object with all null entries removed.
  */
 export function authClaims<T extends AuthClaimsObject = AuthClaimsObject>(authClaimsUpdate: AuthClaimsUpdate<T>): AuthClaims<T> {
   return filterFromPOJO(authClaimsUpdate, { filter: { valueFilter: KeyValueTypleValueFilter.NULL } }) as AuthClaims<T>;

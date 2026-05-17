@@ -38,6 +38,10 @@ export type MongoDBLikeDateQueryFilter = object;
  * Takes `$lte` from `startsAt` (falling back to `endsAt`) and `$gte` from
  * `endsAt` (falling back to `startsAt`).
  *
+ * @param startsAt - Range filter derived from the starts-at bounds.
+ * @param endsAt - Range filter derived from the ends-at bounds.
+ * @returns A single merged range filter.
+ *
  * @example
  * ```ts
  * const merged = mergeMongoDBLikeRangeFilters(
@@ -46,10 +50,6 @@ export type MongoDBLikeDateQueryFilter = object;
  * );
  * // { $lte: 2026-12-31, $gte: 2026-01-01 }
  * ```
- *
- * @param startsAt - Range filter derived from the starts-at bounds.
- * @param endsAt - Range filter derived from the ends-at bounds.
- * @returns A single merged range filter.
  */
 export function mergeMongoDBLikeRangeFilters(startsAt: Maybe<MongoDBLikeDateRangeFilter>, endsAt: Maybe<MongoDBLikeDateRangeFilter>) {
   return {
@@ -68,6 +68,9 @@ export interface MakeMongoDBLikeDateQueryBuilderConfig {
  *
  * Supports both two-field (start + end) and single-field date models.
  *
+ * @param config - Configuration specifying the document field names.
+ * @returns Date query builder that emits MongoDB-style range filters.
+ *
  * @example
  * ```ts
  * const builder = makeMongoDBLikeDateQueryBuilder({
@@ -78,8 +81,6 @@ export interface MakeMongoDBLikeDateQueryBuilderConfig {
  * });
  * ```
  *
- * @param config - Configuration specifying the document field names.
- * @returns A date query builder producing MongoDB-like filter objects.
  * @__NO_SIDE_EFFECTS__
  */
 export function makeMongoDBLikeDateQueryBuilder(config: MakeMongoDBLikeDateQueryBuilderConfig): DateQueryBuilder<MongoDBLikeDateRangeFilter, MongoDBLikeDateQueryFilter> {

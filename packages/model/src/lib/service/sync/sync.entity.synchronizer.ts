@@ -62,9 +62,9 @@ export interface SyncEntitySynchronizerConfig {
  * Registers common type synchronizers and provides lookup by common type. Throws
  * {@link UnregisteredSyncEntityCommonTypeError} if an unregistered common type is requested.
  *
- * @param config - contains the list of common type synchronizers to register
- * @returns a synchronizer that delegates to the appropriate common type synchronizer
- * @throws {UnregisteredSyncEntityCommonTypeError} when requesting an unregistered common type
+ * @param config - Contains the list of common type synchronizers to register.
+ * @returns A synchronizer that delegates to the appropriate common type synchronizer.
+ * @throws {UnregisteredSyncEntityCommonTypeError} When requesting an unregistered common type.
  *
  * @example
  * ```typescript

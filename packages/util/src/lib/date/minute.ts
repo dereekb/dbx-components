@@ -3,8 +3,8 @@ import { type Milliseconds, type Minutes, MS_IN_MINUTE, MS_IN_SECOND, type Secon
 /**
  * Converts the input number of milliseconds to whole minutes by flooring the result.
  *
- * @param milliseconds - The number of milliseconds to convert.
- * @returns The equivalent whole minutes, rounded down.
+ * @param milliseconds - Duration to truncate down to whole minutes.
+ * @returns Floor of the equivalent minutes count.
  *
  * @example
  * ```ts
@@ -29,8 +29,8 @@ export interface MinutesAndSeconds {
  *
  * Rounds down to the nearest second.
  *
- * @param milliseconds - The number of milliseconds to convert
- * @returns An object with the minute and second components
+ * @param milliseconds - Duration to split into minute + second components.
+ * @returns Minute-second pair representing the same duration (seconds floored).
  */
 export function millisecondsToMinutesAndSeconds(milliseconds: Milliseconds): MinutesAndSeconds {
   const seconds = Math.floor(milliseconds / MS_IN_SECOND);
@@ -40,8 +40,8 @@ export function millisecondsToMinutesAndSeconds(milliseconds: Milliseconds): Min
 /**
  * Converts the input number of seconds to the equivalent in minutes and seconds.
  *
- * @param inputSeconds - The number of seconds to convert
- * @returns An object with the minute and second components
+ * @param inputSeconds - Duration to split into minute + second components.
+ * @returns Minute-second pair representing the same duration.
  */
 export function secondsToMinutesAndSeconds(inputSeconds: Seconds): MinutesAndSeconds {
   const minute = Math.floor(inputSeconds / 60);

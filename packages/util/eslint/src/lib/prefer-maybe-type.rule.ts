@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 type AstNode = any;
 
 /**
@@ -66,8 +67,8 @@ function isNullOrUndefinedNode(node: AstNode): boolean {
  * @param node - The TS type AST node.
  * @returns The type name (e.g. `Foo` for `TSTypeReference{ typeName: { name: 'Foo' } }`), or `null` when not a simple reference.
  */
-function getTypeReferenceName(node: AstNode): string | null {
-  let name: string | null = null;
+function getTypeReferenceName(node: AstNode): Maybe<string> {
+  let name: Maybe<string> = null;
 
   if (node?.type === 'TSTypeReference' && node.typeName?.type === 'Identifier') {
     name = node.typeName.name;

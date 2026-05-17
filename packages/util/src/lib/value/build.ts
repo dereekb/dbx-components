@@ -31,10 +31,10 @@ export interface BuildConfig<T extends object> {
  *
  * This is useful when building objects whose type is normally read-only, allowing incremental property assignment during construction.
  *
- * @param config - the build configuration containing the base object and build function
- * @param config.base - optional pre-existing partial object to build upon; defaults to an empty object
- * @param config.build - function that mutates the base object to populate it with desired values
- * @returns the fully constructed object of type T
+ * @param config - The build configuration containing the base object and build function.
+ * @param config.base - Optional pre-existing partial object to build upon; defaults to an empty object.
+ * @param config.build - Function that mutates the base object to populate it with desired values.
+ * @returns The fully constructed object of type T.
  *
  * @dbxUtil
  * @dbxUtilCategory value

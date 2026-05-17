@@ -98,14 +98,14 @@ export interface ExpirationDetails<T extends Expires = Expires> {
  * - **TTL / throttle**: `expirationDetails({ expiresFromDate: lastRunAt, expiresIn: throttleMs })` — see {@link isThrottled}
  * - **Pre-emptive refresh**: `expirationDetails({ expiresFromDate: expiresAt, expiresIn: -bufferMs })` — treat as expired `bufferMs` before the real expiration, e.g. to refresh a token before it actually dies
  *
+ * @param input - Configuration for calculating expiration.
+ * @returns An ExpirationDetails object that can determine expiration state.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags expiration, expires, expiry, ttl, throttle, refresh, time-to-live
  * @dbxUtilRelated is-expired, is-throttled, calculate-expiration-date, is-under-threshold, check-atleast-one-not-expired, check-any-have-expired
- *
  * @template T - The type of Expires object
- * @param input - Configuration for calculating expiration
- * @returns An ExpirationDetails object that can determine expiration state
  */
 export function expirationDetails<T extends Expires = Expires>(input: ExpirationDetailsInput<T>): ExpirationDetails<T> {
   const { expiresAt, expires, now: inputNow, expiresFromDate, defaultExpiresFromDateToNow, expiresIn } = input;
@@ -166,13 +166,13 @@ export function expirationDetails<T extends Expires = Expires>(input: Expiration
  * Convenience function for calculating and returning the expiration date given the input.
  * This is a shorthand for expirationDetails(input).getExpirationDate().
  *
+ * @param input - Input configuration used to calculate the expiration date.
+ * @returns The calculated expiration date, or null if no expiration is defined.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags expiration, expires, expiry, ttl, calculate, date
  * @dbxUtilRelated expiration-details, is-expired
- *
- * @param input - Input configuration used to calculate the expiration date
- * @returns The calculated expiration date, or null if no expiration is defined
  */
 export function calculateExpirationDate(input: ExpirationDetailsInput<Expires>): Maybe<Date> {
   return expirationDetails(input).getExpirationDate();
@@ -182,20 +182,22 @@ export function calculateExpirationDate(input: ExpirationDetailsInput<Expires>):
 /**
  * Convenience wrapper around {@link expirationDetails}().hasExpired() that treats null/undefined input or no expiration date as expired.
  *
+ * @param input - Expiration configuration. Null/undefined is treated as expired.
+ * @param now - Optional override for the current time. Defaults to the current time. Apply any buffer (e.g. for clock skew or pre-emptive refresh) by shifting this value forward.
+ * @returns True when the input is null/undefined or its expiration date has passed; otherwise false.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags expiration, expires, expiry, expired, has-expired, is-expired, ttl
  * @dbxUtilRelated expiration-details, is-throttled, calculate-expiration-date
  *
- * @param input - Expiration configuration. Null/undefined is treated as expired.
- * @param now - Optional override for the current time. Defaults to the current time. Apply any buffer (e.g. for clock skew or pre-emptive refresh) by shifting this value forward.
- * @returns True when the input is null/undefined or its expiration date has passed; otherwise false.
- *
  * @example
+ * ```ts
  * isExpired(null); // true
  * isExpired({ expiresAt: pastDate }); // true
  * isExpired({ expiresAt: futureDate }); // false
  * isExpired({ expiresAt: futureDate }, addMilliseconds(new Date(), 60_000)); // true (when within buffer)
+ * ```
  */
 export function isExpired<T extends Expires = Expires>(input: Maybe<ExpirationDetailsInput<T>>, now?: Maybe<Date>): boolean {
   let result = true;
@@ -215,15 +217,15 @@ export function isExpired<T extends Expires = Expires>(input: Maybe<ExpirationDe
  * Example:
  * - Should send a notification at max every 2 days. The threshold is 2 days in milliseconds, and "nextRunAt" is the previously calculated date that was originally "now" + "threshold".
  *
+ * @param threshold - The threshold time. Typically this is amount of time that was used to calculate the original "nextRunAt" time.
+ * @param nextRunAt - Time the next run will occur. If null/undefined, then this function will return false.
+ * @param now - Optional override for the current time. Defaults to the current time.
+ * @returns True if the threshold has not passed since the next run time, compared to now.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags threshold, throttle, ttl, time-window, rate-limit
  * @dbxUtilRelated is-throttled, expiration-details
- *
- * @param threshold The threshold time. Typically this is amount of time that was used to calculate the original "nextRunAt" time.
- * @param nextRunAt Time the next run will occur. If null/undefined, then this function will return false.
- * @param now Optional override for the current time. Defaults to the current time.
- * @returns True if the threshold has not passed since the next run time, compared to now.
  */
 export function isUnderThreshold(threshold: Milliseconds, nextRunAt: Maybe<DateOrUnixDateTimeMillisecondsNumber>, now?: Maybe<Date>): boolean {
   return nextRunAt == null ? false : !isThrottled(-threshold, nextRunAt, now);
@@ -235,15 +237,15 @@ export function isUnderThreshold(threshold: Milliseconds, nextRunAt: Maybe<DateO
  * Returns true if the throttle time has not passed since the last run time, compared to now.
  * This is useful for rate limiting operations (e.g., "only allow this action once every X milliseconds").
  *
+ * @param throttleTime - Minimum time in milliseconds that must pass between operations.
+ * @param lastRunAt - Timestamp when the operation was last performed.
+ * @param now - Optional override for the current time (defaults to the current time)
+ * @returns True if the operation should be throttled (not enough time has passed), false otherwise.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags throttle, throttled, rate-limit, debounce, ttl, expiration
  * @dbxUtilRelated expiration-details, is-under-threshold, is-expired
- *
- * @param throttleTime - Minimum time in milliseconds that must pass between operations
- * @param lastRunAt - Timestamp when the operation was last performed
- * @param now - Optional override for the current time (defaults to the current time)
- * @returns True if the operation should be throttled (not enough time has passed), false otherwise
  */
 export function isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<DateOrUnixDateTimeMillisecondsNumber>, now?: Maybe<Date>) {
   return !expirationDetails({ defaultExpiresFromDateToNow: false, expiresFromDate: lastRunAt ?? null, expiresIn: throttleTime }).hasExpired(now, true);
@@ -255,13 +257,13 @@ export function isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<
  *
  * If the list is empty, returns false.
  *
+ * @param details - Collection of ExpirationDetails to check.
+ * @returns True if at least one item has not expired, false otherwise.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags expiration, valid, collection, any
  * @dbxUtilRelated expiration-details, check-any-have-expired
- *
- * @param details - Collection of ExpirationDetails to check
- * @returns True if at least one item has not expired, false otherwise
  */
 export function checkAtleastOneNotExpired(details: ExpirationDetails<Expires>[]): boolean {
   const firstExpired = details.findIndex((detail) => !detail.hasExpired());
@@ -274,14 +276,14 @@ export function checkAtleastOneNotExpired(details: ExpirationDetails<Expires>[])
  *
  * If the list is empty, returns the value specified by defaultIfEmpty.
  *
+ * @param details - Collection of ExpirationDetails to check.
+ * @param defaultIfEmpty - Default value to return if the list is empty (defaults to true)
+ * @returns True if any item has expired, or the defaultIfEmpty value for an empty list.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags expiration, refresh, collection, any
  * @dbxUtilRelated expiration-details, check-atleast-one-not-expired
- *
- * @param details - Collection of ExpirationDetails to check
- * @param defaultIfEmpty - Default value to return if the list is empty (defaults to true)
- * @returns True if any item has expired, or the defaultIfEmpty value for an empty list
  */
 export function checkAnyHaveExpired(details: ExpirationDetails<Expires>[], defaultIfEmpty: boolean = true): boolean {
   let result: boolean;

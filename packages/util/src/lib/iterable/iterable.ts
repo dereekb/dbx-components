@@ -14,7 +14,7 @@ export type IterableOrValue<T> = T | Iterable<T>;
 /**
  * Converts an IterableOrValue to an Iterable. Non-iterable values are wrapped in an array.
  *
- * @param values - The value or iterable to convert
+ * @param values - The value or iterable to convert.
  * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
  * @returns An Iterable containing the value(s)
  */
@@ -35,14 +35,14 @@ export function asIterable<T = unknown>(values: IterableOrValue<T>, treatStringA
  *
  * By default treats strings as a non-iterable value, using the string as a single value.
  *
+ * @param values - The value or iterable to convert.
+ * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
+ * @returns An array containing the value(s)
+ *
  * @dbxUtil
  * @dbxUtilCategory iterable
  * @dbxUtilTags iterable, array, convert, normalize, ensure
  * @dbxUtilRelated iterable-to-set, iterable-to-map, as-iterable
- *
- * @param values - The value or iterable to convert
- * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
- * @returns An array containing the value(s)
  */
 export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatStringAsIterable?: boolean): T[] {
   let iterable: Array<T>;
@@ -63,14 +63,14 @@ export function iterableToArray<T = unknown>(values: IterableOrValue<T>, treatSt
  *
  * By default treats strings as a non-iterable value, using the string as a single value.
  *
+ * @param values - The value or iterable to convert.
+ * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
+ * @returns Deduped membership view collected from `values`.
+ *
  * @dbxUtil
  * @dbxUtilCategory iterable
  * @dbxUtilTags iterable, set, convert, normalize, unique, dedupe
  * @dbxUtilRelated iterable-to-array, iterable-to-map
- *
- * @param values - The value or iterable to convert
- * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
- * @returns A Set containing the value(s)
  */
 export function iterableToSet<T = unknown>(values: IterableOrValue<T>, treatStringAsIterable = false): Set<T> {
   return new Set<T>(iterableToArray(values, treatStringAsIterable));
@@ -79,9 +79,9 @@ export function iterableToSet<T = unknown>(values: IterableOrValue<T>, treatStri
 /**
  * Converts an IterableOrValue to a Map using a key extraction function.
  *
- * @param values - The value or iterable to convert
- * @param readKey - Function to extract the key from each value
- * @returns A Map with the extracted keys and their corresponding values
+ * @param values - The value or iterable to convert.
+ * @param readKey - Function to extract the key from each value.
+ * @returns Lookup keyed by `readKey` results; the last entry per key wins.
  */
 export function iterableToMap<T, K extends PrimativeKey = PrimativeKey>(values: IterableOrValue<T>, readKey: ReadKeyFunction<T, K>): Map<Maybe<K>, T> {
   return new Map<Maybe<K>, T>(iterableToArray(values).map((value) => [readKey(value), value]));
@@ -91,14 +91,14 @@ export function iterableToMap<T, K extends PrimativeKey = PrimativeKey>(values: 
  * Type guard that returns true if the input is an Iterable.
  * By default, strings are not treated as iterable.
  *
+ * @param values - The value to check.
+ * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
+ * @returns True if the value is iterable.
+ *
  * @dbxUtil
  * @dbxUtilCategory iterable
  * @dbxUtilTags iterable, type-guard, check, symbol-iterator
  * @dbxUtilRelated is-empty-iterable, as-iterable
- *
- * @param values - The value to check
- * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
- * @returns True if the value is iterable
  */
 export function isIterable<T = unknown>(values: unknown, treatStringAsIterable = false): values is Iterable<T> {
   let result: boolean;
@@ -117,13 +117,13 @@ export function isIterable<T = unknown>(values: unknown, treatStringAsIterable =
 /**
  * Returns true if the iterable has no values.
  *
+ * @param values - The iterable to check.
+ * @returns True if the iterable is empty.
+ *
  * @dbxUtil
  * @dbxUtilCategory iterable
  * @dbxUtilTags iterable, empty, check, length
  * @dbxUtilRelated is-iterable, first-value-from-iterable
- *
- * @param values - The iterable to check
- * @returns True if the iterable is empty
  */
 export function isEmptyIterable<T = unknown>(values: Iterable<T>): boolean {
   let empty = true;
@@ -139,8 +139,8 @@ export function isEmptyIterable<T = unknown>(values: Iterable<T>): boolean {
 /**
  * Returns the first value from the Iterable, or undefined if empty. Order is not guaranteed.
  *
- * @param values - The iterable to read from
- * @returns The first value, or undefined if empty
+ * @param values - The iterable to read from.
+ * @returns The first value, or undefined if empty.
  */
 export function firstValueFromIterable<T>(values: Iterable<T>): Maybe<T> {
   let result: Maybe<T> = undefined;
@@ -156,9 +156,9 @@ export function firstValueFromIterable<T>(values: Iterable<T>): Maybe<T> {
 /**
  * Takes up to `count` items from the iterable. Order is not guaranteed.
  *
- * @param values - The iterable to take from
- * @param count - Maximum number of items to take
- * @returns An array of taken values
+ * @param values - Source iterable feeding the take operation.
+ * @param count - Upper bound on items to consume from the iterator.
+ * @returns Consumed items, capped at `count`.
  */
 export function takeValuesFromIterable<T>(values: Iterable<T>, count: number): T[] {
   const result: T[] = [];
@@ -177,8 +177,8 @@ export function takeValuesFromIterable<T>(values: Iterable<T>, count: number): T
 /**
  * Iterates over iterable values, calling the function for each one.
  *
- * @param values - The iterable to iterate over
- * @param fn - The function to call for each value
+ * @param values - The iterable to iterate over.
+ * @param fn - The function to call for each value.
  */
 export function forEachInIterable<T>(values: Iterable<T>, fn: (value: T) => void): void {
   for (const value of values) {
@@ -190,8 +190,8 @@ export function forEachInIterable<T>(values: Iterable<T>, fn: (value: T) => void
  * Calls the function for each value if the input is iterable, or once with the value if it's a single value.
  * Does nothing if the input is null/undefined.
  *
- * @param values - The value or iterable to process
- * @param fn - The function to call for each value
+ * @param values - The value or iterable to process.
+ * @param fn - The function to call for each value.
  * @param treatStringAsIterable - Whether to treat strings as iterable (defaults to false)
  */
 export function useIterableOrValue<T>(values: Maybe<IterableOrValue<T>>, fn: (value: T) => void, treatStringAsIterable = false): void {
@@ -207,9 +207,9 @@ export function useIterableOrValue<T>(values: Maybe<IterableOrValue<T>>, fn: (va
 /**
  * Finds and returns the first value in the iterable that matches the decision function.
  *
- * @param values - The iterable to search
- * @param fn - Decision function that returns true for the desired value
- * @returns The first matching value, or undefined
+ * @param values - The iterable to search.
+ * @param fn - Decision function that returns true for the desired value.
+ * @returns The first matching value, or undefined.
  */
 export function findInIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>): Maybe<T> {
   let result: Maybe<T> = undefined;
@@ -227,9 +227,9 @@ export function findInIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>):
 /**
  * Returns true if any value in the iterable matches the decision function.
  *
- * @param values - The iterable to search
- * @param fn - Decision function to test each value
- * @returns True if at least one value matches
+ * @param values - The iterable to search.
+ * @param fn - Decision function to test each value.
+ * @returns True if at least one value matches.
  */
 export function existsInIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>): boolean {
   let exists = false;
@@ -247,9 +247,9 @@ export function existsInIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>
 /**
  * Filters values from the iterable, keeping those that pass the decision function.
  *
- * @param values - The iterable to filter
- * @param fn - Decision function that returns true for values to keep
- * @returns An array of matching values
+ * @param values - Source iterable feeding the filter.
+ * @param fn - Predicate that decides whether each value flows through.
+ * @returns Items for which the predicate returned true, in iteration order.
  */
 export function filterFromIterable<T>(values: Iterable<T>, fn: DecisionFunction<T>): T[] {
   const keep: T[] = [];
@@ -269,9 +269,9 @@ export function filterFromIterable<T>(values: Iterable<T>, fn: DecisionFunction<
  *
  * Used to prevent functions from incorrectly treating a tuple as an array of values.
  *
- * @param input - The tuple or array of tuples to wrap
+ * @param input - The tuple or array of tuples to wrap.
  * @returns An array containing the tuple(s)
- * @throws Error if input is not an array
+ * @throws {Error} If input is not an array.
  */
 export function wrapTuples<T>(input: IterableOrValue<T>): T[] {
   if (!Array.isArray(input)) {

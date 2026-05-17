@@ -15,9 +15,9 @@ export interface ContextGrantedModelRoles<O, C = unknown, R extends string = str
 /**
  * Creates a {@link ContextGrantedModelRoles} with a no-access role map, indicating the context has no permissions.
  *
- * @param context - the context that was evaluated
- * @param data - optional model data, if it was loaded
- * @returns a ContextGrantedModelRoles with no access
+ * @param context - The context that was evaluated.
+ * @param data - Optional model data, if it was loaded.
+ * @returns A ContextGrantedModelRoles with no access.
  *
  * @example
  * ```typescript
@@ -32,9 +32,9 @@ export function noAccessContextGrantedModelRoles<O, C = unknown, R extends strin
 /**
  * Creates a {@link ContextGrantedModelRoles} with a full-access role map, granting all permissions.
  *
- * @param context - the context that was evaluated
- * @param data - optional model data
- * @returns a ContextGrantedModelRoles with full access
+ * @param context - The context that was evaluated.
+ * @param data - Optional model data.
+ * @returns A ContextGrantedModelRoles with full access.
  *
  * @example
  * ```typescript
@@ -49,10 +49,10 @@ export function fullAccessGrantedModelRoles<O, C = unknown, R extends string = s
 /**
  * Creates a {@link ContextGrantedModelRoles} with the given role map, data, and context.
  *
- * @param context - the context that was evaluated
- * @param data - the model data, if loaded
- * @param roles - the granted role map
- * @returns a ContextGrantedModelRoles combining all inputs
+ * @param context - The context that was evaluated.
+ * @param data - The model data, if loaded.
+ * @param roles - The granted role map.
+ * @returns A ContextGrantedModelRoles combining all inputs.
  */
 export function contextGrantedModelRoles<O, C = unknown, R extends string = string>(context: C, data: Maybe<O>, roles: GrantedRoleMap<R>): ContextGrantedModelRoles<O, C, R> {
   return {

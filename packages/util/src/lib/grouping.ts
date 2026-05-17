@@ -77,9 +77,9 @@ export type IndexedBatch<T> = T[] & Readonly<IndexRef>;
 /**
  * Splits the input array into batches of a maximum size. Each batch carries its zero-based index as `.i`.
  *
- * @param input - The array to split into batches.
- * @param batchSize - Maximum number of items per batch.
- * @returns An array of {@link IndexedBatch} arrays.
+ * @param input - Source items to partition into consecutive runs.
+ * @param batchSize - Upper bound on items per batch.
+ * @returns Consecutive batches tagged with their zero-based index.
  *
  * @dbxUtil
  * @dbxUtilCategory grouping
@@ -134,13 +134,13 @@ export interface BatchCalc extends BatchCount {
 /**
  * Calculates batch metrics (count, full batches, remainder) from a {@link BatchCount} configuration.
  *
+ * @param input - The total items and items-per-batch configuration.
+ * @returns A {@link BatchCalc} with computed batch counts and remainder.
+ *
  * @dbxUtil
  * @dbxUtilCategory grouping
  * @dbxUtilTags batch, calculate, count, remainder, math
  * @dbxUtilRelated batch, item-count-for-batch-index
- *
- * @param input - The total items and items-per-batch configuration.
- * @returns A {@link BatchCalc} with computed batch counts and remainder.
  */
 export function batchCalc(input: BatchCount): BatchCalc {
   const { totalItems: total, itemsPerBatch: batchSize } = input;
@@ -162,7 +162,7 @@ export function batchCalc(input: BatchCount): BatchCalc {
  *
  * @param index - Zero-based batch index.
  * @param calc - Pre-computed batch calculation from {@link batchCalc}.
- * @returns The number of items in that batch.
+ * @returns Item count for the requested batch, accounting for a smaller trailing remainder.
  */
 export function itemCountForBatchIndex(index: number, calc: BatchCalc): number {
   let itemCount: number;
@@ -199,9 +199,9 @@ export function restoreOrderWithValues<T, K extends PrimativeKey = PrimativeKey>
  * @param orderKeys - Keys defining the desired order.
  * @param values - Values to reorder.
  * @param params - Configuration including key reader, duplicate handling, and new-item behavior.
- * @param params.readKey - function that extracts the grouping key from each value
- * @param params.chooseRetainedValue - function that selects which value to keep when duplicates share the same key; defaults to keeping the first
- * @param params.excludeNewItems - when true, values whose keys are not in `orderKeys` are omitted from the result; defaults to false
+ * @param params.readKey - Function that extracts the grouping key from each value.
+ * @param params.chooseRetainedValue - Function that selects which value to keep when duplicates share the same key; defaults to keeping the first.
+ * @param params.excludeNewItems - When true, values whose keys are not in `orderKeys` are omitted from the result; defaults to false.
  * @returns The reordered values array.
  *
  * @dbxUtil
@@ -248,8 +248,8 @@ export function restoreOrder<T, K extends PrimativeKey = PrimativeKey>(orderKeys
  * @param a - First array to compare.
  * @param b - Second array to compare.
  * @param params - Key extraction and equality functions.
- * @param params.groupKeyFn - function that extracts a grouping key from each element for pairing
- * @param params.isEqual - predicate that returns true when two paired elements are considered equal
+ * @param params.groupKeyFn - Function that extracts a grouping key from each element for pairing.
+ * @param params.isEqual - Predicate that returns true when two paired elements are considered equal.
  * @returns `true` if the array contents differ.
  */
 export function arrayContentsDiffer<T, K extends PrimativeKey = PrimativeKey>(a: T[] = [], b: T[] = [], { groupKeyFn, isEqual }: ArrayContentsDifferentParams<T, K>): boolean {
@@ -306,14 +306,15 @@ export function pairGroupValues<T, K extends PrimativeKey = PrimativeKey>(values
 /**
  * Creates an array of `[key, value]` tuples by extracting a key from each value.
  *
+ * @param values - Values to create key pairs from.
+ * @param keyFn - Extracts the key from each value.
+ * @returns Tuples pairing each derived key with its source value.
+ *
  * @dbxUtil
  * @dbxUtilCategory grouping
  * @dbxUtilTags grouping, key, pairs, tuple, array
  * @dbxUtilRelated group-values, make-values-group-map
  *
- * @param values - Values to create key pairs from.
- * @param keyFn - Extracts the key from each value.
- * @returns An array of `[key, value]` tuples.
  * @__NO_SIDE_EFFECTS__
  */
 export function makeKeyPairs<T, K extends string | number = string | number>(values: T[], keyFn: ReadKeyFunction<T, K>): [Maybe<K>, T][] {
@@ -323,14 +324,14 @@ export function makeKeyPairs<T, K extends string | number = string | number>(val
 /**
  * Separates values into included and excluded groups based on a decision function.
  *
+ * @param values - Values to separate.
+ * @param checkInclusion - Returns `true` for values that should be included.
+ * @returns A {@link SeparateResult} with included and excluded arrays.
+ *
  * @dbxUtil
  * @dbxUtilCategory grouping
  * @dbxUtilTags array, separate, partition, split, filter, group
  * @dbxUtilRelated group-values, pair-group-values
- *
- * @param values - Values to separate.
- * @param checkInclusion - Returns `true` for values that should be included.
- * @returns A {@link SeparateResult} with included and excluded arrays.
  */
 export function separateValues<T>(values: T[], checkInclusion: DecisionFunction<T>): SeparateResult<T> {
   const result: Partial<KeyedGroupingResult<T, { in: unknown; out: unknown }>> = groupValues(values, (x) => {

@@ -12,14 +12,14 @@ import { MAP_IDENTITY } from '../value/map';
  *
  * Recursively compares arrays, objects, Maps, Sets, primitives, and Dates.
  *
+ * @param a - First value to compare.
+ * @param b - Second value to compare.
+ * @returns `true` if the values are deeply equal.
+ *
  * @dbxUtil
  * @dbxUtilCategory object
  * @dbxUtilTags object, equal, equality, deep, compare, recursive, pojo
  * @dbxUtilRelated are-equal-pojo-values-using-pojo-filter, all-objects-are-equal
- *
- * @param a - First value to compare
- * @param b - Second value to compare
- * @returns `true` if the values are deeply equal
  */
 export function areEqualPOJOValues<F>(a: F, b: F): boolean {
   return areEqualPOJOValuesUsingPojoFilter(a, b, MAP_IDENTITY);
@@ -30,10 +30,10 @@ export function areEqualPOJOValues<F>(a: F, b: F): boolean {
  *
  * Recursively compares arrays, objects, Maps, Sets, primitives, and Dates.
  *
- * @param a - First value to compare
- * @param b - Second value to compare
- * @param pojoFilter - Filter function applied to each value before comparison
- * @returns `true` if the filtered values are deeply equal
+ * @param a - First value to compare.
+ * @param b - Second value to compare.
+ * @param pojoFilter - Filter function applied to each value before comparison.
+ * @returns `true` if the filtered values are deeply equal.
  */
 export function areEqualPOJOValuesUsingPojoFilter<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
   let result: boolean;
@@ -222,14 +222,15 @@ export type ObjectFieldEqualityChecker<T extends object> = ((a: Partial<T>, b: P
  *
  * Fields can be specified as simple field names (using the default `===` comparator) or as config objects with custom comparators.
  *
+ * @param config - Configuration with the fields to compare and an optional default equality function.
+ * @returns A function that compares two objects and reports which fields are equal/unequal.
+ *
  * @dbxUtil
  * @dbxUtilCategory object
  * @dbxUtilKind factory
  * @dbxUtilTags object, equality, fields, comparator, factory
  * @dbxUtilRelated object-keys-equality-comparator-function, object-key-equality-comparator-function
  *
- * @param config - Configuration with the fields to compare and an optional default equality function
- * @returns A function that compares two objects and reports which fields are equal/unequal
  * @__NO_SIDE_EFFECTS__
  */
 export function objectFieldEqualityChecker<T extends object>(config: ObjectFieldEqualityCheckerConfig<T>): ObjectFieldEqualityChecker<T> {

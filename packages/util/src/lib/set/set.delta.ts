@@ -69,14 +69,15 @@ export interface SetDeltaFunctionConfig<T, K extends PrimativeKey = PrimativeKey
  * Creates a {@link SetDeltaFunction} that computes the differences between two iterables,
  * identifying which items were added, removed, or unchanged.
  *
+ * @param config - Configuration with the key reader and optional modification detector.
+ * @returns A function that compares two iterables and returns an array of change pairs.
+ *
  * @dbxUtil
  * @dbxUtilCategory set
  * @dbxUtilKind factory
  * @dbxUtilTags set, delta, diff, factory, change, added, removed
  * @dbxUtilRelated index-delta-group-function, set-has-value-function
  *
- * @param config - Configuration with the key reader and optional modification detector.
- * @returns A function that compares two iterables and returns an array of change pairs.
  * @__NO_SIDE_EFFECTS__
  */
 export function setDeltaFunction<T>(config: SetDeltaFunctionConfig<T>): SetDeltaFunction<T> {

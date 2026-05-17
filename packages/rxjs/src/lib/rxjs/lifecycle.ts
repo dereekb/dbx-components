@@ -20,9 +20,9 @@ interface CleanupInternalState<T> {
  * delays emitting the new value until the previous destruction completes.
  * On unsubscription, the last emitted instance is also destroyed.
  *
- * @param destroy - function to clean up each replaced instance
- * @param wait - whether to wait for the previous destroy to complete before emitting
- * @returns an operator that manages instance lifecycle
+ * @param destroy - Function to clean up each replaced instance.
+ * @param wait - Whether to wait for the previous destroy to complete before emitting.
+ * @returns An operator that manages instance lifecycle.
  */
 export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<void>, wait = false): MonoTypeOperatorFunction<T> {
   return (obs: Observable<T>) => {
@@ -30,7 +30,7 @@ export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<void>, wait 
 
     return obs.pipe(
       scan<T, CleanupInternalState<T>>((acc: CleanupInternalState<T>, instance: T) => {
-        let cleanup: Promise<void> | undefined;
+        let cleanup: Maybe<Promise<void>>;
 
         if (acc.instance) {
           cleanup = asPromise(destroy(acc.instance));
@@ -70,8 +70,8 @@ export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<void>, wait 
  * Accepts both {@link Destroyable} and {@link Maybe}<{@link Destroyable}> values,
  * skipping cleanup for nullish emissions.
  *
- * @param wait - whether to wait for the previous destroy to complete before emitting
- * @returns an operator that manages Destroyable lifecycle
+ * @param wait - Whether to wait for the previous destroy to complete before emitting.
+ * @returns An operator that manages Destroyable lifecycle.
  */
 export function cleanupDestroyable<T extends Maybe<Destroyable>>(wait?: boolean): MonoTypeOperatorFunction<T> {
   return cleanup((x: T) => {

@@ -109,6 +109,9 @@ export interface SelectiveFieldEncryptor<T, F extends keyof T> {
  * Each encrypted field's value is JSON.stringified before encryption and JSON.parsed after
  * decryption, so fields can hold any JSON-serializable value (not just strings).
  *
+ * @param config - Encryption configuration specifying provider, fields, and optional prefix.
+ * @returns A selective field encryptor instance.
+ *
  * @example
  * ```ts
  * const encryptor = selectiveFieldEncryptor({
@@ -122,9 +125,6 @@ export interface SelectiveFieldEncryptor<T, F extends keyof T> {
  * const decrypted = encryptor.decrypt(encrypted);
  * // decrypted => { client_id: 'abc', client_secret: 's3cret' }
  * ```
- *
- * @param config - Encryption configuration specifying provider, fields, and optional prefix.
- * @returns A selective field encryptor instance.
  */
 export function selectiveFieldEncryptor<T extends object, F extends keyof T>(config: SelectiveFieldEncryptionConfig<T, F>): SelectiveFieldEncryptor<T, F> {
   const { provider, fields, prefix: prefixInput } = config;

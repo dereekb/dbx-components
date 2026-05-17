@@ -128,7 +128,7 @@ export class DateTimeMinuteInstance {
   private _limit: LimitDateTimeInstance;
   private _dateFilter: Maybe<DateCellScheduleDateFilter>;
 
-  constructor(config: DateTimeMinuteConfig = {}, dateOverride?: Date | null) {
+  constructor(config: DateTimeMinuteConfig = {}, dateOverride?: Maybe<Date>) {
     this._config = config;
     this._date = dateOverride ?? config.date ?? new Date();
     this._step = config.step ?? 1;
@@ -170,7 +170,8 @@ export class DateTimeMinuteInstance {
    * both the schedule and the configured min/max limits. Useful for calendar UIs to
    * determine which days should be selectable.
    *
-   * @param date - the date whose day to evaluate
+   * @param date - Moment whose surrounding day should be evaluated.
+   * @returns Whether the day contains at least one valid date/time value.
    *
    * @example
    * ```ts
@@ -182,8 +183,6 @@ export class DateTimeMinuteInstance {
    * // true if June 15 is a weekday and overlaps the limit range
    * instance.dateDayContainsValidDateValue(new Date('2024-06-15'));
    * ```
-   *
-   * @returns `true` if the day contains at least one valid date/time value.
    */
   dateDayContainsValidDateValue(date: Date) {
     const isInSchedule = this.dateIsInSchedule(date);
@@ -214,7 +213,8 @@ export class DateTimeMinuteInstance {
    * Checks whether the date satisfies the min/max limits and falls on a scheduled day.
    * Unlike {@link isValid}, this does not check future/past constraints.
    *
-   * @param date - date to check; defaults to the instance's current date
+   * @param date - Date to check; defaults to the instance's current date.
+   * @returns `true` if the date is within the min/max limits and on a scheduled day.
    *
    * @example
    * ```ts
@@ -225,8 +225,6 @@ export class DateTimeMinuteInstance {
    *
    * instance.isInValidRange(new Date('2024-06-15T10:00:00')); // true if a weekday
    * ```
-   *
-   * @returns `true` if the date is within the min/max limits and on a scheduled day.
    */
   isInValidRange(date?: Date): boolean {
     const result = this.getStatus(date);
@@ -237,7 +235,8 @@ export class DateTimeMinuteInstance {
    * Checks whether the date passes all configured constraints: min/max limits,
    * future/past requirements, minimum future minutes, and schedule.
    *
-   * @param date - date to check; defaults to the instance's current date
+   * @param date - Date to check; defaults to the instance's current date.
+   * @returns `true` if the date passes all configured constraints.
    *
    * @example
    * ```ts
@@ -248,8 +247,6 @@ export class DateTimeMinuteInstance {
    *
    * instance.isValid(new Date('2099-03-15T10:00:00')); // true if all constraints pass
    * ```
-   *
-   * @returns `true` if the date passes all configured constraints.
    */
   isValid(date?: Date): boolean {
     const result = this.getStatus(date);
@@ -260,7 +257,8 @@ export class DateTimeMinuteInstance {
    * Evaluates the date against all configured constraints and returns a detailed status.
    * Fields default to `true` when their corresponding constraint is not configured.
    *
-   * @param date - date to evaluate; defaults to the instance's current date
+   * @param date - Date to evaluate; defaults to the instance's current date.
+   * @returns A {@link DateTimeMinuteDateStatus} snapshot for the given date.
    *
    * @example
    * ```ts
@@ -272,8 +270,6 @@ export class DateTimeMinuteInstance {
    * // status.isAfterMinimum === false (before min)
    * // status.inFuture === false (if date is in the past)
    * ```
-   *
-   * @returns A {@link DateTimeMinuteDateStatus} snapshot for the given date.
    */
   getStatus(date = this.date): DateTimeMinuteDateStatus {
     let isBeforeMaximum = true;
@@ -327,7 +323,8 @@ export class DateTimeMinuteInstance {
    * Checks whether the date falls on a day included in the configured schedule.
    * Always returns `true` if no schedule is configured.
    *
-   * @param date - date to check; defaults to the instance's current date
+   * @param date - Date to check; defaults to the instance's current date.
+   * @returns `true` if the date is on a scheduled day or no schedule is configured.
    *
    * @example
    * ```ts
@@ -337,8 +334,6 @@ export class DateTimeMinuteInstance {
    *
    * instance.dateIsInSchedule(new Date('2024-06-15')); // true (Saturday = false)
    * ```
-   *
-   * @returns `true` if the date is on a scheduled day or no schedule is configured.
    */
   dateIsInSchedule(date = this.date): boolean {
     return this._dateFilter ? this._dateFilter(date) : true; // true if no date filter
@@ -348,7 +343,8 @@ export class DateTimeMinuteInstance {
    * Rounds the instance's current date down to the configured step interval,
    * optionally clamping the result to the min/max bounds.
    *
-   * @param round - rounding and clamping options
+   * @param round - Rounding and clamping options.
+   * @returns The rounded (and optionally clamped) date.
    *
    * @example
    * ```ts
@@ -361,8 +357,6 @@ export class DateTimeMinuteInstance {
    * instance.round({ roundToSteps: true }); // 2024-06-15T09:00:00
    * instance.round({ roundToSteps: true, roundToBound: true }); // clamped to min if below
    * ```
-   *
-   * @returns The rounded (and optionally clamped) date.
    */
   round(round: RoundDateTimeMinute): Date {
     let date = roundDateTimeDownToSteps(this.date, {
@@ -381,8 +375,9 @@ export class DateTimeMinuteInstance {
    * Clamps the date to both the configured limits and the schedule by first applying
    * {@link clampToLimit}, then {@link clampToSchedule}.
    *
-   * @param date - date to clamp; defaults to the instance's current date
-   * @param maxClampDistance - maximum number of days to search for a valid schedule day
+   * @param date - Date to clamp; defaults to the instance's current date.
+   * @param maxClampDistance - Maximum number of days to search for a valid schedule day.
+   * @returns Moment snapped to both the configured limits and schedule.
    *
    * @example
    * ```ts
@@ -393,8 +388,6 @@ export class DateTimeMinuteInstance {
    *
    * instance.clamp(new Date('2024-05-25')); // clamped to min, then nearest weekday
    * ```
-   *
-   * @returns The date clamped to both the limits and the schedule.
    */
   clamp(date = this.date, maxClampDistance?: Days): Date {
     return this.clampToSchedule(this.clampToLimit(date), maxClampDistance);
@@ -403,7 +396,8 @@ export class DateTimeMinuteInstance {
   /**
    * Clamps the date to the configured min/max limits without considering the schedule.
    *
-   * @param date - date to clamp; defaults to the instance's current date
+   * @param date - Date to clamp; defaults to the instance's current date.
+   * @returns Moment snapped inside the configured min/max limits.
    *
    * @example
    * ```ts
@@ -413,8 +407,6 @@ export class DateTimeMinuteInstance {
    *
    * instance.clampToLimit(new Date('2025-03-01')); // returns max (2024-12-31)
    * ```
-   *
-   * @returns The date clamped to the configured min/max limits.
    */
   clampToLimit(date = this.date): Date {
     return this._limit.clamp(date);
@@ -425,8 +417,9 @@ export class DateTimeMinuteInstance {
    * then backward, within the configured limits and max distance. Returns the input
    * date unchanged if no schedule is configured or the date is already on a valid day.
    *
-   * @param date - date to clamp; defaults to the instance's current date
-   * @param maxClampDistance - maximum number of days to search in each direction; defaults to 370
+   * @param date - Date to clamp; defaults to the instance's current date.
+   * @param maxClampDistance - Maximum number of days to search in each direction; defaults to 370.
+   * @returns The nearest valid scheduled date, or the input date if already valid or no schedule is configured.
    *
    * @example
    * ```ts
@@ -437,8 +430,6 @@ export class DateTimeMinuteInstance {
    * // If June 15, 2024 is a Saturday, returns the next Monday
    * instance.clampToSchedule(new Date('2024-06-15'));
    * ```
-   *
-   * @returns The nearest valid scheduled date, or the input date if already valid or no schedule is configured.
    */
   clampToSchedule(date = this.date, maxClampDistance: Days = 370): Date {
     let nextAvailableDate: Maybe<Date>;
@@ -490,9 +481,10 @@ export class DateTimeMinuteInstance {
    * excluding the input date itself. Returns `undefined` if no schedule is configured
    * or no matching day is found within the max distance.
    *
-   * @param date - starting date for the search
-   * @param direction - whether to search forward ('future') or backward ('past')
-   * @param maxDistance - maximum number of days to search; defaults to 370
+   * @param date - Starting date for the search.
+   * @param direction - Whether to search forward ('future') or backward ('past')
+   * @param maxDistance - Maximum number of days to search; defaults to 370.
+   * @returns The next valid schedule date, or `undefined` if none found within the max distance.
    *
    * @example
    * ```ts
@@ -503,8 +495,6 @@ export class DateTimeMinuteInstance {
    * // Find the next weekday after a Saturday
    * instance.findNextAvailableDayInSchedule(new Date('2024-06-15'), 'future');
    * ```
-   *
-   * @returns The next valid schedule date, or `undefined` if none found within the max distance.
    */
   findNextAvailableDayInSchedule(date: DateCellScheduleDateFilterInput, direction: DateRelativeDirection, maxDistance: Days = 370): Maybe<Date> {
     let nextAvailableDate: Maybe<Date>;
@@ -530,7 +520,8 @@ export class DateTimeMinuteInstance {
    * Checks whether the given date falls on a scheduled day. Always returns `true` if no schedule is configured.
    * Accepts any {@link DateCellScheduleDateFilterInput} value (Date, number, or LogicalDate).
    *
-   * @param date - date to check against the schedule
+   * @param date - Date to check against the schedule.
+   * @returns `true` if the date is on a scheduled day or no schedule is configured.
    *
    * @example
    * ```ts
@@ -541,8 +532,6 @@ export class DateTimeMinuteInstance {
    * instance.isInSchedule(new Date('2024-06-17')); // true (Monday)
    * instance.isInSchedule(new Date('2024-06-16')); // false (Sunday)
    * ```
-   *
-   * @returns `true` if the date is on a scheduled day or no schedule is configured.
    */
   isInSchedule(date: DateCellScheduleDateFilterInput) {
     return this._dateFilter ? this._dateFilter(date) : true;
@@ -582,7 +571,8 @@ export class DateTimeMinuteInstance {
  * constraints defined in the config (limits, future/past, schedule).
  * Uses {@link DateTimeMinuteInstance.isValid} internally.
  *
- * @param config - configuration defining the valid date constraints
+ * @param config - Configuration defining the valid date constraints.
+ * @returns A decision function that returns `true` for valid dates.
  *
  * @example
  * ```ts
@@ -594,7 +584,6 @@ export class DateTimeMinuteInstance {
  * isValid(new Date('2024-06-17T10:00:00')); // true if future weekday after min
  * ```
  *
- * @returns A decision function that returns `true` for valid dates.
  * @__NO_SIDE_EFFECTS__
  */
 export function dateTimeMinuteDecisionFunction(config: DateTimeMinuteConfig): DecisionFunction<Date> {
@@ -611,8 +600,9 @@ export function dateTimeMinuteDecisionFunction(config: DateTimeMinuteConfig): De
  * {@link DateTimeMinuteInstance.dateDayContainsValidDateValue} to check if any moment
  * in the day could be valid.
  *
- * @param config - configuration defining the valid date constraints
- * @param startAndEndOfDayMustBeValid - when true, requires the entire day to be valid rather than just part of it
+ * @param config - Configuration defining the valid date constraints.
+ * @param startAndEndOfDayMustBeValid - When true, requires the entire day to be valid rather than just part of it.
+ * @returns A decision function that returns `true` for valid days.
  *
  * @example
  * ```ts
@@ -629,7 +619,6 @@ export function dateTimeMinuteDecisionFunction(config: DateTimeMinuteConfig): De
  * isFullDayValid(new Date('2024-06-15'));
  * ```
  *
- * @returns A decision function that returns `true` for valid days.
  * @__NO_SIDE_EFFECTS__
  */
 export function dateTimeMinuteWholeDayDecisionFunction(config: DateTimeMinuteConfig, startAndEndOfDayMustBeValid = false): DecisionFunction<Date> {

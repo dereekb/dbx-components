@@ -11,8 +11,8 @@ export interface JoinHostAndPortConfig {
 /**
  * Joins the host and port into a "host:port" string.
  *
- * @param config - The host and port configuration, or null/undefined
- * @returns The joined string, or null/undefined if config is null/undefined
+ * @param config - The host and port configuration, or null/undefined.
+ * @returns The joined string, or null/undefined if config is null/undefined.
  */
 export function joinHostAndPort(config: Maybe<JoinHostAndPortConfig>): Maybe<string> {
   return config ? `${config.host}:${config.port}` : config;

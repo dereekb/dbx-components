@@ -1,4 +1,5 @@
 import { getStatementAnchor, leadingJsdocFor } from './comments';
+import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment } from './jsdoc-parser';
 import { buildLowercaseTagsFix, checkDbxTagFamily, findFamilyTags, reportOnJsdocLine, type DbxCompanionTagSpec, type DbxTagFamilySpec } from './dbx-tag-families';
 
@@ -27,7 +28,7 @@ export interface UtilRequireDbxModelFirebaseIndexCompanionTagsRuleDefinition {
     readonly messages: Readonly<Record<string, string>>;
     readonly schema: readonly object[];
   };
-  create(context: { options: UtilRequireDbxModelFirebaseIndexCompanionTagsRuleOptions[]; report: (descriptor: { loc?: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => AstNode | AstNode[] | null }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
+  create(context: { options: UtilRequireDbxModelFirebaseIndexCompanionTagsRuleOptions[]; report: (descriptor: { loc?: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]> }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
 }
 
 /**

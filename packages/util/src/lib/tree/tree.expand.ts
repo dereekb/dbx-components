@@ -77,16 +77,17 @@ export function expandTreeFunction<T, N extends TreeNode<T, N>>(config: ExpandTr
  * and optionally, how to construct the nodes themselves (`makeNode`). If `makeNode` is not provided, a default node structure is used.
  * The returned function recursively builds a tree from a root value.
  *
+ * @param config - An ExpandTree<T> or ExpandTreeWithNodeBuilder<T, N> configuration object.
+ * @returns An ExpandTreeFunction<T, N> that takes a root value and returns its corresponding tree structure.
+ *
  * @dbxUtil
  * @dbxUtilCategory tree
  * @dbxUtilKind factory
  * @dbxUtilTags tree, expand, build, recursive, factory, hierarchy, traverse, children
  * @dbxUtilRelated expand-trees, expand-flatten-tree-function, explore-tree-function
- *
  * @template T The type of the value being processed at each node.
  * @template N The type of the TreeNode to be created. Defaults to TreeNode<T, any> if not specified by ExpandTreeWithNodeBuilder.
- * @param config An ExpandTree<T> or ExpandTreeWithNodeBuilder<T, N> configuration object.
- * @returns An ExpandTreeFunction<T, N> that takes a root value and returns its corresponding tree structure.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any>>(config: ExpandTree<T> | ExpandTreeWithNodeBuilder<T, N>): ExpandTreeFunction<T, N> {
@@ -115,16 +116,16 @@ export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any
  * Convenience function for expanding multiple root values into an array of trees.
  * Each value in the input array is treated as a root for a new tree.
  *
+ * @param values - An array of root values of type T to expand.
+ * @param expandFn - An ExpandTreeFunction<T, N> used to expand each value into a tree.
+ * @returns An array of N, where each N is the root node of an expanded tree.
+ *
  * @dbxUtil
  * @dbxUtilCategory tree
  * @dbxUtilTags tree, expand, multiple, roots, hierarchy, build, batch
  * @dbxUtilRelated expand-tree-function, expand-flatten-tree-function
- *
  * @template T The type of the input values.
  * @template N The type of the TreeNode in the resulting trees. Must extend TreeNode<T, N>.
- * @param values An array of root values of type T to expand.
- * @param expandFn An ExpandTreeFunction<T, N> used to expand each value into a tree.
- * @returns An array of N, where each N is the root node of an expanded tree.
  */
 export function expandTrees<T, N extends TreeNode<T, N>>(values: T[], expandFn: ExpandTreeFunction<T, N>): N[] {
   return values.map(expandFn);

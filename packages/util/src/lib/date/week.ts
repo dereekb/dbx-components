@@ -19,8 +19,8 @@ export type DayOfWeek = Sunday | Monday | Tuesday | Wednesday | Thusrsday | Frid
  *
  * Equivalent to date.getDay().
  *
- * @param date - The date to get the day of week for
- * @returns The DayOfWeek value (0=Sunday through 6=Saturday)
+ * @param date - Reference instant whose local weekday should be reported.
+ * @returns Weekday for `date` indexed 0=Sunday through 6=Saturday.
  */
 export function dayOfWeek(date: Date) {
   return date.getDay() as DayOfWeek;
@@ -34,8 +34,8 @@ export type IsInAllowedDaysOfWeekSetDecisionFunction = IsInSetDecisionFunction<D
 /**
  * Creates a DecisionFunction that checks whether the input day or Date falls within the allowed days of the week.
  *
- * @param allowedDaysOfWeek - Set of allowed DayOfWeek values
- * @returns A decision function that checks membership in the allowed set
+ * @param allowedDaysOfWeek - Set of allowed DayOfWeek values.
+ * @returns Reusable predicate that yields true when a date or weekday falls in the allowed set.
  */
 export function isInAllowedDaysOfWeekSet(allowedDaysOfWeek: Set<DayOfWeek>): IsInAllowedDaysOfWeekSetDecisionFunction {
   return isInSetDecisionFunction<Date | DayOfWeek, DayOfWeek>(allowedDaysOfWeek, (x) => {
@@ -50,7 +50,7 @@ export function isInAllowedDaysOfWeekSet(allowedDaysOfWeek: Set<DayOfWeek>): IsI
  *
  * @param startingOn - The day to start from (defaults to Sunday)
  * @param maxDays - Maximum number of days to return (defaults to 7)
- * @returns An array of DayOfWeek values
+ * @returns Successive weekdays beginning at `startingOn`, capped at `maxDays`.
  */
 export function daysOfWeekArray(startingOn: DayOfWeek = Day.SUNDAY, maxDays: number = 7): DayOfWeek[] {
   const days: DayOfWeek[] = [];
@@ -99,8 +99,8 @@ export interface EnabledDays {
 /**
  * Creates an EnabledDays object from an iterable of Day enum values.
  *
- * @param input - Iterable of Day values to mark as enabled
- * @returns An EnabledDays object with the specified days set to true
+ * @param input - Iterable of Day values to mark as enabled.
+ * @returns Per-weekday flag record with `true` for every day present in `input`.
  */
 export function enabledDaysFromDaysOfWeek(input: Maybe<Iterable<Day>>): EnabledDays {
   const set = new Set(input);
@@ -119,8 +119,8 @@ export function enabledDaysFromDaysOfWeek(input: Maybe<Iterable<Day>>): EnabledD
 /**
  * Converts an EnabledDays object to an array of Day enum values.
  *
- * @param input - The EnabledDays object to convert
- * @returns An array of Day values for all enabled days
+ * @param input - Per-weekday flag record specifying which days are enabled.
+ * @returns Weekdays whose flag is true, ordered Sunday through Saturday.
  */
 export function daysOfWeekFromEnabledDays(input: Maybe<EnabledDays>): Day[] {
   const daysOfWeek: Day[] = [];
@@ -179,9 +179,9 @@ export interface DayOfWeekNamesTransformConfig {
 /**
  * Returns an array of strings with each day of the week named.
  *
- * @param sundayFirst - If true (default), Sunday is the first day; otherwise Monday is first
- * @param transform - Optional configuration for abbreviation and casing
- * @returns Array of day name strings
+ * @param sundayFirst - If true (default), Sunday is the first day; otherwise Monday is first.
+ * @param transform - Optional configuration for abbreviation and casing.
+ * @returns Localized weekday labels ordered per `sundayFirst` and styled per `transform`.
  */
 export function getDaysOfWeekNames(sundayFirst = true, transform?: DayOfWeekNamesTransformConfig): string[] {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -211,8 +211,8 @@ export function getDaysOfWeekNames(sundayFirst = true, transform?: DayOfWeekName
 /**
  * Creates a Map from DayOfWeek values to their string names.
  *
- * @param transform - Optional configuration for abbreviation and casing
- * @returns A Map from DayOfWeek to name string
+ * @param transform - Optional configuration for abbreviation and casing.
+ * @returns Lookup pairing each weekday with its formatted name.
  */
 export function daysOfWeekNameMap(transform?: DayOfWeekNamesTransformConfig): Map<DayOfWeek, string> {
   const dayOfWeekNames = getDaysOfWeekNames(true, transform);
@@ -227,14 +227,15 @@ export type DayOfWeekNameFunction = (dayOfWeek: DayOfWeek) => string;
 /**
  * Creates a function that returns the name for a given DayOfWeek.
  *
+ * @param transform - Optional configuration for abbreviation and casing.
+ * @returns Reusable resolver that maps a weekday to its formatted name (or 'UNKNOWN').
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilKind factory
  * @dbxUtilTags date, week, day-of-week, name, factory, format
  * @dbxUtilRelated days-of-week-name-map
  *
- * @param transform - Optional configuration for abbreviation and casing
- * @returns A function that maps DayOfWeek values to name strings
  * @__NO_SIDE_EFFECTS__
  */
 export function daysOfWeekNameFunction(transform?: DayOfWeekNamesTransformConfig): DayOfWeekNameFunction {
@@ -245,8 +246,8 @@ export function daysOfWeekNameFunction(transform?: DayOfWeekNamesTransformConfig
 /**
  * Returns the DayOfWeek for the day after the given day.
  *
- * @param day - The starting day
- * @returns The next day of the week
+ * @param day - The starting day.
+ * @returns The next day of the week.
  */
 export function getDayTomorrow(day: DayOfWeek): DayOfWeek {
   return getNextDay(day, 1);
@@ -255,8 +256,8 @@ export function getDayTomorrow(day: DayOfWeek): DayOfWeek {
 /**
  * Returns the DayOfWeek for the day before the given day.
  *
- * @param day - The starting day
- * @returns The previous day of the week
+ * @param day - The starting day.
+ * @returns The previous day of the week.
  */
 export function getDayYesterday(day: DayOfWeek): DayOfWeek {
   return getPreviousDay(day, 1);
@@ -265,9 +266,9 @@ export function getDayYesterday(day: DayOfWeek): DayOfWeek {
 /**
  * Returns the DayOfWeek offset by the given number of days (positive = forward, negative = backward).
  *
- * @param day - The starting day
- * @param days - The number of days to offset (positive or negative)
- * @returns The resulting DayOfWeek
+ * @param day - Starting weekday from which to offset.
+ * @param days - Signed step count (positive advances; negative rewinds).
+ * @returns Weekday after applying the signed offset, wrapping at week boundaries.
  */
 export function getDayOffset(day: DayOfWeek, days: number): DayOfWeek {
   let result: DayOfWeek;
@@ -286,9 +287,9 @@ export function getDayOffset(day: DayOfWeek, days: number): DayOfWeek {
 /**
  * Returns the DayOfWeek that is the given number of days before the input day.
  *
- * @param day - The starting day
- * @param days - The number of days to go back (defaults to 1)
- * @returns The resulting DayOfWeek
+ * @param day - Starting weekday from which to rewind.
+ * @param days - Step count to walk backwards; defaults to 1.
+ * @returns Weekday `days` positions earlier, wrapping at week boundaries.
  */
 export function getPreviousDay(day: DayOfWeek, days: number = 1): DayOfWeek {
   const offset = Math.abs(days) % 7;
@@ -299,9 +300,9 @@ export function getPreviousDay(day: DayOfWeek, days: number = 1): DayOfWeek {
 /**
  * Returns the DayOfWeek that is the given number of days after the input day.
  *
- * @param day - The starting day
- * @param days - The number of days to advance (defaults to 1)
- * @returns The resulting DayOfWeek
+ * @param day - Starting weekday from which to advance.
+ * @param days - Step count to walk forwards; defaults to 1.
+ * @returns Weekday `days` positions later, wrapping at week boundaries.
  */
 export function getNextDay(day: DayOfWeek, days: number = 1): DayOfWeek {
   let result = ((day + days) % 7) as DayOfWeek;

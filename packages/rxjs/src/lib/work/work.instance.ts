@@ -112,7 +112,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
    *
    * If the loading state returns an error, the error is forwarded.
    *
-   * @param loadingStateObs - observable of the loading state to track as the work result
+   * @param loadingStateObs - Observable of the loading state to track as the work result.
    */
   startWorkingWithLoadingStateObservable(loadingStateObs: Observable<Maybe<LoadingState<O>>>): void {
     const obs = preventComplete(loadingStateObs).pipe(filterMaybe(), shareReplay(1));
@@ -145,8 +145,8 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
    *
    * It is used in conjunction with startWorking() and ideal for cases where multiple observables or promises are used.
    *
-   * @param loadingStateObs - promise or observable of the loading state to track for errors
-   * @returns a promise that resolves with the value from the loading state or rejects on error
+   * @param loadingStateObs - Promise or observable of the loading state to track for errors.
+   * @returns Resolves with the first non-loading value, or rejects when the loading state surfaces an error.
    */
   performTaskWithLoadingState<T>(loadingStateObs: Promise<LoadingState<T>> | Observable<Maybe<LoadingState<T>>>): Promise<T> {
     return promiseFromLoadingState(
@@ -168,7 +168,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
    *
    * If an error is thrown, the error is forwarded to the reject function.
    *
-   * @param fn - synchronous function that returns the result value or throws an error
+   * @param fn - Synchronous function that returns the result value or throws an error.
    */
   performTaskWithReturnValue(fn: () => O): void {
     try {
@@ -183,7 +183,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
   /**
    * Begins working using a promise.
    *
-   * @param promise - the promise that represents the asynchronous work
+   * @param promise - Asynchronous work whose resolved value should be tracked as the work result.
    */
   startWorkingWithPromise(promise: Promise<O>): void {
     this.startWorkingWithObservable(from(promise));
@@ -192,7 +192,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
   /**
    * Begins working using an observable.
    *
-   * @param workObs - the observable that represents the asynchronous work and emits the result
+   * @param workObs - The observable that represents the asynchronous work and emits the result.
    */
   startWorkingWithObservable(workObs: Observable<O>): void {
     this.startWorking();
@@ -217,7 +217,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
   /**
    * Sets success on the work.
    *
-   * @param result - the successful result value to pass to the delegate
+   * @param result - The successful result value to pass to the delegate.
    */
   success(result?: O): void {
     this._setComplete(successResult(result));
@@ -227,7 +227,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
   /**
    * Sets rejected on the work.
    *
-   * @param error - the error to pass to the delegate as the rejection reason
+   * @param error - The error to pass to the delegate as the rejection reason.
    */
   reject(error?: ErrorInput): void {
     this._setComplete(errorResult(error));

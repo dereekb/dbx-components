@@ -34,6 +34,10 @@ import { filterMaybeStrict } from '../rxjs/value';
  *
  * If firstOnly is provided, it will only take the first value the observable returns.
  *
+ * @param obs - The source observable to wrap.
+ * @param firstOnly - If true, only takes the first value from the observable.
+ * @returns An observable that emits {@link LoadingState} values representing the loading lifecycle.
+ *
  * @example
  * ```ts
  * // Wrap a data fetch observable into a LoadingState
@@ -42,10 +46,6 @@ import { filterMaybeStrict } from '../rxjs/value';
  * // Wrap an observable and only take the first emitted value
  * readonly singleValueState$ = loadingStateFromObs(this.data$, true);
  * ```
- *
- * @param obs - The source observable to wrap.
- * @param firstOnly - If true, only takes the first value from the observable.
- * @returns An observable that emits {@link LoadingState} values representing the loading lifecycle.
  */
 export function loadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean): Observable<LoadingState<T>> {
   if (firstOnly) {
@@ -125,6 +125,9 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
  * If any source has an error, the error is propagated. If any source is still loading, the result is loading.
  * When all sources are successful, the result value is `true`.
  *
+ * @param sources - LoadingState observables whose statuses participate in the combined emission.
+ * @returns An observable emitting a {@link LoadingState}<boolean> representing the combined status.
+ *
  * @example
  * ```ts
  * const success$ = of(successResult(1));
@@ -137,9 +140,6 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
  * const loading$ = of(beginLoading());
  * const status$ = combineLoadingStatesStatus([loading$, success$]);
  * ```
- *
- * @param sources - An array of LoadingState observables to combine.
- * @returns An observable emitting a {@link LoadingState}<boolean> representing the combined status.
  */
 export function combineLoadingStatesStatus<A extends readonly LoadingState<any>[]>(sources: readonly [...ObservableInputTuple<A>]): Observable<LoadingState<boolean>> {
   return combineLatest(sources).pipe(
@@ -207,6 +207,8 @@ export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>
  *
  * Unlike {@link valueFromLoadingState}, this operator emits for every state change, regardless of whether the value is defined.
  *
+ * @returns An `OperatorFunction` that maps each {@link LoadingState} to its current value (or undefined).
+ *
  * @example
  * ```ts
  * // Expose the current (possibly undefined) value from a loading state
@@ -215,8 +217,6 @@ export function startWithBeginLoading<L extends LoadingState>(state?: Partial<L>
  *   shareReplay(1)
  * );
  * ```
- *
- * @returns An `OperatorFunction` that maps each {@link LoadingState} to its current value (or undefined).
  */
 export function currentValueFromLoadingState<L extends LoadingState>(): OperatorFunction<L, Maybe<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
@@ -230,6 +230,8 @@ export function currentValueFromLoadingState<L extends LoadingState>(): Operator
  * Equivalent to piping {@link currentValueFromLoadingState} and `filterMaybeStrict()`.
  * Only emits when the value is defined, filtering out loading and error states without values.
  *
+ * @returns An `OperatorFunction` that emits only defined values from the {@link LoadingState}.
+ *
  * @example
  * ```ts
  * // Only emit when the loading state has a defined value
@@ -238,8 +240,6 @@ export function currentValueFromLoadingState<L extends LoadingState>(): Operator
  *   // only emits non-null/non-undefined values
  * );
  * ```
- *
- * @returns An `OperatorFunction` that emits only defined values from the {@link LoadingState}.
  */
 export function valueFromLoadingState<L extends LoadingStateWithDefinedValue>(): OperatorFunction<L, MaybeSoStrict<LoadingStateValue<L>>> {
   return (obs: Observable<L>) => {
@@ -255,6 +255,8 @@ export function valueFromLoadingState<L extends LoadingStateWithDefinedValue>():
  *
  * Filters to only emit when the state contains an error, then extracts and emits the {@link ReadableError}.
  *
+ * @returns An `OperatorFunction` that emits the {@link ReadableError} from error states.
+ *
  * @example
  * ```ts
  * // React to errors from a loading state
@@ -263,8 +265,6 @@ export function valueFromLoadingState<L extends LoadingStateWithDefinedValue>():
  *   tap((error) => console.error('Loading failed:', error))
  * ).subscribe();
  * ```
- *
- * @returns An `OperatorFunction` that emits the {@link ReadableError} from error states.
  */
 export function errorFromLoadingState<L extends LoadingState>(): OperatorFunction<L, ReadableError> {
   return (obs: Observable<L>) => {
@@ -281,6 +281,8 @@ export function errorFromLoadingState<L extends LoadingState>(): OperatorFunctio
  * Passes through non-error states unchanged, but throws the error from any {@link LoadingStateWithError},
  * converting the loading state error into an observable error that can be caught with `catchError`.
  *
+ * @returns An `OperatorFunction` that passes through non-error states and throws on error states.
+ *
  * @example
  * ```ts
  * // Convert a LoadingState observable to a Promise, throwing on error states
@@ -291,8 +293,6 @@ export function errorFromLoadingState<L extends LoadingState>(): OperatorFunctio
  *   )
  * );
  * ```
- *
- * @returns An `OperatorFunction` that passes through non-error states and throws on error states.
  */
 export function throwErrorFromLoadingStateError<L extends LoadingState>(): OperatorFunction<L, L> {
   return (obs: Observable<L>) => {
@@ -670,6 +670,9 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputC
  * Waits for the first finished loading state, then resolves with the value. If the finished state
  * contains an error, the promise is rejected with that error.
  *
+ * @param obs - The observable emitting {@link LoadingState} values.
+ * @returns Resolves with the first finished value or rejects when the finished state carries an error.
+ *
  * @example
  * ```ts
  * // Await a loading state observable as a promise
@@ -686,9 +689,6 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputC
  *   throw e;
  * });
  * ```
- *
- * @param obs - The observable emitting {@link LoadingState} values.
- * @returns A Promise that resolves with the value or rejects with the error.
  */
 export function promiseFromLoadingState<T>(obs: Observable<LoadingState<T>>): Promise<T> {
   return firstValueFrom(obs.pipe(filter(isLoadingStateFinishedLoading))).then((x) => {

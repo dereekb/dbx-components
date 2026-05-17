@@ -96,9 +96,9 @@ export type LoadingEventForLoadingPairConfigInput = Pick<LoadingStateContextConf
  * Determines the `loading` flag based on whether an error is present, whether the value is defined,
  * and the `showLoadingOnUndefinedValue` setting. Loading progress is only included while loading.
  *
- * @param state - the current loading state to convert into a context event
- * @param input - configuration input controlling how the loading flag is derived
- * @returns a loading state context event derived from the given state
+ * @param state - The current loading state to convert into a context event.
+ * @param input - Configuration input controlling how the loading flag is derived.
+ * @returns A loading state context event derived from the given state.
  */
 export const DEFAULT_LOADING_EVENT_FOR_LOADING_PAIR_FUNCTION = <T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S>(state: S, input: LoadingEventForLoadingPairConfigInput): LoadingStateContextEvent<T> => {
   const { showLoadingOnUndefinedValue } = input;
@@ -132,6 +132,9 @@ export type LoadingStateContextInput<T = unknown, S extends LoadingState<T> = Lo
  * Accepts either a raw observable or a {@link LoadingStateContextConfig} for fine-grained control
  * over how loading events are derived from the state.
  *
+ * @param input - Optional observable or config to initialize the context.
+ * @returns A mutable loading state context with reactive accessors.
+ *
  * @example
  * ```ts
  * // Create a context from a state observable
@@ -149,9 +152,6 @@ export type LoadingStateContextInput<T = unknown, S extends LoadingState<T> = Lo
  * // Clean up
  * context.destroy();
  * ```
- *
- * @param input - optional observable or config to initialize the context
- * @returns a mutable loading state context with reactive accessors
  */
 export function loadingStateContext<T = unknown, S extends LoadingState<T> = LoadingState<T>, E extends LoadingStateContextEvent = LoadingContextEvent & S>(input?: LoadingStateContextInput<T, S, E>): MutableLoadingStateContext<T, S, E> {
   const _config: Maybe<LoadingStateContextConfig<T, S, E>> = input && isObservable(input) ? { obs: input } : input;

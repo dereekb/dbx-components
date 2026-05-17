@@ -79,6 +79,9 @@ export class ModelRecurrenceInfoUtility {
    * {@link ModelRecurrenceInfo} by parsing the RRule, computing the
    * recurrence date range, and populating the `forever` flag.
    *
+   * @param update - The recurrence start input to expand.
+   * @returns A new {@link ModelRecurrenceInfo} with computed start, end, and forever fields.
+   *
    * @example
    * ```ts
    * const info = ModelRecurrenceInfoUtility.expandModelRecurrenceStartToModelRecurrenceInfo({
@@ -87,9 +90,6 @@ export class ModelRecurrenceInfoUtility {
    *   timezone: 'America/Chicago'
    * });
    * ```
-   *
-   * @param update - The recurrence start input to expand.
-   * @returns A new {@link ModelRecurrenceInfo} with computed start, end, and forever fields.
    */
   static expandModelRecurrenceStartToModelRecurrenceInfo(update: ModelRecurrenceStart): ModelRecurrenceInfo {
     const { date, rrule, timezone } = update;
@@ -120,6 +120,10 @@ export class ModelRecurrenceInfoUtility {
    * and a reference {@link CalendarDate}, allowing further expansion or
    * recurrence queries.
    *
+   * @param info - Stored recurrence metadata.
+   * @param date - Reference calendar date providing startsAt and duration.
+   * @returns A new {@link DateRRuleInstance} ready for expansion.
+   *
    * @example
    * ```ts
    * const instance = ModelRecurrenceInfoUtility.makeDateRRuleInstance(
@@ -128,10 +132,6 @@ export class ModelRecurrenceInfoUtility {
    * );
    * const nextDate = instance.nextRecurrenceDate();
    * ```
-   *
-   * @param info - Stored recurrence metadata.
-   * @param date - Reference calendar date providing startsAt and duration.
-   * @returns A new {@link DateRRuleInstance} ready for expansion.
    */
   static makeDateRRuleInstance(info: ModelRecurrenceInfo, date: CalendarDate): DateRRuleInstance {
     const { rrule, timezone } = info;

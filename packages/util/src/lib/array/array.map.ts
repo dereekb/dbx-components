@@ -47,11 +47,11 @@ export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(value
 /**
  * Returns values for each key, reusing existing items when available and generating new ones for missing keys.
  *
- * @param keys - the keys to resolve values for
- * @param existing - array of pre-existing items to check against
- * @param readKey - function to extract a key from an existing item
- * @param generateFn - function to create a new item for a key not found in existing items
- * @returns an array of items corresponding to each input key, in the same order
+ * @param keys - The keys to resolve values for.
+ * @param existing - Array of pre-existing items to check against.
+ * @param readKey - Function to extract a key from an existing item.
+ * @param generateFn - Function to create a new item for a key not found in existing items.
+ * @returns Items aligned to `keys` — reused when present in `existing`, generated otherwise.
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function generateIfDoesNotExist<T, K extends PrimativeKey = PrimativeKey>(keys: K[], existing: T[], readKey: ReadKeyFunction<T, K>, generateFn: (key: K) => T): T[] {

@@ -19,10 +19,10 @@ export interface ForEachKeyValue<T extends object = object, K extends keyof T = 
 /**
  * Iterates over filtered key/value tuples of an object and invokes a callback for each.
  *
- * @param obj - Object to iterate
- * @param config - Configuration with a forEach callback and optional filter
- * @param config.forEach - callback invoked for each key/value tuple that passes the filter
- * @param config.filter - optional filter controlling which key/value tuples are iterated; when omitted, all tuples are visited
+ * @param obj - Object to iterate.
+ * @param config - Configuration with a forEach callback and optional filter.
+ * @param config.forEach - Callback invoked for each key/value tuple that passes the filter.
+ * @param config.filter - Optional filter controlling which key/value tuples are iterated; when omitted, all tuples are visited.
  *
  * @example
  * ```ts
@@ -42,9 +42,9 @@ export function forEachKeyValue<T extends object = object, K extends keyof T = k
 /**
  * Extracts key/value tuples from an object, optionally filtering them.
  *
- * @param obj - Object to extract tuples from
- * @param filter - Optional filter to apply to the tuples
- * @returns Array of matching key/value tuples
+ * @param obj - Object to extract tuples from.
+ * @param filter - Optional filter to apply to the tuples.
+ * @returns Array of matching key/value tuples.
  *
  * @example
  * ```ts
@@ -72,8 +72,14 @@ export type FilterKeyValueTuplesFunction<T extends object = object, K extends ke
  *
  * When no filter is provided, returns all key/value tuples.
  *
- * @param filter - Optional filter configuration
- * @returns A function that extracts filtered tuples from any input object
+ * @param filter - Optional filter configuration.
+ * @returns A function that extracts filtered tuples from any input object.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, tuples, filter, factory, key-value
+ * @dbxUtilRelated filter-key-value-tuple-function, for-each-key-value
  *
  * @example
  * ```ts
@@ -81,12 +87,6 @@ export type FilterKeyValueTuplesFunction<T extends object = object, K extends ke
  * const tuples = getDefinedTuples({ a: 1, b: undefined, c: 'hello' });
  * // tuples: [['a', 1], ['c', 'hello']]
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, tuples, filter, factory, key-value
- * @dbxUtilRelated filter-key-value-tuple-function, for-each-key-value
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -109,8 +109,8 @@ export function filterKeyValueTuplesFunction<T extends object = object, K extend
 /**
  * Returns all key/value pairs from the object as tuples using `Object.entries`.
  *
- * @param obj - Object to extract tuples from
- * @returns Array of `[key, value]` tuples
+ * @param obj - Object to extract tuples from.
+ * @returns Array of `[key, value]` tuples.
  *
  * @example
  * ```ts
@@ -189,8 +189,8 @@ export interface KeyValueTupleFilter<T extends object = object, K extends keyof 
  *
  * If the input is already an object, returns it as-is. If it's an enum value, wraps it in a filter object.
  *
- * @param input - Enum value or filter object
- * @returns Normalized filter object
+ * @param input - Enum value or filter object.
+ * @returns Normalized filter object.
  */
 export function filterKeyValueTuplesInputToFilter<T extends object = object, K extends keyof T = keyof T>(input: FilterKeyValueTuplesInput<T, K>): KeyValueTupleFilter<T, K> {
   return typeof input === 'object' ? input : { valueFilter: input };
@@ -208,7 +208,13 @@ export type FilterKeyValueTupleFunction<T extends object = object, K extends key
  * (undefined, null, falsy, empty), key filtering, and inversion.
  *
  * @param inputFilter - Filter configuration (enum value or full config object)
- * @returns A predicate function that tests individual key/value tuples
+ * @returns A predicate function that tests individual key/value tuples.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, tuple, filter, predicate, factory, key-value
+ * @dbxUtilRelated filter-key-value-tuples-function
  *
  * @example
  * ```ts
@@ -216,12 +222,6 @@ export type FilterKeyValueTupleFunction<T extends object = object, K extends key
  * isNotNull(['a', 1], 0);    // true
  * isNotNull(['b', null], 0); // false
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, tuple, filter, predicate, factory, key-value
- * @dbxUtilRelated filter-key-value-tuples-function
  *
  * @__NO_SIDE_EFFECTS__
  */

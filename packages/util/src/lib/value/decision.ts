@@ -23,8 +23,8 @@ export type DecisionFunctionFactory<C, I> = FactoryWithRequiredInput<DecisionFun
  *
  * Useful for providing a constant decision where a function is expected.
  *
- * @param decision - the constant boolean value to return
- * @returns a decision function that always returns the given boolean
+ * @param decision - The constant boolean value to return.
+ * @returns A decision function that always returns the given boolean.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -37,6 +37,7 @@ export type DecisionFunctionFactory<C, I> = FactoryWithRequiredInput<DecisionFun
  * const alwaysTrue = decisionFunction(true);
  * alwaysTrue('anything'); // true
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function decisionFunction<I>(decision: boolean): DecisionFunction<I> {
@@ -65,9 +66,9 @@ export const invertDecision: <F extends DecisionFunction<any>>(fn: F, invert?: b
  *
  * If the input is undefined, falls back to a constant function returning `defaultIfUndefined`.
  *
- * @param valueOrFunction - a boolean, decision function, or undefined
- * @param defaultIfUndefined - fallback boolean when the input is nullish (defaults to true)
- * @returns a {@link DecisionFunction} derived from the input
+ * @param valueOrFunction - A boolean, decision function, or undefined.
+ * @param defaultIfUndefined - Fallback boolean when the input is nullish (defaults to true)
+ * @returns A {@link DecisionFunction} derived from the input.
  *
  * @dbxUtil
  * @dbxUtilCategory value

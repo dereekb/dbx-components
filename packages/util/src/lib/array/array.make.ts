@@ -30,14 +30,15 @@ export type RandomArrayFactory<T> = FactoryWithInput<T[], number>;
 /**
  * Creates a factory function that generates arrays of a random length populated with items from a make function.
  *
+ * @param config - Configuration containing the make function and random number source.
+ * @returns A factory that produces arrays of random length, optionally accepting a specific count override.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, random, factory, generate, make
  * @dbxUtilRelated array-factory, random-number-factory
  *
- * @param config - configuration containing the make function and random number source
- * @returns a factory that produces arrays of random length, optionally accepting a specific count override
  * @__NO_SIDE_EFFECTS__
  */
 export function randomArrayFactory<T>(config: RandomArrayFactoryConfig<T>): RandomArrayFactory<T> {

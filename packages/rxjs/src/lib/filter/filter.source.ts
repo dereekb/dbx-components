@@ -104,7 +104,7 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
   /**
    * Sets an initial filter observable that takes priority over the default filter.
    *
-   * @param filterObs - observable providing the initial filter value
+   * @param filterObs - Observable providing the initial filter value.
    */
   initWithFilter(filterObs: Observable<F>): void {
     this._initialFilter.next(filterObs);
@@ -114,7 +114,7 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
   /**
    * Sets the default filter, used as a fallback when no explicit or initial filter is active.
    *
-   * @param filter - default filter value, observable, or undefined to clear
+   * @param filter - Default filter value, observable, or undefined to clear.
    */
   setDefaultFilter(filter: MaybeObservableOrValue<F>): void {
     this._defaultFilter.next(asObservable(filter));
@@ -123,7 +123,7 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
   /**
    * Sets an explicit filter value that takes priority over the initial and default filters.
    *
-   * @param filter - the filter value to set
+   * @param filter - The filter value to set.
    */
   setFilter(filter: F): void {
     this._filter.next(filter);
@@ -142,7 +142,7 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
    * When enabled, any new emission from the initial filter observable clears the explicit
    * filter, causing `filter$` to fall back to the initial filter value.
    *
-   * @param initialFilterTakesPriority - whether initial filter changes should reset the explicit filter
+   * @param initialFilterTakesPriority - Whether initial filter changes should reset the explicit filter.
    */
   setInitialFilterTakesPriority(initialFilterTakesPriority: boolean) {
     this._initialFilterTakesPriority.next(initialFilterTakesPriority);

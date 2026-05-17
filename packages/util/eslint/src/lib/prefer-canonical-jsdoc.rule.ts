@@ -1,4 +1,5 @@
 import { getStatementAnchor } from './comments';
+import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 
 type AstNode = any;
@@ -35,7 +36,7 @@ export interface UtilPreferCanonicalJsdocRuleDefinition {
     readonly messages: Readonly<Record<string, string>>;
     readonly schema: readonly object[];
   };
-  create(context: { options: UtilPreferCanonicalJsdocRuleOptions[]; report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => AstNode | AstNode[] | null }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
+  create(context: { options: UtilPreferCanonicalJsdocRuleOptions[]; report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]> }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
 }
 
 const DEFAULT_WORKSPACE_TAG_PREFIXES: readonly string[] = ['dbxUtil', 'dbxPipe', 'dbxModel', 'dbxForm', 'dbxAction', 'dbxWeb', 'dbxFilter', 'dbxAuth', 'dbxDocsUiExample', 'dbxRule', 'see'];
@@ -70,6 +71,9 @@ const FENCED_OPENERS = new Set(['`', '*', '{', '[', '(', '<', '"', "'"]);
 
 /**
  * Returns the position of the first non-blank character of a multi-line string, or -1 if none.
+ *
+ * @param text - Source text scanned left-to-right.
+ * @returns Zero-based offset of the first non-whitespace character, or `-1` when the text is blank.
  */
 function firstNonBlankCharIndex(text: string): number {
   let result = -1;
@@ -86,6 +90,9 @@ function firstNonBlankCharIndex(text: string): number {
 
 /**
  * Returns the position (within `text`) of the last non-blank character, or -1 if none.
+ *
+ * @param text - Source text scanned right-to-left.
+ * @returns Zero-based offset of the last non-whitespace character, or `-1` when the text is blank.
  */
 function lastNonBlankCharIndex(text: string): number {
   let result = -1;
@@ -103,6 +110,10 @@ function lastNonBlankCharIndex(text: string): number {
 /**
  * Returns true when the first non-whitespace char of `text` is acceptable for the given check.
  * Acceptable openers (markdown links, fences, code) are treated as already canonical.
+ *
+ * @param text - Description text whose opener is being validated.
+ * @param check - Style requirement currently restricted to `'capital'`.
+ * @returns True when the opener already satisfies the canonical form.
  */
 function startsCanonically(text: string, check: CharCheck): boolean {
   const idx = firstNonBlankCharIndex(text);
@@ -122,6 +133,9 @@ function startsCanonically(text: string, check: CharCheck): boolean {
 
 /**
  * Returns true when the last non-whitespace char of `text` is acceptable terminal punctuation.
+ *
+ * @param text - Description text whose terminator is being validated.
+ * @returns True when the text ends with canonical terminal punctuation (or a fenced closer).
  */
 function endsCanonically(text: string): boolean {
   const idx = lastNonBlankCharIndex(text);
@@ -139,6 +153,10 @@ function endsCanonically(text: string): boolean {
 
 /**
  * Returns the source-text offset of an offset-within-comment-value, given a Block comment node.
+ *
+ * @param commentNode - Block comment whose original source location anchors the conversion.
+ * @param valueOffset - Offset measured against the comment's `value` (post-`/**` prefix).
+ * @returns Absolute offset into the file source text.
  */
 function commentValueToSourceOffset(commentNode: AstNode, valueOffset: number): number {
   return commentNode.range[0] + 2 + valueOffset; // `/*` is 2 chars; `*` of `/**` is part of the value
@@ -147,9 +165,12 @@ function commentValueToSourceOffset(commentNode: AstNode, valueOffset: number): 
 /**
  * Detects whether the function-like node has parameters in its signature. Variable-bound arrow
  * functions arrive through their VariableDeclaration parent; class methods through MethodDefinition.
+ *
+ * @param anchor - Declaration node directly underneath the JSDoc comment.
+ * @returns Underlying function-shaped node when one can be resolved; otherwise null.
  */
-function functionLikeFromAnchor(anchor: AstNode): AstNode | null {
-  let result: AstNode | null = null;
+function functionLikeFromAnchor(anchor: AstNode): Maybe<AstNode> {
+  let result: Maybe<AstNode> = null;
 
   if (anchor.type === 'FunctionDeclaration') {
     result = anchor;
@@ -178,6 +199,10 @@ const TYPE_RESTATING_PATTERNS: readonly RegExp[] = [/^a string\b/i, /^a number\b
 
 /**
  * Returns the tag-order rank for a parsed tag, using the configured workspace prefixes.
+ *
+ * @param tag - Parsed tag whose canonical position should be looked up.
+ * @param workspacePrefixes - Tag-name prefixes that are recognized as workspace tags.
+ * @returns Numeric rank used by the sorting pass; lower ranks come first.
  */
 function rankFor(tag: Pick<ParsedJsdocTag, 'tag'>, workspacePrefixes: readonly string[]): number {
   let rank: number = TAG_RANK.unknown;
@@ -198,8 +223,8 @@ function rankFor(tag: Pick<ParsedJsdocTag, 'tag'>, workspacePrefixes: readonly s
  */
 interface CanonicalTag {
   tag: string;
-  type: string | undefined;
-  name: string | undefined;
+  type: Maybe<string>;
+  name: Maybe<string>;
   /**
    * Text that appears on the same line as the `@tag` header, after `@tag {Type} name` has been
    * stripped. The serializer re-emits the canonical separator (` - ` for `@param`, ` ` otherwise).
@@ -225,8 +250,12 @@ interface CanonicalJsdocModel {
  * Returns the leading whitespace before `commentNode.range[0]` on its source line, or null when
  * the comment is not the first non-whitespace token on its line (inline JSDoc, which we can't
  * safely rewrite as multi-line).
+ *
+ * @param sourceText - Full file source the comment sits within.
+ * @param commentNode - Block-comment node whose indentation should be reconstructed.
+ * @returns Leading-whitespace prefix on the comment's line, or null when the comment is inline.
  */
-function getCommentLineIndent(sourceText: string, commentNode: AstNode): string | null {
+function getCommentLineIndent(sourceText: string, commentNode: AstNode): Maybe<string> {
   let lineStart = commentNode.range[0];
   while (lineStart > 0 && sourceText.charAt(lineStart - 1) !== '\n') {
     lineStart -= 1;
@@ -240,6 +269,9 @@ function getCommentLineIndent(sourceText: string, commentNode: AstNode): string 
  * is recovered from the original tag-line text rather than from `tag.description`, so a tag whose
  * body starts on a continuation line (e.g. `@example` followed by a fenced block) keeps its
  * headerText empty.
+ *
+ * @param parsed - Immutable parsed view of the JSDoc block.
+ * @returns Mutable canonical model that downstream normalizers can edit in place.
  */
 function buildCanonicalModel(parsed: ParsedJsdoc): CanonicalJsdocModel {
   const descriptionParagraphs: string[][] = parsed.descriptionParagraphs.map((p) => p.split('\n'));
@@ -291,6 +323,10 @@ function buildCanonicalModel(parsed: ParsedJsdoc): CanonicalJsdocModel {
  * in the same bucket are emitted with no separator. Buckets: standard (`@param`/`@returns`/`@throws`),
  * workspace, example, `@__NO_SIDE_EFFECTS__`. Unknown tags share the workspace bucket so a single
  * mis-named tag doesn't trigger an extra blank line.
+ *
+ * @param tag - Tag whose serialization bucket should be resolved.
+ * @param workspacePrefixes - Tag-name prefixes recognized as workspace tags.
+ * @returns Bucket id used by the serializer to decide blank-line separators.
  */
 function bucketFor(tag: CanonicalTag, workspacePrefixes: readonly string[]): number {
   let bucket: number;
@@ -315,6 +351,9 @@ function bucketFor(tag: CanonicalTag, workspacePrefixes: readonly string[]): num
  * uses ` - ` after the parameter name for `@param`, a single space for other tags. An empty
  * `headerText` produces a header line with no trailing content (used by `@example` whose body is
  * a fenced block on subsequent lines).
+ *
+ * @param tag - Canonical tag to render.
+ * @returns Header line followed by any continuation lines for the tag.
  */
 function serializeTag(tag: CanonicalTag): string[] {
   let header = '@' + tag.tag;
@@ -342,6 +381,11 @@ function serializeTag(tag: CanonicalTag): string[] {
  * Serializes the canonical model back into a comment-value string (the text between `/*` and
  * `*\/`). For multi-line output, every content line is prefixed with `${indent} * `; blank
  * separators use `${indent} *` (no trailing space). For single-line output, the value is `* text `.
+ *
+ * @param model - Canonical view to serialize.
+ * @param indent - Whitespace prefix used on every comment line (matches the comment's column).
+ * @param workspacePrefixes - Tag-name prefixes recognized as workspace tags during bucketing.
+ * @returns Rendered comment value ready to splice in via fixer.replaceTextRange.
  */
 function serializeJsdocValue(model: CanonicalJsdocModel, indent: string, workspacePrefixes: readonly string[]): string {
   let result: string;
@@ -357,25 +401,27 @@ function serializeJsdocValue(model: CanonicalJsdocModel, indent: string, workspa
     }
 
     let currentBucket = -1;
-    let currentSection: string[] | null = null;
+    let currentSection: string[] = [];
+    let hasCurrentSection = false;
 
     for (const tag of model.tags) {
       const b = bucketFor(tag, workspacePrefixes);
 
-      if (b !== currentBucket) {
+      if (!hasCurrentSection || b !== currentBucket) {
         currentSection = [];
         sections.push(currentSection);
         currentBucket = b;
+        hasCurrentSection = true;
       }
 
-      currentSection!.push(...serializeTag(tag));
+      currentSection.push(...serializeTag(tag));
     }
 
     const allLines: string[] = [];
 
-    for (let i = 0; i < sections.length; i += 1) {
+    for (const [i, section] of sections.entries()) {
       if (i > 0) allLines.push('');
-      allLines.push(...sections[i]);
+      allLines.push(...section);
     }
 
     let value = '*';
@@ -399,6 +445,9 @@ const LOWER_LETTER_PATTERN = /[a-z]/;
 
 /**
  * Returns the offset of the first non-whitespace character of `text`, or -1.
+ *
+ * @param text - Source string scanned left-to-right.
+ * @returns Zero-based offset of the first non-whitespace character, or `-1` when blank.
  */
 function firstNonBlankOffset(text: string): number {
   let result = -1;
@@ -415,6 +464,9 @@ function firstNonBlankOffset(text: string): number {
 
 /**
  * Returns the offset of the last non-whitespace character of `text`, or -1.
+ *
+ * @param text - Source string scanned right-to-left.
+ * @returns Zero-based offset of the last non-whitespace character, or `-1` when blank.
  */
 function lastNonBlankOffset(text: string): number {
   let result = -1;
@@ -432,6 +484,9 @@ function lastNonBlankOffset(text: string): number {
 /**
  * Capitalizes the first letter of `text` if it's a lowercase ASCII letter. Returns the new string
  * (or the original when no change is needed).
+ *
+ * @param text - Description text whose opener should be upper-cased.
+ * @returns Updated text with a leading capital letter, or the original when no rewrite was needed.
  */
 function capitalizeFirstLetter(text: string): string {
   let result = text;
@@ -450,6 +505,9 @@ function capitalizeFirstLetter(text: string): string {
 /**
  * Appends `.` after the last non-whitespace character of `text` if that character isn't already
  * terminal punctuation (`.`, `!`, `?`, `}`, `)`, `]`) or a backtick. Returns the new string.
+ *
+ * @param text - Description text whose terminator should be normalized.
+ * @returns Updated text ending with terminal punctuation, or the original when none was needed.
  */
 function appendTerminalPeriod(text: string): string {
   let result = text;
@@ -468,6 +526,8 @@ function appendTerminalPeriod(text: string): string {
 /**
  * Capitalizes the first non-blank character of the first description paragraph in place. No-op
  * when the description is empty or doesn't start with a lowercase letter.
+ *
+ * @param model - Canonical view whose first paragraph should be capitalized in place.
  */
 function normalizeDescriptionCapital(model: CanonicalJsdocModel): void {
   const para = model.descriptionParagraphs[0];
@@ -479,6 +539,8 @@ function normalizeDescriptionCapital(model: CanonicalJsdocModel): void {
 
 /**
  * Appends terminal punctuation to the last non-blank line of the first description paragraph.
+ *
+ * @param model - Canonical view whose first paragraph should gain a trailing period in place.
  */
 function normalizeDescriptionPeriod(model: CanonicalJsdocModel): void {
   const para = model.descriptionParagraphs[0];
@@ -496,6 +558,8 @@ function normalizeDescriptionPeriod(model: CanonicalJsdocModel): void {
 /**
  * Strips a leading `- ` (and variants like `: `) from the headerText of `@param` tags so the
  * serializer can canonically re-add the ` - ` separator. Idempotent.
+ *
+ * @param tag - Canonical tag whose headerText should be stripped of any leading separator.
  */
 function normalizeParamHyphen(tag: CanonicalTag): void {
   if (tag.tag === 'param') {
@@ -506,6 +570,8 @@ function normalizeParamHyphen(tag: CanonicalTag): void {
 /**
  * Strips a leading `- ` from the headerText of `@returns`/`@return` tags. The canonical form is
  * `@returns Description.` without a hyphen.
+ *
+ * @param tag - Canonical tag whose headerText should be stripped of any leading hyphen separator.
  */
 function normalizeReturnsHyphen(tag: CanonicalTag): void {
   if (tag.tag === 'returns' || tag.tag === 'return') {
@@ -516,6 +582,8 @@ function normalizeReturnsHyphen(tag: CanonicalTag): void {
 /**
  * Capitalizes the first letter of the tag's first description line (headerText, or the first
  * continuation line when headerText is empty). Applied only to `@param`/`@returns`/`@throws`.
+ *
+ * @param tag - Canonical tag whose description opener should be capitalized in place.
  */
 function normalizeTagDescriptionCapital(tag: CanonicalTag): void {
   if (tag.tag === 'param' || tag.tag === 'returns' || tag.tag === 'return' || tag.tag === 'throws') {
@@ -535,6 +603,8 @@ function normalizeTagDescriptionCapital(tag: CanonicalTag): void {
 /**
  * Appends terminal punctuation to the last non-blank line of the tag body. Applied to
  * `@param`/`@returns`/`@throws`.
+ *
+ * @param tag - Canonical tag whose description should gain a trailing period in place.
  */
 function normalizeTagDescriptionPeriod(tag: CanonicalTag): void {
   if (tag.tag === 'param' || tag.tag === 'returns' || tag.tag === 'return' || tag.tag === 'throws') {
@@ -556,7 +626,9 @@ function normalizeTagDescriptionPeriod(tag: CanonicalTag): void {
 
 /**
  * Wraps the body of an `@example` tag in a triple-backtick `ts` fenced block when it isn't
- * already fenced. No-op when the body is empty or already opens with ` ``` `.
+ * already fenced. No-op when the body is empty or already opens with a fence.
+ *
+ * @param tag - Canonical `@example` tag whose body should be fenced in place.
  */
 function normalizeExampleFence(tag: CanonicalTag): void {
   if (tag.tag === 'example') {
@@ -565,7 +637,7 @@ function normalizeExampleFence(tag: CanonicalTag): void {
     if (tag.headerText.length > 0) bodyLines.push(tag.headerText);
     for (const line of tag.continuationLines) bodyLines.push(line);
 
-    let firstNonBlank: string | null = null;
+    let firstNonBlank: Maybe<string> = null;
     for (const line of bodyLines) {
       if (line.trim().length > 0) {
         firstNonBlank = line;
@@ -588,8 +660,12 @@ function normalizeExampleFence(tag: CanonicalTag): void {
 /**
  * Stable-sorts the model's tags by canonical rank, then reorders `@param` tags to match the
  * declared parameter signature when `functionNode` is provided.
+ *
+ * @param model - Canonical view whose tag order should be normalized in place.
+ * @param functionNode - Declaration whose parameter order anchors `@param` ordering; null skips that pass.
+ * @param workspacePrefixes - Tag-name prefixes recognized as workspace tags during ranking.
  */
-function normalizeTagOrder(model: CanonicalJsdocModel, functionNode: AstNode | null, workspacePrefixes: readonly string[]): void {
+function normalizeTagOrder(model: CanonicalJsdocModel, functionNode: Maybe<AstNode>, workspacePrefixes: readonly string[]): void {
   const indexed = model.tags.map((tag, index) => ({ tag, index, rank: rankFor(tag, workspacePrefixes) }));
   indexed.sort((a, b) => a.rank - b.rank || a.index - b.index);
 
@@ -604,10 +680,10 @@ function normalizeTagOrder(model: CanonicalJsdocModel, functionNode: AstNode | n
       const paramSlots: number[] = [];
       const paramEntries: typeof indexed = [];
 
-      for (let i = 0; i < indexed.length; i += 1) {
-        if (indexed[i].tag.tag === 'param') {
+      for (const [i, element] of indexed.entries()) {
+        if (element.tag.tag === 'param') {
           paramSlots.push(i);
-          paramEntries.push(indexed[i]);
+          paramEntries.push(element);
         }
       }
 
@@ -619,8 +695,8 @@ function normalizeTagOrder(model: CanonicalJsdocModel, functionNode: AstNode | n
         return aRank - bRank || a.index - b.index;
       });
 
-      for (let i = 0; i < paramSlots.length; i += 1) {
-        indexed[paramSlots[i]] = paramEntries[i];
+      for (const [i, paramSlot] of paramSlots.entries()) {
+        indexed[paramSlot] = paramEntries[i];
       }
     }
   }
@@ -633,8 +709,13 @@ function normalizeTagOrder(model: CanonicalJsdocModel, functionNode: AstNode | n
  * the hyphen strips must run before the description-capital normalization (otherwise a leading
  * `- ` would block capitalization), and tag reordering runs last so it operates on already-fixed
  * tags. The pipeline is idempotent: a second pass on a fully-canonical model is a no-op.
+ *
+ * @param model - Canonical view rewritten in place.
+ * @param functionNode - Declaration whose parameter order anchors `@param` ordering; null skips that pass.
+ * @param workspacePrefixes - Tag-name prefixes recognized as workspace tags during ranking and bucketing.
+ * @param forceMultiline - When true, marks the model as multi-line before serialization.
  */
-function applyCanonicalNormalizations(model: CanonicalJsdocModel, functionNode: AstNode | null, workspacePrefixes: readonly string[], forceMultiline: boolean): void {
+function applyCanonicalNormalizations(model: CanonicalJsdocModel, functionNode: Maybe<AstNode>, workspacePrefixes: readonly string[], forceMultiline: boolean): void {
   if (forceMultiline) {
     model.singleLine = false;
   }
@@ -736,11 +817,11 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
      * for the current comment (null when the comment is already canonical); `commentFixAttached`
      * tracks whether we've already attached it to a report so we don't emit duplicate fixes.
      */
-    let commentFix: ((fixer: AstNode) => AstNode | null) | null = null;
+    let commentFix: Maybe<(fixer: AstNode) => Maybe<AstNode>> = null;
     let commentFixAttached = false;
 
-    function takeCommentFix(): ((fixer: AstNode) => AstNode | null) | undefined {
-      let result: ((fixer: AstNode) => AstNode | null) | undefined;
+    function takeCommentFix(): Maybe<(fixer: AstNode) => Maybe<AstNode>> {
+      let result: Maybe<(fixer: AstNode) => Maybe<AstNode>>;
 
       if (commentFix && !commentFixAttached) {
         commentFixAttached = true;
@@ -846,7 +927,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       }
     }
 
-    function checkTags(commentNode: AstNode, parsed: ParsedJsdoc, functionNode: AstNode | null): void {
+    function checkTags(commentNode: AstNode, parsed: ParsedJsdoc, functionNode: Maybe<AstNode>): void {
       // Tag ordering
       if (checkTagOrder) {
         let lastRank = -Infinity;
@@ -869,7 +950,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
         }
 
         if (functionNode && Array.isArray(functionNode.params) && paramTags.length > 0) {
-          const declared = functionNode.params.map((p: AstNode) => extractParamName(p)).filter((n: string | null): n is string => typeof n === 'string');
+          const declared = functionNode.params.map((p: AstNode) => extractParamName(p)).filter((n: Maybe<string>): n is string => typeof n === 'string');
           const documented = paramTags.map((t) => t.name ?? '');
           for (let i = 0; i < Math.min(declared.length, documented.length); i += 1) {
             if (declared[i] !== documented[i]) {
@@ -985,10 +1066,10 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       checkTags(commentNode, parsed, functionNode);
     }
 
-    function leadingJsdocFor(node: AstNode): AstNode | null {
+    function leadingJsdocFor(node: AstNode): Maybe<AstNode> {
       const anchor = getStatementAnchor(node);
       const comments: AstNode[] = sourceCode.getCommentsBefore(anchor) || [];
-      let result: AstNode | null = null;
+      let result: Maybe<AstNode> = null;
 
       for (const comment of comments) {
         if (comment.type === 'Block' && typeof comment.value === 'string' && comment.value.startsWith('*')) {
@@ -1010,9 +1091,9 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       if (jsdoc) checkOneJsdoc(jsdoc, node);
     }
 
-    function leadingJsdocForMethod(node: AstNode): AstNode | null {
+    function leadingJsdocForMethod(node: AstNode): Maybe<AstNode> {
       const comments: AstNode[] = sourceCode.getCommentsBefore(node) || [];
-      let result: AstNode | null = null;
+      let result: Maybe<AstNode> = null;
 
       for (const comment of comments) {
         if (comment.type === 'Block' && typeof comment.value === 'string' && comment.value.startsWith('*')) {
@@ -1033,7 +1114,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
           // Anchor for getStatementAnchor expects FunctionDeclaration; emulate for variable declarations.
           const anchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
           const comments: AstNode[] = sourceCode.getCommentsBefore(anchor) || [];
-          let jsdoc: AstNode | null = null;
+          let jsdoc: Maybe<AstNode> = null;
           for (const comment of comments) {
             if (comment.type === 'Block' && typeof comment.value === 'string' && comment.value.startsWith('*')) {
               jsdoc = comment;
@@ -1065,8 +1146,8 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
  * extractParamName({ type: 'AssignmentPattern', left: { type: 'Identifier', name: 'y' } }); // 'y'
  * ```
  */
-function extractParamName(param: AstNode): string | null {
-  let name: string | null = null;
+function extractParamName(param: AstNode): Maybe<string> {
+  let name: Maybe<string> = null;
 
   if (param.type === 'Identifier') {
     name = param.name;

@@ -17,9 +17,9 @@ export type AreEqualContext<T = unknown> = (x: IterableOrValue<T>) => boolean;
  * Creates an {@link IsEqualContext} that captures a reference value and uses the provided comparator
  * to check whether subsequent values are equal to it.
  *
- * @param contextValue - the reference value to compare against
- * @param fn - the equality comparator
- * @returns a function that checks whether a given value equals the captured reference
+ * @param contextValue - The reference value to compare against.
+ * @param fn - The equality comparator.
+ * @returns A function that checks whether a given value equals the captured reference.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -35,6 +35,7 @@ export type AreEqualContext<T = unknown> = (x: IterableOrValue<T>) => boolean;
  * context(0);  // true
  * context(10); // false
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function isEqualContext<T>(contextValue: T, fn: EqualityComparatorFunction<T>): IsEqualContext<T> {
@@ -49,9 +50,9 @@ export function isEqualContext<T>(contextValue: T, fn: EqualityComparatorFunctio
  *
  * Returns `true` only if every value in the input matches the context value according to the comparator.
  *
- * @param contextValue - the reference value to compare against
- * @param fn - the equality comparator
- * @returns a function that checks whether all input values equal the captured reference
+ * @param contextValue - The reference value to compare against.
+ * @param fn - The equality comparator.
+ * @returns A function that checks whether all input values equal the captured reference.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -67,6 +68,7 @@ export function isEqualContext<T>(contextValue: T, fn: EqualityComparatorFunctio
  * context([0, 0, 0]); // true
  * context([0, 1, 2]); // false
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function areEqualContext<T>(contextValue: T, fn: EqualityComparatorFunction<T>): AreEqualContext<T> {
@@ -91,9 +93,9 @@ export function areEqualContext<T>(contextValue: T, fn: EqualityComparatorFuncti
  * Empty iterables and single-value inputs return `true` by default, since there is nothing to contradict equality.
  * Uses the first value as the reference and checks all remaining values against it.
  *
- * @param values - the values to compare
- * @param fn - the equality comparator
- * @returns `true` if all values are equal to each other, or if fewer than two values are provided
+ * @param values - The values to compare.
+ * @param fn - The equality comparator.
+ * @returns `true` if all values are equal to each other, or if fewer than two values are provided.
  *
  * @dbxUtil
  * @dbxUtilCategory value

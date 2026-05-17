@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 /**
  * The bundler hint string that marks a function call as side-effect-free.
  */
@@ -12,7 +13,7 @@ export interface JsdocCommentInfo {
 }
 
 export interface FunctionLeadingContext {
-  readonly jsdoc: JsdocCommentInfo | null;
+  readonly jsdoc: Maybe<JsdocCommentInfo>;
   /**
    * Adjacent `@__NO_SIDE_EFFECTS__` line/block comments that should be migrated into the JSDoc
    * and removed. Excludes the implementation-leading annotation on overloaded functions, which
@@ -33,7 +34,7 @@ export interface FunctionLeadingContext {
    * `null` when the function is single-signature (the line comment is then a removable orphan)
    * or when no such comment is present.
    */
-  readonly implLineComment: AstNode | null;
+  readonly implLineComment: Maybe<AstNode>;
   /**
    * True when the implementation will carry the `@__NO_SIDE_EFFECTS__` annotation in the emitted
    * JavaScript:
@@ -107,9 +108,9 @@ export function getStatementAnchor(node: AstNode): AstNode {
  * @param anchor - The statement-level node ESLint attaches leading comments to.
  * @returns The JSDoc block comment, or null when none is present.
  */
-export function leadingJsdocFor(sourceCode: AstNode, anchor: AstNode): AstNode | null {
+export function leadingJsdocFor(sourceCode: AstNode, anchor: AstNode): Maybe<AstNode> {
   const comments: AstNode[] = sourceCode.getCommentsBefore(anchor) || [];
-  let result: AstNode | null = null;
+  let result: Maybe<AstNode> = null;
 
   for (const comment of comments) {
     if (comment.type === 'Block' && typeof comment.value === 'string' && comment.value.startsWith('*')) {
@@ -134,7 +135,7 @@ function isOverloadSignature(stmt: AstNode, name: string): boolean {
 
 /**
  * Walks backward from the implementation FunctionDeclaration through any overload signatures
- * with the same name, collecting:
+ * with the same name, collecting:.
  *
  * - The leading JSDoc block (preferring the one attached to the **first** overload, since that's
  *   where the function's documentation conventionally lives).
@@ -192,14 +193,14 @@ export function findFunctionLeadingContext(sourceCode: AstNode, implNode: AstNod
 
     const hasOverloads = chainStartIdx >= 0 && implIdx >= 0 && chainStartIdx < implIdx;
 
-    let firstJsdoc: JsdocCommentInfo | null = null;
+    let firstJsdoc: Maybe<JsdocCommentInfo> = null;
     let anyJsdocHasNoSideEffects = false;
     let implJsdocHasNoSideEffects = false;
     const orphanLineComments: AstNode[] = [];
     // For overloaded functions, the `// @__NO_SIDE_EFFECTS__` directly above the implementation
     // declaration is required (TS erases overload signatures, so only this annotation survives).
     // Track it separately so callers don't accidentally remove it.
-    let implLineComment: AstNode | null = null;
+    let implLineComment: Maybe<AstNode> = null;
 
     function processCommentsForStatement(stmt: AstNode, isImplStatement: boolean): void {
       const comments = sourceCode.getCommentsBefore(stmt) || [];
@@ -243,8 +244,8 @@ export function findFunctionLeadingContext(sourceCode: AstNode, implNode: AstNod
 
     // Report the first JSDoc as the canonical jsdoc, but reflect any-in-chain satisfaction
     // so callers don't re-annotate when the marker is already present elsewhere in the chain.
-    let resolved: JsdocCommentInfo | null = null;
-    const captured = firstJsdoc as JsdocCommentInfo | null;
+    let resolved: Maybe<JsdocCommentInfo> = null;
+    const captured = firstJsdoc as Maybe<JsdocCommentInfo>;
 
     if (captured) {
       resolved = { node: captured.node, text: captured.text, hasNoSideEffects: anyJsdocHasNoSideEffects };

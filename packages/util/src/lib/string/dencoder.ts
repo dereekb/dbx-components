@@ -39,9 +39,9 @@ export type PrimativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeK
  * Creates a bidirectional {@link PrimativeKeyDencoderMap} from the given values,
  * allowing lookup in both directions (encoded-to-decoded and decoded-to-encoded).
  *
- * @param values - encoder/decoder value pairs as tuples or a map object
- * @returns a bidirectional Map for encoding/decoding
- * @throws Error if any key or value is repeated
+ * @param values - Encoder/decoder value pairs as tuples or a map object.
+ * @returns A bidirectional Map for encoding/decoding.
+ * @throws Error if any key or value is repeated.
  */
 export function primativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeKey>(values: PrimativeKeyDencoderValues<D, E>): PrimativeKeyDencoderMap<D, E> {
   const map = new Map<D | E, E | D>();
@@ -107,8 +107,8 @@ export type PrimativeKeyDencoderFunction<D extends PrimativeKey, E extends Prima
  * Default fallback factory for {@link PrimativeKeyDencoderFunction} that always returns null,
  * causing an error to be thrown for unknown values.
  *
- * @param _input - the unknown value to look up (ignored; always returns null)
- * @returns always returns null to signal an unknown value
+ * @param _input - The unknown value to look up (ignored; always returns null)
+ * @returns Always returns null to signal an unknown value.
  */
 export const PRIMATIVE_KEY_DENCODER_VALUE = (_input: unknown) => null;
 
@@ -116,15 +116,16 @@ export const PRIMATIVE_KEY_DENCODER_VALUE = (_input: unknown) => null;
  * Creates a new {@link PrimativeKeyDencoderFunction} that can bidirectionally encode/decode
  * primitive key values based on the configured value pairs.
  *
+ * @param config - Configuration with value pairs and optional default fallback.
+ * @returns A function that encodes or decodes single values or arrays.
+ * @throws Error if a single value lookup produces a null result and no default handles it.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, encode, decode, dencoder, bidirectional, factory, primitive
  * @dbxUtilRelated primative-key-dencoder-map, primative-key-string-dencoder
  *
- * @param config - configuration with value pairs and optional default fallback
- * @returns a function that encodes or decodes single values or arrays
- * @throws Error if a single value lookup produces a null result and no default handles it
  * @__NO_SIDE_EFFECTS__
  */
 export function primativeKeyDencoder<D extends PrimativeKey, E extends PrimativeKey>(config: PrimativeKeyDencoderConfig<D, E>): PrimativeKeyDencoderFunction<D, E> {
@@ -181,15 +182,16 @@ export type PrimativeKeyStringDencoderFunction<D extends PrimativeKey, E extends
  * When no splitter is defined, all encoded values must be exactly one character long so the string
  * can be split character-by-character.
  *
+ * @param config - Configuration with dencoder and optional splitter.
+ * @returns A bidirectional function for string-to-array and array-to-string conversion.
+ * @throws Error if encoded values contain the splitter character, or if values exceed one character when no splitter is defined.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, encode, decode, dencoder, splitter, factory, primitive
  * @dbxUtilRelated primative-key-dencoder, primative-key-dencoder-map
  *
- * @param config - configuration with dencoder and optional splitter
- * @returns a bidirectional function for string-to-array and array-to-string conversion
- * @throws Error if encoded values contain the splitter character, or if values exceed one character when no splitter is defined
  * @__NO_SIDE_EFFECTS__
  */
 export function primativeKeyStringDencoder<D extends PrimativeKey, E extends PrimativeKey>(config: PrimativeKeyStringDencoderConfig<D, E>): PrimativeKeyStringDencoderFunction<D, E> {
@@ -325,8 +327,8 @@ export interface NumberStringDencoderConfig {
  *
  * If the config does not include a negative prefix, negative numbers lose their sign during encoding.
  *
- * @param config - configuration with digit alphabet and optional negative prefix
- * @returns a NumberStringDencoder capable of encoding/decoding integers
+ * @param config - Configuration with digit alphabet and optional negative prefix.
+ * @returns A NumberStringDencoder capable of encoding/decoding integers.
  */
 export function numberStringDencoder(config: NumberStringDencoderConfig): NumberStringDencoder {
   const { negativePrefix, digits } = config;
@@ -408,14 +410,15 @@ export type NumberStringDencoderFunction = ((input: NumberStringDencoderString) 
  * Creates a {@link NumberStringDencoderFunction} from the given dencoder.
  * The returned function auto-detects the input type: numbers are encoded, strings are decoded.
  *
+ * @param dencoder - The NumberStringDencoder to wrap.
+ * @returns A bidirectional encode/decode function.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, number, encode, decode, dencoder, bidirectional, factory
  * @dbxUtilRelated number-string-dencoder, number-string-dencoder-encoded-string-value-function, number-string-dencoder-decoded-number-value-function
  *
- * @param dencoder - the NumberStringDencoder to wrap
- * @returns a bidirectional encode/decode function
  * @__NO_SIDE_EFFECTS__
  */
 export function numberStringDencoderFunction(dencoder: NumberStringDencoder): NumberStringDencoderFunction {
@@ -431,14 +434,15 @@ export function numberStringDencoderFunction(dencoder: NumberStringDencoder): Nu
  * Creates a function that always returns the encoded string form of the input.
  * Numbers are encoded; strings are passed through as-is.
  *
+ * @param dencoder - The NumberStringDencoder to use for encoding.
+ * @returns A function that normalizes input to an encoded string.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, number, encode, normalize, factory
  * @dbxUtilRelated number-string-dencoder-function, number-string-dencoder-decoded-number-value-function
  *
- * @param dencoder - the NumberStringDencoder to use for encoding
- * @returns a function that normalizes input to an encoded string
  * @__NO_SIDE_EFFECTS__
  */
 export function numberStringDencoderEncodedStringValueFunction(dencoder: NumberStringDencoder): (input: NumberStringDencoderString | NumberStringDencoderNumber) => NumberStringDencoderString {
@@ -451,14 +455,15 @@ export function numberStringDencoderEncodedStringValueFunction(dencoder: NumberS
  * Creates a function that always returns the decoded number form of the input.
  * Strings are decoded; numbers are passed through as-is.
  *
+ * @param dencoder - The NumberStringDencoder to use for decoding.
+ * @returns A function that normalizes input to a decoded number.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, number, decode, normalize, factory
  * @dbxUtilRelated number-string-dencoder-function, number-string-dencoder-encoded-string-value-function
  *
- * @param dencoder - the NumberStringDencoder to use for decoding
- * @returns a function that normalizes input to a decoded number
  * @__NO_SIDE_EFFECTS__
  */
 export function numberStringDencoderDecodedNumberValueFunction(dencoder: NumberStringDencoder): (input: NumberStringDencoderString | NumberStringDencoderNumber) => NumberStringDencoderNumber {

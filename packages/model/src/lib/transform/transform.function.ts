@@ -15,8 +15,9 @@ export type TransformAndValidateFunctionResultFactory<C = unknown> = <T extends 
 /**
  * Creates a factory for transform-and-validate functions that return the result with the parsed object attached as `params`.
  *
- * @param defaults - shared error handler defaults
- * @returns a factory that produces functions returning {@link TransformAndValidateFunctionResult}
+ * @param defaults - Shared error handler defaults.
+ * @returns A factory that produces functions returning {@link TransformAndValidateFunctionResult}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function transformAndValidateFunctionResultFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateFunctionResultFactory<C> {
@@ -27,8 +28,9 @@ export function transformAndValidateFunctionResultFactory<C = unknown>(defaults:
  * Wraps an existing {@link TransformAndValidateObjectFactory} to produce functions that attach the parsed object
  * as `params` on the result.
  *
- * @param transformAndValidateObjectFactory - the base factory to wrap
- * @returns a factory that produces functions returning results with `params` attached
+ * @param transformAndValidateObjectFactory - The base factory to wrap.
+ * @returns A factory that produces functions returning results with `params` attached.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function toTransformAndValidateFunctionResultFactory<C = unknown>(transformAndValidateObjectFactory: TransformAndValidateObjectFactory<C>): TransformAndValidateFunctionResultFactory<C> {

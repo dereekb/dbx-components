@@ -35,8 +35,8 @@ export interface DateOrDayStringRange extends DateOrDayStringStart {
 /**
  * Converts a {@link DateOrDayStringRange} to a {@link DateRange} by parsing any string values to the start of their respective days.
  *
- * @param range - the range with Date or string values
- * @returns a DateRange with concrete Date objects
+ * @param range - The range with Date or string values.
+ * @returns A DateRange with concrete Date objects.
  *
  * @example
  * ```ts
@@ -54,8 +54,8 @@ export function dateOrDayStringRangeToDateRange(range: DateOrDayStringRange): Da
 /**
  * Converts a {@link DateOrDayStringRange} to an {@link ISO8601DayStringRange} by formatting any Date values as ISO 8601 day strings using the system timezone.
  *
- * @param range - the range with Date or string values
- * @returns a range with both start and end as ISO 8601 day strings
+ * @param range - The range with Date or string values.
+ * @returns A range with both start and end as ISO 8601 day strings.
  *
  * @example
  * ```ts

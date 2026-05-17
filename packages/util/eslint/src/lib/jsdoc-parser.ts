@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 /**
  * Minimal JSDoc parser used by the workspace's custom ESLint rules.
  *
@@ -48,11 +49,11 @@ export interface ParsedJsdocTag {
   /**
    * For `@param`: the parameter name. For other tags: `undefined`.
    */
-  readonly name: string | undefined;
+  readonly name: Maybe<string>;
   /**
    * For `@throws` / `@param` style: the `{Type}` annotation if present.
    */
-  readonly type: string | undefined;
+  readonly type: Maybe<string>;
   /**
    * Remaining text on the tag line + continuation lines, joined with `\n`. Trimmed of trailing whitespace.
    */
@@ -213,7 +214,7 @@ export function parseJsdocComment(commentValue: string): ParsedJsdoc {
       let remainder = match[2];
 
       // Pull off an optional `{Type}` annotation immediately after the tag name (for @throws, @param, etc.).
-      let typeAnnotation: string | undefined;
+      let typeAnnotation: Maybe<string>;
       const typeMatch = remainder.match(/^\{([^}]*)\}\s*(.*)$/);
       if (typeMatch) {
         typeAnnotation = typeMatch[1];
@@ -221,7 +222,7 @@ export function parseJsdocComment(commentValue: string): ParsedJsdoc {
       }
 
       // For @param: pull off the parameter name (first word).
-      let nameAnnotation: string | undefined;
+      let nameAnnotation: Maybe<string>;
       if (tagName === 'param') {
         const nameMatch = remainder.match(/^([A-Za-z_$][A-Za-z0-9_$.[\]]*)\s*(.*)$/);
         if (nameMatch) {

@@ -24,9 +24,9 @@ export const WEBSITE_LINK_ISOLATE_BASE_URL_PROFILE_ID = isolateWebsitePathFuncti
  *
  * Optionally prepends a prefix (e.g., "@" for TikTok, "$" for Cash App).
  *
- * @param input - a username or full profile URL
- * @param prefix - optional prefix to prepend to the extracted username
- * @returns the isolated username, optionally prefixed
+ * @param input - A username or full profile URL.
+ * @param prefix - Optional prefix to prepend to the extracted username.
+ * @returns The isolated username, optionally prefixed.
  *
  * @example
  * ```typescript
@@ -47,9 +47,9 @@ export function usernameFromUsernameOrWebsiteWithBaseUrlUsername(input: ModelKey
  *
  * Used for platforms with non-standard URL patterns (e.g., Snapchat's `/add/{username}`, YouTube's `/c/{username}`).
  *
- * @param input - a username or full profile URL
- * @param isolateFn - custom function that extracts the relevant path segment from the URL
- * @returns the isolated username
+ * @param input - A username or full profile URL.
+ * @param isolateFn - Custom function that extracts the relevant path segment from the URL.
+ * @returns The isolated username.
  */
 export function usernameFromUsernameOrWebsiteWithOneOffBaseUrlUsername(input: ModelKey | WebsiteUrl, isolateFn: IsolateWebsitePathFunction) {
   return toRelativeSlashPathStartType(isolateFn(usernameOrWebsiteUrlToWebsiteUrl(input)));
@@ -60,8 +60,8 @@ export function usernameFromUsernameOrWebsiteWithOneOffBaseUrlUsername(input: Mo
  *
  * If the input has a website domain, it is returned as-is. Otherwise, it is treated as a path and converted to an absolute slash path.
  *
- * @param input - a username or website URL
- * @returns a normalized website URL
+ * @param input - A username or website URL.
+ * @returns A normalized website URL.
  */
 export function usernameOrWebsiteUrlToWebsiteUrl(input: string): WebsiteUrl {
   return hasWebsiteDomain(input) ? input : toAbsoluteSlashPathStartType(removeHttpFromUrl(input));
@@ -76,8 +76,8 @@ export const WEBSITE_URL_WEBSITE_LINK_TYPE = 'w';
 /**
  * Converts a generic website URL into a {@link WebsiteLink}, stripping the HTTP/HTTPS protocol.
  *
- * @param input - the full website URL
- * @returns a WebsiteLink with the protocol removed from the data
+ * @param input - The full website URL.
+ * @returns A WebsiteLink with the protocol removed from the data.
  *
  * @example
  * ```typescript
@@ -101,8 +101,8 @@ export const EMAIL_URL_WEBSITE_LINK_TYPE = 'e';
 /**
  * Converts an email address into a {@link WebsiteLink}.
  *
- * @param input - the email address
- * @returns a WebsiteLink storing the email as data
+ * @param input - The email address.
+ * @returns A WebsiteLink storing the email as data.
  */
 export function emailAddressToWebsiteLink(input: EmailAddress): WebsiteLink {
   return {
@@ -120,8 +120,8 @@ export const PHONE_URL_WEBSITE_LINK_TYPE = 'p';
 /**
  * Converts an E.164 phone number into a {@link WebsiteLink}.
  *
- * @param input - the phone number in E.164 format
- * @returns a WebsiteLink storing the phone number as data
+ * @param input - The phone number in E.164 format.
+ * @returns A WebsiteLink storing the phone number as data.
  */
 export function phoneNumberToWebsiteLink(input: E164PhoneNumber): WebsiteLink {
   return {
@@ -158,8 +158,8 @@ export type FacebookWebsiteLinkType = typeof FACEBOOK_WEBSITE_LINK_TYPE;
  *
  * Accepts either a raw username or a full Facebook profile URL.
  *
- * @param input - a Facebook profile ID or full profile URL
- * @returns a WebsiteLink with the isolated username as data
+ * @param input - A Facebook profile ID or full profile URL.
+ * @returns A WebsiteLink with the isolated username as data.
  *
  * @example
  * ```typescript
@@ -180,8 +180,8 @@ export function facebookProfileUrlToWebsiteLink(input: FacebookProfileId | Websi
 /**
  * Constructs a full Facebook profile URL from a profile ID.
  *
- * @param profileId - the Facebook profile ID or username
- * @returns the full profile URL
+ * @param profileId - The Facebook profile ID or username.
+ * @returns The full profile URL.
  */
 export function facebookProfileUrl<P extends FacebookProfileId>(profileId: P): FacebookProfileUrl<P> {
   return `${FACEBOOK_BASE_URL}/${profileId}`;
@@ -213,8 +213,8 @@ export type InstagramWebsiteLinkType = typeof INSTAGRAM_WEBSITE_LINK_TYPE;
 /**
  * Converts an Instagram profile ID or URL into a {@link WebsiteLink}.
  *
- * @param input - an Instagram username or full profile URL
- * @returns a WebsiteLink with the isolated username as data
+ * @param input - An Instagram username or full profile URL.
+ * @returns A WebsiteLink with the isolated username as data.
  */
 export function instagramProfileUrlToWebsiteLink(input: InstagramProfileId | WebsiteUrl): WebsiteLink {
   return {
@@ -226,8 +226,8 @@ export function instagramProfileUrlToWebsiteLink(input: InstagramProfileId | Web
 /**
  * Constructs a full Instagram profile URL from a profile ID.
  *
- * @param profileId - the Instagram username
- * @returns the full profile URL
+ * @param profileId - The Instagram username.
+ * @returns The full profile URL.
  */
 export function instagramProfileUrl<P extends InstagramProfileId>(profileId: P): InstagramProfileUrl<P> {
   return `${INSTAGRAM_BASE_URL}/${profileId}`;
@@ -259,8 +259,8 @@ export type TwitterWebsiteLinkType = typeof TWITTER_WEBSITE_LINK_TYPE;
 /**
  * Converts a Twitter profile ID or URL into a {@link WebsiteLink}.
  *
- * @param input - a Twitter username or full profile URL
- * @returns a WebsiteLink with the isolated username as data
+ * @param input - A Twitter username or full profile URL.
+ * @returns A WebsiteLink with the isolated username as data.
  */
 export function twitterProfileUrlToWebsiteLink(input: TwitterProfileId | WebsiteUrl): WebsiteLink {
   return {
@@ -272,8 +272,8 @@ export function twitterProfileUrlToWebsiteLink(input: TwitterProfileId | Website
 /**
  * Constructs a full Twitter profile URL from a profile ID.
  *
- * @param profileId - the Twitter username
- * @returns the full profile URL
+ * @param profileId - The Twitter username.
+ * @returns The full profile URL.
  */
 export function twitterProfileUrl<P extends TwitterProfileId>(profileId: P): TwitterProfileUrl<P> {
   return `${TWITTER_BASE_URL}/${profileId}`;
@@ -312,8 +312,8 @@ export type TikTokWebsiteLinkType = typeof TIKTOK_WEBSITE_LINK_TYPE;
  *
  * Automatically prepends the "@" prefix if not already present.
  *
- * @param input - a TikTok username (with or without "@") or full profile URL
- * @returns a WebsiteLink with the "@"-prefixed username as data
+ * @param input - A TikTok username (with or without "@") or full profile URL.
+ * @returns A WebsiteLink with the "@"-prefixed username as data.
  */
 export function tiktokProfileUrlToWebsiteLink(input: TikTokProfileId | WebsiteUrl): WebsiteLink {
   return {
@@ -325,8 +325,8 @@ export function tiktokProfileUrlToWebsiteLink(input: TikTokProfileId | WebsiteUr
 /**
  * Constructs a full TikTok profile URL from a profile ID.
  *
- * @param profileId - the TikTok username (without "@" prefix)
- * @returns the full profile URL with "@" prefix
+ * @param profileId - The TikTok username (without "@" prefix)
+ * @returns The full profile URL with "@" prefix.
  */
 export function tiktokProfileUrl<P extends TikTokProfileId>(profileId: P): TikTokProfileUrl<P> {
   return `${TIKTOK_BASE_URL}/@${profileId}`;
@@ -371,8 +371,8 @@ export const SNAPCHAT_WEBSITE_LINK_ISOLATE_PROFILE_ID = isolateWebsitePathFuncti
  *
  * Handles Snapchat's `/add/{username}` URL pattern.
  *
- * @param input - a Snapchat username or full profile URL
- * @returns a WebsiteLink with the isolated username as data
+ * @param input - A Snapchat username or full profile URL.
+ * @returns A WebsiteLink with the isolated username as data.
  */
 export function snapchatProfileUrlToWebsiteLink(input: SnapchatProfileId | WebsiteUrl): WebsiteLink {
   return {
@@ -384,8 +384,8 @@ export function snapchatProfileUrlToWebsiteLink(input: SnapchatProfileId | Websi
 /**
  * Constructs a full Snapchat profile URL from a profile ID.
  *
- * @param profileId - the Snapchat username
- * @returns the full profile URL with `/add/` path
+ * @param profileId - The Snapchat username.
+ * @returns The full profile URL with `/add/` path.
  */
 export function snapchatProfileUrl<P extends SnapchatProfileId>(profileId: P): SnapchatProfileUrl<P> {
   return `${SNAPCHAT_BASE_URL}/add/${profileId}`;
@@ -430,8 +430,8 @@ export const YOUTUBE_WEBSITE_LINK_ISOLATE_PROFILE_ID = isolateWebsitePathFunctio
  *
  * Handles YouTube's `/c/{channel}` URL pattern.
  *
- * @param input - a YouTube channel name or full channel URL
- * @returns a WebsiteLink with the isolated channel name as data
+ * @param input - A YouTube channel name or full channel URL.
+ * @returns A WebsiteLink with the isolated channel name as data.
  */
 export function youtubeProfileUrlToWebsiteLink(input: YouTubeProfileId | WebsiteUrl): WebsiteLink {
   return {
@@ -443,8 +443,8 @@ export function youtubeProfileUrlToWebsiteLink(input: YouTubeProfileId | Website
 /**
  * Constructs a full YouTube channel URL from a profile ID.
  *
- * @param profileId - the YouTube channel name
- * @returns the full channel URL with `/c/` path
+ * @param profileId - The YouTube channel name.
+ * @returns The full channel URL with `/c/` path.
  */
 export function youtubeProfileUrl<P extends YouTubeProfileId>(profileId: P): YouTubeProfileUrl<P> {
   return `${YOUTUBE_BASE_URL}/c/${profileId}`;
@@ -477,8 +477,8 @@ export type PayPalWebsiteLinkType = typeof PAYPAL_WEBSITE_LINK_TYPE;
 /**
  * Converts a PayPal profile ID or URL into a {@link WebsiteLink}.
  *
- * @param input - a PayPal username or full PayPal.me URL
- * @returns a WebsiteLink with the isolated username as data
+ * @param input - A PayPal username or full PayPal.me URL.
+ * @returns A WebsiteLink with the isolated username as data.
  */
 export function paypalProfileUrlToWebsiteLink(input: PayPalProfileId | WebsiteUrl): WebsiteLink {
   return {
@@ -490,8 +490,8 @@ export function paypalProfileUrlToWebsiteLink(input: PayPalProfileId | WebsiteUr
 /**
  * Constructs a full PayPal.me profile URL from a profile ID.
  *
- * @param profileId - the PayPal username
- * @returns the full PayPal.me URL
+ * @param profileId - The PayPal username.
+ * @returns The full PayPal.me URL.
  */
 export function paypalProfileUrl<P extends PayPalProfileId>(profileId: P): PayPalProfileUrl<P> {
   return `${PAYPAL_BASE_URL}/${profileId}`;
@@ -530,8 +530,8 @@ export type CashappWebsiteLinkType = typeof CASHAPP_WEBSITE_LINK_TYPE;
  *
  * Automatically prepends the "$" prefix if not already present.
  *
- * @param input - a Cash App username (with or without "$") or full profile URL
- * @returns a WebsiteLink with the "$"-prefixed username as data
+ * @param input - A Cash App username (with or without "$") or full profile URL.
+ * @returns A WebsiteLink with the "$"-prefixed username as data.
  */
 export function cashappProfileUrlToWebsiteLink(input: CashappProfileId | WebsiteUrl): WebsiteLink {
   return {
@@ -543,8 +543,8 @@ export function cashappProfileUrlToWebsiteLink(input: CashappProfileId | Website
 /**
  * Constructs a full Cash App profile URL from a profile ID.
  *
- * @param profileId - the Cash App username (without "$" prefix)
- * @returns the full Cash App URL with "$" prefix
+ * @param profileId - The Cash App username (without "$" prefix)
+ * @returns The full Cash App URL with "$" prefix.
  */
 export function cashappProfileUrl<P extends CashappProfileId>(profileId: P): CashappProfileUrl<P> {
   return `${CASHAPP_BASE_URL}/$${profileId}`;
@@ -589,8 +589,8 @@ export const VENMO_WEBSITE_LINK_ISOLATE_PROFILE_ID = isolateWebsitePathFunction(
  *
  * Handles Venmo's `/u/{username}` URL pattern.
  *
- * @param input - a Venmo username or full profile URL
- * @returns a WebsiteLink with the isolated username as data
+ * @param input - A Venmo username or full profile URL.
+ * @returns A WebsiteLink with the isolated username as data.
  */
 export function venmoProfileUrlToWebsiteLink(input: VenmoProfileId | WebsiteUrl): WebsiteLink {
   return {
@@ -602,8 +602,8 @@ export function venmoProfileUrlToWebsiteLink(input: VenmoProfileId | WebsiteUrl)
 /**
  * Constructs a full Venmo profile URL from a profile ID.
  *
- * @param profileId - the Venmo username
- * @returns the full profile URL with `/u/` path
+ * @param profileId - The Venmo username.
+ * @returns The full profile URL with `/u/` path.
  */
 export function venmoProfileUrl<P extends VenmoProfileId>(profileId: P): VenmoProfileUrl<P> {
   return `${VENMO_BASE_URL}/u/${profileId}`;
@@ -648,8 +648,8 @@ export const SPOTIFY_WEBSITE_LINK_ISOLATE_PROFILE_ID = isolateWebsitePathFunctio
  *
  * Handles Spotify's `/user/{username}` URL pattern.
  *
- * @param input - a Spotify username or full profile URL
- * @returns a WebsiteLink with the isolated username as data
+ * @param input - A Spotify username or full profile URL.
+ * @returns A WebsiteLink with the isolated username as data.
  */
 export function spotifyProfileUrlToWebsiteLink(input: SpotifyProfileId | WebsiteUrl): WebsiteLink {
   return {
@@ -661,8 +661,8 @@ export function spotifyProfileUrlToWebsiteLink(input: SpotifyProfileId | Website
 /**
  * Constructs a full Spotify profile URL from a profile ID.
  *
- * @param profileId - the Spotify username
- * @returns the full profile URL with `/user/` path
+ * @param profileId - The Spotify username.
+ * @returns The full profile URL with `/user/` path.
  */
 export function spotifyProfileUrl<P extends SpotifyProfileId>(profileId: P): SpotifyProfileUrl<P> {
   return `${SPOTIFY_BASE_URL}/user/${profileId}`;

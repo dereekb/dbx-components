@@ -169,8 +169,8 @@ export function characterPrefixSuffixInstance<P extends CharacterPrefix = '', S 
  * (vs. {@link removeFirstMatchingSuffix}, which silently passes the
  * input through).
  *
- * @param input The string to trim.
- * @param suffix The suffix to remove.
+ * @param input - The string to trim.
+ * @param suffix - The suffix to remove.
  * @returns The input without the suffix, or `undefined` when the input
  *   does not end with the suffix.
  */
@@ -183,8 +183,8 @@ export function removeSuffix(input: string, suffix: string): Maybe<string> {
  * Removes the first matching suffix from the input string. Returns the
  * input unchanged when none of the suffixes match.
  *
- * @param input The string to trim.
- * @param suffixes The suffixes to try in order.
+ * @param input - The string to trim.
+ * @param suffixes - The suffixes to try in order.
  * @returns The input with the first matching suffix removed, or the
  *   input unchanged when no suffix matches.
  */

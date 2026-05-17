@@ -13,13 +13,13 @@
  *
  * Empty segments (e.g. leading underscores in `_USER_ID`) are skipped.
  *
+ * @param input - The SCREAMING_SNAKE_CASE input.
+ * @returns The camelCase form.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, case, camelcase, snakecase, screaming, convert, transform
  * @dbxUtilRelated camel-or-pascal-to-screaming-snake
- *
- * @param input The SCREAMING_SNAKE_CASE input.
- * @returns The camelCase form.
  */
 export function screamingSnakeToCamelCase(input: string): string {
   const parts = input.split('_').filter((p) => p.length > 0);
@@ -41,13 +41,13 @@ export function screamingSnakeToCamelCase(input: string): string {
  * Each upper-case character (other than the first) is preceded by an
  * underscore, then the whole result is upper-cased.
  *
+ * @param input - The camelCase / PascalCase input.
+ * @returns The SCREAMING_SNAKE_CASE form.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, case, camelcase, pascalcase, snakecase, screaming, convert, transform
  * @dbxUtilRelated screaming-snake-to-camel-case
- *
- * @param input The camelCase / PascalCase input.
- * @returns The SCREAMING_SNAKE_CASE form.
  */
 export function camelOrPascalToScreamingSnake(input: string): string {
   let out = '';

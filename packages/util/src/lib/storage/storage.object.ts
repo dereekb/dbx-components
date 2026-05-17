@@ -1,4 +1,5 @@
 import { type Maybe } from '../value/maybe.type';
+import type { Maybe } from '@dereekb/util';
 import { range } from '../array/array.number';
 import { type StoredDataStorageKey } from './storage';
 import { hasNonNullValue } from '../value/maybe';
@@ -50,7 +51,7 @@ export abstract class StorageObject extends SimpleStorageObject {
    * @param index The index of the key to retrieve.
    * @returns The key string if found, otherwise null.
    */
-  abstract key(index: number): string | null;
+  abstract key(index: number): Maybe<string>;
 }
 
 /**
@@ -82,8 +83,8 @@ export class StorageObjectUtility {
   /**
    * Retrieves all keys from a StorageObject, optionally filtering by a prefix.
    *
-   * @param storageObject The StorageObject to retrieve keys from.
-   * @param prefix Optional prefix to filter keys by.
+   * @param storageObject - The StorageObject to retrieve keys from.
+   * @param prefix - Optional prefix to filter keys by.
    * @returns An array of StoredDataStorageKey.
    */
   static allKeysFromStorageObject(storageObject: StorageObject, prefix?: string): StoredDataStorageKey[] {

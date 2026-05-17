@@ -39,7 +39,7 @@ export class SimpleLoadingContext implements LoadingContext, Destroyable {
   /**
    * Whether the current state has a non-null error.
    *
-   * @returns true if the current state contains an error
+   * @returns True if the current state contains an error.
    */
   public hasError(): boolean {
     return isLoadingStateWithError(this._subject.value);
@@ -65,7 +65,7 @@ export class SimpleLoadingContext implements LoadingContext, Destroyable {
   /**
    * Sets the loading flag and clears any existing error.
    *
-   * @param loading - whether loading is in progress (defaults to true)
+   * @param loading - Whether loading is in progress (defaults to true)
    */
   public setLoading(loading: boolean = true): void {
     // clears the current error
@@ -77,8 +77,8 @@ export class SimpleLoadingContext implements LoadingContext, Destroyable {
   /**
    * Sets an error state with an optional loading flag.
    *
-   * @param error - the error to set
-   * @param loading - whether loading is still in progress (defaults to false)
+   * @param error - The error to set.
+   * @param loading - Whether loading is still in progress (defaults to false)
    */
   public setError(error: ReadableError, loading: boolean = false): void {
     this._subject.next({

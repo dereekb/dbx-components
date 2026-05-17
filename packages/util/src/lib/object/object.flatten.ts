@@ -26,6 +26,10 @@ export interface FlattenObjectConfig {
  * Empty nested objects are omitted from the result (they produce no keys).
  * Circular references are detected and treated as leaf values to avoid infinite recursion.
  *
+ * @param input - The object to flatten. If nullish, returns an empty object.
+ * @param config - Optional configuration for separator and max depth.
+ * @returns A new flat object with concatenated key paths.
+ *
  * @dbxUtil
  * @dbxUtilCategory object
  * @dbxUtilTags object, flatten, flat, nested, dot-notation, deep, traverse
@@ -41,10 +45,6 @@ export interface FlattenObjectConfig {
  * flattenObject({ a: { b: { c: 1 } } }, { maxDepth: 1 });
  * // { 'a.b': { c: 1 } }
  * ```
- *
- * @param input - The object to flatten. If nullish, returns an empty object.
- * @param config - Optional configuration for separator and max depth.
- * @returns A new flat object with concatenated key paths.
  */
 export function flattenObject(input: Maybe<Record<string, unknown>>, config?: FlattenObjectConfig): Record<string, unknown> {
   const result: Record<string, unknown> = {};
@@ -79,8 +79,8 @@ export function flattenObject(input: Maybe<Record<string, unknown>>, config?: Fl
 /**
  * Returns true if the value is a plain object (not an array, Date, RegExp, null, etc.).
  *
- * @param value - the value to check
- * @returns true if the value is a plain object with an Object or null prototype
+ * @param value - The value to check.
+ * @returns True if the value is a plain object with an Object or null prototype.
  */
 function _isPlainObject(value: unknown): value is Record<string, unknown> {
   let result = false;

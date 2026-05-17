@@ -48,8 +48,8 @@ export interface UtilRequireReadonlyConfigParamsRuleDefinition {
 /**
  * Returns the property's identifier name when available (best-effort for diagnostic messages).
  *
- * @param node - A `TSPropertySignature` AST node.
- * @returns A string label for the property, falling back to `<computed>` for non-identifier keys.
+ * @param node - `TSPropertySignature` whose property name should be derived.
+ * @returns Property label suitable for diagnostic messages; `<computed>` when the key is not a static identifier or string literal.
  */
 function getPropertyName(node: AstNode): string {
   let name: string = '<computed>';

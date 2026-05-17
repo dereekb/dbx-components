@@ -47,19 +47,19 @@ export type ReadKeysFunction<T, K extends PrimativeKey = PrimativeKey> = MapFunc
  * filtering out null/undefined keys.
  *
  * @param readKey - Function that extracts one or more keys from a value.
- * @returns A function that reads keys from a single value or array of values.
- *
- * @example
- * ```ts
- * const fn = readKeysFunction<string>((x) => x);
- * fn(['a', 'b', 'c']); // ['a', 'b', 'c']
- * ```
+ * @returns Reusable extractor that normalizes single or batch input into a flat key list (nullish keys dropped).
  *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags key, read, factory, array, primitive
  * @dbxUtilRelated read-keys-set-function
+ *
+ * @example
+ * ```ts
+ * const fn = readKeysFunction<string>((x) => x);
+ * fn(['a', 'b', 'c']); // ['a', 'b', 'c']
+ * ```
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -90,7 +90,7 @@ export function readKeysFunction<T, K extends PrimativeKey = PrimativeKey>(readK
  *
  * @param readKey - Function that extracts one or more keys from a value.
  * @param values - Values to read keys from.
- * @returns An array of all extracted keys.
+ * @returns Flat list of every key extracted from `values`.
  */
 export function readKeysFrom<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>, values: T[]): K[] {
   return readKeysFunction(readKey)(values);
@@ -105,19 +105,19 @@ export type ReadKeysSetFunction<T, K extends PrimativeKey = PrimativeKey> = MapF
  * Creates a {@link ReadKeysSetFunction} from a key-reading function. Like {@link readKeysFunction} but returns a Set, deduplicating keys.
  *
  * @param readKey - Function that extracts one or more keys from a value.
- * @returns A function that reads keys from values into a Set.
- *
- * @example
- * ```ts
- * const fn = readKeysSetFunction<string>((x) => x);
- * fn(['a', 'b', 'a']); // Set { 'a', 'b' }
- * ```
+ * @returns Reusable extractor that collects keys into a deduped Set.
  *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags key, read, set, factory, dedupe, primitive
  * @dbxUtilRelated read-keys-function
+ *
+ * @example
+ * ```ts
+ * const fn = readKeysSetFunction<string>((x) => x);
+ * fn(['a', 'b', 'a']); // Set { 'a', 'b' }
+ * ```
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -152,7 +152,7 @@ export function readKeysSetFunction<T, K extends PrimativeKey = PrimativeKey>(re
  *
  * @param readKey - Function that extracts one or more keys from a value.
  * @param values - Values to read keys from.
- * @returns A Set of all extracted keys.
+ * @returns Deduped key collection drawn from `values`.
  */
 export function readKeysSetFrom<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>, values: T[]): Set<K> {
   return readKeysSetFunction(readKey)(values);

@@ -237,10 +237,9 @@ export interface ItemAccumulatorNextPageUntilResultsCountResult extends Page {
  * Automatically pages through an accumulator's iteration until the desired number of results
  * is reached or no more pages are available.
  *
- * @param config - configuration specifying the accumulator, result limit, and counting function
- * @returns promise resolving to the final page number and total results count
- *
- * @throws Rejects if the iteration encounters an error during loading
+ * @param config - Configuration specifying the accumulator, result limit, and counting function.
+ * @returns Promise resolving to the final page number and total results count.
+ * @throws {Error} Rejects if the iteration encounters a loading error.
  */
 export function itemAccumulatorNextPageUntilResultsCount<O>(config: ItemAccumulatorNextPageUntilResultsCountConfig<O>): Promise<ItemAccumulatorNextPageUntilResultsCountResult> {
   const { accumulator, maxResultsLimit, countResultsFunction: countResults } = config;

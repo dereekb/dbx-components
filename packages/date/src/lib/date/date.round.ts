@@ -21,9 +21,9 @@ export interface StepRoundDateTimeDown extends RoundTimeDown {
 /**
  * Rounds the date's minutes to the nearest step, then rounds remaining time components down.
  *
- * @param date - the date to round
- * @param round - step and rounding configuration
- * @returns the rounded date
+ * @param date - Moment to round.
+ * @param round - Step size and trailing-component clearing options.
+ * @returns Rounded copy of the input moment.
  *
  * @example
  * ```ts
@@ -45,9 +45,9 @@ export function roundDateTimeDownToSteps(date: Date, round: StepRoundDateTimeDow
 /**
  * Clears time components of the date based on rounding options (e.g. seconds/milliseconds, or hours/minutes for day rounding).
  *
- * @param date - the date to round
- * @param round - which components to clear
- * @returns the rounded date
+ * @param date - Moment to round.
+ * @param round - Selection of time components to clear.
+ * @returns Rounded copy of the input moment.
  *
  * @example
  * ```ts
@@ -84,9 +84,9 @@ export function roundDateTimeDown(date: Date, round: RoundTimeDown): Date {
  *
  * If the step is 1 or less, the date is returned unchanged. If rounding pushes minutes to 60, the hour is incremented.
  *
- * @param date - the date to round
- * @param step - the minute step to round to
- * @returns the date with minutes rounded to the nearest step
+ * @param date - Moment to round.
+ * @param step - Granularity of minutes the result must align to.
+ * @returns Copy of the moment with minutes snapped to the requested step.
  *
  * @example
  * ```ts
@@ -95,22 +95,22 @@ export function roundDateTimeDown(date: Date, round: RoundTimeDown): Date {
  * ```
  */
 export function roundToMinuteSteps(date: Date, step: number): Date {
+  let result = date;
+
   // Only steps of 1 or more are allowed.
-  if (step <= 1) {
-    return date;
-  }
+  if (step > 1) {
+    const minute = getMinutes(date);
+    const roundedValue = roundNumberUpToStep(minute, step);
 
-  const minute = getMinutes(date);
-  const roundedValue = roundNumberUpToStep(minute, step);
-
-  if (roundedValue !== minute) {
-    if (roundedValue === 60) {
-      // Round the hour up.
-      date = addHours(set(date, { minutes: 0 }), 1);
-    } else {
-      date = set(date, { minutes: roundedValue });
+    if (roundedValue !== minute) {
+      if (roundedValue === 60) {
+        // Round the hour up.
+        result = addHours(set(date, { minutes: 0 }), 1);
+      } else {
+        result = set(date, { minutes: roundedValue });
+      }
     }
   }
 
-  return date;
+  return result;
 }

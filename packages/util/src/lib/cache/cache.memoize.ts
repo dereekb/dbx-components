@@ -12,13 +12,13 @@ import { type AsyncKeyedValueCache, type AsyncValueCache } from './cache';
  * Note: the memoized value is per-process. Long-running processes will not observe writes
  * made by other processes to the inner backing once the memo is populated.
  *
+ * @param inner - The backing cache to memoize. Reads are delegated once and cached; writes are forwarded through and refresh the memo.
+ * @returns An {@link AsyncValueCache} that proxies the inner cache with a single-load memoization layer.
+ *
  * @dbxUtil
  * @dbxUtilCategory cache
  * @dbxUtilTags memoize, memo, cache, async, single-load, async-value
  * @dbxUtilRelated memoize-async-keyed-value-cache
- *
- * @param inner - The backing cache to memoize. Reads are delegated once and cached; writes are forwarded through and refresh the memo.
- * @returns An {@link AsyncValueCache} that proxies the inner cache with a single-load memoization layer.
  *
  * @example
  * ```ts
@@ -101,13 +101,13 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
  * Note: the memoized record is per-process. Long-running processes will not observe writes
  * made by other processes to the inner backing once the memo is populated.
  *
+ * @param inner - The backing keyed cache to memoize. The full record is loaded once and cached; writes are forwarded through and applied to the memo.
+ * @returns An {@link AsyncKeyedValueCache} that proxies the inner cache with a record-level memoization layer.
+ *
  * @dbxUtil
  * @dbxUtilCategory cache
  * @dbxUtilTags memoize, memo, cache, async, keyed, record
  * @dbxUtilRelated memoize-async-value-cache
- *
- * @param inner - The backing keyed cache to memoize. The full record is loaded once and cached; writes are forwarded through and applied to the memo.
- * @returns An {@link AsyncKeyedValueCache} that proxies the inner cache with a record-level memoization layer.
  *
  * @example
  * ```ts

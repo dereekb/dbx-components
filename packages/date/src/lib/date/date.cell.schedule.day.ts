@@ -6,9 +6,9 @@ import { type DateCellScheduleDayCodesInput, expandDateCellScheduleDayCodes } fr
  *
  * Each day code is expanded to its corresponding day(s) of the week, then offset from the Sunday reference index.
  *
- * @param sundayIndex - the DateCellIndex for the Sunday of the target week
- * @param dayCodes - day codes to convert (e.g. WEEKDAY, individual days)
- * @returns array of DateCellIndex values for the matching days
+ * @param sundayIndex - The DateCellIndex for the Sunday of the target week.
+ * @param dayCodes - Day codes to convert (e.g. WEEKDAY, individual days)
+ * @returns Array of DateCellIndex values for the matching days.
  *
  * @example
  * ```ts

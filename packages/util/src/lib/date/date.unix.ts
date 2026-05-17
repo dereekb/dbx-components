@@ -22,13 +22,13 @@ export type DateOrUnixDateTimeSecondsNumber = Date | UnixDateTimeSecondsNumber;
 /**
  * Converts a Date object or unix timestamp number to a unix timestamp number.
  *
+ * @param input - Date object or unix timestamp number to convert.
+ * @returns Unix timestamp number if input is valid, null/undefined if input is null/undefined.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, unix, seconds, timestamp, convert, normalize
  * @dbxUtilRelated unix-date-time-seconds-number-from-date, date-from-date-or-time-seconds-number
- *
- * @param input - Date object or unix timestamp number to convert
- * @returns Unix timestamp number if input is valid, null/undefined if input is null/undefined
  */
 export function unixDateTimeSecondsNumberFromDateOrTimeNumber(input: Maybe<DateOrUnixDateTimeSecondsNumber>): Maybe<UnixDateTimeSecondsNumber> {
   let result: Maybe<UnixDateTimeSecondsNumber>;
@@ -47,12 +47,12 @@ export function unixDateTimeSecondsNumberFromDateOrTimeNumber(input: Maybe<DateO
 /**
  * Gets the current time as a unix timestamp number.
  *
+ * @returns Current time as unix timestamp number.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, unix, seconds, timestamp, now, current, time
  * @dbxUtilRelated unix-date-time-seconds-number-from-date
- *
- * @returns Current time as unix timestamp number
  */
 export function unixDateTimeSecondsNumberForNow(): UnixDateTimeSecondsNumber {
   return unixDateTimeSecondsNumberFromDate(new Date());
@@ -72,7 +72,7 @@ export function unixDateTimeSecondsNumberForNow(): UnixDateTimeSecondsNumber {
 export function unixDateTimeSecondsNumberFromDate(date: Date): UnixDateTimeSecondsNumber;
 export function unixDateTimeSecondsNumberFromDate(date: MaybeNot): MaybeNot;
 export function unixDateTimeSecondsNumberFromDate(date: Maybe<Date>): Maybe<UnixDateTimeSecondsNumber> {
-  return date != null ? Math.ceil(date.getTime() / 1000) : (date as null | undefined);
+  return date != null ? Math.ceil(date.getTime() / 1000) : (date as Maybe<UnixDateTimeSecondsNumber>);
 }
 
 /**
@@ -101,14 +101,14 @@ export function dateFromDateOrTimeSecondsNumber(input: Maybe<DateOrUnixDateTimeS
 /**
  * Converts a unix timestamp number to a Date object.
  *
+ * @param dateTimeNumber - Unix timestamp number to convert.
+ * @returns Date object if timestamp is valid, null/undefined if timestamp is null/undefined.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, unix, seconds, timestamp, convert, parse
  * @dbxUtilRelated unix-date-time-seconds-number-from-date, date-from-date-or-time-seconds-number
- *
- * @param dateTimeNumber - Unix timestamp number to convert
- * @returns Date object if timestamp is valid, null/undefined if timestamp is null/undefined
  */
 export function unixDateTimeSecondsNumberToDate(dateTimeNumber: Maybe<UnixDateTimeSecondsNumber>): Maybe<Date> {
-  return dateTimeNumber != null ? new Date(dateTimeNumber * 1000) : (dateTimeNumber as null | undefined);
+  return dateTimeNumber != null ? new Date(dateTimeNumber * 1000) : (dateTimeNumber as Maybe<Date>);
 }

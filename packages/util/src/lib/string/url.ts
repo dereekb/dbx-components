@@ -1,4 +1,5 @@
 import { type ArrayOrValue, asArray } from '../array/array';
+import type { Maybe } from '@dereekb/util';
 import { type EmailAddress } from '../contact/email';
 import { type E164PhoneNumberExtensionPair, type E164PhoneNumberWithOptionalExtension, type PhoneNumber, e164PhoneNumberExtensionPair, isE164PhoneNumber } from '../contact/phone';
 import { type IndexRangeInput } from './../value/indexed';
@@ -251,7 +252,7 @@ export interface WebsiteUrlDetails {
   /**
    * The port number, or `undefined` if none is present.
    */
-  readonly portNumber: PortNumber | undefined;
+  readonly portNumber: Maybe<PortNumber>;
   /**
    * The domain and path split pair.
    */
@@ -271,7 +272,7 @@ export interface WebsiteUrlDetails {
   /**
    * The query string portion, or undefined if none.
    */
-  readonly query: string | undefined;
+  readonly query: Maybe<string>;
 }
 
 /**
@@ -449,14 +450,15 @@ export interface IsolateWebsitePathFunctionConfig {
 /**
  * Creates an {@link IsolateWebsitePathFunction} that extracts and transforms a path from a website URL based on the configuration.
  *
+ * @param config - Configuration for path isolation, including base path removal, component range, query handling, and trailing slash behavior.
+ * @returns A function that isolates the configured portion of a website path.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, url, path, isolate, transform, factory, query
  * @dbxUtilRelated website-path-from-website-url, website-path-and-query-pair, fix-extra-query-parameters
  *
- * @param config - Configuration for path isolation, including base path removal, component range, query handling, and trailing slash behavior.
- * @returns A function that isolates the configured portion of a website path.
  * @__NO_SIDE_EFFECTS__
  */
 export function isolateWebsitePathFunction(config: IsolateWebsitePathFunctionConfig = {}): IsolateWebsitePathFunction {
@@ -542,7 +544,7 @@ export function websitePathAndQueryPair(inputPath: string | WebsitePath): Websit
  */
 export function fixExtraQueryParameters(input: string, replaceAll = false): string {
   const questionMarkIndexes = findAllCharacterOccurences(new Set('?'), input);
-  let indexesToReplace: number[] | undefined;
+  let indexesToReplace: Maybe<number[]>;
   let fixed = input;
 
   if (replaceAll && questionMarkIndexes.length) {
@@ -614,7 +616,7 @@ export interface WebsiteDomainAndPathPair {
 export function websiteDomainAndPathPair(input: WebsiteDomainAndPath): WebsiteDomainAndPathPair {
   const result = splitJoinRemainder(input, '/', 2);
   const domain = result[0];
-  const path = result[1] as string | undefined; // may be undefined if input has no path separator
+  const path = result[1] as Maybe<string>; // may be undefined if input has no path separator
 
   return {
     domain,

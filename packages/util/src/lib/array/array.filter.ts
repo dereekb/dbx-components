@@ -1,4 +1,5 @@
 import { type MapFunction } from '../value/map';
+import type { Maybe } from '@dereekb/util';
 import { type DecisionFunction } from '../value/decision';
 import { copyArray } from './array';
 import { expandIndexSet, findBestIndexSetPair, findToIndexSet } from './array.index';
@@ -14,12 +15,12 @@ import { type AscendingSortCompareFunction } from '../sort';
  *
  * If order is irrelevant, use filterValuesByDistanceNoOrder() instead.
  *
- * @param input - The array of values to filter
- * @param minDistance - The minimum distance required between values (inclusive)
- * @param getValue - Function that extracts a numeric value from each item for distance comparison
- * @returns A filtered array with only values that are at least minDistance apart, in their original input order
+ * @param input - Candidate items to dedupe along the value axis.
+ * @param minDistance - Inclusive gap that adjacent kept values must satisfy.
+ * @param getValue - Resolver that maps each item to a numeric coordinate; null skips the item.
+ * @returns Subset of `input` preserved in original index order with min-distance enforced.
  */
-export function filterValuesByDistance<T>(input: T[], minDistance: number, getValue: (value: T) => number | null): T[] {
+export function filterValuesByDistance<T>(input: T[], minDistance: number, getValue: (value: T) => Maybe<number>): T[] {
   // Tag each non-null value with its original index so we can restore order after the distance filter.
   const tagged: [{ readonly item: T; readonly index: number }, number][] = [];
 
@@ -43,13 +44,13 @@ export function filterValuesByDistance<T>(input: T[], minDistance: number, getVa
  * This is useful in cases where many values are too "close" to each other (generally items that share the same time, or within seconds of each other), and
  * we are only interested in seeing one of those items.
  *
- * @param input - The array of values to filter
- * @param minDistance - The minimum distance required between values (inclusive)
- * @param getValue - Function that extracts a numeric value from each item for distance comparison
- * @returns A filtered array with only values that are at least minDistance apart, sorted by the extracted value
+ * @param input - Candidate items to dedupe along the value axis.
+ * @param minDistance - Inclusive gap that adjacent kept values must satisfy.
+ * @param getValue - Resolver that maps each item to a numeric coordinate; null skips the item.
+ * @returns Subset of `input` sorted ascending by extracted value with min-distance enforced.
  */
-export function filterValuesByDistanceNoOrder<T>(input: T[], minDistance: number, getValue: (value: T) => number | null): T[] {
-  const values: [T, number][] = input.map((x) => [x, getValue(x)] as [T, number | null]).filter((x): x is [T, number] => x[1] != null);
+export function filterValuesByDistanceNoOrder<T>(input: T[], minDistance: number, getValue: (value: T) => Maybe<number>): T[] {
+  const values: [T, number][] = input.map((x) => [x, getValue(x)] as [T, Maybe<number>]).filter((x): x is [T, number] => x[1] != null);
   return _filterValuesByDistance(values, minDistance, (x) => x[0]);
 }
 
@@ -58,10 +59,10 @@ export function filterValuesByDistanceNoOrder<T>(input: T[], minDistance: number
 /**
  * Internal helper function for filtering values by distance.
  *
- * @param values - Array of tuples containing the original value and its numeric representation
+ * @param values - Array of tuples containing the original value and its numeric representation.
  * @param minDistance - The minimum distance required between values (inclusive).
- * @param toOutputValue - Function to convert a value-number tuple to the output format
- * @returns A filtered array with only values that are at least minDistance apart
+ * @param toOutputValue - Function to convert a value-number tuple to the output format.
+ * @returns A filtered array with only values that are at least minDistance apart.
  */
 function _filterValuesByDistance<T, Y>(values: [T, number][], minDistance: number, toOutputValue: (value: [T, number]) => Y): Y[] {
   let filtered: Y[];
@@ -113,14 +114,15 @@ export interface BestFitConfig<T> {
 /**
  * Same as applyBestFit, but returns a new array, rather than modifying the existing array.
  *
+ * @param input - Source items considered for best-fit selection; not mutated.
+ * @param config - Strategy describing eligibility, comparison, and non-winner transformation.
+ * @returns Fresh array containing the chosen winner alongside transformed runners-up.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilTags array, best-fit, filter, sort, immutable
  * @dbxUtilRelated apply-best-fit, find-best-index-set-pair
  *
- * @param input - The array to filter for the best fit.
- * @param config - The best-fit strategy ({@link BestFitConfig}).
- * @returns A new array with only the best fit item and transformed non-best-fit items.
  * @__NO_SIDE_EFFECTS__
  */
 export function makeBestFit<T>(input: T[], config: BestFitConfig<T>): T[] {
@@ -133,14 +135,14 @@ export function makeBestFit<T>(input: T[], config: BestFitConfig<T>): T[] {
  * For instance, if two items are selected but only one can be selected by design, this function can be used to
  * pick the best fit, and update the input array.
  *
+ * @param input - Mutable array whose runners-up should be rewritten in place.
+ * @param config - Strategy describing eligibility, comparison, and non-winner transformation.
+ * @returns Same `input` reference after the runner-up replacements.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilTags array, best-fit, filter, sort, mutable, in-place
  * @dbxUtilRelated make-best-fit, find-best-index-set-pair
- *
- * @param input - The array to modify in-place.
- * @param config - The best-fit strategy ({@link BestFitConfig}).
- * @returns The modified input array with only the best fit item and transformed non-best-fit items.
  */
 export function applyBestFit<T>(input: T[], config: BestFitConfig<T>): T[] {
   const { filter, compare, updateNonBestFit } = config;
@@ -171,15 +173,16 @@ export type FilterAndMapFunction<I, O> = MapFunction<Iterable<I>, O[]>;
  * Creates a function that filters the input values and maps all matching values to a new value.
  * This is a higher-order function that combines filtering and mapping operations.
  *
+ * @param decisionFunction - Predicate used to decide whether each iterated item flows through.
+ * @param mapFunction - Transform applied to every included item.
+ * @returns Reusable filter-then-map operator over any iterable input.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, filter, map, transform, factory, iterable
  * @dbxUtilRelated array-decision-function
  *
- * @param decisionFunction - Function that determines which items to include in the result
- * @param mapFunction - Function that transforms each included item
- * @returns A function that takes an iterable of input values and returns an array of transformed values
  * @__NO_SIDE_EFFECTS__
  */
 export function filterAndMapFunction<I, O>(decisionFunction: DecisionFunction<I>, mapFunction: MapFunction<I, O>): FilterAndMapFunction<I, O> {

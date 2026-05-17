@@ -40,14 +40,15 @@ export type SearchStringFilterFunctionConfigInput<T> = ReadKeyFunction<T, string
 /**
  * Creates a {@link SearchStringFilterFunction} that filters values based on whether their string representation matches the filter text.
  *
+ * @param config - A read function or full configuration specifying how to extract and match search strings.
+ * @returns A function that filters an array of values by a search/filter text string.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, search, filter, factory, match, decision
  * @dbxUtilRelated case-insensitive-filter-by-index-of-decision-factory
  *
- * @param config - A read function or full configuration specifying how to extract and match search strings.
- * @returns A function that filters an array of values by a search/filter text string.
  * @__NO_SIDE_EFFECTS__
  */
 export function searchStringFilterFunction<T>(config: SearchStringFilterFunctionConfigInput<T>): SearchStringFilterFunction<T> {

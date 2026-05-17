@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 import { type AsyncKeyedValueCache, type AsyncValueCache } from './cache';
 
 /**
@@ -27,7 +28,7 @@ import { type AsyncKeyedValueCache, type AsyncValueCache } from './cache';
 export function mergeAsyncValueCaches<T>(caches: ReadonlyArray<AsyncValueCache<T>>): AsyncValueCache<T> {
   return {
     load: async () => {
-      let result: T | null | undefined;
+      let result: Maybe<T>;
 
       for (const cache of caches) {
         const value = await cache.load();
@@ -88,7 +89,7 @@ export function mergeAsyncKeyedValueCaches<T>(caches: ReadonlyArray<AsyncKeyedVa
       return merged;
     },
     get: async (key) => {
-      let result: T | null | undefined;
+      let result: Maybe<T>;
 
       for (const cache of caches) {
         const value = await cache.get(key);

@@ -37,9 +37,9 @@ export interface Modifier<T> extends ModifierFunctionRef<T> {
 /**
  * Creates a {@link Modifier} with the given key and modify function.
  *
- * @param key - unique identifier for the modifier
- * @param modify - function that mutates the target value
- * @returns a new {@link Modifier} pairing the key with the modify function
+ * @param key - Unique identifier for the modifier.
+ * @param modify - Function that mutates the target value.
+ * @returns A new {@link Modifier} pairing the key with the modify function.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -64,7 +64,7 @@ export function modifier<T>(key: string, modify: ModifierFunction<T>): Modifier<
 /**
  * A no-operation modifier that does nothing to the input. Useful as a default/fallback.
  *
- * @returns undefined (no mutation is performed)
+ * @returns Undefined (no mutation is performed)
  */
 export const NOOP_MODIFIER: ModifierFunction<any> = () => undefined;
 
@@ -78,9 +78,9 @@ export type ModifierMap<T> = Map<ModifierKey, Modifier<T>>;
  *
  * If a modifier with the same key already exists, it is replaced.
  *
- * @param modifiers - modifier(s) to add
- * @param map - existing map to add to, or undefined to create a new one
- * @returns the modifier map with the new modifiers added
+ * @param modifiers - Modifier(s) to add.
+ * @param map - Existing map to add to, or undefined to create a new one.
+ * @returns The modifier map with the new modifiers added.
  *
  * @example
  * ```ts
@@ -100,9 +100,9 @@ export function addModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map?: Mayb
 /**
  * Removes one or more modifiers from the map by key. Returns an empty map if no map is provided.
  *
- * @param modifiers - modifier(s) whose keys should be removed
- * @param map - the map to remove from
- * @returns the modifier map with the specified modifiers removed
+ * @param modifiers - Modifier(s) whose keys should be removed.
+ * @param map - The map to remove from.
+ * @returns The modifier map with the specified modifiers removed.
  *
  * @example
  * ```ts
@@ -127,8 +127,13 @@ export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Ma
  *
  * Returns {@link NOOP_MODIFIER} if the map is nullish or empty.
  *
- * @param map - the modifier map to convert
- * @returns a single modifier function that applies all mapped modifiers, or {@link NOOP_MODIFIER} if empty
+ * @param map - The modifier map to convert.
+ * @returns A single modifier function that applies all mapped modifiers, or {@link NOOP_MODIFIER} if empty.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilTags modifier, map, factory, compose
+ * @dbxUtilRelated maybe-modifier-map-to-function, modifier
  *
  * @example
  * ```ts
@@ -139,11 +144,6 @@ export function removeModifiers<T>(modifiers: ArrayOrValue<Modifier<T>>, map: Ma
  * fn(obj);
  * // obj.x === 1
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory value
- * @dbxUtilTags modifier, map, factory, compose
- * @dbxUtilRelated maybe-modifier-map-to-function, modifier
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -156,13 +156,14 @@ export function modifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): ModifierFu
  *
  * Returns undefined if no map is provided, allowing callers to distinguish "no modifiers" from "empty modifiers".
  *
+ * @param map - The modifier map to convert.
+ * @returns A composed modifier function, or `undefined` if no map is provided.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilTags modifier, map, factory, compose, optional
  * @dbxUtilRelated modifier-map-to-function, modifier
  *
- * @param map - the modifier map to convert
- * @returns a composed modifier function, or `undefined` if no map is provided
  * @__NO_SIDE_EFFECTS__
  */
 export function maybeModifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): Maybe<ModifierFunction<T>> {
@@ -182,8 +183,8 @@ export function maybeModifierMapToFunction<T>(map: Maybe<ModifierMap<T>>): Maybe
  *
  * Returns {@link NOOP_MODIFIER} if the array is empty or nullish.
  *
- * @param modifiers - array of modifier functions to merge
- * @returns a single modifier function that applies all provided modifiers, or {@link NOOP_MODIFIER} if empty
+ * @param modifiers - Array of modifier functions to merge.
+ * @returns A single modifier function that applies all provided modifiers, or {@link NOOP_MODIFIER} if empty.
  *
  * @example
  * ```ts
@@ -204,8 +205,8 @@ export function mergeModifiers<T>(modifiers: ModifierFunction<T>[]): ModifierFun
  *
  * If only one modifier is provided, returns it directly without wrapping.
  *
- * @param modifiers - array of modifier functions to merge, or undefined
- * @returns a composed modifier function, the single modifier if only one provided, or `undefined` if input is nullish
+ * @param modifiers - Array of modifier functions to merge, or undefined.
+ * @returns A composed modifier function, the single modifier if only one provided, or `undefined` if input is nullish.
  */
 export function maybeMergeModifiers<T>(modifiers: Maybe<ModifierFunction<T>[]>): Maybe<ModifierFunction<T>> {
   let result: Maybe<ModifierFunction<T>> = undefined;

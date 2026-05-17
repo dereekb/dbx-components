@@ -6,8 +6,8 @@ import { type Maybe, performTaskLoop, type GetterOrValue, asGetter, isMaybeNot, 
  * Combines an iteration's `hasNext$` and `canLoadMore$` into a single observable that emits
  * `true` only when both conditions are met (more items exist and the page limit hasn't been reached).
  *
- * @param iteration - the iteration to check
- * @returns observable that emits `true` when more items can be loaded
+ * @param iteration - The iteration to check.
+ * @returns Observable that emits `true` when more items can be loaded.
  */
 export function iterationHasNextAndCanLoadMore<V>(iteration: ItemIteration<V>): Observable<boolean> {
   return iteration.canLoadMore$.pipe(
@@ -23,12 +23,11 @@ export function iterationHasNextAndCanLoadMore<V>(iteration: ItemIteration<V>): 
  *
  * Falls back to the provided default limit if no max is configured on the iterator.
  *
- * @param iterator - the page iteration to advance
- * @param defaultLimit - fallback page limit if none is configured (defaults to 100)
- * @returns promise resolving to the last loaded page number
- *
- * @throws {Error} If neither a max page load limit nor a default limit is defined
- * @throws Rejects if the iteration encounters a loading error
+ * @param iterator - The page iteration to advance.
+ * @param defaultLimit - Fallback page limit if none is configured (defaults to 100)
+ * @returns Promise resolving to the last loaded page number.
+ * @throws {Error} If neither a max page load limit nor a default limit is defined.
+ * @throws {Error} Rejects if the iteration encounters a loading error.
  */
 export function iteratorNextPageUntilMaxPageLoadLimit(iterator: PageItemIteration, defaultLimit: Maybe<number> = 100): Promise<number> {
   return iteratorNextPageUntilPage(iterator, () => {
@@ -46,11 +45,10 @@ export function iteratorNextPageUntilMaxPageLoadLimit(iterator: PageItemIteratio
  * Automatically pages through a {@link PageItemIteration} until the specified page number is reached,
  * respecting the iteration's max page load limit.
  *
- * @param iteration - the page iteration to advance
- * @param page - target page number (or getter returning one) representing total pages to load
- * @returns promise resolving to the last loaded page number
- *
- * @throws Rejects if the iteration encounters a loading error
+ * @param iteration - The page iteration to advance.
+ * @param page - Target page number (or getter returning one) representing total pages to load.
+ * @returns Promise resolving to the last loaded page number.
+ * @throws {Error} Rejects if the iteration encounters a loading error.
  */
 export function iteratorNextPageUntilPage(iteration: PageItemIteration, page: GetterOrValue<number>): Promise<PageNumber> {
   const getPageLimit = asGetter(page);
