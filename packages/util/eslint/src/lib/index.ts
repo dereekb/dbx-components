@@ -1,3 +1,10 @@
 export { utilRequireNoSideEffectsRule, type UtilRequireNoSideEffectsRuleOptions, type UtilRequireNoSideEffectsRuleDefinition } from './require-no-side-effects.rule';
 export { utilPreferNoSideEffectsInJsdocRule, type UtilPreferNoSideEffectsInJsdocRuleDefinition } from './prefer-no-side-effects-in-jsdoc.rule';
+export { utilNoSisterReExportRule, type UtilNoSisterReExportRuleOptions, type UtilNoSisterReExportRuleDefinition } from './no-sister-re-export.rule';
+export { utilRequireSingleReturnRule, type UtilRequireSingleReturnRuleDefinition } from './require-single-return.rule';
+export { utilRequireReadonlyConfigParamsRule, type UtilRequireReadonlyConfigParamsRuleOptions, type UtilRequireReadonlyConfigParamsRuleDefinition } from './require-readonly-config-params.rule';
+export { utilPreferConfigObjectRule, type UtilPreferConfigObjectRuleOptions, type UtilPreferConfigObjectRuleDefinition } from './prefer-config-object.rule';
+export { utilPreferMaybeTypeRule, type UtilPreferMaybeTypeRuleOptions, type UtilPreferMaybeTypeRuleDefinition } from './prefer-maybe-type.rule';
+export { utilNoInlineTypeImportRule, type UtilNoInlineTypeImportRuleDefinition } from './no-inline-type-import.rule';
+export { utilRequireDeprecatedAliasPlacementRule, type UtilRequireDeprecatedAliasPlacementRuleDefinition } from './require-deprecated-alias-placement.rule';
 export { utilEslintPlugin, type UtilEslintPlugin } from './plugin';

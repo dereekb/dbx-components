@@ -112,7 +112,14 @@ export default [
     },
     rules: {
       'dereekb-util/require-no-side-effects': 'warn', // start at warn to surface any factories the annotation pass missed; promote to error after a clean lint sweep
-      'dereekb-util/prefer-no-side-effects-in-jsdoc': 'warn' // migrates existing `// @__NO_SIDE_EFFECTS__` line comments into adjacent JSDoc blocks via --fix
+      'dereekb-util/prefer-no-side-effects-in-jsdoc': 'warn', // migrates existing `// @__NO_SIDE_EFFECTS__` line comments into adjacent JSDoc blocks via --fix
+      'dereekb-util/no-sister-re-export': ['warn', { patterns: ['@dereekb/*'] }], // disallow `export … from '@dereekb/<other-pkg>'`; intra-package re-exports use relative paths and stay valid
+      'dereekb-util/require-single-return': 'warn', // dbx__note__typescript-programming → Single Return Per Function
+      'dereekb-util/require-readonly-config-params': 'warn', // dbx__note__typescript-programming → Readonly Interface Properties (auto-fix inserts readonly; @dbxMutable exempts Firestore model interfaces)
+      'dereekb-util/prefer-config-object': 'warn', // dbx__note__typescript-programming → Prefer Single Config Object
+      'dereekb-util/prefer-maybe-type': 'warn', // dbx__note__typescript-programming → Maybe<T> Usage
+      'dereekb-util/no-inline-type-import': 'warn', // dbx__note__typescript-programming → No Inline Type Imports
+      'dereekb-util/require-deprecated-alias-placement': 'warn' // dbx__note__typescript-programming → Deprecated Alias Placement
     }
   },
   {
