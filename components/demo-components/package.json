@@ -1,6 +1,6 @@
 {
   "name": "demo-components",
-  "version": "13.11.13",
+  "version": "13.11.14",
   "peerDependencies": {
     "@angular/common": "*",
     "@angular/core": "*",

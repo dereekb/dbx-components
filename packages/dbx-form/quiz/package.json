@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/dbx-form/quiz",
-  "version": "13.11.13",
+  "version": "13.11.14",
   "peerDependencies": {
     "@angular/common": "21.2.11",
     "@angular/core": "21.2.11",
-    "@dereekb/dbx-core": "13.11.13",
-    "@dereekb/dbx-web": "13.11.13",
-    "@dereekb/rxjs": "13.11.13",
-    "@dereekb/util": "13.11.13",
-    "@dereekb/vitest": "13.11.13",
+    "@dereekb/dbx-core": "13.11.14",
+    "@dereekb/dbx-web": "13.11.14",
+    "@dereekb/rxjs": "13.11.14",
+    "@dereekb/util": "13.11.14",
+    "@dereekb/vitest": "13.11.14",
     "@ngrx/component-store": "^21.1.0",
     "rxjs": "^7.8.2"
   }

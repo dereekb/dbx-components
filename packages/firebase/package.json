@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase",
-  "version": "13.11.13",
+  "version": "13.11.14",
   "sideEffects": false,
   "exports": {
     "./test": {
@@ -11,10 +11,10 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/util": "13.11.13",
-    "@dereekb/date": "13.11.13",
-    "@dereekb/model": "13.11.13",
-    "@dereekb/rxjs": "13.11.13",
+    "@dereekb/util": "13.11.14",
+    "@dereekb/date": "13.11.14",
+    "@dereekb/model": "13.11.14",
+    "@dereekb/rxjs": "13.11.14",
     "@firebase/rules-unit-testing": "5.0.0",
     "arktype": "^2.2.0",
     "date-fns": "^4.1.0",
