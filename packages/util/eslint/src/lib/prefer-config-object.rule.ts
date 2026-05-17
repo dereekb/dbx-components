@@ -1,9 +1,16 @@
 type AstNode = any;
 
 /**
- * Default maximum positional parameters before the rule suggests a config object.
+ * Default maximum positional parameters before the warn-level rule suggests a config object.
+ * Triggers a warning when a function has more than 2 positional parameters (i.e. 3+ args).
  */
-const DEFAULT_MAX_PARAMS = 2;
+const DEFAULT_MAX_PARAMS_WARN = 2;
+
+/**
+ * Default maximum positional parameters before the hard-error rule rejects the signature.
+ * Triggers an error when a function has more than 4 positional parameters (i.e. 5+ args).
+ */
+const DEFAULT_MAX_PARAMS_HARD = 4;
 
 /**
  * Default JSDoc tag that opts a function out of this rule.
@@ -11,11 +18,12 @@ const DEFAULT_MAX_PARAMS = 2;
 const DEFAULT_ALLOW_JSDOC_TAG = '@dbxAllowMultiParams';
 
 /**
- * Options accepted by the prefer-config-object rule.
+ * Options accepted by the prefer-config-object rule (and the hard variant).
  */
 export interface UtilPreferConfigObjectRuleOptions {
   /**
-   * Maximum number of positional parameters before the rule fires. Defaults to 2.
+   * Maximum number of positional parameters before the rule fires. Defaults to 2 for the warn
+   * variant (`prefer-config-object`) and 4 for the hard variant (`prefer-config-object-hard`).
    */
   readonly maxParams?: number;
   /**
@@ -40,6 +48,14 @@ export interface UtilPreferConfigObjectRuleDefinition {
     readonly schema: readonly object[];
   };
   create(context: { options: UtilPreferConfigObjectRuleOptions[]; report: (descriptor: { node: AstNode; messageId: string; data?: Record<string, string> }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
+}
+
+/**
+ * Internal config for `createPreferConfigObjectRule`.
+ */
+interface PreferConfigObjectRuleConfig {
+  readonly defaultMaxParams: number;
+  readonly description: string;
 }
 
 /**
@@ -113,83 +129,110 @@ function hasAllowJsdoc(sourceCode: AstNode, anchor: AstNode, allowTag: string): 
 }
 
 /**
- * ESLint rule recommending a single config object when a function takes more than two positional
- * parameters. Class constructors and decorated parameters (e.g. NestJS `@Inject`) are exempted so
- * that legitimate DI signatures aren't flagged. Functions can opt out of the rule via a leading
- * JSDoc block carrying the configured allow tag (default `@dbxAllowMultiParams`).
+ * Builds a prefer-config-object-style rule with a configurable default `maxParams` threshold.
+ * Class constructors and decorated parameters (e.g. NestJS `@Inject`) are exempted. Functions can
+ * opt out via a leading JSDoc block carrying the configured allow tag (default `@dbxAllowMultiParams`).
  *
- * @see `dbx__note__typescript-programming` → Prefer Single Config Object
+ * @param config - Default threshold and rule description.
+ * @returns A complete ESLint rule definition that emits `tooManyParams` reports.
  */
-export const utilPreferConfigObjectRule: UtilPreferConfigObjectRuleDefinition = {
-  meta: {
-    type: 'suggestion',
-    docs: {
-      description: 'Prefer a single config object when a function takes more than two positional parameters.',
-      recommended: true
-    },
-    messages: {
-      tooManyParams: "Function '{{name}}' takes {{count}} positional parameters; use a single config object instead (see dbx__note__typescript-programming → Prefer Single Config Object)."
-    },
-    schema: [
-      {
-        type: 'object' as const,
-        properties: {
-          maxParams: {
-            type: 'number' as const,
-            minimum: 0,
-            description: 'Maximum number of positional parameters before the rule fires.'
+function createPreferConfigObjectRule(config: PreferConfigObjectRuleConfig): UtilPreferConfigObjectRuleDefinition {
+  return {
+    meta: {
+      type: 'suggestion',
+      docs: {
+        description: config.description,
+        recommended: true
+      },
+      messages: {
+        tooManyParams: "Function '{{name}}' takes {{count}} positional parameters; use a single config object instead (see dbx__note__typescript-programming → Prefer Single Config Object)."
+      },
+      schema: [
+        {
+          type: 'object' as const,
+          properties: {
+            maxParams: {
+              type: 'number' as const,
+              minimum: 0,
+              description: 'Maximum number of positional parameters before the rule fires.'
+            },
+            allowJsdocTag: {
+              type: 'string' as const,
+              description: 'JSDoc tag that opts a function out of this rule.'
+            }
           },
-          allowJsdocTag: {
-            type: 'string' as const,
-            description: 'JSDoc tag that opts a function out of this rule.'
-          }
-        },
-        additionalProperties: false
-      }
-    ]
-  },
-  create(context) {
-    const options = context.options[0] ?? {};
-    const maxParams = options.maxParams ?? DEFAULT_MAX_PARAMS;
-    const allowTag = options.allowJsdocTag ?? DEFAULT_ALLOW_JSDOC_TAG;
-    const sourceCode = context.sourceCode;
+          additionalProperties: false
+        }
+      ]
+    },
+    create(context) {
+      const options = context.options[0] ?? {};
+      const maxParams = options.maxParams ?? config.defaultMaxParams;
+      const allowTag = options.allowJsdocTag ?? DEFAULT_ALLOW_JSDOC_TAG;
+      const sourceCode = context.sourceCode;
 
-    function checkFunction(node: AstNode): void {
-      if (!isConstructor(node)) {
-        const params: AstNode[] = node.params ?? [];
+      function checkFunction(node: AstNode): void {
+        if (!isConstructor(node)) {
+          const params: AstNode[] = node.params ?? [];
 
-        // Decorated parameters indicate framework-driven signatures (NestJS handlers, Angular DI inside
-        // constructors which we already skip — but standalone decorated functions exist too).
-        if (!params.some(paramHasDecorator) && params.length > maxParams) {
-          // Anchor for JSDoc lookup: prefer the enclosing export statement, then a VariableDeclaration
-          // (for `const fn = () => ...`), otherwise the function node itself.
-          let anchor: AstNode = node;
+          // Decorated parameters indicate framework-driven signatures (NestJS handlers, Angular DI inside
+          // constructors which we already skip — but standalone decorated functions exist too).
+          if (!params.some(paramHasDecorator) && params.length > maxParams) {
+            // Anchor for JSDoc lookup: prefer the enclosing export statement, then a VariableDeclaration
+            // (for `const fn = () => ...`), otherwise the function node itself.
+            let anchor: AstNode = node;
 
-          if (node.parent?.type === 'VariableDeclarator' && node.parent.parent?.type === 'VariableDeclaration') {
-            anchor = node.parent.parent;
-          }
+            if (node.parent?.type === 'VariableDeclarator' && node.parent.parent?.type === 'VariableDeclaration') {
+              anchor = node.parent.parent;
+            }
 
-          if (anchor.parent && (anchor.parent.type === 'ExportNamedDeclaration' || anchor.parent.type === 'ExportDefaultDeclaration')) {
-            anchor = anchor.parent;
-          }
+            if (anchor.parent && (anchor.parent.type === 'ExportNamedDeclaration' || anchor.parent.type === 'ExportDefaultDeclaration')) {
+              anchor = anchor.parent;
+            }
 
-          if (!hasAllowJsdoc(sourceCode, anchor, allowTag)) {
-            const name = getFunctionDisplayName(node);
+            if (!hasAllowJsdoc(sourceCode, anchor, allowTag)) {
+              const name = getFunctionDisplayName(node);
 
-            context.report({
-              node: node.id ?? node,
-              messageId: 'tooManyParams',
-              data: { name, count: String(params.length) }
-            });
+              context.report({
+                node: node.id ?? node,
+                messageId: 'tooManyParams',
+                data: { name, count: String(params.length) }
+              });
+            }
           }
         }
       }
-    }
 
-    return {
-      FunctionDeclaration: checkFunction,
-      FunctionExpression: checkFunction,
-      ArrowFunctionExpression: checkFunction
-    };
-  }
-};
+      return {
+        FunctionDeclaration: checkFunction,
+        FunctionExpression: checkFunction,
+        ArrowFunctionExpression: checkFunction
+      };
+    }
+  };
+}
+
+/**
+ * ESLint rule recommending a single config object when a function takes more than two positional
+ * parameters (default `maxParams: 2`, i.e. fires at 3+ args). Intended to be configured at the
+ * `warn` severity. Pair with `prefer-config-object-hard` for a stricter cap.
+ *
+ * @see `dbx__note__typescript-programming` → Prefer Single Config Object
+ */
+export const utilPreferConfigObjectRule: UtilPreferConfigObjectRuleDefinition = createPreferConfigObjectRule({
+  defaultMaxParams: DEFAULT_MAX_PARAMS_WARN,
+  description: 'Prefer a single config object when a function takes more than two positional parameters.'
+});
+
+/**
+ * Hard-stop variant of `prefer-config-object`. Fires when a function takes more than four positional
+ * parameters (default `maxParams: 4`, i.e. fires at 5+ args). Intended to be configured at the
+ * `error` severity so genuinely unwieldy signatures break the build even when the softer warn-level
+ * rule is disabled or downgraded.
+ *
+ * @see `dbx__note__typescript-programming` → Prefer Single Config Object
+ */
+export const utilPreferConfigObjectHardRule: UtilPreferConfigObjectRuleDefinition = createPreferConfigObjectRule({
+  defaultMaxParams: DEFAULT_MAX_PARAMS_HARD,
+  description: 'Reject function signatures with more than four positional parameters; require a single config object.'
+});

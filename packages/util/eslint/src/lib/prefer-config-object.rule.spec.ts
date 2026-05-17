@@ -2,12 +2,14 @@ import { Linter } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
 import { utilEslintPlugin } from './plugin';
 
+type RuleId = 'dereekb-util/prefer-config-object' | 'dereekb-util/prefer-config-object-hard';
+
 interface LintOptions {
   readonly maxParams?: number;
   readonly allowJsdocTag?: string;
 }
 
-function buildConfig(options?: LintOptions): Linter.Config[] {
+function buildConfig(ruleId: RuleId, options?: LintOptions): Linter.Config[] {
   const ruleOptions = options ? ['error', options] : ['error'];
 
   return [
@@ -24,7 +26,7 @@ function buildConfig(options?: LintOptions): Linter.Config[] {
         'dereekb-util': utilEslintPlugin as any
       },
       rules: {
-        'dereekb-util/prefer-config-object': ruleOptions as any
+        [ruleId]: ruleOptions as any
       }
     }
   ];
@@ -32,10 +34,15 @@ function buildConfig(options?: LintOptions): Linter.Config[] {
 
 function lintCode(code: string, options?: LintOptions): Linter.LintMessage[] {
   const linter = new Linter({ configType: 'flat' });
-  return linter.verify(code, buildConfig(options), { filename: 'test.ts' }).filter((m) => m.ruleId === 'dereekb-util/prefer-config-object');
+  return linter.verify(code, buildConfig('dereekb-util/prefer-config-object', options), { filename: 'test.ts' }).filter((m) => m.ruleId === 'dereekb-util/prefer-config-object');
 }
 
-describe('prefer-config-object rule', () => {
+function lintHardCode(code: string, options?: LintOptions): Linter.LintMessage[] {
+  const linter = new Linter({ configType: 'flat' });
+  return linter.verify(code, buildConfig('dereekb-util/prefer-config-object-hard', options), { filename: 'test.ts' }).filter((m) => m.ruleId === 'dereekb-util/prefer-config-object-hard');
+}
+
+describe('prefer-config-object rule (warn variant, default maxParams: 2)', () => {
   describe('valid', () => {
     it('function with two parameters passes', () => {
       const errors = lintCode(`
@@ -167,6 +174,70 @@ function legacy(a: string, b: string, c: string, d: string) {
         { allowJsdocTag: '@internal-allow' }
       );
       expect(errors).toHaveLength(0);
+    });
+  });
+});
+
+describe('prefer-config-object-hard rule (default maxParams: 4)', () => {
+  describe('valid', () => {
+    it('function with four parameters passes by default', () => {
+      const errors = lintHardCode(`
+function quad(a: number, b: number, c: number, d: number) {
+  return a + b + c + d;
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('function with three parameters passes by default', () => {
+      const errors = lintHardCode(`
+function createFilter(name: string, caseSensitive: boolean, maxResults: number) {
+  return { name, caseSensitive, maxResults };
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('constructor with six parameters is exempt', () => {
+      const errors = lintHardCode(`
+class Service {
+  constructor(a: string, b: number, c: boolean, d: Date, e: string, f: number) {}
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('@dbxAllowMultiParams JSDoc opts out even with five params', () => {
+      const errors = lintHardCode(`
+/**
+ * @dbxAllowMultiParams
+ */
+export function legacy(a: string, b: string, c: string, d: string, e: string) {
+  return a + b + c + d + e;
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe('invalid', () => {
+    it('flags a function with five parameters', () => {
+      const errors = lintHardCode(`
+function tooMany(a: number, b: number, c: number, d: number, e: number) {
+  return a + b + c + d + e;
+}
+`);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain('tooMany');
+      expect(errors[0].message).toContain('5 positional');
+    });
+
+    it('flags an arrow function with six parameters', () => {
+      const errors = lintHardCode(`
+const make = (a: string, b: string, c: string, d: string, e: string, f: string) => a + b + c + d + e + f;
+`);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].message).toContain('make');
     });
   });
 });

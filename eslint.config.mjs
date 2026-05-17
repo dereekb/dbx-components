@@ -118,7 +118,8 @@ export default [
       'dereekb-util/no-sister-re-export': ['warn', { patterns: ['@dereekb/*'] }], // disallow `export … from '@dereekb/<other-pkg>'`; intra-package re-exports use relative paths and stay valid
       'dereekb-util/require-single-return': 'warn', // dbx__note__typescript-programming → Single Return Per Function
       'dereekb-util/require-readonly-config-params': 'warn', // dbx__note__typescript-programming → Readonly Interface Properties (auto-fix inserts readonly; @dbxMutable exempts Firestore model interfaces)
-      'dereekb-util/prefer-config-object': 'warn', // dbx__note__typescript-programming → Prefer Single Config Object
+      'dereekb-util/prefer-config-object': 'off', // dbx__note__typescript-programming → Prefer Single Config Object. Warn-level rule (default maxParams: 2, fires at 3+ args). Disabled here for now; will re-enable as part of a breaking change pass that refactors offending function signatures.
+      'dereekb-util/prefer-config-object-hard': 'off', // Hard-stop variant of prefer-config-object (default maxParams: 4, fires at 5+ args). Disabled here for now; flip to 'error' alongside the breaking-change refactor pass.
       'dereekb-util/prefer-maybe-type': 'warn', // dbx__note__typescript-programming → Maybe<T> Usage
       'dereekb-util/no-inline-type-import': 'warn', // dbx__note__typescript-programming → No Inline Type Imports
       'dereekb-util/require-deprecated-alias-placement': 'warn', // dbx__note__typescript-programming → Deprecated Alias Placement

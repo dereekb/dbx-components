@@ -3,7 +3,7 @@ import { type UtilPreferNoSideEffectsInJsdocRuleDefinition, utilPreferNoSideEffe
 import { type UtilNoSisterReExportRuleDefinition, utilNoSisterReExportRule } from './no-sister-re-export.rule';
 import { type UtilRequireSingleReturnRuleDefinition, utilRequireSingleReturnRule } from './require-single-return.rule';
 import { type UtilRequireReadonlyConfigParamsRuleDefinition, utilRequireReadonlyConfigParamsRule } from './require-readonly-config-params.rule';
-import { type UtilPreferConfigObjectRuleDefinition, utilPreferConfigObjectRule } from './prefer-config-object.rule';
+import { type UtilPreferConfigObjectRuleDefinition, utilPreferConfigObjectRule, utilPreferConfigObjectHardRule } from './prefer-config-object.rule';
 import { type UtilPreferMaybeTypeRuleDefinition, utilPreferMaybeTypeRule } from './prefer-maybe-type.rule';
 import { type UtilNoInlineTypeImportRuleDefinition, utilNoInlineTypeImportRule } from './no-inline-type-import.rule';
 import { type UtilRequireDeprecatedAliasPlacementRuleDefinition, utilRequireDeprecatedAliasPlacementRule } from './require-deprecated-alias-placement.rule';
@@ -32,6 +32,7 @@ export interface UtilEslintPlugin {
     readonly 'require-single-return': UtilRequireSingleReturnRuleDefinition;
     readonly 'require-readonly-config-params': UtilRequireReadonlyConfigParamsRuleDefinition;
     readonly 'prefer-config-object': UtilPreferConfigObjectRuleDefinition;
+    readonly 'prefer-config-object-hard': UtilPreferConfigObjectRuleDefinition;
     readonly 'prefer-maybe-type': UtilPreferMaybeTypeRuleDefinition;
     readonly 'no-inline-type-import': UtilNoInlineTypeImportRuleDefinition;
     readonly 'require-deprecated-alias-placement': UtilRequireDeprecatedAliasPlacementRuleDefinition;
@@ -65,6 +66,7 @@ export const utilEslintPlugin: UtilEslintPlugin = {
     'require-single-return': utilRequireSingleReturnRule,
     'require-readonly-config-params': utilRequireReadonlyConfigParamsRule,
     'prefer-config-object': utilPreferConfigObjectRule,
+    'prefer-config-object-hard': utilPreferConfigObjectHardRule,
     'prefer-maybe-type': utilPreferMaybeTypeRule,
     'no-inline-type-import': utilNoInlineTypeImportRule,
     'require-deprecated-alias-placement': utilRequireDeprecatedAliasPlacementRule,
