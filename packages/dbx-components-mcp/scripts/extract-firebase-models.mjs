@@ -23,7 +23,7 @@
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import prettier from 'prettier';
+import { resolveConfig, format } from 'prettier';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const WORKSPACE_ROOT = resolve(SCRIPT_DIR, '..', '..', '..');
@@ -101,8 +101,8 @@ async function main() {
  * style and short-array formatting, which dirties the working tree on every run.
  */
 async function formatWithPrettier(source) {
-  const config = await prettier.resolveConfig(OUTPUT_FILE);
-  const result = await prettier.format(source, { ...config, filepath: OUTPUT_FILE });
+  const config = await resolveConfig(OUTPUT_FILE);
+  const result = await format(source, { ...config, filepath: OUTPUT_FILE });
   return result;
 }
 

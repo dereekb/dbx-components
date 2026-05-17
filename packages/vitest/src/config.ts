@@ -223,6 +223,7 @@ export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptio
        * See: https://github.com/firebase/firebase-tools-ui/issues/996#issuecomment-3954367815
        */
       pool = 'forks';
+      maxWorkers = Number(configuredMaxWorkers);
     }
 
     /**

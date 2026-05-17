@@ -48,7 +48,7 @@ function parseCodeFromInput(input: string | undefined): string | undefined {
       result = code;
     } catch (e) {
       if (e instanceof TypeError) {
-        throw new Error(`Invalid URL provided for --code: ${input}`);
+        throw new Error(`Invalid URL provided for --code: ${input}`, { cause: e });
       }
 
       throw e;

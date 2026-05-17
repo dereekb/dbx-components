@@ -19,4 +19,4 @@ export const environment: DemoEnvironment = {
  * interaction + authorization endpoint paths so cookies are set on the API host directly,
  * bypassing the Firebase Hosting cookie strip at `components.dereekb.com`.
  */
-export const oidcApiOrigin = 'https://api.components.dereekb.com';
+export const OIDC_API_ORIGIN = 'https://api.components.dereekb.com';

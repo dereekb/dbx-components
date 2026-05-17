@@ -136,6 +136,9 @@ interface ResolveAuthorizationRebaseOriginInput {
  *
  * Returns `undefined` when none is set or every candidate fails to parse; the caller should then
  * use the discovered endpoint unchanged.
+ *
+ * @param input - The candidate URLs in priority order.
+ * @returns The selected origin, or `undefined` when no candidate yields one.
  */
 function resolveAuthorizationRebaseOrigin(input: ResolveAuthorizationRebaseOriginInput): Maybe<string> {
   let result: Maybe<string>;

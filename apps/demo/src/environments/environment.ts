@@ -14,4 +14,4 @@ export const environment: DemoEnvironment = {
  * Optional API origin used by the dbx-firebase OIDC provider when the OIDC issuer is hosted on
  * a different origin than the frontend. Local development is single-origin, so leave undefined.
  */
-export const oidcApiOrigin: string | undefined = undefined;
+export const OIDC_API_ORIGIN: string | undefined = undefined;

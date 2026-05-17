@@ -510,6 +510,10 @@ export interface DbxForgeBuildFieldDefConfig<C extends DbxForgeFieldFunctionDef<
   // TODO: ...
 }
 
+function getDefaultValidation(): DbxForgeFieldValidation {
+  return {};
+}
+
 /**
  * Creates a {@link DbxForgeFieldFunctionFieldDefBuilder} that provides a builder-instance pattern
  * for configuring field definitions.
@@ -529,10 +533,6 @@ export interface DbxForgeBuildFieldDefConfig<C extends DbxForgeFieldFunctionDef<
  * });
  * ```
  */
-function getDefaultValidation(): DbxForgeFieldValidation {
-  return {};
-}
-
 export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, FV = any>(configureFunction: DbxForgeBuildFieldDefFunction<C, FV>, _config?: Maybe<DbxForgeBuildFieldDefConfig<C>>): DbxForgeFieldFunctionFieldDefBuilder<C, FV> {
   // TODO: Default ValidationMessages place, etc.
 

@@ -210,7 +210,7 @@ export class ModelRelationUtility {
       return ModelRelationUtility.insertCollection(current, mods, { readKey, readType, merge });
     }
 
-    let result: T[];
+    let result: T[] = current;
 
     switch (change) {
       case RelationChange.SET:
@@ -235,7 +235,7 @@ export class ModelRelationUtility {
         break;
     }
 
-    return result!;
+    return result;
   }
 
   /**

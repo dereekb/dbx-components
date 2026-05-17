@@ -2,7 +2,7 @@ import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalytic
 import { type ApplicationConfig, importProvidersFrom, inject, type Injector, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
-import { environment, oidcApiOrigin } from './environments/environment';
+import { environment, OIDC_API_ORIGIN } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnvironment, provideDbxAssetLoader, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, DbxFirebaseModelEntitiesDebugWidgetComponent, type DbxFirebaseModelEntitiesWidgetEntry, type DbxFirebaseModelEntitiesWidgetServiceConfig, type DbxFirebaseModelTypesServiceConfig, type DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, provideDbxLinkify, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries, provideDbxWebPageTitleService } from '@dereekb/dbx-web';
@@ -325,7 +325,7 @@ export const appConfig: ApplicationConfig = {
         // Production deploys the OIDC issuer at api.components.dereekb.com so cookies are set
         // on the API host directly, bypassing the Firebase Hosting cookie strip. Local stays
         // undefined and OIDC paths remain relative.
-        oidcApiOrigin
+        oidcApiOrigin: OIDC_API_ORIGIN
       }
     }),
     // App initializers

@@ -1,4 +1,5 @@
 import { type ActionCommandSpec, type CliContext, iterateDbxCliCallModel } from '@dereekb/dbx-cli';
+import { type OnCallQueryModelResult } from '@dereekb/firebase';
 import { type Guestbook, type GuestbookEntry, type GuestbookKey, type QueryGuestbookEntriesParams, type QueryGuestbooksParams } from 'demo-firebase';
 
 // MARK: queryGuestbookEntriesForGuestbook
@@ -116,7 +117,7 @@ export interface QueryAllPublishedGuestbookEntriesOutput {
 export async function queryAllPublishedGuestbookEntries(input: QueryAllPublishedGuestbookEntriesInput): Promise<QueryAllPublishedGuestbookEntriesOutput> {
   const { context, limit, parallel } = input;
 
-  const result = await iterateDbxCliCallModel<QueryGuestbooksParams, Guestbook, import('@dereekb/firebase').OnCallQueryModelResult<Guestbook>, QueryGuestbookEntriesForGuestbookOutput>({
+  const result = await iterateDbxCliCallModel<QueryGuestbooksParams, Guestbook, OnCallQueryModelResult<Guestbook>, QueryGuestbookEntriesForGuestbookOutput>({
     context,
     call: 'query',
     modelType: 'guestbook',

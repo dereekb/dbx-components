@@ -129,7 +129,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
       this._currentPromise = promiseRef as PromiseReference<unknown>;
 
       // await the promise
-      await promiseRef.promise;
+      result = await promiseRef.promise;
     } catch (e) {
       error = e;
     }
