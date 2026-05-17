@@ -92,6 +92,7 @@ export function acceptTermsField({ key = 'accept', label = 'Accept Terms', descr
 */
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyToggleField instead.
  */

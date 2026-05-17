@@ -159,7 +159,7 @@ export const oldTwo = 'b';
       expect(lintCode(output)).toHaveLength(0);
     });
 
-    it('does not autofix when deprecated exports are interleaved with non-deprecated ones', () => {
+    it('moves interleaved deprecated exports to the bottom under a marker', () => {
       const input = `/**
  * @deprecated use NEW_NAME instead.
  */
@@ -168,9 +168,45 @@ export const oldName = 'foo';
 export const NEW_NAME = 'foo';
 `;
       const output = fixCode(input);
-      // Reordering required; autofix should be skipped, leaving the warning in place.
-      expect(output).toBe(input);
-      expect(lintCode(output).length).toBeGreaterThan(0);
+      // Reordering required; the deprecated block should now sit below the marker at EOF.
+      const markerIdx = output.indexOf('// COMPAT: Deprecated aliases');
+      const newNameIdx = output.indexOf('export const NEW_NAME');
+      const oldNameIdx = output.indexOf('export const oldName');
+      expect(markerIdx).toBeGreaterThan(0);
+      expect(newNameIdx).toBeGreaterThanOrEqual(0);
+      expect(newNameIdx).toBeLessThan(markerIdx);
+      expect(oldNameIdx).toBeGreaterThan(markerIdx);
+      expect(lintCode(output)).toHaveLength(0);
+    });
+
+    it('consolidates multiple interleaved deprecated blocks in source order at the bottom', () => {
+      const input = `/**
+ * @deprecated use A instead.
+ */
+export const oldA = 'a';
+
+export const A = 'a';
+
+/**
+ * @deprecated use B instead.
+ */
+export const oldB = 'b';
+
+export const B = 'b';
+`;
+      const output = fixCode(input);
+      const markerIdx = output.indexOf('// COMPAT: Deprecated aliases');
+      const oldAIdx = output.indexOf('export const oldA');
+      const oldBIdx = output.indexOf('export const oldB');
+      const aIdx = output.indexOf('export const A =');
+      const bIdx = output.indexOf('export const B =');
+      // Marker sits below both non-deprecated exports
+      expect(aIdx).toBeLessThan(markerIdx);
+      expect(bIdx).toBeLessThan(markerIdx);
+      // Deprecated blocks sit below the marker, in their original source order
+      expect(oldAIdx).toBeGreaterThan(markerIdx);
+      expect(oldBIdx).toBeGreaterThan(oldAIdx);
+      expect(lintCode(output)).toHaveLength(0);
     });
 
     it('moves a deprecated alias sitting above the marker to below it', () => {
@@ -192,7 +228,7 @@ export const anotherOld = 'bar';
       const oldNameIdx = output.indexOf('export const oldName');
       const newNameIdx = output.indexOf('export const NEW_NAME');
       expect(markerIdx).toBeGreaterThan(0);
-      expect(newNameIdx).toBeGreaterThan(0);
+      expect(newNameIdx).toBeGreaterThanOrEqual(0);
       expect(newNameIdx).toBeLessThan(markerIdx);
       expect(oldNameIdx).toBeGreaterThan(markerIdx);
       expect(lintCode(output)).toHaveLength(0);

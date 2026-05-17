@@ -203,6 +203,7 @@ export function formlyUsernameLoginField(username: UsernameLoginFieldUsernameCon
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTextPasswordField instead.
  */

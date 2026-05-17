@@ -41,6 +41,7 @@ export function formlyChipTextField(config: ChipTextFieldConfig) {
 }
 
 // MARK: Deprecated
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyChipTextField instead.
  */

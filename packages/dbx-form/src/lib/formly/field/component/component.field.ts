@@ -24,6 +24,7 @@ export function formlyComponentField<T = unknown>(config: ComponentFieldConfig<T
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyComponentField instead.
  */

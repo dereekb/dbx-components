@@ -136,6 +136,7 @@ export function formlySearchableTextField<T, M = unknown, H extends PrimativeKey
 }
 
 // MARK: Deprecated
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyMakeMetaFilterSearchableFieldValueDisplayFn instead.
  */

@@ -207,6 +207,7 @@ export function formlyDollarAmountField(config: DollarAmountFieldConfig) {
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyNumberFieldTransformParser instead.
  */

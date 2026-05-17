@@ -42,6 +42,7 @@ export function formlyChecklistItemField<T = unknown>(config: ChecklistItemField
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyChecklistItemField instead.
  */

@@ -53,6 +53,7 @@ export interface ZohoSignContextRef {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use ZohoSignFetchFactoryParams instead.
  */

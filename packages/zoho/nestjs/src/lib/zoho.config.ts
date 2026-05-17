@@ -62,15 +62,6 @@ export interface ReadZohoConfigFromConfigServiceConfig {
  * @returns ZohoConfig read from environment variables
  */
 export function readZohoConfigFromConfigService(config: ReadZohoConfigFromConfigServiceConfig): ZohoConfig;
-/**
- * @deprecated Use the config object overload instead.
- *
- * @param configService - NestJS ConfigService to read environment variables from
- * @param servicePrefix - optional prefix to scope config keys per service
- * @param assertValid - whether to throw if required config values are missing
- * @returns ZohoConfig read from environment variables
- */
-export function readZohoConfigFromConfigService(configService: ConfigService, servicePrefix?: string, assertValid?: boolean): ZohoConfig;
 export function readZohoConfigFromConfigService(configOrService: ReadZohoConfigFromConfigServiceConfig | ConfigService, servicePrefix?: string, assertValid = true): ZohoConfig {
   let configService: ConfigService;
 
@@ -106,3 +97,14 @@ export function assertValidZohoConfig(config: ZohoConfig) {
     throw new Error(`No Zoho API url or type specified.`);
   }
 }
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated Use the config object overload instead.
+ *
+ * @param configService - NestJS ConfigService to read environment variables from
+ * @param servicePrefix - optional prefix to scope config keys per service
+ * @param assertValid - whether to throw if required config values are missing
+ * @returns ZohoConfig read from environment variables
+ */
+export function readZohoConfigFromConfigService(configService: ConfigService, servicePrefix?: string, assertValid?: boolean): ZohoConfig;

@@ -311,6 +311,7 @@ export function zohoRecruitRemoveTagsFromRecords(context: ZohoRecruitContext): Z
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use zohoRecruitCreateTagsForModule instead.
  */

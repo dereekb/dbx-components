@@ -96,6 +96,7 @@ export function formlyAddValueSelectionOptionFunction<T>(label?: string | undefi
 }
 
 // MARK: Deprecated
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyValueSelectionField instead.
  */

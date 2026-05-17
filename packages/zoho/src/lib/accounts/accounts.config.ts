@@ -72,6 +72,7 @@ export interface ZohoAccountsContextRef {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use ZohoAccountsFetchFactoryParams instead.
  */

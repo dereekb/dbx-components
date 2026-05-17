@@ -1147,11 +1147,6 @@ export function zohoCrmUrlSearchParamsMinusIdAndModule(...input: Maybe<object | 
 }
 
 /**
- * @deprecated use makeUrlSearchParams instead.
- */
-export const zohoCrmUrlSearchParams = makeUrlSearchParams;
-
-/**
  * Constructs the standard FetchJsonInput used by CRM API calls, pairing the HTTP method with an optional body.
  *
  * @param method - HTTP method to use for the request.
@@ -1328,6 +1323,13 @@ export interface ZohoCrmMultiRecordResultEntry<I, O> {
 }
 
 // MARK: Compat
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated use makeUrlSearchParams instead.
+ */
+export const zohoCrmUrlSearchParams = makeUrlSearchParams;
+
 /**
  * @deprecated use ZohoCrmGetRelatedRecordsPageFilter instead.
  */

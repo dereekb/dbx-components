@@ -79,16 +79,6 @@ function isFlexFieldConfig(input: FieldDef<unknown> | DbxForgeFlexLayoutFieldCon
  */
 export function dbxForgeFlexLayout(config: DbxForgeFlexLayoutConfig): ContainerField;
 /**
- * @deprecated Pass a {@link DbxForgeFlexLayoutConfig} object instead — the array form
- * diverges from how every other forge field factory is configured. Move array entries
- * into the `fields` property of the config object.
- *
- * @param fields - Child fields (or {@link DbxForgeFlexLayoutFieldConfig} entries with per-field size overrides).
- * @param config - Optional layout config (without `fields`) carrying breakpoint/sizing defaults.
- * @returns A {@link ContainerField} with the flex wrapper applied and per-child sizing classes.
- */
-export function dbxForgeFlexLayout(fields: readonly (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config?: Omit<DbxForgeFlexLayoutConfig, 'fields'>): ContainerField;
-/**
  * Creates a responsive flex layout container that arranges child fields horizontally
  * with configurable sizing, breakpoints, and responsive behavior.
  *
@@ -163,3 +153,15 @@ export function dbxForgeFlexLayout(input: DbxForgeFlexLayoutConfig | readonly (F
     wrappers: [flexWrapper]
   });
 }
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated Pass a {@link DbxForgeFlexLayoutConfig} object instead — the array form
+ * diverges from how every other forge field factory is configured. Move array entries
+ * into the `fields` property of the config object.
+ *
+ * @param fields - Child fields (or {@link DbxForgeFlexLayoutFieldConfig} entries with per-field size overrides).
+ * @param config - Optional layout config (without `fields`) carrying breakpoint/sizing defaults.
+ * @returns A {@link ContainerField} with the flex wrapper applied and per-child sizing classes.
+ */
+export function dbxForgeFlexLayout(fields: readonly (FieldDef<unknown> | DbxForgeFlexLayoutFieldConfig)[], config?: Omit<DbxForgeFlexLayoutConfig, 'fields'>): ContainerField;

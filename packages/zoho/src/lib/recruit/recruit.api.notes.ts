@@ -225,6 +225,7 @@ export function zohoRecruitCreateNotesForRecord(context: ZohoRecruitContext): Zo
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use zohoRecruitCreateNotes instead.
  */

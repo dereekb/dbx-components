@@ -156,6 +156,7 @@ export function formlyPhoneListField(repeatConfig: Partial<PhoneListFieldConfig>
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyPhoneField instead.
  */

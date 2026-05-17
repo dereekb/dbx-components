@@ -136,6 +136,7 @@ export function formlyTextAreaField(config: TextAreaFieldConfig): FormlyFieldCon
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTextFieldTransformParser instead.
  */

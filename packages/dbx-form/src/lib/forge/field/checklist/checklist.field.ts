@@ -13,11 +13,6 @@ export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeField
 export type DbxForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeChecklistFieldConfig<T>) => DbxForgeField<MatMultiCheckboxField<T>>;
 
 /**
- * @deprecated Use {@link DbxForgeChecklistFieldFunction} instead.
- */
-export type ForgeChecklistFieldFunction = DbxForgeChecklistFieldFunction;
-
-/**
  * Multi-checkbox group. Use for small static option sets where every option is visible at once.
  *
  * @param config - Checklist field configuration
@@ -42,3 +37,9 @@ export const dbxForgeChecklistField = dbxForgeFieldFunction<DbxForgeChecklistFie
   type: 'multi-checkbox' as const,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder()
 }) as DbxForgeChecklistFieldFunction;
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated Use {@link DbxForgeChecklistFieldFunction} instead.
+ */
+export type ForgeChecklistFieldFunction = DbxForgeChecklistFieldFunction;

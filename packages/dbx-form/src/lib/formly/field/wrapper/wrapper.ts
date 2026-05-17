@@ -226,6 +226,7 @@ export function formlyFlexLayoutWrapper(fieldConfigs: (FormlyFieldConfig | DbxFl
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyAddWrapperToFormlyFieldConfig instead.
  */

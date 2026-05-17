@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable import-x/default */
+
 /**
  * Extracts the rule catalog from per-cluster `codes.ts` enums and emits
  * packages/dbx-components-mcp/generated/rule-catalog.generated.json

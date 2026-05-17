@@ -510,6 +510,7 @@ export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use {@link OnCallModelTypeApiDetails} instead.
  */

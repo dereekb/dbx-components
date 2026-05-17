@@ -284,7 +284,7 @@ export function initializeAllApplicableNotificationBoxesFactory(context: Notific
         const query = notificationBoxCollection.queryDocument(notificationBoxesFlaggedForNeedsInitializationQuery());
         const notificationBoxDocuments = await query.getDocs();
 
-        const result = await performAsyncTasks(
+        return performAsyncTasks(
           notificationBoxDocuments,
           async (notificationBoxDocument) => {
             return firestoreContext.runTransaction((transaction) => initializeNotificationBoxInTransaction(initializeNotificationBoxParams, notificationBoxDocument, transaction));
@@ -293,8 +293,6 @@ export function initializeAllApplicableNotificationBoxesFactory(context: Notific
             maxParallelTasks: 5
           }
         );
-
-        return result;
       }
 
       // iterate through all NotificationBox items that need to be synced
@@ -408,7 +406,7 @@ export function initializeAllApplicableNotificationSummariesFactory(context: Not
         const query = notificationSummaryCollection.queryDocument(notificationSummariesFlaggedForNeedsInitializationQuery());
         const notificationSummaryDocuments = await query.getDocs();
 
-        const result = await performAsyncTasks(
+        return performAsyncTasks(
           notificationSummaryDocuments,
           async (notificationSummaryDocument) => {
             return firestoreContext.runTransaction((transaction) => initializeNotificationSummaryInTransaction(initializeNotificationSummaryParams, notificationSummaryDocument, transaction));
@@ -417,8 +415,6 @@ export function initializeAllApplicableNotificationSummariesFactory(context: Not
             maxParallelTasks: 5
           }
         );
-
-        return result;
       }
 
       // iterate through all NotificationSummary items that need to be synced

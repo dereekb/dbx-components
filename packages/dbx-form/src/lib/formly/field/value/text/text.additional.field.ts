@@ -258,6 +258,7 @@ export function formlyLatLngTextField({ key = 'latLng' }: Partial<TextFieldConfi
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyNameField instead.
  */

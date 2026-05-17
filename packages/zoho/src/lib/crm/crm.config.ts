@@ -81,6 +81,7 @@ export interface ZohoCrmContextRef {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use ZohoCrmFetchFactoryParams instead.
  */

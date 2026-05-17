@@ -251,6 +251,7 @@ export function zohoStandardRateLimitDetailsReader(headers: Headers): Maybe<Zoho
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use DEFAULT_ZOHO_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION instead.
  */

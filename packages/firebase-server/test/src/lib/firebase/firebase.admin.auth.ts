@@ -109,14 +109,6 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
 }
 
 /**
- * Partial event context for gen 1 event-triggered cloud functions, with the `auth` field omitted
- * since it is injected automatically by the test context.
- *
- * @deprecated Used only with gen 1 event cloud functions via {@link AuthorizedUserTestContextInstance.callEventCloudFunction}.
- */
-export type CallEventFunctionEventContext = Partial<Omit<EventContext, 'auth'>>;
-
-/**
  * Simulates JSON serialization round-trip by stringifying then parsing the input object.
  *
  * This mimics the behavior of sending data over HTTP to a Cloud Function endpoint,
@@ -585,3 +577,12 @@ export function testFirestoreClaimsFromUserRecord(userRecord: UserRecord): objec
     ...baseClaims
   };
 }
+
+// COMPAT: Deprecated aliases
+/**
+ * Partial event context for gen 1 event-triggered cloud functions, with the `auth` field omitted
+ * since it is injected automatically by the test context.
+ *
+ * @deprecated Used only with gen 1 event cloud functions via {@link AuthorizedUserTestContextInstance.callEventCloudFunction}.
+ */
+export type CallEventFunctionEventContext = Partial<Omit<EventContext, 'auth'>>;

@@ -40,6 +40,7 @@ export function formlySourceSelectField<T extends PrimativeKey = PrimativeKey, M
 }
 
 // MARK: Deprecated
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlySourceSelectField instead.
  */

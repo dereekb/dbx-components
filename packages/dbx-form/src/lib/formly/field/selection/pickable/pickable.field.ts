@@ -68,6 +68,7 @@ export function formlyPickableItemListField<T = unknown, M = unknown>(config: Pi
 }
 
 // MARK: Deprecated
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyPickableItemChipField instead.
  */

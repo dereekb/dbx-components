@@ -90,6 +90,7 @@ export interface ZohoCrmNote extends ZohoCrmNoteData, UniqueModelWithId {}
 export type ZohoCrmRecordNote = ZohoCrmNote;
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use NewZohoCrmNewNoteData instead.
  */

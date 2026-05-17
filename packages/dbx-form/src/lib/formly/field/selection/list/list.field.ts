@@ -40,6 +40,7 @@ export function formlyDbxListField<T = unknown, C extends AbstractDbxSelectionLi
 }
 
 // MARK: Deprecated
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyDbxListField instead.
  */

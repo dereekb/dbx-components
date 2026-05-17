@@ -1228,11 +1228,6 @@ export function zohoRecruitUrlSearchParamsMinusIdAndModule(...input: Maybe<objec
 }
 
 /**
- * @deprecated use makeUrlSearchParams instead.
- */
-export const zohoRecruitUrlSearchParams = makeUrlSearchParams;
-
-/**
  * Constructs a standard {@link FetchJsonInput} for Zoho Recruit API calls with the given HTTP method and optional body.
  *
  * @param method - HTTP method for the request.
@@ -1415,6 +1410,13 @@ export interface ZohoRecruitMultiRecordResultEntry<I, O> {
 }
 
 // MARK: Compat
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated use makeUrlSearchParams instead.
+ */
+export const zohoRecruitUrlSearchParams = makeUrlSearchParams;
+
 /**
  * @deprecated use ZohoRecruitGetRelatedRecordsPageFilter instead.
  */

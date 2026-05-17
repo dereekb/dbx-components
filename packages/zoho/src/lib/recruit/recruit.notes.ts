@@ -75,6 +75,7 @@ export interface ZohoRecruitNote extends ZohoRecruitNoteData, UniqueModelWithId 
 export type ZohoRecruitRecordNote = ZohoRecruitNote;
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use NewZohoRecruitNewNoteData instead.
  */

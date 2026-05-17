@@ -179,6 +179,7 @@ export function formlyTimeDurationField(config: Partial<TimeDurationFieldConfig>
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTimeDurationField instead.
  */

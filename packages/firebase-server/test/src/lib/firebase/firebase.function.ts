@@ -23,21 +23,6 @@ export type CloudFunctionV1TypeFix<T> = Omit<CloudFunctionV1Input<T>, '__trigger
 export type CloudFunctionV1<T> = CloudFunctionV1TypeFix<T>;
 
 // gen 1
-/**
- * @deprecated deprecated gen 1 firebase function type
- */
-export type WrappedCloudFunctionV1<T> = WrappedScheduledFunction | WrappedFunction<T>;
-
-/**
- * @deprecated deprecated gen 1 firebase function type
- */
-export type WrapCloudFunctionV1 = <T>(cloudFunction: CloudFunctionV1<T>) => WrappedCloudFunctionV1<T>;
-
-/**
- * @deprecated deprecated gen 1 firebase function type
- */
-export type WrapCloudFunctionV1Input<T> = CloudFunctionV1<T>;
-
 // gen 2
 /**
  * Wrapped callable function that only takes in data and options that are used to simulate a Firebase request, then returns the result.
@@ -251,28 +236,6 @@ export function firebaseAdminCloudFunctionWrapper(instance: FeaturesList): Fireb
 }
 
 /**
- * Creates a lazy getter that wraps a gen 1 cloud function for testing each time it is called.
- *
- * The returned getter re-wraps on every invocation, so it always reflects the latest function
- * reference from the provided getter — useful when the function under test is re-created between tests.
- *
- * @param wrapper - The cloud function wrapper providing gen 1 wrap support.
- * @param getter - Lazy accessor for the gen 1 cloud function under test; re-evaluated on every getter call.
- * @returns A getter that, when invoked, returns a freshly wrapped gen 1 cloud function ready for invocation in tests.
- *
- * @deprecated Prefer gen 2 functions and {@link wrapCloudFunctionV2ForTests} or {@link wrapCloudFunctionTests}.
- *
- * @example
- * ```ts
- * const getWrapped = wrapCloudFunctionV1ForTests(wrapper, () => myV1Function);
- * const result = await getWrapped()({ /* event data *\/ });
- * ```
- */
-export function wrapCloudFunctionV1ForTests<I, T extends WrapCloudFunctionV1Input<I> = WrapCloudFunctionV1Input<I>>(wrapper: FirebaseAdminCloudFunctionWrapper, getter: Getter<T>): Getter<WrappedCloudFunctionV1<I>> {
-  return () => wrapper.wrapV1CloudFunction(getter());
-}
-
-/**
  * Creates a lazy getter that wraps a gen 2 cloud function for testing each time it is called.
  *
  * Re-wraps on every invocation so it always reflects the latest function reference,
@@ -334,6 +297,45 @@ export function wrapCallableRequestForTests<I, O = unknown, T extends WrapCallab
 }
 
 // MARK: Compat
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated deprecated gen 1 firebase function type
+ */
+export type WrappedCloudFunctionV1<T> = WrappedScheduledFunction | WrappedFunction<T>;
+
+/**
+ * @deprecated deprecated gen 1 firebase function type
+ */
+export type WrapCloudFunctionV1 = <T>(cloudFunction: CloudFunctionV1<T>) => WrappedCloudFunctionV1<T>;
+
+/**
+ * @deprecated deprecated gen 1 firebase function type
+ */
+export type WrapCloudFunctionV1Input<T> = CloudFunctionV1<T>;
+
+/**
+ * Creates a lazy getter that wraps a gen 1 cloud function for testing each time it is called.
+ *
+ * The returned getter re-wraps on every invocation, so it always reflects the latest function
+ * reference from the provided getter — useful when the function under test is re-created between tests.
+ *
+ * @param wrapper - The cloud function wrapper providing gen 1 wrap support.
+ * @param getter - Lazy accessor for the gen 1 cloud function under test; re-evaluated on every getter call.
+ * @returns A getter that, when invoked, returns a freshly wrapped gen 1 cloud function ready for invocation in tests.
+ *
+ * @deprecated Prefer gen 2 functions and {@link wrapCloudFunctionV2ForTests} or {@link wrapCloudFunctionTests}.
+ *
+ * @example
+ * ```ts
+ * const getWrapped = wrapCloudFunctionV1ForTests(wrapper, () => myV1Function);
+ * const result = await getWrapped()({ /* event data *\/ });
+ * ```
+ */
+export function wrapCloudFunctionV1ForTests<I, T extends WrapCloudFunctionV1Input<I> = WrapCloudFunctionV1Input<I>>(wrapper: FirebaseAdminCloudFunctionWrapper, getter: Getter<T>): Getter<WrappedCloudFunctionV1<I>> {
+  return () => wrapper.wrapV1CloudFunction(getter());
+}
+
 /**
  * @deprecated use WrappedCallableRequest instead.
  */

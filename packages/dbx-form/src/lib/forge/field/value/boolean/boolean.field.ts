@@ -4,15 +4,6 @@ import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConf
 import { configureDbxForgeFormFieldWrapperWith } from '../../wrapper/formfield/formfield.wrapper';
 
 /**
- * CSS class applied to forge fields when `styledBox` is enabled.
- *
- * @deprecated Boolean fields now use the Material-style form-field wrapper to render the
- * outlined chrome and standard label/hint/error subscript. Retained as an export for any
- * consumers still referencing the class name directly.
- */
-export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';
-
-/**
  * Where the field's primary label is rendered when wrapped by the form-field wrapper.
  */
 export type DbxForgeBooleanShowLabelAt = 'wrapper' | 'content' | 'both';
@@ -151,3 +142,13 @@ export const dbxForgeCheckboxField = dbxForgeFieldFunction<DbxForgeCheckboxField
     }
   })
 }) as DbxForgeFieldFunction<DbxForgeCheckboxFieldConfig, MatCheckboxField>;
+
+// COMPAT: Deprecated aliases
+/**
+ * CSS class applied to forge fields when `styledBox` is enabled.
+ *
+ * @deprecated Boolean fields now use the Material-style form-field wrapper to render the
+ * outlined chrome and standard label/hint/error subscript. Retained as an export for any
+ * consumers still referencing the class name directly.
+ */
+export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';

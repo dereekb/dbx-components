@@ -179,6 +179,16 @@ function getStatementBlockRange(sourceCode: AstNode, statement: AstNode): readon
     end += 1;
   }
 
+  // Also consume up to one immediately-following blank line so that removing several adjacent
+  // blocks does not leave a stack of empty lines behind.
+  let blankProbe = end;
+  while (blankProbe < text.length && (text[blankProbe] === ' ' || text[blankProbe] === '\t')) {
+    blankProbe += 1;
+  }
+  if (blankProbe < text.length && text[blankProbe] === '\n') {
+    end = blankProbe + 1;
+  }
+
   return [startCandidate, end];
 }
 
@@ -233,10 +243,12 @@ function allDeprecatedAtBottom(analyzable: readonly AstNode[], deprecated: reado
  * category is fixed, re-linting will surface the next one.
  *
  * Autofix coverage:
- *   - `missingCompatMarker` — when the deprecated exports are already contiguous at the bottom of
- *     the file, inserts `// COMPAT: Deprecated aliases` just before the first deprecated block.
- *     When deprecated exports are interleaved with non-deprecated ones, no autofix is applied; the
- *     warning remains and the developer must reorder manually.
+ *   - `missingCompatMarker` — inserts `// COMPAT: Deprecated aliases` and consolidates all
+ *     deprecated blocks at the bottom of the file. When the deprecated tail is already at the
+ *     bottom of the file, only the marker line is inserted (no statements are moved). When
+ *     deprecated exports are interleaved with non-deprecated ones, the autofix removes each
+ *     deprecated block from its current location and re-emits them in source order at the bottom
+ *     of the file under the marker.
  *   - `deprecatedAliasNotAtBottom` — moves the misplaced deprecated block from above the marker to
  *     just after the marker. One block per pass; ESLint's autofix loop converges across multiple
  *     violations.
@@ -281,13 +293,36 @@ export const utilRequireDeprecatedAliasPlacementRule: UtilRequireDeprecatedAlias
         if (markerOffset === -1) {
           const firstDeprecated = deprecatedStatements[0];
 
-          // Autofix only when the deprecated tail is already contiguous at the bottom of the file.
-          // Otherwise reordering is required and we leave it to manual cleanup.
           let fixFn: ((fixer: RuleFixer) => unknown) | undefined = undefined;
+
           if (allDeprecatedAtBottom(analyzable, deprecatedStatements)) {
+            // Common case: deprecated statements are already at the bottom; just drop in the
+            // marker comment ahead of the first deprecated block.
             const blockRange = getStatementBlockRange(sourceCode, firstDeprecated);
             const insertionPoint: number = blockRange[0];
             fixFn = (fixer) => fixer.replaceTextRange([insertionPoint, insertionPoint], `${COMPAT_MARKER_LINE}\n`);
+          } else {
+            // Interleaved case: pull every deprecated block out of the file and re-emit them in
+            // source order at EOF, prefixed with the marker. Each removal range is non-overlapping
+            // with the append, so ESLint will accept the combined fix in a single pass.
+            const blockRanges: Array<readonly [number, number]> = [];
+            const blockTexts: string[] = [];
+            for (const stmt of deprecatedStatements) {
+              const range = getStatementBlockRange(sourceCode, stmt);
+              blockRanges.push(range);
+              blockTexts.push(readRange(sourceCode, range));
+            }
+
+            const sourceText: string = sourceCode.text;
+            const eof: number = sourceText.length;
+            const trailingNewline: string = sourceText.endsWith('\n') ? '' : '\n';
+            // Strip trailing newline from each block to control spacing precisely, then re-add
+            // a single newline between blocks. Final block lands without a trailing newline; an
+            // explicit `\n` at the end keeps EOF tidy.
+            const joinedBlocks = blockTexts.map((t) => t.replace(/\n+$/, '')).join('\n\n');
+            const appendText = `${trailingNewline}\n${COMPAT_MARKER_LINE}\n${joinedBlocks}\n`;
+
+            fixFn = (fixer) => [...blockRanges.map((r) => fixer.removeRange(r)), fixer.insertTextAfterRange([eof, eof], appendText)];
           }
 
           context.report({

@@ -192,6 +192,7 @@ export function formlyAddressListField(config: Partial<AddressListFieldConfig> =
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyAddressLineField instead.
  */

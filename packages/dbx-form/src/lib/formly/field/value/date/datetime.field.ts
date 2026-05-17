@@ -275,6 +275,7 @@ export function formlyFixedDateRangeField(config: Partial<FixedDateRangeFieldCon
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTimeOnlyField instead.
  */

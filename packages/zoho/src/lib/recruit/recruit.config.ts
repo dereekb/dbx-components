@@ -81,6 +81,7 @@ export interface ZohoRecruitContextRef {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use ZohoRecruitFetchFactoryParams instead.
  */

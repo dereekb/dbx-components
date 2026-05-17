@@ -165,6 +165,7 @@ export const interceptZohoRecruit200StatusWithErrorResponse = interceptZohoError
 export const handleZohoRecruitErrorFetch = handleZohoErrorFetchFactory(parseZohoRecruitError, logZohoRecruitErrorToConsole);
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use assertZohoRecruitRecordDataArrayResultHasContent instead.
  */

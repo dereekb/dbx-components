@@ -36,6 +36,7 @@ export function formlyTimezoneStringField(config: TimezoneStringFieldConfig = {}
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTimezoneStringField instead.
  */
