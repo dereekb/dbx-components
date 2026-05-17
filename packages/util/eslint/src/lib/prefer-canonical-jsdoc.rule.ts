@@ -3,6 +3,8 @@ import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdo
 
 type AstNode = any;
 
+const TAG_LINE_REGEX = /^@([A-Za-z_][A-Za-z0-9_]*)\s*(.*)$/;
+
 /**
  * Options for the prefer-canonical-jsdoc rule. Each `checkX` flag toggles a related group of
  * messageIds; default is `true` for all checks.
@@ -37,6 +39,13 @@ export interface UtilPreferCanonicalJsdocRuleDefinition {
 }
 
 const DEFAULT_WORKSPACE_TAG_PREFIXES: readonly string[] = ['dbxUtil', 'dbxPipe', 'dbxModel', 'dbxForm', 'dbxAction', 'dbxWeb', 'dbxFilter', 'dbxAuth', 'dbxDocsUiExample', 'dbxRule', 'see'];
+
+/**
+ * MessageIds whose findings are repaired by the comment-level autofix pipeline. `throwsErrorType`
+ * (needs a user-provided error type) and `descriptionTypeRestating` (needs rewording) are
+ * deliberately excluded — they remain report-only.
+ */
+const AUTOFIXABLE_MESSAGE_IDS: ReadonlySet<string> = new Set(['descriptionMissingCapital', 'descriptionMissingPeriod', 'descriptionParagraphSeparator', 'paramHyphen', 'paramDescriptionCapital', 'paramDescriptionPeriod', 'paramOrder', 'returnsNoHyphen', 'returnsDescriptionCapital', 'returnsDescriptionPeriod', 'throwsDescriptionCapital', 'throwsDescriptionPeriod', 'tagOrder', 'exampleFence', 'functionShouldBeMultiline']);
 
 /**
  * Tag-order rank. Lower ranks must appear first in the JSDoc tag list. Unknown tags fall back to
@@ -170,7 +179,7 @@ const TYPE_RESTATING_PATTERNS: readonly RegExp[] = [/^a string\b/i, /^a number\b
 /**
  * Returns the tag-order rank for a parsed tag, using the configured workspace prefixes.
  */
-function rankFor(tag: ParsedJsdocTag, workspacePrefixes: readonly string[]): number {
+function rankFor(tag: Pick<ParsedJsdocTag, 'tag'>, workspacePrefixes: readonly string[]): number {
   let rank: number = TAG_RANK.unknown;
 
   if (tag.tag === 'param') rank = TAG_RANK.param;
@@ -181,6 +190,466 @@ function rankFor(tag: ParsedJsdocTag, workspacePrefixes: readonly string[]): num
   else if (workspacePrefixes.some((p) => tag.tag === p || tag.tag.startsWith(p))) rank = TAG_RANK.workspace;
 
   return rank;
+}
+
+/**
+ * Mutable per-tag view used by the autofix pipeline. Built from a {@link ParsedJsdocTag}, mutated
+ * in place by the normalizers, then re-serialized.
+ */
+interface CanonicalTag {
+  tag: string;
+  type: string | undefined;
+  name: string | undefined;
+  /**
+   * Text that appears on the same line as the `@tag` header, after `@tag {Type} name` has been
+   * stripped. The serializer re-emits the canonical separator (` - ` for `@param`, ` ` otherwise).
+   */
+  headerText: string;
+  /**
+   * Lines that follow the header line, with their leading ` * ` prefix already stripped. Interior
+   * blank lines are preserved (matters for fenced `@example` blocks); trailing blanks are stripped.
+   */
+  continuationLines: string[];
+}
+
+/**
+ * Mutable view of an entire JSDoc comment.
+ */
+interface CanonicalJsdocModel {
+  singleLine: boolean;
+  descriptionParagraphs: string[][];
+  tags: CanonicalTag[];
+}
+
+/**
+ * Returns the leading whitespace before `commentNode.range[0]` on its source line, or null when
+ * the comment is not the first non-whitespace token on its line (inline JSDoc, which we can't
+ * safely rewrite as multi-line).
+ */
+function getCommentLineIndent(sourceText: string, commentNode: AstNode): string | null {
+  let lineStart = commentNode.range[0];
+  while (lineStart > 0 && sourceText.charAt(lineStart - 1) !== '\n') {
+    lineStart -= 1;
+  }
+  const prefix = sourceText.slice(lineStart, commentNode.range[0]);
+  return /^\s*$/.test(prefix) ? prefix : null;
+}
+
+/**
+ * Builds the mutable canonical view from a {@link ParsedJsdoc}. The {@link CanonicalTag} headerText
+ * is recovered from the original tag-line text rather than from `tag.description`, so a tag whose
+ * body starts on a continuation line (e.g. `@example` followed by a fenced block) keeps its
+ * headerText empty.
+ */
+function buildCanonicalModel(parsed: ParsedJsdoc): CanonicalJsdocModel {
+  const descriptionParagraphs: string[][] = parsed.descriptionParagraphs.map((p) => p.split('\n'));
+
+  const tags: CanonicalTag[] = parsed.tags.map((t) => {
+    const firstLineText = t.lines[0]?.text ?? '';
+    let headerText = '';
+    const m = firstLineText.match(TAG_LINE_REGEX);
+
+    if (m) {
+      let remainder = m[2];
+
+      if (t.type !== undefined) {
+        const tm = remainder.match(/^\{[^}]*\}\s*(.*)$/);
+        if (tm) remainder = tm[1];
+      }
+
+      if (t.name !== undefined) {
+        const nm = remainder.match(/^[A-Za-z_$][A-Za-z0-9_$.[\]]*\s*(.*)$/);
+        if (nm) remainder = nm[1];
+      }
+
+      headerText = remainder;
+    }
+
+    const continuationLines = t.lines.slice(1).map((l) => l.text);
+    while (continuationLines.length > 0 && continuationLines[continuationLines.length - 1].trim().length === 0) {
+      continuationLines.pop();
+    }
+
+    return {
+      tag: t.tag,
+      type: t.type,
+      name: t.name,
+      headerText,
+      continuationLines
+    };
+  });
+
+  return {
+    singleLine: parsed.singleLine,
+    descriptionParagraphs,
+    tags
+  };
+}
+
+/**
+ * Rank-bucket for separating tag groups with a blank `* ` line during serialization. Adjacent tags
+ * in the same bucket are emitted with no separator. Buckets: standard (`@param`/`@returns`/`@throws`),
+ * workspace, example, `@__NO_SIDE_EFFECTS__`. Unknown tags share the workspace bucket so a single
+ * mis-named tag doesn't trigger an extra blank line.
+ */
+function bucketFor(tag: CanonicalTag, workspacePrefixes: readonly string[]): number {
+  let bucket: number;
+
+  if (tag.tag === 'param' || tag.tag === 'returns' || tag.tag === 'return' || tag.tag === 'throws') {
+    bucket = 0;
+  } else if (tag.tag === '__NO_SIDE_EFFECTS__') {
+    bucket = 3;
+  } else if (tag.tag === 'example') {
+    bucket = 2;
+  } else if (workspacePrefixes.some((p) => tag.tag === p || tag.tag.startsWith(p))) {
+    bucket = 1;
+  } else {
+    bucket = 1;
+  }
+
+  return bucket;
+}
+
+/**
+ * Serializes a single tag into its rendered lines (text only, no ` * ` prefix). The header line
+ * uses ` - ` after the parameter name for `@param`, a single space for other tags. An empty
+ * `headerText` produces a header line with no trailing content (used by `@example` whose body is
+ * a fenced block on subsequent lines).
+ */
+function serializeTag(tag: CanonicalTag): string[] {
+  let header = '@' + tag.tag;
+
+  if (tag.type !== undefined) {
+    header += ' {' + tag.type + '}';
+  }
+
+  if (tag.name !== undefined) {
+    header += ' ' + tag.name;
+  }
+
+  if (tag.headerText.length > 0) {
+    if (tag.tag === 'param') {
+      header += ' - ' + tag.headerText;
+    } else {
+      header += ' ' + tag.headerText;
+    }
+  }
+
+  return [header, ...tag.continuationLines];
+}
+
+/**
+ * Serializes the canonical model back into a comment-value string (the text between `/*` and
+ * `*\/`). For multi-line output, every content line is prefixed with `${indent} * `; blank
+ * separators use `${indent} *` (no trailing space). For single-line output, the value is `* text `.
+ */
+function serializeJsdocValue(model: CanonicalJsdocModel, indent: string, workspacePrefixes: readonly string[]): string {
+  let result: string;
+
+  if (model.singleLine) {
+    const descText = model.descriptionParagraphs[0]?.join(' ') ?? '';
+    result = '* ' + descText + ' ';
+  } else {
+    const sections: string[][] = [];
+
+    for (const paragraph of model.descriptionParagraphs) {
+      sections.push([...paragraph]);
+    }
+
+    let currentBucket = -1;
+    let currentSection: string[] | null = null;
+
+    for (const tag of model.tags) {
+      const b = bucketFor(tag, workspacePrefixes);
+
+      if (b !== currentBucket) {
+        currentSection = [];
+        sections.push(currentSection);
+        currentBucket = b;
+      }
+
+      currentSection!.push(...serializeTag(tag));
+    }
+
+    const allLines: string[] = [];
+
+    for (let i = 0; i < sections.length; i += 1) {
+      if (i > 0) allLines.push('');
+      allLines.push(...sections[i]);
+    }
+
+    let value = '*';
+
+    for (const line of allLines) {
+      if (line.length === 0) {
+        value += '\n' + indent + ' *';
+      } else {
+        value += '\n' + indent + ' * ' + line;
+      }
+    }
+
+    value += '\n' + indent + ' ';
+    result = value;
+  }
+
+  return result;
+}
+
+const LOWER_LETTER_PATTERN = /[a-z]/;
+
+/**
+ * Returns the offset of the first non-whitespace character of `text`, or -1.
+ */
+function firstNonBlankOffset(text: string): number {
+  let result = -1;
+
+  for (let i = 0; i < text.length; i += 1) {
+    if (!/\s/.test(text.charAt(i))) {
+      result = i;
+      break;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Returns the offset of the last non-whitespace character of `text`, or -1.
+ */
+function lastNonBlankOffset(text: string): number {
+  let result = -1;
+
+  for (let i = text.length - 1; i >= 0; i -= 1) {
+    if (!/\s/.test(text.charAt(i))) {
+      result = i;
+      break;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Capitalizes the first letter of `text` if it's a lowercase ASCII letter. Returns the new string
+ * (or the original when no change is needed).
+ */
+function capitalizeFirstLetter(text: string): string {
+  let result = text;
+  const idx = firstNonBlankOffset(text);
+
+  if (idx !== -1) {
+    const ch = text.charAt(idx);
+    if (LOWER_LETTER_PATTERN.test(ch)) {
+      result = text.slice(0, idx) + ch.toUpperCase() + text.slice(idx + 1);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Appends `.` after the last non-whitespace character of `text` if that character isn't already
+ * terminal punctuation (`.`, `!`, `?`, `}`, `)`, `]`) or a backtick. Returns the new string.
+ */
+function appendTerminalPeriod(text: string): string {
+  let result = text;
+  const idx = lastNonBlankOffset(text);
+
+  if (idx !== -1) {
+    const ch = text.charAt(idx);
+    if (!TERMINAL_PUNCTUATION.has(ch) && ch !== '`') {
+      result = text.slice(0, idx + 1) + '.' + text.slice(idx + 1);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Capitalizes the first non-blank character of the first description paragraph in place. No-op
+ * when the description is empty or doesn't start with a lowercase letter.
+ */
+function normalizeDescriptionCapital(model: CanonicalJsdocModel): void {
+  const para = model.descriptionParagraphs[0];
+
+  if (para && para.length > 0) {
+    para[0] = capitalizeFirstLetter(para[0]);
+  }
+}
+
+/**
+ * Appends terminal punctuation to the last non-blank line of the first description paragraph.
+ */
+function normalizeDescriptionPeriod(model: CanonicalJsdocModel): void {
+  const para = model.descriptionParagraphs[0];
+
+  if (para && para.length > 0) {
+    for (let i = para.length - 1; i >= 0; i -= 1) {
+      if (para[i].trim().length > 0) {
+        para[i] = appendTerminalPeriod(para[i]);
+        break;
+      }
+    }
+  }
+}
+
+/**
+ * Strips a leading `- ` (and variants like `: `) from the headerText of `@param` tags so the
+ * serializer can canonically re-add the ` - ` separator. Idempotent.
+ */
+function normalizeParamHyphen(tag: CanonicalTag): void {
+  if (tag.tag === 'param') {
+    tag.headerText = tag.headerText.replace(/^[-:]\s+/, '');
+  }
+}
+
+/**
+ * Strips a leading `- ` from the headerText of `@returns`/`@return` tags. The canonical form is
+ * `@returns Description.` without a hyphen.
+ */
+function normalizeReturnsHyphen(tag: CanonicalTag): void {
+  if (tag.tag === 'returns' || tag.tag === 'return') {
+    tag.headerText = tag.headerText.replace(/^-\s+/, '');
+  }
+}
+
+/**
+ * Capitalizes the first letter of the tag's first description line (headerText, or the first
+ * continuation line when headerText is empty). Applied only to `@param`/`@returns`/`@throws`.
+ */
+function normalizeTagDescriptionCapital(tag: CanonicalTag): void {
+  if (tag.tag === 'param' || tag.tag === 'returns' || tag.tag === 'return' || tag.tag === 'throws') {
+    if (tag.headerText.trim().length > 0) {
+      tag.headerText = capitalizeFirstLetter(tag.headerText);
+    } else {
+      for (let i = 0; i < tag.continuationLines.length; i += 1) {
+        if (tag.continuationLines[i].trim().length > 0) {
+          tag.continuationLines[i] = capitalizeFirstLetter(tag.continuationLines[i]);
+          break;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Appends terminal punctuation to the last non-blank line of the tag body. Applied to
+ * `@param`/`@returns`/`@throws`.
+ */
+function normalizeTagDescriptionPeriod(tag: CanonicalTag): void {
+  if (tag.tag === 'param' || tag.tag === 'returns' || tag.tag === 'return' || tag.tag === 'throws') {
+    let mutated = false;
+
+    for (let i = tag.continuationLines.length - 1; i >= 0; i -= 1) {
+      if (tag.continuationLines[i].trim().length > 0) {
+        tag.continuationLines[i] = appendTerminalPeriod(tag.continuationLines[i]);
+        mutated = true;
+        break;
+      }
+    }
+
+    if (!mutated && tag.headerText.trim().length > 0) {
+      tag.headerText = appendTerminalPeriod(tag.headerText);
+    }
+  }
+}
+
+/**
+ * Wraps the body of an `@example` tag in a triple-backtick `ts` fenced block when it isn't
+ * already fenced. No-op when the body is empty or already opens with ` ``` `.
+ */
+function normalizeExampleFence(tag: CanonicalTag): void {
+  if (tag.tag === 'example') {
+    const bodyLines: string[] = [];
+
+    if (tag.headerText.length > 0) bodyLines.push(tag.headerText);
+    for (const line of tag.continuationLines) bodyLines.push(line);
+
+    let firstNonBlank: string | null = null;
+    for (const line of bodyLines) {
+      if (line.trim().length > 0) {
+        firstNonBlank = line;
+        break;
+      }
+    }
+
+    if (firstNonBlank !== null && !firstNonBlank.trimStart().startsWith('```')) {
+      const content: string[] = [];
+      for (const line of bodyLines) {
+        if (line.trim().length > 0) content.push(line);
+      }
+
+      tag.headerText = '';
+      tag.continuationLines = ['```ts', ...content, '```'];
+    }
+  }
+}
+
+/**
+ * Stable-sorts the model's tags by canonical rank, then reorders `@param` tags to match the
+ * declared parameter signature when `functionNode` is provided.
+ */
+function normalizeTagOrder(model: CanonicalJsdocModel, functionNode: AstNode | null, workspacePrefixes: readonly string[]): void {
+  const indexed = model.tags.map((tag, index) => ({ tag, index, rank: rankFor(tag, workspacePrefixes) }));
+  indexed.sort((a, b) => a.rank - b.rank || a.index - b.index);
+
+  if (functionNode && Array.isArray(functionNode.params)) {
+    const declared: string[] = [];
+    for (const param of functionNode.params) {
+      const name = extractParamName(param);
+      if (typeof name === 'string') declared.push(name);
+    }
+
+    if (declared.length > 0) {
+      const paramSlots: number[] = [];
+      const paramEntries: typeof indexed = [];
+
+      for (let i = 0; i < indexed.length; i += 1) {
+        if (indexed[i].tag.tag === 'param') {
+          paramSlots.push(i);
+          paramEntries.push(indexed[i]);
+        }
+      }
+
+      paramEntries.sort((a, b) => {
+        const ai = a.tag.name === undefined ? -1 : declared.indexOf(a.tag.name);
+        const bi = b.tag.name === undefined ? -1 : declared.indexOf(b.tag.name);
+        const aRank = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+        const bRank = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+        return aRank - bRank || a.index - b.index;
+      });
+
+      for (let i = 0; i < paramSlots.length; i += 1) {
+        indexed[paramSlots[i]] = paramEntries[i];
+      }
+    }
+  }
+
+  model.tags = indexed.map((e) => e.tag);
+}
+
+/**
+ * Applies every in-place normalization to the canonical model. The order matters in two places:
+ * the hyphen strips must run before the description-capital normalization (otherwise a leading
+ * `- ` would block capitalization), and tag reordering runs last so it operates on already-fixed
+ * tags. The pipeline is idempotent: a second pass on a fully-canonical model is a no-op.
+ */
+function applyCanonicalNormalizations(model: CanonicalJsdocModel, functionNode: AstNode | null, workspacePrefixes: readonly string[], forceMultiline: boolean): void {
+  if (forceMultiline) {
+    model.singleLine = false;
+  }
+
+  for (const tag of model.tags) {
+    normalizeParamHyphen(tag);
+    normalizeReturnsHyphen(tag);
+    normalizeTagDescriptionCapital(tag);
+    normalizeTagDescriptionPeriod(tag);
+    normalizeExampleFence(tag);
+  }
+
+  normalizeDescriptionCapital(model);
+  normalizeDescriptionPeriod(model);
+  normalizeTagOrder(model, functionNode, workspacePrefixes);
 }
 
 /**
@@ -262,23 +731,44 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
     const checkSingleLine = options.checkSingleLine !== false;
     const workspacePrefixes = options.workspaceTagPrefixes ?? DEFAULT_WORKSPACE_TAG_PREFIXES;
 
+    /**
+     * Per-comment scratch state for the autofix. `commentFix` holds the lazily-computed rewrite
+     * for the current comment (null when the comment is already canonical); `commentFixAttached`
+     * tracks whether we've already attached it to a report so we don't emit duplicate fixes.
+     */
+    let commentFix: ((fixer: AstNode) => AstNode | null) | null = null;
+    let commentFixAttached = false;
+
+    function takeCommentFix(): ((fixer: AstNode) => AstNode | null) | undefined {
+      let result: ((fixer: AstNode) => AstNode | null) | undefined;
+
+      if (commentFix && !commentFixAttached) {
+        commentFixAttached = true;
+        result = commentFix;
+      }
+
+      return result;
+    }
+
     function reportRangeMessage(commentNode: AstNode, parsed: ParsedJsdoc, messageId: string, lineIndex: number, data?: Record<string, string>): void {
       const line = parsed.lines[lineIndex];
       const startInValue = line?.textOffsetStart ?? 0;
       const endInValue = startInValue + (line?.text?.length ?? 0);
       const start = commentValueToSourceOffset(commentNode, startInValue);
       const end = commentValueToSourceOffset(commentNode, endInValue);
+      const fix = AUTOFIXABLE_MESSAGE_IDS.has(messageId) ? takeCommentFix() : undefined;
       context.report({
         loc: {
           start: sourceCode.getLocFromIndex(start),
           end: sourceCode.getLocFromIndex(end)
         },
         messageId,
-        data
+        data,
+        fix
       });
     }
 
-    function checkParamFormat(commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag, sourceText: string): void {
+    function checkParamFormat(commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag): void {
       const paramLineText = parsed.lines[tag.startLineIndex].text;
       const name = tag.name ?? '<unknown>';
 
@@ -298,16 +788,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
           reportRangeMessage(commentNode, parsed, 'paramDescriptionCapital', tag.startLineIndex, { name });
         }
         if (!endsCanonically(trimmed)) {
-          const fix = buildAppendPeriodFix(commentNode, parsed, tag, sourceText);
-          context.report({
-            loc: {
-              start: sourceCode.getLocFromIndex(commentValueToSourceOffset(commentNode, parsed.lines[tag.startLineIndex].textOffsetStart)),
-              end: sourceCode.getLocFromIndex(commentValueToSourceOffset(commentNode, parsed.lines[tag.endLineIndex].textOffsetStart + parsed.lines[tag.endLineIndex].text.length))
-            },
-            messageId: 'paramDescriptionPeriod',
-            data: { name },
-            fix
-          });
+          reportRangeMessage(commentNode, parsed, 'paramDescriptionPeriod', tag.startLineIndex, { name });
         }
 
         if (checkTypeRestating && TYPE_RESTATING_PATTERNS.some((re) => re.test(trimmed))) {
@@ -316,30 +797,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       }
     }
 
-    function buildAppendPeriodFix(commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag, sourceText: string): (fixer: AstNode) => AstNode | null {
-      return (fixer: AstNode) => {
-        let fixResult: AstNode | null = null;
-        const lastLine = parsed.lines[tag.endLineIndex];
-
-        if (lastLine && lastLine.text.trim().length !== 0) {
-          const charPos = lastNonBlankCharIndex(lastLine.text);
-
-          if (charPos !== -1) {
-            const ch = lastLine.text.charAt(charPos);
-
-            if (!TERMINAL_PUNCTUATION.has(ch) && ch !== '`') {
-              const insertAt = commentValueToSourceOffset(commentNode, lastLine.textOffsetStart + charPos + 1);
-              void sourceText; // referenced for symmetry with other fixers
-              fixResult = fixer.insertTextAfterRange([insertAt, insertAt], '.');
-            }
-          }
-        }
-
-        return fixResult;
-      };
-    }
-
-    function checkReturnsFormat(commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag, sourceText: string): void {
+    function checkReturnsFormat(commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag): void {
       const description = tag.description;
       const trimmed = description.trimStart();
 
@@ -355,15 +813,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
         reportRangeMessage(commentNode, parsed, 'returnsDescriptionCapital', tag.startLineIndex);
       }
       if (!endsCanonically(checkedDescription)) {
-        const fix = buildAppendPeriodFix(commentNode, parsed, tag, sourceText);
-        context.report({
-          loc: {
-            start: sourceCode.getLocFromIndex(commentValueToSourceOffset(commentNode, parsed.lines[tag.startLineIndex].textOffsetStart)),
-            end: sourceCode.getLocFromIndex(commentValueToSourceOffset(commentNode, parsed.lines[tag.endLineIndex].textOffsetStart + parsed.lines[tag.endLineIndex].text.length))
-          },
-          messageId: 'returnsDescriptionPeriod',
-          fix
-        });
+        reportRangeMessage(commentNode, parsed, 'returnsDescriptionPeriod', tag.startLineIndex);
       }
       if (checkTypeRestating && TYPE_RESTATING_PATTERNS.some((re) => re.test(checkedDescription))) {
         reportRangeMessage(commentNode, parsed, 'descriptionTypeRestating', tag.startLineIndex);
@@ -396,7 +846,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       }
     }
 
-    function checkTags(commentNode: AstNode, parsed: ParsedJsdoc, sourceText: string, functionNode: AstNode | null): void {
+    function checkTags(commentNode: AstNode, parsed: ParsedJsdoc, functionNode: AstNode | null): void {
       // Tag ordering
       if (checkTagOrder) {
         let lastRank = -Infinity;
@@ -415,7 +865,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
 
       if (checkParam) {
         for (const tag of paramTags) {
-          checkParamFormat(commentNode, parsed, tag, sourceText);
+          checkParamFormat(commentNode, parsed, tag);
         }
 
         if (functionNode && Array.isArray(functionNode.params) && paramTags.length > 0) {
@@ -433,7 +883,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       if (checkReturns) {
         for (const tag of parsed.tags) {
           if (tag.tag === 'returns' || tag.tag === 'return') {
-            checkReturnsFormat(commentNode, parsed, tag, sourceText);
+            checkReturnsFormat(commentNode, parsed, tag);
           }
         }
       }
@@ -510,12 +960,29 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       const sourceText = sourceCode.getText();
       const functionNode = functionLikeFromAnchor(anchor);
 
+      // Compute the comment-level autofix once per JSDoc. `reportRangeMessage` consumes it for
+      // the first autofixable finding so ESLint applies a single rewrite per comment per pass.
+      commentFix = null;
+      commentFixAttached = false;
+      const indent = getCommentLineIndent(sourceText, commentNode);
+      const wantsMultiline = !!(checkSingleLine && parsed.singleLine && functionNode && Array.isArray(functionNode.params) && functionNode.params.length > 0);
+
+      if (indent !== null) {
+        const model = buildCanonicalModel(parsed);
+        applyCanonicalNormalizations(model, functionNode, workspacePrefixes, wantsMultiline);
+        const newValue = serializeJsdocValue(model, indent, workspacePrefixes);
+
+        if (newValue !== commentNode.value) {
+          commentFix = (fixer: AstNode) => fixer.replaceTextRange(commentNode.range, '/*' + newValue + '*/');
+        }
+      }
+
       if (checkSingleLine && parsed.singleLine && functionNode && Array.isArray(functionNode.params) && functionNode.params.length > 0) {
         reportRangeMessage(commentNode, parsed, 'functionShouldBeMultiline', 0);
       }
 
       checkDescriptionBlock(commentNode, parsed);
-      checkTags(commentNode, parsed, sourceText, functionNode);
+      checkTags(commentNode, parsed, functionNode);
     }
 
     function leadingJsdocFor(node: AstNode): AstNode | null {

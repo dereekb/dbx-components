@@ -28,6 +28,12 @@ function lintCode(code: string, options?: Record<string, unknown>): Linter.LintM
   return linter.verify(code, buildConfig(options), { filename: 'test.ts' }).filter((m) => m.ruleId === 'dereekb-util/prefer-canonical-jsdoc');
 }
 
+function fixCode(code: string, options?: Record<string, unknown>): string {
+  const linter = new Linter({ configType: 'flat' });
+  const result = linter.verifyAndFix(code, buildConfig(options), { filename: 'test.ts' });
+  return result.output;
+}
+
 function messagesById(messages: Linter.LintMessage[]): Record<string, number> {
   const out: Record<string, number> = {};
   for (const m of messages) {
@@ -373,6 +379,289 @@ function foo(x: number): number { return x + 1; }
 function greet(): void { console.log('hi'); }
 `);
       expect(messagesById(errors).functionShouldBeMultiline ?? 0).toBe(0);
+    });
+  });
+
+  describe('autofix', () => {
+    it('appends terminal punctuation to description', () => {
+      const output = fixCode(`
+/**
+ * Adds one to the input
+ *
+ * @param x - The value.
+ * @returns The result.
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain('Adds one to the input.');
+    });
+
+    it('capitalizes the description first letter', () => {
+      const output = fixCode(`
+/**
+ * adds one to the input.
+ *
+ * @param x - The value.
+ * @returns The result.
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain(' * Adds one to the input.');
+    });
+
+    it('collapses runs of blank description-separator lines to one', () => {
+      const output = fixCode(`
+/**
+ * First paragraph.
+ *
+ *
+ * Second paragraph.
+ *
+ * @param x - The value.
+ * @returns The result.
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      // No two consecutive blank ` * ` lines should remain.
+      expect(/\n \*\n \*\n/.test(output)).toBe(false);
+      expect(output).toContain('First paragraph.');
+      expect(output).toContain('Second paragraph.');
+    });
+
+    it('inserts the canonical hyphen between @param name and description', () => {
+      const output = fixCode(`
+/**
+ * Adds one.
+ *
+ * @param x the input value.
+ * @returns The result.
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain('@param x - The input value.');
+    });
+
+    it('capitalizes @param description first letter', () => {
+      const output = fixCode(`
+/**
+ * Adds one.
+ *
+ * @param x - the input value.
+ * @returns The result.
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain('@param x - The input value.');
+    });
+
+    it('appends terminal punctuation to @param description', () => {
+      const output = fixCode(`
+/**
+ * Adds one.
+ *
+ * @param x - The input value
+ * @returns The result.
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain('@param x - The input value.');
+    });
+
+    it('reorders @param tags to match the declared signature', () => {
+      const output = fixCode(`
+/**
+ * Adds two numbers.
+ *
+ * @param b - Second.
+ * @param a - First.
+ * @returns The sum.
+ */
+function foo(a: number, b: number): number { return a + b; }
+`);
+      const aIdx = output.indexOf('@param a');
+      const bIdx = output.indexOf('@param b');
+      expect(aIdx).toBeGreaterThan(-1);
+      expect(bIdx).toBeGreaterThan(-1);
+      expect(aIdx).toBeLessThan(bIdx);
+    });
+
+    it('strips the leading `- ` from @returns', () => {
+      const output = fixCode(`
+/**
+ * Adds one.
+ *
+ * @param x - The value.
+ * @returns - The result.
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain('@returns The result.');
+      expect(output).not.toContain('@returns -');
+    });
+
+    it('capitalizes @returns description first letter', () => {
+      const output = fixCode(`
+/**
+ * Adds one.
+ *
+ * @param x - The value.
+ * @returns the result.
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain('@returns The result.');
+    });
+
+    it('appends terminal punctuation to @returns description', () => {
+      const output = fixCode(`
+/**
+ * Adds one.
+ *
+ * @param x - The value.
+ * @returns The result
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain('@returns The result.');
+    });
+
+    it('capitalizes @throws description first letter', () => {
+      const output = fixCode(`
+/**
+ * Asserts non-empty.
+ *
+ * @param x - The value.
+ * @returns The value.
+ * @throws {TypeError} if the input is empty.
+ */
+function foo(x: string): string { return x; }
+`);
+      expect(output).toContain('@throws {TypeError} If the input is empty.');
+    });
+
+    it('appends terminal punctuation to @throws description', () => {
+      const output = fixCode(`
+/**
+ * Asserts non-empty.
+ *
+ * @param x - The value.
+ * @returns The value.
+ * @throws {TypeError} If the input is empty
+ */
+function foo(x: string): string { return x; }
+`);
+      expect(output).toContain('@throws {TypeError} If the input is empty.');
+    });
+
+    it('reorders tags into canonical bucket order', () => {
+      const output = fixCode(`
+/**
+ * Adds one.
+ *
+ * @param x - The value.
+ * @throws {Error} On error.
+ * @returns The result.
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      const paramIdx = output.indexOf('@param');
+      const returnsIdx = output.indexOf('@returns');
+      const throwsIdx = output.indexOf('@throws');
+      expect(paramIdx).toBeLessThan(returnsIdx);
+      expect(returnsIdx).toBeLessThan(throwsIdx);
+    });
+
+    it('wraps an unfenced @example body in a ```ts fence', () => {
+      const output = fixCode(`
+/**
+ * Adds one.
+ *
+ * @param x - The value.
+ * @returns The result.
+ *
+ * @example foo(1)
+ */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain('@example');
+      expect(output).toMatch(/\* ```ts\n \* foo\(1\)\n \* ```/);
+    });
+
+    it('converts a single-line JSDoc to multi-line when the function has parameters', () => {
+      const output = fixCode(`/** Adds one. */
+function foo(x: number): number { return x + 1; }
+`);
+      expect(output).toContain('/**\n');
+      expect(output).toContain(' * Adds one.');
+      expect(output).toMatch(/\*\/\nfunction foo/);
+    });
+
+    it('leaves a canonical JSDoc untouched', () => {
+      const input = `
+/**
+ * Reduces an array of booleans with the logical AND operation.
+ *
+ * @param array - Array of boolean values to reduce.
+ * @param emptyArrayValue - Value to return if the array is empty.
+ * @returns The result of ANDing all boolean values in the array.
+ *
+ * @example
+ * \`\`\`ts
+ * reduceBooleansWithAnd([true, true]);
+ * \`\`\`
+ */
+function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolean): boolean {
+  let result = false;
+  return result;
+}
+`;
+      expect(fixCode(input)).toBe(input);
+    });
+
+    it('does not autofix @throws missing {ErrorType} braces', () => {
+      const input = `
+/**
+ * Asserts non-empty.
+ *
+ * @param x - The value.
+ * @returns The value.
+ * @throws If the input is empty.
+ */
+function foo(x: string): string { return x; }
+`;
+      const output = fixCode(input);
+      expect(output).toContain('@throws If the input is empty.');
+      expect(output).not.toContain('@throws {');
+    });
+
+    it('does not autofix descriptionTypeRestating phrasing', () => {
+      const input = `
+/**
+ * Builds entries.
+ *
+ * @param n - Count.
+ * @returns An array of entries.
+ */
+function foo(n: number): number[] { return []; }
+`;
+      const output = fixCode(input);
+      expect(output).toContain('@returns An array of entries.');
+    });
+
+    it('fixes a fully non-canonical JSDoc end-to-end', () => {
+      const output = fixCode(`
+/**
+ * adds two numbers
+ *
+ * @param b the second value
+ * @param a - the first value
+ * @returns - the result
+ */
+function foo(a: number, b: number): number { return a + b; }
+`);
+      expect(output).toContain(' * Adds two numbers.');
+      expect(output).toMatch(/@param a - The first value\.\s+\* @param b - The second value\./);
+      expect(output).toContain('@returns The result.');
     });
   });
 });
