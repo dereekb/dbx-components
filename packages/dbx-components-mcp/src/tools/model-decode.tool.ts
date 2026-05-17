@@ -96,7 +96,7 @@ function coerceToDocument(data: unknown): Document {
       parsed = JSON.parse(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      throw new Error(`Input data is a string but not valid JSON: ${message}`);
+      throw new Error(`Input data is a string but not valid JSON: ${message}`, { cause: err });
     }
   }
   if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
