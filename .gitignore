@@ -85,3 +85,6 @@ setup/.tmp
 .claude/worktrees
 .agents
 scheduled_tasks.lock
+
+# dbx-cli-lint-cache output
+.lint-cache/
