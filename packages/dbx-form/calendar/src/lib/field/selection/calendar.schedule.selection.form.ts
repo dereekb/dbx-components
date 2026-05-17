@@ -18,7 +18,7 @@ export function dbxScheduleSelectionCalendarDateDaysFormFields() {
 /**
  * Creates an array of toggle field configs, one for each day of the week, keyed by lowercase day name.
  *
- * @returns An array of toggle Formly field configs for each day of the week.
+ * @returns The toggle Formly field configs for each day of the week.
  *
  * @deprecated Use forge toggle fields directly.
  */

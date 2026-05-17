@@ -154,8 +154,8 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
    * @param type - The model type string (e.g., 'profile', 'guestbook').
    * @param select - Selection params including key, roles, and optional use function.
    * @returns The result of the `use` function, or the roles reader if no `use` function is provided.
-   * @throws Throws {@link nestFirebaseDoesNotExistError} if the document does not exist.
-   * @throws Throws {@link nestFirebaseForbiddenPermissionError} if the caller lacks the requested roles.
+   * @throws {Error} Throws {@link nestFirebaseDoesNotExistError} if the document does not exist.
+   * @throws {Error} Throws {@link nestFirebaseForbiddenPermissionError} if the caller lacks the requested roles.
    */
   async useModel<T extends FirebaseModelsServiceTypes<Y>, O>(type: T, select: UseModelInput<FirebaseAppModelContext<A>, Y, T, O>): Promise<O>;
   async useModel<T extends FirebaseModelsServiceTypes<Y>>(type: T, select: UseModelInputForRolesReader<FirebaseAppModelContext<A>, Y, T>): Promise<FirebaseModelsServiceSelectionResultRolesReader<Y, T>>;

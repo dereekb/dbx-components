@@ -13,7 +13,7 @@ export abstract class DbxPromptConfirm {
  * Provides a {@link DbxPromptConfirm} implementation for dependency injection.
  *
  * @param sourceType - The concrete class that implements {@link DbxPromptConfirm}
- * @returns An array of providers that register the given type as the {@link DbxPromptConfirm} implementation.
+ * @returns The providers that register the given type as the {@link DbxPromptConfirm} implementation.
  *
  * @Directive ({ providers: provideDbxPromptConfirm(MyConfirmDirective) })
  * ```

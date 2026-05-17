@@ -36,7 +36,7 @@ export enum DbxDateTimeValueMode {
  *
  * @param mode - Determines how the input value is interpreted.
  * @param timezoneInstance - Optional timezone converter for UTC-normal date handling.
- * @returns A function that parses input values to Date objects.
+ * @returns Parses input values to Date objects.
  *
  * @example
  * ```typescript
@@ -125,7 +125,7 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
  *
  * @param mode - Determines the output format.
  * @param timezoneInstance - Optional timezone converter for UTC-normal date handling.
- * @returns A function that formats Date objects to the target output type.
+ * @returns Formats Date objects to the target output type.
  *
  * @example
  * ```typescript

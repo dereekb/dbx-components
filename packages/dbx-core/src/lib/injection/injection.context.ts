@@ -59,7 +59,7 @@ export abstract class DbxInjectionContext {
    * @typeParam T - The type of the injected component.
    * @typeParam O - The return type of the `use` promise.
    * @param config - The context configuration describing the component and usage callback.
-   * @returns A promise that resolves with the value from `config.use`.
+   * @returns Resolves to the value from `config.use`.
    */
   abstract showContext<T = unknown, O = unknown>(config: DbxInjectionContextConfig<T>): Promise<O>;
 

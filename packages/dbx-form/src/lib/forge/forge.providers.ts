@@ -174,7 +174,7 @@ export const DBX_FORGE_FIELD_WRAPPER_TYPES: WrapperTypeDefinition[] = [
  * Add this to your app's providers alongside provideDbxFormConfiguration().
  *
  * @param additionalFieldTypes - Extra field type definitions from extension packages to register alongside the built-in types.
- * @returns An array of providers that register all forge field types with ng-forge's dynamic form system.
+ * @returns The providers that register all forge field types with ng-forge's dynamic form system.
  *
  * @example
  * ```typescript

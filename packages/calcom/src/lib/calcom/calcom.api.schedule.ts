@@ -27,7 +27,7 @@ export interface CalcomGetSchedulesResponse {
  * Retrieves all schedules for the authenticated user, including availability rules and overrides.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that retrieves all schedules.
+ * @returns Retrieves all schedules.
  *
  * @see https://cal.com/docs/api-reference/v2/schedules/get-all-schedules
  *

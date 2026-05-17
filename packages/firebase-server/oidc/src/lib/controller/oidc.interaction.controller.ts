@@ -45,7 +45,7 @@ export class OidcInteractionController {
    * @param req - The incoming Express request.
    * @param res - The Express response used for redirecting.
    * @returns A redirect response to the appropriate frontend page.
-   * @throws {HttpException} 404 when the interaction UID is not found or has expired.
+   * @throws {HttpException} HTTP 404 when the interaction UID is not found or has expired.
    */
   @Get(':uid')
   async getInteraction(@Param('uid') uid: OidcInteractionUid, @Req() req: Request, @Res() res: Response) {
@@ -69,8 +69,8 @@ export class OidcInteractionController {
    * @param uid - The interaction UID from the URL path.
    * @param body - The login request containing the Firebase ID token.
    * @param res - The Express response used for sending JSON.
-   * @throws {HttpException} 401 when the Firebase ID token is invalid.
-   * @throws {HttpException} 400 when the login interaction cannot be completed.
+   * @throws {HttpException} HTTP 401 when the Firebase ID token is invalid.
+   * @throws {HttpException} HTTP 400 when the login interaction cannot be completed.
    */
   @Post(':uid/login')
   @HttpCode(HttpStatus.OK)
@@ -101,7 +101,7 @@ export class OidcInteractionController {
    * @param uid - The interaction UID from the URL path.
    * @param body - The consent request containing approval decision and Firebase ID token.
    * @param res - The Express response used for sending JSON.
-   * @throws {HttpException} 400 when the consent interaction cannot be completed.
+   * @throws {HttpException} HTTP 400 when the consent interaction cannot be completed.
    */
   @Post(':uid/consent')
   @HttpCode(HttpStatus.OK)
@@ -218,7 +218,7 @@ export class OidcInteractionController {
    *
    * @param idToken - The Firebase Auth ID token to verify.
    * @returns The user's UID extracted from the decoded token.
-   * @throws {HttpException} 401 when the token is invalid or expired.
+   * @throws {HttpException} HTTP 401 when the token is invalid or expired.
    */
   private async _verifyIdToken(idToken: string): Promise<string> {
     try {

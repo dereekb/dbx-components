@@ -14,7 +14,7 @@ export type GetListFunction = (input: GetListInput) => Promise<TrelloList>;
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-lists/#api-lists-id-get.
  *
  * @param context - The Trello API context.
- * @returns A function that retrieves a list by id.
+ * @returns Retrieves a list by id.
  */
 export function getList(context: TrelloContext): GetListFunction {
   return (input) => context.fetchJson(`/lists/${input.listId}`, 'GET');
@@ -26,7 +26,7 @@ export type CreateListFunction = (input: CreateListBody) => Promise<TrelloList>;
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-lists/#api-lists-post.
  *
  * @param context - The Trello API context.
- * @returns A function that creates a new list on a board.
+ * @returns Creates a new list on a board.
  */
 export function createList(context: TrelloContext): CreateListFunction {
   return (input) => {
@@ -45,7 +45,7 @@ export type UpdateListFunction = (input: UpdateListInput) => Promise<TrelloList>
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-lists/#api-lists-id-put.
  *
  * @param context - The Trello API context.
- * @returns A function that updates an existing list.
+ * @returns Updates an existing list.
  */
 export function updateList(context: TrelloContext): UpdateListFunction {
   return (input) => {
@@ -65,7 +65,7 @@ export type ListCardsInListFunction = (input: ListCardsInListInput) => Promise<R
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-lists/#api-lists-id-cards-get.
  *
  * @param context - The Trello API context.
- * @returns A function that lists all cards on a list.
+ * @returns Lists all cards on a list.
  */
 export function listCardsInList(context: TrelloContext): ListCardsInListFunction {
   return (input) => {

@@ -135,7 +135,7 @@ export interface InitializeStorageFileModelInTransactionInput<D extends Firestor
  *
  * @param input - The document, transaction, template function, and options.
  * @returns An object indicating whether the document was initialized or was already initialized.
- * @throws StorageFileModelAlreadyInitializedError when `throwErrorIfAlreadyInitialized` is true.
+ * @throws {Error} StorageFileModelAlreadyInitializedError when `throwErrorIfAlreadyInitialized` is true.
  */
 export async function initializeStorageFileModelInTransaction<D extends FirestoreDocument<InitializedStorageFileModel>>(input: InitializeStorageFileModelInTransactionInput<D>) {
   const { makeTemplateFunction, throwErrorIfAlreadyInitialized, transaction, document: documentInTransaction, data: storageFileModel } = input;

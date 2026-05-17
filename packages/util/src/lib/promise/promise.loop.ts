@@ -136,7 +136,7 @@ export interface PerformMakeLoopConfig<O> {
  * Each iteration receives the current index and the array of items created so far.
  *
  * @param config - Configuration with the make function and count.
- * @returns An array of all created items.
+ * @returns The all created items.
  */
 export function performMakeLoop<O>(config: PerformMakeLoopConfig<O>): Promise<O[]> {
   return performTaskCountLoop<O[]>({

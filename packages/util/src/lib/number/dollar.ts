@@ -119,7 +119,7 @@ export type DollarAmountStringWithUnitFunction<U extends DollarAmountUnit> = ((a
  * Creates a function that formats dollar amounts as strings with a unit prefix (e.g., "$12.50").
  *
  * @param unit - The unit prefix to prepend; defaults to "$".
- * @returns A function that formats dollar amounts with the configured unit.
+ * @returns Formats dollar amounts with the configured unit.
  *
  * @dbxUtil
  * @dbxUtilCategory number

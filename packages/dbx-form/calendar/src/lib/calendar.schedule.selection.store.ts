@@ -1270,7 +1270,7 @@ export function finalizeNewCalendarScheduleSelectionState(nextState: Building<Ca
  * Builds a decision function that determines whether a given day index is enabled (selected) in the current state.
  *
  * @param state - The selection state to derive the enabled-day function from.
- * @returns A function that returns true if the given day is enabled/selected.
+ * @returns Returns true if the given day is enabled/selected.
  */
 export function isEnabledDayInCalendarScheduleSelectionState(state: CalendarScheduleSelectionState): DecisionFunction<DateCellTimingRelativeIndexFactoryInput> {
   const { allowedDaysOfWeek, indexFactory, inputStart, inputEnd, indexDayOfWeek, systemTimezone } = state;

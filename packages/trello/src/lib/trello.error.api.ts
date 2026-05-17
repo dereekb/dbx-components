@@ -75,7 +75,7 @@ export type LogTrelloServerErrorFunction = (error: FetchRequestFactoryError | Tr
  * Creates a logTrelloServerErrorFunction that logs the error to console.
  *
  * @param trelloApiNamePrefix - Prefix to use when logging.
- * @returns A function that logs Trello server errors to the console.
+ * @returns Logs Trello server errors to the console.
  *
  * @__NO_SIDE_EFFECTS__
  */

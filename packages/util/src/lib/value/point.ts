@@ -289,7 +289,7 @@ export type LatLngTupleFunctionConfig = LatLngPointFunctionConfig;
  * applying optional precision configuration.
  *
  * @param config - Optional configuration for precision and wrapping behavior.
- * @returns A function that produces lat/lng tuples from flexible inputs.
+ * @returns Produces lat/lng tuples from flexible inputs.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -439,7 +439,7 @@ export type LatLngPointPrecisionFunction = (latLngPoint: LatLngPoint) => LatLngP
  *
  * @param precision - Number of decimal places to retain.
  * @param precisionRounding - Optional rounding strategy (e.g., floor, ceil, round)
- * @returns A function that rounds points to the given precision.
+ * @returns Rounds points to the given precision.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -471,7 +471,7 @@ export type LatLngStringFunctionConfig = LatLngPointFunctionConfig;
  * applying optional precision configuration.
  *
  * @param config - Optional configuration for precision and wrapping behavior.
- * @returns A function that produces lat/lng strings from flexible inputs.
+ * @returns Produces lat/lng strings from flexible inputs.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -550,7 +550,7 @@ export function latLngPoint(lat: LatLngPointInput, lng?: Longitude): LatLngPoint
  * into a {@link LatLngPoint}, with configurable precision, wrapping, and validation.
  *
  * @param config - Optional configuration for precision, wrapping, validation, and tuple ordering.
- * @returns A function that produces points from flexible inputs.
+ * @returns Produces points from flexible inputs.
  * @throws {Error} When the input cannot be parsed into a valid point.
  *
  * @dbxUtil
@@ -697,7 +697,7 @@ export type LatLngDataPointFunction<T extends LatLngRef> = (data: T) => LatLngDa
  * Creates a {@link LatLngDataPointFunction} that wraps a {@link LatLngRef} object with its resolved point coordinates.
  *
  * @param config - Optional configuration for precision and wrapping behavior.
- * @returns A function that produces data points from lat/lng references.
+ * @returns Produces data points from lat/lng references.
  *
  * @dbxUtil
  * @dbxUtilCategory value

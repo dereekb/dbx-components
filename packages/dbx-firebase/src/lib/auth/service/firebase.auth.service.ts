@@ -364,7 +364,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    * Sends a password reset email to the given address via the configured delegate.
    *
    * @param email - The email address to send the reset to.
-   * @returns A promise that resolves when the email has been sent.
+   * @returns Resolves when the email has been sent.
    *
    * @example
    * ```ts
@@ -379,7 +379,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    * Completes a password reset using the verification code and new password via the configured delegate.
    *
    * @param input - The verification code and new password.
-   * @returns A promise that resolves when the password has been reset.
+   * @returns Resolves when the password has been reset.
    *
    * @example
    * ```ts
@@ -392,7 +392,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
 
   /**
    * @param email - The email address to send the reset to.
-   * @returns A promise that resolves when the email has been sent.
+   * @returns Resolves when the email has been sent.
    *
    * @deprecated use {@link sendPasswordReset} instead, which delegates to the configured
    * {@link DbxFirebaseAuthServiceDelegate.sendPasswordReset} implementation.

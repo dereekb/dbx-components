@@ -5,7 +5,7 @@ import { exploreTreeFunction, type ExploreTreeFunctionConfig, ExploreTreeVisitNo
 
 // MARK: Flatten
 /**
- * A function that flattens a tree structure into an array of values.
+ * Flattens a tree structure into an array of values.
  *
  * @template N The type of the tree node, extending TreeNode.
  * @template V The type of values in the resulting flattened array.
@@ -62,7 +62,7 @@ export type FlattenTreeAddNodeDecisionFunction<N extends TreeNode<unknown>, V = 
  *
  * @param tree - The root node to flatten.
  * @param addNodeFn - Optional filter controlling which nodes and subtrees are included.
- * @returns An array of all nodes in the tree that pass the filter.
+ * @returns The all nodes in the tree that pass the filter.
  *
  * @dbxUtil
  * @dbxUtilCategory tree

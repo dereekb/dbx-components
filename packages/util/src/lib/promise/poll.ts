@@ -30,7 +30,7 @@ export interface PollConfig {
  * @param config.check - Predicate function that returns true when the polling condition has been satisfied.
  * @param config.wait - Milliseconds to wait between polling iterations; defaults to 250.
  * @param config.timesToGiveup - Maximum number of polling iterations before giving up; defaults to `Number.MAX_SAFE_INTEGER`
- * @returns A Promise that resolves when the check condition returns `true` or the max attempts are exhausted.
+ * @returns Resolves when the check condition returns `true` or the max attempts are exhausted.
  *
  * @dbxUtil
  * @dbxUtilCategory promise

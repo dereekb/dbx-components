@@ -29,7 +29,7 @@ export type RunAsyncTasksForValuesConfig<T = unknown> = Omit<PerformAsyncTasksCo
  * @param taskFn - The async task to execute.
  * @param config - Optional configuration for retries and retry behavior.
  * @returns The value produced by the task, or undefined if the task produced no value.
- * @throws Rethrows any error thrown by the task function.
+ * @throws {Error} Rethrows any error thrown by the task function.
  *
  * @dbxUtil
  * @dbxUtilCategory promise
@@ -52,8 +52,8 @@ export async function runAsyncTaskForValue<O>(taskFn: () => Promise<O>, config?:
  * @param input - The array of input values to process.
  * @param taskFn - The async task function to run for each input value.
  * @param config - Optional configuration for parallelism and retries.
- * @returns An array of results produced by the task function for each input.
- * @throws Rethrows any error thrown by a task function.
+ * @returns The results produced by the task function for each input.
+ * @throws {Error} Rethrows any error thrown by a task function.
  *
  * @dbxUtil
  * @dbxUtilCategory promise
@@ -151,7 +151,7 @@ export interface PerformAsyncTasksConfig<I = unknown, K extends PrimativeKey = P
  * @param taskFn - The async function to execute for each input.
  * @param config - Configuration for retries, parallelism, and error handling.
  * @returns An aggregated result with succeeded/failed items and their outputs/errors.
- * @throws Rethrows the last error from retries if `throwError` is true (default).
+ * @throws {Error} Rethrows the last error from retries if `throwError` is true (default).
  *
  * @dbxUtil
  * @dbxUtilCategory promise
@@ -204,7 +204,7 @@ export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey =
  * @param taskFn - The async task to execute.
  * @param config - Optional configuration for retries and error handling.
  * @returns A result object containing the value (if successful) and a success flag.
- * @throws Rethrows the last error from retries if `throwError` is true (default).
+ * @throws {Error} Rethrows the last error from retries if `throwError` is true (default).
  *
  * @dbxUtil
  * @dbxUtilCategory promise
@@ -301,8 +301,8 @@ export type PerformTasksInParallelFunction<I> = (input: I[]) => Promise<void>;
  *
  * @param input - The array of items to process.
  * @param config - Configuration for task execution, parallelism, and concurrency constraints.
- * @returns A Promise that resolves when all tasks complete.
- * @throws Rethrows the first error encountered during task execution.
+ * @returns Resolves when all tasks complete.
+ * @throws {Error} Rethrows the first error encountered during task execution.
  */
 export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], config: PerformTasksInParallelFunctionConfig<I, K>): Promise<void> {
   return performTasksInParallelFunction(config)(input);
@@ -313,7 +313,7 @@ export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksI
  * and non-concurrent task key constraints.
  *
  * @param config - Configuration for task factory, parallelism limits, and concurrency keys.
- * @returns A function that accepts an array of inputs and returns a Promise resolving when all tasks complete.
+ * @returns Accepts an array of inputs and returns a Promise resolving when all tasks complete.
  *
  * @dbxUtil
  * @dbxUtilCategory promise
@@ -344,7 +344,7 @@ export function performTasksInParallelFunction<I, K extends PrimativeKey = Perfo
      * Performs the input tasks in parallel using the configured performTasks function.
      *
      * @param input - The input tasks to perform.
-     * @returns A promise that resolves when all tasks have completed.
+     * @returns Resolves when all tasks have completed.
      */
     function performTasksWithInput(input: I[]) {
       const taskInputFactory = terminatingFactoryFromArray(
@@ -427,7 +427,7 @@ export type PerformTaskFactoryTasksInParallelFunction<I> = (taskInputFactory: Pe
  * with configurable concurrency limits and non-concurrent key constraints.
  *
  * @param config - Configuration for the task factory, parallelism, and concurrency behavior.
- * @returns A function that accepts a task input factory and returns a Promise that resolves when all tasks complete.
+ * @returns Accepts a task input factory and returns a Promise that resolves when all tasks complete.
  *
  * @dbxUtil
  * @dbxUtilCategory promise

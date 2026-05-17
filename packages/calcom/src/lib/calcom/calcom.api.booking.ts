@@ -58,7 +58,7 @@ export interface CalcomCancelBookingResponse {
  * booking (the client), not the host. This endpoint can be called without authentication.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that creates a booking from the given input.
+ * @returns Creates a booking from the given input.
  *
  * @see https://cal.com/docs/api-reference/v2/bookings/create-a-booking
  *
@@ -88,7 +88,7 @@ export function createBooking(context: CalcomContext): (input: CalcomCreateBooki
  * Retrieves a booking by its unique UID.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that retrieves a booking by its UID.
+ * @returns Retrieves a booking by its UID.
  *
  * @see https://cal.com/docs/api-reference/v2/bookings/get-a-booking
  *
@@ -111,7 +111,7 @@ export function getBooking(context: CalcomContext): (uid: CalcomBookingUid) => P
  * Cancels a booking by its unique UID, with an optional cancellation reason.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that cancels a booking by UID.
+ * @returns Cancels a booking by UID.
  *
  * @see https://cal.com/docs/api-reference/v2/bookings/cancel-a-booking
  *

@@ -62,7 +62,7 @@ const DEFAULT_BUNDLED_FILENAMES = ['dereekb-util.semantic-types.mcp.generated.js
  *
  * @param startUrl - File URL to start the walk from (typically `import.meta.url`)
  * @returns The absolute path of the directory that contains `package.json`
- * @throws When no `package.json` is found before reaching the filesystem root.
+ * @throws {Error} When no `package.json` is found before reaching the filesystem root.
  */
 function findPackageRoot(startUrl: string): string {
   const startPath = fileURLToPath(startUrl);

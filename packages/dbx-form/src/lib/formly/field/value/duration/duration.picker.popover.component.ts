@@ -272,7 +272,7 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Returns the current step based on whether shift is held.
    *
-   * @returns 2 when shift is held for larger increments, 1 otherwise.
+   * @returns Two when shift is held for larger increments, one otherwise.
    */
   private get _currentStep(): number {
     return this._shiftHeld ? 2 : 1;

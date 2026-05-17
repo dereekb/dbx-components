@@ -355,7 +355,7 @@ function buildTopicsIndex(mergedEntries: ReadonlyMap<string, SemanticTypeEntry>)
  *
  * @param input - Manifest sources plus an optional injected `readFile`
  * @returns Merged entries, topic index, deterministic warnings, and the list of source labels that loaded.
- * @throws When a strict source fails or when zero manifests load successfully.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadSemanticTypeManifests(input: LoadSemanticTypeManifestsInput): Promise<LoadSemanticTypeManifestsResult> {
   const { sources, readFile = DEFAULT_READ_FILE } = input;

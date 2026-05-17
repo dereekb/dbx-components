@@ -52,7 +52,7 @@ export function filteredPage<F = unknown>(page: PageNumber, request?: Filter<F>)
  * @param loadFn - Async function that loads a page of results.
  * @param iterFn - Callbacks for processing each item or page.
  * @returns The total number of items processed across all pages.
- * @throws Error if neither `use` nor `usePage` is specified in `iterFn`
+ * @throws {Error} If neither `use` nor `usePage` is specified in `iterFn`
  */
 export async function iterateFilteredPages<T, F>(inputPage: FilteredPage<F>, loadFn: (page: FilteredPage<F>) => Promise<T[]>, iterFn: FilteredPageIterateFn<T>): Promise<number> {
   let currentPage = inputPage.page;

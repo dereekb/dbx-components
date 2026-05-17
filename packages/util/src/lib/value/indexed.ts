@@ -133,7 +133,7 @@ export type IndexDeltaGroupFunction<T> = (inputItems: T[], previousItems?: Maybe
  * items are added or removed from an indexed collection.
  *
  * @param readIndex - Reads an item's index, returning null/undefined for unindexed items.
- * @returns A function that groups items by their index state.
+ * @returns Groups items by their index state.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -227,7 +227,7 @@ export type ComputeNextFreeIndexFunction<T> = (values: T[]) => IndexNumber;
  *
  * @param readIndex - Extracts the index number from each item.
  * @param nextIndex - Optional custom function to compute the next index from the max item; defaults to max + 1.
- * @returns A function that computes the next free index for a given array.
+ * @returns Computes the next free index for a given array.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -261,7 +261,7 @@ export function computeNextFreeIndexFunction<T>(readIndex: ReadIndexFunction<T>,
  *
  * @param readIndex - Extracts the index number from each item.
  * @param nextIndex - Optional custom function to compute the next index from the last item; defaults to last + 1.
- * @returns A function that computes the next free index from sorted arrays.
+ * @returns Computes the next free index from sorted arrays.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -290,7 +290,7 @@ export type MinAndMaxIndexFunction<T> = ((values: Iterable<T>) => MinAndMaxFunct
  * Creates a {@link MinAndMaxIndexFunction} that extracts the minimum and maximum index numbers from a collection.
  *
  * @param readIndex - Extracts the index number from each item.
- * @returns A function returning the min/max indexes, or null for empty input.
+ * @returns The min/max indexes, or null for empty input.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -340,7 +340,7 @@ export type MinAndMaxIndexItemsFunction<T> = MinAndMaxFunction<T> & {
  * with the minimum and maximum index values.
  *
  * @param readIndex - Extracts the index number from each item.
- * @returns A function returning the min/max items, or null for empty input.
+ * @returns The min/max items, or null for empty input.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -407,7 +407,7 @@ export type FindBestIndexMatchFunction<T> = <I extends IndexRef>(value: I) => T;
  * Given an input index, returns the item with the highest index that is less than or equal to the input.
  *
  * @param items - The available match options; must not be empty.
- * @returns A function that finds the best match for any input index.
+ * @returns Finds the best match for any input index.
  * @throws {Error} When the input iterable is empty.
  *
  * @dbxUtil
@@ -584,7 +584,7 @@ export type FitToIndexRangeFunction = (input: IndexNumber) => IndexNumber;
  * Creates a {@link FitToIndexRangeFunction} that clamps index numbers to the given range boundaries.
  *
  * @param input - The range to clamp to.
- * @returns A function that clamps any index to the range.
+ * @returns Clamps any index to the range.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -611,7 +611,7 @@ export type WrapIndexNumberFunction = WrapNumberFunction;
  *
  * @param input - The index range to wrap within.
  * @param fencePosts - Whether to use fencepost semantics (maxIndex is exclusive); defaults to true.
- * @returns A function that wraps any index into the range.
+ * @returns Wraps any index into the range.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -848,7 +848,7 @@ export function indexRangeOverlapsIndexRangeFunction(input: IndexRangeFunctionIn
  * Returns an array of all IndexNumbers within the input IndexRange (minIndex inclusive, maxIndex exclusive).
  *
  * @param indexRange - The range to enumerate.
- * @returns An array of sequential index numbers.
+ * @returns The sequential index numbers.
  */
 export function allIndexesInIndexRange(indexRange: IndexRange): IndexNumber[] {
   return range(indexRange.minIndex, indexRange.maxIndex);
@@ -893,7 +893,7 @@ export type StepsFromIndexFunction = ((startIndex: number, wrapAround?: boolean,
  * Returns undefined when the result falls outside the range (unless wrapping or fitting is enabled).
  *
  * @param config - Stepping behavior configuration.
- * @returns A function that computes the stepped index.
+ * @returns Computes the stepped index.
  *
  * @dbxUtil
  * @dbxUtilCategory value

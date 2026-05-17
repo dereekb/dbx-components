@@ -35,7 +35,7 @@ export class TypedServiceRegistryInstance<S, T extends string = string> implemen
    *
    * @param type - The type key to look up.
    * @returns The registered service instance.
-   * @throws Error if no service is registered for the given type.
+   * @throws {Error} If no service is registered for the given type.
    */
   serviceForType(type: T): S {
     const getter = this._map.get(type);

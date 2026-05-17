@@ -40,7 +40,7 @@ export function asSet<T>(values: IterableOrValue<T>): Set<T> {
  * Creates a copy of the set, applies the given function to the copy, and returns it.
  *
  * @param set - The set to copy, or null/undefined for an empty set.
- * @param fn - A function to mutate the copied set.
+ * @param fn - Used to mutate the copied set.
  * @returns The modified copy of the set.
  */
 export function copySetAndDo<T>(set: Maybe<Set<T>>, fn: (set: Set<T>) => void): Set<T> {
@@ -156,7 +156,7 @@ export function hasDifferentValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T
  *
  * @param a - First iterable.
  * @param b - Second iterable.
- * @returns An array of values present in only one of the inputs.
+ * @returns The values present in only one of the inputs.
  */
 export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): Maybe<T>[] {
   return symmetricDifferenceArrayBetweenSets(new Set(a), new Set(b));
@@ -167,7 +167,7 @@ export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iter
  *
  * @param a - First set.
  * @param b - Second set.
- * @returns An array of values present in only one of the sets.
+ * @returns The values present in only one of the sets.
  */
 export function symmetricDifferenceArrayBetweenSets<T>(a: Set<Maybe<T>>, b: Set<Maybe<T>>): Maybe<T>[] {
   return [...symmetricDifference(a, b)];
@@ -200,7 +200,7 @@ export function keepFromSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>
  *
  * @param values - The array to filter.
  * @param set - The set to check membership against.
- * @returns An array of values present in the set.
+ * @returns The values present in the set.
  */
 export function keepValuesFromSet<T>(values: T[], set: Set<T>): T[] {
   return filterValuesUsingSet(values, set, false);
@@ -211,7 +211,7 @@ export function keepValuesFromSet<T>(values: T[], set: Set<T>): T[] {
  *
  * @param valuesToExclude - The array of values to filter.
  * @param iterable - The iterable of values to exclude.
- * @returns An array of values not found in the iterable.
+ * @returns The values not found in the iterable.
  */
 export function excludeValues<T>(valuesToExclude: T[], iterable: Maybe<Iterable<T>>): T[] {
   return excludeValuesFromSet(valuesToExclude, new Set(iterable));
@@ -222,7 +222,7 @@ export function excludeValues<T>(valuesToExclude: T[], iterable: Maybe<Iterable<
  *
  * @param values - The array to filter.
  * @param set - The set of values to exclude.
- * @returns An array of values not in the set.
+ * @returns The values not in the set.
  */
 export function excludeValuesFromSet<T>(values: T[], set: Set<T>): T[] {
   return filterValuesUsingSet(values, set, true);
@@ -318,7 +318,7 @@ export function mapValuesToSet<I, O>(values: Iterable<I>, mapFn: MapFunction<I, 
  *
  * @param iterable - The values to create a set from.
  * @param exclude - If true, the returned function returns true for values NOT in the set.
- * @returns A function that tests membership.
+ * @returns Tests membership.
  *
  * @dbxUtil
  * @dbxUtilCategory set
@@ -343,7 +343,7 @@ export type SetHasValueFunction<T> = (value: T) => boolean;
  *
  * @param set - The set to check against.
  * @param exclude - If true, returns true for values NOT in the set.
- * @returns A function that tests membership.
+ * @returns Tests membership.
  *
  * @dbxUtil
  * @dbxUtilCategory set
@@ -431,7 +431,7 @@ export type SetIncludesFunction<T> = (valuesToFind: IterableOrValue<T>) => boole
  * @param valuesSet - The reference set.
  * @param mode - Whether to require 'all' values or 'any' value to be present. Defaults to 'all'.
  * @param emptyValuesToFindArrayResult - The result when the values to find are empty.
- * @returns A function that tests inclusion against the set.
+ * @returns Tests inclusion against the set.
  *
  * @dbxUtil
  * @dbxUtilCategory set

@@ -94,7 +94,7 @@ export function initProfileForUidFactory({ profileCollection: profileFirestoreCo
  * @param context.profileCollection - The Firestore collection accessor for profile documents.
  * @param context.profilePrivateDataCollectionFactory - Factory for creating private profile data subcollections.
  * @returns An action transform function that validates params and updates the username.
- * @throws UsernameAlreadyTakenError when the requested username belongs to another profile.
+ * @throws {Error} UsernameAlreadyTakenError when the requested username belongs to another profile.
  */
 export function setProfileUsernameFactory({ firebaseServerActionTransformFunctionFactory, profileCollection: profileFirestoreCollection, profilePrivateDataCollectionFactory }: ProfileServerActionsContext) {
   const { query: queryProfile } = profileFirestoreCollection;

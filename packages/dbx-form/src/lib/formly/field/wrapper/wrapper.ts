@@ -47,8 +47,6 @@ export function formlyAddWrapperToFormlyFieldConfig<C extends FormlyFieldConfig,
  * Wraps a field with the auto-touch wrapper that marks the control as touched on value change.
  *
  * @param fieldConfig - The field configuration to wrap.
- * @param fieldConfig - The field configuration to wrap.
- * @param autoTouchWrapper - Optional expand wrapper configuration.
  * @param autoTouchWrapper - Optional expand wrapper configuration.
  * @returns A wrapped field configuration with auto-touch behavior.
  */
@@ -60,8 +58,6 @@ export function formlyAutoTouchWrapper<T extends object, C extends FormlyFieldCo
  * Wraps a field with the expand wrapper that shows/hides the field based on value or user click.
  *
  * @param fieldConfig - The field configuration to wrap.
- * @param fieldConfig - The field configuration to wrap.
- * @param expandWrapper - Optional expand wrapper configuration.
  * @param expandWrapper - Optional expand wrapper configuration.
  * @returns A wrapped field configuration with expand/collapse behavior.
  */
@@ -73,8 +69,6 @@ export function formlyExpandWrapper<T extends object, C extends FormlyFieldConfi
  * Wraps a field with the toggle wrapper that uses a slide toggle to show/hide content.
  *
  * @param fieldConfig - The field configuration to wrap.
- * @param fieldConfig - The field configuration to wrap.
- * @param toggleWrapper - Optional toggle wrapper configuration.
  * @param toggleWrapper - Optional toggle wrapper configuration.
  * @returns A wrapped field configuration with toggle show/hide behavior.
  */
@@ -86,8 +80,6 @@ export function formlyToggleWrapper<C extends FormlyFieldConfig>(fieldConfig: C,
  * Wraps a field group in a section layout with an optional header and hint.
  *
  * @param fieldConfig - The field configuration to wrap.
- * @param fieldConfig - The field configuration to wrap.
- * @param sectionWrapper - Optional section configuration with header and hint.
  * @param sectionWrapper - Optional section configuration with header and hint.
  * @returns A wrapped field configuration with section layout.
  */
@@ -99,8 +91,6 @@ export function formlySectionWrapper<C extends FormlyFieldConfig>(fieldConfig: C
  * Wraps a field group in a subsection layout with an optional header and hint.
  *
  * @param fieldConfig - The field configuration to wrap.
- * @param fieldConfig - The field configuration to wrap.
- * @param subsectionWrapper - Optional subsection configuration with header and hint.
  * @param subsectionWrapper - Optional subsection configuration with header and hint.
  * @returns A wrapped field configuration with subsection layout.
  */
@@ -112,8 +102,6 @@ export function formlySubsectionWrapper<C extends FormlyFieldConfig>(fieldConfig
  * Wraps a field with an info button that triggers a callback when clicked.
  *
  * @param fieldConfig - The field configuration to wrap.
- * @param fieldConfig - The field configuration to wrap.
- * @param infoWrapper - Info wrapper configuration with callback.
  * @param infoWrapper - Info wrapper configuration with callback.
  * @returns A wrapped field configuration with info button.
  */
@@ -125,8 +113,6 @@ export function formlyInfoWrapper<C extends FormlyFieldConfig>(fieldConfig: C, i
  * Wraps a field with dynamic CSS class and style bindings.
  *
  * @param fieldConfig - The field configuration to wrap.
- * @param fieldConfig - The field configuration to wrap.
- * @param styleWrapper - Style wrapper configuration with CSS classes and styles.
  * @param styleWrapper - Style wrapper configuration with CSS classes and styles.
  * @returns A wrapped field configuration with dynamic styling.
  */
@@ -138,8 +124,6 @@ export function formlyStyleWrapper<C extends FormlyFieldConfig>(fieldConfig: C, 
  * Wraps a field with a loading indicator that shows during async validation.
  *
  * @param fieldConfig - The field configuration to wrap.
- * @param fieldConfig - The field configuration to wrap.
- * @param workingWrapper - Optional working wrapper configuration.
  * @param workingWrapper - Optional working wrapper configuration.
  * @returns A wrapped field configuration with loading indicator.
  */
@@ -169,7 +153,6 @@ export interface DbxFlexLayoutWrapperGroupFieldConfigDefaults extends DbxFlexWra
  * Type guard that checks if the input is a {@link DbxFlexLayoutWrapperGroupFieldConfig}
  * (has a `field` property) rather than a plain {@link FormlyFieldConfig}.
  *
- * @param input - The field config or wrapper group config to check.
  * @param input - The field config or wrapper group config to check.
  * @returns True if the input has a `field` property identifying it as a wrapper group config.
  */

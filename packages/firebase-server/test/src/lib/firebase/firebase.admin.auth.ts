@@ -214,7 +214,7 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
    * @param input.eventType - Discriminator for the auth event being simulated (`google.firebase.auth.user.create` or `google.firebase.auth.user.delete`).
    * @param input.eventOverride - Partial event fields used to override the default placeholder values (e.g., `ipAddress`, `userAgent`, `resource`).
    * @param input.skipJsonConversion - When `true`, skip the JSON serialize/parse round-trip applied to the event payload (default `false`).
-   * @returns A promise that resolves once the blocking function has completed.
+   * @returns Resolves once the blocking function has completed.
    */
   callAuthBlockingFunction(input: { fn: WrappedBlockingFunctionWithHandler<AuthBlockingEvent, void>; userRecord: UserRecord; eventType: 'google.firebase.auth.user.create' | 'google.firebase.auth.user.delete'; eventOverride?: Partial<AuthBlockingEvent>; skipJsonConversion?: boolean }): Promise<void> {
     const { fn, userRecord, eventType, eventOverride, skipJsonConversion = false } = input;

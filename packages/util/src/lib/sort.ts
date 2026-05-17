@@ -9,7 +9,7 @@ export const SORT_VALUE_GREATER_THAN: SortComparisonNumber = 1;
 export const SORT_VALUE_EQUAL: SortComparisonNumber = 0;
 
 /**
- * A number that is the result of comparison two items.
+ * Is the result of comparison two items.
  *
  * In "ascending" order, a value:
  * - smaller than another will return -1 (or less).
@@ -173,7 +173,7 @@ export function sortValues<T>(input: SortValuesInput<T>): T[] {
  *
  * @param sortRef - Reference containing the sort comparison function.
  * @param sortOnCopyDefault - Whether to sort on a copy by default (default: true).
- * @returns A function that sorts arrays using the configured comparison.
+ * @returns Sorts arrays using the configured comparison.
  */
 export function sortValuesFunctionWithSortRef<T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault: boolean = true): SortValuesFunction<T> {
   const sortWith = sortRef?.sortWith;
@@ -220,7 +220,7 @@ export type MinAndMaxFunction<T> = (values: Iterable<T>) => MinAndMaxFunctionRes
  * Creates a {@link MinAndMaxFunction} that finds the minimum and maximum values from an iterable using the provided comparison function.
  *
  * @param compareFn - Ascending sort comparison function used to determine min/max.
- * @returns A function that returns `{ min, max }` or `null` for empty iterables.
+ * @returns Returns `{ min, max }` or `null` for empty iterables.
  *
  * @dbxUtil
  * @dbxUtilCategory sort

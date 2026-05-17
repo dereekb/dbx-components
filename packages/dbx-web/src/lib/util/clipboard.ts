@@ -40,7 +40,7 @@ export interface CopyToClipboardFunctionConfig {
  *
  * @param clipboard - The Angular CDK Clipboard instance.
  * @param config - Optional timeout and retry settings.
- * @returns A function that copies text to the clipboard.
+ * @returns Copies text to the clipboard.
  *
  * @example
  * ```ts

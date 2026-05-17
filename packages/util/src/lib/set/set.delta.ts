@@ -70,7 +70,7 @@ export interface SetDeltaFunctionConfig<T, K extends PrimativeKey = PrimativeKey
  * identifying which items were added, removed, or unchanged.
  *
  * @param config - Configuration with the key reader and optional modification detector.
- * @returns A function that compares two iterables and returns an array of change pairs.
+ * @returns Compares two iterables and returns an array of change pairs.
  *
  * @dbxUtil
  * @dbxUtilCategory set

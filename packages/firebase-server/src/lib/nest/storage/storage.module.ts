@@ -58,7 +58,7 @@ export class FirebaseServerStorageContextModule {}
  *
  * @param input - A bucket ID string or full factory config object.
  * @returns A NestJS provider for the storage context factory config token.
- * @throws Error if `defaultBucketId` is empty.
+ * @throws {Error} If `defaultBucketId` is empty.
  *
  * @example
  * ```typescript

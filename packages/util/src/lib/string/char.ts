@@ -25,7 +25,7 @@ export interface FirstAndLastCharacterOccurrence {
  * @param input - String to search through.
  * @param find - Single character to find.
  * @returns An object containing the first index, last index, and total occurrence count.
- * @throws Error if find is not exactly one character long.
+ * @throws {Error} If find is not exactly one character long.
  */
 export function firstAndLastCharacterOccurrence(input: string, find: string): FirstAndLastCharacterOccurrence {
   let first: number = -1;
@@ -81,7 +81,7 @@ export type ReplaceLastCharacterIfIsFunction = (input: string) => string;
  *
  * @param replacement - String to substitute for the last character.
  * @param is - Character(s) that trigger the replacement.
- * @returns A function that conditionally replaces the last character.
+ * @returns Conditionally replaces the last character.
  *
  * @dbxUtil
  * @dbxUtilCategory string

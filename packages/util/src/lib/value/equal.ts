@@ -19,7 +19,7 @@ export type AreEqualContext<T = unknown> = (x: IterableOrValue<T>) => boolean;
  *
  * @param contextValue - The reference value to compare against.
  * @param fn - The equality comparator.
- * @returns A function that checks whether a given value equals the captured reference.
+ * @returns Checks whether a given value equals the captured reference.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -52,7 +52,7 @@ export function isEqualContext<T>(contextValue: T, fn: EqualityComparatorFunctio
  *
  * @param contextValue - The reference value to compare against.
  * @param fn - The equality comparator.
- * @returns A function that checks whether all input values equal the captured reference.
+ * @returns Checks whether all input values equal the captured reference.
  *
  * @dbxUtil
  * @dbxUtilCategory value

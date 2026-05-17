@@ -41,7 +41,7 @@ export type PrimativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeK
  *
  * @param values - Encoder/decoder value pairs as tuples or a map object.
  * @returns A bidirectional Map for encoding/decoding.
- * @throws Error if any key or value is repeated.
+ * @throws {Error} If any key or value is repeated.
  */
 export function primativeKeyDencoderMap<D extends PrimativeKey, E extends PrimativeKey>(values: PrimativeKeyDencoderValues<D, E>): PrimativeKeyDencoderMap<D, E> {
   const map = new Map<D | E, E | D>();
@@ -117,8 +117,8 @@ export const PRIMATIVE_KEY_DENCODER_VALUE = (_input: unknown) => null;
  * primitive key values based on the configured value pairs.
  *
  * @param config - Configuration with value pairs and optional default fallback.
- * @returns A function that encodes or decodes single values or arrays.
- * @throws Error if a single value lookup produces a null result and no default handles it.
+ * @returns Encodes or decodes single values or arrays.
+ * @throws {Error} If a single value lookup produces a null result and no default handles it.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -184,7 +184,7 @@ export type PrimativeKeyStringDencoderFunction<D extends PrimativeKey, E extends
  *
  * @param config - Configuration with dencoder and optional splitter.
  * @returns A bidirectional function for string-to-array and array-to-string conversion.
- * @throws Error if encoded values contain the splitter character, or if values exceed one character when no splitter is defined.
+ * @throws {Error} If encoded values contain the splitter character, or if values exceed one character when no splitter is defined.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -435,7 +435,7 @@ export function numberStringDencoderFunction(dencoder: NumberStringDencoder): Nu
  * Numbers are encoded; strings are passed through as-is.
  *
  * @param dencoder - The NumberStringDencoder to use for encoding.
- * @returns A function that normalizes input to an encoded string.
+ * @returns Normalizes input to an encoded string.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -456,7 +456,7 @@ export function numberStringDencoderEncodedStringValueFunction(dencoder: NumberS
  * Strings are decoded; numbers are passed through as-is.
  *
  * @param dencoder - The NumberStringDencoder to use for decoding.
- * @returns A function that normalizes input to a decoded number.
+ * @returns Normalizes input to a decoded number.
  *
  * @dbxUtil
  * @dbxUtilCategory string

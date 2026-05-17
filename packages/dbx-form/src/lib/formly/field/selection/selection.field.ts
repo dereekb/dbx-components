@@ -79,7 +79,7 @@ export function formlyValueSelectionField<T>(config: ValueSelectionFieldConfig<T
  * if one doesn't already exist.
  *
  * @param label - Optional label for the clear option.
- * @returns A function that transforms selection options by prepending a clear option.
+ * @returns Transforms selection options by prepending a clear option.
  *
  * @__NO_SIDE_EFFECTS__
  */

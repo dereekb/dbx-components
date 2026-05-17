@@ -44,7 +44,7 @@ export interface CalcomGetWebhooksResponse {
  * when specified events occur (e.g., bookings created, cancelled, rescheduled).
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that creates a webhook subscription from the given input.
+ * @returns Creates a webhook subscription from the given input.
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/create-a-webhook
  *
@@ -72,7 +72,7 @@ export function createWebhook(context: CalcomContext): (input: CalcomCreateWebho
  * Retrieves all webhooks for the authenticated user.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that retrieves all webhooks.
+ * @returns Retrieves all webhooks.
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/get-all-webhooks
  *
@@ -93,7 +93,7 @@ export function getWebhooks(context: CalcomContext): () => Promise<CalcomGetWebh
  * Retrieves a specific webhook by ID.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that retrieves a specific webhook by ID.
+ * @returns Retrieves a specific webhook by ID.
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/get-a-webhook
  *
@@ -114,7 +114,7 @@ export function getWebhook(context: CalcomContext): (webhookId: CalcomWebhookId)
  * Updates an existing webhook by ID.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that updates an existing webhook by ID.
+ * @returns Updates an existing webhook by ID.
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/update-a-webhook
  *
@@ -135,7 +135,7 @@ export function updateWebhook(context: CalcomContext): (webhookId: CalcomWebhook
  * Deletes a webhook by ID.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that deletes a webhook by ID.
+ * @returns Deletes a webhook by ID.
  *
  * @see https://cal.com/docs/api-reference/v2/webhooks/delete-a-webhook
  *

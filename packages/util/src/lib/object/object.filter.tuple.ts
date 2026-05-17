@@ -73,7 +73,7 @@ export type FilterKeyValueTuplesFunction<T extends object = object, K extends ke
  * When no filter is provided, returns all key/value tuples.
  *
  * @param filter - Optional filter configuration.
- * @returns A function that extracts filtered tuples from any input object.
+ * @returns Extracts filtered tuples from any input object.
  *
  * @dbxUtil
  * @dbxUtilCategory object

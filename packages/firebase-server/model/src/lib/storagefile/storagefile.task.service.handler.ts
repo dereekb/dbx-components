@@ -264,7 +264,7 @@ export interface AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessor
  * Assembles all built-in StorageFileGroup subtask processors, such as ZIP generation.
  *
  * @param config - Configuration controlling which group processors to include.
- * @returns An array of subtask processor configs for StorageFileGroup processing purposes.
+ * @returns The subtask processor configs for StorageFileGroup processing purposes.
  */
 export function allStorageFileGroupStorageFileProcessingPurposeSubtaskProcessors(config: AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget[] {
   const { excludeZipProcessing } = config;

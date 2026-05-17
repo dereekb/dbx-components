@@ -19,7 +19,7 @@ export type GetMeetingFunction = (input: GetMeetingInput) => Promise<GetMeetingR
  * Https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meeting.
  *
  * @param context - The Zoom API context.
- * @returns A function that retrieves a meeting by ID.
+ * @returns Retrieves a meeting by ID.
  */
 export function getMeeting(context: ZoomContext): GetMeetingFunction {
   return (input) => context.fetchJson(`/meetings/${input.meetingId}`, 'GET');
@@ -38,7 +38,7 @@ export type ListMeetingsForUserFunction = (input: ListMeetingsForUserInput) => P
  * Https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/meetings.
  *
  * @param context - The Zoom API context.
- * @returns A function that lists meetings for a user.
+ * @returns Lists meetings for a user.
  */
 export function listMeetingsForUser(context: ZoomContext): ListMeetingsForUserFunction {
   return (input) => context.fetchJson(`/users/${input.user}/meetings`, 'GET').then(mapToZoomPageResult('meetings'));
@@ -172,7 +172,7 @@ export type CreateMeetingForUserResponse = ZoomMeeting;
  * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/POST/users/{userId}/meetings.
  *
  * @param context - The Zoom API context.
- * @returns A function that creates a meeting for a user.
+ * @returns Creates a meeting for a user.
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -211,7 +211,7 @@ export type UpdateMeetingFunction = (input: UpdateMeetingInput) => Promise<Updat
  * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/PUT/meetings/{meetingId}
  *
  * @param context - The Zoom API context.
- * @returns A function that updates a meeting.
+ * @returns Updates a meeting.
  */
 export function updateMeeting(context: ZoomContext): UpdateMeetingFunction {
   return (input) =>
@@ -252,7 +252,7 @@ export const DELETE_MEETING_DOES_NOT_EXIST_ERROR_CODE = 3001;
  * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/DELETE/meetings/{meetingId}
  *
  * @param context - The Zoom API context.
- * @returns A function that deletes a meeting (silences 3001 "not found" errors by default)
+ * @returns Deletes a meeting (silences 3001 "not found" errors by default)
  */
 export function deleteMeeting(context: ZoomContext): DeleteMeetingFunction {
   const silenceDoesNotExistError = silenceZoomErrorWithCodesFunction(DELETE_MEETING_DOES_NOT_EXIST_ERROR_CODE);
@@ -272,7 +272,7 @@ export type GetPastMeetingFunction = (input: GetPastMeetingInput) => Promise<Get
  * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}
  *
  * @param context - The Zoom API context.
- * @returns A function that retrieves a past meeting.
+ * @returns Retrieves a past meeting.
  */
 export function getPastMeeting(context: ZoomContext): GetPastMeetingFunction {
   return (input) => context.fetchJson(`/past_meetings/${input.meetingId}`, 'GET');
@@ -291,7 +291,7 @@ export type GetPastMeetingParticipantsFunction = (input: GetPastMeetingParticipa
  * Https://developers.zoom.us/docs/api/meetings/#tag/meetings/GET/past_meetings/{meetingId}/participants.
  *
  * @param context - The Zoom API context.
- * @returns A function that retrieves participants from a past meeting.
+ * @returns Retrieves participants from a past meeting.
  */
 export function getPastMeetingParticipants(context: ZoomContext): GetPastMeetingParticipantsFunction {
   return (input) => context.fetchJson(`/past_meetings/${input.meetingId}/participants`, 'GET').then(mapToZoomPageResult('participants'));

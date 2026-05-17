@@ -279,7 +279,7 @@ function buildIndexMap<TEntry>(mergedEntries: ReadonlyMap<string, TEntry>, extra
  * @param input - Manifest sources plus an optional injected `readFile`
  * @param config - Per-domain schema + key extractors + name for error messages.
  * @returns Merged entries, generic index map, deterministic warnings, and the list of source labels that loaded.
- * @throws When a strict source fails or when zero manifests load successfully.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadManifestsBase<TManifest extends BaseManifest<TEntry>, TEntry>(input: ManifestLoaderInput, config: ManifestLoaderConfig<TManifest, TEntry>): Promise<ManifestLoaderBaseResult<TEntry>> {
   const { sources, readFile = DEFAULT_READ_FILE } = input;

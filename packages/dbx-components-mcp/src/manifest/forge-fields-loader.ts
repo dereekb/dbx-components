@@ -57,7 +57,7 @@ export interface LoadForgeFieldManifestsResult {
  *
  * @param input - Manifest sources plus an optional injected `readFile`
  * @returns Merged entries, tier index, deterministic warnings, and the list of source labels that loaded.
- * @throws When a strict source fails or when zero manifests load successfully.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadForgeFieldManifests(input: LoadForgeFieldManifestsInput): Promise<LoadForgeFieldManifestsResult> {
   const { entries, indexMap, warnings, loadedSources } = await loadManifestsBase<ForgeFieldManifest, ForgeFieldEntry>(input, {

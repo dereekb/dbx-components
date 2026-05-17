@@ -70,7 +70,7 @@ export abstract class FullStorageObject extends StorageObject {
   /**
    * Removes all items from storage.
    *
-   * @returns An array of keys that were removed.
+   * @returns The keys that were removed.
    */
   abstract removeAll(): string[];
 }

@@ -201,7 +201,7 @@ export const guestbookEntryConverter = snapshotConverterFunctions<GuestbookEntry
  * GuestbookEntry documents under a given Guestbook parent document.
  *
  * @param context - The FirestoreContext used to resolve the subcollection.
- * @returns A function that accepts a GuestbookDocument and returns its GuestbookEntry subcollection reference.
+ * @returns Accepts a GuestbookDocument and returns its GuestbookEntry subcollection reference.
  */
 export function guestbookEntryCollectionReferenceFactory(context: FirestoreContext): (guestbook: GuestbookDocument) => CollectionReference<GuestbookEntry> {
   return (guestbook: GuestbookDocument) => {

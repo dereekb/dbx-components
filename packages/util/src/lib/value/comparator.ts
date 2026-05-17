@@ -93,7 +93,7 @@ export type CompareEqualityWithValueFromItemsFunction<I, V> = ((a: Maybe<I>, b: 
  *
  * @param readValues - Extracts the comparable value from each item.
  * @param equalityComparator - Compares the extracted values for equality.
- * @returns A function that compares two items by their extracted values.
+ * @returns Compares two items by their extracted values.
  *
  * @dbxUtil
  * @dbxUtilCategory value

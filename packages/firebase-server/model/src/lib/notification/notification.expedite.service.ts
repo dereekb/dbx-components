@@ -167,7 +167,7 @@ export function provideMutableNotificationExpediteService(): Provider[] {
  *
  * This should generally be used in the global module of an app.
  *
- * @returns An array of abstract classes to export from the NestJS module.
+ * @returns The abstract classes to export from the NestJS module.
  */
 export function exportMutableNotificationExpediteService(): Abstract<any>[] {
   return [NotificationExpediteService, MutableNotificationExpediteService];

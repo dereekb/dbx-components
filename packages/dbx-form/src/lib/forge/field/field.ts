@@ -1088,7 +1088,7 @@ function _finalizeValidators<C extends DbxForgeFieldFunctionDef<any>>(instance: 
  * Creates a single {@link DbxForgeBuildFieldDefFunction} from all the input functions.
  *
  * @param fns - The functions to apply.
- * @returns A function that applies all of the given functions.
+ * @returns Applies all of the given functions.
  */
 export function dbxForgeFieldFunctionConfigure<C extends DbxForgeFieldFunctionDef<any>, FV = unknown>(...fns: DbxForgeBuildFieldDefFunction<C, FV>[]): DbxForgeBuildFieldDefFunction<C, FV> {
   let fn: DbxForgeBuildFieldDefFunction<C, FV>;

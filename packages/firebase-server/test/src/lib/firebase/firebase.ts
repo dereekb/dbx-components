@@ -116,7 +116,7 @@ export function getGCloudTestProjectId() {
  * so that each component can also
  *
  * @returns The test project ID that was re-applied to `FIREBASE_CONFIG`/`GCLOUD_PROJECT`.
- * @throws Error when no test project ID is present in the environment (i.e., {@link initFirebaseAdminTestEnvironment} has not been called).
+ * @throws {Error} When no test project ID is present in the environment (i.e., {@link initFirebaseAdminTestEnvironment} has not been called).
  */
 export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
   // firebase-functions-test overwrites this each time.

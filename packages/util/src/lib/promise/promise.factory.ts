@@ -2,7 +2,7 @@ import { type FactoryWithRequiredInput } from '../getter/getter';
 import { type Maybe } from '../value/maybe.type';
 
 /**
- * A function that tries an array of Promise factories one after another until one
+ * Tries an array of Promise factories one after another until one
  * produces a successful result. Returns `undefined` if none succeed.
  *
  * @param input - The input to pass to each factory.
@@ -48,7 +48,7 @@ export interface TryWithPromiseFactoriesFunctionConfig<I, O> extends TryWithProm
  * until one returns a non-null value (or a Maybe value if `successOnMaybe` is true).
  *
  * @param config - Configuration including the array of promise factories and default behavior options.
- * @returns A function that tries each factory in order for a given input.
+ * @returns Tries each factory in order for a given input.
  *
  * @dbxUtil
  * @dbxUtilCategory promise

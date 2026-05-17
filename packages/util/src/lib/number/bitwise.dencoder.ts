@@ -91,7 +91,7 @@ export type BitwiseSetDencoder<D extends BitwiseEncodedSetIndex> = BitwiseSetEnc
  * Accepts either a Set (encodes to number) or a number (decodes to Set).
  *
  * @param maxIndex - Optional exclusive upper bound of indices for decoding; defaults to 32.
- * @returns A function that encodes Sets to numbers and decodes numbers to Sets.
+ * @returns Encodes Sets to numbers and decodes numbers to Sets.
  */
 export function bitwiseSetDencoder<D extends BitwiseEncodedSetIndex>(maxIndex?: number): BitwiseSetDencoder<D> {
   const decoder = maxIndex ? bitwiseSetDecoder<D>(maxIndex) : dencodeBitwiseSet;
@@ -173,7 +173,7 @@ export interface BitwiseObjectDencoderConfig<T extends object, D extends Bitwise
  * Accepts either a number (decodes to object) or an object (encodes to number). Returns 0 for null/undefined input.
  *
  * @param config - Configuration with `toSetFunction`, `fromSetFunction`, and optional `maxIndex`
- * @returns A function that encodes objects to numbers and decodes numbers to objects.
+ * @returns Encodes objects to numbers and decodes numbers to objects.
  */
 export function bitwiseObjectDencoder<T extends object, D extends BitwiseEncodedSetIndex = BitwiseEncodedSetIndex>(config: BitwiseObjectDencoderConfig<T, D>): BitwiseObjectDencoder<T> {
   const encoder = bitwiseObjectEncoder(config.toSetFunction);

@@ -386,7 +386,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 /**
  * Provides DbxForgeFormContext and registers it as both DbxForm and DbxMutableForm.
  *
- * @returns An array of providers registering the forge form context for dependency injection.
+ * @returns The providers registering the forge form context for dependency injection.
  */
 export function provideDbxForgeFormContext(): Provider[] {
   return [DbxForgeFormContext, ...provideDbxMutableForm(DbxForgeFormContext)];

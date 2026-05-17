@@ -106,7 +106,7 @@ export type CutValueToPrecisionFunction = ((input: AsNumberInput) => number) & {
  *
  * @param precision - Number of decimal places to retain.
  * @param roundingType - Rounding strategy; defaults to 'cut' (truncation)
- * @returns A function that accepts a number or string and returns the truncated number.
+ * @returns Accepts a number or string and returns the truncated number.
  *
  * @dbxUtil
  * @dbxUtilCategory number
@@ -142,7 +142,7 @@ export type RoundToPrecisionFunctionType = NumberRounding | 'cut';
  *
  * @param precision - Number of decimal places.
  * @param roundFn - Rounding strategy; defaults to 'round'. Use 'cut' for truncation.
- * @returns A function that rounds numbers to the configured precision.
+ * @returns Rounds numbers to the configured precision.
  *
  * @dbxUtil
  * @dbxUtilCategory number
@@ -255,8 +255,8 @@ export type RoundNumberToStepFunction = ((input: Maybe<number>) => number) & {
  * Accepts either a step number (uses 'ceil' rounding) or a full config with step, rounding type, and origin.
  *
  * @param input - Step size or full configuration.
- * @returns A function that rounds input numbers to the nearest step.
- * @throws Error if step is 0 or undefined.
+ * @returns Rounds input numbers to the nearest step.
+ * @throws {Error} If step is 0 or undefined.
  *
  * @dbxUtil
  * @dbxUtilCategory number

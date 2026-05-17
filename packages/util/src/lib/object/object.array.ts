@@ -22,7 +22,7 @@ export function objectFlatMergeMatrix<A extends object = object, B extends objec
  *
  * @param a - First array (or single value) of partial objects.
  * @param b - Second array (or single value) of partial objects.
- * @returns 2D array where result[i][j] is `{ ...a[i], ...b[j] }`
+ * @returns Two-dimensional array where `result[i][j]` is `{ ...a[i], ...b[j] }`.
  */
 export function objectMergeMatrix<A extends object = object, B extends object = object>(a: ArrayOrValue<Partial<A>>, b: ArrayOrValue<Partial<B>>): (Partial<A> & Partial<B>)[][] {
   let result: (Partial<A> & Partial<B>)[][];

@@ -21,7 +21,7 @@ export type StripObjectFunction<T extends object> = (input: Maybe<T>, copy?: May
  *
  * @param filter - Filter controlling which key/value pairs are removed from the input object.
  * @param copy - When true (default), the returned function shallow-copies the input before filtering instead of mutating it.
- * @returns A function that returns the stripped object, or `undefined` when filtering removed every key.
+ * @returns Returns the stripped object, or `undefined` when filtering removed every key.
  *
  * @dbxUtil
  * @dbxUtilCategory object
@@ -855,7 +855,7 @@ export function valuesFromPOJOFunction<O = unknown, I extends object = object>(f
  *
  * @param keysToFilter - The set of keys to include (or exclude when inverted).
  * @param invertFilter - When `true`, keys in `keysToFilter` are excluded instead of included. Defaults to `false`.
- * @returns A function that filters keys on any input POJO.
+ * @returns Filters keys on any input POJO.
  *
  * @dbxUtil
  * @dbxUtilCategory object
@@ -900,7 +900,7 @@ export type FilterTuplesOnPOJOFunction<T extends object> = T extends Record<stri
  * and returns a new object containing only the entries that pass.
  *
  * @param filterTupleOnObject - Predicate applied to each `[key, value]` entry.
- * @returns A function that filters entries on any input POJO.
+ * @returns Filters entries on any input POJO.
  *
  * @dbxUtil
  * @dbxUtilCategory object
@@ -986,7 +986,7 @@ export type ForEachKeyValueOnPOJOConfig<T extends object, C = unknown, K extends
  * @param config - The filter and forEach callback configuration.
  * @param config.forEach - Callback invoked for each key/value pair that passes the filter.
  * @param config.filter - Optional filter controlling which key/value pairs are iterated; when omitted, all pairs are visited.
- * @returns A function that iterates matching key/value pairs on any input object.
+ * @returns Iterates matching key/value pairs on any input object.
  *
  * @dbxUtil
  * @dbxUtilCategory object

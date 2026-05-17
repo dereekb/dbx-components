@@ -295,7 +295,7 @@ export type SlashPathStartTypeFactory = SlashPathFunction;
  * Creates a function that enforces the specified start type on a slash path.
  *
  * @param type - The start type to enforce.
- * @returns A function that transforms paths to the specified start type.
+ * @returns Transforms paths to the specified start type.
  *
  * @dbxUtil
  * @dbxUtilCategory path
@@ -658,7 +658,7 @@ export interface SlashPathValidationFactoryConfig {
  * Creates a validation/fixup function for slash paths that replaces illegal characters and extra dots.
  *
  * @param config - Configuration for validation behavior.
- * @returns A function that validates and fixes a slash path.
+ * @returns Validates and fixes a slash path.
  *
  * @dbxUtil
  * @dbxUtilCategory path
@@ -819,7 +819,7 @@ export type IsolateSlashPathFunction = (path: SlashPath) => SlashPath;
  * Creates an IsolateSlashPathFunction.
  *
  * @param config - Configuration with range, optional start type, and file mode.
- * @returns A function that isolates path segments within the configured range.
+ * @returns Isolates path segments within the configured range.
  *
  * @dbxUtil
  * @dbxUtilCategory path

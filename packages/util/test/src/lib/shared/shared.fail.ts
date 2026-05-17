@@ -128,7 +128,7 @@ export function expectFailAssertErrorType(expectedType: ClassType | ClassLikeTyp
  *
  * @param errorFn - Function expected to throw an error (sync or async)
  * @param assertFailType - Optional assertion to validate the type or content of the thrown error.
- * @returns A promise that rejects with {@link ExpectedFailError} when the expected failure is verified, or with {@link UnexpectedSuccessFailureError} when `errorFn` resolves successfully.
+ * @returns Rejects with {@link ExpectedFailError} when the expected failure is verified, or with {@link UnexpectedSuccessFailureError} when `errorFn` resolves successfully.
  *
  * @example
  * ```ts

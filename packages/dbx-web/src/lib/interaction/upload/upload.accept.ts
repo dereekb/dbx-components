@@ -16,14 +16,14 @@ export function fileAcceptString(accept: FileAcceptString | FileAcceptFilterType
 }
 
 /**
- * A string that describes a type of file that can be selected.
+ * Describes a type of file that can be selected.
  *
  * Can either be a mime type or a file suffix.
  */
 export type FileAcceptFilterTypeString = MimeTypeWildcard | MimeTypeWithoutParameters | MimeTypeWithSubtypeWildcardWithoutParameters | SlashPathTypedFileSuffix;
 
 /**
- * An array of file accept filter type strings.
+ * The file accept filter type strings.
  */
 export type FileAcceptFilterTypeStringArray = FileAcceptFilterTypeString[];
 
@@ -31,7 +31,7 @@ export type FileAcceptFilterTypeStringArray = FileAcceptFilterTypeString[];
  * Converts a comma-separated accept string or array into a {@link FileAcceptFilterTypeStringArray}.
  *
  * @param accept - A file accept string or array of filter type strings to normalize.
- * @returns An array of individual filter type strings.
+ * @returns The individual filter type strings.
  *
  * @example
  * ```ts
@@ -91,7 +91,7 @@ export interface FileArrayAcceptMatchResult {
 }
 
 /**
- * A function that matches an array of files based on the internal configuration.
+ * Matches an array of files based on the internal configuration.
  */
 export type FileArrayAcceptMatchFunction = (input: File[]) => FileArrayAcceptMatchResult;
 
@@ -99,7 +99,7 @@ export type FileArrayAcceptMatchFunction = (input: File[]) => FileArrayAcceptMat
  * Creates a {@link FileArrayAcceptMatchFunction} that filters and separates files based on accept criteria and multiple file support.
  *
  * @param config - Configuration specifying the accept criteria and whether multiple files are allowed.
- * @returns A function that accepts an array of files and returns the categorized match result.
+ * @returns Accepts an array of files and returns the categorized match result.
  *
  * @example
  * ```ts

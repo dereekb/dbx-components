@@ -26,7 +26,7 @@ export interface ReplaceStringsConfig {
  * Creates a function that replaces all occurrences of the configured target strings with a replacement value.
  *
  * @param config - Configuration specifying strings to find and the replacement value.
- * @returns A function that performs the configured replacements on an input string.
+ * @returns Performs the configured replacements on an input string.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -100,7 +100,7 @@ export type EscapeStringCharactersFunction = (input: string) => string;
  * Creates an {@link EscapeStringCharactersFunction} that escapes specific characters in a string using the configured escape strategy.
  *
  * @param config - Configuration specifying which characters to escape and how to escape them.
- * @returns A function that escapes the configured characters in any input string.
+ * @returns Escapes the configured characters in any input string.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -188,7 +188,7 @@ export const escapeStringForRegex = escapeStringCharactersFunction({
  *
  * @param input - The string to search through.
  * @param max - Optional maximum number of occurrences to return.
- * @returns An array of zero-based indices where matching characters were found.
+ * @returns The zero-based indices where matching characters were found.
  */
 export type FindAllCharacterOccurencesFunction = (input: string, max?: Maybe<number>) => number[];
 
@@ -196,7 +196,7 @@ export type FindAllCharacterOccurencesFunction = (input: string, max?: Maybe<num
  * Creates a {@link FindAllCharacterOccurencesFunction} that searches for characters from the given set.
  *
  * @param characterSet - The set of characters to search for.
- * @returns A function that finds all occurrences of the configured characters in an input string.
+ * @returns Finds all occurrences of the configured characters in an input string.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -232,7 +232,7 @@ export function findAllCharacterOccurencesFunction(characterSet: Set<string>): F
  * @param set - The set of characters to search for.
  * @param input - The string to search through.
  * @param max - Optional maximum number of occurrences to return.
- * @returns An array of zero-based indices where matching characters were found.
+ * @returns The zero-based indices where matching characters were found.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -276,7 +276,7 @@ export type SplitStringAtFirstCharacterOccurenceFunction = (input: string) => Sp
  * Creates a function that splits a string into two parts at the first occurrence of any character in the configured set.
  *
  * @param splitAt - A single character or set of characters to split on.
- * @returns A function that splits input strings at the first matching character.
+ * @returns Splits input strings at the first matching character.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -329,7 +329,7 @@ export type KeepCharactersAfterFirstCharacterOccurenceFunction = (input: string)
  * Creates a function that returns only the characters after the first occurrence of any character in the configured set.
  *
  * @param findCharacters - A single character or set of characters to search for.
- * @returns A function that extracts the substring after the first matching character, or an empty string if none found.
+ * @returns Extracts the substring after the first matching character, or an empty string if none found.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -369,7 +369,7 @@ export type RemoveCharactersAfterFirstCharacterOccurenceFunction = (input: strin
  * Creates a function that removes all characters after (and including) the first occurrence of any character in the configured set.
  *
  * @param findCharacters - A single character or set of characters to search for.
- * @returns A function that truncates input strings at the first matching character.
+ * @returns Truncates input strings at the first matching character.
  *
  * @dbxUtil
  * @dbxUtilCategory string

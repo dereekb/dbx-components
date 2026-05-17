@@ -44,7 +44,7 @@ export interface CalcomUpdateEventTypeInput {
  * Retrieves all event types for the authenticated user.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that retrieves all event types.
+ * @returns Retrieves all event types.
  *
  * @see https://cal.com/docs/api-reference/v2/event-types/get-all-event-types
  *
@@ -62,7 +62,7 @@ export function getEventTypes(context: CalcomContext): () => Promise<CalcomGetEv
  * Creates a new event type for the authenticated user.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that creates a new event type from the given input.
+ * @returns Creates a new event type from the given input.
  *
  * @see https://cal.com/docs/api-reference/v2/event-types/create-an-event-type
  *
@@ -91,7 +91,7 @@ export function createEventType(context: CalcomContext): (input: CalcomCreateEve
  * Updates an existing event type by ID.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that updates an event type by ID.
+ * @returns Updates an event type by ID.
  *
  * @see https://cal.com/docs/api-reference/v2/event-types/update-an-event-type
  *
@@ -113,7 +113,7 @@ export function updateEventType(context: CalcomContext): (eventTypeId: CalcomEve
  * Deletes an event type by ID.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that deletes an event type by ID.
+ * @returns Deletes an event type by ID.
  *
  * @see https://cal.com/docs/api-reference/v2/event-types/delete-an-event-type
  *

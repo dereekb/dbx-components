@@ -1123,15 +1123,6 @@ function findFirstBranchNode(bodyNode: Node): { readonly branchKind: ComplexQuer
   return result;
 }
 
-/**
- * Walks the body looking for the first call to `where`, `orderBy`, or any
- * registered Firestore query helper. Used to enforce that dispatcher-tagged
- * factories only delegate to other query functions and never emit constraints
- * directly.
- *
- * @param bodyNode - The outer function body block.
- * @returns The offending call's callee name + line, or undefined when clean.
- */
 function getCallExpressionName(expression: Node): string | undefined {
   if (Node.isIdentifier(expression)) {
     return expression.getText();
@@ -1142,6 +1133,15 @@ function getCallExpressionName(expression: Node): string | undefined {
   return undefined;
 }
 
+/**
+ * Walks the body looking for the first call to `where`, `orderBy`, or any
+ * registered Firestore query helper. Used to enforce that dispatcher-tagged
+ * factories only delegate to other query functions and never emit constraints
+ * directly.
+ *
+ * @param bodyNode - The outer function body block.
+ * @returns The offending call's callee name + line, or undefined when clean.
+ */
 function findFirstConstraintCall(bodyNode: Node): { readonly callee: string; readonly line: number } | undefined {
   const calls = bodyNode.getDescendantsOfKind(SyntaxKind.CallExpression);
   calls.sort((a, b) => a.getStart() - b.getStart());

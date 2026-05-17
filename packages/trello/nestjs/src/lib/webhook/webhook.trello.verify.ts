@@ -50,7 +50,7 @@ export function trelloWebhookExpectedSignature(appSecret: TrelloAppSecret, rawBo
  * Verifies a Trello webhook event header.
  *
  * @param config - The verifier configuration.
- * @returns A function that verifies a Trello webhook event.
+ * @returns Verifies a Trello webhook event.
  *
  * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#webhook-signatures
  */

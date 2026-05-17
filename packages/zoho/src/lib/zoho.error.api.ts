@@ -174,7 +174,7 @@ export interface LogZohoServerErrorFunctionConfig {
  *
  * @param zohoApiNamePrefix - Prefix to use when logging (e.g. 'ZohoRecruit', 'ZohoSign')
  * @param options - Optional configuration for controlling which error types are logged.
- * @returns A function that logs Zoho server errors to the console.
+ * @returns Logs Zoho server errors to the console.
  *
  * @__NO_SIDE_EFFECTS__
  */

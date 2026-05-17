@@ -41,7 +41,7 @@ export type MapObjectMapFunction<M extends ObjectMap<I>, I = unknown, O = unknow
  * Creates a reusable {@link MapObjectMapFunction} that applies {@link mapObjectMap} with the given mapping function.
  *
  * @param mapFn - Function that transforms each value (receives value and key)
- * @returns A function that maps all values in an input object map.
+ * @returns Maps all values in an input object map.
  *
  * @dbxUtil
  * @dbxUtilCategory object
@@ -105,7 +105,7 @@ export type MapObjectKeyFunction<M> = <K extends keyof M>(key: K, value: M[K]) =
  * Creates a reusable {@link MapObjectKeysFunction} that transforms the keys of an input object using the given mapping function.
  *
  * @param mapKeyFn - Function that computes the new key from the old key and its value.
- * @returns A function that remaps keys on any input object.
+ * @returns Remaps keys on any input object.
  *
  * @dbxUtil
  * @dbxUtilCategory object

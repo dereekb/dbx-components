@@ -60,7 +60,7 @@ export function firebaseServerEnvTokenProvider<T extends FirebaseServerEnvironme
  * Use this when the NestJS app needs the config accessible via either token.
  *
  * @param env - The Firebase server environment configuration.
- * @returns An array of providers binding the config to both Firebase and base server env tokens.
+ * @returns The providers binding the config to both Firebase and base server env tokens.
  *
  * @Module ({
  *   providers: [...firebaseServerEnvTokenProviders(myEnvConfig)]

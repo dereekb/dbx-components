@@ -30,8 +30,8 @@ export type IsInNumberBoundFunction = (number: number) => boolean;
  * Creates a function that checks whether a number falls within the specified inclusive bounds.
  *
  * @param bounds - The min/max bounds to test against.
- * @returns A function that returns `true` if the input number is within bounds.
- * @throws Error if the bounds are invalid (min > max)
+ * @returns Returns `true` if the input number is within bounds.
+ * @throws {Error} If the bounds are invalid (min > max)
  *
  * @dbxUtil
  * @dbxUtilCategory number
@@ -73,7 +73,7 @@ export type WrapNumberFunction<T extends number = number> = MapFunction<number, 
  * When `fencePosts` is true, wraps to the nearest "fence post" value, extending the wrap range by one in each direction.
  *
  * @param wrapNumberFunctionConfig - Configuration with min, max, and optional fence post behavior.
- * @returns A function that wraps input numbers into the bounded range.
+ * @returns Wraps input numbers into the bounded range.
  *
  * @dbxUtil
  * @dbxUtilCategory number
@@ -122,7 +122,7 @@ export type BoundNumberFunction<T extends number = number> = MapFunction<number,
  * When `wrap` is true, uses modular wrapping. Otherwise, clamps values to the min/max range.
  *
  * @param boundNumberFunctionConfig - Configuration with min, max, and optional wrap behavior.
- * @returns A function that bounds input numbers into the configured range.
+ * @returns Bounds input numbers into the configured range.
  *
  * @dbxUtil
  * @dbxUtilCategory number

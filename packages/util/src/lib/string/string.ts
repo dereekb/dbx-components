@@ -423,7 +423,7 @@ export interface CutStringFunctionConfig {
 export const DEFAULT_CUT_STRING_END_TEXT = '...';
 
 /**
- * A function that truncates a string to a configured maximum length, optionally appending end text.
+ * Truncates a string to a configured maximum length, optionally appending end text.
  */
 export type CutStringFunction = ((input: string) => string) & ((input: Maybe<string>) => Maybe<string>);
 

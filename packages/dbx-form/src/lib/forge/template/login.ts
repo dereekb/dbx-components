@@ -212,7 +212,7 @@ export interface DbxForgeUsernameLoginFieldsConfig {
  * validator that ensures both password values match.
  *
  * @param config - Login fields configuration.
- * @returns An array of forge field definitions for the login form.
+ * @returns The forge field definitions for the login form.
  *
  * @dbxFormField
  * @dbxFormSlug username-password-login-fields

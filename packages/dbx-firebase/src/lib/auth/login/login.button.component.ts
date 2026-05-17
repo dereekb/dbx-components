@@ -199,7 +199,7 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
    * Handles the link action. Override in subclasses that support linking.
    * Throws by default for providers that do not support linking.
    *
-   * @returns A promise that resolves when the link action completes.
+   * @returns Resolves when the link action completes.
    */
   handleLink(): Promise<unknown> {
     throw new Error(`Linking is not supported for the "${this.loginProvider}" provider.`);
@@ -209,7 +209,7 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
    * Handles the unlink action by removing the provider from the current user.
    * Uses the {@link LOGIN_METHOD_TYPE_TO_FIREBASE_PROVIDER_ID_MAP} to resolve the Firebase provider ID.
    *
-   * @returns A promise that resolves when the unlink action completes.
+   * @returns Resolves when the unlink action completes.
    */
   handleUnlink(): Promise<unknown> {
     const providerId = loginMethodTypeToFirebaseProviderId(this.loginProvider);

@@ -90,7 +90,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
    * {@inheritDoc DbxInjectionContext.showContext}
    *
    * @param config - The injection context configuration describing the component and its usage.
-   * @returns A promise that resolves with the output of the injected component's usage.
+   * @returns Resolves to the output of the injected component's usage.
    */
   async showContext<T, O>(config: DbxInjectionContextConfig<T>): Promise<O> {
     // clear the current context before showing something new.

@@ -134,7 +134,7 @@ export const dbxInjectionComponentConfigIsEqual: EqualityComparatorFunction<Mayb
  * Provider arrays are concatenated so that all providers from all configs are preserved.
  * All other properties are merged with later values taking precedence.
  *
- * @param configs - An array of partial configs to merge. May contain `undefined`/`null` entries which are filtered out.
+ * @param configs - The partial configs to merge. May contain `undefined`/`null` entries which are filtered out.
  * @returns A single merged partial configuration.
  */
 export function mergeDbxInjectionComponentConfigs<T = unknown>(configs: Maybe<Partial<DbxInjectionComponentConfig<T>>>[]): Partial<DbxInjectionComponentConfig<T>> {

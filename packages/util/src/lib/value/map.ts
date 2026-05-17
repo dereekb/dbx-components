@@ -78,7 +78,7 @@ export type ApplyMapFunctionWithOptions<I, O, C> = (input: I, target?: Maybe<Par
  * Lifts a per-element MapFunction into one that operates on arrays, applying the mapping to each element.
  *
  * @param mapFunction - Per-element transformation.
- * @returns A function that maps entire arrays.
+ * @returns Maps entire arrays.
  *
  * @dbxUtil
  * @dbxUtilCategory value

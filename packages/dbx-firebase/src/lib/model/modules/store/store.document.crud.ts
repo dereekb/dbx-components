@@ -27,7 +27,7 @@ export type DbxFirebaseDocumentStoreCreateFunction<I, O extends OnCallCreateMode
  * @param store - The document store to capture the created model's key into.
  * @param fn - The Firebase create function to wrap.
  * @param config - Optional config with an `onResult` callback.
- * @returns A function that executes the create and sets the resulting key on the store.
+ * @returns Executes the create and sets the resulting key on the store.
  * @__NO_SIDE_EFFECTS__
  */
 export function firebaseDocumentStoreCreateFunction<I, O extends OnCallCreateModelResult = OnCallCreateModelResult>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseCreateFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<I, O>): DbxFirebaseDocumentStoreCreateFunction<I, O> {
@@ -100,7 +100,7 @@ export function firebaseDocumentStoreReadFunction<I extends DbxFirebaseDocumentS
  * @param store - The document store whose current key is injected into the request params.
  * @param fn - The Firebase update function to wrap.
  * @param config - Optional config with an `onResult` callback.
- * @returns A function that executes the update with the store's key injected.
+ * @returns Executes the update with the store's key injected.
  * @__NO_SIDE_EFFECTS__
  */
 export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseUpdateFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>): DbxFirebaseDocumentStoreFunction<I, O> {

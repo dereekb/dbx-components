@@ -58,7 +58,7 @@ export interface LoadUiComponentManifestsResult {
  *
  * @param input - Manifest sources plus an optional injected `readFile`
  * @returns Merged entries, category index, deterministic warnings, and the list of source labels that loaded.
- * @throws When a strict source fails or when zero manifests load successfully.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadUiComponentManifests(input: LoadUiComponentManifestsInput): Promise<LoadUiComponentManifestsResult> {
   const { entries, indexMap, warnings, loadedSources } = await loadManifestsBase<UiComponentManifest, UiComponentEntry>(input, {

@@ -3,7 +3,7 @@ import { type Maybe } from '../value';
 import { runAsyncTasksForValues, type RunAsyncTasksForValuesConfig } from './promise';
 
 /**
- * A function that returns a Promise, typically returning void/no value.
+ * Returns a Promise, typically returning void/no value.
  */
 export type AsyncTask<T = void> = AsyncFactory<T>;
 
@@ -21,7 +21,7 @@ export type NamedAsyncTask<T = void> = {
 export type NamedAsyncTaskRecord<T = void> = Record<string, AsyncTask<T>>;
 
 /**
- * A function that runs an array of named async tasks.
+ * Runs an array of named async tasks.
  */
 export type RunNamedAsyncTasksFunction<T = void> = (inputTasks: RunNamedAsyncTasksInput<T>, options?: Maybe<RunNamedAsyncTasksFunctionOptions<T>>) => Promise<RunNamedAsyncTasksResult<T>>;
 
@@ -129,7 +129,7 @@ export function runNamedAsyncTasksFunction<T = void>(config?: RunNamedAsyncTasks
  * Convenience function that creates a {@link RunNamedAsyncTasksFunction} and immediately
  * executes it with the given tasks.
  *
- * @param inputTasks - An array of named tasks or a record of task functions keyed by name.
+ * @param inputTasks - The named tasks or a record of task functions keyed by name.
  * @param config - Optional configuration for callbacks and default execution options.
  * @returns The result containing successful and failed tasks.
  */

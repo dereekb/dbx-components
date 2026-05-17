@@ -144,7 +144,7 @@ export class OidcService {
    * and a `grant_type=refresh_token` exchange fails with `invalid_grant`.
    *
    * @param grantId - The grant id (and Grant adapter entry id) to revoke.
-   * @throws When the Grant entry does not exist.
+   * @throws {Error} When the Grant entry does not exist.
    */
   async revokeGrant(grantId: string): Promise<void> {
     const provider = await this.getProvider();

@@ -65,7 +65,7 @@ export interface LoadFilterManifestsResult {
  *
  * @param input - Manifest sources plus an optional injected `readFile`
  * @returns Merged entries, kind index, deterministic warnings, and the list of source labels that loaded.
- * @throws When a strict source fails or when zero manifests load successfully.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadFilterManifests(input: LoadFilterManifestsInput): Promise<LoadFilterManifestsResult> {
   const { entries, indexMap, warnings, loadedSources } = await loadManifestsBase<FilterManifest, FilterEntry>(input, {

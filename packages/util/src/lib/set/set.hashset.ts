@@ -116,7 +116,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
    * Returns the values associated with the given keys, omitting keys that have no value.
    *
    * @param keys - The keys to look up.
-   * @returns An array of found values.
+   * @returns The found values.
    */
   valuesForKeys(keys: Maybe<K>[]): T[] {
     const values: T[] = [];
@@ -154,7 +154,7 @@ export class HashSet<K extends PrimativeKey, T> implements Set<T> {
   /**
    * Returns all values in the set as an array.
    *
-   * @returns An array of all stored values.
+   * @returns The all stored values.
    */
   valuesArray(): T[] {
     return [...this._map.values()];

@@ -18,7 +18,7 @@ export interface ExpandTree<T> {
    *
    * @param value The current value of type T to retrieve children for.
    * @param depth The depth of the current node.
-   * @returns An array of child values of type T, or undefined/null if no children exist.
+   * @returns The child values of type T, or undefined/null if no children exist.
    */
   getChildren(value: T, depth: number): Maybe<T[]>;
 }
@@ -42,7 +42,7 @@ export interface ExpandTreeWithNodeBuilder<T, N extends TreeNode<T, N>> extends 
 }
 
 /**
- * A function that expands an input value of type T into a TreeNode of type N.
+ * Expands an input value of type T into a TreeNode of type N.
  *
  * @template T The type of the input value to expand.
  * @template N The type of the TreeNode to be created. Defaults to TreeNode<T, any>.
@@ -116,7 +116,7 @@ export function expandTreeFunction<T, N extends TreeNode<T, N> = TreeNode<T, any
  * Convenience function for expanding multiple root values into an array of trees.
  * Each value in the input array is treated as a root for a new tree.
  *
- * @param values - An array of root values of type T to expand.
+ * @param values - The root values of type T to expand.
  * @param expandFn - An ExpandTreeFunction<T, N> used to expand each value into a tree.
  * @returns An array of N, where each N is the root node of an expanded tree.
  *

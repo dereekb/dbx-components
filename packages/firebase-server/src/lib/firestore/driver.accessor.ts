@@ -24,7 +24,7 @@ interface DocRefSource {
  * @param path - The initial collection path.
  * @param pathSegments - Optional pairs of [docId, collectionName] for subcollection traversal.
  * @returns The resolved {@link CollectionReference} at the given path.
- * @throws Error if pathSegments length is odd (segments must come in pairs).
+ * @throws {Error} If pathSegments length is odd (segments must come in pairs).
  *
  * @example
  * ```typescript

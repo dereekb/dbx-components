@@ -23,7 +23,7 @@ export interface CalcomGetMeResponse {
  * Retrieves the profile of the currently authenticated Cal.com user.
  *
  * @param context - The Cal.com API context providing authentication and fetch capabilities.
- * @returns A function that retrieves the authenticated user's profile.
+ * @returns Retrieves the authenticated user's profile.
  *
  * @see https://cal.com/docs/api-reference/v2/me
  *

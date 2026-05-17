@@ -293,7 +293,7 @@ export function findBestSplitStringTreeChildMatch<M = unknown>(tree: SplitString
  *
  * @param tree - The tree to search.
  * @param value - The string value to find a match path for.
- * @returns An array of tree nodes forming the match path from root to deepest match, or `undefined` if no match is found.
+ * @returns The tree nodes forming the match path from root to deepest match, or `undefined` if no match is found.
  */
 export function findBestSplitStringTreeMatchPath<M = unknown>(tree: SplitStringTree<M>, value: SplitStringTreeNodeString): Maybe<SplitStringTree<M>[]> {
   let bestResult = findBestSplitStringTreeChildMatchPath(tree, value);
@@ -312,7 +312,7 @@ export function findBestSplitStringTreeMatchPath<M = unknown>(tree: SplitStringT
  *
  * @param tree - The tree to search.
  * @param value - The string value to find a match path for.
- * @returns An array of child tree nodes forming the match path, or `undefined` if no match is found.
+ * @returns The child tree nodes forming the match path, or `undefined` if no match is found.
  */
 export function findBestSplitStringTreeChildMatchPath<M = unknown>(tree: SplitStringTree<M>, value: SplitStringTreeNodeString): Maybe<SplitStringTree<M>[]> {
   const { children } = tree;

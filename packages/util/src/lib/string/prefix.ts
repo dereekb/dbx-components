@@ -23,7 +23,7 @@ export type CharacterPrefix = string;
 export type CharacterSuffix = string;
 
 /**
- * A string that does not have a CharacterPrefix or CharacterSuffix.
+ * Does not have a CharacterPrefix or CharacterSuffix.
  *
  * @semanticType
  * @semanticTopic string
@@ -32,17 +32,17 @@ export type CharacterSuffix = string;
 export type CharacterPrefixSuffixCleanString = string;
 
 /**
- * A string that is a combination of a prefix and suffix.
+ * Is a combination of a prefix and suffix.
  */
 export type CharacterPrefixSuffixString<P extends CharacterPrefix = '', S extends CharacterSuffix = '', T extends string = string> = `${P}${T}${S}`;
 
 /**
- * A string that has a known prefix.
+ * Has a known prefix.
  */
 export type CharacterPrefixString<P extends CharacterPrefix = '', T extends string = string> = CharacterPrefixSuffixString<P, '', T>;
 
 /**
- * A string that has a known suffix.
+ * Has a known suffix.
  */
 export type CharacterSuffixString<S extends CharacterSuffix = '', T extends string = string> = CharacterPrefixSuffixString<'', S, T>;
 

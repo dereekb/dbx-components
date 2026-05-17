@@ -157,7 +157,7 @@ export interface PerformFullOAuthFlowInput {
  * @param input.uid - Firebase user ID for whom the test ID token is minted and the OAuth flow is authorized.
  * @param input.config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method).
  * @returns The exchanged access token and ID token from the OIDC `/token` endpoint.
- * @throws Error when the token exchange step fails (the response body and status are included in the message).
+ * @throws {Error} When the token exchange step fails (the response body and status are included in the message).
  */
 export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Promise<PerformFullOAuthFlowResult> {
   const { server, oidcClientService, nestApp, uid, config } = input;

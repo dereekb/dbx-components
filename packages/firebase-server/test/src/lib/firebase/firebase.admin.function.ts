@@ -28,7 +28,7 @@ let firebaseFunctionsTestInstance: Maybe<FeaturesList>;
  * @param reroll - When `true`, generates a new project ID instead of reusing the current one.
  * @returns The initialized {@link FeaturesList} singleton.
  *
- * @throws Error if `initFirebaseAdminTestEnvironment()` has not been called.
+ * @throws {Error} If `initFirebaseAdminTestEnvironment()` has not been called.
  *
  * @example
  * ```ts

@@ -8,7 +8,7 @@ import { transformStringFunction, type TransformStringFunctionConfig } from './t
 export type StringFactory<K extends string = string> = Factory<K>;
 
 /**
- * A function that converts a value of type T to a string.
+ * Converts a value of type T to a string.
  */
 export type ToStringFunction<T, K extends string = string> = FactoryWithRequiredInput<K, T>;
 

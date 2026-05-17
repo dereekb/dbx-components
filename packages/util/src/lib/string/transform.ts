@@ -98,7 +98,7 @@ export interface TransformStringFunctionConfigRef<S extends string = string> {
 }
 
 /**
- * A function that maps a string of type S to another string of type S.
+ * Maps a string of type S to another string of type S.
  *
  * @template S The specific string type, defaults to `string`.
  */
@@ -203,7 +203,7 @@ export type AddPrefixFunction = (input: string) => string;
  * Creates a function that adds a configured prefix to the input string if it does not exist on that string.
  *
  * @param prefix - The prefix to add.
- * @returns A function that adds the prefix to a string.
+ * @returns Adds the prefix to a string.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -238,7 +238,7 @@ export function addSuffix(suffix: string, input: string): string {
  * Creates a function that adds a configured suffix to the input string if it does not exist on that string.
  *
  * @param suffix - The suffix to add.
- * @returns A function that adds the suffix to a string.
+ * @returns Adds the suffix to a string.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -264,7 +264,7 @@ export type PadStartFunction = TransformStringFunction;
  *
  * @param minLength - The minimum length of the string.
  * @param padCharacter - The character to use for padding.
- * @returns A function that pads the start of a string.
+ * @returns Pads the start of a string.
  *
  * @dbxUtil
  * @dbxUtilCategory string

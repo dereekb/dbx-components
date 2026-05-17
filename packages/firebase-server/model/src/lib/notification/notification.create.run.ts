@@ -69,7 +69,7 @@ export interface CreateOrRunUniqueNotificationDocumentRunResult extends CreateNo
  *
  * @param input - Creation and run configuration.
  * @returns The creation pair result with optional send/enqueue outcomes.
- * @throws Error if the notification template is not flagged as unique.
+ * @throws {Error} If the notification template is not flagged as unique.
  *
  * @example
  * ```ts

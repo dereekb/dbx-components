@@ -718,8 +718,8 @@ export interface UpdateNotificationUserNotificationBoxRecipientConfigResult {
  *
  * @param input - The current state and intended change.
  * @returns The updated box config array and notification box recipient, if changes occurred.
- * @throws NotificationUserBlockedFromBeingAddedToRecipientsError when inserting a blocked user.
- * @throws NotificationUserLockedConfigFromBeingUpdatedError when updating a locked user's config.
+ * @throws {Error} NotificationUserBlockedFromBeingAddedToRecipientsError when inserting a blocked user.
+ * @throws {Error} NotificationUserLockedConfigFromBeingUpdatedError when updating a locked user's config.
  */
 export function updateNotificationUserNotificationBoxRecipientConfig(input: UpdateNotificationUserNotificationBoxRecipientConfigInput): UpdateNotificationUserNotificationBoxRecipientConfigResult {
   const { notificationBoxId, notificationUserId, notificationUser, insertingRecipientIntoNotificationBox, removeRecipientFromNotificationBox, notificationBoxRecipient } = input;

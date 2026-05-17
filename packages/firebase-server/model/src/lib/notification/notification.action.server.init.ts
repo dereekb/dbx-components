@@ -159,7 +159,7 @@ export interface InitializeNotificationModelInTransactionInput<D extends Firesto
  *
  * @param input - The document, transaction, template function, and options.
  * @returns An object with `initialized` and `alreadyInitialized` boolean flags.
- * @throws NotificationModelAlreadyInitializedError when `throwErrorIfAlreadyInitialized` is true.
+ * @throws {Error} NotificationModelAlreadyInitializedError when `throwErrorIfAlreadyInitialized` is true.
  */
 export async function initializeNotificationModelInTransaction<D extends FirestoreDocument<InitializedNotificationModel, any>>(input: InitializeNotificationModelInTransactionInput<D>) {
   const { makeTemplateFunction, throwErrorIfAlreadyInitialized, transaction, document: documentInTransaction, data: notificationBox } = input;

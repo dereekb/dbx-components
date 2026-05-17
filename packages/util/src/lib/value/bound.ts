@@ -246,7 +246,7 @@ export type LatLngBoundTupleFunctionConfig = LatLngBoundFunctionConfig;
  * applying optional precision to the resulting points.
  *
  * @param config - Optional configuration for point precision.
- * @returns A function that produces bound tuples from flexible inputs.
+ * @returns Produces bound tuples from flexible inputs.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -308,7 +308,7 @@ export interface LatLngBoundFunctionConfig {
  * or a pre-existing bound object.
  *
  * @param config - Optional configuration for point precision and custom point functions.
- * @returns A function that produces bounds from flexible inputs.
+ * @returns Produces bounds from flexible inputs.
  * @throws {Error} When the input cannot be parsed into a valid bound.
  *
  * @dbxUtil
@@ -467,7 +467,7 @@ export type IsWithinLatLngBoundFunction = LatLngBoundCheckFunction & { readonly 
  * both corners to be within.
  *
  * @param bound - The reference bound to check containment against.
- * @returns A function that returns `true` if the input is within the reference bound.
+ * @returns Returns `true` if the input is within the reference bound.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -555,7 +555,7 @@ export function latLngBoundOverlapsLatLngBound(a: LatLngBound, b: LatLngBound): 
  * handling antimeridian wrapping.
  *
  * @param bound - The reference bound to check overlap against.
- * @returns A function that returns `true` if the input overlaps the reference bound.
+ * @returns Returns `true` if the input overlaps the reference bound.
  *
  * @dbxUtil
  * @dbxUtilCategory value

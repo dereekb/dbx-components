@@ -30,7 +30,7 @@ export abstract class AbstractForwardDbxInjectionContextDirective implements Dbx
    * {@inheritDoc DbxInjectionContext.showContext}
    *
    * @param config - The injection context configuration to forward to the host context.
-   * @returns A promise that resolves with the output of the injected component's usage.
+   * @returns Resolves to the output of the injected component's usage.
    */
   showContext<T = unknown, O = unknown>(config: DbxInjectionContextConfig<T, unknown>): Promise<O> {
     return this.dbxInjectionContext.showContext(config);

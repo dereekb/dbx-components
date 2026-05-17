@@ -16,7 +16,7 @@ export type GetBoardFunction = (input: GetBoardInput) => Promise<TrelloBoard>;
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-id-get.
  *
  * @param context - The Trello API context.
- * @returns A function that retrieves a board by id.
+ * @returns Retrieves a board by id.
  */
 export function getBoard(context: TrelloContext): GetBoardFunction {
   return (input) => context.fetchJson(`/boards/${input.boardId}`, 'GET');
@@ -28,7 +28,7 @@ export type CreateBoardFunction = (input: CreateBoardBody) => Promise<TrelloBoar
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-post.
  *
  * @param context - The Trello API context.
- * @returns A function that creates a new board.
+ * @returns Creates a new board.
  */
 export function createBoard(context: TrelloContext): CreateBoardFunction {
   return (input) => {
@@ -47,7 +47,7 @@ export type UpdateBoardFunction = (input: UpdateBoardInput) => Promise<TrelloBoa
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-id-put.
  *
  * @param context - The Trello API context.
- * @returns A function that updates an existing board.
+ * @returns Updates an existing board.
  */
 export function updateBoard(context: TrelloContext): UpdateBoardFunction {
   return (input) => {
@@ -62,7 +62,7 @@ export type DeleteBoardFunction = (input: GetBoardInput) => Promise<void>;
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-id-delete.
  *
  * @param context - The Trello API context.
- * @returns A function that deletes a board.
+ * @returns Deletes a board.
  */
 export function deleteBoard(context: TrelloContext): DeleteBoardFunction {
   return async (input) => {
@@ -86,7 +86,7 @@ export type ListBoardListsFunction = (input: ListBoardListsInput) => Promise<Rea
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-id-lists-get.
  *
  * @param context - The Trello API context.
- * @returns A function that lists all lists on a board.
+ * @returns Lists all lists on a board.
  */
 export function listBoardLists(context: TrelloContext): ListBoardListsFunction {
   return (input) => {
@@ -107,7 +107,7 @@ export type ListBoardCardsFunction = (input: ListBoardCardsInput) => Promise<Rea
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-id-cards-get.
  *
  * @param context - The Trello API context.
- * @returns A function that lists all cards on a board.
+ * @returns Lists all cards on a board.
  */
 export function listBoardCards(context: TrelloContext): ListBoardCardsFunction {
   return (input) => {
@@ -131,7 +131,7 @@ export type ListBoardLabelsFunction = (input: ListBoardLabelsInput) => Promise<R
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-id-labels-get.
  *
  * @param context - The Trello API context.
- * @returns A function that lists every label defined on a board.
+ * @returns Lists every label defined on a board.
  */
 export function listBoardLabels(context: TrelloContext): ListBoardLabelsFunction {
   return (input) => {
@@ -155,7 +155,7 @@ export type ListBoardMembersFunction = (input: ListBoardMembersInput) => Promise
  * Https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-id-members-get.
  *
  * @param context - The Trello API context.
- * @returns A function that lists all members of a board.
+ * @returns Lists all members of a board.
  */
 export function listBoardMembers(context: TrelloContext): ListBoardMembersFunction {
   return (input) => context.fetchJson(`/boards/${input.boardId}/members`, 'GET');

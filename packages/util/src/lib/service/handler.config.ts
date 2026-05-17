@@ -42,7 +42,7 @@ export type HandlerSetFunction<T, R = HandleResult> = (handlerFunction: Internal
  *
  * @param accessor - The handler set accessor to register on.
  * @param key - The key (or keys) to associate the handler with.
- * @returns A function that accepts a handler function and registers it for the given key.
+ * @returns Accepts a handler function and registers it for the given key.
  *
  * @dbxUtil
  * @dbxUtilCategory service
@@ -63,7 +63,7 @@ export function handlerSetFunction<T, K extends PrimativeKey = string, R = Handl
 }
 
 /**
- * A function that registers a handler function whose input type differs from the handler's native type,
+ * Registers a handler function whose input type differs from the handler's native type,
  * using a mapping function to convert between them.
  */
 export type HandlerMappedSetFunction<I, R = HandleResult> = (handlerFunction: InternalHandlerFunction<I, R>) => void;
@@ -75,7 +75,7 @@ export type HandlerMappedSetFunction<I, R = HandleResult> = (handlerFunction: In
  * @param accessor - The handler set accessor to register on.
  * @param key - The key (or keys) to associate the handler with.
  * @param mapFn - Function to map from the handler's native type to the handler function's expected type.
- * @returns A function that accepts a mapped handler function and registers it.
+ * @returns Accepts a mapped handler function and registers it.
  *
  * @dbxUtil
  * @dbxUtilCategory service
@@ -121,12 +121,12 @@ export function handlerMappedSetFunctionFactory<I, T, K extends PrimativeKey = s
 }
 
 /**
- * A function that configures handler bindings via a configurer object.
+ * Configures handler bindings via a configurer object.
  */
 export type HandlerConfigurerFunction<C extends HandlerBindAccessor<T, K, R>, T, K extends PrimativeKey = string, R = HandleResult> = (configurer: C) => void;
 
 /**
- * A function that binds an object to a handler and invokes a configure callback.
+ * Binds an object to a handler and invokes a configure callback.
  */
 export type HandlerConfigurer<C extends HandlerBindAccessor<T, K, R>, T, K extends PrimativeKey = string, R = HandleResult> = (bindTo: unknown, configure: HandlerConfigurerFunction<C, T, K, R>) => void;
 

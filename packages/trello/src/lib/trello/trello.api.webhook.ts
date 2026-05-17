@@ -11,7 +11,7 @@ export type CreateWebhookFunction = (input: CreateWebhookBody) => Promise<Trello
  * https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#creating-a-webhook
  *
  * @param context - The Trello API context.
- * @returns A function that registers a new webhook.
+ * @returns Registers a new webhook.
  */
 export function createWebhook(context: TrelloContext): CreateWebhookFunction {
   return (input) => {
@@ -30,7 +30,7 @@ export type GetWebhookFunction = (input: GetWebhookInput) => Promise<TrelloWebho
  * Https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#retrieving-a-webhook.
  *
  * @param context - The Trello API context.
- * @returns A function that retrieves a webhook by id.
+ * @returns Retrieves a webhook by id.
  */
 export function getWebhook(context: TrelloContext): GetWebhookFunction {
   return (input) => context.fetchJson(`/webhooks/${input.webhookId}`, 'GET');
@@ -46,7 +46,7 @@ export type UpdateWebhookFunction = (input: UpdateWebhookInput) => Promise<Trell
  * Https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#updating-a-webhook.
  *
  * @param context - The Trello API context.
- * @returns A function that updates an existing webhook.
+ * @returns Updates an existing webhook.
  */
 export function updateWebhook(context: TrelloContext): UpdateWebhookFunction {
   return (input) => {
@@ -61,7 +61,7 @@ export type DeleteWebhookFunction = (input: GetWebhookInput) => Promise<void>;
  * Https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#deleting-a-webhook.
  *
  * @param context - The Trello API context.
- * @returns A function that deletes a webhook.
+ * @returns Deletes a webhook.
  */
 export function deleteWebhook(context: TrelloContext): DeleteWebhookFunction {
   return async (input) => {
@@ -82,7 +82,7 @@ export type ListWebhooksForTokenFunction = (input?: ListWebhooksForTokenInput) =
  * Https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/.
  *
  * @param context - The Trello API context.
- * @returns A function that lists all webhooks registered for a token.
+ * @returns Lists all webhooks registered for a token.
  */
 export function listWebhooksForToken(context: TrelloContext): ListWebhooksForTokenFunction {
   return (input) => {

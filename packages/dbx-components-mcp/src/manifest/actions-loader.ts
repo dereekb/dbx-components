@@ -53,7 +53,7 @@ export interface LoadActionManifestsResult {
  *
  * @param input - Manifest sources plus an optional injected `readFile`
  * @returns Merged entries, role index, deterministic warnings, and the list of source labels that loaded.
- * @throws When a strict source fails or when zero manifests load successfully.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadActionManifests(input: LoadActionManifestsInput): Promise<LoadActionManifestsResult> {
   const { entries, indexMap, warnings, loadedSources } = await loadManifestsBase<ActionManifest, ActionEntry>(input, {
