@@ -1,6 +1,6 @@
 import nx from '@nx/eslint-plugin';
 import unusedImports from 'eslint-plugin-unused-imports';
-import importPlugin from 'eslint-plugin-import';
+import importPlugin from 'eslint-plugin-import-x';
 import prettierConfig from 'eslint-config-prettier';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
@@ -40,15 +40,16 @@ export default [
   {
     files: ['**/*.{ts,tsx,mts,cts,html}'],
     rules: {
-      'import/no-unresolved': 'off',
-      'import/namespace': 'off'
+      'import-x/no-unresolved': 'off',
+      'import-x/namespace': 'off',
+      'import-x/default': 'off' // disabled: TypeScript handles CJS-default interop natively (e.g. `import tsParser from '@typescript-eslint/parser'`), but import-x reports it as missing
     }
   },
   {
     files: ['**/*.{ts,tsx}'],
     ignores: ['**/*.spec.ts', '**/*.spec.tsx'],
     rules: {
-      'import/no-duplicates': ['warn', { considerQueryString: true, 'prefer-inline': true }]
+      'import-x/no-duplicates': ['warn', { considerQueryString: true, 'prefer-inline': true }]
     }
   },
   {
@@ -81,7 +82,8 @@ export default [
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off', // disabled: not auto-fixable and manual fixes remove runtime-necessary guards when types don't reflect actual nullability (e.g. empty array returns)
       '@typescript-eslint/no-empty-object-type': 'off', // disabled: empty object types are used intentionally
-      '@typescript-eslint/no-empty-interface': 'off' // disabled: empty interfaces are used intentionally for extensibility
+      '@typescript-eslint/no-empty-interface': 'off', // disabled: empty interfaces are used intentionally for extensibility
+      'no-useless-assignment': 'off' // disabled: conflicts with the workspace's dereekb-util/require-single-return pattern (default-init then conditionally reassign)
     }
   },
   {
