@@ -220,6 +220,49 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
     expect(result.entries[0].constraintSequences).toEqual([]);
   });
 
+  it('parses @dbxModelFirebaseIndexAllowArrayContainsAny as allowArrayContainsAny = true', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { jw: string[] };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexAllowArrayContainsAny
+         */
+        export function jobsWithAnyWeek(weeks: string[]): unknown {
+          return where<Job>('jw', 'array-contains-any', weeks);
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].allowArrayContainsAny).toBe(true);
+  });
+
+  it('defaults allowArrayContainsAny to false when the tag is absent', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { status: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function defaultQuery(): unknown {
+          return where<Job>('status', '==', 'active');
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].allowArrayContainsAny).toBe(false);
+  });
+
   it('errors with complex-query-body when constraints sit inside if-branches', () => {
     const project = projectWith({
       '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,

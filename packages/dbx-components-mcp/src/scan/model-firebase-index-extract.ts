@@ -41,6 +41,7 @@ const INDEX_MODEL_TAG = 'dbxModelFirebaseIndexModel';
 const INDEX_SCOPE_TAG = 'dbxModelFirebaseIndexScope';
 const INDEX_MANUAL_TAG = 'dbxModelFirebaseIndexManual';
 const INDEX_SKIP_TAG = 'dbxModelFirebaseIndexSkip';
+const INDEX_ALLOW_ARRAY_CONTAINS_ANY_TAG = 'dbxModelFirebaseIndexAllowArrayContainsAny';
 const INDEX_CATEGORY_TAG = 'dbxModelFirebaseIndexCategory';
 const INDEX_TAGS_TAG = 'dbxModelFirebaseIndexTags';
 const INDEX_RELATED_TAG = 'dbxModelFirebaseIndexRelated';
@@ -82,6 +83,7 @@ export interface ExtractedModelFirebaseIndexEntry {
   readonly scope: FirestoreQueryScope;
   readonly manual: boolean;
   readonly skip: boolean;
+  readonly allowArrayContainsAny: boolean;
   readonly category: string;
   readonly signature: string;
   readonly description: string;
@@ -227,6 +229,7 @@ interface ParsedIndexTags {
   readonly manual: boolean;
   readonly skip: boolean;
   readonly dispatcher: boolean;
+  readonly allowArrayContainsAny: boolean;
   readonly category?: string;
   readonly explicitTags: readonly string[];
   readonly relatedSlugs: readonly string[];
@@ -252,6 +255,7 @@ interface MutableTagState {
   manual: boolean;
   skip: boolean;
   dispatcher: boolean;
+  allowArrayContainsAny: boolean;
   category: string | undefined;
   readonly explicitTags: string[];
   readonly relatedSlugs: string[];
@@ -273,6 +277,7 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     manual: false,
     skip: false,
     dispatcher: false,
+    allowArrayContainsAny: false,
     category: undefined,
     explicitTags: [],
     relatedSlugs: [],
@@ -312,6 +317,7 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     manual: state.manual,
     skip: state.skip,
     dispatcher: state.dispatcher,
+    allowArrayContainsAny: state.allowArrayContainsAny,
     category: state.category,
     explicitTags: state.explicitTags,
     relatedSlugs: state.relatedSlugs,
@@ -346,6 +352,9 @@ function applyTag(state: MutableTagState, name: string, text: string): void {
       break;
     case INDEX_DISPATCHER_TAG:
       state.dispatcher = parseBooleanTag(text) ?? true;
+      break;
+    case INDEX_ALLOW_ARRAY_CONTAINS_ANY_TAG:
+      state.allowArrayContainsAny = parseBooleanTag(text) ?? true;
       break;
     case INDEX_CATEGORY_TAG:
       state.category = text;
@@ -504,6 +513,7 @@ function composeEntry(input: ComposeEntryInput): ExtractedModelFirebaseIndexEntr
     scope,
     manual: tags.manual,
     skip: tags.skip,
+    allowArrayContainsAny: tags.allowArrayContainsAny,
     category,
     signature,
     description: tags.summary,

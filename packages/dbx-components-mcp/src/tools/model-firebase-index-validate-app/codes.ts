@@ -207,8 +207,8 @@ export enum ModelFirebaseIndexValidateAppCode {
    *
    * @dbxRuleSeverity warning
    * @dbxRuleApplies Every constraint sequence with at least one `array-contains-any` `where`.
-   * @dbxRuleNotApplies Queries using `array-contains` (singular) — those have full composite support.
-   * @dbxRuleFix Confirm the deployed composite supports `array-contains-any` for the field set, or restructure to `array-contains` with a denormalised flag.
+   * @dbxRuleNotApplies Queries using `array-contains` (singular) — those have full composite support. Also suppressed when the factory is tagged `@dbxModelFirebaseIndexAllowArrayContainsAny`.
+   * @dbxRuleFix Confirm the deployed composite supports `array-contains-any` for the field set and add `@dbxModelFirebaseIndexAllowArrayContainsAny` to silence the advisory, or restructure to `array-contains` with a denormalised flag.
    */
   MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY = 'MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY',
 

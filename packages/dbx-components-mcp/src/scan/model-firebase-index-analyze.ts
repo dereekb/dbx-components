@@ -24,7 +24,7 @@
  * companion fieldOverrides).
  */
 
-import { type ConstraintSequence, type ConstraintSequenceEntry, type DerivedComposite, type DerivedFieldOverride, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder, type FirestoreQueryScope, type FirestoreWhereOperator , DEFAULT_FIRESTORE_INDEX_DENSITY } from '../manifest/model-firebase-index-schema.js';
+import { type ConstraintSequence, type ConstraintSequenceEntry, type DerivedComposite, type DerivedFieldOverride, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder, type FirestoreQueryScope, type FirestoreWhereOperator, DEFAULT_FIRESTORE_INDEX_DENSITY } from '../manifest/model-firebase-index-schema.js';
 import type { ExtractedModelFirebaseIndexEntry } from './model-firebase-index-extract.js';
 
 // MARK: Public types
@@ -84,7 +84,7 @@ export function analyzeEntry(entry: ExtractedModelFirebaseIndexEntry): AnalyzedE
   const warnings: AnalyzerWarning[] = [];
 
   for (const sequence of entry.constraintSequences) {
-    const result = analyzeSequence({ sequence, collection: entry.collection, scope: entry.scope, factoryName: entry.name });
+    const result = analyzeSequence({ sequence, collection: entry.collection, scope: entry.scope, factoryName: entry.name, allowArrayContainsAny: entry.allowArrayContainsAny });
     for (const warning of result.warnings) {
       warnings.push(warning);
     }
@@ -119,6 +119,7 @@ interface AnalyzeSequenceInput {
   readonly collection: string;
   readonly scope: FirestoreQueryScope;
   readonly factoryName: string;
+  readonly allowArrayContainsAny: boolean;
 }
 
 type AnalyzeSequenceResult = { readonly kind: 'composite'; readonly composite: DerivedComposite; readonly warnings: readonly AnalyzerWarning[] } | { readonly kind: 'fieldOverride'; readonly fieldOverride: { readonly fieldPath: string; readonly variant: DerivedFieldOverrideVariant }; readonly warnings: readonly AnalyzerWarning[] } | { readonly kind: 'auto'; readonly warnings: readonly AnalyzerWarning[] };
@@ -159,9 +160,9 @@ function bucketConstraints(entries: readonly ConstraintSequenceEntry[]): Buckete
         ranges.push(entry);
       }
     } else if (ARRAY_OPERATORS.has(op) && !seenArrayFields.has(entry.fieldPath)) {
-        seenArrayFields.add(entry.fieldPath);
-        arrays.push(entry);
-      }
+      seenArrayFields.add(entry.fieldPath);
+      arrays.push(entry);
+    }
   }
 
   return {
@@ -174,16 +175,18 @@ function bucketConstraints(entries: readonly ConstraintSequenceEntry[]): Buckete
 }
 
 function analyzeSequence(input: AnalyzeSequenceInput): AnalyzeSequenceResult {
-  const { sequence, collection, scope, factoryName } = input;
+  const { sequence, collection, scope, factoryName, allowArrayContainsAny } = input;
   const buckets = bucketConstraints(sequence.entries);
   const warnings: AnalyzerWarning[] = [];
 
   if (buckets.ranges.length > 1) {
     warnings.push({ kind: 'multiple-range-fields', factoryName, fields: buckets.ranges.map((r) => r.fieldPath) });
   }
-  for (const arrayEntry of buckets.arrays) {
-    if (arrayEntry.operator === 'array-contains-any') {
-      warnings.push({ kind: 'unsupported-array-contains-any', factoryName, field: arrayEntry.fieldPath });
+  if (!allowArrayContainsAny) {
+    for (const arrayEntry of buckets.arrays) {
+      if (arrayEntry.operator === 'array-contains-any') {
+        warnings.push({ kind: 'unsupported-array-contains-any', factoryName, field: arrayEntry.fieldPath });
+      }
     }
   }
 

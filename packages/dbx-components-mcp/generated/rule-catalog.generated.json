@@ -478,8 +478,8 @@
     "title": "A field uses the `array-contains-any` operator — index support is partial",
     "whatItFlags": "A field uses the `array-contains-any` operator — index support is partial.",
     "whenItApplies": "Every constraint sequence with at least one `array-contains-any` `where`.",
-    "whenItDoesNotApply": "Queries using `array-contains` (singular) — those have full composite support.",
-    "canonicalFix": "Confirm the deployed composite supports `array-contains-any` for the field set, or restructure to `array-contains` with a denormalised flag."
+    "whenItDoesNotApply": "Queries using `array-contains` (singular) — those have full composite support. Also suppressed when the factory is tagged `@dbxModelFirebaseIndexAllowArrayContainsAny`.",
+    "canonicalFix": "Confirm the deployed composite supports `array-contains-any` for the field set and add `@dbxModelFirebaseIndexAllowArrayContainsAny` to silence the advisory, or restructure to `array-contains` with a denormalised flag."
   },
   {
     "code": "MODEL_FIREBASE_INDEX_UNSUPPORTED_SCOPE",
