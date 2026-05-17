@@ -195,7 +195,7 @@ function functionLikeFromAnchor(anchor: AstNode): Maybe<AstNode> {
   return result;
 }
 
-const TYPE_RESTATING_PATTERNS: readonly RegExp[] = [/^a string\b/i, /^a number\b/i, /^a boolean\b/i, /^an array of\b/i, /^an instance of\b/i, /^a (?:map|set|promise|function|array|object|date)\b/i, /^the (?:string|number|boolean|array|map|set|promise|object|date) /i];
+const TYPE_RESTATING_PATTERNS: readonly RegExp[] = [/^a string\b/i, /^a number\b/i, /^a boolean\b/i, /^an array of\b/i, /^an instance of\b/i, /^a (?:map|set|promise|function|array|object|date)\b/i, /^the (?:string|number|boolean|array|map|set|promise|object|date)(?:\s+(?:value|object|data|instance))?\s*\.?\s*$/i];
 
 /**
  * Returns the tag-order rank for a parsed tag, using the configured workspace prefixes.
@@ -951,7 +951,18 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
 
         if (functionNode && Array.isArray(functionNode.params) && paramTags.length > 0) {
           const declared = functionNode.params.map((p: AstNode) => extractParamName(p)).filter((n: Maybe<string>): n is string => typeof n === 'string');
-          const documented = paramTags.map((t) => t.name ?? '');
+          // Collapse JSDoc dot-notation (e.g. `input.foo`) and consecutive dot-notation runs to the parent param.
+          // `@param input.a` and `@param input.b` both reference the single declared `input` parameter.
+          const documentedRaw = paramTags.map((t) => t.name ?? '');
+          const documented: string[] = [];
+          let lastBase: Maybe<string> = null;
+          for (const name of documentedRaw) {
+            const base = name.split('.')[0];
+            if (base !== lastBase) {
+              documented.push(base);
+              lastBase = base;
+            }
+          }
           for (let i = 0; i < Math.min(declared.length, documented.length); i += 1) {
             if (declared[i] !== documented[i]) {
               reportRangeMessage(commentNode, parsed, 'paramOrder', paramTags[i].startLineIndex, { name: documented[i] || '<unknown>', expected: declared[i] });
@@ -1157,6 +1168,11 @@ function extractParamName(param: AstNode): Maybe<string> {
     name = param.argument.name;
   } else if (param.type === 'TSParameterProperty' && param.parameter?.type === 'Identifier') {
     name = param.parameter.name;
+  }
+
+  // TypeScript's `this` parameter is a type-only declaration, not a documentable positional parameter.
+  if (name === 'this') {
+    name = null;
   }
 
   return name;

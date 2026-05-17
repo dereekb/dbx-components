@@ -198,6 +198,34 @@ function foo(a: number, b: number): number { return a + b; }
 `);
       expect(messagesById(errors).paramOrder).toBeGreaterThanOrEqual(1);
     });
+
+    it('treats JSDoc dot-notation `input.foo` as referring to the parent `input` param', () => {
+      const errors = lintCode(`
+/**
+ * Parses input.
+ *
+ * @param input.a - First sub-field.
+ * @param input.b - Second sub-field.
+ * @returns The result.
+ */
+function parse(input: { a: string; b: string }): string { return input.a + input.b; }
+`);
+      expect(messagesById(errors).paramOrder ?? 0).toBe(0);
+    });
+
+    it('does not treat TypeScript `this` parameter as a positional @param', () => {
+      const errors = lintCode(`
+/**
+ * Asserts something.
+ *
+ * @param received - The value under test.
+ * @param expected - The reference value.
+ * @returns The result.
+ */
+function check(this: { isNot: boolean }, received: number, expected: number): number { return received - expected; }
+`);
+      expect(messagesById(errors).paramOrder ?? 0).toBe(0);
+    });
   });
 
   describe('@returns format', () => {
@@ -360,6 +388,48 @@ function foo(n: number): number[] { return []; }
  */
 function foo(x: number): number { return x + 1; }
 `);
+      expect(messagesById(errors).descriptionTypeRestating ?? 0).toBe(0);
+    });
+
+    it('flags bare "the {type}" descriptions that add no purpose', () => {
+      const errors = lintCode(`
+/**
+ * Stores a set.
+ *
+ * @param values - The set.
+ * @returns The set.
+ */
+function foo(values: Set<number>): Set<number> { return values; }
+`);
+      expect(messagesById(errors).descriptionTypeRestating).toBeGreaterThanOrEqual(1);
+    });
+
+    it('flags "the {type} value" descriptions that add no purpose', () => {
+      const errors = lintCode(`
+/**
+ * Stores a value.
+ *
+ * @param v - The string value.
+ * @returns Numeric result.
+ */
+function foo(v: string): number { return v.length; }
+`);
+      expect(messagesById(errors).descriptionTypeRestating).toBeGreaterThanOrEqual(1);
+    });
+
+    it('passes when "the {type} ..." description adds purpose info', () => {
+      const errors = lintCode(`
+/**
+ * Copies a set.
+ *
+ * @param source - The set to copy.
+ * @param fn - Callback that mutates the copied set.
+ * @returns The copied set.
+ */
+function copy<T>(source: Set<T>, fn: (s: Set<T>) => void): Set<T> { return new Set(source); }
+`);
+      // "The set to copy." adds purpose info — should not be flagged.
+      // "The copied set." is the @returns description; it's just describing the role of the result.
       expect(messagesById(errors).descriptionTypeRestating ?? 0).toBe(0);
     });
   });
