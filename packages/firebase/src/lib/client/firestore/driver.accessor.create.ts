@@ -7,15 +7,16 @@ import { type WithFieldValue, type WriteResult } from '../../common/firestore/ty
  * Used by client-side accessor implementations (default, transaction) as their `create()` method.
  * Checks for document existence first, then calls `set()` if the document is absent.
  *
- * @param accessor - the accessor to perform the existence check and set operation on
- * @returns a function that creates the document if it does not exist, or throws if it does
- * @throws {Error} When the document already exists at the reference path
+ * @param accessor - Accessor used to check for existence and write the new document.
+ * @returns Create function that writes the document or throws when it already exists.
+ * @throws {Error} When the document already exists at the reference path.
  *
  * @example
  * ```ts
  * const create = createWithAccessor(accessor);
  * await create({ name: 'New Item' }); // throws if document already exists
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createWithAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>): (data: WithFieldValue<T>) => Promise<void | WriteResult> {

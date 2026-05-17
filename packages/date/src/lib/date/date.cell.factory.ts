@@ -1354,7 +1354,7 @@ export interface IsDateWithinDateCellRangeConfig {
  */
 export function isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRangeConfig): IsDateWithinDateCellRangeFunction {
   const { startsAt: inputStartsAt, range: inputRange } = config;
-  let startsAt: Maybe<DateCellTimingStartsAt> = inputStartsAt;
+  let startsAt: DateCellTimingStartsAt | undefined = inputStartsAt;
 
   let dateRange: Maybe<DateRangeStart & Partial<DateRange>>;
   let rangeInput: Maybe<DateCell | DateCellRange>;

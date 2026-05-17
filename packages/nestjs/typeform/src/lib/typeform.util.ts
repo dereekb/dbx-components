@@ -24,8 +24,8 @@ export interface TypeformTemplateRef {
  *
  * Returns an array of TypeformTemplateRef objects describing each match, its type, and its ref value.
  *
- * @param input - the string to search for template references
- * @returns an array of TypeformTemplateRef objects for each match found
+ * @param input - Source string to search for template references.
+ * @returns One TypeformTemplateRef per match, in left-to-right order.
  */
 export function findTypeformTemplateRefsInString(input: string): TypeformTemplateRef[] {
   /**

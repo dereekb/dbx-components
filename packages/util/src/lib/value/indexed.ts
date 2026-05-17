@@ -1,5 +1,4 @@
 import { findValuesFrom, type FindValuesFromInput } from '../set/set';
-import type { Maybe } from '@dereekb/util';
 import { type ArrayOrValue, asArray, lastValue } from '../array/array';
 import { objectHasKey } from '../object/object';
 import { HashSet } from '../set/set.hashset';
@@ -163,7 +162,7 @@ export function indexDeltaGroupFunction<T>(readIndex: ReadMaybeIndexFunction<T>)
       return index != null;
     });
 
-    let deletedItems: Maybe<T[]>;
+    let deletedItems: T[] | undefined;
 
     if (previousItems != null) {
       // compute delta if available

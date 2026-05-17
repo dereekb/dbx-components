@@ -688,8 +688,8 @@ function normalizeTagOrder(model: CanonicalJsdocModel, functionNode: Maybe<AstNo
       }
 
       paramEntries.sort((a, b) => {
-        const ai = a.tag.name === undefined ? -1 : declared.indexOf(a.tag.name);
-        const bi = b.tag.name === undefined ? -1 : declared.indexOf(b.tag.name);
+        const ai = a.tag.name == null ? -1 : declared.indexOf(a.tag.name);
+        const bi = b.tag.name == null ? -1 : declared.indexOf(b.tag.name);
         const aRank = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
         const bRank = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
         return aRank - bRank || a.index - b.index;
@@ -837,7 +837,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       const endInValue = startInValue + (line?.text?.length ?? 0);
       const start = commentValueToSourceOffset(commentNode, startInValue);
       const end = commentValueToSourceOffset(commentNode, endInValue);
-      const fix = AUTOFIXABLE_MESSAGE_IDS.has(messageId) ? takeCommentFix() : undefined;
+      const fix = AUTOFIXABLE_MESSAGE_IDS.has(messageId) ? (takeCommentFix() ?? undefined) : undefined;
       context.report({
         loc: {
           start: sourceCode.getLocFromIndex(start),
@@ -1048,7 +1048,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       const indent = getCommentLineIndent(sourceText, commentNode);
       const wantsMultiline = !!(checkSingleLine && parsed.singleLine && functionNode && Array.isArray(functionNode.params) && functionNode.params.length > 0);
 
-      if (indent !== null) {
+      if (indent != null) {
         const model = buildCanonicalModel(parsed);
         applyCanonicalNormalizations(model, functionNode, workspacePrefixes, wantsMultiline);
         const newValue = serializeJsdocValue(model, indent, workspacePrefixes);

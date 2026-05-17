@@ -1,5 +1,4 @@
 import { firstValueFromIterable, forEachInIterable } from './iterable/iterable';
-import type { Maybe } from '@dereekb/util';
 import { type MapFunction, mapIdentityFunction, type MapSameFunction } from './value/map';
 import { type Maybe, type MaybeMap } from './value/maybe.type';
 

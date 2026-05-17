@@ -178,7 +178,7 @@ export const utilRequireDbxFormFieldCompanionTagsRule: UtilRequireDbxFormFieldCo
       const tier = determineTier(markers, tierTags);
 
       if (markers.some((m) => m.tag === 'dbxFormField')) {
-        if (tier === undefined) {
+        if (tier == null) {
           reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingTier', report: context.report });
         } else if (!allowedTiers.includes(tier)) {
           reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tierTags[0]?.startLineIndex ?? triggerLine, messageId: 'invalidTier', data: { value: tier, allowed: allowedTiers.join(', ') }, report: context.report });

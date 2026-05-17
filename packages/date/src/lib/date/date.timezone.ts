@@ -1153,7 +1153,7 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
 
     let baseDate: Date;
     let copyFrom: Maybe<Date>;
-    let result: Date;
+    let result: Maybe<Date>;
     let shortCircuited = false;
 
     // set copyFrom

@@ -58,8 +58,9 @@ export class FirebaseModelPermissionServiceInstance<C extends FirebaseModelConte
 /**
  * Creates a {@link FirebaseModelPermissionServiceInstance} from a delegate.
  *
- * @param delegate - provides model loading and role computation
- * @returns a {@link FirebaseModelPermissionServiceInstance} configured with the given delegate
+ * @param delegate - Provides model loading and role computation.
+ * @returns A {@link FirebaseModelPermissionServiceInstance} configured with the given delegate.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firebaseModelPermissionService<C extends FirebaseModelContext, T, D extends FirestoreDocument<T> = FirestoreDocument<T>, R extends string = string>(delegate: FirebasePermissionServiceInstanceDelegate<C, T, D, R>): FirebaseModelPermissionServiceInstance<C, T, D, R> {

@@ -13,9 +13,10 @@ import { MAP_IDENTITY } from '@dereekb/util';
  *
  * If the input array is empty, an Observable that emits an empty array is returned.
  *
+ * @param documents - Array of document instances to stream snapshots for.
+ * @returns Observable that emits arrays of DocumentSnapshots whenever any document changes.
+ *
  * @template D - The FirestoreDocument implementation type
- * @param documents - Array of document instances to stream snapshots for
- * @returns Observable that emits arrays of DocumentSnapshots whenever any document changes
  */
 export function latestSnapshotsFromDocuments<D extends FirestoreDocument<any>>(documents: D[]): Observable<DocumentSnapshot<FirestoreDocumentData<D>>[]> {
   return mapLatestSnapshotsFromDocuments(documents, map(MAP_IDENTITY));
@@ -32,9 +33,9 @@ export function latestSnapshotsFromDocuments<D extends FirestoreDocument<any>>(d
  *
  * Returns `of([])` for an empty input array.
  *
- * @param documents - Documents to stream from
- * @param operator - RxJS operator applied to each document's snapshot stream individually
- * @returns Observable emitting an array of transformed values whenever any document changes
+ * @param documents - Documents to stream from.
+ * @param operator - RxJS operator applied to each document's snapshot stream individually.
+ * @returns Observable emitting an array of transformed values whenever any document changes.
  */
 export function mapLatestSnapshotsFromDocuments<D extends FirestoreDocument<any>, O>(documents: D[], operator: OperatorFunction<DocumentSnapshot<FirestoreDocumentData<D>>, O>): Observable<O[]> {
   return documents.length ? combineLatest(documents.map((x) => x.accessor.stream().pipe(operator))) : of([]);
@@ -50,9 +51,10 @@ export function mapLatestSnapshotsFromDocuments<D extends FirestoreDocument<any>
  *
  * Non-existent documents are filtered out of the results automatically.
  *
+ * @param documents - Array of document instances to stream data for.
+ * @returns Observable that emits arrays of document data whenever any document changes.
+ *
  * @template D - The FirestoreDocument implementation type
- * @param documents - Array of document instances to stream data for
- * @returns Observable that emits arrays of document data whenever any document changes
  */
 export function streamDocumentSnapshotsData<D extends FirestoreDocument<any>>(documents: D[]): Observable<DocumentDataWithIdAndKey<FirestoreDocumentData<D>>[]> {
   return latestSnapshotsFromDocuments<D>(documents).pipe(dataFromDocumentSnapshots());
@@ -65,8 +67,9 @@ export function streamDocumentSnapshotsData<D extends FirestoreDocument<any>>(do
  * and filters out non-existent documents. It's designed to be used in a pipe after
  * operations that produce arrays of snapshots.
  *
+ * @returns An operator that transforms arrays of DocumentSnapshots into arrays of document data.
+ *
  * @template T - The document data type
- * @returns An operator that transforms arrays of DocumentSnapshots into arrays of document data
  */
 export function dataFromDocumentSnapshots<T>(): OperatorFunction<DocumentSnapshot<T>[], DocumentDataWithIdAndKey<T>[]> {
   return map((x: DocumentSnapshot<T>[]) => getDataFromDocumentSnapshots<T>(x));
@@ -85,8 +88,8 @@ export function dataFromDocumentSnapshots<T>(): OperatorFunction<DocumentSnapsho
  *
  * This is the streaming equivalent of {@link import('./document.utility').getDocumentSnapshotDataPairs}.
  *
- * @param documents - Documents to stream snapshot-data pairs for
- * @returns Observable emitting snapshot-data pairs whenever any document changes
+ * @param documents - Documents to stream snapshot-data pairs for.
+ * @returns Observable emitting snapshot-data pairs whenever any document changes.
  */
 export function streamDocumentSnapshotDataPairs<D extends FirestoreDocument<any>>(documents: D[]): Observable<FirestoreDocumentSnapshotDataPair<D>[]> {
   return documents.length
@@ -117,14 +120,15 @@ export function streamDocumentSnapshotDataPairs<D extends FirestoreDocument<any>
  *
  * This is the streaming equivalent of {@link import('./document.utility').getDocumentSnapshotDataPairsWithData}.
  *
- * @param documents - Documents to stream snapshot-data pairs for
- * @returns Observable emitting snapshot-data pairs for existing documents only, whenever any document changes
+ * @param documents - Documents to stream snapshot-data pairs for.
+ * @returns Observable emitting snapshot-data pairs for existing documents only, whenever any document changes.
  */
 export function streamDocumentSnapshotDataPairsWithData<D extends FirestoreDocument<any>>(documents: D[]): Observable<FirestoreDocumentSnapshotDataPairWithData<D>[]> {
   return streamDocumentSnapshotDataPairs(documents).pipe(map((pairs) => pairs.filter((pair): pair is FirestoreDocumentSnapshotDataPairWithData<D> => pair.data != null)));
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use {@link streamDocumentSnapshotsData} instead.
  */

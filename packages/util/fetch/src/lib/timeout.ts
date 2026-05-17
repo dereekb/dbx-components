@@ -35,7 +35,7 @@ export function fetchTimeout(inputFetch: typeof fetch): typeof fetch {
       };
     }
 
-    let responsePromise = inputFetch(input, init);
+    let responsePromise = inputFetch(input, init ?? undefined);
 
     if (timeout) {
       const timeoutId = setTimeout(() => {

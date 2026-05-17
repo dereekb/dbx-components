@@ -1,5 +1,5 @@
+import { type Maybe } from '../value/maybe.type';
 import { type MapFunction } from '../value/map';
-import type { Maybe } from '@dereekb/util';
 import { type DecisionFunction } from '../value/decision';
 import { copyArray } from './array';
 import { expandIndexSet, findBestIndexSetPair, findToIndexSet } from './array.index';

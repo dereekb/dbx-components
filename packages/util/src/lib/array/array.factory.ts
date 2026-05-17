@@ -1,5 +1,5 @@
+import { type Maybe } from '../value/maybe.type';
 import { type Factory, type FactoryWithIndex, type FactoryWithRequiredInput, makeWithFactory, makeWithFactoryInput } from '../getter/getter';
-import type { Maybe } from '@dereekb/util';
 import { type AsyncMapFunction } from '../value/map';
 
 /**

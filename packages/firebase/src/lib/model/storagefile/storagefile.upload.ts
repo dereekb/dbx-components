@@ -32,8 +32,8 @@ export type UserUploadsFolderSlashPathFactory = FactoryWithRequiredInput<SlashPa
 /**
  * Creates a {@link UserUploadsFolderSlashPathFactory} that generates per-user upload folder paths.
  *
- * @param inputBasePath - optional custom base path; defaults to {@link ALL_USER_UPLOADS_FOLDER_PATH}
- * @returns a factory function that generates per-user upload folder slash paths
+ * @param inputBasePath - Optional custom base path; defaults to {@link ALL_USER_UPLOADS_FOLDER_PATH}
+ * @returns A factory function that generates per-user upload folder slash paths.
  *
  * @example
  * ```ts
@@ -41,6 +41,7 @@ export type UserUploadsFolderSlashPathFactory = FactoryWithRequiredInput<SlashPa
  * const path = factory('user123');
  * // path === '/uploads/u/user123'
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function userUploadsFolderSlashPathFactory(inputBasePath?: Maybe<string>): UserUploadsFolderSlashPathFactory {
@@ -64,10 +65,10 @@ export interface UserUploadsFolderStoragePathFactoryConfig {
 /**
  * Creates a {@link UserUploadsFolderStoragePathFactory} that includes the storage bucket ID.
  *
- * @param root0 - the configuration object
- * @param root0.bucketId - the storage bucket ID to include in each generated path
- * @param root0.basePath - optional custom base path; defaults to {@link ALL_USER_UPLOADS_FOLDER_PATH}
- * @returns a factory function that generates per-user StoragePath values including the bucket ID
+ * @param root0 - The configuration object.
+ * @param root0.bucketId - The storage bucket ID to include in each generated path.
+ * @param root0.basePath - Optional custom base path; defaults to {@link ALL_USER_UPLOADS_FOLDER_PATH}
+ * @returns A factory function that generates per-user StoragePath values including the bucket ID.
  *
  * @example
  * ```ts
@@ -75,6 +76,7 @@ export interface UserUploadsFolderStoragePathFactoryConfig {
  * const storagePath = factory('user123');
  * // storagePath === { pathString: '/uploads/u/user123', bucketId: 'my-bucket' }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function userUploadsFolderStoragePathFactory({ bucketId, basePath: inputBasePath }: UserUploadsFolderStoragePathFactoryConfig): UserUploadsFolderStoragePathFactory {

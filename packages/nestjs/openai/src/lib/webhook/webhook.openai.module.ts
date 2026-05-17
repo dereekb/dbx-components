@@ -11,8 +11,8 @@ import { OpenAIModule } from '../openai.module';
  *
  * Reads the OpenAI webhook secret token from environment variables.
  *
- * @param configService - NestJS config service for reading environment variables
- * @returns a validated OpenAIWebhookServiceConfig
+ * @param configService - NestJS config service for reading environment variables.
+ * @returns A validated OpenAIWebhookServiceConfig.
  */
 export function openAIWebhookServiceConfigFactory(configService: ConfigService): OpenAIWebhookServiceConfig {
   const config: OpenAIWebhookServiceConfig = {

@@ -43,8 +43,8 @@ export interface FirebaseStorageContextFactoryConfig {
  * The returned factory resolves a default bucket (from driver, config, or error) and builds
  * a {@link StoragePathFactory} to normalize all path inputs.
  *
- * @param drivers - the storage driver implementations to use
- * @returns a {@link FirebaseStorageContextFactory} that creates storage contexts for a given storage instance
+ * @param drivers - The storage driver implementations to use.
+ * @returns A {@link FirebaseStorageContextFactory} that creates storage contexts for a given storage instance.
  * @throws {Error} When a default bucket ID cannot be resolved from the driver or config.
  *
  * @example
@@ -53,6 +53,7 @@ export interface FirebaseStorageContextFactoryConfig {
  * const storageContext = factory(firebaseStorage, { defaultBucketId: 'my-bucket' });
  * const file = storageContext.file('uploads/doc.pdf');
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firebaseStorageContextFactory<F extends FirebaseStorage = FirebaseStorage>(drivers: FirebaseStorageDrivers): FirebaseStorageContextFactory<F> {

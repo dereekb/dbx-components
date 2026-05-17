@@ -323,7 +323,7 @@ export class DateRRuleInstance {
 
     let start: Date = this.rrule.options.dtstart;
     let end: Date;
-    let finalRecurrenceEndsAt: Maybe<Date>;
+    let finalRecurrenceEndsAt: Date | undefined;
 
     if (forever) {
       end = maxFutureDate();

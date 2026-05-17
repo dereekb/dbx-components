@@ -1,5 +1,4 @@
 import { BaseError } from 'make-error';
-import type { Maybe } from '@dereekb/util';
 import { escapeStringForRegex } from '../string/replace';
 import { type Maybe } from '../value/maybe.type';
 

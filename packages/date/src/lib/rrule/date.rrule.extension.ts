@@ -1,3 +1,9 @@
+/* eslint-disable dereekb-util/prefer-maybe-type --
+ * This file mirrors the upstream `rrule` library's `IterResult<"before">` interface, which
+ * uses `Date | null` (not `Maybe<Date>`) for `minDate`, `maxDate`, `_value`, and `getValue`.
+ * Rewriting these to `Maybe<Date>` would widen them with `undefined` and break the structural
+ * assignment to `IterResult<"before">`.
+ */
 import { type Maybe } from '@dereekb/util';
 import { maxFutureDate } from '../date/date';
 import { RRule } from 'rrule';
@@ -12,7 +18,7 @@ export interface IterArgs {
   before: Date;
   after: Date;
   dt: Date;
-  _value: Maybe<Date | Date[]>;
+  _value: Date | Date[] | null;
 }
 
 // TODO: Fix typings in RRule, or better yet, add the given types up to RRule.
@@ -92,14 +98,14 @@ export class DateRRule extends RRule {
  */
 abstract class BaseRRuleIter {
   readonly method = 'before';
-  readonly minDate: Maybe<Date> = undefined as unknown as Date;
-  readonly maxDate: Maybe<Date> = undefined as unknown as Date;
+  readonly minDate: Date | null = undefined as unknown as Date;
+  readonly maxDate: Date | null = undefined as unknown as Date;
   readonly _result: Date[] = undefined as unknown as Date[];
   readonly args: Partial<IterArgs> = undefined as unknown as Partial<IterArgs>;
   public total: number = 0;
-  protected _value: Maybe<Date> = null;
+  protected _value: Date | null = null;
 
-  getValue(): Maybe<Date> {
+  getValue(): Date | null {
     return this._value;
   }
 }
@@ -195,8 +201,8 @@ export class NextIterResult extends BaseRRuleIter {
  * Stops as soon as one qualifying date is found. Used by {@link DateRRule.any}.
  */
 export class AnyIterResult extends BaseRRuleIter {
-  override readonly minDate: Maybe<Date> = null;
-  override readonly maxDate: Maybe<Date> = null;
+  override readonly minDate: Date | null = null;
+  override readonly maxDate: Date | null = null;
 
   constructor(
     filter?: { minDate?: Maybe<Date>; maxDate?: Maybe<Date> },

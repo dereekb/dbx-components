@@ -9,8 +9,9 @@ import { ClientAppService } from './client.service';
  *
  * Reads the client web app URL from the CLIENT_WEB_APP_URL environment variable.
  *
- * @param configService - NestJS config service for reading environment variables
- * @returns a validated ClientAppServiceConfig
+ * @param configService - NestJS config service for reading environment variables.
+ * @returns A validated ClientAppServiceConfig.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function clientAppConfigFactory(configService: ConfigService): ClientAppServiceConfig {

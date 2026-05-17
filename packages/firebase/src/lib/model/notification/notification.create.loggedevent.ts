@@ -27,8 +27,8 @@ export type CreateNotificationLoggedEventTemplateInput = Omit<CreateNotification
  * {@link createNotificationDocumentPair}), so it is invisible to the send loop and is archived to
  * {@link NotificationLoggedEventDay} during cleanup.
  *
- * @param input - logged-event template input parameters
- * @returns the configured logged-event notification template
+ * @param input - Logged-event template input parameters.
+ * @returns The configured logged-event notification template.
  * @throws {Error} When `notificationModel` is not provided.
  *
  * @example
@@ -39,6 +39,7 @@ export type CreateNotificationLoggedEventTemplateInput = Omit<CreateNotification
  *   data: { workerId: 'w_001', at: new Date().toISOString() }
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createNotificationLoggedEventTemplate(input: CreateNotificationLoggedEventTemplateInput): CreateNotificationLoggedEventTemplate {

@@ -117,13 +117,13 @@ export const systemStateConverter = snapshotConverterFunctions<SystemState>({
 /**
  * Returns the raw Firestore CollectionReference for the SystemState collection.
  *
+ * @param context - The Firestore context to use.
+ * @returns The CollectionReference for SystemState documents.
+ *
  * @example
  * ```ts
  * const colRef = systemStateCollectionReference(firestoreContext);
  * ```
- *
- * @param context - the Firestore context to use
- * @returns the CollectionReference for SystemState documents
  */
 export function systemStateCollectionReference(context: FirestoreContext): CollectionReference<SystemState> {
   return context.collection(systemStateIdentity.collectionName);
@@ -156,9 +156,9 @@ export type SystemStateStoredDataConverterMap = {
  * converter based on the document ID (which is the {@link SystemStateTypeIdentifier}).
  * Documents with no matching converter use the default pass-through converter.
  *
- * @param firestoreContext - the Firestore context
- * @param converters - map of type identifiers to their data field converters
- * @returns a configured SystemStateFirestoreCollection with per-type data converters
+ * @param firestoreContext - The Firestore context.
+ * @param converters - Map of type identifiers to their data field converters.
+ * @returns A configured SystemStateFirestoreCollection with per-type data converters.
  *
  * @example
  * ```ts

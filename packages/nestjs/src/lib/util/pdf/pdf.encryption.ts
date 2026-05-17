@@ -1,4 +1,4 @@
-import { PDF_ENCRYPT_MARKER } from '@dereekb/util';
+import { PDF_ENCRYPT_MARKER, type Maybe } from '@dereekb/util';
 import { createHash, createCipheriv } from 'node:crypto';
 
 /**
@@ -40,6 +40,9 @@ export type PdfEncryptionStatus = 'none' | 'write_protected_only' | 'fully_encry
  * Lives in `@dereekb/nestjs` (rather than `@dereekb/util`) because it uses Node's
  * built-in `node:crypto` module, which isn't available in the browser.
  *
+ * @param buffer - PDF file contents.
+ * @returns The encryption status of the PDF.
+ *
  * @example
  * ```ts
  * const status = detectPdfEncryption(buffer);
@@ -51,9 +54,6 @@ export type PdfEncryptionStatus = 'none' | 'write_protected_only' | 'fully_encry
  *   // Safe to read, but not to mutate without the owner password.
  * }
  * ```
- *
- * @param buffer - PDF file contents.
- * @returns The encryption status of the PDF.
  */
 export function detectPdfEncryption(buffer: Buffer): PdfEncryptionStatus {
   let result: PdfEncryptionStatus = 'unknown_encrypted';
@@ -76,8 +76,8 @@ export function detectPdfEncryption(buffer: Buffer): PdfEncryptionStatus {
   return result;
 }
 
-function checkStandardHandlerEmptyPassword(info: PdfEncryptionInfo, buffer: Buffer): boolean | null {
-  let result: boolean | null = null;
+function checkStandardHandlerEmptyPassword(info: PdfEncryptionInfo, buffer: Buffer): Maybe<boolean> {
+  let result: Maybe<boolean> = null;
 
   if (info.R >= 2 && info.R <= 4) {
     const fileId = extractFirstFileId(buffer);
@@ -255,10 +255,10 @@ function decodePdfHexString(content: Buffer): Buffer {
   return out;
 }
 
-function readPdfNumber(buffer: Buffer, start: number): { value: number; end: number } | null {
+function readPdfNumber(buffer: Buffer, start: number): Maybe<{ value: number; end: number }> {
   let i = start;
   while (i < buffer.length && !isPdfWhitespaceOrDelimiter(buffer[i])) i++;
-  let result: { value: number; end: number } | null = null;
+  let result: Maybe<{ value: number; end: number }> = null;
   if (i > start) {
     const text = buffer.toString('latin1', start, i);
     const value = Number(text);
@@ -274,11 +274,11 @@ interface PdfDictEntry {
   readonly raw: Buffer;
 }
 
-function parsePdfDict(buffer: Buffer, dictStart: number): { entries: Map<string, PdfDictEntry>; end: number } | null {
+function parsePdfDict(buffer: Buffer, dictStart: number): Maybe<{ entries: Map<string, PdfDictEntry>; end: number }> {
   // dictStart is the byte after `<<`.
   const entries = new Map<string, PdfDictEntry>();
   let i = skipPdfWhitespaceAndComments(buffer, dictStart);
-  let result: { entries: Map<string, PdfDictEntry>; end: number } | null = null;
+  let result: Maybe<{ entries: Map<string, PdfDictEntry>; end: number }> = null;
   let aborted = false;
 
   while (i < buffer.length && !aborted && result === null) {
@@ -312,9 +312,9 @@ function parsePdfDict(buffer: Buffer, dictStart: number): { entries: Map<string,
 
 type PdfValueResult = { entry: PdfDictEntry; end: number };
 
-function readPdfValue(buffer: Buffer, start: number): PdfValueResult | null {
+function readPdfValue(buffer: Buffer, start: number): Maybe<PdfValueResult> {
   const b = buffer[start];
-  let result: PdfValueResult | null;
+  let result: Maybe<PdfValueResult>;
 
   if (b === 0x3c && buffer[start + 1] === 0x3c) {
     result = readPdfDictValue(buffer, start);
@@ -392,7 +392,7 @@ function readPdfTokenOrRefValue(buffer: Buffer, start: number): PdfValueResult {
   const referenceEnd = readIndirectReferenceEnd(buffer, tokenEnd);
   let result: PdfValueResult;
 
-  if (referenceEnd !== null) {
+  if (referenceEnd != null) {
     result = { entry: { type: 'ref', raw: buffer.subarray(start, referenceEnd) }, end: referenceEnd };
   } else if (token === 'true' || token === 'false') {
     result = { entry: { type: 'boolean', raw: buffer.subarray(start, tokenEnd) }, end: tokenEnd };
@@ -405,9 +405,9 @@ function readPdfTokenOrRefValue(buffer: Buffer, start: number): PdfValueResult {
   return result;
 }
 
-function readIndirectReferenceEnd(buffer: Buffer, tokenEnd: number): number | null {
+function readIndirectReferenceEnd(buffer: Buffer, tokenEnd: number): Maybe<number> {
   // Probe ahead for `GEN R` after a leading object number to detect `N G R`.
-  let result: number | null = null;
+  let result: Maybe<number> = null;
   const probe = skipPdfWhitespaceAndComments(buffer, tokenEnd);
 
   if (probe < buffer.length) {
@@ -441,8 +441,8 @@ function findEncryptKeywordIndex(buffer: Buffer): number {
   return last;
 }
 
-function extractEncryptionDictionary(buffer: Buffer, encryptIndex: number): Buffer | null {
-  let result: Buffer | null = null;
+function extractEncryptionDictionary(buffer: Buffer, encryptIndex: number): Maybe<Buffer> {
+  let result: Maybe<Buffer> = null;
   let i = encryptIndex + PDF_ENCRYPT_MARKER.length;
   i = skipPdfWhitespaceAndComments(buffer, i);
 
@@ -460,8 +460,8 @@ function extractEncryptionDictionary(buffer: Buffer, encryptIndex: number): Buff
   return result;
 }
 
-function resolveIndirectEncryptionDictionary(buffer: Buffer, start: number): Buffer | null {
-  let result: Buffer | null = null;
+function resolveIndirectEncryptionDictionary(buffer: Buffer, start: number): Maybe<Buffer> {
+  let result: Maybe<Buffer> = null;
   const numResult = readPdfNumber(buffer, start);
 
   if (numResult) {
@@ -493,9 +493,9 @@ function findIndirectObjectStart(buffer: Buffer, objNum: number, objGen: number)
   return match ? match.index + match[0].length : -1;
 }
 
-function parseEncryptionInfo(dictBuffer: Buffer): PdfEncryptionInfo | null {
+function parseEncryptionInfo(dictBuffer: Buffer): Maybe<PdfEncryptionInfo> {
   // `dictBuffer` is the full `<< ... >>`; pass the body to parsePdfDict.
-  let result: PdfEncryptionInfo | null = null;
+  let result: Maybe<PdfEncryptionInfo> = null;
   const isDict = dictBuffer.length >= 4 && dictBuffer[0] === 0x3c && dictBuffer[1] === 0x3c;
   const parsed = isDict ? parsePdfDict(dictBuffer, 2) : null;
 
@@ -519,8 +519,8 @@ function parseEncryptionInfo(dictBuffer: Buffer): PdfEncryptionInfo | null {
   return result;
 }
 
-function readNumberValue(entry: PdfDictEntry | undefined): number | null {
-  let result: number | null = null;
+function readNumberValue(entry: PdfDictEntry | undefined): Maybe<number> {
+  let result: Maybe<number> = null;
   if (entry?.type === 'number') {
     const value = Number(entry.raw.toString('latin1'));
     if (!Number.isNaN(value)) {
@@ -530,22 +530,22 @@ function readNumberValue(entry: PdfDictEntry | undefined): number | null {
   return result;
 }
 
-function readNameValue(entry: PdfDictEntry | undefined): string | null {
+function readNameValue(entry: PdfDictEntry | undefined): Maybe<string> {
   return entry?.type === 'name' ? entry.raw.toString('latin1') : null;
 }
 
-function readStringValue(entry: PdfDictEntry | undefined): Buffer | null {
+function readStringValue(entry: PdfDictEntry | undefined): Maybe<Buffer> {
   return entry?.type === 'string' ? entry.raw : null;
 }
 
-function readBooleanValue(entry: PdfDictEntry): boolean | null {
+function readBooleanValue(entry: PdfDictEntry): Maybe<boolean> {
   return entry.type === 'boolean' ? entry.raw.toString('latin1') === 'true' : null;
 }
 
-function extractFirstFileId(buffer: Buffer): Buffer | null {
+function extractFirstFileId(buffer: Buffer): Maybe<Buffer> {
   // The /ID array lives in the trailer or the cross-reference stream dictionary.
   // Walk the buffer right-to-left to find the most recent /ID array.
-  let result: Buffer | null = null;
+  let result: Maybe<Buffer> = null;
   let pos = buffer.length;
   let done = false;
 

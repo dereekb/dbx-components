@@ -12,7 +12,7 @@ export type FirebaseStorageClientDrivers = FirebaseStorageDrivers;
  *
  * Provides file and folder accessor operations for use with {@link clientFirebaseStorageContextFactory}.
  *
- * @returns the client-side {@link FirebaseStorageClientDrivers} for the `firebase/storage` SDK
+ * @returns The client-side {@link FirebaseStorageClientDrivers} for the `firebase/storage` SDK.
  *
  * @example
  * ```ts

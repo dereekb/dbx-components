@@ -54,7 +54,7 @@ export class SubscriptionObject<T extends Unsubscribable = Unsubscribable> imple
    */
   public setSub(sub: Maybe<T | void>) {
     this.unsub();
-    this._subscription = sub as Maybe<T>;
+    this._subscription = sub as T | undefined;
   }
 
   /**

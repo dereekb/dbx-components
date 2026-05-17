@@ -1,4 +1,5 @@
 import { type DocumentReference, type DocumentSnapshot, type Transaction as FirebaseFirestoreTransaction, type UpdateData, type WithFieldValue } from 'firebase/firestore';
+import type { Maybe } from '@dereekb/util';
 import { from, type Observable } from 'rxjs';
 import { type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentContext, FirestoreDocumentContextType, type SetOptions, type DocumentData, type FirestoreDataConverter, assertFirestoreUpdateHasData, type WriteResult, type FirestoreAccessorIncrementUpdate, type FirestoreAccessorArrayUpdate } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
@@ -46,7 +47,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
     return this.transaction.get(this.documentRef);
   }
 
-  getWithConverter<U extends DocumentData = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<DocumentData, U>> {
+  getWithConverter<U extends DocumentData = DocumentData>(converter: Maybe<FirestoreDataConverter<U>>): Promise<DocumentSnapshot<DocumentData, U>> {
     const withConverter = (converter != null ? this.documentRef.withConverter<U, DocumentData>(converter) : this.documentRef.withConverter(null)) as DocumentReference<U, DocumentData>;
     return this.transaction.get(withConverter) as Promise<DocumentSnapshot<DocumentData, U>>;
   }
@@ -80,8 +81,8 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
  * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces {@link TransactionFirestoreDocumentDataAccessor}
  * instances bound to the given transaction. All operations from these accessors participate in the same transaction.
  *
- * @param transaction - the Firestore `Transaction` to bind operations to
- * @returns a factory that creates transaction-backed document data accessors for any document reference
+ * @param transaction - The Firestore `Transaction` to bind operations to.
+ * @returns A factory that creates transaction-backed document data accessors for any document reference.
  *
  * @example
  * ```ts
@@ -92,6 +93,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
  *   // ... modify and set
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function transactionAccessorFactory<T>(transaction: FirebaseFirestoreTransaction): FirestoreDocumentDataAccessorFactory<T> {
@@ -126,8 +128,8 @@ export class TransactionFirestoreDocumentContext<T> implements FirestoreDocument
 /**
  * Factory function that creates a {@link TransactionFirestoreDocumentContext} for the given transaction.
  *
- * @param transaction - the Firestore `Transaction` to use for all document operations
- * @returns a new {@link TransactionFirestoreDocumentContext} bound to the given transaction
+ * @param transaction - The Firestore `Transaction` to use for all document operations.
+ * @returns A new {@link TransactionFirestoreDocumentContext} bound to the given transaction.
  *
  * @example
  * ```ts

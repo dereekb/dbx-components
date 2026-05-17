@@ -67,7 +67,7 @@ export interface WorkFactoryConfig<T, O> {
 export function workFactory<T, O>({ work, delegate }: WorkFactoryConfig<T, O>): WorkFactory<T, O> {
   return (value: T) => {
     const handler = new WorkInstance<T, O>(value, delegate);
-    let fnResult: void | Observable<O>;
+    let fnResult: void | Observable<O> = undefined;
     let result: Maybe<WorkInstance<T, O>>;
 
     try {

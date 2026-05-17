@@ -1,5 +1,4 @@
 import { type Maybe } from '../value/maybe.type';
-import type { Maybe } from '@dereekb/util';
 import { type Rectangle, rectangleOverlapsRectangle, type Vector } from './vector';
 import { type Writable } from 'ts-essentials';
 import { latLngPointFunction, type LatLngPoint, type LatLngPointInput, type LatLngPrecision, type LatLngPointFunction, isLatLngPoint, isSameLatLngPoint, diffLatLngPoints, TOTAL_LONGITUDE_RANGE, copyLatLngPoint } from './point';

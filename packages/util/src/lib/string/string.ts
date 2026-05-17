@@ -1,5 +1,4 @@
 import { type ArrayOrValue, asArray } from '../array/array';
-import type { Maybe } from '@dereekb/util';
 import { type Configurable } from '../type';
 import { type MapFunction } from '../value/map';
 import { type MaybeNot, type Maybe } from '../value/maybe.type';

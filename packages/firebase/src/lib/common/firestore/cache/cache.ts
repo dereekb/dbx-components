@@ -299,9 +299,9 @@ export interface FirestoreCollectionDocumentCache<T = unknown> {
  * Creates a {@link FirestoreCollectionDocumentCache} that delegates to the given
  * collection cache with the key pre-bound.
  *
- * @param collectionCache - The parent collection cache
- * @param key - The document path to bind
- * @returns A document-scoped cache
+ * @param collectionCache - The parent collection cache.
+ * @param key - The document path to bind.
+ * @returns A document-scoped cache.
  *
  * @example
  * ```ts
@@ -309,6 +309,7 @@ export interface FirestoreCollectionDocumentCache<T = unknown> {
  * docCache.set({ data: userData });
  * const entry = docCache.get();
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreCollectionDocumentCache<T>(collectionCache: FirestoreCollectionCache<T>, key: FirestoreModelKey): FirestoreCollectionDocumentCache<T> {
@@ -432,14 +433,14 @@ const NOOP_FIRESTORE_COLLECTION_CACHE: FirestoreCollectionCache<any> = {
  *
  * Used when no cache driver is configured so that `.cache` is always defined.
  *
+ * @returns The singleton noop collection cache.
+ *
  * @example
  * ```ts
  * const cache = noopFirestoreCollectionCache();
  * cache.get('path/to/doc'); // always returns undefined
  * cache.set('path/to/doc', { data }); // no-op
  * ```
- *
- * @returns The singleton noop collection cache.
  */
 export function noopFirestoreCollectionCache<T>(): FirestoreCollectionCache<T> {
   return NOOP_FIRESTORE_COLLECTION_CACHE as FirestoreCollectionCache<T>;
@@ -479,14 +480,14 @@ const NOOP_FIRESTORE_CONTEXT_CACHE: FirestoreContextCache = {
  * Used when no cache factory is configured so that `FirestoreContext.cache` is always defined,
  * avoiding null checks throughout the codebase.
  *
+ * @returns The singleton noop context cache.
+ *
  * @example
  * ```ts
  * const cache = noopFirestoreContextCache();
  * cache.cacheForCollection('user', { defaultTtl: 0 }); // returns noop collection cache
  * cache.isEnabled(); // false
  * ```
- *
- * @returns The singleton noop context cache.
  */
 export function noopFirestoreContextCache(): FirestoreContextCache {
   return NOOP_FIRESTORE_CONTEXT_CACHE;

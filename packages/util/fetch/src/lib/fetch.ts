@@ -159,7 +159,7 @@ export type AbortControllerFactory = Factory<AbortController>;
  * @param init
  * @returns
  */
-export const DEFAULT_FETCH_REQUEST_FACTORY: FetchRequestFactory = (input, init) => new Request(input, init);
+export const DEFAULT_FETCH_REQUEST_FACTORY: FetchRequestFactory = (input, init) => new Request(input, init ?? undefined);
 
 /**
  * Creates a FetchRequestFactory that builds Request objects by applying base URL resolution,
@@ -255,7 +255,7 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
   return async (input: RequestInfo | URL, init?: Maybe<RequestInit>) => {
     try {
       const fixedRequest = await buildRequestWithFixedUrl(input);
-      init = await buildRequestInit(fixedRequest, init);
+      init = await buildRequestInit(fixedRequest, init ?? undefined);
       const request = await makeRequest(fixedRequest, init);
 
       (request as RequestWithTimeout).timeout = timeout; // copy/set timeout on the request directly

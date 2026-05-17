@@ -32,8 +32,8 @@ export interface CreateNotificationTaskTemplateInput extends Omit<CreateNotifica
 /**
  * Creates a {@link CreateNotificationTaskTemplate} with `TASK_NOTIFICATION` send type and no recipients.
  *
- * @param input - task template input parameters
- * @returns the configured task notification template
+ * @param input - Task template input parameters.
+ * @returns The configured task notification template.
  * @throws {Error} When `unique=true` but no `notificationModel` or target model is specified.
  *
  * @example
@@ -45,6 +45,7 @@ export interface CreateNotificationTaskTemplateInput extends Omit<CreateNotifica
  *   data: { reportType: 'monthly' }
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createNotificationTaskTemplate(input: CreateNotificationTaskTemplateInput): CreateNotificationTaskTemplate {

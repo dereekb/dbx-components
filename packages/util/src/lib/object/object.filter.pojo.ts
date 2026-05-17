@@ -1,5 +1,4 @@
 import { type ArrayOrValue, asArray } from './../array/array';
-import type { Maybe } from '@dereekb/util';
 import { filterMaybeArrayValues } from '../array/array.value';
 import { type Maybe } from '../value/maybe.type';
 import { filterKeyValueTuplesFunction, type FilterKeyValueTuplesInput, filterKeyValueTuplesInputToFilter, type KeyValueTuple, type KeyValueTupleFilter, KeyValueTypleValueFilter } from './object.filter.tuple';

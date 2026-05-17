@@ -11,7 +11,7 @@
  * Each level can enable/disable delivery per channel (email, text, push, summary) per template type.
  * Configs are stored efficiently using bitwise encoding via {@link EncodedNotificationBoxRecipientTemplateConfig}.
  */
-import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, type NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, mergeObjectsFunction, KeyValueTypleValueFilter, mergeObjects, Building } from '@dereekb/util';
+import { type Maybe, type EmailAddress, type E164PhoneNumber, type BitwiseEncodedSet, bitwiseObjectDencoder, type IndexRef, forEachKeyValue, type NeedsSyncBoolean, updateMaybeValue, UNSET_INDEX_NUMBER, mergeObjectsFunction, KeyValueTypleValueFilter, mergeObjects, type Building } from '@dereekb/util';
 import { type NotificationBoxId, type NotificationSummaryId, type NotificationTemplateType } from './notification.id';
 import { type FirebaseAuthUserId, firestoreBitwiseObjectMap, firestoreNumber, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreEnum, optionalFirestoreString, type SavedToFirestoreIfTrue, firestoreModelIdString } from '../../common';
 
@@ -54,9 +54,9 @@ export interface NotificationBoxRecipientTemplateConfig {
 /**
  * Merges two {@link NotificationBoxRecipientTemplateConfig} objects, preferring values from `a` over `b`.
  *
- * @param a - primary config whose defined values take precedence
- * @param b - fallback config supplying values when `a` fields are undefined
- * @returns the merged template config with values from `a` preferred over `b`
+ * @param a - Primary config whose defined values take precedence.
+ * @param b - Fallback config supplying values when `a` fields are undefined.
+ * @returns The merged template config with values from `a` preferred over `b`
  *
  * @example
  * ```ts
@@ -85,8 +85,8 @@ export function mergeNotificationBoxRecipientTemplateConfigs(a?: Maybe<Notificat
  *
  * This produces the "effective" configuration used at send time, where each channel has a definite boolean.
  *
- * @param a - the template config to resolve
- * @returns the effective config with each channel flag filled in using the send-default fallback
+ * @param a - The template config to resolve.
+ * @returns The effective config with each channel flag filled in using the send-default fallback.
  *
  * @example
  * ```ts
@@ -148,9 +148,9 @@ export interface NotificationRecipient {
  *
  * Automatically clears the summary ID (`s`) when a `uid` is present.
  *
- * @param a - existing recipient to update
- * @param b - partial values to apply on top of the existing recipient
- * @returns the updated recipient with merged values
+ * @param a - Existing recipient to update.
+ * @param b - Partial values to apply on top of the existing recipient.
+ * @returns The updated recipient with merged values.
  */
 export function updateNotificationRecipient(a: NotificationRecipient, b: Partial<NotificationRecipient>): NotificationRecipient {
   const { uid: inputUid, n: inputN, e: inputE, t: inputT, s: inputS } = b;
@@ -251,9 +251,9 @@ export interface NotificationBoxRecipient extends NotificationRecipient, IndexRe
 /**
  * Creates a new {@link NotificationBoxRecipient} for a user with an empty config record.
  *
- * @param uid - the user's Firebase auth UID
- * @param i - the recipient's index position in the box's recipient array
- * @returns a new recipient entry with the given uid and index and an empty template config record
+ * @param uid - The user's Firebase auth UID.
+ * @param i - The recipient's index position in the box's recipient array.
+ * @returns A new recipient entry with the given uid and index and an empty template config record.
  */
 export function newNotificationBoxRecipientForUid(uid: FirebaseAuthUserId, i: number): NotificationBoxRecipient {
   return {
@@ -287,9 +287,9 @@ export interface NotificationUserDefaultNotificationBoxRecipientConfig extends O
 /**
  * Merges two {@link NotificationUserDefaultNotificationBoxRecipientConfig} objects, preferring defined values from `a` over `b`.
  *
- * @param a - primary config whose defined values take precedence
- * @param b - fallback config supplying values when `a` fields are undefined
- * @returns the merged config
+ * @param a - Primary config whose defined values take precedence.
+ * @param b - Fallback config supplying values when `a` fields are undefined.
+ * @returns The merged config.
  */
 export function mergeNotificationUserDefaultNotificationBoxRecipientConfig(a: NotificationUserDefaultNotificationBoxRecipientConfig, b: NotificationUserDefaultNotificationBoxRecipientConfig): NotificationUserDefaultNotificationBoxRecipientConfig {
   const c = mergeNotificationBoxRecipientTemplateConfigRecords(a.c, b.c);
@@ -319,26 +319,26 @@ export interface NotificationUserNotificationBoxRecipientConfig extends Omit<Not
   /**
    * ID of the {@link NotificationBox} this config mirrors. The related model key can be inferred via {@link inferNotificationBoxRelatedModelKey}.
    */
-  nb: NotificationBoxId;
+  readonly nb: NotificationBoxId;
   /**
    * Self-removal flag. When set, the user has removed themselves from this box.
    *
    * Only the box owner can restore a removed user. Users typically prefer the `f` (opt-out) flag instead,
    * which stops delivery without removing the subscription. The config is retained unless the user explicitly deletes it.
    */
-  rm?: Maybe<SavedToFirestoreIfTrue>;
+  readonly rm?: Maybe<SavedToFirestoreIfTrue>;
   /**
    * Whether this config needs to be synced with the corresponding {@link NotificationBox} recipient entry.
    */
-  ns?: Maybe<NeedsSyncBoolean>;
+  readonly ns?: Maybe<NeedsSyncBoolean>;
   /**
    * Locked flag. Prevents the box from modifying this user's recipient config.
    */
-  lk?: Maybe<SavedToFirestoreIfTrue>;
+  readonly lk?: Maybe<SavedToFirestoreIfTrue>;
   /**
    * Blocked flag. Prevents the box from re-adding this user as a recipient.
    */
-  bk?: Maybe<SavedToFirestoreIfTrue>;
+  readonly bk?: Maybe<SavedToFirestoreIfTrue>;
 }
 
 /**
@@ -377,9 +377,9 @@ export type NotificationBoxRecipientTemplateConfigRecord = Record<NotificationTe
 /**
  * Merges two {@link NotificationBoxRecipientTemplateConfigRecord} objects, preferring defined values from `a`.
  *
- * @param a - primary record whose defined values take precedence
- * @param b - fallback record supplying values when `a` entries are undefined
- * @returns the merged template config record
+ * @param a - Primary record whose defined values take precedence.
+ * @param b - Fallback record supplying values when `a` entries are undefined.
+ * @returns The merged template config record.
  */
 export function mergeNotificationBoxRecipientTemplateConfigRecords(a: NotificationBoxRecipientTemplateConfigRecord, b: NotificationBoxRecipientTemplateConfigRecord): NotificationBoxRecipientTemplateConfigRecord {
   const mergeConfigs = mergeObjectsFunction<NotificationBoxRecipientTemplateConfigRecord>(KeyValueTypleValueFilter.UNDEFINED);
@@ -460,7 +460,8 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
  * Creates a Firestore field converter for {@link NotificationBoxRecipientTemplateConfigRecord},
  * using bitwise encoding for compact storage.
  *
- * @returns a Firestore field converter that encodes and decodes template config records using bitwise encoding
+ * @returns A Firestore field converter that encodes and decodes template config records using bitwise encoding.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreNotificationBoxRecipientTemplateConfigRecord() {
@@ -548,8 +549,8 @@ export type NotificationBoxRecipientTemplateConfigArray = NotificationBoxRecipie
 /**
  * Converts a {@link NotificationBoxRecipientTemplateConfigRecord} to an array of entries with their type keys.
  *
- * @param input - the template config record to convert
- * @returns an array of entries each containing a type key and the corresponding channel config
+ * @param input - Template config record keyed by template type.
+ * @returns Flattened entries combining each template type with its channel config.
  *
  * @example
  * ```ts
@@ -575,8 +576,8 @@ export function notificationBoxRecipientTemplateConfigRecordToArray(input: Notif
 /**
  * Converts a {@link NotificationBoxRecipientTemplateConfigArray} back to a {@link NotificationBoxRecipientTemplateConfigRecord}.
  *
- * @param input - the array of typed config entries to convert
- * @returns a record keyed by template type
+ * @param input - Flattened entries that include the template type and channel config.
+ * @returns Template config record keyed by template type.
  */
 export function notificationBoxRecipientTemplateConfigArrayToRecord(input: NotificationBoxRecipientTemplateConfigArray): NotificationBoxRecipientTemplateConfigRecord {
   const map: NotificationBoxRecipientTemplateConfigRecord = {};

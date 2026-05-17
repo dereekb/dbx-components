@@ -111,8 +111,8 @@ export type NotificationSummaryIdForUidFunction = FactoryWithRequiredInput<Notif
  * Creates a {@link NotificationSummaryIdForUidFunction} that generates summary IDs
  * by combining the given user model identity with the provided UID.
  *
- * @param userModelIdentity - the root identity for user models (e.g., `profileIdentity`)
- * @returns a function that generates a {@link NotificationSummaryId} for a given user UID
+ * @param userModelIdentity - Root identity for the user model (e.g., `profileIdentity`).
+ * @returns Function that maps a user UID to its {@link NotificationSummaryId}.
  *
  * @example
  * ```ts
@@ -149,14 +149,14 @@ export type NotificationLoggedEventDayKey = FirestoreModelKey;
  * Returns the {@link NotificationLoggedEventDayId} (an ISO 8601 day string in UTC)
  * for the given date. Used as the document ID when archiving logged-event notifications.
  *
+ * @param date - Instant whose UTC calendar day is captured.
+ * @returns UTC ISO day string for that instant.
+ *
  * @example
  * ```ts
  * notificationLoggedEventDayId(new Date('2026-05-08T17:30:00Z'));
  * // '2026-05-08'
  * ```
- *
- * @param date - the date to derive the day ID from
- * @returns the UTC ISO day string for that date
  */
 export function notificationLoggedEventDayId(date: Date): NotificationLoggedEventDayId {
   return toISO8601DayStringForUTC(date);
@@ -243,9 +243,9 @@ export interface NotificationTaskKeyRef {
 /**
  * Creates a NotificationTaskUniqueId from the input model id and task type.
  *
- * @param input - model id input
- * @param taskType - task type
- * @returns the unique notification task id combining the model id and task type
+ * @param input - Model id input.
+ * @param taskType - Task type.
+ * @returns The unique notification task id combining the model id and task type.
  */
 export function notificationTaskUniqueId(input: FirestoreModelIdInput, taskType: NotificationTaskType): NotificationTaskUniqueId {
   return `${firestoreModelId(input)}_${taskType}`; // combineation of model id and template type

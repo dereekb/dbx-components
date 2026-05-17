@@ -1,5 +1,4 @@
 import { type ArrayOrValue, asArray, lastValue } from '../array/array';
-import type { Maybe } from '@dereekb/util';
 import { type Configurable } from '../type';
 import { type Building } from '../value/build';
 import { type Maybe } from '../value/maybe.type';
@@ -228,7 +227,7 @@ export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inpu
   const { separator, mergeMeta } = config;
   const { value, leafMeta, nodeMeta } = inputValue;
 
-  function nextMeta(node: SplitStringTree<M>, nextMeta: M): Maybe<M> {
+  function nextMeta(node: SplitStringTree<M>, nextMeta: M): M {
     return mergeMeta && node.meta != null ? mergeMeta(node.meta, nextMeta) : nextMeta;
   }
 

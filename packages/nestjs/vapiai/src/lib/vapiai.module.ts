@@ -9,8 +9,8 @@ import { type VapiAiSecretToken } from './vapiai.type';
  *
  * Reads the Vapi AI secret token from environment variables.
  *
- * @param configService - NestJS config service for reading environment variables
- * @returns a validated VapiAiServiceConfig
+ * @param configService - NestJS config service for reading environment variables.
+ * @returns A validated VapiAiServiceConfig.
  */
 export function vapiaiServiceConfigFactory(configService: ConfigService): VapiAiServiceConfig {
   const config: VapiAiServiceConfig = {

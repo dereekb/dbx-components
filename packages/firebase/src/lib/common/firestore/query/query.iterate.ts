@@ -60,7 +60,7 @@ export interface IterateFirestoreDocumentSnapshotPairsConfig<T, R, D extends Fir
  * This is the highest-level iteration function — use it when your callback needs
  * document-level operations (updates, deletes) alongside the snapshot data.
  *
- * @param config - Iteration config including the document accessor and per-pair callback
+ * @param config - Iteration config including the document accessor and per-pair callback.
  * @returns Checkpoint-level statistics (total checkpoints, snapshots visited, limit status)
  *
  * @example
@@ -140,7 +140,7 @@ export type IterateFirestoreDocumentSnapshotsResult<T, R> = PerformAsyncTasksRes
  * For document-level operations (needing the typed {@link FirestoreDocument} wrapper),
  * use {@link iterateFirestoreDocumentSnapshotPairs} instead.
  *
- * @param config - Iteration config including the per-snapshot callback
+ * @param config - Iteration config including the per-snapshot callback.
  * @returns Checkpoint-level statistics (total checkpoints, snapshots visited, limit status)
  *
  * @example
@@ -204,7 +204,7 @@ export interface IterateFirestoreDocumentSnapshotPairBatchesConfig<T, R, D exten
  * typed document-snapshot pairs. Use this when you need batch-level operations with
  * typed document access (e.g., bulk updates, batch writes).
  *
- * @param config - Iteration config including the document accessor and per-batch callback
+ * @param config - Iteration config including the document accessor and per-batch callback.
  * @returns Checkpoint-level statistics (total checkpoints, snapshots visited, limit status)
  *
  * @example
@@ -285,7 +285,7 @@ export interface IterateFirestoreDocumentSnapshotBatchesConfig<T, R> extends Omi
    * Called once per checkpoint with all snapshots from that checkpoint. If it returns `null`,
    * all snapshots are processed in a single batch. Takes precedence over `batchSize` when provided.
    */
-  readonly batchSizeForSnapshots?: Maybe<FactoryWithRequiredInput<number | null, QueryDocumentSnapshot<T>[]>>;
+  readonly batchSizeForSnapshots?: Maybe<FactoryWithRequiredInput<Maybe<number>, QueryDocumentSnapshot<T>[]>>;
   /**
    * Callback invoked for each batch of document snapshots within a checkpoint.
    *
@@ -326,7 +326,7 @@ export const DEFAULT_ITERATE_FIRESTORE_DOCUMENT_SNAPSHOT_BATCHES_BATCH_SIZE = 25
  * For per-snapshot processing, use {@link iterateFirestoreDocumentSnapshots}.
  * For batch processing with typed document pairs, use {@link iterateFirestoreDocumentSnapshotPairBatches}.
  *
- * @param config - Iteration config including batch size and per-batch callback
+ * @param config - Iteration config including batch size and per-batch callback.
  * @returns Checkpoint-level statistics (total checkpoints, snapshots visited, limit status)
  *
  * @example
@@ -351,20 +351,22 @@ export async function iterateFirestoreDocumentSnapshotBatches<T, R>(config: Iter
   return iterateFirestoreDocumentSnapshotCheckpoints({
     ...config,
     iterateCheckpoint: async (docSnapshots) => {
-      if (docSnapshots.length === 0) {
-        return [];
+      let result: IterateFirestoreDocumentSnapshotBatchesResult<T, R>[] = [];
+
+      if (docSnapshots.length !== 0) {
+        const batchSizeForSnapshotsResult = batchSizeForSnapshots(docSnapshots);
+        const batches = batchSizeForSnapshotsResult == null ? [docSnapshots] : batch(docSnapshots, batchSizeForSnapshotsResult);
+        let i = 0;
+
+        const performTasksResult = await performAsyncTasks(batches, (x) => iterateSnapshotBatch(x, i++), {
+          sequential: true, // sequential by default
+          ...performTasksConfig
+        });
+
+        result = performTasksResult.results.map(([snapshots, batchResult], i) => ({ snapshots, result: batchResult, i }));
       }
 
-      const batchSizeForSnapshotsResult = batchSizeForSnapshots(docSnapshots);
-      const batches = batchSizeForSnapshotsResult === null ? [docSnapshots] : batch(docSnapshots, batchSizeForSnapshotsResult);
-      let i = 0;
-
-      const performTasksResult = await performAsyncTasks(batches, (x) => iterateSnapshotBatch(x, i++), {
-        sequential: true, // sequential by default
-        ...performTasksConfig
-      });
-
-      return performTasksResult.results.map(([snapshots, result], i) => ({ snapshots, result, i }));
+      return result;
     }
   });
 }
@@ -629,8 +631,8 @@ export interface IterateFirestoreDocumentSnapshotCheckpointsResult {
  * - {@link iterateFirestoreDocumentSnapshots} — processes one snapshot at a time
  * - {@link iterateFirestoreDocumentSnapshotPairs} — loads typed document wrappers per snapshot
  *
- * @param config - Complete configuration for pagination, processing, and termination behavior
- * @returns Statistics including total checkpoints executed, snapshots visited, and whether the limit was hit
+ * @param config - Complete configuration for pagination, processing, and termination behavior.
+ * @returns Statistics including total checkpoints executed, snapshots visited, and whether the limit was hit.
  *
  * @example
  * ```typescript
@@ -673,7 +675,7 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
   // eslint-disable-next-line sonarjs/cognitive-complexity -- cursor-based pagination logic with repeat detection is inherently complex
   async function taskInputFactory() {
     // Perform another query, then pass the results to the task factory.
-    let result: { i: IndexNumber; docQuerySnapshot: QuerySnapshot<T> } | null = null;
+    let result: Maybe<{ i: IndexNumber; docQuerySnapshot: QuerySnapshot<T> }> = null;
 
     if (!hasReachedEnd) {
       const constraints = constraintsFactory();
@@ -785,7 +787,7 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
  * this filter uses the full document path ({@link readFirestoreModelKeyFromDocumentSnapshot}),
  * making it suitable for cross-collection iteration where document IDs alone may collide.
  *
- * @returns A reusable filter function that passes each unique document path exactly once
+ * @returns A reusable filter function that passes each unique document path exactly once.
  *
  * @example
  * ```typescript

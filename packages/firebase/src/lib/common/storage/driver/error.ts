@@ -7,8 +7,8 @@ import { BaseError } from 'make-error';
  *
  * Required when the upload input is a string, since the format (raw, base64, etc.) must be explicit.
  *
- * @param options - the upload options to extract from
- * @returns the {@link StorageDataStringType} extracted from the options
+ * @param options - The upload options to extract from.
+ * @returns The {@link StorageDataStringType} extracted from the options.
  * @throws {Error} When `stringFormat` is not set in the options.
  */
 export function assertStorageUploadOptionsStringFormat(options?: StorageUploadOptions): StorageDataStringType {
@@ -24,7 +24,7 @@ export function assertStorageUploadOptionsStringFormat(options?: StorageUploadOp
 /**
  * Creates an error indicating that `stringFormat` was missing from upload options.
  *
- * @returns an {@link Error} describing the missing `stringFormat` in upload options
+ * @returns An {@link Error} describing the missing `stringFormat` in upload options.
  */
 export function noStringFormatInStorageUploadOptionsError() {
   return new Error('stringFormat was missing a value in the StorageUploadOptions.');

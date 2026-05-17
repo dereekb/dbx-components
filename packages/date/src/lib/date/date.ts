@@ -274,7 +274,7 @@ export function toISODateString(input: DateOrDateString): ISO8601DateString {
  * // tz === 'America/New_York' (or similar)
  * ```
  */
-export function guessCurrentTimezone(): Maybe<TimezoneString> {
+export function guessCurrentTimezone(): TimezoneString | undefined {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
 

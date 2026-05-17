@@ -1,4 +1,4 @@
-import type { Maybe } from '@dereekb/util';
+import { type Maybe } from '../value/maybe.type';
 import { type UnixDateTimeMillisecondsNumber } from '../date/date';
 
 /**

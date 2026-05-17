@@ -14,7 +14,7 @@ export type FirebaseFirestoreClientDrivers = FirestoreDrivers;
  * Provides accessor drivers (default, batch, transaction) and query drivers for use
  * with {@link clientFirebaseFirestoreContextFactory}.
  *
- * @returns the client-side {@link FirebaseFirestoreClientDrivers} for the `firebase/firestore` SDK
+ * @returns The client-side {@link FirebaseFirestoreClientDrivers} for the `firebase/firestore` SDK.
  *
  * @example
  * ```ts

@@ -9,8 +9,8 @@ import { type OpenAIApiKey, type OpenAIOrganizationId, type OpenAIProjectId } fr
  *
  * Reads the API key, base URL, organization ID, and project ID from environment variables.
  *
- * @param configService - NestJS config service for reading environment variables
- * @returns a validated OpenAIServiceConfig
+ * @param configService - NestJS config service for reading environment variables.
+ * @returns A validated OpenAIServiceConfig.
  */
 export function openAIServiceConfigFactory(configService: ConfigService): OpenAIServiceConfig {
   const config: OpenAIServiceConfig = {

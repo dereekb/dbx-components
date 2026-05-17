@@ -122,7 +122,7 @@ export interface BaseFirestoreFieldConfig<V, D = unknown> {
   /**
    * Optional default value to use before saving if the value is null/undefined
    */
-  readonly defaultBeforeSave?: GetterOrValue<D | null>;
+  readonly defaultBeforeSave?: GetterOrValue<Maybe<D>>;
 }
 
 /**
@@ -195,15 +195,16 @@ export type FirestoreModelFieldMapFunctionsConfig<V, D> = ModelFieldMapFunctions
  * Use the higher-level field converters for common types; use this directly only when you need a
  * custom conversion not covered by the built-in converters.
  *
- * @template V - Value type for the field in the model
- * @template D - Data type for the field in Firestore (defaults to unknown)
- * @param config - Configuration for the Firestore field
- * @returns A configured mapping between model and Firestore data
+ * @param config - Configuration for the Firestore field.
+ * @returns A configured mapping between model and Firestore data.
  *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory primitive
  * @dbxModelSnapshotFieldTags base, custom, transform, default, factory
  * @dbxModelSnapshotFieldRelated optional-firestore-field
+ * @template V - Value type for the field in the model
+ * @template D - Data type for the field in Firestore (defaults to unknown)
+ *
  * @example
  * ```ts
  * // Custom field that stores a Set<string> as a comma-separated string
@@ -213,6 +214,7 @@ export type FirestoreModelFieldMapFunctionsConfig<V, D> = ModelFieldMapFunctions
  *   toData: (set) => [...set].join(',')
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D>): FirestoreModelFieldMapFunctionsConfig<V, D> {
@@ -262,17 +264,20 @@ export const FIRESTORE_PASSTHROUGH_FIELD = firestoreField<unknown, unknown>({
  * This is useful when the model field and Firestore field are the same type and
  * no transformation is needed in either direction.
  *
- * @template T - Type for both the model field and Firestore field
- * @returns A field mapping configuration that passes values through unchanged
+ * @returns A field mapping configuration that passes values through unchanged.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory primitive
  * @dbxModelSnapshotFieldTags passthrough, identity, raw, untransformed, factory
+ * @template T - Type for both the model field and Firestore field
+ *
  * @example
  * ```ts
  * fields: {
  *   payload: firestorePassThroughField<MyType>()
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestorePassThroughField<T>(): ModelFieldMapFunctionsConfig<T, T> {
@@ -355,7 +360,7 @@ export interface OptionalFirestoreFieldConfigWithTwoTypeTransform<V, D> extends 
    *
    * Overrides transformData.
    */
-  readonly transformToData?: MapFunction<V, D | null>;
+  readonly transformToData?: MapFunction<V, Maybe<D>>;
 }
 
 /**
@@ -420,6 +425,7 @@ export function optionalFirestoreField<T>(config?: OptionalFirestoreFieldConfigW
 // @__NO_SIDE_EFFECTS__
 export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>> {
   // NOTE: Typings for this function internally is weird due to the support for both the one and two type transforms.
+  let result: FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>> = FIRESTORE_PASSTHROUGH_FIELD as FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
 
   if (config) {
     const inputConfig = config as OptionalFirestoreFieldConfigWithOneTypeTransform<V>;
@@ -428,7 +434,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
 
     const transformData = inputTransformData ?? passThrough;
     const transformFrom = (transformFromData ?? transformData) as MapFunction<D, V>;
-    const baseTransformTo = (transformToData ?? transformData) as MapFunction<V, D | null>;
+    const baseTransformTo = (transformToData ?? transformData) as MapFunction<V, Maybe<D>>;
 
     const dontStoreValueIf = inputDontStoreValueIf != null ? (isEqualToValueDecisionFunction(inputDontStoreValueIf) as Maybe<DecisionFunction<V>>) : null;
     const transformTo =
@@ -474,25 +480,27 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
       const dontStoreValue = dontStoreIf;
 
       toData = ((x: Maybe<V>) => {
-        if (x == null) {
-          return x;
+        let result: Maybe<D> = x as Maybe<D>;
+
+        if (x != null) {
+          const transformedValue = transformTo(x);
+          result = transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
         }
 
-        const transformedValue = transformTo(x);
-        return transformedValue != null && !dontStoreValue(transformedValue) ? transformedValue : null;
+        return result;
       }) as MapFunction<Maybe<V>, Maybe<D>>;
     } else {
       toData = ((x: Maybe<V>) => (x != null ? (transformTo(x) ?? null) : x)) as MapFunction<Maybe<V>, Maybe<D>>;
     }
 
-    return firestoreField<Maybe<V>, Maybe<D>>({
+    result = firestoreField<Maybe<V>, Maybe<D>>({
       default: null,
       fromData,
       toData
     });
   }
 
-  return FIRESTORE_PASSTHROUGH_FIELD as FirestoreModelFieldMapFunctionsConfig<Maybe<V>, Maybe<D>>;
+  return result;
 }
 
 /**
@@ -558,9 +566,14 @@ export const DEFAULT_FIRESTORE_STRING_FIELD_VALUE = '';
  * Defaults to empty string `''` when the field is missing. Supports optional string
  * transformation (e.g., lowercase, trim) applied on both read and write.
  *
+ * @param config - Configuration for the string field.
+ * @returns A field mapping configuration for string values.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory primitive
+ * @dbxModelSnapshotFieldTags string, text, transform, lowercase, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-string
  * @template S - String type for the field (defaults to string)
- * @param config - Configuration for the string field
- * @returns A field mapping configuration for string values
  *
  * @example
  * ```ts
@@ -570,10 +583,7 @@ export const DEFAULT_FIRESTORE_STRING_FIELD_VALUE = '';
  * // String field with lowercase transformation
  * const emailField = firestoreString({ transform: 'lowercase' });
  * ```
- * @dbxModelSnapshotField
- * @dbxModelSnapshotFieldCategory primitive
- * @dbxModelSnapshotFieldTags string, text, transform, lowercase, factory
- * @dbxModelSnapshotFieldRelated optional-firestore-string
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreString<S extends string = string>(config?: FirestoreStringConfig<S>) {
@@ -598,20 +608,23 @@ export type OptionalFirestoreString<S extends string = string> = OptionalOneType
 /**
  * Creates a field mapping configuration for optional Firestore string fields.
  *
- * @template S - String type for the field (defaults to string)
- * @param config - Configuration for the optional string field
- * @returns A field mapping configuration for optional string values
+ * @param config - Configuration for the optional string field.
+ * @returns A field mapping configuration for optional string values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory primitive
  * @dbxModelSnapshotFieldOptional true
  * @dbxModelSnapshotFieldTags string, text, optional, transform, factory
  * @dbxModelSnapshotFieldRelated firestore-string
+ * @template S - String type for the field (defaults to string)
+ *
  * @example
  * ```ts
  * fields: {
  *   nickname: optionalFirestoreString()
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreString<S extends string = string>(config?: OptionalFirestoreString<S>) {
@@ -634,19 +647,22 @@ export type FirestoreEnumConfig<S extends string | number> = MapConfiguredFirest
 /**
  * Creates a field mapping configuration for Firestore enum fields.
  *
- * @template S - Enum type (string or number)
- * @param config - Configuration for the enum field
- * @returns A field mapping configuration for enum values
+ * @param config - Configuration for the enum field.
+ * @returns A field mapping configuration for enum values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory primitive
  * @dbxModelSnapshotFieldTags enum, string, number, factory
  * @dbxModelSnapshotFieldRelated optional-firestore-enum
+ * @template S - Enum type (string or number)
+ *
  * @example
  * ```ts
  * fields: {
  *   status: firestoreEnum<UserStatus>({ default: UserStatus.Pending })
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreEnum<S extends string | number>(config: FirestoreEnumConfig<S>): FirestoreModelFieldMapFunctionsConfig<S, S> {
@@ -667,14 +683,16 @@ export type OptionalFirestoreEnumConfig<S extends string | number> = OptionalOne
 /**
  * Creates a field mapping configuration for optional Firestore enum fields.
  *
- * @template S - Enum type (string or number)
- * @param config - Configuration for the optional enum field
- * @returns A field mapping configuration for optional enum values
+ * @param config - Configuration for the optional enum field.
+ * @returns A field mapping configuration for optional enum values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory primitive
  * @dbxModelSnapshotFieldOptional true
  * @dbxModelSnapshotFieldTags enum, optional, string, number, factory
  * @dbxModelSnapshotFieldRelated firestore-enum
+ * @template S - Enum type (string or number)
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreEnum<S extends string | number>(config?: OptionalFirestoreEnumConfig<S>) {
@@ -684,17 +702,20 @@ export function optionalFirestoreEnum<S extends string | number>(config?: Option
 /**
  * Creates a field mapping configuration for Firestore UID fields.
  *
- * @returns A field mapping configuration for Firebase Auth user IDs
+ * @returns A field mapping configuration for Firebase Auth user IDs.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory model-key
  * @dbxModelSnapshotFieldTags uid, user, owner, account, auth, string, factory
  * @dbxModelSnapshotFieldRelated optional-firestore-uid
+ *
  * @example
  * ```ts
  * fields: {
  *   uid: firestoreUID()
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreUID() {
@@ -706,12 +727,14 @@ export function firestoreUID() {
 /**
  * Creates a field mapping configuration for optional Firestore UID fields.
  *
- * @returns A field mapping configuration for optional Firebase Auth user IDs
+ * @returns A field mapping configuration for optional Firebase Auth user IDs.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory model-key
  * @dbxModelSnapshotFieldOptional true
  * @dbxModelSnapshotFieldTags uid, user, owner, account, auth, optional, string, factory
  * @dbxModelSnapshotFieldRelated firestore-uid
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreUID() {
@@ -768,8 +791,13 @@ export type FirestoreDateFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<
  * Defaults to `new Date()` when the field is missing. Use `saveDefaultAsNow` to automatically
  * store the current timestamp when a new document is created.
  *
- * @param config - Configuration for the date field
- * @returns A field mapping configuration for Date values
+ * @param config - Configuration for the date field.
+ * @returns A field mapping configuration for Date values.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory date
+ * @dbxModelSnapshotFieldTags date, time, iso, timestamp, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-date, firestore-date-number
  *
  * @example
  * ```ts
@@ -779,10 +807,7 @@ export type FirestoreDateFieldConfig = DefaultMapConfiguredFirestoreFieldConfig<
  * // Date field with a fixed default
  * const startDateField = firestoreDate({ default: new Date('2020-01-01') });
  * ```
- * @dbxModelSnapshotField
- * @dbxModelSnapshotFieldCategory date
- * @dbxModelSnapshotFieldTags date, time, iso, timestamp, factory
- * @dbxModelSnapshotFieldRelated optional-firestore-date, firestore-date-number
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDate(config: FirestoreDateFieldConfig = {}) {
@@ -807,19 +832,22 @@ export type OptionalFirestoreDateFieldConfig = OptionalFirestoreFieldConfig<Date
  *
  * Handles conversion between JavaScript Date objects and ISO8601 strings stored in Firestore.
  *
- * @param config - Configuration for the optional date field
- * @returns A field mapping configuration for optional Date values
+ * @param config - Configuration for the optional date field.
+ * @returns A field mapping configuration for optional Date values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory date
  * @dbxModelSnapshotFieldOptional true
  * @dbxModelSnapshotFieldTags date, time, iso, optional, factory
  * @dbxModelSnapshotFieldRelated firestore-date
+ *
  * @example
  * ```ts
  * fields: {
  *   deletedAt: optionalFirestoreDate()
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreDate(config?: OptionalFirestoreDateFieldConfig) {
@@ -863,12 +891,14 @@ export type FirestoreDateNumberFieldConfig = DefaultMapConfiguredFirestoreFieldC
  * Handles conversion between JavaScript Date objects and numeric representations
  * using the provided `fromDate`/`toDate` conversion functions.
  *
- * @param config - Configuration including custom Date-to-number conversion functions
- * @returns A field mapping configuration for Date values stored as numbers
+ * @param config - Configuration including custom Date-to-number conversion functions.
+ * @returns A field mapping configuration for Date values stored as numbers.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory date
  * @dbxModelSnapshotFieldTags date, number, timestamp, factory
  * @dbxModelSnapshotFieldRelated optional-firestore-date-number, firestore-unix-date-time-seconds-number
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDateNumber(config: FirestoreDateNumberFieldConfig) {
@@ -892,13 +922,15 @@ export type OptionalFirestoreDateNumberFieldConfig = OptionalFirestoreFieldConfi
 /**
  * Creates a field mapping configuration for optional Firestore date field that is stored as a number.
  *
- * @param config - Configuration for the optional date field
- * @returns A field mapping configuration for optional Date values
+ * @param config - Configuration for the optional date field.
+ * @returns A field mapping configuration for optional Date values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory date
  * @dbxModelSnapshotFieldOptional true
  * @dbxModelSnapshotFieldTags date, number, timestamp, optional, factory
  * @dbxModelSnapshotFieldRelated firestore-date-number
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreDateNumber(config: OptionalFirestoreDateNumberFieldConfig) {
@@ -924,8 +956,9 @@ export type FirestoreUnixDateTimeSecondsNumberFieldConfig = Omit<FirestoreDateNu
 /**
  * Creates a field mapping configuration for Firestore Date fields that are stored as a UnixDateTimeSecondsNumber.
  *
- * @param config - Configuration for the date field
- * @returns A field mapping configuration for Date values
+ * @param config - Configuration for the date field.
+ * @returns A field mapping configuration for Date values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreUnixDateTimeSecondsNumber(config: FirestoreUnixDateTimeSecondsNumberFieldConfig) {
@@ -941,8 +974,9 @@ export type OptionalFirestoreUnixDateTimeSecondsNumberFieldConfig = Omit<Optiona
 /**
  * Creates a field mapping configuration for optional Firestore Date fields that are stored as a UnixDateTimeSecondsNumber.
  *
- * @param config - Configuration for the optional date field
- * @returns A field mapping configuration for optional Date values
+ * @param config - Configuration for the optional date field.
+ * @returns A field mapping configuration for optional Date values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreUnixDateTimeSecondsNumber(config?: OptionalFirestoreUnixDateTimeSecondsNumberFieldConfig) {
@@ -961,18 +995,21 @@ export type FirestoreBooleanFieldConfig = MapConfiguredFirestoreFieldConfigWithD
 /**
  * Creates a field mapping configuration for Firestore boolean fields.
  *
- * @param config - Configuration for the boolean field
- * @returns A field mapping configuration for boolean values
+ * @param config - Configuration for the boolean field.
+ * @returns A field mapping configuration for boolean values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory primitive
  * @dbxModelSnapshotFieldTags boolean, flag, factory
  * @dbxModelSnapshotFieldRelated optional-firestore-boolean
+ *
  * @example
  * ```ts
  * fields: {
  *   active: firestoreBoolean({ default: true })
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreBoolean(config: FirestoreBooleanFieldConfig) {
@@ -991,19 +1028,22 @@ export type OptionalFirestoreBooleanFieldConfig = OptionalOneTypeFirestoreFieldC
 /**
  * Creates a field mapping configuration for optional Firestore boolean fields.
  *
- * @param config - Configuration for the optional boolean field
- * @returns A field mapping configuration for optional boolean values
+ * @param config - Configuration for the optional boolean field.
+ * @returns A field mapping configuration for optional boolean values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory primitive
  * @dbxModelSnapshotFieldOptional true
  * @dbxModelSnapshotFieldTags boolean, flag, optional, dontstore, factory
  * @dbxModelSnapshotFieldRelated firestore-boolean
+ *
  * @example
  * ```ts
  * fields: {
  *   ns: optionalFirestoreBoolean()
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreBoolean(config?: OptionalFirestoreBooleanFieldConfig) {
@@ -1029,19 +1069,22 @@ export interface FirestoreNumberConfig<N extends number = number> extends MapCon
 /**
  * Creates a field mapping configuration for Firestore number fields.
  *
- * @template N - Number type for the field (defaults to number)
- * @param config - Configuration for the number field
- * @returns A field mapping configuration for number values
+ * @param config - Configuration for the number field.
+ * @returns A field mapping configuration for number values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory primitive
  * @dbxModelSnapshotFieldTags number, integer, transform, factory
  * @dbxModelSnapshotFieldRelated optional-firestore-number
+ * @template N - Number type for the field (defaults to number)
+ *
  * @example
  * ```ts
  * fields: {
  *   count: firestoreNumber({ default: 0 })
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreNumber<N extends number = number>(config: FirestoreNumberConfig<N>) {
@@ -1066,14 +1109,16 @@ export type OptionalFirestoreNumberFieldConfig<N extends number = number> = Opti
 /**
  * Creates a field mapping configuration for optional Firestore number fields.
  *
- * @template N - Number type for the field (defaults to number)
- * @param config - Configuration for the optional number field
- * @returns A field mapping configuration for optional number values
+ * @param config - Configuration for the optional number field.
+ * @returns A field mapping configuration for optional number values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory primitive
  * @dbxModelSnapshotFieldOptional true
  * @dbxModelSnapshotFieldTags number, integer, optional, transform, factory
  * @dbxModelSnapshotFieldRelated firestore-number
+ * @template N - Number type for the field (defaults to number)
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreNumber<N extends number = number>(config?: OptionalFirestoreNumberFieldConfig<N>) {
@@ -1099,9 +1144,14 @@ export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldCon
  * Defaults to an empty array when the field is missing. Supports optional sorting
  * via `sortWith` which is applied on both read and write.
  *
+ * @param config - Configuration for the array field.
+ * @returns A field mapping configuration for array values.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory array
+ * @dbxModelSnapshotFieldTags array, list, sort, factory
+ * @dbxModelSnapshotFieldRelated optional-firestore-array, firestore-unique-array
  * @template T - Type of elements in the array
- * @param config - Configuration for the array field
- * @returns A field mapping configuration for array values
  *
  * @example
  * ```ts
@@ -1110,10 +1160,7 @@ export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldCon
  *   sortWith: (a, b) => a.localeCompare(b)
  * });
  * ```
- * @dbxModelSnapshotField
- * @dbxModelSnapshotFieldCategory array
- * @dbxModelSnapshotFieldTags array, list, sort, factory
- * @dbxModelSnapshotFieldRelated optional-firestore-array, firestore-unique-array
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
@@ -1154,20 +1201,23 @@ export type OptionalFirestoreArrayFieldConfig<T> = Omit<OptionalFirestoreFieldCo
  *
  * Supports unique filtering and conditional storage based on array content.
  *
- * @template T - Type of elements in the array
- * @param config - Configuration for the optional array field
- * @returns A field mapping configuration for optional array values
+ * @param config - Configuration for the optional array field.
+ * @returns A field mapping configuration for optional array values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory array
  * @dbxModelSnapshotFieldOptional true
  * @dbxModelSnapshotFieldTags array, list, optional, unique, dontstore, factory
  * @dbxModelSnapshotFieldRelated firestore-array
+ * @template T - Type of elements in the array
+ *
  * @example
  * ```ts
  * fields: {
  *   tags: optionalFirestoreArray<string>({ filterUnique: true, dontStoreIfEmpty: true })
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldConfig<T>) {
@@ -1224,10 +1274,12 @@ export type FirestoreUniqueArrayFieldConfig<T, K extends PrimativeKey = T extend
 /**
  * Creates a field mapping configuration for Firestore array fields with unique filtering.
  *
+ * @param config - Configuration for the unique array field.
+ * @returns A field mapping configuration for unique array values.
+ *
  * @template T - Type of elements in the array
  * @template K - Key type for filtering uniqueness
- * @param config - Configuration for the unique array field
- * @returns A field mapping configuration for unique array values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreUniqueArray<T, K extends PrimativeKey = T extends PrimativeKey ? T : PrimativeKey>(config: FirestoreUniqueArrayFieldConfig<T, K>) {
@@ -1259,10 +1311,12 @@ export type FirestoreUniqueKeyedArrayFieldConfig<T, K extends PrimativeKey = Pri
 /**
  * Creates a field mapping configuration for Firestore array fields with unique filtering based on a key function.
  *
+ * @param config - Configuration for the keyed unique array field.
+ * @returns A field mapping configuration for keyed unique array values.
+ *
  * @template T - Type of elements in the array
  * @template K - Type of the key used for uniqueness
- * @param config - Configuration for the keyed unique array field
- * @returns A field mapping configuration for keyed unique array values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreUniqueKeyedArray<T, K extends PrimativeKey = PrimativeKey>(config: FirestoreUniqueKeyedArrayFieldConfig<T, K>) {
@@ -1282,12 +1336,14 @@ export type FirestoreEnumArrayFieldConfig<S extends string | number> = Omit<Fire
 /**
  * Creates a field mapping configuration for Firestore array fields of unique enum values.
  *
- * @template S - Enum type (string or number)
- * @param config - Configuration for the enum array field
- * @returns A field mapping configuration for enum array values
+ * @param config - Configuration for the enum array field.
+ * @returns A field mapping configuration for enum array values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory array
  * @dbxModelSnapshotFieldTags array, enum, unique, flags, tags, factory
+ * @template S - Enum type (string or number)
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreEnumArray<S extends string | number>(config: FirestoreEnumArrayFieldConfig<S> = {}) {
@@ -1307,9 +1363,11 @@ export type FirestoreUniqueStringArrayFieldConfig<S extends string = string> = O
 /**
  * Creates a field mapping configuration for Firestore array fields of unique string values.
  *
+ * @param config - Configuration for the unique string array field.
+ * @returns A field mapping configuration for unique string array values.
+ *
  * @template S - String type (defaults to string)
- * @param config - Configuration for the unique string array field
- * @returns A field mapping configuration for unique string array values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreUniqueStringArray<S extends string = string>(config?: FirestoreUniqueStringArrayFieldConfig<S>) {
@@ -1355,12 +1413,14 @@ export type FirestoreUniqueNumberArrayFieldConfig<S extends number = number> = O
 /**
  * Creates a field mapping configuration for Firestore array fields of unique number values.
  *
+ * @param config - Configuration for the unique number array field.
+ * @returns A field mapping configuration for unique number array values.
+ *
  * @template S - Number type (defaults to number)
- * @param config - Configuration for the unique number array field
- * @returns A field mapping configuration for unique number array values
+ *
  * @__NO_SIDE_EFFECTS__
  */
-
+// eslint-disable-next-line sonarjs/no-identical-functions -- exposes a distinct typed alias for number arrays
 export function firestoreUniqueNumberArray<S extends number = number>(config?: FirestoreUniqueNumberArrayFieldConfig<S>) {
   return firestoreUniqueArray<S, S>({
     ...config,
@@ -1397,10 +1457,12 @@ export type FirestoreEncodedArrayFieldConfig<T, E extends string | number> = Def
  * Encodes model values to string or number representations for storage, and decodes them on read.
  * Useful when the model type is richer than what should be stored directly in Firestore.
  *
+ * @param config - Configuration for the encoded array field.
+ * @returns A field mapping configuration for encoded array values.
+ *
  * @template T - Type of elements in the model array
  * @template E - Type of encoded elements in Firestore (string or number)
- * @param config - Configuration for the encoded array field
- * @returns A field mapping configuration for encoded array values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreEncodedArray<T, E extends string | number>(config: FirestoreEncodedArrayFieldConfig<T, E>) {
@@ -1434,10 +1496,12 @@ export type FirestoreDencoderArrayFieldConfig<D extends PrimativeKey, E extends 
  * The dencoder is a single function that handles both encoding (model → Firestore) and decoding
  * (Firestore → model) directions, leveraging {@link PrimativeKeyDencoderFunction}.
  *
+ * @param config - Configuration for the decoder array field.
+ * @returns A field mapping configuration for encoded primative key array values.
+ *
  * @template D - Type of decoded elements in the model array
  * @template E - Type of encoded elements in Firestore
- * @param config - Configuration for the decoder array field
- * @returns A field mapping configuration for encoded primative key array values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDencoderArray<D extends PrimativeKey, E extends PrimativeKey>(config: FirestoreDencoderArrayFieldConfig<D, E>) {
@@ -1469,11 +1533,13 @@ export type FirestoreDencoderStringArrayFieldConfig<D extends PrimativeKey, E ex
  *
  * An array that is stored as an encoded string using a PrimativeKeyDencoderString configuration.
  *
+ * @param config - Configuration for the string decoder array field.
+ * @returns A field mapping configuration for string-encoded primative key array values.
+ *
  * @template D - Type of decoded elements in the model array
  * @template E - Type of encoded elements (intermediate representation)
  * @template S - String type for storage in Firestore
- * @param config - Configuration for the string decoder array field
- * @returns A field mapping configuration for string-encoded primative key array values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDencoderStringArray<D extends PrimativeKey, E extends PrimativeKey, S extends string = string>(config: FirestoreDencoderStringArrayFieldConfig<D, E, S>) {
@@ -1517,10 +1583,14 @@ export type FirestoreMapFieldConfig<T, K extends string = string> = DefaultMapCo
  * By default, removes all null/undefined keys from the object before saving to Firestore.
  * Defaults to an empty object `{}` when the field is missing.
  *
+ * @param config - Configuration for the map field.
+ * @returns A field mapping configuration for map values.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory map
+ * @dbxModelSnapshotFieldTags map, record, dictionary, dict, factory
  * @template T - Value type in the map
  * @template K - Key type (must be string, as Firestore maps only have string keys)
- * @param config - Configuration for the map field
- * @returns A field mapping configuration for map values
  *
  * @example
  * ```ts
@@ -1529,9 +1599,7 @@ export type FirestoreMapFieldConfig<T, K extends string = string> = DefaultMapCo
  *   mapFilter: KeyValueTypleValueFilter.EMPTY
  * });
  * ```
- * @dbxModelSnapshotField
- * @dbxModelSnapshotFieldCategory map
- * @dbxModelSnapshotFieldTags map, record, dictionary, dict, factory
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreMap<T, K extends string = string>(config: FirestoreMapFieldConfig<T, K> = {}) {
@@ -1557,7 +1625,8 @@ export function firestoreMap<T, K extends string = string>(config: FirestoreMapF
  *
  * Filters out models with no/null roles by default.
  *
- * @returns A field mapping configuration for a map of granted roles keyed by FirestoreModelKey
+ * @returns A field mapping configuration for a map of granted roles keyed by FirestoreModelKey.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyGrantedRoleMap<R extends GrantedRole>() {
@@ -1601,11 +1670,13 @@ export type FirestoreEncodedObjectMapFieldConfig<T, E, S extends string = string
  * Each value in the map is encoded/decoded using the provided `encoder`/`decoder` functions.
  * By default, removes all empty/null keys from the map before saving.
  *
+ * @param config - Configuration including encoder/decoder functions.
+ * @returns A field mapping configuration for encoded map values.
+ *
  * @template T - Decoded value type in the model
  * @template E - Encoded value type in Firestore
  * @template S - Key type (string, defaults to string)
- * @param config - Configuration including encoder/decoder functions
- * @returns A field mapping configuration for encoded map values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreEncodedObjectMap<T, E, S extends string = string>(config: FirestoreEncodedObjectMapFieldConfig<T, E, S>) {
@@ -1642,11 +1713,13 @@ export type FirestoreDencoderMapFieldConfig<D extends PrimativeKey, E extends Pr
  * Similar to {@link firestoreEncodedObjectMap} but uses a single dencoder function for both
  * encoding and decoding directions. By default, removes all empty/null keys from the map before saving.
  *
+ * @param config - Configuration including the dencoder function.
+ * @returns A field mapping configuration for dencoder-mapped values.
+ *
  * @template D - Decoded primative key type
  * @template E - Encoded primative key type
  * @template S - Key type for the map (string, defaults to string)
- * @param config - Configuration including the dencoder function
- * @returns A field mapping configuration for dencoder-mapped values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDencoderMap<D extends PrimativeKey, E extends PrimativeKey, S extends string = string>(config: FirestoreDencoderMapFieldConfig<D, E, S>) {
@@ -1663,8 +1736,9 @@ export function firestoreDencoderMap<D extends PrimativeKey, E extends Primative
  *
  * Filters out models with empty/no roles by default.
  *
- * @param dencoder - The dencoder function used to encode and decode the role values
- * @returns A field mapping configuration for an encoded granted role map keyed by FirestoreModelKey
+ * @param dencoder - The dencoder function used to encode and decode the role values.
+ * @returns A field mapping configuration for an encoded granted role map keyed by FirestoreModelKey.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyEncodedGrantedRoleMap<D extends GrantedRole, E extends string>(dencoder: PrimativeKeyStringDencoderFunction<D, E>) {
@@ -1684,13 +1758,15 @@ export type FirestoreArrayMapFieldConfig<T, K extends string = string> = Firesto
  *
  * Defaults to filtering empty arrays and null/undefined elements from each array before saving.
  *
- * @template T - Element type in the array values
- * @template K - Key type for the map (string)
- * @param config - Configuration for the array map field
- * @returns A field mapping configuration for map values with array entries
+ * @param config - Configuration for the array map field.
+ * @returns A field mapping configuration for map values with array entries.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory map
  * @dbxModelSnapshotFieldTags map, array, lookup, multi-value, factory
+ * @template T - Element type in the array values
+ * @template K - Key type for the map (string)
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreArrayMap<T, K extends string = string>(config: FirestoreArrayMapFieldConfig<T, K> = {}) {
@@ -1706,7 +1782,8 @@ export function firestoreArrayMap<T, K extends string = string>(config: Firestor
  *
  * Filters empty roles/arrays by default.
  *
- * @returns A field mapping configuration for a map of granted role arrays keyed by FirestoreModelKey
+ * @returns A field mapping configuration for a map of granted role arrays keyed by FirestoreModelKey.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyGrantedRoleArrayMap<R extends GrantedRole>() {
@@ -1758,8 +1835,9 @@ export type FirestoreObjectArrayFieldConfigFirestoreFieldInput<T extends object,
  * Used internally by {@link firestoreObjectArray} to adapt field configs into the map functions
  * format needed for array element conversion.
  *
- * @param config - The FirestoreModelFieldMapFunctionsConfig to convert
- * @returns A ModelMapFunctionsRef wrapping the derived map functions
+ * @param config - The FirestoreModelFieldMapFunctionsConfig to convert.
+ * @returns A ModelMapFunctionsRef wrapping the derived map functions.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreModelFieldMapFunctionsConfig<T, O>): ModelMapFunctionsRef<T, O> {
@@ -1778,10 +1856,15 @@ export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O e
  *
  * On write, null/undefined values are filtered from each object to match Firestore semantics.
  *
+ * @param config - Configuration including element conversions and optional filtering/sorting.
+ * @returns A field mapping configuration for object array values.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory object
+ * @dbxModelSnapshotFieldTags array, object, embedded, nested, structured, factory
+ * @dbxModelSnapshotFieldRelated firestore-sub-object
  * @template T - The element model type
  * @template O - The element Firestore data type (defaults to FirestoreModelData<T>)
- * @param config - Configuration including element conversions and optional filtering/sorting
- * @returns A field mapping configuration for object array values
  *
  * @example
  * ```ts
@@ -1791,10 +1874,7 @@ export function firestoreFieldConfigToModelMapFunctionsRef<T extends object, O e
  *   sortWith: sortAscendingIndexNumberRefFunction()
  * });
  * ```
- * @dbxModelSnapshotField
- * @dbxModelSnapshotFieldCategory object
- * @dbxModelSnapshotFieldTags array, object, embedded, nested, structured, factory
- * @dbxModelSnapshotFieldRelated firestore-sub-object
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreObjectArray<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreObjectArrayFieldConfig<T, O>) {
@@ -1862,10 +1942,15 @@ export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extend
  * conversion of embedded documents. The `objectField` defines the conversion rules for
  * the nested object's fields using the same converter patterns.
  *
+ * @param config - Configuration including nested field conversions.
+ * @returns A field mapping configuration with both field config and map functions.
+ *
+ * @dbxModelSnapshotField
+ * @dbxModelSnapshotFieldCategory object
+ * @dbxModelSnapshotFieldTags object, nested, embedded, structured, factory
+ * @dbxModelSnapshotFieldRelated firestore-object-array
  * @template T - The nested model type
  * @template O - The nested Firestore data type (defaults to FirestoreModelData<T>)
- * @param config - Configuration including nested field conversions
- * @returns A field mapping configuration with both field config and map functions
  *
  * @example
  * ```ts
@@ -1878,10 +1963,7 @@ export type FirestoreSubObjectFieldMapFunctionsConfig<T extends object, O extend
  *   }
  * });
  * ```
- * @dbxModelSnapshotField
- * @dbxModelSnapshotFieldCategory object
- * @dbxModelSnapshotFieldTags object, nested, embedded, structured, factory
- * @dbxModelSnapshotFieldRelated firestore-object-array
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreSubObject<T extends object, O extends object = FirestoreModelData<T>>(config: FirestoreSubObjectFieldConfig<T, O>): FirestoreSubObjectFieldMapFunctionsConfig<T, O> {
@@ -1918,17 +2000,20 @@ export interface FirestoreLatLngStringConfig extends DefaultMapConfiguredFiresto
  *
  * Applies validation and optional precision rounding on both read and write.
  *
- * @param config - Optional precision and default value configuration
- * @returns A field mapping configuration for LatLngString values
+ * @param config - Optional precision and default value configuration.
+ * @returns A field mapping configuration for LatLngString values.
+ *
  * @dbxModelSnapshotField
  * @dbxModelSnapshotFieldCategory geo
  * @dbxModelSnapshotFieldTags geo, latlng, location, coordinates, coords, geolocation, factory
+ *
  * @example
  * ```ts
  * fields: {
  *   loc: firestoreLatLngString()
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreLatLngString(config?: FirestoreLatLngStringConfig) {
@@ -1976,7 +2061,8 @@ export const firestoreWebsiteLinkAssignFn: MapFunction<WebsiteLink, WebsiteLink>
 /**
  * Creates a field mapping configuration for Firestore website link fields.
  *
- * @returns A field mapping configuration for website link values
+ * @returns A field mapping configuration for website link values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreWebsiteLink() {
@@ -1991,7 +2077,8 @@ export function firestoreWebsiteLink() {
 /**
  * Creates a field mapping configuration for Firestore arrays of WebsiteLink values.
  *
- * @returns A field mapping configuration for WebsiteLink array values
+ * @returns A field mapping configuration for WebsiteLink array values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreWebsiteLinkArray() {
@@ -2013,7 +2100,8 @@ export const firestoreWebsiteFileLinkAssignFn: MapFunction<WebsiteFileLink, Webs
 /**
  * Creates a field mapping configuration for Firestore website file link fields.
  *
- * @returns A field mapping configuration for website file link values
+ * @returns A field mapping configuration for website file link values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreWebsiteFileLink() {
@@ -2028,7 +2116,8 @@ export function firestoreWebsiteFileLink() {
 /**
  * Stores the array of WebsiteFileLink values as an array of objects.
  *
- * @returns A field mapping configuration for WebsiteFileLink array values stored as objects
+ * @returns A field mapping configuration for WebsiteFileLink array values stored as objects.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreWebsiteFileLinkObjectArray() {
@@ -2040,7 +2129,8 @@ export function firestoreWebsiteFileLinkObjectArray() {
 /**
  * Stores the array of WebsiteFileLink values as an array of EncodedWebsiteFileLink values.
  *
- * @returns A field mapping configuration for WebsiteFileLink array values stored in encoded form
+ * @returns A field mapping configuration for WebsiteFileLink array values stored in encoded form.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreWebsiteFileLinkEncodedArray() {
@@ -2069,7 +2159,8 @@ export const firestoreDateCellRangeAssignFn: MapFunction<DateCellRange, DateCell
 /**
  * Creates a field mapping configuration for Firestore date cell range fields.
  *
- * @returns A field mapping configuration for date cell range values
+ * @returns A field mapping configuration for date cell range values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDateCellRange() {
@@ -2084,8 +2175,9 @@ export function firestoreDateCellRange() {
 /**
  * Creates a field mapping configuration for Firestore arrays of DateCellRange values.
  *
- * @param sort - Whether to sort the array by index number; defaults to true
- * @returns A field mapping configuration for DateCellRange array values
+ * @param sort - Whether to sort the array by index number; defaults to true.
+ * @returns A field mapping configuration for DateCellRange array values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDateCellRangeArray(sort: boolean = true) {
@@ -2108,7 +2200,8 @@ export const firestoreDateCellScheduleAssignFn: MapFunction<DateCellSchedule, Da
 /**
  * Creates a field mapping configuration for Firestore date cell schedule fields.
  *
- * @returns A field mapping configuration for date cell schedule values
+ * @returns A field mapping configuration for date cell schedule values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDateCellSchedule() {
@@ -2135,15 +2228,16 @@ export const assignUnitedStatesAddressFunction = assignValuesToPOJOFunction<Unit
 /**
  * Function to assign values from an input UnitedStatesAddress to a default UnitedStatesAddress.
  *
- * @param input - The source UnitedStatesAddress to copy values from
- * @returns A new UnitedStatesAddress with values assigned from the input
+ * @param input - The source UnitedStatesAddress to copy values from.
+ * @returns A new UnitedStatesAddress with values assigned from the input.
  */
 export const firestoreUnitedStatesAddressAssignFn: MapFunction<UnitedStatesAddress, UnitedStatesAddress> = (input) => assignUnitedStatesAddressFunction(DEFAULT_FIRESTORE_UNITED_STATES_ADDRESS_VALUE, input);
 
 /**
  * Creates a field mapping configuration for Firestore United States address fields.
  *
- * @returns A field mapping configuration for United States address values
+ * @returns A field mapping configuration for United States address values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreUnitedStatesAddress() {
@@ -2157,7 +2251,8 @@ export function firestoreUnitedStatesAddress() {
 /**
  * Creates a field mapping configuration for optional Firestore United States address fields.
  *
- * @returns A field mapping configuration for optional United States address values
+ * @returns A field mapping configuration for optional United States address values.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function optionalFirestoreUnitedStatesAddress() {
@@ -2197,9 +2292,11 @@ export interface FirestoreBitwiseSetConfig<D extends number = number> extends De
 /**
  * Creates a field mapping configuration for Firestore fields that store sets of numbers as bitwise-encoded values.
  *
+ * @param config - Configuration for the bitwise set field.
+ * @returns A field mapping configuration for bitwise-encoded set values.
+ *
  * @template D - Type of number elements in the set (defaults to number)
- * @param config - Configuration for the bitwise set field
- * @returns A field mapping configuration for bitwise-encoded set values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreBitwiseSet<D extends number = number>(config: FirestoreBitwiseSetConfig<D>) {
@@ -2228,10 +2325,12 @@ export interface FirestoreBitwiseSetMapConfig<D extends number = number, K exten
 /**
  * Creates a field mapping configuration for Firestore fields that map objects with bitwise-encoded set values.
  *
+ * @param config - Configuration for the bitwise set map field.
+ * @returns A field mapping configuration for object maps with bitwise-encoded set values.
+ *
  * @template D - Type of number elements in the sets (defaults to number)
  * @template K - Type of keys in the object (string)
- * @param config - Configuration for the bitwise set map field
- * @returns A field mapping configuration for object maps with bitwise-encoded set values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreBitwiseSetMap<D extends number = number, K extends string = string>(config: FirestoreBitwiseSetMapConfig<D, K>) {
@@ -2260,10 +2359,12 @@ export interface FirestoreBitwiseObjectMapConfig<T extends object, K extends str
 /**
  * Creates a field mapping configuration for Firestore fields that map objects with bitwise-encoded object values.
  *
+ * @param config - Configuration for the bitwise object map field.
+ * @returns A field mapping configuration for object maps with bitwise-encoded object values.
+ *
  * @template T - Type of object values in the map
  * @template K - Type of keys in the object (string)
- * @param config - Configuration for the bitwise object map field
- * @returns A field mapping configuration for object maps with bitwise-encoded object values
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreBitwiseObjectMap<T extends object, K extends string = string>(config: FirestoreBitwiseObjectMapConfig<T, K>) {

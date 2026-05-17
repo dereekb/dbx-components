@@ -151,8 +151,8 @@ interface DistributeAndWritePagesInput<T> {
  * Internal helper: distribute items into per-page buckets, write each page,
  * delete pages that no longer have items, and write the updated index.
  *
- * @param input - Distribution and write context
- * @returns A promise that resolves when all writes have been queued onto the supplied context
+ * @param input - Distribution and write context.
+ * @returns Resolves once every page write is queued onto the supplied context.
  */
 function distributeAndWritePages<T>(input: DistributeAndWritePagesInput<T>): Promise<void> {
   const { items, distributionScheme, maxItemsPerPage, itemConverter, existingPageIds, collectionRef, indexRef, firestoreAccessorDriver, context } = input;
@@ -240,8 +240,8 @@ interface ReadPageInput<T> {
  * Internal helper: read a single page and return its items.
  * Missing pages are silently treated as empty.
  *
- * @param input - Page-read context
- * @returns The items present on the requested page, or an empty array if the page does not exist
+ * @param input - Page-read context.
+ * @returns The items present on the requested page, or an empty array if the page does not exist.
  */
 async function readPageInto<T>(input: ReadPageInput<T>): Promise<T[]> {
   const { pageId, collectionRef, firestoreAccessorDriver, context, itemConverter } = input;
@@ -269,8 +269,8 @@ async function readPageInto<T>(input: ReadPageInput<T>): Promise<T[]> {
  * {@link FirestoreContextReference} from its base — both are provided by
  * {@link makeFirestoreCollectionWithParent}.
  *
- * @param x - The collection object to extend
- * @param config - Paged accessor configuration
+ * @param x - The collection object to extend.
+ * @param config - Paged accessor configuration.
  */
 export function extendFirestoreCollectionWithPagedItemAccessor<X extends FirestorePagedItemAccessor<T> & CollectionReferenceRef<unknown> & FirestoreContextReference, T>(x: Building<X>, config: PagedItemAccessorExtensionConfig<T>): void {
   const { indexDocumentId, distributionScheme, maxItemsPerPage, itemConverter } = config;

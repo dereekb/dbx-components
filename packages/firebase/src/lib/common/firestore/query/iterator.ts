@@ -171,8 +171,8 @@ export type InternalFirestoreItemPageIterationInstance<T> = ItemPageIterationIns
  * This utility function removes constraints that would conflict with the pagination
  * mechanics, such as 'limit' constraints which are automatically added by the paginator.
  *
- * @param constraints - Array of query constraints to filter
- * @returns Filtered array with disallowed constraints removed
+ * @param constraints - Array of query constraints to filter.
+ * @returns Filtered array with disallowed constraints removed.
  */
 export function filterDisallowedFirestoreItemPageIteratorInputConstraints(constraints: FirestoreQueryConstraint[]): FirestoreQueryConstraint[] {
   const isIllegal = new Set([FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE]);
@@ -338,11 +338,13 @@ export type FirestoreItemPageIterationFactoryFunction<T> = (filter?: FirestoreIt
  * that can create properly configured pagination instances. This is useful when you need to create
  * multiple pagination instances for the same collection but with different filters.
  *
+ * @param baseConfig - The base configuration shared by all created pagination instances.
+ * @returns A factory function that creates pagination instances with the specified base configuration.
+ *
  * @template T - The document data type in the query results
- * @param baseConfig - The base configuration shared by all created pagination instances
- * @returns A factory function that creates pagination instances with the specified base configuration
  *
  * @example
+ * ```ts
  * // Create a factory for paginating users collection
  * const usersQuery = collection(firestore, 'users');
  * const usersPaginator = firestoreItemPageIterationFactory({
@@ -350,7 +352,6 @@ export type FirestoreItemPageIterationFactoryFunction<T> = (filter?: FirestoreIt
  *   itemsPerPage: 20,
  *   firestoreQueryDriver: driver
  * });
- *
  * // Create specific pagination instances with different filters
  * const activePaginator = usersPaginator({
  *   constraints: [where('status', '==', 'active')]
@@ -358,6 +359,8 @@ export type FirestoreItemPageIterationFactoryFunction<T> = (filter?: FirestoreIt
  * const adminPaginator = usersPaginator({
  *   constraints: [where('role', '==', 'admin')]
  * });
+ * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreItemPageIterationFactory<T>(baseConfig: FirestoreItemPageIterationBaseConfig<T>): FirestoreItemPageIterationFactoryFunction<T> {
@@ -398,11 +401,13 @@ export const FIRESTORE_ITEM_PAGE_ITERATOR = new ItemPageIterator<FirestoreItemPa
  * that directly provides document arrays while also exposing access to the underlying
  * snapshot iteration.
  *
+ * @param config - The configuration for the pagination.
+ * @returns A Firestore pagination instance that loads documents in pages.
+ *
  * @template T - The document data type in the query results
- * @param config - The configuration for the pagination
- * @returns A Firestore pagination instance that loads documents in pages
  *
  * @example
+ * ```ts
  * // Create a pagination instance for a users collection
  * const usersPagination = firestoreItemPageIteration({
  *   queryLike: collection(firestore, 'users'),
@@ -412,14 +417,14 @@ export const FIRESTORE_ITEM_PAGE_ITERATOR = new ItemPageIterator<FirestoreItemPa
  *     constraints: [where('status', '==', 'active'), orderBy('createdAt', 'desc')]
  *   }
  * });
- *
  * // Load the first page of results
  * const firstPage = await usersPagination.loadNextPage().toPromise();
  * console.log('First 10 users:', firstPage);
- *
  * // Load the next page when needed
  * const secondPage = await usersPagination.loadNextPage().toPromise();
  * console.log('Next 10 users:', secondPage);
+ * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreItemPageIteration<T>(config: FirestoreItemPageIterationConfig<T>): FirestoreItemPageIterationInstance<T> {
@@ -460,8 +465,9 @@ export type FirestoreFixedItemPageIterationFactoryFunction<T> = (items: Document
  * producing a pagination instance that iterates over those specific documents in pages.
  *
  * @param baseConfig - Base pagination configuration (query reference, driver, page size)
- * @param documentAccessor - Accessor used to load document snapshots from the references
- * @returns A factory function that creates fixed-set pagination instances
+ * @param documentAccessor - Accessor used to load document snapshots from the references.
+ * @returns A factory function that creates fixed-set pagination instances.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreFixedItemPageIterationFactory<T>(baseConfig: FirestoreItemPageIterationConfig<T>, documentAccessor: LimitedFirestoreDocumentAccessor<T>): FirestoreFixedItemPageIterationFactoryFunction<T> {
@@ -510,8 +516,9 @@ export interface FirestoreFixedItemPageIterationConfig<T> extends FirestoreItemP
  * This is useful for paginating over known document sets (e.g., from a pre-computed list
  * of references) without executing Firestore queries.
  *
- * @param config - Configuration including the document references, accessor, and pagination settings
- * @returns A pagination instance that pages through the fixed reference set
+ * @param config - Configuration including the document references, accessor, and pagination settings.
+ * @returns A pagination instance that pages through the fixed reference set.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreFixedItemPageIteration<T>(config: FirestoreFixedItemPageIterationConfig<T>): FirestoreItemPageIterationInstance<T> {

@@ -375,7 +375,7 @@ export function formatToDayRangeString(startOrDateRange: DateRange | Date, endOr
  * // undefined
  * ```
  */
-export function safeFormatToISO8601DateString(input: Maybe<DateOrDateString | UTCDateString>): Maybe<ISO8601DateString> {
+export function safeFormatToISO8601DateString(input: Maybe<DateOrDateString | UTCDateString>): ISO8601DateString | undefined {
   const date = safeToJsDate(input);
   return date != null && isValid(date) ? formatToISO8601DateString(date) : undefined;
 }

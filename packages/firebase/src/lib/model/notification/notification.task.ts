@@ -80,7 +80,7 @@ export interface NotificationTask<D extends NotificationItemMetadata = {}> {
  * Use this when the handler needs more time but doesn't want to increment the failure counter.
  * The task will be re-queued without counting as an error attempt.
  *
- * @returns an empty checkpoint array signaling in-progress without failure
+ * @returns An empty checkpoint array signaling in-progress without failure.
  *
  * @example
  * ```ts
@@ -97,9 +97,9 @@ export function delayCompletion<S extends NotificationTaskCheckpointString = Not
  *
  * Use when the task needs to wait (e.g., for an external API to complete) but hasn't failed.
  *
- * @param delayUntil - absolute date or relative milliseconds from the task's run start time
- * @param updateMetadata - optional metadata updates to merge into the notification item
- * @returns a task result that re-queues the task after the specified delay without marking it failed
+ * @param delayUntil - Absolute date or relative milliseconds from the task's run start time.
+ * @param updateMetadata - Optional metadata updates to merge into the notification item.
+ * @returns A task result that re-queues the task after the specified delay without marking it failed.
  *
  * @example
  * ```ts
@@ -121,9 +121,9 @@ export function notificationTaskDelayRetry<D extends NotificationItemMetadata = 
  * The completed checkpoint strings are added to the notification's `tpr` set. The task is re-queued
  * for the next checkpoint.
  *
- * @param completedParts - checkpoint string(s) that were just completed
- * @param updateMetadata - optional metadata updates to merge into the notification item
- * @returns a task result marking the given checkpoints complete while keeping the task running
+ * @param completedParts - Checkpoint string(s) that were just completed.
+ * @param updateMetadata - Optional metadata updates to merge into the notification item.
+ * @returns A task result marking the given checkpoints complete while keeping the task running.
  *
  * @example
  * ```ts
@@ -141,8 +141,8 @@ export function notificationTaskPartiallyComplete<D extends NotificationItemMeta
 /**
  * Returns a result indicating the task completed successfully. The notification document will be deleted.
  *
- * @param updateMetadata - optional final metadata update (applied before deletion if subtasks need it)
- * @returns a task result signaling successful completion; the notification document will be deleted
+ * @param updateMetadata - Optional final metadata update (applied before deletion if subtasks need it)
+ * @returns A task result signaling successful completion; the notification document will be deleted.
  *
  * @example
  * ```ts
@@ -162,9 +162,9 @@ export function notificationTaskComplete<D extends NotificationItemMetadata = {}
  *
  * After exceeding the maximum retry attempts, the task will be permanently deleted.
  *
- * @param updateMetadata - optional metadata updates
- * @param removeFromCompletedCheckpoints - checkpoint(s) to remove from the completed set (e.g., to retry a checkpoint)
- * @returns a task result signaling failure; the error attempt counter is incremented
+ * @param updateMetadata - Optional metadata updates.
+ * @param removeFromCompletedCheckpoints - Checkpoint(s) to remove from the completed set (e.g., to retry a checkpoint)
+ * @returns A task result signaling failure; the error attempt counter is incremented.
  *
  * @example
  * ```ts
@@ -186,9 +186,9 @@ export function notificationTaskFailed<D extends NotificationItemMetadata = {}, 
  * By default, only sets `canRunNextCheckpoint` if it isn't already defined.
  * Use `force: true` to override an existing value.
  *
- * @param result - the task result to wrap
- * @param force - when true, overrides any existing `canRunNextCheckpoint` value
- * @returns a copy of the result with `canRunNextCheckpoint` set to true
+ * @param result - The task result to wrap.
+ * @param force - When true, overrides any existing `canRunNextCheckpoint` value.
+ * @returns A copy of the result with `canRunNextCheckpoint` set to true.
  */
 export function notificationTaskCanRunNextCheckpoint<D extends NotificationItemMetadata = {}, S extends NotificationTaskCheckpointString = NotificationTaskCheckpointString>(result: NotificationTaskServiceHandleNotificationTaskResult<D, S>, force?: Maybe<boolean>): NotificationTaskServiceHandleNotificationTaskResult<D, S> {
   if (force || result.canRunNextCheckpoint == null) {

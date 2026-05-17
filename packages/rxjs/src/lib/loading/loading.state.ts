@@ -600,7 +600,7 @@ export function mergeLoadingStateWithLoading<S extends LoadingState>(state: S, l
  * @param value - The new value to set.
  * @returns A new state representing success.
  */
-export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, value: Maybe<LoadingStateValue<S>>): S {
+export function mergeLoadingStateWithValue<S extends LoadingState>(state: S, value: LoadingStateValue<S> | undefined): S {
   return {
     ...state,
     value: value ?? undefined,

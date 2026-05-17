@@ -36,9 +36,9 @@ export interface FirebaseFirestoreQueryBuilder {
 /**
  * Appends one or more `QueryConstraint` values to the builder, returning a new builder instance.
  *
- * @param builder - current query builder state
- * @param constraint - constraint(s) to append
- * @returns a new {@link FirebaseFirestoreQueryBuilder} with the added constraint(s)
+ * @param builder - Current query builder state.
+ * @param constraint - Constraint(s) to append.
+ * @returns A new {@link FirebaseFirestoreQueryBuilder} with the added constraint(s)
  */
 export function addConstraintToBuilder(builder: FirebaseFirestoreQueryBuilder, constraint: ArrayOrValue<QueryConstraint>): FirebaseFirestoreQueryBuilder {
   return {
@@ -74,7 +74,7 @@ export const FIRESTORE_CLIENT_QUERY_CONSTRAINT_HANDLER_MAPPING: FullFirestoreQue
  * Converts abstract query constraints into `firebase/firestore` `QueryConstraint` objects
  * and composes them into an executable `Query`.
  *
- * @returns a {@link FirestoreQueryConstraintFunctionsDriver} backed by the `firebase/firestore` client SDK
+ * @returns A {@link FirestoreQueryConstraintFunctionsDriver} backed by the `firebase/firestore` client SDK.
  */
 export function firebaseFirestoreQueryConstraintFunctionsDriver(): FirestoreQueryConstraintFunctionsDriver {
   return makeFirestoreQueryConstraintFunctionsDriver({
@@ -92,7 +92,7 @@ export function firebaseFirestoreQueryConstraintFunctionsDriver(): FirestoreQuer
  * Note: Transactions are not supported for queries on the client; passing a `transaction` to `getDocs`
  * will throw an error.
  *
- * @returns a {@link FirestoreQueryDriver} backed by the `firebase/firestore` client SDK
+ * @returns A {@link FirestoreQueryDriver} backed by the `firebase/firestore` client SDK.
  *
  * @example
  * ```ts

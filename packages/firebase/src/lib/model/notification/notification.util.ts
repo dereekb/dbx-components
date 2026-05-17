@@ -32,8 +32,8 @@ export interface EffectiveNotificationBoxRecipientConfigInput {
  * Filters template configs to only include types applicable to the notification box's model.
  * Used during the server-side sync process to update box recipient entries from user configs.
  *
- * @param input - the merged config inputs including uid, global config, box config, and optional existing recipient
- * @returns the computed effective box recipient with merged config, contact info, and flags
+ * @param input - The merged config inputs including uid, global config, box config, and optional existing recipient.
+ * @returns The computed effective box recipient with merged config, contact info, and flags.
  */
 export function effectiveNotificationBoxRecipientConfig(input: EffectiveNotificationBoxRecipientConfigInput) {
   const { uid, m: inputM, appNotificationTemplateTypeInfoRecordService, gc, boxConfig: notificationUserNotificationBoxConfig, recipient } = input;
@@ -90,8 +90,8 @@ export interface UpdateNotificationUserNotificationSendExclusionsResult {
  *
  * Exclusions not matching any associated notification box are automatically filtered out.
  *
- * @param input - the user, exclusions to add, and exclusions to remove
- * @returns the updated exclusion list and the partial user update to apply
+ * @param input - The user, exclusions to add, and exclusions to remove.
+ * @returns The updated exclusion list and the partial user update to apply.
  */
 export function updateNotificationUserNotificationSendExclusions(input: UpdateNotificationUserNotificationSendExclusionsInput): UpdateNotificationUserNotificationSendExclusionsResult {
   const { notificationUser, addExclusions: inputAddExclusions, removeExclusions: inputRemoveExclusions } = input;
@@ -148,8 +148,8 @@ export type ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsResu
  * Applies the current exclusion list to per-box configs, setting/clearing the `x` flag and marking
  * changed configs as needing sync (`ns = true`).
  *
- * @param params - the exclusion list, per-box configs, and optional flag to recalculate the global ns flag
- * @returns the updated per-box configs and the recalculated needs-sync flag
+ * @param params - The exclusion list, per-box configs, and optional flag to recalculate the global ns flag.
+ * @returns The updated per-box configs and the recalculated needs-sync flag.
  */
 export function applyExclusionsToNotificationUserNotificationBoxRecipientConfigs(params: ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsParams): ApplyExclusionsToNotificationUserNotificationBoxRecipientConfigsResult {
   const { x: inputX, bc: inputBc, notificationUser, recalculateNs } = params;
@@ -188,8 +188,8 @@ export function applyExclusionsToNotificationUserNotificationBoxRecipientConfigs
 /**
  * Returns true if any of the per-box configs need syncing (`ns == true`).
  *
- * @param configs - array of per-box recipient configs to check
- * @returns true if at least one config has its needs-sync flag set
+ * @param configs - Array of per-box recipient configs to check.
+ * @returns True if at least one config has its needs-sync flag set.
  */
 export function calculateNsForNotificationUserNotificationBoxRecipientConfigs(configs: NotificationUserNotificationBoxRecipientConfig[]): boolean {
   return configs.some((x) => x.ns);
@@ -207,8 +207,8 @@ export type NotificationSendExclusionCanSendFunction = ((notification: Notificat
  * Creates a {@link NotificationSendExclusionCanSendFunction} from the given exclusion list.
  * Returns true for IDs that don't match any exclusion prefix.
  *
- * @param exclusions - the list of box IDs or prefixes that should be excluded from delivery
- * @returns a predicate function that returns true if the given notification/box ID is not excluded
+ * @param exclusions - The list of box IDs or prefixes that should be excluded from delivery.
+ * @returns A predicate function that returns true if the given notification/box ID is not excluded.
  */
 export const notificationSendExclusionCanSendFunction = (exclusions: NotificationBoxSendExclusionList): NotificationSendExclusionCanSendFunction => {
   const fn = (notification: NotificationId | NotificationBoxId) => {
@@ -225,8 +225,8 @@ export const notificationSendExclusionCanSendFunction = (exclusions: Notificatio
  * Returns true if all channels on the notification have reached a terminal state
  * (NONE, NO_TRY, SENT, or SKIPPED). Used to determine if the notification can be marked done.
  *
- * @param input - the per-channel send flags to evaluate
- * @returns true if all channels are in a terminal send state
+ * @param input - The per-channel send flags to evaluate.
+ * @returns True if all channels are in a terminal send state.
  */
 export function notificationSendFlagsImplyIsComplete(input: NotificationSendFlags): boolean {
   return isCompleteNotificationSendState(input.es) && isCompleteNotificationSendState(input.ps) && isCompleteNotificationSendState(input.ts) && isCompleteNotificationSendState(input.ns);
@@ -236,8 +236,8 @@ export function notificationSendFlagsImplyIsComplete(input: NotificationSendFlag
  * Returns true if the given send state is terminal — no further send attempts will be made.
  * Terminal states: NONE, NO_TRY, SENT, SKIPPED.
  *
- * @param input - the send state to evaluate
- * @returns true if the state is terminal and no further delivery will be attempted
+ * @param input - The send state to evaluate.
+ * @returns True if the state is terminal and no further delivery will be attempted.
  */
 export function isCompleteNotificationSendState(input: NotificationSendState): boolean {
   let isComplete = false;
@@ -273,8 +273,8 @@ export interface AllowedNotificationRecipients {
 /**
  * Resolves which recipient groups (global, box, explicit) are allowed based on the {@link NotificationRecipientSendFlag}.
  *
- * @param flag - the recipient send flag controlling which groups are included
- * @returns an object indicating which recipient groups are permitted for this notification
+ * @param flag - The recipient send flag controlling which groups are included.
+ * @returns An object indicating which recipient groups are permitted for this notification.
  */
 export function allowedNotificationRecipients(flag?: Maybe<NotificationRecipientSendFlag>): AllowedNotificationRecipients {
   let canSendToGlobalRecipients: boolean = true;
@@ -316,8 +316,8 @@ export function allowedNotificationRecipients(flag?: Maybe<NotificationRecipient
  * Logged-event notifications bypass the normal send pipeline entirely and are archived to the
  * day-keyed {@link NotificationLoggedEventDay} collection during cleanup.
  *
- * @param notification - the notification to check
- * @returns true if the notification has the LOGGED_EVENT send type
+ * @param notification - The notification to check.
+ * @returns True if the notification has the LOGGED_EVENT send type.
  */
 export function isLoggedEventNotification(notification: Pick<Notification, 'st'>): boolean {
   return notification.st === NotificationSendType.LOGGED_EVENT;
@@ -331,15 +331,17 @@ export function isLoggedEventNotification(notification: Pick<Notification, 'st'>
  * to only explicit or only global recipients are not saved to the weekly archive). Logged-event
  * notifications are archived to {@link NotificationLoggedEventDay} instead and never to the weekly archive.
  *
- * @param notification - the notification to check
- * @returns true if the notification should be saved to the weekly archive after delivery
+ * @param notification - The notification to check.
+ * @returns True if the notification should be saved to the weekly archive after delivery.
  */
 export function shouldSaveNotificationToNotificationWeek(notification: Notification): boolean {
-  if (isLoggedEventNotification(notification)) {
-    return false;
+  let result = false;
+
+  if (!isLoggedEventNotification(notification)) {
+    result = allowedNotificationRecipients(notification.rf).canSendToBoxRecipients;
   }
 
-  return allowedNotificationRecipients(notification.rf).canSendToBoxRecipients;
+  return result;
 }
 
 // MARK: NotificationBox
@@ -347,9 +349,9 @@ export function shouldSaveNotificationToNotificationWeek(notification: Notificat
  * Merges a partial update into a {@link NotificationUserNotificationBoxRecipientConfig},
  * preserving user-controlled fields (`nb`, `rm`, `ns`, `lk`, `bk`) and respecting OPT_OUT state.
  *
- * @param a - base user box recipient config to merge into
- * @param b - partial update to apply on top of the base
- * @returns the merged config with protected fields retained from `a`
+ * @param a - Base user box recipient config to merge into.
+ * @param b - Partial update to apply on top of the base.
+ * @returns The merged config with protected fields retained from `a`
  */
 export function mergeNotificationUserNotificationBoxRecipientConfigs(a: NotificationUserNotificationBoxRecipientConfig, b: Partial<NotificationUserNotificationBoxRecipientConfig>): NotificationUserNotificationBoxRecipientConfig {
   return {
@@ -367,9 +369,9 @@ export function mergeNotificationUserNotificationBoxRecipientConfigs(a: Notifica
 /**
  * Merges a partial update into a {@link NotificationBoxRecipient}, deeply merging the `c` (config record) field.
  *
- * @param a - base recipient to merge into
- * @param b - partial recipient update to apply on top of the base
- * @returns the merged recipient with deeply merged template config records
+ * @param a - Base recipient to merge into.
+ * @param b - Partial recipient update to apply on top of the base.
+ * @returns The merged recipient with deeply merged template config records.
  */
 export function mergeNotificationBoxRecipients<T extends NotificationBoxRecipient>(a: T, b: Partial<T>): T {
   return {
@@ -403,9 +405,9 @@ export interface NotificationBoxDocumentReferencePair {
 /**
  * Resolves a {@link NotificationBoxDocument} from a reference pair, loading by model key if no document is provided directly.
  *
- * @param input - reference pair containing either a direct document or a model key to load from
- * @param accessor - Firestore document accessor used to load the document by ID when needed
- * @returns the resolved NotificationBoxDocument
+ * @param input - Reference pair containing either a direct document or a model key to load from.
+ * @param accessor - Firestore document accessor used to load the document by ID when needed.
+ * @returns The resolved NotificationBoxDocument.
  * @throws {Error} When neither a document nor a model key is provided.
  */
 export function loadNotificationBoxDocumentForReferencePair(input: NotificationBoxDocumentReferencePair, accessor: FirestoreDocumentAccessor<NotificationBox, NotificationBoxDocument>) {

@@ -394,7 +394,7 @@ export interface StorageMetadata extends ConfigurableStorageMetadata {
  * Additional user-defined custom metadata.
  */
 export type StorageCustomMetadata = {
-  readonly [key: string]: string | null;
+  readonly [key: string]: Maybe<string>;
 };
 
 export interface StorageDeleteFileOptions {

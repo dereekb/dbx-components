@@ -8,10 +8,10 @@ import { StorageFileUploadStreamUnsupportedError } from './error';
  *
  * This is a server-side convenience — most client implementations don't support `uploadStream()`.
  *
- * @param file - the target file accessor to upload to
- * @param readableStream - the source stream to pipe
- * @param options - optional upload configuration (content type, metadata, etc.)
- * @returns a promise that resolves when the upload stream has finished
+ * @param file - Destination file accessor for the upload.
+ * @param readableStream - Source stream piped into the upload.
+ * @param options - Overrides for content type, metadata, etc., if any.
+ * @returns Resolves once the upload stream has finished.
  * @throws {StorageFileUploadStreamUnsupportedError} When the file accessor does not support stream uploads.
  *
  * @example

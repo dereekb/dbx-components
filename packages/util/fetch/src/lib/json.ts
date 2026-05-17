@@ -131,7 +131,7 @@ export type FetchJsonRequestInitFunction = (methodOrInput?: Maybe<string | Fetch
 export function fetchJsonRequestInitFunction(config: FetchJsonRequestInitFunctionConfig = {}): FetchJsonRequestInitFunction {
   const { defaultMethod = 'GET', mapFetchJsonInput = mapIdentityFunction() } = config;
 
-  return (methodOrInput: string | FetchJsonInput = defaultMethod, body?: FetchJsonBody) => {
+  return (methodOrInput: Maybe<string | FetchJsonInput> = defaultMethod, body?: FetchJsonBody) => {
     let config: FetchJsonInput;
 
     if (typeof methodOrInput === 'string') {
@@ -140,7 +140,7 @@ export function fetchJsonRequestInitFunction(config: FetchJsonRequestInitFunctio
         body
       };
     } else {
-      config = methodOrInput;
+      config = methodOrInput ?? { method: defaultMethod, body };
     }
 
     config = mapFetchJsonInput(config);

@@ -1,5 +1,4 @@
 import { type Factory } from '../getter/getter';
-import type { Maybe } from '@dereekb/util';
 import { randomNumberFactory } from '../number';
 import { boundNumberFunction, wrapNumberFunction } from '../number/bound';
 import { cutValueToPrecisionFunction, type NumberPrecision, type RoundToPrecisionFunctionType } from '../number/round';

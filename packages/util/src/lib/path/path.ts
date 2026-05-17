@@ -1,5 +1,4 @@
 import { chainMapFunction, chainMapSameFunctions, mapIdentityFunction, type MapSameFunction } from '../value/map';
-import type { Maybe } from '@dereekb/util';
 import { decisionFunction, type DecisionFunction } from '../value/decision';
 import { asArray, type ArrayOrValue, pushItemOrArrayItemsIntoArray, lastValue } from '../array/array';
 import { firstAndLastCharacterOccurrence, replaceCharacterAtIndexWith, splitStringAtIndex } from '../string/char';

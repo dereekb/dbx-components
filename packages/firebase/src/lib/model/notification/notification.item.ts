@@ -119,9 +119,9 @@ export interface UnreadNotificationItemsResult<D extends NotificationItemMetadat
  * Items are considered read if their `v` flag is true OR if they were created before the `considerReadIfCreatedBefore` date.
  * This is used with {@link NotificationSummary.rat} to mark all older items as read.
  *
- * @param items - notification items to classify
- * @param considerReadIfCreatedBefore - optional cutoff date; items created at or before this date are treated as read
- * @returns an object containing both the read and unread item arrays along with the input cutoff date
+ * @param items - Notification items to classify.
+ * @param considerReadIfCreatedBefore - Optional cutoff date; items created at or before this date are treated as read.
+ * @returns An object containing both the read and unread item arrays along with the input cutoff date.
  *
  * @example
  * ```ts

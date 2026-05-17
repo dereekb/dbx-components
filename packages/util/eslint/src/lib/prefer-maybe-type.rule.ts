@@ -62,6 +62,26 @@ function isNullOrUndefinedNode(node: AstNode): boolean {
 }
 
 /**
+ * Returns true if the type node represents a `null` literal type (either the `null` keyword or a
+ * literal type with the value `null`). Used to detect unions that explicitly include `null`, which
+ * is the only flavor the prefer-maybe-type rule targets.
+ *
+ * @param node - The TS type AST node.
+ * @returns True when the node represents a `null` literal type.
+ */
+function isNullNode(node: AstNode): boolean {
+  let match = false;
+
+  if (node.type === 'TSNullKeyword') {
+    match = true;
+  } else if (node.type === 'TSLiteralType' && node.literal?.type === 'Literal' && node.literal.value === null) {
+    match = true;
+  }
+
+  return match;
+}
+
+/**
  * Returns the named identifier of a type-reference node when available.
  *
  * @param node - The TS type AST node.
@@ -104,24 +124,35 @@ function renderUnionLabel(types: readonly AstNode[]): string {
 }
 
 /**
- * Returns true when the file already imports `Maybe` from `@dereekb/util` (either as a value or type
- * specifier). Used to skip the auto-fix's `import type { Maybe }` insertion when an equivalent
- * import is already present.
+ * Returns true when the file already imports `Maybe` (or has it as a top-level type alias / interface
+ * declaration) regardless of source path. Used to skip the auto-fix's `import type { Maybe }`
+ * insertion when an equivalent name is already in scope — this matters for files inside the
+ * `@dereekb/util` package itself, which import `Maybe` from a relative path (e.g.
+ * `../value/maybe.type`), and for files that re-export `Maybe` from another barrel.
  *
  * @param program - The `Program` AST node.
- * @returns True when an existing import declaration brings `Maybe` into scope from `@dereekb/util`.
+ * @returns True when an existing import or declaration brings `Maybe` into scope.
  */
 function hasMaybeImportFromDereekbUtil(program: AstNode): boolean {
   const body: AstNode[] = program?.body ?? [];
   let found = false;
 
   for (const stmt of body) {
-    if (stmt.type === 'ImportDeclaration' && stmt.source?.value === MAYBE_MODULE_PATH) {
+    if (stmt.type === 'ImportDeclaration') {
       const specifiers: AstNode[] = stmt.specifiers ?? [];
       for (const spec of specifiers) {
         if (spec.type === 'ImportSpecifier' && spec.imported?.type === 'Identifier' && spec.imported.name === MAYBE_IDENTIFIER) {
           found = true;
         }
+      }
+    } else if (stmt.type === 'TSTypeAliasDeclaration' && stmt.id?.name === MAYBE_IDENTIFIER) {
+      found = true;
+    } else if (stmt.type === 'TSInterfaceDeclaration' && stmt.id?.name === MAYBE_IDENTIFIER) {
+      found = true;
+    } else if (stmt.type === 'ExportNamedDeclaration' && stmt.declaration) {
+      const decl = stmt.declaration;
+      if ((decl.type === 'TSTypeAliasDeclaration' || decl.type === 'TSInterfaceDeclaration') && decl.id?.name === MAYBE_IDENTIFIER) {
+        found = true;
       }
     }
   }
@@ -167,10 +198,12 @@ function buildMaybeReplacement(sourceCode: AstNode, unionTypes: readonly AstNode
 }
 
 /**
- * ESLint rule that flags explicit `T | null` / `T | undefined` / `T | null | undefined` unions and
- * recommends using `Maybe<T>` from `@dereekb/util` instead. Optional properties and parameters
- * (`foo?: string`) are not flagged because the `?` modifier already yields the canonical shape — the
- * rule targets only the explicit-union form.
+ * ESLint rule that flags explicit `T | null` and `T | null | undefined` unions (including the
+ * combination of an optional modifier with `| null`, e.g. `foo?: T | null`) and recommends using
+ * `Maybe<T>` from `@dereekb/util` instead. The rule targets only unions that explicitly include
+ * `null` — `T | undefined` alone is left untouched because `x?: T` and `T | undefined` are the
+ * common, intentional shapes for "value may be absent" and have no canonical `Maybe<T>` equivalent
+ * to push toward when `null` isn't involved.
  *
  * Auto-fix rewrites the union as `Maybe<...>` and (once per file) inserts
  * `import type { Maybe } from '@dereekb/util';` near the top of the file. The workspace's
@@ -184,11 +217,11 @@ export const utilPreferMaybeTypeRule: UtilPreferMaybeTypeRuleDefinition = {
     type: 'suggestion',
     fixable: 'code',
     docs: {
-      description: "Prefer 'Maybe<T>' from '@dereekb/util' over explicit 'T | null' / 'T | undefined' / 'T | null | undefined' unions.",
+      description: "Prefer 'Maybe<T>' from '@dereekb/util' over explicit 'T | null' / 'T | null | undefined' unions.",
       recommended: true
     },
     messages: {
-      preferMaybe: "Type '{{union}}' should use 'Maybe<T>' from '@dereekb/util' instead of an explicit '| null' / '| undefined' union."
+      preferMaybe: "Type '{{union}}' should use 'Maybe<T>' from '@dereekb/util' instead of an explicit '| null' union."
     },
     schema: [
       {
@@ -220,15 +253,18 @@ export const utilPreferMaybeTypeRule: UtilPreferMaybeTypeRuleDefinition = {
       const types: AstNode[] = node.types ?? [];
 
       if (types.length >= 2) {
-        const hasNullable = types.some((t) => isNullOrUndefinedNode(t));
+        // Only target unions that explicitly include `null`. `T | undefined` alone is left untouched
+        // because `x?: T` and `T | undefined` are the common, intentional shapes for "value may be
+        // absent" and rewriting them to `Maybe<T>` would add `null` to the type's domain.
+        const hasNull = types.some((t) => isNullNode(t));
 
-        if (hasNullable) {
+        if (hasNull) {
           // Every non-null member that is a simple type reference must NOT be on the allowlist
           // (allowlist hits silence the report so callers can opt out for specific named aliases).
           const nonNullMembers = types.filter((t) => !isNullOrUndefinedNode(t));
           const anyAllowed = nonNullMembers.some((t) => {
             const name = getTypeReferenceName(t);
-            return name !== null && allowedTypeNames.has(name);
+            return name != null && allowedTypeNames.has(name);
           });
 
           if (!anyAllowed) {

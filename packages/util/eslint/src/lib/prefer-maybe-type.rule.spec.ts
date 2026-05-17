@@ -69,6 +69,35 @@ type Foo = Maybe<string>;
       expect(errors).toHaveLength(0);
     });
 
+    it('T | undefined alone is not flagged (only null-bearing unions are targeted)', () => {
+      const errors = lintCode(`type Foo = string | undefined;`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('explicit | undefined in interface property is not flagged', () => {
+      const errors = lintCode(`
+interface SearchResult {
+  match: Item | undefined;
+}
+interface Item {
+  readonly id: string;
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('function return type T | undefined is not flagged', () => {
+      const errors = lintCode(`
+function find(id: string): Item | undefined {
+  return undefined as any;
+}
+interface Item {
+  readonly id: string;
+}
+`);
+      expect(errors).toHaveLength(0);
+    });
+
     it('allowedTypeNames silences a specific named alias', () => {
       const errors = lintCode(
         `
@@ -85,18 +114,6 @@ type Foo = NullableThing | null;
       const errors = lintCode(`type Foo = string | null;`);
       expect(errors).toHaveLength(1);
       expect(errors[0].message).toContain('Maybe<T>');
-    });
-
-    it('flags T | undefined in a return type', () => {
-      const errors = lintCode(`
-function find(id: string): Item | undefined {
-  return undefined as any;
-}
-interface Item {
-  readonly id: string;
-}
-`);
-      expect(errors).toHaveLength(1);
     });
 
     it('flags T | null | undefined', () => {
@@ -116,10 +133,10 @@ interface Item {
       expect(errors).toHaveLength(1);
     });
 
-    it('flags explicit | undefined when ? would have sufficed', () => {
+    it('flags optional + | null combination (foo?: T | null)', () => {
       const errors = lintCode(`
 interface SearchResult {
-  match: Item | undefined;
+  match?: Item | null;
 }
 interface Item {
   readonly id: string;
@@ -147,10 +164,10 @@ type Foo = string | null;
       expect(output).toContain("import type { Maybe } from '@dereekb/util';");
     });
 
-    it('rewrites T | undefined as Maybe<T>', () => {
+    it('does not rewrite T | undefined (rule does not target undefined-only unions)', () => {
       const input = `type Foo = string | undefined;\n`;
       const output = fixCode(input);
-      expect(output).toContain('type Foo = Maybe<string>;');
+      expect(output).toBe(input);
     });
 
     it('rewrites T | null | undefined as Maybe<T>', () => {
@@ -177,7 +194,7 @@ type Foo = string | null;
     it('adds the import only once even when multiple unions are flagged', () => {
       const input = `
 type A = string | null;
-type B = number | undefined;
+type B = number | null | undefined;
 type C = boolean | null;
 `;
       const output = fixCode(input);

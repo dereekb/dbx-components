@@ -188,7 +188,7 @@ export const utilRequireDbxModelCompanionTagsRule: UtilRequireDbxModelCompanionT
           else if (key === 'encoding') encoding = value;
         }
         if (!hasFrom) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'compositeKeyMissingFrom', report: context.report });
-        if (encoding === undefined) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'compositeKeyMissingEncoding', report: context.report });
+        if (encoding == null) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'compositeKeyMissingEncoding', report: context.report });
         else if (!allowedEncodings.includes(encoding)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'compositeKeyInvalidEncoding', data: { value: encoding, allowed: allowedEncodings.join(', ') }, report: context.report });
       }
     }

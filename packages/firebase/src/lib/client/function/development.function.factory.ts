@@ -34,8 +34,8 @@ export type DevelopmentFirebaseFunctionMapFactory<M extends DevelopmentFirebaseF
  * Similar to {@link callModelFirebaseFunctionMapFactory}, all development functions are multiplexed
  * through a single endpoint. The function specifier and data are wrapped via {@link onCallDevelopmentParams}.
  *
- * @param configMap - maps each development function key to optional configuration
- * @returns a factory that creates a {@link DevelopmentFirebaseFunctionMap} for a given `Functions` instance
+ * @param configMap - Maps each development function key to optional configuration.
+ * @returns A factory that creates a {@link DevelopmentFirebaseFunctionMap} for a given `Functions` instance.
  *
  * @example
  * ```ts
@@ -46,6 +46,7 @@ export type DevelopmentFirebaseFunctionMapFactory<M extends DevelopmentFirebaseF
  * const devFns = factory(getFunctions());
  * await devFns.resetData();
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function developmentFirebaseFunctionMapFactory<M extends DevelopmentFirebaseFunctionTypeMap>(configMap: DevelopmentFirebaseFunctionConfigMap<M>): DevelopmentFirebaseFunctionMapFactory<M> {

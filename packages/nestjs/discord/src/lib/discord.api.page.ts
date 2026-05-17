@@ -94,8 +94,8 @@ export interface DiscordFetchMessagePageFactoryInput<I extends DiscordMessagePag
  * message's ID from each response and sets it as the `before` cursor for the next request.
  * When the number of returned messages is less than the requested limit, pagination stops.
  *
- * @param input - The factory input configuration
- * @returns A page factory that produces iterable page fetchers
+ * @param input - The factory input configuration.
+ * @returns A page factory that produces iterable page fetchers.
  *
  * @example
  * ```typescript

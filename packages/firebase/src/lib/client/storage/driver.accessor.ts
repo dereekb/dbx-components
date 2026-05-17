@@ -12,8 +12,8 @@ import { map, Observable, shareReplay } from 'rxjs';
  * Useful for distinguishing missing-file errors from other storage failures,
  * e.g., to silently handle deletion of already-deleted files.
  *
- * @param input - the error or error message to check
- * @returns `true` if the error message contains `'storage/object-not-found'`, `false` otherwise
+ * @param input - The error or error message to check.
+ * @returns `true` if the error message contains `'storage/object-not-found'`, `false` otherwise.
  *
  * @example
  * ```ts
@@ -33,9 +33,9 @@ export function isFirebaseStorageObjectNotFoundError(input: Maybe<ErrorInput | s
 /**
  * Creates a `StorageReference` from an abstract {@link StoragePath} using the client `firebase/storage` SDK.
  *
- * @param storage - the client Firebase Storage instance
- * @param path - abstract storage path to resolve
- * @returns a `StorageReference` pointing to the resolved storage path
+ * @param storage - The client Firebase Storage instance.
+ * @param path - Abstract storage path to resolve.
+ * @returns A `StorageReference` pointing to the resolved storage path.
  */
 export function firebaseStorageRefForStorageFilePath(storage: ClientFirebaseStorage, path: StoragePath): StorageReference {
   return ref(storage, firebaseStorageFilePathFromStorageFilePath(path));
@@ -46,8 +46,8 @@ export function firebaseStorageRefForStorageFilePath(storage: ClientFirebaseStor
  *
  * Returns `true` if metadata is successfully retrieved, `false` for any error (including permission errors).
  *
- * @param ref - the storage reference to check
- * @returns a promise that resolves to `true` if the file exists, `false` otherwise
+ * @param ref - Storage reference whose metadata is probed.
+ * @returns Resolves with `true` when metadata exists, otherwise `false`.
  */
 export function firebaseStorageFileExists(ref: StorageReference): Promise<boolean> {
   return getMetadata(ref).then(
@@ -67,9 +67,9 @@ export type FirebaseStorageClientAccessorFile = FirebaseStorageAccessorFile<Stor
  * Provides all file operations (upload, download, metadata, delete, resumable upload) backed by
  * the `firebase/storage` SDK. Resumable uploads expose an Observable stream of upload progress snapshots.
  *
- * @param storage - the client Firebase Storage instance
- * @param storagePath - the abstract storage path for the file
- * @returns a {@link FirebaseStorageClientAccessorFile} providing CRUD and upload operations for the given path
+ * @param storage - The client Firebase Storage instance.
+ * @param storagePath - The abstract storage path for the file.
+ * @returns A {@link FirebaseStorageClientAccessorFile} providing CRUD and upload operations for the given path.
  *
  * @example
  * ```ts
@@ -245,9 +245,9 @@ export const firebaseStorageClientListFilesResultFactory = storageListFilesResul
  * Supports existence checks, paginated file/folder listing, and recursive nested listing
  * when `includeNestedResults` is enabled.
  *
- * @param storage - the client Firebase Storage instance
- * @param storagePath - the abstract storage path for the folder
- * @returns a {@link FirebaseStorageClientAccessorFolder} providing listing and existence operations for the given path
+ * @param storage - The client Firebase Storage instance.
+ * @param storagePath - The abstract storage path for the folder.
+ * @returns A {@link FirebaseStorageClientAccessorFolder} providing listing and existence operations for the given path.
  *
  * @example
  * ```ts
@@ -304,7 +304,7 @@ export function firebaseStorageClientAccessorFolder(storage: ClientFirebaseStora
  * Provides file and folder accessor factories and default bucket resolution.
  * Used internally by {@link firebaseStorageClientDrivers}.
  *
- * @returns a {@link FirebaseStorageAccessorDriver} backed by the `firebase/storage` client SDK
+ * @returns A {@link FirebaseStorageAccessorDriver} backed by the `firebase/storage` client SDK.
  *
  * @example
  * ```ts

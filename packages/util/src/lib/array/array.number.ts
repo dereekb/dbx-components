@@ -1,5 +1,4 @@
 import { type Maybe } from '../value/maybe.type';
-import type { Maybe } from '@dereekb/util';
 import { type IndexRange } from '../value/indexed';
 
 /**

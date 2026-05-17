@@ -1,4 +1,5 @@
 import { onSnapshot, type DocumentReference, type DocumentSnapshot, type UpdateData, type WithFieldValue, getDoc, deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
+import type { Maybe } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 import { assertFirestoreUpdateHasData, type DocumentData, type FirestoreAccessorArrayUpdate, type FirestoreAccessorIncrementUpdate, type FirestoreDataConverter, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, streamFromOnSnapshot, type WriteResult } from '../../common/firestore';
 import { createWithAccessor } from './driver.accessor.create';
@@ -42,7 +43,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
     return getDoc(this.documentRef);
   }
 
-  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+  getWithConverter<U = DocumentData>(converter: Maybe<FirestoreDataConverter<U>>): Promise<DocumentSnapshot<U>> {
     const withConverter = (converter != null ? this.documentRef.withConverter<U, DocumentData>(converter) : this.documentRef.withConverter(null)) as DocumentReference<U, DocumentData>;
     return getDoc(withConverter) as Promise<DocumentSnapshot<U>>;
   }
@@ -73,7 +74,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
  * Creates a {@link FirestoreDocumentDataAccessorFactory} that produces {@link DefaultFirestoreDocumentDataAccessor} instances
  * for direct (non-batched, non-transactional) Firestore operations.
  *
- * @returns a factory that creates default (non-transactional) document data accessors
+ * @returns A factory that creates default (non-transactional) document data accessors.
  *
  * @example
  * ```ts
@@ -81,6 +82,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
  * const accessor = factory.accessorFor(documentRef);
  * const snapshot = await accessor.get();
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAccessorFactory<T> {
@@ -96,7 +98,7 @@ export function defaultFirestoreAccessorFactory<T>(): FirestoreDocumentDataAcces
  * The context type is {@link FirestoreDocumentContextType.NONE}, meaning operations execute immediately
  * against Firestore without transaction or batch grouping.
  *
- * @returns a default {@link FirestoreDocumentContext} with no transaction or batch semantics
+ * @returns A default {@link FirestoreDocumentContext} with no transaction or batch semantics.
  *
  * @example
  * ```ts

@@ -1,5 +1,4 @@
 import { symmetricDifferenceArray } from '../set/set';
-import type { Maybe } from '@dereekb/util';
 import { type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
 import { type Maybe } from '../value/maybe.type';
 import { type MapFunction } from '../value/map';
@@ -315,16 +314,11 @@ export function readModelKey<T extends UniqueModel>(input: Maybe<ModelOrKey<T>>,
 export function readModelKey<T>(input: Maybe<ModelOrKey<T>>, { required = false, read = readUniqueModelKey as ReadModelKeyFunction<T> }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
   let key: Maybe<ModelKey>;
 
-  switch (typeof input) {
-    case 'string':
-      key = input as ModelKey;
-      break;
-    case 'object':
-      key = read(input);
-      break;
-    case 'undefined':
-    default:
-      break;
+  if (typeof input === 'string') {
+    key = input as ModelKey;
+  } else if (input != null && typeof input === 'object') {
+    // typeof null === 'object', so guard against null before passing to `read`.
+    key = read(input as T);
   }
 
   if (!key && required) {

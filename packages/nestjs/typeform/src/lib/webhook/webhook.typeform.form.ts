@@ -48,8 +48,8 @@ export interface ExpandedTypeformWebhookFormResponse {
  *
  * Pairs each answer with its definition field and expands any field reference templates in question titles.
  *
- * @param formResponse - the raw Typeform webhook form response to expand
- * @returns an ExpandedTypeformWebhookFormResponse with the original response and paired question/answer data
+ * @param formResponse - The raw Typeform webhook form response to expand.
+ * @returns An ExpandedTypeformWebhookFormResponse with the original response and paired question/answer data.
  */
 export function expandTypeformWebhookFormResponse(formResponse: TypeformWebhookFormResponse): ExpandedTypeformWebhookFormResponse {
   const { answers, definition } = formResponse;
@@ -113,8 +113,8 @@ export function expandTypeformWebhookFormResponse(formResponse: TypeformWebhookF
  *
  * Extracts the typed value and a string representation based on the answer type.
  *
- * @param answer - the raw Typeform form response answer to convert
- * @returns a TypeformFormResponseAnswerValuePair containing the answer, its typed value, and a string representation
+ * @param answer - The raw Typeform form response answer to convert.
+ * @returns A TypeformFormResponseAnswerValuePair containing the answer, its typed value, and a string representation.
  */
 export function makeTypeformFormResponseAnswerValuePair(answer: TypeformFormResponseAnswer): TypeformFormResponseAnswerValuePair {
   let value: unknown;

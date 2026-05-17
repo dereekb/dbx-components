@@ -144,29 +144,30 @@ export type IterationQueryDocChangeWatcherChangeType = 'addedAndRemoved' | 'adde
  * raw query snapshots and processed change events, making it easier to react to
  * specific types of changes.
  *
- * @template T - The document data type
  * @param config - Configuration for the watcher, including the iteration instance to watch
- *                and an optional delay before starting to monitor changes
- * @returns A watcher object with observables for streaming changes
+ *                and an optional delay before starting to monitor changes.
+ * @returns A watcher object with observables for streaming changes.
+ *
+ * @template T - The document data type
  *
  * @example
+ * ```ts
  * // Create a watcher for changes to active users
  * const usersIterator = firestoreItemPageIterator({
  *   queryFactory: () => collection(firestore, 'users').where('status', '==', 'active'),
  *   pageSize: 10
  * });
- *
  * const watcher = iterationQueryDocChangeWatcher({
  *   instance: usersIterator,
  *   delay: 1000 // wait 1 second after first results before watching for changes
  * });
- *
  * // React to specific change types
  * watcher.event$.subscribe(event => {
  *   if (event.type === 'added') {
  *     console.log('New users added:', event.added.map(change => change.doc.data()));
  *   }
  * });
+ * ```
  */
 export function iterationQueryDocChangeWatcher<T = unknown>(config: IterationQueryDocChangeWatcherConfig<T>): IterationQueryDocChangeWatcher<T> {
   const { instance, delay: timeUntilActive = DEFAULT_QUERY_CHANGE_WATCHER_DELAY } = config;
@@ -224,9 +225,10 @@ export function iterationQueryDocChangeWatcher<T = unknown>(config: IterationQue
  * 4. If only modifications are present, classify as 'modified'.
  * 5. If no changes are present, classify as 'none'.
  *
+ * @param group - The change group to classify.
+ * @returns The overall change type classification.
+ *
  * @template T - The document data type
- * @param group - The change group to classify
- * @returns The overall change type classification
  */
 export function iterationQueryDocChangeWatcherChangeTypeForGroup<T = unknown>(group: IterationQueryDocChangeWatcherChangeGroup<T>): IterationQueryDocChangeWatcherChangeType {
   const hasAdded = group.added.length > 0;

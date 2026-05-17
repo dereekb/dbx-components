@@ -38,8 +38,8 @@ export type ModelStorageSlashPathFactory<T extends object = object> = (input: Re
  *
  * The generated paths follow the convention `/model/[basePath/]<modelKey>/[path]`.
  *
- * @param config - optional base path to nest under
- * @returns a {@link ModelStorageSlashPathFactory} that maps Firestore model keys to storage paths
+ * @param config - Optional base path to nest under.
+ * @returns A {@link ModelStorageSlashPathFactory} that maps Firestore model keys to storage paths.
  *
  * @example
  * ```ts
@@ -47,6 +47,7 @@ export type ModelStorageSlashPathFactory<T extends object = object> = (input: Re
  * const path = pathFactory(userDocument, 'profile.png');
  * // path === '/model/avatars/users/abc123/profile.png'
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function modelStorageSlashPathFactory<T extends object = object>(config?: ModelStorageSlashPathFactoryConfig): ModelStorageSlashPathFactory<T> {

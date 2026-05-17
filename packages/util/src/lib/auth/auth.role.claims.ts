@@ -1,5 +1,4 @@
 import { type AuthRole, type AuthRoleSet } from './auth.role';
-import type { Maybe } from '@dereekb/util';
 import { objectHasKey } from '../object/object';
 import { filterFromPOJO, forEachKeyValueOnPOJOFunction } from '../object/object.filter.pojo';
 import { KeyValueTypleValueFilter } from '../object/object.filter.tuple';

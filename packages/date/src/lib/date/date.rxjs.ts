@@ -28,7 +28,7 @@ export interface DateIntervalConfig {
   /**
    * Scheduler for the rxjs interval.
    */
-  readonly scheduler?: Maybe<SchedulerLike>;
+  readonly scheduler?: SchedulerLike | undefined;
 }
 
 /**

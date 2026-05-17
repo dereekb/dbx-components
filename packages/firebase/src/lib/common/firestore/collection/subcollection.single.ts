@@ -71,12 +71,14 @@ export interface SingleItemFirestoreCollection<T, PT, D extends FirestoreDocumen
  * a specific document. It combines the hierarchical relationship of parent-child documents
  * with the convenience of direct access to a single, known document in the subcollection.
  *
+ * @param config - Configuration for the single document subcollection.
+ * @returns A subcollection instance with specialized accessors for the single document.
+ *
  * @template T - The data type of the subcollection document
  * @template PT - The data type of the parent document
  * @template D - The document type for the subcollection document, defaults to FirestoreDocument<T>
  * @template PD - The document type for the parent document, defaults to FirestoreDocument<PT>
- * @param config - Configuration for the single document subcollection
- * @returns A subcollection instance with specialized accessors for the single document
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeSingleItemFirestoreCollection<T, PT, D extends FirestoreDocument<T> = FirestoreDocument<T>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: SingleItemFirestoreCollectionConfig<T, PT, D, PD>): SingleItemFirestoreCollection<T, PT, D, PD> {

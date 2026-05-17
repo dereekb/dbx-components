@@ -10,8 +10,8 @@ import { type UpdateData } from '../../common/firestore/types';
  * Processes both `union` (add elements) and `remove` (delete elements) operations,
  * spreading array values as individual arguments since Firestore does not allow nested arrays.
  *
- * @param input - object with `union` and/or `remove` maps from field names to arrays of values
- * @returns Firestore `UpdateData` with `FieldValue.arrayUnion()`/`FieldValue.arrayRemove()` sentinels
+ * @param input - Object with `union` and/or `remove` maps from field names to arrays of values.
+ * @returns Firestore `UpdateData` with `FieldValue.arrayUnion()`/`FieldValue.arrayRemove()` sentinels.
  *
  * @example
  * ```ts
@@ -21,6 +21,7 @@ import { type UpdateData } from '../../common/firestore/types';
  * });
  * await updateDoc(docRef, updateData);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreClientArrayUpdateToUpdateData<T extends object>(input: FirestoreAccessorArrayUpdate<T>): UpdateData<T> {

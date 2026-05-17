@@ -1,5 +1,4 @@
 import { type Maybe } from '../value/maybe.type';
-import type { Maybe } from '@dereekb/util';
 import { range } from '../array/array.number';
 import { type StoredDataStorageKey } from './storage';
 import { hasNonNullValue } from '../value/maybe';

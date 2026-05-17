@@ -24,8 +24,8 @@ export type DiscordWebhookInteraction<T extends Interaction = Interaction> = T;
 /**
  * Casts an untyped Discord interaction to a typed one.
  *
- * @param interaction - the raw interaction to cast
- * @returns the interaction cast to the specified typed DiscordWebhookInteraction
+ * @param interaction - The raw interaction to cast.
+ * @returns The interaction cast to the specified typed DiscordWebhookInteraction.
  */
 export function discordWebhookInteraction<T extends Interaction = Interaction>(interaction: UntypedDiscordInteraction): DiscordWebhookInteraction<T> {
   return interaction as DiscordWebhookInteraction<T>;

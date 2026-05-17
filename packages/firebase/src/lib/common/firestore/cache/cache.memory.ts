@@ -42,7 +42,7 @@ export interface FirestoreCollectionCacheDelegate<T> {
 /**
  * Creates an in-memory {@link FirestoreCollectionCacheDelegate} backed by a Map.
  *
- * @returns A Map-backed delegate instance.
+ * @returns Delegate backed by an in-process Map.
  *
  * @example
  * ```ts
@@ -106,9 +106,10 @@ interface MakeFirestoreCollectionCacheConfig<T> {
  *
  * The actual storage is handled by the provided {@link FirestoreCollectionCacheDelegate}.
  *
+ * @param config - Configuration including TTL, enabled check, event emitter, and delegate.
+ * @returns A collection cache instance.
+ *
  * @template T - The document data type
- * @param config - Configuration including TTL, enabled check, event emitter, and delegate
- * @returns A collection cache instance
  */
 function makeFirestoreCollectionCache<T>(config: MakeFirestoreCollectionCacheConfig<T>): FirestoreCollectionCache<T> {
   const { defaultTtl, isEnabled, emitEvent, delegate } = config;
@@ -206,8 +207,8 @@ export interface MakeFirestoreContextCacheConfig {
  * This is the shared foundation used by both {@link inMemoryFirestoreContextCache} and
  * {@link readLoggingFirestoreContextCache}.
  *
- * @param config - Configuration including default TTL and delegate factory
- * @returns A new context cache
+ * @param config - Configuration including default TTL and delegate factory.
+ * @returns A new context cache.
  *
  * @example
  * ```ts
@@ -216,6 +217,7 @@ export interface MakeFirestoreContextCacheConfig {
  *   createDelegate: () => inMemoryFirestoreCollectionCacheDelegate()
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeFirestoreContextCache(config: MakeFirestoreContextCacheConfig): FirestoreContextCache {
@@ -309,13 +311,14 @@ export function makeFirestoreContextCache(config: MakeFirestoreContextCacheConfi
  * Uses simple Map-based storage with TTL-based expiration. Suitable for
  * client-side caching where the application lifecycle matches the cache lifecycle.
  *
- * @returns A factory function that creates in-memory context caches
+ * @returns A factory function that creates in-memory context caches.
  *
  * @example
  * ```ts
  * const factory = inMemoryFirestoreContextCacheFactory();
  * const contextCache = factory({ defaultTtl: 60000 });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function inMemoryFirestoreContextCacheFactory(): FirestoreContextCacheFactory {
@@ -336,8 +339,8 @@ export interface InMemoryFirestoreContextCacheConfig {
  * Creates an in-memory {@link FirestoreContextCache} that manages per-collection
  * caches with TTL-based expiration, per-type enable/disable, and event streaming.
  *
- * @param config - Optional configuration
- * @returns A new context cache
+ * @param config - Optional configuration.
+ * @returns A new context cache.
  *
  * @example
  * ```ts
@@ -361,7 +364,7 @@ export function inMemoryFirestoreContextCache(config?: InMemoryFirestoreContextC
  * Useful for analytics, debugging, and monitoring read patterns without the
  * memory overhead of actual caching.
  *
- * @returns A factory function that creates read-logging context caches
+ * @returns A factory function that creates read-logging context caches.
  *
  * @example
  * ```ts
@@ -369,6 +372,7 @@ export function inMemoryFirestoreContextCache(config?: InMemoryFirestoreContextC
  * const contextCache = factory();
  * contextCache.events$.subscribe((event) => console.log(event));
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function readLoggingFirestoreContextCacheFactory(): FirestoreContextCacheFactory {
@@ -393,8 +397,8 @@ export interface ReadLoggingFirestoreContextCacheConfig {
  * Useful for tracking read patterns, debugging, and monitoring which documents
  * are accessed and how often, without the memory overhead of actual caching.
  *
- * @param config - Optional configuration
- * @returns A new read-logging context cache
+ * @param config - Optional configuration.
+ * @returns A new read-logging context cache.
  *
  * @example
  * ```ts
@@ -417,9 +421,10 @@ export function readLoggingFirestoreContextCache(config?: ReadLoggingFirestoreCo
  * Creates an operation-scoped {@link FirestoreCollectionCacheInstance} that deduplicates
  * concurrent reads and uses the parent cache as a warm start.
  *
+ * @param parentCache - The parent collection cache for warm-start lookups.
+ * @returns An operation-scoped cache instance.
+ *
  * @template T - The document data type
- * @param parentCache - The parent collection cache for warm-start lookups
- * @returns An operation-scoped cache instance
  */
 function makeFirestoreCollectionCacheInstance<T>(parentCache: FirestoreCollectionCache<T>): FirestoreCollectionCacheInstance<T> {
   const localEntries = new Map<FirestoreModelKey, FirestoreCacheEntry<T>>();

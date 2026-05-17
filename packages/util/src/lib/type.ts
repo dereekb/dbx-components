@@ -1,5 +1,4 @@
 import { type Merge, type OmitNeverProperties, type PickProperties, type StrictOmit, type UnionToIntersection, type Writable } from 'ts-essentials';
-import type { Maybe } from '@dereekb/util';
 import { type Maybe } from './value/maybe.type';
 
 /**

@@ -11,8 +11,8 @@ export const STRIPE_DEFAULT_API_VERSION: Stripe.LatestApiVersion = '2026-02-25.c
  *
  * Reads STRIPE_SECRET and STRIPE_WEBHOOK_SECRET from environment variables using the default API version.
  *
- * @param configService - NestJS config service for reading environment variables
- * @returns a validated StripeServiceConfig
+ * @param configService - NestJS config service for reading environment variables.
+ * @returns A validated StripeServiceConfig.
  */
 export function stripeServiceConfigFactory(configService: ConfigService): StripeServiceConfig {
   const config: StripeServiceConfig = {

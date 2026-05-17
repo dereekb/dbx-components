@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 /**
  * The import source that NestJS decorators come from.
  */
@@ -52,15 +53,15 @@ interface TypeOnlyImportInfo {
 /**
  * Extracts the decorator name from a decorator node.
  *
+ * @param decorator - The decorator AST node.
+ * @returns The decorator name, or empty string if unrecognized.
+ *
  * @example
  * ```
  * // Returns 'Injectable' for both:
  * // @Injectable()
  * // @Injectable
  * ```
- *
- * @param decorator - The decorator AST node
- * @returns The decorator name, or empty string if unrecognized
  */
 function getDecoratorName(decorator: AstNode): string {
   const expression = decorator.expression;
@@ -82,12 +83,12 @@ function getDecoratorName(decorator: AstNode): string {
 /**
  * Extracts the injection token name from a decorator like @Inject(TokenName).
  *
- * @param decorator - The decorator AST node
- * @returns The token identifier name, or null if not a simple identifier
+ * @param decorator - The decorator AST node.
+ * @returns The token identifier name, or null if not a simple identifier.
  */
-function getInjectTokenFromDecorator(decorator: AstNode): string | null {
+function getInjectTokenFromDecorator(decorator: AstNode): Maybe<string> {
   const expression = decorator.expression;
-  let tokenName: string | null = null;
+  let tokenName: Maybe<string> = null;
 
   if (expression.type === 'CallExpression' && expression.callee.type === 'Identifier' && expression.callee.name === 'Inject') {
     const firstArg = expression.arguments[0];
@@ -103,8 +104,8 @@ function getInjectTokenFromDecorator(decorator: AstNode): string | null {
 /**
  * Extracts the parameter name from a constructor parameter node.
  *
- * @param param - The parameter AST node
- * @returns The parameter name for error reporting
+ * @param param - The parameter AST node.
+ * @returns The parameter name for error reporting.
  */
 function getParamName(param: AstNode): string {
   let name = '(unknown)';
@@ -132,13 +133,13 @@ function getParamName(param: AstNode): string {
  * Returns the type name only for simple TSTypeReference identifiers (i.e. class names like `FooApi`).
  * Returns null for primitives, union types, generics, or any non-simple type reference.
  *
- * @param param - The parameter AST node
- * @returns The type name to use as injection token, or null if not auto-fixable
+ * @param param - The parameter AST node.
+ * @returns The type name to use as injection token, or null if not auto-fixable.
  */
-function getInjectTokenName(param: AstNode): string | null {
+function getInjectTokenName(param: AstNode): Maybe<string> {
   const target = param.type === 'TSParameterProperty' ? param.parameter : param;
   const typeAnnotation = target.typeAnnotation?.typeAnnotation;
-  let tokenName: string | null = null;
+  let tokenName: Maybe<string> = null;
 
   if (typeAnnotation?.type === 'TSTypeReference' && typeAnnotation.typeName?.type === 'Identifier' && !typeAnnotation.typeArguments) {
     tokenName = typeAnnotation.typeName.name;

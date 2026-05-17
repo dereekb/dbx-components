@@ -78,8 +78,8 @@ export type MailgunRecipientBatchSendTargetFromReplyToBatchGroupKey = string;
 /**
  * Creates a composite key from the from/replyTo email addresses used to group MailgunRecipientBatchSendTarget values.
  *
- * @param recipient - the batch send target whose from/replyTo addresses are used as the grouping key
- * @returns a string key in the form "f:{fromEmail}|r:{replyToEmail}" used to group recipients into batches
+ * @param recipient - Batch send target whose from/replyTo addresses are used as the grouping key.
+ * @returns Composite key in the form "f:{fromEmail}|r:{replyToEmail}" used to group recipients into batches.
  */
 export function mailgunRecipientBatchSendTargetFromReplyToBatchGroupKey(recipient: MailgunRecipientBatchSendTarget): MailgunRecipientBatchSendTargetFromReplyToBatchGroupKey {
   const fromEmail = (recipient.from?.email ?? '').toLowerCase();
@@ -359,7 +359,7 @@ export interface MailgunRecipientBatchSendTargetEntityKeyRecipientLookupConfig {
 /**
  * Creates a MailgunRecipientBatchSendTargetEntityKeyRecipientLookup given the input configuration.
  *
- * @param config The configuration for the lookup.
+ * @param config - The configuration for the lookup.
  * @returns The lookup.
  */
 export function mailgunRecipientBatchSendTargetEntityKeyRecipientLookup(config: MailgunRecipientBatchSendTargetEntityKeyRecipientLookupConfig): MailgunRecipientBatchSendTargetEntityKeyRecipientLookup {

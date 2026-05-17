@@ -30,7 +30,7 @@ export function cleanup<T>(destroy: (instance: T) => PromiseOrValue<void>, wait 
 
     return obs.pipe(
       scan<T, CleanupInternalState<T>>((acc: CleanupInternalState<T>, instance: T) => {
-        let cleanup: Maybe<Promise<void>>;
+        let cleanup: Promise<void> | undefined;
 
         if (acc.instance) {
           cleanup = asPromise(destroy(acc.instance));
