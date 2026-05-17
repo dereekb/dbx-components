@@ -220,6 +220,9 @@ export function getFirestoreQueryHelperDescriptor(name: string): FirestoreQueryH
  * `parts` template.
  *
  * @param input - The resolved descriptor + call-site values.
+ * @param input.descriptor - The looked-up helper descriptor.
+ * @param input.fieldPath - The resolved field path for the constraints.
+ * @param input.direction - Optional call-site direction override for orderBy parts.
  * @returns The ordered constraint entries the helper emits.
  */
 export function expandFirestoreQueryHelper(input: { readonly descriptor: FirestoreQueryHelperDescriptor; readonly fieldPath: string; readonly direction?: 'asc' | 'desc' }): readonly ConstraintSequenceEntry[] {

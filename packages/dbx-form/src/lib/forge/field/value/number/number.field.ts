@@ -130,11 +130,10 @@ export type DbxForgeDollarAmountFieldConfig = Omit<DbxForgeNumberFieldConfig, 'r
  * @param config - Number field configuration (precision is overridden to dollar amount precision)
  * @returns A {@link MatInputField} for dollar amount input.
  *
- * @dbxFormField
+ * @dbxFormFieldDerivative number
  * @dbxFormSlug dollar-amount
  * @dbxFormProduces number
  * @dbxFormArrayOutput no
- * @dbxFormFieldDerivative number
  * @dbxFormConfigInterface DbxForgeDollarAmountFieldConfig
  *
  * @example

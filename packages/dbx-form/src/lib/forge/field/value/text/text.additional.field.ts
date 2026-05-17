@@ -15,7 +15,6 @@ export type DbxForgeNameFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @param config - Optional overrides; defaults to key `'name'`, label `'Name'`
  * @returns A {@link MatInputField} for name input.
  *
- * @dbxFormField
  * @dbxFormSlug name
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -66,7 +65,6 @@ export interface DbxForgeEmailFieldConfig {
  * @param config - Optional overrides; defaults to key `'email'`, label `'Email Address'`
  * @returns A {@link MatInputField} with email input type.
  *
- * @dbxFormField
  * @dbxFormSlug email
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -105,7 +103,6 @@ export type DbxForgeCityFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @param config - Optional overrides; defaults to key `'city'`, label `'City'`
  * @returns A {@link MatInputField} for city input.
  *
- * @dbxFormField
  * @dbxFormSlug city
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -147,7 +144,6 @@ export interface DbxForgeStateFieldConfig extends Partial<DbxForgeTextFieldConfi
  * @param config - Optional overrides; defaults to key `'state'`, label `'State'`
  * @returns A {@link MatInputField} for state input.
  *
- * @dbxFormField
  * @dbxFormSlug state
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -190,7 +186,6 @@ export type DbxForgeCountryFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @param config - Optional overrides; defaults to key `'country'`, label `'Country'`
  * @returns A {@link MatInputField} for country input.
  *
- * @dbxFormField
  * @dbxFormSlug country
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -227,7 +222,6 @@ export type DbxForgeZipCodeFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @param config - Optional overrides; defaults to key `'zip'`, label `'Zip Code'`
  * @returns A {@link MatInputField} for zip code input.
  *
- * @dbxFormField
  * @dbxFormSlug zip-code
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -270,7 +264,6 @@ export type DbxForgeLatLngTextFieldConfig = Partial<DbxForgeTextFieldConfig>;
  * @param config - Optional overrides; defaults to key `'latLng'`
  * @returns A {@link MatInputField} for coordinate input.
  *
- * @dbxFormField
  * @dbxFormSlug lat-lng
  * @dbxFormProduces string
  * @dbxFormArrayOutput no

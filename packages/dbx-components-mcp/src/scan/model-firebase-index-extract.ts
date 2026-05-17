@@ -1123,6 +1123,13 @@ function findFirstBranchNode(bodyNode: Node): { readonly branchKind: ComplexQuer
   return result;
 }
 
+/**
+ * Resolves the textual callee name for a call expression's left-hand side
+ * (Identifier or PropertyAccessExpression).
+ *
+ * @param expression - The call expression's leading node.
+ * @returns The callee identifier name, or undefined when the form is unsupported.
+ */
 function getCallExpressionName(expression: Node): string | undefined {
   if (Node.isIdentifier(expression)) {
     return expression.getText();

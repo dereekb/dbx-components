@@ -32,6 +32,7 @@ export interface ParsedGetManyArgs {
  *    {@link CliError} if the manifest is missing, the prefix is unresolved, or the leaf
  *    has no `modelType`.
  *
+ * @param input - Positionals captured by yargs plus the optional model manifest.
  * @param input.modelOrKey - The first positional from yargs.
  * @param input.key - The optional second positional from yargs.
  * @param input.manifest - The generated model manifest (for prefix lookup).
@@ -98,6 +99,7 @@ export function parseGetArgs(input: { readonly modelOrKey: string | undefined; r
  *
  * Always rejects empty key lists and lists exceeding 50 keys.
  *
+ * @param input - Positionals captured by yargs plus the optional model manifest.
  * @param input.firstArg - The first positional from yargs.
  * @param input.rest - The remaining positionals from yargs.
  * @param input.manifest - The generated model manifest (used only in the inferred-key branch).

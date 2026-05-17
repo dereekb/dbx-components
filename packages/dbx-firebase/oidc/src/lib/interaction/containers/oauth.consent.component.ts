@@ -147,6 +147,9 @@ export class DbxOAuthConsentComponent implements OnDestroy {
    * straight off the form value (it already matches the API field name
    * `grantedOIDCScopes`) and forwards it through `submitConsent`. On a
    * successful response, hard-navigates to the OIDC server's redirect URL.
+   *
+   * @param formValue - Submitted form value containing the granted scope array.
+   * @param context - The Work context driving the approval flow.
    */
   readonly handleApprove: WorkUsingContext<OAuthConsentScopesFormValue, OAuthInteractionConsentResponse> = (formValue, context) => {
     const uid = this.resolvedInteractionUid();
@@ -172,6 +175,9 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   /**
    * Handles the Deny action. No payload is sent — the server returns
    * `access_denied` to the OAuth client.
+   *
+   * @param _value - Unused form payload.
+   * @param context - The Work context driving the denial flow.
    */
   readonly handleDeny: WorkUsingContext<void, OAuthInteractionConsentResponse> = (_value, context) => {
     const uid = this.resolvedInteractionUid();

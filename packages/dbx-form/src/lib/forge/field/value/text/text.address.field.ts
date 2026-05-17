@@ -55,7 +55,6 @@ export interface DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFiel
  * @param config - Optional overrides; line number determines key and label.
  * @returns A {@link MatInputField} for address line input.
  *
- * @dbxFormField
  * @dbxFormSlug address-line
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -89,7 +88,6 @@ export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig 
  * @param config - Address fields configuration.
  * @returns Array of forge field definitions for a complete address form section.
  *
- * @dbxFormField
  * @dbxFormSlug address-fields
  * @dbxFormProduces FieldDef[]
  * @dbxFormArrayOutput no

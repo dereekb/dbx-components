@@ -39,7 +39,6 @@ export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldC
  * @param config - Optional configuration for the password field.
  * @returns A {@link MatInputField} with password input type.
  *
- * @dbxFormField
  * @dbxFormSlug password-field
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -70,7 +69,6 @@ export function dbxForgeTextPasswordField(config?: DbxForgeTextPasswordFieldConf
  * @param config - Optional configuration for the verify password field.
  * @returns A {@link MatInputField} with password input type.
  *
- * @dbxFormField
  * @dbxFormSlug verify-password-field
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -116,7 +114,6 @@ export interface DbxForgeTextPasswordWithVerifyFieldConfig {
  * @param config - Configuration for the password and verify password fields.
  * @returns A tuple of `[passwordField, verifyPasswordField]`
  *
- * @dbxFormField
  * @dbxFormSlug password-with-verify-fields
  * @dbxFormProduces FieldDef[]
  * @dbxFormArrayOutput no
@@ -214,7 +211,6 @@ export interface DbxForgeUsernameLoginFieldsConfig {
  * @param config - Login fields configuration.
  * @returns The forge field definitions for the login form.
  *
- * @dbxFormField
  * @dbxFormSlug username-password-login-fields
  * @dbxFormProduces FieldDef[]
  * @dbxFormArrayOutput no
@@ -255,7 +251,6 @@ export function dbxForgeUsernamePasswordLoginFields(config: DbxForgeUsernameLogi
  * @param username - Either `'email'`, `'username'`, or a full config object.
  * @returns A forge field definition for the username input.
  *
- * @dbxFormField
  * @dbxFormSlug username-login-field
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
