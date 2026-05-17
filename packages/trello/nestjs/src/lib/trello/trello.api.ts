@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { addCommentToCard, addLabelToCard, addMemberToCard, createBoard, createCard, createList, createWebhook, deleteBoard, deleteCard, deleteWebhook, getBoard, getCard, getList, getMe, getMember, getWebhook, listBoardCards, listBoardLists, listBoardMembers, listCardsInList, listWebhooksForToken, trelloFactory, updateBoard, updateCard, updateList, updateWebhook, type Trello, type TrelloContext } from '@dereekb/trello';
+import { addCommentToCard, addLabelToCard, addMemberToCard, createBoard, createCard, createList, createWebhook, deleteBoard, deleteCard, deleteWebhook, getBoard, getCard, getList, getMe, getMember, getWebhook, listBoardCards, listBoardLabels, listBoardLists, listBoardMembers, listCardActions, listCardsInList, listWebhooksForToken, trelloFactory, updateBoard, updateCard, updateList, updateWebhook, type Trello, type TrelloContext } from '@dereekb/trello';
 import { TrelloServiceConfig } from './trello.config';
 
 @Injectable()
@@ -47,6 +47,10 @@ export class TrelloApi {
     return listBoardMembers(this.trelloContext);
   }
 
+  get listBoardLabels() {
+    return listBoardLabels(this.trelloContext);
+  }
+
   // MARK: Lists
   get getList() {
     return getList(this.trelloContext);
@@ -91,6 +95,10 @@ export class TrelloApi {
 
   get addLabelToCard() {
     return addLabelToCard(this.trelloContext);
+  }
+
+  get listCardActions() {
+    return listCardActions(this.trelloContext);
   }
 
   // MARK: Members
