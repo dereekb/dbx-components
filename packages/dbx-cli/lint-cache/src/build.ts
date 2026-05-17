@@ -1,8 +1,10 @@
 import { spawn } from 'node:child_process';
+import type { Maybe } from '@dereekb/util';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
+import { patchIndexEntry, projectResultFromCache } from './build-many';
 import { findProject } from './project-lookup';
 import { cacheFileName, type LintCache, type LintCacheFileSummary, type LintCacheMessage, type LintCacheRuleSummary } from './types';
 
@@ -10,8 +12,16 @@ export interface BuildOptions {
   readonly project: string;
   readonly workspaceRoot: string;
   readonly outputDir: string;
-  readonly nxArgs: readonly string[] | undefined;
+  readonly nxArgs: Maybe<readonly string[]>;
   readonly fix: boolean;
+  /**
+   * When true (default), if `<outputDir>/index.json` exists the matching
+   * project entry is patched after the per-project cache is written so the
+   * aggregate stays consistent with single-project rebuilds. `runBuildMany`
+   * passes `false` because it writes the full index in one shot at the end,
+   * which avoids concurrent reader/writer races when multiple workers run.
+   */
+  readonly updateIndex?: boolean;
 }
 
 export interface BuildResult {
@@ -20,7 +30,7 @@ export interface BuildResult {
 }
 
 interface EslintRawMessage {
-  readonly ruleId: string | null;
+  readonly ruleId: Maybe<string>;
   readonly severity: 0 | 1 | 2;
   readonly message: string;
   readonly line?: number;
@@ -48,6 +58,9 @@ interface EslintRawResult {
  * Using Nx's executor (rather than the ESLint Node API directly) keeps the
  * call compatible with workspace-specific flat-config compatibility shims
  * that the executor applies internally.
+ *
+ * @param opts - The project to lint, the workspace root, the cache output directory, and any extra nx args / --fix flag.
+ * @returns The written cache path and the in-memory cache object.
  */
 export async function runBuild(opts: BuildOptions): Promise<BuildResult> {
   const project = findProject(opts.workspaceRoot, opts.project);
@@ -85,6 +98,13 @@ export async function runBuild(opts: BuildOptions): Promise<BuildResult> {
 
   const cachePath = join(opts.outputDir, cacheFileName(opts.project));
   writeFileSync(cachePath, JSON.stringify(cache, null, 2));
+
+  if (opts.updateIndex !== false) {
+    patchIndexEntry({
+      outputDir: opts.outputDir,
+      entry: projectResultFromCache({ project: opts.project, cachePath, cache })
+    });
+  }
 
   return { cachePath, cache };
 }

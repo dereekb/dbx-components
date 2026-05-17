@@ -1,9 +1,21 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { Maybe } from '@dereekb/util';
 
 import { runBuild } from './build';
 import { listProjects, type ProjectInfo } from './project-lookup';
 import type { LintCache } from './types';
+
+interface LintCacheIndex {
+  readonly schemaVersion: 1;
+  readonly generatedAt: string;
+  readonly projectCount: number;
+  readonly succeeded: number;
+  readonly failed: number;
+  readonly totalErrors: number;
+  readonly totalWarnings: number;
+  readonly projects: readonly BuildManyProjectResult[];
+}
 
 export interface BuildManyOptions {
   readonly workspaceRoot: string;
@@ -12,20 +24,26 @@ export interface BuildManyOptions {
   readonly exclude: readonly string[];
   readonly concurrency: number;
   readonly continueOnError: boolean;
-  readonly nxArgs: readonly string[] | undefined;
+  readonly nxArgs: Maybe<readonly string[]>;
   readonly fix: boolean;
-  readonly onProgress: ((event: BuildManyProgressEvent) => void) | undefined;
+  readonly onProgress: Maybe<(event: BuildManyProgressEvent) => void>;
 }
 
 export type BuildManyProgressEvent = { readonly kind: 'start'; readonly project: string; readonly index: number; readonly total: number } | { readonly kind: 'done'; readonly project: string; readonly index: number; readonly total: number; readonly cache: LintCache } | { readonly kind: 'error'; readonly project: string; readonly index: number; readonly total: number; readonly error: string };
 
 export interface BuildManyProjectResult {
   readonly project: string;
-  readonly cachePath: string | undefined;
-  readonly errorCount: number | undefined;
-  readonly warningCount: number | undefined;
-  readonly filesWithIssues: number | undefined;
-  readonly error: string | undefined;
+  readonly cachePath: Maybe<string>;
+  readonly errorCount: Maybe<number>;
+  readonly warningCount: Maybe<number>;
+  readonly filesWithIssues: Maybe<number>;
+  /**
+   * ISO-8601 timestamp from the project's cache file (i.e. when ESLint last
+   * ran for that project). Lets consumers see staleness across the index
+   * after single-project rebuilds. `null` if the project failed to build.
+   */
+  readonly generatedAt: Maybe<string>;
+  readonly error: Maybe<string>;
 }
 
 export interface BuildManyResult {
@@ -41,10 +59,13 @@ export interface BuildManyResult {
  * After all projects finish, writes an aggregate `index.json` next to the
  * per-project cache files so a downstream agent can pick the project to
  * inspect without re-walking the workspace.
+ *
+ * @param opts - The workspace root, output directory, include/exclude patterns, concurrency, fix flag, and optional progress callback.
+ * @returns The aggregate index path, per-project results, and workspace-wide error/warning totals.
  */
 export async function runBuildMany(opts: BuildManyOptions): Promise<BuildManyResult> {
   const lintable = listProjects(opts.workspaceRoot).filter((p) => p.hasLintTarget);
-  const targets = filterProjects(lintable, opts.include, opts.exclude);
+  const targets = filterProjects({ projects: lintable, include: opts.include, exclude: opts.exclude });
 
   if (!existsSync(opts.outputDir)) mkdirSync(opts.outputDir, { recursive: true });
 
@@ -66,16 +87,10 @@ export async function runBuildMany(opts: BuildManyOptions): Promise<BuildManyRes
           workspaceRoot: opts.workspaceRoot,
           outputDir: opts.outputDir,
           nxArgs: opts.nxArgs,
-          fix: opts.fix
+          fix: opts.fix,
+          updateIndex: false
         });
-        results.push({
-          project: project.name,
-          cachePath,
-          errorCount: cache.errorCount,
-          warningCount: cache.warningCount,
-          filesWithIssues: cache.filesWithIssues,
-          error: undefined
-        });
+        results.push(projectResultFromCache({ project: project.name, cachePath, cache }));
         opts.onProgress?.({ kind: 'done', project: project.name, index, total, cache });
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
@@ -85,6 +100,7 @@ export async function runBuildMany(opts: BuildManyOptions): Promise<BuildManyRes
           errorCount: undefined,
           warningCount: undefined,
           filesWithIssues: undefined,
+          generatedAt: undefined,
           error: message
         });
         opts.onProgress?.({ kind: 'error', project: project.name, index, total, error: message });
@@ -123,19 +139,30 @@ export async function runBuildMany(opts: BuildManyOptions): Promise<BuildManyRes
   return { indexPath, projects: results, totalErrors, totalWarnings };
 }
 
+export interface FilterProjectsInput {
+  readonly projects: readonly ProjectInfo[];
+  readonly include: readonly string[];
+  readonly exclude: readonly string[];
+}
+
 /**
  * Returns the subset of `projects` matched by the include/exclude patterns.
+ *
  * Patterns with `*` or `?` are treated as globs (`*` ≡ `.*`, `?` ≡ `.`).
  * Plain patterns are substring matches. With no include patterns the result
  * starts with every project; exclude patterns then trim it.
+ *
+ * @param input - The projects to filter and the include/exclude patterns to apply.
+ * @returns A new array with the matched projects in their original order.
  */
-export function filterProjects(projects: readonly ProjectInfo[], include: readonly string[], exclude: readonly string[]): readonly ProjectInfo[] {
-  const includeMatchers = include.map(matcherFor);
-  const excludeMatchers = exclude.map(matcherFor);
-  return projects.filter((p) => {
-    if (includeMatchers.length > 0 && !includeMatchers.some((m) => m(p.name))) return false;
-    if (excludeMatchers.length > 0 && excludeMatchers.some((m) => m(p.name))) return false;
-    return true;
+export function filterProjects(input: FilterProjectsInput): readonly ProjectInfo[] {
+  const includeMatchers = input.include.map(matcherFor);
+  const excludeMatchers = input.exclude.map(matcherFor);
+  return input.projects.filter((p) => {
+    let keep = true;
+    if (includeMatchers.length > 0 && !includeMatchers.some((m) => m(p.name))) keep = false;
+    if (keep && excludeMatchers.length > 0 && excludeMatchers.some((m) => m(p.name))) keep = false;
+    return keep;
   });
 }
 
@@ -170,4 +197,80 @@ function globToRegExp(pattern: string): RegExp {
     }
   }
   return new RegExp(`^${regex}$`);
+}
+
+export interface ProjectResultFromCacheInput {
+  readonly project: string;
+  readonly cachePath: string;
+  readonly cache: LintCache;
+}
+
+/**
+ * Builds a `BuildManyProjectResult` from a single project's cache file.
+ *
+ * Shared by `runBuildMany` (collecting per-project results) and `runBuild`
+ * (patching the matching entry in `index.json` when present).
+ *
+ * @param input - The project name, written cache path, and parsed cache.
+ * @returns A populated `BuildManyProjectResult` with `error` set to `undefined`.
+ */
+export function projectResultFromCache(input: ProjectResultFromCacheInput): BuildManyProjectResult {
+  return {
+    project: input.project,
+    cachePath: input.cachePath,
+    errorCount: input.cache.errorCount,
+    warningCount: input.cache.warningCount,
+    filesWithIssues: input.cache.filesWithIssues,
+    generatedAt: input.cache.generatedAt,
+    error: undefined
+  };
+}
+
+export interface PatchIndexEntryInput {
+  readonly outputDir: string;
+  readonly entry: BuildManyProjectResult;
+}
+
+/**
+ * Patches the matching project entry inside `<outputDir>/index.json`
+ * after a single-project rebuild, so the aggregate index stays consistent
+ * with the per-project cache that was just written.
+ *
+ * No-op when `index.json` does not exist yet (single-project `build` runs
+ * are valid before any `build-many` has produced an index). Recomputes the
+ * top-level `totalErrors` / `totalWarnings` / `succeeded` / `failed`
+ * counters but does NOT touch the index-level `generatedAt` — that
+ * represents the last full `build-many` run.
+ *
+ * @param input - The output directory containing `index.json` and the project entry to patch in.
+ * @returns `true` if `index.json` existed and was patched; `false` if no index was present.
+ */
+export function patchIndexEntry(input: PatchIndexEntryInput): boolean {
+  const indexPath = join(input.outputDir, 'index.json');
+  let patched = false;
+  if (existsSync(indexPath)) {
+    const index = JSON.parse(readFileSync(indexPath, 'utf8')) as LintCacheIndex;
+    const projects = [...index.projects];
+    const existingIdx = projects.findIndex((p) => p.project === input.entry.project);
+    if (existingIdx >= 0) {
+      projects[existingIdx] = input.entry;
+    } else {
+      projects.push(input.entry);
+      projects.sort((a, b) => a.project.localeCompare(b.project));
+    }
+
+    const next: LintCacheIndex = {
+      schemaVersion: 1,
+      generatedAt: index.generatedAt,
+      projectCount: projects.length,
+      succeeded: projects.filter((p) => p.error == null).length,
+      failed: projects.filter((p) => p.error != null).length,
+      totalErrors: projects.reduce((acc, r) => acc + (r.errorCount ?? 0), 0),
+      totalWarnings: projects.reduce((acc, r) => acc + (r.warningCount ?? 0), 0),
+      projects
+    };
+    writeFileSync(indexPath, JSON.stringify(next, null, 2));
+    patched = true;
+  }
+  return patched;
 }

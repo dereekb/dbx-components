@@ -1,10 +1,11 @@
+import type { Maybe } from '@dereekb/util';
 export interface LintCacheMessage {
   readonly filePath: string;
   readonly line: number;
   readonly column: number;
-  readonly endLine: number | null;
-  readonly endColumn: number | null;
-  readonly ruleId: string | null;
+  readonly endLine: Maybe<number>;
+  readonly endColumn: Maybe<number>;
+  readonly ruleId: Maybe<string>;
   readonly severity: 'error' | 'warning';
   readonly message: string;
   readonly fixable: boolean;
@@ -42,6 +43,9 @@ export interface LintCache {
 
 /**
  * Sanitizes a project name into a safe filename stem so the cache file path is predictable.
+ *
+ * @param projectName - The Nx project name (may contain `@` or `/` characters from scoped sub-projects).
+ * @returns The sanitized filename, e.g. `my-project.json` or `dbx-cli_lint-cache.json`.
  */
 export function cacheFileName(projectName: string): string {
   return `${projectName.replaceAll(/[^A-Za-z0-9._-]/g, '_')}.json`;

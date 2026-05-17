@@ -12,13 +12,15 @@
  *   list-projects — preview which projects build-many would target after
  *                 filters, without running ESLint.
  *
- * Cache files are written under --output-dir (default `.lint-cache/`,
- * workspace-relative).
+ * Cache files are written under --output-dir (default `.tmp/lint-cache/`,
+ * workspace-relative — `.tmp/` is the established cache root for this
+ * workspace and is already gitignored).
  */
 
 import { resolve } from 'node:path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import type { Maybe } from '@dereekb/util';
 
 import { runBuild } from './build';
 import { filterProjects, runBuildMany, type BuildManyProgressEvent } from './build-many';
@@ -31,7 +33,7 @@ const FORMAT_CHOICES: readonly OutputFormat[] = ['summary', 'rules', 'files', 'm
 const SEVERITY_CHOICES = ['error', 'warning'] as const;
 
 interface CommonArgs {
-  readonly workspace: string | undefined;
+  readonly workspace: Maybe<string>;
 }
 
 await yargs(hideBin(process.argv))
@@ -43,7 +45,7 @@ await yargs(hideBin(process.argv))
     (y) =>
       y
         .positional('project', { type: 'string', describe: 'Nx project name', demandOption: true })
-        .option('output-dir', { type: 'string', default: '.lint-cache', describe: 'Directory the cache file is written into (workspace-relative).' })
+        .option('output-dir', { type: 'string', default: '.tmp/lint-cache', describe: 'Directory the cache file is written into (workspace-relative).' })
         .option('workspace', { type: 'string', describe: 'Workspace root (defaults to cwd).' })
         .option('nx-arg', { type: 'array', string: true, describe: 'Extra argument passed through to `nx run <project>:lint` (repeatable).' })
         .option('fix', { type: 'boolean', default: false, describe: 'Run ESLint with --fix; remaining (non-fixable) issues are still cached.' })
@@ -70,7 +72,7 @@ await yargs(hideBin(process.argv))
     (y) =>
       y
         .positional('project', { type: 'string', describe: 'Nx project name', demandOption: true })
-        .option('cache-dir', { type: 'string', default: '.lint-cache', describe: 'Directory the cache file lives in (workspace-relative).' })
+        .option('cache-dir', { type: 'string', default: '.tmp/lint-cache', describe: 'Directory the cache file lives in (workspace-relative).' })
         .option('workspace', { type: 'string', describe: 'Workspace root (defaults to cwd).' })
         .option('rule', { type: 'array', string: true, describe: 'Filter to one or more rule IDs (repeatable). OR-ed.' })
         .option('severity', { choices: SEVERITY_CHOICES, describe: 'Filter to errors or warnings only.' })
@@ -97,7 +99,7 @@ await yargs(hideBin(process.argv))
     'Run ESLint for every project with a lint target (with optional filters) and write per-project caches plus an aggregate index.json.',
     (y) =>
       y
-        .option('output-dir', { type: 'string', default: '.lint-cache', describe: 'Directory the cache files are written into (workspace-relative).' })
+        .option('output-dir', { type: 'string', default: '.tmp/lint-cache', describe: 'Directory the cache files are written into (workspace-relative).' })
         .option('workspace', { type: 'string', describe: 'Workspace root (defaults to cwd).' })
         .option('include', { type: 'array', string: true, default: [] as readonly string[], describe: 'Only build projects whose name matches one of these patterns (substring or *-glob). Repeatable.' })
         .option('exclude', { type: 'array', string: true, default: [] as readonly string[], describe: 'Skip projects whose name matches one of these patterns (substring or *-glob). Repeatable.' })
@@ -145,7 +147,7 @@ await yargs(hideBin(process.argv))
       const exclude = (args.exclude ?? []) as readonly string[];
       const projects = listProjects(workspaceRoot);
       const lintable = args.all ? projects : projects.filter((p) => p.hasLintTarget);
-      const filtered = filterProjects(lintable, include, exclude);
+      const filtered = filterProjects({ projects: lintable, include, exclude });
       for (const p of filtered) {
         const lintFlag = p.hasLintTarget ? '' : '  (no lint target)';
         console.log(`${p.name}\t${p.projectRoot}${lintFlag}`);

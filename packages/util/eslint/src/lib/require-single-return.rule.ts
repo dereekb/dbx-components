@@ -100,8 +100,7 @@ function collectCountedReturns(node: AstNode, out: AstNode[]): void {
         const body = consequent.body;
         const lastIndex = body.length - 1;
 
-        for (let i = 0; i < body.length; i += 1) {
-          const stmt = body[i];
+        for (const [i, stmt] of body.entries()) {
           const isLastReturn = i === lastIndex && stmt?.type === 'ReturnStatement';
 
           if (!isLastReturn) {

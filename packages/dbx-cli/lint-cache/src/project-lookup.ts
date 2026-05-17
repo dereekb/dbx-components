@@ -1,4 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import type { Maybe } from '@dereekb/util';
 import { join, relative } from 'node:path';
 
 const TOP_LEVEL_DIRS: readonly string[] = ['apps', 'packages', 'tools'];
@@ -8,7 +9,7 @@ export interface ProjectInfo {
   readonly name: string;
   readonly projectRoot: string;
   readonly absoluteRoot: string;
-  readonly lintFilePatterns: readonly string[] | undefined;
+  readonly lintFilePatterns: Maybe<readonly string[]>;
   readonly hasLintTarget: boolean;
 }
 
@@ -17,9 +18,13 @@ export interface ProjectInfo {
  * (apps/, packages/, tools/) and the workspace-root project.json. Returns the
  * project's workspace-relative root and its `lint.options.lintFilePatterns` if
  * one was declared.
+ *
+ * @param workspaceRoot - Absolute path to the Nx workspace root.
+ * @param projectName - The Nx project name to locate (matches against the `name` field in project.json).
+ * @returns The matched project info, or `null` if no project with that name was found.
  */
-export function findProject(workspaceRoot: string, projectName: string): ProjectInfo | null {
-  let result: ProjectInfo | null = null;
+export function findProject(workspaceRoot: string, projectName: string): Maybe<ProjectInfo> {
+  let result: Maybe<ProjectInfo> = null;
 
   for (const dir of TOP_LEVEL_DIRS) {
     if (result) break;
@@ -30,7 +35,7 @@ export function findProject(workspaceRoot: string, projectName: string): Project
 
   if (!result) {
     const rootProject = readProjectJson(join(workspaceRoot, 'project.json'));
-    if (rootProject && rootProject.name === projectName) {
+    if (rootProject?.name === projectName) {
       result = toProjectInfo(workspaceRoot, workspaceRoot, rootProject);
     }
   }
@@ -38,8 +43,8 @@ export function findProject(workspaceRoot: string, projectName: string): Project
   return result;
 }
 
-function walkForProject(workspaceRoot: string, dir: string, projectName: string): ProjectInfo | null {
-  let found: ProjectInfo | null = null;
+function walkForProject(workspaceRoot: string, dir: string, projectName: string): Maybe<ProjectInfo> {
+  let found: Maybe<ProjectInfo> = null;
   const entries = readdirSync(dir, { withFileTypes: true });
   for (const e of entries) {
     if (found) break;
@@ -49,7 +54,7 @@ function walkForProject(workspaceRoot: string, dir: string, projectName: string)
     const pjPath = join(childDir, 'project.json');
     if (existsSync(pjPath)) {
       const pj = readProjectJson(pjPath);
-      if (pj && pj.name === projectName) {
+      if (pj?.name === projectName) {
         found = toProjectInfo(workspaceRoot, childDir, pj);
         continue;
       }
@@ -63,6 +68,9 @@ function walkForProject(workspaceRoot: string, dir: string, projectName: string)
  * Walks the workspace and returns every project. Filtering by `hasLintTarget`
  * is left to the caller so this stays useful for future inspection commands
  * that do not care whether `lint` is wired up.
+ *
+ * @param workspaceRoot - Absolute path to the Nx workspace root.
+ * @returns Every discovered project, sorted by name.
  */
 export function listProjects(workspaceRoot: string): readonly ProjectInfo[] {
   const out: ProjectInfo[] = [];
@@ -101,8 +109,8 @@ interface RawProjectJson {
   readonly targets?: Record<string, { readonly executor?: string; readonly options?: { readonly lintFilePatterns?: readonly string[] } }>;
 }
 
-function readProjectJson(path: string): RawProjectJson | null {
-  let parsed: RawProjectJson | null;
+function readProjectJson(path: string): Maybe<RawProjectJson> {
+  let parsed: Maybe<RawProjectJson>;
   try {
     parsed = JSON.parse(readFileSync(path, 'utf8')) as RawProjectJson;
   } catch {

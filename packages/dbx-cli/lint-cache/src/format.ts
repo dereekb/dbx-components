@@ -3,6 +3,13 @@ import type { QueryResult } from './query';
 
 export type OutputFormat = 'summary' | 'rules' | 'files' | 'messages' | 'json';
 
+/**
+ * Renders a `QueryResult` as text in the requested format.
+ *
+ * @param format - One of `summary`, `rules`, `files`, `messages`, or `json`.
+ * @param result - The filtered query result to render.
+ * @returns The rendered text (caller decides whether to console.log or write to a file).
+ */
 export function renderResult(format: OutputFormat, result: QueryResult): string {
   let output: string;
   switch (format) {
@@ -31,20 +38,21 @@ function renderSummary(r: QueryResult): string {
   lines.push(`Generated: ${c.generatedAt}`);
   lines.push(`Totals: ${c.errorCount} errors · ${c.warningCount} warnings · ${c.filesWithIssues}/${c.fileCount} files with issues`);
   lines.push(`Matched: ${r.totalMatched} messages${r.truncated ? ` (showing ${r.matched.length})` : ''}`);
-  if (r.matched.length === 0) return lines.join('\n');
 
-  const ruleCounts = aggregateByRule(r.matched);
-  const fileCounts = aggregateByFile(r.matched);
+  if (r.matched.length > 0) {
+    const ruleCounts = aggregateByRule(r.matched);
+    const fileCounts = aggregateByFile(r.matched);
 
-  lines.push('');
-  lines.push('Top rules:');
-  for (const [rule, count] of topEntries(ruleCounts, 10)) {
-    lines.push(`  ${pad(count, 5)}  ${rule}`);
-  }
-  lines.push('');
-  lines.push('Top files:');
-  for (const [file, count] of topEntries(fileCounts, 10)) {
-    lines.push(`  ${pad(count, 5)}  ${file}`);
+    lines.push('');
+    lines.push('Top rules:');
+    for (const [rule, count] of topEntries(ruleCounts, 10)) {
+      lines.push(`  ${pad(count, 5)}  ${rule}`);
+    }
+    lines.push('');
+    lines.push('Top files:');
+    for (const [file, count] of topEntries(fileCounts, 10)) {
+      lines.push(`  ${pad(count, 5)}  ${file}`);
+    }
   }
 
   return lines.join('\n');

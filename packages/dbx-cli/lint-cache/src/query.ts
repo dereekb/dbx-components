@@ -1,13 +1,14 @@
 import { existsSync, readFileSync } from 'node:fs';
+import type { Maybe } from '@dereekb/util';
 
 import type { LintCache, LintCacheMessage } from './types';
 
 export interface QueryFilters {
-  readonly rule: readonly string[] | undefined;
-  readonly severity: 'error' | 'warning' | undefined;
-  readonly file: string | undefined;
-  readonly message: string | undefined;
-  readonly limit: number | undefined;
+  readonly rule: Maybe<readonly string[]>;
+  readonly severity: Maybe<'error' | 'warning'>;
+  readonly file: Maybe<string>;
+  readonly message: Maybe<string>;
+  readonly limit: Maybe<number>;
 }
 
 export interface QueryResult {
@@ -22,6 +23,10 @@ export interface QueryResult {
  * filter. `rule` is an OR across the listed rule IDs; the other filters are
  * AND-ed together. `limit` only changes the returned slice — `totalMatched`
  * is always the pre-limit count.
+ *
+ * @param cachePath - Absolute path to the lint cache JSON file previously written by `runBuild`.
+ * @param filters - Rule / severity / file / message / limit filters to apply over the cached messages.
+ * @returns The cache, the filtered (and possibly truncated) message slice, and the pre-limit match count.
  */
 export function runQuery(cachePath: string, filters: QueryFilters): QueryResult {
   if (!existsSync(cachePath)) {

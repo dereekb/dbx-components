@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "devDependencies": {
+    "@dereekb/util": "13.11.14",
     "eslint": "10.4.0",
     "yargs": "^18.0.0",
     "@types/yargs": "^17.0.35"
