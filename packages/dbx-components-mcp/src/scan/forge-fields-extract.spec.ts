@@ -240,3 +240,57 @@ describe('extractForgeFieldEntries — new tier validation', () => {
     expect(entry.composesFromSlugs).toEqual(['username', 'password']);
   });
 });
+
+describe('extractForgeFieldEntries — marker tag aliases', () => {
+  it('registers a derivative declared with @dbxFormFieldDerivative as the sole marker', () => {
+    const project = projectWith({
+      '/proj/src/derivative-only.ts': `
+        export interface DbxForgeDerivativeOnlyFieldConfig {
+          /** Stub. */
+          stub?: string;
+        }
+
+        /**
+         * Derivative with no separate @dbxFormField marker.
+         * @dbxFormFieldDerivative text
+         * @dbxFormSlug derivative-only
+         * @dbxFormProduces string
+         * @dbxFormArrayOutput no
+         */
+        export function dbxForgeDerivativeOnlyField(config?: DbxForgeDerivativeOnlyFieldConfig) {
+          return config;
+        }
+      `
+    });
+    const result = extractForgeFieldEntries({ project });
+    const entry = findEntry(result.entries, 'derivative-only');
+    expect(entry.tier).toBe('field-derivative');
+    expect(entry.composesFromSlugs).toEqual(['text']);
+  });
+
+  it('registers a template declared with @dbxFormFieldTemplate as the sole marker', () => {
+    const project = projectWith({
+      '/proj/src/template-only.ts': `
+        export interface DbxForgeTemplateOnlyConfig {
+          /** Stub. */
+          stub?: string;
+        }
+
+        /**
+         * Template with no separate @dbxFormField marker.
+         * @dbxFormFieldTemplate username password
+         * @dbxFormSlug template-only
+         * @dbxFormProduces FieldDef[]
+         * @dbxFormArrayOutput no
+         */
+        export function dbxForgeTemplateOnly(config?: DbxForgeTemplateOnlyConfig) {
+          return config;
+        }
+      `
+    });
+    const result = extractForgeFieldEntries({ project });
+    const entry = findEntry(result.entries, 'template-only');
+    expect(entry.tier).toBe('template-builder');
+    expect(entry.composesFromSlugs).toEqual(['username', 'password']);
+  });
+});

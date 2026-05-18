@@ -181,12 +181,14 @@ interface NodeWithJsDocs {
   getJsDocs(): JSDoc[];
 }
 
+const FORM_FIELD_MARKER_TAGS: ReadonlySet<string> = new Set([FORM_FIELD_MARKER, FORM_FIELD_DERIVATIVE_TAG, FORM_FIELD_TEMPLATE_TAG]);
+
 function findTaggedDocs(decl: NodeWithJsDocs): readonly JSDoc[] {
   const docs = decl.getJsDocs();
   let hasMarker = false;
   for (const doc of docs) {
     for (const tag of doc.getTags()) {
-      if (tag.getTagName() === FORM_FIELD_MARKER) {
+      if (FORM_FIELD_MARKER_TAGS.has(tag.getTagName())) {
         hasMarker = true;
       }
     }
