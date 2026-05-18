@@ -149,7 +149,7 @@ export class OidcInteractionController {
       const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
 
       if (missingOIDCScope.length > 0) {
-        const { granted, rejected } = resolveEffectiveSubset(missingOIDCScope, body.grantedOIDCScopes, ALWAYS_GRANTED_OIDC_SCOPES, encounteredOIDCScopes);
+        const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: ALWAYS_GRANTED_OIDC_SCOPES, alreadyEncountered: encounteredOIDCScopes });
 
         if (granted.length > 0) {
           grant.addOIDCScope(granted.join(' '));
@@ -165,7 +165,7 @@ export class OidcInteractionController {
       const missingOIDCClaims = (prompt.details.missingOIDCClaims as string[] | undefined) ?? [];
 
       if (missingOIDCClaims.length > 0) {
-        const { granted, rejected } = resolveEffectiveSubset(missingOIDCClaims, body.grantedOIDCClaims, [], encounteredOIDCClaims);
+        const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCClaims, requestedSubset: body.grantedOIDCClaims, alreadyEncountered: encounteredOIDCClaims });
 
         if (granted.length > 0) {
           grant.addOIDCClaims(granted);
@@ -181,7 +181,7 @@ export class OidcInteractionController {
       for (const [indicator, scopes] of Object.entries(missingResourceScopes)) {
         const requestedSubset = body.grantedResourceScopes?.[indicator];
         const encounteredResourceScopes = grant.getResourceScopeEncountered(indicator).split(' ').filter(Boolean);
-        const { granted, rejected } = resolveEffectiveSubset(scopes, requestedSubset, [], encounteredResourceScopes);
+        const { granted, rejected } = resolveEffectiveSubset({ missing: scopes, requestedSubset, alreadyEncountered: encounteredResourceScopes });
 
         if (granted.length > 0) {
           grant.addResourceScope(indicator, granted.join(' '));
@@ -231,6 +231,28 @@ export class OidcInteractionController {
 }
 
 /**
+ * Inputs for {@link resolveEffectiveSubset}.
+ */
+export interface ResolveEffectiveSubsetInput {
+  /**
+   * Entries the OIDC prompt indicated were missing for this consent.
+   */
+  readonly missing: readonly string[];
+  /**
+   * Optional subset the caller wants to grant; each value must be in `missing` or `alreadyEncountered`.
+   */
+  readonly requestedSubset: readonly string[] | undefined;
+  /**
+   * Entries that must be granted whenever they appear in `missing`, regardless of `requestedSubset`.
+   */
+  readonly alwaysGranted?: readonly string[];
+  /**
+   * Entries the existing Grant has previously granted or rejected. Tolerated as no-ops on re-consent.
+   */
+  readonly alreadyEncountered?: readonly string[];
+}
+
+/**
  * Resolves the effective set to grant — and the complementary set to
  * reject — from a missing set, an optional caller-provided subset, an
  * optional list of always-granted entries, and an optional list of
@@ -246,13 +268,11 @@ export class OidcInteractionController {
  *   are not re-applied to the grant (no-op).
  * - Always-granted entries are union'd into `granted` (clamped to `missing`).
  *
- * @param missing - Entries the OIDC prompt indicated were missing for this consent.
- * @param requestedSubset - Optional subset the caller wants to grant; each value must be in `missing` or `alreadyEncountered`.
- * @param alwaysGranted - Entries that must be granted whenever they appear in `missing`, regardless of `requestedSubset`.
- * @param alreadyEncountered - Entries the existing Grant has previously granted or rejected. Tolerated as no-ops on re-consent.
+ * @param input - Missing entries plus optional subset, always-granted, and already-encountered lists.
  * @returns `granted` to add to the grant and `rejected` to record on the grant.
  */
-export function resolveEffectiveSubset(missing: readonly string[], requestedSubset: readonly string[] | undefined, alwaysGranted: readonly string[] = [], alreadyEncountered: readonly string[] = []): { granted: string[]; rejected: string[] } {
+export function resolveEffectiveSubset(input: ResolveEffectiveSubsetInput): { granted: string[]; rejected: string[] } {
+  const { missing, requestedSubset, alwaysGranted = [], alreadyEncountered = [] } = input;
   const missingSet = new Set(missing);
   const encounteredSet = new Set(alreadyEncountered);
   let baseSelection: readonly string[];

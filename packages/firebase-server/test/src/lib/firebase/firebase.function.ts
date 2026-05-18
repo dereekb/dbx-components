@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- file intentionally retains gen 1 / V2-prefixed wrapper signatures for backward-compatible test infrastructure */
 import { type BlockingFunction, type CloudFunction as CloudFunctionV1Input } from 'firebase-functions/v1';
 import { type CloudFunction as CloudFunctionV2, type CloudEvent } from 'firebase-functions/v2';
 import { type CallableContextOptions, type WrappedFunction, type WrappedScheduledFunction, type WrappedV2Function } from 'firebase-functions-test/lib/main';

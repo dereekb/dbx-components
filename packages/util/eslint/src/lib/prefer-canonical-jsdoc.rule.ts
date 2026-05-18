@@ -444,44 +444,6 @@ function serializeJsdocValue(model: CanonicalJsdocModel, indent: string, workspa
 const LOWER_LETTER_PATTERN = /[a-z]/;
 
 /**
- * Returns the offset of the first non-whitespace character of `text`, or -1.
- *
- * @param text - Source string scanned left-to-right.
- * @returns Zero-based offset of the first non-whitespace character, or `-1` when blank.
- */
-function firstNonBlankOffset(text: string): number {
-  let result = -1;
-
-  for (let i = 0; i < text.length; i += 1) {
-    if (!/\s/.test(text.charAt(i))) {
-      result = i;
-      break;
-    }
-  }
-
-  return result;
-}
-
-/**
- * Returns the offset of the last non-whitespace character of `text`, or -1.
- *
- * @param text - Source string scanned right-to-left.
- * @returns Zero-based offset of the last non-whitespace character, or `-1` when blank.
- */
-function lastNonBlankOffset(text: string): number {
-  let result = -1;
-
-  for (let i = text.length - 1; i >= 0; i -= 1) {
-    if (!/\s/.test(text.charAt(i))) {
-      result = i;
-      break;
-    }
-  }
-
-  return result;
-}
-
-/**
  * Capitalizes the first letter of `text` if it's a lowercase ASCII letter. Returns the new string
  * (or the original when no change is needed).
  *
@@ -490,7 +452,7 @@ function lastNonBlankOffset(text: string): number {
  */
 function capitalizeFirstLetter(text: string): string {
   let result = text;
-  const idx = firstNonBlankOffset(text);
+  const idx = firstNonBlankCharIndex(text);
 
   if (idx !== -1) {
     const ch = text.charAt(idx);
@@ -511,7 +473,7 @@ function capitalizeFirstLetter(text: string): string {
  */
 function appendTerminalPeriod(text: string): string {
   let result = text;
-  const idx = lastNonBlankOffset(text);
+  const idx = lastNonBlankCharIndex(text);
 
   if (idx !== -1) {
     const ch = text.charAt(idx);
@@ -705,17 +667,38 @@ function normalizeTagOrder(model: CanonicalJsdocModel, functionNode: Maybe<AstNo
 }
 
 /**
+ * Inputs for {@link applyCanonicalNormalizations}.
+ */
+interface ApplyCanonicalNormalizationsInput {
+  /**
+   * Canonical view rewritten in place.
+   */
+  readonly model: CanonicalJsdocModel;
+  /**
+   * Declaration whose parameter order anchors `@param` ordering; null skips that pass.
+   */
+  readonly functionNode: Maybe<AstNode>;
+  /**
+   * Tag-name prefixes recognized as workspace tags during ranking and bucketing.
+   */
+  readonly workspacePrefixes: readonly string[];
+  /**
+   * When true, marks the model as multi-line before serialization.
+   */
+  readonly forceMultiline: boolean;
+}
+
+/**
  * Applies every in-place normalization to the canonical model. The order matters in two places:
  * the hyphen strips must run before the description-capital normalization (otherwise a leading
  * `- ` would block capitalization), and tag reordering runs last so it operates on already-fixed
  * tags. The pipeline is idempotent: a second pass on a fully-canonical model is a no-op.
  *
- * @param model - Canonical view rewritten in place.
- * @param functionNode - Declaration whose parameter order anchors `@param` ordering; null skips that pass.
- * @param workspacePrefixes - Tag-name prefixes recognized as workspace tags during ranking and bucketing.
- * @param forceMultiline - When true, marks the model as multi-line before serialization.
+ * @param input - Model plus normalization context.
  */
-function applyCanonicalNormalizations(model: CanonicalJsdocModel, functionNode: Maybe<AstNode>, workspacePrefixes: readonly string[], forceMultiline: boolean): void {
+function applyCanonicalNormalizations(input: ApplyCanonicalNormalizationsInput): void {
+  const { model, functionNode, workspacePrefixes, forceMultiline } = input;
+
   if (forceMultiline) {
     model.singleLine = false;
   }
@@ -831,7 +814,8 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       return result;
     }
 
-    function reportRangeMessage(commentNode: AstNode, parsed: ParsedJsdoc, messageId: string, lineIndex: number, data?: Record<string, string>): void {
+    function reportRangeMessage(commentNode: AstNode, parsed: ParsedJsdoc, report: { messageId: string; lineIndex: number; data?: Record<string, string> }): void {
+      const { messageId, lineIndex, data } = report;
       const line = parsed.lines[lineIndex];
       const startInValue = line?.textOffsetStart ?? 0;
       const endInValue = startInValue + (line?.text?.length ?? 0);
@@ -857,7 +841,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
         const hasCanonicalHyphen = / - /.test(paramLineText) || /^@param\s+\S+\s*$/.test(paramLineText);
 
         if (!hasCanonicalHyphen && tag.description.trim().length > 0) {
-          reportRangeMessage(commentNode, parsed, 'paramHyphen', tag.startLineIndex, { name });
+          reportRangeMessage(commentNode, parsed, { messageId: 'paramHyphen', lineIndex: tag.startLineIndex, data: { name } });
         }
       }
 
@@ -866,14 +850,14 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
 
       if (trimmed.length > 0) {
         if (!startsCanonically(trimmed, 'capital')) {
-          reportRangeMessage(commentNode, parsed, 'paramDescriptionCapital', tag.startLineIndex, { name });
+          reportRangeMessage(commentNode, parsed, { messageId: 'paramDescriptionCapital', lineIndex: tag.startLineIndex, data: { name } });
         }
         if (!endsCanonically(trimmed)) {
-          reportRangeMessage(commentNode, parsed, 'paramDescriptionPeriod', tag.startLineIndex, { name });
+          reportRangeMessage(commentNode, parsed, { messageId: 'paramDescriptionPeriod', lineIndex: tag.startLineIndex, data: { name } });
         }
 
         if (checkTypeRestating && TYPE_RESTATING_PATTERNS.some((re) => re.test(trimmed))) {
-          reportRangeMessage(commentNode, parsed, 'descriptionTypeRestating', tag.startLineIndex);
+          reportRangeMessage(commentNode, parsed, { messageId: 'descriptionTypeRestating', lineIndex: tag.startLineIndex });
         }
       }
     }
@@ -883,7 +867,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       const trimmed = description.trimStart();
 
       if (trimmed.startsWith('- ')) {
-        reportRangeMessage(commentNode, parsed, 'returnsNoHyphen', tag.startLineIndex);
+        reportRangeMessage(commentNode, parsed, { messageId: 'returnsNoHyphen', lineIndex: tag.startLineIndex });
       }
 
       if (trimmed.length === 0) return;
@@ -891,28 +875,28 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       const checkedDescription = trimmed.startsWith('- ') ? trimmed.slice(2) : trimmed;
 
       if (!startsCanonically(checkedDescription, 'capital')) {
-        reportRangeMessage(commentNode, parsed, 'returnsDescriptionCapital', tag.startLineIndex);
+        reportRangeMessage(commentNode, parsed, { messageId: 'returnsDescriptionCapital', lineIndex: tag.startLineIndex });
       }
       if (!endsCanonically(checkedDescription)) {
-        reportRangeMessage(commentNode, parsed, 'returnsDescriptionPeriod', tag.startLineIndex);
+        reportRangeMessage(commentNode, parsed, { messageId: 'returnsDescriptionPeriod', lineIndex: tag.startLineIndex });
       }
       if (checkTypeRestating && TYPE_RESTATING_PATTERNS.some((re) => re.test(checkedDescription))) {
-        reportRangeMessage(commentNode, parsed, 'descriptionTypeRestating', tag.startLineIndex);
+        reportRangeMessage(commentNode, parsed, { messageId: 'descriptionTypeRestating', lineIndex: tag.startLineIndex });
       }
     }
 
     function checkThrowsFormat(commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag): void {
       if (!tag.type) {
-        reportRangeMessage(commentNode, parsed, 'throwsErrorType', tag.startLineIndex);
+        reportRangeMessage(commentNode, parsed, { messageId: 'throwsErrorType', lineIndex: tag.startLineIndex });
       } else {
         const description = tag.description;
 
         if (description.trim().length !== 0) {
           if (!startsCanonically(description, 'capital')) {
-            reportRangeMessage(commentNode, parsed, 'throwsDescriptionCapital', tag.startLineIndex);
+            reportRangeMessage(commentNode, parsed, { messageId: 'throwsDescriptionCapital', lineIndex: tag.startLineIndex });
           }
           if (!endsCanonically(description)) {
-            reportRangeMessage(commentNode, parsed, 'throwsDescriptionPeriod', tag.startLineIndex);
+            reportRangeMessage(commentNode, parsed, { messageId: 'throwsDescriptionPeriod', lineIndex: tag.startLineIndex });
           }
         }
       }
@@ -923,7 +907,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       const trimmed = body.replace(/^\s+/, '');
       if (trimmed.length === 0) return;
       if (!trimmed.startsWith('```')) {
-        reportRangeMessage(commentNode, parsed, 'exampleFence', tag.startLineIndex);
+        reportRangeMessage(commentNode, parsed, { messageId: 'exampleFence', lineIndex: tag.startLineIndex });
       }
     }
 
@@ -934,7 +918,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
         for (const tag of parsed.tags) {
           const rank = rankFor(tag, workspacePrefixes);
           if (rank < lastRank) {
-            reportRangeMessage(commentNode, parsed, 'tagOrder', tag.startLineIndex, { tag: tag.tag });
+            reportRangeMessage(commentNode, parsed, { messageId: 'tagOrder', lineIndex: tag.startLineIndex, data: { tag: tag.tag } });
           } else {
             lastRank = rank;
           }
@@ -965,7 +949,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
           }
           for (let i = 0; i < Math.min(declared.length, documented.length); i += 1) {
             if (declared[i] !== documented[i]) {
-              reportRangeMessage(commentNode, parsed, 'paramOrder', paramTags[i].startLineIndex, { name: documented[i] || '<unknown>', expected: declared[i] });
+              reportRangeMessage(commentNode, parsed, { messageId: 'paramOrder', lineIndex: paramTags[i].startLineIndex, data: { name: documented[i] || '<unknown>', expected: declared[i] } });
               break;
             }
           }
@@ -1014,14 +998,14 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
           }
 
           if (!startsCanonically(first, 'capital')) {
-            reportRangeMessage(commentNode, parsed, 'descriptionMissingCapital', firstLineIdx);
+            reportRangeMessage(commentNode, parsed, { messageId: 'descriptionMissingCapital', lineIndex: firstLineIdx });
           }
           if (!endsCanonically(first)) {
-            reportRangeMessage(commentNode, parsed, 'descriptionMissingPeriod', firstLineIdx);
+            reportRangeMessage(commentNode, parsed, { messageId: 'descriptionMissingPeriod', lineIndex: firstLineIdx });
           }
 
           if (checkTypeRestating && TYPE_RESTATING_PATTERNS.some((re) => re.test(first.trim()))) {
-            reportRangeMessage(commentNode, parsed, 'descriptionTypeRestating', firstLineIdx);
+            reportRangeMessage(commentNode, parsed, { messageId: 'descriptionTypeRestating', lineIndex: firstLineIdx });
           }
 
           // Paragraph separator: exactly one blank line between paragraphs.
@@ -1037,7 +1021,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
               } else if (!descLines[i].blank && runStart !== -1) {
                 const runLength = i - runStart;
                 if (runLength !== 1) {
-                  reportRangeMessage(commentNode, parsed, 'descriptionParagraphSeparator', descLines[runStart].index);
+                  reportRangeMessage(commentNode, parsed, { messageId: 'descriptionParagraphSeparator', lineIndex: descLines[runStart].index });
                 }
                 runStart = -1;
               }
@@ -1061,7 +1045,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
 
       if (indent != null) {
         const model = buildCanonicalModel(parsed);
-        applyCanonicalNormalizations(model, functionNode, workspacePrefixes, wantsMultiline);
+        applyCanonicalNormalizations({ model, functionNode, workspacePrefixes, forceMultiline: wantsMultiline });
         const newValue = serializeJsdocValue(model, indent, workspacePrefixes);
 
         if (newValue !== commentNode.value) {
@@ -1070,7 +1054,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       }
 
       if (checkSingleLine && parsed.singleLine && functionNode && Array.isArray(functionNode.params) && functionNode.params.length > 0) {
-        reportRangeMessage(commentNode, parsed, 'functionShouldBeMultiline', 0);
+        reportRangeMessage(commentNode, parsed, { messageId: 'functionShouldBeMultiline', lineIndex: 0 });
       }
 
       checkDescriptionBlock(commentNode, parsed);

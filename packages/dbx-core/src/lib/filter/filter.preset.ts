@@ -8,7 +8,7 @@ import { type ClickableAnchorLink } from '../router/anchor/anchor';
  * @dbxFilter
  * @dbxFilterSlug clickable-preset
  * @dbxFilterRelated source
- * @dbxFilterSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxFilterSkillRefs dbx-component-patterns
  *
  * @typeParam F - The filter type, which must include a preset field.
  * @typeParam P - The preset string identifier type.

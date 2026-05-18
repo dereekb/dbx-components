@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- demo module aggregates legacy NgModules (DbxFormCalendarModule, DbxFormDateScheduleRangeFieldModule, DbxFormMapboxModule) alongside their provider-based replacements */
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent } from './component/example.calendar.schedule.selection.popover.content.component';
 import { NgModule, inject } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';

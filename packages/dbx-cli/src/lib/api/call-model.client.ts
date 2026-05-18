@@ -282,4 +282,5 @@ function trimSlash(url: string): string {
   return url.endsWith('/') ? url.slice(0, -1) : url;
 }
 
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade so dbx-cli consumers can resolve CALL_MODEL_APP_FUNCTION_KEY without depending on @dereekb/firebase directly
 export { CALL_MODEL_APP_FUNCTION_KEY } from '@dereekb/firebase';

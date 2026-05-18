@@ -37,7 +37,8 @@ function renderSummary(r: QueryResult): string {
   lines.push(`Project: ${c.project} (${c.projectRoot})`);
   lines.push(`Generated: ${c.generatedAt}`);
   lines.push(`Totals: ${c.errorCount} errors · ${c.warningCount} warnings · ${c.filesWithIssues}/${c.fileCount} files with issues`);
-  lines.push(`Matched: ${r.totalMatched} messages${r.truncated ? ` (showing ${r.matched.length})` : ''}`);
+  const truncatedSuffix = r.truncated ? ` (showing ${r.matched.length})` : '';
+  lines.push(`Matched: ${r.totalMatched} messages${truncatedSuffix}`);
 
   if (r.matched.length > 0) {
     const ruleCounts = aggregateByRule(r.matched);
@@ -99,7 +100,8 @@ function renderFiles(r: QueryResult): string {
 }
 
 function renderMessages(r: QueryResult): string {
-  const lines: string[] = [`Messages (${r.totalMatched}${r.truncated ? `, showing ${r.matched.length}` : ''}):`];
+  const truncatedSuffix = r.truncated ? `, showing ${r.matched.length}` : '';
+  const lines: string[] = [`Messages (${r.totalMatched}${truncatedSuffix}):`];
   for (const m of r.matched) {
     const sev = m.severity === 'error' ? 'ERR ' : 'WARN';
     lines.push(`  ${sev}  ${m.filePath}:${m.line}:${m.column}  [${m.ruleId ?? '(no-rule)'}]  ${m.message}`);

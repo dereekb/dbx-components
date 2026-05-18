@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- file intentionally exposes gen 1 wrapped-function overloads for backward-compatible test fixtures */
 import { type FirebaseAuthUserId } from '@dereekb/firebase';
 import { type RemoveIndex, incrementingNumberFactory, mapGetter, asGetter, type Factory, type GetterOrValue, type PromiseOrValue, type EmailAddress, type E164PhoneNumber, randomEmailFactory, randomPhoneNumberFactory } from '@dereekb/util';
 import { AbstractChildTestContextFixture, type TestContextFixture, useTestContextFixture } from '@dereekb/util/test';

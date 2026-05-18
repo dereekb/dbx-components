@@ -337,18 +337,19 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
 
   getScrollPositionRelativeToBottom(): number {
     const element = this.nativeElementSignal();
+    let result = 0;
 
     if (element) {
       try {
         // At max scroll, scrollHeight = scrollTop + clientHeight;
         const { scrollTop, scrollHeight, clientHeight } = element;
-        return scrollHeight - (scrollTop + clientHeight);
+        result = scrollHeight - (scrollTop + clientHeight);
       } catch {
         /* ignored */
       }
     }
 
-    return 0;
+    return result;
   }
 
   jumpToBottom(): void {

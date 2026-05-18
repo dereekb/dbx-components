@@ -1,5 +1,6 @@
 import { outputResult, type PaginatedResponse, type PaginationAdapter, runPaginatedList } from '@dereekb/dbx-cli';
 
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade so zoho-cli consumers keep the existing pagination import surface
 export { type PaginatedResponse, type PaginationAdapter, type RunPaginatedListOutcome, type RunPaginatedListParams, type StreamingDump, openStreamingDump, runPaginatedList } from '@dereekb/dbx-cli';
 
 /**

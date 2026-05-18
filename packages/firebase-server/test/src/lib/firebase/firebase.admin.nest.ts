@@ -226,6 +226,7 @@ export function firebaseAdminNestContextFixture<PI extends FirebaseAdminTestCont
 /**
  * @deprecated Use `FirebaseNestServerRootModule` from `@dereekb/firebase-server` instead.
  */
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compat alias retained until the deprecated name is dropped
 export { FirebaseNestServerRootModule as FirebaseAdminNestRootModule } from '@dereekb/firebase-server';
 
 /**

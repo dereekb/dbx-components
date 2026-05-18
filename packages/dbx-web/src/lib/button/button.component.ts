@@ -131,6 +131,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     };
 
     const buttonStyle = this.buttonStyle();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- reads the deprecated customButtonColor input/style for backward compatibility until removed
     const customButtonColorValue = this.customButtonColor() ?? buttonStyle?.customButtonColor;
 
     if (customButtonColorValue) {

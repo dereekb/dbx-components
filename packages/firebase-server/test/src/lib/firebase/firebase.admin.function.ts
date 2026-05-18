@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- file retains support for the deprecated FirebaseAdminFunctionTestConfig.useFunctionSingletonContext field until it is removed */
 import admin from 'firebase-admin';
 import functions from 'firebase-functions-test';
 import { type Firestore } from '@google-cloud/firestore';

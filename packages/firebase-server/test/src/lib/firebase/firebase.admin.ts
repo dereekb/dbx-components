@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 import { type Firestore } from '@google-cloud/firestore';
-import { type JestTestFirestoreContextFactory, makeTestingFirestoreDrivers, type TestFirestoreContext, TestFirestoreContextFixture, type TestFirestoreInstance, makeTestingFirebaseStorageDrivers, type TestFirebaseStorageContext, type TestFirebaseStorageInstance } from '@dereekb/firebase/test';
+import { type TestFirestoreContextFactory, makeTestingFirestoreDrivers, type TestFirestoreContext, TestFirestoreContextFixture, type TestFirestoreInstance, makeTestingFirebaseStorageDrivers, type TestFirebaseStorageContext, type TestFirebaseStorageInstance } from '@dereekb/firebase/test';
 import { AbstractTestContextFixture, type BuildTestsWithContextFunction, testContextBuilder, type TestContextFactory, type TestContextFixture, useTestContextFixture } from '@dereekb/util/test';
 import { googleCloudFirebaseStorageDrivers, googleCloudFirestoreDrivers, googleCloudStorageFromFirebaseAdminStorage } from '@dereekb/firebase-server';
 import { GoogleCloudTestFirestoreInstance } from '../firestore/firestore';
@@ -249,7 +249,7 @@ export const firebaseAdminTestContextFactory: FirebaseAdminTestContextFactory = 
  * @param factory
  * @returns
  */
-export function firebaseAdminFirestoreContextFixture(factory: TestContextFactory<TestContextFixture<FirebaseAdminTestContextInstance>>): JestTestFirestoreContextFactory {
+export function firebaseAdminFirestoreContextFixture(factory: TestContextFactory<TestContextFixture<FirebaseAdminTestContextInstance>>): TestFirestoreContextFactory {
   return (buildTests: BuildTestsWithContextFunction<TestFirestoreContextFixture>) => {
     factory((f) => firebaseAdminFirestoreContextWithFixture(f, buildTests));
   };

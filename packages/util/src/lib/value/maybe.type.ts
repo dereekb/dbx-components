@@ -3,6 +3,7 @@ import { type OmitNeverProperties } from 'ts-essentials';
 /**
  * A null/undefined value.
  */
+// eslint-disable-next-line dereekb-util/prefer-maybe-type -- this is the source-of-truth definition for the null/undefined half of Maybe<T>
 export type MaybeNot = null | undefined;
 
 /**

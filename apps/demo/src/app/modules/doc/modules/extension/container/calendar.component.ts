@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- demo intentionally documents the legacy DbxFormDateScheduleRangeFieldModule / dateScheduleRangeField alongside the new forge equivalents */
 import { type OnInit, Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxCalendarComponent, type DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';

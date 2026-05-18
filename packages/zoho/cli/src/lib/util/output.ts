@@ -1,6 +1,7 @@
 import { type CliErrorOutput, DEFAULT_CLI_SECRET_PATTERNS, buildErrorOutput as defaultBuildErrorOutput, configureCliErrorMapper, configureCliSecretPatterns, sanitizeString } from '@dereekb/dbx-cli';
 import { ZohoInvalidAuthorizationError, ZohoInvalidTokenError, ZohoServerFetchResponseError, ZohoTooManyRequestsError } from '@dereekb/zoho';
 
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade so zoho-cli consumers keep the existing output-helper import surface
 export { type CliError, type CliErrorOutput, type CliOutput, type CliOutputOptions, type CliSuccessOutput, buildDumpFilePath, configureCliSecretPatterns, configureOutputOptions, dumpTimestamp, getOutputOptions, outputResult, pickFields, sanitizeString } from '@dereekb/dbx-cli';
 
 // Add Zoho's refresh-token shape (`1000.<≥20 alphanum>`) to the secret-redaction list. Defaults

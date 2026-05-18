@@ -435,15 +435,21 @@ export function findBestIndexMatchFunction<T extends IndexRef>(items: Iterable<T
 
   if (bestMatchArray.length === 0) {
     throw new Error('findBestIndexMatchFunction() input array cannot be empty.');
-  } else if (bestMatchArray.length === 1) {
-    return () => defaultMatch;
+  }
+
+  let result: FindBestIndexMatchFunction<T>;
+
+  if (bestMatchArray.length === 1) {
+    result = () => defaultMatch;
   } else {
-    return (input) => {
+    result = (input) => {
       const { i } = input;
       const bestMatch = bestMatchArray.find((matchOption) => i >= matchOption.i);
       return (bestMatch ?? defaultMatch) as T;
     };
   }
+
+  return result;
 }
 
 /**

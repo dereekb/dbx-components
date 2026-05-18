@@ -253,6 +253,7 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
  * Re-export of dbx-cli's `resolveOutputConfig` so existing zoho-cli consumers keep the same
  * module surface. New code can import from `@dereekb/dbx-cli` directly.
  */
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade for existing zoho-cli consumers
 export { resolveOutputConfig } from '@dereekb/dbx-cli';
 
 /**
@@ -297,4 +298,5 @@ export function configuredProducts(config: ZohoCliConfig): ZohoCliProduct[] {
  * Re-export of dbx-cli's secret-masking helper. Auth/show commands import via this module so the
  * masking pattern stays consistent across CLIs.
  */
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade for zoho-cli auth/show commands
 export { maskSecret } from '@dereekb/dbx-cli';

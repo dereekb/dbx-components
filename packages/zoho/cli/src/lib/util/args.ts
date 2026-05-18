@@ -1,6 +1,7 @@
 import { type MultiplePagesOptions, withMultiplePages } from '@dereekb/dbx-cli';
 import type { Argv } from 'yargs';
 
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade so zoho-cli consumers keep the existing import surface
 export { DUMP_MERGE_MODES, DUMP_OUTPUT_MODES, MULTIPLE_PAGES_OUTPUT_MODES, type DumpMergeMode, type DumpOutputMode, type MultiplePagesOptions, type MultiplePagesOutputMode, withMultiplePages } from '@dereekb/dbx-cli';
 
 export interface PaginationOptions {
