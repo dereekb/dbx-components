@@ -3,7 +3,10 @@ import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment } from './jsdoc-parser';
 import { buildLowercaseTagsFix, checkDbxTagFamily, findFamilyTags, reportOnJsdocLine, type DbxCompanionTagSpec, type DbxTagFamilySpec } from './dbx-tag-families';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 const DEFAULT_ALLOWED_SCOPES: readonly string[] = ['COLLECTION', 'COLLECTION_GROUP'];
 const DEFAULT_KNOWN_COMPANIONS: readonly string[] = ['Slug', 'Model', 'Scope', 'Dispatcher', 'Manual', 'Skip', 'AllowArrayContainsAny', 'Category', 'Tags', 'Related', 'SkillRefs', 'Path', 'Helper'];
@@ -94,6 +97,53 @@ export const utilRequireDbxModelFirebaseIndexCompanionTagsRule: UtilRequireDbxMo
       companions: allCompanions.filter((c) => knownCompanions.includes(c.suffix))
     };
 
+    function handleCommaItem(commentNode: AstNode, parsed: ReturnType<typeof parseJsdocComment>, suffix: string, value: string, lineIndex: number): void {
+      if (suffix === 'Related') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex, messageId: 'relatedNotKebab', data: { value }, report: context.report });
+      else if (suffix === 'SkillRefs') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex, messageId: 'skillRefsNotKebab', data: { value }, report: context.report });
+    }
+
+    function handleTagsNotLowercase(commentNode: AstNode, parsed: ReturnType<typeof parseJsdocComment>, v: Extract<Parameters<Parameters<typeof checkDbxTagFamily>[0]['emit']>[0], { kind: 'tags-not-lowercase' }>): void {
+      if (v.suffix !== 'Tags') return;
+      const fix = buildLowercaseTagsFix({ commentNode, parsed, sourceCode, tag: v.raw });
+      const fixer = fix ? (fixer2: AstNode) => fixer2.replaceTextRange([fix.startOffset, fix.endOffset], fix.replacement) : undefined;
+      reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'tagsNotLowercase', data: { value: v.value }, report: context.report, fix: fixer });
+    }
+
+    function handleViolation(commentNode: AstNode, parsed: ReturnType<typeof parseJsdocComment>, v: Parameters<Parameters<typeof checkDbxTagFamily>[0]['emit']>[0]): void {
+      switch (v.kind) {
+        case 'missing':
+        case 'empty':
+          if (v.suffix === 'Model') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'missingModel', report: context.report });
+          break;
+        case 'invalid-kebab':
+          if (v.suffix === 'Slug') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'slugNotKebab', data: { value: v.value }, report: context.report });
+          break;
+        case 'invalid-pascal':
+          if (v.suffix === 'Model') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidModelIdentifier', data: { value: v.value }, report: context.report });
+          break;
+        case 'invalid-enum':
+          if (v.suffix === 'Scope') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidScope', data: { value: v.value, allowed: v.allowed.join(', ') }, report: context.report });
+          break;
+        case 'invalid-boolean':
+          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidBooleanValue', data: { name: v.suffix, value: v.value }, report: context.report });
+          break;
+        case 'comma-item-not-kebab':
+          handleCommaItem(commentNode, parsed, v.suffix, v.value, v.lineIndex);
+          break;
+        case 'tags-not-lowercase':
+          handleTagsNotLowercase(commentNode, parsed, v);
+          break;
+        case 'unknown':
+          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'unknownDbxModelFirebaseIndexTag', data: { name: v.suffix, known: knownCompanions.join(', ') }, report: context.report });
+          break;
+        case 'duplicate':
+          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'duplicateCompanionTag', data: { name: v.suffix }, report: context.report });
+          break;
+        default:
+          break;
+      }
+    }
+
     function checkJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
       const { markerTag, familyTags } = findFamilyTags(parsed, spec.marker);
@@ -105,45 +155,7 @@ export const utilRequireDbxModelFirebaseIndexCompanionTagsRule: UtilRequireDbxMo
         spec,
         markerTag: triggerTag,
         familyTags,
-        emit: (v) => {
-          switch (v.kind) {
-            case 'missing':
-            case 'empty':
-              if (v.suffix === 'Model') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'missingModel', report: context.report });
-              break;
-            case 'invalid-kebab':
-              if (v.suffix === 'Slug') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'slugNotKebab', data: { value: v.value }, report: context.report });
-              break;
-            case 'invalid-pascal':
-              if (v.suffix === 'Model') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidModelIdentifier', data: { value: v.value }, report: context.report });
-              break;
-            case 'invalid-enum':
-              if (v.suffix === 'Scope') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidScope', data: { value: v.value, allowed: v.allowed.join(', ') }, report: context.report });
-              break;
-            case 'invalid-boolean':
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidBooleanValue', data: { name: v.suffix, value: v.value }, report: context.report });
-              break;
-            case 'comma-item-not-kebab':
-              if (v.suffix === 'Related') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'relatedNotKebab', data: { value: v.value }, report: context.report });
-              else if (v.suffix === 'SkillRefs') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'skillRefsNotKebab', data: { value: v.value }, report: context.report });
-              break;
-            case 'tags-not-lowercase': {
-              if (v.suffix !== 'Tags') break;
-              const fix = buildLowercaseTagsFix({ commentNode, parsed, sourceCode, tag: v.raw });
-              const fixer = fix ? (fixer2: AstNode) => fixer2.replaceTextRange([fix.startOffset, fix.endOffset], fix.replacement) : undefined;
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'tagsNotLowercase', data: { value: v.value }, report: context.report, fix: fixer });
-              break;
-            }
-            case 'unknown':
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'unknownDbxModelFirebaseIndexTag', data: { name: v.suffix, known: knownCompanions.join(', ') }, report: context.report });
-              break;
-            case 'duplicate':
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'duplicateCompanionTag', data: { name: v.suffix }, report: context.report });
-              break;
-            default:
-              break;
-          }
-        }
+        emit: (v) => handleViolation(commentNode, parsed, v)
       });
     }
 

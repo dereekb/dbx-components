@@ -1,5 +1,8 @@
 import type { Maybe } from '@dereekb/util';
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 /**
  * Module path that exports `Maybe<T>`. Used to detect existing imports and to compose the auto-fix
@@ -137,31 +140,25 @@ function renderUnionLabel(types: readonly AstNode[]): string {
  * @param program - The `Program` AST node.
  * @returns True when an existing import or declaration brings `Maybe` into scope.
  */
+function importBringsMaybeIntoScope(stmt: AstNode): boolean {
+  const specifiers: AstNode[] = stmt.specifiers ?? [];
+  return specifiers.some((spec) => spec.type === 'ImportSpecifier' && spec.imported?.type === 'Identifier' && spec.imported.name === MAYBE_IDENTIFIER);
+}
+
+function isMaybeTypeOrInterfaceDecl(node: AstNode): boolean {
+  return (node.type === 'TSTypeAliasDeclaration' || node.type === 'TSInterfaceDeclaration') && node.id?.name === MAYBE_IDENTIFIER;
+}
+
+function statementBringsMaybeIntoScope(stmt: AstNode): boolean {
+  if (stmt.type === 'ImportDeclaration') return importBringsMaybeIntoScope(stmt);
+  if (isMaybeTypeOrInterfaceDecl(stmt)) return true;
+  if (stmt.type === 'ExportNamedDeclaration' && stmt.declaration) return isMaybeTypeOrInterfaceDecl(stmt.declaration);
+  return false;
+}
+
 function hasMaybeImportFromDereekbUtil(program: AstNode): boolean {
   const body: AstNode[] = program?.body ?? [];
-  let found = false;
-
-  for (const stmt of body) {
-    if (stmt.type === 'ImportDeclaration') {
-      const specifiers: AstNode[] = stmt.specifiers ?? [];
-      for (const spec of specifiers) {
-        if (spec.type === 'ImportSpecifier' && spec.imported?.type === 'Identifier' && spec.imported.name === MAYBE_IDENTIFIER) {
-          found = true;
-        }
-      }
-    } else if (stmt.type === 'TSTypeAliasDeclaration' && stmt.id?.name === MAYBE_IDENTIFIER) {
-      found = true;
-    } else if (stmt.type === 'TSInterfaceDeclaration' && stmt.id?.name === MAYBE_IDENTIFIER) {
-      found = true;
-    } else if (stmt.type === 'ExportNamedDeclaration' && stmt.declaration) {
-      const decl = stmt.declaration;
-      if ((decl.type === 'TSTypeAliasDeclaration' || decl.type === 'TSInterfaceDeclaration') && decl.id?.name === MAYBE_IDENTIFIER) {
-        found = true;
-      }
-    }
-  }
-
-  return found;
+  return body.some(statementBringsMaybeIntoScope);
 }
 
 /**

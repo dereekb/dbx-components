@@ -1,4 +1,7 @@
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 /**
  * The required marker line comment that opens the deprecated-aliases section at the bottom of a file.
@@ -37,7 +40,7 @@ export interface UtilRequireDeprecatedAliasPlacementRuleDefinition {
     };
     readonly schema: readonly object[];
   };
-  create(context: { report: (descriptor: { node: AstNode; messageId: string; fix?: (fixer: RuleFixer) => unknown }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
+  create(context: RuleContext): Record<string, (node: AstNode) => void>;
 }
 
 /**
@@ -161,7 +164,7 @@ function findAdjacentJsDoc(sourceCode: AstNode, statement: AstNode): AstNode | u
  */
 function getStatementBlockRange(sourceCode: AstNode, statement: AstNode): readonly [number, number] {
   const jsdoc = findAdjacentJsDoc(sourceCode, statement);
-  const startCandidate: number = jsdoc !== undefined ? jsdoc.range[0] : statement.range[0];
+  const startCandidate: number = jsdoc === undefined ? statement.range[0] : jsdoc.range[0];
   const text: string = sourceCode.text;
   let end: number = statement.range[1];
 
@@ -228,6 +231,196 @@ function allDeprecatedAtBottom(analyzable: readonly AstNode[], deprecated: reado
 }
 
 /**
+ * Fix function signature used throughout the rule. Returned by helper builders and consumed by
+ * `context.report({ fix })`.
+ */
+type FixFn = (fixer: RuleFixer) => unknown;
+
+/**
+ * Narrow shape of the ESLint rule context the rule actually uses.
+ */
+interface RuleContext {
+  readonly report: (descriptor: { node: AstNode; messageId: string; fix?: FixFn }) => void;
+  readonly sourceCode: AstNode;
+}
+
+/**
+ * Builds the fix for the marker-only case where every deprecated statement already sits at the
+ * bottom of the file: insert the marker line immediately above the first deprecated block.
+ *
+ * @param sourceCode - The ESLint `SourceCode` instance.
+ * @param firstDeprecated - The first deprecated statement (the insertion anchor).
+ * @returns A fix function that inserts the marker comment.
+ */
+function buildMarkerOnlyFix(sourceCode: AstNode, firstDeprecated: AstNode): FixFn {
+  const blockRange = getStatementBlockRange(sourceCode, firstDeprecated);
+  const insertionPoint: number = blockRange[0];
+  return (fixer) => fixer.replaceTextRange([insertionPoint, insertionPoint], `${COMPAT_MARKER_LINE}\n`);
+}
+
+/**
+ * Builds the fix for the interleaved case: cut every deprecated block out of the file and re-emit
+ * them in source order at EOF, preceded by the marker.
+ *
+ * @param sourceCode - The ESLint `SourceCode` instance.
+ * @param deprecatedStatements - Deprecated statements in source order.
+ * @returns A fix function that removes and re-appends each deprecated block.
+ */
+function buildInterleavedFix(sourceCode: AstNode, deprecatedStatements: readonly AstNode[]): FixFn {
+  const blockRanges: Array<readonly [number, number]> = [];
+  const blockTexts: string[] = [];
+
+  for (const stmt of deprecatedStatements) {
+    const range = getStatementBlockRange(sourceCode, stmt);
+    blockRanges.push(range);
+    blockTexts.push(readRange(sourceCode, range));
+  }
+
+  const sourceText: string = sourceCode.text;
+  const eof: number = sourceText.length;
+  const trailingNewline: string = sourceText.endsWith('\n') ? '' : '\n';
+  // Strip trailing newline from each block to control spacing precisely, then re-add a single
+  // newline between blocks. Final block lands without a trailing newline; an explicit `\n` at
+  // the end keeps EOF tidy.
+  const joinedBlocks = blockTexts.map((t) => t.replace(/\n+$/, '')).join('\n\n');
+  const appendText = `${trailingNewline}\n${COMPAT_MARKER_LINE}\n${joinedBlocks}\n`;
+
+  return (fixer) => [...blockRanges.map((r) => fixer.removeRange(r)), fixer.insertTextAfterRange([eof, eof], appendText)];
+}
+
+/**
+ * Marker placement metadata: both the comment node (when available) and its start offset. The
+ * offset acts as a fallback when only the offset has been computed.
+ */
+interface MarkerLocation {
+  readonly comment: AstNode | undefined;
+  readonly offset: number;
+}
+
+/**
+ * Reports the `missingCompatMarker` violation, choosing between the marker-only and interleaved
+ * fix strategies based on whether the deprecated tail is already at the bottom of the file.
+ *
+ * @param context - The ESLint rule context.
+ * @param sourceCode - The ESLint `SourceCode` instance.
+ * @param analyzable - All analyzable top-level statements in source order.
+ * @param deprecatedStatements - The subset that carry `@deprecated`.
+ */
+function reportMissingMarker(args: { readonly context: RuleContext; readonly sourceCode: AstNode; readonly analyzable: readonly AstNode[]; readonly deprecatedStatements: readonly AstNode[] }): void {
+  const { context, sourceCode, analyzable, deprecatedStatements } = args;
+  const firstDeprecated = deprecatedStatements[0];
+  const fixFn: FixFn = allDeprecatedAtBottom(analyzable, deprecatedStatements) ? buildMarkerOnlyFix(sourceCode, firstDeprecated) : buildInterleavedFix(sourceCode, deprecatedStatements);
+
+  context.report({
+    node: firstDeprecated,
+    messageId: 'missingCompatMarker',
+    fix: fixFn
+  });
+}
+
+/**
+ * Builds the fix that moves a deprecated block sitting above the marker to immediately after the
+ * marker comment.
+ *
+ * @param sourceCode - The ESLint `SourceCode` instance.
+ * @param stmt - The misplaced deprecated statement.
+ * @param marker - Marker comment node (when available) plus its start offset (fallback).
+ * @returns A fix function that relocates the block below the marker.
+ */
+function buildMoveDeprecatedFix(sourceCode: AstNode, stmt: AstNode, marker: MarkerLocation): FixFn {
+  const blockRange = getStatementBlockRange(sourceCode, stmt);
+  const blockText = readRange(sourceCode, blockRange);
+  const markerEnd: number = marker.comment === undefined ? marker.offset : marker.comment.range[1];
+
+  return (fixer) => [
+    // Remove from current location.
+    fixer.removeRange(blockRange),
+    // Insert after the marker comment, preceded by a newline so it lands on a new line.
+    fixer.insertTextAfterRange([markerEnd, markerEnd], `\n${blockText.replace(/\n$/, '')}`)
+  ];
+}
+
+/**
+ * Builds the fix that moves a non-deprecated block sitting below the marker to immediately before
+ * the marker comment.
+ *
+ * @param sourceCode - The ESLint `SourceCode` instance.
+ * @param stmt - The misplaced non-deprecated statement.
+ * @param marker - Marker comment node (when available) plus its start offset (fallback).
+ * @returns A fix function that relocates the block above the marker.
+ */
+function buildMoveNonDeprecatedFix(sourceCode: AstNode, stmt: AstNode, marker: MarkerLocation): FixFn {
+  const blockRange = getStatementBlockRange(sourceCode, stmt);
+  const blockText = readRange(sourceCode, blockRange);
+  const markerStart: number = marker.comment === undefined ? marker.offset : marker.comment.range[0];
+
+  return (fixer) => [
+    fixer.removeRange(blockRange),
+    // Insert just before the marker; keep the block's trailing newline and add one more so a
+    // blank line separates the moved block from the marker.
+    fixer.replaceTextRange([markerStart, markerStart], `${blockText}\n`)
+  ];
+}
+
+/**
+ * Reports the first misplaced deprecated block (above the marker) and the first misplaced
+ * non-deprecated block (below the marker). At most one of each is reported per pass; ESLint's
+ * autofix loop converges across multiple violations.
+ *
+ * @param context - The ESLint rule context.
+ * @param sourceCode - The ESLint `SourceCode` instance.
+ * @param analyzable - All analyzable top-level statements in source order.
+ * @param markerOffset - The marker comment's start offset.
+ */
+function reportMisplacedStatements(args: { readonly context: RuleContext; readonly sourceCode: AstNode; readonly analyzable: readonly AstNode[]; readonly markerOffset: number }): void {
+  const { context, sourceCode, analyzable, markerOffset } = args;
+  const marker: MarkerLocation = { comment: findCompatMarkerComment(sourceCode), offset: markerOffset };
+  let reportedAliasAboveMarker = false;
+  let reportedNonDeprecatedBelowMarker = false;
+
+  for (const stmt of analyzable) {
+    const isAfterMarker = stmt.range[0] > markerOffset;
+    const isDeprecated = statementIsDeprecated(sourceCode, stmt);
+
+    if (isDeprecated && !isAfterMarker && !reportedAliasAboveMarker) {
+      context.report({
+        node: stmt,
+        messageId: 'deprecatedAliasNotAtBottom',
+        fix: buildMoveDeprecatedFix(sourceCode, stmt, marker)
+      });
+      reportedAliasAboveMarker = true;
+    } else if (!isDeprecated && isAfterMarker && !reportedNonDeprecatedBelowMarker) {
+      context.report({
+        node: stmt,
+        messageId: 'nonDeprecatedAfterMarker',
+        fix: buildMoveNonDeprecatedFix(sourceCode, stmt, marker)
+      });
+      reportedNonDeprecatedBelowMarker = true;
+    }
+  }
+}
+
+/**
+ * Collects all analyzable top-level statements that carry an `@deprecated` JSDoc tag, preserving
+ * source order.
+ *
+ * @param sourceCode - The ESLint `SourceCode` instance.
+ * @param analyzable - All analyzable top-level statements in source order.
+ * @returns The deprecated subset of `analyzable`.
+ */
+function collectDeprecatedStatements(sourceCode: AstNode, analyzable: readonly AstNode[]): AstNode[] {
+  const deprecatedStatements: AstNode[] = [];
+
+  for (const stmt of analyzable) {
+    if (statementIsDeprecated(sourceCode, stmt)) {
+      deprecatedStatements.push(stmt);
+    }
+  }
+
+  return deprecatedStatements;
+}
+
+/**
  * ESLint rule requiring that exports carrying a `@deprecated` JSDoc tag live at the bottom of the
  * file under a `// COMPAT: Deprecated aliases` line comment, and that no non-deprecated exports
  * follow the marker. The rule mirrors the workspace's "Deprecated Alias Placement" convention so
@@ -267,110 +460,26 @@ export const utilRequireDeprecatedAliasPlacementRule: UtilRequireDeprecatedAlias
     },
     schema: []
   },
-  create(context) {
+  create(context: RuleContext): Record<string, (node: AstNode) => void> {
     const sourceCode = context.sourceCode;
 
     function checkProgram(programNode: AstNode): void {
       const body: AstNode[] = programNode.body ?? [];
       const analyzable = body.filter(isAnalyzableExportLike);
+      const deprecatedStatements = collectDeprecatedStatements(sourceCode, analyzable);
 
-      const deprecatedStatements: AstNode[] = [];
-
-      for (const stmt of analyzable) {
-        if (statementIsDeprecated(sourceCode, stmt)) {
-          deprecatedStatements.push(stmt);
-        }
+      if (deprecatedStatements.length === 0) {
+        return;
       }
 
-      if (deprecatedStatements.length !== 0) {
-        const markerOffset = findCompatMarkerOffset(sourceCode);
+      const markerOffset = findCompatMarkerOffset(sourceCode);
 
-        if (markerOffset === -1) {
-          const firstDeprecated = deprecatedStatements[0];
-
-          let fixFn: ((fixer: RuleFixer) => unknown) | undefined = undefined;
-
-          if (allDeprecatedAtBottom(analyzable, deprecatedStatements)) {
-            // Common case: deprecated statements are already at the bottom; just drop in the
-            // marker comment ahead of the first deprecated block.
-            const blockRange = getStatementBlockRange(sourceCode, firstDeprecated);
-            const insertionPoint: number = blockRange[0];
-            fixFn = (fixer) => fixer.replaceTextRange([insertionPoint, insertionPoint], `${COMPAT_MARKER_LINE}\n`);
-          } else {
-            // Interleaved case: pull every deprecated block out of the file and re-emit them in
-            // source order at EOF, prefixed with the marker. Each removal range is non-overlapping
-            // with the append, so ESLint will accept the combined fix in a single pass.
-            const blockRanges: Array<readonly [number, number]> = [];
-            const blockTexts: string[] = [];
-            for (const stmt of deprecatedStatements) {
-              const range = getStatementBlockRange(sourceCode, stmt);
-              blockRanges.push(range);
-              blockTexts.push(readRange(sourceCode, range));
-            }
-
-            const sourceText: string = sourceCode.text;
-            const eof: number = sourceText.length;
-            const trailingNewline: string = sourceText.endsWith('\n') ? '' : '\n';
-            // Strip trailing newline from each block to control spacing precisely, then re-add
-            // a single newline between blocks. Final block lands without a trailing newline; an
-            // explicit `\n` at the end keeps EOF tidy.
-            const joinedBlocks = blockTexts.map((t) => t.replace(/\n+$/, '')).join('\n\n');
-            const appendText = `${trailingNewline}\n${COMPAT_MARKER_LINE}\n${joinedBlocks}\n`;
-
-            fixFn = (fixer) => [...blockRanges.map((r) => fixer.removeRange(r)), fixer.insertTextAfterRange([eof, eof], appendText)];
-          }
-
-          context.report({
-            node: firstDeprecated,
-            messageId: 'missingCompatMarker',
-            fix: fixFn
-          });
-        } else {
-          const markerComment = findCompatMarkerComment(sourceCode);
-          let reportedAliasAboveMarker = false;
-          let reportedNonDeprecatedBelowMarker = false;
-
-          for (const stmt of analyzable) {
-            const stmtStart: number = stmt.range[0];
-            const isAfterMarker = stmtStart > markerOffset;
-            const isDeprecated = statementIsDeprecated(sourceCode, stmt);
-
-            if (isDeprecated && !isAfterMarker && !reportedAliasAboveMarker) {
-              const blockRange = getStatementBlockRange(sourceCode, stmt);
-              const blockText = readRange(sourceCode, blockRange);
-              const markerEnd: number = markerComment !== undefined ? markerComment.range[1] : markerOffset;
-
-              context.report({
-                node: stmt,
-                messageId: 'deprecatedAliasNotAtBottom',
-                fix: (fixer) => [
-                  // Remove from current location.
-                  fixer.removeRange(blockRange),
-                  // Insert after the marker comment, preceded by a newline so it lands on a new line.
-                  fixer.insertTextAfterRange([markerEnd, markerEnd], `\n${blockText.replace(/\n$/, '')}`)
-                ]
-              });
-              reportedAliasAboveMarker = true;
-            } else if (!isDeprecated && isAfterMarker && !reportedNonDeprecatedBelowMarker) {
-              const blockRange = getStatementBlockRange(sourceCode, stmt);
-              const blockText = readRange(sourceCode, blockRange);
-              const markerStart: number = markerComment !== undefined ? markerComment.range[0] : markerOffset;
-
-              context.report({
-                node: stmt,
-                messageId: 'nonDeprecatedAfterMarker',
-                fix: (fixer) => [
-                  fixer.removeRange(blockRange),
-                  // Insert just before the marker; keep the block's trailing newline and add one
-                  // more so a blank line separates the moved block from the marker.
-                  fixer.replaceTextRange([markerStart, markerStart], `${blockText}\n`)
-                ]
-              });
-              reportedNonDeprecatedBelowMarker = true;
-            }
-          }
-        }
+      if (markerOffset === -1) {
+        reportMissingMarker({ context, sourceCode, analyzable, deprecatedStatements });
+        return;
       }
+
+      reportMisplacedStatements({ context, sourceCode, analyzable, markerOffset });
     }
 
     return {

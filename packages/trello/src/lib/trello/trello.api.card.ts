@@ -97,7 +97,7 @@ export function deleteCard(context: TrelloContext): DeleteCardFunction {
  *
  * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/action-types/
  */
-export type TrelloActionType = string;
+export type TrelloActionType = string; // NOSONAR (S6564 — intentional semantic alias)
 
 export interface ListCardActionsInput {
   readonly cardId: TrelloCardId;

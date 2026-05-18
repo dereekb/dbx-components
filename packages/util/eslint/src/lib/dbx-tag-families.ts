@@ -12,7 +12,10 @@
 import type { Maybe } from '@dereekb/util';
 import { type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 /**
  * Kebab-case slug pattern: lowercase letters/digits, words separated by single hyphens,
@@ -150,6 +153,39 @@ export function groupCompanionsBySuffix(familyTags: readonly ParsedJsdocTag[], m
 }
 
 /**
+ * Per-format validators dispatched from {@link validateNonEmptyValue}. Each entry validates
+ * a single non-empty tag value and emits zero or more violations.
+ */
+const VALUE_VALIDATORS: Record<DbxTagFormat['kind'], (spec: DbxCompanionTagSpec, tag: ParsedJsdocTag, value: string, lineIndex: number, emit: (v: DbxTagViolation) => void) => void> = {
+  marker: () => undefined,
+  'free-text': () => undefined,
+  'comma-list-free-text': () => undefined,
+  'kebab-slug': (spec, _tag, value, lineIndex, emit) => {
+    if (!KEBAB_SLUG_PATTERN.test(value)) emit({ kind: 'invalid-kebab', suffix: spec.suffix, value, lineIndex });
+  },
+  enum: (spec, _tag, value, lineIndex, emit) => {
+    const format = spec.format as { readonly kind: 'enum'; readonly values: readonly string[] };
+    if (!format.values.includes(value)) emit({ kind: 'invalid-enum', suffix: spec.suffix, value, allowed: format.values, lineIndex });
+  },
+  'pascal-identifier': (spec, _tag, value, lineIndex, emit) => {
+    if (!PASCAL_IDENTIFIER_PATTERN.test(value)) emit({ kind: 'invalid-pascal', suffix: spec.suffix, value, lineIndex });
+  },
+  'comma-list-kebab-slug': (spec, _tag, value, lineIndex, emit) => {
+    for (const item of splitCommaSeparated(value)) {
+      if (!KEBAB_SLUG_PATTERN.test(item)) emit({ kind: 'comma-item-not-kebab', suffix: spec.suffix, value: item, lineIndex });
+    }
+  },
+  'comma-list-lowercase': (spec, tag, value, lineIndex, emit) => {
+    for (const item of splitCommaSeparated(value)) {
+      if (/[A-Z]/.test(item)) emit({ kind: 'tags-not-lowercase', suffix: spec.suffix, value: item, lineIndex, raw: tag });
+    }
+  },
+  boolean: (spec, _tag, value, lineIndex, emit) => {
+    if (parseBooleanTagValue(value) === undefined) emit({ kind: 'invalid-boolean', suffix: spec.suffix, value, lineIndex });
+  }
+};
+
+/**
  * Validates one companion tag's value against the configured {@link DbxTagFormat}
  * and emits zero-or-more violations. Used by {@link checkDbxTagFamily} to keep
  * each rule's body small.
@@ -159,56 +195,16 @@ export function groupCompanionsBySuffix(familyTags: readonly ParsedJsdocTag[], m
  * @param emit - Callback for each violation.
  */
 function validateCompanionValue(spec: DbxCompanionTagSpec, tags: readonly ParsedJsdocTag[], emit: (v: DbxTagViolation) => void): void {
+  if (spec.format.kind === 'marker') return;
   for (const tag of tags) {
     const value = tag.description.trim();
     const lineIndex = tag.startLineIndex;
-    if (spec.format.kind === 'marker') {
-      // Marker companions are bare; any value text is ignored.
-      continue;
-    }
     if (value.length === 0) {
-      // Empty values are only allowed for boolean (bare-true) format.
-      if (spec.format.kind !== 'boolean') {
-        emit({ kind: 'empty', suffix: spec.suffix, lineIndex });
-      }
+      if (spec.format.kind !== 'boolean') emit({ kind: 'empty', suffix: spec.suffix, lineIndex });
       continue;
     }
-    switch (spec.format.kind) {
-      case 'kebab-slug': {
-        if (!KEBAB_SLUG_PATTERN.test(value)) emit({ kind: 'invalid-kebab', suffix: spec.suffix, value, lineIndex });
-        break;
-      }
-      case 'enum': {
-        if (!spec.format.values.includes(value)) emit({ kind: 'invalid-enum', suffix: spec.suffix, value, allowed: spec.format.values, lineIndex });
-        break;
-      }
-      case 'pascal-identifier': {
-        if (!PASCAL_IDENTIFIER_PATTERN.test(value)) emit({ kind: 'invalid-pascal', suffix: spec.suffix, value, lineIndex });
-        break;
-      }
-      case 'comma-list-kebab-slug': {
-        for (const item of splitCommaSeparated(value)) {
-          if (!KEBAB_SLUG_PATTERN.test(item)) emit({ kind: 'comma-item-not-kebab', suffix: spec.suffix, value: item, lineIndex });
-        }
-        break;
-      }
-      case 'comma-list-lowercase': {
-        for (const item of splitCommaSeparated(value)) {
-          if (/[A-Z]/.test(item)) emit({ kind: 'tags-not-lowercase', suffix: spec.suffix, value: item, lineIndex, raw: tag });
-        }
-        break;
-      }
-      case 'comma-list-free-text':
-      case 'free-text':
-        // No format constraint — only emptiness was checked.
-        break;
-      case 'boolean': {
-        if (parseBooleanTagValue(value) === undefined) emit({ kind: 'invalid-boolean', suffix: spec.suffix, value, lineIndex });
-        break;
-      }
-      default:
-        break;
-    }
+    const validator = VALUE_VALIDATORS[spec.format.kind];
+    if (validator) validator(spec, tag, value, lineIndex, emit);
   }
 }
 
@@ -248,31 +244,38 @@ export interface CheckDbxTagFamilyInput {
  * checkDbxTagFamily({ parsed, spec, markerTag, familyTags, emit });
  * ```
  */
+function emitUnknownCompanions(groups: Map<string, ParsedJsdocTag[]>, knownSuffixes: ReadonlySet<string>, emit: (v: DbxTagViolation) => void): void {
+  for (const [suffix, instances] of groups.entries()) {
+    if (knownSuffixes.has(suffix)) continue;
+    for (const tag of instances) emit({ kind: 'unknown', suffix, lineIndex: tag.startLineIndex });
+  }
+}
+
+function emitDuplicateCompanions(companion: DbxCompanionTagSpec, instances: readonly ParsedJsdocTag[], emit: (v: DbxTagViolation) => void): void {
+  for (let i = 1; i < instances.length; i += 1) {
+    emit({ kind: 'duplicate', suffix: companion.suffix, lineIndex: instances[i].startLineIndex });
+  }
+}
+
+function checkCompanion(companion: DbxCompanionTagSpec, instances: readonly ParsedJsdocTag[], markerLineIndex: number, emit: (v: DbxTagViolation) => void): void {
+  if (instances.length === 0) {
+    if (companion.required) emit({ kind: 'missing', suffix: companion.suffix, lineIndex: markerLineIndex });
+    return;
+  }
+  if (!companion.multiple && instances.length > 1) emitDuplicateCompanions(companion, instances, emit);
+  validateCompanionValue(companion, instances, emit);
+}
+
 export function checkDbxTagFamily(input: CheckDbxTagFamilyInput): void {
   const { spec, markerTag, familyTags, emit } = input;
   const knownSuffixes = new Set(spec.companions.map((c) => c.suffix));
   const groups = groupCompanionsBySuffix(familyTags, spec.marker);
 
-  // Unknown companions (typo detection).
-  for (const [suffix, instances] of groups.entries()) {
-    if (!knownSuffixes.has(suffix)) {
-      for (const tag of instances) emit({ kind: 'unknown', suffix, lineIndex: tag.startLineIndex });
-    }
-  }
+  emitUnknownCompanions(groups, knownSuffixes, emit);
 
-  // Required-present / duplicate / per-companion value validation.
   for (const companion of spec.companions) {
     const instances = groups.get(companion.suffix) ?? [];
-    if (instances.length === 0) {
-      if (companion.required) emit({ kind: 'missing', suffix: companion.suffix, lineIndex: markerTag.startLineIndex });
-      continue;
-    }
-    if (!companion.multiple && instances.length > 1) {
-      for (let i = 1; i < instances.length; i += 1) {
-        emit({ kind: 'duplicate', suffix: companion.suffix, lineIndex: instances[i].startLineIndex });
-      }
-    }
-    validateCompanionValue(companion, instances, emit);
+    checkCompanion(companion, instances, markerTag.startLineIndex, emit);
   }
 }
 

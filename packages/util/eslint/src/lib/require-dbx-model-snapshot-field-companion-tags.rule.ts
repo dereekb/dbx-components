@@ -3,7 +3,12 @@ import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment } from './jsdoc-parser';
 import { buildLowercaseTagsFix, checkDbxTagFamily, findFamilyTags, reportOnJsdocLine, type DbxCompanionTagSpec, type DbxTagFamilySpec } from './dbx-tag-families';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  // index signature keeps the loose-typed semantics of the original `= any`
+  // so the rule body can freely navigate AST properties without churn.
+  [key: string]: any;
+}
 
 const DEFAULT_ALLOWED_KINDS: readonly string[] = ['factory', 'const'];
 const DEFAULT_KNOWN_COMPANIONS: readonly string[] = ['Slug', 'Category', 'Kind', 'Optional', 'Tags', 'Related', 'SkillRefs'];

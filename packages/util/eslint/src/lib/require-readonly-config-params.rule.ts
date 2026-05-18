@@ -1,4 +1,7 @@
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 /**
  * Default name suffixes that mark an interface as config-shaped (its properties should be readonly).
@@ -135,41 +138,37 @@ export const utilRequireReadonlyConfigParamsRule: UtilRequireReadonlyConfigParam
       return suffixes.some((suffix) => name.endsWith(suffix));
     }
 
-    function checkInterface(node: AstNode): void {
-      if (node.id?.type === 'Identifier') {
-        const interfaceName: string = node.id.name;
-
-        if (interfaceNameMatches(interfaceName)) {
-          // Allow opt-out via JSDoc tag (Firestore model data interfaces).
-          // Check the leading JSDoc of the interface OR its enclosing `export` statement.
-          const exportAnchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
-
-          if (!hasExemptJsdoc(sourceCode, exportAnchor, exemptTag)) {
-            const members: AstNode[] = node.body?.body ?? [];
-
-            for (const member of members) {
-              if (member.type !== 'TSPropertySignature') {
-                continue;
-              }
-
-              if (member.readonly === true) {
-                continue;
-              }
-
-              const propertyName = getPropertyName(member);
-
-              context.report({
-                node: member,
-                messageId: 'missingReadonly',
-                data: { property: propertyName, interface: interfaceName },
-                fix(fixer: AstNode) {
-                  return fixer.insertTextBefore(member, 'readonly ');
-                }
-              });
-            }
-          }
+    function reportMissingReadonly(member: AstNode, interfaceName: string): void {
+      const propertyName = getPropertyName(member);
+      context.report({
+        node: member,
+        messageId: 'missingReadonly',
+        data: { property: propertyName, interface: interfaceName },
+        fix(fixer: AstNode) {
+          return fixer.insertTextBefore(member, 'readonly ');
         }
+      });
+    }
+
+    function checkMembers(members: readonly AstNode[], interfaceName: string): void {
+      for (const member of members) {
+        if (member.type !== 'TSPropertySignature' || member.readonly === true) continue;
+        reportMissingReadonly(member, interfaceName);
       }
+    }
+
+    function checkInterface(node: AstNode): void {
+      if (node.id?.type !== 'Identifier') return;
+      const interfaceName: string = node.id.name;
+      if (!interfaceNameMatches(interfaceName)) return;
+
+      // Allow opt-out via JSDoc tag (Firestore model data interfaces).
+      // Check the leading JSDoc of the interface OR its enclosing `export` statement.
+      const exportAnchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
+      if (hasExemptJsdoc(sourceCode, exportAnchor, exemptTag)) return;
+
+      const members: AstNode[] = node.body?.body ?? [];
+      checkMembers(members, interfaceName);
     }
 
     return {

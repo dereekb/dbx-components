@@ -1,4 +1,7 @@
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 /**
  * AST node types whose bodies represent a *new* function scope and must be skipped during return-counting.
@@ -53,6 +56,34 @@ function getFunctionDisplayName(node: AstNode): string {
 
 const SKIP_KEYS = new Set(['parent', 'loc', 'range']);
 
+function collectFromGuardConsequent(consequent: AstNode, out: AstNode[]): void {
+  if (consequent.type === 'ReturnStatement') return;
+  if (consequent.type !== 'BlockStatement') {
+    collectCountedReturns(consequent, out);
+    return;
+  }
+  const body = consequent.body;
+  const lastIndex = body.length - 1;
+  for (const [i, stmt] of body.entries()) {
+    const isLastReturn = i === lastIndex && stmt?.type === 'ReturnStatement';
+    if (!isLastReturn) collectCountedReturns(stmt, out);
+  }
+}
+
+function collectFromGuardIf(node: AstNode, out: AstNode[]): void {
+  // Test expression rarely contains returns, but recurse to be safe.
+  collectCountedReturns(node.test, out);
+  const consequent = node.consequent;
+  if (consequent != null) collectFromGuardConsequent(consequent, out);
+}
+
+function walkChildren(node: AstNode, out: AstNode[]): void {
+  for (const key of Object.keys(node)) {
+    if (SKIP_KEYS.has(key)) continue;
+    collectCountedReturns(node[key], out);
+  }
+}
+
 /**
  * Recursively walks `node`, pushing each non-ignored `ReturnStatement` onto `out`. A `ReturnStatement` is
  * considered an "early-exit guard" (and skipped) when it is the consequent — or the last statement of the
@@ -63,65 +94,22 @@ const SKIP_KEYS = new Set(['parent', 'loc', 'range']);
  * @param out - The accumulator array that receives counted `ReturnStatement` nodes.
  */
 function collectCountedReturns(node: AstNode, out: AstNode[]): void {
-  if (node === null || typeof node !== 'object') {
-    return;
-  }
-
+  if (node === null || typeof node !== 'object') return;
   if (Array.isArray(node)) {
-    for (const child of node) {
-      collectCountedReturns(child, out);
-    }
+    for (const child of node) collectCountedReturns(child, out);
     return;
   }
-
-  if (typeof node.type !== 'string') {
-    return;
-  }
-
+  if (typeof node.type !== 'string') return;
   if (node.type === 'ReturnStatement') {
     out.push(node);
     return;
   }
-
-  if (NESTED_FUNCTION_TYPES.has(node.type)) {
-    return;
-  }
-
+  if (NESTED_FUNCTION_TYPES.has(node.type)) return;
   if (node.type === 'IfStatement' && node.alternate == null) {
-    // Test expression rarely contains returns, but recurse to be safe.
-    collectCountedReturns(node.test, out);
-
-    const consequent = node.consequent;
-
-    if (consequent != null) {
-      if (consequent.type === 'ReturnStatement') {
-        // `if (...) return X;` — early-exit, do not count.
-      } else if (consequent.type === 'BlockStatement') {
-        const body = consequent.body;
-        const lastIndex = body.length - 1;
-
-        for (const [i, stmt] of body.entries()) {
-          const isLastReturn = i === lastIndex && stmt?.type === 'ReturnStatement';
-
-          if (!isLastReturn) {
-            collectCountedReturns(stmt, out);
-          }
-        }
-      } else {
-        collectCountedReturns(consequent, out);
-      }
-    }
-
+    collectFromGuardIf(node, out);
     return;
   }
-
-  for (const key of Object.keys(node)) {
-    if (SKIP_KEYS.has(key)) {
-      continue;
-    }
-
-    collectCountedReturns(node[key], out);
-  }
+  walkChildren(node, out);
 }
 
 /**

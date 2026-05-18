@@ -103,6 +103,9 @@ export interface ParsedJsdoc {
 }
 
 const TAG_LINE_REGEX = /^@([A-Za-z_]\w*)\s*(.*)$/;
+const TYPE_ANNOTATION_REGEX = /^\{([^}]*)\}\s*(.*)$/;
+const PARAM_NAME_REGEX = /^([A-Za-z_$][A-Za-z0-9_$.[\]]*)\s*(.*)$/;
+const LINE_PREFIX_REGEX = /^(\s*\*?\s?)(.*)$/;
 
 /**
  * Strips the leading whitespace + `*` + optional space prefix from a JSDoc body line and reports the length stripped.
@@ -118,7 +121,7 @@ const TAG_LINE_REGEX = /^@([A-Za-z_]\w*)\s*(.*)$/;
  * ```
  */
 function stripPrefix(raw: string): { readonly text: string; readonly prefixLength: number } {
-  const match = /^(\s*\*?\s?)(.*)$/.exec(raw);
+  const match = LINE_PREFIX_REGEX.exec(raw);
   const result: { text: string; prefixLength: number } = { text: raw, prefixLength: 0 };
 
   if (match) {
@@ -127,6 +130,227 @@ function stripPrefix(raw: string): { readonly text: string; readonly prefixLengt
   }
 
   return result;
+}
+
+/**
+ * Splits the raw comment value into per-line views with prefix/offset metadata.
+ *
+ * @param commentValue - The `value` of an ESLint Block comment.
+ * @returns Array of parsed line records in source order.
+ */
+function buildParsedLines(commentValue: string): ParsedJsdocLine[] {
+  const rawLines = commentValue.split('\n');
+  let runningOffset = 0;
+  return rawLines.map((raw, index) => {
+    const { text: stripped, prefixLength } = stripPrefix(raw);
+    const text = stripped.trimEnd();
+    const blank = text.length === 0;
+    const valueOffsetStart = runningOffset;
+    const textOffsetStart = runningOffset + prefixLength;
+    runningOffset += raw.length + 1; // +1 for the consumed `\n` (overshoots on last line, harmless)
+    return { raw, text, blank, index, valueOffsetStart, textOffsetStart };
+  });
+}
+
+/**
+ * Returns the index of the first line that begins with a JSDoc `@tag`, or `-1` when none exists.
+ *
+ * @param lines - Parsed lines in source order.
+ * @returns Zero-based line index of the first tag, or `-1` when no tag is present.
+ */
+function findFirstTagIndex(lines: readonly ParsedJsdocLine[]): number {
+  let firstTagIndex = -1;
+
+  for (const [i, line] of lines.entries()) {
+    if (TAG_LINE_REGEX.test(line.text)) {
+      firstTagIndex = i;
+      break;
+    }
+  }
+
+  return firstTagIndex;
+}
+
+/**
+ * Trims leading and trailing blank lines from a contiguous run of description lines.
+ *
+ * @param descriptionLines - Description-section lines before any tag.
+ * @returns Sub-array with surrounding blank lines stripped.
+ */
+function trimBlankBoundaries(descriptionLines: readonly ParsedJsdocLine[]): readonly ParsedJsdocLine[] {
+  let descStart = 0;
+  let descEnd = descriptionLines.length;
+  while (descStart < descEnd && descriptionLines[descStart].blank) descStart += 1;
+  while (descEnd > descStart && descriptionLines[descEnd - 1].blank) descEnd -= 1;
+  return descriptionLines.slice(descStart, descEnd);
+}
+
+/**
+ * Splits the trimmed description lines into paragraphs separated by blank-line runs.
+ *
+ * @param trimmedDescription - Description lines with surrounding blank lines removed.
+ * @returns Paragraph strings joined by `\n`.
+ */
+function buildDescriptionParagraphs(trimmedDescription: readonly ParsedJsdocLine[]): string[] {
+  const descriptionParagraphs: string[] = [];
+  let paragraphBuffer: string[] = [];
+
+  for (const line of trimmedDescription) {
+    if (line.blank) {
+      if (paragraphBuffer.length > 0) {
+        descriptionParagraphs.push(paragraphBuffer.join('\n'));
+        paragraphBuffer = [];
+      }
+    } else {
+      paragraphBuffer.push(line.text);
+    }
+  }
+
+  if (paragraphBuffer.length > 0) {
+    descriptionParagraphs.push(paragraphBuffer.join('\n'));
+  }
+
+  return descriptionParagraphs;
+}
+
+/**
+ * Pulls an optional `{Type}` annotation off the front of a tag remainder.
+ *
+ * @param remainder - The tag-line text after the `@tagName` prefix.
+ * @returns The annotation (or `undefined`) plus the remaining text.
+ */
+function extractTypeAnnotation(remainder: string): { readonly type: Maybe<string>; readonly rest: string } {
+  let type: Maybe<string>;
+  let rest = remainder;
+  const typeMatch = TYPE_ANNOTATION_REGEX.exec(remainder);
+
+  if (typeMatch) {
+    type = typeMatch[1];
+    rest = typeMatch[2];
+  }
+
+  return { type, rest };
+}
+
+/**
+ * Pulls an optional parameter name off the front of a `@param` tag remainder.
+ *
+ * @param tagName - Tag name (only `'param'` extracts a name; other tags pass through).
+ * @param remainder - The tag-line text after the optional `{Type}` annotation.
+ * @returns The parameter name (or `undefined`) plus the remaining text.
+ */
+function extractParamName(tagName: string, remainder: string): { readonly name: Maybe<string>; readonly rest: string } {
+  let name: Maybe<string>;
+  let rest = remainder;
+
+  if (tagName === 'param') {
+    const nameMatch = PARAM_NAME_REGEX.exec(remainder);
+    if (nameMatch) {
+      name = nameMatch[1];
+      rest = nameMatch[2];
+    }
+  }
+
+  return { name, rest };
+}
+
+/**
+ * Collects the tag line at `startIndex` plus every following non-tag continuation line.
+ *
+ * @param lines - All parsed lines in the comment.
+ * @param startIndex - Index of the `@tag` opening line.
+ * @returns The collected tag lines and the index of the next unconsumed line.
+ */
+function collectTagLines(lines: readonly ParsedJsdocLine[], startIndex: number): { readonly tagLines: ParsedJsdocLine[]; readonly nextIndex: number } {
+  const tagLines: ParsedJsdocLine[] = [lines[startIndex]];
+  let j = startIndex + 1;
+
+  while (j < lines.length) {
+    if (TAG_LINE_REGEX.test(lines[j].text)) break;
+    tagLines.push(lines[j]);
+    j += 1;
+  }
+
+  return { tagLines, nextIndex: j };
+}
+
+/**
+ * Joins the on-line remainder and continuation-line text into a tag description, dropping trailing
+ * blank lines while preserving interior blanks.
+ *
+ * @param remainder - The on-line remainder after stripping `@tagName {Type} name`.
+ * @param tagLines - All lines that belong to the tag (including the header line at index 0).
+ * @returns Description text joined by `\n`.
+ */
+function buildTagDescription(remainder: string, tagLines: readonly ParsedJsdocLine[]): string {
+  const descriptionParts: string[] = [];
+
+  if (remainder.length > 0) descriptionParts.push(remainder);
+  for (let k = 1; k < tagLines.length; k += 1) {
+    descriptionParts.push(tagLines[k].text);
+  }
+
+  while (descriptionParts.length > 0 && (descriptionParts.at(-1) as string).trim().length === 0) {
+    descriptionParts.pop();
+  }
+
+  return descriptionParts.join('\n');
+}
+
+/**
+ * Builds a single parsed-tag record starting at `startIndex` in the line array.
+ *
+ * @param lines - All parsed lines in the comment.
+ * @param startIndex - Index of the `@tag` opening line.
+ * @returns The parsed tag and the next unconsumed line index.
+ */
+function parseTagAt(lines: readonly ParsedJsdocLine[], startIndex: number): { readonly tag: ParsedJsdocTag; readonly nextIndex: number } {
+  const line = lines[startIndex];
+  const match = TAG_LINE_REGEX.exec(line.text) as RegExpExecArray;
+  const tagName = match[1];
+  const { type, rest: afterType } = extractTypeAnnotation(match[2]);
+  const { name, rest: afterName } = extractParamName(tagName, afterType);
+  const { tagLines, nextIndex } = collectTagLines(lines, startIndex);
+  const description = buildTagDescription(afterName, tagLines);
+
+  return {
+    tag: {
+      tag: tagName,
+      name,
+      type,
+      description,
+      lines: tagLines,
+      startLineIndex: startIndex,
+      endLineIndex: nextIndex - 1
+    },
+    nextIndex
+  };
+}
+
+/**
+ * Parses every `@tag` block starting from `firstTagIndex` to the end of the line array.
+ *
+ * @param lines - All parsed lines in the comment.
+ * @param firstTagIndex - Index where tag parsing should begin (`-1` skips entirely).
+ * @returns All parsed tags in source order.
+ */
+function parseTags(lines: readonly ParsedJsdocLine[], firstTagIndex: number): ParsedJsdocTag[] {
+  const tags: ParsedJsdocTag[] = [];
+
+  if (firstTagIndex !== -1) {
+    let i = firstTagIndex;
+    while (i < lines.length) {
+      if (!TAG_LINE_REGEX.test(lines[i].text)) {
+        i += 1;
+        continue;
+      }
+      const { tag, nextIndex } = parseTagAt(lines, i);
+      tags.push(tag);
+      i = nextIndex;
+    }
+  }
+
+  return tags;
 }
 
 /**
@@ -146,124 +370,13 @@ function stripPrefix(raw: string): { readonly text: string; readonly prefixLengt
  */
 export function parseJsdocComment(commentValue: string): ParsedJsdoc {
   const singleLine = !commentValue.includes('\n');
-  const rawLines = commentValue.split('\n');
-
-  // For single-line JSDocs, the value is `* description` (the leading `*` belongs to the opener).
-  // Treat the whole thing as one "line" of description after stripping.
-  let runningOffset = 0;
-  const lines: ParsedJsdocLine[] = rawLines.map((raw, index) => {
-    const { text: stripped, prefixLength } = stripPrefix(raw);
-    const text = stripped.trimEnd();
-    const blank = text.length === 0;
-    const valueOffsetStart = runningOffset;
-    const textOffsetStart = runningOffset + prefixLength;
-    runningOffset += raw.length + 1; // +1 for the consumed `\n` (overshoots on last line, harmless)
-    return { raw, text, blank, index, valueOffsetStart, textOffsetStart };
-  });
-
-  // Locate the first tag line.
-  let firstTagIndex = -1;
-  for (const [i, line] of lines.entries()) {
-    if (TAG_LINE_REGEX.test(line.text)) {
-      firstTagIndex = i;
-      break;
-    }
-  }
-
+  const lines = buildParsedLines(commentValue);
+  const firstTagIndex = findFirstTagIndex(lines);
   const descriptionLines = firstTagIndex === -1 ? lines.slice() : lines.slice(0, firstTagIndex);
-
-  // Strip leading and trailing blank lines from the description for the joined string.
-  let descStart = 0;
-  let descEnd = descriptionLines.length;
-  while (descStart < descEnd && descriptionLines[descStart].blank) descStart += 1;
-  while (descEnd > descStart && descriptionLines[descEnd - 1].blank) descEnd -= 1;
-  const trimmedDescription = descriptionLines.slice(descStart, descEnd);
+  const trimmedDescription = trimBlankBoundaries(descriptionLines);
   const description = trimmedDescription.map((l) => l.text).join('\n');
-
-  // Split description into paragraphs by blank-line runs.
-  const descriptionParagraphs: string[] = [];
-  let paragraphBuffer: string[] = [];
-  for (const line of trimmedDescription) {
-    if (line.blank) {
-      if (paragraphBuffer.length > 0) {
-        descriptionParagraphs.push(paragraphBuffer.join('\n'));
-        paragraphBuffer = [];
-      }
-    } else {
-      paragraphBuffer.push(line.text);
-    }
-  }
-  if (paragraphBuffer.length > 0) {
-    descriptionParagraphs.push(paragraphBuffer.join('\n'));
-  }
-
-  // Parse tags. Each tag begins on a line matching TAG_LINE_REGEX; subsequent non-tag lines
-  // (including blanks) belong to that tag until the next tag line or end of comment.
-  const tags: ParsedJsdocTag[] = [];
-  if (firstTagIndex !== -1) {
-    let i = firstTagIndex;
-    while (i < lines.length) {
-      const line = lines[i];
-      const match = TAG_LINE_REGEX.exec(line.text);
-      if (!match) {
-        i += 1;
-        continue;
-      }
-
-      const tagName = match[1];
-      let remainder = match[2];
-
-      // Pull off an optional `{Type}` annotation immediately after the tag name (for @throws, @param, etc.).
-      let typeAnnotation: Maybe<string>;
-      const typeMatch = /^\{([^}]*)\}\s*(.*)$/.exec(remainder);
-      if (typeMatch) {
-        typeAnnotation = typeMatch[1];
-        remainder = typeMatch[2];
-      }
-
-      // For @param: pull off the parameter name (first word).
-      let nameAnnotation: Maybe<string>;
-      if (tagName === 'param') {
-        const nameMatch = /^([A-Za-z_$][A-Za-z0-9_$.[\]]*)\s*(.*)$/.exec(remainder);
-        if (nameMatch) {
-          nameAnnotation = nameMatch[1];
-          remainder = nameMatch[2];
-        }
-      }
-
-      // Collect continuation lines: from i+1 until next tag line or end of comment.
-      const tagLines: ParsedJsdocLine[] = [line];
-      let j = i + 1;
-      while (j < lines.length) {
-        if (TAG_LINE_REGEX.test(lines[j].text)) break;
-        tagLines.push(lines[j]);
-        j += 1;
-      }
-
-      // Build the description string: the remainder of the tag line + any continuation line text.
-      const descriptionParts: string[] = [];
-      if (remainder.length > 0) descriptionParts.push(remainder);
-      for (let k = 1; k < tagLines.length; k += 1) {
-        descriptionParts.push(tagLines[k].text);
-      }
-      // Trim trailing blank lines from the tag's collected text but preserve interior blanks (matter for @example fenced blocks).
-      while (descriptionParts.length > 0 && (descriptionParts.at(-1) as string).trim().length === 0) {
-        descriptionParts.pop();
-      }
-
-      tags.push({
-        tag: tagName,
-        name: nameAnnotation,
-        type: typeAnnotation,
-        description: descriptionParts.join('\n'),
-        lines: tagLines,
-        startLineIndex: i,
-        endLineIndex: j - 1
-      });
-
-      i = j;
-    }
-  }
+  const descriptionParagraphs = buildDescriptionParagraphs(trimmedDescription);
+  const tags = parseTags(lines, firstTagIndex);
 
   return {
     lines,

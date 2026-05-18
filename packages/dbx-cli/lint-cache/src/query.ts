@@ -81,7 +81,7 @@ function globToRegExp(pattern: string): RegExp {
     } else if (ch === '?') {
       regex += '[^/]';
       i += 1;
-    } else if ('.+^$()|[]{}\\/'.includes(ch)) {
+    } else if (String.raw`.+^$()|[]{}\/`.includes(ch)) {
       regex += String.raw`\${ch}`;
       i += 1;
     } else {

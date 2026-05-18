@@ -94,9 +94,7 @@ export function openStreamingDump(params: OpenStreamingDumpParams): StreamingDum
     const writeBoth = (input: WriteBothInput): void => {
       const flagFn = input.append ? appendFileSync : writeFileSync;
 
-      if (mainPath) {
-        flagFn(mainPath, input.mainContent);
-      }
+      flagFn(mainPath, input.mainContent);
 
       if (pickPath && input.pickContent !== undefined) {
         flagFn(pickPath, input.pickContent);

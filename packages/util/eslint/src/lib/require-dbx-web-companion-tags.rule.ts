@@ -2,7 +2,12 @@ import { leadingJsdocFor } from './comments';
 import { parseJsdocComment } from './jsdoc-parser';
 import { checkDbxTagFamily, reportOnJsdocLine, type DbxCompanionTagSpec, type DbxTagFamilySpec } from './dbx-tag-families';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  // index signature keeps the loose-typed semantics of the original `= any`
+  // so the rule body can freely navigate AST properties without churn.
+  [key: string]: any;
+}
 
 const DEFAULT_ALLOWED_CATEGORIES: readonly string[] = ['layout', 'list', 'button', 'card', 'feedback', 'overlay', 'navigation', 'text', 'screen', 'action', 'router', 'misc'];
 const DEFAULT_ALLOWED_KINDS: readonly string[] = ['component', 'directive', 'pipe', 'service'];

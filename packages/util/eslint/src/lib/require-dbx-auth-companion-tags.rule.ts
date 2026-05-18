@@ -2,7 +2,10 @@ import { leadingJsdocFor } from './comments';
 import { parseJsdocComment } from './jsdoc-parser';
 import { KEBAB_SLUG_PATTERN, reportOnJsdocLine, splitCommaSeparated } from './dbx-tag-families';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 const DEFAULT_KNOWN_COMPANIONS: readonly string[] = ['ClaimsApp', 'Claim', 'ClaimsService', 'Role', 'RoleTag'];
 
@@ -88,6 +91,26 @@ export const utilRequireDbxAuthCompanionTagsRule: UtilRequireDbxAuthCompanionTag
       }
     }
 
+    function reportDuplicateClaims(commentNode: AstNode, parsed: ReturnType<typeof parseJsdocComment>, claimTags: readonly ReturnType<typeof parseJsdocComment>['tags'][number][]): void {
+      for (let i = 1; i < claimTags.length; i += 1) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: claimTags[i].startLineIndex, messageId: 'duplicateCompanionTag', data: { name: 'Claim' }, report: context.report });
+    }
+
+    function reportRoleTagKebab(commentNode: AstNode, parsed: ReturnType<typeof parseJsdocComment>, roleTagTags: readonly ReturnType<typeof parseJsdocComment>['tags'][number][]): void {
+      for (const tag of roleTagTags) {
+        for (const item of splitCommaSeparated(tag.description)) {
+          if (!KEBAB_SLUG_PATTERN.test(item)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'roleTagNotKebab', data: { value: item }, report: context.report });
+        }
+      }
+    }
+
+    function reportUnknownAuthTags(commentNode: AstNode, parsed: ReturnType<typeof parseJsdocComment>): void {
+      for (const tag of parsed.tags) {
+        if (!tag.tag.startsWith('dbxAuth') || tag.tag === 'dbxAuthClaim') continue;
+        const suffix = tag.tag.slice('dbxAuth'.length);
+        if (!knownCompanions.includes(suffix)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknownDbxAuthTag', data: { name: suffix, known: knownCompanions.join(', ') }, report: context.report });
+      }
+    }
+
     function checkPropertyJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
       const claimTags = parsed.tags.filter((t) => t.tag === 'dbxAuthClaim');
@@ -95,23 +118,9 @@ export const utilRequireDbxAuthCompanionTagsRule: UtilRequireDbxAuthCompanionTag
       const roleTagTags = parsed.tags.filter((t) => t.tag === 'dbxAuthRoleTag');
       if (claimTags.length === 0 && roleTags.length === 0 && roleTagTags.length === 0) return;
 
-      if (claimTags.length > 1) {
-        for (let i = 1; i < claimTags.length; i += 1) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: claimTags[i].startLineIndex, messageId: 'duplicateCompanionTag', data: { name: 'Claim' }, report: context.report });
-      }
-
-      // `@dbxAuthRoleTag` items must be kebab.
-      for (const tag of roleTagTags) {
-        for (const item of splitCommaSeparated(tag.description)) {
-          if (!KEBAB_SLUG_PATTERN.test(item)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'roleTagNotKebab', data: { value: item }, report: context.report });
-        }
-      }
-
-      // Unknown @dbxAuth* tags on the property JSDoc.
-      for (const tag of parsed.tags) {
-        if (!tag.tag.startsWith('dbxAuth') || tag.tag === 'dbxAuthClaim') continue;
-        const suffix = tag.tag.slice('dbxAuth'.length);
-        if (!knownCompanions.includes(suffix)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknownDbxAuthTag', data: { name: suffix, known: knownCompanions.join(', ') }, report: context.report });
-      }
+      if (claimTags.length > 1) reportDuplicateClaims(commentNode, parsed, claimTags);
+      reportRoleTagKebab(commentNode, parsed, roleTagTags);
+      reportUnknownAuthTags(commentNode, parsed);
     }
 
     function checkVariableJsdoc(commentNode: AstNode): void {

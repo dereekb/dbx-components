@@ -34,7 +34,7 @@ export type TrelloBoardPermissionLevel = 'private' | 'org' | 'public';
  *
  * Common preset values: `blue`, `orange`, `green`, `red`, `purple`, `pink`, `lime`, `sky`, `grey`.
  */
-export type TrelloBoardBackground = string;
+export type TrelloBoardBackground = string; // NOSONAR (S6564 — intentional semantic alias)
 
 export interface CreateBoardBody {
   /**

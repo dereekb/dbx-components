@@ -297,10 +297,10 @@ export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDoc
     if (firestoreCollection != null) {
       const id = (firestoreCollection as RootSingleItemFirestoreCollection<T, D>).singleItemIdentifier;
 
-      if (id != null) {
-        result = { ...state, firestoreCollection, id };
-      } else {
+      if (id == null) {
         throw new Error('AbstractRootSingleItemDbxFirebaseDocument only accepts RootSingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
+      } else {
+        result = { ...state, firestoreCollection, id };
       }
     } else {
       result = { ...state, firestoreCollection: null };

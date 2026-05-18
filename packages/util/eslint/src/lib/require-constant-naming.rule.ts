@@ -1,4 +1,9 @@
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  // index signature keeps the loose-typed semantics of the original `= any`
+  // so the rule body can freely navigate AST properties without churn.
+  [key: string]: any;
+}
 
 /**
  * JSDoc tag that opts a const declaration out of the constant-naming rule.

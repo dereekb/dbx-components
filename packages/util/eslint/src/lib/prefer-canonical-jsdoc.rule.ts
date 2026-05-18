@@ -2,7 +2,10 @@ import { getStatementAnchor } from './comments';
 import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 const TAG_LINE_REGEX = /^@([A-Za-z_]\w*)\s*(.*)$/;
 
@@ -378,6 +381,74 @@ function serializeTag(tag: CanonicalTag): string[] {
 }
 
 /**
+ * Groups the canonical tags into bucketed sections, inserting a new section when the bucket changes.
+ *
+ * @param tags - Canonical tags in their already-ordered position.
+ * @param workspacePrefixes - Tag-name prefixes recognized as workspace tags.
+ * @returns Array of sections, each section a flat array of rendered tag lines.
+ */
+function groupTagsIntoSections(tags: readonly CanonicalTag[], workspacePrefixes: readonly string[]): string[][] {
+  const sections: string[][] = [];
+  let currentBucket = -1;
+  let currentSection: string[] = [];
+  let hasCurrentSection = false;
+
+  for (const tag of tags) {
+    const b = bucketFor(tag, workspacePrefixes);
+
+    if (!hasCurrentSection || b !== currentBucket) {
+      currentSection = [];
+      sections.push(currentSection);
+      currentBucket = b;
+      hasCurrentSection = true;
+    }
+
+    currentSection.push(...serializeTag(tag));
+  }
+
+  return sections;
+}
+
+/**
+ * Joins bucketed sections into a flat line array, inserting a blank separator between sections.
+ *
+ * @param sections - Sections produced by `groupTagsIntoSections` plus prepended description paragraphs.
+ * @returns Flattened line array with a single blank between adjacent sections.
+ */
+function flattenSections(sections: readonly string[][]): string[] {
+  const allLines: string[] = [];
+
+  for (const [i, section] of sections.entries()) {
+    if (i > 0) allLines.push('');
+    allLines.push(...section);
+  }
+
+  return allLines;
+}
+
+/**
+ * Renders a flat line array as a multi-line JSDoc comment value with the given column indent.
+ *
+ * @param allLines - Comment body lines (blanks rendered as `${indent} *`).
+ * @param indent - Whitespace prefix used on every comment line.
+ * @returns Comment-value text ready to splice between `/*` and `*\/`.
+ */
+function renderMultilineValue(allLines: readonly string[], indent: string): string {
+  let value = '*';
+
+  for (const line of allLines) {
+    if (line.length === 0) {
+      value += '\n' + indent + ' *';
+    } else {
+      value += '\n' + indent + ' * ' + line;
+    }
+  }
+
+  value += '\n' + indent + ' ';
+  return value;
+}
+
+/**
  * Serializes the canonical model back into a comment-value string (the text between `/*` and
  * `*\/`). For multi-line output, every content line is prefixed with `${indent} * `; blank
  * separators use `${indent} *` (no trailing space). For single-line output, the value is `* text `.
@@ -394,48 +465,10 @@ function serializeJsdocValue(model: CanonicalJsdocModel, indent: string, workspa
     const descText = model.descriptionParagraphs[0]?.join(' ') ?? '';
     result = '* ' + descText + ' ';
   } else {
-    const sections: string[][] = [];
-
-    for (const paragraph of model.descriptionParagraphs) {
-      sections.push([...paragraph]);
-    }
-
-    let currentBucket = -1;
-    let currentSection: string[] = [];
-    let hasCurrentSection = false;
-
-    for (const tag of model.tags) {
-      const b = bucketFor(tag, workspacePrefixes);
-
-      if (!hasCurrentSection || b !== currentBucket) {
-        currentSection = [];
-        sections.push(currentSection);
-        currentBucket = b;
-        hasCurrentSection = true;
-      }
-
-      currentSection.push(...serializeTag(tag));
-    }
-
-    const allLines: string[] = [];
-
-    for (const [i, section] of sections.entries()) {
-      if (i > 0) allLines.push('');
-      allLines.push(...section);
-    }
-
-    let value = '*';
-
-    for (const line of allLines) {
-      if (line.length === 0) {
-        value += '\n' + indent + ' *';
-      } else {
-        value += '\n' + indent + ' * ' + line;
-      }
-    }
-
-    value += '\n' + indent + ' ';
-    result = value;
+    const descriptionSections: string[][] = model.descriptionParagraphs.map((paragraph) => [...paragraph]);
+    const tagSections = groupTagsIntoSections(model.tags, workspacePrefixes);
+    const allLines = flattenSections([...descriptionSections, ...tagSections]);
+    result = renderMultilineValue(allLines, indent);
   }
 
   return result;
@@ -587,35 +620,97 @@ function normalizeTagDescriptionPeriod(tag: CanonicalTag): void {
 }
 
 /**
+ * Returns the first non-blank entry in a string array, or `null` when every entry is blank.
+ *
+ * @param lines - Candidate lines scanned in order.
+ * @returns First non-blank line, or `null`.
+ */
+function findFirstNonBlankLine(lines: readonly string[]): Maybe<string> {
+  let result: Maybe<string> = null;
+
+  for (const line of lines) {
+    if (line.trim().length > 0) {
+      result = line;
+      break;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Wraps the body of an `@example` tag in a triple-backtick `ts` fenced block when it isn't
  * already fenced. No-op when the body is empty or already opens with a fence.
  *
  * @param tag - Canonical `@example` tag whose body should be fenced in place.
  */
 function normalizeExampleFence(tag: CanonicalTag): void {
-  if (tag.tag === 'example') {
-    const bodyLines: string[] = [];
+  if (tag.tag !== 'example') return;
 
-    if (tag.headerText.length > 0) bodyLines.push(tag.headerText);
-    for (const line of tag.continuationLines) bodyLines.push(line);
+  const bodyLines: string[] = [];
+  if (tag.headerText.length > 0) bodyLines.push(tag.headerText);
+  bodyLines.push(...tag.continuationLines);
 
-    let firstNonBlank: Maybe<string> = null;
-    for (const line of bodyLines) {
-      if (line.trim().length > 0) {
-        firstNonBlank = line;
-        break;
-      }
+  const firstNonBlank = findFirstNonBlankLine(bodyLines);
+  if (firstNonBlank === null) return;
+  if (firstNonBlank.trimStart().startsWith('```')) return;
+
+  const content = bodyLines.filter((line) => line.trim().length > 0);
+  tag.headerText = '';
+  tag.continuationLines = ['```ts', ...content, '```'];
+}
+
+interface IndexedTag {
+  tag: CanonicalTag;
+  index: number;
+  rank: number;
+}
+
+/**
+ * Extracts the declared parameter names from a function-like AST node.
+ *
+ * @param functionNode - Declaration whose `params` array supplies the declared names.
+ * @returns Declared parameter identifiers in source order.
+ */
+function collectDeclaredParamNames(functionNode: AstNode): string[] {
+  const declared: string[] = [];
+
+  for (const param of functionNode.params) {
+    const name = extractParamName(param);
+    if (typeof name === 'string') declared.push(name);
+  }
+
+  return declared;
+}
+
+/**
+ * Reorders `@param` entries inside the rank-sorted list to match the declared parameter signature
+ * while leaving non-param entries in place.
+ *
+ * @param indexed - Rank-sorted entry list mutated in place.
+ * @param declared - Declared parameter names in signature order.
+ */
+function reorderParamSlots(indexed: IndexedTag[], declared: readonly string[]): void {
+  const paramSlots: number[] = [];
+  const paramEntries: IndexedTag[] = [];
+
+  for (const [i, element] of indexed.entries()) {
+    if (element.tag.tag === 'param') {
+      paramSlots.push(i);
+      paramEntries.push(element);
     }
+  }
 
-    if (firstNonBlank !== null && !firstNonBlank.trimStart().startsWith('```')) {
-      const content: string[] = [];
-      for (const line of bodyLines) {
-        if (line.trim().length > 0) content.push(line);
-      }
+  paramEntries.sort((a, b) => {
+    const ai = a.tag.name == null ? -1 : declared.indexOf(a.tag.name);
+    const bi = b.tag.name == null ? -1 : declared.indexOf(b.tag.name);
+    const aRank = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
+    const bRank = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
+    return aRank - bRank || a.index - b.index;
+  });
 
-      tag.headerText = '';
-      tag.continuationLines = ['```ts', ...content, '```'];
-    }
+  for (const [i, paramSlot] of paramSlots.entries()) {
+    indexed[paramSlot] = paramEntries[i];
   }
 }
 
@@ -628,38 +723,13 @@ function normalizeExampleFence(tag: CanonicalTag): void {
  * @param workspacePrefixes - Tag-name prefixes recognized as workspace tags during ranking.
  */
 function normalizeTagOrder(model: CanonicalJsdocModel, functionNode: Maybe<AstNode>, workspacePrefixes: readonly string[]): void {
-  const indexed = model.tags.map((tag, index) => ({ tag, index, rank: rankFor(tag, workspacePrefixes) }));
+  const indexed: IndexedTag[] = model.tags.map((tag, index) => ({ tag, index, rank: rankFor(tag, workspacePrefixes) }));
   indexed.sort((a, b) => a.rank - b.rank || a.index - b.index);
 
   if (functionNode && Array.isArray(functionNode.params)) {
-    const declared: string[] = [];
-    for (const param of functionNode.params) {
-      const name = extractParamName(param);
-      if (typeof name === 'string') declared.push(name);
-    }
-
+    const declared = collectDeclaredParamNames(functionNode);
     if (declared.length > 0) {
-      const paramSlots: number[] = [];
-      const paramEntries: typeof indexed = [];
-
-      for (const [i, element] of indexed.entries()) {
-        if (element.tag.tag === 'param') {
-          paramSlots.push(i);
-          paramEntries.push(element);
-        }
-      }
-
-      paramEntries.sort((a, b) => {
-        const ai = a.tag.name == null ? -1 : declared.indexOf(a.tag.name);
-        const bi = b.tag.name == null ? -1 : declared.indexOf(b.tag.name);
-        const aRank = ai === -1 ? Number.MAX_SAFE_INTEGER : ai;
-        const bRank = bi === -1 ? Number.MAX_SAFE_INTEGER : bi;
-        return aRank - bRank || a.index - b.index;
-      });
-
-      for (const [i, paramSlot] of paramSlots.entries()) {
-        indexed[paramSlot] = paramEntries[i];
-      }
+      reorderParamSlots(indexed, declared);
     }
   }
 
@@ -911,123 +981,124 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       }
     }
 
-    function checkTags(commentNode: AstNode, parsed: ParsedJsdoc, functionNode: Maybe<AstNode>): void {
-      // Tag ordering
-      if (checkTagOrder) {
-        let lastRank = -Infinity;
-        for (const tag of parsed.tags) {
-          const rank = rankFor(tag, workspacePrefixes);
-          if (rank < lastRank) {
-            reportRangeMessage(commentNode, parsed, { messageId: 'tagOrder', lineIndex: tag.startLineIndex, data: { tag: tag.tag } });
-          } else {
-            lastRank = rank;
-          }
+    function reportTagOrder(commentNode: AstNode, parsed: ParsedJsdoc): void {
+      let lastRank = -Infinity;
+      for (const tag of parsed.tags) {
+        const rank = rankFor(tag, workspacePrefixes);
+        if (rank < lastRank) {
+          reportRangeMessage(commentNode, parsed, { messageId: 'tagOrder', lineIndex: tag.startLineIndex, data: { tag: tag.tag } });
+        } else {
+          lastRank = rank;
         }
       }
+    }
 
-      // Per-tag formatting
+    function reportParamOrderMismatch(commentNode: AstNode, parsed: ParsedJsdoc, paramTags: readonly ParsedJsdocTag[], functionNode: AstNode): void {
+      const declared = functionNode.params.map((p: AstNode) => extractParamName(p)).filter((n: Maybe<string>): n is string => typeof n === 'string');
+      // Collapse JSDoc dot-notation (e.g. `input.foo`) and consecutive dot-notation runs to the parent param.
+      // `@param input.a` and `@param input.b` both reference the single declared `input` parameter.
+      const documentedRaw = paramTags.map((t) => t.name ?? '');
+      const documented: string[] = [];
+      let lastBase: Maybe<string> = null;
+      for (const name of documentedRaw) {
+        const base = name.split('.')[0];
+        if (base !== lastBase) {
+          documented.push(base);
+          lastBase = base;
+        }
+      }
+      for (let i = 0; i < Math.min(declared.length, documented.length); i += 1) {
+        if (declared[i] !== documented[i]) {
+          reportRangeMessage(commentNode, parsed, { messageId: 'paramOrder', lineIndex: paramTags[i].startLineIndex, data: { name: documented[i] || '<unknown>', expected: declared[i] } });
+          break;
+        }
+      }
+    }
+
+    function checkParamTags(commentNode: AstNode, parsed: ParsedJsdoc, paramTags: readonly ParsedJsdocTag[], functionNode: Maybe<AstNode>): void {
+      for (const tag of paramTags) {
+        checkParamFormat(commentNode, parsed, tag);
+      }
+
+      if (functionNode && Array.isArray(functionNode.params) && paramTags.length > 0) {
+        reportParamOrderMismatch(commentNode, parsed, paramTags, functionNode);
+      }
+    }
+
+    function checkTagsByName(commentNode: AstNode, parsed: ParsedJsdoc, names: readonly string[], handler: (commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag) => void): void {
+      for (const tag of parsed.tags) {
+        if (names.includes(tag.tag)) {
+          handler(commentNode, parsed, tag);
+        }
+      }
+    }
+
+    function checkTags(commentNode: AstNode, parsed: ParsedJsdoc, functionNode: Maybe<AstNode>): void {
+      if (checkTagOrder) reportTagOrder(commentNode, parsed);
+
       const paramTags = parsed.tags.filter((t) => t.tag === 'param');
 
-      if (checkParam) {
-        for (const tag of paramTags) {
-          checkParamFormat(commentNode, parsed, tag);
-        }
+      if (checkParam) checkParamTags(commentNode, parsed, paramTags, functionNode);
+      if (checkReturns) checkTagsByName(commentNode, parsed, ['returns', 'return'], checkReturnsFormat);
+      if (checkThrows) checkTagsByName(commentNode, parsed, ['throws'], checkThrowsFormat);
+      if (checkExampleFence) checkTagsByName(commentNode, parsed, ['example'], checkExampleFormat);
+    }
 
-        if (functionNode && Array.isArray(functionNode.params) && paramTags.length > 0) {
-          const declared = functionNode.params.map((p: AstNode) => extractParamName(p)).filter((n: Maybe<string>): n is string => typeof n === 'string');
-          // Collapse JSDoc dot-notation (e.g. `input.foo`) and consecutive dot-notation runs to the parent param.
-          // `@param input.a` and `@param input.b` both reference the single declared `input` parameter.
-          const documentedRaw = paramTags.map((t) => t.name ?? '');
-          const documented: string[] = [];
-          let lastBase: Maybe<string> = null;
-          for (const name of documentedRaw) {
-            const base = name.split('.')[0];
-            if (base !== lastBase) {
-              documented.push(base);
-              lastBase = base;
-            }
-          }
-          for (let i = 0; i < Math.min(declared.length, documented.length); i += 1) {
-            if (declared[i] !== documented[i]) {
-              reportRangeMessage(commentNode, parsed, { messageId: 'paramOrder', lineIndex: paramTags[i].startLineIndex, data: { name: documented[i] || '<unknown>', expected: declared[i] } });
-              break;
-            }
-          }
+    function firstDescriptionLineIndex(parsed: ParsedJsdoc): number {
+      let firstLineIdx = 0;
+      for (const line of parsed.descriptionLines) {
+        if (!line.blank) {
+          firstLineIdx = line.index;
+          break;
         }
       }
+      return firstLineIdx;
+    }
 
-      if (checkReturns) {
-        for (const tag of parsed.tags) {
-          if (tag.tag === 'returns' || tag.tag === 'return') {
-            checkReturnsFormat(commentNode, parsed, tag);
-          }
-        }
+    function checkFirstParagraph(commentNode: AstNode, parsed: ParsedJsdoc, first: string, firstLineIdx: number): void {
+      if (!startsCanonically(first, 'capital')) {
+        reportRangeMessage(commentNode, parsed, { messageId: 'descriptionMissingCapital', lineIndex: firstLineIdx });
       }
-
-      if (checkThrows) {
-        for (const tag of parsed.tags) {
-          if (tag.tag === 'throws') {
-            checkThrowsFormat(commentNode, parsed, tag);
-          }
-        }
+      if (!endsCanonically(first)) {
+        reportRangeMessage(commentNode, parsed, { messageId: 'descriptionMissingPeriod', lineIndex: firstLineIdx });
       }
+      if (checkTypeRestating && TYPE_RESTATING_PATTERNS.some((re) => re.test(first.trim()))) {
+        reportRangeMessage(commentNode, parsed, { messageId: 'descriptionTypeRestating', lineIndex: firstLineIdx });
+      }
+    }
 
-      if (checkExampleFence) {
-        for (const tag of parsed.tags) {
-          if (tag.tag === 'example') {
-            checkExampleFormat(commentNode, parsed, tag);
+    function checkParagraphSeparators(commentNode: AstNode, parsed: ParsedJsdoc): void {
+      const descLines = parsed.descriptionLines;
+      let runStart = -1;
+      let firstWasContent = false;
+
+      for (let i = 0; i < descLines.length; i += 1) {
+        const isBlank = descLines[i].blank;
+        if (!isBlank) firstWasContent = true;
+
+        if (isBlank && firstWasContent) {
+          if (runStart === -1) runStart = i;
+        } else if (!isBlank && runStart !== -1) {
+          const runLength = i - runStart;
+          if (runLength !== 1) {
+            reportRangeMessage(commentNode, parsed, { messageId: 'descriptionParagraphSeparator', lineIndex: descLines[runStart].index });
           }
+          runStart = -1;
         }
       }
     }
 
     function checkDescriptionBlock(commentNode: AstNode, parsed: ParsedJsdoc): void {
-      if (checkDescription) {
-        const paragraphs = parsed.descriptionParagraphs;
+      if (!checkDescription) return;
 
-        if (paragraphs.length !== 0) {
-          // First paragraph: capitalized, period.
-          const first = paragraphs[0];
-          // Locate the line index for the first non-blank description line for reporting.
-          let firstLineIdx = 0;
-          for (const line of parsed.descriptionLines) {
-            if (!line.blank) {
-              firstLineIdx = line.index;
-              break;
-            }
-          }
+      const paragraphs = parsed.descriptionParagraphs;
+      if (paragraphs.length === 0) return;
 
-          if (!startsCanonically(first, 'capital')) {
-            reportRangeMessage(commentNode, parsed, { messageId: 'descriptionMissingCapital', lineIndex: firstLineIdx });
-          }
-          if (!endsCanonically(first)) {
-            reportRangeMessage(commentNode, parsed, { messageId: 'descriptionMissingPeriod', lineIndex: firstLineIdx });
-          }
+      const firstLineIdx = firstDescriptionLineIndex(parsed);
+      checkFirstParagraph(commentNode, parsed, paragraphs[0], firstLineIdx);
 
-          if (checkTypeRestating && TYPE_RESTATING_PATTERNS.some((re) => re.test(first.trim()))) {
-            reportRangeMessage(commentNode, parsed, { messageId: 'descriptionTypeRestating', lineIndex: firstLineIdx });
-          }
-
-          // Paragraph separator: exactly one blank line between paragraphs.
-          if (paragraphs.length > 1) {
-            // Walk descriptionLines and count blank-line runs.
-            const descLines = parsed.descriptionLines;
-            let runStart = -1;
-            let firstWasContent = false;
-            for (let i = 0; i < descLines.length; i += 1) {
-              if (!descLines[i].blank) firstWasContent = true;
-              if (descLines[i].blank && firstWasContent) {
-                if (runStart === -1) runStart = i;
-              } else if (!descLines[i].blank && runStart !== -1) {
-                const runLength = i - runStart;
-                if (runLength !== 1) {
-                  reportRangeMessage(commentNode, parsed, { messageId: 'descriptionParagraphSeparator', lineIndex: descLines[runStart].index });
-                }
-                runStart = -1;
-              }
-            }
-          }
-        }
+      if (paragraphs.length > 1) {
+        checkParagraphSeparators(commentNode, parsed);
       }
     }
 
@@ -1099,25 +1170,38 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       return result;
     }
 
-    function visitVariableDeclaration(node: AstNode): void {
-      const declarator = node.declarations?.[0];
+    function isFunctionExpressionInit(init: Maybe<AstNode>): boolean {
+      return !!init && (init.type === 'ArrowFunctionExpression' || init.type === 'FunctionExpression');
+    }
 
-      if (declarator) {
-        const init = declarator.init;
+    function resolveVariableAnchor(node: AstNode): AstNode {
+      const parent = node.parent;
+      const parentExports = parent && (parent.type === 'ExportNamedDeclaration' || parent.type === 'ExportDefaultDeclaration');
+      return parentExports ? parent : node;
+    }
 
-        if (init && (init.type === 'ArrowFunctionExpression' || init.type === 'FunctionExpression')) {
-          // Anchor for getStatementAnchor expects FunctionDeclaration; emulate for variable declarations.
-          const anchor = node.parent && (node.parent.type === 'ExportNamedDeclaration' || node.parent.type === 'ExportDefaultDeclaration') ? node.parent : node;
-          const comments: AstNode[] = sourceCode.getCommentsBefore(anchor) || [];
-          let jsdoc: Maybe<AstNode> = null;
-          for (const comment of comments) {
-            if (comment.type === 'Block' && typeof comment.value === 'string' && comment.value.startsWith('*')) {
-              jsdoc = comment;
-            }
-          }
-          if (jsdoc) checkOneJsdoc(jsdoc, anchor);
+    function findLeadingJsdocComment(anchor: AstNode): Maybe<AstNode> {
+      const comments: AstNode[] = sourceCode.getCommentsBefore(anchor) || [];
+      let jsdoc: Maybe<AstNode> = null;
+
+      for (const comment of comments) {
+        if (comment.type === 'Block' && typeof comment.value === 'string' && comment.value.startsWith('*')) {
+          jsdoc = comment;
         }
       }
+
+      return jsdoc;
+    }
+
+    function visitVariableDeclaration(node: AstNode): void {
+      const declarator = node.declarations?.[0];
+      if (!declarator) return;
+      if (!isFunctionExpressionInit(declarator.init)) return;
+
+      // Anchor for getStatementAnchor expects FunctionDeclaration; emulate for variable declarations.
+      const anchor = resolveVariableAnchor(node);
+      const jsdoc = findLeadingJsdocComment(anchor);
+      if (jsdoc) checkOneJsdoc(jsdoc, anchor);
     }
 
     return {

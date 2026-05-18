@@ -1,0 +1,533 @@
+[
+  {
+    "key": "AZ45aG7XruoyaBABXx9S",
+    "rule": "javascript:S1135",
+    "severity": "INFO",
+    "file": "eslint.config.mjs",
+    "startLine": 109,
+    "endLine": 109,
+    "message": "Complete the task associated to this \"TODO\" comment."
+  },
+  {
+    "key": "AZ45LtaGBO_6kV5uVj_B",
+    "rule": "typescript:S7780",
+    "severity": "MINOR",
+    "file": "packages/dbx-cli/lint-cache/src/build-many.ts",
+    "startLine": 191,
+    "endLine": 191,
+    "message": "`String.raw` should be used to avoid escaping `\\`."
+  },
+  {
+    "key": "AZ45LtaZBO_6kV5uVj_D",
+    "rule": "typescript:S7778",
+    "severity": "MINOR",
+    "file": "packages/dbx-cli/lint-cache/src/format.ts",
+    "startLine": 38,
+    "endLine": 38,
+    "message": "Do not call `Array#push()` multiple times."
+  },
+  {
+    "key": "AZ45LtZ8BO_6kV5uVj--",
+    "rule": "typescript:S7780",
+    "severity": "MINOR",
+    "file": "packages/dbx-cli/lint-cache/src/query.ts",
+    "startLine": 84,
+    "endLine": 84,
+    "message": "`String.raw` should be used to avoid escaping `\\`."
+  },
+  {
+    "key": "AZ45jY9oEK7wgQC93TB-",
+    "rule": "typescript:S6660",
+    "severity": "MAJOR",
+    "file": "packages/dbx-cli/src/lib/manifest/build-model-info-command.ts",
+    "startLine": 97,
+    "endLine": 97,
+    "message": "'If' statement should not be the only statement in 'else' block"
+  },
+  {
+    "key": "AZ45jY6BEK7wgQC93TB9",
+    "rule": "typescript:S2589",
+    "severity": "MAJOR",
+    "file": "packages/dbx-cli/src/lib/util/pagination.ts",
+    "startLine": 97,
+    "endLine": 97,
+    "message": "This always evaluates to truthy. Consider refactoring this code."
+  },
+  {
+    "key": "AZ45jZrTEK7wgQC93TB_",
+    "rule": "typescript:S6551",
+    "severity": "MINOR",
+    "file": "packages/dbx-core/src/lib/injection/injection.context.directive.ts",
+    "startLine": 151,
+    "endLine": 151,
+    "message": "'error' will use Object's default stringification format ('[object Object]') when stringified."
+  },
+  {
+    "key": "AZ45LuBLBO_6kV5uVkAu",
+    "rule": "typescript:S7735",
+    "severity": "MINOR",
+    "file": "packages/dbx-firebase/src/lib/model/modules/store/store.document.ts",
+    "startLine": 300,
+    "endLine": 300,
+    "message": "Unexpected negated condition."
+  },
+  {
+    "key": "AZ45LtIbBO_6kV5uVj-M",
+    "rule": "typescript:S4325",
+    "severity": "MINOR",
+    "file": "packages/dbx-web/src/lib/interaction/detach/detach.service.ts",
+    "startLine": 153,
+    "endLine": 153,
+    "message": "This assertion is unnecessary since the receiver accepts the original type of the expression."
+  },
+  {
+    "key": "AZ45Lt_VBO_6kV5uVkAr",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/trello/src/lib/trello/trello.api.board.type.ts",
+    "startLine": 37,
+    "endLine": 37,
+    "message": "Remove this redundant type alias and replace its occurrences with \"string\"."
+  },
+  {
+    "key": "AZ45Lt-8BO_6kV5uVkAq",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/trello/src/lib/trello/trello.api.card.ts",
+    "startLine": 100,
+    "endLine": 100,
+    "message": "Remove this redundant type alias and replace its occurrences with \"string\"."
+  },
+  {
+    "key": "AZ45LvBqBO_6kV5uVkBa",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/dbx-tag-families.ts",
+    "startLine": 15,
+    "endLine": 15,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvBqBO_6kV5uVkBb",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/dbx-tag-families.ts",
+    "startLine": 161,
+    "endLine": 161,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 36 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvBqBO_6kV5uVkBc",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/dbx-tag-families.ts",
+    "startLine": 251,
+    "endLine": 251,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 18 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvEiBO_6kV5uVkB7",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/jsdoc-parser.ts",
+    "startLine": 147,
+    "endLine": 147,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 49 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvBVBO_6kV5uVkBZ",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/no-inline-type-import.rule.ts",
+    "startLine": 1,
+    "endLine": 1,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvGcBO_6kV5uVkCd",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/no-sister-re-export.rule.ts",
+    "startLine": 1,
+    "endLine": 1,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvF3BO_6kV5uVkCJ",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/prefer-canonical-jsdoc.rule.ts",
+    "startLine": 5,
+    "endLine": 5,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvF3BO_6kV5uVkCT",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/prefer-canonical-jsdoc.rule.ts",
+    "startLine": 390,
+    "endLine": 390,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 20 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvF3BO_6kV5uVkCU",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/prefer-canonical-jsdoc.rule.ts",
+    "startLine": 595,
+    "endLine": 595,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 20 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvF3BO_6kV5uVkCV",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/prefer-canonical-jsdoc.rule.ts",
+    "startLine": 630,
+    "endLine": 630,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 19 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvF3BO_6kV5uVkCX",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/prefer-canonical-jsdoc.rule.ts",
+    "startLine": 914,
+    "endLine": 914,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 45 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvF3BO_6kV5uVkCY",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/prefer-canonical-jsdoc.rule.ts",
+    "startLine": 984,
+    "endLine": 984,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 52 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvF3BO_6kV5uVkCa",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/prefer-canonical-jsdoc.rule.ts",
+    "startLine": 1102,
+    "endLine": 1102,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 19 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvCLBO_6kV5uVkBf",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/prefer-config-object.rule.ts",
+    "startLine": 1,
+    "endLine": 1,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvFJBO_6kV5uVkCD",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/prefer-maybe-type.rule.ts",
+    "startLine": 2,
+    "endLine": 2,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvFJBO_6kV5uVkCG",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/prefer-maybe-type.rule.ts",
+    "startLine": 140,
+    "endLine": 140,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 21 to the 15 allowed."
+  },
+  {
+    "key": "AZ45V4PdRXnEWm2RihSH",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-constant-naming.rule.ts",
+    "startLine": 1,
+    "endLine": 1,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvDABO_6kV5uVkBj",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-action-companion-tags.rule.ts",
+    "startLine": 6,
+    "endLine": 6,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvDABO_6kV5uVkBl",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-dbx-action-companion-tags.rule.ts",
+    "startLine": 103,
+    "endLine": 103,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 40 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvFbBO_6kV5uVkCH",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-auth-companion-tags.rule.ts",
+    "startLine": 5,
+    "endLine": 5,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvFbBO_6kV5uVkCI",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-dbx-auth-companion-tags.rule.ts",
+    "startLine": 91,
+    "endLine": 91,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvB7BO_6kV5uVkBe",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-docs-ui-example-companion-tags.rule.ts",
+    "startLine": 5,
+    "endLine": 5,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvHpBO_6kV5uVkCl",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-filter-companion-tags.rule.ts",
+    "startLine": 5,
+    "endLine": 5,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvDTBO_6kV5uVkBm",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-form-field-companion-tags.rule.ts",
+    "startLine": 6,
+    "endLine": 6,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvDTBO_6kV5uVkBs",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-dbx-form-field-companion-tags.rule.ts",
+    "startLine": 145,
+    "endLine": 145,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 68 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvBGBO_6kV5uVkBV",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-model-companion-tags.rule.ts",
+    "startLine": 6,
+    "endLine": 6,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvBGBO_6kV5uVkBY",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-dbx-model-companion-tags.rule.ts",
+    "startLine": 121,
+    "endLine": 121,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 66 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvCuBO_6kV5uVkBh",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-model-firebase-index-companion-tags.rule.ts",
+    "startLine": 6,
+    "endLine": 6,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvCuBO_6kV5uVkBi",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-dbx-model-firebase-index-companion-tags.rule.ts",
+    "startLine": 108,
+    "endLine": 108,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvAdBO_6kV5uVkBS",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-model-snapshot-field-companion-tags.rule.ts",
+    "startLine": 6,
+    "endLine": 6,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvEMBO_6kV5uVkB1",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-pipe-companion-tags.rule.ts",
+    "startLine": 5,
+    "endLine": 5,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvHXBO_6kV5uVkCj",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-rule-companion-tags.rule.ts",
+    "startLine": 5,
+    "endLine": 5,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvHXBO_6kV5uVkCk",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-dbx-rule-companion-tags.rule.ts",
+    "startLine": 81,
+    "endLine": 81,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 31 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvGLBO_6kV5uVkCb",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-util-companion-tags.rule.ts",
+    "startLine": 6,
+    "endLine": 6,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvGLBO_6kV5uVkCc",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-dbx-util-companion-tags.rule.ts",
+    "startLine": 130,
+    "endLine": 130,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 43 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvCcBO_6kV5uVkBg",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-dbx-web-companion-tags.rule.ts",
+    "startLine": 5,
+    "endLine": 5,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvDpBO_6kV5uVkBt",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-deprecated-alias-placement.rule.ts",
+    "startLine": 1,
+    "endLine": 1,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvDpBO_6kV5uVkBw",
+    "rule": "typescript:S7735",
+    "severity": "MINOR",
+    "file": "packages/util/eslint/src/lib/require-deprecated-alias-placement.rule.ts",
+    "startLine": 164,
+    "endLine": 164,
+    "message": "Unexpected negated condition."
+  },
+  {
+    "key": "AZ45LvDpBO_6kV5uVkBx",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-deprecated-alias-placement.rule.ts",
+    "startLine": 273,
+    "endLine": 273,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 39 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvDpBO_6kV5uVkBz",
+    "rule": "typescript:S7735",
+    "severity": "MINOR",
+    "file": "packages/util/eslint/src/lib/require-deprecated-alias-placement.rule.ts",
+    "startLine": 341,
+    "endLine": 341,
+    "message": "Unexpected negated condition."
+  },
+  {
+    "key": "AZ45LvDpBO_6kV5uVkB0",
+    "rule": "typescript:S7735",
+    "severity": "MINOR",
+    "file": "packages/util/eslint/src/lib/require-deprecated-alias-placement.rule.ts",
+    "startLine": 357,
+    "endLine": 357,
+    "message": "Unexpected negated condition."
+  },
+  {
+    "key": "AZ45V4OTRXnEWm2RihSG",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-exported-jsdoc-example.rule.ts",
+    "startLine": 1,
+    "endLine": 1,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvA0BO_6kV5uVkBU",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-no-side-effects.rule.ts",
+    "startLine": 143,
+    "endLine": 143,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvGvBO_6kV5uVkCg",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-readonly-config-params.rule.ts",
+    "startLine": 1,
+    "endLine": 1,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvGvBO_6kV5uVkCh",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-readonly-config-params.rule.ts",
+    "startLine": 138,
+    "endLine": 138,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 24 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LvANBO_6kV5uVkBQ",
+    "rule": "typescript:S6564",
+    "severity": "MAJOR",
+    "file": "packages/util/eslint/src/lib/require-single-return.rule.ts",
+    "startLine": 1,
+    "endLine": 1,
+    "message": "Remove this redundant type alias and replace its occurrences with \"any\"."
+  },
+  {
+    "key": "AZ45LvANBO_6kV5uVkBR",
+    "rule": "typescript:S3776",
+    "severity": "CRITICAL",
+    "file": "packages/util/eslint/src/lib/require-single-return.rule.ts",
+    "startLine": 65,
+    "endLine": 65,
+    "message": "Refactor this function to reduce its Cognitive Complexity from 29 to the 15 allowed."
+  },
+  {
+    "key": "AZ45LtNQBO_6kV5uVj-Q",
+    "rule": "typescript:S4325",
+    "severity": "MINOR",
+    "file": "packages/zoho/nestjs/src/lib/accounts/accounts.service.ts",
+    "startLine": 189,
+    "endLine": 189,
+    "message": "This assertion is unnecessary since it does not change the type of the expression."
+  }
+]

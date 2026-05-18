@@ -1,9 +1,77 @@
 import { getStatementAnchor, leadingJsdocFor } from './comments';
 import type { Maybe } from '@dereekb/util';
-import { parseJsdocComment } from './jsdoc-parser';
+import { parseJsdocComment, type ParsedJsdoc } from './jsdoc-parser';
 import { buildLowercaseTagsFix, checkDbxTagFamily, findFamilyTags, reportOnJsdocLine, type DbxCompanionTagSpec, type DbxTagFamilySpec, type DbxTagViolation } from './dbx-tag-families';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
+
+interface UtilReportContext {
+  readonly commentNode: AstNode;
+  readonly parsed: ParsedJsdoc;
+  readonly sourceCode: AstNode;
+  readonly report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]> }) => void;
+  readonly knownCompanions: readonly string[];
+}
+
+function handleUtilCategoryViolation(ctx: UtilReportContext, v: DbxTagViolation): boolean {
+  if (v.suffix !== 'Category') return false;
+  switch (v.kind) {
+    case 'missing':
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'missingCategory', report: ctx.report });
+      return false;
+    case 'empty':
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'emptyCategory', report: ctx.report });
+      return false;
+    case 'invalid-kebab':
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'invalidCategoryFormat', data: { value: v.value }, report: ctx.report });
+      return true;
+    case 'duplicate':
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'multipleCategoryTags', report: ctx.report });
+      return false;
+    default:
+      return false;
+  }
+}
+
+function handleUtilTagsViolation(ctx: UtilReportContext, v: DbxTagViolation): void {
+  if (v.kind !== 'tags-not-lowercase' || v.suffix !== 'Tags') return;
+  const fix = buildLowercaseTagsFix({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, tag: v.raw });
+  const fixer = fix ? (fixer2: AstNode) => fixer2.replaceTextRange([fix.startOffset, fix.endOffset], fix.replacement) : undefined;
+  reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'tagsNotLowercase', data: { value: v.value }, report: ctx.report, fix: fixer });
+}
+
+function handleUtilViolation(ctx: UtilReportContext, v: DbxTagViolation): boolean {
+  if (v.suffix === 'Category') {
+    return handleUtilCategoryViolation(ctx, v);
+  }
+  switch (v.kind) {
+    case 'invalid-enum':
+      if (v.suffix === 'Kind') {
+        reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'invalidKind', data: { value: v.value, allowed: v.allowed.join(', ') }, report: ctx.report });
+      }
+      break;
+    case 'comma-item-not-kebab':
+      if (v.suffix === 'Related') {
+        reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'relatedNotKebab', data: { value: v.value }, report: ctx.report });
+      }
+      break;
+    case 'tags-not-lowercase':
+      handleUtilTagsViolation(ctx, v);
+      break;
+    case 'unknown':
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'unknownDbxUtilTag', data: { name: v.suffix, known: ctx.knownCompanions.join(', ') }, report: ctx.report });
+      break;
+    case 'duplicate':
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'duplicateCompanionTag', data: { name: v.suffix }, report: ctx.report });
+      break;
+    default:
+      break;
+  }
+  return false;
+}
 
 /**
  * Default companion-tag names recognized in the `@dbxUtil` family. The names exclude the

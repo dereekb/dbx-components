@@ -186,7 +186,7 @@ function reviveZohoAccessToken(raw: unknown): Maybe<ZohoAccessToken> {
     const rawExpiresAt = value.expiresAt;
     const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
 
-    result = { ...value, expiresAt: expiresAt as Date };
+    result = { ...value, expiresAt: expiresAt };
   }
 
   return result;

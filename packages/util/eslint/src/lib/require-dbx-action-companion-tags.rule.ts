@@ -3,11 +3,59 @@ import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 import { KEBAB_SLUG_PATTERN, reportOnJsdocLine, splitCommaSeparated } from './dbx-tag-families';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 const DEFAULT_ALLOWED_ROLES: readonly string[] = ['directive', 'store'];
 const DEFAULT_ALLOWED_STATES: readonly string[] = ['IDLE', 'DISABLED', 'TRIGGERED', 'VALUE_READY', 'WORKING', 'RESOLVED', 'REJECTED'];
 const DEFAULT_KNOWN_COMPANIONS: readonly string[] = ['Slug', 'Role', 'StateInteraction', 'ProducesContext', 'ConsumesContext', 'SkillRefs', 'DisabledKey', 'StateEnum', 'StateTransitionsFrom', 'StateTransitionsTo'];
+const PROPERTY_ONLY_COMPANIONS: ReadonlySet<string> = new Set(['StateTransitionsFrom', 'StateTransitionsTo']);
+
+interface ClassReportContext {
+  readonly commentNode: AstNode;
+  readonly parsed: ParsedJsdoc;
+  readonly sourceCode: AstNode;
+  readonly report: (descriptor: { loc?: AstNode; messageId: string; data?: Record<string, string> }) => void;
+}
+
+function reportClassUnknownAndMisplaced(ctx: ClassReportContext, companions: ReadonlyMap<string, ParsedJsdocTag[]>, knownCompanions: readonly string[]): void {
+  for (const [suffix, instances] of companions.entries()) {
+    if (!knownCompanions.includes(suffix)) {
+      for (const tag of instances) {
+        reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknownDbxActionTag', data: { name: suffix, known: knownCompanions.join(', ') }, report: ctx.report });
+      }
+    }
+    if (PROPERTY_ONLY_COMPANIONS.has(suffix)) {
+      for (const tag of instances) {
+        reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'stateTagOutsideEnumMember', data: { name: suffix }, report: ctx.report });
+      }
+    }
+  }
+}
+
+function reportClassDuplicates(ctx: ClassReportContext, companions: ReadonlyMap<string, ParsedJsdocTag[]>): void {
+  for (const [suffix, instances] of companions.entries()) {
+    if (instances.length <= 1) continue;
+    for (let i = 1; i < instances.length; i += 1) {
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: instances[i].startLineIndex, messageId: 'duplicateCompanionTag', data: { name: suffix }, report: ctx.report });
+    }
+  }
+}
+
+function reportClassSlug(ctx: ClassReportContext, slugTags: readonly ParsedJsdocTag[], triggerLine: number): void {
+  if (slugTags.length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingSlug', report: ctx.report });
+    return;
+  }
+  const value = slugTags[0].description.trim();
+  if (value.length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: slugTags[0].startLineIndex, messageId: 'missingSlug', report: ctx.report });
+  } else if (!KEBAB_SLUG_PATTERN.test(value)) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: slugTags[0].startLineIndex, messageId: 'invalidSlugFormat', data: { value }, report: ctx.report });
+  }
+}
 
 /**
  * Splits an `@dbxAction`-family JSDoc into its marker tag and the map of
@@ -98,60 +146,39 @@ export const utilRequireDbxActionCompanionTagsRule: UtilRequireDbxActionCompanio
     const allowedStates = options.allowedStates ?? DEFAULT_ALLOWED_STATES;
     const knownCompanions = options.knownCompanions ?? DEFAULT_KNOWN_COMPANIONS;
     const requireBareMarker = options.requireBareMarker !== false;
-    const propertyOnlyCompanions: ReadonlySet<string> = new Set(['StateTransitionsFrom', 'StateTransitionsTo']);
 
     function checkClassJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
       const { markerTag, companions } = collectFamilyTags(parsed);
       if ((!markerTag && companions.size === 0) || (requireBareMarker && !markerTag)) return;
+
+      const ctx: ClassReportContext = { commentNode, parsed, sourceCode, report: context.report };
       const triggerLine = (markerTag ?? Array.from(companions.values())[0]?.[0])?.startLineIndex ?? 0;
 
-      // Unknown companions.
-      for (const [suffix, instances] of companions.entries()) {
-        if (!knownCompanions.includes(suffix)) {
-          for (const tag of instances) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknownDbxActionTag', data: { name: suffix, known: knownCompanions.join(', ') }, report: context.report });
-        }
-        if (propertyOnlyCompanions.has(suffix)) {
-          for (const tag of instances) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'stateTagOutsideEnumMember', data: { name: suffix }, report: context.report });
-        }
-      }
+      reportClassUnknownAndMisplaced(ctx, companions, knownCompanions);
+      reportClassDuplicates(ctx, companions);
+      reportClassSlug(ctx, companions.get('Slug') ?? [], triggerLine);
 
-      // Duplicate detection (only for non-multiple companions).
-      for (const [suffix, instances] of companions.entries()) {
-        if (instances.length <= 1) continue;
-        for (let i = 1; i < instances.length; i += 1) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: instances[i].startLineIndex, messageId: 'duplicateCompanionTag', data: { name: suffix }, report: context.report });
-        }
-      }
-
-      // Required Slug.
-      const slugTags = companions.get('Slug') ?? [];
-      if (slugTags.length === 0) {
-        reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingSlug', report: context.report });
-      } else {
-        const value = slugTags[0].description.trim();
-        if (value.length === 0) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: slugTags[0].startLineIndex, messageId: 'missingSlug', report: context.report });
-        else if (!KEBAB_SLUG_PATTERN.test(value)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: slugTags[0].startLineIndex, messageId: 'invalidSlugFormat', data: { value }, report: context.report });
-      }
-
-      // Role enum.
-      const roleTags = companions.get('Role') ?? [];
-      for (const tag of roleTags) {
+      for (const tag of companions.get('Role') ?? []) {
         const value = tag.description.trim();
-        if (value.length > 0 && !allowedRoles.includes(value)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidRole', data: { value, allowed: allowedRoles.join(', ') }, report: context.report });
+        if (value.length > 0 && !allowedRoles.includes(value)) {
+          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidRole', data: { value, allowed: allowedRoles.join(', ') }, report: context.report });
+        }
       }
 
-      // StateInteraction list values.
       for (const tag of companions.get('StateInteraction') ?? []) {
         for (const item of splitCommaSeparated(tag.description)) {
-          if (!allowedStates.includes(item)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidStateValue', data: { value: item, allowed: allowedStates.join(', ') }, report: context.report });
+          if (!allowedStates.includes(item)) {
+            reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidStateValue', data: { value: item, allowed: allowedStates.join(', ') }, report: context.report });
+          }
         }
       }
 
-      // SkillRefs kebab.
       for (const tag of companions.get('SkillRefs') ?? []) {
         for (const item of splitCommaSeparated(tag.description)) {
-          if (!KEBAB_SLUG_PATTERN.test(item)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'skillRefsNotKebab', data: { value: item }, report: context.report });
+          if (!KEBAB_SLUG_PATTERN.test(item)) {
+            reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'skillRefsNotKebab', data: { value: item }, report: context.report });
+          }
         }
       }
     }

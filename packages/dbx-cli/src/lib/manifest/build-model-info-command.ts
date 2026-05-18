@@ -93,11 +93,9 @@ function runHandler(manifest: CliModelManifest, argv: ModelInfoArgv): void {
     } else {
       process.stdout.write(renderModelManifestEntry(entry));
     }
+  } else if (argv.json) {
+    outputResult(manifest);
   } else {
-    if (argv.json) {
-      outputResult(manifest);
-    } else {
-      process.stdout.write(renderModelManifestList(manifest));
-    }
+    process.stdout.write(renderModelManifestList(manifest));
   }
 }

@@ -106,7 +106,7 @@ export default [
       'dereekb-dbx-web/require-complete-on-destroy': 'error',
       'dereekb-dbx-web/no-redundant-on-destroy': 'error',
       'dereekb-dbx-web/require-computed-signal-suffix': 'warn', // dbx__note__angular-conventions ANG-C2: computed() class properties end with Signal; raw input()/model() properties don't.
-      'dereekb-dbx-web/require-component-config-input': 'off' // TODO(dbx-components-v14): re-enable at 'warn'. dbx__note__angular-conventions ANG-C1: consolidate >3 signal inputs into a single config input. Disabled here for now; flip to 'warn' for dbx-components v14 alongside the breaking-change refactor pass that consolidates wide-input components (DbxButtonComponent, DbxLoadingComponent, DbxForge*FieldComponent cluster, ~60 total) into a single config input.
+      'dereekb-dbx-web/require-component-config-input': 'off' // NOTE(dbx-components-v14): re-enable at 'warn'. dbx__note__angular-conventions ANG-C1: consolidate >3 signal inputs into a single config input. Disabled here for now; flip to 'warn' for dbx-components v14 alongside the breaking-change refactor pass that consolidates wide-input components (DbxButtonComponent, DbxLoadingComponent, DbxForge*FieldComponent cluster, ~60 total) into a single config input.
     }
   },
   {

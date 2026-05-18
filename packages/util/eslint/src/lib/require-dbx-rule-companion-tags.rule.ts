@@ -1,12 +1,86 @@
 import { leadingJsdocFor } from './comments';
-import { parseJsdocComment, type ParsedJsdocTag } from './jsdoc-parser';
+import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 import { reportOnJsdocLine } from './dbx-tag-families';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 const DEFAULT_ALLOWED_SEVERITIES: readonly string[] = ['error', 'warning'];
 const DEFAULT_ALLOWED_SEE_ALSO_KINDS: readonly string[] = ['artifact', 'tool', 'doc'];
 const DEFAULT_KNOWN_COMPANIONS: readonly string[] = ['Severity', 'Applies', 'NotApplies', 'Fix', 'Template', 'SeeAlso'];
+const MULTIPLE_COMPANIONS: ReadonlySet<string> = new Set(['SeeAlso']);
+const REQUIRED_SIMPLE_COMPANIONS: readonly (readonly [string, string])[] = [
+  ['Applies', 'missingApplies'],
+  ['NotApplies', 'missingNotApplies'],
+  ['Fix', 'missingFix']
+];
+
+interface RuleReportContext {
+  readonly commentNode: AstNode;
+  readonly parsed: ParsedJsdoc;
+  readonly sourceCode: AstNode;
+  readonly report: (descriptor: { loc?: AstNode; messageId: string; data?: Record<string, string> }) => void;
+}
+
+function reportUnknownCompanions(ctx: RuleReportContext, companions: ReadonlyMap<string, ParsedJsdocTag[]>, knownCompanions: readonly string[]): void {
+  for (const [suffix, instances] of companions.entries()) {
+    if (knownCompanions.includes(suffix)) continue;
+    for (const tag of instances) {
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknownDbxRuleTag', data: { name: suffix, known: knownCompanions.join(', ') }, report: ctx.report });
+    }
+  }
+}
+
+function reportDuplicates(ctx: RuleReportContext, companions: ReadonlyMap<string, ParsedJsdocTag[]>): void {
+  for (const [suffix, instances] of companions.entries()) {
+    if (MULTIPLE_COMPANIONS.has(suffix) || instances.length <= 1) continue;
+    for (let i = 1; i < instances.length; i += 1) {
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: instances[i].startLineIndex, messageId: 'duplicateCompanionTag', data: { name: suffix }, report: ctx.report });
+    }
+  }
+}
+
+function reportSeverity(ctx: RuleReportContext, severityTags: readonly ParsedJsdocTag[], triggerLine: number, allowedSeverities: readonly string[]): void {
+  if (severityTags.length === 0 || severityTags[0].description.trim().length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingSeverity', report: ctx.report });
+    return;
+  }
+  const value = severityTags[0].description.trim();
+  if (!allowedSeverities.includes(value)) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: severityTags[0].startLineIndex, messageId: 'invalidSeverity', data: { value, allowed: allowedSeverities.join(', ') }, report: ctx.report });
+  }
+}
+
+function reportSeeAlso(ctx: RuleReportContext, seeAlsoTags: readonly ParsedJsdocTag[], allowedSeeAlsoKinds: readonly string[]): void {
+  for (const tag of seeAlsoTags) {
+    const raw = tag.description.trim();
+    if (raw.length === 0) continue;
+    const colonIdx = raw.indexOf(':');
+    if (colonIdx <= 0) {
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidSeeAlsoFormat', data: { value: raw }, report: ctx.report });
+      continue;
+    }
+    const kind = raw.slice(0, colonIdx).trim();
+    if (!allowedSeeAlsoKinds.includes(kind)) {
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidSeeAlsoKind', data: { value: kind, allowed: allowedSeeAlsoKinds.join(', ') }, report: ctx.report });
+    }
+  }
+}
+
+function collectRuleCompanions(parsed: ParsedJsdoc): { readonly markerTag: ParsedJsdocTag | undefined; readonly companions: Map<string, ParsedJsdocTag[]> } {
+  const markerTag = parsed.tags.find((t) => t.tag === 'dbxRule');
+  const companions = new Map<string, ParsedJsdocTag[]>();
+  for (const tag of parsed.tags) {
+    if (!tag.tag.startsWith('dbxRule') || tag.tag === 'dbxRule') continue;
+    const suffix = tag.tag.slice('dbxRule'.length);
+    const list = companions.get(suffix) ?? [];
+    list.push(tag);
+    companions.set(suffix, list);
+  }
+  return { markerTag, companions };
+}
 
 /**
  * Options for the require-dbx-rule-companion-tags rule.
@@ -76,66 +150,27 @@ export const utilRequireDbxRuleCompanionTagsRule: UtilRequireDbxRuleCompanionTag
     const allowedSeeAlsoKinds = options.allowedSeeAlsoKinds ?? DEFAULT_ALLOWED_SEE_ALSO_KINDS;
     const knownCompanions = options.knownCompanions ?? DEFAULT_KNOWN_COMPANIONS;
     const requireBareMarker = options.requireBareMarker !== false;
-    const multipleCompanions: ReadonlySet<string> = new Set(['SeeAlso']);
 
     function checkEnumMemberJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
-      const markerTag = parsed.tags.find((t) => t.tag === 'dbxRule');
-      const companions = new Map<string, ParsedJsdocTag[]>();
-      for (const tag of parsed.tags) {
-        if (!tag.tag.startsWith('dbxRule') || tag.tag === 'dbxRule') continue;
-        const suffix = tag.tag.slice('dbxRule'.length);
-        const list = companions.get(suffix) ?? [];
-        list.push(tag);
-        companions.set(suffix, list);
-      }
+      const { markerTag, companions } = collectRuleCompanions(parsed);
       if ((!markerTag && companions.size === 0) || (requireBareMarker && !markerTag)) return;
+
+      const ctx: RuleReportContext = { commentNode, parsed, sourceCode, report: context.report };
       const triggerLine = markerTag?.startLineIndex ?? 0;
 
-      // Unknown companions.
-      for (const [suffix, instances] of companions.entries()) {
-        if (!knownCompanions.includes(suffix)) {
-          for (const tag of instances) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknownDbxRuleTag', data: { name: suffix, known: knownCompanions.join(', ') }, report: context.report });
-        }
-      }
+      reportUnknownCompanions(ctx, companions, knownCompanions);
+      reportDuplicates(ctx, companions);
+      reportSeverity(ctx, companions.get('Severity') ?? [], triggerLine, allowedSeverities);
 
-      // Duplicate detection (excluding repeatable SeeAlso).
-      for (const [suffix, instances] of companions.entries()) {
-        if (multipleCompanions.has(suffix) || instances.length <= 1) continue;
-        for (let i = 1; i < instances.length; i += 1) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: instances[i].startLineIndex, messageId: 'duplicateCompanionTag', data: { name: suffix }, report: context.report });
-      }
-
-      // Required Severity.
-      const severityTags = companions.get('Severity') ?? [];
-      if (severityTags.length === 0 || severityTags[0].description.trim().length === 0) {
-        reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingSeverity', report: context.report });
-      } else {
-        const value = severityTags[0].description.trim();
-        if (!allowedSeverities.includes(value)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: severityTags[0].startLineIndex, messageId: 'invalidSeverity', data: { value, allowed: allowedSeverities.join(', ') }, report: context.report });
-      }
-
-      // Required Applies, NotApplies, Fix.
-      for (const [suffix, messageId] of [
-        ['Applies', 'missingApplies'],
-        ['NotApplies', 'missingNotApplies'],
-        ['Fix', 'missingFix']
-      ] as const) {
+      for (const [suffix, messageId] of REQUIRED_SIMPLE_COMPANIONS) {
         const tags = companions.get(suffix) ?? [];
-        if (tags.length === 0 || tags[0].description.trim().length === 0) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId, report: context.report });
+        if (tags.length === 0 || tags[0].description.trim().length === 0) {
+          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId, report: context.report });
+        }
       }
 
-      // SeeAlso format + kind validation.
-      for (const tag of companions.get('SeeAlso') ?? []) {
-        const raw = tag.description.trim();
-        if (raw.length === 0) continue;
-        const colonIdx = raw.indexOf(':');
-        if (colonIdx <= 0) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidSeeAlsoFormat', data: { value: raw }, report: context.report });
-          continue;
-        }
-        const kind = raw.slice(0, colonIdx).trim();
-        if (!allowedSeeAlsoKinds.includes(kind)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidSeeAlsoKind', data: { value: kind, allowed: allowedSeeAlsoKinds.join(', ') }, report: context.report });
-      }
+      reportSeeAlso(ctx, companions.get('SeeAlso') ?? [], allowedSeeAlsoKinds);
     }
 
     function visitEnumMember(node: AstNode): void {

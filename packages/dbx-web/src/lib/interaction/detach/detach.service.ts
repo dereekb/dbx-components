@@ -150,7 +150,7 @@ export class DbxDetachService {
     let instance: DbxDetachInstance<T>;
 
     if (existing) {
-      instance = new DbxDetachInstanceImpl(existing as DbxDetachEntryState<T>);
+      instance = new DbxDetachInstanceImpl(existing);
     } else {
       const controller = new DbxDetachEntryController(key, config.data, this);
 
