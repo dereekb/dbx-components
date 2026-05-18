@@ -4,7 +4,7 @@
  */
 
 import type { DeclaredEntry, HandlerEntry, ModelSummary, ReconciledEntry, ValidateIssue } from './types.js';
-import type { CrudVerb } from '../model-api-shared/types.js';
+import type { CrudVerb } from '@dereekb/dbx-cli/manifest-extract';
 import { checkHandlerNaming } from './naming.js';
 
 export interface ReconcileInput {

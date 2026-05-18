@@ -155,24 +155,24 @@ function applyInterfaceTag(state: MutableInterfaceTagState, tagName: string, val
   switch (tagName) {
     case 'dbxModel':
       state.dbxModel = true;
-      return;
+      break;
     case 'dbxModelSubObject':
       state.dbxModelSubObject = true;
-      return;
+      break;
     case 'dbxModelOrganizationalGroupRoot':
       state.dbxModelOrganizationalGroupRoot = true;
-      return;
+      break;
     case 'dbxModelArchetype':
       applyArchetypeTag(state, value);
-      return;
+      break;
     case 'dbxModelAggregatesFrom':
       applyAggregatesFromTag(state, value);
-      return;
+      break;
     case 'dbxModelCompositeKey':
       applyCompositeKeyTag(state, value);
-      return;
+      break;
     default:
-      return;
+      break;
   }
 }
 

@@ -66,24 +66,35 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.specFile, cwd);
     if (parsed.apiDir !== undefined) ensurePathInsideCwd(parsed.apiDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const specAbs = resolve(cwd, parsed.specFile);
-  const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
-  let tree;
-  try {
-    tree = await inspectSpecFile({ specAbs, specRel: parsed.specFile, apiAbs, apiRel: parsed.apiDir });
-  } catch (err) {
-    return toolError(`Failed to read spec file: ${err instanceof Error ? err.message : String(err)}`);
+  let result: ToolResult;
+  if (ensureError !== undefined) {
+    result = toolError(ensureError);
+  } else {
+    const specAbs = resolve(cwd, parsed.specFile);
+    const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
+    let tree;
+    let inspectError: string | undefined;
+    try {
+      tree = await inspectSpecFile({ specAbs, specRel: parsed.specFile, apiAbs, apiRel: parsed.apiDir });
+    } catch (err) {
+      inspectError = `Failed to read spec file: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (inspectError !== undefined || tree === undefined) {
+      result = toolError(inspectError ?? 'Failed to inspect spec file.');
+    } else {
+      const view = (parsed.view ?? 'all') as SpecTreeView;
+      const filters = { filterByModel: parsed.filterByModel, filterByDescribePath: parsed.filterByDescribePath };
+      const text = parsed.format === 'json' ? formatTreeAsJson(tree, view, filters) : formatTreeAsMarkdown(tree, view, filters);
+      result = { content: [{ type: 'text', text }] };
+    }
   }
-  const view = (parsed.view ?? 'all') as SpecTreeView;
-  const filters = { filterByModel: parsed.filterByModel, filterByDescribePath: parsed.filterByDescribePath };
-  const text = parsed.format === 'json' ? formatTreeAsJson(tree, view, filters) : formatTreeAsMarkdown(tree, view, filters);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

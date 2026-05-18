@@ -387,6 +387,7 @@ interface ResolveOptionalRegistryArgs<TRegistry, TResult> {
  */
 async function resolveOptionalRegistry<TRegistry, TResult>(args: ResolveOptionalRegistryArgs<TRegistry, TResult>): Promise<TRegistry | undefined> {
   if (args.injected !== undefined) return args.injected;
+  let resolved: TRegistry | undefined;
   try {
     const result = await args.load({ cwd: args.cwd });
     if (args.observer === undefined) {
@@ -395,13 +396,13 @@ async function resolveOptionalRegistry<TRegistry, TResult>(args: ResolveOptional
       args.observer(result);
     }
     args.onSuccess?.(result);
-    return args.extractRegistry(result);
+    resolved = args.extractRegistry(result);
   } catch (error) {
     if (!args.catchErrors) throw error;
     const message = error instanceof Error ? error.message : String(error);
     process.stderr.write(`[dbx-components-mcp] ${args.failureLabel} registry unavailable: ${message}\n`);
-    return undefined;
   }
+  return resolved;
 }
 
 /**

@@ -47,22 +47,32 @@ export async function runDbxDocsUiExamplesScanCli(input: RunDbxDocsUiExamplesSca
 }
 
 function formatExtractWarning(warning: DbxDocsUiExamplesExtractWarning): string {
+  let result: string;
   switch (warning.kind) {
     case 'missing-required-tag':
-      return `${warning.className} (${warning.filePath}:${warning.line}) missing @${warning.tag}`;
+      result = `${warning.className} (${warning.filePath}:${warning.line}) missing @${warning.tag}`;
+      break;
     case 'unknown-category':
-      return `${warning.className} (${warning.filePath}:${warning.line}) unknown category "${warning.category}"`;
+      result = `${warning.className} (${warning.filePath}:${warning.line}) unknown category "${warning.category}"`;
+      break;
     case 'missing-component-decorator':
-      return `${warning.className} (${warning.filePath}:${warning.line}) missing @Component decorator`;
+      result = `${warning.className} (${warning.filePath}:${warning.line}) missing @Component decorator`;
+      break;
     case 'missing-template':
-      return `${warning.className} (${warning.filePath}:${warning.line}) missing template / templateUrl`;
+      result = `${warning.className} (${warning.filePath}:${warning.line}) missing template / templateUrl`;
+      break;
     case 'missing-example-root':
-      return `${warning.className} (${warning.filePath}:${warning.line}) template missing <dbx-docs-ui-example> root`;
+      result = `${warning.className} (${warning.filePath}:${warning.line}) template missing <dbx-docs-ui-example> root`;
+      break;
     case 'missing-example-content':
-      return `${warning.className} (${warning.filePath}:${warning.line}) template missing <dbx-docs-ui-example-content>`;
+      result = `${warning.className} (${warning.filePath}:${warning.line}) template missing <dbx-docs-ui-example-content>`;
+      break;
     case 'template-url-unreadable':
-      return `${warning.className} (${warning.filePath}:${warning.line}) could not read templateUrl ${warning.templatePath}`;
+      result = `${warning.className} (${warning.filePath}:${warning.line}) could not read templateUrl ${warning.templatePath}`;
+      break;
     case 'uses-unresolved':
-      return `${warning.className} (${warning.filePath}:${warning.line}) @dbxDocsUiExampleUses ${warning.identifier} could not be resolved`;
+      result = `${warning.className} (${warning.filePath}:${warning.line}) @dbxDocsUiExampleUses ${warning.identifier} could not be resolved`;
+      break;
   }
+  return result;
 }

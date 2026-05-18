@@ -128,14 +128,18 @@ function parseChainQuery(value: string): readonly string[] {
  * @returns `true` when the sequence is contained in the chain.
  */
 function chainContainsSequence(chain: readonly string[], sequence: readonly string[]): boolean {
-  if (sequence.length === 0) return true;
-  if (sequence.length > chain.length) return false;
-  const lowerChain = chain.map((s) => s.toLowerCase());
-  outer: for (let i = 0; i <= lowerChain.length - sequence.length; i++) {
-    for (const [j, element] of sequence.entries()) {
-      if (lowerChain[i + j] !== element) continue outer;
+  let result = false;
+  if (sequence.length === 0) {
+    result = true;
+  } else if (sequence.length <= chain.length) {
+    const lowerChain = chain.map((s) => s.toLowerCase());
+    outer: for (let i = 0; i <= lowerChain.length - sequence.length; i++) {
+      for (const [j, element] of sequence.entries()) {
+        if (lowerChain[i + j] !== element) continue outer;
+      }
+      result = true;
+      break;
     }
-    return true;
   }
-  return false;
+  return result;
 }

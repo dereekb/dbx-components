@@ -188,47 +188,61 @@ function formatNotFound(rawTopic: string, candidates: readonly FirebaseModel[]):
  * @returns The rendered hierarchy, or an error result when args fail validation.
  */
 export async function runModelHierarchy(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedHierarchyArgs;
+  let args: ParsedHierarchyArgs | undefined;
+  let parseError: string | undefined;
   try {
     args = parseHierarchyArgs(rawArgs);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
+    parseError = error instanceof Error ? error.message : String(error);
   }
 
-  const cwd = process.cwd();
-  if (args.componentDirs) {
-    try {
-      for (const dir of args.componentDirs) ensurePathInsideCwd(dir, cwd);
-    } catch (error) {
-      return toolError(error instanceof Error ? error.message : String(error));
+  let toolResult: ToolResult;
+  if (parseError !== undefined || args === undefined) {
+    toolResult = toolError(parseError ?? 'Failed to parse arguments.');
+  } else {
+    const cwd = process.cwd();
+    let ensureError: string | undefined;
+    if (args.componentDirs) {
+      try {
+        for (const dir of args.componentDirs) ensurePathInsideCwd(dir, cwd);
+      } catch (error) {
+        ensureError = error instanceof Error ? error.message : String(error);
+      }
+    }
+    if (ensureError !== undefined) {
+      toolResult = toolError(ensureError);
+    } else {
+      const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
+      const models = selectModels(args.scope, downstream);
+
+      let rootModel: FirebaseModel | undefined;
+      let rootMissing = false;
+      if (args.rootModel !== undefined) {
+        rootModel = resolveRootModel(args.rootModel, args.scope, downstream);
+        if (!rootModel) {
+          rootMissing = true;
+        }
+      }
+      if (rootMissing && args.rootModel !== undefined) {
+        const candidates = fuzzyCandidates(models, args.rootModel.trim().toLowerCase());
+        toolResult = toolError(formatNotFound(args.rootModel, candidates));
+      } else {
+        const result = buildModelHierarchy({
+          models,
+          rootModel,
+          maxDepth: args.maxDepth,
+          format: args.format
+        });
+        const text = renderModelHierarchy(result, args.output, {
+          scope: args.scope,
+          rootModel: rootModel?.identityConst,
+          maxDepth: args.maxDepth
+        });
+        toolResult = { content: [{ type: 'text', text }] };
+      }
     }
   }
-
-  const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
-  const models = selectModels(args.scope, downstream);
-
-  let rootModel: FirebaseModel | undefined;
-  if (args.rootModel !== undefined) {
-    rootModel = resolveRootModel(args.rootModel, args.scope, downstream);
-    if (!rootModel) {
-      const candidates = fuzzyCandidates(models, args.rootModel.trim().toLowerCase());
-      return toolError(formatNotFound(args.rootModel, candidates));
-    }
-  }
-
-  const result = buildModelHierarchy({
-    models,
-    rootModel,
-    maxDepth: args.maxDepth,
-    format: args.format
-  });
-  const text = renderModelHierarchy(result, args.output, {
-    scope: args.scope,
-    rootModel: rootModel?.identityConst,
-    maxDepth: args.maxDepth
-  });
-  return { content: [{ type: 'text', text }] };
+  return toolResult;
 }
 
 export const modelHierarchyTool: DbxTool = {

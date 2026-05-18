@@ -72,9 +72,10 @@ async function runOneCluster(workspaceRoot: string, packageRelDir: string, clust
     stderr.push(message);
   };
 
+  let result: RefreshOutcome;
   try {
     const exitCode = await dispatchScanCli({ cluster, workspaceRoot, packageRelDir, log, errorLog });
-    return {
+    result = {
       kind: exitCode === 0 ? 'ok' : 'fail',
       packageRelDir,
       cluster,
@@ -83,13 +84,14 @@ async function runOneCluster(workspaceRoot: string, packageRelDir: string, clust
       stderr
     };
   } catch (err) {
-    return {
+    result = {
       kind: 'error',
       packageRelDir,
       cluster,
       message: err instanceof Error ? err.message : String(err)
     };
   }
+  return result;
 }
 
 interface DispatchInput {
@@ -109,18 +111,26 @@ async function dispatchScanCli(input: DispatchInput): Promise<number> {
     log: input.log,
     errorLog: input.errorLog
   };
+  let exitCode: number;
   switch (input.cluster) {
     case 'actions':
-      return (await runActionsScanCli(baseInput)).exitCode;
+      exitCode = (await runActionsScanCli(baseInput)).exitCode;
+      break;
     case 'filters':
-      return (await runFiltersScanCli(baseInput)).exitCode;
+      exitCode = (await runFiltersScanCli(baseInput)).exitCode;
+      break;
     case 'forgeFields':
-      return (await runForgeFieldsScanCli(baseInput)).exitCode;
+      exitCode = (await runForgeFieldsScanCli(baseInput)).exitCode;
+      break;
     case 'pipes':
-      return (await runPipesScanCli(baseInput)).exitCode;
+      exitCode = (await runPipesScanCli(baseInput)).exitCode;
+      break;
     case 'uiComponents':
-      return (await runUiComponentsScanCli(baseInput)).exitCode;
+      exitCode = (await runUiComponentsScanCli(baseInput)).exitCode;
+      break;
     case 'semanticTypes':
-      return (await runScanCli(baseInput)).exitCode;
+      exitCode = (await runScanCli(baseInput)).exitCode;
+      break;
   }
+  return exitCode;
 }

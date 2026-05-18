@@ -156,36 +156,49 @@ interface ListAppReport {
 // MARK: Tool factory
 async function runListAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolResult> {
   const parsed = ListAppArgsType(rawArgs);
+  let result: ToolResult;
   if (parsed instanceof type.errors) {
-    return toolError(`Invalid arguments: ${parsed.summary}`);
+    result = toolError(`Invalid arguments: ${parsed.summary}`);
+  } else {
+    const cwd = process.cwd();
+    let pathError: string | undefined;
+    try {
+      ensurePathInsideCwd(parsed.componentDir, cwd);
+    } catch (err) {
+      pathError = err instanceof Error ? err.message : String(err);
+    }
+
+    if (pathError !== undefined) {
+      result = toolError(pathError);
+    } else {
+      const componentAbs = resolve(cwd, parsed.componentDir);
+
+      const filters: ListAppFilters = {
+        model: parsed.model,
+        category: parsed.category,
+        tag: parsed.tag,
+        excludedOnly: parsed.excludedOnly ?? false,
+        unusedOnly: parsed.unusedOnly ?? false,
+        includeUntagged: parsed.includeUntagged ?? true
+      };
+
+      let report: ListAppReport | undefined;
+      let buildError: string | undefined;
+      try {
+        report = await buildListAppReport({ componentDir: parsed.componentDir, componentAbs, workspaceRoot: cwd, filters });
+      } catch (err) {
+        buildError = `Failed to walk component for firebase indexes: ${err instanceof Error ? err.message : String(err)}`;
+      }
+
+      if (buildError !== undefined) {
+        result = toolError(buildError);
+      } else {
+        const text = parsed.format === 'json' ? formatReportAsJson(report as ListAppReport) : formatReportAsMarkdown(report as ListAppReport);
+        result = { content: [{ type: 'text', text }] };
+      }
+    }
   }
-  const cwd = process.cwd();
-  try {
-    ensurePathInsideCwd(parsed.componentDir, cwd);
-  } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
-  }
-
-  const componentAbs = resolve(cwd, parsed.componentDir);
-
-  const filters: ListAppFilters = {
-    model: parsed.model,
-    category: parsed.category,
-    tag: parsed.tag,
-    excludedOnly: parsed.excludedOnly ?? false,
-    unusedOnly: parsed.unusedOnly ?? false,
-    includeUntagged: parsed.includeUntagged ?? true
-  };
-
-  let report: ListAppReport;
-  try {
-    report = await buildListAppReport({ componentDir: parsed.componentDir, componentAbs, workspaceRoot: cwd, filters });
-  } catch (err) {
-    return toolError(`Failed to walk component for firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
-  }
-
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  return { content: [{ type: 'text', text }] };
+  return result;
 }
 
 /**
@@ -376,36 +389,71 @@ function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry, references: Factor
 }
 
 function formatBuildWarning(warning: ModelFirebaseIndexBuildWarning): string {
+  let result: string;
   if (warning.stage === 'extract') {
     const w = warning.warning;
     switch (w.kind) {
       case 'missing-name':
-        return `(anonymous) (${w.filePath}:${w.line}) tagged export has no resolvable name`;
+        result = `(anonymous) (${w.filePath}:${w.line}) tagged export has no resolvable name`;
+        break;
       case 'missing-model-tag':
-        return `${w.name} (${w.filePath}:${w.line}) missing required @dbxModelFirebaseIndexModel tag`;
+        result = `${w.name} (${w.filePath}:${w.line}) missing required @dbxModelFirebaseIndexModel tag`;
+        break;
       case 'unresolved-model':
-        return `${w.name} (${w.filePath}:${w.line}) could not resolve model "${w.model}" to a Firestore identity`;
+        result = `${w.name} (${w.filePath}:${w.line}) could not resolve model "${w.model}" to a Firestore identity`;
+        break;
       case 'unsupported-scope':
-        return `${w.name} (${w.filePath}:${w.line}) unsupported @dbxModelFirebaseIndexScope value "${w.scope}"`;
+        result = `${w.name} (${w.filePath}:${w.line}) unsupported @dbxModelFirebaseIndexScope value "${w.scope}"`;
+        break;
       case 'duplicate-slug':
-        return `${w.name} (${w.filePath}:${w.line}) duplicate slug "${w.slug}" — already used by ${w.previousName}`;
+        result = `${w.name} (${w.filePath}:${w.line}) duplicate slug "${w.slug}" — already used by ${w.previousName}`;
+        break;
       case 'unknown-helper':
-        return `${w.name} (${w.filePath}:${w.line}) unknown constraint helper "${w.helper}"`;
+        result = `${w.name} (${w.filePath}:${w.line}) unknown constraint helper "${w.helper}"`;
+        break;
       case 'unresolved-field':
-        return `${w.name} (${w.filePath}:${w.line}) could not resolve field-path argument to "${w.callee}"`;
+        result = `${w.name} (${w.filePath}:${w.line}) could not resolve field-path argument to "${w.callee}"`;
+        break;
+      case 'missing-paths':
+        result = `${w.name} (${w.filePath}:${w.line}) missing path coverage for conditional fields [${w.conditionalFields.join(', ')}]`;
+        break;
+      case 'unknown-path-field':
+        result = `${w.name} (${w.filePath}:${w.line}) @dbxModelFirebaseIndexPath references unknown field "${w.field}"`;
+        break;
+      case 'unannotated-query-helper':
+        result = `${w.name} (${w.filePath}:${w.line}) calls query helper "${w.callee}" (${w.calleeFilePath}:${w.calleeLine}) that is not tagged with @dbxModelFirebaseIndexHelper`;
+        break;
+      case 'transitive-cycle':
+        result = `${w.name} (${w.filePath}:${w.line}) transitive constraint resolution hit a cycle through "${w.callee}"`;
+        break;
+      case 'unresolvable-transitive-callee':
+        result = `${w.name} (${w.filePath}:${w.line}) could not resolve transitive callee "${w.callee}"`;
+        break;
+      case 'complex-query-body':
+        result = `${w.name} (${w.filePath}:${w.line}) tagged query body contains a "${w.branchKind}" construct — split into one factory per target index or mark as @dbxModelFirebaseIndexDispatcher`;
+        break;
+      case 'non-delegating-dispatcher':
+        result = `${w.name} (${w.filePath}:${w.line}) @dbxModelFirebaseIndexDispatcher calls "${w.callee}" directly — dispatchers must only delegate to other tagged query functions`;
+        break;
       case 'excluded-factory':
-        return `${w.name} (${w.filePath}:${w.line}) tagged @dbxModelFirebaseIndexExclude — analyzer is suppressing composites + fieldOverrides for this factory`;
+        result = `${w.name} (${w.filePath}:${w.line}) tagged @dbxModelFirebaseIndexExclude — analyzer is suppressing composites + fieldOverrides for this factory`;
+        break;
+    }
+  } else {
+    const w = warning.warning;
+    switch (w.kind) {
+      case 'multiple-range-fields':
+        result = `${w.factoryName} multiple range-field constraints on [${w.fields.join(', ')}] — Firestore allows only one range field per query`;
+        break;
+      case 'orderby-conflict':
+        result = `${w.factoryName} field "${w.field}" has conflicting orderBy directions [${w.directions.join(', ')}]`;
+        break;
+      case 'unsupported-array-contains-any':
+        result = `${w.factoryName} field "${w.field}" uses array-contains-any — index support is partial`;
+        break;
     }
   }
-  const w = warning.warning;
-  switch (w.kind) {
-    case 'multiple-range-fields':
-      return `${w.factoryName} multiple range-field constraints on [${w.fields.join(', ')}] — Firestore allows only one range field per query`;
-    case 'orderby-conflict':
-      return `${w.factoryName} field "${w.field}" has conflicting orderBy directions [${w.directions.join(', ')}]`;
-    case 'unsupported-array-contains-any':
-      return `${w.factoryName} field "${w.field}" uses array-contains-any — index support is partial`;
-  }
+  return result;
 }
 
 // MARK: Untagged-candidate detection
@@ -434,7 +482,7 @@ async function collectUntaggedCandidates(input: CollectUntaggedCandidatesInput):
   for (const sourceFile of project.getSourceFiles()) {
     if (!sourceFile.getFilePath().endsWith('.query.ts')) continue;
     for (const fn of sourceFile.getFunctions()) {
-      const usage = extractUntaggedFunction(sourceFile, fn, componentAbs, taggedNames);
+      const usage = extractUntaggedFunction({ sourceFile, fn, componentAbs, taggedNames });
       if (usage !== undefined) {
         candidates.push(usage);
       }
@@ -444,7 +492,34 @@ async function collectUntaggedCandidates(input: CollectUntaggedCandidatesInput):
   return candidates;
 }
 
-function extractUntaggedFunction(sourceFile: SourceFile, fn: FunctionDeclaration, componentAbs: string, taggedNames: ReadonlySet<string>): UntaggedCandidate | undefined {
+interface ExtractUntaggedFunctionInput {
+  readonly sourceFile: SourceFile;
+  readonly fn: FunctionDeclaration;
+  readonly componentAbs: string;
+  readonly taggedNames: ReadonlySet<string>;
+}
+
+/**
+ * Returns an {@link UntaggedCandidate} when `fn` is an exported function whose
+ * declared return type mentions `FirestoreQueryConstraint` and whose name is
+ * not already present in `taggedNames`. Returns `undefined` otherwise — the
+ * caller filters these out when assembling the candidate list.
+ *
+ * @param input - The source file + function declaration to inspect, plus the
+ *   component root used for subpath relativisation and the tagged-name set
+ *   used to skip already-classified functions.
+ * @returns An untagged candidate when `fn` matches, `undefined` otherwise.
+ *
+ * @example
+ * ```ts
+ * const usage = extractUntaggedFunction({ sourceFile, fn, componentAbs, taggedNames });
+ * if (usage !== undefined) {
+ *   candidates.push(usage);
+ * }
+ * ```
+ */
+function extractUntaggedFunction(input: ExtractUntaggedFunctionInput): UntaggedCandidate | undefined {
+  const { sourceFile, fn, componentAbs, taggedNames } = input;
   let result: UntaggedCandidate | undefined;
   if (fn.isExported()) {
     const name = fn.getName();
@@ -465,6 +540,23 @@ function extractUntaggedFunction(sourceFile: SourceFile, fn: FunctionDeclaration
 
 const SRC_PREFIXES = ['/src/lib/', '/src/'];
 
+/**
+ * Converts an absolute source-file path into a stable subpath relative to the
+ * project root. Strips any leading `src/lib/` or `src/` segment and the
+ * trailing `.ts` extension so the output mirrors how the rest of this tool
+ * displays subpaths (e.g. `model/profile/profile.query`).
+ *
+ * @param filePath - Absolute source-file path.
+ * @param projectRoot - Absolute project root the result should be relative to.
+ * @returns The project-relative subpath with `src/lib/` / `src/` stripped and
+ *   the trailing `.ts` removed.
+ *
+ * @example
+ * ```ts
+ * relativeSubpath('/abs/component/src/lib/model/profile/profile.query.ts', '/abs/component');
+ * // → 'model/profile/profile.query'
+ * ```
+ */
 function relativeSubpath(filePath: string, projectRoot: string): string {
   const normalised = filePath.replaceAll('\\', '/');
   const projectNormalised = projectRoot.replaceAll('\\', '/');

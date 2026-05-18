@@ -316,13 +316,14 @@ interface PipeDecoratorInfo {
 }
 
 function readPipeDecorator(decl: ClassDeclaration): PipeDecoratorInfo | undefined {
+  let result: PipeDecoratorInfo | undefined;
   for (const decorator of decl.getDecorators()) {
-    if (decorator.getName() !== 'Pipe') {
-      continue;
+    if (decorator.getName() === 'Pipe') {
+      result = readPipeDecoratorConfig(decorator);
+      break;
     }
-    return readPipeDecoratorConfig(decorator);
   }
-  return undefined;
+  return result;
 }
 
 function readPipeDecoratorConfig(decorator: Decorator): PipeDecoratorInfo | undefined {

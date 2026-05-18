@@ -207,15 +207,15 @@ function formatScaffold(args: ParsedScaffoldArgs): string {
  * @returns The rendered scaffold, or an error result when args fail validation.
  */
 export function runFilterScaffold(rawArgs: unknown): ToolResult {
-  let args: ParsedScaffoldArgs;
+  let result: ToolResult;
   try {
-    args = parseArgs(rawArgs);
+    const args = parseArgs(rawArgs);
+    const text = formatScaffold(args);
+    result = { content: [{ type: 'text', text }] };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    result = toolError(message);
   }
-  const text = formatScaffold(args);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

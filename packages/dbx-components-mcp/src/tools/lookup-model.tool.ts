@@ -231,16 +231,22 @@ const EMPTY_DOWNSTREAM_CATALOG: DownstreamCatalog = {
  * @returns The markdown body to surface to the caller.
  */
 function renderMatch(match: LookupModelMatch, args: ParsedLookupModelArgs, downstream: DownstreamCatalog): string {
+  let result: string;
   switch (match.kind) {
     case 'catalog':
-      return formatFirebaseModelCatalog(args.scope === 'downstream' ? [] : FIREBASE_MODELS, args.scope === 'upstream' ? [] : downstream.models);
+      result = formatFirebaseModelCatalog(args.scope === 'downstream' ? [] : FIREBASE_MODELS, args.scope === 'upstream' ? [] : downstream.models);
+      break;
     case 'shapes':
-      return formatFirebaseStoreShapeTaxonomy();
+      result = formatFirebaseStoreShapeTaxonomy();
+      break;
     case 'single':
-      return formatFirebaseModelEntry(match.model, args.depth, { fields: args.fields });
+      result = formatFirebaseModelEntry(match.model, args.depth, { fields: args.fields });
+      break;
     case 'not-found':
-      return formatNotFound(match.normalized, match.candidates);
+      result = formatNotFound(match.normalized, match.candidates);
+      break;
   }
+  return result;
 }
 
 /**
@@ -253,28 +259,32 @@ function renderMatch(match: LookupModelMatch, args: ParsedLookupModelArgs, downs
  * @returns The rendered match, or an error result when args fail validation.
  */
 export async function runLookupModel(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedLookupModelArgs;
+  let result: ToolResult;
   try {
-    args = parseLookupModelArgs(rawArgs);
+    const args = parseLookupModelArgs(rawArgs);
+    const cwd = process.cwd();
+    const componentDirs = args.componentDirs;
+    let pathError: string | undefined;
+    if (componentDirs) {
+      try {
+        for (const dir of componentDirs) ensurePathInsideCwd(dir, cwd);
+      } catch (error) {
+        pathError = error instanceof Error ? error.message : String(error);
+      }
+    }
+
+    if (pathError !== undefined) {
+      result = toolError(pathError);
+    } else {
+      const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs });
+      const match = resolveTopic({ rawTopic: args.topic, scope: args.scope, downstream });
+      const text = renderMatch(match, args, downstream);
+      result = { content: [{ type: 'text', text }] };
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
+    result = toolError(message);
   }
-
-  const cwd = process.cwd();
-  const componentDirs = args.componentDirs;
-  if (componentDirs) {
-    try {
-      for (const dir of componentDirs) ensurePathInsideCwd(dir, cwd);
-    } catch (error) {
-      return toolError(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs });
-  const match = resolveTopic({ rawTopic: args.topic, scope: args.scope, downstream });
-  const text = renderMatch(match, args, downstream);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

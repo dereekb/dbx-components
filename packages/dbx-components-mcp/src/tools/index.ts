@@ -413,9 +413,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   underlyingServer.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: toolArgs } = request.params;
     const tool = tools.find((t) => t.definition.name === name);
-    if (!tool) {
-      return toolError(`Unknown tool: ${name}. Known tools: ${tools.map((t) => t.definition.name).join(', ')}.`);
-    }
-    return tool.run(toolArgs);
+    const result = tool ? tool.run(toolArgs) : toolError(`Unknown tool: ${name}. Known tools: ${tools.map((t) => t.definition.name).join(', ')}.`);
+    return result;
   });
 }

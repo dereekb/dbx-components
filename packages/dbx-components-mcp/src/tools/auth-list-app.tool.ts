@@ -50,22 +50,23 @@ export function createAuthListAppTool(input: CreateAuthListAppToolInput): DbxToo
     definition: DBX_AUTH_LIST_APP_TOOL,
     run(rawArgs) {
       const parsed = ListAppArgsType(rawArgs);
-      if (parsed instanceof type.errors) {
-        return toolError(`Invalid arguments: ${parsed.summary}`);
-      }
-      const { app } = parsed;
-      const normalized = app.trim();
       let result: ToolResult;
-      if (isCatalogTopic(normalized)) {
-        result = { content: [{ type: 'text', text: formatAppCatalog(registry.apps) }] };
+      if (parsed instanceof type.errors) {
+        result = toolError(`Invalid arguments: ${parsed.summary}`);
       } else {
-        const entry = registry.findApp(normalized);
-        if (entry === undefined) {
-          result = { content: [{ type: 'text', text: formatNotFound(normalized, registry.apps) }] };
+        const { app } = parsed;
+        const normalized = app.trim();
+        if (isCatalogTopic(normalized)) {
+          result = { content: [{ type: 'text', text: formatAppCatalog(registry.apps) }] };
         } else {
-          const claims = registry.findClaimsByApp(entry.app);
-          const text = formatApp(entry, claims, registry);
-          result = { content: [{ type: 'text', text }] };
+          const entry = registry.findApp(normalized);
+          if (entry === undefined) {
+            result = { content: [{ type: 'text', text: formatNotFound(normalized, registry.apps) }] };
+          } else {
+            const claims = registry.findClaimsByApp(entry.app);
+            const text = formatApp(entry, claims, registry);
+            result = { content: [{ type: 'text', text }] };
+          }
         }
       }
       return result;

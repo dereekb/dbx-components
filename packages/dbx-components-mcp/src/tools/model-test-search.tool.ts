@@ -81,23 +81,34 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   const query: SpecSearchQuery = { mode: queryFields[0].mode, value: queryFields[0].value as string };
 
   const cwd = process.cwd();
+  let out: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.specFile, cwd);
     if (parsed.apiDir !== undefined) ensurePathInsideCwd(parsed.apiDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const specAbs = resolve(cwd, parsed.specFile);
-  const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
-  let tree;
-  try {
-    tree = await inspectSpecFile({ specAbs, specRel: parsed.specFile, apiAbs, apiRel: parsed.apiDir });
-  } catch (err) {
-    return toolError(`Failed to read spec file: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError !== undefined) {
+    out = toolError(ensureError);
+  } else {
+    const specAbs = resolve(cwd, parsed.specFile);
+    const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
+    let tree;
+    let inspectError: string | undefined;
+    try {
+      tree = await inspectSpecFile({ specAbs, specRel: parsed.specFile, apiAbs, apiRel: parsed.apiDir });
+    } catch (err) {
+      inspectError = `Failed to read spec file: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (inspectError !== undefined || tree === undefined) {
+      out = toolError(inspectError ?? 'Failed to inspect spec file.');
+    } else {
+      const result = searchSpecTree(tree, query);
+      const text = parsed.format === 'json' ? formatSearchAsJson(tree, result) : formatSearchAsMarkdown(tree, result);
+      out = { content: [{ type: 'text', text }] };
+    }
   }
-  const result = searchSpecTree(tree, query);
-  const text = parsed.format === 'json' ? formatSearchAsJson(tree, result) : formatSearchAsMarkdown(tree, result);
-  const out: ToolResult = { content: [{ type: 'text', text }] };
   return out;
 }
 

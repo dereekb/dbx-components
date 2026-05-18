@@ -58,28 +58,39 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError('Provide either `model` (PascalCase model name) or `identity` (the `<camelName>Identity` const string).');
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.apiDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const apiAbs = resolve(cwd, parsed.apiDir);
-  let extraction;
-  try {
-    extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
-  } catch (err) {
-    return toolError(`Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError !== undefined) {
+    result = toolError(ensureError);
+  } else {
+    const apiAbs = resolve(cwd, parsed.apiDir);
+    let extraction;
+    let inspectError: string | undefined;
+    try {
+      extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
+    } catch (err) {
+      inspectError = `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (inspectError !== undefined || extraction === undefined) {
+      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
+    } else {
+      const lookupModel = parsed.model ?? identityToModel(parsed.identity as string);
+      const entry = extraction.entries.find((e) => e.model === lookupModel);
+      if (!entry) {
+        const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
+        const usedIdentity = parsed.identity && !parsed.model ? ` (resolved \`identity="${parsed.identity}"\` → \`${lookupModel}\`)` : '';
+        result = toolError(`Model \`${lookupModel}\` not found in \`${extraction.fixturePath}\`${usedIdentity}. Known: ${known}.`);
+      } else {
+        const text = parsed.format === 'json' ? formatLookupAsJson(extraction, entry) : formatLookupAsMarkdown(extraction, entry);
+        result = { content: [{ type: 'text', text }] };
+      }
+    }
   }
-
-  const lookupModel = parsed.model ?? identityToModel(parsed.identity as string);
-  const entry = extraction.entries.find((e) => e.model === lookupModel);
-  if (!entry) {
-    const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
-    const usedIdentity = parsed.identity && !parsed.model ? ` (resolved \`identity="${parsed.identity}"\` → \`${lookupModel}\`)` : '';
-    return toolError(`Model \`${lookupModel}\` not found in \`${extraction.fixturePath}\`${usedIdentity}. Known: ${known}.`);
-  }
-  const text = parsed.format === 'json' ? formatLookupAsJson(extraction, entry) : formatLookupAsMarkdown(extraction, entry);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

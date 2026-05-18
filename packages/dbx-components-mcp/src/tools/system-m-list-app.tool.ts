@@ -55,20 +55,31 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  let report;
-  try {
-    report = await listAppSystem(componentAbs, { componentDir: parsed.componentDir });
-  } catch (err) {
-    return toolError(`Failed to list system states: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError !== undefined) {
+    result = toolError(ensureError);
+  } else {
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    let report;
+    let listError: string | undefined;
+    try {
+      report = await listAppSystem(componentAbs, { componentDir: parsed.componentDir });
+    } catch (err) {
+      listError = `Failed to list system states: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (listError !== undefined || report === undefined) {
+      result = toolError(listError ?? 'Failed to list system states.');
+    } else {
+      const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+      result = { content: [{ type: 'text', text }] };
+    }
   }
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

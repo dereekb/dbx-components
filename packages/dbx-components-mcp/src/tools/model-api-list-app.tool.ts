@@ -69,21 +69,32 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  const modelFilter = parsed.model ?? (parsed.identity ? identityToModel(parsed.identity) : undefined);
-  let report;
-  try {
-    report = await listAppModelApi(componentAbs, { componentDir: parsed.componentDir, modelFilter });
-  } catch (err) {
-    return toolError(`Failed to list model API entries: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError !== undefined) {
+    result = toolError(ensureError);
+  } else {
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    const modelFilter = parsed.model ?? (parsed.identity ? identityToModel(parsed.identity) : undefined);
+    let report;
+    let listError: string | undefined;
+    try {
+      report = await listAppModelApi(componentAbs, { componentDir: parsed.componentDir, modelFilter });
+    } catch (err) {
+      listError = `Failed to list model API entries: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (listError !== undefined || report === undefined) {
+      result = toolError(listError ?? 'Failed to list model API entries.');
+    } else {
+      const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+      result = { content: [{ type: 'text', text }] };
+    }
   }
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

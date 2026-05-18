@@ -9,9 +9,8 @@
 
 import { readdir, readFile, stat, type Dirent } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
-import { extractCrudEntries } from '../model-api-shared/index.js';
+import { extractCrudEntries, type CrudVerb } from '@dereekb/dbx-cli/manifest-extract';
 import type { ApiListEntry, ApiListFileSummary, ApiListVerbCounts } from './types.js';
-import type { CrudVerb } from '../model-api-shared/types.js';
 
 const API_SUFFIX = '.api.ts';
 const MODEL_SUBPATH = 'src/lib';
@@ -80,38 +79,43 @@ export async function extractApiList(input: ExtractApiListInput): Promise<Extrac
  * @returns The directory entries or `[]` on failure.
  */
 async function readDirSafe(path: string): Promise<readonly Dirent[]> {
+  let result: readonly Dirent[];
   try {
-    return await readdir(path, { withFileTypes: true });
+    result = await readdir(path, { withFileTypes: true });
   } catch {
-    return [];
+    result = [];
   }
+  return result;
 }
 
 async function collectApiFiles(root: string): Promise<readonly string[]> {
   const out: string[] = [];
   const stack: string[] = [];
+  let isDir = false;
   try {
     const stats = await stat(root);
-    if (!stats.isDirectory()) return out;
-    stack.push(root);
+    isDir = stats.isDirectory();
   } catch {
-    return out;
+    isDir = false;
   }
-  while (stack.length > 0) {
-    const current = stack.pop() as string;
-    const entries = await readDirSafe(current);
-    for (const entry of entries) {
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(full);
-        continue;
-      }
-      if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-        out.push(full);
+  if (isDir) {
+    stack.push(root);
+    while (stack.length > 0) {
+      const current = stack.pop() as string;
+      const entries = await readDirSafe(current);
+      for (const entry of entries) {
+        const full = join(current, entry.name);
+        if (entry.isDirectory()) {
+          stack.push(full);
+          continue;
+        }
+        if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
+          out.push(full);
+        }
       }
     }
+    out.sort((a, b) => a.localeCompare(b));
   }
-  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 

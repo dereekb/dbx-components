@@ -334,18 +334,23 @@ export interface CreateSearchUiToolInput {
 export function createSearchUiTool(input: CreateSearchUiToolInput): DbxTool {
   const { registry, examplesRegistry = EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY } = input;
   const run = (rawArgs: unknown): ToolResult => {
-    let args: ParsedSearchUiArgs;
+    let args: ParsedSearchUiArgs | undefined;
+    let parseError: string | undefined;
     try {
       args = parseSearchUiArgs(rawArgs);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      parseError = error instanceof Error ? error.message : String(error);
     }
-    const tokens = tokenize(args.query);
-    const corpus = args.category ? registry.findByCategory(args.category) : registry.all;
-    const hits = searchRegistry(corpus, tokens, args.limit);
-    const text = formatSearchResults({ query: args.query, tokens, hits, category: args.category, examplesRegistry });
-    const result: ToolResult = { content: [{ type: 'text', text }] };
+    let result: ToolResult;
+    if (parseError !== undefined || args === undefined) {
+      result = toolError(parseError ?? 'Failed to parse arguments.');
+    } else {
+      const tokens = tokenize(args.query);
+      const corpus = args.category ? registry.findByCategory(args.category) : registry.all;
+      const hits = searchRegistry(corpus, tokens, args.limit);
+      const text = formatSearchResults({ query: args.query, tokens, hits, category: args.category, examplesRegistry });
+      result = { content: [{ type: 'text', text }] };
+    }
     return result;
   };
   return { definition: DBX_UI_SEARCH_TOOL, run };

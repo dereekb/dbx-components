@@ -310,64 +310,79 @@ function formatKeyDecode(input: DecodedKeyPath, rawKey: string): string {
  * @returns The formatted decode, or an error result when args fail validation.
  */
 export function runModelDecode(rawArgs: unknown): ToolResult {
-  let args: ParsedDecodeArgs;
+  let result: ToolResult;
+  let args: ParsedDecodeArgs | undefined;
+  let parseError: string | undefined;
   try {
     args = parseDecodeArgs(rawArgs);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    parseError = err instanceof Error ? err.message : String(err);
   }
 
-  if (args.data === undefined && args.key === undefined) {
-    return toolError('Provide either `data` (a Firestore document) or `key` (a Firestore model key).');
-  }
-
-  // Key-only mode: no document provided, just a key string.
-  if (args.data === undefined && typeof args.key === 'string') {
+  if (parseError !== undefined) {
+    result = toolError(parseError);
+  } else if (args === undefined) {
+    // Unreachable in practice — parseDecodeArgs either returns or throws.
+    result = toolError('Unable to parse arguments.');
+  } else if (args.data === undefined && args.key === undefined) {
+    result = toolError('Provide either `data` (a Firestore document) or `key` (a Firestore model key).');
+  } else if (args.data === undefined && typeof args.key === 'string') {
+    // Key-only mode: no document provided, just a key string.
     const decoded = decodeKeyPath(args.key, args.model);
     if ('error' in decoded) {
-      return toolError(decoded.error);
+      result = toolError(decoded.error);
+    } else {
+      const text = formatKeyDecode(decoded, args.key);
+      result = { content: [{ type: 'text', text }] };
     }
-    const text = formatKeyDecode(decoded, args.key);
-    const result: ToolResult = { content: [{ type: 'text', text }] };
-    return result;
+  } else {
+    let document: Document | undefined;
+    let coerceError: string | undefined;
+    try {
+      document = coerceToDocument(args.data);
+    } catch (err) {
+      coerceError = err instanceof Error ? err.message : String(err);
+    }
+    if (coerceError !== undefined) {
+      result = toolError(coerceError);
+    } else if (document === undefined) {
+      // Unreachable — coerceToDocument either returns or throws.
+      result = toolError('Unable to coerce document.');
+    } else {
+      // When the caller supplied `key` alongside `data`, use it as an extra
+      // detection hint — preferring the explicit argument over a
+      // `key`/`_key`/`id` field on the doc.
+      const extraKey = args.key ?? document.extraKey;
+      const detection = detectModel(document.doc, extraKey, args.model);
+      if (!detection) {
+        const message = buildUnmatchedMessage(args.model, { ...document, extraKey });
+        result = { content: [{ type: 'text', text: message }] };
+      } else {
+        const prefixes = buildPrefixMap();
+        const header = buildDetectionHeader(detection);
+        const body = formatDecode({ model: detection.model, doc: document.doc, prefixes, extraKey });
+        const text = `${header}\n\n${body}`;
+        result = { content: [{ type: 'text', text }] };
+      }
+    }
   }
-
-  let document: Document;
-  try {
-    document = coerceToDocument(args.data);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  // When the caller supplied `key` alongside `data`, use it as an extra detection
-  // hint — preferring the explicit argument over a `key`/`_key`/`id` field on the doc.
-  const extraKey = args.key ?? document.extraKey;
-  const detection = detectModel(document.doc, extraKey, args.model);
-  if (!detection) {
-    const message = buildUnmatchedMessage(args.model, { ...document, extraKey });
-    const result: ToolResult = { content: [{ type: 'text', text: message }] };
-    return result;
-  }
-
-  const prefixes = buildPrefixMap();
-  const header = buildDetectionHeader(detection);
-  const body = formatDecode({ model: detection.model, doc: document.doc, prefixes, extraKey });
-  const text = `${header}\n\n${body}`;
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
 function buildDetectionHeader(detection: DetectionResult): string {
+  let result: string;
   switch (detection.strategy) {
     case 'hint':
-      return `_Model selected from explicit hint._`;
+      result = `_Model selected from explicit hint._`;
+      break;
     case 'key-prefix':
-      return `_Model detected from document key prefix._`;
+      result = `_Model detected from document key prefix._`;
+      break;
     case 'field-score':
-      return `_Model detected by field-name match (score ${detection.score ?? 0})._`;
+      result = `_Model detected by field-name match (score ${detection.score ?? 0})._`;
+      break;
   }
+  return result;
 }
 
 function buildUnmatchedMessage(hint: string | undefined, document: Document): string {

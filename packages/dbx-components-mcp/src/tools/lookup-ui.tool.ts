@@ -341,32 +341,30 @@ export interface CreateLookupUiToolInput {
 export function createLookupUiTool(input: CreateLookupUiToolInput): DbxTool {
   const { registry } = input;
   const run = (rawArgs: unknown): ToolResult => {
-    let args: ParsedLookupUiArgs;
+    let result: ToolResult;
     try {
-      args = parseLookupUiArgs(rawArgs);
+      const args = parseLookupUiArgs(rawArgs);
+      const match = resolveTopic(registry, args.topic);
+      let text: string;
+      switch (match.kind) {
+        case 'catalog':
+          text = formatCatalog(registry);
+          break;
+        case 'single':
+          text = formatEntry(match.entry, args.depth);
+          break;
+        case 'group':
+          text = formatGroup(match.entries, match.title);
+          break;
+        case 'not-found':
+          text = formatNotFound(match.normalized, match.candidates);
+          break;
+      }
+      result = { content: [{ type: 'text', text }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      result = toolError(message);
     }
-
-    const match = resolveTopic(registry, args.topic);
-    let text: string;
-    switch (match.kind) {
-      case 'catalog':
-        text = formatCatalog(registry);
-        break;
-      case 'single':
-        text = formatEntry(match.entry, args.depth);
-        break;
-      case 'group':
-        text = formatGroup(match.entries, match.title);
-        break;
-      case 'not-found':
-        text = formatNotFound(match.normalized, match.candidates);
-        break;
-    }
-
-    const result: ToolResult = { content: [{ type: 'text', text }] };
     return result;
   };
   return { definition: DBX_UI_LOOKUP_TOOL, run };

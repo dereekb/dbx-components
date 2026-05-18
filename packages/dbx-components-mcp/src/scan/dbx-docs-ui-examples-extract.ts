@@ -331,18 +331,23 @@ async function resolveComponentTemplate(input: ResolveTemplateInput): Promise<Re
   }
   const selector = decoratorInfo.selector ?? '';
   let template: string | undefined = decoratorInfo.template;
+  let result: ResolveTemplateResult | undefined;
   if (template === undefined && decoratorInfo.templateUrl !== undefined) {
     const templateAbs = resolve(dirname(filePath), decoratorInfo.templateUrl);
     try {
       template = await readFile(templateAbs);
     } catch {
-      return { kind: 'skipped', warning: { kind: 'template-url-unreadable', className, templatePath: templateAbs, filePath, line } };
+      result = { kind: 'skipped', warning: { kind: 'template-url-unreadable', className, templatePath: templateAbs, filePath, line } };
     }
   }
-  if (template === undefined) {
-    return { kind: 'skipped', warning: { kind: 'missing-template', className, filePath, line } };
+  if (result === undefined) {
+    if (template === undefined) {
+      result = { kind: 'skipped', warning: { kind: 'missing-template', className, filePath, line } };
+    } else {
+      result = { kind: 'ok', template, selector };
+    }
   }
-  return { kind: 'ok', template, selector };
+  return result;
 }
 
 interface ResolveUsesInput {
@@ -471,13 +476,14 @@ interface ComponentDecoratorInfo {
 }
 
 function readComponentDecorator(decl: ClassDeclaration): ComponentDecoratorInfo | undefined {
+  let result: ComponentDecoratorInfo | undefined;
   for (const decorator of decl.getDecorators()) {
-    if (decorator.getName() !== 'Component') {
-      continue;
+    if (decorator.getName() === 'Component') {
+      result = readDecoratorConfig(decorator);
+      break;
     }
-    return readDecoratorConfig(decorator);
   }
-  return undefined;
+  return result;
 }
 
 function readDecoratorConfig(decorator: Decorator): ComponentDecoratorInfo {
@@ -604,9 +610,10 @@ async function resolveUseEntry(input: ResolveUseEntryInput): Promise<DbxDocsUiEx
   // they use in the template; siblings re-exported from the same source
   // file (or barrel) are picked up automatically.
   const candidatePaths = collectCandidateModulePaths(sourceFile, filePath);
+  let result: DbxDocsUiExampleUseEntry | undefined;
   for (const candidatePath of candidatePaths) {
     const resolvedFile = await loadSourceFile({ absolutePath: candidatePath, project, readFile, sourceFileCache });
-    if (resolvedFile === null) {
+    if (resolvedFile == null) {
       continue;
     }
     const declaration = findNamedDeclaration(resolvedFile, tag.identifier);
@@ -618,7 +625,7 @@ async function resolveUseEntry(input: ResolveUseEntryInput): Promise<DbxDocsUiEx
       continue;
     }
     const { kind, selector, pipeName } = captured.angular;
-    return {
+    result = {
       kind,
       className: tag.identifier,
       ...(tag.role === undefined ? {} : { role: tag.role }),
@@ -626,8 +633,9 @@ async function resolveUseEntry(input: ResolveUseEntryInput): Promise<DbxDocsUiEx
       ...(pipeName === undefined ? {} : { pipeName }),
       classSource: captured.classSource
     };
+    break;
   }
-  return undefined;
+  return result;
 }
 
 function collectCandidateModulePaths(sourceFile: SourceFile, fromFile: string): readonly string[] {

@@ -91,16 +91,16 @@ export interface CreateCssTokenLookupToolInput {
 export function createCssTokenLookupTool(input: CreateCssTokenLookupToolInput): DbxTool {
   const { registry } = input;
   const run = (rawArgs: unknown): ToolResult => {
-    let args: ResolveTokenInput;
+    let tool: ToolResult;
     try {
-      args = parseArgs(rawArgs);
+      const args = parseArgs(rawArgs);
+      const result = resolveToken(registry, args);
+      const text = formatCssTokenLookup(registry, args, result);
+      tool = { content: [{ type: 'text', text }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      tool = toolError(message);
     }
-    const result = resolveToken(registry, args);
-    const text = formatCssTokenLookup(registry, args, result);
-    const tool: ToolResult = { content: [{ type: 'text', text }] };
     return tool;
   };
   return { definition: DBX_CSS_TOKEN_LOOKUP_TOOL, run };

@@ -328,12 +328,15 @@ function serializeJson(value: unknown): string {
 }
 
 function parseExisting(text: Maybe<string>): Maybe<ScanFileShape> {
-  if (text === null) return null;
-  try {
-    return JSON.parse(text) as ScanFileShape;
-  } catch {
-    return null;
+  let result: Maybe<ScanFileShape> = null;
+  if (text !== null) {
+    try {
+      result = JSON.parse(text) as ScanFileShape;
+    } catch {
+      result = null;
+    }
   }
+  return result;
 }
 
 function cloneConfig(config: NonNullable<WorkspaceSnapshot['config']>): MutableConfigShape {
@@ -348,11 +351,13 @@ function cloneConfig(config: NonNullable<WorkspaceSnapshot['config']>): MutableC
 }
 
 async function tryRead(path: string, readFile: InitReadFile): Promise<Maybe<string>> {
+  let result: Maybe<string>;
   try {
-    return await readFile(path);
+    result = await readFile(path);
   } catch {
-    return null;
+    result = null;
   }
+  return result;
 }
 
 const defaultReadFile: InitReadFile = (path) => nodeReadFile(path, 'utf-8');

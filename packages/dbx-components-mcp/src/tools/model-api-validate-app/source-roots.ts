@@ -123,25 +123,28 @@ async function resolveUpstreamRoots(input: ResolveUpstreamInput): Promise<readon
 
 async function readComponentDereekbDeps(componentAbs: string): Promise<readonly string[]> {
   const pkgPath = join(componentAbs, COMPONENT_PACKAGE_JSON);
-  let raw: string;
+  let raw: string | undefined;
   try {
     raw = await readFile(pkgPath, 'utf8');
   } catch {
-    return [];
+    raw = undefined;
   }
   let json: unknown;
-  try {
-    json = JSON.parse(raw);
-  } catch {
-    return [];
+  if (raw !== undefined) {
+    try {
+      json = JSON.parse(raw);
+    } catch {
+      json = undefined;
+    }
   }
-  if (!isRecord(json)) return [];
   const out = new Set<string>();
-  for (const field of ['dependencies', 'devDependencies', 'peerDependencies'] as const) {
-    const map = json[field];
-    if (!isRecord(map)) continue;
-    for (const name of Object.keys(map)) {
-      if (name.startsWith(DBX_COMPONENTS_BASE_SCOPE)) out.add(name);
+  if (isRecord(json)) {
+    for (const field of ['dependencies', 'devDependencies', 'peerDependencies'] as const) {
+      const map = json[field];
+      if (!isRecord(map)) continue;
+      for (const name of Object.keys(map)) {
+        if (name.startsWith(DBX_COMPONENTS_BASE_SCOPE)) out.add(name);
+      }
     }
   }
   return [...out];
@@ -153,31 +156,32 @@ interface PackagePathsMap {
 
 async function readTsconfigPaths(workspaceRoot: string): Promise<PackagePathsMap | undefined> {
   const tsconfigPath = join(workspaceRoot, TSCONFIG_BASE);
-  let raw: string;
+  let raw: string | undefined;
   try {
     raw = await readFile(tsconfigPath, 'utf8');
   } catch {
-    return undefined;
+    raw = undefined;
   }
   let json: unknown;
-  try {
-    json = JSON.parse(stripJsonComments(raw));
-  } catch {
-    return undefined;
+  if (raw !== undefined) {
+    try {
+      json = JSON.parse(stripJsonComments(raw));
+    } catch {
+      json = undefined;
+    }
   }
-  if (!isRecord(json)) return undefined;
-  const compilerOptions = json.compilerOptions;
-  if (!isRecord(compilerOptions)) return undefined;
-  const paths = compilerOptions.paths;
-  if (!isRecord(paths)) return undefined;
-  const entries = new Map<string, string>();
-  for (const [alias, target] of Object.entries(paths)) {
-    if (!Array.isArray(target) || target.length === 0) continue;
-    const first = target[0];
-    if (typeof first !== 'string') continue;
-    entries.set(alias, first);
+  let result: PackagePathsMap | undefined;
+  if (isRecord(json) && isRecord(json.compilerOptions) && isRecord(json.compilerOptions.paths)) {
+    const entries = new Map<string, string>();
+    for (const [alias, target] of Object.entries(json.compilerOptions.paths)) {
+      if (!Array.isArray(target) || target.length === 0) continue;
+      const first = target[0];
+      if (typeof first !== 'string') continue;
+      entries.set(alias, first);
+    }
+    result = { entries };
   }
-  return { entries };
+  return result;
 }
 
 interface ResolvePackageRootInput {
@@ -205,12 +209,14 @@ function resolvePackageRoot(input: ResolvePackageRootInput): string | undefined 
 }
 
 async function isDirectory(path: string): Promise<boolean> {
+  let result = false;
   try {
     const s = await stat(path);
-    return s.isDirectory();
+    result = s.isDirectory();
   } catch {
-    return false;
+    result = false;
   }
+  return result;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

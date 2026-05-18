@@ -153,21 +153,24 @@ function parseFirestoreModelIdentityCall(call: CallExpression): ParsedFirestoreM
   }
 
   const stringArgs: string[] = [];
+  let invalidArg = false;
   for (let i = stringArgsStart; i < args.length; i += 1) {
     const arg = args[i];
     if (Node.isStringLiteral(arg) || Node.isNoSubstitutionTemplateLiteral(arg)) {
       stringArgs.push(arg.getLiteralText());
     } else {
-      return undefined;
+      invalidArg = true;
+      break;
     }
   }
 
-  if (stringArgs.length === 0) {
-    return undefined;
+  let result: ParsedFirestoreModelIdentityCall | undefined;
+  if (!invalidArg && stringArgs.length > 0) {
+    const modelType = stringArgs[0];
+    const collection = stringArgs.length >= 2 ? stringArgs[1] : modelType;
+    result = { modelType, collection, isNested };
   }
-  const modelType = stringArgs[0];
-  const collection = stringArgs.length >= 2 ? stringArgs[1] : modelType;
-  return { modelType, collection, isNested };
+  return result;
 }
 
 function buildResolverFromRecords(records: readonly ResolvedFirestoreModelIdentity[]): FirestoreModelIdentityResolver {

@@ -190,21 +190,22 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
    */
   function fuzzyCandidates(query: string): readonly FormFieldInfo[] {
     const q = query.trim().toLowerCase();
-    if (q.length === 0) {
-      return [];
-    }
-    const scored: { readonly field: FormFieldInfo; readonly score: number }[] = [];
-    for (const field of registry.all) {
-      const slugHit = field.slug.toLowerCase().includes(q) ? 3 : 0;
-      const nameHit = field.factoryName.toLowerCase().includes(q) ? 2 : 0;
-      const descHit = field.description.toLowerCase().includes(q) ? 1 : 0;
-      const score = slugHit + nameHit + descHit;
-      if (score > 0) {
-        scored.push({ field, score });
+    let result: readonly FormFieldInfo[] = [];
+    if (q.length > 0) {
+      const scored: { readonly field: FormFieldInfo; readonly score: number }[] = [];
+      for (const field of registry.all) {
+        const slugHit = field.slug.toLowerCase().includes(q) ? 3 : 0;
+        const nameHit = field.factoryName.toLowerCase().includes(q) ? 2 : 0;
+        const descHit = field.description.toLowerCase().includes(q) ? 1 : 0;
+        const score = slugHit + nameHit + descHit;
+        if (score > 0) {
+          scored.push({ field, score });
+        }
       }
+      scored.sort((a, b) => b.score - a.score);
+      result = scored.slice(0, 5).map((s) => s.field);
     }
-    scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, 5).map((s) => s.field);
+    return result;
   }
 
   // MARK: Formatting
@@ -227,32 +228,30 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
   }
 
   function run(rawArgs: unknown): ToolResult {
-    let args: { readonly topic: string; readonly depth: 'brief' | 'full' };
+    let result: ToolResult;
     try {
-      args = parseLookupFormArgs(rawArgs);
+      const args = parseLookupFormArgs(rawArgs);
+      const match = resolveTopic(args.topic);
+      let text: string;
+      switch (match.kind) {
+        case 'catalog':
+          text = formatCatalog();
+          break;
+        case 'single':
+          text = formatFormFieldEntry(match.field, args.depth);
+          break;
+        case 'group':
+          text = formatFormFieldGroup(match.fields, match.title);
+          break;
+        case 'not-found':
+          text = formatNotFound(match.normalized, match.candidates);
+          break;
+      }
+      result = { content: [{ type: 'text', text }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      result = toolError(message);
     }
-
-    const match = resolveTopic(args.topic);
-    let text: string;
-    switch (match.kind) {
-      case 'catalog':
-        text = formatCatalog();
-        break;
-      case 'single':
-        text = formatFormFieldEntry(match.field, args.depth);
-        break;
-      case 'group':
-        text = formatFormFieldGroup(match.fields, match.title);
-        break;
-      case 'not-found':
-        text = formatNotFound(match.normalized, match.candidates);
-        break;
-    }
-
-    const result: ToolResult = { content: [{ type: 'text', text }] };
     return result;
   }
 

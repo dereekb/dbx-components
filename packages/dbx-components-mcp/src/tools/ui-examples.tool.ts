@@ -242,30 +242,35 @@ export interface CreateUiExamplesToolInput {
 export function createUiExamplesTool(input: CreateUiExamplesToolInput = {}): DbxTool {
   const examplesRegistry = input.examplesRegistry ?? EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY;
   const run = (rawArgs: unknown): ToolResult => {
-    let args: ParsedUiExamplesArgs;
+    let args: ParsedUiExamplesArgs | undefined;
+    let parseError: string | undefined;
     try {
       args = parseUiExamplesArgs(rawArgs);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      parseError = error instanceof Error ? error.message : String(error);
     }
 
-    const lowered = args.pattern.trim().toLowerCase();
-    const scannedEntries = examplesRegistry.all;
-    let text: string;
-    if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
-      text = formatCatalog(scannedEntries);
+    let result: ToolResult;
+    if (parseError !== undefined || args === undefined) {
+      result = toolError(parseError ?? 'Failed to parse arguments.');
     } else {
-      const curated = getUiExamplePattern(args.pattern);
-      if (curated === undefined) {
-        const scanned = examplesRegistry.findBySlug(args.pattern.trim());
-        text = scanned === undefined ? formatNotFound(args.pattern, scannedEntries) : formatScannedExample(scanned, args.depth);
+      const lowered = args.pattern.trim().toLowerCase();
+      const scannedEntries = examplesRegistry.all;
+      let text: string;
+      if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
+        text = formatCatalog(scannedEntries);
       } else {
-        text = formatPattern(curated, args.depth);
+        const curated = getUiExamplePattern(args.pattern);
+        if (curated === undefined) {
+          const scanned = examplesRegistry.findBySlug(args.pattern.trim());
+          text = scanned === undefined ? formatNotFound(args.pattern, scannedEntries) : formatScannedExample(scanned, args.depth);
+        } else {
+          text = formatPattern(curated, args.depth);
+        }
       }
+      result = { content: [{ type: 'text', text }] };
     }
-
-    return { content: [{ type: 'text', text }] };
+    return result;
   };
   return { definition: DBX_UI_EXAMPLES_TOOL, run };
 }

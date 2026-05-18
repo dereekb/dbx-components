@@ -108,24 +108,22 @@ function code(value: string): string {
  * @returns The formatted pattern text, or an error result when args fail validation.
  */
 export function runActionExamples(rawArgs: unknown): ToolResult {
-  let args: ParsedActionExamplesArgs;
+  let result: ToolResult;
   try {
-    args = parseActionExamplesArgs(rawArgs);
+    const args = parseActionExamplesArgs(rawArgs);
+    const lowered = args.pattern.trim().toLowerCase();
+    let text: string;
+    if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
+      text = formatPatternCatalog();
+    } else {
+      const pattern = getActionExamplePattern(args.pattern);
+      text = pattern ? formatPattern(pattern, args.depth) : formatNotFound(args.pattern);
+    }
+    result = { content: [{ type: 'text', text }] };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
+    result = toolError(message);
   }
-
-  const lowered = args.pattern.trim().toLowerCase();
-  let text: string;
-  if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
-    text = formatPatternCatalog();
-  } else {
-    const pattern = getActionExamplePattern(args.pattern);
-    text = pattern ? formatPattern(pattern, args.depth) : formatNotFound(args.pattern);
-  }
-
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

@@ -208,33 +208,35 @@ function findFunctionTypeMap(sourceFile: SourceFile): ExtractedTypeAlias | undef
 }
 
 function findFunctionTypeConfigMap(sourceFile: SourceFile): ExtractedVariable | undefined {
-  for (const stmt of sourceFile.getVariableStatements()) {
+  let result: ExtractedVariable | undefined;
+  outer: for (const stmt of sourceFile.getVariableStatements()) {
     for (const decl of stmt.getDeclarations()) {
       const name = decl.getName();
       if (!name.endsWith('FunctionTypeConfigMap')) {
         continue;
       }
       const typeNode = decl.getTypeNode();
-      const result: ExtractedVariable = {
+      result = {
         name,
         exported: stmt.isExported(),
         line: decl.getStartLineNumber(),
         typeAnnotation: typeNode ? typeNode.getText() : undefined
       };
-      return result;
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function findCrudConfigType(sourceFile: SourceFile): ExtractedCrudConfigType | undefined {
+  let result: ExtractedCrudConfigType | undefined;
   for (const alias of sourceFile.getTypeAliases()) {
     if (!alias.getName().endsWith('ModelCrudFunctionsConfig')) {
       continue;
     }
     const typeNode = alias.getTypeNode();
     const summary = typeNode && Node.isTypeLiteral(typeNode) ? summarizeCrudConfigType(typeNode) : { keys: [], nonNullKeys: [], bareLeafParamsNames: [] };
-    const result: ExtractedCrudConfigType = {
+    result = {
       name: alias.getName(),
       exported: alias.isExported(),
       line: alias.getStartLineNumber(),
@@ -242,9 +244,9 @@ function findCrudConfigType(sourceFile: SourceFile): ExtractedCrudConfigType | u
       nonNullKeys: summary.nonNullKeys,
       bareLeafParamsNames: summary.bareLeafParamsNames
     };
-    return result;
+    break;
   }
-  return undefined;
+  return result;
 }
 
 interface CrudConfigTypeSummary {

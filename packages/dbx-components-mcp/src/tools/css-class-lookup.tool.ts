@@ -125,15 +125,15 @@ export interface CreateCssClassLookupToolInput {
 export function createCssClassLookupTool(input: CreateCssClassLookupToolInput): DbxTool {
   const { registry } = input;
   const run = (rawArgs: unknown): ToolResult => {
-    let args: ParsedArgs;
+    let tool: ToolResult;
     try {
-      args = parseArgs(rawArgs);
+      const args = parseArgs(rawArgs);
+      const text = renderResponse(registry, args);
+      tool = { content: [{ type: 'text', text }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      tool = toolError(message);
     }
-    const text = renderResponse(registry, args);
-    const tool: ToolResult = { content: [{ type: 'text', text }] };
     return tool;
   };
   return { definition: DBX_CSS_CLASS_LOOKUP_TOOL, run };
@@ -394,14 +394,14 @@ function appendEntryMatchDiff(lines: string[], scored: ScoredCssUtilityMatch | u
 }
 
 function appendEntryChildren(lines: string[], entry: CssUtilityEntry, registry: CssUtilityRegistry | undefined): void {
-  if (registry === undefined) return;
-  const children = registry.findChildrenOf(entry.slug);
-  if (children.length === 0) return;
-  lines.push('', `## Children (${children.length})`, '');
-  for (const child of children) {
-    const role = child.role ?? 'misc';
-    const intent = child.intent === undefined ? '' : ` — ${child.intent}`;
-    lines.push(`- \`${child.selector}\` (${role})${intent}`);
+  const children = registry === undefined ? [] : registry.findChildrenOf(entry.slug);
+  if (children.length > 0) {
+    lines.push('', `## Children (${children.length})`, '');
+    for (const child of children) {
+      const role = child.role ?? 'misc';
+      const intent = child.intent === undefined ? '' : ` — ${child.intent}`;
+      lines.push(`- \`${child.selector}\` (${role})${intent}`);
+    }
   }
 }
 

@@ -143,22 +143,31 @@ function appendHit(lines: string[], hit: SpecSearchHit): void {
 }
 
 function hitLabel(hit: SpecSearchHit): string {
+  let result: string;
   switch (hit.kind) {
     case 'fixture':
-      return `**fixture** \`${hit.callee ?? '?'}\` → \`${hit.model ?? '?'}\``;
+      result = `**fixture** \`${hit.callee ?? '?'}\` → \`${hit.model ?? '?'}\``;
+      break;
     case 'describe':
-      return `**${hit.callee ?? 'describe'}** \`${hit.title ?? '?'}\``;
+      result = `**${hit.callee ?? 'describe'}** \`${hit.title ?? '?'}\``;
+      break;
     case 'it':
-      return `**${hit.callee ?? 'it'}** \`${hit.title ?? '?'}\``;
+      result = `**${hit.callee ?? 'it'}** \`${hit.title ?? '?'}\``;
+      break;
     case 'helperCall':
-      return `**helperCall** \`${hit.callee ?? '?'}\``;
+      result = `**helperCall** \`${hit.callee ?? '?'}\``;
+      break;
     case 'wrapper':
-      return `**wrapper** \`${hit.callee ?? '?'}\``;
+      result = `**wrapper** \`${hit.callee ?? '?'}\``;
+      break;
     case 'hook':
-      return `**${hit.title ?? 'hook'}**`;
+      result = `**${hit.title ?? 'hook'}**`;
+      break;
     default:
-      return '**?**';
+      result = '**?**';
+      break;
   }
+  return result;
 }
 
 function appendNode(lines: string[], node: SpecNode, depth: number): void {
@@ -176,25 +185,34 @@ function describeOrItTitle(node: SpecNode & { readonly kind: 'describe' | 'it' }
 }
 
 function nodeLabel(node: SpecNode): string {
+  let result: string;
   switch (node.kind) {
     case 'describe':
-      return `**${node.callee ?? 'describe'}** ${describeOrItTitle(node)}`;
+      result = `**${node.callee ?? 'describe'}** ${describeOrItTitle(node)}`;
+      break;
     case 'it':
-      return `**${node.callee ?? 'it'}** ${describeOrItTitle(node)}`;
+      result = `**${node.callee ?? 'it'}** ${describeOrItTitle(node)}`;
+      break;
     case 'hook':
-      return `**${node.title ?? 'hook'}**`;
+      result = `**${node.title ?? 'hook'}**`;
+      break;
     case 'fixture': {
       const var_ = node.varName === undefined ? '' : ` _(as \`${node.varName}\`)_`;
       const parents = node.parentVars && node.parentVars.length > 0 ? ` deps: \`${node.parentVars.join(', ')}\`` : '';
-      return `**fixture** \`${node.callee ?? '?'}\` → \`${node.model ?? '?'}\`${var_}${parents}`;
+      result = `**fixture** \`${node.callee ?? '?'}\` → \`${node.model ?? '?'}\`${var_}${parents}`;
+      break;
     }
     case 'wrapper':
-      return `**wrapper** \`${node.callee ?? '?'}\``;
+      result = `**wrapper** \`${node.callee ?? '?'}\``;
+      break;
     case 'helperCall':
-      return `**helperCall** \`${node.callee ?? '?'}\``;
+      result = `**helperCall** \`${node.callee ?? '?'}\``;
+      break;
     default:
-      return '**?**';
+      result = '**?**';
+      break;
   }
+  return result;
 }
 
 /**

@@ -61,23 +61,23 @@ export function createAuthTokenExplainTool(input: CreateAuthTokenExplainToolInpu
     definition: DBX_AUTH_TOKEN_EXPLAIN_TOOL,
     run(rawArgs) {
       const parsed = TokenArgsType(rawArgs);
-      if (parsed instanceof type.errors) {
-        return toolError(`Invalid arguments: ${parsed.summary}`);
-      }
-      const { token, claims: claimsObj, app, expectedIssuer } = parsed;
-
       let result: ToolResult;
-      if (token !== undefined && claimsObj !== undefined) {
-        result = toolError('Pass exactly one of `token` or `claims`, not both.');
-      } else if (token === undefined && claimsObj === undefined) {
-        result = toolError('Pass either `token` (JWT) or `claims` (object).');
+      if (parsed instanceof type.errors) {
+        result = toolError(`Invalid arguments: ${parsed.summary}`);
       } else {
-        const decoded = token === undefined ? { header: undefined, payload: claimsObj as Record<string, unknown>, signature: undefined } : decodeJwt(token);
-        if (decoded === null) {
-          result = toolError('Could not decode JWT — expected 3 base64url segments separated by `.`.');
+        const { token, claims: claimsObj, app, expectedIssuer } = parsed;
+        if (token !== undefined && claimsObj !== undefined) {
+          result = toolError('Pass exactly one of `token` or `claims`, not both.');
+        } else if (token === undefined && claimsObj === undefined) {
+          result = toolError('Pass either `token` (JWT) or `claims` (object).');
         } else {
-          const text = formatExplain({ registry, app, expectedIssuer, header: decoded.header, payload: decoded.payload, signaturePresent: decoded.signature !== undefined });
-          result = { content: [{ type: 'text', text }] };
+          const decoded = token === undefined ? { header: undefined, payload: claimsObj as Record<string, unknown>, signature: undefined } : decodeJwt(token);
+          if (decoded == null) {
+            result = toolError('Could not decode JWT — expected 3 base64url segments separated by `.`.');
+          } else {
+            const text = formatExplain({ registry, app, expectedIssuer, header: decoded.header, payload: decoded.payload, signaturePresent: decoded.signature !== undefined });
+            result = { content: [{ type: 'text', text }] };
+          }
         }
       }
       return result;

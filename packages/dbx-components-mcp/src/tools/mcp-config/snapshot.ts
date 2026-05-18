@@ -130,12 +130,14 @@ function clustersRegisteredInPackage(pkg: DownstreamPackage, sources: readonly R
 }
 
 async function fileExists(path: string): Promise<boolean> {
+  let result: boolean;
   try {
     const stats = await stat(path);
-    return stats.isFile();
+    result = stats.isFile();
   } catch {
-    return false;
+    result = false;
   }
+  return result;
 }
 
 function relativeOrAbsolute(from: string, target: string): string {

@@ -150,21 +150,25 @@ async function inspectPackage(workspaceRoot: string, relDir: string): Promise<Do
 }
 
 async function isDirectory(path: string): Promise<boolean> {
+  let result = false;
   try {
     const stats = await stat(path);
-    return stats.isDirectory();
+    result = stats.isDirectory();
   } catch {
-    return false;
+    /* swallow */
   }
+  return result;
 }
 
 async function fileExists(path: string): Promise<boolean> {
+  let result = false;
   try {
     const stats = await stat(path);
-    return stats.isFile();
+    result = stats.isFile();
   } catch {
-    return false;
+    /* swallow */
   }
+  return result;
 }
 
 async function readPackageName(absDir: string, relDir: string): Promise<string> {

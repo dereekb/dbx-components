@@ -42,17 +42,21 @@ export function findModelGroups(sf: SourceFile): readonly ExtractedModelGroup[] 
 
 function buildFromDecl(decl: ClassDeclaration | InterfaceDeclaration): ExtractedModelGroup | undefined {
   const name = decl.getName();
-  if (!name?.endsWith(CONTAINER_SUFFIX)) return undefined;
-  const tag = readDbxModelGroupTag(decl.getJsDocs());
-  if (tag === undefined) return undefined;
-  const explicitName = typeof tag === 'string' ? tag : undefined;
-  const groupName = explicitName ?? name.slice(0, -CONTAINER_SUFFIX.length);
-  return {
-    name: groupName,
-    containerName: name,
-    description: readDescription(decl.getJsDocs()),
-    modelNames: extractGroupModelNames(decl.getText())
-  };
+  let result: ExtractedModelGroup | undefined;
+  if (name?.endsWith(CONTAINER_SUFFIX)) {
+    const tag = readDbxModelGroupTag(decl.getJsDocs());
+    if (tag !== undefined) {
+      const explicitName = typeof tag === 'string' ? tag : undefined;
+      const groupName = explicitName ?? name.slice(0, -CONTAINER_SUFFIX.length);
+      result = {
+        name: groupName,
+        containerName: name,
+        description: readDescription(decl.getJsDocs()),
+        modelNames: extractGroupModelNames(decl.getText())
+      };
+    }
+  }
+  return result;
 }
 
 function readDbxModelGroupTag(jsDocs: readonly JSDoc[]): true | string | undefined {

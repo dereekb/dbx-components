@@ -176,32 +176,39 @@ async function runValidateAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolR
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let toolResult: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
     if (parsed.indexesFile !== undefined) {
       ensurePathInsideCwd(parsed.indexesFile, cwd);
     }
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
+  if (ensureError !== undefined) {
+    toolResult = toolError(ensureError);
+  } else {
+    const indexesRelative = parsed.indexesFile ?? 'firestore.indexes.json';
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    const indexesAbs = resolve(cwd, indexesRelative);
 
-  const indexesRelative = parsed.indexesFile ?? 'firestore.indexes.json';
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  const indexesAbs = resolve(cwd, indexesRelative);
-
-  let report: ModelFirebaseIndexValidateAppReport;
-  try {
-    report = await buildValidateAppReport({ componentDir: parsed.componentDir, componentAbs, workspaceRoot: cwd, indexesRelative, indexesAbs });
-  } catch (err) {
-    return toolError(`Failed to validate component firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
+    let report: ModelFirebaseIndexValidateAppReport | undefined;
+    let buildError: string | undefined;
+    try {
+      report = await buildValidateAppReport({ componentDir: parsed.componentDir, componentAbs, workspaceRoot: cwd, indexesRelative, indexesAbs });
+    } catch (err) {
+      buildError = `Failed to validate component firebase indexes: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (buildError !== undefined || report === undefined) {
+      toolResult = toolError(buildError ?? 'Failed to build validation report.');
+    } else {
+      const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+      const baseResult: ToolResult = { content: [{ type: 'text', text }] };
+      toolResult = report.drift ? { ...baseResult, isError: true } : baseResult;
+    }
   }
-
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
-  if (report.drift) {
-    return { ...result, isError: true };
-  }
-  return result;
+  return toolResult;
 }
 
 /**
@@ -463,31 +470,42 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
 async function readExistingIndexesJson(indexesAbs: string): Promise<{ readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string }> {
   let text: Maybe<string> = null;
   let readError: string | undefined;
+  let missing = false;
   try {
     text = await readFile(indexesAbs, 'utf-8');
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code === 'ENOENT') {
-      return { exists: false };
+      missing = true;
+    } else {
+      readError = err instanceof Error ? err.message : String(err);
     }
-    readError = err instanceof Error ? err.message : String(err);
   }
-  if (text === null) {
-    return { exists: false, readError };
+  let result: { readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string };
+  if (missing) {
+    result = { exists: false };
+  } else if (text === null) {
+    result = { exists: false, readError };
+  } else {
+    let parsed: unknown;
+    let parseError: string | undefined;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      parseError = err instanceof Error ? err.message : String(err);
+    }
+    if (parseError !== undefined) {
+      result = { exists: true, readError: parseError };
+    } else if (parsed === null || typeof parsed !== 'object') {
+      result = { exists: true, readError: 'Top-level value is not an object.' };
+    } else {
+      const raw = parsed as { indexes?: unknown; fieldOverrides?: unknown };
+      const indexes = Array.isArray(raw.indexes) ? (raw.indexes as FirestoreIndexesJson['indexes']) : [];
+      const fieldOverrides = Array.isArray(raw.fieldOverrides) ? (raw.fieldOverrides as FirestoreIndexesJson['fieldOverrides']) : [];
+      result = { exists: true, existingJson: { indexes, fieldOverrides } };
+    }
   }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch (err) {
-    return { exists: true, readError: err instanceof Error ? err.message : String(err) };
-  }
-  if (parsed === null || typeof parsed !== 'object') {
-    return { exists: true, readError: 'Top-level value is not an object.' };
-  }
-  const raw = parsed as { indexes?: unknown; fieldOverrides?: unknown };
-  const indexes = Array.isArray(raw.indexes) ? (raw.indexes as FirestoreIndexesJson['indexes']) : [];
-  const fieldOverrides = Array.isArray(raw.fieldOverrides) ? (raw.fieldOverrides as FirestoreIndexesJson['fieldOverrides']) : [];
-  return { exists: true, existingJson: { indexes, fieldOverrides } };
+  return result;
 }
 
 function formatBuildFailure(buildOutcome: Exclude<Awaited<ReturnType<typeof buildModelFirebaseIndexManifest>>, { readonly kind: 'success' }>): string {

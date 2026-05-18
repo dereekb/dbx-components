@@ -927,32 +927,46 @@ function checkDeclarationOrder(file: ExtractedFile, model: ExtractedModel, viola
 }
 
 function declarationLine(model: ExtractedModel, kind: DeclarationKind): number | undefined {
+  let result: number | undefined;
   switch (kind) {
     case 'identity':
-      return model.identity.line;
+      result = model.identity.line;
+      break;
     case 'interface':
-      return model.iface?.line;
+      result = model.iface?.line;
+      break;
     case 'rolesType':
-      return model.rolesType?.line;
+      result = model.rolesType?.line;
+      break;
     case 'documentClass':
-      return model.documentClass?.line;
+      result = model.documentClass?.line;
+      break;
     case 'converter':
-      return model.converter?.line;
+      result = model.converter?.line;
+      break;
     case 'referenceFn':
-      return model.referenceFn?.line;
+      result = model.referenceFn?.line;
+      break;
     case 'collectionType':
-      return model.collectionType?.line;
+      result = model.collectionType?.line;
+      break;
     case 'collectionFactoryType':
-      return model.collectionFactoryType?.line;
+      result = model.collectionFactoryType?.line;
+      break;
     case 'collectionFn':
-      return model.collectionFn?.line;
+      result = model.collectionFn?.line;
+      break;
     case 'referenceGroupFn':
-      return model.referenceGroupFn?.line;
+      result = model.referenceGroupFn?.line;
+      break;
     case 'collectionGroupType':
-      return model.collectionGroupType?.line;
+      result = model.collectionGroupType?.line;
+      break;
     case 'collectionGroupFn':
-      return model.collectionGroupFn?.line;
+      result = model.collectionGroupFn?.line;
+      break;
   }
+  return result;
 }
 
 // MARK: Composite-key tag

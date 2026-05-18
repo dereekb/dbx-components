@@ -108,13 +108,14 @@ async function scanProviderFiles(srcAbs: string): Promise<readonly string[]> {
 }
 
 async function readFileIfExists(absPath: string): Promise<string | undefined> {
+  let result: string | undefined;
   try {
-    return await readFile(absPath, 'utf8');
+    result = await readFile(absPath, 'utf8');
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
-    if (code === 'ENOENT' || code === 'ENOTDIR' || code === 'EISDIR') {
-      return undefined;
+    if (code !== 'ENOENT' && code !== 'ENOTDIR' && code !== 'EISDIR') {
+      throw err;
     }
-    throw err;
   }
+  return result;
 }

@@ -418,7 +418,8 @@ function resolveTemplateInfoSpreads(direct: readonly string[], spreads: readonly
 
 // MARK: API wiring
 function extractTemplateInfoRecordWiring(sources: readonly SourceFile[]): ExtractedTemplateInfoRecordWiring | undefined {
-  for (const sf of sources) {
+  let result: ExtractedTemplateInfoRecordWiring | undefined;
+  outer: for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
       if (call.getExpression().getText() !== TEMPLATE_INFO_RECORD_SERVICE) continue;
@@ -427,29 +428,30 @@ function extractTemplateInfoRecordWiring(sources: readonly SourceFile[]): Extrac
       if (!first) continue;
       const inner = unwrapAsExpressions(first);
       if (!inner || !Node.isIdentifier(inner)) continue;
-      const result: ExtractedTemplateInfoRecordWiring = {
+      result = {
         recordIdentifier: inner.getText(),
         sourceFile: rel
       };
-      return result;
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function extractTemplateConfigsArrayWiring(sources: readonly SourceFile[]): ExtractedTemplateConfigsArrayWiring | undefined {
-  for (const sf of sources) {
+  let result: ExtractedTemplateConfigsArrayWiring | undefined;
+  outer: for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const obj of sf.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression)) {
       const provideIdent = readIdentifierProperty(obj, 'provide');
       if (provideIdent !== TEMPLATE_CONFIGS_ARRAY_TOKEN) continue;
       const useFactoryIdent = readIdentifierProperty(obj, 'useFactory');
       if (!useFactoryIdent) continue;
-      const result: ExtractedTemplateConfigsArrayWiring = { useFactoryIdentifier: useFactoryIdent, sourceFile: rel };
-      return result;
+      result = { useFactoryIdentifier: useFactoryIdent, sourceFile: rel };
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex {
@@ -497,25 +499,29 @@ function extractTemplateConfigsArrayFactory(sources: readonly SourceFile[], inde
 }
 
 function findFactoryInVariableStatements(sf: SourceFile, rel: string, index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {
-  for (const stmt of sf.getVariableStatements()) {
+  let result: ExtractedTemplateConfigsArrayFactory | undefined;
+  outer: for (const stmt of sf.getVariableStatements()) {
     for (const decl of stmt.getDeclarations()) {
       const name = decl.getName();
       if (!name.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
       const body = unwrapAsExpressions(decl.getInitializer());
       if (!body) continue;
-      return buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: body, sourceFile: rel, index });
+      result = buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: body, sourceFile: rel, index });
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function findFactoryInFunctions(sf: SourceFile, rel: string, index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {
+  let result: ExtractedTemplateConfigsArrayFactory | undefined;
   for (const fn of sf.getFunctions()) {
     const name = fn.getName();
     if (!name?.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
-    return buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: fn, sourceFile: rel, index });
+    result = buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: fn, sourceFile: rel, index });
+    break;
   }
-  return undefined;
+  return result;
 }
 
 interface FactorySummaryBuckets {

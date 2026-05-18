@@ -179,14 +179,15 @@ interface ParsedAppValidateArgs {
 
 function ensureArgPaths(parsed: ParsedAppValidateArgs, cwd: string): ToolResult | undefined {
   const candidates: (string | undefined)[] = [parsed.componentDir, parsed.apiDir, parsed.webDir, parsed.indexesFile];
+  let result: ToolResult | undefined;
   try {
     for (const candidate of candidates) {
       if (candidate !== undefined) ensurePathInsideCwd(candidate, cwd);
     }
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    result = toolError(err instanceof Error ? err.message : String(err));
   }
-  return undefined;
+  return result;
 }
 
 interface RunAllClustersInput {

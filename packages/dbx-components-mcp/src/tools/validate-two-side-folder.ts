@@ -291,16 +291,18 @@ async function inspectSide(input: InspectSideInput): Promise<SideInspection> {
 }
 
 async function isExistingDirectory(path: string): Promise<boolean> {
+  let result: boolean;
   try {
     const stats = await stat(path);
-    return stats.isDirectory();
+    result = stats.isDirectory();
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code !== 'ENOENT' && code !== 'ENOTDIR') {
       throw err;
     }
-    return false;
+    result = false;
   }
+  return result;
 }
 
 interface ReadFolderResult {

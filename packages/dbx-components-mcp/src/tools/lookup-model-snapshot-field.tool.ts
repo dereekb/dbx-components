@@ -116,24 +116,27 @@ function formatEntry(entry: ModelSnapshotFieldEntryInfo, depth: LookupDepth): st
 }
 
 function formatCatalog(entries: readonly ModelSnapshotFieldEntryInfo[]): string {
+  let output: string;
   if (entries.length === 0) {
-    return ['# Snapshot-field catalog', '', 'No snapshot fields have been registered yet.', '', 'Add a `@dbxModelSnapshotField` JSDoc tag to a function/const, then run `nx run dbx-components-mcp:generate-manifests`.'].join('\n');
-  }
-  const lines: string[] = ['# Snapshot-field catalog', '', `${entries.length} entries.`, ''];
-  const sorted = [...entries].sort((a, b) => {
-    const byCategory = a.category.localeCompare(b.category);
-    return byCategory === 0 ? a.slug.localeCompare(b.slug) : byCategory;
-  });
-  let lastCategory: string | undefined;
-  for (const entry of sorted) {
-    if (entry.category !== lastCategory) {
-      lines.push('', `## ${entry.category}`, '');
-      lastCategory = entry.category;
+    output = ['# Snapshot-field catalog', '', 'No snapshot fields have been registered yet.', '', 'Add a `@dbxModelSnapshotField` JSDoc tag to a function/const, then run `nx run dbx-components-mcp:generate-manifests`.'].join('\n');
+  } else {
+    const lines: string[] = ['# Snapshot-field catalog', '', `${entries.length} entries.`, ''];
+    const sorted = [...entries].sort((a, b) => {
+      const byCategory = a.category.localeCompare(b.category);
+      return byCategory === 0 ? a.slug.localeCompare(b.slug) : byCategory;
+    });
+    let lastCategory: string | undefined;
+    for (const entry of sorted) {
+      if (entry.category !== lastCategory) {
+        lines.push('', `## ${entry.category}`, '');
+        lastCategory = entry.category;
+      }
+      const optBadge = entry.optional ? ' *(optional)*' : '';
+      lines.push(`- \`${entry.slug}\` → \`${entry.name}\`${optBadge} *(${entry.kind})* — ${entry.description.split('\n')[0]}`);
     }
-    const optBadge = entry.optional ? ' *(optional)*' : '';
-    lines.push(`- \`${entry.slug}\` → \`${entry.name}\`${optBadge} *(${entry.kind})* — ${entry.description.split('\n')[0]}`);
+    output = lines.join('\n').trimEnd();
   }
-  return lines.join('\n').trimEnd();
+  return output;
 }
 
 function formatNotFound(normalized: string, candidates: readonly ModelSnapshotFieldEntryInfo[]): string {

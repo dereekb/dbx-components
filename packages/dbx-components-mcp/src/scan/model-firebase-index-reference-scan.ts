@@ -119,41 +119,38 @@ export async function scanFactoryReferences(input: ScanFactoryReferencesInput): 
   for (const entry of entries) {
     result.set(entry.slug, { count: 0, productionCount: 0, specCount: 0, referencedBy: [] });
   }
-  if (entries.length === 0) {
-    return result;
-  }
 
-  const namesBySlug = buildNameLookup(entries);
-  const declFilePathsBySlug = buildDeclFilePathLookup(entries);
-  const declFilePaths = new Set<string>(declFilePathsBySlug.values());
-  const filePaths = await globber({ projectRoot, include, exclude: [...exclude] });
-  const combinedPattern = buildCombinedRegex(Array.from(namesBySlug.values()));
+  if (entries.length > 0) {
+    const namesBySlug = buildNameLookup(entries);
+    const declFilePathsBySlug = buildDeclFilePathLookup(entries);
+    const declFilePaths = new Set<string>(declFilePathsBySlug.values());
+    const filePaths = await globber({ projectRoot, include, exclude: [...exclude] });
+    const combinedPattern = buildCombinedRegex(Array.from(namesBySlug.values()));
 
-  if (combinedPattern === undefined) {
-    return result;
-  }
+    if (combinedPattern !== undefined) {
+      const sitesBySlug = new Map<string, FactoryReferenceSite[]>();
+      for (const entry of entries) {
+        sitesBySlug.set(entry.slug, []);
+      }
 
-  const sitesBySlug = new Map<string, FactoryReferenceSite[]>();
-  for (const entry of entries) {
-    sitesBySlug.set(entry.slug, []);
-  }
+      for (const relPath of filePaths) {
+        const absolutePath = resolvePath(projectRoot, relPath);
+        if (declFilePaths.has(absolutePath)) {
+          continue;
+        }
+        await scanOneFile({ absolutePath, projectRoot, readFile, combinedPattern, namesBySlug, sitesBySlug });
+      }
 
-  for (const relPath of filePaths) {
-    const absolutePath = resolvePath(projectRoot, relPath);
-    if (declFilePaths.has(absolutePath)) {
-      continue;
-    }
-    await scanOneFile({ absolutePath, projectRoot, readFile, combinedPattern, namesBySlug, sitesBySlug });
-  }
-
-  for (const [slug, sites] of sitesBySlug) {
-    let specCount = 0;
-    for (const site of sites) {
-      if (site.isSpec) {
-        specCount += 1;
+      for (const [slug, sites] of sitesBySlug) {
+        let specCount = 0;
+        for (const site of sites) {
+          if (site.isSpec) {
+            specCount += 1;
+          }
+        }
+        result.set(slug, { count: sites.length, productionCount: sites.length - specCount, specCount, referencedBy: sites });
       }
     }
-    result.set(slug, { count: sites.length, productionCount: sites.length - specCount, specCount, referencedBy: sites });
   }
   return result;
 }

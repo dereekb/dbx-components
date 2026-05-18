@@ -105,24 +105,22 @@ function code(value: string): string {
  * @returns The formatted pattern text, or an error result when args fail validation.
  */
 export function runFormExamples(rawArgs: unknown): ToolResult {
-  let args: ParsedExamplesArgs;
+  let result: ToolResult;
   try {
-    args = parseExamplesArgs(rawArgs);
+    const args = parseExamplesArgs(rawArgs);
+    const lowered = args.pattern.trim().toLowerCase();
+    let text: string;
+    if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
+      text = formatPatternCatalog();
+    } else {
+      const pattern = getExamplePattern(args.pattern);
+      text = pattern ? formatPattern(pattern, args.depth) : formatNotFound(args.pattern);
+    }
+    result = { content: [{ type: 'text', text }] };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
+    result = toolError(message);
   }
-
-  const lowered = args.pattern.trim().toLowerCase();
-  let text: string;
-  if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
-    text = formatPatternCatalog();
-  } else {
-    const pattern = getExamplePattern(args.pattern);
-    text = pattern ? formatPattern(pattern, args.depth) : formatNotFound(args.pattern);
-  }
-
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

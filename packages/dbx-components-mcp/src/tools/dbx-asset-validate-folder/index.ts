@@ -39,35 +39,35 @@ function collectComponentViolations(inspection: AppAssetsInspection): Violation[
       side: 'component',
       file: undefined
     });
-    return violations;
-  }
-  const extracted = extractAppAssets(inspection);
-  if (!extracted.assetsFileExists) {
-    pushViolation(violations, {
-      code: 'DBX_ASSET_FOLDER_FILE_MISSING',
-      message: `Component is missing \`src/lib/assets.ts\`. Add the file and export \`AssetPathRef\` constants.`,
-      side: 'component',
-      file: undefined
-    });
-    return violations;
-  }
-  if (extracted.assetConstants.length === 0 && extracted.aggregatorExports.length === 0) {
-    pushViolation(violations, {
-      code: 'DBX_ASSET_FOLDER_NO_EXPORTS',
-      severity: 'warning',
-      message: `\`src/lib/assets.ts\` exports neither an \`AssetPathRef\` constant nor an \`AssetPathRef[]\` aggregator.`,
-      side: 'component',
-      file: 'src/lib/assets.ts'
-    });
-  }
-  if (!extracted.barrelReExportsAssets) {
-    pushViolation(violations, {
-      code: 'DBX_ASSET_FOLDER_BARREL_MISSING',
-      severity: 'warning',
-      message: `Component barrel \`src/lib/index.ts\` does not re-export \`./assets\`. Add \`export * from './assets';\` so downstream consumers see the refs.`,
-      side: 'component',
-      file: 'src/lib/index.ts'
-    });
+  } else {
+    const extracted = extractAppAssets(inspection);
+    if (!extracted.assetsFileExists) {
+      pushViolation(violations, {
+        code: 'DBX_ASSET_FOLDER_FILE_MISSING',
+        message: `Component is missing \`src/lib/assets.ts\`. Add the file and export \`AssetPathRef\` constants.`,
+        side: 'component',
+        file: undefined
+      });
+    } else {
+      if (extracted.assetConstants.length === 0 && extracted.aggregatorExports.length === 0) {
+        pushViolation(violations, {
+          code: 'DBX_ASSET_FOLDER_NO_EXPORTS',
+          severity: 'warning',
+          message: `\`src/lib/assets.ts\` exports neither an \`AssetPathRef\` constant nor an \`AssetPathRef[]\` aggregator.`,
+          side: 'component',
+          file: 'src/lib/assets.ts'
+        });
+      }
+      if (!extracted.barrelReExportsAssets) {
+        pushViolation(violations, {
+          code: 'DBX_ASSET_FOLDER_BARREL_MISSING',
+          severity: 'warning',
+          message: `Component barrel \`src/lib/index.ts\` does not re-export \`./assets\`. Add \`export * from './assets';\` so downstream consumers see the refs.`,
+          side: 'component',
+          file: 'src/lib/index.ts'
+        });
+      }
+    }
   }
   return violations;
 }

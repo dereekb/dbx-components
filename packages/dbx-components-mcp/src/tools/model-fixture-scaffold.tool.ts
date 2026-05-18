@@ -98,43 +98,54 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.apiDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const apiAbs = resolve(cwd, parsed.apiDir);
-  let extraction;
-  try {
-    extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
-  } catch (err) {
-    return toolError(`Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError !== undefined) {
+    result = toolError(ensureError);
+  } else {
+    const apiAbs = resolve(cwd, parsed.apiDir);
+    let extraction;
+    let inspectError: string | undefined;
+    try {
+      extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
+    } catch (err) {
+      inspectError = `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (inspectError !== undefined || extraction === undefined) {
+      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
+    } else {
+      const prefix = parsed.prefix ?? extraction.prefix;
+      if (!prefix) {
+        result = toolError('Could not detect a workspace prefix from the fixture file. Pass `prefix` explicitly (e.g. `DemoApi`).');
+      } else if ((parsed.archetype === 'sub-collection' || parsed.archetype === 'sub-collection-traversal') && !parsed.parentFixture) {
+        result = toolError(`Archetype \`${parsed.archetype}\` requires \`parentFixture\` (the bare parent model name).`);
+      } else {
+        const rendered = renderFixtureScaffold(extraction, buildRenderOptions(parsed, prefix));
+        const conflicts = collectConflicts(extraction, rendered);
+        if (conflicts.length > 0) {
+          result = toolError(['Refusing to scaffold — the following names already exist in `' + extraction.fixturePath + '`:', '', ...conflicts.map((c) => '- `' + c + '`'), '', 'Rename, delete, or pick a different model name and retry.'].join('\n'));
+        } else {
+          const absolutePath = join(apiAbs, FIXTURE_RELATIVE_PATH);
+          const writeResult = await appendScaffoldToFile({ absolutePath, snippet: rendered.snippet });
+          if (!writeResult.ok) {
+            result = toolError(writeResult.message);
+          } else {
+            // Re-parse to compute final line numbers for the response.
+            const reExtraction = extractAppFixturesFromText({ text: writeResult.updated, fixturePath: extraction.fixturePath });
+            const newEntry = reExtraction.entries.find((e) => e.fixtureClassName === rendered.fixtureClassName);
+            const text = formatScaffoldResponse({ rendered, extraction, archetype: parsed.archetype, newEntry });
+            result = { content: [{ type: 'text', text }] };
+          }
+        }
+      }
+    }
   }
-  const prefix = parsed.prefix ?? extraction.prefix;
-  if (!prefix) {
-    return toolError('Could not detect a workspace prefix from the fixture file. Pass `prefix` explicitly (e.g. `DemoApi`).');
-  }
-  if ((parsed.archetype === 'sub-collection' || parsed.archetype === 'sub-collection-traversal') && !parsed.parentFixture) {
-    return toolError(`Archetype \`${parsed.archetype}\` requires \`parentFixture\` (the bare parent model name).`);
-  }
-
-  const rendered = renderFixtureScaffold(extraction, buildRenderOptions(parsed, prefix));
-
-  const conflicts = collectConflicts(extraction, rendered);
-  if (conflicts.length > 0) {
-    return toolError(['Refusing to scaffold — the following names already exist in `' + extraction.fixturePath + '`:', '', ...conflicts.map((c) => '- `' + c + '`'), '', 'Rename, delete, or pick a different model name and retry.'].join('\n'));
-  }
-
-  const absolutePath = join(apiAbs, FIXTURE_RELATIVE_PATH);
-  const writeResult = await appendScaffoldToFile({ absolutePath, snippet: rendered.snippet });
-  if (!writeResult.ok) return toolError(writeResult.message);
-
-  // Re-parse to compute final line numbers for the response.
-  const reExtraction = extractAppFixturesFromText({ text: writeResult.updated, fixturePath: extraction.fixturePath });
-  const newEntry = reExtraction.entries.find((e) => e.fixtureClassName === rendered.fixtureClassName);
-
-  const text = formatScaffoldResponse({ rendered, extraction, archetype: parsed.archetype, newEntry });
-  return { content: [{ type: 'text', text }] };
+  return result;
 }
 
 function buildRenderOptions(parsed: ReturnType<typeof ScaffoldArgsType> & object, prefix: string): Parameters<typeof renderFixtureScaffold>[1] {
@@ -169,20 +180,32 @@ interface AppendScaffoldErrorResult {
 }
 
 async function appendScaffoldToFile(input: { absolutePath: string; snippet: string }): Promise<AppendScaffoldResult | AppendScaffoldErrorResult> {
-  let original: string;
+  let original: string | undefined;
+  let readError: string | undefined;
   try {
     original = await readFile(input.absolutePath, 'utf8');
   } catch (err) {
-    return { ok: false, message: `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}` };
+    readError = `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`;
   }
-  const newline = original.endsWith('\n') ? '' : '\n';
-  const updated = `${original}${newline}\n${input.snippet}`;
-  try {
-    await writeFile(input.absolutePath, updated, 'utf8');
-  } catch (err) {
-    return { ok: false, message: `Failed to write fixture file: ${err instanceof Error ? err.message : String(err)}` };
+  let result: AppendScaffoldResult | AppendScaffoldErrorResult;
+  if (readError !== undefined || original === undefined) {
+    result = { ok: false, message: readError ?? 'Failed to read fixture file.' };
+  } else {
+    const newline = original.endsWith('\n') ? '' : '\n';
+    const updated = `${original}${newline}\n${input.snippet}`;
+    let writeError: string | undefined;
+    try {
+      await writeFile(input.absolutePath, updated, 'utf8');
+    } catch (err) {
+      writeError = `Failed to write fixture file: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (writeError !== undefined) {
+      result = { ok: false, message: writeError };
+    } else {
+      result = { ok: true, updated };
+    }
   }
-  return { ok: true, updated };
+  return result;
 }
 
 interface FormatScaffoldResponseInput {

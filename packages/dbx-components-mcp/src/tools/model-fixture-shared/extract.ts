@@ -133,15 +133,17 @@ export function extractAppFixturesFromText(input: ExtractAppFixturesInput): AppF
  * @returns The detected prefix, or `undefined` when no base class is found.
  */
 function detectPrefix(sourceFile: SourceFile): string | undefined {
+  let result: string | undefined;
   for (const cls of sourceFile.getClasses()) {
     const name = cls.getName();
     if (!name) continue;
     if (!name.endsWith('ContextFixture')) continue;
     if (name.endsWith(FIXTURE_SUFFIX)) continue;
     if (!extendsByName(cls, BASE_CONTEXT_FIXTURE_BASE)) continue;
-    return name.slice(0, name.length - 'ContextFixture'.length);
+    result = name.slice(0, name.length - 'ContextFixture'.length);
+    break;
   }
-  return undefined;
+  return result;
 }
 
 /**

@@ -253,17 +253,17 @@ export interface SearchToolConfig<TEntry> {
  * @returns The search tool result.
  */
 export function runSearchTool<TEntry>(config: SearchToolConfig<TEntry>, rawArgs: unknown): ToolResult {
-  let args: ParsedSearchArgs;
+  let result: ToolResult;
   try {
-    args = parseSearchArgs(rawArgs, { defaultLimit: config.defaultLimit, maxLimit: config.maxLimit });
+    const args = parseSearchArgs(rawArgs, { defaultLimit: config.defaultLimit, maxLimit: config.maxLimit });
+    const tokens = tokenize(args.query, config.aliasResolver);
+    const ranked = searchEntries<TEntry>({ entries: config.entries, tokens, scoreFn: config.scoreEntry, tieBreaker: config.tieBreaker, mode: config.tokenMatchMode });
+    const hits = ranked.slice(0, args.limit);
+    const text = config.formatResults({ query: args.query, tokens, hits });
+    result = { content: [{ type: 'text', text }] };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
+    result = toolError(message);
   }
-  const tokens = tokenize(args.query, config.aliasResolver);
-  const ranked = searchEntries<TEntry>({ entries: config.entries, tokens, scoreFn: config.scoreEntry, tieBreaker: config.tieBreaker, mode: config.tokenMatchMode });
-  const hits = ranked.slice(0, args.limit);
-  const text = config.formatResults({ query: args.query, tokens, hits });
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }

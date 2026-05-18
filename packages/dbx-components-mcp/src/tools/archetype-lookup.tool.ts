@@ -68,28 +68,28 @@ function formatNotFound(slug: string): string {
  * @returns The rendered archetype entry / catalog / not-found message.
  */
 export function runArchetypeLookup(rawArgs: unknown): ToolResult {
-  let args: ParsedLookupArgs;
+  let result: ToolResult;
   try {
-    args = parseArgs(rawArgs);
-  } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
-  }
-
-  const slugLower = args.slug.trim().toLowerCase();
-  let text: string;
-  let isError = false;
-  if (CATALOG_KEYWORDS.has(slugLower)) {
-    text = formatArchetypeCatalog(MODEL_ARCHETYPES);
-  } else {
-    const resolved = resolveModelArchetype(args.slug);
-    if (resolved) {
-      text = formatLookup(resolved.archetype, args.axes);
+    const args = parseArgs(rawArgs);
+    const slugLower = args.slug.trim().toLowerCase();
+    let text: string;
+    let isError = false;
+    if (CATALOG_KEYWORDS.has(slugLower)) {
+      text = formatArchetypeCatalog(MODEL_ARCHETYPES);
     } else {
-      text = formatNotFound(args.slug);
-      isError = true;
+      const resolved = resolveModelArchetype(args.slug);
+      if (resolved) {
+        text = formatLookup(resolved.archetype, args.axes);
+      } else {
+        text = formatNotFound(args.slug);
+        isError = true;
+      }
     }
+    result = { content: [{ type: 'text', text }], isError };
+  } catch (err) {
+    result = toolError(err instanceof Error ? err.message : String(err));
   }
-  return { content: [{ type: 'text', text }], isError };
+  return result;
 }
 
 function formatLookup(archetype: ModelArchetypeInfo, axesFilter: { readonly [k: string]: string } | undefined): string {

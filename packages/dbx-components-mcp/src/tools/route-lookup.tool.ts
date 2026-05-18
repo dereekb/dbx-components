@@ -275,38 +275,42 @@ function code(value: string): string {
  * @returns The formatted lookup, or an error result when args fail validation.
  */
 export async function runRouteLookup(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedLookupArgs;
+  let args: ParsedLookupArgs | undefined;
+  let parseError: string | undefined;
   try {
     args = parseArgs(rawArgs);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    parseError = err instanceof Error ? err.message : String(err);
   }
 
-  const ctx = await loadRouteContext(args);
-  if (ctx.kind === 'error') {
-    return ctx.result;
+  let result: ToolResult;
+  if (parseError !== undefined || args === undefined) {
+    result = toolError(parseError ?? 'Failed to parse arguments.');
+  } else {
+    const ctx = await loadRouteContext(args);
+    if (ctx.kind === 'error') {
+      result = ctx.result;
+    } else {
+      const { tree } = ctx;
+      const match = resolveTopic(args.topic, tree.byName);
+      let text: string;
+      switch (match.kind) {
+        case 'single':
+          text = formatSingle(match.node, args.depth, match.via);
+          break;
+        case 'group':
+          text = formatGroup(match.title, match.nodes);
+          break;
+        case 'not-found':
+          text = formatNotFound(match.normalized, match.candidates);
+          break;
+      }
+      result = {
+        content: [{ type: 'text', text }],
+        isError: match.kind === 'not-found'
+      };
+    }
   }
-
-  const { tree } = ctx;
-  const match = resolveTopic(args.topic, tree.byName);
-  let text: string;
-  switch (match.kind) {
-    case 'single':
-      text = formatSingle(match.node, args.depth, match.via);
-      break;
-    case 'group':
-      text = formatGroup(match.title, match.nodes);
-      break;
-    case 'not-found':
-      text = formatNotFound(match.normalized, match.candidates);
-      break;
-  }
-
-  const result: ToolResult = {
-    content: [{ type: 'text', text }],
-    isError: match.kind === 'not-found'
-  };
   return result;
 }
 

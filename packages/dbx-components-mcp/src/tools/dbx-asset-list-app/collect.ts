@@ -55,6 +55,5 @@ export function collectAppAssets(inspection: AppAssetsInspection, extracted: Ext
 }
 
 function detectProviderWired(text: string | undefined): boolean {
-  if (!text) return false;
-  return PROVIDE_CALL_RE.test(text);
+  return text ? PROVIDE_CALL_RE.test(text) : false;
 }

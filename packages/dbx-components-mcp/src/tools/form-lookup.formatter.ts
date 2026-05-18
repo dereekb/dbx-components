@@ -132,29 +132,32 @@ function formatExampleSection(field: FormFieldInfo): string {
  * @returns The markdown body the tool emits as content.
  */
 export function formatFormFieldGroup(fields: readonly FormFieldInfo[], title: string): string {
+  let output: string;
   if (fields.length === 0) {
-    return `_No form entries matched._`;
-  }
-  const byTier = new Map<string, FormFieldInfo[]>();
-  for (const field of fields) {
-    const list = byTier.get(field.tier) ?? [];
-    list.push(field);
-    byTier.set(field.tier, list);
-  }
+    output = `_No form entries matched._`;
+  } else {
+    const byTier = new Map<string, FormFieldInfo[]>();
+    for (const field of fields) {
+      const list = byTier.get(field.tier) ?? [];
+      list.push(field);
+      byTier.set(field.tier, list);
+    }
 
-  const sections: string[] = [`# ${title}`, ''];
-  for (const tier of FORM_TIER_ORDER) {
-    const list = byTier.get(tier);
-    if (!list || list.length === 0) {
-      continue;
+    const sections: string[] = [`# ${title}`, ''];
+    for (const tier of FORM_TIER_ORDER) {
+      const list = byTier.get(tier);
+      if (!list || list.length === 0) {
+        continue;
+      }
+      sections.push(`## ${tier} (${list.length})`, '');
+      for (const field of list) {
+        const arrayOptional = field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
+        const array = field.arrayOutput === 'yes' ? ' *(array)*' : arrayOptional;
+        sections.push(`- **\`${field.slug}\`** → \`${field.factoryName}\` — produces \`${field.produces}\`${array}. ${field.description}`);
+      }
+      sections.push('');
     }
-    sections.push(`## ${tier} (${list.length})`, '');
-    for (const field of list) {
-      const arrayOptional = field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
-      const array = field.arrayOutput === 'yes' ? ' *(array)*' : arrayOptional;
-      sections.push(`- **\`${field.slug}\`** → \`${field.factoryName}\` — produces \`${field.produces}\`${array}. ${field.description}`);
-    }
-    sections.push('');
+    output = sections.join('\n').trimEnd();
   }
-  return sections.join('\n').trimEnd();
+  return output;
 }

@@ -48,28 +48,33 @@ const ColorTemplateListAppArgs = type({
 
 async function run(rawArgs: unknown): Promise<ToolResult> {
   const parsed = ColorTemplateListAppArgs(rawArgs);
+  let result: ToolResult;
   if (parsed instanceof type.errors) {
-    return toolError(`Invalid arguments: ${parsed.summary}`);
-  }
+    result = toolError(`Invalid arguments: ${parsed.summary}`);
+  } else {
+    const cwd = process.cwd();
+    const apiRel = parsed.apiDir;
+    let pathError: string | undefined;
+    try {
+      ensurePathInsideCwd(apiRel, cwd);
+    } catch (err) {
+      pathError = err instanceof Error ? err.message : String(err);
+    }
 
-  const cwd = process.cwd();
-  const apiRel = parsed.apiDir;
-  try {
-    ensurePathInsideCwd(apiRel, cwd);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    if (pathError !== undefined) {
+      result = toolError(pathError);
+    } else {
+      const apiAbs = resolve(cwd, apiRel);
+      const inspection = await inspectColorTemplates(apiAbs, apiRel);
+      if (!inspection.appExists) {
+        result = toolError(`App directory not found: \`${apiRel}\`.`);
+      } else {
+        const report = listAppColorTemplates(inspection);
+        const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+        result = { content: [{ type: 'text', text }] };
+      }
+    }
   }
-
-  const apiAbs = resolve(cwd, apiRel);
-  const inspection = await inspectColorTemplates(apiAbs, apiRel);
-  if (!inspection.appExists) {
-    return toolError(`App directory not found: \`${apiRel}\`.`);
-  }
-
-  const report = listAppColorTemplates(inspection);
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

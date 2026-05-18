@@ -133,30 +133,29 @@ export interface LookupToolConfig<TEntry> {
  *   result when `topic` cannot be resolved or args fail validation.
  */
 function runLookup<TEntry>(config: LookupToolConfig<TEntry>, rawArgs: unknown): ToolResult {
-  let args: ParsedLookupArgs;
+  let result: ToolResult;
   try {
-    args = parseLookupArgs(rawArgs);
+    const args = parseLookupArgs(rawArgs);
+    const match = resolveLookup(config, args.topic);
+    let text: string;
+    let isError = false;
+    switch (match.kind) {
+      case 'catalog':
+        text = config.formatCatalog(config.entries);
+        break;
+      case 'single':
+        text = config.formatEntry(match.entry, args.depth);
+        break;
+      case 'not-found':
+        text = config.formatNotFound(match.normalized, match.candidates);
+        isError = true;
+        break;
+    }
+    result = { content: [{ type: 'text', text }], isError };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    result = toolError(message);
   }
-
-  const match = resolveLookup(config, args.topic);
-  let text: string;
-  let isError = false;
-  switch (match.kind) {
-    case 'catalog':
-      text = config.formatCatalog(config.entries);
-      break;
-    case 'single':
-      text = config.formatEntry(match.entry, args.depth);
-      break;
-    case 'not-found':
-      text = config.formatNotFound(match.normalized, match.candidates);
-      isError = true;
-      break;
-  }
-  const result: ToolResult = { content: [{ type: 'text', text }], isError };
   return result;
 }
 

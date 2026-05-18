@@ -80,38 +80,43 @@ export async function extractServerActions(apiAbs: string, apiRel: string): Prom
  * @returns The directory entries or `[]` on failure.
  */
 async function readDirSafe(path: string): Promise<readonly Dirent[]> {
+  let result: readonly Dirent[];
   try {
-    return await readdir(path, { withFileTypes: true });
+    result = await readdir(path, { withFileTypes: true });
   } catch {
-    return [];
+    result = [];
   }
+  return result;
 }
 
 async function collectActionFiles(root: string): Promise<readonly string[]> {
   const out: string[] = [];
   const stack: string[] = [];
+  let isDir = false;
   try {
     const stats = await stat(root);
-    if (!stats.isDirectory()) return out;
-    stack.push(root);
+    isDir = stats.isDirectory();
   } catch {
-    return out;
+    isDir = false;
   }
-  while (stack.length > 0) {
-    const current = stack.pop() as string;
-    const entries = await readDirSafe(current);
-    for (const entry of entries) {
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(full);
-        continue;
-      }
-      if (entry.isFile() && entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-        out.push(full);
+  if (isDir) {
+    stack.push(root);
+    while (stack.length > 0) {
+      const current = stack.pop() as string;
+      const entries = await readDirSafe(current);
+      for (const entry of entries) {
+        const full = join(current, entry.name);
+        if (entry.isDirectory()) {
+          stack.push(full);
+          continue;
+        }
+        if (entry.isFile() && entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
+          out.push(full);
+        }
       }
     }
+    out.sort((a, b) => a.localeCompare(b));
   }
-  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 
@@ -163,11 +168,13 @@ async function findModuleCandidates(actionFilePath: string): Promise<readonly st
 }
 
 async function safeRead(path: string): Promise<string | undefined> {
+  let result: string | undefined;
   try {
-    return await readFile(path, 'utf8');
+    result = await readFile(path, 'utf8');
   } catch {
-    return undefined;
+    result = undefined;
   }
+  return result;
 }
 
 interface ParsedModuleWiring {

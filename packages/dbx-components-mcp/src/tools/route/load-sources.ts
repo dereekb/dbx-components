@@ -156,35 +156,37 @@ async function loadOne(relative: string, cwd: string, into: Map<string, RouteSou
 }
 
 async function resolveRelativeImport(fromFile: string, specifier: string, cwd: string): Promise<RouteSource | undefined> {
-  if (!specifier.startsWith('.')) {
-    return undefined;
-  }
-  const fromAbsolute = isAbsolute(fromFile) ? fromFile : resolve(cwd, fromFile);
-  const fromDir = dirname(fromAbsolute);
-  const baseAbsolute = resolve(fromDir, specifier);
-  const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
-  for (const ext of TRY_EXTENSIONS) {
-    const candidateAbsolute = baseAbsolute + ext;
-    if (!candidateAbsolute.startsWith(cwdPrefix) && candidateAbsolute !== cwd) {
-      continue;
+  let result: RouteSource | undefined;
+  if (specifier.startsWith('.')) {
+    const fromAbsolute = isAbsolute(fromFile) ? fromFile : resolve(cwd, fromFile);
+    const fromDir = dirname(fromAbsolute);
+    const baseAbsolute = resolve(fromDir, specifier);
+    const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
+    for (const ext of TRY_EXTENSIONS) {
+      const candidateAbsolute = baseAbsolute + ext;
+      if (!candidateAbsolute.startsWith(cwdPrefix) && candidateAbsolute !== cwd) {
+        continue;
+      }
+      const exists = await fileExists(candidateAbsolute);
+      if (!exists) {
+        continue;
+      }
+      const text = await readFile(candidateAbsolute, 'utf8');
+      const relativeName = candidateAbsolute.startsWith(cwdPrefix) ? candidateAbsolute.slice(cwdPrefix.length) : candidateAbsolute;
+      result = { name: relativeName, text };
+      break;
     }
-    const exists = await fileExists(candidateAbsolute);
-    if (!exists) {
-      continue;
-    }
-    const text = await readFile(candidateAbsolute, 'utf8');
-    const relativeName = candidateAbsolute.startsWith(cwdPrefix) ? candidateAbsolute.slice(cwdPrefix.length) : candidateAbsolute;
-    const result: RouteSource = { name: relativeName, text };
-    return result;
   }
-  return undefined;
+  return result;
 }
 
 async function fileExists(path: string): Promise<boolean> {
+  let result: boolean;
   try {
     const info = await stat(path);
-    return info.isFile();
+    result = info.isFile();
   } catch {
-    return false;
+    result = false;
   }
+  return result;
 }

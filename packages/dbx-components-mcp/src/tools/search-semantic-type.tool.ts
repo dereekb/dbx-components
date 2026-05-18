@@ -120,26 +120,29 @@ export function createSemanticTypeSearchTool(config: CreateSemanticTypeSearchToo
   const { registry } = config;
 
   function run(rawArgs: unknown): ToolResult {
-    let args: ParsedSearchArgs;
-    let result: ToolResult;
+    let args: ParsedSearchArgs | undefined;
+    let parseError: string | undefined;
     try {
       args = parseSearchArgs(rawArgs);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      parseError = error instanceof Error ? error.message : String(error);
     }
-
-    const filterCount = countDefined([args.topic, args.baseType, args.package, args.query]);
-    if (filterCount === 0) {
-      result = toolError('At least one filter (topic, baseType, package, query) must be supplied.');
+    let result: ToolResult;
+    if (parseError !== undefined || args === undefined) {
+      result = toolError(parseError ?? 'Failed to parse arguments.');
     } else {
-      const matches = applyFilters(registry, args);
-      const limited = matches.slice(0, args.limit);
-      const text = formatSemanticTypeSearchResults({
-        query: describeFilters(args),
-        entries: limited
-      });
-      result = { content: [{ type: 'text', text }] };
+      const filterCount = countDefined([args.topic, args.baseType, args.package, args.query]);
+      if (filterCount === 0) {
+        result = toolError('At least one filter (topic, baseType, package, query) must be supplied.');
+      } else {
+        const matches = applyFilters(registry, args);
+        const limited = matches.slice(0, args.limit);
+        const text = formatSemanticTypeSearchResults({
+          query: describeFilters(args),
+          entries: limited
+        });
+        result = { content: [{ type: 'text', text }] };
+      }
     }
     return result;
   }

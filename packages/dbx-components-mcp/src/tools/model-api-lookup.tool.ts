@@ -69,34 +69,44 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError('Provide either `model` (PascalCase model name) or `identity` (the `<camelName>Identity` const string).');
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
     if (parsed.apiDir) {
       ensurePathInsideCwd(parsed.apiDir, cwd);
     }
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  const apiAbs = parsed.apiDir ? resolve(cwd, parsed.apiDir) : undefined;
-  const modelFilter = parsed.model ?? identityToModel(parsed.identity as string);
-  let report;
-  try {
-    report = await lookupModelApi({
-      componentAbs,
-      componentDir: parsed.componentDir,
-      apiAbs,
-      apiDir: parsed.apiDir,
-      modelFilter
-    });
-  } catch (err) {
-    return toolError(`Failed to lookup model API entries: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError !== undefined) {
+    result = toolError(ensureError);
+  } else {
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    const apiAbs = parsed.apiDir ? resolve(cwd, parsed.apiDir) : undefined;
+    const modelFilter = parsed.model ?? identityToModel(parsed.identity as string);
+    let report;
+    let lookupError: string | undefined;
+    try {
+      report = await lookupModelApi({
+        componentAbs,
+        componentDir: parsed.componentDir,
+        apiAbs,
+        apiDir: parsed.apiDir,
+        modelFilter
+      });
+    } catch (err) {
+      lookupError = `Failed to lookup model API entries: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (lookupError !== undefined || report === undefined) {
+      result = toolError(lookupError ?? 'Failed to lookup model API entries.');
+    } else if (!report.sourceFile) {
+      result = toolError(`No matching \`<model>.api.ts\` source found in \`${parsed.componentDir}\` for filter \`${modelFilter}\`.`);
+    } else {
+      const text = parsed.format === 'json' ? formatLookupAsJson(report) : formatLookupAsMarkdown(report);
+      result = { content: [{ type: 'text', text }] };
+    }
   }
-  if (!report.sourceFile) {
-    return toolError(`No matching \`<model>.api.ts\` source found in \`${parsed.componentDir}\` for filter \`${modelFilter}\`.`);
-  }
-  const text = parsed.format === 'json' ? formatLookupAsJson(report) : formatLookupAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

@@ -12,7 +12,7 @@
 
 import { readdir, readFile, stat, type Dirent } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
-import { extractCrudEntries } from '../model-api-shared/index.js';
+import { extractCrudEntries } from '@dereekb/dbx-cli/manifest-extract';
 import type { DeclaredEntry } from './types.js';
 
 const API_SUFFIX = '.api.ts';
@@ -97,37 +97,42 @@ export async function extractDeclaredEntries(roots: readonly DeclaredEntriesSour
  * @returns The directory entries or `[]` on failure.
  */
 async function readDirSafe(path: string): Promise<readonly Dirent[]> {
+  let result: readonly Dirent[];
   try {
-    return await readdir(path, { withFileTypes: true });
+    result = await readdir(path, { withFileTypes: true });
   } catch {
-    return [];
+    result = [];
   }
+  return result;
 }
 
 async function collectApiFiles(rootAbs: string): Promise<readonly string[]> {
   const files: string[] = [];
   const stack: string[] = [];
+  let isDir = false;
   try {
     const stats = await stat(rootAbs);
-    if (!stats.isDirectory()) return [];
-    stack.push(rootAbs);
+    isDir = stats.isDirectory();
   } catch {
-    return [];
+    isDir = false;
   }
-  while (stack.length > 0) {
-    const current = stack.pop() as string;
-    const entries = await readDirSafe(current);
-    for (const entry of entries) {
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(full);
-        continue;
-      }
-      if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-        files.push(full);
+  if (isDir) {
+    stack.push(rootAbs);
+    while (stack.length > 0) {
+      const current = stack.pop() as string;
+      const entries = await readDirSafe(current);
+      for (const entry of entries) {
+        const full = join(current, entry.name);
+        if (entry.isDirectory()) {
+          stack.push(full);
+          continue;
+        }
+        if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
+          files.push(full);
+        }
       }
     }
+    files.sort((a, b) => a.localeCompare(b));
   }
-  files.sort((a, b) => a.localeCompare(b));
   return files;
 }

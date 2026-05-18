@@ -85,12 +85,14 @@ async function readRootStatus(rootDir: string): Promise<SideStatus | undefined> 
  * @returns `true` when the path is a directory.
  */
 async function isDirectory(absPath: string): Promise<boolean> {
+  let result = false;
   try {
     const stats = await stat(absPath);
-    return stats.isDirectory();
+    result = stats.isDirectory();
   } catch {
-    return false;
+    /* swallow */
   }
+  return result;
 }
 
 /**

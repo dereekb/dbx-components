@@ -72,23 +72,34 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
     ensurePathInsideCwd(parsed.apiDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  const apiAbs = resolve(cwd, parsed.apiDir);
-  const modelFilter = parsed.model ?? (parsed.identity ? identityToModel(parsed.identity) : undefined);
-  let report;
-  try {
-    report = await validateAppModelApi({ componentAbs, componentDir: parsed.componentDir, apiAbs, apiDir: parsed.apiDir, modelFilter });
-  } catch (err) {
-    return toolError(`Failed to validate app: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError !== undefined) {
+    result = toolError(ensureError);
+  } else {
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    const apiAbs = resolve(cwd, parsed.apiDir);
+    const modelFilter = parsed.model ?? (parsed.identity ? identityToModel(parsed.identity) : undefined);
+    let report;
+    let validateError: string | undefined;
+    try {
+      report = await validateAppModelApi({ componentAbs, componentDir: parsed.componentDir, apiAbs, apiDir: parsed.apiDir, modelFilter });
+    } catch (err) {
+      validateError = `Failed to validate app: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (validateError !== undefined || report === undefined) {
+      result = toolError(validateError ?? 'Failed to validate app.');
+    } else {
+      const text = parsed.format === 'json' ? formatValidationAsJson(report) : formatValidationAsMarkdown(report);
+      result = { content: [{ type: 'text', text }] };
+    }
   }
-  const text = parsed.format === 'json' ? formatValidationAsJson(report) : formatValidationAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 

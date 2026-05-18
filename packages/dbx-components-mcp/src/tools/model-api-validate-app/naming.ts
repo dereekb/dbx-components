@@ -22,7 +22,7 @@
  *  - `profile.update._` (default specifier) → `profileUpdate`.
  */
 
-import type { CrudVerb } from '../model-api-shared/types.js';
+import type { CrudVerb } from '@dereekb/dbx-cli/manifest-extract';
 import type { HandlerEntry, ValidateIssue } from './types.js';
 
 /**

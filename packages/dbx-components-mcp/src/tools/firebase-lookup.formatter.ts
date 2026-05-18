@@ -197,10 +197,7 @@ function appendFieldsTable(lines: string[], fields: readonly FirebaseField[], de
  * @returns The label text (without the surrounding backticks)
  */
 function formatFieldLabel(field: FirebaseField): string {
-  if (field.longName && field.longName !== field.name) {
-    return `${field.name} (${field.longName})`;
-  }
-  return field.name;
+  return field.longName && field.longName !== field.name ? `${field.name} (${field.longName})` : field.name;
 }
 
 function appendSubObjectSections(lines: string[], fields: readonly FirebaseField[], depth: LookupDepth): void {

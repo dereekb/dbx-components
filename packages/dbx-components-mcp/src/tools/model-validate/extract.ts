@@ -703,16 +703,17 @@ function findFunction(sourceFile: SourceFile, name: string): ExtractedDecl | und
 }
 
 function findVariable(sourceFile: SourceFile, name: string): ExtractedDecl | undefined {
-  for (const statement of sourceFile.getVariableStatements()) {
+  let result: ExtractedDecl | undefined;
+  outer: for (const statement of sourceFile.getVariableStatements()) {
     for (const decl of statement.getDeclarations()) {
       if (decl.getName() !== name) {
         continue;
       }
-      const result: ExtractedDecl = { name, exported: statement.isExported(), line: decl.getStartLineNumber() };
-      return result;
+      result = { name, exported: statement.isExported(), line: decl.getStartLineNumber() };
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function findDocumentClass(sourceFile: SourceFile, name: string): ExtractedDocumentClass | undefined {

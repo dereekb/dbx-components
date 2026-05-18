@@ -96,12 +96,14 @@ async function readAppWiring(appDir: string): Promise<AppAssetWiringInspection> 
 }
 
 async function isDirectory(absPath: string): Promise<boolean> {
+  let result = false;
   try {
     const stats = await stat(absPath);
-    return stats.isDirectory();
+    result = stats.isDirectory();
   } catch {
-    return false;
+    /* swallow */
   }
+  return result;
 }
 
 async function readFileIfExists(absPath: string): Promise<string | undefined> {

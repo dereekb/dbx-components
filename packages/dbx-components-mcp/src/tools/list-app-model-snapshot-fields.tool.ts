@@ -116,37 +116,50 @@ export function createListAppModelSnapshotFieldsTool(input: CreateListAppModelSn
 
   async function run(rawArgs: unknown): Promise<ToolResult> {
     const parsed = ListAppArgsType(rawArgs);
+    let result: ToolResult;
     if (parsed instanceof type.errors) {
-      return toolError(`Invalid arguments: ${parsed.summary}`);
-    }
-    const cwd = process.cwd();
-    try {
-      ensurePathInsideCwd(parsed.componentDir, cwd);
-      if (parsed.apiDir !== undefined) {
-        ensurePathInsideCwd(parsed.apiDir, cwd);
+      result = toolError(`Invalid arguments: ${parsed.summary}`);
+    } else {
+      const cwd = process.cwd();
+      let pathError: string | undefined;
+      try {
+        ensurePathInsideCwd(parsed.componentDir, cwd);
+        if (parsed.apiDir !== undefined) {
+          ensurePathInsideCwd(parsed.apiDir, cwd);
+        }
+      } catch (err) {
+        pathError = err instanceof Error ? err.message : String(err);
       }
-    } catch (err) {
-      return toolError(err instanceof Error ? err.message : String(err));
+
+      if (pathError !== undefined) {
+        result = toolError(pathError);
+      } else {
+        const componentAbs = resolve(cwd, parsed.componentDir);
+        const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
+
+        let report: ListAppReport | undefined;
+        let buildError: string | undefined;
+        try {
+          report = await buildListAppReport({
+            componentDir: parsed.componentDir,
+            componentAbs,
+            apiDir: parsed.apiDir,
+            apiAbs,
+            registry
+          });
+        } catch (err) {
+          buildError = `Failed to walk app for snapshot fields: ${err instanceof Error ? err.message : String(err)}`;
+        }
+
+        if (buildError !== undefined) {
+          result = toolError(buildError);
+        } else {
+          const text = parsed.format === 'json' ? formatReportAsJson(report as ListAppReport) : formatReportAsMarkdown(report as ListAppReport);
+          result = { content: [{ type: 'text', text }] };
+        }
+      }
     }
-
-    const componentAbs = resolve(cwd, parsed.componentDir);
-    const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
-
-    let report: ListAppReport;
-    try {
-      report = await buildListAppReport({
-        componentDir: parsed.componentDir,
-        componentAbs,
-        apiDir: parsed.apiDir,
-        apiAbs,
-        registry
-      });
-    } catch (err) {
-      return toolError(`Failed to walk app for snapshot fields: ${err instanceof Error ? err.message : String(err)}`);
-    }
-
-    const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-    return { content: [{ type: 'text', text }] };
+    return result;
   }
 
   return { definition: DBX_MODEL_SNAPSHOT_FIELD_LIST_APP_TOOL, run };

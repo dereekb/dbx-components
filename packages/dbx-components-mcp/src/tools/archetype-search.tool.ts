@@ -164,28 +164,29 @@ function renderSearchOutput(input: RenderSearchOutputInput): string {
  */
 export async function runArchetypeSearch(rawArgs: unknown): Promise<ToolResult> {
   let args: ParsedSearchArgs;
+  let result: ToolResult;
   try {
     args = parseArgs(rawArgs);
+    const resolved = resolveModelArchetype(args.archetype);
+    if (!resolved) {
+      result = toolError(`Unknown archetype slug \`${args.archetype}\`. Try \`dbx_model_archetype_lookup slug="list"\` for the catalog.`);
+    } else {
+      const cwd = process.cwd();
+      const componentDirsError = validateComponentDirs(args.componentDirs, cwd);
+      if (componentDirsError) {
+        result = componentDirsError;
+      } else {
+        const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
+        const pool = buildSearchPool(args.scope, downstream);
+        const slug = resolved.archetype.slug;
+        const filtered = pool.filter((m) => m.archetypes?.includes(slug) === true && matchesAxes(m, slug, args.axes)).slice(0, args.limit);
+        result = { content: [{ type: 'text', text: renderSearchOutput({ args, slug, filtered }) }] };
+      }
+    }
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    result = toolError(err instanceof Error ? err.message : String(err));
   }
-
-  const resolved = resolveModelArchetype(args.archetype);
-  if (!resolved) {
-    return toolError(`Unknown archetype slug \`${args.archetype}\`. Try \`dbx_model_archetype_lookup slug="list"\` for the catalog.`);
-  }
-
-  const cwd = process.cwd();
-  const componentDirsError = validateComponentDirs(args.componentDirs, cwd);
-  if (componentDirsError) return componentDirsError;
-
-  const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
-  const pool = buildSearchPool(args.scope, downstream);
-
-  const slug = resolved.archetype.slug;
-  const filtered = pool.filter((m) => m.archetypes?.includes(slug) === true && matchesAxes(m, slug, args.axes)).slice(0, args.limit);
-
-  return { content: [{ type: 'text', text: renderSearchOutput({ args, slug, filtered }) }] };
+  return result;
 }
 
 export const archetypeSearchTool: DbxTool = {

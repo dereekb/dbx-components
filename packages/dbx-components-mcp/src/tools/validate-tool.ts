@@ -77,38 +77,47 @@ export function createFolderValidateTool<TInspection extends { readonly path: st
     }
 
     const cwd = process.cwd();
-    let paths: readonly string[];
+    let runResult: ToolResult;
+    let paths: readonly string[] | undefined;
+    let resolveError: string | undefined;
     try {
       paths = await resolveFolderPaths({ paths: parsed.paths, glob: parsed.glob, cwd });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return toolError(`Failed to resolve folder paths: ${message}`);
+      resolveError = `Failed to resolve folder paths: ${message}`;
     }
 
-    if (paths.length === 0) {
-      return toolError('No matching folders found.');
-    }
-
-    const inspections: TInspection[] = [];
-    try {
-      for (const relative of paths) {
-        const absolute = resolve(cwd, relative);
-        const inspection = await inspectFolder(absolute);
-        const relativized = { ...inspection, path: relative };
-        inspections.push(relativized);
+    if (resolveError !== undefined || paths === undefined) {
+      runResult = toolError(resolveError ?? 'Failed to resolve folder paths.');
+    } else if (paths.length === 0) {
+      runResult = toolError('No matching folders found.');
+    } else {
+      const inspections: TInspection[] = [];
+      let readError: string | undefined;
+      try {
+        for (const relative of paths) {
+          const absolute = resolve(cwd, relative);
+          const inspection = await inspectFolder(absolute);
+          const relativized = { ...inspection, path: relative };
+          inspections.push(relativized);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        readError = `Failed to read folders: ${message}`;
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return toolError(`Failed to read folders: ${message}`);
-    }
 
-    const result = validate(inspections);
-    const text = format(result);
-    const toolResult: ToolResult = {
-      content: [{ type: 'text', text }],
-      isError: result.errorCount > 0
-    };
-    return toolResult;
+      if (readError !== undefined) {
+        runResult = toolError(readError);
+      } else {
+        const result = validate(inspections);
+        const text = format(result);
+        runResult = {
+          content: [{ type: 'text', text }],
+          isError: result.errorCount > 0
+        };
+      }
+    }
+    return runResult;
   }
 
   const tool: DbxTool = { definition, run };
@@ -173,24 +182,28 @@ export function createSourceValidateTool<TResult extends { readonly errorCount: 
       return toolError('Must provide at least one of `sources`, `paths`, or `glob`.');
     }
 
-    let sources: readonly ValidatorSource[];
+    let toolResult: ToolResult;
+    let sources: readonly ValidatorSource[] | undefined;
+    let readError: string | undefined;
     try {
       sources = await resolveValidatorSources({ sources: parsed.sources, paths: parsed.paths, glob: parsed.glob, cwd: process.cwd() });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return toolError(`Failed to read sources: ${message}`);
+      readError = `Failed to read sources: ${message}`;
     }
 
-    if (sources.length === 0) {
-      return toolError('No matching source files found.');
+    if (readError !== undefined || sources === undefined) {
+      toolResult = toolError(readError ?? 'Failed to read sources.');
+    } else if (sources.length === 0) {
+      toolResult = toolError('No matching source files found.');
+    } else {
+      const result = validate(sources);
+      const text = format(result);
+      toolResult = {
+        content: [{ type: 'text', text }],
+        isError: result.errorCount > 0
+      };
     }
-
-    const result = validate(sources);
-    const text = format(result);
-    const toolResult: ToolResult = {
-      content: [{ type: 'text', text }],
-      isError: result.errorCount > 0
-    };
     return toolResult;
   }
 
@@ -268,19 +281,25 @@ function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly a
   const cwd = process.cwd();
   const componentRel = parsed.componentDir;
   const apiRel = parsed.apiDir;
+  let result: TwoSideInspectAndValidateInput | ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(componentRel, cwd);
     ensurePathInsideCwd(apiRel, cwd);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  return {
-    componentAbs: resolve(cwd, componentRel),
-    componentRel,
-    apiAbs: resolve(cwd, apiRel),
-    apiRel
-  };
+  if (ensureError !== undefined) {
+    result = toolError(ensureError);
+  } else {
+    result = {
+      componentAbs: resolve(cwd, componentRel),
+      componentRel,
+      apiAbs: resolve(cwd, apiRel),
+      apiRel
+    };
+  }
+  return result;
 }
 
 /**

@@ -69,7 +69,8 @@ export async function loadRouteContext(input: RouteContextInput): Promise<RouteC
     return { kind: 'error', result: toolError('Must provide at least one of `sources`, `paths`, or `glob`.') };
   }
 
-  let sources: readonly RouteSource[];
+  let sources: readonly RouteSource[] | undefined;
+  let loadError: string | undefined;
   try {
     const loaded = await loadRouteSources({
       sources: input.sources,
@@ -81,13 +82,17 @@ export async function loadRouteContext(input: RouteContextInput): Promise<RouteC
     sources = loaded.sources;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return { kind: 'error', result: toolError(`Failed to read sources: ${message}`) };
+    loadError = `Failed to read sources: ${message}`;
   }
 
-  if (sources.length === 0) {
-    return { kind: 'error', result: toolError('No matching source files found.') };
+  let outcome: RouteContextResult;
+  if (loadError !== undefined || sources === undefined) {
+    outcome = { kind: 'error', result: toolError(loadError ?? 'Failed to read sources.') };
+  } else if (sources.length === 0) {
+    outcome = { kind: 'error', result: toolError('No matching source files found.') };
+  } else {
+    const tree = loadRouteTree({ sources });
+    outcome = { kind: 'ok', tree, sources };
   }
-
-  const tree = loadRouteTree({ sources });
-  return { kind: 'ok', tree, sources };
+  return outcome;
 }
