@@ -266,8 +266,7 @@ export function isThrottled(throttleTime: Maybe<Milliseconds>, lastRunAt: Maybe<
  * @dbxUtilRelated expiration-details, check-any-have-expired
  */
 export function checkAtleastOneNotExpired(details: ExpirationDetails<Expires>[]): boolean {
-  const firstExpired = details.findIndex((detail) => !detail.hasExpired());
-  return firstExpired !== -1;
+  return details.some((detail) => !detail.hasExpired());
 }
 
 /**
@@ -291,8 +290,7 @@ export function checkAnyHaveExpired(details: ExpirationDetails<Expires>[], defau
   if (details.length === 0) {
     result = defaultIfEmpty;
   } else {
-    const firstExpired = details.findIndex((detail) => detail.hasExpired());
-    result = firstExpired !== -1;
+    result = details.some((detail) => detail.hasExpired());
   }
 
   return result;

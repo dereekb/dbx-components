@@ -67,9 +67,9 @@ export function isValidDateCellRangeSeries(input: DateCellRange[]): boolean {
   let result: boolean;
 
   if (Array.isArray(input)) {
-    const invalidRange = input.findIndex((range) => !isValidDateCellRange(range));
+    const allRangesValid = input.every((range) => isValidDateCellRange(range));
 
-    if (invalidRange === -1) {
+    if (allRangesValid) {
       let greatestIndex = -1;
       result = true;
 
@@ -871,6 +871,7 @@ type DateCellRangePriorityPair<B extends DateCellRange | UniqueDateCell> = {
  *
  * @param config - Controls start/end bounds, fill strategy, and overlap retention behavior.
  * @returns Configured expander that merges, fills, and resolves overlaps in cell-range arrays.
+ * @throws {Error} When `fillOption` is `'fill'` but no `fillFactory` is supplied.
  *
  * @example
  * ```ts
@@ -883,8 +884,6 @@ type DateCellRangePriorityPair<B extends DateCellRange | UniqueDateCell> = {
  * const result = expand([{ i: 2, to: 5 }, { i: 8, to: 10 }]);
  * // result.blocks => [{ i: 2, to: 5 }, { i: 8, to: 10 }]
  * ```
- *
- * @throws {Error} When `fillOption` is `'fill'` but no `fillFactory` is supplied.
  *
  * @__NO_SIDE_EFFECTS__
  */

@@ -196,7 +196,7 @@ export function isUniqueKeyedFunction<T, K extends PrimativeKey = PrimativeKey>(
   return (input) => {
     const keys = new Set<Maybe<K>>();
 
-    const findResult = input.findIndex((x) => {
+    const hasAnyDuplicate = input.some((x) => {
       const key = readKey(x);
       let hasDuplicate = false;
 
@@ -211,7 +211,7 @@ export function isUniqueKeyedFunction<T, K extends PrimativeKey = PrimativeKey>(
       return hasDuplicate;
     });
 
-    return findResult === -1;
+    return !hasAnyDuplicate;
   };
 }
 

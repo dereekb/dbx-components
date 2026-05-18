@@ -470,10 +470,10 @@ export function dateCellTimingExpansionFactory<B extends DateCell | DateCellRang
       }
     }
 
-    blocks.findIndex((block) => {
+    blocks.some((block) => {
       if (dateCellRangeHasRange(block)) {
         // Expands the block's range as if it is at a single index
-        range(block.i, block.to + 1).findIndex((i) => {
+        range(block.i, block.to + 1).some((i) => {
           const blockAtIndex = { ...block, i, to: i }; // copy block, set to as i
           filterAndPush(blockAtIndex, blocksEvaluated);
 
