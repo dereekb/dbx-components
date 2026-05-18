@@ -652,7 +652,7 @@ function normalizeExampleFence(tag: CanonicalTag): void {
   bodyLines.push(...tag.continuationLines);
 
   const firstNonBlank = findFirstNonBlankLine(bodyLines);
-  if (firstNonBlank === null) return;
+  if (firstNonBlank == null) return;
   if (firstNonBlank.trimStart().startsWith('```')) return;
 
   const content = bodyLines.filter((line) => line.trim().length > 0);
@@ -894,6 +894,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       const fix = AUTOFIXABLE_MESSAGE_IDS.has(messageId) ? (takeCommentFix() ?? undefined) : undefined;
       context.report({
         loc: {
+          type: 'SourceLocation',
           start: sourceCode.getLocFromIndex(start),
           end: sourceCode.getLocFromIndex(end)
         },

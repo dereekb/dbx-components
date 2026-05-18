@@ -315,6 +315,7 @@ export function reportOnJsdocLine(input: ReportOnLineInput): void {
   const end = commentValueToSourceOffset(commentNode, endInValue);
   report({
     loc: {
+      type: 'SourceLocation',
       start: sourceCode.getLocFromIndex(start),
       end: sourceCode.getLocFromIndex(end)
     },

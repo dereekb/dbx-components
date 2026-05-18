@@ -254,7 +254,7 @@ export const utilPreferMaybeTypeRule: UtilPreferMaybeTypeRuleDefinition = {
     const noAutoImport = options.noAutoImport ?? false;
     const sourceCode = context.sourceCode;
 
-    let programNode: AstNode = null;
+    let programNode: Maybe<AstNode> = null;
     let maybeAlreadyImported = false;
     // Tracks whether we've already requested the import-add fix for this lint pass — only the first
     // report emits it so ESLint doesn't see multiple inserts at the same offset (which it would
