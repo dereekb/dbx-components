@@ -35,3 +35,10 @@ export const DBX_WEB_ESLINT_PLUGIN: DbxWebEslintPlugin = {
     'require-top-level-computed-signals': DBX_WEB_REQUIRE_TOP_LEVEL_COMPUTED_SIGNALS_RULE
   }
 };
+
+/**
+ * camelCase alias of {@link DBX_WEB_ESLINT_PLUGIN} matching the conventional ESLint plugin export name.
+ *
+ * @dbxAllowConstantName
+ */
+export const dbxWebESLintPlugin: DbxWebEslintPlugin = DBX_WEB_ESLINT_PLUGIN;

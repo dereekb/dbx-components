@@ -100,3 +100,10 @@ export const UTIL_ESLINT_PLUGIN: UtilEslintPlugin = {
     'prefer-suggested-string': UTIL_PREFER_SUGGESTED_STRING_RULE
   }
 };
+
+/**
+ * camelCase alias of {@link UTIL_ESLINT_PLUGIN} matching the conventional ESLint plugin export name.
+ *
+ * @dbxAllowConstantName
+ */
+export const utilESLintPlugin: UtilEslintPlugin = UTIL_ESLINT_PLUGIN;
