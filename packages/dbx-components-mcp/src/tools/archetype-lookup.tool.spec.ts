@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { archetypeLookupTool } from './archetype-lookup.tool.js';
+import { ARCHETYPE_LOOKUP_TOOL } from './archetype-lookup.tool.js';
 
 function runLookup(args: Record<string, unknown>) {
-  const result = archetypeLookupTool.run(args);
+  const result = ARCHETYPE_LOOKUP_TOOL.run(args);
   if (result instanceof Promise) throw new Error('expected synchronous result');
   return { result, text: result.content.map((c) => c.text).join('\n') };
 }

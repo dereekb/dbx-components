@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { archetypeSearchTool } from './archetype-search.tool.js';
+import { ARCHETYPE_SEARCH_TOOL } from './archetype-search.tool.js';
 
 async function runSearch(args: Record<string, unknown>) {
-  const result = await archetypeSearchTool.run(args);
+  const result = await ARCHETYPE_SEARCH_TOOL.run(args);
   return { result, text: result.content.map((c) => c.text).join('\n') };
 }
 

@@ -88,7 +88,7 @@ export async function extractHandlerEntries(apiAbs: string, apiDir: string): Pro
 
 function matchVerbFromConstName(name: string): CrudVerb | undefined {
   for (const { token, verb } of VERB_TOKENS) {
-    if (name.endsWith(`${token}ModelMap`)) {
+    if (name.endsWith(`${token}ModelMap`) || name.endsWith(`_${token.toUpperCase()}_MODEL_MAP`)) {
       return verb;
     }
   }

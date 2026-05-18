@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { dbxColorSmellCheckTool } from './dbx-color-smell-check.tool.js';
+import { DBX_COLOR_SMELL_CHECK_TOOL } from './dbx-color-smell-check.tool.js';
 
 const TS_FIXTURE = `import type { DbxColorConfig } from '@dereekb/dbx-web';
 
@@ -46,7 +46,7 @@ describe('dbxColorSmellCheckTool', () => {
         const apiDir = relative(tmp, appDir).split(/[\\/]/).join('/');
         const tsPath = relative(tmp, join(featureDir, 'thing.ts')).split(/[\\/]/).join('/');
         const htmlPath = relative(tmp, join(featureDir, 'thing.html')).split(/[\\/]/).join('/');
-        const result = await dbxColorSmellCheckTool.run({ paths: [tsPath, htmlPath], apiDir });
+        const result = await DBX_COLOR_SMELL_CHECK_TOOL.run({ paths: [tsPath, htmlPath], apiDir });
         const text = result.content[0].text;
         expect(text).toContain('# Color smell check');
         expect(text).toContain('brand-positive');
@@ -60,7 +60,7 @@ describe('dbxColorSmellCheckTool', () => {
   });
 
   it('rejects missing inputs', async () => {
-    const result = await dbxColorSmellCheckTool.run({});
+    const result = await DBX_COLOR_SMELL_CHECK_TOOL.run({});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Must provide at least one of');
   });
