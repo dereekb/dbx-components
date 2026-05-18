@@ -1,6 +1,8 @@
 import { dbxWebRequireCleanSubscriptionRule } from './require-clean-subscription.rule';
 import { dbxWebRequireCompleteOnDestroyRule } from './require-complete-on-destroy.rule';
 import { dbxWebNoRedundantOnDestroyRule } from './no-redundant-on-destroy.rule';
+import { dbxWebRequireComputedSignalSuffixRule } from './require-computed-signal-suffix.rule';
+import { dbxWebRequireComponentConfigInputRule } from './require-component-config-input.rule';
 
 /**
  * ESLint plugin interface for dbx-web rules.
@@ -10,6 +12,8 @@ export interface DbxWebEslintPlugin {
     readonly 'require-clean-subscription': typeof dbxWebRequireCleanSubscriptionRule;
     readonly 'require-complete-on-destroy': typeof dbxWebRequireCompleteOnDestroyRule;
     readonly 'no-redundant-on-destroy': typeof dbxWebNoRedundantOnDestroyRule;
+    readonly 'require-computed-signal-suffix': typeof dbxWebRequireComputedSignalSuffixRule;
+    readonly 'require-component-config-input': typeof dbxWebRequireComponentConfigInputRule;
   };
 }
 
@@ -23,6 +27,8 @@ export const dbxWebEslintPlugin: DbxWebEslintPlugin = {
   rules: {
     'require-clean-subscription': dbxWebRequireCleanSubscriptionRule,
     'require-complete-on-destroy': dbxWebRequireCompleteOnDestroyRule,
-    'no-redundant-on-destroy': dbxWebNoRedundantOnDestroyRule
+    'no-redundant-on-destroy': dbxWebNoRedundantOnDestroyRule,
+    'require-computed-signal-suffix': dbxWebRequireComputedSignalSuffixRule,
+    'require-component-config-input': dbxWebRequireComponentConfigInputRule
   }
 };

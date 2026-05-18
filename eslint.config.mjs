@@ -103,7 +103,9 @@ export default [
     rules: {
       'dereekb-dbx-web/require-clean-subscription': 'error',
       'dereekb-dbx-web/require-complete-on-destroy': 'error',
-      'dereekb-dbx-web/no-redundant-on-destroy': 'error'
+      'dereekb-dbx-web/no-redundant-on-destroy': 'error',
+      'dereekb-dbx-web/require-computed-signal-suffix': 'warn', // dbx__note__angular-conventions ANG-C2: computed() class properties end with Signal; raw input()/model() properties don't.
+      'dereekb-dbx-web/require-component-config-input': 'off' // TODO(dbx-components-v14): re-enable at 'warn'. dbx__note__angular-conventions ANG-C1: consolidate >3 signal inputs into a single config input. Disabled here for now; flip to 'warn' for dbx-components v14 alongside the breaking-change refactor pass that consolidates wide-input components (DbxButtonComponent, DbxLoadingComponent, DbxForge*FieldComponent cluster, ~60 total) into a single config input.
     }
   },
   {
@@ -135,7 +137,9 @@ export default [
       'dereekb-util/require-dbx-form-field-companion-tags': 'warn', // dbx-components-mcp forge-fields registry: enforce tier-specific @dbxForm* tags on @dbxFormField-tagged factories
       'dereekb-util/require-dbx-model-companion-tags': 'warn', // dbx-components-mcp model registry: enforce @dbxModel marker semantics, archetype/aggregatesFrom/compositeKey formats
       'dereekb-util/require-dbx-auth-companion-tags': 'warn', // dbx-components-mcp auth registry: enforce @dbxAuthClaimsApp / @dbxAuthClaim / @dbxAuthClaimsService location + slug formats
-      'dereekb-util/require-dbx-rule-companion-tags': 'warn' // dbx-components-mcp rule catalog: enforce @dbxRuleSeverity/Applies/NotApplies/Fix on @dbxRule-tagged enum members
+      'dereekb-util/require-dbx-rule-companion-tags': 'warn', // dbx-components-mcp rule catalog: enforce @dbxRuleSeverity/Applies/NotApplies/Fix on @dbxRule-tagged enum members
+      'dereekb-util/require-constant-naming': 'warn', // dbx__note__typescript-programming → Constant Naming: camelCase for function-typed exported const, UPPER_SNAKE_CASE (or PascalCase) for value-typed. Ambiguous initializers (CallExpression aliases, etc.) are skipped; `@dbxAllowConstantName` JSDoc opts an export out.
+      'dereekb-util/require-exported-jsdoc-example': 'off' // dbx__note__typescript-jsdocs → "Function JSDocs Must Include Examples". Staged off — surfaces ~700+ warnings workspace-wide because the convention itself has a soft escape ("when the description and signature already communicate clearly"); flip to 'warn' as part of a future JSDoc-enrichment sweep. Opt-out tag is `@dbxAllowSkipExample`.
     }
   },
   {
@@ -188,6 +192,9 @@ export default [
       ],
       'jsdoc/require-param': ['warn', { enableFixer: false }],
       'jsdoc/require-returns': ['warn', { enableFixer: false }],
+      // `jsdoc/require-example` is too broad (no exported-only filter); we use the custom
+      // `dereekb-util/require-exported-jsdoc-example` rule below instead.
+      'jsdoc/require-throws': 'warn', // dbx__note__typescript-jsdocs → "Always Document Errors with @throws"; warns when a function body contains `throw` but the JSDoc has no @throws tag.
       'jsdoc/multiline-blocks': ['warn', { noSingleLineBlocks: true }],
       'jsdoc/tag-lines': ['warn', 'any', { startLines: 1 }]
     }

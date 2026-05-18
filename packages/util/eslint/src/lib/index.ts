@@ -20,4 +20,6 @@ export { utilRequireDbxFormFieldCompanionTagsRule, type UtilRequireDbxFormFieldC
 export { utilRequireDbxModelCompanionTagsRule, type UtilRequireDbxModelCompanionTagsRuleOptions, type UtilRequireDbxModelCompanionTagsRuleDefinition } from './require-dbx-model-companion-tags.rule';
 export { utilRequireDbxAuthCompanionTagsRule, type UtilRequireDbxAuthCompanionTagsRuleOptions, type UtilRequireDbxAuthCompanionTagsRuleDefinition } from './require-dbx-auth-companion-tags.rule';
 export { utilRequireDbxRuleCompanionTagsRule, type UtilRequireDbxRuleCompanionTagsRuleOptions, type UtilRequireDbxRuleCompanionTagsRuleDefinition } from './require-dbx-rule-companion-tags.rule';
+export { utilRequireConstantNamingRule, type UtilRequireConstantNamingRuleOptions, type UtilRequireConstantNamingRuleDefinition } from './require-constant-naming.rule';
+export { utilRequireExportedJsdocExampleRule, type UtilRequireExportedJsdocExampleRuleOptions, type UtilRequireExportedJsdocExampleRuleDefinition } from './require-exported-jsdoc-example.rule';
 export { utilEslintPlugin, type UtilEslintPlugin } from './plugin';
