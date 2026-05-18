@@ -48,8 +48,14 @@ export abstract class AbstractDbxButtonDirective implements DbxButton {
   private readonly _workingSignal = signal<Maybe<DbxButtonWorking>>(undefined);
   private readonly _buttonDisplayContentSignal = signal<Maybe<DbxButtonDisplay>>(undefined);
 
-  readonly disabledSignal = computed(() => this._disabledSignal() ?? this.disabled());
-  readonly workingSignal = computed(() => this._workingSignal() ?? this.working());
+  readonly disabledSignal = computed(() => {
+    const disabled = this.disabled();
+    return this._disabledSignal() ?? disabled;
+  });
+  readonly workingSignal = computed(() => {
+    const working = this.working();
+    return this._workingSignal() ?? working;
+  });
 
   readonly isWorkingSignal = computed(() => {
     const working = this.workingSignal();

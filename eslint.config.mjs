@@ -16,7 +16,7 @@ export default [
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
   {
-    ignores: ['**/dist', '**/vitest.config.*.timestamp*', '**/*.generated.*']
+    ignores: ['**/dist', '**/.stats', '**/vitest.config.*.timestamp*', '**/*.generated.*']
   },
   {
     plugins: {

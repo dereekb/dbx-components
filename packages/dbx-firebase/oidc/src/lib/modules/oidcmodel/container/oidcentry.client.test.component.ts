@@ -104,6 +104,7 @@ export class DbxFirebaseOidcEntryClientTestComponent {
   readonly formValue = signal<Maybe<DbxFirebaseOidcModelClientTestFormValue>>(undefined);
 
   readonly authorizationUrlSignal = computed(() => {
+    const resolvedAuthorizationEndpointPath = this.resolvedAuthorizationEndpointPathSignal();
     const clientId = this.clientIdSignal();
     const codeChallenge = this.codeChallenge();
     const state = this.state();
@@ -125,7 +126,7 @@ export class DbxFirebaseOidcEntryClientTestComponent {
         code_challenge_method: 'S256'
       });
 
-      result = `${this.resolvedAuthorizationEndpointPathSignal()}?${params.toString()}`;
+      result = `${resolvedAuthorizationEndpointPath}?${params.toString()}`;
     }
 
     return result;

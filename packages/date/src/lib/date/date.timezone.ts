@@ -314,14 +314,13 @@ export type DateTimezoneUtcNormalInstanceTransformType = 'targetDateToBaseDate' 
  *
  * @param input - The transform type to invert.
  * @returns The inverse transform type for round-trip conversion.
+ * @throws {Error} When `input` is not a recognized transform type.
  *
  * @example
  * ```ts
  * inverseDateTimezoneUtcNormalInstanceTransformType('targetDateToBaseDate'); // 'baseDateToTargetDate'
  * inverseDateTimezoneUtcNormalInstanceTransformType('systemDateToTargetDate'); // 'targetDateToSystemDate'
  * ```
- *
- * @throws {Error} When `input` is not a recognized transform type.
  */
 export function inverseDateTimezoneUtcNormalInstanceTransformType(input: DateTimezoneUtcNormalInstanceTransformType): DateTimezoneUtcNormalInstanceTransformType {
   let result: DateTimezoneUtcNormalInstanceTransformType;

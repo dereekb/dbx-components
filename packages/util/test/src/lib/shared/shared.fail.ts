@@ -89,7 +89,7 @@ export function failDueToSuccess(): never {
  * instances and re-throws all other errors.
  *
  * @param e - The caught error to evaluate.
- * @throws Re-throws the supplied error when it is not an {@link ExpectedFailError}.
+ * @throws {unknown} Re-throws the supplied error when it is not an {@link ExpectedFailError}.
  */
 export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
   if (e instanceof ExpectedFailError) {

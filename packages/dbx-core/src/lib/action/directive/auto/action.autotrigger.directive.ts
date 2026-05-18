@@ -69,12 +69,11 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> {
   readonly useInstantTriggerPreset = input<boolean, Maybe<'' | boolean>>(false, { transform: isDefinedAndNotFalse });
 
   readonly triggerDebounceSignal = computed(() => {
+    const useFastTrigger = this.useFastTriggerPreset();
+    const useInstantTrigger = this.useInstantTriggerPreset();
     let debounce = this.triggerDebounce();
 
     if (debounce == null) {
-      const useFastTrigger = this.useFastTriggerPreset();
-      const useInstantTrigger = this.useInstantTriggerPreset();
-
       if (useFastTrigger) {
         debounce = DBX_ACTION_AUTO_TRIGGER_FAST_TRIGGER_DEBOUNCE;
       } else if (useInstantTrigger) {
@@ -86,12 +85,11 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> {
   });
 
   readonly triggerThrottleSignal: Signal<number> = computed(() => {
+    const useFastTrigger = this.useFastTriggerPreset();
+    const useInstantTrigger = this.useInstantTriggerPreset();
     let throttle = this.triggerThrottle();
 
     if (throttle == null) {
-      const useFastTrigger = this.useFastTriggerPreset();
-      const useInstantTrigger = this.useInstantTriggerPreset();
-
       if (useFastTrigger) {
         throttle = DBX_ACTION_AUTO_TRIGGER_FAST_TRIGGER_DEBOUNCE;
       } else if (useInstantTrigger) {

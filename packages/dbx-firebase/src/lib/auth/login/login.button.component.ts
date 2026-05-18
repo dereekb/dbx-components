@@ -70,7 +70,10 @@ export class DbxFirebaseLoginButtonComponent {
   readonly iconSignal = computed(() => this.config()?.icon);
   readonly iconFilterSignal = computed(() => this.config()?.iconFilter);
   readonly textSignal = computed(() => this.config()?.text ?? '');
-  readonly buttonColorSignal = computed(() => this.config()?.buttonColor ?? (this.config()?.color ? undefined : 'transparent'));
+  readonly buttonColorSignal = computed(() => {
+    const config = this.config();
+    return config?.buttonColor ?? (config?.color ? undefined : 'transparent');
+  });
   readonly buttonTextColorSignal = computed(() => this.config()?.buttonTextColor);
   readonly colorSignal = computed(() => this.config()?.color);
   readonly confirmConfigSignal = computed(() => this.config()?.confirmConfig);

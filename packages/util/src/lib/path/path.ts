@@ -1229,10 +1229,10 @@ export function slashPathPathMatcher<N extends PrimativeValue = PrimativeValue>(
       const remainingNonMatches = targetPathPartsCount - inputPathParts.length;
       nonMatchingPartsCount += remainingNonMatches;
 
-      const matchingPartsFiller = Array(remainingNonMatches).fill(null);
+      const matchingPartsFiller = new Array(remainingNonMatches).fill(null);
       pushItemOrArrayItemsIntoArray(matchingParts, matchingPartsFiller);
 
-      const nonMatchingPartsFiller = Array(remainingNonMatches).fill(nonMatchingFillValue);
+      const nonMatchingPartsFiller = new Array(remainingNonMatches).fill(nonMatchingFillValue);
       pushItemOrArrayItemsIntoArray(nonMatchingParts, nonMatchingPartsFiller);
     }
 

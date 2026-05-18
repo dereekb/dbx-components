@@ -260,7 +260,7 @@ export function filterKeyValueTupleFunction<T extends object = object, K extends
   }
 
   if (keysFilter) {
-    const filterByTypeFn = filterFn as FilterKeyValueTupleFunction<T, K>;
+    const filterByTypeFn = filterFn;
     // convert all the input keys to strings for our set, as Object.entries will return only strings.
     const keysSet = new Set(keysFilter.map((x) => x.toString())) as Set<K>;
     filterFn = (x, i) => filterByTypeFn(x, i) && keysSet.has(x[0]);

@@ -20,7 +20,7 @@ export default [
       '@typescript-eslint/max-params': ['warn', { max: 3, countVoidThis: false }],
       '@typescript-eslint/no-deprecated': 'warn',
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'warn', // matches Sonar S4325; auto-fixable
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off', // disabled: autofix repeatedly strips load-bearing casts (ngrx ComponentStore widening, generic-narrowing inside fn bodies, yargs default-value typing, errorResult() widening, Promise<O> flattening) and breaks the build
 
       '@typescript-eslint/no-misused-promises': 'warn',
       '@typescript-eslint/return-await': ['warn', 'in-try-catch'],

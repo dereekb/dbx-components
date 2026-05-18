@@ -78,6 +78,7 @@ export class DbxFirebaseLoginListComponent {
   }
 
   readonly providerTypesSignal = computed(() => {
+    const linkedMethodTypes = this.linkedMethodTypesSignal();
     const providerTypes = this.providerTypes();
     const omitProviderTypes = this.omitProviderTypes();
     const loginMode = this.loginMode();
@@ -86,7 +87,7 @@ export class DbxFirebaseLoginListComponent {
 
     if (loginMode === 'unlink') {
       // In unlink mode, show only currently linked providers
-      baseTypes = this.linkedMethodTypesSignal();
+      baseTypes = linkedMethodTypes;
     } else {
       baseTypes = providerTypes ? asArray(providerTypes) : this.dbxFirebaseAuthLoginService.getEnabledTypes();
     }
