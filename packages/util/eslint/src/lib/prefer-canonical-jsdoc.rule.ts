@@ -1025,14 +1025,6 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       }
     }
 
-    function checkTagsByName(commentNode: AstNode, parsed: ParsedJsdoc, names: readonly string[], handler: (commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag) => void): void {
-      for (const tag of parsed.tags) {
-        if (names.includes(tag.tag)) {
-          handler(commentNode, parsed, tag);
-        }
-      }
-    }
-
     function checkTags(commentNode: AstNode, parsed: ParsedJsdoc, functionNode: Maybe<AstNode>): void {
       if (checkTagOrder) reportTagOrder(commentNode, parsed);
 
@@ -1042,17 +1034,6 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       if (checkReturns) checkTagsByName(commentNode, parsed, ['returns', 'return'], checkReturnsFormat);
       if (checkThrows) checkTagsByName(commentNode, parsed, ['throws'], checkThrowsFormat);
       if (checkExampleFence) checkTagsByName(commentNode, parsed, ['example'], checkExampleFormat);
-    }
-
-    function firstDescriptionLineIndex(parsed: ParsedJsdoc): number {
-      let firstLineIdx = 0;
-      for (const line of parsed.descriptionLines) {
-        if (!line.blank) {
-          firstLineIdx = line.index;
-          break;
-        }
-      }
-      return firstLineIdx;
     }
 
     function checkFirstParagraph(commentNode: AstNode, parsed: ParsedJsdoc, first: string, firstLineIdx: number): void {
@@ -1174,12 +1155,6 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       return !!init && (init.type === 'ArrowFunctionExpression' || init.type === 'FunctionExpression');
     }
 
-    function resolveVariableAnchor(node: AstNode): AstNode {
-      const parent = node.parent;
-      const parentExports = parent && (parent.type === 'ExportNamedDeclaration' || parent.type === 'ExportDefaultDeclaration');
-      return parentExports ? parent : node;
-    }
-
     function findLeadingJsdocComment(anchor: AstNode): Maybe<AstNode> {
       const comments: AstNode[] = sourceCode.getCommentsBefore(anchor) || [];
       let jsdoc: Maybe<AstNode> = null;
@@ -1211,6 +1186,66 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
     };
   }
 };
+
+/**
+ * Iterates over the tags in a parsed JSDoc and invokes the handler for each tag whose name matches the provided list.
+ *
+ * @param commentNode - The JSDoc comment AST node.
+ * @param parsed - The parsed JSDoc model.
+ * @param names - Tag names to match (e.g. `['returns', 'return']`).
+ * @param handler - Callback invoked for every matched tag.
+ *
+ * @example
+ * ```ts
+ * checkTagsByName(commentNode, parsed, ['returns', 'return'], checkReturnsFormat);
+ * ```
+ */
+function checkTagsByName(commentNode: AstNode, parsed: ParsedJsdoc, names: readonly string[], handler: (commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag) => void): void {
+  for (const tag of parsed.tags) {
+    if (names.includes(tag.tag)) {
+      handler(commentNode, parsed, tag);
+    }
+  }
+}
+
+/**
+ * Returns the line index of the first non-blank line in a JSDoc description.
+ *
+ * @param parsed - The parsed JSDoc model.
+ * @returns The line index of the first non-blank description line, or 0 if all are blank.
+ *
+ * @example
+ * ```ts
+ * firstDescriptionLineIndex(parsed); // 1
+ * ```
+ */
+function firstDescriptionLineIndex(parsed: ParsedJsdoc): number {
+  let firstLineIdx = 0;
+  for (const line of parsed.descriptionLines) {
+    if (!line.blank) {
+      firstLineIdx = line.index;
+      break;
+    }
+  }
+  return firstLineIdx;
+}
+
+/**
+ * Resolves the anchor node to use for comment lookup, preferring an enclosing export declaration when present.
+ *
+ * @param node - The variable declaration AST node.
+ * @returns The export declaration parent if present, otherwise the node itself.
+ *
+ * @example
+ * ```ts
+ * resolveVariableAnchor(variableDeclaration); // parent ExportNamedDeclaration or the node itself
+ * ```
+ */
+function resolveVariableAnchor(node: AstNode): AstNode {
+  const parent = node.parent;
+  const parentExports = parent && (parent.type === 'ExportNamedDeclaration' || parent.type === 'ExportDefaultDeclaration');
+  return parentExports ? parent : node;
+}
 
 /**
  * Returns the identifier name of a function parameter node, or null when the parameter is a pattern

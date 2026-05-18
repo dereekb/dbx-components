@@ -3,9 +3,13 @@ import type { Maybe } from '@dereekb/util';
 import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
 import { KEBAB_SLUG_PATTERN, reportOnJsdocLine, splitCommaSeparated } from './dbx-tag-families';
 
-type AstNode = any;
+interface AstNode {
+  readonly type: string;
+  [key: string]: any;
+}
 
 const FORM_MARKERS: ReadonlySet<string> = new Set(['dbxFormField', 'dbxFormFieldDerivative', 'dbxFormFieldTemplate']);
+const COMPOSES_FROM_MARKERS: ReadonlySet<string> = new Set(['dbxFormFieldDerivative', 'dbxFormFieldTemplate']);
 const DEFAULT_ALLOWED_TIERS: readonly string[] = ['field-factory', 'field-derivative', 'composite-builder', 'template-builder', 'primitive'];
 const DEFAULT_ALLOWED_WRAPPER_PATTERNS: readonly string[] = ['unwrapped', 'material-form-field-wrapped'];
 const DEFAULT_ALLOWED_SUFFIXES: readonly string[] = ['Row', 'Group', 'Fields', 'Field', 'Wrapper', 'Layout'];
@@ -57,6 +61,132 @@ function determineTier(markers: readonly ParsedJsdocTag[], tierTags: readonly Pa
   }
   const explicitTier = tierTags.length > 0 ? tierTags[0].description.trim() : undefined;
   return explicitTier;
+}
+
+interface FormReportContext {
+  readonly commentNode: AstNode;
+  readonly parsed: ParsedJsdoc;
+  readonly sourceCode: AstNode;
+  readonly report: (descriptor: { loc?: AstNode; messageId: string; data?: Record<string, string> }) => void;
+}
+
+function reportFormDuplicateMarkers(ctx: FormReportContext, markers: readonly ParsedJsdocTag[]): void {
+  if (markers.length <= 1) return;
+  for (let i = 1; i < markers.length; i += 1) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: markers[i].startLineIndex, messageId: 'duplicateMarker', report: ctx.report });
+  }
+}
+
+function reportFormUnknownCompanions(ctx: FormReportContext, companions: ReadonlyMap<string, ParsedJsdocTag[]>, knownCompanions: readonly string[]): void {
+  for (const [suffix, instances] of companions.entries()) {
+    if (knownCompanions.includes(suffix)) continue;
+    for (const tag of instances) {
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknownDbxFormTag', data: { name: suffix, known: knownCompanions.join(', ') }, report: ctx.report });
+    }
+  }
+}
+
+function reportFormDuplicateCompanions(ctx: FormReportContext, companions: ReadonlyMap<string, ParsedJsdocTag[]>): void {
+  for (const [suffix, instances] of companions.entries()) {
+    if (instances.length <= 1) continue;
+    for (let i = 1; i < instances.length; i += 1) {
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: instances[i].startLineIndex, messageId: 'duplicateCompanionTag', data: { name: suffix }, report: ctx.report });
+    }
+  }
+}
+
+function reportFormSlug(ctx: FormReportContext, slugTags: readonly ParsedJsdocTag[], triggerLine: number): void {
+  if (slugTags.length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingSlug', report: ctx.report });
+    return;
+  }
+  const value = slugTags[0].description.trim();
+  if (value.length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: slugTags[0].startLineIndex, messageId: 'missingSlug', report: ctx.report });
+  } else if (!KEBAB_SLUG_PATTERN.test(value)) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: slugTags[0].startLineIndex, messageId: 'invalidSlugFormat', data: { value }, report: ctx.report });
+  }
+}
+
+function reportFormProduces(ctx: FormReportContext, producesTags: readonly ParsedJsdocTag[], triggerLine: number): void {
+  if (producesTags.length === 0 || producesTags[0].description.trim().length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingProduces', report: ctx.report });
+  }
+}
+
+function reportFormArrayOutput(ctx: FormReportContext, arrayOutputTags: readonly ParsedJsdocTag[], allowedArrayOutputs: readonly string[], triggerLine: number): void {
+  if (arrayOutputTags.length === 0 || arrayOutputTags[0].description.trim().length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingArrayOutput', report: ctx.report });
+    return;
+  }
+  const value = arrayOutputTags[0].description.trim();
+  if (!allowedArrayOutputs.includes(value)) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: arrayOutputTags[0].startLineIndex, messageId: 'invalidArrayOutput', data: { value, allowed: allowedArrayOutputs.join(', ') }, report: ctx.report });
+  }
+}
+
+function reportFormTier(ctx: FormReportContext, markers: readonly ParsedJsdocTag[], tierTags: readonly ParsedJsdocTag[], tier: Maybe<string>, allowedTiers: readonly string[], triggerLine: number): void {
+  if (!markers.some((m) => m.tag === 'dbxFormField')) return;
+  if (tier == null) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingTier', report: ctx.report });
+  } else if (!allowedTiers.includes(tier)) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tierTags[0]?.startLineIndex ?? triggerLine, messageId: 'invalidTier', data: { value: tier, allowed: allowedTiers.join(', ') }, report: ctx.report });
+  }
+}
+
+function reportFormWrapperPattern(ctx: FormReportContext, wrapperTags: readonly ParsedJsdocTag[], allowedWrapperPatterns: readonly string[], triggerLine: number): void {
+  if (wrapperTags.length === 0 || wrapperTags[0].description.trim().length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingWrapperPattern', report: ctx.report });
+    return;
+  }
+  const value = wrapperTags[0].description.trim();
+  if (!allowedWrapperPatterns.includes(value)) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: wrapperTags[0].startLineIndex, messageId: 'invalidWrapperPattern', data: { value, allowed: allowedWrapperPatterns.join(', ') }, report: ctx.report });
+  }
+}
+
+function reportFormFieldFactoryTier(ctx: FormReportContext, companions: ReadonlyMap<string, ParsedJsdocTag[]>, allowedWrapperPatterns: readonly string[], triggerLine: number): void {
+  reportFormWrapperPattern(ctx, companions.get('WrapperPattern') ?? [], allowedWrapperPatterns, triggerLine);
+  const ngFormTags = companions.get('NgFormType') ?? [];
+  if (ngFormTags.length === 0 || ngFormTags[0].description.trim().length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingNgFormType', report: ctx.report });
+  }
+}
+
+function reportFormCompositeBuilderTier(ctx: FormReportContext, suffixTags: readonly ParsedJsdocTag[], allowedSuffixes: readonly string[], triggerLine: number): void {
+  if (suffixTags.length === 0 || suffixTags[0].description.trim().length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingSuffix', report: ctx.report });
+    return;
+  }
+  const value = suffixTags[0].description.trim();
+  if (!allowedSuffixes.includes(value)) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: suffixTags[0].startLineIndex, messageId: 'invalidSuffix', data: { value, allowed: allowedSuffixes.join(', ') }, report: ctx.report });
+  }
+}
+
+function reportFormDerivativeTier(ctx: FormReportContext, markers: readonly ParsedJsdocTag[], composesFromTags: readonly ParsedJsdocTag[], triggerLine: number): void {
+  const markerCarriesComposes = markers.some((m) => COMPOSES_FROM_MARKERS.has(m.tag) && m.description.trim().length > 0);
+  if (composesFromTags.length === 0 && !markerCarriesComposes) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingComposesFrom', report: ctx.report });
+  }
+}
+
+function reportFormComposesFromKebab(ctx: FormReportContext, composesFromTags: readonly ParsedJsdocTag[], markers: readonly ParsedJsdocTag[]): void {
+  for (const tag of composesFromTags) {
+    for (const item of splitCommaSeparated(tag.description)) {
+      if (!KEBAB_SLUG_PATTERN.test(item)) {
+        reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'composesFromNotKebab', data: { value: item }, report: ctx.report });
+      }
+    }
+  }
+  for (const m of markers) {
+    if (!COMPOSES_FROM_MARKERS.has(m.tag)) continue;
+    for (const item of splitCommaSeparated(m.description)) {
+      if (!KEBAB_SLUG_PATTERN.test(item)) {
+        reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: m.startLineIndex, messageId: 'composesFromNotKebab', data: { value: item }, report: ctx.report });
+      }
+    }
+  }
 }
 
 /**
@@ -146,109 +276,31 @@ export const utilRequireDbxFormFieldCompanionTagsRule: UtilRequireDbxFormFieldCo
       const parsed = parseJsdocComment(commentNode.value);
       const { markers, companions } = collectFormTags(parsed);
       if ((markers.length === 0 && companions.size === 0) || (requireBareMarker && markers.length === 0)) return;
+
+      const ctx: FormReportContext = { commentNode, parsed, sourceCode, report: context.report };
       const triggerLine = markers[0]?.startLineIndex ?? 0;
 
-      // Mutually-exclusive markers.
-      if (markers.length > 1) {
-        for (let i = 1; i < markers.length; i += 1) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: markers[i].startLineIndex, messageId: 'duplicateMarker', report: context.report });
-        }
-      }
+      reportFormDuplicateMarkers(ctx, markers);
+      reportFormUnknownCompanions(ctx, companions, knownCompanions);
+      reportFormDuplicateCompanions(ctx, companions);
+      reportFormSlug(ctx, companions.get('Slug') ?? [], triggerLine);
+      reportFormProduces(ctx, companions.get('Produces') ?? [], triggerLine);
+      reportFormArrayOutput(ctx, companions.get('ArrayOutput') ?? [], allowedArrayOutputs, triggerLine);
 
-      // Unknown companions.
-      for (const [suffix, instances] of companions.entries()) {
-        if (!knownCompanions.includes(suffix)) {
-          for (const tag of instances) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'unknownDbxFormTag', data: { name: suffix, known: knownCompanions.join(', ') }, report: context.report });
-        }
-      }
-
-      // Duplicate detection.
-      for (const [suffix, instances] of companions.entries()) {
-        if (instances.length <= 1) continue;
-        for (let i = 1; i < instances.length; i += 1) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: instances[i].startLineIndex, messageId: 'duplicateCompanionTag', data: { name: suffix }, report: context.report });
-      }
-
-      // Required Slug.
-      const slugTags = companions.get('Slug') ?? [];
-      if (slugTags.length === 0) {
-        reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingSlug', report: context.report });
-      } else {
-        const value = slugTags[0].description.trim();
-        if (value.length === 0) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: slugTags[0].startLineIndex, messageId: 'missingSlug', report: context.report });
-        else if (!KEBAB_SLUG_PATTERN.test(value)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: slugTags[0].startLineIndex, messageId: 'invalidSlugFormat', data: { value }, report: context.report });
-      }
-
-      // Required Produces.
-      const producesTags = companions.get('Produces') ?? [];
-      if (producesTags.length === 0 || producesTags[0].description.trim().length === 0) {
-        reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingProduces', report: context.report });
-      }
-
-      // Required ArrayOutput.
-      const arrayOutputTags = companions.get('ArrayOutput') ?? [];
-      if (arrayOutputTags.length === 0 || arrayOutputTags[0].description.trim().length === 0) {
-        reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingArrayOutput', report: context.report });
-      } else {
-        const value = arrayOutputTags[0].description.trim();
-        if (!allowedArrayOutputs.includes(value)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: arrayOutputTags[0].startLineIndex, messageId: 'invalidArrayOutput', data: { value, allowed: allowedArrayOutputs.join(', ') }, report: context.report });
-      }
-
-      // Tier resolution + tier-specific checks.
       const tierTags = companions.get('Tier') ?? [];
       const tier = determineTier(markers, tierTags);
-
-      if (markers.some((m) => m.tag === 'dbxFormField')) {
-        if (tier == null) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingTier', report: context.report });
-        } else if (!allowedTiers.includes(tier)) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tierTags[0]?.startLineIndex ?? triggerLine, messageId: 'invalidTier', data: { value: tier, allowed: allowedTiers.join(', ') }, report: context.report });
-        }
-      }
+      reportFormTier(ctx, markers, tierTags, tier, allowedTiers, triggerLine);
 
       const composesFromTags = companions.get('ComposesFrom') ?? [];
-
       if (tier === 'field-factory') {
-        const wrapperTags = companions.get('WrapperPattern') ?? [];
-        if (wrapperTags.length === 0 || wrapperTags[0].description.trim().length === 0) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingWrapperPattern', report: context.report });
-        } else {
-          const value = wrapperTags[0].description.trim();
-          if (!allowedWrapperPatterns.includes(value)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: wrapperTags[0].startLineIndex, messageId: 'invalidWrapperPattern', data: { value, allowed: allowedWrapperPatterns.join(', ') }, report: context.report });
-        }
-        const ngFormTags = companions.get('NgFormType') ?? [];
-        if (ngFormTags.length === 0 || ngFormTags[0].description.trim().length === 0) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingNgFormType', report: context.report });
-        }
+        reportFormFieldFactoryTier(ctx, companions, allowedWrapperPatterns, triggerLine);
       } else if (tier === 'composite-builder') {
-        const suffixTags = companions.get('Suffix') ?? [];
-        if (suffixTags.length === 0 || suffixTags[0].description.trim().length === 0) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingSuffix', report: context.report });
-        } else {
-          const value = suffixTags[0].description.trim();
-          if (!allowedSuffixes.includes(value)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: suffixTags[0].startLineIndex, messageId: 'invalidSuffix', data: { value, allowed: allowedSuffixes.join(', ') }, report: context.report });
-        }
+        reportFormCompositeBuilderTier(ctx, companions.get('Suffix') ?? [], allowedSuffixes, triggerLine);
       } else if (tier === 'field-derivative' || tier === 'template-builder') {
-        // ComposesFrom required for these tiers (either explicit @dbxFormComposesFrom OR carried by the marker).
-        const markerCarriesComposes = markers.some((m) => m.tag === 'dbxFormFieldDerivative' || m.tag === 'dbxFormFieldTemplate') && markers.some((m) => (m.tag === 'dbxFormFieldDerivative' || m.tag === 'dbxFormFieldTemplate') && m.description.trim().length > 0);
-        if (composesFromTags.length === 0 && !markerCarriesComposes) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: triggerLine, messageId: 'missingComposesFrom', report: context.report });
-        }
+        reportFormDerivativeTier(ctx, markers, composesFromTags, triggerLine);
       }
 
-      // ComposesFrom kebab validation (explicit @dbxFormComposesFrom only).
-      for (const tag of composesFromTags) {
-        for (const item of splitCommaSeparated(tag.description)) {
-          if (!KEBAB_SLUG_PATTERN.test(item)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'composesFromNotKebab', data: { value: item }, report: context.report });
-        }
-      }
-      // Also validate slugs carried on `@dbxFormFieldDerivative <slug>` / `@dbxFormFieldTemplate <slug,...>`.
-      for (const m of markers) {
-        if (m.tag === 'dbxFormFieldDerivative' || m.tag === 'dbxFormFieldTemplate') {
-          for (const item of splitCommaSeparated(m.description)) {
-            if (!KEBAB_SLUG_PATTERN.test(item)) reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: m.startLineIndex, messageId: 'composesFromNotKebab', data: { value: item }, report: context.report });
-          }
-        }
-      }
+      reportFormComposesFromKebab(ctx, composesFromTags, markers);
     }
 
     function visit(node: AstNode): void {

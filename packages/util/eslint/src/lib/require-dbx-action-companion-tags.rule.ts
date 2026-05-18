@@ -57,6 +57,35 @@ function reportClassSlug(ctx: ClassReportContext, slugTags: readonly ParsedJsdoc
   }
 }
 
+function reportClassRoles(ctx: ClassReportContext, roleTags: readonly ParsedJsdocTag[], allowedRoles: readonly string[]): void {
+  for (const tag of roleTags) {
+    const value = tag.description.trim();
+    if (value.length > 0 && !allowedRoles.includes(value)) {
+      reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidRole', data: { value, allowed: allowedRoles.join(', ') }, report: ctx.report });
+    }
+  }
+}
+
+function reportClassStateInteractions(ctx: ClassReportContext, stateTags: readonly ParsedJsdocTag[], allowedStates: readonly string[]): void {
+  for (const tag of stateTags) {
+    for (const item of splitCommaSeparated(tag.description)) {
+      if (!allowedStates.includes(item)) {
+        reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidStateValue', data: { value: item, allowed: allowedStates.join(', ') }, report: ctx.report });
+      }
+    }
+  }
+}
+
+function reportClassSkillRefs(ctx: ClassReportContext, skillRefsTags: readonly ParsedJsdocTag[]): void {
+  for (const tag of skillRefsTags) {
+    for (const item of splitCommaSeparated(tag.description)) {
+      if (!KEBAB_SLUG_PATTERN.test(item)) {
+        reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'skillRefsNotKebab', data: { value: item }, report: ctx.report });
+      }
+    }
+  }
+}
+
 /**
  * Splits an `@dbxAction`-family JSDoc into its marker tag and the map of
  * companion tags keyed by their suffix (e.g. `Slug`, `Role`).
@@ -158,29 +187,9 @@ export const utilRequireDbxActionCompanionTagsRule: UtilRequireDbxActionCompanio
       reportClassUnknownAndMisplaced(ctx, companions, knownCompanions);
       reportClassDuplicates(ctx, companions);
       reportClassSlug(ctx, companions.get('Slug') ?? [], triggerLine);
-
-      for (const tag of companions.get('Role') ?? []) {
-        const value = tag.description.trim();
-        if (value.length > 0 && !allowedRoles.includes(value)) {
-          reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidRole', data: { value, allowed: allowedRoles.join(', ') }, report: context.report });
-        }
-      }
-
-      for (const tag of companions.get('StateInteraction') ?? []) {
-        for (const item of splitCommaSeparated(tag.description)) {
-          if (!allowedStates.includes(item)) {
-            reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'invalidStateValue', data: { value: item, allowed: allowedStates.join(', ') }, report: context.report });
-          }
-        }
-      }
-
-      for (const tag of companions.get('SkillRefs') ?? []) {
-        for (const item of splitCommaSeparated(tag.description)) {
-          if (!KEBAB_SLUG_PATTERN.test(item)) {
-            reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: tag.startLineIndex, messageId: 'skillRefsNotKebab', data: { value: item }, report: context.report });
-          }
-        }
-      }
+      reportClassRoles(ctx, companions.get('Role') ?? [], allowedRoles);
+      reportClassStateInteractions(ctx, companions.get('StateInteraction') ?? [], allowedStates);
+      reportClassSkillRefs(ctx, companions.get('SkillRefs') ?? []);
     }
 
     function checkEnumMemberJsdoc(commentNode: AstNode): void {

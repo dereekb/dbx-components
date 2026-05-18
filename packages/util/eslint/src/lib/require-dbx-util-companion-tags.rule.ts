@@ -73,6 +73,25 @@ function handleUtilViolation(ctx: UtilReportContext, v: DbxTagViolation): boolea
   return false;
 }
 
+function reportUtilViolations(ctx: UtilReportContext, violations: readonly DbxTagViolation[]): boolean {
+  let kebabFailedForCategory = false;
+  for (const v of violations) {
+    if (handleUtilViolation(ctx, v)) {
+      kebabFailedForCategory = true;
+    }
+  }
+  return kebabFailedForCategory;
+}
+
+function reportUtilAllowedCategory(ctx: UtilReportContext, familyTags: readonly { readonly tag: string; readonly description: string; readonly startLineIndex: number }[], allowedCategories: readonly string[]): void {
+  const categoryTags = familyTags.filter((t) => t.tag === 'dbxUtilCategory');
+  if (categoryTags.length === 0) return;
+  const first = categoryTags[0];
+  const value = first.description.trim();
+  if (value.length === 0 || allowedCategories.includes(value)) return;
+  reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: first.startLineIndex, messageId: 'invalidCategoryFormat', data: { value }, report: ctx.report });
+}
+
 /**
  * Default companion-tag names recognized in the `@dbxUtil` family. The names exclude the
  * `dbxUtil` prefix (so `@dbxUtilCategory` is represented as `'Category'`).
@@ -204,78 +223,14 @@ export const utilRequireDbxUtilCompanionTagsRule: UtilRequireDbxUtilCompanionTag
       const violations: DbxTagViolation[] = [];
       checkDbxTagFamily({ parsed, spec, markerTag: triggerTag, familyTags, emit: (v) => violations.push(v) });
 
-      let kebabFailedForCategory = false;
-      for (const v of violations) {
-        const isCategory = v.suffix === 'Category';
-        switch (v.kind) {
-          case 'missing': {
-            if (isCategory) {
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'missingCategory', report: context.report });
-            }
-            break;
-          }
-          case 'empty': {
-            if (isCategory) {
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'emptyCategory', report: context.report });
-            }
-            break;
-          }
-          case 'invalid-kebab': {
-            if (isCategory) {
-              kebabFailedForCategory = true;
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidCategoryFormat', data: { value: v.value }, report: context.report });
-            }
-            break;
-          }
-          case 'invalid-enum': {
-            if (v.suffix === 'Kind') {
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidKind', data: { value: v.value, allowed: v.allowed.join(', ') }, report: context.report });
-            }
-            break;
-          }
-          case 'comma-item-not-kebab': {
-            if (v.suffix === 'Related') {
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'relatedNotKebab', data: { value: v.value }, report: context.report });
-            }
-            break;
-          }
-          case 'tags-not-lowercase': {
-            if (v.suffix === 'Tags') {
-              const fix = buildLowercaseTagsFix({ commentNode, parsed, sourceCode, tag: v.raw });
-              const fixer = fix ? (fixer2: AstNode) => fixer2.replaceTextRange([fix.startOffset, fix.endOffset], fix.replacement) : undefined;
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'tagsNotLowercase', data: { value: v.value }, report: context.report, fix: fixer });
-            }
-            break;
-          }
-          case 'unknown': {
-            reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'unknownDbxUtilTag', data: { name: v.suffix, known: knownCompanions.join(', ') }, report: context.report });
-            break;
-          }
-          case 'duplicate': {
-            if (isCategory) {
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'multipleCategoryTags', report: context.report });
-            } else {
-              reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'duplicateCompanionTag', data: { name: v.suffix }, report: context.report });
-            }
-            break;
-          }
-          default:
-            break;
-        }
-      }
+      const ctx: UtilReportContext = { commentNode, parsed, sourceCode, report: context.report, knownCompanions };
+      const kebabFailedForCategory = reportUtilViolations(ctx, violations);
 
       // Apply the allowedCategories option on top of the kebab-format result.
       // Skipped when the kebab check already flagged the category — the original
       // semantics used `else if` so only one invalidCategoryFormat fires.
       if (allowedCategories && !kebabFailedForCategory) {
-        const categoryTags = familyTags.filter((t) => t.tag === 'dbxUtilCategory');
-        if (categoryTags.length > 0) {
-          const first = categoryTags[0];
-          const value = first.description.trim();
-          if (value.length > 0 && !allowedCategories.includes(value)) {
-            reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: first.startLineIndex, messageId: 'invalidCategoryFormat', data: { value }, report: context.report });
-          }
-        }
+        reportUtilAllowedCategory(ctx, familyTags, allowedCategories);
       }
     }
 

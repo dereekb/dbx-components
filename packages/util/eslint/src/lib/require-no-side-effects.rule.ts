@@ -38,6 +38,14 @@ function getFunctionName(node: AstNode): Maybe<string> {
   return node.id?.type === 'Identifier' ? node.id.name : null;
 }
 
+function pickMessageId(hasOverloads: boolean, jsdoc: ReturnType<typeof findFunctionLeadingContext>['jsdoc']): 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory' {
+  let messageId: 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory';
+  if (hasOverloads && jsdoc?.hasNoSideEffects) messageId = 'missingImplAnnotationOverloaded';
+  else if (jsdoc) messageId = 'missingNoSideEffectsJsdoc';
+  else messageId = 'missingJsdocForFactory';
+  return messageId;
+}
+
 /**
  * Builds the merged set of name patterns based on rule options.
  *
@@ -138,14 +146,6 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
 
     function nameMatchesFactoryPattern(name: string): boolean {
       return namePatterns.some((pattern) => pattern.test(name));
-    }
-
-    function pickMessageId(hasOverloads: boolean, jsdoc: ReturnType<typeof findFunctionLeadingContext>['jsdoc']): 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory' {
-      let messageId: 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory';
-      if (hasOverloads && jsdoc?.hasNoSideEffects) messageId = 'missingImplAnnotationOverloaded';
-      else if (jsdoc) messageId = 'missingNoSideEffectsJsdoc';
-      else messageId = 'missingJsdocForFactory';
-      return messageId;
     }
 
     function buildJsdocTagFixes(fixer: AstNode, jsdoc: NonNullable<ReturnType<typeof findFunctionLeadingContext>['jsdoc']>): AstNode[] {
