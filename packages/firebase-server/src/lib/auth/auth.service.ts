@@ -359,7 +359,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   }
 
   setClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: Maybe<AuthClaimsUpdate<T>>): Promise<void> {
-    return this.service.auth.setCustomUserClaims(this.uid, claims).then(() => {
+    return this.service.auth.setCustomUserClaims(this.uid, claims ?? null).then(() => {
       this._loadRecord.reset(); // reset the cache
     });
   }

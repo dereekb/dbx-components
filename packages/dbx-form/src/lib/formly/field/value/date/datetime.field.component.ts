@@ -1067,7 +1067,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     }
   }
 
-  datePicked(event: MatDatepickerInputEvent<Date>): void {
+  datePicked(event: MatDatepickerInputEvent<Date | undefined>): void {
     const date = event.value;
 
     if (date) {

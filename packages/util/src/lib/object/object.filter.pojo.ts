@@ -10,7 +10,7 @@ import { invertBooleanReturnFunction } from '../function/function.boolean';
 /**
  * Strips the input object. If the object has no keys after the filtering process, returns undefined.
  */
-export type StripObjectFunction<T extends object> = (input: Maybe<T>, copy?: Maybe<boolean>) => Maybe<T>;
+export type StripObjectFunction<T extends object> = (input: Maybe<T>, copy?: Maybe<boolean>) => T | undefined;
 
 /**
  * Creates a reusable {@link StripObjectFunction} that filters values from an object and returns
@@ -41,7 +41,7 @@ export function stripObjectFunction<T extends object>(filter: FilterKeyValueTupl
   const filterFn = filterFromPOJOFunction<T>({ filter, copy });
 
   return (input: Maybe<T>, copyOverride?: Maybe<boolean>) => {
-    let result: Maybe<T>;
+    let result: T | undefined;
 
     if (input != null) {
       const filtered = filterFn(input, copyOverride);
@@ -68,7 +68,7 @@ export function stripObjectFunction<T extends object>(filter: FilterKeyValueTupl
  * stripObject(null);                   // undefined
  * ```
  */
-export function stripObject<T extends object>(input: Maybe<T>, copy?: boolean): Maybe<T> {
+export function stripObject<T extends object>(input: Maybe<T>, copy?: boolean): T | undefined {
   return stripObjectFunction<T>(KeyValueTypleValueFilter.UNDEFINED, copy)(input);
 }
 

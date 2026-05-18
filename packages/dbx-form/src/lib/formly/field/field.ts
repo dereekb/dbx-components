@@ -19,12 +19,14 @@ export type BasePartialPotentialFieldConfig = Partial<BaseFieldConfig> & Partial
  *
  * This is the engine-agnostic base. Formly and forge extend this with their own
  * engine-specific properties.
+ *
+ * @dbxMutable shape merged with the mutable third-party `FormlyFieldProps` (via interface extension); `readonly` modifiers here would diverge from that base and trip TS2320.
  */
 
 export interface BaseFieldConfig {
   readonly key: string;
-  readonly required?: boolean;
-  readonly readonly?: boolean;
+  required?: boolean;
+  readonly?: boolean;
 }
 
 /**
@@ -37,14 +39,16 @@ export interface FieldConfig extends BaseFieldConfig, Pick<FormlyFieldConfig, 'e
  * Labeled Formly field configuration with label, placeholder, and autocomplete support.
  *
  * Extends the Formly-specific {@link FieldConfig} to include expressions and parsers.
+ *
+ * @dbxMutable label/placeholder mirror the mutable third-party `FormlyFieldProps`; readonly here would trip TS2320 on interfaces that mix this with `FormlyFieldProps`-extending props.
  */
 export interface LabeledFieldConfig extends FieldConfig {
-  readonly label?: string;
-  readonly placeholder?: string;
+  label?: string;
+  placeholder?: string;
   /**
    * Sets the autocomplete values. Pass `false` to disable autocomplete.
    */
-  readonly autocomplete?: string | false;
+  autocomplete?: string | false;
 }
 
 /**
@@ -255,14 +259,15 @@ export interface MaterialFormFieldConfig {
  * Configuration for a labeled form field with label, placeholder, and autocomplete support.
  *
  * @deprecated
+ * @dbxMutable kept mutable to match `FormlyFieldProps` for backwards-compatible mixing.
  */
 export interface LabeledBaseFieldConfig extends BaseFieldConfig {
-  readonly label?: string;
-  readonly placeholder?: string;
+  label?: string;
+  placeholder?: string;
   /**
    * Sets the autocomplete values. Pass `false` to disable autocomplete.
    */
-  readonly autocomplete?: string | DisableAutocompleteForField;
+  autocomplete?: string | DisableAutocompleteForField;
 }
 
 /**
@@ -278,6 +283,7 @@ export interface DefaultValueFieldConfig<T = unknown> {
  * Configuration mixin for a field hint/help text.
  *
  * @deprecated
+ * @dbxMutable `description` mirrors mutable `FormlyFieldProps.description`.
  */
 export interface HintFieldConfig extends Partial<DescriptionFieldConfig> {
   /**
@@ -285,11 +291,11 @@ export interface HintFieldConfig extends Partial<DescriptionFieldConfig> {
    *
    * @deprecated use hint instead.
    */
-  readonly description?: string;
+  description?: string;
   /**
    * Hint text.
    */
-  readonly hint?: string;
+  hint?: string;
 }
 
 /**
@@ -330,10 +336,11 @@ export type FieldValueParser<I = any, O = any> = MapFunction<I, O>;
  * Configuration mixin for arbitrary HTML attributes on a form field element.
  *
  * @deprecated
+ * @dbxMutable mirrors mutable `FormlyFieldProps.attributes`.
  */
 
 export interface AttributesFieldConfig {
-  readonly attributes?: {
+  attributes?: {
     [key: string]: string | number;
   };
 }
@@ -342,11 +349,12 @@ export interface AttributesFieldConfig {
  * Configuration mixin for a field hint/description/help text.
  *
  * @deprecated
+ * @dbxMutable mirrors mutable `FormlyFieldProps.description`.
  */
 
 export interface DescriptionFieldConfig {
   /**
    * Description text.
    */
-  readonly description?: string;
+  description?: string;
 }

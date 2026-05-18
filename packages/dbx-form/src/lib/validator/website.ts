@@ -1,3 +1,4 @@
+/* eslint-disable dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null`; widening to `Maybe<...>` adds `undefined` and breaks the contract (TS2322). */
 import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@angular/forms';
 import { type ArrayOrValue, type Maybe, type WebsiteDomain, type WebsiteUrlDetails, asArray, isWebsiteUrlWithPrefix, websiteUrlDetails } from '@dereekb/util';
 
@@ -65,7 +66,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
 
   const portNumbersMessagePart = isAllowPorts ? '' : ' Urls with port numbers (e.g. localhost:8080) are not allowed.';
 
-  const validateWebsiteValue: (details: WebsiteUrlDetails) => Maybe<ValidationErrors> = isPrefixRequired
+  const validateWebsiteValue: (details: WebsiteUrlDetails) => ValidationErrors | null = isPrefixRequired
     ? (details: WebsiteUrlDetails) => {
         return isValidUrl(details)
           ? null
@@ -89,7 +90,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
             };
       };
 
-  const validateWebsiteDomain: (details: WebsiteUrlDetails) => Maybe<ValidationErrors> = (details: WebsiteUrlDetails) => {
+  const validateWebsiteDomain: (details: WebsiteUrlDetails) => ValidationErrors | null = (details: WebsiteUrlDetails) => {
     let pass = validDomainsSet.size === 0;
 
     if (details.hasWebsiteDomain && validateDomains) {
@@ -108,7 +109,7 @@ export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): Val
         };
   };
 
-  return (control: AbstractControl): Maybe<ValidationErrors> => {
+  return (control: AbstractControl): ValidationErrors | null => {
     const value: string | undefined = control.value;
 
     if (value != null) {

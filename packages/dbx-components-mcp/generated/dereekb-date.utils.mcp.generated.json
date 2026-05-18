@@ -290,11 +290,11 @@
         {
           "name": "collection",
           "type": "DateCellCollection<B>",
-          "description": "- The date cell collection containing timing and blocks to expand.",
+          "description": "- Collection whose timing and blocks should be expanded.",
           "optional": false
         }
       ],
-      "returns": "An array of {@link DateCellDurationSpan } values with concrete start times and durations.",
+      "returns": "Duration spans with concrete start times for each block.",
       "tags": [
         "date",
         "cell",
@@ -322,17 +322,17 @@
         {
           "name": "timing",
           "type": "DateCellTiming",
-          "description": "- The timing schedule providing start times and duration.",
+          "description": "- Schedule providing start times and duration.",
           "optional": false
         },
         {
           "name": "blocks",
           "type": "B[]",
-          "description": "- The date cell blocks to expand into duration spans.",
+          "description": "- Blocks to expand into concrete duration spans.",
           "optional": false
         }
       ],
-      "returns": "An array of {@link DateCellDurationSpan } values with concrete start times.",
+      "returns": "Duration spans with concrete start times.",
       "tags": [
         "date",
         "cell",
@@ -549,7 +549,7 @@
         {
           "name": "date",
           "type": "DateOrDateCellIndex",
-          "description": "- A date or index to convert; defaults to the current date/time.",
+          "description": "- Moment to convert; defaults to the current date/time.",
           "optional": true
         }
       ],
@@ -770,7 +770,7 @@
         {
           "name": "input",
           "type": "DateOrDateCellIndex",
-          "description": "- A date or day index to convert.",
+          "description": "- Moment or day-index to resolve to a calendar date.",
           "optional": false
         }
       ],
@@ -879,11 +879,11 @@
         {
           "name": "data",
           "type": "TimeDurationData",
-          "description": "- The duration data to check",
+          "description": "- The duration data to check.",
           "optional": false
         }
       ],
-      "returns": "True if empty",
+      "returns": "True if empty.",
       "tags": [
         "date",
         "duration",
@@ -914,11 +914,11 @@
         {
           "name": "data",
           "type": "TimeDurationData",
-          "description": "- The duration data to convert",
+          "description": "- The duration data to convert.",
           "optional": false
         }
       ],
-      "returns": "Total milliseconds",
+      "returns": "Total milliseconds.",
       "tags": [
         "date",
         "duration",
@@ -951,7 +951,7 @@
         {
           "name": "ms",
           "type": "Milliseconds",
-          "description": "- The total milliseconds to decompose",
+          "description": "- The total milliseconds to decompose.",
           "optional": false
         },
         {
@@ -961,7 +961,7 @@
           "optional": true
         }
       ],
-      "returns": "A TimeDurationData with the decomposed values",
+      "returns": "A TimeDurationData with the decomposed values.",
       "tags": [
         "date",
         "duration",
@@ -995,17 +995,17 @@
         {
           "name": "data",
           "type": "TimeDurationData",
-          "description": "- The duration data",
+          "description": "- The duration data.",
           "optional": false
         },
         {
           "name": "unit",
           "type": "TimeUnit",
-          "description": "- The time unit to read",
+          "description": "- The time unit to read.",
           "optional": false
         }
       ],
-      "returns": "The value for that unit, or 0 if not set",
+      "returns": "The value for that unit, or 0 if not set.",
       "tags": [
         "date",
         "duration",
@@ -1036,23 +1036,23 @@
         {
           "name": "data",
           "type": "TimeDurationData",
-          "description": "- The original duration data",
+          "description": "- The original duration data.",
           "optional": false
         },
         {
           "name": "unit",
           "type": "TimeUnit",
-          "description": "- The time unit to set",
+          "description": "- The time unit to set.",
           "optional": false
         },
         {
           "name": "value",
           "type": "number",
-          "description": "- The new value",
+          "description": "- The new value.",
           "optional": false
         }
       ],
-      "returns": "A new TimeDurationData with the updated value",
+      "returns": "A new TimeDurationData with the updated value.",
       "tags": [
         "date",
         "duration",
@@ -1084,11 +1084,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- The duration string to parse",
+          "description": "- The duration string to parse.",
           "optional": false
         }
       ],
-      "returns": "A TimeDurationData object with the parsed values",
+      "returns": "A TimeDurationData object with the parsed values.",
       "tags": [
         "date",
         "duration",
@@ -1120,11 +1120,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- The duration string to parse",
+          "description": "- The duration string to parse.",
           "optional": false
         }
       ],
-      "returns": "Total milliseconds",
+      "returns": "Total milliseconds.",
       "tags": [
         "date",
         "duration",
@@ -1156,11 +1156,11 @@
         {
           "name": "data",
           "type": "TimeDurationData",
-          "description": "- The duration data to format",
+          "description": "- The duration data to format.",
           "optional": false
         }
       ],
-      "returns": "A compact duration string",
+      "returns": "A compact duration string.",
       "tags": [
         "date",
         "duration",
@@ -1191,11 +1191,11 @@
         {
           "name": "data",
           "type": "TimeDurationData",
-          "description": "- The duration data to format",
+          "description": "- The duration data to format.",
           "optional": false
         }
       ],
-      "returns": "A human-readable duration string",
+      "returns": "A human-readable duration string.",
       "tags": [
         "date",
         "duration",
@@ -1227,11 +1227,11 @@
         {
           "name": "span",
           "type": "DateDurationSpan",
-          "description": "- the duration span to compute the end for",
+          "description": "- Span whose end date should be computed.",
           "optional": false
         }
       ],
-      "returns": "the date when the span ends",
+      "returns": "Moment when the span ends.",
       "tags": [
         "date",
         "duration",
@@ -1260,11 +1260,11 @@
         {
           "name": "span",
           "type": "DateDurationSpan",
-          "description": "- the duration span to convert",
+          "description": "- Span to project onto a start/end date range.",
           "optional": false
         }
       ],
-      "returns": "a date range from startsAt to startsAt + duration",
+      "returns": "Range from startsAt to startsAt + duration.",
       "tags": [
         "date",
         "duration",
@@ -1292,11 +1292,11 @@
         {
           "name": "dateRange",
           "type": "DateRange",
-          "description": "- the date range to convert",
+          "description": "- Range to project onto a duration span.",
           "optional": false
         }
       ],
-      "returns": "a duration span with the range's start as startsAt",
+      "returns": "Span anchored at the range's start with duration measured to its end.",
       "tags": [
         "date",
         "duration",
@@ -1325,11 +1325,11 @@
         {
           "name": "inputConfig",
           "type": "FormatDateRangeFunctionConfigInput",
-          "description": "- format function or full configuration",
+          "description": "- Format function or full configuration.",
           "optional": false
         }
       ],
-      "returns": "a reusable function that formats date ranges into strings",
+      "returns": "A reusable function that formats date ranges into strings.",
       "tags": [
         "date",
         "format",
@@ -1358,23 +1358,23 @@
         {
           "name": "range",
           "type": "DateRange",
-          "description": "- date range to format",
+          "description": "- Date range to format.",
           "optional": false
         },
         {
           "name": "inputConfig",
           "type": "FormatDateRangeFunctionConfigInput",
-          "description": "- format function or full configuration",
+          "description": "- Format function or full configuration.",
           "optional": false
         },
         {
           "name": "separator",
           "type": "string",
-          "description": "- optional separator override when inputConfig is a function",
+          "description": "- Optional separator override when inputConfig is a function.",
           "optional": true
         }
       ],
-      "returns": "the formatted date range string",
+      "returns": "The formatted date range string.",
       "tags": [
         "date",
         "format",
@@ -1402,17 +1402,17 @@
         {
           "name": "range",
           "type": "DateRange",
-          "description": "- date range to compute distance for",
+          "description": "- Date range to compute distance for.",
           "optional": false
         },
         {
           "name": "inputConfig",
           "type": "FormatDateRangeDistanceFunctionConfig",
-          "description": "- optional distance formatting configuration",
+          "description": "- Optional distance formatting configuration.",
           "optional": true
         }
       ],
-      "returns": "the human-readable distance string",
+      "returns": "The human-readable distance string.",
       "tags": [
         "date",
         "format",
@@ -1489,11 +1489,11 @@
         {
           "name": "dateRange",
           "type": "DateRange",
-          "description": "- the date range to measure",
+          "description": "- Range to measure.",
           "optional": false
         }
       ],
-      "returns": "the number of days in the range, inclusive",
+      "returns": "Inclusive count of calendar days covered by the range.",
       "tags": [
         "date",
         "range",
@@ -1523,11 +1523,11 @@
         {
           "name": "input",
           "type": "unknown",
-          "description": "- the value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
-      "returns": "true if the value has valid Date `start` and `end` properties",
+      "returns": "True if the value has valid Date `start` and `end` properties.",
       "tags": [
         "date",
         "range",
@@ -1556,17 +1556,17 @@
         {
           "name": "a",
           "type": "Maybe<Partial<DateRange>>",
-          "description": "- first date range to compare",
+          "description": "- First date range to compare.",
           "optional": false
         },
         {
           "name": "b",
           "type": "Maybe<Partial<DateRange>>",
-          "description": "- second date range to compare",
+          "description": "- Second date range to compare.",
           "optional": false
         }
       ],
-      "returns": "true if both ranges are equal or both are nullish",
+      "returns": "True if both ranges are equal or both are nullish.",
       "tags": [
         "date",
         "range",
@@ -1596,11 +1596,11 @@
         {
           "name": "input",
           "type": "unknown",
-          "description": "- value to check",
+          "description": "- Value to check.",
           "optional": false
         }
       ],
-      "returns": "whether the input is a Date",
+      "returns": "Whether the input is a Date.",
       "tags": [
         "date",
         "type-guard",
@@ -1624,11 +1624,11 @@
         {
           "name": "milliseconds",
           "type": "number",
-          "description": "- duration in milliseconds",
+          "description": "- Duration in milliseconds.",
           "optional": false
         }
       ],
-      "returns": "equivalent duration in minutes",
+      "returns": "Equivalent duration in minutes.",
       "tags": [
         "date",
         "time",
@@ -1660,11 +1660,11 @@
         {
           "name": "milliseconds",
           "type": "number",
-          "description": "- duration in milliseconds",
+          "description": "- Duration in milliseconds.",
           "optional": false
         }
       ],
-      "returns": "equivalent duration in seconds",
+      "returns": "Equivalent duration in seconds.",
       "tags": [
         "date",
         "time",
@@ -1696,11 +1696,11 @@
         {
           "name": "hours",
           "type": "number",
-          "description": "- number of hours (defaults to 1)",
+          "description": "- Number of hours (defaults to 1)",
           "optional": true
         }
       ],
-      "returns": "equivalent duration in milliseconds",
+      "returns": "Equivalent duration in milliseconds.",
       "tags": [
         "date",
         "time",
@@ -1731,11 +1731,11 @@
         {
           "name": "minutes",
           "type": "number",
-          "description": "- number of minutes (defaults to 1)",
+          "description": "- Number of minutes (defaults to 1)",
           "optional": true
         }
       ],
-      "returns": "equivalent duration in milliseconds",
+      "returns": "Equivalent duration in milliseconds.",
       "tags": [
         "date",
         "time",
@@ -1766,11 +1766,11 @@
         {
           "name": "days",
           "type": "number",
-          "description": "- number of days (defaults to 1)",
+          "description": "- Number of days (defaults to 1)",
           "optional": true
         }
       ],
-      "returns": "equivalent duration in minutes",
+      "returns": "Equivalent duration in minutes.",
       "tags": [
         "date",
         "time",
@@ -1800,11 +1800,11 @@
         {
           "name": "date",
           "type": "Date",
-          "description": "- date to check",
+          "description": "- Date to check.",
           "optional": false
         }
       ],
-      "returns": "whether the date is the max future sentinel",
+      "returns": "Whether the date is the max future sentinel.",
       "tags": [
         "date",
         "sentinel",
@@ -1833,11 +1833,11 @@
         {
           "name": "time",
           "type": "Date",
-          "description": "- date to truncate (defaults to now)",
+          "description": "- Date to truncate (defaults to now)",
           "optional": true
         }
       ],
-      "returns": "date rounded down to the start of the minute",
+      "returns": "Date rounded down to the start of the minute.",
       "tags": [
         "date",
         "minute",
@@ -1863,11 +1863,11 @@
         {
           "name": "input",
           "type": "DateOrDateString",
-          "description": "- date or date string to convert",
+          "description": "- Date or date string to convert.",
           "optional": false
         }
       ],
-      "returns": "the ISO 8601 string representation",
+      "returns": "The ISO 8601 string representation.",
       "tags": [
         "date",
         "iso",
@@ -1895,7 +1895,7 @@
       "signature": "guessCurrentTimezone(): TimezoneString | undefined",
       "description": "Guesses the current system's timezone using the Intl API.",
       "params": [],
-      "returns": "the IANA timezone string (e.g. \"America/Chicago\"), or undefined if detection fails",
+      "returns": "The IANA timezone string (e.g. \"America/Chicago\"), or undefined if detection fails.",
       "tags": [
         "date",
         "timezone",
@@ -1921,7 +1921,7 @@
       "signature": "requireCurrentTimezone(): TimezoneString",
       "description": "Returns the current system's timezone, throwing if detection fails.\n\nConvenience wrapper around {@link guessCurrentTimezone} for contexts where a timezone is required.",
       "params": [],
-      "returns": "the IANA timezone string",
+      "returns": "The IANA timezone string.",
       "tags": [
         "date",
         "timezone",
@@ -1950,11 +1950,11 @@
         {
           "name": "input",
           "type": "Maybe<DateOrDateString | UTCDateString>",
-          "description": "- date, date string, or null/undefined",
+          "description": "- Date, date string, or null/undefined.",
           "optional": false
         }
       ],
-      "returns": "the parsed Date or undefined if input was nullish",
+      "returns": "The parsed Date or undefined if input was nullish.",
       "tags": [
         "date",
         "parse",
@@ -1985,11 +1985,11 @@
         {
           "name": "input",
           "type": "DateOrDateString | UTCDateString | UnixDateTimeMillisecondsNumber",
-          "description": "- value to convert",
+          "description": "- Value to convert.",
           "optional": false
         }
       ],
-      "returns": "the parsed Date",
+      "returns": "The parsed Date.",
       "tags": [
         "date",
         "parse",
@@ -2022,11 +2022,11 @@
         {
           "name": "input",
           "type": "ISO8601DateString | UTCDateString | UnixDateTimeMillisecondsNumber",
-          "description": "- ISO 8601 string, UTC date string, or unix milliseconds",
+          "description": "- ISO 8601 string, UTC date string, or unix milliseconds.",
           "optional": false
         }
       ],
-      "returns": "the parsed Date, or undefined if invalid",
+      "returns": "The parsed Date, or undefined if invalid.",
       "tags": [
         "date",
         "parse",
@@ -2326,11 +2326,11 @@
         {
           "name": "date",
           "type": "Date",
-          "description": "- date to round (defaults to now)",
+          "description": "- Moment to round; defaults to the current date/time.",
           "optional": true
         }
       ],
-      "returns": "the date with seconds and milliseconds set to zero",
+      "returns": "Copy of the input with seconds and milliseconds set to zero.",
       "tags": [
         "date",
         "round",
@@ -2362,11 +2362,11 @@
         {
           "name": "date",
           "type": "Date",
-          "description": "- date to round (defaults to now)",
+          "description": "- Moment to round; defaults to the current date/time.",
           "optional": true
         }
       ],
-      "returns": "the date with minutes, seconds, and milliseconds set to zero",
+      "returns": "Copy of the input with minutes, seconds, and milliseconds set to zero.",
       "tags": [
         "date",
         "round",

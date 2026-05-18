@@ -101,7 +101,7 @@ import {
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent, mapIdentityFunction } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent, mapIdentityFunction, type Building } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, addSeconds, hoursToMilliseconds, isFuture } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
@@ -460,7 +460,7 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
             const nextConfigs = notificationBoxConfigsToSyncInThisBatch.filter((x) => !notificationBoxIdsSynced.has(x.nb));
 
             notificationBoxIdsToSyncInThisBatch.forEach((nb) => {
-              let nextConfig: Maybe<NotificationUserNotificationBoxRecipientConfig>;
+              let nextConfig: Maybe<Building<NotificationUserNotificationBoxRecipientConfig>>;
 
               if (notificationBoxConfigsToRemoveFromNotificationUser.has(nb)) {
                 // do nothing, as it should be removed
@@ -490,7 +490,7 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
 
               if (nextConfig != null) {
                 nextConfig.ns = false; // mark as synced
-                nextConfigs.push(nextConfig);
+                nextConfigs.push(nextConfig as NotificationUserNotificationBoxRecipientConfig);
               }
             });
 

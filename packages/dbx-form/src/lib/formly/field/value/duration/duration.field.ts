@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DescriptionFieldConfig retained for the formly layer until full migration to forge */
 import { type ValidatorFn, type AbstractControl, type ValidationErrors } from '@angular/forms';
-import { type Maybe, type TimeUnit, type HoursAndMinutes, TIME_UNIT_LABEL_MAP, millisecondsToTimeUnit, hoursAndMinutesToTimeUnit } from '@dereekb/util';
+import { type TimeUnit, type HoursAndMinutes, TIME_UNIT_LABEL_MAP, millisecondsToTimeUnit, hoursAndMinutesToTimeUnit } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type TimeDurationData, durationDataToMilliseconds } from '@dereekb/date';
 import { type DescriptionFieldConfig, type LabeledFieldConfig, type MaterialFormFieldConfig, formlyField, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '../../field';
@@ -78,7 +78,8 @@ function timeDurationMinMaxValidator(config: Partial<TimeDurationFieldConfig>): 
     return undefined;
   }
 
-  return (control: AbstractControl): Maybe<ValidationErrors> => {
+  // eslint-disable-next-line dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null` (no `undefined`).
+  return (control: AbstractControl): ValidationErrors | null => {
     const value = control.value;
 
     if (value == null) {

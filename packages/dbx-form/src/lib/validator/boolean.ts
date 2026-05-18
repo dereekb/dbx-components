@@ -1,4 +1,3 @@
-import type { Maybe } from '@dereekb/util';
 import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@angular/forms';
 
 /**
@@ -7,7 +6,8 @@ import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@
  * @returns A ValidatorFn that fails when the value is falsy.
  */
 export function isTruthy(): ValidatorFn {
-  return (control: AbstractControl): Maybe<ValidationErrors> => {
+  // eslint-disable-next-line dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null` (no `undefined`).
+  return (control: AbstractControl): ValidationErrors | null => {
     const value: boolean | undefined = control.value;
 
     if (!value) {

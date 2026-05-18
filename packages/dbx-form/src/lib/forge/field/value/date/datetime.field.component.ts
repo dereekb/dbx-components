@@ -878,7 +878,7 @@ export class DbxForgeDateTimeFieldComponent {
     }
   }
 
-  onDatePicked(event: MatDatepickerInputEvent<Date>): void {
+  onDatePicked(event: MatDatepickerInputEvent<Date | undefined>): void {
     const date = event.value;
     if (date) {
       this.dateCtrl.setValue(date);

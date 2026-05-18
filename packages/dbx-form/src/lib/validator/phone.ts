@@ -1,5 +1,6 @@
+/* eslint-disable dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null`; widening to `Maybe<...>` adds `undefined` and breaks the contract (TS2322). */
 import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@angular/forms';
-import { type Maybe, e164PhoneNumberExtensionPair, isE164PhoneNumber as isE164PhoneNumberFunction, isValidPhoneExtensionNumber } from '@dereekb/util';
+import { e164PhoneNumberExtensionPair, isE164PhoneNumber as isE164PhoneNumberFunction, isValidPhoneExtensionNumber } from '@dereekb/util';
 import { INVALID_PHONE_NUMBER_EXTENSION_MESSAGE, INVALID_PHONE_NUMBER_MESSAGE } from '../formly/config/validation';
 
 /**
@@ -9,7 +10,7 @@ import { INVALID_PHONE_NUMBER_EXTENSION_MESSAGE, INVALID_PHONE_NUMBER_MESSAGE } 
  * @returns A ValidatorFn that validates E.164 phone numbers.
  */
 export function isE164PhoneNumber(allowExtension: boolean): ValidatorFn {
-  return (control: AbstractControl): Maybe<ValidationErrors> => {
+  return (control: AbstractControl): ValidationErrors | null => {
     const value: string | undefined = control.value;
 
     if (value != null && !isE164PhoneNumberFunction(value, allowExtension)) {
@@ -28,7 +29,7 @@ export function isE164PhoneNumber(allowExtension: boolean): ValidatorFn {
  * @returns A ValidatorFn that validates phone extension numbers.
  */
 export function isPhoneExtension(): ValidatorFn {
-  return (control: AbstractControl): Maybe<ValidationErrors> => {
+  return (control: AbstractControl): ValidationErrors | null => {
     const value: string | number | undefined = control.value;
 
     if (value != null) {
@@ -51,7 +52,7 @@ export function isPhoneExtension(): ValidatorFn {
  * @returns A ValidatorFn that validates E.164 phone numbers with optional extensions.
  */
 export function isE164PhoneNumberWithValidExtension(): ValidatorFn {
-  return (control: AbstractControl): Maybe<ValidationErrors> => {
+  return (control: AbstractControl): ValidationErrors | null => {
     const value: string | undefined = control.value;
     let errors: ValidationErrors = {};
 

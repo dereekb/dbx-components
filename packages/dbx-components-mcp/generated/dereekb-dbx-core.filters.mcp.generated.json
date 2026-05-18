@@ -118,7 +118,7 @@
         "source"
       ],
       "skillRefs": [
-        "dbx__ref__dbx-component-patterns"
+        "dbx-component-patterns"
       ]
     },
     {

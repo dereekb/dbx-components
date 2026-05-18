@@ -1,5 +1,6 @@
+/* eslint-disable dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null`; widening to `Maybe<...>` adds `undefined` and breaks the contract (TS2322). */
 import { type AbstractControl, type ValidationErrors, type ValidatorFn, Validators } from '@angular/forms';
-import { type Maybe, isNumberDivisibleBy, nearestDivisibleValues } from '@dereekb/util';
+import { isNumberDivisibleBy, nearestDivisibleValues } from '@dereekb/util';
 
 /**
  * Merges the use of the min and max validator.
@@ -12,11 +13,11 @@ export function isInRange(min: number = Number.MIN_SAFE_INTEGER, max: number = N
   const minFn = Validators.min(min);
   const maxFn = Validators.max(max);
 
-  return (control: AbstractControl): Maybe<ValidationErrors> => {
+  return (control: AbstractControl): ValidationErrors | null => {
     const minError = minFn(control);
     const maxError = maxFn(control);
 
-    let errors: Maybe<ValidationErrors> = null;
+    let errors: ValidationErrors | null = null;
 
     if (minError || maxError) {
       errors = {
@@ -49,7 +50,7 @@ export function isDivisibleBy(divisor: number): ValidatorFn {
     throw new Error('Divisior must be greater than zero.');
   }
 
-  return (control: AbstractControl): Maybe<ValidationErrors> => {
+  return (control: AbstractControl): ValidationErrors | null => {
     const value: number | undefined = control.value;
 
     if (value != null && !isNumberDivisibleBy(value, divisor)) {

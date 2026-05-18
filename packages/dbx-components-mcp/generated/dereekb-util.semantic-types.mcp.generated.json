@@ -42,7 +42,7 @@
       "topics": [
         "numeric"
       ],
-      "notes": "A number that is the result of comparison two items.\n\nIn \"ascending\" order, a value:\n- smaller than another will return -1 (or less).\n- equal to another will return 0\n- greater than another will return 1 (or more).\n- Example: a - b\n\nIn \"descending\" order, this returns the opposite values as \"ascending\".\n- Example: b - a"
+      "notes": "Is the result of comparison two items.\n\nIn \"ascending\" order, a value:\n- smaller than another will return -1 (or less).\n- equal to another will return 0\n- greater than another will return 1 (or more).\n- Example: a - b\n\nIn \"descending\" order, this returns the opposite values as \"ascending\".\n- Example: b - a"
     },
     {
       "name": "BooleanStringKey",
@@ -1212,7 +1212,7 @@
         "string",
         "dereekb-util:prefix"
       ],
-      "notes": "A string that does not have a CharacterPrefix or CharacterSuffix."
+      "notes": "Does not have a CharacterPrefix or CharacterSuffix."
     },
     {
       "name": "SplitStringTreeNodeString",

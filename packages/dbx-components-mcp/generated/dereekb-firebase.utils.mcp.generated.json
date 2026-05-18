@@ -18,17 +18,17 @@
         {
           "name": "documentAccessor",
           "type": "FirestoreDocumentAccessor<T, D>",
-          "description": "- Accessor that provides the `newDocument()` factory method",
+          "description": "- Accessor that provides the `newDocument()` factory method.",
           "optional": false
         },
         {
           "name": "count",
           "type": "number",
-          "description": "- Number of document instances to create",
+          "description": "- Number of document instances to create.",
           "optional": false
         }
       ],
-      "returns": "Array of `count` new document instances, each with a unique auto-generated ID",
+      "returns": "Array of `count` new document instances, each with a unique auto-generated ID.",
       "tags": [
         "firestore",
         "document",
@@ -56,13 +56,13 @@
         {
           "name": "documentAccessor",
           "type": "FirestoreDocumentAccessor<T, D>",
-          "description": "- Accessor providing the document factory and collection context",
+          "description": "- Accessor providing the document factory and collection context.",
           "optional": false
         },
         {
           "name": "make",
           "type": "MakeDocumentsParams<T, D>",
-          "description": "- Configuration controlling count, factory, and initialization",
+          "description": "- Configuration controlling count, factory, and initialization.",
           "optional": false
         }
       ],
@@ -97,11 +97,11 @@
         {
           "name": "documents",
           "type": "D[]",
-          "description": "- Documents to fetch snapshots for",
+          "description": "- Documents to fetch snapshots for.",
           "optional": false
         }
       ],
-      "returns": "Snapshots in the same order as the input array",
+      "returns": "Snapshots in the same order as the input array.",
       "tags": [
         "firestore",
         "snapshot",
@@ -132,11 +132,11 @@
         {
           "name": "document",
           "type": "D",
-          "description": "- The document to fetch",
+          "description": "- The document to fetch.",
           "optional": false
         }
       ],
-      "returns": "A pair containing the document and its snapshot",
+      "returns": "A pair containing the document and its snapshot.",
       "tags": [
         "firestore",
         "snapshot",
@@ -165,11 +165,11 @@
         {
           "name": "documents",
           "type": "D[]",
-          "description": "- Documents to fetch",
+          "description": "- Documents to fetch.",
           "optional": false
         }
       ],
-      "returns": "Pairs in the same order as the input array",
+      "returns": "Pairs in the same order as the input array.",
       "tags": [
         "firestore",
         "snapshot",
@@ -200,7 +200,7 @@
         {
           "name": "document",
           "type": "D",
-          "description": "- The document to fetch",
+          "description": "- The document to fetch.",
           "optional": false
         }
       ],
@@ -235,11 +235,11 @@
         {
           "name": "documents",
           "type": "D[]",
-          "description": "- Documents to fetch",
+          "description": "- Documents to fetch.",
           "optional": false
         }
       ],
-      "returns": "Triplets in the same order as the input array",
+      "returns": "Triplets in the same order as the input array.",
       "tags": [
         "firestore",
         "snapshot",
@@ -272,11 +272,11 @@
         {
           "name": "documents",
           "type": "D[]",
-          "description": "- Documents to fetch",
+          "description": "- Documents to fetch.",
           "optional": false
         }
       ],
-      "returns": "Triplets for documents that exist, in their original relative order",
+      "returns": "Triplets for documents that exist, in their original relative order.",
       "tags": [
         "firestore",
         "snapshot",
@@ -310,11 +310,11 @@
         {
           "name": "documents",
           "type": "D[]",
-          "description": "- Documents to fetch",
+          "description": "- Documents to fetch.",
           "optional": false
         }
       ],
-      "returns": "Tuples in the same order as the input array",
+      "returns": "Tuples in the same order as the input array.",
       "tags": [
         "firestore",
         "snapshot",
@@ -475,17 +475,17 @@
         {
           "name": "accessor",
           "type": "LimitedFirestoreDocumentAccessor<T, D>",
-          "description": "- Accessor to load documents with",
+          "description": "- Accessor to load documents with.",
           "optional": false
         },
         {
           "name": "snapshots",
           "type": "QuerySnapshot<T>",
-          "description": "- Query snapshot containing the document references",
+          "description": "- Query snapshot containing the document references.",
           "optional": false
         }
       ],
-      "returns": "Document instances in the same order as the query results",
+      "returns": "Document instances in the same order as the query results.",
       "tags": [
         "firestore",
         "document",
@@ -519,23 +519,23 @@
         {
           "name": "accessor",
           "type": "LimitedFirestoreDocumentAccessor<T, D>",
-          "description": "- Accessor to load documents with",
+          "description": "- Accessor to load documents with.",
           "optional": false
         },
         {
           "name": "values",
           "type": "I[]",
-          "description": "- Source values to extract references from",
+          "description": "- Source values to extract references from.",
           "optional": false
         },
         {
           "name": "getRef",
           "type": "(value: I) => DocumentReference<T>",
-          "description": "- Extracts a document reference from each value",
+          "description": "- Extracts a document reference from each value.",
           "optional": false
         }
       ],
-      "returns": "Document instances in the same order as the input values",
+      "returns": "Document instances in the same order as the input values.",
       "tags": [
         "firestore",
         "document",
@@ -572,17 +572,17 @@
         {
           "name": "accessor",
           "type": "LimitedFirestoreDocumentAccessor<T, D>",
-          "description": "- Accessor to load documents with",
+          "description": "- Accessor to load documents with.",
           "optional": false
         },
         {
           "name": "refs",
           "type": "DocumentReference<T>[]",
-          "description": "- Document references to load",
+          "description": "- Document references to load.",
           "optional": false
         }
       ],
-      "returns": "Document instances in the same order as the input references",
+      "returns": "Document instances in the same order as the input references.",
       "tags": [
         "firestore",
         "document",
@@ -615,23 +615,23 @@
         {
           "name": "accessor",
           "type": "LimitedFirestoreDocumentAccessor<T, D>",
-          "description": "- Accessor to load documents with",
+          "description": "- Accessor to load documents with.",
           "optional": false
         },
         {
           "name": "values",
           "type": "I[]",
-          "description": "- Source values to extract keys from",
+          "description": "- Source values to extract keys from.",
           "optional": false
         },
         {
           "name": "getKey",
           "type": "(value: I) => FirestoreModelKey",
-          "description": "- Extracts a model key (full Firestore path) from each value",
+          "description": "- Extracts a model key (full Firestore path) from each value.",
           "optional": false
         }
       ],
-      "returns": "Document instances in the same order as the input values",
+      "returns": "Document instances in the same order as the input values.",
       "tags": [
         "firestore",
         "document",
@@ -669,7 +669,7 @@
         {
           "name": "accessor",
           "type": "LimitedFirestoreDocumentAccessor<T, D>",
-          "description": "- Accessor to load documents with",
+          "description": "- Accessor to load documents with.",
           "optional": false
         },
         {
@@ -679,7 +679,7 @@
           "optional": false
         }
       ],
-      "returns": "Document instances in the same order as the input keys",
+      "returns": "Document instances in the same order as the input keys.",
       "tags": [
         "firestore",
         "document",
@@ -719,17 +719,17 @@
         {
           "name": "values",
           "type": "I[]",
-          "description": "- Source values to extract IDs from",
+          "description": "- Source values to extract IDs from.",
           "optional": false
         },
         {
           "name": "getId",
           "type": "(value: I) => FirestoreModelId",
-          "description": "- Extracts a model ID from each value",
+          "description": "- Extracts a model ID from each value.",
           "optional": false
         }
       ],
-      "returns": "Document instances in the same order as the input values",
+      "returns": "Document instances in the same order as the input values.",
       "tags": [
         "firestore",
         "document",
@@ -773,11 +773,11 @@
         {
           "name": "ids",
           "type": "FirestoreModelId[]",
-          "description": "- Document IDs within the accessor's collection",
+          "description": "- Document IDs within the accessor's collection.",
           "optional": false
         }
       ],
-      "returns": "Document instances in the same order as the input IDs",
+      "returns": "Document instances in the same order as the input IDs.",
       "tags": [
         "firestore",
         "document",
@@ -811,11 +811,11 @@
         {
           "name": "accessorContext",
           "type": "LimitedFirestoreDocumentAccessorContextExtension<T, D>",
-          "description": "- Context that provides accessors for both default and transactional use",
+          "description": "- Context that provides accessors for both default and transactional use.",
           "optional": false
         }
       ],
-      "returns": "A loader function that converts document references to document instances",
+      "returns": "A loader function that converts document references to document instances.",
       "tags": [
         "firestore",
         "document",
@@ -844,11 +844,11 @@
         {
           "name": "accessorContext",
           "type": "LimitedFirestoreDocumentAccessorContextExtension<T, D>",
-          "description": "- Context that provides accessors for both default and transactional use",
+          "description": "- Context that provides accessors for both default and transactional use.",
           "optional": false
         }
       ],
-      "returns": "A loader function that converts snapshots to document-snapshot-data pairs",
+      "returns": "A loader function that converts snapshots to document-snapshot-data pairs.",
       "tags": [
         "firestore",
         "snapshot",
@@ -882,11 +882,11 @@
         {
           "name": "accessor",
           "type": "LimitedFirestoreDocumentAccessor<T, D>",
-          "description": "- The accessor to bind for document loading",
+          "description": "- The accessor to bind for document loading.",
           "optional": false
         }
       ],
-      "returns": "A reusable function that converts snapshots to pairs using the bound accessor",
+      "returns": "A reusable function that converts snapshots to pairs using the bound accessor.",
       "tags": [
         "firestore",
         "snapshot",
@@ -1041,7 +1041,7 @@
         {
           "name": "snapshot",
           "type": "DocumentSnapshot<T>",
-          "description": "- Source of the `id` and `key` values",
+          "description": "- Source of the `id` and `key` values.",
           "optional": false
         }
       ],
@@ -1086,7 +1086,7 @@
         {
           "name": "modelRef",
           "type": "FirestoreModelKeyRef & FirestoreModelIdRef",
-          "description": "- Source of the `id` and `key` values",
+          "description": "- Source of the `id` and `key` values.",
           "optional": false
         }
       ],
@@ -1125,23 +1125,23 @@
         {
           "name": "document",
           "type": "Maybe<D>",
-          "description": "- The document to fetch, or nullish to skip",
+          "description": "- The document to fetch, or nullish to skip.",
           "optional": false
         },
         {
           "name": "use",
           "type": "UseAsync<DocumentSnapshot<FirestoreDocumentData<D>>, O>",
-          "description": "- Callback that receives the fetched snapshot and returns a result",
+          "description": "- Callback that receives the fetched snapshot and returns a result.",
           "optional": false
         },
         {
           "name": "defaultValue",
           "type": "Maybe<AsyncGetterOrValue<O>>",
-          "description": "- Fallback value when `document` is nullish or the snapshot is unavailable",
+          "description": "- Fallback value when `document` is nullish or the snapshot is unavailable.",
           "optional": true
         }
       ],
-      "returns": "The result of `use`, or the default value",
+      "returns": "The result of `use`, or the default value.",
       "tags": [
         "firestore",
         "snapshot",
@@ -1198,7 +1198,7 @@
         {
           "name": "document",
           "type": "D",
-          "description": "- The document to extract the ID from",
+          "description": "- The document to extract the ID from.",
           "optional": false
         }
       ],
@@ -1232,11 +1232,11 @@
         {
           "name": "documents",
           "type": "D[]",
-          "description": "- Documents to extract IDs from",
+          "description": "- Documents to extract IDs from.",
           "optional": false
         }
       ],
-      "returns": "Array of document IDs in the same order as the input",
+      "returns": "Array of document IDs in the same order as the input.",
       "tags": [
         "firestore",
         "document",
@@ -1268,7 +1268,7 @@
         {
           "name": "document",
           "type": "D",
-          "description": "- The document to extract the key from",
+          "description": "- The document to extract the key from.",
           "optional": false
         }
       ],
@@ -1302,11 +1302,11 @@
         {
           "name": "documents",
           "type": "D[]",
-          "description": "- Documents to extract keys from",
+          "description": "- Documents to extract keys from.",
           "optional": false
         }
       ],
-      "returns": "Array of full Firestore paths in the same order as the input",
+      "returns": "Array of full Firestore paths in the same order as the input.",
       "tags": [
         "firestore",
         "document",
@@ -1339,11 +1339,11 @@
         {
           "name": "document",
           "type": "D",
-          "description": "- The document to extract the reference from",
+          "description": "- The document to extract the reference from.",
           "optional": false
         }
       ],
-      "returns": "The underlying Firestore document reference",
+      "returns": "The underlying Firestore document reference.",
       "tags": [
         "firestore",
         "document",
@@ -1371,11 +1371,11 @@
         {
           "name": "documents",
           "type": "D[]",
-          "description": "- Documents to extract references from",
+          "description": "- Documents to extract references from.",
           "optional": false
         }
       ],
-      "returns": "Array of document references in the same order as the input",
+      "returns": "Array of document references in the same order as the input.",
       "tags": [
         "firestore",
         "document",
@@ -1406,11 +1406,11 @@
         {
           "name": "accessor",
           "type": "LimitedFirestoreDocumentAccessor<T, D>",
-          "description": "- The accessor to wrap with caching behavior",
+          "description": "- The accessor to wrap with caching behavior.",
           "optional": false
         }
       ],
-      "returns": "A {@link LimitedFirestoreDocumentAccessorSnapshotCache } backed by the given accessor",
+      "returns": "A {@link LimitedFirestoreDocumentAccessorSnapshotCache } backed by the given accessor.",
       "tags": [
         "firestore",
         "cache",

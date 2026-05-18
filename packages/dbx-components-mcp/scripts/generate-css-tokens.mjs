@@ -42,28 +42,28 @@ const flags = parseFlags(argv);
 
 if (!flags.source) {
   console.error('generate-css-tokens: missing --source flag (dbx-web | mat-sys | mdc | app)');
-  process.exit(1);
+  process.exitCode = 1;
+} else {
+  let exitCode = 0;
+  switch (flags.source) {
+    case 'dbx-web':
+      exitCode = await runDbxWeb(flags);
+      break;
+    case 'mat-sys':
+      exitCode = await runCuratedSource('angular-material-m3.tokens.source.json', 'angular-material-m3.tokens.mcp.generated.json', flags);
+      break;
+    case 'mdc':
+      exitCode = await runCuratedSource('angular-material-mdc.tokens.source.json', 'angular-material-mdc.tokens.mcp.generated.json', flags);
+      break;
+    case 'app':
+      exitCode = await runAppScans(flags);
+      break;
+    default:
+      console.error(`generate-css-tokens: unknown --source value: ${flags.source}`);
+      exitCode = 1;
+  }
+  process.exitCode = exitCode;
 }
-
-let exitCode = 0;
-switch (flags.source) {
-  case 'dbx-web':
-    exitCode = await runDbxWeb(flags);
-    break;
-  case 'mat-sys':
-    exitCode = await runCuratedSource('angular-material-m3.tokens.source.json', 'angular-material-m3.tokens.mcp.generated.json', flags);
-    break;
-  case 'mdc':
-    exitCode = await runCuratedSource('angular-material-mdc.tokens.source.json', 'angular-material-mdc.tokens.mcp.generated.json', flags);
-    break;
-  case 'app':
-    exitCode = await runAppScans(flags);
-    break;
-  default:
-    console.error(`generate-css-tokens: unknown --source value: ${flags.source}`);
-    exitCode = 1;
-}
-process.exit(exitCode);
 
 // MARK: Modes
 async function runDbxWeb(flags) {
