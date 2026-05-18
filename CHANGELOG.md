@@ -1,3 +1,11 @@
+## [13.11.15](https://github.com/dereekb/dbx-components/compare/v13.11.14-dev...v13.11.15) (2026-05-18)
+
+
+### Code Refactoring
+
+- eslint v10 ([#51](https://github.com/dereekb/dbx-components/issues/51)) ([b65b1ad8](https://github.com/dereekb/dbx-components/commit/b65b1ad8b5054bda2b1ba0b787f56b7b788ceb12)), closes [#51](https://github.com/dereekb/dbx-components/issues/51) [String#match](https://github.com/dereekb/String/issues/match) [Array#push](https://github.com/dereekb/Array/issues/push)
+- lint-fix ([cca88a22](https://github.com/dereekb/dbx-components/commit/cca88a22924fc52d6c58b2a6919cbff0de998608))
+
 ## [13.11.14](https://github.com/dereekb/dbx-components/compare/v13.11.13-dev...v13.11.14) (2026-05-17)
 
 
