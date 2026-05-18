@@ -12,8 +12,8 @@ const FOOTER = '_Run `dbx_asset_validate_app` to also verify provider wiring and
  * Renders a {@link ValidationResult} as the markdown report the tool
  * returns to callers.
  *
- * @param result - the aggregated validation outcome
- * @returns the markdown report
+ * @param result - The aggregated validation outcome.
+ * @returns The markdown report.
  */
 export function formatResult(result: ValidationResult): string {
   return formatTwoSideResult({ title: 'Asset folder validation', result, footer: FOOTER });

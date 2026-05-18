@@ -17,15 +17,16 @@ export type ArrayDecisionFunction<T> = (values: T[]) => boolean;
  * When mode is `'any'`, the resulting function returns `true` if at least one element satisfies the predicate.
  * When mode is `'all'`, it returns `true` only if every element satisfies the predicate.
  *
+ * @param decision - Predicate used to test individual elements.
+ * @param mode - Whether all or any elements must satisfy the predicate.
+ * @returns Predicate operating on whole arrays driven by the configured aggregation mode.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, decision, predicate, find, every, some, all, any, factory
  * @dbxUtilRelated array-decision
  *
- * @param decision - Predicate used to test individual elements.
- * @param mode - Whether all or any elements must satisfy the predicate.
- * @returns A function that evaluates an array against the configured decision criteria.
  * @__NO_SIDE_EFFECTS__
  */
 export function arrayDecisionFunction<T>(decision: ArrayFindDecisionFunction<T>, mode: SetIncludesMode): ArrayDecisionFunction<T> {
@@ -36,15 +37,15 @@ export function arrayDecisionFunction<T>(decision: ArrayFindDecisionFunction<T>,
 /**
  * Convenience wrapper that creates and immediately invokes an {@link ArrayDecisionFunction}.
  *
- * @dbxUtil
- * @dbxUtilCategory array
- * @dbxUtilTags array, decision, predicate, find, every, some, all, any
- * @dbxUtilRelated array-decision-function
- *
  * @param values - Array to evaluate.
  * @param decision - Predicate used to test individual elements.
  * @param mode - Whether all or any elements must satisfy the predicate.
  * @returns `true` if the array satisfies the decision criteria for the given mode.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory array
+ * @dbxUtilTags array, decision, predicate, find, every, some, all, any
+ * @dbxUtilRelated array-decision-function
  */
 export function arrayDecision<T>(values: T[], decision: ArrayFindDecisionFunction<T>, mode: SetIncludesMode): boolean {
   return arrayDecisionFunction(decision, mode)(values);

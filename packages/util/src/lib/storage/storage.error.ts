@@ -8,7 +8,7 @@ export class StoredDataError extends BaseError {
   /**
    * Creates an instance of StoredDataError.
    *
-   * @param message Optional error message.
+   * @param message - Optional error message.
    */
   constructor(message?: string) {
     super(message);
@@ -22,7 +22,7 @@ export class DataDoesNotExistError extends StoredDataError {
   /**
    * Creates an instance of DataDoesNotExistError.
    *
-   * @param message Optional error message.
+   * @param message - Optional error message.
    */
   constructor(message?: string) {
     super(message);
@@ -38,8 +38,8 @@ export class DataIsExpiredError<T> extends StoredDataError {
   /**
    * Creates an instance of DataIsExpiredError.
    *
-   * @param data The expired data, including metadata.
-   * @param message Optional error message. If not provided, a default message will be used.
+   * @param data - The expired data, including metadata.
+   * @param message - Optional error message. If not provided, a default message will be used.
    */
   constructor(
     readonly data: ReadStoredData<T>,

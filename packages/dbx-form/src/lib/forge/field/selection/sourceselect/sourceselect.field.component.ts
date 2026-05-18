@@ -82,22 +82,24 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   readonly hintSignal = computed(() => this.props()?.hint);
 
   // Material config
-  readonly effectiveAppearance = computed(() => this.materialConfig?.appearance ?? 'outline');
-  readonly effectiveSubscriptSizing = computed(() => this.materialConfig?.subscriptSizing ?? 'dynamic');
+  readonly effectiveAppearanceSignal = computed(() => this.materialConfig?.appearance ?? 'outline');
+  readonly effectiveSubscriptSizingSignal = computed(() => this.materialConfig?.subscriptSizing ?? 'dynamic');
 
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as any);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   // ARIA
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequiredSignal = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const hintId = this.hintIdSignal();
+    if (this.errorsToDisplaySignal().length > 0) return errorId;
+    if (this.props()?.hint) return hintId;
     return null;
   });
 
@@ -153,7 +155,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
               const loading = x.some(isLoadingStateLoading);
               const value: SourceSelectValueGroup<T, M>[] = statesWithValues.map((y) => ({
                 label: y.label,
-                values: (y.value as M[]).map((meta) => ({ meta, value: valueReader(meta) }))
+                values: y.value.map((meta) => ({ meta, value: valueReader(meta) }))
               }));
 
               return { loading, value };
@@ -174,7 +176,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
     map(([fromOpenSourceGroup, loadSources]) => {
       const loadSourcesValue = loadSources.value ?? [];
       const value: SourceSelectValueGroup<T, M>[] = [fromOpenSourceGroup, ...loadSourcesValue];
-      return { loading: loadSources.loading, value } as LoadingStateWithDefinedValue<SourceSelectValueGroup<T, M>[]>;
+      return { loading: loadSources.loading, value };
     }),
     shareReplay(1)
   );
@@ -298,7 +300,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
   });
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'mat-select' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'mat-select' });
   }
 
   ngOnInit(): void {
@@ -485,7 +487,7 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
               const displayResultsMapping: [SourceSelectDisplayValue<T, M>, T][] = displayResults.map((x) => [x, x.value]);
               const valueIndexHashMap = new Map(displayResultsMapping.map(([x, hash]) => [hash, x]));
               displayResultsMapping.forEach(([x, hash]) => displayMap.set(hash, x));
-              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1])) as SourceSelectDisplayValue<T, M>[];
+              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
             })
           );
         }

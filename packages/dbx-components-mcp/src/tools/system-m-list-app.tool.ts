@@ -55,21 +55,32 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  let report;
-  try {
-    report = await listAppSystem(componentAbs, { componentDir: parsed.componentDir });
-  } catch (err) {
-    return toolError(`Failed to list system states: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError === undefined) {
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    let report;
+    let listError: string | undefined;
+    try {
+      report = await listAppSystem(componentAbs, { componentDir: parsed.componentDir });
+    } catch (err) {
+      listError = `Failed to list system states: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (listError === undefined && report !== undefined) {
+      const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+      result = { content: [{ type: 'text', text }] };
+    } else {
+      result = toolError(listError ?? 'Failed to list system states.');
+    }
+  } else {
+    result = toolError(ensureError);
   }
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-export const systemMListAppTool: DbxTool = { definition: TOOL, run };
+export const SYSTEM_M_LIST_APP_TOOL: DbxTool = { definition: TOOL, run };

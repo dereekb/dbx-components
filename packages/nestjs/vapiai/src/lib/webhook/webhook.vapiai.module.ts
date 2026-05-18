@@ -10,8 +10,8 @@ import { type VapiAiSecretToken, type VapiApiWebhookEventVerificationType } from
  *
  * Reads the webhook secret, HMAC secret, verification type, and signature prefix from environment variables.
  *
- * @param configService - NestJS config service for reading environment variables
- * @returns a validated VapiAiWebhookServiceConfig
+ * @param configService - NestJS config service for reading environment variables.
+ * @returns A validated VapiAiWebhookServiceConfig.
  */
 export function vapiaiWebhookServiceConfigFactory(configService: ConfigService): VapiAiWebhookServiceConfig {
   const config: VapiAiWebhookServiceConfig = {

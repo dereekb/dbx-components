@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- file retains support for the deprecated FirebaseAdminFunctionTestConfig.useFunctionSingletonContext field until it is removed */
 import admin from 'firebase-admin';
 import functions from 'firebase-functions-test';
 import { type Firestore } from '@google-cloud/firestore';
@@ -28,7 +29,7 @@ let firebaseFunctionsTestInstance: Maybe<FeaturesList>;
  * @param reroll - When `true`, generates a new project ID instead of reusing the current one.
  * @returns The initialized {@link FeaturesList} singleton.
  *
- * @throws Error if `initFirebaseAdminTestEnvironment()` has not been called.
+ * @throws {Error} If `initFirebaseAdminTestEnvironment()` has not been called.
  *
  * @example
  * ```ts
@@ -74,7 +75,7 @@ export interface FirebaseAdminFunctionTestConfig {
    *
    * @deprecated Is false by default to allow a new app to be defined each time. Usage of the singleton does not make sense. Remove later, and require that tests be run in serial if testing framework isn't behaving.
    */
-  useFunctionSingletonContext: boolean;
+  readonly useFunctionSingletonContext: boolean;
 }
 
 /**

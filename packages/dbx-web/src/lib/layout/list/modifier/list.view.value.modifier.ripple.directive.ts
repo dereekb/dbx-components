@@ -15,10 +15,10 @@ export const DBX_LIST_ITEM_DISABLE_RIPPLE_LIST_ITEM_MODIFIER_KEY = 'disable_ripp
  * Default decision function that disables ripple on items that already have ripple disabled,
  * lack an anchor, or have an anchor with no navigation target.
  *
- * @param item - the list item to evaluate for ripple disabling
- * @returns `true` if the ripple should be disabled for this item
+ * @param item - The list item to evaluate for ripple disabling.
+ * @returns `true` if the ripple should be disabled for this item.
  */
-export const DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION: DbxValueListItemDecisionFunction<unknown> = <T>(item: DbxValueListItem<T>) => {
+export const DEFAULT_DBX_LIST_ITEM_DISABLE_FUNCTION: DbxValueListItemDecisionFunction<unknown> = <T>(item: DbxValueListItem<T>) => {
   return item.rippleDisabled || !item.anchor || (!item.anchor.ref && !item.anchor.url && !item.anchor.onClick);
 };
 
@@ -39,7 +39,7 @@ export class DbxListItemDisableRippleModifierDirective<T> extends AbstractDbxVal
   readonly disableRippleForItem = input<Maybe<DbxValueListItemDecisionFunction<T>>, Maybe<'' | DbxValueListItemDecisionFunction<T>>>(undefined, { alias: 'dbxListItemDisableRippleModifier', transform: transformEmptyStringInputToUndefined });
 
   readonly disableRippleForItemModifiers$: Observable<Maybe<ArrayOrValue<Modifier<DbxValueListItem<T>>>>> = toObservable(this.disableRippleForItem).pipe(
-    map((x) => x ?? DBX_LIST_ITEM_DEFAULT_DISABLE_FUNCTION),
+    map((x) => x ?? DEFAULT_DBX_LIST_ITEM_DISABLE_FUNCTION),
     map((disableRippleForItem) => {
       const modifiers: Modifier<DbxValueListItem<T>> = {
         key: DBX_LIST_ITEM_DISABLE_RIPPLE_LIST_ITEM_MODIFIER_KEY,

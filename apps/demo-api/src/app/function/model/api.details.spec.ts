@@ -1,6 +1,6 @@
 import { withApiDetails, readApiDetails, getModelApiDetails, onCallSpecifierHandler, onCallCreateModel, onCallUpdateModel, onCallReadModel, onCallDeleteModel, onCallModel, type OnCallApiDetailsRef, type OnCallModelMap, type ModelApiDetailsResult } from '@dereekb/firebase-server';
 import { createGuestbookParamsType, insertGuestbookEntryParamsType, subscribeToGuestbookNotificationsParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
-import { demoCreateModelMap } from './crud.functions';
+import { DEMO_CREATE_MODEL_MAP } from './crud.functions';
 import { type DemoOnCallCreateModelMap, type DemoOnCallUpdateModelMap } from '../function.context';
 
 /**
@@ -13,7 +13,7 @@ describe('demo api.details integration', () => {
   // MARK: Baseline
   describe('existing demo call model handlers', () => {
     it('should have _apiDetails on handlers using withApiDetails', () => {
-      const details = readApiDetails(demoCreateModelMap.guestbook as unknown as OnCallApiDetailsRef);
+      const details = readApiDetails(DEMO_CREATE_MODEL_MAP.guestbook as unknown as OnCallApiDetailsRef);
       expect(details).toBeDefined();
     });
 
@@ -58,7 +58,7 @@ describe('demo api.details integration', () => {
     let details: ModelApiDetailsResult;
 
     beforeEach(() => {
-      details = getModelApiDetails(callModel as unknown as OnCallApiDetailsRef)!;
+      details = getModelApiDetails(callModel)!;
     });
 
     it('should return a ModelApiDetailsResult', () => {

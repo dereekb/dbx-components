@@ -104,8 +104,8 @@ export type NotificationTemplateTypeInfoRecord = Record<NotificationTemplateType
 /**
  * Creates a {@link NotificationTemplateTypeInfoRecord} from an array of template type info entries.
  *
- * @param infoArray - array of template type info entries to index
- * @returns a record keyed by template type
+ * @param infoArray - Array of template type info entries to index.
+ * @returns A record keyed by template type.
  * @throws {Error} When duplicate template types are found in the input array.
  *
  * @example
@@ -218,8 +218,8 @@ export abstract class AppNotificationTemplateTypeInfoRecordService {
  * Builds internal indexes for fast lookup by notification model identity and target model identity.
  * Handles alternative model identities defined in {@link NotificationTemplateTypeInfoIdentityInfoAlternativeModelIdentityPair}.
  *
- * @param appNotificationTemplateTypeInfoRecord - the complete template type registry for the application
- * @returns a fully initialized service with indexed lookups for fast template type discovery
+ * @param appNotificationTemplateTypeInfoRecord - The complete template type registry for the application.
+ * @returns A fully initialized service with indexed lookups for fast template type discovery.
  *
  * @example
  * ```ts
@@ -228,6 +228,7 @@ export abstract class AppNotificationTemplateTypeInfoRecordService {
  * );
  * const types = service.getTemplateTypesForNotificationModel('project/abc123');
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function appNotificationTemplateTypeInfoRecordService(appNotificationTemplateTypeInfoRecord: NotificationTemplateTypeInfoRecord): AppNotificationTemplateTypeInfoRecordService {

@@ -65,21 +65,21 @@ export class OidcEncryptionService {
    * Encrypts sensitive fields in an adapter payload and returns it as a {@link JsonSerializableObject}
    * suitable for storing directly in Firestore.
    *
-   * @param payload - the adapter payload to encrypt
-   * @returns the encrypted payload as a JSON-serializable object
+   * @param payload - The adapter payload to encrypt.
+   * @returns The encrypted payload as a JSON-serializable object.
    */
   encryptAdapterPayload(payload: AdapterPayload): JsonSerializableObject {
     const filtered = filterUndefinedValues(payload);
-    return this.adapterPayloadEncryptor.encrypt(filtered) as JsonSerializableObject;
+    return this.adapterPayloadEncryptor.encrypt(filtered);
   }
 
   /**
    * Decrypts sensitive fields in a Firestore-stored payload object back to an {@link AdapterPayload}.
    *
-   * @param payload - the encrypted Firestore-stored payload
-   * @returns the decrypted adapter payload
+   * @param payload - The encrypted Firestore-stored payload.
+   * @returns The decrypted adapter payload.
    */
   decryptAdapterPayload(payload: JsonSerializableObject): AdapterPayload {
-    return this.adapterPayloadEncryptor.decrypt(payload as any) as AdapterPayload;
+    return this.adapterPayloadEncryptor.decrypt(payload as any);
   }
 }

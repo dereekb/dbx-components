@@ -1,4 +1,5 @@
 import { type AstNode, CLEAN_HELPER, CLEAN_SUBSCRIPTION_HELPER, COMPLETE_ON_DESTROY_HELPER, createImportRegistry, findAngularComponentDecorator, findNgOnDestroyMethod, findOnDestroyImplementsClause, getClassMemberName, getImplementsSpecifierRemovalRange, type ImportRegistry, isCalledIdentifier, isDeclareProperty, isStaticProperty, isThisMemberAccess, trackImportDeclaration } from './util';
+import type { Maybe } from '@dereekb/util';
 import { getStatementRangeWithLeadingWhitespace } from './require-clean-subscription.rule';
 
 /**
@@ -74,7 +75,7 @@ export interface DbxWebNoRedundantOnDestroyRuleDefinition {
  *   no `ngOnDestroy()` method (e.g. left over from a previous run), the
  *   orphaned implements clause is removed.
  */
-export const dbxWebNoRedundantOnDestroyRule: DbxWebNoRedundantOnDestroyRuleDefinition = {
+export const DBX_WEB_NO_REDUNDANT_ON_DESTROY_RULE: DbxWebNoRedundantOnDestroyRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',
@@ -94,72 +95,61 @@ export const dbxWebNoRedundantOnDestroyRule: DbxWebNoRedundantOnDestroyRuleDefin
     const registry = createImportRegistry();
     const sourceCode = context.sourceCode;
 
-    const visitClass = (classNode: AstNode): void => {
-      const matchedDecorator = findAngularComponentDecorator(classNode, registry);
+    const reportOrphanedImplements = (classNode: AstNode): void => {
+      const implementsMatch = findOnDestroyImplementsClause(classNode, registry);
 
-      if (!matchedDecorator) {
-        return;
-      }
-
-      const ngOnDestroy = findNgOnDestroyMethod(classNode);
-      const body = ngOnDestroy?.value?.body?.body;
-
-      if (!ngOnDestroy || !body) {
-        const implementsMatch = findOnDestroyImplementsClause(classNode, registry);
-
-        if (implementsMatch) {
-          context.report({
-            node: implementsMatch.clauseSpecifier,
-            messageId: 'orphanedImplementsOnDestroy',
-            fix: (fixer: AstNode) => [fixer.removeRange(getImplementsSpecifierRemovalRange(implementsMatch, sourceCode))]
-          });
-        }
-
-        return;
-      }
-
-      if (body.length === 0) {
+      if (implementsMatch) {
         context.report({
-          node: ngOnDestroy,
-          messageId: 'emptyNgOnDestroy',
-          fix: (fixer: AstNode) => buildRemoveNgOnDestroyFixes({ fixer, ngOnDestroy, classNode, registry, sourceCode })
+          node: implementsMatch.clauseSpecifier,
+          messageId: 'orphanedImplementsOnDestroy',
+          fix: (fixer: AstNode) => [fixer.removeRange(getImplementsSpecifierRemovalRange(implementsMatch, sourceCode))]
         });
-        return;
       }
+    };
 
-      const wrappedFields = collectWrappedFieldNames(classNode);
-      const redundantStatements: RedundantStatementMatch[] = [];
-      let hasNonRedundantStatement = false;
+    const reportRemoveNgOnDestroy = (ngOnDestroy: AstNode, classNode: AstNode, messageId: 'emptyNgOnDestroy' | 'redundantNgOnDestroy'): void => {
+      context.report({
+        node: ngOnDestroy,
+        messageId,
+        fix: (fixer: AstNode) => buildRemoveNgOnDestroyFixes({ fixer, ngOnDestroy, classNode, registry, sourceCode })
+      });
+    };
 
-      for (const statement of body) {
-        const match = matchRedundantCleanupStatement(statement, wrappedFields);
+    const reportRedundantStatements = (entries: readonly RedundantStatementMatch[]): void => {
+      for (const entry of entries) {
+        context.report({
+          node: entry.statement,
+          messageId: 'redundantCleanupCall',
+          data: { name: entry.fieldName, method: entry.method, wrapper: entry.wrapper },
+          fix: (fixer: AstNode) => [fixer.removeRange(getStatementRangeWithLeadingWhitespace(entry.statement, sourceCode))]
+        });
+      }
+    };
 
-        if (match) {
-          redundantStatements.push(match);
+    const visitNgOnDestroyBody = (ngOnDestroy: AstNode, body: readonly AstNode[], classNode: AstNode): void => {
+      const { redundantStatements, hasNonRedundantStatement } = partitionNgOnDestroyStatements(body, classNode);
+
+      if (redundantStatements.length > 0) {
+        if (hasNonRedundantStatement) {
+          reportRedundantStatements(redundantStatements);
         } else {
-          hasNonRedundantStatement = true;
+          reportRemoveNgOnDestroy(ngOnDestroy, classNode, 'redundantNgOnDestroy');
         }
       }
+    };
 
-      if (redundantStatements.length === 0) {
-        return;
-      }
+    const visitClass = (classNode: AstNode): void => {
+      if (findAngularComponentDecorator(classNode, registry)) {
+        const ngOnDestroy = findNgOnDestroyMethod(classNode);
+        const body = ngOnDestroy?.value?.body?.body;
 
-      if (hasNonRedundantStatement) {
-        for (const entry of redundantStatements) {
-          context.report({
-            node: entry.statement,
-            messageId: 'redundantCleanupCall',
-            data: { name: entry.fieldName, method: entry.method, wrapper: entry.wrapper },
-            fix: (fixer: AstNode) => [fixer.removeRange(getStatementRangeWithLeadingWhitespace(entry.statement, sourceCode))]
-          });
+        if (!ngOnDestroy || !body) {
+          reportOrphanedImplements(classNode);
+        } else if (body.length === 0) {
+          reportRemoveNgOnDestroy(ngOnDestroy, classNode, 'emptyNgOnDestroy');
+        } else {
+          visitNgOnDestroyBody(ngOnDestroy, body, classNode);
         }
-      } else {
-        context.report({
-          node: ngOnDestroy,
-          messageId: 'redundantNgOnDestroy',
-          fix: (fixer: AstNode) => buildRemoveNgOnDestroyFixes({ fixer, ngOnDestroy, classNode, registry, sourceCode })
-        });
       }
     };
 
@@ -213,8 +203,78 @@ function collectWrappedFieldNames(classNode: AstNode): Map<string, string> {
  * @param expression - The initializer expression, or null/undefined.
  * @returns The wrapper helper name (`cleanSubscription` etc.) or null.
  */
-function wrapperNameFromInitializer(expression: AstNode | null | undefined): string | null {
+function wrapperNameFromInitializer(expression: Maybe<AstNode>): Maybe<string> {
   return expression ? isCalledIdentifier(expression, HELPER_NAMES) : null;
+}
+
+/**
+ * Splits an `ngOnDestroy` body into redundant cleanup matches and a flag
+ * indicating whether any other (non-redundant) statement is present.
+ *
+ * @param body - The statements of the `ngOnDestroy` method body.
+ * @param classNode - The owning class node, used to gather wrapped fields.
+ * @returns The redundant matches and the non-redundant flag.
+ */
+function partitionNgOnDestroyStatements(body: readonly AstNode[], classNode: AstNode): { readonly redundantStatements: RedundantStatementMatch[]; readonly hasNonRedundantStatement: boolean } {
+  const wrappedFields = collectWrappedFieldNames(classNode);
+  const redundantStatements: RedundantStatementMatch[] = [];
+  let hasNonRedundantStatement = false;
+
+  for (const statement of body) {
+    const match = matchRedundantCleanupStatement(statement, wrappedFields);
+
+    if (match) {
+      redundantStatements.push(match);
+    } else {
+      hasNonRedundantStatement = true;
+    }
+  }
+
+  return { redundantStatements, hasNonRedundantStatement };
+}
+
+/**
+ * Returns the redundant method name (`destroy` / `complete`) when the call
+ * expression is a zero-argument member call to one of those methods.
+ *
+ * @param expression - The expression to inspect.
+ * @returns The method name and its callee MemberExpression, or null.
+ */
+function getRedundantMethodCall(expression: Maybe<AstNode>): Maybe<{ readonly methodName: string; readonly callee: AstNode }> {
+  let result: Maybe<{ readonly methodName: string; readonly callee: AstNode }> = null;
+  const isZeroArgMemberCall = expression?.type === 'CallExpression' && expression.arguments?.length === 0 && expression.callee?.type === 'MemberExpression';
+
+  if (isZeroArgMemberCall) {
+    const callee = expression.callee;
+    const methodName = !callee.computed && callee.property?.type === 'Identifier' ? callee.property.name : null;
+
+    if (methodName && REDUNDANT_METHODS.has(methodName)) {
+      result = { methodName, callee };
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Returns the `this.<fieldName>` field name from a callee object, or null
+ * when the receiver is not a non-computed `this.<identifier>` access.
+ *
+ * @param calleeObject - The callee's object (the receiver of the method call).
+ * @returns The field name or null.
+ */
+function getThisFieldName(calleeObject: Maybe<AstNode>): Maybe<string> {
+  let result: Maybe<string> = null;
+
+  if (calleeObject?.type === 'MemberExpression' && !calleeObject.computed && calleeObject.property?.type === 'Identifier') {
+    const fieldName = calleeObject.property.name;
+
+    if (isThisMemberAccess(calleeObject, fieldName)) {
+      result = fieldName;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -225,25 +285,16 @@ function wrapperNameFromInitializer(expression: AstNode | null | undefined): str
  * @param wrappedFields - Map of class field names to their wrapper helper names.
  * @returns Match details, or null.
  */
-function matchRedundantCleanupStatement(statement: AstNode, wrappedFields: Map<string, string>): RedundantStatementMatch | null {
-  let result: RedundantStatementMatch | null = null;
+function matchRedundantCleanupStatement(statement: AstNode, wrappedFields: Map<string, string>): Maybe<RedundantStatementMatch> {
+  let result: Maybe<RedundantStatementMatch> = null;
 
   if (statement.type === 'ExpressionStatement') {
-    const call = statement.expression;
-    const isZeroArgMemberCall = call?.type === 'CallExpression' && call.arguments?.length === 0 && call.callee?.type === 'MemberExpression';
+    const methodCall = getRedundantMethodCall(statement.expression);
+    const fieldName = methodCall ? getThisFieldName(methodCall.callee.object) : null;
+    const wrapper = fieldName ? wrappedFields.get(fieldName) : undefined;
 
-    if (isZeroArgMemberCall) {
-      const callee = call.callee;
-      const methodName = !callee.computed && callee.property?.type === 'Identifier' ? callee.property.name : null;
-
-      if (methodName && REDUNDANT_METHODS.has(methodName) && callee.object?.type === 'MemberExpression' && callee.object.property?.type === 'Identifier' && !callee.object.computed) {
-        const fieldName = callee.object.property.name;
-        const wrapper = isThisMemberAccess(callee.object, fieldName) ? wrappedFields.get(fieldName) : undefined;
-
-        if (wrapper) {
-          result = { statement, fieldName, method: methodName, wrapper };
-        }
-      }
+    if (methodCall && fieldName && wrapper) {
+      result = { statement, fieldName, method: methodCall.methodName, wrapper };
     }
   }
 

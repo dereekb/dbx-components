@@ -22,7 +22,7 @@ const MANIFEST: CliApiManifest = [
     verb: 'update',
     specifier: 'insert',
     paramsTypeName: 'InsertGuestbookEntryParams',
-    paramsValidator: sampleParamsType as Type<unknown>,
+    paramsValidator: sampleParamsType,
     resultTypeName: 'InsertGuestbookEntryResult',
     groupName: 'Guestbook',
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts'

@@ -46,6 +46,11 @@ export interface WorkFactoryConfig<T, O> {
  * If the work function returns an observable, it is automatically subscribed to. If it uses
  * the handler directly, the observable return is ignored.
  *
+ * @param config - Work function and delegate configuration.
+ * @param config.work - The work function to execute for each input value.
+ * @param config.delegate - Delegate that receives lifecycle callbacks (start, success, reject)
+ * @returns A factory function that creates WorkInstance for each input.
+ *
  * @example
  * ```ts
  * const factory = workFactory({
@@ -57,26 +62,23 @@ export interface WorkFactoryConfig<T, O> {
  * // instance tracks the work lifecycle
  * ```
  *
- * @param config - work function and delegate configuration
- * @param config.work - the work function to execute for each input value
- * @param config.delegate - delegate that receives lifecycle callbacks (start, success, reject)
- * @returns a factory function that creates WorkInstance for each input
  * @__NO_SIDE_EFFECTS__
  */
 export function workFactory<T, O>({ work, delegate }: WorkFactoryConfig<T, O>): WorkFactory<T, O> {
   return (value: T) => {
     const handler = new WorkInstance<T, O>(value, delegate);
-    let fnResult: void | Observable<O>;
+    let fnResult: void | Observable<O> = undefined;
+    let result: Maybe<WorkInstance<T, O>>;
 
     try {
       fnResult = work(value, handler);
+      result = handler;
     } catch (e: unknown) {
       console.error('Work encountered an unexpected error.', e);
       handler.reject(e as ErrorInput);
-      return;
     }
 
-    if (!handler.isComplete && fnResult && isObservable(fnResult)) {
+    if (result != null && !handler.isComplete && fnResult && isObservable(fnResult)) {
       if (handler.hasStarted) {
         throw new Error('Work already marked as begun from returned result. Either return an observable or use the handler directly.');
       }
@@ -84,7 +86,7 @@ export function workFactory<T, O>({ work, delegate }: WorkFactoryConfig<T, O>): 
       handler.startWorkingWithObservable(fnResult);
     }
 
-    return handler;
+    return result;
   };
 }
 
@@ -98,8 +100,9 @@ export type WorkFactoryConfigFactory<T, O> = FactoryWithRequiredInput<WorkFactor
  * Creates a {@link WorkFactory} that generates a new {@link WorkFactoryConfig} for each input,
  * enabling dynamic work and delegate selection per invocation.
  *
- * @param configFactory - factory that produces work configuration from the input value
- * @returns a work factory with per-invocation configuration
+ * @param configFactory - Factory that produces work configuration from the input value.
+ * @returns A work factory with per-invocation configuration.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function workFactoryForConfigFactory<T, O>(configFactory: WorkFactoryConfigFactory<T, O>): WorkFactory<T, O> {

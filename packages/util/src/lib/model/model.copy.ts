@@ -11,7 +11,7 @@ export interface CopyModelFieldConfig<V = unknown> {
   /**
    * Default value if not presented. If default is not defined and there is no value, the key will be ignored entirely.
    */
-  default?: V;
+  readonly default?: V;
 }
 
 /**
@@ -26,15 +26,16 @@ export type CopyModelFieldFunction<T> = (from: Partial<T>, target: Partial<T>) =
  * If the field does not exist on the source but a default is configured, the default is used.
  * Otherwise, the target is left unchanged.
  *
+ * @param key - The property key to copy.
+ * @param inputConfig - Optional config with a default value for the field.
+ * @returns Reusable mapper that copies the configured field (or fills in the default) per pair.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, copy, field, factory, default
  * @dbxUtilRelated make-model-map-functions, modify-model-map-functions
  *
- * @param key - The property key to copy
- * @param inputConfig - Optional config with a default value for the field
- * @returns A function that copies the field from source to target
  * @__NO_SIDE_EFFECTS__
  */
 export function makeCopyModelFieldFunction<T extends object>(key: keyof T, inputConfig?: Maybe<CopyModelFieldConfig>): CopyModelFieldFunction<T> {

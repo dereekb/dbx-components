@@ -32,10 +32,13 @@ export interface ParsedGetManyArgs {
  *    {@link CliError} if the manifest is missing, the prefix is unresolved, or the leaf
  *    has no `modelType`.
  *
+ * @param input - Positionals captured by yargs plus the optional model manifest.
  * @param input.modelOrKey - The first positional from yargs.
  * @param input.key - The optional second positional from yargs.
  * @param input.manifest - The generated model manifest (for prefix lookup).
  * @returns The parsed `{ modelType, key }` pair.
+ * @throws {CliError} When `modelOrKey` is missing, when no manifest is wired but inference is required, when the bare positional is not a full key, or when the manifest cannot resolve the key's prefix.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function parseGetArgs(input: { readonly modelOrKey: string | undefined; readonly key: string | undefined; readonly manifest?: CliModelManifest }): ParsedGetArgs {
@@ -49,38 +52,41 @@ export function parseGetArgs(input: { readonly modelOrKey: string | undefined; r
   }
 
   const explicitKey = input.key?.trim();
+  let result: ParsedGetArgs;
 
   if (explicitKey != null && explicitKey.length > 0) {
-    return { modelType: modelOrKey, key: explicitKey };
+    result = { modelType: modelOrKey, key: explicitKey };
+  } else {
+    if (!modelOrKey.includes('/')) {
+      throw new CliError({
+        message: `get: '${modelOrKey}' looks like a bare doc id. Provide a full key (e.g. 'jws/abc123') or use 'get <model> <key>'.`,
+        code: 'INVALID_ARGUMENT'
+      });
+    }
+
+    const manifest = input.manifest;
+
+    if (!manifest || manifest.length === 0) {
+      throw new CliError({
+        message: 'get: cannot infer modelType — no model manifest is wired into the CLI. Pass `modelManifest` to `runCli`, or use `get <model> <key>` explicitly.',
+        code: 'INVALID_ARGUMENT'
+      });
+    }
+
+    const decoded = decodeFirestoreModelKey(modelOrKey, manifest);
+
+    if (decoded.unresolvedPrefixes.length > 0 || !decoded.leaf.modelType) {
+      throw new CliError({
+        message: `get: unable to resolve modelType for key '${modelOrKey}'. Unknown prefix: ${decoded.unresolvedPrefixes.join(', ') || decoded.leaf.prefix}. Known prefixes: ${manifestPrefixList(manifest)}.`,
+        code: 'INVALID_ARGUMENT',
+        suggestion: "Run `<cli> model-decode '<key>'` to inspect a key, or use `get <model> <key>` explicitly."
+      });
+    }
+
+    result = { modelType: decoded.leaf.modelType, key: modelOrKey };
   }
 
-  if (!modelOrKey.includes('/')) {
-    throw new CliError({
-      message: `get: '${modelOrKey}' looks like a bare doc id. Provide a full key (e.g. 'jws/abc123') or use 'get <model> <key>'.`,
-      code: 'INVALID_ARGUMENT'
-    });
-  }
-
-  const manifest = input.manifest;
-
-  if (!manifest || manifest.length === 0) {
-    throw new CliError({
-      message: 'get: cannot infer modelType — no model manifest is wired into the CLI. Pass `modelManifest` to `runCli`, or use `get <model> <key>` explicitly.',
-      code: 'INVALID_ARGUMENT'
-    });
-  }
-
-  const decoded = decodeFirestoreModelKey(modelOrKey, manifest);
-
-  if (decoded.unresolvedPrefixes.length > 0 || !decoded.leaf.modelType) {
-    throw new CliError({
-      message: `get: unable to resolve modelType for key '${modelOrKey}'. Unknown prefix: ${decoded.unresolvedPrefixes.join(', ') || decoded.leaf.prefix}. Known prefixes: ${manifestPrefixList(manifest)}.`,
-      code: 'INVALID_ARGUMENT',
-      suggestion: "Run `<cli> model-decode '<key>'` to inspect a key, or use `get <model> <key>` explicitly."
-    });
-  }
-
-  return { modelType: decoded.leaf.modelType, key: modelOrKey };
+  return result;
 }
 
 /**
@@ -94,10 +100,13 @@ export function parseGetArgs(input: { readonly modelOrKey: string | undefined; r
  *
  * Always rejects empty key lists and lists exceeding 50 keys.
  *
+ * @param input - Positionals captured by yargs plus the optional model manifest.
  * @param input.firstArg - The first positional from yargs.
  * @param input.rest - The remaining positionals from yargs.
  * @param input.manifest - The generated model manifest (used only in the inferred-key branch).
  * @returns The parsed `{ modelType, keys }` pair.
+ * @throws {CliError} When positionals are missing, when an inferred-key call lacks a manifest, when one or more keys cannot be resolved, or when the keys span multiple `modelType`s.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function parseGetManyArgs(input: { readonly firstArg: string | undefined; readonly rest: ReadonlyArray<string>; readonly manifest?: CliModelManifest }): ParsedGetManyArgs {
@@ -111,19 +120,23 @@ export function parseGetManyArgs(input: { readonly firstArg: string | undefined;
     });
   }
 
+  let result: ParsedGetManyArgs;
+
   if (firstArg.includes('/')) {
     const keys = [firstArg, ...rest];
-    return inferModelTypeFromKeys(keys, input.manifest);
+    result = inferModelTypeFromKeys(keys, input.manifest);
+  } else {
+    if (rest.length === 0) {
+      throw new CliError({
+        message: `get-many: '${firstArg}' has no '/' so it was treated as a model name, but no keys were supplied. Usage: 'get-many <model> <key...>'.`,
+        code: 'INVALID_ARGUMENT'
+      });
+    }
+
+    result = { modelType: firstArg, keys: rest };
   }
 
-  if (rest.length === 0) {
-    throw new CliError({
-      message: `get-many: '${firstArg}' has no '/' so it was treated as a model name, but no keys were supplied. Usage: 'get-many <model> <key...>'.`,
-      code: 'INVALID_ARGUMENT'
-    });
-  }
-
-  return { modelType: firstArg, keys: rest };
+  return result;
 }
 
 function inferModelTypeFromKeys(keys: ReadonlyArray<string>, manifest: CliModelManifest | undefined): ParsedGetManyArgs {

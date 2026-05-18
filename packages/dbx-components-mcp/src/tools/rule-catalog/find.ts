@@ -16,8 +16,8 @@ import type { RuleEntry } from './types.js';
  * case-insensitive — the catalog stores SCREAMING_SNAKE strings, so callers
  * passing a lowercased copy still resolve.
  *
- * @param code - the rule code to look up
- * @returns the matching entry, or `undefined` when no rule has that code
+ * @param code - The rule code to look up.
+ * @returns The matching entry, or `undefined` when no rule has that code.
  */
 export function findRule(code: string): RuleEntry | undefined {
   const target = code.trim().toUpperCase();
@@ -40,9 +40,9 @@ interface SearchHit {
  *    (AND semantics) — otherwise the candidate is dropped.
  *  - Code matches outscore title matches outscore source matches.
  *
- * @param query - the free-form search query
- * @param limit - max results to return; defaults to 5
- * @returns the highest-scoring catalog entries, descending
+ * @param query - The free-form search query.
+ * @param limit - Max results to return; defaults to 5.
+ * @returns The highest-scoring catalog entries, descending.
  */
 export function searchRules(query: string, limit = 5): readonly RuleEntry[] {
   // Split on whitespace AND underscore — codes are SCREAMING_SNAKE, so a
@@ -83,10 +83,10 @@ export function searchRules(query: string, limit = 5): readonly RuleEntry[] {
  * behaviour. When false (the OR fallback) the score is the sum of
  * token contributions and a zero return drops the entry.
  *
- * @param entry - the catalog entry to score
- * @param tokens - whitespace/underscore-separated query tokens, lowercased
- * @param requireAll - whether every token must contribute
- * @returns the additive score, or `undefined` to drop the entry
+ * @param entry - The catalog entry to score.
+ * @param tokens - Whitespace/underscore-separated query tokens, lowercased.
+ * @param requireAll - Whether every token must contribute.
+ * @returns The additive score, or `undefined` to drop the entry.
  */
 function scoreEntry(entry: RuleEntry, tokens: readonly string[], requireAll: boolean): number | undefined {
   const code = entry.code.toLowerCase();

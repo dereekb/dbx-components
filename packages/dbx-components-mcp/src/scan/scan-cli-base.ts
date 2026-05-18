@@ -13,6 +13,7 @@
  * downstream wiring without removing meaningful additional duplication.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile, writeFile as nodeWriteFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -139,9 +140,9 @@ const DEFAULT_WRITE_FILE: ScanCliBaseWriteFile = (path, data) => nodeWriteFile(p
  * user errors — every failure path returns a structured exit code so callers
  * can wire this into `process.exit` without try/catch.
  *
- * @param input - argv plus injectable I/O hooks
- * @param config - per-domain wiring (subcommand label, usage, build, serialize, warning formatter)
- * @returns the CLI's exit code (0 on success, 1 on drift / build failure, 2 on usage error)
+ * @param input - Argv plus injectable I/O hooks.
+ * @param config - Per-domain wiring (subcommand label, usage, build, serialize, warning formatter)
+ * @returns The CLI's exit code (0 on success, 1 on drift / build failure, 2 on usage error)
  */
 export async function runScanCliBase<TManifest extends ScanCliManifestLike, TWarning, TGlobber>(input: RunScanCliBaseInput<TGlobber>, config: ScanCliConfig<TManifest, TWarning, TGlobber>): Promise<RunScanCliResult> {
   const { argv, cwd, generator, readFile = DEFAULT_READ_FILE, writeFile = DEFAULT_WRITE_FILE, globber, now, log = console.log, errorLog = console.error } = input;
@@ -326,7 +327,7 @@ interface RunCheckInput<TManifest extends ScanCliManifestLike, TWarning, TGlobbe
 
 async function runCheck<TManifest extends ScanCliManifestLike, TWarning, TGlobber>(input: RunCheckInput<TManifest, TWarning, TGlobber>): Promise<RunScanCliResult> {
   const { finalOutPath, serialized, outcome, projectArg, readFile, log, errorLog, config } = input;
-  let existing: string | null;
+  let existing: Maybe<string>;
   try {
     existing = await readFile(finalOutPath);
   } catch {

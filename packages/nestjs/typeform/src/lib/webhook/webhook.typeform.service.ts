@@ -32,7 +32,7 @@ export class TypeformWebhookService {
     if (!result.valid) {
       this.logger.warn('Received invalid Typeform event.', req);
     } else {
-      await this.updateForTypeformEvent(result.event as TypeformWebhookEvent);
+      await this.updateForTypeformEvent(result.event);
     }
   }
 

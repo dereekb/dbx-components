@@ -60,10 +60,10 @@ function applyFieldsFilter(model: FirebaseModel, filter: readonly string[]): Fil
  * longName appears in the filter set. Mutates `matched` so the outer
  * `applyFieldsFilter` can report unmatched-filter entries correctly.
  *
- * @param subObject - the sub-object structure to scan
- * @param filterSet - lowercased filter entries the caller is looking for
- * @param matched - mutable set of filter entries that have matched somewhere
- * @returns `true` when the sub-object (or any nested sub-object) matches at least one filter entry
+ * @param subObject - The sub-object structure to scan.
+ * @param filterSet - Lowercased filter entries the caller is looking for.
+ * @param matched - Mutable set of filter entries that have matched somewhere.
+ * @returns `true` when the sub-object (or any nested sub-object) matches at least one filter entry.
  */
 function subObjectMatches(subObject: FirebaseSubObject, filterSet: ReadonlySet<string>, matched: Set<string>): boolean {
   let any = false;
@@ -120,10 +120,10 @@ const STORE_SHAPE_LABEL: Readonly<Record<FirebaseModelStoreShape, string>> = {
  * Renders a single Firebase model entry as markdown — identity, store shape,
  * source path, and a fields table whose width depends on `depth`.
  *
- * @param model - the registry entry to render
- * @param depth - `'brief'` for fields-only or `'full'` for type/converter columns + enums
- * @param options - optional knobs (e.g. `fields` filter)
- * @returns the markdown body the tool emits as content
+ * @param model - The registry entry to render.
+ * @param depth - `'brief'` for fields-only or `'full'` for type/converter columns + enums.
+ * @param options - Optional knobs (e.g. `fields` filter)
+ * @returns The markdown body the tool emits as content.
  */
 export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDepth, options?: FormatFirebaseModelEntryOptions): string {
   const identityLine = model.parentIdentityConst ? `\`${model.identityConst}\` — subcollection of \`${model.parentIdentityConst}\`` : `\`${model.identityConst}\` — root collection`;
@@ -193,14 +193,11 @@ function appendFieldsTable(lines: string[], fields: readonly FirebaseField[], de
  * the persisted key and the human-readable expansion without leaving
  * the table.
  *
- * @param field - the field to label
- * @returns the label text (without the surrounding backticks)
+ * @param field - The field to label.
+ * @returns The label text (without the surrounding backticks)
  */
 function formatFieldLabel(field: FirebaseField): string {
-  if (field.longName && field.longName !== field.name) {
-    return `${field.name} (${field.longName})`;
-  }
-  return field.name;
+  return field.longName && field.longName !== field.name ? `${field.name} (${field.longName})` : field.name;
 }
 
 function appendSubObjectSections(lines: string[], fields: readonly FirebaseField[], depth: LookupDepth): void {
@@ -273,8 +270,8 @@ function describeField(field: FirebaseField): string {
  * the extractor (heuristic or `@dbxModelArchetype` JSDoc override). Returns
  * `undefined` when no archetype is tagged so the caller can skip the line.
  *
- * @param model - the registry entry to inspect
- * @returns the human-readable label, or `undefined` for un-archetype models
+ * @param model - The registry entry to inspect.
+ * @returns The human-readable label, or `undefined` for un-archetype models.
  */
 function formatArchetypeLabel(model: FirebaseModel): string | undefined {
   let result: string | undefined;
@@ -438,8 +435,8 @@ function prunedEnumsForFields(model: FirebaseModel, kept: readonly FirebaseField
  * package. Each package gets a `### \`pkg\`` heading and its models
  * sorted alphabetically.
  *
- * @param downstream - downstream-only entries (already filtered for scope)
- * @returns the markdown lines to splice into the catalog body
+ * @param downstream - Downstream-only entries (already filtered for scope)
+ * @returns The markdown lines to splice into the catalog body.
  */
 function formatDownstreamSection(downstream: readonly FirebaseModel[]): readonly string[] {
   const lines: string[] = ['', '## Downstream models', ''];
@@ -469,9 +466,9 @@ function formatDownstreamSection(downstream: readonly FirebaseModel[]): readonly
  * by source package. Used as the response body of `dbx_model_lookup`
  * when the caller asks for the full catalog rather than a single entry.
  *
- * @param models - the entries to list, typically the upstream registry
- * @param downstream - downstream-only entries grouped per package (optional)
- * @returns the markdown body the tool emits as content
+ * @param models - The entries to list, typically the upstream registry.
+ * @param downstream - Downstream-only entries grouped per package (optional)
+ * @returns The markdown body the tool emits as content.
  */
 export function formatFirebaseModelCatalog(models: readonly FirebaseModel[], downstream?: readonly FirebaseModel[]): string {
   const roots = models.filter((m) => !m.parentIdentityConst);

@@ -73,8 +73,8 @@ export type MapboxFlyToOptions = Parameters<MapboxGl.Map['flyTo']>[0];
 export type MapboxSetStyleOptions = Parameters<MapboxGl.Map['setStyle']>[1];
 
 export interface MapboxStyleConfig {
-  style: MapboxGl.StyleSpecification | string;
-  options?: MapboxSetStyleOptions;
+  readonly style: MapboxGl.StyleSpecification | string;
+  readonly options?: MapboxSetStyleOptions;
 }
 
 export interface MapboxFitPositions {

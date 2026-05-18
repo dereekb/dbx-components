@@ -1,5 +1,5 @@
 import { type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
-import { type MultiValueMapBuilder, multiValueMapBuilder, readKeysToMap, readMultipleKeysToMap, keyValueMapFactory, multiKeyValueMapFactory } from './map.key';
+import { type MultiValueMapBuilder, mapsHaveSameKeys, multiValueMapBuilder, readKeysToMap, readMultipleKeysToMap, keyValueMapFactory, multiKeyValueMapFactory } from './map.key';
 
 describe('readKeysToMap()', () => {
   it('should create a map.', () => {
@@ -55,11 +55,11 @@ describe('keyValueMapFactory()', () => {
     const values = [1, undefined, 3, null, 5];
     const readKeyWithNulls: ReadKeyFunction<number | null | undefined, string> = (x) => (x != null ? String(x) : x);
     const factory = keyValueMapFactory(readKeyWithNulls);
-    const result = factory(values.filter((x) => x != null) as number[]); // factory expects T[], ensure correct type
+    const result = factory(values.filter((x) => x != null)); // factory expects T[], ensure correct type
 
     // test values manually to ensure it is ignoring the values with null/undefined keys
     const testFactory = keyValueMapFactory<number | null | undefined, string>(readKeyWithNulls);
-    const testResult = testFactory(values as (number | null | undefined)[]);
+    const testResult = testFactory(values);
 
     expect(testResult.size).toBe(3);
     expect(testResult.get('1')).toBe(1);
@@ -140,5 +140,56 @@ describe('multiValueMapBuilder()', () => {
         });
       });
     });
+  });
+});
+
+describe('mapsHaveSameKeys()', () => {
+  it('should return true for two empty maps', () => {
+    expect(mapsHaveSameKeys(new Map(), new Map())).toBe(true);
+  });
+
+  it('should return true when both maps have the same keys with the same values', () => {
+    const a = new Map<string, number>([
+      ['x', 1],
+      ['y', 2]
+    ]);
+    const b = new Map<string, number>([
+      ['x', 1],
+      ['y', 2]
+    ]);
+    expect(mapsHaveSameKeys(a, b)).toBe(true);
+  });
+
+  it('should return true when both maps have the same keys regardless of values', () => {
+    const a = new Map<string, number>([
+      ['x', 1],
+      ['y', 2]
+    ]);
+    const b = new Map<string, number>([
+      ['x', 100],
+      ['y', 200]
+    ]);
+    expect(mapsHaveSameKeys(a, b)).toBe(true);
+  });
+
+  it('should return false when sizes differ', () => {
+    const a = new Map<string, number>([['x', 1]]);
+    const b = new Map<string, number>([
+      ['x', 1],
+      ['y', 2]
+    ]);
+    expect(mapsHaveSameKeys(a, b)).toBe(false);
+  });
+
+  it('should return false when sizes match but keys differ', () => {
+    const a = new Map<string, number>([
+      ['x', 1],
+      ['y', 2]
+    ]);
+    const b = new Map<string, number>([
+      ['x', 1],
+      ['z', 2]
+    ]);
+    expect(mapsHaveSameKeys(a, b)).toBe(false);
   });
 });

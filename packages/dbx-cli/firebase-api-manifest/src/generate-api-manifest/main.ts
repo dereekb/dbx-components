@@ -207,9 +207,15 @@ async function main(): Promise<void> {
 }
 
 function compareEntries(a: CollectedEntry, b: CollectedEntry): number {
-  if (a.entry.model !== b.entry.model) return a.entry.model.localeCompare(b.entry.model);
-  if (a.entry.verb !== b.entry.verb) return a.entry.verb.localeCompare(b.entry.verb);
-  return (a.entry.specifier ?? '').localeCompare(b.entry.specifier ?? '');
+  let result: number;
+  if (a.entry.model !== b.entry.model) {
+    result = a.entry.model.localeCompare(b.entry.model);
+  } else if (a.entry.verb === b.entry.verb) {
+    result = (a.entry.specifier ?? '').localeCompare(b.entry.specifier ?? '');
+  } else {
+    result = a.entry.verb.localeCompare(b.entry.verb);
+  }
+  return result;
 }
 
 function ensureOutputDir(outputDir: string): void {

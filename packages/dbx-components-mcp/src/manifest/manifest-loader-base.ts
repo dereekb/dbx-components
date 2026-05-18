@@ -14,6 +14,7 @@
  * meaningful duplication.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile } from 'node:fs/promises';
 import { type } from 'arktype';
 
@@ -114,7 +115,7 @@ const SUPPORTED_VERSION = 1;
 // MARK: Source loading
 type ParseRawResult = { readonly kind: 'parsed'; readonly value: unknown } | { readonly kind: 'error'; readonly error: string };
 
-function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<string | null> {
+function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<Maybe<string>> {
   return readFile(path).then(
     (raw) => raw,
     () => null
@@ -122,39 +123,49 @@ function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<string | 
 }
 
 function tryParseRaw(raw: string): ParseRawResult {
+  let result: ParseRawResult;
   try {
-    return { kind: 'parsed', value: JSON.parse(raw) };
+    result = { kind: 'parsed', value: JSON.parse(raw) };
   } catch (err) {
-    return { kind: 'error', error: err instanceof Error ? err.message : String(err) };
+    result = { kind: 'error', error: err instanceof Error ? err.message : String(err) };
   }
+  return result;
 }
 
 function validateParsedManifest<TManifest>(path: string, parsed: unknown, schema: (parsed: unknown) => TManifest | type.errors): LoadFromSourceResult<TManifest> {
-  const candidateVersion = (parsed as { readonly version?: unknown } | null | undefined)?.version;
-  if (candidateVersion !== SUPPORTED_VERSION) {
-    return { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
+  const candidateVersion = (parsed as Maybe<{ readonly version?: unknown }>)?.version;
+  let result: LoadFromSourceResult<TManifest>;
+
+  if (candidateVersion === SUPPORTED_VERSION) {
+    const validated = schema(parsed);
+    if (validated instanceof type.errors) {
+      result = { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
+    } else {
+      result = { kind: 'success', manifest: validated };
+    }
+  } else {
+    result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
   }
 
-  const validated = schema(parsed);
-  if (validated instanceof type.errors) {
-    return { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
-  }
-
-  return { kind: 'success', manifest: validated };
+  return result;
 }
 
 async function loadFromSource<TManifest>(source: ManifestSource, readFile: ManifestReadFile, schema: (parsed: unknown) => TManifest | type.errors): Promise<LoadFromSourceResult<TManifest>> {
   const raw = await tryReadRaw(source.path, readFile);
+  let result: LoadFromSourceResult<TManifest>;
+
   if (raw === null) {
-    return { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
+    result = { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
+  } else {
+    const parseResult = tryParseRaw(raw);
+    if (parseResult.kind === 'error') {
+      result = { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseResult.error } };
+    } else {
+      result = validateParsedManifest(source.path, parseResult.value, schema);
+    }
   }
 
-  const parseResult = tryParseRaw(raw);
-  if (parseResult.kind === 'error') {
-    return { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseResult.error } };
-  }
-
-  return validateParsedManifest(source.path, parseResult.value, schema);
+  return result;
 }
 
 function isStrictSource(source: ManifestSource): boolean {
@@ -265,10 +276,10 @@ function buildIndexMap<TEntry>(mergedEntries: ReadonlyMap<string, TEntry>, extra
  * Domain wrappers translate the generic result fields into their named
  * shape (e.g. `indexMap` → `roleIndex`).
  *
- * @param input - manifest sources plus an optional injected `readFile`
- * @param config - per-domain schema + key extractors + name for error messages
- * @returns merged entries, generic index map, deterministic warnings, and the list of source labels that loaded
- * @throws when a strict source fails or when zero manifests load successfully
+ * @param input - Manifest sources plus an optional injected `readFile`
+ * @param config - Per-domain schema + key extractors + name for error messages.
+ * @returns Merged entries, generic index map, deterministic warnings, and the list of source labels that loaded.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadManifestsBase<TManifest extends BaseManifest<TEntry>, TEntry>(input: ManifestLoaderInput, config: ManifestLoaderConfig<TManifest, TEntry>): Promise<ManifestLoaderBaseResult<TEntry>> {
   const { sources, readFile = DEFAULT_READ_FILE } = input;

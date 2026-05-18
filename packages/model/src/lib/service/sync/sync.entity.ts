@@ -50,8 +50,8 @@ export type SyncEntityCommonTypeIdPairFactory = (input: SyncEntityCommonTypeIdPa
  * If the input is a string, it is treated as a commonId and paired with the given commonType.
  * If the input is already a pair, it is returned as-is.
  *
- * @param commonType - the default common type to use when input is a plain string
- * @returns a factory function that produces SyncEntityCommonTypeIdPair instances
+ * @param commonType - The default common type to use when input is a plain string.
+ * @returns A factory function that produces SyncEntityCommonTypeIdPair instances.
  *
  * @example
  * ```typescript
@@ -59,6 +59,7 @@ export type SyncEntityCommonTypeIdPairFactory = (input: SyncEntityCommonTypeIdPa
  * factory('abc123');  // { commonType: 'user', commonId: 'abc123' }
  * factory({ commonType: 'user', commonId: 'abc123' });  // passed through as-is
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function syncEntityCommonTypeIdPairFactory(commonType: SyncEntityCommonType): SyncEntityCommonTypeIdPairFactory {
@@ -117,8 +118,8 @@ export type SyncEntityFactory = FactoryWithRequiredInput<SyncEntity, SyncEntityC
  * The factory attaches the configured source info and optionally transforms the commonId into an entity id
  * using the provided idFactory (defaults to identity).
  *
- * @param config - source info and optional id factory
- * @returns a factory that creates SyncEntity instances
+ * @param config - Source info and optional id factory.
+ * @returns A factory that creates SyncEntity instances.
  *
  * @example
  * ```typescript
@@ -129,6 +130,7 @@ export type SyncEntityFactory = FactoryWithRequiredInput<SyncEntity, SyncEntityC
  * const entity = factory({ commonType: 'user', commonId: 'abc123' });
  * // entity.id === 'abc123', entity.sourceInfo.id === 'api'
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function syncEntityFactory(config: SyncEntityFactoryConfig): SyncEntityFactory {

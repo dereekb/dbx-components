@@ -24,8 +24,8 @@ export type DbxActionWorkOrWorkProgress = boolean | DbxActionWorkProgress;
 /**
  * Creates a working progress value from an array of working progress values.
  *
- * @param workOrWorkProgress The array of working progress values to use.
- * @param progressPercent An optional progress percent value to use if the working progress is a boolean.
+ * @param workOrWorkProgress - The array of working progress values to use.
+ * @param progressPercent - An optional progress percent value to use if the working progress is a boolean.
  * @returns The working progress value.
  */
 export function dbxActionWorkProgress(workOrWorkProgress: Maybe<DbxActionWorkOrWorkProgress>[], progressPercent?: Maybe<DbxActionWorkProgress>) {
@@ -161,17 +161,23 @@ export const DEFAULT_ACTION_DISABLED_KEY = 'dbx_action_disabled';
  * @returns `true` if the state is idle-like, `false` if the action is in-progress.
  */
 export function isIdleActionState(actionState: DbxActionState): boolean {
+  let result: boolean;
+
   switch (actionState) {
     case DbxActionState.IDLE:
     case DbxActionState.DISABLED:
     case DbxActionState.REJECTED:
     case DbxActionState.RESOLVED:
-      return true;
+      result = true;
+      break;
     case DbxActionState.TRIGGERED:
     case DbxActionState.VALUE_READY:
     case DbxActionState.WORKING:
-      return false;
+      result = false;
+      break;
   }
+
+  return result;
 }
 
 /**

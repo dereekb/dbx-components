@@ -151,8 +151,9 @@ interface DistributeAndWritePagesInput<T> {
  * Internal helper: distribute items into per-page buckets, write each page,
  * delete pages that no longer have items, and write the updated index.
  *
- * @param input - Distribution and write context
- * @returns A promise that resolves when all writes have been queued onto the supplied context
+ * @param input - Distribution and write context.
+ * @returns Resolves once every page write is queued onto the supplied context.
+ * @throws {Error} When `distributionScheme.distribute()` returns a page id that is not declared in the scheme.
  */
 function distributeAndWritePages<T>(input: DistributeAndWritePagesInput<T>): Promise<void> {
   const { items, distributionScheme, maxItemsPerPage, itemConverter, existingPageIds, collectionRef, indexRef, firestoreAccessorDriver, context } = input;
@@ -240,8 +241,8 @@ interface ReadPageInput<T> {
  * Internal helper: read a single page and return its items.
  * Missing pages are silently treated as empty.
  *
- * @param input - Page-read context
- * @returns The items present on the requested page, or an empty array if the page does not exist
+ * @param input - Page-read context.
+ * @returns The items present on the requested page, or an empty array if the page does not exist.
  */
 async function readPageInto<T>(input: ReadPageInput<T>): Promise<T[]> {
   const { pageId, collectionRef, firestoreAccessorDriver, context, itemConverter } = input;
@@ -249,13 +250,16 @@ async function readPageInto<T>(input: ReadPageInput<T>): Promise<T[]> {
   const accessor: FirestoreDocumentDataAccessor<unknown> = context.accessorFactory.accessorFor(pageRef);
   const snapshot = await accessor.get();
   const data = snapshot.data() as Maybe<PagedItemPageData<T>>;
+  let result: T[];
 
-  if (!data) {
-    return [];
+  if (data) {
+    const items = data.i ?? [];
+    result = itemConverter ? items.map((raw) => itemConverter.fromData(raw as object)) : items;
+  } else {
+    result = [];
   }
 
-  const items = data.i ?? [];
-  return itemConverter ? items.map((raw) => itemConverter.fromData(raw as object)) : items;
+  return result;
 }
 
 // MARK: Extension
@@ -266,8 +270,8 @@ async function readPageInto<T>(input: ReadPageInput<T>): Promise<T[]> {
  * {@link FirestoreContextReference} from its base — both are provided by
  * {@link makeFirestoreCollectionWithParent}.
  *
- * @param x - The collection object to extend
- * @param config - Paged accessor configuration
+ * @param x - The collection object to extend.
+ * @param config - Paged accessor configuration.
  */
 export function extendFirestoreCollectionWithPagedItemAccessor<X extends FirestorePagedItemAccessor<T> & CollectionReferenceRef<unknown> & FirestoreContextReference, T>(x: Building<X>, config: PagedItemAccessorExtensionConfig<T>): void {
   const { indexDocumentId, distributionScheme, maxItemsPerPage, itemConverter } = config;
@@ -289,33 +293,40 @@ export function extendFirestoreCollectionWithPagedItemAccessor<X extends Firesto
   }
 
   async function loadItemsForPagesWithContext(pageIds: string[], context: FirestoreDocumentContext<unknown>): Promise<T[]> {
+    let result: T[];
+
     if (pageIds.length === 0) {
-      return [];
+      result = [];
+    } else {
+      const pageReads = pageIds.map((pageId) =>
+        readPageInto<T>({
+          pageId,
+          collectionRef,
+          firestoreAccessorDriver,
+          context,
+          itemConverter
+        })
+      );
+
+      const pageResults = await Promise.all(pageReads);
+      result = pageResults.flat();
     }
 
-    const pageReads = pageIds.map((pageId) =>
-      readPageInto<T>({
-        pageId,
-        collectionRef,
-        firestoreAccessorDriver,
-        context,
-        itemConverter
-      })
-    );
-
-    const pageResults = await Promise.all(pageReads);
-    return pageResults.flat();
+    return result;
   }
 
   async function loadAllItems(): Promise<T[]> {
     const index = await loadIndex();
+    let result: T[];
 
-    if (!index) {
-      return [];
+    if (index) {
+      const context = firestoreAccessorDriver.defaultContextFactory<unknown>();
+      result = await loadItemsForPagesWithContext(index.p, context);
+    } else {
+      result = [];
     }
 
-    const context = firestoreAccessorDriver.defaultContextFactory<unknown>();
-    return loadItemsForPagesWithContext(index.p, context);
+    return result;
   }
 
   async function loadItemsForPages(pageIds: string[]): Promise<T[]> {

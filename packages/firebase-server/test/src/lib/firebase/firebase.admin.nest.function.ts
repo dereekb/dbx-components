@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- file intentionally provides gen 1 wrap helpers for NestJS-hosted test fixtures */
 import { type Getter } from '@dereekb/util';
 import { type BuildTestsWithContextFunction, type TestContextFactory, type TestContextFixture } from '@dereekb/util/test';
 import { firebaseAdminNestContextWithFixture, type FirebaseAdminNestTestConfig, type FirebaseAdminNestTestContext, FirebaseAdminNestTestContextFixture, FirebaseAdminNestTestContextInstance } from './firebase.admin.nest';

@@ -20,9 +20,9 @@ export interface ValidateAppNotificationsOptions {
  * file rules over a single snapshot so the listing and validation reports stay
  * in sync.
  *
- * @param inspection - the prepared component + api file snapshot
- * @param options - workspace directories used to relativise emitted paths
- * @returns the aggregated validation outcome with counts and violations
+ * @param inspection - The prepared component + api file snapshot.
+ * @param options - Workspace directories used to relativise emitted paths.
+ * @returns The aggregated validation outcome with counts and violations.
  */
 export function validateAppNotifications(inspection: AppNotificationsInspection, options: ValidateAppNotificationsOptions): ValidationResult {
   const extracted = extractAppNotifications(inspection);

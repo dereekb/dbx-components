@@ -107,8 +107,8 @@ const FALSE_TAG_VALUES: ReadonlySet<string> = new Set(['false', 'no', 'required'
  * `@dbxModelSnapshotField` JSDoc marker. Order is stable: source files in
  * the order ts-morph reports them, declarations within a file in source order.
  *
- * @param input - the ts-morph project to scan
- * @returns the extracted entries plus any non-fatal warnings
+ * @param input - The ts-morph project to scan.
+ * @returns The extracted entries plus any non-fatal warnings.
  */
 export function extractModelSnapshotFieldEntries(input: ExtractModelSnapshotFieldEntriesInput): ExtractModelSnapshotFieldEntriesResult {
   const { project } = input;
@@ -518,8 +518,8 @@ function buildSignature(input: BuildSignatureInput): string {
  * `firestore-passthrough-field`); already-kebab inputs pass through
  * unchanged.
  *
- * @param name - the export identifier
- * @returns the kebab-case slug
+ * @param name - The export identifier.
+ * @returns The kebab-case slug.
  */
 export function toKebabCase(name: string): string {
   if (name.length === 0) {
@@ -537,8 +537,8 @@ export function toKebabCase(name: string): string {
  * Heuristic that flags `optionalFirestore*` exports as optional. The user
  * can override this with `@dbxModelSnapshotFieldOptional false`.
  *
- * @param name - the export identifier
- * @returns true when the name signals an optional variant
+ * @param name - The export identifier.
+ * @returns True when the name signals an optional variant.
  */
 export function deriveOptionalFromName(name: string): boolean {
   return name.startsWith('optional') || name.startsWith('OPTIONAL_');
@@ -556,8 +556,8 @@ const PROJECT_PREFIX_PATTERNS = ['/src/lib/', '/src/'];
  * `model-key`, `geo`, …) — the path-derived default is a fallback so an
  * untagged scan still produces a usable manifest.
  *
- * @param filePath - the absolute or repo-relative path to the source file
- * @returns the derived category slug, or `'misc'` when no folder is found
+ * @param filePath - The absolute or repo-relative path to the source file.
+ * @returns The derived category slug, or `'misc'` when no folder is found.
  */
 export function deriveCategoryFromPath(filePath: string): string {
   const normalised = filePath.replaceAll('\\', '/');

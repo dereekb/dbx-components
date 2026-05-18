@@ -4,7 +4,7 @@ import { PROFILE_BIO_MAX_LENGTH, PROFILE_USERNAME_MAX_LENGTH } from 'demo-fireba
 /**
  * Returns the default set of editable profile form fields (currently just the bio).
  *
- * @returns array of forge field configurations for profile editing
+ * @returns Array of forge field configurations for profile editing.
  */
 export function profileFields() {
   return [profileBioField()];
@@ -13,8 +13,8 @@ export function profileFields() {
 /**
  * Returns the username field with async availability validation.
  *
- * @param config - provides the async validator to check username availability
- * @returns array containing the configured username field
+ * @param config - Provides the async validator to check username availability.
+ * @returns Array containing the configured username field.
  */
 export function profileUsernameFields(config: ProfileUsernameFieldConfig) {
   return [profileUsernameField(config)];
@@ -23,22 +23,22 @@ export function profileUsernameFields(config: ProfileUsernameFieldConfig) {
 /**
  * Creates a text area field for the user biography, enforcing the max length constraint.
  *
- * @returns a forge text area field configuration for the profile bio
+ * @returns A forge text area field configuration for the profile bio.
  */
 export function profileBioField() {
   return dbxForgeTextAreaField({ key: 'bio', label: 'Biography', maxLength: PROFILE_BIO_MAX_LENGTH, required: true });
 }
 
 export interface ProfileUsernameFieldConfig {
-  checkUsernameIsAvailable: DbxForgeFieldValueIsAvailableCheckFn<string>;
+  readonly checkUsernameIsAvailable: DbxForgeFieldValueIsAvailableCheckFn<string>;
 }
 
 /**
  * Creates a username text field with throttled async availability checking.
  * Shows an error message when the username is already taken.
  *
- * @param config - provides the async validator to check username availability
- * @returns a forge text-is-available field configuration for the username
+ * @param config - Provides the async validator to check username availability.
+ * @returns A forge text-is-available field configuration for the username.
  */
 export function profileUsernameField(config: ProfileUsernameFieldConfig) {
   return dbxForgeTextIsAvailableField({

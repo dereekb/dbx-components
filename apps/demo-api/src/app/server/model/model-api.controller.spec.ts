@@ -13,7 +13,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         makeNestContext: mapDemoApiNestContext
       };
 
-      dispatchService = new ModelApiCallModelDispatchService(config, f.instance.nest as any);
+      dispatchService = new ModelApiCallModelDispatchService(config, f.instance.nest);
     });
 
     describe('getApiDetails()', () => {
@@ -251,7 +251,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         (mockDispatchService.dispatch as any).mockResolvedValue({ modelKeys: ['abc'] });
         const req = _mockRequest('POST', { uid: 'test-user' });
 
-        const result = await controller.directDispatch({ call: 'create', modelType: 'guestbook', data: {} } as any, req);
+        const result = await controller.directDispatch({ call: 'create', modelType: 'guestbook', data: {} }, req);
         expect(result).toEqual({ modelKeys: ['abc'] });
       });
 

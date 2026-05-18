@@ -66,6 +66,11 @@ export interface BlockingFunctionBuilder<E extends object, O> {
  * The attached `__handler` enables direct handler invocation in tests without triggering
  * the full Firebase blocking function infrastructure.
  *
+ * @param blockingFunctionBuilder - The Firebase blocking function constructor (e.g., `beforeUserCreated`).
+ * @param handler - The handler logic to execute on each event.
+ * @param opts - Optional {@link BlockingOptions} passed to the builder.
+ * @returns A {@link BlockingFunctionWithHandler} with the handler accessible via `__handler`.
+ *
  * @example
  * ```ts
  * const fn = makeBlockingFunctionWithHandler(
@@ -76,10 +81,6 @@ export interface BlockingFunctionBuilder<E extends object, O> {
  * // In tests: fn.__handler(mockEvent)
  * ```
  *
- * @param blockingFunctionBuilder - The Firebase blocking function constructor (e.g., `beforeUserCreated`).
- * @param handler - The handler logic to execute on each event.
- * @param opts - Optional {@link BlockingOptions} passed to the builder.
- * @returns A {@link BlockingFunctionWithHandler} with the handler accessible via `__handler`.
  * @__NO_SIDE_EFFECTS__
  */
 export function makeBlockingFunctionWithHandler<E extends object, O>(blockingFunctionBuilder: BlockingFunctionBuilder<E, O>, handler: BlockingFunctionHandler<E, O>, opts?: Maybe<BlockingOptions>): BlockingFunctionWithHandler<E, O> {
@@ -134,6 +135,9 @@ export type BlockingFunctionHandlerWithNestContextFactory<N> = <E extends object
  * The returned factory lazily resolves the NestJS application on each invocation, injects the
  * typed context into the event, and delegates to the handler.
  *
+ * @param makeNestContext - Factory that creates the typed context from the NestJS application context.
+ * @returns A factory for creating nest-context-aware blocking function handlers.
+ *
  * @example
  * ```ts
  * const factory = blockingFunctionHandlerWithNestContextFactory(makeMyContext);
@@ -145,8 +149,6 @@ export type BlockingFunctionHandlerWithNestContextFactory<N> = <E extends object
  * );
  * ```
  *
- * @param makeNestContext - Factory that creates the typed context from the NestJS application context.
- * @returns A factory for creating nest-context-aware blocking function handlers.
  * @__NO_SIDE_EFFECTS__
  */
 export function blockingFunctionHandlerWithNestContextFactory<N>(makeNestContext: MakeNestContext<N>): BlockingFunctionHandlerWithNestContextFactory<N> {

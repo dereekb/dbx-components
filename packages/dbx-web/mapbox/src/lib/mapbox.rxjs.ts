@@ -72,17 +72,17 @@ export function filterByMapboxViewportBound<T>(config: FilterMapboxBoundConfig<T
               const cachedValue = cache.get(cacheKey);
               let bound: LatLngBound;
 
-              if (!cachedValue) {
+              if (cachedValue) {
+                bound = cachedValue;
+              } else {
                 bound = viewportBoundFunction({ center: centerLatLng, zoom: zoomStep });
                 cache.set(cacheKey, bound);
-              } else {
-                bound = cachedValue;
               }
 
               return {
                 value,
                 bound
-              } as MapboxViewportBoundFunctionItem<T>;
+              };
             });
           }),
           combineLatestWith(boundDecisionObs),

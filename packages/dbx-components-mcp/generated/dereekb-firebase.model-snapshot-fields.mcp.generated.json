@@ -19,11 +19,11 @@
         {
           "name": "config",
           "type": "FirestoreFieldConfig<V, D>",
-          "description": "- Configuration for the Firestore field",
+          "description": "- Configuration for the Firestore field.",
           "optional": false
         }
       ],
-      "returns": "A configured mapping between model and Firestore data",
+      "returns": "A configured mapping between model and Firestore data.",
       "tags": [
         "base",
         "custom",
@@ -76,7 +76,7 @@
       "description": "Creates a pass-through field mapping configuration that doesn't transform the data.\n\nThis is useful when the model field and Firestore field are the same type and\nno transformation is needed in either direction.",
       "optional": false,
       "params": [],
-      "returns": "A field mapping configuration that passes values through unchanged",
+      "returns": "A field mapping configuration that passes values through unchanged.",
       "tags": [
         "passthrough",
         "identity",
@@ -106,11 +106,11 @@
         {
           "name": "config",
           "type": "FirestoreStringConfig<S>",
-          "description": "- Configuration for the string field",
+          "description": "- Configuration for the string field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for string values",
+      "returns": "A field mapping configuration for string values.",
       "tags": [
         "string",
         "text",
@@ -140,11 +140,11 @@
         {
           "name": "config",
           "type": "OptionalFirestoreString<S>",
-          "description": "- Configuration for the optional string field",
+          "description": "- Configuration for the optional string field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for optional string values",
+      "returns": "A field mapping configuration for optional string values.",
       "tags": [
         "string",
         "text",
@@ -174,11 +174,11 @@
         {
           "name": "config",
           "type": "FirestoreEnumConfig<S>",
-          "description": "- Configuration for the enum field",
+          "description": "- Configuration for the enum field.",
           "optional": false
         }
       ],
-      "returns": "A field mapping configuration for enum values",
+      "returns": "A field mapping configuration for enum values.",
       "tags": [
         "enum",
         "string",
@@ -207,11 +207,11 @@
         {
           "name": "config",
           "type": "OptionalFirestoreEnumConfig<S>",
-          "description": "- Configuration for the optional enum field",
+          "description": "- Configuration for the optional enum field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for optional enum values",
+      "returns": "A field mapping configuration for optional enum values.",
       "tags": [
         "enum",
         "optional",
@@ -237,7 +237,7 @@
       "description": "Creates a field mapping configuration for Firestore UID fields.",
       "optional": false,
       "params": [],
-      "returns": "A field mapping configuration for Firebase Auth user IDs",
+      "returns": "A field mapping configuration for Firebase Auth user IDs.",
       "tags": [
         "uid",
         "user",
@@ -266,7 +266,7 @@
       "description": "Creates a field mapping configuration for optional Firestore UID fields.",
       "optional": true,
       "params": [],
-      "returns": "A field mapping configuration for optional Firebase Auth user IDs",
+      "returns": "A field mapping configuration for optional Firebase Auth user IDs.",
       "tags": [
         "uid",
         "user",
@@ -349,11 +349,11 @@
         {
           "name": "config",
           "type": "FirestoreDateFieldConfig",
-          "description": "- Configuration for the date field",
+          "description": "- Configuration for the date field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for Date values",
+      "returns": "A field mapping configuration for Date values.",
       "tags": [
         "date",
         "time",
@@ -383,11 +383,11 @@
         {
           "name": "config",
           "type": "OptionalFirestoreDateFieldConfig",
-          "description": "- Configuration for the optional date field",
+          "description": "- Configuration for the optional date field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for optional Date values",
+      "returns": "A field mapping configuration for optional Date values.",
       "tags": [
         "date",
         "time",
@@ -416,11 +416,11 @@
         {
           "name": "config",
           "type": "FirestoreDateNumberFieldConfig",
-          "description": "- Configuration including custom Date-to-number conversion functions",
+          "description": "- Configuration including custom Date-to-number conversion functions.",
           "optional": false
         }
       ],
-      "returns": "A field mapping configuration for Date values stored as numbers",
+      "returns": "A field mapping configuration for Date values stored as numbers.",
       "tags": [
         "date",
         "number",
@@ -448,11 +448,11 @@
         {
           "name": "config",
           "type": "OptionalFirestoreDateNumberFieldConfig",
-          "description": "- Configuration for the optional date field",
+          "description": "- Configuration for the optional date field.",
           "optional": false
         }
       ],
-      "returns": "A field mapping configuration for optional Date values",
+      "returns": "A field mapping configuration for optional Date values.",
       "tags": [
         "date",
         "number",
@@ -480,11 +480,11 @@
         {
           "name": "config",
           "type": "FirestoreBooleanFieldConfig",
-          "description": "- Configuration for the boolean field",
+          "description": "- Configuration for the boolean field.",
           "optional": false
         }
       ],
-      "returns": "A field mapping configuration for boolean values",
+      "returns": "A field mapping configuration for boolean values.",
       "tags": [
         "boolean",
         "flag",
@@ -512,11 +512,11 @@
         {
           "name": "config",
           "type": "OptionalFirestoreBooleanFieldConfig",
-          "description": "- Configuration for the optional boolean field",
+          "description": "- Configuration for the optional boolean field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for optional boolean values",
+      "returns": "A field mapping configuration for optional boolean values.",
       "tags": [
         "boolean",
         "flag",
@@ -546,11 +546,11 @@
         {
           "name": "config",
           "type": "FirestoreNumberConfig<N>",
-          "description": "- Configuration for the number field",
+          "description": "- Configuration for the number field.",
           "optional": false
         }
       ],
-      "returns": "A field mapping configuration for number values",
+      "returns": "A field mapping configuration for number values.",
       "tags": [
         "number",
         "integer",
@@ -579,11 +579,11 @@
         {
           "name": "config",
           "type": "OptionalFirestoreNumberFieldConfig<N>",
-          "description": "- Configuration for the optional number field",
+          "description": "- Configuration for the optional number field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for optional number values",
+      "returns": "A field mapping configuration for optional number values.",
       "tags": [
         "number",
         "integer",
@@ -612,11 +612,11 @@
         {
           "name": "config",
           "type": "FirestoreArrayFieldConfig<T>",
-          "description": "- Configuration for the array field",
+          "description": "- Configuration for the array field.",
           "optional": false
         }
       ],
-      "returns": "A field mapping configuration for array values",
+      "returns": "A field mapping configuration for array values.",
       "tags": [
         "array",
         "list",
@@ -645,11 +645,11 @@
         {
           "name": "config",
           "type": "OptionalFirestoreArrayFieldConfig<T>",
-          "description": "- Configuration for the optional array field",
+          "description": "- Configuration for the optional array field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for optional array values",
+      "returns": "A field mapping configuration for optional array values.",
       "tags": [
         "array",
         "list",
@@ -679,11 +679,11 @@
         {
           "name": "config",
           "type": "FirestoreEnumArrayFieldConfig<S>",
-          "description": "- Configuration for the enum array field",
+          "description": "- Configuration for the enum array field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for enum array values",
+      "returns": "A field mapping configuration for enum array values.",
       "tags": [
         "array",
         "enum",
@@ -763,11 +763,11 @@
         {
           "name": "config",
           "type": "FirestoreMapFieldConfig<T, K>",
-          "description": "- Configuration for the map field",
+          "description": "- Configuration for the map field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for map values",
+      "returns": "A field mapping configuration for map values.",
       "tags": [
         "map",
         "record",
@@ -793,11 +793,11 @@
         {
           "name": "config",
           "type": "FirestoreArrayMapFieldConfig<T, K>",
-          "description": "- Configuration for the array map field",
+          "description": "- Configuration for the array map field.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for map values with array entries",
+      "returns": "A field mapping configuration for map values with array entries.",
       "tags": [
         "map",
         "array",
@@ -822,11 +822,11 @@
         {
           "name": "config",
           "type": "FirestoreObjectArrayFieldConfig<T, O>",
-          "description": "- Configuration including element conversions and optional filtering/sorting",
+          "description": "- Configuration including element conversions and optional filtering/sorting.",
           "optional": false
         }
       ],
-      "returns": "A field mapping configuration for object array values",
+      "returns": "A field mapping configuration for object array values.",
       "tags": [
         "array",
         "object",
@@ -856,11 +856,11 @@
         {
           "name": "config",
           "type": "FirestoreSubObjectFieldConfig<T, O>",
-          "description": "- Configuration including nested field conversions",
+          "description": "- Configuration including nested field conversions.",
           "optional": false
         }
       ],
-      "returns": "A field mapping configuration with both field config and map functions",
+      "returns": "A field mapping configuration with both field config and map functions.",
       "tags": [
         "object",
         "nested",
@@ -890,11 +890,11 @@
         {
           "name": "config",
           "type": "FirestoreLatLngStringConfig",
-          "description": "- Optional precision and default value configuration",
+          "description": "- Optional precision and default value configuration.",
           "optional": true
         }
       ],
-      "returns": "A field mapping configuration for LatLngString values",
+      "returns": "A field mapping configuration for LatLngString values.",
       "tags": [
         "geo",
         "latlng",

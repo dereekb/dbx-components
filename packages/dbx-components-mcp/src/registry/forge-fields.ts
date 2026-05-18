@@ -62,8 +62,9 @@ export interface ForgeFieldRegistry {
 /**
  * Builds a {@link ForgeFieldRegistry} from a loader result.
  *
- * @param loaded - the merged registry returned by `loadForgeFieldManifests`
- * @returns a domain-friendly read API over the merged entries
+ * @param loaded - The merged registry returned by `loadForgeFieldManifests`
+ * @returns A domain-friendly read API over the merged entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createForgeFieldRegistry(loaded: LoadForgeFieldManifestsResult): ForgeFieldRegistry {
@@ -77,10 +78,11 @@ export function createForgeFieldRegistry(loaded: LoadForgeFieldManifestsResult):
  * pipeline, and by snapshot tests comparing the merged registry against the
  * legacy hand-written `FORM_FIELDS` constant.
  *
- * @param input - the entries plus the source labels to advertise
- * @param input.entries - the full entry list
- * @param input.loadedSources - source labels reported via `registry.loadedSources`
- * @returns a domain-friendly read API over the supplied entries
+ * @param input - The entries plus the source labels to advertise.
+ * @param input.entries - The full entry list.
+ * @param input.loadedSources - Source labels reported via `registry.loadedSources`
+ * @returns A domain-friendly read API over the supplied entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createForgeFieldRegistryFromEntries(input: { readonly entries: readonly FormFieldInfo[]; readonly loadedSources: readonly string[] }): ForgeFieldRegistry {
@@ -154,8 +156,8 @@ export const EMPTY_FORGE_FIELD_REGISTRY: ForgeFieldRegistry = createForgeFieldRe
  * the right combination is present per tier and falls back to safe defaults
  * when a generator emits a partially-populated entry.
  *
- * @param entry - the manifest entry to convert
- * @returns the matching FormFieldInfo
+ * @param entry - The manifest entry to convert.
+ * @returns The matching FormFieldInfo.
  */
 export function toFormFieldInfo(entry: ForgeFieldEntry): FormFieldInfo {
   const config = toConfigRecord(entry.properties);

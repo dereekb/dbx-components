@@ -27,18 +27,23 @@ export type ZohoCrmConfigApiUrlInput = ZohoCrmApiUrlKey | ZohoCrmApiUrl;
 /**
  * Resolves a CRM API URL input to its full base URL. Well-known keys ('sandbox', 'production') map to their respective Zoho CRM endpoints; custom URLs pass through unchanged.
  *
- * @param input - A well-known environment key or a custom CRM API URL
- * @returns The resolved full Zoho CRM API base URL
+ * @param input - A well-known environment key or a custom CRM API URL.
+ * @returns The resolved full Zoho CRM API base URL.
  */
 export function zohoCrmConfigApiUrl(input: ZohoCrmConfigApiUrlInput): ZohoApiUrl {
+  let result: ZohoApiUrl;
   switch (input) {
     case 'sandbox':
-      return 'https://crmsandbox.zoho.com/crm';
+      result = 'https://crmsandbox.zoho.com/crm';
+      break;
     case 'production':
-      return 'https://www.zohoapis.com/crm';
+      result = 'https://www.zohoapis.com/crm';
+      break;
     default:
-      return input;
+      result = input;
+      break;
   }
+  return result;
 }
 
 /**
@@ -76,6 +81,7 @@ export interface ZohoCrmContextRef {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use ZohoCrmFetchFactoryParams instead.
  */

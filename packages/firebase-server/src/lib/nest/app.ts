@@ -84,11 +84,6 @@ export interface NestFirebaseServerEnvironmentConfig {
 
 // COMPAT: Deprecated alias for NestFirebaseServerEnvironmentConfig.
 /**
- * @deprecated Use NestFirebaseServerEnvironmentConfig instead.
- */
-export type NestServerEnvironmentConfig = NestFirebaseServerEnvironmentConfig;
-
-/**
  * Creates a {@link NestServerInstance} that manages NestJS server lifecycle within Firebase Cloud Functions.
  *
  * The returned instance caches servers by Firebase app name, so calling `initNestServer` multiple
@@ -148,7 +143,7 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
       const nest: Promise<INestApplication> = createNestServer(server).catch((err) => {
         console.error('Nest failed startup.', err);
         throw err;
-      }) as Promise<INestApplication>;
+      });
 
       nestServer = { server, nest: makeGetter(nest) };
       serversCache.set(appName, nestServer);
@@ -180,3 +175,9 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
     removeNestServer
   };
 }
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated Use NestFirebaseServerEnvironmentConfig instead.
+ */
+export type NestServerEnvironmentConfig = NestFirebaseServerEnvironmentConfig;

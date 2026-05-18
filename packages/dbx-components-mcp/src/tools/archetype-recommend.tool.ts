@@ -135,9 +135,9 @@ function parseArgs(raw: unknown): ParsedRecommendArgs {
     throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedRecommendArgs = {
-    questionnaire: parsed.questionnaire as ArchetypeQuestionnaire,
+    questionnaire: parsed.questionnaire,
     archetypeHint: parsed.archetypeHint,
-    scope: (parsed.scope ?? 'all') as RecommendScope,
+    scope: parsed.scope ?? 'all',
     componentDirs: parsed.componentDirs,
     maxResults: parsed.maxResults ?? DEFAULT_MAX_RESULTS,
     peerCount: parsed.peerCount ?? DEFAULT_PEER_COUNT,
@@ -191,61 +191,64 @@ const EMPTY_DOWNSTREAM_CATALOG: DownstreamCatalog = {
 /**
  * Handler for `dbx_model_archetype_recommend`.
  *
- * @param rawArgs - the unvalidated tool arguments
- * @returns the rendered recommendation, or an error result on validation failure
+ * @param rawArgs - The unvalidated tool arguments.
+ * @returns The rendered recommendation, or an error result on validation failure.
  */
 export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedRecommendArgs;
+  let result: ToolResult;
   try {
-    args = parseArgs(rawArgs);
+    const args = parseArgs(rawArgs);
+    const cwd = process.cwd();
+    const pathCheck = ensureComponentDirsValid(args.componentDirs, cwd);
+    if (pathCheck === undefined) {
+      const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
+      const scoreResult = scoreCatalog(args.questionnaire);
+      const top = pickTopArchetype(scoreResult, args.archetypeHint);
+
+      const axes = deriveAxes(top.archetype, args.questionnaire);
+      const axisAlternatives = deriveAxisAlternatives(top.archetype, args.questionnaire);
+      const addons = args.includeFieldLevelAddons ? deriveAddons(args.questionnaire) : [];
+      const peers = buildPeerPool({
+        archetype: top.archetype,
+        axes,
+        scope: args.scope,
+        downstream,
+        limit: args.peerCount
+      });
+
+      const alternatives: ScoredArchetype[] = scoreResult.ranked.filter((r) => r.archetype.slug !== top.archetype.slug).slice(0, args.maxResults);
+
+      const scopeLabel = `scope=${args.scope}`;
+      const text = formatRecommendation({
+        top,
+        tied: scoreResult.tied,
+        axes,
+        axisAlternatives,
+        addons,
+        peers,
+        alternatives,
+        scopeLabel,
+        shortCircuited: scoreResult.shortCircuited && top.archetype.slug === scoreResult.top.archetype.slug
+      });
+      result = { content: [{ type: 'text', text }] };
+    } else {
+      result = pathCheck;
+    }
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    result = toolError(err instanceof Error ? err.message : String(err));
   }
-
-  const cwd = process.cwd();
-  const pathCheck = ensureComponentDirsValid(args.componentDirs, cwd);
-  if (pathCheck !== undefined) return pathCheck;
-
-  const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
-  const scoreResult = scoreCatalog(args.questionnaire);
-  const top = pickTopArchetype(scoreResult, args.archetypeHint);
-
-  const axes = deriveAxes(top.archetype, args.questionnaire);
-  const axisAlternatives = deriveAxisAlternatives(top.archetype, args.questionnaire);
-  const addons = args.includeFieldLevelAddons ? deriveAddons(args.questionnaire) : [];
-  const peers = buildPeerPool({
-    archetype: top.archetype,
-    axes,
-    scope: args.scope,
-    downstream,
-    limit: args.peerCount
-  });
-
-  const alternatives: ScoredArchetype[] = scoreResult.ranked.filter((r) => r.archetype.slug !== top.archetype.slug).slice(0, args.maxResults);
-
-  const scopeLabel = `scope=${args.scope}`;
-  const text = formatRecommendation({
-    top,
-    tied: scoreResult.tied,
-    axes,
-    axisAlternatives,
-    addons,
-    peers,
-    alternatives,
-    scopeLabel,
-    shortCircuited: scoreResult.shortCircuited && top.archetype.slug === scoreResult.top.archetype.slug
-  });
-  return { content: [{ type: 'text', text }] };
+  return result;
 }
 
 function ensureComponentDirsValid(componentDirs: readonly string[] | undefined, cwd: string): ToolResult | undefined {
   if (componentDirs === undefined) return undefined;
+  let result: ToolResult | undefined;
   try {
     for (const dir of componentDirs) ensurePathInsideCwd(dir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    result = toolError(err instanceof Error ? err.message : String(err));
   }
-  return undefined;
+  return result;
 }
 
 function pickTopArchetype(scoreResult: ReturnType<typeof scoreCatalog>, archetypeHint: string | undefined): ScoredArchetype {
@@ -256,7 +259,7 @@ function pickTopArchetype(scoreResult: ReturnType<typeof scoreCatalog>, archetyp
   return hinted ?? scoreResult.top;
 }
 
-export const archetypeRecommendTool: DbxTool = {
+export const ARCHETYPE_RECOMMEND_TOOL: DbxTool = {
   definition: DBX_MODEL_ARCHETYPE_RECOMMEND_TOOL,
   run: runArchetypeRecommend
 };

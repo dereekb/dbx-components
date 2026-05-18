@@ -29,7 +29,7 @@ describe('performAsyncTasks()', () => {
 
       const tasksToRun = 4;
       const input = range(0, tasksToRun);
-      const nonConcurrentTaskKeyFactory = (x: number) => (isEvenNumber(x) ? 'even' : 'odd') as 'even' | 'odd';
+      const nonConcurrentTaskKeyFactory = (x: number) => (isEvenNumber(x) ? 'even' : 'odd');
 
       let wasRunningConcurrentTask = false;
       const currentTaskKeys = new Set<'even' | 'odd'>();
@@ -270,7 +270,7 @@ describe('performTasksInParallelFunction()', () => {
 
         void performTasksInParallel(input, {
           maxParallelTasks: tasksToRun, // set to try to run then all in parallel
-          nonConcurrentTaskKeyFactory: (x) => (isEvenNumber(x) ? 'even' : 'odd') as 'even' | 'odd', // based on if they're even or odd
+          nonConcurrentTaskKeyFactory: (x) => (isEvenNumber(x) ? 'even' : 'odd'), // based on if they're even or odd
           taskFactory: async (x, _, keys) => {
             const key = keys[0];
 

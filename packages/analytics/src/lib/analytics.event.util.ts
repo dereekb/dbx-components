@@ -41,6 +41,10 @@ export interface AsAnalyticsEventDataConfig {
  * 2. Filters out any values that are not `string`, `number`, or `boolean`
  * 3. Filters out non-finite numbers (`NaN`, `Infinity`, `-Infinity`)
  *
+ * @param input - The object to convert. If nullish, returns an empty object.
+ * @param config - Optional configuration for flattening behavior.
+ * @returns A new {@link AnalyticsEventData} object containing only valid analytics values.
+ *
  * @example
  * ```ts
  * asAnalyticsEventData({ action: 'click', user: { age: 25, name: 'Jo' }, tags: [1, 2] });
@@ -49,10 +53,6 @@ export interface AsAnalyticsEventDataConfig {
  * asAnalyticsEventData({ a: 'ok', b: { nested: 1 } }, { flattenObjects: false });
  * // { a: 'ok' }
  * ```
- *
- * @param input - The object to convert. If nullish, returns an empty object.
- * @param config - Optional configuration for flattening behavior.
- * @returns A new {@link AnalyticsEventData} object containing only valid analytics values.
  */
 export function asAnalyticsEventData(input: Maybe<Record<string, unknown>>, config?: AsAnalyticsEventDataConfig): AnalyticsEventData {
   const result: Record<string, string | number | boolean> = {};

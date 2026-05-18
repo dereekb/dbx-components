@@ -15,6 +15,7 @@
 
 import type { CrudEntry, CrudExtraction, ModelExtraction } from '@dereekb/dbx-cli/manifest-extract';
 
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- intentional facade so the firebase-api-manifest pipeline can keep importing extractor types by their local name
 export type { CrudEntry, CrudEntryDocField, CrudExtraction } from '@dereekb/dbx-cli/manifest-extract';
 
 export interface FunctionsGroup {

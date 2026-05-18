@@ -59,21 +59,32 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.apiDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const apiAbs = resolve(cwd, parsed.apiDir);
-  let report;
-  try {
-    report = await listAppServerActions(apiAbs, { apiDir: parsed.apiDir });
-  } catch (err) {
-    return toolError(`Failed to list server actions: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError === undefined) {
+    const apiAbs = resolve(cwd, parsed.apiDir);
+    let report;
+    let listError: string | undefined;
+    try {
+      report = await listAppServerActions(apiAbs, { apiDir: parsed.apiDir });
+    } catch (err) {
+      listError = `Failed to list server actions: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (listError !== undefined || report === undefined) {
+      result = toolError(listError ?? 'Failed to list server actions.');
+    } else {
+      const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+      result = { content: [{ type: 'text', text }] };
+    }
+  } else {
+    result = toolError(ensureError);
   }
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-export const serverActionsListAppTool: DbxTool = { definition: TOOL, run };
+export const SERVER_ACTIONS_LIST_APP_TOOL: DbxTool = { definition: TOOL, run };

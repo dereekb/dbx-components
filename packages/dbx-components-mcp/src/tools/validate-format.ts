@@ -46,8 +46,8 @@ export interface ViolationLine<TCode extends string = string> {
 /**
  * Renders the headline pass/fail label.
  *
- * @param errorCount - number of error-severity violations
- * @param warningCount - number of warning-severity violations
+ * @param errorCount - Number of error-severity violations.
+ * @param warningCount - Number of warning-severity violations.
  * @returns `FAIL` when there are any errors, `PASS WITH WARNINGS` when only warnings, otherwise `PASS`
  */
 export function formatStatusLabel(errorCount: number, warningCount: number): string {
@@ -67,9 +67,9 @@ export function formatStatusLabel(errorCount: number, warningCount: number): str
  * order within each bucket. Used by per-domain formatters that emit one
  * markdown section per file / folder / side / model.
  *
- * @param violations - the violations to bucket
- * @param keyFn - extracts the bucket key for a single violation
- * @returns insertion-ordered map of key → violations
+ * @param violations - The violations to bucket.
+ * @param keyFn - Extracts the bucket key for a single violation.
+ * @returns Insertion-ordered map of key → violations.
  */
 export function groupViolations<TViolation, TKey>(violations: readonly TViolation[], keyFn: (violation: TViolation) => TKey): Map<TKey, readonly TViolation[]> {
   const out = new Map<TKey, TViolation[]>();
@@ -86,7 +86,7 @@ export function groupViolations<TViolation, TKey>(violations: readonly TViolatio
 }
 
 /**
- * Renders a single violation as the canonical markdown bullet:
+ * Renders a single violation as the canonical markdown bullet:.
  *
  *   - **[ERROR] CODE**`<locationPart>` — `<message>`
  *
@@ -94,9 +94,9 @@ export function groupViolations<TViolation, TKey>(violations: readonly TViolatio
  * format (e.g. `' _(line 12)_'` or `' _(file: foo.ts)_'`); pass an empty
  * string when the violation has no location detail.
  *
- * @param violation - the violation to format
- * @param locationPart - pre-formatted location suffix appended after the code (may be empty)
- * @returns the markdown bullet line
+ * @param violation - The violation to format.
+ * @param locationPart - Pre-formatted location suffix appended after the code (may be empty)
+ * @returns The markdown bullet line.
  */
 export function formatViolationLine(violation: ViolationLine, locationPart: string): string {
   const label = violation.severity === 'error' ? 'ERROR' : 'WARN';
@@ -110,8 +110,8 @@ export function formatViolationLine(violation: ViolationLine, locationPart: stri
  * appended after a violation line. Three sub-bullets max: `Fix:` (always
  * when present), `Template:` (when set), and `See also:` (when set).
  *
- * @param hint - the remediation hint pulled from the rule catalog
- * @returns the indented bullet block, or an empty string when there's nothing to render
+ * @param hint - The remediation hint pulled from the rule catalog.
+ * @returns The indented bullet block, or an empty string when there's nothing to render.
  */
 function formatRemediationBlock(hint: RemediationHint): string {
   const lines: string[] = [];
@@ -169,10 +169,10 @@ export interface FolderGroupedResult<TViolation extends FolderGroupedViolation =
  * (model, system) share this loop instead of hand-rolling identical
  * iteration in each `index.ts`.
  *
- * @param config - shared call config
- * @param config.inspections - the prepared folder inspections
- * @param config.runRules - the per-domain rules to apply to each inspection
- * @returns the aggregated validation outcome
+ * @param config - Shared call config.
+ * @param config.inspections - The prepared folder inspections.
+ * @param config.runRules - The per-domain rules to apply to each inspection.
+ * @returns The aggregated validation outcome.
  */
 export function aggregateFolderRules<TInspection, TViolation extends FolderGroupedViolation>(config: { readonly inspections: readonly TInspection[]; readonly runRules: (inspection: TInspection) => readonly TViolation[] }): FolderGroupedResult<TViolation> {
   const { inspections, runRules } = config;
@@ -203,10 +203,10 @@ export function aggregateFolderRules<TInspection, TViolation extends FolderGroup
  * used by `dbx_validate_model_folder` and `dbx_system_m_validate_folder`.
  * Violations are grouped by folder so callers see one section per directory.
  *
- * @param config - shared call config
- * @param config.title - heading text (e.g. `'Model folder validation'`)
- * @param config.result - the aggregated validator outcome
- * @returns the markdown report
+ * @param config - Shared call config.
+ * @param config.title - Heading text (e.g. `'Model folder validation'`)
+ * @param config.result - The aggregated validator outcome.
+ * @returns The markdown report.
  */
 export function formatFolderGroupedResult<TResult extends FolderGroupedResult>(config: { readonly title: string; readonly result: TResult }): string {
   const { title, result } = config;
@@ -342,14 +342,14 @@ export interface FileGroupedResult {
  * Violations are grouped by file, then by a caller-supplied inner key
  * (model name / rule group).
  *
- * @param config - shared call config
- * @param config.title - heading text (e.g. `'Firebase model validation'`)
- * @param config.summary - first-paragraph summary excluding the trailing
+ * @param config - Shared call config.
+ * @param config.title - Heading text (e.g. `'Firebase model validation'`)
+ * @param config.summary - First-paragraph summary excluding the trailing
  *   error/warning counts (e.g. `'Checked 5 file(s), 12 model(s).'`); the
  *   counts are appended automatically.
- * @param config.innerKey - extracts the secondary grouping key from each violation
- * @param config.result - the aggregated validator outcome
- * @returns the markdown report
+ * @param config.innerKey - Extracts the secondary grouping key from each violation.
+ * @param config.result - The aggregated validator outcome.
+ * @returns The markdown report.
  */
 export function formatFileGroupedResult<TResult extends FileGroupedResult>(config: { readonly title: string; readonly summary: string; readonly innerKey: (violation: TResult['violations'][number]) => string; readonly result: TResult }): string {
   const { title, summary, innerKey, result } = config;

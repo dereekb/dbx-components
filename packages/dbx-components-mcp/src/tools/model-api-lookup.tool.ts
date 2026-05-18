@@ -69,34 +69,46 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError('Provide either `model` (PascalCase model name) or `identity` (the `<camelName>Identity` const string).');
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
     if (parsed.apiDir) {
       ensurePathInsideCwd(parsed.apiDir, cwd);
     }
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  const apiAbs = parsed.apiDir ? resolve(cwd, parsed.apiDir) : undefined;
-  const modelFilter = parsed.model ?? identityToModel(parsed.identity as string);
-  let report;
-  try {
-    report = await lookupModelApi({
-      componentAbs,
-      componentDir: parsed.componentDir,
-      apiAbs,
-      apiDir: parsed.apiDir,
-      modelFilter
-    });
-  } catch (err) {
-    return toolError(`Failed to lookup model API entries: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError === undefined) {
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    const apiAbs = parsed.apiDir ? resolve(cwd, parsed.apiDir) : undefined;
+    const modelFilter = parsed.model ?? identityToModel(parsed.identity as string);
+    let report;
+    let lookupError: string | undefined;
+    try {
+      report = await lookupModelApi({
+        componentAbs,
+        componentDir: parsed.componentDir,
+        apiAbs,
+        apiDir: parsed.apiDir,
+        modelFilter
+      });
+    } catch (err) {
+      lookupError = `Failed to lookup model API entries: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (lookupError === undefined && report !== undefined) {
+      if (report.sourceFile) {
+        const text = parsed.format === 'json' ? formatLookupAsJson(report) : formatLookupAsMarkdown(report);
+        result = { content: [{ type: 'text', text }] };
+      } else {
+        result = toolError(`No matching \`<model>.api.ts\` source found in \`${parsed.componentDir}\` for filter \`${modelFilter}\`.`);
+      }
+    } else {
+      result = toolError(lookupError ?? 'Failed to lookup model API entries.');
+    }
+  } else {
+    result = toolError(ensureError);
   }
-  if (!report.sourceFile) {
-    return toolError(`No matching \`<model>.api.ts\` source found in \`${parsed.componentDir}\` for filter \`${modelFilter}\`.`);
-  }
-  const text = parsed.format === 'json' ? formatLookupAsJson(report) : formatLookupAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
@@ -104,8 +116,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
  * Maps a `firestoreModelIdentity` const name to the bare PascalCase model
  * name. Strips the trailing `Identity` suffix (case-insensitive).
  *
- * @param identity - the identity const string (e.g. `profileIdentity`)
- * @returns the bare PascalCase model name (e.g. `Profile`)
+ * @param identity - The identity const string (e.g. `profileIdentity`)
+ * @returns The bare PascalCase model name (e.g. `Profile`)
  */
 function identityToModel(identity: string): string {
   const stem = identity.replace(/Identity$/i, '');
@@ -113,4 +125,4 @@ function identityToModel(identity: string): string {
   return stem.charAt(0).toUpperCase() + stem.slice(1);
 }
 
-export const modelApiLookupTool: DbxTool = { definition: TOOL, run };
+export const MODEL_API_LOOKUP_TOOL: DbxTool = { definition: TOOL, run };

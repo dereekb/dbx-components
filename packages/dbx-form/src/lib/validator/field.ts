@@ -9,22 +9,22 @@ export interface FieldValuesAreEqualValidatorConfig<T extends object = object> {
    *
    * If none are defined, then all fields from the control are matched.
    */
-  keysFilter?: (keyof T)[];
+  readonly keysFilter?: (keyof T)[];
 
   /**
    * Full filter to use, if defined.
    */
-  valuesFilter?: KeyValueTupleFilter<T>;
+  readonly valuesFilter?: KeyValueTupleFilter<T>;
 
   /**
    * Optional equivalence comparator.
    */
-  isEqual?: EqualityComparatorFunction<T>;
+  readonly isEqual?: EqualityComparatorFunction<T>;
 
   /**
    * Custom message for this validator.
    */
-  message?: string;
+  readonly message?: string;
 }
 
 /**

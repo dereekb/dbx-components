@@ -54,12 +54,14 @@ export type StreamDocsUnsubscribeFunction = () => void;
  * and RxJS's reactive streams, allowing for seamless integration of Firestore
  * query results into reactive applications.
  *
- * @template O - The type of output value to emit in the Observable
  * @param callOnSnapshot - Function that sets up the Firestore snapshot listener
- *                          and returns an unsubscribe function
- * @returns An Observable that emits values from the Firestore snapshot listener
+ *                          and returns an unsubscribe function.
+ * @returns An Observable that emits values from the Firestore snapshot listener.
+ *
+ * @template O - The type of output value to emit in the Observable
  *
  * @example
+ * ```ts
  * // Create a reactive stream from a Firestore query
  * const usersStream = streamFromOnSnapshot(params => {
  *   return collection(firestore, 'users')
@@ -70,6 +72,7 @@ export type StreamDocsUnsubscribeFunction = () => void;
  *       () => params.complete()
  *     );
  * });
+ * ```
  */
 export function streamFromOnSnapshot<O>(callOnSnapshot: (params: StreamDocsWithOnSnapshotFunctionParams<O>) => StreamDocsUnsubscribeFunction): Observable<O> {
   return new Observable<O>((subscriber) => {
@@ -90,9 +93,10 @@ export function streamFromOnSnapshot<O>(callOnSnapshot: (params: StreamDocsWithO
  * DocumentReference objects, making it easier to work with the references
  * to the documents that matched a query.
  *
+ * @param snapshots - The query snapshot containing document snapshots.
+ * @returns Array of document references extracted from the snapshot.
+ *
  * @template T - The document data type
- * @param snapshots - The query snapshot containing document snapshots
- * @returns Array of document references extracted from the snapshot
  */
 export function documentReferencesFromSnapshot<T>(snapshots: QuerySnapshot<T>): DocumentReference<T>[] {
   return snapshots.docs.map((x) => x.ref);
@@ -106,8 +110,8 @@ export function documentReferencesFromSnapshot<T>(snapshots: QuerySnapshot<T>): 
  * which uniquely identifies the document within Firestore. This is useful
  * for tracking documents across queries and preventing duplicate processing.
  *
- * @param snapshot - The document snapshot to extract the key from
- * @returns The document's full path as a FirestoreModelKey
+ * @param snapshot - The document snapshot to extract the key from.
+ * @returns The document's full path as a FirestoreModelKey.
  */
 export function readFirestoreModelKeyFromDocumentSnapshot(snapshot: DocumentSnapshot<any>): FirestoreModelKey {
   return snapshot.ref.path;

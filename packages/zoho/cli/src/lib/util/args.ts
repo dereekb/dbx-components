@@ -1,6 +1,7 @@
 import { type MultiplePagesOptions, withMultiplePages } from '@dereekb/dbx-cli';
 import type { Argv } from 'yargs';
 
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade so zoho-cli consumers keep the existing import surface
 export { DUMP_MERGE_MODES, DUMP_OUTPUT_MODES, MULTIPLE_PAGES_OUTPUT_MODES, type DumpMergeMode, type DumpOutputMode, type MultiplePagesOptions, type MultiplePagesOutputMode, withMultiplePages } from '@dereekb/dbx-cli';
 
 export interface PaginationOptions {
@@ -30,7 +31,7 @@ export interface DeskPaginationOptions {
  * @returns The same builder, typed with {@link DeskPaginationOptions} and {@link MultiplePagesOptions}.
  */
 export function withDeskPagination<T>(yargs: Argv<T>): Argv<T & DeskPaginationOptions & MultiplePagesOptions> {
-  return withMultiplePages(yargs.option('from', { type: 'number', default: 1, describe: 'Start index (1-based)' }).option('limit', { type: 'number', default: 25, describe: 'Max records (max 50)' })) as unknown as Argv<T & DeskPaginationOptions & MultiplePagesOptions>;
+  return withMultiplePages(yargs.option('from', { type: 'number', default: 1, describe: 'Start index (1-based)' }).option('limit', { type: 'number', default: 25, describe: 'Max records (max 50)' }));
 }
 
 export interface ModuleOptions {
@@ -49,7 +50,7 @@ export function withModule<T>(yargs: Argv<T>): Argv<T & ModuleOptions> {
     type: 'string',
     demandOption: true,
     describe: 'Zoho module name (e.g. Candidates, Contacts, Leads)'
-  }) as unknown as Argv<T & ModuleOptions>;
+  });
 }
 
 export interface RecordIdOptions {
@@ -67,7 +68,7 @@ export function withRecordId<T>(yargs: Argv<T>): Argv<T & RecordIdOptions> {
     type: 'string',
     demandOption: true,
     describe: 'Record ID'
-  }) as unknown as Argv<T & RecordIdOptions>;
+  });
 }
 
 export interface FieldsOptions {
@@ -86,7 +87,7 @@ export function withFields<T>(yargs: Argv<T>, required = false): Argv<T & Fields
     type: 'string',
     demandOption: required,
     describe: 'Comma-separated field names to return'
-  }) as unknown as Argv<T & FieldsOptions>;
+  });
 }
 
 export interface SortOptions {
@@ -101,5 +102,5 @@ export interface SortOptions {
  * @returns The same builder, typed with {@link SortOptions}.
  */
 export function withSort<T>(yargs: Argv<T>): Argv<T & SortOptions> {
-  return yargs.option('sort-by', { type: 'string', describe: 'Field to sort by' }).option('sort-order', { type: 'string', choices: ['asc', 'desc'] as const, describe: 'Sort direction' }) as unknown as Argv<T & SortOptions>;
+  return yargs.option('sort-by', { type: 'string', describe: 'Field to sort by' }).option('sort-order', { type: 'string', choices: ['asc', 'desc'] as const, describe: 'Sort direction' });
 }

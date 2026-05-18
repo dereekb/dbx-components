@@ -44,8 +44,8 @@ export type ZohoDeskGetTicketThreadsFunction = (input: ZohoDeskGetTicketThreadsI
  *
  * Retrieves a paginated list of conversation threads (emails, replies, notes) for a ticket.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves threads for a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves threads for a ticket.
  */
 export function zohoDeskGetTicketThreads(context: ZohoDeskContext): ZohoDeskGetTicketThreadsFunction {
   return (input: ZohoDeskGetTicketThreadsInput) => {
@@ -73,8 +73,8 @@ export type ZohoDeskGetTicketThreadByIdFunction = (input: ZohoDeskGetTicketThrea
 /**
  * Creates a {@link ZohoDeskGetTicketThreadByIdFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves a single thread
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves a single thread.
  */
 export function zohoDeskGetTicketThreadById(context: ZohoDeskContext): ZohoDeskGetTicketThreadByIdFunction {
   return (input: ZohoDeskGetTicketThreadByIdInput) => {
@@ -95,8 +95,9 @@ export type ZohoDeskGetTicketThreadsPageFactory = (input: ZohoDeskGetTicketThrea
 /**
  * Creates a {@link ZohoDeskGetTicketThreadsPageFactory} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Page factory for iterating over thread results
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Page factory for iterating over thread results.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetTicketThreadsPageFactory(context: ZohoDeskContext): ZohoDeskGetTicketThreadsPageFactory {

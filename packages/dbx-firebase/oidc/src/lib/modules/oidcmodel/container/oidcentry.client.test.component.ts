@@ -20,8 +20,8 @@ import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuratio
 @Component({
   selector: 'dbx-firebase-oidc-entry-client-test',
   template: `
-    @if (formConfig()) {
-      <dbx-firebase-oidc-client-test-forge-form [dbxFormSource]="formTemplate$" dbxFormSourceMode="always" [config]="formConfig()" (dbxFormValueChange)="onFormValueChange($event)"></dbx-firebase-oidc-client-test-forge-form>
+    @if (formConfigSignal()) {
+      <dbx-firebase-oidc-client-test-forge-form [dbxFormSource]="formTemplate$" dbxFormSourceMode="always" [config]="formConfigSignal()" (dbxFormValueChange)="onFormValueChange($event)"></dbx-firebase-oidc-client-test-forge-form>
       <dbx-content-pit class="dbx-block dbx-mb3" [rounded]="true">
         <dbx-detail-block class="dbx-pb4" icon="link" header="Authorization URL">
           @if (authorizationUrlSignal()) {
@@ -60,8 +60,8 @@ export class DbxFirebaseOidcEntryClientTestComponent {
    */
   readonly oidcAuthorizationEndpointApiPath = input<Maybe<string>>(undefined);
 
-  readonly resolvedAvailableScopes = computed<OidcScopeDetails[]>(() => this.availableScopes() ?? this.oidcConfigService.availableScopes);
-  readonly resolvedAuthorizationEndpointPath = computed<string>(() => this.oidcAuthorizationEndpointApiPath() ?? this.oidcConfigService.oidcAuthorizationEndpointApiPath);
+  readonly resolvedAvailableScopesSignal = computed<OidcScopeDetails[]>(() => this.availableScopes() ?? this.oidcConfigService.availableScopes);
+  readonly resolvedAuthorizationEndpointPathSignal = computed<string>(() => this.oidcAuthorizationEndpointApiPath() ?? this.oidcConfigService.oidcAuthorizationEndpointApiPath);
 
   // MARK: Derived Store Data
   readonly redirectUrisSignal = toSignal(this.oidcEntryDocumentStore.data$.pipe(map((data) => (data.payload as OidcEntryOAuthClientPayloadData)?.redirect_uris ?? [])));
@@ -69,9 +69,9 @@ export class DbxFirebaseOidcEntryClientTestComponent {
   readonly clientIdSignal = toSignal(this.oidcEntryDocumentStore.data$.pipe(map((data) => (data.payload as OidcEntryOAuthClientPayloadData)?.client_id)));
 
   // MARK: Form Config
-  readonly formConfig = computed<OidcEntryClientTestFormFieldsConfig>(() => {
+  readonly formConfigSignal = computed<OidcEntryClientTestFormFieldsConfig>(() => {
     const redirectUris = this.redirectUrisSignal() ?? [];
-    const availableScopes = this.resolvedAvailableScopes();
+    const availableScopes = this.resolvedAvailableScopesSignal();
 
     console.log('formConfig:', { redirectUris, availableScopes });
 
@@ -104,28 +104,32 @@ export class DbxFirebaseOidcEntryClientTestComponent {
   readonly formValue = signal<Maybe<DbxFirebaseOidcModelClientTestFormValue>>(undefined);
 
   readonly authorizationUrlSignal = computed(() => {
+    const resolvedAuthorizationEndpointPath = this.resolvedAuthorizationEndpointPathSignal();
     const clientId = this.clientIdSignal();
     const codeChallenge = this.codeChallenge();
     const state = this.state();
     const nonce = this.nonce();
     const formValue = this.formValue();
+    let result: Maybe<string>;
 
     if (!clientId || !codeChallenge || !formValue?.redirect_uri) {
-      return undefined;
+      result = undefined;
+    } else {
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        redirect_uri: formValue.redirect_uri,
+        scope: (formValue.scopes ?? ['openid']).join(' '),
+        state,
+        nonce,
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256'
+      });
+
+      result = `${resolvedAuthorizationEndpointPath}?${params.toString()}`;
     }
 
-    const params = new URLSearchParams({
-      response_type: 'code',
-      client_id: clientId,
-      redirect_uri: formValue.redirect_uri,
-      scope: (formValue.scopes ?? ['openid']).join(' '),
-      state,
-      nonce,
-      code_challenge: codeChallenge,
-      code_challenge_method: 'S256'
-    });
-
-    return `${this.resolvedAuthorizationEndpointPath()}?${params.toString()}`;
+    return result;
   });
 
   constructor() {

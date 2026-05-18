@@ -28,8 +28,8 @@ export const DEFAULT_ZOHO_DESK_API_RATE_LIMIT = 200;
  * Desk uses a credit-based system with `X-Rate-Limit-Remaining-v3` and `Retry-After` (in seconds)
  * rather than the `X-RATELIMIT-*` headers used by CRM/Recruit/Sign.
  *
- * @param headers - HTTP response headers from a Zoho Desk API call
- * @returns Parsed rate limit details, or null if the Desk rate limit headers are absent
+ * @param headers - HTTP response headers from a Zoho Desk API call.
+ * @returns Parsed rate limit details, or null if the Desk rate limit headers are absent.
  */
 export function zohoDeskRateLimitDetailsReader(headers: Headers): Maybe<ZohoRateLimitResponseDetails> {
   const remainingHeader = headers.get(ZOHO_DESK_RATE_LIMIT_REMAINING_HEADER);
@@ -64,7 +64,7 @@ export function zohoDeskRateLimitDetailsReader(headers: Headers): Maybe<ZohoRate
  * with the Desk-specific header reader. Unlike CRM, Desk does not provide a total limit header,
  * so the configured `maxRateLimit` (defaulting to {@link DEFAULT_ZOHO_DESK_API_RATE_LIMIT}) is used throughout.
  *
- * @param config - Optional configuration for rate limit, reset period, and 429 handling
+ * @param config - Optional configuration for rate limit, reset period, and 429 handling.
  * @returns A rate-limited fetch handler with the underlying rate limiter accessible via `_rateLimiter`
  */
 export function zohoDeskRateLimitedFetchHandler(config?: Maybe<ZohoRateLimitedFetchHandlerConfig>): ZohoRateLimitedFetchHandler {

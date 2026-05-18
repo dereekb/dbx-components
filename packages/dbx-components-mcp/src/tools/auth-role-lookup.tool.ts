@@ -26,7 +26,7 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import type { AuthClaimInfo, AuthRegistry, AuthRoleInfo, AuthScopeInfo } from '../registry/auth-runtime.js';
-import { toolError, type DbxTool } from './types.js';
+import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DBX_AUTH_ROLE_LOOKUP_TOOL: Tool = {
   name: 'dbx_auth_role_lookup',
@@ -69,34 +69,35 @@ export function createAuthRoleLookupTool(input: CreateAuthRoleLookupToolInput): 
     definition: DBX_AUTH_ROLE_LOOKUP_TOOL,
     run(rawArgs) {
       const parsed = RoleArgsType(rawArgs);
+      let result: ToolResult;
       if (parsed instanceof type.errors) {
-        return toolError(`Invalid arguments: ${parsed.summary}`);
-      }
-      const { topic, tag, model, verb, depth = 'full' } = parsed;
-      let text: string;
+        result = toolError(`Invalid arguments: ${parsed.summary}`);
+      } else {
+        const { topic, tag, model, verb, depth = 'full' } = parsed;
+        let text: string | undefined;
 
-      if (model !== undefined || verb !== undefined) {
-        text = formatReverseLookup({ registry, model, verb });
-      } else if (tag !== undefined && tag.length > 0) {
-        text = formatTagLookup(registry, tag, depth);
-      } else if (topic !== undefined && topic.length > 0) {
-        const normalized = topic.trim();
-        if (isCatalogTopic(normalized)) {
-          text = formatCatalog(registry.roles);
-        } else {
-          const role = registry.findRole(normalized);
-          if (role === undefined) {
-            text = formatNotFound(normalized, registry.roles);
+        if (model !== undefined || verb !== undefined) {
+          text = formatReverseLookup({ registry, model, verb });
+        } else if (tag !== undefined && tag.length > 0) {
+          text = formatTagLookup(registry, tag, depth);
+        } else if (topic !== undefined && topic.length > 0) {
+          const normalized = topic.trim();
+          if (isCatalogTopic(normalized)) {
+            text = formatCatalog(registry.roles);
           } else {
-            const claims = registry.findClaimsForRole(role.role);
-            text = formatRole(role, claims, depth);
+            const role = registry.findRole(normalized);
+            if (role === undefined) {
+              text = formatNotFound(normalized, registry.roles);
+            } else {
+              const claims = registry.findClaimsForRole(role.role);
+              text = formatRole(role, claims, depth);
+            }
           }
         }
-      } else {
-        return toolError('Provide one of `topic`, `tag`, or `model` + `verb`.');
-      }
 
-      return { content: [{ type: 'text', text }] };
+        result = text === undefined ? toolError('Provide one of `topic`, `tag`, or `model` + `verb`.') : { content: [{ type: 'text', text }] };
+      }
+      return result;
     }
   };
   return tool;

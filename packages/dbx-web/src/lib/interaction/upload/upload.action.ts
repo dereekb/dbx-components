@@ -17,12 +17,13 @@ export abstract class DbxFileUploadActionCompatable {
  * Provides a {@link DbxFileUploadActionCompatable} for dependency injection from the given component type.
  *
  * @param sourceType - The concrete component class that implements {@link DbxFileUploadActionCompatable}
- * @returns An array of providers that register the given type as the {@link DbxFileUploadActionCompatable} implementation
+ * @returns The providers that register the given type as the {@link DbxFileUploadActionCompatable} implementation.
+ *
+ * @Component ({ providers: provideDbxFileUploadActionCompatable(MyUploadComponent) })
+ * ```
  *
  * @example
  * ```ts
- * @Component({ providers: provideDbxFileUploadActionCompatable(MyUploadComponent) })
- * ```
  */
 export function provideDbxFileUploadActionCompatable<S extends DbxFileUploadActionCompatable>(sourceType: Type<S>): Provider[] {
   return [

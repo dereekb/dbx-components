@@ -8,6 +8,7 @@ import { DbxFirebaseOidcConfig, DbxFirebaseOidcConfigService } from './service/o
  *
  * @param appCollection - The application's Firestore collection that must implement {@link OidcModelFirestoreCollections}.
  * @returns The validated OidcModelFirestoreCollections instance.
+ * @throws {Error} When `appCollection` does not expose an `oidcEntryCollection`.
  */
 export function provideOidcModelFirestoreCollections(appCollection: OidcModelFirestoreCollections): OidcModelFirestoreCollections {
   if (!appCollection.oidcEntryCollection) {

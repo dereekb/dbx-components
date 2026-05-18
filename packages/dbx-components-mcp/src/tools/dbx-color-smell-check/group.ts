@@ -29,8 +29,8 @@ export interface GroupColorSmellsInput {
  * the best template recommendation from the supplied list (or a
  * placeholder when no template matches).
  *
- * @param input - the literals, equivalence config, and cross-reference templates
- * @returns the final report (findings + summary)
+ * @param input - The literals, equivalence config, and cross-reference templates.
+ * @returns The final report (findings + summary)
  */
 export function groupColorSmells(input: GroupColorSmellsInput): ColorSmellCheckResult {
   const groups = new Map<string, ColorSmellLiteralLocation[]>();

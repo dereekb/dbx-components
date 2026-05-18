@@ -7,8 +7,8 @@ import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 /**
  * Preview component function preset that renders zip files using {@link DbxZipPreviewComponent}.
  *
- * @param input - The preview input containing the source URL and MIME type of the zip file
- * @returns An injection component config that initializes a {@link DbxZipPreviewComponent} with the given source URL
+ * @param input - The preview input containing the source URL and MIME type of the zip file.
+ * @returns An injection component config that initializes a {@link DbxZipPreviewComponent} with the given source URL.
  */
 export const DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_COMPONENT_PRESET: DbxWebFilePreviewServicePreviewComponentFunction = (input) => {
   const { srcUrl } = input;

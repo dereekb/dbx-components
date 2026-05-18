@@ -86,7 +86,7 @@ export function readZohoConfigFromConfigService(configOrService: ReadZohoConfigF
   const apiUrlConfigKey = `${servicePrefixString}${ZOHO_API_URL_CONFIG_KEY}`;
 
   const config = {
-    apiUrl: configService.get<string>(apiUrlConfigKey) ?? (configService.get<string>(ZOHO_API_URL_CONFIG_KEY) as string)
+    apiUrl: configService.get<string>(apiUrlConfigKey) ?? configService.get<string>(ZOHO_API_URL_CONFIG_KEY)
   };
 
   if (assertValid && !config.apiUrl) {
@@ -99,7 +99,8 @@ export function readZohoConfigFromConfigService(configOrService: ReadZohoConfigF
 /**
  * Asserts that the provided ZohoConfig has a valid API URL configured.
  *
- * @param config - the Zoho config to validate
+ * @param config - The Zoho config to validate.
+ * @throws {Error} When `config.apiUrl` is missing.
  */
 export function assertValidZohoConfig(config: ZohoConfig) {
   if (!config.apiUrl) {

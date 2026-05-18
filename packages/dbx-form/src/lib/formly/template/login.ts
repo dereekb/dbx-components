@@ -148,11 +148,11 @@ export interface DefaultUsernameLoginFieldsValue extends DefaultUsernameLoginFie
 /**
  * Template for login field that takes in a username and password.
  *
- * @param param0 - Login fields configuration
- * @param param0.username - Optional username field configuration
- * @param param0.password - Optional password field configuration
- * @param param0.verifyPassword - Optional verify-password field configuration, or `true` to use defaults
- * @returns An array of Formly field configs for the login form
+ * @param param0 - Login fields configuration.
+ * @param param0.username - Optional username field configuration.
+ * @param param0.password - Optional password field configuration.
+ * @param param0.verifyPassword - Optional verify-password field configuration, or `true` to use defaults.
+ * @returns Array of Formly field configs for the login form.
  */
 export function formlyUsernamePasswordLoginFields({ username, password, verifyPassword }: UsernameLoginFieldsConfig): FormlyFieldConfig[] {
   const usernameField = formlyUsernameLoginField(username);
@@ -203,6 +203,7 @@ export function formlyUsernameLoginField(username: UsernameLoginFieldUsernameCon
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTextPasswordField instead.
  */

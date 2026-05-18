@@ -25,8 +25,8 @@ import { ALL_STORAGE_FILE_NOTIFICATION_TASK_TYPES, type NotificationTaskServiceH
  * Builds the NotificationTaskService for the demo API, registering all task handlers
  * including the example multi-step task, the unique task variant, and storage file processing.
  *
- * @param demoFirebaseServerActionsContext - server actions context providing Firestore and storage access
- * @returns a configured NotificationTaskService with all demo task handlers
+ * @param demoFirebaseServerActionsContext - Server actions context providing Firestore and storage access.
+ * @returns A configured NotificationTaskService with all demo task handlers.
  */
 export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext): NotificationTaskService {
   /**
@@ -146,8 +146,8 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
  * Creates the storage file processing notification task handler for the demo API.
  * Configures subtask processors for user test file uploads with multi-step processing flow.
  *
- * @param demoFirebaseServerActionsContext - server actions context providing storage and Firestore access
- * @returns a notification task handler config for storage file processing
+ * @param demoFirebaseServerActionsContext - Server actions context providing storage and Firestore access.
+ * @returns A notification task handler config for storage file processing.
  */
 export function demoStorageFileProcessingNotificationTaskHandler(demoFirebaseServerActionsContext: DemoFirebaseServerActionsContext) {
   const testFileProcessorConfig: StorageFileProcessingPurposeSubtaskProcessorConfig<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask> = {

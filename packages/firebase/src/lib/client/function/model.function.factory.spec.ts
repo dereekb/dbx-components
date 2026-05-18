@@ -42,7 +42,7 @@ export type ExampleModelCrudFunctionsConfig = {
 };
 
 export const exampleModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ExampleModelCrudFunctionsConfig, ExampleTypes> = {
-  example: ['read:user', 'create:_,user', 'update:_,sendUserInvite,admin' as any, 'delete', 'query:_,byName']
+  example: ['read:user', 'create:_,user', 'update:_,sendUserInvite,admin', 'delete', 'query:_,byName']
 };
 
 export abstract class ExampleFunctions implements ModelFirebaseFunctionMap<ExampleFunctionTypeMap, ExampleModelCrudFunctionsConfig> {

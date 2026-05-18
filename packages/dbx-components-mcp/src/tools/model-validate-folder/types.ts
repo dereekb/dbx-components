@@ -124,8 +124,9 @@ export interface RequiredFile {
  * Centralised here so the folder rules and any future scaffolders share the
  * same shape without drift.
  *
- * @param name - the model folder's basename
- * @returns the required files in the order rules surface them
+ * @param name - The model folder's basename.
+ * @returns The required files in the order rules surface them.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildRequiredFiles(name: string): readonly RequiredFile[] {

@@ -66,11 +66,7 @@ export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective 
   readonly contentLoadingState$ = toObservable(this.contentLoadingStateSignal);
   readonly content$: Observable<Maybe<DownloadTextContent>> = this.contentLoadingState$.pipe(
     switchMap((x) => {
-      if (x) {
-        return of(x).pipe(valueFromFinishedLoadingState());
-      }
-
-      return of(undefined);
+      return x ? of(x).pipe(valueFromFinishedLoadingState()) : of(undefined);
     })
   );
 
@@ -99,11 +95,7 @@ export class DbxDownloadTextViewComponent extends AbstractDbxClipboardDirective 
     return this.content$.pipe(
       first(),
       switchMap((downloadTextContent: Maybe<DownloadTextContent>) => {
-        if (downloadTextContent) {
-          return this._copyToClipboard(downloadTextContent.content);
-        }
-
-        return of(false);
+        return downloadTextContent ? this._copyToClipboard(downloadTextContent.content) : of(false);
       })
     );
   };

@@ -51,7 +51,7 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
   /**
    * Registers one or more model type configurations. Merges with any previously registered configs.
    *
-   * @param configs - Single or array of model type configurations to register
+   * @param configs - Single or array of model type configurations to register.
    */
   addTypeConfigs(configs: ArrayOrValue<DbxModelTypeConfiguration>) {
     const types = {
@@ -68,7 +68,7 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
   /**
    * Registers model type configurations from a map, merging with existing configs.
    *
-   * @param configs - Map of model type strings to their configurations
+   * @param configs - Map of model type strings to their configurations.
    */
   addTypeConfigsMap(configs: DbxModelTypeConfigurationMap) {
     const newConfig: DbxModelTypeConfigurationMap = {
@@ -128,8 +128,8 @@ export class DbxModelTypesService<I extends DbxModelTypeInfo = DbxModelTypeInfo>
   /**
    * Returns an observable of the Material icon name for the given model type.
    *
-   * @param type - The model type string to look up
-   * @returns Observable emitting the icon name for the given model type
+   * @param type - The model type string to look up.
+   * @returns Observable emitting the icon name for the given model type.
    */
   iconForType(type: ModelTypeString): Observable<string> {
     return this.iconMap$.pipe(map((x) => x[type]));

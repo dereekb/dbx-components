@@ -26,7 +26,7 @@ const ARCHETYPES_BY_COLLECTION_KIND_TEMPLATE = 'dbx://model-archetype/by-collect
  * Registers the model-archetype resource family. No registry argument because
  * the catalog is a static constant.
  *
- * @param server - the MCP server to register resources against
+ * @param server - The MCP server to register resources against.
  */
 export function registerModelArchetypesResource(server: McpServer): void {
   server.registerResource(

@@ -8,7 +8,7 @@ import type { FieldDef, FormConfig } from '@ng-forge/dynamic-forms';
  *
  * This is the forge equivalent of {@link dbxScheduleSelectionCalendarDateDaysFormFields}.
  *
- * @returns A FormConfig with toggle fields for each day of the week
+ * @returns A FormConfig with toggle fields for each day of the week.
  */
 export function dbxScheduleSelectionCalendarDateDaysForgeFormFields(): FormConfig {
   return { fields: dbxScheduleSelectionCalendarDateDaysForgeFormDayFields() } as FormConfig;
@@ -17,7 +17,7 @@ export function dbxScheduleSelectionCalendarDateDaysForgeFormFields(): FormConfi
 /**
  * Creates an array of forge toggle field definitions, one for each day of the week, keyed by lowercase day name.
  *
- * @returns An array of forge toggle field definitions for each day of the week
+ * @returns The forge toggle field definitions for each day of the week.
  */
 export function dbxScheduleSelectionCalendarDateDaysForgeFormDayFields(): FieldDef<unknown>[] {
   return getDaysOfWeekNames(false).map((dayOfWeekName: string) => {

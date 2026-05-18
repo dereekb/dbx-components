@@ -22,7 +22,7 @@ import { FirebaseServerEnvService } from '@dereekb/firebase-server';
  * `/interaction/{uid}/*` POSTs carry the Firebase ID token in the JSON body, not in cookies, so
  * we keep the CORS surface minimal.
  *
- * @param nestApp - the NestJS application to configure.
+ * @param nestApp - The NestJS application to configure.
  *
  * @example
  * ```ts

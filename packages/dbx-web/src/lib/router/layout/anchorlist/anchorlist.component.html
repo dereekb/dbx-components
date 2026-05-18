@@ -1,5 +1,5 @@
 <mat-nav-list class="dbx-anchor-list">
-  @for (expanded of expandedAnchors(); track $index; let last = $last) {
+  @for (expanded of expandedAnchorsSignal(); track $index; let last = $last) {
     <dbx-anchor [anchor]="expanded.value" [ngClass]="expanded.classes">
       <a mat-list-item [disabled]="expanded.value.disabled">
         @if (expanded.value.icon) {

@@ -43,8 +43,8 @@ export type ZohoRecruitCreateNotesFunction = (input: ZohoRecruitCreateNotesReque
  * Prefer {@link zohoRecruitCreateNotesForRecord} when creating notes linked to a specific
  * record, as it handles the module/parent linking automatically.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that creates notes in the Notes module
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that creates notes in the Notes module.
  *
  * @example
  * ```typescript
@@ -95,8 +95,8 @@ export type ZohoRecruitDeleteNotesFunction = (input: ZohoRecruitDeleteNotesReque
  * Deletes one or more notes by their IDs from the Notes module. Returns a paired
  * success/error result for each note ID.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that deletes notes by ID
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that deletes notes by ID.
  *
  * @example
  * ```typescript
@@ -133,8 +133,8 @@ export type ZohoRecruitGetNotesForRecordFunction = (input: ZohoRecruitGetNotesFo
  * Retrieves notes related to a specific record by targeting the Notes module
  * via the related records API. Returns an empty page result when no notes exist.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that retrieves notes for a record
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that retrieves notes for a record.
  *
  * @example
  * ```typescript
@@ -162,8 +162,9 @@ export type ZohoRecruitGetNotesForRecordPageFactory = FetchPageFactory<ZohoRecru
  * multiple pages. Wraps {@link zohoRecruitGetNotesForRecord} with automatic
  * pagination handling via {@link zohoFetchPageFactory}.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Page factory for iterating over record notes
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Page factory for iterating over record notes.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitGetNotesForRecordPageFactory(context: ZohoRecruitContext): ZohoRecruitGetNotesForRecordPageFactory {
@@ -190,8 +191,8 @@ export type ZohoRecruitCreateNotesForRecordFunction = (input: ZohoRecruitCreateN
  * `se_module` and `Parent_Id` on each note entry from the request's `module` and `id`,
  * then delegates to {@link zohoRecruitCreateNotes}.
  *
- * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting
- * @returns Function that creates notes linked to a specific record
+ * @param context - Authenticated Zoho Recruit context providing fetch and rate limiting.
+ * @returns Function that creates notes linked to a specific record.
  *
  * @example
  * ```typescript
@@ -224,6 +225,7 @@ export function zohoRecruitCreateNotesForRecord(context: ZohoRecruitContext): Zo
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use zohoRecruitCreateNotes instead.
  */

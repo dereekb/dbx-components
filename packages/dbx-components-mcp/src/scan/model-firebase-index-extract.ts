@@ -41,6 +41,9 @@ const INDEX_MODEL_TAG = 'dbxModelFirebaseIndexModel';
 const INDEX_SCOPE_TAG = 'dbxModelFirebaseIndexScope';
 const INDEX_MANUAL_TAG = 'dbxModelFirebaseIndexManual';
 const INDEX_SKIP_TAG = 'dbxModelFirebaseIndexSkip';
+const INDEX_SPEC_FILES_ONLY_TAG = 'dbxModelFirebaseIndexSpecFilesOnly';
+const INDEX_EXCLUDE_TAG = 'dbxModelFirebaseIndexExclude';
+const INDEX_ALLOW_ARRAY_CONTAINS_ANY_TAG = 'dbxModelFirebaseIndexAllowArrayContainsAny';
 const INDEX_CATEGORY_TAG = 'dbxModelFirebaseIndexCategory';
 const INDEX_TAGS_TAG = 'dbxModelFirebaseIndexTags';
 const INDEX_RELATED_TAG = 'dbxModelFirebaseIndexRelated';
@@ -82,6 +85,24 @@ export interface ExtractedModelFirebaseIndexEntry {
   readonly scope: FirestoreQueryScope;
   readonly manual: boolean;
   readonly skip: boolean;
+  /**
+   * True when the factory carries `@dbxModelFirebaseIndexSpecFilesOnly`. The
+   * factory is intentionally for `.spec.ts` use only — the analyzer suppresses
+   * composite + fieldOverride emission (mirroring `skip`), and the validator
+   * raises `MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION` (error) if a
+   * non-spec file references the factory by name.
+   */
+  readonly specOnly: boolean;
+  /**
+   * True when the factory carries `@dbxModelFirebaseIndexExclude`. The
+   * constraint sequence is still parsed (unlike `skip`, which empties it)
+   * so the list-app / lookup tools can display the would-be query shape;
+   * the analyzer suppresses composite + fieldOverride emission. Every
+   * excluded factory also produces an `excluded-factory` warning so the
+   * exclusion is auditable.
+   */
+  readonly excluded: boolean;
+  readonly allowArrayContainsAny: boolean;
   readonly category: string;
   readonly signature: string;
   readonly description: string;
@@ -123,7 +144,8 @@ export type ModelFirebaseIndexExtractWarning =
   | { readonly kind: 'transitive-cycle'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
   | { readonly kind: 'unresolvable-transitive-callee'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
   | { readonly kind: 'complex-query-body'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly branchKind: ComplexQueryBranchKind; readonly filePath: string; readonly line: number }
-  | { readonly kind: 'non-delegating-dispatcher'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number };
+  | { readonly kind: 'non-delegating-dispatcher'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly callee: string; readonly filePath: string; readonly line: number }
+  | { readonly kind: 'excluded-factory'; readonly severity: ModelFirebaseIndexExtractWarningSeverity; readonly name: string; readonly filePath: string; readonly line: number };
 
 /**
  * Input to {@link extractModelFirebaseIndexEntries}.
@@ -154,8 +176,8 @@ const WHERE_OPERATOR_SET: ReadonlySet<string> = new Set(FIRESTORE_WHERE_OPERATOR
  * the order ts-morph reports them, declarations within a file in source
  * order.
  *
- * @param input - the ts-morph project, identity resolver, and project root
- * @returns the extracted entries plus any non-fatal warnings
+ * @param input - The ts-morph project, identity resolver, and project root.
+ * @returns The extracted entries plus any non-fatal warnings.
  */
 export function extractModelFirebaseIndexEntries(input: ExtractModelFirebaseIndexEntriesInput): ExtractModelFirebaseIndexEntriesResult {
   const { project, identityResolver } = input;
@@ -226,7 +248,10 @@ interface ParsedIndexTags {
   readonly scope?: string;
   readonly manual: boolean;
   readonly skip: boolean;
+  readonly specOnly: boolean;
+  readonly excluded: boolean;
   readonly dispatcher: boolean;
+  readonly allowArrayContainsAny: boolean;
   readonly category?: string;
   readonly explicitTags: readonly string[];
   readonly relatedSlugs: readonly string[];
@@ -251,7 +276,10 @@ interface MutableTagState {
   scope: string | undefined;
   manual: boolean;
   skip: boolean;
+  specOnly: boolean;
+  excluded: boolean;
   dispatcher: boolean;
+  allowArrayContainsAny: boolean;
   category: string | undefined;
   readonly explicitTags: string[];
   readonly relatedSlugs: string[];
@@ -272,7 +300,10 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     scope: undefined,
     manual: false,
     skip: false,
+    specOnly: false,
+    excluded: false,
     dispatcher: false,
+    allowArrayContainsAny: false,
     category: undefined,
     explicitTags: [],
     relatedSlugs: [],
@@ -311,7 +342,10 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedIndexTags {
     scope: state.scope,
     manual: state.manual,
     skip: state.skip,
+    specOnly: state.specOnly,
+    excluded: state.excluded,
     dispatcher: state.dispatcher,
+    allowArrayContainsAny: state.allowArrayContainsAny,
     category: state.category,
     explicitTags: state.explicitTags,
     relatedSlugs: state.relatedSlugs,
@@ -344,8 +378,17 @@ function applyTag(state: MutableTagState, name: string, text: string): void {
     case INDEX_SKIP_TAG:
       state.skip = parseBooleanTag(text) ?? true;
       break;
+    case INDEX_SPEC_FILES_ONLY_TAG:
+      state.specOnly = parseBooleanTag(text) ?? true;
+      break;
+    case INDEX_EXCLUDE_TAG:
+      state.excluded = parseBooleanTag(text) ?? true;
+      break;
     case INDEX_DISPATCHER_TAG:
       state.dispatcher = parseBooleanTag(text) ?? true;
+      break;
+    case INDEX_ALLOW_ARRAY_CONTAINS_ANY_TAG:
+      state.allowArrayContainsAny = parseBooleanTag(text) ?? true;
       break;
     case INDEX_CATEGORY_TAG:
       state.category = text;
@@ -495,6 +538,10 @@ function composeEntry(input: ComposeEntryInput): ExtractedModelFirebaseIndexEntr
 
   const constraintSequences = resolveConstraintSequences({ candidate, tags, name, line, filePath, warnings });
 
+  if (tags.excluded) {
+    warnings.push({ kind: 'excluded-factory', severity: 'warning', name, filePath, line });
+  }
+
   return {
     slug,
     name,
@@ -504,6 +551,9 @@ function composeEntry(input: ComposeEntryInput): ExtractedModelFirebaseIndexEntr
     scope,
     manual: tags.manual,
     skip: tags.skip,
+    specOnly: tags.specOnly,
+    excluded: tags.excluded,
+    allowArrayContainsAny: tags.allowArrayContainsAny,
     category,
     signature,
     description: tags.summary,
@@ -536,7 +586,7 @@ function resolveConstraintSequences(input: ResolveConstraintSequencesInput): rea
   for (const warning of bodyResult.warnings) {
     warnings.push(warning);
   }
-  if (tags.skip || tags.dispatcher || bodyResult.skipped) {
+  if (tags.skip || tags.specOnly || tags.dispatcher || bodyResult.skipped) {
     return [];
   }
   return buildConstraintSequences({
@@ -608,8 +658,8 @@ interface BuildConstraintSequencesInput {
  * the body sits inside an `if` branch (a strong signal the factory needs
  * explicit path declarations).
  *
- * @param input - extracted body entries, JSDoc-declared paths, warning sink
- * @returns the sequences to feed the analyzer
+ * @param input - Extracted body entries, JSDoc-declared paths, warning sink.
+ * @returns The sequences to feed the analyzer.
  */
 function buildConstraintSequences(input: BuildConstraintSequencesInput): readonly ConstraintSequence[] {
   const { bodyEntries, conditionalFields, paths, factoryName, filePath, line, warnings } = input;
@@ -968,8 +1018,8 @@ interface ResolvedCallee {
  * TypeScript symbol table. Returns `undefined` for arrow-function variables,
  * methods, or unresolvable names.
  *
- * @param identifier - the call expression's bare-identifier callee
- * @returns the resolved declaration and whether it has a body
+ * @param identifier - The call expression's bare-identifier callee.
+ * @returns The resolved declaration and whether it has a body.
  */
 function resolveCalleeDeclaration(identifier: Identifier): ResolvedCallee | undefined {
   const symbol = identifier.getSymbol();
@@ -995,9 +1045,9 @@ function resolveCalleeDeclaration(identifier: Identifier): ResolvedCallee | unde
  * `<T>`, or `Maker` suffix) so generic instantiations and reasonable aliases
  * are caught without compile-time type evaluation.
  *
- * @param returnType - the resolved return-type text
- * @returns true when the type looks like a Firestore-query-constraint
- *   return
+ * @param returnType - The resolved return-type text.
+ * @returns True when the type looks like a Firestore-query-constraint
+ *   return.
  */
 function isConstraintRelatedReturnType(returnType: string): boolean {
   if (returnType.length === 0) {
@@ -1055,8 +1105,8 @@ function buildDeclKey(decl: FunctionDeclaration): string {
  * branching constructs in {@link COMPLEX_BODY_SYNTAX_KINDS} cover the cases
  * authors actually use to build different constraint sets per call.
  *
- * @param bodyNode - the outer function body block
- * @returns the first disallowed branch's kind + line, or undefined when clean
+ * @param bodyNode - The outer function body block.
+ * @returns The first disallowed branch's kind + line, or undefined when clean.
  */
 function findFirstBranchNode(bodyNode: Node): { readonly branchKind: ComplexQueryBranchKind; readonly line: number } | undefined {
   let result: { readonly branchKind: ComplexQueryBranchKind; readonly line: number } | undefined;
@@ -1074,13 +1124,11 @@ function findFirstBranchNode(bodyNode: Node): { readonly branchKind: ComplexQuer
 }
 
 /**
- * Walks the body looking for the first call to `where`, `orderBy`, or any
- * registered Firestore query helper. Used to enforce that dispatcher-tagged
- * factories only delegate to other query functions and never emit constraints
- * directly.
+ * Resolves the textual callee name for a call expression's left-hand side
+ * (Identifier or PropertyAccessExpression).
  *
- * @param bodyNode - the outer function body block
- * @returns the offending call's callee name + line, or undefined when clean
+ * @param expression - The call expression's leading node.
+ * @returns The callee identifier name, or undefined when the form is unsupported.
  */
 function getCallExpressionName(expression: Node): string | undefined {
   if (Node.isIdentifier(expression)) {
@@ -1092,6 +1140,15 @@ function getCallExpressionName(expression: Node): string | undefined {
   return undefined;
 }
 
+/**
+ * Walks the body looking for the first call to `where`, `orderBy`, or any
+ * registered Firestore query helper. Used to enforce that dispatcher-tagged
+ * factories only delegate to other query functions and never emit constraints
+ * directly.
+ *
+ * @param bodyNode - The outer function body block.
+ * @returns The offending call's callee name + line, or undefined when clean.
+ */
 function findFirstConstraintCall(bodyNode: Node): { readonly callee: string; readonly line: number } | undefined {
   const calls = bodyNode.getDescendantsOfKind(SyntaxKind.CallExpression);
   calls.sort((a, b) => a.getStart() - b.getStart());
@@ -1184,8 +1241,8 @@ function readDirectionLiteral(node: Node | undefined): 'asc' | 'desc' | undefine
  * camelCase (`jobLocationWeeksDirty` → `job-location-weeks-dirty`) and
  * SCREAMING_SNAKE_CASE; already-kebab inputs pass through unchanged.
  *
- * @param name - the export identifier
- * @returns the kebab-case slug
+ * @param name - The export identifier.
+ * @returns The kebab-case slug.
  */
 export function toKebabCase(name: string): string {
   if (name.length === 0) {

@@ -122,16 +122,21 @@ export class DbxFirebaseAuthLoginService {
    * @returns True if the provider was registered, false if it already existed and override was false.
    */
   register(provider: DbxFirebaseAuthLoginProvider, override: boolean = true): boolean {
+    let result: boolean;
+
     if (override || !this._providers.has(provider.loginMethodType)) {
       this._providers.set(provider.loginMethodType, provider);
 
       if (provider.assets) {
         this.updateAssetsForProvider(provider.loginMethodType, provider.assets);
       }
-      return true;
+
+      result = true;
+    } else {
+      result = false;
     }
 
-    return false;
+    return result;
   }
 
   /**
@@ -209,7 +214,7 @@ export class DbxFirebaseAuthLoginService {
   /**
    * Returns all registered provider assets.
    *
-   * @returns A map of login method types to their asset configurations.
+   * @returns Map of login method types to their asset configurations.
    */
   getAllProviderAssets(): Map<FirebaseLoginMethodType, DbxFirebaseAuthLoginProviderAssets> {
     return new Map(this._assets);

@@ -56,9 +56,9 @@ export interface LoadModelSnapshotFieldManifestsResult {
  * Loads, validates, and merges the supplied manifest sources into a single
  * registry suitable for the `dbx_model_snapshot_field_*` MCP tools.
  *
- * @param input - manifest sources plus an optional injected `readFile`
- * @returns merged entries, category index, deterministic warnings, and the list of source labels that loaded
- * @throws when a strict source fails or when zero manifests load successfully
+ * @param input - Manifest sources plus an optional injected `readFile`
+ * @returns Merged entries, category index, deterministic warnings, and the list of source labels that loaded.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadModelSnapshotFieldManifests(input: LoadModelSnapshotFieldManifestsInput): Promise<LoadModelSnapshotFieldManifestsResult> {
   const { entries, indexMap, warnings, loadedSources } = await loadManifestsBase<ModelSnapshotFieldManifest, ModelSnapshotFieldEntry>(input, {

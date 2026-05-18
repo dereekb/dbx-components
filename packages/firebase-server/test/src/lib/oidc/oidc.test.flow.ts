@@ -75,7 +75,7 @@ async function createTestIdToken(nestApp: INestApplication, uid: string): Promis
  * @returns The `uid` query parameter from the redirect URL (the interaction identifier issued by `oidc-provider`).
  */
 function extractInteractionUid(res: request.Response): string {
-  const location = res.headers['location'] as string;
+  const location = res.headers['location'];
   const url = location.startsWith('/') ? new URL(location, 'http://localhost') : new URL(location);
   return url.searchParams.get('uid')!;
 }
@@ -121,12 +121,16 @@ function createCookieJar() {
  * @returns The space-separated scope string to pass to the `/oidc/auth` endpoint.
  */
 async function resolveScopes(nestApp: INestApplication, config?: OAuthTestFlowConfig): Promise<string> {
+  let result: string;
+
   if (config?.scopes) {
-    return config.scopes;
+    result = config.scopes;
+  } else {
+    const accountService = nestApp.get(OidcAccountService);
+    result = Object.keys(accountService.providerConfig.claims).join(' ');
   }
 
-  const accountService = nestApp.get(OidcAccountService);
-  return Object.keys(accountService.providerConfig.claims).join(' ');
+  return result;
 }
 
 // MARK: Flow
@@ -153,7 +157,7 @@ export interface PerformFullOAuthFlowInput {
  * @param input.uid - Firebase user ID for whom the test ID token is minted and the OAuth flow is authorized.
  * @param input.config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method).
  * @returns The exchanged access token and ID token from the OIDC `/token` endpoint.
- * @throws Error when the token exchange step fails (the response body and status are included in the message).
+ * @throws {Error} When the token exchange step fails (the response body and status are included in the message).
  */
 export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Promise<PerformFullOAuthFlowResult> {
   const { server, oidcClientService, nestApp, uid, config } = input;

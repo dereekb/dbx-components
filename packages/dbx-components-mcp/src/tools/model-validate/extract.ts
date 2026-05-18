@@ -17,8 +17,8 @@ import { SUB_OBJECT_FACTORY_NAMES, type ExtractedArchetypeTagInfo, type Extracte
  * the rules module consumes. Extraction stays best-effort so partial files
  * still produce useful diagnostics rather than crashing the validator.
  *
- * @param source - the in-memory source name + text pair to extract
- * @returns the structured extraction used by the rules layer
+ * @param source - The in-memory source name + text pair to extract.
+ * @returns The structured extraction used by the rules layer.
  */
 export function extractFile(source: ValidatorSource): ExtractedFile {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
@@ -57,8 +57,8 @@ export function extractFile(source: ValidatorSource): ExtractedFile {
  * Cross-file resolution of the captured type-arg name happens at the
  * rules layer via the validator's {@link CrossFileRuleContext}.
  *
- * @param sourceFile - the parsed model source file
- * @returns each detected call site, in source order
+ * @param sourceFile - The parsed model source file.
+ * @returns Each detected call site, in source order.
  */
 function findSubObjectFactoryCalls(sourceFile: SourceFile): readonly ExtractedSubObjectFactoryCall[] {
   const out: ExtractedSubObjectFactoryCall[] = [];
@@ -95,8 +95,8 @@ function findSubObjectFactoryCalls(sourceFile: SourceFile): readonly ExtractedSu
  * for inline types, qualified names, or other type shapes that don't
  * resolve to a single declared interface name.
  *
- * @param typeNode - the type node to inspect
- * @returns the bare identifier text, or `undefined` when not a simple type reference
+ * @param typeNode - The type node to inspect.
+ * @returns The bare identifier text, or `undefined` when not a simple type reference.
  */
 function readTypeReferenceIdentifier(typeNode: Node): string | undefined {
   if (!Node.isTypeReference(typeNode)) {
@@ -147,8 +147,8 @@ function findDataInterfaces(sourceFile: SourceFile, groupInterface: ExtractedGro
  * inheritance walks. Unresolvable wrappers fall through to the leftmost
  * identifier.
  *
- * @param iface - the interface declaration to inspect
- * @returns the parent identifier names in source order
+ * @param iface - The interface declaration to inspect.
+ * @returns The parent identifier names in source order.
  */
 function readExtendsNames(iface: InterfaceDeclaration): readonly string[] {
   const out: string[] = [];
@@ -255,8 +255,8 @@ function findGroupInterface(sourceFile: SourceFile): ExtractedGroupInterface | u
  * Mirrors `scan/extract-models/find-model-groups.ts` so the validator and
  * the rich catalog extractor agree on what counts as a tagged group.
  *
- * @param jsDocs - JSDoc blocks attached to the group container declaration
- * @returns the tag value, or `undefined` when no `@dbxModelGroup` tag is present
+ * @param jsDocs - JSDoc blocks attached to the group container declaration.
+ * @returns The tag value, or `undefined` when no `@dbxModelGroup` tag is present.
  */
 function readDbxModelGroupTag(jsDocs: readonly JSDoc[]): string | true | undefined {
   let result: string | true | undefined;
@@ -277,7 +277,7 @@ function readDbxModelGroupTag(jsDocs: readonly JSDoc[]): string | true | undefin
  * Mirrors `scan/extract-models/find-interfaces.ts` so a downstream model
  * interface that the catalog would skip is also flagged here.
  *
- * @param jsDocs - JSDoc blocks attached to the data interface declaration
+ * @param jsDocs - JSDoc blocks attached to the data interface declaration.
  * @returns `true` when `@dbxModel` is present, otherwise `false`
  */
 function readDbxModelTag(jsDocs: readonly JSDoc[]): boolean {
@@ -302,7 +302,7 @@ function readDbxModelTag(jsDocs: readonly JSDoc[]): boolean {
  * as subject to the same per-field `@dbxModelVariable` long-name rules a
  * `@dbxModel` interface receives.
  *
- * @param jsDocs - JSDoc blocks attached to the data interface declaration
+ * @param jsDocs - JSDoc blocks attached to the data interface declaration.
  * @returns `true` when `@dbxModelSubObject` is present, otherwise `false`
  */
 function readDbxModelSubObjectTag(jsDocs: readonly JSDoc[]): boolean {
@@ -327,8 +327,8 @@ const VALIDATOR_COMPOSITE_KEY_MODEL_NAME_RE = /^[A-Za-z][A-Za-z0-9_$]*$/;
  * `parseArchetypeTagValue`, but keeps the line number — the validator emits
  * findings anchored at the tag rather than at the interface declaration.
  *
- * @param jsDocs - JSDoc blocks attached to the interface declaration
- * @returns one {@link ExtractedArchetypeTagInfo} per occurrence, in source order
+ * @param jsDocs - JSDoc blocks attached to the interface declaration.
+ * @returns One {@link ExtractedArchetypeTagInfo} per occurrence, in source order.
  */
 function readDbxModelArchetypeTags(jsDocs: readonly JSDoc[]): readonly ExtractedArchetypeTagInfo[] {
   const out: ExtractedArchetypeTagInfo[] = [];
@@ -367,8 +367,8 @@ function readDbxModelArchetypeTags(jsDocs: readonly JSDoc[]): readonly Extracted
  * specific findings (missing `from`, invalid encoding, wildcard mixed, etc.)
  * rather than the extractor silently dropping malformed tags.
  *
- * @param jsDocs - JSDoc blocks attached to the interface declaration
- * @returns the parsed tag, or `undefined` when no tag is present
+ * @param jsDocs - JSDoc blocks attached to the interface declaration.
+ * @returns The parsed tag, or `undefined` when no tag is present.
  */
 function readDbxModelCompositeKeyTag(jsDocs: readonly JSDoc[]): ExtractedCompositeKeyTagInfo | undefined {
   let result: ExtractedCompositeKeyTagInfo | undefined;
@@ -411,8 +411,8 @@ function readDbxModelCompositeKeyTag(jsDocs: readonly JSDoc[]): ExtractedComposi
  * Returns the trimmed tag text when present and non-empty; `undefined`
  * otherwise (matching the rich extractor's "first non-empty wins" rule).
  *
- * @param jsDocs - JSDoc blocks attached to the property declaration
- * @returns the long-name string, or `undefined` when no `@dbxModelVariable` tag is present
+ * @param jsDocs - JSDoc blocks attached to the property declaration.
+ * @returns The long-name string, or `undefined` when no `@dbxModelVariable` tag is present.
  */
 function readDbxModelVariableTag(jsDocs: readonly JSDoc[]): string | undefined {
   let result: string | undefined;
@@ -453,8 +453,8 @@ function findGroupTypes(sourceFile: SourceFile): ExtractedGroupTypes | undefined
  * Pulls `X` out of each `typeof X` member of the alias (covers both single
  * `typeof X` aliases and `typeof A | typeof B` unions).
  *
- * @param alias - the `*Types` type alias to inspect
- * @returns each referenced identity-const name in source order
+ * @param alias - The `*Types` type alias to inspect.
+ * @returns Each referenced identity-const name in source order.
  */
 function extractIdentityRefs(alias: TypeAliasDeclaration): readonly string[] {
   const typeNode = alias.getTypeNode();
@@ -617,9 +617,9 @@ function extractModel(sourceFile: SourceFile, identity: RawIdentity): ExtractedM
  *   - `firestoreCollectionWithParent` → `'sub-collection'`
  *   - `singleItemFirestoreCollection` → `'singleton-sub'`
  *
- * @param sourceFile - the parsed model source file
- * @param factoryFnName - name of the `*FirestoreCollection`/`*FirestoreCollectionFactory` function
- * @returns the detected kind, or `undefined` when none can be located
+ * @param sourceFile - The parsed model source file.
+ * @param factoryFnName - Name of the `*FirestoreCollection`/`*FirestoreCollectionFactory` function.
+ * @returns The detected kind, or `undefined` when none can be located.
  */
 function detectFactoryCallKind(sourceFile: SourceFile, factoryFnName: string): FirestoreCollectionKind | undefined {
   const fn = sourceFile.getFunction(factoryFnName);
@@ -703,16 +703,17 @@ function findFunction(sourceFile: SourceFile, name: string): ExtractedDecl | und
 }
 
 function findVariable(sourceFile: SourceFile, name: string): ExtractedDecl | undefined {
-  for (const statement of sourceFile.getVariableStatements()) {
+  let result: ExtractedDecl | undefined;
+  outer: for (const statement of sourceFile.getVariableStatements()) {
     for (const decl of statement.getDeclarations()) {
       if (decl.getName() !== name) {
         continue;
       }
-      const result: ExtractedDecl = { name, exported: statement.isExported(), line: decl.getStartLineNumber() };
-      return result;
+      result = { name, exported: statement.isExported(), line: decl.getStartLineNumber() };
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function findDocumentClass(sourceFile: SourceFile, name: string): ExtractedDocumentClass | undefined {

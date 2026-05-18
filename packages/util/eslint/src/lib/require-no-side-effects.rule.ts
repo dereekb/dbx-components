@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 import { findFunctionLeadingContext, getLineIndent, getStatementAnchor, NO_SIDE_EFFECTS_TAG } from './comments';
 
 /**
@@ -33,12 +34,16 @@ type AstNode = any;
  * @param node - The FunctionDeclaration AST node.
  * @returns The function's identifier name, or `null` for anonymous functions.
  */
-function getFunctionName(node: AstNode): string | null {
-  if (node.id?.type === 'Identifier') {
-    return node.id.name;
-  }
+function getFunctionName(node: AstNode): Maybe<string> {
+  return node.id?.type === 'Identifier' ? node.id.name : null;
+}
 
-  return null;
+function pickMessageId(hasOverloads: boolean, jsdoc: ReturnType<typeof findFunctionLeadingContext>['jsdoc']): 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory' {
+  let messageId: 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory';
+  if (hasOverloads && jsdoc?.hasNoSideEffects) messageId = 'missingImplAnnotationOverloaded';
+  else if (jsdoc) messageId = 'missingNoSideEffectsJsdoc';
+  else messageId = 'missingJsdocForFactory';
+  return messageId;
 }
 
 /**
@@ -48,12 +53,16 @@ function getFunctionName(node: AstNode): string | null {
  * @returns The combined default + additional regex patterns, or an empty list when name-pattern matching is disabled.
  */
 function buildNamePatterns(options: UtilRequireNoSideEffectsRuleOptions): readonly RegExp[] {
-  if (!options.checkNamePatterns) {
-    return [];
+  let result: readonly RegExp[];
+
+  if (options.checkNamePatterns) {
+    const additional = (options.additionalNamePatterns ?? []).map((source) => new RegExp(source));
+    result = [...DEFAULT_NAME_PATTERNS, ...additional];
+  } else {
+    result = [];
   }
 
-  const additional = (options.additionalNamePatterns ?? []).map((source) => new RegExp(source));
-  return [...DEFAULT_NAME_PATTERNS, ...additional];
+  return result;
 }
 
 /**
@@ -98,7 +107,7 @@ export interface UtilRequireNoSideEffectsRuleDefinition {
  * declaration (other than the required impl-leading line comment on overloaded functions), and
  * when no JSDoc is present, creates a minimal one carrying both tags.
  */
-export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinition = {
+export const UTIL_REQUIRE_NO_SIDE_EFFECTS_RULE: UtilRequireNoSideEffectsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',
@@ -139,127 +148,85 @@ export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinitio
       return namePatterns.some((pattern) => pattern.test(name));
     }
 
+    function buildJsdocTagFixes(fixer: AstNode, jsdoc: NonNullable<ReturnType<typeof findFunctionLeadingContext>['jsdoc']>): AstNode[] {
+      const fixes: AstNode[] = [];
+      const jsdocText = jsdoc.text;
+      const jsdocStart = jsdoc.node.range[0];
+      const jsdocEnd = jsdoc.node.range[1];
+      const jsdocIndent = getLineIndent(sourceText, jsdocStart);
+
+      if (jsdocText.includes('\n')) {
+        const closingMarkerStart = jsdocEnd - 2;
+        let closingLineStart = closingMarkerStart;
+        while (closingLineStart > 0 && sourceText.charAt(closingLineStart - 1) !== '\n') closingLineStart -= 1;
+        fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`));
+      } else {
+        const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
+        const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
+        fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
+      }
+      return fixes;
+    }
+
+    function buildCreateJsdocFix(fixer: AstNode, chainStartStatement: AstNode): AstNode {
+      const nodeStart = chainStartStatement.range[0];
+      const indent = getLineIndent(sourceText, nodeStart);
+      const newJsdoc = `/**\n${indent} * @dbxUtilKind factory\n${indent} * ${NO_SIDE_EFFECTS_TAG}\n${indent} */\n${indent}`;
+      return fixer.insertTextBeforeRange([nodeStart, nodeStart], newJsdoc);
+    }
+
+    function buildImplLineCommentFix(fixer: AstNode, node: AstNode): AstNode {
+      const implAnchor = getStatementAnchor(node);
+      const implStart = implAnchor.range[0];
+      const indent = getLineIndent(sourceText, implStart);
+      return fixer.insertTextBeforeRange([implStart, implStart], `// ${NO_SIDE_EFFECTS_TAG}\n${indent}`);
+    }
+
+    function buildRedundantRemovalFix(fixer: AstNode, redundant: AstNode): AstNode {
+      const [start, end] = redundant.range;
+      let removeEnd = end;
+      while (removeEnd < sourceText.length && (sourceText.charAt(removeEnd) === ' ' || sourceText.charAt(removeEnd) === '\t')) removeEnd += 1;
+      if (sourceText.charAt(removeEnd) === '\n') removeEnd += 1;
+      let removeStart = start;
+      while (removeStart > 0 && (sourceText.charAt(removeStart - 1) === ' ' || sourceText.charAt(removeStart - 1) === '\t')) removeStart -= 1;
+      return fixer.removeRange([removeStart, removeEnd]);
+    }
+
+    function buildAllFixes(fixer: AstNode, node: AstNode, ctx: ReturnType<typeof findFunctionLeadingContext>): AstNode[] {
+      const { jsdoc, orphanLineComments: redundantLineComments, hasOverloads, implLineComment, chainStartStatement } = ctx;
+      const fixes: AstNode[] = [];
+
+      if (jsdoc && !jsdoc.hasNoSideEffects) fixes.push(...buildJsdocTagFixes(fixer, jsdoc));
+      else if (!jsdoc) fixes.push(buildCreateJsdocFix(fixer, chainStartStatement));
+
+      if (hasOverloads && !implLineComment) fixes.push(buildImplLineCommentFix(fixer, node));
+
+      for (const redundant of redundantLineComments) fixes.push(buildRedundantRemovalFix(fixer, redundant));
+
+      return fixes;
+    }
+
     function checkFunction(node: AstNode): void {
-      // Skip overload signatures (TSDeclareFunction) and bodyless declarations.
-      if (node.type !== 'FunctionDeclaration' || !node.body) {
-        return;
-      }
-
+      if (node.type !== 'FunctionDeclaration' || !node.body) return;
       const name = getFunctionName(node);
+      if (!name) return;
 
-      if (!name) {
-        return;
-      }
-
-      // Walks the overload chain (if any) so we read the JSDoc on the first overload,
-      // any orphan annotations placed between overloads, and the (preserved) impl-leading annotation.
-      const { jsdoc, orphanLineComments: redundantLineComments, hasOverloads, implLineComment, implHasSurvivingAnnotation, chainStartStatement } = findFunctionLeadingContext(sourceCode, node);
+      const ctx = findFunctionLeadingContext(sourceCode, node);
+      const { jsdoc, hasOverloads, implHasSurvivingAnnotation } = ctx;
 
       const taggedAsFactory = jsdoc?.text?.includes(FACTORY_JSDOC_TAG) === true;
       const matchedByName = !taggedAsFactory && namePatterns.length > 0 && nameMatchesFactoryPattern(name);
 
-      if (!taggedAsFactory && !matchedByName) {
-        return;
-      }
+      if (!(taggedAsFactory || matchedByName) || implHasSurvivingAnnotation) return;
 
-      // The bundled implementation already carries the marker — passing. This covers:
-      //   - non-overloaded with the tag in the (only) JSDoc, AND
-      //   - overloaded with either a `// @__NO_SIDE_EFFECTS__` above the impl or its own tagged JSDoc.
-      if (implHasSurvivingAnnotation) {
-        return;
-      }
-
-      // Choose the most specific message:
-      //   - overloaded + JSDoc with the tag on first overload but no impl annotation → impl-specific.
-      //   - has any JSDoc → JSDoc tag missing.
-      //   - no JSDoc → JSDoc must be created.
-      let messageId: 'missingImplAnnotationOverloaded' | 'missingNoSideEffectsJsdoc' | 'missingJsdocForFactory';
-
-      if (hasOverloads && jsdoc?.hasNoSideEffects) {
-        messageId = 'missingImplAnnotationOverloaded';
-      } else if (jsdoc) {
-        messageId = 'missingNoSideEffectsJsdoc';
-      } else {
-        messageId = 'missingJsdocForFactory';
-      }
+      const messageId = pickMessageId(hasOverloads, jsdoc);
 
       context.report({
         node: node.id,
         messageId,
         data: { name },
         fix(fixer: AstNode) {
-          const fixes: AstNode[] = [];
-
-          // Add the JSDoc tag (or create the JSDoc) so consumer-facing docs reflect the marker.
-          // Skipped when the existing JSDoc already carries the tag — only the impl-line comment
-          // would be missing in that case (handled below).
-          if (jsdoc && !jsdoc.hasNoSideEffects) {
-            const jsdocText = jsdoc.text; // text excludes /* and */
-            const jsdocStart = jsdoc.node.range[0];
-            const jsdocEnd = jsdoc.node.range[1];
-
-            // Determine the column the JSDoc starts at to align the new line.
-            const jsdocIndent = getLineIndent(sourceText, jsdocStart);
-
-            // If the JSDoc is single-line (e.g. `/** @dbxUtilKind factory */`),
-            // expand it to multi-line. Detect by absence of newline in the body.
-            if (jsdocText.includes('\n')) {
-              // Multi-line JSDoc: insert a new line `${indent} * @__NO_SIDE_EFFECTS__\n`
-              // immediately before the line containing the closing `*/`, so the closing line
-              // and existing body lines remain untouched.
-              const closingMarkerStart = jsdocEnd - 2; // start of `*/`
-              let closingLineStart = closingMarkerStart;
-              while (closingLineStart > 0 && sourceText.charAt(closingLineStart - 1) !== '\n') {
-                closingLineStart -= 1;
-              }
-              const insertion = `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`;
-              fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], insertion));
-            } else {
-              const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
-              const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
-              fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
-            }
-          } else if (!jsdoc) {
-            // No JSDoc anywhere — create one above the FIRST statement in the chain. For overloaded
-            // functions the canonical doc placement is on the first overload, not the implementation.
-            const nodeStart = chainStartStatement.range[0];
-            const indent = getLineIndent(sourceText, nodeStart);
-
-            const newJsdoc = `/**\n${indent} * @dbxUtilKind factory\n${indent} * ${NO_SIDE_EFFECTS_TAG}\n${indent} */\n${indent}`;
-            fixes.push(fixer.insertTextBeforeRange([nodeStart, nodeStart], newJsdoc));
-          }
-
-          // Overloaded functions need a `// @__NO_SIDE_EFFECTS__` line comment directly above the
-          // implementation so the marker survives TypeScript's overload-signature erasure and reaches
-          // the bundled JavaScript. Skipped when one is already in place.
-          if (hasOverloads && !implLineComment) {
-            const implAnchor = getStatementAnchor(node);
-            const implStart = implAnchor.range[0];
-            const indent = getLineIndent(sourceText, implStart);
-
-            fixes.push(fixer.insertTextBeforeRange([implStart, implStart], `// ${NO_SIDE_EFFECTS_TAG}\n${indent}`));
-          }
-
-          // Remove any redundant adjacent annotation comments now that JSDoc carries the tag.
-          for (const redundant of redundantLineComments) {
-            const [start, end] = redundant.range;
-            // Extend the removal to include the trailing newline + indent so we don't leave a blank line.
-            let removeEnd = end;
-            while (removeEnd < sourceText.length && (sourceText.charAt(removeEnd) === ' ' || sourceText.charAt(removeEnd) === '\t')) {
-              removeEnd += 1;
-            }
-            if (sourceText.charAt(removeEnd) === '\n') {
-              removeEnd += 1;
-            }
-            // Also drop leading indent on the comment's line.
-            let removeStart = start;
-            while (removeStart > 0 && (sourceText.charAt(removeStart - 1) === ' ' || sourceText.charAt(removeStart - 1) === '\t')) {
-              removeStart -= 1;
-            }
-            fixes.push(fixer.removeRange([removeStart, removeEnd]));
-          }
-
-          return fixes;
+          return buildAllFixes(fixer, node, ctx);
         }
       });
     }

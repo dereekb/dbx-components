@@ -63,7 +63,7 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
    * `--dbx-forge-list-item-field-height` custom property. Returns `null` when
    * the prop is absent so the existing 300px default in `_list.scss` wins.
    */
-  readonly maxHeightCssVarSignal = computed<string | null>(() => {
+  readonly maxHeightCssVarSignal = computed<Maybe<string>>(() => {
     const raw = this.props()?.maxHeight;
 
     if (raw == null) {
@@ -84,15 +84,17 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as any);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   // ARIA
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const hintId = this.hintIdSignal();
+    if (this.errorsToDisplaySignal().length > 0) return errorId;
+    if (this.props()?.hint) return hintId;
     return null;
   });
 
@@ -147,7 +149,7 @@ export class DbxForgeListSelectionFieldComponent<T = unknown, C extends Abstract
   readonly isSelectedModifierFunctionSignal = toSignal(this.isSelectedModifierFunction$);
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'dbx-injection' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'dbx-injection' });
 
     // Sync field value to _valuesSubject
     effect(() => {

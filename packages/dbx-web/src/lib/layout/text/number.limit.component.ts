@@ -67,7 +67,7 @@ export class DbxNumberWithLimitComponent<T extends number = number> {
 
   readonly limitSignal = computed(() => {
     const number = this.number();
-    return number?.limit != null ? (number?.formatNumber ? number.formatNumber(number.limit) : number?.limit) : undefined;
+    return number?.limit == null ? undefined : number?.formatNumber ? number.formatNumber(number.limit) : number?.limit;
   });
 
   readonly hasLimitSignal = computed(() => {

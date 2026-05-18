@@ -118,9 +118,9 @@ export interface UnitedStatesAddressWithContact extends UnitedStatesAddress {
  * Empty or undefined fields are omitted. If the input includes contact fields (name, phone), they appear at the top.
  * Returns `undefined` if no meaningful parts are present.
  *
- * @param input - the address to format
- * @param addLinebreaks - whether to join parts with newlines (default `true`) or concatenate them directly
- * @returns the formatted address string, or `undefined` if no meaningful parts are present
+ * @param input - The address to format.
+ * @param addLinebreaks - Whether to join parts with newlines (default `true`) or concatenate them directly.
+ * @returns The formatted address string, or `undefined` if no meaningful parts are present.
  */
 export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddress | UnitedStatesAddressWithContact>>, addLinebreaks = true): Maybe<string> {
   const { name, phone, line1, line2, zip, state, city } = (input ?? {}) as Partial<UnitedStatesAddressWithContact>;
@@ -156,8 +156,8 @@ export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddre
  *
  * Useful for validating an address before submission or display.
  *
- * @param input - the address to validate
- * @returns `true` if all required fields (line1, city, state, zip) are populated
+ * @param input - The address to validate.
+ * @returns `true` if all required fields (line1, city, state, zip) are populated.
  *
  * @example
  * ```ts
@@ -188,8 +188,8 @@ export const US_STATE_CODE_STRING_REGEX = /^((A[LKSZR])|(C[AOT])|(D[EC])|(F[ML])
  *
  * Only matches uppercase codes; lowercase input returns `false`.
  *
- * @param input - the string to test
- * @returns `true` if the input matches a valid US state or territory code
+ * @param input - The string to test.
+ * @returns `true` if the input matches a valid US state or territory code.
  *
  * @example
  * ```ts

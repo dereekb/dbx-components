@@ -55,15 +55,18 @@ export function createInjectorForInjectionComponentConfig<T>(params: DbxInjectio
   const { config, parentInjector } = params;
   const { injector: inputInjector, providers, data } = config;
   const parent = inputInjector ?? parentInjector;
+  let result: Injector;
 
   if (!providers && data == null) {
-    return parent;
+    result = parent;
+  } else {
+    result = Injector.create({
+      parent,
+      providers: mergeStaticProviders({ provide: DBX_INJECTION_COMPONENT_DATA, useValue: data }, providers)
+    });
   }
 
-  return Injector.create({
-    parent,
-    providers: mergeStaticProviders({ provide: DBX_INJECTION_COMPONENT_DATA, useValue: data }, providers)
-  });
+  return result;
 }
 
 /**

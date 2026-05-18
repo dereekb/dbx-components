@@ -14,6 +14,7 @@
  * neutral?" routing without pulling in `culori` for v1.
  */
 
+import type { Maybe } from '@dereekb/util';
 import type { TokenEntry } from '../../manifest/tokens-schema.js';
 import type { ScoredTokenMatch, TokenRegistry } from '../../registry/tokens-runtime.js';
 import { expandIntentQuery } from './synonyms.js';
@@ -53,9 +54,9 @@ const SOURCE_RANK: Record<string, number> = { 'mat-sys': 4, mdc: 3, 'dbx-web': 2
  * intent / value / component matchers and applies any role / category
  * filters supplied by the caller.
  *
- * @param registry - the token registry to search
- * @param input - the query inputs (at least one of intent/value/component/category)
- * @returns the top scored matches plus a confidence flag
+ * @param registry - The token registry to search.
+ * @param input - The query inputs (at least one of intent/value/component/category)
+ * @returns The top scored matches plus a confidence flag.
  */
 export function resolveToken(registry: TokenRegistry, input: ResolveTokenInput): ResolveTokenResult {
   const candidates = filterCandidates(registry.all, input);
@@ -119,7 +120,7 @@ function scoreByValue(scored: Map<string, number>, candidates: readonly TokenEnt
   }
 }
 
-function computeValueScoreForEntry(input: { entry: TokenEntry; trimmed: string; parsedColor: RgbColor | null; parsedLength: ParsedLength | null; parsedShadow: ShadowLayer[] | null; legacyHint: boolean }): number {
+function computeValueScoreForEntry(input: { entry: TokenEntry; trimmed: string; parsedColor: Maybe<RgbColor>; parsedLength: Maybe<ParsedLength>; parsedShadow: Maybe<ShadowLayer[]>; legacyHint: boolean }): number {
   const { entry, trimmed, parsedColor, parsedLength, parsedShadow, legacyHint } = input;
   let score = 0;
   if (parsedColor !== null && (entry.role === 'color' || entry.role === 'text-color' || entry.role === 'surface' || entry.role === 'shadow')) {
@@ -205,16 +206,16 @@ const HEX_RE = /^#([0-9a-f]{3,8})$/i;
  * Parses a CSS color literal into linear RGB plus alpha. Supports `#hex`,
  * `rgb(a)(...)` (comma + space variants), and a few common named colors.
  *
- * @param raw - the user-supplied value, trimmed
- * @returns the parsed color, or null if not a recognisable color literal
+ * @param raw - The user-supplied value, trimmed.
+ * @returns The parsed color, or null if not a recognisable color literal.
  */
-export function parseColor(raw: string): RgbColor | null {
+export function parseColor(raw: string): Maybe<RgbColor> {
   const trimmed = raw.trim();
   if (trimmed === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
   if (trimmed.toLowerCase() === 'white') return { r: 255, g: 255, b: 255, a: 1 };
   if (trimmed.toLowerCase() === 'black') return { r: 0, g: 0, b: 0, a: 1 };
   const rgbMatch = RGB_RE.exec(trimmed);
-  let result: RgbColor | null = null;
+  let result: Maybe<RgbColor> = null;
   if (rgbMatch !== null) {
     const parts = rgbMatch[1].trim().split(RGB_PARTS_RE);
     const numeric = /^[0-9.]+$/;
@@ -307,9 +308,9 @@ function rgbToOkLab(rgb: RgbColor): OkLabColor {
  * similar — values under ~0.05 are perceptually close, under ~0.02 are
  * indistinguishable to most viewers.
  *
- * @param a - first color
- * @param b - second color
- * @returns the OKLab distance, including alpha as an extra channel
+ * @param a - First color.
+ * @param b - Second color.
+ * @returns The OKLab distance, including alpha as an extra channel.
  */
 export function colorDistance(a: RgbColor, b: RgbColor): number {
   const lab1 = rgbToOkLab(a);
@@ -339,7 +340,7 @@ function scoreColor(entry: TokenEntry, target: RgbColor): number {
   return best;
 }
 
-function isLegacyHintColor(parsed: RgbColor | null): boolean {
+function isLegacyHintColor(parsed: Maybe<RgbColor>): boolean {
   let result = false;
   if (parsed !== null) {
     const isBlack = parsed.r < 5 && parsed.g < 5 && parsed.b < 5;
@@ -359,12 +360,12 @@ const LENGTH_RE = /^([0-9.]+)\s*(px|rem|em|%|vh|vw)?$/i;
 /**
  * Parses a CSS length literal (px, rem, em, %, vh, vw, or unitless number).
  *
- * @param raw - the trimmed value
- * @returns the parsed length, or null if not a recognisable length literal
+ * @param raw - The trimmed value.
+ * @returns The parsed length, or null if not a recognisable length literal.
  */
-export function parseLength(raw: string): ParsedLength | null {
+export function parseLength(raw: string): Maybe<ParsedLength> {
   const match = LENGTH_RE.exec(raw.trim());
-  let result: ParsedLength | null = null;
+  let result: Maybe<ParsedLength> = null;
   if (match !== null) {
     result = {
       value: Number.parseFloat(match[1]),
@@ -392,15 +393,15 @@ function scoreLength(entry: TokenEntry, target: ParsedLength): number {
 }
 
 // MARK: Value scoring — shadow
-type ShadowLayer = { offsetX: number; offsetY: number; blur: number; spread: number; color: RgbColor | null };
+type ShadowLayer = { offsetX: number; offsetY: number; blur: number; spread: number; color: Maybe<RgbColor> };
 
 /**
  * Parses a CSS shadow literal into one or more layers.
  *
- * @param raw - the trimmed value
- * @returns the parsed layers, or null if not a recognisable shadow
+ * @param raw - The trimmed value.
+ * @returns The parsed layers, or null if not a recognisable shadow.
  */
-export function parseShadow(raw: string): ShadowLayer[] | null {
+export function parseShadow(raw: string): Maybe<ShadowLayer[]> {
   const trimmed = raw.trim();
   if (!trimmed.includes('px') && !trimmed.startsWith('rgba(') && !trimmed.includes(' ')) return null;
   const layers: ShadowLayer[] = [];
@@ -429,16 +430,16 @@ function splitShadowLayers(raw: string): string[] {
   return out;
 }
 
-function parseShadowLayer(raw: string): ShadowLayer | null {
+function parseShadowLayer(raw: string): Maybe<ShadowLayer> {
   const colorMatch = /(rgba?\([^)]*\)|#[0-9a-f]+)/i.exec(raw);
-  let color: RgbColor | null = null;
+  let color: Maybe<RgbColor> = null;
   let withoutColor = raw;
   if (colorMatch !== null) {
     color = parseColor(colorMatch[1]);
     withoutColor = (raw.slice(0, colorMatch.index) + raw.slice(colorMatch.index + colorMatch[0].length)).trim();
   }
   const parts = withoutColor.split(/\s+/).filter((p) => p.length > 0);
-  let result: ShadowLayer | null = null;
+  let result: Maybe<ShadowLayer> = null;
   if (parts.length >= 2) {
     const ox = parseLength(parts[0]);
     const oy = parseLength(parts[1]);

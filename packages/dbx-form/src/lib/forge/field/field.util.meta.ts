@@ -10,7 +10,7 @@ import { type FieldAutocompleteAttributeOptionRef, fieldAutocompleteAttributeVal
  * Intended to be used inside a field builder function to propagate autocomplete hints from
  * config into the final rendered form control.
  *
- * @param instance - the field builder instance whose field def is inspected and to which metadata is added
+ * @param instance - The field builder instance whose field def is inspected and to which metadata is added.
  */
 export function configureForgeAutocompleteFieldMeta<C extends DbxForgeFieldFunctionDef<any> & FieldAutocompleteAttributeOptionRef>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>): void {
   const fieldDef = instance.getFieldDef();

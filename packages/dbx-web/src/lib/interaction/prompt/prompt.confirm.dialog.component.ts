@@ -17,7 +17,7 @@ export const DEFAULT_DBX_PROMPT_CONFIRM_DIALOG_CONFIG = {
  * Configuration for the confirmation dialog, extending prompt config with an optional injected component.
  */
 export interface DbxPromptConfirmDialogConfig extends DbxPromptConfirmConfig {
-  component?: DbxInjectionComponentConfig;
+  readonly component?: DbxInjectionComponentConfig;
 }
 
 /**

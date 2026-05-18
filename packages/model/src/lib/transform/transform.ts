@@ -21,8 +21,8 @@ export interface TransformAndValidateObject<T extends object, O, C = unknown> ex
  *
  * On validation success, calls the configured handler function. On validation failure, delegates to the error handler.
  *
- * @param config - schema, handler function, and validation error handler
- * @returns a function that validates and processes input objects
+ * @param config - Schema, handler function, and validation error handler.
+ * @returns Wrapped function that runs validation then either invokes the handler or routes failures to the error handler.
  *
  * @example
  * ```typescript
@@ -41,14 +41,17 @@ export function transformAndValidateObject<T extends object, O, I extends object
 
   return async (input: I, context?: C) => {
     const x = await transformToResult(input, context);
+    let output: { object: T; result: O };
 
     if (x.success) {
-      return { object: x.object, result: x.result };
+      output = { object: x.object, result: x.result };
+    } else {
+      // Error handler is expected to throw. If it doesn't, there is no validated object to return.
+      const result = await handleValidationError(x.validationErrors);
+      output = { object: undefined as unknown as T, result };
     }
 
-    // Error handler is expected to throw. If it doesn't, there is no validated object to return.
-    const result = await handleValidationError(x.validationErrors);
-    return { object: undefined as unknown as T, result };
+    return output;
   };
 }
 
@@ -71,8 +74,9 @@ export type TransformAndValidateObjectFactory<C = unknown> = <T extends object, 
  * The factory pre-configures error handling so individual function calls
  * only need to specify the schema and handler.
  *
- * @param defaults - default error handler
- * @returns a factory function that creates TransformAndValidateObjectFunction instances
+ * @param defaults - Default error handler.
+ * @returns A factory function that creates TransformAndValidateObjectFunction instances.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function transformAndValidateObjectFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateObjectFactory<C> {
@@ -116,8 +120,8 @@ export interface TransformAndValidateObjectResultFunctionConfig<T extends object
  * Returns `{ success: true, object, result }` on valid input, or `{ success: false, validationErrors }` on failure.
  * The caller is responsible for handling the error case.
  *
- * @param config - schema and handler function
- * @returns a function that returns a success/error discriminated result
+ * @param config - Schema and handler function.
+ * @returns Wrapped function that yields a discriminated result so the caller can branch on success or validation failure.
  *
  * @example
  * ```typescript
@@ -138,14 +142,17 @@ export function transformAndValidateObjectResult<T extends object, O, I extends 
   const { schema, fn } = config;
 
   return async (input: I) => {
-    const out = schema(input as unknown);
+    const out = schema(input);
+    let output: TransformAndValidateObjectResultOutput<T, O>;
 
     if (out instanceof type.errors) {
-      return { validationErrors: out as ArkErrors, success: false as const };
+      output = { validationErrors: out, success: false as const };
+    } else {
+      const object = out as T;
+      const result = await fn(object);
+      output = { object, result, success: true as const };
     }
 
-    const object = out as T;
-    const result = await fn(object);
-    return { object, result, success: true as const };
+    return output;
   };
 }

@@ -34,8 +34,8 @@ export class DbxModelViewTrackerStorage {
   /**
    * Persists a view tracker event to storage. Deduplicates by model key, sorts by date, and trims to the max event limit.
    *
-   * @param event - The event to record
-   * @returns Observable that completes when the event has been persisted
+   * @param event - The event to record.
+   * @returns Observable that completes when the event has been persisted.
    */
   addTrackerEvent(event: DbxModelViewTrackerEvent): Observable<void> {
     const storageKey = this.getStorageKeyForFolder(event.folder);
@@ -65,7 +65,7 @@ export class DbxModelViewTrackerStorage {
    * Returns all stored view events for the given folder.
    *
    * @param folder - Optional folder name; defaults to `'default'`
-   * @returns Observable of all view tracker events in the folder
+   * @returns Observable of all view tracker events in the folder.
    */
   getAllEvents(folder?: Maybe<string>): Observable<DbxModelViewTrackerEvent[]> {
     return this.getEventSet(folder).pipe(map((x) => x.e));
@@ -75,7 +75,7 @@ export class DbxModelViewTrackerStorage {
    * Returns the complete event set for the given folder.
    *
    * @param folder - Optional folder name; defaults to `'default'`
-   * @returns Observable of the event set containing events and the last-update timestamp
+   * @returns Observable of the event set containing events and the last-update timestamp.
    */
   getEventSet(folder?: Maybe<string>): Observable<DbxModelViewTrackerEventSet> {
     const storageKey = this.getStorageKeyForFolder(folder);
@@ -95,7 +95,7 @@ export class DbxModelViewTrackerStorage {
    * Computes the storage key for a given folder name.
    *
    * @param folder - Optional folder name; defaults to `'default'`
-   * @returns The computed storage key string combining the base key and folder name
+   * @returns The computed storage key string combining the base key and folder name.
    */
   getStorageKeyForFolder(folder?: Maybe<string>): string {
     return `${this.storageKey}_${folder ?? 'default'}`;

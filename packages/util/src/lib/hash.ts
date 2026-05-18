@@ -20,10 +20,10 @@ export type HashDecodeMap<H extends string = string, V extends string = string> 
 /**
  * Decodes a list of hashed string values using a provided list of potential original values and a hash function.
  *
- * @param hashedValues - An array of hashed strings to decode.
- * @param decodeValues - An array of potential original string values.
- * @param hashFn - A function that takes a string and returns its hashed representation.
- * @returns An array of decoded strings. Values that cannot be decoded are filtered out.
+ * @param hashedValues - Hashed inputs awaiting reverse lookup.
+ * @param decodeValues - Plaintext candidates that may match one of the hashes.
+ * @param hashFn - Deterministic hashing used to align the candidate set with the input hashes.
+ * @returns Plaintext recovered from `decodeValues`, dropping any hash that lacks a match.
  *
  * @dbxUtil
  * @dbxUtilCategory hash
@@ -46,14 +46,15 @@ export function decodeHashedValues(hashedValues: string[], decodeValues: string[
  * Creates a `HashDecodeMap` from a list of potential original string values and a hash function.
  * The map's keys are the hashed versions of the `decodeValues`, and the values are the original `decodeValues`.
  *
+ * @param decodeValues - Plaintext candidates whose hashes the map should index.
+ * @param hashFn - Deterministic hashing used to compute each key.
+ * @returns Hash-to-plaintext lookup ready for reverse decoding.
+ *
  * @dbxUtil
  * @dbxUtilCategory hash
  * @dbxUtilTags hash, decode, map, lookup, reverse, factory
  * @dbxUtilRelated decode-hashed-values, decode-hashed-values-with-decode-map
  *
- * @param decodeValues - An array of potential original string values.
- * @param hashFn - A function that takes a string and returns its hashed representation.
- * @returns A {@link HashDecodeMap} for decoding hashed values.
  * @__NO_SIDE_EFFECTS__
  */
 export function makeHashDecodeMap(decodeValues: string[], hashFn: (value: string) => string): HashDecodeMap {
@@ -65,9 +66,9 @@ export function makeHashDecodeMap(decodeValues: string[], hashFn: (value: string
 /**
  * Decodes a list of hashed string values using a pre-built `HashDecodeMap`.
  *
- * @param hashedValues - An array of hashed strings to decode.
- * @param decodeMap - A {@link HashDecodeMap} to use for looking up original values.
- * @returns An array of decoded strings. Values that cannot be decoded are filtered out.
+ * @param hashedValues - Hashed inputs awaiting reverse lookup.
+ * @param decodeMap - Pre-built hash-to-plaintext lookup.
+ * @returns Plaintext recovered via `decodeMap`, dropping any hash missing from it.
  */
 export function decodeHashedValuesWithDecodeMap(hashedValues: string[], decodeMap: HashDecodeMap): string[] {
   const values = hashedValues.map((x) => decodeMap.get(x));

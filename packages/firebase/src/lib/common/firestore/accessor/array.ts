@@ -16,10 +16,11 @@ export type ArrayFieldUpdateWithAccessorFunction<T> = (data: FirestoreAccessorAr
  * the operation entirely if no valid fields remain. Uses Firestore's built-in `arrayUnion`
  * and `arrayRemove` operations, which are safe for concurrent updates.
  *
- * @param accessor - The document accessor to perform the array update on
- * @returns A function that applies array updates to the document
+ * @param accessor - Accessor used to apply the array update.
+ * @returns Update function that runs the supplied array operations.
  *
  * @see https://firebase.google.com/docs/firestore/manage-data/add-data#update_elements_in_an_array
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function arrayUpdateWithAccessorFunction<T>(accessor: FirestoreDocumentDataAccessor<T>): ArrayFieldUpdateWithAccessorFunction<T> {

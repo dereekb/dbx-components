@@ -13,9 +13,13 @@ export type SortByStringFunction<T> = SortCompareFunction<T>;
  * `(a, b) => a.localeCompare(b)` everywhere, and to satisfy the no-default-sort
  * lint rule for string arrays.
  *
+ * @param a - The first string to compare.
+ * @param b - The second string to compare.
+ * @returns A negative number when `a` sorts before `b`, positive when after, `0` when equal.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
- * @dbxUtilKind comparator
+ * @dbxUtilKind const
  * @dbxUtilTags string, sort, compare, alphabetical, locale
  * @dbxUtilRelated compare-strings-numeric, sort-by-string-function
  *
@@ -31,9 +35,13 @@ export const compareStrings: SortByStringFunction<string> = (a, b) => a.localeCo
  * with the `numeric` collation option enabled, so numeric substrings are compared by value
  * (e.g. `"2"` sorts before `"10"`).
  *
+ * @param a - The first string to compare.
+ * @param b - The second string to compare.
+ * @returns A negative number when `a` sorts before `b`, positive when after, `0` when equal.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
- * @dbxUtilKind comparator
+ * @dbxUtilKind const
  * @dbxUtilTags string, sort, compare, numeric, natural, locale
  * @dbxUtilRelated compare-strings, sort-by-string-function
  *
@@ -47,14 +55,15 @@ export const compareStringsNumeric: SortByStringFunction<string> = (a, b) => a.l
 /**
  * Creates a {@link SortByStringFunction} that sorts values in ascending alphabetical order using `localeCompare`.
  *
+ * @param readStringFn - Function to extract a string from each value for comparison.
+ * @returns A comparator function suitable for use with `Array.sort()`.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, sort, compare, alphabetical, factory, locale
  * @dbxUtilRelated sort-by-label-function, compare-strings
  *
- * @param readStringFn - Function to extract a string from each value for comparison.
- * @returns A comparator function suitable for use with `Array.sort()`.
  * @__NO_SIDE_EFFECTS__
  */
 export function sortByStringFunction<T>(readStringFn: ReadStringFunction<T>): SortByStringFunction<T> {

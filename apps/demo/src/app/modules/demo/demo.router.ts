@@ -2,9 +2,9 @@ import { type Ng2StateDeclaration } from '@uirouter/angular';
 import { DemoHomeComponent } from './container/home.component';
 import { DemoLayoutComponent } from './container/layout.component';
 import { type HasAuthStateData, redirectBasedOnAuthUserState } from '@dereekb/dbx-core';
-import { demoAppStateData } from './modules/app/demo.app.router.auth';
+import { DEMO_APP_STATE_DATA } from './modules/app/demo.app.router.auth';
 
-export const layoutState: Ng2StateDeclaration = {
+export const LAYOUT_STATE: Ng2StateDeclaration = {
   parent: 'root',
   url: '/demo',
   name: 'demo',
@@ -12,19 +12,19 @@ export const layoutState: Ng2StateDeclaration = {
   component: DemoLayoutComponent
 };
 
-export const homeState: Ng2StateDeclaration = {
+export const HOME_STATE: Ng2StateDeclaration = {
   url: '/home',
   name: 'demo.home',
   component: DemoHomeComponent
 };
 
-export const loginState: Ng2StateDeclaration = {
+export const LOGIN_STATE: Ng2StateDeclaration = {
   url: '/login',
   name: 'demo.login',
   redirectTo: 'demo.auth.login'
 };
 
-export const demoAuthFutureState: Ng2StateDeclaration = {
+export const DEMO_AUTH_FUTURE_STATE: Ng2StateDeclaration = {
   name: 'demo.auth.**',
   url: '/auth',
   loadChildren: () => import('./modules/auth/demo.auth.module').then((m) => m.DemoAuthModule),
@@ -37,7 +37,7 @@ export const demoAuthFutureState: Ng2StateDeclaration = {
   } as HasAuthStateData
 };
 
-export const demoOnboardFutureState: Ng2StateDeclaration = {
+export const DEMO_ONBOARD_FUTURE_STATE: Ng2StateDeclaration = {
   name: 'demo.onboard.**',
   url: '/onboard',
   loadChildren: () => import('./modules/onboard/demo.onboard.module').then((m) => m.DemoOnboardModule),
@@ -49,14 +49,14 @@ export const demoOnboardFutureState: Ng2StateDeclaration = {
   } as HasAuthStateData
 };
 
-export const demoAppFutureState: Ng2StateDeclaration = {
+export const DEMO_APP_FUTURE_STATE: Ng2StateDeclaration = {
   name: 'demo.app.**',
   url: '/app',
   loadChildren: () => import('./modules/app/demo.app.module').then((m) => m.DemoAppModule),
-  data: demoAppStateData
+  data: DEMO_APP_STATE_DATA
 };
 
-export const demoOAuthFutureState: Ng2StateDeclaration = {
+export const DEMO_OAUTH_FUTURE_STATE: Ng2StateDeclaration = {
   name: 'demo.oauth.**',
   url: '/oauth',
   loadChildren: () => import('./modules/oauth/demo.oauth.module').then((m) => m.DemoOAuthModule)
@@ -64,4 +64,4 @@ export const demoOAuthFutureState: Ng2StateDeclaration = {
 
 // TODO: Add public state that also allows anonymous viewers. Anonymous users still must sign the ToS. Their signature updates their Token.
 
-export const STATES: Ng2StateDeclaration[] = [layoutState, homeState, loginState, demoOnboardFutureState, demoAuthFutureState, demoAppFutureState, demoOAuthFutureState];
+export const STATES: Ng2StateDeclaration[] = [LAYOUT_STATE, HOME_STATE, LOGIN_STATE, DEMO_ONBOARD_FUTURE_STATE, DEMO_AUTH_FUTURE_STATE, DEMO_APP_FUTURE_STATE, DEMO_OAUTH_FUTURE_STATE];

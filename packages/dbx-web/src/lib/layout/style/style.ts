@@ -185,6 +185,9 @@ export type DbxColorInput = DbxThemeColor | DbxColorConfig | '';
  * Any non-null object is treated as a config so template-only configs (i.e. `{ template: 'foo' }`)
  * are detected before the service expands them.
  *
+ * @param value - The value to test.
+ * @returns `true` when the value is a {@link DbxColorConfig}
+ *
  * @example
  * ```ts
  * isDbxColorConfig('primary'); // false
@@ -192,9 +195,6 @@ export type DbxColorInput = DbxThemeColor | DbxColorConfig | '';
  * isDbxColorConfig({ template: 'brand-positive' }); // true
  * isDbxColorConfig(undefined); // false
  * ```
- *
- * @param value - the value to test
- * @returns `true` when the value is a {@link DbxColorConfig}
  */
 export function isDbxColorConfig(value: Maybe<DbxColorInput>): value is DbxColorConfig {
   return typeof value === 'object' && value !== null;
@@ -217,15 +217,15 @@ export const DBX_COLOR_CUSTOM_TEXT_CSS_CLASS: CssClass = 'dbx-color-text';
 /**
  * Returns the CSS class name for a themed background color.
  *
+ * @param color - The theme color, color config, or nullish/empty for the default class.
+ * @returns The CSS class name for the themed background (e.g., `'dbx-primary-bg'`, `'dbx-color-bg'`, or `'dbx-default'`)
+ *
  * @example
  * ```ts
  * dbxColorBackground('primary'); // 'dbx-primary-bg'
  * dbxColorBackground({ color: '#ff0066' }); // 'dbx-color-bg'
  * dbxColorBackground(undefined); // 'dbx-default'
  * ```
- *
- * @param color - the theme color, color config, or nullish/empty for the default class
- * @returns the CSS class name for the themed background (e.g., `'dbx-primary-bg'`, `'dbx-color-bg'`, or `'dbx-default'`)
  */
 export function dbxColorBackground(color: Maybe<DbxColorInput>): CssClass {
   let cssClass: CssClass = 'dbx-default'; // default text color class (not -bg) to avoid setting --dbx-bg-color-current which interferes with button label color tokens
@@ -291,7 +291,7 @@ export function dbxThemeColorCssToken(color: Maybe<DbxThemeColor>, returnDefault
   let result: Maybe<CssToken>;
 
   if (color && color in DBX_THEME_COLOR_CSS_VAR_MAP) {
-    result = DBX_THEME_COLOR_CSS_VAR_MAP[color as DbxThemeColor];
+    result = DBX_THEME_COLOR_CSS_VAR_MAP[color];
   } else if (returnDefault) {
     result = DBX_THEME_COLOR_CSS_VAR_MAP.default;
   }
@@ -326,6 +326,7 @@ export function dbxThemeColorCssTokenVar(color: Maybe<DbxThemeColor>, returnDefa
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use {@link dbxThemeColorCssToken} instead.
  */

@@ -19,8 +19,8 @@ export interface LoadRouteTreeArgs {
  * Pure tree-loading entry point. Resolves the supplied source list and builds
  * the parent/child tree in one step so wrappers can stay thin.
  *
- * @param args - the in-memory sources to process
- * @returns the constructed route tree with extraction issues attached
+ * @param args - The in-memory sources to process.
+ * @returns The constructed route tree with extraction issues attached.
  */
 export function loadRouteTree(args: LoadRouteTreeArgs): RouteTree {
   const resolved = resolveRouteSources(args.sources);

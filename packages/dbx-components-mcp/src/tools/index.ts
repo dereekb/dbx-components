@@ -101,33 +101,33 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { createLookupFormTool } from './lookup-form.tool.js';
 import { createSearchFormTool } from './search-form.tool.js';
-import { formExamplesTool } from './form-examples.tool.js';
+import { FORM_EXAMPLES_TOOL } from './form-examples.tool.js';
 import { createFormScaffoldTool } from './form-scaffold.tool.js';
 import { createLookupUiTool } from './lookup-ui.tool.js';
 import { createSearchUiTool } from './search-ui.tool.js';
 import { createUiExamplesTool } from './ui-examples.tool.js';
-import { lookupModelTool } from './lookup-model.tool.js';
-import { searchModelTool } from './search-model.tool.js';
-import { modelDecodeTool } from './model-decode.tool.js';
+import { LOOKUP_MODEL_TOOL } from './lookup-model.tool.js';
+import { SEARCH_MODEL_TOOL } from './search-model.tool.js';
+import { MODEL_DECODE_TOOL } from './model-decode.tool.js';
 import { createModelValidateTool } from './model-validate.tool.js';
 import type { RuleOptions } from './model-validate/index.js';
 import { modelValidateApiTool } from './model-validate-api.tool.js';
-import { modelApiListAppTool } from './model-api-list-app.tool.js';
-import { modelApiLookupTool } from './model-api-lookup.tool.js';
-import { modelApiValidateAppTool } from './model-api-validate-app.tool.js';
+import { MODEL_API_LIST_APP_TOOL } from './model-api-list-app.tool.js';
+import { MODEL_API_LOOKUP_TOOL } from './model-api-lookup.tool.js';
+import { MODEL_API_VALIDATE_APP_TOOL } from './model-api-validate-app.tool.js';
 import { createModelValidateFolderTool } from './model-validate-folder.tool.js';
-import { modelStoreScaffoldTool } from './model-store-scaffold.tool.js';
-import { modelFixtureListAppTool } from './model-fixture-list-app.tool.js';
-import { modelFixtureLookupTool } from './model-fixture-lookup.tool.js';
+import { MODEL_STORE_SCAFFOLD_TOOL } from './model-store-scaffold.tool.js';
+import { MODEL_FIXTURE_LIST_APP_TOOL } from './model-fixture-list-app.tool.js';
+import { MODEL_FIXTURE_LOOKUP_TOOL } from './model-fixture-lookup.tool.js';
 import { createModelFixtureValidateAppTool } from './model-fixture-validate-app.tool.js';
-import { modelFixtureScaffoldTool } from './model-fixture-scaffold.tool.js';
-import { modelFixtureForwardTool } from './model-fixture-forward.tool.js';
-import { modelTestTreeTool } from './model-test-tree.tool.js';
-import { modelTestSearchTool } from './model-test-search.tool.js';
-import { archetypeRecommendTool } from './archetype-recommend.tool.js';
-import { archetypeLookupTool } from './archetype-lookup.tool.js';
-import { archetypeSearchTool } from './archetype-search.tool.js';
-import { modelHierarchyTool } from './model-hierarchy.tool.js';
+import { MODEL_FIXTURE_SCAFFOLD_TOOL } from './model-fixture-scaffold.tool.js';
+import { MODEL_FIXTURE_FORWARD_TOOL } from './model-fixture-forward.tool.js';
+import { MODEL_TEST_TREE_TOOL } from './model-test-tree.tool.js';
+import { MODEL_TEST_SEARCH_TOOL } from './model-test-search.tool.js';
+import { ARCHETYPE_RECOMMEND_TOOL } from './archetype-recommend.tool.js';
+import { ARCHETYPE_LOOKUP_TOOL } from './archetype-lookup.tool.js';
+import { ARCHETYPE_SEARCH_TOOL } from './archetype-search.tool.js';
+import { MODEL_HIERARCHY_TOOL } from './model-hierarchy.tool.js';
 import type { FixtureModelRegistry } from './model-fixture-shared/index.js';
 import { storageFileMValidateAppTool } from './storagefile-m-validate-app.tool.js';
 import { storageFileMListAppTool } from './storagefile-m-list-app.tool.js';
@@ -136,22 +136,22 @@ import { notificationMValidateAppTool } from './notification-m-validate-app.tool
 import { notificationMListAppTool } from './notification-m-list-app.tool.js';
 import { notificationMValidateFolderTool } from './notification-m-validate-folder.tool.js';
 import { systemMValidateFolderTool } from './system-m-validate-folder.tool.js';
-import { systemMListAppTool } from './system-m-list-app.tool.js';
+import { SYSTEM_M_LIST_APP_TOOL } from './system-m-list-app.tool.js';
 import { dbxAssetValidateAppTool } from './dbx-asset-validate-app.tool.js';
 import { dbxAssetListAppTool } from './dbx-asset-list-app.tool.js';
 import { dbxAssetValidateFolderTool } from './dbx-asset-validate-folder.tool.js';
-import { dbxAssetScaffoldTool } from './dbx-asset-scaffold.tool.js';
-import { dbxColorTemplateListAppTool } from './dbx-color-template-list-app.tool.js';
-import { dbxColorSmellCheckTool } from './dbx-color-smell-check.tool.js';
+import { DBX_ASSET_SCAFFOLD_TOOL } from './dbx-asset-scaffold.tool.js';
+import { DBX_COLOR_TEMPLATE_LIST_APP_TOOL } from './dbx-color-template-list-app.tool.js';
+import { DBX_COLOR_SMELL_CHECK_TOOL } from './dbx-color-smell-check.tool.js';
 import { createLookupActionTool } from './lookup-action.tool.js';
 import { createSearchActionTool } from './search-action.tool.js';
-import { actionExamplesTool } from './action-examples.tool.js';
-import { actionScaffoldTool } from './action-scaffold.tool.js';
-import { routeTreeTool } from './route-tree.tool.js';
-import { routeLookupTool } from './route-lookup.tool.js';
-import { routeSearchTool } from './route-search.tool.js';
+import { ACTION_EXAMPLES_TOOL } from './action-examples.tool.js';
+import { ACTION_SCAFFOLD_TOOL } from './action-scaffold.tool.js';
+import { ROUTE_TREE_TOOL } from './route-tree.tool.js';
+import { ROUTE_LOOKUP_TOOL } from './route-lookup.tool.js';
+import { ROUTE_SEARCH_TOOL } from './route-search.tool.js';
 import { createLookupFilterTool } from './lookup-filter.tool.js';
-import { filterScaffoldTool } from './filter-scaffold.tool.js';
+import { FILTER_SCAFFOLD_TOOL } from './filter-scaffold.tool.js';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
 import { createSearchPipeTool } from './search-pipe.tool.js';
 import { createLookupUtilTool } from './lookup-util.tool.js';
@@ -163,13 +163,13 @@ import { createLookupModelFirebaseIndexTool } from './lookup-model-firebase-inde
 import { createSearchModelFirebaseIndexTool } from './search-model-firebase-index.tool.js';
 import { createListAppModelFirebaseIndexTool } from './list-app-model-firebase-index.tool.js';
 import { createValidateAppModelFirebaseIndexTool } from './validate-app-model-firebase-index.tool.js';
-import { artifactScaffoldTool } from './artifact-scaffold.tool.js';
-import { artifactFileConventionTool } from './artifact-file-convention.tool.js';
-import { explainRuleTool } from './explain-rule.tool.js';
-import { appValidateTool } from './app-validate.tool.js';
-import { modelListComponentTool } from './model-list-component.tool.js';
-import { serverActionsListAppTool } from './server-actions-list-app.tool.js';
-import { mcpConfigTool } from './mcp-config.tool.js';
+import { ARTIFACT_SCAFFOLD_TOOL } from './artifact-scaffold.tool.js';
+import { ARTIFACT_FILE_CONVENTION_TOOL } from './artifact-file-convention.tool.js';
+import { EXPLAIN_RULE_TOOL } from './explain-rule.tool.js';
+import { APP_VALIDATE_TOOL } from './app-validate.tool.js';
+import { MODEL_LIST_COMPONENT_TOOL } from './model-list-component.tool.js';
+import { SERVER_ACTIONS_LIST_APP_TOOL } from './server-actions-list-app.tool.js';
+import { MCP_CONFIG_TOOL } from './mcp-config.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
@@ -207,26 +207,26 @@ import { toolError, type DbxTool } from './types.js';
  */
 export const DBX_TOOLS: readonly DbxTool[] = [
   // form
-  formExamplesTool,
+  FORM_EXAMPLES_TOOL,
   // model
-  lookupModelTool,
-  searchModelTool,
-  modelHierarchyTool,
-  modelDecodeTool,
+  LOOKUP_MODEL_TOOL,
+  SEARCH_MODEL_TOOL,
+  MODEL_HIERARCHY_TOOL,
+  MODEL_DECODE_TOOL,
   modelValidateApiTool,
-  modelApiListAppTool,
-  modelApiLookupTool,
-  modelApiValidateAppTool,
-  modelStoreScaffoldTool,
-  modelFixtureListAppTool,
-  modelFixtureLookupTool,
-  modelFixtureScaffoldTool,
-  modelFixtureForwardTool,
-  modelTestTreeTool,
-  modelTestSearchTool,
-  archetypeRecommendTool,
-  archetypeLookupTool,
-  archetypeSearchTool,
+  MODEL_API_LIST_APP_TOOL,
+  MODEL_API_LOOKUP_TOOL,
+  MODEL_API_VALIDATE_APP_TOOL,
+  MODEL_STORE_SCAFFOLD_TOOL,
+  MODEL_FIXTURE_LIST_APP_TOOL,
+  MODEL_FIXTURE_LOOKUP_TOOL,
+  MODEL_FIXTURE_SCAFFOLD_TOOL,
+  MODEL_FIXTURE_FORWARD_TOOL,
+  MODEL_TEST_TREE_TOOL,
+  MODEL_TEST_SEARCH_TOOL,
+  ARCHETYPE_RECOMMEND_TOOL,
+  ARCHETYPE_LOOKUP_TOOL,
+  ARCHETYPE_SEARCH_TOOL,
   // storagefile_m (model extension)
   storageFileMValidateAppTool,
   storageFileMListAppTool,
@@ -237,36 +237,36 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   notificationMValidateFolderTool,
   // system_m (model extension)
   systemMValidateFolderTool,
-  systemMListAppTool,
+  SYSTEM_M_LIST_APP_TOOL,
   // asset (component + app extension)
   dbxAssetValidateAppTool,
   dbxAssetListAppTool,
   dbxAssetValidateFolderTool,
-  dbxAssetScaffoldTool,
+  DBX_ASSET_SCAFFOLD_TOOL,
   // color (Angular app extension)
-  dbxColorTemplateListAppTool,
-  dbxColorSmellCheckTool,
+  DBX_COLOR_TEMPLATE_LIST_APP_TOOL,
+  DBX_COLOR_SMELL_CHECK_TOOL,
   // action
-  actionExamplesTool,
-  actionScaffoldTool,
+  ACTION_EXAMPLES_TOOL,
+  ACTION_SCAFFOLD_TOOL,
   // route
-  routeTreeTool,
-  routeLookupTool,
-  routeSearchTool,
+  ROUTE_TREE_TOOL,
+  ROUTE_LOOKUP_TOOL,
+  ROUTE_SEARCH_TOOL,
   // filter
-  filterScaffoldTool,
+  FILTER_SCAFFOLD_TOOL,
   // artifact (cross-domain dispatchers)
-  artifactScaffoldTool,
-  artifactFileConventionTool,
+  ARTIFACT_SCAFFOLD_TOOL,
+  ARTIFACT_FILE_CONVENTION_TOOL,
   // rule catalog (cross-domain reference)
-  explainRuleTool,
+  EXPLAIN_RULE_TOOL,
   // aggregate orchestrator
-  appValidateTool,
+  APP_VALIDATE_TOOL,
   // downstream component introspection
-  modelListComponentTool,
-  serverActionsListAppTool,
+  MODEL_LIST_COMPONENT_TOOL,
+  SERVER_ACTIONS_LIST_APP_TOOL,
   // workspace config audit / setup
-  mcpConfigTool
+  MCP_CONFIG_TOOL
 ];
 
 /**
@@ -358,8 +358,8 @@ export interface RegisterToolsOptions {
  * pure handler — the dispatcher routes calls by name and converts thrown
  * errors into `isError` tool results.
  *
- * @param server - the MCP server whose underlying transport handlers to register
- * @param options - optional registry handles passed to tool factories
+ * @param server - The MCP server whose underlying transport handlers to register.
+ * @param options - Optional registry handles passed to tool factories.
  */
 export function registerTools(server: McpServer, options: RegisterToolsOptions = {}): void {
   const underlyingServer = server.server;
@@ -413,9 +413,6 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   underlyingServer.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: toolArgs } = request.params;
     const tool = tools.find((t) => t.definition.name === name);
-    if (!tool) {
-      return toolError(`Unknown tool: ${name}. Known tools: ${tools.map((t) => t.definition.name).join(', ')}.`);
-    }
-    return tool.run(toolArgs);
+    return tool ? tool.run(toolArgs) : toolError(`Unknown tool: ${name}. Known tools: ${tools.map((t) => t.definition.name).join(', ')}.`);
   });
 }

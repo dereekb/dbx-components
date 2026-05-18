@@ -22,15 +22,15 @@ const GRANTABLE_MODELS: ReadonlySet<string> = new Set(GRANTABLE_MODEL_NAMES);
  * Sensitive payload fields (`client_secret`, `registration_access_token`) are selectively
  * encrypted via the {@link OidcEncryptionService}.
  *
+ * @param collections - Firestore collection access for adapter entries.
+ * @param encryptionService - Encryption service for sensitive payload fields.
+ * @returns An oidc-provider adapter constructor backed by Firestore.
+ *
  * @example
  * ```ts
  * const adapter = createAdapterFactory(collections, encryptionService);
  * new Provider('issuer', { adapter });
  * ```
- *
- * @param collections - Firestore collection access for adapter entries.
- * @param encryptionService - Encryption service for sensitive payload fields.
- * @returns an oidc-provider adapter constructor backed by Firestore
  */
 export function createAdapterFactory(collections: OidcServerFirestoreCollections, encryptionService: OidcEncryptionService): AdapterConstructor {
   class FirestoreAdapter implements Adapter {
@@ -48,18 +48,18 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
       // oidc-provider uses `accountId` as the user identifier on Grant, AccessToken,
       // RefreshToken, etc. — `payload.uid` is only populated on Session/Interaction.
       // Fall back to `accountId` so the indexed `uid` column works for all entry types.
-      const uid = (payload.uid as string | undefined) ?? (payload.accountId as string | undefined);
+      const uid = payload.uid ?? payload.accountId;
 
       // oidc-provider stores the OAuth client id as `clientId` on every grantable
       // model (Grant, AccessToken, RefreshToken, AuthorizationCode, DeviceCode, etc.).
       // Client entries themselves use `client_id` in the payload, so we read both.
-      const clientId = (payload.clientId as string | undefined) ?? (payload.client_id as string | undefined);
+      const clientId = payload.clientId ?? payload.client_id;
 
       // Derive a stable `createdAt` from the payload so it survives upserts
       // (e.g. `consume`). Grant/AccessToken/RefreshToken/AuthorizationCode all
       // inherit `iat` (epoch seconds) from BaseToken; Client entries use
       // `created_at` (ISO string).
-      const iat = payload.iat as number | undefined;
+      const iat = payload.iat;
       const createdAtIso = payload.created_at as string | undefined;
       let createdAt: Maybe<Date>;
 
@@ -74,16 +74,16 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
         payload: encryptionService.encryptAdapterPayload(payload),
         o,
         uid,
-        grantId: payload.grantId as string | undefined,
+        grantId: payload.grantId,
         clientId,
-        userCode: payload.userCode as string | undefined,
+        userCode: payload.userCode,
         consumed: payload.consumed as number | undefined,
         ...(createdAt ? { createdAt } : undefined),
         ...(expiresIn ? { expiresAt: unixDateTimeSecondsNumberToDate(unixDateTimeSecondsNumberForNow() + expiresIn) } : undefined)
       };
 
       const doc = this.collection.documentAccessor().loadDocumentForId(id);
-      await doc.accessor.set(data as Partial<OidcEntry>, { merge: true });
+      await doc.accessor.set(data, { merge: true });
     }
 
     async find(id: OidcEntryId): Promise<AdapterPayload | undefined> {
@@ -141,8 +141,8 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
      * Converts a Firestore document into an oidc-provider payload,
      * returning `undefined` if the entry has expired.
      *
-     * @param data - the Firestore document data to convert
-     * @returns the decrypted adapter payload, or undefined if the entry has expired
+     * @param data - The Firestore document data to convert.
+     * @returns The decrypted adapter payload, or undefined if the entry has expired.
      */
     private _toPayload(data: OidcEntry): AdapterPayload | undefined {
       let expiresDate: Date | undefined;

@@ -320,23 +320,23 @@ function renderScaffold(args: ParsedScaffoldArgs): string {
  * scaffold output for the requested action role, and packages it as tool
  * content.
  *
- * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
- * @returns the rendered scaffold, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments object from the MCP runtime.
+ * @returns The rendered scaffold, or an error result when args fail validation.
  */
 export function runActionScaffold(rawArgs: unknown): ToolResult {
-  let args: ParsedScaffoldArgs;
+  let result: ToolResult;
   try {
-    args = parseScaffoldArgs(rawArgs);
+    const args = parseScaffoldArgs(rawArgs);
+    const text = renderScaffold(args);
+    result = { content: [{ type: 'text', text }] };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
+    result = toolError(message);
   }
-  const text = renderScaffold(args);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-export const actionScaffoldTool: DbxTool = {
+export const ACTION_SCAFFOLD_TOOL: DbxTool = {
   definition: DBX_ACTION_SCAFFOLD_TOOL,
   run: runActionScaffold
 };

@@ -49,9 +49,9 @@ export const E164PHONE_NUMBER_REGEX = /^\+[1-9]\d{6,14}$/;
 /**
  * Validates if the input string is a valid E.164 phone number.
  *
- * @param input - The phone number string to validate
- * @param allowExtension - If true, allows an extension in the format +number#extension
- * @returns True if the input is a valid E.164 phone number
+ * @param input - The phone number string to validate.
+ * @param allowExtension - If true, allows an extension in the format +number#extension.
+ * @returns True if the input is a valid E.164 phone number.
  */
 export function isE164PhoneNumber(input: string, allowExtension = true): input is E164PhoneNumber {
   return (allowExtension ? E164PHONE_NUMBER_WITH_OPTIONAL_EXTENSION_REGEX : E164PHONE_NUMBER_REGEX).test(input);
@@ -91,8 +91,8 @@ export const E164PHONE_NUMBER_WITH_EXTENSION_REGEX = /^\+[1-9]\d{6,14}(#\d{1,6})
  * Validates if the input string is a valid E.164 phone number with an extension.
  * The phone number must be in the format +number#extension.
  *
- * @param input - The phone number string to validate
- * @returns True if the input is a valid E.164 phone number with extension
+ * @param input - The phone number string to validate.
+ * @returns True if the input is a valid E.164 phone number with extension.
  */
 export function isE164PhoneNumberWithExtension(input: string): input is E164PhoneNumberWithExtension {
   return E164PHONE_NUMBER_WITH_EXTENSION_REGEX.test(input);
@@ -108,8 +108,8 @@ export const PHONE_EXTENSION_NUMBER_REGEX = /^\d{1,6}$/;
  * Validates if the input string is a valid phone extension number.
  * Valid extensions are 1-6 digits with no other characters.
  *
- * @param input - The extension string to validate
- * @returns True if the input is a valid phone extension number
+ * @param input - The extension string to validate.
+ * @returns True if the input is a valid phone extension number.
  */
 export function isValidPhoneExtensionNumber(input: string): input is PhoneExtensionNumber {
   return PHONE_EXTENSION_NUMBER_REGEX.test(input);
@@ -142,8 +142,8 @@ const e164PhoneNumberExtensionPairSplitterFunction = splitStringAtFirstCharacter
  * Splits a phone number into its main number and extension components.
  * If the input contains a # character, everything before is the number and everything after is the extension.
  *
- * @param input - The phone number string to split
- * @returns An object containing the number and optional extension
+ * @param input - The phone number string to split.
+ * @returns An object containing the number and optional extension.
  */
 export function e164PhoneNumberExtensionPair(input: PhoneNumber | E164PhoneNumberWithOptionalExtension): E164PhoneNumberExtensionPair {
   const split = e164PhoneNumberExtensionPairSplitterFunction(input);
@@ -158,8 +158,8 @@ export function e164PhoneNumberExtensionPair(input: PhoneNumber | E164PhoneNumbe
  * Combines a phone number and optional extension into a single string.
  * If an extension is provided, it will be appended with a # separator.
  *
- * @param input - An object containing the phone number and optional extension
- * @returns A formatted phone number string with optional extension
+ * @param input - An object containing the phone number and optional extension.
+ * @returns A formatted phone number string with optional extension.
  */
 export function e164PhoneNumberFromE164PhoneNumberExtensionPair(input: E164PhoneNumberExtensionPair): E164PhoneNumberWithOptionalExtension {
   return input.extension ? `${input.number}#${input.extension}` : input.number;
@@ -179,7 +179,7 @@ const PHONE_NUMBER_FORMATTING_CHARACTERS_REGEX = /[() \-.]/g;
  *
  * @param input - A raw phone number string, possibly with formatting (e.g. `'(720)6620850'`, `'720-662-0850'`)
  * @param defaultCountryCode - The country calling code to prepend if the number lacks one (default: `'1'` for US/Canada)
- * @returns The corrected {@link E164PhoneNumber}, or `undefined` if the input cannot be converted
+ * @returns The corrected {@link E164PhoneNumber}, or `undefined` if the input cannot be converted.
  *
  * @example
  * ```typescript

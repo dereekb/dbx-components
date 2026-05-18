@@ -6,9 +6,9 @@ import { type ZohoSearchRecordsCriteriaEntryArray, type ZohoSearchRecordsCriteri
  *
  * When used within an OR criteria tree, this enables searching for records matching any of the provided emails.
  *
- * @param emails - Single email or array of emails to create criteria entries for
+ * @param emails - Single email or array of emails to create criteria entries for.
  * @param field - Record field name to match against. Defaults to `'Email'`.
- * @returns Array of criteria entries, one per email, each using the `equals` filter
+ * @returns Array of criteria entries, one per email, each using the `equals` filter.
  *
  * @example
  * ```typescript

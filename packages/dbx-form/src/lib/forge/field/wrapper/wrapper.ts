@@ -1,5 +1,5 @@
 import type { RowField, GroupField, ContainerField, FieldDef, ConditionalExpression, WrapperConfig } from '@ng-forge/dynamic-forms';
-import { FORGE_EXPAND_FIELD_TYPE_NAME, type DbxForgeExpandButtonType, type DbxForgeExpandFieldDef, type DbxForgeExpandFieldProps } from './expand/expand.field';
+import { FORGE_EXPAND_FIELD_TYPE_NAME, type DbxForgeExpandButtonType, type DbxForgeExpandFieldDef } from './expand/expand.field';
 import { DBX_FORGE_FLEX_WRAPPER_TYPE_NAME, type DbxForgeFlexWrapper } from './flex/flex.wrapper';
 /**
  * Logic configuration for container fields (group, row, array).
@@ -39,7 +39,7 @@ export interface DbxForgeRowConfig extends Omit<RowField, 'type' | 'key'> {
  * Uses the `@ng-forge/dynamic-forms` `RowField` type with a 12-column grid system.
  * Each child field can specify a `col` value (1-12) for responsive sizing.
  *
- * @param config - Row layout configuration with fields and optional className
+ * @param config - Row layout configuration with fields and optional className.
  * @returns A {@link RowField} with type `'row'`
  *
  * @dbxFormField
@@ -87,7 +87,7 @@ export interface DbxForgeGroupConfig extends Omit<GroupField, 'type'> {}
  *
  * For sections with headers, use the section wrapper type instead.
  *
- * @param config - Group configuration with fields and required key
+ * @param config - Group configuration with fields and required key.
  * @returns A {@link GroupField} with type `'group'`
  *
  * @dbxFormField
@@ -112,7 +112,6 @@ export interface DbxForgeGroupConfig extends Omit<GroupField, 'type'> {}
  * // Resulting form value shape:
  * // { address: { city: '...', state: '...' } }
  * ```
- *
  * @example
  * ```typescript
  * // Wrong: if the intent is purely visual (e.g. conditional visibility) and
@@ -162,7 +161,7 @@ export interface DbxForgeContainerConfig extends Omit<ContainerField, 'type' | '
  * or structural. Use {@link dbxForgeGroup} when the intent is to nest the
  * child values under a named key in the form value.
  *
- * @param config - Container configuration with fields and optional key/wrappers
+ * @param config - Container configuration with fields and optional key/wrappers.
  * @returns A {@link ContainerField} with type `'container'`
  *
  * @example
@@ -181,7 +180,6 @@ export interface DbxForgeContainerConfig extends Omit<ContainerField, 'type' | '
  * // Resulting form value shape (flat):
  * // { city: '...', state: '...' }
  * ```
- *
  * @example
  * ```typescript
  * // Conditional visibility without altering the value shape — a common use
@@ -261,8 +259,8 @@ export interface DbxForgeToggleWrapperConfig {
  *
  * This is the forge equivalent of the formly `formlyToggleWrapper`.
  *
- * @param config - Toggle wrapper configuration
- * @returns A {@link ContainerField} containing the toggle and content container
+ * @param config - Toggle wrapper configuration.
+ * @returns A {@link ContainerField} containing the toggle and content container.
  *
  * @dbxFormField
  * @dbxFormSlug toggle-wrapper
@@ -384,8 +382,8 @@ export interface DbxForgeExpandWrapperConfig {
  *
  * This is the forge equivalent of the formly `formlyExpandWrapper`.
  *
- * @param config - Expand wrapper configuration
- * @returns A {@link ContainerField} containing the expand control and content container
+ * @param config - Expand wrapper configuration.
+ * @returns A {@link ContainerField} containing the expand control and content container.
  *
  * @dbxFormField
  * @dbxFormSlug expand-wrapper
@@ -423,8 +421,8 @@ export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): Cont
     props: {
       buttonType: config.buttonType ?? 'text',
       expandLabel: config.label ?? ''
-    } as DbxForgeExpandFieldProps
-  } as DbxForgeExpandFieldDef;
+    }
+  };
 
   const hiddenCondition: DbxForgeContainerLogicConfig = {
     type: 'hidden',

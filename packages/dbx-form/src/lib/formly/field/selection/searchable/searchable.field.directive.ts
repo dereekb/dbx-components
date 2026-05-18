@@ -363,9 +363,8 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
    *
    * Only used when multiSelect is false.
    *
-   * @param value - The display value to synchronize the input control with
-   *
-   * @param value - The display value to synchronize the input control with
+   * @param value - The display value to synchronize the input control with.
+   * @param value - The display value to synchronize the input control with.
    */
   protected _syncSingleValue(value: SearchableValueFieldDisplayValue<T>): void {
     this.inputCtrl.setValue(value.label);
@@ -395,7 +394,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
   /**
    * Returns the first validation error message from the input control, if any.
    *
-   * @returns The first error message string, or undefined if there are no errors
+   * @returns The first error message string, or undefined if there are no errors.
    */
   get inputErrorMessage(): string | undefined {
     const errors = this.inputCtrl.errors;

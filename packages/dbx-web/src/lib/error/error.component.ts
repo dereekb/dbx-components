@@ -75,13 +75,19 @@ export class DbxErrorComponent {
   readonly iconOnly = input<Maybe<boolean>>(false);
 
   private readonly _errorOverrideSignal = signal<Maybe<ErrorInput>>(undefined);
-  readonly errorSignal = computed(() => this._errorOverrideSignal() ?? this.error());
+  readonly errorSignal = computed(() => {
+    const error = this.error();
+    return this._errorOverrideSignal() ?? error;
+  });
 
-  readonly state = computed<DbxErrorComponentState>(() => {
+  readonly stateSignal = computed<DbxErrorComponentState>(() => {
     const rawError = this.errorSignal();
     const iconOnly = this.iconOnly();
+    let result: DbxErrorComponentState;
 
-    if (rawError != null) {
+    if (rawError == null) {
+      result = { viewType: 'none' };
+    } else {
       const error = toReadableError(rawError);
       const isDefaultError = iconOnly ? false : isDefaultReadableError(error);
 
@@ -111,23 +117,23 @@ export class DbxErrorComponent {
         }
       }
 
-      return state;
+      result = state;
     }
 
-    return { viewType: 'none' };
+    return result;
   });
 
-  readonly viewTypeSignal = computed(() => this.state().viewType);
-  readonly isDefaultErrorSignal = computed(() => this.state().isDefaultError);
-  readonly messageSignal = computed(() => this.state().message);
-  readonly customViewSignal = computed(() => this.state().customView);
+  readonly viewTypeSignal = computed(() => this.stateSignal().viewType);
+  readonly isDefaultErrorSignal = computed(() => this.stateSignal().isDefaultError);
+  readonly messageSignal = computed(() => this.stateSignal().message);
+  readonly customViewSignal = computed(() => this.stateSignal().customView);
 
   setError(error: Maybe<ErrorInput>) {
     this._errorOverrideSignal.set(error);
   }
 
   openErrorPopover(event: DbxErrorViewButtonEvent) {
-    const error = this.state().error;
+    const error = this.stateSignal().error;
 
     if (error != null) {
       const popoverRef = DbxErrorPopoverComponent.openPopover(this.popoverService, {

@@ -220,6 +220,174 @@ describe('extractModelFirebaseIndexEntries — flags + constraints', () => {
     expect(result.entries[0].constraintSequences).toEqual([]);
   });
 
+  it('sets specOnly = true and empties constraintSequences when @dbxModelFirebaseIndexSpecFilesOnly is set', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { status: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexSpecFilesOnly
+         */
+        export function specOnlyQuery(): unknown[] {
+          return [where<Job>('status', '==', 'active')];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].specOnly).toBe(true);
+    expect(result.entries[0].skip).toBe(false);
+    expect(result.entries[0].constraintSequences).toEqual([]);
+  });
+
+  it('defaults specOnly to false when @dbxModelFirebaseIndexSpecFilesOnly is absent', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { status: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function normalQuery(): unknown {
+          return where<Job>('status', '==', 'active');
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].specOnly).toBe(false);
+  });
+
+  it('keeps constraintSequences populated but emits excluded-factory warning when @dbxModelFirebaseIndexExclude is set', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        function orderBy<T>(_a: keyof T, _d: 'asc' | 'desc'): unknown { return {}; }
+        type Job = { status: string; dat: number };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexExclude
+         */
+        export function excludedQuery(): unknown[] {
+          return [where<Job>('status', '==', 'active'), orderBy<Job>('dat', 'asc')];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].excluded).toBe(true);
+    expect(result.entries[0].skip).toBe(false);
+    expect(result.entries[0].constraintSequences.length).toBe(1);
+    expect(result.entries[0].constraintSequences[0].entries.length).toBe(2);
+    const warning = result.warnings.find((w) => w.kind === 'excluded-factory');
+    expect(warning).toBeDefined();
+    if (warning?.kind === 'excluded-factory') {
+      expect(warning.severity).toBe('warning');
+      expect(warning.name).toBe('excludedQuery');
+    }
+  });
+
+  it('defaults excluded to false when @dbxModelFirebaseIndexExclude is absent', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { status: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function normalQuery(): unknown {
+          return where<Job>('status', '==', 'active');
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].excluded).toBe(false);
+    expect(result.warnings.find((w) => w.kind === 'excluded-factory')).toBeUndefined();
+  });
+
+  it('lets @dbxModelFirebaseIndexSkip suppress constraints even when @dbxModelFirebaseIndexExclude is also present', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { status: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexSkip
+         * @dbxModelFirebaseIndexExclude
+         */
+        export function skipAndExcludedQuery(): unknown[] {
+          return [where<Job>('status', '==', 'active')];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].skip).toBe(true);
+    expect(result.entries[0].excluded).toBe(true);
+    expect(result.entries[0].constraintSequences).toEqual([]);
+    expect(result.warnings.find((w) => w.kind === 'excluded-factory')).toBeDefined();
+  });
+
+  it('parses @dbxModelFirebaseIndexAllowArrayContainsAny as allowArrayContainsAny = true', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { jw: string[] };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexAllowArrayContainsAny
+         */
+        export function jobsWithAnyWeek(weeks: string[]): unknown {
+          return where<Job>('jw', 'array-contains-any', weeks);
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].allowArrayContainsAny).toBe(true);
+  });
+
+  it('defaults allowArrayContainsAny to false when the tag is absent', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/job.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { status: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function defaultQuery(): unknown {
+          return where<Job>('status', '==', 'active');
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    expect(result.entries.length).toBe(1);
+    expect(result.entries[0].allowArrayContainsAny).toBe(false);
+  });
+
   it('errors with complex-query-body when constraints sit inside if-branches', () => {
     const project = projectWith({
       '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,

@@ -1,16 +1,16 @@
 <div class="dbx-fixeddaterange-field">
-  <mat-calendar #calendarView [selected]="calendarSelectionSignal()" [dateFilter]="pickerFilterSignal()" [minDate]="minDateSignal()" [maxDate]="maxDateSignal()" (selectedChange)="selectedChange($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()"></mat-calendar>
+  <mat-calendar #calendarView [selected]="calendarSelectionSignal()" [dateFilter]="pickerFilterSignal()" [minDate]="minDateSignal()" [maxDate]="maxDateSignal()" (selectedChange)="selectedChange($event)" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-describedby]="ariaDescribedBySignal()"></mat-calendar>
   <mat-form-field class="dbx-fixeddaterange-field-input" appearance="fill">
-    @if (showRangeInput()) {
+    @if (showRangeInputSignal()) {
       <mat-date-range-input [formGroup]="inputRangeForm">
         <input #startDateInput matStartDate formControlName="start" placeholder="Start date" />
         <input #endDateInput [ngClass]="endDisabledSignal() ? 'dbx-fixeddaterange-field-input-end' : ''" [attr.tabindex]="endDisabledSignal() ? -1 : 0" matEndDate formControlName="end" placeholder="End date" />
       </mat-date-range-input>
     }
   </mat-form-field>
-  @if (errorsToDisplay()[0]; as error) {
-    <mat-error [id]="errorId()">{{ error.message }}</mat-error>
+  @if (errorsToDisplaySignal()[0]; as error) {
+    <mat-error [id]="errorIdSignal()">{{ error.message }}</mat-error>
   } @else if (props()?.hint; as hint) {
-    <mat-hint [id]="hintId()">{{ hint }}</mat-hint>
+    <mat-hint [id]="hintIdSignal()">{{ hint }}</mat-hint>
   }
 </div>

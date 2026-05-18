@@ -40,22 +40,22 @@ export class DbxErrorWidgetViewComponent {
     if (error != null) {
       const entry = this.dbxErrorWidgetService.getErrorWidgetEntry(error.code);
 
-      if (entry != null) {
+      if (entry == null) {
+        const unknownEntry = this.dbxErrorWidgetService.getUnknownErrorWidgetEntry();
+
+        if (unknownEntry?.widgetComponentClass != null) {
+          config = {
+            componentClass: unknownEntry?.widgetComponentClass,
+            data: error
+          };
+        }
+      } else {
         const defaultEntry = this.dbxErrorWidgetService.getDefaultErrorWidgetEntry();
         const componentClass = entry.widgetComponentClass ?? defaultEntry?.widgetComponentClass;
 
         if (componentClass != null) {
           config = {
             componentClass,
-            data: error
-          };
-        }
-      } else {
-        const unknownEntry = this.dbxErrorWidgetService.getUnknownErrorWidgetEntry();
-
-        if (unknownEntry?.widgetComponentClass != null) {
-          config = {
-            componentClass: unknownEntry?.widgetComponentClass,
             data: error
           };
         }

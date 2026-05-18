@@ -9,7 +9,7 @@ import { TrelloWebhookService } from './webhook.trello.service';
  *
  * Reads `TRELLO_APP_SECRET` and `TRELLO_WEBHOOK_CALLBACK_URL` from the environment.
  *
- * @param configService The NestJS ConfigService.
+ * @param configService - The NestJS ConfigService.
  * @returns A validated TrelloWebhookServiceConfig.
  */
 export function trelloWebhookServiceConfigFactory(configService: ConfigService): TrelloWebhookServiceConfig {

@@ -139,9 +139,9 @@ function scoreBoolDimension(input: BoolDimensionScoreInput): ScoredArchetypeMatc
 /**
  * Scores one archetype against the questionnaire.
  *
- * @param archetype - the archetype catalog entry to score
- * @param q - the caller's filled questionnaire
- * @returns a {@link ScoredArchetype} carrying the breakdown
+ * @param archetype - The archetype catalog entry to score.
+ * @param q - The caller's filled questionnaire.
+ * @returns A {@link ScoredArchetype} carrying the breakdown.
  */
 export function scoreArchetypeAgainstQuestionnaire(archetype: ModelArchetypeInfo, q: ArchetypeQuestionnaire): ScoredArchetype {
   const matches: ScoredArchetypeMatch[] = [];
@@ -219,8 +219,8 @@ export function scoreArchetypeAgainstQuestionnaire(archetype: ModelArchetypeInfo
  * `active-vs-archive-split`) are excluded from the primary ranking — they are
  * returned separately by the recommender.
  *
- * @param q - the caller's filled questionnaire
- * @returns the ranked list of scored archetypes
+ * @param q - The caller's filled questionnaire.
+ * @returns The ranked list of scored archetypes.
  */
 export function scoreCatalog(q: ArchetypeQuestionnaire): ScoreCatalogResult {
   // Pre-check for framework short-circuits — when one fires, only the matching archetype is

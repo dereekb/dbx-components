@@ -630,8 +630,8 @@ const ARCHETYPES_BY_SLUG: ReadonlyMap<ModelArchetypeSlug, ModelArchetypeInfo> = 
  * Resolves a slug to its archetype entry. Returns `undefined` for unknown
  * slugs.
  *
- * @param slug - archetype slug (`'root-entity'`, `'denormalised-aggregate'`, …)
- * @returns the matching catalog entry, or `undefined` when no archetype uses the slug
+ * @param slug - Archetype slug (`'root-entity'`, `'denormalised-aggregate'`, …)
+ * @returns The matching catalog entry, or `undefined` when no archetype uses the slug.
  */
 export function getModelArchetypeBySlug(slug: ModelArchetypeSlug): ModelArchetypeInfo | undefined {
   return ARCHETYPES_BY_SLUG.get(slug);
@@ -641,8 +641,8 @@ export function getModelArchetypeBySlug(slug: ModelArchetypeSlug): ModelArchetyp
  * Resolves a slug (case-insensitive) to its archetype entry. The canonical
  * entry point for lookup tools.
  *
- * @param slug - archetype slug
- * @returns the matching catalog entry, or `undefined` when no archetype uses the slug
+ * @param slug - Archetype slug.
+ * @returns The matching catalog entry, or `undefined` when no archetype uses the slug.
  */
 export function resolveModelArchetype(slug: string): { readonly archetype: ModelArchetypeInfo } | undefined {
   const trimmed = slug.trim();
@@ -656,8 +656,8 @@ export function resolveModelArchetype(slug: string): { readonly archetype: Model
  * sync mode. Useful for browsing by sync semantics
  * (`dbx://model-archetype/by-sync-mode/{mode}`).
  *
- * @param mode - sync mode to filter by
- * @returns matching archetypes in declaration order
+ * @param mode - Sync mode to filter by.
+ * @returns Matching archetypes in declaration order.
  */
 export function getModelArchetypesBySyncMode(mode: ModelArchetypeSyncMode): readonly ModelArchetypeInfo[] {
   return MODEL_ARCHETYPES.filter((a) => a.expected.syncMode?.includes(mode) === true);
@@ -666,8 +666,8 @@ export function getModelArchetypesBySyncMode(mode: ModelArchetypeSyncMode): read
 /**
  * Returns every catalog entry whose implied `collectionKind` matches.
  *
- * @param kind - {@link FirestoreCollectionKind} to filter by
- * @returns matching archetypes in declaration order
+ * @param kind - {@link FirestoreCollectionKind} to filter by.
+ * @returns Matching archetypes in declaration order.
  */
 export function getModelArchetypesByCollectionKind(kind: FirestoreCollectionKind): readonly ModelArchetypeInfo[] {
   return MODEL_ARCHETYPES.filter((a) => a.collectionKind === kind);
@@ -676,9 +676,9 @@ export function getModelArchetypesByCollectionKind(kind: FirestoreCollectionKind
 /**
  * Returns every catalog entry whose `axes[axisName]` includes the given value.
  *
- * @param axisName - axis to filter on (e.g. `'subPurpose'`, `'keying'`)
- * @param axisValue - the value to filter by
- * @returns matching archetypes in declaration order
+ * @param axisName - Axis to filter on (e.g. `'subPurpose'`, `'keying'`)
+ * @param axisValue - The value to filter by.
+ * @returns Matching archetypes in declaration order.
  */
 export function getModelArchetypesByAxisValue(axisName: string, axisValue: string): readonly ModelArchetypeInfo[] {
   return MODEL_ARCHETYPES.filter((a) => a.axes[axisName]?.includes(axisValue) === true);

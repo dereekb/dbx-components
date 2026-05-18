@@ -12,14 +12,14 @@ import { MAP_IDENTITY } from '../value/map';
  *
  * Recursively compares arrays, objects, Maps, Sets, primitives, and Dates.
  *
+ * @param a - First value to compare.
+ * @param b - Second value to compare.
+ * @returns `true` if the values are deeply equal.
+ *
  * @dbxUtil
  * @dbxUtilCategory object
  * @dbxUtilTags object, equal, equality, deep, compare, recursive, pojo
  * @dbxUtilRelated are-equal-pojo-values-using-pojo-filter, all-objects-are-equal
- *
- * @param a - First value to compare
- * @param b - Second value to compare
- * @returns `true` if the values are deeply equal
  */
 export function areEqualPOJOValues<F>(a: F, b: F): boolean {
   return areEqualPOJOValuesUsingPojoFilter(a, b, MAP_IDENTITY);
@@ -30,10 +30,10 @@ export function areEqualPOJOValues<F>(a: F, b: F): boolean {
  *
  * Recursively compares arrays, objects, Maps, Sets, primitives, and Dates.
  *
- * @param a - First value to compare
- * @param b - Second value to compare
- * @param pojoFilter - Filter function applied to each value before comparison
- * @returns `true` if the filtered values are deeply equal
+ * @param a - First value to compare.
+ * @param b - Second value to compare.
+ * @param pojoFilter - Filter function applied to each value before comparison.
+ * @returns `true` if the filtered values are deeply equal.
  */
 export function areEqualPOJOValuesUsingPojoFilter<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
   let result: boolean;
@@ -70,79 +70,83 @@ export function areEqualPOJOValuesUsingPojoFilter<F>(a: F, b: F, pojoFilter: Fil
 }
 
 function _compareIterables<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  let result: boolean;
+
   if (Array.isArray(a)) {
-    return _compareArrays(a, b as unknown[], pojoFilter);
+    result = _compareArrays(a, b as unknown[], pojoFilter);
+  } else if (a instanceof Set) {
+    result = setsAreEquivalent(a, b as Set<unknown>);
+  } else if (a instanceof Map) {
+    result = _compareMaps(a, b as Map<unknown, unknown>, pojoFilter);
+  } else {
+    result = false;
   }
 
-  if (a instanceof Set) {
-    return setsAreEquivalent(a, b as Set<unknown>);
-  }
-
-  if (a instanceof Map) {
-    return _compareMaps(a, b as Map<unknown, unknown>, pojoFilter);
-  }
-
-  return false;
+  return result;
 }
 
 function _compareArrays<F>(a: unknown[], b: unknown[], pojoFilter: FilterFromPOJOFunction<F>): boolean {
-  if (a.length !== b.length) {
-    return false;
+  let result: boolean;
+
+  if (a.length === b.length) {
+    result = a.every((aValue, i) => {
+      const bValue = b[i];
+      return areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
+    });
+  } else {
+    result = false;
   }
 
-  const firstInequalityIndex = a.findIndex((aValue, i) => {
-    const bValue = b[i];
-    return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
-  });
-
-  return firstInequalityIndex === -1;
+  return result;
 }
 
 function _compareMaps<F>(a: Map<unknown, unknown>, b: Map<unknown, unknown>, pojoFilter: FilterFromPOJOFunction<F>): boolean {
-  if (a.size !== b.size) {
-    return false;
+  let result: boolean;
+
+  if (a.size === b.size) {
+    result = Array.from(a.entries()).every(([key, aValue]) => {
+      const bValue = b.get(key);
+      return areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
+    });
+  } else {
+    result = false;
   }
 
-  const firstInequalityIndex = Array.from(a.entries()).findIndex(([key, aValue]) => {
-    const bValue = b.get(key);
-    return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
-  });
-
-  return firstInequalityIndex === -1;
+  return result;
 }
 
 function _compareObjects<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): boolean {
+  let result: boolean;
+
   // check constructors/types
   const firstType = (a as object).constructor.name;
   const secondType = (b as object).constructor.name;
 
   if (firstType !== secondType) {
-    return false;
+    result = false;
+  } else if (isDate(a)) {
+    // check Date comparison
+    result = isEqualDate(a, b as Date);
+  } else {
+    // check object comparison via keys
+    const aObject = a as Record<string, any>;
+    const bObject = b as Record<string, any>;
+
+    const aKeys = Object.keys(aObject);
+    const bKeys = Object.keys(bObject);
+
+    if (aKeys.length === bKeys.length) {
+      result = aKeys.every((key) => {
+        const aKeyValue = aObject[key];
+        const bKeyValue = bObject[key];
+        return areEqualPOJOValuesUsingPojoFilter(aKeyValue, bKeyValue, pojoFilter);
+      });
+    } else {
+      result = false;
+    }
   }
 
-  // check Date comparison
-  if (isDate(a)) {
-    return isEqualDate(a, b as Date);
-  }
-
-  // check object comparison via keys
-  const aObject = a as Record<string, any>;
-  const bObject = b as Record<string, any>;
-
-  const aKeys = Object.keys(aObject);
-  const bKeys = Object.keys(bObject);
-
-  if (aKeys.length !== bKeys.length) {
-    return false;
-  }
-
-  const firstInequalityIndex = aKeys.findIndex((key) => {
-    const aKeyValue = aObject[key];
-    const bKeyValue = bObject[key];
-    return !areEqualPOJOValuesUsingPojoFilter(aKeyValue, bKeyValue, pojoFilter);
-  });
-
-  return firstInequalityIndex === -1;
+  return result;
 }
 
 // MARK: ObjectFieldEqualityChecker
@@ -212,14 +216,15 @@ export type ObjectFieldEqualityChecker<T extends object> = ((a: Partial<T>, b: P
  *
  * Fields can be specified as simple field names (using the default `===` comparator) or as config objects with custom comparators.
  *
+ * @param config - Configuration with the fields to compare and an optional default equality function.
+ * @returns Compares two objects and reports which fields are equal/unequal.
+ *
  * @dbxUtil
  * @dbxUtilCategory object
  * @dbxUtilKind factory
  * @dbxUtilTags object, equality, fields, comparator, factory
  * @dbxUtilRelated object-keys-equality-comparator-function, object-key-equality-comparator-function
  *
- * @param config - Configuration with the fields to compare and an optional default equality function
- * @returns A function that compares two objects and reports which fields are equal/unequal
  * @__NO_SIDE_EFFECTS__
  */
 export function objectFieldEqualityChecker<T extends object>(config: ObjectFieldEqualityCheckerConfig<T>): ObjectFieldEqualityChecker<T> {

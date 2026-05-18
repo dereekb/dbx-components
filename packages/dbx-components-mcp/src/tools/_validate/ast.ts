@@ -48,8 +48,9 @@ export interface BuildInMemoryProjectInput {
  * {@link componentRelPath} and {@link apiRelPath} can recover the
  * caller-relative path from a {@link SourceFile}.
  *
- * @param input - the prepared two-side inspection
- * @returns the populated project plus per-side source-file arrays
+ * @param input - The prepared two-side inspection.
+ * @returns The populated project plus per-side source-file arrays.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildInMemoryProject(input: BuildInMemoryProjectInput): InMemoryProject {
@@ -74,8 +75,8 @@ export function buildInMemoryProject(input: BuildInMemoryProjectInput): InMemory
  * lives under `notification/handlers/...`, so api-side extraction may
  * also walk component sources.
  *
- * @param sourceFile - source file produced by {@link buildInMemoryProject}
- * @returns the original relPath supplied to {@link buildInMemoryProject}
+ * @param sourceFile - Source file produced by {@link buildInMemoryProject}
+ * @returns The original relPath supplied to {@link buildInMemoryProject}
  */
 export function apiRelPath(sourceFile: SourceFile): string {
   return sourceFile
@@ -89,8 +90,8 @@ export function apiRelPath(sourceFile: SourceFile): string {
  * by {@link buildInMemoryProject}, stripping only the `__component__/`
  * virtual prefix.
  *
- * @param sourceFile - source file produced by {@link buildInMemoryProject}
- * @returns the original relPath supplied to {@link buildInMemoryProject}
+ * @param sourceFile - Source file produced by {@link buildInMemoryProject}
+ * @returns The original relPath supplied to {@link buildInMemoryProject}
  */
 export function componentRelPath(sourceFile: SourceFile): string {
   return sourceFile.getFilePath().replace(new RegExp(`^/${COMPONENT_VIRTUAL_PREFIX}`), '');
@@ -102,8 +103,8 @@ export function componentRelPath(sourceFile: SourceFile): string {
  * expression. Useful when extractors want to unwrap
  * `STATUS as StatusType` style declarations before pattern-matching.
  *
- * @param node - the node to unwrap
- * @returns the innermost non-as expression, or `undefined` when the
+ * @param node - The node to unwrap.
+ * @returns The innermost non-as expression, or `undefined` when the
  *   input was `undefined`
  */
 export function unwrapAsExpressions(node: Node | undefined): Node | undefined {
@@ -118,9 +119,9 @@ export function unwrapAsExpressions(node: Node | undefined): Node | undefined {
  * Narrows a node to an {@link ObjectLiteralExpression} after stripping
  * `as` casts.
  *
- * @param node - the node to narrow
- * @returns the unwrapped object literal, or `undefined` when the node
- *   does not resolve to one
+ * @param node - The node to narrow.
+ * @returns The unwrapped object literal, or `undefined` when the node
+ *   does not resolve to one.
  */
 export function asObjectLiteral(node: Node | undefined): ObjectLiteralExpression | undefined {
   const inner = unwrapAsExpressions(node);
@@ -134,9 +135,9 @@ export function asObjectLiteral(node: Node | undefined): ObjectLiteralExpression
  * Narrows a node to an {@link ArrayLiteralExpression} after stripping
  * `as` casts.
  *
- * @param node - the node to narrow
- * @returns the unwrapped array literal, or `undefined` when the node
- *   does not resolve to one
+ * @param node - The node to narrow.
+ * @returns The unwrapped array literal, or `undefined` when the node
+ *   does not resolve to one.
  */
 export function asArrayLiteral(node: Node | undefined): ArrayLiteralExpression | undefined {
   const inner = unwrapAsExpressions(node);
@@ -150,9 +151,9 @@ export function asArrayLiteral(node: Node | undefined): ArrayLiteralExpression |
  * Reads the string-literal initializer of a variable declaration,
  * tolerating an `as` cast around the literal.
  *
- * @param decl - the variable declaration to inspect
- * @returns the literal text, or `undefined` when the declaration's
- *   initializer is missing or not a string literal
+ * @param decl - The variable declaration to inspect.
+ * @returns The literal text, or `undefined` when the declaration's
+ *   initializer is missing or not a string literal.
  */
 export function readStringLiteralInitializer(decl: VariableDeclaration): string | undefined {
   const initializer = unwrapAsExpressions(decl.getInitializer());
@@ -167,9 +168,9 @@ export function readStringLiteralInitializer(decl: VariableDeclaration): string 
  * matching how each validator stringifies the type for comparison
  * against domain-specific constants like `StorageFilePurpose`.
  *
- * @param node - the variable declaration to inspect
- * @returns the annotation text, or `undefined` when the declaration
- *   has no explicit type node
+ * @param node - The variable declaration to inspect.
+ * @returns The annotation text, or `undefined` when the declaration
+ *   has no explicit type node.
  */
 export function typeAnnotationText(node: VariableDeclaration): string | undefined {
   const tn = node.getTypeNode();
@@ -182,10 +183,10 @@ export function typeAnnotationText(node: VariableDeclaration): string | undefine
  * (`{ name: value }`) and shorthand property assignments
  * (`{ name }` — the name node itself stands in for the value).
  *
- * @param obj - the object literal to inspect
- * @param name - the property name to look up
- * @returns the initializer/name node, or `undefined` when the property
- *   is absent or carries no recognisable value position
+ * @param obj - The object literal to inspect.
+ * @param name - The property name to look up.
+ * @returns The initializer/name node, or `undefined` when the property
+ *   is absent or carries no recognisable value position.
  */
 export function getPropertyInitializer(obj: ObjectLiteralExpression, name: string): Node | undefined {
   const prop = obj.getProperty(name);
@@ -203,10 +204,10 @@ export function getPropertyInitializer(obj: ObjectLiteralExpression, name: strin
  * Reads the string-literal value of a property on an object literal,
  * tolerating an `as` cast around the literal.
  *
- * @param obj - the object literal to inspect
- * @param name - the property name to look up
- * @returns the literal text, or `undefined` when the property is
- *   missing or not a string literal
+ * @param obj - The object literal to inspect.
+ * @param name - The property name to look up.
+ * @returns The literal text, or `undefined` when the property is
+ *   missing or not a string literal.
  */
 export function readStringProperty(obj: ObjectLiteralExpression, name: string): string | undefined {
   const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
@@ -220,10 +221,10 @@ export function readStringProperty(obj: ObjectLiteralExpression, name: string): 
  * Reads the identifier-name value of a property on an object literal,
  * tolerating an `as` cast around the identifier.
  *
- * @param obj - the object literal to inspect
- * @param name - the property name to look up
- * @returns the identifier text, or `undefined` when the property is
- *   missing or does not resolve to an identifier
+ * @param obj - The object literal to inspect.
+ * @param name - The property name to look up.
+ * @returns The identifier text, or `undefined` when the property is
+ *   missing or does not resolve to an identifier.
  */
 export function readIdentifierProperty(obj: ObjectLiteralExpression, name: string): string | undefined {
   const init = unwrapAsExpressions(getPropertyInitializer(obj, name));
@@ -241,8 +242,8 @@ export function readIdentifierProperty(obj: ObjectLiteralExpression, name: strin
  * - For concise arrow bodies (`() => expr`), returns the body itself.
  * - Returns `undefined` when {@link fn} is not a function/arrow node.
  *
- * @param fn - the function/arrow/method node
- * @returns the return expression, or `undefined`
+ * @param fn - The function/arrow/method node.
+ * @returns The return expression, or `undefined`
  */
 export function findReturnExpression(fn: Node): Node | undefined {
   if (!Node.isArrowFunction(fn) && !Node.isFunctionDeclaration(fn) && !Node.isFunctionExpression(fn)) {
@@ -266,9 +267,9 @@ export function findReturnExpression(fn: Node): Node | undefined {
  * source file, scanning top-level statements first and then any
  * descendant declarations (function-scoped or block-scoped).
  *
- * @param sf - the source file to scan
- * @param name - the variable name to match
- * @returns the matching declaration, or `undefined` when none is found
+ * @param sf - The source file to scan.
+ * @param name - The variable name to match.
+ * @returns The matching declaration, or `undefined` when none is found.
  */
 export function findLocalVariable(sf: SourceFile, name: string): VariableDeclaration | undefined {
   for (const stmt of sf.getVariableStatements()) {
@@ -286,8 +287,8 @@ export function findLocalVariable(sf: SourceFile, name: string): VariableDeclara
  * Pushes the names of every `typeof X` query inside a type node onto
  * {@link out}.
  *
- * @param node - the type node to walk
- * @param out - the mutable buffer that receives the referenced names
+ * @param node - The type node to walk.
+ * @param out - The mutable buffer that receives the referenced names.
  */
 export function collectTypeofReferences(node: TypeNode, out: string[]): void {
   if (Node.isTypeQuery(node)) {

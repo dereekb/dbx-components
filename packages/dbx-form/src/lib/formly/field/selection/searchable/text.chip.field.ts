@@ -11,15 +11,15 @@ export interface ChipTextFieldConfig extends LabeledFieldConfig, StringValueFiel
   /**
    * Whether text values are case-sensitive. Defaults to false (lowercased).
    */
-  caseSensitive?: boolean;
+  readonly caseSensitive?: boolean;
 }
 
 /**
  * Creates a searchable chip field for freeform text entry where each entered string
  * becomes a chip. Values are lowercased by default unless `caseSensitive` is true.
  *
- * @param config - Text chip field configuration
- * @returns A {@link FormlyFieldConfig} for text chip input
+ * @param config - Text chip field configuration.
+ * @returns A {@link FormlyFieldConfig} for text chip input.
  *
  * @example
  * ```typescript
@@ -41,6 +41,7 @@ export function formlyChipTextField(config: ChipTextFieldConfig) {
 }
 
 // MARK: Deprecated
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyChipTextField instead.
  */

@@ -6,7 +6,7 @@ import { guessCurrentTimezone } from '../date/date';
 /**
  * Returns all recognized IANA timezone strings, including the explicit UTC entry.
  *
- * @returns all known IANA timezone strings plus UTC
+ * @returns All known IANA timezone strings plus UTC.
  *
  * @example
  * ```ts
@@ -69,7 +69,7 @@ export interface TimezoneInfo extends TimezoneStringRef {
 /**
  * Returns the {@link TimezoneInfo} for the current system timezone, falling back to UTC.
  *
- * @returns timezone info for the current system timezone
+ * @returns Timezone info for the current system timezone.
  *
  * @example
  * ```ts
@@ -87,9 +87,9 @@ export function timezoneInfoForSystem(): TimezoneInfo {
  * The date matters because abbreviations change with DST transitions.
  * Returns `"UNKNOWN"` if no timezone is provided.
  *
- * @param timezone - the IANA timezone string (or UTC abbreviation) to get the abbreviation for
- * @param date - the date at which to evaluate the abbreviation (defaults to now)
- * @returns the short timezone abbreviation
+ * @param timezone - IANA timezone string (or UTC abbreviation) whose abbreviation should be returned.
+ * @param date - Reference moment used to evaluate the abbreviation; defaults to the current date/time.
+ * @returns Short timezone abbreviation for the resolved moment.
  *
  * @example
  * ```ts
@@ -115,9 +115,9 @@ export function getTimezoneAbbreviation(timezone: Maybe<TimezoneString | UTCTime
  *
  * Returns `"Unknown Timezone"` if no timezone is provided.
  *
- * @param timezone - the IANA timezone string to get the long name for
- * @param date - the date at which to evaluate the name (defaults to now)
- * @returns the full timezone display name
+ * @param timezone - IANA timezone string whose display name should be returned.
+ * @param date - Reference moment used to evaluate the name; defaults to the current date/time.
+ * @returns Full timezone display name for the resolved moment.
  *
  * @example
  * ```ts
@@ -131,9 +131,9 @@ export function getTimezoneLongName(timezone: Maybe<TimezoneString>, date = new 
 /**
  * Builds a {@link TimezoneInfo} for the given timezone, computing abbreviation and search variants.
  *
- * @param timezone - the IANA timezone string to build info for
- * @param date - the date at which to evaluate the abbreviation (defaults to now)
- * @returns the computed TimezoneInfo
+ * @param timezone - IANA timezone string whose info should be built.
+ * @param date - Reference moment used to evaluate the abbreviation; defaults to the current date/time.
+ * @returns Computed TimezoneInfo with abbreviation and search variants.
  *
  * @example
  * ```ts
@@ -159,9 +159,9 @@ export function timezoneStringToTimezoneInfo(timezone: TimezoneString, date = ne
  *
  * For queries longer than 2 characters, substring matching on the searchable name is also used.
  *
- * @param search - the search query string
- * @param infos - the array of TimezoneInfo objects to filter
- * @returns the matching TimezoneInfo entries
+ * @param search - Search query supplied by the caller.
+ * @param infos - TimezoneInfo entries to filter.
+ * @returns Entries whose searchable fields match the query.
  *
  * @example
  * ```ts
@@ -183,8 +183,8 @@ const timezoneStringToSearchableStringReplace = replaceStringsFunction({
  *
  * Replaces `/` and `_` with spaces (e.g., `"America/New_York"` becomes `"america new york"`).
  *
- * @param timezone - the IANA timezone string to convert
- * @returns the searchable lowercase string
+ * @param timezone - The IANA timezone string to convert.
+ * @returns The searchable lowercase string.
  *
  * @example
  * ```ts
@@ -200,8 +200,8 @@ export function timezoneStringToSearchableString(timezone: TimezoneString): stri
  *
  * Uses the cached set from {@link allKnownTimezoneStrings} for O(1) lookup.
  *
- * @param input - the string to check
- * @returns whether the input is a known timezone
+ * @param input - Candidate string to test against the registry.
+ * @returns Whether the input matches a known IANA timezone identifier.
  *
  * @example
  * ```ts

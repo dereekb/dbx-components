@@ -5,9 +5,10 @@ import type { CliModelField, CliModelManifest, CliModelManifestEntry } from '../
  * `modelType` first, then falls back to `identityConst` and `collectionPrefix`
  * so callers can pass any of the three forms a user might type at the CLI.
  *
- * @param modelType - identifier to look up.
- * @param manifest - generated model manifest.
- * @returns the matching entry, or `undefined` when none exists.
+ * @param modelType - Identifier to look up.
+ * @param manifest - Generated model manifest.
+ * @returns The matching entry, or `undefined` when none exists.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function findCliModelManifestEntry(modelType: string, manifest: CliModelManifest): CliModelManifestEntry | undefined {
@@ -31,59 +32,71 @@ export function findCliModelManifestEntry(modelType: string, manifest: CliModelM
  * Unknown keys, primitives, `Date`, `null`, and `undefined` pass through
  * unchanged.
  *
- * @param modelType - the model identifier (`modelType`, `identityConst`,
+ * @param modelType - The model identifier (`modelType`, `identityConst`,
  *   or `collectionPrefix`) used to look up the rewrite map.
- * @param data - the value to rewrite (typically a `read`/`query` response
+ * @param data - The value to rewrite (typically a `read`/`query` response
  *   payload).
- * @param manifest - generated model manifest.
- * @returns the rewritten value, or `data` unchanged when no rewrite applies.
+ * @param manifest - Generated model manifest.
+ * @returns The rewritten value, or `data` unchanged when no rewrite applies.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function expandModelKeys(modelType: string, data: unknown, manifest: CliModelManifest): unknown {
   const entry = findCliModelManifestEntry(modelType, manifest);
-  if (!entry) return data;
-  return rewriteWithFields(data, entry.fields);
+  return entry ? rewriteWithFields(data, entry.fields) : data;
 }
 
 function rewriteWithFields(value: unknown, fields: readonly CliModelField[]): unknown {
+  let result: unknown;
   if (Array.isArray(value)) {
-    return value.map((item) => rewriteWithFields(item, fields));
-  }
-  if (!isPlainObject(value)) return value;
+    result = value.map((item) => rewriteWithFields(item, fields));
+  } else if (isPlainObject(value)) {
+    const fieldByName = new Map<string, CliModelField>();
+    for (const field of fields) fieldByName.set(field.name, field);
 
-  const fieldByName = new Map<string, CliModelField>();
-  for (const field of fields) fieldByName.set(field.name, field);
-
-  const out: Record<string, unknown> = {};
-  for (const [key, raw] of Object.entries(value)) {
-    const field = fieldByName.get(key);
-    if (!field) {
-      out[key] = raw;
-      continue;
+    const out: Record<string, unknown> = {};
+    for (const [key, raw] of Object.entries(value)) {
+      const field = fieldByName.get(key);
+      if (field) {
+        const longKey = field.longName.length > 0 ? field.longName : key;
+        out[longKey] = rewriteFieldValue(raw, field);
+      } else {
+        out[key] = raw;
+      }
     }
-    const longKey = field.longName.length > 0 ? field.longName : key;
-    out[longKey] = rewriteFieldValue(raw, field);
+    result = out;
+  } else {
+    result = value;
   }
-  return out;
+  return result;
 }
 
 function rewriteFieldValue(value: unknown, field: CliModelField): unknown {
   const nested = field.nestedFields;
-  if (!nested || nested.length === 0) return value;
-  if (field.nestedIsArray) {
-    if (!Array.isArray(value)) return value;
-    return value.map((item) => rewriteWithFields(item, nested));
+  let result: unknown;
+  if (!nested || nested.length === 0) {
+    result = value;
+  } else if (field.nestedIsArray) {
+    result = Array.isArray(value) ? value.map((item) => rewriteWithFields(item, nested)) : value;
+  } else if (isPlainObject(value)) {
+    result = rewriteWithFields(value, nested);
+  } else {
+    result = value;
   }
-  if (!isPlainObject(value)) return value;
-  return rewriteWithFields(value, nested);
+  return result;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
-  if (value === null || typeof value !== 'object') return false;
-  if (Array.isArray(value)) return false;
-  if (value instanceof Date) return false;
-  // Objects from JSON.parse have Object.prototype as their proto. Anything
-  // exotic (Map, Set, Buffer, class instances) we leave untouched.
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || proto === null;
+  let result: boolean;
+  if (value === null || typeof value !== 'object') {
+    result = false;
+  } else if (Array.isArray(value) || value instanceof Date) {
+    result = false;
+  } else {
+    // Objects from JSON.parse have Object.prototype as their proto. Anything
+    // exotic (Map, Set, Buffer, class instances) we leave untouched.
+    const proto = Object.getPrototypeOf(value);
+    result = proto === Object.prototype || proto === null;
+  }
+  return result;
 }

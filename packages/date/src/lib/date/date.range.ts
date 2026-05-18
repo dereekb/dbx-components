@@ -13,8 +13,8 @@ export interface DateRangeStart {
 /**
  * Type guard to check if a value conforms to the {@link DateRangeStart} interface.
  *
- * @param value - the value to check
- * @returns true if the value has a valid Date `start` property
+ * @param value - The value to check.
+ * @returns True if the value has a valid Date `start` property.
  *
  * @example
  * ```ts
@@ -54,8 +54,8 @@ export interface DateRange extends DateRangeStart {
  * Counts the total number of calendar days spanned by the range, inclusive of both endpoints.
  * Always returns at least 1, even for same-day ranges.
  *
- * @param dateRange - the date range to measure
- * @returns the number of days in the range, inclusive
+ * @param dateRange - Range to measure.
+ * @returns Inclusive count of calendar days covered by the range.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -75,8 +75,8 @@ export function dateRangeDaysCount(dateRange: DateRange): number {
 /**
  * Type guard to check if a value is a valid {@link DateRange} with both start and end as Date objects.
  *
- * @param input - the value to check
- * @returns true if the value has valid Date `start` and `end` properties
+ * @param input - The value to check.
+ * @returns True if the value has valid Date `start` and `end` properties.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -98,9 +98,9 @@ export function isDateRange(input: unknown): input is DateRange {
  * Compares two date ranges for exact millisecond equality on both start and end.
  * Returns true if both are nullish.
  *
- * @param a - first date range to compare
- * @param b - second date range to compare
- * @returns true if both ranges are equal or both are nullish
+ * @param a - First date range to compare.
+ * @param b - Second date range to compare.
+ * @returns True if both ranges are equal or both are nullish.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -123,9 +123,9 @@ export function isSameDateRange(a: Maybe<Partial<DateRange>>, b: Maybe<Partial<D
  * Compares two date ranges for calendar-day equality, ignoring time-of-day differences.
  * Returns true if both are nullish.
  *
- * @param a - first date range to compare
- * @param b - second date range to compare
- * @returns true if both ranges fall on the same calendar days or both are nullish
+ * @param a - First date range to compare.
+ * @param b - Second date range to compare.
+ * @returns True if both ranges fall on the same calendar days or both are nullish.
  *
  * @example
  * ```ts
@@ -141,8 +141,8 @@ export function isSameDateDayRange(a: Maybe<Partial<DateRange>>, b: Maybe<Partia
 /**
  * Checks whether the range is unbounded (neither start nor end is set), meaning it conceptually includes all dates.
  *
- * @param input - the partial date range to check
- * @returns true if neither start nor end is set
+ * @param input - The partial date range to check.
+ * @returns True if neither start nor end is set.
  *
  * @example
  * ```ts
@@ -157,8 +157,8 @@ export function isInfiniteDateRange(input: Partial<DateRange>): boolean {
 /**
  * Checks whether the range has only one of start or end set, but not both.
  *
- * @param input - the partial date range to check
- * @returns true if exactly one of start or end is set
+ * @param input - The partial date range to check.
+ * @returns True if exactly one of start or end is set.
  *
  * @example
  * ```ts
@@ -173,8 +173,8 @@ export function isPartialDateRange(input: Partial<DateRange>): input is DateRang
 /**
  * Checks whether the range has both start and end set.
  *
- * @param input - the partial date range to check
- * @returns true if both start and end are set
+ * @param input - The partial date range to check.
+ * @returns True if both start and end are set.
  *
  * @example
  * ```ts
@@ -195,9 +195,9 @@ export type DateOrDateRange = Date | DateRange;
  * Normalizes a Date or {@link DateRange} into a DateRange. When given a single Date,
  * uses it as start and optionally uses the provided end date (defaults to the same date).
  *
- * @param startOrDateRange - a Date or existing DateRange
- * @param end - optional end date when the first argument is a plain Date
- * @returns a DateRange
+ * @param startOrDateRange - Range or starting Date for the new range.
+ * @param end - Optional end date when the first argument is a plain Date.
+ * @returns Normalized range covering the inputs.
  *
  * @example
  * ```ts
@@ -290,12 +290,12 @@ export interface DateRangeParams {
   /**
    * Type of range.
    */
-  type: DateRangeType;
+  readonly type: DateRangeType;
   /**
    * Date to filter on. If not provided, assumes now.
    */
-  date: Date;
-  distance?: number;
+  readonly date: Date;
+  readonly distance?: number;
 }
 
 export interface DateRangeTypedInput {
@@ -325,10 +325,10 @@ export type DateRangeInput = (DateRangeTypedInput | DateRangeDistanceInput) & {
  * Creates a {@link DateRange} from the given type and optional parameters. Supports many range
  * strategies including fixed periods (day, week, month), directional ranges, and radii.
  *
- * @param input - the range type or full configuration object
- * @param inputRoundToMinute - optional override to round the date to the start of its minute
- * @returns a computed DateRange
- * @throws Error if the type is not a recognized {@link DateRangeType}
+ * @param input - The range type or full configuration object.
+ * @param inputRoundToMinute - Optional override to round the date to the start of its minute.
+ * @returns Computed range satisfying the requested strategy.
+ * @throws {Error} If the type is not a recognized {@link DateRangeType}.
  *
  * @example
  * ```ts
@@ -343,7 +343,7 @@ export type DateRangeInput = (DateRangeTypedInput | DateRangeDistanceInput) & {
  * ```
  */
 export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMinute?: boolean): DateRange {
-  const config: DateRangeInput = typeof input === 'string' ? { type: input } : (input as DateRangeInput);
+  const config: DateRangeInput = typeof input === 'string' ? { type: input } : input;
   const { type = DateRangeType.DAYS_RANGE, date: inputDate, distance: inputDistance, roundToMinute: inputConfigRoundToMinute = false } = config;
   const rawDistance = inputDistance ?? undefined;
   const roundToMinute = inputRoundToMinute ?? inputConfigRoundToMinute;
@@ -465,8 +465,8 @@ export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMin
  * Returns a range spanning the full calendar day (first to last millisecond) of the given date.
  * Convenience wrapper around {@link dateRange} with {@link DateRangeType.DAY}.
  *
- * @param date - the date whose full day range to return
- * @returns a DateRange from start of day to end of day
+ * @param date - Reference date whose surrounding calendar day to capture.
+ * @returns Range from start of day to end of day for the reference date.
  *
  * @example
  * ```ts
@@ -530,7 +530,7 @@ export class IterateDaysInDateRangeFunctionBailError extends Error {
  * Throws a {@link IterateDaysInDateRangeFunctionBailError} to stop date range iteration early
  * from within a forEach callback. Only works inside functions created by {@link iterateDaysInDateRangeFunction}.
  *
- * @throws {@link IterateDaysInDateRangeFunctionBailError} always
+ * @throws {@link IterateDaysInDateRangeFunctionBailError} Always.
  */
 export function endItreateDaysInDateRangeEarly() {
   throw new IterateDaysInDateRangeFunctionBailError();
@@ -540,9 +540,9 @@ export function endItreateDaysInDateRangeEarly() {
  * Creates a reusable function that iterates over dates within a range using a configurable step function.
  * Supports max iteration limits and early bail-out via {@link endItreateDaysInDateRangeEarly}.
  *
- * @param input - configuration or a step function for advancing between dates
- * @returns a reusable iteration function
- * @throws Error if max iterations is exceeded and throwErrorOnMaxIterations is true
+ * @param input - Configuration or step function for advancing between dates.
+ * @returns Reusable iterator bound to the configured stepping strategy.
+ * @throws {Error} If max iterations is exceeded and throwErrorOnMaxIterations is true.
  *
  * @example
  * ```ts
@@ -550,6 +550,7 @@ export function endItreateDaysInDateRangeEarly() {
  * const iterateEvery2Days = iterateDaysInDateRangeFunction((date) => addDays(date, 2));
  * const results = iterateEvery2Days(range, (date) => date.toISOString());
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function iterateDaysInDateRangeFunction(input: IterateDaysInDateRangeFunctionConfigInput): IterateDatesInDateRangeFunction {
@@ -581,7 +582,7 @@ export function iterateDaysInDateRangeFunction(input: IterateDaysInDateRangeFunc
       }
     }
 
-    return results as T[];
+    return results;
   };
 }
 
@@ -631,9 +632,9 @@ export type ExpandDaysForDateRangeFunction = FactoryWithRequiredInput<Date[], Da
  * Creates a reusable function that expands a {@link DateRange} into an array of individual day dates.
  * Includes a configurable safety limit to prevent accidental memory exhaustion from large ranges.
  *
- * @param config - optional configuration for the max expansion size
- * @returns a function that expands a DateRange into an array of Dates
- * @throws Error if the range spans more days than the configured maxExpansionSize
+ * @param config - Optional configuration for the max expansion size.
+ * @returns Expander that produces one date per day inside the input range.
+ * @throws {Error} If the range spans more days than the configured maxExpansionSize.
  *
  * @example
  * ```ts
@@ -641,6 +642,7 @@ export type ExpandDaysForDateRangeFunction = FactoryWithRequiredInput<Date[], Da
  * const days = expand({ start: new Date('2024-01-01'), end: new Date('2024-01-03') });
  * // [2024-01-01, 2024-01-02, 2024-01-03]
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function expandDaysForDateRangeFunction(config: ExpandDaysForDateRangeConfig = {}): ExpandDaysForDateRangeFunction {
@@ -666,8 +668,8 @@ export function expandDaysForDateRangeFunction(config: ExpandDaysForDateRangeCon
  * Expands a {@link DateRange} into an array of one Date per day. Uses the default max expansion size.
  * Convenience wrapper around {@link expandDaysForDateRangeFunction}.
  *
- * @param range - the date range to expand
- * @returns an array of Dates, one per day in the range
+ * @param range - Range whose individual days should be produced.
+ * @returns One Date per day in the range.
  *
  * @example
  * ```ts
@@ -682,11 +684,9 @@ export function expandDaysForDateRange(range: DateRange): Date[] {
 /**
  * Determines whether the current moment (or provided `now`) falls before, within, or after the given range.
  *
- * @param dateRange - the date range to compare against
- * @param dateRange.start - the start of the range
- * @param dateRange.end - the end of the range
- * @param now - the reference date, defaults to the current moment
- * @returns 'past', 'present', or 'future'
+ * @param dateRange - Range whose endpoints classify the reference moment.
+ * @param now - Reference moment, defaults to the current date/time.
+ * @returns 'past', 'present', or 'future'.
  *
  * @example
  * ```ts
@@ -696,7 +696,8 @@ export function expandDaysForDateRange(range: DateRange): Date[] {
  * dateRangeRelativeState(range, new Date('2023-12-31')); // 'future'
  * ```
  */
-export function dateRangeRelativeState({ start, end }: DateRange, now: Date = new Date()): DateRelativeState {
+export function dateRangeRelativeState(dateRange: DateRange, now: Date = new Date()): DateRelativeState {
+  const { start, end } = dateRange;
   let result: DateRelativeState;
 
   if (isAfter(now, end)) {
@@ -719,9 +720,9 @@ export interface GroupDateRangesByDateRelativeStatesResult<T extends DateRange> 
 /**
  * Groups an array of date ranges into past, present, and future buckets based on the current moment (or provided `now`).
  *
- * @param dateRanges - the date ranges to group
- * @param _now - the reference date, defaults to the current moment
- * @returns an object with past, present, and future arrays
+ * @param dateRanges - Ranges to classify against the reference moment.
+ * @param _now - Reference moment, defaults to the current date/time.
+ * @returns Buckets of ranges separated into past, present, and future.
  *
  * @example
  * ```ts
@@ -752,9 +753,9 @@ export type IsDateInDateRangeFunction<T extends Partial<DateRange> = DateRange> 
  * Checks whether a date falls within a (possibly partial) date range.
  * Convenience wrapper around {@link isDateInDateRangeFunction}.
  *
- * @param date - the date to test
- * @param dateRange - the range to test against
- * @returns true if the date falls within the range
+ * @param date - Moment to test.
+ * @param dateRange - Range to test the moment against.
+ * @returns Whether the moment falls within the range.
  *
  * @example
  * ```ts
@@ -772,8 +773,8 @@ export function isDateInDateRange(date: Date, dateRange: Partial<DateRange>): bo
  * Handles partial ranges: if only start is set, checks >= start; if only end, checks <= end;
  * if neither, all dates are considered in range.
  *
- * @param dateRange - the boundary range to test against
- * @returns a function that tests whether a date falls within the range
+ * @param dateRange - Boundary range that candidate dates are compared against.
+ * @returns Predicate that reports whether a date falls inside the configured range.
  *
  * @example
  * ```ts
@@ -784,6 +785,7 @@ export function isDateInDateRange(date: Date, dateRange: Partial<DateRange>): bo
  * isInQ1(new Date('2024-02-15')); // true
  * isInQ1(new Date('2024-05-01')); // false
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function isDateInDateRangeFunction<T extends Partial<DateRange>>(dateRange: T): IsDateInDateRangeFunction<T> {
@@ -829,9 +831,9 @@ export type IsDateRangeInDateRangeFunction<T extends Partial<DateRange> = Partia
  * Checks whether a date range is fully contained within another (possibly partial) date range.
  * Convenience wrapper around {@link isDateRangeInDateRangeFunction}.
  *
- * @param compareDateRange - the range to test for containment
- * @param dateRange - the boundary range
- * @returns true if compareDateRange is fully within dateRange
+ * @param compareDateRange - The range to test for containment.
+ * @param dateRange - The boundary range.
+ * @returns True if compareDateRange is fully within dateRange.
  *
  * @example
  * ```ts
@@ -848,8 +850,8 @@ export function isDateRangeInDateRange(compareDateRange: DateRange, dateRange: P
  * Creates a reusable function that tests whether a given date range is fully contained within
  * the configured boundary range. Both start and end of the input must be within bounds.
  *
- * @param dateRange - the boundary range
- * @returns a function that tests containment of other ranges
+ * @param dateRange - Boundary range that candidate ranges must fit inside.
+ * @returns Predicate that reports whether a candidate range is fully contained.
  *
  * @example
  * ```ts
@@ -860,6 +862,7 @@ export function isDateRangeInDateRange(compareDateRange: DateRange, dateRange: P
  * isInYear({ start: new Date('2024-03-01'), end: new Date('2024-06-30') }); // true
  * isInYear({ start: new Date('2023-12-01'), end: new Date('2024-06-30') }); // false
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function isDateRangeInDateRangeFunction<T extends Partial<DateRange> = DateRange>(dateRange: T): IsDateRangeInDateRangeFunction<T> {
@@ -881,9 +884,9 @@ export type DateRangeOverlapsDateRangeFunction<T extends DateRange = DateRange> 
  * Checks whether two date ranges overlap in any way (partial or full).
  * Convenience wrapper around {@link dateRangeOverlapsDateRangeFunction}.
  *
- * @param compareDateRange - the range to test for overlap
- * @param dateRange - the reference range
- * @returns true if the ranges overlap
+ * @param compareDateRange - The range to test for overlap.
+ * @param dateRange - The reference range.
+ * @returns True if the ranges overlap.
  *
  * @example
  * ```ts
@@ -900,8 +903,8 @@ export function dateRangeOverlapsDateRange(compareDateRange: DateRange, dateRang
  * Creates a reusable function that tests whether input ranges overlap the configured boundary range.
  * Two ranges overlap if one starts before the other ends, and vice versa.
  *
- * @param dateRange - the boundary range to test overlap against
- * @returns a function that tests overlap of other ranges
+ * @param dateRange - Boundary range that candidates are tested for overlap against.
+ * @returns Predicate that reports whether a candidate range overlaps the boundary.
  *
  * @example
  * ```ts
@@ -912,6 +915,7 @@ export function dateRangeOverlapsDateRange(compareDateRange: DateRange, dateRang
  * overlapsQ1({ start: new Date('2024-03-15'), end: new Date('2024-04-15') }); // true
  * overlapsQ1({ start: new Date('2024-05-01'), end: new Date('2024-06-01') }); // false
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dateRangeOverlapsDateRangeFunction<T extends DateRange = DateRange>(dateRange: T): DateRangeOverlapsDateRangeFunction<T> {
@@ -939,8 +943,8 @@ export function dateRangeOverlapsDateRangeFunction<T extends DateRange = DateRan
  *
  * Operates in UTC, so daylight savings transitions are not considered.
  *
- * @param dateRange - the date range to fit into a single day period
- * @returns a new date range with the same start and an end within 24 hours of start
+ * @param dateRange - Range whose endpoints should be collapsed onto a single day.
+ * @returns Range with the same start whose end lies within 24 hours of start.
  *
  * @example
  * ```ts
@@ -981,8 +985,8 @@ export type ClampDateFunction = ((date: Date) => Date) & DateRangeFunctionDateRa
  * Dates before start are clamped to start; dates after end are clamped to end.
  * Partial ranges clamp only on the side that is defined.
  *
- * @param dateRange - the boundary range for clamping
- * @returns a function that clamps dates to the range
+ * @param dateRange - Boundary range that input dates are clamped against.
+ * @returns Clamper that snaps each input into the configured range.
  *
  * @example
  * ```ts
@@ -994,6 +998,7 @@ export type ClampDateFunction = ((date: Date) => Date) & DateRangeFunctionDateRa
  * clamp(new Date('2024-06-15')); // 2024-06-15 (unchanged)
  * clamp(new Date('2025-06-15')); // 2024-12-31
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function clampDateFunction(dateRange: Partial<DateRange>): ClampDateFunction {
@@ -1045,9 +1050,9 @@ export function clampDateFunction(dateRange: Partial<DateRange>): ClampDateFunct
  * Clamps a single date to fall within the given range boundaries.
  * Convenience wrapper around {@link clampDateFunction}.
  *
- * @param date - the date to clamp
- * @param dateRange - the boundary range
- * @returns the clamped date
+ * @param date - Moment to clamp.
+ * @param dateRange - Boundary range that the moment is clamped against.
+ * @returns Clamped moment inside the range.
  *
  * @example
  * ```ts
@@ -1102,9 +1107,9 @@ export function clampDateRangeFunction(dateRange: Partial<DateRange>, defaultCla
  * Clamps a date range to fit within a boundary range.
  * Convenience wrapper around {@link clampDateRangeFunction}.
  *
- * @param inputDateRange - the date range to clamp
- * @param limitToDateRange - the boundary range
- * @returns the clamped date range
+ * @param inputDateRange - Range whose endpoints should be clamped.
+ * @param limitToDateRange - Boundary range that the input is clamped against.
+ * @returns Clamped range fitting inside the boundary.
  *
  * @example
  * ```ts
@@ -1126,8 +1131,8 @@ export type TransformDateRangeDatesFunction = (dateRange: DateRange) => DateRang
 /**
  * Creates a function that applies a date transformation to both start and end of a {@link DateRange}.
  *
- * @param transform - the transformation to apply to both dates
- * @returns a function that transforms both dates of a DateRange
+ * @param transform - Mapping applied to both endpoints of every input range.
+ * @returns Transformer that returns a range with both endpoints mapped.
  *
  * @example
  * ```ts
@@ -1136,6 +1141,7 @@ export type TransformDateRangeDatesFunction = (dateRange: DateRange) => DateRang
  * const range = { start: new Date('2024-01-01T10:30:00'), end: new Date('2024-01-01T14:45:00') };
  * roundToHour(range); // { start: 2024-01-01T10:00:00, end: 2024-01-01T14:00:00 }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function transformDateRangeDatesFunction(transform: MapFunction<Date, Date>): TransformDateRangeDatesFunction {
@@ -1163,8 +1169,8 @@ export interface DateRangeWithDateOrStringValue {
  * Returns each unique day of the week present in the range, in the order they appear starting from
  * the range's start day. For ranges spanning 7+ days, returns all days of the week.
  *
- * @param dateRange - the date range to inspect
- * @returns an array of unique day-of-week values present in the range
+ * @param dateRange - Range whose covered weekdays should be enumerated.
+ * @returns Unique day-of-week values appearing in the range, in encounter order.
  *
  * @example
  * ```ts
@@ -1174,21 +1180,24 @@ export interface DateRangeWithDateOrStringValue {
  * ```
  */
 export function getDaysOfWeekInDateRange(dateRange: DateRange): DayOfWeek[] {
-  const days: DayOfWeek[] = [];
-
   const daysRange = differenceInDays(dateRange.start, dateRange.end);
+  let result: DayOfWeek[];
 
   if (daysRange >= 7) {
-    return daysOfWeekArray(dayOfWeek(dateRange.start));
+    result = daysOfWeekArray(dayOfWeek(dateRange.start));
+  } else {
+    const days: DayOfWeek[] = [];
+
+    forEachDayInDateRange(dateRange, (day) => {
+      days.push(dayOfWeek(day));
+
+      if (days.length >= 7) {
+        endItreateDaysInDateRangeEarly();
+      }
+    });
+
+    result = days;
   }
 
-  forEachDayInDateRange(dateRange, (day) => {
-    days.push(dayOfWeek(day));
-
-    if (days.length >= 7) {
-      endItreateDaysInDateRangeEarly();
-    }
-  });
-
-  return days;
+  return result;
 }

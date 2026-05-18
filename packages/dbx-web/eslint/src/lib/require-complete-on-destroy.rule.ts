@@ -1,4 +1,5 @@
 import { type AstNode, COMPLETE_ON_DESTROY_HELPER, DBX_COMPONENTS_DBX_CORE_MODULE, type ImportRegistry, RXJS_MODULE, SUBJECT_NAMES, createImportRegistry, ensureNamedImportFix, findAngularComponentDecorator, findNgOnDestroyMethod, getClassMemberName, isCalledIdentifier, isDeclareProperty, isImportedFrom, isStaticProperty, trackImportDeclaration } from './util';
+import type { Maybe } from '@dereekb/util';
 import { collectNgOnDestroyRemovalFixes } from './require-clean-subscription.rule';
 
 /**
@@ -47,7 +48,7 @@ interface BuildSubjectFixInput {
   /**
    * The class's `ngOnDestroy()` MethodDefinition node, or null.
    */
-  readonly ngOnDestroy: AstNode | null;
+  readonly ngOnDestroy: Maybe<AstNode>;
   /**
    * The file's import registry, mutated as fixes are queued.
    */
@@ -71,7 +72,7 @@ interface BuildSubjectFixInput {
  * - Inserts the `completeOnDestroy` named import from `@dereekb/dbx-core` if missing.
  * - Removes any matching `this.<field>.complete();` line from the same class's `ngOnDestroy`.
  */
-export const dbxWebRequireCompleteOnDestroyRule: DbxWebRequireCompleteOnDestroyRuleDefinition = {
+export const DBX_WEB_REQUIRE_COMPLETE_ON_DESTROY_RULE: DbxWebRequireCompleteOnDestroyRuleDefinition = {
   meta: {
     type: 'problem',
     fixable: 'code',
@@ -157,8 +158,8 @@ export const dbxWebRequireCompleteOnDestroyRule: DbxWebRequireCompleteOnDestroyR
  * @param registry - The file's import registry.
  * @returns The matched Subject identifier name, or null.
  */
-function unwrappedSubjectNewName(expression: AstNode, registry: ImportRegistry): string | null {
-  let result: string | null = null;
+function unwrappedSubjectNewName(expression: AstNode, registry: ImportRegistry): Maybe<string> {
+  let result: Maybe<string> = null;
 
   if (!isCalledIdentifier(expression, ACCEPTED_WRAPPERS) && expression.type === 'NewExpression') {
     const callee = expression.callee;

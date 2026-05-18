@@ -377,39 +377,38 @@ export interface CreateLookupActionToolInput {
  * pass a fixture registry; the production server passes the merged registry
  * from {@link loadActionRegistry}.
  *
- * @param input - the registry the tool reads from
- * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @param input - The registry the tool reads from.
+ * @returns A {@link DbxTool} ready to register with the dispatcher.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createLookupActionTool(input: CreateLookupActionToolInput): DbxTool {
   const { registry } = input;
   const run = (rawArgs: unknown): ToolResult => {
-    let args: ParsedLookupActionArgs;
+    let result: ToolResult;
     try {
-      args = parseLookupActionArgs(rawArgs);
+      const args = parseLookupActionArgs(rawArgs);
+      const match = resolveTopic(registry, args.topic);
+      let text: string;
+      switch (match.kind) {
+        case 'catalog':
+          text = formatCatalog(registry);
+          break;
+        case 'single':
+          text = formatActionEntry(match.entry, args.depth);
+          break;
+        case 'group':
+          text = formatActionGroup(match.entries, match.title);
+          break;
+        case 'not-found':
+          text = formatNotFound(match.normalized, match.candidates);
+          break;
+      }
+      result = { content: [{ type: 'text', text }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      result = toolError(message);
     }
-
-    const match = resolveTopic(registry, args.topic);
-    let text: string;
-    switch (match.kind) {
-      case 'catalog':
-        text = formatCatalog(registry);
-        break;
-      case 'single':
-        text = formatActionEntry(match.entry, args.depth);
-        break;
-      case 'group':
-        text = formatActionGroup(match.entries, match.title);
-        break;
-      case 'not-found':
-        text = formatNotFound(match.normalized, match.candidates);
-        break;
-    }
-
-    const result: ToolResult = { content: [{ type: 'text', text }] };
     return result;
   };
   return { definition: DBX_ACTION_LOOKUP_TOOL, run };

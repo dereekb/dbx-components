@@ -1,3 +1,9 @@
+/* eslint-disable dereekb-util/prefer-maybe-type --
+ * This file mirrors the upstream `rrule` library's `IterResult<"before">` interface, which
+ * uses `Date | null` (not `Maybe<Date>`) for `minDate`, `maxDate`, `_value`, and `getValue`.
+ * Rewriting these to `Maybe<Date>` would widen them with `undefined` and break the structural
+ * assignment to `IterResult<"before">`.
+ */
 import { type Maybe } from '@dereekb/util';
 import { maxFutureDate } from '../date/date';
 import { RRule } from 'rrule';
@@ -40,13 +46,13 @@ export class DateRRule extends RRule {
   /**
    * Returns the last occurrence in the rule chain, up to the configured max iteration limit.
    *
+   * @returns The last occurrence date, or `undefined` if there are none.
+   *
    * @example
    * ```ts
    * const rule = new DateRRule({ freq: RRule.DAILY, count: 5, dtstart: startDate });
    * const lastDate = rule.last(); // fifth occurrence
    * ```
-   *
-   * @returns The last occurrence date, or `undefined` if there are none.
    */
   last(): Maybe<Date> {
     return this._iter(new LastIterResult());
@@ -55,14 +61,14 @@ export class DateRRule extends RRule {
   /**
    * Returns the first recurrence that occurs on or after the given date.
    *
+   * @param minDate - The earliest date to consider.
+   * @returns The first occurrence on or after `minDate`, or `undefined` if none.
+   *
    * @example
    * ```ts
    * const rule = new DateRRule({ freq: RRule.WEEKLY, dtstart: startDate });
    * const nextDate = rule.next(new Date());
    * ```
-   *
-   * @param minDate - The earliest date to consider.
-   * @returns The first occurrence on or after `minDate`, or `undefined` if none.
    */
   next(minDate: Date): Maybe<Date> {
     return this._iter(new NextIterResult(minDate));
@@ -71,16 +77,16 @@ export class DateRRule extends RRule {
   /**
    * Checks whether any recurrence falls within the optional date bounds.
    *
+   * @param filter - Optional date bounds with `minDate` and `maxDate`.
+   * @param filter.minDate - Optional minimum date bound.
+   * @param filter.maxDate - Optional maximum date bound.
+   * @returns `true` if at least one recurrence falls within the bounds.
+   *
    * @example
    * ```ts
    * const rule = new DateRRule({ freq: RRule.DAILY, dtstart: startDate });
    * const exists = rule.any({ minDate: rangeStart, maxDate: rangeEnd });
    * ```
-   *
-   * @param filter - Optional date bounds with `minDate` and `maxDate`.
-   * @param filter.minDate - Optional minimum date bound.
-   * @param filter.maxDate - Optional maximum date bound.
-   * @returns `true` if at least one recurrence falls within the bounds.
    */
   any(filter: { minDate?: Maybe<Date>; maxDate?: Maybe<Date> } = {}): boolean {
     return this._iter(new AnyIterResult(filter)) != null;

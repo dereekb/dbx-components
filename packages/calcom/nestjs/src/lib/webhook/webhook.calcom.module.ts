@@ -8,8 +8,8 @@ import { type Maybe } from '@dereekb/util';
 /**
  * Factory function that creates a {@link CalcomWebhookServiceConfig} from NestJS ConfigService environment variables.
  *
- * @param configService - the NestJS ConfigService instance
- * @returns a validated CalcomWebhookServiceConfig
+ * @param configService - The NestJS ConfigService instance.
+ * @returns A validated CalcomWebhookServiceConfig.
  */
 export function calcomWebhookServiceConfigFactory(configService: ConfigService): CalcomWebhookServiceConfig {
   const config: CalcomWebhookServiceConfig = {
@@ -51,8 +51,8 @@ export interface ProvideAppCalcomWebhookMetadataConfig extends Pick<ModuleMetada
 /**
  * Convenience function used to generate ModuleMetadata for an app's CalcomWebhookModule.
  *
- * @param config - the module metadata configuration including optional dependency module
- * @returns NestJS ModuleMetadata for registering the CalcomWebhookModule
+ * @param config - The module metadata configuration including optional dependency module.
+ * @returns NestJS ModuleMetadata for registering the CalcomWebhookModule.
  */
 export function appCalcomWebhookModuleMetadata(config: ProvideAppCalcomWebhookMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

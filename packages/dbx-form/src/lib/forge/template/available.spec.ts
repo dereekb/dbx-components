@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { type FormControlStatus } from '@angular/forms';
 import { firstValueFrom, of } from 'rxjs';
 import { waitForMs } from '@dereekb/util';
 import { dbxForgeTextIsAvailableField, FORGE_FIELD_VALUE_IS_AVAILABLE_VALIDATOR_NAME } from './available';
@@ -135,7 +134,7 @@ describe('dbxForgeTextIsAvailableField() scenarios', () => {
     await setValueAndSettle('');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('VALID');
   });
 
   it('should report VALID when checkValueIsAvailable resolves true', async () => {
@@ -148,7 +147,7 @@ describe('dbxForgeTextIsAvailableField() scenarios', () => {
     await setValueAndSettle('free');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('VALID');
   });
 
   it('should report INVALID when checkValueIsAvailable resolves false', async () => {
@@ -161,6 +160,6 @@ describe('dbxForgeTextIsAvailableField() scenarios', () => {
     await setValueAndSettle('taken');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('INVALID');
   });
 });

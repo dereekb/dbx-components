@@ -17,10 +17,11 @@ export type IncrementUpdateWithAccessorFunction<T> = (data: FirestoreAccessorInc
  *
  * Uses Firestore's built-in atomic increment operation, which is safe for concurrent updates.
  *
- * @param accessor - The document accessor to perform the increment on
- * @returns A function that applies increment updates to the document
+ * @param accessor - Accessor used to apply the increment.
+ * @returns Update function that runs the supplied increment operations.
  *
  * @see https://cloud.google.com/firestore/docs/samples/firestore-data-set-numeric-increment
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function incrementUpdateWithAccessorFunction<T>(accessor: FirestoreDocumentDataAccessor<T>): IncrementUpdateWithAccessorFunction<T> {

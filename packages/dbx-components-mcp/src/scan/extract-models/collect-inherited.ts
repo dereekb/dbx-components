@@ -17,9 +17,9 @@ import type { ExtractedInterface, ExtractedInterfaceProp } from './types.js';
  * interface and every ancestor reachable via `extendsNames`. Walk order
  * is parents-first so the supplied interface's own props win on conflict.
  *
- * @param iface - the interface to start from
- * @param interfaceByName - lookup map of every interface in the same file
- * @returns the merged property map
+ * @param iface - The interface to start from.
+ * @param interfaceByName - Lookup map of every interface in the same file.
+ * @returns The merged property map.
  */
 export function collectInheritedProps(iface: ExtractedInterface, interfaceByName: ReadonlyMap<string, ExtractedInterface>): ReadonlyMap<string, ExtractedInterfaceProp> {
   const out = new Map<string, ExtractedInterfaceProp>();

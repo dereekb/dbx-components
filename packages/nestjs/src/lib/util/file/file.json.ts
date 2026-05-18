@@ -14,7 +14,7 @@ export function readJsonFile<T>(filePath: string): Promise<Maybe<T>> {
   return new Promise<Maybe<T>>((resolve, reject) => {
     readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
       if (err) {
-        if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        if (err.code === 'ENOENT') {
           resolve(undefined);
         } else {
           reject(err);
@@ -64,7 +64,7 @@ export interface WriteJsonFileInput {
  * @param input.dirPath - Absolute path to the parent directory; created (recursively) when missing.
  * @param input.data - Value to serialize as JSON (pretty-printed with two-space indentation).
  * @param input.mode - Optional numeric file mode (e.g. `0o600`) applied via `chmod` after the write.
- * @returns A promise that resolves once the JSON has been written and the optional `chmod` has completed.
+ * @returns Resolves once the JSON has been written and the optional `chmod` has completed.
  */
 export function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
   mkdirSync(input.dirPath, { recursive: true });
@@ -73,18 +73,14 @@ export function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
     writeFile(input.filePath, JSON.stringify(input.data, null, 2), { mode: input.mode }, (err) => {
       if (err) {
         reject(err);
-        return;
-      }
-
-      if (input.mode == null) {
+      } else if (input.mode == null) {
         resolve();
-        return;
+      } else {
+        chmod(input.filePath, input.mode, (chmodErr) => {
+          if (chmodErr) reject(chmodErr);
+          else resolve();
+        });
       }
-
-      chmod(input.filePath, input.mode, (chmodErr) => {
-        if (chmodErr) reject(chmodErr);
-        else resolve();
-      });
     });
   });
 }
@@ -97,7 +93,7 @@ export function writeJsonFile(input: WriteJsonFileInput): Promise<void> {
  * swallowing them masks real failures and makes operations appear to have succeeded.
  *
  * @param filePath - Absolute path to the file to remove.
- * @returns A promise that resolves once the file is removed (or was already absent).
+ * @returns Resolves once the file is removed (or was already absent).
  */
 export function removeFile(filePath: string): Promise<void> {
   return rm(filePath, { force: true });

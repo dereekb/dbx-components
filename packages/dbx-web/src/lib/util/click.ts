@@ -32,6 +32,9 @@ export interface OverrideClickElementEffectConfig {
  *
  * Must be called in an Angular injection context.
  *
+ * @param config - Configuration specifying the click target, child element to intercept, and optional disabled signal.
+ * @returns The created Angular effect reference.
+ *
  * @example
  * ```ts
  * overrideClickElementEffect({
@@ -39,9 +42,6 @@ export interface OverrideClickElementEffectConfig {
  *   childClickTarget: this.buttonElementRef
  * });
  * ```
- *
- * @param config - configuration specifying the click target, child element to intercept, and optional disabled signal
- * @returns the created Angular effect reference
  */
 export function overrideClickElementEffect(config: OverrideClickElementEffectConfig) {
   const { clickTarget, childClickTarget, disabledSignal } = config;

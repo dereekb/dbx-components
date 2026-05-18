@@ -158,7 +158,7 @@ const DEFAULT_OAUTH_TEST_TIMEOUT = 30_000;
  * and provides an authenticated supertest agent and helper methods.
  *
  * @param config - Optional flow overrides (scopes, redirect URI, client name, timeout) and custom fixture/instance constructors.
- * @returns A function that, given parent fixtures and a `buildTests` callback, registers a `describe('(oauth)', ...)` block which performs the full OAuth flow and exposes the authenticated supertest fixture.
+ * @returns Function that, given parent fixtures and a `buildTests` callback, registers a `describe('(oauth)', ...)` block which performs the full OAuth flow and exposes the authenticated supertest fixture.
  *
  * @example
  * ```typescript

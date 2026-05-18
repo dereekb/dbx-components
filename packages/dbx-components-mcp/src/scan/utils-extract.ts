@@ -100,8 +100,8 @@ const VALID_KIND_OVERRIDES: ReadonlySet<string> = new Set(['function', 'class', 
  * `@dbxUtil` JSDoc marker. Order is stable: source files in the order
  * ts-morph reports them, declarations within a file in source order.
  *
- * @param input - the ts-morph project to scan
- * @returns the extracted entries plus any non-fatal warnings
+ * @param input - The ts-morph project to scan.
+ * @returns The extracted entries plus any non-fatal warnings.
  */
 export function extractUtilEntries(input: ExtractUtilEntriesInput): ExtractUtilEntriesResult {
   const { project } = input;
@@ -527,8 +527,8 @@ function buildSignature(input: BuildSignatureInput): string {
  * (`ExpirationDetails` → `expiration-details`); already-kebab inputs pass
  * through unchanged.
  *
- * @param name - the export identifier
- * @returns the kebab-case slug
+ * @param name - The export identifier.
+ * @returns The kebab-case slug.
  */
 export function toKebabCase(name: string): string {
   if (name.length === 0) {
@@ -549,8 +549,8 @@ const PROJECT_PREFIX_PATTERNS = ['/src/lib/', '/src/'];
  * first folder beneath `src/lib/` (or `src/` when `src/lib/` isn't
  * present), so `packages/util/src/lib/date/expires.ts` → `date`.
  *
- * @param filePath - the absolute or repo-relative path to the source file
- * @returns the derived category slug, or `'misc'` when no folder is found
+ * @param filePath - The absolute or repo-relative path to the source file.
+ * @returns The derived category slug, or `'misc'` when no folder is found.
  */
 export function deriveCategoryFromPath(filePath: string): string {
   const normalised = filePath.replaceAll('\\', '/');

@@ -68,8 +68,8 @@ export type IterateFetchPagesByEachItemResult<T, R> = PerformAsyncTasksResult<It
  * Each item's callback receives a global index that reflects its position across all pages,
  * not just within the current page.
  *
- * @param config - Configuration specifying the fetch page source, item extraction, and per-item callback
- * @returns Combined result from {@link iterateFetchPagesByItems} including page/item counts and per-item task results
+ * @param config - Configuration specifying the fetch page source, item extraction, and per-item callback.
+ * @returns Combined result from {@link iterateFetchPagesByItems} including page/item counts and per-item task results.
  *
  * @example
  * ```typescript
@@ -216,7 +216,7 @@ export interface IterateFetchPagesByItemsResult<I, O, T, R> extends IterateFetch
  *
  * For per-item processing instead of batch processing, use {@link iterateFetchPagesByEachItem}.
  *
- * @param config - Configuration specifying fetch source, item extraction, filtering, limits, and batch callback
+ * @param config - Configuration specifying fetch source, item extraction, filtering, limits, and batch callback.
  * @returns Result with page count and item counters (loaded and visited)
  *
  * @example
@@ -379,7 +379,7 @@ export interface BaseIterateFetchPagesConfig<I, O, R> extends FetchPageFactoryIn
    * @param pageResult - The complete iteration result for the most recent page
    * @returns `true` to stop iteration after this page
    */
-  endEarly?: DecisionFunction<IterateFetchPagesIterationResult<I, O, R>>;
+  readonly endEarly?: DecisionFunction<IterateFetchPagesIterationResult<I, O, R>>;
 }
 
 /**
@@ -471,22 +471,24 @@ export async function iterateFetchPages<I, O, R>(config: IterateFetchPagesConfig
   let currentNextPage: Maybe<FetchNextPage<I, O>>;
 
   async function taskInputFactory() {
+    let result: Maybe<{ i: IndexNumber; fetchPageResult: FetchPageResultWithInput<I, O> }>;
+
     if (hasReachedEnd) {
-      return null; // issue no more tasks
-    }
-
-    if (currentNextPage != null && (currentNextPage.isAtMaxPage || !currentNextPage.hasNext)) {
+      result = null; // issue no more tasks
+    } else if (currentNextPage != null && (currentNextPage.isAtMaxPage || !currentNextPage.hasNext)) {
       hasReachedEnd = true;
-      return null;
+      result = null;
+    } else {
+      currentNextPage = await fetchPage.fetchNext();
+      fetchPage = currentNextPage;
+
+      result = {
+        i: currentNextPage.page,
+        fetchPageResult: currentNextPage
+      };
     }
 
-    currentNextPage = await fetchPage.fetchNext();
-    fetchPage = currentNextPage;
-
-    return {
-      i: currentNextPage.page,
-      fetchPageResult: currentNextPage
-    };
+    return result;
   }
 
   const performTaskFn = performTasksFromFactoryInParallelFunction({

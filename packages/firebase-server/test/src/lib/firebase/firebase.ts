@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 let adminEnvironmentInitialized = false;
 
 /**
@@ -23,9 +24,9 @@ export type FirebaseAdminTestEnvironmentHost = string;
  * accidental connections to production services.
  */
 export interface FirebaseAdminTestEnvironmentEmulatorsConfig {
-  auth: FirebaseAdminTestEnvironmentHost | null;
-  storage: FirebaseAdminTestEnvironmentHost | null;
-  firestore: FirebaseAdminTestEnvironmentHost | null;
+  readonly auth: Maybe<FirebaseAdminTestEnvironmentHost>;
+  readonly storage: Maybe<FirebaseAdminTestEnvironmentHost>;
+  readonly firestore: Maybe<FirebaseAdminTestEnvironmentHost>;
 }
 
 /**
@@ -34,7 +35,7 @@ export interface FirebaseAdminTestEnvironmentEmulatorsConfig {
  * Passed to {@link initFirebaseAdminTestEnvironment} to configure which emulators the test suite connects to.
  */
 export interface FirebaseAdminTestEnvironmentConfig {
-  emulators: FirebaseAdminTestEnvironmentEmulatorsConfig;
+  readonly emulators: FirebaseAdminTestEnvironmentEmulatorsConfig;
 }
 
 /**
@@ -115,7 +116,7 @@ export function getGCloudTestProjectId() {
  * so that each component can also
  *
  * @returns The test project ID that was re-applied to `FIREBASE_CONFIG`/`GCLOUD_PROJECT`.
- * @throws Error when no test project ID is present in the environment (i.e., {@link initFirebaseAdminTestEnvironment} has not been called).
+ * @throws {Error} When no test project ID is present in the environment (i.e., {@link initFirebaseAdminTestEnvironment} has not been called).
  */
 export function applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv() {
   // firebase-functions-test overwrites this each time.

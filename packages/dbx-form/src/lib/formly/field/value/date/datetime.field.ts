@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DescriptionFieldConfig retained for the formly layer until full migration to forge */
 import { type Observable, of } from 'rxjs';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, type MaterialFormFieldConfig } from '../../field';
@@ -20,7 +21,7 @@ export type TimeFieldConfig = Omit<DateTimeFieldConfig, 'showDate' | 'timeOnly'>
  * Factory that returns an observable of a date-time picker configuration
  * that automatically selects the next upcoming time, rounded down to the nearest minute.
  *
- * @returns An observable emitting a picker configuration with takeNextUpcomingTime and roundDownToMinute enabled
+ * @returns An observable emitting a picker configuration with takeNextUpcomingTime and roundDownToMinute enabled.
  */
 export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DbxDateTimePickerConfiguration> = () =>
   of({
@@ -31,10 +32,9 @@ export const TAKE_NEXT_UPCOMING_TIME_CONFIG_OBS: () => Observable<DbxDateTimePic
 /**
  * Same as DateTime field but with the Date input hidden by default.
  *
- * @param config - Optional time field configuration overrides
- * @returns A {@link FormlyFieldConfig} configured as a time-only input
- *
- * @param config - Optional time field configuration overrides
+ * @param config - Optional time field configuration overrides.
+ * @param config - Optional time field configuration overrides.
+ * @returns A {@link FormlyFieldConfig} configured as a time-only input.
  */
 export function formlyTimeOnlyField(config: Partial<TimeFieldConfig> = {}): FormlyFieldConfig {
   return formlyDateTimeField({
@@ -102,17 +102,17 @@ export type DateDateRangeFieldDateConfig = Omit<DateTimeFieldConfig, 'dateLabel'
  * Configuration for a date range field with separate start and end date pickers.
  */
 export interface DateDateRangeFieldConfig extends Pick<DateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
-  required?: boolean;
-  start?: Partial<DateDateRangeFieldDateConfig>;
-  end?: Partial<DateDateRangeFieldDateConfig>;
+  readonly required?: boolean;
+  readonly start?: Partial<DateDateRangeFieldDateConfig>;
+  readonly end?: Partial<DateDateRangeFieldDateConfig>;
 }
 
 /**
  * Creates a pair of date pickers for selecting a date range (start and end dates)
  * arranged in a flex layout. The pickers are synchronized so the start date stays before the end date.
  *
- * @param config - Date range configuration with optional start/end overrides
- * @returns A {@link FormlyFieldConfig} containing the start and end date field pair
+ * @param config - Date range configuration with optional start/end overrides.
+ * @returns A {@link FormlyFieldConfig} containing the start and end date field pair.
  *
  * @example
  * ```typescript
@@ -173,17 +173,17 @@ export type DateTimeRangeFieldTimeConfig = Omit<DateDateRangeFieldDateConfig, 'a
  * Configuration for a date-time range field with separate start and end time pickers.
  */
 export interface DateDateTimeRangeFieldConfig extends Pick<DateTimeFieldConfig, 'timeDate' | 'timezone' | 'showTimezone' | 'presets' | 'valueMode' | 'minuteStep'> {
-  required?: boolean;
-  start?: Partial<DateTimeRangeFieldTimeConfig>;
-  end?: Partial<DateTimeRangeFieldTimeConfig>;
+  readonly required?: boolean;
+  readonly start?: Partial<DateTimeRangeFieldTimeConfig>;
+  readonly end?: Partial<DateTimeRangeFieldTimeConfig>;
 }
 
 /**
  * Creates a pair of time-only pickers for selecting a time range (start and end times)
  * arranged in a flex layout.
  *
- * @param inputConfig - Time range configuration with optional start/end overrides
- * @returns A {@link FormlyFieldConfig} containing the start and end time field pair
+ * @param inputConfig - Time range configuration with optional start/end overrides.
+ * @returns A {@link FormlyFieldConfig} containing the start and end time field pair.
  *
  * @example
  * ```typescript
@@ -276,6 +276,7 @@ export function formlyFixedDateRangeField(config: Partial<FixedDateRangeFieldCon
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTimeOnlyField instead.
  */

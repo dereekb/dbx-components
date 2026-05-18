@@ -27,8 +27,8 @@ const CONTENT_VALIDATION_SKIP_SUFFIXES: readonly string[] = ['.spec.ts', '.id.ts
  * can run the per-file content validator without re-touching the disk.
  * Specs construct inspections directly without using this function.
  *
- * @param path - absolute path to the folder to inspect
- * @returns the inspection record describing the folder's status and contents
+ * @param path - Absolute path to the folder to inspect.
+ * @returns The inspection record describing the folder's status and contents.
  */
 export async function inspectFolder(path: string): Promise<FolderInspection> {
   const name = basename(path);

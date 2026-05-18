@@ -283,9 +283,9 @@ export type NotificationMessageFunction = NotificationMessageFunctionWithoutExtr
  * Creates a {@link NotificationMessageFunction} by attaching optional {@link NotificationMessageFunctionExtras}
  * (global recipients, lifecycle callbacks) to a base message generation function.
  *
- * @param fn - base function that generates message content per recipient
- * @param extras - optional delivery customization (global recipients, send callbacks)
- * @returns a {@link NotificationMessageFunction} with the extras attached
+ * @param fn - Base function that generates message content per recipient.
+ * @param extras - Optional delivery customization (global recipients, send callbacks)
+ * @returns A {@link NotificationMessageFunction} with the extras attached.
  *
  * @example
  * ```ts
@@ -297,6 +297,7 @@ export type NotificationMessageFunction = NotificationMessageFunctionWithoutExtr
  *   { globalRecipients: [adminRecipient] }
  * );
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function notificationMessageFunction(fn: NotificationMessageFunctionWithoutExtras, extras?: NotificationMessageFunctionExtras): NotificationMessageFunction {
@@ -316,7 +317,7 @@ export function notificationMessageFunction(fn: NotificationMessageFunctionWitho
  *
  * Useful as a placeholder factory for template types that should not produce deliverable content.
  *
- * @returns a factory that produces no-content message functions
+ * @returns A factory that produces no-content message functions.
  *
  * @example
  * ```ts
@@ -325,6 +326,7 @@ export function notificationMessageFunction(fn: NotificationMessageFunctionWitho
  * const msg = await msgFn(inputContext);
  * // msg.flag === NotificationMessageFlag.NO_CONTENT
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function noContentNotificationMessageFunctionFactory<D extends NotificationItemMetadata = {}>(): NotificationMessageFunctionFactory<D> {

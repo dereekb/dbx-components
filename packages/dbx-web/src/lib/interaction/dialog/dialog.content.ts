@@ -9,8 +9,8 @@ export type DbxDialogContentConfig = Omit<MatDialogConfig, 'viewContainerRef' | 
 /**
  * Sanitizes a {@link DbxDialogContentConfig} by normalizing the panelClass into an array.
  *
- * @param input - The dialog content config to sanitize, or null/undefined
- * @returns A new config with panelClass normalized to an array of CSS class strings
+ * @param input - The dialog content config to sanitize, or null/undefined.
+ * @returns A new config with panelClass normalized to an array of CSS class strings.
  *
  * @example
  * ```ts

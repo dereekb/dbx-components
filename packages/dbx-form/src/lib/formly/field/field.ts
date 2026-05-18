@@ -1,50 +1,10 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- defines and references the deprecated formly config interfaces (LabeledBaseFieldConfig, AttributesFieldConfig, DescriptionFieldConfig, FieldConfigParsersRef, FieldValueParser, DefaultValueFieldConfig) retained for the legacy formly layer until full migration to forge */
 import { type AsyncValidatorFn, type ValidatorFn } from '@angular/forms';
 import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, type FilterKeyValueTuplesInput, type GeneralFilterFromPOJOFunction, type ArrayOrValue, type Maybe, asArray, objectHasNoKeys, type MapFunction } from '@dereekb/util';
 import { type FormlyFieldConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { type ValidationMessageOption } from '../type';
 import { type FormlyFieldProps as MaterialFormlyFormFieldProps } from '@ngx-formly/material/form-field';
 import { type DisableAutocompleteForField, disableAutofillAttributes } from '../../field';
-
-/**
- * Configuration for a labeled form field with label, placeholder, and autocomplete support.
- *
- * @deprecated
- */
-export interface LabeledBaseFieldConfig extends BaseFieldConfig {
-  label?: string;
-  placeholder?: string;
-  /**
-   * Sets the autocomplete values. Pass `false` to disable autocomplete.
-   */
-  autocomplete?: string | DisableAutocompleteForField;
-}
-
-/**
- * Configuration mixin that provides a default value for a form field.
- *
- * @deprecated
- */
-export interface DefaultValueFieldConfig<T = unknown> {
-  defaultValue?: T;
-}
-
-/**
- * Configuration mixin for a field hint/help text.
- *
- * @deprecated
- */
-export interface HintFieldConfig extends Partial<DescriptionFieldConfig> {
-  /**
-   * Description text. Alias for hint.
-   *
-   * @deprecated use hint instead.
-   */
-  description?: string;
-  /**
-   * Hint text.
-   */
-  hint?: string;
-}
 
 /**
  * Union of all partial shared field config types.
@@ -59,66 +19,14 @@ export type BasePartialPotentialFieldConfig = Partial<BaseFieldConfig> & Partial
  *
  * This is the engine-agnostic base. Formly and forge extend this with their own
  * engine-specific properties.
+ *
+ * @dbxMutable shape merged with the mutable third-party `FormlyFieldProps` (via interface extension); `readonly` modifiers here would diverge from that base and trip TS2320.
  */
 
 export interface BaseFieldConfig {
-  key: string;
+  readonly key: string;
   required?: boolean;
   readonly?: boolean;
-}
-
-/**
- * Reference to an array of value parsers applied to a field's value.
- *
- * @deprecated
- */
-
-export interface FieldConfigParsersRef {
-  parsers: FieldValueParser[];
-}
-/**
- * Optional reference to value parsers for a field.
- *
- * @deprecated
- */
-
-export interface FieldConfigWithParsers {
-  parsers?: FieldValueParser[];
-}
-/**
- * @deprecated Use FieldValueParser instead.
- */
-
-export type FormlyValueParser<I = any, O = any> = FieldValueParser<I, O>;
-/**
- * A value parser function that transforms a form field's value from one type to another.
- *
- * @deprecated Use MapFunction instead.
- */
-
-export type FieldValueParser<I = any, O = any> = MapFunction<I, O>;
-/**
- * Configuration mixin for arbitrary HTML attributes on a form field element.
- *
- * @deprecated
- */
-
-export interface AttributesFieldConfig {
-  attributes?: {
-    [key: string]: string | number;
-  };
-}
-/**
- * Configuration mixin for a field hint/description/help text.
- *
- * @deprecated
- */
-
-export interface DescriptionFieldConfig {
-  /**
-   * Description text.
-   */
-  description?: string;
 }
 
 /**
@@ -131,6 +39,8 @@ export interface FieldConfig extends BaseFieldConfig, Pick<FormlyFieldConfig, 'e
  * Labeled Formly field configuration with label, placeholder, and autocomplete support.
  *
  * Extends the Formly-specific {@link FieldConfig} to include expressions and parsers.
+ *
+ * @dbxMutable label/placeholder mirror the mutable third-party `FormlyFieldProps`; readonly here would trip TS2320 on interfaces that mix this with `FormlyFieldProps`-extending props.
  */
 export interface LabeledFieldConfig extends FieldConfig {
   label?: string;
@@ -152,10 +62,9 @@ export type PartialPotentialFieldConfig = Partial<FieldConfig> & Partial<Labeled
 /**
  * Validates the configuration on the input field.
  *
- * @param fieldConfig - The Formly field configuration to validate
- * @returns The validated field configuration
- *
- * @param fieldConfig - The Formly field configuration to validate
+ * @param fieldConfig - The Formly field configuration to validate.
+ * @returns The validated field configuration.
+ * @throws {Error} When `fieldConfig.key` is missing.
  */
 export function formlyField<T extends FormlyFieldConfig = FormlyFieldConfig>(fieldConfig: T): T {
   if (!fieldConfig.key) {
@@ -187,25 +96,25 @@ export function propsAndConfigForFieldConfig<O extends object = object>(fieldCon
 /**
  * Keys from {@link PartialPotentialFieldConfig} that are merged into Formly props.
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const partialPotentialFieldConfigKeys: (keyof PartialPotentialFieldConfig)[] = ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete'];
+
+export const PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS: (keyof PartialPotentialFieldConfig)[] = ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete'];
 /**
  * Filter configuration for extracting field config keys from objects.
  */
-export const partialPotentialFieldConfigKeysFilter: FilterKeyValueTuplesInput<PartialPotentialFieldConfig> = {
-  keysFilter: partialPotentialFieldConfigKeys
+export const PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS_FILTER: FilterKeyValueTuplesInput<PartialPotentialFieldConfig> = {
+  keysFilter: PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS
 };
 
 /**
  * Merge function that combines multiple partial field configs, picking only the recognized keys.
  */
-export const mergePropsValueObjects = mergeObjectsFunction<PartialPotentialFieldConfig>(partialPotentialFieldConfigKeysFilter);
+export const mergePropsValueObjects = mergeObjectsFunction<PartialPotentialFieldConfig>(PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS_FILTER);
 
 /**
  * Filter function that extracts only the recognized field config keys from an object.
  */
 export const filterPartialPotentialFieldConfigValuesFromObject = filterFromPOJOFunction<PartialPotentialFieldConfig>({
-  filter: partialPotentialFieldConfigKeysFilter
+  filter: PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS_FILTER
 }) as GeneralFilterFromPOJOFunction<PartialPotentialFieldConfig>;
 
 /**
@@ -214,8 +123,8 @@ export const filterPartialPotentialFieldConfigValuesFromObject = filterFromPOJOF
  * Merges label, placeholder, required, readonly, description, attributes, and autocomplete
  * settings. When autocomplete is `false`, disables browser autofill via special attributes.
  *
- * @param fieldConfig - Base field configuration
- * @param override - Optional property overrides
+ * @param fieldConfig - Base field configuration.
+ * @param override - Optional property overrides.
  * @returns Merged props object suitable for use in a {@link FormlyFieldConfig}
  */
 export function propsValueForFieldConfig<T extends FormlyFieldProps, O extends object = object>(fieldConfig: PartialPotentialFieldConfig, override?: PartialPotentialFieldConfig & O): Partial<T> & O {
@@ -295,8 +204,8 @@ export type ValidatorsForFieldConfig = {
  * Converts Angular validators, async validators, and validation messages into the
  * Formly-compatible validator configuration format.
  *
- * @param input - Validators, async validators, and messages to convert
- * @returns A Formly-compatible validator config, or undefined if no validators provided
+ * @param input - Validators, async validators, and messages to convert.
+ * @returns A Formly-compatible validator config, or undefined if no validators provided.
  *
  * @example
  * ```typescript
@@ -343,4 +252,109 @@ export function validatorsForFieldConfig(input: ValidatorsForFieldConfigInput): 
  */
 export interface MaterialFormFieldConfig {
   readonly materialFormField?: Partial<Pick<MaterialFormlyFormFieldProps, 'prefix' | 'suffix' | 'hideLabel' | 'hideRequiredMarker' | 'hideFieldUnderline' | 'floatLabel' | 'appearance' | 'color' | 'hintStart' | 'hintEnd'>>;
+}
+
+// COMPAT: Deprecated aliases
+/**
+ * Configuration for a labeled form field with label, placeholder, and autocomplete support.
+ *
+ * @deprecated
+ * @dbxMutable kept mutable to match `FormlyFieldProps` for backwards-compatible mixing.
+ */
+export interface LabeledBaseFieldConfig extends BaseFieldConfig {
+  label?: string;
+  placeholder?: string;
+  /**
+   * Sets the autocomplete values. Pass `false` to disable autocomplete.
+   */
+  autocomplete?: string | DisableAutocompleteForField;
+}
+
+/**
+ * Configuration mixin that provides a default value for a form field.
+ *
+ * @deprecated
+ */
+export interface DefaultValueFieldConfig<T = unknown> {
+  readonly defaultValue?: T;
+}
+
+/**
+ * Configuration mixin for a field hint/help text.
+ *
+ * @deprecated
+ * @dbxMutable `description` mirrors mutable `FormlyFieldProps.description`.
+ */
+export interface HintFieldConfig extends Partial<DescriptionFieldConfig> {
+  /**
+   * Description text. Alias for hint.
+   *
+   * @deprecated use hint instead.
+   */
+  description?: string;
+  /**
+   * Hint text.
+   */
+  hint?: string;
+}
+
+/**
+ * Reference to an array of value parsers applied to a field's value.
+ *
+ * @deprecated
+ */
+
+export interface FieldConfigParsersRef {
+  parsers: FieldValueParser[];
+}
+
+/**
+ * Optional reference to value parsers for a field.
+ *
+ * @deprecated
+ */
+
+export interface FieldConfigWithParsers {
+  parsers?: FieldValueParser[];
+}
+
+/**
+ * @deprecated Use FieldValueParser instead.
+ */
+
+export type FormlyValueParser<I = any, O = any> = FieldValueParser<I, O>;
+
+/**
+ * A value parser function that transforms a form field's value from one type to another.
+ *
+ * @deprecated Use MapFunction instead.
+ */
+
+export type FieldValueParser<I = any, O = any> = MapFunction<I, O>;
+
+/**
+ * Configuration mixin for arbitrary HTML attributes on a form field element.
+ *
+ * @deprecated
+ * @dbxMutable mirrors mutable `FormlyFieldProps.attributes`.
+ */
+
+export interface AttributesFieldConfig {
+  attributes?: {
+    [key: string]: string | number;
+  };
+}
+
+/**
+ * Configuration mixin for a field hint/description/help text.
+ *
+ * @deprecated
+ * @dbxMutable mirrors mutable `FormlyFieldProps.description`.
+ */
+
+export interface DescriptionFieldConfig {
+  /**
+   * Description text.
+   */
+  description?: string;
 }

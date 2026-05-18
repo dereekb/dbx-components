@@ -18,7 +18,7 @@ import {
   mockItemConverter,
   type MockItemPagedEntry,
   type MockItemPagedFirestoreCollection,
-  MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE
+  DEFAULT_MOCK_ITEM_PAGED_MAX_ITEMS_PER_PAGE
 } from '../mock';
 import { type Getter, compareStrings } from '@dereekb/util';
 
@@ -542,7 +542,7 @@ export function describeFirestoreAccessorDriverTests(f: MockItemCollectionFixtur
               expect(index).toBeDefined();
               expect(index?.tc).toBe(items.length);
               expect(index?.p).toEqual(['0', '1']);
-              expect(index?.pc).toEqual({ '0': MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE, '1': items.length - MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE });
+              expect(index?.pc).toEqual({ '0': DEFAULT_MOCK_ITEM_PAGED_MAX_ITEMS_PER_PAGE, '1': items.length - DEFAULT_MOCK_ITEM_PAGED_MAX_ITEMS_PER_PAGE });
               expect(index?.u).toBeGreaterThan(0);
             });
 

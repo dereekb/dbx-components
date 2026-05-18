@@ -121,7 +121,7 @@ export const profilePrivateDataConverter = snapshotConverterFunctions<ProfilePri
  * ProfilePrivateData documents under a given Profile parent document.
  *
  * @param context - The FirestoreContext used to resolve the subcollection.
- * @returns A function that accepts a ProfileDocument and returns its ProfilePrivateData subcollection reference.
+ * @returns Accepts a ProfileDocument and returns its ProfilePrivateData subcollection reference.
  */
 export function profilePrivateDataCollectionReferenceFactory(context: FirestoreContext): (profile: ProfileDocument) => CollectionReference<ProfilePrivateData> {
   return (profile: ProfileDocument) => {

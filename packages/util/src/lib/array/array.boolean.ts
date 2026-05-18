@@ -25,8 +25,8 @@ export type BooleanKeyArray<T = string> = Maybe<T[]>;
 /**
  * Wraps a key reading function to ensure that empty string keys are not used in boolean key arrays.
  *
- * @param readKey - The key reading function to wrap
- * @returns A wrapped key reading function that throws an error if an empty string is used as a key
+ * @param readKey - The key reading function to wrap.
+ * @returns A wrapped key reading function that throws an error if an empty string is used as a key.
  */
 export function readBooleanKeySafetyWrap<T>(readKey: ReadModelKeyFunction<T>): ReadModelKeyFunction<T> {
   return (value: T) => {
@@ -43,8 +43,8 @@ export function readBooleanKeySafetyWrap<T>(readKey: ReadModelKeyFunction<T>): R
 /**
  * Checks if a boolean key array evaluates to false (empty or undefined).
  *
- * @param value - The boolean key array to check
- * @returns True if the array is empty or undefined, false otherwise
+ * @param value - Boolean-key array to evaluate as a tri-state.
+ * @returns True when the array has no entries (treated as `false`); otherwise false.
  */
 export function isFalseBooleanKeyArray(value: BooleanKeyArray): boolean {
   return !value || value.length <= 0;
@@ -53,8 +53,8 @@ export function isFalseBooleanKeyArray(value: BooleanKeyArray): boolean {
 /**
  * Checks if a boolean key array evaluates to true (has at least one value).
  *
- * @param value - The boolean key array to check
- * @returns True if the array has at least one value, false otherwise
+ * @param value - Boolean-key array to evaluate as a tri-state.
+ * @returns True when at least one entry exists (treated as `true`); otherwise false.
  */
 export function isTrueBooleanKeyArray(value: BooleanKeyArray): boolean {
   return !isFalseBooleanKeyArray(value);
@@ -63,10 +63,10 @@ export function isTrueBooleanKeyArray(value: BooleanKeyArray): boolean {
 /**
  * Inserts a value into a boolean key array, removing any existing values with the same key.
  *
- * @param array - The boolean key array to insert into
- * @param value - The value to insert
- * @param readKey - Function to extract the key from a value
- * @returns A new boolean key array with the value inserted
+ * @param array - Existing boolean-key array to extend.
+ * @param value - Entry to add, displacing any prior entry with the same key.
+ * @param readKey - Resolver that derives the comparison key from an entry.
+ * @returns Resulting boolean-key array containing the inserted entry.
  */
 export function insertIntoBooleanKeyArray<T>(array: BooleanKeyArray<T>, value: T, readKey: ReadModelKeyFunction<T>): BooleanKeyArray<T> {
   return array ? [...removeModelsWithSameKey(array, value, readBooleanKeySafetyWrap(readKey)), value] : [value];
@@ -75,10 +75,10 @@ export function insertIntoBooleanKeyArray<T>(array: BooleanKeyArray<T>, value: T
 /**
  * Removes a value from a boolean key array based on its key.
  *
- * @param array - The boolean key array to remove from
- * @param value - The value to remove
- * @param readKey - Function to extract the key from a value
- * @returns A new boolean key array with the value removed
+ * @param array - Existing boolean-key array to filter.
+ * @param value - Entry whose key identifies the row to drop.
+ * @param readKey - Resolver that derives the comparison key from an entry.
+ * @returns Boolean-key array with entries matching the value's key removed.
  */
 export function removeFromBooleanKeyArray<T>(array: BooleanKeyArray<T>, value: T, readKey: ReadModelKeyFunction<T>): BooleanKeyArray<T> {
   return array ? removeModelsWithSameKey(array, value, readBooleanKeySafetyWrap(readKey)) : array;
@@ -87,10 +87,10 @@ export function removeFromBooleanKeyArray<T>(array: BooleanKeyArray<T>, value: T
 /**
  * Removes values from a boolean key array that match the specified key.
  *
- * @param array - The boolean key array to remove from
- * @param key - The key to match for removal
- * @param readKey - Function to extract the key from a value
- * @returns A new boolean key array with matching values removed
+ * @param array - Existing boolean-key array to filter.
+ * @param key - Identifier whose entries should be removed.
+ * @param readKey - Resolver that derives the comparison key from an entry.
+ * @returns Boolean-key array with entries carrying the given key removed.
  */
 export function removeByKeyFromBooleanKeyArray<T>(array: BooleanKeyArray<T>, key: string, readKey: ReadModelKeyFunction<T>): BooleanKeyArray<T> {
   return array ? removeModelsWithKey(array, key, readBooleanKeySafetyWrap(readKey)) : array;
@@ -104,8 +104,8 @@ export type BooleanKeyArrayUtility<T> = ReturnType<typeof booleanKeyArrayUtility
 /**
  * Creates a utility object with functions for working with boolean key arrays.
  *
- * @param readKey - Function to extract the key from a value
- * @returns An object with utility functions for boolean key arrays
+ * @param readKey - Function to extract the key from a value.
+ * @returns An object with utility functions for boolean key arrays.
  */
 export function booleanKeyArrayUtility<T>(readKey: ReadModelKeyFunction<T>) {
   const isFalse = (value: BooleanKeyArray): boolean => {

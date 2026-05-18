@@ -19,11 +19,11 @@ export interface DbxFormStyleWrapperConfig {
   /**
    * Observable or static value providing inline styles via `[ngStyle]`.
    */
-  styleGetter?: Maybe<ObservableOrValue<DbxFormStyleObject>>;
+  readonly styleGetter?: Maybe<ObservableOrValue<DbxFormStyleObject>>;
   /**
    * Observable or static value providing CSS class names via `[ngClass]`.
    */
-  classGetter?: Maybe<ObservableOrValue<string>>;
+  readonly classGetter?: Maybe<ObservableOrValue<string>>;
 }
 
 /**

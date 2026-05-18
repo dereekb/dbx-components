@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { archetypeRecommendTool } from './archetype-recommend.tool.js';
+import { ARCHETYPE_RECOMMEND_TOOL } from './archetype-recommend.tool.js';
 
 async function runRecommend(args: Record<string, unknown>) {
-  const result = await archetypeRecommendTool.run(args);
+  const result = await ARCHETYPE_RECOMMEND_TOOL.run(args);
   const text = result.content.map((c) => c.text).join('\n');
   return { result, text };
 }
@@ -109,7 +109,7 @@ describe('dbx_model_archetype_recommend', () => {
   });
 
   it('rejects malformed questionnaire input', async () => {
-    const result = await archetypeRecommendTool.run({ questionnaire: 'not-an-object' });
+    const result = await ARCHETYPE_RECOMMEND_TOOL.run({ questionnaire: 'not-an-object' });
     expect(result.isError).toBe(true);
   });
 

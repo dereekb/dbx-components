@@ -106,8 +106,9 @@ export interface ModelSnapshotFieldRegistry {
 /**
  * Builds a {@link ModelSnapshotFieldRegistry} from a loader result.
  *
- * @param loaded - the merged registry returned by `loadModelSnapshotFieldManifests`
- * @returns a domain-friendly read API over the merged entries
+ * @param loaded - The merged registry returned by `loadModelSnapshotFieldManifests`
+ * @returns A domain-friendly read API over the merged entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createModelSnapshotFieldRegistry(loaded: LoadModelSnapshotFieldManifestsResult): ModelSnapshotFieldRegistry {
@@ -120,10 +121,11 @@ export function createModelSnapshotFieldRegistry(loaded: LoadModelSnapshotFieldM
  * {@link ModelSnapshotFieldEntryInfo} array. Used by tests that need to
  * drive the tools without going through the loader pipeline.
  *
- * @param input - the entries plus the source labels to advertise
- * @param input.entries - the full entry list
- * @param input.loadedSources - source labels reported via `registry.loadedSources`
- * @returns a domain-friendly read API over the supplied entries
+ * @param input - The entries plus the source labels to advertise.
+ * @param input.entries - The full entry list.
+ * @param input.loadedSources - Source labels reported via `registry.loadedSources`
+ * @returns A domain-friendly read API over the supplied entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createModelSnapshotFieldRegistryFromEntries(input: { readonly entries: readonly ModelSnapshotFieldEntryInfo[]; readonly loadedSources: readonly string[] }): ModelSnapshotFieldRegistry {
@@ -202,8 +204,8 @@ export const EMPTY_MODEL_SNAPSHOT_FIELD_REGISTRY: ModelSnapshotFieldRegistry = c
  * shape the lookup/search tools consume. Optional manifest fields fall
  * back to safe defaults so a partially-populated entry still renders cleanly.
  *
- * @param entry - the manifest entry to convert
- * @returns the matching ModelSnapshotFieldEntryInfo
+ * @param entry - The manifest entry to convert.
+ * @returns The matching ModelSnapshotFieldEntryInfo.
  */
 export function toModelSnapshotFieldEntryInfo(entry: ModelSnapshotFieldEntry): ModelSnapshotFieldEntryInfo {
   const result: ModelSnapshotFieldEntryInfo = {

@@ -9,8 +9,8 @@ export type ZoomOAuthServiceConfigFactory = (configService: ConfigService) => Zo
 /**
  * Default factory function for creating ZoomOAuthServiceConfig from ConfigService.
  *
- * @param configService The NestJS ConfigService
- * @returns A validated ZoomOAuthServiceConfig
+ * @param configService - The NestJS ConfigService.
+ * @returns A validated ZoomOAuthServiceConfig.
  */
 export function zoomOAuthServiceConfigFactory(configService: ConfigService): ZoomOAuthServiceConfig {
   return readZoomOAuthServiceConfigFromConfigService(configService);
@@ -36,8 +36,8 @@ export interface ProvideAppZoomOAuthMetadataConfig extends Pick<ModuleMetadata, 
 /**
  * Convenience function used to generate ModuleMetadata for an app's ZoomOAuthModule.
  *
- * @param config The configuration for the module metadata
- * @returns Module metadata for the Zoom OAuth module
+ * @param config - The configuration for the module metadata.
+ * @returns Module metadata for the Zoom OAuth module.
  */
 export function appZoomOAuthModuleMetadata(config: ProvideAppZoomOAuthMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

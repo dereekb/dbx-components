@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { addDays, startOfDay } from 'date-fns';
-import { type DateCellScheduleDateFilterConfig, type DateCellScheduleEncodedWeek, dateCellTiming, type DateRange } from '@dereekb/date';
+import { type DateCellScheduleDateFilterConfig, dateCellTiming, type DateRange } from '@dereekb/date';
 import { BehaviorSubject } from 'rxjs';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { type CalendarScheduleSelectionState, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithComputeSelectionResultRelativeToFilter, updateStateWithDateCellScheduleRangeValue, updateStateWithFilter, updateStateWithInitialSelectionState, updateStateWithMinMaxDateRange, updateStateWithTimezoneValue } from '../../calendar.schedule.selection.store';
@@ -67,7 +67,7 @@ describe('dbxForgeDateScheduleRangeField()', () => {
 
       const filterConfig: DateCellScheduleDateFilterConfig = {
         ...dateCellTiming({ startsAt: today, duration: 60 }, daysInFilter, 'UTC'),
-        w: '89' as DateCellScheduleEncodedWeek,
+        w: '89',
         ex: [] as number[]
       };
 
@@ -99,9 +99,9 @@ describe('dbxForgeDateScheduleRangeField()', () => {
         function createConfiguredState() {
           let state = initialCalendarScheduleSelectionState();
           state = updateStateWithMinMaxDateRange(state, field.props!.minMaxDateRange as Partial<DateRange>);
-          state = updateStateWithComputeSelectionResultRelativeToFilter(state, field.props!.computeSelectionResultRelativeToFilter!);
+          state = updateStateWithComputeSelectionResultRelativeToFilter(state, field.props!.computeSelectionResultRelativeToFilter);
           state = updateStateWithFilter(state, field.props!.filter as DateCellScheduleDateFilterConfig);
-          state = updateStateWithInitialSelectionState(state, field.props!.initialSelectionState!);
+          state = updateStateWithInitialSelectionState(state, field.props!.initialSelectionState);
           return state;
         }
 
@@ -159,7 +159,7 @@ describe('dbxForgeDateScheduleRangeField()', () => {
 
     const filterConfig: DateCellScheduleDateFilterConfig = {
       ...dateCellTiming({ startsAt: today, duration: 60 }, daysInFilter, 'UTC'),
-      w: '89' as DateCellScheduleEncodedWeek,
+      w: '89',
       ex: [] as number[]
     };
 
@@ -426,12 +426,12 @@ describe('dbxForgeDateScheduleRangeField()', () => {
         expect(firstValue).toBeDefined();
 
         // First round-trip
-        state = updateStateWithDateCellScheduleRangeValue(state, firstValue!);
+        state = updateStateWithDateCellScheduleRangeValue(state, firstValue);
         const secondValue = state.currentSelectionValue?.dateScheduleRange;
         expect(secondValue).toBeDefined();
 
         // Second round-trip
-        state = updateStateWithDateCellScheduleRangeValue(state, secondValue!);
+        state = updateStateWithDateCellScheduleRangeValue(state, secondValue);
         const thirdValue = state.currentSelectionValue?.dateScheduleRange;
         expect(thirdValue).toBeDefined();
 

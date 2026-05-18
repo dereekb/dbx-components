@@ -45,9 +45,9 @@ const CANDIDATE_RELPATHS: readonly string[] = ['src/root.app.config.ts', 'src/ap
  * missing-file errors. Falls back to scanning `src/**\/*.providers.ts`
  * when none of the well-known names match.
  *
- * @param apiAbs - absolute path to the Angular app root
- * @param apiRel - caller-supplied relative path used in the returned report
- * @returns the inspection result the extractor consumes
+ * @param apiAbs - Absolute path to the Angular app root.
+ * @param apiRel - Caller-supplied relative path used in the returned report.
+ * @returns The inspection result the extractor consumes.
  */
 export async function inspectColorTemplates(apiAbs: string, apiRel: string): Promise<ColorTemplateInspection> {
   const present: ColorTemplateInspectedFile[] = [];
@@ -108,13 +108,14 @@ async function scanProviderFiles(srcAbs: string): Promise<readonly string[]> {
 }
 
 async function readFileIfExists(absPath: string): Promise<string | undefined> {
+  let result: string | undefined;
   try {
-    return await readFile(absPath, 'utf8');
+    result = await readFile(absPath, 'utf8');
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
-    if (code === 'ENOENT' || code === 'ENOTDIR' || code === 'EISDIR') {
-      return undefined;
+    if (code !== 'ENOENT' && code !== 'ENOTDIR' && code !== 'EISDIR') {
+      throw err;
     }
-    throw err;
   }
+  return result;
 }

@@ -6,9 +6,9 @@ export type AdditionalModuleMetadata = Partial<ModuleMetadata>;
 /**
  * Merges two module metadata entries together.
  *
- * @param base - the base module metadata
- * @param additional - additional metadata to merge in
- * @returns the merged module metadata
+ * @param base - The base module metadata.
+ * @param additional - Additional metadata to merge in.
+ * @returns The merged module metadata.
  */
 export function mergeModuleMetadata(base: ModuleMetadata, additional: AdditionalModuleMetadata = {}): ModuleMetadata {
   return {
@@ -24,8 +24,8 @@ export function mergeModuleMetadata(base: ModuleMetadata, additional: Additional
  *
  * For class providers, returns the class itself; for object providers, returns the provide token.
  *
- * @param providers - the providers to extract tokens from
- * @returns an array of injection tokens
+ * @param providers - Providers to extract tokens from.
+ * @returns Injection tokens collected from each provider.
  */
 export function injectionTokensFromProviders(providers: ArrayOrValue<Provider<unknown>>): InjectionToken[] {
   return asArray(providers).map((x) => {

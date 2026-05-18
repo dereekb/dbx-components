@@ -14,6 +14,7 @@
  * catalog when the same key appears in multiple apps.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import type { AuthClaimInfo, AuthRegistry } from '../registry/auth-runtime.js';
@@ -60,23 +61,23 @@ export function createAuthTokenExplainTool(input: CreateAuthTokenExplainToolInpu
     definition: DBX_AUTH_TOKEN_EXPLAIN_TOOL,
     run(rawArgs) {
       const parsed = TokenArgsType(rawArgs);
-      if (parsed instanceof type.errors) {
-        return toolError(`Invalid arguments: ${parsed.summary}`);
-      }
-      const { token, claims: claimsObj, app, expectedIssuer } = parsed;
-
       let result: ToolResult;
-      if (token !== undefined && claimsObj !== undefined) {
-        result = toolError('Pass exactly one of `token` or `claims`, not both.');
-      } else if (token === undefined && claimsObj === undefined) {
-        result = toolError('Pass either `token` (JWT) or `claims` (object).');
+      if (parsed instanceof type.errors) {
+        result = toolError(`Invalid arguments: ${parsed.summary}`);
       } else {
-        const decoded = token === undefined ? { header: undefined, payload: claimsObj as Record<string, unknown>, signature: undefined } : decodeJwt(token);
-        if (decoded === null) {
-          result = toolError('Could not decode JWT — expected 3 base64url segments separated by `.`.');
+        const { token, claims: claimsObj, app, expectedIssuer } = parsed;
+        if (token !== undefined && claimsObj !== undefined) {
+          result = toolError('Pass exactly one of `token` or `claims`, not both.');
+        } else if (token === undefined && claimsObj === undefined) {
+          result = toolError('Pass either `token` (JWT) or `claims` (object).');
         } else {
-          const text = formatExplain({ registry, app, expectedIssuer, header: decoded.header, payload: decoded.payload, signaturePresent: decoded.signature !== undefined });
-          result = { content: [{ type: 'text', text }] };
+          const decoded = token === undefined ? { header: undefined, payload: claimsObj as Record<string, unknown>, signature: undefined } : decodeJwt(token);
+          if (decoded == null) {
+            result = toolError('Could not decode JWT — expected 3 base64url segments separated by `.`.');
+          } else {
+            const text = formatExplain({ registry, app, expectedIssuer, header: decoded.header, payload: decoded.payload, signaturePresent: decoded.signature !== undefined });
+            result = { content: [{ type: 'text', text }] };
+          }
         }
       }
       return result;
@@ -91,9 +92,9 @@ interface DecodedJwt {
   readonly signature: string | undefined;
 }
 
-function decodeJwt(token: string): DecodedJwt | null {
+function decodeJwt(token: string): Maybe<DecodedJwt> {
   const parts = token.trim().split('.');
-  let result: DecodedJwt | null = null;
+  let result: Maybe<DecodedJwt> = null;
   if (parts.length === 3) {
     const [headerSegment, payloadSegment, signature] = parts;
     const header = decodeJwtSegment(headerSegment);
@@ -105,8 +106,8 @@ function decodeJwt(token: string): DecodedJwt | null {
   return result;
 }
 
-function decodeJwtSegment(segment: string): Record<string, unknown> | null {
-  let result: Record<string, unknown> | null = null;
+function decodeJwtSegment(segment: string): Maybe<Record<string, unknown>> {
+  let result: Maybe<Record<string, unknown>> = null;
   try {
     const padded = segment.padEnd(segment.length + ((4 - (segment.length % 4)) % 4), '=');
     const base64 = padded.replaceAll('-', '+').replaceAll('_', '/');

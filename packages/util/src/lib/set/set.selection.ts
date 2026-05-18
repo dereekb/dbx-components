@@ -13,18 +13,21 @@ export interface IsSelectedDecisionFunctionConfig<T, K extends PrimativeKey = Pr
   /**
    * Reads the key from the input value.
    */
-  readKey: ReadKeyFunction<T, K>;
+  readonly readKey: ReadKeyFunction<T, K>;
   /**
    * Default value to use if readKey returns no key.
    *
    * Defaults to false.
    */
-  defaultIfKeyNull?: boolean;
+  readonly defaultIfKeyNull?: boolean;
 }
 
 /**
  * Creates an {@link IsSelectedDecisionFunctionFactory} that produces decision functions
  * checking whether a value's key is included in a set of selected values.
+ *
+ * @param config - Configuration with the key reader and default behavior.
+ * @returns A factory that creates decision functions from a set of selected keys.
  *
  * @dbxUtil
  * @dbxUtilCategory set
@@ -32,8 +35,6 @@ export interface IsSelectedDecisionFunctionConfig<T, K extends PrimativeKey = Pr
  * @dbxUtilTags set, selection, decision, predicate, factory, key
  * @dbxUtilRelated is-in-set-decision-function
  *
- * @param config - Configuration with the key reader and default behavior.
- * @returns A factory that creates decision functions from a set of selected keys.
  * @__NO_SIDE_EFFECTS__
  */
 export function isSelectedDecisionFunctionFactory<T, K extends PrimativeKey = PrimativeKey>(config: IsSelectedDecisionFunctionConfig<T, K>): IsSelectedDecisionFunctionFactory<T, K> {

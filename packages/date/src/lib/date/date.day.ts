@@ -39,8 +39,8 @@ export interface YearMonthDayCodePair {
 /**
  * Extracts the year component from a {@link YearMonthDayCode} by dividing out the month and day digits.
  *
- * @param yearMonthDayCode - Encoded YYYYMMDD value to extract the year from
- * @returns the year component of the code
+ * @param yearMonthDayCode - Encoded YYYYMMDD value to extract the year from.
+ * @returns The year component of the code.
  */
 export function yearMonthDayCodeYear(yearMonthDayCode: YearMonthDayCode): YearNumber {
   return Math.floor(yearMonthDayCode / 10000);
@@ -49,8 +49,8 @@ export function yearMonthDayCodeYear(yearMonthDayCode: YearMonthDayCode): YearNu
 /**
  * Extracts the month component (1-12) from a {@link YearMonthDayCode} by isolating the middle two digits.
  *
- * @param yearMonthDayCode - Encoded YYYYMMDD value to extract the month from
- * @returns the month component (1-12) of the code
+ * @param yearMonthDayCode - Encoded YYYYMMDD value to extract the month from.
+ * @returns The month component (1-12) of the code.
  */
 export function yearMonthDayCodeMonth(yearMonthDayCode: YearMonthDayCode): MonthOfYear {
   return Math.floor((yearMonthDayCode % 10000) / 100);
@@ -59,8 +59,8 @@ export function yearMonthDayCodeMonth(yearMonthDayCode: YearMonthDayCode): Month
 /**
  * Extracts the day-of-month component (1-31) from a {@link YearMonthDayCode} by isolating the last two digits.
  *
- * @param yearMonthDayCode - Encoded YYYYMMDD value to extract the day from
- * @returns the day-of-month component (1-31) of the code
+ * @param yearMonthDayCode - Encoded YYYYMMDD value to extract the day from.
+ * @returns The day-of-month component (1-31) of the code.
  */
 export function yearMonthDayCodeDay(yearMonthDayCode: YearMonthDayCode): DayOfMonth {
   return yearMonthDayCode % 100;
@@ -69,8 +69,8 @@ export function yearMonthDayCodeDay(yearMonthDayCode: YearMonthDayCode): DayOfMo
 /**
  * Decomposes a {@link YearMonthDayCode} into its individual year, month, and day components.
  *
- * @param yearMonthDayCode - Encoded YYYYMMDD value to decompose
- * @returns a pair containing the individual year, month, and day components
+ * @param yearMonthDayCode - Encoded YYYYMMDD value to decompose.
+ * @returns A pair containing the individual year, month, and day components.
  */
 export function yearMonthDayCodePair(yearMonthDayCode: YearMonthDayCode): YearMonthDayCodePair {
   return {
@@ -85,8 +85,8 @@ export function yearMonthDayCodePair(yearMonthDayCode: YearMonthDayCode): YearMo
  * using the system's local timezone. No timezone normalization is applied here; callers
  * that need timezone-aware conversion should use {@link yearMonthDayCodeFactory} instead.
  *
- * @param date - Date to extract components from using local timezone
- * @returns a pair containing the year, month, and day from the date
+ * @param date - Date to extract components from using local timezone.
+ * @returns A pair containing the year, month, and day from the date.
  */
 export function yearMonthDayCodePairFromDate(date: Date): YearMonthDayCodePair {
   const day = date.getDate();
@@ -104,8 +104,8 @@ export function yearMonthDayCodePairFromDate(date: Date): YearMonthDayCodePair {
  * Encodes a {@link YearMonthDayCodePair} into a single {@link YearMonthDayCode} integer
  * using the formula `year * 10000 + month * 100 + day`.
  *
- * @param pair - Decomposed date components to encode
- * @returns the encoded YYYYMMDD integer
+ * @param pair - Decomposed date components to encode.
+ * @returns The encoded YYYYMMDD integer.
  */
 export function yearMonthDayCodeFromPair(pair: YearMonthDayCodePair): YearMonthDayCode {
   const { year, month, day } = pair;
@@ -118,8 +118,8 @@ export function yearMonthDayCodeFromPair(pair: YearMonthDayCodePair): YearMonthD
  * Convenience function that converts a Date directly to a {@link YearMonthDayCode}
  * using the system's local timezone. For timezone-aware conversion, use {@link yearMonthDayCodeFactory}.
  *
- * @param date - Date to encode using local timezone
- * @returns the encoded YYYYMMDD integer for the given date
+ * @param date - Date to encode using local timezone.
+ * @returns The encoded YYYYMMDD integer for the given date.
  */
 export function yearMonthDayCodeFromDate(date: Date): YearMonthDayCode {
   return yearMonthDayCodeFromPair(yearMonthDayCodePairFromDate(date));
@@ -156,8 +156,8 @@ export interface YearMonthDayCodeConfig {
  * Resolves a {@link YearMonthDayCodeDateTimezoneInput} into a {@link DateTimezoneUtcNormalInstance},
  * falling back to the system timezone when no input is provided.
  *
- * @param input - Timezone configuration or existing instance to resolve
- * @returns a DateTimezoneUtcNormalInstance, falling back to the system timezone
+ * @param input - Timezone configuration or existing instance to resolve.
+ * @returns A DateTimezoneUtcNormalInstance, falling back to the system timezone.
  */
 export function yearMonthDayCodeDateTimezoneInstance(input: YearMonthDayCodeDateTimezoneInput): DateTimezoneUtcNormalInstance {
   let result: DateTimezoneUtcNormalInstance;
@@ -204,6 +204,9 @@ export function yearMonthDayCode(dateOrYear: Date | number, month?: MonthOfYear,
  * dates to the configured timezone before encoding, ensuring consistent day boundaries
  * regardless of the system's local timezone.
  *
+ * @param config - Optional timezone configuration; defaults to system timezone.
+ * @returns A reusable factory function that converts dates to YearMonthDayCode values.
+ *
  * @example
  * ```ts
  * // Factory for America/Denver timezone
@@ -214,8 +217,6 @@ export function yearMonthDayCode(dateOrYear: Date | number, month?: MonthOfYear,
  * const code2 = toCode(2022, 6, 15); // 20220615
  * ```
  *
- * @param config - Optional timezone configuration; defaults to system timezone
- * @returns a reusable factory function that converts dates to YearMonthDayCode values
  * @__NO_SIDE_EFFECTS__
  */
 export function yearMonthDayCodeFactory(config?: YearMonthDayCodeConfig): YearMonthDayCodeFactory {
@@ -225,11 +226,11 @@ export function yearMonthDayCodeFactory(config?: YearMonthDayCodeConfig): YearMo
     let pair: YearMonthDayCodePair;
 
     if (isDate(dateOrYear)) {
-      const normalDate = normal.systemDateToTargetDate(dateOrYear as Date);
+      const normalDate = normal.systemDateToTargetDate(dateOrYear);
       pair = yearMonthDayCodePairFromDate(normalDate);
     } else {
       pair = {
-        year: dateOrYear as number,
+        year: dateOrYear,
         month: month as number,
         day: day as number
       };
@@ -253,6 +254,9 @@ export type YearMonthDayCodesForDateRangeFactory = (dateOrDateRange: DateOrDateR
  * For a single Date input, the range covers that date's full calendar month.
  * For repeated use or custom timezones, prefer {@link yearMonthDayCodesForDateRangeFactory}.
  *
+ * @param dateOrDateRange - A single Date (expanded to its calendar month) or an explicit date range.
+ * @returns YearMonthDayCode values covering every day in the resolved range.
+ *
  * @example
  * ```ts
  * // Get codes for a 3-day range
@@ -262,9 +266,6 @@ export type YearMonthDayCodesForDateRangeFactory = (dateOrDateRange: DateOrDateR
  * });
  * // [20220101, 20220102, 20220103]
  * ```
- *
- * @param dateOrDateRange - A single Date (expanded to its calendar month) or an explicit date range
- * @returns an array of YearMonthDayCode values, one per day in the range
  */
 export function yearMonthDayCodesForDateRange(dateOrDateRange: DateOrDateRange): YearMonthDayCode[] {
   return yearMonthDayCodesForDateRangeFactory(yearMonthDayCodeFactory({ timezone: SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE }))(dateOrDateRange);
@@ -275,8 +276,9 @@ export function yearMonthDayCodesForDateRange(dateOrDateRange: DateOrDateRange):
  * in a date range and returns the corresponding {@link YearMonthDayCode} values.
  * Shares timezone normalization with the provided factory for consistent day boundaries.
  *
- * @param factory - YearMonthDayCodeFactory to use for encoding; defaults to system timezone
- * @returns a factory that produces arrays of YearMonthDayCode values for date ranges
+ * @param factory - YearMonthDayCodeFactory to use for encoding; defaults to system timezone.
+ * @returns A factory that produces arrays of YearMonthDayCode values for date ranges.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function yearMonthDayCodesForDateRangeFactory(factory: YearMonthDayCodeFactory = yearMonthDayCodeFactory()): YearMonthDayCodesForDateRangeFactory {
@@ -315,14 +317,15 @@ export type YearMonthDayCodeDateConfig = Pick<YearMonthDayCodeConfig, 'timezone'
  * {@link yearMonthDayCodeFactory}: `yearMonthDayCodeDateFactory(cfg)(yearMonthDayCodeFactory(cfg)(date))`
  * returns a Date representing midnight of the original date's day.
  *
+ * @param config - Optional timezone configuration; defaults to system timezone.
+ * @returns A factory that decodes YearMonthDayCode values back into Dates.
+ *
  * @example
  * ```ts
  * const toDate = yearMonthDayCodeDateFactory({ timezone: { timezone: 'America/Denver' } });
  * const date = toDate(20220115); // Date representing Jan 15, 2022 midnight in Denver
  * ```
  *
- * @param config - Optional timezone configuration; defaults to system timezone
- * @returns a factory that decodes YearMonthDayCode values back into Dates
  * @__NO_SIDE_EFFECTS__
  */
 export function yearMonthDayCodeDateFactory(config?: YearMonthDayCodeDateConfig): YearMonthDayCodeDateFactory {
@@ -377,6 +380,9 @@ export interface YearMonthDayCodeGroupFactoryConfig<B> {
  * Each item's date is read via the configured `dateReader`, converted to a {@link YearMonthDayCode},
  * and used as the grouping key. Items with no date fall into the `0` (unknown) group.
  *
+ * @param config - Grouping configuration including the date reader and optional timezone.
+ * @returns A factory that partitions items into day-based groups.
+ *
  * @example
  * ```ts
  * interface Event { name: string; date: Date }
@@ -390,8 +396,6 @@ export interface YearMonthDayCodeGroupFactoryConfig<B> {
  * // [{ dayCode: 20220115, items: [...] }, { dayCode: 20220116, items: [...] }]
  * ```
  *
- * @param config - Grouping configuration including the date reader and optional timezone
- * @returns a factory that partitions items into day-based groups
  * @__NO_SIDE_EFFECTS__
  */
 export function yearMonthDayCodeGroupFactory<B>(config: YearMonthDayCodeGroupFactoryConfig<B>): YearMonthDayCodeGroupFactory<B> {

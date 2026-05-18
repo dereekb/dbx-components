@@ -71,7 +71,7 @@ function parseArgs(raw: unknown): ParsedArgs {
     throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedArgs = {
-    artifact: parsed.artifact as ArtifactKind,
+    artifact: parsed.artifact,
     componentDir: parsed.componentDir,
     apiDir: parsed.apiDir,
     name: parsed.name
@@ -85,27 +85,28 @@ function parseArgs(raw: unknown): ParsedArgs {
  * placement spec for the requested artifact and renders it for callers about
  * to scaffold or validate one.
  *
- * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
- * @returns the formatted convention text, or an error result when the artifact is unknown
+ * @param rawArgs - The unvalidated tool arguments object from the MCP runtime.
+ * @returns The formatted convention text, or an error result when the artifact is unknown.
  */
 export function runArtifactFileConvention(rawArgs: unknown): ToolResult {
-  let args: ParsedArgs;
+  let result: ToolResult;
   try {
-    args = parseArgs(rawArgs);
+    const args = parseArgs(rawArgs);
+    const spec = getFileConventionSpec(args.artifact);
+    if (spec) {
+      const text = formatSpec(spec, { componentDir: args.componentDir, apiDir: args.apiDir, name: args.name });
+      result = { content: [{ type: 'text', text }] };
+    } else {
+      result = toolError(`Unknown artifact kind: \`${args.artifact}\`. Known: ${ARTIFACT_KINDS.join(', ')}.`);
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    result = toolError(message);
   }
-  const spec = getFileConventionSpec(args.artifact);
-  if (!spec) {
-    return toolError(`Unknown artifact kind: \`${args.artifact}\`. Known: ${ARTIFACT_KINDS.join(', ')}.`);
-  }
-  const text = formatSpec(spec, { componentDir: args.componentDir, apiDir: args.apiDir, name: args.name });
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-export const artifactFileConventionTool: DbxTool = {
+export const ARTIFACT_FILE_CONVENTION_TOOL: DbxTool = {
   definition: DBX_ARTIFACT_FILE_CONVENTION_TOOL,
   run: runArtifactFileConvention
 };

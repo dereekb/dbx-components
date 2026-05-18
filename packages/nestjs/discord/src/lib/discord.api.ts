@@ -1,6 +1,6 @@
 import { Client, Events, TextChannel, type Message } from 'discord.js';
 import { Inject, Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
-import { DiscordServiceConfig, DISCORD_DEFAULT_INTENTS } from './discord.config';
+import { DiscordServiceConfig, DEFAULT_DISCORD_INTENTS } from './discord.config';
 import { type DiscordChannelId } from './discord.type';
 
 /**
@@ -21,7 +21,7 @@ export class DiscordApi implements OnModuleInit, OnModuleDestroy {
   constructor(@Inject(DiscordServiceConfig) readonly config: DiscordServiceConfig) {
     const { clientOptions } = config.discord;
     this.client = new Client({
-      intents: DISCORD_DEFAULT_INTENTS,
+      intents: DEFAULT_DISCORD_INTENTS,
       ...clientOptions
     });
   }
@@ -65,10 +65,10 @@ export class DiscordApi implements OnModuleInit, OnModuleDestroy {
   /**
    * Sends a text message to the specified Discord channel.
    *
-   * @param channelId - target channel's snowflake ID
-   * @param content - message text to send
-   * @returns the sent Discord Message
-   * @throws {Error} when the channel is not found or is not a text channel
+   * @param channelId - Target channel's snowflake ID.
+   * @param content - Message text to send.
+   * @returns The sent Discord Message.
+   * @throws {Error} When the channel is not found or is not a text channel.
    */
   async sendMessage(channelId: DiscordChannelId, content: string): Promise<Message> {
     const channel = await this.client.channels.fetch(channelId);
@@ -102,8 +102,8 @@ export class DiscordApi implements OnModuleInit, OnModuleDestroy {
   /**
    * Registers a handler for incoming Discord messages (MessageCreate event).
    *
-   * @param handler - callback invoked for each incoming Message
-   * @returns an unsubscribe function that removes the registered handler
+   * @param handler - Callback invoked for each incoming Message.
+   * @returns An unsubscribe function that removes the registered handler.
    */
   onMessage(handler: (message: Message) => void): () => void {
     this.client.on(Events.MessageCreate, handler);

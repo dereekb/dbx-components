@@ -1,4 +1,5 @@
 import { type DocumentReference, type WriteBatch as GoogleCloudWriteBatch, type DocumentSnapshot } from '@google-cloud/firestore';
+import type { Maybe } from '@dereekb/util';
 import { from, type Observable } from 'rxjs';
 import { type WithFieldValue, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentDeleteParams, type FirestoreDocumentUpdateParams, type UpdateData, type DocumentData, type FirestoreDataConverter, type FirestoreAccessorIncrementUpdate, type FirestoreAccessorArrayUpdate } from '@dereekb/firebase';
 import { firestoreServerIncrementUpdateToUpdateData } from './increment';
@@ -43,7 +44,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> implements FirestoreDocu
     return this.documentRef.get();
   }
 
-  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+  getWithConverter<U = DocumentData>(converter: Maybe<FirestoreDataConverter<U>>): Promise<DocumentSnapshot<U>> {
     return this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>).get();
   }
 

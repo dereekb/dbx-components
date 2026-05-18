@@ -15,10 +15,10 @@ import type { ResolveTokenInput, ResolveTokenResult } from './resolve.js';
  * Renders a {@link ResolveTokenResult} as the markdown body returned by the
  * tool.
  *
- * @param registry - the token registry (used for browse-mode catalog rendering)
- * @param input - the original tool query, used to title the output
- * @param result - the resolution outcome to render
- * @returns the markdown body
+ * @param registry - The token registry (used for browse-mode catalog rendering)
+ * @param input - The original tool query, used to title the output.
+ * @param result - The resolution outcome to render.
+ * @returns The markdown body.
  */
 export function formatCssTokenLookup(registry: TokenRegistry, input: ResolveTokenInput, result: ResolveTokenResult): string {
   let text: string;

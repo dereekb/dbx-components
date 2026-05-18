@@ -37,8 +37,8 @@ export type BitwiseSetEncoder<D extends BitwiseEncodedSetIndex> = (set: Set<D>) 
 /**
  * Encodes a Set of bit indices into a single {@link BitwiseEncodedSet} number using bitwise OR.
  *
- * @param input - Set of indices (0-31) to encode
- * @returns A number with bits set at each index position
+ * @param input - Set of indices (0-31) to encode.
+ * @returns Encoded value with each requested bit position set high.
  */
 export function encodeBitwiseSet<D extends BitwiseEncodedSetIndex>(input: Set<D>): BitwiseEncodedSet {
   let encodedSet = 0;
@@ -58,8 +58,8 @@ export type BitwiseSetDecoder<D extends BitwiseEncodedSetIndex> = (set: BitwiseE
 /**
  * Creates a decoder that converts a {@link BitwiseEncodedSet} number back into a Set of indices by checking each bit position up to `maxIndex`.
  *
- * @param maxIndex - The exclusive upper bound of indices to check
- * @returns A function that decodes an encoded number into a Set of active indices
+ * @param maxIndex - The exclusive upper bound of indices to check.
+ * @returns Reusable decoder that materializes the set of high-bit indices below `maxIndex`.
  */
 export function bitwiseSetDecoder<D extends BitwiseEncodedSetIndex>(maxIndex: number): BitwiseSetDecoder<D> {
   return (input: BitwiseEncodedSet) => {
@@ -90,8 +90,8 @@ export type BitwiseSetDencoder<D extends BitwiseEncodedSetIndex> = BitwiseSetEnc
  *
  * Accepts either a Set (encodes to number) or a number (decodes to Set).
  *
- * @param maxIndex - Optional exclusive upper bound of indices for decoding; defaults to 32
- * @returns A function that encodes Sets to numbers and decodes numbers to Sets
+ * @param maxIndex - Optional exclusive upper bound of indices for decoding; defaults to 32.
+ * @returns Encodes Sets to numbers and decodes numbers to Sets.
  */
 export function bitwiseSetDencoder<D extends BitwiseEncodedSetIndex>(maxIndex?: number): BitwiseSetDencoder<D> {
   const decoder = maxIndex ? bitwiseSetDecoder<D>(maxIndex) : dencodeBitwiseSet;
@@ -122,8 +122,8 @@ export type BitwiseObjectEncoder<T extends object> = (object: T) => BitwiseEncod
  *
  * Uses the provided `toSetFunction` to first map the object to a Set of indices, then encodes it.
  *
- * @param toSetFunction - Function that maps an object to a Set of bit indices
- * @returns An encoder function that produces a bitwise-encoded number from the object
+ * @param toSetFunction - Function that maps an object to a Set of bit indices.
+ * @returns An encoder function that produces a bitwise-encoded number from the object.
  */
 export function bitwiseObjectEncoder<T extends object, D extends BitwiseEncodedSetIndex>(toSetFunction: BitwiseObjectToSetFunction<T, D>): BitwiseObjectEncoder<T> {
   return (input: T) => {
@@ -140,9 +140,9 @@ export type BitwiseObjectDecoder<T extends object> = (set: BitwiseEncodedSet) =>
 /**
  * Creates a {@link BitwiseObjectDecoder} that converts a {@link BitwiseEncodedSet} number back into an object.
  *
- * @param fromSetFunction - Function that maps a Set of bit indices back to an object
- * @param maxIndex - Optional exclusive upper bound of indices for decoding; defaults to 32
- * @returns A decoder function that produces an object from a bitwise-encoded number
+ * @param fromSetFunction - Function that maps a Set of bit indices back to an object.
+ * @param maxIndex - Optional exclusive upper bound of indices for decoding; defaults to 32.
+ * @returns A decoder function that produces an object from a bitwise-encoded number.
  */
 export function bitwiseObjectdecoder<T extends object, D extends BitwiseEncodedSetIndex>(fromSetFunction: BitwiseObjectFromSetFunction<T, D>, maxIndex?: number): BitwiseObjectDecoder<T> {
   const decoder = maxIndex ? bitwiseSetDecoder<D>(maxIndex) : dencodeBitwiseSet;
@@ -173,7 +173,7 @@ export interface BitwiseObjectDencoderConfig<T extends object, D extends Bitwise
  * Accepts either a number (decodes to object) or an object (encodes to number). Returns 0 for null/undefined input.
  *
  * @param config - Configuration with `toSetFunction`, `fromSetFunction`, and optional `maxIndex`
- * @returns A function that encodes objects to numbers and decodes numbers to objects
+ * @returns Encodes objects to numbers and decodes numbers to objects.
  */
 export function bitwiseObjectDencoder<T extends object, D extends BitwiseEncodedSetIndex = BitwiseEncodedSetIndex>(config: BitwiseObjectDencoderConfig<T, D>): BitwiseObjectDencoder<T> {
   const encoder = bitwiseObjectEncoder(config.toSetFunction);

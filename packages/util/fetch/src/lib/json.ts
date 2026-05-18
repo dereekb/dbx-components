@@ -1,4 +1,4 @@
-import { mapIdentityFunction, type MapSameFunction } from '@dereekb/util';
+import { mapIdentityFunction, type MapSameFunction, type Maybe } from '@dereekb/util';
 import { type FetchMethod, type ConfiguredFetch } from './fetch.type';
 import { fetchURL, type FetchURLInput } from './url';
 
@@ -16,13 +16,13 @@ export class JsonResponseParseError extends Error {
  * @param body
  * @returns
  */
-export function fetchJsonBodyString(body: FetchJsonBody | undefined): string | undefined {
+export function fetchJsonBodyString(body: Maybe<FetchJsonBody>): Maybe<string> {
   return body != null ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined;
 }
 
 export interface FetchJsonInput extends Omit<RequestInit, 'body'> {
   readonly method: FetchMethod;
-  readonly body?: FetchJsonBody | undefined;
+  readonly body?: Maybe<FetchJsonBody>;
   /**
    * Optional intercept function to intercept/transform the response.
    *
@@ -44,7 +44,7 @@ export type FetchJsonFunction = FetchJsonGetFunction & FetchJsonMethodAndBodyFun
 
 export type FetchJsonInterceptJsonResponseFunction = (json: unknown, response: Response) => unknown;
 
-export type HandleFetchJsonParseErrorFunction = (response: Response) => string | null | never;
+export type HandleFetchJsonParseErrorFunction = (response: Response) => Maybe<string>;
 
 export const throwJsonResponseParseErrorFunction: HandleFetchJsonParseErrorFunction = (response: Response) => {
   throw new JsonResponseParseError(response);
@@ -68,9 +68,9 @@ export interface FetchJsonFunctionConfig extends FetchJsonRequestInitFunctionCon
 /**
  * Creates a FetchJsonFunction from the input ConfiguredFetch.
  *
- * @param fetch - the configured fetch function to use for making HTTP requests
- * @param inputConfig - optional configuration or error handler for JSON parsing; when a function is provided it is used as the parse error handler
- * @returns a FetchJsonFunction that performs requests and parses JSON responses
+ * @param fetch - The configured fetch function to use for making HTTP requests.
+ * @param inputConfig - Optional configuration or error handler for JSON parsing; when a function is provided it is used as the parse error handler.
+ * @returns A FetchJsonFunction that performs requests and parses JSON responses.
  */
 export function fetchJsonFunction(fetch: ConfiguredFetch, inputConfig?: FetchJsonFunctionConfig | HandleFetchJsonParseErrorFunction): FetchJsonFunction {
   let config: FetchJsonFunctionConfig;
@@ -112,26 +112,26 @@ export interface FetchJsonRequestInitFunctionConfig {
    *
    * Defaults to GET
    */
-  defaultMethod?: string;
+  readonly defaultMethod?: string;
   /**
    * Optional map function to modify the FetchJsonInput before it is finalized into a RequestInit value.
    */
-  mapFetchJsonInput?: FetchJsonInputMapFunction;
+  readonly mapFetchJsonInput?: FetchJsonInputMapFunction;
 }
 
-export type FetchJsonRequestInitFunction = (methodOrInput?: string | FetchJsonInput | undefined, body?: FetchJsonBody) => RequestInit;
+export type FetchJsonRequestInitFunction = (methodOrInput?: Maybe<string | FetchJsonInput>, body?: FetchJsonBody) => RequestInit;
 
 /**
  * Creates a {@link FetchJsonRequestInitFunction} that converts method/body inputs into a fully formed {@link RequestInit},
  * applying the configured default method and optional input mapping.
  *
- * @param config - optional configuration specifying the default HTTP method and an input mapping function
- * @returns a function that produces a {@link RequestInit} from a method string or {@link FetchJsonInput}
+ * @param config - Default-method and input-mapping overrides applied by the generated function.
+ * @returns Reusable builder that resolves a `RequestInit` for each request.
  */
 export function fetchJsonRequestInitFunction(config: FetchJsonRequestInitFunctionConfig = {}): FetchJsonRequestInitFunction {
   const { defaultMethod = 'GET', mapFetchJsonInput = mapIdentityFunction() } = config;
 
-  return (methodOrInput: string | FetchJsonInput = defaultMethod, body?: FetchJsonBody) => {
+  return (methodOrInput: Maybe<string | FetchJsonInput> = defaultMethod, body?: FetchJsonBody) => {
     let config: FetchJsonInput;
 
     if (typeof methodOrInput === 'string') {
@@ -140,7 +140,7 @@ export function fetchJsonRequestInitFunction(config: FetchJsonRequestInitFunctio
         body
       };
     } else {
-      config = methodOrInput;
+      config = methodOrInput ?? { method: defaultMethod, body };
     }
 
     config = mapFetchJsonInput(config);

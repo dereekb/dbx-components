@@ -1,5 +1,6 @@
 import { type UseTestFunctionFixtureFunctionGetter, type UseTestFunctionFixture, type TestFunctionFixtureBuildTests, useTestFunctionFixture, type UseTestFunctionMapObject, type UseTestFunctionMapFixture, type UseTestFunctionMapFixtureGetterFunctions, type UseTestFunctionMapFixtureFunctions, type TestFunctionFixtureMapBuildTests, useTestFunctionMapFixture } from '../shared/shared.function';
 
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use UseTestFunctionFixtureFunctionGetter from shared instead. This is kept for backwards compatibility.
  */

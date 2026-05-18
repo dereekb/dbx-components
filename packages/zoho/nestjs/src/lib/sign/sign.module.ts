@@ -16,9 +16,9 @@ import { type Maybe } from '@dereekb/util';
  * Resolves the API URL via environment variables following the naming convention
  * `ZOHO_SIGN_API_URL` (service-specific) or `ZOHO_API_URL` (shared fallback).
  *
- * @param configService - NestJS config service populated with Zoho environment variables
- * @returns Validated Zoho Sign service configuration
- * @throws {Error} If required config values (e.g. API URL) are missing
+ * @param configService - NestJS config service populated with Zoho environment variables.
+ * @returns Validated Zoho Sign service configuration.
+ * @throws {Error} If required config values (e.g. API URL) are missing.
  *
  * @example
  * ```typescript
@@ -47,8 +47,8 @@ export function zohoSignServiceConfigFactory(configService: ConfigService): Zoho
  * Reads Zoho Accounts (OAuth) settings scoped to the Sign service from
  * the NestJS ConfigService and returns an accounts service config.
  *
- * @param configService - NestJS config service populated with Zoho OAuth environment variables
- * @returns Zoho Accounts service config scoped to the Sign service access token
+ * @param configService - NestJS config service populated with Zoho OAuth environment variables.
+ * @returns Zoho Accounts service config scoped to the Sign service access token.
  *
  * @example
  * ```typescript
@@ -95,14 +95,10 @@ export interface ProvideAppZohoSignMetadataConfig extends Pick<ModuleMetadata, '
  * exports {@link ZohoSignApi} by default. Additional imports, exports, and providers
  * from the config are merged in.
  *
- * @param config - Module configuration with optional dependency module and extra metadata
+ * @param config - Module configuration with optional dependency module and extra metadata.
  * @returns Complete NestJS module metadata ready to pass to `@Module()`
  *
- * @example
- * ```typescript
- * const cacheService = fileZohoAccountsAccessTokenCacheService();
- *
- * @Module({
+ * @Module ({
  *   providers: [
  *     {
  *       provide: ZohoAccountsAccessTokenCacheService,
@@ -112,10 +108,13 @@ export interface ProvideAppZohoSignMetadataConfig extends Pick<ModuleMetadata, '
  *   exports: [ZohoAccountsAccessTokenCacheService]
  * })
  * export class ZohoSignDependencyModule {}
- *
- * @Module(appZohoSignModuleMetadata({ dependencyModule: ZohoSignDependencyModule }))
+ * @Module (appZohoSignModuleMetadata({ dependencyModule: ZohoSignDependencyModule }))
  * export class AppZohoSignModule {}
  * ```
+ *
+ * @example
+ * ```typescript
+ * const cacheService = fileZohoAccountsAccessTokenCacheService();
  */
 export function appZohoSignModuleMetadata(config: ProvideAppZohoSignMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

@@ -8,15 +8,15 @@ import { loadingStateFromObs, valueFromFinishedLoadingState } from './loading.st
  *
  * Returns true if the value is nullish or has zero length, regardless of loading status.
  *
+ * @param listLoadingState - The list loading state to check.
+ * @returns True if the value is empty or absent.
+ *
  * @example
  * ```ts
  * isListLoadingStateWithEmptyValue(successResult([])); // true
  * isListLoadingStateWithEmptyValue(successResult([1, 2])); // false
  * isListLoadingStateWithEmptyValue(beginLoading()); // true (no value)
  * ```
- *
- * @param listLoadingState - the list loading state to check
- * @returns true if the value is empty or absent
  */
 export function isListLoadingStateWithEmptyValue<T>(listLoadingState: ListLoadingState<T>): boolean {
   return Boolean(!listLoadingState.value?.length);
@@ -25,14 +25,14 @@ export function isListLoadingStateWithEmptyValue<T>(listLoadingState: ListLoadin
 /**
  * RxJS operator that maps each emitted {@link ListLoadingState} to a boolean indicating whether the list is empty.
  *
+ * @returns An operator that emits true when the list value is empty or absent.
+ *
  * @example
  * ```ts
  * of(successResult([])).pipe(
  *   mapIsListLoadingStateWithEmptyValue()
  * ).subscribe((isEmpty) => console.log(isEmpty)); // true
  * ```
- *
- * @returns an operator that emits true when the list value is empty or absent
  */
 export function mapIsListLoadingStateWithEmptyValue<T>(): OperatorFunction<ListLoadingState<T>, boolean> {
   return map(isListLoadingStateWithEmptyValue);
@@ -43,16 +43,16 @@ export function mapIsListLoadingStateWithEmptyValue<T>(): OperatorFunction<ListL
  *
  * Uses {@link loadingStateFromObs} internally and attaches the page number to each emitted state.
  *
+ * @param obs - The source observable to wrap.
+ * @param firstOnly - If true, only takes the first value.
+ * @param page - The page number to attach (defaults to 0)
+ * @returns An observable of page loading states.
+ *
  * @example
  * ```ts
  * const pageState$ = pageLoadingStateFromObs(fetchItems$, false, 2);
  * // emits: { loading: true, page: 2 }, then { value: items, loading: false, page: 2 }
  * ```
- *
- * @param obs - the source observable to wrap
- * @param firstOnly - if true, only takes the first value
- * @param page - the page number to attach (defaults to 0)
- * @returns an observable of page loading states
  */
 export function pageLoadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boolean, page: PageNumber = 0): Observable<PageLoadingState<T>> {
   return loadingStateFromObs(obs, firstOnly).pipe(
@@ -69,6 +69,8 @@ export function pageLoadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boole
  *
  * Combines {@link valueFromFinishedLoadingState} with a default of `[]`.
  *
+ * @returns An operator that emits the array value or an empty array.
+ *
  * @example
  * ```ts
  * of(successResult([1, 2, 3])).pipe(
@@ -79,8 +81,6 @@ export function pageLoadingStateFromObs<T>(obs: Observable<T>, firstOnly?: boole
  *   arrayValueFromFinishedLoadingState()
  * ).subscribe((items) => console.log(items)); // []
  * ```
- *
- * @returns an operator that emits the array value or an empty array
  */
 export function arrayValueFromFinishedLoadingState<L extends ListLoadingState>(): OperatorFunction<L, LoadingStateValue<L>> {
   return (obs: Observable<L>) => {

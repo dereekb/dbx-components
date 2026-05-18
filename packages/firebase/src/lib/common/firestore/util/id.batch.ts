@@ -65,10 +65,11 @@ export type FirestoreIdBatchVerifierFactory<T, I extends PrimativeKey> = Factory
  * collection, respecting Firestore's `where('in')` limit of {@link FIRESTORE_MAX_WHERE_IN_FILTER_ARGS_COUNT}
  * items per query. This is used for batch ID generation to ensure uniqueness.
  *
+ * @param config - Specifies how to query for existing keys (by field or custom constraints)
+ * @returns A factory that produces verifiers bound to a specific collection.
+ *
  * @template T - The Firestore document data type
  * @template I - The identifier/key type
- * @param config - Specifies how to query for existing keys (by field or custom constraints)
- * @returns A factory that produces verifiers bound to a specific collection
  *
  * @example
  * ```ts
@@ -80,6 +81,7 @@ export type FirestoreIdBatchVerifierFactory<T, I extends PrimativeKey> = Factory
  * const verifier = factory(myCollection);
  * // verifier can now check batches of IDs for uniqueness
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreIdBatchVerifierFactory<T, I extends PrimativeKey>(config: FirestoreIdBatchVerifierFactoryConfig<T, I>): FirestoreIdBatchVerifierFactory<T, I> {

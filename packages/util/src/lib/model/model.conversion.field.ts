@@ -5,8 +5,8 @@ import { type ModelFieldMapFunctionsConfig } from './model.conversion';
  *
  * When the input is null/undefined, the provided default value is used instead.
  *
- * @param defaultOutput - Default value to use when the source value is null/undefined
- * @returns A {@link ModelFieldMapFunctionsConfig} with identity `from` and `to` conversions
+ * @param defaultOutput - Default value to use when the source value is null/undefined.
+ * @returns A {@link ModelFieldMapFunctionsConfig} with identity `from` and `to` conversions.
  *
  * @example
  * ```ts

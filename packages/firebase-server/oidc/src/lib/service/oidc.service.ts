@@ -37,7 +37,7 @@ export class OidcService {
   /**
    * Returns the oidc-provider instance, initializing it on first access.
    *
-   * @returns the lazily-initialized oidc-provider instance
+   * @returns The lazily-initialized oidc-provider instance.
    */
   getProvider(): Promise<Provider> {
     return this._getProvider();
@@ -85,50 +85,51 @@ export class OidcService {
   async verifyAccessToken(rawToken: string): Promise<OidcAuthData | undefined> {
     const provider = await this.getProvider();
     const accessToken = await provider.AccessToken.find(rawToken);
+    let result: OidcAuthData | undefined;
 
-    if (!accessToken) {
-      return undefined;
-    }
+    if (accessToken) {
+      // Extract account claims baked into the access token at issuance time.
+      // These are the claims built by OidcAccountServiceDelegate.buildClaimsForUser()
+      // (e.g., `a` for admin, `o` for onboarded) based on the granted scopes.
+      // Read the account claims baked into the token at issuance time via extraAccessTokenClaims.
+      const accountClaims = (accessToken as any).extra ?? {};
 
-    // Extract account claims baked into the access token at issuance time.
-    // These are the claims built by OidcAccountServiceDelegate.buildClaimsForUser()
-    // (e.g., `a` for admin, `o` for onboarded) based on the granted scopes.
-    // Read the account claims baked into the token at issuance time via extraAccessTokenClaims.
-    const accountClaims = (accessToken as any).extra ?? {};
-
-    const token: DecodedIdToken = {
-      // Account claims from the token (e.g., admin, onboarded)
-      ...accountClaims,
-      // Standard JWT claims — sourced from the access token
-      aud: firstValue(accessToken.aud),
-      iss: this.config.issuer,
-      sub: accessToken.accountId,
-      iat: accessToken.iat,
-      exp: accessToken.exp ?? unixDateTimeSecondsNumberForNow() + accessToken.expiration,
-      auth_time: accessToken.iat,
-      // Firebase UID (copied from sub)
-      uid: accessToken.accountId,
-      // OIDC-specific claims carried on the token
-      scope: accessToken.scope,
-      client_id: accessToken.clientId,
-      // Firebase sign-in info — marked as OIDC provider
-      firebase: {
-        identities: {},
-        sign_in_provider: 'dbx_oidc'
-      }
-    };
-
-    return {
-      uid: accessToken.accountId,
-      token,
-      rawToken,
-      oidcValidatedToken: {
+      const token: DecodedIdToken = {
+        // Account claims from the token (e.g., admin, onboarded)
+        ...accountClaims,
+        // Standard JWT claims — sourced from the access token
+        aud: firstValue(accessToken.aud),
+        iss: this.config.issuer,
         sub: accessToken.accountId,
+        iat: accessToken.iat,
+        exp: accessToken.exp ?? unixDateTimeSecondsNumberForNow() + accessToken.expiration,
+        auth_time: accessToken.iat,
+        // Firebase UID (copied from sub)
+        uid: accessToken.accountId,
+        // OIDC-specific claims carried on the token
         scope: accessToken.scope,
         client_id: accessToken.clientId,
-        ...accountClaims
-      }
-    };
+        // Firebase sign-in info — marked as OIDC provider
+        firebase: {
+          identities: {},
+          sign_in_provider: 'dbx_oidc'
+        }
+      };
+
+      result = {
+        uid: accessToken.accountId,
+        token,
+        rawToken,
+        oidcValidatedToken: {
+          sub: accessToken.accountId,
+          scope: accessToken.scope,
+          client_id: accessToken.clientId,
+          ...accountClaims
+        }
+      };
+    }
+
+    return result;
   }
 
   // MARK: Grant Revocation
@@ -142,8 +143,8 @@ export class OidcService {
    * referencing the grant is gone — `verifyAccessToken` returns `undefined`
    * and a `grant_type=refresh_token` exchange fails with `invalid_grant`.
    *
-   * @param grantId - the grant id (and Grant adapter entry id) to revoke
-   * @throws when the Grant entry does not exist
+   * @param grantId - The grant id (and Grant adapter entry id) to revoke.
+   * @throws {Error} When the Grant entry does not exist.
    */
   async revokeGrant(grantId: string): Promise<void> {
     const provider = await this.getProvider();
@@ -202,8 +203,8 @@ export class OidcService {
    * Does NOT include `adapter`, `findAccount`, or `jwks` — those require async
    * setup and are handled by {@link OidcService}.
    *
-   * @param cookieKeys - the signing keys for oidc-provider session cookies
-   * @returns the oidc-provider configuration options
+   * @param cookieKeys - The signing keys for oidc-provider session cookies.
+   * @returns The oidc-provider configuration options.
    */
   buildProviderConfiguration(cookieKeys: string[]): Configuration {
     const config = this.config;
@@ -237,20 +238,14 @@ export class OidcService {
       extraClientMetadata: {
         properties: [DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA],
         validator: (_ctx, key, value) => {
-          if (key !== DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA) {
-            return;
-          }
+          if (key === DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA && value !== undefined && value !== null) {
+            if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+              throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} must be a positive integer (seconds).`);
+            }
 
-          if (value === undefined || value === null) {
-            return;
-          }
-
-          if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
-            throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} must be a positive integer (seconds).`);
-          }
-
-          if (value > serverMaxSeconds) {
-            throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} cannot exceed the server max of ${serverMaxSeconds} seconds.`);
+            if (value > serverMaxSeconds) {
+              throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} cannot exceed the server max of ${serverMaxSeconds} seconds.`);
+            }
           }
         }
       },
@@ -266,8 +261,8 @@ export class OidcService {
           const remaining = readRemainingGrantSeconds(ctx);
           return Math.min(remaining ?? config.tokenLifetimes.refreshToken, config.tokenLifetimes.refreshToken);
         },
-        Session: (ctx, _session) => resolveDurationFromCtx(ctx as KoaContextWithOIDC | undefined, undefined, config.tokenLifetimes.session),
-        Grant: (ctx, _grant, client) => resolveDurationFromCtx(ctx as KoaContextWithOIDC | undefined, client as { dbx_max_session_ttl?: number } | undefined, config.tokenLifetimes.grant),
+        Session: (ctx, _session) => resolveDurationFromCtx(ctx, undefined, config.tokenLifetimes.session),
+        Grant: (ctx, _grant, client) => resolveDurationFromCtx(ctx, client as { dbx_max_session_ttl?: number } | undefined, config.tokenLifetimes.grant),
         Interaction: 60 * 60,
         DeviceCode: 10 * 60
       },
@@ -320,6 +315,7 @@ export class OidcService {
       extraTokenClaims: async (_ctx: unknown, token: any) => {
         const accountId = token.accountId;
         const scope = token.scope;
+        let result: Record<string, unknown> = {};
 
         if (accountId && scope) {
           const account = await this.accountService.userContext(accountId).findAccount();
@@ -329,11 +325,11 @@ export class OidcService {
             const { sub: _sub, ...extraClaims } = claims;
 
             // Filter out undefined values — the Firestore adapter cannot serialize them.
-            return filterUndefinedValues(extraClaims);
+            result = filterUndefinedValues(extraClaims);
           }
         }
 
-        return {};
+        return result;
       }
     };
   }

@@ -34,10 +34,10 @@ export interface CalcomGetAvailableSlotsResponse {
  *
  * Identify the event type by `eventTypeId`, or by `eventTypeSlug` + `username`/`teamSlug`.
  *
- * @see https://cal.com/docs/api-reference/v2/slots/get-available-time-slots-for-an-event-type
+ * @param context - The Cal.com API context (authenticated or public)
+ * @returns Queries available slots for the given input.
  *
- * @param context - the Cal.com API context (authenticated or public)
- * @returns a function that queries available slots for the given input
+ * @see https://cal.com/docs/api-reference/v2/slots/get-available-time-slots-for-an-event-type
  *
  * @example
  * ```ts

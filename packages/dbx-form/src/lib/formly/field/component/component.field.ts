@@ -8,7 +8,7 @@ export type ComponentFieldConfig<T = unknown> = DbxFormComponentFieldConfig<T>;
 /**
  * Creates a Formly field configuration that renders a custom Angular component.
  *
- * @param config - Component field configuration
+ * @param config - Component field configuration.
  * @returns A {@link DbxFormComponentFormlyFieldConfig} with type `'component'`
  *
  * @example
@@ -24,6 +24,7 @@ export function formlyComponentField<T = unknown>(config: ComponentFieldConfig<T
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyComponentField instead.
  */

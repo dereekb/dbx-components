@@ -192,7 +192,7 @@ export class DbxFormlyComponent<T> implements DbxForm, DbxFormlyContextDelegate<
   }
 
   setValue(value: T): void {
-    this.modelSignal.set(structuredClone(value) as T);
+    this.modelSignal.set(structuredClone(value));
 
     if (this.options.updateInitialValue) {
       this.options.updateInitialValue();

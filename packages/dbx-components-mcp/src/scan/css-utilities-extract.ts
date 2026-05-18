@@ -80,6 +80,7 @@
  * No PostCSS dependency.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { type CssUtilityRoleValue, type CssUtilityScopeValue, CSS_UTILITY_ROLES, CSS_UTILITY_SCOPES } from '../manifest/css-utilities-schema.js';
 
 // MARK: Public types
@@ -141,7 +142,7 @@ export interface ExtractCssUtilityEntriesResult {
 
 // MARK: Annotation parsing
 interface ParsedAnnotation {
-  readonly utilitySlug: string | null;
+  readonly utilitySlug: Maybe<string>;
   readonly intent?: string;
   readonly role?: string;
   readonly seeAlso?: readonly string[];
@@ -153,7 +154,7 @@ interface ParsedAnnotation {
 }
 
 interface MutableAnnotationState {
-  utilitySlug: string | null;
+  utilitySlug: Maybe<string>;
   intent: string | undefined;
   role: string | undefined;
   seeAlsoCollected: string[];
@@ -232,9 +233,9 @@ function applyAnnotationLine(state: MutableAnnotationState, line: string): void 
  * leading `/// `) into a structured shape. Lines without a recognised tag
  * are ignored — the curation marker itself is the only required line.
  *
- * @param lines - the annotation lines belonging to one block
- * @returns the parsed annotation; `utilitySlug` is `null` when no
- *          `@dbx-utility` line appears
+ * @param lines - The annotation lines belonging to one block.
+ * @returns The parsed annotation; `utilitySlug` is `null` when no
+ *          `@dbx-utility` line appears.
  */
 export function parseAnnotation(lines: readonly string[]): ParsedAnnotation {
   const state = createEmptyAnnotationState();
@@ -399,8 +400,8 @@ function processAnnotatedSelector(input: StepInput): StepResult {
  * compound or descendant selectors are reported via the
  * `unsupported-selector` warning.
  *
- * @param input - the file label (relative path) and the SCSS source string
- * @returns the extracted entries plus deterministic warnings
+ * @param input - The file label (relative path) and the SCSS source string.
+ * @returns The extracted entries plus deterministic warnings.
  */
 export function extractCssUtilityEntries(input: ExtractCssUtilityEntriesInput): ExtractCssUtilityEntriesResult {
   const { file, source } = input;
@@ -441,12 +442,12 @@ const COMPOUND_HOST_RE = /^(\.[A-Za-z_][\w-]*)(\s.*)$/;
  * `.foo.bar`, pseudo-class hosts like `.foo:hover`, and attribute hosts are
  * intentionally rejected so the host stays unambiguous.
  *
- * @param part - one comma-separated selector part (already whitespace-collapsed)
+ * @param part - One comma-separated selector part (already whitespace-collapsed)
  * @returns `{ host, fullChain }` when accepted; `fullChain === host` for
  *          flat selectors. `null` for unsupported shapes.
  */
-function splitHostAndChain(part: string): { readonly host: string; readonly fullChain: string } | null {
-  let result: { readonly host: string; readonly fullChain: string } | null = null;
+function splitHostAndChain(part: string): Maybe<{ readonly host: string; readonly fullChain: string }> {
+  let result: Maybe<{ readonly host: string; readonly fullChain: string }> = null;
   if (FLAT_CLASS_RE.test(part)) {
     result = { host: part, fullChain: part };
   } else {
@@ -477,15 +478,15 @@ interface PickedSelector {
  * rules surface as `unsupported-selector` warnings upstream so a single
  * malformed annotation can't break a whole scan.
  *
- * @param raw - the trimmed selector text up to the opening `{`
- * @returns the chosen host + fullChain, or `null` when unsupported
+ * @param raw - The trimmed selector text up to the opening `{`
+ * @returns The chosen host + fullChain, or `null` when unsupported.
  */
-function pickCanonicalSelector(raw: string): PickedSelector | null {
+function pickCanonicalSelector(raw: string): Maybe<PickedSelector> {
   const parts = raw
     .split(',')
     .map((s) => s.replaceAll(/\s+/g, ' ').trim())
     .filter((s) => s.length > 0);
-  let picked: PickedSelector | null = null;
+  let picked: Maybe<PickedSelector> = null;
   if (parts.length > 0) {
     const split = parts.map(splitHostAndChain);
     if (!split.includes(null)) {
@@ -509,11 +510,11 @@ interface RuleStart {
   readonly endLine: number;
 }
 
-function findNextRuleStart(lines: readonly string[], from: number): RuleStart | null {
-  let result: RuleStart | null = null;
+function findNextRuleStart(lines: readonly string[], from: number): Maybe<RuleStart> {
+  let result: Maybe<RuleStart> = null;
   let cursor = from;
   let bail = false;
-  let selectorStart: number | null = null;
+  let selectorStart: Maybe<number> = null;
   while (cursor < lines.length && result === null && !bail) {
     const line = lines[cursor];
     const trimmed = line.trim();
@@ -691,7 +692,7 @@ function consumeDeclarationChar(state: DeclScanState, body: string, declarations
   return false;
 }
 
-function parseSingleDeclaration(raw: string): ExtractedCssDeclaration | null {
+function parseSingleDeclaration(raw: string): Maybe<ExtractedCssDeclaration> {
   const trimmed = raw.trim();
   if (trimmed.length === 0) return null;
   if (trimmed.startsWith('@')) return null; // @include / @use / etc.
@@ -729,12 +730,12 @@ const CSS_VAR_REFERENCE_RE = /var\(\s*(--[A-Za-z_][\w-]*)/g;
  * calls in fallbacks naturally because the regex matches every
  * `var(--name` occurrence regardless of nesting depth.
  *
- * @param body - the raw rule body extracted by `readRuleBody`
- * @returns the sorted, deduped list of `--name` strings (leading `--` kept)
+ * @param body - The raw rule body extracted by `readRuleBody`
+ * @returns The sorted, deduped list of `--name` strings (leading `--` kept)
  */
 function collectTokensReadFromBody(body: string): readonly string[] {
   const set = new Set<string>();
-  let match: RegExpExecArray | null;
+  let match: Maybe<RegExpExecArray>;
   CSS_VAR_REFERENCE_RE.lastIndex = 0;
   while ((match = CSS_VAR_REFERENCE_RE.exec(body)) !== null) {
     set.add(match[1]);
@@ -746,8 +747,8 @@ function collectTokensReadFromBody(body: string): readonly string[] {
  * Pulls the `--name` declarations out of the parsed body. Sorted and
  * deduped so output order is deterministic.
  *
- * @param declarations - the parsed declarations from one rule body
- * @returns the sorted, deduped list of `--name` strings (leading `--` kept)
+ * @param declarations - The parsed declarations from one rule body.
+ * @returns The sorted, deduped list of `--name` strings (leading `--` kept)
  */
 function collectTokensSet(declarations: readonly ExtractedCssDeclaration[]): readonly string[] {
   const set = new Set<string>();

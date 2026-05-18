@@ -46,8 +46,8 @@ export type VapiAiWebhookEventVerifier = (req: Request, rawBody: Buffer) => Prom
  *
  * Supports secret token, HMAC SHA-256, and no-op verification modes based on the provided configuration.
  *
- * @param config - the verification configuration including secret tokens, verification type, and signature prefix
- * @returns a VapiAiWebhookEventVerifier function that validates incoming webhook requests
+ * @param config - The verification configuration including secret tokens, verification type, and signature prefix.
+ * @returns A VapiAiWebhookEventVerifier function that validates incoming webhook requests.
  */
 export function vapiAiWebhookEventVerifier(config: VapiApiWebhookEventVerificationConfig): VapiAiWebhookEventVerifier {
   const { verificationType: inputVerificationType, secret: inputSecret, hmacSecret: inputHmacSecret, signaturePrefix: inputSignaturePrefix } = config;

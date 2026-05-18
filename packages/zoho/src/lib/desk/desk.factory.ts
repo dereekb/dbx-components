@@ -49,8 +49,9 @@ export type ZohoDeskFactory = (config: ZohoDeskConfig) => ZohoDesk;
  * Unlike CRM/Recruit/Sign, the Desk API requires an `orgId` header on every request.
  * This is injected automatically from the config.
  *
- * @param factoryConfig - Configuration providing account credentials and optional overrides
- * @returns A factory function that creates authenticated Zoho Desk clients
+ * @param factoryConfig - Configuration providing account credentials and optional overrides.
+ * @returns A factory function that creates authenticated Zoho Desk clients.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskFactory(factoryConfig: ZohoDeskFactoryConfig): ZohoDeskFactory {

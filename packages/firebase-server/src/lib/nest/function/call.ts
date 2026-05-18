@@ -80,6 +80,9 @@ export type OnCallWithOptionalAuthorizedNestContext<N, I = unknown, O = unknown>
  * By default, callable functions with auth-aware nest context require auth. Use this wrapper to
  * explicitly opt out of that requirement for endpoints that should be publicly accessible.
  *
+ * @param fn - The callable function handler to wrap.
+ * @returns A new handler flagged with `_requireAuth: false`.
+ *
  * @example
  * ```ts
  * const handler = optionalAuthContext<MyContext, Input, Output>((request) => {
@@ -87,9 +90,6 @@ export type OnCallWithOptionalAuthorizedNestContext<N, I = unknown, O = unknown>
  *   return doSomething(request);
  * });
  * ```
- *
- * @param fn - The callable function handler to wrap.
- * @returns A new handler flagged with `_requireAuth: false`.
  */
 export function optionalAuthContext<N, I, O>(fn: OnCallWithNestContext<N, I, O>): OnCallWithOptionalAuthorizedNestContext<N, I, O> {
   const fnWithOptionalAuth = ((request: OnCallWithNestContextRequest<N, I>) => fn(request)) as OnCallWithOptionalAuthorizedNestContext<N, I, O>;
@@ -134,6 +134,9 @@ export function assertRequestRequiresAuthForFunction(fn: OnCallWithAuthAwareNest
  * The wrapper calls {@link assertIsContextWithAuthData} before invoking the handler, ensuring that
  * unauthenticated requests are rejected with an appropriate error before reaching handler logic.
  *
+ * @param fn - The authorized handler to wrap with auth assertion.
+ * @returns A general {@link OnCallWithNestContext} handler that asserts auth before delegating.
+ *
  * @example
  * ```ts
  * const secureHandler = inAuthContext<MyContext, Input, Output>((request) => {
@@ -141,9 +144,6 @@ export function assertRequestRequiresAuthForFunction(fn: OnCallWithAuthAwareNest
  *   return processAuthenticatedRequest(request);
  * });
  * ```
- *
- * @param fn - The authorized handler to wrap with auth assertion.
- * @returns A general {@link OnCallWithNestContext} handler that asserts auth before delegating.
  */
 export function inAuthContext<N, I, O>(fn: OnCallWithAuthorizedNestContext<N, I, O>): OnCallWithNestContext<N, I, O> {
   return (request) => {

@@ -55,24 +55,24 @@ export function createAuthClaimLookupTool(input: CreateAuthClaimLookupToolInput)
     definition: DBX_AUTH_CLAIM_LOOKUP_TOOL,
     run(rawArgs) {
       const parsed = ClaimArgsType(rawArgs);
-      if (parsed instanceof type.errors) {
-        return toolError(`Invalid arguments: ${parsed.summary}`);
-      }
-      const { topic, app, depth = 'full' } = parsed;
-      const normalized = topic.trim();
       let result: ToolResult;
-
-      if (isCatalogTopic(normalized)) {
-        result = { content: [{ type: 'text', text: formatCatalog(registry.claims) }] };
+      if (parsed instanceof type.errors) {
+        result = toolError(`Invalid arguments: ${parsed.summary}`);
       } else {
-        const byKey = registry.findClaim(normalized, app);
-        const byInterface = byKey === undefined ? registry.findClaimsByInterface(normalized) : [];
-        if (byKey !== undefined) {
-          result = { content: [{ type: 'text', text: formatClaim(byKey, depth) }] };
-        } else if (byInterface.length > 0) {
-          result = { content: [{ type: 'text', text: formatInterfaceClaims(normalized, byInterface, depth) }] };
+        const { topic, app, depth = 'full' } = parsed;
+        const normalized = topic.trim();
+        if (isCatalogTopic(normalized)) {
+          result = { content: [{ type: 'text', text: formatCatalog(registry.claims) }] };
         } else {
-          result = { content: [{ type: 'text', text: formatNotFound(normalized, registry.claims) }] };
+          const byKey = registry.findClaim(normalized, app);
+          const byInterface = byKey === undefined ? registry.findClaimsByInterface(normalized) : [];
+          if (byKey !== undefined) {
+            result = { content: [{ type: 'text', text: formatClaim(byKey, depth) }] };
+          } else if (byInterface.length > 0) {
+            result = { content: [{ type: 'text', text: formatInterfaceClaims(normalized, byInterface, depth) }] };
+          } else {
+            result = { content: [{ type: 'text', text: formatNotFound(normalized, registry.claims) }] };
+          }
         }
       }
       return result;

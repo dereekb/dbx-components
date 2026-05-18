@@ -8,9 +8,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
  * Reads the Zoho Sign webhook secret from the NestJS ConfigService
  * and returns a validated webhook service config.
  *
- * @param configService - NestJS config service populated with webhook environment variables
- * @returns Validated Zoho Sign webhook service configuration
- * @throws {Error} If the webhook secret is not configured
+ * @param configService - NestJS config service populated with webhook environment variables.
+ * @returns Validated Zoho Sign webhook service configuration.
+ * @throws {Error} If the webhook secret is not configured.
  */
 export function zohoSignWebhookServiceConfigFactory(configService: ConfigService): ZohoSignWebhookServiceConfig {
   const config: ZohoSignWebhookServiceConfig = {

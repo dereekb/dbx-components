@@ -23,8 +23,8 @@ export type DateCellIndex = number;
 /**
  * Returns true if the index is a non-negative integer, which is required for valid date cell indexing.
  *
- * @param input - the index to validate
- * @returns whether the input is a valid date cell index (>= 0 and an integer)
+ * @param input - The index to validate.
+ * @returns Whether the input is a valid date cell index (>= 0 and an integer)
  *
  * @example
  * ```ts
@@ -60,8 +60,8 @@ export interface DateCell extends IndexRef {
 /**
  * Normalizes a number or {@link DateCell} to a DateCell object.
  *
- * @param dateCellOrIndex - a numeric index or existing DateCell
- * @returns a DateCell object with the `i` property set
+ * @param dateCellOrIndex - A numeric index or existing DateCell.
+ * @returns A DateCell object with the `i` property set.
  *
  * @example
  * ```ts
@@ -111,8 +111,8 @@ export interface DateCellTimingStartsAtForStartOfDayInput {
  *
  * Useful for initializing a timing range that begins "today" in a particular timezone.
  *
- * @param input - optional timezone and "now" override
- * @returns a DateCellTimingStartsAt with startsAt at midnight and the resolved timezone
+ * @param input - Optional timezone and "now" override.
+ * @returns A DateCellTimingStartsAt with startsAt at midnight and the resolved timezone.
  *
  * @example
  * ```ts
@@ -197,8 +197,8 @@ export type DateCellTimingTimezoneInput = Omit<DateTimezoneUtcNormalFunctionInpu
  *
  * Falls back to the system timezone if no input is provided.
  *
- * @param timezoneInput - timezone configuration or undefined for system timezone
- * @returns a DateTimezoneUtcNormalInstance with a guaranteed configured timezone
+ * @param timezoneInput - Timezone configuration or undefined for system timezone.
+ * @returns A DateTimezoneUtcNormalInstance with a guaranteed configured timezone.
  * @throws {Error} When the timezone cannot be resolved to a known timezone string.
  *
  * @example
@@ -231,8 +231,8 @@ export type FullDateCellTimingStart = Pick<FullDateCellTiming, 'start'>;
 /**
  * Derives a {@link FullDateCellTiming} from a {@link DateCellTiming} by computing the `start` date (midnight in the timing's timezone).
  *
- * @param timing - the base timing to expand
- * @returns the timing with the `start` field populated
+ * @param timing - The base timing to expand.
+ * @returns The timing with the `start` field populated.
  *
  * @example
  * ```ts
@@ -255,8 +255,8 @@ export interface FullDateCellTimingTimezonePair {
  *
  * Useful when both the full timing and the timezone conversion utilities are needed together.
  *
- * @param timing - the base timing to expand
- * @returns the full timing paired with its timezone normal instance
+ * @param timing - The base timing to expand.
+ * @returns The full timing paired with its timezone normal instance.
  */
 export function fullDateCellTimingTimezonePair(timing: DateCellTiming): FullDateCellTimingTimezonePair {
   const { startsAt, end, duration, timezone } = timing;
@@ -279,8 +279,8 @@ export function fullDateCellTimingTimezonePair(timing: DateCellTiming): FullDate
 /**
  * Validates that a date has zero minutes, seconds, and milliseconds, which is required for a valid DateCellTiming start date (midnight in the target timezone).
  *
- * @param date - the start date to validate
- * @returns whether the date is at a valid hour boundary
+ * @param date - The start date to validate.
+ * @returns Whether the date is at a valid hour boundary.
  *
  * @example
  * ```ts
@@ -306,10 +306,11 @@ export function isValidDateCellTimingStartDate(date: Date): boolean {
  *
  * The start date from the inputDate is considered to to have the offset noted in DateCell, and will be retained.
  *
- * @param durationInput - the duration span containing the startsAt time and event duration in minutes
- * @param rangeInput - specifies the date range: a number of days, a DateRange, or a DateRangeDayDistanceInput
- * @param timezoneInput - optional timezone configuration; defaults to the system timezone if omitted
- * @returns a fully computed FullDateCellTiming with start, startsAt, end, duration, and timezone
+ * @param durationInput - The duration span containing the startsAt time and event duration in minutes.
+ * @param rangeInput - Specifies the date range: a number of days, a DateRange, or a DateRangeDayDistanceInput.
+ * @param timezoneInput - Optional timezone configuration; defaults to the system timezone if omitted.
+ * @returns A fully computed FullDateCellTiming with start, startsAt, end, duration, and timezone.
+ * @throws {Error} When `durationInput.duration` exceeds 24 hours.
  */
 export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: DateCellTimingRangeInput, timezoneInput?: DateCellTimingTimezoneInput): FullDateCellTiming {
   const { duration } = durationInput;
@@ -406,8 +407,8 @@ export interface DateCellTimingStartPair {
 /**
  * Computes the start-of-day date for a timing and returns it paired with the timezone normal instance.
  *
- * @param timing - timing with startsAt and timezone
- * @returns the midnight start date and the timezone normal instance used to compute it
+ * @param timing - Timing with startsAt and timezone.
+ * @returns The midnight start date and the timezone normal instance used to compute it.
  */
 export function dateCellTimingStartPair(timing: DateCellTimingStartsAt): DateCellTimingStartPair {
   const { startsAt, timezone } = timing;
@@ -429,8 +430,8 @@ export function dateCellTimingStartPair(timing: DateCellTimingStartsAt): DateCel
 /**
  * Computes the start-of-day (midnight) date for a {@link DateCellTimingStartsAt} in its configured timezone.
  *
- * @param timing - timing with startsAt and timezone
- * @returns the midnight Date for the timing's first day in its timezone
+ * @param timing - Timing with startsAt and timezone.
+ * @returns The midnight Date for the timing's first day in its timezone.
  */
 export function dateCellTimingStart(timing: DateCellTimingStartsAt): Date {
   return dateCellTimingStartPair(timing).start;
@@ -454,9 +455,9 @@ export type DateCellTimingEvent = Pick<DateCellTiming, 'startsAt' | 'duration'>;
 /**
  * Null-safe equality check for two {@link DateCellTimingStartsAtEndRange} values, comparing timezone, startsAt, and end.
  *
- * @param a - first range
- * @param b - second range
- * @returns whether the two ranges are equivalent
+ * @param a - First range.
+ * @param b - Second range.
+ * @returns Whether the two ranges are equivalent.
  */
 export function isSameDateCellTimingEventStartsAtEndRange(a: Maybe<DateCellTimingStartsAtEndRange>, b: Maybe<DateCellTimingStartsAtEndRange>): boolean {
   return a && b ? a.timezone === b.timezone && isSameDate(a.startsAt, b.startsAt) && isSameDate(a.end, b.end) : a == b;
@@ -465,9 +466,9 @@ export function isSameDateCellTimingEventStartsAtEndRange(a: Maybe<DateCellTimin
 /**
  * Null-safe equality check for two {@link DateCellTiming} values, comparing duration and the starts-at/end range.
  *
- * @param a - first timing
- * @param b - second timing
- * @returns whether the two timings are equivalent
+ * @param a - First timing.
+ * @param b - Second timing.
+ * @returns Whether the two timings are equivalent.
  */
 export function isSameDateCellTiming(a: Maybe<DateCellTiming>, b: Maybe<DateCellTiming>): boolean {
   return a && b ? a.duration === b.duration && isSameDateCellTimingEventStartsAtEndRange(a, b) : a == b;
@@ -478,9 +479,9 @@ export function isSameDateCellTiming(a: Maybe<DateCellTiming>, b: Maybe<DateCell
  *
  * In most cases {@link isSameDateCellTiming} is sufficient since `start` is derived from `startsAt`.
  *
- * @param a - first full timing
- * @param b - second full timing
- * @returns whether all fields are exactly equal
+ * @param a - First full timing.
+ * @param b - Second full timing.
+ * @returns Whether all fields are exactly equal.
  */
 export function isSameFullDateCellTiming(a: Maybe<FullDateCellTiming>, b: Maybe<FullDateCellTiming>): boolean {
   return a && b ? isSameDate(a.start, b.start) && isSameDateCellTiming(a, b) : a == b;
@@ -491,8 +492,8 @@ export function isSameFullDateCellTiming(a: Maybe<FullDateCellTiming>, b: Maybe<
  *
  * Does not validate correctness (e.g. end after start). Use {@link isValidDateCellTiming} for validation.
  *
- * @param input - value to check
- * @returns whether the input matches the DateCellTiming shape
+ * @param input - Value to check.
+ * @returns Whether the input matches the DateCellTiming shape.
  */
 export function isDateCellTiming(input: unknown): input is DateCellTiming {
   let result = false;
@@ -510,8 +511,8 @@ export function isDateCellTiming(input: unknown): input is DateCellTiming {
  *
  * Does not validate correctness. Use {@link isValidFullDateCellTiming} for validation.
  *
- * @param input - value to check
- * @returns whether the input matches the FullDateCellTiming shape
+ * @param input - Value to check.
+ * @returns Whether the input matches the FullDateCellTiming shape.
  */
 export function isFullDateCellTiming(input: unknown): input is FullDateCellTiming {
   let result = false;
@@ -527,8 +528,8 @@ export function isFullDateCellTiming(input: unknown): input is FullDateCellTimin
 /**
  * Derives a {@link DateCellTimingDateRange} from a timing, using midnight in the timing's timezone as the start and the event's end time as the end.
  *
- * @param timing - timing with startsAt, end, and timezone
- * @returns a date range spanning from midnight of the first day to the end of the last event
+ * @param timing - Timing with startsAt, end, and timezone.
+ * @returns Date range spanning from midnight of the first day to the end of the last event.
  */
 export function dateCellTimingDateRange(timing: DateCellTimingStartsAtEndRange): DateCellTimingDateRange {
   const start = dateCellTimingStart(timing);
@@ -540,8 +541,8 @@ export function dateCellTimingDateRange(timing: DateCellTimingStartsAtEndRange):
  *
  * Unlike {@link dateCellTimingDateRange}, the start is the event time rather than midnight.
  *
- * @param timing - timing with startsAt, end, and timezone
- * @returns the event range
+ * @param timing - Timing with startsAt, end, and timezone.
+ * @returns The event range.
  */
 export function dateCellTimingEventRange(timing: Pick<DateCellTiming, 'startsAt' | 'end' | 'timezone'>): DateCellTimingEventRange {
   return { start: timing.startsAt, end: timing.end, timezone: timing.timezone };
@@ -550,8 +551,8 @@ export function dateCellTimingEventRange(timing: Pick<DateCellTiming, 'startsAt'
 /**
  * Returns the date range of the first event only (from startsAt to startsAt + duration).
  *
- * @param timing - timing to extract the first event from
- * @returns date range of the first event
+ * @param timing - Timing to extract the first event from.
+ * @returns Date range of the first event.
  */
 export function getDateCellTimingFirstEventDateRange(timing: DateCellTimingStartsAtEndRange): DateRange {
   const duration = calculateExpectedDateCellTimingDuration(timing);
@@ -562,8 +563,8 @@ export function getDateCellTimingFirstEventDateRange(timing: DateCellTimingStart
 /**
  * Converts a timing's duration from minutes to fractional hours.
  *
- * @param timing - timing with a duration in minutes
- * @returns the duration expressed as fractional hours (e.g. 90 minutes = 1.5)
+ * @param timing - Timing with a duration in minutes.
+ * @returns The duration expressed as fractional hours (e.g. 90 minutes = 1.5)
  */
 export function getDateCellTimingHoursInEvent(timing: Pick<DateCellTiming, 'duration'>): FractionalHour {
   return minutesToFractionalHours(timing.duration);
@@ -583,8 +584,9 @@ export type UpdateDateCellTimingToTimezoneFunction = (<T extends DateCellTimingS
  *
  * The event occurs at the same absolute moment in time, but is now associated with a different timezone.
  *
- * @param timezone - the new IANA timezone to apply
- * @returns a function that updates timings to the new timezone
+ * @param timezone - IANA timezone to associate with future timings.
+ * @returns Updater that rebinds timings to the configured timezone.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function updateDateCellTimingToTimezoneFunction(timezone: TimezoneString): UpdateDateCellTimingToTimezoneFunction {
@@ -605,8 +607,8 @@ export function updateDateCellTimingToTimezoneFunction(timezone: TimezoneString)
 /**
  * Updates the timing's timezone to the system timezone while preserving the absolute startsAt instant.
  *
- * @param timing - timing to update
- * @returns the timing with the system timezone applied
+ * @param timing - Timing to update.
+ * @returns The timing with the system timezone applied.
  */
 export function updateDateCellTimingToSystemTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
   return updateDateCellTimingToTimezone(timing, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.configuredTimezoneString as string);
@@ -615,8 +617,8 @@ export function updateDateCellTimingToSystemTimezone<T extends DateCellTimingSta
 /**
  * Updates the timing's timezone to UTC while preserving the absolute startsAt instant.
  *
- * @param timing - timing to update
- * @returns the timing with UTC timezone applied
+ * @param timing - Timing to update.
+ * @returns The timing with UTC timezone applied.
  */
 export function updateDateCellTimingToUTCTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
   return updateDateCellTimingToTimezone(timing, UTC_TIMEZONE_STRING);
@@ -627,9 +629,9 @@ export function updateDateCellTimingToUTCTimezone<T extends DateCellTimingStarts
  *
  * Shorthand for creating an {@link updateDateCellTimingToTimezoneFunction} and immediately invoking it.
  *
- * @param timing - timing to update
- * @param timezone - the new IANA timezone
- * @returns the timing with the new timezone applied
+ * @param timing - Timing to update.
+ * @param timezone - The new IANA timezone.
+ * @returns The timing with the new timezone applied.
  */
 export function updateDateCellTimingToTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T, timezone: TimezoneString): T {
   return updateDateCellTimingToTimezoneFunction(timezone)(timing);
@@ -652,8 +654,9 @@ export type ShiftDateCellTimingToTimezoneFunction = (<T extends DateCellTimingSt
  * Unlike {@link updateDateCellTimingToTimezoneFunction}, which preserves the absolute instant, this shifts the absolute times
  * so the local time appearance remains the same (e.g. 8AM UTC becomes 8AM Denver).
  *
- * @param timezoneInput - the target timezone to shift into
- * @returns a function that shifts timings into the new timezone
+ * @param timezoneInput - Destination timezone for the wall-clock shift.
+ * @returns Shifter that rewrites timings to keep wall-clock time in the new timezone.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function shiftDateCellTimingToTimezoneFunction(timezoneInput: DateCellTimingTimezoneInput): ShiftDateCellTimingToTimezoneFunction {
@@ -685,8 +688,8 @@ export function shiftDateCellTimingToTimezoneFunction(timezoneInput: DateCellTim
 /**
  * Shifts a timing to the system timezone, preserving the wall clock time appearance.
  *
- * @param timing - timing to shift
- * @returns the timing shifted to the system timezone
+ * @param timing - Timing to shift.
+ * @returns The timing shifted to the system timezone.
  */
 export function shiftDateCellTimingToSystemTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
   return shiftDateCellTimingToTimezone(timing, SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
@@ -695,8 +698,8 @@ export function shiftDateCellTimingToSystemTimezone<T extends DateCellTimingStar
 /**
  * Shifts a timing to UTC, preserving the wall clock time appearance.
  *
- * @param timing - timing to shift
- * @returns the timing shifted to UTC
+ * @param timing - Timing to shift.
+ * @returns The timing shifted to UTC.
  */
 export function shiftDateCellTimingToUTCTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T): T {
   return shiftDateCellTimingToTimezone(timing, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE);
@@ -707,9 +710,9 @@ export function shiftDateCellTimingToUTCTimezone<T extends DateCellTimingStartsA
  *
  * Shorthand for creating a {@link shiftDateCellTimingToTimezoneFunction} and immediately invoking it.
  *
- * @param timing - timing to shift
- * @param timezone - the target timezone
- * @returns the timing shifted to the new timezone
+ * @param timing - Timing to shift.
+ * @param timezone - The target timezone.
+ * @returns The timing shifted to the new timezone.
  */
 export function shiftDateCellTimingToTimezone<T extends DateCellTimingStartsAtEndRange>(timing: T, timezone: DateCellTimingTimezoneInput): T {
   return shiftDateCellTimingToTimezoneFunction(timezone)(timing);
@@ -751,8 +754,8 @@ function _calculateExpectedDateCellTimingDurationPair(timing: DateCellTimingStar
 /**
  * Calculates the expected duration and the final event's startsAt from a timing range, accounting for DST transitions.
  *
- * @param timing - the timing range to analyze
- * @returns the computed duration in minutes and the expected startsAt of the last event
+ * @param timing - The timing range to analyze.
+ * @returns The computed duration in minutes and the expected startsAt of the last event.
  */
 export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimingStartsAtEndRange): CalculateExpectedDateCellTimingDurationPair {
   const { duration, normalInstance, endInUtcNormal } = _calculateExpectedDateCellTimingDurationPair(timing);
@@ -768,8 +771,8 @@ export function calculateExpectedDateCellTimingDurationPair(timing: DateCellTimi
 /**
  * Calculates the expected event duration in minutes from a timing range by analyzing the gap between startsAt and end.
  *
- * @param timing - the timing range to analyze
- * @returns the duration in minutes
+ * @param timing - The timing range to analyze.
+ * @returns The duration in minutes.
  */
 export function calculateExpectedDateCellTimingDuration(timing: DateCellTimingStartsAtEndRange): Minutes {
   return _calculateExpectedDateCellTimingDurationPair(timing).duration;
@@ -778,8 +781,8 @@ export function calculateExpectedDateCellTimingDuration(timing: DateCellTimingSt
 /**
  * Converts a {@link DateCellTimingStartsAtEndRange} to a full {@link DateCellTiming} by computing the duration from the range.
  *
- * @param timing - the starts-at/end range to convert
- * @returns a DateCellTiming with the calculated duration
+ * @param timing - The starts-at/end range to convert.
+ * @returns A DateCellTiming with the calculated duration.
  */
 export function dateCellTimingFromDateCellTimingStartsAtEndRange(timing: DateCellTimingStartsAtEndRange): DateCellTiming {
   const { startsAt, end, timezone } = timing;
@@ -795,8 +798,8 @@ export function dateCellTimingFromDateCellTimingStartsAtEndRange(timing: DateCel
 /**
  * Computes the startsAt time and duration for the final event in a timing range.
  *
- * @param timing - the timing range to analyze
- * @returns a DateCellTimingEvent representing the last scheduled event
+ * @param timing - The timing range to analyze.
+ * @returns A DateCellTimingEvent representing the last scheduled event.
  */
 export function dateCellTimingFinalStartsAtEvent(timing: DateCellTimingStartsAtEndRange): DateCellTimingEvent {
   const { duration, expectedFinalStartsAt: startsAt } = calculateExpectedDateCellTimingDurationPair(timing);
@@ -824,8 +827,8 @@ export interface IsValidDateCellTimingInfo {
  *
  * Validates that end is after startsAt, duration is within bounds, startsAt has no fractional seconds, and the computed duration matches the expected value.
  *
- * @param timing - the timing to validate
- * @returns detailed validation info with individual boolean flags
+ * @param timing - The timing to validate.
+ * @returns Detailed validation info with individual boolean flags.
  */
 export function isValidDateCellTimingInfo(timing: DateCellTiming): IsValidDateCellTimingInfo {
   const { end, startsAt, duration, timezone } = timing;
@@ -866,8 +869,8 @@ export function isValidDateCellTimingInfo(timing: DateCellTiming): IsValidDateCe
  *
  * Shorthand for {@link isValidDateCellTimingInfo} when only the boolean result is needed.
  *
- * @param timing - the timing to validate
- * @returns whether the timing is valid
+ * @param timing - The timing to validate.
+ * @returns Whether the timing is valid.
  */
 export function isValidDateCellTiming(timing: DateCellTiming): boolean {
   const { isValid } = isValidDateCellTimingInfo(timing);
@@ -889,8 +892,8 @@ export interface IsValidFullDateCellTimingInfo extends IsValidDateCellTimingInfo
  * Performs detailed validation of a {@link FullDateCellTiming}, including all {@link isValidDateCellTimingInfo} checks
  * plus additional checks that the `start` date is at midnight and properly aligned with `startsAt`.
  *
- * @param timing - the full timing to validate
- * @returns detailed validation info with individual boolean flags
+ * @param timing - The full timing to validate.
+ * @returns Detailed validation info with individual boolean flags.
  */
 export function isValidFullDateCellTimingInfo(timing: FullDateCellTiming): IsValidFullDateCellTimingInfo {
   const { start, normalInstance } = dateCellTimingStartPair(timing);
@@ -945,8 +948,8 @@ export function isValidFullDateCellTimingInfo(timing: FullDateCellTiming): IsVal
  *
  * Shorthand for {@link isValidFullDateCellTimingInfo} when only the boolean result is needed.
  *
- * @param timing - the full timing to validate
- * @returns whether the timing is valid
+ * @param timing - The full timing to validate.
+ * @returns Whether the timing is valid.
  */
 export function isValidFullDateCellTiming(timing: FullDateCellTiming): boolean {
   const { isValid } = isValidFullDateCellTimingInfo(timing);

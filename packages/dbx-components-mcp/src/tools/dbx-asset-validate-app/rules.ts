@@ -32,9 +32,9 @@ const PROVIDER_IMPORT_RE = /from\s*['"]@dereekb\/dbx-core['"]/;
  * structure / wiring rules so the report stays focused on the root
  * cause.
  *
- * @param inspection - the on-disk snapshot used for I/O rules
- * @param extracted - the pre-extracted facts the structure / wiring rules consume
- * @returns the violations the rules emit for the snapshot
+ * @param inspection - The on-disk snapshot used for I/O rules.
+ * @param extracted - The pre-extracted facts the structure / wiring rules consume.
+ * @returns The violations the rules emit for the snapshot.
  */
 export function runRules(inspection: AppAssetsInspection, extracted: ExtractedAppAssets): readonly Violation[] {
   const violations: Violation[] = [];

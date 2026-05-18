@@ -39,10 +39,10 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
       <span class="loading-progress-view-indicator" [dbxColor]="color()">
         @switch (linear()) {
           @case (true) {
-            <mat-progress-bar [mode]="bmode()" [bufferValue]="bufferValue()" [value]="value()" style="margin: auto;"></mat-progress-bar>
+            <mat-progress-bar [mode]="bmodeSignal()" [bufferValue]="bufferValue()" [value]="value()" style="margin: auto;"></mat-progress-bar>
           }
           @default {
-            <mat-progress-spinner [diameter]="diameterSignal()" [mode]="smode()" [value]="value()" style="margin: auto;"></mat-progress-spinner>
+            <mat-progress-spinner [diameter]="diameterSignal()" [mode]="smodeSignal()" [value]="value()" style="margin: auto;"></mat-progress-spinner>
           }
         }
       </span>
@@ -67,8 +67,8 @@ export class DbxLoadingProgressComponent {
   readonly value = input<Maybe<number>>();
   readonly bufferValue = input<Maybe<number>>();
 
-  readonly bmode = computed(() => this.mode() as ProgressBarMode);
-  readonly smode = computed(() => this.mode() as ProgressSpinnerMode);
+  readonly bmodeSignal = computed(() => this.mode());
+  readonly smodeSignal = computed(() => this.mode() as ProgressSpinnerMode);
 
   readonly diameterSignal = computed(() => this.diameter() || this.defaultDiameter);
 }

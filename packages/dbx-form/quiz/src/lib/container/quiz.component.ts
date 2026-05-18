@@ -91,8 +91,31 @@ export class QuizComponent {
 
   readonly viewConfig$: Observable<QuizComponentViewConfig> = this.startedQuiz$.pipe(
     switchMap((started) => {
-      if (!started) {
-        return this.quiz$.pipe(
+      let result: Observable<QuizComponentViewConfig>;
+
+      if (started) {
+        result = combineLatest([this.quiz$, this.currentQuestion$, this.quizStore.isAtEndOfQuestions$]).pipe(
+          map(([quiz, currentQuestion, isAtEndOfQuestions]) => {
+            let viewConfig: QuizComponentViewConfig;
+
+            if (isAtEndOfQuestions) {
+              viewConfig = {
+                state: 'post-quiz',
+                resultsComponent: quiz?.resultsComponentConfig
+              };
+            } else {
+              viewConfig = {
+                state: 'quiz',
+                questionComponent: currentQuestion?.questionComponentConfig,
+                answerComponent: currentQuestion?.answerComponentConfig
+              };
+            }
+
+            return viewConfig;
+          })
+        );
+      } else {
+        result = this.quiz$.pipe(
           map((quiz) => {
             const viewConfig: QuizComponentViewPreQuizConfig = {
               state: 'pre-quiz',
@@ -104,30 +127,11 @@ export class QuizComponent {
         );
       }
 
-      return combineLatest([this.quiz$, this.currentQuestion$, this.quizStore.isAtEndOfQuestions$]).pipe(
-        map(([quiz, currentQuestion, isAtEndOfQuestions]) => {
-          let viewConfig: QuizComponentViewConfig;
-
-          if (isAtEndOfQuestions) {
-            viewConfig = {
-              state: 'post-quiz',
-              resultsComponent: quiz?.resultsComponentConfig
-            };
-          } else {
-            viewConfig = {
-              state: 'quiz',
-              questionComponent: currentQuestion?.questionComponentConfig,
-              answerComponent: currentQuestion?.answerComponentConfig
-            };
-          }
-
-          return viewConfig;
-        })
-      );
+      return result;
     })
   );
 
-  readonly viewConfigSignal: Signal<QuizComponentViewConfig> = toSignal(this.viewConfig$, { initialValue: { state: 'init' } as QuizComponentViewConfig });
+  readonly viewConfigSignal: Signal<QuizComponentViewConfig> = toSignal(this.viewConfig$, { initialValue: { state: 'init' } });
   readonly viewStateSignal: Signal<QuizComponentState> = computed(() => this.viewConfigSignal()?.state ?? 'init');
 
   readonly preQuizComponentConfigSignal: Signal<Maybe<DbxInjectionComponentConfig>> = computed(() => (this.viewConfigSignal() as QuizComponentViewPreQuizConfig)?.preQuizComponent);

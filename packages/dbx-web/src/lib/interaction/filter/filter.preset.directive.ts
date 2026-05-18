@@ -90,7 +90,7 @@ export abstract class AbstractDbxPresetFilterMenuDirective<F extends FilterWithP
 
     if (presetValue == null || (typeof presetValue !== 'function' && objectHasNoKeys(presetValue))) {
       // set and then reset if the value is null or empty
-      this.filterSourceDirective.setFilter((presetValue ?? {}) as F);
+      this.filterSourceDirective.setFilter(presetValue ?? {});
       this.filterSourceDirective.resetFilter();
     } else {
       let filter = getValueFromGetter(presetValue) as F;

@@ -46,9 +46,9 @@ export class OidcInteractionService {
    *
    * Requires the oidc-provider interaction cookie to be present on the request.
    *
-   * @param req - the Express request containing the interaction cookie
-   * @param res - the Express response
-   * @returns the oidc-provider interaction details
+   * @param req - The Express request containing the interaction cookie.
+   * @param res - The Express response.
+   * @returns The oidc-provider interaction details.
    */
   async getInteractionDetails(req: Request, res: Response): Promise<Interaction> {
     const provider = await this.oidcService.getProvider();
@@ -62,8 +62,8 @@ export class OidcInteractionService {
    * This is necessary when the interaction cookie is scoped to a different path
    * (e.g., the frontend) and is not sent with backend API requests.
    *
-   * @param uid - the interaction UID to look up
-   * @returns the interaction details for the given UID
+   * @param uid - The interaction UID to look up.
+   * @returns The interaction details for the given UID.
    * @throws {Error} When the interaction is not found or has expired.
    */
   async findInteractionByUid(uid: OidcInteractionUid): Promise<Interaction> {
@@ -83,10 +83,10 @@ export class OidcInteractionService {
    * Looks up the interaction directly by UID, applies the result, saves it,
    * and returns the `returnTo` URL for the client to redirect to.
    *
-   * @param uid - the interaction UID to complete
-   * @param result - the interaction results to apply
-   * @param options - optional settings for merging with the last submission
-   * @param options.mergeWithLastSubmission - whether to merge with the last submission (defaults to true)
+   * @param uid - The interaction UID to complete.
+   * @param result - The interaction results to apply.
+   * @param options - Optional settings for merging with the last submission.
+   * @param options.mergeWithLastSubmission - Whether to merge with the last submission (defaults to true)
    * @returns The `returnTo` URL that the client should redirect to.
    */
   async finishInteractionByUid(uid: OidcInteractionUid, result: InteractionResults, options?: { mergeWithLastSubmission?: boolean }): Promise<string> {
@@ -111,11 +111,11 @@ export class OidcInteractionService {
    * `dbx_session_ttl` request param when save is driven from a NestJS controller — see
    * {@link OidcService#resolveLoginDurationForGrant}).
    *
-   * @param grantId - the existing grant ID to look up, or undefined to create a new grant
-   * @param accountId - the account ID for creating a new grant
-   * @param clientId - the client ID for creating a new grant
-   * @param expiresInSeconds - optional TTL (seconds) to assign to a newly-created grant
-   * @returns the found or newly created grant
+   * @param grantId - The existing grant ID to look up, or undefined to create a new grant.
+   * @param accountId - The account ID for creating a new grant.
+   * @param clientId - The client ID for creating a new grant.
+   * @param expiresInSeconds - Optional TTL (seconds) to assign to a newly-created grant.
+   * @returns The found or newly created grant.
    */
   // eslint-disable-next-line @typescript-eslint/max-params -- positional args mirror the existing call sites
   async findOrCreateGrant(grantId: string | undefined, accountId: string, clientId: string, expiresInSeconds?: number): Promise<Grant> {

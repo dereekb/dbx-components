@@ -13,8 +13,8 @@ function zohoDeskContactApiFetchJsonInput(method: string): FetchJsonInput {
 /**
  * Joins include values into a comma-separated string.
  *
- * @param include - Single or array of include values
- * @returns Comma-separated string, or undefined if no values provided
+ * @param include - Single or array of include values.
+ * @returns Comma-separated string, or undefined if no values provided.
  */
 function joinContactInclude(include: Maybe<ArrayOrValue<string>>): Maybe<string> {
   let result: Maybe<string>;
@@ -53,8 +53,8 @@ export type ZohoDeskGetContactsFunction = (input: ZohoDeskGetContactsInput) => P
  * Retrieves a paginated list of contacts from Zoho Desk, with optional sorting,
  * inline expansion of related entities, and custom view filtering.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves paginated contacts
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves paginated contacts.
  */
 export function zohoDeskGetContacts(context: ZohoDeskContext): ZohoDeskGetContactsFunction {
   return (input: ZohoDeskGetContactsInput) => {
@@ -81,8 +81,8 @@ export type ZohoDeskGetContactByIdFunction = (input: ZohoDeskGetContactByIdInput
 /**
  * Creates a {@link ZohoDeskGetContactByIdFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves a single contact
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves a single contact.
  */
 export function zohoDeskGetContactById(context: ZohoDeskContext): ZohoDeskGetContactByIdFunction {
   return (input: ZohoDeskGetContactByIdInput) => {
@@ -112,8 +112,8 @@ export type ZohoDeskGetContactsByIdsFunction = (input: ZohoDeskGetContactsByIdsI
  *
  * Retrieves multiple contacts in a single request by providing their IDs.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves contacts by IDs
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves contacts by IDs.
  */
 export function zohoDeskGetContactsByIds(context: ZohoDeskContext): ZohoDeskGetContactsByIdsFunction {
   return (input: ZohoDeskGetContactsByIdsInput) => {
@@ -131,8 +131,9 @@ export type ZohoDeskGetContactsPageFactory = (input: ZohoDeskGetContactsInput, o
 /**
  * Creates a {@link ZohoDeskGetContactsPageFactory} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Page factory for iterating over contact results
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Page factory for iterating over contact results.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetContactsPageFactory(context: ZohoDeskContext): ZohoDeskGetContactsPageFactory {

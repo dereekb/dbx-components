@@ -2,7 +2,7 @@
  * Types for `dbx_model_api_lookup`.
  */
 
-import type { CrudEntry } from '../model-api-shared/types.js';
+import type { CrudEntry } from '@dereekb/dbx-cli/manifest-extract';
 
 export interface ApiLookupEntry extends CrudEntry {
   readonly sourceFile: string;

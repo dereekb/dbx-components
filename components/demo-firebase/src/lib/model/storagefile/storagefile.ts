@@ -102,7 +102,7 @@ export function userProfileStorageFileGroupId(userId: FirebaseAuthUserId): Stora
  * Returns the list of StorageFileGroupIds that a user's test files belong to.
  *
  * @param userId - The Firebase Auth user ID.
- * @returns An array of StorageFileGroupIds for the user's test file group membership.
+ * @returns Array of StorageFileGroupIds for the user's test file group membership.
  */
 export function userTestFileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
   return [userProfileStorageFileGroupId(userId)];
@@ -161,7 +161,7 @@ export function makeUserAvatarFileStoragePath(userId: FirebaseAuthUserId): Slash
  * Returns the list of StorageFileGroupIds that a user's avatar file belongs to.
  *
  * @param userId - The Firebase Auth user ID.
- * @returns An array of StorageFileGroupIds for the user's avatar group membership.
+ * @returns Array of StorageFileGroupIds for the user's avatar group membership.
  */
 export function userAvatarFileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
   return [userProfileStorageFileGroupId(userId)];
@@ -234,7 +234,7 @@ export function userLogFileStoragePath(userId: FirebaseAuthUserId, name: SlashPa
  * Returns the list of StorageFileGroupIds that a user's log files belong to.
  *
  * @param userId - The Firebase Auth user ID.
- * @returns An array of StorageFileGroupIds for the user's log file group membership.
+ * @returns Array of StorageFileGroupIds for the user's log file group membership.
  */
 export function userLogFileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
   return [userProfileStorageFileGroupId(userId)];

@@ -78,7 +78,7 @@ export class OidcAccountServiceUserContext<S extends OidcScope = OidcScope, U ex
     private readonly _service: OidcAccountService<S, U>,
     private readonly _uid: string
   ) {
-    this.authUserContext = this._service.authService.userContext(this._uid) as U;
+    this.authUserContext = this._service.authService.userContext(this._uid);
   }
 
   get uid(): string {
@@ -95,25 +95,26 @@ export class OidcAccountServiceUserContext<S extends OidcScope = OidcScope, U ex
    * Returns an {@link OidcAccount} compatible with oidc-provider's `findAccount` interface,
    * or `undefined` if the user does not exist in Firebase Auth.
    *
-   * @returns the OIDC account for this user, or undefined if the user does not exist
+   * @returns The OIDC account for this user, or undefined if the user does not exist.
    */
   async findAccount(): Promise<OidcAccount | undefined> {
     const authUserContext = this.authUserContext;
     const exists = await authUserContext.exists();
+    let result: OidcAccount | undefined;
 
-    if (!exists) {
-      return undefined;
+    if (exists) {
+      const delegate = this._service.delegate;
+
+      result = {
+        accountId: this._uid,
+        async claims(_use: string, scope: string): Promise<OidcAccountClaims> {
+          const scopes = new Set(scope.split(' ')) as Set<S>;
+          return delegate.buildClaimsForUser(authUserContext, scopes);
+        }
+      };
     }
 
-    const delegate = this._service.delegate;
-
-    return {
-      accountId: this._uid,
-      async claims(_use: string, scope: string): Promise<OidcAccountClaims> {
-        const scopes = new Set(scope.split(' ')) as Set<S>;
-        return delegate.buildClaimsForUser(authUserContext, scopes);
-      }
-    };
+    return result;
   }
 }
 
@@ -135,7 +136,7 @@ export class OidcAccountService<S extends OidcScope = OidcScope, U extends Fireb
   /**
    * The provider config from the delegate.
    *
-   * @returns the OIDC provider configuration from the delegate
+   * @returns The OIDC provider configuration from the delegate.
    */
   get providerConfig(): OidcProviderConfig<S> {
     return this.delegate.providerConfig;
@@ -144,8 +145,8 @@ export class OidcAccountService<S extends OidcScope = OidcScope, U extends Fireb
   /**
    * Creates a user context for the given user ID.
    *
-   * @param uid - the Firebase Auth user ID
-   * @returns a new user context bound to the given user
+   * @param uid - The Firebase Auth user ID.
+   * @returns A new user context bound to the given user.
    */
   userContext(uid: string): OidcAccountServiceUserContext<S, U> {
     return new OidcAccountServiceUserContext<S, U>(this, uid);

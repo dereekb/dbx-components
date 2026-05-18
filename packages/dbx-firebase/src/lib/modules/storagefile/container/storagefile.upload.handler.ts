@@ -324,7 +324,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
 
   const allFilesAndLatestProgress: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>[] = new Array(allFiles.length);
   const allFilesAndDetails: FileUploadDetails[] = allFiles.map((file) => ({ file }));
-  const overallProgressPerCompletedFile: PercentDecimal = (1 / allFilesAndLatestProgress.length) as PercentDecimal;
+  const overallProgressPerCompletedFile: PercentDecimal = 1 / allFilesAndLatestProgress.length;
 
   /**
    * Once set, any new file upload task that hits this will return an cancel failure.
@@ -468,58 +468,61 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
     }
 
     async function runUploadTaskForFile([file, index]: readonly [File, IndexNumber]) {
+      let result: Promise<void> | undefined;
+
       if (flaggedCancel) {
         onStartFileUploadFlaggedCancelled(index);
-        return;
-      }
+      } else {
+        result = new Promise<void>((resolve) => {
+          const updateFileUploadProgress = (nextProgress: DbxFirebaseStorageFileUploadStoreFileProgress) => {
+            // update the progress
+            updateUploadProgress({
+              index,
+              nextProgress
+            });
+          };
 
-      return new Promise<void>((resolve) => {
-        const updateFileUploadProgress = (nextProgress: DbxFirebaseStorageFileUploadStoreFileProgress) => {
-          // update the progress
-          updateUploadProgress({
-            index,
-            nextProgress
-          });
-        };
-
-        const updateFileUploadProgressWithUncaughtError = (error: unknown) => {
-          // error occurred, update the progress with the error
-          updateUploadProgress({
-            index,
-            nonProgressError: error,
-            fileUploadTaskDone: true
-          });
-
-          // always resolve, never reject
-          resolve();
-        };
-
-        const completeFileUploadProgress = () => {
-          updateUploadProgress({
-            index,
-            fileUploadTaskDone: true
-          });
-
-          resolve();
-        };
-
-        // upload the file, subscribe to the progress
-        uploadHandler
-          .uploadFile(file)
-          .then((uploadInstance) => {
-            // add to active file indexes
-            onStartFileUpload(index, uploadInstance);
-
-            const uploadSubscription = uploadInstance.upload.subscribe({
-              next: updateFileUploadProgress,
-              error: updateFileUploadProgressWithUncaughtError,
-              complete: completeFileUploadProgress
+          const updateFileUploadProgressWithUncaughtError = (error: unknown) => {
+            // error occurred, update the progress with the error
+            updateUploadProgress({
+              index,
+              nonProgressError: error,
+              fileUploadTaskDone: true
             });
 
-            multiUploadsSubscriptionObject.addSubs(uploadSubscription);
-          })
-          .catch(updateFileUploadProgressWithUncaughtError);
-      });
+            // always resolve, never reject
+            resolve();
+          };
+
+          const completeFileUploadProgress = () => {
+            updateUploadProgress({
+              index,
+              fileUploadTaskDone: true
+            });
+
+            resolve();
+          };
+
+          // upload the file, subscribe to the progress
+          uploadHandler
+            .uploadFile(file)
+            .then((uploadInstance) => {
+              // add to active file indexes
+              onStartFileUpload(index, uploadInstance);
+
+              const uploadSubscription = uploadInstance.upload.subscribe({
+                next: updateFileUploadProgress,
+                error: updateFileUploadProgressWithUncaughtError,
+                complete: completeFileUploadProgress
+              });
+
+              multiUploadsSubscriptionObject.addSubs(uploadSubscription);
+            })
+            .catch(updateFileUploadProgressWithUncaughtError);
+        });
+      }
+
+      return result;
     }
 
     // run upload task for each file

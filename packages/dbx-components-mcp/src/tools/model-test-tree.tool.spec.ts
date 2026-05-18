@@ -9,7 +9,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { modelTestTreeTool } from './model-test-tree.tool.js';
+import { MODEL_TEST_TREE_TOOL } from './model-test-tree.tool.js';
 
 const SPEC_TEXT = `import { hellosubsApiFunctionContextFactory, hellosubsCountryContext, hellosubsJobContext } from '../../../test/fixture';
 hellosubsApiFunctionContextFactory((f) => {
@@ -41,19 +41,19 @@ describe('dbx_model_test_tree', () => {
   });
 
   it('rejects an invalid arg payload', async () => {
-    const result = await modelTestTreeTool.run({});
+    const result = await MODEL_TEST_TREE_TOOL.run({});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Invalid arguments');
   });
 
   it('rejects a path outside the cwd', async () => {
-    const result = await modelTestTreeTool.run({ specFile: '../escape.spec.ts' });
+    const result = await MODEL_TEST_TREE_TOOL.run({ specFile: '../escape.spec.ts' });
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('outside the server cwd');
   });
 
   it('returns a markdown tree by default', async () => {
-    const result = await modelTestTreeTool.run({ specFile: specRel });
+    const result = await MODEL_TEST_TREE_TOOL.run({ specFile: specRel });
     expect(result.isError).toBeFalsy();
     const text = result.content[0].text;
     expect(text).toContain('Spec tree');
@@ -64,7 +64,7 @@ describe('dbx_model_test_tree', () => {
   });
 
   it('honours the `view` argument', async () => {
-    const result = await modelTestTreeTool.run({ specFile: specRel, view: 'fixtures' });
+    const result = await MODEL_TEST_TREE_TOOL.run({ specFile: specRel, view: 'fixtures' });
     expect(result.isError).toBeFalsy();
     const text = result.content[0].text;
     expect(text).not.toContain('**describe**');
@@ -73,7 +73,7 @@ describe('dbx_model_test_tree', () => {
   });
 
   it('returns parseable JSON when format=json', async () => {
-    const result = await modelTestTreeTool.run({ specFile: specRel, format: 'json', view: 'its' });
+    const result = await MODEL_TEST_TREE_TOOL.run({ specFile: specRel, format: 'json', view: 'its' });
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.its).toHaveLength(1);
     expect(parsed.its[0].title).toBe('publishes');

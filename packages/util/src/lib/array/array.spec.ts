@@ -1,5 +1,5 @@
 import { mergeArraysIntoArray, range, flattenArray, type Maybe } from '@dereekb/util';
-import { copyArray, removeValuesAtIndexesFromArrayCopy, splitFront, takeLast } from './array';
+import { copyArray, pushItemOrArrayItemsIntoArray, removeValuesAtIndexesFromArrayCopy, splitFront, takeLast } from './array';
 
 describe('copyArray()', () => {
   it('should return a shallow copy of the input array', () => {
@@ -165,5 +165,31 @@ describe('removeValuesAtIndexesFromArrayCopy()', () => {
     expect(result[0]).toBe(7);
     expect(result[1]).toBe(8);
     expect(result[2]).toBe(9);
+  });
+});
+
+describe('pushItemOrArrayItemsIntoArray()', () => {
+  it('should push a single non-array value onto the target', () => {
+    const target: number[] = [1, 2];
+    const result = pushItemOrArrayItemsIntoArray(target, 3);
+
+    expect(result).toBe(target); // mutates and returns same reference
+    expect(target).toEqual([1, 2, 3]);
+  });
+
+  it('should push all values from an array onto the target', () => {
+    const target: number[] = [1];
+    const result = pushItemOrArrayItemsIntoArray(target, [2, 3, 4]);
+
+    expect(result).toBe(target);
+    expect(target).toEqual([1, 2, 3, 4]);
+  });
+
+  it('should be a no-op when passed an empty array', () => {
+    const target: number[] = [1, 2];
+    const result = pushItemOrArrayItemsIntoArray(target, []);
+
+    expect(result).toBe(target);
+    expect(target).toEqual([1, 2]);
   });
 });

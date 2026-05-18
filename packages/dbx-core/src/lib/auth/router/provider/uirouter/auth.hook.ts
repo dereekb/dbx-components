@@ -10,7 +10,7 @@ import { type AuthTransitionDecision, type AuthTransitionHookOptions, makeAuthTr
  * @see {@link AuthTransitionHookOptions} for redirect and timeout configuration.
  */
 export interface IsLoggedInHookConfig {
-  options: AuthTransitionHookOptions;
+  readonly options: AuthTransitionHookOptions;
 }
 
 /**

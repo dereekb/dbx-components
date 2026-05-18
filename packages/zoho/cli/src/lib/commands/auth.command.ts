@@ -31,12 +31,12 @@ const ZOHO_SCOPES: Record<string, string[]> = {
  * @throws {Error} When `input` is a URL that lacks a `code` query parameter, or when it starts with `http://`/`https://` but cannot be parsed as a URL.
  */
 function parseCodeFromInput(input: string | undefined): string | undefined {
-  if (!input) {
-    return undefined;
-  }
+  let result: string | undefined;
 
-  // If the input looks like a URL, extract the code query parameter
-  if (input.startsWith('http://') || input.startsWith('https://')) {
+  if (!input) {
+    result = undefined;
+  } else if (input.startsWith('http://') || input.startsWith('https://')) {
+    // If the input looks like a URL, extract the code query parameter
     try {
       const url = new URL(input);
       const code = url.searchParams.get('code');
@@ -45,17 +45,19 @@ function parseCodeFromInput(input: string | undefined): string | undefined {
         throw new Error('No "code" parameter found in the provided URL.');
       }
 
-      return code;
+      result = code;
     } catch (e) {
       if (e instanceof TypeError) {
-        throw new Error(`Invalid URL provided for --code: ${input}`);
+        throw new Error(`Invalid URL provided for --code: ${input}`, { cause: e });
       }
 
       throw e;
     }
+  } else {
+    result = input;
   }
 
-  return input;
+  return result;
 }
 
 // MARK: Setup
@@ -291,15 +293,13 @@ const authShowCommand: CommandModule = {
       }
 
       function maskCreds(creds: Partial<ZohoCliCredentials> | undefined) {
-        if (!creds) {
-          return undefined;
-        }
-
-        return {
-          clientId: creds.clientId ? maskSecret(creds.clientId) : undefined,
-          clientSecret: creds.clientSecret ? maskSecret(creds.clientSecret) : undefined,
-          refreshToken: creds.refreshToken ? maskSecret(creds.refreshToken) : undefined
-        };
+        return creds
+          ? {
+              clientId: creds.clientId ? maskSecret(creds.clientId) : undefined,
+              clientSecret: creds.clientSecret ? maskSecret(creds.clientSecret) : undefined,
+              refreshToken: creds.refreshToken ? maskSecret(creds.refreshToken) : undefined
+            }
+          : undefined;
       }
 
       outputResult({
@@ -330,50 +330,48 @@ const authCheckCommand: CommandModule = {
     try {
       const config = await loadCliConfig();
 
-      if (!config) {
-        outputResult({ authenticated: false, error: 'No credentials configured. Run: zoho-cli auth setup' });
-        return;
-      }
+      if (config) {
+        const products = configuredProducts(config);
 
-      const products = configuredProducts(config);
+        if (products.length === 0) {
+          outputResult({ authenticated: false, error: 'No products have complete credentials. Run: zoho-cli auth setup' });
+        } else {
+          // Try token exchange for each configured product
+          const context = createCliContext(config);
+          const results: Record<string, unknown> = {};
 
-      if (products.length === 0) {
-        outputResult({ authenticated: false, error: 'No products have complete credentials. Run: zoho-cli auth setup' });
-        return;
-      }
+          for (const product of products) {
+            try {
+              let api;
 
-      // Try token exchange for each configured product
-      const context = createCliContext(config);
-      const results: Record<string, unknown> = {};
+              if (product === 'recruit') {
+                api = context.recruitApi;
+              } else if (product === 'crm') {
+                api = context.crmApi;
+              } else {
+                api = context.deskApi;
+              }
 
-      for (const product of products) {
-        try {
-          let api;
+              if (!api) {
+                results[product] = { authenticated: false, error: 'Not configured' };
+                continue;
+              }
 
-          if (product === 'recruit') {
-            api = context.recruitApi;
-          } else if (product === 'crm') {
-            api = context.crmApi;
-          } else {
-            api = context.deskApi;
+              // Access the underlying accounts API to verify token exchange
+              const accountsApi = (api as any).zohoAccountsApi;
+              const tokenResponse = await accountsApi.accessToken();
+              results[product] = { authenticated: true, scope: tokenResponse.scope, expiresIn: tokenResponse.expires_in };
+            } catch (e) {
+              const message = e instanceof Error ? e.message : String(e);
+              results[product] = { authenticated: false, error: message };
+            }
           }
 
-          if (!api) {
-            results[product] = { authenticated: false, error: 'Not configured' };
-            continue;
-          }
-
-          // Access the underlying accounts API to verify token exchange
-          const accountsApi = (api as any).zohoAccountsApi;
-          const tokenResponse = await accountsApi.accessToken();
-          results[product] = { authenticated: true, scope: tokenResponse.scope, expiresIn: tokenResponse.expires_in };
-        } catch (e) {
-          const message = e instanceof Error ? e.message : String(e);
-          results[product] = { authenticated: false, error: message };
+          outputResult({ products: results });
         }
+      } else {
+        outputResult({ authenticated: false, error: 'No credentials configured. Run: zoho-cli auth setup' });
       }
-
-      outputResult({ products: results });
     } catch (e) {
       outputError(e);
       process.exit(1);
@@ -398,7 +396,7 @@ const authClearCommand: CommandModule = {
 };
 
 // MARK: Auth
-export const authCommand: CommandModule = {
+export const AUTH_COMMAND: CommandModule = {
   command: 'auth',
   describe: 'Manage Zoho API credentials',
   builder: (yargs: Argv) => yargs.command(authSetupCommand).command(authSetCommand).command(authShowCommand).command(authCheckCommand).command(authClearCommand).demandCommand(1, 'Please specify an auth subcommand.'),

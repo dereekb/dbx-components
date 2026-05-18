@@ -251,7 +251,7 @@ function parseArgs(rawArgs: unknown): ParsedSearchModelArgs {
   return {
     query: parsed.query,
     limit: parsed.limit,
-    scope: (parsed.scope ?? 'all') as SearchScope,
+    scope: parsed.scope ?? 'all',
     componentDirs: parsed.componentDirs
   };
 }
@@ -261,50 +261,62 @@ function parseArgs(rawArgs: unknown): ParsedSearchModelArgs {
  * downstream catalog when `scope` requires it, builds the entry pool, and
  * dispatches to the shared search pipeline.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted search result, or an error result on validation failure
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The formatted search result, or an error result on validation failure.
  */
 export async function runSearchModel(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedSearchModelArgs;
+  let args: ParsedSearchModelArgs | undefined;
+  let parseError: string | undefined;
   try {
     args = parseArgs(rawArgs);
   } catch (error) {
-    return toolError(error instanceof Error ? error.message : String(error));
+    parseError = error instanceof Error ? error.message : String(error);
   }
 
-  const cwd = process.cwd();
-  const componentDirs = args.componentDirs;
-  if (componentDirs) {
-    try {
-      for (const dir of componentDirs) ensurePathInsideCwd(dir, cwd);
-    } catch (error) {
-      return toolError(error instanceof Error ? error.message : String(error));
+  let result: ToolResult;
+  if (parseError !== undefined || args === undefined) {
+    result = toolError(parseError ?? 'Failed to parse arguments.');
+  } else {
+    const cwd = process.cwd();
+    const componentDirs = args.componentDirs;
+    let ensureError: string | undefined;
+    if (componentDirs) {
+      try {
+        for (const dir of componentDirs) ensurePathInsideCwd(dir, cwd);
+      } catch (error) {
+        ensureError = error instanceof Error ? error.message : String(error);
+      }
+    }
+    if (ensureError === undefined) {
+      const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs });
+      const pool = buildEntryPool({ scope: args.scope, downstream });
+
+      const argsCapture = args;
+      result = runSearchTool<FirebaseModel>(
+        {
+          entries: pool.entries,
+          defaultLimit: DEFAULT_LIMIT,
+          maxLimit: MAX_LIMIT,
+          scoreEntry: scoreFirebaseModelAgainstToken,
+          tieBreaker: (model) => model.name,
+          formatResults: ({ query, tokens, hits }) =>
+            formatSearchResults({
+              query,
+              tokens,
+              hits,
+              scope: argsCapture.scope,
+              upstreamCount: pool.upstreamCount,
+              downstreamCatalog: downstream,
+              downstreamPackagesScanned: pool.downstreamPackages
+            })
+        },
+        argsCapture.limit === undefined ? { query: argsCapture.query } : { query: argsCapture.query, limit: argsCapture.limit }
+      );
+    } else {
+      result = toolError(ensureError);
     }
   }
-
-  const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs });
-  const pool = buildEntryPool({ scope: args.scope, downstream });
-
-  return runSearchTool<FirebaseModel>(
-    {
-      entries: pool.entries,
-      defaultLimit: DEFAULT_LIMIT,
-      maxLimit: MAX_LIMIT,
-      scoreEntry: scoreFirebaseModelAgainstToken,
-      tieBreaker: (model) => model.name,
-      formatResults: ({ query, tokens, hits }) =>
-        formatSearchResults({
-          query,
-          tokens,
-          hits,
-          scope: args.scope,
-          upstreamCount: pool.upstreamCount,
-          downstreamCatalog: downstream,
-          downstreamPackagesScanned: pool.downstreamPackages
-        })
-    },
-    args.limit === undefined ? { query: args.query } : { query: args.query, limit: args.limit }
-  );
+  return result;
 }
 
 const EMPTY_DOWNSTREAM_CATALOG: DownstreamCatalog = {
@@ -315,7 +327,7 @@ const EMPTY_DOWNSTREAM_CATALOG: DownstreamCatalog = {
   discoveryUsed: false
 };
 
-export const searchModelTool: DbxTool = {
+export const SEARCH_MODEL_TOOL: DbxTool = {
   definition: DBX_MODEL_SEARCH_TOOL,
   run: runSearchModel
 };

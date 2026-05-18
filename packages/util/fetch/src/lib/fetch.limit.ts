@@ -37,8 +37,8 @@ export interface RateLimitedFetchHandlerConfig<T extends PromiseRateLimiter> {
  * Creates a FetchHandler that enforces rate limiting via the provided PromiseRateLimiter and supports
  * automatic retry when the server signals throttling.
  *
- * @param config - configuration containing the rate limiter, retry settings, and response handler
- * @returns a RateLimitedFetchHandler that rate-limits outgoing requests and retries on throttle responses
+ * @param config - Configuration containing the rate limiter, retry settings, and response handler.
+ * @returns A RateLimitedFetchHandler that rate-limits outgoing requests and retries on throttle responses.
  */
 export function rateLimitedFetchHandler<T extends PromiseRateLimiter>(config: RateLimitedFetchHandlerConfig<T>): RateLimitedFetchHandler<T> {
   const { updateWithResponse, maxRetries: inputMaxRetries } = config;

@@ -18,7 +18,7 @@ export interface CloudFunctionTestBaseConfig {
   /**
    * The test context fixture providing NestJS module and function wrapping access.
    */
-  f: FirebaseAdminFunctionNestTestContext;
+  readonly f: FirebaseAdminFunctionNestTestContext;
 }
 
 /**
@@ -29,7 +29,7 @@ export interface CloudFunctionTestSingleConfig<I extends object> extends CloudFu
   /**
    * The cloud function factory to wrap for testing.
    */
-  fn: WrapCloudFunctionForNestTestsInput<I>;
+  readonly fn: WrapCloudFunctionForNestTestsInput<I>;
 }
 
 /**
@@ -54,7 +54,7 @@ export interface CloudFunctionTestMultipleConfig<I extends object, T extends Clo
   /**
    * Map of named cloud function factories to wrap for testing.
    */
-  fns: T;
+  readonly fns: T;
 }
 
 /**

@@ -19,8 +19,8 @@ export type AES256GCMEncryptionSecret = string;
 /**
  * Validates that the given secret is a 64-character hexadecimal string (32 bytes for AES-256).
  *
- * @param secret - the hex-encoded secret key string to validate
- * @returns true if the secret is exactly 64 valid hex characters, false otherwise
+ * @param secret - The hex-encoded secret key string to validate.
+ * @returns True if the secret is exactly 64 valid hex characters, false otherwise.
  *
  * @example
  * ```typescript
@@ -47,15 +47,15 @@ export type AES256GCMEncryptionSecretSource = GetterOrValue<AES256GCMEncryptionS
  * The getter is called immediately and the key is validated on creation. The returned
  * function provides the resolved Buffer without re-resolving or re-validating.
  *
+ * @param source - The secret source configuration.
+ * @returns A getter that returns the resolved 32-byte Buffer for AES-256 encryption.
+ * @throws {Error} When the resolved key is not 64 hex characters.
+ *
  * @example
  * ```typescript
  * const getKey = resolveEncryptionKey('a'.repeat(64));
  * const key: Buffer = getKey();
  * ```
- *
- * @param source - The secret source configuration.
- * @returns A getter that returns the resolved 32-byte Buffer for AES-256 encryption.
- * @throws Error if the resolved key is not 64 hex characters.
  */
 export function resolveEncryptionKey(source: AES256GCMEncryptionSecretSource): Getter<Buffer> {
   const hex: AES256GCMEncryptionSecret = getValueFromGetter(source);
@@ -100,6 +100,10 @@ export interface AES256GCMEncryption {
 /**
  * Creates an `AES256GCMEncryption` instance that captures the resolved key in a closure.
  *
+ * @param source - The hex-encoded secret or getter for the AES-256 key.
+ * @returns An `AES256GCMEncryption` instance.
+ * @throws {Error} When the resolved key is not 64 hex characters.
+ *
  * @example
  * ```typescript
  * const encryption = createAES256GCMEncryption('a'.repeat(64));
@@ -112,9 +116,6 @@ export interface AES256GCMEncryption {
  * // decryptedStr === 'hello'
  * ```
  *
- * @param source - The hex-encoded secret or getter for the AES-256 key.
- * @returns An `AES256GCMEncryption` instance.
- * @throws Error if the resolved key is not 64 hex characters.
  * @__NO_SIDE_EFFECTS__
  */
 export function createAES256GCMEncryption(source: AES256GCMEncryptionSecretSource): AES256GCMEncryption {
@@ -162,16 +163,16 @@ export function createAES256GCMEncryption(source: AES256GCMEncryptionSecretSourc
  *
  * Format: base64(IV (12 bytes) + ciphertext + authTag (16 bytes))
  *
+ * @param value - The value to encrypt (must be JSON-serializable).
+ * @param key - The 32-byte encryption key from `resolveEncryptionKey()`.
+ * @returns The encrypted value as a base64 string.
+ *
  * @example
  * ```typescript
  * const getKey = resolveEncryptionKey(mySecret);
  * const encrypted = encryptValue({ sensitive: 'data' }, getKey());
  * const decrypted = decryptValue<{ sensitive: string }>(encrypted, getKey());
  * ```
- *
- * @param value - The value to encrypt (must be JSON-serializable).
- * @param key - The 32-byte encryption key from `resolveEncryptionKey()`.
- * @returns The encrypted value as a base64 string.
  */
 export function encryptValue<T>(value: T, key: Buffer): string {
   const iv = randomBytes(ENCRYPTED_FIELD_IV_LENGTH);
@@ -208,6 +209,10 @@ export function decryptValue<T>(encoded: string, key: Buffer): T {
  * The key is resolved and validated eagerly at creation time. The provider encrypts/decrypts
  * raw strings (no JSON serialization) — suitable for use with `selectiveFieldEncryptor`.
  *
+ * @param source - The hex-encoded secret or getter for the AES-256 key.
+ * @returns A `StringEncryptionProvider` that encrypts/decrypts strings via AES-256-GCM.
+ * @throws {Error} When the resolved key is not 64 hex characters.
+ *
  * @example
  * ```typescript
  * const provider = createAesStringEncryptionProvider('a'.repeat(64));
@@ -216,9 +221,6 @@ export function decryptValue<T>(encoded: string, key: Buffer): T {
  * // decrypted === 'sensitive data'
  * ```
  *
- * @param source - The hex-encoded secret or getter for the AES-256 key.
- * @returns A `StringEncryptionProvider` that encrypts/decrypts strings via AES-256-GCM.
- * @throws Error if the resolved key is not 64 hex characters.
  * @__NO_SIDE_EFFECTS__
  */
 export function createAesStringEncryptionProvider(source: AES256GCMEncryptionSecretSource): StringEncryptionProvider {

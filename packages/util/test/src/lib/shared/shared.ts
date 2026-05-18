@@ -18,8 +18,8 @@ export type TestDoneCallback = ((...args: any[]) => any) & {
 /**
  * Passes the error to the TestDoneCallback.
  *
- * @param done - the test framework's done callback to signal completion or failure
- * @param e - the error to pass to the callback; defaults to a generic error
+ * @param done - The test framework's done callback to signal completion or failure.
+ * @param e - The error to pass to the callback; defaults to a generic error.
  */
 export function failWithTestDoneCallback(done: TestDoneCallback, e: unknown = new Error('failed test')) {
   if (done.fail != null) {
@@ -32,7 +32,7 @@ export function failWithTestDoneCallback(done: TestDoneCallback, e: unknown = ne
 /**
  * A test function that receives a done callback to signal completion.
  */
-export type TestProvidesCallbackWithDone = (cb: TestDoneCallback) => void | undefined;
+export type TestProvidesCallbackWithDone = (cb: TestDoneCallback) => Maybe<void>;
 
 /**
  * A test function that either uses a done callback or returns a promise to signal completion.
@@ -53,7 +53,7 @@ export type TestDoneCallbackRef = Omit<TestDoneCallback, 'fail'> & {
  *
  * Used to create a promise reference that can be used to assert that a test function was called.
  *
- * @returns a new {@link TestDoneCallbackRef} with a done callback and underlying promise
+ * @returns A new {@link TestDoneCallbackRef} with a done callback and underlying promise.
  */
 export function testDoneCallbackRef(): TestDoneCallbackRef {
   const _promise = promiseReference<void>();
@@ -80,24 +80,24 @@ export function testDoneCallbackRef(): TestDoneCallbackRef {
  *
  * This also supports calling the input test with async, but still only returns when done is called.
  *
- * @example
+ * @param testFn - The callback-based test function that receives a done callback.
+ * @returns Promise-based wrapper function suitable for Vitest or other async test runners.
  *
+ * @example
+ * ```ts
  * // Before (Jasmine/Jest style):
  * it('test name', (done) => {
  *   // async test code
  *   done();
  * });
- *
  * // After (Vitest compatible):
  * it('test name', callbackTest((done) => {
  *   // async test code
  *   done();
  * }));
- *
- * @param testFn - the callback-based test function that receives a done callback
- * @returns a Promise-based wrapper function suitable for Vitest or other async test runners
+ * ```
  */
-export function callbackTest(testFn: TestProvidesCallbackWithDone | ((cb: TestDoneCallback) => PromiseOrValue<void | undefined>)): () => Promise<void> {
+export function callbackTest(testFn: TestProvidesCallbackWithDone | ((cb: TestDoneCallback) => PromiseOrValue<Maybe<void>>)): () => Promise<void> {
   return async () => {
     const done = testDoneCallbackRef();
     await testFn(done.done);
@@ -194,41 +194,41 @@ export interface TestContextBuilderConfig<I, F extends TestContextFixture<I>, C>
   /**
    * Builds a config given the optional, partial input config. This is used across all tests.
    */
-  buildConfig: (config?: Partial<C>) => C;
+  readonly buildConfig: (config?: Partial<C>) => C;
 
   /**
    * Builds a new fixture to use across all encapsulated tests.
    */
-  buildFixture: (config: C) => F;
+  readonly buildFixture: (config: C) => F;
 
   /**
    * Arbitrary before each function, called before the instance is setup.
    */
-  beforeEach?: () => Promise<void>;
+  readonly beforeEach?: () => Promise<void>;
 
   /**
    * Use for building an instance.
    *
    * When the promise resolves it should be ready to be used by the test being executed.
    */
-  setupInstance: (config: C) => Promise<I>;
+  readonly setupInstance: (config: C) => Promise<I>;
 
   /**
    * Use for cleaning up the instance before the next test.
    */
-  teardownInstance: (instance: I, config: C) => Promise<void>;
+  readonly teardownInstance: (instance: I, config: C) => Promise<void>;
 
   /**
    * Arbitrary after each function.
    */
-  afterEach?: () => Promise<void>;
+  readonly afterEach?: () => Promise<void>;
 }
 
 /**
  * Creates a TestContextBuilderFunction given the input builder.
  *
- * @param builder - configuration defining how to build configs, fixtures, and manage instance lifecycle
- * @returns a builder function that accepts optional partial config and produces a {@link TestContextFactory}
+ * @param builder - Configuration defining how to build configs, fixtures, and manage instance lifecycle.
+ * @returns A builder function that accepts optional partial config and produces a {@link TestContextFactory}
  */
 export function testContextBuilder<I, F extends TestContextFixture<I>, C>(builder: TestContextBuilderConfig<I, F, C>): TestContextBuilderFunction<I, F, C> {
   return (inputConfig?: Partial<C>) => {
@@ -280,7 +280,7 @@ export interface UseContextFixture<C extends TestContextFixture<I>, I> {
  * Before each test, a new instance is created and set on the fixture. After each test, the instance
  * is cleared and optionally destroyed. Test declarations happen synchronously between the hooks.
  *
- * @param config - fixture, test builder, and instance lifecycle functions
+ * @param config - Fixture, test builder, and instance lifecycle functions.
  */
 export function useTestContextFixture<C extends TestContextFixture<I>, I>(config: UseContextFixture<C, I>): void {
   const { buildTests, fixture, initInstance, destroyInstance } = config;

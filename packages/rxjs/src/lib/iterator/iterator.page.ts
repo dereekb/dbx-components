@@ -145,8 +145,8 @@ export class ItemPageIterator<V, F, C extends ItemPageIterationConfig<F> = ItemP
   /**
    * Creates a new iteration instance with the given configuration.
    *
-   * @param config - filter and page limit configuration for this iteration session
-   * @returns new iteration instance ready to begin loading pages
+   * @param config - Filter and page limit configuration for this iteration session.
+   * @returns New iteration instance ready to begin loading pages.
    */
   instance(config: C): ItemPageIterationInstance<V, F, C> {
     return new ItemPageIterationInstance(this, config);
@@ -211,6 +211,8 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
         first(),
         map(([hasNextAndCanLoadMore, prevResult]: [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>]) => [itemPageIteratorShouldLoadNextPage(request, hasNextAndCanLoadMore, prevResult), prevResult] as [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>]),
         mergeMap(([shouldLoadNextPage, prevResult]: [boolean, Maybe<PageLoadingState<ItemPageIteratorResult<V>>>]) => {
+          let outputObs: Observable<Maybe<PageLoadingState<ItemPageIteratorResult<V>>>>;
+
           if (shouldLoadNextPage) {
             const nextPageNumber = nextIteratorPageNumber(prevResult); // retry number if error occured
             const page = filteredPage(nextPageNumber, this._config);
@@ -228,8 +230,12 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
             const stateObs: Observable<PageLoadingState<ItemPageIteratorResult<V>>> = iteratorResultObs.pipe(
               first(),
               map((result) => {
-                if (result.error != null) {
-                  return {
+                let mappedState: PageLoadingState<ItemPageIteratorResult<V>>;
+
+                if (result.error == null) {
+                  mappedState = successPageResult(nextPageNumber, result);
+                } else {
+                  mappedState = {
                     loading: false,
                     page: nextPageNumber,
                     error: result.error,
@@ -237,29 +243,31 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
                   };
                 }
 
-                return successPageResult(nextPageNumber, result);
+                return mappedState;
               }),
               startWithBeginLoading(page),
               shareReplay(1)
             );
 
-            return stateObs;
+            outputObs = stateObs;
+          } else {
+            outputObs = of(prevResult).pipe();
           }
 
-          return of(prevResult).pipe();
+          return outputObs;
         }),
         map((inputState) => {
           let state: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
 
           if (inputState != null) {
-            const end = inputState.value != null ? isItemPageIteratorResultEndResult(inputState.value as ItemPageIteratorResult<V>) : undefined;
+            const end = inputState.value != null ? isItemPageIteratorResultEndResult(inputState.value) : undefined;
             const hasNextPage = invertMaybeBoolean(end);
 
             // Reuse the same reference when hasNextPage hasn't changed to avoid
             // tricking downstream distinctUntilChanged/scan into treating a
             // re-emitted result as a new page (which causes duplicate accumulation).
-            if ((inputState as PageLoadingState<ItemPageIteratorResult<V>>).hasNextPage === hasNextPage) {
-              state = inputState as PageLoadingState<ItemPageIteratorResult<V>>;
+            if (inputState.hasNextPage === hasNextPage) {
+              state = inputState;
             } else {
               state = { ...inputState, hasNextPage };
             }
@@ -510,19 +518,21 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
  * - `end` is not explicitly `false` and the result value is empty/null (via `hasValueOrNotEmpty`)
  * - Error results are never considered the end
  *
- * @param result - the page result to check
- * @returns `true` if this result indicates no more pages are available
+ * @param result - The page result to check.
+ * @returns `true` if this result indicates no more pages are available.
  */
 export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorResult<V>) {
+  let isEnd: boolean;
+
   if (result.error != null) {
-    return false;
+    isEnd = false;
+  } else if (result.end == null) {
+    isEnd = !hasValueOrNotEmpty(result);
+  } else {
+    isEnd = result.end;
   }
 
-  if (result.end != null) {
-    return result.end;
-  }
-
-  return !hasValueOrNotEmpty(result);
+  return isEnd;
 }
 
 function itemPageIteratorShouldLoadNextPage<V = unknown>(request: ItemIteratorNextRequest, hasNextAndCanLoadMore: boolean, prevResult: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>): boolean {
@@ -542,6 +552,8 @@ function mapItemPageLoadingStateFromResultPageLoadingState<V>(): OperatorFunctio
 }
 
 function itemPageLoadingStateFromResultPageLoadingState<V>(input: PageLoadingState<ItemPageIteratorResult<V>>): PageLoadingState<V> {
+  // TODO(breaking-change): refactor to build the result as an object literal so mapValue narrows V and hasNextPage can be assigned without the cast. See https://github.com/dereekb/dbx-components issue tracking for cleanup.
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- cast widens mapValue's V|undefined inference to V and removes readonly so hasNextPage can be assigned; tsc reports both errors without it
   const result = mapLoadingStateResults(input, {
     mapValue: (result: ItemPageIteratorResult<V>) => result.value
   }) as Configurable<PageLoadingState<V>>;

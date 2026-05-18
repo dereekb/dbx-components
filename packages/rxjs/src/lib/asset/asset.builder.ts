@@ -4,14 +4,14 @@ import { type AssetLocalPathRef, type AssetRemotePathRef } from './asset';
 /**
  * Creates a local {@link AssetLocalPathRef}.
  *
+ * @param path - Relative path from the environment's base asset directory.
+ * @returns A local asset reference with the given path.
+ *
  * @example
  * ```ts
  * const DISTRICTS = localAsset('data/school-districts.json');
  * // { sourceType: 'local', path: 'data/school-districts.json' }
  * ```
- *
- * @param path - Relative path from the environment's base asset directory.
- * @returns A local asset reference with the given path.
  */
 export function localAsset(path: SlashPath): AssetLocalPathRef {
   return { sourceType: 'local', path };
@@ -23,15 +23,15 @@ export function localAsset(path: SlashPath): AssetLocalPathRef {
  * Remote assets always use absolute URLs with an http:// or https:// prefix.
  * Throws if the provided URL does not have a valid prefix.
  *
+ * @param url - Absolute URL with http/https prefix to fetch the asset from.
+ * @returns A remote asset reference with the given URL.
+ * @throws {Error} If the URL does not have a valid http/https prefix.
+ *
  * @example
  * ```ts
  * const CDN = remoteAsset('https://cdn.example.com/geo.json');
  * // { sourceType: 'remote', url: 'https://cdn.example.com/geo.json' }
  * ```
- *
- * @param url - Absolute URL with http/https prefix to fetch the asset from.
- * @returns A remote asset reference with the given URL.
- * @throws Error if the URL does not have a valid http/https prefix.
  */
 export function remoteAsset(url: WebsiteUrlWithPrefix): AssetRemotePathRef {
   if (!isWebsiteUrlWithPrefix(url)) {
@@ -67,6 +67,9 @@ export interface AssetFolderBuilder {
  * Creates a fluent builder for creating multiple local asset refs
  * from the same folder.
  *
+ * @param folder - Base folder path for the assets.
+ * @returns A fluent builder for creating local asset refs within the specified folder.
+ *
  * @example
  * ```ts
  * const DATA = assetFolder('data');
@@ -80,9 +83,6 @@ export interface AssetFolderBuilder {
  * //   { sourceType: 'local', path: 'data/b.txt' }
  * // ]
  * ```
- *
- * @param folder - Base folder path for the assets.
- * @returns A fluent builder for creating local asset refs within the specified folder.
  */
 export function assetFolder(folder: SlashPath): AssetFolderBuilder {
   const normalizedFolder = folder.endsWith('/') ? folder : folder + '/';
@@ -128,6 +128,10 @@ export interface RemoteAssetBuilder {
  * The base URL must be a valid {@link WebsiteUrlWithPrefix}.
  * Each child path is appended to produce a full absolute URL.
  *
+ * @param baseUrl - Base URL with http/https prefix.
+ * @returns A fluent builder for creating remote asset refs under the specified base URL.
+ * @throws {Error} If the base URL does not have a valid http/https prefix.
+ *
  * @example
  * ```ts
  * const CDN = remoteAssetBaseUrl('https://cdn.example.com/assets');
@@ -141,10 +145,6 @@ export interface RemoteAssetBuilder {
  * //   { sourceType: 'remote', url: 'https://cdn.example.com/assets/b.json' }
  * // ]
  * ```
- *
- * @param baseUrl - Base URL with http/https prefix.
- * @returns A fluent builder for creating remote asset refs under the specified base URL.
- * @throws Error if the base URL does not have a valid http/https prefix.
  */
 export function remoteAssetBaseUrl(baseUrl: WebsiteUrlWithPrefix): RemoteAssetBuilder {
   if (!isWebsiteUrlWithPrefix(baseUrl)) {
@@ -154,7 +154,7 @@ export function remoteAssetBaseUrl(baseUrl: WebsiteUrlWithPrefix): RemoteAssetBu
   const normalizedBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
 
   function resolveChildUrl(path: SlashPath): WebsiteUrlWithPrefix {
-    return new URL(path, normalizedBase).href as WebsiteUrlWithPrefix;
+    return new URL(path, normalizedBase).href;
   }
 
   const builder: RemoteAssetBuilder = {

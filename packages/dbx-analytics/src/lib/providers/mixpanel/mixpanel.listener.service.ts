@@ -54,8 +54,8 @@ export class DbxAnalyticsMixpanelServiceListener extends AbstractDbxAnalyticsSer
    * Non-session-replay events are intentionally ignored — Segment's device-mode integration
    * already forwards track/identify/page to Mixpanel.
    *
-   * @param api - The loaded Mixpanel SDK instance
-   * @param streamEvent - The analytics event to process
+   * @param api - The loaded Mixpanel SDK instance.
+   * @param streamEvent - The analytics event to process.
    */
   protected handleStreamEvent(api: MixpanelLike, streamEvent: DbxAnalyticsStreamEvent): void {
     switch (streamEvent.type) {

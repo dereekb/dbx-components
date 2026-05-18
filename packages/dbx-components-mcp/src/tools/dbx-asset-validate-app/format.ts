@@ -13,8 +13,8 @@ const FOOTER = '_Run `dbx_asset_scaffold` to generate a new asset constant, or `
  * Renders a {@link ValidationResult} as the markdown report the tool
  * returns to callers.
  *
- * @param result - the aggregated validation outcome
- * @returns the markdown report
+ * @param result - The aggregated validation outcome.
+ * @returns The markdown report.
  */
 export function formatResult(result: ValidationResult): string {
   return formatTwoSideResult({ title: 'App assets validation', result, footer: FOOTER });

@@ -13,8 +13,9 @@ export type TransformAndValidateResultFactory<C = unknown> = <T extends object, 
  *
  * Useful when you only need the processed output and don't need access to the validated input.
  *
- * @param defaults - shared error handler defaults
- * @returns a factory that produces functions returning only the handler's result
+ * @param defaults - Shared error handler defaults.
+ * @returns A factory that produces functions returning only the handler's result.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function transformAndValidateResultFactory<C = unknown>(defaults: TransformAndValidateObjectFactoryDefaults<C>): TransformAndValidateResultFactory<C> {

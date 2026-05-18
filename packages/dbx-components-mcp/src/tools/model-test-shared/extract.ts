@@ -21,7 +21,7 @@
  *    `assertSnapshotData(...)`, etc.) are not descended into.
  */
 
-import { Node, Project, SyntaxKind, type ArrowFunction, type Block, type CallExpression, type FunctionExpression, type Identifier, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
+import { Node, Project, SyntaxKind, type ArrowFunction, type Block, type CallExpression, type FunctionExpression, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
 import type { HelperDescribe, PrefixSource, SpecFileTree, SpecNode } from './types.js';
 
 /**
@@ -66,8 +66,8 @@ function isItName(name: string): boolean {
  * Pure entry point used by inspect.ts and tests. Parses the supplied spec
  * text and returns the structural tree; never touches disk.
  *
- * @param input - the raw spec text + caller-relative path metadata
- * @returns the parsed tree
+ * @param input - The raw spec text + caller-relative path metadata.
+ * @returns The parsed tree.
  */
 export function extractSpecTreeFromText(input: ExtractSpecTreeInput): SpecFileTree {
   const { text, specPath } = input;
@@ -133,9 +133,9 @@ interface ResolvedPrefix {
  *    walker still detects fixtures via the `*Context$` suffix heuristic but
  *    leaves `model` blank.
  *
- * @param sourceFile - the parsed spec file
- * @param input - the caller-supplied input (potentially carrying overrides)
- * @returns the resolved prefix metadata
+ * @param sourceFile - The parsed spec file.
+ * @param input - The caller-supplied input (potentially carrying overrides)
+ * @returns The resolved prefix metadata.
  */
 function resolvePrefixAndFixtures(sourceFile: SourceFile, input: ExtractSpecTreeInput): ResolvedPrefix {
   const supplied = input.knownFixtureNames ?? [];
@@ -166,8 +166,8 @@ function resolvePrefixAndFixtures(sourceFile: SourceFile, input: ExtractSpecTree
  * `test/fixture` (with or without a `.js`/`.ts` extension), filtered to
  * `*Context` identifiers and excluding `*ContextFactory` ones.
  *
- * @param sourceFile - the parsed spec file
- * @returns the deduplicated list of fixture-context import names
+ * @param sourceFile - The parsed spec file.
+ * @returns The deduplicated list of fixture-context import names.
  */
 function collectFixtureImports(sourceFile: SourceFile): string[] {
   const seen = new Set<string>();
@@ -190,8 +190,8 @@ function collectFixtureImports(sourceFile: SourceFile): string[] {
  * (anywhere ending in `test/fixture`, optionally with a `.js`/`.ts`
  * extension).
  *
- * @param spec - the import declaration's module specifier
- * @returns `true` when this looks like a fixture import
+ * @param spec - The import declaration's module specifier.
+ * @returns `true` when this looks like a fixture import.
  */
 function matchesFixtureModulePath(spec: string): boolean {
   return /(^|\/)test\/fixture(\.[a-z]+)?$/.test(spec);
@@ -204,8 +204,8 @@ function matchesFixtureModulePath(spec: string): boolean {
  * The first character is upper-cased to match the PascalCase form used in
  * fixture class names.
  *
- * @param names - the imported `*Context` function names
- * @returns the workspace prefix, or `undefined` if no shared prefix exists
+ * @param names - The imported `*Context` function names.
+ * @returns The workspace prefix, or `undefined` if no shared prefix exists.
  */
 function detectPrefixFromImports(names: readonly string[]): string | undefined {
   if (names.length === 0) return undefined;
@@ -235,8 +235,8 @@ function sharedPrefix(a: string, b: string): string {
  * token. e.g. `hellosubsAuth` → `hellosubs`. If no boundary is present the
  * full string is returned.
  *
- * @param s - the candidate prefix to trim
- * @returns the trimmed prefix
+ * @param s - The candidate prefix to trim.
+ * @returns The trimmed prefix.
  */
 function trimToCamelBoundary(s: string): string {
   for (let i = s.length - 1; i >= 0; i--) {
@@ -262,9 +262,9 @@ interface WalkContext {
  * Classifies one call expression and, when its kind warrants it, recurses
  * into the call's callback body to gather child structural nodes.
  *
- * @param call - the call expression being inspected
- * @param ctx - shared walk state
- * @returns the resulting node, or `undefined` if the call isn't structural
+ * @param call - The call expression being inspected.
+ * @param ctx - Shared walk state.
+ * @returns The resulting node, or `undefined` if the call isn't structural.
  */
 function walkCall(call: CallExpression, ctx: WalkContext): SpecNode | undefined {
   const calleeName = getCalleeName(call);
@@ -305,9 +305,9 @@ function walkCall(call: CallExpression, ctx: WalkContext): SpecNode | undefined 
  * required. Otherwise we fall back to the heuristic: `<prefix><Model>Context`
  * (or `<lower><Capitalized>Context` when the prefix is unknown).
  *
- * @param name - the callee identifier
- * @param ctx - shared walk state
- * @returns `true` when this is a fixture call
+ * @param name - The callee identifier.
+ * @param ctx - Shared walk state.
+ * @returns `true` when this is a fixture call.
  */
 function isKnownFixtureName(name: string, ctx: WalkContext): boolean {
   if (ctx.knownFixtureNames.length > 0) {
@@ -414,9 +414,9 @@ function helperCallNode(input: HelperCallNodeInput): SpecNode {
  * Strips the workspace prefix (and the trailing `Context`) from the given
  * fixture-context callee name to produce the bare PascalCase model name.
  *
- * @param name - the callee identifier (e.g. `hellosubsCountryContext`)
- * @param prefix - the resolved workspace prefix (e.g. `Hellosubs`)
- * @returns the model name (e.g. `Country`), or `undefined` when no prefix
+ * @param name - The callee identifier (e.g. `hellosubsCountryContext`)
+ * @param prefix - The resolved workspace prefix (e.g. `Hellosubs`)
+ * @returns The model name (e.g. `Country`), or `undefined` when no prefix.
  */
 function stripFixturePrefix(name: string, prefix: string | undefined): string | undefined {
   if (!name.endsWith(FIXTURE_CONTEXT_SUFFIX)) return undefined;
@@ -454,8 +454,8 @@ function readTitle(arg: Node | undefined): TitleInfo {
  * Returns the trailing arrow- or function-expression argument that holds the
  * call's body. Used to recurse into describe/it/fixture/wrapper bodies.
  *
- * @param call - the call expression to inspect
- * @returns the callback node, or `undefined` when no callback is present
+ * @param call - The call expression to inspect.
+ * @returns The callback node, or `undefined` when no callback is present.
  */
 function findCallback(call: CallExpression): ArrowFunction | FunctionExpression | undefined {
   const args = call.getArguments();
@@ -487,8 +487,8 @@ function readCallbackVarName(callback: ArrowFunction | FunctionExpression): stri
  * Only direct identifier values are captured. Other expressions (arrays,
  * call results, literals) are skipped — they're not parent-fixture vars.
  *
- * @param obj - the first-arg object literal
- * @returns the captured identifier names, in source order
+ * @param obj - The first-arg object literal.
+ * @returns The captured identifier names, in source order.
  */
 function readParentVars(obj: ObjectLiteralExpression): readonly string[] {
   const out: string[] = [];
@@ -500,7 +500,7 @@ function readParentVars(obj: ObjectLiteralExpression): readonly string[] {
     if (Node.isPropertyAssignment(prop)) {
       const init = prop.getInitializer();
       if (init !== undefined && Node.isIdentifier(init)) {
-        out.push((init as Identifier).getText());
+        out.push(init.getText());
       }
     }
   }
@@ -516,9 +516,9 @@ function readParentVars(obj: ObjectLiteralExpression): readonly string[] {
  * Nested expression statements inside other structural calls are reached
  * through the recursive `walkCall` invocation.
  *
- * @param callback - the arrow/function expression whose body to walk
- * @param ctx - shared walk state
- * @returns the structural child nodes detected in the body
+ * @param callback - The arrow/function expression whose body to walk.
+ * @param ctx - Shared walk state.
+ * @returns The structural child nodes detected in the body.
  */
 function walkCallbackBody(callback: ArrowFunction | FunctionExpression, ctx: WalkContext): readonly SpecNode[] {
   const body = callback.getBody();
@@ -557,8 +557,8 @@ function getCalleeName(call: CallExpression): string | undefined {
  * Walks the spec file's top-level functions and arrow-function constants,
  * registering each whose body invokes `describe`/`it` as a helper-describe.
  *
- * @param sourceFile - the parsed spec file
- * @returns the helper list, in source order
+ * @param sourceFile - The parsed spec file.
+ * @returns The helper list, in source order.
  */
 function collectHelpers(sourceFile: SourceFile): readonly HelperDescribe[] {
   const out: HelperDescribe[] = [];

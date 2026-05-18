@@ -12,7 +12,7 @@ export const DISCORD_BOT_TOKEN_ENV_VAR = 'DISCORD_BOT_TOKEN';
  * Includes Guilds, GuildMessages, and MessageContent.
  * Note: MessageContent is a privileged intent and must be enabled in the Discord Developer Portal.
  */
-export const DISCORD_DEFAULT_INTENTS = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent];
+export const DEFAULT_DISCORD_INTENTS = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent];
 
 export interface DiscordServiceApiConfig {
   /**
@@ -20,7 +20,7 @@ export interface DiscordServiceApiConfig {
    */
   readonly botToken: DiscordBotToken;
   /**
-   * discord.js Client options. Intents default to DISCORD_DEFAULT_INTENTS if not provided.
+   * discord.js Client options. Intents default to DEFAULT_DISCORD_INTENTS if not provided.
    */
   readonly clientOptions?: Partial<ClientOptions>;
   /**

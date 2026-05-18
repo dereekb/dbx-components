@@ -15,15 +15,15 @@ export interface RandomNumberFactoryConfig {
    *
    * No rounding by default.
    */
-  round?: RoundingInput;
+  readonly round?: RoundingInput;
   /**
    * Minimum number (inclusive)
    */
-  min?: number;
+  readonly min?: number;
   /**
    * Max number (exclusive)
    */
-  max: number;
+  readonly max: number;
 }
 
 export type RandomNumberFactoryInput = number | RandomNumberFactoryConfig;
@@ -33,15 +33,16 @@ export type RandomNumberFactoryInput = number | RandomNumberFactoryConfig;
  *
  * Accepts either a simple max number or a full config object with min, max, and rounding options.
  *
+ * @param maxOrArgs - Maximum value (exclusive) or full configuration object.
+ * @param roundingInput - Optional rounding mode override.
+ * @returns A factory function that produces random numbers within the range.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilKind factory
  * @dbxUtilTags number, random, factory, range, min, max, generate
  * @dbxUtilRelated random-number, rounding-function
  *
- * @param maxOrArgs - Maximum value (exclusive) or full configuration object
- * @param roundingInput - Optional rounding mode override
- * @returns A factory function that produces random numbers within the range
  * @__NO_SIDE_EFFECTS__
  */
 export function randomNumberFactory(maxOrArgs: RandomNumberFactoryInput, roundingInput?: RoundingInput): RandomNumberFactory {
@@ -69,14 +70,14 @@ export function randomNumberFactory(maxOrArgs: RandomNumberFactoryInput, roundin
 /**
  * Generates a single random number using {@link randomNumberFactory}. Convenience function for one-off usage.
  *
+ * @param maxOrArgs - Maximum value (exclusive) or full configuration object.
+ * @param roundingInput - Optional rounding mode.
+ * @returns A single random number.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, random, range, generate
  * @dbxUtilRelated random-number-factory
- *
- * @param maxOrArgs - Maximum value (exclusive) or full configuration object
- * @param roundingInput - Optional rounding mode
- * @returns A single random number
  */
 export function randomNumber(maxOrArgs: RandomNumberFactoryInput, roundingInput?: RoundingInput) {
   return randomNumberFactory(maxOrArgs, roundingInput)();

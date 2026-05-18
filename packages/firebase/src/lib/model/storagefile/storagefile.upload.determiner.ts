@@ -148,8 +148,8 @@ export interface DetermineByFileNameConfig {
  * at {@link EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL}. Otherwise, prefix matching is used
  * (e.g., `image` matches `image.png`, `image-test.jpg`) at {@link HIGH_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL}.
  *
- * @param config - file type, match string, and optional determination levels
- * @returns an UploadedFileTypeDeterminer that classifies by file name
+ * @param config - File type, match string, and optional determination levels.
+ * @returns An UploadedFileTypeDeterminer that classifies by file name.
  *
  * @example
  * ```ts
@@ -210,8 +210,8 @@ export interface DetermineByFolderNameConfig {
  * Matches at {@link EXACT_UPLOADED_FILE_TYPE_DETERMINATION_LEVEL} when the folder path
  * exactly equals the configured match string.
  *
- * @param config - file type and folder name to match
- * @returns an UploadedFileTypeDeterminer that classifies by folder name
+ * @param config - File type and folder name to match.
+ * @returns An UploadedFileTypeDeterminer that classifies by folder name.
  *
  * @example
  * ```ts
@@ -277,8 +277,8 @@ export interface DetermineByFilePathConfig {
  * Uses {@link slashPathPathMatcher} for path pattern matching. Most flexible of the
  * built-in determiners.
  *
- * @param config - file type, path match config, optional bucket/file filters
- * @returns an UploadedFileTypeDeterminer that classifies by storage path
+ * @param config - File type, path match config, optional bucket/file filters.
+ * @returns An UploadedFileTypeDeterminer that classifies by storage path.
  *
  * @example
  * ```ts
@@ -367,8 +367,8 @@ export type DetermineUserByFolderDeterminerWrapperFunction = (determiner: Upload
  * Extracts the user ID from a path like `{rootFolder}/{userFolderPrefix}/{userId}/{file}`.
  * If `requireUser` is true, the determination fails when no user can be detected.
  *
- * @param config - root folder, user prefix, and matching options
- * @returns a wrapper function that adds user detection to any UploadedFileTypeDeterminer
+ * @param config - Root folder, user prefix, and matching options.
+ * @returns A wrapper function that adds user detection to any UploadedFileTypeDeterminer.
  *
  * @example
  * ```ts
@@ -378,6 +378,7 @@ export type DetermineUserByFolderDeterminerWrapperFunction = (determiner: Upload
  * });
  * const withUser = addUser(myDeterminer);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function determineUserByFolderWrapperFunction(config: DetermineUserByFolderWrapperFunctionConfig): DetermineUserByFolderDeterminerWrapperFunction {
@@ -430,14 +431,15 @@ export function determineUserByFolderWrapperFunction(config: DetermineUserByFold
 /**
  * Convenience wrapper pre-configured for the standard uploads folder structure (`uploads/u/{userId}/...`).
  *
- * @param config - optional matching options (rootFolder and userFolderPrefix are pre-configured)
- * @returns a wrapper function that adds user detection for the standard uploads folder structure
+ * @param config - Optional matching options (rootFolder and userFolderPrefix are pre-configured)
+ * @returns A wrapper function that adds user detection for the standard uploads folder structure.
  *
  * @example
  * ```ts
  * const addUser = determineUserByUserUploadsFolderWrapperFunction();
  * const withUser = addUser(myDeterminer);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function determineUserByUserUploadsFolderWrapperFunction(config?: Omit<DetermineUserByFolderWrapperFunctionConfig, 'rootFolder' | 'userFolderPrefix'>): DetermineUserByFolderDeterminerWrapperFunction {
@@ -461,7 +463,7 @@ export interface DetermineUserByFolderFunctionConfig extends DetermineUserByFold
 /**
  * Convenience function for using determineUserByFolderWrapperFunction directly on a pre-set determiner.
  *
- * @param config Configuration.
+ * @param config - Configuration.
  * @returns The wrapped UploadedFileTypeDeterminer.
  */
 export function determineUserByFolder(config: DetermineUserByFolderFunctionConfig): UploadedFileTypeDeterminer {
@@ -487,9 +489,9 @@ export interface LimitUploadFileTypeDeterminerConfig {
  *
  * Useful for scoping a broad determiner to a subset of types in a specific context.
  *
- * @param determiner - the determiner to filter
- * @param types - allowed file type identifier(s)
- * @returns an UploadedFileTypeDeterminer that only returns results for the specified file types
+ * @param determiner - The determiner to filter.
+ * @param types - Allowed file type identifier(s)
+ * @returns An UploadedFileTypeDeterminer that only returns results for the specified file types.
  *
  * @example
  * ```ts
@@ -539,8 +541,8 @@ export interface CombineUploadFileTypeDeterminerConfig {
  * If only one determiner is provided, it is returned unwrapped. The search can be
  * short-circuited via `completeSearchOnFirstMatch` or `completeSearchAtLevel`.
  *
- * @param config - determiners to combine and optional early-exit settings
- * @returns a combined UploadedFileTypeDeterminer that returns the highest-confidence match
+ * @param config - Determiners to combine and optional early-exit settings.
+ * @returns A combined UploadedFileTypeDeterminer that returns the highest-confidence match.
  *
  * @example
  * ```ts

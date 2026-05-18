@@ -11,7 +11,7 @@ export type DbxFormComponentFieldConfig<T> = DbxInjectionComponentConfig<T>;
  * Formly field config extended with a {@link DbxFormComponentFieldConfig} for custom component rendering.
  */
 export interface DbxFormComponentFormlyFieldConfig<T = unknown> extends FormlyFieldConfig {
-  componentField: DbxFormComponentFieldConfig<T>;
+  readonly componentField: DbxFormComponentFieldConfig<T>;
 }
 
 /**

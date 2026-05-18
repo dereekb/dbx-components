@@ -14,8 +14,8 @@ import type { NameTokens } from './types.js';
  * Splits a free-form name (kebab, snake, camel, pascal) into lowercase
  * word tokens.
  *
- * @param input - the raw identifier-like string to split
- * @returns the lowercased word fragments preserving original ordering
+ * @param input - The raw identifier-like string to split.
+ * @returns The lowercased word fragments preserving original ordering.
  */
 function splitWords(input: string): readonly string[] {
   return input
@@ -31,8 +31,9 @@ function splitWords(input: string): readonly string[] {
  * Throws when the input has no extractable word so templates never emit
  * empty identifiers.
  *
- * @param name - the raw artifact name supplied by the caller
- * @returns the resolved tokens for substitution
+ * @param name - The raw artifact name supplied by the caller.
+ * @returns The resolved tokens for substitution.
+ * @throws {Error} When no word fragments can be extracted from `name`.
  */
 export function deriveNameTokens(name: string): NameTokens {
   const parts = splitWords(name);
@@ -80,11 +81,12 @@ export interface TemplateContext {
  * `components/demo-firebase` → package name `demo-firebase`, app stem `demo`,
  * context type `DemoFirebaseServerActionsContext`.
  *
- * @param input - the artifact name tokens and project directories
- * @param input.tokens - the derived name tokens from {@link deriveNameTokens}
- * @param input.componentDir - workspace path to the component package
- * @param input.apiDir - workspace path to the api package
- * @returns the resolved template context including app-stem-derived constants
+ * @param input - The artifact name tokens and project directories.
+ * @param input.tokens - The derived name tokens from {@link deriveNameTokens}
+ * @param input.componentDir - Workspace path to the component package.
+ * @param input.apiDir - Workspace path to the api package.
+ * @returns The resolved template context including app-stem-derived constants.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildTemplateContext(input: { readonly tokens: NameTokens; readonly componentDir: string; readonly apiDir: string }): TemplateContext {
@@ -120,9 +122,9 @@ function basenameOf(path: string): string {
  * more specific tokens go first so substrings (e.g. `<<Pascal>>` inside
  * `<<AppPascal>>`) cannot collide.
  *
- * @param template - the raw template string with `<<token>>` slots
- * @param ctx - the resolved template context to substitute from
- * @returns the template with every recognised token replaced
+ * @param template - The raw template string with `<<token>>` slots.
+ * @param ctx - The resolved template context to substitute from.
+ * @returns The template with every recognised token replaced.
  */
 export function applyTokens(template: string, ctx: TemplateContext): string {
   let result = template;

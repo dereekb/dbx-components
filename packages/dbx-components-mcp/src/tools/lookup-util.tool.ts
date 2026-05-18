@@ -113,23 +113,26 @@ function formatEntry(entry: UtilEntryInfo, depth: LookupDepth): string {
 }
 
 function formatCatalog(entries: readonly UtilEntryInfo[]): string {
+  let output: string;
   if (entries.length === 0) {
-    return ['# Utility catalog', '', 'No utilities have been registered yet.', '', 'Add a `@dbxUtil` JSDoc tag to a function/class/const, then run `nx run dbx-components-mcp:generate-manifests`.'].join('\n');
-  }
-  const lines: string[] = ['# Utility catalog', '', `${entries.length} entries.`, ''];
-  const sorted = [...entries].sort((a, b) => {
-    const byCategory = a.category.localeCompare(b.category);
-    return byCategory === 0 ? a.slug.localeCompare(b.slug) : byCategory;
-  });
-  let lastCategory: string | undefined;
-  for (const entry of sorted) {
-    if (entry.category !== lastCategory) {
-      lines.push('', `## ${entry.category}`, '');
-      lastCategory = entry.category;
+    output = ['# Utility catalog', '', 'No utilities have been registered yet.', '', 'Add a `@dbxUtil` JSDoc tag to a function/class/const, then run `nx run dbx-components-mcp:generate-manifests`.'].join('\n');
+  } else {
+    const lines: string[] = ['# Utility catalog', '', `${entries.length} entries.`, ''];
+    const sorted = [...entries].sort((a, b) => {
+      const byCategory = a.category.localeCompare(b.category);
+      return byCategory === 0 ? a.slug.localeCompare(b.slug) : byCategory;
+    });
+    let lastCategory: string | undefined;
+    for (const entry of sorted) {
+      if (entry.category !== lastCategory) {
+        lines.push('', `## ${entry.category}`, '');
+        lastCategory = entry.category;
+      }
+      lines.push(`- \`${entry.slug}\` → \`${entry.name}\` *(${entry.kind})* — ${entry.description.split('\n')[0]}`);
     }
-    lines.push(`- \`${entry.slug}\` → \`${entry.name}\` *(${entry.kind})* — ${entry.description.split('\n')[0]}`);
+    output = lines.join('\n').trimEnd();
   }
-  return lines.join('\n').trimEnd();
+  return output;
 }
 
 function formatNotFound(normalized: string, candidates: readonly UtilEntryInfo[]): string {
@@ -167,8 +170,9 @@ export interface CreateLookupUtilToolInput {
  * Tests pass a fixture registry; the production server passes the merged
  * registry from {@link loadUtilRegistry}.
  *
- * @param input - the registry the tool reads from
- * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @param input - The registry the tool reads from.
+ * @returns A {@link DbxTool} ready to register with the dispatcher.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createLookupUtilTool(input: CreateLookupUtilToolInput): DbxTool {

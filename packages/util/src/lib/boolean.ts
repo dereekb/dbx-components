@@ -71,15 +71,15 @@ export function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolea
 /**
  * Reduces an array of booleans with the logical OR operation.
  *
- * @dbxUtil
- * @dbxUtilCategory boolean
- * @dbxUtilTags boolean, reduce, or, some, any, disjunction, aggregate
- * @dbxUtilRelated reduce-booleans-with-and, reduce-booleans-with-or-fn
- *
  * @param array - Array of boolean values to reduce.
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, a TypeError will be thrown.
  * @returns The result of ORing all boolean values in the array.
  * @throws {TypeError} If the array is empty and no emptyArrayValue is provided.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory boolean
+ * @dbxUtilTags boolean, reduce, or, some, any, disjunction, aggregate
+ * @dbxUtilRelated reduce-booleans-with-and, reduce-booleans-with-or-fn
  */
 export function reduceBooleansWithOr(array: boolean[], emptyArrayValue?: boolean): boolean {
   return reduceBooleansWithOrFn(emptyArrayValue)(array);
@@ -89,7 +89,7 @@ export function reduceBooleansWithOr(array: boolean[], emptyArrayValue?: boolean
  * Creates a function that reduces an array of booleans with the logical AND operation.
  *
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, the returned function will throw a TypeError.
- * @returns A function that takes an array of booleans and returns the result of ANDing them.
+ * @returns Reducer that yields true only when every entry is truthy (or the fallback for empty input).
  *
  * @example
  * ```ts
@@ -107,7 +107,7 @@ export function reduceBooleansWithAndFn(emptyArrayValue?: boolean): (array: bool
  * Creates a function that reduces an array of booleans with the logical OR operation.
  *
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, the returned function will throw a TypeError.
- * @returns A function that takes an array of booleans and returns the result of ORing them.
+ * @returns Reducer that yields true when any entry is truthy (or the fallback for empty input).
  *
  * @example
  * ```ts
@@ -126,7 +126,7 @@ export function reduceBooleansWithOrFn(emptyArrayValue?: boolean): (array: boole
  *
  * @param reduceFn - Function that takes two boolean values and returns a single boolean.
  * @param emptyArrayValue - Value to return if the array is empty. If not provided and the array is empty, the returned function will throw a TypeError because `Array.prototype.reduce` on an empty array without an initial value throws.
- * @returns A function that takes an array of booleans and returns the result of reducing them.
+ * @returns Reducer that folds the array with `reduceFn`, falling back to `emptyArrayValue` when empty.
  *
  * @example
  * ```ts
@@ -201,13 +201,13 @@ export function booleanFactory(config: BooleanFactoryConfig): BooleanFactory {
 /**
  * Returns a random boolean based on the specified chance.
  *
+ * @param chance - Number between 0.0 and 100.0 representing the percentage chance of returning true (default: 50, i.e., 50%).
+ * @returns A random boolean value with the specified probability of being true.
+ *
  * @dbxUtil
  * @dbxUtilCategory boolean
  * @dbxUtilTags boolean, random, chance, probability, coin-flip
  * @dbxUtilRelated boolean-factory
- *
- * @param chance - Number between 0.0 and 100.0 representing the percentage chance of returning true (default: 50, i.e., 50%).
- * @returns A random boolean value with the specified probability of being true.
  */
 export function randomBoolean(chance: BooleanTrueChance = 50): boolean {
   return booleanFactory({ chance })();

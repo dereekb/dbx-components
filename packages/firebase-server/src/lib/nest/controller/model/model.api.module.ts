@@ -29,13 +29,14 @@ export interface ModelApiModuleMetadataConfig extends Pick<ModuleMetadata, 'impo
  * @param metadataConfig - Configuration including the dependency module.
  * @returns NestJS module metadata with the Model API controller, dispatch service, and app context provider.
  *
- * @example
- * ```typescript
- * @Module(modelApiModuleMetadata({
+ * @Module (modelApiModuleMetadata({
  *   dependencyModule: DemoModelApiDependencyModule
  * }))
  * export class DemoModelApiModule {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function modelApiModuleMetadata(metadataConfig: ModelApiModuleMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = metadataConfig;

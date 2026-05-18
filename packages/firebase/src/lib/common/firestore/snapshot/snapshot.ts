@@ -14,12 +14,14 @@ import { type FirestoreModelData, type SnapshotConverterConfig, type SnapshotCon
  * typed model objects and the data format stored in Firestore. It supports field-level conversions,
  * custom modifiers, and handles Firestore's merge options appropriately.
  *
+ * @param config - Field mappings and modifiers that drive the conversion.
+ * @returns Function set used to convert snapshots and writes for the model.
+ *
  * @template T - The application model type that will be used in your application code
  * @template O - The data type that will be stored in Firestore (defaults to FirestoreModelData<T>)
- * @param config - Configuration for the converter, including field mappings and modifiers
- * @returns A set of functions for converting between Firestore data and application models
  *
  * @example
+ * ```ts
  * // Create a converter for a User model
  * const userConverter = snapshotConverterFunctions<User, UserData>({
  *   fields: {
@@ -29,9 +31,10 @@ import { type FirestoreModelData, type SnapshotConverterConfig, type SnapshotCon
  *     }
  *   }
  * });
- *
  * // Use with a collection reference
  * const usersCollection = firestore.collection('users').withConverter(userConverter);
+ * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function snapshotConverterFunctions<T extends object, O extends object = FirestoreModelData<T>>(config: SnapshotConverterConfig<T, O>): SnapshotConverterFunctions<T, O> {
@@ -52,9 +55,9 @@ export function snapshotConverterFunctions<T extends object, O extends object = 
    *
    * Extracts the data from the snapshot and applies the configured conversions.
    *
-   * @param input - The Firestore DocumentSnapshot containing the data
-   * @param target - Optional partial object to merge the converted data into
-   * @returns The converted application model object
+   * @param input - The Firestore DocumentSnapshot containing the data.
+   * @param target - Optional partial object to merge the converted data into.
+   * @returns The converted application model object.
    */
   const from: SnapshotConverterFromFunction<T, O> = (input: DocumentSnapshot, target?: Maybe<Partial<T>>) => {
     const data = input.data();
@@ -67,10 +70,10 @@ export function snapshotConverterFunctions<T extends object, O extends object = 
    * Applies the configured conversions and handles Firestore's merge options to determine
    * which fields should be included in the output.
    *
-   * @param input - The application model object to convert
-   * @param target - Optional partial object to merge the converted data into
-   * @param options - Firestore SetOptions that affect how the data is converted
-   * @returns The converted Firestore document data
+   * @param input - The application model object to convert.
+   * @param target - Optional partial object to merge the converted data into.
+   * @param options - Firestore SetOptions that affect how the data is converted.
+   * @returns The converted Firestore document data.
    */
   const to: SnapshotConverterToFunction<T, O> = (input: T, target?: Maybe<Partial<O>>, options?: Maybe<SetOptions>) => {
     let toOptions: Maybe<ModelConversionOptions<T>>;

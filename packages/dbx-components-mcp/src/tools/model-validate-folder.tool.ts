@@ -76,8 +76,9 @@ export interface CreateModelValidateFolderToolOptions {
  * exported as {@link modelValidateFolderTool} below for callers that
  * don't need config.
  *
- * @param options - optional rule overrides
- * @returns the registered MCP tool wrapper
+ * @param options - Optional rule overrides.
+ * @returns The registered MCP tool wrapper.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createModelValidateFolderTool(options: CreateModelValidateFolderToolOptions = {}): DbxTool {

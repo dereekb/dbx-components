@@ -17,8 +17,8 @@ import type { RemediationHint } from './types.js';
  * keeps the violation valid (the caller treats `remediation`
  * as optional) so unmapped codes don't blow up the formatter.
  *
- * @param code - the violation code emitted by the rule
- * @returns the populated hint, or `undefined` when no rule matches
+ * @param code - The violation code emitted by the rule.
+ * @returns The populated hint, or `undefined` when no rule matches.
  */
 export function attachRemediation(code: string): RemediationHint | undefined {
   const rule = findRule(code);

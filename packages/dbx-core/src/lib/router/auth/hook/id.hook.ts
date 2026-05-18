@@ -109,11 +109,15 @@ export function redirectForIdentifierParamHook(input: RedirectForIdentifierParam
           } else if (defaultAllowedIdValue !== transitionTargetId) {
             redirectToId = canViewUser(transitionTargetId, authService, injector).pipe(
               map((x) => {
+                let mapped: Maybe<ModelKey>;
+
                 if (x == null || typeof x === 'boolean') {
-                  return x ? transitionTargetId : defaultAllowedIdValue;
+                  mapped = x ? transitionTargetId : defaultAllowedIdValue;
+                } else {
+                  mapped = x;
                 }
 
-                return x;
+                return mapped;
               })
             );
           }

@@ -103,8 +103,8 @@ export abstract class StorageFileInitServerActions {
  * Creates a concrete {@link StorageFileInitServerActions} implementation by wiring each
  * initialization action to its factory function.
  *
- * @param context - the initialization context with template function and Firestore access
- * @returns a {@link StorageFileInitServerActions} wired to the provided context
+ * @param context - The initialization context with template function and Firestore access.
+ * @returns A {@link StorageFileInitServerActions} wired to the provided context.
  */
 export function storageFileInitServerActions(context: StorageFileInitServerActionsContext): StorageFileInitServerActions {
   return {
@@ -133,9 +133,9 @@ export interface InitializeStorageFileModelInTransactionInput<D extends Firestor
  * - Returns `null`/`undefined` → marks the model as invalid (`fi=true`)
  * - Returns `false` → deletes the document entirely
  *
- * @param input - the document, transaction, template function, and options
- * @returns an object indicating whether the document was initialized or was already initialized
- * @throws storageFileModelAlreadyInitializedError when `throwErrorIfAlreadyInitialized` is true
+ * @param input - The document, transaction, template function, and options.
+ * @returns An object indicating whether the document was initialized or was already initialized.
+ * @throws {Error} StorageFileModelAlreadyInitializedError when `throwErrorIfAlreadyInitialized` is true.
  */
 export async function initializeStorageFileModelInTransaction<D extends FirestoreDocument<InitializedStorageFileModel>>(input: InitializeStorageFileModelInTransactionInput<D>) {
   const { makeTemplateFunction, throwErrorIfAlreadyInitialized, transaction, document: documentInTransaction, data: storageFileModel } = input;
@@ -191,8 +191,8 @@ export async function initializeStorageFileModelInTransaction<D extends Firestor
  * Applies the app-specific template function, restricting the template to only the `o` (owner)
  * and content flag properties, and always flags the group for content regeneration.
  *
- * @param context - the initialization context providing collection access and the template function
- * @returns an async function that initializes a storage file group document within a transaction
+ * @param context - The initialization context providing collection access and the template function.
+ * @returns An async function that initializes a storage file group document within a transaction.
  */
 export function initializeStorageFileGroupInTransactionFactory(context: StorageFileInitServerActionsContext) {
   const { storageFileGroupCollection, makeTemplateForStorageFileGroupInitialization } = context;
@@ -227,8 +227,8 @@ export function initializeStorageFileGroupInTransactionFactory(context: StorageF
  * Wraps the in-transaction group initialization in a Firestore transaction
  * and follows the transform-and-validate pattern.
  *
- * @param context - the initialization context with Firestore access and template function
- * @returns a transform-and-validate function for single storage file group initialization
+ * @param context - The initialization context with Firestore access and template function.
+ * @returns A transform-and-validate function for single storage file group initialization.
  */
 export function initializeStorageFileGroupFactory(context: StorageFileInitServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
@@ -249,8 +249,8 @@ export function initializeStorageFileGroupFactory(context: StorageFileInitServer
  * initializing each in parallel (up to 5 concurrent tasks). Loops until no more
  * flagged groups are found.
  *
- * @param context - the initialization context with Firestore access, collection, and template function
- * @returns a transform-and-validate function for batch storage file group initialization
+ * @param context - The initialization context with Firestore access, collection, and template function.
+ * @returns A transform-and-validate function for batch storage file group initialization.
  */
 export function initializeAllApplicableStorageFileGroupsFactory(context: StorageFileInitServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, storageFileGroupCollection } = context;

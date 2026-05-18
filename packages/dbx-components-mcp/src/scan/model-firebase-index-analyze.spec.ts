@@ -25,6 +25,7 @@ interface BuildEntryInput {
   readonly isNested?: boolean;
   readonly manual?: boolean;
   readonly skip?: boolean;
+  readonly allowArrayContainsAny?: boolean;
   readonly sequences: readonly ConstraintSequence[];
 }
 
@@ -38,6 +39,7 @@ function buildEntry(input: BuildEntryInput): ExtractedModelFirebaseIndexEntry {
     scope: input.scope,
     manual: input.manual ?? false,
     skip: input.skip ?? false,
+    allowArrayContainsAny: input.allowArrayContainsAny ?? false,
     category: '',
     signature: 'fakeQuery(): FirestoreQueryConstraint[]',
     description: '',
@@ -270,5 +272,26 @@ describe('analyzeEntry — diagnostics', () => {
     const result = analyzeEntry(entry);
     const warning = result.warnings.find((w) => w.kind === 'unsupported-array-contains-any');
     expect(warning).toBeDefined();
+  });
+
+  it('suppresses array-contains-any warning when allowArrayContainsAny is set', () => {
+    const entry = buildEntry({
+      name: 'arrayContainsAnyQuery',
+      collection: 'jljt',
+      scope: 'COLLECTION_GROUP',
+      isNested: true,
+      allowArrayContainsAny: true,
+      sequences: [
+        {
+          entries: [
+            { kind: 'where', fieldPath: 'ow', operator: 'array-contains-any' },
+            { kind: 'orderBy', fieldPath: 'r', direction: 'asc' }
+          ]
+        }
+      ]
+    });
+    const result = analyzeEntry(entry);
+    const warning = result.warnings.find((w) => w.kind === 'unsupported-array-contains-any');
+    expect(warning).toBeUndefined();
   });
 });

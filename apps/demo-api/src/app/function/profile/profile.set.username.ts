@@ -4,6 +4,7 @@ import { onCallWithDemoNestContext } from '../function.context';
 import { userHasNoProfileError } from '../../common';
 import { profileForUserRequest } from './profile.util';
 
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use updateProfileUsername's pattern with update functions instead.
  */

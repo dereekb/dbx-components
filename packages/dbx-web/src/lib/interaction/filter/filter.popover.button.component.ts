@@ -38,13 +38,9 @@ export class DbxFilterPopoverButtonComponent<F extends object = object> extends 
 
   readonly buttonDisplaySignal = computed(() => {
     const pairDisplay = this.buttonDisplayStyle()?.display;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- reads the deprecated buttonDisplay input for backward compatibility until removed
     const directDisplay = this.buttonDisplay();
-
-    if (!pairDisplay && !directDisplay) {
-      return undefined;
-    }
-
-    return { ...pairDisplay, ...directDisplay };
+    return !pairDisplay && !directDisplay ? undefined : { ...pairDisplay, ...directDisplay };
   });
 
   readonly buttonStyleSignal = computed(() => this.buttonDisplayStyle()?.style);

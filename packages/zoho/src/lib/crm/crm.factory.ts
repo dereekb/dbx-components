@@ -45,8 +45,8 @@ export type ZohoCrmFactory = (config: ZohoCrmConfig) => ZohoCrm;
  * Each client handles OAuth token refresh on {@link ZohoInvalidTokenError}, rate limiting,
  * and Zoho CRM's non-standard error responses (200 status with error body).
  *
- * @param factoryConfig - Configuration providing account credentials and optional overrides
- * @returns A factory function that creates authenticated Zoho CRM clients
+ * @param factoryConfig - Configuration providing account credentials and optional overrides.
+ * @returns A factory function that creates authenticated Zoho CRM clients.
  *
  * @example
  * ```typescript
@@ -61,6 +61,7 @@ export type ZohoCrmFactory = (config: ZohoCrmConfig) => ZohoCrm;
  * // Use the CRM context for API calls:
  * const { crmContext } = zohoCrm;
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoCrmFactory(factoryConfig: ZohoCrmFactoryConfig): ZohoCrmFactory {

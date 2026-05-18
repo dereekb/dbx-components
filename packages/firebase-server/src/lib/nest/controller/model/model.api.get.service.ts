@@ -60,7 +60,7 @@ export class ModelApiGetService {
    * @param key - The full Firestore model key (e.g., 'pr/abc123').
    * @param auth - The authenticated user's auth data from the request.
    * @returns The document key and data.
-   * @throws Permission or not-found errors from useModel.
+   * @throws {Error} Permission or not-found errors from useModel.
    */
   async readDocument(modelType: FirestoreModelType, key: FirestoreModelKey, auth: Maybe<FirebaseServerAuthData>): Promise<ModelAccessReadResult> {
     const authRef = this._makeAuthRef(auth);

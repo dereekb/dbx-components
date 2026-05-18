@@ -11,9 +11,9 @@ export type ObservableDecisionFunction<T> = (value: T) => Observable<boolean>;
  *
  * When `invert` is false, returns the original function unchanged.
  *
- * @param decisionFn - the decision function to invert
- * @param invert - whether to apply the inversion (defaults to true)
- * @returns the inverted (or original) decision function
+ * @param decisionFn - The decision function to invert.
+ * @param invert - Whether to apply the inversion (defaults to true)
+ * @returns The inverted (or original) decision function.
  */
 export function invertObservableDecision<F extends ObservableDecisionFunction<any>>(decisionFn: F, invert = true): F {
   return invert
@@ -30,9 +30,9 @@ export function invertObservableDecision<F extends ObservableDecisionFunction<an
  * Items where the decision returns true are kept; others are removed. Results are throttled
  * to prevent excessive re-emissions.
  *
- * @param observableDecisionFunction - async predicate to evaluate each item
- * @param throttle - throttle duration in ms (defaults to 20)
- * @returns an operator that async-filters array elements
+ * @param observableDecisionFunction - Async predicate to evaluate each item.
+ * @param throttle - Throttle duration in ms (defaults to 20)
+ * @returns An operator that async-filters array elements.
  */
 export function filterItemsWithObservableDecision<T>(observableDecisionFunction: ObservableDecisionFunction<T>, throttle: Milliseconds = 20): MonoTypeOperatorFunction<T[]> {
   const filterAndMap = filterAndMapFunction<[T, boolean], T>(

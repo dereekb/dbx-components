@@ -184,10 +184,11 @@ export type FirestoreModelTypes<I extends FirestoreModelIdentity> = I extends Fi
 /**
  * Creates a FirestoreModelIdentity value.
  *
- * @param parentOrModelName The parent FirestoreModelIdentity or the model name if not nested
- * @param collectionNameOrModelName The collection name or the model name if not nested
- * @param inputCollectionName Optional explicit collection name (used when parent is provided)
- * @returns The created FirestoreModelIdentity
+ * @param parentOrModelName Parent identity when nested, otherwise the model name.
+ * @param collectionNameOrModelName Collection name when a parent is provided, otherwise the model name.
+ * @param modelName Model name when a parent and collection name are both supplied.
+ * @param inputCollectionName Explicit collection name; only meaningful alongside a parent.
+ * @returns Identity value describing the model and its collection placement.
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelIdentity<M extends FirestoreModelType>(modelName: M): RootFirestoreModelIdentity<M, FirestoreModelDefaultCollectionName<M>>;
@@ -261,8 +262,10 @@ export interface FirestoreModelTypeRef<M extends FirestoreModelType = FirestoreM
 /**
  * Reads the FirestoreModelType from a FirestoreModelType or FirestoreModelTypeRef.
  *
- * @param modelTypeInput
- * @returns
+ * @param modelTypeInput - Either a raw `FirestoreModelType` string or an object exposing one via `.modelType`.
+ * @returns The resolved `FirestoreModelType` string.
+ * @throws {Error} When the resolved model type is empty.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelType(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef): FirestoreModelType {
@@ -428,8 +431,8 @@ export const FIRESTORE_MODEL_ID_REGEX = /^(?!\.\.?$)(?!.*__.*__)([^\s/]{1,1500})
 /**
  * Returns true if the input string is a FirestoreModelId.
  *
- * @param input - The string to test
- * @returns True if the input is a valid FirestoreModelId
+ * @param input - Candidate identifier to validate.
+ * @returns True when the input matches the Firestore ID format.
  */
 export function isFirestoreModelId(input: string | FirestoreModelId): input is FirestoreModelId {
   return FIRESTORE_MODEL_ID_REGEX.test(input);
@@ -483,8 +486,8 @@ export const FIRESTORE_MODEL_KEY_REGEX_STRICT = /^(?:(?:(?!\.\.?$)(?!.*__.*__)([
 /**
  * Returns true if the input string is a FirestoreModelKey.
  *
- * @param input - The string to test
- * @returns True if the input is a valid FirestoreModelKey
+ * @param input - Candidate path to validate.
+ * @returns True when the input matches the Firestore key format.
  */
 export function isFirestoreModelKey(input: string | FirestoreModelKey): input is FirestoreModelKey {
   return FIRESTORE_MODEL_KEY_REGEX.test(input);
@@ -493,8 +496,8 @@ export function isFirestoreModelKey(input: string | FirestoreModelKey): input is
 /**
  * Returns true if the input string is a FirestoreModelId or a FirestoreModelKey.
  *
- * @param input - The string to test
- * @returns True if the input is a valid FirestoreModelId or FirestoreModelKey
+ * @param input - Candidate identifier or path to validate.
+ * @returns True when the input matches either the ID or key format.
  */
 export function isFirestoreModelIdOrKey(input: string | FirestoreModelId | FirestoreModelKey): input is FirestoreModelId | FirestoreModelKey {
   return stringContains(input, '/') ? FIRESTORE_MODEL_KEY_REGEX.test(input) : FIRESTORE_MODEL_ID_REGEX.test(input);
@@ -512,11 +515,12 @@ export type FirestoreCollectionModelKeyPart<N extends FirestoreCollectionNameRef
 export type FirestoreCollectionModelKey<N extends FirestoreCollectionNameRef = FirestoreCollectionNameRef, K extends FirestoreModelId = FirestoreModelId> = FirestoreCollectionModelKeyPart<N, K>;
 
 /**
- * Creates a firestoreModelKeyPart
+ * Creates a firestoreModelKeyPart.
  *
  * @param identity
  * @param id
  * @returns
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyPart<N extends FirestoreCollectionNameRef, K extends FirestoreModelId = FirestoreModelId>(identity: N, id: K): FirestoreCollectionModelKeyPart<N, K> {
@@ -540,8 +544,9 @@ export type FirestoreModelKeyFactory<I extends RootFirestoreModelIdentity, K ext
 /**
  * Creates a FirestoreModelKeyFactory for the input root identity.
  *
- * @param identity - The root FirestoreModelIdentity to bind the factory to
- * @returns A factory function that creates FirestoreModelKey values for the given identity and a provided id
+ * @param identity - The root FirestoreModelIdentity to bind the factory to.
+ * @returns A factory function that creates FirestoreModelKey values for the given identity and a provided id.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyFactory<I extends RootFirestoreModelIdentity, K extends FirestoreModelId = FirestoreModelId>(identity: I) {
@@ -612,8 +617,9 @@ export type FirestoreModelCollectionAndIdPairObject = Record<FirestoreCollection
 /**
  * Converts a FirestoreModelKey or reference into a record mapping each collection name to its document id.
  *
- * @param input - The FirestoreModelKey, DocumentReferenceRef, or FirestoreModelKeyRef to convert
- * @returns An object mapping collection names to document ids, or undefined if the key is unavailable
+ * @param input - The FirestoreModelKey, DocumentReferenceRef, or FirestoreModelKeyRef to convert.
+ * @returns An object mapping collection names to document ids, or undefined if the key is unavailable.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyPairObject(input: FirestoreModelKey | DocumentReferenceRef<unknown> | FirestoreModelKeyRef): Maybe<FirestoreModelCollectionAndIdPairObject> {
@@ -646,8 +652,9 @@ export type FirestoreModelCollectionTypeArrayName = string;
 /**
  * Returns the FirestoreCollectionType derived from the input FirestoreModelKey.
  *
- * @param input - The key or reference to extract the collection type from
- * @returns The FirestoreCollectionType string, or undefined if the key is unavailable
+ * @param input - The key or reference to extract the collection type from.
+ * @returns The FirestoreCollectionType string, or undefined if the key is unavailable.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyCollectionType<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreCollectionType> {
@@ -657,9 +664,10 @@ export function firestoreModelKeyCollectionType<T = unknown>(input: ReadFirestor
 /**
  * Returns the collection type array name string derived from the input key, joined by the given separator.
  *
- * @param input - The key or reference to extract collection names from
- * @param separator - The separator to join collection names with; defaults to the Firestore collection name separator
- * @returns The joined collection type array name string, or undefined if the key is unavailable
+ * @param input - The key or reference to extract collection names from.
+ * @param separator - The separator to join collection names with; defaults to the Firestore collection name separator.
+ * @returns The joined collection type array name string, or undefined if the key is unavailable.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyCollectionTypeArrayName<T = unknown>(input: ReadFirestoreModelKeyInput<T>, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): Maybe<FirestoreModelCollectionTypeArrayName> {
@@ -669,9 +677,10 @@ export function firestoreModelKeyCollectionTypeArrayName<T = unknown>(input: Rea
 /**
  * Returns the collection type array name string derived from a FirestoreModelIdentity, joined by the given separator.
  *
- * @param input - The FirestoreModelIdentity to derive collection names from
- * @param separator - The separator to join collection names with; defaults to the Firestore collection name separator
- * @returns The joined collection type array name string
+ * @param input - The FirestoreModelIdentity to derive collection names from.
+ * @param separator - The separator to join collection names with; defaults to the Firestore collection name separator.
+ * @returns The joined collection type array name string.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreIdentityTypeArrayName(input: FirestoreModelIdentity, separator: string = FIRESTORE_COLLECTION_NAME_SEPARATOR): FirestoreModelCollectionTypeArrayName {
@@ -683,8 +692,9 @@ export type FirestoreModelCollectionTypeArray = FirestoreCollectionName[];
 /**
  * Returns an ordered array of collection names derived from a FirestoreModelIdentity, from root to leaf.
  *
- * @param input - The FirestoreModelIdentity to traverse
- * @returns An array of FirestoreCollectionName values ordered from root to leaf
+ * @param input - Identity whose ancestor chain is walked.
+ * @returns Collection names ordered from root to leaf.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): FirestoreModelCollectionTypeArray {
@@ -708,8 +718,10 @@ export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): Fires
 /**
  * Returns an ordered array of collection names derived from the input FirestoreModelKey.
  *
- * @param input - The key or reference to extract collection names from
- * @returns An array of FirestoreCollectionName values, or undefined if the key is unavailable
+ * @param input - Key or reference whose path segments are parsed.
+ * @returns Collection names extracted from the key, or undefined when no key is available.
+ * @throws {Error} When the decoded key has an odd number of path segments (e.g. a collection ref instead of a document ref).
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyCollectionTypeArray<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelCollectionTypeArray> {
@@ -739,8 +751,9 @@ export interface FirestoreModelCollectionAndIdPair extends FirestoreModelIdRef, 
 /**
  * Returns the collection name of the input key.
  *
- * @param input - The key or reference to extract the collection name from
- * @returns The FirestoreCollectionName from the deepest key pair, or undefined if unavailable
+ * @param input - The key or reference to extract the collection name from.
+ * @returns The FirestoreCollectionName from the deepest key pair, or undefined if unavailable.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyCollectionName<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreCollectionName> {
@@ -750,9 +763,10 @@ export function firestoreModelKeyCollectionName<T = unknown>(input: ReadFirestor
 /**
  * Returns the parent model key from up the specified amount of levels.
  *
- * @param input - The key or reference to extract the parent key from
- * @param maxLevelsUp - The number of levels to traverse up the key hierarchy; defaults to 1
- * @returns The parent FirestoreModelKey, or undefined if no parent exists
+ * @param input - Key or reference whose ancestor is located.
+ * @param maxLevelsUp - How many hierarchy levels to climb; defaults to 1.
+ * @returns Parent key, or undefined when no parent exists at that depth.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyParentKey<T = unknown>(input: ReadFirestoreModelKeyInput<T>, maxLevelsUp = 1): Maybe<FirestoreModelKey> {
@@ -769,9 +783,10 @@ export function firestoreModelKeyParentKey<T = unknown>(input: ReadFirestoreMode
 /**
  * Returns the collection/id pair array truncated by the specified number of levels from the end.
  *
- * @param input - The key or reference to extract pairs from
- * @param maxLevelsUp - The number of levels to remove from the end; defaults to 1
- * @returns An array of FirestoreModelCollectionAndIdPair values up to the parent level, or undefined if unavailable
+ * @param input - Key or reference whose pair list is truncated.
+ * @param maxLevelsUp - How many trailing pairs to drop; defaults to 1.
+ * @returns Pair list down to the requested ancestor level, or undefined when unavailable.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyParentKeyPartPairs<T = unknown>(input: ReadFirestoreModelKeyInput<T>, maxLevelsUp = 1): Maybe<FirestoreModelCollectionAndIdPair[]> {
@@ -800,8 +815,10 @@ export function firestoreModelKeyTypePair<T = unknown>(input: ReadFirestoreModel
 /**
  * Parses a FirestoreModelKey into an ordered array of collection/id pair objects.
  *
- * @param input - The key or reference to parse
- * @returns An array of FirestoreModelCollectionAndIdPair values, or undefined if the key is unavailable
+ * @param input - Key or reference whose path segments are decoded.
+ * @returns Ordered collection/id pairs decoded from the key, or undefined when no key is available.
+ * @throws {Error} When the decoded key has an odd number of path segments (e.g. a collection ref instead of a document ref).
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyPartPairs<T = unknown>(input: ReadFirestoreModelKeyInput<T>): Maybe<FirestoreModelCollectionAndIdPair[]> {
@@ -896,7 +913,8 @@ export type FirestoreDummyModelKey = typeof FIRESTORE_DUMMY_MODEL_KEY;
  * It's useful in testing scenarios or when initializing structures that
  * require a key before one is available.
  *
- * @returns The dummy model key constant
+ * @returns The dummy model key constant.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDummyKey(): FirestoreDummyModelKey {
@@ -980,10 +998,12 @@ export interface FirestoreCollectionRef<T, D extends FirestoreDocument<T> = Fire
  * 3. Query factory for building typed queries
  * 4. Iteration utilities for paginated access
  *
+ * @param inputConfig - Configuration for the collection.
+ * @returns A fully configured FirestoreCollection instance.
+ *
  * @template T - The data type of documents in the collection
  * @template D - The FirestoreDocument type that wraps the data
- * @param inputConfig - Configuration for the collection
- * @returns A fully configured FirestoreCollection instance
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeFirestoreCollection<T, D extends FirestoreDocument<T>>(inputConfig: FirestoreCollectionConfig<T, D>): FirestoreCollection<T, D> {

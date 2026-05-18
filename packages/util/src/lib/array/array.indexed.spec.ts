@@ -1,5 +1,5 @@
 import { type IndexNumber, type IndexRef } from '../value';
-import { getArrayNextIndex, indexedValuesArrayAccessorFactory, rangedIndexedValuesArrayAccessorFactory, findNext } from './array.indexed';
+import { getArrayNextIndex, indexedValuesArrayAccessorFactory, rangedIndexedValuesArrayAccessorFactory, rangedIndexedValuesArrayAccessorInfoFactory, findNext } from './array.indexed';
 import { range } from './array.number';
 
 describe('findNext()', () => {
@@ -160,6 +160,74 @@ describe('indexedValuesArrayAccessorInfoFactory()', () => {
           expect(result.value).toBe('c');
         });
       });
+    });
+  });
+});
+
+describe('rangedIndexedValuesArrayAccessorInfoFactory()', () => {
+  const factory = rangedIndexedValuesArrayAccessorInfoFactory<TestItemWithTwoIndexes>({
+    readIndexRange: (value) => ({ minIndex: value.i, maxIndex: value.to })
+  });
+
+  describe('with an empty values array', () => {
+    const accessor = factory([]);
+
+    it('should return an empty info object for any index', () => {
+      expect(accessor(0)).toEqual({});
+      expect(accessor(100)).toEqual({});
+    });
+  });
+
+  describe('with values', () => {
+    const values: TestItemWithTwoIndexes[] = [
+      { i: 0, to: 5, value: 'a' },
+      { i: 10, to: 50, value: 'b' },
+      { i: 100, to: 500, value: 'c' }
+    ];
+
+    const accessor = factory(values);
+
+    it('should return the matching value with prev and next neighbors', () => {
+      const result = accessor(20);
+      expect(result.match?.value).toBe('b');
+      expect(result.prev?.value).toBe('a');
+      expect(result.next?.value).toBe('c');
+    });
+
+    it('should return undefined match for an index in a gap between ranges', () => {
+      const result = accessor(7);
+      expect(result.match).toBeUndefined();
+      // prev should be the range before the gap, next should be the range after
+      expect(result.prev?.value).toBe('a');
+      expect(result.next?.value).toBe('b');
+    });
+
+    it('should return undefined match for an index past all ranges, with prev set to the last range', () => {
+      const result = accessor(1000);
+      expect(result.match).toBeUndefined();
+      expect(result.prev?.value).toBe('c');
+      expect(result.next).toBeUndefined();
+    });
+
+    it('should return undefined match for an index before all ranges, with next set to the first range', () => {
+      const result = accessor(-1);
+      expect(result.match).toBeUndefined();
+      expect(result.prev).toBeUndefined();
+      expect(result.next?.value).toBe('a');
+    });
+
+    it('should match the first range and have no prev', () => {
+      const result = accessor(2);
+      expect(result.match?.value).toBe('a');
+      expect(result.prev).toBeUndefined();
+      expect(result.next?.value).toBe('b');
+    });
+
+    it('should match the last range and have no next', () => {
+      const result = accessor(200);
+      expect(result.match?.value).toBe('c');
+      expect(result.prev?.value).toBe('b');
+      expect(result.next).toBeUndefined();
     });
   });
 });

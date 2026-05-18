@@ -35,9 +35,9 @@ export abstract class ZoomOAuthServiceConfig {
 /**
  * Reads a ZoomOAuthServiceConfig from the NestJS ConfigService using environment variables.
  *
- * @param configService The NestJS ConfigService to read from
- * @param prefix Optional prefix for environment variable names
- * @returns A validated ZoomOAuthServiceConfig
+ * @param configService - The NestJS ConfigService to read from.
+ * @param prefix - Optional prefix for environment variable names.
+ * @returns A validated ZoomOAuthServiceConfig.
  */
 export function readZoomOAuthServiceConfigFromConfigService(configService: ConfigService, prefix?: string): ZoomOAuthServiceConfig {
   const prefixString = characterPrefixSuffixInstance({ suffix: '_', suffixEmptyString: false }).prefixSuffixString(prefix ?? '');

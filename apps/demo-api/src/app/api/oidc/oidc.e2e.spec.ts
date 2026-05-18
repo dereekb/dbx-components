@@ -205,7 +205,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         expect([301, 302, 303, 307, 308]).toContain(res.status);
 
-        const location = res.headers['location'] as string;
+        const location = res.headers['location'];
         expect(location).toBeDefined();
         // No CRLF that would allow header injection.
         expect(location).not.toContain('\r');
@@ -276,7 +276,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
        * Extract the interaction UID from a redirect to the login/consent frontend URL.
        */
       function extractInteractionUid(res: request.Response): string {
-        const location = res.headers['location'] as string;
+        const location = res.headers['location'];
         const url = location.startsWith('/') ? new URL(location, 'http://localhost') : new URL(location);
         return url.searchParams.get('uid')!;
       }

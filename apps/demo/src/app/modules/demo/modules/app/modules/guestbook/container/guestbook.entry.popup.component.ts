@@ -8,7 +8,7 @@ import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-for
 import { toSignal } from '@angular/core/rxjs-interop';
 
 export interface DemoGuestbookEntryPopupComponentConfig {
-  guestbookEntryDocumentStore: GuestbookEntryDocumentStore;
+  readonly guestbookEntryDocumentStore: GuestbookEntryDocumentStore;
 }
 
 @Component({

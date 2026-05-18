@@ -52,7 +52,7 @@ export interface DbxAppAuthStateUser {
  * Represents a fully unauthenticated state: no user identifier, not onboarded,
  * in the `'none'` auth state, with no roles assigned.
  */
-export const initialState: DbxAppAuthStateUser = {
+export const INITIAL_STATE: DbxAppAuthStateUser = {
   userId: NO_AUTH_USER_IDENTIFIER,
   isOnboarded: false,
   userState: 'none',
@@ -60,8 +60,8 @@ export const initialState: DbxAppAuthStateUser = {
 };
 
 export const reducer = createReducer(
-  initialState,
-  on(DbxAppAuthActions.loggedOut, () => ({ ...initialState })),
+  INITIAL_STATE,
+  on(DbxAppAuthActions.loggedOut, () => ({ ...INITIAL_STATE })),
   on(DbxAppAuthUserActions.setUserIdentifier, (state, { id: userId }) => ({ ...state, userId })),
   on(DbxAppAuthUserActions.setUserIsOnboarded, (state, { isOnboarded }) => ({ ...state, isOnboarded })),
   on(DbxAppAuthUserActions.setUserState, (state, { state: userState }) => ({ ...state, userState })),

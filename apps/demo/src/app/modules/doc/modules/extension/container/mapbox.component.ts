@@ -5,26 +5,7 @@ import { dbxForgeMapboxLatLngField, dbxForgeMapboxZoomField } from '@dereekb/dbx
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
-import {
-  type KnownMapboxStyle,
-  type DbxMapboxLayoutSide,
-  type DbxMapboxMarker,
-  type DbxMapboxMarkerFactory,
-  dbxMapboxColoredDotStyle,
-  filterByMapboxViewportBound,
-  DbxMapboxChangeService,
-  type MapboxFitPositions,
-  DbxMapboxInjectionStore,
-  DbxMapboxModule,
-  DbxMapboxInjectionComponent,
-  DbxMapboxLayoutComponent,
-  DbxMapboxLayoutVirtualResizeSyncComponent,
-  DbxMapboxMapDirective,
-  DbxMapboxMapStoreInjectionBlockDirective,
-  DbxMapboxMarkerComponent,
-  DbxMapboxMarkersComponent,
-  DbxMapboxMenuComponent
-} from '@dereekb/dbx-web/mapbox';
+import { type DbxMapboxLayoutSide, type DbxMapboxMarker, type DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, DbxMapboxInjectionStore, DbxMapboxModule, DbxMapboxInjectionComponent, DbxMapboxLayoutComponent, DbxMapboxLayoutVirtualResizeSyncComponent, DbxMapboxMapDirective, DbxMapboxMapStoreInjectionBlockDirective, DbxMapboxMarkerComponent, DbxMapboxMarkersComponent, DbxMapboxMenuComponent } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, type Observable, combineLatest, of, first } from 'rxjs';
 import { DocExtensionMapboxContentExampleComponent } from '../component/mapbox.content.example.component';
 import { type DbxThemeColor, DBX_THEME_COLORS, DbxContentContainerDirective, DbxBarDirective, DbxLabelBlockComponent, DbxDetailBlockComponent } from '@dereekb/dbx-web';
@@ -392,7 +373,7 @@ export class DocExtensionMapboxComponent implements OnInit {
 
     this.dbxMapboxMapStore.fitPositions(
       positions.pipe(
-        map((positions) => ({ positions, options: { minZoom: 8, padding: 20 } }) as MapboxFitPositions),
+        map((positions) => ({ positions, options: { minZoom: 8, padding: 20 } })),
         first()
       )
     );
@@ -433,15 +414,15 @@ export class DocExtensionMapboxComponent implements OnInit {
   }
 
   useStreetsMap() {
-    this.dbxMapboxMapStore.setStyle('mapbox://styles/mapbox/streets-v11' as KnownMapboxStyle);
+    this.dbxMapboxMapStore.setStyle('mapbox://styles/mapbox/streets-v11');
   }
 
   useDarkMap() {
-    this.dbxMapboxMapStore.setStyle('mapbox://styles/mapbox/dark-v10' as KnownMapboxStyle);
+    this.dbxMapboxMapStore.setStyle('mapbox://styles/mapbox/dark-v10');
   }
 
   useSatelliteMap() {
-    this.dbxMapboxMapStore.setStyle('mapbox://styles/mapbox/satellite-v9' as KnownMapboxStyle);
+    this.dbxMapboxMapStore.setStyle('mapbox://styles/mapbox/satellite-v9');
   }
 
   clickMenuItem(value: number) {

@@ -105,8 +105,9 @@ export interface UtilRegistry {
 /**
  * Builds a {@link UtilRegistry} from a loader result.
  *
- * @param loaded - the merged registry returned by `loadUtilManifests`
- * @returns a domain-friendly read API over the merged entries
+ * @param loaded - The merged registry returned by `loadUtilManifests`
+ * @returns A domain-friendly read API over the merged entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createUtilRegistry(loaded: LoadUtilManifestsResult): UtilRegistry {
@@ -119,10 +120,11 @@ export function createUtilRegistry(loaded: LoadUtilManifestsResult): UtilRegistr
  * Used by tests that need to drive the tools without going through the
  * loader pipeline.
  *
- * @param input - the entries plus the source labels to advertise
- * @param input.entries - the full entry list
- * @param input.loadedSources - source labels reported via `registry.loadedSources`
- * @returns a domain-friendly read API over the supplied entries
+ * @param input - The entries plus the source labels to advertise.
+ * @param input.entries - The full entry list.
+ * @param input.loadedSources - Source labels reported via `registry.loadedSources`
+ * @returns A domain-friendly read API over the supplied entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createUtilRegistryFromEntries(input: { readonly entries: readonly UtilEntryInfo[]; readonly loadedSources: readonly string[] }): UtilRegistry {
@@ -200,8 +202,8 @@ export const EMPTY_UTIL_REGISTRY: UtilRegistry = createUtilRegistryFromEntries({
  * lookup/search tools consume. Optional manifest fields fall back to safe
  * defaults so a partially-populated entry still renders cleanly.
  *
- * @param entry - the manifest entry to convert
- * @returns the matching UtilEntryInfo
+ * @param entry - The manifest entry to convert.
+ * @returns The matching UtilEntryInfo.
  */
 export function toUtilEntryInfo(entry: UtilEntry): UtilEntryInfo {
   const result: UtilEntryInfo = {

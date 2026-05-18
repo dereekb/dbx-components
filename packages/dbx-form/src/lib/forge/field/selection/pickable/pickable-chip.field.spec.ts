@@ -108,7 +108,7 @@ describe('DbxForgePickableChipFieldConfig - Exhaustive Whitelist', () => {
     it('hint is accessible with concrete generics', () => {
       // hint/description are conditional on the props type having a hint property.
       // With default generics the conditional defers to never; with concrete types it resolves.
-      const config: DbxForgePickableChipFieldConfig<string> = { key: 'test', hint: 'test hint' } as any;
+      const config: DbxForgePickableChipFieldConfig<string> = { key: 'test', hint: 'test hint' };
       expect(config.hint).toBe('test hint');
     });
   });
@@ -363,7 +363,7 @@ describe('scenarios', () => {
           loadValues: stubLoadValues,
           displayForValue: stubDisplayForValue
         }
-      } as DbxForgePickableChipFieldConfig<string>);
+      });
 
       fixture.componentInstance.config.set({ fields: [field] });
 
@@ -395,7 +395,7 @@ describe('scenarios', () => {
           loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
           displayForValue: stubDisplayForValue
         }
-      } as DbxForgePickableChipFieldConfig<string>);
+      });
 
       // Inspect the raw form value so a `['']` leak through stripEmptyForgeValues is visible.
       const context = fixture.componentInstance.context;
@@ -473,7 +473,7 @@ describe('DbxForgePickableChipFieldComponent', () => {
         loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }]),
         displayForValue: stubDisplayForValue
       }
-    } as DbxForgePickableChipFieldConfig<string>);
+    });
 
     const fixture = TestBed.createComponent(TestForgePickableChipHostComponent);
     fixture.componentInstance.config = { fields: [field] };

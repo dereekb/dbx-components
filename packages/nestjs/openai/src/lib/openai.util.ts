@@ -64,7 +64,7 @@ export function isParsedOpenAIJsonResponseWithJson(response: ParsedOpenAIJsonRes
 /**
  * Parses the OpenAI response into a ParsedOpenAIJsonResponse.
  *
- * @param response The OpenAI response to parse.
+ * @param response - The OpenAI response to parse.
  * @returns The parsed OpenAI response.
  */
 export function parseOpenAIJsonResponse(response: string | OpenAI.Responses.Response): ParsedOpenAIJsonResponse {
@@ -96,8 +96,8 @@ export type OpenAIJsonResponseFieldMap = Map<OpenAIJsonResponseFieldName, OpenAI
 /**
  * Creates a map of the OpenAI json response fields.
  *
- * @param response The OpenAI json response to create a map from.
- * @returns The map of the OpenAI json response fields.
+ * @param response - OpenAI json response to index.
+ * @returns Map keyed by field name for direct lookup.
  */
 export function openAIJsonResponseFieldsMap(response: OpenAIJsonResponse): OpenAIJsonResponseFieldMap {
   return new Map(response.fields.map((x) => [x.field_name, x.field_value]));

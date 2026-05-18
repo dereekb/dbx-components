@@ -58,9 +58,9 @@ const TIME_UNIT_MS_MAP: Readonly<Record<TimeUnit, Milliseconds>> = {
 /**
  * Converts an amount in the given time unit to milliseconds.
  *
- * @param amount - The numeric amount in the given unit
- * @param unit - The time unit of the amount
- * @returns The equivalent number of milliseconds
+ * @param amount - The numeric amount in the given unit.
+ * @param unit - The time unit of the amount.
+ * @returns The equivalent number of milliseconds.
  *
  * @example
  * ```typescript
@@ -75,9 +75,9 @@ export function timeUnitToMilliseconds(amount: number, unit: TimeUnit): Millisec
 /**
  * Converts milliseconds to an amount in the given time unit.
  *
- * @param ms - The number of milliseconds
- * @param unit - The target time unit
- * @returns The equivalent amount in the target unit
+ * @param ms - Source duration measured in milliseconds.
+ * @param unit - Time unit to express the duration in.
+ * @returns Same duration rescaled to the requested unit.
  *
  * @example
  * ```typescript
@@ -94,10 +94,10 @@ export function millisecondsToTimeUnit(ms: Milliseconds, unit: TimeUnit): number
  *
  * Goes through milliseconds as an intermediary for the conversion.
  *
- * @param amount - The numeric amount in the source unit
- * @param fromUnit - The source time unit
- * @param toUnit - The target time unit
- * @returns The equivalent amount in the target unit
+ * @param amount - The numeric amount in the source unit.
+ * @param fromUnit - The source time unit.
+ * @param toUnit - The target time unit.
+ * @returns The equivalent amount in the target unit.
  *
  * @example
  * ```typescript
@@ -107,11 +107,7 @@ export function millisecondsToTimeUnit(ms: Milliseconds, unit: TimeUnit): number
  * ```
  */
 export function convertTimeDuration(amount: number, fromUnit: TimeUnit, toUnit: TimeUnit): number {
-  if (fromUnit === toUnit) {
-    return amount;
-  }
-
-  return millisecondsToTimeUnit(timeUnitToMilliseconds(amount, fromUnit), toUnit);
+  return fromUnit === toUnit ? amount : millisecondsToTimeUnit(timeUnitToMilliseconds(amount, fromUnit), toUnit);
 }
 
 // MARK: TimeDuration
@@ -126,8 +122,8 @@ export interface TimeDuration {
 /**
  * Converts a TimeDuration to milliseconds.
  *
- * @param duration - The duration to convert
- * @returns The equivalent number of milliseconds
+ * @param duration - The duration to convert.
+ * @returns The equivalent number of milliseconds.
  *
  * @example
  * ```typescript
@@ -143,8 +139,8 @@ export function timeDurationToMilliseconds(duration: TimeDuration): Milliseconds
  *
  * First converts to total minutes, then splits into hours and minutes.
  *
- * @param duration - The duration to convert
- * @returns An HoursAndMinutes object
+ * @param duration - The duration to convert.
+ * @returns An HoursAndMinutes object.
  *
  * @example
  * ```typescript
@@ -160,9 +156,9 @@ export function timeDurationToHoursAndMinutes(duration: TimeDuration): HoursAndM
 /**
  * Converts an HoursAndMinutes object to a total number in the specified time unit.
  *
- * @param hoursAndMinutes - The hours and minutes to convert
- * @param toUnit - The target time unit
- * @returns The equivalent amount in the target unit
+ * @param hoursAndMinutes - The hours and minutes to convert.
+ * @param toUnit - The target time unit.
+ * @returns The equivalent amount in the target unit.
  *
  * @example
  * ```typescript

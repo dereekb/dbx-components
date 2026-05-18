@@ -30,14 +30,16 @@ export class DateFormatFromToPipe implements PipeTransform {
 
   // eslint-disable-next-line @typescript-eslint/max-params
   static formatFromTo(input: Maybe<DateOrDateString>, format: string, minutes: Minutes, locale: string): Maybe<string> {
+    let result: Maybe<string> = undefined;
+
     if (input) {
       const date = toJsDate(input);
       const endDate = addMinutes(date, minutes);
       const dateString = formatDate(date, format, locale);
-      return dateString + ' - ' + formatToTimeString(endDate);
+      result = dateString + ' - ' + formatToTimeString(endDate);
     }
 
-    return undefined;
+    return result;
   }
 
   transform(input: Maybe<DateOrDateString>, format: string, minutes: Minutes): Maybe<string> {

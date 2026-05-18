@@ -27,18 +27,23 @@ export type ZohoRecruitConfigApiUrlInput = ZohoRecruitApiUrlKey | ZohoRecruitApi
 /**
  * Resolves an environment key or passthrough URL to the full Zoho Recruit API URL.
  *
- * @param input - An environment key ('sandbox' or 'production') or a full API URL
- * @returns The resolved Zoho Recruit API URL
+ * @param input - An environment key ('sandbox' or 'production') or a full API URL.
+ * @returns The resolved Zoho Recruit API URL.
  */
 export function zohoRecruitConfigApiUrl(input: ZohoRecruitConfigApiUrlInput): ZohoApiUrl {
+  let result: ZohoApiUrl;
   switch (input) {
     case 'sandbox':
-      return 'https://recruitsandbox.zoho.com/recruit';
+      result = 'https://recruitsandbox.zoho.com/recruit';
+      break;
     case 'production':
-      return 'https://recruit.zoho.com/recruit';
+      result = 'https://recruit.zoho.com/recruit';
+      break;
     default:
-      return input;
+      result = input;
+      break;
   }
+  return result;
 }
 
 /**
@@ -76,6 +81,7 @@ export interface ZohoRecruitContextRef {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use ZohoRecruitFetchFactoryParams instead.
  */

@@ -131,8 +131,8 @@ function normalizeValue(raw: string): string {
  * into a property→value map. Lowercases properties; trims and collapses
  * whitespace in values; drops empty pairs.
  *
- * @param raw - the declaration string to parse
- * @returns the parsed property→value map (lowercased keys)
+ * @param raw - The declaration string to parse.
+ * @returns The parsed property→value map (lowercased keys)
  */
 export function parseDeclarations(raw: string): ReadonlyMap<string, string> {
   const result = new Map<string, string>();
@@ -179,7 +179,7 @@ interface TallyPropInput {
  * Updates the running tally with one property's contribution to the
  * intersect/union/matched/extra/missing buckets.
  *
- * @param input - tally to mutate plus the property + per-side values
+ * @param input - Tally to mutate plus the property + per-side values.
  */
 function tallyProp(input: TallyPropInput): void {
   const { tally, prop, inputValue, entryValue } = input;
@@ -190,14 +190,10 @@ function tallyProp(input: TallyPropInput): void {
       tally.weightedIntersect += weight;
       tally.matched.push(prop);
     }
-    return;
-  }
-  if (inputValue !== undefined) {
+  } else if (inputValue !== undefined) {
     tally.weightedUnion += weight;
     tally.missingInput.push(prop);
-    return;
-  }
-  if (entryValue !== undefined) {
+  } else if (entryValue !== undefined) {
     tally.weightedUnion += weight;
     tally.extraEntry.push(prop);
   }
@@ -226,8 +222,9 @@ function scoreAgainstEntry(input: ReadonlyMap<string, string>, entry: ReadonlyMa
  * Builds a {@link CssUtilityRegistry} from a loader result. Single sorted-by-
  * slug copy, plus pre-computed source/role buckets.
  *
- * @param loaded - the merged registry returned by `loadCssUtilityManifests`
- * @returns a domain-friendly read API over the merged entries
+ * @param loaded - The merged registry returned by `loadCssUtilityManifests`
+ * @returns A domain-friendly read API over the merged entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createCssUtilityRegistry(loaded: LoadCssUtilityManifestsResult): CssUtilityRegistry {
@@ -240,10 +237,11 @@ export function createCssUtilityRegistry(loaded: LoadCssUtilityManifestsResult):
  * and by callers that want to drive the tool without going through the
  * loader pipeline.
  *
- * @param input - the entries plus the source labels to advertise
- * @param input.entries - the full entry list (will be sorted by slug)
- * @param input.loadedSources - source labels reported via `registry.loadedSources`
- * @returns a domain-friendly read API over the supplied entries
+ * @param input - The entries plus the source labels to advertise.
+ * @param input.entries - The full entry list (will be sorted by slug)
+ * @param input.loadedSources - Source labels reported via `registry.loadedSources`
+ * @returns A domain-friendly read API over the supplied entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createCssUtilityRegistryFromEntries(input: { readonly entries: readonly CssUtilityEntry[]; readonly loadedSources: readonly string[] }): CssUtilityRegistry {
@@ -287,9 +285,14 @@ export function createCssUtilityRegistryFromEntries(input: { readonly entries: r
     findByName(name) {
       const trimmed = name.trim();
       const direct = byName.get(trimmed);
-      if (direct !== undefined) return direct;
-      const stripped = trimmed.replace(/^\./, '');
-      return byName.get(stripped);
+      let found: CssUtilityEntry | undefined;
+      if (direct === undefined) {
+        const stripped = trimmed.replace(/^\./, '');
+        found = byName.get(stripped);
+      } else {
+        found = direct;
+      }
+      return found;
     },
     findChildrenOf(parent) {
       return byParentImmutable.get(parent) ?? [];
@@ -379,8 +382,8 @@ interface PickCandidatePoolInput {
  * to that parent's children directly (the smaller set). Otherwise, fall
  * back to the role bucket if `role` is set, then the full list.
  *
- * @param input - the indexes to draw from plus optional role/parent filters
- * @returns the smallest pool consistent with the supplied filters
+ * @param input - The indexes to draw from plus optional role/parent filters.
+ * @returns The smallest pool consistent with the supplied filters.
  */
 function pickCandidatePool(input: PickCandidatePoolInput): readonly CssUtilityEntry[] {
   const { all, byRole, byParent, role, parent } = input;
@@ -407,8 +410,8 @@ interface ShouldIncludeEntryInput {
  * passed the parent filter upstream, so this returns `true`. Otherwise
  * children are hidden unless `includeChildren` is set.
  *
- * @param input - the entry plus the active parent / includeChildren flags
- * @returns `true` when the entry should be included in the result
+ * @param input - The entry plus the active parent / includeChildren flags.
+ * @returns `true` when the entry should be included in the result.
  */
 function shouldIncludeEntry(input: ShouldIncludeEntryInput): boolean {
   const { entry, parent, includeChildren } = input;

@@ -7,7 +7,7 @@ import { distinctUntilChanged, filter, mergeMap, isObservable, type MonoTypeOper
  * Uses {@link areEqualPOJOValues} for comparison, so the emitted objects should be plain objects
  * or compatible with deep value equality checks.
  *
- * @returns operator that filters out consecutive duplicate POJO emissions
+ * @returns Operator that filters out consecutive duplicate POJO emissions.
  *
  * @example
  * ```ts

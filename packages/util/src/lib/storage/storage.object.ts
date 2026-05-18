@@ -50,7 +50,7 @@ export abstract class StorageObject extends SimpleStorageObject {
    * @param index The index of the key to retrieve.
    * @returns The key string if found, otherwise null.
    */
-  abstract key(index: number): string | null;
+  abstract key(index: number): Maybe<string>;
 }
 
 /**
@@ -70,7 +70,7 @@ export abstract class FullStorageObject extends StorageObject {
   /**
    * Removes all items from storage.
    *
-   * @returns An array of keys that were removed.
+   * @returns The keys that were removed.
    */
   abstract removeAll(): string[];
 }
@@ -82,9 +82,9 @@ export class StorageObjectUtility {
   /**
    * Retrieves all keys from a StorageObject, optionally filtering by a prefix.
    *
-   * @param storageObject The StorageObject to retrieve keys from.
-   * @param prefix Optional prefix to filter keys by.
-   * @returns An array of StoredDataStorageKey.
+   * @param storageObject - The StorageObject to retrieve keys from.
+   * @param prefix - Optional prefix to filter keys by.
+   * @returns Array of StoredDataStorageKey.
    */
   static allKeysFromStorageObject(storageObject: StorageObject, prefix?: string): StoredDataStorageKey[] {
     const length = storageObject.length;

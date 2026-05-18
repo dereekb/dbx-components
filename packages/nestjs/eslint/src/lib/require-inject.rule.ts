@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 /**
  * The import source that NestJS decorators come from.
  */
@@ -52,84 +53,78 @@ interface TypeOnlyImportInfo {
 /**
  * Extracts the decorator name from a decorator node.
  *
+ * @param decorator - The decorator AST node.
+ * @returns The decorator name, or empty string if unrecognized.
+ *
  * @example
  * ```
  * // Returns 'Injectable' for both:
  * // @Injectable()
  * // @Injectable
  * ```
- *
- * @param decorator - The decorator AST node
- * @returns The decorator name, or empty string if unrecognized
  */
 function getDecoratorName(decorator: AstNode): string {
   const expression = decorator.expression;
+  let name = '';
 
   if (expression.type === 'CallExpression') {
     if (expression.callee.type === 'Identifier') {
-      return expression.callee.name;
+      name = expression.callee.name;
+    } else if (expression.callee.type === 'MemberExpression' && expression.callee.property.type === 'Identifier') {
+      name = expression.callee.property.name;
     }
-
-    if (expression.callee.type === 'MemberExpression' && expression.callee.property.type === 'Identifier') {
-      return expression.callee.property.name;
-    }
+  } else if (expression.type === 'Identifier') {
+    name = expression.name;
   }
 
-  if (expression.type === 'Identifier') {
-    return expression.name;
-  }
-
-  return '';
+  return name;
 }
 
 /**
  * Extracts the injection token name from a decorator like @Inject(TokenName).
  *
- * @param decorator - The decorator AST node
- * @returns The token identifier name, or null if not a simple identifier
+ * @param decorator - The decorator AST node.
+ * @returns The token identifier name, or null if not a simple identifier.
  */
-function getInjectTokenFromDecorator(decorator: AstNode): string | null {
+function getInjectTokenFromDecorator(decorator: AstNode): Maybe<string> {
   const expression = decorator.expression;
+  let tokenName: Maybe<string> = null;
 
   if (expression.type === 'CallExpression' && expression.callee.type === 'Identifier' && expression.callee.name === 'Inject') {
     const firstArg = expression.arguments[0];
 
     if (firstArg?.type === 'Identifier') {
-      return firstArg.name;
+      tokenName = firstArg.name;
     }
   }
 
-  return null;
+  return tokenName;
 }
 
 /**
  * Extracts the parameter name from a constructor parameter node.
  *
- * @param param - The parameter AST node
- * @returns The parameter name for error reporting
+ * @param param - The parameter AST node.
+ * @returns The parameter name for error reporting.
  */
 function getParamName(param: AstNode): string {
+  let name = '(unknown)';
+
   if (param.type === 'TSParameterProperty') {
     const inner = param.parameter;
 
     if (inner.type === 'Identifier') {
-      return inner.name;
+      name = inner.name;
+    } else if (inner.type === 'AssignmentPattern' && inner.left.type === 'Identifier') {
+      name = inner.left.name;
     }
-
-    if (inner.type === 'AssignmentPattern' && inner.left.type === 'Identifier') {
-      return inner.left.name;
-    }
+  } else if (param.type === 'Identifier') {
+    name = param.name;
+  } else if (param.type === 'AssignmentPattern' && param.left.type === 'Identifier') {
+    name = param.left.name;
   }
 
-  if (param.type === 'Identifier') {
-    return param.name;
-  }
-
-  if (param.type === 'AssignmentPattern' && param.left.type === 'Identifier') {
-    return param.left.name;
-  }
-
-  return '(unknown)';
+  return name;
 }
 
 /**
@@ -138,18 +133,19 @@ function getParamName(param: AstNode): string {
  * Returns the type name only for simple TSTypeReference identifiers (i.e. class names like `FooApi`).
  * Returns null for primitives, union types, generics, or any non-simple type reference.
  *
- * @param param - The parameter AST node
- * @returns The type name to use as injection token, or null if not auto-fixable
+ * @param param - The parameter AST node.
+ * @returns The type name to use as injection token, or null if not auto-fixable.
  */
-function getInjectTokenName(param: AstNode): string | null {
+function getInjectTokenName(param: AstNode): Maybe<string> {
   const target = param.type === 'TSParameterProperty' ? param.parameter : param;
   const typeAnnotation = target.typeAnnotation?.typeAnnotation;
+  let tokenName: Maybe<string> = null;
 
   if (typeAnnotation?.type === 'TSTypeReference' && typeAnnotation.typeName?.type === 'Identifier' && !typeAnnotation.typeArguments) {
-    return typeAnnotation.typeName.name;
+    tokenName = typeAnnotation.typeName.name;
   }
 
-  return null;
+  return tokenName;
 }
 
 /**
@@ -191,7 +187,7 @@ export interface NestjsRequireInjectRuleDefinition {
  * Register as a plugin in your flat ESLint config, then enable individual rules
  * under the chosen plugin prefix (e.g. 'dereekb-nestjs/require-nest-inject').
  */
-export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
+export const NESTJS_REQUIRE_INJECT_RULE: NestjsRequireInjectRuleDefinition = {
   meta: {
     type: 'problem',
     fixable: 'code',
@@ -279,97 +275,94 @@ export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
       },
       ClassDeclaration(classNode: AstNode) {
         const decorators = classNode.decorators;
+        const matchedClassDecorator =
+          decorators && decorators.length > 0
+            ? decorators.find((d: AstNode) => {
+                const name = getDecoratorName(d);
+                return classDecorators.has(name) && nestjsImports.has(name);
+              })
+            : undefined;
+        const constructor = matchedClassDecorator ? classNode.body.body.find((member: AstNode) => member.type === 'MethodDefinition' && member.kind === 'constructor') : undefined;
+        const params = constructor?.value.params;
+        const shouldCheckParams = Boolean(matchedClassDecorator && params && params.length > 0);
 
-        if (!decorators || decorators.length === 0) {
-          return;
-        }
+        if (shouldCheckParams) {
+          const classDecoratorName = getDecoratorName(matchedClassDecorator);
 
-        const matchedClassDecorator = decorators.find((d: AstNode) => {
-          const name = getDecoratorName(d);
-          return classDecorators.has(name) && nestjsImports.has(name);
-        });
+          for (const param of params) {
+            const paramDecoratorsOnNode = param.decorators;
+            const hasValidDecorator = paramDecoratorsOnNode && paramDecoratorsOnNode.length > 0 && paramDecoratorsOnNode.some((d: AstNode) => paramDecorators.has(getDecoratorName(d)));
 
-        if (!matchedClassDecorator) {
-          return;
-        }
+            if (hasValidDecorator) {
+              // Has @Inject() — check if the injection token is a type-only import
+              for (const decorator of paramDecoratorsOnNode) {
+                const tokenName = getInjectTokenFromDecorator(decorator);
 
-        const classDecoratorName = getDecoratorName(matchedClassDecorator);
+                if (tokenName) {
+                  const typeImportInfo = typeOnlyImports.get(tokenName);
 
-        const constructor = classNode.body.body.find((member: AstNode) => member.type === 'MethodDefinition' && member.kind === 'constructor');
+                  if (typeImportInfo) {
+                    context.report({
+                      node: decorator,
+                      messageId: 'typeOnlyInjectToken',
+                      data: { token: tokenName },
+                      fix: (fixer: AstNode) => {
+                        let fixResult: AstNode;
 
-        if (!constructor?.value.params || constructor.value.params.length === 0) {
-          return;
-        }
+                        if (typeImportInfo.isDeclarationLevel) {
+                          // `import type { X } from '...'` → `import { X } from '...'`
+                          // Remove 'type ' after 'import '
+                          const importKeywordEnd = typeImportInfo.declaration.range[0] + 'import '.length;
+                          fixResult = fixer.removeRange([importKeywordEnd, importKeywordEnd + 'type '.length]);
+                        } else {
+                          // `import { type X }` → `import { X }`
+                          // The specifier range includes 'type X', so remove 'type ' prefix
+                          const specRange = typeImportInfo.specifier.range;
+                          const importedRange = typeImportInfo.specifier.imported.range;
+                          fixResult = fixer.removeRange([specRange[0], importedRange[0]]);
+                        }
 
-        for (const param of constructor.value.params) {
-          const paramDecoratorsOnNode = param.decorators;
-          const hasValidDecorator = paramDecoratorsOnNode && paramDecoratorsOnNode.length > 0 && paramDecoratorsOnNode.some((d: AstNode) => paramDecorators.has(getDecoratorName(d)));
-
-          if (hasValidDecorator) {
-            // Has @Inject() — check if the injection token is a type-only import
-            for (const decorator of paramDecoratorsOnNode) {
-              const tokenName = getInjectTokenFromDecorator(decorator);
-
-              if (tokenName) {
-                const typeImportInfo = typeOnlyImports.get(tokenName);
-
-                if (typeImportInfo) {
-                  context.report({
-                    node: decorator,
-                    messageId: 'typeOnlyInjectToken',
-                    data: { token: tokenName },
-                    fix: (fixer: AstNode) => {
-                      if (typeImportInfo.isDeclarationLevel) {
-                        // `import type { X } from '...'` → `import { X } from '...'`
-                        // Remove 'type ' after 'import '
-                        const importKeywordEnd = typeImportInfo.declaration.range[0] + 'import '.length;
-                        return fixer.removeRange([importKeywordEnd, importKeywordEnd + 'type '.length]);
+                        return fixResult;
                       }
+                    });
 
-                      // `import { type X }` → `import { X }`
-                      // The specifier range includes 'type X', so remove 'type ' prefix
-                      const specRange = typeImportInfo.specifier.range;
-                      const importedRange = typeImportInfo.specifier.imported.range;
-                      return fixer.removeRange([specRange[0], importedRange[0]]);
-                    }
-                  });
-
-                  // Remove from tracking so we don't report the same import twice
-                  typeOnlyImports.delete(tokenName);
+                    // Remove from tracking so we don't report the same import twice
+                    typeOnlyImports.delete(tokenName);
+                  }
                 }
               }
-            }
-          } else {
-            // Missing @Inject() entirely
-            const tokenName = getInjectTokenName(param);
+            } else {
+              // Missing @Inject() entirely
+              const tokenName = getInjectTokenName(param);
 
-            context.report({
-              node: param,
-              messageId: 'missingInject',
-              data: {
-                name: getParamName(param),
-                classDecorator: classDecoratorName
-              },
-              fix: tokenName
-                ? (fixer: AstNode) => {
-                    const fixes = [];
+              context.report({
+                node: param,
+                messageId: 'missingInject',
+                data: {
+                  name: getParamName(param),
+                  classDecorator: classDecoratorName
+                },
+                fix: tokenName
+                  ? (fixer: AstNode) => {
+                      const fixes = [];
 
-                    fixes.push(fixer.insertTextBefore(param, `@Inject(${tokenName}) `));
+                      fixes.push(fixer.insertTextBefore(param, `@Inject(${tokenName}) `));
 
-                    if (!nestjsImports.has('Inject') && nestjsImportNode) {
-                      const lastSpecifier = nestjsImportNode.specifiers[nestjsImportNode.specifiers.length - 1];
+                      if (!nestjsImports.has('Inject') && nestjsImportNode) {
+                        const lastSpecifier = nestjsImportNode.specifiers[nestjsImportNode.specifiers.length - 1];
 
-                      if (lastSpecifier) {
-                        fixes.push(fixer.insertTextAfter(lastSpecifier, ', Inject'));
+                        if (lastSpecifier) {
+                          fixes.push(fixer.insertTextAfter(lastSpecifier, ', Inject'));
+                        }
+
+                        nestjsImports.add('Inject');
                       }
 
-                      nestjsImports.add('Inject');
+                      return fixes;
                     }
-
-                    return fixes;
-                  }
-                : undefined
-            });
+                  : undefined
+              });
+            }
           }
         }
       }

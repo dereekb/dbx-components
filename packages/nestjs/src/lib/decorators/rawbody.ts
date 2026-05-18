@@ -30,8 +30,7 @@ export const ParseRawBody = createParamDecorator(async (_, context: ExecutionCon
     throw new BadRequestException('Invalid body');
   }
 
-  const body = await rawbody(req);
-  return body as RawBodyBuffer;
+  return rawbody(req);
 });
 
 /**
@@ -78,9 +77,9 @@ export const ParsedQueryRawBody = createParamDecorator(async (_, context: Execut
 /**
  * Parses a raw body buffer as JSON.
  *
- * @param rawBody - The raw body buffer to parse
- * @returns The parsed JSON object
- * @throws {SyntaxError} When the body is not valid JSON
+ * @param rawBody - The raw body buffer to parse.
+ * @returns The parsed JSON object.
+ * @throws {SyntaxError} When the body is not valid JSON.
  *
  * @example
  * ```typescript
@@ -95,8 +94,8 @@ export function RawBodyToJson<T extends object>(rawBody: RawBodyBuffer): T {
 /**
  * Parses a raw body buffer as a URL-encoded query string.
  *
- * @param rawBody - The raw body buffer to parse
- * @returns The parsed query parameters
+ * @param rawBody - The raw body buffer to parse.
+ * @returns The parsed query parameters.
  *
  * @example
  * ```typescript
@@ -111,8 +110,8 @@ export function RawBodyToParsedQueryString(rawBody: RawBodyBuffer): ParsedUrlQue
 /**
  * Converts a raw body buffer to a trimmed UTF-8 string.
  *
- * @param rawBody - The raw body buffer to convert
- * @returns The decoded and trimmed string content
+ * @param rawBody - The raw body buffer to convert.
+ * @returns The decoded and trimmed string content.
  *
  * @example
  * ```typescript

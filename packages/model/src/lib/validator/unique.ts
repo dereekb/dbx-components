@@ -4,8 +4,8 @@ import { type } from 'arktype';
 /**
  * Creates an ArkType schema that validates an array has no duplicate keys.
  *
- * @param readKey - function that extracts the key from each array element
- * @returns an ArkType schema that narrows `T[]` to ensure uniqueness
+ * @param readKey - Function that extracts the key from each array element.
+ * @returns An ArkType schema that narrows `T[]` to ensure uniqueness.
  *
  * @example
  * ```typescript

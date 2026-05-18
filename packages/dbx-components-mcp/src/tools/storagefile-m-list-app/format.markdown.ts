@@ -5,8 +5,8 @@ import type { AppStorageFilesReport, StorageFilePurposeSummary } from './types.j
  * returns by default. One section per purpose so callers can scan upload
  * wiring without parsing JSON.
  *
- * @param report - the listing report to render
- * @returns the markdown body
+ * @param report - The listing report to render.
+ * @returns The markdown body.
  */
 export function formatReportAsMarkdown(report: AppStorageFilesReport): string {
   const basename = report.componentDir.split('/').pop() ?? report.componentDir;

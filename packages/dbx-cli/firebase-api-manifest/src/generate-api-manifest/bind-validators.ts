@@ -9,6 +9,7 @@
  * is `export const <name>ParamsType = ... as Type<<Name>Params>`.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 
@@ -21,8 +22,7 @@ import { dirname, isAbsolute, join, resolve } from 'node:path';
  * @returns The lowerCamelCase validator identifier (or empty string for empty input).
  */
 export function deriveValidatorName(paramsTypeName: string): string {
-  if (!paramsTypeName) return '';
-  return paramsTypeName.charAt(0).toLowerCase() + paramsTypeName.slice(1) + 'Type';
+  return paramsTypeName ? paramsTypeName.charAt(0).toLowerCase() + paramsTypeName.slice(1) + 'Type' : '';
 }
 
 /**
@@ -46,8 +46,7 @@ export interface IsExportedInput {
 export function isExportedFromPackage(input: IsExportedInput): boolean {
   const { packageRoot, identifier } = input;
   const indexPath = locateBarrelEntry(packageRoot);
-  if (!indexPath) return false;
-  return findIdentifierInBarrelChain(indexPath, identifier, new Set());
+  return indexPath ? findIdentifierInBarrelChain(indexPath, identifier, new Set()) : false;
 }
 
 function locateBarrelEntry(packageRoot: string): string | undefined {
@@ -58,35 +57,48 @@ function locateBarrelEntry(packageRoot: string): string | undefined {
 const EXPORT_DECL_PATTERNS: readonly RegExp[] = [/export\s+(?:declare\s+)?const\s+IDENT\b/, /export\s+(?:declare\s+)?function\s+IDENT\b/, /export\s*\{[^}]*\bIDENT\b[^}]*\}/];
 
 function findIdentifierInBarrelChain(filePath: string, identifier: string, visited: Set<string>): boolean {
-  if (visited.has(filePath)) return false;
-  visited.add(filePath);
+  let result = false;
 
-  let text: string;
-  try {
-    text = readFileSync(filePath, 'utf8');
-  } catch {
-    return false;
+  if (!visited.has(filePath)) {
+    visited.add(filePath);
+
+    let text: string | undefined;
+    try {
+      text = readFileSync(filePath, 'utf8');
+    } catch {
+      text = undefined;
+    }
+
+    if (text !== undefined) {
+      for (const pattern of EXPORT_DECL_PATTERNS) {
+        const re = new RegExp(pattern.source.replace('IDENT', escapeRegExp(identifier)));
+        if (re.test(text)) {
+          result = true;
+          break;
+        }
+      }
+
+      if (!result) {
+        const dir = dirname(filePath);
+        for (const reExportTarget of collectReExportTargets(text)) {
+          const resolved = resolveReExport(dir, reExportTarget);
+          if (!resolved) continue;
+          if (findIdentifierInBarrelChain(resolved, identifier, visited)) {
+            result = true;
+            break;
+          }
+        }
+      }
+    }
   }
 
-  for (const pattern of EXPORT_DECL_PATTERNS) {
-    const re = new RegExp(pattern.source.replace('IDENT', escapeRegExp(identifier)));
-    if (re.test(text)) return true;
-  }
-
-  const dir = dirname(filePath);
-  for (const reExportTarget of collectReExportTargets(text)) {
-    const resolved = resolveReExport(dir, reExportTarget);
-    if (!resolved) continue;
-    if (findIdentifierInBarrelChain(resolved, identifier, visited)) return true;
-  }
-
-  return false;
+  return result;
 }
 
 function collectReExportTargets(text: string): string[] {
   const out: string[] = [];
   const re = /export\s*(?:\*|\{[^}]*\})\s*from\s*['"]([^'"]+)['"]/g;
-  let match: RegExpExecArray | null;
+  let match: Maybe<RegExpExecArray>;
   while ((match = re.exec(text)) !== null) {
     out.push(match[1]);
   }
@@ -94,16 +106,17 @@ function collectReExportTargets(text: string): string[] {
 }
 
 function resolveReExport(fromDir: string, target: string): string | undefined {
-  if (!target.startsWith('.')) return undefined;
-  const candidate = isAbsolute(target) ? target : resolve(fromDir, target);
-
   let result: string | undefined;
-  for (const ext of ['.ts', '.mts', '.d.ts', '/index.ts', '/index.mts', '/index.d.ts']) {
-    const probe = hasTsModuleExtension(candidate) ? candidate : candidate + ext;
-    const resolved = resolveExistingTsPath(probe);
-    if (resolved) {
-      result = resolved;
-      break;
+  if (target.startsWith('.')) {
+    const candidate = isAbsolute(target) ? target : resolve(fromDir, target);
+
+    for (const ext of ['.ts', '.mts', '.d.ts', '/index.ts', '/index.mts', '/index.d.ts']) {
+      const probe = hasTsModuleExtension(candidate) ? candidate : candidate + ext;
+      const resolved = resolveExistingTsPath(probe);
+      if (resolved) {
+        result = resolved;
+        break;
+      }
     }
   }
   return result;
@@ -114,14 +127,24 @@ function hasTsModuleExtension(value: string): boolean {
 }
 
 function resolveExistingTsPath(probe: string): string | undefined {
-  if (!existsSync(probe)) return undefined;
-  const stat = statSync(probe);
-  if (stat.isFile()) return probe;
-  if (!stat.isDirectory()) return undefined;
-  const sourceIndex = join(probe, 'index.ts');
-  if (existsSync(sourceIndex)) return sourceIndex;
-  const declarationIndex = join(probe, 'index.d.ts');
-  return existsSync(declarationIndex) ? declarationIndex : undefined;
+  let result: string | undefined;
+  if (existsSync(probe)) {
+    const stat = statSync(probe);
+    if (stat.isFile()) {
+      result = probe;
+    } else if (stat.isDirectory()) {
+      const sourceIndex = join(probe, 'index.ts');
+      if (existsSync(sourceIndex)) {
+        result = sourceIndex;
+      } else {
+        const declarationIndex = join(probe, 'index.d.ts');
+        if (existsSync(declarationIndex)) {
+          result = declarationIndex;
+        }
+      }
+    }
+  }
+  return result;
 }
 
 function escapeRegExp(value: string): string {
@@ -139,10 +162,10 @@ function escapeRegExp(value: string): string {
  */
 export function listPackageTsFiles(packageRoot: string): string[] {
   const libRoot = join(packageRoot, 'src');
-  if (!safeIsDirectory(libRoot)) return [];
-
   const out: string[] = [];
-  walk(libRoot, out);
+  if (safeIsDirectory(libRoot)) {
+    walk(libRoot, out);
+  }
   return out;
 }
 
@@ -160,9 +183,11 @@ function walk(dir: string, out: string[]): void {
 }
 
 function safeIsDirectory(p: string): boolean {
+  let result: boolean;
   try {
-    return statSync(p).isDirectory();
+    result = statSync(p).isDirectory();
   } catch {
-    return false;
+    result = false;
   }
+  return result;
 }

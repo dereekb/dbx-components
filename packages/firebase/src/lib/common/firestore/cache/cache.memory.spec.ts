@@ -1,6 +1,6 @@
 import { firstValueFrom, take, toArray } from 'rxjs';
 import { type FirestoreCacheEntry, type FirestoreCollectionCache, type FirestoreContextCache, noopFirestoreCollectionCache, noopFirestoreContextCache } from './cache';
-import { inMemoryFirestoreContextCacheFactory, inMemoryFirestoreContextCache, readLoggingFirestoreContextCache, readLoggingFirestoreContextCacheFactory, IN_MEMORY_CACHE_DEFAULT_TTL } from './cache.memory';
+import { inMemoryFirestoreContextCacheFactory, inMemoryFirestoreContextCache, readLoggingFirestoreContextCache, readLoggingFirestoreContextCacheFactory, DEFAULT_IN_MEMORY_CACHE_TTL } from './cache.memory';
 
 // MARK: Test Helpers
 function makeCacheEntry<T>(data: T): { data: T } {
@@ -452,8 +452,8 @@ describe('readLoggingFirestoreContextCacheFactory()', () => {
   });
 });
 
-describe('IN_MEMORY_CACHE_DEFAULT_TTL', () => {
+describe('DEFAULT_IN_MEMORY_CACHE_TTL', () => {
   it('should be 5 minutes in milliseconds', () => {
-    expect(IN_MEMORY_CACHE_DEFAULT_TTL).toBe(300000);
+    expect(DEFAULT_IN_MEMORY_CACHE_TTL).toBe(300000);
   });
 });

@@ -159,7 +159,7 @@ export function makeAuthTransitionHook(config: AuthTransitionHookConfig): Transi
         if (isGetter<AuthTransitionRedirectTarget>(redirectTo)) {
           resultObs = getValueFromGetter(redirectTo, { authService, injector, transition } as AuthTransitionDecisionGetterInput);
         } else {
-          resultObs = of(redirectTo as SegueRefOrSegueRefRouterLink);
+          resultObs = of(redirectTo);
         }
 
         redirectToObs = resultObs.pipe(

@@ -69,16 +69,17 @@ export interface FirebaseServerFirestoreContextModuleConfig {
  *
  * If caching is not needed, use {@link FirebaseServerFirestoreContextModule} directly instead.
  *
- * @param config - Configuration including the cache factory
- * @returns Module metadata ready for the `@Module()` decorator
+ * @param config - Configuration including the cache factory.
+ * @returns Module metadata ready for the `@Module()` decorator.
  *
- * @example
- * ```typescript
- * @Module(firebaseServerFirestoreContextModuleMetadata({
+ * @Module (firebaseServerFirestoreContextModuleMetadata({
  *   firestoreContextCacheFactory: inMemoryFirestoreContextCacheFactory()
  * }))
  * export class AppFirestoreContextModule {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function firebaseServerFirestoreContextModuleMetadata(config: FirebaseServerFirestoreContextModuleConfig): ModuleMetadata {
   const params: FirestoreContextFactoryParams = { firestoreContextCacheFactory: config.firestoreContextCacheFactory };
@@ -106,8 +107,8 @@ export type ProvideAppFirestoreCollectionsFactory<T> = (context: FirestoreContex
  * Configuration for providing an app's Firestore collections class via NestJS DI.
  */
 export interface ProvideAppFirestoreCollectionsConfig<T> {
-  provide: ClassLikeType<T>;
-  useFactory: ProvideAppFirestoreCollectionsFactory<T>;
+  readonly provide: ClassLikeType<T>;
+  readonly useFactory: ProvideAppFirestoreCollectionsFactory<T>;
 }
 
 /**
@@ -151,25 +152,25 @@ export interface ProvideAppFirestoreModuleMetadataConfig<T> extends ProvideAppFi
  * @param config - The Firestore collections config plus optional additional module metadata.
  * @returns NestJS module metadata ready to be passed to the `@Module()` decorator.
  *
- * @example
- * ```typescript
- * @Module(appFirestoreModuleMetadata({
+ * @Module (appFirestoreModuleMetadata({
  *   provide: DemoFirestoreCollections,
  *   useFactory: (context) => new DemoFirestoreCollections(context)
  * }))
  * export class AppFirestoreModule {}
  * ```
- *
- * @example
- * ```typescript
- * // With caching
- * @Module(appFirestoreModuleMetadata({
+ * @Module (appFirestoreModuleMetadata({
  *   provide: DemoFirestoreCollections,
  *   useFactory: (context) => new DemoFirestoreCollections(context),
  *   firestoreContextCacheFactory: inMemoryFirestoreContextCacheFactory()
  * }))
  * export class AppFirestoreModule {}
  * ```
+ *
+ * @example
+ * ```typescript
+ * @example
+ * ```typescript
+ * // With caching
  */
 export function appFirestoreModuleMetadata<T>(config: ProvideAppFirestoreModuleMetadataConfig<T>): ModuleMetadata {
   const contextModuleMetadata = config.firestoreContextCacheFactory ? firebaseServerFirestoreContextModuleMetadata({ firestoreContextCacheFactory: config.firestoreContextCacheFactory }) : { imports: [FirebaseServerFirestoreContextModule], exports: [FirebaseServerFirestoreContextModule] };

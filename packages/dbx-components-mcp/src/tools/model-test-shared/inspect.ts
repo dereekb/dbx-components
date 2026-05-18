@@ -22,12 +22,12 @@ import type { SpecFileTree } from './types.js';
  * parser can use the authoritative workspace prefix and the full set of
  * fixture-context names.
  *
- * @param config - inspection inputs
- * @param config.specAbs - absolute path to the `.spec.ts` file
- * @param config.specRel - caller-relative path metadata
- * @param config.apiAbs - optional absolute path to the API app root
- * @param config.apiRel - optional caller-relative path metadata for the app
- * @returns the parsed tree
+ * @param config - Inspection inputs.
+ * @param config.specAbs - Absolute path to the `.spec.ts` file.
+ * @param config.specRel - Caller-relative path metadata.
+ * @param config.apiAbs - Optional absolute path to the API app root.
+ * @param config.apiRel - Optional caller-relative path metadata for the app.
+ * @returns The parsed tree.
  */
 export async function inspectSpecFile(config: { readonly specAbs: string; readonly specRel: string; readonly apiAbs?: string; readonly apiRel?: string }): Promise<SpecFileTree> {
   const { specAbs, specRel, apiAbs, apiRel } = config;

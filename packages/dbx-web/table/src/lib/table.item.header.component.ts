@@ -16,7 +16,7 @@ import { DbxInjectionComponent } from '@dereekb/dbx-core';
 })
 export class DbxTableItemHeaderComponent<T> extends AbstractDbxTableItemDirective<T> {
   readonly config$ = this.tableStore.viewDelegate$.pipe(
-    switchMap((viewDelegate) => this.item$.pipe(map((x) => (x != null ? viewDelegate.itemHeader(x) : undefined)))),
+    switchMap((viewDelegate) => this.item$.pipe(map((x) => (x == null ? undefined : viewDelegate.itemHeader(x))))),
     maybeValueFromObservableOrValue()
   );
 

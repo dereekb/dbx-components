@@ -16,10 +16,10 @@ export type ZoomWebhookEventVerifier = (req: Request, _rawBody: Buffer) => ZoomW
 /**
  * Verifies a Zoom webhook event header.
  *
- * @see https://developers.zoom.us/docs/api/webhooks/#verify-with-zooms-header
+ * @param zoomSecretToken - The Zoom secret token.
+ * @returns Verifies a Zoom webhook event.
  *
- * @param zoomSecretToken The Zoom secret token.
- * @returns A function that verifies a Zoom webhook event.
+ * @see https://developers.zoom.us/docs/api/webhooks/#verify-with-zooms-header
  */
 export function zoomWebhookEventVerifier(zoomSecretToken: ZoomSecretToken): ZoomWebhookEventVerifier {
   return (request: Request, _rawBody: Buffer) => {

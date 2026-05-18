@@ -11,6 +11,7 @@
  * block name-checks it.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile } from 'node:fs/promises';
 import { basename, extname, isAbsolute, resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
@@ -115,7 +116,7 @@ function pairBatchPaths(paths: readonly string[]): readonly PairedFile[] {
   const order: string[] = [];
   for (const path of paths) {
     const ext = extname(path).toLowerCase();
-    let kind: 'html' | 'scss' | null = null;
+    let kind: Maybe<'html' | 'scss'> = null;
     if (ext === '.html') kind = 'html';
     else if (ext === '.scss' || ext === '.css') kind = 'scss';
     if (kind === null) continue;
@@ -172,8 +173,9 @@ export interface CreateUiSmellCheckToolInput {
 /**
  * Creates the `dbx_ui_smell_check` tool wired to the supplied registries.
  *
- * @param input - the registries plus an optional cwd / readFile for config lookup
- * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @param input - The registries plus an optional cwd / readFile for config lookup.
+ * @returns A {@link DbxTool} ready to register with the dispatcher.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createUiSmellCheckTool(input: CreateUiSmellCheckToolInput): DbxTool {
@@ -199,7 +201,7 @@ async function loadConventionsFromConfig(input: { readonly cwd: string | undefin
   let result: ProjectConventions = {};
   try {
     const configResult = await findAndLoadConfig({ cwd: input.cwd ?? process.cwd(), readFile: input.readFile });
-    const block = (configResult.config as { uiSmellCheck?: { projectConventions?: ProjectConventions } } | null)?.uiSmellCheck?.projectConventions;
+    const block = (configResult.config as Maybe<{ uiSmellCheck?: { projectConventions?: ProjectConventions } }>)?.uiSmellCheck?.projectConventions;
     if (block !== undefined) {
       result = block;
     }
@@ -265,8 +267,8 @@ async function runSingleMode(input: RunModeInput): Promise<ToolResult> {
   return { content: [{ type: 'text', text }] };
 }
 
-function checkSingleModeMutualExclusion(args: ParsedArgs): ToolResult | null {
-  let result: ToolResult | null = null;
+function checkSingleModeMutualExclusion(args: ParsedArgs): Maybe<ToolResult> {
+  let result: Maybe<ToolResult> = null;
   if (args.html.length > 0 && args.htmlPath !== undefined) {
     result = toolError('dbx_ui_smell_check: provide either `html` or `htmlPath`, not both.');
   } else if (args.scss.length > 0 && args.scssPath !== undefined) {
@@ -329,7 +331,7 @@ async function runBatch(input: RunBatchInput): Promise<ToolResult> {
     return toolError('dbx_ui_smell_check: `paths` produced no recognizable files (need .html/.scss/.css).');
   }
   const files: SmellResultFile[] = [];
-  let earlyResult: ToolResult | null = null;
+  let earlyResult: Maybe<ToolResult> = null;
   for (const entry of paired) {
     const built = await buildBatchFileEntry(entry, input);
     if (built.kind === 'error') {

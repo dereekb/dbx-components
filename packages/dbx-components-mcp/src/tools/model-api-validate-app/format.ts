@@ -55,17 +55,25 @@ export function formatValidationAsJson(report: ValidateReport): string {
 }
 
 function formatHandlerMapStatus(report: ValidateReport): string {
+  let result: string;
   switch (report.handlerMapStatus.kind) {
     case 'ok': {
-      if (report.handlerMapStatus.verbsFound.length === 0) return 'Verbs found: _(none)_';
-      const verbs = report.handlerMapStatus.verbsFound.map((v) => `\`${v}\``).join(', ');
-      return `Verbs found: ${verbs}`;
+      if (report.handlerMapStatus.verbsFound.length === 0) {
+        result = 'Verbs found: _(none)_';
+      } else {
+        const verbs = report.handlerMapStatus.verbsFound.map((v) => `\`${v}\``).join(', ');
+        result = `Verbs found: ${verbs}`;
+      }
+      break;
     }
     case 'missing':
-      return `_Handler map not found at \`${report.handlerMapStatus.path}\` — every declared call will be flagged as MISSING HANDLER._`;
+      result = `_Handler map not found at \`${report.handlerMapStatus.path}\` — every declared call will be flagged as MISSING HANDLER._`;
+      break;
     case 'error':
-      return `_Handler map parse error: ${report.handlerMapStatus.message}_`;
+      result = `_Handler map parse error: ${report.handlerMapStatus.message}_`;
+      break;
   }
+  return result;
 }
 
 function entryStatus(entry: ReconciledEntry): string {

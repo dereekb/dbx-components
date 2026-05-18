@@ -1,5 +1,5 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
-import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 import type { DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';
 import { type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
 
@@ -72,4 +72,4 @@ export interface DbxForgeDateTimeFieldConfig extends DbxForgeFieldFunctionDef<Db
 export const dbxForgeDateTimeField = dbxForgeFieldFunction<DbxForgeDateTimeFieldConfig>({
   type: FORGE_DATETIME_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder()
-}) as DbxForgeFieldFunction<DbxForgeDateTimeFieldConfig, DbxForgeDateTimeFieldDef>;
+});

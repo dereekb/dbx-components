@@ -18,8 +18,8 @@ const SUB_OBJECT_FACTORY_NAMES: ReadonlySet<ExtractedSubObjectConst['factoryName
  * object types and generic parameters are skipped because they never
  * resolve to a declared interface.
  *
- * @param sf - the parsed source file to inspect
- * @returns one entry per detected sub-object factory const, in source order
+ * @param sf - The parsed source file to inspect.
+ * @returns One entry per detected sub-object factory const, in source order.
  */
 export function findSubObjectConsts(sf: SourceFile): readonly ExtractedSubObjectConst[] {
   const out: ExtractedSubObjectConst[] = [];

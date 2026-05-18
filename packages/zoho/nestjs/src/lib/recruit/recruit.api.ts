@@ -54,7 +54,7 @@ export class ZohoRecruitApi {
   /**
    * The authenticated Recruit context used by all operation accessors.
    *
-   * @returns the Recruit context from the underlying client
+   * @returns The Recruit context from the underlying client.
    */
   get recruitContext(): ZohoRecruitContext {
     return this.zohoRecruit.recruitContext;
@@ -63,7 +63,7 @@ export class ZohoRecruitApi {
   /**
    * Rate limiter shared across all Recruit requests to respect Zoho API quotas.
    *
-   * @returns the shared rate limiter instance
+   * @returns The shared rate limiter instance.
    */
   get zohoRateLimiter() {
     return this.zohoRecruit.recruitContext.zohoRateLimiter;
@@ -73,8 +73,8 @@ export class ZohoRecruitApi {
    * Initializes the Recruit client by combining the service config with the
    * accounts context for OAuth token management.
    *
-   * @param config - Zoho Recruit service configuration
-   * @param zohoAccountsApi - accounts API used for OAuth token management
+   * @param config - Zoho Recruit service configuration.
+   * @param zohoAccountsApi - Accounts API used for OAuth token management.
    */
   constructor(
     @Inject(ZohoRecruitServiceConfig) readonly config: ZohoRecruitServiceConfig,
@@ -90,7 +90,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitInsertRecord}.
    *
-   * @returns bound insert record function
+   * @returns Bound insert record function.
    */
   get insertRecord() {
     return zohoRecruitInsertRecord(this.recruitContext);
@@ -99,7 +99,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitUpsertRecord}.
    *
-   * @returns bound upsert record function
+   * @returns Bound upsert record function.
    */
   get upsertRecord() {
     return zohoRecruitUpsertRecord(this.recruitContext);
@@ -108,7 +108,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitUpdateRecord}.
    *
-   * @returns bound update record function
+   * @returns Bound update record function.
    */
   get updateRecord() {
     return zohoRecruitUpdateRecord(this.recruitContext);
@@ -117,7 +117,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitDeleteRecord}.
    *
-   * @returns bound delete record function
+   * @returns Bound delete record function.
    */
   get deleteRecord() {
     return zohoRecruitDeleteRecord(this.recruitContext);
@@ -126,7 +126,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetRecordById}.
    *
-   * @returns bound get record by ID function
+   * @returns Bound get record by ID function.
    */
   get getRecordById() {
     return zohoRecruitGetRecordById(this.recruitContext);
@@ -135,7 +135,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetRecords}.
    *
-   * @returns bound get records function
+   * @returns Bound get records function.
    */
   get getRecords() {
     return zohoRecruitGetRecords(this.recruitContext);
@@ -144,7 +144,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitSearchRecords}.
    *
-   * @returns bound search records function
+   * @returns Bound search records function.
    */
   get searchRecords() {
     return zohoRecruitSearchRecords(this.recruitContext);
@@ -153,7 +153,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitSearchRecordsPageFactory}.
    *
-   * @returns bound search records page factory function
+   * @returns Bound search records page factory function.
    */
   get searchRecordsPageFactory() {
     return zohoRecruitSearchRecordsPageFactory(this.recruitContext);
@@ -162,7 +162,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetRelatedRecordsFunctionFactory}.
    *
-   * @returns bound get related records factory function
+   * @returns Bound get related records factory function.
    */
   get getRelatedRecordsFunctionFactory() {
     return zohoRecruitGetRelatedRecordsFunctionFactory(this.recruitContext);
@@ -171,7 +171,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetEmailsForRecord}.
    *
-   * @returns bound get emails for record function
+   * @returns Bound get emails for record function.
    */
   get getEmailsForRecord() {
     return zohoRecruitGetEmailsForRecord(this.recruitContext);
@@ -180,7 +180,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetEmailsForRecordPageFactory}.
    *
-   * @returns bound get emails page factory function
+   * @returns Bound get emails page factory function.
    */
   get getEmailsForRecordPageFactory() {
     return zohoRecruitGetEmailsForRecordPageFactory(this.recruitContext);
@@ -189,7 +189,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetAttachmentsForRecord}.
    *
-   * @returns bound get attachments for record function
+   * @returns Bound get attachments for record function.
    */
   get getAttachmentsForRecord() {
     return zohoRecruitGetAttachmentsForRecord(this.recruitContext);
@@ -198,7 +198,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetAttachmentsForRecordPageFactory}.
    *
-   * @returns bound get attachments page factory function
+   * @returns Bound get attachments page factory function.
    */
   get getAttachmentsForRecordPageFactory() {
     return zohoRecruitGetAttachmentsForRecordPageFactory(this.recruitContext);
@@ -207,7 +207,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitUploadAttachmentForRecord}.
    *
-   * @returns bound upload attachment function
+   * @returns Bound upload attachment function.
    */
   get uploadAttachmentForRecord() {
     return zohoRecruitUploadAttachmentForRecord(this.recruitContext);
@@ -216,7 +216,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitDownloadAttachmentForRecord}.
    *
-   * @returns bound download attachment function
+   * @returns Bound download attachment function.
    */
   get downloadAttachmentForRecord() {
     return zohoRecruitDownloadAttachmentForRecord(this.recruitContext);
@@ -225,7 +225,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitDeleteAttachmentFromRecord}.
    *
-   * @returns bound delete attachment function
+   * @returns Bound delete attachment function.
    */
   get deleteAttachmentFromRecord() {
     return zohoRecruitDeleteAttachmentFromRecord(this.recruitContext);
@@ -234,7 +234,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitCreateNotes}.
    *
-   * @returns bound create notes function
+   * @returns Bound create notes function.
    */
   get createNotes() {
     return zohoRecruitCreateNotes(this.recruitContext);
@@ -243,7 +243,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitDeleteNotes}.
    *
-   * @returns bound delete notes function
+   * @returns Bound delete notes function.
    */
   get deleteNotes() {
     return zohoRecruitDeleteNotes(this.recruitContext);
@@ -252,7 +252,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitCreateNotesForRecord}.
    *
-   * @returns bound create notes for record function
+   * @returns Bound create notes for record function.
    */
   get createNotesForRecord() {
     return zohoRecruitCreateNotesForRecord(this.recruitContext);
@@ -261,7 +261,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetNotesForRecord}.
    *
-   * @returns bound get notes for record function
+   * @returns Bound get notes for record function.
    */
   get getNotesForRecord() {
     return zohoRecruitGetNotesForRecord(this.recruitContext);
@@ -270,7 +270,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetNotesForRecordPageFactory}.
    *
-   * @returns bound get notes page factory function
+   * @returns Bound get notes page factory function.
    */
   get getNotesForRecordPageFactory() {
     return zohoRecruitGetNotesForRecordPageFactory(this.recruitContext);
@@ -279,7 +279,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitExecuteRestApiFunction}.
    *
-   * @returns bound execute REST API function
+   * @returns Bound execute REST API function.
    */
   get executeRestApiFunction() {
     return zohoRecruitExecuteRestApiFunction(this.recruitContext);
@@ -288,7 +288,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitAssociateCandidateRecordsWithJobOpenings}.
    *
-   * @returns bound associate candidates with job openings function
+   * @returns Bound associate candidates with job openings function.
    */
   get associateCandidateRecordsWithJobOpenings() {
     return zohoRecruitAssociateCandidateRecordsWithJobOpenings(this.recruitContext);
@@ -297,7 +297,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitSearchCandidateAssociatedJobOpeningRecords}.
    *
-   * @returns bound search candidate associated job openings function
+   * @returns Bound search candidate associated job openings function.
    */
   get searchCandidateAssociatedJobOpeningRecords() {
     return zohoRecruitSearchCandidateAssociatedJobOpeningRecords(this.recruitContext);
@@ -306,7 +306,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory}.
    *
-   * @returns bound search candidate job openings page factory function
+   * @returns Bound search candidate job openings page factory function.
    */
   get searchCandidateAssociatedJobOpeningRecordsPageFactory() {
     return zohoRecruitSearchCandidateAssociatedJobOpeningRecordsPageFactory(this.recruitContext);
@@ -315,7 +315,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitSearchJobOpeningAssociatedCandidateRecords}.
    *
-   * @returns bound search job opening associated candidates function
+   * @returns Bound search job opening associated candidates function.
    */
   get searchJobOpeningAssociatedCandidateRecords() {
     return zohoRecruitSearchJobOpeningAssociatedCandidateRecords(this.recruitContext);
@@ -324,7 +324,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory}.
    *
-   * @returns bound search job opening candidates page factory function
+   * @returns Bound search job opening candidates page factory function.
    */
   get searchJobOpeningAssociatedCandidateRecordsPageFactory() {
     return zohoRecruitSearchJobOpeningAssociatedCandidateRecordsPageFactory(this.recruitContext);
@@ -333,7 +333,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitCreateTagsForModule}.
    *
-   * @returns bound create tags for module function
+   * @returns Bound create tags for module function.
    */
   get createTagsForModule() {
     return zohoRecruitCreateTagsForModule(this.recruitContext);
@@ -342,7 +342,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitGetTagsForModule}.
    *
-   * @returns bound get tags for module function
+   * @returns Bound get tags for module function.
    */
   get getTagsForModule() {
     return zohoRecruitGetTagsForModule(this.recruitContext);
@@ -351,7 +351,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitAddTagsToRecords}.
    *
-   * @returns bound add tags to records function
+   * @returns Bound add tags to records function.
    */
   get addTagsToRecords() {
     return zohoRecruitAddTagsToRecords(this.recruitContext);
@@ -360,7 +360,7 @@ export class ZohoRecruitApi {
   /**
    * Configured pass-through for {@link zohoRecruitRemoveTagsFromRecords}.
    *
-   * @returns bound remove tags from records function
+   * @returns Bound remove tags from records function.
    */
   get removeTagsFromRecords() {
     return zohoRecruitRemoveTagsFromRecords(this.recruitContext);

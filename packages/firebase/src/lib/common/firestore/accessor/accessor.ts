@@ -92,7 +92,7 @@ export interface FirestoreDocumentDataAccessor<T, D = DocumentData> extends Docu
    * @param converter
    */
   getWithConverter(converter: null): Promise<DocumentSnapshot<DocumentData>>;
-  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>>;
+  getWithConverter<U = DocumentData>(converter: Maybe<FirestoreDataConverter<U>>): Promise<DocumentSnapshot<U>>;
   /**
    * Whether or not the target object currently exists.
    */
@@ -193,11 +193,12 @@ export enum FirestoreAccessorStreamMode {
 /**
  * Creates an Observable that emits the document data from snapshots based on the specified stream mode.
  *
+ * @param accessor - The document accessor to retrieve snapshots from.
+ * @param mode - Whether to use a one-time GET or continuous STREAM mode.
+ * @param options - Options for how to format the document data.
+ * @returns An Observable that emits the document data or undefined if the document doesn't exist.
+ *
  * @template T - The document data type
- * @param accessor - The document accessor to retrieve snapshots from
- * @param mode - Whether to use a one-time GET or continuous STREAM mode
- * @param options - Options for how to format the document data
- * @returns An Observable that emits the document data or undefined if the document doesn't exist
  */
 export function snapshotStreamDataForAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>, mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<Maybe<T>> {
   return dataFromSnapshotStream<T>(snapshotStreamForAccessor(accessor, mode), options);
@@ -206,10 +207,11 @@ export function snapshotStreamDataForAccessor<T>(accessor: FirestoreDocumentData
 /**
  * Creates an Observable that emits DocumentSnapshots based on the specified stream mode.
  *
+ * @param accessor - The document accessor to retrieve snapshots from.
+ * @param mode - Whether to use a one-time GET or continuous STREAM mode.
+ * @returns An Observable that emits DocumentSnapshots.
+ *
  * @template T - The document data type
- * @param accessor - The document accessor to retrieve snapshots from
- * @param mode - Whether to use a one-time GET or continuous STREAM mode
- * @returns An Observable that emits DocumentSnapshots
  */
 export function snapshotStreamForAccessor<T>(accessor: FirestoreDocumentDataAccessor<T>, mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<T>> {
   return mode === FirestoreAccessorStreamMode.GET ? from(accessor.get()) : accessor.stream();
@@ -220,10 +222,11 @@ export function snapshotStreamForAccessor<T>(accessor: FirestoreDocumentDataAcce
  *
  * Filters out null/undefined values from the stream (documents that don't exist).
  *
+ * @param stream - Observable that emits DocumentSnapshots.
+ * @param options - Options for how to format the document data.
+ * @returns An Observable that emits document data, filtering out non-existent documents.
+ *
  * @template T - The document data type
- * @param stream - Observable that emits DocumentSnapshots
- * @param options - Options for how to format the document data
- * @returns An Observable that emits document data, filtering out non-existent documents
  */
 export function dataFromSnapshotStream<T>(stream: Observable<DocumentSnapshot<T>>, options?: SnapshotOptions): Observable<T> {
   return stream.pipe(mapDataFromSnapshot(options), filterMaybe());
@@ -232,9 +235,10 @@ export function dataFromSnapshotStream<T>(stream: Observable<DocumentSnapshot<T>
 /**
  * Creates an RxJS operator that transforms DocumentSnapshots into their data.
  *
- * @template T - The document data type
- * @param options - Options for how to format the document data
+ * @param options - Options for how to format the document data.
  * @returns An operator that transforms DocumentSnapshots into document data (or undefined if the document doesn't exist)
+ *
+ * @template T - The document data type
  */
 export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunction<DocumentSnapshot<T>, Maybe<T>> {
   return map((x) => x.data(options));
@@ -266,10 +270,12 @@ export type UpdateWithAccessorUpdateAndConverterFunction<T> = (data: Partial<T>,
  * - Skips the update if the resulting data is empty
  * - Applies any provided preconditions to the update
  *
+ * @param accessor - Accessor used to apply the underlying update.
+ * @param converter - Converter that normalizes input data into Firestore format.
+ * @returns Update function that converts then writes the partial data.
+ *
  * @template T - The document data type
- * @param accessor - The document accessor to use for updates
- * @param converter - The data converter to transform input data to Firestore format
- * @returns A function that updates the document with converted data
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function updateWithAccessorUpdateAndConverterFunction<T>(accessor: FirestoreDocumentDataAccessor<T>, converter: FirestoreDataConverter<T>): UpdateWithAccessorUpdateAndConverterFunction<T> {

@@ -74,10 +74,10 @@ export interface PushIoViolationsConfig<TCode extends string, TViolation> {
  * Walks both sides of the inspection, pushing one violation per
  * non-`'ok'` status onto {@link PushIoViolationsConfig.violations}.
  *
- * @param config - the inspection, mutable buffer, code lookup, message
- *   strings, and per-domain violation constructor
+ * @param config - The inspection, mutable buffer, code lookup, message
+ *   strings, and per-domain violation constructor.
  * @returns `true` when both sides are `'ok'` and content rules should
- *   continue; `false` when at least one side short-circuited
+ *   continue; `false` when at least one side short-circuited.
  */
 export function pushIoViolations<TCode extends string, TViolation>(config: PushIoViolationsConfig<TCode, TViolation>): boolean {
   const { inspection, violations, codes, messages, build } = config;

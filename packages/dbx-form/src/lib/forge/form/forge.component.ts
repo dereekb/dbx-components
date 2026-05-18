@@ -23,7 +23,7 @@ import { cleanSubscription } from '@dereekb/dbx-core';
   `,
   host: {
     class: 'dbx-forge',
-    '[class.dbx-forge-form-disabled]': 'isDisabled()'
+    '[class.dbx-forge-form-disabled]': 'isDisabledSignal()'
   },
   providers: [EventDispatcher, { provide: DbxForgeDynamicFormSignalRef, useExisting: DbxForgeFormComponent }, DbxForgeFormContextService, { provide: DbxForm, useExisting: DbxForgeFormContext }, { provide: DbxMutableForm, useExisting: DbxForgeFormContext }],
   imports: [DynamicForm],
@@ -70,10 +70,10 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
    */
   private _pendingValue: Maybe<{ value: Maybe<Partial<T>> }> = undefined;
 
-  readonly isDisabled = computed(() => BooleanStringKeyArrayUtility.isTrue(this._disabled()));
+  readonly isDisabledSignal = computed(() => BooleanStringKeyArrayUtility.isTrue(this._disabled()));
 
   readonly formOptionsSignal = computed((): FormOptions | undefined => {
-    return this.isDisabled() ? { disabled: true } : undefined;
+    return this.isDisabledSignal() ? { disabled: true } : undefined;
   });
 
   /**
@@ -85,7 +85,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
    * DynamicForm.valid(). They register their nested validity via
    * {@link DbxForgeFormContext.registerWrapperValidity}, and this computed combines both sources.
    */
-  readonly formValid = computed(() => (this.dynamicForm()?.valid() ?? false) && this._context.allWrappersValid());
+  readonly formValidSignal = computed(() => (this.dynamicForm()?.valid() ?? false) && this._context.allWrappersValid());
 
   /**
    * Track form value changes and update the context value + changes count.
@@ -154,7 +154,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
   protected readonly _parentFormTreeEffect = effect(() => {
     const formTree = this.dynamicForm()?.form();
     untracked(() => {
-      this._context.setParentFormTree(formTree as any);
+      this._context.setParentFormTree(formTree);
     });
   });
 
@@ -165,7 +165,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
    * update isComplete and status without incrementing changesCount.
    */
   protected readonly _validityEffect = effect(() => {
-    const isValid = this.formValid();
+    const isValid = this.formValidSignal();
 
     untracked(() => {
       this._context.updateIsValid(isValid);
@@ -174,13 +174,13 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
   });
 
   protected _emitFormState(): void {
-    const isValid = this.formValid();
+    const isValid = this.formValidSignal();
     const isReset = this._isReset();
     const changesCount = this._changesCount();
 
-    const suppressComplete = this.isDisabled() && !this._context.emitValueWhenDisabled;
+    const suppressComplete = this.isDisabledSignal() && !this._context.emitValueWhenDisabled;
     let status: DbxFormEvent['status'];
-    if (this.isDisabled()) {
+    if (this.isDisabledSignal()) {
       status = 'DISABLED';
     } else if (isValid) {
       status = 'VALID';
@@ -195,7 +195,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
       pristine: isReset,
       untouched: isReset,
       changesCount,
-      isDisabled: this.isDisabled(),
+      isDisabled: this.isDisabledSignal(),
       disabled: this._disabled(),
       lastResetAt: this._lastResetAt()
     };
@@ -297,10 +297,10 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
  *   when {@link DbxForgeFormContext.stripInternalKeys} is true (default)
  * - Null/undefined-only filter when `stripInternalKeys` is false
  *
- * @param a - the previous form value
- * @param b - the next form value
- * @param context - the forge form context providing filter configuration
- * @returns true if the two values are considered equal after filtering
+ * @param a - The previous form value.
+ * @param b - The next form value.
+ * @param context - The forge form context providing filter configuration.
+ * @returns True if the two values are considered equal after filtering.
  */
 export function _forgeFormValueEqual<T>(a: T, b: T, context: DbxForgeFormContext<T>): boolean {
   const pojoFilter = context.formValuePojoFilter ?? (context.stripInternalKeys ? _filterForgeFormValueStripInternal : _filterForgeFormValueKeepInternal);
@@ -314,8 +314,8 @@ export function _forgeFormValueEqual<T>(a: T, b: T, context: DbxForgeFormContext
  * NaN are all skipped so that two values differing only by these "empty" values
  * are considered equal.
  *
- * @param val - the value to test
- * @returns true if the value is null, undefined, or NaN
+ * @param val - The value to test.
+ * @returns True if the value is null, undefined, or NaN.
  */
 function _isFilteredFormValue(val: unknown): boolean {
   return val == null || (typeof val === 'number' && Number.isNaN(val));
@@ -332,8 +332,8 @@ function _isFilteredFormValue(val: unknown): boolean {
  * which would otherwise cause `_forgeFormValueEqual` to treat two structurally
  * identical values as unequal and trigger an infinite effect cycle.
  *
- * @param input - the form value object to filter
- * @returns a filtered copy with internal keys and null/undefined/NaN values removed
+ * @param input - The form value object to filter.
+ * @returns A filtered copy with internal keys and null/undefined/NaN values removed.
  */
 export function _filterForgeFormValueStripInternal<T>(input: T): T {
   if (input == null || typeof input !== 'object' || Array.isArray(input)) {
@@ -355,8 +355,8 @@ export function _filterForgeFormValueStripInternal<T>(input: T): T {
  * Filter used when `stripInternalKeys` is false: retains `_`-prefixed keys
  * but still strips null/undefined and NaN values.
  *
- * @param input - the form value object to filter
- * @returns a filtered copy with null/undefined/NaN values removed but internal keys retained
+ * @param input - The form value object to filter.
+ * @returns A filtered copy with null/undefined/NaN values removed but internal keys retained.
  */
 export function _filterForgeFormValueKeepInternal<T>(input: T): T {
   if (input == null || typeof input !== 'object' || Array.isArray(input)) {

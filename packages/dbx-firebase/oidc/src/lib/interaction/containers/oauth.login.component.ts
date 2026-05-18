@@ -26,7 +26,7 @@ import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../
   standalone: true,
   imports: [DbxFirebaseOAuthLoginViewComponent],
   template: `
-    <dbx-firebase-oauth-login-view [loginStateCase]="loginStateCase()" [error]="errorMessage()" (retryClick)="retry()">
+    <dbx-firebase-oauth-login-view [loginStateCase]="loginStateCaseSignal()" [error]="errorMessage()" (retryClick)="retry()">
       <ng-content />
     </dbx-firebase-oauth-login-view>
   `,
@@ -45,34 +45,34 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
   readonly isLoggedIn: Signal<Maybe<boolean>> = toSignal(this.dbxFirebaseAuthService.isLoggedIn$);
 
   readonly submitting = signal(false);
-  readonly errorMessage = signal<string | null>(null);
+  readonly errorMessage = signal<Maybe<string>>(null);
 
-  readonly loginStateCase = computed<OidcLoginStateCase>(() => {
-    if (this.submitting()) {
-      return 'submitting';
-    }
-
-    if (this.errorMessage()) {
-      return 'error';
-    }
-
+  readonly loginStateCaseSignal = computed<OidcLoginStateCase>(() => {
+    const errorMessage = this.errorMessage();
     const isLoggedIn = this.isLoggedIn();
+    let result: OidcLoginStateCase;
 
-    if (isLoggedIn === undefined) {
-      return 'unknown';
+    if (this.submitting()) {
+      result = 'submitting';
+    } else if (errorMessage) {
+      result = 'error';
+    } else {
+      if (isLoggedIn === undefined) {
+        result = 'unknown';
+      } else if (isLoggedIn) {
+        result = 'user';
+      } else {
+        result = 'no_user';
+      }
     }
 
-    if (!isLoggedIn) {
-      return 'no_user';
-    }
-
-    return 'user';
+    return result;
   });
 
   constructor() {
     // Auto-submit when user is logged in
     effect(() => {
-      if (this.loginStateCase() === 'user') {
+      if (this.loginStateCaseSignal() === 'user') {
         this._submitIdToken();
       }
     });

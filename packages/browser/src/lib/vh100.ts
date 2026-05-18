@@ -13,13 +13,14 @@ export const DEFAULT_VH100_VARIABLE_NAME: CssTokenName = 'vh100';
  * causing layout overflow. The returned function can be called to refresh the property value.
  *
  * @param cssTokenName - Name of the CSS custom property (without the `--` prefix)
- * @returns A zero-argument function that updates the CSS property to the current inner height
+ * @returns A zero-argument function that updates the CSS property to the current inner height.
  *
  * @example
  * ```typescript
  * const refresh = refreshVh100Function('vh100');
  * refresh(); // sets --vh100 to e.g. "812px"
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function refreshVh100Function(cssTokenName: CssTokenName = DEFAULT_VH100_VARIABLE_NAME) {

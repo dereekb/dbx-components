@@ -12,8 +12,8 @@ export const SERVER_ENV_TOKEN: InjectionToken = 'SERVER_ENV_TOKEN';
  *
  * Use this to register a server environment configuration instance with the NestJS dependency injection container.
  *
- * @param env - the server environment config to provide
- * @returns a NestJS Provider that supplies the config under SERVER_ENV_TOKEN
+ * @param env - The server environment config to provide.
+ * @returns A NestJS Provider that supplies the config under SERVER_ENV_TOKEN.
  */
 export function serverEnvTokenProvider<T extends ServerEnvironmentConfig = ServerEnvironmentConfig>(env: T): Provider {
   return {

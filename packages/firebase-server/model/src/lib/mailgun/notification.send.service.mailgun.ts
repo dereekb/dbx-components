@@ -46,7 +46,7 @@ export interface MailgunNotificationEmailSendServiceConfig {
   readonly messageBuilders: Record<NotificationSendMessageTemplateName, MailgunNotificationEmailSendServiceTemplateBuilder>;
 }
 
-export const MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_DEFAULT_MAX_BATCH_SIZE_PER_REQUEST = 50;
+export const DEFAULT_MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_MAX_BATCH_SIZE_PER_REQUEST = 50;
 
 /**
  * Function that converts the input into zero or more MailgunTemplateEmailRequests.
@@ -65,8 +65,8 @@ export type MailgunNotificationEmailSendService = NotificationEmailSendService;
  * converts each batch to a {@link MailgunTemplateEmailRequest} using the configured template builders,
  * and dispatches them through the Mailgun API.
  *
- * @param config - service configuration including the Mailgun service, template builders, and batch size
- * @returns a {@link NotificationEmailSendService} that batches and sends emails through Mailgun
+ * @param config - Service configuration including the Mailgun service, template builders, and batch size.
+ * @returns A {@link NotificationEmailSendService} that batches and sends emails through Mailgun.
  *
  * @example
  * ```ts
@@ -85,7 +85,7 @@ export type MailgunNotificationEmailSendService = NotificationEmailSendService;
 export function mailgunNotificationEmailSendService(config: MailgunNotificationEmailSendServiceConfig): MailgunNotificationEmailSendService {
   const { mailgunService, defaultSendTemplateName, maxBatchSizePerRequest: inputMaxBatchSizePerRequest, messageBuilders: inputMessageBuilders } = config;
   const lowercaseKeysMessageBuilders = mapObjectKeysToLowercase(inputMessageBuilders);
-  const maxBatchSizePerRequest = inputMaxBatchSizePerRequest ?? MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_DEFAULT_MAX_BATCH_SIZE_PER_REQUEST;
+  const maxBatchSizePerRequest = inputMaxBatchSizePerRequest ?? DEFAULT_MAILGUN_NOTIFICATION_EMAIL_SEND_SERVICE_MAX_BATCH_SIZE_PER_REQUEST;
 
   const sendService: MailgunNotificationEmailSendService = {
     async buildSendInstanceForEmailNotificationMessages(notificationMessages: NotificationMessage[]): Promise<NotificationSendMessagesInstance<NotificationSendEmailMessagesResult>> {

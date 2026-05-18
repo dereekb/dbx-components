@@ -56,8 +56,8 @@ export const UI_PATTERNS: readonly UiExamplePattern[] = [UI_PATTERN_SETTINGS_SEC
 /**
  * Looks up a UI example pattern by its slug.
  *
- * @param slug - the pattern slug to resolve, case-insensitive and trimmed
- * @returns the matching pattern, or `undefined` when no slug matches
+ * @param slug - The pattern slug to resolve, case-insensitive and trimmed.
+ * @returns The matching pattern, or `undefined` when no slug matches.
  */
 export function getUiExamplePattern(slug: string): UiExamplePattern | undefined {
   const lowered = slug.trim().toLowerCase();

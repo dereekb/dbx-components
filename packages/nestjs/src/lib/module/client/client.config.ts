@@ -20,8 +20,8 @@ export abstract class ClientAppServiceConfig {
   /**
    * Validates that the configuration contains a non-empty client web app URL.
    *
-   * @param config - The configuration to validate
-   * @throws {Error} When `clientWebAppUrl` is not specified
+   * @param config - The configuration to validate.
+   * @throws {Error} When `clientWebAppUrl` is not specified.
    */
   static assertValidConfig(config: ClientAppServiceConfig) {
     if (!config.client.clientWebAppUrl) {

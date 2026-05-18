@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly mapbox factory; references deprecated config interfaces and is itself deprecated in favor of dbxForgeMapboxZoomField() */
 import { type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledBaseFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormMapboxZoomComponentFieldProps } from './zoom.field.component';
 
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use DbxForgeMapboxZoomFieldConfig instead.
  */
@@ -10,9 +12,10 @@ export interface MapboxZoomFieldConfig extends Omit<LabeledBaseFieldConfig, 'key
 /**
  * Creates a Formly field configuration for a Mapbox-powered zoom level picker with optional map preview.
  *
+ * @param config - Optional field configuration overrides.
+ * @returns A validated Formly field configuration for the Mapbox zoom picker.
+ *
  * @deprecated Use dbxForgeMapboxZoomField() from the forge API instead.
- * @param config - Optional field configuration overrides
- * @returns A validated Formly field configuration for the Mapbox zoom picker
  */
 export function mapboxZoomField(config: MapboxZoomFieldConfig = {}): FormlyFieldConfig {
   const { key = 'zoom', showMap, center, minZoom, maxZoom, zoomStep } = config;

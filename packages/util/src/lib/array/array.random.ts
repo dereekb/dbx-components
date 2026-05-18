@@ -14,15 +14,16 @@ export type RandomPickFactory<T> = (() => T) & {
 /**
  * Creates a {@link RandomPickFactory} from the input values.
  *
+ * @param values - Array of values to randomly pick from.
+ * @returns A callable factory that returns a random value from the array on each invocation.
+ * @throws {Error} If the input array is empty.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, random, pick, sample, choose, factory
  * @dbxUtilRelated pick-one-randomly, random-array-index
  *
- * @param values - array of values to randomly pick from
- * @returns a callable factory that returns a random value from the array on each invocation
- * @throws Error if the input array is empty
  * @__NO_SIDE_EFFECTS__
  */
 export function randomPickFactory<T>(values: T[]): RandomPickFactory<T> {
@@ -41,13 +42,13 @@ export function randomPickFactory<T>(values: T[]): RandomPickFactory<T> {
 /**
  * Returns a random index from the input array. Returns 0 if the array is empty.
  *
+ * @param values - Array to generate a random index for.
+ * @returns A random valid index within the array, or 0 if the array is empty.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilTags array, random, index, position
  * @dbxUtilRelated pick-one-randomly, random-pick-factory
- *
- * @param values - array to generate a random index for
- * @returns a random valid index within the array, or 0 if the array is empty
  */
 export function randomArrayIndex<T>(values: T[]): IndexNumber {
   return values.length === 0 ? 0 : Math.round(Math.random() * (values.length - 1));
@@ -56,14 +57,14 @@ export function randomArrayIndex<T>(values: T[]): IndexNumber {
 /**
  * Picks a single item randomly from the input array.
  *
+ * @param values - Array to pick a random item from.
+ * @returns A randomly selected item from the array.
+ * @throws {Error} If the input array is empty.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilTags array, random, pick, sample, choose
  * @dbxUtilRelated random-pick-factory, random-array-index
- *
- * @param values - array to pick a random item from
- * @returns a randomly selected item from the array
- * @throws Error if the input array is empty
  */
 export function pickOneRandomly<T>(values: T[]): T {
   return randomPickFactory(values)();

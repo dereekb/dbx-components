@@ -92,8 +92,8 @@ export interface ModelKeyNamePair extends Pick<ModelKeyTypePair, 'key'> {
 export interface ModelKeyTypeNamePair<M extends ModelTypeString = ModelTypeString> extends ModelKeyNamePair, ModelKeyTypePair<M> {}
 
 export interface ReadModelKeyParams<T> {
-  required?: boolean;
-  read: ReadModelKeyFunction<T>;
+  readonly required?: boolean;
+  readonly read: ReadModelKeyFunction<T>;
 }
 
 export type ReadModelKeyFunction<T> = ReadKeyFunction<T, ModelKey>;
@@ -105,16 +105,16 @@ export type MultiModelKeyMap<T> = Map<string, T>;
 /**
  * Reads the `id` property from a {@link UniqueModel}.
  *
- * @param model - Model to read the key from
- * @returns The model's `id` value
+ * @param model - Model to read the key from.
+ * @returns The model's `id` value.
  */
 export const readUniqueModelKey = (model: UniqueModel) => model.id;
 
 /**
  * Deduplicates an array of model keys using a Set.
  *
- * @param keys - Array of model keys that may contain duplicates
- * @returns Array containing only unique keys
+ * @param keys - Array of model keys that may contain duplicates.
+ * @returns Array containing only unique keys.
  *
  * @example
  * ```ts
@@ -157,11 +157,11 @@ export function readModelKeysFromObjects<T extends UniqueModel>(input: T[], requ
 /**
  * Computes the symmetric difference (elements in either array but not both) between two arrays of models or keys.
  *
- * @param a - First array of models or keys
- * @param b - Second array of models or keys
- * @param required - Whether keys are required
- * @param read - Function to extract keys from models
- * @returns Keys that appear in one array but not the other
+ * @param a - First array of models or keys.
+ * @param b - Second array of models or keys.
+ * @param required - Whether keys are required.
+ * @param read - Function to extract keys from models.
+ * @returns Keys that appear in one array but not the other.
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function symmetricDifferenceWithModels<T extends UniqueModel>(a: ModelOrKey<T>[], b: ModelOrKey<T>[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[] {
@@ -226,14 +226,15 @@ export function makeModelMap<T>(input: T[], read?: ReadModelKeyFunction<T>): Map
  *
  * If multiple models share the same relation key, the last one wins for that key.
  *
+ * @param input - Array of models to index.
+ * @param read - Function that returns an array of relation keys for each model.
+ * @returns Map from relation key to model.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilTags model, map, key, multi, relation, index, lookup
  * @dbxUtilRelated make-model-map, read-model-key
  *
- * @param input - Array of models to index
- * @param read - Function that returns an array of relation keys for each model
- * @returns Map from relation key to model
  * @__NO_SIDE_EFFECTS__
  */
 export function makeMultiModelKeyMap<T>(input: T[], read: ReadRelationKeysFunction<T>): MultiModelKeyMap<T> {
@@ -252,13 +253,13 @@ export function makeMultiModelKeyMap<T>(input: T[], read: ReadRelationKeysFuncti
  *
  * If the input is null/undefined and `required` is true, throws an error.
  *
- * @param input - A model object or a model key string
- * @param config - Handlers for model and key cases, plus whether input is required
- * @param config.useModel - handler invoked when the input is a model object; if omitted, the model's key is passed to `useKey` instead
- * @param config.useKey - handler invoked when the input is a model key string
- * @param config.required - when true, throws an error if the input is nullish; defaults to false
- * @returns The result of the matched handler, or undefined if input is nullish and not required
- * @throws Error if `required` is true and input is nullish
+ * @param input - A model object or a model key string.
+ * @param config - Handlers for model and key cases, plus whether input is required.
+ * @param config.useModel - Handler invoked when the input is a model object; if omitted, the model's key is passed to `useKey` instead.
+ * @param config.useKey - Handler invoked when the input is a model key string.
+ * @param config.required - When true, throws an error if the input is nullish; defaults to false.
+ * @returns The result of the matched handler, or undefined if input is nullish and not required.
+ * @throws {Error} If `required` is true and input is nullish.
  */
 export function useModelOrKey<O, T extends UniqueModel>(input: ModelOrKey<T>, { useModel, useKey, required = false }: { useModel?: (model: T) => O; useKey: (key: Maybe<ModelKey>) => O; required?: boolean }): Maybe<O> {
   let result: Maybe<O>;
@@ -279,22 +280,22 @@ export function useModelOrKey<O, T extends UniqueModel>(input: ModelOrKey<T>, { 
 /**
  * Extracts model keys from an array of models or key strings.
  *
- * @param input - Array of models, key strings, or undefined values
- * @param required - Whether keys are required
- * @param read - Function to extract the key from model objects
- * @returns Array of model keys
+ * @param input - Array of models, key strings, or undefined values.
+ * @param required - Whether keys are required.
+ * @param read - Function to extract the key from model objects.
+ * @returns Array of model keys.
  */
-export function readModelKeys<T extends UniqueModel>(input: (ModelOrKey<T> | undefined)[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[] {
+export function readModelKeys<T extends UniqueModel>(input: Maybe<ModelOrKey<T>>[], required?: boolean, read?: ReadModelKeyFunction<T>): Maybe<ModelKey>[] {
   return input.map((x) => readModelKey(x, { required, read }));
 }
 
 /**
  * Reads a model key from a model or key string. Convenience wrapper around {@link readModelKey} with default params.
  *
- * @param input - A model object or a key string
- * @returns The extracted model key, or undefined if input is undefined
+ * @param input - A model object or a key string.
+ * @returns The extracted model key, or undefined if input is undefined.
  */
-export function requireModelKey<T extends UniqueModel>(input: ModelOrKey<T> | undefined): Maybe<ModelKey> {
+export function requireModelKey<T extends UniqueModel>(input: Maybe<ModelOrKey<T>>): Maybe<ModelKey> {
   return readModelKey(input);
 }
 
@@ -308,21 +309,16 @@ export function requireModelKey<T extends UniqueModel>(input: ModelOrKey<T> | un
  * @returns The extracted model key, or undefined
  * @throws Error if `required` is true and no key can be extracted
  */
-export function readModelKey<T>(input: ModelOrKey<T> | undefined, params: ReadModelKeyParams<T>): Maybe<ModelKey>;
-export function readModelKey<T extends UniqueModel>(input: ModelOrKey<T> | undefined, params?: Partial<ReadModelKeyParams<T>>): Maybe<ModelKey>;
-export function readModelKey<T>(input: ModelOrKey<T> | undefined, { required = false, read = readUniqueModelKey as ReadModelKeyFunction<T> }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
+export function readModelKey<T>(input: Maybe<ModelOrKey<T>>, params: ReadModelKeyParams<T>): Maybe<ModelKey>;
+export function readModelKey<T extends UniqueModel>(input: Maybe<ModelOrKey<T>>, params?: Partial<ReadModelKeyParams<T>>): Maybe<ModelKey>;
+export function readModelKey<T>(input: Maybe<ModelOrKey<T>>, { required = false, read = readUniqueModelKey as ReadModelKeyFunction<T> }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
   let key: Maybe<ModelKey>;
 
-  switch (typeof input) {
-    case 'string':
-      key = input as ModelKey;
-      break;
-    case 'object':
-      key = read(input);
-      break;
-    case 'undefined':
-    default:
-      break;
+  if (typeof input === 'string') {
+    key = input;
+  } else if (input != null && typeof input === 'object') {
+    // typeof null === 'object', so guard against null before passing to `read`.
+    key = read(input);
   }
 
   if (!key && required) {
@@ -335,11 +331,11 @@ export function readModelKey<T>(input: ModelOrKey<T> | undefined, { required = f
 /**
  * Reads a model key directly from a model object using the provided read function.
  *
- * @param input - Model object to read the key from
- * @param required - Whether the key is required; throws if missing when true
- * @param read - Function to extract the key; defaults to reading the `id` property
- * @returns The extracted model key, or undefined
- * @throws Error if `required` is true and the key is missing
+ * @param input - Model object to read the key from.
+ * @param required - Whether the key is required; throws if missing when true.
+ * @param read - Function to extract the key; defaults to reading the `id` property.
+ * @returns The extracted model key, or undefined.
+ * @throws {Error} If `required` is true and the key is missing.
  */
 export function readModelKeyFromObject<T extends UniqueModel>(input: T, required = false, read: ReadModelKeyFunction<T> = (x) => x.id): Maybe<ModelKey> {
   const key: Maybe<ModelKey> = read(input);
@@ -354,22 +350,17 @@ export function readModelKeyFromObject<T extends UniqueModel>(input: T, required
 /**
  * Type guard that checks whether the input is a string model key rather than a model object.
  *
- * @param input - A model object or a key string
- * @returns `true` if the input is a string key
+ * @param input - A model object or a key string.
+ * @returns `true` if the input is a string key.
  */
 export function isModelKey<T extends UniqueModel>(input: ModelOrKey<T>): input is ModelKey {
-  switch (typeof input) {
-    case 'string':
-      return true;
-    default:
-      return false;
-  }
+  return typeof input === 'string';
 }
 
 /**
  * Throws an error indicating a model key was required but not provided.
  *
- * @throws Error always
+ * @throws {Error} Always — this function never returns normally.
  */
 export function throwKeyIsRequired(): void {
   throw new Error('Key was required.');
@@ -378,8 +369,8 @@ export function throwKeyIsRequired(): void {
 /**
  * Encodes a {@link ModelKeyTypePair} into a single string in the format `type_key`.
  *
- * @param pair - The type/key pair to encode
- * @returns Encoded string representation
+ * @param pair - The type/key pair to encode.
+ * @returns Encoded string representation.
  *
  * @example
  * ```ts
@@ -394,8 +385,8 @@ export function encodeModelKeyTypePair(pair: ModelKeyTypePair): ModelKey {
 /**
  * Decodes a string in the format `type_key` back into a {@link ModelKeyTypePair}.
  *
- * @param linkKey - Encoded string to decode
- * @returns The decoded type/key pair
+ * @param linkKey - Encoded string to decode.
+ * @returns The decoded type/key pair.
  *
  * @example
  * ```ts
@@ -429,15 +420,16 @@ export type ModelTypeDataPairFactory<T, M extends ModelTypeString = ModelTypeStr
  *
  * Falls back to the provided default type if the type reader returns a nullish value.
  *
+ * @param typeReader - Function to extract the model type from input data.
+ * @param defaultType - Fallback type string when the reader returns nullish.
+ * @returns Factory function that produces ModelTypeDataPair values.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, type, pair, factory, wrap
  * @dbxUtilRelated read-model-key, encode-model-key-type-pair
  *
- * @param typeReader - Function to extract the model type from input data
- * @param defaultType - Fallback type string when the reader returns nullish
- * @returns Factory function that produces ModelTypeDataPair values
  * @__NO_SIDE_EFFECTS__
  */
 export function modelTypeDataPairFactory<T, M extends ModelTypeString = ModelTypeString>(typeReader: ReadModelTypeFunction<T, M>, defaultType = DEFAULT_UNKNOWN_MODEL_TYPE_STRING): ModelTypeDataPairFactory<T, M> {
@@ -450,7 +442,7 @@ export function modelTypeDataPairFactory<T, M extends ModelTypeString = ModelTyp
   };
 }
 
-// MARK: COMPAT
+// COMPAT: Deprecated aliases
 /**
  * Abstract base class for models identified by a unique {@link ModelKey}.
  *

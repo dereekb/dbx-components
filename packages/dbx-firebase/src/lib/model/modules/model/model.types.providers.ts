@@ -19,8 +19,9 @@ export interface ProvideDbxFirebaseModelTypesServiceConfig {
 /**
  * Creates EnvironmentProviders for DbxFirebaseModelTypesService.
  *
- * @param config Configuration
- * @returns EnvironmentProviders
+ * @param config - Configuration.
+ * @returns EnvironmentProviders.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxFirebaseModelTypesService(config: ProvideDbxFirebaseModelTypesServiceConfig): EnvironmentProviders {

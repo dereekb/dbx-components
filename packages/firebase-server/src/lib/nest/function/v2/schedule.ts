@@ -49,6 +49,9 @@ export type OnScheduleHandlerWithNestApplicationFactory = (schedule: OnScheduleC
  * merges base and per-function schedule options, and attaches `_runNow` and `_schedule` metadata
  * to the resulting function for testing and introspection.
  *
+ * @param baseScheduleConfig - Optional default schedule options merged into every function created by this factory.
+ * @returns A factory for creating nest-application-aware scheduled functions.
+ *
  * @example
  * ```ts
  * const scheduleFactory = onScheduleHandlerWithNestApplicationFactory({ timeoutSeconds: 60 });
@@ -58,8 +61,6 @@ export type OnScheduleHandlerWithNestApplicationFactory = (schedule: OnScheduleC
  * );
  * ```
  *
- * @param baseScheduleConfig - Optional default schedule options merged into every function created by this factory.
- * @returns A factory for creating nest-application-aware scheduled functions.
  * @__NO_SIDE_EFFECTS__
  */
 export function onScheduleHandlerWithNestApplicationFactory(baseScheduleConfig?: OnScheduleConfigWithGlobalOptions): OnScheduleHandlerWithNestApplicationFactory {

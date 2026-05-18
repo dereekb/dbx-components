@@ -102,6 +102,7 @@ export interface DbxWebFilePreviewServicePreviewDialogWithComponentFunctionInput
  */
 export type DbxWebFilePreviewServicePreviewDialogWithComponentFunction = (input: DbxWebFilePreviewServicePreviewDialogWithComponentFunctionInput) => MatDialogRef<unknown, unknown>;
 
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use DbxWebFilePreviewServicePreviewDialogFunction instead.
  */

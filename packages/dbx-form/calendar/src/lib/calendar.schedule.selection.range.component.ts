@@ -62,7 +62,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
   });
 
   readonly errorStateMatcher: ErrorStateMatcher = {
-    isErrorState: (control: AbstractControl | null, _form) => {
+    isErrorState: (control: Maybe<AbstractControl>, _form) => {
       return control ? (control.invalid && (control.dirty || control.touched)) || (control.touched && this.range.invalid) : false;
     }
   };
@@ -110,7 +110,7 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
 
   readonly datePickerFilter$: Observable<DateFilterFn<Date>> = combineLatest([this.dbxCalendarScheduleSelectionStore.isEnabledFilterDayFunction$, this.dbxCalendarScheduleSelectionStore.isInAllowedDaysOfWeekFunction$]).pipe(
     map(([isEnabled, isAllowedDayOfWeek]) => {
-      const fn = (date: Date | null) => {
+      const fn = (date: Maybe<Date>) => {
         return date ? isAllowedDayOfWeek(date) && isEnabled(date) : true;
       };
 
@@ -123,21 +123,19 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
   readonly timezoneReleventDateSignal = toSignal(this.timezoneReleventDate$, { initialValue: new Date() });
   readonly isCustomizedSignal = toSignal(this.isCustomized$, { initialValue: false });
 
-  readonly showCustomLabelSignal = computed(() => this.showCustomize() && this.isCustomizedSignal());
+  readonly showCustomLabelSignal = computed(() => {
+    const isCustomized = this.isCustomizedSignal();
+    return this.showCustomize() && isCustomized;
+  });
   readonly currentErrorMessageSignal = toSignal(this.currentErrorMessage$);
-  readonly datePickerFilterSignal = toSignal(this.datePickerFilter$, { initialValue: (() => true) as DateFilterFn<Date> });
+  readonly datePickerFilterSignal = toSignal(this.datePickerFilter$, { initialValue: () => true });
 
   protected readonly _requiredUpdateValidatorsEffect = effect(() => {
     const validators = this.required()
       ? [
           (control: AbstractControl) => {
             const range = control.value;
-
-            if (!range?.start || !range.end) {
-              return { required: true };
-            }
-
-            return null;
+            return !range?.start || !range.end ? { required: true } : null;
           }
         ]
       : [];

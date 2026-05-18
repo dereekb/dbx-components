@@ -111,36 +111,36 @@ export interface ModelTestContextFactoryParams<T, D extends FirestoreDocument<T>
   /**
    * Creates a ModelTestContextInstanceDelegate from the parent instance.
    */
-  getCollection: (parentInstance: PI, config: C) => CL;
+  readonly getCollection: (parentInstance: PI, config: C) => CL;
 
   /**
    * Creates the custom fixture. If not defined, a ModelTestContextFixture is created.
    */
-  makeFixture?: (parent: PF) => F;
+  readonly makeFixture?: (parent: PF) => F;
 
   /**
    * Optional function to create a DocumentReference.
    *
    * If not provided, expects the input CL type to be a full FirestoreCollection, instead of a FirestoreCollectionLike.
    */
-  makeRef?: (collection: CL, config: C, parentInstance: PI) => Promise<DocumentReference<T>>;
+  readonly makeRef?: (collection: CL, config: C, parentInstance: PI) => Promise<DocumentReference<T>>;
 
   /**
    * Custom make instance function. If not defined, a ModelTestContextInstance will be generated.
    */
-  makeInstance?: (collection: CL, ref: DocumentReference<T>, testInstance: PI) => PromiseOrValue<I>;
+  readonly makeInstance?: (collection: CL, ref: DocumentReference<T>, testInstance: PI) => PromiseOrValue<I>;
 
   /**
    * Optional function to initialize the document for this instance.
    */
-  initDocument?: (instance: I, config: C) => Promise<void>;
+  readonly initDocument?: (instance: I, config: C) => Promise<void>;
 
   /**
    * Optional function to retrieve a collection given the input document.
    *
    * Required if using ModelTestContextDocumentRefParam as input.
    */
-  collectionForDocument?: (parentInstance: PI, document: D) => CL;
+  readonly collectionForDocument?: (parentInstance: PI, document: D) => CL;
 
   /**
    * Optional teardown function to cleanup after this object.
@@ -181,7 +181,7 @@ export type ModelTestContextParams<C = any, PI extends FirebaseAdminTestContext 
  * build the test context instance, optionally initialize the document, and clean up after each test.
  *
  * @param config - Factory configuration that resolves the collection, optionally produces document refs, builds fixtures/instances, and tears down state.
- * @returns A function that, given runtime params and a `buildTests` callback, registers the model fixture hooks against the active test context.
+ * @returns Function that, given runtime params and a `buildTests` callback, registers the model fixture hooks against the active test context.
  *
  * @see {@link ModelTestContextFactoryParams} for configuration options
  */

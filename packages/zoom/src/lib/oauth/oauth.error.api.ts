@@ -37,8 +37,8 @@ export const logZoomOAuthErrorToConsole = logZoomServerErrorFunction('ZoomOAuth'
 /**
  * Parses a FetchResponseError into a typed Zoom OAuth error.
  *
- * @param responseError The fetch response error to parse
- * @returns The parsed error, or undefined if parsing fails
+ * @param responseError - The fetch response error to parse.
+ * @returns The parsed error, or undefined if parsing fails.
  */
 export async function parseZoomOAuthError(responseError: FetchResponseError) {
   const data: ZoomServerErrorData | undefined = await responseError.response.json().catch(() => undefined);
@@ -54,9 +54,9 @@ export async function parseZoomOAuthError(responseError: FetchResponseError) {
 /**
  * Parses a ZoomServerErrorData into a Zoom OAuth-specific error.
  *
- * @param zoomServerError The raw error data from the Zoom API
- * @param responseError The original fetch response error
- * @returns A parsed error, or undefined if the error is unrecognized
+ * @param zoomServerError - The raw error data from the Zoom API.
+ * @param responseError - The original fetch response error.
+ * @returns A parsed error, or undefined if the error is unrecognized.
  */
 export function parseZoomOAuthServerErrorResponseData(zoomServerError: ZoomServerErrorData, responseError: FetchResponseError) {
   let result: ParsedZoomServerError | undefined;

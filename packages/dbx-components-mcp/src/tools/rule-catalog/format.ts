@@ -12,8 +12,8 @@ import type { RuleEntry, RuleSeeAlso } from './types.js';
  * when-it-applies, when-it-does-NOT-apply, canonical fix, optional
  * fix template, optional see-also list.
  *
- * @param entry - the rule entry to render
- * @returns the formatted markdown text
+ * @param entry - The rule entry to render.
+ * @returns The formatted markdown text.
  */
 export function formatRuleAsMarkdown(entry: RuleEntry): string {
   const lines: string[] = [`# \`${entry.code}\``, '', `**${entry.title}**`, '', `- **Severity:** \`${entry.severity}\``, `- **Source tool:** \`${entry.source}\``, '', '## What it flags', '', entry.whatItFlags, '', '## When it applies', '', entry.whenItApplies, '', '## When it does NOT apply', '', entry.whenItDoesNotApply, '', '## Canonical fix', '', entry.canonicalFix, ''];
@@ -34,8 +34,8 @@ export function formatRuleAsMarkdown(entry: RuleEntry): string {
  * Renders one catalog entry as a JSON string. Pre-formatted with
  * 2-space indentation so the MCP `text` content is human-scannable.
  *
- * @param entry - the rule entry to render
- * @returns the formatted JSON text
+ * @param entry - The rule entry to render.
+ * @returns The formatted JSON text.
  */
 export function formatRuleAsJson(entry: RuleEntry): string {
   return JSON.stringify(entry, null, 2);
@@ -47,8 +47,8 @@ export function formatRuleAsJson(entry: RuleEntry): string {
  * `artifact` references resolve through `dbx_artifact_file_convention`,
  * and `doc` is a free-form pointer.
  *
- * @param ref - the see-also reference
- * @returns one bullet-friendly line
+ * @param ref - The see-also reference.
+ * @returns One bullet-friendly line.
  */
 function formatSeeAlso(ref: RuleSeeAlso): string {
   const tail = ref.note ? ` — ${ref.note}` : '';

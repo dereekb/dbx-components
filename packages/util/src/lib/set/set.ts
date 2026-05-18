@@ -15,13 +15,13 @@ export type AllOrNoneSelection = 'all' | 'none';
 /**
  * Converts an {@link IterableOrValue} into a Set. Strings are treated as single values rather than character iterables.
  *
+ * @param values - The value or iterable to convert.
+ * @returns A new Set containing all values.
+ *
  * @dbxUtil
  * @dbxUtilCategory set
  * @dbxUtilTags set, convert, normalize, ensure, unique, dedupe
  * @dbxUtilRelated add-to-set, iterable-to-set
- *
- * @param values - The value or iterable to convert.
- * @returns A new Set containing all values.
  */
 export function asSet<T>(values: IterableOrValue<T>): Set<T> {
   let set: Set<T>;
@@ -40,7 +40,7 @@ export function asSet<T>(values: IterableOrValue<T>): Set<T> {
  * Creates a copy of the set, applies the given function to the copy, and returns it.
  *
  * @param set - The set to copy, or null/undefined for an empty set.
- * @param fn - A function to mutate the copied set.
+ * @param fn - Used to mutate the copied set.
  * @returns The modified copy of the set.
  */
 export function copySetAndDo<T>(set: Maybe<Set<T>>, fn: (set: Set<T>) => void): Set<T> {
@@ -63,13 +63,13 @@ export function addToSetCopy<T>(set: Maybe<Set<T>>, values: Maybe<IterableOrValu
 /**
  * Adds one or more values to the given set in place.
  *
+ * @param set - The set to add values to.
+ * @param values - The value or iterable of values to add.
+ *
  * @dbxUtil
  * @dbxUtilCategory set
  * @dbxUtilTags set, add, mutate, insert, in-place
  * @dbxUtilRelated add-to-set-copy, remove-from-set, toggle-in-set
- *
- * @param set - The set to add values to.
- * @param values - The value or iterable of values to add.
  */
 export function addToSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>) {
   useIterableOrValue(values, (x) => set.add(x));
@@ -89,13 +89,13 @@ export function toggleInSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>
 /**
  * Toggles values in the set in place: adds if absent, removes if present.
  *
+ * @param set - The set to modify.
+ * @param values - The values to toggle.
+ *
  * @dbxUtil
  * @dbxUtilCategory set
  * @dbxUtilTags set, toggle, add, remove, mutate, in-place
  * @dbxUtilRelated toggle-in-set-copy, add-to-set, remove-from-set
- *
- * @param set - The set to modify.
- * @param values - The values to toggle.
  */
 export function toggleInSet<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>) {
   useIterableOrValue(values, (x) => {
@@ -156,7 +156,7 @@ export function hasDifferentValues<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T
  *
  * @param a - First iterable.
  * @param b - Second iterable.
- * @returns An array of values present in only one of the inputs.
+ * @returns The values present in only one of the inputs.
  */
 export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): Maybe<T>[] {
   return symmetricDifferenceArrayBetweenSets(new Set(a), new Set(b));
@@ -167,7 +167,7 @@ export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iter
  *
  * @param a - First set.
  * @param b - Second set.
- * @returns An array of values present in only one of the sets.
+ * @returns The values present in only one of the sets.
  */
 export function symmetricDifferenceArrayBetweenSets<T>(a: Set<Maybe<T>>, b: Set<Maybe<T>>): Maybe<T>[] {
   return [...symmetricDifference(a, b)];
@@ -177,7 +177,7 @@ export function symmetricDifferenceArrayBetweenSets<T>(a: Set<Maybe<T>>, b: Set<
  * Flattens a two-dimensional array into a Set of unique values.
  *
  * @param array - The nested array to flatten.
- * @returns A Set containing all values from the nested arrays.
+ * @returns Set of unique values pulled from every nested array.
  */
 export function flattenArrayToSet<T>(array: T[][]): Set<T> {
   return new Set(flattenArray(array));
@@ -189,7 +189,7 @@ export function flattenArrayToSet<T>(array: T[][]): Set<T> {
  *
  * @param set - The reference set to check membership against.
  * @param values - The values to filter.
- * @returns A Set of values that exist in both inputs.
+ * @returns Intersection between the input values and the reference set.
  */
 export function keepFromSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>): Set<T> {
   return values != null ? filterValuesToSet(asIterable(values), (x) => set.has(x)) : new Set();
@@ -200,7 +200,7 @@ export function keepFromSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>
  *
  * @param values - The array to filter.
  * @param set - The set to check membership against.
- * @returns An array of values present in the set.
+ * @returns The values present in the set.
  */
 export function keepValuesFromSet<T>(values: T[], set: Set<T>): T[] {
   return filterValuesUsingSet(values, set, false);
@@ -211,7 +211,7 @@ export function keepValuesFromSet<T>(values: T[], set: Set<T>): T[] {
  *
  * @param valuesToExclude - The array of values to filter.
  * @param iterable - The iterable of values to exclude.
- * @returns An array of values not found in the iterable.
+ * @returns The values not found in the iterable.
  */
 export function excludeValues<T>(valuesToExclude: T[], iterable: Maybe<Iterable<T>>): T[] {
   return excludeValuesFromSet(valuesToExclude, new Set(iterable));
@@ -222,7 +222,7 @@ export function excludeValues<T>(valuesToExclude: T[], iterable: Maybe<Iterable<
  *
  * @param values - The array to filter.
  * @param set - The set of values to exclude.
- * @returns An array of values not in the set.
+ * @returns The values not in the set.
  */
 export function excludeValuesFromSet<T>(values: T[], set: Set<T>): T[] {
   return filterValuesUsingSet(values, set, true);
@@ -246,7 +246,7 @@ export function filterValuesUsingSet<T>(values: T[], set: Set<T>, exclude = fals
  *
  * @param values - The iterable to filter.
  * @param fn - The decision function that determines inclusion.
- * @returns A Set of values that passed the filter.
+ * @returns Set of values for which `fn` returned `true`.
  */
 export function filterValuesToSet<T>(values: Iterable<T>, fn: DecisionFunction<T>): Set<T> {
   const keep = new Set<T>();
@@ -301,7 +301,7 @@ export function separateValuesToSets<T>(values: Iterable<T>, fn: DecisionFunctio
  *
  * @param values - The iterable to map.
  * @param mapFn - The mapping function.
- * @returns A Set of mapped values.
+ * @returns Mapped values collected into a Set (duplicates collapse).
  */
 export function mapValuesToSet<I, O>(values: Iterable<I>, mapFn: MapFunction<I, O>): Set<O> {
   const set = new Set<O>();
@@ -316,15 +316,16 @@ export function mapValuesToSet<I, O>(values: Iterable<I>, mapFn: MapFunction<I, 
 /**
  * Creates a {@link SetHasValueFunction} from an {@link IterableOrValue} by first converting it to a Set.
  *
+ * @param iterable - The values to create a set from.
+ * @param exclude - If true, the returned function returns true for values NOT in the set.
+ * @returns Tests membership.
+ *
  * @dbxUtil
  * @dbxUtilCategory set
  * @dbxUtilKind factory
  * @dbxUtilTags set, has, decision, factory, membership, exclude
  * @dbxUtilRelated set-has-value-function, set-includes-function
  *
- * @param iterable - The values to create a set from.
- * @param exclude - If true, the returned function returns true for values NOT in the set.
- * @returns A function that tests membership.
  * @__NO_SIDE_EFFECTS__
  */
 export function hasValueFunction<T>(iterable: IterableOrValue<T>, exclude: boolean = false): SetHasValueFunction<T> {
@@ -340,15 +341,16 @@ export type SetHasValueFunction<T> = (value: T) => boolean;
 /**
  * Creates a {@link SetHasValueFunction} for the given set. When `exclude` is true, returns the inverse (true for values not in the set).
  *
+ * @param set - The set to check against.
+ * @param exclude - If true, returns true for values NOT in the set.
+ * @returns Tests membership.
+ *
  * @dbxUtil
  * @dbxUtilCategory set
  * @dbxUtilKind factory
  * @dbxUtilTags set, has, decision, factory, membership, exclude
  * @dbxUtilRelated has-value-function, set-includes-function
  *
- * @param set - The set to check against.
- * @param exclude - If true, returns true for values NOT in the set.
- * @returns A function that tests membership.
  * @__NO_SIDE_EFFECTS__
  */
 export function setHasValueFunction<T>(set: Set<T>, exclude: boolean): SetHasValueFunction<T> {
@@ -426,16 +428,17 @@ export type SetIncludesFunction<T> = (valuesToFind: IterableOrValue<T>) => boole
 /**
  * Creates a {@link SetIncludesFunction} that checks whether the set includes given values using the specified mode.
  *
+ * @param valuesSet - The reference set.
+ * @param mode - Whether to require 'all' values or 'any' value to be present. Defaults to 'all'.
+ * @param emptyValuesToFindArrayResult - The result when the values to find are empty.
+ * @returns Tests inclusion against the set.
+ *
  * @dbxUtil
  * @dbxUtilCategory set
  * @dbxUtilKind factory
  * @dbxUtilTags set, includes, decision, factory, all, any, mode
  * @dbxUtilRelated has-value-function, set-has-value-function
  *
- * @param valuesSet - The reference set.
- * @param mode - Whether to require 'all' values or 'any' value to be present. Defaults to 'all'.
- * @param emptyValuesToFindArrayResult - The result when the values to find are empty.
- * @returns A function that tests inclusion against the set.
  * @__NO_SIDE_EFFECTS__
  */
 export function setIncludesFunction<T>(valuesSet: Set<T>, mode: SetIncludesMode = 'all', emptyValuesToFindArrayResult?: boolean): SetIncludesFunction<T> {
@@ -466,10 +469,10 @@ export function setIncludes<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<
 /**
  * Returns false if the input array contains any value from the second array.
  *
- * @param values - the values to check against
- * @param valuesToFind - the values to look for
- * @param emptyValuesToFindArrayResult - result when valuesToFind is empty
- * @returns `true` if none of the valuesToFind are present in values
+ * @param values - The values to check against.
+ * @param valuesToFind - The values to look for.
+ * @param emptyValuesToFindArrayResult - Result when valuesToFind is empty.
+ * @returns `true` if none of the valuesToFind are present in values.
  */
 export function containsNoneOfValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult?: boolean): boolean {
   const set = new Set(asIterable(valuesToFind, false));
@@ -505,10 +508,10 @@ export function setContainsNoneOfValue<T>(valuesSet: Set<T>, valuesToFind: Itera
  *
  * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to false.
  *
- * @param values - the values to build a set from and check against
- * @param valuesToFind - the values to search for within the set
- * @param emptyValuesToFindArrayResult - result when valuesToFind is empty; defaults to false
- * @returns `true` if any of the valuesToFind exist in values
+ * @param values - The values to build a set from and check against.
+ * @param valuesToFind - The values to search for within the set.
+ * @param emptyValuesToFindArrayResult - Result when valuesToFind is empty; defaults to false.
+ * @returns `true` if any of the valuesToFind exist in values.
  */
 export function containsAnyValue<T>(values: IterableOrValue<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult?: boolean): boolean {
   const set = new Set(asIterable(values, false));
@@ -520,10 +523,10 @@ export function containsAnyValue<T>(values: IterableOrValue<T>, valuesToFind: It
  *
  * If values is empty, returns the emptyValuesToFindArrayResult value. Defaults to false.
  *
- * @param values - the values to check for membership in the set
- * @param valuesToFind - the set to check against
- * @param emptyValuesArrayResult - result when values is empty; defaults to false
- * @returns `true` if any of the values are present in the set
+ * @param values - The values to check for membership in the set.
+ * @param valuesToFind - The set to check against.
+ * @param emptyValuesArrayResult - Result when values is empty; defaults to false.
+ * @returns `true` if any of the values are present in the set.
  */
 export function containsAnyValueFromSet<T>(values: IterableOrValue<T>, valuesToFind: Set<T>, emptyValuesArrayResult?: boolean): boolean {
   return setContainsAnyValue(valuesToFind, values, emptyValuesArrayResult);
@@ -534,10 +537,10 @@ export function containsAnyValueFromSet<T>(values: IterableOrValue<T>, valuesToF
  *
  * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to false.
  *
- * @param valuesSet - the set to check for membership
- * @param valuesToFind - the values to search for in the set
- * @param emptyValuesToFindArrayResult - result when valuesToFind is empty; defaults to false
- * @returns `true` if any of the valuesToFind are present in the set
+ * @param valuesSet - The set to check for membership.
+ * @param valuesToFind - The values to search for in the set.
+ * @param emptyValuesToFindArrayResult - Result when valuesToFind is empty; defaults to false.
+ * @returns `true` if any of the valuesToFind are present in the set.
  */
 export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult = false): boolean {
   const valuesToFindArray = iterableToArray(valuesToFind);
@@ -550,10 +553,10 @@ export function setContainsAnyValue<T>(valuesSet: Set<T>, valuesToFind: Iterable
  *
  * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to true.
  *
- * @param values - the iterable of values to build a set from
- * @param valuesToFind - the values that must all be present
- * @param emptyValuesArrayResult - result when valuesToFind is empty; defaults to true
- * @returns `true` if all valuesToFind are present in the values set
+ * @param values - The iterable of values to build a set from.
+ * @param valuesToFind - The values that must all be present.
+ * @param emptyValuesArrayResult - Result when valuesToFind is empty; defaults to true.
+ * @returns `true` if all valuesToFind are present in the values set.
  */
 export function containsAllValues<T>(values: Iterable<T>, valuesToFind: IterableOrValue<T>, emptyValuesArrayResult?: boolean): boolean {
   const set = new Set(values);
@@ -565,10 +568,10 @@ export function containsAllValues<T>(values: Iterable<T>, valuesToFind: Iterable
  *
  * If valuesToFind is empty, returns the emptyValuesToFindArrayResult value. Defaults to true.
  *
- * @param valuesSet - the set to check for full containment
- * @param valuesToFind - the values that must all be present in the set
- * @param emptyValuesToFindArrayResult - result when valuesToFind is empty; defaults to true
- * @returns `true` if every value in valuesToFind is present in the set
+ * @param valuesSet - The set to check for full containment.
+ * @param valuesToFind - The values that must all be present in the set.
+ * @param emptyValuesToFindArrayResult - Result when valuesToFind is empty; defaults to true.
+ * @returns `true` if every value in valuesToFind is present in the set.
  */
 export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: IterableOrValue<T>, emptyValuesToFindArrayResult = true): boolean {
   const valuesToFindArray = iterableToArray(valuesToFind);
@@ -579,9 +582,9 @@ export function setContainsAllValues<T>(valuesSet: Set<T>, valuesToFind: Iterabl
 /**
  * Returns true if both iterables are defined (or are both null/undefined) and have the same values exactly.
  *
- * @param a - first iterable to compare
- * @param b - second iterable to compare
- * @returns `true` if both iterables contain the same unique values, or both are nullish
+ * @param a - First iterable to compare.
+ * @param b - Second iterable to compare.
+ * @returns `true` if both iterables contain the same unique values, or both are nullish.
  */
 export function iterablesAreSetEquivalent<T>(a: Maybe<Iterable<T>>, b: Maybe<Iterable<T>>): boolean {
   return a && b ? setsAreEquivalent(new Set(a), new Set(b)) : a == b;
@@ -590,9 +593,9 @@ export function iterablesAreSetEquivalent<T>(a: Maybe<Iterable<T>>, b: Maybe<Ite
 /**
  * Returns true if both sets are defined (or are both null/undefined) and have the same values exactly.
  *
- * @param a - first set to compare
- * @param b - second set to compare
- * @returns `true` if both sets contain the same values, or both are nullish
+ * @param a - First set to compare.
+ * @param b - Second set to compare.
+ * @returns `true` if both sets contain the same values, or both are nullish.
  */
 export function setsAreEquivalent<T>(a: Maybe<Set<T>>, b: Maybe<Set<T>>): boolean {
   return a && b ? a.size === b.size && setContainsAllValues(a, b, true) : a == b;

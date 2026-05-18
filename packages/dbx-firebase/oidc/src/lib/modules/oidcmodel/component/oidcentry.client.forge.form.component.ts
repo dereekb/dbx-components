@@ -39,14 +39,18 @@ export class DbxFirebaseOidcEntryClientForgeFormComponent extends AbstractConfig
 
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => {
-      if (!config) {
-        return undefined;
+      let result: Maybe<FormConfig>;
+
+      if (config) {
+        result = oidcEntryClientForgeFormFields({
+          ...config,
+          tokenEndpointAuthMethods: this._oidcConfigService.tokenEndpointAuthMethods
+        });
+      } else {
+        result = undefined;
       }
 
-      return oidcEntryClientForgeFormFields({
-        ...config,
-        tokenEndpointAuthMethods: this._oidcConfigService.tokenEndpointAuthMethods
-      });
+      return result;
     })
   );
 }

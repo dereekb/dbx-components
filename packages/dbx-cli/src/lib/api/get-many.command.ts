@@ -18,7 +18,7 @@ import { parseGetManyArgs } from './get-args.helper';
  *
  * Backend: `POST <apiBaseUrl>/model/<modelType>/get` with body `{ keys }` (ModelApiController.getMany).
  */
-export const getManyCommand: CommandModule = {
+export const GET_MANY_COMMAND: CommandModule = {
   command: 'get-many <firstArg> [rest..]',
   describe: 'Read documents by key (auto-chunks beyond 50). Pass `-` to read keys from stdin.',
   builder: (yargs: Argv) =>

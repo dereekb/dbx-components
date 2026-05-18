@@ -22,9 +22,9 @@ const SYSTEM_STATE_STORED_DATA = 'SystemStateStoredData';
  * configs/maps, imported identifiers) the rules layer consumes from a single
  * source file.
  *
- * @param name - the source file name (used by ts-morph and diagnostics)
- * @param text - the raw source text to parse
- * @returns the structured extraction used by the rules layer
+ * @param name - The source file name (used by ts-morph and diagnostics)
+ * @param text - The raw source text to parse.
+ * @returns The structured extraction used by the rules layer.
  */
 export function extractSystemFile(name: string, text: string): ExtractedSystemFile {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
@@ -144,7 +144,8 @@ function readConverterDataTypeArgument(typeArgs: readonly Node[]): string | unde
 
 // MARK: Converter map
 function findConverterMap(sourceFile: SourceFile): ExtractedConverterMap | undefined {
-  for (const stmt of sourceFile.getVariableStatements()) {
+  let result: ExtractedConverterMap | undefined;
+  outer: for (const stmt of sourceFile.getVariableStatements()) {
     const exported = stmt.isExported();
     for (const decl of stmt.getDeclarations()) {
       const typeNode = decl.getTypeNode();
@@ -154,17 +155,17 @@ function findConverterMap(sourceFile: SourceFile): ExtractedConverterMap | undef
       const nameMatches = declName.endsWith(CONVERTER_MAP_TYPE);
       if (!typeMatches && !nameMatches) continue;
       const keys = collectConverterMapKeys(decl);
-      const entry: ExtractedConverterMap = {
+      result = {
         name: declName,
         exported,
         line: decl.getStartLineNumber(),
         typeAnnotation: typeText,
         keys
       };
-      return entry;
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function collectConverterMapKeys(decl: VariableDeclaration): readonly ExtractedConverterMapKey[] {

@@ -19,4 +19,3 @@ export * from './scan/build-manifest.js';
 export * from './scan/cli.js';
 export * from './manifest/load-filters-registry.js';
 export * from './scan/filters-cli.js';
-export * from './tools/model-api-shared/index.js';

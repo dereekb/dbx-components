@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import { type FormControlStatus } from '@angular/forms';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import type { MatInputField } from '@ng-forge/dynamic-forms-material';
 import { waitForMs } from '@dereekb/util';
@@ -132,7 +131,7 @@ describe('dbxForgeWebsiteUrlField() scenarios', () => {
     await setValueAndSettle('https://example.com');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('VALID');
   });
 
   it('should invalidate when the value is missing an http/https prefix', async () => {
@@ -142,7 +141,7 @@ describe('dbxForgeWebsiteUrlField() scenarios', () => {
     await setValueAndSettle('example.com');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('INVALID');
   });
 
   it('should invalidate when the value is nonsense text', async () => {
@@ -152,7 +151,7 @@ describe('dbxForgeWebsiteUrlField() scenarios', () => {
     await setValueAndSettle('not a url');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('INVALID');
   });
 
   it('should accept a bare url when requirePrefix is false', async () => {
@@ -162,7 +161,7 @@ describe('dbxForgeWebsiteUrlField() scenarios', () => {
     await setValueAndSettle('example.com');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('VALID');
   });
 
   it('should accept urls with a port when allowPorts is true', async () => {
@@ -172,7 +171,7 @@ describe('dbxForgeWebsiteUrlField() scenarios', () => {
     await setValueAndSettle('http://localhost:8080');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('VALID');
   });
 
   it('should reject urls with a port when allowPorts is false', async () => {
@@ -182,7 +181,7 @@ describe('dbxForgeWebsiteUrlField() scenarios', () => {
     await setValueAndSettle('http://localhost:8080');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('INVALID');
   });
 
   it('should validate when the domain is in validDomains', async () => {
@@ -192,7 +191,7 @@ describe('dbxForgeWebsiteUrlField() scenarios', () => {
     await setValueAndSettle('https://example.com');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('VALID');
   });
 
   it('should invalidate when the domain is not in validDomains', async () => {
@@ -202,7 +201,7 @@ describe('dbxForgeWebsiteUrlField() scenarios', () => {
     await setValueAndSettle('https://other.com');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('INVALID');
   });
 
   it('should treat empty values as valid (not-required fields)', async () => {
@@ -212,6 +211,6 @@ describe('dbxForgeWebsiteUrlField() scenarios', () => {
     await setValueAndSettle('');
 
     const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-    expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+    expect(streamEvent.status).toBe('VALID');
   });
 });

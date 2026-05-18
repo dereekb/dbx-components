@@ -1,4 +1,5 @@
 import { type DocumentReference, type DocumentSnapshot, type Transaction as GoogleCloudTransaction, type SetOptions } from '@google-cloud/firestore';
+import type { Maybe } from '@dereekb/util';
 import { from, type Observable } from 'rxjs';
 import { type WithFieldValue, type UpdateData, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentContext, FirestoreDocumentContextType, type FirestoreDocumentUpdateParams, type FirestoreDataConverter, type DocumentData, type FirestoreAccessorIncrementUpdate, type FirestoreAccessorArrayUpdate } from '@dereekb/firebase';
 import { firestoreServerIncrementUpdateToUpdateData } from './increment';
@@ -46,7 +47,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
     return this.transaction.get(this.documentRef);
   }
 
-  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+  getWithConverter<U = DocumentData>(converter: Maybe<FirestoreDataConverter<U>>): Promise<DocumentSnapshot<U>> {
     return this.transaction.get(this.documentRef.withConverter<U>(converter as FirestoreDataConverter<U>));
   }
 

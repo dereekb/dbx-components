@@ -7,7 +7,7 @@ import { DBX_DARK_STYLE_CLASS_SUFFIX, type DbxStyleClass, dbxStyleClassCleanSuff
 /**
  * Injection token for providing the default {@link DbxStyleConfig} to {@link DbxStyleService}.
  */
-export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleServiceDefaultConfig');
+export const DEFAULT_DBX_STYLE_CONFIG_TOKEN = new InjectionToken('DbxStyleServiceDefaultConfig');
 
 /**
  * Manages application-wide style classes and suffix modes (e.g., dark mode).
@@ -17,7 +17,7 @@ export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleServic
  */
 @Injectable()
 export class DbxStyleService implements Destroyable {
-  private readonly _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(inject<DbxStyleConfig>(DBX_STYLE_DEFAULT_CONFIG_TOKEN));
+  private readonly _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(inject<DbxStyleConfig>(DEFAULT_DBX_STYLE_CONFIG_TOKEN));
 
   private readonly _config = new BehaviorSubject<Maybe<Observable<DbxStyleConfig>>>(undefined);
   private readonly _styleClassSuffix = new BehaviorSubject<Maybe<DbxStyleClassCleanSuffix>>(undefined);
@@ -35,8 +35,8 @@ export class DbxStyleService implements Destroyable {
   /**
    * Returns the style class given the input configuration.
    *
-   * @param configObs Observable containing the configuration to use.
-   * @returns DbxStyleClass
+   * @param configObs - Observable containing the configuration to use.
+   * @returns DbxStyleClass.
    */
   getStyleClassWithConfig(configObs: Observable<DbxStyleConfig>): Observable<DbxStyleClass> {
     return combineLatest([configObs, this.styleClassSuffix$]).pipe(
@@ -57,7 +57,7 @@ export class DbxStyleService implements Destroyable {
   /**
    * Toggles the dark suffix on/off for the service.
    *
-   * @param toggle Whether to toggle the suffix on or off
+   * @param toggle - Whether to toggle the suffix on or off.
    */
   toggleDarkSuffix(toggle?: Maybe<boolean>) {
     this.toggleSuffix(DBX_DARK_STYLE_CLASS_SUFFIX, toggle);
@@ -66,14 +66,14 @@ export class DbxStyleService implements Destroyable {
   /**
    * Toggles the arbitrary suffix on/off for the service.
    *
-   * @param suffix The suffix to toggle
-   * @param toggle Whether to toggle the suffix on or off
+   * @param suffix - The suffix to toggle.
+   * @param toggle - Whether to toggle the suffix on or off.
    */
   toggleSuffix(suffix: DbxStyleClassSuffix, toggle?: Maybe<boolean>) {
     // clean the suffix
     suffix = dbxStyleClassCleanSuffix(suffix);
 
-    const toggleValue: boolean = toggle != null ? toggle : this.currentStyleClassSuffix !== suffix;
+    const toggleValue: boolean = toggle == null ? this.currentStyleClassSuffix !== suffix : toggle;
     let suffixValue: Maybe<DbxStyleClassSuffix> = undefined;
 
     if (toggleValue) {
@@ -88,7 +88,7 @@ export class DbxStyleService implements Destroyable {
   /**
    * Returns the current style class suffix, if one is set.
    *
-   * @returns the currently active style class suffix, or undefined if none is set
+   * @returns The currently active style class suffix, or undefined if none is set.
    */
   get currentStyleClassSuffix(): Maybe<DbxStyleClassCleanSuffix> {
     return this._styleClassSuffix.value;
@@ -97,7 +97,7 @@ export class DbxStyleService implements Destroyable {
   /**
    * Directly sets the active style class suffix, or clears it if null/undefined.
    *
-   * @param suffix - the suffix to activate, or nullish to clear the current suffix
+   * @param suffix - The suffix to activate, or nullish to clear the current suffix.
    */
   setStyleClassSuffix(suffix: Maybe<DbxStyleClassSuffix>) {
     this._styleClassSuffix.next(suffix ? dbxStyleClassCleanSuffix(suffix) : undefined);
@@ -106,7 +106,7 @@ export class DbxStyleService implements Destroyable {
   /**
    * Updates the default style configuration used when no override config is set.
    *
-   * @param defaultConfig - the style configuration to use as the new default
+   * @param defaultConfig - The style configuration to use as the new default.
    */
   setDefaultConfig(defaultConfig: DbxStyleConfig) {
     this._defaultConfig.next(defaultConfig);
@@ -115,7 +115,7 @@ export class DbxStyleService implements Destroyable {
   /**
    * Overrides the active style configuration with the given value or observable.
    *
-   * @param config - a style configuration value or observable to set as the active override
+   * @param config - A style configuration value or observable to set as the active override.
    */
   setConfig(config: ObservableOrValue<DbxStyleConfig>) {
     this._config.next(asObservable(config));
@@ -124,7 +124,7 @@ export class DbxStyleService implements Destroyable {
   /**
    * Clears the active config override if it matches the given reference, reverting to the default config.
    *
-   * @param config - the config reference to compare against the current override
+   * @param config - The config reference to compare against the current override.
    */
   unsetConfig(config: ObservableOrValue<DbxStyleConfig>) {
     if (this._config.value === config) {

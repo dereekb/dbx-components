@@ -128,12 +128,12 @@ describe('dbxForgeFlexLayout form value scenarios', () => {
     fixture.componentInstance.config.set({ fields: [flexField] });
     await settle();
 
-    fixture.componentInstance.setValue({ city: 'Metropolis', state: 'NY', zip: '10001' } as unknown as Partial<unknown>);
+    fixture.componentInstance.setValue({ city: 'Metropolis', state: 'NY', zip: '10001' });
     await settle(0);
 
     const value = (await firstValueFrom(fixture.componentInstance.getValue())) as Record<string, unknown>;
     expect(value).toEqual({ city: 'Metropolis', state: 'NY', zip: '10001' });
-    expect(value).not.toHaveProperty(flexField.key as string);
+    expect(value).not.toHaveProperty(flexField.key);
   });
 
   it('should keep flex children flat alongside a sibling field at the parent level', async () => {
@@ -145,7 +145,7 @@ describe('dbxForgeFlexLayout form value scenarios', () => {
     fixture.componentInstance.config.set({ fields: [sibling, flexField] });
     await settle();
 
-    fixture.componentInstance.setValue({ city: 'Metropolis', state: 'NY', zip: '10001' } as unknown as Partial<unknown>);
+    fixture.componentInstance.setValue({ city: 'Metropolis', state: 'NY', zip: '10001' });
     await settle(0);
 
     const value = (await firstValueFrom(fixture.componentInstance.getValue())) as Record<string, unknown>;

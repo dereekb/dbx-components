@@ -37,43 +37,40 @@ export class OidcInteractionController {
   ) {}
 
   /**
-   * GET /interaction/:uid
+   * GET /interaction/:uid.
    *
    * Detects the interaction type and redirects to the appropriate frontend page.
    *
-   * @param uid - the interaction UID from the URL path
-   * @param req - the incoming Express request
-   * @param res - the Express response used for redirecting
-   * @returns a redirect response to the appropriate frontend page
-   * @throws {HttpException} 404 when the interaction UID is not found or has expired.
+   * @param uid - The interaction UID from the URL path.
+   * @param req - The incoming Express request.
+   * @param res - The Express response used for redirecting.
+   * @returns A redirect response to the appropriate frontend page.
+   * @throws {HttpException} HTTP 404 when the interaction UID is not found or has expired.
    */
   @Get(':uid')
   async getInteraction(@Param('uid') uid: OidcInteractionUid, @Req() req: Request, @Res() res: Response) {
     try {
       const interaction = await this.oidcInteractionService.getInteractionDetails(req, res);
       const { prompt } = interaction;
+      const redirectUrl = prompt.name === 'login' ? `${this.oidcProviderConfigService.appLoginUrl}?uid=${uid}` : `${this.oidcProviderConfigService.appConsentUrl}?uid=${uid}`;
 
-      if (prompt.name === 'login') {
-        return res.redirect(`${this.oidcProviderConfigService.appLoginUrl}?uid=${uid}`);
-      }
-
-      return res.redirect(`${this.oidcProviderConfigService.appConsentUrl}?uid=${uid}`);
+      return res.redirect(redirectUrl);
     } catch {
       throw new HttpException('Interaction not found', HttpStatus.NOT_FOUND);
     }
   }
 
   /**
-   * POST /interaction/:uid/login
+   * POST /interaction/:uid/login.
    *
    * Verifies the Firebase Auth ID token sent by the frontend, extracts the
    * user's UID, and completes the oidc-provider login interaction.
    *
-   * @param uid - the interaction UID from the URL path
-   * @param body - the login request containing the Firebase ID token
-   * @param res - the Express response used for sending JSON
-   * @throws {HttpException} 401 when the Firebase ID token is invalid.
-   * @throws {HttpException} 400 when the login interaction cannot be completed.
+   * @param uid - The interaction UID from the URL path.
+   * @param body - The login request containing the Firebase ID token.
+   * @param res - The Express response used for sending JSON.
+   * @throws {HttpException} HTTP 401 when the Firebase ID token is invalid.
+   * @throws {HttpException} HTTP 400 when the login interaction cannot be completed.
    */
   @Post(':uid/login')
   @HttpCode(HttpStatus.OK)
@@ -96,15 +93,15 @@ export class OidcInteractionController {
   }
 
   /**
-   * POST /interaction/:uid/consent
+   * POST /interaction/:uid/consent.
    *
    * Receives consent decision from frontend. Grants missing OIDC scopes and claims
    * when approved, or returns `access_denied` when rejected.
    *
-   * @param uid - the interaction UID from the URL path
-   * @param body - the consent request containing approval decision and Firebase ID token
-   * @param res - the Express response used for sending JSON
-   * @throws {HttpException} 400 when the consent interaction cannot be completed.
+   * @param uid - The interaction UID from the URL path.
+   * @param body - The consent request containing approval decision and Firebase ID token.
+   * @param res - The Express response used for sending JSON.
+   * @throws {HttpException} HTTP 400 when the consent interaction cannot be completed.
    */
   @Post(':uid/consent')
   @HttpCode(HttpStatus.OK)
@@ -152,7 +149,7 @@ export class OidcInteractionController {
       const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
 
       if (missingOIDCScope.length > 0) {
-        const { granted, rejected } = resolveEffectiveSubset(missingOIDCScope, body.grantedOIDCScopes, ALWAYS_GRANTED_OIDC_SCOPES, encounteredOIDCScopes);
+        const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: ALWAYS_GRANTED_OIDC_SCOPES, alreadyEncountered: encounteredOIDCScopes });
 
         if (granted.length > 0) {
           grant.addOIDCScope(granted.join(' '));
@@ -168,7 +165,7 @@ export class OidcInteractionController {
       const missingOIDCClaims = (prompt.details.missingOIDCClaims as string[] | undefined) ?? [];
 
       if (missingOIDCClaims.length > 0) {
-        const { granted, rejected } = resolveEffectiveSubset(missingOIDCClaims, body.grantedOIDCClaims, [], encounteredOIDCClaims);
+        const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCClaims, requestedSubset: body.grantedOIDCClaims, alreadyEncountered: encounteredOIDCClaims });
 
         if (granted.length > 0) {
           grant.addOIDCClaims(granted);
@@ -184,7 +181,7 @@ export class OidcInteractionController {
       for (const [indicator, scopes] of Object.entries(missingResourceScopes)) {
         const requestedSubset = body.grantedResourceScopes?.[indicator];
         const encounteredResourceScopes = grant.getResourceScopeEncountered(indicator).split(' ').filter(Boolean);
-        const { granted, rejected } = resolveEffectiveSubset(scopes, requestedSubset, [], encounteredResourceScopes);
+        const { granted, rejected } = resolveEffectiveSubset({ missing: scopes, requestedSubset, alreadyEncountered: encounteredResourceScopes });
 
         if (granted.length > 0) {
           grant.addResourceScope(indicator, granted.join(' '));
@@ -219,9 +216,9 @@ export class OidcInteractionController {
   /**
    * Verifies a Firebase Auth ID token and returns the user's UID.
    *
-   * @param idToken - the Firebase Auth ID token to verify
-   * @returns the user's UID extracted from the decoded token
-   * @throws {HttpException} 401 when the token is invalid or expired.
+   * @param idToken - The Firebase Auth ID token to verify.
+   * @returns The user's UID extracted from the decoded token.
+   * @throws {HttpException} HTTP 401 when the token is invalid or expired.
    */
   private async _verifyIdToken(idToken: string): Promise<string> {
     try {
@@ -231,6 +228,28 @@ export class OidcInteractionController {
       throw new HttpException('Invalid Firebase ID token', HttpStatus.UNAUTHORIZED);
     }
   }
+}
+
+/**
+ * Inputs for {@link resolveEffectiveSubset}.
+ */
+export interface ResolveEffectiveSubsetInput {
+  /**
+   * Entries the OIDC prompt indicated were missing for this consent.
+   */
+  readonly missing: readonly string[];
+  /**
+   * Optional subset the caller wants to grant; each value must be in `missing` or `alreadyEncountered`.
+   */
+  readonly requestedSubset: readonly string[] | undefined;
+  /**
+   * Entries that must be granted whenever they appear in `missing`, regardless of `requestedSubset`.
+   */
+  readonly alwaysGranted?: readonly string[];
+  /**
+   * Entries the existing Grant has previously granted or rejected. Tolerated as no-ops on re-consent.
+   */
+  readonly alreadyEncountered?: readonly string[];
 }
 
 /**
@@ -249,13 +268,12 @@ export class OidcInteractionController {
  *   are not re-applied to the grant (no-op).
  * - Always-granted entries are union'd into `granted` (clamped to `missing`).
  *
- * @param missing - Entries the OIDC prompt indicated were missing for this consent.
- * @param requestedSubset - Optional subset the caller wants to grant; each value must be in `missing` or `alreadyEncountered`.
- * @param alwaysGranted - Entries that must be granted whenever they appear in `missing`, regardless of `requestedSubset`.
- * @param alreadyEncountered - Entries the existing Grant has previously granted or rejected. Tolerated as no-ops on re-consent.
+ * @param input - Missing entries plus optional subset, always-granted, and already-encountered lists.
  * @returns `granted` to add to the grant and `rejected` to record on the grant.
+ * @throws {HttpException} `400 BAD_REQUEST` when `requestedSubset` includes a value that is neither missing nor already-encountered.
  */
-export function resolveEffectiveSubset(missing: readonly string[], requestedSubset: readonly string[] | undefined, alwaysGranted: readonly string[] = [], alreadyEncountered: readonly string[] = []): { granted: string[]; rejected: string[] } {
+export function resolveEffectiveSubset(input: ResolveEffectiveSubsetInput): { granted: string[]; rejected: string[] } {
+  const { missing, requestedSubset, alwaysGranted = [], alreadyEncountered = [] } = input;
   const missingSet = new Set(missing);
   const encounteredSet = new Set(alreadyEncountered);
   let baseSelection: readonly string[];

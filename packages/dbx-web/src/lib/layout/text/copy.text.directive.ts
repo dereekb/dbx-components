@@ -28,7 +28,7 @@ export class DbxClickToCopyTextDirective extends AbstractDbxClipboardDirective {
   /**
    * If the input is null, then copy from the element's text content.
    */
-  readonly copyText = input<Maybe<string | null>>(undefined, { alias: 'dbxClickToCopyText' });
+  readonly copyText = input<Maybe<Maybe<string>>>(undefined, { alias: 'dbxClickToCopyText' });
 
   /**
    * If true, the click events will be ignored.

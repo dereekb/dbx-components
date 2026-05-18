@@ -15,22 +15,26 @@ export class DbxTableDateRangeDayDistanceInputCellInputRangeSelectionStrategy<D>
   private readonly _dateAdapter = inject(DateAdapter<D>);
   private readonly dbxTableDateRangeDayDistanceInputCellInputComponent = inject(DbxTableDateRangeDayDistanceInputCellInputComponent);
 
-  selectionFinished(date: D | null): DateRange<D> {
+  selectionFinished(date: Maybe<D>): DateRange<D> {
     return this._createFiveDayRange(date);
   }
 
-  createPreview(activeDate: D | null): DateRange<D> {
+  createPreview(activeDate: Maybe<D>): DateRange<D> {
     return this._createFiveDayRange(activeDate);
   }
 
-  private _createFiveDayRange(date: D | null): DateRange<D> {
+  private _createFiveDayRange(date: Maybe<D>): DateRange<D> {
+    let result: DateRange<D>;
+
     if (date) {
       const start = date;
       const end = this._dateAdapter.addCalendarDays(date, this.dbxTableDateRangeDayDistanceInputCellInputComponent.daysDistance);
-      return new DateRange<D>(start, end);
+      result = new DateRange<D>(start, end);
+    } else {
+      result = new DateRange<D>(null, null);
     }
 
-    return new DateRange<D>(null, null);
+    return result;
   }
 }
 
@@ -157,8 +161,8 @@ export class DbxTableDateRangeDayDistanceInputCellInputComponent {
  *
  * Initializes the component with the provided configuration for day distance, date bounds, and button format.
  *
- * @param componentConfig - optional configuration for the date range input (day distance, min/max dates, button format)
- * @returns an injection component config that renders a {@link DbxTableDateRangeDayDistanceInputCellInputComponent}
+ * @param componentConfig - Optional configuration for the date range input (day distance, min/max dates, button format)
+ * @returns An injection component config that renders a {@link DbxTableDateRangeDayDistanceInputCellInputComponent}
  */
 export function dbxTableDateRangeDayDistanceInputCellInput(componentConfig?: DbxTableDateRangeDayDistanceInputCellInputComponentConfig): DbxInjectionComponentConfig<DbxTableDateRangeDayDistanceInputCellInputComponent> {
   const config: DbxInjectionComponentConfig<DbxTableDateRangeDayDistanceInputCellInputComponent> = {

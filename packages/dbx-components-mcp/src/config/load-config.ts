@@ -12,6 +12,7 @@
  * the caller decides whether to log or escalate.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { type } from 'arktype';
@@ -37,8 +38,8 @@ export type ConfigWarning = { readonly kind: 'config-parse-failed'; readonly pat
  * iff a file was actually found, regardless of whether parsing succeeded.
  */
 export interface FindAndLoadConfigResult {
-  readonly config: DbxMcpConfig | null;
-  readonly configPath: string | null;
+  readonly config: Maybe<DbxMcpConfig>;
+  readonly configPath: Maybe<string>;
   readonly warnings: readonly ConfigWarning[];
 }
 
@@ -61,14 +62,14 @@ const DEFAULT_READ_FILE: ConfigReadFile = (path) => nodeReadFile(path, 'utf-8');
  * return `{ config: null, configPath: <found path>, warnings: [...] }`
  * so the caller can decide how loud to be about the failure.
  *
- * @param input - cwd and an optional injected `readFile`
- * @returns the parsed config, the path it came from, and any warnings
+ * @param input - Cwd and an optional injected `readFile`
+ * @returns The parsed config, the path it came from, and any warnings.
  */
 export async function findAndLoadConfig(input: FindAndLoadConfigInput): Promise<FindAndLoadConfigResult> {
   const { cwd, readFile = DEFAULT_READ_FILE } = input;
   const configPath = resolve(cwd, CONFIG_FILENAME);
 
-  let raw: string | null = null;
+  let raw: Maybe<string> = null;
   try {
     raw = await readFile(configPath);
   } catch {
@@ -80,7 +81,7 @@ export async function findAndLoadConfig(input: FindAndLoadConfigInput): Promise<
     result = { config: null, configPath: null, warnings: [] };
   } else {
     let parsed: unknown;
-    let parseError: string | null = null;
+    let parseError: Maybe<string> = null;
     try {
       parsed = JSON.parse(raw);
     } catch (err) {

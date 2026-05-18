@@ -61,11 +61,13 @@ export abstract class AbstractDbxListWrapperDirective<T, V extends DbxListView<T
   readonly state = input<Maybe<ObservableOrValue<S>>>();
 
   readonly selectionModeSignal: Signal<Maybe<DbxListSelectionMode>> = computed(() => {
-    return this._selectionModeOverrideSignal() ?? this.selectionMode();
+    const selectionMode = this.selectionMode();
+    return this._selectionModeOverrideSignal() ?? selectionMode;
   });
 
   readonly disabledSignal: Signal<Maybe<boolean>> = computed(() => {
-    return this._disabledOverrideSignal() ?? this.disabled();
+    const disabled = this.disabled();
+    return this._disabledOverrideSignal() ?? disabled;
   });
 
   readonly currentState$ = combineLatest([this._stateOverride, toObservable(this.state)]).pipe(

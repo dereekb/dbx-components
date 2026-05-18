@@ -416,8 +416,8 @@ export interface DemoAuthorizedUserContextFactoryConfig {
   /**
    * Onboarded state. Defaults to true.
    */
-  onboarded?: boolean;
-  demoUserLevel?: 'admin' | 'user';
+  readonly onboarded?: boolean;
+  readonly demoUserLevel?: 'admin' | 'user';
 }
 
 export const demoAuthorizedUserContextFactory = (params: DemoAuthorizedUserContextFactoryConfig) =>
@@ -437,7 +437,7 @@ export const demoAuthorizedUserAdminContext = demoAuthorizedUserContextFactory({
 
 // MARK: With Profile
 export interface DemoApiProfileTestContextParams {
-  u: DemoApiAuthorizedUserTestContextFixture;
+  readonly u: DemoApiAuthorizedUserTestContextFixture;
 }
 
 export class DemoApiProfileTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<Profile, ProfileDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiProfileTestContextInstance<F>> {}
@@ -487,9 +487,9 @@ export const demoGuestbookContext = demoGuestbookContextFactory();
 
 // MARK: Guestbook Entry
 export interface DemoApiGuestbookEntryTestContextParams extends Partial<GuestbookEntry> {
-  init?: boolean;
-  u: DemoApiAuthorizedUserTestContextFixture;
-  g: DemoApiGuestbookTestContextFixture;
+  readonly init?: boolean;
+  readonly u: DemoApiAuthorizedUserTestContextFixture;
+  readonly g: DemoApiGuestbookTestContextFixture;
 }
 
 export class DemoApiGuestbookEntryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<GuestbookEntry, GuestbookEntryDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiGuestbookEntryTestContextInstance<F>> {
@@ -570,8 +570,8 @@ export const demoGuestbookEntryContext = demoGuestbookEntryContextFactory();
 
 // MARK: NotificationSummary
 export interface DemoApiNotificationUserTestContextParams {
-  u: DemoApiAuthorizedUserTestContextFixture;
-  init?: boolean;
+  readonly u: DemoApiAuthorizedUserTestContextFixture;
+  readonly init?: boolean;
 }
 
 export class DemoApiNotificationUserTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationUser, NotificationUserDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationUserTestContextInstance<F>> {
@@ -633,10 +633,10 @@ export const demoNotificationUserContext = demoNotificationUserContextFactory();
 
 // MARK: NotificationSummary
 export interface DemoApiNotificationSummaryTestContextParams {
-  for: ModelTestContextFixture<any, any, any, any, any>;
-  ownershipKey?: FirestoreModelKey | ModelTestContextFixture<any, any, any, any, any>;
-  createIfNeeded?: boolean;
-  initIfNeeded?: boolean;
+  readonly for: ModelTestContextFixture<any, any, any, any, any>;
+  readonly ownershipKey?: FirestoreModelKey | ModelTestContextFixture<any, any, any, any, any>;
+  readonly createIfNeeded?: boolean;
+  readonly initIfNeeded?: boolean;
 }
 
 export class DemoApiNotificationSummaryTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationSummary, NotificationSummaryDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationSummaryTestContextInstance<F>> {}
@@ -683,16 +683,16 @@ export const demoNotificationSummaryContext = demoNotificationSummaryContextFact
 
 // MARK: NotificationBox
 export interface DemoApiNotificationBoxTestContextParams {
-  for: ModelTestContextFixture<any, any, any, any, any>;
-  ownershipKey?: FirestoreModelKey | ModelTestContextFixture<any, any, any, any, any>;
+  readonly for: ModelTestContextFixture<any, any, any, any, any>;
+  readonly ownershipKey?: FirestoreModelKey | ModelTestContextFixture<any, any, any, any, any>;
   /**
    * Whether or not to create the NotificationBox. Defaults to false.
    */
-  createIfNeeded?: boolean;
+  readonly createIfNeeded?: boolean;
   /**
    * Whether or not to create and initialize. Defaults to false.
    */
-  initIfNeeded?: boolean;
+  readonly initIfNeeded?: boolean;
 }
 
 export class DemoApiNotificationBoxTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationBox, NotificationBoxDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationBoxTestContextInstance<F>> {
@@ -834,7 +834,7 @@ export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunct
   /**
    * Sends the notification.
    *
-   * @returns the result of sending all queued notifications
+   * @returns The result of sending all queued notifications.
    */
   async sendAllQueuedNotifications() {
     const sendAllQueuedNotifications = await this.testContext.notificationServerActions.sendQueuedNotifications({});
@@ -842,9 +842,9 @@ export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunct
   }
 
   /**
-   * Cleanup all sent notifications
+   * Cleanup all sent notifications.
    *
-   * @returns the result of the cleanup operation
+   * @returns The result of the cleanup operation.
    */
   async cleanupAllSentNotifications() {
     const params: CleanupSentNotificationsParams = {};
@@ -855,8 +855,8 @@ export class DemoApiNotificationTestContextInstance<F extends FirebaseAdminFunct
   /**
    * Sends the notification.
    *
-   * @param params - optional send parameters (key is automatically set from the test context document)
-   * @returns the result of sending the notification
+   * @param params - Optional send parameters (key is automatically set from the test context document)
+   * @returns The result of sending the notification.
    */
   async sendNotification(params?: Maybe<Omit<SendNotificationParams, 'key'>>) {
     const sendNotification = await this.testContext.notificationServerActions.sendNotification({ ...params, key: this.documentKey });
@@ -892,15 +892,15 @@ export const demoNotificationContext = demoNotificationContextFactory();
 
 // MARK: NotificationWeek
 export interface DemoApiNotificationWeekTestContextParams {
-  nb: DemoApiNotificationBoxTestContextFixture;
+  readonly nb: DemoApiNotificationBoxTestContextFixture;
   /**
    * Week to target. If not set, defaults to today.
    */
-  week?: YearWeekCode;
+  readonly week?: YearWeekCode;
   /**
    * Whether or not to initialize the NotificationWeek. Defaults to true.
    */
-  init?: boolean;
+  readonly init?: boolean;
 }
 
 export class DemoApiNotificationWeekTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<NotificationWeek, NotificationWeekDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiNotificationWeekTestContextInstance<F>> {}
@@ -1056,11 +1056,11 @@ export interface DemoApiStorageFileGroupTestContextParams {
   /**
    * Whether or not to create the StorageFileGroup. Defaults to false.
    */
-  createIfNeeded?: boolean;
+  readonly createIfNeeded?: boolean;
   /**
    * Whether or not to create and initialize. Defaults to false.
    */
-  initIfNeeded?: boolean;
+  readonly initIfNeeded?: boolean;
 }
 
 export class DemoApiStorageFileGroupTestContextFixture<F extends FirebaseAdminFunctionTestContextInstance = FirebaseAdminFunctionTestContextInstance> extends ModelTestContextFixture<StorageFileGroup, StorageFileGroupDocument, DemoApiFunctionContextFixtureInstance<F>, DemoApiFunctionContextFixture<F>, DemoApiStorageFileGroupTestContextInstance<F>> {

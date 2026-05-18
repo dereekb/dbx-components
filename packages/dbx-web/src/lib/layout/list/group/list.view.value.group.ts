@@ -36,8 +36,8 @@ export type DbxValueListViewGroupValuesFunction<G, T, I extends DbxValueListItem
 /**
  * Default grouping function that places all items into a single unnamed group.
  *
- * @param items The flat list of configured list items to group
- * @returns An array containing a single group with all input items
+ * @param items - The flat list of configured list items to group.
+ * @returns An array containing a single group with all input items.
  */
 export const defaultDbxValueListViewGroupValuesFunction = <T, I extends DbxValueListItem<T>>(items: DbxValueListItemConfig<T, I>[]) => {
   const data = {};
@@ -64,7 +64,7 @@ export abstract class DbxValueListViewGroupDelegate<G, T, I extends DbxValueList
 /**
  * Creates a default {@link DbxValueListViewGroupDelegate} that places all items into a single ungrouped list.
  *
- * @returns A group delegate that places all items into one unnamed group
+ * @returns A group delegate that places all items into one unnamed group.
  *
  * @example
  * ```ts
@@ -80,16 +80,17 @@ export function defaultDbxValueListViewGroupDelegate<T, I extends DbxValueListIt
 /**
  * Registers a class as a {@link DbxValueListViewGroupDelegate} provider for dependency injection.
  *
- * @param sourceType The class type to register as the group delegate provider
- * @returns An array of Angular providers that bind the given class to {@link DbxValueListViewGroupDelegate}
+ * @param sourceType - The class type to register as the group delegate provider.
+ * @returns Array of Angular providers that bind the given class to {@link DbxValueListViewGroupDelegate}
  *
- * @example
- * ```ts
- * @Directive({
+ * @Directive ({
  *   providers: provideDbxValueListViewGroupDelegate(MyGroupDelegate)
  * })
  * export class MyGroupDelegate extends DbxValueListViewGroupDelegate<MyGroup, MyItem> { ... }
  * ```
+ *
+ * @example
+ * ```ts
  */
 export function provideDbxValueListViewGroupDelegate<D extends DbxValueListViewGroupDelegate<any, any, any, any>>(sourceType: Type<D>): Provider[] {
   // use of any here is allowed as typings are not relevant for providers

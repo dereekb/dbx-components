@@ -136,8 +136,9 @@ export interface CreateLookupFilterToolInput {
  * pass a fixture registry; the production server passes the merged registry
  * from {@link loadFilterRegistry}.
  *
- * @param input - the registry the tool reads from
- * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @param input - The registry the tool reads from.
+ * @returns A {@link DbxTool} ready to register with the dispatcher.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createLookupFilterTool(input: CreateLookupFilterToolInput): DbxTool {

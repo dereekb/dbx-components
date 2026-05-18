@@ -27,6 +27,7 @@
  * canonical hellosubs layout).
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
@@ -34,6 +35,8 @@ import { type } from 'arktype';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { buildModelFirebaseIndexManifest } from '../scan/model-firebase-index-build-manifest.js';
+import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount } from '../scan/model-firebase-index-reference-scan.js';
+import type { ModelFirebaseIndexEntry } from '../manifest/model-firebase-index-schema.js';
 import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
 import { generateFirestoreIndexesJson, type FirestoreIndexesJson } from '../scan/firestore-indexes-generate.js';
 import { ModelFirebaseIndexValidateAppCode } from './model-firebase-index-validate-app/codes.js';
@@ -88,7 +91,9 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     '- `@dbxModelFirebaseIndexDispatcher` — marks a function as a *dispatcher*: it must only delegate to other tagged query functions via `switch`/`if`/`return` and must NOT call `where`, `orderBy`, or any helper itself. Dispatchers emit no index of their own; they exist so callers have a single entry-point that picks the right per-index function based on a mode/type parameter. See "Dispatcher pattern" below.',
     '- `@dbxModelFirebaseIndexPath <field>, <field>, ...` — one sequence per tag, filtered to the listed fields (preserves declared order). Use when a static body has multiple `where`/`orderBy` calls and you want to emit multiple composites from it. NOTE: as of this version the body must be branch-free; previously this tag was the escape hatch for `if`-branched bodies, but those now error with `MODEL_FIREBASE_INDEX_COMPLEX_QUERY_BODY`.',
     "- `@dbxModelFirebaseIndexSkip` — do not emit this factory's own index. Its body still contributes constraints to callers via transitive splicing.",
+    '- `@dbxModelFirebaseIndexSpecFilesOnly` — factory exists for `*.spec.ts` callers only. No composite/fieldOverride emission (like `Skip`), but the validator emits the `MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION` **error** if any non-spec file references the factory. The `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` warning is suppressed as long as at least one `*.spec.ts` caller exists.',
     '- `@dbxModelFirebaseIndexManual` — author manages this index by hand; the generator skips it but the deployed shape is treated as expected (no `removed` drift).',
+    '- `@dbxModelFirebaseIndexAllowArrayContainsAny` — silences the `MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY` warning for this factory. Use when the deployed composite is known to support `array-contains-any` for the field set and the partial-support advisory is just noise. Has no effect on index generation.',
     '- `@dbxModelFirebaseIndexCategory`, `@dbxModelFirebaseIndexTags`, `@dbxModelFirebaseIndexSlug`, `@dbxModelFirebaseIndexRelated`, `@dbxModelFirebaseIndexSkillRefs` — lookup/search metadata; no effect on index generation.',
     '',
     '## One query function per target index',
@@ -136,6 +141,7 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     'Errors (validation fails when any are present):',
     '- `MODEL_FIREBASE_INDEX_COMPLEX_QUERY_BODY` — tagged body uses `if` / `switch` / ternary / loop.',
     '- `MODEL_FIREBASE_INDEX_NON_DELEGATING_DISPATCHER` — `@dbxModelFirebaseIndexDispatcher` calls `where` / `orderBy` / a helper directly.',
+    '- `MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION` — a `@dbxModelFirebaseIndexSpecFilesOnly` factory is referenced from a non-spec file.',
     '- `MODEL_FIREBASE_INDEX_COMPOSITE_ADDED`, `MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_ADDED` — required by factories, missing from JSON.',
     '',
     'Warnings (advisory):',
@@ -147,6 +153,8 @@ const DBX_MODEL_FIREBASE_INDEX_VALIDATE_APP_TOOL: Tool = {
     '- `MODEL_FIREBASE_INDEX_UNRESOLVED_FIELD` — non-literal field-path argument.',
     '- `MODEL_FIREBASE_INDEX_MULTIPLE_RANGE_FIELDS`, `MODEL_FIREBASE_INDEX_ORDERBY_CONFLICT`, `MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY` — Firestore index-shape issues.',
     '- `MODEL_FIREBASE_INDEX_COMPOSITE_REMOVED`, `MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_REMOVED` — stale entries in JSON.',
+    '- `MODEL_FIREBASE_INDEX_EXCLUDED` — `@dbxModelFirebaseIndexExclude` is suppressing index emission for an audited factory.',
+    '- `MODEL_FIREBASE_INDEX_UNUSED_FACTORY` — tagged factory has no production callers anywhere in the workspace (`apps/`, `components/`, `packages/`); delete it, tag it `@dbxModelFirebaseIndexSpecFilesOnly` if it is a `*.spec.ts`-only helper, or mark `@dbxModelFirebaseIndexSkip`.',
     '',
     'Pass any code to `dbx_explain_rule` for the canonical fix and template.'
   ].join('\n'),
@@ -168,38 +176,46 @@ async function runValidateAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolR
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let toolResult: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
     if (parsed.indexesFile !== undefined) {
       ensurePathInsideCwd(parsed.indexesFile, cwd);
     }
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
+  if (ensureError === undefined) {
+    const indexesRelative = parsed.indexesFile ?? 'firestore.indexes.json';
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    const indexesAbs = resolve(cwd, indexesRelative);
 
-  const indexesRelative = parsed.indexesFile ?? 'firestore.indexes.json';
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  const indexesAbs = resolve(cwd, indexesRelative);
-
-  let report: ModelFirebaseIndexValidateAppReport;
-  try {
-    report = await buildValidateAppReport({ componentDir: parsed.componentDir, componentAbs, indexesRelative, indexesAbs });
-  } catch (err) {
-    return toolError(`Failed to validate component firebase indexes: ${err instanceof Error ? err.message : String(err)}`);
+    let report: ModelFirebaseIndexValidateAppReport | undefined;
+    let buildError: string | undefined;
+    try {
+      report = await buildValidateAppReport({ componentDir: parsed.componentDir, componentAbs, workspaceRoot: cwd, indexesRelative, indexesAbs });
+    } catch (err) {
+      buildError = `Failed to validate component firebase indexes: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (buildError !== undefined || report === undefined) {
+      toolResult = toolError(buildError ?? 'Failed to build validation report.');
+    } else {
+      const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+      const baseResult: ToolResult = { content: [{ type: 'text', text }] };
+      toolResult = report.drift ? { ...baseResult, isError: true } : baseResult;
+    }
+  } else {
+    toolResult = toolError(ensureError);
   }
-
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
-  if (report.drift) {
-    return { ...result, isError: true };
-  }
-  return result;
+  return toolResult;
 }
 
 /**
  * Builds the `dbx_model_firebase_index_validate_app` tool.
  *
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createValidateAppModelFirebaseIndexTool(): DbxTool {
@@ -210,6 +226,7 @@ export function createValidateAppModelFirebaseIndexTool(): DbxTool {
 interface BuildValidateAppReportInput {
   readonly componentDir: string;
   readonly componentAbs: string;
+  readonly workspaceRoot: string;
   readonly indexesRelative: string;
   readonly indexesAbs: string;
 }
@@ -254,8 +271,97 @@ function pushDiffViolation(input: PushDiffViolationInput): void {
   });
 }
 
+const MAX_PRODUCTION_SAMPLES = 5;
+
+interface PushFactoryCallerViolationsInput {
+  readonly buffer: ViolationBuffer;
+  readonly entry: ModelFirebaseIndexEntry;
+  readonly references: ReadonlyMap<string, FactoryReferenceCount>;
+  readonly filePath: string | undefined;
+}
+
+/**
+ * Emits the per-factory caller-based violations: the spec-only-violation
+ * error when a `@dbxModelFirebaseIndexSpecFilesOnly` factory has any
+ * non-spec callers, and the unused-factory warning when a factory has
+ * no production callers (and, for spec-only factories, no spec callers
+ * either).
+ *
+ * @param input - The validator's buffer, the manifest entry, scanner refs, and the factory's source file.
+ */
+function pushFactoryCallerViolations(input: PushFactoryCallerViolationsInput): void {
+  const { buffer, entry, references, filePath } = input;
+  if (entry.skip || entry.manual) return;
+  const refs = references.get(entry.slug);
+  const productionCount = refs?.productionCount ?? 0;
+  const specCount = refs?.specCount ?? 0;
+  if (entry.specOnly === true) {
+    pushSpecOnlyCallerViolations({ buffer, entry, refs, productionCount, specCount, filePath });
+    return;
+  }
+  if (productionCount > 0) return;
+  pushViolation(buffer, {
+    code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNUSED_FACTORY,
+    severity: 'warning',
+    message: formatUnusedFactoryMessage(entry.name, specCount),
+    file: filePath,
+    line: undefined,
+    factory: entry.name,
+    remediation: attachRemediation(ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNUSED_FACTORY)
+  });
+}
+
+interface PushSpecOnlyCallerViolationsInput {
+  readonly buffer: ViolationBuffer;
+  readonly entry: ModelFirebaseIndexEntry;
+  readonly refs: FactoryReferenceCount | undefined;
+  readonly productionCount: number;
+  readonly specCount: number;
+  readonly filePath: string | undefined;
+}
+
+function pushSpecOnlyCallerViolations(input: PushSpecOnlyCallerViolationsInput): void {
+  const { buffer, entry, refs, productionCount, specCount, filePath } = input;
+  if (productionCount > 0) {
+    const productionSites = (refs?.referencedBy ?? []).filter((r) => !r.isSpec).slice(0, MAX_PRODUCTION_SAMPLES);
+    pushViolation(buffer, {
+      code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION,
+      severity: 'error',
+      message: formatSpecOnlyViolationMessage(entry.name, productionCount, productionSites),
+      file: filePath,
+      line: undefined,
+      factory: entry.name,
+      remediation: attachRemediation(ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION)
+    });
+    return;
+  }
+  if (specCount > 0) return;
+  pushViolation(buffer, {
+    code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNUSED_FACTORY,
+    severity: 'warning',
+    message: `${entry.name} is tagged \`@dbxModelFirebaseIndexSpecFilesOnly\` but has no spec callers either — delete the factory or add \`@dbxModelFirebaseIndexSkip\` if retention is intentional.`,
+    file: filePath,
+    line: undefined,
+    factory: entry.name,
+    remediation: attachRemediation(ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNUSED_FACTORY)
+  });
+}
+
+function formatUnusedFactoryMessage(factoryName: string, specCount: number): string {
+  const plural = specCount === 1 ? '' : 's';
+  const specSuffix = specCount > 0 ? ` (${specCount} spec-only caller${plural} — tag \`@dbxModelFirebaseIndexSpecFilesOnly\` if test-only is intentional)` : '';
+  return `${factoryName} has no production callers anywhere in the workspace (\`apps/\`, \`components/\`, \`packages/\`)${specSuffix} — delete the factory or add \`@dbxModelFirebaseIndexSkip\` if retention is intentional.`;
+}
+
+function formatSpecOnlyViolationMessage(factoryName: string, productionCount: number, productionSites: readonly { readonly file: string; readonly line: number }[]): string {
+  const plural = productionCount === 1 ? '' : 's';
+  const sites = productionSites.map((r) => `\`${r.file}:${r.line}\``).join(', ');
+  const sampleSuffix = sites.length === 0 ? '' : ` First non-spec references: ${sites}.`;
+  return `${factoryName} is tagged \`@dbxModelFirebaseIndexSpecFilesOnly\` but is referenced from ${productionCount} non-spec file${plural}.${sampleSuffix} Either move the production call into a non-spec-only factory (and emit the required composite) or drop the tag and emit the index.`;
+}
+
 async function buildValidateAppReport(input: BuildValidateAppReportInput): Promise<ModelFirebaseIndexValidateAppReport> {
-  const { componentDir, componentAbs, indexesRelative, indexesAbs } = input;
+  const { componentDir, componentAbs, workspaceRoot, indexesRelative, indexesAbs } = input;
   const buffer = newBuffer();
 
   const buildOutcome = await buildModelFirebaseIndexManifest({
@@ -279,6 +385,16 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
   const { existingJson, exists: indexesFileExists, readError } = await readExistingIndexesJson(indexesAbs);
   for (const buildWarning of buildOutcome.extractWarnings) {
     pushViolation(buffer, buildFirebaseIndexValidateAppViolation(mapModelFirebaseIndexBuildWarning(buildWarning)));
+  }
+
+  const references = await scanFactoryReferences({
+    projectRoot: workspaceRoot,
+    entries: buildOutcome.manifest.entries.map((e) => ({ slug: e.slug, name: e.name, filePath: buildOutcome.entryFilePathsBySlug.get(e.slug) ?? '' })),
+    include: WORKSPACE_FACTORY_SCAN_INCLUDE,
+    exclude: WORKSPACE_FACTORY_SCAN_EXCLUDE
+  });
+  for (const entry of buildOutcome.manifest.entries) {
+    pushFactoryCallerViolations({ buffer, entry, references, filePath: buildOutcome.entryFilePathsBySlug.get(entry.slug) });
   }
   if (readError !== undefined) {
     pushViolation(buffer, {
@@ -352,33 +468,44 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
 }
 
 async function readExistingIndexesJson(indexesAbs: string): Promise<{ readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string }> {
-  let text: string | null = null;
+  let text: Maybe<string> = null;
   let readError: string | undefined;
+  let missing = false;
   try {
     text = await readFile(indexesAbs, 'utf-8');
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code;
     if (code === 'ENOENT') {
-      return { exists: false };
+      missing = true;
+    } else {
+      readError = err instanceof Error ? err.message : String(err);
     }
-    readError = err instanceof Error ? err.message : String(err);
   }
-  if (text === null) {
-    return { exists: false, readError };
+  let result: { readonly existingJson?: FirestoreIndexesJson; readonly exists: boolean; readonly readError?: string };
+  if (missing) {
+    result = { exists: false };
+  } else if (text === null) {
+    result = { exists: false, readError };
+  } else {
+    let parsed: unknown;
+    let parseError: string | undefined;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      parseError = err instanceof Error ? err.message : String(err);
+    }
+    if (parseError !== undefined) {
+      result = { exists: true, readError: parseError };
+    } else if (parsed === null || typeof parsed !== 'object') {
+      result = { exists: true, readError: 'Top-level value is not an object.' };
+    } else {
+      const raw = parsed as { indexes?: unknown; fieldOverrides?: unknown };
+      const indexes = Array.isArray(raw.indexes) ? (raw.indexes as FirestoreIndexesJson['indexes']) : [];
+      const fieldOverrides = Array.isArray(raw.fieldOverrides) ? (raw.fieldOverrides as FirestoreIndexesJson['fieldOverrides']) : [];
+      result = { exists: true, existingJson: { indexes, fieldOverrides } };
+    }
   }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch (err) {
-    return { exists: true, readError: err instanceof Error ? err.message : String(err) };
-  }
-  if (parsed === null || typeof parsed !== 'object') {
-    return { exists: true, readError: 'Top-level value is not an object.' };
-  }
-  const raw = parsed as { indexes?: unknown; fieldOverrides?: unknown };
-  const indexes = Array.isArray(raw.indexes) ? (raw.indexes as FirestoreIndexesJson['indexes']) : [];
-  const fieldOverrides = Array.isArray(raw.fieldOverrides) ? (raw.fieldOverrides as FirestoreIndexesJson['fieldOverrides']) : [];
-  return { exists: true, existingJson: { indexes, fieldOverrides } };
+  return result;
 }
 
 function formatBuildFailure(buildOutcome: Exclude<Awaited<ReturnType<typeof buildModelFirebaseIndexManifest>>, { readonly kind: 'success' }>): string {

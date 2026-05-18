@@ -10,22 +10,23 @@ import { type UserRelated } from '../../../model/user';
  *
  * Returns `false` if no auth is present.
  *
- * @param context - the Firebase model context to evaluate
- * @returns a promise resolving to `true` if the user is an admin, `false` otherwise
+ * @param context - Firebase model context whose caller is evaluated.
+ * @returns Resolves with `true` for an admin caller, otherwise `false`.
  */
 export const isAdminInFirebaseModelContext: AsyncDecisionFunction<FirebaseModelContext> = (context: FirebaseModelContext) => context.auth?.isAdmin() ?? false;
 
 /**
  * Creates a {@link GrantRolesIfFunction} that grants the specified roles when the user is an admin.
  *
- * @param rolesToGrantToAdmin - roles to grant if the user is an admin
- * @returns a {@link GrantRolesIfFunction} that grants the given roles when the user is an admin
+ * @param rolesToGrantToAdmin - Roles to grant if the user is an admin.
+ * @returns A {@link GrantRolesIfFunction} that grants the given roles when the user is an admin.
  *
  * @example
  * ```ts
  * const grantIfAdmin = grantModelRolesIfAdminFunction(fullAccessRoleMap);
  * const roles = await grantIfAdmin(context);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function grantModelRolesIfAdminFunction<R extends string = string>(rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<FirebaseModelContext, R> {
@@ -40,10 +41,10 @@ export const grantFullAccessIfAdmin: GeneralGrantRolesIfFunction<FirebaseModelCo
 /**
  * Convenience function that evaluates admin status and grants roles in a single call.
  *
- * @param context - the model context to check
- * @param rolesToGrantToAdmin - roles to grant if admin
- * @param otherwise - fallback role computation when not admin
- * @returns a promise or value resolving to the granted role map
+ * @param context - Firebase model context whose caller is evaluated.
+ * @param rolesToGrantToAdmin - Roles granted when the caller is an admin.
+ * @param otherwise - Fallback computation invoked for non-admin callers.
+ * @returns Resolves with the granted role map.
  */
 export function grantModelRolesIfAdmin<R extends string = string>(context: FirebaseModelContext, rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>, otherwise?: GrantRolesOtherwiseFunction<R>): PromiseOrValue<GrantedRoleMap<R>> {
   return grantModelRolesIfAdminFunction(rolesToGrantToAdmin)(context, otherwise);
@@ -53,9 +54,10 @@ export function grantModelRolesIfAdmin<R extends string = string>(context: Fireb
 /**
  * Creates a {@link GrantRolesIfFunction} that grants roles when the user has all specified auth roles in their token.
  *
- * @param authRoles - the auth roles the user must have
- * @param rolesToGrantToAdmin - the model roles to grant if the auth roles are present
- * @returns a {@link GrantRolesIfFunction} that grants the given roles when the user has the required auth roles
+ * @param authRoles - The auth roles the user must have.
+ * @param rolesToGrantToAdmin - The model roles to grant if the auth roles are present.
+ * @returns A {@link GrantRolesIfFunction} that grants the given roles when the user has the required auth roles.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function grantModelRolesIfHasAuthRolesFunction<R extends string = string>(authRoles: AuthRole[], rolesToGrantToAdmin: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<FirebaseModelContext, R> {
@@ -74,8 +76,9 @@ export type GrantModelRolesIfHasAuthRolesFactory = <R extends string = string>(c
 /**
  * Creates a reusable factory pre-configured with specific auth roles to check for.
  *
- * @param authRoles - the auth roles the user must have
- * @returns a {@link GrantModelRolesIfHasAuthRolesFactory} pre-configured to check the given auth roles
+ * @param authRoles - The auth roles the user must have.
+ * @returns A {@link GrantModelRolesIfHasAuthRolesFactory} pre-configured to check the given auth roles.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function grantModelRolesIfHasAuthRolesFactory(authRoles: IterableOrValue<AuthRole>): GrantModelRolesIfHasAuthRolesFactory {
@@ -141,14 +144,15 @@ export const isOwnerOfUserRelatedModelInFirebaseModelContext: AsyncDecisionFunct
 /**
  * Creates a {@link GrantRolesIfFunction} that grants roles when the authenticated user's UID matches the model's `uid` field.
  *
- * @param rolesToGrant - the roles to grant if the user owns the model
- * @returns a {@link GrantRolesIfFunction} that grants roles when the authenticated user is the model owner
+ * @param rolesToGrant - The roles to grant if the user owns the model.
+ * @returns A {@link GrantRolesIfFunction} that grants roles when the authenticated user is the model owner.
  *
  * @example
  * ```ts
  * const grantIfOwner = grantModelRolesIfAuthUserRelatedModelFunction<User>(fullAccessRoleMap);
  * const roles = await grantIfOwner({ model: userData, context });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function grantModelRolesIfAuthUserRelatedModelFunction<T extends UserRelated, R extends string = string>(rolesToGrant: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<UserRelatedModelFirebaseModelContext<T>, R> {
@@ -176,9 +180,10 @@ export type GeneralGrantRolesOnlyIfFunction<C> = <R extends string = string>(con
 /**
  * Creates a {@link GrantRolesOnlyIfFunction} with no fallback — returns no-access if the condition is false.
  *
- * @param grantIf - decision function to evaluate
- * @param grantedRoles - roles to grant if the decision is `true`
- * @returns a {@link GrantRolesOnlyIfFunction} that grants roles or returns no-access with no fallback
+ * @param grantIf - Decision function to evaluate.
+ * @param grantedRoles - Roles to grant if the decision is `true`
+ * @returns A {@link GrantRolesOnlyIfFunction} that grants roles or returns no-access with no fallback.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function grantModelRolesOnlyIfFunction<C, R extends string = string>(grantIf: AsyncDecisionFunction<C>, grantedRoles: GetterOrValue<GrantedRoleMap<R>>): GrantRolesOnlyIfFunction<C, R> {
@@ -210,9 +215,9 @@ export type GrantRolesOtherwiseFunction<R extends string = string> = Getter<Gran
  *
  * This is the core building block for composing permission logic.
  *
- * @param grantIf - async decision function to evaluate
- * @param grantedRoles - roles to grant if the decision is `true`
- * @returns a {@link GrantRolesIfFunction} that evaluates the condition and grants roles or falls back
+ * @param grantIf - Async decision function to evaluate.
+ * @param grantedRoles - Roles to grant if the decision is `true`
+ * @returns A {@link GrantRolesIfFunction} that evaluates the condition and grants roles or falls back.
  * @throws {Error} When `grantIf` is not provided.
  *
  * @example
@@ -223,6 +228,7 @@ export type GrantRolesOtherwiseFunction<R extends string = string> = Getter<Gran
  * );
  * const roles = await grantIfOwner(context, () => noAccessRoleMap());
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function grantModelRolesIfFunction<C, R extends string = string>(grantIf: AsyncDecisionFunction<C>, grantedRoles: GetterOrValue<GrantedRoleMap<R>>): GrantRolesIfFunction<C, R> {

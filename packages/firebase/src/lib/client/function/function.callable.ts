@@ -77,15 +77,15 @@ export function mapHttpsCallable<I, O, A, B = unknown>(callable: HttpsCallable<A
  * Unwraps an `HttpsCallable` so it returns the response data directly (`O`) instead of
  * `HttpsCallableResult<O>`. Simplifies consumption when only the data payload is needed.
  */
-export type DirectDataHttpsCallable<C extends HttpsCallable<any, any>> = C extends HttpsCallable<infer I, infer O> ? (data?: I | null) => Promise<O> : never;
+export type DirectDataHttpsCallable<C extends HttpsCallable<any, any>> = C extends HttpsCallable<infer I, infer O> ? (data?: Maybe<I>) => Promise<O> : never;
 
 /**
  * Wraps an `HttpsCallable` to return the data payload directly, stripping the `HttpsCallableResult` wrapper.
  *
  * Errors are converted to readable errors via {@link convertHttpsCallableErrorToReadableError}.
  *
- * @param callable - the `HttpsCallable` to wrap
- * @returns a {@link DirectDataHttpsCallable} that resolves to the response data directly
+ * @param callable - The `HttpsCallable` to wrap.
+ * @returns A {@link DirectDataHttpsCallable} that resolves to the response data directly.
  *
  * @example
  * ```ts
@@ -106,15 +106,15 @@ export function directDataHttpsCallable<I, O, C extends HttpsCallable<I, O> = Ht
  * If the error is a client-side {@link FirebaseError} with `details`, wraps it as a {@link FirebaseServerError}
  * to preserve server-side error context. Otherwise, converts it to a generic readable error via `toReadableError`.
  *
- * @param error - the caught error from an `HttpsCallable` invocation
- * @returns a {@link FirebaseServerError} if the error has structured details, or a generic readable error otherwise
+ * @param error - The caught error from an `HttpsCallable` invocation.
+ * @returns A {@link FirebaseServerError} if the error has structured details, or a generic readable error otherwise.
  */
 export function convertHttpsCallableErrorToReadableError(error: unknown) {
   let result: unknown;
 
   if (typeof error === 'object') {
     if (isClientFirebaseError(error) && (error as Partial<{ details: object }>).details != null) {
-      result = FirebaseServerError.fromFirebaseError(error as FirebaseError);
+      result = FirebaseServerError.fromFirebaseError(error);
     } else {
       result = toReadableError(error);
     }

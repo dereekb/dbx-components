@@ -106,8 +106,9 @@ export interface CreateListAppModelSnapshotFieldsToolInput {
  * Builds the `dbx_model_snapshot_field_list_app` tool wired to the
  * supplied registry.
  *
- * @param input - the registry the tool resolves identifiers against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param input - The registry the tool resolves identifiers against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createListAppModelSnapshotFieldsTool(input: CreateListAppModelSnapshotFieldsToolInput): DbxTool {
@@ -115,37 +116,50 @@ export function createListAppModelSnapshotFieldsTool(input: CreateListAppModelSn
 
   async function run(rawArgs: unknown): Promise<ToolResult> {
     const parsed = ListAppArgsType(rawArgs);
+    let result: ToolResult;
     if (parsed instanceof type.errors) {
-      return toolError(`Invalid arguments: ${parsed.summary}`);
-    }
-    const cwd = process.cwd();
-    try {
-      ensurePathInsideCwd(parsed.componentDir, cwd);
-      if (parsed.apiDir !== undefined) {
-        ensurePathInsideCwd(parsed.apiDir, cwd);
+      result = toolError(`Invalid arguments: ${parsed.summary}`);
+    } else {
+      const cwd = process.cwd();
+      let pathError: string | undefined;
+      try {
+        ensurePathInsideCwd(parsed.componentDir, cwd);
+        if (parsed.apiDir !== undefined) {
+          ensurePathInsideCwd(parsed.apiDir, cwd);
+        }
+      } catch (err) {
+        pathError = err instanceof Error ? err.message : String(err);
       }
-    } catch (err) {
-      return toolError(err instanceof Error ? err.message : String(err));
+
+      if (pathError === undefined) {
+        const componentAbs = resolve(cwd, parsed.componentDir);
+        const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
+
+        let report: ListAppReport | undefined;
+        let buildError: string | undefined;
+        try {
+          report = await buildListAppReport({
+            componentDir: parsed.componentDir,
+            componentAbs,
+            apiDir: parsed.apiDir,
+            apiAbs,
+            registry
+          });
+        } catch (err) {
+          buildError = `Failed to walk app for snapshot fields: ${err instanceof Error ? err.message : String(err)}`;
+        }
+
+        if (buildError === undefined) {
+          const text = parsed.format === 'json' ? formatReportAsJson(report as ListAppReport) : formatReportAsMarkdown(report as ListAppReport);
+          result = { content: [{ type: 'text', text }] };
+        } else {
+          result = toolError(buildError);
+        }
+      } else {
+        result = toolError(pathError);
+      }
     }
-
-    const componentAbs = resolve(cwd, parsed.componentDir);
-    const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
-
-    let report: ListAppReport;
-    try {
-      report = await buildListAppReport({
-        componentDir: parsed.componentDir,
-        componentAbs,
-        apiDir: parsed.apiDir,
-        apiAbs,
-        registry
-      });
-    } catch (err) {
-      return toolError(`Failed to walk app for snapshot fields: ${err instanceof Error ? err.message : String(err)}`);
-    }
-
-    const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-    return { content: [{ type: 'text', text }] };
+    return result;
   }
 
   return { definition: DBX_MODEL_SNAPSHOT_FIELD_LIST_APP_TOOL, run };
@@ -304,8 +318,8 @@ function extractFieldUsages(fieldsObj: ObjectLiteralExpression, registry: ModelS
  * `undefined` for property accesses, computed expressions, and other
  * shapes the registry can't resolve syntactically.
  *
- * @param text - the converter expression source text
- * @returns the leading identifier, or undefined if the head can't be parsed
+ * @param text - The converter expression source text.
+ * @returns The leading identifier, or undefined if the head can't be parsed.
  */
 export function parseHeadIdentifier(text: string): string | undefined {
   const trimmed = text.trim();
@@ -319,9 +333,9 @@ export function parseHeadIdentifier(text: string): string | undefined {
  * Counts how many times each registry-resolved snapshot field appears across
  * the given models. Returns rows sorted by descending count, then slug.
  *
- * @param models - the per-model usage rows
- * @param registry - the snapshot-field registry used to attach `name` to each slug
- * @returns frequency rows ready for the markdown / JSON formatter
+ * @param models - The per-model usage rows.
+ * @param registry - The snapshot-field registry used to attach `name` to each slug.
+ * @returns Frequency rows ready for the markdown / JSON formatter.
  */
 function aggregateFactoryFrequency(models: readonly ModelUsage[], registry: ModelSnapshotFieldRegistry): readonly { readonly slug: string; readonly name: string; readonly count: number }[] {
   const counts = new Map<string, number>();
@@ -346,8 +360,8 @@ function aggregateFactoryFrequency(models: readonly ModelUsage[], registry: Mode
  * Counts each unmatched ("external") head identifier across the given models.
  * Returns rows sorted by descending count, then identifier.
  *
- * @param models - the per-model usage rows
- * @returns external-identifier rows ready for the formatter
+ * @param models - The per-model usage rows.
+ * @returns External-identifier rows ready for the formatter.
  */
 function aggregateExternalIdentifiers(models: readonly ModelUsage[]): readonly { readonly identifier: string; readonly count: number }[] {
   const counts = new Map<string, number>();

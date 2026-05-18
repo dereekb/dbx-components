@@ -1,5 +1,6 @@
 import { type AbstractWrappedFixtureWithInstance, type WrapTestContextConfig, wrapTestContextFactory, type InstanceWrapTestContextConfig, instanceWrapTestContextFactory, type TestWrappedContextFactoryBuilder } from '../shared/shared.wrap';
 
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use TestWrappedContextFactoryBuilder from shared instead. This is kept for backwards compatibility.
  */

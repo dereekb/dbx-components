@@ -84,8 +84,8 @@ export interface DbxForgeCalendarDateScheduleRangeFieldConfig extends Pick<Calen
  *
  * This is the forge equivalent of {@link dateScheduleRangeField}.
  *
- * @param config - Optional schedule range field configuration overrides
- * @returns A validated forge field definition for date schedule range selection
+ * @param config - Optional schedule range field configuration overrides.
+ * @returns A validated forge field definition for date schedule range selection.
  */
 export function dbxForgeDateScheduleRangeField(config: DbxForgeCalendarDateScheduleRangeFieldConfig = {}): DbxForgeCalendarDateScheduleRangeFieldDef {
   const { key = 'schedule', label, description, required, readonly: isReadonly, appearance, allowTextInput, hideCustomize, allowCustomizeWithoutDateRange, outputTimezone, defaultScheduleDays, minMaxDateRange, filter, exclusions, dialogContentConfig, computeSelectionResultRelativeToFilter, initialSelectionState, cellContentFactory, customDetailsConfig } = config;
@@ -113,9 +113,9 @@ export function dbxForgeDateScheduleRangeField(config: DbxForgeCalendarDateSched
     key,
     type: FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE,
     label: label ?? 'Schedule',
-    value: undefined as unknown,
+    value: undefined,
     required,
     readonly: isReadonly,
     props: Object.keys(props).length > 0 ? props : undefined
-  }) as DbxForgeCalendarDateScheduleRangeFieldDef;
+  });
 }

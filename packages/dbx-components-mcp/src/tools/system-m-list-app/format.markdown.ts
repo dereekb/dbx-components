@@ -15,8 +15,8 @@ const STATUS_LABEL = {
  * header plus a per-state table covering data interface, converter,
  * and converter-map presence.
  *
- * @param report - the listing report to render
- * @returns the markdown document
+ * @param report - The listing report to render.
+ * @returns The markdown document.
  */
 export function formatReportAsMarkdown(report: SystemMListAppReport): string {
   const lines: string[] = [`# System state listing — \`${report.componentDir}\``, '', `Folder: \`${report.folderPath}\``, `Status: ${STATUS_LABEL[report.status]}`];

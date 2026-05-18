@@ -1,9 +1,9 @@
 <div class="dbx-forge-datetime-field-wrapper">
   <!-- Field Label -->
-  @if (fieldLabel()) {
+  @if (fieldLabelSignal()) {
     <span class="dbx-forge-field-label">
-      {{ fieldLabel() }}
-      @if (isRequired()) {
+      {{ fieldLabelSignal() }}
+      @if (isRequiredSignal()) {
         <span class="dbx-forge-required-marker">*</span>
       }
     </span>
@@ -12,18 +12,18 @@
   <!-- Date + Time row -->
   <div class="dbx-forge-datetime-field dbx-forge-datetime-inputs">
     <!-- Date Input -->
-    @if (showDateInputSignal()) {
-      <div class="dbx-forge-datetime-col" [class.dbx-forge-datetime-col-full]="isDateOnly()">
-        <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
-          <mat-label>{{ dateLabel() }}</mat-label>
-          <input matInput [disabled]="isDisabledSignal()" [required]="isDateRequired()" [min]="dateInputMinSignal()" [max]="dateInputMaxSignal()" [matDatepicker]="picker" [matDatepickerFilter]="pickerFilterSignal()" (dateChange)="onDatePicked($event)" [value]="dateValueSignal()" (click)="onDateInputClick(picker)" (keydown)="onDateKeydown($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()" />
-          @if (!hideDatePicker()) {
+    @if (resolvedShowDateInputSignal()) {
+      <div class="dbx-forge-datetime-col" [class.dbx-forge-datetime-col-full]="isDateOnlySignal()">
+        <mat-form-field [appearance]="appearanceSignal()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
+          <mat-label>{{ dateLabelSignal() }}</mat-label>
+          <input matInput [disabled]="isDisabledSignal()" [required]="isDateRequiredSignal()" [min]="dateInputMinSignal()" [max]="dateInputMaxSignal()" [matDatepicker]="picker" [matDatepickerFilter]="pickerFilterSignal()" (dateChange)="onDatePicked($event)" [value]="dateValueSignal()" (click)="onDateInputClick(picker)" (keydown)="onDateKeydown($event)" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-required]="ariaRequiredSignal()" [attr.aria-describedby]="ariaDescribedBySignal()" />
+          @if (!hideDatePickerSignal()) {
             <button matPrefix mat-icon-button (click)="picker.open()" [disabled]="isDisabledSignal()" aria-label="Open date picker">
               <mat-icon aria-hidden="true">calendar_today</mat-icon>
             </button>
           }
           <mat-datepicker #picker></mat-datepicker>
-          @if (showClearButtonSignal()) {
+          @if (resolvedShowClearButtonSignal()) {
             <button matSuffix mat-icon-button aria-label="Clear date and time" [disabled]="isDisabledSignal()" (click)="clearValue()">
               <mat-icon aria-hidden="true">clear</mat-icon>
             </button>
@@ -42,7 +42,7 @@
       <div class="dbx-forge-datetime-col">
         @if (showTimeInputSignal()) {
           <mat-menu #timemenu="matMenu">
-            @if (timeMode() === 'optional') {
+            @if (timeModeSignal() === 'optional') {
               <button mat-menu-item (click)="removeTime()">
                 <span>Remove Time</span>
               </button>
@@ -52,9 +52,9 @@
               <button mat-menu-item (click)="selectPreset(preset)">{{ preset.label | getValue }}</button>
             }
           </mat-menu>
-          <mat-form-field [appearance]="appearance()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
-            <mat-label>{{ timeLabel() }}</mat-label>
-            <input matInput [errorStateMatcher]="timeErrorStateMatcher" [required]="isTimeRequired()" [formControl]="timeCtrl" (focus)="onTimeFocus()" (focusout)="onTimeBlur()" (keydown)="onTimeKeydown($event)" />
+          <mat-form-field [appearance]="appearanceSignal()" subscriptSizing="dynamic" class="dbx-forge-datetime-col-field">
+            <mat-label>{{ timeLabelSignal() }}</mat-label>
+            <input matInput [errorStateMatcher]="timeErrorStateMatcher" [required]="isTimeRequiredSignal()" [formControl]="timeCtrl" (focus)="onTimeFocus()" (focusout)="onTimeBlur()" (keydown)="onTimeKeydown($event)" />
             <button matPrefix mat-icon-button [matMenuTriggerFor]="timemenu" aria-label="Open time presets" [disabled]="isTimeMenuDisabledSignal()">
               <mat-icon aria-hidden="true">timer</mat-icon>
             </button>
@@ -81,21 +81,21 @@
   <!-- Date Hint / Error -->
   @if (hasErrorSignal()) {
     @if (currentErrorMessageSignal()) {
-      <mat-error class="dbx-forge-datetime-error" [id]="errorId()">{{ currentErrorMessageSignal() }}</mat-error>
+      <mat-error class="dbx-forge-datetime-error" [id]="errorIdSignal()">{{ currentErrorMessageSignal() }}</mat-error>
     }
-  } @else if (!hideDateHint()) {
-    <div class="dbx-forge-datetime-hint" [id]="hintId()">
+  } @else if (!hideDateHintSignal()) {
+    <div class="dbx-forge-datetime-hint" [id]="hintIdSignal()">
       @if (!hasValueSignal()) {
         <span class="dbx-small dbx-hint">No date/time set</span>
       } @else if (displayValueSignal(); as dv) {
         @if (fullDaySignal()) {
           <small>
-            <b class="dbx-ok">{{ allDayLabel() }}</b>
+            <b class="dbx-ok">{{ allDayLabelSignal() }}</b>
             {{ dv | date: 'fullDate' }} {{ tzAbbreviationSignal() }} ({{ dv | dateDistance }})
           </small>
         } @else {
           <small>
-            <b class="dbx-ok">{{ atTimeLabel() }}</b>
+            <b class="dbx-ok">{{ atTimeLabelSignal() }}</b>
             {{ dv | date: 'medium' }} {{ tzAbbreviationSignal() }} ({{ dv | timeDistance }})
           </small>
         }
@@ -104,14 +104,14 @@
   }
 
   <!-- Description -->
-  @if (description()) {
-    <p class="dbx-hint dbx-forge-datetime-desc">{{ description() }}</p>
+  @if (descriptionSignal()) {
+    <p class="dbx-hint dbx-forge-datetime-desc">{{ descriptionSignal() }}</p>
   }
 </div>
 
 <!-- Timezone Suffix Template -->
 <ng-template #tzSuffix>
-  @if (showTimezone()) {
+  @if (showTimezoneSignal()) {
     <span class="dbx-forge-datetime-timezone dbx-faint">{{ tzAbbreviationSignal() }}</span>
   }
 </ng-template>

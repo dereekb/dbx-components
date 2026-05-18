@@ -33,8 +33,8 @@ export type ZohoDeskConfigApiUrlInput = ZohoDeskApiUrlKey | ZohoDeskApiUrl;
  * Resolves a Desk API URL input to its full base URL. The 'production' key maps to the
  * primary Zoho Desk endpoint; custom URLs pass through unchanged.
  *
- * @param input - A well-known environment key or a custom Desk API URL
- * @returns The resolved full Zoho Desk API base URL
+ * @param input - A well-known environment key or a custom Desk API URL.
+ * @returns The resolved full Zoho Desk API base URL.
  */
 export function zohoDeskConfigApiUrl(input: ZohoDeskConfigApiUrlInput): ZohoApiUrl {
   let result: ZohoApiUrl;

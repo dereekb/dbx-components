@@ -22,7 +22,7 @@ export function asObservable<T>(valueOrObs: Maybe<ObservableOrValue<T>>): Observ
 /**
  * RxJS operator that flattens an emitted {@link ObservableOrValue} into its unwrapped value via `switchMap`.
  *
- * @returns an operator that unwraps ObservableOrValue emissions
+ * @returns An operator that unwraps ObservableOrValue emissions.
  */
 export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrValue<T>, T> {
   return switchMap((x) => asObservable(x));
@@ -32,7 +32,7 @@ export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrVa
  * RxJS operator that flattens an emitted Maybe<{@link ObservableOrValue}> into its unwrapped value,
  * emitting `undefined` when the input is nullish.
  *
- * @returns an operator that unwraps Maybe<ObservableOrValue> emissions
+ * @returns An operator that unwraps Maybe<ObservableOrValue> emissions.
  */
 export function maybeValueFromObservableOrValue<T>(): OperatorFunction<MaybeObservableOrValue<T>, Maybe<T>> {
   return switchMap((x) => (x != null ? asObservable(x) : of(undefined)));
@@ -66,7 +66,7 @@ export function asObservableFromGetter<T, A>(this: unknown, input: ObservableOrV
 /**
  * RxJS operator that flattens an emitted {@link ObservableOrValueGetter} into its resolved value via `switchMap`.
  *
- * @returns an operator that unwraps getter emissions
+ * @returns An operator that unwraps getter emissions.
  */
 export function valueFromObservableOrValueGetter<T>(): OperatorFunction<ObservableOrValueGetter<T>, T> {
   return switchMap((x) => asObservableFromGetter(x));
@@ -76,7 +76,7 @@ export function valueFromObservableOrValueGetter<T>(): OperatorFunction<Observab
  * RxJS operator that flattens an emitted Maybe<{@link ObservableOrValueGetter}> into its resolved value,
  * emitting `undefined` when the input is nullish.
  *
- * @returns an operator that unwraps Maybe<ObservableOrValueGetter> emissions, emitting undefined for nullish inputs
+ * @returns An operator that unwraps Maybe<ObservableOrValueGetter> emissions, emitting undefined for nullish inputs.
  */
 export function maybeValueFromObservableOrValueGetter<T>(): OperatorFunction<MaybeObservableOrValueGetter<T>, Maybe<T>> {
   return switchMap((x) => (x != null ? asObservableFromGetter(x) : of(undefined)));

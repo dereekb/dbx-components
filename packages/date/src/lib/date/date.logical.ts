@@ -40,9 +40,9 @@ export type LogicalDate = Date | LogicalDateStringCode;
 /**
  * Creates a factory function that resolves a {@link LogicalDateStringCode} to a concrete Date relative to an input reference date.
  *
- * @param logicalDateStringCode - the logical date code to resolve
- * @returns a factory that accepts an optional reference date and returns the resolved Date
- * @throws {Error} when the input code is not a recognized {@link LogicalDateStringCode}
+ * @param logicalDateStringCode - The logical date code to resolve.
+ * @returns A factory that accepts an optional reference date and returns the resolved Date.
+ * @throws {Error} When the input code is not a recognized {@link LogicalDateStringCode}
  *
  * @example
  * ```ts
@@ -50,6 +50,7 @@ export type LogicalDate = Date | LogicalDateStringCode;
  * const startOfToday = factory(new Date('2024-06-15T14:30:00Z'));
  * // startOfToday is 2024-06-15T00:00:00 in the system timezone
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function logicalDateStringCodeDateFactory(logicalDateStringCode: LogicalDateStringCode): FactoryWithInput<Date, Date> {
@@ -114,8 +115,8 @@ export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>, now: Date =
 /**
  * Type guard that checks whether the input is a recognized {@link LogicalDateStringCode}.
  *
- * @param logicalDate - value to check
- * @returns true if the value is one of the known logical date string codes
+ * @param logicalDate - Value to check.
+ * @returns True if the value is one of the known logical date string codes.
  *
  * @example
  * ```ts

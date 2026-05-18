@@ -45,13 +45,13 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as any);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   // ARIA
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    if (this.errorsToDisplaySignal().length > 0) return this.errorIdSignal();
+    if (this.props()?.hint) return this.hintIdSignal();
     return null;
   });
 
@@ -84,7 +84,7 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
 
   constructor() {
     super();
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'input' });
   }
 
   get inputErrorMessage(): Maybe<string> {

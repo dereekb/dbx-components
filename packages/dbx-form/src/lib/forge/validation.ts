@@ -9,6 +9,8 @@ import type { ValidationMessages } from '@ng-forge/dynamic-forms';
  * Can be used as `FormConfig.defaultValidationMessages` to apply form-wide,
  * or spread into individual field `validationMessages`.
  *
+ * @returns A ValidationMessages object with messages for required, email, minLength, maxLength, min, max, and pattern validators.
+ *
  * @example
  * ```typescript
  * const config: FormConfig = {
@@ -16,8 +18,6 @@ import type { ValidationMessages } from '@ng-forge/dynamic-forms';
  *   defaultValidationMessages: forgeDefaultValidationMessages()
  * };
  * ```
- *
- * @returns A ValidationMessages object with messages for required, email, minLength, maxLength, min, max, and pattern validators
  */
 export function dbxForgeDefaultValidationMessages(): ValidationMessages {
   return {

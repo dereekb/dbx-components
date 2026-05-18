@@ -33,8 +33,8 @@ export type LatLngBoundOrPoint = LatLngBound | LatLngPoint;
 /**
  * Type guard that checks whether the input is a {@link LatLngBound} by testing for the presence of `sw` and `ne` properties.
  *
- * @param input - value to test
- * @returns `true` if the input has `sw` and `ne` properties, indicating a bound
+ * @param input - Value to test.
+ * @returns `true` if the input has `sw` and `ne` properties, indicating a bound.
  */
 export function isLatLngBound(input: LatLngBound | unknown): input is LatLngBound {
   return typeof input === 'object' && input != null && 'sw' in input && 'ne' in input;
@@ -43,8 +43,8 @@ export function isLatLngBound(input: LatLngBound | unknown): input is LatLngBoun
 /**
  * Creates a deep copy of the bound so that mutations to the copy do not affect the original.
  *
- * @param input - bound to copy
- * @returns a new bound with copied corner points
+ * @param input - Bound to copy.
+ * @returns A new bound with copied corner points.
  */
 export function copyLatLngBound(input: LatLngBound): LatLngBound {
   return { sw: copyLatLngPoint(input.sw), ne: copyLatLngPoint(input.ne) };
@@ -53,9 +53,9 @@ export function copyLatLngBound(input: LatLngBound): LatLngBound {
 /**
  * Checks whether two bounds are identical by comparing both corner points.
  *
- * @param a - first bound
- * @param b - second bound
- * @returns `true` if both the `sw` and `ne` corners are the same
+ * @param a - First bound.
+ * @param b - Second bound.
+ * @returns `true` if both the `sw` and `ne` corners are the same.
  */
 export function isSameLatLngBound(a: LatLngBound, b: LatLngBound): boolean {
   return isSameLatLngPoint(a.sw, b.sw) && isSameLatLngPoint(a.ne, b.ne);
@@ -64,9 +64,9 @@ export function isSameLatLngBound(a: LatLngBound, b: LatLngBound): boolean {
 /**
  * Computes the difference between the `ne` and `sw` corner points of a bound, giving the span in latitude and longitude.
  *
- * @param bounds - bound to measure
- * @param wrap - whether to wrap the difference across the antimeridian
- * @returns a point whose `lat`/`lng` represent the span of the bound
+ * @param bounds - Bound to measure.
+ * @param wrap - Whether to wrap the difference across the antimeridian.
+ * @returns A point whose `lat`/`lng` represent the span of the bound.
  */
 export function diffLatLngBoundPoints(bounds: LatLngBound, wrap = false): LatLngPoint {
   return diffLatLngPoints(bounds.ne, bounds.sw, wrap);
@@ -78,8 +78,8 @@ export function diffLatLngBoundPoints(bounds: LatLngBound, wrap = false): LatLng
  * A bound "wraps" when it crosses the antimeridian (longitude +/-180), requiring special handling
  * for containment and overlap checks.
  *
- * @param bound - bound to check
- * @returns `true` if the bound wraps the map in either sense
+ * @param bound - Bound to check.
+ * @returns `true` if the bound wraps the map in either sense.
  */
 export function latLngBoundWrapsMap(bound: LatLngBound) {
   return latLngBoundStrictlyWrapsMap(bound) || latLngBoundFullyWrapsMap(bound);
@@ -89,8 +89,8 @@ export function latLngBoundWrapsMap(bound: LatLngBound) {
  * Returns true if the input LatLngBound's sw corner comes after the ne corner longitudinally,
  * indicating the bound crosses the antimeridian.
  *
- * @param bound - bound to check
- * @returns `true` if the sw longitude is greater than the ne longitude
+ * @param bound - Bound to check.
+ * @returns `true` if the sw longitude is greater than the ne longitude.
  */
 export function latLngBoundStrictlyWrapsMap(bound: LatLngBound) {
   return bound.sw.lng > bound.ne.lng;
@@ -100,8 +100,8 @@ export function latLngBoundStrictlyWrapsMap(bound: LatLngBound) {
  * Returns true if the LatLngBound's longitudinal span exceeds the total longitude range (360 degrees),
  * meaning the bound covers the entire map horizontally.
  *
- * @param bound - bound to check
- * @returns `true` if the absolute longitude difference exceeds the total longitude range
+ * @param bound - Bound to check.
+ * @returns `true` if the absolute longitude difference exceeds the total longitude range.
  */
 export function latLngBoundFullyWrapsMap(bound: LatLngBound) {
   return Math.abs(bound.ne.lng - bound.sw.lng) > TOTAL_LONGITUDE_RANGE;
@@ -110,8 +110,8 @@ export function latLngBoundFullyWrapsMap(bound: LatLngBound) {
 /**
  * Returns the north-east corner point of the bound.
  *
- * @param bound - bound to read
- * @returns the `ne` corner point
+ * @param bound - Bound to read.
+ * @returns The `ne` corner point.
  */
 export function latLngBoundNorthEastPoint(bound: LatLngBound): LatLngPoint {
   return bound.ne;
@@ -120,8 +120,8 @@ export function latLngBoundNorthEastPoint(bound: LatLngBound): LatLngPoint {
 /**
  * Derives the north-west corner point from the bound's `ne` latitude and `sw` longitude.
  *
- * @param bound - bound to read
- * @returns the computed north-west corner point
+ * @param bound - Bound to read.
+ * @returns The computed north-west corner point.
  */
 export function latLngBoundNorthWestPoint(bound: LatLngBound): LatLngPoint {
   return { lat: bound.ne.lat, lng: bound.sw.lng };
@@ -130,8 +130,8 @@ export function latLngBoundNorthWestPoint(bound: LatLngBound): LatLngPoint {
 /**
  * Derives the south-east corner point from the bound's `sw` latitude and `ne` longitude.
  *
- * @param bound - bound to read
- * @returns the computed south-east corner point
+ * @param bound - Bound to read.
+ * @returns The computed south-east corner point.
  */
 export function latLngBoundSouthEastPoint(bound: LatLngBound): LatLngPoint {
   return { lat: bound.sw.lat, lng: bound.ne.lng };
@@ -140,8 +140,8 @@ export function latLngBoundSouthEastPoint(bound: LatLngBound): LatLngPoint {
 /**
  * Returns the south-west corner point of the bound.
  *
- * @param bound - bound to read
- * @returns the `sw` corner point
+ * @param bound - Bound to read.
+ * @returns The `sw` corner point.
  */
 export function latLngBoundSouthWestPoint(bound: LatLngBound): LatLngPoint {
   return bound.sw;
@@ -150,8 +150,8 @@ export function latLngBoundSouthWestPoint(bound: LatLngBound): LatLngPoint {
 /**
  * Computes the geographic center of the bound by averaging the corner coordinates.
  *
- * @param bound - bound to compute the center of
- * @returns the center point
+ * @param bound - Bound to compute the center of.
+ * @returns The center point.
  *
  * @example
  * ```ts
@@ -170,8 +170,8 @@ export function latLngBoundCenterPoint(bound: LatLngBound): LatLngPoint {
 /**
  * Returns the northern latitude boundary (the `ne` latitude).
  *
- * @param bound - bound to read
- * @returns the latitude of the north edge
+ * @param bound - Bound to read.
+ * @returns The latitude of the north edge.
  */
 export function latLngBoundNorthBound(bound: LatLngBound): number {
   return bound.ne.lat;
@@ -180,8 +180,8 @@ export function latLngBoundNorthBound(bound: LatLngBound): number {
 /**
  * Returns the southern latitude boundary (the `sw` latitude).
  *
- * @param bound - bound to read
- * @returns the latitude of the south edge
+ * @param bound - Bound to read.
+ * @returns The latitude of the south edge.
  */
 export function latLngBoundSouthBound(bound: LatLngBound): number {
   return bound.sw.lat;
@@ -190,8 +190,8 @@ export function latLngBoundSouthBound(bound: LatLngBound): number {
 /**
  * Returns the eastern longitude boundary (the `ne` longitude).
  *
- * @param bound - bound to read
- * @returns the longitude of the east edge
+ * @param bound - Bound to read.
+ * @returns The longitude of the east edge.
  */
 export function latLngBoundEastBound(bound: LatLngBound): number {
   return bound.ne.lng;
@@ -200,8 +200,8 @@ export function latLngBoundEastBound(bound: LatLngBound): number {
 /**
  * Returns the western longitude boundary (the `sw` longitude).
  *
- * @param bound - bound to read
- * @returns the longitude of the west edge
+ * @param bound - Bound to read.
+ * @returns The longitude of the west edge.
  */
 export function latLngBoundWestBound(bound: LatLngBound): number {
   return bound.sw.lng;
@@ -226,9 +226,9 @@ export type LatLngBoundInput = LatLngBound | LatLngBoundTuple | LatLngBoundTuple
 /**
  * Convenience function that creates a {@link LatLngBoundTuple} using the default configuration.
  *
- * @param input - a sw point or any bound input
- * @param inputNe - optional ne point when providing two separate points
- * @returns a tuple of `[sw, ne]` points
+ * @param input - A sw point or any bound input.
+ * @param inputNe - Optional ne point when providing two separate points.
+ * @returns A tuple of `[sw, ne]` points.
  */
 export function latLngBoundTuple(input: LatLngBoundSouthWestPoint | LatLngBoundInput, inputNe?: LatLngBoundNothEastPoint): LatLngBoundTuple {
   return latLngBoundTupleFunction()(input, inputNe);
@@ -245,14 +245,15 @@ export type LatLngBoundTupleFunctionConfig = LatLngBoundFunctionConfig;
  * Creates a {@link LatLngBoundTupleFunction} that converts various bound inputs into a `[sw, ne]` tuple,
  * applying optional precision to the resulting points.
  *
+ * @param config - Optional configuration for point precision.
+ * @returns Produces bound tuples from flexible inputs.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, bound, tuple, factory, geographic
  * @dbxUtilRelated lat-lng-bound-function, lat-lng-bound
  *
- * @param config - optional configuration for point precision
- * @returns a function that produces bound tuples from flexible inputs
  * @__NO_SIDE_EFFECTS__
  */
 export function latLngBoundTupleFunction(config?: LatLngBoundTupleFunctionConfig): LatLngBoundTupleFunction {
@@ -267,9 +268,9 @@ export function latLngBoundTupleFunction(config?: LatLngBoundTupleFunctionConfig
 /**
  * Convenience function that creates a {@link LatLngBound} using the default configuration.
  *
- * @param input - a sw point or any bound input
- * @param inputNe - optional ne point when providing two separate points
- * @returns a bound object
+ * @param input - A sw point or any bound input.
+ * @param inputNe - Optional ne point when providing two separate points.
+ * @returns A bound object.
  *
  * @example
  * ```ts
@@ -293,11 +294,11 @@ export interface LatLngBoundFunctionConfig {
   /**
    * Point function to use for calculations.
    */
-  pointFunction?: LatLngPointFunction;
+  readonly pointFunction?: LatLngPointFunction;
   /**
    * LatLngPrecision to use if pointFunction is not provided.
    */
-  precision?: LatLngPrecision;
+  readonly precision?: LatLngPrecision;
 }
 
 /**
@@ -306,9 +307,9 @@ export interface LatLngBoundFunctionConfig {
  * Supports creating bounds from: two separate points, a `[sw, ne]` tuple, a four-point tuple (computes min/max extents),
  * or a pre-existing bound object.
  *
- * @param config - optional configuration for point precision and custom point functions
- * @returns a function that produces bounds from flexible inputs
- * @throws {Error} when the input cannot be parsed into a valid bound
+ * @param config - Optional configuration for point precision and custom point functions.
+ * @returns Produces bounds from flexible inputs.
+ * @throws {Error} When the input cannot be parsed into a valid bound.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -322,17 +323,18 @@ export interface LatLngBoundFunctionConfig {
  * const result = fn([{ lat: 20, lng: 20 }, { lat: 30, lng: 30 }]);
  * // result.sw.lat === 20, result.ne.lat === 30
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function latLngBoundFunction(config?: LatLngBoundFunctionConfig): LatLngBoundFunction {
   const { pointFunction, precision } = config ?? {};
   const latLngPoint = pointFunction ?? latLngPointFunction({ precision });
   return (input: LatLngBoundSouthWestPoint | LatLngBoundInput, inputNe?: LatLngBoundNothEastPoint) => {
-    let bound: LatLngBound | undefined;
+    let bound: Maybe<LatLngBound>;
 
     if (Array.isArray(input)) {
       if (input.length === 2) {
-        const [sw, ne] = input as LatLngBoundTuple;
+        const [sw, ne] = input;
         bound = {
           sw: latLngPoint(sw),
           ne: latLngPoint(ne)
@@ -376,8 +378,8 @@ export type ExtendLatLngBoundInput = ArrayOrValue<LatLngBoundOrPoint>;
  *
  * When given an array, the first element seeds the initial bound and subsequent elements extend it.
  *
- * @param input - one or more points/bounds to derive the bounding box from
- * @returns the computed bound, or `undefined` if the input is empty
+ * @param input - One or more points/bounds to derive the bounding box from.
+ * @returns The computed bound, or `undefined` if the input is empty.
  *
  * @example
  * ```ts
@@ -416,9 +418,9 @@ export function latLngBoundFromInput(input: ExtendLatLngBoundInput): Maybe<LatLn
  *
  * The returned bound's `sw` corner uses the minimum lat/lng encountered, and its `ne` corner uses the maximum.
  *
- * @param bound - the starting bound to extend
- * @param extendWith - one or more points/bounds to include
- * @returns a new bound that encompasses the original and all extensions
+ * @param bound - The starting bound to extend.
+ * @param extendWith - One or more points/bounds to include.
+ * @returns A new bound that encompasses the original and all extensions.
  */
 export function extendLatLngBound(bound: LatLngBound, extendWith: ExtendLatLngBoundInput): LatLngBound {
   const { sw, ne } = copyLatLngBound(bound);
@@ -464,14 +466,15 @@ export type IsWithinLatLngBoundFunction = LatLngBoundCheckFunction & { readonly 
  * falls entirely within the specified bound. Points are checked directly; bounds require
  * both corners to be within.
  *
+ * @param bound - The reference bound to check containment against.
+ * @returns Returns `true` if the input is within the reference bound.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, bound, contains, decision, factory, geographic
  * @dbxUtilRelated overlaps-lat-lng-bound-function, is-lat-lng-point-within-lat-lng-bound
  *
- * @param bound - the reference bound to check containment against
- * @returns a function that returns `true` if the input is within the reference bound
  * @__NO_SIDE_EFFECTS__
  */
 export function isWithinLatLngBoundFunction(bound: LatLngBound): IsWithinLatLngBoundFunction {
@@ -479,7 +482,7 @@ export function isWithinLatLngBoundFunction(bound: LatLngBound): IsWithinLatLngB
     return isLatLngPoint(boundOrPoint) ? isLatLngPointWithinLatLngBound(boundOrPoint, bound) : isLatLngBoundWithinLatLngBound(boundOrPoint, bound);
   }) as unknown as Writable<IsWithinLatLngBoundFunction>;
 
-  (fn as unknown as Writable<IsWithinLatLngBoundFunction>)._bound = bound;
+  fn._bound = bound;
 
   return fn as IsWithinLatLngBoundFunction;
 }
@@ -487,8 +490,8 @@ export function isWithinLatLngBoundFunction(bound: LatLngBound): IsWithinLatLngB
 /**
  * Checks whether one bound is entirely contained within another by verifying both its corners are within the outer bound.
  *
- * @param bound - the inner bound to test
- * @param within - the outer bound to test against
+ * @param bound - The inner bound to test.
+ * @param within - The outer bound to test against.
  * @returns `true` if both corners of `bound` are within `within`
  */
 export function isLatLngBoundWithinLatLngBound(bound: LatLngBound, within: LatLngBound): boolean {
@@ -499,9 +502,9 @@ export function isLatLngBoundWithinLatLngBound(bound: LatLngBound, within: LatLn
  * Checks whether a point lies within a bound. Handles bounds that wrap the antimeridian by checking
  * if the longitude falls on either side of the wrap.
  *
- * @param point - the point to test
- * @param within - the bound to test against
- * @returns `true` if the point is within the bound
+ * @param point - The point to test.
+ * @param within - The bound to test against.
+ * @returns `true` if the point is within the bound.
  *
  * @example
  * ```ts
@@ -538,9 +541,9 @@ export type OverlapsLatLngBoundFunction = LatLngBoundCheckFunction & { readonly 
 /**
  * Checks whether two bounds overlap each other.
  *
- * @param a - the first bound
- * @param b - the second bound
- * @returns `true` if the bounds overlap
+ * @param a - The first bound.
+ * @param b - The second bound.
+ * @returns `true` if the bounds overlap.
  */
 export function latLngBoundOverlapsLatLngBound(a: LatLngBound, b: LatLngBound): boolean {
   return overlapsLatLngBoundFunction(a)(b);
@@ -551,14 +554,15 @@ export function latLngBoundOverlapsLatLngBound(a: LatLngBound, b: LatLngBound): 
  * overlaps the reference bound. Internally converts bounds to rectangles for overlap detection,
  * handling antimeridian wrapping.
  *
+ * @param bound - The reference bound to check overlap against.
+ * @returns Returns `true` if the input overlaps the reference bound.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, lat-lng, bound, overlap, decision, factory, geographic
  * @dbxUtilRelated is-within-lat-lng-bound-function, lat-lng-bound-overlaps-lat-lng-bound
  *
- * @param bound - the reference bound to check overlap against
- * @returns a function that returns `true` if the input overlaps the reference bound
  * @__NO_SIDE_EFFECTS__
  */
 export function overlapsLatLngBoundFunction(bound: LatLngBound): OverlapsLatLngBoundFunction {
@@ -568,7 +572,7 @@ export function overlapsLatLngBoundFunction(bound: LatLngBound): OverlapsLatLngB
     return isLatLngPoint(boundOrPoint) ? isLatLngPointWithinLatLngBound(boundOrPoint, bound) : rectangleOverlapsRectangle(a, boundToRectangle(boundOrPoint));
   }) as unknown as Writable<IsWithinLatLngBoundFunction>;
 
-  (fn as unknown as Writable<IsWithinLatLngBoundFunction>)._bound = bound;
+  fn._bound = bound;
 
   return fn as IsWithinLatLngBoundFunction;
 }
@@ -583,8 +587,8 @@ export const TOTAL_SPAN_OF_LONGITUDE = 360;
  * where the left edge (-180 longitude) begins at x=360. This allows safe rectangle-based
  * overlap comparisons without worrying about antimeridian wrapping.
  *
- * @param bound - the geographic bound to convert
- * @returns a rectangle suitable for overlap calculations
+ * @param bound - The geographic bound to convert.
+ * @returns A rectangle suitable for overlap calculations.
  */
 export function boundToRectangle(bound: LatLngBound): Rectangle {
   function pointToVector(point: LatLngPoint, lngOffset: number = 0): Vector {

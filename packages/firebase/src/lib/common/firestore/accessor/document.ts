@@ -129,8 +129,8 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    *
    * Passively populates the cache with each emitted snapshot.
    *
-   * @param mode - The stream mode controlling how the Observable emits snapshot updates
-   * @returns An Observable that emits DocumentSnapshot values based on the given mode
+   * @param mode - The stream mode controlling how the Observable emits snapshot updates.
+   * @returns An Observable that emits DocumentSnapshot values based on the given mode.
    */
   snapshotStream(mode: FirestoreAccessorStreamMode): Observable<DocumentSnapshot<T>> {
     return snapshotStreamForAccessor(this.accessor, mode).pipe(
@@ -149,9 +149,9 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    *
    * Passively populates the cache via {@link snapshotStream}.
    *
-   * @param mode - The stream mode controlling how the Observable emits snapshot data updates
-   * @param options - Optional SnapshotOptions for reading the document data
-   * @returns An Observable that emits the document data or undefined based on the given mode
+   * @param mode - The stream mode controlling how the Observable emits snapshot data updates.
+   * @param options - Optional SnapshotOptions for reading the document data.
+   * @returns An Observable that emits the document data or undefined based on the given mode.
    */
   snapshotDataStream(mode: FirestoreAccessorStreamMode, options?: SnapshotOptions): Observable<Maybe<T>> {
     return this.snapshotStream(mode).pipe(map((snap) => snap.data(options)));
@@ -162,7 +162,7 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    *
    * Passively populates the cache with the fetched snapshot.
    *
-   * @returns A Promise resolving to the document snapshot
+   * @returns Resolves with the freshly fetched snapshot.
    */
   snapshot(): Promise<DocumentSnapshot<T>> {
     return this.accessor.get().then((snap) => {
@@ -182,8 +182,8 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    * If a fresh cache entry exists, returns it without hitting Firestore.
    * Otherwise falls through to {@link snapshot} which populates the cache.
    *
-   * @param options - Optional SnapshotOptions for reading the document data
-   * @returns A Promise resolving to the document data, or undefined if the document does not exist
+   * @param options - Overrides forwarded to `DocumentSnapshot.data()`, if any.
+   * @returns Resolves with the document data, or undefined when the document does not exist.
    */
   snapshotData(options?: SnapshotOptions): Promise<Maybe<T>> {
     return this.snapshot().then((x) => x.data(options));
@@ -204,8 +204,8 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    *
    * Populates the cache with the written data after a successful create.
    *
-   * @param data - The document data to create
-   * @returns A Promise that resolves when the create completes
+   * @param data - Initial document contents.
+   * @returns Resolves when the create completes.
    */
   create(data: T): Promise<WriteResult | void> {
     return this.accessor.create(data).then((result) => {
@@ -222,9 +222,9 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    * Invalidates the cache entry since partial updates don't provide the full document.
    * Throws an exception when the document does not exist.
    *
-   * @param data - Partial document data to update
-   * @param params - Optional update parameters
-   * @returns A Promise that resolves when the update completes
+   * @param data - Partial field values written to the existing document.
+   * @param params - Overrides applied to the update operation, if any.
+   * @returns Resolves when the update completes.
    */
   update(data: Partial<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
     return updateWithAccessorUpdateAndConverterFunction(this.accessor, this.converter)(data, params).then((result) => {
@@ -238,8 +238,8 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    *
    * Invalidates the cache entry since increment updates don't provide the full document.
    *
-   * @param data - The increment update to apply to numeric fields
-   * @returns A Promise that resolves when the increment update completes
+   * @param data - Field paths mapped to their increment amounts.
+   * @returns Resolves when the increment update completes.
    */
   increment(data: FirestoreAccessorIncrementUpdate<T>): Promise<WriteResult | void> {
     return incrementUpdateWithAccessorFunction<T>(this.accessor)(data).then((result) => {
@@ -253,8 +253,8 @@ export abstract class AbstractFirestoreDocument<T, D extends AbstractFirestoreDo
    *
    * Invalidates the cache entry since array updates don't provide the full document.
    *
-   * @param data - The array field update to apply (union or remove elements)
-   * @returns A Promise that resolves when the array update completes
+   * @param data - Array operations (union/remove) to apply per field.
+   * @returns Resolves when the array update completes.
    */
   arrayUpdate(data: FirestoreAccessorArrayUpdate<T>): Promise<WriteResult | void> {
     return arrayUpdateWithAccessorFunction<T>(this.accessor)(data).then((result) => {
@@ -419,8 +419,9 @@ export interface LimitedFirestoreDocumentAccessorFactoryConfig<T, D extends Fire
 /**
  * Creates a {@link LimitedFirestoreDocumentAccessorFactoryFunction} from the provided configuration.
  *
- * @param config - Configuration including converter, accessor factory, and document factory
- * @returns A factory function for creating LimitedFirestoreDocumentAccessor instances
+ * @param config - Configuration including converter, accessor factory, and document factory.
+ * @returns A factory function for creating LimitedFirestoreDocumentAccessor instances.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function limitedFirestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LimitedFirestoreDocumentAccessorFactoryConfig<T, D>): LimitedFirestoreDocumentAccessorFactoryFunction<T, D> {
@@ -502,8 +503,9 @@ export interface FirestoreDocumentAccessorFactoryConfig<T, D extends FirestoreDo
  * Extends the limited accessor factory with collection-level operations such as creating new documents
  * and loading documents by ID.
  *
- * @param config - Configuration including the collection reference and document factory
- * @returns A factory function for creating FirestoreDocumentAccessor instances
+ * @param config - Configuration including the collection reference and document factory.
+ * @returns A factory function for creating FirestoreDocumentAccessor instances.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDocumentAccessorFactory<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: FirestoreDocumentAccessorFactoryConfig<T, D>): FirestoreDocumentAccessorFactoryFunction<T, D> {
@@ -647,8 +649,9 @@ export interface FirestoreSingleDocumentAccessorConfig<T, D extends FirestoreDoc
 /**
  * Creates a {@link FirestoreSingleDocumentAccessor} for a collection that contains a single known document.
  *
- * @param config - Configuration specifying the single item identifier and the document accessor context extension
- * @returns A FirestoreSingleDocumentAccessor providing convenient access to the single document
+ * @param config - Configuration specifying the single item identifier and the document accessor context extension.
+ * @returns A FirestoreSingleDocumentAccessor providing convenient access to the single document.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreSingleDocumentAccessor<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: FirestoreSingleDocumentAccessorConfig<T, D>): FirestoreSingleDocumentAccessor<T, D> {
@@ -697,7 +700,7 @@ export interface SingleItemFirestoreCollectionDocumentIdentifierRef {
 /**
  * Extends a Firestore collection object in-place with single-document accessor methods.
  *
- * @param x - The collection object to extend with single-document accessor methods
+ * @param x - The collection object to extend with single-document accessor methods.
  * @param singleItemIdentifier - Optional identifier for the single document; defaults to {@link DEFAULT_SINGLE_ITEM_FIRESTORE_COLLECTION_DOCUMENT_IDENTIFIER}
  */
 export function extendFirestoreCollectionWithSingleDocumentAccessor<X extends FirestoreSingleDocumentAccessor<T, D> & FirestoreDocumentAccessorContextExtension<T, D>, T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(x: Building<X>, singleItemIdentifier?: SingleItemFirestoreCollectionDocumentIdentifier): void {

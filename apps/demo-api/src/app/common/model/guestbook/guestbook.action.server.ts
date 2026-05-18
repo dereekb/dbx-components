@@ -39,8 +39,8 @@ export abstract class GuestbookServerActions {
 /**
  * Factory for generating GuestbookServerActions for a given context.
  *
- * @param context - the server actions context providing Firestore collections and transaction support
- * @returns a concrete GuestbookServerActions implementation bound to the given context
+ * @param context - The server actions context providing Firestore collections and transaction support.
+ * @returns A concrete GuestbookServerActions implementation bound to the given context.
  */
 export function guestbookServerActions(context: GuestbookServerActionsContext): GuestbookServerActions {
   return {
@@ -56,9 +56,9 @@ export function guestbookServerActions(context: GuestbookServerActionsContext): 
  * Creates a server action factory that handles creating new guestbook documents.
  *
  * @param context
- * @param context.firebaseServerActionTransformFunctionFactory - factory for creating validated action transform functions
- * @param context.guestbookCollection - the Firestore collection accessor for guestbook documents
- * @returns an action transform function that validates params and creates a new guestbook document
+ * @param context.firebaseServerActionTransformFunctionFactory - Factory for creating validated action transform functions.
+ * @param context.guestbookCollection - The Firestore collection accessor for guestbook documents.
+ * @returns An action transform function that validates params and creates a new guestbook document.
  */
 export function guestbookCreateGuestbookFactory({ firebaseServerActionTransformFunctionFactory, guestbookCollection }: GuestbookServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(createGuestbookParamsType, async (params) => {
@@ -85,8 +85,8 @@ export function guestbookCreateGuestbookFactory({ firebaseServerActionTransformF
  * Validates that the parent guestbook exists and is not locked before writing.
  * Also creates a notification when a new entry is inserted.
  *
- * @param context - server actions context providing Firestore collections and transaction support
- * @returns an action transform function that validates params and inserts/updates a guestbook entry
+ * @param context - Server actions context providing Firestore collections and transaction support.
+ * @returns An action transform function that validates params and inserts/updates a guestbook entry.
  */
 export function guestbookEntryInsertEntryFactory(context: GuestbookServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, guestbookCollection, guestbookEntryCollectionFactory } = context;
@@ -144,10 +144,9 @@ export function guestbookEntryInsertEntryFactory(context: GuestbookServerActions
  * Creates a server action factory that increments the like count on a published guestbook entry.
  * Runs within a transaction to ensure consistency, and creates a "liked" notification.
  *
- * @param context - server actions context providing Firestore collections and transaction support
- * @returns an action transform function that validates params and increments the entry like count
- *
- * @throws {Error} When the target guestbook entry is not published
+ * @param context - Server actions context providing Firestore collections and transaction support.
+ * @returns An action transform function that validates params and increments the entry like count.
+ * @throws {Error} When the target guestbook entry is not published.
  */
 export function likeGuestbookEntryFactory(context: GuestbookServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, guestbookCollection: _guestbookCollection, guestbookEntryCollectionGroup } = context;
@@ -184,10 +183,9 @@ export function likeGuestbookEntryFactory(context: GuestbookServerActionsContext
  * Creates a server action factory that subscribes a user to notifications for a guestbook.
  * Adds the user as a recipient on the guestbook's notification box, creating it if needed.
  *
- * @param context - server actions context providing Firestore collections and notification box support
- * @returns an action transform function that subscribes a user to guestbook notifications
- *
- * @throws {Error} When the target guestbook does not exist
+ * @param context - Server actions context providing Firestore collections and notification box support.
+ * @returns An action transform function that subscribes a user to guestbook notifications.
+ * @throws {Error} When the target guestbook does not exist.
  */
 export function subscribeToGuestbookNotificationsFactory(context: GuestbookServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory, guestbookCollection } = context;

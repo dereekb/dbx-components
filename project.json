@@ -16,7 +16,7 @@
       "dependsOn": [],
       "options": {
         "description": "",
-        "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test --target=lint"
+        "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test,dbx-cli-test --target=lint"
       }
     },
     "lint-fix-all": {
@@ -24,7 +24,18 @@
       "dependsOn": [],
       "options": {
         "description": "",
-        "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test --target=lint --fix"
+        "command": "npx nx run-many --tui=false --parallel=6 --exclude=workspace,util-test,firebase-test,firebase-server-test,dbx-cli-test --target=lint --fix"
+      }
+    },
+    "lint-fix-cache": {
+      "executor": "nx:run-commands",
+      "metadata": {
+        "description": "Lint every project via dbx-cli-lint-cache with --fix, writing grouped JSON caches to .tmp/lint-cache/. Rebuilds the CLI bundle first if its source changed."
+      },
+      "options": {
+        "command": "npx nx run dbx-cli-lint-cache:lint-fix-cache",
+        "forwardAllArgs": true,
+        "color": true
       }
     },
     "start-release": {

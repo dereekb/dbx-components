@@ -115,11 +115,12 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
  * Test-only middleware that skips OIDC discovery, disk token loading, and token refresh, attaching
  * a pre-built {@link CliContext} directly via {@link setCliContext}.
  *
- * @internal Intended for use by `@dereekb/dbx-cli/test`. Not for production wiring.
- *
  * @param input - The pre-built context to attach on every invocation.
  * @param input.cliContext - The {@link CliContext} that will be attached via {@link setCliContext}.
  * @returns A yargs middleware function that always sets the provided context.
+ *
+ * @internal Intended for use by `@dereekb/dbx-cli/test`. Not for production wiring.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createPassthroughAuthMiddleware(input: { readonly cliContext: CliContext }): MiddlewareFunction {

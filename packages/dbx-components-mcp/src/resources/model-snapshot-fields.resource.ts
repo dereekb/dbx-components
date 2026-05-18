@@ -33,8 +33,8 @@ export interface RegisterModelSnapshotFieldsResourceOptions {
  * the layout used by other registry resources so clients can browse instead
  * of invoking `dbx_model_snapshot_field_lookup`.
  *
- * @param server - the MCP server to register resources against
- * @param options - registry the resources read from
+ * @param server - The MCP server to register resources against.
+ * @param options - Registry the resources read from.
  */
 export function registerModelSnapshotFieldsResource(server: McpServer, options: RegisterModelSnapshotFieldsResourceOptions): void {
   const { registry } = options;

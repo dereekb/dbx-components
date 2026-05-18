@@ -7,8 +7,8 @@ import type { ServerActionsReport } from './types.js';
 /**
  * Renders the report as markdown.
  *
- * @param report - the populated report
- * @returns the formatted markdown text
+ * @param report - The populated report.
+ * @returns The formatted markdown text.
  */
 export function formatReportAsMarkdown(report: ServerActionsReport): string {
   const fixtureStatusLine = report.fixtureStatus === 'ok' ? `- **Fixture cross-reference:** ok` : `- **Fixture cross-reference:** error reading fixture file: ${report.fixtureStatus.message}`;
@@ -39,8 +39,8 @@ export function formatReportAsMarkdown(report: ServerActionsReport): string {
 /**
  * Renders the report as JSON.
  *
- * @param report - the populated report
- * @returns the formatted JSON text
+ * @param report - The populated report.
+ * @returns The formatted JSON text.
  */
 export function formatReportAsJson(report: ServerActionsReport): string {
   return JSON.stringify(report, null, 2);

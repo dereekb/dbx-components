@@ -3,8 +3,8 @@
  *
  * Operates via simple string splitting rather than URL parsing, so it works with partial or non-standard URLs.
  *
- * @param url - the full URL string to clean
- * @returns the URL string with query parameters and hash fragments removed
+ * @param url - The full URL string to clean.
+ * @returns The URL string with query parameters and hash fragments removed.
  *
  * @example
  * ```ts

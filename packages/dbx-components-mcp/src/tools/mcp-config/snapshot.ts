@@ -10,6 +10,7 @@
  * caller writes to disk.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { stat } from 'node:fs/promises';
 import { findAndLoadConfig, type ConfigWarning } from '../../config/load-config.js';
@@ -55,8 +56,8 @@ export interface PackageSnapshot {
  */
 export interface WorkspaceSnapshot {
   readonly workspaceRoot: string;
-  readonly configPath: string | null;
-  readonly config: DbxMcpConfig | null;
+  readonly configPath: Maybe<string>;
+  readonly config: Maybe<DbxMcpConfig>;
   readonly configWarnings: readonly ConfigWarning[];
   readonly registeredSources: readonly RegisteredSource[];
   readonly packages: readonly PackageSnapshot[];
@@ -74,8 +75,8 @@ export interface BuildSnapshotInput {
  * Builds a {@link WorkspaceSnapshot} for the given workspace root. Pure
  * read-only — never writes anything.
  *
- * @param input - workspace root plus optional explicit-dir override
- * @returns the gathered snapshot
+ * @param input - Workspace root plus optional explicit-dir override.
+ * @returns The gathered snapshot.
  */
 export async function buildSnapshot(input: BuildSnapshotInput): Promise<WorkspaceSnapshot> {
   const { workspaceRoot, explicitDirs } = input;
@@ -99,7 +100,7 @@ export async function buildSnapshot(input: BuildSnapshotInput): Promise<Workspac
   };
 }
 
-async function collectRegisteredSources(config: DbxMcpConfig | null, configBaseDir: string, workspaceRoot: string): Promise<readonly RegisteredSource[]> {
+async function collectRegisteredSources(config: Maybe<DbxMcpConfig>, configBaseDir: string, workspaceRoot: string): Promise<readonly RegisteredSource[]> {
   if (config === null) return [];
   const out: RegisteredSource[] = [];
   for (const cluster of DOWNSTREAM_CLUSTERS) {
@@ -129,12 +130,14 @@ function clustersRegisteredInPackage(pkg: DownstreamPackage, sources: readonly R
 }
 
 async function fileExists(path: string): Promise<boolean> {
+  let result: boolean;
   try {
     const stats = await stat(path);
-    return stats.isFile();
+    result = stats.isFile();
   } catch {
-    return false;
+    result = false;
   }
+  return result;
 }
 
 function relativeOrAbsolute(from: string, target: string): string {

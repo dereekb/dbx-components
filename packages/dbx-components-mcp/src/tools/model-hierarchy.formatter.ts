@@ -104,8 +104,9 @@ export interface BuildHierarchyInput {
  * `parentIdentityConst` links present on each model. Returns the requested
  * representation(s) plus a summary block.
  *
- * @param input - the assembled call config
- * @returns the hierarchy result honoring `format` and `maxDepth`
+ * @param input - The assembled call config.
+ * @returns The hierarchy result honoring `format` and `maxDepth`
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildModelHierarchy(input: BuildHierarchyInput): HierarchyResult {
@@ -301,10 +302,10 @@ export interface RenderHierarchyContext {
  * format. `'json'` is `JSON.stringify(result, null, 2)`; `'markdown'` is the
  * pretty tree + flat list combo with glyphs (`├─`, `└─`).
  *
- * @param result - hierarchy data to render
+ * @param result - Hierarchy data to render.
  * @param output - `'markdown'` (default) or `'json'`
- * @param context - optional decorative metadata for the markdown header
- * @returns the rendered text the tool emits as `ToolResult` content
+ * @param context - Optional decorative metadata for the markdown header.
+ * @returns The rendered text the tool emits as `ToolResult` content.
  */
 export function renderModelHierarchy(result: HierarchyResult, output: HierarchyOutput, context?: RenderHierarchyContext): string {
   let text: string;

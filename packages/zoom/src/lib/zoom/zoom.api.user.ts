@@ -14,7 +14,7 @@ export type GetUserResponse = ZoomUser;
 export type GetUserFunction = (input: GetUserInput) => Promise<GetUserResponse>;
 
 /**
- * https://developers.zoom.us/docs/api/users/#tag/users/GET/users/{userId}
+ * Https://developers.zoom.us/docs/api/users/#tag/users/GET/users/{userId}
  *
  * @param context
  * @returns
@@ -34,7 +34,7 @@ export type ListUsersResponse = ZoomPageResult<ZoomUser>;
 export type ListUsersFunction = (input?: ListUsersInput) => Promise<ListUsersResponse>;
 
 /**
- * https://developers.zoom.us/docs/api/users/#tag/users/GET/users
+ * Https://developers.zoom.us/docs/api/users/#tag/users/GET/users.
  *
  * @param context
  * @returns
@@ -48,8 +48,9 @@ export type ListUsersPageFactory = FetchPageFactory<ListUsersInput, ListUsersRes
 /**
  * Creates a page factory for listing users.
  *
- * @param context The Zoom API context
- * @returns A page factory for paginated user listing
+ * @param context - The Zoom API context.
+ * @returns A page factory for paginated user listing.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function listUsersPageFactory(context: ZoomContext): ListUsersPageFactory {

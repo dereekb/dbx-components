@@ -103,7 +103,7 @@ export class OidcClientService {
    *
    * @param clientId - The client's document/adapter entry ID.
    * @param params - The fields to update.
-   * @throws When the client is not found.
+   * @throws {Error} When the client is not found.
    */
   async updateClient(clientId: OidcEntryClientId, params: Omit<UpdateOidcClientParams, 'key'>): Promise<void> {
     const provider = await this.oidcService.getProvider();
@@ -144,7 +144,7 @@ export class OidcClientService {
    *
    * @param clientId - The client's document/adapter entry ID.
    * @returns The client ID and new secret (plaintext, returned only once).
-   * @throws When the client is not found.
+   * @throws {Error} When the client is not found.
    */
   async rotateClientSecret(clientId: OidcEntryClientId): Promise<RotateOidcClientSecretResult> {
     const provider = await this.oidcService.getProvider();
@@ -172,7 +172,7 @@ export class OidcClientService {
    * Deletes an OIDC client through the oidc-provider adapter.
    *
    * @param clientId - The client's document/adapter entry ID.
-   * @throws When the client is not found.
+   * @throws {Error} When the client is not found.
    */
   async deleteClient(clientId: OidcEntryClientId): Promise<void> {
     const provider = await this.oidcService.getProvider();

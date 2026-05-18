@@ -7,13 +7,14 @@
  * @param value - The input value to transform.
  * @returns The original value, or `undefined` if the value is an empty string.
  *
- * @example
- * ```typescript
- * @Directive({ selector: '[appHighlight]' })
+ * @Directive ({ selector: '[appHighlight]' })
  * export class HighlightDirective {
  *   @Input({ alias: 'appHighlight', transform: transformEmptyStringInputToUndefined })
  *   color?: string;
  * }
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export const transformEmptyStringInputToUndefined = <T>(value: T | '') => (value === '' ? undefined : value);

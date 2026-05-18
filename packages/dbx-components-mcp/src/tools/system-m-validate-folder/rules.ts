@@ -17,8 +17,8 @@ const SYSTEM_PREFIX = 'system.';
  * diagnostics. Short-circuits cleanly on missing/invalid folders so a stat
  * failure does not cascade into spurious downstream warnings.
  *
- * @param inspection - the prepared folder inspection
- * @returns the violations the rules emit for that folder
+ * @param inspection - The prepared folder inspection.
+ * @returns The violations the rules emit for that folder.
  */
 export function runRules(inspection: SystemFolderInspection): readonly Violation[] {
   const violations: Violation[] = [];

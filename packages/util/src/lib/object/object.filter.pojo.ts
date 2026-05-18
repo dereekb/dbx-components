@@ -21,7 +21,7 @@ export type StripObjectFunction<T extends object> = (input: Maybe<T>, copy?: May
  *
  * @param filter - Filter controlling which key/value pairs are removed from the input object.
  * @param copy - When true (default), the returned function shallow-copies the input before filtering instead of mutating it.
- * @returns A function that returns the stripped object, or `undefined` when filtering removed every key.
+ * @returns Returns the stripped object, or `undefined` when filtering removed every key.
  *
  * @dbxUtil
  * @dbxUtilCategory object
@@ -126,7 +126,7 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
    * Accepts a {@link KeyValueTypleValueFilter} enum value or a {@link KeyValueTupleFilter} object.
    * When not provided, the default filter removes `undefined` values (i.e., `KeyValueTypleValueFilter.UNDEFINED`).
    */
-  filter?: FilterKeyValueTuplesInput<T>;
+  readonly filter?: FilterKeyValueTuplesInput<T>;
   /**
    * Whether or not to return a copy of the input value, rather than change it directly.
    * If true, a copy of the input object will be returned.
@@ -134,7 +134,7 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
    *
    * False by default.
    */
-  copy?: boolean;
+  readonly copy?: boolean;
   /**
    * Whether or not the template being applied to objects should be recalculated each time.
    *
@@ -142,7 +142,7 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
    *
    * False by default.
    */
-  dynamic?: boolean;
+  readonly dynamic?: boolean;
 }
 
 /**
@@ -156,10 +156,16 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
  * By default, `undefined` values in sources are excluded from the template.
  *
  * @param config - Configuration controlling filtering, copying, and caching behavior.
- * @param config.filter - filter applied to source object values when building the template; by default, `undefined` values are excluded
- * @param config.copy - when true, the target object is shallow-copied before applying overrides instead of being mutated in place
- * @param config.dynamic - when true, the template is recalculated on each call instead of being cached; useful when source objects may change over time
+ * @param config.filter - Filter applied to source object values when building the template; by default, `undefined` values are excluded.
+ * @param config.copy - When true, the target object is shallow-copied before applying overrides instead of being mutated in place.
+ * @param config.dynamic - When true, the template is recalculated on each call instead of being cached; useful when source objects may change over time.
  * @returns A factory function that accepts source objects and returns an override function.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, override, factory, merge, template, cached
+ * @dbxUtilRelated override-in-object, merge-objects-function, filter-from-pojo-function
  *
  * @example
  * ```typescript
@@ -168,12 +174,6 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
  * const result = overrideFn({ color: 'blue', size: 5 });
  * // result is { color: 'red', size: 10 } (a new copy)
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, override, factory, merge, template, cached
- * @dbxUtilRelated override-in-object, merge-objects-function, filter-from-pojo-function
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -185,7 +185,7 @@ export function overrideInObjectFunctionFactory<T extends object>({ filter, copy
       const template = {};
 
       from.forEach((x) => {
-        const relevantValues = filterToRelevantValuesObject({ ...x } as T);
+        const relevantValues = filterToRelevantValuesObject({ ...x });
         Object.assign(template, relevantValues);
       });
 
@@ -249,6 +249,12 @@ export type MergeObjectsFunction<T extends object> = (objects: Maybe<Partial<T>>
  * @param filter - Optional filter controlling which key/value pairs are included. Defaults to filtering out `undefined` values.
  * @returns A reusable merge function.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, merge, factory, filter
+ * @dbxUtilRelated merge-objects, override-in-object-function-factory
+ *
  * @example
  * ```typescript
  * const merge = mergeObjectsFunction();
@@ -258,12 +264,6 @@ export type MergeObjectsFunction<T extends object> = (objects: Maybe<Partial<T>>
  * // With null filter to also exclude null values:
  * const mergeNoNulls = mergeObjectsFunction(KeyValueTypleValueFilter.NULL);
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, merge, factory, filter
- * @dbxUtilRelated merge-objects, override-in-object-function-factory
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -299,7 +299,7 @@ export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTu
  */
 export function filterUndefinedValues<T extends object>(obj: T, filterNull = false): T {
   const filterFn = filterNull ? filterNullAndUndefinedValues : filterOnlyUndefinedValues;
-  return filterFn(obj) as T;
+  return filterFn(obj);
 }
 
 /**
@@ -312,7 +312,7 @@ export function filterUndefinedValues<T extends object>(obj: T, filterNull = fal
  * // { a: 1, c: null }
  * ```
  */
-export const filterOnlyUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.UNDEFINED } }) as GeneralFilterFromPOJOFunction;
+export const filterOnlyUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.UNDEFINED } });
 
 /**
  * Pre-built filter that returns a copy of the input object with all `null` and `undefined` values removed.
@@ -324,7 +324,7 @@ export const filterOnlyUndefinedValues: GeneralFilterFromPOJOFunction = filterFr
  * // { a: 1, d: 0 }
  * ```
  */
-export const filterNullAndUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.NULL } }) as GeneralFilterFromPOJOFunction;
+export const filterNullAndUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.NULL } });
 
 /**
  * Pre-built filter that returns a copy of the input object with all empty values removed.
@@ -336,7 +336,7 @@ export const filterNullAndUndefinedValues: GeneralFilterFromPOJOFunction = filte
  * // { a: 1, e: 'hello' }
  * ```
  */
-export const filterEmptyPojoValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.EMPTY } }) as GeneralFilterFromPOJOFunction;
+export const filterEmptyPojoValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.EMPTY } });
 
 /**
  * Pre-built filter that returns a copy of the input object with all falsy and empty values removed.
@@ -348,7 +348,7 @@ export const filterEmptyPojoValues: GeneralFilterFromPOJOFunction = filterFromPO
  * // { a: 1, e: 'hello' }
  * ```
  */
-export const filterFalsyAndEmptyValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.FALSY_AND_EMPTY } }) as GeneralFilterFromPOJOFunction;
+export const filterFalsyAndEmptyValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.FALSY_AND_EMPTY } });
 
 /**
  * Pre-built function that returns all keys from a POJO whose values are not `undefined`.
@@ -428,18 +428,18 @@ export type GeneralFindPOJOKeysFunction = <T extends object>(obj: T) => (keyof T
  * @param filter - A {@link FilterKeyValueTuplesInput} controlling which values match. Required (no default).
  * @returns A reusable function that returns matching keys from any input object.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, keys, find, factory, filter
+ * @dbxUtilRelated find-pojo-keys, count-pojo-keys-function, for-each-key-value-on-pojo-function
+ *
  * @example
  * ```typescript
  * const findDefinedKeys = findPOJOKeysFunction(KeyValueTypleValueFilter.UNDEFINED);
  * findDefinedKeys({ a: 1, b: undefined, c: 'hello' });
  * // ['a', 'c']
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, pojo, keys, find, factory, filter
- * @dbxUtilRelated find-pojo-keys, count-pojo-keys-function, for-each-key-value-on-pojo-function
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -495,18 +495,18 @@ export type CountPOJOKeysFunction<T> = (obj: T) => number;
  * @param filter - A {@link FilterKeyValueTuplesInput} controlling which values are counted. Defaults to `KeyValueTypleValueFilter.UNDEFINED`.
  * @returns A reusable function that counts matching keys on any input object.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, keys, count, factory, filter
+ * @dbxUtilRelated count-pojo-keys, find-pojo-keys-function
+ *
  * @example
  * ```typescript
  * const countDefined = countPOJOKeysFunction();
  * countDefined({ a: 1, b: undefined, c: 'test' });
  * // 2
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, pojo, keys, count, factory, filter
- * @dbxUtilRelated count-pojo-keys, find-pojo-keys-function
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -591,9 +591,15 @@ export type GeneralFilterFromPOJOFunction<X = object> = <T extends X>(input: T) 
  * By default, removes `undefined` values (`KeyValueTypleValueFilter.UNDEFINED`) and does not copy (`copy: false`).
  *
  * @param config - Configuration for filtering and copying. Defaults to `{ copy: false, filter: { valueFilter: KeyValueTypleValueFilter.UNDEFINED } }`.
- * @param config.copy - when true, returns a shallow copy with filtered keys removed instead of mutating the input; defaults to false
- * @param config.filter - the filter criteria determining which key/value pairs to remove; defaults to removing `undefined` values
+ * @param config.copy - When true, returns a shallow copy with filtered keys removed instead of mutating the input; defaults to false.
+ * @param config.filter - The filter criteria determining which key/value pairs to remove; defaults to removing `undefined` values.
  * @returns A reusable filter function. The returned function also accepts a `copyOverride` argument to override the copy behavior per-call.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, filter, factory, remove, copy
+ * @dbxUtilRelated filter-from-pojo, strip-object-function, assign-values-to-pojo-function
  *
  * @example
  * ```typescript
@@ -607,12 +613,6 @@ export type GeneralFilterFromPOJOFunction<X = object> = <T extends X>(input: T) 
  * const result = filterNulls({ a: 1, b: null, c: undefined });
  * // result is { a: 1 }, original is unchanged
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, pojo, filter, factory, remove, copy
- * @dbxUtilRelated filter-from-pojo, strip-object-function, assign-values-to-pojo-function
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -727,6 +727,12 @@ export type AssignValuesToPOJOFunctionInput<T extends object = object, K extends
  * @param input - Filter and copy configuration. Defaults to `KeyValueTypleValueFilter.UNDEFINED` (filter undefined, copy target).
  * @returns A reusable assign function with a `_returnCopyByDefault` property indicating the configured copy behavior.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, assign, factory, filter, copy
+ * @dbxUtilRelated assign-values-to-pojo, filter-from-pojo-function
+ *
  * @example
  * ```typescript
  * // Default: filters undefined, returns a copy
@@ -738,12 +744,6 @@ export type AssignValuesToPOJOFunctionInput<T extends object = object, K extends
  * // With NULL filter and no copy:
  * const assignNoNulls = assignValuesToPOJOFunction({ valueFilter: KeyValueTypleValueFilter.NULL, copy: false });
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, pojo, assign, factory, filter, copy
- * @dbxUtilRelated assign-values-to-pojo, filter-from-pojo-function
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -811,6 +811,12 @@ export type ValuesFromPOJOFunction<O = unknown, I extends object = object> = (ob
  * @param filter - A {@link FilterKeyValueTuplesInput} controlling which values are included. Defaults to `KeyValueTypleValueFilter.UNDEFINED`.
  * @returns A reusable function that extracts matching values from any input object.
  *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, values, factory, filter, extract
+ * @dbxUtilRelated values-from-pojo, find-pojo-keys-function
+ *
  * @example
  * ```typescript
  * const getDefinedValues = valuesFromPOJOFunction();
@@ -821,12 +827,6 @@ export type ValuesFromPOJOFunction<O = unknown, I extends object = object> = (ob
  * getNonNullValues({ a: 1, b: null, c: undefined });
  * // [1]
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, pojo, values, factory, filter, extract
- * @dbxUtilRelated values-from-pojo, find-pojo-keys-function
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -855,7 +855,13 @@ export function valuesFromPOJOFunction<O = unknown, I extends object = object>(f
  *
  * @param keysToFilter - The set of keys to include (or exclude when inverted).
  * @param invertFilter - When `true`, keys in `keysToFilter` are excluded instead of included. Defaults to `false`.
- * @returns A function that filters keys on any input POJO.
+ * @returns Filters keys on any input POJO.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, keys, filter, pick, omit, factory
+ * @dbxUtilRelated filter-tuples-on-pojo-function, filter-from-pojo-function
  *
  * @example
  * ```typescript
@@ -867,12 +873,6 @@ export function valuesFromPOJOFunction<O = unknown, I extends object = object>(f
  * omitAB({ a: 1, b: 2, c: 3 });
  * // { c: 3 }
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, pojo, keys, filter, pick, omit, factory
- * @dbxUtilRelated filter-tuples-on-pojo-function, filter-from-pojo-function
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -900,7 +900,13 @@ export type FilterTuplesOnPOJOFunction<T extends object> = T extends Record<stri
  * and returns a new object containing only the entries that pass.
  *
  * @param filterTupleOnObject - Predicate applied to each `[key, value]` entry.
- * @returns A function that filters entries on any input POJO.
+ * @returns Filters entries on any input POJO.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, tuples, filter, predicate, factory
+ * @dbxUtilRelated filter-keys-on-pojo-function, filter-from-pojo-function
  *
  * @example
  * ```typescript
@@ -908,12 +914,6 @@ export type FilterTuplesOnPOJOFunction<T extends object> = T extends Record<stri
  * keepStrings({ a: 'hello', b: 42, c: 'world' });
  * // { a: 'hello', c: 'world' }
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, pojo, tuples, filter, predicate, factory
- * @dbxUtilRelated filter-keys-on-pojo-function, filter-from-pojo-function
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -984,9 +984,15 @@ export type ForEachKeyValueOnPOJOConfig<T extends object, C = unknown, K extends
  * When no filter is provided, all key/value pairs are iterated.
  *
  * @param config - The filter and forEach callback configuration.
- * @param config.forEach - callback invoked for each key/value pair that passes the filter
- * @param config.filter - optional filter controlling which key/value pairs are iterated; when omitted, all pairs are visited
- * @returns A function that iterates matching key/value pairs on any input object.
+ * @param config.forEach - Callback invoked for each key/value pair that passes the filter.
+ * @param config.filter - Optional filter controlling which key/value pairs are iterated; when omitted, all pairs are visited.
+ * @returns Iterates matching key/value pairs on any input object.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory object
+ * @dbxUtilKind factory
+ * @dbxUtilTags object, pojo, for-each, iterate, factory, callback
+ * @dbxUtilRelated find-pojo-keys-function, count-pojo-keys-function, filter-key-value-tuples-function
  *
  * @example
  * ```typescript
@@ -997,12 +1003,6 @@ export type ForEachKeyValueOnPOJOConfig<T extends object, C = unknown, K extends
  * logDefined({ a: 1, b: undefined, c: 'test' });
  * // logs: 'a' 1, 'c' 'test'
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory object
- * @dbxUtilKind factory
- * @dbxUtilTags object, pojo, for-each, iterate, factory, callback
- * @dbxUtilRelated find-pojo-keys-function, count-pojo-keys-function, filter-key-value-tuples-function
  *
  * @__NO_SIDE_EFFECTS__
  */

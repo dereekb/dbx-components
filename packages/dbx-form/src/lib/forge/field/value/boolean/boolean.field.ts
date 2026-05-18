@@ -1,16 +1,7 @@
 import type { DynamicText } from '@ng-forge/dynamic-forms';
 import type { MatToggleField, MatCheckboxField } from '@ng-forge/dynamic-forms-material';
-import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 import { configureDbxForgeFormFieldWrapperWith } from '../../wrapper/formfield/formfield.wrapper';
-
-/**
- * CSS class applied to forge fields when `styledBox` is enabled.
- *
- * @deprecated Boolean fields now use the Material-style form-field wrapper to render the
- * outlined chrome and standard label/hint/error subscript. Retained as an export for any
- * consumers still referencing the class name directly.
- */
-export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';
 
 /**
  * Where the field's primary label is rendered when wrapped by the form-field wrapper.
@@ -83,7 +74,7 @@ export const dbxForgeToggleField = dbxForgeFieldFunction<DbxForgeToggleFieldConf
       }
     }
   })
-}) as DbxForgeFieldFunction<DbxForgeToggleFieldConfig, MatToggleField>;
+});
 
 // MARK: Checkbox Field
 /**
@@ -150,4 +141,14 @@ export const dbxForgeCheckboxField = dbxForgeFieldFunction<DbxForgeCheckboxField
       }
     }
   })
-}) as DbxForgeFieldFunction<DbxForgeCheckboxFieldConfig, MatCheckboxField>;
+});
+
+// COMPAT: Deprecated aliases
+/**
+ * CSS class applied to forge fields when `styledBox` is enabled.
+ *
+ * @deprecated Boolean fields now use the Material-style form-field wrapper to render the
+ * outlined chrome and standard label/hint/error subscript. Retained as an export for any
+ * consumers still referencing the class name directly.
+ */
+export const FORGE_STYLED_BOX_CLASS = 'dbx-forge-styled-box';

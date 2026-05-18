@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE, DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND, dbxForgeTextPasswordField, dbxForgeTextPasswordWithVerifyField, dbxForgeTextVerifyPasswordField, dbxForgeUsernamePasswordLoginFields, dbxForgeUsernameLoginField } from './login';
+import { DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE, DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND, dbxForgeTextPasswordField, dbxForgeTextPasswordWithVerifyField, dbxForgeTextVerifyPasswordField, dbxForgeUsernamePasswordLoginFields, dbxForgeUsernameLoginField } from './login';
 
 // MARK: dbxForgeTextPasswordField
 describe('dbxForgeTextPasswordField()', () => {
@@ -201,6 +201,6 @@ describe('dbxForgeTextPasswordWithVerifyField()', () => {
 
   it('should register a default validation message for the match kind', () => {
     const [, verifyPasswordField] = dbxForgeTextPasswordWithVerifyField();
-    expect(verifyPasswordField.validationMessages?.[DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND]).toBe(DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE);
+    expect(verifyPasswordField.validationMessages?.[DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND]).toBe(DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE);
   });
 });

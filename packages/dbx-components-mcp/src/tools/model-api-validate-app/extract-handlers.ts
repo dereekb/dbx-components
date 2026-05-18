@@ -24,7 +24,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Node, Project, type ObjectLiteralExpression } from 'ts-morph';
 import type { HandlerEntry, HandlerMapStatus } from './types.js';
-import type { CrudVerb } from '../model-api-shared/types.js';
+import type { CrudVerb } from '@dereekb/dbx-cli/manifest-extract';
 
 const HANDLER_MAP_REL = 'src/app/function/model/crud.functions.ts';
 
@@ -46,44 +46,49 @@ export interface HandlerExtractionResult {
  * Reads `<apiDir>/src/app/function/model/crud.functions.ts` and returns one
  * handler entry per `(verb, model, specifier)` cell.
  *
- * @param apiAbs - absolute path to the API package root
- * @param apiDir - relative path used in source citations
- * @returns the populated handler entries plus the parse status
+ * @param apiAbs - Absolute path to the API package root.
+ * @param apiDir - Relative path used in source citations.
+ * @returns The populated handler entries plus the parse status.
  */
 export async function extractHandlerEntries(apiAbs: string, apiDir: string): Promise<HandlerExtractionResult> {
   const fullPath = join(apiAbs, HANDLER_MAP_REL);
   const sourceFileRel = `${apiDir}/${HANDLER_MAP_REL}`;
-  let text: string;
+  let text: string | undefined;
   try {
     text = await readFile(fullPath, 'utf8');
   } catch {
-    return { path: fullPath, status: { kind: 'missing', path: HANDLER_MAP_REL }, entries: [] };
+    text = undefined;
   }
+  let result: HandlerExtractionResult;
+  if (text === undefined) {
+    result = { path: fullPath, status: { kind: 'missing', path: HANDLER_MAP_REL }, entries: [] };
+  } else {
+    const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
+    const sourceFile = project.createSourceFile(sourceFileRel, text, { overwrite: true });
 
-  const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-  const sourceFile = project.createSourceFile(sourceFileRel, text, { overwrite: true });
+    const entries: HandlerEntry[] = [];
+    const verbsFound: CrudVerb[] = [];
 
-  const entries: HandlerEntry[] = [];
-  const verbsFound: CrudVerb[] = [];
-
-  for (const stmt of sourceFile.getVariableStatements()) {
-    for (const decl of stmt.getDeclarations()) {
-      const name = decl.getName();
-      const verb = matchVerbFromConstName(name);
-      if (!verb) continue;
-      const initializer = decl.getInitializer();
-      if (!initializer || !Node.isObjectLiteralExpression(initializer)) continue;
-      verbsFound.push(verb);
-      collectVerbMap({ verb, mapLiteral: initializer, sourceFileRel, entries });
+    for (const stmt of sourceFile.getVariableStatements()) {
+      for (const decl of stmt.getDeclarations()) {
+        const name = decl.getName();
+        const verb = matchVerbFromConstName(name);
+        if (!verb) continue;
+        const initializer = decl.getInitializer();
+        if (!initializer || !Node.isObjectLiteralExpression(initializer)) continue;
+        verbsFound.push(verb);
+        collectVerbMap({ verb, mapLiteral: initializer, sourceFileRel, entries });
+      }
     }
-  }
 
-  return { path: fullPath, status: { kind: 'ok', verbsFound }, entries };
+    result = { path: fullPath, status: { kind: 'ok', verbsFound }, entries };
+  }
+  return result;
 }
 
 function matchVerbFromConstName(name: string): CrudVerb | undefined {
   for (const { token, verb } of VERB_TOKENS) {
-    if (name.endsWith(`${token}ModelMap`)) {
+    if (name.endsWith(`${token}ModelMap`) || name.endsWith(`_${token.toUpperCase()}_MODEL_MAP`)) {
       return verb;
     }
   }

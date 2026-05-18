@@ -29,6 +29,17 @@ const WORKSPACE_ROOT = resolve(PACKAGE_ROOT, '..', '..');
 const ROOT_CONFIG_PATH = resolve(WORKSPACE_ROOT, 'dbx-mcp.config.json');
 
 // Register ts-node so we can import the canonical TypeScript entry point.
+// Use transpile-only mode + an inline compilerOptions override: the workspace's `tsconfig.base.json`
+// sets `moduleResolution: bundler` and `module: ES2022`, which conflict with ts-node-esm's defaults
+// and trip TS5109 when it tries to type-check these scripts. Type safety for the scan CLIs is
+// enforced by their owning project's `build` / `lint` targets, so runtime transpilation is enough.
+process.env.TS_NODE_TRANSPILE_ONLY = '1';
+process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({
+  module: 'NodeNext',
+  moduleResolution: 'NodeNext',
+  isolatedModules: true,
+  verbatimModuleSyntax: false
+});
 register('ts-node/esm', pathToFileURL(`${WORKSPACE_ROOT}/`));
 
 const { runScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/cli.ts`);

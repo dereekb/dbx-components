@@ -170,16 +170,17 @@ export abstract class DbxButton {
  * Creates Angular providers that register a {@link DbxButton} implementation for DI.
  *
  * @param sourceType - The concrete button directive or component class to provide.
- * @returns An array of Angular providers for the button.
+ * @returns Array of Angular providers for the button.
  *
- * @example
- * ```typescript
- * @Directive({
+ * @Directive ({
  *   selector: '[myCustomButton]',
  *   providers: provideDbxButton(MyCustomButtonDirective),
  * })
  * export class MyCustomButtonDirective extends AbstractDbxButtonDirective {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function provideDbxButton<S extends DbxButton>(sourceType: Type<S>): Provider[] {
   return [

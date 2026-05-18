@@ -26,15 +26,15 @@ export type RunAsyncTasksForValuesConfig<T = unknown> = Omit<PerformAsyncTasksCo
 /**
  * Runs a single async task and returns the resulting value. Always configured to throw on failure.
  *
+ * @param taskFn - The async task to execute.
+ * @param config - Optional configuration for retries and retry behavior.
+ * @returns The value produced by the task, or undefined if the task produced no value.
+ * @throws {Error} Rethrows any error thrown by the task function.
+ *
  * @dbxUtil
  * @dbxUtilCategory promise
  * @dbxUtilTags promise, async, task, retry, run, value
  * @dbxUtilRelated perform-async-task, run-async-tasks-for-values, perform-async-tasks
- *
- * @param taskFn - The async task to execute.
- * @param config - Optional configuration for retries and retry behavior.
- * @returns The value produced by the task, or undefined if the task produced no value.
- * @throws Rethrows any error thrown by the task function.
  */
 export async function runAsyncTaskForValue<O>(taskFn: () => Promise<O>, config?: RunAsyncTaskForValueConfig<0>): Promise<Maybe<O>> {
   const { value } = await performAsyncTask(taskFn, {
@@ -49,16 +49,16 @@ export async function runAsyncTaskForValue<O>(taskFn: () => Promise<O>, config?:
  * Runs an async task for each input value and returns an array of the resulting values.
  * Always configured to throw on failure.
  *
+ * @param input - The array of input values to process.
+ * @param taskFn - The async task function to run for each input value.
+ * @param config - Optional configuration for parallelism and retries.
+ * @returns The results produced by the task function for each input.
+ * @throws {Error} Rethrows any error thrown by a task function.
+ *
  * @dbxUtil
  * @dbxUtilCategory promise
  * @dbxUtilTags promise, async, tasks, parallel, batch, retry, run, values
  * @dbxUtilRelated perform-async-tasks, run-async-task-for-value
- *
- * @param input - The array of input values to process.
- * @param taskFn - The async task function to run for each input value.
- * @param config - Optional configuration for parallelism and retries.
- * @returns An array of results produced by the task function for each input.
- * @throws Rethrows any error thrown by a task function.
  */
 export async function runAsyncTasksForValues<T, K = unknown>(input: T[], taskFn: PerformAsyncTaskFn<T, K>, config?: RunAsyncTasksForValuesConfig<T>): Promise<K[]> {
   const results = await performAsyncTasks(input, taskFn, {
@@ -147,16 +147,16 @@ export interface PerformAsyncTasksConfig<I = unknown, K extends PrimativeKey = P
  * Performs async tasks for each input value with configurable retry and parallelism behavior.
  * Useful for operations that may experience optimistic concurrency collisions.
  *
- * @dbxUtil
- * @dbxUtilCategory promise
- * @dbxUtilTags async, promise, parallel, retry, task, batch, concurrency, throttle
- * @dbxUtilRelated perform-tasks-in-parallel, perform-async-task
- *
  * @param input - The array of input values to process.
  * @param taskFn - The async function to execute for each input.
  * @param config - Configuration for retries, parallelism, and error handling.
  * @returns An aggregated result with succeeded/failed items and their outputs/errors.
- * @throws Rethrows the last error from retries if `throwError` is true (default).
+ * @throws {Error} Rethrows the last error from retries if `throwError` is true (default).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory promise
+ * @dbxUtilTags async, promise, parallel, retry, task, batch, concurrency, throttle
+ * @dbxUtilRelated perform-tasks-in-parallel, perform-async-task
  */
 export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], taskFn: PerformAsyncTaskFn<I, O>, config: PerformAsyncTasksConfig<I, K> = { throwError: true }): Promise<PerformAsyncTasksResult<I, O>> {
   const { sequential, maxParallelTasks, waitBetweenTasks, nonConcurrentTaskKeyFactory } = config;
@@ -201,15 +201,15 @@ export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey =
 /**
  * Performs a single async task with configurable retry behavior and returns the result with success status.
  *
+ * @param taskFn - The async task to execute.
+ * @param config - Optional configuration for retries and error handling.
+ * @returns A result object containing the value (if successful) and a success flag.
+ * @throws {Error} Rethrows the last error from retries if `throwError` is true (default).
+ *
  * @dbxUtil
  * @dbxUtilCategory promise
  * @dbxUtilTags promise, async, task, retry, run, success
  * @dbxUtilRelated perform-async-tasks, run-async-task-for-value
- *
- * @param taskFn - The async task to execute.
- * @param config - Optional configuration for retries and error handling.
- * @returns A result object containing the value (if successful) and a success flag.
- * @throws Rethrows the last error from retries if `throwError` is true (default).
  */
 export async function performAsyncTask<O>(taskFn: () => Promise<O>, config?: PerformAsyncTaskConfig<0>): Promise<PerformAsyncTaskResult<O>> {
   const [, value, success] = await _performAsyncTask(0, () => taskFn(), config);
@@ -221,13 +221,17 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
   const throwError = inputThrowError ?? true; // throw errors by default
   const retriesAllowed = inputRetriesAllowed || 0;
 
-  async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [Error | unknown, false]> {
+  async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [unknown, false]> {
+    let outcome: [O, true] | [unknown, false];
+
     try {
       const result: O = await taskFn(value, tryNumber);
-      return [result, true];
+      outcome = [result, true];
     } catch (e) {
-      return [e, false];
+      outcome = [e, false];
     }
+
+    return outcome;
   }
 
   async function iterateTask(value: I, tryNumber: number): Promise<[I, O, boolean]> {
@@ -244,22 +248,26 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
       return iterateTask(value, tryNumber + 1);
     }
 
+    let iterationResult: [I, O, boolean];
+
     if (success) {
-      return [value, ...result];
+      iterationResult = [value, ...result];
+    } else {
+      const retriesRemaining = retriesAllowed - tryNumber;
+
+      if (retriesRemaining > 0) {
+        iterationResult = await (retryWait ? waitForMs(retryWait).then(() => doNextTry()) : doNextTry());
+      } else {
+        // Error out.
+        if (throwError) {
+          throw result[0];
+        }
+
+        iterationResult = [value, undefined as unknown as O, false];
+      }
     }
 
-    const retriesRemaining = retriesAllowed - tryNumber;
-
-    if (retriesRemaining > 0) {
-      return retryWait ? waitForMs(retryWait).then(() => doNextTry()) : doNextTry();
-    }
-
-    // Error out.
-    if (throwError) {
-      throw result[0];
-    }
-
-    return [value, undefined as unknown as O, false];
+    return iterationResult;
   }
 
   return iterateTask(value, 0);
@@ -293,8 +301,8 @@ export type PerformTasksInParallelFunction<I> = (input: I[]) => Promise<void>;
  *
  * @param input - The array of items to process.
  * @param config - Configuration for task execution, parallelism, and concurrency constraints.
- * @returns A Promise that resolves when all tasks complete.
- * @throws Rethrows the first error encountered during task execution.
+ * @returns Resolves when all tasks complete.
+ * @throws {Error} Rethrows the first error encountered during task execution.
  */
 export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(input: I[], config: PerformTasksInParallelFunctionConfig<I, K>): Promise<void> {
   return performTasksInParallelFunction(config)(input);
@@ -304,14 +312,15 @@ export function performTasksInParallel<I, K extends PrimativeKey = PerformTasksI
  * Creates a reusable function that performs tasks in parallel with optional concurrency limits
  * and non-concurrent task key constraints.
  *
+ * @param config - Configuration for task factory, parallelism limits, and concurrency keys.
+ * @returns Accepts an array of inputs and returns a Promise resolving when all tasks complete.
+ *
  * @dbxUtil
  * @dbxUtilCategory promise
  * @dbxUtilKind factory
  * @dbxUtilTags promise, parallel, factory, concurrency, async, tasks
  * @dbxUtilRelated perform-tasks-in-parallel, perform-async-tasks-function
  *
- * @param config - Configuration for task factory, parallelism limits, and concurrency keys.
- * @returns A function that accepts an array of inputs and returns a Promise resolving when all tasks complete.
  * @__NO_SIDE_EFFECTS__
  */
 export function performTasksInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksInParallelFunctionConfig<I, K>): PerformTasksInParallelFunction<I> {
@@ -334,8 +343,8 @@ export function performTasksInParallelFunction<I, K extends PrimativeKey = Perfo
     /**
      * Performs the input tasks in parallel using the configured performTasks function.
      *
-     * @param input The input tasks to perform
-     * @returns A promise that resolves when all tasks have completed
+     * @param input - The input tasks to perform.
+     * @returns Resolves when all tasks have completed.
      */
     function performTasksWithInput(input: I[]) {
       const taskInputFactory = terminatingFactoryFromArray(
@@ -402,7 +411,7 @@ export interface PerformTasksFromFactoryInParallelFunctionConfig<I, K extends Pr
  * A factory function that produces the next batch of task inputs. Returns `null` to signal
  * that no more inputs are available.
  */
-export type PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I> = () => PromiseOrValue<ArrayOrValue<I> | null>;
+export type PerformTaskFactoryTasksInParallelFunctionTaskInputFactory<I> = () => PromiseOrValue<Maybe<ArrayOrValue<I>>>;
 
 /**
  * Function that awaits all promises generated from the task factory until the factory returns null.
@@ -417,19 +426,20 @@ export type PerformTaskFactoryTasksInParallelFunction<I> = (taskInputFactory: Pe
  * Creates a function that pulls task inputs from a factory and executes them in parallel
  * with configurable concurrency limits and non-concurrent key constraints.
  *
+ * @param config - Configuration for the task factory, parallelism, and concurrency behavior.
+ * @returns Accepts a task input factory and returns a Promise that resolves when all tasks complete.
+ *
  * @dbxUtil
  * @dbxUtilCategory promise
  * @dbxUtilKind factory
  * @dbxUtilTags promise, parallel, factory, concurrency, async, pull-tasks
  * @dbxUtilRelated perform-tasks-in-parallel-function
  *
- * @param config - Configuration for the task factory, parallelism, and concurrency behavior.
- * @returns a function that accepts a task input factory and returns a Promise that resolves when all tasks complete
  * @__NO_SIDE_EFFECTS__
  */
 export function performTasksFromFactoryInParallelFunction<I, K extends PrimativeKey = PerformTasksInParallelTaskUniqueKey>(config: PerformTasksFromFactoryInParallelFunctionConfig<I, K>): PerformTaskFactoryTasksInParallelFunction<I> {
   /**
-   * @returns null
+   * @returns Null.
    */
   const defaultNonConcurrentTaskKeyFactory = () => null;
 
@@ -443,7 +453,7 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 
       let incompleteTasks: Readonly<[I, K[], IndexNumber]>[] = [];
 
-      type NextIncompleteTask = (typeof incompleteTasks)[0] | undefined;
+      type NextIncompleteTask = Maybe<(typeof incompleteTasks)[0]>;
 
       let baseI = 0;
       let isOutOfTasks = false;
@@ -488,19 +498,21 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
       }
 
       async function requestMoreTasks(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {
-        if (isOutOfTasks) {
-          return;
+        let result: NextIncompleteTask;
+
+        if (!isOutOfTasks) {
+          const promiseRef = promiseReference<NextIncompleteTask>();
+
+          if (isFulfillingTask) {
+            requestTasksQueue.push([parallelIndex, promiseRef]);
+          } else {
+            void fulfillRequestMoreTasks(parallelIndex, promiseRef);
+          }
+
+          result = await promiseRef.promise;
         }
 
-        const promiseRef = promiseReference<NextIncompleteTask>();
-
-        if (isFulfillingTask) {
-          requestTasksQueue.push([parallelIndex, promiseRef]);
-        } else {
-          void fulfillRequestMoreTasks(parallelIndex, promiseRef);
-        }
-
-        return promiseRef.promise;
+        return result;
       }
 
       let currentRunIndex = 0;
@@ -516,21 +528,24 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 
       function tryAcquireTask(candidate: NonNullable<NextIncompleteTask>): 'skip' | 'defer' | 'acquired' {
         const candidateIndex = candidate[2];
+        let outcome: 'skip' | 'defer' | 'acquired';
 
         if (visitedTaskIndexes.has(candidateIndex)) {
-          return 'skip';
+          outcome = 'skip';
+        } else {
+          const keys = candidate[1];
+          const keyOfTaskCurrentlyInUse = setContainsAnyValue(currentParellelTaskKeys, keys);
+
+          if (keyOfTaskCurrentlyInUse) {
+            keys.forEach((key) => waitingConcurrentTasks.addTuples(key, candidate));
+            outcome = 'defer';
+          } else {
+            addToSet(currentParellelTaskKeys, keys);
+            outcome = 'acquired';
+          }
         }
 
-        const keys = candidate[1];
-        const keyOfTaskCurrentlyInUse = setContainsAnyValue(currentParellelTaskKeys, keys);
-
-        if (keyOfTaskCurrentlyInUse) {
-          keys.forEach((key) => waitingConcurrentTasks.addTuples(key, candidate));
-          return 'defer';
-        }
-
-        addToSet(currentParellelTaskKeys, keys);
-        return 'acquired';
+        return outcome;
       }
 
       async function getNextTask(parallelIndex: IndexNumber): Promise<NextIncompleteTask> {
@@ -640,15 +655,16 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
 /**
  * Creates a default non-concurrent task key factory that generates unique incrementing number strings.
  *
+ * @returns A {@link StringFactory} that produces unique keys for identifying non-concurrent tasks.
+ *
  * @dbxUtil
  * @dbxUtilCategory promise
  * @dbxUtilKind factory
  * @dbxUtilTags promise, parallel, key, factory, unique, incrementing
  * @dbxUtilRelated perform-tasks-in-parallel-function, incrementing-number-factory
  *
- * @returns A {@link StringFactory} that produces unique keys for identifying non-concurrent tasks.
  * @__NO_SIDE_EFFECTS__
  */
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
-  return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
+  return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString());
 }

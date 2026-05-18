@@ -39,6 +39,7 @@ export class TestFirestoreContextFixture<F extends TestFirestoreInstance = TestF
 export type TestFirestoreContextFactory = TestContextFactory<TestFirestoreContextFixture>;
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use TestFirestoreContextFactory instead.
  */

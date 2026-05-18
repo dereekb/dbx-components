@@ -25,21 +25,23 @@ import type { ApiFileMatch } from './types';
  */
 export function findApiFiles(packageRoot: string): ApiFileMatch[] {
   const libRoot = join(packageRoot, 'src', 'lib');
-  if (!safeIsDirectory(libRoot)) return [];
-
   const out: ApiFileMatch[] = [];
-  const seenClassNames = new Set<string>();
-  for (const file of walkApiFiles(libRoot)) {
-    const text = readFileSync(file, 'utf8');
-    const extraction = extractCrudEntries({ name: file, text });
-    if (!extraction.functionsClassName) continue;
-    // Source `.api.ts` and its sibling `.api.d.ts` both exist when scanning a
-    // local workspace package after a build — keep the first hit (source wins
-    // because the walker visits `.api.ts` first via lexical order).
-    if (seenClassNames.has(extraction.functionsClassName)) continue;
-    seenClassNames.add(extraction.functionsClassName);
-    out.push({ filePath: file, className: extraction.functionsClassName, extraction });
+
+  if (safeIsDirectory(libRoot)) {
+    const seenClassNames = new Set<string>();
+    for (const file of walkApiFiles(libRoot)) {
+      const text = readFileSync(file, 'utf8');
+      const extraction = extractCrudEntries({ name: file, text });
+      if (!extraction.functionsClassName) continue;
+      // Source `.api.ts` and its sibling `.api.d.ts` both exist when scanning a
+      // local workspace package after a build — keep the first hit (source wins
+      // because the walker visits `.api.ts` first via lexical order).
+      if (seenClassNames.has(extraction.functionsClassName)) continue;
+      seenClassNames.add(extraction.functionsClassName);
+      out.push({ filePath: file, className: extraction.functionsClassName, extraction });
+    }
   }
+
   return out;
 }
 
@@ -57,14 +59,16 @@ function* walkApiFiles(dir: string): Generator<string> {
 }
 
 function isApiFile(name: string): boolean {
-  if (name.endsWith('.spec.ts') || name.endsWith('.test.ts')) return false;
-  return name.endsWith('.api.ts') || name.endsWith('.api.d.ts');
+  const isSpec = name.endsWith('.spec.ts') || name.endsWith('.test.ts');
+  return !isSpec && (name.endsWith('.api.ts') || name.endsWith('.api.d.ts'));
 }
 
 function safeIsDirectory(p: string): boolean {
+  let result: boolean;
   try {
-    return statSync(p).isDirectory();
+    result = statSync(p).isDirectory();
   } catch {
-    return false;
+    result = false;
   }
+  return result;
 }

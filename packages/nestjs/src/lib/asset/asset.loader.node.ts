@@ -22,6 +22,9 @@ export interface NodeJsLocalAssetLoaderConfig {
  * The ref's {@link AssetLocalPathRef.path} is resolved relative
  * to the configured {@link NodeJsLocalAssetLoaderConfig.basePath}.
  *
+ * @param config - Filesystem configuration with base path.
+ * @returns An {@link AssetLoader} backed by the local filesystem.
+ *
  * @example
  * ```ts
  * const loader = nodeJsLocalAssetLoader({ basePath: './assets' });
@@ -29,9 +32,6 @@ export interface NodeJsLocalAssetLoaderConfig {
  *   // reads from ./assets/data/districts.json
  * });
  * ```
- *
- * @param config - Filesystem configuration with base path.
- * @returns An {@link AssetLoader} backed by the local filesystem.
  */
 export function nodeJsLocalAssetLoader(config: NodeJsLocalAssetLoaderConfig): AssetLoader {
   const { basePath } = config;

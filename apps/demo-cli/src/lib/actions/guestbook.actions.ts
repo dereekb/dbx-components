@@ -1,4 +1,5 @@
 import { type ActionCommandSpec, type CliContext, iterateDbxCliCallModel } from '@dereekb/dbx-cli';
+import { type OnCallQueryModelResult } from '@dereekb/firebase';
 import { type Guestbook, type GuestbookEntry, type GuestbookKey, type QueryGuestbookEntriesParams, type QueryGuestbooksParams } from 'demo-firebase';
 
 // MARK: queryGuestbookEntriesForGuestbook
@@ -27,8 +28,11 @@ export interface QueryGuestbookEntriesForGuestbookOutput {
  *
  * Exposed as a plain async function so other actions can compose it directly
  * (no string-keyed action registry, full TypeScript inference). The matching
- * {@link queryGuestbookEntriesForGuestbookAction} is a thin yargs adapter that
+ * {@link QUERY_GUESTBOOK_ENTRIES_FOR_GUESTBOOK_ACTION} is a thin yargs adapter that
  * delegates to this function.
+ *
+ * @param input - The function inputs.
+ * @returns Aggregated entries for the Guestbook.
  *
  * @example
  * ```ts
@@ -38,9 +42,6 @@ export interface QueryGuestbookEntriesForGuestbookOutput {
  *   published: true
  * });
  * ```
- *
- * @param input - The function inputs.
- * @returns Aggregated entries for the Guestbook.
  */
 export async function queryGuestbookEntriesForGuestbook(input: QueryGuestbookEntriesForGuestbookInput): Promise<QueryGuestbookEntriesForGuestbookOutput> {
   const { context, guestbook, published, limit } = input;
@@ -65,7 +66,7 @@ export async function queryGuestbookEntriesForGuestbook(input: QueryGuestbookEnt
 /**
  * Action: list GuestbookEntries for a single Guestbook (paginated).
  */
-export const queryGuestbookEntriesForGuestbookAction: ActionCommandSpec = {
+export const QUERY_GUESTBOOK_ENTRIES_FOR_GUESTBOOK_ACTION: ActionCommandSpec = {
   command: 'entries <guestbook>',
   describe: 'List GuestbookEntries for a Guestbook (paginates guestbookEntry.query).',
   model: 'guestbook',
@@ -104,19 +105,19 @@ export interface QueryAllPublishedGuestbookEntriesOutput {
  * {@link queryGuestbookEntriesForGuestbook} to gather its published entries —
  * demonstrating two-level action composition without a `callAction` registry.
  *
+ * @param input - The function inputs.
+ * @returns Aggregate counts plus the per-Guestbook breakdown.
+ *
  * @example
  * ```ts
  * const summary = await queryAllPublishedGuestbookEntries({ context, parallel: 4 });
  * console.log(summary.guestbookCount, summary.entryCount);
  * ```
- *
- * @param input - The function inputs.
- * @returns Aggregate counts plus the per-Guestbook breakdown.
  */
 export async function queryAllPublishedGuestbookEntries(input: QueryAllPublishedGuestbookEntriesInput): Promise<QueryAllPublishedGuestbookEntriesOutput> {
   const { context, limit, parallel } = input;
 
-  const result = await iterateDbxCliCallModel<QueryGuestbooksParams, Guestbook, import('@dereekb/firebase').OnCallQueryModelResult<Guestbook>, QueryGuestbookEntriesForGuestbookOutput>({
+  const result = await iterateDbxCliCallModel<QueryGuestbooksParams, Guestbook, OnCallQueryModelResult<Guestbook>, QueryGuestbookEntriesForGuestbookOutput>({
     context,
     call: 'query',
     modelType: 'guestbook',
@@ -141,7 +142,7 @@ export async function queryAllPublishedGuestbookEntries(input: QueryAllPublished
 /**
  * Action: enumerate every published Guestbook and gather its published entries.
  */
-export const queryAllPublishedGuestbookEntriesAction: ActionCommandSpec = {
+export const QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION: ActionCommandSpec = {
   command: 'all-published-entries',
   describe: 'Paginate every published Guestbook and gather its published entries.',
   model: 'guestbook',

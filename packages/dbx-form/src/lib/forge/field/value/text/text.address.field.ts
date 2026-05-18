@@ -52,15 +52,15 @@ export interface DbxForgeAddressLineFieldConfig extends Partial<DbxForgeTextFiel
 /**
  * Street address line input. The `line` prop controls which line (1 or 2) — it affects key and label generation.
  *
- * @param config - Optional overrides; line number determines key and label
- * @returns A {@link MatInputField} for address line input
+ * @param config - Optional overrides; line number determines key and label.
+ * @returns A {@link MatInputField} for address line input.
  *
- * @dbxFormField
  * @dbxFormSlug address-line
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
  * @dbxFormFieldDerivative text
  * @dbxFormConfigInterface DbxForgeAddressLineFieldConfig
+ *
  * @example
  * ```typescript
  * dbxForgeAddressLineField({ line: 2 })
@@ -85,15 +85,15 @@ export function dbxForgeAddressLineField(config: DbxForgeAddressLineFieldConfig 
 /**
  * Flat array of address fields (line(s), city, state, zip, optional country) with a sensible flex layout. Drop directly into a parent `fields: []`.
  *
- * @param config - Address fields configuration
- * @returns Array of forge field definitions for a complete address form section
+ * @param config - Address fields configuration.
+ * @returns Array of forge field definitions for a complete address form section.
  *
- * @dbxFormField
  * @dbxFormSlug address-fields
  * @dbxFormProduces FieldDef[]
  * @dbxFormArrayOutput no
  * @dbxFormFieldTemplate address-line, city, state, zip-code, country
  * @dbxFormConfigInterface DbxForgeAddressFieldsConfig
+ *
  * @example
  * ```typescript
  * dbxForgeAddressFields({ required: true, includeCountry: false })
@@ -135,7 +135,7 @@ export interface DbxForgeAddressGroupConfig extends DbxForgeAddressFieldsConfig 
  * Wraps `address-fields` in a `GroupField` so the address is stored as a nested object under one key. Prefer this when the rest of the form doesn't want address fields flattened.
  *
  * @param config - Optional overrides; defaults to key `'address'`
- * @returns A {@link GroupField} containing address fields
+ * @returns A {@link GroupField} containing address fields.
  *
  * @dbxFormField
  * @dbxFormSlug address-group
@@ -145,6 +145,7 @@ export interface DbxForgeAddressGroupConfig extends DbxForgeAddressFieldsConfig 
  * @dbxFormArrayOutput no
  * @dbxFormConfigInterface DbxForgeAddressGroupConfig
  * @dbxFormComposesFrom address-fields, group
+ *
  * @example
  * ```typescript
  * dbxForgeAddressGroup({ key: 'billingAddress' })
@@ -174,8 +175,8 @@ export interface DbxForgeAddressListFieldConfig extends DbxForgeAddressFieldsCon
 /**
  * Repeatable array of addresses built on top of `array-field` + `address-group`. Keeps the `Field` suffix because it returns a single composite field whose value is an array of addresses.
  *
- * @param config - Optional overrides; defaults to key `'addresses'`, max 6 entries
- * @returns A {@link DbxForgeArrayFieldDef} for multiple addresses
+ * @param config - Optional overrides; defaults to key `'addresses'`, max 6 entries.
+ * @returns A {@link DbxForgeArrayFieldDef} for multiple addresses.
  *
  * @dbxFormField
  * @dbxFormSlug address-list
@@ -185,6 +186,7 @@ export interface DbxForgeAddressListFieldConfig extends DbxForgeAddressFieldsCon
  * @dbxFormArrayOutput yes
  * @dbxFormConfigInterface DbxForgeAddressListFieldConfig
  * @dbxFormComposesFrom address-group, array-field
+ *
  * @example
  * ```typescript
  * dbxForgeAddressListField({ maxAddresses: 3 })

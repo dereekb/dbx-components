@@ -102,7 +102,7 @@ export interface AuthClaimRoleMappingInfo {
   readonly inverseMode?: 'any' | 'all';
   /**
    * Override claim value when set. `undefined` means the default
-   * ({@link AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE}) is used.
+   * ({@link DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE}) is used.
    */
   readonly claimValue?: string | number | boolean;
   /**
@@ -342,8 +342,9 @@ export interface CreateAuthRegistryFromEntriesInput {
  * registry indexes by every accessor's primary key so all lookups are O(1)
  * after construction.
  *
- * @param input - the entry arrays plus the source labels to advertise
- * @returns a fully-indexed registry suitable for tools and resources
+ * @param input - The entry arrays plus the source labels to advertise.
+ * @returns A fully-indexed registry suitable for tools and resources.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createAuthRegistryFromEntries(input: CreateAuthRegistryFromEntriesInput = {}): AuthRegistry {

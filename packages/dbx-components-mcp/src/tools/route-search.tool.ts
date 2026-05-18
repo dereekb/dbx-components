@@ -156,50 +156,55 @@ function formatHits(options: FormatHitsOptions): string {
  * and ranks states by query, returning the top hits with matched-on metadata
  * for callers exploring an unfamiliar app.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted search results, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The formatted search results, or an error result when args fail validation.
  */
 export async function runRouteSearch(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedSearchArgs;
+  let args: ParsedSearchArgs | undefined;
+  let parseError: string | undefined;
   try {
     args = parseArgs(rawArgs);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    parseError = err instanceof Error ? err.message : String(err);
   }
 
-  const ctx = await loadRouteContext(args);
-  if (ctx.kind === 'error') {
-    return ctx.result;
-  }
-
-  const { tree } = ctx;
-  const hits: ScoredHit[] = [];
-  for (const node of tree.byName.values()) {
-    const hit = scoreHit(node, args.query, args.scope);
-    if (hit) {
-      hits.push(hit);
+  let result: ToolResult;
+  if (parseError !== undefined || args === undefined) {
+    result = toolError(parseError ?? 'Failed to parse arguments.');
+  } else {
+    const ctx = await loadRouteContext(args);
+    if (ctx.kind === 'error') {
+      result = ctx.result;
+    } else {
+      const { tree } = ctx;
+      const hits: ScoredHit[] = [];
+      for (const node of tree.byName.values()) {
+        const hit = scoreHit(node, args.query, args.scope);
+        if (hit) {
+          hits.push(hit);
+        }
+      }
+      hits.sort((a, b) => {
+        if (b.score !== a.score) {
+          return b.score - a.score;
+        }
+        if (a.node.data.name < b.node.data.name) {
+          return -1;
+        }
+        if (a.node.data.name > b.node.data.name) {
+          return 1;
+        }
+        return 0;
+      });
+      const top = hits.slice(0, 10);
+      const text = formatHits({ query: args.query, scope: args.scope, hits: top, totalNodes: tree.nodeCount });
+      result = { content: [{ type: 'text', text }] };
     }
   }
-  hits.sort((a, b) => {
-    if (b.score !== a.score) {
-      return b.score - a.score;
-    }
-    if (a.node.data.name < b.node.data.name) {
-      return -1;
-    }
-    if (a.node.data.name > b.node.data.name) {
-      return 1;
-    }
-    return 0;
-  });
-  const top = hits.slice(0, 10);
-  const text = formatHits({ query: args.query, scope: args.scope, hits: top, totalNodes: tree.nodeCount });
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-export const routeSearchTool: DbxTool = {
+export const ROUTE_SEARCH_TOOL: DbxTool = {
   definition: DBX_ROUTE_SEARCH_TOOL,
   run: runRouteSearch
 };

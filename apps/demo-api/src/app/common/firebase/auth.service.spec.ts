@@ -1,4 +1,4 @@
-import { AUTH_ADMIN_ROLE, AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, objectHasNoKeys } from '@dereekb/util';
+import { AUTH_ADMIN_ROLE, AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE, DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE, objectHasNoKeys } from '@dereekb/util';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext } from './../../../test/fixture';
 import { type DemoApiAuthService } from './auth.service';
@@ -38,12 +38,12 @@ demoApiFunctionContextFactory((f) => {
 
       it('should return admin claim for admin role', () => {
         const claims = authService.claimsForRoles(new Set([AUTH_ADMIN_ROLE]));
-        expect(claims.a).toBe(AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE);
+        expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
       });
 
       it('should return onboarded claim for onboarded roles', () => {
         const claims = authService.claimsForRoles(new Set([AUTH_TOS_SIGNED_ROLE, AUTH_ONBOARDED_ROLE]));
-        expect(claims.o).toBe(AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE);
+        expect(claims.o).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
       });
     });
 
@@ -119,7 +119,7 @@ demoApiFunctionContextFactory((f) => {
               expect(roles.has(AUTH_ADMIN_ROLE)).toBe(true);
 
               const claims = await userContext.loadClaims();
-              expect(claims.a).toBe(AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE);
+              expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
             });
           });
 
@@ -291,7 +291,7 @@ demoApiFunctionContextFactory((f) => {
             acceptsStreaming: false
           };
 
-          const authContext = authService.context(callableContext as any);
+          const authContext = authService.context(callableContext);
           expect(authContext).toBeDefined();
           expect(authContext.uid).toBe(u.uid);
         });
@@ -306,7 +306,7 @@ demoApiFunctionContextFactory((f) => {
             acceptsStreaming: false
           };
 
-          const authContext = authService.context(callableContext as any);
+          const authContext = authService.context(callableContext);
           expect(authContext.isAdmin).toBe(true);
         });
       });

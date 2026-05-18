@@ -19,9 +19,9 @@ export interface MappedPageItemIterationInstance<O, I = unknown, M extends PageL
  * and transforms its loading state values while preserving page-level operations
  * (nextPage, page load limits, latestLoadedPage).
  *
- * @param itemIteration - the source page iteration to wrap
- * @param config - mapping configuration for transforming loading state values
- * @returns mapped page iteration instance
+ * @param itemIteration - The source page iteration to wrap.
+ * @param config - Mapping configuration for transforming loading state values.
+ * @returns Mapped page iteration instance.
  */
 export function mappedPageItemIteration<O, I = unknown, M extends PageLoadingState<O> = PageLoadingState<O>, L extends PageLoadingState<I> = PageLoadingState<I>, N extends PageItemIteration<I, L> = PageItemIteration<I, L>>(itemIteration: N, config: MappedItemIterationInstanceMapConfig<O, I, M, L>): MappedPageItemIterationInstance<O, I, M, L, N> {
   function nextPage(request?: ItemIteratorNextRequest): Promise<number> {

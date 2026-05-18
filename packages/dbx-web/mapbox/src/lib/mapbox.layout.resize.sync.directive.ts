@@ -16,7 +16,7 @@ export class DbxMapboxLayoutVirtualResizeSyncComponent {
 
   readonly resizedVector$ = this.dbxMapboxLayoutComponent.viewResized$.pipe(
     map(() => {
-      const element = this.dbxMapboxLayoutComponent.drawerContainerElement()?.nativeElement as HTMLElement;
+      const element = this.dbxMapboxLayoutComponent.drawerContainerElement()?.nativeElement;
       const { clientWidth, clientHeight } = element;
 
       return {

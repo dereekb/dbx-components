@@ -59,9 +59,9 @@ const DBX_FORM_SEARCH_TOOL: Tool = {
  * spaced so stacked hits can't fabricate a higher score than the next-better
  * match kind.
  *
- * @param field - the form registry entry being scored
- * @param token - the lowercase token to score against
- * @returns the additive score for this token/field pair (`0` when there's no hit)
+ * @param field - The form registry entry being scored.
+ * @param token - The lowercase token to score against.
+ * @returns The additive score for this token/field pair (`0` when there's no hit)
  */
 function scoreFieldAgainstToken(field: FormFieldInfo, token: string): number {
   let score = 0;
@@ -171,8 +171,9 @@ export interface CreateSearchFormToolConfig {
  * Builds the `dbx_form_search` tool against a forge-fields registry. Called by
  * {@link registerTools} once the registry has loaded at server startup.
  *
- * @param config - the registry the tool should rank against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry the tool should rank against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSearchFormTool(config: CreateSearchFormToolConfig): DbxTool {

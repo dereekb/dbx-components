@@ -1,6 +1,6 @@
 import { type FirestoreAccessorDriver, type CollectionReference, type Firestore, type TransactionFunction, type DocumentReference, type TransactionFirestoreDocumentContextFactory, type WriteBatchFirestoreDocumentContextFactory } from '@dereekb/firebase';
 import { batch } from '@dereekb/util';
-import { type CollectionGroup, type CollectionReference as GoogleCloudCollectionReference, type DocumentReference as GoogleCloudDocumentReference, type Firestore as GoogleCloudFirestore } from '@google-cloud/firestore';
+import { type CollectionReference as GoogleCloudCollectionReference, type DocumentReference as GoogleCloudDocumentReference, type Firestore as GoogleCloudFirestore } from '@google-cloud/firestore';
 import { writeBatchDocumentContext } from './driver.accessor.batch';
 import { defaultFirestoreDocumentContext } from './driver.accessor.default';
 import { transactionDocumentContext } from './driver.accessor.transaction';
@@ -24,7 +24,7 @@ interface DocRefSource {
  * @param path - The initial collection path.
  * @param pathSegments - Optional pairs of [docId, collectionName] for subcollection traversal.
  * @returns The resolved {@link CollectionReference} at the given path.
- * @throws Error if pathSegments length is odd (segments must come in pairs).
+ * @throws {Error} If pathSegments length is odd (segments must come in pairs).
  *
  * @example
  * ```typescript
@@ -48,7 +48,7 @@ export function collectionRefForPath<T>(start: CollectionRefForPathInput, path: 
     });
   }
 
-  return ref as CollectionReference<T>;
+  return ref;
 }
 
 /**
@@ -81,7 +81,7 @@ export function docRefForPath<T>(start: DocRefForPathInput, path?: string, pathS
     });
   }
 
-  return doc as DocumentReference<T>;
+  return doc;
 }
 
 /**
@@ -99,11 +99,11 @@ export function docRefForPath<T>(start: DocRefForPathInput, path?: string, pathS
  */
 export function googleCloudFirestoreAccessorDriver(): FirestoreAccessorDriver {
   return {
-    doc: <T>(collection: CollectionReference<T>, path?: string, ...pathSegments: string[]) => docRefForPath(collection as GoogleCloudCollectionReference, path, pathSegments) as DocumentReference<T>,
-    docAtPath: <T>(firestore: Firestore, fullPath: string) => (firestore as GoogleCloudFirestore).doc(fullPath) as DocumentReference<T>,
-    collectionGroup: <T>(firestore: Firestore, collectionId: string) => (firestore as GoogleCloudFirestore).collectionGroup(collectionId) as CollectionGroup<T>,
-    collection: <T>(firestore: Firestore, path: string, ...pathSegments: string[]) => collectionRefForPath(firestore as GoogleCloudFirestore, path, pathSegments) as CollectionReference<T>,
-    subcollection: <T>(document: DocumentReference, path: string, ...pathSegments: string[]) => collectionRefForPath(document as GoogleCloudDocumentReference, path, pathSegments) as CollectionReference<T>,
+    doc: <T>(collection: CollectionReference<T>, path?: string, ...pathSegments: string[]) => docRefForPath(collection as GoogleCloudCollectionReference, path, pathSegments),
+    docAtPath: <T>(firestore: Firestore, fullPath: string) => (firestore as GoogleCloudFirestore).doc(fullPath),
+    collectionGroup: <T>(firestore: Firestore, collectionId: string) => (firestore as GoogleCloudFirestore).collectionGroup(collectionId),
+    collection: <T>(firestore: Firestore, path: string, ...pathSegments: string[]) => collectionRefForPath(firestore as GoogleCloudFirestore, path, pathSegments),
+    subcollection: <T>(document: DocumentReference, path: string, ...pathSegments: string[]) => collectionRefForPath(document as GoogleCloudDocumentReference, path, pathSegments),
     transactionFactoryForFirestore:
       (firestore) =>
       async <T>(fn: TransactionFunction<T>) =>

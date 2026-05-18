@@ -93,21 +93,29 @@ function parseArgs(rawArgs: unknown, defaultCwd: string): ParsedArgs | string {
   if (parsed.cwd !== undefined && parsed.cwd.length > 0) {
     workspaceRoot = resolve(defaultCwd, parsed.cwd);
   }
+  let result: ParsedArgs | string;
+  let invalidDirError: string | undefined;
   if (parsed.explicitDirs !== undefined) {
     for (const dir of parsed.explicitDirs) {
+      if (invalidDirError !== undefined) break;
       try {
         ensurePathInsideCwd(dir, workspaceRoot);
       } catch (err) {
-        return err instanceof Error ? err.message : String(err);
+        invalidDirError = err instanceof Error ? err.message : String(err);
       }
     }
   }
-  return {
-    op: parsed.op,
-    workspaceRoot,
-    dryRun: parsed.dryRun ?? false,
-    explicitDirs: parsed.explicitDirs
-  };
+  if (invalidDirError === undefined) {
+    result = {
+      op: parsed.op,
+      workspaceRoot,
+      dryRun: parsed.dryRun ?? false,
+      explicitDirs: parsed.explicitDirs
+    };
+  } else {
+    result = invalidDirError;
+  }
+  return result;
 }
 
 // MARK: Run
@@ -116,14 +124,17 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   if (typeof parsed === 'string') return toolError(parsed);
   const snapshot = await buildSnapshot({ workspaceRoot: parsed.workspaceRoot, explicitDirs: parsed.explicitDirs });
 
+  let result: ToolResult;
   switch (parsed.op) {
     case 'status': {
       const text = formatStatus(snapshot);
-      return { content: [{ type: 'text', text }] };
+      result = { content: [{ type: 'text', text }] };
+      break;
     }
     case 'validate': {
       const { text, hasErrors } = formatValidate(snapshot);
-      return { content: [{ type: 'text', text }], isError: hasErrors };
+      result = { content: [{ type: 'text', text }], isError: hasErrors };
+      break;
     }
     case 'init': {
       const plan = await buildInitPlan({ snapshot });
@@ -131,17 +142,20 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
         await applyInitPlan(plan);
       }
       const text = formatInit(plan, { dryRun: parsed.dryRun });
-      return { content: [{ type: 'text', text }] };
+      result = { content: [{ type: 'text', text }] };
+      break;
     }
     case 'refresh': {
-      const result = await refreshSnapshot(snapshot);
-      const { text, hasFailures } = formatRefresh(result);
-      return { content: [{ type: 'text', text }], isError: hasFailures };
+      const refreshResult = await refreshSnapshot(snapshot);
+      const { text, hasFailures } = formatRefresh(refreshResult);
+      result = { content: [{ type: 'text', text }], isError: hasFailures };
+      break;
     }
   }
+  return result;
 }
 
-export const mcpConfigTool: DbxTool = {
+export const MCP_CONFIG_TOOL: DbxTool = {
   definition: TOOL,
   run
 };

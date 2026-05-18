@@ -35,8 +35,8 @@ export type ZohoDeskGetDepartmentsFunction = (input: ZohoDeskGetDepartmentsInput
  * Retrieves a paginated list of departments from Zoho Desk, with optional filtering
  * by chat status, search string, and enabled state.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves paginated departments
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves paginated departments.
  */
 export function zohoDeskGetDepartments(context: ZohoDeskContext): ZohoDeskGetDepartmentsFunction {
   return (input: ZohoDeskGetDepartmentsInput) => {
@@ -61,8 +61,8 @@ export type ZohoDeskGetDepartmentByIdFunction = (input: ZohoDeskGetDepartmentByI
 /**
  * Creates a {@link ZohoDeskGetDepartmentByIdFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves a single department
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves a single department.
  */
 export function zohoDeskGetDepartmentById(context: ZohoDeskContext): ZohoDeskGetDepartmentByIdFunction {
   return (input: ZohoDeskGetDepartmentByIdInput) => context.fetchJson<ZohoDeskDepartment>(`/departments/${input.departmentId}`, zohoDeskDepartmentApiFetchJsonInput('GET'));

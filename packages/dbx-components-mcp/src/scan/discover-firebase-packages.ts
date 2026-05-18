@@ -50,8 +50,8 @@ export interface DownstreamFirebasePackage {
  * are deliberately not scanned — `dbx_model_search` / `dbx_model_lookup`
  * accept an explicit `componentDirs` override for non-standard layouts.
  *
- * @param workspaceRoot - absolute path to the caller's workspace root
- * @returns the discovered packages sorted by `packageName`
+ * @param workspaceRoot - Absolute path to the caller's workspace root.
+ * @returns The discovered packages sorted by `packageName`
  */
 export async function discoverDownstreamFirebasePackages(workspaceRoot: string): Promise<readonly DownstreamFirebasePackage[]> {
   const out: DownstreamFirebasePackage[] = [];
@@ -74,9 +74,9 @@ export async function discoverDownstreamFirebasePackages(workspaceRoot: string):
  * don't have one are dropped. Mirrors the post-glob filtering in
  * {@link discoverDownstreamFirebasePackages}.
  *
- * @param workspaceRoot - absolute path to the caller's workspace root
- * @param componentDirs - workspace-relative directories to inspect
- * @returns the resolved packages (may be shorter than `componentDirs`)
+ * @param workspaceRoot - Absolute path to the caller's workspace root.
+ * @param componentDirs - Workspace-relative directories to inspect.
+ * @returns The resolved packages (may be shorter than `componentDirs`)
  */
 export async function resolveExplicitFirebasePackages(workspaceRoot: string, componentDirs: readonly string[]): Promise<readonly DownstreamFirebasePackage[]> {
   const out: DownstreamFirebasePackage[] = [];

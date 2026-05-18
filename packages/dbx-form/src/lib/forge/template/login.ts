@@ -13,17 +13,17 @@ export const DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND = 'passwordsMatch';
 /**
  * Default validation message used when the passwords do not match.
  */
-export const DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE = 'The passwords do not match.';
+export const DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE = 'The passwords do not match.';
 
 /**
  * Default autocomplete value for password fields.
  */
-export const DBX_FORGE_TEXT_PASSWORD_DEFAULT_AUTOCOMPLETE = 'current-password';
+export const DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE = 'current-password';
 
 /**
  * Default autocomplete value for verify password fields.
  */
-export const DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE = 'new-password';
+export const DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE = 'new-password';
 
 // MARK: Password Field
 /**
@@ -36,10 +36,9 @@ export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldC
  *
  * Defaults to the key `'password'` and label `'Password'` unless overridden.
  *
- * @param config - Optional configuration for the password field
- * @returns A {@link MatInputField} with password input type
+ * @param config - Optional configuration for the password field.
+ * @returns A {@link MatInputField} with password input type.
  *
- * @dbxFormField
  * @dbxFormSlug password-field
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -54,7 +53,7 @@ export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldC
 export function dbxForgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
   return dbxForgeTextField({
     key: 'password',
-    autocomplete: DBX_FORGE_TEXT_PASSWORD_DEFAULT_AUTOCOMPLETE,
+    autocomplete: DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE,
     ...config,
     label: config?.label ?? 'Password',
     inputType: 'password',
@@ -67,10 +66,9 @@ export function dbxForgeTextPasswordField(config?: DbxForgeTextPasswordFieldConf
  *
  * Defaults to the key `'verifyPassword'` and label `'Verify Password'` unless overridden.
  *
- * @param config - Optional configuration for the verify password field
- * @returns A {@link MatInputField} with password input type
+ * @param config - Optional configuration for the verify password field.
+ * @returns A {@link MatInputField} with password input type.
  *
- * @dbxFormField
  * @dbxFormSlug verify-password-field
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -86,7 +84,7 @@ export function dbxForgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFie
   return dbxForgeTextPasswordField({
     key: 'verifyPassword',
     label: 'Verify Password',
-    autocomplete: DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE,
+    autocomplete: DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE,
     ...config,
     required: true
   });
@@ -113,10 +111,9 @@ export interface DbxForgeTextPasswordWithVerifyFieldConfig {
  * The verify password field uses an expression-based custom validator that compares the
  * verify field value against the primary password field's value via `formValue`.
  *
- * @param config - Configuration for the password and verify password fields
+ * @param config - Configuration for the password and verify password fields.
  * @returns A tuple of `[passwordField, verifyPasswordField]`
  *
- * @dbxFormField
  * @dbxFormSlug password-with-verify-fields
  * @dbxFormProduces FieldDef[]
  * @dbxFormArrayOutput no
@@ -132,9 +129,9 @@ export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswor
   /**
    * Utilize the verify password autocomplete if it is for a new password.
    */
-  const passwordFieldAutocomplete = config?.password?.autocomplete ?? DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE;
+  const passwordFieldAutocomplete = config?.password?.autocomplete ?? DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE;
   const passwordField = dbxForgeTextPasswordField({ ...config?.password, autocomplete: passwordFieldAutocomplete });
-  const passwordKey = passwordField.key as string;
+  const passwordKey = passwordField.key;
   const verifyPasswordKey = config?.verifyPassword?.key ?? `verify${capitalizeFirstLetter(passwordKey)}`;
   const verifyPasswordLabel = config?.verifyPassword?.label ?? `Verify ${passwordField.label ?? 'Password'}`;
 
@@ -144,7 +141,7 @@ export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswor
     kind: DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND
   };
 
-  const inputValidators = (config?.verifyPassword?.validators ?? []) as ValidatorConfig[];
+  const inputValidators = config?.verifyPassword?.validators ?? [];
   const inputValidationMessages = config?.verifyPassword?.validationMessages;
 
   const verifyPasswordField = dbxForgeTextVerifyPasswordField({
@@ -154,7 +151,7 @@ export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswor
     label: verifyPasswordLabel,
     validators: [...inputValidators, matchValidator],
     validationMessages: {
-      [DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND]: DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE,
+      [DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND]: DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE,
       ...inputValidationMessages
     }
   });
@@ -211,10 +208,9 @@ export interface DbxForgeUsernameLoginFieldsConfig {
  * When `verifyPassword` is provided, a second password field is added with a custom
  * validator that ensures both password values match.
  *
- * @param config - Login fields configuration
- * @returns An array of forge field definitions for the login form
+ * @param config - Login fields configuration.
+ * @returns The forge field definitions for the login form.
  *
- * @dbxFormField
  * @dbxFormSlug username-password-login-fields
  * @dbxFormProduces FieldDef[]
  * @dbxFormArrayOutput no
@@ -252,10 +248,9 @@ export function dbxForgeUsernamePasswordLoginFields(config: DbxForgeUsernameLogi
  *
  * Supports email or plain text input based on the provided configuration.
  *
- * @param username - Either `'email'`, `'username'`, or a full config object
- * @returns A forge field definition for the username input
+ * @param username - Either `'email'`, `'username'`, or a full config object.
+ * @returns A forge field definition for the username input.
  *
- * @dbxFormField
  * @dbxFormSlug username-login-field
  * @dbxFormProduces string
  * @dbxFormArrayOutput no
@@ -288,3 +283,23 @@ export function dbxForgeUsernameLoginField(username: DbxForgeUsernameLoginFieldU
 
   return result;
 }
+
+// MARK: Compat
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated use DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE instead.
+ * @dbxAllowDefaultPrefix
+ */
+export const DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE = DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE;
+
+/**
+ * @deprecated use DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE instead.
+ * @dbxAllowDefaultPrefix
+ */
+export const DBX_FORGE_TEXT_PASSWORD_DEFAULT_AUTOCOMPLETE = DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE;
+
+/**
+ * @deprecated use DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE instead.
+ * @dbxAllowDefaultPrefix
+ */
+export const DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE = DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE;

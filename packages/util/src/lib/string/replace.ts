@@ -25,14 +25,15 @@ export interface ReplaceStringsConfig {
 /**
  * Creates a function that replaces all occurrences of the configured target strings with a replacement value.
  *
+ * @param config - Configuration specifying strings to find and the replacement value.
+ * @returns Performs the configured replacements on an input string.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, replace, regex, substitute, factory
  * @dbxUtilRelated find-strings-regex-string, escape-string-for-regex
  *
- * @param config - Configuration specifying strings to find and the replacement value.
- * @returns A function that performs the configured replacements on an input string.
  * @__NO_SIDE_EFFECTS__
  */
 export function replaceStringsFunction(config: ReplaceStringsConfig) {
@@ -55,13 +56,13 @@ export const REGEX_SPECIAL_CHARACTERS_SET = new Set(REGEX_SPECIAL_CHARACTERS);
 /**
  * Creates an escaped regex string that matches any of the input values, joined with the OR (`|`) operator.
  *
+ * @param find - One or more strings to create a matching regex pattern for.
+ * @returns A regex-compatible string with special characters escaped and values joined by `|`.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, regex, escape, alternation, pattern
  * @dbxUtilRelated escape-string-for-regex, replace-strings-function
- *
- * @param find - One or more strings to create a matching regex pattern for.
- * @returns A regex-compatible string with special characters escaped and values joined by `|`.
  */
 export function findStringsRegexString(find: ArrayOrValue<string>): string {
   const input = asArray(find);
@@ -98,14 +99,15 @@ export type EscapeStringCharactersFunction = (input: string) => string;
 /**
  * Creates an {@link EscapeStringCharactersFunction} that escapes specific characters in a string using the configured escape strategy.
  *
+ * @param config - Configuration specifying which characters to escape and how to escape them.
+ * @returns Escapes the configured characters in any input string.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, escape, characters, factory, transform
  * @dbxUtilRelated escape-string-for-regex, find-all-character-occurences-function
  *
- * @param config - Configuration specifying which characters to escape and how to escape them.
- * @returns A function that escapes the configured characters in any input string.
  * @__NO_SIDE_EFFECTS__
  */
 export function escapeStringCharactersFunction(config: EscapeStringCharactersFunctionConfig): EscapeStringCharactersFunction {
@@ -186,12 +188,15 @@ export const escapeStringForRegex = escapeStringCharactersFunction({
  *
  * @param input - The string to search through.
  * @param max - Optional maximum number of occurrences to return.
- * @returns An array of zero-based indices where matching characters were found.
+ * @returns The zero-based indices where matching characters were found.
  */
 export type FindAllCharacterOccurencesFunction = (input: string, max?: Maybe<number>) => number[];
 
 /**
  * Creates a {@link FindAllCharacterOccurencesFunction} that searches for characters from the given set.
+ *
+ * @param characterSet - The set of characters to search for.
+ * @returns Finds all occurrences of the configured characters in an input string.
  *
  * @dbxUtil
  * @dbxUtilCategory string
@@ -199,8 +204,6 @@ export type FindAllCharacterOccurencesFunction = (input: string, max?: Maybe<num
  * @dbxUtilTags string, search, characters, indices, factory, occurrences
  * @dbxUtilRelated find-all-character-occurences, find-first-character-occurence
  *
- * @param characterSet - The set of characters to search for.
- * @returns A function that finds all occurrences of the configured characters in an input string.
  * @__NO_SIDE_EFFECTS__
  */
 export function findAllCharacterOccurencesFunction(characterSet: Set<string>): FindAllCharacterOccurencesFunction {
@@ -226,15 +229,15 @@ export function findAllCharacterOccurencesFunction(characterSet: Set<string>): F
 /**
  * Finds all indices of characters from the set that appear in the input string.
  *
+ * @param set - The set of characters to search for.
+ * @param input - The string to search through.
+ * @param max - Optional maximum number of occurrences to return.
+ * @returns The zero-based indices where matching characters were found.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, search, characters, indices, occurrences
  * @dbxUtilRelated find-all-character-occurences-function, find-first-character-occurence
- *
- * @param set - The set of characters to search for.
- * @param input - The string to search through.
- * @param max - Optional maximum number of occurrences to return.
- * @returns An array of zero-based indices where matching characters were found.
  */
 export function findAllCharacterOccurences(set: Set<string>, input: string, max?: number): number[] {
   return findAllCharacterOccurencesFunction(set)(input, max);
@@ -243,14 +246,14 @@ export function findAllCharacterOccurences(set: Set<string>, input: string, max?
 /**
  * Finds the index of the first occurrence of any character from the set in the input string.
  *
+ * @param set - The set of characters to search for.
+ * @param input - The string to search through.
+ * @returns The zero-based index of the first matching character, or `undefined` if none found.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, search, characters, first, index, occurrence
  * @dbxUtilRelated find-all-character-occurences, find-all-character-occurences-function
- *
- * @param set - The set of characters to search for.
- * @param input - The string to search through.
- * @returns The zero-based index of the first matching character, or `undefined` if none found.
  */
 export function findFirstCharacterOccurence(set: Set<string>, input: string): Maybe<number> {
   return findAllCharacterOccurences(set, input, 1)[0];
@@ -262,7 +265,7 @@ export function findFirstCharacterOccurence(set: Set<string>, input: string): Ma
  * The first element is the string before the split character(s).
  * The second element is the string after the split character(s), or is undefined if no split occured.
  */
-export type SplitStringAtFirstCharacterOccurenceResult = [string, string | undefined];
+export type SplitStringAtFirstCharacterOccurenceResult = [string, Maybe<string>];
 
 /**
  * Splits the input string at the configured split character(s).
@@ -272,21 +275,22 @@ export type SplitStringAtFirstCharacterOccurenceFunction = (input: string) => Sp
 /**
  * Creates a function that splits a string into two parts at the first occurrence of any character in the configured set.
  *
+ * @param splitAt - A single character or set of characters to split on.
+ * @returns Splits input strings at the first matching character.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, split, characters, occurrence, factory
  * @dbxUtilRelated split-string-at-first-character-occurence, keep-characters-after-first-character-occurence-function
  *
- * @param splitAt - A single character or set of characters to split on.
- * @returns A function that splits input strings at the first matching character.
  * @__NO_SIDE_EFFECTS__
  */
 export function splitStringAtFirstCharacterOccurenceFunction(splitAt: string | Set<string>): SplitStringAtFirstCharacterOccurenceFunction {
   return (input: string) => {
     const splitSet = typeof splitAt === 'string' ? new Set([splitAt]) : splitAt;
     const firstOccurence = findFirstCharacterOccurence(splitSet, input);
-    let result: [string, string | undefined];
+    let result: [string, Maybe<string>];
 
     if (firstOccurence != null) {
       result = splitStringAtIndex(input, firstOccurence, false);
@@ -301,16 +305,16 @@ export function splitStringAtFirstCharacterOccurenceFunction(splitAt: string | S
 /**
  * Splits the input string into two parts at the first occurrence of any character in the split set.
  *
+ * @param input - The string to split.
+ * @param splitAt - A single character or set of characters to split on.
+ * @returns A tuple of [before, after], where `after` is `undefined` if no split character was found.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, split, characters, occurrence, tuple
  * @dbxUtilRelated split-string-at-first-character-occurence-function, find-first-character-occurence
- *
- * @param input - The string to split.
- * @param splitAt - A single character or set of characters to split on.
- * @returns A tuple of [before, after], where `after` is `undefined` if no split character was found.
  */
-export function splitStringAtFirstCharacterOccurence(input: string, splitAt: string | Set<string>): [string, string | undefined] {
+export function splitStringAtFirstCharacterOccurence(input: string, splitAt: string | Set<string>): [string, Maybe<string>] {
   return splitStringAtFirstCharacterOccurenceFunction(splitAt)(input);
 }
 
@@ -324,14 +328,15 @@ export type KeepCharactersAfterFirstCharacterOccurenceFunction = (input: string)
 /**
  * Creates a function that returns only the characters after the first occurrence of any character in the configured set.
  *
+ * @param findCharacters - A single character or set of characters to search for.
+ * @returns Extracts the substring after the first matching character, or an empty string if none found.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, keep, after, occurrence, factory, suffix
  * @dbxUtilRelated keep-characters-after-first-character-occurence, remove-characters-after-first-character-occurence-function
  *
- * @param findCharacters - A single character or set of characters to search for.
- * @returns A function that extracts the substring after the first matching character, or an empty string if none found.
  * @__NO_SIDE_EFFECTS__
  */
 export function keepCharactersAfterFirstCharacterOccurenceFunction(findCharacters: string | Set<string>): KeepCharactersAfterFirstCharacterOccurenceFunction {
@@ -342,14 +347,14 @@ export function keepCharactersAfterFirstCharacterOccurenceFunction(findCharacter
 /**
  * Returns only the characters after the first occurrence of any character from the find set.
  *
+ * @param input - The string to search through.
+ * @param findCharacters - A single character or set of characters to search for.
+ * @returns The substring after the first matching character, or an empty string if none found.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, keep, after, occurrence, suffix
  * @dbxUtilRelated keep-characters-after-first-character-occurence-function, remove-characters-after-first-character-occurence
- *
- * @param input - The string to search through.
- * @param findCharacters - A single character or set of characters to search for.
- * @returns The substring after the first matching character, or an empty string if none found.
  */
 export function keepCharactersAfterFirstCharacterOccurence(input: string, findCharacters: string | Set<string>): string {
   return keepCharactersAfterFirstCharacterOccurenceFunction(findCharacters)(input);
@@ -363,14 +368,15 @@ export type RemoveCharactersAfterFirstCharacterOccurenceFunction = (input: strin
 /**
  * Creates a function that removes all characters after (and including) the first occurrence of any character in the configured set.
  *
+ * @param findCharacters - A single character or set of characters to search for.
+ * @returns Truncates input strings at the first matching character.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, remove, truncate, occurrence, factory, prefix
  * @dbxUtilRelated remove-characters-after-first-character-occurence, keep-characters-after-first-character-occurence-function
  *
- * @param findCharacters - A single character or set of characters to search for.
- * @returns A function that truncates input strings at the first matching character.
  * @__NO_SIDE_EFFECTS__
  */
 export function removeCharactersAfterFirstCharacterOccurenceFunction(findCharacters: string | Set<string>): RemoveCharactersAfterFirstCharacterOccurenceFunction {
@@ -381,14 +387,14 @@ export function removeCharactersAfterFirstCharacterOccurenceFunction(findCharact
 /**
  * Removes all characters after (and including) the first occurrence of any character from the find set.
  *
+ * @param input - The string to truncate.
+ * @param findCharacters - A single character or set of characters to search for.
+ * @returns The substring before the first matching character, or the full string if none found.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilTags string, remove, truncate, occurrence, prefix
  * @dbxUtilRelated remove-characters-after-first-character-occurence-function, keep-characters-after-first-character-occurence
- *
- * @param input - The string to truncate.
- * @param findCharacters - A single character or set of characters to search for.
- * @returns The substring before the first matching character, or the full string if none found.
  */
 export function removeCharactersAfterFirstCharacterOccurence(input: string, findCharacters: string | Set<string>): string {
   return removeCharactersAfterFirstCharacterOccurenceFunction(findCharacters)(input);

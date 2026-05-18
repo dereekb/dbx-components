@@ -158,12 +158,6 @@ export interface RRuleExdateAttribute {
 export const RRULE_STRING_SPLITTER = ':';
 
 /**
- * @deprecated use RRULE_STRING_SPLITTER instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const RRuleStringSplitter = RRULE_STRING_SPLITTER;
-
-/**
  * Utility class for parsing and manipulating RFC 5545 RRule strings.
  *
  * Provides static methods for separating EXDATE rules, parsing RFC 5545 date-time strings,
@@ -179,6 +173,9 @@ export class DateRRuleParseUtility {
   /**
    * Splits an RRule line set into basic rules and parsed EXDATE exclusion dates.
    *
+   * @param input - The RRule string line set to separate.
+   * @returns The separated basic rules and parsed EXDATE exclusion dates.
+   *
    * @example
    * ```ts
    * const result = DateRRuleParseUtility.separateRRuleStringSetValues([
@@ -188,9 +185,6 @@ export class DateRRuleParseUtility {
    * // result.basic = ['RRULE:FREQ=DAILY']
    * // result.exdates contains the parsed exclusion dates
    * ```
-   *
-   * @param input - The RRule string line set to separate.
-   * @returns The separated basic rules and parsed EXDATE exclusion dates.
    */
   static separateRRuleStringSetValues(input: RRuleStringLineSet): RRuleStringSetSeparation {
     const basic: RRuleStringLineSet = [];
@@ -227,9 +221,9 @@ export class DateRRuleParseUtility {
   /**
    * Parses an EXDATE line into its timezone and date components.
    *
-   * @param line - The raw EXDATE line string to parse.
-   * @returns The parsed EXDATE attribute with timezone and dates.
-   * @throws Error if the line is not an EXDATE property.
+   * @param line - Raw EXDATE line string to parse.
+   * @returns Parsed EXDATE attribute with timezone and dates.
+   * @throws {Error} If the line is not an EXDATE property.
    */
   static parseExdateAttributeFromLine(line: RRuleLineString): RRuleExdateAttribute {
     const property = this.parseProperty(line);
@@ -240,8 +234,8 @@ export class DateRRuleParseUtility {
   /**
    * Extracts timezone and UTC-normalized dates from an already-parsed EXDATE property.
    *
-   * @param property - The parsed EXDATE property to extract from.
-   * @returns The EXDATE attribute containing timezone and UTC-normalized dates.
+   * @param property - Parsed EXDATE property to extract from.
+   * @returns EXDATE attribute containing timezone and UTC-normalized dates.
    */
   static parseExdateAttributeFromProperty(property: RRuleProperty): RRuleExdateAttribute {
     const timezone: Maybe<TimezoneString> = property.params.find((x) => x.key === 'TZID')?.value;
@@ -258,10 +252,10 @@ export class DateRRuleParseUtility {
   /**
    * Convenience wrapper that creates a timezone converter and delegates to {@link parseDateTimeString}.
    *
-   * @param rfcDateString - The RFC 5545 date or date-time string to parse.
-   * @param timezone - Optional timezone for non-UTC date strings.
-   * @returns The parsed JavaScript Date.
-   * @throws Error if the date string is not UTC and no timezone is provided.
+   * @param rfcDateString - RFC 5545 date or date-time string to parse.
+   * @param timezone - Optional timezone applied when interpreting non-UTC strings.
+   * @returns Parsed JavaScript Date.
+   * @throws {Error} If the date string is not UTC and no timezone is provided.
    */
   static parseDateTimeStringWithTimezone(rfcDateString: RFC5545DateString | RFC5545DateTimeString, timezone: Maybe<string>): Date {
     return DateRRuleParseUtility.parseDateTimeString(rfcDateString, timezone ? new DateTimezoneUtcNormalInstance({ timezone }) : undefined);
@@ -273,10 +267,10 @@ export class DateRRuleParseUtility {
    * If the string does not end in `Z` (indicating UTC), the converter is used to normalize
    * the local date representation to its true UTC equivalent.
    *
-   * @param rfcDateString - The RFC 5545 date or date-time string to parse.
-   * @param converter - Optional timezone converter for non-UTC date strings.
-   * @returns The parsed JavaScript Date.
-   * @throws Error if the string cannot be parsed or a non-UTC string lacks a converter.
+   * @param rfcDateString - RFC 5545 date or date-time string to parse.
+   * @param converter - Optional timezone converter applied when interpreting non-UTC strings.
+   * @returns Parsed JavaScript Date.
+   * @throws {Error} If the string cannot be parsed or a non-UTC string lacks a converter.
    */
   static parseDateTimeString(rfcDateString: RFC5545DateString | RFC5545DateTimeString, converter: Maybe<DateTimezoneBaseDateConverter>): Date {
     const RFC5545_DATE_TIME_FORMAT = /^((\d{4})(\d{2})(\d{2}))(T(\d{2})(\d{2})(\d{2})Z?)?$/;
@@ -310,14 +304,14 @@ export class DateRRuleParseUtility {
   /**
    * Formats a Date as an RFC 5545 UTC date-time string (e.g., `"20210611T110000Z"`).
    *
+   * @param date - Moment to render.
+   * @returns RFC 5545 UTC date-time representation of the moment.
+   *
    * @example
    * ```ts
    * DateRRuleParseUtility.formatDateTimeString(new Date('2021-06-11T11:00:00Z'));
    * // => '20210611T110000Z'
    * ```
-   *
-   * @param date - The date to format.
-   * @returns The RFC 5545 UTC date-time string representation.
    */
   static formatDateTimeString(date: Date): RFC5545DateTimeString {
     return format(date, `yyyyMMdd'T'HHmmss'Z'`);
@@ -396,8 +390,8 @@ export class DateRRuleParseUtility {
   /**
    * Splits a newline-delimited RRule string into individual line strings.
    *
-   * @param lines - The newline-delimited RRule string to split.
-   * @returns An array of individual RRule line strings.
+   * @param lines - Newline-delimited RRule string to split.
+   * @returns Individual RRule line strings produced from the input.
    */
   static toRRuleStringSet(lines: RRuleLines): RRuleStringLineSet {
     return lines.split('\n');
@@ -406,8 +400,8 @@ export class DateRRuleParseUtility {
   /**
    * Joins an array of RRule line strings into a single newline-delimited string.
    *
-   * @param rruleStringSet - The array of RRule line strings to join.
-   * @returns A single newline-delimited RRule string.
+   * @param rruleStringSet - RRule line strings to join.
+   * @returns Combined newline-delimited RRule representation.
    */
   static toRRuleLines(rruleStringSet: RRuleStringLineSet): RRuleLines {
     return rruleStringSet.join('\n');
@@ -417,9 +411,9 @@ export class DateRRuleParseUtility {
   /**
    * Asserts that the property has the expected type, throwing if it does not match.
    *
-   * @param type - The expected property type.
-   * @param property - The property to check.
-   * @throws Error if the property type does not match the expected type.
+   * @param type - Expected property type.
+   * @param property - Property under inspection.
+   * @throws {Error} If the property type does not match the expected type.
    */
   static assertPropertyType(type: RRulePropertyType, property: RRuleProperty): void {
     if (property.type !== type) {
@@ -427,3 +421,11 @@ export class DateRRuleParseUtility {
     }
   }
 }
+
+// COMPAT: Deprecated aliases
+
+/**
+ * @deprecated use RRULE_STRING_SPLITTER instead.
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const RRuleStringSplitter = RRULE_STRING_SPLITTER;

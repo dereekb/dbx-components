@@ -181,6 +181,39 @@ export enum ModelFirebaseIndexValidateAppCode {
    */
   MODEL_FIREBASE_INDEX_NON_DELEGATING_DISPATCHER = 'MODEL_FIREBASE_INDEX_NON_DELEGATING_DISPATCHER',
 
+  /**
+   * A tagged factory carries `@dbxModelFirebaseIndexExclude` — its constraints are parsed but the analyzer suppresses composite + fieldOverride emission.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every `@dbxModelFirebaseIndex`-tagged factory that also declares `@dbxModelFirebaseIndexExclude`. The warning fires on every scan so the deliberate exclusion stays auditable in CI logs.
+   * @dbxRuleNotApplies Factories using `@dbxModelFirebaseIndexSkip` (silent — no warning emitted) or `@dbxModelFirebaseIndexManual` (composites are author-managed, no audit signal needed).
+   * @dbxRuleFix If the exclusion is no longer required, delete the `@dbxModelFirebaseIndexExclude` tag and let the analyzer emit the implied composite. If the factory should be permanently silent, switch to `@dbxModelFirebaseIndexSkip` and document the rationale next to the tag.
+   * @dbxRuleSeeAlso tool:dbx_model_firebase_index_validate_app
+   */
+  MODEL_FIREBASE_INDEX_EXCLUDED = 'MODEL_FIREBASE_INDEX_EXCLUDED',
+
+  /**
+   * A tagged factory has zero callers anywhere in the workspace.
+   *
+   * @dbxRuleSeverity warning
+   * @dbxRuleApplies Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any `.ts` file under `apps/`, `components/`, or `packages/` (excluding `*.d.ts`, `node_modules/`, and build outputs). For regular factories only non-spec callers count toward "used" — a factory whose only references are inside `*.spec.ts` files still triggers this warning unless it is opted in via `@dbxModelFirebaseIndexSpecFilesOnly`. The check uses word-boundary text scanning so renames + stale exports surface here.
+   * @dbxRuleNotApplies Factories marked `@dbxModelFirebaseIndexSkip` (the author already opted out of emission), `@dbxModelFirebaseIndexManual` (author-managed index, not necessarily wired through normal call sites), or `@dbxModelFirebaseIndexSpecFilesOnly` that have at least one `*.spec.ts` caller (the intended state for test-only helpers).
+   * @dbxRuleFix Either delete the factory (and its `*.query.ts` file if empty), wire up a production caller, or — if the factory is intentionally a `*.spec.ts`-only helper — tag it `@dbxModelFirebaseIndexSpecFilesOnly`. `@dbxModelFirebaseIndexSkip` still works for "retain pending a future caller".
+   * @dbxRuleSeeAlso tool:dbx_model_firebase_index_list_app
+   */
+  MODEL_FIREBASE_INDEX_UNUSED_FACTORY = 'MODEL_FIREBASE_INDEX_UNUSED_FACTORY',
+
+  /**
+   * A factory tagged `@dbxModelFirebaseIndexSpecFilesOnly` is referenced from at least one non-spec file.
+   *
+   * @dbxRuleSeverity error
+   * @dbxRuleApplies Every `@dbxModelFirebaseIndexSpecFilesOnly` factory whose name appears in a `.ts` file under `apps/`, `components/`, or `packages/` that is NOT a `*.spec.ts` / `*.spec.tsx` file. The tag is a contract that the factory exists for tests only; a production caller breaks that contract and would leak a query shape the index generator deliberately skipped.
+   * @dbxRuleNotApplies Spec-only factories whose references are confined to `*.spec.ts` / `*.spec.tsx` files (the intended state), or factories not tagged `@dbxModelFirebaseIndexSpecFilesOnly`.
+   * @dbxRuleFix Either move the production call-site into a tagged, non-spec-only factory (and update its callers), or remove the `@dbxModelFirebaseIndexSpecFilesOnly` tag and ensure the produced composite/fieldOverride is declared so the generator emits the required Firestore index.
+   * @dbxRuleSeeAlso tool:dbx_model_firebase_index_list_app
+   */
+  MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION = 'MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION',
+
   // MARK: Analyze — Firestore shape
   /**
    * A constraint sequence has more than one range-filtered field.
@@ -207,8 +240,8 @@ export enum ModelFirebaseIndexValidateAppCode {
    *
    * @dbxRuleSeverity warning
    * @dbxRuleApplies Every constraint sequence with at least one `array-contains-any` `where`.
-   * @dbxRuleNotApplies Queries using `array-contains` (singular) — those have full composite support.
-   * @dbxRuleFix Confirm the deployed composite supports `array-contains-any` for the field set, or restructure to `array-contains` with a denormalised flag.
+   * @dbxRuleNotApplies Queries using `array-contains` (singular) — those have full composite support. Also suppressed when the factory is tagged `@dbxModelFirebaseIndexAllowArrayContainsAny`.
+   * @dbxRuleFix Confirm the deployed composite supports `array-contains-any` for the field set and add `@dbxModelFirebaseIndexAllowArrayContainsAny` to silence the advisory, or restructure to `array-contains` with a denormalised flag.
    */
   MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY = 'MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY',
 

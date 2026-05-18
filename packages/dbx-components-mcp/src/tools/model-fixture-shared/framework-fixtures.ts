@@ -68,9 +68,9 @@ export const NON_MODEL_JSDOC_TAG = 'dbxFixtureNotModel';
 /**
  * Looks up a framework family by factory call name.
  *
- * @param factoryCallName - the identifier name appearing in the factory body
+ * @param factoryCallName - The identifier name appearing in the factory body
  *   call expression (e.g. `authorizedUserContextFactory`)
- * @returns the matched family, or `undefined`
+ * @returns The matched family, or `undefined`
  */
 export function findFamilyByFactoryName(factoryCallName: string): FrameworkNonModelFixtureFamily | undefined {
   return KNOWN_NON_MODEL_FIXTURE_FAMILIES.find((f) => f.factoryName === factoryCallName);
@@ -79,8 +79,8 @@ export function findFamilyByFactoryName(factoryCallName: string): FrameworkNonMo
 /**
  * Looks up a framework family by Fixture or Instance base class name.
  *
- * @param baseClassName - the class identifier on the `extends` clause
- * @returns the matched family, or `undefined`
+ * @param baseClassName - The class identifier on the `extends` clause.
+ * @returns The matched family, or `undefined`
  */
 export function findFamilyByBaseClass(baseClassName: string): FrameworkNonModelFixtureFamily | undefined {
   return KNOWN_NON_MODEL_FIXTURE_FAMILIES.find((f) => f.baseFixtureClass === baseClassName || f.baseInstanceClass === baseClassName);

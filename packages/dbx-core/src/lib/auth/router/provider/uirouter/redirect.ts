@@ -18,6 +18,9 @@ import { type AuthUserState } from '../../../auth.user';
  *   redirect targets (static or dynamic) for that state.
  * @returns An {@link AuthTransitionRedirectTargetGetter} that resolves the redirect based on the current auth state.
  *
+ * @see {@link AuthTransitionRedirectTargetOrGetter}
+ * @see {@link AuthUserState}
+ *
  * @example
  * ```ts
  * const redirectGetter = redirectBasedOnAuthUserState({
@@ -27,9 +30,6 @@ import { type AuthUserState } from '../../../auth.user';
  *   'user': '/app'
  * });
  * ```
- *
- * @see {@link AuthTransitionRedirectTargetOrGetter}
- * @see {@link AuthUserState}
  */
 export function redirectBasedOnAuthUserState(stateMap: ObjectMap<AuthTransitionRedirectTargetOrGetter>): AuthTransitionRedirectTargetGetter {
   return (input: AuthTransitionDecisionGetterInput) => {

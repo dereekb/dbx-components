@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy NgModule that wraps the deprecated DbxFormCalendarDateScheduleRangeFieldComponent; replacement is provideDbxForgeCalendarFieldDeclarations() */
 import { NgModule } from '@angular/core';
 import { DbxFormCalendarDateScheduleRangeFieldComponent } from './calendar.schedule.field.component';
 import { FormlyModule } from '@ngx-formly/core';

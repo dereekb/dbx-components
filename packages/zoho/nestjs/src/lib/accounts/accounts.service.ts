@@ -29,7 +29,7 @@ function buildZohoReadAdapter(cache: ZohoAccessTokenCache): AsyncValueCache<Zoho
   };
 }
 
-function updateZohoCacheCapturingError(cache: ZohoAccessTokenCache, accessToken: ZohoAccessToken): Promise<null | readonly [ZohoAccessTokenCache, unknown]> {
+function updateZohoCacheCapturingError(cache: ZohoAccessTokenCache, accessToken: ZohoAccessToken): Promise<Maybe<readonly [ZohoAccessTokenCache, unknown]>> {
   return cache
     .updateCachedToken(accessToken)
     .then(() => null)
@@ -41,7 +41,7 @@ export type LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction = (failedUp
 /**
  * Default error logging function for merged Zoho access token cache services.
  *
- * @param failedUpdates - array of cache/error tuples that failed during update
+ * @param failedUpdates - Array of cache/error tuples that failed during update.
  */
 export function logMergeZohoAccountsAccessTokenCacheServiceErrorFunction(failedUpdates: (readonly [ZohoAccessTokenCache, unknown])[]) {
   console.warn(`mergeZohoAccountsAccessTokenCacheServices(): failed updating ${failedUpdates.length} caches.`);
@@ -62,10 +62,10 @@ export function logMergeZohoAccountsAccessTokenCacheServiceErrorFunction(failedU
  * never short-circuits the lookup. Updates and clears run across all services in parallel
  * via `Promise.allSettled`, mirroring the previous behavior, with optional error logging.
  *
- * @param servicesToMerge Must include atleast one service. Empty arrays will throw an error.
- * @param inputServicesToMerge - cache services to merge in priority order
- * @param logError - optional error logging toggle or custom logging function
- * @returns a merged ZohoAccountsAccessTokenCacheService that delegates across all inputs
+ * @param inputServicesToMerge - Cache services to merge in priority order. Must include at least one service.
+ * @param logError - Optional error logging toggle or custom logging function.
+ * @returns A merged ZohoAccountsAccessTokenCacheService that delegates across all inputs.
+ * @throws {Error} When `inputServicesToMerge` is empty.
  */
 export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: ZohoAccountsAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction>): ZohoAccountsAccessTokenCacheService {
   const services = [...inputServicesToMerge];
@@ -111,9 +111,9 @@ export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: 
  * Backed by {@link inMemoryAsyncKeyedValueCache} so all per-service caches share the
  * same record instance.
  *
- * @param existingCache - optional pre-populated token cache record to use as initial state
- * @param logAccessToConsole - whether to log cache reads and writes to the console
- * @returns a ZohoAccountsAccessTokenCacheService backed by in-memory storage
+ * @param existingCache - Optional pre-populated token cache record to use as initial state.
+ * @param logAccessToConsole - Whether to log cache reads and writes to the console.
+ * @returns A ZohoAccountsAccessTokenCacheService backed by in-memory storage.
  */
 export function memoryZohoAccountsAccessTokenCacheService(existingCache?: ZohoAccountsAccessTokenCacheRecord, logAccessToConsole?: boolean): ZohoAccountsAccessTokenCacheService {
   const initialEntries: Record<string, ZohoAccessToken> = {};
@@ -173,19 +173,23 @@ export const DEFAULT_FILE_ZOHO_ACCOUNTS_ACCESS_TOKEN_CACHE_SERVICE_PATH = '.tmp/
  * Reviver applied to each cached token entry on load so `expiresAt` is always a `Date`
  * regardless of how it was serialized.
  *
- * @param raw - the raw value loaded from storage; expected to be an object shaped like a ZohoAccessToken with a serialized `expiresAt`
- * @returns the parsed ZohoAccessToken with `expiresAt` coerced to a Date, or undefined when the input is not an object
+ * @param raw - The raw value loaded from storage; expected to be an object shaped like a ZohoAccessToken with a serialized `expiresAt`
+ * @returns The parsed ZohoAccessToken with `expiresAt` coerced to a Date, or undefined when the input is not an object.
  */
 function reviveZohoAccessToken(raw: unknown): Maybe<ZohoAccessToken> {
+  let result: Maybe<ZohoAccessToken>;
+
   if (raw == null || typeof raw !== 'object') {
-    return undefined;
+    result = undefined;
+  } else {
+    const value = raw as ZohoAccessToken & { expiresAt?: unknown };
+    const rawExpiresAt = value.expiresAt;
+    const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt) : rawExpiresAt;
+
+    result = { ...value, expiresAt: expiresAt };
   }
 
-  const value = raw as ZohoAccessToken & { expiresAt?: unknown };
-  const rawExpiresAt = value.expiresAt;
-  const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
-
-  return { ...(value as ZohoAccessToken), expiresAt: expiresAt as Date };
+  return result;
 }
 
 /**
@@ -196,9 +200,9 @@ function reviveZohoAccessToken(raw: unknown): Maybe<ZohoAccessToken> {
  *
  * Useful for testing.
  *
- * @param filename - path to the JSON file used for token persistence
- * @param useMemoryCache - whether to also cache tokens in memory for faster reads
- * @returns a FileSystemZohoAccountsAccessTokenCacheService backed by file storage
+ * @param filename - Path to the JSON file used for token persistence.
+ * @param useMemoryCache - Whether to also cache tokens in memory for faster reads.
+ * @returns A FileSystemZohoAccountsAccessTokenCacheService backed by file storage.
  */
 export function fileZohoAccountsAccessTokenCacheService(filename: string = DEFAULT_FILE_ZOHO_ACCOUNTS_ACCESS_TOKEN_CACHE_SERVICE_PATH, useMemoryCache = true): FileSystemZohoAccountsAccessTokenCacheService {
   const fileCache = createJsonFileAsyncKeyedValueCache<ZohoAccessToken>({
@@ -230,14 +234,16 @@ export function fileZohoAccountsAccessTokenCacheService(filename: string = DEFAU
 
   async function readTokenFile(): Promise<Maybe<ZohoAccountsAccessTokenCacheRecord>> {
     const raw = await readJsonFile<Record<string, unknown>>(filename);
+    let result: Maybe<ZohoAccountsAccessTokenCacheRecord>;
 
     if (raw == null) {
-      return undefined;
-    }
-
-    const result: ZohoAccountsAccessTokenCacheRecord = {};
-    for (const key of Object.keys(raw)) {
-      result[key] = reviveZohoAccessToken(raw[key]);
+      result = undefined;
+    } else {
+      const revived: ZohoAccountsAccessTokenCacheRecord = {};
+      for (const key of Object.keys(raw)) {
+        revived[key] = reviveZohoAccessToken(raw[key]);
+      }
+      result = revived;
     }
 
     return result;

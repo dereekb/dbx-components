@@ -8,7 +8,7 @@ import { TRELLO_API_KEY_ENV_VAR, TRELLO_API_TOKEN_ENV_VAR, TrelloServiceConfig }
  *
  * Reads `TRELLO_API_KEY` and `TRELLO_API_TOKEN` from the environment.
  *
- * @param configService The NestJS ConfigService.
+ * @param configService - The NestJS ConfigService.
  * @returns A validated TrelloServiceConfig.
  */
 export function trelloServiceConfigFactory(configService: ConfigService): TrelloServiceConfig {
@@ -28,7 +28,7 @@ export interface ProvideAppTrelloMetadataConfig extends Pick<ModuleMetadata, 'im
 /**
  * Convenience function used to generate ModuleMetadata for an app's TrelloModule.
  *
- * @param config Optional additional module metadata overrides.
+ * @param config - Optional additional module metadata overrides.
  * @returns Module metadata for the Trello module.
  */
 export function appTrelloModuleMetadata(config?: ProvideAppTrelloMetadataConfig): ModuleMetadata {

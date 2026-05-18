@@ -861,7 +861,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
           this._renderingTimer.pipe(
             map(() => {
               const bound = x.getBounds();
-              let result: LatLngBound | null = null;
+              let result: Maybe<LatLngBound> = null;
 
               if (bound != null) {
                 const boundSw = bound.getSouthWest();
@@ -952,7 +952,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   readonly zoomNow$: Observable<MapboxZoomLevel> = this.whenInitialized$.pipe(
     switchMap(() =>
       this.mapInstance$.pipe(
-        switchMap((x) => this._renderingTimer.pipe(map(() => x.getZoom() as MapboxZoomLevel))),
+        switchMap((x) => this._renderingTimer.pipe(map(() => x.getZoom()))),
         shareReplay(1)
       )
     )

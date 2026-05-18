@@ -34,7 +34,7 @@ export type DbxContentContainerWidth = 'small' | 'medium' | 'large' | 'wide' | '
   selector: 'dbx-content-container,[dbxContentContainer],.dbx-content-container',
   host: {
     class: 'd-block dbx-content-container',
-    '[class]': `classConfig()`
+    '[class]': `classConfigSignal()`
   },
   standalone: true
 })
@@ -43,7 +43,7 @@ export class DbxContentContainerDirective {
   readonly padding = input<DbxContentContainerPadding>('normal');
   readonly topPadding = input<DbxContentContainerPadding>('none');
 
-  readonly classConfig = computed(() => {
+  readonly classConfigSignal = computed(() => {
     return 'container-' + this.grow() + ' container-padding-' + this.padding() + ' container-top-padding-' + this.topPadding();
   });
 }

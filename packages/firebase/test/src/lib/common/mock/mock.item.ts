@@ -142,14 +142,14 @@ export type MockItemFirestoreCollection = FirestoreCollection<MockItem, MockItem
 /**
  * Creates a {@link MockItemFirestoreCollection} bound to the given {@link FirestoreContext}.
  *
+ * @param firestoreContext - The Firestore context (test or production) used to resolve the underlying collection reference.
+ * @returns A {@link MockItemFirestoreCollection} wired with the {@link mockItemConverter} and {@link mockItemIdentity}.
+ *
  * @example
  * ```ts
  * const collection = mockItemFirestoreCollection(firestoreContext);
  * const doc = collection.documentAccessor().newDocument();
  * ```
- *
- * @param firestoreContext - The Firestore context (test or production) used to resolve the underlying collection reference.
- * @returns A {@link MockItemFirestoreCollection} wired with the {@link mockItemConverter} and {@link mockItemIdentity}.
  */
 export function mockItemFirestoreCollection(firestoreContext: FirestoreContext): MockItemFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -305,7 +305,7 @@ export const mockItemPrivateConverter = snapshotConverterFunctions({
  * subcollections under a given {@link MockItemDocument} parent.
  *
  * @param context - The Firestore context used to resolve subcollections.
- * @returns A function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemPrivate subcollection.
+ * @returns Function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemPrivate subcollection.
  */
 export function mockItemPrivateCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemPrivate> {
   return (parent: MockItemDocument) => {
@@ -413,12 +413,12 @@ export type MockItemUserData = FirestoreModelData<MockItemUser, {}>;
  * Firestore collection path name.
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention -- camelCase chosen to match neighboring mock exports in this test fixture
-export const mockItemUserCollectionName = 'mockItemUser';
+export const MOCK_ITEM_USER_COLLECTION_NAME = 'mockItemUser';
 /**
  * Default document identifier used for MockItemUser in tests.
  */
 // eslint-disable-next-line @typescript-eslint/naming-convention -- camelCase chosen to match neighboring mock exports in this test fixture
-export const mockItemUserIdentifier = '0';
+export const MOCK_ITEM_USER_IDENTIFIER = '0';
 
 /**
  * Used to build a FirestoreDataConverter. Fields are configured via configuration. See the SnapshotConverterFunctions for more info.
@@ -435,11 +435,11 @@ export const mockItemUserConverter = snapshotConverterFunctions({
  * subcollections under a given {@link MockItemDocument} parent.
  *
  * @param context - The Firestore context used to resolve subcollections.
- * @returns A function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemUser subcollection.
+ * @returns Function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemUser subcollection.
  */
 export function mockItemUserCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemUser> {
   return (parent: MockItemDocument) => {
-    return context.subcollection(parent.documentRef, mockItemUserCollectionName);
+    return context.subcollection(parent.documentRef, MOCK_ITEM_USER_COLLECTION_NAME);
   };
 }
 
@@ -487,7 +487,7 @@ export function mockItemUserFirestoreCollection(firestoreContext: FirestoreConte
  * @returns A typed {@link CollectionGroup} reference for the MockItemUser collection name.
  */
 export function mockItemUserCollectionReference(context: FirestoreContext): CollectionGroup<MockItemUser> {
-  return context.collectionGroup(mockItemUserCollectionName);
+  return context.collectionGroup(MOCK_ITEM_USER_COLLECTION_NAME);
 }
 
 /**
@@ -565,7 +565,7 @@ export const mockItemSubItemConverter = snapshotConverterFunctions<MockItemSubIt
  * subcollections under a given {@link MockItemDocument} parent.
  *
  * @param context - The Firestore context used to resolve subcollections.
- * @returns A function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItem subcollection.
+ * @returns Function that, given a parent {@link MockItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItem subcollection.
  */
 export function mockItemSubItemCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemDocument) => CollectionReference<MockItemSubItem> {
   return (parent: MockItemDocument) => {
@@ -688,7 +688,7 @@ export const mockItemSubItemDeepConverter = snapshotConverterFunctions<MockItemS
  * subcollections under a given {@link MockItemSubItemDocument} parent.
  *
  * @param context - The Firestore context used to resolve subcollections.
- * @returns A function that, given a parent {@link MockItemSubItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItemDeep subcollection.
+ * @returns Function that, given a parent {@link MockItemSubItemDocument}, returns a typed {@link CollectionReference} for that parent's MockItemSubItemDeep subcollection.
  */
 export function mockItemSubItemDeepCollectionReferenceFactory(context: FirestoreContext): (parent: MockItemSubItemDocument) => CollectionReference<MockItemSubItemDeep> {
   return (parent: MockItemSubItemDocument) => {
@@ -811,7 +811,7 @@ export class MockItemPagedDocument extends AbstractFirestoreDocumentWithParent<M
  * The mock entry shape is already Firestore-safe, so the converter is an identity
  * pass-through. Production usage may wrap a real converter (e.g. for date fields).
  */
-export const mockItemPagedEntryConverter: PagedItemConverter<MockItemPagedEntry> = {
+export const MOCK_ITEM_PAGED_ENTRY_CONVERTER: PagedItemConverter<MockItemPagedEntry> = {
   fromData: (data) => data as MockItemPagedEntry,
   toData: (item) => item
 };
@@ -820,7 +820,7 @@ export const mockItemPagedEntryConverter: PagedItemConverter<MockItemPagedEntry>
  * Static distribution scheme for {@link MockItemPagedEntry} that buckets items by their
  * {@link MockItemPagedEntry.group} field across three page IDs (`a`, `b`, `c`).
  */
-export const mockItemPagedAlphaDistributionScheme: PagedItemDistributionScheme<MockItemPagedEntry> = {
+export const MOCK_ITEM_PAGED_ALPHA_DISTRIBUTION_SCHEME: PagedItemDistributionScheme<MockItemPagedEntry> = {
   pageIds: ['a', 'b', 'c'],
   distribute: (entry) => entry.group
 };
@@ -829,7 +829,7 @@ export const mockItemPagedAlphaDistributionScheme: PagedItemDistributionScheme<M
  * Default `maxItemsPerPage` used by the dynamic mock paged collection factory. Kept small to
  * exercise multi-page boundary conditions in tests without writing many entries.
  */
-export const MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE = 3;
+export const DEFAULT_MOCK_ITEM_PAGED_MAX_ITEMS_PER_PAGE = 3;
 
 /**
  * Typed {@link PagedItemFirestoreCollection} for {@link MockItemPagedEntry} items under a
@@ -854,7 +854,7 @@ export interface MockItemPagedFirestoreCollectionConfig {
   readonly distributionScheme?: PagedItemDistributionScheme<MockItemPagedEntry>;
   /**
    * Maximum items per page document in dynamic mode. Defaults to
-   * {@link MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE}.
+   * {@link DEFAULT_MOCK_ITEM_PAGED_MAX_ITEMS_PER_PAGE}.
    */
   readonly maxItemsPerPage?: number;
 }
@@ -866,10 +866,10 @@ export interface MockItemPagedFirestoreCollectionConfig {
  * @param firestoreContext - The Firestore context used to resolve the underlying subcollection.
  * @param config - Optional config selecting between dynamic (default) and static distribution.
  * @returns A factory that, given a parent {@link MockItemDocument}, returns a paged subcollection
- * wired with {@link mockItemPagedEntryConverter}.
+ * wired with {@link MOCK_ITEM_PAGED_ENTRY_CONVERTER}.
  */
 export function mockItemPagedFirestoreCollection(firestoreContext: FirestoreContext, config?: MockItemPagedFirestoreCollectionConfig): MockItemPagedFirestoreCollectionFactory {
-  const { distributionScheme, maxItemsPerPage = MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE } = config ?? {};
+  const { distributionScheme, maxItemsPerPage = DEFAULT_MOCK_ITEM_PAGED_MAX_ITEMS_PER_PAGE } = config ?? {};
 
   return (parent: MockItemDocument) => {
     return firestoreContext.pagedItemFirestoreCollection<MockItemPagedEntry, MockItem, MockItemPagedDocument, MockItemDocument>({
@@ -880,7 +880,7 @@ export function mockItemPagedFirestoreCollection(firestoreContext: FirestoreCont
       firestoreContext,
       maxItemsPerPage,
       distributionScheme,
-      itemConverter: mockItemPagedEntryConverter
+      itemConverter: MOCK_ITEM_PAGED_ENTRY_CONVERTER
     });
   };
 }
@@ -928,7 +928,7 @@ export function mockItemPagedFirestoreCollectionGroup(firestoreContext: Firestor
 /**
  * System state type identifier for mock system state data.
  *
- * Used as the key in {@link mockItemSystemStateStoredDataConverterMap}.
+ * Used as the key in {@link MOCK_ITEM_SYSTEM_STATE_STORED_DATA_CONVERTER_MAP}.
  */
 export const MOCK_SYSTEM_STATE_TYPE = 'mockitemsystemstate';
 
@@ -962,6 +962,6 @@ export const mockItemSystemDataConverter: SystemStateStoredDataFieldConverterCon
  * Used when creating the mock system state Firestore collection to register
  * the {@link MockSystemData} converter under the {@link MOCK_SYSTEM_STATE_TYPE} key.
  */
-export const mockItemSystemStateStoredDataConverterMap: SystemStateStoredDataConverterMap = {
+export const MOCK_ITEM_SYSTEM_STATE_STORED_DATA_CONVERTER_MAP: SystemStateStoredDataConverterMap = {
   [MOCK_SYSTEM_STATE_TYPE]: mockItemSystemDataConverter
 };

@@ -16,10 +16,12 @@ export interface DbxActionContextSourceReference<T = unknown, O = unknown> exten
  * The returned reference has a no-op `destroy()` method, making it suitable for cases
  * where the caller does not own the lifecycle of the source instance.
  *
- * @typeParam T - The input value type.
- * @typeParam O - The output result type.
  * @param sourceInstance - The source instance to wrap.
  * @returns A destroyable reference to the source instance.
+ *
+ * @typeParam T - The input value type.
+ * @typeParam O - The output result type.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeDbxActionContextSourceReference<T, O>(sourceInstance: DbxActionContextStoreSourceInstance<T, O>): DbxActionContextSourceReference<T, O> {

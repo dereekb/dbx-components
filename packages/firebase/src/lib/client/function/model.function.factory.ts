@@ -2,7 +2,7 @@
 
 import { type MaybeNot, build, cachedGetter, capitalizeFirstLetter, type ValuesTypesAsArray, type CommaSeparatedKeysOfObject, separateValues, type Getter, lowercaseFirstLetter } from '@dereekb/util';
 import { type Functions, type HttpsCallable, httpsCallable } from 'firebase/functions';
-import { type NonNever } from 'ts-essentials';
+import { type OmitNeverProperties } from 'ts-essentials';
 import { type FirestoreModelIdentity, type FirestoreModelTypes } from '../../common/firestore/collection';
 import { type FirebaseFunctionTypeMap, type FirebaseFunctionMap, type FirebaseFunction } from './function';
 import { mapHttpsCallable } from './function.callable';
@@ -106,8 +106,8 @@ export type ModelFirebaseCrudFunctionQueryTypeConfig = {
  * Default specifier string (`'_'`) used when a CRUD operation has specifiers but one
  * should map to the base function name without a specifier suffix.
  */
-export const MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT = '_';
-export type ModelFirebaseCrudFunctionSpecifierDefault = typeof MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT;
+export const DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER = '_';
+export type ModelFirebaseCrudFunctionSpecifierDefault = typeof DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER;
 
 /**
  * Separator character (`','`) used to split multiple specifier keys in a config string.
@@ -122,7 +122,7 @@ export type ModelFirebaseCrudFunctionSpecifierSplitter = typeof MODEL_FUNCTION_F
  * The {@link FirestoreModelIdentity} type parameter `T` constrains which model type keys are
  * valid, providing compile-time safety. Entries are string arrays like `['create', 'update:status,config']`.
  */
-export type ModelFirebaseCrudFunctionConfigMap<C extends ModelFirebaseCrudFunctionTypeMap<T>, T extends FirestoreModelIdentity> = NonNever<{
+export type ModelFirebaseCrudFunctionConfigMap<C extends ModelFirebaseCrudFunctionTypeMap<T>, T extends FirestoreModelIdentity> = OmitNeverProperties<{
   [K in FirestoreModelTypes<T>]: C[K] extends null ? never : ModelFirebaseCrudFunctionConfigMapEntry<C[K]>;
 }>;
 
@@ -134,7 +134,7 @@ export type ModelFirebaseCrudFunctionConfigMapEntrySpecifier<K extends string, M
 
 export type ModelFirebaseCrudFunctionMap<C extends ModelFirebaseCrudFunctionTypeMap> = ModelFirebaseCrudFunctionRawMap<C>;
 
-export type ModelFirebaseCrudFunctionRawMap<C extends ModelFirebaseCrudFunctionTypeMap> = NonNever<{
+export type ModelFirebaseCrudFunctionRawMap<C extends ModelFirebaseCrudFunctionTypeMap> = OmitNeverProperties<{
   [K in keyof C]: K extends string ? ModelFirebaseCrudFunctionMapEntry<K, C[K]> : never;
 }>;
 
@@ -180,9 +180,9 @@ export type ModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U
  *
  * Custom (non-CRUD) functions from `configMap` get their own individual `HttpsCallable` instances.
  *
- * @param configMap - configuration for custom (non-CRUD) functions
- * @param crudConfigMap - configuration for model CRUD functions with optional specifiers
- * @returns a {@link ModelFirebaseFunctionMapFactory} that creates a combined custom and CRUD function map for a given `Functions` instance
+ * @param configMap - Configuration for custom (non-CRUD) functions.
+ * @param crudConfigMap - Configuration for model CRUD functions with optional specifiers.
+ * @returns A {@link ModelFirebaseFunctionMapFactory} that creates a combined custom and CRUD function map for a given `Functions` instance.
  *
  * @example
  * ```ts
@@ -194,6 +194,7 @@ export type ModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U
  * await fns.createNotification(data);
  * await fns.updateNotificationStatus(data);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap, U extends ModelFirebaseCrudFunctionTypeMap>(configMap: FirebaseFunctionTypeConfigMap<M>, crudConfigMap: ModelFirebaseCrudFunctionConfigMap<U, FirestoreModelIdentity>): ModelFirebaseFunctionMapFactory<M, U> {
@@ -213,7 +214,7 @@ export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTy
       const specifiers: Record<string, HttpsCallable<unknown, unknown>> = {};
 
       specifierKeys.forEach((inputSpecifier) => {
-        const specifier = inputSpecifier === MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT ? '' : inputSpecifier;
+        const specifier = inputSpecifier === DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER ? '' : inputSpecifier;
         const specifierFn = makeCallFunction(callFn, modelType, inputSpecifier) as HttpsCallable<unknown, unknown>;
 
         const fullSpecifierName = `${callFn.call}${modelTypeSuffix}${capitalizeFirstLetter(specifier)}`;

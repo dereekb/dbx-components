@@ -6,9 +6,9 @@ import { type ArrayOrValue, convertToArray, flattenArray } from '../array';
  *
  * Convenience wrapper around {@link objectMergeMatrix} that flattens the result.
  *
- * @param a - First array (or single value) of partial objects
- * @param b - Second array (or single value) of partial objects
- * @returns Flat array of merged objects
+ * @param a - First array (or single value) of partial objects.
+ * @param b - Second array (or single value) of partial objects.
+ * @returns Flat array of merged objects.
  */
 export function objectFlatMergeMatrix<A extends object = object, B extends object = object>(a: ArrayOrValue<Partial<A>>, b: ArrayOrValue<Partial<B>>): (Partial<A> & Partial<B>)[] {
   return flattenArray(objectMergeMatrix(a, b));
@@ -20,9 +20,9 @@ export function objectFlatMergeMatrix<A extends object = object, B extends objec
  * Each element in the matrix is the spread merge of one item from a with one item from b.
  * If either input is null/undefined, returns the other as a single-row matrix.
  *
- * @param a - First array (or single value) of partial objects
- * @param b - Second array (or single value) of partial objects
- * @returns 2D array where result[i][j] is `{ ...a[i], ...b[j] }`
+ * @param a - First array (or single value) of partial objects.
+ * @param b - Second array (or single value) of partial objects.
+ * @returns Two-dimensional array where `result[i][j]` is `{ ...a[i], ...b[j] }`.
  */
 export function objectMergeMatrix<A extends object = object, B extends object = object>(a: ArrayOrValue<Partial<A>>, b: ArrayOrValue<Partial<B>>): (Partial<A> & Partial<B>)[][] {
   let result: (Partial<A> & Partial<B>)[][];

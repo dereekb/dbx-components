@@ -54,8 +54,9 @@ export type TrelloFactory = (config: TrelloConfig) => Trello;
  *
  * Auth uses Trello's `Authorization: OAuth oauth_consumer_key=..., oauth_token=...` header form so credentials never appear in URLs or logs.
  *
- * @param factoryConfig Factory-level configuration shared across created Trello instances.
+ * @param factoryConfig - Factory-level configuration shared across created Trello instances.
  * @returns A factory function that creates a configured Trello API instance.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function trelloFactory(factoryConfig: TrelloFactoryConfig = {}): TrelloFactory {

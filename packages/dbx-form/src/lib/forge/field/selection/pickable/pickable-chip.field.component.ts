@@ -27,7 +27,7 @@ export class DbxForgePickableChipFieldComponent<T = unknown, M = unknown, H exte
 
   constructor() {
     super();
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'mat-chip-listbox' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'mat-chip-listbox' });
   }
 
   toggleAll(): void {

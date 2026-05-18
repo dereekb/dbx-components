@@ -19,8 +19,8 @@ export type UsePromiseCallback = (cb: PromiseCallback) => void;
  * Node.js-style error-first callback; calling it with an error rejects the promise, and
  * calling it without an error resolves it.
  *
- * @param use - A function that performs an async operation and signals completion via the provided callback.
- * @returns A Promise that resolves when the callback is invoked without an error, or rejects with the provided error.
+ * @param use - Performs an async operation and signals completion via the provided callback.
+ * @returns Resolves when the callback is invoked without an error, or rejects with the provided error.
  */
 export async function useCallback(use: UsePromiseCallback): Promise<void> {
   return new Promise((resolve, reject) => {

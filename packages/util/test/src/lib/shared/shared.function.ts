@@ -24,8 +24,8 @@ export type TestFunctionFixtureBuildTests<I> = (fn: I) => void;
  * The forwarded function delegates to the getter at call time, so the underlying implementation
  * can change between tests while test declarations remain stable.
  *
- * @param config - provides the getter for the function under test
- * @param buildTests - declares test cases using the forwarded function
+ * @param config - Provides the getter for the function under test.
+ * @param buildTests - Declares test cases using the forwarded function.
  */
 export function useTestFunctionFixture<I extends (...args: any[]) => O, O = any>(config: UseTestFunctionFixture<I, O>, buildTests: TestFunctionFixtureBuildTests<I>): void {
   const { fn } = config;
@@ -73,8 +73,8 @@ export type TestFunctionFixtureMapBuildTests<T extends UseTestFunctionMapObject>
  * Similar to {@link useTestFunctionFixture} but operates on a map of functions, allowing tests
  * to be declared against multiple related function implementations at once.
  *
- * @param config - provides getters for each named function under test
- * @param buildTests - declares test cases using the map of forwarded functions
+ * @param config - Provides getters for each named function under test.
+ * @param buildTests - Declares test cases using the map of forwarded functions.
  */
 export function useTestFunctionMapFixture<T extends UseTestFunctionMapObject>(config: UseTestFunctionMapFixture<T>, buildTests: TestFunctionFixtureMapBuildTests<T>): void {
   const forwardedFunctions = mapObjectMap(config.fns, (fn) => forwardFunction(fn));

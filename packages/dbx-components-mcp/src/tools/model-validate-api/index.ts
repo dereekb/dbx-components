@@ -14,8 +14,8 @@ import type { ValidationResult, ValidatorSource, Violation } from './types.js';
  * supplied source and aggregates the violations and counts. The MCP tool layer
  * supplies real file I/O on top of this.
  *
- * @param sources - the in-memory api files to validate
- * @returns the aggregated validation outcome with counts and violations
+ * @param sources - The in-memory api files to validate.
+ * @returns The aggregated validation outcome with counts and violations.
  */
 export function validateModelApiSources(sources: readonly ValidatorSource[]): ValidationResult {
   const violations: Violation[] = [];

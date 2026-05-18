@@ -6,8 +6,8 @@ import { asObservable } from './getter';
  * Creates a function that takes a `Map` and combines the latest emissions from observables
  * created from each map value.
  *
- * @param mapToObs - function to transform each map value into an observable
- * @returns a function that converts a Map to a combined observable of results
+ * @param mapToObs - Function to transform each map value into an observable.
+ * @returns Operator-ready function that combines the per-entry observables into one emission of results.
  */
 export function combineLatestFromMapValuesObsFn<T, O>(mapToObs: (value: T) => Observable<O>): (map: Map<unknown, T>) => Observable<O[]> {
   const combineArrayFn = combineLatestFromArrayObsFn(mapToObs);
@@ -22,8 +22,8 @@ export function combineLatestFromMapValuesObsFn<T, O>(mapToObs: (value: T) => Ob
  *
  * Returns `of([])` for empty arrays.
  *
- * @param mapToObs - function to transform each value into an observable
- * @returns a function that converts an array to a combined observable
+ * @param mapToObs - Function to transform each value into an observable.
+ * @returns Operator-ready function that combines the latest emissions from each derived observable.
  */
 export function combineLatestFromArrayObsFn<T, O>(mapToObs: (value: T) => Observable<O>): (values: T[]) => Observable<O[]> {
   return (latest) => {
@@ -45,6 +45,9 @@ export type ObservableObjectMapResult<T extends ObservableObjectMap> = {
  * Each key in the input object maps to an observable (or static value). The result observable
  * emits an object with the same keys, where each value is the latest emission from its source.
  *
+ * @param objectMap - An object whose values are observables or static values.
+ * @returns An observable that emits the resolved object.
+ *
  * @example
  * ```ts
  * const result$ = combineLatestFromObject({
@@ -53,9 +56,6 @@ export type ObservableObjectMapResult<T extends ObservableObjectMap> = {
  * });
  * // emits { name: 'Alice', age: 30 }
  * ```
- *
- * @param objectMap - an object whose values are observables or static values
- * @returns an observable that emits the resolved object
  */
 export function combineLatestFromObject<T extends ObservableObjectMap>(objectMap: T): Observable<ObservableObjectMapResult<T>> {
   const pairs = allKeyValueTuples(objectMap);
@@ -78,8 +78,8 @@ export function combineLatestFromObject<T extends ObservableObjectMap>(objectMap
 /**
  * RxJS operator that maps an array of items to a `Map<K, T>` using the provided key reader.
  *
- * @param read - function to extract the key from each item
- * @returns an operator that converts an array into a keyed Map
+ * @param read - Function to extract the key from each item.
+ * @returns An operator that converts an array into a keyed Map.
  */
 export function keyValueMap<T, K extends PrimativeKey = PrimativeKey>(read: ReadKeyFunction<T, K>): OperatorFunction<T[], Map<K, T>> {
   return map(keyValueMapFactory(read));
@@ -89,8 +89,8 @@ export function keyValueMap<T, K extends PrimativeKey = PrimativeKey>(read: Read
  * RxJS operator that maps an array of items to a `Map<K, T>` using a multi-key reader,
  * allowing each item to appear under multiple keys.
  *
- * @param read - function to extract multiple keys from each item
- * @returns an operator that converts an array into a multi-keyed Map
+ * @param read - Function to extract multiple keys from each item.
+ * @returns An operator that converts an array into a multi-keyed Map.
  */
 export function multiKeyValueMap<T, K extends PrimativeKey = PrimativeKey>(read: ReadMultipleKeysFunction<T, K>): OperatorFunction<T[], Map<K, T>> {
   return map(multiKeyValueMapFactory(read));

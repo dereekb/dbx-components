@@ -39,8 +39,8 @@ export interface Page {
 /**
  * Extracts the page number from a {@link Page} object, returning {@link UNLOADED_PAGE} if the input is nullish.
  *
- * @param page - Page object to read from
- * @returns The page number, or {@link UNLOADED_PAGE} (-1) if not provided
+ * @param page - Page object to read from.
+ * @returns The page number, or {@link UNLOADED_PAGE} (-1) if not provided.
  */
 export function getPageNumber(page: Maybe<Partial<Page>>): number {
   return page?.page ?? UNLOADED_PAGE;
@@ -49,8 +49,8 @@ export function getPageNumber(page: Maybe<Partial<Page>>): number {
 /**
  * Returns the next sequential page number after the given page.
  *
- * @param page - Current page object
- * @returns The current page number plus one
+ * @param page - Current page object.
+ * @returns The current page number plus one.
  */
 export function getNextPageNumber(page: Maybe<Partial<Page>>): number {
   return getPageNumber(page) + 1;
@@ -59,7 +59,7 @@ export function getNextPageNumber(page: Maybe<Partial<Page>>): number {
 /**
  * Checks whether the given page represents the final page of results.
  *
- * @param page - Page object to check
+ * @param page - Page object to check.
  * @returns `true` if the page number equals {@link FINAL_PAGE}
  */
 export function isFinalPage(page: Maybe<Partial<Page>>): boolean {

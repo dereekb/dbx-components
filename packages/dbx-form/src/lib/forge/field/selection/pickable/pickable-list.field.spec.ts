@@ -100,7 +100,7 @@ describe('DbxForgePickableListFieldConfig - Exhaustive Whitelist', () => {
     });
 
     it('hint is accessible with concrete generics', () => {
-      const config: DbxForgePickableListFieldConfig<string> = { key: 'test', hint: 'test hint' } as any;
+      const config: DbxForgePickableListFieldConfig<string> = { key: 'test', hint: 'test hint' };
       expect(config.hint).toBe('test hint');
     });
   });
@@ -355,7 +355,7 @@ describe('scenarios', () => {
           loadValues: stubLoadValues,
           displayForValue: stubDisplayForValue
         }
-      } as DbxForgePickableListFieldConfig<string>);
+      });
 
       fixture.componentInstance.config.set({ fields: [field] });
 

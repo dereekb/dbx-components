@@ -14,6 +14,7 @@
  * caller imports the source or the bundled binary.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -45,7 +46,7 @@ export interface LoadUiComponentRegistryInput {
  */
 export interface LoadUiComponentRegistryResult {
   readonly registry: UiComponentRegistry;
-  readonly configPath: string | null;
+  readonly configPath: Maybe<string>;
   readonly configWarnings: readonly ConfigWarning[];
   readonly loaderWarnings: readonly UiComponentLoaderWarning[];
   readonly externalSourceCount: number;
@@ -92,8 +93,8 @@ const DEFAULT_BUNDLED_PATHS: BundledUiManifestPathsFactory = () => {
  * the loader's "zero successful manifests" guard. The caller is responsible
  * for deciding whether an empty registry is a fatal startup error.
  *
- * @param input - cwd plus optional injected bundled-path factory and reader
- * @returns the registry, the resolved config path (if any), and any warnings
+ * @param input - Cwd plus optional injected bundled-path factory and reader.
+ * @returns The registry, the resolved config path (if any), and any warnings.
  */
 export async function loadUiComponentRegistry(input: LoadUiComponentRegistryInput): Promise<LoadUiComponentRegistryResult> {
   const { cwd, bundledManifestPaths = DEFAULT_BUNDLED_PATHS, readFile } = input;
@@ -135,7 +136,7 @@ export async function loadUiComponentRegistry(input: LoadUiComponentRegistryInpu
  * Re-exported so callers can build a deterministic test fixture pointing at
  * the package's bundled manifests without touching `import.meta.url`.
  *
- * @returns the absolute paths of the bundled `@dereekb/*` manifests
+ * @returns The absolute paths of the bundled `@dereekb/*` manifests.
  */
 export function getDefaultBundledUiManifestPaths(): readonly string[] {
   return DEFAULT_BUNDLED_PATHS();

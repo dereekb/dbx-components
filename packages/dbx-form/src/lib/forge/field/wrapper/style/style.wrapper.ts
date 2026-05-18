@@ -44,8 +44,8 @@ export interface DbxForgeStyleWrapper {
 /**
  * Style wrapper config — applies dynamic CSS classes (`ngClass`) and/or inline styles (`ngStyle`) to any field via its `wrappers: []`.
  *
- * @param config - the style wrapper configuration without the `type` property
- * @returns a complete {@link DbxForgeStyleWrapper} config with the type set
+ * @param config - The style wrapper configuration without the `type` property.
+ * @returns A complete {@link DbxForgeStyleWrapper} config with the type set.
  *
  * @dbxFormField
  * @dbxFormSlug style-wrapper

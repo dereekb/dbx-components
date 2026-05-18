@@ -39,7 +39,7 @@ export const TRELLO_WEBHOOK_UPDATE_BOARD_ACTION_TYPE = 'updateBoard';
 /**
  * Re-narrows an UntypedTrelloWebhookEvent's payload to the given action data type.
  *
- * @param event The untyped event.
+ * @param event - The untyped event.
  * @returns A typed view over the same event.
  */
 export function trelloWebhookEvent<D>(event: UntypedTrelloWebhookEvent): TrelloWebhookEvent<D> {

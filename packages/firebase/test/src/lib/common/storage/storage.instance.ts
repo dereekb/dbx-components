@@ -50,6 +50,7 @@ export class TestFirebaseStorageContextFixture<F extends TestFirebaseStorageInst
 export type TestFirebaseStorageContextFactory = TestContextFactory<TestFirebaseStorageContextFixture>;
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use TestFirebaseStorageContextFactory instead.
  */

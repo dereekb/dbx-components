@@ -31,8 +31,8 @@ export type TypeformWebhookEventVerifier = (req: Request, rawBody: Buffer) => Pr
 /**
  * Verifies a Typeform webhook event header using HMAC-SHA256 signature verification.
  *
- * @param config - The verification config containing the Typeform webhook secret token.
- * @returns A function that verifies a Typeform webhook event.
+ * @param config - Verification config containing the Typeform webhook secret token.
+ * @returns Verifier function that validates each request's signature header.
  */
 export function typeFormWebhookEventVerifier(config: TypeformWebhookEventVerificationConfig): TypeformWebhookEventVerifier {
   const { secret } = config;

@@ -38,16 +38,18 @@ export interface ModelFileMatch {
  */
 export function findModelFiles(packageRoot: string): ModelFileMatch[] {
   const libRoot = join(packageRoot, 'src', 'lib');
-  if (!safeIsDirectory(libRoot)) return [];
-
   const out: ModelFileMatch[] = [];
-  for (const filePath of walkSourceFiles(libRoot)) {
-    const text = readFileSync(filePath, 'utf8');
-    if (!textHasModelMarker(text)) continue;
-    const extraction = extractModelsFromSource({ name: filePath, text });
-    if (extraction.identities.length === 0 && extraction.modelGroups.length === 0 && extraction.converters.length === 0) continue;
-    out.push({ filePath, extraction });
+
+  if (safeIsDirectory(libRoot)) {
+    for (const filePath of walkSourceFiles(libRoot)) {
+      const text = readFileSync(filePath, 'utf8');
+      if (!textHasModelMarker(text)) continue;
+      const extraction = extractModelsFromSource({ name: filePath, text });
+      if (extraction.identities.length === 0 && extraction.modelGroups.length === 0 && extraction.converters.length === 0) continue;
+      out.push({ filePath, extraction });
+    }
   }
+
   return out;
 }
 
@@ -55,12 +57,7 @@ function textHasModelMarker(text: string): boolean {
   // Source files that hold model definitions, converters, or model-group containers we care
   // about. Files like helpers/utility files that import none of these are skipped to keep the
   // ts-morph parse off the hot path.
-  if (text.includes('firestoreModelIdentity(')) return true;
-  if (text.includes('@dbxModelGroup')) return true;
-  if (text.includes('snapshotConverterFunctions')) return true;
-  if (text.includes('firestoreSubObject')) return true;
-  if (text.includes('firestoreObjectArray')) return true;
-  return false;
+  return text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup') || text.includes('snapshotConverterFunctions') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray');
 }
 
 function* walkSourceFiles(dir: string): Generator<string> {
@@ -77,19 +74,15 @@ function* walkSourceFiles(dir: string): Generator<string> {
 }
 
 function isCandidateSourceFile(name: string): boolean {
-  if (!name.endsWith('.ts')) return false;
-  if (name.endsWith('.api.ts')) return false;
-  if (name.endsWith('.spec.ts')) return false;
-  if (name.endsWith('.test.ts')) return false;
-  if (name.endsWith('.id.ts')) return false;
-  if (name.endsWith('.d.ts')) return false;
-  return true;
+  return name.endsWith('.ts') && !name.endsWith('.api.ts') && !name.endsWith('.spec.ts') && !name.endsWith('.test.ts') && !name.endsWith('.id.ts') && !name.endsWith('.d.ts');
 }
 
 function safeIsDirectory(p: string): boolean {
+  let result: boolean;
   try {
-    return statSync(p).isDirectory();
+    result = statSync(p).isDirectory();
   } catch {
-    return false;
+    result = false;
   }
+  return result;
 }

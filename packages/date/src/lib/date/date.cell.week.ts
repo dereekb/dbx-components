@@ -1,6 +1,6 @@
 import { type DayOfWeek, getNextDay, type MapFunction, type Maybe } from '@dereekb/util';
 import { type DateCellIndex, type DateCellTiming } from './date.cell';
-import { type YearWeekCode, type YearWeekCodeDateReader, type YearWeekCodeFactory, yearWeekCodeFromDate, yearWeekCodeGroupFactory, type YearWeekCodeGroupFactory, type YearWeekCodeReader } from './date.week';
+import { type YearWeekCode, type YearWeekCodeFactory, yearWeekCodeFromDate, yearWeekCodeGroupFactory, type YearWeekCodeGroupFactory, type YearWeekCodeReader } from './date.week';
 import { dateCellTimingStartDateFactory } from './date.cell.factory';
 
 /**
@@ -11,8 +11,8 @@ export type DateCellDayOfWeekFactory = MapFunction<DateCellIndex, DayOfWeek>;
 /**
  * Creates a factory that maps a {@link DateCellIndex} to its corresponding {@link DayOfWeek}.
  *
- * @param inputDayForIndexZero - the day of the week for index 0 (can be a DayOfWeek number or a Date)
- * @returns a function that computes the day of the week for any given index
+ * @param inputDayForIndexZero - Calendar day that should be anchored at index 0.
+ * @returns Factory that resolves any cell index to its day-of-week.
  *
  * @example
  * ```ts
@@ -22,6 +22,7 @@ export type DateCellDayOfWeekFactory = MapFunction<DateCellIndex, DayOfWeek>;
  * dayFactory(1); // Day.TUESDAY
  * dayFactory(6); // Day.SUNDAY
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDayOfWeekFactory(inputDayForIndexZero: DayOfWeek | Date): DateCellDayOfWeekFactory {
@@ -41,8 +42,9 @@ export interface DateCellIndexYearWeekCodeConfig {
 /**
  * Creates a factory that computes the {@link YearWeekCode} for a given {@link DateCellIndex} or Date, relative to the configured timing.
  *
- * @param config - timing configuration to compute dates from indexes
- * @returns a function that returns the YearWeekCode for a given index or date
+ * @param config - Timing configuration to compute dates from indexes.
+ * @returns Factory that resolves a cell index or date to its YearWeekCode.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellIndexYearWeekCodeFactory(config: DateCellIndexYearWeekCodeConfig): DateCellIndexYearWeekCodeFactory {
@@ -69,8 +71,9 @@ export interface DateCellIndexYearWeekCodeGroupFactoryConfig<B> {
 /**
  * Creates a factory that groups items by their {@link YearWeekCode} based on a DateCellIndex reader and timing.
  *
- * @param config - reader and factory configuration
- * @returns a function that groups input items into YearWeekCode groups
+ * @param config - Reader and factory configuration.
+ * @returns Grouper that buckets items by their YearWeekCode.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellIndexYearWeekCodeGroupFactory<B>(config: DateCellIndexYearWeekCodeGroupFactoryConfig<B>): YearWeekCodeGroupFactory<B> {
@@ -80,6 +83,6 @@ export function dateCellIndexYearWeekCodeGroupFactory<B>(config: DateCellIndexYe
   return yearWeekCodeGroupFactory<B>({
     yearWeekCodeFactory: dateCellIndexYearWeekCode as YearWeekCodeFactory,
     yearWeekCodeReader: dateCellIndexYearWeekCode as YearWeekCodeReader,
-    dateReader: dateCellIndexReader as YearWeekCodeDateReader<B>
+    dateReader: dateCellIndexReader
   });
 }

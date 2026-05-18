@@ -239,8 +239,10 @@ export interface PagedItemFirestoreCollection<T, PT, D extends FirestoreDocument
  * handled by the paged accessor's {@link PagedItemConverter}) and `c` is the
  * denormalized count.
  *
+ * @returns A snapshot converter for {@link PagedItemPageData}<T>.
+ *
  * @template T - The item type stored across pages
- * @returns A snapshot converter for {@link PagedItemPageData}<T>
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function defaultPagedItemPageDataConverter<T>(): SnapshotConverterFunctions<PagedItemPageData<T>> {
@@ -263,12 +265,14 @@ export function defaultPagedItemPageDataConverter<T>(): SnapshotConverterFunctio
  * default {@link defaultPagedItemPageDataConverter} is used so consumers don't
  * have to model the envelope shape themselves.
  *
+ * @param config - Paged collection configuration.
+ * @returns A configured paged subcollection.
+ *
  * @template T - The item type stored across pages
  * @template PT - The parent document data type
  * @template D - The page document type
  * @template PD - The parent document type
- * @param config - Paged collection configuration
- * @returns A configured paged subcollection
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makePagedItemFirestoreCollection<T, PT, D extends FirestoreDocument<PagedItemPageData<T>> = FirestoreDocument<PagedItemPageData<T>>, PD extends FirestoreDocument<PT> = FirestoreDocument<PT>>(config: PagedItemFirestoreCollectionConfig<T, PT, D, PD>): PagedItemFirestoreCollection<T, PT, D, PD> {

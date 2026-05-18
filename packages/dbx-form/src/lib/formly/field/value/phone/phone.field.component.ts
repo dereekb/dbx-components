@@ -2,7 +2,7 @@ import { Component, type OnInit, type OnDestroy, ChangeDetectionStrategy } from 
 import { FieldType } from '@ngx-formly/material'; // extend FieldType from Material, not core!
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { isPhoneExtension } from '../../../../validator/phone';
-import { type E164PhoneNumber, type E164PhoneNumberExtensionPair, type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, objectHasNoKeys } from '@dereekb/util';
+import { type E164PhoneNumber, type Maybe, e164PhoneNumberExtensionPair, e164PhoneNumberFromE164PhoneNumberExtensionPair, objectHasNoKeys } from '@dereekb/util';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { combineLatest, distinctUntilChanged, map, startWith } from 'rxjs';
 
@@ -113,7 +113,7 @@ export class DbxPhoneFieldComponent extends FieldType<FieldTypeConfig<Internatio
               return e164PhoneNumberFromE164PhoneNumberExtensionPair({
                 number: phone as E164PhoneNumber,
                 extension
-              } as E164PhoneNumberExtensionPair);
+              });
             }
 
             return phone;

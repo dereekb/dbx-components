@@ -21,18 +21,19 @@ export type ExpandFlattenTreeFunction<T, V> = (values: T[]) => V[];
  * This higher-order function takes a function to expand an array of values `T` into a list of trees (`N[]` where `N` is a TreeNode)
  * and another function to flatten these trees into a single array of values `V`.
  *
+ * @param expand - An ExpandTreeFunction (values: T[]) => N[] that converts an array of T into an array of tree nodes N.
+ * @param flatten - A FlattenTreeFunction (tree: N, array?: V[]) => V[] that flattens a tree of N nodes into an array of V values.
+ * @returns An ExpandFlattenTreeFunction (values: T[]) => V[] that performs the combined expansion and flattening.
+ *
  * @dbxUtil
  * @dbxUtilCategory tree
  * @dbxUtilKind factory
  * @dbxUtilTags tree, expand, flatten, compose, factory, transform
  * @dbxUtilRelated expand-tree-function, flatten-tree-to-array-function, expand-trees
- *
  * @template T The type of the initial input values.
  * @template V The type of the values in the final flattened output array.
  * @template N The type of the intermediate tree nodes. Must extend TreeNode with value T and children of type N.
- * @param expand An ExpandTreeFunction (values: T[]) => N[] that converts an array of T into an array of tree nodes N.
- * @param flatten A FlattenTreeFunction (tree: N, array?: V[]) => V[] that flattens a tree of N nodes into an array of V values.
- * @returns An ExpandFlattenTreeFunction (values: T[]) => V[] that performs the combined expansion and flattening.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function expandFlattenTreeFunction<T, V, N extends TreeNode<T, N> = TreeNode<T, any>>(expand: ExpandTreeFunction<T, N>, flatten: FlattenTreeFunction<N, V>): ExpandFlattenTreeFunction<T, V> {

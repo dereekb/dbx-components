@@ -4,7 +4,8 @@ import { DbxFirebaseAnalyticsUserEventsListenerService } from './analytics.user.
 /**
  * Creates a EnvironmentProviders that provides a DbxFirebaseAnalyticsUserEventsListenerService and initialize it when the app is initialized.
  *
- * @returns EnvironmentProviders
+ * @returns EnvironmentProviders.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxFirebaseAnalyticsUserEventsListenerService() {

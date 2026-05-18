@@ -25,8 +25,9 @@ export type ZoomOAuthFactory = (config: ZoomOAuthConfig) => ZoomOAuth;
 /**
  * Creates a ZoomOAuth instance factory from the given configuration.
  *
- * @param factoryConfig Configuration for the OAuth factory
- * @returns A factory that creates configured ZoomOAuth instances
+ * @param factoryConfig - Configuration for the OAuth factory.
+ * @returns A factory that creates configured ZoomOAuth instances.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAuthFactory {
@@ -131,10 +132,11 @@ export interface ZoomOAuthZoomAccessTokenFactoryConfig {
 }
 
 /**
- * Creates a ZoomOAuthZoomAccessTokenFactoryConfig
+ * Creates a ZoomOAuthZoomAccessTokenFactoryConfig.
  *
  * @param config
  * @returns
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zoomOAuthZoomAccessTokenFactory(config: ZoomOAuthZoomAccessTokenFactoryConfig): ZoomAccessTokenFactory {

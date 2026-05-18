@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy NgModule that wraps the deprecated DbxFormMapboxLatLngFieldComponent; replacement is provideDbxForgeMapboxFieldDeclarations() */
 import { NgModule } from '@angular/core';
 import { DbxFormMapboxLatLngFieldComponent } from './latlng.field.component';
 import { FormlyModule } from '@ngx-formly/core';

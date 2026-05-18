@@ -20,8 +20,8 @@ export type PartialModelModifier<V extends object, D extends object> = Partial<M
  *
  * Combines all `modifyData` and `modifyModel` functions from the input modifiers into unified modifier functions.
  *
- * @param input - One or more partial model modifiers to merge
- * @returns A single merged modifier with combined `modifyData` and `modifyModel` functions
+ * @param input - One or more partial model modifiers to merge.
+ * @returns A single merged modifier with combined `modifyData` and `modifyModel` functions.
  */
 export function maybeMergeModelModifiers<V extends object, D extends object>(input: ArrayOrValue<PartialModelModifier<V, D>>): PartialModelModifier<V, D> {
   const modifiers = asArray(input);
@@ -65,14 +65,15 @@ export interface ModifyModelMapFunctionsConfig<V extends object, D extends objec
  *
  * Optionally copies the input object before modification to avoid mutating the original.
  *
+ * @param config - Configuration with the base map functions, modifiers, and copy options.
+ * @returns New model map functions with modifiers applied before each conversion.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, map, modify, factory, modifier, copy
  * @dbxUtilRelated make-model-map-functions, modify-model-map-function
  *
- * @param config - Configuration with the base map functions, modifiers, and copy options
- * @returns New model map functions with modifiers applied before each conversion
  * @__NO_SIDE_EFFECTS__
  */
 export function modifyModelMapFunctions<V extends object, D extends object>(config: ModifyModelMapFunctionsConfig<V, D>): ModelMapFunctions<V, D> {
@@ -95,16 +96,17 @@ export function modifyModelMapFunctions<V extends object, D extends object>(conf
  * When `copy` is true (default), the input is shallow-copied before modification to avoid mutating the original.
  * If no modifier is provided, the original map function is returned unchanged.
  *
+ * @param mapFn - The base map function to wrap.
+ * @param modifyModel - Optional modifier to apply before mapping.
+ * @param copy - Whether to shallow-copy the input before modifying; defaults to true.
+ * @returns The wrapped map function, or the original if no modifier is provided.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, map, modify, factory, modifier, wrap
  * @dbxUtilRelated modify-model-map-functions, model-field-map-function
  *
- * @param mapFn - The base map function to wrap
- * @param modifyModel - Optional modifier to apply before mapping
- * @param copy - Whether to shallow-copy the input before modifying; defaults to true
- * @returns The wrapped map function, or the original if no modifier is provided
  * @__NO_SIDE_EFFECTS__
  */
 export function modifyModelMapFunction<I extends object, O extends object>(mapFn: ModelMapFunction<I, O>, modifyModel: Maybe<ModifierFunction<I>>, copy = true): ModelMapFunction<I, O> {

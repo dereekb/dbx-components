@@ -57,8 +57,9 @@ export interface CreateFolderValidateToolConfig<TInspection extends { readonly p
  *
  * Used by `dbx_model_validate_folder` and `dbx_system_m_validate_folder`.
  *
- * @param config - the domain-specific hooks and tool definition
- * @returns the registered {@link DbxTool}
+ * @param config - The domain-specific hooks and tool definition.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createFolderValidateTool<TInspection extends { readonly path: string }, TResult extends { readonly errorCount: number }>(config: CreateFolderValidateToolConfig<TInspection, TResult>): DbxTool {
@@ -76,38 +77,47 @@ export function createFolderValidateTool<TInspection extends { readonly path: st
     }
 
     const cwd = process.cwd();
-    let paths: readonly string[];
+    let runResult: ToolResult;
+    let paths: readonly string[] | undefined;
+    let resolveError: string | undefined;
     try {
       paths = await resolveFolderPaths({ paths: parsed.paths, glob: parsed.glob, cwd });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return toolError(`Failed to resolve folder paths: ${message}`);
+      resolveError = `Failed to resolve folder paths: ${message}`;
     }
 
-    if (paths.length === 0) {
-      return toolError('No matching folders found.');
-    }
-
-    const inspections: TInspection[] = [];
-    try {
-      for (const relative of paths) {
-        const absolute = resolve(cwd, relative);
-        const inspection = await inspectFolder(absolute);
-        const relativized = { ...inspection, path: relative };
-        inspections.push(relativized);
+    if (resolveError !== undefined || paths === undefined) {
+      runResult = toolError(resolveError ?? 'Failed to resolve folder paths.');
+    } else if (paths.length === 0) {
+      runResult = toolError('No matching folders found.');
+    } else {
+      const inspections: TInspection[] = [];
+      let readError: string | undefined;
+      try {
+        for (const relative of paths) {
+          const absolute = resolve(cwd, relative);
+          const inspection = await inspectFolder(absolute);
+          const relativized = { ...inspection, path: relative };
+          inspections.push(relativized);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        readError = `Failed to read folders: ${message}`;
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return toolError(`Failed to read folders: ${message}`);
-    }
 
-    const result = validate(inspections);
-    const text = format(result);
-    const toolResult: ToolResult = {
-      content: [{ type: 'text', text }],
-      isError: result.errorCount > 0
-    };
-    return toolResult;
+      if (readError === undefined) {
+        const result = validate(inspections);
+        const text = format(result);
+        runResult = {
+          content: [{ type: 'text', text }],
+          isError: result.errorCount > 0
+        };
+      } else {
+        runResult = toolError(readError);
+      }
+    }
+    return runResult;
   }
 
   const tool: DbxTool = { definition, run };
@@ -153,8 +163,9 @@ export interface CreateSourceValidateToolConfig<TResult extends { readonly error
  *
  * Used by `dbx_model_validate` and `dbx_model_validate_api`.
  *
- * @param config - the domain-specific hooks and tool definition
- * @returns the registered {@link DbxTool}
+ * @param config - The domain-specific hooks and tool definition.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSourceValidateTool<TResult extends { readonly errorCount: number }>(config: CreateSourceValidateToolConfig<TResult>): DbxTool {
@@ -171,24 +182,28 @@ export function createSourceValidateTool<TResult extends { readonly errorCount: 
       return toolError('Must provide at least one of `sources`, `paths`, or `glob`.');
     }
 
-    let sources: readonly ValidatorSource[];
+    let toolResult: ToolResult;
+    let sources: readonly ValidatorSource[] | undefined;
+    let readError: string | undefined;
     try {
       sources = await resolveValidatorSources({ sources: parsed.sources, paths: parsed.paths, glob: parsed.glob, cwd: process.cwd() });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return toolError(`Failed to read sources: ${message}`);
+      readError = `Failed to read sources: ${message}`;
     }
 
-    if (sources.length === 0) {
-      return toolError('No matching source files found.');
+    if (readError !== undefined || sources === undefined) {
+      toolResult = toolError(readError ?? 'Failed to read sources.');
+    } else if (sources.length === 0) {
+      toolResult = toolError('No matching source files found.');
+    } else {
+      const result = validate(sources);
+      const text = format(result);
+      toolResult = {
+        content: [{ type: 'text', text }],
+        isError: result.errorCount > 0
+      };
     }
-
-    const result = validate(sources);
-    const text = format(result);
-    const toolResult: ToolResult = {
-      content: [{ type: 'text', text }],
-      isError: result.errorCount > 0
-    };
     return toolResult;
   }
 
@@ -257,28 +272,34 @@ export interface CreateTwoSideValidateToolConfig<TResult extends { readonly erro
  * factories. Returns the resolved input or a {@link toolError} payload
  * when either path escapes `cwd`.
  *
- * @param parsed - the parsed-args envelope
- * @param parsed.componentDir - the relative path to the component package root
- * @param parsed.apiDir - the relative path to the API app root
- * @returns the absolute + relative quad, or an error `ToolResult`
+ * @param parsed - The parsed-args envelope.
+ * @param parsed.componentDir - The relative path to the component package root.
+ * @param parsed.apiDir - The relative path to the API app root.
+ * @returns The absolute + relative quad, or an error `ToolResult`
  */
 function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly apiDir: string }): TwoSideInspectAndValidateInput | ToolResult {
   const cwd = process.cwd();
   const componentRel = parsed.componentDir;
   const apiRel = parsed.apiDir;
+  let result: TwoSideInspectAndValidateInput | ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(componentRel, cwd);
     ensurePathInsideCwd(apiRel, cwd);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  return {
-    componentAbs: resolve(cwd, componentRel),
-    componentRel,
-    apiAbs: resolve(cwd, apiRel),
-    apiRel
-  };
+  if (ensureError === undefined) {
+    result = {
+      componentAbs: resolve(cwd, componentRel),
+      componentRel,
+      apiAbs: resolve(cwd, apiRel),
+      apiRel
+    };
+  } else {
+    result = toolError(ensureError);
+  }
+  return result;
 }
 
 /**
@@ -290,8 +311,9 @@ function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly a
  * Used by `dbx_notification_m_validate_folder`, `dbx_notification_m_validate_app`,
  * `dbx_storagefile_m_validate_folder`, and `dbx_storagefile_m_validate_app`.
  *
- * @param config - the domain-specific hooks and tool definition
- * @returns the registered {@link DbxTool}
+ * @param config - The domain-specific hooks and tool definition.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createTwoSideValidateTool<TResult extends { readonly errorCount: number }>(config: CreateTwoSideValidateToolConfig<TResult>): DbxTool {
@@ -367,8 +389,9 @@ export interface CreateListAppToolConfig<TReport> {
  *
  * Used by `dbx_notification_m_list_app` and `dbx_storagefile_m_list_app`.
  *
- * @param config - the domain-specific hooks and tool definition
- * @returns the registered {@link DbxTool}
+ * @param config - The domain-specific hooks and tool definition.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createListAppTool<TReport>(config: CreateListAppToolConfig<TReport>): DbxTool {

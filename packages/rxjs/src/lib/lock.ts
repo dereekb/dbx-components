@@ -74,12 +74,12 @@ export const DEFAULT_LOCK_SET_TIME_LOCK_KEY = 'timelock';
  *
  * Useful for deferring an action until all locks are released, with a safety timeout to avoid waiting indefinitely.
  *
- * @param config - configuration specifying the lock set, callback, timeout, and optional delay
- * @param config.lockSet - the lock set to monitor for the next unlock event
- * @param config.fn - optional callback to invoke when the lock set unlocks or the timeout is reached
- * @param config.timeout - maximum time in milliseconds to wait before timing out
- * @param config.delayTime - optional delay in milliseconds after unlock before invoking the callback
- * @returns subscription that can be unsubscribed to cancel the wait
+ * @param config - Configuration specifying the lock set, callback, timeout, and optional delay.
+ * @param config.lockSet - The lock set to monitor for the next unlock event.
+ * @param config.fn - Optional callback to invoke when the lock set unlocks or the timeout is reached.
+ * @param config.timeout - Maximum time in milliseconds to wait before timing out.
+ * @param config.delayTime - Optional delay in milliseconds after unlock before invoking the callback.
+ * @returns Subscription that can be unsubscribed to cancel the wait.
  *
  * @example
  * ```ts
@@ -178,9 +178,9 @@ export class LockSet implements Destroyable {
    * When locked with a duration, the lock automatically releases after the specified time.
    * When unlocked, the lock is removed from the set.
    *
-   * @param key - identifier for this lock
-   * @param config - locked state or configuration object
-   * @param duration - optional auto-unlock duration in milliseconds (only used with boolean config)
+   * @param key - Identifier for this lock.
+   * @param config - Locked state or configuration object.
+   * @param duration - Optional auto-unlock duration in milliseconds (only used with boolean config)
    */
   setLocked(key: LockKey, config: SetLockedConfig): void;
   setLocked(key: LockKey, config: boolean, duration?: Milliseconds): void;
@@ -212,7 +212,7 @@ export class LockSet implements Destroyable {
   /**
    * Locks for a specified number of seconds using the default time lock key.
    *
-   * @param seconds - duration in seconds
+   * @param seconds - Duration in seconds.
    */
   lockForSeconds(seconds: Seconds): void {
     this.lockForTime(seconds * 1000);
@@ -221,8 +221,8 @@ export class LockSet implements Destroyable {
   /**
    * Locks for a specified duration in milliseconds, automatically unlocking when the time elapses.
    *
-   * @param milliseconds - lock duration
-   * @param key - optional lock key, defaults to {@link DEFAULT_LOCK_SET_TIME_LOCK_KEY}
+   * @param milliseconds - Lock duration.
+   * @param key - Optional lock key, defaults to {@link DEFAULT_LOCK_SET_TIME_LOCK_KEY}
    */
   lockForTime(milliseconds: Milliseconds, key?: LockKey): void {
     this.addLock(key ?? DEFAULT_LOCK_SET_TIME_LOCK_KEY, of(false).pipe(delay(milliseconds), startWith(true)));
@@ -232,9 +232,9 @@ export class LockSet implements Destroyable {
    * Registers a lock observable under the given key. The lock is considered active when
    * the observable emits `true`. Empty observables are treated as unlocked.
    *
-   * @param key - identifier for this lock
-   * @param obs - observable that emits the lock state
-   * @returns function that removes this specific lock when called
+   * @param key - Identifier for this lock.
+   * @param obs - Observable that emits the lock state.
+   * @returns Function that removes this specific lock when called.
    *
    * @example
    * ```ts
@@ -269,7 +269,7 @@ export class LockSet implements Destroyable {
   /**
    * Removes the lock registered under the given key, if it exists.
    *
-   * @param key - identifier of the lock to remove
+   * @param key - Identifier of the lock to remove.
    */
   removeLock(key: LockKey): void {
     if (this._locks.value.delete(key)) {
@@ -280,9 +280,9 @@ export class LockSet implements Destroyable {
   /**
    * Registers a callback for the next time this lock set becomes unlocked.
    *
-   * @param config - callback function or configuration object
-   * @param delayTime - optional delay in milliseconds after unlock before invoking the callback
-   * @returns subscription that can be unsubscribed to cancel the wait
+   * @param config - Callback function or configuration object.
+   * @param delayTime - Optional delay in milliseconds after unlock before invoking the callback.
+   * @returns Subscription that can be unsubscribed to cancel the wait.
    */
   onNextUnlock(config: OnLockSetUnlockedFunction | Omit<OnLockSetUnlockedConfig, 'lockSet'>, delayTime?: Milliseconds): Subscription {
     return onLockSetNextUnlock({
@@ -296,7 +296,7 @@ export class LockSet implements Destroyable {
    * Establishes a parent-child relationship where this lock set's locked state is propagated
    * to the parent. When this lock set is locked, the parent will also reflect a locked state.
    *
-   * @param parent - parent lock set or observable of one; pass `undefined` to detach
+   * @param parent - Parent lock set or observable of one; pass `undefined` to detach.
    */
   setParentLockSet(parent: ObservableOrValue<Maybe<LockSet>>): void {
     this._parentSub.subscription = preventComplete(asObservable(parent))
@@ -320,9 +320,9 @@ export class LockSet implements Destroyable {
   /**
    * Registers a child lock set so its locked state propagates upward to this lock set.
    *
-   * @param lockSet - child lock set to monitor
-   * @param key - optional lock key, auto-generated if not provided
-   * @returns function that removes the child lock relationship when called
+   * @param lockSet - Child lock set to monitor.
+   * @param key - Optional lock key, auto-generated if not provided.
+   * @returns Function that removes the child lock relationship when called.
    */
   addChildLockSet(lockSet: LockSet, key: LockKey = `${LockSet.LOCK_SET_CHILD_INDEX_STEPPER++}`): RemoveLockFunction {
     return this.addLock(key, lockSet.isLocked$);
@@ -339,8 +339,8 @@ export class LockSet implements Destroyable {
    * After the unlock event (or timeout), the optional callback is invoked and then
    * {@link destroy} is called after a short delay.
    *
-   * @param config - optional callback or configuration for the unlock wait
-   * @param delayTime - optional delay in milliseconds after unlock before invoking the callback
+   * @param config - Optional callback or configuration for the unlock wait.
+   * @param delayTime - Optional delay in milliseconds after unlock before invoking the callback.
    */
   destroyOnNextUnlock(config?: Maybe<DestroyOnNextUnlockConfig['fn'] | DestroyOnNextUnlockConfig>, delayTime?: Milliseconds): void {
     let fn: Maybe<OnLockSetUnlockedFunction>;

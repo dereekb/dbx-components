@@ -46,8 +46,8 @@ export type ZohoDeskGetAgentsFunction = (input: ZohoDeskGetAgentsInput) => Promi
  * Retrieves a paginated list of agents, with optional filtering by department and status,
  * and inline expansion of related entities (role, profile, departments).
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves paginated agents
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves paginated agents.
  */
 export function zohoDeskGetAgents(context: ZohoDeskContext): ZohoDeskGetAgentsFunction {
   return (input: ZohoDeskGetAgentsInput) => {
@@ -74,8 +74,8 @@ export type ZohoDeskGetAgentByIdFunction = (input: ZohoDeskGetAgentByIdInput) =>
 /**
  * Creates a {@link ZohoDeskGetAgentByIdFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves a single agent
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves a single agent.
  */
 export function zohoDeskGetAgentById(context: ZohoDeskContext): ZohoDeskGetAgentByIdFunction {
   return (input: ZohoDeskGetAgentByIdInput) => {
@@ -103,8 +103,8 @@ export type ZohoDeskGetAgentsByIdsFunction = (input: ZohoDeskGetAgentsByIdsInput
 /**
  * Creates a {@link ZohoDeskGetAgentsByIdsFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves agents by IDs
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves agents by IDs.
  */
 export function zohoDeskGetAgentsByIds(context: ZohoDeskContext): ZohoDeskGetAgentsByIdsFunction {
   return (input: ZohoDeskGetAgentsByIdsInput) => {
@@ -124,8 +124,8 @@ export type ZohoDeskGetMyInfoFunction = () => Promise<ZohoDeskAgent>;
  *
  * Retrieves the profile of the agent associated with the current OAuth token.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves the current agent's info
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves the current agent's info.
  */
 export function zohoDeskGetMyInfo(context: ZohoDeskContext): ZohoDeskGetMyInfoFunction {
   return () => context.fetchJson<ZohoDeskAgent>('/myinfo', zohoDeskAgentApiFetchJsonInput('GET'));
@@ -140,8 +140,9 @@ export type ZohoDeskGetAgentsPageFactory = (input: ZohoDeskGetAgentsInput, optio
 /**
  * Creates a {@link ZohoDeskGetAgentsPageFactory} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Page factory for iterating over agent results
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Page factory for iterating over agent results.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetAgentsPageFactory(context: ZohoDeskContext): ZohoDeskGetAgentsPageFactory {

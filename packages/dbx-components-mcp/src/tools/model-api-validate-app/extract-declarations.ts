@@ -12,7 +12,7 @@
 
 import { readdir, readFile, stat, type Dirent } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
-import { extractCrudEntries } from '../model-api-shared/index.js';
+import { extractCrudEntries } from '@dereekb/dbx-cli/manifest-extract';
 import type { DeclaredEntry } from './types.js';
 
 const API_SUFFIX = '.api.ts';
@@ -41,9 +41,9 @@ export interface DeclaredEntriesSourceRoot {
  * `callModelFirebaseFunctionMapFactory` marker so unrelated `.api.ts`
  * files aren't parsed.
  *
- * @param fileAbs - absolute path to the API source file
- * @param root - source root used to compute the relative path string
- * @returns the declared CRUD entries from this file (empty when none)
+ * @param fileAbs - Absolute path to the API source file.
+ * @param root - Source root used to compute the relative path string.
+ * @returns The declared CRUD entries from this file (empty when none)
  */
 async function extractDeclaredEntriesFromFile(fileAbs: string, root: DeclaredEntriesSourceRoot): Promise<readonly DeclaredEntry[]> {
   const text = await readFile(fileAbs, 'utf8');
@@ -93,41 +93,46 @@ export async function extractDeclaredEntries(roots: readonly DeclaredEntriesSour
  * Reads a directory's `Dirent` entries; returns an empty list when the
  * path is unreadable (e.g. permission denied, race-condition removal).
  *
- * @param path - absolute directory path
- * @returns the directory entries or `[]` on failure
+ * @param path - Absolute directory path.
+ * @returns The directory entries or `[]` on failure.
  */
 async function readDirSafe(path: string): Promise<readonly Dirent[]> {
+  let result: readonly Dirent[];
   try {
-    return await readdir(path, { withFileTypes: true });
+    result = await readdir(path, { withFileTypes: true });
   } catch {
-    return [];
+    result = [];
   }
+  return result;
 }
 
 async function collectApiFiles(rootAbs: string): Promise<readonly string[]> {
   const files: string[] = [];
   const stack: string[] = [];
+  let isDir = false;
   try {
     const stats = await stat(rootAbs);
-    if (!stats.isDirectory()) return [];
-    stack.push(rootAbs);
+    isDir = stats.isDirectory();
   } catch {
-    return [];
+    isDir = false;
   }
-  while (stack.length > 0) {
-    const current = stack.pop() as string;
-    const entries = await readDirSafe(current);
-    for (const entry of entries) {
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(full);
-        continue;
-      }
-      if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-        files.push(full);
+  if (isDir) {
+    stack.push(rootAbs);
+    while (stack.length > 0) {
+      const current = stack.pop() as string;
+      const entries = await readDirSafe(current);
+      for (const entry of entries) {
+        const full = join(current, entry.name);
+        if (entry.isDirectory()) {
+          stack.push(full);
+          continue;
+        }
+        if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
+          files.push(full);
+        }
       }
     }
+    files.sort((a, b) => a.localeCompare(b));
   }
-  files.sort((a, b) => a.localeCompare(b));
   return files;
 }

@@ -6,8 +6,8 @@ import { DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent
 export const DEFAULT_EXAMPLE_SCHEDULE_SELECTION_CALENDAR_DATE_POPOVER_KEY = 'examplecalendarselection';
 
 export interface DocExtensionExampleScheduleSelectionCalendarDatePopoverConfig {
-  origin: ElementRef;
-  injector: Injector;
+  readonly origin: ElementRef;
+  readonly injector: Injector;
 }
 
 @Component({

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- aggregator NgModule for the deprecated DbxFormCalendarModule; replacement is provideDbxForgeCalendarFieldDeclarations() */
 import { NgModule } from '@angular/core';
 import { DbxScheduleSelectionCalendarComponent } from './calendar.schedule.selection.component';
 import { DbxScheduleSelectionCalendarDatePopoverButtonComponent } from './calendar.schedule.selection.popover.button.component';

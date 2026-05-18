@@ -37,15 +37,18 @@ export type FirestoreQueryOrderByAndRangeWhereTuple = [FirestoreQueryConstraint<
  * include documents that are descendants of the specified parent. It's useful for hierarchical data
  * structures where you need to retrieve all documents of a certain type that belong to a specific parent.
  *
+ * @param parentRef - The parent document reference.
+ * @returns Array of query constraints to filter by parent document.
+ *
  * @template P - The parent document data type
- * @param parentRef - The parent document reference
- * @returns Array of query constraints to filter by parent document
  *
  * @example
+ * ```ts
  * // Get all 'comments' documents under a specific 'post'
  * const postRef = doc(firestore, 'posts', postId);
  * const query = collectionGroup(firestore, 'comments')
  *   .where(...allChildDocumentsUnderParent(postRef));
+ * ```
  */
 export function allChildDocumentsUnderParent<P>(parentRef: DocumentReference<P>): FirestoreQueryOrderByDocumentIdRangeBoundsTuple {
   return allChildDocumentsUnderParentPath(parentRef.path);
@@ -59,12 +62,14 @@ export function allChildDocumentsUnderParent<P>(parentRef: DocumentReference<P>)
  * Uses a range query on document IDs to efficiently filter for descendants.
  *
  * @param parentPath - The full path to the parent document (e.g., 'users/123')
- * @returns Array of query constraints to filter by parent path
+ * @returns Array of query constraints to filter by parent path.
  *
  * @example
+ * ```ts
  * // Get all 'comments' under a specific post without creating a reference
  * const query = collectionGroup(firestore, 'comments')
  *   .where(...allChildDocumentsUnderParentPath('posts/abc123'));
+ * ```
  */
 export function allChildDocumentsUnderParentPath(parentPath: string): FirestoreQueryOrderByDocumentIdRangeBoundsTuple {
   // https://medium.com/firebase-developers/how-to-query-collections-in-firestore-under-a-certain-path-6a0d686cebd2
@@ -106,16 +111,19 @@ export function allChildDocumentsUnderRelativePath<T = object>(orderByFieldPath:
  * It's useful when you're storing references to other models as strings in the format
  * 'collectionType/id'.
  *
- * @template T - The document data type
- * @param orderByFieldPath - The field containing model references
- * @param value - The root model identity containing the collection type to search for
+ * @param orderByFieldPath - The field containing model references.
+ * @param value - The root model identity containing the collection type to search for.
  * @param sortDirection - Optional direction to sort results (default: 'asc')
- * @returns Array of query constraints to filter by model type
+ * @returns Array of query constraints to filter by model type.
+ *
+ * @template T - The document data type
  *
  * @example
+ * ```ts
  * // Find all documents where the 'reference' field contains a reference to a 'users' model
  * const query = collection(firestore, 'documents')
  *   .where(...whereStringHasRootIdentityModelKey('reference', { collectionType: 'users' }));
+ * ```
  */
 export function whereStringHasRootIdentityModelKey<T = object>(orderByFieldPath: FieldPathOrStringPathOf<T> | FieldPathOrStringPath, value: RootFirestoreModelIdentity, sortDirection?: OrderByDirection): FirestoreQueryOrderByRangeBoundsTuple {
   return whereStringValueHasPrefix(orderByFieldPath as FieldPathOrStringPath, `${value.collectionType}/`, sortDirection);

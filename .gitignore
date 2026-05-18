@@ -40,7 +40,7 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
-/.stats
+.stats/
 
 # System Files
 .DS_Store
@@ -71,7 +71,7 @@ service_account.json
 /.cache
 
 # CI/Testing
-/.reports
+.reports/
 /.tmp
 vitest.config.*.timestamp*
 
@@ -84,3 +84,4 @@ setup/.tmp
 
 .claude/worktrees
 .agents
+scheduled_tasks.lock

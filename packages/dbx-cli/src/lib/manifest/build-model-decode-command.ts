@@ -111,6 +111,8 @@ function runHandler(manifest: CliModelManifest, argv: ModelDecodeArgv): void {
  * @param rawKey - The Firestore key string.
  * @param manifest - The generated model manifest.
  * @returns The decoded key with leaf, ancestors, and any unresolved prefixes.
+ * @throws {CliError} When `rawKey` is empty or does not parse into an even number of `prefix/id` segments.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function decodeFirestoreModelKey(rawKey: string, manifest: CliModelManifest): DecodedKey {
@@ -149,20 +151,20 @@ export function decodeFirestoreModelKey(rawKey: string, manifest: CliModelManife
 }
 
 function toSegment(prefix: string, id: string, entry: CliModelManifestEntry | undefined): DecodedKeySegment {
-  if (!entry) {
-    return { prefix, id };
-  }
-  return {
-    prefix,
-    id,
-    modelName: entry.modelName,
-    modelType: entry.modelType,
-    modelGroup: entry.modelGroup,
-    identityConst: entry.identityConst,
-    parentIdentityConst: entry.parentIdentityConst,
-    sourcePackage: entry.sourcePackage,
-    sourceFile: entry.sourceFile
-  };
+  const result: DecodedKeySegment = entry
+    ? {
+        prefix,
+        id,
+        modelName: entry.modelName,
+        modelType: entry.modelType,
+        modelGroup: entry.modelGroup,
+        identityConst: entry.identityConst,
+        parentIdentityConst: entry.parentIdentityConst,
+        sourcePackage: entry.sourcePackage,
+        sourceFile: entry.sourceFile
+      }
+    : { prefix, id };
+  return result;
 }
 
 /**
@@ -170,8 +172,9 @@ function toSegment(prefix: string, id: string, entry: CliModelManifestEntry | un
  * MCP `dbx_model_decode` key-mode output for consistency between agent and
  * shell consumers.
  *
- * @param decoded - the decoded key returned by {@link decodeFirestoreModelKey}.
- * @returns the formatted block with a trailing newline.
+ * @param decoded - The decoded key returned by {@link decodeFirestoreModelKey}.
+ * @returns The formatted block with a trailing newline.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function renderDecodedKey(decoded: DecodedKey): string {
@@ -190,26 +193,24 @@ export function renderDecodedKey(decoded: DecodedKey): string {
 }
 
 function renderLeafLines(leaf: DecodedKeySegment): string[] {
-  if (!leaf.modelName) {
-    return [`Model: <unknown — prefix '${leaf.prefix}' not in manifest>`, `prefix: ${leaf.prefix}`, `id: ${leaf.id}`];
-  }
-
-  const lines: string[] = [`Model: ${leaf.modelName}`];
-  if (leaf.identityConst) lines.push(`identityConst: ${leaf.identityConst}`);
-  if (leaf.modelType) lines.push(`modelType: ${leaf.modelType}`);
-  lines.push(`prefix: ${leaf.prefix}`, `id: ${leaf.id}`);
-  if (leaf.modelGroup) lines.push(`modelGroup: ${leaf.modelGroup}`);
-  if (leaf.parentIdentityConst) lines.push(`parentIdentityConst: ${leaf.parentIdentityConst}`);
-  if (leaf.sourcePackage) {
-    const sourceSuffix = leaf.sourceFile ? ` (${leaf.sourceFile})` : '';
-    lines.push(`source: ${leaf.sourcePackage}${sourceSuffix}`);
+  let lines: string[];
+  if (leaf.modelName) {
+    lines = [`Model: ${leaf.modelName}`];
+    if (leaf.identityConst) lines.push(`identityConst: ${leaf.identityConst}`);
+    if (leaf.modelType) lines.push(`modelType: ${leaf.modelType}`);
+    lines.push(`prefix: ${leaf.prefix}`, `id: ${leaf.id}`);
+    if (leaf.modelGroup) lines.push(`modelGroup: ${leaf.modelGroup}`);
+    if (leaf.parentIdentityConst) lines.push(`parentIdentityConst: ${leaf.parentIdentityConst}`);
+    if (leaf.sourcePackage) {
+      const sourceSuffix = leaf.sourceFile ? ` (${leaf.sourceFile})` : '';
+      lines.push(`source: ${leaf.sourcePackage}${sourceSuffix}`);
+    }
+  } else {
+    lines = [`Model: <unknown — prefix '${leaf.prefix}' not in manifest>`, `prefix: ${leaf.prefix}`, `id: ${leaf.id}`];
   }
   return lines;
 }
 
 function renderAncestorLine(ancestor: DecodedKeySegment): string {
-  if (ancestor.modelName) {
-    return `- ${ancestor.modelName} — prefix ${ancestor.prefix}, id ${ancestor.id}`;
-  }
-  return `- <unknown> — prefix ${ancestor.prefix}, id ${ancestor.id}`;
+  return ancestor.modelName ? `- ${ancestor.modelName} — prefix ${ancestor.prefix}, id ${ancestor.id}` : `- <unknown> — prefix ${ancestor.prefix}, id ${ancestor.id}`;
 }

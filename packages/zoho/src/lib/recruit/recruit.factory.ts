@@ -45,8 +45,8 @@ export type ZohoRecruitFactory = (config: ZohoRecruitConfig) => ZohoRecruit;
  * Each client handles OAuth token refresh on {@link ZohoInvalidTokenError}, rate limiting,
  * and Zoho Recruit's non-standard error responses (200 status with error body).
  *
- * @param factoryConfig - Configuration providing account credentials and optional overrides
- * @returns A factory function that creates authenticated Zoho Recruit clients
+ * @param factoryConfig - Configuration providing account credentials and optional overrides.
+ * @returns A factory function that creates authenticated Zoho Recruit clients.
  *
  * @example
  * ```typescript
@@ -61,6 +61,7 @@ export type ZohoRecruitFactory = (config: ZohoRecruitConfig) => ZohoRecruit;
  * // Use the recruit context for API calls:
  * const { recruitContext } = zohoRecruit;
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): ZohoRecruitFactory {

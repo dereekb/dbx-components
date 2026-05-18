@@ -38,15 +38,16 @@ export interface CopyToClipboardFunctionConfig {
 /**
  * Creates a {@link CopyToClipboardFunction} that retries the copy operation until success or timeout.
  *
- * @param clipboard - the Angular CDK Clipboard instance
- * @param config - optional timeout and retry settings
- * @returns a function that copies text to the clipboard
+ * @param clipboard - The Angular CDK Clipboard instance.
+ * @param config - Optional timeout and retry settings.
+ * @returns Copies text to the clipboard.
  *
  * @example
  * ```ts
  * const copy = copyToClipboardFunction(clipboard, { copyTimeoutSeconds: 10 });
  * const success = await copy('some text');
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function copyToClipboardFunction(clipboard: Clipboard, config?: CopyToClipboardFunctionConfig): CopyToClipboardFunction {
@@ -91,14 +92,15 @@ export function copyToClipboardFunction(clipboard: Clipboard, config?: CopyToCli
  *
  * Must be called in an Angular injection context.
  *
- * @param config - optional timeout and retry settings
- * @returns the clipboard copy function
+ * @param config - Optional timeout and retry settings.
+ * @returns The clipboard copy function.
  *
  * @example
  * ```ts
  * const copy = injectCopyToClipboardFunction();
  * await copy('copied text');
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function injectCopyToClipboardFunction(config?: CopyToClipboardFunctionConfig) {
@@ -142,8 +144,8 @@ export interface CopyToClipboardFunctionWithSnackbarMessageConfig extends CopyTo
  *
  * Must be called in an Angular injection context.
  *
- * @param config - optional configuration for copy behavior and snackbar messages
- * @returns clipboard copy function with snackbar notification support
+ * @param config - Optional configuration for copy behavior and snackbar messages.
+ * @returns Clipboard copy function with snackbar notification support.
  *
  * @example
  * ```ts
@@ -172,9 +174,9 @@ export function injectCopyToClipboardFunctionWithSnackbarMessage(config?: CopyTo
     if (config != null) {
       const { successMessage: inputSuccessMessage, failureMessage: inputFailureMessage, snackbarDuration: inputSnackbarDuration } = config;
 
-      successMessage = (inputSuccessMessage !== undefined ? inputSuccessMessage : successMessage) ?? DEFAULT_SUCCESS_MESSAGE;
-      failureMessage = (inputFailureMessage !== undefined ? inputFailureMessage : failureMessage) ?? DEFAULT_FAILURE_MESSAGE;
-      snackbarDuration = (inputSnackbarDuration !== undefined ? inputSnackbarDuration : snackbarDuration) ?? DEFAULT_SNACKBAR_DURATION;
+      successMessage = (inputSuccessMessage === undefined ? successMessage : inputSuccessMessage) ?? DEFAULT_SUCCESS_MESSAGE;
+      failureMessage = (inputFailureMessage === undefined ? failureMessage : inputFailureMessage) ?? DEFAULT_FAILURE_MESSAGE;
+      snackbarDuration = (inputSnackbarDuration === undefined ? snackbarDuration : inputSnackbarDuration) ?? DEFAULT_SNACKBAR_DURATION;
     }
   };
 

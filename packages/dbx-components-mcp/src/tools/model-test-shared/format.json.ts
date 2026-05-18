@@ -24,10 +24,10 @@ interface ItIndexEntry {
 /**
  * Renders the tree report for `dbx_model_test_tree` in JSON form.
  *
- * @param tree - the parsed spec tree
- * @param view - the requested view
- * @param filters - optional model / describe-path filters
- * @returns the JSON body
+ * @param tree - The parsed spec tree.
+ * @param view - The requested view.
+ * @param filters - Optional model / describe-path filters.
+ * @returns The JSON body.
  */
 export function formatTreeAsJson(tree: SpecFileTree, view: SpecTreeView = 'all', filters: SpecTreeFilters = {}): string {
   if (view === 'helpers') {
@@ -47,9 +47,9 @@ export function formatTreeAsJson(tree: SpecFileTree, view: SpecTreeView = 'all',
 /**
  * Renders the search report for `dbx_model_test_search` in JSON form.
  *
- * @param tree - the parsed spec tree (used for the wrapper metadata)
- * @param result - the search outcome
- * @returns the JSON body
+ * @param tree - The parsed spec tree (used for the wrapper metadata)
+ * @param result - The search outcome.
+ * @returns The JSON body.
  */
 export function formatSearchAsJson(tree: SpecFileTree, result: SpecSearchResult): string {
   const payload = { specPath: tree.specPath, prefix: tree.prefix, prefixSource: tree.prefixSource, query: result.query, hits: result.hits };

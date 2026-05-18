@@ -23,6 +23,13 @@ function MERGE_RELATION_TAG(a: RelationTag): RelationTag {
   return a; // a and b are the same.
 }
 
+const MERGE_WITH_INSERTED_SUFFIX = (a: RelationTag, _b: RelationTag): RelationTag => {
+  return new RelationTag({
+    key: a.key,
+    type: `${a.type}_inserted`
+  });
+};
+
 describe('ModelRelationUtility', () => {
   describe('addToCollection()', () => {
     let current: string[];
@@ -309,12 +316,7 @@ describe('ModelRelationUtility', () => {
       });
 
       describe('INSERT', () => {
-        const MERGE_WITH_SUFFIX = (a: RelationTag, _b: RelationTag): RelationTag => {
-          return new RelationTag({
-            key: a.key,
-            type: `${a.type}_inserted`
-          });
-        };
+        const MERGE_WITH_SUFFIX = MERGE_WITH_INSERTED_SUFFIX;
 
         it('should update an existing item', () => {
           const insert = [
@@ -363,6 +365,30 @@ describe('ModelRelationUtility', () => {
           expect(result.find((x) => x.key === 'a')!.type).toBe('a_inserted');
           expect(result.find((x) => x.key === 'b')!.type).toBe('b'); // unchanged
           expect(result.find((x) => x.key === 'c')!.type).toBe('c'); // new
+        });
+      });
+
+      describe('REMOVE_AND_INSERT', () => {
+        const MERGE_WITH_SUFFIX = MERGE_WITH_INSERTED_SUFFIX;
+
+        it('should remove all current values and then insert the new values', () => {
+          const insert = [
+            new RelationTag({
+              key: 'c', // new key
+              type: 'c'
+            }),
+            new RelationTag({
+              key: 'd', // new key
+              type: 'd'
+            })
+          ];
+
+          const result = ModelRelationUtility.modifyCollection(current, RelationChange.REMOVE_AND_INSERT, insert, { merge: MERGE_WITH_SUFFIX, readType: READ_RELATION_TAG_TYPE, readKey: READ_RELATION_KEY });
+          expect(result.length).toBe(2);
+          expect(result.find((x) => x.key === 'a')).toBeUndefined(); // original removed
+          expect(result.find((x) => x.key === 'b')).toBeUndefined(); // original removed
+          expect(result.find((x) => x.key === 'c')).toBeDefined();
+          expect(result.find((x) => x.key === 'd')).toBeDefined();
         });
       });
     });

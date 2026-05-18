@@ -51,21 +51,32 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.apiDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const apiAbs = resolve(cwd, parsed.apiDir);
-  let extraction;
-  try {
-    extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
-  } catch (err) {
-    return toolError(`Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`);
+  let result: ToolResult;
+  if (ensureError === undefined) {
+    const apiAbs = resolve(cwd, parsed.apiDir);
+    let extraction;
+    let inspectError: string | undefined;
+    try {
+      extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
+    } catch (err) {
+      inspectError = `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (inspectError === undefined && extraction !== undefined) {
+      const text = parsed.format === 'json' ? formatListAsJson(extraction) : formatListAsMarkdown(extraction);
+      result = { content: [{ type: 'text', text }] };
+    } else {
+      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
+    }
+  } else {
+    result = toolError(ensureError);
   }
-  const text = parsed.format === 'json' ? formatListAsJson(extraction) : formatListAsMarkdown(extraction);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-export const modelFixtureListAppTool: DbxTool = { definition: TOOL, run };
+export const MODEL_FIXTURE_LIST_APP_TOOL: DbxTool = { definition: TOOL, run };

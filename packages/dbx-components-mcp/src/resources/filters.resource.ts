@@ -29,8 +29,8 @@ export interface RegisterFiltersResourceOptions {
  * filter) on the given server, mirroring the layout used by other registry
  * resources so clients can browse instead of invoking `dbx_filter_lookup`.
  *
- * @param server - the MCP server to register resources against
- * @param options - registry the resources read from
+ * @param server - The MCP server to register resources against.
+ * @param options - Registry the resources read from.
  */
 export function registerFiltersResource(server: McpServer, options: RegisterFiltersResourceOptions): void {
   const { registry } = options;

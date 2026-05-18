@@ -14,12 +14,12 @@ export interface DbxAppContextStateData {
   state: DbxAppContextState;
 }
 
-export const initialState: DbxAppContextStateData = {
+export const INITIAL_STATE: DbxAppContextStateData = {
   state: DBX_INIT_APP_CONTEXT_STATE
 };
 
 export const reducer = createReducer(
-  initialState,
+  INITIAL_STATE,
   /**
    * When DbxAppContextActions.dbxAppContextSetState is pushed, update the app's state to match the argument state.
    */

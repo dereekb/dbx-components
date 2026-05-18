@@ -21,8 +21,8 @@ export interface ValidateAppOptions {
  * upstream `@dereekb/*` package it depends on) against the handlers wired
  * in the app's `crud.functions.ts`.
  *
- * @param options - resolved paths and optional model filter
- * @returns the populated validation report
+ * @param options - Resolved paths and optional model filter.
+ * @returns The populated validation report.
  */
 export async function validateAppModelApi(options: ValidateAppOptions): Promise<ValidateReport> {
   const { roots, workspaceRoot } = await resolveApiSourceRoots({ componentAbs: options.componentAbs, workspaceRoot: undefined });

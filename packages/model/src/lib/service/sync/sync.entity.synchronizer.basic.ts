@@ -137,11 +137,12 @@ export interface BasicSyncEntityCommonTypeSynchronizerConfig {
  * 2. Secondary sources are synchronized sequentially; if a secondary reports deletion while primary did not, the sync restarts once.
  * 3. Replica sources are synchronized concurrently (up to 3 in parallel).
  *
- * @param config - common type, sources, and context loader
- * @returns a synchronizer for the configured common type
- * @throws {NoPrimarySyncSourceError} when no primary source is found
- * @throws {MultiplePrimarySyncSourceError} when more than one primary source is found
- * @throws {SynchronizationFailedError} when primary or secondary sync returns failed/error
+ * @param config - Common type, sources, and context loader.
+ * @returns A synchronizer for the configured common type.
+ * @throws {NoPrimarySyncSourceError} When no primary source is found.
+ * @throws {MultiplePrimarySyncSourceError} When more than one primary source is found.
+ * @throws {SynchronizationFailedError} When primary or secondary sync returns failed/error.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: BasicSyncEntityCommonTypeSynchronizerConfig): BasicSyncEntityCommonTypeSynchronizer {
@@ -155,8 +156,8 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
   /**
    * Loads the relevant sources for the given entity and context.
    *
-   * @param entityCommonTypeIdPair The common type/id pair identifying the entity.
-   * @param entitySourceContext The contextual information for the entity.
+   * @param entityCommonTypeIdPair - The common type/id pair identifying the entity.
+   * @param entitySourceContext - The contextual information for the entity.
    * @returns The relevant sources for the entity.
    */
   function loadSources(entityCommonTypeIdPair: SyncEntityCommonTypeIdPair, entitySourceContext: BasicSyncEntityCommonTypeSynchronizerEntitySourceContextLoaderResult): BasicSyncEntityCommonTypeSynchronizerSourceSyncEntityFunctionInput[] {
@@ -267,7 +268,7 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
     /**
      * Performs the synchronization for this entity instance.
      *
-     * @param context Optional synchronization context with additional configuration.
+     * @param context - Optional synchronization context with additional configuration.
      * @returns The result of the synchronization operation.
      */
     const synchronize: SyncEntityCommonTypeSynchronizerInstance['synchronize'] = async (context?: Maybe<SyncEntityCommonTypeSynchronizerFunctionContext>) => {
@@ -390,7 +391,7 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
           };
         }
 
-        return result as PerformSynchronizationOfSourcesResult;
+        return result;
       }
 
       const result = await performSynchronizationOfSources({ syncRecursionDepth: 0 });

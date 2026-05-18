@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input, type Signal, viewChild } from '@angular/core';
 import { AbstractPopoverRefDirective, DbxButtonComponent, type DbxButtonStyle, DbxPopoverService } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { DbxFirebaseModelEntitiesPopoverComponent, type DbxFirebaseModelEntitiesPopoverConfigWithoutOrigin } from './model.entities.popover.component';
@@ -40,12 +40,12 @@ export class DbxFirebaseModelEntitiesPopoverButtonComponent extends AbstractPopo
   readonly buttonElement = viewChild.required<string, ElementRef>('button', { read: ElementRef });
   readonly config = input<DbxFirebaseModelEntitiesPopoverButtonConfig>();
 
-  readonly buttonDisplaySignal = computed(() => {
+  readonly buttonDisplaySignal: Signal<DbxButtonDisplay> = computed(() => {
     const config = this.config();
     return config?.buttonDisplay ?? { icon: config?.icon ?? 'data_object' };
   });
 
-  readonly buttonStyleSignal = computed(() => this.config()?.buttonStyle ?? ({ type: 'icon' } as DbxButtonStyle));
+  readonly buttonStyleSignal: Signal<DbxButtonStyle> = computed(() => this.config()?.buttonStyle ?? { type: 'icon' });
 
   protected override _makePopoverRef(origin?: Maybe<ElementRef>): NgPopoverRef<unknown, unknown> {
     if (!origin) {

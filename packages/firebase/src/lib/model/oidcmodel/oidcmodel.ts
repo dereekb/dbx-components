@@ -1,4 +1,4 @@
-import { type JsonSerializableObject, type Maybe } from '@dereekb/util';
+import { type JsonSerializableObject, type SuggestedString, type Maybe } from '@dereekb/util';
 import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreModelIdentity, snapshotConverterFunctions, optionalFirestoreDate, optionalFirestoreNumber, optionalFirestoreString, firestoreString, type FirebaseAuthOwnershipKey, firestorePassThroughField, type FirebaseAuthUserId } from '../../common';
 import { type GrantedDeleteRole, type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 
@@ -35,7 +35,7 @@ export const oidcEntryIdentity = firestoreModelIdentity('oidcEntry', 'oidc_e');
  *
  * Used as the discriminator in the {@link OidcEntry.type} field.
  */
-export type OidcEntryType = 'Session' | 'AccessToken' | 'AuthorizationCode' | 'RefreshToken' | 'DeviceCode' | 'ClientCredentials' | 'Client' | 'InitialAccessToken' | 'RegistrationAccessToken' | 'Interaction' | 'ReplayDetection' | 'PushedAuthorizationRequest' | 'Grant' | 'BackchannelAuthenticationRequest' | (string & {});
+export type OidcEntryType = SuggestedString<'Session' | 'AccessToken' | 'AuthorizationCode' | 'RefreshToken' | 'DeviceCode' | 'ClientCredentials' | 'Client' | 'InitialAccessToken' | 'RegistrationAccessToken' | 'Interaction' | 'ReplayDetection' | 'PushedAuthorizationRequest' | 'Grant' | 'BackchannelAuthenticationRequest'>;
 
 /**
  * Type value for Client adapter entries.
@@ -178,8 +178,8 @@ export interface OidcEntryFirestoreCollectionConfig {
 /**
  * Returns the Firestore {@link CollectionReference} for {@link OidcEntry} documents.
  *
- * @param context - the Firestore context to use
- * @returns the CollectionReference for OidcEntry documents
+ * @param context - The Firestore context to use.
+ * @returns The CollectionReference for OidcEntry documents.
  */
 export function oidcEntryCollectionReference(context: FirestoreContext): CollectionReference<OidcEntry> {
   return context.collection(oidcEntryIdentity.collectionName);
@@ -188,8 +188,8 @@ export function oidcEntryCollectionReference(context: FirestoreContext): Collect
 /**
  * Creates an {@link OidcEntryFirestoreCollection} from the given configuration.
  *
- * @param config - the Firestore context and collection configuration
- * @returns a configured OidcEntryFirestoreCollection
+ * @param config - The Firestore context and collection configuration.
+ * @returns A configured OidcEntryFirestoreCollection.
  */
 export function oidcEntryFirestoreCollection(config: OidcEntryFirestoreCollectionConfig): OidcEntryFirestoreCollection {
   const { firestoreContext } = config;

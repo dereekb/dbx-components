@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { type Maybe, separateValues } from '@dereekb/util';
 import { DBX_INJECTION_COMPONENT_DATA } from '@dereekb/dbx-core';
 import { DbxActionFormDirective } from '@dereekb/dbx-form';
 import { type OidcScope } from '@dereekb/firebase';
-import { separateValues } from '@dereekb/util';
 import { DbxFirebaseOidcConfigService } from '../../service/oidc.configuration.service';
 import { type DbxFirebaseOAuthConsentScopesViewData } from './oauth.consent.scope.view.component';
 import { type OAuthConsentScope } from './oauth.consent.scope';
@@ -33,10 +33,10 @@ import { DbxFirebaseOAuthConsentScopeFormComponent } from './oauth.consent.scope
 @Component({
   selector: 'dbx-firebase-oauth-consent-scope-default-view',
   template: `
-    @if (alwaysGrantedLabel(); as label) {
+    @if (alwaysGrantedLabelSignal(); as label) {
       <p class="dbx-firebase-oauth-consent-always-granted dbx-hint">Always granted: {{ label }}</p>
     }
-    <dbx-firebase-oauth-consent-scope-form dbxActionForm [config]="formFieldsConfig()"></dbx-firebase-oauth-consent-scope-form>
+    <dbx-firebase-oauth-consent-scope-form dbxActionForm [config]="formFieldsConfigSignal()"></dbx-firebase-oauth-consent-scope-form>
   `,
   imports: [DbxFirebaseOAuthConsentScopeFormComponent, DbxActionFormDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,7 +46,7 @@ export class DbxFirebaseOAuthConsentScopeDefaultViewComponent {
   private readonly _oidcConfigService = inject(DbxFirebaseOidcConfigService);
   private readonly _data = inject<DbxFirebaseOAuthConsentScopesViewData>(DBX_INJECTION_COMPONENT_DATA);
 
-  readonly mappedScopes = computed<OAuthConsentScope[]>(() => {
+  readonly mappedScopesSignal = computed<OAuthConsentScope[]>(() => {
     const availableScopes = this._oidcConfigService.availableScopes;
     const availableScopeValues = new Set(availableScopes.map((s) => s.value));
     const { included: knownScopes, excluded: unknownScopes } = separateValues(this._data.scopes, (name) => availableScopeValues.has(name));
@@ -60,17 +60,17 @@ export class DbxFirebaseOAuthConsentScopeDefaultViewComponent {
     ];
   });
 
-  readonly optionalScopes = computed<OAuthConsentScope[]>(() => {
+  readonly optionalScopesSignal = computed<OAuthConsentScope[]>(() => {
     const requiredSet = new Set<OidcScope>(this._data.requiredScopes ?? []);
-    return this.mappedScopes().filter((scope) => !requiredSet.has(scope.name));
+    return this.mappedScopesSignal().filter((scope) => !requiredSet.has(scope.name));
   });
 
-  readonly alwaysGrantedLabel = computed<string | null>(() => {
+  readonly alwaysGrantedLabelSignal = computed<Maybe<string>>(() => {
     const required = this._data.requiredScopes ?? [];
     return required.length > 0 ? required.join(', ') : null;
   });
 
-  readonly formFieldsConfig = computed<OAuthConsentScopesFormFieldsConfig>(() => ({
-    optionalScopes: this.optionalScopes()
+  readonly formFieldsConfigSignal = computed<OAuthConsentScopesFormFieldsConfig>(() => ({
+    optionalScopes: this.optionalScopesSignal()
   }));
 }

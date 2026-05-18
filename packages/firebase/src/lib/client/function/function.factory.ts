@@ -35,8 +35,8 @@ export type FirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap> = (fun
  * Each key in the config map becomes an `HttpsCallable` function wrapped with {@link directDataHttpsCallable}
  * for direct data access. Per-key options (e.g., timeout) are applied if provided.
  *
- * @param configMap - maps function keys to their optional configuration
- * @returns a {@link FirebaseFunctionMapFactory} that creates a typed callable function map for a given `Functions` instance
+ * @param configMap - Maps function keys to their optional configuration.
+ * @returns A {@link FirebaseFunctionMapFactory} that creates a typed callable function map for a given `Functions` instance.
  *
  * @example
  * ```ts
@@ -47,6 +47,7 @@ export type FirebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap> = (fun
  * const functions = factory(getFunctions());
  * const result = await functions.createUser({ name: 'Alice' });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firebaseFunctionMapFactory<M extends FirebaseFunctionTypeMap>(configMap: FirebaseFunctionTypeConfigMap<M>): FirebaseFunctionMapFactory<M> {
@@ -126,8 +127,8 @@ export type LazyFirebaseFunctions<M extends FirebaseFunctionsMap> = {
  * Each function group is lazily initialized on first access using `cachedGetter`,
  * so `httpsCallable` instances are only created when actually needed.
  *
- * @param configMap - maps each function group key to its `[ClassType, Factory]` tuple
- * @returns a {@link LazyFirebaseFunctionsFactory} that creates a lazy-loaded function map for a given `Functions` instance
+ * @param configMap - Maps each function group key to its `[ClassType, Factory]` tuple.
+ * @returns A {@link LazyFirebaseFunctionsFactory} that creates a lazy-loaded function map for a given `Functions` instance.
  *
  * @example
  * ```ts
@@ -139,6 +140,7 @@ export type LazyFirebaseFunctions<M extends FirebaseFunctionsMap> = {
  * const lazyFns = factory(getFunctions());
  * const notifFns = lazyFns.notificationFunctions(); // initialized on first call
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function lazyFirebaseFunctionsFactory<M extends FirebaseFunctionsMap, C extends FirebaseFunctionsConfigMap<M> = FirebaseFunctionsConfigMap<M>>(configMap: C): LazyFirebaseFunctionsFactory<M> {

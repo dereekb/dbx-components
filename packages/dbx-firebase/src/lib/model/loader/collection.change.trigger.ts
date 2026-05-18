@@ -1,5 +1,5 @@
 import { SubscriptionObject, type ObservableOrValue, asObservable } from '@dereekb/rxjs';
-import { BehaviorSubject, filter, switchMap, exhaustMap, EMPTY } from 'rxjs';
+import { BehaviorSubject, filter, switchMap, exhaustMap, EMPTY, type Observable } from 'rxjs';
 import { type Destroyable, type Maybe, type Initialized } from '@dereekb/util';
 import { type DbxFirebaseCollectionChangeWatcher, dbxFirebaseCollectionChangeWatcher } from './collection.change.watcher';
 import { type DbxFirebaseCollectionLoaderAccessor } from './collection.loader';
@@ -56,13 +56,18 @@ export class DbxFirebaseCollectionChangeTriggerInstance<S extends DbxFirebaseCol
     this._sub.subscription = this._triggerFunction
       .pipe(
         switchMap((triggerFunction) => {
+          let result: Observable<unknown>;
+
           if (triggerFunction) {
-            return this.watcher.triggered$.pipe(
+            result = this.watcher.triggered$.pipe(
               filter((triggered) => triggered),
               exhaustMap(() => asObservable(triggerFunction(this)))
             );
+          } else {
+            result = EMPTY;
           }
-          return EMPTY;
+
+          return result;
         })
       )
       .subscribe();

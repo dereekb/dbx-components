@@ -22,11 +22,11 @@ import type { AppFixturesExtraction, FixtureDiagnostic, FixtureEntry, FixtureMet
  * positives just because the dbx-components-mcp registry doesn't know
  * about their models).
  *
- * @param extraction - the parsed fixture file
- * @param options - optional registry hookup
- * @param options.registry - the optional fixture-model registry consulted by
- *   the parent-field-naming and cross-reference rules
- * @returns the aggregated validation result
+ * @param extraction - The parsed fixture file.
+ * @param options - Optional registry hookup.
+ * @param options.registry - The optional fixture-model registry consulted by
+ *   the parent-field-naming and cross-reference rules.
+ * @returns The aggregated validation result.
  */
 export function validateAppFixtures(extraction: AppFixturesExtraction, options: { readonly registry?: FixtureModelRegistry } = {}): FixtureValidationResult {
   const diagnostics: FixtureDiagnostic[] = [];

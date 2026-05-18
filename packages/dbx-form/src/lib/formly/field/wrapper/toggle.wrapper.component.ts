@@ -14,7 +14,7 @@ export interface DbxFormToggleWrapperConfig<T extends object = object> extends A
   /**
    * Optional function that returns an observable of the toggle label based on open state.
    */
-  toggleLabelObs?: (open: Maybe<boolean>) => Observable<string>;
+  readonly toggleLabelObs?: (open: Maybe<boolean>) => Observable<string>;
 }
 
 /**

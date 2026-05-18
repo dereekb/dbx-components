@@ -1,4 +1,5 @@
 import { type Observable } from 'rxjs';
+import type { Maybe } from '@dereekb/util';
 import { type DocumentData, type DocumentReference, type DocumentSnapshot, type FirestoreDataConverter, type PartialWithFieldValue, type SetOptions, type UpdateData, type WithFieldValue, type WriteResult } from '../types';
 import { type FirestoreAccessorArrayUpdate, type FirestoreAccessorIncrementUpdate, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type FirestoreDocumentDeleteParams, type FirestoreDocumentUpdateParams } from './accessor';
 
@@ -19,7 +20,7 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Creates a new accessor wrapper.
    *
-   * @param accessor - The accessor instance to wrap
+   * @param accessor - The accessor instance to wrap.
    */
   constructor(accessor: FirestoreDocumentDataAccessor<T, D>) {
     this._accessor = accessor;
@@ -28,7 +29,7 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Gets the wrapped accessor instance.
    *
-   * @returns The wrapped FirestoreDocumentDataAccessor instance
+   * @returns The wrapped FirestoreDocumentDataAccessor instance.
    */
   get accessor(): FirestoreDocumentDataAccessor<T, D> {
     return this._accessor;
@@ -37,7 +38,7 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Gets the document reference from the wrapped accessor.
    *
-   * @returns The DocumentReference for the current document
+   * @returns The DocumentReference for the current document.
    */
   get documentRef(): DocumentReference<T> {
     return this.accessor.documentRef;
@@ -46,7 +47,7 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Streams document snapshots from the wrapped accessor.
    *
-   * @returns An Observable that emits DocumentSnapshots when the document changes
+   * @returns An Observable that emits DocumentSnapshots when the document changes.
    */
   stream(): Observable<DocumentSnapshot<T>> {
     return this.accessor.stream();
@@ -55,8 +56,8 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Creates a new document with the provided data.
    *
-   * @param data - The data to create the document with
-   * @returns A Promise that resolves when the create operation completes
+   * @param data - Initial document contents.
+   * @returns Resolves when the create operation completes.
    */
   create(data: WithFieldValue<T>): Promise<WriteResult | void> {
     return this.accessor.create(data);
@@ -65,7 +66,7 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Gets the current document snapshot.
    *
-   * @returns A Promise that resolves with the current DocumentSnapshot
+   * @returns Resolves with the latest snapshot read for this document.
    */
   get(): Promise<DocumentSnapshot<T>> {
     return this.accessor.get();
@@ -74,18 +75,19 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Gets the document snapshot with a specific data converter.
    *
+   * @param converter - Converter applied to the raw snapshot, or null to skip conversion.
+   * @returns Resolves with the converted snapshot.
+   *
    * @template U - The converted data type
-   * @param converter - The data converter to use, or null for raw data
-   * @returns A Promise that resolves with the DocumentSnapshot with converted data
    */
-  getWithConverter<U = DocumentData>(converter: null | FirestoreDataConverter<U>): Promise<DocumentSnapshot<U>> {
+  getWithConverter<U = DocumentData>(converter: Maybe<FirestoreDataConverter<U>>): Promise<DocumentSnapshot<U>> {
     return this.accessor.getWithConverter(converter);
   }
 
   /**
    * Checks if the document exists.
    *
-   * @returns A Promise that resolves with true if the document exists, false otherwise
+   * @returns Resolves with true when the document is present, otherwise false.
    */
   exists(): Promise<boolean> {
     return this.accessor.exists();
@@ -94,8 +96,8 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Deletes the document.
    *
-   * @param params - Optional parameters for the delete operation
-   * @returns A Promise that resolves when the delete operation completes
+   * @param params - Overrides applied to the delete operation, if any.
+   * @returns Resolves when the delete operation completes.
    */
   delete(params?: FirestoreDocumentDeleteParams): Promise<void | WriteResult> {
     return this.accessor.delete(params);
@@ -104,16 +106,16 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Sets document data with merge options.
    *
-   * @param data - The partial data to set with merge
-   * @param options - The set options (e.g., merge settings)
-   * @returns A Promise that resolves when the set operation completes
+   * @param data - Partial fields written to the document.
+   * @param options - Controls merge behavior (e.g., merge or mergeFields).
+   * @returns Resolves when the set operation completes.
    */
   set(data: PartialWithFieldValue<T>, options: SetOptions): Promise<WriteResult | void>;
   /**
    * Sets document data, replacing any existing data.
    *
-   * @param data - The complete data to set
-   * @returns A Promise that resolves when the set operation completes
+   * @param data - Full replacement contents for the document.
+   * @returns Resolves when the set operation completes.
    */
   set(data: WithFieldValue<T>): Promise<WriteResult | void>;
   set(data: PartialWithFieldValue<T> | WithFieldValue<T>, options?: SetOptions): Promise<void | WriteResult> {
@@ -123,9 +125,9 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Updates specific fields of the document.
    *
-   * @param data - The fields to update and their new values
-   * @param params - Optional parameters for the update operation
-   * @returns A Promise that resolves when the update operation completes
+   * @param data - Field paths mapped to their new values.
+   * @param params - Overrides applied to the update operation, if any.
+   * @returns Resolves when the update operation completes.
    */
   update(data: UpdateData<D>, params?: FirestoreDocumentUpdateParams): Promise<void | WriteResult> {
     return this.accessor.update(data, params);
@@ -134,9 +136,9 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Increments numeric fields in the document.
    *
-   * @param data - Mapping of fields to increment and the amount to increment by
-   * @param params - Optional parameters for the increment operation
-   * @returns A Promise that resolves when the increment operation completes
+   * @param data - Field paths mapped to their increment amounts.
+   * @param params - Overrides applied to the increment operation, if any.
+   * @returns Resolves when the increment operation completes.
    */
   increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
     return this.accessor.increment(data, params);
@@ -145,9 +147,9 @@ export abstract class AbstractFirestoreDocumentDataAccessorWrapper<T, D = Docume
   /**
    * Updates array fields in the document.
    *
-   * @param data - The array update to apply
-   * @param params - Optional parameters for the update operation
-   * @returns A Promise that resolves when the update operation completes
+   * @param data - Array operations (union/remove) to apply per field.
+   * @param params - Overrides applied to the update operation, if any.
+   * @returns Resolves when the update operation completes.
    */
   arrayUpdate(data: FirestoreAccessorArrayUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<WriteResult | void> {
     return this.accessor.arrayUpdate(data, params);
@@ -178,10 +180,12 @@ export type InterceptAccessorFactoryFunction<T, D = DocumentData> = (input: Fire
  * original factory with the provided wrapper function, allowing for consistent modification
  * of all accessors created through the factory.
  *
+ * @param wrap - Wraps each accessor produced by the original factory.
+ * @returns Factory transformer that pipes accessors through the wrapper.
+ *
  * @template T - The document data type
  * @template D - The raw document data type in Firestore
- * @param wrap - Function to wrap each created accessor
- * @returns A function that transforms accessor factories to use the wrapper
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function interceptAccessorFactoryFunction<T, D = DocumentData>(wrap: WrapFirestoreDocumentDataAccessorFunction<T, D>): InterceptAccessorFactoryFunction<T, D> {

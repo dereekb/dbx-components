@@ -43,10 +43,11 @@ export abstract class SecondaryActionContextStoreSource<T = unknown, O = unknown
 /**
  * Filters null/undefined values from an observable of {@link ActionContextStore} instances.
  *
- * @typeParam T - The input value type.
- * @typeParam O - The output result type.
  * @param obs - The observable that may emit null/undefined store values.
  * @returns An observable that only emits non-null store instances.
+ *
+ * @typeParam T - The input value type.
+ * @typeParam O - The output result type.
  */
 export function actionContextStoreSourcePipe<T, O>(obs: Observable<Maybe<ActionContextStore<T, O>>>): Observable<ActionContextStore<T, O>> {
   return obs.pipe(filterMaybe());
@@ -67,12 +68,13 @@ export type PipeActionStoreFunction<R, T, O> = (store: ActionContextStore<T, O>)
  * Subscribes to the source's store observable and applies the provided function
  * via switchMap, automatically switching to the latest store.
  *
- * @typeParam R - The return type of the derived observable.
- * @typeParam T - The input value type.
- * @typeParam O - The output result type.
  * @param source - The action context store source to read from.
  * @param pipeFn - The function to apply to each emitted store.
  * @returns An observable of the derived value.
+ *
+ * @typeParam R - The return type of the derived observable.
+ * @typeParam T - The input value type.
+ * @typeParam O - The output result type.
  */
 export function pipeActionStore<R = unknown, T = unknown, O = unknown>(source: ActionContextStoreSource<T, O>, pipeFn: PipeActionStoreFunction<R, T, O>): Observable<R> {
   return source.store$.pipe(switchMap(pipeFn));
@@ -92,11 +94,12 @@ export type UseActionStoreFunction<T, O> = (store: ActionContextStore<T, O>) => 
  * This is a convenience for performing one-shot imperative operations on the store,
  * such as triggering an action or setting a value, without maintaining a long-lived subscription.
  *
- * @typeParam T - The input value type.
- * @typeParam O - The output result type.
  * @param source - The action context store source to read from.
  * @param useFn - The function to invoke with the store.
  * @returns The subscription (completes after first emission).
+ *
+ * @typeParam T - The input value type.
+ * @typeParam O - The output result type.
  */
 export function useActionStore<T = unknown, O = unknown>(source: ActionContextStoreSource<T, O>, useFn: UseActionStoreFunction<T, O>): Subscription {
   return source.store$.pipe(first()).subscribe(useFn);

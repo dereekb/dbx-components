@@ -97,8 +97,8 @@ interface UiSearchHit {
 /**
  * Tokenizes the query into lowercase non-empty tokens. Duplicates collapse.
  *
- * @param query - the raw multi-word search query
- * @returns the unique tokens in original-query order
+ * @param query - The raw multi-word search query.
+ * @returns The unique tokens in original-query order.
  */
 function tokenize(query: string): readonly string[] {
   const raw = query
@@ -175,9 +175,9 @@ function scoreClassName(className: string, token: string): number {
  *   relatedSlugs membership: 2
  *   description includes: 1
  *
- * @param entry - the UI registry entry being scored
- * @param token - the lowercase token to score against
- * @returns the additive score for this token/entry pair (`0` when there's no hit)
+ * @param entry - The UI registry entry being scored.
+ * @param token - The lowercase token to score against.
+ * @returns The additive score for this token/entry pair (`0` when there's no hit)
  */
 function scoreEntryAgainstToken(entry: UiComponentEntry, token: string): number {
   const slug = entry.slug.toLowerCase();
@@ -326,25 +326,31 @@ export interface CreateSearchUiToolInput {
  * a fixture registry; the production server passes the merged registry from
  * {@link loadUiComponentRegistry}.
  *
- * @param input - the registry the tool reads from
- * @returns a {@link DbxTool} ready to register with the dispatcher
+ * @param input - The registry the tool reads from.
+ * @returns A {@link DbxTool} ready to register with the dispatcher.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSearchUiTool(input: CreateSearchUiToolInput): DbxTool {
   const { registry, examplesRegistry = EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY } = input;
   const run = (rawArgs: unknown): ToolResult => {
-    let args: ParsedSearchUiArgs;
+    let args: ParsedSearchUiArgs | undefined;
+    let parseError: string | undefined;
     try {
       args = parseSearchUiArgs(rawArgs);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      parseError = error instanceof Error ? error.message : String(error);
     }
-    const tokens = tokenize(args.query);
-    const corpus = args.category ? registry.findByCategory(args.category) : registry.all;
-    const hits = searchRegistry(corpus, tokens, args.limit);
-    const text = formatSearchResults({ query: args.query, tokens, hits, category: args.category, examplesRegistry });
-    const result: ToolResult = { content: [{ type: 'text', text }] };
+    let result: ToolResult;
+    if (parseError !== undefined || args === undefined) {
+      result = toolError(parseError ?? 'Failed to parse arguments.');
+    } else {
+      const tokens = tokenize(args.query);
+      const corpus = args.category ? registry.findByCategory(args.category) : registry.all;
+      const hits = searchRegistry(corpus, tokens, args.limit);
+      const text = formatSearchResults({ query: args.query, tokens, hits, category: args.category, examplesRegistry });
+      result = { content: [{ type: 'text', text }] };
+    }
     return result;
   };
   return { definition: DBX_UI_SEARCH_TOOL, run };

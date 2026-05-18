@@ -41,15 +41,16 @@ export type IdBatchFactory<T> = AsyncArrayFactory<T>;
  * The factory generates identifiers in batches, filters them for uniqueness, and verifies each batch
  * using the configured verifier. Throws if uniqueness generation fails repeatedly (after 20 attempts).
  *
+ * @param config - Configuration with the base factory for generating candidates and the verifier for validating them.
+ * @returns An async factory function that produces the requested number of valid identifiers.
+ * @throws {Error} If the factory cannot produce enough unique values after repeated attempts.
+ *
  * @dbxUtil
  * @dbxUtilCategory model
  * @dbxUtilKind factory
  * @dbxUtilTags model, id, batch, factory, async, unique, identifier
  * @dbxUtilRelated sequential-incrementing-number-string-model-id-factory
  *
- * @param config - Configuration with the base factory for generating candidates and the verifier for validating them
- * @returns An async factory function that produces the requested number of valid identifiers
- * @throws Error if the factory cannot produce enough unique values after repeated attempts
  * @__NO_SIDE_EFFECTS__
  */
 export function idBatchFactory<T, K extends PrimativeKey = PrimativeKey>(config: IdBatchFactoryConfig<T, K>): IdBatchFactory<T> {
