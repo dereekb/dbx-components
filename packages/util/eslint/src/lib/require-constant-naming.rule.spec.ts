@@ -94,8 +94,26 @@ describe('require-constant-naming rule', () => {
       expect(errors).toHaveLength(0);
     });
 
-    it('UPPER_SNAKE_CASE arrow function is flagged', () => {
+    it('UPPER_SNAKE_CASE arrow function passes', () => {
       const errors = lintCode(`export const MAKE_THING = () => 1;`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('UPPER_SNAKE_CASE function expression passes', () => {
+      const errors = lintCode(`export const IS_THING = function (x: unknown) { return !!x; };`);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('UPPER_SNAKE_CASE TSFunctionType annotation passes', () => {
+      const errors = lintCode(`
+        type Fn = (a: number) => number;
+        export const MY_FN: Fn = (a) => a + 1;
+      `);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('snake_case arrow function is flagged', () => {
+      const errors = lintCode(`export const make_thing = () => 1;`);
       expect(errors).toHaveLength(1);
       expect(errors[0].messageId).toBe('functionConstantShouldBeCamelCase');
     });

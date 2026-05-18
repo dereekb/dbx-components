@@ -75,7 +75,7 @@ export interface DbxWebNoRedundantOnDestroyRuleDefinition {
  *   no `ngOnDestroy()` method (e.g. left over from a previous run), the
  *   orphaned implements clause is removed.
  */
-export const dbxWebNoRedundantOnDestroyRule: DbxWebNoRedundantOnDestroyRuleDefinition = {
+export const DBX_WEB_NO_REDUNDANT_ON_DESTROY_RULE: DbxWebNoRedundantOnDestroyRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 /**
  * Injection token for providing a default meta icon string to {@link DbxListViewMetaIconComponent} instances.
  */
-export const DBX_LIST_VIEW_DEFAULT_META_ICON = new InjectionToken<string>('DBX_LIST_VIEW_DEFAULT_META_ICON');
+export const DEFAULT_DBX_LIST_VIEW_META_ICON = new InjectionToken<string>('DEFAULT_DBX_LIST_VIEW_META_ICON');
 
 /**
  * Configuration interface for the meta icon, specifying which Material icon to display.
@@ -18,7 +18,7 @@ export interface DbxListViewMetaIconConfig {
 
 /**
  * Displays a Material icon in the meta (trailing) area of a list item. Reads its icon from the item's meta
- * configuration or falls back to a default provided via {@link DBX_LIST_VIEW_DEFAULT_META_ICON}.
+ * configuration or falls back to a default provided via {@link DEFAULT_DBX_LIST_VIEW_META_ICON}.
  *
  * Use the static `metaConfig()` method to create the injection component config for use in list view configurations.
  *
@@ -38,7 +38,7 @@ export interface DbxListViewMetaIconConfig {
 })
 export class DbxListViewMetaIconComponent {
   readonly item = inject<DbxValueListItem<unknown, DbxListViewMetaIconConfig>>(DBX_VALUE_LIST_VIEW_ITEM, { optional: true });
-  readonly defaultIcon = inject<Maybe<string>>(DBX_LIST_VIEW_DEFAULT_META_ICON, { optional: true });
+  readonly defaultIcon = inject<Maybe<string>>(DEFAULT_DBX_LIST_VIEW_META_ICON, { optional: true });
 
   readonly icon: Maybe<string> = this.item?.meta?.icon ?? this.defaultIcon;
 
@@ -47,7 +47,7 @@ export class DbxListViewMetaIconComponent {
       componentClass: DbxListViewMetaIconComponent,
       providers: [
         {
-          provide: DBX_LIST_VIEW_DEFAULT_META_ICON,
+          provide: DEFAULT_DBX_LIST_VIEW_META_ICON,
           useValue: defaultIcon
         }
       ]

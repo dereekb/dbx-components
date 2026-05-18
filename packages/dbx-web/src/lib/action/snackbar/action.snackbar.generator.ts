@@ -123,13 +123,13 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction(config: DbxM
           reference = getValueFromGetter(undoInput);
         }
 
-        if (!reference) {
-          console.error('Expected action source reference was not provided to undo...');
-        } else {
+        if (reference) {
           building.action = {
             button: undoButtonText ?? 'Undo',
             reference
           };
+        } else {
+          console.error('Expected action source reference was not provided to undo...');
         }
       }
 

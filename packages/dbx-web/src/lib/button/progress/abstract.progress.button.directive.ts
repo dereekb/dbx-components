@@ -125,14 +125,12 @@ export abstract class AbstractProgressButtonDirective {
     const mode = config?.mode;
     let result: ProgressSpinnerMode;
 
-    if (!mode) {
-      if (workingValue != null) {
-        result = 'determinate';
-      } else {
-        result = 'indeterminate';
-      }
-    } else {
+    if (mode) {
       result = mode;
+    } else if (workingValue == null) {
+      result = 'indeterminate';
+    } else {
+      result = 'determinate';
     }
 
     return result;

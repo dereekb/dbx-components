@@ -80,14 +80,12 @@ export class DbxBasicLoadingComponent {
 
     let result: ProgressBarMode | ProgressSpinnerMode;
 
-    if (!mode) {
-      if (loadingProgress != null) {
-        result = 'determinate';
-      } else {
-        result = 'indeterminate';
-      }
-    } else {
+    if (mode) {
       result = mode;
+    } else if (loadingProgress == null) {
+      result = 'indeterminate';
+    } else {
+      result = 'determinate';
     }
 
     return result;

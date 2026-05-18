@@ -35,7 +35,7 @@ export function provideDbxWebFilePreviewServiceEntries(entries: DbxWebFilePrevie
  * @param input - The preview input containing blob data, source URL, and MIME type information.
  * @returns An injection component config that initializes a {@link DbxEmbedComponent} with the appropriate embed element and content.
  */
-export const DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_PREVIEW_COMPONENT_FUNCTION: DbxWebFilePreviewServicePreviewComponentFunction = (input) => {
+export const DEFAULT_DBX_WEB_FILE_PREVIEW_SERVICE_PREVIEW_COMPONENT_FUNCTION: DbxWebFilePreviewServicePreviewComponentFunction = (input) => {
   const { blob, srcUrl, embedMimeType, sanitizeSrcUrl } = input;
 
   let embedElement: DbxEmbedComponentElement = 'embed';
@@ -72,7 +72,7 @@ export const DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_PREVIEW_COMPONENT_FUNCTION: Db
  * @param input - The dialog input containing the MatDialog instance and the component config to display.
  * @returns A MatDialogRef for the opened injection dialog.
  */
-export const DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_DIALOG_WITH_COMPONENT_FUNCTION: DbxWebFilePreviewServicePreviewDialogWithComponentFunction = (input) => {
+export const DEFAULT_DBX_WEB_FILE_PREVIEW_SERVICE_DIALOG_WITH_COMPONENT_FUNCTION: DbxWebFilePreviewServicePreviewDialogWithComponentFunction = (input) => {
   const { matDialog, componentConfig } = input;
   return DbxInjectionDialogComponent.openDialog(matDialog, {
     componentConfig,
@@ -99,8 +99,8 @@ export class DbxWebFilePreviewService {
     }
   }
 
-  private _defaultPreviewComponentFunction: DbxWebFilePreviewServicePreviewComponentFunction = DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_PREVIEW_COMPONENT_FUNCTION;
-  private _defaultPreviewDialogWithComponentFunction: DbxWebFilePreviewServicePreviewDialogWithComponentFunction = DBX_WEB_FILE_PREVIEW_SERVICE_DEFAULT_DIALOG_WITH_COMPONENT_FUNCTION;
+  private _defaultPreviewComponentFunction: DbxWebFilePreviewServicePreviewComponentFunction = DEFAULT_DBX_WEB_FILE_PREVIEW_SERVICE_PREVIEW_COMPONENT_FUNCTION;
+  private _defaultPreviewDialogWithComponentFunction: DbxWebFilePreviewServicePreviewDialogWithComponentFunction = DEFAULT_DBX_WEB_FILE_PREVIEW_SERVICE_DIALOG_WITH_COMPONENT_FUNCTION;
 
   // Configuration
   /**

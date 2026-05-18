@@ -116,14 +116,14 @@ export interface AuthRoleClaimsFactoryDefaults {
   /**
    * Default value to use for claims that have no value present.
    *
-   * If undefined, defaults to AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE.
+   * If undefined, defaults to DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE.
    */
   claimValue?: AuthClaimValue;
 
   /**
    * Default value for claims that are not defined.
    *
-   * If undefined, defaults to AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE.
+   * If undefined, defaults to DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE.
    */
   emptyValue?: AuthClaimValue | ClearAuthClaimValue;
 }
@@ -165,8 +165,8 @@ export interface AuthRoleClaimsService<T extends AuthClaimsObject> {
   readonly defaultEmptyValue: unknown;
 }
 
-export const AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE = 1;
-export const AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE = null;
+export const DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE = 1;
+export const DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE = null;
 
 interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfigEntryEncodeOptions {
   claimKey: AuthClaimKey;
@@ -191,8 +191,8 @@ interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfi
  * @__NO_SIDE_EFFECTS__
  */
 export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRoleClaimsFactoryConfig<T>, defaults: AuthRoleClaimsFactoryDefaults = {}): AuthRoleClaimsService<T> {
-  const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE) ?? AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
-  const defaultEmptyValue: AuthClaimValue | ClearAuthClaimValue = (objectHasKey(defaults, 'emptyValue') ? defaults.emptyValue : AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE) ?? null;
+  const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults.claimValue : DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE) ?? DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE;
+  const defaultEmptyValue: AuthClaimValue | ClearAuthClaimValue = (objectHasKey(defaults, 'emptyValue') ? defaults.emptyValue : DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE) ?? null;
 
   function isSimpleOptions(entry: AuthRoleClaimsFactoryConfigEntry<any>): entry is AuthRoleClaimsFactoryConfigEntrySimpleOptions {
     return 'roles' in entry;

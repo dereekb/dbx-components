@@ -165,15 +165,15 @@ export class DbxMapboxLayoutComponent implements OnInit {
 
                   const easeTo: Observable<MapboxEaseTo> = this.dbxMapboxMapStore.calculateNextCenterOffsetWithScreenMarginChange(margin).pipe(
                     first(),
-                    map((center) => ({ to: { center, duration: 3200, essential: false } }) as MapboxEaseTo)
+                    map((center) => ({ to: { center, duration: 3200, essential: false } }))
                   );
 
                   this.dbxMapboxMapStore.setMargin(opened ? margin : undefined);
 
-                  if (!init) {
-                    this.dbxMapboxMapStore.easeTo(easeTo);
-                  } else {
+                  if (init) {
                     init = true;
+                  } else {
+                    this.dbxMapboxMapStore.easeTo(easeTo);
                   }
                 });
               })

@@ -829,7 +829,7 @@ export const mockItemPagedAlphaDistributionScheme: PagedItemDistributionScheme<M
  * Default `maxItemsPerPage` used by the dynamic mock paged collection factory. Kept small to
  * exercise multi-page boundary conditions in tests without writing many entries.
  */
-export const MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE = 3;
+export const DEFAULT_MOCK_ITEM_PAGED_MAX_ITEMS_PER_PAGE = 3;
 
 /**
  * Typed {@link PagedItemFirestoreCollection} for {@link MockItemPagedEntry} items under a
@@ -854,7 +854,7 @@ export interface MockItemPagedFirestoreCollectionConfig {
   readonly distributionScheme?: PagedItemDistributionScheme<MockItemPagedEntry>;
   /**
    * Maximum items per page document in dynamic mode. Defaults to
-   * {@link MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE}.
+   * {@link DEFAULT_MOCK_ITEM_PAGED_MAX_ITEMS_PER_PAGE}.
    */
   readonly maxItemsPerPage?: number;
 }
@@ -869,7 +869,7 @@ export interface MockItemPagedFirestoreCollectionConfig {
  * wired with {@link mockItemPagedEntryConverter}.
  */
 export function mockItemPagedFirestoreCollection(firestoreContext: FirestoreContext, config?: MockItemPagedFirestoreCollectionConfig): MockItemPagedFirestoreCollectionFactory {
-  const { distributionScheme, maxItemsPerPage = MOCK_ITEM_PAGED_DEFAULT_MAX_ITEMS_PER_PAGE } = config ?? {};
+  const { distributionScheme, maxItemsPerPage = DEFAULT_MOCK_ITEM_PAGED_MAX_ITEMS_PER_PAGE } = config ?? {};
 
   return (parent: MockItemDocument) => {
     return firestoreContext.pagedItemFirestoreCollection<MockItemPagedEntry, MockItem, MockItemPagedDocument, MockItemDocument>({

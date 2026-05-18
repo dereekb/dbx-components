@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, ElementRef, inject, input, type OnInit, type OnDestroy, effect } from '@angular/core';
-import { DBX_DETACH_DEFAULT_KEY, type DbxDetachKey } from './detach';
+import { DEFAULT_DBX_DETACH_KEY, type DbxDetachKey } from './detach';
 import { DbxDetachService } from './detach.service';
 
 /**
@@ -36,7 +36,7 @@ export class DbxDetachOutletComponent implements OnInit, OnDestroy {
   private readonly _detachService = inject(DbxDetachService);
   private readonly _elementRef = inject(ElementRef);
 
-  readonly key = input<DbxDetachKey>(DBX_DETACH_DEFAULT_KEY);
+  readonly key = input<DbxDetachKey>(DEFAULT_DBX_DETACH_KEY);
 
   /**
    * When true, the component automatically moves to the floating overlay

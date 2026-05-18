@@ -10,7 +10,7 @@ export const ZOHO_DESK_MAX_PAGE_LIMIT = 50;
 /**
  * Default number of records per page for Zoho Desk list endpoints.
  */
-export const ZOHO_DESK_DEFAULT_PAGE_LIMIT = 25;
+export const DEFAULT_ZOHO_DESK_PAGE_LIMIT = 25;
 
 /**
  * Pagination parameters for Zoho Desk list endpoints.
@@ -28,7 +28,7 @@ export interface ZohoDeskPageFilter {
   /**
    * Number of records to return per page.
    *
-   * Defaults to {@link ZOHO_DESK_DEFAULT_PAGE_LIMIT}. Maximum is {@link ZOHO_DESK_MAX_PAGE_LIMIT}.
+   * Defaults to {@link DEFAULT_ZOHO_DESK_PAGE_LIMIT}. Maximum is {@link ZOHO_DESK_MAX_PAGE_LIMIT}.
    */
   readonly limit?: number;
 }
@@ -87,11 +87,11 @@ export function zohoDeskFetchPageFactory<I extends ZohoDeskPageFilter, R extends
     readFetchPageResultInfo: function (result: R): PromiseOrValue<ReadFetchPageResultInfo> {
       const dataLength = result.data?.length ?? 0;
       return {
-        hasNext: dataLength > 0 && dataLength >= ZOHO_DESK_DEFAULT_PAGE_LIMIT
+        hasNext: dataLength > 0 && dataLength >= DEFAULT_ZOHO_DESK_PAGE_LIMIT
       };
     },
     buildInputForNextPage: function (pageResult: Partial<FetchPageResult<R>>, input: I, options: FetchPageFactoryInputOptions): PromiseOrValue<Maybe<Partial<I>>> {
-      const limit = options.maxItemsPerPage ?? input.limit ?? ZOHO_DESK_DEFAULT_PAGE_LIMIT;
+      const limit = options.maxItemsPerPage ?? input.limit ?? DEFAULT_ZOHO_DESK_PAGE_LIMIT;
       const previousFrom = input.from ?? 1;
       const nextFrom = previousFrom + limit;
 

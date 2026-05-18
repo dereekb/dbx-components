@@ -1,5 +1,5 @@
 import { type GatewayIntentBits, type ClientOptions } from 'discord.js';
-import { DISCORD_DEFAULT_INTENTS } from './discord.config';
+import { DEFAULT_DISCORD_INTENTS } from './discord.config';
 
 /**
  * Returns default ClientOptions for a bot that reads guild messages.
@@ -16,7 +16,7 @@ import { DISCORD_DEFAULT_INTENTS } from './discord.config';
  */
 export function discordDefaultClientOptions(): Partial<ClientOptions> {
   return {
-    intents: DISCORD_DEFAULT_INTENTS
+    intents: DEFAULT_DISCORD_INTENTS
   };
 }
 
@@ -34,6 +34,6 @@ export function discordDefaultClientOptions(): Partial<ClientOptions> {
  */
 export function discordClientOptionsWithIntents(additionalIntents: GatewayIntentBits[]): Partial<ClientOptions> {
   return {
-    intents: [...DISCORD_DEFAULT_INTENTS, ...additionalIntents]
+    intents: [...DEFAULT_DISCORD_INTENTS, ...additionalIntents]
   };
 }

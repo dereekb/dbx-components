@@ -57,7 +57,7 @@ export interface DbxWebRequireComputedSignalSuffixRuleDefinition {
  *
  * @see `dbx__note__angular-conventions` → ANG-C2 Computed Signal Naming.
  */
-export const dbxWebRequireComputedSignalSuffixRule: DbxWebRequireComputedSignalSuffixRuleDefinition = {
+export const DBX_WEB_REQUIRE_COMPUTED_SIGNAL_SUFFIX_RULE: DbxWebRequireComputedSignalSuffixRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: undefined,

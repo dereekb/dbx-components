@@ -21,7 +21,7 @@ export class DbxTableItemActionComponent<T> extends AbstractDbxTableItemDirectiv
       let obs: MaybeObservableOrValue<DbxInjectionComponentConfig> = undefined;
 
       if (itemAction) {
-        obs = this.item$.pipe(map((x) => (x != null ? itemAction(x) : undefined)));
+        obs = this.item$.pipe(map((x) => (x == null ? undefined : itemAction(x))));
       }
 
       return obs;

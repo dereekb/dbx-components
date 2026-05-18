@@ -291,7 +291,7 @@ export function dbxThemeColorCssToken(color: Maybe<DbxThemeColor>, returnDefault
   let result: Maybe<CssToken>;
 
   if (color && color in DBX_THEME_COLOR_CSS_VAR_MAP) {
-    result = DBX_THEME_COLOR_CSS_VAR_MAP[color as DbxThemeColor];
+    result = DBX_THEME_COLOR_CSS_VAR_MAP[color];
   } else if (returnDefault) {
     result = DBX_THEME_COLOR_CSS_VAR_MAP.default;
   }

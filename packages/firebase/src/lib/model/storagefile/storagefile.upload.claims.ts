@@ -1,4 +1,4 @@
-import { type AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, type AuthRoleClaimsFactoryConfigEntrySimpleOptions } from '@dereekb/util';
+import { type DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE, type AuthRoleClaimsFactoryConfigEntrySimpleOptions } from '@dereekb/util';
 
 /**
  * Claim value type used to restrict file uploads for a user.
@@ -6,7 +6,7 @@ import { type AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, type AuthRoleClaimsFactoryCo
  * When set to true in the user's custom claims, the `uploads` role is revoked
  * (inverse claim pattern).
  */
-export type StorageFileUploadUserRestriction = typeof AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
+export type StorageFileUploadUserRestriction = typeof DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE;
 
 /**
  * Custom claims shape for controlling a user's file upload permission.

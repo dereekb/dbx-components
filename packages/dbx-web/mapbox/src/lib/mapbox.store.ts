@@ -952,7 +952,7 @@ export class DbxMapboxMapStore extends ComponentStore<DbxMapboxStoreState> {
   readonly zoomNow$: Observable<MapboxZoomLevel> = this.whenInitialized$.pipe(
     switchMap(() =>
       this.mapInstance$.pipe(
-        switchMap((x) => this._renderingTimer.pipe(map(() => x.getZoom() as MapboxZoomLevel))),
+        switchMap((x) => this._renderingTimer.pipe(map(() => x.getZoom()))),
         shareReplay(1)
       )
     )

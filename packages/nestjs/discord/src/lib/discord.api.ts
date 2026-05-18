@@ -1,6 +1,6 @@
 import { Client, Events, TextChannel, type Message } from 'discord.js';
 import { Inject, Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
-import { DiscordServiceConfig, DISCORD_DEFAULT_INTENTS } from './discord.config';
+import { DiscordServiceConfig, DEFAULT_DISCORD_INTENTS } from './discord.config';
 import { type DiscordChannelId } from './discord.type';
 
 /**
@@ -21,7 +21,7 @@ export class DiscordApi implements OnModuleInit, OnModuleDestroy {
   constructor(@Inject(DiscordServiceConfig) readonly config: DiscordServiceConfig) {
     const { clientOptions } = config.discord;
     this.client = new Client({
-      intents: DISCORD_DEFAULT_INTENTS,
+      intents: DEFAULT_DISCORD_INTENTS,
       ...clientOptions
     });
   }

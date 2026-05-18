@@ -1,5 +1,5 @@
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { NUMBER_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX, NUMBER_STRING_DENCODER_64_DIGITS, type NumberStringDencoder, numberStringDencoder, primativeKeyDencoder, primativeKeyDencoderMap, primativeKeyStringDencoder } from './dencoder';
+import { DEFAULT_NUMBER_STRING_DENCODER_64_NEGATIVE_PREFIX, NUMBER_STRING_DENCODER_64_DIGITS, type NumberStringDencoder, numberStringDencoder, primativeKeyDencoder, primativeKeyDencoderMap, primativeKeyStringDencoder } from './dencoder';
 
 enum TestEncodedValuesShort {
   TEST_A = 'a',
@@ -255,7 +255,7 @@ describe('numberStringDencoder()', () => {
     }
 
     describe('with negative prefix', () => {
-      const instance = numberStringDencoder({ negativePrefix: NUMBER_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX, digits: NUMBER_STRING_DENCODER_64_DIGITS });
+      const instance = numberStringDencoder({ negativePrefix: DEFAULT_NUMBER_STRING_DENCODER_64_NEGATIVE_PREFIX, digits: NUMBER_STRING_DENCODER_64_DIGITS });
 
       describePositiveNumberConversions(instance);
       describeNegativeNumberConversions(instance);

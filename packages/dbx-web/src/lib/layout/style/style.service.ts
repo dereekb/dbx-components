@@ -7,7 +7,7 @@ import { DBX_DARK_STYLE_CLASS_SUFFIX, type DbxStyleClass, dbxStyleClassCleanSuff
 /**
  * Injection token for providing the default {@link DbxStyleConfig} to {@link DbxStyleService}.
  */
-export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleServiceDefaultConfig');
+export const DEFAULT_DBX_STYLE_CONFIG_TOKEN = new InjectionToken('DbxStyleServiceDefaultConfig');
 
 /**
  * Manages application-wide style classes and suffix modes (e.g., dark mode).
@@ -17,7 +17,7 @@ export const DBX_STYLE_DEFAULT_CONFIG_TOKEN = new InjectionToken('DbxStyleServic
  */
 @Injectable()
 export class DbxStyleService implements Destroyable {
-  private readonly _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(inject<DbxStyleConfig>(DBX_STYLE_DEFAULT_CONFIG_TOKEN));
+  private readonly _defaultConfig = new BehaviorSubject<Maybe<DbxStyleConfig>>(inject<DbxStyleConfig>(DEFAULT_DBX_STYLE_CONFIG_TOKEN));
 
   private readonly _config = new BehaviorSubject<Maybe<Observable<DbxStyleConfig>>>(undefined);
   private readonly _styleClassSuffix = new BehaviorSubject<Maybe<DbxStyleClassCleanSuffix>>(undefined);
@@ -73,7 +73,7 @@ export class DbxStyleService implements Destroyable {
     // clean the suffix
     suffix = dbxStyleClassCleanSuffix(suffix);
 
-    const toggleValue: boolean = toggle != null ? toggle : this.currentStyleClassSuffix !== suffix;
+    const toggleValue: boolean = toggle == null ? this.currentStyleClassSuffix !== suffix : toggle;
     let suffixValue: Maybe<DbxStyleClassSuffix> = undefined;
 
     if (toggleValue) {

@@ -53,7 +53,7 @@ export abstract class AbstractDbxListViewDirective<T> implements DbxListView<T> 
       if (x) {
         valuesObs = asObservable(x);
       } else {
-        valuesObs = combineLatest([this._inputValues$, this._inputValuesArray$]).pipe(switchMap(([x, y]) => (y != null ? of(y) : asObservable(x))));
+        valuesObs = combineLatest([this._inputValues$, this._inputValuesArray$]).pipe(switchMap(([x, y]) => (y == null ? asObservable(x) : of(y))));
       }
 
       return valuesObs;

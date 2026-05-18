@@ -109,12 +109,12 @@ export type DbxListComponentScrolledEventPosition = number;
 /**
  * Default infinite scroll distance multiplier for triggering load-more events.
  */
-export const DBX_LIST_DEFAULT_SCROLL_DISTANCE = 1.5;
+export const DEFAULT_DBX_LIST_SCROLL_DISTANCE = 1.5;
 
 /**
  * Default throttle duration in milliseconds for scroll events.
  */
-export const DBX_LIST_DEFAULT_THROTTLE_SCROLL = 50;
+export const DEFAULT_DBX_LIST_THROTTLE_SCROLL = 50;
 
 /**
  * Displays a potentially infinitely scrollable list of content. Supports load-more triggers, selection modes, and empty/loading states.
@@ -213,13 +213,13 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
   );
 
   readonly throttleScroll$: Observable<number> = this.config$.pipe(
-    map((x) => x?.throttle ?? DBX_LIST_DEFAULT_THROTTLE_SCROLL),
+    map((x) => x?.throttle ?? DEFAULT_DBX_LIST_THROTTLE_SCROLL),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   readonly scrollDistance$: Observable<number> = this.config$.pipe(
-    map((x) => x?.scrollDistance ?? DBX_LIST_DEFAULT_SCROLL_DISTANCE),
+    map((x) => x?.scrollDistance ?? DEFAULT_DBX_LIST_SCROLL_DISTANCE),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -323,8 +323,8 @@ export class DbxListComponent<T = unknown, V extends DbxListView<T> = DbxListVie
     shareReplay(1)
   );
 
-  readonly infiniteScrollDistanceSignal = toSignal(this.scrollDistance$, { initialValue: DBX_LIST_DEFAULT_SCROLL_DISTANCE });
-  readonly infiniteScrollThrottleSignal = toSignal(this.throttleScroll$, { initialValue: DBX_LIST_DEFAULT_THROTTLE_SCROLL });
+  readonly infiniteScrollDistanceSignal = toSignal(this.scrollDistance$, { initialValue: DEFAULT_DBX_LIST_SCROLL_DISTANCE });
+  readonly infiniteScrollThrottleSignal = toSignal(this.throttleScroll$, { initialValue: DEFAULT_DBX_LIST_THROTTLE_SCROLL });
   readonly hideContentSignal = toSignal(this.hideContent$);
   readonly injectedComponentConfigSignal = toSignal(this.injectedComponentConfig$);
   readonly isEmptyAndNotLoadingSignal = toSignal(this.isEmptyAndNotLoading$);

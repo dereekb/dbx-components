@@ -181,7 +181,7 @@ export class DbxHelpWidgetService {
    * @returns Array of resolved widget entries, excluding any keys that could not be resolved.
    */
   getHelpWidgetEntriesForHelpContextKeys(helpContextKeys: DbxHelpContextKey[]): DbxHelpWidgetServiceEntry[] {
-    return helpContextKeys.map((context) => this.getHelpWidgetEntry(context)).filter((entry) => !!entry) as DbxHelpWidgetServiceEntry[];
+    return helpContextKeys.map((context) => this.getHelpWidgetEntry(context)).filter((entry) => !!entry);
   }
 
   /**

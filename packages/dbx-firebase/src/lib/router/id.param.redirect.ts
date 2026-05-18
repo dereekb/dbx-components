@@ -3,9 +3,9 @@ import { type DbxRouterService, DbxRouteParamDefaultRedirectInstance, type DbxRo
 import { type Destroyable, type Initialized, type Maybe, type ModelKey } from '@dereekb/util';
 import { type MaybeObservableOrValueGetter, type SwitchMapToDefaultFilterFunction } from '@dereekb/rxjs';
 
-export const DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_ID_PARAM_KEY = 'id';
-export const DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_KEY_PARAM_KEY = 'key';
-export const DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_USE_PARAM_VALUE = '0';
+export const DEFAULT_DBX_FIREBASE_ID_ROUTER_PARAM_ID_PARAM_KEY = 'id';
+export const DEFAULT_DBX_FIREBASE_ID_ROUTER_PARAM_KEY_PARAM_KEY = 'key';
+export const DEFAULT_DBX_FIREBASE_ID_ROUTER_PARAM_USE_PARAM_VALUE = '0';
 
 /**
  * Used to read an id with a specific key from the current route.
@@ -52,7 +52,7 @@ export interface DbxFirebaseIdRouteParamRedirectInstance extends DbxFirebaseIdRo
  * @param defaultParamKey - The route parameter key to read. Defaults to 'key'.
  * @returns A new route param redirect instance for model keys.
  */
-export function dbxFirebaseKeyRouteParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_KEY_PARAM_KEY): DbxFirebaseIdRouteParamRedirectInstance {
+export function dbxFirebaseKeyRouteParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DEFAULT_DBX_FIREBASE_ID_ROUTER_PARAM_KEY_PARAM_KEY): DbxFirebaseIdRouteParamRedirectInstance {
   return dbxFirebaseIdRouteParamRedirect(dbxRouterService, defaultParamKey);
 }
 
@@ -63,10 +63,10 @@ export function dbxFirebaseKeyRouteParamRedirect(dbxRouterService: DbxRouterServ
  * @param defaultParamKey - The route parameter key to read. Defaults to 'id'.
  * @returns A new route param redirect instance for model IDs with configurable redirect behavior.
  */
-export function dbxFirebaseIdRouteParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_ID_PARAM_KEY): DbxFirebaseIdRouteParamRedirectInstance {
+export function dbxFirebaseIdRouteParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DEFAULT_DBX_FIREBASE_ID_ROUTER_PARAM_ID_PARAM_KEY): DbxFirebaseIdRouteParamRedirectInstance {
   const _paramReader = dbxRouteParamReaderInstance<ModelKey>(dbxRouterService, defaultParamKey);
   const _paramRedirect = new DbxRouteParamDefaultRedirectInstance<ModelKey>(_paramReader);
-  const _useDefaultParamDecider = new BehaviorSubject<string | SwitchMapToDefaultFilterFunction<ModelKey>>(DBX_FIREBASE_ID_ROUTER_PARAM_DEFAULT_USE_PARAM_VALUE);
+  const _useDefaultParamDecider = new BehaviorSubject<string | SwitchMapToDefaultFilterFunction<ModelKey>>(DEFAULT_DBX_FIREBASE_ID_ROUTER_PARAM_USE_PARAM_VALUE);
 
   const _useDefaultParam$: Observable<SwitchMapToDefaultFilterFunction<ModelKey>> = _useDefaultParamDecider.pipe(
     map((x) => {

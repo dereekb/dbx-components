@@ -17,7 +17,7 @@ const INPUT_INITIALIZERS: ReadonlySet<string> = new Set(['input']);
 const DEFAULT_INPUT_THRESHOLD = 3;
 
 /**
- * Options for {@link dbxWebRequireComponentConfigInputRule}.
+ * Options for {@link DBX_WEB_REQUIRE_COMPONENT_CONFIG_INPUT_RULE}.
  */
 export interface DbxWebRequireComponentConfigInputRuleOptions {
   /**
@@ -66,7 +66,7 @@ export interface DbxWebRequireComponentConfigInputRuleDefinition {
  *
  * @see `dbx__note__angular-conventions` → ANG-C1 Component Config Input.
  */
-export const dbxWebRequireComponentConfigInputRule: DbxWebRequireComponentConfigInputRuleDefinition = {
+export const DBX_WEB_REQUIRE_COMPONENT_CONFIG_INPUT_RULE: DbxWebRequireComponentConfigInputRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: undefined,

@@ -50,7 +50,7 @@ export interface DbxForgeEmailValidatorConfig {
 /**
  * Default message applied by {@link dbxForgeEmailValidator} when no override is supplied.
  */
-export const DBX_FORGE_DEFAULT_EMAIL_VALIDATION_MESSAGE = 'Please enter a valid email address.';
+export const DEFAULT_DBX_FORGE_EMAIL_VALIDATION_MESSAGE = 'Please enter a valid email address.';
 
 /**
  * Builds a forge validator input that applies the built-in `email` validator with a default
@@ -66,7 +66,7 @@ export const DBX_FORGE_DEFAULT_EMAIL_VALIDATION_MESSAGE = 'Please enter a valid 
  * ```
  */
 export function dbxForgeEmailValidator(config?: DbxForgeEmailValidatorConfig): DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput {
-  const message = config?.message ?? DBX_FORGE_DEFAULT_EMAIL_VALIDATION_MESSAGE;
+  const message = config?.message ?? DEFAULT_DBX_FORGE_EMAIL_VALIDATION_MESSAGE;
 
   return {
     validators: [

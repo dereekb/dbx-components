@@ -1,4 +1,4 @@
-import { discordFetchMessagePageFactory, type DiscordMessagePageFilter, type DiscordMessagePageResult, DISCORD_DEFAULT_MESSAGES_PER_PAGE } from './discord.api.page';
+import { discordFetchMessagePageFactory, type DiscordMessagePageFilter, type DiscordMessagePageResult, DEFAULT_DISCORD_MESSAGES_PER_PAGE } from './discord.api.page';
 
 interface TestMessage {
   id: string;
@@ -145,8 +145,8 @@ describe('discordFetchMessagePageFactory()', () => {
     await expect(firstPage.fetchNext()).rejects.toThrow();
   });
 
-  it('should use DISCORD_DEFAULT_MESSAGES_PER_PAGE when no limit is specified', async () => {
-    const messages = makeMessages(DISCORD_DEFAULT_MESSAGES_PER_PAGE, 200);
+  it('should use DEFAULT_DISCORD_MESSAGES_PER_PAGE when no limit is specified', async () => {
+    const messages = makeMessages(DEFAULT_DISCORD_MESSAGES_PER_PAGE, 200);
 
     const fetch = vi.fn(
       async (_input: DiscordMessagePageFilter): Promise<DiscordMessagePageResult<TestMessage>> => ({
@@ -158,7 +158,7 @@ describe('discordFetchMessagePageFactory()', () => {
     const page = factory({});
 
     const firstPage = await page.fetchNext();
-    expect(firstPage.result.data.length).toBe(DISCORD_DEFAULT_MESSAGES_PER_PAGE);
+    expect(firstPage.result.data.length).toBe(DEFAULT_DISCORD_MESSAGES_PER_PAGE);
 
     // should continue since we got exactly the default limit
     await firstPage.fetchNext();

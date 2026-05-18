@@ -226,7 +226,9 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
   }
 
   private _useClosingValue(closeType: NgPopoverCloseType, useValue: (value?: O | undefined) => void) {
-    if (this.getClosingValueFn != null) {
+    if (this.getClosingValueFn == null) {
+      useValue();
+    } else {
       asPromise(this.getClosingValueFn(this.data, closeType)).then(
         (x) => {
           useValue(x);
@@ -235,8 +237,6 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
           useValue();
         }
       );
-    } else {
-      useValue();
     }
   }
 

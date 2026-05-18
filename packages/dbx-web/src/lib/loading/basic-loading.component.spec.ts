@@ -47,9 +47,9 @@ describe('DbxBasicLoadingComponent', () => {
       component.loadingSignal.set(false);
       fixture.detectChanges();
 
-      waitForComponentToBeLoading = waitForState('loading')(component.component()!);
-      waitForComponentToHaveContent = waitForState('content')(component.component()!);
-      waitForComponentToHaveError = waitForState('error')(component.component()!);
+      waitForComponentToBeLoading = waitForState('loading')(component.component());
+      waitForComponentToHaveContent = waitForState('content')(component.component());
+      waitForComponentToHaveError = waitForState('error')(component.component());
     });
 
     afterEach(() => {
@@ -93,7 +93,7 @@ describe('DbxBasicLoadingComponent', () => {
 
           waitForComponentToBeLoading(() => {
             runInInjectionContext(injector, () => {
-              toObservable(fixture.componentInstance.component()!.hasNoCustomLoadingSignal)
+              toObservable(fixture.componentInstance.component().hasNoCustomLoadingSignal)
                 .pipe(
                   filter((x) => x),
                   first()
@@ -116,7 +116,7 @@ describe('DbxBasicLoadingComponent', () => {
 
           waitForComponentToBeLoading(() => {
             runInInjectionContext(injector, () => {
-              toObservable(fixture.componentInstance.component()!.hasNoCustomLoadingSignal)
+              toObservable(fixture.componentInstance.component().hasNoCustomLoadingSignal)
                 .pipe(
                   filter((x) => x),
                   first()
@@ -170,7 +170,7 @@ describe('DbxBasicLoadingComponent', () => {
 
           waitForComponentToHaveError(() => {
             runInInjectionContext(injector, () => {
-              toObservable(fixture.componentInstance.component()!.hasNoCustomErrorSignal)
+              toObservable(fixture.componentInstance.component().hasNoCustomErrorSignal)
                 .pipe(
                   filter((x) => x),
                   first()
@@ -195,7 +195,7 @@ describe('DbxBasicLoadingComponent', () => {
     beforeEach(async () => {
       fixture = TestBed.createComponent(BasicLoadingWithCustomErrorComponent);
       component = fixture.componentInstance;
-      waitForComponentToHaveError = waitForState('error')(component.component()!);
+      waitForComponentToHaveError = waitForState('error')(component.component());
 
       component.errorSignal.set({
         code: 'Test',
@@ -228,7 +228,7 @@ describe('DbxBasicLoadingComponent', () => {
           const injector = TestBed.inject(Injector);
 
           runInInjectionContext(injector, () => {
-            toObservable(component.component()!.hasNoCustomErrorSignal)
+            toObservable(component.component().hasNoCustomErrorSignal)
               .pipe(
                 filter((x) => !x),
                 first()
@@ -254,7 +254,7 @@ describe('DbxBasicLoadingComponent', () => {
       component = fixture.componentInstance;
       component.loadingSignal.set(true);
       fixture.detectChanges();
-      waitForComponentToBeLoading = waitForState('loading')(component.component()!);
+      waitForComponentToBeLoading = waitForState('loading')(component.component());
     });
 
     afterEach(() => {
@@ -280,7 +280,7 @@ describe('DbxBasicLoadingComponent', () => {
           const injector = TestBed.inject(Injector);
 
           runInInjectionContext(injector, () => {
-            toObservable(component.component()!.hasNoCustomLoadingSignal)
+            toObservable(component.component().hasNoCustomLoadingSignal)
               .pipe(
                 filter((x) => !x),
                 first()

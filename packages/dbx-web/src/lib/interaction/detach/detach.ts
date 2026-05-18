@@ -11,7 +11,7 @@ export type DbxDetachKey = string;
 /**
  * Default key used when no key is specified.
  */
-export const DBX_DETACH_DEFAULT_KEY: DbxDetachKey = 'default';
+export const DEFAULT_DBX_DETACH_KEY: DbxDetachKey = 'default';
 
 /**
  * Possible display states for a detach instance.

@@ -146,7 +146,8 @@ function classifyConstant(declarator: AstNode): ConstantKind {
  * `const` declarations:
  *
  * - Function-typed constants (arrow/function expression initializers, or `: TSFunctionType`
- *   annotations) must be camelCase, since they're callable.
+ *   annotations) may be camelCase (the usual callable casing) or UPPER_SNAKE_CASE (when the binding
+ *   is treated as a constant-shaped function reference, e.g. a default factory or registered hook).
  * - Plain-value constants (string/number/boolean/array/object/`new`/template-literal initializers)
  *   must be UPPER_SNAKE_CASE. PascalCase is also accepted for class- and enum-like singletons.
  *
@@ -165,11 +166,11 @@ export const utilRequireConstantNamingRule: UtilRequireConstantNamingRuleDefinit
     type: 'suggestion',
     fixable: undefined,
     docs: {
-      description: 'Require camelCase on function-typed exported constants and UPPER_SNAKE_CASE on value-typed exported constants.',
+      description: 'Require camelCase or UPPER_SNAKE_CASE on function-typed exported constants and UPPER_SNAKE_CASE on value-typed exported constants.',
       recommended: true
     },
     messages: {
-      functionConstantShouldBeCamelCase: "Function-typed constant '{{name}}' should be camelCase (callable bindings stay lowercase). Tag with `{{exemptTag}}` if the rule's heuristics are wrong here.",
+      functionConstantShouldBeCamelCase: "Function-typed constant '{{name}}' should be camelCase or UPPER_SNAKE_CASE. Tag with `{{exemptTag}}` if the rule's heuristics are wrong here.",
       valueConstantShouldBeUpperSnakeCase: "Value constant '{{name}}' should be UPPER_SNAKE_CASE (or PascalCase for class/enum-like singletons). Tag with `{{exemptTag}}` if the rule's heuristics are wrong here."
     },
     schema: [
@@ -215,7 +216,7 @@ export const utilRequireConstantNamingRule: UtilRequireConstantNamingRuleDefinit
         const kind = classifyConstant(declarator);
 
         if (kind === 'function') {
-          if (!CAMEL_CASE.test(name)) {
+          if (!CAMEL_CASE.test(name) && !UPPER_SNAKE_CASE.test(name)) {
             context.report({
               node: declarator.id,
               messageId: 'functionConstantShouldBeCamelCase',

@@ -39,7 +39,7 @@ import { DbxSectionHeaderComponent } from './section.header.component';
   host: {
     class: 'd-block dbx-section',
     role: 'region',
-    '[class]': 'classConfig()',
+    '[class]': 'classConfigSignal()',
     '[attr.aria-label]': 'headerConfigSignal().header'
   },
   imports: [DbxSectionHeaderComponent],
@@ -52,7 +52,7 @@ export class DbxSectionComponent extends DbxSectionHeaderComponent {
    */
   readonly elevate = input<boolean>(false);
 
-  readonly classConfig = computed(() => {
+  readonly classConfigSignal = computed(() => {
     return this.elevate() ? 'dbx-section-elevate dbx-content-elevate' : '';
   });
 }

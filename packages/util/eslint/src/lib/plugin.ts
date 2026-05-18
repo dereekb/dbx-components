@@ -21,6 +21,7 @@ import { type UtilRequireDbxModelCompanionTagsRuleDefinition, utilRequireDbxMode
 import { type UtilRequireDbxAuthCompanionTagsRuleDefinition, utilRequireDbxAuthCompanionTagsRule } from './require-dbx-auth-companion-tags.rule';
 import { type UtilRequireDbxRuleCompanionTagsRuleDefinition, utilRequireDbxRuleCompanionTagsRule } from './require-dbx-rule-companion-tags.rule';
 import { type UtilRequireConstantNamingRuleDefinition, utilRequireConstantNamingRule } from './require-constant-naming.rule';
+import { type UtilRequireDefaultPrefixNamingRuleDefinition, utilRequireDefaultPrefixNamingRule } from './require-default-prefix-naming.rule';
 import { type UtilRequireExportedJsdocExampleRuleDefinition, utilRequireExportedJsdocExampleRule } from './require-exported-jsdoc-example.rule';
 
 /**
@@ -52,6 +53,7 @@ export interface UtilEslintPlugin {
     readonly 'require-dbx-auth-companion-tags': UtilRequireDbxAuthCompanionTagsRuleDefinition;
     readonly 'require-dbx-rule-companion-tags': UtilRequireDbxRuleCompanionTagsRuleDefinition;
     readonly 'require-constant-naming': UtilRequireConstantNamingRuleDefinition;
+    readonly 'require-default-prefix-naming': UtilRequireDefaultPrefixNamingRuleDefinition;
     readonly 'require-exported-jsdoc-example': UtilRequireExportedJsdocExampleRuleDefinition;
   };
 }
@@ -88,6 +90,7 @@ export const utilEslintPlugin: UtilEslintPlugin = {
     'require-dbx-auth-companion-tags': utilRequireDbxAuthCompanionTagsRule,
     'require-dbx-rule-companion-tags': utilRequireDbxRuleCompanionTagsRule,
     'require-constant-naming': utilRequireConstantNamingRule,
+    'require-default-prefix-naming': utilRequireDefaultPrefixNamingRule,
     'require-exported-jsdoc-example': utilRequireExportedJsdocExampleRule
   }
 };

@@ -4,7 +4,7 @@ import { NgOverlayContainerService, type NgPopoverRef } from 'ng-overlay-contain
 import { Overlay } from '@angular/cdk/overlay';
 import { BehaviorSubject, type Observable, map, distinctUntilChanged } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
-import { DbxDetachController, DbxDetachWindowState, type DbxDetachConfig, type DbxDetachInstance, type DbxDetachKey, type DbxDetachOverlayConfig, type DbxDetachWindowStateType, DBX_DETACH_DEFAULT_KEY } from './detach';
+import { DbxDetachController, DbxDetachWindowState, type DbxDetachConfig, type DbxDetachInstance, type DbxDetachKey, type DbxDetachOverlayConfig, type DbxDetachWindowStateType, DEFAULT_DBX_DETACH_KEY } from './detach';
 import { DbxDetachOverlayComponent, type DbxDetachOverlayData } from './detach.overlay.component';
 import { PopupGlobalPositionStrategy } from '../popup/popup.position.strategy';
 
@@ -144,7 +144,7 @@ export class DbxDetachService {
    * @returns The new or existing {@link DbxDetachInstance} for the given key.
    */
   init<T>(config: DbxDetachConfig<T>): DbxDetachInstance<T> {
-    const key = config.key ?? DBX_DETACH_DEFAULT_KEY;
+    const key = config.key ?? DEFAULT_DBX_DETACH_KEY;
 
     const existing = this._entries.get(key);
     let instance: DbxDetachInstance<T>;
@@ -196,22 +196,22 @@ export class DbxDetachService {
   /**
    * Gets the instance for the given key, if it exists.
    *
-   * @param key - The detach key to look up. Defaults to {@link DBX_DETACH_DEFAULT_KEY}.
+   * @param key - The detach key to look up. Defaults to {@link DEFAULT_DBX_DETACH_KEY}.
    * @returns The instance if found, otherwise `undefined`.
    */
   get<T = unknown>(key?: DbxDetachKey): Maybe<DbxDetachInstance<T>> {
-    const entry = this._entries.get(key ?? DBX_DETACH_DEFAULT_KEY);
+    const entry = this._entries.get(key ?? DEFAULT_DBX_DETACH_KEY);
     return entry ? new DbxDetachInstanceImpl(entry as DbxDetachEntryState<T>) : undefined;
   }
 
   /**
    * Observable of whether an entry exists for the given key.
    *
-   * @param key - The detach key to observe. Defaults to {@link DBX_DETACH_DEFAULT_KEY}.
+   * @param key - The detach key to observe. Defaults to {@link DEFAULT_DBX_DETACH_KEY}.
    * @returns An observable that emits `true` when an entry exists for the key.
    */
   has$(key?: DbxDetachKey): Observable<boolean> {
-    const k = key ?? DBX_DETACH_DEFAULT_KEY;
+    const k = key ?? DEFAULT_DBX_DETACH_KEY;
     return this._entries$.pipe(
       map((entries) => entries.has(k)),
       distinctUntilChanged()

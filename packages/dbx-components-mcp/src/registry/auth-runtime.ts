@@ -102,7 +102,7 @@ export interface AuthClaimRoleMappingInfo {
   readonly inverseMode?: 'any' | 'all';
   /**
    * Override claim value when set. `undefined` means the default
-   * ({@link AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE}) is used.
+   * ({@link DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE}) is used.
    */
   readonly claimValue?: string | number | boolean;
   /**

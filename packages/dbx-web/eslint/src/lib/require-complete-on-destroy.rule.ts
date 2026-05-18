@@ -72,7 +72,7 @@ interface BuildSubjectFixInput {
  * - Inserts the `completeOnDestroy` named import from `@dereekb/dbx-core` if missing.
  * - Removes any matching `this.<field>.complete();` line from the same class's `ngOnDestroy`.
  */
-export const dbxWebRequireCompleteOnDestroyRule: DbxWebRequireCompleteOnDestroyRuleDefinition = {
+export const DBX_WEB_REQUIRE_COMPLETE_ON_DESTROY_RULE: DbxWebRequireCompleteOnDestroyRuleDefinition = {
   meta: {
     type: 'problem',
     fixable: 'code',

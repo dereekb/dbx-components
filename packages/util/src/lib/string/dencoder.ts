@@ -272,7 +272,7 @@ export const NUMBER_STRING_DENCODER_64_DIGITS: NumberStringDencoderDigits = '012
 /**
  * The default negative prefix for negative numbers.
  */
-export const NUMBER_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX = '!';
+export const DEFAULT_NUMBER_STRING_DENCODER_64_NEGATIVE_PREFIX = '!';
 
 /**
  * The NumberString dencoder type
@@ -396,7 +396,7 @@ export function numberStringDencoder(config: NumberStringDencoderConfig): Number
  * Pre-configured 64-character {@link NumberStringDencoder} using the default digit alphabet and negative prefix.
  */
 export const NUMBER_STRING_DENCODER_64 = numberStringDencoder({
-  negativePrefix: NUMBER_STRING_DENCODER_64_DEFAULT_NEGATIVE_PREFIX,
+  negativePrefix: DEFAULT_NUMBER_STRING_DENCODER_64_NEGATIVE_PREFIX,
   digits: NUMBER_STRING_DENCODER_64_DIGITS
 });
 

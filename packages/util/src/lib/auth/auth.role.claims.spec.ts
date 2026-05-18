@@ -1,7 +1,7 @@
 import { AUTH_USER_ROLE, type Maybe, objectHasKey } from '@dereekb/util';
 import { containsAllValues, hasDifferentValues } from '../set';
 import { type AuthRoleSet, AUTH_ADMIN_ROLE } from './auth.role';
-import { type AuthClaimsObject, type AuthRoleClaimsService, authRoleClaimsService, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE, type AuthRoleClaimsFactoryConfigEntrySimpleOptions } from './auth.role.claims';
+import { type AuthClaimsObject, type AuthRoleClaimsService, authRoleClaimsService, DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE, DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE, type AuthRoleClaimsFactoryConfigEntrySimpleOptions } from './auth.role.claims';
 
 type TestClaims = {
   test: string;
@@ -71,9 +71,9 @@ describe('authRoleClaimsFactory()', () => {
         const result = service.toClaims(roles);
 
         expect(Object.keys(result).length).toBe(3);
-        expect(result['test']).toBe(AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE);
+        expect(result['test']).toBe(DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE);
         expect(result['u']).toBe(claimsConfig['u'].value);
-        expect(result['m']).toBe(AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE);
+        expect(result['m']).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
         expect(result['ignoredValue']).not.toBeDefined();
         expect(objectHasKey(result, 'ignoredValue')).toBe(false);
       });
@@ -91,7 +91,7 @@ describe('authRoleClaimsFactory()', () => {
         expect(Object.keys(result).length).toBe(3);
         expect(result.test).toBe(emptyValue);
         expect(result.u).toBe(claimsConfig['u'].value);
-        expect(result.m).toBe(AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE);
+        expect(result.m).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
       });
 
       it('should have an empty value for claims that do not have all the roles.', () => {
@@ -99,7 +99,7 @@ describe('authRoleClaimsFactory()', () => {
         const result = service.toClaims(roles);
 
         expect(Object.keys(result).length).toBe(3);
-        expect(result.m).toBe(AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE);
+        expect(result.m).toBe(DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE);
       });
     });
 
@@ -195,7 +195,7 @@ describe('authRoleClaimsFactory()', () => {
         const result = service.toClaims(roles);
 
         expect(Object.keys(result).length).toBe(1);
-        expect(result.type).toBe(AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE);
+        expect(result.type).toBe(DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE);
       });
 
       it('should have ignored the ignoredValue.', () => {

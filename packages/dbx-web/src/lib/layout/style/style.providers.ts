@@ -1,6 +1,6 @@
 import { type EnvironmentProviders, makeEnvironmentProviders, type Provider } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
-import { DBX_STYLE_DEFAULT_CONFIG_TOKEN, DbxStyleService } from './style.service';
+import { DEFAULT_DBX_STYLE_CONFIG_TOKEN, DbxStyleService } from './style.service';
 import { DbxColorService, DbxColorServiceConfig } from './style.color.service';
 import { type DbxStyleConfig } from './style';
 
@@ -46,7 +46,7 @@ export function provideDbxStyleService(config: ProvideDbxStyleServiceConfig): En
   const providers: Provider[] = [
     // config
     {
-      provide: DBX_STYLE_DEFAULT_CONFIG_TOKEN,
+      provide: DEFAULT_DBX_STYLE_CONFIG_TOKEN,
       useValue: dbxStyleConfig
     },
     // services

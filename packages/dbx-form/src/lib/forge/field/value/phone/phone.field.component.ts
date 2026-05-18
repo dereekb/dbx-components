@@ -51,7 +51,7 @@ export interface DbxForgePhoneFieldProps {
 /**
  * Default preferred countries shown at the top of the phone country dropdown.
  */
-export const FORGE_DEFAULT_PREFERRED_COUNTRIES = ['us'];
+export const DEFAULT_FORGE_PREFERRED_COUNTRIES = ['us'];
 
 /**
  * Custom ng-forge field component that wraps the ngx-mat-input-tel phone input.
@@ -105,7 +105,7 @@ export class DbxForgePhoneFieldComponent {
   readonly extensionCtrl = new FormControl<string>('', { validators: [isPhoneExtension()] });
 
   // Computed props
-  readonly preferredCountries: Signal<string[]> = computed(() => this.props()?.preferredCountries ?? FORGE_DEFAULT_PREFERRED_COUNTRIES);
+  readonly preferredCountries: Signal<string[]> = computed(() => this.props()?.preferredCountries ?? DEFAULT_FORGE_PREFERRED_COUNTRIES);
   readonly onlyCountries: Signal<string[]> = computed(() => this.props()?.onlyCountries ?? []);
   readonly enableSearch: Signal<boolean> = computed(() => this.props()?.enableSearch ?? true);
   readonly allowExtension: Signal<boolean> = computed(() => this.props()?.allowExtension ?? false);

@@ -8,7 +8,7 @@ import { type FirestoreContextCacheFactory, type FirestoreContextCacheFactoryCon
  *
  * Set to 5 minutes.
  */
-export const IN_MEMORY_CACHE_DEFAULT_TTL: Milliseconds = 5 * 60 * 1000;
+export const DEFAULT_IN_MEMORY_CACHE_TTL: Milliseconds = 5 * 60 * 1000;
 
 // MARK: Collection Cache Delegate
 /**
@@ -351,7 +351,7 @@ export interface InMemoryFirestoreContextCacheConfig {
  */
 export function inMemoryFirestoreContextCache(config?: InMemoryFirestoreContextCacheConfig): FirestoreContextCache {
   return makeFirestoreContextCache({
-    defaultTtl: config?.defaultTtl ?? IN_MEMORY_CACHE_DEFAULT_TTL,
+    defaultTtl: config?.defaultTtl ?? DEFAULT_IN_MEMORY_CACHE_TTL,
     createDelegate: () => inMemoryFirestoreCollectionCacheDelegate()
   });
 }
@@ -410,7 +410,7 @@ export interface ReadLoggingFirestoreContextCacheConfig {
  */
 export function readLoggingFirestoreContextCache(config?: ReadLoggingFirestoreContextCacheConfig): FirestoreContextCache {
   return makeFirestoreContextCache({
-    defaultTtl: config?.defaultTtl ?? IN_MEMORY_CACHE_DEFAULT_TTL,
+    defaultTtl: config?.defaultTtl ?? DEFAULT_IN_MEMORY_CACHE_TTL,
     createDelegate: () => noopFirestoreCollectionCacheDelegate(),
     mapEvents$: (events$) => events$.pipe(filter((event) => event.type !== 'miss'))
   });

@@ -21,5 +21,6 @@ export { utilRequireDbxModelCompanionTagsRule, type UtilRequireDbxModelCompanion
 export { utilRequireDbxAuthCompanionTagsRule, type UtilRequireDbxAuthCompanionTagsRuleOptions, type UtilRequireDbxAuthCompanionTagsRuleDefinition } from './require-dbx-auth-companion-tags.rule';
 export { utilRequireDbxRuleCompanionTagsRule, type UtilRequireDbxRuleCompanionTagsRuleOptions, type UtilRequireDbxRuleCompanionTagsRuleDefinition } from './require-dbx-rule-companion-tags.rule';
 export { utilRequireConstantNamingRule, type UtilRequireConstantNamingRuleOptions, type UtilRequireConstantNamingRuleDefinition } from './require-constant-naming.rule';
+export { utilRequireDefaultPrefixNamingRule, type UtilRequireDefaultPrefixNamingRuleOptions, type UtilRequireDefaultPrefixNamingRuleDefinition } from './require-default-prefix-naming.rule';
 export { utilRequireExportedJsdocExampleRule, type UtilRequireExportedJsdocExampleRuleOptions, type UtilRequireExportedJsdocExampleRuleDefinition } from './require-exported-jsdoc-example.rule';
 export { utilEslintPlugin, type UtilEslintPlugin } from './plugin';

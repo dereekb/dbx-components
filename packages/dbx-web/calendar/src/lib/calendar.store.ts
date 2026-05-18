@@ -101,8 +101,8 @@ export function visibleDateRangeForCalendarState(calendarState: CalendarState): 
       break;
   }
 
-  const isMinDateVisible: boolean = navigationRangeLimit?.start != null ? !isAfter(start, navigationRangeLimit.start) : false;
-  const isMaxDateVisible: boolean = navigationRangeLimit?.end != null ? !isBefore(end, navigationRangeLimit.end) : false;
+  const isMinDateVisible: boolean = navigationRangeLimit?.start != null && !isAfter(start, navigationRangeLimit.start);
+  const isMaxDateVisible: boolean = navigationRangeLimit?.end != null && !isBefore(end, navigationRangeLimit.end);
 
   // TODO: Consider changing min/max date visible logical utility to be fully within the current month or not,
   // not just visible, since it can change to a locked out calendar and doesn't feel as UI friendly.

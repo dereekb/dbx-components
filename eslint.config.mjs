@@ -6,7 +6,7 @@ import jsdocPlugin from 'eslint-plugin-jsdoc';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
 import { nestjsEslintPlugin } from './dist/packages/nestjs/eslint/index.esm.js';
-import { dbxWebEslintPlugin } from './dist/packages/dbx-web/eslint/index.esm.js';
+import { DBX_WEB_ESLINT_PLUGIN } from './dist/packages/dbx-web/eslint/index.esm.js';
 import { utilEslintPlugin } from './dist/packages/util/eslint/index.esm.js';
 
 export default [
@@ -99,7 +99,7 @@ export default [
   {
     files: ['**/*.ts'],
     plugins: {
-      'dereekb-dbx-web': dbxWebEslintPlugin
+      'dereekb-dbx-web': DBX_WEB_ESLINT_PLUGIN
     },
     rules: {
       'dereekb-dbx-web/require-clean-subscription': 'error',
@@ -139,7 +139,8 @@ export default [
       'dereekb-util/require-dbx-model-companion-tags': 'warn', // dbx-components-mcp model registry: enforce @dbxModel marker semantics, archetype/aggregatesFrom/compositeKey formats
       'dereekb-util/require-dbx-auth-companion-tags': 'warn', // dbx-components-mcp auth registry: enforce @dbxAuthClaimsApp / @dbxAuthClaim / @dbxAuthClaimsService location + slug formats
       'dereekb-util/require-dbx-rule-companion-tags': 'warn', // dbx-components-mcp rule catalog: enforce @dbxRuleSeverity/Applies/NotApplies/Fix on @dbxRule-tagged enum members
-      'dereekb-util/require-constant-naming': 'warn', // dbx__note__typescript-programming → Constant Naming: camelCase for function-typed exported const, UPPER_SNAKE_CASE (or PascalCase) for value-typed. Ambiguous initializers (CallExpression aliases, etc.) are skipped; `@dbxAllowConstantName` JSDoc opts an export out.
+      'dereekb-util/require-constant-naming': 'warn', // dbx__note__typescript-programming → Constant Naming: camelCase or UPPER_SNAKE_CASE for function-typed exported const, UPPER_SNAKE_CASE (or PascalCase) for value-typed. Ambiguous initializers (CallExpression aliases, etc.) are skipped; `@dbxAllowConstantName` JSDoc opts an export out.
+      'dereekb-util/require-default-prefix-naming': 'warn', // SCREAMING_CASE const names containing `_DEFAULT` as a non-leading segment (e.g. `FOO_DEFAULT_BAR`, `FOO_BAR_DEFAULT`) must put `DEFAULT_` at the front (`DEFAULT_FOO_BAR`). Skips PascalCase/camelCase/underscored bindings; `@dbxAllowDefaultPrefix` JSDoc opts a declaration out.
       'dereekb-util/require-exported-jsdoc-example': 'off' // dbx__note__typescript-jsdocs → "Function JSDocs Must Include Examples". Staged off — surfaces ~700+ warnings workspace-wide because the convention itself has a soft escape ("when the description and signature already communicate clearly"); flip to 'warn' as part of a future JSDoc-enrichment sweep. Opt-out tag is `@dbxAllowSkipExample`.
     }
   },

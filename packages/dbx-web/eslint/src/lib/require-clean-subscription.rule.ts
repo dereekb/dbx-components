@@ -97,7 +97,7 @@ export interface CollectNgOnDestroyRemovalFixesInput {
  * - Inserts the `cleanSubscription` named import from `@dereekb/dbx-core` if missing.
  * - Removes any matching `this.<field>.destroy();` line from the same class's `ngOnDestroy`.
  */
-export const dbxWebRequireCleanSubscriptionRule: DbxWebRequireCleanSubscriptionRuleDefinition = {
+export const DBX_WEB_REQUIRE_CLEAN_SUBSCRIPTION_RULE: DbxWebRequireCleanSubscriptionRuleDefinition = {
   meta: {
     type: 'problem',
     fixable: 'code',

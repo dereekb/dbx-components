@@ -106,8 +106,8 @@ export type ModelFirebaseCrudFunctionQueryTypeConfig = {
  * Default specifier string (`'_'`) used when a CRUD operation has specifiers but one
  * should map to the base function name without a specifier suffix.
  */
-export const MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT = '_';
-export type ModelFirebaseCrudFunctionSpecifierDefault = typeof MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT;
+export const DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER = '_';
+export type ModelFirebaseCrudFunctionSpecifierDefault = typeof DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER;
 
 /**
  * Separator character (`','`) used to split multiple specifier keys in a config string.
@@ -214,7 +214,7 @@ export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTy
       const specifiers: Record<string, HttpsCallable<unknown, unknown>> = {};
 
       specifierKeys.forEach((inputSpecifier) => {
-        const specifier = inputSpecifier === MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT ? '' : inputSpecifier;
+        const specifier = inputSpecifier === DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER ? '' : inputSpecifier;
         const specifierFn = makeCallFunction(callFn, modelType, inputSpecifier) as HttpsCallable<unknown, unknown>;
 
         const fullSpecifierName = `${callFn.call}${modelTypeSuffix}${capitalizeFirstLetter(specifier)}`;

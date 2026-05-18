@@ -43,7 +43,7 @@ export interface DbxAnchorListExpandedAnchor extends ExpandedClickableAnchorLink
 export class DbxAnchorListComponent {
   readonly anchors = input.required<ClickableAnchorLinkTree[], Maybe<ClickableAnchorLinkTree[]>>({ transform: (x) => x ?? [] });
 
-  readonly expandedAnchors: Signal<DbxAnchorListExpandedAnchor[]> = computed(() => {
+  readonly expandedAnchorsSignal: Signal<DbxAnchorListExpandedAnchor[]> = computed(() => {
     const anchors = this.anchors();
     return expandClickableAnchorLinkTrees(anchors).map((y) => {
       (y as Configurable<DbxAnchorListExpandedAnchor>).classes = `${y.depth > 0 ? 'dbx-anchor-list-child' : 'dbx-anchor-list-root'} dbx-anchor-list-depth-${y.depth}`;

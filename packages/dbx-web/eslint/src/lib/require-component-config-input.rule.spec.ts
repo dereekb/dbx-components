@@ -1,6 +1,6 @@
 import { Linter } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
-import { dbxWebEslintPlugin } from './plugin';
+import { DBX_WEB_ESLINT_PLUGIN } from './plugin';
 
 const RULE_ID = 'dereekb-dbx-web/require-component-config-input';
 
@@ -9,14 +9,14 @@ function makeConfig(): Linter.Config[] {
     {
       files: ['**/*.ts'],
       languageOptions: {
-        parser: tsParser as any,
+        parser: tsParser,
         parserOptions: {
           ecmaVersion: 2022,
           sourceType: 'module'
         }
       },
       plugins: {
-        'dereekb-dbx-web': dbxWebEslintPlugin as any
+        'dereekb-dbx-web': DBX_WEB_ESLINT_PLUGIN
       },
       rules: {
         [RULE_ID]: 'error'

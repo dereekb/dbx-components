@@ -124,8 +124,8 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
         return this.tableStore.viewDelegate$.pipe(
           map((viewDelegate) => {
             const { groupHeader: inputGroupHeader, groupFooter: inputGroupFooter } = viewDelegate;
-            const hasGroupHeader = inputGroupHeader != null ? (group: DbxTableItemGroup<T, G>) => inputGroupHeader(group) != null : () => false;
-            const hasGroupFooter = inputGroupFooter != null ? (group: DbxTableItemGroup<T, G>) => inputGroupFooter(group) != null : () => false;
+            const hasGroupHeader = inputGroupHeader == null ? () => false : (group: DbxTableItemGroup<T, G>) => inputGroupHeader(group) != null;
+            const hasGroupFooter = inputGroupFooter == null ? () => false : (group: DbxTableItemGroup<T, G>) => inputGroupFooter(group) != null;
 
             return groups.flatMap((group) => {
               const { items } = group;

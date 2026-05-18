@@ -1,6 +1,6 @@
 import { Directive, type OnInit, inject, input } from '@angular/core';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
-import { DBX_DETACH_DEFAULT_KEY, type DbxDetachKey } from './detach';
+import { DEFAULT_DBX_DETACH_KEY, type DbxDetachKey } from './detach';
 import { DbxDetachService } from './detach.service';
 
 /**
@@ -23,7 +23,7 @@ export class DbxDetachInitDirective implements OnInit {
   private readonly _detachService = inject(DbxDetachService);
 
   readonly config = input.required<DbxInjectionComponentConfig>({ alias: 'dbxDetachInit' });
-  readonly key = input<DbxDetachKey>(DBX_DETACH_DEFAULT_KEY, { alias: 'dbxDetachInitKey' });
+  readonly key = input<DbxDetachKey>(DEFAULT_DBX_DETACH_KEY, { alias: 'dbxDetachInitKey' });
 
   ngOnInit(): void {
     this._detachService.init({

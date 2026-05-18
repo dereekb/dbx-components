@@ -34,7 +34,7 @@ export interface DbxChipDisplay extends LabeledValue<string> {
 /**
  * Default background tone percentage for tonal chip coloring.
  */
-export const DBX_CHIP_DEFAULT_TONE = 18;
+export const DEFAULT_DBX_CHIP_TONE = 18;
 
 /**
  * Renders a styled chip element with optional small, block, and color modes.
@@ -85,7 +85,7 @@ export class DbxChipDirective {
    */
   readonly display = input<Maybe<DbxChipDisplay>>();
   /**
-   * Background tone level for tonal appearance. Defaults to {@link DBX_CHIP_DEFAULT_TONE}.
+   * Background tone level for tonal appearance. Defaults to {@link DEFAULT_DBX_CHIP_TONE}.
    *
    * Set to `100` for fully opaque background.
    */
@@ -108,7 +108,7 @@ export class DbxChipDirective {
    */
   readonly colorStyleSignal = computed(() => this._configSignal()?.contrast ?? null);
 
-  readonly toneSignal = computed(() => this.tone() ?? this.display()?.tone ?? this._configSignal()?.tone ?? DBX_CHIP_DEFAULT_TONE);
+  readonly toneSignal = computed(() => this.tone() ?? this.display()?.tone ?? this._configSignal()?.tone ?? DEFAULT_DBX_CHIP_TONE);
 
   readonly styleSignal = computed(() => {
     const display = this.display();

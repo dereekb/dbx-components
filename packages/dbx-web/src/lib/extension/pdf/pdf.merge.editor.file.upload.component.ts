@@ -6,7 +6,7 @@ import { type Maybe } from '@dereekb/util';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
 import { DbxFileUploadComponent, type DbxFileUploadMode } from '../../interaction/upload/upload.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
-import { PDF_MERGE_DEFAULT_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry } from './pdf.merge';
+import { DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry } from './pdf.merge';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeEditorFileUploadValidatorDirective } from './pdf.merge.editor.file.upload.validator.directive';
 import { DbxPdfMergeEntryComponent } from './pdf.merge.entry.component';
@@ -25,7 +25,7 @@ export type DbxPdfMergeEditorFileUploadState = 'no_file' | 'valid' | 'invalid';
  */
 export interface DbxPdfMergeEditorFileUploadConfig {
   /**
-   * Override for the accept filter. Defaults to {@link PDF_MERGE_DEFAULT_ACCEPT}.
+   * Override for the accept filter. Defaults to {@link DEFAULT_PDF_MERGE_ACCEPT}.
    */
   readonly accept?: Maybe<FileArrayAcceptMatchConfig['accept']>;
   /**
@@ -120,7 +120,7 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   readonly slotId = input.required<string>();
   readonly config = input<Maybe<DbxPdfMergeEditorFileUploadConfig>>();
 
-  readonly acceptSignal = computed<FileArrayAcceptMatchConfig['accept']>(() => this.config()?.accept ?? (PDF_MERGE_DEFAULT_ACCEPT as FileArrayAcceptMatchConfig['accept']));
+  readonly acceptSignal = computed<FileArrayAcceptMatchConfig['accept']>(() => this.config()?.accept ?? (DEFAULT_PDF_MERGE_ACCEPT as FileArrayAcceptMatchConfig['accept']));
   readonly multipleSignal = computed(() => this.config()?.multiple ?? false);
   readonly modeSignal = computed<DbxFileUploadMode>(() => this.config()?.mode ?? 'default');
   readonly labelSignal = computed(() => this.config()?.label);
@@ -198,7 +198,7 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
     shareReplay(1)
   );
 
-  readonly stateSignal = toSignal(this.state$, { initialValue: 'no_file' as DbxPdfMergeEditorFileUploadState });
+  readonly stateSignal = toSignal(this.state$, { initialValue: 'no_file' });
 
   /**
    * Per-slot validity stream consumed by {@link DbxPdfMergeEditorFileUploadValidatorDirective}. Reports `true` when the slot is `valid` or when the slot is `no_file` and not `required`. An `invalid` state always reports `false`, even on optional slots — bad files block the merge until the user removes them.
