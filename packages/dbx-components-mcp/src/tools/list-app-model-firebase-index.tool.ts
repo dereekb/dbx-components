@@ -25,7 +25,7 @@ import { type } from 'arktype';
 import { type FunctionDeclaration, type Project, type SourceFile } from 'ts-morph';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { buildModelFirebaseIndexManifest, type BuildModelFirebaseIndexManifestOutcome, type ModelFirebaseIndexBuildWarning } from '../scan/model-firebase-index-build-manifest.js';
+import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, type BuildModelFirebaseIndexManifestOutcome } from '../scan/model-firebase-index-build-manifest.js';
 import type { DerivedComposite, DerivedFieldOverride, ModelFirebaseIndexEntry } from '../manifest/model-firebase-index-schema.js';
 import { buildScanProject, defaultGlobber, defaultReadFile } from '../scan/scan-io.js';
 import { MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME } from '../scan/model-firebase-index-scan-config-schema.js';
@@ -259,7 +259,7 @@ async function resolveBuildOutcome(input: ResolveBuildOutcomeInput): Promise<Lis
       const excludedCount = tagged.filter((t) => t.excluded).length;
       const specOnlyCount = tagged.filter((t) => t.specOnly).length;
       const specOnlyViolationCount = tagged.filter((t) => isSpecOnlyViolation(t)).length;
-      const warnings = buildOutcome.extractWarnings.map(formatBuildWarning);
+      const warnings = buildOutcome.extractWarnings.map(formatModelFirebaseIndexBuildWarning);
       report = {
         componentDir,
         source: buildOutcome.manifest.source,
@@ -386,74 +386,6 @@ function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry, references: Factor
     composites: entry.derivedComposites.map((c) => ({ ...c, fields: c.fields.map((f) => ({ ...f })) })),
     fieldOverrides: entry.derivedFieldOverrides.map((f) => ({ ...f, variants: f.variants.map((v) => ({ ...v })) }))
   };
-}
-
-function formatBuildWarning(warning: ModelFirebaseIndexBuildWarning): string {
-  let result: string;
-  if (warning.stage === 'extract') {
-    const w = warning.warning;
-    switch (w.kind) {
-      case 'missing-name':
-        result = `(anonymous) (${w.filePath}:${w.line}) tagged export has no resolvable name`;
-        break;
-      case 'missing-model-tag':
-        result = `${w.name} (${w.filePath}:${w.line}) missing required @dbxModelFirebaseIndexModel tag`;
-        break;
-      case 'unresolved-model':
-        result = `${w.name} (${w.filePath}:${w.line}) could not resolve model "${w.model}" to a Firestore identity`;
-        break;
-      case 'unsupported-scope':
-        result = `${w.name} (${w.filePath}:${w.line}) unsupported @dbxModelFirebaseIndexScope value "${w.scope}"`;
-        break;
-      case 'duplicate-slug':
-        result = `${w.name} (${w.filePath}:${w.line}) duplicate slug "${w.slug}" — already used by ${w.previousName}`;
-        break;
-      case 'unknown-helper':
-        result = `${w.name} (${w.filePath}:${w.line}) unknown constraint helper "${w.helper}"`;
-        break;
-      case 'unresolved-field':
-        result = `${w.name} (${w.filePath}:${w.line}) could not resolve field-path argument to "${w.callee}"`;
-        break;
-      case 'missing-paths':
-        result = `${w.name} (${w.filePath}:${w.line}) missing path coverage for conditional fields [${w.conditionalFields.join(', ')}]`;
-        break;
-      case 'unknown-path-field':
-        result = `${w.name} (${w.filePath}:${w.line}) @dbxModelFirebaseIndexPath references unknown field "${w.field}"`;
-        break;
-      case 'unannotated-query-helper':
-        result = `${w.name} (${w.filePath}:${w.line}) calls query helper "${w.callee}" (${w.calleeFilePath}:${w.calleeLine}) that is not tagged with @dbxModelFirebaseIndexHelper`;
-        break;
-      case 'transitive-cycle':
-        result = `${w.name} (${w.filePath}:${w.line}) transitive constraint resolution hit a cycle through "${w.callee}"`;
-        break;
-      case 'unresolvable-transitive-callee':
-        result = `${w.name} (${w.filePath}:${w.line}) could not resolve transitive callee "${w.callee}"`;
-        break;
-      case 'complex-query-body':
-        result = `${w.name} (${w.filePath}:${w.line}) tagged query body contains a "${w.branchKind}" construct — split into one factory per target index or mark as @dbxModelFirebaseIndexDispatcher`;
-        break;
-      case 'non-delegating-dispatcher':
-        result = `${w.name} (${w.filePath}:${w.line}) @dbxModelFirebaseIndexDispatcher calls "${w.callee}" directly — dispatchers must only delegate to other tagged query functions`;
-        break;
-      case 'excluded-factory':
-        result = `${w.name} (${w.filePath}:${w.line}) tagged @dbxModelFirebaseIndexExclude — analyzer is suppressing composites + fieldOverrides for this factory`;
-        break;
-    }
-  } else {
-    const w = warning.warning;
-    switch (w.kind) {
-      case 'multiple-range-fields':
-        result = `${w.factoryName} multiple range-field constraints on [${w.fields.join(', ')}] — Firestore allows only one range field per query`;
-        break;
-      case 'orderby-conflict':
-        result = `${w.factoryName} field "${w.field}" has conflicting orderBy directions [${w.directions.join(', ')}]`;
-        break;
-      case 'unsupported-array-contains-any':
-        result = `${w.factoryName} field "${w.field}" uses array-contains-any — index support is partial`;
-        break;
-    }
-  }
-  return result;
 }
 
 // MARK: Untagged-candidate detection
