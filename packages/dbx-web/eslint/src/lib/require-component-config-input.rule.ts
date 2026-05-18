@@ -113,7 +113,7 @@ export const dbxWebRequireComponentConfigInputRule: DbxWebRequireComponentConfig
 
         const initializer = member.value;
 
-        if (initializer && initializer.type === 'CallExpression' && isAngularInputCall(initializer, registry)) {
+        if (initializer?.type === 'CallExpression' && isAngularInputCall(initializer, registry)) {
           inputCount += 1;
         }
       }

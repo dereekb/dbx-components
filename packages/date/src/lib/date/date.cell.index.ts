@@ -66,14 +66,10 @@ export function isValidDateCellRange(input: DateCellRange): boolean {
 export function isValidDateCellRangeSeries(input: DateCellRange[]): boolean {
   let result: boolean;
 
-  if (!Array.isArray(input)) {
-    result = false;
-  } else {
+  if (Array.isArray(input)) {
     const invalidRange = input.findIndex((range) => !isValidDateCellRange(range));
 
-    if (invalidRange !== -1) {
-      result = false;
-    } else {
+    if (invalidRange === -1) {
       let greatestIndex = -1;
       result = true;
 
@@ -86,7 +82,11 @@ export function isValidDateCellRangeSeries(input: DateCellRange[]): boolean {
           greatestIndex = nextGreatestIndex;
         }
       }
+    } else {
+      result = false;
     }
+  } else {
+    result = false;
   }
 
   return result;
@@ -150,9 +150,7 @@ export interface LeastAndGreatestDateCellIndexResult<T> {
 export function getLeastAndGreatestDateCellIndexInDateCellRanges<T extends DateCellRange>(input: T[]): Maybe<LeastAndGreatestDateCellIndexResult<T>> {
   let result: Maybe<LeastAndGreatestDateCellIndexResult<T>>;
 
-  if (!input.length) {
-    result = null;
-  } else {
+  if (input.length) {
     let leastIndex = Number.MAX_SAFE_INTEGER;
     let greatestIndex = 0;
     let leastIndexItem: T = input[0];
@@ -179,6 +177,8 @@ export function getLeastAndGreatestDateCellIndexInDateCellRanges<T extends DateC
       greatestIndex,
       greatestIndexItem
     };
+  } else {
+    result = null;
   }
 
   return result;

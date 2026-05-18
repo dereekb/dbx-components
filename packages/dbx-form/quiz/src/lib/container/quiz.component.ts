@@ -93,18 +93,7 @@ export class QuizComponent {
     switchMap((started) => {
       let result: Observable<QuizComponentViewConfig>;
 
-      if (!started) {
-        result = this.quiz$.pipe(
-          map((quiz) => {
-            const viewConfig: QuizComponentViewPreQuizConfig = {
-              state: 'pre-quiz',
-              preQuizComponent: quiz?.preQuizComponentConfig
-            };
-
-            return viewConfig;
-          })
-        );
-      } else {
+      if (started) {
         result = combineLatest([this.quiz$, this.currentQuestion$, this.quizStore.isAtEndOfQuestions$]).pipe(
           map(([quiz, currentQuestion, isAtEndOfQuestions]) => {
             let viewConfig: QuizComponentViewConfig;
@@ -121,6 +110,17 @@ export class QuizComponent {
                 answerComponent: currentQuestion?.answerComponentConfig
               };
             }
+
+            return viewConfig;
+          })
+        );
+      } else {
+        result = this.quiz$.pipe(
+          map((quiz) => {
+            const viewConfig: QuizComponentViewPreQuizConfig = {
+              state: 'pre-quiz',
+              preQuizComponent: quiz?.preQuizComponentConfig
+            };
 
             return viewConfig;
           })

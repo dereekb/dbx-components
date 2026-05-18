@@ -35,9 +35,7 @@ export class DbxFirebaseDevelopmentPopupContentForgeFormComponent extends Abstra
     map((config) => {
       let result: Maybe<FormConfig>;
 
-      if (!config) {
-        result = undefined;
-      } else {
+      if (config) {
         result = {
           fields: [
             dbxForgePickableChipField<string, DbxFirebaseDevelopmentWidgetEntry>({
@@ -53,6 +51,8 @@ export class DbxFirebaseDevelopmentPopupContentForgeFormComponent extends Abstra
             })
           ]
         };
+      } else {
+        result = undefined;
       }
 
       return result;

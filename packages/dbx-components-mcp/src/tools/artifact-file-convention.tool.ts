@@ -93,11 +93,11 @@ export function runArtifactFileConvention(rawArgs: unknown): ToolResult {
   try {
     const args = parseArgs(rawArgs);
     const spec = getFileConventionSpec(args.artifact);
-    if (!spec) {
-      result = toolError(`Unknown artifact kind: \`${args.artifact}\`. Known: ${ARTIFACT_KINDS.join(', ')}.`);
-    } else {
+    if (spec) {
       const text = formatSpec(spec, { componentDir: args.componentDir, apiDir: args.apiDir, name: args.name });
       result = { content: [{ type: 'text', text }] };
+    } else {
+      result = toolError(`Unknown artifact kind: \`${args.artifact}\`. Known: ${ARTIFACT_KINDS.join(', ')}.`);
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

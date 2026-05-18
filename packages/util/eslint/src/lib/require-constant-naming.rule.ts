@@ -188,7 +188,7 @@ export const utilRequireConstantNamingRule: UtilRequireConstantNamingRuleDefinit
     function checkExportNamedDeclaration(node: AstNode): void {
       const decl = node.declaration;
 
-      if (!decl || decl.type !== 'VariableDeclaration' || decl.kind !== 'const') {
+      if (decl?.type !== 'VariableDeclaration' || decl.kind !== 'const') {
         return;
       }
 

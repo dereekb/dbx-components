@@ -259,16 +259,12 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       const { envName, env } = await resolveCliEnvOrThrow({ cliName, paths, flagEnv: argv.env, envVarName, defaultEnvs });
       const entry = await tokens.get(envName);
 
-      if (!entry) {
-        outputResult({ env: envName, authenticated: false, suggestion: `Run: ${cliName} auth login --env ${envName}` });
-      } else {
+      if (entry) {
         const expired = isTokenExpired(entry);
         const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
         const userinfoEndpoint = meta.userinfo_endpoint;
 
-        if (!userinfoEndpoint) {
-          outputResult({ env: envName, authenticated: !expired, expiresAt: entry.expiresAt, expired, scope: entry.scope });
-        } else {
+        if (userinfoEndpoint) {
           const claims = await fetchUserInfo({ userinfoEndpoint, accessToken: entry.accessToken });
           outputResult({
             env: envName,
@@ -279,7 +275,11 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
             sub: claims.sub,
             claims
           });
+        } else {
+          outputResult({ env: envName, authenticated: !expired, expiresAt: entry.expiresAt, expired, scope: entry.scope });
         }
+      } else {
+        outputResult({ env: envName, authenticated: false, suggestion: `Run: ${cliName} auth login --env ${envName}` });
       }
     })
   };

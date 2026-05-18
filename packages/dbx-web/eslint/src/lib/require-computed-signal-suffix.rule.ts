@@ -91,7 +91,7 @@ export const dbxWebRequireComputedSignalSuffixRule: DbxWebRequireComputedSignalS
         const propName = getClassMemberName(member);
         const initializer = member.value;
 
-        if (!propName || !initializer || initializer.type !== 'CallExpression') {
+        if (!propName || initializer?.type !== 'CallExpression') {
           continue;
         }
 

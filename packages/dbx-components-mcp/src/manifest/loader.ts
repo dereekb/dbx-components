@@ -121,15 +121,15 @@ function validateParsedManifest(path: string, parsed: unknown): LoadFromSourceRe
   const candidateVersion = (parsed as Maybe<{ readonly version?: unknown }>)?.version;
   let result: LoadFromSourceResult;
 
-  if (candidateVersion !== SUPPORTED_VERSION) {
-    result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
-  } else {
+  if (candidateVersion === SUPPORTED_VERSION) {
     const validated = SemanticTypeManifest(parsed);
     if (validated instanceof type.errors) {
       result = { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
     } else {
       result = { kind: 'success', manifest: validated };
     }
+  } else {
+    result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
   }
 
   return result;

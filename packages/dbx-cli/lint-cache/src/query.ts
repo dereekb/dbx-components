@@ -57,7 +57,7 @@ export function runQuery(cachePath: string, filters: QueryFilters): QueryResult 
 
   const totalMatched = matched.length;
   const truncated = filters.limit != null && totalMatched > filters.limit;
-  const limited = filters.limit != null ? matched.slice(0, filters.limit) : matched;
+  const limited = filters.limit == null ? matched : matched.slice(0, filters.limit);
 
   return { cache, matched: limited, totalMatched, truncated };
 }
@@ -70,7 +70,7 @@ function globToRegExp(pattern: string): RegExp {
   let regex = '';
   let i = 0;
   while (i < pattern.length) {
-    const ch = pattern[i] as string;
+    const ch = pattern[i];
     if (ch === '*' && pattern[i + 1] === '*') {
       regex += '.*';
       i += 2;
@@ -82,7 +82,7 @@ function globToRegExp(pattern: string): RegExp {
       regex += '[^/]';
       i += 1;
     } else if ('.+^$()|[]{}\\/'.includes(ch)) {
-      regex += `\\${ch}`;
+      regex += String.raw`\${ch}`;
       i += 1;
     } else {
       regex += ch;

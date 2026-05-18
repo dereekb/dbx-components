@@ -35,8 +35,7 @@ function renderSummary(r: QueryResult): string {
   const c = r.cache;
   const lines: string[] = [];
   lines.push(`Project: ${c.project} (${c.projectRoot})`);
-  lines.push(`Generated: ${c.generatedAt}`);
-  lines.push(`Totals: ${c.errorCount} errors · ${c.warningCount} warnings · ${c.filesWithIssues}/${c.fileCount} files with issues`);
+  lines.push(`Generated: ${c.generatedAt}`, `Totals: ${c.errorCount} errors · ${c.warningCount} warnings · ${c.filesWithIssues}/${c.fileCount} files with issues`);
   const truncatedSuffix = r.truncated ? ` (showing ${r.matched.length})` : '';
   lines.push(`Matched: ${r.totalMatched} messages${truncatedSuffix}`);
 
@@ -44,13 +43,11 @@ function renderSummary(r: QueryResult): string {
     const ruleCounts = aggregateByRule(r.matched);
     const fileCounts = aggregateByFile(r.matched);
 
-    lines.push('');
-    lines.push('Top rules:');
+    lines.push('', 'Top rules:');
     for (const [rule, count] of topEntries(ruleCounts, 10)) {
       lines.push(`  ${pad(count, 5)}  ${rule}`);
     }
-    lines.push('');
-    lines.push('Top files:');
+    lines.push('', 'Top files:');
     for (const [file, count] of topEntries(fileCounts, 10)) {
       lines.push(`  ${pad(count, 5)}  ${file}`);
     }

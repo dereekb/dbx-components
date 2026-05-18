@@ -161,7 +161,7 @@ export function filterProjects(input: FilterProjectsInput): readonly ProjectInfo
   return input.projects.filter((p) => {
     let keep = true;
     if (includeMatchers.length > 0 && !includeMatchers.some((m) => m(p.name))) keep = false;
-    if (keep && excludeMatchers.length > 0 && excludeMatchers.some((m) => m(p.name))) keep = false;
+    if (keep && excludeMatchers.some((m) => m(p.name))) keep = false;
     return keep;
   });
 }
@@ -181,7 +181,7 @@ function globToRegExp(pattern: string): RegExp {
   let regex = '';
   let i = 0;
   while (i < pattern.length) {
-    const ch = pattern[i] as string;
+    const ch = pattern[i];
     if (ch === '*') {
       regex += '.*';
       i += 1;
@@ -189,7 +189,7 @@ function globToRegExp(pattern: string): RegExp {
       regex += '.';
       i += 1;
     } else if ('.+^$()|[]{}\\/'.includes(ch)) {
-      regex += `\\${ch}`;
+      regex += String.raw`\${ch}`;
       i += 1;
     } else {
       regex += ch;

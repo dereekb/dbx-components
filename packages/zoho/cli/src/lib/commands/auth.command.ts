@@ -330,9 +330,7 @@ const authCheckCommand: CommandModule = {
     try {
       const config = await loadCliConfig();
 
-      if (!config) {
-        outputResult({ authenticated: false, error: 'No credentials configured. Run: zoho-cli auth setup' });
-      } else {
+      if (config) {
         const products = configuredProducts(config);
 
         if (products.length === 0) {
@@ -371,6 +369,8 @@ const authCheckCommand: CommandModule = {
 
           outputResult({ products: results });
         }
+      } else {
+        outputResult({ authenticated: false, error: 'No credentials configured. Run: zoho-cli auth setup' });
       }
     } catch (e) {
       outputError(e);

@@ -273,13 +273,13 @@ export async function runLookupModel(rawArgs: unknown): Promise<ToolResult> {
       }
     }
 
-    if (pathError !== undefined) {
-      result = toolError(pathError);
-    } else {
+    if (pathError === undefined) {
       const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs });
       const match = resolveTopic({ rawTopic: args.topic, scope: args.scope, downstream });
       const text = renderMatch(match, args, downstream);
       result = { content: [{ type: 'text', text }] };
+    } else {
+      result = toolError(pathError);
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

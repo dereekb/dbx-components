@@ -210,10 +210,10 @@ function compareEntries(a: CollectedEntry, b: CollectedEntry): number {
   let result: number;
   if (a.entry.model !== b.entry.model) {
     result = a.entry.model.localeCompare(b.entry.model);
-  } else if (a.entry.verb !== b.entry.verb) {
-    result = a.entry.verb.localeCompare(b.entry.verb);
-  } else {
+  } else if (a.entry.verb === b.entry.verb) {
     result = (a.entry.specifier ?? '').localeCompare(b.entry.specifier ?? '');
+  } else {
+    result = a.entry.verb.localeCompare(b.entry.verb);
   }
   return result;
 }

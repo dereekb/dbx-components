@@ -105,9 +105,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const apiAbs = resolve(cwd, parsed.apiDir);
     let extraction;
     let inspectError: string | undefined;
@@ -132,18 +130,20 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
         } else {
           const absolutePath = join(apiAbs, FIXTURE_RELATIVE_PATH);
           const writeResult = await appendScaffoldToFile({ absolutePath, snippet: rendered.snippet });
-          if (!writeResult.ok) {
-            result = toolError(writeResult.message);
-          } else {
+          if (writeResult.ok) {
             // Re-parse to compute final line numbers for the response.
             const reExtraction = extractAppFixturesFromText({ text: writeResult.updated, fixturePath: extraction.fixturePath });
             const newEntry = reExtraction.entries.find((e) => e.fixtureClassName === rendered.fixtureClassName);
             const text = formatScaffoldResponse({ rendered, extraction, archetype: parsed.archetype, newEntry });
             result = { content: [{ type: 'text', text }] };
+          } else {
+            result = toolError(writeResult.message);
           }
         }
       }
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }
@@ -199,10 +199,10 @@ async function appendScaffoldToFile(input: { absolutePath: string; snippet: stri
     } catch (err) {
       writeError = `Failed to write fixture file: ${err instanceof Error ? err.message : String(err)}`;
     }
-    if (writeError !== undefined) {
-      result = { ok: false, message: writeError };
-    } else {
+    if (writeError === undefined) {
       result = { ok: true, updated };
+    } else {
+      result = { ok: false, message: writeError };
     }
   }
   return result;

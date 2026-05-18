@@ -50,7 +50,7 @@ export interface UtilNoSisterReExportRuleDefinition {
  * @returns A RegExp matching the entire string against `pattern`.
  */
 function compilePattern(pattern: string): RegExp {
-  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  const escaped = pattern.replaceAll(/[.+?^${}()|[\]\\]/g, String.raw`\$&`).replaceAll('*', '.*');
   return new RegExp(`^${escaped}$`);
 }
 

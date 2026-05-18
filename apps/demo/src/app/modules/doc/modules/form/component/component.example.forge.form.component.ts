@@ -18,9 +18,7 @@ export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncFo
     map((config) => {
       let result: Maybe<FormConfig>;
 
-      if (!config) {
-        result = undefined;
-      } else {
+      if (config) {
         result = {
           fields: [
             dbxForgeComponentField({
@@ -39,6 +37,8 @@ export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncFo
             })
           ]
         } as const satisfies FormConfig;
+      } else {
+        result = undefined;
       }
 
       return result;

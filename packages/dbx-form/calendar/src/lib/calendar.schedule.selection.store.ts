@@ -905,7 +905,9 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
 
   if (isSameValue) {
     result = state;
-  } else if (change != null) {
+  } else if (change == null) {
+    result = noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
+  } else {
     // After the legacy-restored output anchor, change.ex is already state-anchored
     // (change.start equals state.start for filter-relative outputs), so no offset
     // is applied. inputStart is clamped to state.minMaxDateRange.start when set so
@@ -915,8 +917,6 @@ export function updateStateWithDateCellScheduleRangeValue(state: CalendarSchedul
     const clampedInputStart = minMaxStart && minMaxStart.getTime() > change.start.getTime() ? minMaxStart : change.start;
     const nextState: CalendarScheduleSelectionState = { ...state, inputStart: clampedInputStart, inputEnd: change.end, toggledIndexes: new Set(change.ex ?? []) };
     result = updateStateWithChangedScheduleDays(finalizeNewCalendarScheduleSelectionState(nextState), expandDateCellScheduleDayCodes(change.w || ('89' as const)));
-  } else {
-    result = noSelectionCalendarScheduleSelectionState(state); // clear selection, retain disabled days
   }
 
   return result;
@@ -974,7 +974,9 @@ export function updateStateWithSelectionMode(state: CalendarScheduleSelectionSta
   const { selectionMode: currentSelectionMode } = state;
   let result: CalendarScheduleSelectionState;
 
-  if (currentSelectionMode !== selectionMode) {
+  if (currentSelectionMode === selectionMode) {
+    result = state;
+  } else {
     const nextState = { ...state, selectionMode };
 
     if (selectionMode === 'multiple') {
@@ -983,8 +985,6 @@ export function updateStateWithSelectionMode(state: CalendarScheduleSelectionSta
       const currentSelectionRange = computeCalendarScheduleSelectionDateCellRange(nextState);
       result = currentSelectionRange ? updateStateWithChangedDates(nextState, { set: [currentSelectionRange.i], invertSetBehavior: true }) : nextState;
     }
-  } else {
-    result = state;
   }
 
   return result;

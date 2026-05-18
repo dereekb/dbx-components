@@ -44,7 +44,7 @@ export type FetchJsonFunction = FetchJsonGetFunction & FetchJsonMethodAndBodyFun
 
 export type FetchJsonInterceptJsonResponseFunction = (json: unknown, response: Response) => unknown;
 
-export type HandleFetchJsonParseErrorFunction = (response: Response) => Maybe<string | never>;
+export type HandleFetchJsonParseErrorFunction = (response: Response) => Maybe<string>;
 
 export const throwJsonResponseParseErrorFunction: HandleFetchJsonParseErrorFunction = (response: Response) => {
   throw new JsonResponseParseError(response);

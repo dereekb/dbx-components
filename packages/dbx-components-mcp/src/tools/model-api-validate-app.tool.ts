@@ -80,9 +80,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const componentAbs = resolve(cwd, parsed.componentDir);
     const apiAbs = resolve(cwd, parsed.apiDir);
     const modelFilter = parsed.model ?? (parsed.identity ? identityToModel(parsed.identity) : undefined);
@@ -99,6 +97,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
       const text = parsed.format === 'json' ? formatValidationAsJson(report) : formatValidationAsMarkdown(report);
       result = { content: [{ type: 'text', text }] };
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

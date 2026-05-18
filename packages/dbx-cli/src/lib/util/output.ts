@@ -264,9 +264,7 @@ export function buildDumpFilePath(extension: 'json' | 'ndjson', suffix?: string)
   const { dumpDir, commandPath } = _outputOptions;
   let result: Maybe<string>;
 
-  if (!dumpDir) {
-    result = undefined;
-  } else {
+  if (dumpDir) {
     if (!existsSync(dumpDir)) {
       mkdirSync(dumpDir, { recursive: true });
     }
@@ -275,6 +273,8 @@ export function buildDumpFilePath(extension: 'json' | 'ndjson', suffix?: string)
     const stamp = dumpTimestamp();
     const base = suffix ? `${prefix}_${stamp}_${suffix}` : `${prefix}_${stamp}`;
     result = join(dumpDir, `${base}.${extension}`);
+  } else {
+    result = undefined;
   }
 
   return result;

@@ -168,9 +168,7 @@ export async function runArchetypeSearch(rawArgs: unknown): Promise<ToolResult> 
   try {
     args = parseArgs(rawArgs);
     const resolved = resolveModelArchetype(args.archetype);
-    if (!resolved) {
-      result = toolError(`Unknown archetype slug \`${args.archetype}\`. Try \`dbx_model_archetype_lookup slug="list"\` for the catalog.`);
-    } else {
+    if (resolved) {
       const cwd = process.cwd();
       const componentDirsError = validateComponentDirs(args.componentDirs, cwd);
       if (componentDirsError) {
@@ -182,6 +180,8 @@ export async function runArchetypeSearch(rawArgs: unknown): Promise<ToolResult> 
         const filtered = pool.filter((m) => m.archetypes?.includes(slug) === true && matchesAxes(m, slug, args.axes)).slice(0, args.limit);
         result = { content: [{ type: 'text', text: renderSearchOutput({ args, slug, filtered }) }] };
       }
+    } else {
+      result = toolError(`Unknown archetype slug \`${args.archetype}\`. Try \`dbx_model_archetype_lookup slug="list"\` for the catalog.`);
     }
   } catch (err) {
     result = toolError(err instanceof Error ? err.message : String(err));

@@ -61,18 +61,18 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
       pathError = err instanceof Error ? err.message : String(err);
     }
 
-    if (pathError !== undefined) {
-      result = toolError(pathError);
-    } else {
+    if (pathError === undefined) {
       const apiAbs = resolve(cwd, apiRel);
       const inspection = await inspectColorTemplates(apiAbs, apiRel);
-      if (!inspection.appExists) {
-        result = toolError(`App directory not found: \`${apiRel}\`.`);
-      } else {
+      if (inspection.appExists) {
         const report = listAppColorTemplates(inspection);
         const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
         result = { content: [{ type: 'text', text }] };
+      } else {
+        result = toolError(`App directory not found: \`${apiRel}\`.`);
       }
+    } else {
+      result = toolError(pathError);
     }
   }
   return result;

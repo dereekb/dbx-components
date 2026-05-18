@@ -36,16 +36,7 @@ const KEY_DEL = ''; // DEL
 export function promptLine(input: PromptInput): Promise<string> {
   let result: Promise<string>;
 
-  if (!input.mask) {
-    const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: false });
-
-    result = new Promise<string>((resolve) => {
-      rl.question(input.question, (answer) => {
-        rl.close();
-        resolve(answer);
-      });
-    });
-  } else {
+  if (input.mask) {
     result = new Promise<string>((resolve, reject) => {
       const stdout = process.stdout;
       stdout.write(input.question);
@@ -87,6 +78,15 @@ export function promptLine(input: PromptInput): Promise<string> {
       process.stdin.setRawMode?.(true);
       process.stdin.resume();
       process.stdin.on('data', onData);
+    });
+  } else {
+    const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: false });
+
+    result = new Promise<string>((resolve) => {
+      rl.question(input.question, (answer) => {
+        rl.close();
+        resolve(answer);
+      });
     });
   }
 

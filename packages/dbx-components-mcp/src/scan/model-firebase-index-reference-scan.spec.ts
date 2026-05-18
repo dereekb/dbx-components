@@ -82,7 +82,7 @@ describe('scanFactoryReferences', () => {
     expect(info).toBeDefined();
     expect(info?.count).toBe(4);
     expect(info?.referencedBy.length).toBe(4);
-    const files = (info?.referencedBy ?? []).map((r) => r.file).sort();
+    const files = (info?.referencedBy ?? []).map((r) => r.file).sort((a, b) => a.localeCompare(b));
     expect(files).toEqual(['src/lib/model/job/job.action.ts', 'src/lib/model/job/job.action.ts', 'src/lib/model/other/other.api.ts', 'src/lib/model/other/other.api.ts']);
   });
 
@@ -194,14 +194,14 @@ describe('scanFactoryReferences', () => {
     expect(info?.count).toBe(8);
     expect(info?.productionCount).toBe(6);
     expect(info?.specCount).toBe(2);
-    const files = (info?.referencedBy ?? []).map((r) => r.file).sort();
+    const files = (info?.referencedBy ?? []).map((r) => r.file).sort((a, b) => a.localeCompare(b));
     expect(files).toEqual(['apps/foo-api/src/lib/run.action.spec.ts', 'apps/foo-api/src/lib/run.action.spec.ts', 'apps/foo-api/src/lib/run.action.ts', 'apps/foo-api/src/lib/run.action.ts', 'components/foo-shared/src/lib/derived.ts', 'components/foo-shared/src/lib/derived.ts', 'packages/util-helpers/src/lib/wrapper.ts', 'packages/util-helpers/src/lib/wrapper.ts']);
     const specSites = (info?.referencedBy ?? []).filter((r) => r.isSpec).map((r) => r.file);
     expect(specSites).toEqual(['apps/foo-api/src/lib/run.action.spec.ts', 'apps/foo-api/src/lib/run.action.spec.ts']);
     const productionSites = (info?.referencedBy ?? [])
       .filter((r) => !r.isSpec)
       .map((r) => r.file)
-      .sort();
+      .sort((a, b) => a.localeCompare(b));
     expect(productionSites.every((p) => !p.endsWith('.spec.ts'))).toBe(true);
     expect(productionSites.length).toBe(6);
   });

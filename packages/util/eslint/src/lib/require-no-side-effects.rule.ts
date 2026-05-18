@@ -47,11 +47,11 @@ function getFunctionName(node: AstNode): Maybe<string> {
 function buildNamePatterns(options: UtilRequireNoSideEffectsRuleOptions): readonly RegExp[] {
   let result: readonly RegExp[];
 
-  if (!options.checkNamePatterns) {
-    result = [];
-  } else {
+  if (options.checkNamePatterns) {
     const additional = (options.additionalNamePatterns ?? []).map((source) => new RegExp(source));
     result = [...DEFAULT_NAME_PATTERNS, ...additional];
+  } else {
+    result = [];
   }
 
   return result;

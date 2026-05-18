@@ -5,12 +5,48 @@ import { PASCAL_IDENTIFIER_PATTERN, reportOnJsdocLine } from './dbx-tag-families
 
 type AstNode = any;
 
-const MODEL_MARKERS: readonly string[] = ['dbxModel', 'dbxModelSubObject', 'dbxModelOrganizationalGroupRoot', 'dbxModelGroup'];
+const MODEL_MARKERS: ReadonlySet<string> = new Set(['dbxModel', 'dbxModelSubObject', 'dbxModelOrganizationalGroupRoot', 'dbxModelGroup']);
 const MODEL_COMPANIONS: readonly string[] = ['Archetype', 'AggregatesFrom', 'CompositeKey'];
 const PROPERTY_COMPANIONS: readonly string[] = ['Variable', 'VariableSyncFlag'];
 const DEFAULT_ALLOWED_ENCODINGS: readonly string[] = ['two-way', 'one-way'];
 const ARCHETYPE_SLUG_PATTERN = /^[a-z][a-z0-9-]*$/;
 const ARCHETYPE_AXIS_PATTERN = /^([A-Za-z_$][A-Za-z0-9_$]*)=([^,]+)$/;
+
+/**
+ * Splits an interface JSDoc into the marker tags from `MODEL_MARKERS` and the
+ * map of `@dbxModel*` companion tags keyed by suffix. Property-only companions
+ * (`Variable`, `VariableSyncFlag`) are still surfaced so the caller can flag them
+ * as misplaced when found on an interface JSDoc.
+ *
+ * @param parsed - The parsed JSDoc to inspect.
+ * @returns The list of marker tags and the map of companion suffix to tag instances.
+ */
+function collectInterfaceTags(parsed: ParsedJsdoc): { readonly markers: ParsedJsdocTag[]; readonly companions: Map<string, ParsedJsdocTag[]> } {
+  const markers: ParsedJsdocTag[] = [];
+  const companions = new Map<string, ParsedJsdocTag[]>();
+  for (const tag of parsed.tags) {
+    if (MODEL_MARKERS.has(tag.tag)) {
+      markers.push(tag);
+      continue;
+    }
+    // Property-level tags (Variable / VariableSyncFlag) on an interface JSDoc → misplaced.
+    if (tag.tag === 'dbxModelVariable' || tag.tag === 'dbxModelVariableSyncFlag') {
+      const suffix = tag.tag.slice('dbxModel'.length);
+      const list = companions.get(suffix) ?? [];
+      list.push(tag);
+      companions.set(suffix, list);
+      continue;
+    }
+    if (!tag.tag.startsWith('dbxModel')) continue;
+    // Exclude tag prefixes that belong to sibling families (handled by their own rules).
+    if (tag.tag.startsWith('dbxModelSnapshotField') || tag.tag.startsWith('dbxModelFirebaseIndex')) continue;
+    const suffix = tag.tag.slice('dbxModel'.length);
+    const list = companions.get(suffix) ?? [];
+    list.push(tag);
+    companions.set(suffix, list);
+  }
+  return { markers, companions };
+}
 
 /**
  * Options for the require-dbx-model-companion-tags rule.
@@ -81,33 +117,6 @@ export const utilRequireDbxModelCompanionTagsRule: UtilRequireDbxModelCompanionT
     const allowedEncodings = options.allowedEncodings ?? DEFAULT_ALLOWED_ENCODINGS;
     const knownCompanions = options.knownCompanions ?? MODEL_COMPANIONS;
     const requireBareMarker = options.requireBareMarker !== false;
-
-    function collectInterfaceTags(parsed: ParsedJsdoc): { readonly markers: ParsedJsdocTag[]; readonly companions: Map<string, ParsedJsdocTag[]> } {
-      const markers: ParsedJsdocTag[] = [];
-      const companions = new Map<string, ParsedJsdocTag[]>();
-      for (const tag of parsed.tags) {
-        if (MODEL_MARKERS.includes(tag.tag)) {
-          markers.push(tag);
-          continue;
-        }
-        // Property-level tags (Variable / VariableSyncFlag) on an interface JSDoc → misplaced.
-        if (tag.tag === 'dbxModelVariable' || tag.tag === 'dbxModelVariableSyncFlag') {
-          const suffix = tag.tag.slice('dbxModel'.length);
-          const list = companions.get(suffix) ?? [];
-          list.push(tag);
-          companions.set(suffix, list);
-          continue;
-        }
-        if (!tag.tag.startsWith('dbxModel')) continue;
-        // Exclude tag prefixes that belong to sibling families (handled by their own rules).
-        if (tag.tag.startsWith('dbxModelSnapshotField') || tag.tag.startsWith('dbxModelFirebaseIndex')) continue;
-        const suffix = tag.tag.slice('dbxModel'.length);
-        const list = companions.get(suffix) ?? [];
-        list.push(tag);
-        companions.set(suffix, list);
-      }
-      return { markers, companions };
-    }
 
     function checkInterfaceJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);

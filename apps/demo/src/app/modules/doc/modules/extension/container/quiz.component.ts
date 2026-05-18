@@ -23,9 +23,7 @@ export class DocExtensionQuizComponent {
       switchMap((quizComponent) => {
         let result;
 
-        if (!quizComponent) {
-          result = of(null);
-        } else {
+        if (quizComponent) {
           const store = quizComponent.quizStore;
           result = combineLatest([store.startedQuiz$, store.submittedQuiz$, store.questionIndex$, store.answers$, store.completedQuestions$, store.unansweredQuestions$, store.lockQuizNavigation$]).pipe(
             map(([startedQuiz, submittedQuiz, questionIndex, answers, completedQuestions, unansweredQuestions, lockQuizNavigation]) => ({
@@ -38,6 +36,8 @@ export class DocExtensionQuizComponent {
               lockQuizNavigation
             }))
           );
+        } else {
+          result = of(null);
         }
 
         return result;

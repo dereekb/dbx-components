@@ -36,14 +36,14 @@ export class DbxFirebaseEmailForgeFormComponent extends AbstractConfigAsyncForge
     map((config) => {
       let result: Maybe<FormConfig>;
 
-      if (!config) {
-        result = undefined;
-      } else {
+      if (config) {
         const loginMode = config.loginMode ?? 'login';
         const passwordConfig = config.passwordConfig;
 
         const fields = [dbxForgeUsernameLoginField('email'), dbxForgeTextPasswordField(passwordConfig), ...(loginMode === 'register' ? [dbxForgeTextVerifyPasswordField()] : [])];
         result = { fields };
+      } else {
+        result = undefined;
       }
 
       return result;

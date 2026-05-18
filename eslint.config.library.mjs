@@ -20,6 +20,8 @@ export default [
       '@typescript-eslint/max-params': ['warn', { max: 3, countVoidThis: false }],
       '@typescript-eslint/no-deprecated': 'warn',
       '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'warn', // matches Sonar S4325; auto-fixable
+
       '@typescript-eslint/no-misused-promises': 'warn',
       '@typescript-eslint/return-await': ['warn', 'in-try-catch'],
       '@typescript-eslint/await-thenable': 'warn',

@@ -23,6 +23,13 @@ function MERGE_RELATION_TAG(a: RelationTag): RelationTag {
   return a; // a and b are the same.
 }
 
+const MERGE_WITH_INSERTED_SUFFIX = (a: RelationTag, _b: RelationTag): RelationTag => {
+  return new RelationTag({
+    key: a.key,
+    type: `${a.type}_inserted`
+  });
+};
+
 describe('ModelRelationUtility', () => {
   describe('addToCollection()', () => {
     let current: string[];
@@ -309,12 +316,7 @@ describe('ModelRelationUtility', () => {
       });
 
       describe('INSERT', () => {
-        const MERGE_WITH_SUFFIX = (a: RelationTag, _b: RelationTag): RelationTag => {
-          return new RelationTag({
-            key: a.key,
-            type: `${a.type}_inserted`
-          });
-        };
+        const MERGE_WITH_SUFFIX = MERGE_WITH_INSERTED_SUFFIX;
 
         it('should update an existing item', () => {
           const insert = [
@@ -367,12 +369,7 @@ describe('ModelRelationUtility', () => {
       });
 
       describe('REMOVE_AND_INSERT', () => {
-        const MERGE_WITH_SUFFIX = (a: RelationTag, _b: RelationTag): RelationTag => {
-          return new RelationTag({
-            key: a.key,
-            type: `${a.type}_inserted`
-          });
-        };
+        const MERGE_WITH_SUFFIX = MERGE_WITH_INSERTED_SUFFIX;
 
         it('should remove all current values and then insert the new values', () => {
           const insert = [

@@ -146,9 +146,7 @@ export async function runArtifactScaffold(rawArgs: unknown): Promise<ToolResult>
       pathError = err instanceof Error ? err.message : String(err);
     }
 
-    if (pathError !== undefined) {
-      result = toolError(pathError);
-    } else {
+    if (pathError === undefined) {
       let raw: Awaited<ReturnType<typeof scaffoldArtifact>> | undefined;
       let scaffoldError: string | undefined;
       try {
@@ -158,13 +156,15 @@ export async function runArtifactScaffold(rawArgs: unknown): Promise<ToolResult>
         scaffoldError = `Scaffold failed: ${message}`;
       }
 
-      if (scaffoldError !== undefined) {
-        result = toolError(scaffoldError);
-      } else {
+      if (scaffoldError === undefined) {
         const checked = await applyIdempotency(raw as ReturnType<typeof scaffoldArtifact>, (relativePath) => fileExists(resolve(cwd, relativePath)));
         const text = formatResult(checked);
         result = { content: [{ type: 'text', text }] };
+      } else {
+        result = toolError(scaffoldError);
       }
+    } else {
+      result = toolError(pathError);
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

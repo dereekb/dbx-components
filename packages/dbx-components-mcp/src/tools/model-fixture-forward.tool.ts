@@ -58,9 +58,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     ensureError = toErrorMessage(err);
   }
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const apiAbs = resolve(cwd, parsed.apiDir);
     let extraction;
     let inspectError: string | undefined;
@@ -69,14 +67,9 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     } catch (err) {
       inspectError = `Failed to read fixture file: ${toErrorMessage(err)}`;
     }
-    if (inspectError !== undefined || extraction === undefined) {
-      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
-    } else {
+    if (inspectError === undefined && extraction !== undefined) {
       const entry = extraction.entries.find((e) => e.model === parsed.model);
-      if (!entry) {
-        const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
-        result = toolError(`Model \`${parsed.model}\` not found in \`${extraction.fixturePath}\`. Known: ${known}.`);
-      } else {
+      if (entry) {
         const rendered = renderForwarders({ entry, methods: parsed.methods });
         if (rendered.added.length === 0) {
           result = { content: [{ type: 'text', text: renderNoOpReport(extraction.fixturePath, entry.fixtureClassName, rendered) }] };
@@ -89,8 +82,15 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
             result = { content: [{ type: 'text', text: renderSuccessReport(extraction.fixturePath, entry.fixtureClassName, rendered) }] };
           }
         }
+      } else {
+        const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
+        result = toolError(`Model \`${parsed.model}\` not found in \`${extraction.fixturePath}\`. Known: ${known}.`);
       }
+    } else {
+      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }
@@ -110,9 +110,7 @@ async function applyForwardersToFile(absolutePath: string, fixtureClassName: str
   }
   if (result === undefined && sourceFile !== undefined) {
     const fixtureClass = sourceFile.getClass(fixtureClassName);
-    if (!fixtureClass) {
-      result = `Could not locate class \`${fixtureClassName}\` for in-place edit. The fixture file may have been modified since parsing.`;
-    } else {
+    if (fixtureClass) {
       for (const forwarder of rendered.added) {
         fixtureClass.insertText(fixtureClass.getEnd() - 1, '\n' + forwarder.source + '\n');
       }
@@ -122,6 +120,8 @@ async function applyForwardersToFile(absolutePath: string, fixtureClassName: str
       } catch (err) {
         result = `Failed to write fixture file: ${toErrorMessage(err)}`;
       }
+    } else {
+      result = `Could not locate class \`${fixtureClassName}\` for in-place edit. The fixture file may have been modified since parsing.`;
     }
   }
   return result;

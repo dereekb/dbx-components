@@ -104,11 +104,11 @@ export class AbstractSingleItemDbxFirebaseDocument<T, PT, D extends FirestoreDoc
     if (firestoreCollection != null) {
       const id = (firestoreCollection as SingleItemFirestoreCollection<T, PT, D, PD>).singleItemIdentifier;
 
-      if (id != null) {
-        result = { ...state, firestoreCollection, id };
-      } else {
+      if (id == null) {
         throw new Error('AbstractSingleItemDbxFirebaseDocument only accepts SingleItemFirestoreCollection values with a singleItemIdentifier set for setFirestoreCollection.');
       }
+
+      result = { ...state, firestoreCollection, id };
     } else {
       result = { ...state, firestoreCollection: null };
     }

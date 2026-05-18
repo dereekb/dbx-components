@@ -192,9 +192,7 @@ export function renderDecodedKey(decoded: DecodedKey): string {
 
 function renderLeafLines(leaf: DecodedKeySegment): string[] {
   let lines: string[];
-  if (!leaf.modelName) {
-    lines = [`Model: <unknown — prefix '${leaf.prefix}' not in manifest>`, `prefix: ${leaf.prefix}`, `id: ${leaf.id}`];
-  } else {
+  if (leaf.modelName) {
     lines = [`Model: ${leaf.modelName}`];
     if (leaf.identityConst) lines.push(`identityConst: ${leaf.identityConst}`);
     if (leaf.modelType) lines.push(`modelType: ${leaf.modelType}`);
@@ -205,6 +203,8 @@ function renderLeafLines(leaf: DecodedKeySegment): string[] {
       const sourceSuffix = leaf.sourceFile ? ` (${leaf.sourceFile})` : '';
       lines.push(`source: ${leaf.sourcePackage}${sourceSuffix}`);
     }
+  } else {
+    lines = [`Model: <unknown — prefix '${leaf.prefix}' not in manifest>`, `prefix: ${leaf.prefix}`, `id: ${leaf.id}`];
   }
   return lines;
 }

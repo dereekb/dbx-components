@@ -82,7 +82,9 @@ export class DbxErrorComponent {
     const iconOnly = this.iconOnly();
     let result: DbxErrorComponentState;
 
-    if (rawError != null) {
+    if (rawError == null) {
+      result = { viewType: 'none' };
+    } else {
       const error = toReadableError(rawError);
       const isDefaultError = iconOnly ? false : isDefaultReadableError(error);
 
@@ -113,8 +115,6 @@ export class DbxErrorComponent {
       }
 
       result = state;
-    } else {
-      result = { viewType: 'none' };
     }
 
     return result;

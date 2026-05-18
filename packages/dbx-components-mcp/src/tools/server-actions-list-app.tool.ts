@@ -66,9 +66,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const apiAbs = resolve(cwd, parsed.apiDir);
     let report;
     let listError: string | undefined;
@@ -83,6 +81,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
       const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
       result = { content: [{ type: 'text', text }] };
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

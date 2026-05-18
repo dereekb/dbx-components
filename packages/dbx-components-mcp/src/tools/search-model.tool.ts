@@ -287,9 +287,7 @@ export async function runSearchModel(rawArgs: unknown): Promise<ToolResult> {
         ensureError = error instanceof Error ? error.message : String(error);
       }
     }
-    if (ensureError !== undefined) {
-      result = toolError(ensureError);
-    } else {
+    if (ensureError === undefined) {
       const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs });
       const pool = buildEntryPool({ scope: args.scope, downstream });
 
@@ -314,6 +312,8 @@ export async function runSearchModel(rawArgs: unknown): Promise<ToolResult> {
         },
         argsCapture.limit === undefined ? { query: argsCapture.query } : { query: argsCapture.query, limit: argsCapture.limit }
       );
+    } else {
+      result = toolError(ensureError);
     }
   }
   return result;

@@ -58,9 +58,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     ensureError = err instanceof Error ? err.message : String(err);
   }
   let result: ToolResult;
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const apiAbs = resolve(cwd, parsed.apiDir);
     let extraction;
     let inspectError: string | undefined;
@@ -69,12 +67,14 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     } catch (err) {
       inspectError = `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`;
     }
-    if (inspectError !== undefined || extraction === undefined) {
-      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
-    } else {
+    if (inspectError === undefined && extraction !== undefined) {
       const text = parsed.format === 'json' ? formatListAsJson(extraction) : formatListAsMarkdown(extraction);
       result = { content: [{ type: 'text', text }] };
+    } else {
+      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

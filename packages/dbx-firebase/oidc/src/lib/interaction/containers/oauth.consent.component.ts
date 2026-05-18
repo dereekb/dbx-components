@@ -124,10 +124,10 @@ export class DbxOAuthConsentComponent implements OnDestroy {
 
     if (isLoggedIn === undefined) {
       result = 'unknown';
-    } else if (!isLoggedIn) {
-      result = 'no_user';
-    } else {
+    } else if (isLoggedIn) {
       result = 'user';
+    } else {
+      result = 'no_user';
     }
 
     return result;

@@ -41,14 +41,7 @@ function collectComponentViolations(inspection: AppAssetsInspection): Violation[
     });
   } else {
     const extracted = extractAppAssets(inspection);
-    if (!extracted.assetsFileExists) {
-      pushViolation(violations, {
-        code: 'DBX_ASSET_FOLDER_FILE_MISSING',
-        message: `Component is missing \`src/lib/assets.ts\`. Add the file and export \`AssetPathRef\` constants.`,
-        side: 'component',
-        file: undefined
-      });
-    } else {
+    if (extracted.assetsFileExists) {
       if (extracted.assetConstants.length === 0 && extracted.aggregatorExports.length === 0) {
         pushViolation(violations, {
           code: 'DBX_ASSET_FOLDER_NO_EXPORTS',
@@ -67,6 +60,13 @@ function collectComponentViolations(inspection: AppAssetsInspection): Violation[
           file: 'src/lib/index.ts'
         });
       }
+    } else {
+      pushViolation(violations, {
+        code: 'DBX_ASSET_FOLDER_FILE_MISSING',
+        message: `Component is missing \`src/lib/assets.ts\`. Add the file and export \`AssetPathRef\` constants.`,
+        side: 'component',
+        file: undefined
+      });
     }
   }
   return violations;

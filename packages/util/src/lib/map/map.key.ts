@@ -209,15 +209,15 @@ export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>()
 export function mapsHaveSameKeys<K>(a: Map<K, unknown>, b: Map<K, unknown>): boolean {
   let same = true;
 
-  if (a.size !== b.size) {
-    same = false; // must be same size to have same keys
-  } else {
+  if (a.size === b.size) {
     for (const key of a.keys()) {
       if (!b.has(key)) {
         same = false; // b does not have the same key as a
         break;
       }
     }
+  } else {
+    same = false; // must be same size to have same keys
   }
 
   return same;

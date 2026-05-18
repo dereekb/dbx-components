@@ -105,15 +105,15 @@ function parseArgs(rawArgs: unknown, defaultCwd: string): ParsedArgs | string {
       }
     }
   }
-  if (invalidDirError !== undefined) {
-    result = invalidDirError;
-  } else {
+  if (invalidDirError === undefined) {
     result = {
       op: parsed.op,
       workspaceRoot,
       dryRun: parsed.dryRun ?? false,
       explicitDirs: parsed.explicitDirs
     };
+  } else {
+    result = invalidDirError;
   }
   return result;
 }

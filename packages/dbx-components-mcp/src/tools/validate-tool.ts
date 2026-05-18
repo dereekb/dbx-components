@@ -106,15 +106,15 @@ export function createFolderValidateTool<TInspection extends { readonly path: st
         readError = `Failed to read folders: ${message}`;
       }
 
-      if (readError !== undefined) {
-        runResult = toolError(readError);
-      } else {
+      if (readError === undefined) {
         const result = validate(inspections);
         const text = format(result);
         runResult = {
           content: [{ type: 'text', text }],
           isError: result.errorCount > 0
         };
+      } else {
+        runResult = toolError(readError);
       }
     }
     return runResult;
@@ -289,15 +289,15 @@ function resolveTwoSideInput(parsed: { readonly componentDir: string; readonly a
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     result = {
       componentAbs: resolve(cwd, componentRel),
       componentRel,
       apiAbs: resolve(cwd, apiRel),
       apiRel
     };
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

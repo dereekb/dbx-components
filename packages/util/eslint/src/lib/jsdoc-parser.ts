@@ -102,7 +102,7 @@ export interface ParsedJsdoc {
   readonly singleLine: boolean;
 }
 
-const TAG_LINE_REGEX = /^@([A-Za-z_][A-Za-z0-9_]*)\s*(.*)$/;
+const TAG_LINE_REGEX = /^@([A-Za-z_]\w*)\s*(.*)$/;
 
 /**
  * Strips the leading whitespace + `*` + optional space prefix from a JSDoc body line and reports the length stripped.
@@ -118,7 +118,7 @@ const TAG_LINE_REGEX = /^@([A-Za-z_][A-Za-z0-9_]*)\s*(.*)$/;
  * ```
  */
 function stripPrefix(raw: string): { readonly text: string; readonly prefixLength: number } {
-  const match = raw.match(/^(\s*\*?\s?)(.*)$/);
+  const match = /^(\s*\*?\s?)(.*)$/.exec(raw);
   const result: { text: string; prefixLength: number } = { text: raw, prefixLength: 0 };
 
   if (match) {
@@ -204,7 +204,7 @@ export function parseJsdocComment(commentValue: string): ParsedJsdoc {
     let i = firstTagIndex;
     while (i < lines.length) {
       const line = lines[i];
-      const match = line.text.match(TAG_LINE_REGEX);
+      const match = TAG_LINE_REGEX.exec(line.text);
       if (!match) {
         i += 1;
         continue;
@@ -215,7 +215,7 @@ export function parseJsdocComment(commentValue: string): ParsedJsdoc {
 
       // Pull off an optional `{Type}` annotation immediately after the tag name (for @throws, @param, etc.).
       let typeAnnotation: Maybe<string>;
-      const typeMatch = remainder.match(/^\{([^}]*)\}\s*(.*)$/);
+      const typeMatch = /^\{([^}]*)\}\s*(.*)$/.exec(remainder);
       if (typeMatch) {
         typeAnnotation = typeMatch[1];
         remainder = typeMatch[2];
@@ -224,7 +224,7 @@ export function parseJsdocComment(commentValue: string): ParsedJsdoc {
       // For @param: pull off the parameter name (first word).
       let nameAnnotation: Maybe<string>;
       if (tagName === 'param') {
-        const nameMatch = remainder.match(/^([A-Za-z_$][A-Za-z0-9_$.[\]]*)\s*(.*)$/);
+        const nameMatch = /^([A-Za-z_$][A-Za-z0-9_$.[\]]*)\s*(.*)$/.exec(remainder);
         if (nameMatch) {
           nameAnnotation = nameMatch[1];
           remainder = nameMatch[2];
@@ -247,7 +247,7 @@ export function parseJsdocComment(commentValue: string): ParsedJsdoc {
         descriptionParts.push(tagLines[k].text);
       }
       // Trim trailing blank lines from the tag's collected text but preserve interior blanks (matter for @example fenced blocks).
-      while (descriptionParts.length > 0 && descriptionParts[descriptionParts.length - 1].trim().length === 0) {
+      while (descriptionParts.length > 0 && (descriptionParts.at(-1) as string).trim().length === 0) {
         descriptionParts.pop();
       }
 

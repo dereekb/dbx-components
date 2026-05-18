@@ -131,9 +131,7 @@ export function createListAppModelSnapshotFieldsTool(input: CreateListAppModelSn
         pathError = err instanceof Error ? err.message : String(err);
       }
 
-      if (pathError !== undefined) {
-        result = toolError(pathError);
-      } else {
+      if (pathError === undefined) {
         const componentAbs = resolve(cwd, parsed.componentDir);
         const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
 
@@ -151,12 +149,14 @@ export function createListAppModelSnapshotFieldsTool(input: CreateListAppModelSn
           buildError = `Failed to walk app for snapshot fields: ${err instanceof Error ? err.message : String(err)}`;
         }
 
-        if (buildError !== undefined) {
-          result = toolError(buildError);
-        } else {
+        if (buildError === undefined) {
           const text = parsed.format === 'json' ? formatReportAsJson(report as ListAppReport) : formatReportAsMarkdown(report as ListAppReport);
           result = { content: [{ type: 'text', text }] };
+        } else {
+          result = toolError(buildError);
         }
+      } else {
+        result = toolError(pathError);
       }
     }
     return result;

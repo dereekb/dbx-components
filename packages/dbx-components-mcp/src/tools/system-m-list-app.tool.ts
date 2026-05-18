@@ -62,9 +62,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const componentAbs = resolve(cwd, parsed.componentDir);
     let report;
     let listError: string | undefined;
@@ -73,12 +71,14 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     } catch (err) {
       listError = `Failed to list system states: ${err instanceof Error ? err.message : String(err)}`;
     }
-    if (listError !== undefined || report === undefined) {
-      result = toolError(listError ?? 'Failed to list system states.');
-    } else {
+    if (listError === undefined && report !== undefined) {
       const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
       result = { content: [{ type: 'text', text }] };
+    } else {
+      result = toolError(listError ?? 'Failed to list system states.');
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

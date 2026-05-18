@@ -251,11 +251,11 @@ async function readPageInto<T>(input: ReadPageInput<T>): Promise<T[]> {
   const data = snapshot.data() as Maybe<PagedItemPageData<T>>;
   let result: T[];
 
-  if (!data) {
-    result = [];
-  } else {
+  if (data) {
     const items = data.i ?? [];
     result = itemConverter ? items.map((raw) => itemConverter.fromData(raw as object)) : items;
+  } else {
+    result = [];
   }
 
   return result;
@@ -318,11 +318,11 @@ export function extendFirestoreCollectionWithPagedItemAccessor<X extends Firesto
     const index = await loadIndex();
     let result: T[];
 
-    if (!index) {
-      result = [];
-    } else {
+    if (index) {
       const context = firestoreAccessorDriver.defaultContextFactory<unknown>();
       result = await loadItemsForPagesWithContext(index.p, context);
+    } else {
+      result = [];
     }
 
     return result;

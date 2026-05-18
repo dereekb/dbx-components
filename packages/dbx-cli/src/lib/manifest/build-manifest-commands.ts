@@ -745,9 +745,7 @@ function parseAndValidate(entry: CliApiManifestEntry, rawData: string | undefine
   const parsed = parseJsonData(rawData);
   let result: unknown;
 
-  if (!entry.paramsValidator) {
-    result = parsed;
-  } else {
+  if (entry.paramsValidator) {
     const validated = entry.paramsValidator(parsed);
 
     if (validated instanceof Error) {
@@ -759,6 +757,8 @@ function parseAndValidate(entry: CliApiManifestEntry, rawData: string | undefine
     }
 
     result = validated;
+  } else {
+    result = parsed;
   }
 
   return result;

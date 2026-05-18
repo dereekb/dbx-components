@@ -232,15 +232,15 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
               map((result) => {
                 let mappedState: PageLoadingState<ItemPageIteratorResult<V>>;
 
-                if (result.error != null) {
+                if (result.error == null) {
+                  mappedState = successPageResult(nextPageNumber, result);
+                } else {
                   mappedState = {
                     loading: false,
                     page: nextPageNumber,
                     error: result.error,
                     value: result
                   };
-                } else {
-                  mappedState = successPageResult(nextPageNumber, result);
                 }
 
                 return mappedState;
@@ -526,10 +526,10 @@ export function isItemPageIteratorResultEndResult<V>(result: ItemPageIteratorRes
 
   if (result.error != null) {
     isEnd = false;
-  } else if (result.end != null) {
-    isEnd = result.end;
-  } else {
+  } else if (result.end == null) {
     isEnd = !hasValueOrNotEmpty(result);
+  } else {
+    isEnd = result.end;
   }
 
   return isEnd;

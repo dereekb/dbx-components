@@ -159,16 +159,7 @@ function isOverloadSignature(stmt: AstNode, name: string): boolean {
 export function findFunctionLeadingContext(sourceCode: AstNode, implNode: AstNode): FunctionLeadingContext {
   let result: FunctionLeadingContext;
 
-  if (implNode.id?.type !== 'Identifier') {
-    result = {
-      jsdoc: null,
-      orphanLineComments: [],
-      hasOverloads: false,
-      implLineComment: null,
-      implHasSurvivingAnnotation: false,
-      chainStartStatement: getStatementAnchor(implNode)
-    };
-  } else {
+  if (implNode.id?.type === 'Identifier') {
     const name: string = implNode.id.name;
     const implStmt = getStatementAnchor(implNode);
     const container = implStmt.parent;
@@ -259,6 +250,15 @@ export function findFunctionLeadingContext(sourceCode: AstNode, implNode: AstNod
     const chainStartStatement = chainStartIdx >= 0 && container && Array.isArray(container.body) ? container.body[chainStartIdx] : implStmt;
 
     result = { jsdoc: resolved, orphanLineComments, hasOverloads, implLineComment, implHasSurvivingAnnotation, chainStartStatement };
+  } else {
+    result = {
+      jsdoc: null,
+      orphanLineComments: [],
+      hasOverloads: false,
+      implLineComment: null,
+      implHasSurvivingAnnotation: false,
+      chainStartStatement: getStatementAnchor(implNode)
+    };
   }
 
   return result;

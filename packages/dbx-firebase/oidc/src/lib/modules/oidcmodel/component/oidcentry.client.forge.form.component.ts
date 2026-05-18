@@ -41,13 +41,13 @@ export class DbxFirebaseOidcEntryClientForgeFormComponent extends AbstractConfig
     map((config) => {
       let result: Maybe<FormConfig>;
 
-      if (!config) {
-        result = undefined;
-      } else {
+      if (config) {
         result = oidcEntryClientForgeFormFields({
           ...config,
           tokenEndpointAuthMethods: this._oidcConfigService.tokenEndpointAuthMethods
         });
+      } else {
+        result = undefined;
       }
 
       return result;

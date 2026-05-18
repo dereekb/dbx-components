@@ -143,18 +143,9 @@ function findCompatMarkerComment(sourceCode: AstNode): AstNode | undefined {
  */
 function findAdjacentJsDoc(sourceCode: AstNode, statement: AstNode): AstNode | undefined {
   const comments = sourceCode.getCommentsBefore(statement) || [];
-  let jsdoc: AstNode | undefined = undefined;
-
-  for (let i = comments.length - 1; i >= 0; i -= 1) {
-    const c = comments[i];
-    if (c.type === 'Block' && c.value.startsWith('*')) {
-      jsdoc = c;
-      break;
-    }
-    // Hit a non-JSDoc comment (line or non-doc block) — stop; only the immediately-adjacent JSDoc
-    // belongs to the statement.
-    break;
-  }
+  // Only the immediately-adjacent comment can be the statement's JSDoc.
+  const last = comments[comments.length - 1];
+  const jsdoc: AstNode | undefined = last !== undefined && last.type === 'Block' && last.value.startsWith('*') ? last : undefined;
 
   return jsdoc;
 }

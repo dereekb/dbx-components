@@ -60,9 +60,7 @@ export interface UtilPreferMaybeTypeRuleDefinition {
 function isNullOrUndefinedNode(node: AstNode): boolean {
   let match = false;
 
-  if (node.type === 'TSNullKeyword' || node.type === 'TSUndefinedKeyword') {
-    match = true;
-  } else if (node.type === 'TSLiteralType' && node.literal?.type === 'Literal' && node.literal.value === null) {
+  if (node.type === 'TSNullKeyword' || node.type === 'TSUndefinedKeyword' || (node.type === 'TSLiteralType' && node.literal?.type === 'Literal' && node.literal.value === null)) {
     match = true;
   }
 
@@ -80,9 +78,7 @@ function isNullOrUndefinedNode(node: AstNode): boolean {
 function isNullNode(node: AstNode): boolean {
   let match = false;
 
-  if (node.type === 'TSNullKeyword') {
-    match = true;
-  } else if (node.type === 'TSLiteralType' && node.literal?.type === 'Literal' && node.literal.value === null) {
+  if (node.type === 'TSNullKeyword' || (node.type === 'TSLiteralType' && node.literal?.type === 'Literal' && node.literal.value === null)) {
     match = true;
   }
 

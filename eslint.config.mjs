@@ -71,7 +71,8 @@ export default [
       /**
        * Helps catch "single-return" violations trivial locations
        */
-      'no-else-return': ['error', { allowElseIf: false }]
+      'no-else-return': ['error', { allowElseIf: false }],
+      'no-negated-condition': 'warn' // matches Sonar S7735; flags `if (!a) {…} else {…}` and `!a ? x : y`
     }
   },
   {

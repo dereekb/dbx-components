@@ -22,11 +22,11 @@ export const zohoPagePaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
   nextInput: (input, last) => {
     let next: typeof input | undefined;
 
-    if (!last.info?.more_records) {
-      next = undefined;
-    } else {
+    if (last.info?.more_records) {
       const currentPage = (input as { page?: number }).page ?? 1;
       next = { ...input, page: currentPage + 1 };
+    } else {
+      next = undefined;
     }
 
     return next;

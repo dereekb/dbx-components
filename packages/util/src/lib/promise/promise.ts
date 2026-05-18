@@ -221,8 +221,8 @@ async function _performAsyncTask<I, O>(value: I, taskFn: PerformAsyncTaskFn<I, O
   const throwError = inputThrowError ?? true; // throw errors by default
   const retriesAllowed = inputRetriesAllowed || 0;
 
-  async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [Error | unknown, false]> {
-    let outcome: [O, true] | [Error | unknown, false];
+  async function tryTask(value: I, tryNumber: number): Promise<[O, true] | [unknown, false]> {
+    let outcome: [O, true] | [unknown, false];
 
     try {
       const result: O = await taskFn(value, tryNumber);

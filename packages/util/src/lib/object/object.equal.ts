@@ -88,15 +88,15 @@ function _compareIterables<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>)
 function _compareArrays<F>(a: unknown[], b: unknown[], pojoFilter: FilterFromPOJOFunction<F>): boolean {
   let result: boolean;
 
-  if (a.length !== b.length) {
-    result = false;
-  } else {
+  if (a.length === b.length) {
     const firstInequalityIndex = a.findIndex((aValue, i) => {
       const bValue = b[i];
       return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
     });
 
     result = firstInequalityIndex === -1;
+  } else {
+    result = false;
   }
 
   return result;
@@ -105,15 +105,15 @@ function _compareArrays<F>(a: unknown[], b: unknown[], pojoFilter: FilterFromPOJ
 function _compareMaps<F>(a: Map<unknown, unknown>, b: Map<unknown, unknown>, pojoFilter: FilterFromPOJOFunction<F>): boolean {
   let result: boolean;
 
-  if (a.size !== b.size) {
-    result = false;
-  } else {
+  if (a.size === b.size) {
     const firstInequalityIndex = Array.from(a.entries()).findIndex(([key, aValue]) => {
       const bValue = b.get(key);
       return !areEqualPOJOValuesUsingPojoFilter(aValue as F, bValue as F, pojoFilter);
     });
 
     result = firstInequalityIndex === -1;
+  } else {
+    result = false;
   }
 
   return result;
@@ -139,9 +139,7 @@ function _compareObjects<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): 
     const aKeys = Object.keys(aObject);
     const bKeys = Object.keys(bObject);
 
-    if (aKeys.length !== bKeys.length) {
-      result = false;
-    } else {
+    if (aKeys.length === bKeys.length) {
       const firstInequalityIndex = aKeys.findIndex((key) => {
         const aKeyValue = aObject[key];
         const bKeyValue = bObject[key];
@@ -149,6 +147,8 @@ function _compareObjects<F>(a: F, b: F, pojoFilter: FilterFromPOJOFunction<F>): 
       });
 
       result = firstInequalityIndex === -1;
+    } else {
+      result = false;
     }
   }
 

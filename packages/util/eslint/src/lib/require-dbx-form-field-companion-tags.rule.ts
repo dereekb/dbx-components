@@ -5,12 +5,59 @@ import { KEBAB_SLUG_PATTERN, reportOnJsdocLine, splitCommaSeparated } from './db
 
 type AstNode = any;
 
-const FORM_MARKERS: readonly string[] = ['dbxFormField', 'dbxFormFieldDerivative', 'dbxFormFieldTemplate'];
+const FORM_MARKERS: ReadonlySet<string> = new Set(['dbxFormField', 'dbxFormFieldDerivative', 'dbxFormFieldTemplate']);
 const DEFAULT_ALLOWED_TIERS: readonly string[] = ['field-factory', 'field-derivative', 'composite-builder', 'template-builder', 'primitive'];
 const DEFAULT_ALLOWED_WRAPPER_PATTERNS: readonly string[] = ['unwrapped', 'material-form-field-wrapped'];
 const DEFAULT_ALLOWED_SUFFIXES: readonly string[] = ['Row', 'Group', 'Fields', 'Field', 'Wrapper', 'Layout'];
 const DEFAULT_ALLOWED_ARRAY_OUTPUTS: readonly string[] = ['yes', 'no', 'optional'];
 const DEFAULT_KNOWN_COMPANIONS: readonly string[] = ['Slug', 'Tier', 'Produces', 'ArrayOutput', 'WrapperPattern', 'NgFormType', 'Suffix', 'Returns', 'ComposesFrom', 'ConfigInterface', 'PropsInterface', 'Generic', 'PropName'];
+
+/**
+ * Splits a `@dbxFormField` JSDoc into its marker tags and the map of
+ * `@dbxForm*` companion tags keyed by their suffix.
+ *
+ * @param parsed - The parsed JSDoc to inspect.
+ * @returns The list of marker tags and the map of companion suffix to tag instances.
+ */
+function collectFormTags(parsed: ParsedJsdoc): { readonly markers: ParsedJsdocTag[]; readonly companions: Map<string, ParsedJsdocTag[]> } {
+  const markers: ParsedJsdocTag[] = [];
+  const companions = new Map<string, ParsedJsdocTag[]>();
+  for (const tag of parsed.tags) {
+    if (FORM_MARKERS.has(tag.tag)) {
+      markers.push(tag);
+    } else if (tag.tag.startsWith('dbxForm') && !tag.tag.startsWith('dbxFormField')) {
+      const suffix = tag.tag.slice('dbxForm'.length);
+      const list = companions.get(suffix) ?? [];
+      list.push(tag);
+      companions.set(suffix, list);
+    }
+  }
+  return { markers, companions };
+}
+
+/**
+ * Resolves the effective tier for a `@dbxFormField`-family JSDoc by
+ * preferring marker-derived tiers (e.g. `@dbxFormFieldDerivative` →
+ * `'field-derivative'`) and falling back to the first `@dbxFormTier`.
+ *
+ * @param markers - The marker tags found on the JSDoc.
+ * @param tierTags - Any explicit `@dbxFormTier` tags found on the JSDoc.
+ * @returns The resolved tier, or `undefined` when none is present.
+ */
+function determineTier(markers: readonly ParsedJsdocTag[], tierTags: readonly ParsedJsdocTag[]): Maybe<string> {
+  // Marker-derived tier takes precedence; `@dbxFormFieldDerivative` → 'field-derivative', `@dbxFormFieldTemplate` → 'template-builder'.
+  // `@dbxFormField` requires an explicit `@dbxFormTier`.
+  let derived: Maybe<string>;
+  for (const m of markers) {
+    if (m.tag === 'dbxFormFieldDerivative') derived = 'field-derivative';
+    else if (m.tag === 'dbxFormFieldTemplate') derived = 'template-builder';
+  }
+  if (derived !== undefined) {
+    return derived;
+  }
+  const explicitTier = tierTags.length > 0 ? tierTags[0].description.trim() : undefined;
+  return explicitTier;
+}
 
 /**
  * Options for the require-dbx-form-field-companion-tags rule.
@@ -94,33 +141,6 @@ export const utilRequireDbxFormFieldCompanionTagsRule: UtilRequireDbxFormFieldCo
     const allowedArrayOutputs = options.allowedArrayOutputs ?? DEFAULT_ALLOWED_ARRAY_OUTPUTS;
     const knownCompanions = options.knownCompanions ?? DEFAULT_KNOWN_COMPANIONS;
     const requireBareMarker = options.requireBareMarker !== false;
-
-    function collectFormTags(parsed: ParsedJsdoc): { readonly markers: ParsedJsdocTag[]; readonly companions: Map<string, ParsedJsdocTag[]> } {
-      const markers: ParsedJsdocTag[] = [];
-      const companions = new Map<string, ParsedJsdocTag[]>();
-      for (const tag of parsed.tags) {
-        if (FORM_MARKERS.includes(tag.tag)) {
-          markers.push(tag);
-        } else if (tag.tag.startsWith('dbxForm') && !tag.tag.startsWith('dbxFormField')) {
-          const suffix = tag.tag.slice('dbxForm'.length);
-          const list = companions.get(suffix) ?? [];
-          list.push(tag);
-          companions.set(suffix, list);
-        }
-      }
-      return { markers, companions };
-    }
-
-    function determineTier(markers: readonly ParsedJsdocTag[], tierTags: readonly ParsedJsdocTag[]): Maybe<string> {
-      // Marker-derived tier takes precedence; `@dbxFormFieldDerivative` → 'field-derivative', `@dbxFormFieldTemplate` → 'template-builder'.
-      // `@dbxFormField` requires an explicit `@dbxFormTier`.
-      let derived: Maybe<string>;
-      for (const m of markers) {
-        if (m.tag === 'dbxFormFieldDerivative') derived = 'field-derivative';
-        else if (m.tag === 'dbxFormFieldTemplate') derived = 'template-builder';
-      }
-      return derived !== undefined ? derived : tierTags.length > 0 ? tierTags[0].description.trim() : undefined;
-    }
 
     function checkJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);

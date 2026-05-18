@@ -241,7 +241,7 @@ function buildCombinedRegex(names: readonly string[]): RegExp | undefined {
 }
 
 function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 interface LineOffsetIndex {
@@ -251,7 +251,7 @@ interface LineOffsetIndex {
 function computeLineOffsets(contents: string): LineOffsetIndex {
   const offsets: number[] = [0];
   for (let i = 0; i < contents.length; i += 1) {
-    if (contents.charCodeAt(i) === 10) {
+    if (contents.codePointAt(i) === 10) {
       offsets.push(i + 1);
     }
   }

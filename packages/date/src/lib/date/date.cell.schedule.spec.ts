@@ -907,7 +907,7 @@ wrapDateTests(() => {
     });
 
     it('should return false when only an unrelated field is set', () => {
-      expect(isDateCellSchedule({ foo: 'bar' } as unknown as object)).toBe(false);
+      expect(isDateCellSchedule({ foo: 'bar' })).toBe(false);
     });
   });
 
@@ -950,11 +950,11 @@ wrapDateTests(() => {
     });
 
     it('should return false when duration is present', () => {
-      expect(isDateCellScheduleStartOfDayDateRange({ ...startOfDayRange, duration: 60 } as unknown as object)).toBe(false);
+      expect(isDateCellScheduleStartOfDayDateRange({ ...startOfDayRange, duration: 60 })).toBe(false);
     });
 
     it('should return false when startsAt is present', () => {
-      expect(isDateCellScheduleStartOfDayDateRange({ ...startOfDayRange, startsAt: utc2022Week2StartDate } as unknown as object)).toBe(false);
+      expect(isDateCellScheduleStartOfDayDateRange({ ...startOfDayRange, startsAt: utc2022Week2StartDate })).toBe(false);
     });
 
     it('should return false for an invalid schedule date range', () => {

@@ -39,9 +39,7 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
     load: () => {
       let result: Promise<Maybe<T>>;
 
-      if (loaded != null) {
-        result = Promise.resolve(loaded.value);
-      } else {
+      if (loaded == null) {
         if (inFlight == null) {
           // Cache the in-flight promise so concurrent callers share the same load instead
           // of each firing an independent inner.load(). Cleared on settle so a failed load
@@ -66,6 +64,8 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
         }
 
         result = inFlight;
+      } else {
+        result = Promise.resolve(loaded.value);
       }
 
       return result;
@@ -127,9 +127,7 @@ export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): 
   function ensureLoaded(): Promise<Record<string, T>> {
     let result: Promise<Record<string, T>>;
 
-    if (loaded != null) {
-      result = Promise.resolve(loaded.entries);
-    } else {
+    if (loaded == null) {
       if (inFlight == null) {
         const startGen = generation;
         inFlight = inner.load().then(
@@ -150,6 +148,8 @@ export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): 
       }
 
       result = inFlight;
+    } else {
+      result = Promise.resolve(loaded.entries);
     }
 
     return result;

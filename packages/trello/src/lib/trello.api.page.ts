@@ -87,7 +87,7 @@ export function buildTrelloPageResult<T>(input: TrelloCursorPageFilter, data: Re
   const limit = input.limit ?? data.length;
   const hasMore = data.length === limit && data.length > 0;
   const lastItem = hasMore ? data.at(-1) : undefined;
-  const nextBefore = lastItem !== undefined ? idReader(lastItem) : undefined;
+  const nextBefore = lastItem === undefined ? undefined : idReader(lastItem);
 
   return {
     data,

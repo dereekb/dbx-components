@@ -99,9 +99,6 @@ export const utilRequireDbxPipeCompanionTagsRule: UtilRequireDbxPipeCompanionTag
         emit: (v) => {
           switch (v.kind) {
             case 'missing':
-              if (v.suffix === 'Slug') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'missingSlug', report: context.report });
-              else if (v.suffix === 'Category') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'missingCategory', report: context.report });
-              break;
             case 'empty':
               if (v.suffix === 'Slug') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'missingSlug', report: context.report });
               else if (v.suffix === 'Category') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'missingCategory', report: context.report });

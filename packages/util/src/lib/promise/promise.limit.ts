@@ -149,9 +149,7 @@ export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialP
   function _nextWaitTime(increasedExecutions: number): Milliseconds {
     let waitTime: Milliseconds;
 
-    if (!enabled) {
-      waitTime = 0;
-    } else {
+    if (enabled) {
       const { cooldownRate } = config;
       const msSinceLastExecution = Date.now() - timeOfLastExecution.getTime();
       const cooldown = (msSinceLastExecution * cooldownRate) / MS_IN_SECOND; // the cooldown amount
@@ -164,6 +162,8 @@ export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialP
       }
 
       waitTime = effectiveCount >= countForMaxWaitTime ? config.maxWaitTime : (Math.pow(config.exponentRate, Math.max(effectiveCount, 0)) - 1) * MS_IN_SECOND;
+    } else {
+      waitTime = 0;
     }
 
     return waitTime;

@@ -186,9 +186,7 @@ async function runValidateAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolR
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
-  if (ensureError !== undefined) {
-    toolResult = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const indexesRelative = parsed.indexesFile ?? 'firestore.indexes.json';
     const componentAbs = resolve(cwd, parsed.componentDir);
     const indexesAbs = resolve(cwd, indexesRelative);
@@ -207,6 +205,8 @@ async function runValidateAppModelFirebaseIndex(rawArgs: unknown): Promise<ToolR
       const baseResult: ToolResult = { content: [{ type: 'text', text }] };
       toolResult = report.drift ? { ...baseResult, isError: true } : baseResult;
     }
+  } else {
+    toolResult = toolError(ensureError);
   }
   return toolResult;
 }

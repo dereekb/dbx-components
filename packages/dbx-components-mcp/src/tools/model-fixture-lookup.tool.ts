@@ -65,9 +65,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const apiAbs = resolve(cwd, parsed.apiDir);
     let extraction;
     let inspectError: string | undefined;
@@ -76,20 +74,22 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     } catch (err) {
       inspectError = `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`;
     }
-    if (inspectError !== undefined || extraction === undefined) {
-      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
-    } else {
+    if (inspectError === undefined && extraction !== undefined) {
       const lookupModel = parsed.model ?? identityToModel(parsed.identity as string);
       const entry = extraction.entries.find((e) => e.model === lookupModel);
-      if (!entry) {
+      if (entry) {
+        const text = parsed.format === 'json' ? formatLookupAsJson(extraction, entry) : formatLookupAsMarkdown(extraction, entry);
+        result = { content: [{ type: 'text', text }] };
+      } else {
         const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
         const usedIdentity = parsed.identity && !parsed.model ? ` (resolved \`identity="${parsed.identity}"\` → \`${lookupModel}\`)` : '';
         result = toolError(`Model \`${lookupModel}\` not found in \`${extraction.fixturePath}\`${usedIdentity}. Known: ${known}.`);
-      } else {
-        const text = parsed.format === 'json' ? formatLookupAsJson(extraction, entry) : formatLookupAsMarkdown(extraction, entry);
-        result = { content: [{ type: 'text', text }] };
       }
+    } else {
+      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

@@ -142,7 +142,7 @@ export function discordFetchMessagePageFactory<I extends DiscordMessagePageFilte
           after: undefined,
           around: undefined,
           limit: effectiveLimit
-        } as Partial<I>;
+        };
       }
 
       return nextInput;

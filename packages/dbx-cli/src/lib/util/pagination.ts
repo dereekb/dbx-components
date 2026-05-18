@@ -77,23 +77,16 @@ export function openStreamingDump(params: OpenStreamingDumpParams): StreamingDum
   const pickPath = pick ? buildDumpFilePath(ext, 'pick') : undefined;
   let dump: StreamingDump;
 
-  if (!mainPath) {
-    dump = {
-      mainPath: undefined,
-      pickPath: undefined,
-      writePage: () => undefined,
-      close: () => undefined
-    };
-  } else {
+  if (mainPath) {
     let pagesWritten = 0;
 
     const applyPickToPage = (result: PaginatedResponse): PaginatedResponse => {
       let mapped: PaginatedResponse;
-      if (!pick) {
-        mapped = result;
-      } else {
+      if (pick) {
         const pickedData = pickFields(result.data as unknown[], pick);
         mapped = { ...result, data: pickedData };
+      } else {
+        mapped = result;
       }
       return mapped;
     };
@@ -162,6 +155,13 @@ export function openStreamingDump(params: OpenStreamingDumpParams): StreamingDum
       mainPath,
       pickPath,
       writePage,
+      close: () => undefined
+    };
+  } else {
+    dump = {
+      mainPath: undefined,
+      pickPath: undefined,
+      writePage: () => undefined,
       close: () => undefined
     };
   }

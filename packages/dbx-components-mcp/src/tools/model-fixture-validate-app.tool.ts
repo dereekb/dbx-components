@@ -97,9 +97,7 @@ export function createModelFixtureValidateAppTool(config: CreateModelFixtureVali
     } catch (err) {
       ensureError = err instanceof Error ? err.message : String(err);
     }
-    if (ensureError !== undefined) {
-      toolResult = toolError(ensureError);
-    } else {
+    if (ensureError === undefined) {
       const apiAbs = resolve(cwd, parsed.apiDir);
       let extraction;
       let inspectError: string | undefined;
@@ -119,6 +117,8 @@ export function createModelFixtureValidateAppTool(config: CreateModelFixtureVali
           isError: result.errorCount > 0
         };
       }
+    } else {
+      toolResult = toolError(ensureError);
     }
     return toolResult;
   }

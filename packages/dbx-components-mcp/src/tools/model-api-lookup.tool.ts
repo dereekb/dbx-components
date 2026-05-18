@@ -79,9 +79,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const componentAbs = resolve(cwd, parsed.componentDir);
     const apiAbs = parsed.apiDir ? resolve(cwd, parsed.apiDir) : undefined;
     const modelFilter = parsed.model ?? identityToModel(parsed.identity as string);
@@ -98,14 +96,18 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     } catch (err) {
       lookupError = `Failed to lookup model API entries: ${err instanceof Error ? err.message : String(err)}`;
     }
-    if (lookupError !== undefined || report === undefined) {
-      result = toolError(lookupError ?? 'Failed to lookup model API entries.');
-    } else if (!report.sourceFile) {
-      result = toolError(`No matching \`<model>.api.ts\` source found in \`${parsed.componentDir}\` for filter \`${modelFilter}\`.`);
+    if (lookupError === undefined && report !== undefined) {
+      if (report.sourceFile) {
+        const text = parsed.format === 'json' ? formatLookupAsJson(report) : formatLookupAsMarkdown(report);
+        result = { content: [{ type: 'text', text }] };
+      } else {
+        result = toolError(`No matching \`<model>.api.ts\` source found in \`${parsed.componentDir}\` for filter \`${modelFilter}\`.`);
+      }
     } else {
-      const text = parsed.format === 'json' ? formatLookupAsJson(report) : formatLookupAsMarkdown(report);
-      result = { content: [{ type: 'text', text }] };
+      result = toolError(lookupError ?? 'Failed to lookup model API entries.');
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

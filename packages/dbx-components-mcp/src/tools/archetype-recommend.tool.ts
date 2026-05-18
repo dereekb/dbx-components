@@ -200,9 +200,7 @@ export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResul
     const args = parseArgs(rawArgs);
     const cwd = process.cwd();
     const pathCheck = ensureComponentDirsValid(args.componentDirs, cwd);
-    if (pathCheck !== undefined) {
-      result = pathCheck;
-    } else {
+    if (pathCheck === undefined) {
       const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
       const scoreResult = scoreCatalog(args.questionnaire);
       const top = pickTopArchetype(scoreResult, args.archetypeHint);
@@ -233,6 +231,8 @@ export async function runArchetypeRecommend(rawArgs: unknown): Promise<ToolResul
         shortCircuited: scoreResult.shortCircuited && top.archetype.slug === scoreResult.top.archetype.slug
       });
       result = { content: [{ type: 'text', text }] };
+    } else {
+      result = pathCheck;
     }
   } catch (err) {
     result = toolError(err instanceof Error ? err.message : String(err));

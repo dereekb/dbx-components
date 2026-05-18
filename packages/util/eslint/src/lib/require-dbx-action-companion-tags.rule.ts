@@ -10,6 +10,26 @@ const DEFAULT_ALLOWED_STATES: readonly string[] = ['IDLE', 'DISABLED', 'TRIGGERE
 const DEFAULT_KNOWN_COMPANIONS: readonly string[] = ['Slug', 'Role', 'StateInteraction', 'ProducesContext', 'ConsumesContext', 'SkillRefs', 'DisabledKey', 'StateEnum', 'StateTransitionsFrom', 'StateTransitionsTo'];
 
 /**
+ * Splits an `@dbxAction`-family JSDoc into its marker tag and the map of
+ * companion tags keyed by their suffix (e.g. `Slug`, `Role`).
+ *
+ * @param parsed - The parsed JSDoc to inspect.
+ * @returns The marker tag (if any) and a map of companion suffix to tag instances.
+ */
+function collectFamilyTags(parsed: ParsedJsdoc): { readonly markerTag: Maybe<ParsedJsdocTag>; readonly companions: ReadonlyMap<string, ParsedJsdocTag[]> } {
+  const markerTag = parsed.tags.find((t) => t.tag === 'dbxAction');
+  const groups = new Map<string, ParsedJsdocTag[]>();
+  for (const tag of parsed.tags) {
+    if (!tag.tag.startsWith('dbxAction') || tag.tag === 'dbxAction') continue;
+    const suffix = tag.tag.slice('dbxAction'.length);
+    const list = groups.get(suffix) ?? [];
+    list.push(tag);
+    groups.set(suffix, list);
+  }
+  return { markerTag, companions: groups };
+}
+
+/**
  * Options for the require-dbx-action-companion-tags rule.
  */
 export interface UtilRequireDbxActionCompanionTagsRuleOptions {
@@ -79,19 +99,6 @@ export const utilRequireDbxActionCompanionTagsRule: UtilRequireDbxActionCompanio
     const knownCompanions = options.knownCompanions ?? DEFAULT_KNOWN_COMPANIONS;
     const requireBareMarker = options.requireBareMarker !== false;
     const propertyOnlyCompanions: ReadonlySet<string> = new Set(['StateTransitionsFrom', 'StateTransitionsTo']);
-
-    function collectFamilyTags(parsed: ParsedJsdoc): { readonly markerTag: Maybe<ParsedJsdocTag>; readonly companions: ReadonlyMap<string, ParsedJsdocTag[]> } {
-      const markerTag = parsed.tags.find((t) => t.tag === 'dbxAction');
-      const groups = new Map<string, ParsedJsdocTag[]>();
-      for (const tag of parsed.tags) {
-        if (!tag.tag.startsWith('dbxAction') || tag.tag === 'dbxAction') continue;
-        const suffix = tag.tag.slice('dbxAction'.length);
-        const list = groups.get(suffix) ?? [];
-        list.push(tag);
-        groups.set(suffix, list);
-      }
-      return { markerTag, companions: groups };
-    }
 
     function checkClassJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);

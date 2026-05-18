@@ -50,23 +50,23 @@ function rewriteWithFields(value: unknown, fields: readonly CliModelField[]): un
   let result: unknown;
   if (Array.isArray(value)) {
     result = value.map((item) => rewriteWithFields(item, fields));
-  } else if (!isPlainObject(value)) {
-    result = value;
-  } else {
+  } else if (isPlainObject(value)) {
     const fieldByName = new Map<string, CliModelField>();
     for (const field of fields) fieldByName.set(field.name, field);
 
     const out: Record<string, unknown> = {};
     for (const [key, raw] of Object.entries(value)) {
       const field = fieldByName.get(key);
-      if (!field) {
+      if (field) {
+        const longKey = field.longName.length > 0 ? field.longName : key;
+        out[longKey] = rewriteFieldValue(raw, field);
+      } else {
         out[key] = raw;
-        continue;
       }
-      const longKey = field.longName.length > 0 ? field.longName : key;
-      out[longKey] = rewriteFieldValue(raw, field);
     }
     result = out;
+  } else {
+    result = value;
   }
   return result;
 }
@@ -78,10 +78,10 @@ function rewriteFieldValue(value: unknown, field: CliModelField): unknown {
     result = value;
   } else if (field.nestedIsArray) {
     result = Array.isArray(value) ? value.map((item) => rewriteWithFields(item, nested)) : value;
-  } else if (!isPlainObject(value)) {
-    result = value;
-  } else {
+  } else if (isPlainObject(value)) {
     result = rewriteWithFields(value, nested);
+  } else {
+    result = value;
   }
   return result;
 }

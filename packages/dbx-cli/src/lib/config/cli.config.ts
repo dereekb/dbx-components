@@ -135,16 +135,18 @@ export function mergeOutputConfig(existing: Maybe<CliOutputConfig>, updates: Cli
 
 function mergeOutputCommandsConfig(existing: CliOutputConfig['commands'], updates: CliOutputConfig): CliOutputConfig['commands'] {
   let result: CliOutputConfig['commands'];
-  if (!('commands' in updates)) {
-    result = existing;
-  } else if (!updates.commands) {
-    result = undefined;
-  } else {
-    const merged: Record<string, CliCommandOutputConfig> = { ...existing };
-    for (const key of Object.keys(updates.commands)) {
-      merged[key] = { ...existing?.[key], ...updates.commands[key] };
+  if ('commands' in updates) {
+    if (updates.commands) {
+      const merged: Record<string, CliCommandOutputConfig> = { ...existing };
+      for (const key of Object.keys(updates.commands)) {
+        merged[key] = { ...existing?.[key], ...updates.commands[key] };
+      }
+      result = merged;
+    } else {
+      result = undefined;
     }
-    result = merged;
+  } else {
+    result = existing;
   }
   return result;
 }

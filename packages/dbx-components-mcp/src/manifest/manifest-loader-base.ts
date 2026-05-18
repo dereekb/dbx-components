@@ -136,15 +136,15 @@ function validateParsedManifest<TManifest>(path: string, parsed: unknown, schema
   const candidateVersion = (parsed as Maybe<{ readonly version?: unknown }>)?.version;
   let result: LoadFromSourceResult<TManifest>;
 
-  if (candidateVersion !== SUPPORTED_VERSION) {
-    result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
-  } else {
+  if (candidateVersion === SUPPORTED_VERSION) {
     const validated = schema(parsed);
     if (validated instanceof type.errors) {
       result = { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
     } else {
       result = { kind: 'success', manifest: validated };
     }
+  } else {
+    result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
   }
 
   return result;

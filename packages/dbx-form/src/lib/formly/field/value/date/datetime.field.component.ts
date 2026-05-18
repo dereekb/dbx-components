@@ -690,7 +690,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       }
 
       const filter = dateTimeMinuteWholeDayDecisionFunction(x, false);
-      return (x: Maybe<Date>) => (x != null ? filter(x) : true);
+      return (x: Maybe<Date>) => (x == null ? true : filter(x));
     }),
     shareReplay(1)
   );
@@ -757,7 +757,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       }
 
       const filter = dateTimeMinuteDecisionFunction(config); // filter that the date must be in the given range
-      return (x: Maybe<Date>) => (x != null ? filter(x) : true);
+      return (x: Maybe<Date>) => (x == null ? true : filter(x));
     })
   );
 

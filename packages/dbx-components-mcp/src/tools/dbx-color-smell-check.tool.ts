@@ -66,9 +66,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     toolResult = toolError(`Invalid arguments: ${parsed.summary}`);
   } else {
     const hasAny = (parsed.paths && parsed.paths.length > 0) || parsed.glob;
-    if (!hasAny) {
-      toolResult = toolError('Must provide at least one of `paths` or `glob`.');
-    } else {
+    if (hasAny) {
       const cwd = process.cwd();
       let sources: readonly { readonly name: string; readonly text: string }[] | undefined;
       let sourcesError: string | undefined;
@@ -79,25 +77,29 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
         sourcesError = `Failed to read sources: ${message}`;
       }
 
-      if (sourcesError !== undefined) {
-        toolResult = toolError(sourcesError);
-      } else if ((sources as readonly { readonly name: string; readonly text: string }[]).length === 0) {
-        toolResult = toolError('No matching source files found.');
-      } else {
-        const resolvedSources = sources as readonly { readonly name: string; readonly text: string }[];
-        const equivalenceMode: ColorSmellEquivalenceMode = parsed.equivalenceMode ?? 'normalized';
-        const minDuplicates = parsed.minDuplicates !== undefined && parsed.minDuplicates > 1 ? parsed.minDuplicates : 2;
-
-        const templates = await resolveCrossReferenceTemplates({ apiDir: parsed.apiDir, cwd });
-        if (templates.kind === 'error') {
-          toolResult = templates.error;
+      if (sourcesError === undefined) {
+        if ((sources as readonly { readonly name: string; readonly text: string }[]).length === 0) {
+          toolResult = toolError('No matching source files found.');
         } else {
-          const literals = resolvedSources.flatMap((source) => extractLiteralsFromSource(source));
-          const result = groupColorSmells({ literals, equivalenceMode, minDuplicates, filesScanned: resolvedSources.length, templates: templates.value });
-          const text = parsed.format === 'json' ? formatResultAsJson(result) : formatResultAsMarkdown(result);
-          toolResult = { content: [{ type: 'text', text }] };
+          const resolvedSources = sources as readonly { readonly name: string; readonly text: string }[];
+          const equivalenceMode: ColorSmellEquivalenceMode = parsed.equivalenceMode ?? 'normalized';
+          const minDuplicates = parsed.minDuplicates !== undefined && parsed.minDuplicates > 1 ? parsed.minDuplicates : 2;
+
+          const templates = await resolveCrossReferenceTemplates({ apiDir: parsed.apiDir, cwd });
+          if (templates.kind === 'error') {
+            toolResult = templates.error;
+          } else {
+            const literals = resolvedSources.flatMap((source) => extractLiteralsFromSource(source));
+            const result = groupColorSmells({ literals, equivalenceMode, minDuplicates, filesScanned: resolvedSources.length, templates: templates.value });
+            const text = parsed.format === 'json' ? formatResultAsJson(result) : formatResultAsMarkdown(result);
+            toolResult = { content: [{ type: 'text', text }] };
+          }
         }
+      } else {
+        toolResult = toolError(sourcesError);
       }
+    } else {
+      toolResult = toolError('Must provide at least one of `paths` or `glob`.');
     }
   }
   return toolResult;
@@ -127,21 +129,21 @@ async function resolveCrossReferenceTemplates(input: ResolveTemplatesInput): Pro
   }
 
   let result: ResolveTemplatesResult;
-  if (pathError !== undefined) {
-    result = { kind: 'error', error: toolError(pathError) };
-  } else {
+  if (pathError === undefined) {
     try {
       const inspection = await inspectColorTemplates(resolve(input.cwd, input.apiDir), input.apiDir);
-      if (!inspection.appExists) {
-        result = { kind: 'error', error: toolError(`App directory not found: \`${input.apiDir}\`.`) };
-      } else {
+      if (inspection.appExists) {
         const extracted = extractColorTemplates(inspection);
         result = { kind: 'value', value: extracted.templates };
+      } else {
+        result = { kind: 'error', error: toolError(`App directory not found: \`${input.apiDir}\`.`) };
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       result = { kind: 'error', error: toolError(`Failed to read templates from \`${input.apiDir}\`: ${message}`) };
     }
+  } else {
+    result = { kind: 'error', error: toolError(pathError) };
   }
   return result;
 }

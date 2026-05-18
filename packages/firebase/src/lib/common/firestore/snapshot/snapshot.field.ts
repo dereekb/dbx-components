@@ -479,7 +479,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
     if (dontStoreIf != null) {
       const dontStoreValue = dontStoreIf;
 
-      toData = ((x: Maybe<V>) => {
+      toData = (x: Maybe<V>) => {
         let result: Maybe<D> = x as Maybe<D>;
 
         if (x != null) {
@@ -488,7 +488,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
         }
 
         return result;
-      }) as MapFunction<Maybe<V>, Maybe<D>>;
+      };
     } else {
       toData = ((x: Maybe<V>) => (x != null ? (transformTo(x) ?? null) : x)) as MapFunction<Maybe<V>, Maybe<D>>;
     }

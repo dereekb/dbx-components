@@ -109,10 +109,10 @@ function joinStrings(input: unknown) {
     });
 
     it('block-form early-exit guard whose last statement is a return is exempt', () => {
-      const errors = lintCode(`
+      const errors = lintCode(String.raw`
 function telUrlString(phone: string) {
   if (phone.startsWith('+')) {
-    const formatted = phone.replace(/\\s+/g, '');
+    const formatted = phone.replace(/\s+/g, '');
     return 'tel:' + formatted;
   }
   return 'tel:' + phone;

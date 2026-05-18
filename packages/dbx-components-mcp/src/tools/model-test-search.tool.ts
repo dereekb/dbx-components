@@ -89,9 +89,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   } catch (err) {
     ensureError = err instanceof Error ? err.message : String(err);
   }
-  if (ensureError !== undefined) {
-    out = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const specAbs = resolve(cwd, parsed.specFile);
     const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
     let tree;
@@ -101,13 +99,15 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     } catch (err) {
       inspectError = `Failed to read spec file: ${err instanceof Error ? err.message : String(err)}`;
     }
-    if (inspectError !== undefined || tree === undefined) {
-      out = toolError(inspectError ?? 'Failed to inspect spec file.');
-    } else {
+    if (inspectError === undefined && tree !== undefined) {
       const result = searchSpecTree(tree, query);
       const text = parsed.format === 'json' ? formatSearchAsJson(tree, result) : formatSearchAsMarkdown(tree, result);
       out = { content: [{ type: 'text', text }] };
+    } else {
+      out = toolError(inspectError ?? 'Failed to inspect spec file.');
     }
+  } else {
+    out = toolError(ensureError);
   }
   return out;
 }

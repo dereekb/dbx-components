@@ -40,10 +40,7 @@ const GENERATOR_LABEL = '@dereekb/dbx-components-mcp/scripts/generate-css-tokens
 const argv = process.argv.slice(2);
 const flags = parseFlags(argv);
 
-if (!flags.source) {
-  console.error('generate-css-tokens: missing --source flag (dbx-web | mat-sys | mdc | app)');
-  process.exitCode = 1;
-} else {
+if (flags.source) {
   let exitCode = 0;
   switch (flags.source) {
     case 'dbx-web':
@@ -63,6 +60,9 @@ if (!flags.source) {
       exitCode = 1;
   }
   process.exitCode = exitCode;
+} else {
+  console.error('generate-css-tokens: missing --source flag (dbx-web | mat-sys | mdc | app)');
+  process.exitCode = 1;
 }
 
 // MARK: Modes

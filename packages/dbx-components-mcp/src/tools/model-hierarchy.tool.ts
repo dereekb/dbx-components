@@ -209,9 +209,7 @@ export async function runModelHierarchy(rawArgs: unknown): Promise<ToolResult> {
         ensureError = error instanceof Error ? error.message : String(error);
       }
     }
-    if (ensureError !== undefined) {
-      toolResult = toolError(ensureError);
-    } else {
+    if (ensureError === undefined) {
       const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
       const models = selectModels(args.scope, downstream);
 
@@ -240,6 +238,8 @@ export async function runModelHierarchy(rawArgs: unknown): Promise<ToolResult> {
         });
         toolResult = { content: [{ type: 'text', text }] };
       }
+    } else {
+      toolResult = toolError(ensureError);
     }
   }
   return toolResult;

@@ -286,11 +286,11 @@ export function createCssUtilityRegistryFromEntries(input: { readonly entries: r
       const trimmed = name.trim();
       const direct = byName.get(trimmed);
       let found: CssUtilityEntry | undefined;
-      if (direct !== undefined) {
-        found = direct;
-      } else {
+      if (direct === undefined) {
         const stripped = trimmed.replace(/^\./, '');
         found = byName.get(stripped);
+      } else {
+        found = direct;
       }
       return found;
     },

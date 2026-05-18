@@ -4,7 +4,7 @@ import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdo
 
 type AstNode = any;
 
-const TAG_LINE_REGEX = /^@([A-Za-z_][A-Za-z0-9_]*)\s*(.*)$/;
+const TAG_LINE_REGEX = /^@([A-Za-z_]\w*)\s*(.*)$/;
 
 /**
  * Options for the prefer-canonical-jsdoc rule. Each `checkX` flag toggles a related group of
@@ -279,18 +279,18 @@ function buildCanonicalModel(parsed: ParsedJsdoc): CanonicalJsdocModel {
   const tags: CanonicalTag[] = parsed.tags.map((t) => {
     const firstLineText = t.lines[0]?.text ?? '';
     let headerText = '';
-    const m = firstLineText.match(TAG_LINE_REGEX);
+    const m = TAG_LINE_REGEX.exec(firstLineText);
 
     if (m) {
       let remainder = m[2];
 
       if (t.type !== undefined) {
-        const tm = remainder.match(/^\{[^}]*\}\s*(.*)$/);
+        const tm = /^\{[^}]*\}\s*(.*)$/.exec(remainder);
         if (tm) remainder = tm[1];
       }
 
       if (t.name !== undefined) {
-        const nm = remainder.match(/^[A-Za-z_$][A-Za-z0-9_$.[\]]*\s*(.*)$/);
+        const nm = /^[A-Za-z_$][A-Za-z0-9_$.[\]]*\s*(.*)$/.exec(remainder);
         if (nm) remainder = nm[1];
       }
 
@@ -298,7 +298,7 @@ function buildCanonicalModel(parsed: ParsedJsdoc): CanonicalJsdocModel {
     }
 
     const continuationLines = t.lines.slice(1).map((l) => l.text);
-    while (continuationLines.length > 0 && continuationLines[continuationLines.length - 1].trim().length === 0) {
+    while (continuationLines.length > 0 && (continuationLines.at(-1) as string).trim().length === 0) {
       continuationLines.pop();
     }
 
@@ -886,9 +886,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
     }
 
     function checkThrowsFormat(commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag): void {
-      if (!tag.type) {
-        reportRangeMessage(commentNode, parsed, { messageId: 'throwsErrorType', lineIndex: tag.startLineIndex });
-      } else {
+      if (tag.type) {
         const description = tag.description;
 
         if (description.trim().length !== 0) {
@@ -899,6 +897,8 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
             reportRangeMessage(commentNode, parsed, { messageId: 'throwsDescriptionPeriod', lineIndex: tag.startLineIndex });
           }
         }
+      } else {
+        reportRangeMessage(commentNode, parsed, { messageId: 'throwsErrorType', lineIndex: tag.startLineIndex });
       }
     }
 
@@ -990,9 +990,9 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
           const first = paragraphs[0];
           // Locate the line index for the first non-blank description line for reporting.
           let firstLineIdx = 0;
-          for (let i = 0; i < parsed.descriptionLines.length; i += 1) {
-            if (!parsed.descriptionLines[i].blank) {
-              firstLineIdx = parsed.descriptionLines[i].index;
+          for (const line of parsed.descriptionLines) {
+            if (!line.blank) {
+              firstLineIdx = line.index;
               break;
             }
           }

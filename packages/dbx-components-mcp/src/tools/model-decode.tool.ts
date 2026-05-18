@@ -354,15 +354,15 @@ export function runModelDecode(rawArgs: unknown): ToolResult {
       // `key`/`_key`/`id` field on the doc.
       const extraKey = args.key ?? document.extraKey;
       const detection = detectModel(document.doc, extraKey, args.model);
-      if (!detection) {
-        const message = buildUnmatchedMessage(args.model, { ...document, extraKey });
-        result = { content: [{ type: 'text', text: message }] };
-      } else {
+      if (detection) {
         const prefixes = buildPrefixMap();
         const header = buildDetectionHeader(detection);
         const body = formatDecode({ model: detection.model, doc: document.doc, prefixes, extraKey });
         const text = `${header}\n\n${body}`;
         result = { content: [{ type: 'text', text }] };
+      } else {
+        const message = buildUnmatchedMessage(args.model, { ...document, extraKey });
+        result = { content: [{ type: 'text', text: message }] };
       }
     }
   }

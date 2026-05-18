@@ -38,9 +38,7 @@ export function defaultDoctorChecks(): DoctorCheck[] {
     async ({ envName, env }) => ({ name: 'active-env-resolved', ok: !!envName && !!env, detail: { envName }, ...(envName && env ? {} : { suggestion: 'Run `<cli> env add <name>` and `<cli> env use <name>`, or pass `--env <name>`.' }) }),
     async ({ env }) => {
       let result: DoctorCheckResult;
-      if (!env?.oidcIssuer) {
-        result = { name: 'oidc-issuer-set', ok: false, suggestion: 'Set `oidcIssuer` via `<cli> auth setup`.' };
-      } else {
+      if (env?.oidcIssuer) {
         const candidates = buildOidcDiscoveryCandidates({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
 
         try {
@@ -49,24 +47,26 @@ export function defaultDoctorChecks(): DoctorCheck[] {
         } catch (e) {
           result = { name: 'oidc-discovery-reachable', ok: false, detail: { candidates, error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the env oidcIssuer URL and that the API is running.' };
         }
+      } else {
+        result = { name: 'oidc-issuer-set', ok: false, suggestion: 'Set `oidcIssuer` via `<cli> auth setup`.' };
       }
       return result;
     },
     async ({ cliName, envName, env }) => {
       let result: DoctorCheckResult;
-      if (!envName || !env) {
-        result = { name: 'token-cache-fresh', ok: false, suggestion: 'No env to check.' };
-      } else {
+      if (envName && env) {
         const paths = buildCliPaths({ cliName });
         const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
         const entry = await tokens.get(envName);
 
-        if (!entry) {
-          result = { name: 'token-cache-fresh', ok: false, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
-        } else {
+        if (entry) {
           const expired = isTokenExpired(entry);
           result = { name: 'token-cache-fresh', ok: !expired, detail: { expiresAt: entry.expiresAt, expired }, ...(expired ? { suggestion: `Run \`${cliName} auth check --env ${envName}\` to refresh.` } : {}) };
+        } else {
+          result = { name: 'token-cache-fresh', ok: false, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
         }
+      } else {
+        result = { name: 'token-cache-fresh', ok: false, suggestion: 'No env to check.' };
       }
       return result;
     },
@@ -79,14 +79,7 @@ export function defaultDoctorChecks(): DoctorCheck[] {
         const tokens = createCliTokenCacheStore({ tokenCachePath: paths.tokenCachePath });
         const entry = await tokens.get(envName);
 
-        if (!entry?.refreshToken) {
-          result = {
-            name: 'token-refresh-round-trip',
-            ok: false,
-            detail: { reason: 'no-refresh-token' },
-            suggestion: `No refresh token cached for env "${envName}". Run \`${cliName} auth login --env ${envName}\` — if the env's scopes omit \`offline_access\`, the OIDC provider may not issue one.`
-          };
-        } else {
+        if (entry?.refreshToken) {
           try {
             const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
             await refreshAccessToken({
@@ -99,15 +92,20 @@ export function defaultDoctorChecks(): DoctorCheck[] {
           } catch (e) {
             result = { name: 'token-refresh-round-trip', ok: false, detail: { error: e instanceof Error ? e.message : String(e) }, suggestion: `Run \`${cliName} auth login --env ${envName}\`.` };
           }
+        } else {
+          result = {
+            name: 'token-refresh-round-trip',
+            ok: false,
+            detail: { reason: 'no-refresh-token' },
+            suggestion: `No refresh token cached for env "${envName}". Run \`${cliName} auth login --env ${envName}\` — if the env's scopes omit \`offline_access\`, the OIDC provider may not issue one.`
+          };
         }
       }
       return result;
     },
     async ({ env }) => {
       let result: DoctorCheckResult;
-      if (!env?.apiBaseUrl) {
-        result = { name: 'api-base-url-reachable', ok: false, suggestion: 'Set `apiBaseUrl` via `<cli> auth setup`.' };
-      } else {
+      if (env?.apiBaseUrl) {
         const url = `${env.apiBaseUrl.replace(/\/+$/, '')}${CALL_MODEL_API_PATH}`;
 
         try {
@@ -117,6 +115,8 @@ export function defaultDoctorChecks(): DoctorCheck[] {
         } catch (e) {
           result = { name: 'api-base-url-reachable', ok: false, detail: { url, error: e instanceof Error ? e.message : String(e) }, suggestion: 'Verify the API is running at apiBaseUrl.' };
         }
+      } else {
+        result = { name: 'api-base-url-reachable', ok: false, suggestion: 'Set `apiBaseUrl` via `<cli> auth setup`.' };
       }
       return result;
     }

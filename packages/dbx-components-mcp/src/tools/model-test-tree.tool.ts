@@ -74,9 +74,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     ensureError = err instanceof Error ? err.message : String(err);
   }
   let result: ToolResult;
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const specAbs = resolve(cwd, parsed.specFile);
     const apiAbs = parsed.apiDir === undefined ? undefined : resolve(cwd, parsed.apiDir);
     let tree;
@@ -94,6 +92,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
       const text = parsed.format === 'json' ? formatTreeAsJson(tree, view, filters) : formatTreeAsMarkdown(tree, view, filters);
       result = { content: [{ type: 'text', text }] };
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

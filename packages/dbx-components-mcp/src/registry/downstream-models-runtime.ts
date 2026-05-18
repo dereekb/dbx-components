@@ -165,16 +165,16 @@ async function buildCatalog(input: GetDownstreamCatalogInput): Promise<Downstrea
 
     if (aRoot !== bRoot) {
       result = aRoot - bRoot;
-    } else if (a.sourcePackage !== b.sourcePackage) {
-      result = a.sourcePackage.localeCompare(b.sourcePackage);
-    } else {
+    } else if (a.sourcePackage === b.sourcePackage) {
       result = a.name.localeCompare(b.name);
+    } else {
+      result = a.sourcePackage.localeCompare(b.sourcePackage);
     }
 
     return result;
   });
   modelGroups.sort((a, b) => {
-    return a.sourcePackage !== b.sourcePackage ? a.sourcePackage.localeCompare(b.sourcePackage) : a.name.localeCompare(b.name);
+    return a.sourcePackage === b.sourcePackage ? a.name.localeCompare(b.name) : a.sourcePackage.localeCompare(b.sourcePackage);
   });
 
   return {
