@@ -248,6 +248,38 @@ export const anotherOld = 'bar';
       expect(lintCode(output)).toHaveLength(0);
     });
 
+    it('leaves a deprecated overload signature adjacent to its implementation when fixing a sibling alias', () => {
+      const input = `export function foo(a: number): string;
+/**
+ * @deprecated use the object form.
+ */
+export function foo(a: number, b: number): string;
+export function foo(a: number, b?: number): string {
+  return String(a) + (b ?? '');
+}
+
+/**
+ * @deprecated use NEW_NAME instead.
+ */
+export const oldAlias = 'foo';
+`;
+      const output = fixCode(input);
+      // Marker should be inserted for the sibling alias.
+      const markerIdx = output.indexOf('// COMPAT: Deprecated aliases');
+      const overloadDeprecatedIdx = output.indexOf('export function foo(a: number, b: number)');
+      const overloadImplIdx = output.indexOf('export function foo(a: number, b?: number)');
+      const oldAliasIdx = output.indexOf('export const oldAlias');
+      expect(markerIdx).toBeGreaterThan(0);
+      // Overload signature stays in source order above its implementation, untouched by the autofix.
+      expect(overloadDeprecatedIdx).toBeGreaterThan(0);
+      expect(overloadImplIdx).toBeGreaterThan(overloadDeprecatedIdx);
+      // Overload pair sits ABOVE the marker (i.e., was not relocated to the COMPAT section).
+      expect(overloadImplIdx).toBeLessThan(markerIdx);
+      // Only the sibling alias moved below the marker.
+      expect(oldAliasIdx).toBeGreaterThan(markerIdx);
+      expect(lintCode(output)).toHaveLength(0);
+    });
+
     it('moves a non-deprecated export sitting below the marker to above it', () => {
       const input = `export const NEW_NAME = 'foo';
 
