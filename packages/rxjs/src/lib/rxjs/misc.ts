@@ -37,8 +37,8 @@ export function tapLog<T = unknown>(messageOrFunction: (string | number) | ((val
  *
  * Useful for simulating network latency or staggering requests.
  *
- * @param maxOrArgs - maximum delay in ms, or a full random number config
- * @returns an operator that delays each emission by a random amount
+ * @param maxOrArgs - Maximum delay in ms, or a full random number config.
+ * @returns An operator that delays each emission by a random amount.
  */
 export function randomDelay<T = unknown>(maxOrArgs: number | RandomNumberFactoryConfig): MonoTypeOperatorFunction<T> {
   const makeRandomDelay = randomNumberFactory(maxOrArgs);
@@ -48,9 +48,10 @@ export function randomDelay<T = unknown>(maxOrArgs: number | RandomNumberFactory
 /**
  * RxJS operator that adds a random delay using a custom random number generator.
  *
- * @param makeRandomDelay - factory that produces random delay values
- * @param scheduler - the scheduler to use for the delay (defaults to asyncScheduler)
- * @returns an operator that delays each emission
+ * @param makeRandomDelay - Factory that produces random delay values.
+ * @param scheduler - The scheduler to use for the delay (defaults to asyncScheduler)
+ * @returns An operator that delays each emission.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function randomDelayWithRandomFunction<T = unknown>(makeRandomDelay: RandomNumberFactory, scheduler: SchedulerLike = asyncScheduler): MonoTypeOperatorFunction<T> {

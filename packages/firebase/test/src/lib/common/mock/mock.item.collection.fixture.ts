@@ -90,6 +90,9 @@ export interface MockItemCollectionFirebaseContextConfig {}
  *
  * Compose with a Firebase test context factory to get a fully wired test environment:
  *
+ * @param _config - Reserved for future setup/teardown configuration; currently unused.
+ * @returns A factory builder that wraps a parent {@link TestFirestoreContextFixture} with a {@link MockItemCollectionFixture} per test.
+ *
  * @example
  * ```ts
  * const f = testWithMockItemCollectionFixture()(authorizedFirebaseFactory);
@@ -97,9 +100,6 @@ export interface MockItemCollectionFirebaseContextConfig {}
  *   it('should work', () => { ... });
  * }));
  * ```
- *
- * @param _config - Reserved for future setup/teardown configuration; currently unused.
- * @returns A factory builder that wraps a parent {@link TestFirestoreContextFixture} with a {@link MockItemCollectionFixture} per test.
  */
 export function testWithMockItemCollectionFixture(_config?: MockItemCollectionFirebaseContextConfig): TestWrappedContextFactoryBuilder<MockItemCollectionFixture, TestFirestoreContextFixture> {
   return instanceWrapTestContextFactory({

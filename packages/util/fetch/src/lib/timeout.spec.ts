@@ -6,10 +6,10 @@ import { FetchTimeoutError } from './timeout';
 
 const testFetch: FetchService = fetchService({
   makeFetch: (url, init) => {
-    const req = fetch(url as RequestInfo, init as RequestInit);
-    return req.then((x) => waitForMs(100000).then((x) => ({} as Response))); // if successful, just wait
+    const req = fetch(url, init);
+    return req.then((x) => waitForMs(100000).then((x) => ({}) as Response)); // if successful, just wait
   },
-  makeRequest: (x, y) => new Request(x as RequestInfo, y as RequestInit) as any
+  makeRequest: (x, y) => new Request(x, y as RequestInit)
 });
 
 describe('timeoutFetch()', () => {

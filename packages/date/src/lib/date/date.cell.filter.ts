@@ -16,13 +16,14 @@ export type DateCellDurationSpanFilterFunction<B extends DateCell = DateCell> = 
  * Useful for identifying events or blocks that have already begun relative to a point in time.
  *
  * @param now - Reference time to compare against. Defaults to the current time.
- * @returns a filter function that returns true for spans whose start time is at or before the reference time
+ * @returns A filter function that returns true for spans whose start time is at or before the reference time.
  *
  * @example
  * ```ts
  * const hasStarted = dateCellDurationSpanHasStartedFilterFunction(new Date());
  * const startedSpans = allSpans.filter(hasStarted);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDurationSpanHasStartedFilterFunction<B extends DateCell = DateCell>(now = new Date()): DateCellDurationSpanFilterFunction<B> {
@@ -35,13 +36,14 @@ export function dateCellDurationSpanHasStartedFilterFunction<B extends DateCell 
  * The inverse of {@link dateCellDurationSpanHasStartedFilterFunction}. Useful for finding upcoming or future events.
  *
  * @param now - Reference time to compare against. Defaults to the current time.
- * @returns a filter function that returns true for spans whose start time is strictly after the reference time
+ * @returns A filter function that returns true for spans whose start time is strictly after the reference time.
  *
  * @example
  * ```ts
  * const hasNotStarted = dateCellDurationSpanHasNotStartedFilterFunction(new Date());
  * const futureSpans = allSpans.filter(hasNotStarted);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDurationSpanHasNotStartedFilterFunction<B extends DateCell = DateCell>(now = new Date()): DateCellDurationSpanFilterFunction<B> {
@@ -55,13 +57,14 @@ export function dateCellDurationSpanHasNotStartedFilterFunction<B extends DateCe
  * Useful for identifying completed events.
  *
  * @param now - Reference time to compare against. Defaults to the current time.
- * @returns a filter function that returns true for spans whose computed end time is at or before the reference time
+ * @returns A filter function that returns true for spans whose computed end time is at or before the reference time.
  *
  * @example
  * ```ts
  * const hasEnded = dateCellDurationSpanHasEndedFilterFunction(new Date());
  * const completedSpans = allSpans.filter(hasEnded);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDurationSpanHasEndedFilterFunction<B extends DateCell = DateCell>(now = new Date()): DateCellDurationSpanFilterFunction<B> {
@@ -78,13 +81,14 @@ export function dateCellDurationSpanHasEndedFilterFunction<B extends DateCell = 
  * still in progress or have not yet occurred.
  *
  * @param now - Reference time to compare against. Defaults to the current time.
- * @returns a filter function that returns true for spans whose computed end time is strictly after the reference time
+ * @returns A filter function that returns true for spans whose computed end time is strictly after the reference time.
  *
  * @example
  * ```ts
  * const hasNotEnded = dateCellDurationSpanHasNotEndedFilterFunction(new Date());
  * const activeOrFutureSpans = allSpans.filter(hasNotEnded);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDurationSpanHasNotEndedFilterFunction<B extends DateCell = DateCell>(now = new Date()): DateCellDurationSpanFilterFunction<B> {
@@ -110,13 +114,14 @@ export type ModifyDateCellsToFitRangeFunction = <B extends DateCell | DateCellRa
  * indices clamped to the range boundaries. Non-overlapping cells are excluded entirely.
  *
  * @param range - The target range to fit cells into.
- * @returns a reusable function that clamps or filters date cells to the configured range
+ * @returns A reusable function that clamps or filters date cells to the configured range.
  *
  * @example
  * ```ts
  * const fitToRange = modifyDateCellsToFitRangeFunction({ i: 5, to: 15 });
  * const fitted = fitToRange(dateCells); // cells clamped to [5, 15]
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function modifyDateCellsToFitRangeFunction(range: DateCellRange): ModifyDateCellsToFitRangeFunction {
@@ -159,9 +164,9 @@ export function modifyDateCellsToFitRangeFunction(range: DateCellRange): ModifyD
  * Prefer {@link modifyDateCellsToFitRangeFunction} when processing multiple arrays against the same range
  * to avoid recomputing the range boundaries each time.
  *
- * @param range - The target range to fit cells into.
- * @param input - The date cells to clamp or filter.
- * @returns an array of date cells clamped to the range, with non-overlapping cells removed
+ * @param range - Range that each cell should be clamped to.
+ * @param input - Cells to evaluate and clamp.
+ * @returns Cells clamped to the range, with non-overlapping cells removed.
  *
  * @example
  * ```ts
@@ -178,7 +183,7 @@ export function modifyDateCellsToFitRange<B extends DateCell | DateCellRange | U
  *
  * @param range - The target range to fit the cell into.
  * @param input - The single date cell to clamp or exclude.
- * @returns the clamped date cell, or `undefined` if it does not overlap the range
+ * @returns The clamped date cell, or `undefined` if it does not overlap the range.
  *
  * @example
  * ```ts

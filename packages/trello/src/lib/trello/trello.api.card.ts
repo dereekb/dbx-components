@@ -10,10 +10,10 @@ export interface GetCardInput {
 export type GetCardFunction = (input: GetCardInput) => Promise<TrelloCard>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-get
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-get.
  *
- * @param context The Trello API context.
- * @returns A function that retrieves a card by id.
+ * @param context - The Trello API context.
+ * @returns Retrieves a card by id.
  */
 export function getCard(context: TrelloContext): GetCardFunction {
   return (input) => context.fetchJson(`/cards/${input.cardId}`, 'GET');
@@ -22,10 +22,10 @@ export function getCard(context: TrelloContext): GetCardFunction {
 export type CreateCardFunction = (input: CreateCardBody) => Promise<TrelloCard>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-post
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-post.
  *
- * @param context The Trello API context.
- * @returns A function that creates a card on a list.
+ * @param context - The Trello API context.
+ * @returns Creates a card on a list.
  */
 export function createCard(context: TrelloContext): CreateCardFunction {
   return (input) => {
@@ -52,10 +52,10 @@ export interface UpdateCardInput extends UpdateCardBody {
 export type UpdateCardFunction = (input: UpdateCardInput) => Promise<TrelloCard>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-put
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-put.
  *
- * @param context The Trello API context.
- * @returns A function that updates an existing card.
+ * @param context - The Trello API context.
+ * @returns Updates an existing card.
  */
 export function updateCard(context: TrelloContext): UpdateCardFunction {
   return (input) => {
@@ -77,10 +77,10 @@ export function updateCard(context: TrelloContext): UpdateCardFunction {
 export type DeleteCardFunction = (input: GetCardInput) => Promise<void>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-delete
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-delete.
  *
- * @param context The Trello API context.
- * @returns A function that deletes a card.
+ * @param context - The Trello API context.
+ * @returns Deletes a card.
  */
 export function deleteCard(context: TrelloContext): DeleteCardFunction {
   return async (input) => {
@@ -89,11 +89,15 @@ export function deleteCard(context: TrelloContext): DeleteCardFunction {
 }
 
 /**
- * Known Trello action type. Trello supports many more (40+) — pass any string for filters not enumerated here.
+ * Trello action type identifier.
+ *
+ * Trello supports many action types (40+). Common card-related values: `commentCard`, `updateCard`, `createCard`,
+ * `deleteCard`, `addMemberToCard`, `removeMemberFromCard`, `addAttachmentToCard`, `deleteAttachmentFromCard`,
+ * `addChecklistToCard`, `removeChecklistFromCard`, `updateCheckItemStateOnCard`, `addLabelToCard`, `removeLabelFromCard`.
  *
  * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/action-types/
  */
-export type TrelloActionType = 'commentCard' | 'updateCard' | 'createCard' | 'deleteCard' | 'addMemberToCard' | 'removeMemberFromCard' | 'addAttachmentToCard' | 'deleteAttachmentFromCard' | 'addChecklistToCard' | 'removeChecklistFromCard' | 'updateCheckItemStateOnCard' | 'addLabelToCard' | 'removeLabelFromCard' | string;
+export type TrelloActionType = string; // NOSONAR (S6564 — intentional semantic alias)
 
 export interface ListCardActionsInput {
   readonly cardId: TrelloCardId;
@@ -118,13 +122,13 @@ export interface ListCardActionsInput {
 export type ListCardActionsFunction = <D = unknown>(input: ListCardActionsInput) => Promise<ReadonlyArray<TrelloAction<D>>>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-actions-get
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-actions-get.
  *
  * Comments are returned as actions with `type === 'commentCard'`; pass `filter: 'commentCard'` and the generic
  * type parameter `TrelloCommentCardActionData` to get a comment-typed result.
  *
- * @param context The Trello API context.
- * @returns A function that lists actions on a card.
+ * @param context - The Trello API context.
+ * @returns Lists actions on a card.
  */
 export function listCardActions(context: TrelloContext): ListCardActionsFunction {
   return (input) => {
@@ -145,10 +149,10 @@ export interface AddCommentToCardInput {
 export type AddCommentToCardFunction = (input: AddCommentToCardInput) => Promise<TrelloCommentCardAction>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-actions-comments-post
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-actions-comments-post.
  *
- * @param context The Trello API context.
- * @returns A function that adds a comment to a card.
+ * @param context - The Trello API context.
+ * @returns Adds a comment to a card.
  */
 export function addCommentToCard(context: TrelloContext): AddCommentToCardFunction {
   return (input) => {
@@ -165,10 +169,10 @@ export interface AddMemberToCardInput {
 export type AddMemberToCardFunction = (input: AddMemberToCardInput) => Promise<ReadonlyArray<TrelloMemberId>>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-idmembers-post
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-idmembers-post.
  *
- * @param context The Trello API context.
- * @returns A function that adds a member to a card.
+ * @param context - The Trello API context.
+ * @returns Adds a member to a card.
  */
 export function addMemberToCard(context: TrelloContext): AddMemberToCardFunction {
   return (input) => {
@@ -185,10 +189,10 @@ export interface AddLabelToCardInput {
 export type AddLabelToCardFunction = (input: AddLabelToCardInput) => Promise<ReadonlyArray<TrelloLabelId>>;
 
 /**
- * https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-idlabels-post
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-cards/#api-cards-id-idlabels-post.
  *
- * @param context The Trello API context.
- * @returns A function that adds an existing label to a card.
+ * @param context - The Trello API context.
+ * @returns Adds an existing label to a card.
  */
 export function addLabelToCard(context: TrelloContext): AddLabelToCardFunction {
   return (input) => {

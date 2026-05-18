@@ -7,14 +7,14 @@ import { type ReadableError, type ServerError, ServerErrorResponse, Unauthorized
  * Ensures that the error data is safe for serialization by running it through `JSON.stringify`/`JSON.parse`.
  * Non-serializable data is stripped with a console warning.
  *
+ * @param httpError - The HTTP error response or generic error object to convert.
+ * @returns A plain JSON-serializable {@link ServerError} object.
+ *
  * @example
  * ```typescript
  * const pojoError = convertToPOJOServerErrorResponse(httpErrorResponse);
  * console.log(pojoError.message);
  * ```
- *
- * @param httpError - The HTTP error response or generic error object to convert.
- * @returns A plain JSON-serializable {@link ServerError} object.
  */
 export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | object): ServerError {
   const result: ServerErrorResponse | undefined = convertToServerErrorResponse(httpError);
@@ -42,6 +42,9 @@ export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | 
  * Handles HTTP 401 responses specially by returning an {@link UnauthorizedServerErrorResponse}.
  * Returns `undefined` if the input is falsy.
  *
+ * @param error - The HTTP error response or generic error object to convert.
+ * @returns A {@link ServerErrorResponse} derived from the error, or `undefined` if the input is falsy.
+ *
  * @example
  * ```typescript
  * const serverError = convertToServerErrorResponse(httpErrorResponse);
@@ -49,9 +52,6 @@ export function convertToPOJOServerErrorResponse(httpError: HttpErrorResponse | 
  *   console.log(serverError.status, serverError.message);
  * }
  * ```
- *
- * @param error - The HTTP error response or generic error object to convert.
- * @returns A {@link ServerErrorResponse} derived from the error, or `undefined` if the input is falsy.
  */
 export function convertToServerErrorResponse(error: HttpErrorResponse | object): ServerErrorResponse | undefined {
   let result: ServerErrorResponse | undefined;

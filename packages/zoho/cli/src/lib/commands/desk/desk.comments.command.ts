@@ -3,7 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
-import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
+import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
 
 const commentsListCommand: CommandModule = {
   command: 'list <ticketId>',
@@ -16,7 +16,7 @@ const commentsListCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.getTicketComments(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -86,7 +86,7 @@ const commentsDeleteCommand: CommandModule = {
   }
 };
 
-export const deskCommentsCommand: CommandModule = {
+export const DESK_COMMENTS_COMMAND: CommandModule = {
   command: 'comments',
   describe: 'Desk comment operations',
   builder: (yargs: Argv) => yargs.command(commentsListCommand).command(commentsGetCommand).command(commentsCreateCommand).command(commentsDeleteCommand).demandCommand(1),

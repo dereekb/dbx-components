@@ -72,10 +72,10 @@ export interface RenderedInsertion {
  * Factory, Singleton — land in one logical section. The disk-mutation tool
  * wrapper inserts this string at the end of the file.
  *
- * @param extraction - the current parse of `fixture.ts` (used only to
+ * @param extraction - The current parse of `fixture.ts` (used only to
  *   detect import collisions and pick context fixture/instance names)
- * @param input - scaffold spec
- * @returns the rendered snippet plus a placeholder checklist
+ * @param input - Scaffold spec.
+ * @returns The rendered snippet plus a placeholder checklist.
  */
 export function renderFixtureScaffold(extraction: AppFixturesExtraction, input: RenderFixtureScaffoldInput): RenderedFixtureScaffold {
   const prefix = input.prefix;
@@ -193,8 +193,8 @@ interface RenderInstanceBlockInput {
 /**
  * Renders the Instance class skeleton.
  *
- * @param input - render config
- * @returns the class declaration text
+ * @param input - Render config.
+ * @returns The class declaration text.
  */
 function renderInstanceBlock(input: RenderInstanceBlockInput): string {
   input.todos.push(`Add instance methods to \`${input.instanceClassName}\`.`);
@@ -213,8 +213,8 @@ interface RenderFixtureBlockInput {
 /**
  * Renders the Fixture class skeleton.
  *
- * @param input - render config
- * @returns the class declaration text
+ * @param input - Render config.
+ * @returns The class declaration text.
  */
 function renderFixtureBlock(input: RenderFixtureBlockInput): string {
   input.todos.push(`Add forwarder methods to \`${input.fixtureClassName}\` after defining instance methods.`);

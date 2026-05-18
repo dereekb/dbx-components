@@ -124,8 +124,8 @@ export interface GenerateFirestoreIndexesJsonResult {
  * registry, preserving user-authored content from any prior on-disk
  * version.
  *
- * @param input - the entries and (optionally) the existing JSON to merge against
- * @returns the new JSON payload plus a diff against the existing version
+ * @param input - The entries and (optionally) the existing JSON to merge against.
+ * @returns The new JSON payload plus a diff against the existing version.
  */
 export function generateFirestoreIndexesJson(input: GenerateFirestoreIndexesJsonInput): GenerateFirestoreIndexesJsonResult {
   const { entries, existingJson } = input;
@@ -174,8 +174,8 @@ export function generateFirestoreIndexesJson(input: GenerateFirestoreIndexesJson
  * trailing newline so `--check` mode can byte-compare against the
  * committed file without false-positive whitespace diffs.
  *
- * @param json - the indexes payload to serialise
- * @returns the canonical string form
+ * @param json - The indexes payload to serialise.
+ * @returns The canonical string form.
  */
 export function serializeFirestoreIndexesJson(json: FirestoreIndexesJson): string {
   return `${JSON.stringify(json, null, 2)}\n`;

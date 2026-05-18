@@ -1,4 +1,4 @@
-import { type ModelFirebaseCrudFunctionSpecifier, type ModelFirebaseCrudFunctionSpecifierRef, MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT } from '@dereekb/firebase';
+import { type ModelFirebaseCrudFunctionSpecifier, type ModelFirebaseCrudFunctionSpecifierRef, DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER } from '@dereekb/firebase';
 import { type Configurable, type Maybe, objectToMap, type PromiseOrValue, serverError } from '@dereekb/util';
 import { type NestContextCallableRequestWithOptionalAuth, type NestContextCallableRequestWithAuth } from '../function/nest';
 import { badRequestError } from '../../function/error';
@@ -86,7 +86,7 @@ export function onCallSpecifierHandler<N, I = any, O = any>(config: OnCallSpecif
   const map = objectToMap(config);
 
   const fn = (request: OnCallSpecifierHandlerNestContextRequestWithOptionalAuth<N, I>) => {
-    const { specifier = MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER_DEFAULT } = request;
+    const { specifier = DEFAULT_MODEL_FUNCTION_FIREBASE_CRUD_FUNCTION_SPECIFIER } = request;
     const handler = map.get(specifier);
 
     if (handler != null) {

@@ -47,8 +47,8 @@ export interface RenderedForwarders {
  * Existing Fixture methods with the same name are left alone; they're
  * reported in `skippedAlreadyForwarded`.
  *
- * @param input - the entry to forward + optional whitelist of method names
- * @returns the rendered forwarders + skip metadata
+ * @param input - The entry to forward + optional whitelist of method names.
+ * @returns The rendered forwarders + skip metadata.
  */
 export function renderForwarders(input: RenderForwardersInput): RenderedForwarders {
   const { entry, methods } = input;
@@ -98,8 +98,8 @@ function renderOne(m: FixtureMethod): RenderedForwarder {
  * destructured patterns down to the parameter names. Spread parameters
  * are forwarded as `...name`.
  *
- * @param parameterText - the raw parameter text from ts-morph
- * @returns the comma-joined argument list to use at the call site
+ * @param parameterText - The raw parameter text from ts-morph.
+ * @returns The comma-joined argument list to use at the call site.
  */
 function parameterCallText(parameterText: string): string {
   if (parameterText.trim().length === 0) return '';

@@ -207,7 +207,7 @@ export class DbxForgeDateTimeFieldComponent {
 
   // MARK: Error state matcher
   readonly timeErrorStateMatcher: ErrorStateMatcher = {
-    isErrorState: (control: AbstractControl | null) => {
+    isErrorState: (control: Maybe<AbstractControl>) => {
       if (control) {
         return (control.invalid && (control.dirty || control.touched)) || this.hasErrorSignal() === true;
       }
@@ -216,74 +216,93 @@ export class DbxForgeDateTimeFieldComponent {
   };
 
   // MARK: Computed signals — derived from props
-  readonly fieldLabel = computed(() => {
+  readonly fieldLabelSignal = computed(() => {
     const l = this.label();
     return typeof l === 'string' && l ? l : undefined;
   });
 
-  readonly isRequired = computed(() => {
+  readonly isRequiredSignal = computed(() => {
+    let required = false;
+
     try {
       const state = this.field()?.() as any;
-      return (state?.required?.() as boolean) ?? false;
+      required = (state?.required?.() as boolean) ?? false;
     } catch {
-      return false;
+      required = false;
     }
+
+    return required;
   });
 
-  readonly isDateRequired = computed(() => this.isRequired());
+  readonly isDateRequiredSignal = computed(() => this.isRequiredSignal());
 
-  readonly isTimeRequired = computed(() => this.isRequired() && this.timeMode() === DbxDateTimeFieldTimeMode.REQUIRED);
+  readonly isTimeRequiredSignal = computed(() => {
+    const timeMode = this.timeModeSignal();
+    return this.isRequiredSignal() && timeMode === DbxDateTimeFieldTimeMode.REQUIRED;
+  });
 
-  readonly description = computed(() => {
+  readonly descriptionSignal = computed(() => {
     const h = this.props()?.hint;
     return typeof h === 'string' ? h : undefined;
   });
 
-  readonly appearance = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
+  readonly appearanceSignal = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
 
-  readonly valueMode = computed(() => this.props()?.valueMode ?? DbxDateTimeValueMode.DATE);
+  readonly valueModeSignal = computed(() => this.props()?.valueMode ?? DbxDateTimeValueMode.DATE);
 
-  readonly timeMode = computed<DbxDateTimeFieldTimeMode>(() => {
+  readonly timeModeSignal = computed<DbxDateTimeFieldTimeMode>(() => {
     const p = this.props();
-    if (this.valueMode() === DbxDateTimeValueMode.DAY_STRING) return DbxDateTimeFieldTimeMode.NONE;
+    if (this.valueModeSignal() === DbxDateTimeValueMode.DAY_STRING) return DbxDateTimeFieldTimeMode.NONE;
     if (p?.timeOnly) return DbxDateTimeFieldTimeMode.REQUIRED;
     if (p?.timeMode) return p.timeMode;
     return DbxDateTimeFieldTimeMode.REQUIRED;
   });
 
-  readonly isTimeOnly = computed(() => this.valueMode() === DbxDateTimeValueMode.MINUTE_OF_DAY || this.props()?.timeOnly === true);
-  readonly isDateOnly = computed(() => this.timeMode() === DbxDateTimeFieldTimeMode.NONE);
-  readonly isFullDay = computed(() => this._fullDay());
+  readonly isTimeOnlySignal = computed(() => {
+    const props = this.props();
+    return this.valueModeSignal() === DbxDateTimeValueMode.MINUTE_OF_DAY || props?.timeOnly === true;
+  });
+  readonly isDateOnlySignal = computed(() => this.timeModeSignal() === DbxDateTimeFieldTimeMode.NONE);
+  readonly isFullDaySignal = computed(() => this._fullDay());
 
-  readonly showDateInput = computed(() => !this.isTimeOnly());
-  readonly showTimeInput = computed(() => !this._fullDay() && this.timeMode() !== DbxDateTimeFieldTimeMode.NONE);
-  readonly showAddTimeButton = computed(() => !this.showTimeInput() && this.timeMode() === DbxDateTimeFieldTimeMode.OPTIONAL);
+  readonly showDateInputSignal = computed(() => !this.isTimeOnlySignal());
+  readonly showTimeInputSignal = computed(() => {
+    const timeMode = this.timeModeSignal();
+    return !this._fullDay() && timeMode !== DbxDateTimeFieldTimeMode.NONE;
+  });
+  readonly showAddTimeButtonSignal = computed(() => {
+    const timeMode = this.timeModeSignal();
+    return !this.showTimeInputSignal() && timeMode === DbxDateTimeFieldTimeMode.OPTIONAL;
+  });
 
-  readonly dateLabel = computed(() => this.props()?.dateLabel ?? 'Date');
-  readonly timeLabel = computed(() => this.props()?.timeLabel ?? 'Time');
-  readonly allDayLabel = computed(() => this.props()?.allDayLabel ?? 'All Day');
-  readonly atTimeLabel = computed(() => this.props()?.atTimeLabel ?? 'At');
-  readonly hideDateHint = computed(() => this.props()?.hideDateHint ?? false);
-  readonly hideDatePicker = computed(() => this.props()?.hideDatePicker ?? false);
-  readonly showTimezone = computed(() => this.props()?.showTimezone ?? true);
-  readonly showClearButton = computed(() => this.props()?.showClearButton !== false);
-  readonly minuteStep = computed(() => this.props()?.minuteStep ?? 5);
-  readonly alwaysShowDateInput = computed(() => this.props()?.alwaysShowDateInput ?? true);
-  readonly autofillDateWhenTimeIsPicked = computed(() => this.props()?.autofillDateWhenTimeIsPicked ?? this.alwaysShowDateInput() === false);
-  readonly openOnInputClick = computed(() => this.props()?.openOnInputClick ?? 'picker');
+  readonly dateLabelSignal = computed(() => this.props()?.dateLabel ?? 'Date');
+  readonly timeLabelSignal = computed(() => this.props()?.timeLabel ?? 'Time');
+  readonly allDayLabelSignal = computed(() => this.props()?.allDayLabel ?? 'All Day');
+  readonly atTimeLabelSignal = computed(() => this.props()?.atTimeLabel ?? 'At');
+  readonly hideDateHintSignal = computed(() => this.props()?.hideDateHint ?? false);
+  readonly hideDatePickerSignal = computed(() => this.props()?.hideDatePicker ?? false);
+  readonly showTimezoneSignal = computed(() => this.props()?.showTimezone ?? true);
+  readonly showClearButtonSignal = computed(() => this.props()?.showClearButton !== false);
+  readonly minuteStepSignal = computed(() => this.props()?.minuteStep ?? 5);
+  readonly alwaysShowDateInputSignal = computed(() => this.props()?.alwaysShowDateInput ?? true);
+  readonly autofillDateWhenTimeIsPickedSignal = computed(() => {
+    const alwaysShowDateInput = this.alwaysShowDateInputSignal();
+    return this.props()?.autofillDateWhenTimeIsPicked ?? alwaysShowDateInput === false;
+  });
+  readonly openOnInputClickSignal = computed(() => this.props()?.openOnInputClick ?? 'picker');
 
   // MARK: Timezone signals
-  readonly resolvedTimezone = computed(() => this._timezone() ?? guessCurrentTimezone());
+  readonly resolvedTimezoneSignal = computed(() => this._timezone() ?? guessCurrentTimezone());
 
-  readonly timezoneInstance = computed<Maybe<DateTimezoneUtcNormalInstance>>(() => {
-    const tz = this.resolvedTimezone();
+  readonly timezoneInstanceSignal = computed<Maybe<DateTimezoneUtcNormalInstance>>(() => {
+    const tz = this.resolvedTimezoneSignal();
     return tz ? dateTimezoneUtcNormal({ timezone: tz }) : undefined;
   });
 
   // MARK: Field value reading
   // FieldTree<unknown> is callable — calling it returns FieldState which has .value, .disabled, etc.
   // We call field()() to first unwrap the InputSignal (→ FieldTree), then call the FieldTree (→ FieldState).
-  readonly fieldValue = computed(() => {
+  readonly fieldValueSignal = computed(() => {
     let result: unknown = undefined;
 
     try {
@@ -301,15 +320,15 @@ export class DbxForgeDateTimeFieldComponent {
   // MARK: Observable pipelines
 
   // Parse field value to system timezone Date
-  readonly fieldValue$ = toObservable(this.fieldValue);
+  readonly fieldValue$ = toObservable(this.fieldValueSignal);
 
-  readonly timezoneInstance$ = toObservable(this.timezoneInstance);
+  readonly timezoneInstance$ = toObservable(this.timezoneInstanceSignal);
 
   readonly valueInSystemTimezone$: Observable<Maybe<Date>> = this.fieldValue$.pipe(
     combineLatestWith(this.timezoneInstance$),
     map(([raw, timezoneInstance]) => {
       if (raw == null) return undefined;
-      const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), timezoneInstance);
+      const parser = dbxDateTimeInputValueParseFactory(this.valueModeSignal(), timezoneInstance);
       const result = parser(raw as DbxForgeDateTimeRawValue);
       if (result instanceof Date && Number.isNaN(result.getTime())) return undefined;
       return result;
@@ -359,7 +378,7 @@ export class DbxForgeDateTimeFieldComponent {
   readonly resyncTimeInput$ = this._resyncTimeInput.pipe(debounceTime(200), shareReplay(1));
 
   // Timezone abbreviation
-  readonly tzAbbreviation$ = combineLatest([this.currentDate$, toObservable(this.resolvedTimezone), toObservable(this._timeDate)]).pipe(
+  readonly tzAbbreviation$ = combineLatest([this.currentDate$, toObservable(this.resolvedTimezoneSignal), toObservable(this._timeDate)]).pipe(
     map(([date, timezone, timeDate]) => getTimezoneAbbreviation(timezone, timeDate ?? date ?? new Date())),
     distinctUntilChanged(),
     shareReplay(1)
@@ -370,7 +389,7 @@ export class DbxForgeDateTimeFieldComponent {
   private readonly _timeDate$ = toObservable(this._timeDate);
 
   readonly isTimeCleared$ = combineLatest([this.currentDate$, toObservable(this._timeDate).pipe(startWith(null)), this._isCleared$]).pipe(
-    map(([date, time, isCleared]) => isCleared || (!this.isTimeOnly() && Boolean(!date && !time))),
+    map(([date, time, isCleared]) => isCleared || (!this.isTimeOnlySignal() && Boolean(!date && !time))),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -396,7 +415,7 @@ export class DbxForgeDateTimeFieldComponent {
     shareReplay(1)
   );
 
-  private _syncConfigValueObs(type: DbxDateTimeFieldSyncType): Observable<Date | null> {
+  private _syncConfigValueObs(type: DbxDateTimeFieldSyncType): Observable<Maybe<Date>> {
     return this.parsedSyncConfigs$.pipe(
       switchMap((configs) => {
         const config = configs.find((c) => c.syncType === type);
@@ -433,15 +452,15 @@ export class DbxForgeDateTimeFieldComponent {
     shareReplay(1)
   );
 
-  readonly dateInputMin$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
-    map((x) => (x?.limits?.min ?? null) as Date | null),
-    distinctUntilChanged<Date | null>(isSameDate),
+  readonly dateInputMin$: Observable<Maybe<Date>> = this.dateTimePickerConfig$.pipe(
+    map((x) => (x?.limits?.min ?? null) as Maybe<Date>),
+    distinctUntilChanged<Maybe<Date>>(isSameDate),
     shareReplay(1)
   );
 
-  readonly dateInputMax$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
-    map((x) => (x?.limits?.max ?? null) as Date | null),
-    distinctUntilChanged<Date | null>(isSameDate),
+  readonly dateInputMax$: Observable<Maybe<Date>> = this.dateTimePickerConfig$.pipe(
+    map((x) => (x?.limits?.max ?? null) as Maybe<Date>),
+    distinctUntilChanged<Maybe<Date>>(isSameDate),
     shareReplay(1)
   );
 
@@ -451,11 +470,11 @@ export class DbxForgeDateTimeFieldComponent {
     shareReplay(1)
   );
 
-  readonly pickerFilter$: Observable<(d: Date | null) => boolean> = this.dateTimePickerConfig$.pipe(
+  readonly pickerFilter$: Observable<(d: Maybe<Date>) => boolean> = this.dateTimePickerConfig$.pipe(
     map((x) => {
       if (x) {
         const fn = dateTimeMinuteWholeDayDecisionFunction(x, false);
-        return (d: Date | null) => (d == null ? true : fn(d));
+        return (d: Maybe<Date>) => (d == null ? true : fn(d));
       }
       return () => true;
     }),
@@ -464,7 +483,7 @@ export class DbxForgeDateTimeFieldComponent {
 
   // Show date input reactively based on restricted range
   readonly showDateInput$: Observable<boolean> = this.dateMinAndMaxIsSameDay$.pipe(
-    map((sameDay) => this.showDateInput() && (this.alwaysShowDateInput() || !sameDay)),
+    map((sameDay) => this.showDateInputSignal() && (this.alwaysShowDateInputSignal() || !sameDay)),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -472,7 +491,7 @@ export class DbxForgeDateTimeFieldComponent {
   // Reactive date source: uses of(null) for time-only fields, dateValue$ otherwise.
   // Must be reactive (not a one-shot ternary) because isTimeOnly depends on props
   // which aren't available during class field initialization.
-  private readonly _rawDateTimeDate$: Observable<Maybe<Date>> = toObservable(this.isTimeOnly).pipe(
+  private readonly _rawDateTimeDate$: Observable<Maybe<Date>> = toObservable(this.isTimeOnlySignal).pipe(
     switchMap((timeOnly) => (timeOnly ? of(null) : this.dateValue$)),
     shareReplay(1)
   );
@@ -485,8 +504,8 @@ export class DbxForgeDateTimeFieldComponent {
         timeString,
         isFullDay: fullDay,
         fullDayInUTC: this.props()?.fullDayInUTC ?? false,
-        isTimeOnly: this.isTimeOnly(),
-        timeMode: this.timeMode(),
+        isTimeOnly: this.isTimeOnlySignal(),
+        timeMode: this.timeModeSignal(),
         timeDate,
         isCleared: isTimeCleared
       };
@@ -503,7 +522,7 @@ export class DbxForgeDateTimeFieldComponent {
     tap(([, stepsOffset]) => (stepsOffset ? this._offset.next(0) : 0)),
     map(([date, stepsOffset, config]) => {
       if (date != null && stepsOffset) {
-        return applyTimeOffset({ date, stepsOffset, minuteStep: this.minuteStep(), config });
+        return applyTimeOffset({ date, stepsOffset, minuteStep: this.minuteStepSignal(), config });
       }
       return date;
     }),
@@ -525,7 +544,7 @@ export class DbxForgeDateTimeFieldComponent {
 
   readonly presets$: Observable<DateTimePreset[]> = combineLatest([this.allPresets$, toObservable(this._fullDay)]).pipe(
     switchMap(([allPresets, fullDay]) => {
-      if (this.isTimeOnly()) return of(allPresets);
+      if (this.isTimeOnlySignal()) return of(allPresets);
       if (fullDay) return of([]);
 
       // Use currentDate$ (includes null) so the combineLatest emits even when no date is set.
@@ -555,7 +574,7 @@ export class DbxForgeDateTimeFieldComponent {
       for (const err of errors) {
         if (err.type) errorRecord[err.type] = true;
       }
-      return computeErrorMessage(errorRecord, this.isRequired());
+      return computeErrorMessage(errorRecord, this.isRequiredSignal());
     })
   ).pipe(shareReplay(1));
 
@@ -563,7 +582,7 @@ export class DbxForgeDateTimeFieldComponent {
 
   // Show clear button
   readonly showClearButton$ = this.hasEmptyDisplayValue$.pipe(
-    map((empty) => Boolean(this.showClearButton() && !empty)),
+    map((empty) => Boolean(this.showClearButtonSignal() && !empty)),
     distinctUntilChanged(),
     shareReplay(1)
   );
@@ -576,13 +595,16 @@ export class DbxForgeDateTimeFieldComponent {
    * inbound sync (form source) and user picks. Returns null when cleared.
    */
   readonly dateValueSignal = computed(() => {
-    let result: Date | null = null;
+    const fieldValue = this.fieldValueSignal();
+    const valueMode = this.valueModeSignal();
+    const timezoneInstance = this.timezoneInstanceSignal();
+    let result: Maybe<Date> = null;
 
     if (!this._isCleared()) {
-      const raw = this.fieldValue();
+      const raw = fieldValue;
 
       if (raw != null) {
-        const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
+        const parser = dbxDateTimeInputValueParseFactory(valueMode, timezoneInstance);
         const date = parser(raw as DbxForgeDateTimeRawValue);
 
         if (date && !(date instanceof Date && Number.isNaN(date.getTime()))) {
@@ -594,50 +616,51 @@ export class DbxForgeDateTimeFieldComponent {
     return result;
   });
   readonly displayValueSignal = toSignal(this.displayValue$);
-  readonly pickerFilterSignal = toSignal(this.pickerFilter$, { initialValue: () => true as boolean });
+  readonly pickerFilterSignal = toSignal(this.pickerFilter$, { initialValue: () => true });
   readonly dateInputMinSignal = toSignal(this.dateInputMin$, { initialValue: null });
   readonly dateInputMaxSignal = toSignal(this.dateInputMax$, { initialValue: null });
-  readonly showDateInputSignal = toSignal(this.showDateInput$);
-  readonly showTimeInputSignal = this.showTimeInput;
-  readonly showAddTimeButtonSignal = this.showAddTimeButton;
+  readonly resolvedShowDateInputSignal = toSignal(this.showDateInput$);
   readonly fullDaySignal = this._fullDay.asReadonly();
   readonly tzAbbreviationSignal = toSignal(this.tzAbbreviation$);
   readonly hasValueSignal = toSignal(this.hasEmptyDisplayValue$.pipe(map((x) => !x)));
   readonly currentErrorMessageSignal = toSignal(this.currentErrorMessage$);
   readonly hasErrorSignal = toSignal(this.hasError$);
-  readonly showClearButtonSignal = toSignal(this.showClearButton$);
+  readonly resolvedShowClearButtonSignal = toSignal(this.showClearButton$);
   readonly presetsSignal = toSignal(this.presets$);
   readonly isDisabledSignal = this.isDisabled;
   readonly isTimeMenuDisabledSignal = computed(() => {
     const disabled = this.isDisabled();
-    const isOptional = this.timeMode() === DbxDateTimeFieldTimeMode.OPTIONAL;
+    const isOptional = this.timeModeSignal() === DbxDateTimeFieldTimeMode.OPTIONAL;
     const hasPresets = Boolean(this.presetsSignal()?.length);
     return disabled || (!isOptional && !hasPresets);
   });
 
   // ARIA
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly ariaInvalid = computed(() => (this.hasErrorSignal() ? 'true' : null));
-  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
-    let result: string | null = null;
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalidSignal = computed(() => (this.hasErrorSignal() ? 'true' : null));
+  protected readonly ariaRequiredSignal = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const props = this.props();
+    const hintId = this.hintIdSignal();
+    let result: Maybe<string> = null;
 
     if (this.hasErrorSignal()) {
-      result = this.errorId();
-    } else if (this.props()?.hint) {
-      result = this.hintId();
+      result = errorId;
+    } else if (props?.hint) {
+      result = hintId;
     }
 
     return result;
   });
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'input' });
 
     // Initialize fullDay from timeMode
     effect(() => {
-      if (this.timeMode() === DbxDateTimeFieldTimeMode.NONE) {
+      if (this.timeModeSignal() === DbxDateTimeFieldTimeMode.NONE) {
         this._fullDay.set(true);
       }
     });
@@ -707,7 +730,7 @@ export class DbxForgeDateTimeFieldComponent {
     // Sync inbound: FieldTree value → form controls.
     // Uses untracked() for _isTimeInputFocused to avoid re-running on focus changes.
     effect(() => {
-      const raw = this.fieldValue();
+      const raw = this.fieldValueSignal();
       const isTimeFocused = untracked(() => this._isTimeInputFocused());
 
       if (raw == null) {
@@ -717,7 +740,7 @@ export class DbxForgeDateTimeFieldComponent {
         return;
       }
 
-      const parser = dbxDateTimeInputValueParseFactory(this.valueMode(), this.timezoneInstance());
+      const parser = dbxDateTimeInputValueParseFactory(this.valueModeSignal(), this.timezoneInstanceSignal());
       const date = parser(raw as DbxForgeDateTimeRawValue);
       if (!date || (date instanceof Date && Number.isNaN(date.getTime()))) return;
 
@@ -747,7 +770,7 @@ export class DbxForgeDateTimeFieldComponent {
     // and be incorrectly dropped (e.g. CDT system + UTC field tz: pick 12pm → pick 5pm collides).
     this._sub.subscription = this.fieldValue$
       .pipe(
-        combineLatestWith(this.timezoneInstance$.pipe(map((tz) => dbxDateTimeOutputValueFactory(this.valueMode(), tz)))),
+        combineLatestWith(this.timezoneInstance$.pipe(map((tz) => dbxDateTimeOutputValueFactory(this.valueModeSignal(), tz)))),
         throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
         switchMap(([currentRawValue, valueFactory]) => {
           return this.timeOutput$.pipe(
@@ -794,7 +817,7 @@ export class DbxForgeDateTimeFieldComponent {
       });
 
     // Auto-fill date from restricted range
-    if (this.autofillDateWhenTimeIsPicked()) {
+    if (this.autofillDateWhenTimeIsPickedSignal()) {
       this._autoFillDateSync.subscription = this.dateMinAndMaxIsSameDay$
         .pipe(
           switchMap((canAutofill) => {
@@ -817,11 +840,11 @@ export class DbxForgeDateTimeFieldComponent {
 
     // Auto-fill date with today when user enters a time and no date is set (non-timeOnly fields only).
     // Uses timeDate or today as the fallback date.
-    if (!this.isTimeOnly()) {
+    if (!this.isTimeOnlySignal()) {
       const autoFillDateOnTimeSub = this._updateTime
         .pipe(
           debounceTime(50),
-          filter(() => !this.dateCtrl.value && !!this.timeCtrl.value && !this.isTimeOnly())
+          filter(() => !this.dateCtrl.value && !!this.timeCtrl.value && !this.isTimeOnlySignal())
         )
         .subscribe(() => {
           const fallbackDate = this._timeDate() ?? startOfDay(new Date());
@@ -869,12 +892,12 @@ export class DbxForgeDateTimeFieldComponent {
 
   // MARK: Actions
   onDateInputClick(picker: { open(): void }): void {
-    if (this.openOnInputClick() === 'picker' && !this.isDisabled()) {
+    if (this.openOnInputClickSignal() === 'picker' && !this.isDisabled()) {
       picker.open();
     }
   }
 
-  onDatePicked(event: MatDatepickerInputEvent<Date>): void {
+  onDatePicked(event: MatDatepickerInputEvent<Date | undefined>): void {
     const date = event.value;
     if (date) {
       this.dateCtrl.setValue(date);
@@ -1008,9 +1031,9 @@ export class DbxForgeDateTimeFieldComponent {
  * Custom mapper for the datetime field type.
  * Called by ng-forge's DynamicForm to create the inputs for the component.
  *
- * @param fieldDef - Field definition configuration
- * @param fieldDef.key - Form model key for the field
- * @returns Signal containing a Record of input names to values for ngComponentOutlet
+ * @param fieldDef - Field definition configuration.
+ * @param fieldDef.key - Form model key for the field.
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet.
  */
 export function dateTimeFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

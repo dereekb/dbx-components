@@ -29,8 +29,8 @@ interface MappedBuildWarning {
  * Translates one {@link ModelFirebaseIndexBuildWarning} into the shape
  * the validator pushes as a violation.
  *
- * @param warning - the union variant emitted by the extractor or analyzer
- * @returns the catalog code, severity, message, and location metadata
+ * @param warning - The union variant emitted by the extractor or analyzer.
+ * @returns The catalog code, severity, message, and location metadata.
  */
 export function mapModelFirebaseIndexBuildWarning(warning: ModelFirebaseIndexBuildWarning): MappedBuildWarning {
   if (warning.stage === 'extract') {
@@ -41,9 +41,10 @@ export function mapModelFirebaseIndexBuildWarning(warning: ModelFirebaseIndexBui
 
 function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly stage: 'extract' }>['warning']): MappedBuildWarning {
   const severity: ViolationSeverity = w.severity === 'error' ? 'error' : 'warning';
+  let result: MappedBuildWarning;
   switch (w.kind) {
     case 'missing-name':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_MISSING_NAME,
         severity,
         message: `(anonymous) tagged export has no resolvable name`,
@@ -51,8 +52,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: undefined
       };
+      break;
     case 'missing-model-tag':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_MISSING_MODEL_TAG,
         severity,
         message: `${w.name} missing required @dbxModelFirebaseIndexModel tag`,
@@ -60,8 +62,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'unresolved-model':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNRESOLVED_MODEL,
         severity,
         message: `${w.name} could not resolve model "${w.model}" to a Firestore identity`,
@@ -69,8 +72,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'unsupported-scope':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNSUPPORTED_SCOPE,
         severity,
         message: `${w.name} unsupported @dbxModelFirebaseIndexScope value "${w.scope}"`,
@@ -78,8 +82,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'duplicate-slug':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_DUPLICATE_SLUG,
         severity,
         message: `${w.name} duplicate slug "${w.slug}" — already used by ${w.previousName}`,
@@ -87,8 +92,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'unknown-helper':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNKNOWN_HELPER,
         severity,
         message: `${w.name} unknown constraint helper "${w.helper}"`,
@@ -96,8 +102,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'unresolved-field':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNRESOLVED_FIELD,
         severity,
         message: `${w.name} could not resolve field-path argument to "${w.callee}"`,
@@ -105,8 +112,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'missing-paths':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_MISSING_PATHS,
         severity,
         message: `${w.name} has conditional constraints on [${w.conditionalFields.join(', ')}] but no \`@dbxModelFirebaseIndexPath\` declarations — add one path tag per call pattern (e.g. \`@dbxModelFirebaseIndexPath ${w.conditionalFields.join(', ')}\`)`,
@@ -114,8 +122,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'unknown-path-field':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNKNOWN_PATH_FIELD,
         severity,
         message: `${w.name} \`@dbxModelFirebaseIndexPath\` references field "${w.field}" which no where/orderBy/helper call in the body produces`,
@@ -123,8 +132,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'unannotated-query-helper':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNANNOTATED_QUERY_HELPER,
         severity,
         message: `${w.name} calls ${w.callee} (${w.calleeFilePath}:${w.calleeLine}) which returns FirestoreQueryConstraint(s) but is not tagged with @dbxModelFirebaseIndex — tag the callee or mark it @dbxModelFirebaseIndexSkip if it should be excluded.`,
@@ -132,8 +142,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'transitive-cycle':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_TRANSITIVE_CYCLE,
         severity,
         message: `${w.name} transitive call to ${w.callee} would re-enter a factory already on the resolution stack — skipped to avoid infinite recursion`,
@@ -141,8 +152,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'unresolvable-transitive-callee':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNRESOLVABLE_TRANSITIVE_CALLEE,
         severity,
         message: `${w.name} could not locate the source for transitive callee ${w.callee} (likely a cross-package .d.ts import) — splice skipped`,
@@ -150,8 +162,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'complex-query-body':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_COMPLEX_QUERY_BODY,
         severity,
         message: `${w.name} tagged query body contains a \`${w.branchKind}\` construct. Tagged @dbxModelFirebaseIndex functions must be branch-free (no if/else, switch, ternary, or loops) so each maps to exactly one Firestore index.`,
@@ -159,8 +172,9 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
     case 'non-delegating-dispatcher':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_NON_DELEGATING_DISPATCHER,
         severity,
         message: `${w.name} is tagged \`@dbxModelFirebaseIndexDispatcher\` but calls \`${w.callee}\` directly. Dispatchers must only delegate to other tagged query functions and may not call where/orderBy/helpers themselves.`,
@@ -168,13 +182,26 @@ function mapExtractWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: w.line,
         factory: w.name
       };
+      break;
+    case 'excluded-factory':
+      result = {
+        code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_EXCLUDED,
+        severity,
+        message: `${w.name} is tagged \`@dbxModelFirebaseIndexExclude\` — constraints are parsed but the analyzer is suppressing composite + fieldOverride emission. Remove the tag to restore index generation, or switch to \`@dbxModelFirebaseIndexSkip\` to silence the audit warning.`,
+        file: w.filePath,
+        line: w.line,
+        factory: w.name
+      };
+      break;
   }
+  return result;
 }
 
 function mapAnalyzeWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly stage: 'analyze' }>['warning']): MappedBuildWarning {
+  let result: MappedBuildWarning;
   switch (w.kind) {
     case 'multiple-range-fields':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_MULTIPLE_RANGE_FIELDS,
         severity: 'warning',
         message: `${w.factoryName} multiple range-field constraints on [${w.fields.join(', ')}] — Firestore allows only one range field per query`,
@@ -182,8 +209,9 @@ function mapAnalyzeWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: undefined,
         factory: w.factoryName
       };
+      break;
     case 'orderby-conflict':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_ORDERBY_CONFLICT,
         severity: 'warning',
         message: `${w.factoryName} field "${w.field}" has conflicting orderBy directions [${w.directions.join(', ')}]`,
@@ -191,8 +219,9 @@ function mapAnalyzeWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: undefined,
         factory: w.factoryName
       };
+      break;
     case 'unsupported-array-contains-any':
-      return {
+      result = {
         code: ModelFirebaseIndexValidateAppCode.MODEL_FIREBASE_INDEX_UNSUPPORTED_ARRAY_CONTAINS_ANY,
         severity: 'warning',
         message: `${w.factoryName} field "${w.field}" uses array-contains-any — index support is partial`,
@@ -200,15 +229,17 @@ function mapAnalyzeWarning(w: Extract<ModelFirebaseIndexBuildWarning, { readonly
         line: undefined,
         factory: w.factoryName
       };
+      break;
   }
+  return result;
 }
 
 /**
  * Materialises a {@link ModelFirebaseIndexValidateAppViolation} from a
  * mapped warning, attaching the catalog-driven remediation hint.
  *
- * @param mapped - the warning translated by {@link mapModelFirebaseIndexBuildWarning}
- * @returns a violation ready to push onto the report buffer
+ * @param mapped - The warning translated by {@link mapModelFirebaseIndexBuildWarning}
+ * @returns A violation ready to push onto the report buffer.
  */
 export function buildFirebaseIndexValidateAppViolation(mapped: MappedBuildWarning): ModelFirebaseIndexValidateAppViolation {
   return {

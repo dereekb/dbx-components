@@ -52,8 +52,8 @@ const USAGE = [
  * Runs one invocation of `scan-css-utilities`. Never throws on user errors —
  * every failure path returns a structured exit code.
  *
- * @param input - argv plus injectable I/O hooks
- * @returns the CLI's exit code (0 on success, 1 on drift / build failure, 2 on usage error)
+ * @param input - Argv plus injectable I/O hooks.
+ * @returns The CLI's exit code (0 on success, 1 on drift / build failure, 2 on usage error)
  */
 export async function runCssUtilitiesScanCli(input: RunCssUtilitiesScanCliInput): Promise<RunCssUtilitiesScanCliResult> {
   return runScanCliBase(input, {

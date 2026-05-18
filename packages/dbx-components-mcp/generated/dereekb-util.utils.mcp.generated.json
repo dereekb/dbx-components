@@ -269,17 +269,17 @@
         {
           "name": "input",
           "type": "T[]",
-          "description": "- The array to split into batches.",
+          "description": "- Source items to partition into consecutive runs.",
           "optional": false
         },
         {
           "name": "batchSize",
           "type": "number",
-          "description": "- Maximum number of items per batch.",
+          "description": "- Upper bound on items per batch.",
           "optional": false
         }
       ],
-      "returns": "An array of {@link IndexedBatch } arrays.",
+      "returns": "Consecutive batches tagged with their zero-based index.",
       "tags": [
         "array",
         "batch",
@@ -399,7 +399,7 @@
           "optional": false
         }
       ],
-      "returns": "An array of `[key, value]` tuples.",
+      "returns": "Tuples pairing each derived key with its source value.",
       "tags": [
         "grouping",
         "key",
@@ -553,23 +553,23 @@
         {
           "name": "hashedValues",
           "type": "string[]",
-          "description": "- An array of hashed strings to decode.",
+          "description": "- Hashed inputs awaiting reverse lookup.",
           "optional": false
         },
         {
           "name": "decodeValues",
           "type": "string[]",
-          "description": "- An array of potential original string values.",
+          "description": "- Plaintext candidates that may match one of the hashes.",
           "optional": false
         },
         {
           "name": "hashFn",
           "type": "(value: string) => string",
-          "description": "- A function that takes a string and returns its hashed representation.",
+          "description": "- Deterministic hashing used to align the candidate set with the input hashes.",
           "optional": false
         }
       ],
-      "returns": "An array of decoded strings. Values that cannot be decoded are filtered out.",
+      "returns": "Plaintext recovered from `decodeValues`, dropping any hash that lacks a match.",
       "tags": [
         "hash",
         "decode",
@@ -599,17 +599,17 @@
         {
           "name": "decodeValues",
           "type": "string[]",
-          "description": "- An array of potential original string values.",
+          "description": "- Plaintext candidates whose hashes the map should index.",
           "optional": false
         },
         {
           "name": "hashFn",
           "type": "(value: string) => string",
-          "description": "- A function that takes a string and returns its hashed representation.",
+          "description": "- Deterministic hashing used to compute each key.",
           "optional": false
         }
       ],
-      "returns": "A {@link HashDecodeMap } for decoding hashed values.",
+      "returns": "Hash-to-plaintext lookup ready for reverse decoding.",
       "tags": [
         "hash",
         "decode",
@@ -679,7 +679,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that reads keys from a single value or array of values.",
+      "returns": "Reusable extractor that normalizes single or batch input into a flat key list (nullish keys dropped).",
       "tags": [
         "key",
         "read",
@@ -713,7 +713,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that reads keys from values into a Set.",
+      "returns": "Reusable extractor that collects keys into a deduped Set.",
       "tags": [
         "key",
         "read",
@@ -777,17 +777,17 @@
         {
           "name": "ascendingCompareFn",
           "type": "AscendingSortCompareFunction<T>",
-          "description": "- a comparison function that sorts in ascending order",
+          "description": "- A comparison function that sorts in ascending order.",
           "optional": false
         },
         {
           "name": "order",
           "type": "SortingOrder",
-          "description": "- the desired sort direction; defaults to 'asc'",
+          "description": "- The desired sort direction; defaults to 'asc'.",
           "optional": true
         }
       ],
-      "returns": "the original function if ascending, or a reversed version if descending",
+      "returns": "The original function if ascending, or a reversed version if descending.",
       "tags": [
         "sort",
         "order",
@@ -864,7 +864,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that returns `{ min, max }` or `null` for empty iterables.",
+      "returns": "Returns `{ min, max }` or `null` for empty iterables.",
       "tags": [
         "sort",
         "min",
@@ -1034,11 +1034,11 @@
         {
           "name": "factory",
           "type": "Factory<T> | FactoryWithIndex<T>",
-          "description": "- The factory function used to generate each item",
+          "description": "- Per-item producer invoked once per requested element.",
           "optional": false
         }
       ],
-      "returns": "A function that takes a count parameter and returns an array of generated items",
+      "returns": "Count-driven generator that materializes the requested number of items.",
       "tags": [
         "array",
         "factory",
@@ -1066,11 +1066,11 @@
         {
           "name": "factory",
           "type": "FactoryWithRequiredInput<O, I>",
-          "description": "- The factory function used to transform each input value",
+          "description": "- Per-element producer invoked with each input value plus its index.",
           "optional": false
         }
       ],
-      "returns": "A function that takes an array of input values and returns an array of output values",
+      "returns": "Adapter that runs `factory` against every input element to produce the mapped output array.",
       "tags": [
         "array",
         "factory",
@@ -1098,17 +1098,17 @@
         {
           "name": "input",
           "type": "T[]",
-          "description": "- The array to filter for the best fit.",
+          "description": "- Source items considered for best-fit selection; not mutated.",
           "optional": false
         },
         {
           "name": "config",
           "type": "BestFitConfig<T>",
-          "description": "- The best-fit strategy ({@link BestFitConfig }).",
+          "description": "- Strategy describing eligibility, comparison, and non-winner transformation.",
           "optional": false
         }
       ],
-      "returns": "A new array with only the best fit item and transformed non-best-fit items.",
+      "returns": "Fresh array containing the chosen winner alongside transformed runners-up.",
       "tags": [
         "array",
         "best-fit",
@@ -1138,17 +1138,17 @@
         {
           "name": "input",
           "type": "T[]",
-          "description": "- The array to modify in-place.",
+          "description": "- Mutable array whose runners-up should be rewritten in place.",
           "optional": false
         },
         {
           "name": "config",
           "type": "BestFitConfig<T>",
-          "description": "- The best-fit strategy ({@link BestFitConfig }).",
+          "description": "- Strategy describing eligibility, comparison, and non-winner transformation.",
           "optional": false
         }
       ],
-      "returns": "The modified input array with only the best fit item and transformed non-best-fit items.",
+      "returns": "Same `input` reference after the runner-up replacements.",
       "tags": [
         "array",
         "best-fit",
@@ -1179,17 +1179,17 @@
         {
           "name": "decisionFunction",
           "type": "DecisionFunction<I>",
-          "description": "- Function that determines which items to include in the result",
+          "description": "- Predicate used to decide whether each iterated item flows through.",
           "optional": false
         },
         {
           "name": "mapFunction",
           "type": "MapFunction<I, O>",
-          "description": "- Function that transforms each included item",
+          "description": "- Transform applied to every included item.",
           "optional": false
         }
       ],
-      "returns": "A function that takes an iterable of input values and returns an array of transformed values",
+      "returns": "Reusable filter-then-map operator over any iterable input.",
       "tags": [
         "array",
         "filter",
@@ -1228,7 +1228,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that evaluates an array against the configured decision criteria.",
+      "returns": "Predicate operating on whole arrays driven by the configured aggregation mode.",
       "tags": [
         "array",
         "decision",
@@ -1304,11 +1304,11 @@
         {
           "name": "inputRange",
           "type": "IndexRangeInput",
-          "description": "- the index range configuration to use for slicing",
+          "description": "- Range boundaries to bake into the returned slicer.",
           "optional": false
         }
       ],
-      "returns": "a function that slices the configured range from an input array",
+      "returns": "Reusable slicer that extracts the configured range from any input array.",
       "tags": [
         "array",
         "slice",
@@ -1476,11 +1476,11 @@
         {
           "name": "config",
           "type": "RandomArrayFactoryConfig<T>",
-          "description": "- configuration containing the make function and random number source",
+          "description": "- Configuration containing the make function and random number source.",
           "optional": false
         }
       ],
-      "returns": "a factory that produces arrays of random length, optionally accepting a specific count override",
+      "returns": "A factory that produces arrays of random length, optionally accepting a specific count override.",
       "tags": [
         "array",
         "random",
@@ -1507,11 +1507,11 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "- array of values to randomly pick from",
+          "description": "- Array of values to randomly pick from.",
           "optional": false
         }
       ],
-      "returns": "a callable factory that returns a random value from the array on each invocation",
+      "returns": "A callable factory that returns a random value from the array on each invocation.",
       "tags": [
         "array",
         "random",
@@ -1539,11 +1539,11 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "- array to generate a random index for",
+          "description": "- Array to generate a random index for.",
           "optional": false
         }
       ],
-      "returns": "a random valid index within the array, or 0 if the array is empty",
+      "returns": "A random valid index within the array, or 0 if the array is empty.",
       "tags": [
         "array",
         "random",
@@ -1569,11 +1569,11 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "- array to pick a random item from",
+          "description": "- Array to pick a random item from.",
           "optional": false
         }
       ],
-      "returns": "a randomly selected item from the array",
+      "returns": "A randomly selected item from the array.",
       "tags": [
         "array",
         "random",
@@ -1602,17 +1602,17 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "- The source array to filter.",
+          "description": "- Source whose entries are kept only when present in the second array.",
           "optional": false
         },
         {
           "name": "secondArray",
           "type": "T[]",
-          "description": "- The array of values to keep.",
+          "description": "- Allowed-values gate used for the intersection check.",
           "optional": false
         }
       ],
-      "returns": "A new array containing only the values from `values` that also exist in `secondArray`.",
+      "returns": "Intersection of `values` and `secondArray`, ordered like `values`.",
       "tags": [
         "array",
         "set",
@@ -1642,17 +1642,17 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "- The source array to filter.",
+          "description": "- Source whose entries are kept only when absent from the second array.",
           "optional": false
         },
         {
           "name": "secondArray",
           "type": "T[]",
-          "description": "- The array of values to exclude.",
+          "description": "- Excluded-values gate used for the difference check.",
           "optional": false
         }
       ],
-      "returns": "A new array containing only the values from `values` that do not exist in `secondArray`.",
+      "returns": "Set difference `values \\ secondArray`, ordered like `values`.",
       "tags": [
         "array",
         "set",
@@ -1681,11 +1681,11 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "- The array to check for duplicates.",
+          "description": "- Source to scan for any repeated entry.",
           "optional": false
         }
       ],
-      "returns": "`true` if the array contains at least one duplicate value, `false` otherwise.",
+      "returns": "True when at least one value appears more than once; otherwise false.",
       "tags": [
         "array",
         "duplicate",
@@ -1714,11 +1714,11 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "- The array to search for duplicates.",
+          "description": "- Source to scan left-to-right for the first repeat.",
           "optional": false
         }
       ],
-      "returns": "The index of the first value that is a duplicate of an earlier value, or `-1` if no duplicates exist.",
+      "returns": "Index of the first value that matches an earlier one, or `-1` when all values are unique.",
       "tags": [
         "array",
         "duplicate",
@@ -1748,11 +1748,11 @@
         {
           "name": "arrayOrValue",
           "type": "Maybe<ArrayOrValue<T>>",
-          "description": "- single value or array to convert",
+          "description": "- Single value or array to convert.",
           "optional": false
         }
       ],
-      "returns": "an array with at least one element, or undefined if the result would be empty",
+      "returns": "An array with at least one element, or undefined if the result would be empty.",
       "tags": [
         "array",
         "non-empty",
@@ -1783,11 +1783,11 @@
         {
           "name": "arrayOrValue",
           "type": "Maybe<ArrayOrValue<T>>",
-          "description": "- single value, array, or nullish value to convert",
+          "description": "- Single value, array, or nullish value to convert.",
           "optional": false
         }
       ],
-      "returns": "the input wrapped in an array, the input array itself, or an empty array if nullish",
+      "returns": "The input wrapped in an array, the input array itself, or an empty array if nullish.",
       "tags": [
         "array",
         "convert",
@@ -1817,11 +1817,11 @@
         {
           "name": "arrayOrValue",
           "type": "ArrayOrValue<T>",
-          "description": "- single value or array to convert",
+          "description": "- Single value or array to convert.",
           "optional": false
         }
       ],
-      "returns": "the input array unchanged, or a new single-element array wrapping the input value",
+      "returns": "The input array unchanged, or a new single-element array wrapping the input value.",
       "tags": [
         "array",
         "convert",
@@ -1849,11 +1849,11 @@
         {
           "name": "input",
           "type": "ArrayOrValue<T>",
-          "description": "- single value or array to retrieve from",
+          "description": "- Single value or array to retrieve from.",
           "optional": false
         }
       ],
-      "returns": "the first element of the array, or the input value itself",
+      "returns": "The first element of the array, or the input value itself.",
       "tags": [
         "array",
         "first",
@@ -1881,11 +1881,11 @@
         {
           "name": "input",
           "type": "ArrayOrValue<T>",
-          "description": "- single value or array to retrieve from",
+          "description": "- Single value or array to retrieve from.",
           "optional": false
         }
       ],
-      "returns": "the last element of the array, or the input value itself",
+      "returns": "The last element of the array, or the input value itself.",
       "tags": [
         "array",
         "last",
@@ -1913,11 +1913,11 @@
         {
           "name": "input",
           "type": "ArrayOrValue<T>",
-          "description": "- single value or array to retrieve from",
+          "description": "- Single value or array to retrieve from.",
           "optional": false
         }
       ],
-      "returns": "a two-element tuple of the first and last values",
+      "returns": "A two-element tuple of the first and last values.",
       "tags": [
         "array",
         "first",
@@ -1949,17 +1949,17 @@
         {
           "name": "input",
           "type": "ArrayOrValue<T>",
-          "description": "- single value or array to retrieve from",
+          "description": "- Single value or array to retrieve from.",
           "optional": false
         },
         {
           "name": "index",
           "type": "number",
-          "description": "- zero-based index of the element to retrieve",
+          "description": "- Zero-based index of the element to retrieve.",
           "optional": false
         }
       ],
-      "returns": "the element at the specified index, or the input value itself if not an array",
+      "returns": "The element at the specified index, or the input value itself if not an array.",
       "tags": [
         "array",
         "index",
@@ -1987,11 +1987,11 @@
         {
           "name": "arrays",
           "type": "Maybe<T[]>[]",
-          "description": "- arrays to concatenate; nullish entries are ignored",
+          "description": "- Arrays to concatenate; nullish entries are ignored.",
           "optional": true
         }
       ],
-      "returns": "a single flattened array containing all elements from the non-nullish input arrays",
+      "returns": "A single flattened array containing all elements from the non-nullish input arrays.",
       "tags": [
         "array",
         "concat",
@@ -2020,11 +2020,11 @@
         {
           "name": "array",
           "type": "Maybe<T[]>[]",
-          "description": "- two-dimensional array to flatten, may contain nullish entries",
+          "description": "- Two-dimensional array to flatten, may contain nullish entries.",
           "optional": false
         }
       ],
-      "returns": "a single-dimensional array with all elements from the non-nullish inner arrays",
+      "returns": "A single-dimensional array with all elements from the non-nullish inner arrays.",
       "tags": [
         "array",
         "flatten",
@@ -2053,11 +2053,11 @@
         {
           "name": "input",
           "type": "Maybe<T[]>",
-          "description": "- array to copy, or nullish",
+          "description": "- Array to copy, or nullish.",
           "optional": false
         }
       ],
-      "returns": "a new array with the same elements, or an empty array if input is nullish",
+      "returns": "A new array with the same elements, or an empty array if input is nullish.",
       "tags": [
         "array",
         "copy",
@@ -2083,11 +2083,11 @@
         {
           "name": "arrays",
           "type": "Maybe<T[]>[]",
-          "description": "- arrays to merge; nullish entries are skipped",
+          "description": "- Arrays to merge; nullish entries are skipped.",
           "optional": false
         }
       ],
-      "returns": "a new array containing all elements from the provided arrays",
+      "returns": "A new array containing all elements from the provided arrays.",
       "tags": [
         "array",
         "merge",
@@ -2114,17 +2114,17 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "- source array to take from",
+          "description": "- Source array to take from.",
           "optional": false
         },
         {
           "name": "maxToTake",
           "type": "number",
-          "description": "- maximum number of elements to take from the front",
+          "description": "- Maximum number of elements to take from the front.",
           "optional": false
         }
       ],
-      "returns": "a new array containing at most maxToTake elements from the front",
+      "returns": "A new array containing at most maxToTake elements from the front.",
       "tags": [
         "array",
         "take",
@@ -2152,17 +2152,17 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "The array to split.",
+          "description": "- Source items to partition into front + remaining halves.",
           "optional": false
         },
         {
           "name": "maxToTake",
           "type": "number",
-          "description": "The maximum number of values to take from the front of the array.",
+          "description": "- Upper bound on how many entries to take from the start.",
           "optional": false
         }
       ],
-      "returns": "The front and remaining values.",
+      "returns": "Pair containing the leading slice plus everything left over.",
       "tags": [
         "array",
         "split",
@@ -2189,19 +2189,19 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "Values to take from.",
+          "description": "- Values to take from.",
           "optional": false
         },
         {
           "name": "maxToTake",
           "type": "number",
-          "description": "Max number of values to take from the end of the input array.",
+          "description": "- Max number of values to take from the end of the input array.",
           "optional": false
         },
         {
           "name": "keepFromFront",
           "type": "number",
-          "description": "Number of values to retain in the front of the array. These are not taken.",
+          "description": "- Number of values to retain in the front of the array. These are not taken.",
           "optional": true
         }
       ],
@@ -2234,11 +2234,11 @@
         {
           "name": "array",
           "type": "T[][]",
-          "description": "- two-dimensional array whose elements are counted",
+          "description": "- Two-dimensional array whose elements are counted.",
           "optional": false
         }
       ],
-      "returns": "the total number of elements across all inner arrays",
+      "returns": "The total number of elements across all inner arrays.",
       "tags": [
         "array",
         "count",
@@ -2267,17 +2267,17 @@
         {
           "name": "array",
           "type": "T[]",
-          "description": "- source array to copy from",
+          "description": "- Source array to copy from.",
           "optional": false
         },
         {
           "name": "removeIndexes",
           "type": "IterableOrValue<number>",
-          "description": "- indexes of elements to exclude from the copy",
+          "description": "- Indexes of elements to exclude from the copy.",
           "optional": false
         }
       ],
-      "returns": "a new array without the elements at the specified indexes",
+      "returns": "A new array without the elements at the specified indexes.",
       "tags": [
         "array",
         "remove",
@@ -2571,7 +2571,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that filters maybe values from an optional input array.",
+      "returns": "Reusable filter operator that drops nullish entries and applies the predicate to the rest.",
       "tags": [
         "array",
         "filter",
@@ -2658,11 +2658,11 @@
         {
           "name": "defaults",
           "type": "AuthRoleClaimsFactoryDefaults",
-          "description": "- Optional default values for claim presence and absence",
+          "description": "- Optional default values for claim presence and absence.",
           "optional": true
         }
       ],
-      "returns": "A service with `toClaims` and `toRoles` conversion functions",
+      "returns": "A service with `toClaims` and `toRoles` conversion functions.",
       "tags": [
         "auth",
         "role",
@@ -2756,11 +2756,11 @@
         {
           "name": "addresses",
           "type": "EmailAddress[]",
-          "description": "- Array of email addresses to extract domains from",
+          "description": "- Array of email addresses to extract domains from.",
           "optional": false
         }
       ],
-      "returns": "Array of unique lowercase domain strings",
+      "returns": "Array of unique lowercase domain strings.",
       "tags": [
         "email",
         "domain",
@@ -2793,11 +2793,11 @@
         {
           "name": "address",
           "type": "EmailAddress",
-          "description": "- The email address to extract the domain from",
+          "description": "- The email address to extract the domain from.",
           "optional": false
         }
       ],
-      "returns": "The lowercase domain string",
+      "returns": "The lowercase domain string.",
       "tags": [
         "email",
         "domain",
@@ -2828,11 +2828,11 @@
         {
           "name": "urlLikeInput",
           "type": "string | EmailAddress | EmailAddressDomain",
-          "description": "- A URL, email address, or domain string",
+          "description": "- A URL, email address, or domain string.",
           "optional": false
         }
       ],
-      "returns": "The extracted domain",
+      "returns": "The extracted domain.",
       "tags": [
         "email",
         "domain",
@@ -2866,11 +2866,11 @@
         {
           "name": "participant",
           "type": "EmailParticipant",
-          "description": "- The email participant to convert",
+          "description": "- The email participant to convert.",
           "optional": false
         }
       ],
-      "returns": "A formatted string representation of the participant",
+      "returns": "A formatted string representation of the participant.",
       "tags": [
         "email",
         "participant",
@@ -2901,11 +2901,11 @@
         {
           "name": "participantString",
           "type": "EmailParticipantString",
-          "description": "- The string to parse",
+          "description": "- Serialized participant in `name<email>` or `<email>` form.",
           "optional": false
         }
       ],
-      "returns": "An EmailParticipant object with the extracted name and email",
+      "returns": "Parsed participant pairing the optional display name with the extracted address.",
       "tags": [
         "email",
         "participant",
@@ -2941,7 +2941,7 @@
           "optional": false
         }
       ],
-      "returns": "A combined array of EmailParticipant objects",
+      "returns": "A combined array of EmailParticipant objects.",
       "tags": [
         "email",
         "participant",
@@ -2973,11 +2973,11 @@
         {
           "name": "inputConfig",
           "type": "RandomEmailFactoryConfig",
-          "description": "- Optional configuration overrides",
+          "description": "- Optional configuration overrides.",
           "optional": true
         }
       ],
-      "returns": "A factory function that produces random email address strings",
+      "returns": "A factory function that produces random email address strings.",
       "tags": [
         "contact",
         "email",
@@ -3004,11 +3004,11 @@
         {
           "name": "inputConfig",
           "type": "RandomPhoneNumberFactoryConfig",
-          "description": "- Optional configuration overrides",
+          "description": "- Optional configuration overrides.",
           "optional": true
         }
       ],
-      "returns": "A factory function that produces random E.164 phone number strings",
+      "returns": "A factory function that produces random E.164 phone number strings.",
       "tags": [
         "contact",
         "phone",
@@ -3063,11 +3063,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- The string to test",
+          "description": "- Value to test against the ISO8601 date string pattern.",
           "optional": false
         }
       ],
-      "returns": "True if the input is a valid ISO8601 date string",
+      "returns": "True when the input matches the canonical ISO8601 date layout.",
       "tags": [
         "date",
         "iso8601",
@@ -3119,11 +3119,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- The string to test",
+          "description": "- Value to test against the UTC-formatted date string pattern.",
           "optional": false
         }
       ],
-      "returns": "True if the input is a valid UTC date string",
+      "returns": "True when the input matches the canonical UTC date layout.",
       "tags": [
         "date",
         "utc",
@@ -3151,17 +3151,17 @@
         {
           "name": "a",
           "type": "Maybe<Partial<TimezoneStringRef>>",
-          "description": "- First object that may contain a timezone reference",
+          "description": "- First object that may contain a timezone reference.",
           "optional": false
         },
         {
           "name": "b",
           "type": "Maybe<Partial<TimezoneStringRef>>",
-          "description": "- Second object that may contain a timezone reference",
+          "description": "- Second object that may contain a timezone reference.",
           "optional": false
         }
       ],
-      "returns": "True if both objects have the same timezone or neither has a timezone set",
+      "returns": "True if both objects have the same timezone or neither has a timezone set.",
       "tags": [
         "date",
         "timezone",
@@ -3296,11 +3296,11 @@
         {
           "name": "date",
           "type": "Date",
-          "description": "- The date to get the start of day for",
+          "description": "- Reference instant whose UTC calendar day should be anchored.",
           "optional": false
         }
       ],
-      "returns": "A new Date set to midnight UTC of the input date's UTC day",
+      "returns": "Midnight UTC of the same UTC day as `date`.",
       "tags": [
         "date",
         "utc",
@@ -3331,11 +3331,11 @@
         {
           "name": "date",
           "type": "Date",
-          "description": "- The date to get the start of local day for",
+          "description": "- Reference instant whose system-local calendar day should be anchored.",
           "optional": false
         }
       ],
-      "returns": "A new Date set to midnight UTC of the input date's local day",
+      "returns": "Midnight UTC corresponding to the local-time start of `date`.",
       "tags": [
         "date",
         "utc",
@@ -3366,11 +3366,11 @@
         {
           "name": "inputDateString",
           "type": "ISO8601DayString",
-          "description": "- The ISO8601 day string to parse (e.g., '2022-01-15')",
+          "description": "- ISO8601 day string to parse (e.g. '2022-01-15').",
           "optional": false
         }
       ],
-      "returns": "A Date object set to midnight UTC on the specified day",
+      "returns": "Midnight UTC of the calendar day named by `inputDateString`.",
       "tags": [
         "date",
         "iso8601",
@@ -3400,11 +3400,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- The string to test",
+          "description": "- Value to test against the ISO8601 day-string pattern.",
           "optional": false
         }
       ],
-      "returns": "True if the input is a valid ISO8601 day string",
+      "returns": "True when the input is exactly a YYYY-MM-DD value.",
       "tags": [
         "date",
         "iso8601",
@@ -3434,11 +3434,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- The string to test",
+          "description": "- Value to test for an ISO8601 day-string prefix.",
           "optional": false
         }
       ],
-      "returns": "True if the input starts with a valid ISO8601 day string pattern",
+      "returns": "True when the input begins with a YYYY-MM-DD prefix.",
       "tags": [
         "date",
         "iso8601",
@@ -3493,11 +3493,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- The string to test",
+          "description": "- Value to test against the slash-separated date pattern.",
           "optional": false
         }
       ],
-      "returns": "True if the input is a valid Month/Day/Year slash date",
+      "returns": "True when the input matches the Month/Day/Year slash format.",
       "tags": [
         "date",
         "slash",
@@ -3595,11 +3595,11 @@
         {
           "name": "dateTimeNumber",
           "type": "Maybe<UnixDateTimeMillisecondsNumber>",
-          "description": "- Unix timestamp number to convert",
+          "description": "- Unix timestamp number to convert.",
           "optional": false
         }
       ],
-      "returns": "Date object if timestamp is valid, null/undefined if timestamp is null/undefined",
+      "returns": "Date object if timestamp is valid, null/undefined if timestamp is null/undefined.",
       "tags": [
         "date",
         "milliseconds",
@@ -3628,17 +3628,17 @@
         {
           "name": "dateOrMilliseconds",
           "type": "DateOrMilliseconds",
-          "description": "- The date or milliseconds to convert to a Date.",
+          "description": "- Either a concrete Date or a millisecond offset from `now`.",
           "optional": false
         },
         {
           "name": "now",
           "type": "Maybe<Date>",
-          "description": "- The current date to use when adding milliseconds. Defaults to the current time.",
+          "description": "- Anchor used to resolve a millisecond offset; defaults to the current time.",
           "optional": true
         }
       ],
-      "returns": "The Date representation of the input.",
+      "returns": "Resolved Date for either a direct value or the offset-from-now case.",
       "tags": [
         "date",
         "milliseconds",
@@ -4004,11 +4004,11 @@
         {
           "name": "date",
           "type": "Date",
-          "description": "- The date to extract the month from",
+          "description": "- Reference instant whose local month should be reported.",
           "optional": false
         }
       ],
-      "returns": "The month of year as a number from 1-12",
+      "returns": "One-based local month-of-year, ready for human-facing display.",
       "tags": [
         "date",
         "month",
@@ -4038,11 +4038,11 @@
         {
           "name": "date",
           "type": "Date",
-          "description": "- The date to extract the month from",
+          "description": "- Reference instant whose UTC month should be reported.",
           "optional": false
         }
       ],
-      "returns": "The month of year as a number from 1-12",
+      "returns": "One-based UTC month-of-year, ready for human-facing display.",
       "tags": [
         "date",
         "month",
@@ -4075,7 +4075,7 @@
           "optional": false
         }
       ],
-      "returns": "The month of year as a number from 1-12",
+      "returns": "The month of year as a number from 1-12.",
       "tags": [
         "date",
         "month",
@@ -4138,11 +4138,11 @@
         {
           "name": "value",
           "type": "unknown",
-          "description": "- The value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
-      "returns": "True if the value is a Date object",
+      "returns": "True if the value is a Date object.",
       "tags": [
         "date",
         "predicate",
@@ -4169,17 +4169,17 @@
         {
           "name": "a",
           "type": "Date",
-          "description": "- First date to compare",
+          "description": "- First date to compare.",
           "optional": false
         },
         {
           "name": "b",
           "type": "Date",
-          "description": "- Second date to compare",
+          "description": "- Second date to compare.",
           "optional": false
         }
       ],
-      "returns": "True if the dates represent the same point in time",
+      "returns": "True if the dates represent the same point in time.",
       "tags": [
         "date",
         "equal",
@@ -4206,11 +4206,11 @@
         {
           "name": "input",
           "type": "Date",
-          "description": "- The date to check",
+          "description": "- Instant to compare against the system clock.",
           "optional": false
         }
       ],
-      "returns": "True if the date is in the past",
+      "returns": "True when `input` is strictly before the current time.",
       "tags": [
         "date",
         "past",
@@ -4275,11 +4275,11 @@
         {
           "name": "input",
           "type": "Maybe<DateOrUnixDateTimeSecondsNumber>",
-          "description": "- Date object or unix timestamp number to convert",
+          "description": "- Date object or unix timestamp number to convert.",
           "optional": false
         }
       ],
-      "returns": "Unix timestamp number if input is valid, null/undefined if input is null/undefined",
+      "returns": "Unix timestamp number if input is valid, null/undefined if input is null/undefined.",
       "tags": [
         "date",
         "unix",
@@ -4308,7 +4308,7 @@
       "signature": "unixDateTimeSecondsNumberForNow(): UnixDateTimeSecondsNumber",
       "description": "Gets the current time as a unix timestamp number.",
       "params": [],
-      "returns": "Current time as unix timestamp number",
+      "returns": "Current time as unix timestamp number.",
       "tags": [
         "date",
         "unix",
@@ -4373,11 +4373,11 @@
         {
           "name": "dateTimeNumber",
           "type": "Maybe<UnixDateTimeSecondsNumber>",
-          "description": "- Unix timestamp number to convert",
+          "description": "- Unix timestamp number to convert.",
           "optional": false
         }
       ],
-      "returns": "Date object if timestamp is valid, null/undefined if timestamp is null/undefined",
+      "returns": "Date object if timestamp is valid, null/undefined if timestamp is null/undefined.",
       "tags": [
         "date",
         "unix",
@@ -4408,11 +4408,11 @@
         {
           "name": "input",
           "type": "ExpirationDetailsInput<T>",
-          "description": "- Configuration for calculating expiration",
+          "description": "- Configuration for calculating expiration.",
           "optional": false
         }
       ],
-      "returns": "An ExpirationDetails object that can determine expiration state",
+      "returns": "An ExpirationDetails object that can determine expiration state.",
       "tags": [
         "expiration",
         "expires",
@@ -4447,11 +4447,11 @@
         {
           "name": "input",
           "type": "ExpirationDetailsInput<Expires>",
-          "description": "- Input configuration used to calculate the expiration date",
+          "description": "- Input configuration used to calculate the expiration date.",
           "optional": false
         }
       ],
-      "returns": "The calculated expiration date, or null if no expiration is defined",
+      "returns": "The calculated expiration date, or null if no expiration is defined.",
       "tags": [
         "expiration",
         "expires",
@@ -4522,19 +4522,19 @@
         {
           "name": "threshold",
           "type": "Milliseconds",
-          "description": "The threshold time. Typically this is amount of time that was used to calculate the original \"nextRunAt\" time.",
+          "description": "- The threshold time. Typically this is amount of time that was used to calculate the original \"nextRunAt\" time.",
           "optional": false
         },
         {
           "name": "nextRunAt",
           "type": "Maybe<DateOrUnixDateTimeMillisecondsNumber>",
-          "description": "Time the next run will occur. If null/undefined, then this function will return false.",
+          "description": "- Time the next run will occur. If null/undefined, then this function will return false.",
           "optional": false
         },
         {
           "name": "now",
           "type": "Maybe<Date>",
-          "description": "Optional override for the current time. Defaults to the current time.",
+          "description": "- Optional override for the current time. Defaults to the current time.",
           "optional": true
         }
       ],
@@ -4568,13 +4568,13 @@
         {
           "name": "throttleTime",
           "type": "Maybe<Milliseconds>",
-          "description": "- Minimum time in milliseconds that must pass between operations",
+          "description": "- Minimum time in milliseconds that must pass between operations.",
           "optional": false
         },
         {
           "name": "lastRunAt",
           "type": "Maybe<DateOrUnixDateTimeMillisecondsNumber>",
-          "description": "- Timestamp when the operation was last performed",
+          "description": "- Timestamp when the operation was last performed.",
           "optional": false
         },
         {
@@ -4584,7 +4584,7 @@
           "optional": true
         }
       ],
-      "returns": "True if the operation should be throttled (not enough time has passed), false otherwise",
+      "returns": "True if the operation should be throttled (not enough time has passed), false otherwise.",
       "tags": [
         "throttle",
         "throttled",
@@ -4615,11 +4615,11 @@
         {
           "name": "details",
           "type": "ExpirationDetails<Expires>[]",
-          "description": "- Collection of ExpirationDetails to check",
+          "description": "- Collection of ExpirationDetails to check.",
           "optional": false
         }
       ],
-      "returns": "True if at least one item has not expired, false otherwise",
+      "returns": "True if at least one item has not expired, false otherwise.",
       "tags": [
         "expiration",
         "valid",
@@ -4651,7 +4651,7 @@
         {
           "name": "details",
           "type": "ExpirationDetails<Expires>[]",
-          "description": "- Collection of ExpirationDetails to check",
+          "description": "- Collection of ExpirationDetails to check.",
           "optional": false
         },
         {
@@ -4661,7 +4661,7 @@
           "optional": true
         }
       ],
-      "returns": "True if any item has expired, or the defaultIfEmpty value for an empty list",
+      "returns": "True if any item has expired, or the defaultIfEmpty value for an empty list.",
       "tags": [
         "expiration",
         "refresh",
@@ -4728,11 +4728,11 @@
         {
           "name": "transform",
           "type": "DayOfWeekNamesTransformConfig",
-          "description": "- Optional configuration for abbreviation and casing",
+          "description": "- Optional configuration for abbreviation and casing.",
           "optional": true
         }
       ],
-      "returns": "A function that maps DayOfWeek values to name strings",
+      "returns": "Reusable resolver that maps a weekday to its formatted name (or 'UNKNOWN').",
       "tags": [
         "date",
         "week",
@@ -4762,11 +4762,11 @@
         {
           "name": "target",
           "type": "string",
-          "description": "- The string to search for",
+          "description": "- Substring that must appear in the resolved error message.",
           "optional": false
         }
       ],
-      "returns": "A function that checks error messages for the target string",
+      "returns": "Reusable predicate that yields true when the inspected error contains `target`.",
       "tags": [
         "error",
         "message",
@@ -4795,11 +4795,11 @@
         {
           "name": "inputFilters",
           "type": "Maybe<FilterFunction<T>>[]",
-          "description": "- The filter functions to merge",
+          "description": "- The filter functions to merge.",
           "optional": true
         }
       ],
-      "returns": "A single FilterFunction that applies all filters",
+      "returns": "A single FilterFunction that applies all filters.",
       "tags": [
         "filter",
         "merge",
@@ -4828,7 +4828,7 @@
         {
           "name": "decisionFn",
           "type": "F",
-          "description": "- The function whose boolean return value to invert",
+          "description": "- The function whose boolean return value to invert.",
           "optional": false
         },
         {
@@ -4838,7 +4838,7 @@
           "optional": true
         }
       ],
-      "returns": "The inverted function, or the original if invert is false",
+      "returns": "The inverted function, or the original if invert is false.",
       "tags": [
         "function",
         "boolean",
@@ -4866,11 +4866,11 @@
         {
           "name": "getter",
           "type": "Getter<I>",
-          "description": "- A Getter that provides the target function",
+          "description": "- A Getter that provides the target function.",
           "optional": false
         }
       ],
-      "returns": "A forwarding function with the same signature as the target",
+      "returns": "A forwarding function with the same signature as the target.",
       "tags": [
         "function",
         "forward",
@@ -4896,11 +4896,11 @@
         {
           "name": "defaultFn",
           "type": "I",
-          "description": "- The default function to use as fallback",
+          "description": "- The default function to use as fallback.",
           "optional": false
         }
       ],
-      "returns": "A factory that wraps optional functions with a default fallback",
+      "returns": "A factory that wraps optional functions with a default fallback.",
       "tags": [
         "function",
         "forward",
@@ -4958,11 +4958,11 @@
         {
           "name": "mapFn",
           "type": "MapFunction<I, O>",
-          "description": "- The mapping function to apply",
+          "description": "- The mapping function to apply.",
           "optional": false
         }
       ],
-      "returns": "A factory that transforms Getters of type I to Getters of type O",
+      "returns": "A factory that transforms Getters of type I to Getters of type O.",
       "tags": [
         "getter",
         "map",
@@ -4987,11 +4987,11 @@
         {
           "name": "value",
           "type": "unknown",
-          "description": "- The value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
-      "returns": "True if the value is a non-class function",
+      "returns": "True if the value is a non-class function.",
       "tags": [
         "getter",
         "type-guard",
@@ -5064,11 +5064,11 @@
         {
           "name": "input",
           "type": "GetterOrValue<T>",
-          "description": "- A value or getter function",
+          "description": "- A value or getter function.",
           "optional": false
         }
       ],
-      "returns": "A Getter function that returns the value",
+      "returns": "A Getter function that returns the value.",
       "tags": [
         "getter",
         "factory",
@@ -5096,17 +5096,17 @@
         {
           "name": "value",
           "type": "T",
-          "description": "- The object to copy",
+          "description": "- Source whose contents the factory should reproduce.",
           "optional": false
         },
         {
           "name": "copyFunction",
           "type": "CopyObjectFunction<T>",
-          "description": "- Optional custom copy function (defaults to copyObject)",
+          "description": "- Override for the per-call copy behavior; defaults to `copyObject`.",
           "optional": true
         }
       ],
-      "returns": "A factory that produces copies of the value",
+      "returns": "Stable producer that yields a fresh copy of `value` per invocation.",
       "tags": [
         "getter",
         "factory",
@@ -5133,17 +5133,17 @@
         {
           "name": "input",
           "type": "T | ObjectCopyFactory<T>",
-          "description": "- An object value or a getter function",
+          "description": "- An object value or a getter function.",
           "optional": false
         },
         {
           "name": "copyFunction",
           "type": "CopyObjectFunction<T>",
-          "description": "- Optional custom copy function",
+          "description": "- Optional custom copy function.",
           "optional": true
         }
       ],
-      "returns": "An ObjectCopyFactory for the input",
+      "returns": "An ObjectCopyFactory for the input.",
       "tags": [
         "getter",
         "factory",
@@ -5172,11 +5172,11 @@
         {
           "name": "input",
           "type": "T",
-          "description": "- The value to wrap",
+          "description": "- The value to wrap.",
           "optional": false
         }
       ],
-      "returns": "A Getter that returns the input value",
+      "returns": "A Getter that returns the input value.",
       "tags": [
         "getter",
         "factory",
@@ -5203,17 +5203,17 @@
         {
           "name": "factory",
           "type": "Factory<T> | FactoryWithIndex<T>",
-          "description": "- The factory function to call (receives the current index as argument)",
+          "description": "- Per-item producer invoked with the running index.",
           "optional": false
         },
         {
           "name": "count",
           "type": "number",
-          "description": "- The number of items to create",
+          "description": "- Total number of items to materialize.",
           "optional": false
         }
       ],
-      "returns": "An array of produced values",
+      "returns": "Materialized output collected from each `factory` call.",
       "tags": [
         "getter",
         "factory",
@@ -5281,11 +5281,11 @@
         {
           "name": "factory",
           "type": "Factory<T>",
-          "description": "- The factory to wrap",
+          "description": "- The factory to wrap.",
           "optional": false
         }
       ],
-      "returns": "A new factory that calls the original with no arguments",
+      "returns": "A new factory that calls the original with no arguments.",
       "tags": [
         "getter",
         "factory",
@@ -5313,11 +5313,11 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "- The array of values to randomly select from",
+          "description": "- Candidate pool the factory picks from on each call.",
           "optional": false
         }
       ],
-      "returns": "A factory that returns a random element from the array",
+      "returns": "Stable producer that yields a uniformly random pick from `values`.",
       "tags": [
         "getter",
         "factory",
@@ -5345,7 +5345,7 @@
         {
           "name": "values",
           "type": "IterableOrValue<T>",
-          "description": "- The value or iterable to convert",
+          "description": "- The value or iterable to convert.",
           "optional": false
         },
         {
@@ -5384,7 +5384,7 @@
         {
           "name": "values",
           "type": "IterableOrValue<T>",
-          "description": "- The value or iterable to convert",
+          "description": "- The value or iterable to convert.",
           "optional": false
         },
         {
@@ -5394,7 +5394,7 @@
           "optional": true
         }
       ],
-      "returns": "A Set containing the value(s)",
+      "returns": "Deduped membership view collected from `values`.",
       "tags": [
         "iterable",
         "set",
@@ -5423,7 +5423,7 @@
         {
           "name": "values",
           "type": "unknown",
-          "description": "- The value to check",
+          "description": "- The value to check.",
           "optional": false
         },
         {
@@ -5433,7 +5433,7 @@
           "optional": true
         }
       ],
-      "returns": "True if the value is iterable",
+      "returns": "True if the value is iterable.",
       "tags": [
         "iterable",
         "type-guard",
@@ -5460,11 +5460,11 @@
         {
           "name": "values",
           "type": "Iterable<T>",
-          "description": "- The iterable to check",
+          "description": "- The iterable to check.",
           "optional": false
         }
       ],
-      "returns": "True if the iterable is empty",
+      "returns": "True if the iterable is empty.",
       "tags": [
         "iterable",
         "empty",
@@ -5491,11 +5491,11 @@
         {
           "name": "read",
           "type": "ReadKeyFunction<T, K>",
-          "description": "- Function that extracts a key from each value",
+          "description": "- Function that extracts a key from each value.",
           "optional": false
         }
       ],
-      "returns": "A factory that creates Maps from arrays of values",
+      "returns": "A factory that creates Maps from arrays of values.",
       "tags": [
         "map",
         "key",
@@ -5523,11 +5523,11 @@
         {
           "name": "read",
           "type": "ReadMultipleKeysFunction<T, K>",
-          "description": "- Function that extracts multiple keys from each value",
+          "description": "- Function that extracts multiple keys from each value.",
           "optional": false
         }
       ],
-      "returns": "A factory that creates Maps from arrays of values",
+      "returns": "A factory that creates Maps from arrays of values.",
       "tags": [
         "map",
         "key",
@@ -5556,11 +5556,11 @@
         {
           "name": "config",
           "type": "IdBatchFactoryConfig<T, K>",
-          "description": "- Configuration with the base factory for generating candidates and the verifier for validating them",
+          "description": "- Configuration with the base factory for generating candidates and the verifier for validating them.",
           "optional": false
         }
       ],
-      "returns": "An async factory function that produces the requested number of valid identifiers",
+      "returns": "An async factory function that produces the requested number of valid identifiers.",
       "tags": [
         "model",
         "id",
@@ -5588,11 +5588,11 @@
         {
           "name": "config",
           "type": "SequentialIncrementingNumberStringModelIdFactoryConfig",
-          "description": "- Configuration for the starting index, increment step, dencoder, and transform",
+          "description": "- Configuration for the starting index, increment step, dencoder, and transform.",
           "optional": true
         }
       ],
-      "returns": "A factory function that returns the next encoded string identifier on each call",
+      "returns": "A factory function that returns the next encoded string identifier on each call.",
       "tags": [
         "model",
         "id",
@@ -5623,11 +5623,11 @@
         {
           "name": "fields",
           "type": "ModelFieldConversions<V, D>",
-          "description": "- Field conversion definitions for each key in the model",
+          "description": "- Field conversion definitions for each key in the model.",
           "optional": false
         }
       ],
-      "returns": "Object with `from` and `to` mapping functions",
+      "returns": "Object with `from` and `to` mapping functions.",
       "tags": [
         "model",
         "conversion",
@@ -5658,11 +5658,11 @@
         {
           "name": "fields",
           "type": "ModelConversionFieldValuesConfig<I>",
-          "description": "- Array of `[key, convertFn]` tuples defining how each field is converted",
+          "description": "- Array of `[key, convertFn]` tuples defining how each field is converted.",
           "optional": false
         }
       ],
-      "returns": "A function that converts an input object to an output object",
+      "returns": "Reusable converter that applies the per-field transforms to any input record.",
       "tags": [
         "model",
         "conversion",
@@ -5694,11 +5694,11 @@
         {
           "name": "config",
           "type": "ModelFieldMapFunctionsConfig<I, O>",
-          "description": "- Configuration with `from` and `to` field map configs",
+          "description": "- Configuration with `from` and `to` field map configs.",
           "optional": false
         }
       ],
-      "returns": "Compiled field map functions",
+      "returns": "Compiled field map functions.",
       "tags": [
         "model",
         "field",
@@ -5727,11 +5727,11 @@
         {
           "name": "config",
           "type": "ModelFieldMapConfig<I, O>",
-          "description": "- Configuration specifying how to convert values and handle null/undefined",
+          "description": "- Configuration specifying how to convert values and handle null/undefined.",
           "optional": false
         }
       ],
-      "returns": "A function that maps Maybe input values to output values",
+      "returns": "Reusable mapper that handles concrete and nullish inputs via the configured fallbacks.",
       "tags": [
         "model",
         "field",
@@ -5761,11 +5761,11 @@
         {
           "name": "input",
           "type": "ToModelMapFunctionsInput<T, O>",
-          "description": "- Input that can be resolved to model map functions",
+          "description": "- Input that can be resolved to model map functions.",
           "optional": false
         }
       ],
-      "returns": "Bidirectional model map functions",
+      "returns": "Bidirectional model map functions.",
       "tags": [
         "model",
         "conversion",
@@ -5795,17 +5795,17 @@
         {
           "name": "key",
           "type": "keyof T",
-          "description": "- The property key to copy",
+          "description": "- The property key to copy.",
           "optional": false
         },
         {
           "name": "inputConfig",
           "type": "Maybe<CopyModelFieldConfig>",
-          "description": "- Optional config with a default value for the field",
+          "description": "- Optional config with a default value for the field.",
           "optional": true
         }
       ],
-      "returns": "A function that copies the field from source to target",
+      "returns": "Reusable mapper that copies the configured field (or fills in the default) per pair.",
       "tags": [
         "model",
         "copy",
@@ -5834,11 +5834,11 @@
         {
           "name": "config",
           "type": "ModifyModelMapFunctionsConfig<V, D>",
-          "description": "- Configuration with the base map functions, modifiers, and copy options",
+          "description": "- Configuration with the base map functions, modifiers, and copy options.",
           "optional": false
         }
       ],
-      "returns": "New model map functions with modifiers applied before each conversion",
+      "returns": "New model map functions with modifiers applied before each conversion.",
       "tags": [
         "model",
         "map",
@@ -5867,23 +5867,23 @@
         {
           "name": "mapFn",
           "type": "ModelMapFunction<I, O>",
-          "description": "- The base map function to wrap",
+          "description": "- The base map function to wrap.",
           "optional": false
         },
         {
           "name": "modifyModel",
           "type": "Maybe<ModifierFunction<I>>",
-          "description": "- Optional modifier to apply before mapping",
+          "description": "- Optional modifier to apply before mapping.",
           "optional": false
         },
         {
           "name": "copy",
           "type": "boolean",
-          "description": "- Whether to shallow-copy the input before modifying; defaults to true",
+          "description": "- Whether to shallow-copy the input before modifying; defaults to true.",
           "optional": true
         }
       ],
-      "returns": "The wrapped map function, or the original if no modifier is provided",
+      "returns": "The wrapped map function, or the original if no modifier is provided.",
       "tags": [
         "model",
         "map",
@@ -5950,17 +5950,17 @@
         {
           "name": "input",
           "type": "T[]",
-          "description": "- Array of models to index",
+          "description": "- Array of models to index.",
           "optional": false
         },
         {
           "name": "read",
           "type": "ReadRelationKeysFunction<T>",
-          "description": "- Function that returns an array of relation keys for each model",
+          "description": "- Function that returns an array of relation keys for each model.",
           "optional": false
         }
       ],
-      "returns": "Map from relation key to model",
+      "returns": "Map from relation key to model.",
       "tags": [
         "model",
         "map",
@@ -5990,17 +5990,17 @@
         {
           "name": "typeReader",
           "type": "ReadModelTypeFunction<T, M>",
-          "description": "- Function to extract the model type from input data",
+          "description": "- Function to extract the model type from input data.",
           "optional": false
         },
         {
           "name": "defaultType",
           "type": "string",
-          "description": "- Fallback type string when the reader returns nullish",
+          "description": "- Fallback type string when the reader returns nullish.",
           "optional": true
         }
       ],
-      "returns": "Factory function that produces ModelTypeDataPair values",
+      "returns": "Factory function that produces ModelTypeDataPair values.",
       "tags": [
         "model",
         "type",
@@ -6032,7 +6032,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that consumes a ReadableStream and resolves to its string content",
+      "returns": "Reusable consumer that drains a stream and resolves with its decoded contents.",
       "tags": [
         "nodejs",
         "stream",
@@ -6062,11 +6062,11 @@
         {
           "name": "bounds",
           "type": "NumberBound",
-          "description": "- The min/max bounds to test against",
+          "description": "- The min/max bounds to test against.",
           "optional": false
         }
       ],
-      "returns": "A function that returns `true` if the input number is within bounds",
+      "returns": "Returns `true` if the input number is within bounds.",
       "tags": [
         "number",
         "bound",
@@ -6099,11 +6099,11 @@
         {
           "name": "wrapNumberFunctionConfig",
           "type": "WrapNumberFunctionConfig<T>",
-          "description": "- Configuration with min, max, and optional fence post behavior",
+          "description": "- Configuration with min, max, and optional fence post behavior.",
           "optional": false
         }
       ],
-      "returns": "A function that wraps input numbers into the bounded range",
+      "returns": "Wraps input numbers into the bounded range.",
       "tags": [
         "number",
         "wrap",
@@ -6134,11 +6134,11 @@
         {
           "name": "boundNumberFunctionConfig",
           "type": "BoundNumberFunctionConfig<T>",
-          "description": "- Configuration with min, max, and optional wrap behavior",
+          "description": "- Configuration with min, max, and optional wrap behavior.",
           "optional": false
         }
       ],
-      "returns": "A function that bounds input numbers into the configured range",
+      "returns": "Bounds input numbers into the configured range.",
       "tags": [
         "number",
         "bound",
@@ -6169,23 +6169,23 @@
         {
           "name": "input",
           "type": "number",
-          "description": "- Number to clamp",
+          "description": "- Number to clamp.",
           "optional": false
         },
         {
           "name": "min",
           "type": "T",
-          "description": "- Minimum allowed value",
+          "description": "- Minimum allowed value.",
           "optional": false
         },
         {
           "name": "max",
           "type": "T",
-          "description": "- Maximum allowed value",
+          "description": "- Maximum allowed value.",
           "optional": false
         }
       ],
-      "returns": "The clamped value",
+      "returns": "The clamped value.",
       "tags": [
         "number",
         "clamp",
@@ -6215,11 +6215,11 @@
         {
           "name": "unit",
           "type": "U",
-          "description": "- The unit prefix to prepend; defaults to \"$\"",
+          "description": "- The unit prefix to prepend; defaults to \"$\".",
           "optional": true
         }
       ],
-      "returns": "A function that formats dollar amounts with the configured unit",
+      "returns": "Formats dollar amounts with the configured unit.",
       "tags": [
         "number",
         "dollar",
@@ -6254,7 +6254,7 @@
           "optional": true
         }
       ],
-      "returns": "A factory function that returns the next number in the sequence on each call",
+      "returns": "A factory function that returns the next number in the sequence on each call.",
       "tags": [
         "number",
         "factory",
@@ -6286,7 +6286,7 @@
           "optional": false
         }
       ],
-      "returns": "The decimal equivalent",
+      "returns": "The decimal equivalent.",
       "tags": [
         "number",
         "percent",
@@ -6317,7 +6317,7 @@
           "optional": false
         }
       ],
-      "returns": "The percent number equivalent",
+      "returns": "The percent number equivalent.",
       "tags": [
         "number",
         "percent",
@@ -6344,11 +6344,11 @@
         {
           "name": "input",
           "type": "AsNumberInput",
-          "description": "- A number, number string, or null/undefined",
+          "description": "- Numeric value, numeric string, or null/undefined.",
           "optional": false
         }
       ],
-      "returns": "The numeric value, or 0 for null/undefined",
+      "returns": "The numeric value, or 0 for null/undefined.",
       "tags": [
         "number",
         "parse",
@@ -6373,17 +6373,17 @@
         {
           "name": "value",
           "type": "Maybe<number>",
-          "description": "- The number to check",
+          "description": "- The number to check.",
           "optional": false
         },
         {
           "name": "divisor",
           "type": "number",
-          "description": "- The divisor to test against",
+          "description": "- The divisor to test against.",
           "optional": false
         }
       ],
-      "returns": "`true` if the remainder is zero",
+      "returns": "`true` if the remainder is zero.",
       "tags": [
         "number",
         "divisible",
@@ -6414,17 +6414,17 @@
         {
           "name": "value",
           "type": "number",
-          "description": "- The value to find divisible neighbors for",
+          "description": "- The value to find divisible neighbors for.",
           "optional": false
         },
         {
           "name": "divisor",
           "type": "number",
-          "description": "- The divisor to align to",
+          "description": "- The divisor to align to.",
           "optional": false
         }
       ],
-      "returns": "Object with the input value, divisor, and the nearest ceil/floor divisible values",
+      "returns": "Object with the input value, divisor, and the nearest ceil/floor divisible values.",
       "tags": [
         "number",
         "divisible",
@@ -6454,11 +6454,11 @@
         {
           "name": "value",
           "type": "number",
-          "description": "- Number to test",
+          "description": "- Number to test.",
           "optional": false
         }
       ],
-      "returns": "`true` if even",
+      "returns": "`true` if even.",
       "tags": [
         "number",
         "even",
@@ -6486,11 +6486,11 @@
         {
           "name": "value",
           "type": "number",
-          "description": "- Number to test",
+          "description": "- Number to test.",
           "optional": false
         }
       ],
-      "returns": "`true` if odd",
+      "returns": "`true` if odd.",
       "tags": [
         "number",
         "odd",
@@ -6528,7 +6528,7 @@
           "optional": false
         }
       ],
-      "returns": "Sum of all integers in the range",
+      "returns": "Sum of all integers in the range.",
       "tags": [
         "number",
         "sum",
@@ -6555,11 +6555,11 @@
         {
           "name": "values",
           "type": "Iterable<number>",
-          "description": "- Iterable of numbers to examine",
+          "description": "- Iterable of numbers to examine.",
           "optional": false
         }
       ],
-      "returns": "Object with `min` and `max` values",
+      "returns": "Object with `min` and `max` values.",
       "tags": [
         "number",
         "min",
@@ -6588,17 +6588,17 @@
         {
           "name": "x",
           "type": "number",
-          "description": "- The base of the logarithm",
+          "description": "- The base of the logarithm.",
           "optional": false
         },
         {
           "name": "y",
           "type": "number",
-          "description": "- The value to compute the logarithm of",
+          "description": "- The value to compute the logarithm of.",
           "optional": false
         }
       ],
-      "returns": "The base-x logarithm of y",
+      "returns": "The base-x logarithm of y.",
       "tags": [
         "number",
         "log",
@@ -6623,17 +6623,17 @@
         {
           "name": "maxOrArgs",
           "type": "RandomNumberFactoryInput",
-          "description": "- Maximum value (exclusive) or full configuration object",
+          "description": "- Maximum value (exclusive) or full configuration object.",
           "optional": false
         },
         {
           "name": "roundingInput",
           "type": "RoundingInput",
-          "description": "- Optional rounding mode override",
+          "description": "- Optional rounding mode override.",
           "optional": true
         }
       ],
-      "returns": "A factory function that produces random numbers within the range",
+      "returns": "A factory function that produces random numbers within the range.",
       "tags": [
         "number",
         "random",
@@ -6662,17 +6662,17 @@
         {
           "name": "maxOrArgs",
           "type": "RandomNumberFactoryInput",
-          "description": "- Maximum value (exclusive) or full configuration object",
+          "description": "- Maximum value (exclusive) or full configuration object.",
           "optional": false
         },
         {
           "name": "roundingInput",
           "type": "RoundingInput",
-          "description": "- Optional rounding mode",
+          "description": "- Optional rounding mode.",
           "optional": true
         }
       ],
-      "returns": "A single random number",
+      "returns": "A single random number.",
       "tags": [
         "number",
         "random",
@@ -6697,11 +6697,11 @@
         {
           "name": "type",
           "type": "NumberRounding",
-          "description": "- The rounding strategy: 'floor', 'ceil', 'round', or 'none'",
+          "description": "- The rounding strategy: 'floor', 'ceil', 'round', or 'none'.",
           "optional": false
         }
       ],
-      "returns": "The corresponding Math function, or an identity function for 'none'",
+      "returns": "The corresponding Math function, or an identity function for 'none'.",
       "tags": [
         "number",
         "round",
@@ -6731,17 +6731,17 @@
         {
           "name": "input",
           "type": "AsNumberInput",
-          "description": "- Number, number string, or null/undefined",
+          "description": "- Number, number string, or null/undefined.",
           "optional": false
         },
         {
           "name": "precision",
           "type": "NumberPrecision",
-          "description": "- Number of decimal places to retain",
+          "description": "- Number of decimal places to retain.",
           "optional": false
         }
       ],
-      "returns": "The truncated number value",
+      "returns": "The truncated number value.",
       "tags": [
         "number",
         "precision",
@@ -6772,11 +6772,11 @@
         {
           "name": "input",
           "type": "AsNumberInput",
-          "description": "- Number, number string, or null/undefined",
+          "description": "- Number, number string, or null/undefined.",
           "optional": false
         }
       ],
-      "returns": "The truncated integer value",
+      "returns": "The truncated integer value.",
       "tags": [
         "number",
         "integer",
@@ -6806,7 +6806,7 @@
         {
           "name": "precision",
           "type": "NumberPrecision",
-          "description": "- Number of decimal places to retain",
+          "description": "- Number of decimal places to retain.",
           "optional": false
         },
         {
@@ -6816,7 +6816,7 @@
           "optional": true
         }
       ],
-      "returns": "A function that accepts a number or string and returns the truncated number",
+      "returns": "Accepts a number or string and returns the truncated number.",
       "tags": [
         "number",
         "precision",
@@ -6847,7 +6847,7 @@
         {
           "name": "precision",
           "type": "NumberPrecision",
-          "description": "- Number of decimal places",
+          "description": "- Number of decimal places.",
           "optional": false
         },
         {
@@ -6857,7 +6857,7 @@
           "optional": true
         }
       ],
-      "returns": "A function that rounds numbers to the configured precision",
+      "returns": "Rounds numbers to the configured precision.",
       "tags": [
         "number",
         "round",
@@ -6887,11 +6887,11 @@
         {
           "name": "input",
           "type": "RoundNumberToStepFunctionInput",
-          "description": "- Step size or full configuration",
+          "description": "- Step size or full configuration.",
           "optional": false
         }
       ],
-      "returns": "A function that rounds input numbers to the nearest step",
+      "returns": "Rounds input numbers to the nearest step.",
       "tags": [
         "number",
         "round",
@@ -6921,11 +6921,11 @@
         {
           "name": "readNumberFn",
           "type": "ReadNumberFunction<T>",
-          "description": "- Function that extracts the numeric value from each item",
+          "description": "- Function that extracts the numeric value from each item.",
           "optional": false
         }
       ],
-      "returns": "A sort comparator function for ascending numeric order",
+      "returns": "A sort comparator function for ascending numeric order.",
       "tags": [
         "number",
         "sort",
@@ -6954,11 +6954,11 @@
         {
           "name": "config",
           "type": "TransformNumberFunctionConfig<N>",
-          "description": "- Configuration with optional transform, roundToStep, precision, and bounds",
+          "description": "- Configuration with optional transform, roundToStep, precision, and bounds.",
           "optional": false
         }
       ],
-      "returns": "A single function that applies all configured transformations in sequence",
+      "returns": "A single function that applies all configured transformations in sequence.",
       "tags": [
         "number",
         "transform",
@@ -6988,11 +6988,11 @@
         {
           "name": "config",
           "type": "ObjectDeltaArrayCompressorConfig<T>",
-          "description": "- Configuration with the equality checker that defines which fields to track",
+          "description": "- Configuration with the equality checker that defines which fields to track.",
           "optional": false
         }
       ],
-      "returns": "A compressor with `compress` and `expand` methods",
+      "returns": "A compressor with `compress` and `expand` methods.",
       "tags": [
         "object",
         "delta",
@@ -7021,11 +7021,11 @@
         {
           "name": "obj",
           "type": "Maybe<T>",
-          "description": "- Object to check",
+          "description": "- Object to check.",
           "optional": false
         }
       ],
-      "returns": "`true` if the object is considered empty",
+      "returns": "`true` if the object is considered empty.",
       "tags": [
         "object",
         "empty",
@@ -7054,17 +7054,17 @@
         {
           "name": "a",
           "type": "F",
-          "description": "- First value to compare",
+          "description": "- First value to compare.",
           "optional": false
         },
         {
           "name": "b",
           "type": "F",
-          "description": "- Second value to compare",
+          "description": "- Second value to compare.",
           "optional": false
         }
       ],
-      "returns": "`true` if the values are deeply equal",
+      "returns": "`true` if the values are deeply equal.",
       "tags": [
         "object",
         "equal",
@@ -7095,11 +7095,11 @@
         {
           "name": "config",
           "type": "ObjectFieldEqualityCheckerConfig<T>",
-          "description": "- Configuration with the fields to compare and an optional default equality function",
+          "description": "- Configuration with the fields to compare and an optional default equality function.",
           "optional": false
         }
       ],
-      "returns": "A function that compares two objects and reports which fields are equal/unequal",
+      "returns": "Compares two objects and reports which fields are equal/unequal.",
       "tags": [
         "object",
         "equality",
@@ -7138,7 +7138,7 @@
           "optional": true
         }
       ],
-      "returns": "A function that returns the stripped object, or `undefined` when filtering removed every key.",
+      "returns": "Returns the stripped object, or `undefined` when filtering removed every key.",
       "tags": [
         "object",
         "strip",
@@ -7423,7 +7423,7 @@
           "optional": true
         }
       ],
-      "returns": "A function that filters keys on any input POJO.",
+      "returns": "Filters keys on any input POJO.",
       "tags": [
         "object",
         "pojo",
@@ -7459,7 +7459,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that filters entries on any input POJO.",
+      "returns": "Filters entries on any input POJO.",
       "tags": [
         "object",
         "pojo",
@@ -7494,7 +7494,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that iterates matching key/value pairs on any input object.",
+      "returns": "Iterates matching key/value pairs on any input object.",
       "tags": [
         "object",
         "pojo",
@@ -7530,11 +7530,11 @@
         {
           "name": "filter",
           "type": "FilterKeyValueTuplesInput<T, K>",
-          "description": "- Optional filter configuration",
+          "description": "- Optional filter configuration.",
           "optional": true
         }
       ],
-      "returns": "A function that extracts filtered tuples from any input object",
+      "returns": "Extracts filtered tuples from any input object.",
       "tags": [
         "object",
         "tuples",
@@ -7569,7 +7569,7 @@
           "optional": false
         }
       ],
-      "returns": "A predicate function that tests individual key/value tuples",
+      "returns": "A predicate function that tests individual key/value tuples.",
       "tags": [
         "object",
         "tuple",
@@ -7636,11 +7636,11 @@
         {
           "name": "readKey",
           "type": "ReadKeyFunction<T, K> | ReadMultipleKeysFunction<T, K>",
-          "description": "- Function to extract one or more keys from each object",
+          "description": "- Function to extract one or more keys from each object.",
           "optional": false
         }
       ],
-      "returns": "An equality comparator for arrays of keyed objects",
+      "returns": "An equality comparator for arrays of keyed objects.",
       "tags": [
         "object",
         "key",
@@ -7670,11 +7670,11 @@
         {
           "name": "readKey",
           "type": "ReadKeyFunction<T, K>",
-          "description": "- Function to extract the key from an object",
+          "description": "- Function to extract the key from an object.",
           "optional": false
         }
       ],
-      "returns": "An equality comparator for keyed objects",
+      "returns": "An equality comparator for keyed objects.",
       "tags": [
         "object",
         "key",
@@ -7706,7 +7706,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that maps all values in an input object map",
+      "returns": "Maps all values in an input object map.",
       "tags": [
         "object",
         "map",
@@ -7734,11 +7734,11 @@
         {
           "name": "mapKeyFn",
           "type": "MapObjectKeyFunction<M>",
-          "description": "- Function that computes the new key from the old key and its value",
+          "description": "- Function that computes the new key from the old key and its value.",
           "optional": false
         }
       ],
-      "returns": "A function that remaps keys on any input object",
+      "returns": "Remaps keys on any input object.",
       "tags": [
         "object",
         "map",
@@ -7767,11 +7767,11 @@
         {
           "name": "obj",
           "type": "object",
-          "description": "- Object to check",
+          "description": "- Object to check.",
           "optional": false
         }
       ],
-      "returns": "`true` if the object has zero keys",
+      "returns": "`true` if the object has zero keys.",
       "tags": [
         "object",
         "empty",
@@ -7882,11 +7882,11 @@
         {
           "name": "map",
           "type": "Map<K, T>",
-          "description": "- Map to convert",
+          "description": "- Map to convert.",
           "optional": false
         }
       ],
-      "returns": "A plain object with the same key-value pairs",
+      "returns": "A plain object with the same key-value pairs.",
       "tags": [
         "object",
         "map",
@@ -7910,11 +7910,11 @@
         {
           "name": "input",
           "type": "T",
-          "description": "- Object to copy",
+          "description": "- Object to copy.",
           "optional": false
         }
       ],
-      "returns": "A new object with the same properties",
+      "returns": "A new object with the same properties.",
       "tags": [
         "object",
         "copy",
@@ -8293,7 +8293,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that transforms paths to the specified start type.",
+      "returns": "Transforms paths to the specified start type.",
       "tags": [
         "path",
         "slash",
@@ -8361,7 +8361,7 @@
         {
           "name": "config",
           "type": "SlashPathFolderFactoryConfig",
-          "description": "Configuration options for the factory.",
+          "description": "- Configuration options for the factory.",
           "optional": true
         }
       ],
@@ -8395,17 +8395,17 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- the string path to convert to a folder path",
+          "description": "- The string path to convert to a folder path.",
           "optional": false
         },
         {
           "name": "config",
           "type": "SlashPathFolderFactoryConfig",
-          "description": "- optional configuration controlling path type inference and invalid-path handling",
+          "description": "- Optional configuration controlling path type inference and invalid-path handling.",
           "optional": true
         }
       ],
-      "returns": "a valid slash path folder string with a trailing slash, or an empty string for relative root",
+      "returns": "A valid slash path folder string with a trailing slash, or an empty string for relative root.",
       "tags": [
         "path",
         "slash",
@@ -8617,7 +8617,7 @@
         {
           "name": "input",
           "type": "SlashPath",
-          "description": "A slash path.",
+          "description": "- A slash path.",
           "optional": false
         }
       ],
@@ -8741,7 +8741,7 @@
           "optional": true
         }
       ],
-      "returns": "A function that validates and fixes a slash path.",
+      "returns": "Validates and fixes a slash path.",
       "tags": [
         "path",
         "slash",
@@ -8915,7 +8915,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that isolates path segments within the configured range.",
+      "returns": "Isolates path segments within the configured range.",
       "tags": [
         "path",
         "slash",
@@ -8947,7 +8947,7 @@
         {
           "name": "path",
           "type": "SlashPath",
-          "description": "The path to get details for.",
+          "description": "- The path to get details for.",
           "optional": false
         }
       ],
@@ -9022,7 +9022,7 @@
         {
           "name": "input",
           "type": "SlashPathPathMatcherConfigInput<N>",
-          "description": "The configuration input.",
+          "description": "- The configuration input.",
           "optional": false
         }
       ],
@@ -9054,7 +9054,7 @@
         {
           "name": "input",
           "type": "SlashPathPathMatcherConfigInput<N>",
-          "description": "- the matcher configuration, which may be a target path string, an array of path parts, or a full config object",
+          "description": "- The matcher configuration, which may be a target path string, an array of path parts, or a full config object.",
           "optional": false
         }
       ],
@@ -9089,7 +9089,7 @@
         {
           "name": "config",
           "type": "SlashPathSubPathMatcherConfig",
-          "description": "The configuration for the matcher.",
+          "description": "- The configuration for the matcher.",
           "optional": false
         }
       ],
@@ -9194,7 +9194,7 @@
           "optional": false
         }
       ],
-      "returns": "A Promise that resolves when the check condition returns `true` or the max attempts are exhausted.",
+      "returns": "Resolves when the check condition returns `true` or the max attempts are exhausted.",
       "tags": [
         "promise",
         "poll",
@@ -9226,7 +9226,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that tries each factory in order for a given input.",
+      "returns": "Tries each factory in order for a given input.",
       "tags": [
         "promise",
         "factory",
@@ -9256,7 +9256,7 @@
         {
           "name": "config",
           "type": "RunNamedAsyncTasksFunctionConfig<T>",
-          "description": "Optional configuration.",
+          "description": "- Optional configuration.",
           "optional": true
         }
       ],
@@ -9346,7 +9346,7 @@
           "optional": true
         }
       ],
-      "returns": "An array of results produced by the task function for each input.",
+      "returns": "The results produced by the task function for each input.",
       "tags": [
         "promise",
         "async",
@@ -9468,7 +9468,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that accepts an array of inputs and returns a Promise resolving when all tasks complete.",
+      "returns": "Accepts an array of inputs and returns a Promise resolving when all tasks complete.",
       "tags": [
         "promise",
         "parallel",
@@ -9503,7 +9503,7 @@
           "optional": false
         }
       ],
-      "returns": "a function that accepts a task input factory and returns a Promise that resolves when all tasks complete",
+      "returns": "Accepts a task input factory and returns a Promise that resolves when all tasks complete.",
       "tags": [
         "promise",
         "parallel",
@@ -9569,7 +9569,7 @@
           "optional": false
         }
       ],
-      "returns": "A Promise that resolves to the input value.",
+      "returns": "Resolves to the input value.",
       "tags": [
         "promise",
         "async",
@@ -9643,7 +9643,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that accepts a handler function and registers it for the given key.",
+      "returns": "Accepts a handler function and registers it for the given key.",
       "tags": [
         "service",
         "handler",
@@ -9687,7 +9687,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that accepts a mapped handler function and registers it.",
+      "returns": "Accepts a mapped handler function and registers it.",
       "tags": [
         "service",
         "handler",
@@ -9901,7 +9901,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that compares two iterables and returns an array of change pairs.",
+      "returns": "Compares two iterables and returns an array of change pairs.",
       "tags": [
         "set",
         "delta",
@@ -10087,7 +10087,7 @@
           "optional": true
         }
       ],
-      "returns": "A function that tests membership.",
+      "returns": "Tests membership.",
       "tags": [
         "set",
         "has",
@@ -10127,7 +10127,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that tests membership.",
+      "returns": "Tests membership.",
       "tags": [
         "set",
         "has",
@@ -10173,7 +10173,7 @@
           "optional": true
         }
       ],
-      "returns": "A function that tests inclusion against the set.",
+      "returns": "Tests inclusion against the set.",
       "tags": [
         "set",
         "includes",
@@ -10203,7 +10203,7 @@
         {
           "name": "input",
           "type": "string",
-          "description": "The SCREAMING_SNAKE_CASE input.",
+          "description": "- The SCREAMING_SNAKE_CASE input.",
           "optional": false
         }
       ],
@@ -10238,7 +10238,7 @@
         {
           "name": "input",
           "type": "string",
-          "description": "The camelCase / PascalCase input.",
+          "description": "- The camelCase / PascalCase input.",
           "optional": false
         }
       ],
@@ -10276,17 +10276,17 @@
         {
           "name": "replacement",
           "type": "string",
-          "description": "- string to substitute for the last character",
+          "description": "- String to substitute for the last character.",
           "optional": false
         },
         {
           "name": "is",
           "type": "ArrayOrValue<string>",
-          "description": "- character(s) that trigger the replacement",
+          "description": "- Character(s) that trigger the replacement.",
           "optional": false
         }
       ],
-      "returns": "a function that conditionally replaces the last character",
+      "returns": "Conditionally replaces the last character.",
       "tags": [
         "string",
         "replace",
@@ -10317,11 +10317,11 @@
         {
           "name": "config",
           "type": "PrimativeKeyDencoderConfig<D, E>",
-          "description": "- configuration with value pairs and optional default fallback",
+          "description": "- Configuration with value pairs and optional default fallback.",
           "optional": false
         }
       ],
-      "returns": "a function that encodes or decodes single values or arrays",
+      "returns": "Encodes or decodes single values or arrays.",
       "tags": [
         "string",
         "encode",
@@ -10352,11 +10352,11 @@
         {
           "name": "config",
           "type": "PrimativeKeyStringDencoderConfig<D, E>",
-          "description": "- configuration with dencoder and optional splitter",
+          "description": "- Configuration with dencoder and optional splitter.",
           "optional": false
         }
       ],
-      "returns": "a bidirectional function for string-to-array and array-to-string conversion",
+      "returns": "A bidirectional function for string-to-array and array-to-string conversion.",
       "tags": [
         "string",
         "encode",
@@ -10387,11 +10387,11 @@
         {
           "name": "dencoder",
           "type": "NumberStringDencoder",
-          "description": "- the NumberStringDencoder to wrap",
+          "description": "- The NumberStringDencoder to wrap.",
           "optional": false
         }
       ],
-      "returns": "a bidirectional encode/decode function",
+      "returns": "A bidirectional encode/decode function.",
       "tags": [
         "string",
         "number",
@@ -10422,11 +10422,11 @@
         {
           "name": "dencoder",
           "type": "NumberStringDencoder",
-          "description": "- the NumberStringDencoder to use for encoding",
+          "description": "- The NumberStringDencoder to use for encoding.",
           "optional": false
         }
       ],
-      "returns": "a function that normalizes input to an encoded string",
+      "returns": "Normalizes input to an encoded string.",
       "tags": [
         "string",
         "number",
@@ -10457,11 +10457,11 @@
         {
           "name": "dencoder",
           "type": "NumberStringDencoder",
-          "description": "- the NumberStringDencoder to use for decoding",
+          "description": "- The NumberStringDencoder to use for decoding.",
           "optional": false
         }
       ],
-      "returns": "a function that normalizes input to a decoded number",
+      "returns": "Normalizes input to a decoded number.",
       "tags": [
         "string",
         "number",
@@ -10492,17 +10492,17 @@
         {
           "name": "factory",
           "type": "Factory<T>",
-          "description": "- the original value factory",
+          "description": "- The original value factory.",
           "optional": false
         },
         {
           "name": "toStringFunction",
           "type": "ToStringFunction<T, K>",
-          "description": "- function to convert the factory's output to a string",
+          "description": "- Function to convert the factory's output to a string.",
           "optional": false
         }
       ],
-      "returns": "a new factory that produces string values",
+      "returns": "A new factory that produces string values.",
       "tags": [
         "string",
         "factory",
@@ -10530,7 +10530,7 @@
         {
           "name": "config",
           "type": "StringFromDateConfig",
-          "description": "Configuration for the factory.",
+          "description": "- Configuration for the factory.",
           "optional": false
         }
       ],
@@ -10563,7 +10563,7 @@
         {
           "name": "digitsFromEnd",
           "type": "number",
-          "description": "The number of digits to return from the end of the generated string. Defaults to 7.",
+          "description": "- The number of digits to return from the end of the generated string. Defaults to 7.",
           "optional": true
         }
       ],
@@ -10599,7 +10599,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that performs the configured replacements on an input string.",
+      "returns": "Performs the configured replacements on an input string.",
       "tags": [
         "string",
         "replace",
@@ -10665,7 +10665,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that escapes the configured characters in any input string.",
+      "returns": "Escapes the configured characters in any input string.",
       "tags": [
         "string",
         "escape",
@@ -10722,7 +10722,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that finds all occurrences of the configured characters in an input string.",
+      "returns": "Finds all occurrences of the configured characters in an input string.",
       "tags": [
         "string",
         "search",
@@ -10771,7 +10771,7 @@
           "optional": true
         }
       ],
-      "returns": "An array of zero-based indices where matching characters were found.",
+      "returns": "The zero-based indices where matching characters were found.",
       "tags": [
         "string",
         "search",
@@ -10847,7 +10847,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that splits input strings at the first matching character.",
+      "returns": "Splits input strings at the first matching character.",
       "tags": [
         "string",
         "split",
@@ -10873,7 +10873,7 @@
       "category": "string",
       "module": "@dereekb/util",
       "subpath": "string/replace",
-      "signature": "splitStringAtFirstCharacterOccurence(input: string, splitAt: string | Set<string>): [string, string | undefined]",
+      "signature": "splitStringAtFirstCharacterOccurence(input: string, splitAt: string | Set<string>): [string, Maybe<string>]",
       "description": "Splits the input string into two parts at the first occurrence of any character in the split set.",
       "params": [
         {
@@ -10924,7 +10924,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that extracts the substring after the first matching character, or an empty string if none found.",
+      "returns": "Extracts the substring after the first matching character, or an empty string if none found.",
       "tags": [
         "string",
         "keep",
@@ -11002,7 +11002,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that truncates input strings at the first matching character.",
+      "returns": "Truncates input strings at the first matching character.",
       "tags": [
         "string",
         "remove",
@@ -11082,7 +11082,7 @@
           "optional": false
         }
       ],
-      "returns": "A function that filters an array of values by a search/filter text string.",
+      "returns": "Filters an array of values by a search/filter text string.",
       "tags": [
         "string",
         "search",
@@ -11095,6 +11095,85 @@
       ],
       "relatedSlugs": [
         "case-insensitive-filter-by-index-of-decision-factory"
+      ]
+    },
+    {
+      "slug": "compare-strings",
+      "name": "compareStrings",
+      "kind": "const",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/sort",
+      "signature": "const compareStrings: number",
+      "description": "Pre-configured comparator that sorts strings in ascending alphabetical order using `localeCompare`.\n\nUse this directly with `Array.sort()` / `Array.toSorted()` instead of inlining\n`(a, b) => a.localeCompare(b)` everywhere, and to satisfy the no-default-sort\nlint rule for string arrays.",
+      "params": [
+        {
+          "name": "a",
+          "type": "string",
+          "description": "- The first string to compare.",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "string",
+          "description": "- The second string to compare.",
+          "optional": false
+        }
+      ],
+      "returns": "A negative number when `a` sorts before `b`, positive when after, `0` when equal.",
+      "tags": [
+        "string",
+        "sort",
+        "compare",
+        "alphabetical",
+        "locale",
+        "strings",
+        "comparestrings"
+      ],
+      "example": "['b', 'a', 'c'].sort(compareStrings); // ['a', 'b', 'c']",
+      "relatedSlugs": [
+        "compare-strings-numeric",
+        "sort-by-string-function"
+      ]
+    },
+    {
+      "slug": "compare-strings-numeric",
+      "name": "compareStringsNumeric",
+      "kind": "const",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/sort",
+      "signature": "const compareStringsNumeric: number",
+      "description": "Pre-configured comparator that sorts strings in ascending order using `localeCompare`\nwith the `numeric` collation option enabled, so numeric substrings are compared by value\n(e.g. `\"2\"` sorts before `\"10\"`).",
+      "params": [
+        {
+          "name": "a",
+          "type": "string",
+          "description": "- The first string to compare.",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "string",
+          "description": "- The second string to compare.",
+          "optional": false
+        }
+      ],
+      "returns": "A negative number when `a` sorts before `b`, positive when after, `0` when equal.",
+      "tags": [
+        "string",
+        "sort",
+        "compare",
+        "numeric",
+        "natural",
+        "locale",
+        "strings",
+        "comparestringsnumeric"
+      ],
+      "example": "['10', '2', '1'].sort(compareStringsNumeric); // ['1', '2', '10']",
+      "relatedSlugs": [
+        "compare-strings",
+        "sort-by-string-function"
       ]
     },
     {
@@ -11190,23 +11269,23 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- string to split",
+          "description": "- String to split.",
           "optional": false
         },
         {
           "name": "separator",
           "type": "string",
-          "description": "- delimiter to split on",
+          "description": "- Delimiter to split on.",
           "optional": false
         },
         {
           "name": "limit",
           "type": "number",
-          "description": "- maximum number of resulting segments; overflow segments are rejoined with the separator",
+          "description": "- Maximum number of resulting segments; overflow segments are rejoined with the separator.",
           "optional": false
         }
       ],
-      "returns": "array of string segments, with length at most equal to limit",
+      "returns": "Array of string segments, with length at most equal to limit.",
       "tags": [
         "string",
         "split",
@@ -11268,11 +11347,11 @@
         {
           "name": "value",
           "type": "string",
-          "description": "- string to capitalize",
+          "description": "- String to capitalize.",
           "optional": false
         }
       ],
-      "returns": "the input string with its first character uppercased",
+      "returns": "The input string with its first character uppercased.",
       "tags": [
         "string",
         "capitalize",
@@ -11300,11 +11379,11 @@
         {
           "name": "value",
           "type": "string",
-          "description": "- string to modify",
+          "description": "- String to modify.",
           "optional": false
         }
       ],
-      "returns": "the input string with its first character lowercased",
+      "returns": "The input string with its first character lowercased.",
       "tags": [
         "string",
         "lowercase",
@@ -11332,11 +11411,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- full name string to split",
+          "description": "- Full name string to split.",
           "optional": false
         }
       ],
-      "returns": "a tuple of [firstName, lastName], where lastName includes all text after the first space",
+      "returns": "A tuple of [firstName, lastName], where lastName includes all text after the first space.",
       "tags": [
         "string",
         "name",
@@ -11365,17 +11444,17 @@
         {
           "name": "string",
           "type": "string",
-          "description": "- the string to repeat",
+          "description": "- The string to repeat.",
           "optional": false
         },
         {
           "name": "reapeat",
           "type": "number",
-          "description": "- number of times to repeat the string",
+          "description": "- Number of times to repeat the string.",
           "optional": false
         }
       ],
-      "returns": "the repeated string concatenation",
+      "returns": "The repeated string concatenation.",
       "tags": [
         "string",
         "repeat",
@@ -11398,11 +11477,11 @@
         {
           "name": "config",
           "type": "CutStringFunctionConfig",
-          "description": "- configuration controlling max length and end text behavior",
+          "description": "- Configuration controlling max length and end text behavior.",
           "optional": false
         }
       ],
-      "returns": "a reusable function that truncates input strings",
+      "returns": "A reusable function that truncates input strings.",
       "tags": [
         "string",
         "cut",
@@ -11428,23 +11507,23 @@
         {
           "name": "input",
           "type": "Maybe<string>",
-          "description": "- the string to truncate, or null/undefined",
+          "description": "- The string to truncate, or null/undefined.",
           "optional": false
         },
         {
           "name": "maxLength",
           "type": "number",
-          "description": "- maximum allowed length for the output string",
+          "description": "- Maximum allowed length for the output string.",
           "optional": false
         },
         {
           "name": "endText",
           "type": "Maybe<string>",
-          "description": "- text to append when truncated; defaults to \"...\"",
+          "description": "- Text to append when truncated; defaults to \"...\".",
           "optional": true
         }
       ],
-      "returns": "the truncated string, or null/undefined if the input is null/undefined",
+      "returns": "The truncated string, or null/undefined if the input is null/undefined.",
       "tags": [
         "string",
         "cut",
@@ -11472,11 +11551,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- string to flatten",
+          "description": "- String to flatten.",
           "optional": false
         }
       ],
-      "returns": "the string with collapsed whitespace",
+      "returns": "The string with collapsed whitespace.",
       "tags": [
         "string",
         "whitespace",
@@ -11503,11 +11582,11 @@
         {
           "name": "input",
           "type": "string",
-          "description": "- string to simplify",
+          "description": "- String to simplify.",
           "optional": false
         }
       ],
-      "returns": "the string with simplified whitespace and newlines",
+      "returns": "The string with simplified whitespace and newlines.",
       "tags": [
         "string",
         "whitespace",
@@ -11534,7 +11613,7 @@
         {
           "name": "input",
           "type": "string",
-          "description": "The string to trim.",
+          "description": "- The string to trim.",
           "optional": false
         }
       ],
@@ -11564,7 +11643,7 @@
         {
           "name": "input",
           "type": "string",
-          "description": "The string to convert.",
+          "description": "- The string to convert.",
           "optional": false
         }
       ],
@@ -11596,7 +11675,7 @@
         {
           "name": "input",
           "type": "string",
-          "description": "The string to convert.",
+          "description": "- The string to convert.",
           "optional": false
         }
       ],
@@ -11628,7 +11707,7 @@
         {
           "name": "config",
           "type": "TransformStringFunctionConfig<S>",
-          "description": "The `TransformStringFunctionConfig` detailing the transformations.",
+          "description": "- The `TransformStringFunctionConfig` detailing the transformations.",
           "optional": false
         }
       ],
@@ -11663,11 +11742,11 @@
         {
           "name": "prefix",
           "type": "string",
-          "description": "The prefix to add.",
+          "description": "- The prefix to add.",
           "optional": false
         }
       ],
-      "returns": "A function that adds the prefix to a string.",
+      "returns": "Adds the prefix to a string.",
       "tags": [
         "string",
         "prefix",
@@ -11694,11 +11773,11 @@
         {
           "name": "suffix",
           "type": "string",
-          "description": "The suffix to add.",
+          "description": "- The suffix to add.",
           "optional": false
         }
       ],
-      "returns": "A function that adds the suffix to a string.",
+      "returns": "Adds the suffix to a string.",
       "tags": [
         "string",
         "suffix",
@@ -11725,17 +11804,17 @@
         {
           "name": "minLength",
           "type": "number",
-          "description": "The minimum length of the string.",
+          "description": "- The minimum length of the string.",
           "optional": false
         },
         {
           "name": "padCharacter",
           "type": "string",
-          "description": "The character to use for padding.",
+          "description": "- The character to use for padding.",
           "optional": false
         }
       ],
-      "returns": "A function that pads the start of a string.",
+      "returns": "Pads the start of a string.",
       "tags": [
         "string",
         "pad",
@@ -11762,7 +11841,7 @@
         {
           "name": "config",
           "type": "SliceStringFunctionConfig",
-          "description": "The configuration for the slice function.",
+          "description": "- The configuration for the slice function.",
           "optional": false
         }
       ],
@@ -11830,7 +11909,7 @@
           "optional": true
         }
       ],
-      "returns": "A function that isolates the configured portion of a website path.",
+      "returns": "Isolates the configured portion of a website path.",
       "tags": [
         "string",
         "url",
@@ -11862,13 +11941,13 @@
         {
           "name": "expand",
           "type": "ExpandTreeFunction<T, N>",
-          "description": "An ExpandTreeFunction (values: T[]) => N[] that converts an array of T into an array of tree nodes N.",
+          "description": "- An ExpandTreeFunction (values: T[]) => N[] that converts an array of T into an array of tree nodes N.",
           "optional": false
         },
         {
           "name": "flatten",
           "type": "FlattenTreeFunction<N, V>",
-          "description": "A FlattenTreeFunction (tree: N, array?: V[]) => V[] that flattens a tree of N nodes into an array of V values.",
+          "description": "- A FlattenTreeFunction (tree: N, array?: V[]) => V[] that flattens a tree of N nodes into an array of V values.",
           "optional": false
         }
       ],
@@ -11902,7 +11981,7 @@
         {
           "name": "config",
           "type": "ExpandTree<T> | ExpandTreeWithNodeBuilder<T, N>",
-          "description": "An ExpandTree<T> or ExpandTreeWithNodeBuilder<T, N> configuration object.",
+          "description": "- An ExpandTree<T> or ExpandTreeWithNodeBuilder<T, N> configuration object.",
           "optional": false
         }
       ],
@@ -11938,17 +12017,17 @@
         {
           "name": "values",
           "type": "T[]",
-          "description": "An array of root values of type T to expand.",
+          "description": "- The root values of type T to expand.",
           "optional": false
         },
         {
           "name": "expandFn",
           "type": "ExpandTreeFunction<T, N>",
-          "description": "An ExpandTreeFunction<T, N> used to expand each value into a tree.",
+          "description": "- An ExpandTreeFunction<T, N> used to expand each value into a tree.",
           "optional": false
         }
       ],
-      "returns": "An array of N, where each N is the root node of an expanded tree.",
+      "returns": "Array of N, where each N is the root node of an expanded tree.",
       "tags": [
         "tree",
         "expand",
@@ -12144,7 +12223,7 @@
           "optional": true
         }
       ],
-      "returns": "An array of all nodes in the tree that pass the filter.",
+      "returns": "The all nodes in the tree that pass the filter.",
       "tags": [
         "tree",
         "flatten",
@@ -12266,11 +12345,11 @@
         {
           "name": "config",
           "type": "LatLngBoundTupleFunctionConfig",
-          "description": "- optional configuration for point precision",
+          "description": "- Optional configuration for point precision.",
           "optional": true
         }
       ],
-      "returns": "a function that produces bound tuples from flexible inputs",
+      "returns": "Produces bound tuples from flexible inputs.",
       "tags": [
         "value",
         "lat-lng",
@@ -12301,11 +12380,11 @@
         {
           "name": "config",
           "type": "LatLngBoundFunctionConfig",
-          "description": "- optional configuration for point precision and custom point functions",
+          "description": "- Optional configuration for point precision and custom point functions.",
           "optional": true
         }
       ],
-      "returns": "a function that produces bounds from flexible inputs",
+      "returns": "Produces bounds from flexible inputs.",
       "tags": [
         "value",
         "lat-lng",
@@ -12338,11 +12417,11 @@
         {
           "name": "bound",
           "type": "LatLngBound",
-          "description": "- the reference bound to check containment against",
+          "description": "- The reference bound to check containment against.",
           "optional": false
         }
       ],
-      "returns": "a function that returns `true` if the input is within the reference bound",
+      "returns": "Returns `true` if the input is within the reference bound.",
       "tags": [
         "value",
         "lat-lng",
@@ -12376,11 +12455,11 @@
         {
           "name": "bound",
           "type": "LatLngBound",
-          "description": "- the reference bound to check overlap against",
+          "description": "- The reference bound to check overlap against.",
           "optional": false
         }
       ],
-      "returns": "a function that returns `true` if the input overlaps the reference bound",
+      "returns": "Returns `true` if the input overlaps the reference bound.",
       "tags": [
         "value",
         "lat-lng",
@@ -12417,7 +12496,7 @@
           "optional": false
         }
       ],
-      "returns": "the fully constructed object of type T",
+      "returns": "The fully constructed object of type T.",
       "tags": [
         "build",
         "builder",
@@ -12442,11 +12521,11 @@
         {
           "name": "compare",
           "type": "EqualityComparatorFunction<T>",
-          "description": "- the comparator to wrap",
+          "description": "- The comparator to wrap.",
           "optional": false
         }
       ],
-      "returns": "a new comparator that handles nullish values safely before delegating to the wrapped comparator",
+      "returns": "A new comparator that handles nullish values safely before delegating to the wrapped comparator.",
       "tags": [
         "equal",
         "equality",
@@ -12477,23 +12556,23 @@
         {
           "name": "a",
           "type": "Maybe<T>",
-          "description": "- first value to compare",
+          "description": "- First value to compare.",
           "optional": false
         },
         {
           "name": "b",
           "type": "Maybe<T>",
-          "description": "- second value to compare",
+          "description": "- Second value to compare.",
           "optional": false
         },
         {
           "name": "compare",
           "type": "EqualityComparatorFunction<T>",
-          "description": "- the equality comparator for non-nullish values",
+          "description": "- The equality comparator for non-nullish values.",
           "optional": false
         }
       ],
-      "returns": "`true` if the values are considered equal",
+      "returns": "`true` if the values are considered equal.",
       "tags": [
         "equal",
         "equality",
@@ -12521,17 +12600,17 @@
         {
           "name": "readValues",
           "type": "ReadValueFunction<I, V>",
-          "description": "- extracts the comparable value from each item",
+          "description": "- Extracts the comparable value from each item.",
           "optional": false
         },
         {
           "name": "equalityComparator",
           "type": "EqualityComparatorFunction<V>",
-          "description": "- compares the extracted values for equality",
+          "description": "- Compares the extracted values for equality.",
           "optional": false
         }
       ],
-      "returns": "a function that compares two items by their extracted values",
+      "returns": "Compares two items by their extracted values.",
       "tags": [
         "value",
         "comparator",
@@ -12563,11 +12642,11 @@
         {
           "name": "readValues",
           "type": "ReadValueFunction<I, V>",
-          "description": "- extracts the comparable value from each item",
+          "description": "- Extracts the comparable value from each item.",
           "optional": false
         }
       ],
-      "returns": "a factory function that accepts an equality comparator and produces a comparison function",
+      "returns": "A factory function that accepts an equality comparator and produces a comparison function.",
       "tags": [
         "value",
         "comparator",
@@ -12601,11 +12680,11 @@
         {
           "name": "decision",
           "type": "boolean",
-          "description": "- the constant boolean value to return",
+          "description": "- The constant boolean value to return.",
           "optional": false
         }
       ],
-      "returns": "a decision function that always returns the given boolean",
+      "returns": "A decision function that always returns the given boolean.",
       "tags": [
         "decision",
         "boolean",
@@ -12635,17 +12714,17 @@
         {
           "name": "valueOrFunction",
           "type": "Maybe<boolean | DecisionFunction<T>>",
-          "description": "- a boolean, decision function, or undefined",
+          "description": "- Boolean constant, {@link DecisionFunction }, or undefined to use the default.",
           "optional": false
         },
         {
           "name": "defaultIfUndefined",
           "type": "boolean",
-          "description": "- fallback boolean when the input is nullish (defaults to true)",
+          "description": "- Fallback boolean when the input is nullish (defaults to true)",
           "optional": true
         }
       ],
-      "returns": "a {@link DecisionFunction } derived from the input",
+      "returns": "A {@link DecisionFunction } derived from the input.",
       "tags": [
         "decision",
         "normalize",
@@ -12714,17 +12793,17 @@
         {
           "name": "contextValue",
           "type": "T",
-          "description": "- the reference value to compare against",
+          "description": "- The reference value to compare against.",
           "optional": false
         },
         {
           "name": "fn",
           "type": "EqualityComparatorFunction<T>",
-          "description": "- the equality comparator",
+          "description": "- The equality comparator.",
           "optional": false
         }
       ],
-      "returns": "a function that checks whether a given value equals the captured reference",
+      "returns": "Checks whether a given value equals the captured reference.",
       "tags": [
         "equal",
         "equality",
@@ -12754,17 +12833,17 @@
         {
           "name": "contextValue",
           "type": "T",
-          "description": "- the reference value to compare against",
+          "description": "- The reference value to compare against.",
           "optional": false
         },
         {
           "name": "fn",
           "type": "EqualityComparatorFunction<T>",
-          "description": "- the equality comparator",
+          "description": "- The equality comparator.",
           "optional": false
         }
       ],
-      "returns": "a function that checks whether all input values equal the captured reference",
+      "returns": "Checks whether all input values equal the captured reference.",
       "tags": [
         "equal",
         "equality",
@@ -12796,17 +12875,17 @@
         {
           "name": "values",
           "type": "IterableOrValue<T>",
-          "description": "- the values to compare",
+          "description": "- The values to compare.",
           "optional": false
         },
         {
           "name": "fn",
           "type": "EqualityComparatorFunction<T>",
-          "description": "- the equality comparator",
+          "description": "- The equality comparator.",
           "optional": false
         }
       ],
-      "returns": "`true` if all values are equal to each other, or if fewer than two values are provided",
+      "returns": "`true` if all values are equal to each other, or if fewer than two values are provided.",
       "tags": [
         "equal",
         "equality",
@@ -12835,7 +12914,7 @@
       "signature": "sortAscendingIndexNumberRefFunction(): SortCompareFunction<T>",
       "description": "Creates a SortCompareFunction that sorts IndexRef values in ascending order by their index number.",
       "params": [],
-      "returns": "a compare function suitable for Array.sort()",
+      "returns": "A compare function suitable for Array.sort()",
       "tags": [
         "value",
         "index",
@@ -12866,11 +12945,11 @@
         {
           "name": "readIndex",
           "type": "ReadMaybeIndexFunction<T>",
-          "description": "- reads an item's index, returning null/undefined for unindexed items",
+          "description": "- Reads an item's index, returning null/undefined for unindexed items.",
           "optional": false
         }
       ],
-      "returns": "a function that groups items by their index state",
+      "returns": "Groups items by their index state.",
       "tags": [
         "value",
         "index",
@@ -12900,11 +12979,11 @@
         {
           "name": "readIndex",
           "type": "ReadIndexFunction<T>",
-          "description": "- extracts the index number from each item",
+          "description": "- Extracts the index number from each item.",
           "optional": false
         }
       ],
-      "returns": "a compare function suitable for Array.sort()",
+      "returns": "A compare function suitable for Array.sort()",
       "tags": [
         "value",
         "index",
@@ -12934,17 +13013,17 @@
         {
           "name": "readIndex",
           "type": "ReadIndexFunction<T>",
-          "description": "- extracts the index number from each item",
+          "description": "- Extracts the index number from each item.",
           "optional": false
         },
         {
           "name": "nextIndex",
           "type": "(value: T) => IndexNumber",
-          "description": "- optional custom function to compute the next index from the max item; defaults to max + 1",
+          "description": "- Optional custom function to compute the next index from the max item; defaults to max + 1.",
           "optional": true
         }
       ],
-      "returns": "a function that computes the next free index for a given array",
+      "returns": "Computes the next free index for a given array.",
       "tags": [
         "value",
         "index",
@@ -12975,17 +13054,17 @@
         {
           "name": "readIndex",
           "type": "ReadIndexFunction<T>",
-          "description": "- extracts the index number from each item",
+          "description": "- Extracts the index number from each item.",
           "optional": false
         },
         {
           "name": "nextIndex",
           "type": "(value: T) => IndexNumber",
-          "description": "- optional custom function to compute the next index from the last item; defaults to last + 1",
+          "description": "- Optional custom function to compute the next index from the last item; defaults to last + 1.",
           "optional": true
         }
       ],
-      "returns": "a function that computes the next free index from sorted arrays",
+      "returns": "Computes the next free index from sorted arrays.",
       "tags": [
         "value",
         "index",
@@ -13017,11 +13096,11 @@
         {
           "name": "readIndex",
           "type": "ReadIndexFunction<T>",
-          "description": "- extracts the index number from each item",
+          "description": "- Extracts the index number from each item.",
           "optional": false
         }
       ],
-      "returns": "a function returning the min/max indexes, or null for empty input",
+      "returns": "The min/max indexes, or null for empty input.",
       "tags": [
         "value",
         "index",
@@ -13052,11 +13131,11 @@
         {
           "name": "readIndex",
           "type": "ReadIndexFunction<T>",
-          "description": "- extracts the index number from each item",
+          "description": "- Extracts the index number from each item.",
           "optional": false
         }
       ],
-      "returns": "a function returning the min/max items, or null for empty input",
+      "returns": "The min/max items, or null for empty input.",
       "tags": [
         "value",
         "index",
@@ -13086,11 +13165,11 @@
         {
           "name": "items",
           "type": "Iterable<T>",
-          "description": "- the available match options; must not be empty",
+          "description": "- The available match options; must not be empty.",
           "optional": false
         }
       ],
-      "returns": "a function that finds the best match for any input index",
+      "returns": "Finds the best match for any input index.",
       "tags": [
         "value",
         "index",
@@ -13121,11 +13200,11 @@
         {
           "name": "readIndexRange",
           "type": "ReadIndexRangeFunction<T>",
-          "description": "- extracts the IndexRange from each item",
+          "description": "- Extracts the IndexRange from each item.",
           "optional": false
         }
       ],
-      "returns": "a compare function suitable for Array.sort()",
+      "returns": "A compare function suitable for Array.sort()",
       "tags": [
         "value",
         "index-range",
@@ -13157,11 +13236,11 @@
         {
           "name": "reader",
           "type": "ReadIndexRangeFunction<T>",
-          "description": "- reads the IndexRange from the input value",
+          "description": "- Reads the IndexRange from the input value.",
           "optional": false
         }
       ],
-      "returns": "a factory that creates IndexRangeReaderPair instances",
+      "returns": "A factory that creates IndexRangeReaderPair instances.",
       "tags": [
         "value",
         "index-range",
@@ -13189,11 +13268,11 @@
         {
           "name": "input",
           "type": "IndexRange",
-          "description": "- the range to clamp to",
+          "description": "- The range to clamp to.",
           "optional": false
         }
       ],
-      "returns": "a function that clamps any index to the range",
+      "returns": "Clamps any index to the range.",
       "tags": [
         "value",
         "index",
@@ -13223,17 +13302,17 @@
         {
           "name": "input",
           "type": "IndexRange",
-          "description": "- the index range to wrap within",
+          "description": "- The index range to wrap within.",
           "optional": false
         },
         {
           "name": "fencePosts",
           "type": "boolean",
-          "description": "- whether to use fencepost semantics (maxIndex is exclusive); defaults to true",
+          "description": "- Whether to use fencepost semantics (maxIndex is exclusive); defaults to true.",
           "optional": true
         }
       ],
-      "returns": "a function that wraps any index into the range",
+      "returns": "Wraps any index into the range.",
       "tags": [
         "value",
         "index",
@@ -13303,11 +13382,11 @@
         {
           "name": "input",
           "type": "IndexRangeFunctionInput",
-          "description": "- the range or range config to check against",
+          "description": "- The range or range config to check against.",
           "optional": false
         }
       ],
-      "returns": "a predicate function for index numbers",
+      "returns": "A predicate function for index numbers.",
       "tags": [
         "value",
         "index",
@@ -13336,11 +13415,11 @@
         {
           "name": "input",
           "type": "IndexRangeFunctionInput",
-          "description": "- the range or range config to bind",
+          "description": "- The range or range config to bind.",
           "optional": false
         }
       ],
-      "returns": "a predicate that tests index numbers against the bound range",
+      "returns": "A predicate that tests index numbers against the bound range.",
       "tags": [
         "value",
         "index",
@@ -13372,11 +13451,11 @@
         {
           "name": "input",
           "type": "IndexRangeFunctionInput",
-          "description": "- the bounding range or range config to bind",
+          "description": "- The bounding range or range config to bind.",
           "optional": false
         }
       ],
-      "returns": "a predicate that tests whether index ranges are fully contained",
+      "returns": "A predicate that tests whether index ranges are fully contained.",
       "tags": [
         "value",
         "index-range",
@@ -13409,11 +13488,11 @@
         {
           "name": "input",
           "type": "IndexRangeFunctionInput",
-          "description": "- the reference range or range config to bind",
+          "description": "- The reference range or range config to bind.",
           "optional": false
         }
       ],
-      "returns": "a predicate that tests for overlap with the bound range",
+      "returns": "A predicate that tests for overlap with the bound range.",
       "tags": [
         "value",
         "index-range",
@@ -13445,11 +13524,11 @@
         {
           "name": "config",
           "type": "StepsFromIndexFunctionConfig",
-          "description": "- stepping behavior configuration",
+          "description": "- Stepping behavior configuration.",
           "optional": false
         }
       ],
-      "returns": "a function that computes the stepped index",
+      "returns": "Computes the stepped index.",
       "tags": [
         "value",
         "index",
@@ -13481,11 +13560,11 @@
         {
           "name": "mapFunction",
           "type": "MapFunction<I, O>",
-          "description": "- function to apply only when the input is defined",
+          "description": "- Function to apply only when the input is defined.",
           "optional": false
         }
       ],
-      "returns": "a new function that short-circuits on null/undefined inputs",
+      "returns": "A new function that short-circuits on null/undefined inputs.",
       "tags": [
         "map",
         "transform",
@@ -13516,11 +13595,11 @@
         {
           "name": "mapFunction",
           "type": "MapFunction<I, O>",
-          "description": "- per-element transformation",
+          "description": "- Per-element transformation.",
           "optional": false
         }
       ],
-      "returns": "a function that maps entire arrays",
+      "returns": "Maps entire arrays.",
       "tags": [
         "map",
         "transform",
@@ -13572,7 +13651,7 @@
       "signature": "mapIdentityFunction(): MapFunction<T, T>",
       "description": "Returns the shared {@link MAP_IDENTITY} function cast to the requested type, useful for providing a typed no-op transformation.",
       "params": [],
-      "returns": "the singleton identity function typed as `MapFunction<T, T>`",
+      "returns": "The singleton identity function typed as `MapFunction<T, T>`",
       "tags": [
         "map",
         "identity",
@@ -13600,11 +13679,11 @@
         {
           "name": "fn",
           "type": "unknown",
-          "description": "- the function to check",
+          "description": "- The function to check.",
           "optional": false
         }
       ],
-      "returns": "`true` if the function is the identity singleton",
+      "returns": "`true` if the function is the identity singleton.",
       "tags": [
         "map",
         "identity",
@@ -13633,11 +13712,11 @@
         {
           "name": "input",
           "type": "ArrayOrValue<Maybe<MapSameFunction<I>>>",
-          "description": "- one or more optional same-type map functions to chain",
+          "description": "- One or more optional same-type map functions to chain.",
           "optional": false
         }
       ],
-      "returns": "a single composed function that runs all provided functions in order",
+      "returns": "A single composed function that runs all provided functions in order.",
       "tags": [
         "map",
         "chain",
@@ -13714,7 +13793,7 @@
         {
           "name": "value",
           "type": "Maybe<T>",
-          "description": "- the value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
@@ -13750,11 +13829,11 @@
         {
           "name": "value",
           "type": "Maybe<T>",
-          "description": "- the value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
-      "returns": "`true` if the value is non-nullish and not empty",
+      "returns": "`true` if the value is non-nullish and not empty.",
       "tags": [
         "maybe",
         "empty",
@@ -13786,11 +13865,11 @@
         {
           "name": "value",
           "type": "Maybe<T>",
-          "description": "- the value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
-      "returns": "`true` if the value is non-nullish, non-empty, and not an empty object",
+      "returns": "`true` if the value is non-nullish, non-empty, and not an empty object.",
       "tags": [
         "maybe",
         "empty",
@@ -13823,11 +13902,11 @@
         {
           "name": "value",
           "type": "Maybe<MaybeNot | '' | T>",
-          "description": "- the value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
-      "returns": "`true` if the value is not nullish and not an empty string",
+      "returns": "`true` if the value is not nullish and not an empty string.",
       "tags": [
         "maybe",
         "string",
@@ -13860,7 +13939,7 @@
         {
           "name": "value",
           "type": "Maybe<T>",
-          "description": "- the value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
@@ -13895,7 +13974,7 @@
         {
           "name": "value",
           "type": "Maybe<T>",
-          "description": "- the value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
@@ -13930,7 +14009,7 @@
         {
           "name": "value",
           "type": "Maybe<T>",
-          "description": "- the value to check",
+          "description": "- The value to check.",
           "optional": false
         }
       ],
@@ -13966,17 +14045,17 @@
         {
           "name": "a",
           "type": "Maybe<T>",
-          "description": "- first value",
+          "description": "- First value.",
           "optional": false
         },
         {
           "name": "b",
           "type": "Maybe<T>",
-          "description": "- second value",
+          "description": "- Second value.",
           "optional": false
         }
       ],
-      "returns": "`true` if both values are non-nullish and strictly equal",
+      "returns": "`true` if both values are non-nullish and strictly equal.",
       "tags": [
         "maybe",
         "equal",
@@ -14008,17 +14087,17 @@
         {
           "name": "a",
           "type": "Maybe<T>",
-          "description": "- first value",
+          "description": "- First value.",
           "optional": false
         },
         {
           "name": "b",
           "type": "Maybe<T>",
-          "description": "- second value",
+          "description": "- Second value.",
           "optional": false
         }
       ],
-      "returns": "`true` if both are nullish or both are the same value",
+      "returns": "`true` if both are nullish or both are the same value.",
       "tags": [
         "maybe",
         "equal",
@@ -14050,13 +14129,13 @@
         {
           "name": "a",
           "type": "Maybe<T>",
-          "description": "- the current value",
+          "description": "- The current value.",
           "optional": false
         },
         {
           "name": "b",
           "type": "Maybe<T>",
-          "description": "- the update value",
+          "description": "- The update value.",
           "optional": false
         }
       ],
@@ -14085,17 +14164,17 @@
         {
           "name": "key",
           "type": "string",
-          "description": "- unique identifier for the modifier",
+          "description": "- Unique identifier for the modifier.",
           "optional": false
         },
         {
           "name": "modify",
           "type": "ModifierFunction<T>",
-          "description": "- function that mutates the target value",
+          "description": "- Function that mutates the target value.",
           "optional": false
         }
       ],
-      "returns": "a new {@link Modifier } pairing the key with the modify function",
+      "returns": "A new {@link Modifier } pairing the key with the modify function.",
       "tags": [
         "modifier",
         "mutate",
@@ -14123,11 +14202,11 @@
         {
           "name": "map",
           "type": "Maybe<ModifierMap<T>>",
-          "description": "- the modifier map to convert",
+          "description": "- The modifier map to convert.",
           "optional": false
         }
       ],
-      "returns": "a single modifier function that applies all mapped modifiers, or {@link NOOP_MODIFIER } if empty",
+      "returns": "A single modifier function that applies all mapped modifiers, or {@link NOOP_MODIFIER } if empty.",
       "tags": [
         "modifier",
         "map",
@@ -14157,11 +14236,11 @@
         {
           "name": "map",
           "type": "Maybe<ModifierMap<T>>",
-          "description": "- the modifier map to convert",
+          "description": "- The modifier map to convert.",
           "optional": false
         }
       ],
-      "returns": "a composed modifier function, or `undefined` if no map is provided",
+      "returns": "A composed modifier function, or `undefined` if no map is provided.",
       "tags": [
         "modifier",
         "map",
@@ -14192,11 +14271,11 @@
         {
           "name": "config",
           "type": "LatLngTupleFunctionConfig",
-          "description": "- optional configuration for precision and wrapping behavior",
+          "description": "- Optional configuration for precision and wrapping behavior.",
           "optional": true
         }
       ],
-      "returns": "a function that produces lat/lng tuples from flexible inputs",
+      "returns": "Produces lat/lng tuples from flexible inputs.",
       "tags": [
         "value",
         "lat-lng",
@@ -14227,17 +14306,17 @@
         {
           "name": "precision",
           "type": "LatLngPrecision",
-          "description": "- number of decimal places to retain",
+          "description": "- Number of decimal places to retain.",
           "optional": false
         },
         {
           "name": "precisionRounding",
           "type": "RoundToPrecisionFunctionType",
-          "description": "- optional rounding strategy (e.g., floor, ceil, round)",
+          "description": "- Optional rounding strategy (e.g., floor, ceil, round)",
           "optional": true
         }
       ],
-      "returns": "a function that rounds points to the given precision",
+      "returns": "Rounds points to the given precision.",
       "tags": [
         "value",
         "lat-lng",
@@ -14269,11 +14348,11 @@
         {
           "name": "config",
           "type": "LatLngStringFunctionConfig",
-          "description": "- optional configuration for precision and wrapping behavior",
+          "description": "- Optional configuration for precision and wrapping behavior.",
           "optional": true
         }
       ],
-      "returns": "a function that produces lat/lng strings from flexible inputs",
+      "returns": "Produces lat/lng strings from flexible inputs.",
       "tags": [
         "value",
         "lat-lng",
@@ -14304,11 +14383,11 @@
         {
           "name": "config",
           "type": "LatLngPointFunctionConfig",
-          "description": "- optional configuration for precision, wrapping, validation, and tuple ordering",
+          "description": "- Optional configuration for precision, wrapping, validation, and tuple ordering.",
           "optional": true
         }
       ],
-      "returns": "a function that produces points from flexible inputs",
+      "returns": "Produces points from flexible inputs.",
       "tags": [
         "value",
         "lat-lng",
@@ -14342,11 +14421,11 @@
         {
           "name": "defaultValue",
           "type": "Factory<LatLngPoint>",
-          "description": "- factory for the fallback point; defaults to `defaultLatLngPoint`",
+          "description": "- Factory for the fallback point; defaults to `defaultLatLngPoint`",
           "optional": true
         }
       ],
-      "returns": "a validation function",
+      "returns": "A validation function.",
       "tags": [
         "value",
         "lat-lng",
@@ -14379,11 +14458,11 @@
         {
           "name": "config",
           "type": "LatLngPointFunctionConfig",
-          "description": "- optional configuration for precision and wrapping behavior",
+          "description": "- Optional configuration for precision and wrapping behavior.",
           "optional": true
         }
       ],
-      "returns": "a function that produces data points from lat/lng references",
+      "returns": "Produces data points from lat/lng references.",
       "tags": [
         "value",
         "lat-lng",
@@ -14415,11 +14494,11 @@
         {
           "name": "config",
           "type": "RandomLatLngFactoryConfig",
-          "description": "- optional bounding box and precision configuration",
+          "description": "- Optional bounding box and precision configuration.",
           "optional": true
         }
       ],
-      "returns": "a factory that produces random points within the bounds",
+      "returns": "A factory that produces random points within the bounds.",
       "tags": [
         "value",
         "lat-lng",
@@ -14449,11 +14528,11 @@
         {
           "name": "config",
           "type": "RandomLatLngFromCenterFactoryConfig",
-          "description": "- center point, distances, and optional precision",
+          "description": "- Center point, distances, and optional precision.",
           "optional": false
         }
       ],
-      "returns": "a factory that produces random points near the center",
+      "returns": "A factory that produces random points near the center.",
       "tags": [
         "value",
         "lat-lng",
@@ -14484,11 +14563,11 @@
         {
           "name": "map",
           "type": "MapFunction<A, Maybe<I>>",
-          "description": "- transforms the outer input into the type expected by the consumer",
+          "description": "- Transforms the outer input into the type expected by the consumer.",
           "optional": false
         }
       ],
-      "returns": "a MappedUseFunction that maps then consumes",
+      "returns": "A MappedUseFunction that maps then consumes.",
       "tags": [
         "value",
         "use",
@@ -14519,17 +14598,17 @@
         {
           "name": "mappedUseFn",
           "type": "MappedUseFunction<A, B>",
-          "description": "- the existing mapped use function to wrap",
+          "description": "- The existing mapped use function to wrap.",
           "optional": false
         },
         {
           "name": "map",
           "type": "MapFunction<B, Maybe<I>>",
-          "description": "- additional transformation applied to the intermediate value",
+          "description": "- Additional transformation applied to the intermediate value.",
           "optional": false
         }
       ],
-      "returns": "a new MappedUseFunction with the extra mapping layer",
+      "returns": "A new MappedUseFunction with the extra mapping layer.",
       "tags": [
         "value",
         "use",
@@ -14558,17 +14637,17 @@
         {
           "name": "use",
           "type": "UseValue<I, O>",
-          "description": "- the consumer function to bind",
+          "description": "- The consumer function to bind.",
           "optional": false
         },
         {
           "name": "defaultValue",
           "type": "GetterOrValue<O>",
-          "description": "- fallback when input is null/undefined",
+          "description": "- Fallback when input is null/undefined.",
           "optional": true
         }
       ],
-      "returns": "a single-argument function that applies the bound consumer",
+      "returns": "A single-argument function that applies the bound consumer.",
       "tags": [
         "value",
         "use",
@@ -14597,11 +14676,11 @@
         {
           "name": "map",
           "type": "MapFunction<A, Maybe<PromiseOrValue<Maybe<I>>>>",
-          "description": "- transforms the outer input, optionally asynchronously, into the type expected by the consumer",
+          "description": "- Transforms the outer input, optionally asynchronously, into the type expected by the consumer.",
           "optional": false
         }
       ],
-      "returns": "a MappedUseAsyncFunction that maps then asynchronously consumes",
+      "returns": "A MappedUseAsyncFunction that maps then asynchronously consumes.",
       "tags": [
         "value",
         "use",
@@ -14632,17 +14711,17 @@
         {
           "name": "mappedUsePromiseFn",
           "type": "MappedUseAsyncFunction<A, B>",
-          "description": "- the existing async mapped use function to wrap",
+          "description": "- The existing async mapped use function to wrap.",
           "optional": false
         },
         {
           "name": "map",
           "type": "MapFunction<B, Maybe<PromiseOrValue<Maybe<I>>>>",
-          "description": "- additional transformation (sync or async) applied to the intermediate value",
+          "description": "- Additional transformation (sync or async) applied to the intermediate value.",
           "optional": false
         }
       ],
-      "returns": "a new MappedUseAsyncFunction with the extra mapping layer",
+      "returns": "A new MappedUseAsyncFunction with the extra mapping layer.",
       "tags": [
         "value",
         "use",
@@ -14673,11 +14752,11 @@
         {
           "name": "minSize",
           "type": "Partial<Vector>",
-          "description": "- the minimum dimensions to enforce",
+          "description": "- The minimum dimensions to enforce.",
           "optional": false
         }
       ],
-      "returns": "a resize function that clamps each axis to the specified minimum",
+      "returns": "A resize function that clamps each axis to the specified minimum.",
       "tags": [
         "value",
         "vector",

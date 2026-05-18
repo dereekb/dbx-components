@@ -104,32 +104,30 @@ function code(value: string): string {
  * from the registry, formats it at the requested depth, and packages the
  * result as a tool content payload.
  *
- * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
- * @returns the formatted pattern text, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments object from the MCP runtime.
+ * @returns The formatted pattern text, or an error result when args fail validation.
  */
 export function runActionExamples(rawArgs: unknown): ToolResult {
-  let args: ParsedActionExamplesArgs;
+  let result: ToolResult;
   try {
-    args = parseActionExamplesArgs(rawArgs);
+    const args = parseActionExamplesArgs(rawArgs);
+    const lowered = args.pattern.trim().toLowerCase();
+    let text: string;
+    if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
+      text = formatPatternCatalog();
+    } else {
+      const pattern = getActionExamplePattern(args.pattern);
+      text = pattern ? formatPattern(pattern, args.depth) : formatNotFound(args.pattern);
+    }
+    result = { content: [{ type: 'text', text }] };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
+    result = toolError(message);
   }
-
-  const lowered = args.pattern.trim().toLowerCase();
-  let text: string;
-  if (lowered === 'list' || lowered === 'catalog' || lowered === 'all') {
-    text = formatPatternCatalog();
-  } else {
-    const pattern = getActionExamplePattern(args.pattern);
-    text = pattern ? formatPattern(pattern, args.depth) : formatNotFound(args.pattern);
-  }
-
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-export const actionExamplesTool: DbxTool = {
+export const ACTION_EXAMPLES_TOOL: DbxTool = {
   definition: DBX_ACTION_EXAMPLES_TOOL,
   run: runActionExamples
 };

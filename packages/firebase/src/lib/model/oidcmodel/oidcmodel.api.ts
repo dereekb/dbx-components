@@ -125,7 +125,7 @@ export { targetModelParamsType as deleteOidcTokenParamsType } from '../../common
  */
 export type OidcModelFunctionTypeMap = {};
 
-export const oidcFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<OidcModelFunctionTypeMap> = {};
+export const OIDC_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeConfigMap<OidcModelFunctionTypeMap> = {};
 
 /**
  * CRUD function configuration map for the OIDC client model.
@@ -148,7 +148,7 @@ export type OidcModelCrudFunctionsConfig = {
   };
 };
 
-export const oidcModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<OidcModelCrudFunctionsConfig, OidcModelTypes> = {
+export const OIDC_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<OidcModelCrudFunctionsConfig, OidcModelTypes> = {
   oidcEntry: ['create:client', 'update:client,rotateClientSecret', 'delete:client,token']
 };
 
@@ -185,4 +185,4 @@ export abstract class OidcModelFunctions implements ModelFirebaseFunctionMap<Oid
  * });
  * ```
  */
-export const oidcModelFunctionMap = callModelFirebaseFunctionMapFactory(oidcFunctionTypeConfigMap, oidcModelCrudFunctionsConfig);
+export const oidcModelFunctionMap = callModelFirebaseFunctionMapFactory(OIDC_FUNCTION_TYPE_CONFIG_MAP, OIDC_MODEL_CRUD_FUNCTIONS_CONFIG);

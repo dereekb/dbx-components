@@ -78,8 +78,9 @@ export interface CreateModelFixtureValidateAppToolConfig {
  * Builds the `dbx_model_fixture_validate_app` tool. Centralised here so the
  * dispatcher can lazily inject a model registry from `RegisterToolsOptions`.
  *
- * @param config - registry configuration
- * @returns the registered {@link DbxTool}
+ * @param config - Registry configuration.
+ * @returns The registered {@link DbxTool}
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createModelFixtureValidateAppTool(config: CreateModelFixtureValidateAppToolConfig = {}): DbxTool {
@@ -89,25 +90,36 @@ export function createModelFixtureValidateAppTool(config: CreateModelFixtureVali
       return toolError(`Invalid arguments: ${parsed.summary}`);
     }
     const cwd = process.cwd();
+    let toolResult: ToolResult;
+    let ensureError: string | undefined;
     try {
       ensurePathInsideCwd(parsed.apiDir, cwd);
     } catch (err) {
-      return toolError(err instanceof Error ? err.message : String(err));
+      ensureError = err instanceof Error ? err.message : String(err);
     }
-    const apiAbs = resolve(cwd, parsed.apiDir);
-    let extraction;
-    try {
-      extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
-    } catch (err) {
-      return toolError(`Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`);
+    if (ensureError === undefined) {
+      const apiAbs = resolve(cwd, parsed.apiDir);
+      let extraction;
+      let inspectError: string | undefined;
+      try {
+        extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
+      } catch (err) {
+        inspectError = `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`;
+      }
+      if (inspectError !== undefined || extraction === undefined) {
+        toolResult = toolError(inspectError ?? 'Failed to inspect fixtures.');
+      } else {
+        const registry = config.getRegistry ? config.getRegistry() : undefined;
+        const result = validateAppFixtures(extraction, { registry });
+        const text = parsed.format === 'json' ? formatValidationAsJson(result) : formatValidationAsMarkdown(result);
+        toolResult = {
+          content: [{ type: 'text', text }],
+          isError: result.errorCount > 0
+        };
+      }
+    } else {
+      toolResult = toolError(ensureError);
     }
-    const registry = config.getRegistry ? config.getRegistry() : undefined;
-    const result = validateAppFixtures(extraction, { registry });
-    const text = parsed.format === 'json' ? formatValidationAsJson(result) : formatValidationAsMarkdown(result);
-    const toolResult: ToolResult = {
-      content: [{ type: 'text', text }],
-      isError: result.errorCount > 0
-    };
     return toolResult;
   }
   return { definition: TOOL, run };

@@ -8,6 +8,9 @@ import { assetLoaderFromGetFn } from './asset.loader';
  * Assets are matched by reference identity — the same {@link AssetPathRef}
  * object used to populate the map must be used to retrieve the data.
  *
+ * @param assets - Map of asset refs to their raw byte data.
+ * @returns An {@link AssetLoader} backed by the provided in-memory map.
+ *
  * @example
  * ```ts
  * const DISTRICTS = localAsset('districts.json');
@@ -17,9 +20,6 @@ import { assetLoaderFromGetFn } from './asset.loader';
  *
  * loader.get(DISTRICTS).load().subscribe((data) => { ... });
  * ```
- *
- * @param assets - Map of asset refs to their raw byte data.
- * @returns An {@link AssetLoader} backed by the provided in-memory map.
  */
 export function memoryAssetLoader(assets: Map<AssetPathRef, ArrayBuffer>): AssetLoader {
   const getFn: AssetLoaderGetFn = async (ref: AssetPathRef): Promise<ArrayBuffer> => {

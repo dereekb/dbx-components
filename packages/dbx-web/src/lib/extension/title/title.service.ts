@@ -72,15 +72,18 @@ export class DbxWebPageTitleService {
   readonly leafReference$: Observable<Maybe<DbxWebPageTitleInfoReference>> = this._references.pipe(
     switchMap((set) => {
       const refs = [...set];
-      if (refs.length === 0) return of<Maybe<DbxWebPageTitleInfoReference>>(undefined);
-      return combineLatest(refs.map((ref) => ref.isLeaf$.pipe(map((isLeaf) => ({ ref, isLeaf }))))).pipe(
-        map((items) =>
-          items
-            .filter((x) => x.isLeaf)
-            .map((x) => x.ref)
-            .at(-1)
-        )
-      );
+      const obs: Observable<Maybe<DbxWebPageTitleInfoReference>> =
+        refs.length === 0
+          ? of<Maybe<DbxWebPageTitleInfoReference>>(undefined)
+          : combineLatest(refs.map((ref) => ref.isLeaf$.pipe(map((isLeaf) => ({ ref, isLeaf }))))).pipe(
+              map((items) =>
+                items
+                  .filter((x) => x.isLeaf)
+                  .map((x) => x.ref)
+                  .at(-1)
+              )
+            );
+      return obs;
     }),
     distinctUntilChanged(),
     shareReplay(1)

@@ -38,8 +38,8 @@ export type ZohoSignWebhookEventVerifier = (req: Request, rawBody: Buffer) => Pr
  * in the `X-ZS-WEBHOOK-SIGNATURE` header. This verifier recomputes the signature
  * from the raw request body and compares using timing-safe equality.
  *
- * @param config - Configuration containing the webhook secret key
- * @returns A function that verifies webhook requests
+ * @param config - Configuration containing the webhook secret key.
+ * @returns Verifies webhook requests.
  *
  * @example
  * ```typescript
@@ -56,45 +56,44 @@ export function zohoSignWebhookEventVerifier(config: ZohoSignWebhookVerification
 
   return async (request: Request, rawBody: Buffer) => {
     const receivedSignature = request.headers[ZOHO_SIGN_WEBHOOK_SIGNATURE_HEADER] as Maybe<string>;
+    let result: ZohoSignWebhookEventVerificationResult = { valid: false };
 
-    if (!receivedSignature) {
-      return { valid: false };
-    }
+    if (receivedSignature) {
+      const payloadString = rawBody.toString('utf-8');
 
-    const payloadString = rawBody.toString('utf-8');
+      // Compute HMAC-SHA256 and base64 encode
+      const computedSignature = createHmac('sha256', secret).update(payloadString, 'utf-8').digest('base64');
 
-    // Compute HMAC-SHA256 and base64 encode
-    const computedSignature = createHmac('sha256', secret).update(payloadString, 'utf-8').digest('base64');
+      // Use timing-safe comparison
+      let valid = false;
 
-    // Use timing-safe comparison
-    let valid = false;
-
-    try {
-      const receivedBuffer = Buffer.from(receivedSignature, 'base64');
-      const computedBuffer = Buffer.from(computedSignature, 'base64');
-
-      if (receivedBuffer.length === computedBuffer.length) {
-        valid = timingSafeEqual(receivedBuffer, computedBuffer);
-      }
-    } catch {
-      valid = false;
-    }
-
-    let event: Maybe<ZohoSignWebhookEvent>;
-
-    if (valid) {
       try {
-        const payload: ZohoSignWebhookPayload = JSON.parse(payloadString);
-        event = zohoSignWebhookEvent(payload);
+        const receivedBuffer = Buffer.from(receivedSignature, 'base64');
+        const computedBuffer = Buffer.from(computedSignature, 'base64');
+
+        if (receivedBuffer.length === computedBuffer.length) {
+          valid = timingSafeEqual(receivedBuffer, computedBuffer);
+        }
       } catch {
         valid = false;
       }
+
+      let event: Maybe<ZohoSignWebhookEvent>;
+
+      if (valid) {
+        try {
+          const payload: ZohoSignWebhookPayload = JSON.parse(payloadString);
+          event = zohoSignWebhookEvent(payload);
+        } catch {
+          valid = false;
+        }
+      }
+
+      if (valid && event) {
+        result = { valid: true, event };
+      }
     }
 
-    if (valid && event) {
-      return { valid: true, event };
-    }
-
-    return { valid: false };
+    return result;
   };
 }

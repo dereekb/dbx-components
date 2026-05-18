@@ -2,7 +2,7 @@
  * Types for `dbx_model_api_list_app`.
  */
 
-import type { CrudEntry } from '../model-api-shared/types.js';
+import type { CrudEntry } from '@dereekb/dbx-cli/manifest-extract';
 
 export interface ApiListEntry extends CrudEntry {
   /**

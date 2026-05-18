@@ -16,8 +16,8 @@ import type { ExtractedEnum, ExtractedEnumValue } from './types.js';
  * members. Enum members without an explicit initializer auto-increment
  * starting from 0 (or from the previous explicit numeric value + 1).
  *
- * @param sf - the parsed source file to inspect
- * @returns the enums in source order
+ * @param sf - The parsed source file to inspect.
+ * @returns The enums in source order.
  */
 export function findEnums(sf: SourceFile): readonly ExtractedEnum[] {
   const out: ExtractedEnum[] = [];

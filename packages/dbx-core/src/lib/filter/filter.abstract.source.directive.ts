@@ -7,7 +7,7 @@ import { provideFilterSource } from './filter.content';
 /**
  * DI token for providing a default filter value to {@link AbstractFilterSourceDirective}.
  */
-export const FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN = new InjectionToken<Maybe<Observable<Maybe<unknown>>>>('FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_SOURCE_TOKEN');
+export const DEFAULT_FILTER_SOURCE_DIRECTIVE_FILTER_TOKEN = new InjectionToken<Maybe<Observable<Maybe<unknown>>>>('FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_SOURCE_TOKEN');
 
 /**
  * Abstract class defining the contract for a filter source directive that can be set, reset, and initialized with filters.
@@ -34,16 +34,17 @@ export type ProvideFilterSourceDirectiveDefaultFilterFactoryFunction<F = unknown
  *
  * @param sourceType - The concrete directive class.
  * @param defaultFilterFactory - Optional factory to provide an initial filter value via DI.
- * @returns An array of Angular providers for the filter source directive.
+ * @returns Array of Angular providers for the filter source directive.
  *
- * @example
- * ```typescript
- * @Directive({
+ * @Directive ({
  *   selector: '[myFilterSource]',
  *   providers: provideFilterSourceDirective(MyFilterSourceDirective),
  * })
  * export class MyFilterSourceDirective extends AbstractFilterSourceDirective<MyFilter> {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function provideFilterSourceDirective<S extends FilterSourceDirective<F>, F = unknown>(sourceType: Type<S>, defaultFilterFactory?: ProvideFilterSourceDirectiveDefaultFilterFactoryFunction): Provider[] {
   const providers = [
@@ -56,7 +57,7 @@ export function provideFilterSourceDirective<S extends FilterSourceDirective<F>,
 
   if (defaultFilterFactory != null) {
     providers.push({
-      provide: FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN,
+      provide: DEFAULT_FILTER_SOURCE_DIRECTIVE_FILTER_TOKEN,
       useFactory: defaultFilterFactory,
       deps: [Injector]
     });
@@ -69,13 +70,13 @@ export function provideFilterSourceDirective<S extends FilterSourceDirective<F>,
  * Abstract directive providing a complete {@link FilterSource} implementation backed by a {@link FilterSourceInstance}.
  *
  * Supports setting/resetting filters, initializing from an external observable, and providing
- * a default filter via the {@link FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN} DI token.
+ * a default filter via the {@link DEFAULT_FILTER_SOURCE_DIRECTIVE_FILTER_TOKEN} DI token.
  *
  * @typeParam F - The filter type.
  */
 @Directive()
 export abstract class AbstractFilterSourceDirective<F = unknown> implements FilterSourceDirective<F>, OnDestroy {
-  private readonly _defaultFilter = inject<MaybeObservableOrValue<F>>(FILTER_SOURCE_DIRECTIVE_DEFAULT_FILTER_TOKEN, { optional: true });
+  private readonly _defaultFilter = inject<MaybeObservableOrValue<F>>(DEFAULT_FILTER_SOURCE_DIRECTIVE_FILTER_TOKEN, { optional: true });
 
   protected readonly _defaultFilterSource = new FilterSourceInstance<F>({
     defaultFilter: this._defaultFilter

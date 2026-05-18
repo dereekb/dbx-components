@@ -2,7 +2,7 @@ import type { CommandModule, Argv } from 'yargs';
 import { getRecruitApi, getCrmApi, getDeskApi } from '../middleware/auth.middleware';
 import { outputResult, outputError } from '../util/output';
 
-export const requestCommand: CommandModule = {
+export const REQUEST_COMMAND: CommandModule = {
   command: 'request <product> <method> <path>',
   describe: 'Make a raw API request through the authenticated context',
   builder: (yargs: Argv) =>

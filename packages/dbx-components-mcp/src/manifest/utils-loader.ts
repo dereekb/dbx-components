@@ -56,9 +56,9 @@ export interface LoadUtilManifestsResult {
  * Loads, validates, and merges the supplied manifest sources into a single
  * registry suitable for the `dbx_util_lookup` / `dbx_util_search` MCP tools.
  *
- * @param input - manifest sources plus an optional injected `readFile`
- * @returns merged entries, category index, deterministic warnings, and the list of source labels that loaded
- * @throws when a strict source fails or when zero manifests load successfully
+ * @param input - Manifest sources plus an optional injected `readFile`
+ * @returns Merged entries, category index, deterministic warnings, and the list of source labels that loaded.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadUtilManifests(input: LoadUtilManifestsInput): Promise<LoadUtilManifestsResult> {
   const { entries, indexMap, warnings, loadedSources } = await loadManifestsBase<UtilManifest, UtilEntry>(input, {

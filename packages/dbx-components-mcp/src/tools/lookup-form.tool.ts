@@ -69,8 +69,9 @@ const LookupFormArgsType = type({
  * Parses and validates the caller's args via arktype. Throws a user-facing
  * error string when validation fails — the handler catches and formats it.
  *
- * @param raw - the unvalidated tool arguments from the MCP runtime
- * @returns the canonical args with `depth` defaulted to `'full'`
+ * @param raw - The unvalidated tool arguments from the MCP runtime.
+ * @returns The canonical args with `depth` defaulted to `'full'`
+ * @throws {TypeError} When `raw` fails the lookup-form args schema (missing `topic` or invalid `depth`).
  */
 function parseLookupFormArgs(raw: unknown): { readonly topic: string; readonly depth: 'brief' | 'full' } {
   const parsed = LookupFormArgsType(raw);
@@ -117,8 +118,9 @@ export interface CreateLookupFormToolConfig {
  * Builds the `dbx_form_lookup` tool against a forge-fields registry. Called by
  * {@link registerTools} once the registry has loaded at server startup.
  *
- * @param config - the registry the tool should resolve against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry the tool should resolve against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxTool {
@@ -158,8 +160,8 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
    *   5. form `produces` value match → form group
    *   6. fuzzy substring search over form slug/factoryName/description
    *
-   * @param rawTopic - the caller-supplied topic, untrimmed
-   * @returns the resolved match describing how to render the response
+   * @param rawTopic - The caller-supplied topic, untrimmed.
+   * @returns The resolved match describing how to render the response.
    */
   function resolveTopic(rawTopic: string): LookupFormMatch {
     const lowered = rawTopic.trim().toLowerCase();
@@ -171,8 +173,8 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
    * Case-insensitive exact match against the catalog of `produces` values.
    * Returns the catalog value with its original casing when found.
    *
-   * @param topic - the lookup topic to test against the produces catalog
-   * @returns the matching catalog value with its original casing, or `undefined`
+   * @param topic - The lookup topic to test against the produces catalog.
+   * @returns The matching catalog value with its original casing, or `undefined`
    */
   function findProducesMatch(topic: string): string | undefined {
     const lowered = topic.trim().toLowerCase();
@@ -184,26 +186,27 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
    * Returns up to five entries whose slug / factory name / description contains
    * the query. Good enough at registry size <100 — revisit if it grows.
    *
-   * @param query - the unmatched lookup topic to fuzzy-search
-   * @returns up to five candidate entries ordered by descending score
+   * @param query - The unmatched lookup topic to fuzzy-search.
+   * @returns Up to five candidate entries ordered by descending score.
    */
   function fuzzyCandidates(query: string): readonly FormFieldInfo[] {
     const q = query.trim().toLowerCase();
-    if (q.length === 0) {
-      return [];
-    }
-    const scored: { readonly field: FormFieldInfo; readonly score: number }[] = [];
-    for (const field of registry.all) {
-      const slugHit = field.slug.toLowerCase().includes(q) ? 3 : 0;
-      const nameHit = field.factoryName.toLowerCase().includes(q) ? 2 : 0;
-      const descHit = field.description.toLowerCase().includes(q) ? 1 : 0;
-      const score = slugHit + nameHit + descHit;
-      if (score > 0) {
-        scored.push({ field, score });
+    let result: readonly FormFieldInfo[] = [];
+    if (q.length > 0) {
+      const scored: { readonly field: FormFieldInfo; readonly score: number }[] = [];
+      for (const field of registry.all) {
+        const slugHit = field.slug.toLowerCase().includes(q) ? 3 : 0;
+        const nameHit = field.factoryName.toLowerCase().includes(q) ? 2 : 0;
+        const descHit = field.description.toLowerCase().includes(q) ? 1 : 0;
+        const score = slugHit + nameHit + descHit;
+        if (score > 0) {
+          scored.push({ field, score });
+        }
       }
+      scored.sort((a, b) => b.score - a.score);
+      result = scored.slice(0, 5).map((s) => s.field);
     }
-    scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, 5).map((s) => s.field);
+    return result;
   }
 
   // MARK: Formatting
@@ -226,32 +229,30 @@ export function createLookupFormTool(config: CreateLookupFormToolConfig): DbxToo
   }
 
   function run(rawArgs: unknown): ToolResult {
-    let args: { readonly topic: string; readonly depth: 'brief' | 'full' };
+    let result: ToolResult;
     try {
-      args = parseLookupFormArgs(rawArgs);
+      const args = parseLookupFormArgs(rawArgs);
+      const match = resolveTopic(args.topic);
+      let text: string;
+      switch (match.kind) {
+        case 'catalog':
+          text = formatCatalog();
+          break;
+        case 'single':
+          text = formatFormFieldEntry(match.field, args.depth);
+          break;
+        case 'group':
+          text = formatFormFieldGroup(match.fields, match.title);
+          break;
+        case 'not-found':
+          text = formatNotFound(match.normalized, match.candidates);
+          break;
+      }
+      result = { content: [{ type: 'text', text }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      result = toolError(message);
     }
-
-    const match = resolveTopic(args.topic);
-    let text: string;
-    switch (match.kind) {
-      case 'catalog':
-        text = formatCatalog();
-        break;
-      case 'single':
-        text = formatFormFieldEntry(match.field, args.depth);
-        break;
-      case 'group':
-        text = formatFormFieldGroup(match.fields, match.title);
-        break;
-      case 'not-found':
-        text = formatNotFound(match.normalized, match.candidates);
-        break;
-    }
-
-    const result: ToolResult = { content: [{ type: 'text', text }] };
     return result;
   }
 

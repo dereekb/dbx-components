@@ -33,7 +33,7 @@ export type MapboxViewportBoundFunction = (input: MapboxViewportBoundFunctionInp
  * Creates a function that calculates the geographic bounds of a Mapbox viewport given a center point and zoom level.
  *
  * @param config - Configuration specifying the map canvas size and optional tile size.
- * @returns A function that accepts a center point and zoom level and returns the corresponding {@link LatLngBound}.
+ * @returns Accepts a center point and zoom level and returns the corresponding {@link LatLngBound}.
  */
 export function mapboxViewportBoundFunction(config: MapboxViewportBoundFunctionConfig): MapboxViewportBoundFunction {
   const { mapCanvasSize, tileSize = 512 } = config;

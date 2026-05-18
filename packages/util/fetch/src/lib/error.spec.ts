@@ -3,8 +3,8 @@ import { fetchService, type FetchService } from './fetch';
 import { FetchResponseError, requireOkResponse } from './error';
 
 const testFetch: FetchService = fetchService({
-  makeFetch: fetch as any,
-  makeRequest: (x, y) => new Request(x as RequestInfo, y as RequestInit) as any
+  makeFetch: fetch,
+  makeRequest: (x, y) => new Request(x, y as RequestInit)
 });
 
 describe('requireOkResponse()', () => {

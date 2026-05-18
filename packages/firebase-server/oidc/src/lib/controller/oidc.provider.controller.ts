@@ -26,7 +26,7 @@ export class OidcProviderController {
   }
 
   /**
-   * GET /oidc/login/client
+   * GET /oidc/login/client.
    *
    * Convenience redirect from the API issuer path back to the frontend app's
    * OAuth login page. Lets a user who lands on the API host get bounced to the
@@ -69,18 +69,21 @@ interface MergeQueryParamsFromOriginalUrlInput {
  */
 function mergeQueryParamsFromOriginalUrl(input: MergeQueryParamsFromOriginalUrlInput): string {
   const queryIndex = input.originalUrl.indexOf('?');
+  let result: string;
 
   if (queryIndex < 0) {
-    return input.baseUrl;
+    result = input.baseUrl;
+  } else {
+    const incomingSearch = input.originalUrl.slice(queryIndex + 1);
+
+    if (incomingSearch.length === 0) {
+      result = input.baseUrl;
+    } else {
+      const baseQueryIndex = input.baseUrl.indexOf('?');
+      const separator = baseQueryIndex < 0 ? '?' : '&';
+      result = `${input.baseUrl}${separator}${incomingSearch}`;
+    }
   }
 
-  const incomingSearch = input.originalUrl.slice(queryIndex + 1);
-
-  if (incomingSearch.length === 0) {
-    return input.baseUrl;
-  }
-
-  const baseQueryIndex = input.baseUrl.indexOf('?');
-  const separator = baseQueryIndex < 0 ? '?' : '&';
-  return `${input.baseUrl}${separator}${incomingSearch}`;
+  return result;
 }

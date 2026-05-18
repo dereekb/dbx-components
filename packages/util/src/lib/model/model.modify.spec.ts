@@ -64,7 +64,7 @@ describe('modifyModelMapFunction()', () => {
   it('should not call the modifier for null input', () => {
     let called = false;
     const modified = modifyModelMapFunction(baseFn, () => (called = true));
-    modified(null as any);
+    modified(null);
 
     expect(called).toBe(false);
   });

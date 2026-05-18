@@ -30,8 +30,8 @@ export interface ClassifyFixtureArchetypeInput {
  * the file declares a Fixture/Instance pair but registration was deleted)
  * — the validator surfaces the missing factory separately.
  *
- * @param input - parsed factory call + params metadata
- * @returns the archetype enum
+ * @param input - Parsed factory call + params metadata.
+ * @returns The archetype enum.
  */
 export function classifyFixtureArchetype(input: ClassifyFixtureArchetypeInput): FixtureArchetype {
   const { factory, params } = input;
@@ -51,8 +51,8 @@ export function classifyFixtureArchetype(input: ClassifyFixtureArchetypeInput): 
  * Returns `true` when the factory's `getCollection` reads a parent fixture
  * off `params` (the canonical sub-collection signature).
  *
- * @param factory - parsed factory metadata
- * @returns `true` for sub-collection wiring
+ * @param factory - Parsed factory metadata.
+ * @returns `true` for sub-collection wiring.
  */
 function isSubCollection(factory: FactoryCall | undefined): boolean {
   if (factory === undefined) return false;
@@ -63,8 +63,8 @@ function isSubCollection(factory: FactoryCall | undefined): boolean {
  * Returns `true` when at least one Params field's type resolves to a
  * sibling `<Prefix><X>TestContextFixture`.
  *
- * @param params - parsed Params type metadata
- * @returns `true` when the Params interface has fixture dependency edges
+ * @param params - Parsed Params type metadata.
+ * @returns `true` when the Params interface has fixture dependency edges.
  */
 function paramsHasFixtureDependencies(params: FixtureParamsType | undefined): boolean {
   if (params === undefined) return false;

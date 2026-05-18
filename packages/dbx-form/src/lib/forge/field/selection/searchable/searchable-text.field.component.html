@@ -11,7 +11,7 @@
     @if (searchLabelSignal()) {
       <div class="dbx-label">{{ searchLabelSignal() }}</div>
     }
-    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholder()" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()" />
+    <input #textInput class="dbx-forge-bare-input" [formControl]="inputCtrl" [matAutocomplete]="auto" [placeholder]="searchInputPlaceholderSignal()" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-describedby]="ariaDescribedBySignal()" />
   </div>
 </div>
 <mat-autocomplete class="dbx-searchable-text-field-autocomplete" #auto="matAutocomplete" (optionSelected)="selected($event)">

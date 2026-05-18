@@ -7,8 +7,8 @@ import type { ComponentModelReport } from './types.js';
 /**
  * Renders the listing report as markdown.
  *
- * @param report - the listing report
- * @returns the formatted markdown text
+ * @param report - The listing report.
+ * @returns The formatted markdown text.
  */
 export function formatReportAsMarkdown(report: ComponentModelReport): string {
   const lines: string[] = [`# Models in \`${report.componentDir}\``, '', `- **Models found:** ${report.models.length}`, `- **Reserved folders skipped:** ${report.skipped.length}`];
@@ -44,8 +44,8 @@ export function formatReportAsMarkdown(report: ComponentModelReport): string {
 /**
  * Renders the listing report as JSON.
  *
- * @param report - the listing report
- * @returns the formatted JSON text
+ * @param report - The listing report.
+ * @returns The formatted JSON text.
  */
 export function formatReportAsJson(report: ComponentModelReport): string {
   return JSON.stringify(report, null, 2);

@@ -78,8 +78,8 @@ const ALIASES: Record<string, string> = {
  * alias matches, returns the normalized topic unchanged so downstream lookups
  * can try the topic as a slug / tag / category directly.
  *
- * @param topic - the raw caller-supplied topic to normalise
- * @returns the canonical token, or the normalised topic when no alias applies
+ * @param topic - The raw caller-supplied topic to normalise.
+ * @returns The canonical token, or the normalised topic when no alias applies.
  */
 export function resolveSnapshotFieldTopicAlias(topic: string): string {
   const normalized = topic.trim().toLowerCase();
@@ -89,7 +89,7 @@ export function resolveSnapshotFieldTopicAlias(topic: string): string {
 /**
  * Returns every alias → canonical-token mapping. Useful for docs/introspection.
  *
- * @returns the readonly alias table keyed by alias to canonical token
+ * @returns The readonly alias table keyed by alias to canonical token.
  */
 export function getSnapshotFieldAliasMap(): Readonly<Record<string, string>> {
   return ALIASES;

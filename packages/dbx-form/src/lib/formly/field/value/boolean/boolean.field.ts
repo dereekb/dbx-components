@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DefaultValueFieldConfig and DescriptionFieldConfig retained for the formly layer until full migration to forge */
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type LabeledFieldConfig, formlyField, type DefaultValueFieldConfig, type DescriptionFieldConfig, propsAndConfigForFieldConfig, type MaterialFormFieldConfig } from '../../field';
 import { AUTO_TOUCH_WRAPPER_KEY, STYLE_WRAPPER_KEY } from '../../wrapper/wrapper.key';
@@ -12,7 +13,7 @@ export interface ToggleFieldConfig extends Omit<LabeledFieldConfig, 'placeholder
  *
  * Defaults to `false` when no default value is specified. Uses auto-touch and style wrappers.
  *
- * @param config - Toggle field configuration
+ * @param config - Toggle field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'toggle'`
  *
  * @example
@@ -46,7 +47,7 @@ export interface CheckboxFieldConfig extends LabeledFieldConfig, DefaultValueFie
  *
  * Defaults to `false` when no default value is specified. Uses a style wrapper.
  *
- * @param config - Checkbox field configuration
+ * @param config - Checkbox field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'checkbox'`
  *
  * @example
@@ -92,6 +93,7 @@ export function acceptTermsField({ key = 'accept', label = 'Accept Terms', descr
 */
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyToggleField instead.
  */

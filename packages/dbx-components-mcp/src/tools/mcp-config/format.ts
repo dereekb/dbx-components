@@ -66,8 +66,8 @@ function appendPackagesList(lines: string[], snapshot: WorkspaceSnapshot): void 
 /**
  * `dbx_mcp_config op="status"` renderer.
  *
- * @param snapshot - the workspace snapshot to render
- * @returns markdown text consumed by the tool result
+ * @param snapshot - The workspace snapshot to render.
+ * @returns Markdown text consumed by the tool result.
  */
 export function formatStatus(snapshot: WorkspaceSnapshot): string {
   const configLabel = snapshot.configPath === null ? '_not present_' : `\`${snapshot.configPath}\``;
@@ -96,8 +96,8 @@ export function formatStatus(snapshot: WorkspaceSnapshot): string {
  * Walks the snapshot's config warnings, registered-source existence,
  * and per-package candidate clusters to produce the validation buckets.
  *
- * @param snapshot - the workspace snapshot to inspect
- * @returns split lists of error and warning labels (no markdown yet)
+ * @param snapshot - The workspace snapshot to inspect.
+ * @returns Split lists of error and warning labels (no markdown yet)
  */
 function collectValidationFindings(snapshot: WorkspaceSnapshot): { readonly errors: string[]; readonly warnings: string[] } {
   const errors: string[] = [];
@@ -122,9 +122,9 @@ function collectValidationFindings(snapshot: WorkspaceSnapshot): { readonly erro
  * Appends a `## <heading>` section listing each item as a bullet, plus a
  * trailing blank line. No-ops when the list is empty.
  *
- * @param lines - the output buffer to append to
- * @param heading - the markdown section heading (e.g. `Errors`)
- * @param items - the bullet content; one bullet per item
+ * @param lines - The output buffer to append to.
+ * @param heading - The markdown section heading (e.g. `Errors`)
+ * @param items - The bullet content; one bullet per item.
  */
 function appendFindings(lines: string[], heading: string, items: readonly string[]): void {
   if (items.length === 0) return;
@@ -136,8 +136,8 @@ function appendFindings(lines: string[], heading: string, items: readonly string
 /**
  * `dbx_mcp_config op="validate"` renderer. Errors-only.
  *
- * @param snapshot - the workspace snapshot to validate
- * @returns markdown text plus an `hasErrors` flag the tool maps to `isError`
+ * @param snapshot - The workspace snapshot to validate.
+ * @returns Markdown text plus an `hasErrors` flag the tool maps to `isError`
  */
 export function formatValidate(snapshot: WorkspaceSnapshot): { readonly text: string; readonly hasErrors: boolean } {
   const { errors, warnings } = collectValidationFindings(snapshot);
@@ -153,10 +153,10 @@ export function formatValidate(snapshot: WorkspaceSnapshot): { readonly text: st
 /**
  * `dbx_mcp_config op="init"` renderer.
  *
- * @param plan - the planned set of changes from `buildInitPlan`
- * @param opts - render options
- * @param opts.dryRun - when true, the heading and section labels reflect "would be written"
- * @returns markdown text consumed by the tool result
+ * @param plan - The planned set of changes from `buildInitPlan`
+ * @param opts - Render options.
+ * @param opts.dryRun - When true, the heading and section labels reflect "would be written".
+ * @returns Markdown text consumed by the tool result.
  */
 export function formatInit(plan: InitPlan, opts: { readonly dryRun: boolean }): string {
   const newCount = plan.changes.filter((c) => c.reason === 'new').length;
@@ -188,8 +188,8 @@ export function formatInit(plan: InitPlan, opts: { readonly dryRun: boolean }): 
 /**
  * `dbx_mcp_config op="refresh"` renderer.
  *
- * @param result - per-package, per-cluster refresh outcomes
- * @returns markdown text plus a `hasFailures` flag the tool maps to `isError`
+ * @param result - Per-package, per-cluster refresh outcomes.
+ * @returns Markdown text plus a `hasFailures` flag the tool maps to `isError`
  */
 export function formatRefresh(result: RefreshResult): { readonly text: string; readonly hasFailures: boolean } {
   const ok = result.outcomes.filter((o) => o.kind === 'ok');

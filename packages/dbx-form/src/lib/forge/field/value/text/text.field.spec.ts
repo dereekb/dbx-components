@@ -12,7 +12,6 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
 import { firstValueFrom } from 'rxjs';
-import { type FormControlStatus } from '@angular/forms';
 
 // ============================================================================
 // DbxForgeTextFieldConfig - Exhaustive Whitelist
@@ -388,7 +387,7 @@ describe('scenarios', () => {
 
       const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
 
-      expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+      expect(streamEvent.status).toBe('INVALID');
     });
 
     describe('email inputType', () => {
@@ -424,7 +423,7 @@ describe('scenarios', () => {
         await fixture.whenStable();
 
         const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-        expect(streamEvent.status).toBe('INVALID' as FormControlStatus);
+        expect(streamEvent.status).toBe('INVALID');
       });
 
       it('should mark the form as valid when the value is a valid email', async () => {
@@ -443,7 +442,7 @@ describe('scenarios', () => {
         await fixture.whenStable();
 
         const streamEvent = await firstValueFrom(fixture.componentInstance.context.stream$);
-        expect(streamEvent.status).toBe('VALID' as FormControlStatus);
+        expect(streamEvent.status).toBe('VALID');
       });
 
       it('should not register an email validator when inputType is not email', async () => {

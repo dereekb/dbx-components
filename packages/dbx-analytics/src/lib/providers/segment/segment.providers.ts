@@ -27,8 +27,8 @@ export interface ProvideDbxAnalyticsSegmentModuleConfig {
  *
  * Use alongside {@link provideDbxAnalyticsService} to wire Segment as an analytics listener.
  *
- * @param config - Segment-specific configuration including the write key factory
- * @returns environment providers for Segment analytics
+ * @param config - Segment-specific configuration including the write key factory.
+ * @returns Environment providers for Segment analytics.
  *
  * @example
  * ```ts
@@ -52,6 +52,7 @@ export interface ProvideDbxAnalyticsSegmentModuleConfig {
  *   ]
  * };
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxAnalyticsSegmentApiService(config: ProvideDbxAnalyticsSegmentModuleConfig): EnvironmentProviders {

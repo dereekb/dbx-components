@@ -16,7 +16,7 @@ describe('isCompleteUnitedStatesAddress()', () => {
   it('should return true for an address with a null line2 value.', () => {
     const address: UnitedStatesAddress = {
       line1: 'hello world',
-      line2: null as any,
+      line2: null,
       city: 'San Antonio',
       state: 'TX',
       zip: '78216'

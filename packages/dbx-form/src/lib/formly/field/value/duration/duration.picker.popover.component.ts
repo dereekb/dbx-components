@@ -87,11 +87,11 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Opens the duration picker popover.
    *
-   * @param popoverService - The popover service to use
-   * @param config - Configuration with origin element and picker data
-   * @param config.origin - The element to anchor the popover to
-   * @param config.data - The picker data including current values and which units to show
-   * @returns A reference to the opened popover
+   * @param popoverService - The popover service to use.
+   * @param config - Configuration with origin element and picker data.
+   * @param config.origin - The element to anchor the popover to.
+   * @param config.data - The picker data including current values and which units to show.
+   * @returns A reference to the opened popover.
    */
   static openPopover(popoverService: DbxPopoverService, config: { origin: ElementRef; data: DbxDurationPickerPopoverData }): NgPopoverRef {
     return popoverService.open({
@@ -107,8 +107,8 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Gets the short label for a time unit.
    *
-   * @param unit - The time unit
-   * @returns The short label string
+   * @param unit - The time unit.
+   * @returns The short label string.
    */
   unitLabel(unit: TimeUnit): string {
     return TIME_UNIT_SHORT_LABEL_MAP[unit];
@@ -117,8 +117,8 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Gets the current value for a specific time unit.
    *
-   * @param unit - The time unit to read
-   * @returns The current value for that unit
+   * @param unit - The time unit to read.
+   * @returns The current value for that unit.
    */
   getValue(unit: TimeUnit): number {
     return getDurationDataValue(this.durationData(), unit);
@@ -127,8 +127,8 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Returns true if incrementing the given unit by 1 would not exceed the maximum.
    *
-   * @param unit - The time unit to check
-   * @returns Whether incrementing is allowed
+   * @param unit - The time unit to check.
+   * @returns Whether incrementing is allowed.
    */
   canIncrement(unit: TimeUnit): boolean {
     if (this._maxMs == null) {
@@ -143,8 +143,8 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Returns true if decrementing the given unit by 1 would not go below the minimum (or below 0).
    *
-   * @param unit - The time unit to check
-   * @returns Whether decrementing is allowed
+   * @param unit - The time unit to check.
+   * @returns Whether decrementing is allowed.
    */
   canDecrement(unit: TimeUnit): boolean {
     if (this._carryOver) {
@@ -174,7 +174,7 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
    * Increments the value for a specific time unit.
    * Holding shift doubles the step.
    *
-   * @param unit - The time unit to increment
+   * @param unit - The time unit to increment.
    * @param step - The amount to increment by (defaults to 1)
    */
   increment(unit: TimeUnit, step = 1): void {
@@ -188,7 +188,7 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
    * Decrements the value for a specific time unit.
    * Holding shift doubles the step.
    *
-   * @param unit - The time unit to decrement
+   * @param unit - The time unit to decrement.
    * @param step - The amount to decrement by (defaults to 1)
    */
   decrement(unit: TimeUnit, step = 1): void {
@@ -202,8 +202,8 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Returns the step size — 2 if shift is held, 1 otherwise.
    *
-   * @param event - The mouse or keyboard event
-   * @returns The step multiplier
+   * @param event - The mouse or keyboard event.
+   * @returns The step multiplier.
    */
   stepFromEvent(event?: Event): number {
     if (event && 'shiftKey' in event) {
@@ -217,8 +217,8 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
    * When carryOver is enabled, normalizes the data by converting to total milliseconds
    * and decomposing back into the picker's units (e.g., 60s becomes 1m, 7d becomes 1w).
    *
-   * @param data - The duration data to normalize
-   * @returns Normalized or original data
+   * @param data - The duration data to normalize.
+   * @returns Normalized or original data.
    */
   private _normalizeIfCarryOver(data: TimeDurationData): TimeDurationData {
     if (!this._carryOver) {
@@ -239,8 +239,8 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
    * Fires one action immediately and starts hold-to-repeat.
    * Used by both mousedown and keydown.
    *
-   * @param action - The action to perform
-   * @param unit - The time unit
+   * @param action - The action to perform.
+   * @param unit - The time unit.
    * @param event - The triggering event (for shift detection)
    */
   onHoldStart(action: 'increment' | 'decrement', unit: TimeUnit, event: Event): void {
@@ -272,7 +272,7 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Returns the current step based on whether shift is held.
    *
-   * @returns 2 when shift is held for larger increments, 1 otherwise
+   * @returns Two when shift is held for larger increments, one otherwise.
    */
   private get _currentStep(): number {
     return this._shiftHeld ? 2 : 1;
@@ -285,7 +285,7 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
    * Handles keyup events. Only stops the hold when an arrow key is released.
    * Releasing modifier keys (shift, ctrl, etc.) does not stop the hold.
    *
-   * @param event - The keyboard event
+   * @param event - The keyboard event.
    */
   onKeyUp(event: KeyboardEvent): void {
     this._shiftHeld = event.shiftKey;
@@ -312,10 +312,10 @@ export class DbxDurationPickerPopoverComponent extends AbstractPopoverDirective<
   /**
    * Executes an increment or decrement action if allowed.
    *
-   * @param action - Whether to increment or decrement the value
+   * @param action - Whether to increment or decrement the value.
    * @param unit - The time unit to adjust (e.g. 'h', 'm', 's')
-   * @param step - The step multiplier for the action
-   * @returns True if the action was performed
+   * @param step - The step multiplier for the action.
+   * @returns True if the action was performed.
    */
   private _doAction(action: 'increment' | 'decrement', unit: TimeUnit, step: number): boolean {
     if (action === 'increment' && this.canIncrement(unit)) {

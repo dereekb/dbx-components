@@ -12,7 +12,7 @@ export interface DbxListFieldConfig<T = unknown, C extends AbstractDbxSelectionL
 /**
  * Creates a Formly field configuration for a dbx selection list field.
  *
- * @param config - List field configuration including the list component class and state observable
+ * @param config - List field configuration including the list component class and state observable.
  * @returns A validated {@link FormlyFieldConfig} with type `'dbxlistfield'`
  *
  * @example
@@ -40,6 +40,7 @@ export function formlyDbxListField<T = unknown, C extends AbstractDbxSelectionLi
 }
 
 // MARK: Deprecated
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyDbxListField instead.
  */

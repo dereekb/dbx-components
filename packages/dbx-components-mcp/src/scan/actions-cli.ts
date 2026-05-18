@@ -54,8 +54,8 @@ const USAGE = [
  * every failure path returns a structured exit code so callers can wire
  * this into `process.exit` without try/catch.
  *
- * @param input - argv plus injectable I/O hooks
- * @returns the CLI's exit code (0 on success, 1 on drift / build failure, 2 on usage error)
+ * @param input - Argv plus injectable I/O hooks.
+ * @returns The CLI's exit code (0 on success, 1 on drift / build failure, 2 on usage error)
  */
 export async function runActionsScanCli(input: RunActionsScanCliInput): Promise<RunActionsScanCliResult> {
   return runScanCliBase(input, {

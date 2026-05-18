@@ -64,8 +64,10 @@ export interface ZohoAccountsAccessTokenErrorResponse {
  * The returned function accepts optional overrides for client credentials and refresh token.
  * When omitted, values are read from the {@link ZohoAccountsContext}'s config.
  *
- * @param context - Authenticated Zoho Accounts context providing fetch and config
- * @returns Function that exchanges a refresh token for an access token
+ * @param context - Authenticated Zoho Accounts context providing fetch and config.
+ * @returns Function that exchanges a refresh token for an access token.
+ *
+ * @see https://www.zoho.com/accounts/protocol/oauth/web-apps/access-token-expiry.html
  *
  * @example
  * ```typescript
@@ -80,8 +82,6 @@ export interface ZohoAccountsAccessTokenErrorResponse {
  *   refreshToken: 'other-refresh-token'
  * });
  * ```
- *
- * @see https://www.zoho.com/accounts/protocol/oauth/web-apps/access-token-expiry.html
  */
 export function zohoAccountsAccessToken(context: ZohoAccountsContext): (input?: ZohoAccountsAccessTokenInput) => Promise<ZohoAccountsAccessTokenResponse> {
   return (input) => {
@@ -180,7 +180,9 @@ export type ZohoAccountsRefreshTokenFromAuthorizationCodeFunction = (input: Zoho
  * the initial authorization request.
  *
  * @param context - Zoho Accounts context providing fetch and config (clientId/clientSecret)
- * @returns Function that exchanges an authorization code for tokens
+ * @returns Function that exchanges an authorization code for tokens.
+ *
+ * @see https://www.zoho.com/accounts/protocol/oauth/web-apps/access-token.html
  *
  * @example
  * ```typescript
@@ -191,8 +193,6 @@ export type ZohoAccountsRefreshTokenFromAuthorizationCodeFunction = (input: Zoho
  *   redirectUri: 'https://myapp.example.com/oauth/callback'
  * });
  * ```
- *
- * @see https://www.zoho.com/accounts/protocol/oauth/web-apps/access-token.html
  */
 export function zohoAccountsRefreshTokenFromAuthorizationCode(context: ZohoAccountsContext): ZohoAccountsRefreshTokenFromAuthorizationCodeFunction {
   return (input: ZohoAccountsRefreshTokenFromAuthorizationCodeInput) => {
@@ -217,9 +217,9 @@ export function zohoAccountsRefreshTokenFromAuthorizationCode(context: ZohoAccou
 /**
  * Constructs a standard {@link FetchJsonInput} for Zoho Accounts API calls with the given HTTP method and optional body.
  *
- * @param method - HTTP method to use for the request
- * @param body - Optional request body to include
- * @returns Configured fetch input for the Zoho Accounts API call
+ * @param method - HTTP method to use for the request.
+ * @param body - Optional request body to include.
+ * @returns Configured fetch input for the Zoho Accounts API call.
  */
 export function zohoAccountsApiFetchJsonInput(method: string, body?: FetchJsonBody): FetchJsonInput {
   return {

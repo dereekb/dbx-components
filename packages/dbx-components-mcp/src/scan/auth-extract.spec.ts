@@ -84,7 +84,7 @@ describe('extractAuthEntries', () => {
     const project = projectWith({
       '/svc/claims.ts': `
         import { authRoleClaimsService } from '@dereekb/util';
-        import { storageFileUploadUserSimpleClaimsConfiguration } from '@dereekb/firebase';
+        import { STORAGE_FILE_UPLOAD_USER_SIMPLE_CLAIMS_CONFIGURATION } from '@dereekb/firebase';
 
         /** @dbxAuthClaimsApp svc-api */
         export interface SvcAuthClaims {
@@ -94,7 +94,7 @@ describe('extractAuthEntries', () => {
 
         /** @dbxAuthClaimsService svc-api */
         export const SVC_AUTH_CLAIMS_SERVICE = authRoleClaimsService<SvcAuthClaims>({
-          fr: storageFileUploadUserSimpleClaimsConfiguration
+          fr: STORAGE_FILE_UPLOAD_USER_SIMPLE_CLAIMS_CONFIGURATION
         });
       `
     });

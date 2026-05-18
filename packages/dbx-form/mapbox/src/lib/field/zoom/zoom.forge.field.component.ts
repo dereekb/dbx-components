@@ -78,7 +78,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   readonly defaultValidationMessages: InputSignal<ValidationMessages | undefined> = input<ValidationMessages | undefined>();
 
   // Internal number form control for the zoom input
-  readonly numberCtrl = new FormControl<number | null>(null);
+  readonly numberCtrl = new FormControl<Maybe<number>>(null);
   readonly placeholderText = '';
 
   private _undoZoomLimit = false;
@@ -94,17 +94,20 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   private readonly _center = completeOnDestroy(new BehaviorSubject<Maybe<LatLngPoint>>(undefined));
 
   // Field value signal (double-call pattern)
-  readonly fieldValue = computed(() => {
+  readonly fieldValueSignal = computed(() => {
     const state = this.field()?.() as any;
     return state?.value?.() as unknown;
   });
 
-  readonly isDisabled = computed(() => {
+  readonly isDisabledSignal = computed(() => {
     const state = this.field()?.() as any;
     return (state?.disabled?.() as boolean) ?? false;
   });
 
-  readonly isReadonlyOrDisabledSignal = computed(() => (this.props() as any)?.readonly || this.isDisabled());
+  readonly isReadonlyOrDisabledSignal = computed(() => {
+    const isDisabled = this.isDisabledSignal();
+    return (this.props() as any)?.readonly || isDisabled;
+  });
 
   // Computed props
   readonly showMapSignal = computed(() => this.props()?.showMap ?? true);
@@ -113,7 +116,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   readonly maxZoomSignal = computed(() => mapboxZoomLevel(this.props()?.maxZoom || MAPBOX_MAX_ZOOM_LEVEL));
   readonly zoomStepSignal = computed(() => mapboxZoomLevel(this.props()?.zoomStep || 1));
 
-  readonly fieldValue$ = toObservable(this.fieldValue);
+  readonly fieldValue$ = toObservable(this.fieldValueSignal);
   readonly zoom$ = this.fieldValue$.pipe(filterMaybe(), shareReplay(1)) as unknown as Observable<MapboxZoomLevel>;
   readonly center$ = this._center.pipe(filterMaybe());
 
@@ -129,7 +132,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   }
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'input' });
 
     // Initialize on first props emission
     effect(() => {
@@ -169,7 +172,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
 
     // Sync field value → number control (inbound)
     effect(() => {
-      const value = this.fieldValue();
+      const value = this.fieldValueSignal();
 
       if (!this._syncing) {
         this._syncing = true;
@@ -196,7 +199,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
 
   setZoomValue(zoom?: Maybe<ZoomLevel>) {
     this._syncing = true;
-    this.numberCtrl.setValue((zoom as number) ?? null, { emitEvent: false });
+    this.numberCtrl.setValue(zoom ?? null, { emitEvent: false });
     this._setFieldValue(zoom ?? null);
     this._syncing = false;
   }
@@ -205,9 +208,9 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
 /**
  * Custom mapper for the forge mapbox zoom field.
  *
- * @param fieldDef - Field definition configuration
- * @param fieldDef.key - Form model key for the field
- * @returns Signal containing a Record of input names to values for ngComponentOutlet
+ * @param fieldDef - Field definition configuration.
+ * @param fieldDef.key - Form model key for the field.
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet.
  */
 export function mapboxZoomFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

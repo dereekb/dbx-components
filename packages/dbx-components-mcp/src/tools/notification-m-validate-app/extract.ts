@@ -72,8 +72,8 @@ interface ApiFunctionIndex {
  * objects, factories, handlers, aggregator wiring, and trusted external
  * identifiers — in a single pass so the rules run against a stable snapshot.
  *
- * @param inspection - the prepared component + api file snapshot
- * @returns the structured extraction used by the rules layer
+ * @param inspection - The prepared component + api file snapshot.
+ * @returns The structured extraction used by the rules layer.
  */
 export function extractAppNotifications(inspection: AppNotificationsInspection): ExtractedAppNotifications {
   const { componentSources, apiSources } = buildInMemoryProject(inspection);
@@ -342,10 +342,10 @@ function extractTemplateInfoRecord(sources: readonly SourceFile[], index: Compon
  * {@link ExtractedTemplateInfoRecord} when the initializer is a call to the
  * `notificationTemplateTypeInfoRecord` factory; otherwise `undefined`.
  *
- * @param decl - the variable declaration to inspect
- * @param rel - the relative source file path used in the result record
- * @param index - the component aggregate index used to resolve spread aggregates
- * @returns the extracted record or `undefined` when this declaration is not the factory call
+ * @param decl - The variable declaration to inspect.
+ * @param rel - The relative source file path used in the result record.
+ * @param index - The component aggregate index used to resolve spread aggregates.
+ * @returns The extracted record or `undefined` when this declaration is not the factory call.
  */
 function tryReadTemplateInfoRecord(decl: VariableDeclaration, rel: string, index: ComponentAggregateIndex): ExtractedTemplateInfoRecord | undefined {
   const initializer = unwrapAsExpressions(decl.getInitializer());
@@ -373,9 +373,9 @@ function tryReadTemplateInfoRecord(decl: VariableDeclaration, rel: string, index
  * Splits the elements of the `notificationTemplateTypeInfoRecord([...])`
  * array argument into direct identifier and spread-identifier buckets.
  *
- * @param arr - the array literal argument
- * @param direct - mutable buffer for direct identifier names
- * @param spreads - mutable buffer for spread-aggregate identifier names
+ * @param arr - The array literal argument.
+ * @param direct - Mutable buffer for direct identifier names.
+ * @param spreads - Mutable buffer for spread-aggregate identifier names.
  */
 function classifyInfoRecordArrayElements(arr: ArrayLiteralExpression, direct: string[], spreads: string[]): void {
   for (const el of arr.getElements()) {
@@ -397,10 +397,10 @@ function classifyInfoRecordArrayElements(arr: ArrayLiteralExpression, direct: st
  * Walks each spread aggregate, expanding it into its info identifiers when it
  * resolves locally and recording it as unresolved otherwise.
  *
- * @param direct - directly referenced info identifiers (seed for `resolved`)
- * @param spreads - spread-aggregate identifier names to resolve
- * @param index - the component aggregate index used to look up aggregates
- * @returns the resolved info identifier set and unresolved spread list
+ * @param direct - Directly referenced info identifiers (seed for `resolved`)
+ * @param spreads - Spread-aggregate identifier names to resolve.
+ * @param index - The component aggregate index used to look up aggregates.
+ * @returns The resolved info identifier set and unresolved spread list.
  */
 function resolveTemplateInfoSpreads(direct: readonly string[], spreads: readonly string[], index: ComponentAggregateIndex): { readonly resolved: Set<string>; readonly unresolved: string[] } {
   const resolved = new Set<string>(direct);
@@ -418,7 +418,8 @@ function resolveTemplateInfoSpreads(direct: readonly string[], spreads: readonly
 
 // MARK: API wiring
 function extractTemplateInfoRecordWiring(sources: readonly SourceFile[]): ExtractedTemplateInfoRecordWiring | undefined {
-  for (const sf of sources) {
+  let result: ExtractedTemplateInfoRecordWiring | undefined;
+  outer: for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const call of sf.getDescendantsOfKind(SyntaxKind.CallExpression)) {
       if (call.getExpression().getText() !== TEMPLATE_INFO_RECORD_SERVICE) continue;
@@ -427,29 +428,30 @@ function extractTemplateInfoRecordWiring(sources: readonly SourceFile[]): Extrac
       if (!first) continue;
       const inner = unwrapAsExpressions(first);
       if (!inner || !Node.isIdentifier(inner)) continue;
-      const result: ExtractedTemplateInfoRecordWiring = {
+      result = {
         recordIdentifier: inner.getText(),
         sourceFile: rel
       };
-      return result;
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function extractTemplateConfigsArrayWiring(sources: readonly SourceFile[]): ExtractedTemplateConfigsArrayWiring | undefined {
-  for (const sf of sources) {
+  let result: ExtractedTemplateConfigsArrayWiring | undefined;
+  outer: for (const sf of sources) {
     const rel = apiRelPath(sf);
     for (const obj of sf.getDescendantsOfKind(SyntaxKind.ObjectLiteralExpression)) {
       const provideIdent = readIdentifierProperty(obj, 'provide');
       if (provideIdent !== TEMPLATE_CONFIGS_ARRAY_TOKEN) continue;
       const useFactoryIdent = readIdentifierProperty(obj, 'useFactory');
       if (!useFactoryIdent) continue;
-      const result: ExtractedTemplateConfigsArrayWiring = { useFactoryIdentifier: useFactoryIdent, sourceFile: rel };
-      return result;
+      result = { useFactoryIdentifier: useFactoryIdent, sourceFile: rel };
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function buildApiFunctionIndex(sources: readonly SourceFile[]): ApiFunctionIndex {
@@ -497,25 +499,29 @@ function extractTemplateConfigsArrayFactory(sources: readonly SourceFile[], inde
 }
 
 function findFactoryInVariableStatements(sf: SourceFile, rel: string, index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {
-  for (const stmt of sf.getVariableStatements()) {
+  let result: ExtractedTemplateConfigsArrayFactory | undefined;
+  outer: for (const stmt of sf.getVariableStatements()) {
     for (const decl of stmt.getDeclarations()) {
       const name = decl.getName();
       if (!name.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
       const body = unwrapAsExpressions(decl.getInitializer());
       if (!body) continue;
-      return buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: body, sourceFile: rel, index });
+      result = buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: body, sourceFile: rel, index });
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function findFactoryInFunctions(sf: SourceFile, rel: string, index: ApiFunctionIndex): ExtractedTemplateConfigsArrayFactory | undefined {
+  let result: ExtractedTemplateConfigsArrayFactory | undefined;
   for (const fn of sf.getFunctions()) {
     const name = fn.getName();
     if (!name?.endsWith(TEMPLATE_CONFIGS_ARRAY_FACTORY_SUFFIX)) continue;
-    return buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: fn, sourceFile: rel, index });
+    result = buildTemplateConfigsFactorySummary({ symbolName: name, fnNode: fn, sourceFile: rel, index });
+    break;
   }
-  return undefined;
+  return result;
 }
 
 interface FactorySummaryBuckets {
@@ -711,9 +717,9 @@ interface ValidateArrayElements {
  * Splits the elements of the `validate: [...]` array into direct identifier
  * names and spread identifier names.
  *
- * @param validateArr - the resolved `validate` array literal, or `undefined`
- *   when the property is absent
- * @returns the direct identifier names and spread identifier names
+ * @param validateArr - The resolved `validate` array literal, or `undefined`
+ *   when the property is absent.
+ * @returns The direct identifier names and spread identifier names.
  */
 function collectValidateArrayElements(validateArr: ArrayLiteralExpression | undefined): ValidateArrayElements {
   const ids: string[] = [];
@@ -753,9 +759,9 @@ interface HandlersArrayElements {
  * elsewhere; the binding tracer still walks them so the rules pass can match
  * resolved bindings against the trust list.
  *
- * @param options - the array literal, source file, function index, and
- *   trust-listed identifier set
- * @returns the per-call buckets used to populate the task-service-call record
+ * @param options - The array literal, source file, function index, and
+ *   trust-listed identifier set.
+ * @returns The per-call buckets used to populate the task-service-call record.
  */
 function collectHandlersArrayElements(options: CollectHandlersArrayElementsOptions): HandlersArrayElements {
   const { handlersArr, sf, index, trustedExternal } = options;
@@ -815,7 +821,7 @@ interface ConsumeHandlersSpreadElementOptions {
  * `unresolvedSpreads` because the array expansion happens at runtime, while
  * the binding tracer still walks it for trust-list matching.
  *
- * @param options - the spread inner expression and the buckets to populate
+ * @param options - The spread inner expression and the buckets to populate.
  */
 function consumeHandlersSpreadElement(options: ConsumeHandlersSpreadElementOptions): void {
   const { inner, sf, index, trustedExternal, unresolvedSpreads, resolvedBindings, unresolvedBindings, visited } = options;
@@ -978,10 +984,10 @@ function tryResolveFunctionHandlerBinding(options: CollectHandlerBindingsFromIde
  * property — either directly `validate: [...]` or as `validate: foo`
  * where `foo` is a local array-literal binding.
  *
- * @param obj - the object literal carrying the property
- * @param name - the property name to resolve
- * @param sf - the source file scope used to chase identifier indirection
- * @returns the resolved array literal, or `undefined` when the property is missing or non-array
+ * @param obj - The object literal carrying the property.
+ * @param name - The property name to resolve.
+ * @param sf - The source file scope used to chase identifier indirection.
+ * @returns The resolved array literal, or `undefined` when the property is missing or non-array.
  */
 function resolveArrayFromProperty(obj: ObjectLiteralExpression, name: string, sf: SourceFile): ArrayLiteralExpression | undefined {
   const init = unwrapAsExpressions(getPropertyInitializer(obj, name));

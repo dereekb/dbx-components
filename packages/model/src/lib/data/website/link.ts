@@ -24,8 +24,8 @@ export const WEBSITE_LINK_TYPE_REGEX = /^[a-zA-Z0-9]{1,32}$/;
 /**
  * Checks whether the given string is a valid {@link WebsiteLinkType}.
  *
- * @param input - the string to validate
- * @returns true if it matches the alphanumeric 1-32 character pattern
+ * @param input - Value to test against the website link type pattern.
+ * @returns True if it matches the alphanumeric 1-32 character pattern.
  *
  * @example
  * ```typescript

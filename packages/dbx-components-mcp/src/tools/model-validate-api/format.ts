@@ -12,8 +12,8 @@ import type { ValidationResult } from './types.js';
  * to callers. Groups violations by file, then by rule group, with a headline
  * summary of pass/fail counts.
  *
- * @param result - the aggregated validation outcome
- * @returns the markdown report
+ * @param result - The aggregated validation outcome.
+ * @returns The markdown report.
  */
 export function formatResult(result: ValidationResult): string {
   return formatFileGroupedResult({

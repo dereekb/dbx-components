@@ -16,7 +16,7 @@ import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { formatReportAsJson, formatReportAsMarkdown, inspectColorTemplates, listAppColorTemplates } from './dbx-color-template-list-app/index.js';
 
-const DBX_COLOR_TEMPLATE_LIST_APP_TOOL: Tool = {
+const DBX_COLOR_TEMPLATE_LIST_APP_TOOL_DEFINITION: Tool = {
   name: 'dbx_color_template_list_app',
   description: [
     'List every `DbxColorConfigTemplate` registered through `provideDbxStyleService({ dbxColorServiceConfig: { templates: [...] } })` in an Angular app. Each entry reports its `key`, the resolved `DbxColorConfig` fields (color / contrast / tone / tonal / template), and the source file:line of the literal.',
@@ -48,32 +48,37 @@ const ColorTemplateListAppArgs = type({
 
 async function run(rawArgs: unknown): Promise<ToolResult> {
   const parsed = ColorTemplateListAppArgs(rawArgs);
+  let result: ToolResult;
   if (parsed instanceof type.errors) {
-    return toolError(`Invalid arguments: ${parsed.summary}`);
-  }
+    result = toolError(`Invalid arguments: ${parsed.summary}`);
+  } else {
+    const cwd = process.cwd();
+    const apiRel = parsed.apiDir;
+    let pathError: string | undefined;
+    try {
+      ensurePathInsideCwd(apiRel, cwd);
+    } catch (err) {
+      pathError = err instanceof Error ? err.message : String(err);
+    }
 
-  const cwd = process.cwd();
-  const apiRel = parsed.apiDir;
-  try {
-    ensurePathInsideCwd(apiRel, cwd);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    if (pathError === undefined) {
+      const apiAbs = resolve(cwd, apiRel);
+      const inspection = await inspectColorTemplates(apiAbs, apiRel);
+      if (inspection.appExists) {
+        const report = listAppColorTemplates(inspection);
+        const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+        result = { content: [{ type: 'text', text }] };
+      } else {
+        result = toolError(`App directory not found: \`${apiRel}\`.`);
+      }
+    } else {
+      result = toolError(pathError);
+    }
   }
-
-  const apiAbs = resolve(cwd, apiRel);
-  const inspection = await inspectColorTemplates(apiAbs, apiRel);
-  if (!inspection.appExists) {
-    return toolError(`App directory not found: \`${apiRel}\`.`);
-  }
-
-  const report = listAppColorTemplates(inspection);
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-export const dbxColorTemplateListAppTool: DbxTool = {
-  definition: DBX_COLOR_TEMPLATE_LIST_APP_TOOL,
+export const DBX_COLOR_TEMPLATE_LIST_APP_TOOL: DbxTool = {
+  definition: DBX_COLOR_TEMPLATE_LIST_APP_TOOL_DEFINITION,
   run
 };

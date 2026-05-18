@@ -1,5 +1,5 @@
 import { makeWithFactory } from '../getter';
-import { isEmptyIterable, isIterable, useIterableOrValue, wrapTuples } from './iterable';
+import { existsInIterable, findInIterable, firstValueFromIterable, isEmptyIterable, isIterable, useIterableOrValue, wrapTuples } from './iterable';
 
 describe('isIterable()', () => {
   it('should return true for an array.', () => {
@@ -84,6 +84,67 @@ describe('isEmptyIterable()', () => {
 
   it('should return false for non-empty maps.', () => {
     expect(isEmptyIterable(new Map([['a', 'a']]))).toBe(false);
+  });
+});
+
+describe('firstValueFromIterable()', () => {
+  it('should return undefined for an empty iterable', () => {
+    expect(firstValueFromIterable([])).toBeUndefined();
+    expect(firstValueFromIterable(new Set())).toBeUndefined();
+  });
+
+  it('should return the first value of a non-empty array', () => {
+    expect(firstValueFromIterable([1, 2, 3])).toBe(1);
+  });
+
+  it('should return the first value of a non-empty Set', () => {
+    expect(firstValueFromIterable(new Set(['a', 'b']))).toBe('a');
+  });
+});
+
+describe('findInIterable()', () => {
+  it('should return the first matching value', () => {
+    const result = findInIterable([1, 2, 3, 4], (x) => x > 2);
+    expect(result).toBe(3);
+  });
+
+  it('should return undefined when no value matches', () => {
+    const result = findInIterable([1, 2, 3], () => false);
+    expect(result).toBeUndefined();
+  });
+
+  it('should return undefined for an empty iterable', () => {
+    const result = findInIterable([], () => true);
+    expect(result).toBeUndefined();
+  });
+
+  it('should work with Sets', () => {
+    const result = findInIterable(new Set([1, 2, 3]), (x) => x === 2);
+    expect(result).toBe(2);
+  });
+});
+
+describe('existsInIterable()', () => {
+  it('should return true when at least one value matches', () => {
+    expect(existsInIterable([1, 2, 3], (x) => x === 2)).toBe(true);
+  });
+
+  it('should return false when no value matches', () => {
+    expect(existsInIterable([1, 2, 3], (x) => x === 99)).toBe(false);
+  });
+
+  it('should return false for an empty iterable', () => {
+    expect(existsInIterable([], () => true)).toBe(false);
+  });
+
+  it('should short-circuit on the first match', () => {
+    let count = 0;
+    const result = existsInIterable([1, 2, 3, 4], (x) => {
+      count += 1;
+      return x === 2;
+    });
+    expect(result).toBe(true);
+    expect(count).toBe(2);
   });
 });
 

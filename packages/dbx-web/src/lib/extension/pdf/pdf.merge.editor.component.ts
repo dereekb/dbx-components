@@ -10,7 +10,7 @@ import { DbxFileUploadComponent } from '../../interaction/upload/upload.componen
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
-import { PDF_MERGE_DEFAULT_ACCEPT, type PdfMergeEntry } from './pdf.merge';
+import { DEFAULT_PDF_MERGE_ACCEPT, type PdfMergeEntry } from './pdf.merge';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeListComponent } from './pdf.merge.list.component';
 import { openPdfPreviewDialog } from './pdf.preview.dialog.component';
@@ -50,7 +50,7 @@ export class DbxPdfMergeEditorComponent {
    */
   private readonly _pendingPreview = cleanSubscription();
 
-  readonly accept = input<FileArrayAcceptMatchConfig['accept']>(PDF_MERGE_DEFAULT_ACCEPT as FileArrayAcceptMatchConfig['accept']);
+  readonly accept = input<FileArrayAcceptMatchConfig['accept']>(DEFAULT_PDF_MERGE_ACCEPT as FileArrayAcceptMatchConfig['accept']);
   readonly multiple = input<boolean>(true);
   readonly fileName = input<string>(DEFAULT_MERGED_FILE_NAME);
   readonly showDownloadButton = input<boolean>(false);
@@ -77,7 +77,10 @@ export class DbxPdfMergeEditorComponent {
   /**
    * Computed gate for the Preview and Download affordances. Disabled while no entry is `ready` or while the registered validator delegate reports invalid.
    */
-  readonly canMergeSignal = computed(() => this.hasReadyEntriesSignal() && this.isValidSignal());
+  readonly canMergeSignal = computed(() => {
+    const isValid = this.isValidSignal();
+    return this.hasReadyEntriesSignal() && isValid;
+  });
 
   /**
    * Latest merged blob (or `undefined` while validation/merge is in flight or no entries are ready). Sourced from {@link DbxPdfMergeEditorStore.currentMergeOutput$} so the download button always reflects the current merge without needing the user to click Preview first.

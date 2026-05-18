@@ -50,20 +50,21 @@ export function createAuthScopeLookupTool(input: CreateAuthScopeLookupToolInput)
     definition: DBX_AUTH_SCOPE_LOOKUP_TOOL,
     run(rawArgs) {
       const parsed = ScopeArgsType(rawArgs);
-      if (parsed instanceof type.errors) {
-        return toolError(`Invalid arguments: ${parsed.summary}`);
-      }
-      const { topic, depth = 'full' } = parsed;
-      const normalized = topic.trim();
       let result: ToolResult;
-      if (isCatalogTopic(normalized)) {
-        result = { content: [{ type: 'text', text: formatCatalog(registry.scopes) }] };
+      if (parsed instanceof type.errors) {
+        result = toolError(`Invalid arguments: ${parsed.summary}`);
       } else {
-        const scope = registry.findScope(normalized);
-        if (scope === undefined) {
-          result = { content: [{ type: 'text', text: formatNotFound(normalized, registry.scopes) }] };
+        const { topic, depth = 'full' } = parsed;
+        const normalized = topic.trim();
+        if (isCatalogTopic(normalized)) {
+          result = { content: [{ type: 'text', text: formatCatalog(registry.scopes) }] };
         } else {
-          result = { content: [{ type: 'text', text: formatScope(scope, depth) }] };
+          const scope = registry.findScope(normalized);
+          if (scope === undefined) {
+            result = { content: [{ type: 'text', text: formatNotFound(normalized, registry.scopes) }] };
+          } else {
+            result = { content: [{ type: 'text', text: formatScope(scope, depth) }] };
+          }
         }
       }
       return result;

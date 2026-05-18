@@ -5,8 +5,8 @@ import { type ArrayFindDecisionFunction } from './array.find';
 /**
  * Creates an IndexRange for the input array, spanning from index 0 to the array's length.
  *
- * @param array - The array to create an index range for.
- * @returns An IndexRange covering the full extent of the array.
+ * @param array - Source whose length defines the maxIndex boundary.
+ * @returns Range pair spanning index 0 through the array's length.
  */
 export function indexRangeForArray<T>(array: T[]): IndexRange {
   return { minIndex: 0, maxIndex: array.length };
@@ -15,11 +15,11 @@ export function indexRangeForArray<T>(array: T[]): IndexRange {
 /**
  * Finds a value in the array using the provided decision function, then returns the value at the next index.
  *
- * @param array - The array to search through, or undefined/null.
- * @param find - Decision function used to locate the target element.
- * @param wrapAround - Whether to wrap around to the beginning of the array if the found value is at or near the last index.
- * @param steps - Number of steps forward from the found index. Defaults to 1.
- * @returns The value at the next index, or undefined if no match is found or no next value exists.
+ * @param array - Source to scan; nullish input short-circuits with undefined.
+ * @param find - Predicate that locates the anchor element to step from.
+ * @param wrapAround - When true, stepping past the end resumes from index 0.
+ * @param steps - Forward step count from the matched element; defaults to 1.
+ * @returns Element after the anchor, or undefined when the anchor or its step target falls outside the array.
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function findNext<T>(array: Maybe<T[]>, find: ArrayFindDecisionFunction<T>, wrapAround = false, steps?: number): Maybe<T> {
@@ -45,11 +45,11 @@ export function findNext<T>(array: Maybe<T[]>, find: ArrayFindDecisionFunction<T
  * When wrapAround is true, indexes that are larger than the entire array will be used to find an index that is that many steps into the array.
  * For instance, an index of 5 on an array of length 3 will return the index 1.
  *
- * @param array - The array to compute the next index within.
- * @param index - The current index to step from.
- * @param wrapAround - Whether to wrap around when stepping past the end of the array.
- * @param steps - Number of steps forward from the current index.
- * @returns The computed next index, or undefined if the input index is out of bounds.
+ * @param array - Source whose bounds anchor the step computation.
+ * @param index - Current position from which to advance.
+ * @param wrapAround - When true, stepping past the end resumes from index 0.
+ * @param steps - Forward step count from the current index.
+ * @returns Stepped index when `index` is inside the array; otherwise undefined.
  */
 // eslint-disable-next-line @typescript-eslint/max-params
 export function getArrayNextIndex<T>(array: T[], index: number, wrapAround = false, steps = 1): Maybe<number> {
@@ -78,14 +78,15 @@ export type RangedIndexedValuesArrayAccessorFactory<T> = (values: T[]) => Ranged
  *
  * Each accessor maps an index to the value whose range contains that index, or undefined if no range matches.
  *
+ * @param readIndexRange - Function that reads the index range from each value.
+ * @returns A factory that creates ranged accessors from arrays of values.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, indexed, range, accessor, factory, lookup
  * @dbxUtilRelated indexed-values-array-accessor-factory, ranged-indexed-values-array-accessor-info-factory
  *
- * @param readIndexRange - Function that reads the index range from each value.
- * @returns A factory that creates ranged accessors from arrays of values.
  * @__NO_SIDE_EFFECTS__
  */
 export function rangedIndexedValuesArrayAccessorFactory<T>(readIndexRange: ReadIndexRangeFunction<T>): RangedIndexedValuesArrayAccessorFactory<T> {
@@ -119,15 +120,16 @@ export type IndexedValuesArrayAccessorFactory<T> = (values: T[]) => IndexedValue
  * Each accessor maps an index to the matching value, falling back to the previous value, then the next value.
  * This guarantees a value is always returned.
  *
+ * @param readIndexRange - Function that reads the index range from each value.
+ * @returns A factory that creates indexed accessors from arrays of values.
+ * @throws {Error} If the provided values array is empty.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, indexed, range, accessor, factory, fallback
  * @dbxUtilRelated ranged-indexed-values-array-accessor-factory, ranged-indexed-values-array-accessor-info-factory
  *
- * @param readIndexRange - Function that reads the index range from each value.
- * @returns A factory that creates indexed accessors from arrays of values.
- * @throws Error if the provided values array is empty.
  * @__NO_SIDE_EFFECTS__
  */
 export function indexedValuesArrayAccessorFactory<T>(readIndexRange: ReadIndexRangeFunction<T>): IndexedValuesArrayAccessorFactory<T> {
@@ -195,69 +197,74 @@ export interface RangedIndexedValuesArrayInfoAccessorFactoryConfig<T> {
  * Each accessor sorts the values by their index ranges in ascending order, then for a given index
  * returns the matching value along with its previous and next neighbors.
  *
+ * @param config - Configuration containing the index range reader function.
+ * @returns A factory that creates ranged info accessors from arrays of values.
+ *
  * @dbxUtil
  * @dbxUtilCategory array
  * @dbxUtilKind factory
  * @dbxUtilTags array, indexed, range, accessor, info, factory, neighbors
  * @dbxUtilRelated ranged-indexed-values-array-accessor-factory, indexed-values-array-accessor-factory
  *
- * @param config - Configuration containing the index range reader function.
- * @returns A factory that creates ranged info accessors from arrays of values.
  * @__NO_SIDE_EFFECTS__
  */
 export function rangedIndexedValuesArrayAccessorInfoFactory<T>(config: RangedIndexedValuesArrayInfoAccessorFactoryConfig<T>): RangedIndexedValuesArrayInfoAccessorFactory<T> {
   const pairFactory = indexRangeReaderPairFactory(config.readIndexRange);
   return (values: T[]) => {
+    let accessor: (index: IndexNumber) => RangedIndexValuesArrayAccessorInfo<T>;
+
     if (values.length === 0) {
-      return () => ({}); // no pairs to match on
+      accessor = () => ({}); // no pairs to match on
+    } else {
+      // pairs sorted in ascending order
+      const pairs = values.map(pairFactory).sort(sortByIndexRangeAscendingCompareFunction((x) => x.range));
+
+      accessor = (index: IndexNumber) => {
+        // find the first item that fits the
+        let matchIndex: IndexNumber = -1;
+        let i: IndexNumber;
+
+        for (i = 0; i < pairs.length; i += 1) {
+          const comparison = pairs[i];
+
+          if (comparison.range.minIndex <= index) {
+            if (comparison.range.maxIndex > index) {
+              matchIndex = i;
+              break;
+            }
+            // continue otherwise.
+          } else {
+            break; // outside the min index, is not within these values at all
+          }
+        }
+
+        let match: Maybe<T>;
+        let prev: Maybe<T>;
+        let next: Maybe<T>;
+
+        if (matchIndex === -1) {
+          // no match
+          match = undefined;
+
+          // use i otherwise
+          prev = pairs[i - 1]?.value;
+          next = pairs[i]?.value;
+        } else {
+          match = pairs[matchIndex]?.value;
+          prev = pairs[matchIndex - 1]?.value;
+          next = pairs[matchIndex + 1]?.value;
+        }
+
+        const info: RangedIndexValuesArrayAccessorInfo<T> = {
+          prev,
+          match,
+          next
+        };
+
+        return info;
+      };
     }
 
-    // pairs sorted in ascending order
-    const pairs = values.map(pairFactory).sort(sortByIndexRangeAscendingCompareFunction((x) => x.range));
-
-    return (index: IndexNumber) => {
-      // find the first item that fits the
-      let matchIndex: IndexNumber = -1;
-      let i: IndexNumber;
-
-      for (i = 0; i < pairs.length; i += 1) {
-        const comparison = pairs[i];
-
-        if (comparison.range.minIndex <= index) {
-          if (comparison.range.maxIndex > index) {
-            matchIndex = i;
-            break;
-          }
-          // continue otherwise.
-        } else {
-          break; // outside the min index, is not within these values at all
-        }
-      }
-
-      let match: Maybe<T>;
-      let prev: Maybe<T>;
-      let next: Maybe<T>;
-
-      if (matchIndex === -1) {
-        // no match
-        match = undefined;
-
-        // use i otherwise
-        prev = pairs[i - 1]?.value;
-        next = pairs[i]?.value;
-      } else {
-        match = pairs[matchIndex]?.value;
-        prev = pairs[matchIndex - 1]?.value;
-        next = pairs[matchIndex + 1]?.value;
-      }
-
-      const info: RangedIndexValuesArrayAccessorInfo<T> = {
-        prev,
-        match,
-        next
-      };
-
-      return info;
-    };
+    return accessor;
   };
 }

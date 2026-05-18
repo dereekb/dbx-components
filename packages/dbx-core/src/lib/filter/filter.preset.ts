@@ -8,7 +8,7 @@ import { type ClickableAnchorLink } from '../router/anchor/anchor';
  * @dbxFilter
  * @dbxFilterSlug clickable-preset
  * @dbxFilterRelated source
- * @dbxFilterSkillRefs dbx__ref__dbx-component-patterns
+ * @dbxFilterSkillRefs dbx-component-patterns
  *
  * @typeParam F - The filter type, which must include a preset field.
  * @typeParam P - The preset string identifier type.
@@ -29,7 +29,7 @@ export interface ClickableFilterPreset<F extends FilterWithPreset<P>, P extends 
    *
    * A null value or empty object is used for reset.
    */
-  readonly presetValue: GetterOrValue<FilterWithPresetOptional<F>> | EmptyObject | null;
+  readonly presetValue: Maybe<GetterOrValue<FilterWithPresetOptional<F>> | EmptyObject>;
 }
 
 /**
@@ -56,7 +56,7 @@ export interface ClickablePartialFilterPreset<F> extends Pick<ClickableAnchorLin
    *
    * A null value or empty object is used for no change.
    */
-  readonly partialPresetValue: GetterOrValue<Partial<F>> | EmptyObject | null;
+  readonly partialPresetValue: Maybe<GetterOrValue<Partial<F>> | EmptyObject>;
   /**
    * The current value to test against. Returns true if this partial preset is considered active.
    */

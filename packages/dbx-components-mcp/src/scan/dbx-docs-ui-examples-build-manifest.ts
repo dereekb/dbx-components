@@ -49,8 +49,8 @@ const DEFAULT_GLOBBER: BuildDbxDocsUiExamplesManifestGlobber = defaultGlobber;
 /**
  * Builds a {@link DbxDocsUiExampleManifest} from the supplied project root.
  *
- * @param input - the project root + injection hooks for testing
- * @returns a discriminated outcome describing the result
+ * @param input - The project root + injection hooks for testing.
+ * @returns A discriminated outcome describing the result.
  */
 export async function buildDbxDocsUiExamplesManifest(input: BuildDbxDocsUiExamplesManifestInput): Promise<BuildDbxDocsUiExamplesManifestOutcome> {
   const { projectRoot, generator, readFile = DEFAULT_READ_FILE, globber = DEFAULT_GLOBBER, now = () => new Date() } = input;

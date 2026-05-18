@@ -50,7 +50,7 @@ export abstract class AbstractDbxPartialPresetFilterMenuDirective<F> {
 
     if (presetValue == null || (typeof presetValue !== 'function' && objectHasNoKeys(presetValue))) {
       // set and then reset if the value is null or empty
-      this.filterSourceDirective.setFilter((presetValue ?? {}) as F);
+      this.filterSourceDirective.setFilter(presetValue ?? {});
       this.filterSourceDirective.resetFilter();
     } else {
       const filter = getValueFromGetter(preset.partialPresetValue) as Partial<F>;

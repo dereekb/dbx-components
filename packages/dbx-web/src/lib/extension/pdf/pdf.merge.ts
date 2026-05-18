@@ -29,7 +29,7 @@ export interface PdfMergeEntryValidationResult {
 /**
  * MIME types accepted by the PDF merge editor by default: PDF documents and PNG/JPEG images.
  */
-export const PDF_MERGE_DEFAULT_ACCEPT: readonly MimeTypeWithoutParameters[] = [PDF_MIME_TYPE, PNG_MIME_TYPE, JPEG_MIME_TYPE];
+export const DEFAULT_PDF_MERGE_ACCEPT: readonly MimeTypeWithoutParameters[] = [PDF_MIME_TYPE, PNG_MIME_TYPE, JPEG_MIME_TYPE];
 
 /**
  * MIME type emitted by the merged result blob.

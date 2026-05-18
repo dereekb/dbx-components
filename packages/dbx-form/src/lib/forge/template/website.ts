@@ -11,8 +11,8 @@ export interface DbxForgeWebsiteUrlFieldConfig extends Omit<DbxForgeTextFieldCon
  *
  * Defaults to the key `'website'` and label `'Website Url'` unless overridden in the config.
  *
- * @param config - Optional configuration for the website URL field
- * @returns A {@link MatInputField} for website URL input
+ * @param config - Optional configuration for the website URL field.
+ * @returns A {@link MatInputField} for website URL input.
  *
  * @example
  * ```typescript

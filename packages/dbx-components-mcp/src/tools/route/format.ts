@@ -21,8 +21,8 @@ export interface FormatRouteTreeArgs {
  * Centralising the dispatch here means callers pass the same args shape no
  * matter which output mode they need.
  *
- * @param args - the tree, format, depth limit, and title to render
- * @returns the rendered tree string
+ * @param args - The tree, format, depth limit, and title to render.
+ * @returns The rendered tree string.
  */
 export function formatRouteTree(args: FormatRouteTreeArgs): string {
   const { format } = args;

@@ -72,8 +72,8 @@ const SERVICE_TAG_MARKER = '@dbxAuthClaimsService';
  * no downstream files are found, the registry contains only the
  * built-ins.
  *
- * @param input - workspace cwd plus optional injected reader / extra files
- * @returns the merged registry plus loader/extractor diagnostics
+ * @param input - Workspace cwd plus optional injected reader / extra files.
+ * @returns The merged registry plus loader/extractor diagnostics.
  */
 export async function loadAuthRegistry(input: LoadAuthRegistryInput): Promise<LoadAuthRegistryResult> {
   const { cwd, readFile = defaultReadFile, extraFiles = [] } = input;
@@ -156,8 +156,8 @@ function toPosix(value: string): string {
  * contain one of the auth JSDoc markers. Avoids paying parse cost on
  * unrelated `*claims*.ts` files (e.g. `claims.test.ts`, fixture files).
  *
- * @param text - the raw file contents to inspect
- * @returns `true` when the file contains either marker tag
+ * @param text - The raw file contents to inspect.
+ * @returns `true` when the file contains either marker tag.
  */
 function hasAuthMarker(text: string): boolean {
   return text.includes(APP_TAG_MARKER) || text.includes(SERVICE_TAG_MARKER);
@@ -290,8 +290,8 @@ function toRelative(absolutePath: string, cwd: string): string {
  * Resolves the workspace-relative path of the demo claims module without
  * leaking the constant into the public surface of {@link loadAuthRegistry}.
  *
- * @param workspaceRoot - absolute workspace root
- * @returns the absolute path of `components/demo-firebase/src/lib/auth/claims.ts`
+ * @param workspaceRoot - Absolute workspace root.
+ * @returns The absolute path of `components/demo-firebase/src/lib/auth/claims.ts`
  */
 export function resolveDemoClaimsPath(workspaceRoot: string): string {
   return resolvePath(workspaceRoot, join('components', 'demo-firebase', 'src', 'lib', 'auth', 'claims.ts'));

@@ -115,9 +115,9 @@ function scoreParamsMatch(params: readonly { readonly name: string }[], token: s
  * deliberately spaced so stacked hits can't fabricate a higher score
  * than the next-better match kind.
  *
- * @param entry - the registry entry being scored
- * @param token - the lowercase token to score against
- * @returns the additive score for this token/entry pair (`0` when there's no hit)
+ * @param entry - The registry entry being scored.
+ * @param token - The lowercase token to score against.
+ * @returns The additive score for this token/entry pair (`0` when there's no hit)
  */
 function scoreUtilAgainstToken(entry: UtilEntryInfo, token: string): number {
   const name = entry.name.toLowerCase();
@@ -191,8 +191,9 @@ export interface CreateSearchUtilToolConfig {
  * Builds the `dbx_util_search` tool against a utils registry. Called by
  * {@link registerTools} once the registry has loaded at server startup.
  *
- * @param config - the registry the tool should rank against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry the tool should rank against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSearchUtilTool(config: CreateSearchUtilToolConfig): DbxTool {

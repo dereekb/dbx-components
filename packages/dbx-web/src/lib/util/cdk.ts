@@ -6,8 +6,8 @@ import { type DestroyFunction } from '@dereekb/util';
  * Useful for preventing the default context menu from appearing over dialogs or popups.
  *
  * @param classes - CSS class name of the overlay container element to target. Defaults to `'cdk-overlay-container'`.
- * @param onEvent - optional callback invoked on each suppressed right-click event
- * @returns a cleanup function that removes the event listener
+ * @param onEvent - Optional callback invoked on each suppressed right-click event.
+ * @returns A cleanup function that removes the event listener.
  *
  * @example
  * ```ts

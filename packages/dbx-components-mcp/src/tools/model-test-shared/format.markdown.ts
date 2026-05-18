@@ -13,10 +13,10 @@ const INDENT = '  ';
 /**
  * Renders the tree report for `dbx_model_test_tree`.
  *
- * @param tree - the parsed spec tree
- * @param view - the requested view (defaults to `all`)
- * @param filters - optional model / describe-path filters
- * @returns the markdown body
+ * @param tree - The parsed spec tree.
+ * @param view - The requested view (defaults to `all`)
+ * @param filters - Optional model / describe-path filters.
+ * @returns The markdown body.
  */
 export function formatTreeAsMarkdown(tree: SpecFileTree, view: SpecTreeView = 'all', filters: SpecTreeFilters = {}): string {
   const lines: string[] = [];
@@ -47,9 +47,9 @@ export function formatTreeAsMarkdown(tree: SpecFileTree, view: SpecTreeView = 'a
 /**
  * Renders the search report for `dbx_model_test_search`.
  *
- * @param tree - the parsed spec tree (used for the header)
- * @param result - the search outcome
- * @returns the markdown body
+ * @param tree - The parsed spec tree (used for the header)
+ * @param result - The search outcome.
+ * @returns The markdown body.
  */
 export function formatSearchAsMarkdown(tree: SpecFileTree, result: SpecSearchResult): string {
   const lines: string[] = [`# Spec search — ${tree.specPath}`, '', `Query: \`${result.query.mode}\` = \`${result.query.value}\``, `Matches: ${result.hits.length}`];
@@ -143,22 +143,31 @@ function appendHit(lines: string[], hit: SpecSearchHit): void {
 }
 
 function hitLabel(hit: SpecSearchHit): string {
+  let result: string;
   switch (hit.kind) {
     case 'fixture':
-      return `**fixture** \`${hit.callee ?? '?'}\` → \`${hit.model ?? '?'}\``;
+      result = `**fixture** \`${hit.callee ?? '?'}\` → \`${hit.model ?? '?'}\``;
+      break;
     case 'describe':
-      return `**${hit.callee ?? 'describe'}** \`${hit.title ?? '?'}\``;
+      result = `**${hit.callee ?? 'describe'}** \`${hit.title ?? '?'}\``;
+      break;
     case 'it':
-      return `**${hit.callee ?? 'it'}** \`${hit.title ?? '?'}\``;
+      result = `**${hit.callee ?? 'it'}** \`${hit.title ?? '?'}\``;
+      break;
     case 'helperCall':
-      return `**helperCall** \`${hit.callee ?? '?'}\``;
+      result = `**helperCall** \`${hit.callee ?? '?'}\``;
+      break;
     case 'wrapper':
-      return `**wrapper** \`${hit.callee ?? '?'}\``;
+      result = `**wrapper** \`${hit.callee ?? '?'}\``;
+      break;
     case 'hook':
-      return `**${hit.title ?? 'hook'}**`;
+      result = `**${hit.title ?? 'hook'}**`;
+      break;
     default:
-      return '**?**';
+      result = '**?**';
+      break;
   }
+  return result;
 }
 
 function appendNode(lines: string[], node: SpecNode, depth: number): void {
@@ -176,25 +185,34 @@ function describeOrItTitle(node: SpecNode & { readonly kind: 'describe' | 'it' }
 }
 
 function nodeLabel(node: SpecNode): string {
+  let result: string;
   switch (node.kind) {
     case 'describe':
-      return `**${node.callee ?? 'describe'}** ${describeOrItTitle(node)}`;
+      result = `**${node.callee ?? 'describe'}** ${describeOrItTitle(node)}`;
+      break;
     case 'it':
-      return `**${node.callee ?? 'it'}** ${describeOrItTitle(node)}`;
+      result = `**${node.callee ?? 'it'}** ${describeOrItTitle(node)}`;
+      break;
     case 'hook':
-      return `**${node.title ?? 'hook'}**`;
+      result = `**${node.title ?? 'hook'}**`;
+      break;
     case 'fixture': {
       const var_ = node.varName === undefined ? '' : ` _(as \`${node.varName}\`)_`;
       const parents = node.parentVars && node.parentVars.length > 0 ? ` deps: \`${node.parentVars.join(', ')}\`` : '';
-      return `**fixture** \`${node.callee ?? '?'}\` → \`${node.model ?? '?'}\`${var_}${parents}`;
+      result = `**fixture** \`${node.callee ?? '?'}\` → \`${node.model ?? '?'}\`${var_}${parents}`;
+      break;
     }
     case 'wrapper':
-      return `**wrapper** \`${node.callee ?? '?'}\``;
+      result = `**wrapper** \`${node.callee ?? '?'}\``;
+      break;
     case 'helperCall':
-      return `**helperCall** \`${node.callee ?? '?'}\``;
+      result = `**helperCall** \`${node.callee ?? '?'}\``;
+      break;
     default:
-      return '**?**';
+      result = '**?**';
+      break;
   }
+  return result;
 }
 
 /**
@@ -213,10 +231,10 @@ function nodeLabel(node: SpecNode): string {
  * - `filterByDescribePath` — keep only the deepest subtree whose ancestor
  *   describe-path equals or starts with the supplied `>`-delimited path.
  *
- * @param root - the root node from the parsed tree
- * @param view - the requested view
- * @param filters - the optional model / describe-path filters
- * @returns a new root node with the view + filters applied
+ * @param root - The root node from the parsed tree.
+ * @param view - The requested view.
+ * @param filters - The optional model / describe-path filters.
+ * @returns A new root node with the view + filters applied.
  */
 function applyViewToRoot(root: SpecNode, view: SpecTreeView): SpecNode {
   if (view === 'describes') return collapseTo(root, ['describe', 'it', 'hook', 'helperCall']);

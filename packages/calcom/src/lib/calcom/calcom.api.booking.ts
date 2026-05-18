@@ -57,10 +57,10 @@ export interface CalcomCancelBookingResponse {
  * Creates a new booking for the specified event type. The `attendee` represents the person
  * booking (the client), not the host. This endpoint can be called without authentication.
  *
- * @see https://cal.com/docs/api-reference/v2/bookings/create-a-booking
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Creates a booking from the given input.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that creates a booking from the given input
+ * @see https://cal.com/docs/api-reference/v2/bookings/create-a-booking
  *
  * @example
  * ```ts
@@ -71,6 +71,7 @@ export interface CalcomCancelBookingResponse {
  * });
  * console.log(response.data.uid);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createBooking(context: CalcomContext): (input: CalcomCreateBookingInput) => Promise<CalcomCreateBookingResponse> {
@@ -86,10 +87,10 @@ export function createBooking(context: CalcomContext): (input: CalcomCreateBooki
 /**
  * Retrieves a booking by its unique UID.
  *
- * @see https://cal.com/docs/api-reference/v2/bookings/get-a-booking
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Retrieves a booking by its UID.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that retrieves a booking by its UID
+ * @see https://cal.com/docs/api-reference/v2/bookings/get-a-booking
  *
  * @example
  * ```ts
@@ -109,10 +110,10 @@ export function getBooking(context: CalcomContext): (uid: CalcomBookingUid) => P
 /**
  * Cancels a booking by its unique UID, with an optional cancellation reason.
  *
- * @see https://cal.com/docs/api-reference/v2/bookings/cancel-a-booking
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Cancels a booking by UID.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that cancels a booking by UID
+ * @see https://cal.com/docs/api-reference/v2/bookings/cancel-a-booking
  *
  * @example
  * ```ts

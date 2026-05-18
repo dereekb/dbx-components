@@ -16,8 +16,8 @@ export interface DateDurationSpan {
 /**
  * Computes the end date for a duration span by adding the duration to the start time.
  *
- * @param span - the duration span to compute the end for
- * @returns the date when the span ends
+ * @param span - Span whose end date should be computed.
+ * @returns Moment when the span ends.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -37,13 +37,13 @@ export function dateDurationSpanEndDate(span: DateDurationSpan): Date {
 /**
  * Converts a {@link DateDurationSpan} to a {@link DateRange} with start and end dates.
  *
+ * @param span - Span to project onto a start/end date range.
+ * @returns Range from startsAt to startsAt + duration.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, span, range, convert
  * @dbxUtilRelated date-duration-span-end-date, duration-span-from-date-range
- *
- * @param span - the duration span to convert
- * @returns a date range from startsAt to startsAt + duration
  */
 export function durationSpanToDateRange(span: DateDurationSpan): DateRange {
   return {
@@ -55,13 +55,13 @@ export function durationSpanToDateRange(span: DateDurationSpan): DateRange {
 /**
  * Creates a {@link DateDurationSpan} from a {@link DateRange} by computing the duration in minutes between start and end.
  *
+ * @param dateRange - Range to project onto a duration span.
+ * @returns Span anchored at the range's start with duration measured to its end.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, duration, span, range, convert, minutes
  * @dbxUtilRelated duration-span-to-date-range, date-duration-span-end-date
- *
- * @param dateRange - the date range to convert
- * @returns a duration span with the range's start as startsAt
  */
 export function durationSpanFromDateRange(dateRange: DateRange): DateDurationSpan {
   return {
@@ -73,9 +73,9 @@ export function durationSpanFromDateRange(dateRange: DateRange): DateDurationSpa
 /**
  * Determines whether a duration span is in the past, present, or future relative to the given time.
  *
- * @param span - the duration span to check
- * @param now - reference time (defaults to current time)
- * @returns 'past', 'present', or 'future'
+ * @param span - The duration span to check.
+ * @param now - Reference time (defaults to current time)
+ * @returns 'past', 'present', or 'future'.
  */
 export function durationSpanDateRelativeState(span: DateDurationSpan, now?: Date): DateRelativeState {
   return dateRangeRelativeState(durationSpanToDateRange(span), now);
@@ -84,8 +84,8 @@ export function durationSpanDateRelativeState(span: DateDurationSpan, now?: Date
 /**
  * Converts a duration span's duration from minutes to fractional hours.
  *
- * @param span - the duration span to measure
- * @returns the duration expressed as fractional hours (e.g. 90 minutes = 1.5)
+ * @param span - The duration span to measure.
+ * @returns The duration expressed as fractional hours (e.g. 90 minutes = 1.5)
  */
 export function fractionalHoursInDurationSpan(span: DateDurationSpan): FractionalHour {
   return minutesToFractionalHours(span.duration);

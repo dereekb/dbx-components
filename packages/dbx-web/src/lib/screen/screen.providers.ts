@@ -11,8 +11,8 @@ export interface ProvideDbxScreenMediaServiceConfig {
 /**
  * Creates Angular environment providers for {@link DbxScreenMediaService} and its configuration.
  *
- * @param config - optional service configuration; uses default breakpoints if omitted
- * @returns environment providers to register in the application bootstrap
+ * @param config - Optional service configuration; uses default breakpoints if omitted.
+ * @returns Environment providers to register in the application bootstrap.
  *
  * @example
  * ```ts
@@ -20,6 +20,7 @@ export interface ProvideDbxScreenMediaServiceConfig {
  *   providers: [provideDbxScreenMediaService()]
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxScreenMediaService(config: ProvideDbxScreenMediaServiceConfig = {}): EnvironmentProviders {

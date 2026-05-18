@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type SuggestedString, type Maybe } from '@dereekb/util';
 import { type ZohoDeskAgentId } from './desk';
 
 // MARK: Agent Types
@@ -10,7 +10,7 @@ export type ZohoDeskAgentStatus = 'ACTIVE' | 'DISABLED';
 /**
  * Agent role permission type in Zoho Desk.
  */
-export type ZohoDeskAgentRolePermissionType = 'Light' | 'AgentPublic' | 'Custom' | 'AgentPersonal' | 'Admin' | (string & {});
+export type ZohoDeskAgentRolePermissionType = SuggestedString<'Light' | 'AgentPublic' | 'Custom' | 'AgentPersonal' | 'Admin'>;
 
 /**
  * Related entities that can be expanded when fetching agents.

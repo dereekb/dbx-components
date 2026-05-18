@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly day-selection component; replacement is DbxScheduleSelectionCalendarDateDaysForgeFormComponent */
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { AbstractSyncFormlyFormDirective, dbxFormlyFormComponentProviders, DBX_FORMLY_FORM_COMPONENT_TEMPLATE, DbxFormlyFormComponentImportsModule, DbxFormFormlyWrapperModule, DbxFormFormlyBooleanFieldModule } from '@dereekb/dbx-form';
 import { type EnabledDays } from '@dereekb/util';

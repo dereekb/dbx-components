@@ -94,7 +94,7 @@ function parseArgs(raw: unknown): ScaffoldArtifactInput {
     throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ScaffoldArtifactInput = {
-    artifact: parsed.artifact as ArtifactKind,
+    artifact: parsed.artifact,
     name: parsed.name,
     componentDir: parsed.componentDir,
     apiDir: parsed.apiDir,
@@ -130,44 +130,50 @@ async function fileExists(absolutePath: string): Promise<boolean> {
  * the requested artifact (writing files within the workspace), and reports
  * existing-file conflicts before any write happens.
  *
- * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
- * @returns the scaffold report, or an error result when validation or write fails
+ * @param rawArgs - The unvalidated tool arguments object from the MCP runtime.
+ * @returns The scaffold report, or an error result when validation or write fails.
  */
 export async function runArtifactScaffold(rawArgs: unknown): Promise<ToolResult> {
-  let input: ScaffoldArtifactInput;
+  let result: ToolResult;
   try {
-    input = parseArgs(rawArgs);
+    const input = parseArgs(rawArgs);
+    const cwd = process.cwd();
+    let pathError: string | undefined;
+    try {
+      ensureInsideCwd(input.componentDir, cwd);
+      ensureInsideCwd(input.apiDir, cwd);
+    } catch (err) {
+      pathError = err instanceof Error ? err.message : String(err);
+    }
+
+    if (pathError === undefined) {
+      let raw: Awaited<ReturnType<typeof scaffoldArtifact>> | undefined;
+      let scaffoldError: string | undefined;
+      try {
+        raw = scaffoldArtifact(input);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        scaffoldError = `Scaffold failed: ${message}`;
+      }
+
+      if (scaffoldError === undefined) {
+        const checked = await applyIdempotency(raw as ReturnType<typeof scaffoldArtifact>, (relativePath) => fileExists(resolve(cwd, relativePath)));
+        const text = formatResult(checked);
+        result = { content: [{ type: 'text', text }] };
+      } else {
+        result = toolError(scaffoldError);
+      }
+    } else {
+      result = toolError(pathError);
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    result = toolError(message);
   }
-
-  const cwd = process.cwd();
-  try {
-    ensureInsideCwd(input.componentDir, cwd);
-    ensureInsideCwd(input.apiDir, cwd);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
-  }
-
-  let raw;
-  try {
-    raw = scaffoldArtifact(input);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(`Scaffold failed: ${message}`);
-  }
-
-  const checked = await applyIdempotency(raw, (relativePath) => fileExists(resolve(cwd, relativePath)));
-  const text = formatResult(checked);
-  const result: ToolResult = {
-    content: [{ type: 'text', text }]
-  };
   return result;
 }
 
-export const artifactScaffoldTool: DbxTool = {
+export const ARTIFACT_SCAFFOLD_TOOL: DbxTool = {
   definition: DBX_ARTIFACT_SCAFFOLD_TOOL,
   run: runArtifactScaffold
 };

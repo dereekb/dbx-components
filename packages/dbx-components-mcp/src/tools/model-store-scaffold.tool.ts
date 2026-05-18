@@ -679,19 +679,24 @@ function formatScaffold(args: ParsedScaffoldArgs): string {
  * @returns A {@link ToolResult} containing the markdown scaffold or an `Invalid arguments` error.
  */
 export function runModelStoreScaffold(rawArgs: unknown): ToolResult {
-  let args: ParsedScaffoldArgs;
+  let args: ParsedScaffoldArgs | undefined;
+  let parseError: string | undefined;
   try {
     args = parseArgs(rawArgs);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    parseError = err instanceof Error ? err.message : String(err);
   }
-  const text = formatScaffold(args);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
+  let result: ToolResult;
+  if (parseError !== undefined || args === undefined) {
+    result = toolError(parseError ?? 'Failed to parse arguments.');
+  } else {
+    const text = formatScaffold(args);
+    result = { content: [{ type: 'text', text }] };
+  }
   return result;
 }
 
-export const modelStoreScaffoldTool: DbxTool = {
+export const MODEL_STORE_SCAFFOLD_TOOL: DbxTool = {
   definition: DBX_MODEL_STORE_SCAFFOLD_TOOL,
   run: runModelStoreScaffold
 };

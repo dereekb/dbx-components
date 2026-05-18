@@ -117,7 +117,7 @@ export class DbxSelectionValueListViewComponent<T, I extends DbxValueListItem<T>
     shareReplay(1)
   );
 
-  readonly selectionModeSignal = toSignal(this.selectionMode$, { initialValue: 'select' as DbxListSelectionMode });
+  readonly selectionModeSignal = toSignal(this.selectionMode$, { initialValue: 'select' });
   readonly multipleSignal = computed(() => this.config()?.multiple ?? true);
   readonly stickyHeadersSignal = computed(() => this.config()?.stickyHeaders);
 }

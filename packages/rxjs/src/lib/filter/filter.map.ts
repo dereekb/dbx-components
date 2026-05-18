@@ -36,8 +36,8 @@ export class FilterMap<F> implements Destroyable {
    *
    * Waits until a filter entry exists for the key, then switches to its filter stream.
    *
-   * @param key - filter map key to observe
-   * @returns observable that emits the current filter value for the key
+   * @param key - Filter map key to observe.
+   * @returns Observable that emits the current filter value for the key.
    */
   filterForKey(key: FilterMapKey): Observable<F> {
     return this._map.pipe(
@@ -52,8 +52,8 @@ export class FilterMap<F> implements Destroyable {
   /**
    * Sets a default filter observable for the given key, used as a fallback when no explicit filter is set.
    *
-   * @param key - filter map key
-   * @param obs - default filter observable or value
+   * @param key - Filter map key.
+   * @param obs - Default filter observable or value.
    */
   addDefaultFilterObs(key: FilterMapKey, obs: Maybe<ObservableOrValue<F>>): void {
     this._itemForKey(key).setDefaultFilterObs(obs);
@@ -63,8 +63,8 @@ export class FilterMap<F> implements Destroyable {
    * Adds a filter observable for the given key. Multiple observables can be added per key
    * and their emissions are merged together.
    *
-   * @param key - filter map key
-   * @param obs - filter observable to add
+   * @param key - Filter map key.
+   * @param obs - Filter observable to add.
    */
   addFilterObs(key: FilterMapKey, obs: Observable<F>): void {
     this._itemForKey(key).addFilterObs(obs);
@@ -74,8 +74,8 @@ export class FilterMap<F> implements Destroyable {
    * Creates a {@link FilterMapKeyInstance} bound to the given key, providing both
    * {@link FilterSource} and {@link FilterSourceConnector} interfaces for that key.
    *
-   * @param key - filter map key to bind
-   * @returns instance for interacting with the filter at the given key
+   * @param key - Filter map key to bind.
+   * @returns Instance for interacting with the filter at the given key.
    */
   makeInstance(key: FilterMapKey): FilterMapKeyInstance<F> {
     return new FilterMapKeyInstance<F>(this, key);
@@ -84,8 +84,8 @@ export class FilterMap<F> implements Destroyable {
   /**
    * Creates an observable that emits a new {@link FilterMapKeyInstance} each time the key changes.
    *
-   * @param keyObs - observable of filter map keys
-   * @returns observable that emits instances for the current key
+   * @param keyObs - Observable of filter map keys.
+   * @returns Observable that emits instances for the current key.
    */
   instanceObsForKeyObs(keyObs: Observable<FilterMapKey>): Observable<FilterMapKeyInstance<F>> {
     return keyObs.pipe(
@@ -149,7 +149,7 @@ export class FilterMapKeyInstance<F> implements FilterSourceConnector<F>, Filter
   /**
    * Sets the default filter observable for this key.
    *
-   * @param filterObs - the observable to use as the default filter for this key
+   * @param filterObs - The observable to use as the default filter for this key.
    */
   initWithFilter(filterObs: Observable<F>): void {
     this.dbxFilterMap.addDefaultFilterObs(this.key, filterObs);
@@ -158,7 +158,7 @@ export class FilterMapKeyInstance<F> implements FilterSourceConnector<F>, Filter
   /**
    * Connects a filter source, adding its filter observable to this key's merged filters.
    *
-   * @param filterSource - the filter source whose filter$ will be added to this key's merged stream
+   * @param filterSource - The filter source whose filter$ will be added to this key's merged stream.
    */
   connectWithSource(filterSource: FilterSource<F>): void {
     this.dbxFilterMap.addFilterObs(this.key, filterSource.filter$);

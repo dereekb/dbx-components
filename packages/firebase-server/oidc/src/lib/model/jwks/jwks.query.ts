@@ -4,8 +4,8 @@ import { type JwksKey, type JwksKeyStatus } from './jwks';
 /**
  * Query for JwksKey documents with a specific status.
  *
- * @param status - the lifecycle status to filter by
- * @returns Firestore query constraints filtering by the given status
+ * @param status - The lifecycle status to filter by.
+ * @returns Firestore query constraints filtering by the given status.
  */
 export function jwksKeysWithStatusQuery(status: JwksKeyStatus): FirestoreQueryConstraint[] {
   return [where<JwksKey>('status', '==', status)];
@@ -14,7 +14,7 @@ export function jwksKeysWithStatusQuery(status: JwksKeyStatus): FirestoreQueryCo
 /**
  * Query for active JwksKey documents.
  *
- * @returns Firestore query constraints filtering for active keys
+ * @returns Firestore query constraints filtering for active keys.
  */
 export function activeJwksKeysQuery(): FirestoreQueryConstraint[] {
   return jwksKeysWithStatusQuery('active');
@@ -23,7 +23,7 @@ export function activeJwksKeysQuery(): FirestoreQueryConstraint[] {
 /**
  * Query for non-retired JwksKey documents (active + rotated).
  *
- * @returns Firestore query constraints filtering for non-retired keys
+ * @returns Firestore query constraints filtering for non-retired keys.
  */
 export function nonRetiredJwksKeysQuery(): FirestoreQueryConstraint[] {
   return [where<JwksKey>('status', 'in', ['active', 'rotated'])];
@@ -32,7 +32,7 @@ export function nonRetiredJwksKeysQuery(): FirestoreQueryConstraint[] {
 /**
  * Query for rotated JwksKey documents.
  *
- * @returns Firestore query constraints filtering for rotated keys
+ * @returns Firestore query constraints filtering for rotated keys.
  */
 export function rotatedJwksKeysQuery(): FirestoreQueryConstraint[] {
   return jwksKeysWithStatusQuery('rotated');

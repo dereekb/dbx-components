@@ -44,6 +44,9 @@ export interface ErrorOnEmissionsInPeriodConfig<T> {
  *
  * Useful as a safety valve to detect infinite loops or runaway observables.
  *
+ * @param config - Period duration, max emissions, and error/fallback handling.
+ * @returns An operator that monitors emission frequency.
+ *
  * @example
  * ```ts
  * source$.pipe(
@@ -51,9 +54,6 @@ export interface ErrorOnEmissionsInPeriodConfig<T> {
  * ).subscribe();
  * // throws if more than 100 emissions occur within 1 second
  * ```
- *
- * @param config - period duration, max emissions, and error/fallback handling
- * @returns an operator that monitors emission frequency
  */
 export function errorOnEmissionsInPeriod<T>(config: ErrorOnEmissionsInPeriodConfig<T>): MonoTypeOperatorFunction<T> {
   const { period = 1000, maxEmissionsPerPeriod, onError, errorFactory: inputErrorFactory, errorMessage: inputErrorMessage, switchToObs } = config;
@@ -62,9 +62,10 @@ export function errorOnEmissionsInPeriod<T>(config: ErrorOnEmissionsInPeriodConf
 
   return (source: Observable<T>) => {
     const counter = timePeriodCounter(period);
+    let result: Observable<T>;
 
     if (errorFactory) {
-      return source.pipe(
+      result = source.pipe(
         map((x) => {
           if (counter() > maxEmissionsPerPeriod) {
             const error = errorFactory();
@@ -75,13 +76,11 @@ export function errorOnEmissionsInPeriod<T>(config: ErrorOnEmissionsInPeriodConf
           return x;
         })
       );
+    } else {
+      // switchToObs was provided.
+      result = source.pipe(switchMap((x) => (counter() > maxEmissionsPerPeriod ? (switchToObs as Observable<T>) : of(x))));
     }
 
-    // switchToObs was provided.
-    return source.pipe(
-      switchMap((x) => {
-        return counter() > maxEmissionsPerPeriod ? (switchToObs as Observable<T>) : of(x);
-      })
-    );
+    return result;
   };
 }

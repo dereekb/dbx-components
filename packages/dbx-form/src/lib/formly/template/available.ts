@@ -52,6 +52,7 @@ export function formlyTextIsAvailableField(config: TextAvailableFieldConfig): Fo
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTextIsAvailableField instead.
  */

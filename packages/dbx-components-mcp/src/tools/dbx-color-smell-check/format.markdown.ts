@@ -4,8 +4,8 @@ import type { ColorSmellCheckResult, ColorSmellFinding } from './types.js';
  * Renders the smell-check result as the markdown view the tool returns
  * by default. One section per finding, plus a summary block at the end.
  *
- * @param result - the smell-check output to render
- * @returns the markdown body
+ * @param result - The smell-check output to render.
+ * @returns The markdown body.
  */
 export function formatResultAsMarkdown(result: ColorSmellCheckResult): string {
   const lines: string[] = ['# Color smell check', '', `Files scanned: ${result.summary.filesScanned}`, `Literals found: ${result.summary.literalsFound}`, `Duplicate groups: ${result.summary.duplicateGroups}`];

@@ -31,7 +31,15 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
       map((delegate) => {
         let groups: DbxValueListItemGroup<D, T, I>[];
 
-        if (delegate != null) {
+        if (delegate == null) {
+          groups = [
+            {
+              id: '_',
+              data: { value: null as unknown, title: '' } as D,
+              items
+            }
+          ];
+        } else {
           const groupsValuesMap = makeValuesGroupMap(items, delegate.groupValueForItem);
           const { sortGroupsByData, cssClasses: inputCssClasses } = delegate;
           const cssClassesForAllGroups = inputCssClasses ?? [];
@@ -66,14 +74,6 @@ export class DbxListTitleGroupDirective<T, O extends PrimativeKey = PrimativeKey
           if (sortGroupsByData) {
             groups.sort(compareWithMappedValuesFunction((x) => x.data, sortGroupsByData));
           }
-        } else {
-          groups = [
-            {
-              id: '_',
-              data: { value: null as unknown, title: '' } as D,
-              items
-            }
-          ];
         }
 
         return groups;

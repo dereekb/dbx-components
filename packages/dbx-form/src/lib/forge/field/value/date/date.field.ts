@@ -1,5 +1,5 @@
 import type { MatDatepickerField } from '@ng-forge/dynamic-forms-material';
-import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 
 // MARK: Date Field
 /**
@@ -32,4 +32,4 @@ export interface DbxForgeDateFieldConfig extends DbxForgeFieldFunctionDef<MatDat
 export const dbxForgeDateField = dbxForgeFieldFunction<DbxForgeDateFieldConfig>({
   type: 'datepicker' as const,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder()
-}) as DbxForgeFieldFunction<DbxForgeDateFieldConfig, MatDatepickerField>;
+});

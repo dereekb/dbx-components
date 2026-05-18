@@ -74,8 +74,9 @@ export type LogTrelloServerErrorFunction = (error: FetchRequestFactoryError | Tr
 /**
  * Creates a logTrelloServerErrorFunction that logs the error to console.
  *
- * @param trelloApiNamePrefix Prefix to use when logging.
- * @returns A function that logs Trello server errors to the console.
+ * @param trelloApiNamePrefix - Prefix to use when logging.
+ * @returns Logs Trello server errors to the console.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function logTrelloServerErrorFunction(trelloApiNamePrefix: string): LogTrelloServerErrorFunction {
@@ -95,7 +96,7 @@ export const logTrelloErrorToConsole = logTrelloServerErrorFunction('Trello');
 /**
  * Parses a FetchResponseError into a typed Trello API error.
  *
- * @param responseError The fetch response error to parse.
+ * @param responseError - The fetch response error to parse.
  * @returns A typed Trello error, or undefined if the response could not be parsed.
  */
 export async function parseTrelloApiError(responseError: FetchResponseError): Promise<Maybe<TrelloServerFetchResponseError>> {
@@ -140,9 +141,10 @@ export async function parseTrelloApiError(responseError: FetchResponseError): Pr
 /**
  * Wraps a ConfiguredFetch to translate FetchResponseError into typed Trello errors.
  *
- * @param fetch The fetch to wrap.
- * @param logError Optional logger.
+ * @param fetch - The fetch to wrap.
+ * @param logError - Optional logger.
  * @returns A ConfiguredFetch that throws typed Trello errors for known error responses.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function handleTrelloErrorFetch(fetch: ConfiguredFetch, logError: LogTrelloServerErrorFunction = logTrelloErrorToConsole): ConfiguredFetch {

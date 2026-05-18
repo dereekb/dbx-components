@@ -7,7 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 export const DOC_LAYOUT_SECTIONPAGETWO_POPOVER_KEY = 'doc-layout-sectionpagetwo-popover';
 
 export interface DocLayoutSectionPageTwoPopoverConfig {
-  origin: ElementRef;
+  readonly origin: ElementRef;
 }
 
 @Component({

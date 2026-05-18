@@ -5,8 +5,8 @@ import type { AppNotificationsReport, TaskSummary, TemplateSummary } from './typ
  * Splits the output into header, templates, and tasks sections so readers can
  * scan registration state without parsing JSON.
  *
- * @param report - the listing report to render
- * @returns the markdown body
+ * @param report - The listing report to render.
+ * @returns The markdown body.
  */
 export function formatReportAsMarkdown(report: AppNotificationsReport): string {
   const basename = report.componentDir.split('/').pop() ?? report.componentDir;

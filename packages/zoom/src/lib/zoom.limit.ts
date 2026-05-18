@@ -47,8 +47,8 @@ export type ZoomRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodPro
 /**
  * Creates a rate-limited fetch handler configured for the Zoom API.
  *
- * @param config Optional configuration for rate limiting behavior
- * @returns A configured rate-limited fetch handler
+ * @param config - Optional configuration for rate limiting behavior.
+ * @returns A configured rate-limited fetch handler.
  */
 export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchHandlerConfig>): ZoomRateLimitedFetchHandler {
   const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;
@@ -118,6 +118,7 @@ export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchH
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION instead.
  */

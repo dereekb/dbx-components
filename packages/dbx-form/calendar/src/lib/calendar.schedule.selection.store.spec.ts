@@ -1,6 +1,6 @@
 import { lastValue, range } from '@dereekb/util';
 import { addDays, addHours } from 'date-fns';
-import { DateCellScheduleDayCode, type DateCellScheduleDateFilterConfig, type DateCellScheduleEncodedWeek, expandDateCellScheduleRange } from '@dereekb/date';
+import { DateCellScheduleDayCode, type DateCellScheduleDateFilterConfig, expandDateCellScheduleRange } from '@dereekb/date';
 import { type CalendarScheduleSelectionState, computeCalendarScheduleSelectionDateCellRange, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithChangedScheduleDays, updateStateWithFilter, updateStateWithMinMaxDateRange, updateStateWithDateCellScheduleRangeValue } from './calendar.schedule.selection.store';
 
 /*
@@ -167,7 +167,7 @@ describe('setFilter + setMinMaxDateRange selection bug reproduction', () => {
       startsAt: filterStartsAt,
       end: filterEnd,
       timezone,
-      w: '8' as DateCellScheduleEncodedWeek,
+      w: '8',
       d: [],
       ex: []
     };
@@ -232,7 +232,7 @@ describe('setFilter + setMinMaxDateRange selection bug reproduction', () => {
       startsAt: filterStartsAt,
       end: filterEnd,
       timezone,
-      w: '8' as DateCellScheduleEncodedWeek,
+      w: '8',
       d: [],
       ex: []
     };
@@ -429,7 +429,7 @@ describe('selector coordinate contract (state-anchored indexes)', () => {
       startsAt: filterStartsAt,
       end: filterEnd,
       timezone,
-      w: '8' as DateCellScheduleEncodedWeek,
+      w: '8',
       d: [],
       ex: []
     };

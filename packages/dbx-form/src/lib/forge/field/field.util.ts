@@ -11,7 +11,7 @@ import { FORM_OPTIONS } from '@ng-forge/dynamic-forms';
  *
  * Must be called in an injection context (constructor, field initializer, or inject()-capable context).
  *
- * @returns A computed signal that is `true` when the form is disabled
+ * @returns A computed signal that is `true` when the form is disabled.
  *
  * @example
  * ```typescript
@@ -22,10 +22,14 @@ export function dbxForgeFieldDisabled(): Signal<boolean> {
   const formOptions = inject(FORM_OPTIONS, { optional: true });
 
   return computed(() => {
+    let disabled = false;
+
     try {
-      return formOptions?.()?.disabled ?? false;
+      disabled = formOptions?.()?.disabled ?? false;
     } catch {
-      return false;
+      disabled = false;
     }
+
+    return disabled;
   });
 }

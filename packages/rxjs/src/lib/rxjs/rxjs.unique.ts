@@ -6,9 +6,9 @@ import { map, type MonoTypeOperatorFunction } from 'rxjs';
  *
  * Uses {@link filterUniqueFunction} to deduplicate emitted arrays by extracting a key from each item.
  *
- * @param readKey - function to extract the unique key from each item
- * @param additionalKeysInput - optional additional keys to include in the unique set
- * @returns an operator that emits deduplicated arrays
+ * @param readKey - Function to extract the unique key from each item.
+ * @param additionalKeysInput - Optional additional keys to include in the unique set.
+ * @returns An operator that emits deduplicated arrays.
  */
 export function filterUnique<T, K extends PrimativeKey = PrimativeKey>(readKey: ReadKeyFunction<T, K>, additionalKeysInput?: FilterUniqueFunctionAdditionalKeysInput<T, K>): MonoTypeOperatorFunction<T[]> {
   const filterFn = filterUniqueFunction<T, K>(readKey, additionalKeysInput);

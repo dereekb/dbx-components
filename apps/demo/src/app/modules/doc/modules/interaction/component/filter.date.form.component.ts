@@ -1,11 +1,12 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
+import type { Maybe } from '@dereekb/util';
 import { AbstractSyncForgeFormDirective, dbxForgeFixedDateRangeField, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule } from '@dereekb/dbx-form';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { type DateRange, DateRangeType } from '@dereekb/date';
 import { type DocInteractionTestFilterFormValue } from './filter.custom.form.component';
 
 export type DocInteractionTestDateFilterFormValue = {
-  range: DateRange | null;
+  range: Maybe<DateRange>;
 };
 
 @Component({

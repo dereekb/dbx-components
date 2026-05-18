@@ -74,6 +74,9 @@ export const HEX_PATTERN = /^[0-9a-fA-F]+$/;
 /**
  * Checks whether the input string contains only valid hexadecimal characters.
  *
+ * @param value - The string to check.
+ * @returns True if the string is non-empty and contains only hex characters.
+ *
  * @example
  * ```ts
  * isHex('a1b2c3'); // true
@@ -81,9 +84,6 @@ export const HEX_PATTERN = /^[0-9a-fA-F]+$/;
  * isHex('hello');  // false
  * isHex('');       // false
  * ```
- *
- * @param value - The string to check.
- * @returns True if the string is non-empty and contains only hex characters.
  */
 export function isHex(value: string): value is HexString {
   return HEX_PATTERN.test(value);
@@ -106,6 +106,10 @@ export interface IsHexWithByteLengthConfig {
  *
  * Each byte is encoded as 2 hex characters, so a 32-byte value requires a 64-character hex string.
  *
+ * @param value - The string to check.
+ * @param config - Configuration specifying the expected byte length.
+ * @returns True if the string is valid hex with exactly the expected number of bytes.
+ *
  * @example
  * ```ts
  * // Ed25519 public key is 32 bytes (64 hex chars)
@@ -113,10 +117,6 @@ export interface IsHexWithByteLengthConfig {
  * isHexWithByteLength('abc123', { byteLength: 32 });        // false (too short)
  * isHexWithByteLength('placeholder', { byteLength: 32 });   // false (not hex)
  * ```
- *
- * @param value - The string to check.
- * @param config - Configuration specifying the expected byte length.
- * @returns True if the string is valid hex with exactly the expected number of bytes.
  */
 export function isHexWithByteLength(value: string, config: IsHexWithByteLengthConfig): value is HexString {
   const expectedLength = config.byteLength * 2;

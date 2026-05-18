@@ -8,15 +8,15 @@ import { IS_NOT_WEBSITE_URL_VALIDATION_KEY, IS_NOT_WEBSITE_URL_WITH_EXPECTED_DOM
  * Configuration for {@link dbxForgePatternValidator}.
  */
 export interface DbxForgePatternValidatorConfig {
-  pattern: string | RegExp;
-  message?: ValidationMessages['pattern'];
+  readonly pattern: string | RegExp;
+  readonly message?: ValidationMessages['pattern'];
 }
 
 /**
  * Builds a forge validator input that applies a regex pattern constraint to a field.
  *
- * @param config - the pattern to match and an optional override for the `pattern` validation message
- * @returns a validator input with a `pattern` validator and the associated validation message
+ * @param config - The pattern to match and an optional override for the `pattern` validation message.
+ * @returns A validator input with a `pattern` validator and the associated validation message.
  *
  * @example
  * ```ts
@@ -44,20 +44,20 @@ export function dbxForgePatternValidator(config: DbxForgePatternValidatorConfig)
  * Configuration for {@link dbxForgeEmailValidator}.
  */
 export interface DbxForgeEmailValidatorConfig {
-  message?: ValidationMessages['email'];
+  readonly message?: ValidationMessages['email'];
 }
 
 /**
  * Default message applied by {@link dbxForgeEmailValidator} when no override is supplied.
  */
-export const DBX_FORGE_DEFAULT_EMAIL_VALIDATION_MESSAGE = 'Please enter a valid email address.';
+export const DEFAULT_DBX_FORGE_EMAIL_VALIDATION_MESSAGE = 'Please enter a valid email address.';
 
 /**
  * Builds a forge validator input that applies the built-in `email` validator with a default
  * user-friendly message.
  *
- * @param config - optional override for the `email` validation message
- * @returns a validator input with an `email` validator and the associated validation message
+ * @param config - Optional override for the `email` validation message.
+ * @returns A validator input with an `email` validator and the associated validation message.
  *
  * @example
  * ```ts
@@ -66,7 +66,7 @@ export const DBX_FORGE_DEFAULT_EMAIL_VALIDATION_MESSAGE = 'Please enter a valid 
  * ```
  */
 export function dbxForgeEmailValidator(config?: DbxForgeEmailValidatorConfig): DbxForgeFieldFunctionFieldDefBuilderFunctionInstanceAddValidationInput {
-  const message = config?.message ?? DBX_FORGE_DEFAULT_EMAIL_VALIDATION_MESSAGE;
+  const message = config?.message ?? DEFAULT_DBX_FORGE_EMAIL_VALIDATION_MESSAGE;
 
   return {
     validators: [
@@ -111,8 +111,8 @@ function buildPortNumbersMessagePart(allowPorts: boolean): string {
  * When `validDomains` is provided and non-empty, an additional domain-match error is emitted
  * independently of the URL-shape error so both problems can surface at once.
  *
- * @param config - tuning knobs for prefix, port, allowed domains, and custom messages
- * @returns a validator input with a custom validator and the associated website validation messages
+ * @param config - Tuning knobs for prefix, port, allowed domains, and custom messages.
+ * @returns A validator input with a custom validator and the associated website validation messages.
  *
  * @example
  * ```ts
@@ -139,7 +139,7 @@ export function dbxForgeWebsiteUrlValidator(config?: DbxForgeWebsiteUrlValidator
 
   const fn: CustomValidator = (ctx) => {
     const value = ctx.value() as Maybe<string>;
-    let result: ValidationError[] | null = null;
+    let result: Maybe<ValidationError[]> = null;
 
     if (value != null && value !== '') {
       const details = websiteUrlDetails(value);

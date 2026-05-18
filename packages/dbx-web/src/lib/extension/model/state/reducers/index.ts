@@ -16,9 +16,9 @@ export interface State {
 /**
  * Combined reducer for the DbxModel NgRx feature state, delegating to sub-reducers for each state slice.
  *
- * @param state The current DbxModel feature state, or undefined for initial state
- * @param action The NgRx action to process
- * @returns The new DbxModelState produced by the combined sub-reducers
+ * @param state - The current DbxModel feature state, or undefined for initial state.
+ * @param action - The NgRx action to process.
+ * @returns The new DbxModelState produced by the combined sub-reducers.
  */
 export function reducers(state: DbxModelState | undefined, action: Action) {
   return combineReducers({

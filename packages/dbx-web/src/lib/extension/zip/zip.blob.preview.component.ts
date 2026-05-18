@@ -55,9 +55,9 @@ export class DbxZipBlobPreviewComponent {
    */
   readonly downloadFileName = input<Maybe<string>>();
 
-  readonly hasBlob = computed(() => !!this.blob());
+  readonly hasBlobSignal = computed(() => !!this.blob());
 
-  readonly zipReader = computed(() => {
+  readonly zipReaderSignal = computed(() => {
     const blob = this.blob();
     return blob ? new ZipReader(new BlobReader(blob)) : undefined;
   });
@@ -87,7 +87,7 @@ export class DbxZipBlobPreviewComponent {
     return result;
   });
 
-  readonly zipReader$ = toObservable(this.zipReader);
+  readonly zipReader$ = toObservable(this.zipReaderSignal);
 
   readonly allEntriesLoadingState$: Observable<LoadingState<Entry[]>> = loadingStateFromObs(this.zipReader$.pipe(switchMap((x) => (x ? x.getEntries() : of([])))));
   readonly allEntries$ = this.allEntriesLoadingState$.pipe(valueFromFinishedLoadingState(), distinctUntilChanged(), shareReplay(1));
@@ -120,7 +120,7 @@ export class DbxZipBlobPreviewComponent {
     }
   };
 
-  readonly mode = computed(() => {
+  readonly modeSignal = computed(() => {
     const selectedNode = this.selectedNodeSignal();
 
     let mode = 'view_directory';
@@ -132,7 +132,7 @@ export class DbxZipBlobPreviewComponent {
     return mode;
   });
 
-  readonly listEntries = computed(() => {
+  readonly listEntriesSignal = computed(() => {
     const allEntries = this.allEntriesRootSignal();
     const selectedNode = this.selectedNodeSignal();
 
@@ -151,7 +151,7 @@ export class DbxZipBlobPreviewComponent {
     return entries ?? [];
   });
 
-  readonly listEntries$ = toObservable(this.listEntries);
+  readonly listEntries$ = toObservable(this.listEntriesSignal);
   readonly listEntriesState$ = loadingStateFromObs(this.listEntries$);
 
   readonly selectedNodeIconSignal = computed(() => {

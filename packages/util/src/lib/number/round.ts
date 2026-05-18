@@ -11,14 +11,15 @@ export type RoundingFunction = MapFunction<number, number>;
 /**
  * Returns a rounding function for the specified rounding type.
  *
+ * @param type - The rounding strategy: 'floor', 'ceil', 'round', or 'none'.
+ * @returns The corresponding Math function, or an identity function for 'none'.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilKind factory
  * @dbxUtilTags number, round, floor, ceil, math, factory, rounding
  * @dbxUtilRelated cut-value-to-precision-function, round-to-precision-function
  *
- * @param type - The rounding strategy: 'floor', 'ceil', 'round', or 'none'
- * @returns The corresponding Math function, or an identity function for 'none'
  * @__NO_SIDE_EFFECTS__
  */
 export function roundingFunction(type: NumberRounding): RoundingFunction {
@@ -60,14 +61,14 @@ export type NumberPrecision = number;
  *
  * Accepts strings and null/undefined via {@link asNumber}.
  *
+ * @param input - Number, number string, or null/undefined.
+ * @param precision - Number of decimal places to retain.
+ * @returns The truncated number value.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, precision, decimal, truncate, cut, round
  * @dbxUtilRelated cut-value-to-precision-function, cut-value-to-integer, round-to-precision
- *
- * @param input - Number, number string, or null/undefined
- * @param precision - Number of decimal places to retain
- * @returns The truncated number value
  */
 export function cutValueToPrecision(input: AsNumberInput, precision: NumberPrecision): number {
   return cutValueToPrecisionFunction(precision)(input);
@@ -81,13 +82,13 @@ export const CUT_VALUE_TO_ZERO_PRECISION = cutValueToPrecisionFunction(0);
 /**
  * Truncates a value to an integer by cutting to zero decimal precision.
  *
+ * @param input - Number, number string, or null/undefined.
+ * @returns The truncated integer value.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, integer, truncate, floor, cut, parse
  * @dbxUtilRelated cut-value-to-precision, as-number
- *
- * @param input - Number, number string, or null/undefined
- * @returns The truncated integer value
  */
 export function cutValueToInteger(input: AsNumberInput): number {
   return CUT_VALUE_TO_ZERO_PRECISION(input);
@@ -103,15 +104,16 @@ export type CutValueToPrecisionFunction = ((input: AsNumberInput) => number) & {
 /**
  * Creates a {@link CutValueToPrecisionFunction} that truncates values to the configured precision.
  *
+ * @param precision - Number of decimal places to retain.
+ * @param roundingType - Rounding strategy; defaults to 'cut' (truncation)
+ * @returns Accepts a number or string and returns the truncated number.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilKind factory
  * @dbxUtilTags number, precision, cut, truncate, factory, round
  * @dbxUtilRelated round-to-precision-function, cut-to-precision
  *
- * @param precision - Number of decimal places to retain
- * @param roundingType - Rounding strategy; defaults to 'cut' (truncation)
- * @returns A function that accepts a number or string and returns the truncated number
  * @__NO_SIDE_EFFECTS__
  */
 export function cutValueToPrecisionFunction(precision: NumberPrecision, roundingType: RoundToPrecisionFunctionType = 'cut'): CutValueToPrecisionFunction {
@@ -138,15 +140,16 @@ export type RoundToPrecisionFunctionType = NumberRounding | 'cut';
 /**
  * Creates a function that rounds numbers to the specified precision using a configurable rounding strategy.
  *
+ * @param precision - Number of decimal places.
+ * @param roundFn - Rounding strategy; defaults to 'round'. Use 'cut' for truncation.
+ * @returns Rounds numbers to the configured precision.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilKind factory
  * @dbxUtilTags number, round, precision, factory, decimals
  * @dbxUtilRelated cut-value-to-precision-function, round-to-precision, cut-to-precision
  *
- * @param precision - Number of decimal places
- * @param roundFn - Rounding strategy; defaults to 'round'. Use 'cut' for truncation.
- * @returns A function that rounds numbers to the configured precision
  * @__NO_SIDE_EFFECTS__
  */
 export function roundToPrecisionFunction(precision: NumberPrecision, roundFn: RoundToPrecisionFunctionType = 'round'): RoundToPrecisionFunction {
@@ -165,9 +168,9 @@ export function roundToPrecisionFunction(precision: NumberPrecision, roundFn: Ro
 /**
  * Rounds a number to the specified decimal precision using `Math.round`.
  *
- * @param value - Number to round
- * @param precision - Number of decimal places to retain
- * @returns The rounded number
+ * @param value - Number to round.
+ * @param precision - Number of decimal places to retain.
+ * @returns The rounded number.
  */
 export function roundToPrecision(value: number, precision: NumberPrecision): number {
   return +(Math.round(Number(value + 'e+' + precision)) + 'e-' + precision);
@@ -179,9 +182,9 @@ export function roundToPrecision(value: number, precision: NumberPrecision): num
  * Uses `Math.floor` for positive numbers and `Math.ceil` for negative numbers to truncate toward zero.
  * For example, 1.25 with precision 1 becomes 1.2 (not 1.3).
  *
- * @param value - Number to truncate
- * @param precision - Number of decimal places to retain
- * @returns The truncated number
+ * @param value - Number to truncate.
+ * @param precision - Number of decimal places to retain.
+ * @returns The truncated number.
  */
 export function cutToPrecision(value: number, precision: NumberPrecision): number {
   // use floor for positive numbers, ceil for negative numbers
@@ -209,9 +212,9 @@ export type StepOrigin = number;
 /**
  * Rounds a number up to the nearest multiple of the step size using `Math.ceil`.
  *
- * @param value - Input value
- * @param step - Step size to round up to
- * @returns The nearest multiple of step that is >= value
+ * @param value - Input value.
+ * @param step - Step size to round up to.
+ * @returns The nearest multiple of step that is >= value.
  */
 export function roundNumberUpToStep(value: number, step: number): number {
   return Math.ceil(value / step) * step;
@@ -221,15 +224,15 @@ export function roundNumberUpToStep(value: number, step: number): number {
  * roundNumberToStepFunction()
  */
 export interface RoundNumberToStepFunctionConfig {
-  step: StepNumber;
+  readonly step: StepNumber;
   /**
    * Type of rounding to use.
    */
-  round: Omit<NumberRounding, 'none'>;
+  readonly round: Omit<NumberRounding, 'none'>;
   /**
    * Offset to apply to each input number. Defaults to zero.
    */
-  origin?: StepOrigin;
+  readonly origin?: StepOrigin;
 }
 
 export type RoundNumberToStepFunctionInput = RoundNumberToStepFunctionConfig | StepNumber;
@@ -251,15 +254,16 @@ export type RoundNumberToStepFunction = ((input: Maybe<number>) => number) & {
  *
  * Accepts either a step number (uses 'ceil' rounding) or a full config with step, rounding type, and origin.
  *
+ * @param input - Step size or full configuration.
+ * @returns Rounds input numbers to the nearest step.
+ * @throws {Error} If step is 0 or undefined.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilKind factory
  * @dbxUtilTags number, round, step, factory, multiple, origin
  * @dbxUtilRelated round-number-up-to-step, round-to-precision-function
  *
- * @param input - Step size or full configuration
- * @returns A function that rounds input numbers to the nearest step
- * @throws Error if step is 0 or undefined
  * @__NO_SIDE_EFFECTS__
  */
 export function roundNumberToStepFunction(input: RoundNumberToStepFunctionInput): RoundNumberToStepFunction {

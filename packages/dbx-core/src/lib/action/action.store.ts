@@ -124,9 +124,10 @@ export function actionContextHasNoErrorAndIsModifiedAndCanTrigger(state: ActionC
  * - IDLE/DISABLED -> idle loading state
  * - All other states -> loading (with optional work progress)
  *
- * @typeParam O - The output result type.
  * @param state - The action context state to convert.
  * @returns A loading state representation of the action context state.
+ *
+ * @typeParam O - The output result type.
  */
 export function loadingStateForActionContextState<O = unknown>(state: ActionContextState<unknown, O>): LoadingState<O> {
   let loadingState: LoadingState<O>;

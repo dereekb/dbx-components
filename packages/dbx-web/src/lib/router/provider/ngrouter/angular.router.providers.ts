@@ -5,14 +5,14 @@ import { DbxAngularRouterSegueAnchorComponent } from './anchor.component';
 /**
  * Provides a {@link DbxRouterWebProviderConfig} that configures the application to use Angular Router for rendering segue-ref anchor links.
  *
+ * @returns Environment providers that configure the Angular Router-based segue anchor component.
+ *
  * @example
  * ```typescript
  * bootstrapApplication(AppComponent, {
  *   providers: [provideDbxRouterWebAngularRouterProviderConfig()]
  * });
  * ```
- *
- * @returns environment providers that configure the Angular Router-based segue anchor component
  */
 export function provideDbxRouterWebAngularRouterProviderConfig(): EnvironmentProviders {
   const config: DbxRouterWebProviderConfig = {

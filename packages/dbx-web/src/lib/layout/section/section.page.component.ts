@@ -43,7 +43,7 @@ export type DbxSectionPageScrollLockedMode = 'all' | 'body' | 'locked';
   `,
   host: {
     class: 'd-block dbx-content-page dbx-section-page',
-    '[class]': 'classConfig()'
+    '[class]': 'classConfigSignal()'
   },
   standalone: true,
   imports: [DbxSectionHeaderComponent],
@@ -52,7 +52,7 @@ export type DbxSectionPageScrollLockedMode = 'all' | 'body' | 'locked';
 export class DbxSectionPageComponent extends DbxSectionHeaderComponent {
   readonly scroll = input<DbxSectionPageScrollLockedMode>('all');
 
-  readonly classConfig = computed(() => {
+  readonly classConfigSignal = computed(() => {
     return `dbx-section-page-scroll-${this.scroll()}`;
   });
 

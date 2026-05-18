@@ -32,7 +32,7 @@ describe('transformNumberFunction()', () => {
 
   it('should apply precision', () => {
     const fn = transformNumberFunction({ precision: 1 });
-    expect(fn(1.25 as number)).toBe(1.2);
+    expect(fn(1.25)).toBe(1.2);
   });
 
   it('should apply bounds clamping', () => {

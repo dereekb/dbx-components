@@ -43,8 +43,8 @@ export interface ExtractionOutcome {
  * `firestoreModelIdentity(...)` call land in
  * {@link ExtractionOutcome.unidentifiedFolders}.
  *
- * @param componentAbs - absolute path to the component package root
- * @returns the extraction result (folders + models + skipped list)
+ * @param componentAbs - Absolute path to the component package root.
+ * @returns The extraction result (folders + models + skipped list)
  */
 export async function extractComponentModels(componentAbs: string): Promise<ExtractionOutcome> {
   const modelRoot = join(componentAbs, MODEL_SUBPATH);
@@ -173,19 +173,24 @@ async function fallbackForFolder(input: FallbackForFolderInput): Promise<Compone
 }
 
 async function listFolders(modelRoot: string): Promise<readonly string[] | undefined> {
+  let result: readonly string[] | undefined;
+  let isDir = false;
   try {
     const stats = await stat(modelRoot);
-    if (!stats.isDirectory()) return undefined;
+    isDir = stats.isDirectory();
   } catch {
-    return undefined;
+    isDir = false;
   }
-  const entries = await readdir(modelRoot, { withFileTypes: true });
-  const out: string[] = [];
-  for (const entry of entries) {
-    if (entry.isDirectory()) out.push(entry.name);
+  if (isDir) {
+    const entries = await readdir(modelRoot, { withFileTypes: true });
+    const out: string[] = [];
+    for (const entry of entries) {
+      if (entry.isDirectory()) out.push(entry.name);
+    }
+    out.sort((a, b) => a.localeCompare(b));
+    result = out;
   }
-  out.sort((a, b) => a.localeCompare(b));
-  return out;
+  return result;
 }
 
 interface MainFile {
@@ -196,12 +201,14 @@ interface MainFile {
 
 async function readMainFile(folderAbs: string, folder: string): Promise<MainFile | undefined> {
   const candidate = join(folderAbs, `${folder}.ts`);
+  let result: MainFile | undefined;
   try {
     const text = await readFile(candidate, 'utf8');
-    return { absPath: candidate, fileName: basename(candidate), text };
+    result = { absPath: candidate, fileName: basename(candidate), text };
   } catch {
-    return undefined;
+    result = undefined;
   }
+  return result;
 }
 
 interface ExtractedIdentityInfo {
@@ -212,23 +219,24 @@ interface ExtractedIdentityInfo {
 }
 
 function findIdentityIn(sourceFile: SourceFile): ExtractedIdentityInfo | undefined {
-  for (const statement of sourceFile.getVariableStatements()) {
+  let result: ExtractedIdentityInfo | undefined;
+  outer: for (const statement of sourceFile.getVariableStatements()) {
     for (const decl of statement.getDeclarations()) {
       const initializer = decl.getInitializer();
       if (!initializer || !Node.isCallExpression(initializer)) continue;
       if (initializer.getExpression().getText() !== 'firestoreModelIdentity') continue;
       const args = initializer.getArguments();
       const parsed = parseIdentityArgs(args);
-      const result: ExtractedIdentityInfo = {
+      result = {
         constName: decl.getName(),
         parentIdentityRef: parsed.parentIdentityRef,
         collectionName: parsed.collectionName,
         collectionPrefix: parsed.collectionPrefix
       };
-      return result;
+      break outer;
     }
   }
-  return undefined;
+  return result;
 }
 
 function parseIdentityArgs(args: readonly Node[]): { parentIdentityRef: string | undefined; collectionName: string | undefined; collectionPrefix: string | undefined } {
@@ -254,9 +262,9 @@ function stringLiteralValue(node: Node): string | undefined {
  * back to a PascalCased folder name when the const name doesn't
  * follow the `<camelName>Identity` convention.
  *
- * @param constName - the identity constant name (e.g. `profileIdentity`)
- * @param folder - the folder basename used as a fallback
- * @returns the PascalCase model name
+ * @param constName - The identity constant name (e.g. `profileIdentity`)
+ * @param folder - The folder basename used as a fallback.
+ * @returns The PascalCase model name.
  */
 export function deriveModelName(constName: string, folder: string): string {
   const stem = constName.replace(/Identity$/, '');

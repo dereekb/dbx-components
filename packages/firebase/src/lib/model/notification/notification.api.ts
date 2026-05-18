@@ -427,7 +427,7 @@ export interface CleanupOldNotificationLoggedEventDaysResult {
  */
 export type NotificationFunctionTypeMap = {};
 
-export const notificationFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<NotificationFunctionTypeMap> = {};
+export const NOTIFICATION_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeConfigMap<NotificationFunctionTypeMap> = {};
 
 export type NotificationBoxModelCrudFunctionsConfig = {
   readonly notificationUser: {
@@ -457,7 +457,7 @@ export type NotificationBoxModelCrudFunctionsConfig = {
   readonly notificationLoggedEventDayPage: null;
 };
 
-export const notificationBoxModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
+export const NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<NotificationBoxModelCrudFunctionsConfig, NotificationTypes> = {
   notificationUser: ['update:_,resync'],
   notificationSummary: ['update:_'],
   notificationBox: ['update:_,recipient'],
@@ -498,4 +498,4 @@ export abstract class NotificationFunctions implements ModelFirebaseFunctionMap<
 /**
  * Factory for creating client-side callable function instances from the notification CRUD configuration.
  */
-export const notificationFunctionMap = callModelFirebaseFunctionMapFactory(notificationFunctionTypeConfigMap, notificationBoxModelCrudFunctionsConfig);
+export const notificationFunctionMap = callModelFirebaseFunctionMapFactory(NOTIFICATION_FUNCTION_TYPE_CONFIG_MAP, NOTIFICATION_BOX_MODEL_CRUD_FUNCTIONS_CONFIG);

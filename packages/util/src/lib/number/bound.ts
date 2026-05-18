@@ -16,7 +16,7 @@ export interface NumberBound<T extends number = number> {
 /**
  * Checks whether a {@link NumberBound} is valid (min is less than or equal to max).
  *
- * @param bounds - The bounds to validate
+ * @param bounds - The bounds to validate.
  * @returns `true` if `min <= max`
  */
 export function isValidNumberBound(bounds: NumberBound): boolean {
@@ -29,15 +29,16 @@ export type IsInNumberBoundFunction = (number: number) => boolean;
 /**
  * Creates a function that checks whether a number falls within the specified inclusive bounds.
  *
+ * @param bounds - The min/max bounds to test against.
+ * @returns Returns `true` if the input number is within bounds.
+ * @throws {Error} If the bounds are invalid (min > max)
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilKind factory
  * @dbxUtilTags number, bound, range, between, check, inclusive, factory
  * @dbxUtilRelated bound-number-function, bound-number, is-valid-number-bound
  *
- * @param bounds - The min/max bounds to test against
- * @returns A function that returns `true` if the input number is within bounds
- * @throws Error if the bounds are invalid (min > max)
  * @__NO_SIDE_EFFECTS__
  */
 export function isInNumberBoundFunction(bounds: NumberBound): IsInNumberBoundFunction {
@@ -71,14 +72,15 @@ export type WrapNumberFunction<T extends number = number> = MapFunction<number, 
  *
  * When `fencePosts` is true, wraps to the nearest "fence post" value, extending the wrap range by one in each direction.
  *
+ * @param wrapNumberFunctionConfig - Configuration with min, max, and optional fence post behavior.
+ * @returns Wraps input numbers into the bounded range.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilKind factory
  * @dbxUtilTags number, wrap, modulo, modular, range, factory, circular
  * @dbxUtilRelated bound-number-function, bound-number, is-in-number-bound-function
  *
- * @param wrapNumberFunctionConfig - Configuration with min, max, and optional fence post behavior
- * @returns A function that wraps input numbers into the bounded range
  * @__NO_SIDE_EFFECTS__
  */
 export function wrapNumberFunction<T extends number = number>(wrapNumberFunctionConfig: WrapNumberFunctionConfig<T>): WrapNumberFunction<T> {
@@ -119,14 +121,15 @@ export type BoundNumberFunction<T extends number = number> = MapFunction<number,
  *
  * When `wrap` is true, uses modular wrapping. Otherwise, clamps values to the min/max range.
  *
+ * @param boundNumberFunctionConfig - Configuration with min, max, and optional wrap behavior.
+ * @returns Bounds input numbers into the configured range.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilKind factory
  * @dbxUtilTags number, bound, clamp, wrap, range, factory, constrain
  * @dbxUtilRelated bound-number, wrap-number-function, is-in-number-bound-function
  *
- * @param boundNumberFunctionConfig - Configuration with min, max, and optional wrap behavior
- * @returns A function that bounds input numbers into the configured range
  * @__NO_SIDE_EFFECTS__
  */
 export function boundNumberFunction<T extends number = number>(boundNumberFunctionConfig: BoundNumberFunctionConfig<T>): BoundNumberFunction<T> {
@@ -138,15 +141,15 @@ export function boundNumberFunction<T extends number = number>(boundNumberFuncti
 /**
  * Clamps the input number between the min and max values (inclusive).
  *
+ * @param input - Number to clamp.
+ * @param min - Minimum allowed value.
+ * @param max - Maximum allowed value.
+ * @returns The clamped value.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, clamp, bound, min, max, range, constrain
  * @dbxUtilRelated bound-number-function, wrap-number-function, is-in-number-bound-function
- *
- * @param input - Number to clamp
- * @param min - Minimum allowed value
- * @param max - Maximum allowed value
- * @returns The clamped value
  */
 export function boundNumber<T extends number = number>(input: number, min: T, max: T): T {
   return Math.max(Math.min(input, max), min) as T;

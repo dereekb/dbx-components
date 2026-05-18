@@ -32,8 +32,8 @@ export interface MakeFileForFetchInput {
 /**
  * Creates a File object from the given input.
  *
- * @param input - configuration containing the file content, name, optional MIME type, and last modified timestamp
- * @returns a File object constructed from the provided input
+ * @param input - Configuration containing the file content, name, optional MIME type, and last modified timestamp.
+ * @returns A File object constructed from the provided input.
  */
 export function makeFileForFetch(input: MakeFileForFetchInput): File {
   const options: FilePropertyBag = {};
@@ -146,7 +146,7 @@ export function parseFetchFileResponse(response: Response): FetchFileResponse {
   };
 }
 
-// MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use makeFileForFetch() with FormData instead.
  */
@@ -167,10 +167,10 @@ export interface FetchUploadFileBody {
 }
 
 /**
- * @deprecated Use makeFileForFetch() with FormData and context.fetch() instead.
+ * @param input - Upload request inputs (target URL, fetch implementation, HTTP method, and file body) used to issue the request.
+ * @returns Resolved upload response from the underlying fetch call.
  *
- * @param input - configuration containing the upload URL, fetch function, HTTP method, and file body
- * @returns a promise resolving to the fetch Response
+ * @deprecated Use makeFileForFetch() with FormData and context.fetch() instead.
  */
 // eslint-disable-next-line @typescript-eslint/no-deprecated
 export function fetchUploadFile(input: FetchUploadFile) {

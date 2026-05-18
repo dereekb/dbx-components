@@ -8,6 +8,7 @@
  * `scripts/extract-firebase-models.mjs`.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { type ClassDeclaration, type InterfaceDeclaration, type JSDoc, type SourceFile } from 'ts-morph';
 import { readDescription } from './find-interfaces.js';
 import type { ExtractedModelGroup } from './types.js';
@@ -21,8 +22,8 @@ const MODEL_NAME_RE = /\b([A-Z][A-Za-z0-9]*)FirestoreCollection(?:Factory|Group)
  * tag argument; bare `@dbxModelGroup` markers fall back to the container
  * name with the `FirestoreCollections` suffix stripped.
  *
- * @param sf - the parsed source file to inspect
- * @returns the model-group containers in source order
+ * @param sf - The parsed source file to inspect.
+ * @returns The model-group containers in source order.
  */
 export function findModelGroups(sf: SourceFile): readonly ExtractedModelGroup[] {
   const out: ExtractedModelGroup[] = [];
@@ -41,17 +42,21 @@ export function findModelGroups(sf: SourceFile): readonly ExtractedModelGroup[] 
 
 function buildFromDecl(decl: ClassDeclaration | InterfaceDeclaration): ExtractedModelGroup | undefined {
   const name = decl.getName();
-  if (!name?.endsWith(CONTAINER_SUFFIX)) return undefined;
-  const tag = readDbxModelGroupTag(decl.getJsDocs());
-  if (tag === undefined) return undefined;
-  const explicitName = typeof tag === 'string' ? tag : undefined;
-  const groupName = explicitName ?? name.slice(0, -CONTAINER_SUFFIX.length);
-  return {
-    name: groupName,
-    containerName: name,
-    description: readDescription(decl.getJsDocs()),
-    modelNames: extractGroupModelNames(decl.getText())
-  };
+  let result: ExtractedModelGroup | undefined;
+  if (name?.endsWith(CONTAINER_SUFFIX)) {
+    const tag = readDbxModelGroupTag(decl.getJsDocs());
+    if (tag !== undefined) {
+      const explicitName = typeof tag === 'string' ? tag : undefined;
+      const groupName = explicitName ?? name.slice(0, -CONTAINER_SUFFIX.length);
+      result = {
+        name: groupName,
+        containerName: name,
+        description: readDescription(decl.getJsDocs()),
+        modelNames: extractGroupModelNames(decl.getText())
+      };
+    }
+  }
+  return result;
 }
 
 function readDbxModelGroupTag(jsDocs: readonly JSDoc[]): true | string | undefined {
@@ -68,7 +73,7 @@ function readDbxModelGroupTag(jsDocs: readonly JSDoc[]): true | string | undefin
 
 function extractGroupModelNames(text: string): readonly string[] {
   const seen = new Set<string>();
-  let match: RegExpExecArray | null;
+  let match: Maybe<RegExpExecArray>;
   MODEL_NAME_RE.lastIndex = 0;
   while ((match = MODEL_NAME_RE.exec(text)) !== null) {
     seen.add(match[1]);

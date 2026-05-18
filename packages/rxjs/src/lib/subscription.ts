@@ -23,7 +23,7 @@ export class SubscriptionObject<T extends Unsubscribable = Unsubscribable> imple
   private _subscription?: Maybe<T>;
 
   /**
-   * @param sub - optional initial subscription to manage
+   * @param sub - Optional initial subscription to manage.
    */
   constructor(sub?: Maybe<T>) {
     if (sub) {
@@ -34,7 +34,7 @@ export class SubscriptionObject<T extends Unsubscribable = Unsubscribable> imple
   /**
    * Whether a subscription is currently being managed.
    *
-   * @returns true if a subscription is currently active
+   * @returns True if a subscription is currently active.
    */
   public get hasSubscription(): boolean {
     return Boolean(this._subscription);
@@ -50,7 +50,7 @@ export class SubscriptionObject<T extends Unsubscribable = Unsubscribable> imple
   /**
    * Replaces the current subscription with the given one, unsubscribing from the previous.
    *
-   * @param sub - new subscription to manage, or `undefined`/`void` to just unsubscribe
+   * @param sub - New subscription to manage, or `undefined`/`void` to just unsubscribe.
    */
   public setSub(sub: Maybe<T | void>) {
     this.unsub();
@@ -101,7 +101,7 @@ export class MultiSubscriptionObject<T extends Unsubscribable = Unsubscribable> 
   private _subscriptions?: T[];
 
   /**
-   * @param subs - optional initial subscription(s) to manage
+   * @param subs - Optional initial subscription(s) to manage.
    */
   constructor(subs?: ArrayOrValue<T>) {
     if (subs) {
@@ -112,7 +112,7 @@ export class MultiSubscriptionObject<T extends Unsubscribable = Unsubscribable> 
   /**
    * Whether any subscriptions are currently being managed.
    *
-   * @returns true if one or more subscriptions are currently active
+   * @returns True if one or more subscriptions are currently active.
    */
   public get hasSubscription(): boolean {
     return Boolean(this._subscriptions?.length);
@@ -128,7 +128,7 @@ export class MultiSubscriptionObject<T extends Unsubscribable = Unsubscribable> 
   /**
    * Replaces all managed subscriptions with the given ones, unsubscribing from all previous.
    *
-   * @param subs - new subscription(s) to manage
+   * @param subs - New subscription(s) to manage.
    */
   public setSubs(subs: ArrayOrValue<T>) {
     this.unsub();
@@ -138,7 +138,7 @@ export class MultiSubscriptionObject<T extends Unsubscribable = Unsubscribable> 
   /**
    * Adds subscription(s) to the managed set without affecting existing ones. Duplicate subscriptions are ignored.
    *
-   * @param subs - subscription(s) to add
+   * @param subs - Subscription(s) to add.
    */
   public addSubs(subs: ArrayOrValue<T>) {
     const nextSubscriptions = [...(this._subscriptions ?? [])];

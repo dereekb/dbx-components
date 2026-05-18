@@ -177,8 +177,8 @@ function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string)
 /**
  * Appends the parent-chain section (root → … → node) to the markdown buffer.
  *
- * @param lines - the markdown buffer being built
- * @param node - the node whose ancestor chain to render
+ * @param lines - The markdown buffer being built.
+ * @param node - The node whose ancestor chain to render.
  */
 function appendParentChainSection(lines: string[], node: RouteTreeNode): void {
   const chain = ancestors(node);
@@ -190,9 +190,9 @@ function appendParentChainSection(lines: string[], node: RouteTreeNode): void {
  * Appends a heading and a bullet list of code-formatted keys, or `_None._` when
  * the list is empty.
  *
- * @param lines - the markdown buffer being built
- * @param title - the section heading title
- * @param keys - the list of identifier keys to render
+ * @param lines - The markdown buffer being built.
+ * @param title - The section heading title.
+ * @param keys - The list of identifier keys to render.
  */
 function appendKeyListSection(lines: string[], title: string, keys: readonly string[]): void {
   lines.push('', `## ${title}`);
@@ -209,9 +209,9 @@ function appendKeyListSection(lines: string[], title: string, keys: readonly str
  * Appends a heading plus one bullet per node showing its URL and component, or
  * `_None._` when the list is empty.
  *
- * @param lines - the markdown buffer being built
- * @param title - the section heading title
- * @param nodes - the related nodes (siblings or children) to render
+ * @param lines - The markdown buffer being built.
+ * @param title - The section heading title.
+ * @param nodes - The related nodes (siblings or children) to render.
  */
 function appendRelatedNodesSection(lines: string[], title: string, nodes: readonly RouteTreeNode[]): void {
   lines.push('', `## ${title}`);
@@ -271,46 +271,50 @@ function code(value: string): string {
  * topic against the resolved app sources and renders the matching state
  * details, child summary, or not-found suggestion list.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted lookup, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The formatted lookup, or an error result when args fail validation.
  */
 export async function runRouteLookup(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedLookupArgs;
+  let args: ParsedLookupArgs | undefined;
+  let parseError: string | undefined;
   try {
     args = parseArgs(rawArgs);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    parseError = err instanceof Error ? err.message : String(err);
   }
 
-  const ctx = await loadRouteContext(args);
-  if (ctx.kind === 'error') {
-    return ctx.result;
+  let result: ToolResult;
+  if (parseError !== undefined || args === undefined) {
+    result = toolError(parseError ?? 'Failed to parse arguments.');
+  } else {
+    const ctx = await loadRouteContext(args);
+    if (ctx.kind === 'error') {
+      result = ctx.result;
+    } else {
+      const { tree } = ctx;
+      const match = resolveTopic(args.topic, tree.byName);
+      let text: string;
+      switch (match.kind) {
+        case 'single':
+          text = formatSingle(match.node, args.depth, match.via);
+          break;
+        case 'group':
+          text = formatGroup(match.title, match.nodes);
+          break;
+        case 'not-found':
+          text = formatNotFound(match.normalized, match.candidates);
+          break;
+      }
+      result = {
+        content: [{ type: 'text', text }],
+        isError: match.kind === 'not-found'
+      };
+    }
   }
-
-  const { tree } = ctx;
-  const match = resolveTopic(args.topic, tree.byName);
-  let text: string;
-  switch (match.kind) {
-    case 'single':
-      text = formatSingle(match.node, args.depth, match.via);
-      break;
-    case 'group':
-      text = formatGroup(match.title, match.nodes);
-      break;
-    case 'not-found':
-      text = formatNotFound(match.normalized, match.candidates);
-      break;
-  }
-
-  const result: ToolResult = {
-    content: [{ type: 'text', text }],
-    isError: match.kind === 'not-found'
-  };
   return result;
 }
 
-export const routeLookupTool: DbxTool = {
+export const ROUTE_LOOKUP_TOOL: DbxTool = {
   definition: DBX_ROUTE_LOOKUP_TOOL,
   run: runRouteLookup
 };

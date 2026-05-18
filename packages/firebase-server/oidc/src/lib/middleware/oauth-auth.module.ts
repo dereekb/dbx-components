@@ -64,34 +64,32 @@ export function applyOidcAuthMiddleware(nestApp: INestApplication): void {
   nestApp.use((req: Request, res: Response, next: NextFunction) => {
     const isProtected = protectedPaths.some((prefix) => req.path.startsWith(prefix));
 
-    if (!isProtected) {
-      return next();
+    if (isProtected) {
+      const authHeader = req.headers.authorization;
+
+      if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.slice(7);
+
+        oidcService
+          .verifyAccessToken(token)
+          .then((oauthAuth) => {
+            if (oauthAuth) {
+              (req as Configurable<OidcAuthenticatedRequest>).auth = oauthAuth;
+              next();
+            } else {
+              res.status(401).json({ statusCode: 401, message: 'Invalid or expired access token' });
+            }
+          })
+          .catch((err) => {
+            logger.error('Bearer token verification failed', err);
+            res.status(401).json({ statusCode: 401, message: 'Token verification failed' });
+          });
+      } else {
+        res.status(401).json({ statusCode: 401, message: 'Missing or invalid Authorization header' });
+      }
+    } else {
+      next();
     }
-
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader?.startsWith('Bearer ')) {
-      res.status(401).json({ statusCode: 401, message: 'Missing or invalid Authorization header' });
-      return;
-    }
-
-    const token = authHeader.slice(7);
-
-    oidcService
-      .verifyAccessToken(token)
-      .then((oauthAuth) => {
-        if (!oauthAuth) {
-          res.status(401).json({ statusCode: 401, message: 'Invalid or expired access token' });
-          return;
-        }
-
-        (req as Configurable<OidcAuthenticatedRequest>).auth = oauthAuth;
-        next();
-      })
-      .catch((err) => {
-        logger.error('Bearer token verification failed', err);
-        res.status(401).json({ statusCode: 401, message: 'Token verification failed' });
-      });
   });
 
   _logger.debug(`Applied OAuth bearer token middleware for paths: ${protectedPaths.join(', ')}`);

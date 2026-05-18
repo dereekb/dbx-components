@@ -3,7 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
-import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
+import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
 
 const departmentsListCommand: CommandModule = {
   command: 'list',
@@ -16,7 +16,7 @@ const departmentsListCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.getDepartments(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -49,7 +49,7 @@ const departmentsGetCommand: CommandModule = {
   }
 };
 
-export const deskDepartmentsCommand: CommandModule = {
+export const DESK_DEPARTMENTS_COMMAND: CommandModule = {
   command: 'departments',
   describe: 'Desk department operations',
   builder: (yargs: Argv) => yargs.command(departmentsListCommand).command(departmentsGetCommand).demandCommand(1),

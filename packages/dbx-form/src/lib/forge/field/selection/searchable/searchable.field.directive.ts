@@ -6,7 +6,7 @@ import { type LoadingState, successResult, startWithBeginLoading } from '@dereek
 import { BehaviorSubject, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
-import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, type SearchableValueFieldAnchorFn, type SearchableValueFieldHashFn, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
+import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, type SearchableValueFieldHashFn, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
 import { DbxDefaultSearchableFieldDisplayComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
 import { type DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 
@@ -58,10 +58,10 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
   readonly hintSignal = computed(() => this.props()?.hint);
 
   // ARIA IDs
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
 
-  readonly searchInputPlaceholder = computed(() => {
+  readonly searchInputPlaceholderSignal = computed(() => {
     const p = this.props();
     const searchOnEmpty = p?.searchOnEmptyText ?? false;
     const placeholder = typeof this.placeholder() === 'string' ? (this.placeholder() as string) : undefined;
@@ -173,7 +173,7 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
                 }
 
                 if (!x.anchor && anchorForValue) {
-                  x.anchor = (anchorForValue as SearchableValueFieldAnchorFn<T, M>)(x);
+                  x.anchor = anchorForValue(x);
                 }
               });
 
@@ -182,7 +182,7 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
 
               displayResultsMapping.forEach(([x, hash]) => displayMap.set(hash, x));
 
-              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1])) as ConfiguredSearchableValueFieldDisplayValue<T, M>[];
+              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
             })
           );
         } else {

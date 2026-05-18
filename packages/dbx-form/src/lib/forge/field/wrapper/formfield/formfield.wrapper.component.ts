@@ -169,16 +169,19 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapper {
   readonly props = input<DbxForgeFormFieldWrapperProps>();
 
   // Read-only field tree from the wrapped field
-  private readonly formState = computed(() => this.fieldInputs()?.field);
+  private readonly formStateSignal = computed(() => this.fieldInputs()?.field);
 
   // Disabled state
-  readonly isDisabled = computed(() => this.formState()?.disabled());
+  readonly isDisabledSignal = computed(() => this.formStateSignal()?.disabled());
 
   /**
    * Resolved notch label. Prefers a wrapper-level `props.label` override and
    * falls back to the wrapped field's own label.
    */
-  readonly label = computed(() => this.props()?.label ?? this.fieldInputs()?.label);
+  readonly labelSignal = computed(() => {
+    const fieldInputs = this.fieldInputs();
+    return this.props()?.label ?? fieldInputs?.label;
+  });
 
   readonly hintSignal = computed(() => (this.fieldInputs()?.props as any)?.hint);
   readonly classNameSignal = computed(() => this.fieldInputs()?.className ?? '');
@@ -187,7 +190,7 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapper {
   private readonly keySignal = computed(() => this.fieldInputs()?.key ?? '');
 
   // Validation state from form tree
-  private readonly childErrors = computed(() => this.formState()?.errors() as readonly ValidationError[] | undefined);
+  private readonly childErrorsSignal = computed(() => this.formStateSignal()?.errors() as readonly ValidationError[] | undefined);
 
   /**
    * Whether errors should be displayed.
@@ -196,11 +199,12 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapper {
    * because this wrapper targets non-standard fields (sliders, custom components)
    * where standard blur-based touch behavior may not apply.
    */
-  readonly showErrors = computed(() => {
-    return (this.formState()?.invalid() ?? false) && (this.childErrors()?.length ?? 0) > 0;
+  readonly showErrorsSignal = computed(() => {
+    const childErrors = this.childErrorsSignal();
+    return (this.formStateSignal()?.invalid() ?? false) && (childErrors?.length ?? 0) > 0;
   });
 
-  readonly hasError = this.showErrors;
+  readonly hasError = this.showErrorsSignal;
 
   /**
    * Resolves the first error message using the same priority as ng-forge's
@@ -209,8 +213,8 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapper {
    *
    * Uses `interpolateParams` for `{{param}}` placeholder substitution.
    */
-  readonly firstErrorMessage = computed(() => {
-    const errors = this.childErrors();
+  readonly firstErrorMessageSignal = computed(() => {
+    const errors = this.childErrorsSignal();
     const error = errors?.[0];
 
     if (!error) {
@@ -218,8 +222,8 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapper {
     }
 
     const inputs = this.fieldInputs();
-    const fieldMessages = (inputs?.validationMessages ?? {}) as Record<string, string>;
-    const defaultMessages = (inputs?.defaultValidationMessages ?? {}) as Record<string, string>;
+    const fieldMessages = inputs?.validationMessages ?? {};
+    const defaultMessages = inputs?.defaultValidationMessages ?? {};
     const message = fieldMessages[error.kind] ?? defaultMessages[error.kind] ?? error.message ?? error.kind;
     return interpolateParams(message, error);
   });
@@ -227,10 +231,10 @@ export class DbxForgeFormFieldWrapperComponent implements FieldWrapper {
   /**
    * Whether any child field has `required` state, used to show the asterisk in the label.
    */
-  readonly isRequired = computed(() => this.formState()?.required());
+  readonly isRequiredSignal = computed(() => this.formStateSignal()?.required());
 
   // ARIA IDs
-  protected readonly labelId = computed(() => `${this.keySignal()}-label`);
-  protected readonly errorId = computed(() => `${this.keySignal()}-error`);
-  protected readonly hintId = computed(() => `${this.keySignal()}-hint`);
+  protected readonly labelIdSignal = computed(() => `${this.keySignal()}-label`);
+  protected readonly errorIdSignal = computed(() => `${this.keySignal()}-error`);
+  protected readonly hintIdSignal = computed(() => `${this.keySignal()}-hint`);
 }

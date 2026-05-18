@@ -12,7 +12,7 @@ import { isStdinSentinel, readAllStdin } from '../util/stdin';
  * Provides direct access to the demo-api's typed model dispatch without typed wrappers — useful
  * for ad-hoc admin tasks, scripting, and the MVP demo CLI before model-specific commands ship.
  */
-export const callPassthroughCommand: CommandModule = {
+export const CALL_PASSTHROUGH_COMMAND: CommandModule = {
   command: 'call <model> <verb> [specifier]',
   describe: 'POST a typed model call: { modelType, call, specifier?, data } — generic passthrough',
   builder: (yargs: Argv) => withCallModelArgs(yargs),

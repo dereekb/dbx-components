@@ -141,6 +141,10 @@ export class DateRRuleInstance {
    * Factory that parses the RRule string, merges excluded dates, and builds
    * a fully configured instance.
    *
+   * @param params - RRule source and instance options.
+   * @returns New {@link DateRRuleInstance} bound to the parsed schedule.
+   * @throws {Error} If neither `rruleLines` nor `rruleStringLineSet` is provided.
+   *
    * @example
    * ```ts
    * const instance = DateRRuleInstance.make({
@@ -148,10 +152,6 @@ export class DateRRuleInstance {
    *   options: { date: { startsAt: new Date(), duration: 3600000 }, timezone: 'America/Chicago' }
    * });
    * ```
-   *
-   * @param params - RRule source and instance options.
-   * @throws Error if neither `rruleLines` nor `rruleStringLineSet` is provided.
-   * @returns A new {@link DateRRuleInstance}.
    */
   static make(params: MakeDateRRuleInstance): DateRRuleInstance {
     if (!(params.rruleLines || params.rruleStringLineSet)) {
@@ -219,13 +219,13 @@ export class DateRRuleInstance {
    * Returns the next recurrence date on or after the given reference date,
    * or `undefined` if the recurrence has ended.
    *
+   * @param from - Reference point; defaults to now.
+   * @returns The next occurrence date, or `undefined`.
+   *
    * @example
    * ```ts
    * const next = instance.nextRecurrenceDate(new Date());
    * ```
-   *
-   * @param from - Reference point; defaults to now.
-   * @returns The next occurrence date, or `undefined`.
    */
   nextRecurrenceDate(from: Date = new Date()): Maybe<Date> {
     const baseFrom = this.normalInstance.baseDateToTargetDate(from);
@@ -237,6 +237,10 @@ export class DateRRuleInstance {
    * Expands the recurrence rule into concrete {@link CalendarDate} instances,
    * optionally bounded by a date range.
    *
+   * @param options - Range constraints for the expansion.
+   * @returns Expanded dates plus the resolved range used to bound them.
+   * @throws {Error} When the rule expands infinitely and no range is provided.
+   *
    * @example
    * ```ts
    * const expansion = instance.expand({
@@ -244,10 +248,6 @@ export class DateRRuleInstance {
    * });
    * console.log(expansion.dates.length);
    * ```
-   *
-   * @param options - Range constraints for the expansion.
-   * @throws Error when the rule expands infinitely and no range is provided.
-   * @returns The expanded dates and the resolved range used.
    */
   expand(options: DateRRuleExpansionOptions): DateRRuleExpansion {
     let between: Maybe<DateRange>;
@@ -392,6 +392,10 @@ export class DateRRuleUtility {
    * Expands a recurrence rule into concrete dates using either a pre-built
    * instance or parameters to build one on-the-fly.
    *
+   * @param options - Instance (or parameters to create one) and optional range.
+   * @returns Expansion result containing resolved dates.
+   * @throws {Error} If neither `instance` nor `instanceFrom` is provided.
+   *
    * @example
    * ```ts
    * const result = DateRRuleUtility.expand({
@@ -402,10 +406,6 @@ export class DateRRuleUtility {
    *   range: { start: new Date('2026-01-01'), end: new Date('2026-03-01') }
    * });
    * ```
-   *
-   * @param options - Instance (or parameters to create one) and optional range.
-   * @throws Error if neither `instance` nor `instanceFrom` is provided.
-   * @returns The expansion result containing resolved dates.
    */
   static expand(options: DateRRuleStaticExpansionOptions): DateRRuleExpansion {
     if (!options.instance && !options.instanceFrom) {

@@ -5,8 +5,8 @@ import { type Maybe } from '../value/maybe.type';
 /**
  * Combines multiple Maps into a single Map. Later maps override earlier values for the same key.
  *
- * @param maps - The maps to combine (null/undefined maps are skipped)
- * @returns A new Map containing all entries
+ * @param maps - Lookups to merge; nullish entries are skipped.
+ * @returns Combined lookup with later entries overriding earlier ones per key.
  */
 export function combineMaps<K, T>(...maps: Maybe<Map<K, T>>[]): Map<K, T> {
   const result = new Map<K, T>();
@@ -21,10 +21,10 @@ export function combineMaps<K, T>(...maps: Maybe<Map<K, T>>[]): Map<K, T> {
 /**
  * Sets the same value for one or more keys in a Map.
  *
- * @param map - The map to set values on
- * @param key - A single key or array of keys to set
- * @param value - The value to set for all keys
- * @returns The modified map
+ * @param map - Lookup that receives the writes in place.
+ * @param key - One or more keys to associate with `value`.
+ * @param value - Payload assigned to every supplied key.
+ * @returns Same `map` reference after the assignments.
  */
 export function setKeysOnMap<K, T>(map: Map<K, T>, key: ArrayOrValue<K>, value: T): Map<K, T> {
   asArray(key).forEach((key) => map.set(key, value));
@@ -34,8 +34,8 @@ export function setKeysOnMap<K, T>(map: Map<K, T>, key: ArrayOrValue<K>, value: 
 /**
  * Converts a Map to an array of key-value tuples.
  *
- * @param map - The map to convert
- * @returns An array of [key, value] tuples
+ * @param map - Lookup whose entries should be flattened.
+ * @returns Tuple list mirroring the lookup's entry iteration order.
  */
 export function mapToTuples<K, T>(map: Map<K, T>): [K, T][] {
   return Array.from(map.entries());
@@ -44,8 +44,8 @@ export function mapToTuples<K, T>(map: Map<K, T>): [K, T][] {
 /**
  * Expands a Map with array values into individual key/value tuples.
  *
- * @param map - A Map where values are arrays
- * @returns An array of [key, value] tuples, one for each element in each array
+ * @param map - Lookup whose values are arrays to expand.
+ * @returns Flattened tuples — one per element across every keyed array.
  */
 export function expandArrayMapTuples<K, T>(map: Map<K, T[]>): [K, T][] {
   return expandArrayValueTuples(mapToTuples(map));
@@ -54,8 +54,8 @@ export function expandArrayMapTuples<K, T>(map: Map<K, T[]>): [K, T][] {
 /**
  * Expands tuples where values may be arrays into individual key/value tuples.
  *
- * @param values - Array of [key, ArrayOrValue] tuples to expand
- * @returns An array of [key, value] tuples
+ * @param values - Tuples whose right-hand side may be a single value or an array.
+ * @returns Flattened tuples emitting one entry per element on each input tuple.
  */
 export function expandArrayValueTuples<K, T>(values: [K, ArrayOrValue<T>][]): [K, T][] {
   const tuples: [K, T][] = [];

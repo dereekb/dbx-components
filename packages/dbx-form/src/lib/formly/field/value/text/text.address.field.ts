@@ -51,8 +51,8 @@ export interface AddressLineFieldConfig extends Partial<TextFieldConfig> {
 /**
  * Creates a text field for a single address line with autocomplete support.
  *
- * @param config - Optional overrides; line number determines key and label
- * @returns A {@link FormlyFieldConfig} for address line input
+ * @param config - Optional overrides; line number determines key and label.
+ * @returns A {@link FormlyFieldConfig} for address line input.
  *
  * @example
  * ```typescript
@@ -80,8 +80,8 @@ export function formlyAddressLineField(config: AddressLineFieldConfig = {}): For
  * Creates the full set of address form fields (lines, city, state, zip, and optionally country)
  * arranged in a flex layout.
  *
- * @param config - Address fields configuration
- * @returns Array of {@link FormlyFieldConfig} for a complete address form section
+ * @param config - Address fields configuration.
+ * @returns Array of {@link FormlyFieldConfig} for a complete address form section.
  *
  * @example
  * ```typescript
@@ -130,7 +130,7 @@ export interface AddressFieldConfig extends Readonly<FieldConfig>, DbxFormSectio
  * Creates a section-wrapped address field group containing all address sub-fields.
  *
  * @param config - Optional overrides; defaults to key `'address'`, header `'Address'`
- * @returns A section-wrapped {@link FormlyFieldConfig} containing address fields
+ * @returns A section-wrapped {@link FormlyFieldConfig} containing address fields.
  *
  * @example
  * ```typescript
@@ -169,8 +169,8 @@ export interface AddressListFieldConfig extends Readonly<FieldConfig>, AddressFo
 /**
  * Creates a repeat-array field that allows the user to add multiple addresses.
  *
- * @param config - Optional overrides; defaults to key `'addresses'`, max 6 entries
- * @returns A {@link FormlyFieldConfig} with repeat-array type for multiple addresses
+ * @param config - Optional overrides; defaults to key `'addresses'`, max 6 entries.
+ * @returns A {@link FormlyFieldConfig} with repeat-array type for multiple addresses.
  *
  * @example
  * ```typescript
@@ -192,6 +192,7 @@ export function formlyAddressListField(config: Partial<AddressListFieldConfig> =
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyAddressLineField instead.
  */

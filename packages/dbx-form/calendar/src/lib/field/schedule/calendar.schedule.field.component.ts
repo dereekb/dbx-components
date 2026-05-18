@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, type OnDestroy, type OnInit, inject
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { type ArrayOrValue, type TimezoneString, type Maybe } from '@dereekb/util';
 import { FieldType } from '@ngx-formly/material';
-import { BehaviorSubject, distinctUntilChanged, map, shareReplay, startWith, type Subscription, switchMap } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs';
 import { filterMaybe, type ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { type DateRange, isSameDateCellScheduleDateRange, type DateCellScheduleDateFilterConfig, type DateCellScheduleDayCode, type DateOrDateRangeOrDateCellIndexOrDateCellRange } from '@dereekb/date';
 import { type CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
@@ -200,19 +200,19 @@ export class DbxFormCalendarDateScheduleRangeFieldComponent<T extends DbxFormCal
     const { outputTimezone, minMaxDateRange, filter, exclusions, defaultScheduleDays } = this;
 
     if (filter != null) {
-      this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter)) as Subscription;
+      this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter));
     }
 
     if (defaultScheduleDays != null) {
-      this._defaultWeekSub.subscription = this.dbxCalendarScheduleSelectionStore.setDefaultScheduleDays(asObservable(defaultScheduleDays)) as Subscription;
+      this._defaultWeekSub.subscription = this.dbxCalendarScheduleSelectionStore.setDefaultScheduleDays(asObservable(defaultScheduleDays));
     }
 
     if (minMaxDateRange != null) {
-      this._minMaxDateRangeSub.subscription = this.dbxCalendarScheduleSelectionStore.setMinMaxDateRange(asObservable(minMaxDateRange)) as Subscription;
+      this._minMaxDateRangeSub.subscription = this.dbxCalendarScheduleSelectionStore.setMinMaxDateRange(asObservable(minMaxDateRange));
     }
 
     if (exclusions != null) {
-      this._exclusionsSub.subscription = this.dbxCalendarScheduleSelectionStore.setExclusions(asObservable(exclusions)) as Subscription;
+      this._exclusionsSub.subscription = this.dbxCalendarScheduleSelectionStore.setExclusions(asObservable(exclusions));
     }
 
     if (outputTimezone != null) {

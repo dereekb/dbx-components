@@ -13,24 +13,24 @@ export interface DocFormExampleChecklistValues {
 export type DocFormExampleChecklistDisplayWithDataFn = (builder: DocFormExampleChecklistItemFieldDataSetBuilder) => Observable<ChecklistItemDisplayContent>;
 
 export interface DocFormExampleChecklistFieldsCustomDisplayFieldConfig {
-  displayWithData?: DocFormExampleChecklistDisplayWithDataFn;
+  readonly displayWithData?: DocFormExampleChecklistDisplayWithDataFn;
 }
 
 export type DocFormExampleChecklistFieldsCustomDisplayConfig = KeyValueTransformMap<DocFormExampleChecklistValues, DocFormExampleChecklistFieldsCustomDisplayFieldConfig>;
 export type DocFormExampleChecklistItemFieldDataSetBuilder = ChecklistItemFieldDataSetBuilder<DocFormExampleChecklistValues, ChecklistType<DocFormExampleChecklistValues>>;
 
 export interface DocFormExampleChecklistFieldsConfig {
-  dataObs: Observable<DocFormExampleChecklistValues>;
-  display?: DocFormExampleChecklistFieldsCustomDisplayConfig;
+  readonly dataObs: Observable<DocFormExampleChecklistValues>;
+  readonly display?: DocFormExampleChecklistFieldsCustomDisplayConfig;
 }
 
 /**
  * Builds checklist formly fields from a data observable and optional custom display configuration.
  *
- * @param config - The checklist fields configuration
- * @param config.dataObs - Observable of the checklist data
- * @param config.display - Optional custom display configuration per field
- * @returns The built formly field configs
+ * @param config - The checklist fields configuration.
+ * @param config.dataObs - Observable of the checklist data.
+ * @param config.display - Optional custom display configuration per field.
+ * @returns The built formly field configs.
  *
  * @example
  * ```ts
@@ -87,10 +87,10 @@ export function docFormExampleChecklistFields({ dataObs, display }: DocFormExamp
 /**
  * Wraps checklist fields in a flex layout section field group.
  *
- * @param options - The section options
- * @param options.key - Optional formly key for the section
- * @param options.config - The checklist fields configuration
- * @returns A formly field config wrapping the checklist fields
+ * @param options - The section options.
+ * @param options.key - Optional formly key for the section.
+ * @param options.config - The checklist fields configuration.
+ * @returns A formly field config wrapping the checklist fields.
  *
  * @example
  * ```ts

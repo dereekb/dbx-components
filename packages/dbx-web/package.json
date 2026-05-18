@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-web",
-  "version": "13.11.14",
+  "version": "13.11.15",
   "sideEffects": [
     "*.scss",
     "*.css"
@@ -13,12 +13,12 @@
     "@angular/material": "^21.2.9",
     "@angular/platform-browser": "21.2.11",
     "@cantoo/pdf-lib": "^2.6.5",
-    "@dereekb/browser": "13.11.14",
-    "@dereekb/date": "13.11.14",
-    "@dereekb/dbx-core": "13.11.14",
-    "@dereekb/rxjs": "13.11.14",
-    "@dereekb/util": "13.11.14",
-    "@dereekb/vitest": "13.11.14",
+    "@dereekb/browser": "13.11.15",
+    "@dereekb/date": "13.11.15",
+    "@dereekb/dbx-core": "13.11.15",
+    "@dereekb/rxjs": "13.11.15",
+    "@dereekb/util": "13.11.15",
+    "@dereekb/vitest": "13.11.15",
     "@ngbracket/ngx-layout": "^21.0.0",
     "@ngrx/component-store": "^21.1.0",
     "@ngrx/effects": "^21.1.0",
@@ -53,7 +53,7 @@
     }
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "8.59.0",
-    "eslint": "9.39.4"
+    "@typescript-eslint/parser": "8.59.3",
+    "eslint": "10.4.0"
   }
 }

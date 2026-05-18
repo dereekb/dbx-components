@@ -188,6 +188,7 @@ export const MAX_BATCH_SEND_RECIPIENTS = 1000;
  *
  * @param config - The conversion configuration containing the email request, default sender, and recipient variable settings.
  * @returns The constructed {@link MailgunMessageData} ready to be sent via the Mailgun API.
+ * @throws {Error} When `batchSend` is enabled with `cc`/`bcc` set, when the recipient list exceeds {@link MAX_BATCH_SEND_RECIPIENTS}, or when attachments are supplied via both `messageData` and `request.attachments`.
  */
 export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig): MailgunMessageData {
   const {
@@ -375,8 +376,8 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
  *
  * Each recipient is formatted as "Name <email>" when a name is present, or just the email address.
  *
- * @param recipients - the recipients to convert
- * @returns an array of formatted email address strings
+ * @param recipients - Recipients to convert.
+ * @returns Formatted email address strings.
  */
 export function convertMailgunRecipientsToStrings(recipients: MailgunRecipient[]): EmailParticipantString[] {
   return recipients.map((x) => convertMailgunRecipientToString(x));
@@ -387,8 +388,8 @@ export function convertMailgunRecipientsToStrings(recipients: MailgunRecipient[]
  *
  * Returns "Name <email>" when a name is present, or just the email address otherwise.
  *
- * @param recipient - the recipient to convert
- * @returns a formatted email participant string
+ * @param recipient - The recipient to convert.
+ * @returns A formatted email participant string.
  */
 export function convertMailgunRecipientToString(recipient: MailgunRecipient): EmailParticipantString {
   let address = recipient.email;
@@ -403,8 +404,9 @@ export function convertMailgunRecipientToString(recipient: MailgunRecipient): Em
 /**
  * Encodes a value to a string for use as a Mailgun template variable. Throws an error if the value is not supported.
  *
- * @param value The value to encode.
+ * @param value - The value to encode.
  * @returns The encoded value, or undefined if the value is null or undefined.
+ * @throws {Error} When `value` has an unsupported runtime type.
  */
 export function encodeMailgunTemplateVariableValue(value: unknown): Maybe<string> {
   let encodedValue: Maybe<string>;

@@ -57,34 +57,19 @@ export type CssTokenVar<T extends CssToken = CssToken> = `var(${T})`;
 /**
  * Converts a CSS token into a var() string.
  *
+ * @param cssToken - The CSS token to convert.
+ * @returns The var() string.
+ *
  * @example
  * ```ts
  * cssTokenVar('--dbx-primary-color'); // 'var(--dbx-primary-color)'
  * ```
- *
- * @param cssToken - the CSS token to convert
- * @returns the var() string
  */
 export function cssTokenVar<T extends CssToken>(cssToken: T): CssTokenVar<T> {
   return `var(${cssToken})`;
 }
 
 // MARK: Compat
-/**
- * @deprecated Use {@link CssToken} instead.
- */
-export type CssVariable = CssToken;
-
-/**
- * @deprecated Use {@link CssTokenVar} instead.
- */
-export type CssVariableVar<T extends CssToken = CssToken> = CssTokenVar<T>;
-
-/**
- * @deprecated Use {@link cssTokenVar} instead.
- */
-export const cssVariableVar = cssTokenVar;
-
 /**
  * Represents a single CSS Style
  *
@@ -125,8 +110,8 @@ export type CssClassesArray = ArrayOrValue<ArrayOrValue<SpaceSeparatedCssClasses
 /**
  * Joins together various arrays of CSS classes into a single space-separated string of unique class names.
  *
- * @param cssClasses - one or more CSS class values or arrays of class values
- * @returns a space-separated string of unique CSS class names, or an empty string if input is null/undefined
+ * @param cssClasses - One or more CSS class values or arrays of class values.
+ * @returns A space-separated string of unique CSS class names, or an empty string if input is null/undefined.
  */
 export function spaceSeparatedCssClasses(cssClasses: Maybe<CssClassesArray>): SpaceSeparatedCssClasses {
   let result: SpaceSeparatedCssClasses = '';
@@ -143,8 +128,8 @@ export function spaceSeparatedCssClasses(cssClasses: Maybe<CssClassesArray>): Sp
  * Parses and deduplicates CSS classes from various array/string inputs into a Set.
  * Space-separated class strings are split into individual class names.
  *
- * @param cssClasses - one or more CSS class values or arrays of class values
- * @returns a Set of unique CSS class names, or an empty Set if input is null/undefined
+ * @param cssClasses - One or more CSS class values or arrays of class values.
+ * @returns Set of unique CSS class names, or an empty Set if input is null/undefined.
  */
 export function cssClassesSet(cssClasses: Maybe<CssClassesArray>): Set<CssClass> {
   let result: Set<CssClass>;
@@ -160,3 +145,19 @@ export function cssClassesSet(cssClasses: Maybe<CssClassesArray>): Set<CssClass>
 
   return result;
 }
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated Use {@link CssToken} instead.
+ */
+export type CssVariable = CssToken;
+
+/**
+ * @deprecated Use {@link CssTokenVar} instead.
+ */
+export type CssVariableVar<T extends CssToken = CssToken> = CssTokenVar<T>;
+
+/**
+ * @deprecated Use {@link cssTokenVar} instead.
+ */
+export const cssVariableVar = cssTokenVar;

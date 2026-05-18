@@ -83,12 +83,15 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
   function getAnalyticsService(request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>): OnCallModelAnalyticsService {
     const token = analyticsToken ?? ON_CALL_MODEL_ANALYTICS_SERVICE;
     const moduleRef: ModuleRef = request.nestApplication.get(ModuleRef);
+    let result: OnCallModelAnalyticsService;
 
     try {
-      return moduleRef.get(token, { strict: false });
+      result = moduleRef.get(token, { strict: false });
     } catch {
-      return noopOnCallModelAnalyticsService();
+      result = noopOnCallModelAnalyticsService();
     }
+
+    return result;
   }
 
   const fn = (request: OnCallWithNestContextRequest<unknown, OnCallTypedModelParams>) => {

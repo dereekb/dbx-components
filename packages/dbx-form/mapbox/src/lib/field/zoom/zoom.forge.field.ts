@@ -36,8 +36,8 @@ export interface DbxForgeMapboxZoomFieldConfig {
  *
  * This is the forge equivalent of {@link mapboxZoomField}.
  *
- * @param config - Optional field configuration overrides
- * @returns A validated forge field definition for the Mapbox zoom picker
+ * @param config - Optional field configuration overrides.
+ * @returns A validated forge field definition for the Mapbox zoom picker.
  */
 export function dbxForgeMapboxZoomField(config: DbxForgeMapboxZoomFieldConfig = {}): DbxForgeMapboxZoomFieldDef {
   const { key = 'zoom', label, description, required, readonly: isReadonly, showMap, center, minZoom, maxZoom, zoomStep } = config;
@@ -56,9 +56,9 @@ export function dbxForgeMapboxZoomField(config: DbxForgeMapboxZoomFieldConfig = 
     key,
     type: FORGE_MAPBOX_ZOOM_FIELD_TYPE,
     label: label ?? 'Zoom',
-    value: undefined as unknown,
+    value: undefined,
     required,
     readonly: isReadonly,
     props: Object.keys(props).length > 0 ? props : undefined
-  }) as DbxForgeMapboxZoomFieldDef;
+  });
 }

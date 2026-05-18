@@ -30,9 +30,9 @@ export interface CollectOptions {
  * each `_PURPOSE` constant with its file-type identifier and reachable upload
  * initializer so the listing matches the validator's reachability view.
  *
- * @param extracted - the validator extraction to reshape
- * @param options - workspace directories used to relativise emitted paths
- * @returns the listing report
+ * @param extracted - The validator extraction to reshape.
+ * @param options - Workspace directories used to relativise emitted paths.
+ * @returns The listing report.
  */
 export function collectAppStorageFiles(extracted: ExtractedAppStorageFiles, options: CollectOptions): AppStorageFilesReport {
   const indices = buildStorageFileIndices(extracted);

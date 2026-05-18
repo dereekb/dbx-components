@@ -10,8 +10,8 @@ export const logZohoDeskErrorToConsole = logZohoServerErrorFunction('ZohoDesk', 
 /**
  * Parses a fetch response error into a typed Zoho Desk server error by extracting and interpreting the JSON error body.
  *
- * @param responseError - The fetch response error to parse
- * @returns The parsed Zoho server error, or undefined if the response could not be parsed
+ * @param responseError - The fetch response error to parse.
+ * @returns The parsed Zoho server error, or undefined if the response could not be parsed.
  */
 export async function parseZohoDeskError(responseError: FetchResponseError) {
   const data: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef | undefined = await responseError.response.json().catch(() => undefined);
@@ -28,9 +28,9 @@ export async function parseZohoDeskError(responseError: FetchResponseError) {
  * Parses a Zoho Desk error response body into a typed error. Delegates to Desk-specific
  * error code handling before falling back to the generic Zoho error parser.
  *
- * @param errorResponseData - The raw error response data from the Zoho Desk API
- * @param responseError - The original fetch response error for context
- * @returns The parsed Zoho server error, or undefined if the error could not be classified
+ * @param errorResponseData - The raw error response data from the Zoho Desk API.
+ * @param responseError - The original fetch response error for context.
+ * @returns The parsed Zoho server error, or undefined if the error could not be classified.
  */
 export function parseZohoDeskServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef, responseError: FetchResponseError) {
   let result: ParsedZohoServerError | undefined;

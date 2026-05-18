@@ -13,9 +13,10 @@ const mailgunLogger = new Logger('MailgunServiceModule');
  *
  * Automatically switches to sandbox credentials when USE_MAILGUN_SANDBOX is true or the environment is a test environment.
  *
- * @param configService - NestJS config service for reading environment variables
- * @param serverEnvironmentService - service indicating the current server environment
- * @returns a validated MailgunServiceConfig
+ * @param configService - NestJS config service for reading environment variables.
+ * @param serverEnvironmentService - Service indicating the current server environment.
+ * @returns A validated MailgunServiceConfig.
+ * @throws {Error} When sandbox mode is requested without sandbox credentials, or when `MAILGUN_SENDER_EMAIL` / `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` are missing.
  */
 export function mailgunServiceConfigFactory(configService: ConfigService, serverEnvironmentService: ServerEnvironmentService): MailgunServiceConfig {
   const isTestingEnv = serverEnvironmentService.isTestingEnv;

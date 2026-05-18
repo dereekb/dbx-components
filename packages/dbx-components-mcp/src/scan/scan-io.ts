@@ -7,6 +7,7 @@
  * validation / entry assembly.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { glob as fsGlob, readFile as nodeReadFile } from 'node:fs/promises';
 import { resolve as resolvePath } from 'node:path';
 import { Project } from 'ts-morph';
@@ -64,7 +65,7 @@ export type LoadPackageNameResult = { readonly kind: 'ok'; readonly packageName:
  * @returns Either the parsed package name or a discriminated failure outcome.
  */
 export async function loadPackageName(packagePath: string, readFile: ScanReadFile): Promise<LoadPackageNameResult> {
-  let raw: string | null = null;
+  let raw: Maybe<string> = null;
   try {
     raw = await readFile(packagePath);
   } catch {
@@ -75,14 +76,14 @@ export async function loadPackageName(packagePath: string, readFile: ScanReadFil
     result = { kind: 'fail', outcome: { kind: 'no-package', packagePath } };
   } else {
     let parsed: unknown;
-    let parseError: string | null = null;
+    let parseError: Maybe<string> = null;
     try {
       parsed = JSON.parse(raw);
     } catch (err) {
       parseError = err instanceof Error ? err.message : String(err);
     }
     if (parseError === null) {
-      const name = (parsed as { readonly name?: unknown } | null | undefined)?.name;
+      const name = (parsed as Maybe<{ readonly name?: unknown }>)?.name;
       if (typeof name !== 'string' || name.length === 0) {
         result = { kind: 'fail', outcome: { kind: 'invalid-package', packagePath, error: 'package.json is missing a non-empty `name` field' } };
       } else {
@@ -144,7 +145,7 @@ async function readScanConfigRaw(configPath: string, readFile: ScanReadFile): Pr
     const raw = await readFile(configPath);
     result = { kind: 'ok', raw };
   } catch (err) {
-    const code = (err as NodeJS.ErrnoException | null)?.code;
+    const code = (err as Maybe<NodeJS.ErrnoException>)?.code;
     if (code === 'ENOENT') {
       result = { kind: 'enoent' };
     } else {
@@ -214,8 +215,8 @@ export async function buildScanProject(input: { readonly projectRoot: string; re
  * wildcards. Used by the default globber to filter exclude patterns
  * — the matching logic intentionally mirrors `node:fs/promises.glob`.
  *
- * @param pattern - a glob pattern (no character classes)
- * @returns a RegExp that matches paths satisfying the glob
+ * @param pattern - A glob pattern (no character classes)
+ * @returns A RegExp that matches paths satisfying the glob.
  */
 export function globToRegex(pattern: string): RegExp {
   let body = '';

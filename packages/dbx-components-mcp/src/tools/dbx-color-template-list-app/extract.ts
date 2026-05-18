@@ -43,8 +43,8 @@ interface ExtractContext {
  * and reduces the `dbxColorServiceConfig.templates` reference into a
  * flat list of {@link ColorTemplateEntry} records.
  *
- * @param inspection - the pre-loaded inspection (every file already read)
- * @returns the extracted templates, warnings, and provide-call location
+ * @param inspection - The pre-loaded inspection (every file already read)
+ * @returns The extracted templates, warnings, and provide-call location.
  */
 export function extractColorTemplates(inspection: ColorTemplateInspection): ExtractedColorTemplates {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });

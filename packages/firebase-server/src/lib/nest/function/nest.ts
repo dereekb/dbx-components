@@ -53,7 +53,7 @@ export function injectNestIntoRequest<N, R>(nest: N, request: NestApplicationCon
   return {
     ...(request as NestApplicationContextRequest<R> & R),
     nest
-  } as NestContextRequest<N, R>;
+  };
 }
 
 /**

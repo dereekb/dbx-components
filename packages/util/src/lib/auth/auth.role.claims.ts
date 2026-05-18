@@ -98,12 +98,12 @@ export interface AuthRoleClaimsFactoryConfigEntryEncodeOptions<V extends AuthCla
    *
    * If not defined, will defer to role for finding matches and pull from value.
    */
-  encodeValueFromRoles: (roles: AuthRoleSet) => V | undefined;
+  encodeValueFromRoles: (roles: AuthRoleSet) => Maybe<V>;
 
   /**
    * (Optional) Auth roles associated with this claims. If not defined, the claims key is used.
    */
-  decodeRolesFromValue: (value: Maybe<V>) => AuthRole[] | undefined;
+  decodeRolesFromValue: (value: Maybe<V>) => Maybe<AuthRole[]>;
 }
 
 export type IgnoreAuthRoleClaimsEntry = null;
@@ -116,14 +116,14 @@ export interface AuthRoleClaimsFactoryDefaults {
   /**
    * Default value to use for claims that have no value present.
    *
-   * If undefined, defaults to AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE.
+   * If undefined, defaults to DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE.
    */
   claimValue?: AuthClaimValue;
 
   /**
    * Default value for claims that are not defined.
    *
-   * If undefined, defaults to AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE.
+   * If undefined, defaults to DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE.
    */
   emptyValue?: AuthClaimValue | ClearAuthClaimValue;
 }
@@ -165,8 +165,8 @@ export interface AuthRoleClaimsService<T extends AuthClaimsObject> {
   readonly defaultEmptyValue: unknown;
 }
 
-export const AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE = 1;
-export const AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE = null;
+export const DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE = 1;
+export const DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE = null;
 
 interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfigEntryEncodeOptions {
   claimKey: AuthClaimKey;
@@ -178,20 +178,21 @@ interface AuthRoleClaimsServiceConfigMapEntry extends AuthRoleClaimsFactoryConfi
  * Each key in the config maps a claim key to role(s). Simple entries map a claim value to one or more roles,
  * while encode/decode entries allow custom bidirectional conversion logic.
  *
+ * @param config - Mapping of claim keys to their role configuration entries (or null to ignore)
+ * @param defaults - Optional default values for claim presence and absence.
+ * @returns A service with `toClaims` and `toRoles` conversion functions.
+ *
  * @dbxUtil
  * @dbxUtilCategory auth
  * @dbxUtilKind factory
  * @dbxUtilTags auth, role, claims, jwt, factory, bidirectional
  * @dbxUtilRelated auth-role
  *
- * @param config - Mapping of claim keys to their role configuration entries (or null to ignore)
- * @param defaults - Optional default values for claim presence and absence
- * @returns A service with `toClaims` and `toRoles` conversion functions
  * @__NO_SIDE_EFFECTS__
  */
 export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRoleClaimsFactoryConfig<T>, defaults: AuthRoleClaimsFactoryDefaults = {}): AuthRoleClaimsService<T> {
-  const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults.claimValue : AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE) ?? AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE;
-  const defaultEmptyValue: AuthClaimValue | ClearAuthClaimValue = (objectHasKey(defaults, 'emptyValue') ? defaults.emptyValue : AUTH_ROLE_CLAIMS_DEFAULT_EMPTY_VALUE) ?? null;
+  const defaultClaimValue: AuthClaimValue = (objectHasKey(defaults, 'claimValue') ? defaults.claimValue : DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE) ?? DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE;
+  const defaultEmptyValue: AuthClaimValue | ClearAuthClaimValue = (objectHasKey(defaults, 'emptyValue') ? defaults.emptyValue : DEFAULT_AUTH_ROLE_CLAIMS_EMPTY_VALUE) ?? null;
 
   function isSimpleOptions(entry: AuthRoleClaimsFactoryConfigEntry<any>): entry is AuthRoleClaimsFactoryConfigEntrySimpleOptions {
     return 'roles' in entry;
@@ -324,8 +325,8 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
  * Useful for cleaning up a claims update before persisting or comparing, since update objects
  * use `null` to indicate claim removal.
  *
- * @param authClaimsUpdate - The claims update object potentially containing null values
- * @returns A clean claims object with all null entries removed
+ * @param authClaimsUpdate - The claims update object potentially containing null values.
+ * @returns A clean claims object with all null entries removed.
  */
 export function authClaims<T extends AuthClaimsObject = AuthClaimsObject>(authClaimsUpdate: AuthClaimsUpdate<T>): AuthClaims<T> {
   return filterFromPOJO(authClaimsUpdate, { filter: { valueFilter: KeyValueTypleValueFilter.NULL } }) as AuthClaims<T>;

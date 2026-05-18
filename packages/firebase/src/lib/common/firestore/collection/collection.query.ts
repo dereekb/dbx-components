@@ -203,23 +203,26 @@ export interface FirestoreCollectionQueryFactory<T, D extends FirestoreDocument<
  * by wrapping standard query operations with document loading capabilities. It transforms
  * query results from raw Firestore snapshots into fully-typed document model instances.
  *
+ * @param queryFactory - The base query factory for creating raw Firestore queries.
+ * @param accessorContext - The document accessor context for loading and converting documents.
+ * @returns A collection query factory for creating document-aware queries.
+ *
  * @template T - The data type of the documents
  * @template D - The FirestoreDocument type that wraps the data
- * @param queryFactory - The base query factory for creating raw Firestore queries
- * @param accessorContext - The document accessor context for loading and converting documents
- * @returns A collection query factory for creating document-aware queries
  *
  * @example
+ * ```ts
  * // Creating a collection query factory
  * const userQueryFactory = firestoreCollectionQueryFactory(
  *   userQueryFactory,  // Base query factory
  *   userAccessorContext  // Document accessor context
  * );
- *
  * // Using the factory to create and execute a query
  * const activeUsers = await userQueryFactory
  *   .queryDocument(where('status', '==', 'active'))
  *   .getDocs();
+ * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreCollectionQueryFactory<T, D extends FirestoreDocument<T>>(queryFactory: FirestoreQueryFactory<T>, accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreCollectionQueryFactory<T, D> {
@@ -231,8 +234,8 @@ export function firestoreCollectionQueryFactory<T, D extends FirestoreDocument<T
    * Internal utility function that wraps a base Firestore query with document conversion capabilities.
    * This creates the executable document query interface from a raw Firestore query.
    *
-   * @param baseQuery - The raw Firestore query to wrap
-   * @returns A document-aware executable query
+   * @param baseQuery - The raw Firestore query to wrap.
+   * @returns A document-aware executable query.
    */
   const wrapQuery: (baseQuery: FirestoreExecutableQuery<T>) => FirestoreCollectionExecutableDocumentQuery<T, D> = (baseQuery: FirestoreExecutableQuery<T>) => {
     return {

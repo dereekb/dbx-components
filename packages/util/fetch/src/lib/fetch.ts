@@ -68,7 +68,7 @@ export interface ConfigureFetchInput extends FetchRequestFactoryInput {
 }
 
 /**
- * Default FetchHabdler
+ * Default FetchHabdler.
  *
  * @param request
  * @param makeFetch
@@ -98,7 +98,7 @@ export function configureFetch(config: ConfigureFetchInput): ConfiguredFetchWith
 
   const makeFetchRequest = fetchRequestFactory(config);
 
-  return async (input: RequestInfo | URL, init?: RequestInit | undefined) => {
+  return async (input: RequestInfo | URL, init?: Maybe<RequestInit>) => {
     const request = await makeFetchRequest(input, init);
     let response = fetchHandler(request, makeFetch);
 
@@ -148,8 +148,8 @@ export interface FetchRequestFactoryInput {
   readonly requestInitFactory?: FetchRequestInitFactory;
 }
 
-export type FetchRequestInitFactory = (currRequest: PromiseOrValue<Request>, init?: PromiseOrValue<RequestInit>) => PromiseOrValue<RequestInitWithTimeout | undefined>;
-export type FetchRequestFactory = (input: RequestInfo | URL, init?: RequestInit | undefined) => PromiseOrValue<Request>;
+export type FetchRequestInitFactory = (currRequest: PromiseOrValue<Request>, init?: PromiseOrValue<RequestInit>) => PromiseOrValue<Maybe<RequestInitWithTimeout>>;
+export type FetchRequestFactory = (input: RequestInfo | URL, init?: Maybe<RequestInit>) => PromiseOrValue<Request>;
 export type AbortControllerFactory = Factory<AbortController>;
 
 /**
@@ -159,14 +159,14 @@ export type AbortControllerFactory = Factory<AbortController>;
  * @param init
  * @returns
  */
-export const DEFAULT_FETCH_REQUEST_FACTORY: FetchRequestFactory = (input, init) => new Request(input, init);
+export const DEFAULT_FETCH_REQUEST_FACTORY: FetchRequestFactory = (input, init) => new Request(input, init ?? undefined);
 
 /**
  * Creates a FetchRequestFactory that builds Request objects by applying base URL resolution,
  * base request init merging, timeout configuration, and custom request init transformations.
  *
- * @param config - configuration for URL resolution, base request defaults, timeout, and request init transformations
- * @returns a FetchRequestFactory that produces fully configured Request objects
+ * @param config - Configuration for URL resolution, base request defaults, timeout, and request init transformations.
+ * @returns A FetchRequestFactory that produces fully configured Request objects.
  */
 export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequestFactory {
   const { makeRequest = DEFAULT_FETCH_REQUEST_FACTORY, baseUrl: inputBaseUrl, baseRequest: inputBaseRequest, timeout, requestInitFactory, useBaseUrlForConfiguredFetchRequests = false, forceBaseUrlForWebsiteUrlWithPrefix = useBaseUrlForConfiguredFetchRequests } = config;
@@ -199,8 +199,8 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
   const buildRequestWithFixedUrl = buildUrl
     ? async (input: RequestInfo | URL) => {
         let relativeUrl: Maybe<string>;
-        let baseRequest: Request | undefined;
-        let request: Request | undefined;
+        let baseRequest: Maybe<Request>;
+        let request: Maybe<Request>;
 
         if (typeof input === 'string') {
           relativeUrl = input;
@@ -234,9 +234,9 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
       return (timeout ? { ...computedBaseRequest, timeout } : computedBaseRequest) as RequestInitWithTimeout;
     }
 
-    async function combineRequestInits(request: PromiseOrValue<Request>, requestInit: PromiseOrValue<RequestInit | undefined>) {
+    async function combineRequestInits(request: PromiseOrValue<Request>, requestInit: PromiseOrValue<Maybe<RequestInit>>) {
       const baseRequest = await computeBaseRequest();
-      const merged: RequestInit = mergeRequestInits(baseRequest, await requestInit) as RequestInitWithTimeout;
+      const merged: RequestInit = mergeRequestInits(baseRequest, await requestInit);
       const timeout = (merged as RequestInitWithTimeout).timeout === undefined ? (request as RequestWithTimeout).timeout : (merged as RequestInitWithTimeout).timeout;
       return { ...merged, timeout } as RequestInitWithTimeout;
     }
@@ -252,10 +252,10 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
     buildRequestInit = (_, x) => x;
   }
 
-  return async (input: RequestInfo | URL, init?: RequestInit | undefined) => {
+  return async (input: RequestInfo | URL, init?: Maybe<RequestInit>) => {
     try {
       const fixedRequest = await buildRequestWithFixedUrl(input);
-      init = await buildRequestInit(fixedRequest, init);
+      init = await buildRequestInit(fixedRequest, init ?? undefined);
       const request = await makeRequest(fixedRequest, init);
 
       (request as RequestWithTimeout).timeout = timeout; // copy/set timeout on the request directly
@@ -274,11 +274,11 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
  * Merges two RequestInit objects, combining their headers and spreading remaining properties
  * so that values from the second init override the base.
  *
- * @param base - the base RequestInit to merge onto
- * @param requestInit - optional RequestInit whose values override the base
- * @returns the merged RequestInit
+ * @param base - The base RequestInit to merge onto.
+ * @param requestInit - Optional RequestInit whose values override the base.
+ * @returns The merged RequestInit.
  */
-export function mergeRequestInits<T extends RequestInit>(base: T, requestInit?: T | undefined): T {
+export function mergeRequestInits<T extends RequestInit>(base: T, requestInit?: Maybe<T>): T {
   let result: T;
 
   if (requestInit) {
@@ -295,8 +295,8 @@ export function mergeRequestInits<T extends RequestInit>(base: T, requestInit?: 
  * Merges an array of HeadersInit values into a single array of key-value tuples.
  * Later headers override earlier ones on a per-key basis while preserving multi-value support.
  *
- * @param inputHeadersArray - array of HeadersInit values to merge, where later entries take precedence
- * @returns an array of [key, value] tuples representing the merged headers
+ * @param inputHeadersArray - Header sources to combine; later entries override earlier ones per header name.
+ * @returns Combined [key, value] tuples representing the merged headers in iteration order.
  */
 export function mergeRequestHeaders(inputHeadersArray: Maybe<HeadersInit>[]): [string, string][] {
   const headersMap = multiValueMapBuilder<string, string>();
@@ -324,8 +324,8 @@ export function mergeRequestHeaders(inputHeadersArray: Maybe<HeadersInit>[]): [s
  * Converts a HeadersInit value (tuple array, Headers object, or plain object) into
  * a normalized array of [key, value] tuples.
  *
- * @param headers - the HeadersInit value to convert
- * @returns an array of [key, value] string tuples
+ * @param headers - Header input in any supported shape to normalize.
+ * @returns Tuple list usable as input to multi-value header merging.
  */
 export function headersToHeadersTuple(headers: HeadersInit): [string, string][] {
   let tuples: [string, string][] = [];
@@ -350,8 +350,8 @@ export function headersToHeadersTuple(headers: HeadersInit): [string, string][] 
  * Type guard that checks whether the given input is a fetch Request object
  * by testing for the presence of a url property.
  *
- * @param input - the value to test
- * @returns true if the input is a Request
+ * @param input - The value to test.
+ * @returns True if the input is a Request.
  */
 export function isFetchRequest(input: unknown): input is Request {
   return Boolean((input as Request).url);

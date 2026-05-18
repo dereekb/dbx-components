@@ -58,7 +58,7 @@ export class FirebaseServerStorageContextModule {}
  *
  * @param input - A bucket ID string or full factory config object.
  * @returns A NestJS provider for the storage context factory config token.
- * @throws Error if `defaultBucketId` is empty.
+ * @throws {Error} If `defaultBucketId` is empty.
  *
  * @example
  * ```typescript
@@ -95,7 +95,7 @@ export function defaultProvideFirebaseServerStorageServiceSimple(): ProvideFireb
   return {
     provide: FirebaseServerStorageService,
     useFactory: (context: FirebaseStorageContext) => new FirebaseServerStorageService(context)
-  } as ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService>;
+  };
 }
 
 export type ProvideFirebaseServerStorageService<T extends FirebaseServerStorageService> = FactoryProvider<T> | ProvideFirebaseServerStorageServiceSimple<T>;
@@ -107,7 +107,7 @@ export type ProvideFirebaseServerStorageService<T extends FirebaseServerStorageS
  * so the service can also be injected by the abstract type.
  *
  * @param provider - The storage service provider configuration.
- * @returns An array of NestJS providers for the storage service.
+ * @returns Array of NestJS providers for the storage service.
  * @__NO_SIDE_EFFECTS__
  */
 export function provideFirebaseServerStorageService<T extends FirebaseServerStorageService = FirebaseServerStorageService>(provider: ProvideFirebaseServerStorageService<T>): Provider<T>[] {
@@ -140,11 +140,12 @@ export interface FirebaseServerStorageModuleMetadataConfig<T extends FirebaseSer
  * @param config - Optional configuration including a custom service provider and additional module metadata.
  * @returns NestJS module metadata ready to be passed to the `@Module()` decorator.
  *
- * @example
- * ```typescript
- * @Module(firebaseServerStorageModuleMetadata())
+ * @Module (firebaseServerStorageModuleMetadata())
  * export class AppStorageModule {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function firebaseServerStorageModuleMetadata<T extends FirebaseServerStorageService = FirebaseServerStorageService>(config?: FirebaseServerStorageModuleMetadataConfig<T>): ModuleMetadata {
   const serviceProvider = config?.serviceProvider ?? defaultProvideFirebaseServerStorageServiceSimple();

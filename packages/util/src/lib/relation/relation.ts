@@ -97,26 +97,26 @@ export type ChangeRelationObjectsMaskFn<T> = (x: T) => boolean;
  * Configuration for modifying a single-type relation collection via {@link ModelRelationUtility}.
  */
 export interface UpdateRelationConfig<T> {
-  readKey: ReadRelationKeyFn<T>;
-  merge: MergeRelationObjectsFn<T>;
+  readonly readKey: ReadRelationKeyFn<T>;
+  readonly merge: MergeRelationObjectsFn<T>;
   /**
    * Whether or not an item should be removed when remove is called.
    */
-  shouldRemove?: (x: T) => boolean;
+  readonly shouldRemove?: (x: T) => boolean;
   /**
    * Whether or not the item should be considered when performing a change.
    *
    * For instance, existing items that are passed to this function and it returns false are unable to be changed,
    * and new/target items that are passed to this function and it returns false are ignored.
    */
-  mask?: ChangeRelationObjectsMaskFn<T>;
+  readonly mask?: ChangeRelationObjectsMaskFn<T>;
 }
 
 /**
  * Extends {@link UpdateRelationConfig} with a type reader for multi-type relation collections.
  */
 export interface UpdateMiltiTypeRelationConfig<T> extends UpdateRelationConfig<T> {
-  readType: ReadRelationModelTypeFn<T>;
+  readonly readType: ReadRelationModelTypeFn<T>;
 }
 
 /**
@@ -154,16 +154,19 @@ export class ModelRelationUtility {
     const { mask, readKey } = config;
 
     current = current ?? []; //init current if not set.
+    let result: T[];
 
     if (mask) {
       const { included: currentModify, excluded: currentRetain } = separateValues(current, mask);
       const { included: modModify } = separateValues(mods, mask);
 
       const modifiedResults = this._modifyCollectionWithoutMask(currentModify, change, modModify, config);
-      return this._mergeMaskResults(current, currentRetain, modifiedResults, readKey);
+      result = this._mergeMaskResults(current, currentRetain, modifiedResults, readKey);
+    } else {
+      result = this._modifyCollectionWithoutMask(current, change, mods, config);
     }
 
-    return this._modifyCollectionWithoutMask(current, change, mods, config);
+    return result;
   }
 
   /**
@@ -171,11 +174,11 @@ export class ModelRelationUtility {
    *
    * Order from the "current" is retained. Anything in currentRetain overrides modifiedResults.
    *
-   * @param current - the original array whose ordering is preserved
-   * @param currentRetain - items from `current` that were excluded from modification and take precedence in the merge
-   * @param modifiedResults - items that were modified or added during the relation change
-   * @param readKey - function that extracts the relation key from each item for ordering
-   * @returns the merged array with original ordering restored
+   * @param current - The original array whose ordering is preserved.
+   * @param currentRetain - Items from `current` that were excluded from modification and take precedence in the merge.
+   * @param modifiedResults - Items that were modified or added during the relation change.
+   * @param readKey - Function that extracts the relation key from each item for ordering.
+   * @returns The merged array with original ordering restored.
    */
   // eslint-disable-next-line @typescript-eslint/max-params
   private static _mergeMaskResults<T extends RelationObject>(current: T[], currentRetain: T[], modifiedResults: T[], readKey: ReadRelationKeyFn<T>) {
@@ -207,22 +210,32 @@ export class ModelRelationUtility {
       return ModelRelationUtility.insertCollection(current, mods, { readKey, readType, merge });
     }
 
+    let result: T[] = current;
+
     switch (change) {
       case RelationChange.SET:
         current = []; // Set current before performing add.
-        return performAdd();
+        result = performAdd();
+        break;
       case RelationChange.ADD:
-        return performAdd();
+        result = performAdd();
+        break;
       case RelationChange.REMOVE:
-        return remove();
+        result = remove();
+        break;
       case RelationChange.UPDATE:
-        return ModelRelationUtility.updateCollection(current, mods, { readKey, readType, merge });
+        result = ModelRelationUtility.updateCollection(current, mods, { readKey, readType, merge });
+        break;
       case RelationChange.REMOVE_AND_INSERT:
         current = remove(current, current); // Remove all current values before performing an insert.
-        return performInsert();
+        result = performInsert();
+        break;
       case RelationChange.INSERT:
-        return performInsert();
+        result = performInsert();
+        break;
     }
+
+    return result;
   }
 
   /**
@@ -257,11 +270,11 @@ export class ModelRelationUtility {
   /**
    * Used to modify a collection which may be multi-type. If readType is provided, the collection is handled as a multi-type map.
    *
-   * @param current - the current collection of relation objects
-   * @param mods - the modifications to apply to the collection
-   * @param modifyCollection - function that applies modifications to a single-type subset of the collection
-   * @param readType - optional function to read the type from each relation object, enabling multi-type handling
-   * @returns the modified collection with all changes applied
+   * @param current - The current collection of relation objects.
+   * @param mods - The modifications to apply to the collection.
+   * @param modifyCollection - Function that applies modifications to a single-type subset of the collection.
+   * @param readType - Optional function to read the type from each relation object, enabling multi-type handling.
+   * @returns The modified collection with all changes applied.
    */
   // eslint-disable-next-line @typescript-eslint/max-params
   private static _modifyCollection<T extends RelationObject>(current: T[], mods: T[], modifyCollection: (subSetCurrent: T[], mods: T[]) => T[], readType?: Maybe<ReadRelationModelTypeFn<T>>): T[] {
@@ -350,11 +363,11 @@ export class ModelRelationUtility {
    */
   // eslint-disable-next-line @typescript-eslint/max-params
   static removeFromCollection<T extends RelationObject>(current: Maybe<T[]>, remove: T[], readKey: ReadRelationKeyFn<T>, shouldRemove?: (x: T) => boolean): T[] {
-    if (!current?.length) {
-      return [];
-    }
+    let result: T[];
 
-    if (shouldRemove) {
+    if (!current?.length) {
+      result = [];
+    } else if (shouldRemove) {
       const currentKeyPairs = makeKeyPairs(current, readKey);
       const map = new Map(currentKeyPairs);
 
@@ -367,10 +380,12 @@ export class ModelRelationUtility {
         }
       });
 
-      return currentKeyPairs.filter((x) => map.has(x[0])).map((x) => x[1]); // Retain order, remove from map.
+      result = currentKeyPairs.filter((x) => map.has(x[0])).map((x) => x[1]); // Retain order, remove from map.
+    } else {
+      result = ModelRelationUtility.removeKeysFromCollection(current, remove.map(readKey), readKey);
     }
 
-    return ModelRelationUtility.removeKeysFromCollection(current, remove.map(readKey), readKey);
+    return result;
   }
 
   /**

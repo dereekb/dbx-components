@@ -11,7 +11,7 @@ export interface FieldValueIsAvailableValidatorConfig<T> {
   /**
    * How long to wait in between value changes.
    */
-  throttle?: number;
+  readonly throttle?: number;
 
   /**
    * Returns an observable that checks whether or not the value is currently available.
@@ -23,7 +23,7 @@ export interface FieldValueIsAvailableValidatorConfig<T> {
   /**
    * Custom message for this validator.
    */
-  message?: string;
+  readonly message?: string;
 }
 
 /**

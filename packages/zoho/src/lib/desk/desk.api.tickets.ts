@@ -9,9 +9,9 @@ import { type ZohoDeskPageFilter, type ZohoDeskPageResult, zohoDeskFetchPageFact
 /**
  * Constructs the standard FetchJsonInput used by Desk API calls, pairing the HTTP method with an optional body.
  *
- * @param method - HTTP method to use for the request
- * @param body - Optional request body to include
- * @returns Configured fetch input for the Zoho Desk API call
+ * @param method - HTTP method to use for the request.
+ * @param body - Optional request body to include.
+ * @returns Configured fetch input for the Zoho Desk API call.
  */
 export function zohoDeskApiFetchJsonInput(method: string, body?: Maybe<FetchJsonBody>): FetchJsonInput {
   return {
@@ -23,9 +23,9 @@ export function zohoDeskApiFetchJsonInput(method: string, body?: Maybe<FetchJson
 /**
  * Builds URL search params from the input objects, omitting keys that are used in the URL path.
  *
- * @param input - One or more objects to convert into URL search parameters
- * @param omitKeys - Keys to exclude from the search params
- * @returns URL search params string
+ * @param input - One or more objects to convert into URL search parameters.
+ * @param omitKeys - Keys to exclude from the search params.
+ * @returns URL search params string.
  */
 function zohoDeskUrlSearchParams(input: Maybe<object | Record<string, string | number>>[], omitKeys?: string | string[]) {
   return makeUrlSearchParams(input, { omitKeys });
@@ -34,8 +34,8 @@ function zohoDeskUrlSearchParams(input: Maybe<object | Record<string, string | n
 /**
  * Joins include values into a comma-separated string.
  *
- * @param include - Single or array of include values
- * @returns Comma-separated string, or undefined if no values provided
+ * @param include - Single or array of include values.
+ * @returns Comma-separated string, or undefined if no values provided.
  */
 function joinInclude(include: Maybe<ArrayOrValue<string>>): Maybe<string> {
   let result: Maybe<string>;
@@ -81,8 +81,8 @@ export type ZohoDeskGetTicketsFunction = (input: ZohoDeskGetTicketsInput) => Pro
  * Retrieves a paginated list of tickets from Zoho Desk, with optional filtering by
  * department, status, priority, channel, assignee, and view.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves paginated tickets
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves paginated tickets.
  */
 export function zohoDeskGetTickets(context: ZohoDeskContext): ZohoDeskGetTicketsFunction {
   return (input: ZohoDeskGetTicketsInput) => {
@@ -111,8 +111,8 @@ export type ZohoDeskGetTicketByIdFunction = (input: ZohoDeskGetTicketByIdInput) 
  *
  * Retrieves a single ticket by its ID, with optional inline expansion of related entities.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves a single ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves a single ticket.
  */
 export function zohoDeskGetTicketById(context: ZohoDeskContext): ZohoDeskGetTicketByIdFunction {
   return (input: ZohoDeskGetTicketByIdInput) => {
@@ -181,8 +181,8 @@ export type ZohoDeskSearchTicketsFunction = (input: ZohoDeskSearchTicketsInput) 
  * Searches for tickets matching the given filter criteria. Supports filtering by
  * many fields including subject, email, status, priority, date ranges, and custom fields.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that searches for tickets
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that searches for tickets.
  */
 export function zohoDeskSearchTickets(context: ZohoDeskContext): ZohoDeskSearchTicketsFunction {
   return (input: ZohoDeskSearchTicketsInput) => {
@@ -211,8 +211,8 @@ export type ZohoDeskGetTicketsForContactFunction = (input: ZohoDeskGetTicketsFor
 /**
  * Creates a {@link ZohoDeskGetTicketsForContactFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves tickets for a contact
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves tickets for a contact.
  */
 export function zohoDeskGetTicketsForContact(context: ZohoDeskContext): ZohoDeskGetTicketsForContactFunction {
   return (input: ZohoDeskGetTicketsForContactInput) => {
@@ -242,8 +242,8 @@ export type ZohoDeskGetTicketsForProductFunction = (input: ZohoDeskGetTicketsFor
 /**
  * Creates a {@link ZohoDeskGetTicketsForProductFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves tickets for a product
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves tickets for a product.
  */
 export function zohoDeskGetTicketsForProduct(context: ZohoDeskContext): ZohoDeskGetTicketsForProductFunction {
   return (input: ZohoDeskGetTicketsForProductInput) => {
@@ -269,8 +269,8 @@ export type ZohoDeskGetTicketMetricsFunction = (input: ZohoDeskGetTicketMetricsI
 /**
  * Creates a {@link ZohoDeskGetTicketMetricsFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves ticket metrics
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves ticket metrics.
  */
 export function zohoDeskGetTicketMetrics(context: ZohoDeskContext): ZohoDeskGetTicketMetricsFunction {
   return (input: ZohoDeskGetTicketMetricsInput) => context.fetchJson<ZohoDeskTicketMetrics>(`/tickets/${input.ticketId}/metrics`, zohoDeskApiFetchJsonInput('GET'));
@@ -293,8 +293,8 @@ export type ZohoDeskGetAgentsTicketsCountFunction = (input: ZohoDeskGetAgentsTic
 /**
  * Creates a {@link ZohoDeskGetAgentsTicketsCountFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves agent ticket counts
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves agent ticket counts.
  */
 export function zohoDeskGetAgentsTicketsCount(context: ZohoDeskContext): ZohoDeskGetAgentsTicketsCountFunction {
   return (input: ZohoDeskGetAgentsTicketsCountInput) => {
@@ -320,8 +320,9 @@ export type ZohoDeskGetTicketsPageFactory = (input: ZohoDeskGetTicketsInput, opt
  * Returns a page factory that automatically handles Zoho Desk's offset-based pagination,
  * making it easy to iterate through all tickets across multiple pages.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Page factory for iterating over ticket results
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Page factory for iterating over ticket results.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetTicketsPageFactory(context: ZohoDeskContext): ZohoDeskGetTicketsPageFactory {
@@ -336,8 +337,9 @@ export type ZohoDeskSearchTicketsPageFactory = (input: ZohoDeskSearchTicketsInpu
 /**
  * Creates a {@link ZohoDeskSearchTicketsPageFactory} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Page factory for iterating over search results
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Page factory for iterating over search results.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskSearchTicketsPageFactory(context: ZohoDeskContext): ZohoDeskSearchTicketsPageFactory {

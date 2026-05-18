@@ -49,7 +49,6 @@ import {
   storageFilePurposeAndUserQuery,
   type StorageFilePurpose,
   type FirebaseAuthUserId,
-  type StorageFilePurposeSubgroup,
   MODEL_NOT_AVAILABLE_ERROR_CODE
 } from '@dereekb/firebase';
 import { addMilliseconds, type GetterOrValue, getValueFromGetter, type Maybe, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
@@ -771,7 +770,7 @@ demoApiFunctionContextFactory((f) => {
 
                             it('query should match the specific user, purpose, and purpose subgroup', async () => {
                               const storageFile = await assertSnapshotData(sf.document);
-                              const constraints = storageFilePurposeAndUserQuery({ purpose: storageFile.p as StorageFilePurpose, user: storageFile.u as string, purposeSubgroup: storageFile.pg as StorageFilePurposeSubgroup });
+                              const constraints = storageFilePurposeAndUserQuery({ purpose: storageFile.p as StorageFilePurpose, user: storageFile.u as string, purposeSubgroup: storageFile.pg });
 
                               const result = await f.demoFirestoreCollections.storageFileCollection.queryDocument(constraints).getDocs();
 
@@ -1035,7 +1034,7 @@ demoApiFunctionContextFactory((f) => {
                                   ...((notificationItem.n.d as any)?.sd ?? {}),
                                   canRunNextCheckpoint: true
                                 }
-                              } as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>
+                              }
                             }
                           });
                         });
@@ -1078,7 +1077,7 @@ demoApiFunctionContextFactory((f) => {
                                     delayUntil: 100,
                                     canRunNextCheckpoint: true
                                   }
-                                } as StorageFileProcessingNotificationTaskData<UserTestFileProcessingSubtaskMetadata, UserTestFileProcessingSubtask>
+                                }
                               }
                             });
                           });

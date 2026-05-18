@@ -1,4 +1,4 @@
-import { type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type SuggestedString, type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { fetchPageFactory, type ReadFetchPageResultInfo, type FetchPageResult, type FetchPageFactoryInputOptions, type FetchPageFactoryConfigDefaults } from '@dereekb/util/fetch';
 
 // MARK: Page Filter
@@ -30,7 +30,7 @@ export interface ZohoSignPageFilter {
 /**
  * Known sortable column names for Zoho Sign list endpoints, with a `string` fallback for custom columns.
  */
-export type ZohoSignSortColumn = 'request_name' | 'folder_name' | 'owner_full_name' | 'recipient_email' | 'form_name' | 'created_time' | (string & {});
+export type ZohoSignSortColumn = SuggestedString<'request_name' | 'folder_name' | 'owner_full_name' | 'recipient_email' | 'form_name' | 'created_time'>;
 
 /**
  * Sort direction for Zoho Sign list queries.
@@ -101,9 +101,9 @@ export type ZohoSignFetchPageFetchFunction<I extends ZohoSignPageFilter, R exten
  * The factory reads `page_context.has_more_rows` from each response to determine if additional
  * pages exist, and automatically advances `start_index` by `row_count` for subsequent requests.
  *
- * @param fetch - The Zoho Sign fetch function to paginate over
- * @param defaults - Optional default configuration for the page factory
- * @returns A page factory that produces iterable page fetchers
+ * @param fetch - The Zoho Sign fetch function to paginate over.
+ * @param defaults - Optional default configuration for the page factory.
+ * @returns A page factory that produces iterable page fetchers.
  *
  * @example
  * ```typescript
@@ -116,6 +116,7 @@ export type ZohoSignFetchPageFetchFunction<I extends ZohoSignPageFilter, R exten
  *   const secondPage = await firstPage.fetchNext();
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoSignFetchPageFactory<I extends ZohoSignPageFilter, R extends ZohoSignPageResult<any>>(fetch: ZohoSignFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {
@@ -133,7 +134,7 @@ export function zohoSignFetchPageFactory<I extends ZohoSignPageFilter, R extends
       const rowCount = options.maxItemsPerPage ?? input.row_count ?? previousPageContext?.row_count ?? 20;
       const nextStartIndex = (previousPageContext?.start_index ?? input.start_index ?? 1) + rowCount;
 
-      return { ...input, start_index: nextStartIndex, row_count: rowCount } as Partial<I>;
+      return { ...input, start_index: nextStartIndex, row_count: rowCount };
     }
   });
 }

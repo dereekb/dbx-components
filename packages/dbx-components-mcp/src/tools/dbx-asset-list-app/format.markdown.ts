@@ -6,8 +6,8 @@ import type { AppAssetsReport, AssetReportEntry } from './types.js';
  * aggregator block so callers can scan the full catalog without
  * parsing JSON.
  *
- * @param report - the listing report to render
- * @returns the markdown body
+ * @param report - The listing report to render.
+ * @returns The markdown body.
  */
 export function formatReportAsMarkdown(report: AppAssetsReport): string {
   const basename = report.componentDir.split('/').pop() ?? report.componentDir;

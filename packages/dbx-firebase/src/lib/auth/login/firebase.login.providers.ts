@@ -33,8 +33,8 @@ export interface ProvideDbxFirebaseLoginConfig {
 /**
  * Creates EnvironmentProviders for providing DbxFirebaseLogin configuration.
  *
- * @param config Configuration
- * @returns EnvironmentProviders
+ * @param config - Configuration.
+ * @returns EnvironmentProviders.
  */
 export function provideDbxFirebaseLogin(config: ProvideDbxFirebaseLoginConfig): EnvironmentProviders {
   const { termsOfServiceUrls: loginTerms, enabledLoginMethods, loginTermsComponentClass, passwordConfig } = config;

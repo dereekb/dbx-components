@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import type { Maybe } from '@dereekb/util';
 import { type INestApplication } from '@nestjs/common';
 import { type CliContext, type CliEnvConfig, type CliModelManifest, type CreateCliInput, createCli, createCliContext } from '@dereekb/dbx-cli';
 
@@ -104,7 +105,7 @@ export async function runCliCommand(input: CreateCliInput, args: readonly string
   // catch below maps it back into a structured exitCode.
   let capturedExitCode: number | undefined;
   const exitSentinel = new Error('__cli_test_process_exit__');
-  const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null): never => {
+  const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code?: Maybe<string | number>): never => {
     capturedExitCode = typeof code === 'number' ? code : 0;
     throw exitSentinel;
   });

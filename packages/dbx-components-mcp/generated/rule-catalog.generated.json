@@ -287,6 +287,22 @@
     "canonicalFix": "Pick distinct slugs (or distinct function names) so each factory is addressable."
   },
   {
+    "code": "MODEL_FIREBASE_INDEX_EXCLUDED",
+    "source": "dbx_model_firebase_index_validate_app",
+    "severity": "warning",
+    "title": "A tagged factory carries `@dbxModelFirebaseIndexExclude` — its constraints are parsed but the analyzer suppresses composite + fieldOverride emission",
+    "whatItFlags": "A tagged factory carries `@dbxModelFirebaseIndexExclude` — its constraints are parsed but the analyzer suppresses composite + fieldOverride emission.",
+    "whenItApplies": "Every `@dbxModelFirebaseIndex`-tagged factory that also declares `@dbxModelFirebaseIndexExclude`. The warning fires on every scan so the deliberate exclusion stays auditable in CI logs.",
+    "whenItDoesNotApply": "Factories using `@dbxModelFirebaseIndexSkip` (silent — no warning emitted) or `@dbxModelFirebaseIndexManual` (composites are author-managed, no audit signal needed).",
+    "canonicalFix": "If the exclusion is no longer required, delete the `@dbxModelFirebaseIndexExclude` tag and let the analyzer emit the implied composite. If the factory should be permanently silent, switch to `@dbxModelFirebaseIndexSkip` and document the rationale next to the tag.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_firebase_index_validate_app"
+      }
+    ]
+  },
+  {
     "code": "MODEL_FIREBASE_INDEX_FIELD_OVERRIDE_ADDED",
     "source": "dbx_model_firebase_index_validate_app",
     "severity": "error",
@@ -396,6 +412,22 @@
     "canonicalFix": "Pick one direction per field, or split into two factories — Firestore can only deploy one direction at a time per composite."
   },
   {
+    "code": "MODEL_FIREBASE_INDEX_SPEC_FILES_ONLY_VIOLATION",
+    "source": "dbx_model_firebase_index_validate_app",
+    "severity": "error",
+    "title": "A factory tagged `@dbxModelFirebaseIndexSpecFilesOnly` is referenced from at least one non-spec file",
+    "whatItFlags": "A factory tagged `@dbxModelFirebaseIndexSpecFilesOnly` is referenced from at least one non-spec file.",
+    "whenItApplies": "Every `@dbxModelFirebaseIndexSpecFilesOnly` factory whose name appears in a `.ts` file under `apps/`, `components/`, or `packages/` that is NOT a `*.spec.ts` / `*.spec.tsx` file. The tag is a contract that the factory exists for tests only; a production caller breaks that contract and would leak a query shape the index generator deliberately skipped.",
+    "whenItDoesNotApply": "Spec-only factories whose references are confined to `*.spec.ts` / `*.spec.tsx` files (the intended state), or factories not tagged `@dbxModelFirebaseIndexSpecFilesOnly`.",
+    "canonicalFix": "Either move the production call-site into a tagged, non-spec-only factory (and update its callers), or remove the `@dbxModelFirebaseIndexSpecFilesOnly` tag and ensure the produced composite/fieldOverride is declared so the generator emits the required Firestore index.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_firebase_index_list_app"
+      }
+    ]
+  },
+  {
     "code": "MODEL_FIREBASE_INDEX_TRANSITIVE_CYCLE",
     "source": "dbx_model_firebase_index_validate_app",
     "severity": "warning",
@@ -478,8 +510,8 @@
     "title": "A field uses the `array-contains-any` operator — index support is partial",
     "whatItFlags": "A field uses the `array-contains-any` operator — index support is partial.",
     "whenItApplies": "Every constraint sequence with at least one `array-contains-any` `where`.",
-    "whenItDoesNotApply": "Queries using `array-contains` (singular) — those have full composite support.",
-    "canonicalFix": "Confirm the deployed composite supports `array-contains-any` for the field set, or restructure to `array-contains` with a denormalised flag."
+    "whenItDoesNotApply": "Queries using `array-contains` (singular) — those have full composite support. Also suppressed when the factory is tagged `@dbxModelFirebaseIndexAllowArrayContainsAny`.",
+    "canonicalFix": "Confirm the deployed composite supports `array-contains-any` for the field set and add `@dbxModelFirebaseIndexAllowArrayContainsAny` to silence the advisory, or restructure to `array-contains` with a denormalised flag."
   },
   {
     "code": "MODEL_FIREBASE_INDEX_UNSUPPORTED_SCOPE",
@@ -490,6 +522,22 @@
     "whenItApplies": "Every tagged factory that declares an explicit scope tag.",
     "whenItDoesNotApply": "Factories that omit the tag — scope falls back to COLLECTION_GROUP for nested models, COLLECTION for root models.",
     "canonicalFix": "Set the tag value to exactly `COLLECTION` or `COLLECTION_GROUP`."
+  },
+  {
+    "code": "MODEL_FIREBASE_INDEX_UNUSED_FACTORY",
+    "source": "dbx_model_firebase_index_validate_app",
+    "severity": "warning",
+    "title": "A tagged factory has zero callers anywhere in the workspace",
+    "whatItFlags": "A tagged factory has zero callers anywhere in the workspace.",
+    "whenItApplies": "Every `@dbxModelFirebaseIndex`-tagged factory whose exported name does not appear in any `.ts` file under `apps/`, `components/`, or `packages/` (excluding `*.d.ts`, `node_modules/`, and build outputs). For regular factories only non-spec callers count toward \"used\" — a factory whose only references are inside `*.spec.ts` files still triggers this warning unless it is opted in via `@dbxModelFirebaseIndexSpecFilesOnly`. The check uses word-boundary text scanning so renames + stale exports surface here.",
+    "whenItDoesNotApply": "Factories marked `@dbxModelFirebaseIndexSkip` (the author already opted out of emission), `@dbxModelFirebaseIndexManual` (author-managed index, not necessarily wired through normal call sites), or `@dbxModelFirebaseIndexSpecFilesOnly` that have at least one `*.spec.ts` caller (the intended state for test-only helpers).",
+    "canonicalFix": "Either delete the factory (and its `*.query.ts` file if empty), wire up a production caller, or — if the factory is intentionally a `*.spec.ts`-only helper — tag it `@dbxModelFirebaseIndexSpecFilesOnly`. `@dbxModelFirebaseIndexSkip` still works for \"retain pending a future caller\".",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_firebase_index_list_app"
+      }
+    ]
   },
   {
     "code": "archetype-inconsistent",

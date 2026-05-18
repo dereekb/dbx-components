@@ -28,8 +28,9 @@ export type DbxFirebaseModelEntitiesWidgetInjectionConfigFactory = (entry: DbxFi
 /**
  * Creates a DbxFirebaseModelEntitiesWidgetInjectionConfigFactory.
  *
- * @param injector Optional injector to use for the components.
+ * @param injector - Optional injector to use for the components.
  * @returns
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dbxFirebaseModelEntityWidgetInjectionConfigFactory(injector?: Maybe<Injector>): DbxFirebaseModelEntitiesWidgetInjectionConfigFactory {

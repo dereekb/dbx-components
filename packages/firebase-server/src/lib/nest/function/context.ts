@@ -28,13 +28,13 @@ export type FirebaseServerActionsContextOptions = FirebaseServerActionsTransform
 /**
  * Creates a {@link FirebaseServerActionsContext} with the default transform and validation factories.
  *
+ * @param options - Optional configuration for error logging behavior.
+ * @returns A fully configured actions context.
+ *
  * @example
  * ```ts
  * const context = firebaseServerActionsContext({ logError: true });
  * ```
- *
- * @param options - Optional configuration for error logging behavior.
- * @returns A fully configured actions context.
  */
 export function firebaseServerActionsContext(options?: FirebaseServerActionsContextOptions): FirebaseServerActionsContext {
   return {
@@ -59,7 +59,7 @@ export type FirebaseServerActionsTransformFactoryLogErrorFunctionInput = Firebas
  * Default error logger that writes validation error details to the console.
  * Used when `logError` is `true` or omitted in the factory options.
  *
- * @param details - the validation error details to log.
+ * @param details - The validation error details to log.
  */
 export const defaultFirebaseServerActionsTransformFactoryLogErrorFunction: FirebaseServerActionsTransformFactoryLogErrorFunction = (details) => {
   console.log('firebaseServerActionsTransformFactory() encountered validation error: ', details);
@@ -153,6 +153,9 @@ export interface FirebaseServerActionsTransformFactoryOptions {
  *
  * Validation errors are optionally logged before the error is thrown, controlled by the `logError` option.
  *
+ * @param options - Optional configuration for error logging behavior.
+ * @returns A factory that creates type-safe transform functions from ArkType schemas.
+ *
  * @example
  * ```ts
  * const transformFactory = firebaseServerActionsTransformFactory({ logError: true });
@@ -160,8 +163,6 @@ export interface FirebaseServerActionsTransformFactoryOptions {
  * const validated = await transform(rawInput);
  * ```
  *
- * @param options - Optional configuration for error logging behavior.
- * @returns A factory that creates type-safe transform functions from ArkType schemas.
  * @__NO_SIDE_EFFECTS__
  */
 export function firebaseServerActionsTransformFactory(options?: FirebaseServerActionsTransformFactoryOptions): TransformAndValidateObjectFactory {
@@ -173,7 +174,7 @@ export function firebaseServerActionsTransformFactory(options?: FirebaseServerAc
     handleValidationError: async (validationErrors: ArkErrors) => {
       const serverError = firebaseServerValidationServerError(validationErrors);
       const { data } = serverError;
-      logErrorFunction(data as object);
+      logErrorFunction(data);
       throw badRequestError(serverError);
     }
   });

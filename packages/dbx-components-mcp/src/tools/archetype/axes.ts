@@ -41,9 +41,9 @@ export type ResolvedAxisAlternatives = { readonly [axisName: string]: readonly s
  * Unknown axes are left out; callers fall back to "(not resolved)" in the
  * markdown output.
  *
- * @param archetype - the matched archetype catalog entry
- * @param q - the caller's filled questionnaire
- * @returns the resolved axes map, possibly empty
+ * @param archetype - The matched archetype catalog entry.
+ * @param q - The caller's filled questionnaire.
+ * @returns The resolved axes map, possibly empty.
  */
 export function deriveAxes(archetype: ModelArchetypeInfo, q: ArchetypeQuestionnaire): ResolvedAxes {
   const axes: { [axisName: string]: string } = {};
@@ -102,9 +102,9 @@ function deriveSingleItemSubPurpose(q: ArchetypeQuestionnaire): string | undefin
  * holds the questionnaire's stated `docIdSource`; this function returns the
  * other valid option so the Shape block renders both.
  *
- * @param archetype - the matched archetype catalog entry
- * @param q - the caller's filled questionnaire
- * @returns the alternative axis-value map, possibly empty
+ * @param archetype - The matched archetype catalog entry.
+ * @param q - The caller's filled questionnaire.
+ * @returns The alternative axis-value map, possibly empty.
  */
 export function deriveAxisAlternatives(archetype: ModelArchetypeInfo, q: ArchetypeQuestionnaire): ResolvedAxisAlternatives {
   const alternatives: { [axisName: string]: string[] } = {};
@@ -122,8 +122,8 @@ export function deriveAxisAlternatives(archetype: ModelArchetypeInfo, q: Archety
  * Field-level add-on detection. Returns the add-on slugs the questionnaire
  * triggers — surfaced on the recommender's "Field-level add-ons" line.
  *
- * @param q - the caller's filled questionnaire
- * @returns the add-on slugs in priority order
+ * @param q - The caller's filled questionnaire.
+ * @returns The add-on slugs in priority order.
  */
 export function deriveAddons(q: ArchetypeQuestionnaire): readonly string[] {
   const addons: string[] = [];

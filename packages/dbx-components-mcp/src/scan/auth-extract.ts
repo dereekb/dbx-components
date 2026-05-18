@@ -109,8 +109,8 @@ export interface ExtractAuthEntriesResult {
  * the auth JSDoc markers. Order is stable: source files in the order
  * ts-morph reports them, declarations within a file in source order.
  *
- * @param input - the ts-morph project plus the known-roles resolution map
- * @returns the extracted apps, claims, and any non-fatal warnings
+ * @param input - The ts-morph project plus the known-roles resolution map.
+ * @returns The extracted apps, claims, and any non-fatal warnings.
  */
 export function extractAuthEntries(input: ExtractAuthEntriesInput): ExtractAuthEntriesResult {
   const { project, knownRoles } = input;
@@ -601,9 +601,9 @@ const JSDOC_TAG_EMPTY: JsDocFirstTagValue = { kind: 'empty' };
 /**
  * Reads the first occurrence of `@<tagName>` from the supplied JSDoc blocks.
  *
- * @param jsDocs - the JSDoc blocks attached to the declaration
- * @param tagName - the tag name to look for, without the leading `@`
- * @returns a discriminated value: `{ kind: 'value', text }` when the tag
+ * @param jsDocs - The JSDoc blocks attached to the declaration.
+ * @param tagName - The tag name to look for, without the leading `@`
+ * @returns A discriminated value: `{ kind: 'value', text }` when the tag
  *   carries a value, `{ kind: 'empty' }` when the tag is present but empty
  *   (callers treat that as a warning condition), and `{ kind: 'absent' }`
  *   when the tag is not present at all.

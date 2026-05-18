@@ -34,9 +34,9 @@ export interface TrelloWebhookEventVerifierConfig {
  *
  * Exported for testability.
  *
- * @param appSecret The Trello app secret.
- * @param rawBody The raw request body bytes.
- * @param callbackUrl The exact callback URL configured for this webhook.
+ * @param appSecret - The Trello app secret.
+ * @param rawBody - The raw request body bytes.
+ * @param callbackUrl - The exact callback URL configured for this webhook.
  * @returns The expected base64 signature value.
  */
 export function trelloWebhookExpectedSignature(appSecret: TrelloAppSecret, rawBody: Buffer, callbackUrl: string): string {
@@ -49,17 +49,24 @@ export function trelloWebhookExpectedSignature(appSecret: TrelloAppSecret, rawBo
 /**
  * Verifies a Trello webhook event header.
  *
- * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#webhook-signatures
+ * @param config - The verifier configuration.
+ * @returns Verifies a Trello webhook event.
  *
- * @param config The verifier configuration.
- * @returns A function that verifies a Trello webhook event.
+ * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/webhooks/#webhook-signatures
  */
 export function trelloWebhookEventVerifier(config: TrelloWebhookEventVerifierConfig): TrelloWebhookEventVerifier {
   const { appSecret, callbackUrl } = config;
 
   return (request: Request, rawBody: Buffer) => {
     const headerValue = request.headers['x-trello-webhook'];
-    const signature = typeof headerValue === 'string' ? headerValue : Array.isArray(headerValue) ? headerValue[0] : undefined;
+
+    let signature: string | undefined;
+
+    if (typeof headerValue === 'string') {
+      signature = headerValue;
+    } else if (Array.isArray(headerValue)) {
+      signature = headerValue[0];
+    }
 
     let valid = false;
 
@@ -72,15 +79,19 @@ export function trelloWebhookEventVerifier(config: TrelloWebhookEventVerifierCon
     }
 
     let event: UntypedTrelloWebhookEvent | undefined;
+    let result: TrelloWebhookEventVerificationResult;
 
     if (valid) {
       try {
         event = JSON.parse(rawBody.toString('utf8')) as UntypedTrelloWebhookEvent;
+        result = { valid, event };
       } catch {
-        return { valid: false };
+        result = { valid: false };
       }
+    } else {
+      result = { valid, event };
     }
 
-    return { valid, event };
+    return result;
   };
 }

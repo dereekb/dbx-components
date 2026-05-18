@@ -40,8 +40,8 @@ const TRY_EXTENSIONS: readonly string[] = ['.ts', '.tsx', '/index.ts', '/index.t
  * snapshots the route core consumes. Centralises path-traversal guarding and
  * extension fallback so the route tools share one filesystem layer.
  *
- * @param args - glob/file list, optional cwd, and source-resolution flags
- * @returns the materialised sources alongside the resolved cwd used
+ * @param args - Glob/file list, optional cwd, and source-resolution flags.
+ * @returns The materialised sources alongside the resolved cwd used.
  */
 export async function loadRouteSources(args: LoadSourcesArgs): Promise<LoadedSources> {
   const cwdResolved = args.cwd ? resolve(process.cwd(), args.cwd) : process.cwd();
@@ -76,8 +76,9 @@ export async function loadRouteSources(args: LoadSourcesArgs): Promise<LoadedSou
  * Throws when an explicit cwd input resolves outside the server cwd, mirroring
  * the path-traversal guard the rest of the loader applies.
  *
- * @param requestedCwd - the original cwd argument from the caller
- * @param resolvedCwd - the resolved absolute path
+ * @param requestedCwd - The original cwd argument from the caller.
+ * @param resolvedCwd - The resolved absolute path.
+ * @throws {Error} When `resolvedCwd` lies outside the server cwd.
  */
 function guardCwdInsideServer(requestedCwd: string | undefined, resolvedCwd: string): void {
   if (!requestedCwd) {
@@ -94,9 +95,9 @@ function guardCwdInsideServer(requestedCwd: string | undefined, resolvedCwd: str
  * Concatenates explicit `paths` with the matches of an optional `glob`, both
  * relative to the resolved cwd.
  *
- * @param args - the loader arguments providing `paths` and/or `glob`
- * @param cwdResolved - the resolved cwd used as glob base
- * @returns the combined relative path list to load directly
+ * @param args - The loader arguments providing `paths` and/or `glob`
+ * @param cwdResolved - The resolved cwd used as glob base.
+ * @returns The combined relative path list to load directly.
  */
 async function collectInitialPaths(args: LoadSourcesArgs, cwdResolved: string): Promise<string[]> {
   const initialPaths: string[] = [];
@@ -117,8 +118,8 @@ async function collectInitialPaths(args: LoadSourcesArgs, cwdResolved: string): 
  * Performs a BFS through relative imports starting from every source already
  * present in `collected`, adding newly resolved sources to the same map.
  *
- * @param collected - the source map to extend in place
- * @param cwdResolved - the resolved cwd used to build absolute paths
+ * @param collected - The source map to extend in place.
+ * @param cwdResolved - The resolved cwd used to build absolute paths.
  */
 async function walkRelativeImports(collected: Map<string, RouteSource>, cwdResolved: string): Promise<void> {
   const queue = Array.from(collected.values());
@@ -156,35 +157,37 @@ async function loadOne(relative: string, cwd: string, into: Map<string, RouteSou
 }
 
 async function resolveRelativeImport(fromFile: string, specifier: string, cwd: string): Promise<RouteSource | undefined> {
-  if (!specifier.startsWith('.')) {
-    return undefined;
-  }
-  const fromAbsolute = isAbsolute(fromFile) ? fromFile : resolve(cwd, fromFile);
-  const fromDir = dirname(fromAbsolute);
-  const baseAbsolute = resolve(fromDir, specifier);
-  const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
-  for (const ext of TRY_EXTENSIONS) {
-    const candidateAbsolute = baseAbsolute + ext;
-    if (!candidateAbsolute.startsWith(cwdPrefix) && candidateAbsolute !== cwd) {
-      continue;
+  let result: RouteSource | undefined;
+  if (specifier.startsWith('.')) {
+    const fromAbsolute = isAbsolute(fromFile) ? fromFile : resolve(cwd, fromFile);
+    const fromDir = dirname(fromAbsolute);
+    const baseAbsolute = resolve(fromDir, specifier);
+    const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;
+    for (const ext of TRY_EXTENSIONS) {
+      const candidateAbsolute = baseAbsolute + ext;
+      if (!candidateAbsolute.startsWith(cwdPrefix) && candidateAbsolute !== cwd) {
+        continue;
+      }
+      const exists = await fileExists(candidateAbsolute);
+      if (!exists) {
+        continue;
+      }
+      const text = await readFile(candidateAbsolute, 'utf8');
+      const relativeName = candidateAbsolute.startsWith(cwdPrefix) ? candidateAbsolute.slice(cwdPrefix.length) : candidateAbsolute;
+      result = { name: relativeName, text };
+      break;
     }
-    const exists = await fileExists(candidateAbsolute);
-    if (!exists) {
-      continue;
-    }
-    const text = await readFile(candidateAbsolute, 'utf8');
-    const relativeName = candidateAbsolute.startsWith(cwdPrefix) ? candidateAbsolute.slice(cwdPrefix.length) : candidateAbsolute;
-    const result: RouteSource = { name: relativeName, text };
-    return result;
   }
-  return undefined;
+  return result;
 }
 
 async function fileExists(path: string): Promise<boolean> {
+  let result: boolean;
   try {
     const info = await stat(path);
-    return info.isFile();
+    result = info.isFile();
   } catch {
-    return false;
+    result = false;
   }
+  return result;
 }

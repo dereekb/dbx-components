@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "13.11.14",
+  "version": "13.11.15",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -49,8 +49,8 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/rxjs": "13.11.14",
-    "@dereekb/util": "13.11.14",
+    "@dereekb/rxjs": "13.11.15",
+    "@dereekb/util": "13.11.15",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "@typeform/api-client": "^2.10.2",
@@ -68,8 +68,8 @@
   "devDependencies": {
     "@angular/core": "21.2.11",
     "@nestjs/core": "^11.1.19",
-    "@typescript-eslint/parser": "8.59.0",
-    "eslint": "9.39.4",
+    "@typescript-eslint/parser": "8.59.3",
+    "eslint": "10.4.0",
     "rxjs": "^7.8.2"
   }
 }

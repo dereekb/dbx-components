@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { type Observable, switchMap, first } from 'rxjs';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { DbxFirebaseOidcConfigService } from './oidc.configuration.service';
-import { type OAuthInteractionLoginRequest, type OAuthInteractionConsentRequest, type OidcInteractionUid, type OAuthInteractionLoginResponse, type OAuthInteractionConsentResponse } from '@dereekb/firebase';
+import { type OAuthInteractionConsentRequest, type OidcInteractionUid, type OAuthInteractionLoginResponse, type OAuthInteractionConsentResponse } from '@dereekb/firebase';
 
 // MARK: Service
 /**
@@ -41,7 +41,7 @@ export class DbxFirebaseOidcInteractionService {
   submitLogin(uid: OidcInteractionUid): Observable<OAuthInteractionLoginResponse> {
     return this._authService.idTokenString$.pipe(
       first(),
-      switchMap((idToken) => this.http.post<OAuthInteractionLoginResponse>(`${this.baseUrl}/${uid}/login`, { idToken } as OAuthInteractionLoginRequest))
+      switchMap((idToken) => this.http.post<OAuthInteractionLoginResponse>(`${this.baseUrl}/${uid}/login`, { idToken }))
     );
   }
 

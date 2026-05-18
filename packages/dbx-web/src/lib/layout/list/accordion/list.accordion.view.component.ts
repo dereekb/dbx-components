@@ -56,14 +56,14 @@ export type DbxAccordionRenderEntry<T, I extends DbxValueListItem<T> = DbxValueL
 /**
  * Flattens grouped accordion items into a single array of render entries with stable track IDs.
  *
+ * @param groups - The grouped items to flatten.
+ * @param trackByFn - The track-by function used to derive stable item identity.
+ * @returns A flat array of render entries for use in a single `@for` loop.
+ *
  * @example
  * ```ts
  * const entries = flattenAccordionGroups(groups, trackByFn);
  * ```
- *
- * @param groups - the grouped items to flatten
- * @param trackByFn - the track-by function used to derive stable item identity
- * @returns a flat array of render entries for use in a single `@for` loop
  */
 export function flattenAccordionGroups<T, I extends DbxValueListItem<T> = DbxValueListItem<T>>(groups: DbxValueListItemGroup<unknown, T, I>[], trackByFn: TrackByFunction<DbxValueListItemConfig<T, I>>): DbxAccordionRenderEntry<T, I>[] {
   const entries: DbxAccordionRenderEntry<T, I>[] = [];

@@ -209,8 +209,8 @@ export const notificationUserConverter = snapshotConverterFunctions<Notification
 /**
  * Creates a Firestore collection reference for {@link NotificationUser} documents.
  *
- * @param context - Firestore context to create the collection reference from
- * @returns a typed collection reference for NotificationUser documents
+ * @param context - Firestore context to create the collection reference from.
+ * @returns A typed collection reference for NotificationUser documents.
  */
 export function notificationUserCollectionReference(context: FirestoreContext): CollectionReference<NotificationUser> {
   return context.collection(notificationUserIdentity.collectionName);
@@ -224,8 +224,8 @@ export type NotificationUserFirestoreCollection = FirestoreCollection<Notificati
 /**
  * Creates a typed {@link NotificationUserFirestoreCollection} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection to
- * @returns a typed Firestore collection for NotificationUser documents
+ * @param firestoreContext - Firestore context to bind the collection to.
+ * @returns A typed Firestore collection for NotificationUser documents.
  */
 export function notificationUserFirestoreCollection(firestoreContext: FirestoreContext): NotificationUserFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -349,8 +349,8 @@ export const notificationSummaryConverter = snapshotConverterFunctions<Notificat
 /**
  * Creates a Firestore collection reference for {@link NotificationSummary} documents.
  *
- * @param context - Firestore context to create the collection reference from
- * @returns a typed collection reference for NotificationSummary documents
+ * @param context - Firestore context to create the collection reference from.
+ * @returns A typed collection reference for NotificationSummary documents.
  */
 export function notificationSummaryCollectionReference(context: FirestoreContext): CollectionReference<NotificationSummary> {
   return context.collection(notificationSummaryIdentity.collectionName);
@@ -364,8 +364,8 @@ export type NotificationSummaryFirestoreCollection = FirestoreCollection<Notific
 /**
  * Creates a typed {@link NotificationSummaryFirestoreCollection} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection to
- * @returns a typed Firestore collection for NotificationSummary documents
+ * @param firestoreContext - Firestore context to bind the collection to.
+ * @returns A typed Firestore collection for NotificationSummary documents.
  */
 export function notificationSummaryFirestoreCollection(firestoreContext: FirestoreContext): NotificationSummaryFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -490,8 +490,8 @@ export const notificationBoxConverter = snapshotConverterFunctions<NotificationB
 /**
  * Creates a Firestore collection reference for {@link NotificationBox} documents.
  *
- * @param context - Firestore context to create the collection reference from
- * @returns a typed collection reference for NotificationBox documents
+ * @param context - Firestore context to create the collection reference from.
+ * @returns A typed collection reference for NotificationBox documents.
  */
 export function notificationBoxCollectionReference(context: FirestoreContext): CollectionReference<NotificationBox> {
   return context.collection(notificationBoxIdentity.collectionName);
@@ -505,8 +505,8 @@ export type NotificationBoxFirestoreCollection = FirestoreCollection<Notificatio
 /**
  * Creates a typed {@link NotificationBoxFirestoreCollection} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection to
- * @returns a typed Firestore collection for NotificationBox documents
+ * @param firestoreContext - Firestore context to bind the collection to.
+ * @returns A typed Firestore collection for NotificationBox documents.
  */
 export function notificationBoxFirestoreCollection(firestoreContext: FirestoreContext): NotificationBoxFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -859,8 +859,9 @@ export const notificationConverter = snapshotConverterFunctions<Notification>({
 /**
  * Creates a factory that produces {@link Notification} subcollection references for a given {@link NotificationBoxDocument} parent.
  *
- * @param context - Firestore context to create subcollection references from
- * @returns a factory function that creates collection references for a given NotificationBox parent
+ * @param context - Firestore context to create subcollection references from.
+ * @returns A factory function that creates collection references for a given NotificationBox parent.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function notificationCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<Notification> {
@@ -882,8 +883,9 @@ export type NotificationFirestoreCollectionFactory = (parent: NotificationBoxDoc
 /**
  * Creates a {@link NotificationFirestoreCollectionFactory} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection factory to
- * @returns a factory that creates typed Firestore subcollections for Notification documents
+ * @param firestoreContext - Firestore context to bind the collection factory to.
+ * @returns A factory that creates typed Firestore subcollections for Notification documents.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function notificationFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationFirestoreCollectionFactory {
@@ -904,8 +906,8 @@ export function notificationFirestoreCollectionFactory(firestoreContext: Firesto
 /**
  * Creates a collection group reference for querying all {@link Notification} documents across all {@link NotificationBox} parents.
  *
- * @param context - Firestore context to create the collection group reference from
- * @returns a typed collection group for querying Notification documents across all parents
+ * @param context - Firestore context to create the collection group reference from.
+ * @returns A typed collection group for querying Notification documents across all parents.
  */
 export function notificationCollectionReference(context: FirestoreContext): CollectionGroup<Notification> {
   return context.collectionGroup(notificationIdentity.collectionName);
@@ -919,8 +921,8 @@ export type NotificationFirestoreCollectionGroup = FirestoreCollectionGroup<Noti
 /**
  * Creates a typed {@link NotificationFirestoreCollectionGroup} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection group to
- * @returns a typed Firestore collection group for querying Notification documents across all parents
+ * @param firestoreContext - Firestore context to bind the collection group to.
+ * @returns A typed Firestore collection group for querying Notification documents across all parents.
  */
 export function notificationFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
@@ -991,8 +993,9 @@ export const notificationWeekConverter = snapshotConverterFunctions<Notification
 /**
  * Creates a factory that produces {@link NotificationWeek} subcollection references for a given {@link NotificationBoxDocument} parent.
  *
- * @param context - Firestore context to create subcollection references from
- * @returns a factory function that creates collection references for a given NotificationBox parent
+ * @param context - Firestore context to create subcollection references from.
+ * @returns A factory function that creates collection references for a given NotificationBox parent.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function notificationWeekCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<NotificationWeek> {
@@ -1014,8 +1017,9 @@ export type NotificationWeekFirestoreCollectionFactory = (parent: NotificationBo
 /**
  * Creates a {@link NotificationWeekFirestoreCollectionFactory} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection factory to
- * @returns a factory that creates typed Firestore subcollections for NotificationWeek documents
+ * @param firestoreContext - Firestore context to bind the collection factory to.
+ * @returns A factory that creates typed Firestore subcollections for NotificationWeek documents.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function notificationWeekFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationWeekFirestoreCollectionFactory {
@@ -1036,8 +1040,8 @@ export function notificationWeekFirestoreCollectionFactory(firestoreContext: Fir
 /**
  * Creates a collection group reference for querying all {@link NotificationWeek} documents across all {@link NotificationBox} parents.
  *
- * @param context - Firestore context to create the collection group reference from
- * @returns a typed collection group for querying NotificationWeek documents across all parents
+ * @param context - Firestore context to create the collection group reference from.
+ * @returns A typed collection group for querying NotificationWeek documents across all parents.
  */
 export function notificationWeekCollectionReference(context: FirestoreContext): CollectionGroup<NotificationWeek> {
   return context.collectionGroup(notificationWeekIdentity.collectionName);
@@ -1051,8 +1055,8 @@ export type NotificationWeekFirestoreCollectionGroup = FirestoreCollectionGroup<
 /**
  * Creates a typed {@link NotificationWeekFirestoreCollectionGroup} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection group to
- * @returns a typed Firestore collection group for querying NotificationWeek documents across all parents
+ * @param firestoreContext - Firestore context to bind the collection group to.
+ * @returns A typed Firestore collection group for querying NotificationWeek documents across all parents.
  */
 export function notificationWeekFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationWeekFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
@@ -1088,7 +1092,7 @@ export const notificationLoggedEventDayPageIdentity = firestoreModelIdentity(not
  * day pages. Wraps the existing {@link firestoreNotificationItem} sub-object converter so individual
  * items round-trip through the same field rules used everywhere else NotificationItems are persisted.
  */
-export const notificationLoggedEventDayItemConverter: PagedItemConverter<NotificationItem> = {
+export const NOTIFICATION_LOGGED_EVENT_DAY_ITEM_CONVERTER: PagedItemConverter<NotificationItem> = {
   fromData: (data) => firestoreNotificationItem.mapFunctions.from(data),
   toData: (item) => firestoreNotificationItem.mapFunctions.to(item)
 };
@@ -1134,8 +1138,9 @@ export const notificationLoggedEventDayConverter = snapshotConverterFunctions<No
 /**
  * Creates a factory that produces {@link NotificationLoggedEventDay} subcollection references for a given {@link NotificationBoxDocument} parent.
  *
- * @param context - Firestore context to create subcollection references from
- * @returns a factory function that creates collection references for a given NotificationBox parent
+ * @param context - Firestore context to create subcollection references from.
+ * @returns A factory function that creates collection references for a given NotificationBox parent.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function notificationLoggedEventDayCollectionReferenceFactory(context: FirestoreContext): (notificationBox: NotificationBoxDocument) => CollectionReference<NotificationLoggedEventDay> {
@@ -1157,8 +1162,9 @@ export type NotificationLoggedEventDayFirestoreCollectionFactory = (parent: Noti
 /**
  * Creates a {@link NotificationLoggedEventDayFirestoreCollectionFactory} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection factory to
- * @returns a factory that creates typed Firestore subcollections for NotificationLoggedEventDay wrapper documents
+ * @param firestoreContext - Firestore context to bind the collection factory to.
+ * @returns A factory that creates typed Firestore subcollections for NotificationLoggedEventDay wrapper documents.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function notificationLoggedEventDayFirestoreCollectionFactory(firestoreContext: FirestoreContext): NotificationLoggedEventDayFirestoreCollectionFactory {
@@ -1179,8 +1185,8 @@ export function notificationLoggedEventDayFirestoreCollectionFactory(firestoreCo
 /**
  * Creates a collection group reference for querying all {@link NotificationLoggedEventDay} documents across all {@link NotificationBox} parents.
  *
- * @param context - Firestore context to create the collection group reference from
- * @returns a typed collection group for querying NotificationLoggedEventDay documents across all parents
+ * @param context - Firestore context to create the collection group reference from.
+ * @returns A typed collection group for querying NotificationLoggedEventDay documents across all parents.
  */
 export function notificationLoggedEventDayCollectionReference(context: FirestoreContext): CollectionGroup<NotificationLoggedEventDay> {
   return context.collectionGroup(notificationLoggedEventDayIdentity.collectionName);
@@ -1194,8 +1200,8 @@ export type NotificationLoggedEventDayFirestoreCollectionGroup = FirestoreCollec
 /**
  * Creates a typed {@link NotificationLoggedEventDayFirestoreCollectionGroup} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection group to
- * @returns a typed Firestore collection group for querying NotificationLoggedEventDay documents across all parents
+ * @param firestoreContext - Firestore context to bind the collection group to.
+ * @returns A typed Firestore collection group for querying NotificationLoggedEventDay documents across all parents.
  */
 export function notificationLoggedEventDayFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationLoggedEventDayFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({
@@ -1228,8 +1234,9 @@ export class NotificationLoggedEventDayPageDocument extends AbstractFirestoreDoc
 /**
  * Creates a factory that produces page subcollection references for a given {@link NotificationLoggedEventDayDocument} parent.
  *
- * @param context - Firestore context to create subcollection references from
- * @returns a factory function that creates collection references for a given NotificationLoggedEventDayDocument parent
+ * @param context - Firestore context to create subcollection references from.
+ * @returns A factory function that creates collection references for a given NotificationLoggedEventDayDocument parent.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function notificationLoggedEventDayPagedItemsCollectionReferenceFactory(context: FirestoreContext): (day: NotificationLoggedEventDayDocument) => CollectionReference<NotificationLoggedEventDayPageDocumentData> {
@@ -1259,8 +1266,9 @@ export type NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory = (pa
  * Uses the framework's default count-based dynamic page distribution; consumers do not need to provide
  * a {@link PagedItemDistributionScheme}. The per-item converter delegates to {@link firestoreNotificationItem}.
  *
- * @param firestoreContext - Firestore context to bind the collection factory to
- * @returns a factory that creates paged Firestore subcollections of NotificationItem for a given day
+ * @param firestoreContext - Firestore context to bind the collection factory to.
+ * @returns A factory that creates paged Firestore subcollections of NotificationItem for a given day.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function notificationLoggedEventDayPagedItemsCollectionFactory(firestoreContext: FirestoreContext): NotificationLoggedEventDayPagedItemsFirestoreCollectionFactory {
@@ -1273,7 +1281,7 @@ export function notificationLoggedEventDayPagedItemsCollectionFactory(firestoreC
       makeDocument: (accessor, documentAccessor) => new NotificationLoggedEventDayPageDocument(accessor, documentAccessor),
       firestoreContext,
       parent,
-      itemConverter: notificationLoggedEventDayItemConverter
+      itemConverter: NOTIFICATION_LOGGED_EVENT_DAY_ITEM_CONVERTER
     });
   };
 }
@@ -1281,8 +1289,8 @@ export function notificationLoggedEventDayPagedItemsCollectionFactory(firestoreC
 /**
  * Creates a collection group reference for querying all logged-event page documents across every {@link NotificationLoggedEventDay} parent.
  *
- * @param context - Firestore context to create the collection group reference from
- * @returns a typed collection group for querying logged-event page documents
+ * @param context - Firestore context to create the collection group reference from.
+ * @returns A typed collection group for querying logged-event page documents.
  */
 export function notificationLoggedEventDayPageCollectionReference(context: FirestoreContext): CollectionGroup<NotificationLoggedEventDayPageDocumentData> {
   return context.collectionGroup(notificationLoggedEventDayPageIdentity.collectionName);
@@ -1298,8 +1306,8 @@ export type NotificationLoggedEventDayPageFirestoreCollectionGroup = FirestoreCo
 /**
  * Creates a typed {@link NotificationLoggedEventDayPageFirestoreCollectionGroup} bound to the given Firestore context.
  *
- * @param firestoreContext - Firestore context to bind the collection group to
- * @returns a typed Firestore collection group for querying logged-event page documents across all parents
+ * @param firestoreContext - Firestore context to bind the collection group to.
+ * @returns A typed Firestore collection group for querying logged-event page documents across all parents.
  */
 export function notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext: FirestoreContext): NotificationLoggedEventDayPageFirestoreCollectionGroup {
   return firestoreContext.firestoreCollectionGroup({

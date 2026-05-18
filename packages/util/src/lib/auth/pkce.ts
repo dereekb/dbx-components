@@ -12,8 +12,8 @@ export function generatePkceCodeVerifier(): string {
 /**
  * Generates a PKCE code challenge from a code verifier using SHA-256.
  *
- * @param verifier - The code verifier string to hash
- * @returns A base64url-encoded SHA-256 hash of the verifier
+ * @param verifier - The code verifier string to hash.
+ * @returns A base64url-encoded SHA-256 hash of the verifier.
  */
 export async function generatePkceCodeChallenge(verifier: string): Promise<string> {
   const encoder = new TextEncoder();

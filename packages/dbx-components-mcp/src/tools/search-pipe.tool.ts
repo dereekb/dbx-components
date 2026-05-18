@@ -103,9 +103,9 @@ function scoreTypeFragment(typeText: string, token: string): number {
  *   relatedSlugs membership: 2
  *   description includes (fallback): 1
  *
- * @param entry - the pipe registry entry being scored
- * @param token - the lowercase token to score against
- * @returns the additive score for this token/entry pair (`0` when there's no hit)
+ * @param entry - The pipe registry entry being scored.
+ * @param token - The lowercase token to score against.
+ * @returns The additive score for this token/entry pair (`0` when there's no hit)
  */
 function scoreEntryAgainstToken(entry: PipeEntryInfo, token: string): number {
   const slug = entry.slug.toLowerCase();
@@ -160,8 +160,9 @@ export interface CreateSearchPipeToolConfig {
  * Builds the `dbx_pipe_search` tool against a pipe registry. Called by
  * {@link registerTools} once the registry has loaded at server startup.
  *
- * @param config - the registry the tool should rank against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry the tool should rank against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSearchPipeTool(config: CreateSearchPipeToolConfig): DbxTool {

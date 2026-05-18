@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import type { ContainerField, GroupField, GroupAllowedChildren } from '@ng-forge/dynamic-forms';
+import type { ContainerField } from '@ng-forge/dynamic-forms';
 import { waitForMs } from '@dereekb/util';
 import { firstValueFrom } from 'rxjs';
 import { dbxForgeGroup, dbxForgeContainer } from './wrapper';
@@ -22,7 +22,7 @@ describe('dbxForgeGroup()', () => {
   it('should produce a group-typed field with the given key', () => {
     const field = dbxForgeGroup({
       key: 'address',
-      fields: [dbxForgeTextField({ key: 'city' })] as unknown as GroupAllowedChildren[]
+      fields: [dbxForgeTextField({ key: 'city' })]
     });
 
     expect(field.type).toBe('group');
@@ -33,7 +33,7 @@ describe('dbxForgeGroup()', () => {
     const city = dbxForgeTextField({ key: 'city' });
     const field = dbxForgeGroup({
       key: 'address',
-      fields: [city] as unknown as GroupAllowedChildren[]
+      fields: [city]
     });
 
     expect(field.fields).toHaveLength(1);
@@ -49,7 +49,7 @@ describe('dbxForgeContainer()', () => {
   it('should produce a container-typed field with the given key', () => {
     const field = dbxForgeContainer({
       key: 'my-container',
-      fields: [dbxForgeTextField({ key: 'city' })] as unknown as ContainerField['fields']
+      fields: [dbxForgeTextField({ key: 'city' })]
     });
 
     expect(field.type).toBe('container');
@@ -58,7 +58,7 @@ describe('dbxForgeContainer()', () => {
 
   it('should auto-generate a key when none is provided', () => {
     const field = dbxForgeContainer({
-      fields: [dbxForgeTextField({ key: 'city' })] as unknown as ContainerField['fields']
+      fields: [dbxForgeTextField({ key: 'city' })]
     });
 
     expect(typeof field.key).toBe('string');
@@ -67,7 +67,7 @@ describe('dbxForgeContainer()', () => {
 
   it('should default wrappers to an empty array', () => {
     const field = dbxForgeContainer({
-      fields: [dbxForgeTextField({ key: 'city' })] as unknown as ContainerField['fields']
+      fields: [dbxForgeTextField({ key: 'city' })]
     });
 
     expect(field.wrappers).toEqual([]);
@@ -75,7 +75,7 @@ describe('dbxForgeContainer()', () => {
 
   it('should preserve wrappers passed in config', () => {
     const field = dbxForgeContainer({
-      fields: [dbxForgeTextField({ key: 'city' })] as unknown as ContainerField['fields'],
+      fields: [dbxForgeTextField({ key: 'city' })],
       wrappers: [{ type: 'my-wrapper' }] as unknown as ContainerField['wrappers']
     });
 
@@ -110,13 +110,13 @@ describe('wrapper form value scenarios', () => {
     it('should nest child values under the group key in the form value', async () => {
       const groupField = dbxForgeGroup({
         key: 'address',
-        fields: [dbxForgeTextField({ key: 'city' }), dbxForgeTextField({ key: 'state' })] as unknown as GroupAllowedChildren[]
-      }) as unknown as GroupField;
+        fields: [dbxForgeTextField({ key: 'city' }), dbxForgeTextField({ key: 'state' })]
+      });
 
       fixture.componentInstance.config.set({ fields: [groupField] });
       await settle();
 
-      fixture.componentInstance.setValue({ address: { city: 'Metropolis', state: 'NY' } } as unknown as Partial<unknown>);
+      fixture.componentInstance.setValue({ address: { city: 'Metropolis', state: 'NY' } });
       await settle(0);
 
       const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { address: { city: string; state: string } };
@@ -129,8 +129,8 @@ describe('wrapper form value scenarios', () => {
       // output — the group should not depend on a sibling update to emit.
       const groupField = dbxForgeGroup({
         key: 'address',
-        fields: [dbxForgeTextField({ key: 'city' })] as unknown as GroupAllowedChildren[]
-      }) as unknown as GroupField;
+        fields: [dbxForgeTextField({ key: 'city' })]
+      });
 
       const siblingField = dbxForgeTextField({ key: 'name' });
 
@@ -138,7 +138,7 @@ describe('wrapper form value scenarios', () => {
       await settle();
 
       // Only set the group — leave the sibling alone.
-      fixture.componentInstance.setValue({ address: { city: 'Metropolis' } } as unknown as Partial<unknown>);
+      fixture.componentInstance.setValue({ address: { city: 'Metropolis' } });
       await settle(0);
 
       const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { address?: { city: string }; name?: string };
@@ -150,18 +150,18 @@ describe('wrapper form value scenarios', () => {
       // values should coexist — the group value is not lost or overwritten.
       const groupField = dbxForgeGroup({
         key: 'address',
-        fields: [dbxForgeTextField({ key: 'city' })] as unknown as GroupAllowedChildren[]
-      }) as unknown as GroupField;
+        fields: [dbxForgeTextField({ key: 'city' })]
+      });
 
       const siblingField = dbxForgeTextField({ key: 'name' });
 
       fixture.componentInstance.config.set({ fields: [groupField, siblingField] });
       await settle();
 
-      fixture.componentInstance.setValue({ address: { city: 'Metropolis' } } as unknown as Partial<unknown>);
+      fixture.componentInstance.setValue({ address: { city: 'Metropolis' } });
       await settle(0);
 
-      fixture.componentInstance.setValue({ address: { city: 'Metropolis' }, name: 'Clark' } as unknown as Partial<unknown>);
+      fixture.componentInstance.setValue({ address: { city: 'Metropolis' }, name: 'Clark' });
       await settle(0);
 
       const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { address: { city: string }; name: string };
@@ -173,13 +173,13 @@ describe('wrapper form value scenarios', () => {
     it('should keep child values flat (not nested under the container key)', async () => {
       const containerField = dbxForgeContainer({
         key: 'visual_only',
-        fields: [dbxForgeTextField({ key: 'city' }), dbxForgeTextField({ key: 'state' })] as unknown as ContainerField['fields']
+        fields: [dbxForgeTextField({ key: 'city' }), dbxForgeTextField({ key: 'state' })]
       });
 
       fixture.componentInstance.config.set({ fields: [containerField] });
       await settle();
 
-      fixture.componentInstance.setValue({ city: 'Metropolis', state: 'NY' } as unknown as Partial<unknown>);
+      fixture.componentInstance.setValue({ city: 'Metropolis', state: 'NY' });
       await settle(0);
 
       const value = (await firstValueFrom(fixture.componentInstance.getValue())) as Record<string, unknown>;

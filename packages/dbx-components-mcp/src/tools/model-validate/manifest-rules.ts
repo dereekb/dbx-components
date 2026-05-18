@@ -30,8 +30,8 @@ import type { Violation, ViolationCode } from './types.js';
  * `collectionName` still collide because Firestore CollectionGroup
  * queries match on the leaf segment regardless of parent.
  *
- * @param models - every model from the merged manifest (upstream + downstream)
- * @returns the duplicate-identity violations, in stable iteration order
+ * @param models - Every model from the merged manifest (upstream + downstream)
+ * @returns The duplicate-identity violations, in stable iteration order.
  */
 export function checkManifestIdentityDuplicates(models: readonly FirebaseModel[]): readonly Violation[] {
   const violations: Violation[] = [];
@@ -54,8 +54,8 @@ export function checkManifestIdentityDuplicates(models: readonly FirebaseModel[]
  * entry, anchored at the declaring model's source file with no line (the
  * line lives on the source's per-file rule pass, not the manifest entry).
  *
- * @param models - every model from the merged manifest (upstream + downstream)
- * @returns one violation per unresolved `from=` entry
+ * @param models - Every model from the merged manifest (upstream + downstream)
+ * @returns One violation per unresolved `from=` entry.
  */
 export function checkManifestCompositeKeyFrom(models: readonly FirebaseModel[]): readonly Violation[] {
   const violations: Violation[] = [];

@@ -1,6 +1,6 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
-import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef, type DbxForgeFieldFunctionDef } from '../../field';
 import type { DbxForgeFixedDateRangeFieldComponentProps, DbxForgeFixedDateRangeValue } from './fixeddaterange.field.component';
 
 // MARK: Fixed Date Range Field
@@ -54,4 +54,4 @@ export const dbxForgeFixedDateRangeField = dbxForgeFieldFunction<DbxForgeFixedDa
   buildFieldDef: dbxForgeBuildFieldDef((x) => {
     x.configure(configureDbxForgeFormFieldWrapper);
   })
-}) as DbxForgeFieldFunction<DbxForgeFixedDateRangeFieldConfig, DbxForgeFixedDateRangeFieldDef>;
+});

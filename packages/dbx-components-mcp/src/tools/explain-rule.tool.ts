@@ -171,4 +171,4 @@ function groupBySource(entries: readonly RuleEntry[]): readonly (readonly [RuleS
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b));
 }
 
-export const explainRuleTool: DbxTool = { definition: TOOL, run };
+export const EXPLAIN_RULE_TOOL: DbxTool = { definition: TOOL, run };

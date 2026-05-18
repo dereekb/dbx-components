@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { dbxColorTemplateListAppTool } from './dbx-color-template-list-app.tool.js';
+import { DBX_COLOR_TEMPLATE_LIST_APP_TOOL } from './dbx-color-template-list-app.tool.js';
 
 const ROOT_CONFIG = `import { provideDbxStyleService } from '@dereekb/dbx-web';
 
@@ -20,7 +20,7 @@ export const appConfig = {
 };
 `;
 
-describe('dbxColorTemplateListAppTool', () => {
+describe('DBX_COLOR_TEMPLATE_LIST_APP_TOOL', () => {
   it('returns markdown report listing inline templates from a real fixture app', async () => {
     const tmp = mkdtempSync(join(tmpdir(), 'dbx-color-list-'));
     try {
@@ -31,7 +31,7 @@ describe('dbxColorTemplateListAppTool', () => {
       process.chdir(tmp);
       try {
         const apiDir = relative(tmp, appDir).split(/[\\/]/).join('/');
-        const result = await dbxColorTemplateListAppTool.run({ apiDir });
+        const result = await DBX_COLOR_TEMPLATE_LIST_APP_TOOL.run({ apiDir });
         const text = result.content[0].text;
         expect(text).toContain('# Color templates');
         expect(text).toContain('brand-positive');
@@ -45,13 +45,13 @@ describe('dbxColorTemplateListAppTool', () => {
   });
 
   it('rejects invalid input', async () => {
-    const result = await dbxColorTemplateListAppTool.run({});
+    const result = await DBX_COLOR_TEMPLATE_LIST_APP_TOOL.run({});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Invalid arguments');
   });
 
   it('rejects apiDir that escapes the server cwd', async () => {
-    const result = await dbxColorTemplateListAppTool.run({ apiDir: '../escape' });
+    const result = await DBX_COLOR_TEMPLATE_LIST_APP_TOOL.run({ apiDir: '../escape' });
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('outside the server cwd');
   });

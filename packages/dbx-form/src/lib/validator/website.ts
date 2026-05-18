@@ -1,3 +1,4 @@
+/* eslint-disable dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null`; widening to `Maybe<...>` adds `undefined` and breaks the contract (TS2322). */
 import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@angular/forms';
 import { type ArrayOrValue, type Maybe, type WebsiteDomain, type WebsiteUrlDetails, asArray, isWebsiteUrlWithPrefix, websiteUrlDetails } from '@dereekb/util';
 
@@ -36,8 +37,8 @@ export interface IsWebsiteUrlValidatorConfig {
  * Angular form validator that checks whether the control value is a valid website URL,
  * optionally requiring an http/https prefix, allowing port numbers, and restricting to specific domains.
  *
- * @param config - Optional validation configuration for prefix, port, and domain requirements
- * @returns A ValidatorFn that validates website URLs
+ * @param config - Optional validation configuration for prefix, port, and domain requirements.
+ * @returns A ValidatorFn that validates website URLs.
  */
 export function isWebsiteUrlValidator(config?: IsWebsiteUrlValidatorConfig): ValidatorFn {
   const { requirePrefix, allowPorts, validDomains: inputValidDomains } = config ?? {};

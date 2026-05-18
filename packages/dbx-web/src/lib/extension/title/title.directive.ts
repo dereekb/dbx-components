@@ -76,9 +76,9 @@ export class DbxWebPageTitleInfoDirective implements DbxWebPageTitleInfoReferenc
   }
 
   /**
-   * @internal Maintained by descendant directives to keep `isLeaf$` accurate.
-   *
    * @param child - The descendant directive to register as a child.
+   *
+   * @internal Maintained by descendant directives to keep `isLeaf$` accurate.
    */
   _addChild(child: DbxWebPageTitleInfoDirective): void {
     const next = new Set(this._children.value);
@@ -87,9 +87,9 @@ export class DbxWebPageTitleInfoDirective implements DbxWebPageTitleInfoReferenc
   }
 
   /**
-   * @internal
-   *
    * @param child - The descendant directive to unregister.
+   *
+   * @internal
    */
   _removeChild(child: DbxWebPageTitleInfoDirective): void {
     const next = new Set(this._children.value);

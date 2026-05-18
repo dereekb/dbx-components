@@ -28,8 +28,8 @@ export interface ResolvedSources {
  * issue list, used when the caller has already gathered a complete glob/file
  * set in memory.
  *
- * @param sources - the in-memory sources to extract from
- * @returns the merged extraction nodes, issues, and processed file count
+ * @param sources - The in-memory sources to extract from.
+ * @returns The merged extraction nodes, issues, and processed file count.
  */
 export function resolveRouteSources(sources: readonly RouteSource[]): ResolvedSources {
   const nodes: RouteNode[] = [];
@@ -56,8 +56,8 @@ export function resolveRouteSources(sources: readonly RouteSource[]): ResolvedSo
  * the next round of file reads in transitive walking. Specifiers are
  * left untouched (no `.ts` resolution); the caller normalizes them.
  *
- * @param source - the in-memory source to inspect
- * @returns the relative specifiers in original-source order
+ * @param source - The in-memory source to inspect.
+ * @returns The relative specifiers in original-source order.
  */
 export function computeRelativeSpecifiers(source: RouteSource): readonly string[] {
   const extracted = extractFile(source);

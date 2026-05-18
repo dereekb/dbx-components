@@ -37,8 +37,8 @@ export type DbxContentBorderOpacity = 'lite' | 'full';
   selector: 'dbx-content-border,[dbxContentBorder]',
   host: {
     class: 'd-block dbx-content-border',
-    '[style.--dbx-border-color]': 'borderColorVar()',
-    '[style.--dbx-border-opacity]': 'borderOpacityValue()'
+    '[style.--dbx-border-color]': 'borderColorVarSignal()',
+    '[style.--dbx-border-opacity]': 'borderOpacityValueSignal()'
   },
   standalone: true
 })
@@ -47,9 +47,9 @@ export class DbxContentBorderDirective {
 
   readonly borderOpacity = input<Maybe<DbxContentBorderOpacity | string>>('lite');
 
-  readonly borderColorVar = computed(() => dbxThemeColorCssTokenVar(this.color(), true));
+  readonly borderColorVarSignal = computed(() => dbxThemeColorCssTokenVar(this.color(), true));
 
-  readonly borderOpacityValue = computed(() => {
+  readonly borderOpacityValueSignal = computed(() => {
     const color = this.color();
     const opacity = this.borderOpacity();
     let result: string;

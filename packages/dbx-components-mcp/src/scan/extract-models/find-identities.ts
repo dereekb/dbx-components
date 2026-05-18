@@ -22,9 +22,9 @@ const FUNCTION_NAME = 'firestoreModelIdentity';
  *   • `firestoreModelIdentity(notificationBoxIdentity, 'notification')` → `parent: 'notificationBoxIdentity'`, `modelType: 'notification'`
  *   • `firestoreModelIdentity(guestbookIdentity, 'guestbookEntry', 'gbe')` → all three
  *
- * @param sf - the parsed source file to inspect
- * @returns the identity declarations in source order; entries with an
- *   unrecognisable shape are skipped
+ * @param sf - The parsed source file to inspect.
+ * @returns The identity declarations in source order; entries with an
+ *   unrecognisable shape are skipped.
  */
 export function findIdentities(sf: SourceFile): readonly ExtractedIdentity[] {
   const out: ExtractedIdentity[] = [];

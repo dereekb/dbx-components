@@ -53,11 +53,8 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
    *
    * The displayContentObs, if provided, will merge with the existing observable and the two objects merged.
    *
-   * @param key - The key identifying which checklist field to merge into
-   * @param config - Partial configuration to merge with the existing field config
-   *
-   * @param key - The key identifying which checklist field to merge into
-   * @param config - Partial configuration to merge with the existing field config
+   * @param key - The key identifying which checklist field to merge into.
+   * @param config - Partial configuration to merge with the existing field config.
    */
   merge<T>(key: ChecklistItemFieldDataSetFieldKey<D>, config: Partial<ChecklistItemFieldBuilderInput<T>>) {
     const currentField = this._assertFieldExists(key).field;
@@ -65,7 +62,7 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
       ...currentField,
       ...config,
       key
-    } as any;
+    };
 
     if (currentField.displayContent && config.displayContent) {
       mergedConfig.displayContent = combineLatest([currentField.displayContent, config.displayContent]).pipe(

@@ -8,14 +8,15 @@ import { type FirestoreModelId } from './collection';
  * that satisfies Firestore's document ID constraints. This encoding is one-way; the
  * original email cannot be recovered from the result.
  *
- * @param emailAddress - The email address to convert
- * @returns A Firestore-safe document ID derived from the email
+ * @param emailAddress - The email address to convert.
+ * @returns A Firestore-safe document ID derived from the email.
  *
  * @example
  * ```ts
  * const id = firestoreModelIdFromEmail('user@example.com');
  * // id === 'userAAAexamplecom'
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelIdFromEmail(emailAddress: EmailAddress): FirestoreModelId {

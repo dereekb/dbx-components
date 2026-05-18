@@ -102,8 +102,8 @@ export interface ExtractFilterEntriesResult {
  * (classes before interfaces is not guaranteed — both share the file's
  * declaration order through ts-morph's class/interface accessors).
  *
- * @param input - the ts-morph project to scan
- * @returns the extracted entries plus any non-fatal warnings
+ * @param input - The ts-morph project to scan.
+ * @returns The extracted entries plus any non-fatal warnings.
  */
 export function extractFilterEntries(input: ExtractFilterEntriesInput): ExtractFilterEntriesResult {
   const { project } = input;

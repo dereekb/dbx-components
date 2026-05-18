@@ -8,9 +8,9 @@ import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 /**
  * Factory that creates an {@link OidcModelServerActions} instance from the injected services.
  *
- * @param oidcClientService - the OIDC client service for client CRUD actions
- * @param oidcService - the core OIDC service for grant revocation
- * @returns the configured OidcModelServerActions instance
+ * @param oidcClientService - The OIDC client service for client CRUD actions.
+ * @param oidcService - The core OIDC service for grant revocation.
+ * @returns The configured OidcModelServerActions instance.
  */
 export function oidcModelServerActionsFactory(oidcClientService: OidcClientService, oidcService: OidcService): OidcModelServerActions {
   const context: OidcModelServerActionsContext = {
@@ -38,8 +38,8 @@ export interface ProvideAppOidcModelMetadataConfig {
  * By default this module exports:
  * - OidcModelServerActions
  *
- * @param config - the configuration specifying the OIDC module dependency
- * @returns the NestJS module metadata for the OidcModel module
+ * @param config - The configuration specifying the OIDC module dependency.
+ * @returns The NestJS module metadata for the OidcModel module.
  */
 export function appOidcModelModuleMetadata(config: ProvideAppOidcModelMetadataConfig): ModuleMetadata {
   const { oidcModule } = config;

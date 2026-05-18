@@ -44,8 +44,8 @@ export type ZohoDeskGetTicketAttachmentsFunction = (input: ZohoDeskGetTicketAtta
 /**
  * Creates a {@link ZohoDeskGetTicketAttachmentsFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves attachments for a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves attachments for a ticket.
  */
 export function zohoDeskGetTicketAttachments(context: ZohoDeskContext): ZohoDeskGetTicketAttachmentsFunction {
   return (input: ZohoDeskGetTicketAttachmentsInput) => {
@@ -72,8 +72,8 @@ export type ZohoDeskDeleteTicketAttachmentFunction = (input: ZohoDeskDeleteTicke
 /**
  * Creates a {@link ZohoDeskDeleteTicketAttachmentFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that deletes a ticket attachment
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that deletes a ticket attachment.
  */
 export function zohoDeskDeleteTicketAttachment(context: ZohoDeskContext): ZohoDeskDeleteTicketAttachmentFunction {
   return (input: ZohoDeskDeleteTicketAttachmentInput) => context.fetchJson<void>(`/tickets/${input.ticketId}/attachments/${input.attachmentId}`, zohoDeskAttachmentApiFetchJsonInput('DELETE'));

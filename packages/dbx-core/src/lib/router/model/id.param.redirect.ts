@@ -7,17 +7,17 @@ import { type DbxRouteParamReader, dbxRouteParamReaderInstance, DbxRouteParamDef
 /**
  * Default identifier used by dbxRouteModelIdParamRedirect() that corresponds to the id param of the model in the current route.
  */
-export const DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_ID_PARAM_KEY = 'id';
+export const DEFAULT_DBX_ROUTE_MODEL_ID_PARAM_ID_PARAM_KEY = 'id';
 
 /**
  * Default identifier used by dbxRouteModelIdParamRedirect() that corresponds to the key param of the model in the current route.
  */
-export const DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_KEY_PARAM_KEY = 'key';
+export const DEFAULT_DBX_ROUTE_MODEL_ID_PARAM_KEY_PARAM_KEY = 'key';
 
 /**
  * Default value used by dbxRouteModelIdParamRedirect() for when a value is not available or provided.
  */
-export const DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_USE_PARAM_VALUE = '0';
+export const DEFAULT_DBX_ROUTE_MODEL_ID_PARAM_USE_PARAM_VALUE = '0';
 
 /**
  * Reads a model identifier from the current route by parameter key, with support for automatic
@@ -87,7 +87,7 @@ export interface DbxRouteModelIdParamRedirectInstance extends DbxRouteModelIdPar
  *
  * @see {@link dbxRouteModelIdParamRedirect}
  */
-export function dbxRouteModelKeyParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_KEY_PARAM_KEY): DbxRouteModelIdParamRedirectInstance {
+export function dbxRouteModelKeyParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DEFAULT_DBX_ROUTE_MODEL_ID_PARAM_KEY_PARAM_KEY): DbxRouteModelIdParamRedirectInstance {
   return dbxRouteModelIdParamRedirect(dbxRouterService, defaultParamKey);
 }
 
@@ -105,10 +105,10 @@ export function dbxRouteModelKeyParamRedirect(dbxRouterService: DbxRouterService
  * @see {@link DbxRouteModelIdParamRedirectInstance}
  * @see {@link dbxRouteModelKeyParamRedirect} for the key-based variant
  */
-export function dbxRouteModelIdParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_ID_PARAM_KEY): DbxRouteModelIdParamRedirectInstance {
+export function dbxRouteModelIdParamRedirect(dbxRouterService: DbxRouterService, defaultParamKey: string = DEFAULT_DBX_ROUTE_MODEL_ID_PARAM_ID_PARAM_KEY): DbxRouteModelIdParamRedirectInstance {
   const _paramReader = dbxRouteParamReaderInstance<ModelKey>(dbxRouterService, defaultParamKey);
   const _paramRedirect = new DbxRouteParamDefaultRedirectInstance<ModelKey>(_paramReader);
-  const _useDefaultParamDecider = new BehaviorSubject<string | SwitchMapToDefaultFilterFunction<ModelKey>>(DBX_ROUTE_MODEL_ID_PARAM_DEFAULT_USE_PARAM_VALUE);
+  const _useDefaultParamDecider = new BehaviorSubject<string | SwitchMapToDefaultFilterFunction<ModelKey>>(DEFAULT_DBX_ROUTE_MODEL_ID_PARAM_USE_PARAM_VALUE);
 
   const _useDefaultParam$: Observable<SwitchMapToDefaultFilterFunction<ModelKey>> = _useDefaultParamDecider.pipe(
     map((x) => {

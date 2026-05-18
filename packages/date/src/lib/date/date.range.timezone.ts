@@ -16,8 +16,8 @@ export type FitDateRangeToDayPeriodFunction = (<T extends DateRange>(dateRange: 
  *
  * The function first normalizes the range into the target timezone, fits it to a 24-hour period, then converts back.
  *
- * @param timezone - the timezone to use for the day period calculation
- * @returns a function that fits any date range to a single day period
+ * @param timezone - Timezone applied when collapsing the range to a single day.
+ * @returns Fitter that snaps any range to a single-day window in the bound timezone.
  *
  * @example
  * ```ts
@@ -26,6 +26,7 @@ export type FitDateRangeToDayPeriodFunction = (<T extends DateRange>(dateRange: 
  * const fitted = fit(range);
  * // fitted spans from 10:00 to 14:00 on the same day (4 hours)
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function fitDateRangeToDayPeriodFunction(timezone: DateTimezoneUtcNormalFunctionInput): FitDateRangeToDayPeriodFunction {
@@ -40,9 +41,9 @@ export function fitDateRangeToDayPeriodFunction(timezone: DateTimezoneUtcNormalF
  *
  * Convenience wrapper around {@link fitDateRangeToDayPeriodFunction}.
  *
- * @param dateRange - the range to fit
- * @param timezone - the timezone for day boundary calculation
- * @returns the date range fitted to a single day period
+ * @param dateRange - Range to collapse onto a single calendar day.
+ * @param timezone - Timezone governing the day boundary calculation.
+ * @returns Range snapped to a single-day window in the target timezone.
  */
 export function fitDateRangeToDayPeriod<T extends DateRange = DateRange>(dateRange: T, timezone: DateTimezoneUtcNormalFunctionInput): T {
   return fitDateRangeToDayPeriodFunction(timezone)(dateRange);

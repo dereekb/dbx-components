@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 import { ANGULAR_COMPONENT_DECORATORS, type AstNode, CLEAN_HELPER, CLEAN_SUBSCRIPTION_HELPER, DBX_COMPONENTS_DBX_CORE_MODULE, DBX_COMPONENTS_RXJS_MODULE, type ImportRegistry, SUBSCRIPTION_OBJECT_NAME, createImportRegistry, ensureNamedImportFix, findAngularComponentDecorator, findNgOnDestroyMethod, getClassMemberName, isCalledIdentifier, isDeclareProperty, isImportedFrom, isStaticProperty, isThisMemberAccess, trackImportDeclaration } from './util';
 
 /**
@@ -43,7 +44,7 @@ interface BuildSubscriptionObjectFixInput {
   /**
    * The class's `ngOnDestroy()` MethodDefinition node, or null.
    */
-  readonly ngOnDestroy: AstNode | null;
+  readonly ngOnDestroy: Maybe<AstNode>;
   /**
    * The file's import registry, mutated as fixes are queued.
    */
@@ -96,7 +97,7 @@ export interface CollectNgOnDestroyRemovalFixesInput {
  * - Inserts the `cleanSubscription` named import from `@dereekb/dbx-core` if missing.
  * - Removes any matching `this.<field>.destroy();` line from the same class's `ngOnDestroy`.
  */
-export const dbxWebRequireCleanSubscriptionRule: DbxWebRequireCleanSubscriptionRuleDefinition = {
+export const DBX_WEB_REQUIRE_CLEAN_SUBSCRIPTION_RULE: DbxWebRequireCleanSubscriptionRuleDefinition = {
   meta: {
     type: 'problem',
     fixable: 'code',
@@ -200,10 +201,10 @@ function isUnwrappedSubscriptionObjectNew(expression: AstNode, registry: ImportR
  * @param input - The flagged expression, its property name, the class's ngOnDestroy node, the import registry, and source-code services.
  * @returns A list of fix operations, or null when no fix is producible.
  */
-function buildSubscriptionObjectFix(input: BuildSubscriptionObjectFixInput): AstNode[] | null {
+function buildSubscriptionObjectFix(input: BuildSubscriptionObjectFixInput): Maybe<AstNode[]> {
   const { fixer, newExpr, propName, ngOnDestroy, registry, sourceCode } = input;
   const calleeRange = newExpr.callee?.range;
-  let fixes: AstNode[] | null = null;
+  let fixes: Maybe<AstNode[]> = null;
 
   if (calleeRange) {
     const collected: AstNode[] = [];

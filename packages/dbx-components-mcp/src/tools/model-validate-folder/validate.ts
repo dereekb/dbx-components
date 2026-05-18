@@ -14,11 +14,11 @@ import type { FolderInspection, ValidationResult } from './types.js';
  * Runs the rules layer over each prepared folder inspection and aggregates
  * the violations and counts.
  *
- * @param inspections - the folder snapshots to validate
- * @param options - optional per-call overrides forwarded to the per-file
+ * @param inspections - The folder snapshots to validate.
+ * @param options - Optional per-call overrides forwarded to the per-file
  *   content validator (field-name length limit, ignored field names,
  *   ignored external sub-object parents)
- * @returns the aggregated validation outcome with counts and violations
+ * @returns The aggregated validation outcome with counts and violations.
  */
 export function validateModelFolders(inspections: readonly FolderInspection[], options?: RuleOptions): ValidationResult {
   return aggregateFolderRules({ inspections, runRules: (inspection) => runRules(inspection, options) });

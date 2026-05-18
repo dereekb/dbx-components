@@ -203,7 +203,9 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
 
     let open: Maybe<boolean>;
 
-    if (!forced) {
+    if (forced) {
+      open = toggleOpen;
+    } else {
       switch (mode) {
         case SideNavDisplayMode.MOBILE:
           open = toggleOpen;
@@ -215,8 +217,6 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
         default:
           break;
       }
-    } else {
-      open = toggleOpen;
     }
 
     if (open != null) {

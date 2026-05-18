@@ -73,7 +73,7 @@ export const zohoAccessTokenSystemStateDataConverter: SystemStateStoredDataField
  * Loads the {@link SystemStateDocument} that stores {@link ZohoAccessTokenSystemStateData},
  * using {@link ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE} as the document ID.
  *
- * @param accessor - the document accessor for the SystemState collection.
+ * @param accessor - The document accessor for the SystemState collection.
  * @returns The SystemState document for the Zoho access token data.
  *
  * @example

@@ -14,9 +14,9 @@ type Depth = 'brief' | 'full';
 /**
  * Formats a single form entry as markdown at the requested depth.
  *
- * @param field - the registry entry to render
- * @param depth - `'brief'` for a tight summary or `'full'` for the config table and example
- * @returns the markdown body the tool emits as content
+ * @param field - The registry entry to render.
+ * @param depth - `'brief'` for a tight summary or `'full'` for the config table and example.
+ * @returns The markdown body the tool emits as content.
  */
 export function formatFormFieldEntry(field: FormFieldInfo, depth: Depth): string {
   return depth === 'brief' ? formatBrief(field) : formatFull(field);
@@ -127,34 +127,37 @@ function formatExampleSection(field: FormFieldInfo): string {
  * Formats a list of form entries — used when a query (slug/alias that
  * matches a produces value, or `list` topic) returns multiple candidates.
  *
- * @param fields - the entries to render, grouped by tier internally
- * @param title - heading shown at the top of the rendered list
- * @returns the markdown body the tool emits as content
+ * @param fields - The entries to render, grouped by tier internally.
+ * @param title - Heading shown at the top of the rendered list.
+ * @returns The markdown body the tool emits as content.
  */
 export function formatFormFieldGroup(fields: readonly FormFieldInfo[], title: string): string {
+  let output: string;
   if (fields.length === 0) {
-    return `_No form entries matched._`;
-  }
-  const byTier = new Map<string, FormFieldInfo[]>();
-  for (const field of fields) {
-    const list = byTier.get(field.tier) ?? [];
-    list.push(field);
-    byTier.set(field.tier, list);
-  }
+    output = `_No form entries matched._`;
+  } else {
+    const byTier = new Map<string, FormFieldInfo[]>();
+    for (const field of fields) {
+      const list = byTier.get(field.tier) ?? [];
+      list.push(field);
+      byTier.set(field.tier, list);
+    }
 
-  const sections: string[] = [`# ${title}`, ''];
-  for (const tier of FORM_TIER_ORDER) {
-    const list = byTier.get(tier);
-    if (!list || list.length === 0) {
-      continue;
+    const sections: string[] = [`# ${title}`, ''];
+    for (const tier of FORM_TIER_ORDER) {
+      const list = byTier.get(tier);
+      if (!list || list.length === 0) {
+        continue;
+      }
+      sections.push(`## ${tier} (${list.length})`, '');
+      for (const field of list) {
+        const arrayOptional = field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
+        const array = field.arrayOutput === 'yes' ? ' *(array)*' : arrayOptional;
+        sections.push(`- **\`${field.slug}\`** → \`${field.factoryName}\` — produces \`${field.produces}\`${array}. ${field.description}`);
+      }
+      sections.push('');
     }
-    sections.push(`## ${tier} (${list.length})`, '');
-    for (const field of list) {
-      const arrayOptional = field.arrayOutput === 'optional' ? ' *(single or array)*' : '';
-      const array = field.arrayOutput === 'yes' ? ' *(array)*' : arrayOptional;
-      sections.push(`- **\`${field.slug}\`** → \`${field.factoryName}\` — produces \`${field.produces}\`${array}. ${field.description}`);
-    }
-    sections.push('');
+    output = sections.join('\n').trimEnd();
   }
-  return sections.join('\n').trimEnd();
+  return output;
 }

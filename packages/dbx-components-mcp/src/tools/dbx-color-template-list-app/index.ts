@@ -22,8 +22,8 @@ import { extractColorTemplates } from './extract.js';
  * smell-check cross-reference call uses so the listing and cross-reference
  * stay in sync.
  *
- * @param inspection - the pre-loaded app inspection
- * @returns the listing report
+ * @param inspection - The pre-loaded app inspection.
+ * @returns The listing report.
  */
 export function listAppColorTemplates(inspection: ColorTemplateInspection): ColorTemplateListAppReport {
   const extracted = extractColorTemplates(inspection);

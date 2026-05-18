@@ -147,22 +147,26 @@ export function exponentialPromiseRateLimiter(initialConfig?: Maybe<ExponentialP
   }
 
   function _nextWaitTime(increasedExecutions: number): Milliseconds {
-    if (!enabled) {
-      return 0;
+    let waitTime: Milliseconds;
+
+    if (enabled) {
+      const { cooldownRate } = config;
+      const msSinceLastExecution = Date.now() - timeOfLastExecution.getTime();
+      const cooldown = (msSinceLastExecution * cooldownRate) / MS_IN_SECOND; // the cooldown amount
+      const count = Math.max(currentCount - cooldown, 0);
+      const effectiveCount = Math.max(0, count - config.startLimitAt);
+
+      if (increasedExecutions) {
+        currentCount = count + increasedExecutions;
+        timeOfLastExecution = new Date();
+      }
+
+      waitTime = effectiveCount >= countForMaxWaitTime ? config.maxWaitTime : (Math.pow(config.exponentRate, Math.max(effectiveCount, 0)) - 1) * MS_IN_SECOND;
+    } else {
+      waitTime = 0;
     }
 
-    const { cooldownRate } = config;
-    const msSinceLastExecution = Date.now() - timeOfLastExecution.getTime();
-    const cooldown = (msSinceLastExecution * cooldownRate) / MS_IN_SECOND; // the cooldown amount
-    const count = Math.max(currentCount - cooldown, 0);
-    const effectiveCount = Math.max(0, count - config.startLimitAt);
-
-    if (increasedExecutions) {
-      currentCount = count + increasedExecutions;
-      timeOfLastExecution = new Date();
-    }
-
-    return effectiveCount >= countForMaxWaitTime ? config.maxWaitTime : (Math.pow(config.exponentRate, Math.max(effectiveCount, 0)) - 1) * MS_IN_SECOND;
+    return waitTime;
   }
 
   function getNextWaitTime(increase?: number): Milliseconds {
@@ -323,27 +327,25 @@ export function resetPeriodPromiseRateLimiter(initialConfig: ResetPeriodPromiseR
   }
 
   function _nextWaitTime(increasedExecutions: number): Milliseconds {
-    if (!enabled) {
-      return 0;
-    }
-
-    function computeNextWaitTime(): Milliseconds {
-      remaining -= increasedExecutions;
-      return exponentialLimiter.getNextWaitTime(increasedExecutions);
-    }
-
     let waitTime: Milliseconds = 0;
 
-    if (remaining > 0) {
-      waitTime = computeNextWaitTime();
-    } else {
-      // if none remaining, try and reset
-      _checkRemainingReset();
+    if (enabled) {
+      function computeNextWaitTime(): Milliseconds {
+        remaining -= increasedExecutions;
+        return exponentialLimiter.getNextWaitTime(increasedExecutions);
+      }
 
       if (remaining > 0) {
         waitTime = computeNextWaitTime();
       } else {
-        waitTime = getTimeUntilNextReset();
+        // if none remaining, try and reset
+        _checkRemainingReset();
+
+        if (remaining > 0) {
+          waitTime = computeNextWaitTime();
+        } else {
+          waitTime = getTimeUntilNextReset();
+        }
       }
     }
 

@@ -58,28 +58,39 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError('Provide either `model` (PascalCase model name) or `identity` (the `<camelName>Identity` const string).');
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.apiDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const apiAbs = resolve(cwd, parsed.apiDir);
-  let extraction;
-  try {
-    extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
-  } catch (err) {
-    return toolError(`Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError === undefined) {
+    const apiAbs = resolve(cwd, parsed.apiDir);
+    let extraction;
+    let inspectError: string | undefined;
+    try {
+      extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
+    } catch (err) {
+      inspectError = `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (inspectError === undefined && extraction !== undefined) {
+      const lookupModel = parsed.model ?? identityToModel(parsed.identity as string);
+      const entry = extraction.entries.find((e) => e.model === lookupModel);
+      if (entry) {
+        const text = parsed.format === 'json' ? formatLookupAsJson(extraction, entry) : formatLookupAsMarkdown(extraction, entry);
+        result = { content: [{ type: 'text', text }] };
+      } else {
+        const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
+        const usedIdentity = parsed.identity && !parsed.model ? ` (resolved \`identity="${parsed.identity}"\` → \`${lookupModel}\`)` : '';
+        result = toolError(`Model \`${lookupModel}\` not found in \`${extraction.fixturePath}\`${usedIdentity}. Known: ${known}.`);
+      }
+    } else {
+      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
+    }
+  } else {
+    result = toolError(ensureError);
   }
-
-  const lookupModel = parsed.model ?? identityToModel(parsed.identity as string);
-  const entry = extraction.entries.find((e) => e.model === lookupModel);
-  if (!entry) {
-    const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
-    const usedIdentity = parsed.identity && !parsed.model ? ` (resolved \`identity="${parsed.identity}"\` → \`${lookupModel}\`)` : '';
-    return toolError(`Model \`${lookupModel}\` not found in \`${extraction.fixturePath}\`${usedIdentity}. Known: ${known}.`);
-  }
-  const text = parsed.format === 'json' ? formatLookupAsJson(extraction, entry) : formatLookupAsMarkdown(extraction, entry);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
@@ -88,8 +99,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
  * model name used as the fixture entry key. Strips the trailing
  * `Identity` suffix (case-insensitive) and PascalCases the remainder.
  *
- * @param identity - the identity const string (e.g. `profileIdentity`)
- * @returns the bare PascalCase model name (e.g. `Profile`)
+ * @param identity - The identity const string (e.g. `profileIdentity`)
+ * @returns The bare PascalCase model name (e.g. `Profile`)
  */
 function identityToModel(identity: string): string {
   const stem = identity.replace(/Identity$/i, '');
@@ -97,4 +108,4 @@ function identityToModel(identity: string): string {
   return stem.charAt(0).toUpperCase() + stem.slice(1);
 }
 
-export const modelFixtureLookupTool: DbxTool = { definition: TOOL, run };
+export const MODEL_FIXTURE_LOOKUP_TOOL: DbxTool = { definition: TOOL, run };

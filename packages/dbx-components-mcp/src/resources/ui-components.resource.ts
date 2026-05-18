@@ -31,8 +31,8 @@ export interface RegisterUiComponentsResourceOptions {
  * category and kind filters) on the given server. Mirrors the indexes used by
  * `dbx_ui_lookup` so browsing clients see the same access patterns.
  *
- * @param server - the MCP server to register resources against
- * @param options - registry the resources read from
+ * @param server - The MCP server to register resources against.
+ * @param options - Registry the resources read from.
  */
 export function registerUiComponentsResource(server: McpServer, options: RegisterUiComponentsResourceOptions): void {
   const { registry } = options;

@@ -17,15 +17,15 @@ export interface RandomEmailFactoryConfig {
   /**
    * Set of email prefixes to use
    */
-  prefixes?: ArrayOrValue<string>;
+  readonly prefixes?: ArrayOrValue<string>;
   /**
    * domains to use
    */
-  domains?: ArrayOrValue<EmailAddressDomain>;
+  readonly domains?: ArrayOrValue<EmailAddressDomain>;
   /**
    * Random number generator. Negative numbers are treated as an "ignored" value.
    */
-  numberFactory?: NumberFactory;
+  readonly numberFactory?: NumberFactory;
 }
 
 /**
@@ -42,14 +42,15 @@ export type RandomEmailFactory = Factory<EmailAddress>;
 /**
  * Creates a factory that generates random email addresses using configurable prefixes, domains, and number generators.
  *
+ * @param inputConfig - Optional configuration overrides.
+ * @returns A factory function that produces random email address strings.
+ *
  * @dbxUtil
  * @dbxUtilCategory contact
  * @dbxUtilKind factory
  * @dbxUtilTags contact, email, random, factory, generate
  * @dbxUtilRelated random-phone-number-factory, incrementing-number-factory
  *
- * @param inputConfig - Optional configuration overrides
- * @returns A factory function that produces random email address strings
  * @__NO_SIDE_EFFECTS__
  */
 export function randomEmailFactory(inputConfig?: RandomEmailFactoryConfig): RandomEmailFactory {
@@ -76,11 +77,11 @@ export interface RandomPhoneNumberFactoryConfig {
   /**
    * Set of interntional numbers to use.
    */
-  internationalAreaCodes?: ArrayOrValue<number>;
+  readonly internationalAreaCodes?: ArrayOrValue<number>;
   /**
    * Random number generator. Should generate a 10-digit number. Generated numbers are not validated.
    */
-  numberFactory?: NumberFactory;
+  readonly numberFactory?: NumberFactory;
 }
 
 /**
@@ -100,14 +101,15 @@ export type RandomPhoneNumberFactory = Factory<E164PhoneNumber>;
 /**
  * Creates a factory that generates random E.164 phone numbers using configurable area codes and number generators.
  *
+ * @param inputConfig - Optional configuration overrides.
+ * @returns A factory function that produces random E.164 phone number strings.
+ *
  * @dbxUtil
  * @dbxUtilCategory contact
  * @dbxUtilKind factory
  * @dbxUtilTags contact, phone, e164, random, factory, generate
  * @dbxUtilRelated random-email-factory, random-number-factory
  *
- * @param inputConfig - Optional configuration overrides
- * @returns A factory function that produces random E.164 phone number strings
  * @__NO_SIDE_EFFECTS__
  */
 export function randomPhoneNumberFactory(inputConfig?: RandomPhoneNumberFactoryConfig): RandomPhoneNumberFactory {

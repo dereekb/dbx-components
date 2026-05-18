@@ -116,9 +116,9 @@ export class DateTimeUtilityInstance {
   /**
    * Determines whether the given date falls in the AM or PM period for the specified timezone.
    *
-   * @param date - The date to check. Defaults to now.
+   * @param date - Moment to classify; defaults to the current date/time.
    * @param timezone - Overrides the instance's configured timezone for this call.
-   * @returns {@link TimeAM.AM} or {@link TimeAM.PM} depending on the time of day.
+   * @returns Either {@link TimeAM.AM} or {@link TimeAM.PM} depending on the time of day.
    *
    * @example
    * ```ts
@@ -134,9 +134,9 @@ export class DateTimeUtilityInstance {
   /**
    * Formats a date as a human-readable time string (e.g., "1:30PM") in the given timezone.
    *
-   * @param date - The date to format.
+   * @param date - Moment to render.
    * @param timezone - Overrides the instance's configured timezone for this call.
-   * @returns The formatted time string (e.g., "1:30PM").
+   * @returns Formatted time string (e.g., "1:30PM").
    *
    * @example
    * ```ts
@@ -212,133 +212,132 @@ export class DateTimeUtilityInstance {
 
   _timeStringToDate(input: ReadableTimeString | LogicalDateStringCode, config: ParseTimeString = {}): DateFromTimestringResult | ValidDateFromTimestringResult {
     const { date: inputDate = new Date() } = config;
+    let output: DateFromTimestringResult | ValidDateFromTimestringResult = { valid: false };
 
-    if (!input) {
-      return { valid: false };
-    }
+    if (input) {
+      input = input.trim();
 
-    input = input.trim();
+      let systemParsedDateTime: Maybe<Date>;
+      let valid = false;
 
-    let systemParsedDateTime: Maybe<Date>;
-    let valid = false;
+      function parseTimeString() {
+        const formats = [
+          'h:mma', // 1:20AM
+          'h:mm a', // 1:20 AM
+          'h a', // 1 AM
+          'ha', // 1AM
+          'h:mm', // 1:20
+          'HH:mm' // 01:20
+        ];
 
-    function parseTimeString() {
-      const formats = [
-        'h:mma', // 1:20AM
-        'h:mm a', // 1:20 AM
-        'h a', // 1 AM
-        'ha', // 1AM
-        'h:mm', // 1:20
-        'HH:mm' // 01:20
-      ];
+        // tslint:disable-next-line: prefer-for-of
+        for (const format of formats) {
+          systemParsedDateTime = parse(input, format, relativeDate);
 
-      // tslint:disable-next-line: prefer-for-of
-      for (const format of formats) {
-        systemParsedDateTime = parse(input, format, relativeDate);
+          if (isValidDate(systemParsedDateTime)) {
+            valid = true;
+            break; // Use time.
+          }
+        }
 
-        if (isValidDate(systemParsedDateTime)) {
-          valid = true;
-          break; // Use time.
+        let removedPm = false;
+
+        function removeAmPm(inputString: string): string {
+          inputString = inputString.toLowerCase();
+          removedPm = inputString.includes('pm');
+          inputString = inputString.replaceAll(/am|pm/g, '');
+          return inputString;
+        }
+
+        function parseDateTimeFromNumber(inputString: string): Date {
+          const hour = inputString[0];
+          const minute = inputString[1] + inputString[2];
+          return parse(`${hour}:${minute}AM`, 'h:mma', relativeDate);
+        }
+
+        function parseDateTimeAsHmm(inputString: string): Date {
+          return parse(inputString, 'Hmm', relativeDate);
+        }
+
+        if (!valid) {
+          input = input.trim().replaceAll(/\s+/g, '');
+
+          switch (input.length) {
+            case 1:
+            case 2:
+              // 1
+              systemParsedDateTime = parse(input, 'H', relativeDate);
+              break;
+            case 5:
+              // 120AM
+              input = removeAmPm(input);
+              systemParsedDateTime = parseDateTimeFromNumber(input);
+              break;
+            case 3:
+              // 120
+              systemParsedDateTime = parseDateTimeFromNumber(input);
+              break;
+            case 6:
+              // 1212AM
+              removeAmPm(input);
+
+              if (removedPm) {
+                removedPm = input[0] !== '2'; // If 2, ignore the PM part.
+              }
+
+              systemParsedDateTime = parseDateTimeAsHmm(input);
+              break;
+            default:
+              // 2200
+              systemParsedDateTime = parseDateTimeAsHmm(input);
+              break;
+          }
+
+          if (removedPm) {
+            systemParsedDateTime = addHours(systemParsedDateTime, 12);
+          }
+
+          valid = isValidDate(systemParsedDateTime);
         }
       }
 
-      let removedPm = false;
+      /*
+       The input date needs to capture the right Day we want to parse on, since parse uses the system's information for hours/date information.
+       We do this by adding the offset of the system with the offset of the target timezone.
+       */
+      const relativeDateNormal = isValidDateTimezoneConversionConfig(config) ? new DateTimezoneUtcNormalInstance({ ...config }) : this.normalInstance;
+      const relativeDate = relativeDateNormal.systemDateToTargetDate(inputDate);
 
-      function removeAmPm(inputString: string): string {
-        inputString = inputString.toLowerCase();
-        removedPm = inputString.includes('pm');
-        inputString = inputString.replaceAll(/am|pm/g, '');
-        return inputString;
-      }
+      // console.log('Relative Date: ', relativeDate, calculateAllConversions(inputDate, relativeDateNormal, (x) => millisecondsToHours(x)));
 
-      function parseDateTimeFromNumber(inputString: string): Date {
-        const hour = inputString[0];
-        const minute = inputString[1] + inputString[2];
-        return parse(`${hour}:${minute}AM`, 'h:mma', relativeDate);
-      }
-
-      function parseDateTimeAsHmm(inputString: string): Date {
-        return parse(inputString, 'Hmm', relativeDate);
-      }
-
-      if (!valid) {
-        input = input.trim().replaceAll(/\s+/g, '');
-
-        switch (input.length) {
-          case 1:
-          case 2:
-            // 1
-            systemParsedDateTime = parse(input, 'H', relativeDate);
-            break;
-          case 5:
-            // 120AM
-            input = removeAmPm(input);
-            systemParsedDateTime = parseDateTimeFromNumber(input);
-            break;
-          case 3:
-            // 120
-            systemParsedDateTime = parseDateTimeFromNumber(input);
-            break;
-          case 6:
-            // 1212AM
-            removeAmPm(input);
-
-            if (removedPm) {
-              removedPm = input[0] !== '2'; // If 2, ignore the PM part.
-            }
-
-            systemParsedDateTime = parseDateTimeAsHmm(input);
-            break;
-          default:
-            // 2200
-            systemParsedDateTime = parseDateTimeAsHmm(input);
-            break;
-        }
-
-        if (removedPm) {
-          systemParsedDateTime = addHours(systemParsedDateTime, 12);
-        }
-
+      if (isLogicalDateStringCode(input)) {
+        systemParsedDateTime = dateFromLogicalDate(input);
         valid = isValidDate(systemParsedDateTime);
+      } else {
+        parseTimeString();
       }
+
+      // console.log('Parsed: ', systemParsedDateTime, relativeDate, input, inputDate, relativeDateNormal, relativeDateNormal.configuredTimezoneString);
+
+      // Raw parse result is always UTC for that date.
+      // For example, 1AM will return 1AM UTC in a Date object.
+      let raw: Maybe<Date>;
+      let result: Maybe<Date>;
+
+      if (valid) {
+        // The parsed DateTime will be in the system settings for that date in as a UTC time.
+        raw = relativeDateNormal.baseDateToSystemDate(systemParsedDateTime as Date);
+        result = relativeDateNormal.targetDateToSystemDate(systemParsedDateTime as Date);
+
+        // console.log('Raw: ', input, systemParsedDateTime, differenceInHours(raw, systemParsedDateTime!), raw, differenceInHours(raw, result), result, this.normalInstance.config);
+      }
+
+      output = {
+        raw,
+        result,
+        valid
+      };
     }
-
-    /*
-     The input date needs to capture the right Day we want to parse on, since parse uses the system's information for hours/date information.
-     We do this by adding the offset of the system with the offset of the target timezone.
-     */
-    const relativeDateNormal = isValidDateTimezoneConversionConfig(config) ? new DateTimezoneUtcNormalInstance({ ...config }) : this.normalInstance;
-    const relativeDate = relativeDateNormal.systemDateToTargetDate(inputDate);
-
-    // console.log('Relative Date: ', relativeDate, calculateAllConversions(inputDate, relativeDateNormal, (x) => millisecondsToHours(x)));
-
-    if (isLogicalDateStringCode(input)) {
-      systemParsedDateTime = dateFromLogicalDate(input);
-      valid = isValidDate(systemParsedDateTime);
-    } else {
-      parseTimeString();
-    }
-
-    // console.log('Parsed: ', systemParsedDateTime, relativeDate, input, inputDate, relativeDateNormal, relativeDateNormal.configuredTimezoneString);
-
-    // Raw parse result is always UTC for that date.
-    // For example, 1AM will return 1AM UTC in a Date object.
-    let raw: Maybe<Date>;
-    let result: Maybe<Date>;
-
-    if (valid) {
-      // The parsed DateTime will be in the system settings for that date in as a UTC time.
-      raw = relativeDateNormal.baseDateToSystemDate(systemParsedDateTime as Date);
-      result = relativeDateNormal.targetDateToSystemDate(systemParsedDateTime as Date);
-
-      // console.log('Raw: ', input, systemParsedDateTime, differenceInHours(raw, systemParsedDateTime!), raw, differenceInHours(raw, result), result, this.normalInstance.config);
-    }
-
-    const output: DateFromTimestringResult | ValidDateFromTimestringResult = {
-      raw,
-      result,
-      valid
-    };
 
     return output;
   }
@@ -394,9 +393,9 @@ export function dateTimeInstance(timezone?: Maybe<TimezoneString>): DateTimeUtil
 /**
  * Determines whether the given date falls in the AM or PM period for the specified timezone.
  *
- * @param date - The date to check. Defaults to now.
- * @param timezone - The IANA timezone to evaluate in. Defaults to UTC.
- * @returns {@link TimeAM.AM} or {@link TimeAM.PM} depending on the time of day.
+ * @param date - Moment to classify; defaults to the current date/time.
+ * @param timezone - IANA timezone applied when interpreting the moment. Defaults to UTC.
+ * @returns Either {@link TimeAM.AM} or {@link TimeAM.PM} depending on the time of day.
  *
  * @example
  * ```ts
@@ -414,8 +413,8 @@ export function getTimeAM(date = new Date(), timezone?: Maybe<TimezoneString>): 
  * Formats a date as a readable time string (e.g., "1:30PM") using the system's local timezone,
  * unlike {@link toReadableTimeString} which defaults to UTC.
  *
- * @param date - The date to format.
- * @returns The formatted time string in the system's local timezone.
+ * @param date - Moment to render.
+ * @returns Formatted time string interpreted in the system's local timezone.
  *
  * @example
  * ```ts
@@ -429,9 +428,9 @@ export function toLocalReadableTimeString(date: Date): ReadableTimeString {
 /**
  * Formats a date as a human-readable time string (e.g., "1:30PM") in the given timezone.
  *
- * @param date - The date to format.
- * @param timezone - The IANA timezone to format in. Defaults to UTC.
- * @returns The formatted time string (e.g., "10:30AM").
+ * @param date - Moment to render.
+ * @param timezone - IANA timezone applied when interpreting the moment. Defaults to UTC.
+ * @returns Formatted time string (e.g., "10:30AM").
  *
  * @example
  * ```ts

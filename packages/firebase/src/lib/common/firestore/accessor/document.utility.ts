@@ -10,9 +10,9 @@ import { type FirestoreDocumentData, type FirestoreDocument, type FirestoreDocum
  * but no data is written to the database. Useful for preparing document references in bulk before
  * deciding what data to write.
  *
- * @param documentAccessor - Accessor that provides the `newDocument()` factory method
- * @param count - Number of document instances to create
- * @returns Array of `count` new document instances, each with a unique auto-generated ID
+ * @param documentAccessor - Accessor that provides the `newDocument()` factory method.
+ * @param count - Number of document instances to create.
+ * @returns Array of `count` new document instances, each with a unique auto-generated ID.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -69,15 +69,16 @@ export interface MakeDocumentsParams<T, D extends FirestoreDocument<T> = Firesto
  *
  * Documents are created sequentially (not in parallel) to allow index-dependent logic.
  *
- * @param documentAccessor - Accessor providing the document factory and collection context
- * @param make - Configuration controlling count, factory, and initialization
+ * @param documentAccessor - Accessor providing the document factory and collection context.
+ * @param make - Configuration controlling count, factory, and initialization.
  * @returns Promise resolving to all created document instances (length === `make.count`)
- * @__NO_SIDE_EFFECTS__
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
  * @dbxUtilTags firestore, document, accessor, make, create, persist, bulk, fixture, seed
  * @dbxUtilRelated new-documents
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccessor: FirestoreDocumentAccessor<T, D>, make: MakeDocumentsParams<T, D>): Promise<D[]> {
   const newDocumentFn = make.newDocument ?? (() => documentAccessor.newDocument());
@@ -103,8 +104,8 @@ export function makeDocuments<T, D extends FirestoreDocument<T>>(documentAccesso
  * Each document's `accessor.get()` is called concurrently. The returned array preserves
  * the same ordering as the input `documents` array.
  *
- * @param documents - Documents to fetch snapshots for
- * @returns Snapshots in the same order as the input array
+ * @param documents - Documents to fetch snapshots for.
+ * @returns Snapshots in the same order as the input array.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -135,8 +136,8 @@ export type FirestoreDocumentSnapshotPair<D extends FirestoreDocument<any>> = {
 /**
  * Fetches the current snapshot of a single document and pairs it with the document instance.
  *
- * @param document - The document to fetch
- * @returns A pair containing the document and its snapshot
+ * @param document - The document to fetch.
+ * @returns A pair containing the document and its snapshot.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -150,8 +151,8 @@ export function getDocumentSnapshotPair<D extends FirestoreDocument<any>>(docume
 /**
  * Fetches snapshots for multiple documents in parallel and pairs each with its document instance.
  *
- * @param documents - Documents to fetch
- * @returns Pairs in the same order as the input array
+ * @param documents - Documents to fetch.
+ * @returns Pairs in the same order as the input array.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -199,7 +200,7 @@ export interface FirestoreDocumentSnapshotDataPairWithData<D extends FirestoreDo
 /**
  * Fetches a document's snapshot, extracts its data with `id`/`key` fields, and returns all three as a triplet.
  *
- * @param document - The document to fetch
+ * @param document - The document to fetch.
  * @returns A triplet of document, snapshot, and data (data may be `undefined` if the document doesn't exist)
  *
  * @dbxUtil
@@ -217,8 +218,8 @@ export function getDocumentSnapshotDataPair<D extends FirestoreDocument<any>>(do
  * Processes up to 200 documents concurrently via {@link runAsyncTasksForValues}.
  * The returned array preserves the same ordering as the input.
  *
- * @param documents - Documents to fetch
- * @returns Triplets in the same order as the input array
+ * @param documents - Documents to fetch.
+ * @returns Triplets in the same order as the input array.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -237,8 +238,8 @@ export function getDocumentSnapshotDataPairs<D extends FirestoreDocument<any>>(d
  * Convenience wrapper around {@link getDocumentSnapshotDataPairs} that removes entries where `data` is nullish,
  * returning only {@link FirestoreDocumentSnapshotDataPairWithData} results.
  *
- * @param documents - Documents to fetch
- * @returns Triplets for documents that exist, in their original relative order
+ * @param documents - Documents to fetch.
+ * @returns Triplets for documents that exist, in their original relative order.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -262,8 +263,8 @@ export type FirestoreDocumentSnapshotDataTuple<D extends FirestoreDocument<any>>
  * and does not inject `id`/`key` fields onto the data. The `data` value is the raw result of
  * `snapshot.data()` and may be `undefined` for non-existent documents.
  *
- * @param documents - Documents to fetch
- * @returns Tuples in the same order as the input array
+ * @param documents - Documents to fetch.
+ * @returns Tuples in the same order as the input array.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -353,9 +354,9 @@ export function getDataFromDocumentSnapshots<T>(snapshots: DocumentSnapshot<T>[]
  * Maps each document in `snapshots.docs` to a loaded document via `accessor.loadDocument(ref)`.
  * No additional data fetching occurs; the documents are loaded from their existing references.
  *
- * @param accessor - Accessor to load documents with
- * @param snapshots - Query snapshot containing the document references
- * @returns Document instances in the same order as the query results
+ * @param accessor - Accessor to load documents with.
+ * @param snapshots - Query snapshot containing the document references.
+ * @returns Document instances in the same order as the query results.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -371,10 +372,10 @@ export function loadDocumentsForSnapshots<T, D extends FirestoreDocument<T>>(acc
  *
  * Convenience function that maps values through `getRef` then delegates to {@link loadDocumentsForDocumentReferences}.
  *
- * @param accessor - Accessor to load documents with
- * @param values - Source values to extract references from
- * @param getRef - Extracts a document reference from each value
- * @returns Document instances in the same order as the input values
+ * @param accessor - Accessor to load documents with.
+ * @param values - Source values to extract references from.
+ * @param getRef - Extracts a document reference from each value.
+ * @returns Document instances in the same order as the input values.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -396,9 +397,9 @@ export const loadDocumentsForValues = loadDocumentsForDocumentReferencesFromValu
  * Each reference is passed to `accessor.loadDocument()` to create a document wrapper.
  * No network calls are made; this only creates in-memory document instances bound to the given references.
  *
- * @param accessor - Accessor to load documents with
- * @param refs - Document references to load
- * @returns Document instances in the same order as the input references
+ * @param accessor - Accessor to load documents with.
+ * @param refs - Document references to load.
+ * @returns Document instances in the same order as the input references.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -414,10 +415,10 @@ export function loadDocumentsForDocumentReferences<T, D extends FirestoreDocumen
  *
  * Convenience function that maps values through `getKey` then delegates to {@link loadDocumentsForKeys}.
  *
- * @param accessor - Accessor to load documents with
- * @param values - Source values to extract keys from
- * @param getKey - Extracts a model key (full Firestore path) from each value
- * @returns Document instances in the same order as the input values
+ * @param accessor - Accessor to load documents with.
+ * @param values - Source values to extract keys from.
+ * @param getKey - Extracts a model key (full Firestore path) from each value.
+ * @returns Document instances in the same order as the input values.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -433,9 +434,9 @@ export function loadDocumentsForKeysFromValues<I, T, D extends FirestoreDocument
  *
  * Each key is passed to `accessor.loadDocumentForKey()`. No network calls are made.
  *
- * @param accessor - Accessor to load documents with
+ * @param accessor - Accessor to load documents with.
  * @param keys - Full Firestore document paths (e.g. `'users/abc123'`)
- * @returns Document instances in the same order as the input keys
+ * @returns Document instances in the same order as the input keys.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -453,9 +454,9 @@ export function loadDocumentsForKeys<T, D extends FirestoreDocument<T>>(accessor
  * Requires a full {@link FirestoreDocumentAccessor} (not limited) because loading by ID requires collection context.
  *
  * @param accessor - Accessor to load documents with (must have collection context for ID resolution)
- * @param values - Source values to extract IDs from
- * @param getId - Extracts a model ID from each value
- * @returns Document instances in the same order as the input values
+ * @param values - Source values to extract IDs from.
+ * @param getId - Extracts a model ID from each value.
+ * @returns Document instances in the same order as the input values.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -473,8 +474,8 @@ export function loadDocumentsForIdsFromValues<I, T, D extends FirestoreDocument<
  * because ID-based loading needs the collection reference to resolve the full path. No network calls are made.
  *
  * @param accessor - Accessor to load documents with (must have collection context)
- * @param ids - Document IDs within the accessor's collection
- * @returns Document instances in the same order as the input IDs
+ * @param ids - Document IDs within the accessor's collection.
+ * @returns Document instances in the same order as the input IDs.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -499,15 +500,16 @@ export type FirestoreDocumentLoader<T, D extends FirestoreDocument<T>> = (refere
  * The returned loader resolves the appropriate accessor based on whether a transaction is provided,
  * then delegates to {@link loadDocumentsForDocumentReferences}.
  *
- * @param accessorContext - Context that provides accessors for both default and transactional use
- * @returns A loader function that converts document references to document instances
- * @__NO_SIDE_EFFECTS__
+ * @param accessorContext - Context that provides accessors for both default and transactional use.
+ * @returns A loader function that converts document references to document instances.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
  * @dbxUtilKind factory
  * @dbxUtilTags firestore, document, loader, factory, transaction, accessor, context
  * @dbxUtilRelated firestore-document-snapshot-pairs-loader, load-documents-for-document-references
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDocumentLoader<T, D extends FirestoreDocument<T>>(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentLoader<T, D> {
   return (references: DocumentReference<T>[], transaction?: Transaction) => {
@@ -541,15 +543,16 @@ export type FirestoreQueryDocumentSnapshotPairsLoader<T, D extends FirestoreDocu
  * Also satisfies the {@link FirestoreQueryDocumentSnapshotPairsLoader} type since the implementation
  * handles both {@link DocumentSnapshot} and {@link QueryDocumentSnapshot} inputs.
  *
- * @param accessorContext - Context that provides accessors for both default and transactional use
- * @returns A loader function that converts snapshots to document-snapshot-data pairs
- * @__NO_SIDE_EFFECTS__
+ * @param accessorContext - Context that provides accessors for both default and transactional use.
+ * @returns A loader function that converts snapshots to document-snapshot-data pairs.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
  * @dbxUtilKind factory
  * @dbxUtilTags firestore, snapshot, pair, loader, factory, transaction, accessor, query, context
  * @dbxUtilRelated firestore-document-snapshot-pairs-loader-instance, firestore-query-document-snapshot-pairs-loader, firestore-document-loader
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDocumentSnapshotPairsLoader<T, D extends FirestoreDocument<T>>(accessorContext: LimitedFirestoreDocumentAccessorContextExtension<T, D>): FirestoreDocumentSnapshotPairsLoader<T, D> & FirestoreQueryDocumentSnapshotPairsLoader<T, D> {
   return (snapshots: QueryDocumentSnapshot<T>[] | DocumentSnapshot<T>[], transaction?: Transaction) => {
@@ -581,15 +584,16 @@ export type FirestoreDocumentSnapshotPairsLoaderInstance<T, D extends FirestoreD
  * 2. Loading the document from the snapshot's reference via `accessor.loadDocument()`
  * 3. Combining all three into a single pair object
  *
- * @param accessor - The accessor to bind for document loading
- * @returns A reusable function that converts snapshots to pairs using the bound accessor
- * @__NO_SIDE_EFFECTS__
+ * @param accessor - The accessor to bind for document loading.
+ * @returns A reusable function that converts snapshots to pairs using the bound accessor.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
  * @dbxUtilKind factory
  * @dbxUtilTags firestore, snapshot, pair, loader, factory, instance, accessor, idkey
  * @dbxUtilRelated firestore-document-snapshot-pairs-loader, document-data-with-id-and-key
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreDocumentSnapshotPairsLoaderInstance<T, D extends FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>): FirestoreDocumentSnapshotPairsLoaderInstance<T, D> {
   const fn = ((snapshot: QueryDocumentSnapshot<T> | DocumentSnapshot<T>) => {
@@ -719,7 +723,7 @@ export function documentDataWithIdAndKey<T>(snapshot: DocumentSnapshot<T>): Mayb
  * is modified in-place and also returned for chaining convenience.
  *
  * @param data - The data object to augment (mutated in-place)
- * @param snapshot - Source of the `id` and `key` values
+ * @param snapshot - Source of the `id` and `key` values.
  * @returns The same data object, now typed as {@link DocumentDataWithIdAndKey}
  *
  * @dbxUtil
@@ -744,7 +748,7 @@ export function setIdAndKeyFromSnapshotOnDocumentData<T>(data: T, snapshot: Docu
  * The data object is modified in-place and also returned for chaining convenience.
  *
  * @param data - The data object to augment (mutated in-place)
- * @param modelRef - Source of the `id` and `key` values
+ * @param modelRef - Source of the `id` and `key` values.
  * @returns The same data object, now typed as {@link DocumentDataWithIdAndKey}
  *
  * @dbxUtil
@@ -767,10 +771,10 @@ export function setIdAndKeyFromKeyIdRefOnDocumentData<T>(data: T, modelRef: Fire
  * If `document` is nullish, the `use` callback is not invoked and `defaultValue` is returned instead.
  * If `document` exists but the snapshot is nullish (shouldn't happen in practice), `defaultValue` is also used.
  *
- * @param document - The document to fetch, or nullish to skip
- * @param use - Callback that receives the fetched snapshot and returns a result
- * @param defaultValue - Fallback value when `document` is nullish or the snapshot is unavailable
- * @returns The result of `use`, or the default value
+ * @param document - The document to fetch, or nullish to skip.
+ * @param use - Callback that receives the fetched snapshot and returns a result.
+ * @param defaultValue - Fallback value when `document` is nullish or the snapshot is unavailable.
+ * @returns The result of `use`, or the default value.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -808,14 +812,15 @@ export const useDocumentSnapshotData = wrapUseAsyncFunction(useDocumentSnapshot,
  *
  * Useful as a mapper function, e.g. `documents.map(firestoreModelIdFromDocument)`.
  *
- * @param document - The document to extract the ID from
+ * @param document - The document to extract the ID from.
  * @returns The document's ID (the last segment of its Firestore path)
- * @__NO_SIDE_EFFECTS__
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
  * @dbxUtilTags firestore, document, id, accessor, mapper, key
  * @dbxUtilRelated firestore-model-ids-from-documents, firestore-model-key-from-document
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelIdFromDocument<T, D extends FirestoreDocument<T>>(document: D): FirestoreModelId {
   return document.id;
@@ -824,14 +829,15 @@ export function firestoreModelIdFromDocument<T, D extends FirestoreDocument<T>>(
 /**
  * Extracts document IDs from an array of {@link FirestoreDocument}s.
  *
- * @param documents - Documents to extract IDs from
- * @returns Array of document IDs in the same order as the input
- * @__NO_SIDE_EFFECTS__
+ * @param documents - Documents to extract IDs from.
+ * @returns Array of document IDs in the same order as the input.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
  * @dbxUtilTags firestore, document, id, accessor, batch, mapper
  * @dbxUtilRelated firestore-model-id-from-document, firestore-model-keys-from-documents
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelIdsFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): FirestoreModelId[] {
   return documents.map(firestoreModelIdFromDocument);
@@ -842,14 +848,15 @@ export function firestoreModelIdsFromDocuments<T, D extends FirestoreDocument<T>
  *
  * Useful as a mapper function, e.g. `documents.map(firestoreModelKeyFromDocument)`.
  *
- * @param document - The document to extract the key from
+ * @param document - The document to extract the key from.
  * @returns The document's full Firestore path (e.g. `'users/abc123'`)
- * @__NO_SIDE_EFFECTS__
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
  * @dbxUtilTags firestore, document, key, path, accessor, mapper
  * @dbxUtilRelated firestore-model-keys-from-documents, firestore-model-id-from-document
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeyFromDocument<T, D extends FirestoreDocument<T>>(document: D): FirestoreModelKey {
   return document.key;
@@ -858,14 +865,15 @@ export function firestoreModelKeyFromDocument<T, D extends FirestoreDocument<T>>
 /**
  * Extracts full Firestore paths from an array of {@link FirestoreDocument}s.
  *
- * @param documents - Documents to extract keys from
- * @returns Array of full Firestore paths in the same order as the input
- * @__NO_SIDE_EFFECTS__
+ * @param documents - Documents to extract keys from.
+ * @returns Array of full Firestore paths in the same order as the input.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
  * @dbxUtilTags firestore, document, key, path, accessor, batch, mapper
  * @dbxUtilRelated firestore-model-key-from-document, firestore-model-ids-from-documents
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelKeysFromDocuments<T, D extends FirestoreDocument<T>>(documents: D[]): FirestoreModelKey[] {
   return documents.map(firestoreModelKeyFromDocument);
@@ -876,8 +884,8 @@ export function firestoreModelKeysFromDocuments<T, D extends FirestoreDocument<T
  *
  * Useful as a mapper function, e.g. `documents.map(documentReferenceFromDocument)`.
  *
- * @param document - The document to extract the reference from
- * @returns The underlying Firestore document reference
+ * @param document - The document to extract the reference from.
+ * @returns The underlying Firestore document reference.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -891,8 +899,8 @@ export function documentReferenceFromDocument<T, D extends FirestoreDocument<T>>
 /**
  * Extracts {@link DocumentReference}s from an array of {@link FirestoreDocument}s.
  *
- * @param documents - Documents to extract references from
- * @returns Array of document references in the same order as the input
+ * @param documents - Documents to extract references from.
+ * @returns Array of document references in the same order as the input.
  *
  * @dbxUtil
  * @dbxUtilCategory firestore
@@ -975,13 +983,13 @@ export interface LimitedFirestoreDocumentAccessorSnapshotCache<T, D extends Fire
  * best suited for short-lived scopes (e.g. a single request or batch operation) where stale reads
  * are acceptable.
  *
+ * @param accessor - The accessor to wrap with caching behavior.
+ * @returns A {@link LimitedFirestoreDocumentAccessorSnapshotCache} backed by the given accessor.
+ *
  * @dbxUtil
  * @dbxUtilCategory firestore
  * @dbxUtilKind factory
  * @dbxUtilTags firestore, cache, snapshot, accessor, deduplicate, memoize, reader
- *
- * @param accessor - The accessor to wrap with caching behavior
- * @returns A {@link LimitedFirestoreDocumentAccessorSnapshotCache} backed by the given accessor
  *
  * @example
  * ```typescript
@@ -997,6 +1005,7 @@ export interface LimitedFirestoreDocumentAccessorSnapshotCache<T, D extends Fire
  * // Access the underlying accessor directly
  * const doc = cache.accessor.loadDocumentForKey('users/xyz');
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function limitedFirestoreDocumentAccessorSnapshotCache<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(accessor: LimitedFirestoreDocumentAccessor<T, D>): LimitedFirestoreDocumentAccessorSnapshotCache<T, D> {

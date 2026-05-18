@@ -8,30 +8,30 @@ export type FileAcceptString = string;
 /**
  * Returns a string that can be used as the "accept" attribute of a file input element.
  *
- * @param accept - A file accept string or array of filter type strings to convert
- * @returns A comma-separated string suitable for the HTML accept attribute
+ * @param accept - A file accept string or array of filter type strings to convert.
+ * @returns A comma-separated string suitable for the HTML accept attribute.
  */
 export function fileAcceptString(accept: FileAcceptString | FileAcceptFilterTypeStringArray): FileAcceptString {
   return typeof accept === 'string' ? accept : accept.join(',');
 }
 
 /**
- * A string that describes a type of file that can be selected.
+ * Describes a type of file that can be selected.
  *
  * Can either be a mime type or a file suffix.
  */
 export type FileAcceptFilterTypeString = MimeTypeWildcard | MimeTypeWithoutParameters | MimeTypeWithSubtypeWildcardWithoutParameters | SlashPathTypedFileSuffix;
 
 /**
- * An array of file accept filter type strings.
+ * The file accept filter type strings.
  */
 export type FileAcceptFilterTypeStringArray = FileAcceptFilterTypeString[];
 
 /**
  * Converts a comma-separated accept string or array into a {@link FileAcceptFilterTypeStringArray}.
  *
- * @param accept - A file accept string or array of filter type strings to normalize
- * @returns An array of individual filter type strings
+ * @param accept - A file accept string or array of filter type strings to normalize.
+ * @returns The individual filter type strings.
  *
  * @example
  * ```ts
@@ -91,15 +91,15 @@ export interface FileArrayAcceptMatchResult {
 }
 
 /**
- * A function that matches an array of files based on the internal configuration.
+ * Matches an array of files based on the internal configuration.
  */
 export type FileArrayAcceptMatchFunction = (input: File[]) => FileArrayAcceptMatchResult;
 
 /**
  * Creates a {@link FileArrayAcceptMatchFunction} that filters and separates files based on accept criteria and multiple file support.
  *
- * @param config - Configuration specifying the accept criteria and whether multiple files are allowed
- * @returns A function that accepts an array of files and returns the categorized match result
+ * @param config - Configuration specifying the accept criteria and whether multiple files are allowed.
+ * @returns Accepts an array of files and returns the categorized match result.
  *
  * @example
  * ```ts
@@ -107,6 +107,7 @@ export type FileArrayAcceptMatchFunction = (input: File[]) => FileArrayAcceptMat
  * const result = matchFn(fileList);
  * console.log(result.accepted, result.rejected);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function fileArrayAcceptMatchFunction(config: FileArrayAcceptMatchConfig): FileArrayAcceptMatchFunction {
@@ -143,8 +144,8 @@ export type FileAcceptFunction = DecisionFunction<FileAcceptFunctionInput>;
 /**
  * Creates a {@link FileAcceptFunction} that checks individual files against accept criteria (MIME types, wildcards, or file extensions).
  *
- * @param accept - A file accept string or array specifying which MIME types, wildcards, or file extensions to allow
- * @returns A decision function that returns true if a file matches any of the accept criteria
+ * @param accept - A file accept string or array specifying which MIME types, wildcards, or file extensions to allow.
+ * @returns A decision function that returns true if a file matches any of the accept criteria.
  *
  * @example
  * ```ts
@@ -152,6 +153,7 @@ export type FileAcceptFunction = DecisionFunction<FileAcceptFunctionInput>;
  * isAccepted({ name: 'photo.png', type: 'image/png' }); // true
  * isAccepted({ name: 'doc.txt', type: 'text/plain' }); // false
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function fileAcceptFunction(accept: FileAcceptString | FileAcceptFilterTypeStringArray): FileAcceptFunction {

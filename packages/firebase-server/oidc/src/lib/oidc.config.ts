@@ -268,7 +268,7 @@ export abstract class OidcModuleConfig {
    *
    * Called by {@link oidcModuleConfigFactory} after building the config from environment variables.
    *
-   * @param config - the config object to validate
+   * @param config - The config object to validate.
    * @throws {Error} When any required field (`issuer`, `appInteractionPath`, `appLoginUrlPart`, `appConsentUrlPart`, `jwksServiceConfig`, `jwksKeyConverterConfig`) is missing.
    */
   static assertValidConfig(config: Partial<OidcModuleConfig>) {

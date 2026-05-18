@@ -5,6 +5,7 @@ import type { FieldWithValidation } from '@ng-forge/dynamic-forms';
  */
 export type DbxForgeFieldValidation = Pick<FieldWithValidation, 'validators' | 'validationMessages'>;
 
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use {@link DbxForgeFieldValidation} instead.
  */

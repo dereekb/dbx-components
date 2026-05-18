@@ -29,15 +29,15 @@ export interface ProvideDbxAppAuthRouterStateConfig {
  * @param config - Configuration specifying which app context states activate the auth router effects.
  * @returns Angular `EnvironmentProviders` for the auth router state effects.
  *
+ * @see {@link provideDbxAppAuth} for the all-in-one provider that includes this.
+ * @see {@link DbxAppAuthRouterEffects} for the effects that handle auth-based navigation.
+ *
  * @example
  * ```ts
  * provideDbxAppAuthRouterState({
  *   activeRoutesToApplyEffects: ['root']
  * });
  * ```
- *
- * @see {@link provideDbxAppAuth} for the all-in-one provider that includes this.
- * @see {@link DbxAppAuthRouterEffects} for the effects that handle auth-based navigation.
  */
 export function provideDbxAppAuthRouterState(config: ProvideDbxAppAuthRouterStateConfig): EnvironmentProviders {
   const { activeRoutesToApplyEffects } = config;

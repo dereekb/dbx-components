@@ -134,19 +134,21 @@ export function mergeOutputConfig(existing: Maybe<CliOutputConfig>, updates: Cli
 }
 
 function mergeOutputCommandsConfig(existing: CliOutputConfig['commands'], updates: CliOutputConfig): CliOutputConfig['commands'] {
-  if (!('commands' in updates)) {
-    return existing;
+  let result: CliOutputConfig['commands'];
+  if ('commands' in updates) {
+    if (updates.commands) {
+      const merged: Record<string, CliCommandOutputConfig> = { ...existing };
+      for (const key of Object.keys(updates.commands)) {
+        merged[key] = { ...existing?.[key], ...updates.commands[key] };
+      }
+      result = merged;
+    } else {
+      result = undefined;
+    }
+  } else {
+    result = existing;
   }
-
-  if (!updates.commands) {
-    return undefined;
-  }
-
-  const merged: Record<string, CliCommandOutputConfig> = { ...existing };
-  for (const key of Object.keys(updates.commands)) {
-    merged[key] = { ...existing?.[key], ...updates.commands[key] };
-  }
-  return merged;
+  return result;
 }
 
 export interface ResolveOutputConfigInput {
@@ -186,13 +188,13 @@ export function resolveOutputConfig(input: ResolveOutputConfigInput): { dumpDir?
  * @returns The masked string (`***` when the input is 4 chars or shorter), or the input unchanged when nullish.
  */
 export function maskSecret(value: Maybe<string>): Maybe<string> {
+  let result: Maybe<string>;
   if (value == null) {
-    return value;
+    result = value;
+  } else if (value.length <= 4) {
+    result = '***';
+  } else {
+    result = value.substring(0, 4) + '***';
   }
-
-  if (value.length <= 4) {
-    return '***';
-  }
-
-  return value.substring(0, 4) + '***';
+  return result;
 }

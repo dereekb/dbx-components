@@ -57,9 +57,9 @@ export interface LoadTokenManifestsResult {
  * registry suitable for the `dbx_css_token_lookup` and `dbx_ui_smell_check`
  * MCP tools.
  *
- * @param input - manifest sources plus an optional injected `readFile`
- * @returns merged entries, role index, deterministic warnings, and the list of source labels that loaded
- * @throws when a strict source fails or when zero manifests load successfully
+ * @param input - Manifest sources plus an optional injected `readFile`
+ * @returns Merged entries, role index, deterministic warnings, and the list of source labels that loaded.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadTokenManifests(input: LoadTokenManifestsInput): Promise<LoadTokenManifestsResult> {
   const { entries, indexMap, warnings, loadedSources } = await loadManifestsBase<TokenManifest, TokenEntry>(input, {

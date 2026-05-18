@@ -1,4 +1,5 @@
 import { BaseError } from 'make-error';
+import type { Maybe } from '@dereekb/util';
 import { type RequestInitWithTimeout, type RequestWithTimeout } from './fetch.type';
 
 export class FetchTimeoutError extends BaseError {
@@ -15,13 +16,13 @@ export class FetchTimeoutError extends BaseError {
  * is present on the RequestInit or Request and no abort signal is already provided,
  * an AbortController is created to abort the request after the specified duration.
  *
- * @param inputFetch - the fetch function to wrap with timeout behavior
- * @returns a wrapped fetch function that enforces timeouts via AbortController
+ * @param inputFetch - The fetch function to wrap with timeout behavior.
+ * @returns A wrapped fetch function that enforces timeouts via AbortController.
  */
 export function fetchTimeout(inputFetch: typeof fetch): typeof fetch {
-  return (input: RequestInfo | URL, init: RequestInit | undefined) => {
-    let controller: AbortController | undefined;
-    const timeout: number | null | undefined = (init as RequestInitWithTimeout | undefined)?.timeout ?? (input as RequestWithTimeout).timeout;
+  return (input: RequestInfo | URL, init: Maybe<RequestInit>) => {
+    let controller: Maybe<AbortController>;
+    const timeout: Maybe<number> = (init as Maybe<RequestInitWithTimeout>)?.timeout ?? (input as RequestWithTimeout).timeout;
 
     // if signal is not provided, and a timeout is specified, configure the timeout
     if (!init?.signal && timeout) {
@@ -34,7 +35,7 @@ export function fetchTimeout(inputFetch: typeof fetch): typeof fetch {
       };
     }
 
-    let responsePromise = inputFetch(input, init);
+    let responsePromise = inputFetch(input, init ?? undefined);
 
     if (timeout) {
       const timeoutId = setTimeout(() => {

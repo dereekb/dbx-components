@@ -84,8 +84,8 @@ function manipulateProjectTarget(tree: Tree, project: ProjectConfiguration, remo
  * which some tooling (e.g., Angular compiler) requires. Tags added targets
  * so they can be cleanly removed later.
  *
- * @param tree - the Nx virtual file system tree
- * @param options - generator options; set `remove` to true to strip previously added targets
+ * @param tree - The Nx virtual file system tree.
+ * @param options - Generator options; set `remove` to true to strip previously added targets.
  */
 export async function temporaryBuildTarget(tree: Tree, options: TemporaryBuildTargetGeneratorSchema) {
   const projects = getProjects(tree);

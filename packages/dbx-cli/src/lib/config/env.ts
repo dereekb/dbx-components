@@ -238,20 +238,21 @@ export function applyEnvVarOverrides(input: EnvVarOverrideInput): Maybe<CliEnvCo
   const scopes = process.env[`${prefix}_SCOPES`];
 
   const hasOverrides = apiBaseUrl || oidcIssuer || appClientUrl || clientId || clientSecret || redirectUri || scopes;
+  let result: Maybe<CliEnvConfig>;
 
   if (!input.env && !hasOverrides) {
-    return undefined;
+    result = undefined;
+  } else {
+    result = {
+      apiBaseUrl: apiBaseUrl ?? input.env?.apiBaseUrl ?? '',
+      oidcIssuer: oidcIssuer ?? input.env?.oidcIssuer ?? '',
+      appClientUrl: appClientUrl ?? input.env?.appClientUrl,
+      clientId: clientId ?? input.env?.clientId,
+      clientSecret: clientSecret ?? input.env?.clientSecret,
+      redirectUri: redirectUri ?? input.env?.redirectUri,
+      scopes: scopes ?? input.env?.scopes
+    };
   }
-
-  const result: CliEnvConfig = {
-    apiBaseUrl: apiBaseUrl ?? input.env?.apiBaseUrl ?? '',
-    oidcIssuer: oidcIssuer ?? input.env?.oidcIssuer ?? '',
-    appClientUrl: appClientUrl ?? input.env?.appClientUrl,
-    clientId: clientId ?? input.env?.clientId,
-    clientSecret: clientSecret ?? input.env?.clientSecret,
-    redirectUri: redirectUri ?? input.env?.redirectUri,
-    scopes: scopes ?? input.env?.scopes
-  };
 
   return result;
 }

@@ -36,8 +36,8 @@ export interface DateIntervalConfig {
  *
  * By default emits the current time every second and deduplicates consecutive equal dates.
  *
- * @param config - interval and date generation configuration
- * @returns an Observable that emits Date values
+ * @param config - Interval and date generation configuration.
+ * @returns An Observable that emits Date values.
  *
  * @example
  * ```ts
@@ -69,8 +69,8 @@ export function dateInterval(config: DateIntervalConfig): Observable<Date> {
  *
  * Unlike the default dateInterval, this always emits (no deduplication) since each "now" is unique.
  *
- * @param period - optional emission interval in milliseconds (defaults to 1 second)
- * @returns an Observable that emits the current Date
+ * @param period - Optional emission interval in milliseconds (defaults to 1 second)
+ * @returns An Observable that emits the current Date.
  *
  * @example
  * ```ts

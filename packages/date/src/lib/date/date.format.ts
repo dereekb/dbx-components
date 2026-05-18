@@ -52,8 +52,8 @@ export type FormatDateRangeFunctionConfigInput = FormatDateFunction | FormatDate
  *
  * Useful when the same range formatting logic needs to be applied repeatedly with consistent settings.
  *
- * @param inputConfig - format function or full configuration
- * @returns a reusable function that formats date ranges into strings
+ * @param inputConfig - Format function or full configuration.
+ * @returns A reusable function that formats date ranges into strings.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -74,6 +74,7 @@ export type FormatDateRangeFunctionConfigInput = FormatDateFunction | FormatDate
  * const result = formatRange({ start: new Date('2024-01-15T09:00:00'), end: new Date('2024-01-15T17:00:00') });
  * // "9:00 AM to 5:00 PM"
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConfigInput): FormatDateRangeFunction {
@@ -97,10 +98,10 @@ export function formatDateRangeFunction(inputConfig: FormatDateRangeFunctionConf
 /**
  * Convenience function that formats a date range in a single call without creating a reusable function.
  *
- * @param range - date range to format
- * @param inputConfig - format function or full configuration
- * @param separator - optional separator override when inputConfig is a function
- * @returns the formatted date range string
+ * @param range - Date range to format.
+ * @param inputConfig - Format function or full configuration.
+ * @param separator - Optional separator override when inputConfig is a function.
+ * @returns The formatted date range string.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -159,8 +160,8 @@ export type FormatDateRangeDistanceFunctionConfig = {
  * Creates a reusable function that computes the human-readable distance between the start and end of a date range
  * (e.g., "3 hours", "about 2 days"). Delegates to date-fns `formatDistance` or `formatDistanceStrict`.
  *
- * @param inputConfig - controls distance formatting, optional transforms, and same-day handling
- * @returns a reusable function that computes and formats date range distances
+ * @param inputConfig - Controls distance formatting, optional transforms, and same-day handling.
+ * @returns A reusable function that computes and formats date range distances.
  *
  * @example
  * ```ts
@@ -170,6 +171,7 @@ export type FormatDateRangeDistanceFunctionConfig = {
  * const result = formatDist({ start: new Date('2024-01-15T09:00:00'), end: new Date('2024-01-15T17:00:00') });
  * // "8 hours"
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function formatDateRangeDistanceFunction(inputConfig: FormatDateRangeDistanceFunctionConfig): FormatDateRangeFunction {
@@ -223,9 +225,9 @@ export const formatDateDistance: FormatDateRangeFunction = formatDateRangeDistan
 /**
  * Convenience function that computes the human-readable distance for a date range in a single call.
  *
- * @param range - date range to compute distance for
- * @param inputConfig - optional distance formatting configuration
- * @returns the human-readable distance string
+ * @param range - Date range to compute distance for.
+ * @param inputConfig - Optional distance formatting configuration.
+ * @returns The human-readable distance string.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -356,8 +358,8 @@ export function formatToDayRangeString(startOrDateRange: DateRange | Date, endOr
  * Safely formats the input to an ISO 8601 date string, returning `undefined` for invalid or nullish inputs
  * instead of throwing.
  *
- * @param input - date, date string, or nullish value
- * @returns the ISO 8601 date string, or `undefined` if the input is invalid or nullish
+ * @param input - Date, date string, or nullish value.
+ * @returns The ISO 8601 date string, or `undefined` if the input is invalid or nullish.
  *
  * @example
  * ```ts
@@ -381,8 +383,8 @@ export function safeFormatToISO8601DateString(input: Maybe<DateOrDateString | UT
 /**
  * Formats a Date to a full ISO 8601 date-time string via `Date.toISOString()`. Defaults to the current date/time.
  *
- * @param date - date to format; defaults to `new Date()`
- * @returns the full ISO 8601 date-time string
+ * @param date - Date to format; defaults to `new Date()`
+ * @returns The full ISO 8601 date-time string.
  *
  * @example
  * ```ts
@@ -402,8 +404,8 @@ export function formatToISO8601DateString(date: Date = new Date()): ISO8601DaySt
  *
  * Use {@link toISO8601DayStringForUTC} when the UTC date is needed instead.
  *
- * @param dateOrString - date or existing day string
- * @returns the ISO 8601 day string in system timezone
+ * @param dateOrString - Date or existing day string.
+ * @returns The ISO 8601 day string in system timezone.
  *
  * @example
  * ```ts
@@ -424,8 +426,8 @@ export function toISO8601DayStringForSystem(dateOrString: DateOrDayString): ISO8
  * Formats a Date to an ISO 8601 day string (`yyyy-MM-dd`) using the **system timezone**.
  * Defaults to the current date.
  *
- * @param date - date to format; defaults to `new Date()`
- * @returns the ISO 8601 day string in system timezone
+ * @param date - Date to format; defaults to `new Date()`
+ * @returns The ISO 8601 day string in system timezone.
  *
  * @example
  * ```ts
@@ -445,8 +447,8 @@ export function formatToISO8601DayStringForSystem(date: Date = new Date()): ISO8
  *
  * Use {@link toISO8601DayStringForSystem} when the system-local date is needed instead.
  *
- * @param dateOrString - date or existing day string
- * @returns the ISO 8601 day string in UTC
+ * @param dateOrString - Date or existing day string.
+ * @returns The ISO 8601 day string in UTC.
  *
  * @example
  * ```ts
@@ -468,8 +470,8 @@ export function toISO8601DayStringForUTC(dateOrString: DateOrDayString): ISO8601
  * Formats a Date to an ISO 8601 day string (`yyyy-MM-dd`) using the **UTC date** components.
  * Defaults to the current date.
  *
- * @param date - date to format; defaults to `new Date()`
- * @returns the ISO 8601 day string using UTC date components
+ * @param date - Date to format; defaults to `new Date()`
+ * @returns The ISO 8601 day string using UTC date components.
  *
  * @example
  * ```ts
@@ -489,16 +491,10 @@ export function formatToISO8601DayStringForUTC(date: Date = new Date()): ISO8601
 export const MONTH_DAY_SLASH_DATE_STRING_FORMAT = 'MM/dd/yyyy';
 
 /**
- * @deprecated Use MONTH_DAY_SLASH_DATE_STRING_FORMAT instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const monthDaySlashDateStringFormat = MONTH_DAY_SLASH_DATE_STRING_FORMAT;
-
-/**
  * Formats a Date as a month/day/year slash-separated string (`MM/dd/yyyy`). Defaults to the current date.
  *
- * @param date - date to format; defaults to `new Date()`
- * @returns the formatted `MM/dd/yyyy` string
+ * @param date - Date to format; defaults to `new Date()`
+ * @returns The formatted `MM/dd/yyyy` string.
  *
  * @example
  * ```ts
@@ -513,26 +509,15 @@ export function formatToMonthDaySlashDate(date: Date = new Date()): MonthDaySlas
 }
 
 /**
- * @deprecated use formatToMonthDaySlashDate instead.
- */
-export const formatToShortDateString = formatToMonthDaySlashDate;
-
-/**
  * date-fns format string for `MM/dd` (e.g., `"01/15"`).
  */
 export const DATE_MONTH_DAY_STRING_FORMAT = 'MM/dd';
 
 /**
- * @deprecated Use DATE_MONTH_DAY_STRING_FORMAT instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const dateMonthDayStringFormat = DATE_MONTH_DAY_STRING_FORMAT;
-
-/**
  * Formats a Date as a month/day string (`MM/dd`) without the year. Defaults to the current date.
  *
- * @param date - date to format; defaults to `new Date()`
- * @returns the formatted `MM/dd` string
+ * @param date - Date to format; defaults to `new Date()`
+ * @returns The formatted `MM/dd` string.
  *
  * @example
  * ```ts
@@ -549,8 +534,8 @@ export function formatToMonthDayString(date: Date = new Date()): ISO8601DayStrin
 /**
  * Formats a Date as a human-friendly weekday and month/day string (e.g., `"Mon, Jan 15th"`).
  *
- * @param date - date to format
- * @returns the formatted weekday and month/day string
+ * @param date - Date to format.
+ * @returns The formatted weekday and month/day string.
  *
  * @example
  * ```ts
@@ -570,16 +555,10 @@ export function formatToDateString(date: Date): string {
 export const DATE_TIME_STRING_FORMAT = 'h:mm a';
 
 /**
- * @deprecated Use DATE_TIME_STRING_FORMAT instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const dateTimeStringFormat = DATE_TIME_STRING_FORMAT;
-
-/**
  * Formats a Date as a 12-hour time string with AM/PM (e.g., `"9:00 AM"`).
  *
- * @param date - date to format
- * @returns the formatted 12-hour time string with AM/PM
+ * @param date - Date to format.
+ * @returns The formatted 12-hour time string with AM/PM.
  *
  * @example
  * ```ts
@@ -599,16 +578,10 @@ export function formatToTimeString(date: Date): string {
 export const DATE_SHORT_DATE_AND_TIME_STRING_FORMAT = `${MONTH_DAY_SLASH_DATE_STRING_FORMAT} ${DATE_TIME_STRING_FORMAT}`;
 
 /**
- * @deprecated Use DATE_SHORT_DATE_AND_TIME_STRING_FORMAT instead.
- */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const dateShortDateAndTimeStringFormat = DATE_SHORT_DATE_AND_TIME_STRING_FORMAT;
-
-/**
  * Formats a Date as a short date and time string (e.g., `"01/15/2024 9:00 AM"`).
  *
- * @param date - date to format
- * @returns the formatted short date and time string
+ * @param date - Date to format.
+ * @returns The formatted short date and time string.
  *
  * @example
  * ```ts
@@ -626,9 +599,9 @@ export function formatToShortDateAndTimeString(date: Date): string {
  * Formats a start time with an appended duration indicator. For durations over 2 hours, uses
  * a human-readable distance (e.g., `"about 3 hours"`); otherwise shows exact minutes.
  *
- * @param start - start date/time
- * @param end - end date/time
- * @returns the formatted time string with an appended duration indicator
+ * @param start - Start date/time.
+ * @param end - End date/time.
+ * @returns The formatted time string with an appended duration indicator.
  *
  * @example
  * ```ts
@@ -661,6 +634,11 @@ export function formatToTimeAndDurationString(start: Date, end: Date): string {
  * Produces a relative-time label describing a date range's state relative to now:
  * past (`"ended 2 hours ago"`), present (`"started 30 minutes ago"`), or future (`"starting in 3 days"`).
  *
+ * @param dateRange - Date range with start and end dates.
+ * @param dateRange.start - The start date of the range.
+ * @param dateRange.end - The end date of the range.
+ * @returns The relative-time label describing the date range state.
+ *
  * @example
  * ```ts
  * import { formatStartedEndedDistanceString } from '@dereekb/date';
@@ -676,11 +654,6 @@ export function formatToTimeAndDurationString(start: Date, end: Date): string {
  * formatStartedEndedDistanceString(activeRange);
  * // "started about 1 hour ago"
  * ```
- *
- * @param dateRange - date range with start and end dates
- * @param dateRange.start - the start date of the range
- * @param dateRange.end - the end date of the range
- * @returns the relative-time label describing the date range state
  */
 export function formatStartedEndedDistanceString({ start, end }: DateRange): string {
   const state = dateRangeRelativeState({ start, end });
@@ -711,8 +684,8 @@ export function formatStartedEndedDistanceString({ start, end }: DateRange): str
  * Normalizes a Date or ISO 8601 day string to the start of the day in the system timezone.
  * Useful for converting heterogeneous date inputs into a consistent midnight-aligned Date.
  *
- * @param input - date or day string to normalize
- * @returns a Date set to midnight of the corresponding day in the system timezone
+ * @param input - Date or day string to normalize.
+ * @returns Midnight of the resolved day in the system timezone.
  *
  * @example
  * ```ts
@@ -733,8 +706,8 @@ export function toJsDayDate(input: DateOrDayString): Date {
  * Parses an ISO 8601 day string (e.g., `"2024-01-15"`) or full date string into a Date at the start of the day
  * in the system timezone. Supports year formats with more than 4 digits but does not support negative years.
  *
- * @param dayString - ISO 8601 day or date string to parse
- * @returns a Date at the start of the parsed day in the system timezone
+ * @param dayString - ISO 8601 day or date string to parse.
+ * @returns Midnight of the parsed day in the system timezone.
  *
  * @example
  * ```ts
@@ -759,3 +732,34 @@ export function parseISO8601DayStringToDate(dayString: ISO8601DayString | ISO860
   const result = parse(dayString, format, new Date());
   return startOfDay(result);
 }
+
+// COMPAT: Deprecated aliases
+
+/**
+ * @deprecated Use MONTH_DAY_SLASH_DATE_STRING_FORMAT instead.
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const monthDaySlashDateStringFormat = MONTH_DAY_SLASH_DATE_STRING_FORMAT;
+
+/**
+ * @deprecated use formatToMonthDaySlashDate instead.
+ */
+export const formatToShortDateString = formatToMonthDaySlashDate;
+
+/**
+ * @deprecated Use DATE_MONTH_DAY_STRING_FORMAT instead.
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const dateMonthDayStringFormat = DATE_MONTH_DAY_STRING_FORMAT;
+
+/**
+ * @deprecated Use DATE_TIME_STRING_FORMAT instead.
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const dateTimeStringFormat = DATE_TIME_STRING_FORMAT;
+
+/**
+ * @deprecated Use DATE_SHORT_DATE_AND_TIME_STRING_FORMAT instead.
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const dateShortDateAndTimeStringFormat = DATE_SHORT_DATE_AND_TIME_STRING_FORMAT;

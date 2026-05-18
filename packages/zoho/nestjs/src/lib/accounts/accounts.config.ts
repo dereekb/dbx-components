@@ -63,7 +63,7 @@ export type ZohoAccountsServiceConfigFromConfigServiceInput = ZohoConfigServiceR
  * @param input - The {@link ZohoAccountsServiceConfigFromConfigServiceInput} containing the
  *   `ConfigService` and the `serviceAccessTokenKey` for the target Zoho service.
  * @returns A validated {@link ZohoAccountsServiceConfig} ready for use with `ZohoAccountsApi`.
- * @throws If any required credential (apiUrl, refreshToken, clientId) is missing.
+ * @throws {Error} If any required credential (apiUrl, refreshToken, clientId) is missing.
  */
 export function zohoAccountsServiceConfigFromConfigService(input: ZohoAccountsServiceConfigFromConfigServiceInput): ZohoAccountsServiceConfig {
   const { serviceAccessTokenKey } = input;

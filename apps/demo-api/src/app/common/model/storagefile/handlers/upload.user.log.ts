@@ -16,8 +16,8 @@ import { type DemoFirebaseServerActionsContext } from '../../../firebase/action.
  * to `/log/u/{userId}/{name}` and a StorageFile document is created.
  * No processing.
  *
- * @param context - server actions context providing the storage-file collection accessor.
- * @returns the initializer registered into `StorageFileInitializeFromUploadService`.
+ * @param context - Server actions context providing the storage-file collection accessor.
+ * @returns The initializer registered into `StorageFileInitializeFromUploadService`.
  */
 export function makeUserLogFileUploadInitializer(context: DemoFirebaseServerActionsContext): StorageFileInitializeFromUploadServiceInitializer {
   const { storageFileCollection } = context;

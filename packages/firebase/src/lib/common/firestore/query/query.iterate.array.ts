@@ -57,12 +57,14 @@ export interface LoadAllFirestoreDocumentSnapshotPairsResult<T, D extends Firest
  * result sets in batches, then combines them into a single result array. It supports optional
  * batch processing while loading.
  *
+ * @param config - Configuration options for the loading operation.
+ * @returns Promise resolving to the result containing all matching document snapshot pairs.
+ *
  * @template T - The document data type
  * @template D - The FirestoreDocument implementation type (defaults to FirestoreDocument<T>)
- * @param config - Configuration options for the loading operation
- * @returns Promise resolving to the result containing all matching document snapshot pairs
  *
  * @example
+ * ```ts
  * // Load all active user documents with their data
  * const result = await loadAllFirestoreDocumentSnapshotPairs({
  *   queryFactory: () => collection(firestore, 'users'),
@@ -73,8 +75,8 @@ export interface LoadAllFirestoreDocumentSnapshotPairsResult<T, D extends Firest
  *     console.log(`Processing batch ${index} with ${pairs.length} users`);
  *   }
  * });
- *
  * console.log(`Loaded ${result.snapshotPairs.length} user documents`);
+ * ```
  */
 export async function loadAllFirestoreDocumentSnapshotPairs<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: LoadAllFirestoreDocumentSnapshotPairsConfig<T, D>): Promise<LoadAllFirestoreDocumentSnapshotPairsResult<T, D>> {
   const { documentAccessor, queryFactory, constraintsFactory, dynamicConstraints, totalSnapshotsLimit, limitPerCheckpoint, handleRepeatCursor, filterCheckpointSnapshots, iterateSnapshotPairsBatch: optionalIterateSnapshotPairsBatch } = config;
@@ -160,11 +162,13 @@ export interface LoadAllFirestoreDocumentSnapshotsResult<T> extends Pick<Iterate
  * Unlike loadAllFirestoreDocumentSnapshotPairs, this function only retrieves the document
  * snapshots without automatically loading their associated data.
  *
+ * @param config - Configuration options for the loading operation.
+ * @returns Promise resolving to the result containing all matching document snapshots.
+ *
  * @template T - The document data type
- * @param config - Configuration options for the loading operation
- * @returns Promise resolving to the result containing all matching document snapshots
  *
  * @example
+ * ```ts
  * // Load all documents created in the last 24 hours
  * const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
  * const result = await loadAllFirestoreDocumentSnapshot({
@@ -176,8 +180,8 @@ export interface LoadAllFirestoreDocumentSnapshotsResult<T> extends Pick<Iterate
  *     console.log(`Processing batch with ${snapshots.length} events`);
  *   }
  * });
- *
  * console.log(`Loaded ${result.snapshots.length} event documents`);
+ * ```
  */
 export async function loadAllFirestoreDocumentSnapshot<T>(config: LoadAllFirestoreDocumentSnapshotsConfig<T>): Promise<LoadAllFirestoreDocumentSnapshotsResult<T>> {
   const { queryFactory, constraintsFactory, dynamicConstraints, totalSnapshotsLimit, limitPerCheckpoint, handleRepeatCursor, filterCheckpointSnapshots, iterateSnapshotsForCheckpoint } = config;

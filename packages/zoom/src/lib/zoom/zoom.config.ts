@@ -79,6 +79,7 @@ export interface ZoomServerContextRef {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use ZoomFetchFactoryParams instead.
  */

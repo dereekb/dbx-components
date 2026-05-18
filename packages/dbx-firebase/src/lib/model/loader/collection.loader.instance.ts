@@ -93,31 +93,36 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   );
 
   readonly iteratorFilter$: Observable<FirestoreItemPageIteratorFilter> = combineLatest([this._itemsPerPage.pipe(distinctUntilChanged()), this.constraints$]).pipe(
-    map(([limit, constraints]) => ({ limit, constraints, maxPageLoadLimit: this.maxPages }) as FirestoreItemPageIteratorFilter),
+    map(([limit, constraints]) => ({ limit, constraints, maxPageLoadLimit: this.maxPages })),
     shareReplay(1)
   );
 
   readonly firestoreIteration$: Observable<FirestoreItemPageIterationInstance<T>> = this.collection$.pipe(
     switchMap((collection) => {
+      let result: Observable<FirestoreItemPageIterationInstance<T>>;
+
       if (collection) {
-        return combineLatest([this.collectionMode$, this.iteratorFilter$, this._restart.pipe(startWith(undefined))]).pipe(
+        result = combineLatest([this.collectionMode$, this.iteratorFilter$, this._restart.pipe(startWith(undefined))]).pipe(
           throttleTime(100, undefined, { trailing: true }), // prevent rapid changes and executing filters too quickly.
           switchMap(([mode, filter]) => {
-            let result: Observable<FirestoreItemPageIterationInstance<T>>;
+            let innerResult: Observable<FirestoreItemPageIterationInstance<T>>;
 
             if (mode === 'query') {
-              result = of(collection.firestoreIteration(filter));
+              innerResult = of(collection.firestoreIteration(filter));
             } else {
-              result = this.collectionRefs$.pipe(map((refs) => collection.firestoreFixedIteration(refs, filter)));
+              innerResult = this.collectionRefs$.pipe(map((refs) => collection.firestoreFixedIteration(refs, filter)));
             }
 
-            return result;
+            return innerResult;
           }),
           cleanupDestroyable(), // cleanup the iteration
           shareReplay(1)
         );
+      } else {
+        result = NEVER; // don't emit anything until collection is provided.
       }
-      return NEVER; // don't emit anything until collection is provided.
+
+      return result;
     }),
     cleanupDestroyable(), // cleanup the iteration
     shareReplay(1)

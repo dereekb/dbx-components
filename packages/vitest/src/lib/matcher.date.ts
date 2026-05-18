@@ -47,9 +47,9 @@ interface AllDateMatchers {
 /**
  * Asserts that the received date is chronologically before the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeBefore(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -66,9 +66,9 @@ function toBeBefore(this: MatcherState, received: Date, expected: Date): SyncExp
 /**
  * Asserts that the received date is chronologically after the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeAfter(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -85,9 +85,9 @@ function toBeAfter(this: MatcherState, received: Date, expected: Date): SyncExpe
 /**
  * Asserts that the received date falls within the same calendar second as the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSameSecondAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -104,9 +104,9 @@ function toBeSameSecondAs(this: MatcherState, received: Date, expected: Date): S
 /**
  * Asserts that the received date falls within the same calendar minute as the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSameMinuteAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -123,9 +123,9 @@ function toBeSameMinuteAs(this: MatcherState, received: Date, expected: Date): S
 /**
  * Asserts that the received date falls within the same calendar hour as the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSameHourAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -142,9 +142,9 @@ function toBeSameHourAs(this: MatcherState, received: Date, expected: Date): Syn
 /**
  * Asserts that the received date falls on the same calendar day as the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSameDayAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -161,9 +161,9 @@ function toBeSameDayAs(this: MatcherState, received: Date, expected: Date): Sync
 /**
  * Asserts that the received date falls within the same calendar week as the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSameWeekAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -180,9 +180,9 @@ function toBeSameWeekAs(this: MatcherState, received: Date, expected: Date): Syn
 /**
  * Asserts that the received date falls within the same calendar month as the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSameMonthAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -199,9 +199,9 @@ function toBeSameMonthAs(this: MatcherState, received: Date, expected: Date): Sy
 /**
  * Asserts that the received date falls within the same fiscal quarter as the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSameQuarterAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -218,9 +218,9 @@ function toBeSameQuarterAs(this: MatcherState, received: Date, expected: Date): 
 /**
  * Asserts that the received date falls within the same calendar year as the expected date.
  *
- * @param received - The date under test
- * @param expected - The date to compare against
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @param expected - The date to compare against.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSameYearAs(this: MatcherState, received: Date, expected: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -237,8 +237,8 @@ function toBeSameYearAs(this: MatcherState, received: Date, expected: Date): Syn
 /**
  * Asserts that the received date falls on a Monday.
  *
- * @param received - The date under test
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeMonday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -254,8 +254,8 @@ function toBeMonday(this: MatcherState, received: Date): SyncExpectationResult {
 /**
  * Asserts that the received date falls on a Tuesday.
  *
- * @param received - The date under test
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeTuesday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -271,8 +271,8 @@ function toBeTuesday(this: MatcherState, received: Date): SyncExpectationResult 
 /**
  * Asserts that the received date falls on a Wednesday.
  *
- * @param received - The date under test
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeWednesday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -288,8 +288,8 @@ function toBeWednesday(this: MatcherState, received: Date): SyncExpectationResul
 /**
  * Asserts that the received date falls on a Thursday.
  *
- * @param received - The date under test
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeThursday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -305,8 +305,8 @@ function toBeThursday(this: MatcherState, received: Date): SyncExpectationResult
 /**
  * Asserts that the received date falls on a Friday.
  *
- * @param received - The date under test
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeFriday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -322,8 +322,8 @@ function toBeFriday(this: MatcherState, received: Date): SyncExpectationResult {
 /**
  * Asserts that the received date falls on a Saturday.
  *
- * @param received - The date under test
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSaturday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;
@@ -339,8 +339,8 @@ function toBeSaturday(this: MatcherState, received: Date): SyncExpectationResult
 /**
  * Asserts that the received date falls on a Sunday.
  *
- * @param received - The date under test
- * @returns Matcher result with a descriptive message on failure
+ * @param received - The date under test.
+ * @returns Matcher result with a descriptive message on failure.
  */
 function toBeSunday(this: MatcherState, received: Date): SyncExpectationResult {
   const { isNot } = this;

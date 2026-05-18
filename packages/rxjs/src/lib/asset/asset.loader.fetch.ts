@@ -20,6 +20,9 @@ export interface FetchAssetLoaderConfig {
  *
  * Remote refs always have absolute URLs, so no base URL resolution is needed.
  *
+ * @param config - Optional fetch configuration with custom fetch function.
+ * @returns An {@link AssetLoader} that loads remote assets via HTTP fetch.
+ *
  * @example
  * ```ts
  * const loader = fetchAssetLoader();
@@ -30,9 +33,6 @@ export interface FetchAssetLoaderConfig {
  * // With a custom fetch function:
  * const loader = fetchAssetLoader({ fetch: myAuthenticatedFetch });
  * ```
- *
- * @param config - Optional fetch configuration with custom fetch function.
- * @returns An {@link AssetLoader} that loads remote assets via HTTP fetch.
  */
 export function fetchAssetLoader(config: FetchAssetLoaderConfig = {}): AssetLoader {
   const fetchFn = config.fetch ?? globalThis.fetch;

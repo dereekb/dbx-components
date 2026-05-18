@@ -41,7 +41,7 @@ export interface UtilPreferNoSideEffectsInJsdocRuleDefinition {
  * (and treats line comments between overloads — but not directly above the impl —
  * as ordinary orphans to migrate).
  */
-export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocRuleDefinition = {
+export const UTIL_PREFER_NO_SIDE_EFFECTS_IN_JSDOC_RULE: UtilPreferNoSideEffectsInJsdocRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',
@@ -60,102 +60,92 @@ export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocR
     const sourceText = sourceCode.getText();
 
     function checkFunction(node: AstNode): void {
-      if (node.type !== 'FunctionDeclaration' || !node.body) {
-        return;
-      }
+      if (node.type === 'FunctionDeclaration' && node.body && node.id?.type === 'Identifier') {
+        const name: string = node.id.name;
 
-      if (node.id?.type !== 'Identifier') {
-        return;
-      }
+        // Walks the overload chain (if any) so we find the JSDoc on the first overload,
+        // any orphan annotations between overloads, and the (preserved) impl-leading annotation.
+        const { jsdoc, orphanLineComments, implLineComment, hasOverloads, implHasSurvivingAnnotation } = findFunctionLeadingContext(sourceCode, node);
 
-      const name: string = node.id.name;
+        if (jsdoc) {
+          // Three reasons to fire:
+          //   1. There's an annotation form (orphan OR overload-impl line comment) and the JSDoc
+          //      doesn't yet carry the tag — the JSDoc needs the tag added (for docs/tooling).
+          //   2. There are orphan annotations to consolidate, regardless of JSDoc tag state.
+          //   3. Function is overloaded, JSDoc carries the tag, but the implementation lacks any
+          //      surviving annotation — TS erases overload signatures during emit, so the JSDoc tag
+          //      on the first overload is dropped. We must add a `// @__NO_SIDE_EFFECTS__` directly
+          //      above the impl so the bundler still sees the hint.
+          // The impl line comment on overloaded functions is REQUIRED for tree-shaking and is never
+          // removed — it is only counted as a signal that the JSDoc should also carry the tag.
+          const hasAnyAnnotationSource = orphanLineComments.length > 0 || implLineComment !== null;
+          const needsJsdocTag = !jsdoc.hasNoSideEffects && hasAnyAnnotationSource;
+          const needsOrphanRemoval = orphanLineComments.length > 0;
+          const needsImplLineCommentForOverload = jsdoc.hasNoSideEffects && hasOverloads && !implHasSurvivingAnnotation;
 
-      // Walks the overload chain (if any) so we find the JSDoc on the first overload,
-      // any orphan annotations between overloads, and the (preserved) impl-leading annotation.
-      const { jsdoc, orphanLineComments, implLineComment, hasOverloads, implHasSurvivingAnnotation } = findFunctionLeadingContext(sourceCode, node);
+          if (needsJsdocTag || needsOrphanRemoval || needsImplLineCommentForOverload) {
+            context.report({
+              node: node.id,
+              messageId: needsImplLineCommentForOverload && !needsJsdocTag && !needsOrphanRemoval ? 'missingImplAnnotationOverloaded' : 'preferJsdocPlacement',
+              data: { name },
+              fix(fixer: AstNode) {
+                const fixes: AstNode[] = [];
+                const jsdocText = jsdoc.text;
+                const jsdocStart = jsdoc.node.range[0];
+                const jsdocEnd = jsdoc.node.range[1];
+                const jsdocIndent = getLineIndent(sourceText, jsdocStart);
 
-      if (!jsdoc) {
-        return;
-      }
+                // Insert into JSDoc only if needed (preserve idempotency and skip when only orphans need removal).
+                if (needsJsdocTag) {
+                  if (jsdocText.includes('\n')) {
+                    // Multi-line JSDoc — insert a new tag line immediately before the closing `*/` line.
+                    const closingMarkerStart = jsdocEnd - 2;
+                    let closingLineStart = closingMarkerStart;
+                    while (closingLineStart > 0 && sourceText.charAt(closingLineStart - 1) !== '\n') {
+                      closingLineStart -= 1;
+                    }
+                    const insertion = `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`;
+                    fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], insertion));
+                  } else {
+                    // Single-line JSDoc — expand to multi-line so the new tag has its own line.
+                    const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
+                    const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
+                    fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
+                  }
+                }
 
-      // Three reasons to fire:
-      //   1. There's an annotation form (orphan OR overload-impl line comment) and the JSDoc
-      //      doesn't yet carry the tag — the JSDoc needs the tag added (for docs/tooling).
-      //   2. There are orphan annotations to consolidate, regardless of JSDoc tag state.
-      //   3. Function is overloaded, JSDoc carries the tag, but the implementation lacks any
-      //      surviving annotation — TS erases overload signatures during emit, so the JSDoc tag
-      //      on the first overload is dropped. We must add a `// @__NO_SIDE_EFFECTS__` directly
-      //      above the impl so the bundler still sees the hint.
-      // The impl line comment on overloaded functions is REQUIRED for tree-shaking and is never
-      // removed — it is only counted as a signal that the JSDoc should also carry the tag.
-      const hasAnyAnnotationSource = orphanLineComments.length > 0 || implLineComment !== null;
-      const needsJsdocTag = !jsdoc.hasNoSideEffects && hasAnyAnnotationSource;
-      const needsOrphanRemoval = orphanLineComments.length > 0;
-      const needsImplLineCommentForOverload = jsdoc.hasNoSideEffects && hasOverloads && !implHasSurvivingAnnotation;
+                // Overloaded function with no surviving impl annotation — insert the bundler-required
+                // line comment directly above the implementation declaration.
+                if (needsImplLineCommentForOverload) {
+                  const implAnchor = getStatementAnchor(node);
+                  const implStart = implAnchor.range[0];
+                  const indent = getLineIndent(sourceText, implStart);
+                  fixes.push(fixer.insertTextBeforeRange([implStart, implStart], `// ${NO_SIDE_EFFECTS_TAG}\n${indent}`));
+                }
 
-      if (!needsJsdocTag && !needsOrphanRemoval && !needsImplLineCommentForOverload) {
-        return;
-      }
+                // Remove the orphan line/block comment annotations.
+                for (const orphan of orphanLineComments) {
+                  const [start, end] = orphan.range;
+                  let removeEnd = end;
+                  while (removeEnd < sourceText.length && (sourceText.charAt(removeEnd) === ' ' || sourceText.charAt(removeEnd) === '\t')) {
+                    removeEnd += 1;
+                  }
+                  if (sourceText.charAt(removeEnd) === '\n') {
+                    removeEnd += 1;
+                  }
+                  let removeStart = start;
+                  while (removeStart > 0 && (sourceText.charAt(removeStart - 1) === ' ' || sourceText.charAt(removeStart - 1) === '\t')) {
+                    removeStart -= 1;
+                  }
+                  fixes.push(fixer.removeRange([removeStart, removeEnd]));
+                }
 
-      context.report({
-        node: node.id,
-        messageId: needsImplLineCommentForOverload && !needsJsdocTag && !needsOrphanRemoval ? 'missingImplAnnotationOverloaded' : 'preferJsdocPlacement',
-        data: { name },
-        fix(fixer: AstNode) {
-          const fixes: AstNode[] = [];
-          const jsdocText = jsdoc.text;
-          const jsdocStart = jsdoc.node.range[0];
-          const jsdocEnd = jsdoc.node.range[1];
-          const jsdocIndent = getLineIndent(sourceText, jsdocStart);
-
-          // Insert into JSDoc only if needed (preserve idempotency and skip when only orphans need removal).
-          if (needsJsdocTag) {
-            if (jsdocText.includes('\n')) {
-              // Multi-line JSDoc — insert a new tag line immediately before the closing `*/` line.
-              const closingMarkerStart = jsdocEnd - 2;
-              let closingLineStart = closingMarkerStart;
-              while (closingLineStart > 0 && sourceText.charAt(closingLineStart - 1) !== '\n') {
-                closingLineStart -= 1;
+                return fixes;
               }
-              const insertion = `${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n`;
-              fixes.push(fixer.insertTextBeforeRange([closingLineStart, closingLineStart], insertion));
-            } else {
-              // Single-line JSDoc — expand to multi-line so the new tag has its own line.
-              const bodyTrimmed = jsdocText.replace(/^\*\s*/, '').replace(/\s*$/, '');
-              const newBody = `/**\n${jsdocIndent} * ${bodyTrimmed}\n${jsdocIndent} * ${NO_SIDE_EFFECTS_TAG}\n${jsdocIndent} */`;
-              fixes.push(fixer.replaceTextRange([jsdocStart, jsdocEnd], newBody));
-            }
+            });
           }
-
-          // Overloaded function with no surviving impl annotation — insert the bundler-required
-          // line comment directly above the implementation declaration.
-          if (needsImplLineCommentForOverload) {
-            const implAnchor = getStatementAnchor(node);
-            const implStart = implAnchor.range[0];
-            const indent = getLineIndent(sourceText, implStart);
-            fixes.push(fixer.insertTextBeforeRange([implStart, implStart], `// ${NO_SIDE_EFFECTS_TAG}\n${indent}`));
-          }
-
-          // Remove the orphan line/block comment annotations.
-          for (const orphan of orphanLineComments) {
-            const [start, end] = orphan.range;
-            let removeEnd = end;
-            while (removeEnd < sourceText.length && (sourceText.charAt(removeEnd) === ' ' || sourceText.charAt(removeEnd) === '\t')) {
-              removeEnd += 1;
-            }
-            if (sourceText.charAt(removeEnd) === '\n') {
-              removeEnd += 1;
-            }
-            let removeStart = start;
-            while (removeStart > 0 && (sourceText.charAt(removeStart - 1) === ' ' || sourceText.charAt(removeStart - 1) === '\t')) {
-              removeStart -= 1;
-            }
-            fixes.push(fixer.removeRange([removeStart, removeEnd]));
-          }
-
-          return fixes;
         }
-      });
+      }
     }
 
     return {

@@ -19,8 +19,8 @@ import { DbxForgeGlobalDefaultConfigService } from './forge.global-defaults.serv
  * - Primitive values under `_` keys (e.g. toggle booleans) are dropped entirely.
  * - Non-underscore keys are preserved, with recursive cleaning of nested objects.
  *
- * @param value - The form value object to clean
- * @returns A new object with internal `_`-prefixed keys stripped and their object values unwrapped
+ * @param value - The form value object to clean.
+ * @returns A new object with internal `_`-prefixed keys stripped and their object values unwrapped.
  *
  * @example
  * ```
@@ -59,8 +59,8 @@ export function stripForgeInternalKeys<T>(value: T): T {
  * Empty means: `null`, `undefined`, empty string `""`, or `NaN`.
  * Note: `false`, `0`, empty arrays `[]`, and other falsy values are NOT empty.
  *
- * @param val - The value to check for emptiness
- * @returns True if the value is null, undefined, an empty string, or NaN
+ * @param val - The value to check for emptiness.
+ * @returns True if the value is null, undefined, an empty string, or NaN.
  */
 function isEmptyFormValue(val: unknown): boolean {
   return val === null || val === undefined || val === '' || Number.isNaN(val);
@@ -79,6 +79,9 @@ function isEmptyFormValue(val: unknown): boolean {
  * This normalizes ng-forge output to match ngx-formly behavior, where the model
  * only includes keys that have been explicitly set by the user.
  *
+ * @param value - The form value object to clean.
+ * @returns A new object with empty-valued keys removed.
+ *
  * @example
  * ```
  * stripEmptyForgeValues({ name: "", age: null, active: false, count: 0 })
@@ -90,9 +93,6 @@ function isEmptyFormValue(val: unknown): boolean {
  * stripEmptyForgeValues({ items: [{ amount: NaN, name: 'a' }, { amount: 5 }] })
  * // → { items: [{ name: 'a' }, { amount: 5 }] }
  * ```
- *
- * @param value - The form value object to clean
- * @returns A new object with empty-valued keys removed
  */
 export function stripEmptyForgeValues<T>(value: T): T {
   let result: T;
@@ -386,7 +386,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 /**
  * Provides DbxForgeFormContext and registers it as both DbxForm and DbxMutableForm.
  *
- * @returns An array of providers registering the forge form context for dependency injection
+ * @returns The providers registering the forge form context for dependency injection.
  */
 export function provideDbxForgeFormContext(): Provider[] {
   return [DbxForgeFormContext, ...provideDbxMutableForm(DbxForgeFormContext)];

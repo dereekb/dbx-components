@@ -1,4 +1,4 @@
-import { type WebsiteUrl } from '@dereekb/util';
+import { type WebsiteUrl, type Maybe } from '@dereekb/util';
 import { type CalcomContext } from './calcom.config';
 import { type CalcomWebhookId, type CalcomResponseStatus } from '../calcom.type';
 
@@ -9,8 +9,8 @@ export interface CalcomWebhook {
   readonly subscriberUrl: WebsiteUrl;
   readonly triggers: CalcomWebhookTrigger[];
   readonly active: boolean;
-  readonly payloadTemplate?: string | null;
-  readonly secret?: string | null;
+  readonly payloadTemplate?: Maybe<string>;
+  readonly secret?: Maybe<string>;
 }
 
 export interface CalcomCreateWebhookInput {
@@ -43,10 +43,10 @@ export interface CalcomGetWebhooksResponse {
  * Creates a webhook subscription for the authenticated user. Webhooks notify your app
  * when specified events occur (e.g., bookings created, cancelled, rescheduled).
  *
- * @see https://cal.com/docs/api-reference/v2/webhooks/create-a-webhook
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Creates a webhook subscription from the given input.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that creates a webhook subscription from the given input
+ * @see https://cal.com/docs/api-reference/v2/webhooks/create-a-webhook
  *
  * @example
  * ```ts
@@ -57,6 +57,7 @@ export interface CalcomGetWebhooksResponse {
  * });
  * console.log(response.data.id);
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createWebhook(context: CalcomContext): (input: CalcomCreateWebhookInput) => Promise<CalcomWebhookResponse> {
@@ -70,10 +71,10 @@ export function createWebhook(context: CalcomContext): (input: CalcomCreateWebho
 /**
  * Retrieves all webhooks for the authenticated user.
  *
- * @see https://cal.com/docs/api-reference/v2/webhooks/get-all-webhooks
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Retrieves all webhooks.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that retrieves all webhooks
+ * @see https://cal.com/docs/api-reference/v2/webhooks/get-all-webhooks
  *
  * @example
  * ```ts
@@ -91,10 +92,10 @@ export function getWebhooks(context: CalcomContext): () => Promise<CalcomGetWebh
 /**
  * Retrieves a specific webhook by ID.
  *
- * @see https://cal.com/docs/api-reference/v2/webhooks/get-a-webhook
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Retrieves a specific webhook by ID.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that retrieves a specific webhook by ID
+ * @see https://cal.com/docs/api-reference/v2/webhooks/get-a-webhook
  *
  * @example
  * ```ts
@@ -112,10 +113,10 @@ export function getWebhook(context: CalcomContext): (webhookId: CalcomWebhookId)
 /**
  * Updates an existing webhook by ID.
  *
- * @see https://cal.com/docs/api-reference/v2/webhooks/update-a-webhook
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Updates an existing webhook by ID.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that updates an existing webhook by ID
+ * @see https://cal.com/docs/api-reference/v2/webhooks/update-a-webhook
  *
  * @example
  * ```ts
@@ -133,10 +134,10 @@ export function updateWebhook(context: CalcomContext): (webhookId: CalcomWebhook
 /**
  * Deletes a webhook by ID.
  *
- * @see https://cal.com/docs/api-reference/v2/webhooks/delete-a-webhook
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Deletes a webhook by ID.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that deletes a webhook by ID
+ * @see https://cal.com/docs/api-reference/v2/webhooks/delete-a-webhook
  *
  * @example
  * ```ts

@@ -268,25 +268,31 @@ async function _processPage<TItem, TRaw, TItemResult, TPageResult>(input: {
 
 function _computeEffectiveLimit(totalItemsLimit: Maybe<number>, limitPerPage: Maybe<number>, totalItems: number): Maybe<number> {
   const remainingBudget = totalItemsLimit == null ? undefined : totalItemsLimit - totalItems;
+  let result: Maybe<number>;
 
   if (limitPerPage != null && remainingBudget != null) {
-    return Math.min(limitPerPage, remainingBudget);
+    result = Math.min(limitPerPage, remainingBudget);
+  } else {
+    result = limitPerPage ?? remainingBudget;
   }
 
-  return limitPerPage ?? remainingBudget;
+  return result;
 }
 
 function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; readonly maxPages: Maybe<number>; readonly totalItems: number; readonly pageIndex: number; readonly hasMore: boolean; readonly cursorDocumentKey: Maybe<string> }): { readonly stop: boolean; readonly hitLimit: boolean } {
   const { totalItemsLimit, maxPages, totalItems, pageIndex, hasMore, cursorDocumentKey } = input;
   const reachedItemsLimit = totalItemsLimit != null && totalItems >= totalItemsLimit;
   const reachedPagesLimit = maxPages != null && pageIndex >= maxPages;
+  let result: { readonly stop: boolean; readonly hitLimit: boolean };
 
   if (reachedItemsLimit || reachedPagesLimit) {
-    return { stop: true, hitLimit: true };
+    result = { stop: true, hitLimit: true };
+  } else {
+    const exhausted = hasMore === false || cursorDocumentKey == null;
+    result = { stop: exhausted, hitLimit: false };
   }
 
-  const exhausted = hasMore === false || cursorDocumentKey == null;
-  return { stop: exhausted, hitLimit: false };
+  return result;
 }
 
 /**
@@ -300,6 +306,9 @@ function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; rea
  * Concurrency: pages are fetched serially (cursor dependency); items within a page can run
  * in parallel via `maxParallelPerPage` (forwarded to `performAsyncTasks`).
  *
+ * @param config - Iterator configuration.
+ * @returns The aggregate result.
+ *
  * @example
  * ```ts
  * // Exhaust every published Guestbook entry for a single Guestbook.
@@ -309,7 +318,6 @@ function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; rea
  *   params: { guestbook: 'gb/abc', published: true }
  * });
  * ```
- *
  * @example
  * ```ts
  * // Fan out to a child action per Guestbook, with 4-way parallelism per page.
@@ -321,9 +329,6 @@ function _evaluateLoopExit(input: { readonly totalItemsLimit: Maybe<number>; rea
  *   iterateItem: ({ context, key }) => queryGuestbookEntriesForGuestbook({ context, guestbook: key, published: true })
  * });
  * ```
- *
- * @param config - Iterator configuration.
- * @returns The aggregate result.
  */
 export async function iterateDbxCliCallModel<TParams, TItem, TRaw = OnCallQueryModelResult<TItem>, TItemResult = void, TPageResult = void>(config: IterateDbxCliCallModelConfig<TParams, TItem, TRaw, TItemResult, TPageResult>): Promise<IterateDbxCliCallModelResult<TItem, TItemResult, TPageResult>> {
   const { context, modelType, call, specifier, params, buildRequestData = _defaultBuildRequestData<TParams>, responseAdapter = _defaultResponseAdapter as unknown as IterateDbxCliCallModelResponseAdapter<TRaw, TItem>, limitPerPage, totalItemsLimit, maxPages, iterateItem, iteratePage, itemPerformTasksConfig, maxParallelPerPage, collectItems = true, collectItemResults = iterateItem != null, collectPageResults = iteratePage != null } = config;

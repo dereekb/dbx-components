@@ -9,8 +9,8 @@ import { type TypeformApiToken } from './typeform.type';
  *
  * Reads the Typeform API token and optional base URL from environment variables.
  *
- * @param configService - NestJS config service for reading environment variables
- * @returns a validated TypeformServiceConfig
+ * @param configService - NestJS config service for reading environment variables.
+ * @returns A validated TypeformServiceConfig.
  */
 export function typeFormServiceConfigFactory(configService: ConfigService): TypeformServiceConfig {
   const config: TypeformServiceConfig = {

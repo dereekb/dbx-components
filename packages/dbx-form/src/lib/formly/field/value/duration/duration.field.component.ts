@@ -99,7 +99,7 @@ export class DbxTimeDurationFieldComponent extends FieldType<FieldTypeConfig<Tim
    * Units used for decomposing/displaying duration text.
    * Includes 'ms' if the smallest picker unit would leave a remainder.
    *
-   * @returns The array of time units used for displaying duration text
+   * @returns The array of time units used for displaying duration text.
    */
   get displayUnits(): TimeUnit[] {
     const units = [...this.pickerUnits];
@@ -144,7 +144,7 @@ export class DbxTimeDurationFieldComponent extends FieldType<FieldTypeConfig<Tim
   /**
    * Called when Enter is pressed in the text input.
    *
-   * @param event - The keyboard event triggered by pressing Enter
+   * @param event - The keyboard event triggered by pressing Enter.
    */
   onTextEnter(event: Event): void {
     event.preventDefault();
@@ -222,7 +222,7 @@ export class DbxTimeDurationFieldComponent extends FieldType<FieldTypeConfig<Tim
   /**
    * Converts duration data to the output value and sets it on the form control.
    *
-   * @param data - The parsed duration data containing time unit values
+   * @param data - The parsed duration data containing time unit values.
    */
   private _syncOutputFromDurationData(data: TimeDurationData): void {
     const ms = durationDataToMilliseconds(data);
@@ -246,8 +246,8 @@ export class DbxTimeDurationFieldComponent extends FieldType<FieldTypeConfig<Tim
   /**
    * Converts an output value (number, HoursAndMinutes, or TimeDurationData) to milliseconds.
    *
-   * @param value - The output value to convert, interpreted based on the current valueMode
-   * @returns The equivalent duration in milliseconds
+   * @param value - The output value to convert, interpreted based on the current valueMode.
+   * @returns The equivalent duration in milliseconds.
    */
   private _outputValueToMilliseconds(value: unknown): number {
     if (this.valueMode === 'duration_data') {

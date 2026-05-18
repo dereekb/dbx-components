@@ -146,9 +146,14 @@ function renderModelEntry(entry: CliModelManifestEntry, emitConverters: boolean)
 }
 
 function renderModelFields(fields: readonly CliModelField[], emitConverters: boolean): string {
-  if (fields.length === 0) return '[]';
-  const items = fields.map((field) => renderModelField(field, emitConverters));
-  return `[${items.join(', ')}]`;
+  let result: string;
+  if (fields.length === 0) {
+    result = '[]';
+  } else {
+    const items = fields.map((field) => renderModelField(field, emitConverters));
+    result = `[${items.join(', ')}]`;
+  }
+  return result;
 }
 
 function renderModelField(field: CliModelField, emitConverters: boolean): string {

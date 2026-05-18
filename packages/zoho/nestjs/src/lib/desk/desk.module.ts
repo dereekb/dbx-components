@@ -23,9 +23,9 @@ export const ZOHO_ORG_ID_CONFIG_KEY = 'ORG_ID';
  * `ZOHO_DESK_API_URL` (service-specific) or `ZOHO_API_URL` (shared fallback).
  * The organization ID is read from `ZOHO_DESK_ORG_ID` or `ZOHO_ORG_ID`.
  *
- * @param configService - NestJS config service populated with Zoho environment variables
- * @returns Validated Zoho Desk service configuration
- * @throws {Error} If required config values (API URL or orgId) are missing
+ * @param configService - NestJS config service populated with Zoho environment variables.
+ * @returns Validated Zoho Desk service configuration.
+ * @throws {Error} If required config values (API URL or orgId) are missing.
  */
 export function zohoDeskServiceConfigFactory(configService: ConfigService): ZohoDeskServiceConfig {
   const getFromConfigService = zohoConfigServiceReaderFunction(ZOHO_DESK_SERVICE_NAME, configService);
@@ -45,8 +45,8 @@ export function zohoDeskServiceConfigFactory(configService: ConfigService): Zoho
  * Reads Zoho Accounts (OAuth) settings scoped to the Desk service from
  * the NestJS ConfigService and returns an accounts service config.
  *
- * @param configService - NestJS config service populated with Zoho OAuth environment variables
- * @returns Zoho Accounts service config scoped to the Desk service access token
+ * @param configService - NestJS config service populated with Zoho OAuth environment variables.
+ * @returns Zoho Accounts service config scoped to the Desk service access token.
  */
 export function zohoDeskAccountServiceConfigFactory(configService: ConfigService): ZohoAccountsServiceConfig {
   return zohoAccountsServiceConfigFromConfigService({
@@ -84,7 +84,7 @@ export interface ProvideAppZohoDeskMetadataConfig extends Pick<ModuleMetadata, '
  * exports {@link ZohoDeskApi} by default. Additional imports, exports, and providers
  * from the config are merged in.
  *
- * @param config - Module configuration with optional dependency module and extra metadata
+ * @param config - Module configuration with optional dependency module and extra metadata.
  * @returns Complete NestJS module metadata ready to pass to `@Module()`
  */
 export function appZohoDeskModuleMetadata(config: ProvideAppZohoDeskMetadataConfig): ModuleMetadata {

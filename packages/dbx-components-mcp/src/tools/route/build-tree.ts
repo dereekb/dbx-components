@@ -31,9 +31,10 @@ interface MutableTreeNode {
  * state's full URL while preserving any extraction issues so callers see one
  * combined diagnostics view.
  *
- * @param nodes - the flat route nodes extracted from sources
- * @param extractIssues - issues already discovered during extraction to forward
- * @returns the constructed tree alongside the merged issue list
+ * @param nodes - The flat route nodes extracted from sources.
+ * @param extractIssues - Issues already discovered during extraction to forward.
+ * @returns The constructed tree alongside the merged issue list.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildRouteTree(nodes: readonly RouteNode[], extractIssues: readonly RouteIssue[]): RouteTree {

@@ -4,9 +4,9 @@ import { onMatchDelta } from './delta';
 /**
  * Conditionally applies an operator. Returns the given pipe when `usePipe` is true, otherwise returns identity (pass-through).
  *
- * @param usePipe - whether to apply the pipe
- * @param pipe - the operator to conditionally apply
- * @returns the pipe or identity operator
+ * @param usePipe - Whether to apply the pipe.
+ * @param pipe - The operator to conditionally apply.
+ * @returns The pipe or identity operator.
  */
 export function pipeIf<A>(usePipe: boolean, pipe: OperatorFunction<A, A>): OperatorFunction<A, A> {
   return usePipe ? pipe : identity;
@@ -15,7 +15,7 @@ export function pipeIf<A>(usePipe: boolean, pipe: OperatorFunction<A, A>): Opera
 /**
  * RxJS operator that negates each emitted boolean value.
  *
- * @returns operator that maps each boolean emission to its negated value
+ * @returns Operator that maps each boolean emission to its negated value.
  */
 export function isNot(): MonoTypeOperatorFunction<boolean> {
   return map((x) => !x);
@@ -24,7 +24,7 @@ export function isNot(): MonoTypeOperatorFunction<boolean> {
 /**
  * RxJS operator that only emits when a boolean stream transitions from `true` to `false`.
  *
- * @returns operator that filters to only true-to-false transition emissions
+ * @returns Operator that filters to only true-to-false transition emissions.
  */
 export function onTrueToFalse(): MonoTypeOperatorFunction<boolean> {
   return onMatchDelta({
@@ -37,7 +37,7 @@ export function onTrueToFalse(): MonoTypeOperatorFunction<boolean> {
 /**
  * RxJS operator that only emits when a boolean stream transitions from `false` to `true`.
  *
- * @returns operator that filters to only false-to-true transition emissions
+ * @returns Operator that filters to only false-to-true transition emissions.
  */
 export function onFalseToTrue(): MonoTypeOperatorFunction<boolean> {
   return onMatchDelta({

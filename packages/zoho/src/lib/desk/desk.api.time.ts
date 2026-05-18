@@ -26,8 +26,8 @@ export type ZohoDeskGetTicketTimerFunction = (input: ZohoDeskGetTicketTimerInput
 /**
  * Creates a {@link ZohoDeskGetTicketTimerFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves the ticket timer
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves the ticket timer.
  */
 export function zohoDeskGetTicketTimer(context: ZohoDeskContext): ZohoDeskGetTicketTimerFunction {
   return (input: ZohoDeskGetTicketTimerInput) => context.fetchJson<ZohoDeskTicketTimer>(`/tickets/${input.ticketId}/timer`, zohoDeskTimeApiFetchJsonInput('GET'));
@@ -55,8 +55,8 @@ export type ZohoDeskPerformTicketTimerActionFunction = (input: ZohoDeskPerformTi
 /**
  * Creates a {@link ZohoDeskPerformTicketTimerActionFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that performs a timer action on a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that performs a timer action on a ticket.
  */
 export function zohoDeskPerformTicketTimerAction(context: ZohoDeskContext): ZohoDeskPerformTicketTimerActionFunction {
   return (input: ZohoDeskPerformTicketTimerActionInput) => {
@@ -87,8 +87,8 @@ export type ZohoDeskGetTicketTimeEntriesFunction = (input: ZohoDeskGetTicketTime
 /**
  * Creates a {@link ZohoDeskGetTicketTimeEntriesFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves time entries for a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves time entries for a ticket.
  */
 export function zohoDeskGetTicketTimeEntries(context: ZohoDeskContext): ZohoDeskGetTicketTimeEntriesFunction {
   return (input: ZohoDeskGetTicketTimeEntriesInput) => {
@@ -115,8 +115,8 @@ export type ZohoDeskGetTicketTimeEntryByIdFunction = (input: ZohoDeskGetTicketTi
 /**
  * Creates a {@link ZohoDeskGetTicketTimeEntryByIdFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves a single time entry
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves a single time entry.
  */
 export function zohoDeskGetTicketTimeEntryById(context: ZohoDeskContext): ZohoDeskGetTicketTimeEntryByIdFunction {
   return (input: ZohoDeskGetTicketTimeEntryByIdInput) => context.fetchJson<ZohoDeskTicketTimeEntry>(`/tickets/${input.ticketId}/timeEntries/${input.timeEntryId}`, zohoDeskTimeApiFetchJsonInput('GET'));
@@ -147,8 +147,8 @@ export type ZohoDeskGetTicketTimeEntrySummationFunction = (input: ZohoDeskGetTic
 /**
  * Creates a {@link ZohoDeskGetTicketTimeEntrySummationFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves time entry summation
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves time entry summation.
  */
 export function zohoDeskGetTicketTimeEntrySummation(context: ZohoDeskContext): ZohoDeskGetTicketTimeEntrySummationFunction {
   return (input: ZohoDeskGetTicketTimeEntrySummationInput) => context.fetchJson<ZohoDeskTicketTimeEntrySummation>(`/tickets/${input.ticketId}/timeEntries/summation`, zohoDeskTimeApiFetchJsonInput('GET'));

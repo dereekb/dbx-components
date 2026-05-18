@@ -8,6 +8,7 @@ export interface DbxMapboxEnvironmentOptions extends DbxMapboxConfig {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use DbxMapboxEnvironmentOptions instead.
  */

@@ -46,8 +46,8 @@ export type ZohoDeskGetTicketActivitiesFunction = (input: ZohoDeskGetTicketActiv
  *
  * Retrieves a paginated list of activities (tasks, events, calls) associated with a ticket.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves activities for a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves activities for a ticket.
  */
 export function zohoDeskGetTicketActivities(context: ZohoDeskContext): ZohoDeskGetTicketActivitiesFunction {
   return (input: ZohoDeskGetTicketActivitiesInput) => {
@@ -66,8 +66,9 @@ export type ZohoDeskGetTicketActivitiesPageFactory = (input: ZohoDeskGetTicketAc
 /**
  * Creates a {@link ZohoDeskGetTicketActivitiesPageFactory} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Page factory for iterating over activity results
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Page factory for iterating over activity results.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoDeskGetTicketActivitiesPageFactory(context: ZohoDeskContext): ZohoDeskGetTicketActivitiesPageFactory {

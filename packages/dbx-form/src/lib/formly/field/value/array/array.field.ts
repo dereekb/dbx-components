@@ -11,7 +11,7 @@ export interface RepeatArrayFieldConfig<T = unknown> extends DbxFormRepeatArrayC
   /**
    * Field group template that is repeated for each array entry.
    */
-  repeatFieldGroup: ArrayOrValue<FormlyFieldConfig>;
+  readonly repeatFieldGroup: ArrayOrValue<FormlyFieldConfig>;
 }
 
 /**
@@ -19,7 +19,7 @@ export interface RepeatArrayFieldConfig<T = unknown> extends DbxFormRepeatArrayC
  *
  * Users can dynamically add, remove, duplicate, and rearrange entries.
  *
- * @param config - Repeat array configuration including the template field group
+ * @param config - Repeat array configuration including the template field group.
  * @returns A validated {@link FormlyFieldConfig} with type `'repeatarray'`
  *
  * @example
@@ -61,6 +61,7 @@ export function formlyRepeatArrayField<T = unknown>(config: RepeatArrayFieldConf
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyRepeatArrayField instead.
  */

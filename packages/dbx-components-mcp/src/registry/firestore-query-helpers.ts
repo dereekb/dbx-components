@@ -206,8 +206,8 @@ export const FIRESTORE_QUERY_HELPERS: readonly FirestoreQueryHelperDescriptor[] 
  * registry — the extractor treats that as an opaque call (no constraints
  * emitted) and surfaces a warning so the registry can be extended.
  *
- * @param name - the helper's source-level identifier
- * @returns the descriptor or undefined
+ * @param name - The helper's source-level identifier.
+ * @returns The descriptor or undefined.
  */
 export function getFirestoreQueryHelperDescriptor(name: string): FirestoreQueryHelperDescriptor | undefined {
   return FIRESTORE_QUERY_HELPERS.find((h) => h.name === name);
@@ -219,8 +219,11 @@ export function getFirestoreQueryHelperDescriptor(name: string): FirestoreQueryH
  * supplies the parsed values; this function applies the descriptor's
  * `parts` template.
  *
- * @param input - the resolved descriptor + call-site values
- * @returns the ordered constraint entries the helper emits
+ * @param input - The resolved descriptor + call-site values.
+ * @param input.descriptor - The looked-up helper descriptor.
+ * @param input.fieldPath - The resolved field path for the constraints.
+ * @param input.direction - Optional call-site direction override for orderBy parts.
+ * @returns The ordered constraint entries the helper emits.
  */
 export function expandFirestoreQueryHelper(input: { readonly descriptor: FirestoreQueryHelperDescriptor; readonly fieldPath: string; readonly direction?: 'asc' | 'desc' }): readonly ConstraintSequenceEntry[] {
   const { descriptor, fieldPath, direction } = input;

@@ -1,4 +1,4 @@
-import { type IterationQueryDocChangeWatcherChangeType, type IterationQueryDocChangeWatcherEvent } from '@dereekb/firebase';
+import { type IterationQueryDocChangeWatcherEvent } from '@dereekb/firebase';
 import { SubscriptionObject } from '@dereekb/rxjs';
 import { type Destroyable } from '@dereekb/util';
 import { filter, take, map, BehaviorSubject, distinctUntilChanged, type Observable, switchMap, startWith, shareReplay, combineLatest } from 'rxjs';
@@ -66,7 +66,7 @@ export function dbxFirebaseCollectionChangeWatcher<S extends DbxFirebaseCollecti
         take(1), // only need one event to mark as change is available.
         startWith({
           time: new Date(),
-          type: 'none' as IterationQueryDocChangeWatcherChangeType
+          type: 'none' as const
         })
       )
     ),

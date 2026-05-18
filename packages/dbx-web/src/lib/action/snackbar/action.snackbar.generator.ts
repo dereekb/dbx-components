@@ -85,7 +85,7 @@ export interface DbxMakeActionSnackbarGeneratorEventConfiguration extends Omit<D
  * is included in the generated config.
  *
  * @param config - Per-state message configurations (idle, loading, success, error).
- * @returns A function that maps generator input to a snackbar display configuration.
+ * @returns Maps generator input to a snackbar display configuration.
  *
  * @example
  * ```typescript
@@ -123,13 +123,13 @@ export function makeDbxActionSnackbarDisplayConfigGeneratorFunction(config: DbxM
           reference = getValueFromGetter(undoInput);
         }
 
-        if (!reference) {
-          console.error('Expected action source reference was not provided to undo...');
-        } else {
+        if (reference) {
           building.action = {
             button: undoButtonText ?? 'Undo',
             reference
           };
+        } else {
+          console.error('Expected action source reference was not provided to undo...');
         }
       }
 

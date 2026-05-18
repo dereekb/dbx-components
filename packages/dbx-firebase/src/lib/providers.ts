@@ -65,7 +65,7 @@ export interface ProvideDbxFirebaseConfig<T, M extends FirebaseFunctionsMap = Fi
  * Requires the following already be provided/called:
  * - provideDbxModelService()
  *
- * @param config Configuration for provideDbxFirebase().
+ * @param config - Configuration for provideDbxFirebase().
  * @returns EnvironmentProviders for the DbxFirebase configuration.
  */
 export function provideDbxFirebase<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap>(config: ProvideDbxFirebaseConfig<T, M>) {

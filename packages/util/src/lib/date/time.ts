@@ -28,9 +28,9 @@ export type TimePeriodCounter = (() => number) & {
  * Returns the number of invocations since the current period started.
  * When a new period begins, the counter resets to 0.
  *
- * @param timePeriodLength - Length of each time period in milliseconds
- * @param lastTimePeriodStart - Optional starting point for the first period
- * @returns A callable counter function with metadata properties
+ * @param timePeriodLength - Length of each time period in milliseconds.
+ * @param lastTimePeriodStart - Optional starting point for the first period.
+ * @returns A callable counter function with metadata properties.
  */
 export function timePeriodCounter(timePeriodLength: number, lastTimePeriodStart?: Maybe<Date>): TimePeriodCounter {
   function reset(inputStart: Maybe<Date>) {
@@ -152,15 +152,16 @@ export class TimerCancelledError extends BaseError {
 /**
  * Creates a new Timer from the input duration.
  *
+ * @param duration - The duration of the timer.
+ * @param startImmediately - Whether the timer should start immediately. Defaults to true.
+ * @returns The new Timer.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilKind factory
  * @dbxUtilTags date, time, timer, factory, duration
  * @dbxUtilRelated timer
  *
- * @param duration - The duration of the timer.
- * @param startImmediately - Whether the timer should start immediately. Defaults to true.
- * @returns The new Timer.
  * @__NO_SIDE_EFFECTS__
  */
 export function makeTimer(duration: Milliseconds, startImmediately = true): Timer {
@@ -290,7 +291,7 @@ export function makeTimer(duration: Milliseconds, startImmediately = true): Time
 /**
  * Toggles the input Timer's running state between running and stopped.
  *
- * @param timer - The timer to toggle
+ * @param timer - The timer to toggle.
  * @param toggleRun - If provided, forces the timer to run (true) or stop (false). Otherwise toggles the current state.
  */
 export function toggleTimerRunning(timer: Timer, toggleRun?: boolean): void {
@@ -306,8 +307,8 @@ export function toggleTimerRunning(timer: Timer, toggleRun?: boolean): void {
 /**
  * Returns the approximate end date of the given timer. If a timer is already complete, it returns the time for now.
  *
- * @param timer - the timer whose end date to approximate
- * @returns a Date representing the estimated end time, or null if no duration remains
+ * @param timer - Timer whose remaining duration anchors the projected end.
+ * @returns Projected end instant; null when no duration remains to project.
  */
 export function approximateTimerEndDate(timer: Timer): Maybe<Date> {
   const durationRemaining = timer.durationRemaining;

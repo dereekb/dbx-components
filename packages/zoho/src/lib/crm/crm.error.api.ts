@@ -78,8 +78,8 @@ export class ZohoCrmRecordCrudNoMatchingRecordError extends ZohoCrmRecordCrudInv
 /**
  * Maps a Zoho CRM server error to the appropriate typed {@link ZohoCrmRecordCrudError} subclass based on the error code and affected field.
  *
- * @param error - The server error data containing the error code and field details
- * @returns The appropriate typed CRM CRUD error instance
+ * @param error - The server error data containing the error code and field details.
+ * @returns The appropriate typed CRM CRUD error instance.
  */
 export function zohoCrmRecordCrudError(error: ZohoServerErrorDataWithDetails): ZohoCrmRecordCrudError {
   let result: ZohoCrmRecordCrudError;
@@ -112,9 +112,9 @@ export function zohoCrmRecordCrudError(error: ZohoServerErrorDataWithDetails): Z
 /**
  * Returns an assertion function that throws {@link ZohoCrmRecordNoContentError} when a data array result is empty or null, typically indicating a missing record.
  *
- * @param moduleName - Optional CRM module name for the error context
- * @param recordId - Optional record ID for the error context
- * @returns Assertion function that throws if the data array is empty
+ * @param moduleName - Optional CRM module name for the error context.
+ * @param recordId - Optional record ID for the error context.
+ * @returns Assertion function that throws if the data array is empty.
  */
 export function assertZohoCrmRecordDataArrayResultHasContent<T>(moduleName?: ZohoCrmModuleName, recordId?: ZohoCrmRecordId) {
   return <R extends ZohoDataArrayResultRef<T>>(x: R) => {
@@ -133,8 +133,8 @@ export const logZohoCrmErrorToConsole = logZohoServerErrorFunction('ZohoCrm', { 
 /**
  * Parses a fetch response error into a typed Zoho CRM server error by extracting and interpreting the JSON error body.
  *
- * @param responseError - The fetch response error to parse
- * @returns The parsed Zoho server error, or undefined if the response could not be parsed
+ * @param responseError - The fetch response error to parse.
+ * @returns The parsed Zoho server error, or undefined if the response could not be parsed.
  */
 export async function parseZohoCrmError(responseError: FetchResponseError) {
   const data: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef | undefined = await responseError.response.json().catch(() => undefined);
@@ -150,9 +150,9 @@ export async function parseZohoCrmError(responseError: FetchResponseError) {
 /**
  * Parses a Zoho CRM error response body into a typed error. Delegates to CRM-specific error code handling before falling back to the generic Zoho error parser.
  *
- * @param errorResponseData - The raw error response data from the Zoho CRM API
- * @param responseError - The original fetch response error for context
- * @returns The parsed Zoho server error, or undefined if the error could not be classified
+ * @param errorResponseData - The raw error response data from the Zoho CRM API.
+ * @param responseError - The original fetch response error for context.
+ * @returns The parsed Zoho server error, or undefined if the error could not be classified.
  */
 export function parseZohoCrmServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef, responseError: FetchResponseError) {
   let result: ParsedZohoServerError | undefined;

@@ -80,16 +80,16 @@ export interface ExploreTreeFunctionConfig<N extends TreeNode<unknown>, V = N> {
   /**
    * Custom traversal strategy (e.g., breadth-first). Defaults to depth-first.
    */
-  traverseFunctionFactory?: ExploreTreeTraversalFactoryFunction<N, V>;
+  readonly traverseFunctionFactory?: ExploreTreeTraversalFactoryFunction<N, V>;
   /**
    * Transforms each node into a value before visiting. Defaults to identity.
    */
-  mapNodeFunction?: (node: N) => V;
+  readonly mapNodeFunction?: (node: N) => V;
   /**
    * Controls whether each node is visited, skipped, or has only its children visited.
    * Defaults to visiting all nodes.
    */
-  shouldVisitNodeFunction?: Maybe<ExploreTreeVisitNodeDecisionFunction<N, V>>;
+  readonly shouldVisitNodeFunction?: Maybe<ExploreTreeVisitNodeDecisionFunction<N, V>>;
 }
 
 /**
@@ -109,14 +109,14 @@ export type ExploreTreeFunction<N extends TreeNode<unknown, N>, V> = (trees: Arr
  * By default uses depth-first traversal, identity mapping, and visits all nodes. All options
  * can be overridden per-call.
  *
+ * @param config - Optional default configuration for mapping, filtering, and traversal strategy.
+ * @returns A reusable function that explores trees with the configured behavior.
+ *
  * @dbxUtil
  * @dbxUtilCategory tree
  * @dbxUtilKind factory
  * @dbxUtilTags tree, explore, traverse, visit, factory, depth-first, breadth-first, walk
  * @dbxUtilRelated depth-first-explore-tree-traversal-factory-function, breadth-first-explore-tree-traversal-factory-function, flatten-tree-to-array-function
- *
- * @param config - Optional default configuration for mapping, filtering, and traversal strategy.
- * @returns A reusable function that explores trees with the configured behavior.
  *
  * @example
  * ```typescript
@@ -129,6 +129,7 @@ export type ExploreTreeFunction<N extends TreeNode<unknown, N>, V> = (trees: Arr
  *   visited.push(id);
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function exploreTreeFunction<N extends TreeNode<unknown, N>, V>(config?: Maybe<ExploreTreeFunctionConfig<N, V>>): ExploreTreeFunction<N, V> {
@@ -165,13 +166,13 @@ export function exploreTreeFunction<N extends TreeNode<unknown, N>, V>(config?: 
  * Visits each node before its children (pre-order). This is the default traversal
  * strategy used by {@link exploreTreeFunction}.
  *
+ * @returns A traversal factory that processes nodes in depth-first order.
+ *
  * @dbxUtil
  * @dbxUtilCategory tree
  * @dbxUtilKind factory
  * @dbxUtilTags tree, traverse, depth-first, dfs, pre-order, factory, strategy
  * @dbxUtilRelated breadth-first-explore-tree-traversal-factory-function, explore-tree-function
- *
- * @returns A traversal factory that processes nodes in depth-first order.
  *
  * @example
  * ```typescript
@@ -180,6 +181,7 @@ export function exploreTreeFunction<N extends TreeNode<unknown, N>, V>(config?: 
  * });
  * // Visits: root -> child1 -> leaf1 -> leaf2 -> child2 -> leaf3
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function depthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode<unknown, N>, V>(): ExploreTreeTraversalFactoryFunction<N, V> {
@@ -205,13 +207,13 @@ export function depthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode
  * Visits nodes level by level, processing all nodes at depth N before moving to depth N+1.
  * Uses an internal queue to defer child processing until the current level is complete.
  *
+ * @returns A traversal factory that processes nodes in breadth-first order.
+ *
  * @dbxUtil
  * @dbxUtilCategory tree
  * @dbxUtilKind factory
  * @dbxUtilTags tree, traverse, breadth-first, bfs, level-order, factory, strategy, queue
  * @dbxUtilRelated depth-first-explore-tree-traversal-factory-function, explore-tree-function
- *
- * @returns A traversal factory that processes nodes in breadth-first order.
  *
  * @example
  * ```typescript
@@ -220,6 +222,7 @@ export function depthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode
  * });
  * // Visits: root -> child1, child2, child3 -> leaf1, leaf2, leaf3
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function breadthFirstExploreTreeTraversalFactoryFunction<N extends TreeNode<unknown, N>, V>(): ExploreTreeTraversalFactoryFunction<N, V> {

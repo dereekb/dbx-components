@@ -51,13 +51,13 @@ export const ISO_8601_DATE_STRING_REGEX = /(\d{4,})-(\d{2})-(\d{2})T(\d{2}):(\d{
 /**
  * Determines if a string is a valid ISO8601 date string.
  *
+ * @param input - Value to test against the ISO8601 date string pattern.
+ * @returns True when the input matches the canonical ISO8601 date layout.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, iso8601, string, predicate, validate
  * @dbxUtilRelated is-iso8601-day-string, is-utc-date-string, iso-8601-date-string-regex
- *
- * @param input - The string to test
- * @returns True if the input is a valid ISO8601 date string
  */
 export function isISO8601DateString(input: string): input is ISO8601DateString {
   return ISO_8601_DATE_STRING_REGEX.test(input);
@@ -92,13 +92,13 @@ export const UTC_DATE_STRING_REGEX = /^([a-zA-Z]{3}, \d{2} [a-zA-Z]{3} \d{4} \d{
 /**
  * Determines if a string is a valid UTC date string.
  *
+ * @param input - Value to test against the UTC-formatted date string pattern.
+ * @returns True when the input matches the canonical UTC date layout.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, utc, string, predicate, validate
  * @dbxUtilRelated is-iso8601-date-string, utc-date-string-regex
- *
- * @param input - The string to test
- * @returns True if the input is a valid UTC date string
  */
 export function isUTCDateString(input: string): boolean {
   return UTC_DATE_STRING_REGEX.test(input);
@@ -145,14 +145,14 @@ export interface TimezoneStringRef {
 /**
  * Returns true only if the inputs have the same timezone, or both do not have a timezone set.
  *
+ * @param a - First object that may contain a timezone reference.
+ * @param b - Second object that may contain a timezone reference.
+ * @returns True if both objects have the same timezone or neither has a timezone set.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, timezone, compare, equal, predicate
  * @dbxUtilRelated is-considered-utc-timezone-string
- *
- * @param a - First object that may contain a timezone reference
- * @param b - Second object that may contain a timezone reference
- * @returns True if both objects have the same timezone or neither has a timezone set
  */
 export function hasSameTimezone(a: Maybe<Partial<TimezoneStringRef>>, b: Maybe<Partial<TimezoneStringRef>>): boolean {
   const tzA = a?.timezone;
@@ -249,13 +249,13 @@ export const ISO8601_DAY_STRING_START_REGEX = /^\d{4,}-\d{2}-\d{2}/;
  *
  * I.E. 2022-01-02T04:00:00.000Z in GMT-6 returns 2022-01-02
  *
+ * @param date - Reference instant whose UTC calendar day should be anchored.
+ * @returns Midnight UTC of the same UTC day as `date`.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, utc, start-of-day, day, normalize
  * @dbxUtilRelated start-of-day-for-system-date-in-utc, parse-iso8601-day-string-to-utc-date
- *
- * @param date - The date to get the start of day for
- * @returns A new Date set to midnight UTC of the input date's UTC day
  */
 export function startOfDayForUTCDateInUTC(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
@@ -265,13 +265,13 @@ export function startOfDayForUTCDateInUTC(date: Date): Date {
  *
  * I.E. 2022-01-02T04:00:00.000Z in GMT-6 (10PM Jan 1st CST) returns 2022-01-01
  *
+ * @param date - Reference instant whose system-local calendar day should be anchored.
+ * @returns Midnight UTC corresponding to the local-time start of `date`.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, utc, start-of-day, system, local
  * @dbxUtilRelated start-of-day-for-utc-date-in-utc
- *
- * @param date - The date to get the start of local day for
- * @returns A new Date set to midnight UTC of the input date's local day
  */
 export function startOfDayForSystemDateInUTC(date: Date): Date {
   return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -280,13 +280,13 @@ export function startOfDayForSystemDateInUTC(date: Date): Date {
 /**
  * Parses an ISO8601DayString (YYYY-MM-DD) to a UTC Date at midnight.
  *
+ * @param inputDateString - ISO8601 day string to parse (e.g. '2022-01-15').
+ * @returns Midnight UTC of the calendar day named by `inputDateString`.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, iso8601, day, parse, utc, convert
  * @dbxUtilRelated is-iso8601-day-string, start-of-day-for-utc-date-in-utc
- *
- * @param inputDateString - The ISO8601 day string to parse (e.g., '2022-01-15')
- * @returns A Date object set to midnight UTC on the specified day
  */
 export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString): Date {
   const [yearString, monthString, dateString] = inputDateString.split('-');
@@ -296,13 +296,13 @@ export function parseISO8601DayStringToUTCDate(inputDateString: ISO8601DayString
 /**
  * Determines if a string is a valid ISO8601 day string (YYYY-MM-DD format).
  *
+ * @param input - Value to test against the ISO8601 day-string pattern.
+ * @returns True when the input is exactly a YYYY-MM-DD value.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, iso8601, day, string, predicate, validate
  * @dbxUtilRelated is-iso8601-day-string-start, parse-iso8601-day-string-to-utc-date, iso8601-day-string-regex
- *
- * @param input - The string to test
- * @returns True if the input is a valid ISO8601 day string
  */
 export function isISO8601DayString(input: string): input is ISO8601DayString {
   return ISO8601_DAY_STRING_REGEX.test(input);
@@ -311,13 +311,13 @@ export function isISO8601DayString(input: string): input is ISO8601DayString {
 /**
  * Determines if a string starts with a valid ISO8601 day string pattern (YYYY-MM-DD).
  *
+ * @param input - Value to test for an ISO8601 day-string prefix.
+ * @returns True when the input begins with a YYYY-MM-DD prefix.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, iso8601, day, string, predicate, prefix
  * @dbxUtilRelated is-iso8601-day-string, iso8601-day-string-start-regex
- *
- * @param input - The string to test
- * @returns True if the input starts with a valid ISO8601 day string pattern
  */
 export function isISO8601DayStringStart(input: string): input is ISO8601DayString {
   return ISO8601_DAY_STRING_START_REGEX.test(input);
@@ -346,13 +346,13 @@ export const MONTH_DAY_SLASH_DATE_STRING_REGEX = /^\d{1,2}\/\d{1,2}\/\d+$/;
 /**
  * Determines if a string is a valid Month/Day/Year slash date format.
  *
+ * @param input - Value to test against the slash-separated date pattern.
+ * @returns True when the input matches the Month/Day/Year slash format.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, slash, month, day, string, predicate, validate
  * @dbxUtilRelated month-day-slash-date-to-date-string, month-day-slash-date-string-regex
- *
- * @param input - The string to test
- * @returns True if the input is a valid Month/Day/Year slash date
  */
 export function isMonthDaySlashDate(input: string): input is MonthDaySlashDate {
   return MONTH_DAY_SLASH_DATE_STRING_REGEX.test(input);
@@ -363,13 +363,13 @@ export function isMonthDaySlashDate(input: string): input is MonthDaySlashDate {
  * Handles single digit months and days by adding leading zeros.
  * If year is only 2 digits, prepends '20' to make a 4-digit year.
  *
+ * @param slashDate - The slash date string to convert (e.g., '1/1/20' or '11/15/2022')
+ * @returns An ISO8601 formatted day string (YYYY-MM-DD)
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, slash, day, string, convert, parse
  * @dbxUtilRelated is-month-day-slash-date
- *
- * @param slashDate - The slash date string to convert (e.g., '1/1/20' or '11/15/2022')
- * @returns An ISO8601 formatted day string (YYYY-MM-DD)
  */
 export function monthDaySlashDateToDateString(slashDate: MonthDaySlashDate): ISO8601DayString {
   let [month, day, year] = slashDate.split('/');
@@ -436,13 +436,13 @@ export function dateFromDateOrTimeMillisecondsNumber(input: Maybe<DateOrUnixDate
 /**
  * Converts a unix timestamp number to a Date object.
  *
+ * @param dateTimeNumber - Unix timestamp number to convert.
+ * @returns Date object if timestamp is valid, null/undefined if timestamp is null/undefined.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, milliseconds, unix, convert, parse
  * @dbxUtilRelated date-from-date-or-time-milliseconds-number, unix-date-time-seconds-number-to-date
- *
- * @param dateTimeNumber - Unix timestamp number to convert
- * @returns Date object if timestamp is valid, null/undefined if timestamp is null/undefined
  */
 export function unixMillisecondsNumberToDate(dateTimeNumber: Maybe<UnixDateTimeMillisecondsNumber>): Maybe<Date> {
   return dateTimeNumber == null ? dateTimeNumber : new Date(dateTimeNumber);
@@ -470,14 +470,14 @@ export type DateOrMilliseconds = Date | Milliseconds;
  *
  * If the input is a number of milliseconds, it is added to the current date.
  *
+ * @param dateOrMilliseconds - Either a concrete Date or a millisecond offset from `now`.
+ * @param now - Anchor used to resolve a millisecond offset; defaults to the current time.
+ * @returns Resolved Date for either a direct value or the offset-from-now case.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, milliseconds, convert, normalize, offset
  * @dbxUtilRelated add-milliseconds, date-from-date-or-time-milliseconds-number
- *
- * @param dateOrMilliseconds - The date or milliseconds to convert to a Date.
- * @param now - The current date to use when adding milliseconds. Defaults to the current time.
- * @returns The Date representation of the input.
  */
 export function dateOrMillisecondsToDate(dateOrMilliseconds: DateOrMilliseconds, now?: Maybe<Date>): Date {
   return isDate(dateOrMilliseconds) ? dateOrMilliseconds : addMilliseconds(now ?? new Date(), dateOrMilliseconds);
@@ -700,13 +700,13 @@ export type DateMonth = number;
  *
  * Converts JavaScript's 0-based month (0-11) to a 1-based month (1-12).
  *
+ * @param date - Reference instant whose local month should be reported.
+ * @returns One-based local month-of-year, ready for human-facing display.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, month, year, accessor, system, local
  * @dbxUtilRelated month-of-year-from-date-month, month-of-year-from-utc-date
- *
- * @param date - The date to extract the month from
- * @returns The month of year as a number from 1-12
  */
 export function monthOfYearFromDate(date: Date): MonthOfYear {
   return monthOfYearFromDateMonth(date.getMonth());
@@ -717,13 +717,13 @@ export function monthOfYearFromDate(date: Date): MonthOfYear {
  *
  * Converts JavaScript's 0-based month (0-11) to a 1-based month (1-12).
  *
+ * @param date - Reference instant whose UTC month should be reported.
+ * @returns One-based UTC month-of-year, ready for human-facing display.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, month, year, accessor, utc
  * @dbxUtilRelated month-of-year-from-date, month-of-year-from-date-month
- *
- * @param date - The date to extract the month from
- * @returns The month of year as a number from 1-12
  */
 export function monthOfYearFromUTCDate(date: Date): MonthOfYear {
   return monthOfYearFromDateMonth(date.getUTCMonth());
@@ -732,13 +732,13 @@ export function monthOfYearFromUTCDate(date: Date): MonthOfYear {
 /**
  * Converts a JavaScript Date month (0-11) to a MonthOfYear (1-12).
  *
+ * @param dateMonth - JavaScript Date month (0-11)
+ * @returns The month of year as a number from 1-12.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, month, year, convert, javascript
  * @dbxUtilRelated make-date-month-for-month-of-year, month-of-year-from-date
- *
- * @param dateMonth - JavaScript Date month (0-11)
- * @returns The month of year as a number from 1-12
  */
 export function monthOfYearFromDateMonth(dateMonth: DateMonth): MonthOfYear {
   return dateMonth + 1;
@@ -747,13 +747,14 @@ export function monthOfYearFromDateMonth(dateMonth: DateMonth): MonthOfYear {
 /**
  * Converts a MonthOfYear (1-12) to a JavaScript Date month (0-11).
  *
+ * @param monthOfYear - Month of year (1-12)
+ * @returns JavaScript Date month (0-11)
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, month, convert, javascript
  * @dbxUtilRelated month-of-year-from-date-month, month-of-year-from-date
  *
- * @param monthOfYear - Month of year (1-12)
- * @returns JavaScript Date month (0-11)
  * @__NO_SIDE_EFFECTS__
  */
 export function makeDateMonthForMonthOfYear(monthOfYear: MonthOfYear): DateMonth {
@@ -778,13 +779,13 @@ export type DateRelativeState = DateRelativeDirection | 'present';
  * Returns true if the value is a Date object.
  * Uses both instanceof and Object.prototype.toString for reliable type checking.
  *
+ * @param value - The value to check.
+ * @returns True if the value is a Date object.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, predicate, type-guard, validate
  * @dbxUtilRelated is-equal-date, is-past
- *
- * @param value - The value to check
- * @returns True if the value is a Date object
  */
 export function isDate(value: unknown): value is Date {
   return value instanceof Date || (typeof value === 'object' && Object.prototype.toString.call(value) === '[object Date]');
@@ -794,14 +795,14 @@ export function isDate(value: unknown): value is Date {
  * Returns true if the two input dates represent the same point in time.
  * Compares the timestamp values rather than the object references.
  *
+ * @param a - First date to compare.
+ * @param b - Second date to compare.
+ * @returns True if the dates represent the same point in time.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, equal, compare, predicate
  * @dbxUtilRelated is-date, is-past
- *
- * @param a - First date to compare
- * @param b - Second date to compare
- * @returns True if the dates represent the same point in time
  */
 export function isEqualDate(a: Date, b: Date): boolean {
   return a.getTime() === b.getTime();
@@ -810,13 +811,13 @@ export function isEqualDate(a: Date, b: Date): boolean {
 /**
  * Returns true if the input date is in the past relative to the current time.
  *
+ * @param input - Instant to compare against the system clock.
+ * @returns True when `input` is strictly before the current time.
+ *
  * @dbxUtil
  * @dbxUtilCategory date
  * @dbxUtilTags date, past, compare, predicate, time
  * @dbxUtilRelated is-equal-date, is-date
- *
- * @param input - The date to check
- * @returns True if the date is in the past
  */
 export function isPast(input: Date): boolean {
   return input.getTime() < Date.now();

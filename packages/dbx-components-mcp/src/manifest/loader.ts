@@ -23,6 +23,7 @@
  * loader throws — silent empty registries are the worst failure mode.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile } from 'node:fs/promises';
 import { type } from 'arktype';
 import { isCoreTopic } from './core-topics.js';
@@ -99,7 +100,7 @@ const SUPPORTED_VERSION = 1;
 // MARK: Source loading
 type ParseRawResult = { readonly kind: 'parsed'; readonly value: unknown } | { readonly kind: 'error'; readonly error: string };
 
-function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<string | null> {
+function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<Maybe<string>> {
   return readFile(path).then(
     (raw) => raw,
     () => null
@@ -107,25 +108,31 @@ function tryReadRaw(path: string, readFile: ManifestReadFile): Promise<string | 
 }
 
 function tryParseRaw(raw: string): ParseRawResult {
+  let result: ParseRawResult;
   try {
-    return { kind: 'parsed', value: JSON.parse(raw) };
+    result = { kind: 'parsed', value: JSON.parse(raw) };
   } catch (err) {
-    return { kind: 'error', error: err instanceof Error ? err.message : String(err) };
+    result = { kind: 'error', error: err instanceof Error ? err.message : String(err) };
   }
+  return result;
 }
 
 function validateParsedManifest(path: string, parsed: unknown): LoadFromSourceResult {
-  const candidateVersion = (parsed as { readonly version?: unknown } | null | undefined)?.version;
-  if (candidateVersion !== SUPPORTED_VERSION) {
-    return { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
+  const candidateVersion = (parsed as Maybe<{ readonly version?: unknown }>)?.version;
+  let result: LoadFromSourceResult;
+
+  if (candidateVersion === SUPPORTED_VERSION) {
+    const validated = SemanticTypeManifest(parsed);
+    if (validated instanceof type.errors) {
+      result = { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
+    } else {
+      result = { kind: 'success', manifest: validated };
+    }
+  } else {
+    result = { kind: 'failure', warning: { kind: 'manifest-version-unsupported', path, version: candidateVersion } };
   }
 
-  const validated = SemanticTypeManifest(parsed);
-  if (validated instanceof type.errors) {
-    return { kind: 'failure', warning: { kind: 'manifest-schema-failed', path, error: validated.summary } };
-  }
-
-  return { kind: 'success', manifest: validated };
+  return result;
 }
 
 /**
@@ -133,22 +140,26 @@ function validateParsedManifest(path: string, parsed: unknown): LoadFromSourceRe
  * surfaced as {@link LoaderWarning} values; the caller decides whether
  * to throw (strict source) or collect (non-strict source).
  *
- * @param source - the manifest source descriptor
- * @param readFile - injectable file reader
- * @returns either the validated manifest or a typed failure warning
+ * @param source - The manifest source descriptor.
+ * @param readFile - Injectable file reader.
+ * @returns Either the validated manifest or a typed failure warning.
  */
 async function loadFromSource(source: ManifestSource, readFile: ManifestReadFile): Promise<LoadFromSourceResult> {
   const raw = await tryReadRaw(source.path, readFile);
+  let result: LoadFromSourceResult;
+
   if (raw === null) {
-    return { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
+    result = { kind: 'failure', warning: { kind: 'manifest-missing', path: source.path } };
+  } else {
+    const parseResult = tryParseRaw(raw);
+    if (parseResult.kind === 'error') {
+      result = { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseResult.error } };
+    } else {
+      result = validateParsedManifest(source.path, parseResult.value);
+    }
   }
 
-  const parseResult = tryParseRaw(raw);
-  if (parseResult.kind === 'error') {
-    return { kind: 'failure', warning: { kind: 'manifest-parse-failed', path: source.path, error: parseResult.error } };
-  }
-
-  return validateParsedManifest(source.path, parseResult.value);
+  return result;
 }
 
 /**
@@ -156,8 +167,8 @@ async function loadFromSource(source: ManifestSource, readFile: ManifestReadFile
  * (bundled sources are strict; external sources are not) when the source
  * does not override.
  *
- * @param source - the manifest source descriptor
- * @returns whether failures from `source` should throw (`true`) or warn
+ * @param source - The manifest source descriptor.
+ * @returns Whether failures from `source` should throw (`true`) or warn.
  */
 function isStrictSource(source: ManifestSource): boolean {
   return source.strict ?? source.origin === 'bundled';
@@ -175,11 +186,11 @@ interface FilteredTopics {
  * are stripped and a {@link LoaderWarning} is emitted per drop; the entry
  * is preserved with whatever topics survived.
  *
- * @param config - validation context for one entry's topic list
- * @param config.entryKey - `${package}::${name}` key of the owning entry
- * @param config.topics - the entry's declared topics
- * @param config.topicNamespace - the manifest's `topicNamespace` (prefix for namespaced topics)
- * @returns the filtered topic list plus any warnings produced during filtering
+ * @param config - Validation context for one entry's topic list.
+ * @param config.entryKey - `${package}::${name}` key of the owning entry.
+ * @param config.topics - The entry's declared topics.
+ * @param config.topicNamespace - The manifest's `topicNamespace` (prefix for namespaced topics)
+ * @returns The filtered topic list plus any warnings produced during filtering.
  */
 function filterEntryTopics(config: { readonly entryKey: string; readonly topics: readonly string[]; readonly topicNamespace: string }): FilteredTopics {
   const { entryKey, topics, topicNamespace } = config;
@@ -210,8 +221,8 @@ function filterEntryTopics(config: { readonly entryKey: string; readonly topics:
  * Builds a stable string key from a warning so the loader can return
  * warnings in deterministic order regardless of how they were collected.
  *
- * @param warning - the warning to derive a sort key for
- * @returns a string ordered first by `kind` then by the warning's primary identifiers
+ * @param warning - The warning to derive a sort key for.
+ * @returns Ordered first by `kind` then by the warning's primary identifiers. (string)
  */
 function warningSortKey(warning: LoaderWarning): string {
   let key: string;
@@ -342,9 +353,9 @@ function buildTopicsIndex(mergedEntries: ReadonlyMap<string, SemanticTypeEntry>)
  * fails — strict or not — the loader throws, since a silent empty registry
  * provides no value to a downstream agent.
  *
- * @param input - manifest sources plus an optional injected `readFile`
- * @returns merged entries, topic index, deterministic warnings, and the list of source labels that loaded
- * @throws when a strict source fails or when zero manifests load successfully
+ * @param input - Manifest sources plus an optional injected `readFile`
+ * @returns Merged entries, topic index, deterministic warnings, and the list of source labels that loaded.
+ * @throws {Error} When a strict source fails or when zero manifests load successfully.
  */
 export async function loadSemanticTypeManifests(input: LoadSemanticTypeManifestsInput): Promise<LoadSemanticTypeManifestsResult> {
   const { sources, readFile = DEFAULT_READ_FILE } = input;

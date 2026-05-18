@@ -6,15 +6,15 @@ export interface State {
   // None
 }
 
-export const initialState: State = {};
+export const INITIAL_STATE: State = {};
 
-export const ROOT_REDUCER = createReducer(initialState);
+export const ROOT_REDUCER = createReducer(INITIAL_STATE);
 
 /**
  * Meta-reducer that logs all dispatched actions, previous state, and next state to the console.
  *
- * @param reducer - The reducer to wrap with logging
- * @returns A wrapped reducer that logs state transitions
+ * @param reducer - The reducer to wrap with logging.
+ * @returns A wrapped reducer that logs state transitions.
  */
 export function logger(reducer: ActionReducer<State>): ActionReducer<State> {
   return (state, action) => {

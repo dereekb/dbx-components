@@ -75,9 +75,88 @@ export function openStreamingDump(params: OpenStreamingDumpParams): StreamingDum
   const ext: 'json' | 'ndjson' = dumpOutput === 'raw' ? 'json' : 'ndjson';
   const mainPath = buildDumpFilePath(ext);
   const pickPath = pick ? buildDumpFilePath(ext, 'pick') : undefined;
+  let dump: StreamingDump;
 
-  if (!mainPath) {
-    return {
+  if (mainPath) {
+    let pagesWritten = 0;
+
+    const applyPickToPage = (result: PaginatedResponse): PaginatedResponse => {
+      let mapped: PaginatedResponse;
+      if (pick) {
+        const pickedData = pickFields(result.data as unknown[], pick);
+        mapped = { ...result, data: pickedData };
+      } else {
+        mapped = result;
+      }
+      return mapped;
+    };
+
+    const writeBoth = (input: WriteBothInput): void => {
+      const flagFn = input.append ? appendFileSync : writeFileSync;
+
+      flagFn(mainPath, input.mainContent);
+
+      if (pickPath && input.pickContent !== undefined) {
+        flagFn(pickPath, input.pickContent);
+      }
+    };
+
+    const writeRawPage = (result: PaginatedResponse, append: boolean): void => {
+      const mainContent = JSON.stringify(result, null, 2);
+      const pickContent = pickPath ? JSON.stringify(applyPickToPage(result), null, 2) : undefined;
+      writeBoth({ mainContent, pickContent, append });
+    };
+
+    const writeLinePage = (result: PaginatedResponse, append: boolean): void => {
+      const mainContent = JSON.stringify(result) + '\n';
+      const pickContent = pickPath ? JSON.stringify(applyPickToPage(result)) + '\n' : undefined;
+      writeBoth({ mainContent, pickContent, append });
+    };
+
+    const writeDataByLinePage = (result: PaginatedResponse, append: boolean): void => {
+      // data_by_line — one record per line. For `replace` mode, truncate on first record then append the rest.
+      const records = result.data ?? [];
+      const pickedRecords: Maybe<unknown[]> = pickPath ? pickFields(records as unknown[], pick as string) : undefined;
+
+      if (records.length === 0) {
+        // Still ensure file is created/truncated on first iteration even when empty.
+        if (!append) {
+          writeBoth({ mainContent: '', pickContent: pickPath ? '' : undefined, append: false });
+        }
+      } else {
+        records.forEach((record, index) => {
+          const recordAppend = append || index > 0;
+          const mainContent = JSON.stringify(record) + '\n';
+          const pickContent = pickPath && pickedRecords ? JSON.stringify(pickedRecords[index]) + '\n' : undefined;
+          writeBoth({ mainContent, pickContent, append: recordAppend });
+        });
+      }
+    };
+
+    const writePage = (result: PaginatedResponse): void => {
+      const isFirst = pagesWritten === 0;
+      // For `replace` mode every iteration truncates; for `concat` mode only the first page truncates.
+      const append = dumpMerge === 'concat' && !isFirst;
+
+      if (dumpOutput === 'raw') {
+        writeRawPage(result, append);
+      } else if (dumpOutput === 'page_by_line') {
+        writeLinePage(result, append);
+      } else {
+        writeDataByLinePage(result, append);
+      }
+
+      pagesWritten += 1;
+    };
+
+    dump = {
+      mainPath,
+      pickPath,
+      writePage,
+      close: () => undefined
+    };
+  } else {
+    dump = {
       mainPath: undefined,
       pickPath: undefined,
       writePage: () => undefined,
@@ -85,83 +164,7 @@ export function openStreamingDump(params: OpenStreamingDumpParams): StreamingDum
     };
   }
 
-  let pagesWritten = 0;
-
-  function applyPickToPage(result: PaginatedResponse): PaginatedResponse {
-    if (!pick) {
-      return result;
-    }
-
-    const pickedData = pickFields(result.data as unknown[], pick);
-    return { ...result, data: pickedData };
-  }
-
-  function writeBoth(input: WriteBothInput): void {
-    const flagFn = input.append ? appendFileSync : writeFileSync;
-
-    if (mainPath) {
-      flagFn(mainPath, input.mainContent);
-    }
-
-    if (pickPath && input.pickContent !== undefined) {
-      flagFn(pickPath, input.pickContent);
-    }
-  }
-
-  function writeRawPage(result: PaginatedResponse, append: boolean): void {
-    const mainContent = JSON.stringify(result, null, 2);
-    const pickContent = pickPath ? JSON.stringify(applyPickToPage(result), null, 2) : undefined;
-    writeBoth({ mainContent, pickContent, append });
-  }
-
-  function writeLinePage(result: PaginatedResponse, append: boolean): void {
-    const mainContent = JSON.stringify(result) + '\n';
-    const pickContent = pickPath ? JSON.stringify(applyPickToPage(result)) + '\n' : undefined;
-    writeBoth({ mainContent, pickContent, append });
-  }
-
-  function writeDataByLinePage(result: PaginatedResponse, append: boolean): void {
-    // data_by_line — one record per line. For `replace` mode, truncate on first record then append the rest.
-    const records = result.data ?? [];
-    const pickedRecords: Maybe<unknown[]> = pickPath ? (pickFields(records as unknown[], pick as string) as unknown[]) : undefined;
-
-    if (records.length === 0) {
-      // Still ensure file is created/truncated on first iteration even when empty.
-      if (!append) {
-        writeBoth({ mainContent: '', pickContent: pickPath ? '' : undefined, append: false });
-      }
-    } else {
-      records.forEach((record, index) => {
-        const recordAppend = append || index > 0;
-        const mainContent = JSON.stringify(record) + '\n';
-        const pickContent = pickPath && pickedRecords ? JSON.stringify(pickedRecords[index]) + '\n' : undefined;
-        writeBoth({ mainContent, pickContent, append: recordAppend });
-      });
-    }
-  }
-
-  function writePage(result: PaginatedResponse): void {
-    const isFirst = pagesWritten === 0;
-    // For `replace` mode every iteration truncates; for `concat` mode only the first page truncates.
-    const append = dumpMerge === 'concat' && !isFirst;
-
-    if (dumpOutput === 'raw') {
-      writeRawPage(result, append);
-    } else if (dumpOutput === 'page_by_line') {
-      writeLinePage(result, append);
-    } else {
-      writeDataByLinePage(result, append);
-    }
-
-    pagesWritten += 1;
-  }
-
-  return {
-    mainPath,
-    pickPath,
-    writePage,
-    close: () => undefined
-  };
+  return dump;
 }
 
 // MARK: runPaginatedList
@@ -284,47 +287,50 @@ function printPaginatedOutput<I, R extends PaginatedResponse>(input: PrintPagina
 export async function runPaginatedList<I, R extends PaginatedResponse>(params: RunPaginatedListParams<I, R>): Promise<RunPaginatedListOutcome<R>> {
   const { initialInput, fetchPage, adapter, multiplePagesOutput, dumpOutput, dumpMerge } = params;
   const requestedPages = Math.max(1, Math.floor(params.multiplePages || 1));
+  let outcome: RunPaginatedListOutcome<R>;
 
   if (requestedPages <= 1) {
     const result = await fetchPage(initialInput);
-    return { handled: false, result };
+    outcome = { handled: false, result };
+  } else {
+    const outputOptions = getOutputOptions();
+
+    if (!outputOptions.dumpDir) {
+      console.error('[cli] warning: --multiple-pages used without --dump-dir; results not persisted.');
+    }
+
+    const stream = openStreamingDump({ dumpOutput, dumpMerge });
+
+    let state: FetchLoopState<I, R>;
+    try {
+      state = await runFetchLoop({
+        initialInput,
+        requestedPages,
+        fetchPage,
+        adapter,
+        stream,
+        shouldCollectPages: multiplePagesOutput === 'pages',
+        shouldCollectRecords: multiplePagesOutput === 'merged_page'
+      });
+    } finally {
+      stream.close();
+    }
+
+    const summaryMeta: Record<string, unknown> = {
+      pagesFetched: state.pagesFetched,
+      totalRecords: state.totalRecords,
+      hasMorePagesAvailable: state.hasMorePagesAvailable,
+      dumpFile: stream.mainPath ?? null
+    };
+
+    if (stream.pickPath) {
+      summaryMeta.dumpFilePick = stream.pickPath;
+    }
+
+    printPaginatedOutput({ multiplePagesOutput, summaryMeta, state, adapter, pickFilter: outputOptions.pick });
+
+    outcome = { handled: true };
   }
 
-  const outputOptions = getOutputOptions();
-
-  if (!outputOptions.dumpDir) {
-    console.error('[cli] warning: --multiple-pages used without --dump-dir; results not persisted.');
-  }
-
-  const stream = openStreamingDump({ dumpOutput, dumpMerge });
-
-  let state: FetchLoopState<I, R>;
-  try {
-    state = await runFetchLoop({
-      initialInput,
-      requestedPages,
-      fetchPage,
-      adapter,
-      stream,
-      shouldCollectPages: multiplePagesOutput === 'pages',
-      shouldCollectRecords: multiplePagesOutput === 'merged_page'
-    });
-  } finally {
-    stream.close();
-  }
-
-  const summaryMeta: Record<string, unknown> = {
-    pagesFetched: state.pagesFetched,
-    totalRecords: state.totalRecords,
-    hasMorePagesAvailable: state.hasMorePagesAvailable,
-    dumpFile: stream.mainPath ?? null
-  };
-
-  if (stream.pickPath) {
-    summaryMeta.dumpFilePick = stream.pickPath;
-  }
-
-  printPaginatedOutput({ multiplePagesOutput, summaryMeta, state, adapter, pickFilter: outputOptions.pick });
-
-  return { handled: true };
+  return outcome;
 }

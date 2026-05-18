@@ -96,8 +96,8 @@ export type ZohoServerErrorDataWithDetails<T = unknown> = Required<ZohoServerErr
 /**
  * Normalizes a Zoho error response entry into a consistent {@link ZohoServerErrorData} shape, handling both object and string error formats.
  *
- * @param error - The raw error entry, either a structured object or a plain error code string
- * @returns Normalized error data with code and message fields
+ * @param error - The raw error entry, either a structured object or a plain error code string.
+ * @returns Normalized error data with code and message fields.
  */
 export function zohoServerErrorData(error: ZohoServerErrorResponseDataError): ZohoServerErrorData {
   const errorType = typeof error;
@@ -173,8 +173,9 @@ export interface LogZohoServerErrorFunctionConfig {
  * Creates a logZohoServerErrorFunction that logs the error to console.
  *
  * @param zohoApiNamePrefix - Prefix to use when logging (e.g. 'ZohoRecruit', 'ZohoSign')
- * @param options - Optional configuration for controlling which error types are logged
- * @returns A function that logs Zoho server errors to the console
+ * @param options - Optional configuration for controlling which error types are logged.
+ * @returns Logs Zoho server errors to the console.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function logZohoServerErrorFunction(zohoApiNamePrefix: string, options?: LogZohoServerErrorFunctionConfig): LogZohoServerErrorFunction {
@@ -206,9 +207,10 @@ export type ParseZohoFetchResponseErrorFunction = (responseError: FetchResponseE
 /**
  * Wraps a ConfiguredFetch to support handling errors returned by fetch.
  *
- * @param parseZohoError - Function that parses a fetch response error into a Zoho-specific error
- * @param defaultLogError - Default error logging function used when no custom logger is provided
- * @returns Factory that wraps a ConfiguredFetch with Zoho error handling
+ * @param parseZohoError - Function that parses a fetch response error into a Zoho-specific error.
+ * @param defaultLogError - Default error logging function used when no custom logger is provided.
+ * @returns Factory that wraps a ConfiguredFetch with Zoho error handling.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function handleZohoErrorFetchFactory(parseZohoError: ParseZohoFetchResponseErrorFunction, defaultLogError: LogZohoServerErrorFunction): HandleZohoErrorFetchFactory {
@@ -238,8 +240,9 @@ export type ParseZohoServerErrorResponseData = (zohoServerErrorResponseData: Zoh
 /**
  * FetchJsonInterceptJsonResponseFunction that intercepts a 200 response that actually contains a ZohoServerError and throws a ZohoServerError for the error handling to catch.
  *
- * @param parseZohoServerErrorResponseData - Function that parses raw error response data into a structured error
- * @returns Interceptor function that detects and throws hidden errors in 200 responses
+ * @param parseZohoServerErrorResponseData - Function that parses raw error response data into a structured error.
+ * @returns Interceptor function that detects and throws hidden errors in 200 responses.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function interceptZohoErrorResponseFactory(parseZohoServerErrorResponseData: ParseZohoServerErrorResponseData): FetchJsonInterceptJsonResponseFunction {
@@ -367,8 +370,8 @@ export interface ZohoRateLimitHeaderDetails {
 /**
  * Extracts rate limit details from Zoho API response headers, returning null if the headers are absent.
  *
- * @param headers - HTTP response headers from a Zoho API call
- * @returns Parsed rate limit details, or null if rate limit headers are missing
+ * @param headers - HTTP response headers from a Zoho API call.
+ * @returns Parsed rate limit details, or null if rate limit headers are missing.
  */
 export function zohoRateLimitHeaderDetails(headers: Headers): Maybe<ZohoRateLimitHeaderDetails> {
   const limitHeader = headers.get(ZOHO_RATE_LIMIT_LIMIT_HEADER);
@@ -398,9 +401,9 @@ export class ZohoTooManyRequestsError extends ZohoServerFetchResponseError {
 /**
  * Function that parses/transforms a ZohoServerErrorResponseData into a general ZohoServerError or other known error type.
  *
- * @param errorResponseData - Raw error response data from the Zoho API
- * @param responseError - The underlying fetch response error
- * @returns A typed Zoho server error, or undefined if no error is found
+ * @param errorResponseData - Raw error response data from the Zoho API.
+ * @param responseError - The underlying fetch response error.
+ * @returns A typed Zoho server error, or undefined if no error is found.
  */
 export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerErrorResponseData | ZohoServerErrorResponseDataArrayRef, responseError: FetchResponseError): ZohoServerFetchResponseError | undefined {
   let result: ZohoServerFetchResponseError | undefined;

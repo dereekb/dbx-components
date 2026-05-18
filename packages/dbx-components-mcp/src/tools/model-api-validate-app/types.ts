@@ -2,7 +2,7 @@
  * Types for `dbx_model_api_validate_app`.
  */
 
-import type { CrudVerb } from '../model-api-shared/types.js';
+import type { CrudVerb } from '@dereekb/dbx-cli/manifest-extract';
 import type { ModelApiValidateAppCodeString } from './codes.js';
 
 export type ValidateIssueCode = ModelApiValidateAppCodeString;

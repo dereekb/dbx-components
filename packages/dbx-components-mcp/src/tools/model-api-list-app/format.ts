@@ -16,9 +16,9 @@ import type { ApiListEntry, ApiListFileSummary, ApiListReport } from './types.js
  * model labels, counts, the per-entry table, and any non-empty entry
  * descriptions.
  *
- * @param fileSummary - the file-level summary (group name + counts)
- * @param fileEntries - the entries belonging to this file
- * @returns the markdown lines for this file's section
+ * @param fileSummary - The file-level summary (group name + counts)
+ * @param fileEntries - The entries belonging to this file.
+ * @returns The markdown lines for this file's section.
  */
 function formatFileSection(fileSummary: ApiListFileSummary, fileEntries: readonly ApiListEntry[]): readonly string[] {
   const modelLabels = fileSummary.modelKeys.length === 0 ? '_(none)_' : fileSummary.modelKeys.map((m) => `\`${m}\``).join(', ');

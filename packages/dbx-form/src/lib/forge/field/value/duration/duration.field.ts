@@ -2,7 +2,7 @@ import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import { type TimeUnit, filterFromPOJO } from '@dereekb/util';
 import type { TimeDurationFieldValueMode } from '../../../../formly/field/value/duration/duration.field';
 import type { DbxForgeTimeDurationFieldComponentProps } from './duration.field.component';
-import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 
 /**
  * The custom forge field type name for the time duration field.
@@ -85,4 +85,4 @@ export const dbxForgeTimeDurationField = dbxForgeFieldFunction<DbxForgeTimeDurat
       carryOver: config.carryOver
     })
   )
-}) as DbxForgeFieldFunction<DbxForgeTimeDurationFieldConfig, DbxForgeTimeDurationFieldDef>;
+});

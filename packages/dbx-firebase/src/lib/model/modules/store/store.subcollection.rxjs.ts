@@ -38,7 +38,7 @@ export function setParentStoreEffect<T, PT, D extends FirestoreDocument<T> = Fir
         let result: Maybe<Subscription>;
 
         if (parentStore) {
-          result = store._setParent(parentStore.currentDocument$) as Subscription;
+          result = store._setParent(parentStore.currentDocument$);
         } else {
           result = undefined;
         }

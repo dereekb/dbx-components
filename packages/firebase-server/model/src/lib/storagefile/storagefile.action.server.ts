@@ -179,10 +179,9 @@ export abstract class StorageFileServerActions {
  * Creates a concrete {@link StorageFileServerActions} implementation by wiring each action
  * to its factory function using the provided context.
  *
- * @param context - the fully assembled storage file server actions context
- *
- * @param context - the fully assembled storage file server actions context
- * @returns a concrete {@link StorageFileServerActions} with all action methods wired to their factories
+ * @param context - The fully assembled storage file server actions context.
+ * @param context - The fully assembled storage file server actions context.
+ * @returns A concrete {@link StorageFileServerActions} with all action methods wired to their factories.
  *
  * @example
  * ```ts
@@ -218,8 +217,8 @@ export function storageFileServerActions(context: StorageFileServerActionsContex
  *
  * Creates a new {@link StorageFile} document using the provided template data.
  *
- * @param context - the base server actions context providing Firestore and storage access
- * @returns an async transform-and-validate function that creates a StorageFile document
+ * @param context - The base server actions context providing Firestore and storage access.
+ * @returns An async transform-and-validate function that creates a StorageFile document.
  */
 export function createStorageFileFactory(context: BaseStorageFileServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory } = context;
@@ -242,8 +241,8 @@ export function createStorageFileFactory(context: BaseStorageFileServerActionsCo
  * initializes each one via the upload service, and cleans up the source upload
  * on success. Failed initializations are logged but do not halt the batch.
  *
- * @param context - the storage file server actions context with storage service and upload initialization
- * @returns an async transform-and-validate function that returns batch initialization results
+ * @param context - The storage file server actions context with storage service and upload initialization.
+ * @returns An async transform-and-validate function that returns batch initialization results.
  */
 export function initializeAllStorageFilesFromUploadsFactory(context: StorageFileServerActionsContext) {
   const { storageService, firebaseServerActionTransformFunctionFactory } = context;
@@ -317,8 +316,8 @@ export interface InitializeStorageFileFromUploadFileInput {
  * Validates the file exists and is allowed, runs the upload initializer, deletes the upload source
  * on success, and optionally expedites processing of the created storage file.
  *
- * @param context - the storage file server actions context
- * @returns an async function that accepts an upload file input and returns the created StorageFileDocument
+ * @param context - The storage file server actions context.
+ * @returns An async function that accepts an upload file input and returns the created StorageFileDocument.
  */
 export function _initializeStorageFileFromUploadFileFactory(context: StorageFileServerActionsContext) {
   const { firestoreContext, storageFileInitializeFromUploadService, notificationExpediteService } = context;
@@ -447,8 +446,8 @@ export function _initializeStorageFileFromUploadFileFactory(context: StorageFile
  * Validates the file exists and is allowed, runs the type determiner and initializer,
  * then cleans up the upload source on success.
  *
- * @param context - the storage file server actions context with storage and upload services
- * @returns an async transform-and-validate function that creates a StorageFile from an upload
+ * @param context - The storage file server actions context with storage and upload services.
+ * @returns An async transform-and-validate function that creates a StorageFile from an upload.
  */
 export function initializeStorageFileFromUploadFactory(context: StorageFileServerActionsContext) {
   const { storageService, firebaseServerActionTransformFunctionFactory } = context;
@@ -469,8 +468,8 @@ export function initializeStorageFileFromUploadFactory(context: StorageFileServe
  *
  * Updates an existing {@link StorageFile} document with the provided schedule-delete-at time.
  *
- * @param context - the base server actions context providing Firestore access
- * @returns an async transform-and-validate function that updates a StorageFile document
+ * @param context - The base server actions context providing Firestore access.
+ * @returns An async transform-and-validate function that updates a StorageFile document.
  */
 export function updateStorageFileFactory(context: BaseStorageFileServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory } = context;
@@ -495,8 +494,8 @@ export function updateStorageFileFactory(context: BaseStorageFileServerActionsCo
  * Updates embedded file entries within a {@link StorageFileGroup} document inside a
  * Firestore transaction, merging display name changes into the existing entries.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that updates a StorageFileGroup document
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that updates a StorageFileGroup document.
  */
 export function updateStorageFileGroupFactory(context: StorageFileServerActionsContext) {
   const { firestoreContext, storageFileGroupCollection, firebaseServerActionTransformFunctionFactory } = context;
@@ -545,8 +544,8 @@ export function updateStorageFileGroupFactory(context: StorageFileServerActionsC
  * processing notification task for each file and optionally expedites delivery.
  * Handles stuck-processing detection with a throttle check.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that returns batch processing results
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that returns batch processing results.
  */
 export function processAllQueuedStorageFilesFactory(context: StorageFileServerActionsContext) {
   const { storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
@@ -620,8 +619,8 @@ export interface ProcessStorageFileInTransactionInput {
  * Creates or restarts a notification task for the file based on its current processing state,
  * handling stuck-processing detection, forced restarts, and re-processing of already-successful files.
  *
- * @param context - the storage file server actions context
- * @returns an async function that processes a storage file within a transaction
+ * @param context - The storage file server actions context.
+ * @returns An async function that processes a storage file within a transaction.
  */
 export function _processStorageFileInTransactionFactory(context: StorageFileServerActionsContext) {
   const { storageFileCollection, notificationCollectionGroup } = context;
@@ -729,8 +728,8 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
  * Processes a single {@link StorageFile} by creating a notification task for it
  * and marking it as processing. Validates the file is in a valid state for processing.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that processes a single StorageFile
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that processes a single StorageFile.
  */
 export function processStorageFileFactory(context: StorageFileServerActionsContext) {
   const { firestoreContext, notificationExpediteService, firebaseServerActionTransformFunctionFactory } = context;
@@ -779,8 +778,8 @@ export function processStorageFileFactory(context: StorageFileServerActionsConte
  * scheduled delete time has passed. Removes both the Firestore document and
  * the associated file in Cloud Storage.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that returns batch deletion results
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that returns batch deletion results.
  */
 export function deleteAllQueuedStorageFilesFactory(context: StorageFileServerActionsContext) {
   const { storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
@@ -837,8 +836,8 @@ export function deleteAllQueuedStorageFilesFactory(context: StorageFileServerAct
  * Deletes a single {@link StorageFile} document and its associated Cloud Storage file.
  * Validates the file is flagged for deletion and the scheduled delete time has passed.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that deletes a StorageFile and its storage object
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that deletes a StorageFile and its storage object.
  */
 export function deleteStorageFileFactory(context: StorageFileServerActionsContext) {
   const { firestoreContext, storageService, storageFileCollection, firebaseServerActionTransformFunctionFactory } = context;
@@ -930,8 +929,8 @@ export const DEFAULT_DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_PARALLEL_TASKS = 5;
  * When `throwOnFirstError` is true, the first failure throws immediately (single-download behavior).
  * When false, failures are collected in the errors array (batch behavior).
  *
- * @param context - the storage file server actions context
- * @returns an async function that processes a {@link DownloadMultipleStorageFilesFactoryInput} and returns a {@link DownloadMultipleStorageFilesResult}
+ * @param context - The storage file server actions context.
+ * @returns An async function that processes a {@link DownloadMultipleStorageFilesFactoryInput} and returns a {@link DownloadMultipleStorageFilesResult}
  */
 function _downloadMultipleStorageFilesFactory(context: StorageFileServerActionsContext) {
   const { storageService, storageFileCollection } = context;
@@ -980,7 +979,7 @@ function _downloadMultipleStorageFilesFactory(context: StorageFileServerActionsC
           fileName: metadata.name ? slashPathDetails(metadata.name).end : undefined,
           mimeType: itemResponseContentType ?? metadata.contentType,
           expiresAt: unixDateTimeSecondsNumberFromDate(downloadUrlExpiresAt)
-        } as DownloadMultipleStorageFileSuccessItem;
+        };
       },
       {
         throwError: throwOnFirstError ?? false,
@@ -1004,8 +1003,8 @@ function _downloadMultipleStorageFilesFactory(context: StorageFileServerActionsC
  * Generates a signed download URL for a {@link StorageFile}'s associated Cloud Storage file.
  * Delegates to {@link _downloadMultipleStorageFilesFactory} with a single item and `throwOnFirstError: true`.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that generates a signed download URL
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that generates a signed download URL.
  */
 export function downloadStorageFileFactory(context: StorageFileServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory } = context;
@@ -1037,8 +1036,8 @@ export function downloadStorageFileFactory(context: StorageFileServerActionsCont
  * By default, individual failures are collected in the errors array rather than failing the entire batch.
  * Set `throwOnFirstError` in params to throw on the first failure instead.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that generates signed download URLs for multiple files
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that generates signed download URLs for multiple files.
  */
 export function downloadMultipleStorageFilesFactory(context: StorageFileServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory } = context;
@@ -1097,8 +1096,8 @@ export interface CreateStorageFileGroupInTransactionInput extends StorageFileGro
  * The created group is flagged for initialization (`s=true`) and uses a dummy owner key
  * that will be set during the initialization step.
  *
- * @param context - the storage file server actions context
- * @returns an async function that creates a StorageFileGroup within a transaction
+ * @param context - The storage file server actions context.
+ * @returns An async function that creates a StorageFileGroup within a transaction.
  */
 export function createStorageFileGroupInTransactionFactory(context: StorageFileServerActionsContext) {
   const { storageFileGroupCollection } = context;
@@ -1134,8 +1133,8 @@ export function createStorageFileGroupInTransactionFactory(context: StorageFileS
  * Creates a new {@link StorageFileGroup} document within a Firestore transaction,
  * associating it with a model key or storage file.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that creates a new StorageFileGroup
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that creates a new StorageFileGroup.
  */
 export function createStorageFileGroupFactory(context: StorageFileServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
@@ -1188,8 +1187,8 @@ export interface SyncStorageFileWithGroupsInTransactionInput {
  * Adds the storage file to groups it is missing from, removes it from groups when requested,
  * and optionally creates new groups for references that do not yet exist.
  *
- * @param context - the storage file server actions context
- * @returns an async function that syncs a storage file with its groups within a transaction
+ * @param context - The storage file server actions context.
+ * @returns An async function that syncs a storage file with its groups within a transaction.
  */
 export function _syncStorageFileWithGroupsInTransactionFactory(context: StorageFileServerActionsContext) {
   const { storageFileCollection, storageFileGroupCollection } = context;
@@ -1284,8 +1283,8 @@ export function _syncStorageFileWithGroupsInTransactionFactory(context: StorageF
  * Syncs a single {@link StorageFile}'s embedded data into its associated {@link StorageFileGroup}
  * documents and clears the sync flag on completion.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that syncs a StorageFile with its groups
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that syncs a StorageFile with its groups.
  */
 export function syncStorageFileWithGroupsFactory(context: StorageFileServerActionsContext) {
   const { firestoreContext, firebaseServerActionTransformFunctionFactory } = context;
@@ -1307,8 +1306,8 @@ export function syncStorageFileWithGroupsFactory(context: StorageFileServerActio
  * updating their associated {@link StorageFileGroup} documents and flagging
  * groups for content regeneration when changes occur.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that returns batch sync results
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that returns batch sync results.
  */
 export function syncAllFlaggedStorageFilesWithGroupsFactory(context: StorageFileServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, storageFileCollection } = context;
@@ -1319,7 +1318,7 @@ export function syncAllFlaggedStorageFilesWithGroupsFactory(context: StorageFile
       const syncStorageFileWithGroupsInstance = await syncStorageFileWithGroups({
         key: firestoreDummyKey(),
         force: true // force anyways; they should all be flagged for sync when the query hits
-      } as SyncStorageFileWithGroupsParams);
+      });
 
       let storageFilesSynced = 0;
       let storageFilesGroupsCreated = 0;
@@ -1372,8 +1371,8 @@ export function syncAllFlaggedStorageFilesWithGroupsFactory(context: StorageFile
  * Regenerates the content of a single {@link StorageFileGroup}, including building a ZIP
  * archive from the group's embedded files and updating the group's content metadata.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that regenerates a StorageFileGroup's content
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that regenerates a StorageFileGroup's content.
  */
 export function regenerateStorageFileGroupContentFactory(context: StorageFileServerActionsContext) {
   const { firestoreContext, storageService, storageFileCollection, storageFileGroupCollection, firebaseServerActionTransformFunctionFactory } = context;
@@ -1459,8 +1458,8 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
  * Batch-processes all {@link StorageFileGroup} documents flagged for content regeneration,
  * rebuilding their ZIP archives and updating content metadata.
  *
- * @param context - the storage file server actions context
- * @returns an async transform-and-validate function that returns batch regeneration results
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that returns batch regeneration results.
  */
 export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: StorageFileServerActionsContext) {
   const { firebaseServerActionTransformFunctionFactory, storageFileGroupCollection } = context;
@@ -1470,7 +1469,7 @@ export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: Sto
     return async () => {
       const regenerateStorageFileGroupContentInstance = await regenerateStorageFileGroupContent({
         key: firestoreDummyKey()
-      } as RegenerateStorageFileGroupContentParams);
+      });
 
       let storageFileGroupsUpdated = 0;
       let contentStorageFilesFlaggedForProcessing = 0;

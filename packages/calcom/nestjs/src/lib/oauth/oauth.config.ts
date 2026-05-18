@@ -40,8 +40,8 @@ export abstract class CalcomOAuthServiceConfig {
 /**
  * Factory function that creates a {@link CalcomOAuthServiceConfig} from NestJS ConfigService environment variables.
  *
- * @param configService - the NestJS ConfigService instance
- * @returns a validated CalcomOAuthServiceConfig
+ * @param configService - The NestJS ConfigService instance.
+ * @returns A validated CalcomOAuthServiceConfig.
  */
 export function calcomOAuthServiceConfigFactory(configService: ConfigService): CalcomOAuthServiceConfig {
   const clientId = configService.get<string>(CALCOM_CLIENT_ID_CONFIG_KEY);

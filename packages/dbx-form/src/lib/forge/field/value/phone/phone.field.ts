@@ -1,7 +1,7 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import { filterFromPOJO } from '@dereekb/util';
 import type { DbxForgePhoneFieldProps } from './phone.field.component';
-import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 
 // MARK: Phone Field
 /**
@@ -86,4 +86,4 @@ export const dbxForgePhoneField = dbxForgeFieldFunction<DbxForgePhoneFieldConfig
       autocomplete: config.autocomplete === false ? 'off' : config.autocomplete
     })
   )
-}) as DbxForgeFieldFunction<DbxForgePhoneFieldConfig, DbxForgePhoneFieldDef>;
+});

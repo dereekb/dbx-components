@@ -85,8 +85,8 @@ export interface RegisterModelFirebaseIndexResourceOptions {
  * details, collection/model/category/module/tag filters, schema and rules
  * references).
  *
- * @param server - the MCP server to register resources against
- * @param options - registry the resources read from
+ * @param server - The MCP server to register resources against.
+ * @param options - Registry the resources read from.
  */
 export function registerModelFirebaseIndexResource(server: McpServer, options: RegisterModelFirebaseIndexResourceOptions): void {
   const { registry } = options;

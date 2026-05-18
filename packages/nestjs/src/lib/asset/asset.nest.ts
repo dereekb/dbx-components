@@ -27,16 +27,17 @@ export interface AppAssetLoaderModuleMetadataConfig {
  * Local assets are loaded from the filesystem. Remote assets (which always
  * have absolute URLs) are loaded via `fetch`.
  *
- * @example
- * ```ts
- * @Module(appAssetLoaderModuleMetadata({
+ * @param config - Local filesystem config and optional remote fetch config.
+ * @returns NestJS {@link ModuleMetadata} that provides an {@link AssetLoader}.
+ *
+ * @Module (appAssetLoaderModuleMetadata({
  *   local: { basePath: './assets' }
  * }))
  * export class AppAssetLoaderModule {}
  * ```
  *
- * @param config - Local filesystem config and optional remote fetch config.
- * @returns NestJS {@link ModuleMetadata} that provides an {@link AssetLoader}.
+ * @example
+ * ```ts
  */
 export function appAssetLoaderModuleMetadata(config: AppAssetLoaderModuleMetadataConfig): ModuleMetadata {
   const local = nodeJsLocalAssetLoader(config.local);

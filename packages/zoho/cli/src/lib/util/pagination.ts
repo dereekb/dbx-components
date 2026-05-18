@@ -1,10 +1,11 @@
 import { outputResult, type PaginatedResponse, type PaginationAdapter, runPaginatedList } from '@dereekb/dbx-cli';
 
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade so zoho-cli consumers keep the existing pagination import surface
 export { type PaginatedResponse, type PaginationAdapter, type RunPaginatedListOutcome, type RunPaginatedListParams, type StreamingDump, openStreamingDump, runPaginatedList } from '@dereekb/dbx-cli';
 
 /**
  * Zoho-specific extension of {@link PaginatedResponse} that exposes the `info` block returned
- * by Zoho CRM/Recruit list endpoints. Used by {@link zohoPagePaginationAdapter} to detect
+ * by Zoho CRM/Recruit list endpoints. Used by {@link ZOHO_PAGE_PAGINATION_ADAPTER} to detect
  * end-of-data and to derive single-page meta.
  */
 export interface ZohoPaginatedResponse extends PaginatedResponse {
@@ -17,14 +18,18 @@ export interface ZohoPaginatedResponse extends PaginatedResponse {
  * Typed loosely on input so any command's literal input shape (with `page` / `per_page` keys plus
  * arbitrary other fields) satisfies the {@link PaginationAdapter} contract.
  */
-export const zohoPagePaginationAdapter: PaginationAdapter<any, ZohoPaginatedResponse> = {
+export const ZOHO_PAGE_PAGINATION_ADAPTER: PaginationAdapter<any, ZohoPaginatedResponse> = {
   nextInput: (input, last) => {
-    if (!last.info?.more_records) {
-      return undefined;
+    let next: typeof input | undefined;
+
+    if (last.info?.more_records) {
+      const currentPage = (input as { page?: number }).page ?? 1;
+      next = { ...input, page: currentPage + 1 };
+    } else {
+      next = undefined;
     }
 
-    const currentPage = (input as { page?: number }).page ?? 1;
-    return { ...input, page: currentPage + 1 };
+    return next;
   },
   countOf: (r) => r.data?.length ?? 0,
   metaOf: (input, r) => ({
@@ -41,22 +46,20 @@ export const zohoPagePaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
  * Desk responses have no `more_records` flag; a page that returns fewer records than `limit` is
  * treated as the final page.
  */
-export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResponse> = {
+export const ZOHO_DESK_PAGINATION_ADAPTER: PaginationAdapter<any, ZohoPaginatedResponse> = {
   nextInput: (input, last) => {
     const limit = (input as { limit?: number }).limit ?? 25;
-
-    if (limit <= 0) {
-      return undefined;
-    }
-
     const count = last.data?.length ?? 0;
+    let next: typeof input | undefined;
 
-    if (count < limit) {
-      return undefined;
+    if (limit <= 0 || count < limit) {
+      next = undefined;
+    } else {
+      const currentFrom = (input as { from?: number }).from ?? 1;
+      next = { ...input, from: currentFrom + limit };
     }
 
-    const currentFrom = (input as { from?: number }).from ?? 1;
-    return { ...input, from: currentFrom + limit };
+    return next;
   },
   countOf: (r) => r.data?.length ?? 0,
   metaOf: (input, r) => ({
@@ -66,13 +69,8 @@ export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
   }),
   hasMorePagesAvailable: (input, r) => {
     const limit = (input as { limit?: number }).limit ?? 25;
-
-    if (limit <= 0) {
-      return false;
-    }
-
     const count = r.data?.length ?? 0;
-    return count >= limit;
+    return limit > 0 && count >= limit;
   }
 };
 
@@ -85,7 +83,6 @@ export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
  * them to {@link runPaginatedList}, which validates them.
  */
 export interface RunZohoPaginatedListInput<TInput, TResponse extends ZohoPaginatedResponse> {
-   
   readonly argv: any;
   readonly initialInput: TInput;
   readonly fetchPage: (input: TInput) => Promise<TResponse>;
@@ -94,22 +91,22 @@ export interface RunZohoPaginatedListInput<TInput, TResponse extends ZohoPaginat
 /**
  * Convenience runner for Zoho CRM/Recruit list-style commands.
  *
- * Wires {@link runPaginatedList} with {@link zohoPagePaginationAdapter} and,
+ * Wires {@link runPaginatedList} with {@link ZOHO_PAGE_PAGINATION_ADAPTER} and,
  * when the call resolves to a single-page response, prints the standard
  * `data` + `{page, per_page, more_records}` meta envelope every command in
  * those CLIs uses. Multi-page invocations are streamed/printed by
  * `runPaginatedList` itself so this helper is a no-op in that branch.
  *
- * @param input - argv (the yargs-typed handler argv), the per-command
+ * @param input - Argv (the yargs-typed handler argv), the per-command
  *   `initialInput` payload, and the fetcher that issues the underlying API
- *   call
+ *   call.
  */
 export async function runZohoPaginatedList<TInput, TResponse extends ZohoPaginatedResponse>(input: RunZohoPaginatedListInput<TInput, TResponse>): Promise<void> {
   const { argv, initialInput, fetchPage } = input;
   const outcome = await runPaginatedList({
     initialInput,
     fetchPage,
-    adapter: zohoPagePaginationAdapter,
+    adapter: ZOHO_PAGE_PAGINATION_ADAPTER,
     multiplePages: argv.multiplePages,
     multiplePagesOutput: argv.multiplePagesOutput,
     dumpOutput: argv.dumpOutput,

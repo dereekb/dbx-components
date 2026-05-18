@@ -5,10 +5,11 @@ import { type Observable, of, shareReplay, switchMap } from 'rxjs';
 import { type AuthUserStateObsFunction, type DbxFirebaseAuthService } from './firebase.auth.service';
 
 /**
- * Creates a AuthUserStateObsFunction that derives a user state from the input firebase auth service, and the optional stateForLoggedInUser input
+ * Creates a AuthUserStateObsFunction that derives a user state from the input firebase auth service, and the optional stateForLoggedInUser input.
  *
- * @param stateForLoggedInUser Optional function that returns an observable for the user's state if they are logged in and not an anonymous user.
+ * @param stateForLoggedInUser - Optional function that returns an observable for the user's state if they are logged in and not an anonymous user.
  * @returns
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function authUserStateFromFirebaseAuthServiceFunction(stateForLoggedInUser: AuthUserStateObsFunction = () => of('user')): AuthUserStateObsFunction {

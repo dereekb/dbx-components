@@ -12,8 +12,8 @@ import type { ValidationResult } from './types.js';
  * to callers. Groups violations by file, then by model within the file, so
  * readers see one section per identity definition.
  *
- * @param result - the aggregated validation outcome
- * @returns the markdown report
+ * @param result - The aggregated validation outcome.
+ * @returns The markdown report.
  */
 export function formatResult(result: ValidationResult): string {
   return formatFileGroupedResult({

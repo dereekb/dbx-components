@@ -8,8 +8,8 @@ import { firestoreContextFactory } from '@dereekb/firebase';
  * Configuration for connecting to a Google Cloud Firestore emulator in tests.
  */
 export interface GoogleCloudTestFirestoreConfig {
-  host: string;
-  port: number;
+  readonly host: string;
+  readonly port: number;
 }
 
 /**

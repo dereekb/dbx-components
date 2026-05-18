@@ -17,8 +17,8 @@ export interface LookupApiOptions {
  * Builds the deep-detail report for one model declared in a firebase-component
  * package, optionally enriched with action/factory JSDoc from a paired API app.
  *
- * @param options - resolved paths and the model filter
- * @returns the populated report
+ * @param options - Resolved paths and the model filter.
+ * @returns The populated report.
  */
 export async function lookupModelApi(options: LookupApiOptions): Promise<ApiLookupReport> {
   return extractApiLookup({

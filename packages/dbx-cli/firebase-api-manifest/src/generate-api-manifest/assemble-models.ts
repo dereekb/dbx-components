@@ -35,10 +35,10 @@ export interface AssembleModelsInput {
  * list the generator emits. De-duplicates models by `identityConst` (first
  * file wins, matching the converter walker's stable ordering across packages).
  *
- * @param input - one entry per source file, with the package label and
+ * @param input - One entry per source file, with the package label and
  *   workspace-relative source path that should be stamped on every produced
  *   manifest entry.
- * @returns the assembled manifest entries, sorted by `modelType` for stable
+ * @returns The assembled manifest entries, sorted by `modelType` for stable
  *   diffs.
  */
 export function assembleModels(input: AssembleModelsInput): readonly CliModelManifestEntry[] {
@@ -121,38 +121,42 @@ interface BuildEntryInput {
 
 function buildEntryForIdentity(input: BuildEntryInput): CliModelManifestEntry | undefined {
   const { identity, source, registries, enumNames } = input;
-  if (identity.collectionPrefix === undefined) return undefined;
+  let result: CliModelManifestEntry | undefined;
 
-  const modelName = capitalize(identity.modelType);
-  const iface = registries.interfaceRegistry.get(modelName);
-  if (!iface?.hasDbxModelTag) return undefined;
+  if (identity.collectionPrefix !== undefined) {
+    const modelName = capitalize(identity.modelType);
+    const iface = registries.interfaceRegistry.get(modelName);
+    if (iface?.hasDbxModelTag) {
+      const converter = findConverterForInterface(source.extraction, modelName) ?? findConverterFromRegistry(registries.converterRegistry, modelName);
+      if (converter) {
+        const fields = buildFields({
+          converter,
+          iface,
+          interfaceRegistry: registries.interfaceRegistry,
+          converterRegistry: registries.converterRegistry,
+          enumNames,
+          depth: 0,
+          visitedConverters: new Set<string>()
+        });
 
-  const converter = findConverterForInterface(source.extraction, modelName) ?? findConverterFromRegistry(registries.converterRegistry, modelName);
-  if (!converter) return undefined;
+        const modelGroup = registries.groupByModelName.get(modelName);
+        result = {
+          modelType: identity.modelType,
+          modelName,
+          ...(modelGroup ? { modelGroup } : {}),
+          identityConst: identity.identityConst,
+          collectionPrefix: identity.collectionPrefix,
+          ...(identity.parentIdentityConst ? { parentIdentityConst: identity.parentIdentityConst } : {}),
+          ...(iface.description ? { description: iface.description } : {}),
+          sourcePackage: source.sourcePackage,
+          sourceFile: source.sourceFile,
+          fields
+        };
+      }
+    }
+  }
 
-  const fields = buildFields({
-    converter,
-    iface,
-    interfaceRegistry: registries.interfaceRegistry,
-    converterRegistry: registries.converterRegistry,
-    enumNames,
-    depth: 0,
-    visitedConverters: new Set<string>()
-  });
-
-  const modelGroup = registries.groupByModelName.get(modelName);
-  return {
-    modelType: identity.modelType,
-    modelName,
-    ...(modelGroup ? { modelGroup } : {}),
-    identityConst: identity.identityConst,
-    collectionPrefix: identity.collectionPrefix,
-    ...(identity.parentIdentityConst ? { parentIdentityConst: identity.parentIdentityConst } : {}),
-    ...(iface.description ? { description: iface.description } : {}),
-    sourcePackage: source.sourcePackage,
-    sourceFile: source.sourceFile,
-    fields
-  };
+  return result;
 }
 
 function findConverterForInterface(extraction: ModelExtraction, interfaceName: string): ModelExtractionConverter | undefined {
@@ -232,33 +236,41 @@ interface ResolvedNested {
 
 function resolveNestedFields(input: BuildFieldInput): ResolvedNested | undefined {
   const { field } = input;
-  if (input.depth >= MAX_NESTED_DEPTH) return undefined;
+  let result: ResolvedNested | undefined;
 
-  let nestedConverter: ModelExtractionConverter | undefined;
-  if (field.nestedConverterInline) {
-    nestedConverter = field.nestedConverterInline;
-  } else if (field.nestedConverterRef) {
-    if (input.visitedConverters.has(field.nestedConverterRef)) return undefined;
-    nestedConverter = input.converterRegistry.get(field.nestedConverterRef);
+  if (input.depth < MAX_NESTED_DEPTH) {
+    let nestedConverter: ModelExtractionConverter | undefined;
+    let aborted = false;
+    if (field.nestedConverterInline) {
+      nestedConverter = field.nestedConverterInline;
+    } else if (field.nestedConverterRef) {
+      if (input.visitedConverters.has(field.nestedConverterRef)) {
+        aborted = true;
+      } else {
+        nestedConverter = input.converterRegistry.get(field.nestedConverterRef);
+      }
+    }
+
+    if (!aborted && nestedConverter) {
+      const nextVisited = new Set(input.visitedConverters);
+      if (nestedConverter.converterConst) nextVisited.add(nestedConverter.converterConst);
+
+      const nestedIface = nestedConverter.interfaceName ? input.interfaceRegistry.get(nestedConverter.interfaceName) : undefined;
+      const fields = buildFields({
+        converter: nestedConverter,
+        iface: nestedIface,
+        interfaceRegistry: input.interfaceRegistry,
+        converterRegistry: input.converterRegistry,
+        enumNames: input.enumNames,
+        depth: input.depth + 1,
+        visitedConverters: nextVisited
+      });
+
+      result = { fields, isArray: field.nestedIsArray ?? false };
+    }
   }
 
-  if (!nestedConverter) return undefined;
-
-  const nextVisited = new Set(input.visitedConverters);
-  if (nestedConverter.converterConst) nextVisited.add(nestedConverter.converterConst);
-
-  const nestedIface = nestedConverter.interfaceName ? input.interfaceRegistry.get(nestedConverter.interfaceName) : undefined;
-  const fields = buildFields({
-    converter: nestedConverter,
-    iface: nestedIface,
-    interfaceRegistry: input.interfaceRegistry,
-    converterRegistry: input.converterRegistry,
-    enumNames: input.enumNames,
-    depth: input.depth + 1,
-    visitedConverters: nextVisited
-  });
-
-  return { fields, isArray: field.nestedIsArray ?? false };
+  return result;
 }
 
 function collectAncestors(iface: ModelExtractionInterface, registry: ReadonlyMap<string, ModelExtractionInterface>): readonly ModelExtractionInterface[] {

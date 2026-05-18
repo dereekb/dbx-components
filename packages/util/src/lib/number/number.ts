@@ -51,13 +51,13 @@ export type PercentDecimal = number;
  *
  * Returns 0 for null/undefined input.
  *
+ * @param input - A percent number value (e.g., 5 means 5%)
+ * @returns The decimal equivalent.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, percent, decimal, convert, ratio
  * @dbxUtilRelated percent-number-from-decimal
- *
- * @param input - A percent number value (e.g., 5 means 5%)
- * @returns The decimal equivalent
  */
 export function percentNumberToDecimal(input: Maybe<number>): number {
   return input ? input / 100 : 0;
@@ -68,13 +68,13 @@ export function percentNumberToDecimal(input: Maybe<number>): number {
  *
  * Returns 0 for null/undefined input.
  *
+ * @param input - A decimal percent value (e.g., 0.05 means 5%)
+ * @returns The percent number equivalent.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, percent, decimal, convert, ratio
  * @dbxUtilRelated percent-number-to-decimal
- *
- * @param input - A decimal percent value (e.g., 0.05 means 5%)
- * @returns The percent number equivalent
  */
 export function percentNumberFromDecimal(input: Maybe<number>): PercentNumber {
   return input ? input * 100 : 0;
@@ -97,12 +97,12 @@ export type AsNumberInput = Maybe<NumberOrNumberString>;
  *
  * Strings are parsed via `Number()`. Null/undefined returns 0.
  *
+ * @param input - Numeric value, numeric string, or null/undefined.
+ * @returns The numeric value, or 0 for null/undefined.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, parse, convert, coerce, string, normalize
- *
- * @param input - A number, number string, or null/undefined
- * @returns The numeric value, or 0 for null/undefined
  */
 export function asNumber(input: AsNumberInput): number {
   let value: number;
@@ -127,14 +127,14 @@ export function asNumber(input: AsNumberInput): number {
  *
  * Treats null/undefined as 0.
  *
+ * @param value - The number to check.
+ * @param divisor - The divisor to test against.
+ * @returns `true` if the remainder is zero.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, divisible, modulo, division, math, check
  * @dbxUtilRelated nearest-divisible-values, is-even-number, is-odd-number
- *
- * @param value - The number to check
- * @param divisor - The divisor to test against
- * @returns `true` if the remainder is zero
  */
 export function isNumberDivisibleBy(value: Maybe<number>, divisor: number): boolean {
   const remainder = (value ?? 0) % divisor;
@@ -151,14 +151,14 @@ export interface NearestDivisibleValues {
 /**
  * Finds the nearest values that are evenly divisible by the divisor, both above (ceil) and below (floor) the input value.
  *
+ * @param value - The value to find divisible neighbors for.
+ * @param divisor - The divisor to align to.
+ * @returns Object with the input value, divisor, and the nearest ceil/floor divisible values.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, divisible, nearest, ceil, floor, round, snap, math
  * @dbxUtilRelated is-number-divisible-by
- *
- * @param value - The value to find divisible neighbors for
- * @param divisor - The divisor to align to
- * @returns Object with the input value, divisor, and the nearest ceil/floor divisible values
  */
 export function nearestDivisibleValues(value: number, divisor: number): NearestDivisibleValues {
   const point = value / divisor;
@@ -176,13 +176,13 @@ export function nearestDivisibleValues(value: number, divisor: number): NearestD
 /**
  * Checks whether the input is an even number.
  *
+ * @param value - Number to test.
+ * @returns `true` if even.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, even, parity, math, check
  * @dbxUtilRelated is-odd-number, is-number-divisible-by
- *
- * @param value - Number to test
- * @returns `true` if even
  */
 export function isEvenNumber(value: number): boolean {
   return value % 2 === 0;
@@ -191,13 +191,13 @@ export function isEvenNumber(value: number): boolean {
 /**
  * Checks whether the input is an odd number.
  *
+ * @param value - Number to test.
+ * @returns `true` if odd.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, odd, parity, math, check
  * @dbxUtilRelated is-even-number, is-number-divisible-by
- *
- * @param value - Number to test
- * @returns `true` if odd
  */
 export function isOddNumber(value: number): boolean {
   return value % 2 === 1;
@@ -208,13 +208,13 @@ export function isOddNumber(value: number): boolean {
  *
  * The `from` value is floored and the `to` value is ceiled before computation.
  *
+ * @param from - The starting value (floored to nearest integer)
+ * @param to - The ending value (ceiled to nearest integer)
+ * @returns Sum of all integers in the range.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, sum, range, integers, math, gauss, total
- *
- * @param from - The starting value (floored to nearest integer)
- * @param to - The ending value (ceiled to nearest integer)
- * @returns Sum of all integers in the range
  */
 export function sumOfIntegersBetween(from: number, to: number): number {
   const x = Math.floor(from);
@@ -229,22 +229,22 @@ export function sumOfIntegersBetween(from: number, to: number): number {
 /**
  * A {@link SortCompareFunction} for numbers that sorts in ascending order.
  *
- * @param a - the first number to compare
- * @param b - the second number to compare
- * @returns a negative value if `a` is less than `b`, zero if equal, or a positive value if `a` is greater
+ * @param a - The first number to compare.
+ * @param b - The second number to compare.
+ * @returns A negative value if `a` is less than `b`, zero if equal, or a positive value if `a` is greater.
  */
 export const sortCompareNumberFunction: SortCompareFunction<number> = (a, b) => a - b;
 
 /**
  * Finds the minimum and maximum values from an iterable of numbers.
  *
+ * @param values - Iterable of numbers to examine.
+ * @returns Object with `min` and `max` values.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, min, max, range, sort, bounds, extremes
  * @dbxUtilRelated sort-compare-number-function
- *
- * @param values - Iterable of numbers to examine
- * @returns Object with `min` and `max` values
  */
 export function minAndMaxNumber(values: Iterable<number>): MinAndMaxFunctionResult<number> {
   return minAndMaxFunction(sortCompareNumberFunction)(values);
@@ -253,13 +253,13 @@ export function minAndMaxNumber(values: Iterable<number>): MinAndMaxFunctionResu
 /**
  * Computes the logarithm of `y` with base `x`.
  *
+ * @param x - The base of the logarithm.
+ * @param y - The value to compute the logarithm of.
+ * @returns The base-x logarithm of y.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilTags number, log, logarithm, math, base
- *
- * @param x - The base of the logarithm
- * @param y - The value to compute the logarithm of
- * @returns The base-x logarithm of y
  *
  * @example
  * ```ts

@@ -61,5 +61,5 @@ export function noopFirebaseServerAnalyticsServiceListener(): FirebaseServerAnal
     sendEventType: noop,
     sendEvent: noop,
     sendUserPropertiesEvent: noop
-  } as FirebaseServerAnalyticsServiceListener;
+  };
 }

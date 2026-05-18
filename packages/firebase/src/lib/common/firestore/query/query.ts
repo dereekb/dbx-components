@@ -146,28 +146,30 @@ export interface FirestoreQueryConfig<T> extends FirestoreQueryDriverRef, QueryL
  * maintains the base query reference (typically a collection or collection group) and provides
  * a fluent API for working with it.
  *
+ * @param config - Configuration for the query factory, including the base query reference and driver.
+ * @returns A factory for creating and executing queries against the specified collection.
+ *
  * @template T - The document data type in the query results
- * @param config - Configuration for the query factory, including the base query reference and driver
- * @returns A factory for creating and executing queries against the specified collection
  *
  * @example
+ * ```ts
  * // Create a query factory for the 'users' collection
  * const usersQuery = firestoreQueryFactory({
  *   queryLike: collection(firestore, 'users'),
  *   firestoreQueryDriver: driver
  * });
- *
  * // Use the factory to create and execute queries
  * const activeUsers = await usersQuery.query(
  *   where('status', '==', 'active'),
  *   orderBy('lastLogin', 'desc'),
  *   limit(10)
  * ).getDocs();
- *
  * // Queries can be extended with additional constraints
  * const adminUsers = activeUsers.filter(
  *   where('role', '==', 'admin')
  * ).getDocs();
+ * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreQueryFactory<T>(config: FirestoreQueryConfig<T>): FirestoreQueryFactory<T> {

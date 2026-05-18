@@ -33,16 +33,15 @@ export type ScreenMediaHeightType = 'tiny' | 'normal';
 /**
  * Returns `true` if the current screen width type is at least as wide as the given breakpoint.
  *
- * @param current - the current screen width type
- * @param breakpoint - the minimum width type to check against
+ * @param current - The current screen width type.
+ * @param breakpoint - The minimum width type to check against.
+ * @returns `true` if the current width type meets or exceeds the breakpoint.
  *
  * @example
  * ```ts
  * screenMediaWidthTypeIsActive('tablet', 'small'); // true
  * screenMediaWidthTypeIsActive('micro', 'tablet'); // false
  * ```
- *
- * @returns `true` if the current width type meets or exceeds the breakpoint
  */
 export function screenMediaWidthTypeIsActive(current: ScreenMediaWidthType, breakpoint: ScreenMediaWidthType) {
   return compareScreenMediaWidthTypes(current, breakpoint, (a, b) => a >= b);
@@ -51,10 +50,10 @@ export function screenMediaWidthTypeIsActive(current: ScreenMediaWidthType, brea
 /**
  * Compares two {@link ScreenMediaWidthType} values using a custom comparator on their numeric sizes.
  *
- * @param a - the first screen width type
- * @param b - the second screen width type
- * @param compare - a comparator function applied to the numeric size values of `a` and `b`
- * @returns the result of applying the comparator to the mapped numeric sizes
+ * @param a - The first screen width type.
+ * @param b - The second screen width type.
+ * @param compare - A comparator function applied to the numeric size values of `a` and `b`
+ * @returns The result of applying the comparator to the mapped numeric sizes.
  */
 export function compareScreenMediaWidthTypes(a: ScreenMediaWidthType, b: ScreenMediaWidthType, compare: (a: number, b: number) => boolean) {
   return compare(SCREEN_MEDIA_WIDTH_TYPE_SIZE_MAP[a], SCREEN_MEDIA_WIDTH_TYPE_SIZE_MAP[b]);

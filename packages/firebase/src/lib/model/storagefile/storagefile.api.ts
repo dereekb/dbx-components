@@ -362,7 +362,7 @@ export interface InitializeAllApplicableStorageFileGroupsResult {
  */
 export type StorageFileFunctionTypeMap = {};
 
-export const storageFileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<StorageFileFunctionTypeMap> = {};
+export const STORAGE_FILE_FUNCTION_TYPE_CONFIG_MAP: FirebaseFunctionTypeConfigMap<StorageFileFunctionTypeMap> = {};
 
 /**
  * CRUD function configuration map for the StorageFile model family.
@@ -401,8 +401,8 @@ export type StorageFileModelCrudFunctionsConfig = {
   };
 };
 
-export const storageFileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups' as any, 'delete:_', 'read:download,downloadMultiple'],
+export const STORAGE_FILE_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
+  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple'],
   storageFileGroup: ['update:_,regenerateContent']
 };
 
@@ -449,4 +449,4 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
  * const result = await functions.storageFile.createStorageFile.fromUpload({ pathString: 'uploads/u/123/avatar.png' });
  * ```
  */
-export const storageFileFunctionMap = callModelFirebaseFunctionMapFactory(storageFileFunctionTypeConfigMap, storageFileModelCrudFunctionsConfig);
+export const storageFileFunctionMap = callModelFirebaseFunctionMapFactory(STORAGE_FILE_FUNCTION_TYPE_CONFIG_MAP, STORAGE_FILE_MODEL_CRUD_FUNCTIONS_CONFIG);

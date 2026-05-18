@@ -16,9 +16,9 @@ import { type Maybe } from '@dereekb/util';
  * Resolves the API URL via environment variables following the naming convention
  * `ZOHO_RECRUIT_API_URL` (service-specific) or `ZOHO_API_URL` (shared fallback).
  *
- * @param configService - NestJS config service populated with Zoho environment variables
- * @returns Validated Zoho Recruit service configuration
- * @throws {Error} If required config values (e.g. API URL) are missing
+ * @param configService - NestJS config service populated with Zoho environment variables.
+ * @returns Validated Zoho Recruit service configuration.
+ * @throws {Error} If required config values (e.g. API URL) are missing.
  *
  * @example
  * ```typescript
@@ -46,8 +46,8 @@ export function zohoRecruitServiceConfigFactory(configService: ConfigService): Z
  * Reads Zoho Accounts (OAuth) settings scoped to the Recruit service from
  * the NestJS ConfigService and returns an accounts service config.
  *
- * @param configService - NestJS config service populated with Zoho OAuth environment variables
- * @returns Zoho Accounts service config scoped to the Recruit service access token
+ * @param configService - NestJS config service populated with Zoho OAuth environment variables.
+ * @returns Zoho Accounts service config scoped to the Recruit service access token.
  *
  * @example
  * ```typescript
@@ -94,14 +94,10 @@ export interface ProvideAppZohoRecruitMetadataConfig extends Pick<ModuleMetadata
  * exports {@link ZohoRecruitApi} by default. Additional imports, exports, and providers
  * from the config are merged in.
  *
- * @param config - Module configuration with optional dependency module and extra metadata
+ * @param config - Module configuration with optional dependency module and extra metadata.
  * @returns Complete NestJS module metadata ready to pass to `@Module()`
  *
- * @example
- * ```typescript
- * const cacheService = fileZohoAccountsAccessTokenCacheService();
- *
- * @Module({
+ * @Module ({
  *   providers: [
  *     {
  *       provide: ZohoAccountsAccessTokenCacheService,
@@ -111,10 +107,13 @@ export interface ProvideAppZohoRecruitMetadataConfig extends Pick<ModuleMetadata
  *   exports: [ZohoAccountsAccessTokenCacheService]
  * })
  * export class ZohoRecruitDependencyModule {}
- *
- * @Module(appZohoRecruitModuleMetadata({ dependencyModule: ZohoRecruitDependencyModule }))
+ * @Module (appZohoRecruitModuleMetadata({ dependencyModule: ZohoRecruitDependencyModule }))
  * export class AppZohoRecruitModule {}
  * ```
+ *
+ * @example
+ * ```typescript
+ * const cacheService = fileZohoAccountsAccessTokenCacheService();
  */
 export function appZohoRecruitModuleMetadata(config: ProvideAppZohoRecruitMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

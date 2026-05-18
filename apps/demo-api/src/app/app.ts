@@ -26,8 +26,8 @@ export const { initNestServer } = nestServerInstance(DEMO_API_NEST_SERVER_CONFIG
 /**
  * Builder for all functions in the app.
  *
- * @param nest - lazy getter for the NestJS application instance
- * @returns an object mapping function keys to their Cloud Function handlers
+ * @param nest - Lazy getter for the NestJS application instance.
+ * @returns An object mapping function keys to their Cloud Function handlers.
  */
 export function allAppFunctions(nest: NestAppPromiseGetter) {
   return {
@@ -48,8 +48,8 @@ export function allAppFunctions(nest: NestAppPromiseGetter) {
 /**
  * Builder for all scheduled functions in the app.
  *
- * @param nest - lazy getter for the NestJS application instance
- * @returns an object mapping schedule keys to their scheduled Cloud Function handlers
+ * @param nest - Lazy getter for the NestJS application instance.
+ * @returns An object mapping schedule keys to their scheduled Cloud Function handlers.
  */
 export function allScheduledAppFunctions(nest: NestAppPromiseGetter) {
   return {

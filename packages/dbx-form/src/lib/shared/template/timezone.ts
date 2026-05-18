@@ -37,10 +37,9 @@ export function timezoneStringSearchFunction(): SearchableValueFieldStringSearch
  * Maps each timezone value to a display object with the timezone name as the label
  * and its abbreviation as the sublabel.
  *
- * @param values - The timezone values to convert to display values
- * @returns An observable emitting display values with label and sublabel
- *
- * @param values - The timezone values to convert to display values
+ * @param values - The timezone values to convert to display values.
+ * @param values - The timezone values to convert to display values.
+ * @returns An observable emitting display values with label and sublabel.
  */
 
 export const DISPLAY_FOR_TIMEZONE_STRING_VALUE: SearchableValueFieldDisplayFn<string, TimezoneInfo> = (values: SearchableValueFieldValue<string, TimezoneInfo>[]) => {

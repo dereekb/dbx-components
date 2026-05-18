@@ -7,7 +7,7 @@ import { type FirebaseError } from 'firebase/app';
  * for the `FirebaseError` name and a string `code` property. Used by {@link convertHttpsCallableErrorToReadableError}
  * to determine the appropriate error wrapping strategy.
  *
- * @param error - the value to check
+ * @param error - The value to check.
  * @returns `true` if the input matches the shape of a client-side `FirebaseError`
  *
  * @example

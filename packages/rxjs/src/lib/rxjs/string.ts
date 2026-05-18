@@ -15,6 +15,9 @@ export interface SearchStringFilterConfig<T> {
  * Combines the source array with the `search$` observable and applies the configured
  * search string filter function. When the search is null/undefined, all items pass through.
  *
+ * @param config - Search filter configuration with filter function and search$ observable.
+ * @returns An operator that filters arrays by search string.
+ *
  * @example
  * ```ts
  * const items$ = of(['apple', 'banana', 'cherry']);
@@ -25,9 +28,6 @@ export interface SearchStringFilterConfig<T> {
  * ).subscribe(console.log);
  * // ['banana']
  * ```
- *
- * @param config - search filter configuration with filter function and search$ observable
- * @returns an operator that filters arrays by search string
  */
 export function filterWithSearchString<T>(config: SearchStringFilterConfig<T>): MonoTypeOperatorFunction<T[]> {
   const { filter, search$ } = config;

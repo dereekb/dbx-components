@@ -13,80 +13,80 @@ import { DocLayoutTwoColumnsChildComponent } from './container/two.child.compone
 import { DocLayoutTwoColumnsComponent } from './container/two.component';
 import { DocLayoutAvatarComponent } from './container/avatar.component';
 
-export const layoutState: Ng2StateDeclaration = {
+export const LAYOUT_STATE: Ng2StateDeclaration = {
   url: '/layout',
   name: 'doc.layout',
   component: DocLayoutLayoutComponent,
   redirectTo: 'doc.layout.home'
 };
 
-export const homeState: Ng2StateDeclaration = {
+export const HOME_STATE: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.layout.home',
   component: DocLayoutHomeComponent
 };
 
-export const avatarState: Ng2StateDeclaration = {
+export const AVATAR_STATE: Ng2StateDeclaration = {
   url: '/avatar',
   name: 'doc.layout.avatar',
   component: DocLayoutAvatarComponent
 };
 
-export const docLayoutBarState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_BAR_STATE: Ng2StateDeclaration = {
   url: '/bar',
   name: 'doc.layout.bar',
   component: DocLayoutBarComponent
 };
 
-export const docLayoutContentState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_CONTENT_STATE: Ng2StateDeclaration = {
   url: '/content',
   name: 'doc.layout.content',
   component: DocLayoutContentComponent
 };
 
-export const docLayoutFlexState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_FLEX_STATE: Ng2StateDeclaration = {
   url: '/flex',
   name: 'doc.layout.flex',
   component: DocLayoutFlexComponent
 };
 
-export const docLayoutSectionState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_SECTION_STATE: Ng2StateDeclaration = {
   url: '/section',
   name: 'doc.layout.section',
   component: DocLayoutSectionComponent
 };
 
-export const docLayoutSectionPageState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_SECTION_PAGE_STATE: Ng2StateDeclaration = {
   url: '/sectionpage',
   name: 'doc.layout.sectionpage',
   component: DocLayoutSectionPageComponent
 };
 
-export const docLayoutSectionPageTwoState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_SECTION_PAGE_TWO_STATE: Ng2StateDeclaration = {
   url: '/sectionpagetwo',
   name: 'doc.layout.sectionpagetwo',
   component: DocLayoutSectionPageTwoComponent
 };
 
-export const docLayoutListState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_LIST_STATE: Ng2StateDeclaration = {
   url: '/list',
   name: 'doc.layout.list',
   component: DocLayoutListComponent
 };
 
-export const docLayoutTwoBlockState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_TWO_BLOCK_STATE: Ng2StateDeclaration = {
   url: '/block',
   name: 'doc.layout.block',
   component: DocLayoutTwoBlockComponent
 };
 
-export const docLayoutTwoState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_TWO_STATE: Ng2StateDeclaration = {
   url: '/two',
   name: 'doc.layout.two',
   component: DocLayoutTwoColumnsComponent
 };
 
-export const docLayoutTwoChildState: Ng2StateDeclaration = {
+export const DOC_LAYOUT_TWO_CHILD_STATE: Ng2StateDeclaration = {
   url: '/child',
   name: 'doc.layout.two.child',
   component: DocLayoutTwoColumnsChildComponent
@@ -94,17 +94,17 @@ export const docLayoutTwoChildState: Ng2StateDeclaration = {
 
 export const STATES: Ng2StateDeclaration[] = [
   //
-  layoutState,
-  homeState,
-  avatarState,
-  docLayoutBarState,
-  docLayoutContentState,
-  docLayoutFlexState,
-  docLayoutSectionState,
-  docLayoutSectionPageState,
-  docLayoutSectionPageTwoState,
-  docLayoutListState,
-  docLayoutTwoBlockState,
-  docLayoutTwoState,
-  docLayoutTwoChildState
+  LAYOUT_STATE,
+  HOME_STATE,
+  AVATAR_STATE,
+  DOC_LAYOUT_BAR_STATE,
+  DOC_LAYOUT_CONTENT_STATE,
+  DOC_LAYOUT_FLEX_STATE,
+  DOC_LAYOUT_SECTION_STATE,
+  DOC_LAYOUT_SECTION_PAGE_STATE,
+  DOC_LAYOUT_SECTION_PAGE_TWO_STATE,
+  DOC_LAYOUT_LIST_STATE,
+  DOC_LAYOUT_TWO_BLOCK_STATE,
+  DOC_LAYOUT_TWO_STATE,
+  DOC_LAYOUT_TWO_CHILD_STATE
 ];

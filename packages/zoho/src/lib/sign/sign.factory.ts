@@ -45,8 +45,8 @@ export type ZohoSignFactory = (config: ZohoSignConfig) => ZohoSign;
  * Each client handles OAuth token refresh on {@link ZohoInvalidTokenError}, rate limiting,
  * and Zoho Sign's non-standard error responses (200 status with error body).
  *
- * @param factoryConfig - Configuration providing account credentials and optional overrides
- * @returns A factory function that creates authenticated Zoho Sign clients
+ * @param factoryConfig - Configuration providing account credentials and optional overrides.
+ * @returns A factory function that creates authenticated Zoho Sign clients.
  *
  * @example
  * ```typescript
@@ -61,6 +61,7 @@ export type ZohoSignFactory = (config: ZohoSignConfig) => ZohoSign;
  * // Use the sign context for API calls:
  * const { signContext } = zohoSign;
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoSignFactory(factoryConfig: ZohoSignFactoryConfig): ZohoSignFactory {

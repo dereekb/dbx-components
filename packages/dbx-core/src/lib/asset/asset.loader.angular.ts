@@ -2,7 +2,7 @@ import { Injectable, InjectionToken, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { defer, type Observable } from 'rxjs';
 import { type SlashPathFolder } from '@dereekb/util';
-import { type AssetPathRef, type AssetRemotePathRef, type AssetLoaderAssetInstance, AssetLoader } from '@dereekb/rxjs';
+import { type AssetPathRef, type AssetLoaderAssetInstance, AssetLoader } from '@dereekb/rxjs';
 
 /**
  * Default base URL for local assets in Angular apps.
@@ -71,7 +71,7 @@ export class DbxCoreAssetLoader extends AssetLoader {
       const normalizedBase = base.endsWith('/') ? base : base + '/';
       url = `${normalizedBase}${ref.path}`;
     } else {
-      url = (ref as AssetRemotePathRef).url;
+      url = ref.url;
     }
 
     return url;

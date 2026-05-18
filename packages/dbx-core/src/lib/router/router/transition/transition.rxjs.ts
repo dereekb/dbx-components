@@ -83,12 +83,12 @@ export interface LatestSuccessfulRoutesConfig<T extends LatestSuccessfulRoutesCo
  * On each successful router transition, checks all configured routes against the router service
  * and emits an array of those that are active. The result is deduplicated by index and shared.
  *
- * @typeParam T - The route configuration type, extending {@link LatestSuccessfulRoutesConfigRoute}.
  * @param config - Configuration specifying the router services and routes to monitor.
  * @returns An observable emitting an array of the currently active route configurations.
  *
  * @see {@link LatestSuccessfulRoutesConfig}
  * @see {@link isLatestSuccessfulRoute} for a boolean variant
+ * @typeParam T - The route configuration type, extending {@link LatestSuccessfulRoutesConfigRoute}.
  */
 export function latestSuccessfulRoutes<T extends LatestSuccessfulRoutesConfigRoute>(config: LatestSuccessfulRoutesConfig<T>): Observable<T[]> {
   const { dbxRouterTransitionService, dbxRouterService, routes: inputRoutes } = config;

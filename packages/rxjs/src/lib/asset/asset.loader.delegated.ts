@@ -23,6 +23,9 @@ export interface DelegatedAssetLoaderConfig {
  * loader together, and the delegated loader routes each {@link AssetPathRef}
  * to the correct one based on {@link AssetPathRef.sourceType}.
  *
+ * @param config - Specifies the local and remote delegate loaders.
+ * @returns An {@link AssetLoader} that routes requests to the appropriate delegate based on source type.
+ *
  * @example
  * ```ts
  * const loader = delegatedAssetLoader({
@@ -33,9 +36,6 @@ export interface DelegatedAssetLoaderConfig {
  * loader.get(localAsset('data/districts.json'));   // → local loader
  * loader.get(remoteAsset('data/geo.json'));        // → remote loader
  * ```
- *
- * @param config - Specifies the local and remote delegate loaders.
- * @returns An {@link AssetLoader} that routes requests to the appropriate delegate based on source type.
  */
 export function delegatedAssetLoader(config: DelegatedAssetLoaderConfig): AssetLoader {
   const { local, remote } = config;

@@ -1,6 +1,6 @@
 import { filterFromPOJO } from '@dereekb/util';
 import { FORGE_TEXT_EDITOR_FIELD_TYPE, type DbxForgeTextEditorFieldDef } from './texteditor.field.component';
-import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../field';
+import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../field';
 
 // MARK: Config
 /**
@@ -39,4 +39,4 @@ export const dbxForgeTextEditorField = dbxForgeFieldFunction<DbxForgeTextEditorF
       maxLength: config.maxLength
     })
   )
-}) as DbxForgeFieldFunction<DbxForgeTextEditorFieldConfig, DbxForgeTextEditorFieldDef>;
+});

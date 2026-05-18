@@ -10,7 +10,7 @@
   </div>
   <dbx-bar-header class="dbx-zip-blob-preview-header" [icon]="selectedNodeIconSignal()" [text]="selectedNodePathSignal()"></dbx-bar-header>
   <div class="dbx-zip-blob-preview-content">
-    @switch (mode()) {
+    @switch (modeSignal()) {
       @case ('view_directory') {
         <dbx-zip-preview-file-entry-list [state]="listEntriesState$" [dbxListTitleGroup]="listTitleGroupDelegate" [dbxListItemModifier] [dbxListItemAnchorModifier]="makeEntryAnchor"></dbx-zip-preview-file-entry-list>
       }

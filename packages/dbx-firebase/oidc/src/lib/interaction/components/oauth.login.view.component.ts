@@ -48,7 +48,7 @@ export type OidcLoginStateCase = 'unknown' | 'no_user' | 'user' | 'submitting' |
         }
         @case ('error') {
           <dbx-button text="Retry" [raised]="true" (buttonClick)="retryClick.emit()"></dbx-button>
-          <dbx-error [error]="resolvedError()"></dbx-error>
+          <dbx-error [error]="resolvedErrorSignal()"></dbx-error>
         }
       }
     </div>
@@ -62,7 +62,7 @@ export class DbxFirebaseOAuthLoginViewComponent {
   readonly loginStateCase = input.required<OidcLoginStateCase>();
   readonly error = input<Maybe<string | ErrorInput>>();
 
-  readonly resolvedError = computed<Maybe<ErrorInput>>(() => {
+  readonly resolvedErrorSignal = computed<Maybe<ErrorInput>>(() => {
     const error = this.error();
     return typeof error === 'string' ? readableError('ERROR', error) : error;
   });

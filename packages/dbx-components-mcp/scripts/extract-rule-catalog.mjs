@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* eslint-disable import/default */
+
 /**
  * Extracts the rule catalog from per-cluster `codes.ts` enums and emits
  * packages/dbx-components-mcp/generated/rule-catalog.generated.json
@@ -23,7 +23,7 @@
 import { readdirSync, statSync, writeFileSync, existsSync } from 'node:fs';
 import { join, relative, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import prettier from 'prettier';
+import { resolveConfig, format } from 'prettier';
 import { Project } from 'ts-morph';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -254,8 +254,8 @@ function emitTs(entries) {
 }
 
 async function formatWithPrettier(source) {
-  const config = await prettier.resolveConfig(OUTPUT_TS);
-  return prettier.format(source, { ...config, filepath: OUTPUT_TS });
+  const config = await resolveConfig(OUTPUT_TS);
+  return format(source, { ...config, filepath: OUTPUT_TS });
 }
 
 function relPath(p) {

@@ -248,12 +248,16 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   }
 
   rolesForClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaims<T>): AuthRoleSet {
+    let result: AuthRoleSet;
+
     if (this._authRoleClaimsService) {
-      return this._authRoleClaimsService.toRoles(claims);
+      result = this._authRoleClaimsService.toRoles(claims);
+    } else {
+      console.warn('DbxFirebaseAuthService: rolesForClaims called with no authRoleClaimsService provided. An empty set is returned.');
+      result = new Set();
     }
 
-    console.warn('DbxFirebaseAuthService: rolesForClaims called with no authRoleClaimsService provided. An empty set is returned.');
-    return new Set();
+    return result;
   }
 
   getAuthContextInfo(): Promise<Maybe<DbxFirebaseAuthContextInfo>> {
@@ -280,7 +284,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    *
    * @param provider - The auth provider to link.
    * @param resolver - Optional popup redirect resolver.
-   * @returns A promise resolving to the user credential after linking.
+   * @returns Promise resolving to the user credential after linking.
    *
    * @example
    * ```ts
@@ -306,7 +310,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    * when a credential-already-in-use error provides an {@link AuthCredential}.
    *
    * @param credential - The auth credential to link.
-   * @returns A promise resolving to the user credential after linking.
+   * @returns Promise resolving to the user credential after linking.
    *
    * @example
    * ```ts
@@ -331,7 +335,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    * Unlinks an authentication provider from the current user.
    *
    * @param providerId - The provider ID to unlink (e.g., 'google.com').
-   * @returns A promise resolving to the updated user.
+   * @returns Promise resolving to the updated user.
    *
    * @example
    * ```ts
@@ -359,8 +363,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   /**
    * Sends a password reset email to the given address via the configured delegate.
    *
-   * @param email - the email address to send the reset to
-   * @returns A promise that resolves when the email has been sent.
+   * @param email - The email address to send the reset to.
+   * @returns Resolves when the email has been sent.
    *
    * @example
    * ```ts
@@ -374,8 +378,8 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   /**
    * Completes a password reset using the verification code and new password via the configured delegate.
    *
-   * @param input - the verification code and new password
-   * @returns A promise that resolves when the password has been reset.
+   * @param input - The verification code and new password.
+   * @returns Resolves when the password has been reset.
    *
    * @example
    * ```ts
@@ -387,11 +391,11 @@ export class DbxFirebaseAuthService implements DbxAuthService {
   }
 
   /**
+   * @param email - The email address to send the reset to.
+   * @returns Resolves when the email has been sent.
+   *
    * @deprecated use {@link sendPasswordReset} instead, which delegates to the configured
    * {@link DbxFirebaseAuthServiceDelegate.sendPasswordReset} implementation.
-   *
-   * @param email - the email address to send the reset to
-   * @returns A promise that resolves when the email has been sent.
    */
   sendPasswordResetEmail(email: string): Promise<void> {
     return this.sendPasswordReset(email);

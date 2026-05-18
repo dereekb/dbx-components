@@ -7,6 +7,36 @@ import { type Maybe } from './value/maybe.type';
 export type PrimativeValue = boolean | string | number;
 
 /**
+ * Open-ended union of known string literals `T` plus an arbitrary string fallback.
+ *
+ * `T | string` collapses to `string` in TypeScript and erases IDE autocomplete for the
+ * literal members. The `(string & {})` intersection is the canonical workaround: at
+ * runtime it is just `string`, but the compiler keeps the literal members visible in
+ * the union so editors still suggest them.
+ *
+ * Always prefer this named alias over writing the intersection inline. Two lint rules
+ * enforce that:
+ *
+ * - `dereekb-util/no-inline-string-empty-object-intersection` (error) — flags every
+ *   inline `T | (string & {})` and tells the developer to switch to `SuggestedString<T>`.
+ * - `dereekb-util/prefer-suggested-string` (warn) — flags `T | string` where `T` is a
+ *   literal-string union; if you actually want autocomplete-preserving behavior, switch
+ *   to `SuggestedString<T>`, otherwise drop the literal half and keep plain `string`.
+ *
+ * Reach for `SuggestedString` only when the API genuinely accepts unknown string values
+ * alongside a known set (e.g. third-party APIs that document a literal set but allow
+ * custom strings). For closed sets, use a plain literal union; for unconstrained input,
+ * use plain `string`.
+ *
+ * @example
+ * ```ts
+ * type ZohoDeskTicketPriority = SuggestedString<'Low' | 'Medium' | 'High' | 'Urgent'>;
+ * // accepts any string, but autocompletes the four known priorities.
+ * ```
+ */
+export type SuggestedString<T extends string> = T | (string & Record<never, never>);
+
+/**
  * Class typing, restricted to types that have a constructor via the new keyword.
  */
 export type ClassType<T = unknown> = {
@@ -22,13 +52,13 @@ export type ObjectWithConstructor = {
  * Returns true if the input is a function-like value with a prototype and constructor (i.e., a class or named function declaration).
  * Returns false for arrow functions, class instances, plain objects, and primitives.
  *
+ * @param obj - The value to check.
+ * @returns Whether the value is a function with a constructor.
+ *
  * @dbxUtil
  * @dbxUtilCategory type
  * @dbxUtilTags type, type-guard, function, class, constructor, reflection
  * @dbxUtilRelated is-class-like-type, get-function-type, is-non-class-function
- *
- * @param obj - The value to check.
- * @returns Whether the value is a function with a constructor.
  */
 export function isObjectWithConstructor(obj: any): obj is ObjectWithConstructor {
   return typeof obj === 'function' && !!obj.prototype && !!obj.constructor && !!obj.prototype.constructor.name;
@@ -38,13 +68,13 @@ export function isObjectWithConstructor(obj: any): obj is ObjectWithConstructor 
  * Returns true if the input is a class (requires `new` to instantiate). Distinguishes classes from regular functions
  * by checking that the prototype is non-writable.
  *
+ * @param obj - The value to check.
+ * @returns Whether the value is a class type.
+ *
  * @dbxUtil
  * @dbxUtilCategory type
  * @dbxUtilTags type, type-guard, class, reflection, instance
  * @dbxUtilRelated is-object-with-constructor, get-function-type
- *
- * @param obj - The value to check.
- * @returns Whether the value is a class type.
  */
 export function isClassLikeType(obj: unknown): obj is ClassLikeType {
   return isObjectWithConstructor(obj) && !Object.getOwnPropertyDescriptor(obj, 'prototype')?.writable;
@@ -56,13 +86,13 @@ export type FunctionType = 'function' | 'class' | 'arrow';
  * Determines the function type of the input value: `'class'`, `'function'`, or `'arrow'`.
  * Returns `null` if the input is not a function.
  *
+ * @param x - The value to inspect.
+ * @returns The {@link FunctionType}, or `null` for non-functions.
+ *
  * @dbxUtil
  * @dbxUtilCategory type
  * @dbxUtilTags type, function, class, arrow, reflection, kind, detect
  * @dbxUtilRelated is-class-like-type, is-non-class-function, is-object-with-constructor
- *
- * @param x - The value to inspect.
- * @returns The {@link FunctionType}, or `null` for non-functions.
  */
 export function getFunctionType(x: unknown): Maybe<FunctionType> {
   // https://stackoverflow.com/a/69316645 // check writable to distinguish between a class type and an object
@@ -72,13 +102,14 @@ export function getFunctionType(x: unknown): Maybe<FunctionType> {
 /**
  * Returns true if the input is a function but not a class (i.e., a regular function or arrow function).
  *
+ * @param x - The value to check.
+ * @returns Whether the value is a non-class function.
+ *
  * @dbxUtil
  * @dbxUtilCategory type
  * @dbxUtilTags type, type-guard, function, arrow, reflection, callable
  * @dbxUtilRelated is-class-like-type, get-function-type
  *
- * @param x - The value to check.
- * @returns Whether the value is a non-class function.
  * @__NO_SIDE_EFFECTS__
  */
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
@@ -113,7 +144,7 @@ export type ValuesTypesAsArray<T> = T[keyof T][];
  * Converts the input value to a string, if possible. Never otherwise.
  */
 export type KeyAsString<K> = `${KeyCanBeString<K>}`;
-export type KeyCanBeString<K> = K extends number | boolean | string | null | undefined ? K : never;
+export type KeyCanBeString<K> = K extends Maybe<number | boolean | string> ? K : never;
 
 export type BooleanKeyValueTransformMap<T> = KeyValueTransformMap<T, boolean>;
 

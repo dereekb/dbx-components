@@ -40,8 +40,8 @@ export interface DbxForgeDateRangeRowConfig {
  *
  * This is the forge equivalent of formly's `formlyDateRangeField()`.
  *
- * @param config - Date range configuration with optional shared props and start/end overrides
- * @returns A {@link RowField} containing the start and end date field pair
+ * @param config - Date range configuration with optional shared props and start/end overrides.
+ * @returns A {@link RowField} containing the start and end date field pair.
  *
  * @dbxFormField
  * @dbxFormSlug date-range-row

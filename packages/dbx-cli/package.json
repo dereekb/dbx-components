@@ -1,13 +1,17 @@
 {
   "name": "@dereekb/dbx-cli",
-  "version": "13.11.14",
+  "version": "13.11.15",
   "sideEffects": false,
   "bin": {
-    "dbx-cli-generate-firebase-api-manifest": "firebase-api-manifest/main.js"
+    "dbx-cli-generate-firebase-api-manifest": "firebase-api-manifest/main.js",
+    "dbx-cli-lint-cache": "lint-cache/main.js"
   },
   "exports": {
     "./firebase-api-manifest": {
       "default": "./firebase-api-manifest/main.js"
+    },
+    "./lint-cache": {
+      "default": "./lint-cache/main.js"
     },
     "./manifest-extract": {
       "module": "./manifest-extract/index.esm.js",
@@ -23,14 +27,15 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "13.11.14",
-    "@dereekb/firebase": "13.11.14",
-    "@dereekb/nestjs": "13.11.14",
-    "@dereekb/util": "13.11.14",
+    "@dereekb/date": "13.11.15",
+    "@dereekb/firebase": "13.11.15",
+    "@dereekb/nestjs": "13.11.15",
+    "@dereekb/util": "13.11.15",
     "arktype": "^2.2.0",
     "yargs": "^18.0.0"
   },
   "devDependencies": {
-    "@types/yargs": "^17.0.35"
+    "@types/yargs": "^17.0.35",
+    "eslint": "10.4.0"
   }
 }

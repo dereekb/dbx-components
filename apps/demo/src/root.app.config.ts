@@ -2,7 +2,7 @@ import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalytic
 import { type ApplicationConfig, importProvidersFrom, inject, type Injector, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
-import { environment, oidcApiOrigin } from './environments/environment';
+import { environment, OIDC_API_ORIGIN } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnvironment, provideDbxAssetLoader, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, DbxFirebaseModelEntitiesDebugWidgetComponent, type DbxFirebaseModelEntitiesWidgetEntry, type DbxFirebaseModelEntitiesWidgetServiceConfig, type DbxFirebaseModelTypesServiceConfig, type DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, provideDbxLinkify, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries, provideDbxWebPageTitleService } from '@dereekb/dbx-web';
@@ -28,7 +28,7 @@ import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
  * Factory for the Segment API service configuration, activating analytics only in production.
  *
  * @param _injector - Angular injector (unused)
- * @returns Configured Segment API service config
+ * @returns Configured Segment API service config.
  */
 export function dbxAnalyticsSegmentApiServiceConfigFactory(_injector: Injector): DbxAnalyticsSegmentApiServiceConfig {
   const config = new DbxAnalyticsSegmentApiServiceConfig(environment.analytics.segment);
@@ -40,8 +40,8 @@ export function dbxAnalyticsSegmentApiServiceConfigFactory(_injector: Injector):
 /**
  * Factory for the analytics service configuration with Segment listener and Firebase user source.
  *
- * @param injector - Angular injector used to resolve Segment and Firebase analytics dependencies
- * @returns Configured analytics service configuration
+ * @param injector - Angular injector used to resolve Segment and Firebase analytics dependencies.
+ * @returns Configured analytics service configuration.
  */
 export function dbxAnalyticsServiceConfigurationFactory(injector: Injector): DbxAnalyticsServiceConfiguration {
   const segmentListener: DbxAnalyticsSegmentServiceListener = injector.get(DbxAnalyticsSegmentServiceListener);
@@ -61,10 +61,10 @@ export function dbxAnalyticsServiceConfigurationFactory(injector: Injector): Dbx
 /**
  * Configures the UIRouter with analytics page view tracking, auth transition hooks, and debug tracing.
  *
- * @param router - The UIRouter instance to configure
- * @param injector - Angular injector for resolving the analytics service
+ * @param router - The UIRouter instance to configure.
+ * @param injector - Angular injector for resolving the analytics service.
  * @param _module - The states module (unused)
- * @returns undefined
+ * @returns Undefined.
  */
 export function routerConfigFn(router: UIRouter, injector: Injector, _module: StatesModule): any {
   const transitionService = router.transitionService;
@@ -102,8 +102,8 @@ export function routerConfigFn(router: UIRouter, injector: Injector, _module: St
  * Overrides `sendPasswordReset` and `completePasswordReset` to use the profile CRUD API
  * instead of Firebase's built-in methods.
  *
- * @param injector - Angular injector used to resolve ProfileFunctions
- * @returns Configured auth service delegate
+ * @param injector - Angular injector used to resolve ProfileFunctions.
+ * @returns Configured auth service delegate.
  */
 export function demoAuthDelegateFactory(injector: Injector): DbxFirebaseAuthServiceDelegate {
   const profileFunctions = injector.get(ProfileFunctions);
@@ -130,7 +130,7 @@ export function demoAuthDelegateFactory(injector: Injector): DbxFirebaseAuthServ
 /**
  * Registers the demo model types (guestbook) for the Firebase model types service.
  *
- * @returns Configured model types service config
+ * @returns Configured model types service config.
  */
 export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTypesServiceConfig {
   const guestbook: DbxFirebaseModelTypesServiceEntry<Guestbook> = {
@@ -163,7 +163,7 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 /**
  * Registers the demo entity widgets (guestbook) with a debug component for the model entities widget service.
  *
- * @returns Configured model entities widget service config
+ * @returns Configured model entities widget service config.
  */
 export function dbxFirebaseModelEntitiesWidgetServiceConfigFactory(): DbxFirebaseModelEntitiesWidgetServiceConfig {
   const guestbook: DbxFirebaseModelEntitiesWidgetEntry = {
@@ -181,7 +181,7 @@ export function dbxFirebaseModelEntitiesWidgetServiceConfigFactory(): DbxFirebas
   return config;
 }
 
-export const appConfig: ApplicationConfig = {
+export const APP_CONFIG: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection(), // dbx-components is not zoneless yet
     // formly
@@ -325,7 +325,7 @@ export const appConfig: ApplicationConfig = {
         // Production deploys the OIDC issuer at api.components.dereekb.com so cookies are set
         // on the API host directly, bypassing the Firebase Hosting cookie strip. Local stays
         // undefined and OIDC paths remain relative.
-        oidcApiOrigin
+        oidcApiOrigin: OIDC_API_ORIGIN
       }
     }),
     // App initializers

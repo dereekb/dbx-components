@@ -100,15 +100,9 @@ export function getTokenCachePath(): string {
  * @returns The first matching env var value, or `undefined` when neither is set.
  */
 function envVar(key: string, servicePrefix?: string): Maybe<string> {
-  if (servicePrefix) {
-    const serviceSpecific = process.env[`ZOHO_${servicePrefix}_${key}`];
-
-    if (serviceSpecific) {
-      return serviceSpecific;
-    }
-  }
-
-  return process.env[`ZOHO_${key}`];
+  const serviceSpecific = servicePrefix ? process.env[`ZOHO_${servicePrefix}_${key}`] : undefined;
+  const result: Maybe<string> = serviceSpecific ?? process.env[`ZOHO_${key}`];
+  return result;
 }
 
 /**
@@ -125,52 +119,57 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
   const envClientSecret = envVar('ACCOUNTS_CLIENT_SECRET');
   const envRefreshToken = envVar('ACCOUNTS_REFRESH_TOKEN');
   const hasSharedEnvConfig = envClientId && envClientSecret && envRefreshToken;
+  let result: Maybe<ZohoCliConfig>;
 
   if (!fileConfig && !hasSharedEnvConfig) {
-    return undefined;
-  }
+    result = undefined;
+  } else {
+    const shared = {
+      clientId: envClientId ?? fileConfig?.shared?.clientId ?? '',
+      clientSecret: envClientSecret ?? fileConfig?.shared?.clientSecret ?? '',
+      refreshToken: envRefreshToken ?? fileConfig?.shared?.refreshToken ?? '',
+      region: envVar('ACCOUNTS_URL') ?? fileConfig?.shared?.region,
+      apiMode: envVar('API_URL') ?? fileConfig?.shared?.apiMode
+    };
 
-  const shared = {
-    clientId: envClientId ?? fileConfig?.shared?.clientId ?? '',
-    clientSecret: envClientSecret ?? fileConfig?.shared?.clientSecret ?? '',
-    refreshToken: envRefreshToken ?? fileConfig?.shared?.refreshToken ?? '',
-    region: envVar('ACCOUNTS_URL') ?? fileConfig?.shared?.region,
-    apiMode: envVar('API_URL') ?? fileConfig?.shared?.apiMode
-  };
+    // Build per-product overrides from env vars
+    const productConfigFromEnv = (product: string): Maybe<ZohoCliProductConfig> => {
+      const prefix = product.toUpperCase();
+      const apiUrl = envVar('API_URL', prefix);
+      const orgId = product === 'desk' ? envVar('DESK_ORG_ID') : undefined;
+      const fileProduct = fileConfig?.[product as ZohoCliProduct];
 
-  // Build per-product overrides from env vars
-  function productConfigFromEnv(product: string): Maybe<ZohoCliProductConfig> {
-    const prefix = product.toUpperCase();
-    const apiUrl = envVar('API_URL', prefix);
-    const orgId = product === 'desk' ? envVar('DESK_ORG_ID') : undefined;
-    const fileProduct = fileConfig?.[product as ZohoCliProduct];
+      // Only include env overrides that are actually service-specific (not the shared fallback)
+      const envSpecificClientId = process.env[`ZOHO_${prefix}_ACCOUNTS_CLIENT_ID`];
+      const envSpecificClientSecret = process.env[`ZOHO_${prefix}_ACCOUNTS_CLIENT_SECRET`];
+      const envSpecificRefreshToken = process.env[`ZOHO_${prefix}_ACCOUNTS_REFRESH_TOKEN`];
+      const hasEnvSpecific = envSpecificClientId || envSpecificClientSecret || envSpecificRefreshToken;
 
-    // Only include env overrides that are actually service-specific (not the shared fallback)
-    const envSpecificClientId = process.env[`ZOHO_${prefix}_ACCOUNTS_CLIENT_ID`];
-    const envSpecificClientSecret = process.env[`ZOHO_${prefix}_ACCOUNTS_CLIENT_SECRET`];
-    const envSpecificRefreshToken = process.env[`ZOHO_${prefix}_ACCOUNTS_REFRESH_TOKEN`];
-    const hasEnvSpecific = envSpecificClientId || envSpecificClientSecret || envSpecificRefreshToken;
+      let productResult: Maybe<ZohoCliProductConfig>;
 
-    if (!fileProduct && !hasEnvSpecific && !orgId) {
-      return undefined;
-    }
+      if (!fileProduct && !hasEnvSpecific && !orgId) {
+        productResult = undefined;
+      } else {
+        productResult = {
+          clientId: envSpecificClientId ?? fileProduct?.clientId,
+          clientSecret: envSpecificClientSecret ?? fileProduct?.clientSecret,
+          refreshToken: envSpecificRefreshToken ?? fileProduct?.refreshToken,
+          apiUrl: apiUrl ?? fileProduct?.apiUrl,
+          orgId: orgId ?? fileProduct?.orgId
+        };
+      }
 
-    return {
-      clientId: envSpecificClientId ?? fileProduct?.clientId,
-      clientSecret: envSpecificClientSecret ?? fileProduct?.clientSecret,
-      refreshToken: envSpecificRefreshToken ?? fileProduct?.refreshToken,
-      apiUrl: apiUrl ?? fileProduct?.apiUrl,
-      orgId: orgId ?? fileProduct?.orgId
+      return productResult;
+    };
+
+    result = {
+      shared,
+      recruit: productConfigFromEnv('recruit') ?? fileConfig?.recruit,
+      crm: productConfigFromEnv('crm') ?? fileConfig?.crm,
+      desk: productConfigFromEnv('desk') ?? fileConfig?.desk,
+      output: fileConfig?.output
     };
   }
-
-  const result: ZohoCliConfig = {
-    shared,
-    recruit: productConfigFromEnv('recruit') ?? fileConfig?.recruit,
-    crm: productConfigFromEnv('crm') ?? fileConfig?.crm,
-    desk: productConfigFromEnv('desk') ?? fileConfig?.desk,
-    output: fileConfig?.output
-  };
 
   return result;
 }
@@ -191,18 +190,22 @@ export function resolveProductCredentials(config: ZohoCliConfig, product: ZohoCl
   const clientSecret = productConfig?.clientSecret ?? shared.clientSecret;
   const refreshToken = productConfig?.refreshToken ?? shared.refreshToken;
 
+  let result: Maybe<ZohoCliResolvedProductCredentials>;
+
   if (!clientId || !clientSecret || !refreshToken) {
-    return undefined;
+    result = undefined;
+  } else {
+    result = {
+      clientId,
+      clientSecret,
+      refreshToken,
+      region: shared.region ?? 'us',
+      apiMode: productConfig?.apiUrl ?? shared.apiMode ?? 'production',
+      orgId: productConfig?.orgId
+    };
   }
 
-  return {
-    clientId,
-    clientSecret,
-    refreshToken,
-    region: shared.region ?? 'us',
-    apiMode: productConfig?.apiUrl ?? shared.apiMode ?? 'production',
-    orgId: productConfig?.orgId
-  };
+  return result;
 }
 
 /**
@@ -250,6 +253,7 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
  * Re-export of dbx-cli's `resolveOutputConfig` so existing zoho-cli consumers keep the same
  * module surface. New code can import from `@dereekb/dbx-cli` directly.
  */
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade for existing zoho-cli consumers
 export { resolveOutputConfig } from '@dereekb/dbx-cli';
 
 /**
@@ -286,16 +290,7 @@ export async function clearCliConfig(): Promise<void> {
 export function configuredProducts(config: ZohoCliConfig): ZohoCliProduct[] {
   return ZOHO_CLI_PRODUCTS.filter((p) => {
     const resolved = resolveProductCredentials(config, p);
-
-    if (!resolved) {
-      return false;
-    }
-
-    if (p === 'desk' && !resolved.orgId) {
-      return false;
-    }
-
-    return true;
+    return resolved != null && (p !== 'desk' || resolved.orgId != null);
   });
 }
 
@@ -303,4 +298,5 @@ export function configuredProducts(config: ZohoCliConfig): ZohoCliProduct[] {
  * Re-export of dbx-cli's secret-masking helper. Auth/show commands import via this module so the
  * masking pattern stays consistent across CLIs.
  */
+// eslint-disable-next-line dereekb-util/no-sister-re-export -- backward-compatible facade for zoho-cli auth/show commands
 export { maskSecret } from '@dereekb/dbx-cli';

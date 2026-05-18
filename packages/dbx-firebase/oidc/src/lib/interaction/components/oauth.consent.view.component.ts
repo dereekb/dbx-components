@@ -67,27 +67,27 @@ export type OidcConsentStateCase = 'unknown' | 'no_user' | 'user';
         }
         @case ('user') {
           <div class="dbx-firebase-oauth-consent-header">
-            @if (clientName()) {
-              <h2>You're signing in to {{ clientName() }}</h2>
+            @if (clientNameSignal()) {
+              <h2>You're signing in to {{ clientNameSignal() }}</h2>
             }
             <div class="dbx-firebase-oauth-consent-header-info dbx-flex">
-              <dbx-avatar [avatarUrl]="logoUri()" [avatarStyle]="'square'" avatarIcon="apps"></dbx-avatar>
+              <dbx-avatar [avatarUrl]="logoUriSignal()" [avatarStyle]="'square'" avatarIcon="apps"></dbx-avatar>
               <span>
-                @if (clientUri()) {
-                  <a class="dbx-firebase-oauth-consent-client-uri" [href]="clientUri()" target="_blank" rel="noopener noreferrer">{{ clientUri() }}</a>
+                @if (clientUriSignal()) {
+                  <a class="dbx-firebase-oauth-consent-client-uri" [href]="clientUriSignal()" target="_blank" rel="noopener noreferrer">{{ clientUriSignal() }}</a>
                 }
               </span>
             </div>
           </div>
-          @if (clientName()) {
+          @if (clientNameSignal()) {
             <p class="dbx-firebase-oauth-consent-prompt">
-              <strong>{{ clientName() }}</strong>
+              <strong>{{ clientNameSignal() }}</strong>
               is requesting these permissions:
             </p>
           }
 
           <div dbxAction dbxActionSnackbarError [dbxActionHandler]="approveHandler()">
-            <dbx-injection [config]="resolvedScopeInjectionConfig()"></dbx-injection>
+            <dbx-injection [config]="resolvedScopeInjectionConfigSignal()"></dbx-injection>
 
             <div class="dbx-pt3 dbx-pb3 dbx-firebase-oauth-consent-actions">
               <dbx-button dbxActionButton text="Approve" [raised]="true" color="primary"></dbx-button>
@@ -129,16 +129,16 @@ export class DbxFirebaseOAuthConsentViewComponent {
    */
   readonly denyHandler = input.required<WorkUsingContext<void, OAuthInteractionConsentResponse>>();
 
-  readonly clientName = computed(() => this.details()?.client_name ?? '');
-  readonly clientUri = computed(() => this.details()?.client_uri);
-  readonly logoUri = computed(() => this.details()?.logo_uri);
-  readonly scopes: Signal<OidcScope[]> = computed(() => SPACE_STRING_SPLIT_JOIN.splitStrings(this.details()?.scopes ?? ''));
+  readonly clientNameSignal = computed(() => this.details()?.client_name ?? '');
+  readonly clientUriSignal = computed(() => this.details()?.client_uri);
+  readonly logoUriSignal = computed(() => this.details()?.logo_uri);
+  readonly scopesSignal: Signal<OidcScope[]> = computed(() => SPACE_STRING_SPLIT_JOIN.splitStrings(this.details()?.scopes ?? ''));
 
-  readonly resolvedScopeInjectionConfig = computed<DbxInjectionComponentConfig>(() => {
+  readonly resolvedScopeInjectionConfigSignal = computed<DbxInjectionComponentConfig>(() => {
     const data: DbxFirebaseOAuthConsentScopesViewData = {
       details: this.details(),
-      scopes: this.scopes(),
-      clientName: this.clientName(),
+      scopes: this.scopesSignal(),
+      clientName: this.clientNameSignal(),
       requiredScopes: this.requiredScopes()
     };
 

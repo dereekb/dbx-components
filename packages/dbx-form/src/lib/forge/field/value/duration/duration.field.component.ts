@@ -115,12 +115,15 @@ export class DbxForgeTimeDurationFieldComponent {
   private _currentDurationData: TimeDurationData = {};
 
   // Computed props
-  readonly effectiveAppearance = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
+  readonly effectiveAppearanceSignal = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
 
   readonly outputUnitSignal: Signal<TimeUnit> = computed(() => this.props()?.outputUnit ?? 'ms');
   readonly valueModeSignal: Signal<TimeDurationFieldValueMode> = computed(() => this.props()?.valueMode ?? 'number');
   readonly allowedUnitsSignal: Signal<TimeUnit[]> = computed(() => this.props()?.allowedUnits ?? (ALL_TIME_UNITS as unknown as TimeUnit[]));
-  readonly pickerUnitsSignal: Signal<TimeUnit[]> = computed(() => this.props()?.pickerUnits ?? this.allowedUnitsSignal().filter((u) => u !== 'ms'));
+  readonly pickerUnitsSignal: Signal<TimeUnit[]> = computed(() => {
+    const allowedUnits = this.allowedUnitsSignal();
+    return this.props()?.pickerUnits ?? allowedUnits.filter((u) => u !== 'ms');
+  });
 
   /**
    * Units used for decomposing/displaying duration text.
@@ -141,16 +144,18 @@ export class DbxForgeTimeDurationFieldComponent {
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as Signal<FieldTree<unknown>>, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as Signal<FieldTree<unknown>>);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   // ARIA
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequiredSignal = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const hintId = this.hintIdSignal();
+    if (this.errorsToDisplaySignal().length > 0) return errorId;
+    if (this.props()?.hint) return hintId;
     return null;
   });
 
@@ -160,7 +165,7 @@ export class DbxForgeTimeDurationFieldComponent {
   private _syncing = false;
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'input' });
 
     // Disabled state propagation
     effect(() => {
@@ -206,7 +211,7 @@ export class DbxForgeTimeDurationFieldComponent {
   /**
    * Called when Enter is pressed in the text input.
    *
-   * @param event - The keyboard event triggered by pressing Enter
+   * @param event - The keyboard event triggered by pressing Enter.
    */
   onTextEnter(event: Event): void {
     event.preventDefault();
@@ -278,7 +283,7 @@ export class DbxForgeTimeDurationFieldComponent {
   /**
    * Converts duration data to the output value and sets it on the field.
    *
-   * @param data - The parsed duration data containing time unit values
+   * @param data - The parsed duration data containing time unit values.
    */
   private _syncOutputFromDurationData(data: TimeDurationData): void {
     const ms = durationDataToMilliseconds(data);
@@ -302,7 +307,7 @@ export class DbxForgeTimeDurationFieldComponent {
   /**
    * Writes a value to the Signal Forms field tree.
    *
-   * @param value - The value to set on the field, or undefined to clear it
+   * @param value - The value to set on the field, or undefined to clear it.
    */
   private _setFieldValue(value: unknown): void {
     this._syncing = true;
@@ -321,8 +326,8 @@ export class DbxForgeTimeDurationFieldComponent {
    *
    * @param value - The output value to convert (number, HoursAndMinutes, or TimeDurationData depending on valueMode)
    * @param outputUnit - The time unit of the numeric output value (used when valueMode is 'number')
-   * @param valueMode - The current value mode determining how to interpret the value
-   * @returns The equivalent duration in milliseconds
+   * @param valueMode - The current value mode determining how to interpret the value.
+   * @returns The equivalent duration in milliseconds.
    */
   private _outputValueToMilliseconds(value: unknown, outputUnit: TimeUnit, valueMode: TimeDurationFieldValueMode): number {
     let result: number;
@@ -347,9 +352,9 @@ export class DbxForgeTimeDurationFieldComponent {
  * Uses the standard valueFieldMapper pattern from ng-forge/integration to resolve
  * the field tree and build the standard inputs for the component.
  *
- * @param fieldDef - The time duration field definition
- * @param fieldDef.key - Form model key for the field
- * @returns Signal containing Record of input names to values for ngComponentOutlet
+ * @param fieldDef - The time duration field definition.
+ * @param fieldDef.key - Form model key for the field.
+ * @returns Signal containing Record of input names to values for ngComponentOutlet.
  */
 export function timeDurationFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

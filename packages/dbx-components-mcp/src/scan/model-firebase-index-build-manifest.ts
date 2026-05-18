@@ -54,7 +54,7 @@ export interface BuildModelFirebaseIndexManifestInput {
  * Outcome of one generator run.
  */
 export type BuildModelFirebaseIndexManifestOutcome =
-  | { readonly kind: 'success'; readonly manifest: ModelFirebaseIndexManifest; readonly outPath: string; readonly scannedFileCount: number; readonly extractWarnings: readonly ModelFirebaseIndexBuildWarning[] }
+  | { readonly kind: 'success'; readonly manifest: ModelFirebaseIndexManifest; readonly outPath: string; readonly scannedFileCount: number; readonly extractWarnings: readonly ModelFirebaseIndexBuildWarning[]; readonly entryFilePathsBySlug: ReadonlyMap<string, string> }
   | { readonly kind: 'no-config'; readonly configPath: string }
   | { readonly kind: 'invalid-scan-config'; readonly configPath: string; readonly error: string }
   | { readonly kind: 'no-package'; readonly packagePath: string }
@@ -70,8 +70,8 @@ const DEFAULT_GLOBBER: BuildModelFirebaseIndexGlobber = defaultGlobber;
  * root. The function is pure with respect to the injected I/O hooks, so
  * unit tests can drive every branch without disk access.
  *
- * @param input - the project root + injection hooks for testing
- * @returns a discriminated outcome describing the result
+ * @param input - The project root + injection hooks for testing.
+ * @returns A discriminated outcome describing the result.
  */
 export async function buildModelFirebaseIndexManifest(input: BuildModelFirebaseIndexManifestInput): Promise<BuildModelFirebaseIndexManifestOutcome> {
   const { projectRoot, generator, readFile = DEFAULT_READ_FILE, globber = DEFAULT_GLOBBER, now = () => new Date() } = input;
@@ -142,12 +142,17 @@ export async function buildModelFirebaseIndexManifest(input: BuildModelFirebaseI
     outcome = { kind: 'invalid-manifest', error: validated.summary };
   } else {
     const outPath = resolve(projectRoot, scanSection.out ?? DEFAULT_MODEL_FIREBASE_INDEX_SCAN_OUT_PATH);
+    const entryFilePathsBySlug = new Map<string, string>();
+    for (const analyzedEntry of analyzed) {
+      entryFilePathsBySlug.set(analyzedEntry.extractedEntry.slug, analyzedEntry.extractedEntry.filePath);
+    }
     outcome = {
       kind: 'success',
       manifest: validated,
       outPath,
       scannedFileCount: filePaths.length,
-      extractWarnings: buildWarnings
+      extractWarnings: buildWarnings,
+      entryFilePathsBySlug
     };
   }
   return outcome;
@@ -199,6 +204,8 @@ function assembleEntry(input: AssembleEntryInput): ModelFirebaseIndexEntry {
     scope: entry.scope,
     manual: entry.manual,
     skip: entry.skip,
+    ...(entry.specOnly ? { specOnly: true } : {}),
+    ...(entry.excluded ? { excluded: true } : {}),
     category: entry.category,
     params: entry.params.map((p) => ({ ...p })),
     returns: entry.returns,
@@ -224,9 +231,92 @@ function assembleEntry(input: AssembleEntryInput): ModelFirebaseIndexEntry {
  * newline so `--check` mode can byte-compare against a committed file
  * without false-positive diffs from key reordering.
  *
- * @param manifest - the manifest to serialise
- * @returns the canonical string form
+ * @param manifest - The manifest to serialise.
+ * @returns The canonical string form.
  */
 export function serializeModelFirebaseIndexManifest(manifest: ModelFirebaseIndexManifest): string {
   return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+// MARK: Warning formatting
+/**
+ * Renders a {@link ModelFirebaseIndexBuildWarning} into a single human-readable
+ * line. Shared by the `scan-model-firebase-indexes` CLI and the
+ * `dbx_model_firebase_index_list_app` MCP tool so both surfaces describe the
+ * same warning identically.
+ *
+ * @param warning - Warning emitted by the extractor or analyzer.
+ * @returns A one-line description suitable for CLI logs or markdown bullets.
+ *
+ * @example
+ * ```ts
+ * outcome.extractWarnings.map(formatModelFirebaseIndexBuildWarning).forEach(log);
+ * ```
+ */
+export function formatModelFirebaseIndexBuildWarning(warning: ModelFirebaseIndexBuildWarning): string {
+  let result: string;
+  if (warning.stage === 'extract') {
+    const w = warning.warning;
+    switch (w.kind) {
+      case 'missing-name':
+        result = `(anonymous) (${w.filePath}:${w.line}) tagged export has no resolvable name`;
+        break;
+      case 'missing-model-tag':
+        result = `${w.name} (${w.filePath}:${w.line}) missing required @dbxModelFirebaseIndexModel tag`;
+        break;
+      case 'unresolved-model':
+        result = `${w.name} (${w.filePath}:${w.line}) could not resolve model "${w.model}" to a Firestore identity`;
+        break;
+      case 'unsupported-scope':
+        result = `${w.name} (${w.filePath}:${w.line}) unsupported @dbxModelFirebaseIndexScope value "${w.scope}"`;
+        break;
+      case 'duplicate-slug':
+        result = `${w.name} (${w.filePath}:${w.line}) duplicate slug "${w.slug}" — already used by ${w.previousName}`;
+        break;
+      case 'unknown-helper':
+        result = `${w.name} (${w.filePath}:${w.line}) unknown constraint helper "${w.helper}"`;
+        break;
+      case 'unresolved-field':
+        result = `${w.name} (${w.filePath}:${w.line}) could not resolve field-path argument to "${w.callee}"`;
+        break;
+      case 'missing-paths':
+        result = `${w.name} (${w.filePath}:${w.line}) missing path coverage for conditional fields [${w.conditionalFields.join(', ')}]`;
+        break;
+      case 'unknown-path-field':
+        result = `${w.name} (${w.filePath}:${w.line}) @dbxModelFirebaseIndexPath references unknown field "${w.field}"`;
+        break;
+      case 'unannotated-query-helper':
+        result = `${w.name} (${w.filePath}:${w.line}) calls query helper "${w.callee}" (${w.calleeFilePath}:${w.calleeLine}) that is not tagged with @dbxModelFirebaseIndexHelper`;
+        break;
+      case 'transitive-cycle':
+        result = `${w.name} (${w.filePath}:${w.line}) transitive constraint resolution hit a cycle through "${w.callee}"`;
+        break;
+      case 'unresolvable-transitive-callee':
+        result = `${w.name} (${w.filePath}:${w.line}) could not resolve transitive callee "${w.callee}"`;
+        break;
+      case 'complex-query-body':
+        result = `${w.name} (${w.filePath}:${w.line}) tagged query body contains a "${w.branchKind}" construct — split into one factory per target index or mark as @dbxModelFirebaseIndexDispatcher`;
+        break;
+      case 'non-delegating-dispatcher':
+        result = `${w.name} (${w.filePath}:${w.line}) @dbxModelFirebaseIndexDispatcher calls "${w.callee}" directly — dispatchers must only delegate to other tagged query functions`;
+        break;
+      case 'excluded-factory':
+        result = `${w.name} (${w.filePath}:${w.line}) tagged @dbxModelFirebaseIndexExclude — analyzer is suppressing composites + fieldOverrides for this factory`;
+        break;
+    }
+  } else {
+    const w = warning.warning;
+    switch (w.kind) {
+      case 'multiple-range-fields':
+        result = `${w.factoryName} multiple range-field constraints on [${w.fields.join(', ')}] — Firestore allows only one range field per query`;
+        break;
+      case 'orderby-conflict':
+        result = `${w.factoryName} field "${w.field}" has conflicting orderBy directions [${w.directions.join(', ')}]`;
+        break;
+      case 'unsupported-array-contains-any':
+        result = `${w.factoryName} field "${w.field}" uses array-contains-any — index support is partial`;
+        break;
+    }
+  }
+  return result;
 }

@@ -82,13 +82,14 @@ export interface FirebaseServerAuthModuleMetadataConfig<T extends FirebaseServer
  * @param config - The module metadata configuration including the service provider.
  * @returns The merged NestJS module metadata.
  *
- * @example
- * ```typescript
- * @Module(firebaseServerAuthModuleMetadata({
+ * @Module (firebaseServerAuthModuleMetadata({
  *   serviceProvider: { provide: MyAuthService, useFactory: (auth) => new MyAuthService(auth) }
  * }))
  * export class AppAuthModule {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function firebaseServerAuthModuleMetadata<T extends FirebaseServerAuthService>(config: FirebaseServerAuthModuleMetadataConfig<T>): ModuleMetadata {
   return mergeModuleMetadata(

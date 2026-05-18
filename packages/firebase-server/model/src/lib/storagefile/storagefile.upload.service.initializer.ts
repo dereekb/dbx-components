@@ -96,9 +96,9 @@ export interface StorageFileInitializeFromUploadServiceInitializerStorageFileDoc
  * Convenience factory for creating a permanent failure result, indicating the file
  * should be discarded and any created intermediate files cleaned up.
  *
- * @param error - the error that caused the permanent failure
- * @param createdFile - optional path to a file that was created before the error and should be deleted
- * @returns a permanent failure result with the error and optional created file reference
+ * @param error - The error that caused the permanent failure.
+ * @param createdFile - Optional path to a file that was created before the error and should be deleted.
+ * @returns A permanent failure result with the error and optional created file reference.
  */
 export function storageFileInitializeFromUploadServiceInitializerResultPermanentFailure(error: unknown, createdFile?: Maybe<StoragePathRef>): StorageFileInitializeFromUploadServiceInitializerResult {
   return {
@@ -182,8 +182,8 @@ export interface StorageFileInitializeFromUploadServiceConfig {
  * 3. The created file is linked back to the StorageFile document via custom metadata
  * 4. Optionally, previous files for the same purpose/user are flagged for deletion
  *
- * @param config - service configuration including determiners, initializers, and storage references
- * @returns a {@link StorageFileInitializeFromUploadService} with type detection and upload initialization
+ * @param config - Service configuration including determiners, initializers, and storage references.
+ * @returns A {@link StorageFileInitializeFromUploadService} with type detection and upload initialization.
  *
  * @example
  * ```ts

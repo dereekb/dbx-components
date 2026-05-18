@@ -16,8 +16,8 @@ export interface ResizedEvent {
  *
  * Must be called in an Angular injection context. Automatically disconnects the ResizeObserver on destroy.
  *
- * @param inputElement - the element to observe; if omitted, the host element is injected via `ElementRef`
- * @returns a read-only signal of resize events
+ * @param inputElement - The element to observe; if omitted, the host element is injected via `ElementRef`
+ * @returns A read-only signal of resize events.
  *
  * @example
  * ```ts

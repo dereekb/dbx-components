@@ -14,8 +14,8 @@ export type EqualityComparatorFunction<T> = (a: T, b: T) => boolean;
  * When both are nullish, it uses strict equality (`===`), so `null === null` is `true`
  * but `null === undefined` is `false`.
  *
- * @param compare - the comparator to wrap
- * @returns a new comparator that handles nullish values safely before delegating to the wrapped comparator
+ * @param compare - The comparator to wrap.
+ * @returns A new comparator that handles nullish values safely before delegating to the wrapped comparator.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -30,6 +30,7 @@ export type EqualityComparatorFunction<T> = (a: T, b: T) => boolean;
  * safeCompare(null, null);  // true
  * safeCompare(null, undefined); // false
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function safeEqualityComparatorFunction<T>(compare: EqualityComparatorFunction<T>): EqualityComparatorFunction<Maybe<T>> {
@@ -42,10 +43,10 @@ export function safeEqualityComparatorFunction<T>(compare: EqualityComparatorFun
  * Delegates to {@link safeEqualityComparatorFunction} internally, so nullish values are handled
  * without invoking the comparator.
  *
- * @param a - first value to compare
- * @param b - second value to compare
- * @param compare - the equality comparator for non-nullish values
- * @returns `true` if the values are considered equal
+ * @param a - First value to compare.
+ * @param b - Second value to compare.
+ * @param compare - The equality comparator for non-nullish values.
+ * @returns `true` if the values are considered equal.
  *
  * @dbxUtil
  * @dbxUtilCategory value
@@ -90,15 +91,16 @@ export type CompareEqualityWithValueFromItemsFunction<I, V> = ((a: Maybe<I>, b: 
  * This is a convenience wrapper around {@link compareEqualityWithValueFromItemsFunctionFactory} that
  * accepts both the value reader and comparator in a single call.
  *
+ * @param readValues - Extracts the comparable value from each item.
+ * @param equalityComparator - Compares the extracted values for equality.
+ * @returns Compares two items by their extracted values.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags value, comparator, equality, factory, read
  * @dbxUtilRelated compare-equality-with-value-from-items-function-factory, safe-equality-comparator-function
  *
- * @param readValues - extracts the comparable value from each item
- * @param equalityComparator - compares the extracted values for equality
- * @returns a function that compares two items by their extracted values
  * @__NO_SIDE_EFFECTS__
  */
 export function compareEqualityWithValueFromItemsFunction<I, V>(readValues: ReadValueFunction<I, V>, equalityComparator: EqualityComparatorFunction<V>): CompareEqualityWithValueFromItemsFunction<I, V> {
@@ -116,8 +118,14 @@ export type CompareEqualityWithValueFromItemsFunctionFactory<I, V> = ((equalityC
  * The returned factory accepts different equality comparators, allowing reuse of the same value extraction logic
  * with varying comparison strategies.
  *
- * @param readValues - extracts the comparable value from each item
- * @returns a factory function that accepts an equality comparator and produces a comparison function
+ * @param readValues - Extracts the comparable value from each item.
+ * @returns A factory function that accepts an equality comparator and produces a comparison function.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory value
+ * @dbxUtilKind factory
+ * @dbxUtilTags value, comparator, equality, factory, read, reuse
+ * @dbxUtilRelated compare-equality-with-value-from-items-function, safe-equality-comparator-function
  *
  * @example
  * ```ts
@@ -129,12 +137,6 @@ export type CompareEqualityWithValueFromItemsFunctionFactory<I, V> = ((equalityC
  * fn(undefined, undefined); // true
  * fn(0, 1);           // false
  * ```
- *
- * @dbxUtil
- * @dbxUtilCategory value
- * @dbxUtilKind factory
- * @dbxUtilTags value, comparator, equality, factory, read, reuse
- * @dbxUtilRelated compare-equality-with-value-from-items-function, safe-equality-comparator-function
  *
  * @__NO_SIDE_EFFECTS__
  */

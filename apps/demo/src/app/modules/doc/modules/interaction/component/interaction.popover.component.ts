@@ -7,7 +7,7 @@ import { DocInteractionExamplePopoverContentComponent } from './interaction.popo
 export const DEFAULT_INTERACTION_POPOVER_COMPOSER_POPOVER_KEY = 'popover';
 
 export interface DocInteractionPopoverConfig {
-  origin: ElementRef;
+  readonly origin: ElementRef;
 }
 
 @Component({

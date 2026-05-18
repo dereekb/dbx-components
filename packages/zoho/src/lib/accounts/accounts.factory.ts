@@ -45,9 +45,9 @@ export type ZohoAccountsFactory = (config: ZohoAccountsConfig) => ZohoAccounts;
  * The Accounts client is the foundation for CRM, Recruit, and Sign clients, as it provides
  * the {@link ZohoAccountsContext} needed for OAuth token management.
  *
- * @param factoryConfig - Configuration providing optional fetch and logging overrides
- * @returns A factory function that creates authenticated Zoho Accounts clients
- * @throws {Error} If `refreshToken`, `clientId`, or `clientSecret` are missing from the config
+ * @param factoryConfig - Configuration providing optional fetch and logging overrides.
+ * @returns A factory function that creates authenticated Zoho Accounts clients.
+ * @throws {Error} If `refreshToken`, `clientId`, or `clientSecret` are missing from the config.
  *
  * @example
  * ```typescript
@@ -65,6 +65,7 @@ export type ZohoAccountsFactory = (config: ZohoAccountsConfig) => ZohoAccounts;
  *   accountsContext: zohoAccounts.accountsContext
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoAccountsFactory(factoryConfig: ZohoAccountsFactoryConfig): ZohoAccountsFactory {
@@ -183,9 +184,10 @@ export interface ZohoAccountsZohoAccessTokenFactoryConfig {
  * The returned function also exposes a `resetAccessToken()` method to invalidate
  * the current cached token, typically called on {@link ZohoInvalidTokenError}.
  *
- * @param config - Token refresh, caching, and expiration buffer configuration
- * @returns A token factory function with `resetAccessToken` for cache invalidation
- * @throws {ZohoAccountsAuthFailureError} If the token refresher fails
+ * @param config - Token refresh, caching, and expiration buffer configuration.
+ * @returns A token factory function with `resetAccessToken` for cache invalidation.
+ * @throws {ZohoAccountsAuthFailureError} If the token refresher fails.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoAccountsZohoAccessTokenFactory(config: ZohoAccountsZohoAccessTokenFactoryConfig): ZohoAccessTokenFactory {

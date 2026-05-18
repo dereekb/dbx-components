@@ -23,7 +23,7 @@ export type CharacterPrefix = string;
 export type CharacterSuffix = string;
 
 /**
- * A string that does not have a CharacterPrefix or CharacterSuffix.
+ * Does not have a CharacterPrefix or CharacterSuffix.
  *
  * @semanticType
  * @semanticTopic string
@@ -32,17 +32,17 @@ export type CharacterSuffix = string;
 export type CharacterPrefixSuffixCleanString = string;
 
 /**
- * A string that is a combination of a prefix and suffix.
+ * Is a combination of a prefix and suffix.
  */
 export type CharacterPrefixSuffixString<P extends CharacterPrefix = '', S extends CharacterSuffix = '', T extends string = string> = `${P}${T}${S}`;
 
 /**
- * A string that has a known prefix.
+ * Has a known prefix.
  */
 export type CharacterPrefixString<P extends CharacterPrefix = '', T extends string = string> = CharacterPrefixSuffixString<P, '', T>;
 
 /**
- * A string that has a known suffix.
+ * Has a known suffix.
  */
 export type CharacterSuffixString<S extends CharacterSuffix = '', T extends string = string> = CharacterPrefixSuffixString<'', S, T>;
 
@@ -145,7 +145,7 @@ export function characterPrefixSuffixInstance<P extends CharacterPrefix = '', S 
         result = `${result}${suffix}` as CharacterPrefixSuffixString<P, S, T>;
       }
     } else {
-      result = `${prefix}${clean}${suffix}` as CharacterPrefixSuffixString<P, S, T>;
+      result = `${prefix}${clean}${suffix}`;
     }
 
     return result;
@@ -169,8 +169,8 @@ export function characterPrefixSuffixInstance<P extends CharacterPrefix = '', S 
  * (vs. {@link removeFirstMatchingSuffix}, which silently passes the
  * input through).
  *
- * @param input The string to trim.
- * @param suffix The suffix to remove.
+ * @param input - The string to trim.
+ * @param suffix - The suffix to remove.
  * @returns The input without the suffix, or `undefined` when the input
  *   does not end with the suffix.
  */
@@ -183,8 +183,8 @@ export function removeSuffix(input: string, suffix: string): Maybe<string> {
  * Removes the first matching suffix from the input string. Returns the
  * input unchanged when none of the suffixes match.
  *
- * @param input The string to trim.
- * @param suffixes The suffixes to try in order.
+ * @param input - The string to trim.
+ * @param suffixes - The suffixes to try in order.
  * @returns The input with the first matching suffix removed, or the
  *   input unchanged when no suffix matches.
  */

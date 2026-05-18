@@ -26,8 +26,8 @@ export interface ProvideAppCalcomOAuthMetadataConfig extends Pick<ModuleMetadata
 /**
  * Convenience function used to generate ModuleMetadata for an app's CalcomOAuthModule.
  *
- * @param config - the module metadata configuration including optional dependency module and config factory
- * @returns NestJS ModuleMetadata for registering the CalcomOAuthModule
+ * @param config - The module metadata configuration including optional dependency module and config factory.
+ * @returns NestJS ModuleMetadata for registering the CalcomOAuthModule.
  */
 export function appCalcomOAuthModuleMetadata(config: ProvideAppCalcomOAuthMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

@@ -11,7 +11,7 @@ import { type AuthTransitionDecision, type AuthTransitionHookOptions, type AuthT
  * @see {@link AuthTransitionHookOptions} for redirect and timeout configuration.
  */
 export interface HasAuthStateHookConfig {
-  options: AuthTransitionHookOptions;
+  readonly options: AuthTransitionHookOptions;
 }
 
 /**
@@ -45,13 +45,13 @@ export interface HasAuthStateObjectConfig {
    * Auth user states that are permitted to access this route.
    * If specified, only users in one of these states can proceed.
    */
-  allowedStates?: ArrayOrValue<AuthUserState>;
+  readonly allowedStates?: ArrayOrValue<AuthUserState>;
 
   /**
    * Auth user states that are explicitly forbidden from accessing this route.
    * If the user is in one of these states, the transition is rejected.
    */
-  disallowedStates?: ArrayOrValue<AuthUserState>;
+  readonly disallowedStates?: ArrayOrValue<AuthUserState>;
 }
 
 /**

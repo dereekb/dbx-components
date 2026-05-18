@@ -16,28 +16,32 @@ import { type DocFormExampleComponentFormConfig, DOC_FORM_EXAMPLE_COMPONENT_DATA
 export class DocForgeExampleComponentFormComponent extends AbstractConfigAsyncForgeFormDirective<unknown, DocFormExampleComponentFormConfig> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => {
-      if (!config) {
-        return undefined;
+      let result: Maybe<FormConfig>;
+
+      if (config) {
+        result = {
+          fields: [
+            dbxForgeComponentField({
+              props: {
+                componentField: {
+                  componentClass: config.componentClass,
+                  providers: [
+                    {
+                      provide: DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN,
+                      useValue: 'example injected value'
+                    }
+                  ]
+                },
+                allowDisabledEffects: config.allowDisabledEffects ?? true
+              }
+            })
+          ]
+        } as const satisfies FormConfig;
+      } else {
+        result = undefined;
       }
 
-      return {
-        fields: [
-          dbxForgeComponentField({
-            props: {
-              componentField: {
-                componentClass: config.componentClass,
-                providers: [
-                  {
-                    provide: DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN,
-                    useValue: 'example injected value'
-                  }
-                ]
-              },
-              allowDisabledEffects: config.allowDisabledEffects ?? true
-            }
-          })
-        ]
-      } as const satisfies FormConfig;
+      return result;
     })
   );
 }

@@ -15,10 +15,11 @@ export type InjectableType<T> = (Type<T> | AbstractType<T>) & Provider;
  * This is a convenience for one-off instantiation of an injectable class using a specific
  * parent injector, without needing to manually configure `Injector.create()`.
  *
- * @typeParam T - The type to instantiate.
  * @param type - The injectable class to provide and resolve.
  * @param parent - The parent injector that supplies the type's dependencies.
  * @returns A new instance of `T`.
+ *
+ * @typeParam T - The type to instantiate.
  *
  * @example
  * ```typescript

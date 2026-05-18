@@ -38,8 +38,8 @@ export type GrantStorageFileRolesForUserAuthFunction = (input: GrantStorageFileR
  *
  * Use this within a permission service to define role-based access for StorageFile operations.
  *
- * @param config - the permission output, auth context, and target document
- * @returns a function that accepts role configuration and returns a GrantRolesOtherwiseFunction
+ * @param config - Permission output, auth context, and target document for the grant.
+ * @returns Builder that takes role configuration and yields a GrantRolesOtherwiseFunction.
  *
  * @example
  * ```ts
@@ -49,6 +49,7 @@ export type GrantStorageFileRolesForUserAuthFunction = (input: GrantStorageFileR
  *   rolesForStorageFileOwnershipKey: (key) => ({ read: true })
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function grantStorageFileRolesForUserAuthFunction<T extends FirebaseModelContext>(config: GrantStorageFileRolesForUserAuthFunctionConfig<T>): GrantStorageFileRolesForUserAuthFunction {

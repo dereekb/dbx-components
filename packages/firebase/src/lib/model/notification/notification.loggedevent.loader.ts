@@ -83,8 +83,8 @@ export interface NotificationLoggedEventLoader {
  *
  * Cache lifetime is the loader instance — create one per request/transaction; do not retain.
  *
- * @param config - notification collections, the parent {@link NotificationBoxDocument}, optional transaction.
- * @returns the cached loader.
+ * @param config - Notification collections, the parent {@link NotificationBoxDocument}, optional transaction.
+ * @returns The cached loader.
  */
 export function notificationLoggedEventLoader(config: NotificationLoggedEventLoaderConfig): NotificationLoggedEventLoader {
   const { notificationFirestoreCollections, notificationBox, transaction } = config;
@@ -145,11 +145,13 @@ export function notificationLoggedEventLoader(config: NotificationLoggedEventLoa
     });
 
     await performTasks(() => {
-      if (cursor >= dayIds.length) {
-        return null;
+      let next: Maybe<NotificationLoggedEventDayId> = null;
+
+      if (cursor < dayIds.length) {
+        next = dayIds[cursor];
+        cursor += 1;
       }
-      const next = dayIds[cursor];
-      cursor += 1;
+
       return next;
     });
   }

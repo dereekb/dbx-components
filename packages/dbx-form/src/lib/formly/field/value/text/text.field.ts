@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated AttributesFieldConfig, DescriptionFieldConfig, FieldConfigParsersRef, and FieldValueParser retained for the formly layer until full migration to forge */
 import { concatArrays, mapMaybeFunction, transformStringFunction, type TransformStringFunctionConfig, type TransformStringFunctionConfigRef } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type MaterialFormFieldConfig, type DescriptionFieldConfig, type AttributesFieldConfig, type FieldValueParser, type FieldConfigParsersRef } from '../../field';
@@ -6,15 +7,15 @@ import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, typ
  * Configuration for minimum and maximum text length constraints.
  */
 export interface TextFieldLengthConfig {
-  minLength?: number;
-  maxLength?: number;
+  readonly minLength?: number;
+  readonly maxLength?: number;
 }
 
 /**
  * Configuration for regex pattern validation on a text field.
  */
 export interface TextFieldPatternConfig {
-  pattern?: string | RegExp;
+  readonly pattern?: string | RegExp;
 }
 
 /**
@@ -32,19 +33,19 @@ export interface TextFieldConfig extends LabeledFieldConfig, DescriptionFieldCon
   /**
    * HTML input type. Defaults to `'text'`.
    */
-  inputType?: TextFieldInputType;
+  readonly inputType?: TextFieldInputType;
   /**
    * String transformation applied as a value parser (e.g., trim, uppercase).
    */
-  transform?: TransformStringFunctionConfig;
+  readonly transform?: TransformStringFunctionConfig;
 }
 
 /**
  * Builds an array of value parsers for a text field, incorporating any configured
  * string transformation (e.g., trim, lowercase) as a parser prepended to existing parsers.
  *
- * @param config - Parser and transform configuration
- * @returns Array of value parsers, or undefined if none configured
+ * @param config - Parser and transform configuration.
+ * @returns Array of value parsers, or undefined if none configured.
  *
  * @example
  * ```typescript
@@ -70,7 +71,7 @@ export function formlyTextFieldTransformParser(config: Partial<FieldConfigParser
 /**
  * Creates a Formly field configuration for a single-line text input.
  *
- * @param config - Text field configuration including key, label, validation, and transform options
+ * @param config - Text field configuration including key, label, validation, and transform options.
  * @returns A validated {@link FormlyFieldConfig} with type `'input'`
  *
  * @example
@@ -103,13 +104,13 @@ export interface TextAreaFieldConfig extends LabeledFieldConfig, DescriptionFiel
   /**
    * Number of visible text rows. Defaults to 3.
    */
-  rows?: number;
+  readonly rows?: number;
 }
 
 /**
  * Creates a Formly field configuration for a multi-line textarea input.
  *
- * @param config - Textarea field configuration including key, label, rows, and validation options
+ * @param config - Textarea field configuration including key, label, rows, and validation options.
  * @returns A validated {@link FormlyFieldConfig} with type `'textarea'`
  *
  * @example
@@ -136,6 +137,7 @@ export function formlyTextAreaField(config: TextAreaFieldConfig): FormlyFieldCon
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTextFieldTransformParser instead.
  */

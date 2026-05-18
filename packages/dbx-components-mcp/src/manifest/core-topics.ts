@@ -36,7 +36,7 @@ export const CORE_TOPICS_SET: ReadonlySet<string> = new Set<string>(CORE_TOPICS)
 /**
  * Returns whether `topic` is a recognised bare core topic.
  *
- * @param topic - the topic string to test
+ * @param topic - The topic string to test.
  * @returns `true` when `topic` is present in {@link CORE_TOPICS}
  */
 export function isCoreTopic(topic: string): topic is CoreTopic {

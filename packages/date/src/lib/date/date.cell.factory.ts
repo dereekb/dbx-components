@@ -320,8 +320,8 @@ export function dateCellIndexRange(timing: DateCellTiming, limit?: DateCellTimin
  *
  * Shorthand for calling {@link expandDateCellTiming} with `collection.timing` and `collection.blocks`.
  *
- * @param collection - The date cell collection containing timing and blocks to expand.
- * @returns An array of {@link DateCellDurationSpan} values with concrete start times and durations.
+ * @param collection - Collection whose timing and blocks should be expanded.
+ * @returns Duration spans with concrete start times for each block.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -337,9 +337,9 @@ export function expandDateCellCollection<B extends DateCell = DateCell>(collecti
  *
  * Shorthand for creating a {@link dateCellTimingExpansionFactory} and immediately invoking it.
  *
- * @param timing - The timing schedule providing start times and duration.
- * @param blocks - The date cell blocks to expand into duration spans.
- * @returns An array of {@link DateCellDurationSpan} values with concrete start times.
+ * @param timing - Schedule providing start times and duration.
+ * @param blocks - Blocks to expand into concrete duration spans.
+ * @returns Duration spans with concrete start times.
  *
  * @dbxUtil
  * @dbxUtilCategory date
@@ -373,30 +373,30 @@ export interface DateCellTimingExpansionFactoryConfig<B extends DateCell | DateC
   /**
    * Timing to use in the configuration.
    */
-  timing: DateCellTiming;
+  readonly timing: DateCellTiming;
   /**
    * Range to limit duration span output to.
    *
    * If not provided, uses the input timing's range.
    * If false, the timing's range is ignored too, and only the DateCellIndex values are considered.
    */
-  rangeLimit?: DateCellTimingRangeInput | false;
+  readonly rangeLimit?: DateCellTimingRangeInput | false;
   /**
    * Additional filter function to filter potential blocks in/out.
    */
-  filter?: FilterFunction<B>;
+  readonly filter?: FilterFunction<B>;
   /**
    * (Optional) Additional filter function based on the calcualted DateCellDurationSpan.
    */
-  durationSpanFilter?: FilterFunction<DateCellDurationSpan<B>>;
+  readonly durationSpanFilter?: FilterFunction<DateCellDurationSpan<B>>;
   /**
    * (Optional) Max number of blocks to evaluate.
    */
-  blocksEvaluationLimit?: number;
+  readonly blocksEvaluationLimit?: number;
   /**
    * (Optional) Max number of DateCellDurationSpan values to return.
    */
-  maxDateCellsToReturn?: number;
+  readonly maxDateCellsToReturn?: number;
 }
 
 /**
@@ -470,10 +470,10 @@ export function dateCellTimingExpansionFactory<B extends DateCell | DateCellRang
       }
     }
 
-    blocks.findIndex((block) => {
+    blocks.some((block) => {
       if (dateCellRangeHasRange(block)) {
         // Expands the block's range as if it is at a single index
-        range(block.i, block.to + 1).findIndex((i) => {
+        range(block.i, block.to + 1).some((i) => {
           const blockAtIndex = { ...block, i, to: i }; // copy block, set to as i
           filterAndPush(blockAtIndex, blocksEvaluated);
 
@@ -589,6 +589,14 @@ export type DateCellDayTimingInfoFactory = ((date: DateOrDateCellIndex, now?: Da
  * The factory handles timezone normalization internally and accounts for edge cases
  * where a timing window spans midnight into the next day.
  *
+ * @param config - Configuration providing the timing and optional range limit.
+ * @returns A factory that computes {@link DateCellDayTimingInfo} for any date or day index.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, day, timing, info, factory, progress, in-progress, complete
+ * @dbxUtilRelated date-cell-timing-relative-index-factory, date-cell-timing-expansion-factory, date-cell-timing-completed-time-range
+ *
  * @example
  * ```ts
  * const timing = dateCellTiming({ startsAt, duration: 60 }, 5);
@@ -605,13 +613,6 @@ export type DateCellDayTimingInfoFactory = ((date: DateOrDateCellIndex, now?: Da
  * console.log(dateInfo.dayIndex);    // which day index this date falls on
  * ```
  *
- * @param config - Configuration providing the timing and optional range limit.
- * @returns A factory that computes {@link DateCellDayTimingInfo} for any date or day index.
- *
- * @dbxUtil
- * @dbxUtilCategory date
- * @dbxUtilTags date, cell, day, timing, info, factory, progress, in-progress, complete
- * @dbxUtilRelated date-cell-timing-relative-index-factory, date-cell-timing-expansion-factory, date-cell-timing-completed-time-range
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellDayTimingInfoFactory(config: DateCellDayTimingInfoFactoryConfig): DateCellDayTimingInfoFactory {
@@ -730,6 +731,14 @@ export function isDateCellTimingRelativeIndexFactory<T extends DateCellTimingSta
  * all date inputs through UTC to handle timezone offsets correctly, computing the floor
  * of the hour difference divided by 24 to determine the day offset.
  *
+ * @param input - A timing configuration or an existing factory (returned as-is).
+ * @returns A factory that converts dates, ISO8601 day strings, or indexes to zero-based day offsets.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, relative-index, factory, day-offset, iso8601, timezone
+ * @dbxUtilRelated is-date-cell-timing-relative-index-factory, get-relative-index-for-date-cell-timing, date-cell-timing-relative-index-array-factory
+ *
  * @example
  * ```ts
  * const timing = dateCellTiming({ startsAt, duration: 60 }, 5);
@@ -749,49 +758,49 @@ export function isDateCellTimingRelativeIndexFactory<T extends DateCellTimingSta
  * indexFactory._normalInstance;  // timezone normalizer
  * ```
  *
- * @param input - A timing configuration or an existing factory (returned as-is).
- * @returns A factory that converts dates, ISO8601 day strings, or indexes to zero-based day offsets.
- *
- * @dbxUtil
- * @dbxUtilCategory date
- * @dbxUtilTags date, cell, timing, relative-index, factory, day-offset, iso8601, timezone
- * @dbxUtilRelated is-date-cell-timing-relative-index-factory, get-relative-index-for-date-cell-timing, date-cell-timing-relative-index-array-factory
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingRelativeIndexFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(input: T | DateCellTimingRelativeIndexFactory<T>): DateCellTimingRelativeIndexFactory<T> {
+  let result: DateCellTimingRelativeIndexFactory<T>;
+
   if (isDateCellTimingRelativeIndexFactory(input)) {
-    return input;
+    result = input;
+  } else {
+    const timing = input;
+    const { start, normalInstance } = dateCellTimingStartPair(input);
+    const startInUtc = normalInstance.baseDateToTargetDate(start); // takes the target date and puts in into UTC normal
+
+    const factory = ((input: DateOrDateCellIndex | ISO8601DayString) => {
+      const inputType = typeof input;
+      let resultIndex: DateCellIndex;
+
+      if (inputType === 'number') {
+        resultIndex = input as DateCellIndex;
+      } else {
+        let diff: number;
+
+        if (inputType === 'string') {
+          const startOfDayInUtc = parseISO8601DayStringToUTCDate(input as string); // parse as UTC
+          diff = differenceInHours(startOfDayInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the UTC times. Round down.
+          // console.log({ startOfDayInUtc, diff, startInUtc });
+        } else {
+          const dateInUtc = normalInstance.baseDateToTargetDate(input as Date); // convert to UTC normal
+          diff = differenceInHours(dateInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the difference in UTC times. Round down.
+          // console.log({ input, dateInUtc, diff, startInUtc, tz: normalInstance.configuredTimezoneString, systemTargetOffset: normalInstance.targetDateToSystemDateOffset(input as Date) / MS_IN_HOUR, targetBaseOffset: normalInstance.targetDateToBaseDateOffset(input as Date) / MS_IN_HOUR });
+        }
+
+        const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
+        resultIndex = daysOffset || 0; // do not return -0
+      }
+
+      return resultIndex;
+    }) as Building<DateCellTimingRelativeIndexFactory<T>>;
+    factory._timing = timing;
+    factory._normalInstance = normalInstance;
+    result = factory as DateCellTimingRelativeIndexFactory<T>;
   }
 
-  const timing = input;
-  const { start, normalInstance } = dateCellTimingStartPair(input);
-  const startInUtc = normalInstance.baseDateToTargetDate(start); // takes the target date and puts in into UTC normal
-
-  const factory = ((input: DateOrDateCellIndex | ISO8601DayString) => {
-    const inputType = typeof input;
-
-    if (inputType === 'number') {
-      return input as DateCellIndex;
-    }
-
-    let diff: number;
-
-    if (inputType === 'string') {
-      const startOfDayInUtc = parseISO8601DayStringToUTCDate(input as string); // parse as UTC
-      diff = differenceInHours(startOfDayInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the UTC times. Round down.
-      // console.log({ startOfDayInUtc, diff, startInUtc });
-    } else {
-      const dateInUtc = normalInstance.baseDateToTargetDate(input as Date); // convert to UTC normal
-      diff = differenceInHours(dateInUtc, startInUtc, { roundingMethod: 'floor' }); // compare the difference in UTC times. Round down.
-      // console.log({ input, dateInUtc, diff, startInUtc, tz: normalInstance.configuredTimezoneString, systemTargetOffset: normalInstance.targetDateToSystemDateOffset(input as Date) / MS_IN_HOUR, targetBaseOffset: normalInstance.targetDateToBaseDateOffset(input as Date) / MS_IN_HOUR });
-    }
-
-    const daysOffset = Math.floor(diff / HOURS_IN_DAY); // total number of hours difference from the original UTC date
-    return daysOffset || 0; // do not return -0
-  }) as Building<DateCellTimingRelativeIndexFactory<T>>;
-  factory._timing = timing;
-  factory._normalInstance = normalInstance;
-  return factory as DateCellTimingRelativeIndexFactory<T>;
+  return result;
 }
 
 /**
@@ -853,6 +862,15 @@ export function dateCellTimingRelativeIndexArrayFactory<T extends DateCellTiming
  *
  * Defaults to the current date/time if no date is provided.
  *
+ * @param timing - The timing providing the start date and timezone context.
+ * @param date - Moment to convert; defaults to the current date/time.
+ * @returns The zero-based day index relative to the timing's start.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, relative-index, day-offset, shorthand
+ * @dbxUtilRelated date-cell-timing-relative-index-factory, get-relative-date-for-date-cell-timing
+ *
  * @example
  * ```ts
  * const timing: DateCellTimingStartsAt = { startsAt, timezone: 'America/Denver' };
@@ -863,15 +881,6 @@ export function dateCellTimingRelativeIndexArrayFactory<T extends DateCellTiming
  * // Get the index for a specific date
  * const index = getRelativeIndexForDateCellTiming(timing, someDate);
  * ```
- *
- * @param timing - The timing providing the start date and timezone context.
- * @param date - A date or index to convert; defaults to the current date/time.
- * @returns The zero-based day index relative to the timing's start.
- *
- * @dbxUtil
- * @dbxUtilCategory date
- * @dbxUtilTags date, cell, timing, relative-index, day-offset, shorthand
- * @dbxUtilRelated date-cell-timing-relative-index-factory, get-relative-date-for-date-cell-timing
  */
 export function getRelativeIndexForDateCellTiming(timing: DateCellTimingStartsAt, date: DateOrDateCellIndex = new Date()): DateCellIndex {
   return dateCellTimingRelativeIndexFactory(timing)(date);
@@ -895,6 +904,14 @@ export type DateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCel
  * date arithmetic) but want to retain the hours/minutes of "now" rather than using
  * the timing's startsAt time.
  *
+ * @param timing - The timing providing the start date and timezone context.
+ * @returns A factory that maps day indexes to calendar dates preserving the current time-of-day.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, date, factory, day-index, calendar, time-of-day
+ * @dbxUtilRelated date-cell-timing-start-date-factory, date-cell-timing-starts-at-date-factory, get-relative-date-for-date-cell-timing
+ *
  * @example
  * ```ts
  * const timing = dateCellTiming({ startsAt, duration: 60 }, 5);
@@ -910,13 +927,6 @@ export type DateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCel
  * const dateForDay3AtNoon = dateFactory(3, noonDate);
  * ```
  *
- * @param timing - The timing providing the start date and timezone context.
- * @returns A factory that maps day indexes to calendar dates preserving the current time-of-day.
- *
- * @dbxUtil
- * @dbxUtilCategory date
- * @dbxUtilTags date, cell, timing, date, factory, day-index, calendar, time-of-day
- * @dbxUtilRelated date-cell-timing-start-date-factory, date-cell-timing-starts-at-date-factory, get-relative-date-for-date-cell-timing
  * @__NO_SIDE_EFFECTS__
  */
 export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = DateCellTimingStartsAt>(timing: T): DateCellTimingDateFactory<T> {
@@ -925,21 +935,25 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
   const startUtcHours = start.getUTCHours();
 
   const factory = ((input: DateOrDateCellIndex, inputNow?: Date) => {
+    let result: Date;
+
     if (isDate(input)) {
-      return input;
+      result = input;
+    } else {
+      const now = inputNow ?? new Date();
+      const nowHours = now.getUTCHours();
+      const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), nowHours, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
+
+      // if the current hours are less than the UTC offset hours, then bump one extra day forward to be sure we're in the correct day.
+      if (startUtcHours > nowHours) {
+        input += 1;
+      }
+
+      // add days to apply the correct offset to the target index
+      result = addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY);
     }
 
-    const now = inputNow ?? new Date();
-    const nowHours = now.getUTCHours();
-    const utcStartDateWithNowTime = new Date(Date.UTC(utcStartDate.getUTCFullYear(), utcStartDate.getUTCMonth(), utcStartDate.getUTCDate(), nowHours, now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds()));
-
-    // if the current hours are less than the UTC offset hours, then bump one extra day forward to be sure we're in the correct day.
-    if (startUtcHours > nowHours) {
-      input += 1;
-    }
-
-    // add days to apply the correct offset to the target index
-    return addHours(utcStartDateWithNowTime, input * HOURS_IN_DAY);
+    return result;
   }) as Building<DateCellTimingDateFactory>;
   factory._timing = timing;
   return factory as DateCellTimingDateFactory<T>;
@@ -951,12 +965,6 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
  * This is the index corresponding to the timing's `end` date, representing the final
  * day in the schedule.
  *
- * @example
- * ```ts
- * const timing = dateCellTiming({ startsAt, duration: 60 }, 5);
- * const lastIndex = dateCellTimingEndIndex(timing); // 4 (zero-based, 5 days)
- * ```
- *
  * @param input - A timing or an existing relative index factory.
  * @returns The zero-based index of the last day in the schedule.
  *
@@ -964,6 +972,12 @@ export function dateCellTimingDateFactory<T extends DateCellTimingStartsAt = Dat
  * @dbxUtilCategory date
  * @dbxUtilTags date, cell, timing, end, index, last
  * @dbxUtilRelated date-cell-timing-relative-index-factory, date-cell-timing-end-date-factory, date-cell-timing-latest-completed-index
+ *
+ * @example
+ * ```ts
+ * const timing = dateCellTiming({ startsAt, duration: 60 }, 5);
+ * const lastIndex = dateCellTimingEndIndex(timing); // 4 (zero-based, 5 days)
+ * ```
  */
 export function dateCellTimingEndIndex(input: DateCellTiming | DateCellTimingRelativeIndexFactory<DateCellTiming>): IndexNumber {
   const factory = dateCellTimingRelativeIndexFactory(input);
@@ -1126,7 +1140,7 @@ export function dateCellTimingEndDateFactory<T extends DateCellTiming = DateCell
  * relative to the timing. Shorthand for creating a {@link dateCellTimingDateFactory} and invoking it.
  *
  * @param timing - The timing providing the start date and timezone context.
- * @param input - A date or day index to convert.
+ * @param input - Moment or day-index to resolve to a calendar date.
  * @returns The calendar date corresponding to the input, preserving current time-of-day.
  *
  * @dbxUtil
@@ -1195,6 +1209,14 @@ export interface UpdateDateCellTimingWithDateCellTimingEventInput {
  * When only `replaceStartDay` is true, the day changes but the time-of-day is preserved.
  * When only `replaceStartsAt` is true, the time-of-day changes but the calendar date is preserved.
  *
+ * @param input - Configuration specifying the timing to update, the event source, and which aspects to replace.
+ * @returns A new {@link FullDateCellTiming} with the requested aspects replaced.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, timing, event, update, replace, modify, edit
+ * @dbxUtilRelated date-cell-timing-starts-at-date-factory, date-cell-timing-start-date-factory
+ *
  * @example
  * ```ts
  * const result = updateDateCellTimingWithDateCellTimingEvent({
@@ -1205,14 +1227,6 @@ export interface UpdateDateCellTimingWithDateCellTimingEventInput {
  * });
  * // result has the same start day and end day, but new time-of-day and 90-minute duration
  * ```
- *
- * @param input - Configuration specifying the timing to update, the event source, and which aspects to replace.
- * @returns A new {@link FullDateCellTiming} with the requested aspects replaced.
- *
- * @dbxUtil
- * @dbxUtilCategory date
- * @dbxUtilTags date, cell, timing, event, update, replace, modify, edit
- * @dbxUtilRelated date-cell-timing-starts-at-date-factory, date-cell-timing-start-date-factory
  */
 export function updateDateCellTimingWithDateCellTimingEvent(input: UpdateDateCellTimingWithDateCellTimingEventInput): FullDateCellTiming {
   const { timing, event, replaceStartDay, replaceStartsAt, startDayDate: startDateDay, endOnEvent, replaceDuration } = input;
@@ -1300,11 +1314,11 @@ export interface IsDateWithinDateCellRangeConfig {
    *
    * If not provided, defaults to the index in the range if a date is provided with the system timezone, or throws an exception if a date range is input.
    */
-  startsAt?: DateCellTimingStartsAt;
+  readonly startsAt?: DateCellTimingStartsAt;
   /**
    * Range to compare the input to.
    */
-  range: IsDateWithinDateCellRangeInput;
+  readonly range: IsDateWithinDateCellRangeInput;
 }
 
 /**
@@ -1314,8 +1328,15 @@ export interface IsDateWithinDateCellRangeConfig {
  * Converts all date-based inputs to cell indexes using the configured (or inferred) timezone
  * before performing the containment check.
  *
- * @throws Error if `startsAt` is not provided and cannot be inferred from the range input
+ * @param config - Configuration specifying the reference range and optional timezone context.
+ * @returns A predicate function that checks containment within the configured range.
+ * @throws {Error} If `startsAt` is not provided and cannot be inferred from the range input
  *   (e.g., when a DateRange without a single-date range is used without explicit startsAt).
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, cell, range, contains, within, predicate, factory, check
+ * @dbxUtilRelated date-cell-timing-relative-index-factory, date-cell-index-range
  *
  * @example
  * ```ts
@@ -1329,21 +1350,14 @@ export interface IsDateWithinDateCellRangeConfig {
  * isInRange(someDate); // converts date to index, then checks containment
  * ```
  *
- * @param config - Configuration specifying the reference range and optional timezone context.
- * @returns A predicate function that checks containment within the configured range.
- *
- * @dbxUtil
- * @dbxUtilCategory date
- * @dbxUtilTags date, cell, range, contains, within, predicate, factory, check
- * @dbxUtilRelated date-cell-timing-relative-index-factory, date-cell-index-range
  * @__NO_SIDE_EFFECTS__
  */
 export function isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRangeConfig): IsDateWithinDateCellRangeFunction {
   const { startsAt: inputStartsAt, range: inputRange } = config;
   let startsAt: DateCellTimingStartsAt | undefined = inputStartsAt;
 
-  let dateRange: (DateRangeStart & Partial<DateRange>) | undefined;
-  let rangeInput: DateCell | DateCellRange | undefined;
+  let dateRange: Maybe<DateRangeStart & Partial<DateRange>>;
+  let rangeInput: Maybe<DateCell | DateCellRange>;
   let isDateInput = false;
 
   if (typeof inputRange === 'number') {
@@ -1354,7 +1368,7 @@ export function isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRa
   } else if (isDateRangeStart(inputRange)) {
     dateRange = inputRange;
   } else {
-    rangeInput = inputRange as DateCell | DateCellRange;
+    rangeInput = inputRange;
   }
 
   if (!inputStartsAt && dateRange && isDateInput) {

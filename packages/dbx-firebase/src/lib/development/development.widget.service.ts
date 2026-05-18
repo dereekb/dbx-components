@@ -35,14 +35,17 @@ export class DbxFirebaseDevelopmentWidgetService {
    */
   register(provider: DbxFirebaseDevelopmentWidgetEntry, override: boolean = true): boolean {
     const type = provider.widget.type;
+    let result: boolean;
 
     if (override || !this._entries.has(type)) {
       this._entries.set(type, provider);
       this.dbxWidgetService.register(provider.widget, override);
-      return true;
+      result = true;
+    } else {
+      result = false;
     }
 
-    return false;
+    return result;
   }
 
   getEntryWidgetIdentifiers(): DbxWidgetType[] {

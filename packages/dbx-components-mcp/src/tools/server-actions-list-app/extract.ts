@@ -20,9 +20,9 @@ const COMMON_BARREL_REL = 'src/app/common/index.ts';
  * abstract class. Performs the I/O up front so the caller can decide
  * how to render or aggregate the result.
  *
- * @param apiAbs - absolute path to the API package root
- * @param apiRel - caller-supplied relative path used for diagnostics
- * @returns the populated entries, model root, and fixture status
+ * @param apiAbs - Absolute path to the API package root.
+ * @param apiRel - Caller-supplied relative path used for diagnostics.
+ * @returns The populated entries, model root, and fixture status.
  */
 export async function extractServerActions(apiAbs: string, apiRel: string): Promise<{ readonly modelRoot: string; readonly entries: readonly ServerActionEntry[]; readonly fixtureStatus: 'ok' | { readonly kind: 'error'; readonly message: string } }> {
   const modelRoot = join(apiAbs, COMMON_MODEL_SUBPATH);
@@ -76,42 +76,47 @@ export async function extractServerActions(apiAbs: string, apiRel: string): Prom
  * Reads a directory's `Dirent` entries; returns an empty list when the
  * path is unreadable.
  *
- * @param path - absolute directory path
- * @returns the directory entries or `[]` on failure
+ * @param path - Absolute directory path.
+ * @returns The directory entries or `[]` on failure.
  */
 async function readDirSafe(path: string): Promise<readonly Dirent[]> {
+  let result: readonly Dirent[];
   try {
-    return await readdir(path, { withFileTypes: true });
+    result = await readdir(path, { withFileTypes: true });
   } catch {
-    return [];
+    result = [];
   }
+  return result;
 }
 
 async function collectActionFiles(root: string): Promise<readonly string[]> {
   const out: string[] = [];
   const stack: string[] = [];
+  let isDir = false;
   try {
     const stats = await stat(root);
-    if (!stats.isDirectory()) return out;
-    stack.push(root);
+    isDir = stats.isDirectory();
   } catch {
-    return out;
+    isDir = false;
   }
-  while (stack.length > 0) {
-    const current = stack.pop() as string;
-    const entries = await readDirSafe(current);
-    for (const entry of entries) {
-      const full = join(current, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(full);
-        continue;
-      }
-      if (entry.isFile() && entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-        out.push(full);
+  if (isDir) {
+    stack.push(root);
+    while (stack.length > 0) {
+      const current = stack.pop() as string;
+      const entries = await readDirSafe(current);
+      for (const entry of entries) {
+        const full = join(current, entry.name);
+        if (entry.isDirectory()) {
+          stack.push(full);
+          continue;
+        }
+        if (entry.isFile() && entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
+          out.push(full);
+        }
       }
     }
+    out.sort((a, b) => a.localeCompare(b));
   }
-  out.sort((a, b) => a.localeCompare(b));
   return out;
 }
 
@@ -163,11 +168,13 @@ async function findModuleCandidates(actionFilePath: string): Promise<readonly st
 }
 
 async function safeRead(path: string): Promise<string | undefined> {
+  let result: string | undefined;
   try {
-    return await readFile(path, 'utf8');
+    result = await readFile(path, 'utf8');
   } catch {
-    return undefined;
+    result = undefined;
   }
+  return result;
 }
 
 interface ParsedModuleWiring {
@@ -208,9 +215,9 @@ function inspectModuleText(input: { readonly text: string; readonly className: s
  * Tests a `{ provide: ClassName, ... }` provider literal for a `provide`
  * identifier referencing `className`.
  *
- * @param element - the object literal from the providers/exports array
- * @param className - the action class name being searched for
- * @returns `true` when `provide` directly identifies the class
+ * @param element - The object literal from the providers/exports array.
+ * @param className - The action class name being searched for.
+ * @returns `true` when `provide` directly identifies the class.
  */
 function providerObjectMatchesClass(element: ObjectLiteralExpression, className: string): boolean {
   const provideProp = element.getProperty('provide');
@@ -223,8 +230,8 @@ function providerObjectMatchesClass(element: ObjectLiteralExpression, className:
  * Tests one providers/exports array element for a match against the
  * action class — direct identifier or `{ provide: ClassName }` literal.
  *
- * @param element - the array element to inspect
- * @param className - the action class name being searched for
+ * @param element - The array element to inspect.
+ * @param className - The action class name being searched for.
  * @returns `true` when the element references `className`
  */
 function elementMatchesClass(element: Node, className: string): boolean {

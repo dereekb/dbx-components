@@ -23,7 +23,7 @@ export interface MappedItemIterationInstanceMapConfig<O, I, M extends LoadingSta
    * Whether destroying the mapped instance also destroys the underlying iteration.
    * Defaults to `true`.
    */
-  forwardDestroy?: boolean;
+  readonly forwardDestroy?: boolean;
 }
 
 /**
@@ -50,9 +50,9 @@ export interface MappedItemIterationInstance<O, I = unknown, M extends LoadingSt
  *
  * Control flow (next, hasNext, canLoadMore) is delegated directly to the underlying iteration.
  *
- * @param itemIterator - the source iteration to wrap
- * @param config - mapping configuration for transforming loading state values
- * @returns mapped iteration instance with transformed state observables
+ * @param itemIterator - The source iteration to wrap.
+ * @param config - Mapping configuration for transforming loading state values.
+ * @returns Mapped iteration instance with transformed state observables.
  */
 export function mapItemIteration<O, I = unknown, M extends LoadingState<O> = LoadingState<O>, L extends LoadingState<I> = LoadingState<I>, N extends ItemIteration<I, L> = ItemIteration<I, L>>(itemIterator: N, config: MappedItemIterationInstanceMapConfig<O, I, M, L>): MappedItemIterationInstance<O, I, M, L, N> {
   const hasNext$: Observable<boolean> = itemIterator.hasNext$;

@@ -36,8 +36,8 @@ export type OpenAIWebhookEventVerifier = (req: Request, rawBody: Buffer) => Prom
 /**
  * Verifies an OpenAI webhook event header using the OpenAI client's built-in signature verification.
  *
- * @param config - The verification config containing the OpenAI webhook secret and client.
- * @returns A function that verifies an OpenAI webhook event.
+ * @param config - Verification config containing the OpenAI webhook secret and client.
+ * @returns Verifier function that validates the webhook signature on each request.
  */
 export function openAIWebhookEventVerifier(config: OpenAIWebhookEventVerificationConfig): OpenAIWebhookEventVerifier {
   const { secret, client } = config;

@@ -11,8 +11,8 @@ import type { AppFixturesExtraction, FixtureEntry, FixtureValidationResult } fro
 /**
  * Renders the listing report as JSON.
  *
- * @param extraction - the parsed fixture file
- * @returns the JSON body
+ * @param extraction - The parsed fixture file.
+ * @returns The JSON body.
  */
 export function formatListAsJson(extraction: AppFixturesExtraction): string {
   return stringify({
@@ -27,9 +27,9 @@ export function formatListAsJson(extraction: AppFixturesExtraction): string {
 /**
  * Renders the per-model lookup report as JSON.
  *
- * @param extraction - the parsed fixture file
- * @param entry - the matched entry
- * @returns the JSON body
+ * @param extraction - The parsed fixture file.
+ * @param entry - The matched entry.
+ * @returns The JSON body.
  */
 export function formatLookupAsJson(extraction: AppFixturesExtraction, entry: FixtureEntry): string {
   return stringify({
@@ -42,8 +42,8 @@ export function formatLookupAsJson(extraction: AppFixturesExtraction, entry: Fix
 /**
  * Renders the validation report as JSON.
  *
- * @param result - the validation result
- * @returns the JSON body
+ * @param result - The validation result.
+ * @returns The JSON body.
  */
 export function formatValidationAsJson(result: FixtureValidationResult): string {
   return stringify({

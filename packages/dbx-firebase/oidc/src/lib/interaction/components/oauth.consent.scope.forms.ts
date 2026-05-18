@@ -15,7 +15,7 @@ export const OAUTH_CONSENT_SCOPES_REQUIRED_VALIDATOR_KIND = 'mustSelectAtLeastOn
 /**
  * Default message shown when the user has cleared every optional scope.
  */
-export const OAUTH_CONSENT_SCOPES_REQUIRED_VALIDATOR_DEFAULT_MESSAGE = 'Select at least one scope to grant.';
+export const DEFAULT_OAUTH_CONSENT_SCOPES_REQUIRED_VALIDATOR_MESSAGE = 'Select at least one scope to grant.';
 
 /**
  * Form value emitted by the consent scopes form.
@@ -77,7 +77,7 @@ export function oauthConsentScopesFormConfig(config: OAuthConsentScopesFormField
         value,
         validators,
         validationMessages: {
-          [OAUTH_CONSENT_SCOPES_REQUIRED_VALIDATOR_KIND]: OAUTH_CONSENT_SCOPES_REQUIRED_VALIDATOR_DEFAULT_MESSAGE
+          [OAUTH_CONSENT_SCOPES_REQUIRED_VALIDATOR_KIND]: DEFAULT_OAUTH_CONSENT_SCOPES_REQUIRED_VALIDATOR_MESSAGE
         },
         props: {
           listComponentClass: of(DbxFirebaseOAuthConsentScopeListComponent),

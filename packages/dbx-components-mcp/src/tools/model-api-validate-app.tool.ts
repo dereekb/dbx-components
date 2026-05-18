@@ -72,23 +72,34 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
     ensurePathInsideCwd(parsed.apiDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  const apiAbs = resolve(cwd, parsed.apiDir);
-  const modelFilter = parsed.model ?? (parsed.identity ? identityToModel(parsed.identity) : undefined);
-  let report;
-  try {
-    report = await validateAppModelApi({ componentAbs, componentDir: parsed.componentDir, apiAbs, apiDir: parsed.apiDir, modelFilter });
-  } catch (err) {
-    return toolError(`Failed to validate app: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError === undefined) {
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    const apiAbs = resolve(cwd, parsed.apiDir);
+    const modelFilter = parsed.model ?? (parsed.identity ? identityToModel(parsed.identity) : undefined);
+    let report;
+    let validateError: string | undefined;
+    try {
+      report = await validateAppModelApi({ componentAbs, componentDir: parsed.componentDir, apiAbs, apiDir: parsed.apiDir, modelFilter });
+    } catch (err) {
+      validateError = `Failed to validate app: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (validateError !== undefined || report === undefined) {
+      result = toolError(validateError ?? 'Failed to validate app.');
+    } else {
+      const text = parsed.format === 'json' ? formatValidationAsJson(report) : formatValidationAsMarkdown(report);
+      result = { content: [{ type: 'text', text }] };
+    }
+  } else {
+    result = toolError(ensureError);
   }
-  const text = parsed.format === 'json' ? formatValidationAsJson(report) : formatValidationAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
@@ -96,8 +107,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
  * Maps a `firestoreModelIdentity` const name to the bare PascalCase model
  * name. Strips the trailing `Identity` suffix (case-insensitive).
  *
- * @param identity - the identity const string (e.g. `profileIdentity`)
- * @returns the bare PascalCase model name (e.g. `Profile`)
+ * @param identity - The identity const string (e.g. `profileIdentity`)
+ * @returns The bare PascalCase model name (e.g. `Profile`)
  */
 function identityToModel(identity: string): string {
   const stem = identity.replace(/Identity$/i, '');
@@ -105,4 +116,4 @@ function identityToModel(identity: string): string {
   return stem.charAt(0).toUpperCase() + stem.slice(1);
 }
 
-export const modelApiValidateAppTool: DbxTool = { definition: TOOL, run };
+export const MODEL_API_VALIDATE_APP_TOOL: DbxTool = { definition: TOOL, run };

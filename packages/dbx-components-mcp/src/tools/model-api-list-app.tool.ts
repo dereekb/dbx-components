@@ -69,21 +69,32 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError(`Invalid arguments: ${parsed.summary}`);
   }
   const cwd = process.cwd();
+  let result: ToolResult;
+  let ensureError: string | undefined;
   try {
     ensurePathInsideCwd(parsed.componentDir, cwd);
   } catch (err) {
-    return toolError(err instanceof Error ? err.message : String(err));
+    ensureError = err instanceof Error ? err.message : String(err);
   }
-  const componentAbs = resolve(cwd, parsed.componentDir);
-  const modelFilter = parsed.model ?? (parsed.identity ? identityToModel(parsed.identity) : undefined);
-  let report;
-  try {
-    report = await listAppModelApi(componentAbs, { componentDir: parsed.componentDir, modelFilter });
-  } catch (err) {
-    return toolError(`Failed to list model API entries: ${err instanceof Error ? err.message : String(err)}`);
+  if (ensureError === undefined) {
+    const componentAbs = resolve(cwd, parsed.componentDir);
+    const modelFilter = parsed.model ?? (parsed.identity ? identityToModel(parsed.identity) : undefined);
+    let report;
+    let listError: string | undefined;
+    try {
+      report = await listAppModelApi(componentAbs, { componentDir: parsed.componentDir, modelFilter });
+    } catch (err) {
+      listError = `Failed to list model API entries: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (listError !== undefined || report === undefined) {
+      result = toolError(listError ?? 'Failed to list model API entries.');
+    } else {
+      const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
+      result = { content: [{ type: 'text', text }] };
+    }
+  } else {
+    result = toolError(ensureError);
   }
-  const text = parsed.format === 'json' ? formatReportAsJson(report) : formatReportAsMarkdown(report);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
@@ -91,8 +102,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
  * Maps a `firestoreModelIdentity` const name to the bare PascalCase model
  * name. Strips the trailing `Identity` suffix (case-insensitive).
  *
- * @param identity - the identity const string (e.g. `profileIdentity`)
- * @returns the bare PascalCase model name (e.g. `Profile`)
+ * @param identity - The identity const string (e.g. `profileIdentity`)
+ * @returns The bare PascalCase model name (e.g. `Profile`)
  */
 function identityToModel(identity: string): string {
   const stem = identity.replace(/Identity$/i, '');
@@ -100,4 +111,4 @@ function identityToModel(identity: string): string {
   return stem.charAt(0).toUpperCase() + stem.slice(1);
 }
 
-export const modelApiListAppTool: DbxTool = { definition: TOOL, run };
+export const MODEL_API_LIST_APP_TOOL: DbxTool = { definition: TOOL, run };

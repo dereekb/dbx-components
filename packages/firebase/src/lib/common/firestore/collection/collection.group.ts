@@ -53,10 +53,12 @@ export interface FirestoreCollectionGroup<T, D extends FirestoreDocument<T> = Fi
  * which is particularly useful for modeling relationships that can exist at different points
  * in the document hierarchy.
  *
+ * @param config - Configuration for the collection group.
+ * @returns A fully configured FirestoreCollectionGroup instance.
+ *
  * @template T - The data type of the documents in the collection group
  * @template D - The FirestoreDocument type that wraps the data
- * @param config - Configuration for the collection group
- * @returns A fully configured FirestoreCollectionGroup instance
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeFirestoreCollectionGroup<T, D extends FirestoreDocument<T>>(config: FirestoreCollectionGroupConfig<T, D>): FirestoreCollectionGroup<T, D> {

@@ -14,7 +14,7 @@ describe('makeUrlSearchParams()', () => {
   });
 
   it('should filter empty values by default', () => {
-    const result = makeUrlSearchParams({ a: '1', b: null, c: undefined } as any);
+    const result = makeUrlSearchParams({ a: '1', b: null, c: undefined });
     expect(result.get('a')).toBe('1');
     expect(result.has('b')).toBe(false);
     expect(result.has('c')).toBe(false);
@@ -86,7 +86,7 @@ describe('updateUrlSearchParams()', () => {
   });
 
   it('should filter empty values from new params by default', () => {
-    const result = updateUrlSearchParams('https://example.com?a=1', { b: null, c: '3' } as any);
+    const result = updateUrlSearchParams('https://example.com?a=1', { b: null, c: '3' });
     expect(result).toContain('a=1');
     expect(result).toContain('c=3');
     expect(result).not.toContain('b=');

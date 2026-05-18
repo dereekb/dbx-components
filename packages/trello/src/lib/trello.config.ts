@@ -1,4 +1,4 @@
-import { type TrelloApiKey, type TrelloApiToken, type TrelloApiUrl } from './trello.type';
+import { type TrelloApiKey, type TrelloApiToken } from './trello.type';
 
 /**
  * Configuration for a TrelloContext.
@@ -17,5 +17,5 @@ export interface TrelloConfig {
   /**
    * Optional custom API base URL. Defaults to https://api.trello.com/1.
    */
-  readonly apiUrl?: TrelloApiUrl | string;
+  readonly apiUrl?: string;
 }

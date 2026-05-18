@@ -8,9 +8,9 @@ import { asArray } from '@dereekb/util';
  * If `removeFromCompletedCheckpoints` is set, removes only those specific checkpoints.
  * Otherwise, returns the original array unchanged.
  *
- * @param inputCompletions - the current list of completed checkpoint strings
- * @param handleTaskResult - the handler result containing removal instructions
- * @returns the filtered completions array with specified checkpoints removed
+ * @param inputCompletions - The current list of completed checkpoint strings.
+ * @param handleTaskResult - The handler result containing removal instructions.
+ * @returns The filtered completions array with specified checkpoints removed.
  *
  * @example
  * ```ts

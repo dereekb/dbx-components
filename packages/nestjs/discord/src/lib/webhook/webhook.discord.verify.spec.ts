@@ -18,7 +18,7 @@ describe('discordWebhookEventVerifier', () => {
       headers: {
         'x-signature-ed25519': signature.toString('hex'),
         'x-signature-timestamp': timestamp
-      } as any
+      }
     };
 
     return { req, rawBody };
@@ -46,7 +46,7 @@ describe('discordWebhookEventVerifier', () => {
       headers: {
         'x-signature-ed25519': 'deadbeef'.repeat(16),
         'x-signature-timestamp': '1234567890'
-      } as any
+      }
     };
 
     const result = await verifier(req as Request, rawBody);
@@ -70,7 +70,7 @@ describe('discordWebhookEventVerifier', () => {
     const req: Partial<Request> = {
       headers: {
         'x-signature-timestamp': '1234567890'
-      } as any
+      }
     };
 
     const result = await verifier(req as Request, rawBody);
@@ -83,7 +83,7 @@ describe('discordWebhookEventVerifier', () => {
     const req: Partial<Request> = {
       headers: {
         'x-signature-ed25519': 'deadbeef'.repeat(16)
-      } as any
+      }
     };
 
     const result = await verifier(req as Request, rawBody);
@@ -94,7 +94,7 @@ describe('discordWebhookEventVerifier', () => {
     const rawBody = Buffer.from(JSON.stringify({ type: 1 }));
 
     const req: Partial<Request> = {
-      headers: {} as any
+      headers: {}
     };
 
     const result = await verifier(req as Request, rawBody);

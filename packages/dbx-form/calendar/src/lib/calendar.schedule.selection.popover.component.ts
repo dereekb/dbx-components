@@ -6,8 +6,8 @@ import { DbxScheduleSelectionCalendarDatePopoverContentComponent } from './calen
 export const DEFAULT_SCHEDULE_SELECTION_CALENDAR_DATE_POPOVER_KEY = 'calendarselection';
 
 export interface DbxScheduleSelectionCalendarDatePopoverConfig {
-  origin: ElementRef;
-  injector: Injector;
+  readonly origin: ElementRef;
+  readonly injector: Injector;
 }
 
 @Component({

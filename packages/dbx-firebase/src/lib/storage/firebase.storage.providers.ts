@@ -10,8 +10,9 @@ export type DbxFirebaseStorageContextConfigFactory = (app: FirebaseApp, injector
 /**
  * The default factory function for the DbxFirebaseStorageContext.
  *
- * @param base Optional base configuration to use.
+ * @param base - Optional base configuration to use.
  * @returns Factory function for the DbxFirebaseStorageContext.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dbxFirebaseStorageProvidersContextConfigFactory(base?: FirebaseStorageContextFactoryConfig): DbxFirebaseStorageContextConfigFactory {

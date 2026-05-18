@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DescriptionFieldConfig retained for the formly layer until full migration to forge */
 import { type ValidatorFn, type AbstractControl, type ValidationErrors } from '@angular/forms';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type TimeUnit, type HoursAndMinutes, TIME_UNIT_LABEL_MAP, millisecondsToTimeUnit, hoursAndMinutesToTimeUnit } from '@dereekb/util';
+import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type TimeDurationData, durationDataToMilliseconds } from '@dereekb/date';
 import { type DescriptionFieldConfig, type LabeledFieldConfig, type MaterialFormFieldConfig, formlyField, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '../../field';
 
@@ -67,8 +68,8 @@ export interface TimeDurationFieldConfig extends LabeledFieldConfig, Description
 /**
  * Creates a ValidatorFn that checks the duration output value against min/max constraints.
  *
- * @param config - The duration field config containing min, max, outputUnit, and valueMode
- * @returns A ValidatorFn, or undefined if no min/max is configured
+ * @param config - The duration field config containing min, max, outputUnit, and valueMode.
+ * @returns A ValidatorFn, or undefined if no min/max is configured.
  */
 function timeDurationMinMaxValidator(config: Partial<TimeDurationFieldConfig>): ValidatorFn | undefined {
   const { min, max, outputUnit = 'ms', valueMode = 'number' } = config;
@@ -77,6 +78,7 @@ function timeDurationMinMaxValidator(config: Partial<TimeDurationFieldConfig>): 
     return undefined;
   }
 
+  // eslint-disable-next-line dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null` (no `undefined`).
   return (control: AbstractControl): ValidationErrors | null => {
     const value = control.value;
 
@@ -120,7 +122,7 @@ function timeDurationMinMaxValidator(config: Partial<TimeDurationFieldConfig>): 
  * The field uses a text input that parses duration strings (e.g., "3d10h5m8s",
  * "2 hours 30 minutes") and a popover picker button with +/- columns for each unit.
  *
- * @param config - Time duration field configuration
+ * @param config - Time duration field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'timeduration'`
  *
  * @example
@@ -179,6 +181,7 @@ export function formlyTimeDurationField(config: Partial<TimeDurationFieldConfig>
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTimeDurationField instead.
  */

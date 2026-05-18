@@ -100,31 +100,35 @@ function parseArgs(raw: unknown): ParsedTreeArgs {
  * resolved app sources and renders it in markdown or json depending on the
  * requested format.
  *
- * @param rawArgs - the unvalidated tool arguments from the MCP runtime
- * @returns the formatted tree, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments from the MCP runtime.
+ * @returns The formatted tree, or an error result when args fail validation.
  */
 export async function runRouteTree(rawArgs: unknown): Promise<ToolResult> {
-  let args: ParsedTreeArgs;
+  let args: ParsedTreeArgs | undefined;
+  let parseError: string | undefined;
   try {
     args = parseArgs(rawArgs);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return toolError(message);
+    parseError = err instanceof Error ? err.message : String(err);
   }
-
-  const ctx = await loadRouteContext(args);
-  if (ctx.kind === 'error') {
-    return ctx.result;
+  let result: ToolResult;
+  if (parseError !== undefined || args === undefined) {
+    result = toolError(parseError ?? 'Failed to parse arguments.');
+  } else {
+    const ctx = await loadRouteContext(args);
+    if (ctx.kind === 'error') {
+      result = ctx.result;
+    } else {
+      const { tree } = ctx;
+      const title = describeTitle(args);
+      const text = formatRouteTree({ tree, format: args.format, depthLimit: args.depthLimit, title });
+      const errorCount = tree.issues.filter((i) => i.severity === 'error').length;
+      result = {
+        content: [{ type: 'text', text }],
+        isError: errorCount > 0
+      };
+    }
   }
-
-  const { tree } = ctx;
-  const title = describeTitle(args);
-  const text = formatRouteTree({ tree, format: args.format, depthLimit: args.depthLimit, title });
-  const errorCount = tree.issues.filter((i) => i.severity === 'error').length;
-  const result: ToolResult = {
-    content: [{ type: 'text', text }],
-    isError: errorCount > 0
-  };
   return result;
 }
 
@@ -138,7 +142,7 @@ function describeTitle(args: ParsedTreeArgs): string {
   return 'inline sources';
 }
 
-export const routeTreeTool: DbxTool = {
+export const ROUTE_TREE_TOOL: DbxTool = {
   definition: DBX_ROUTE_TREE_TOOL,
   run: runRouteTree
 };

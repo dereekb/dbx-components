@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- file intentionally exposes gen 1 wrapped-function overloads for backward-compatible test fixtures */
 import { type FirebaseAuthUserId } from '@dereekb/firebase';
 import { type RemoveIndex, incrementingNumberFactory, mapGetter, asGetter, type Factory, type GetterOrValue, type PromiseOrValue, type EmailAddress, type E164PhoneNumber, randomEmailFactory, randomPhoneNumberFactory } from '@dereekb/util';
 import { AbstractChildTestContextFixture, type TestContextFixture, useTestContextFixture } from '@dereekb/util/test';
@@ -109,14 +110,6 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
 }
 
 /**
- * Partial event context for gen 1 event-triggered cloud functions, with the `auth` field omitted
- * since it is injected automatically by the test context.
- *
- * @deprecated Used only with gen 1 event cloud functions via {@link AuthorizedUserTestContextInstance.callEventCloudFunction}.
- */
-export type CallEventFunctionEventContext = Partial<Omit<EventContext, 'auth'>>;
-
-/**
  * Simulates JSON serialization round-trip by stringifying then parsing the input object.
  *
  * This mimics the behavior of sending data over HTTP to a Cloud Function endpoint,
@@ -179,7 +172,7 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
    * @param fn - Wrapped gen 2 callable request to invoke.
    * @param params - Request payload to pass to the callable, simulating the JSON body of an HTTP call.
    * @param skipJsonConversion - When `true`, skip the JSON serialize/parse round-trip applied to `params` (default `false`).
-   * @returns A promise resolving to the callable's return value.
+   * @returns Promise resolving to the callable's return value.
    */
   callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>> {
     // Parse to JSON then back to simulate sending JSON to the server, and the server parsing it as a POJO.
@@ -222,7 +215,7 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
    * @param input.eventType - Discriminator for the auth event being simulated (`google.firebase.auth.user.create` or `google.firebase.auth.user.delete`).
    * @param input.eventOverride - Partial event fields used to override the default placeholder values (e.g., `ipAddress`, `userAgent`, `resource`).
    * @param input.skipJsonConversion - When `true`, skip the JSON serialize/parse round-trip applied to the event payload (default `false`).
-   * @returns A promise that resolves once the blocking function has completed.
+   * @returns Resolves once the blocking function has completed.
    */
   callAuthBlockingFunction(input: { fn: WrappedBlockingFunctionWithHandler<AuthBlockingEvent, void>; userRecord: UserRecord; eventType: 'google.firebase.auth.user.create' | 'google.firebase.auth.user.delete'; eventOverride?: Partial<AuthBlockingEvent>; skipJsonConversion?: boolean }): Promise<void> {
     const { fn, userRecord, eventType, eventOverride, skipJsonConversion = false } = input;
@@ -244,13 +237,13 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
   }
 
   /**
-   * @deprecated gen 1
-   *
    * @param fn
    * @param params
    * @param contextOptions
    * @param skipJsonConversion
    * @returns
+   *
+   * @deprecated gen 1
    */
   // eslint-disable-next-line @typescript-eslint/max-params -- deprecated gen 1 signature kept for downstream compatibility
   callEventCloudFunction<F extends WrappedFunction<any>, O = unknown>(fn: F, params: CallCloudFunctionParams<F>, contextOptions?: CallEventFunctionEventContext, skipJsonConversion = false): Promise<O> {
@@ -283,33 +276,33 @@ export interface AuthorizedUserTestContextDetailsTemplate {
  * authorizedUserContext/authorizedUserContextFactory parameters.
  */
 export interface AuthorizedUserTestContextParams<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>, C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>> {
-  f: PF;
+  readonly f: PF;
 
   /**
    * uid value/getter to use. If not provided, a random one will be generated.
    */
-  uid?: GetterOrValue<FirebaseAuthUserId>;
+  readonly uid?: GetterOrValue<FirebaseAuthUserId>;
 
   /**
    * Additional user details to attach to the create request.
    */
-  makeUserDetails?: (uid: FirebaseAuthUserId, params: C) => AuthorizedUserTestContextDetailsTemplate;
+  readonly makeUserDetails?: (uid: FirebaseAuthUserId, params: C) => AuthorizedUserTestContextDetailsTemplate;
 
   /**
    * Creates the custom fixture. If not defined, a AuthorizedUserTestContextFixture is created.
    */
-  makeFixture?: (parent: PF) => F;
+  readonly makeFixture?: (parent: PF) => F;
 
   /**
    * Custom make instance function. If not defined, a AuthorizedUserTestContextInstance will be generated.
    */
   // eslint-disable-next-line @typescript-eslint/max-params -- public callback signature used widely by downstream test fixtures
-  makeInstance?: (uid: FirebaseAuthUserId, testInstance: PI, params: C, userRecord: UserRecord) => PromiseOrValue<I>;
+  readonly makeInstance?: (uid: FirebaseAuthUserId, testInstance: PI, params: C, userRecord: UserRecord) => PromiseOrValue<I>;
 
   /**
    * Optional function to initialize the user for this instance.
    */
-  initUser?: (instance: I, params: C) => Promise<void>;
+  readonly initUser?: (instance: I, params: C) => Promise<void>;
 }
 
 /**
@@ -370,12 +363,12 @@ export const AUTHORIZED_USER_RANDOM_PHONE_NUMBER_FACTORY = randomPhoneNumberFact
  * custom claims, and post-create initialization) and tear it down afterward.
  *
  * @param config - Factory configuration: optional uid generator, custom fixture/instance constructors, user-detail builder, and `initUser` hook.
- * @returns A function that, given runtime params and a `buildTests` callback, wires the authorized-user fixture into the active test context.
+ * @returns Function that, given runtime params and a `buildTests` callback, wires the authorized-user fixture into the active test context.
  */
 export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext = FirebaseAdminTestContext, PF extends TestContextFixture<PI> = TestContextFixture<PI>, I extends AuthorizedUserTestContextInstance<PI> = AuthorizedUserTestContextInstance<PI>, F extends AuthorizedUserTestContextFixture<PI, PF, I> = AuthorizedUserTestContextFixture<PI, PF, I>, C extends AuthorizedUserTestContextFactoryParams<PI, PF> = AuthorizedUserTestContextFactoryParams<PI, PF>>(
   config: AuthorizedUserTestContextFactoryConfig<PI, PF, I, F>
 ): (params: C, buildTests: (u: F) => void) => void {
-  const { uid: uidGetter, makeInstance = (uid, testInstance) => new AuthorizedUserTestContextInstance(uid, testInstance) as I, makeFixture = (f: PF) => new AuthorizedUserTestContextFixture<PI, PF, I>(f), makeUserDetails = () => ({}) as AuthorizedUserTestContextDetailsTemplate, initUser } = config;
+  const { uid: uidGetter, makeInstance = (uid, testInstance) => new AuthorizedUserTestContextInstance(uid, testInstance) as I, makeFixture = (f: PF) => new AuthorizedUserTestContextFixture<PI, PF, I>(f), makeUserDetails = () => ({}), initUser } = config;
   const makeUid = uidGetter ? asGetter(uidGetter) : testUidFactory;
 
   return (params: C, buildTests: (u: F) => void) => {
@@ -585,3 +578,12 @@ export function testFirestoreClaimsFromUserRecord(userRecord: UserRecord): objec
     ...baseClaims
   };
 }
+
+// COMPAT: Deprecated aliases
+/**
+ * Partial event context for gen 1 event-triggered cloud functions, with the `auth` field omitted
+ * since it is injected automatically by the test context.
+ *
+ * @deprecated Used only with gen 1 event cloud functions via {@link AuthorizedUserTestContextInstance.callEventCloudFunction}.
+ */
+export type CallEventFunctionEventContext = Partial<Omit<EventContext, 'auth'>>;

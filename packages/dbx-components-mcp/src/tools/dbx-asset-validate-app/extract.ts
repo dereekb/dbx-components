@@ -33,8 +33,8 @@ const BARREL_RE_EXPORT_RE = /export\s*\*\s*from\s*['"]\.\/assets['"]/;
  * builder bindings, the aggregator export, and trust-listed external
  * identifiers — in a single pass.
  *
- * @param inspection - the prepared component + app inspection
- * @returns the structured extraction used by the rules layer
+ * @param inspection - The prepared component + app inspection.
+ * @returns The structured extraction used by the rules layer.
  */
 export function extractAppAssets(inspection: AppAssetsInspection): ExtractedAppAssets {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
@@ -301,19 +301,19 @@ interface JoinFluentInput {
 
 function joinFluent(input: JoinFluentInput): string | undefined {
   if (input.child === undefined) return undefined;
+  let result: string | undefined;
   if (input.sourceType === 'local' && input.folder) {
     const base = input.folder.basePath.endsWith('/') ? input.folder.basePath : `${input.folder.basePath}/`;
-    return `${base}${input.child}`;
-  }
-  if (input.sourceType === 'remote' && input.remoteBase) {
+    result = `${base}${input.child}`;
+  } else if (input.sourceType === 'remote' && input.remoteBase) {
     const base = input.remoteBase.baseUrl.endsWith('/') ? input.remoteBase.baseUrl : `${input.remoteBase.baseUrl}/`;
     try {
-      return new URL(input.child, base).href;
+      result = new URL(input.child, base).href;
     } catch {
-      return `${base}${input.child}`;
+      result = `${base}${input.child}`;
     }
   }
-  return undefined;
+  return result;
 }
 
 function readStringArg(call: CallExpression): string | undefined {

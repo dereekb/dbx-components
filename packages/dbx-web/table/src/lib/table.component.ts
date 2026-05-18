@@ -43,8 +43,8 @@ export type DbxTableViewElement<T, G> = DbxTableViewGroupElement<T, G> | DbxTabl
 /**
  * Type guard that checks whether a table view element is a group element (header or footer).
  *
- * @param element - the table view element to check
- * @returns `true` if the element represents a group header or footer row
+ * @param element - The table view element to check.
+ * @returns `true` if the element represents a group header or footer row.
  */
 export function isDbxTableViewGroupElement<T, G>(element: DbxTableViewElement<T, G>): element is DbxTableViewGroupElement<T, G> {
   return element.type === 'group';
@@ -53,8 +53,8 @@ export function isDbxTableViewGroupElement<T, G>(element: DbxTableViewElement<T,
 /**
  * Type guard that checks whether a table view element is an item data element.
  *
- * @param element - the table view element to check
- * @returns `true` if the element represents an item data row
+ * @param element - The table view element to check.
+ * @returns `true` if the element represents an item data row.
  */
 export function isDbxTableViewItemElement<T, G>(element: DbxTableViewElement<T, G>): element is DbxTableViewItemElement<T, G> {
   return element.type === 'item';
@@ -124,8 +124,8 @@ export class DbxTableViewComponent<I, C, T, G = unknown> {
         return this.tableStore.viewDelegate$.pipe(
           map((viewDelegate) => {
             const { groupHeader: inputGroupHeader, groupFooter: inputGroupFooter } = viewDelegate;
-            const hasGroupHeader = inputGroupHeader != null ? (group: DbxTableItemGroup<T, G>) => inputGroupHeader(group) != null : () => false;
-            const hasGroupFooter = inputGroupFooter != null ? (group: DbxTableItemGroup<T, G>) => inputGroupFooter(group) != null : () => false;
+            const hasGroupHeader = inputGroupHeader == null ? () => false : (group: DbxTableItemGroup<T, G>) => inputGroupHeader(group) != null;
+            const hasGroupFooter = inputGroupFooter == null ? () => false : (group: DbxTableItemGroup<T, G>) => inputGroupFooter(group) != null;
 
             return groups.flatMap((group) => {
               const { items } = group;

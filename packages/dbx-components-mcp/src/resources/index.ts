@@ -83,8 +83,8 @@ export interface RegisterResourcesOptions {
  * stays a single line. Adding a new domain means importing the registrar above
  * and adding one call here.
  *
- * @param server - the MCP server to register resources against
- * @param options - optional registry handles passed to dynamic resources
+ * @param server - The MCP server to register resources against.
+ * @param options - Optional registry handles passed to dynamic resources.
  */
 export function registerResources(server: McpServer, options: RegisterResourcesOptions = {}): void {
   if (options.forgeFieldRegistry !== undefined) {

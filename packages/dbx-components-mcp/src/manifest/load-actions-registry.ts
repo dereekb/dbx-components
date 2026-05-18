@@ -7,6 +7,7 @@
  * declared in `dbx-mcp.config.json` under `actions.sources`.
  */
 
+import type { Maybe } from '@dereekb/util';
 import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,7 +26,7 @@ export interface LoadActionRegistryInput {
 
 export interface LoadActionRegistryResult {
   readonly registry: ActionRegistry;
-  readonly configPath: string | null;
+  readonly configPath: Maybe<string>;
   readonly configWarnings: readonly ConfigWarning[];
   readonly loaderWarnings: readonly ActionLoaderWarning[];
   readonly externalSourceCount: number;

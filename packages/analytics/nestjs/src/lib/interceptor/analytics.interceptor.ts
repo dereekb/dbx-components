@@ -39,13 +39,18 @@ export interface AnalyticsEventInterceptorConfig<T> {
  *
  * @param config - The analytics event configuration specifying the event name and optional data extractor.
  * @returns A method decorator that attaches analytics metadata.
+ * @throws {Error} When `config.name` is empty.
+ *
+ * @dbxAllowConstantName NestJS decorator factories conventionally use PascalCase.
  *
  * @example
- * ```ts
- * @EmitAnalyticsEvent({ name: 'User Registered', fn: (result) => ({ userId: result.id }) })
- * @Post('register')
- * async register(@Body() body: RegisterDto) {
- *   return this.authService.register(body);
+ * ```typescript
+ * class AuthController {
+ *   @EmitAnalyticsEvent({ name: 'User Registered', fn: (result) => ({ userId: result.id }) })
+ *   @Post('register')
+ *   async register(@Body() body: RegisterDto) {
+ *     return this.authService.register(body);
+ *   }
  * }
  * ```
  */

@@ -77,32 +77,25 @@ interface ModelInfoArgv {
 function runHandler(manifest: CliModelManifest, argv: ModelInfoArgv): void {
   const query = typeof argv.model === 'string' && argv.model.length > 0 ? argv.model : undefined;
 
-  if (!query) {
-    if (argv.json) {
-      outputResult(manifest);
-      return;
+  if (query) {
+    const entry = resolveCliModel(manifest, query);
+    if (!entry) {
+      throw new CliError({
+        message: `No model matches '${query}'. Run \`model-info\` without an argument to list available models.`,
+        code: 'MODEL_INFO_NOT_FOUND'
+      });
     }
+
+    if (argv.json) {
+      outputResult(entry);
+    } else if (argv.fields) {
+      process.stdout.write(renderModelManifestFields(entry));
+    } else {
+      process.stdout.write(renderModelManifestEntry(entry));
+    }
+  } else if (argv.json) {
+    outputResult(manifest);
+  } else {
     process.stdout.write(renderModelManifestList(manifest));
-    return;
   }
-
-  const entry = resolveCliModel(manifest, query);
-  if (!entry) {
-    throw new CliError({
-      message: `No model matches '${query}'. Run \`model-info\` without an argument to list available models.`,
-      code: 'MODEL_INFO_NOT_FOUND'
-    });
-  }
-
-  if (argv.json) {
-    outputResult(entry);
-    return;
-  }
-
-  if (argv.fields) {
-    process.stdout.write(renderModelManifestFields(entry));
-    return;
-  }
-
-  process.stdout.write(renderModelManifestEntry(entry));
 }

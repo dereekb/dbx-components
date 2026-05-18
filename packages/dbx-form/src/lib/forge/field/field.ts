@@ -153,8 +153,8 @@ export interface DbxForgeFieldFunctionConfig<C extends DbxForgeFieldFunctionDef<
  * The returned function accepts a field definition config and an optional configure callback,
  * and produces a fully-typed {@link DbxForgeField} with the correct `type` set.
  *
- * @param config - factory configuration containing the field type and optional builders for props and the field definition
- * @returns a reusable field factory function
+ * @param config - Factory configuration containing the field type and optional builders for props and the field definition.
+ * @returns A reusable field factory function.
  *
  * @example
  * ```ts
@@ -166,6 +166,7 @@ export interface DbxForgeFieldFunctionConfig<C extends DbxForgeFieldFunctionDef<
  *   })
  * });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function dbxForgeFieldFunction<C extends DbxForgeFieldFunctionDef<F>, F extends FieldDef<any> = ExtractDbxForgeFieldDef<C>>(config: DbxForgeFieldFunctionConfig<C>): DbxForgeFieldFunction<C, F> {
@@ -509,6 +510,10 @@ export interface DbxForgeBuildFieldDefConfig<C extends DbxForgeFieldFunctionDef<
   // TODO: ...
 }
 
+function getDefaultValidation(): DbxForgeFieldValidation {
+  return {};
+}
+
 /**
  * Creates a {@link DbxForgeFieldFunctionFieldDefBuilder} that provides a builder-instance pattern
  * for configuring field definitions.
@@ -516,9 +521,9 @@ export interface DbxForgeBuildFieldDefConfig<C extends DbxForgeFieldFunctionDef<
  * The returned builder runs the `configureFunction` first, then any per-call `inputConfigure` callback,
  * and finally finalizes logic entries (registering custom functions, expanding transforms).
  *
- * @param configureFunction - primary configure callback applied to every field built by this builder
- * @param _config - reserved for future builder-level options
- * @returns a reusable field definition builder
+ * @param configureFunction - Primary configure callback applied to every field built by this builder.
+ * @param _config - Reserved for future builder-level options.
+ * @returns A reusable field definition builder.
  *
  * @example
  * ```ts
@@ -528,10 +533,6 @@ export interface DbxForgeBuildFieldDefConfig<C extends DbxForgeFieldFunctionDef<
  * });
  * ```
  */
-function getDefaultValidation(): DbxForgeFieldValidation {
-  return {};
-}
-
 export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, FV = any>(configureFunction: DbxForgeBuildFieldDefFunction<C, FV>, _config?: Maybe<DbxForgeBuildFieldDefConfig<C>>): DbxForgeFieldFunctionFieldDefBuilder<C, FV> {
   // TODO: Default ValidationMessages place, etc.
 
@@ -565,8 +566,8 @@ export function dbxForgeBuildFieldDef<C extends DbxForgeFieldFunctionDef<any>, F
      * Built-in validators deduplicate by type. Custom/async/http validators use a
      * composite key to allow multiple validators of the same type with different function names.
      *
-     * @param v - the validator input to generate a deduplication key for
-     * @returns a string key unique to the validator's type and identity
+     * @param v - The validator input to generate a deduplication key for.
+     * @returns Key unique to the validator's type and identity. (string)
      */
     function _validatorDeduplicationKey(v: DbxForgeFieldValidatorInput): string {
       let result: string;
@@ -777,8 +778,8 @@ function _finalizeLogicAndValidation<C extends DbxForgeFieldFunctionDef<any>, FV
  *
  * Registers inline `fn` derivation functions and converts transform entries to derivation logic.
  *
- * @param instance - the builder instance whose logic entries will be finalized
- * @param fieldDef - the field definition being constructed
+ * @param instance - The builder instance whose logic entries will be finalized.
+ * @param fieldDef - The field definition being constructed.
  */
 function _finalizeLogic<C extends DbxForgeFieldFunctionDef<any>, FV = any>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C, FV>, fieldDef: C): void {
   const logic = instance.getLogic();
@@ -816,7 +817,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
   /**
    * Generates a default function name for the given entry, and sets it on the entry.
    *
-   * @returns a unique auto-generated function name based on the field key
+   * @returns A unique auto-generated function name based on the field key.
    */
   function _generateDefaultFunctionName() {
     customFunctionNameCount += 1;
@@ -826,9 +827,9 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
   /**
    * Registers a custom function with the customFnConfig.
    *
-   * @param input - the function to register, including its async flag and optional name
-   * @param generateFunctionName - optional name generator; defaults to {@link _generateDefaultFunctionName}
-   * @returns the resolved function name under which the function was registered
+   * @param input - The function to register, including its async flag and optional name.
+   * @param generateFunctionName - Optional name generator; defaults to {@link _generateDefaultFunctionName}
+   * @returns The resolved function name under which the function was registered.
    */
   function _registerCustomFunction(input: RegisterCustomFunctionInput, generateFunctionName: () => string = _generateDefaultFunctionName): string {
     const { isAsync, functionName, fn } = input;
@@ -853,7 +854,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
       /**
        * Generates a default function name for the given entry, and sets it on the entry.
        *
-       * @returns a unique auto-generated function name assigned to the derivation entry
+       * @returns A unique auto-generated function name assigned to the derivation entry.
        */
       function generateDefaultFunctionNameForEntry() {
         const functionName = _generateDefaultFunctionName();
@@ -918,8 +919,8 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
     /**
      * Build the final derivation function.
      *
-     * @param ctx - the evaluation context containing the current field value
-     * @returns the transformed field value
+     * @param ctx - The evaluation context containing the current field value.
+     * @returns The transformed field value.
      */
     const fn: DbxForgeFieldLogicFn = (ctx) => {
       return transformFn(ctx.fieldValue, ctx);
@@ -1001,8 +1002,8 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
  * Scans validators for inline `fn` properties, auto-registers them in
  * `customFnConfig.validators`/`asyncValidators`, and replaces `fn` with the generated `functionName`.
  *
- * @param instance - the builder instance whose validators will be finalized
- * @param fieldDef - the field definition being constructed
+ * @param instance - The builder instance whose validators will be finalized.
+ * @param fieldDef - The field definition being constructed.
  */
 function _finalizeValidation<C extends DbxForgeFieldFunctionDef<any>>(instance: DbxForgeFieldFunctionFieldDefBuilderFunctionInstance<C>, fieldDef: C): void {
   const validation = instance.getValidation();
@@ -1053,7 +1054,7 @@ function _finalizeValidators<C extends DbxForgeFieldFunctionDef<any>>(instance: 
         // Return a clean ValidatorConfig without fn or reusableDefinition
         result = { ...rest, functionName } as ValidatorConfig;
       } else {
-        result = entry as ValidatorConfig;
+        result = entry;
       }
 
       return result;
@@ -1086,8 +1087,8 @@ function _finalizeValidators<C extends DbxForgeFieldFunctionDef<any>>(instance: 
 /**
  * Creates a single {@link DbxForgeBuildFieldDefFunction} from all the input functions.
  *
- * @param fns The functions to apply.
- * @returns A function that applies all of the given functions.
+ * @param fns - The functions to apply.
+ * @returns Applies all of the given functions.
  */
 export function dbxForgeFieldFunctionConfigure<C extends DbxForgeFieldFunctionDef<any>, FV = unknown>(...fns: DbxForgeBuildFieldDefFunction<C, FV>[]): DbxForgeBuildFieldDefFunction<C, FV> {
   let fn: DbxForgeBuildFieldDefFunction<C, FV>;
@@ -1118,8 +1119,8 @@ export function dbxForgeFieldFunctionConfigure<C extends DbxForgeFieldFunctionDe
  * Historically hint/description lived at the base config level. In `@ng-forge/dynamic-forms` hints are
  * expected under `props`, so this builder bridges that gap.
  *
- * @param makeProps - optional delegate that produces additional props; its result is merged before the hint is applied
- * @returns a props builder that includes the hint value
+ * @param makeProps - Optional delegate that produces additional props; its result is merged before the hint is applied.
+ * @returns A props builder that includes the hint value.
  *
  * @example
  * ```ts
@@ -1136,6 +1137,7 @@ export function dbxForgeFieldFunctionConfigPropsWithHintBuilder<C extends DbxFor
     if ('hint' in input) {
       (props as DbxForgeFieldHintValueRef<any>).hint = input.hint;
     } else if ('description' in input) {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- intentionally accepts the deprecated `description` input as a fallback for `hint`
       (props as DbxForgeFieldHintValueRef<any>).hint = input.description;
     }
 

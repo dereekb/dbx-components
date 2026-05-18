@@ -15,8 +15,8 @@ export interface DbxPdfPreviewDialogConfig extends Omit<MatDialogConfig, 'data'>
 /**
  * Opens a dialog containing a {@link DbxPdfPreviewComponent} for previewing a PDF blob or URL.
  *
- * @param matDialog The {@link MatDialog} instance to use.
- * @param config Source (blob or URL) and Material dialog options.
+ * @param matDialog - The {@link MatDialog} instance to use.
+ * @param config - Source (blob or URL) and Material dialog options.
  * @returns The {@link MatDialogRef} for the opened dialog.
  */
 export function openPdfPreviewDialog(matDialog: MatDialog, config: DbxPdfPreviewDialogConfig): MatDialogRef<DbxInjectionDialogComponent<DbxPdfPreviewComponent>, void> {

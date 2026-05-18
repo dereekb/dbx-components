@@ -32,7 +32,7 @@ export const DBX_FORGE_MAPBOX_FIELD_TYPES: FieldTypeDefinition[] = [DbxForgeMapb
  *
  * Add this to your app's providers alongside provideDbxForgeFormFieldDeclarations().
  *
- * @returns An array of providers that register the mapbox forge field types with ng-forge
+ * @returns The providers that register the mapbox forge field types with ng-forge.
  */
 export function provideDbxForgeMapboxFieldDeclarations() {
   return provideDynamicForm(...DBX_FORGE_MAPBOX_FIELD_TYPES);

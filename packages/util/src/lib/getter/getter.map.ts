@@ -10,9 +10,9 @@ export type MapGetterFactory<I, O> = (input: Getter<I>) => Getter<O>;
 /**
  * Creates a new Getter that applies a mapping function to the result of the input Getter.
  *
- * @param input - The source Getter
- * @param mapFn - The mapping function to apply to the getter's value
- * @returns A new Getter that returns the mapped value
+ * @param input - The source Getter.
+ * @param mapFn - The mapping function to apply to the getter's value.
+ * @returns A new Getter that returns the mapped value.
  */
 export function mapGetter<I, O>(input: Getter<I>, mapFn: MapFunction<I, O>): Getter<O> {
   return mapGetterFactory(mapFn)(input);
@@ -21,14 +21,15 @@ export function mapGetter<I, O>(input: Getter<I>, mapFn: MapFunction<I, O>): Get
 /**
  * Creates a factory that wraps Getters with a mapping function.
  *
+ * @param mapFn - The mapping function to apply.
+ * @returns A factory that transforms Getters of type I to Getters of type O.
+ *
  * @dbxUtil
  * @dbxUtilCategory getter
  * @dbxUtilKind factory
  * @dbxUtilTags getter, map, transform, factory
  * @dbxUtilRelated map-getter
  *
- * @param mapFn - The mapping function to apply
- * @returns A factory that transforms Getters of type I to Getters of type O
  * @__NO_SIDE_EFFECTS__
  */
 export function mapGetterFactory<I, O>(mapFn: MapFunction<I, O>): MapGetterFactory<I, O> {

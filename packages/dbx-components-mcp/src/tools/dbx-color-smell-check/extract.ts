@@ -56,9 +56,9 @@ export interface ExtractedLiteral {
  * (variable annotation or property assignment) or are passed as the
  * value of a `color` / `dbxColor` / `dbxTextColor` property.
  *
- * @param filePath - workspace-relative path used in the output records
- * @param text - source text of the file
- * @returns the list of candidate literals (may include dynamic ones)
+ * @param filePath - Workspace-relative path used in the output records.
+ * @param text - Source text of the file.
+ * @returns The list of candidate literals (may include dynamic ones)
  */
 export function extractTsLiterals(filePath: string, text: string): readonly ExtractedLiteral[] {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
@@ -211,9 +211,9 @@ const HTML_ATTR_RE = /\[(dbxColor|dbxTextColor|color)\]="([^"]+)"/g;
  * `[color]`. Bracket-balanced object literals are parsed with the same
  * key whitelist the TS extractor uses; everything else is ignored.
  *
- * @param filePath - workspace-relative path used in the output records
- * @param text - HTML source text of the file
- * @returns the list of candidate literals (may include dynamic ones)
+ * @param filePath - Workspace-relative path used in the output records.
+ * @param text - HTML source text of the file.
+ * @returns The list of candidate literals (may include dynamic ones)
  */
 export function extractHtmlLiterals(filePath: string, text: string): readonly ExtractedLiteral[] {
   const out: ExtractedLiteral[] = [];

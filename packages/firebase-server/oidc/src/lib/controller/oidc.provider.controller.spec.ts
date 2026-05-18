@@ -17,9 +17,12 @@ function createMockRequest(originalUrl: string): Request {
   return { originalUrl } as Request;
 }
 
-function createMockResponse(): Response & { redirect: ReturnType<typeof vi.fn> } {
-  const redirect = vi.fn();
-  return { redirect } as unknown as Response & { redirect: ReturnType<typeof vi.fn> };
+interface MockResponse {
+  readonly redirect: ReturnType<typeof vi.fn>;
+}
+
+function createMockResponse(): MockResponse {
+  return { redirect: vi.fn() };
 }
 
 describe('OidcProviderController', () => {
@@ -36,7 +39,7 @@ describe('OidcProviderController', () => {
       const req = createMockRequest('/oidc/login/client');
       const res = createMockResponse();
 
-      controller.redirectToClientLogin(req, res);
+      controller.redirectToClientLogin(req, res as unknown as Response);
 
       expect(res.redirect).toHaveBeenCalledWith(appLoginUrl);
     });
@@ -45,7 +48,7 @@ describe('OidcProviderController', () => {
       const req = createMockRequest('/oidc/login/client?uid=abc123&state=xyz');
       const res = createMockResponse();
 
-      controller.redirectToClientLogin(req, res);
+      controller.redirectToClientLogin(req, res as unknown as Response);
 
       expect(res.redirect).toHaveBeenCalledWith(`${appLoginUrl}?uid=abc123&state=xyz`);
     });
@@ -56,7 +59,7 @@ describe('OidcProviderController', () => {
       const req = createMockRequest('/oidc/login/client?uid=abc123&state=xyz');
       const res = createMockResponse();
 
-      controllerWithQueryUrl.redirectToClientLogin(req, res);
+      controllerWithQueryUrl.redirectToClientLogin(req, res as unknown as Response);
 
       expect(res.redirect).toHaveBeenCalledWith(`${appLoginUrlWithQuery}&uid=abc123&state=xyz`);
     });

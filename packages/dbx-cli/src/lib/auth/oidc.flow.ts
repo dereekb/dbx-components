@@ -72,6 +72,8 @@ export interface BuildAuthorizationUrlInput {
  * @param input.state - The opaque OAuth state token used for CSRF protection.
  * @param input.codeChallenge - The PKCE code challenge derived from the verifier.
  * @returns The full authorization URL with all OAuth params merged in.
+ * @throws {CliError} When `requestedSessionTtlSeconds` is provided but is not a positive integer.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string {
@@ -136,6 +138,9 @@ interface ResolveAuthorizationRebaseOriginInput {
  *
  * Returns `undefined` when none is set or every candidate fails to parse; the caller should then
  * use the discovered endpoint unchanged.
+ *
+ * @param input - The candidate URLs in priority order.
+ * @returns The selected origin, or `undefined` when no candidate yields one.
  */
 function resolveAuthorizationRebaseOrigin(input: ResolveAuthorizationRebaseOriginInput): Maybe<string> {
   let result: Maybe<string>;
@@ -273,6 +278,7 @@ function parseUrlRedirect(trimmed: string, expectedState: string | undefined): P
  * @param input.pasted - The redirect URL or bare authorization code pasted by the user.
  * @param input.expectedState - Optional state value to assert against `state` when present in the URL.
  * @returns The {@link ParsedRedirect} containing `code` and (when present) `state`.
+ * @throws {CliError} When `pasted` is empty, when the URL contains no `code` parameter, or when `expectedState` does not match the URL's `state`.
  */
 export function parsePastedRedirect(input: ParsePastedRedirectInput): ParsedRedirect {
   const trimmed = input.pasted.trim();
@@ -281,9 +287,6 @@ export function parsePastedRedirect(input: ParsePastedRedirectInput): ParsedRedi
     throw new CliError({ message: 'No code or redirect URL was provided.', code: 'AUTH_NO_CODE' });
   }
 
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('urn:')) {
-    return parseUrlRedirect(trimmed, input.expectedState);
-  }
-
-  return { code: trimmed };
+  const isUrl = trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('urn:');
+  return isUrl ? parseUrlRedirect(trimmed, input.expectedState) : { code: trimmed };
 }

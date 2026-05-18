@@ -107,8 +107,9 @@ export const PIPE_CATEGORY_ORDER: readonly PipeCategory[] = ['value', 'date', 'a
 /**
  * Builds a {@link PipeRegistry} from a loader result.
  *
- * @param loaded - the merged registry returned by `loadPipeManifests`
- * @returns a domain-friendly read API over the merged entries
+ * @param loaded - The merged registry returned by `loadPipeManifests`
+ * @returns A domain-friendly read API over the merged entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createPipeRegistry(loaded: LoadPipeManifestsResult): PipeRegistry {
@@ -121,10 +122,11 @@ export function createPipeRegistry(loaded: LoadPipeManifestsResult): PipeRegistr
  * by tests that need to drive the tool without going through the loader
  * pipeline.
  *
- * @param input - the entries plus the source labels to advertise
- * @param input.entries - the full entry list
- * @param input.loadedSources - source labels reported via `registry.loadedSources`
- * @returns a domain-friendly read API over the supplied entries
+ * @param input - The entries plus the source labels to advertise.
+ * @param input.entries - The full entry list.
+ * @param input.loadedSources - Source labels reported via `registry.loadedSources`
+ * @returns A domain-friendly read API over the supplied entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createPipeRegistryFromEntries(input: { readonly entries: readonly PipeEntryInfo[]; readonly loadedSources: readonly string[] }): PipeRegistry {
@@ -186,8 +188,8 @@ export const EMPTY_PIPE_REGISTRY: PipeRegistry = createPipeRegistryFromEntries({
  * tool consumes. Optional manifest fields fall back to safe defaults so a
  * partially-populated entry still renders cleanly.
  *
- * @param entry - the manifest entry to convert
- * @returns the matching PipeEntryInfo
+ * @param entry - The manifest entry to convert.
+ * @returns The matching PipeEntryInfo.
  */
 export function toPipeEntryInfo(entry: PipeEntry): PipeEntryInfo {
   const result: PipeEntryInfo = {

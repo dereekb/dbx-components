@@ -14,7 +14,7 @@ function readFromMap(map: Map<string, string>): ScanReadFile {
 
 const DEMO_CLAIMS_SOURCE = `
   import { AUTH_ADMIN_ROLE, AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE, authRoleClaimsService } from '@dereekb/util';
-  import { storageFileUploadUserSimpleClaimsConfiguration, type StorageFileUploadUserClaims } from '@dereekb/firebase';
+  import { STORAGE_FILE_UPLOAD_USER_SIMPLE_CLAIMS_CONFIGURATION, type StorageFileUploadUserClaims } from '@dereekb/firebase';
 
   /**
    * @dbxAuthClaimsApp demo-api
@@ -43,7 +43,7 @@ const DEMO_CLAIMS_SOURCE = `
   export const DEMO_AUTH_CLAIMS_SERVICE = authRoleClaimsService<DemoApiAuthClaims>({
     o: { roles: [AUTH_TOS_SIGNED_ROLE, AUTH_ONBOARDED_ROLE], claimValue: 1 },
     a: { roles: AUTH_ADMIN_ROLE, claimValue: 1 },
-    fr: storageFileUploadUserSimpleClaimsConfiguration
+    fr: STORAGE_FILE_UPLOAD_USER_SIMPLE_CLAIMS_CONFIGURATION
   });
 `;
 

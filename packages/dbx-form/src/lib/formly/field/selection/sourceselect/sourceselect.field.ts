@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DescriptionFieldConfig retained for the formly layer until full migration to forge */
 import { type PrimativeKey } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig, type DescriptionFieldConfig, type MaterialFormFieldConfig } from '../../field';
@@ -13,7 +14,7 @@ export interface SourceSelectFieldConfig<T extends PrimativeKey = PrimativeKey, 
  * Creates a Formly field configuration for a source-select field that loads and
  * displays selectable values from one or more external data sources.
  *
- * @param config - Source-select field configuration
+ * @param config - Source-select field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'sourceselectfield'`
  *
  * @example
@@ -40,6 +41,7 @@ export function formlySourceSelectField<T extends PrimativeKey = PrimativeKey, M
 }
 
 // MARK: Deprecated
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlySourceSelectField instead.
  */

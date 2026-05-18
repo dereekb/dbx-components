@@ -13,26 +13,26 @@ export interface ProvideDbxFirebaseFunctionsConfig<T, M extends FirebaseFunction
    *
    * This is typically your LazyFirebaseFunctions result type.
    */
-  functionsGetterToken: ClassLikeType<T>;
+  readonly functionsGetterToken: ClassLikeType<T>;
   /**
    * Factory function to retrieve the functions getter instance.
    *
    * @param functions The Firebase functions instance.
    * @returns The functions getter instance.
    */
-  functionsGetterFactory: (functions: Functions) => T;
+  readonly functionsGetterFactory: (functions: Functions) => T;
   /**
    * Key of the functions config to use to inject FirebaseDevelopmentFunctions using that same provider.
    *
    * Defaults to "developmentFunctions". If false, will not be injected automatically.
    */
-  developmentFunctionsKey?: string | false;
+  readonly developmentFunctionsKey?: string | false;
   /**
    * Optional functions config map to provide.
    *
    * If provided, will inject all the types with factory functions so they can be injected into the app.
    */
-  functionsConfigMap?: FirebaseFunctionsConfigMap<M>;
+  readonly functionsConfigMap?: FirebaseFunctionsConfigMap<M>;
 }
 
 /**
@@ -40,8 +40,9 @@ export interface ProvideDbxFirebaseFunctionsConfig<T, M extends FirebaseFunction
  *
  * Also provides FirebaseDevelopmentFunctions if developmentFunctionsKey is provided.
  *
- * @param config Configuration for provideDbxFirebaseFunctions().
+ * @param config - Configuration for provideDbxFirebaseFunctions().
  * @returns EnvironmentProviders for the LazyFirebaseFunctions type.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxFirebaseFunctions<T, M extends FirebaseFunctionsMap = FirebaseFunctionsMap>(config: ProvideDbxFirebaseFunctionsConfig<T, M>): EnvironmentProviders {

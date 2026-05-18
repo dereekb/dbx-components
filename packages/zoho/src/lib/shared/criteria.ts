@@ -27,8 +27,8 @@ export const MAX_ZOHO_SEARCH_MODULE_RECORDS_CRITERIA = 10;
  * {@link ZohoSearchRecordsCriteriaTree} with nested AND/OR groups. Returns
  * `undefined` when the input is nullish or empty.
  *
- * @param input - Criteria tree element, entry array, or raw criteria string
- * @returns Compiled criteria string, or `undefined` if input is empty
+ * @param input - Criteria tree element, entry array, or raw criteria string.
+ * @returns Compiled criteria string, or `undefined` if input is empty.
  *
  * @example
  * ```typescript
@@ -81,8 +81,8 @@ export function zohoSearchRecordsCriteriaString<T = any>(input: Maybe<ZohoSearch
  * recursively resolving nested AND/OR groups. When both `and` and `or` are
  * present at the same level, the OR group is merged into the AND group.
  *
- * @param tree - Criteria tree containing `and` and/or `or` branches
- * @returns Compiled criteria string, or `undefined` if the tree is empty
+ * @param tree - Criteria tree containing `and` and/or `or` branches.
+ * @returns Compiled criteria string, or `undefined` if the tree is empty.
  */
 export function zohoSearchRecordsCriteriaStringForTree<T = any>(tree: ZohoSearchRecordsCriteriaTree<T>): Maybe<ZohoSearchRecordsCriteriaString> {
   function convertToString(value: Maybe<ZohoSearchRecordsCriteriaTreeElement<T>>): Maybe<ArrayOrValue<ZohoSearchRecordsCriteriaString>> {
@@ -202,7 +202,7 @@ export const escapeZohoFieldValueForCriteriaString = escapeStringCharactersFunct
  *
  * Automatically escapes parentheses and commas in the value via {@link escapeZohoFieldValueForCriteriaString}.
  *
- * @param entry - The criteria entry to convert
+ * @param entry - The criteria entry to convert.
  * @returns Criteria string in the format `(field:filter:escapedValue)`
  *
  * @example

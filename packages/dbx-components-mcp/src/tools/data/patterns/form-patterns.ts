@@ -57,8 +57,8 @@ export const EXAMPLE_PATTERNS: readonly ExamplePattern[] = [FORM_PATTERN_CONTACT
 /**
  * Looks up an example pattern by its slug.
  *
- * @param slug - the pattern slug to resolve, case-insensitive and trimmed
- * @returns the matching pattern, or `undefined` when no slug matches
+ * @param slug - The pattern slug to resolve, case-insensitive and trimmed.
+ * @returns The matching pattern, or `undefined` when no slug matches.
  */
 export function getExamplePattern(slug: string): ExamplePattern | undefined {
   const lowered = slug.trim().toLowerCase();

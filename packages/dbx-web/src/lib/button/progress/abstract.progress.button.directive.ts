@@ -125,14 +125,12 @@ export abstract class AbstractProgressButtonDirective {
     const mode = config?.mode;
     let result: ProgressSpinnerMode;
 
-    if (!mode) {
-      if (workingValue != null) {
-        result = 'determinate';
-      } else {
-        result = 'indeterminate';
-      }
-    } else {
+    if (mode) {
       result = mode;
+    } else if (workingValue == null) {
+      result = 'indeterminate';
+    } else {
+      result = 'determinate';
     }
 
     return result;
@@ -172,7 +170,8 @@ export abstract class AbstractProgressButtonDirective {
    * Whether button content should be hidden via opacity (working spinner or echo overlay active).
    */
   readonly hideContentSignal = computed(() => {
-    return this.showProgressSignal() || this.echoActiveSignal();
+    const echoActive = this.echoActiveSignal();
+    return this.showProgressSignal() || echoActive;
   });
 
   /**

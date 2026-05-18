@@ -13,11 +13,11 @@ export interface CalcomOAuthFactoryConfig {
   /**
    * Creates a new fetch instance to use when making calls.
    */
-  fetchFactory?: CalcomOAuthFetchFactory;
+  readonly fetchFactory?: CalcomOAuthFetchFactory;
   /**
    * Custom log error function.
    */
-  logCalcomServerErrorFunction?: LogCalcomServerErrorFunction;
+  readonly logCalcomServerErrorFunction?: LogCalcomServerErrorFunction;
 }
 
 export type CalcomOAuthFactory = (config: CalcomOAuthConfig) => CalcomOAuth;
@@ -27,8 +27,9 @@ export type CalcomOAuthFactory = (config: CalcomOAuthConfig) => CalcomOAuth;
  * Supports both API key authentication (static token, no refresh) and full OAuth
  * refresh token flow with automatic token rotation.
  *
- * @param factoryConfig - configuration including optional fetch factory and error logging
- * @returns a factory function that accepts a CalcomOAuthConfig and produces a CalcomOAuth instance
+ * @param factoryConfig - Configuration including optional fetch factory and error logging.
+ * @returns A factory function that accepts a CalcomOAuthConfig and produces a CalcomOAuth instance.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): CalcomOAuthFactory {
@@ -72,7 +73,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
     // MARK: API Key Auth (static token, no refresh)
     if (useApiKey) {
       const apiKeyToken: CalcomAccessToken = {
-        accessToken: config.apiKey as string,
+        accessToken: config.apiKey,
         refreshToken: '',
         expiresIn: Number.MAX_SAFE_INTEGER,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 100), // 100 years
@@ -93,7 +94,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
         config
       };
 
-      return { oauthContext } as CalcomOAuth;
+      return { oauthContext };
     }
 
     // MARK: OAuth Auth (refresh token flow)
@@ -180,8 +181,9 @@ export interface CalcomOAuthAccessTokenFactoryConfig {
  * Checks the in-memory cache first, then the external cache, and finally refreshes
  * from the token refresher if no valid token is available.
  *
- * @param config - configuration including the token refresher, optional cache, and expiration buffer
- * @returns a CalcomAccessTokenFactory that returns a valid access token on each call
+ * @param config - Configuration including the token refresher, optional cache, and expiration buffer.
+ * @returns A CalcomAccessTokenFactory that returns a valid access token on each call.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function calcomOAuthAccessTokenFactory(config: CalcomOAuthAccessTokenFactoryConfig): CalcomAccessTokenFactory {

@@ -16,9 +16,9 @@ import type { EmittedFile, ScaffoldArtifactInput, ScaffoldArtifactResult, Wiring
  * scaffold core stays a small switch and individual renderers can grow
  * independently.
  *
- * @param input - the validated scaffold request
- * @param ctx - the resolved template context (name tokens + project dirs)
- * @returns the artifact's emitted files and wiring instructions
+ * @param input - The validated scaffold request.
+ * @param ctx - The resolved template context (name tokens + project dirs)
+ * @returns The artifact's emitted files and wiring instructions.
  */
 export function renderArtifact(input: ScaffoldArtifactInput, ctx: TemplateContext): ScaffoldArtifactResult {
   let result: ScaffoldArtifactResult;

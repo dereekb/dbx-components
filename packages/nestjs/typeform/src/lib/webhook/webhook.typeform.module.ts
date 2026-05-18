@@ -10,8 +10,8 @@ import { type TypeformWebhookSecretToken } from '../typeform.type';
  *
  * Reads the Typeform webhook secret token from environment variables for signature verification.
  *
- * @param configService - NestJS config service for reading environment variables
- * @returns a validated TypeformWebhookServiceConfig
+ * @param configService - NestJS config service for reading environment variables.
+ * @returns A validated TypeformWebhookServiceConfig.
  */
 export function typeFormWebhookServiceConfigFactory(configService: ConfigService): TypeformWebhookServiceConfig {
   const config: TypeformWebhookServiceConfig = {

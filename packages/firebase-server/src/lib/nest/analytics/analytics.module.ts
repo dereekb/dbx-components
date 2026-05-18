@@ -29,16 +29,17 @@ export interface ProvideAppAnalyticsMetadataConfig extends Pick<ModuleMetadata, 
  * Provides {@link FirebaseServerAnalyticsService} and registers it as the
  * {@link ON_CALL_MODEL_ANALYTICS_SERVICE} token for the onCall dispatch chain.
  *
- * @param config - the configuration including an optional dependency module and additional providers
- * @returns module metadata ready for use with `@Module()`
+ * @param config - The configuration including an optional dependency module and additional providers.
+ * @returns Module metadata ready for use with `@Module()`
  *
- * @example
- * ```ts
- * @Module(appAnalyticsModuleMetadata({
+ * @Module (appAnalyticsModuleMetadata({
  *   dependencyModule: FirebaseServerAnalyticsSegmentModule
  * }))
  * export class AppAnalyticsModule {}
  * ```
+ *
+ * @example
+ * ```ts
  */
 export function appAnalyticsModuleMetadata(config: ProvideAppAnalyticsMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = config;

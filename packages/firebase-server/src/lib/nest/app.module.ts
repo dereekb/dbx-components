@@ -137,8 +137,9 @@ export interface NestServerRootModuleResult {
  * - `GlobalRoutePrefixConfig` token
  * - Optional webhook and AppCheck middleware modules
  *
- * @param config - Shared configuration
- * @returns The root module and resolved prefix config
+ * @param config - Shared configuration.
+ * @returns The root module and resolved prefix config.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildNestServerRootModule(config: NestServerRootModuleConfig): NestServerRootModuleResult {
@@ -163,10 +164,10 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     const isWebhooksEnabled = config.envConfig.isWebhooksEnabled ?? (appUrl != null && Boolean(config.configureWebhooks));
     let apiPrefixPath: Maybe<WebsitePath>;
     if (apiPrefix) {
-      apiPrefixPath = apiPrefix.startsWith('/') ? (apiPrefix as WebsitePath) : (`/${apiPrefix}` as WebsitePath);
+      apiPrefixPath = apiPrefix.startsWith('/') ? (apiPrefix as WebsitePath) : `/${apiPrefix}`;
     }
     const appApiUrl = config.envConfig.appApiUrl ?? (isApiEnabled && appUrl && apiPrefixPath ? websiteUrlFromPaths(appUrl, apiPrefixPath) : undefined);
-    const webhookPaths: WebsitePath[] = apiPrefixPath ? [apiPrefixPath, DEFAULT_BASE_WEBHOOK_PATH as WebsitePath] : [DEFAULT_BASE_WEBHOOK_PATH as WebsitePath];
+    const webhookPaths: WebsitePath[] = apiPrefixPath ? [apiPrefixPath, DEFAULT_BASE_WEBHOOK_PATH] : [DEFAULT_BASE_WEBHOOK_PATH];
     const appWebhookUrl = config.envConfig.appWebhookUrl ?? (isWebhooksEnabled && appUrl ? websiteUrlFromPaths(appUrl, webhookPaths) : undefined);
 
     const augmentedEnvConfig: FirebaseServerEnvironmentConfig = {

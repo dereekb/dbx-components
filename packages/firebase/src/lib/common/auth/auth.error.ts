@@ -64,8 +64,8 @@ export const FIREBASE_AUTH_QUOTA_EXCEEDED_ERROR = 'auth/quota-exceeded';
  * Maps known error codes (wrong password, user not found, network errors) to contextual messages
  * suitable for display in the UI.
  *
- * @param inputError - the Firebase Auth error to convert
- * @returns a {@link ReadableError} with a human-readable message suitable for display
+ * @param inputError - The Firebase Auth error to convert.
+ * @returns A {@link ReadableError} with a human-readable message suitable for display.
  *
  * @example
  * ```ts

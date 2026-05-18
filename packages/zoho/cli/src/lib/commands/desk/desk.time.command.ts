@@ -3,7 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
-import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
+import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
 
 const timeTimerCommand: CommandModule = {
   command: 'timer <ticketId>',
@@ -48,7 +48,7 @@ const timeEntriesCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.getTicketTimeEntries(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -81,7 +81,7 @@ const timeSummationCommand: CommandModule = {
   }
 };
 
-export const deskTimeCommand: CommandModule = {
+export const DESK_TIME_COMMAND: CommandModule = {
   command: 'time',
   describe: 'Desk time tracking operations',
   builder: (yargs: Argv) => yargs.command(timeTimerCommand).command(timeTimerActionCommand).command(timeEntriesCommand).command(timeSummationCommand).demandCommand(1),

@@ -42,8 +42,8 @@ export interface RelativeImport {
  * extraction-time diagnostics. Best-effort: malformed states surface as issues
  * rather than throwing so the rest of the file still contributes nodes.
  *
- * @param source - the in-memory source name + text pair to extract
- * @returns the discovered route nodes alongside extraction issues
+ * @param source - The in-memory source name + text pair to extract.
+ * @returns The discovered route nodes alongside extraction issues.
  */
 export function extractFile(source: RouteSource): ExtractFileResult {
   const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });

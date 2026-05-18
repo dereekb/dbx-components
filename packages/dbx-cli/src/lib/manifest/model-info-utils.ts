@@ -8,9 +8,10 @@ import type { CliModelField, CliModelManifest, CliModelManifestEntry } from './t
  * Re-exports {@link findCliModelManifestEntry} under a more descriptive name
  * for the model-info command.
  *
- * @param manifest - the generated model manifest.
- * @param query - identifier to look up.
- * @returns the matching entry or `undefined`.
+ * @param manifest - The generated model manifest.
+ * @param query - Identifier to look up.
+ * @returns The matching entry or `undefined`.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function resolveCliModel(manifest: CliModelManifest, query: string): CliModelManifestEntry | undefined {
@@ -20,24 +21,29 @@ export function resolveCliModel(manifest: CliModelManifest, query: string): CliM
 /**
  * Produces a column-aligned summary table of every model in the manifest.
  *
- * @param manifest - the generated model manifest.
- * @returns the formatted table as a single string with a trailing newline.
+ * @param manifest - The generated model manifest.
+ * @returns The formatted table as a single string with a trailing newline.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function renderModelManifestList(manifest: CliModelManifest): string {
+  let result: string;
   if (manifest.length === 0) {
-    return 'No models found in the generated manifest.\n';
+    result = 'No models found in the generated manifest.\n';
+  } else {
+    const rows: readonly (readonly string[])[] = [['MODEL', 'PREFIX', 'GROUP', 'FIELDS', 'PACKAGE', 'IDENTITY'], ...manifest.map((m) => [m.modelType, m.collectionPrefix, m.modelGroup ?? '', String(m.fields.length), m.sourcePackage, m.identityConst])];
+    result = renderTable(rows);
   }
-  const rows: readonly (readonly string[])[] = [['MODEL', 'PREFIX', 'GROUP', 'FIELDS', 'PACKAGE', 'IDENTITY'], ...manifest.map((m) => [m.modelType, m.collectionPrefix, m.modelGroup ?? '', String(m.fields.length), m.sourcePackage, m.identityConst])];
-  return renderTable(rows);
+  return result;
 }
 
 /**
  * Produces a human-readable summary of one model entry: header, description,
  * and an indented field tree (recursing into `nestedFields`).
  *
- * @param entry - the manifest entry to render.
- * @returns the formatted summary as a single string with a trailing newline.
+ * @param entry - The manifest entry to render.
+ * @returns The formatted summary as a single string with a trailing newline.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function renderModelManifestEntry(entry: CliModelManifestEntry): string {
@@ -56,8 +62,9 @@ export function renderModelManifestEntry(entry: CliModelManifestEntry): string {
  * Produces the field-table portion of {@link renderModelManifestEntry} on its
  * own, used by the `--fields` flag of the `model-info` command.
  *
- * @param entry - the manifest entry whose fields should be rendered.
- * @returns the formatted field tree as a single string with a trailing newline.
+ * @param entry - The manifest entry whose fields should be rendered.
+ * @returns The formatted field tree as a single string with a trailing newline.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function renderModelManifestFields(entry: CliModelManifestEntry): string {
@@ -86,41 +93,55 @@ function buildFieldRow(field: CliModelField, includeConverter: boolean): string[
 
 function renderNestedFieldBlock(field: CliModelField, indent: number): string[] {
   const nested = field.nestedFields;
-  if (!nested || nested.length === 0) return [];
-  const label = field.nestedIsArray ? 'array element' : 'sub-object';
-  const plural = nested.length === 1 ? '' : 's';
-  return [indentLines(`↳ ${field.name} (${label}, ${nested.length} field${plural})`, indent + 2), renderFieldsTree(nested, indent + 4)];
+  let result: string[];
+  if (!nested || nested.length === 0) {
+    result = [];
+  } else {
+    const label = field.nestedIsArray ? 'array element' : 'sub-object';
+    const plural = nested.length === 1 ? '' : 's';
+    result = [indentLines(`↳ ${field.name} (${label}, ${nested.length} field${plural})`, indent + 2), renderFieldsTree(nested, indent + 4)];
+  }
+  return result;
 }
 
 function renderTable(rows: readonly (readonly string[])[]): string {
-  if (rows.length === 0) return '';
-  const widths: number[] = [];
-  for (const row of rows) {
-    row.forEach((cell, i) => {
-      const cellWidth = cell.length;
-      widths[i] = Math.max(widths[i] ?? 0, cellWidth);
-    });
+  let result: string;
+  if (rows.length === 0) {
+    result = '';
+  } else {
+    const widths: number[] = [];
+    for (const row of rows) {
+      row.forEach((cell, i) => {
+        const cellWidth = cell.length;
+        widths[i] = Math.max(widths[i] ?? 0, cellWidth);
+      });
+    }
+    result = rows
+      .map((row) =>
+        row
+          .map((cell, i) => (i === row.length - 1 ? cell : cell.padEnd(widths[i] ?? 0)))
+          .join('  ')
+          .replace(/\s+$/, '')
+      )
+      .join('\n');
   }
-  return rows
-    .map((row) =>
-      row
-        .map((cell, i) => (i === row.length - 1 ? cell : cell.padEnd(widths[i] ?? 0)))
-        .join('  ')
-        .replace(/\s+$/, '')
-    )
-    .join('\n');
+  return result;
 }
 
 function truncate(text: string, max: number): string {
-  if (text.length <= max) return text;
-  return text.slice(0, max - 1) + '…';
+  return text.length <= max ? text : text.slice(0, max - 1) + '…';
 }
 
 function indentLines(text: string, indent: number): string {
-  if (indent <= 0) return text;
-  const pad = ' '.repeat(indent);
-  return text
-    .split('\n')
-    .map((line) => (line.length > 0 ? pad + line : line))
-    .join('\n');
+  let result: string;
+  if (indent <= 0) {
+    result = text;
+  } else {
+    const pad = ' '.repeat(indent);
+    result = text
+      .split('\n')
+      .map((line) => (line.length > 0 ? pad + line : line))
+      .join('\n');
+  }
+  return result;
 }

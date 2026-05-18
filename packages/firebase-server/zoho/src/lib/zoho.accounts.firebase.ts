@@ -11,7 +11,7 @@ import { type ZohoAccessTokenSystemStateData, loadZohoAccessTokenSystemState } f
  * Tokens are stored in a single {@link SystemState} document (type {@link ZOHO_ACCESS_TOKEN_SYSTEM_STATE_TYPE})
  * and token updates/clears use Firestore transactions for concurrency safety.
  *
- * @param systemStateCollection - the Firestore collection for system state documents.
+ * @param systemStateCollection - The Firestore collection for system state documents.
  * @returns A cache service backed by Firestore system state documents.
  *
  * @example

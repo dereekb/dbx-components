@@ -32,11 +32,12 @@ export interface MakeFirestoreQueryConstraintFunctionsDriver<B> extends Omit<Fir
  * handlers declaratively. The returned driver applies constraints sequentially using the
  * registered handlers and throws if an unsupported constraint type is encountered.
  *
- * @template B - The platform-specific query builder type
- * @param config - The handler map configuration
- * @returns A fully configured constraint functions driver
+ * @param config - The handler map configuration.
+ * @returns A fully configured constraint functions driver.
+ * @throws {Error} When a query uses a constraint type not present in the handler map.
  *
- * @throws {Error} When a query uses a constraint type not present in the handler map
+ * @template B - The platform-specific query builder type
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeFirestoreQueryConstraintFunctionsDriver<B>(config: MakeFirestoreQueryConstraintFunctionsDriver<B>): FirestoreQueryConstraintFunctionsDriver {

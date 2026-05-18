@@ -24,16 +24,20 @@ export type ZohoAccountsConfigApiUrlInput = ZohoAccountsApiUrlKey | ZohoAccounts
 /**
  * Resolves a Zoho Accounts API URL input to the full base URL. The 'us' key maps to the US datacenter; custom URLs pass through unchanged.
  *
- * @param input - A well-known datacenter key or a custom Zoho Accounts API URL
- * @returns The resolved full Zoho Accounts API base URL
+ * @param input - A well-known datacenter key or a custom Zoho Accounts API URL.
+ * @returns The resolved full Zoho Accounts API base URL.
  */
 export function zohoAccountsConfigApiUrl(input: ZohoAccountsConfigApiUrlInput): ZohoApiUrl {
+  let result: ZohoApiUrl;
   switch (input) {
     case 'us':
-      return ZOHO_ACCOUNTS_US_API_URL;
+      result = ZOHO_ACCOUNTS_US_API_URL;
+      break;
     default:
-      return input;
+      result = input;
+      break;
   }
+  return result;
 }
 
 /**
@@ -68,6 +72,7 @@ export interface ZohoAccountsContextRef {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use ZohoAccountsFetchFactoryParams instead.
  */

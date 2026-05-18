@@ -75,10 +75,9 @@ export interface DbxDateTimeFieldTimeDateConfig<I = unknown> {
 /**
  * Type guard that checks whether the input is a {@link DbxDateTimeFieldTimeDateConfig}.
  *
- * @param input - The value to check
- * @returns True if the input is a DbxDateTimeFieldTimeDateConfig with a string path property
- *
- * @param input - The value to check
+ * @param input - The value to check.
+ * @param input - The value to check.
+ * @returns True if the input is a DbxDateTimeFieldTimeDateConfig with a string path property.
  */
 export function isDbxDateTimeFieldTimeDateConfig(input: unknown): input is DbxDateTimeFieldTimeDateConfig {
   return input != null && typeof input === 'object' && typeof (input as DbxDateTimeFieldTimeDateConfig).path === 'string';
@@ -231,15 +230,15 @@ export interface DbxDateTimeFieldSyncParsedField extends Pick<DbxDateTimeFieldSy
  * Creates an observable that emits the current Date value from a synced field control
  * matching the specified sync type ('before' or 'after').
  *
- * @param parseConfigsObs - Observable of parsed sync field configurations
- * @param type - The sync direction to filter for
- * @returns Observable of the synced date value, or null if no matching sync config
+ * @param parseConfigsObs - Observable of parsed sync field configurations.
+ * @param type - The sync direction to filter for.
+ * @returns Observable of the synced date value, or null if no matching sync config.
  */
-export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldSyncParsedField[]>, type: DbxDateTimeFieldSyncType): Observable<Date | null> {
+export function syncConfigValueObs(parseConfigsObs: Observable<DbxDateTimeFieldSyncParsedField[]>, type: DbxDateTimeFieldSyncType): Observable<Maybe<Date>> {
   return parseConfigsObs.pipe(
     switchMap((x) => {
       const config = x.find((y) => y.syncType === type);
-      let result: Observable<Date | null>;
+      let result: Observable<Maybe<Date>>;
 
       if (config) {
         const { control } = config;
@@ -319,7 +318,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
   private readonly _resyncTimeInput = completeOnDestroy(new Subject<void>());
 
   readonly timeErrorStateMatcher: ErrorStateMatcher = {
-    isErrorState: (control: AbstractControl | null, form) => {
+    isErrorState: (control: Maybe<AbstractControl>, form) => {
       return control ? (control.invalid && (control.dirty || control.touched)) || this.errorStateMatcher.isErrorState(this.formControl, form) : false;
     }
   };
@@ -575,8 +574,8 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly syncConfigBeforeValue$: Observable<Date | null> = syncConfigValueObs(this.parsedSyncConfigs$, 'before');
-  readonly syncConfigAfterValue$: Observable<Date | null> = syncConfigValueObs(this.parsedSyncConfigs$, 'after');
+  readonly syncConfigBeforeValue$: Observable<Maybe<Date>> = syncConfigValueObs(this.parsedSyncConfigs$, 'before');
+  readonly syncConfigAfterValue$: Observable<Maybe<Date>> = syncConfigValueObs(this.parsedSyncConfigs$, 'after');
 
   readonly isTimeCleared$ = combineLatest([this.currentDate$, this._timeDate.pipe(startWith(null))]).pipe(
     switchMap(([date, time]) => {
@@ -656,15 +655,15 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly dateInputMin$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
-    map((x) => (x?.limits?.min ?? null) as Date | null),
-    distinctUntilChanged<Date | null>(isSameDate),
+  readonly dateInputMin$: Observable<Maybe<Date>> = this.dateTimePickerConfig$.pipe(
+    map((x) => (x?.limits?.min ?? null) as Maybe<Date>),
+    distinctUntilChanged<Maybe<Date>>(isSameDate),
     shareReplay(1)
   );
 
-  readonly dateInputMax$: Observable<Date | null> = this.dateTimePickerConfig$.pipe(
-    map((x) => (x?.limits?.max ?? null) as Date | null),
-    distinctUntilChanged<Date | null>(isSameDate),
+  readonly dateInputMax$: Observable<Maybe<Date>> = this.dateTimePickerConfig$.pipe(
+    map((x) => (x?.limits?.max ?? null) as Maybe<Date>),
+    distinctUntilChanged<Maybe<Date>>(isSameDate),
     shareReplay(1)
   );
 
@@ -683,7 +682,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     shareReplay(1)
   );
 
-  readonly pickerFilter$: Observable<DecisionFunction<Date | null>> = this.dateTimePickerConfig$.pipe(
+  readonly pickerFilter$: Observable<DecisionFunction<Maybe<Date>>> = this.dateTimePickerConfig$.pipe(
     distinctUntilChanged(),
     map((x) => {
       if (!x) {
@@ -691,12 +690,12 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       }
 
       const filter = dateTimeMinuteWholeDayDecisionFunction(x, false);
-      return (x: Date | null) => (x != null ? filter(x) : true);
+      return (x: Maybe<Date>) => (x == null ? true : filter(x));
     }),
     shareReplay(1)
   );
 
-  readonly defaultPickerFilter: DecisionFunction<Date | null> = () => true;
+  readonly defaultPickerFilter: DecisionFunction<Maybe<Date>> = () => true;
 
   readonly timeOutput$: Observable<Maybe<Date>> = combineLatest([this.rawDateTime$, this._offset, this.dateTimePickerConfig$]).pipe(
     throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true }),
@@ -758,7 +757,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
       }
 
       const filter = dateTimeMinuteDecisionFunction(config); // filter that the date must be in the given range
-      return (x: Date | null) => (x != null ? filter(x) : true);
+      return (x: Maybe<Date>) => (x == null ? true : filter(x));
     })
   );
 
@@ -1068,7 +1067,7 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
     }
   }
 
-  datePicked(event: MatDatepickerInputEvent<Date>): void {
+  datePicked(event: MatDatepickerInputEvent<Date | undefined>): void {
     const date = event.value;
 
     if (date) {

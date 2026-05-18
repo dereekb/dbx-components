@@ -24,7 +24,7 @@ export abstract class AbstractOnDbxAppContextStateEffects<S = unknown> implement
   }
 
   /**
-   * Configures all actions of the sub-class to only activate when the DbxAppContextState in App
+   * Configures all actions of the sub-class to only activate when the DbxAppContextState in App.
    *
    * @param resolvedEffects$
    * @returns

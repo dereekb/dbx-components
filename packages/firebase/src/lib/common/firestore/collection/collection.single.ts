@@ -46,10 +46,12 @@ export interface RootSingleItemFirestoreCollection<T, D extends FirestoreDocumen
  * with a single document. Useful for application settings, configuration,
  * or any singleton-like data structures that are stored in Firestore.
  *
+ * @param config - Configuration for the single document collection.
+ * @returns A RootSingleItemFirestoreCollection instance configured for the specified document.
+ *
  * @template T - The data type of the document
  * @template D - The FirestoreDocument type, defaults to FirestoreDocument<T>
- * @param config - Configuration for the single document collection
- * @returns A RootSingleItemFirestoreCollection instance configured for the specified document
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function makeRootSingleItemFirestoreCollection<T, D extends FirestoreDocument<T> = FirestoreDocument<T>>(config: RootSingleItemFirestoreCollectionConfig<T, D>): RootSingleItemFirestoreCollection<T, D> {

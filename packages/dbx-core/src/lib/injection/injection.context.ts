@@ -27,12 +27,12 @@ export interface DbxInjectionContextConfig<T = unknown, O = unknown> {
   /**
    * The {@link DbxInjectionComponentConfig} describing which component to create and how to configure it.
    */
-  config: DbxInjectionComponentConfig<T>;
+  readonly config: DbxInjectionComponentConfig<T>;
   /**
    * Callback invoked with the created component instance. The returned promise controls how long
    * the injected view remains visible; the original content is restored once it resolves.
    */
-  use: (instance: T) => Promise<O>;
+  readonly use: (instance: T) => Promise<O>;
 }
 
 /**
@@ -59,7 +59,7 @@ export abstract class DbxInjectionContext {
    * @typeParam T - The type of the injected component.
    * @typeParam O - The return type of the `use` promise.
    * @param config - The context configuration describing the component and usage callback.
-   * @returns A promise that resolves with the value from `config.use`.
+   * @returns Resolves to the value from `config.use`.
    */
   abstract showContext<T = unknown, O = unknown>(config: DbxInjectionContextConfig<T>): Promise<O>;
 
@@ -78,9 +78,10 @@ export abstract class DbxInjectionContext {
  * This enables dependency injection consumers to request `DbxInjectionContext` and receive
  * the specific directive or service implementation.
  *
- * @typeParam T - The concrete type that extends {@link DbxInjectionContext}.
  * @param type - The concrete class to register as the existing provider.
- * @returns An array of Angular providers.
+ * @returns Array of Angular providers.
+ *
+ * @typeParam T - The concrete type that extends {@link DbxInjectionContext}.
  */
 export function provideDbxInjectionContext<T extends DbxInjectionContext>(type: Type<T>): Provider[] {
   return [

@@ -28,8 +28,8 @@ export class FetchResponseError extends BaseError {
 /**
  * Asserts that the fetch response has an ok status code, throwing a FetchResponseError if it does not.
  *
- * @param responsePromise - promise resolving to the fetch Response to validate
- * @returns a promise resolving to the Response if the status is ok
+ * @param responsePromise - Pending fetch result whose status must be validated.
+ * @returns Same response when the status is ok; otherwise the rejected error.
  */
 export function requireOkResponse(responsePromise: Promise<Response>): Promise<Response> {
   return responsePromise.then((response) => {

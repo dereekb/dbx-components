@@ -33,6 +33,10 @@ export interface ProvideDbxAppAuthConfig extends ProvideDbxAppAuthRouterConfig, 
  * @param config - Combined auth configuration including routes and active states for effects.
  * @returns Angular `EnvironmentProviders` to be included in the application's provider list.
  *
+ * @see {@link provideDbxAppAuthState}
+ * @see {@link provideDbxAppAuthRouter}
+ * @see {@link provideDbxAppAuthRouterState}
+ *
  * @example
  * ```ts
  * // In your app config or module:
@@ -44,10 +48,6 @@ export interface ProvideDbxAppAuthConfig extends ProvideDbxAppAuthRouterConfig, 
  *   activeRoutesToApplyEffects: ['root']
  * });
  * ```
- *
- * @see {@link provideDbxAppAuthState}
- * @see {@link provideDbxAppAuthRouter}
- * @see {@link provideDbxAppAuthRouterState}
  */
 export function provideDbxAppAuth(config: ProvideDbxAppAuthConfig): EnvironmentProviders {
   const { dbxAppAuthRoutes, activeRoutesToApplyEffects } = config;

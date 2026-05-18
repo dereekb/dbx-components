@@ -76,8 +76,8 @@ export function dateFromLogicalDate(logicalDate: Maybe<LogicalDate>): Maybe<Date
  * Determines if the input value is a recognized LogicalDateStringCode.
  * Currently, only the 'now' value is recognized as a LogicalDateStringCode.
  *
- * @param logicalDate - The value to check
- * @returns True if the value is a recognized LogicalDateStringCode
+ * @param logicalDate - The value to check.
+ * @returns True if the value is a recognized LogicalDateStringCode.
  */
 export function isLogicalDateStringCode(logicalDate: Maybe<string | LogicalDate>): logicalDate is LogicalDateStringCode {
   let isLogicalDateStringCode = false;

@@ -55,10 +55,10 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
   );
 
   /**
-   * @param windowKey - Key on the `window` object where the loaded service is stored
-   * @param callbackKey - Optional key on `window` for a callback invoked when the service script finishes loading
+   * @param windowKey - Key on the `window` object where the loaded service is stored.
+   * @param callbackKey - Optional key on `window` for a callback invoked when the service script finishes loading.
    * @param serviceName - Human-readable name for logging; defaults to `windowKey`
-   * @param preload - When truthy, begins loading the service immediately on construction
+   * @param preload - When truthy, begins loading the service immediately on construction.
    */
   // eslint-disable-next-line @typescript-eslint/max-params -- abstract class constructor with well-defined parameters
   constructor(windowKey: string, callbackKey?: string, serviceName?: Maybe<string>, preload?: Maybe<boolean | string>) {
@@ -84,7 +84,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    *
    * Triggers loading if not already started.
    *
-   * @returns Promise that resolves with the loaded service instance
+   * @returns Promise that resolves with the loaded service instance.
    */
   getService(): Promise<T> {
     return firstValueFrom(this.service$);
@@ -97,7 +97,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    * Retries up to 10 times at 1-second intervals before invoking `_onLoadServiceFailure()`.
    * Subsequent calls return the same promise without re-initiating.
    *
-   * @returns Promise that resolves with the loaded service
+   * @returns Promise that resolves with the loaded service.
    */
   protected loadService(): Promise<T> {
     if (!this._loading.value) {
@@ -148,7 +148,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    *
    * Subclasses can override to attempt an alternative loading strategy or return a fallback promise.
    *
-   * @returns A promise resolving with the service if recovery succeeds, or `void` to reject
+   * @returns Promise resolving with the service if recovery succeeds, or `void` to reject.
    */
   protected _onLoadServiceFailure(): Promise<T> | void {
     // override in parent if needed.
@@ -171,7 +171,7 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    * Hook called before completing the service load. Subclasses can override to perform
    * additional async setup before the service reference is read from `window`.
    *
-   * @returns Promise that resolves when pre-load setup is complete
+   * @returns Promise that resolves when pre-load setup is complete.
    */
   protected _prepareCompleteLoadingService(): Promise<unknown> {
     return Promise.resolve();
@@ -182,8 +182,8 @@ export abstract class AbstractAsyncWindowLoadedService<T> implements Destroyable
    *
    * Subclasses can override to configure or wrap the service before it is emitted to subscribers.
    *
-   * @param service - The raw service instance from the window
-   * @returns The initialized service, or void to use the original
+   * @param service - The raw service instance from the window.
+   * @returns The initialized service, or void to use the original.
    */
   protected _initService(service: T): Promise<T | void> {
     return Promise.resolve(service);

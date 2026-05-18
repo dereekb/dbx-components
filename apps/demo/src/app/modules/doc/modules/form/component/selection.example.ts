@@ -14,8 +14,8 @@ export interface DocFormExampleSelectionValue {
 /**
  * Creates an example selection value with a numeric ID.
  *
- * @param id - Optional string ID to use; generates a random one if not provided
- * @returns An object with string id and numeric value
+ * @param id - Optional string ID to use; generates a random one if not provided.
+ * @returns An object with string id and numeric value.
  */
 export function MAKE_EXAMPLE_SELECTION_VALUE(id?: string) {
   const value = id ? Number(id) : Math.ceil(Math.random() * 1000000000);
@@ -32,7 +32,7 @@ export const MAKE_RANDOM_SELECTION_VALUES = randomArrayFactory({ random: { min: 
  * Creates a search function that returns random selection values after the minimum character threshold.
  *
  * @param minimumCharacters - Minimum characters required before returning results (default: 3)
- * @returns A search function for use with searchable value fields
+ * @returns A search function for use with searchable value fields.
  */
 export function EXAMPLE_SEARCH_FOR_SELECTION_VALUE(minimumCharacters: number = 3): SearchableValueFieldStringSearchFn<DocFormExampleSelectionValueId, any> {
   const makeRandomDelay = randomNumberFactory(200); // use to show the loading bar.

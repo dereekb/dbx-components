@@ -17,8 +17,8 @@ export const CALCOM_API_VERSION_HEADER = 'cal-api-version';
 /**
  * Returns a headers object with the cal-api-version header set.
  *
- * @param version - the Cal.com API version string to include in the header
- * @returns a headers record containing the cal-api-version header
+ * @param version - The Cal.com API version string to include in the header.
+ * @returns A headers record containing the cal-api-version header.
  */
 export function calcomApiVersionHeaders(version: CalcomApiVersionString): Record<string, string> {
   return { [CALCOM_API_VERSION_HEADER]: version };

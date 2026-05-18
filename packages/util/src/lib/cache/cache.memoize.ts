@@ -12,13 +12,13 @@ import { type AsyncKeyedValueCache, type AsyncValueCache } from './cache';
  * Note: the memoized value is per-process. Long-running processes will not observe writes
  * made by other processes to the inner backing once the memo is populated.
  *
+ * @param inner - The backing cache to memoize. Reads are delegated once and cached; writes are forwarded through and refresh the memo.
+ * @returns An {@link AsyncValueCache} that proxies the inner cache with a single-load memoization layer.
+ *
  * @dbxUtil
  * @dbxUtilCategory cache
  * @dbxUtilTags memoize, memo, cache, async, single-load, async-value
  * @dbxUtilRelated memoize-async-keyed-value-cache
- *
- * @param inner - The backing cache to memoize. Reads are delegated once and cached; writes are forwarded through and refresh the memo.
- * @returns An {@link AsyncValueCache} that proxies the inner cache with a single-load memoization layer.
  *
  * @example
  * ```ts
@@ -37,34 +37,38 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
 
   return {
     load: () => {
-      if (loaded != null) {
-        return Promise.resolve(loaded.value);
+      let result: Promise<Maybe<T>>;
+
+      if (loaded == null) {
+        if (inFlight == null) {
+          // Cache the in-flight promise so concurrent callers share the same load instead
+          // of each firing an independent inner.load(). Cleared on settle so a failed load
+          // doesn't permanently poison the memo. The captured generation lets a slow
+          // resolve detect a concurrent update()/clear() and skip clobbering newer state.
+          const startGen = generation;
+          inFlight = inner.load().then(
+            (value) => {
+              if (generation === startGen) {
+                loaded = { value };
+                inFlight = undefined;
+              }
+              return value;
+            },
+            (error) => {
+              if (generation === startGen) {
+                inFlight = undefined;
+              }
+              throw error;
+            }
+          );
+        }
+
+        result = inFlight;
+      } else {
+        result = Promise.resolve(loaded.value);
       }
 
-      if (inFlight == null) {
-        // Cache the in-flight promise so concurrent callers share the same load instead
-        // of each firing an independent inner.load(). Cleared on settle so a failed load
-        // doesn't permanently poison the memo. The captured generation lets a slow
-        // resolve detect a concurrent update()/clear() and skip clobbering newer state.
-        const startGen = generation;
-        inFlight = inner.load().then(
-          (value) => {
-            if (generation === startGen) {
-              loaded = { value };
-              inFlight = undefined;
-            }
-            return value;
-          },
-          (error) => {
-            if (generation === startGen) {
-              inFlight = undefined;
-            }
-            throw error;
-          }
-        );
-      }
-
-      return inFlight;
+      return result;
     },
     update: async (next) => {
       generation += 1;
@@ -97,13 +101,13 @@ export function memoizeAsyncValueCache<T>(inner: AsyncValueCache<T>): AsyncValue
  * Note: the memoized record is per-process. Long-running processes will not observe writes
  * made by other processes to the inner backing once the memo is populated.
  *
+ * @param inner - The backing keyed cache to memoize. The full record is loaded once and cached; writes are forwarded through and applied to the memo.
+ * @returns An {@link AsyncKeyedValueCache} that proxies the inner cache with a record-level memoization layer.
+ *
  * @dbxUtil
  * @dbxUtilCategory cache
  * @dbxUtilTags memoize, memo, cache, async, keyed, record
  * @dbxUtilRelated memoize-async-value-cache
- *
- * @param inner - The backing keyed cache to memoize. The full record is loaded once and cached; writes are forwarded through and applied to the memo.
- * @returns An {@link AsyncKeyedValueCache} that proxies the inner cache with a record-level memoization layer.
  *
  * @example
  * ```ts
@@ -121,30 +125,34 @@ export function memoizeAsyncKeyedValueCache<T>(inner: AsyncKeyedValueCache<T>): 
   let generation = 0;
 
   function ensureLoaded(): Promise<Record<string, T>> {
-    if (loaded != null) {
-      return Promise.resolve(loaded.entries);
+    let result: Promise<Record<string, T>>;
+
+    if (loaded == null) {
+      if (inFlight == null) {
+        const startGen = generation;
+        inFlight = inner.load().then(
+          (entries) => {
+            if (generation === startGen) {
+              loaded = { entries };
+              inFlight = undefined;
+            }
+            return entries;
+          },
+          (error) => {
+            if (generation === startGen) {
+              inFlight = undefined;
+            }
+            throw error;
+          }
+        );
+      }
+
+      result = inFlight;
+    } else {
+      result = Promise.resolve(loaded.entries);
     }
 
-    if (inFlight == null) {
-      const startGen = generation;
-      inFlight = inner.load().then(
-        (entries) => {
-          if (generation === startGen) {
-            loaded = { entries };
-            inFlight = undefined;
-          }
-          return entries;
-        },
-        (error) => {
-          if (generation === startGen) {
-            inFlight = undefined;
-          }
-          throw error;
-        }
-      );
-    }
-
-    return inFlight;
+    return result;
   }
 
   return {

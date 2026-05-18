@@ -11,7 +11,7 @@ interface DoctorCheck {
   readonly message?: string;
 }
 
-export const doctorCommand: CommandModule = {
+export const DOCTOR_COMMAND: CommandModule = {
   command: 'doctor',
   describe: 'Check CLI configuration and connectivity',
   builder: (yargs: Argv) => yargs,

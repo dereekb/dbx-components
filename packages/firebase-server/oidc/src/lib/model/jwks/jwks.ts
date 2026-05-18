@@ -102,8 +102,8 @@ export interface JwksKeyConverterConfig {
  *
  * Requires runtime encryption config since the private key field is encrypted at rest.
  *
- * @param config - encryption configuration for the private key field
- * @returns snapshot converter functions for JwksKey documents
+ * @param config - Encryption configuration for the private key field.
+ * @returns Snapshot converter functions for JwksKey documents.
  */
 export function jwksKeyConverter(config: JwksKeyConverterConfig) {
   return snapshotConverterFunctions<JwksKey>({
@@ -122,8 +122,8 @@ export function jwksKeyConverter(config: JwksKeyConverterConfig) {
 /**
  * Returns the Firestore {@link CollectionReference} for {@link JwksKey} documents.
  *
- * @param context - the Firestore context to create the collection reference from
- * @returns the typed collection reference for JwksKey documents
+ * @param context - The Firestore context to create the collection reference from.
+ * @returns The typed collection reference for JwksKey documents.
  */
 export function jwksKeyCollectionReference(context: FirestoreContext): CollectionReference<JwksKey> {
   return context.collection(jwksKeyIdentity.collectionName);
@@ -144,8 +144,8 @@ export interface JwksKeyFirestoreCollectionConfig extends JwksKeyConverterConfig
 /**
  * Creates a {@link JwksKeyFirestoreCollection} with encrypted private key field support.
  *
- * @param config - configuration including the Firestore context and encryption settings
- * @returns the configured JwksKey Firestore collection
+ * @param config - Configuration including the Firestore context and encryption settings.
+ * @returns The configured JwksKey Firestore collection.
  */
 export function jwksKeyFirestoreCollection(config: JwksKeyFirestoreCollectionConfig): JwksKeyFirestoreCollection {
   const { firestoreContext } = config;

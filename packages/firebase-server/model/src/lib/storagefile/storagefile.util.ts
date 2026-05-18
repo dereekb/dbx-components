@@ -36,7 +36,7 @@ export interface QueryAndFlagStorageFilesForDeleteResult {
 /**
  * Performs a query and flags the matching StorageFiles for deletion.
  *
- * @param input The input for the query and flagging.
+ * @param input - The input for the query and flagging.
  * @returns The result of the query and flagging.
  */
 export async function queryAndFlagStorageFilesForDelete(input: QueryAndFlagStorageFilesForDeleteInput): Promise<QueryAndFlagStorageFilesForDeleteResult> {
@@ -76,7 +76,7 @@ export async function queryAndFlagStorageFilesForDelete(input: QueryAndFlagStora
 /**
  * Creates a template for updating a StorageFile to be queued for deletion at the input time.
  *
- * @param queueForDeleteTime When to delete the StorageFile. If true or unset, the StorageFile will be flagged to be deleted immediately.
+ * @param queueForDeleteTime - When to delete the StorageFile. If true or unset, the StorageFile will be flagged to be deleted immediately.
  * @returns The update template for the StorageFile.
  */
 export function markStorageFileForDeleteTemplate(queueForDeleteTime?: Maybe<StorageFileQueueForDeleteTime>): Pick<StorageFile, 'sdat' | 'fs'> {

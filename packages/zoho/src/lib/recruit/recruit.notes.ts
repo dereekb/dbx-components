@@ -1,4 +1,4 @@
-import { type ISO8601DateString, type UniqueModelWithId } from '@dereekb/util';
+import { type ISO8601DateString, type UniqueModelWithId, type Maybe } from '@dereekb/util';
 import { type ZohoRecruitReferenceData, type ZohoRecruitParentReferenceData, type ZohoRecruitTypeId, type ZohoRecruitModuleName, type ZohoRecruitCreatedByData, type ZohoRecruitModifiedByData, type ZohoRecruitId } from './recruit';
 
 // MARK: Notes
@@ -48,7 +48,7 @@ export interface ZohoRecruitNoteData {
   Note_Owner: ZohoRecruitNoteOwnerData;
   Created_By: ZohoRecruitCreatedByData;
   Modified_By: ZohoRecruitModifiedByData;
-  $size: ZohoRecruitNoteFileSize | null;
+  $size: Maybe<ZohoRecruitNoteFileSize>;
   $voice_note: boolean;
   $status: ZohoRecruitNoteStatus;
 }
@@ -75,6 +75,7 @@ export interface ZohoRecruitNote extends ZohoRecruitNoteData, UniqueModelWithId 
 export type ZohoRecruitRecordNote = ZohoRecruitNote;
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated use NewZohoRecruitNewNoteData instead.
  */

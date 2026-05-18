@@ -17,9 +17,9 @@ export interface ListAppNotificationsOptions {
  * the output into the listing report so registration state and validator
  * findings stay in sync.
  *
- * @param inspection - the prepared filesystem inspection (component + api files)
- * @param options - workspace directories used to relativise emitted paths
- * @returns the listing report
+ * @param inspection - The prepared filesystem inspection (component + api files)
+ * @param options - Workspace directories used to relativise emitted paths.
+ * @returns The listing report.
  */
 export function listAppNotifications(inspection: AppNotificationsInspection, options: ListAppNotificationsOptions): AppNotificationsReport {
   const extracted = extractAppNotifications(inspection);

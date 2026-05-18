@@ -29,10 +29,10 @@ export interface StorageFileGroupDocumentReferencePair {
  * If a document is provided directly, it is returned as-is. Otherwise, the related model key
  * is converted to a group ID via {@link storageFileGroupIdForModel} and loaded from the accessor.
  *
- * @param input - reference pair containing either a document or a related model key
- * @param accessor - document accessor used to load the group document by ID
- * @returns the resolved StorageFileGroupDocument
- * @throws {Error} When neither storageFileGroupDocument nor storageFileGroupRelatedModelKey is provided
+ * @param input - Reference pair containing either a document or a related model key.
+ * @param accessor - Document accessor used to load the group document by ID.
+ * @returns The resolved StorageFileGroupDocument.
+ * @throws {Error} When neither storageFileGroupDocument nor storageFileGroupRelatedModelKey is provided.
  *
  * @example
  * ```ts
@@ -84,8 +84,8 @@ export interface CalculateStorageFileGroupEmbeddedFileUpdateInput {
  * with existing ones by StorageFile ID. Automatically flags regeneration when files are removed
  * or when new files haven't been added to the zip yet.
  *
- * @param input - current group state, files to insert/remove, and regeneration options
- * @returns updated `f` (embedded files) and `re` (regeneration flag)
+ * @param input - Current group state, files to insert/remove, and regeneration options.
+ * @returns Updated `f` (embedded files) and `re` (regeneration flag)
  *
  * @example
  * ```ts
@@ -156,8 +156,8 @@ export interface CalculateStorageFileGroupRegenerationResult {
  * - The zip has never been generated (`zat` is unset) and files exist
  * - Any embedded file has never been included in the zip (`zat` is unset on the entry)
  *
- * @param input - group state and optional force flag
- * @returns the regeneration result indicating whether the zip or other derived files need to be regenerated
+ * @param input - Group state and optional force flag.
+ * @returns The regeneration result indicating whether the zip or other derived files need to be regenerated.
  *
  * @example
  * ```ts

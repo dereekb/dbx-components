@@ -121,9 +121,9 @@ function scoreStateValue(stateValue: string, token: string): number {
  *   skillRefs membership: 2
  *   description includes (fallback): 1
  *
- * @param entry - the action registry entry being scored
- * @param token - the lowercase token to score against
- * @returns the additive score for this token/entry pair (`0` when there's no hit)
+ * @param entry - The action registry entry being scored.
+ * @param token - The lowercase token to score against.
+ * @returns The additive score for this token/entry pair (`0` when there's no hit)
  */
 function scoreEntryAgainstToken(entry: ActionEntryInfo, token: string): number {
   const slug = entry.slug.toLowerCase();
@@ -204,8 +204,9 @@ export interface CreateSearchActionToolConfig {
  * Builds the `dbx_action_search` tool against an action registry. Called by
  * {@link registerTools} once the registry has loaded at server startup.
  *
- * @param config - the registry the tool should rank against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry the tool should rank against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSearchActionTool(config: CreateSearchActionToolConfig): DbxTool {

@@ -247,6 +247,9 @@ export interface ExecuteOnCallQueryConfig<T, R = T> {
  * - Fetching one extra document to detect whether more results exist
  * - Building the {@link OnCallQueryModelResult} with cursorDocumentKey and hasMore
  *
+ * @param config - Query configuration including collection, constraints, and pagination params.
+ * @returns Paginated query result with cursor for the next page.
+ *
  * @example
  * ```typescript
  * export const queryGuestbooks: DemoQueryModelFunction<QueryGuestbooksParams, OnCallQueryModelResult<Guestbook>> = async (request) => {
@@ -269,9 +272,6 @@ export interface ExecuteOnCallQueryConfig<T, R = T> {
  *   });
  * };
  * ```
- *
- * @param config - Query configuration including collection, constraints, and pagination params.
- * @returns Paginated query result with cursor for the next page.
  */
 export async function executeOnCallQuery<T, R = T>(config: ExecuteOnCallQueryConfig<T, R>): Promise<OnCallQueryModelResult<R>> {
   const { params, collection, loadCursorDocument, buildConstraints, maxLimit = MAX_ON_CALL_QUERY_MODEL_LIMIT, mapResult } = config;

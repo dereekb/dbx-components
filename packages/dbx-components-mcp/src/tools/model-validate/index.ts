@@ -19,9 +19,9 @@ import type { CrossFileInterfaceEntry, CrossFileRuleContext, ExtractedFile, Rule
  * rules that need to resolve identifier references across sibling files
  * (e.g. `MODEL_SUBOBJECT_NOT_TAGGED`) can do so by name.
  *
- * @param sources - the in-memory model files to validate
- * @param options - optional rule overrides (field-name length limit, ignore list)
- * @returns the aggregated validation outcome with counts and violations
+ * @param sources - The in-memory model files to validate.
+ * @param options - Optional rule overrides (field-name length limit, ignore list)
+ * @returns The aggregated validation outcome with counts and violations.
  */
 export function validateFirebaseModelSources(sources: readonly ValidatorSource[], options?: RuleOptions): ValidationResult {
   const violations: Violation[] = [];
@@ -62,8 +62,8 @@ export function validateFirebaseModelSources(sources: readonly ValidatorSource[]
  * a name, the first one encountered wins — the rule layer treats names
  * as unique within a model folder.
  *
- * @param extracteds - per-file extraction results
- * @returns the shared context threaded into each {@link runRules} call
+ * @param extracteds - Per-file extraction results.
+ * @returns The shared context threaded into each {@link runRules} call.
  */
 function buildCrossFileRuleContext(extracteds: readonly ExtractedFile[]): CrossFileRuleContext {
   const interfacesByName = new Map<string, CrossFileInterfaceEntry>();

@@ -106,9 +106,9 @@ export type StorageFileGroupCreatedStorageFileKey<P extends StorageFileGroupRela
 /**
  * Creates a StorageFileGroupCreatedStorageFileKey from the input StorageFileGroupId and purpose.
  *
- * @param purpose - the purpose identifying the type of file within the group
- * @param storageFileGroupId - the ID of the parent StorageFileGroup
- * @returns a deterministic FirestoreCollectionModelKey for the storage file
+ * @param purpose - The purpose identifying the type of file within the group.
+ * @param storageFileGroupId - The ID of the parent StorageFileGroup.
+ * @returns A deterministic FirestoreCollectionModelKey for the storage file.
  */
 export function storageFileGroupCreatedStorageFileKey<P extends StorageFileGroupRelatedStorageFilePurpose>(purpose: P, storageFileGroupId: StorageFileGroupId): StorageFileGroupCreatedStorageFileKey<P> {
   return firestoreModelKey(storageFileIdentity, `${purpose}_${storageFileGroupId}`);
@@ -122,8 +122,9 @@ export type StorageFileGroupCreateStorageFileKeyFactory<P extends StorageFileGro
 /**
  * Creates a factory function for generating StorageFileGroupCreatedStorageFileKey values using the input purpose.
  *
- * @param purpose The purpose of the StorageFileGroupCreatedStorageFileKey.
+ * @param purpose - The purpose of the StorageFileGroupCreatedStorageFileKey.
  * @returns A factory function that takes a StorageFileGroupId and returns a StorageFileGroupCreatedStorageFileKey.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function storageFileGroupCreateStorageFileKeyFactory<P extends StorageFileGroupRelatedStorageFilePurpose>(purpose: P): StorageFileGroupCreateStorageFileKeyFactory<P> {
@@ -264,8 +265,8 @@ export enum StorageFileProcessingState {
  * (INIT_OR_NONE, FAILED, or SUCCESS). Files that are already QUEUED/PROCESSING, ARCHIVED,
  * or DO_NOT_PROCESS are not eligible.
  *
- * @param storageFile - the file's processing state (`ps`) and purpose (`p`) fields
- * @returns true if the file can be queued for processing
+ * @param storageFile - The file's processing state (`ps`) and purpose (`p`) fields.
+ * @returns True if the file can be queued for processing.
  *
  * @example
  * ```ts
@@ -510,13 +511,13 @@ export const storageFileConverter = snapshotConverterFunctions<StorageFile>({
 /**
  * Returns the raw Firestore CollectionReference for the StorageFile collection.
  *
+ * @param context - The Firestore context to use.
+ * @returns The CollectionReference for StorageFile documents.
+ *
  * @example
  * ```ts
  * const colRef = storageFileCollectionReference(firestoreContext);
  * ```
- *
- * @param context - the Firestore context to use
- * @returns the CollectionReference for StorageFile documents
  */
 export function storageFileCollectionReference(context: FirestoreContext): CollectionReference<StorageFile> {
   return context.collection(storageFileIdentity.collectionName);
@@ -530,14 +531,14 @@ export type StorageFileFirestoreCollection = FirestoreCollection<StorageFile, St
 /**
  * Creates a fully configured {@link StorageFileFirestoreCollection} with snapshot conversion and document factory.
  *
+ * @param firestoreContext - The Firestore context to use.
+ * @returns A configured StorageFileFirestoreCollection.
+ *
  * @example
  * ```ts
  * const collection = storageFileFirestoreCollection(firestoreContext);
  * const doc = collection.documentAccessor().newDocument();
  * ```
- *
- * @param firestoreContext - the Firestore context to use
- * @returns a configured StorageFileFirestoreCollection
  */
 export function storageFileFirestoreCollection(firestoreContext: FirestoreContext): StorageFileFirestoreCollection {
   return firestoreContext.firestoreCollection({
@@ -719,13 +720,13 @@ export const storageFileGroupConverter = snapshotConverterFunctions<StorageFileG
 /**
  * Returns the raw Firestore CollectionReference for the StorageFileGroup collection.
  *
+ * @param context - The Firestore context to use.
+ * @returns The CollectionReference for StorageFileGroup documents.
+ *
  * @example
  * ```ts
  * const colRef = storageFileGroupCollectionReference(firestoreContext);
  * ```
- *
- * @param context - the Firestore context to use
- * @returns the CollectionReference for StorageFileGroup documents
  */
 export function storageFileGroupCollectionReference(context: FirestoreContext): CollectionReference<StorageFileGroup> {
   return context.collection(storageFileGroupIdentity.collectionName);
@@ -739,14 +740,14 @@ export type StorageFileGroupFirestoreCollection = FirestoreCollection<StorageFil
 /**
  * Creates a fully configured {@link StorageFileGroupFirestoreCollection} with snapshot conversion and document factory.
  *
+ * @param firestoreContext - The Firestore context to use.
+ * @returns A configured StorageFileGroupFirestoreCollection.
+ *
  * @example
  * ```ts
  * const collection = storageFileGroupFirestoreCollection(firestoreContext);
  * const doc = collection.documentAccessor().loadDocumentForId(groupId);
  * ```
- *
- * @param firestoreContext - the Firestore context to use
- * @returns a configured StorageFileGroupFirestoreCollection
  */
 export function storageFileGroupFirestoreCollection(firestoreContext: FirestoreContext): StorageFileGroupFirestoreCollection {
   return firestoreContext.firestoreCollection({

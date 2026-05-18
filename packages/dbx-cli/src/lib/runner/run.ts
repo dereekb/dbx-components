@@ -3,9 +3,9 @@ import { hideBin } from 'yargs/helpers';
 import { type ActionCommandSpec } from '../action/action.command.factory';
 import { buildActionCommands } from '../action/build-action-commands';
 import { createAuthCommand } from '../auth/auth.command.factory';
-import { callPassthroughCommand } from '../api/call.passthrough.command';
-import { getCommand } from '../api/get.command';
-import { getManyCommand } from '../api/get-many.command';
+import { CALL_PASSTHROUGH_COMMAND } from '../api/call.passthrough.command';
+import { GET_COMMAND } from '../api/get.command';
+import { GET_MANY_COMMAND } from '../api/get-many.command';
 import { type CliEnvDefault } from '../config/env';
 import { type CliContext } from '../context/cli.context';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
@@ -183,10 +183,10 @@ export function createCli(input: CreateCliInput): Argv {
   }
 
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
-  const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [callPassthroughCommand];
+  const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [CALL_PASSTHROUGH_COMMAND];
 
   if (input.disableModelGet !== true) {
-    builtInApiCommands.push(getCommand, getManyCommand);
+    builtInApiCommands.push(GET_COMMAND, GET_MANY_COMMAND);
   }
 
   const actionCommands = buildActionCommands(input.actionCommands ?? []);
@@ -219,10 +219,10 @@ export function createCli(input: CreateCliInput): Argv {
     .alias('help', 'h')
     .wrap(Math.min(120, process.stdout.columns || 80));
 
-  if (input.version != null) {
-    parser = parser.version(input.version);
-  } else {
+  if (input.version == null) {
     parser = parser.version(false);
+  } else {
+    parser = parser.version(input.version);
   }
 
   if (input.completionCommandName !== false) {
@@ -250,14 +250,15 @@ export async function runCli(input: CreateCliInput): Promise<void> {
 
 function commandName(cmd: CommandModule): string {
   const raw = cmd.command;
+  let result: string;
 
   if (typeof raw === 'string') {
-    return raw.split(' ')[0];
+    result = raw.split(' ')[0];
+  } else if (Array.isArray(raw) && raw.length > 0) {
+    result = raw[0].split(' ')[0];
+  } else {
+    result = '';
   }
 
-  if (Array.isArray(raw) && raw.length > 0) {
-    return raw[0].split(' ')[0];
-  }
-
-  return '';
+  return result;
 }

@@ -1,6 +1,6 @@
 import nx from '@nx/eslint-plugin';
 import importPlugin from 'eslint-plugin-import';
-import { nestjsEslintPlugin } from '@dereekb/nestjs/eslint';
+import { NESTJS_ESLINT_PLUGIN } from '@dereekb/nestjs/eslint';
 
 export default [
   ...nx.configs['flat/base'],
@@ -61,7 +61,7 @@ export default [
   {
     files: ['**/*.ts'],
     plugins: {
-      'dereekb-nestjs': nestjsEslintPlugin
+      'dereekb-nestjs': NESTJS_ESLINT_PLUGIN
     },
     rules: {
       'dereekb-nestjs/require-nest-inject': 'error'

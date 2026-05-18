@@ -90,7 +90,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
    * {@inheritDoc DbxInjectionContext.showContext}
    *
    * @param config - The injection context configuration describing the component and its usage.
-   * @returns A promise that resolves with the output of the injected component's usage.
+   * @returns Resolves to the output of the injected component's usage.
    */
   async showContext<T, O>(config: DbxInjectionContextConfig<T>): Promise<O> {
     // clear the current context before showing something new.
@@ -129,7 +129,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
       this._currentPromise = promiseRef as PromiseReference<unknown>;
 
       // await the promise
-      await promiseRef.promise;
+      result = await promiseRef.promise;
     } catch (e) {
       error = e;
     }
@@ -147,7 +147,16 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
       if (error instanceof Error) {
         throw error;
       }
-      const message = typeof error === 'object' ? JSON.stringify(error) : String(error);
+
+      let message: string;
+      if (error == null) {
+        message = String(error);
+      } else if (typeof error === 'object') {
+        message = JSON.stringify(error);
+      } else {
+        message = String(error);
+      }
+
       throw new Error(message);
     }
 

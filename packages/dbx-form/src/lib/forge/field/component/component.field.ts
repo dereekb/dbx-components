@@ -1,5 +1,5 @@
 import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldDef, type DbxForgeComponentFieldProps } from './component.field.component';
-import { dbxForgeFieldFunction, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../field';
+import { dbxForgeFieldFunction, type DbxForgeFieldFunctionDef } from '../field';
 import type { DbxForgeField } from '../../form/forge.form';
 
 // MARK: Config
@@ -34,14 +34,9 @@ let _componentFieldCounter = 0;
  */
 export type DbxForgeComponentFieldFunction = <T = unknown>(config: DbxForgeComponentFieldConfig<T>) => DbxForgeField<DbxForgeComponentFieldDef<T>>;
 
-/**
- * @deprecated Use {@link DbxForgeComponentFieldFunction} instead.
- */
-export type ForgeComponentFieldFunction = DbxForgeComponentFieldFunction;
-
 const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldConfig>({
   type: FORGE_COMPONENT_FIELD_TYPE
-}) as DbxForgeFieldFunction<_DbxForgeComponentFieldConfig, DbxForgeComponentFieldDef>;
+});
 
 /**
  * Escape hatch — injects any Angular component as the field renderer via DbxInjection. Use when no existing form field fits.
@@ -50,7 +45,7 @@ const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldCon
  * into the form. Generates a unique key when none is provided so that ng-forge's
  * field reconciliation treats each config change as a new field instance.
  *
- * @param config - Component field configuration
+ * @param config - Component field configuration.
  * @returns A validated {@link DbxForgeComponentFieldDef}
  *
  * @dbxFormField
@@ -74,3 +69,9 @@ export const dbxForgeComponentField: DbxForgeComponentFieldFunction = (config) =
     key: config.key || `_component_${++_componentFieldCounter}`
   } as _DbxForgeComponentFieldConfig) as any;
 };
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated Use {@link DbxForgeComponentFieldFunction} instead.
+ */
+export type ForgeComponentFieldFunction = DbxForgeComponentFieldFunction;

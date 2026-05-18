@@ -5,11 +5,11 @@ export const storageFileGroupUpdate: DemoUpdateModelFunction<UpdateStorageFileGr
   const { nest, data } = request;
 
   const updateStorageFileGroup = await nest.storageFileServerActions.updateStorageFileGroup(data);
-  const storageFileGroupDocument = (await nest.useModel('storageFileGroup', {
+  const storageFileGroupDocument = await nest.useModel('storageFileGroup', {
     request,
     key: data.key,
     use: (x) => x.document
-  })) as StorageFileGroupDocument;
+  });
 
   return updateStorageFileGroup(storageFileGroupDocument);
 };

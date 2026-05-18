@@ -1,4 +1,4 @@
-import { type EmailAddress, type ISO8601DateString, type TimezoneString } from '@dereekb/util';
+import { type EmailAddress, type ISO8601DateString, type TimezoneString, type Maybe } from '@dereekb/util';
 import { type CalcomContext } from './calcom.config';
 import { type CalcomUserId, type CalcomUsername, type CalcomScheduleId, type CalcomResponseStatus } from '../calcom.type';
 import { CALCOM_API_VERSION_ME, calcomApiVersionHeaders } from '../shared/calcom.api-version';
@@ -6,12 +6,12 @@ import { CALCOM_API_VERSION_ME, calcomApiVersionHeaders } from '../shared/calcom
 export interface CalcomUser {
   readonly id: CalcomUserId;
   readonly email: EmailAddress;
-  readonly username: CalcomUsername | null;
+  readonly username: Maybe<CalcomUsername>;
   readonly timeZone: TimezoneString;
   readonly weekStart: string;
   readonly createdDate: ISO8601DateString;
   readonly timeFormat: number;
-  readonly defaultScheduleId: CalcomScheduleId | null;
+  readonly defaultScheduleId: Maybe<CalcomScheduleId>;
 }
 
 export interface CalcomGetMeResponse {
@@ -22,10 +22,10 @@ export interface CalcomGetMeResponse {
 /**
  * Retrieves the profile of the currently authenticated Cal.com user.
  *
- * @see https://cal.com/docs/api-reference/v2/me
+ * @param context - The Cal.com API context providing authentication and fetch capabilities.
+ * @returns Retrieves the authenticated user's profile.
  *
- * @param context - the Cal.com API context providing authentication and fetch capabilities
- * @returns a function that retrieves the authenticated user's profile
+ * @see https://cal.com/docs/api-reference/v2/me
  *
  * @example
  * ```ts

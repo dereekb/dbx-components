@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DescriptionFieldConfig retained for the formly layer until full migration to forge */
 import { type DescriptionFieldConfig, type MaterialFormFieldConfig, type LabeledFieldConfig, formlyField, propsAndConfigForFieldConfig } from './../field';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type TextFieldLengthConfig } from '../value/text/text.field';
@@ -12,7 +13,7 @@ export interface TextEditorFieldConfig extends LabeledFieldConfig, DescriptionFi
  *
  * The field defaults to an empty string and updates the model on blur events.
  *
- * @param config - Text editor field configuration
+ * @param config - Text editor field configuration.
  * @returns A validated {@link FormlyFieldConfig} with type `'texteditor'`
  *
  * @example
@@ -42,6 +43,7 @@ export function formlyTextEditorField(config: TextEditorFieldConfig): FormlyFiel
 }
 
 // MARK: Deprecated Aliases
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use formlyTextEditorField instead.
  */

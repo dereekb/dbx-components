@@ -12,8 +12,8 @@ import type { SystemFolderInspection, ValidationResult } from './types.js';
  * Runs the rules layer over each prepared folder inspection and aggregates
  * the violations and counts.
  *
- * @param inspections - the folder snapshots to validate
- * @returns the aggregated validation outcome with counts and violations
+ * @param inspections - The folder snapshots to validate.
+ * @returns The aggregated validation outcome with counts and violations.
  */
 export function validateSystemFolders(inspections: readonly SystemFolderInspection[]): ValidationResult {
   return aggregateFolderRules({ inspections, runRules });

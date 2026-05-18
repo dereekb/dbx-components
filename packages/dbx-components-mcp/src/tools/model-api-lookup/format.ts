@@ -47,14 +47,19 @@ export function formatLookupAsJson(report: ApiLookupReport): string {
 }
 
 function formatActionLookupStatus(report: ApiLookupReport): string {
+  let result: string;
   switch (report.actionLookupStatus.kind) {
     case 'ok':
-      return `scanned ${report.actionLookupStatus.filesScanned} \`*.action.server.ts\` file(s)`;
+      result = `scanned ${report.actionLookupStatus.filesScanned} \`*.action.server.ts\` file(s)`;
+      break;
     case 'skipped':
-      return `_skipped — ${report.actionLookupStatus.reason}_`;
+      result = `_skipped — ${report.actionLookupStatus.reason}_`;
+      break;
     case 'error':
-      return `_error — ${report.actionLookupStatus.message}_`;
+      result = `_error — ${report.actionLookupStatus.message}_`;
+      break;
   }
+  return result;
 }
 
 function formatEntry(entry: ApiLookupEntry): string {

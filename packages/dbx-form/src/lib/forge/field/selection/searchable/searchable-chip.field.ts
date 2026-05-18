@@ -83,7 +83,7 @@ export type DbxForgeSearchableStringChipFieldConfig<M = unknown> = Omit<DbxForge
  * (or typing a separator key) commits the typed value as a chip.
  *
  * @param config - String-specific searchable chip field configuration (omits allowStringValues)
- * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a searchable chip field
+ * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a searchable chip field.
  *
  * @dbxFormField
  * @dbxFormSlug searchable-string-chip

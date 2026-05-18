@@ -5,8 +5,8 @@ import type { ColorTemplateConfig, ColorTemplateEntry, ColorTemplateListAppRepor
  * returns by default. One block per template plus a warnings section
  * so callers can scan the catalog without parsing JSON.
  *
- * @param report - the listing report to render
- * @returns the markdown body
+ * @param report - The listing report to render.
+ * @returns The markdown body.
  */
 export function formatReportAsMarkdown(report: ColorTemplateListAppReport): string {
   const lines: string[] = [`# Color templates — ${report.apiDir}`, '', `App: \`${report.apiDir}\``];

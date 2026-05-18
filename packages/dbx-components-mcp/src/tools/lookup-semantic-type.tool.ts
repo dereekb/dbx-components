@@ -83,45 +83,44 @@ export interface CreateSemanticTypeLookupToolConfig {
  * Builds the `dbx_semantic_type_lookup` tool against a registry. Called by
  * {@link registerTools} once the registry has been loaded at server startup.
  *
- * @param config - the registry the tool should resolve against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry the tool should resolve against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSemanticTypeLookupTool(config: CreateSemanticTypeLookupToolConfig): DbxTool {
   const { registry } = config;
 
   function run(rawArgs: unknown): ToolResult {
-    let args: ParsedLookupArgs;
     let result: ToolResult;
     try {
-      args = parseLookupArgs(rawArgs);
+      const args = parseLookupArgs(rawArgs);
+      const trimmed = args.name.trim();
+      const lowered = trimmed.toLowerCase();
+      if (lowered === 'catalog' || lowered === 'list' || lowered === 'all') {
+        const text = formatSemanticTypeCatalog({
+          total: registry.all.length,
+          topics: registry.topics,
+          packages: registry.packages,
+          baseTypes: registry.baseTypes,
+          loadedSources: registry.loadedSources
+        });
+        result = { content: [{ type: 'text', text }] };
+      } else {
+        const matches = registry.findByName(trimmed);
+        let text: string;
+        if (matches.length === 0) {
+          text = formatNotFound(trimmed, registry);
+        } else if (matches.length === 1) {
+          text = formatSemanticTypeEntry(matches[0], args.depth);
+        } else {
+          text = formatSemanticTypeCollision(trimmed, matches);
+        }
+        result = { content: [{ type: 'text', text }] };
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
-    }
-
-    const trimmed = args.name.trim();
-    const lowered = trimmed.toLowerCase();
-    if (lowered === 'catalog' || lowered === 'list' || lowered === 'all') {
-      const text = formatSemanticTypeCatalog({
-        total: registry.all.length,
-        topics: registry.topics,
-        packages: registry.packages,
-        baseTypes: registry.baseTypes,
-        loadedSources: registry.loadedSources
-      });
-      result = { content: [{ type: 'text', text }] };
-    } else {
-      const matches = registry.findByName(trimmed);
-      let text: string;
-      if (matches.length === 0) {
-        text = formatNotFound(trimmed, registry);
-      } else if (matches.length === 1) {
-        text = formatSemanticTypeEntry(matches[0], args.depth);
-      } else {
-        text = formatSemanticTypeCollision(trimmed, matches);
-      }
-      result = { content: [{ type: 'text', text }] };
+      result = toolError(message);
     }
     return result;
   }

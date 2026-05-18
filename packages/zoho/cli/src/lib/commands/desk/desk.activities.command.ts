@@ -3,7 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
-import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
+import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
 
 const activitiesListCommand: CommandModule = {
   command: 'list <ticketId>',
@@ -16,7 +16,7 @@ const activitiesListCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.getTicketActivities(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -33,7 +33,7 @@ const activitiesListCommand: CommandModule = {
   }
 };
 
-export const deskActivitiesCommand: CommandModule = {
+export const DESK_ACTIVITIES_COMMAND: CommandModule = {
   command: 'activities',
   describe: 'Desk ticket activity operations',
   builder: (yargs: Argv) => yargs.command(activitiesListCommand).demandCommand(1),

@@ -78,14 +78,14 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
   /**
    * Loads the full Firebase Auth {@link admin.auth.UserRecord} for this user.
    *
-   * @throws Throws if the user does not exist.
+   * @throws {Error} Throws if the user does not exist.
    */
   loadRecord(): Promise<admin.auth.UserRecord>;
 
   /**
    * Loads a normalized {@link FirebaseAuthDetails} snapshot of the user's auth profile.
    *
-   * @throws Throws if the user does not exist.
+   * @throws {Error} Throws if the user does not exist.
    */
   loadDetails(): Promise<FirebaseAuthDetails>;
 
@@ -156,7 +156,7 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
   /**
    * Loads the user's raw custom claims object from their Firebase Auth record.
    *
-   * @throws Throws if the user does not exist.
+   * @throws {Error} Throws if the user does not exist.
    */
   loadClaims<T extends AuthClaimsObject = AuthClaimsObject>(): Promise<AuthClaims<T>>;
 
@@ -358,8 +358,8 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return this.setClaims(null);
   }
 
-  setClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: AuthClaimsUpdate<T> | null): Promise<void> {
-    return this.service.auth.setCustomUserClaims(this.uid, claims).then(() => {
+  setClaims<T extends AuthClaimsObject = AuthClaimsObject>(claims: Maybe<AuthClaimsUpdate<T>>): Promise<void> {
+    return this.service.auth.setCustomUserClaims(this.uid, claims ?? null).then(() => {
       this._loadRecord.reset(); // reset the cache
     });
   }
@@ -628,7 +628,7 @@ export interface FirebaseServerNewUserService<D = unknown, U extends FirebaseSer
    * when explicitly requested via the input flags.
    *
    * @param input - Configuration for the new user and setup content delivery.
-   * @throws Throws if neither email, phone, nor uid is provided.
+   * @throws {Error} Throws if neither email, phone, nor uid is provided.
    */
   initializeNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<admin.auth.UserRecord>;
   /**
@@ -904,7 +904,7 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
    *
    * @param input - The initialization configuration for the new user.
    * @returns The created user record and the setup password used.
-   * @throws Throws if the Firebase Admin SDK rejects the user creation.
+   * @throws {Error} Throws if the Firebase Admin SDK rejects the user creation.
    */
   protected async createNewUser(input: FirebaseServerAuthInitializeNewUser<D>): Promise<FirebaseServerAuthCreateNewUserResult> {
     const { uid, displayName, email, phone: phoneNumber, setupPassword: inputPassword } = input;
@@ -1107,7 +1107,7 @@ export interface FirebaseServerUserPasswordResetService<D = unknown, U extends F
    * may throw the same errors (throttle, send-once, no-config) depending on the configuration.
    *
    * @param input - Configuration for the reset, including user identification and send options.
-   * @throws Throws if neither uid nor email is provided.
+   * @throws {Error} Throws if neither uid nor email is provided.
    * @throws {FirebaseServerAuthPasswordResetThrottleError} When send is throttled and `sendResetThrowErrors` is true.
    * @throws {FirebaseServerAuthPasswordResetSendOnceError} When already sent and `sendResetDetailsOnce` + `sendResetThrowErrors` are true.
    * @throws {FirebaseServerAuthPasswordResetNoResetConfigError} When no reset claims exist and `sendResetThrowErrors` is true.
@@ -1370,7 +1370,7 @@ export abstract class FirebaseServerAuthService<U extends FirebaseServerAuthUser
    * Asserts that the request contains valid auth data (a UID is present).
    *
    * @param context - The callable function context from a Firebase function invocation.
-   * @throws Throws if the context does not contain authenticated user data.
+   * @throws {Error} Throws if the context does not contain authenticated user data.
    */
   abstract context(context: CallableContext): C;
 

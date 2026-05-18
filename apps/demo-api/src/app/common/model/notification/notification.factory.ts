@@ -8,8 +8,8 @@ import { type NotificationTemplateServiceTypeConfig } from '@dereekb/firebase-se
  * Creates a notification template config for test notifications with static content.
  * Used in integration tests to verify the notification pipeline.
  *
- * @param _context - server actions context (unused but kept for factory signature consistency)
- * @returns a notification template service config for the test notification type
+ * @param _context - Server actions context (unused but kept for factory signature consistency)
+ * @returns A notification template service config for the test notification type.
  */
 export function demoNotificationTestFactory(_context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
@@ -39,8 +39,8 @@ export function demoNotificationTestFactory(_context: DemoFirebaseServerActionsC
  * Supports optional send skipping via the notification data's skipSend flag,
  * and includes onSendAttempted/onSendSuccess lifecycle hooks.
  *
- * @param _context - server actions context (unused but kept for factory signature consistency)
- * @returns a notification template service config for the example notification type
+ * @param _context - Server actions context (unused but kept for factory signature consistency)
+ * @returns A notification template service config for the example notification type.
  */
 export function demoExampleNotificationFactory(_context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
@@ -85,8 +85,8 @@ export function demoExampleNotificationFactory(_context: DemoFirebaseServerActio
  * Creates a notification template config for guestbook entry creation events.
  * Builds a notification message linking to the newly created guestbook entry.
  *
- * @param context - server actions context used to resolve the client URL for action links
- * @returns a notification template service config for the guestbook entry created type
+ * @param context - Server actions context used to resolve the client URL for action links.
+ * @returns A notification template service config for the guestbook entry created type.
  */
 export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {
@@ -119,8 +119,8 @@ export function demoGuestbookEntryCreatedNotificationFactory(context: DemoFireba
  * Creates a notification template config for guestbook entry like events.
  * Builds a notification message linking to the liked guestbook entry.
  *
- * @param context - server actions context used to resolve the client URL for action links
- * @returns a notification template service config for the guestbook entry liked type
+ * @param context - Server actions context used to resolve the client URL for action links.
+ * @returns A notification template service config for the guestbook entry liked type.
  */
 export function demoGuestbookEntryLikedNotificationFactory(context: DemoFirebaseServerActionsContext): NotificationTemplateServiceTypeConfig {
   return {

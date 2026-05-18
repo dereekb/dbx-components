@@ -51,8 +51,8 @@ export type FirestoreNotificationSummarySendService = NotificationSummarySendSer
  *
  * Each summary update runs in a Firestore transaction to prevent concurrent write conflicts.
  *
- * @param config - service configuration including Firestore context and collection references
- * @returns a {@link NotificationSummarySendService} backed by Firestore
+ * @param config - Service configuration including Firestore context and collection references.
+ * @returns A {@link NotificationSummarySendService} backed by Firestore.
  *
  * @example
  * ```ts
@@ -85,7 +85,6 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
       const cutSubject = cutStringFunction({ maxLength: NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_SUBJECT_MAX_LENGTH });
       const cutMessage = cutStringFunction({ maxLength: NOTIFICATION_SUMMARY_EMBEDDED_NOTIFICATION_ITEM_MESSAGE_MAX_LENGTH });
 
-       
       const messagesGroups = messagesGroupedByNotificationSummaryMapBuilder.entries() as [NotificationSummaryId, NotificationMessage<{}>[]][];
 
       return async () => {
@@ -96,7 +95,7 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
         await runAsyncTasksForValues(messagesGroups, async ([notificationSummaryId, messages]) => {
           await firestoreContext
             .runTransaction(async (transaction) => {
-              const notificationSummaryDocument = notificationSummaryCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationSummaryId as NotificationSummaryId);
+              const notificationSummaryDocument = notificationSummaryCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationSummaryId);
               const notificationSummary = await notificationSummaryDocument.snapshotData();
 
               let updated = false;

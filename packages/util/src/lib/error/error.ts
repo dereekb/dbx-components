@@ -42,8 +42,8 @@ export interface ReadableError extends Partial<CodedError> {
 /**
  * Checks if the error has the default error code or no code at all.
  *
- * @param error - A ReadableError or error code string to check
- * @returns True if the error uses the default code or has no code
+ * @param error - A ReadableError or error code string to check.
+ * @returns True if the error uses the default code or has no code.
  */
 export function isDefaultReadableError(error: Maybe<ReadableError | StringErrorCode>) {
   const code = typeof error === 'object' ? error?.code : error;
@@ -58,9 +58,9 @@ export type ReadableErrorWithCode<T extends ReadableError = ReadableError> = T &
 /**
  * Creates a ReadableError with a code and optional message.
  *
- * @param code - The error code
- * @param message - Optional human-readable error message
- * @returns A ReadableErrorWithCode object
+ * @param code - The error code.
+ * @param message - Optional human-readable error message.
+ * @returns A ReadableErrorWithCode object.
  */
 export function readableError(code: StringErrorCode, message?: string): ReadableErrorWithCode {
   return {
@@ -129,9 +129,9 @@ export function toReadableError(inputError: Maybe<ErrorInput>): Maybe<CodedError
 /**
  * Checks if an error's message contains the target string.
  *
- * @param input - The error or string to check
- * @param target - The string to search for in the error message
- * @returns True if the error message contains the target string
+ * @param input - Error-shaped value or message string to inspect; nullish short-circuits to false.
+ * @param target - Substring that must appear in the resolved error message.
+ * @returns True when the error message includes `target`.
  */
 export function errorMessageContainsString(input: Maybe<ErrorInput | string>, target: string): boolean {
   return input ? errorMessageContainsStringFunction(target)(input) : false;
@@ -145,14 +145,15 @@ export type ErrorMessageContainsStringFunction = (input: Maybe<ErrorInput | stri
 /**
  * Creates a function that checks if an error's message contains the target string.
  *
+ * @param target - Substring that must appear in the resolved error message.
+ * @returns Reusable predicate that yields true when the inspected error contains `target`.
+ *
  * @dbxUtil
  * @dbxUtilCategory error
  * @dbxUtilKind factory
  * @dbxUtilTags error, message, contains, factory, predicate, regex
  * @dbxUtilRelated escape-string-for-regex
  *
- * @param target - The string to search for
- * @returns A function that checks error messages for the target string
  * @__NO_SIDE_EFFECTS__
  */
 export function errorMessageContainsStringFunction(target: string): ErrorMessageContainsStringFunction {
@@ -167,9 +168,9 @@ export function errorMessageContainsStringFunction(target: string): ErrorMessage
 /**
  * Extracts the message string from an error or returns the input if it's already a string.
  *
- * @param input - The error or string to extract a message from
- * @returns The error message string, or null/undefined if not available
+ * @param input - The error or string to extract a message from.
+ * @returns The error message string, or null/undefined if not available.
  */
 export function messageFromError(input: Maybe<ErrorInput | string>): Maybe<string> {
-  return (typeof input === 'object' ? (input as ReadableError).message : input) ?? (input as string | undefined | null);
+  return (typeof input === 'object' ? (input as ReadableError).message : input) ?? (input as Maybe<string>);
 }

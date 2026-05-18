@@ -37,8 +37,8 @@ export type DiscordWebhookEventVerifier = (req: Request, rawBody: Buffer) => Pro
  *
  * Uses Node.js built-in crypto with JWK key import — no external dependencies required.
  *
- * @param config - verification config containing the application's public key
- * @returns a DiscordWebhookEventVerifier function that validates Ed25519-signed requests
+ * @param config - Verification config containing the application's public key.
+ * @returns A DiscordWebhookEventVerifier function that validates Ed25519-signed requests.
  *
  * @example
  * ```ts

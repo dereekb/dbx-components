@@ -45,8 +45,8 @@ export type StorageListFilesResultFactory<S, R> = (input: StorageListFilesResult
  * The returned factory lazily computes file and folder arrays (via {@link cachedGetter}) and
  * provides cursor-based pagination through the `next()` method.
  *
- * @param delegate - platform-specific implementation for extracting results
- * @returns a {@link StorageListFilesResultFactory} that normalizes raw SDK list results
+ * @param delegate - Platform-specific implementation for extracting results.
+ * @returns A {@link StorageListFilesResultFactory} that normalizes raw SDK list results.
  *
  * @example
  * ```ts
@@ -54,6 +54,7 @@ export type StorageListFilesResultFactory<S, R> = (input: StorageListFilesResult
  * const result = factory({ storage, folder, options: { maxResults: 50 } }, rawSdkResult);
  * const files = result.files();
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function storageListFilesResultFactory<S, R>(delegate: StorageListFilesResultFactoryDelegate<S, R>): StorageListFilesResultFactory<S, R> {
@@ -102,7 +103,7 @@ export function storageListFilesResultFactory<S, R>(delegate: StorageListFilesRe
 /**
  * Creates an error thrown when `next()` is called on a list result that has no more pages.
  *
- * @returns an {@link Error} indicating there are no more pages to fetch
+ * @returns An {@link Error} indicating there are no more pages to fetch.
  */
 export function storageListFilesResultHasNoNextError() {
   return new Error('hasNext is false, there are no more results available.');

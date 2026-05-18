@@ -23,8 +23,8 @@ export interface ProvideDbxFirebaseNotificationsConfig {
 /**
  * Creates EnvironmentProviders that provides a DbxFirebaseNotificationTemplateService, DbxFirebaseNotificationItemWidgetService and AppNotificationTemplateTypeInfoRecordService.
  *
- * @param config Configuration
- * @returns EnvironmentProviders
+ * @param config - Configuration.
+ * @returns EnvironmentProviders.
  */
 export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotificationsConfig): EnvironmentProviders {
   const { appNotificationTemplateTypeInfoRecordService } = config;

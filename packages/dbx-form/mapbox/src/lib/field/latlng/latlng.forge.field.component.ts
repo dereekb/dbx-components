@@ -5,7 +5,7 @@ import { asObservableFromGetter, filterMaybe, type ObservableFactoryWithRequired
 import { type Maybe, type LatLngPoint, type LatLngPointFunctionConfig, type LatLngStringFunction, latLngStringFunction, type Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, type LatLngPointFunction, isSameLatLngPoint, defaultLatLngPoint } from '@dereekb/util';
 import { WaGeolocationService } from '@ng-web-apis/geolocation';
 import { type Marker } from 'mapbox-gl';
-import { DbxMapboxInjectionStore, DbxMapboxMapStore, type DbxMapboxMarkerDisplayConfig, DbxMapboxModule, type MapboxEaseTo, type MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
+import { DbxMapboxInjectionStore, DbxMapboxMapStore, type DbxMapboxMarkerDisplayConfig, DbxMapboxModule, type MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
 import { DbxForgeMapboxLatLngFieldMarkerComponent } from './latlng.forge.field.marker.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
@@ -136,30 +136,36 @@ export class DbxForgeMapboxLatLngFieldComponent {
   readonly useCurrentLocationDisabled$ = this._useCurrentLocationDisabled.asObservable();
 
   // Field value signal (double-call pattern)
-  readonly fieldValue = computed(() => {
+  readonly fieldValueSignal = computed(() => {
     const state = this.field()?.() as any;
     return state?.value?.() as unknown;
   });
 
-  readonly isDisabled = computed(() => {
+  readonly isDisabledSignal = computed(() => {
     const state = this.field()?.() as any;
     return (state?.disabled?.() as boolean) ?? false;
   });
 
-  readonly isReadonlyOrDisabledSignal = computed(() => (this.props() as any)?.readonly || this.isDisabled());
+  readonly isReadonlyOrDisabledSignal = computed(() => {
+    const isDisabled = this.isDisabledSignal();
+    return (this.props() as any)?.readonly || isDisabled;
+  });
 
   // Computed props from field definition
   readonly showMapSignal = computed(() => this.props()?.showMap ?? true);
   readonly selectLocationOnMapDragSignal = computed(() => this.props()?.selectLocationOnMapDrag ?? true);
   readonly selectLocationOnMapClickSignal = computed(() => this.props()?.selectLocationOnMapClick ?? false);
   readonly setCenterOnLocationSetSignal = computed(() => this.props()?.setCenterOnLocationSet ?? true);
-  readonly showCenterButtonSignal = computed(() => !this.selectLocationOnMapDragSignal() && this.props()?.showCenterButton !== false);
+  readonly showCenterButtonSignal = computed(() => {
+    const props = this.props();
+    return !this.selectLocationOnMapDragSignal() && props?.showCenterButton !== false;
+  });
   readonly recenterTimeSignal = computed(() => this.props()?.recenterTime || 10 * 1000);
   readonly placeholderTextSignal = computed(() => this.props()?.placeholder);
 
   // Observables for map store sync
   readonly latLngValueSignal = computed<LatLngPoint>(() => {
-    const value = this.fieldValue();
+    const value = this.fieldValueSignal();
     const fn = this.latLngPointFunctionSignal();
     return value == null ? defaultLatLngPoint() : fn(value as string);
   });
@@ -190,7 +196,7 @@ export class DbxForgeMapboxLatLngFieldComponent {
   }
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'input' });
 
     // Initialize on first props emission
     effect(() => {
@@ -257,7 +263,7 @@ export class DbxForgeMapboxLatLngFieldComponent {
 
     // Sync field value → text control (inbound)
     effect(() => {
-      const value = this.fieldValue();
+      const value = this.fieldValueSignal();
 
       if (!this._syncing) {
         this._syncing = true;
@@ -280,7 +286,7 @@ export class DbxForgeMapboxLatLngFieldComponent {
     this.dbxMapboxMapStore.easeTo(
       this.nonZeroLatLng$.pipe(
         first(),
-        map((x) => ({ center: x }) as MapboxEaseTo)
+        map((x) => ({ center: x }))
       )
     );
   }
@@ -306,7 +312,7 @@ export class DbxForgeMapboxLatLngFieldComponent {
   setValue(latLng?: Maybe<LatLngPoint>) {
     const stringValue = latLng ? this.latLngStringFunctionSignal()(latLng) : null;
     this._syncing = true;
-    this.textCtrl.setValue(stringValue as string, { emitEvent: false });
+    this.textCtrl.setValue(stringValue, { emitEvent: false });
     this._setFieldValue(stringValue);
     this._syncing = false;
   }
@@ -315,9 +321,9 @@ export class DbxForgeMapboxLatLngFieldComponent {
 /**
  * Custom mapper for the forge mapbox lat/lng field.
  *
- * @param fieldDef - Field definition configuration
- * @param fieldDef.key - Form model key for the field
- * @returns Signal containing a Record of input names to values for ngComponentOutlet
+ * @param fieldDef - Field definition configuration.
+ * @param fieldDef.key - Form model key for the field.
+ * @returns Signal containing a Record of input names to values for ngComponentOutlet.
  */
 export function mapboxLatLngFieldMapper(fieldDef: { key: string }): Signal<Record<string, unknown>> {
   const ctx = resolveValueFieldContext();

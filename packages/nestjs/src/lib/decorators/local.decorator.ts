@@ -13,8 +13,8 @@ export const IsRequestFromLocalHost = createParamDecorator((data: unknown, conte
  *
  * Checks for both http://localhost and https://localhost origins.
  *
- * @param context - the NestJS execution context containing the HTTP request
- * @returns true if the request origin is localhost
+ * @param context - The NestJS execution context containing the HTTP request.
+ * @returns True if the request origin is localhost.
  */
 export function isLocalhost(context: ExecutionContext): boolean {
   const req: Request = context.switchToHttp().getRequest();

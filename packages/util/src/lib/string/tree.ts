@@ -102,14 +102,15 @@ export type SplitStringTreeFactoryConfig<M = unknown> = AddToSplitStringTreeInpu
 /**
  * Creates a {@link SplitStringTreeFactory} that builds tree structures by splitting strings on the configured separator.
  *
+ * @param config - Configuration specifying the separator and optional metadata merge strategy.
+ * @returns A factory function that creates or extends split string trees.
+ *
  * @dbxUtil
  * @dbxUtilCategory string
  * @dbxUtilKind factory
  * @dbxUtilTags string, tree, split, separator, factory, hierarchy
  * @dbxUtilRelated add-to-split-string-tree, find-best-split-string-tree-match
  *
- * @param config - Configuration specifying the separator and optional metadata merge strategy.
- * @returns A factory function that creates or extends split string trees.
  * @__NO_SIDE_EFFECTS__
  */
 export function splitStringTreeFactory<M = unknown>(config: SplitStringTreeFactoryConfig<M>): SplitStringTreeFactory<M> {
@@ -226,7 +227,7 @@ export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inpu
   const { separator, mergeMeta } = config;
   const { value, leafMeta, nodeMeta } = inputValue;
 
-  function nextMeta(node: SplitStringTree<M>, nextMeta: M): M | undefined {
+  function nextMeta(node: SplitStringTree<M>, nextMeta: M): M {
     return mergeMeta && node.meta != null ? mergeMeta(node.meta, nextMeta) : nextMeta;
   }
 
@@ -234,7 +235,7 @@ export function addToSplitStringTree<M = unknown>(tree: SplitStringTree<M>, inpu
   let currentNode: Configurable<SplitStringTree<M>> = tree;
 
   parts.forEach((nodeValue) => {
-    const existingChildNode = currentNode.children[nodeValue] as SplitStringTree<M> | undefined; // may be undefined for new paths
+    const existingChildNode = currentNode.children[nodeValue] as Maybe<SplitStringTree<M>>; // may be undefined for new paths
     const childNode = (existingChildNode ?? { nodeValue, children: {} }) as Configurable<SplitStringTree<M>>; // use the existing node or create a new node
 
     if (!existingChildNode) {
@@ -292,7 +293,7 @@ export function findBestSplitStringTreeChildMatch<M = unknown>(tree: SplitString
  *
  * @param tree - The tree to search.
  * @param value - The string value to find a match path for.
- * @returns An array of tree nodes forming the match path from root to deepest match, or `undefined` if no match is found.
+ * @returns The tree nodes forming the match path from root to deepest match, or `undefined` if no match is found.
  */
 export function findBestSplitStringTreeMatchPath<M = unknown>(tree: SplitStringTree<M>, value: SplitStringTreeNodeString): Maybe<SplitStringTree<M>[]> {
   let bestResult = findBestSplitStringTreeChildMatchPath(tree, value);
@@ -311,7 +312,7 @@ export function findBestSplitStringTreeMatchPath<M = unknown>(tree: SplitStringT
  *
  * @param tree - The tree to search.
  * @param value - The string value to find a match path for.
- * @returns An array of child tree nodes forming the match path, or `undefined` if no match is found.
+ * @returns The child tree nodes forming the match path, or `undefined` if no match is found.
  */
 export function findBestSplitStringTreeChildMatchPath<M = unknown>(tree: SplitStringTree<M>, value: SplitStringTreeNodeString): Maybe<SplitStringTree<M>[]> {
   const { children } = tree;

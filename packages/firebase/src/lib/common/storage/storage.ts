@@ -50,8 +50,8 @@ export interface StoragePath extends StorageBucketIdRef, StorageSlashPathRef {}
  *
  * Useful when you need an independent reference that won't be affected by mutations to the original.
  *
- * @param path - the storage path to copy
- * @returns a new {@link StoragePath} with the same `bucketId` and `pathString`
+ * @param path - The storage path to copy.
+ * @returns A new {@link StoragePath} with the same `bucketId` and `pathString`
  *
  * @example
  * ```ts
@@ -93,8 +93,8 @@ export interface StoragePathFactoryConfig extends StorageBucketIdRef {
  * Creates a {@link StoragePathFactory} that normalizes various path inputs into {@link StoragePath} objects
  * with a consistent bucket assignment.
  *
- * @param config - bucket and replacement behavior
- * @returns a {@link StoragePathFactory} that normalizes path inputs with the configured bucket
+ * @param config - Bucket and replacement behavior.
+ * @returns A {@link StoragePathFactory} that normalizes path inputs with the configured bucket.
  *
  * @example
  * ```ts
@@ -102,6 +102,7 @@ export interface StoragePathFactoryConfig extends StorageBucketIdRef {
  * const path = pathFactory('images/photo.png');
  * // path === { bucketId: 'my-bucket', pathString: 'images/photo.png' }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function storagePathFactory(config: StoragePathFactoryConfig): StoragePathFactory {
@@ -150,8 +151,8 @@ export type GoogleCloudStorageFilePath<P extends StorageSlashPath = StorageSlash
  * If the path has a bucketId, produces a `gs://bucket/path` URI. Otherwise, returns just the relative path
  * (implying the default bucket).
  *
- * @param path - the storage path to convert
- * @returns a {@link GoogleCloudStorageFilePath} string (`gs://bucket/path` or a relative path)
+ * @param path - The storage path to convert.
+ * @returns A {@link GoogleCloudStorageFilePath} string (`gs://bucket/path` or a relative path)
  *
  * @example
  * ```ts
@@ -177,8 +178,8 @@ export function firebaseStorageFilePathFromStorageFilePath(path: StoragePath): G
 /**
  * Returns the `gs://` bucket prefix URI for the given bucket identifier or ref.
  *
- * @param storage - bucket ID string or a {@link StorageBucketIdRef}
- * @returns the `gs://bucket` prefix URI as a {@link GoogleCloudStorageBucketPrefix}
+ * @param storage - Bucket ID string or a {@link StorageBucketIdRef}
+ * @returns The `gs://bucket` prefix URI as a {@link GoogleCloudStorageBucketPrefix}
  *
  * @example
  * ```ts

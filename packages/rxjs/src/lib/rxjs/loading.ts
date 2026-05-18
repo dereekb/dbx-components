@@ -5,13 +5,13 @@ import { type Observable, startWith, distinctUntilChanged, shareReplay, map, typ
  *
  * Only considers the first emission from the source. The result is shared via `shareReplay(1)`.
  *
+ * @returns An operator that tracks whether the first value has been emitted.
+ *
  * @example
  * ```ts
  * const loading$ = dataFetch$.pipe(isLoading());
  * // emits true initially, then false once dataFetch$ emits
  * ```
- *
- * @returns an operator that tracks whether the first value has been emitted
  */
 export function isLoading<T>(): OperatorFunction<T, boolean> {
   return (source: Observable<T>) => {

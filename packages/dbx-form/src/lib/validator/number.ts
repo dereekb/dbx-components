@@ -1,3 +1,4 @@
+/* eslint-disable dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null`; widening to `Maybe<...>` adds `undefined` and breaks the contract (TS2322). */
 import { type AbstractControl, type ValidationErrors, type ValidatorFn, Validators } from '@angular/forms';
 import { isNumberDivisibleBy, nearestDivisibleValues } from '@dereekb/util';
 
@@ -41,8 +42,9 @@ export interface IsDivisibleByError {
 /**
  * Angular Form ValidationFn for checking isDivisibleBy the input divisor.
  *
- * @param divisor
- * @returns
+ * @param divisor - The non-zero divisor every input value must be divisible by.
+ * @returns A `ValidatorFn` that emits an `isDivisibleBy` error when the control value is not divisible by `divisor`.
+ * @throws {Error} When `divisor` is zero.
  */
 export function isDivisibleBy(divisor: number): ValidatorFn {
   if (divisor === 0) {

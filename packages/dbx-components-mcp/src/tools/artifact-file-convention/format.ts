@@ -20,9 +20,9 @@ interface ResolvedPlaceholders {
  * placeholder substitution (`<componentDir>`, `<name>`, ...) so callers see
  * paths relative to their own project layout.
  *
- * @param spec - the convention spec to render
- * @param values - placeholder substitutions supplied by the caller
- * @returns the trimmed markdown document
+ * @param spec - The convention spec to render.
+ * @param values - Placeholder substitutions supplied by the caller.
+ * @returns The trimmed markdown document.
  */
 export function formatSpec(spec: FileConventionSpec, values: PlaceholderValues): string {
   const resolved = resolvePlaceholders(values);

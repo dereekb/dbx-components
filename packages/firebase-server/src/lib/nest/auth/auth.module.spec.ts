@@ -7,7 +7,7 @@ import { Module } from '@nestjs/common';
 import { firebaseServerAuthModuleMetadata } from './auth.module';
 import { authorizedUserContextFactory, firebaseAdminFunctionNestContextFactory, initFirebaseServerAdminTestEnvironment } from '@dereekb/firebase-server/test';
 import { AbstractFirebaseServerAuthContext, AbstractFirebaseServerAuthService, AbstractFirebaseServerAuthUserContext, AbstractFirebaseServerNewUserService, type FirebaseServerAuthNewUserSetupDetails, type FirebaseServerAuthUserContext } from '../../auth/auth.service';
-import { type AuthClaims, type AuthClaimsUpdate, authRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE, type Maybe, objectHasNoKeys } from '@dereekb/util';
+import { type AuthClaims, type AuthClaimsUpdate, authRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE, type Maybe, objectHasNoKeys } from '@dereekb/util';
 import { type CallableContextWithAuthData } from '../../function/context';
 import { type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
@@ -169,7 +169,7 @@ describe('firebase server nest auth', () => {
               await authUserContext.addRoles(AUTH_ADMIN_ROLE);
               const claims: AuthClaims<typeof TEST_CLAIMS_SERVICE_CONFIG> = await authUserContext.loadClaims();
               expect(claims).toBeDefined();
-              expect(claims.a).toBe(AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE);
+              expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
 
               const roles = await authUserContext.loadRoles();
               expect(roles.has(AUTH_ADMIN_ROLE)).toBe(true);
@@ -194,7 +194,7 @@ describe('firebase server nest auth', () => {
 
               const claims: AuthClaims<typeof TEST_CLAIMS_SERVICE_CONFIG> = await authUserContext.loadClaims();
               expect(claims.a).toBeDefined();
-              expect(claims.a).toBe(AUTH_ROLE_CLAIMS_DEFAULT_CLAIM_VALUE);
+              expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
 
               const roles = await authUserContext.loadRoles();
               expect(roles.has(AUTH_ADMIN_ROLE)).toBe(true);
@@ -227,8 +227,8 @@ describe('firebase server nest auth', () => {
 
               let claims = await authUserContext.loadClaims<LoadClaimsTest>();
               expect(claims).toBeDefined();
-              expect(claims!.test).toBe(1);
-              expect(claims!.second).not.toBe(2);
+              expect(claims.test).toBe(1);
+              expect(claims.second).not.toBe(2);
 
               await authUserContext.updateClaims({
                 second: 2
@@ -236,8 +236,8 @@ describe('firebase server nest auth', () => {
 
               claims = await authUserContext.loadClaims();
               expect(claims).toBeDefined();
-              expect(claims!.test).toBe(1);
-              expect(claims!.second).toBe(2);
+              expect(claims.test).toBe(1);
+              expect(claims.second).toBe(2);
             });
 
             it('should remove any keys with null update values', async () => {
@@ -248,7 +248,7 @@ describe('firebase server nest auth', () => {
 
               let claims = await authUserContext.loadClaims<LoadClaimsTest>();
               expect(claims).toBeDefined();
-              expect(claims!.test).toBe(1);
+              expect(claims.test).toBe(1);
 
               await authUserContext.updateClaims({
                 test: null
@@ -256,8 +256,8 @@ describe('firebase server nest auth', () => {
 
               claims = await authUserContext.loadClaims();
               expect(claims).toBeDefined();
-              expect(claims!.test).toBeUndefined();
-              expect(claims!.second).toBe(2);
+              expect(claims.test).toBeUndefined();
+              expect(claims.second).toBe(2);
             });
           });
 
@@ -269,13 +269,13 @@ describe('firebase server nest auth', () => {
 
               let claims = await authUserContext.loadClaims<LoadClaimsTest>();
               expect(claims).toBeDefined();
-              expect(claims!.test).toBe(1);
+              expect(claims.test).toBe(1);
 
               await authUserContext.clearClaims();
 
               claims = await authUserContext.loadClaims();
               expect(claims).toBeDefined();
-              expect(objectHasNoKeys(claims!)).toBe(true);
+              expect(objectHasNoKeys(claims)).toBe(true);
             });
           });
         });
@@ -611,7 +611,7 @@ describe('firebase server nest auth', () => {
                 nestApplication: context.nestApplication,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any,
+                data: {},
                 acceptsStreaming: false
               };
 
@@ -627,7 +627,7 @@ describe('firebase server nest auth', () => {
                 nestApplication: context.nestApplication,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any,
+                data: {},
                 acceptsStreaming: false
               };
 
@@ -659,7 +659,7 @@ describe('firebase server nest auth', () => {
                 nestApplication: context.nestApplication,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any,
+                data: {},
                 acceptsStreaming: false
               };
 
@@ -677,7 +677,7 @@ describe('firebase server nest auth', () => {
                 nestApplication: context.nestApplication,
                 rawRequest: {} as any,
                 auth,
-                data: {} as any,
+                data: {},
                 acceptsStreaming: false
               };
             });

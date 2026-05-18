@@ -56,8 +56,9 @@ export interface SemanticTypeRegistry {
  * topic / package / baseType buckets so each lookup is O(n) at worst and
  * subsequent calls hit the cached bucket lists.
  *
- * @param loaded - the merged registry returned by `loadSemanticTypeManifests`
- * @returns a domain-friendly read API over the merged entries
+ * @param loaded - The merged registry returned by `loadSemanticTypeManifests`
+ * @returns A domain-friendly read API over the merged entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSemanticTypeRegistry(loaded: LoadSemanticTypeManifestsResult): SemanticTypeRegistry {
@@ -69,10 +70,11 @@ export function createSemanticTypeRegistry(loaded: LoadSemanticTypeManifestsResu
  * Builds a {@link SemanticTypeRegistry} from a raw entry array. Used by tests
  * that need to drive the tools without going through the loader pipeline.
  *
- * @param input - the entries plus the source labels to advertise
- * @param input.entries - the full entry list (will be sorted by name)
- * @param input.loadedSources - source labels reported via `registry.loadedSources`
- * @returns a domain-friendly read API over the supplied entries
+ * @param input - The entries plus the source labels to advertise.
+ * @param input.entries - The full entry list (will be sorted by name)
+ * @param input.loadedSources - Source labels reported via `registry.loadedSources`
+ * @returns A domain-friendly read API over the supplied entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createSemanticTypeRegistryFromEntries(input: { readonly entries: readonly SemanticTypeEntry[]; readonly loadedSources: readonly string[] }): SemanticTypeRegistry {

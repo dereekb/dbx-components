@@ -38,11 +38,11 @@ export abstract class DbxRouteModelIdDirectiveDelegate {
 /**
  * Creates Angular DI providers that register the given source type as a {@link DbxRouteModelIdDirectiveDelegate}.
  *
- * @typeParam S - The concrete delegate class type to register.
  * @param sourceType - The class to provide as the delegate.
- * @returns An array of Angular providers.
+ * @returns Array of Angular providers.
  *
  * @see {@link DbxRouteModelIdDirectiveDelegate}
+ * @typeParam S - The concrete delegate class type to register.
  */
 export function provideDbxRouteModelIdDirectiveDelegate<S extends DbxRouteModelIdDirectiveDelegate>(sourceType: Type<S>): Provider[] {
   const providers: Provider[] = [
@@ -91,11 +91,11 @@ export abstract class DbxRouteModelKeyDirectiveDelegate {
 /**
  * Creates Angular DI providers that register the given source type as a {@link DbxRouteModelKeyDirectiveDelegate}.
  *
- * @typeParam S - The concrete delegate class type to register.
  * @param sourceType - The class to provide as the delegate.
- * @returns An array of Angular providers.
+ * @returns Array of Angular providers.
  *
  * @see {@link DbxRouteModelKeyDirectiveDelegate}
+ * @typeParam S - The concrete delegate class type to register.
  */
 export function provideDbxRouteModelKeyDirectiveDelegate<S extends DbxRouteModelKeyDirectiveDelegate>(sourceType: Type<S>): Provider[] {
   const providers: Provider[] = [

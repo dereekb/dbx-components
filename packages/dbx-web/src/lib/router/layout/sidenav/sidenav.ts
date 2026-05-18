@@ -45,16 +45,16 @@ export type DbxSidenavPosition = 'start' | 'end';
  * Falls back to the lowest allowed mode if no lower mode is available, or {@link SideNavDisplayMode.NONE}
  * if the allowed set is empty or undefined.
  *
+ * @param mode - The requested display mode to resolve.
+ * @param allowedModes - Set of modes that are permitted; if null/undefined, all modes are allowed.
+ * @returns The resolved display mode, falling back to the nearest lower allowed mode or NONE.
+ *
  * @example
  * ```ts
  * // ICON not allowed, rounds down to MOBILE
  * resolveSideNavDisplayMode(SideNavDisplayMode.ICON, new Set([SideNavDisplayMode.MOBILE, SideNavDisplayMode.FULL]));
  * // => SideNavDisplayMode.MOBILE
  * ```
- *
- * @param mode - The requested display mode to resolve.
- * @param allowedModes - Set of modes that are permitted; if null/undefined, all modes are allowed.
- * @returns The resolved display mode, falling back to the nearest lower allowed mode or NONE.
  */
 export function resolveSideNavDisplayMode(mode: SideNavDisplayMode, allowedModes: Maybe<Set<SideNavDisplayMode>>): SideNavDisplayMode {
   let result: SideNavDisplayMode;

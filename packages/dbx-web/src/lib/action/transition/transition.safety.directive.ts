@@ -83,27 +83,25 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
       combineLatest([this.source.isModified$, this.safetyType$]).pipe(
         first(),
         mergeMap(([isModified, safetyType]) => {
-          if (isModified) {
-            return race([
-              // Watch for success to occur. At that point, close everything.
-              this.source.success$.pipe(
-                first(),
-                map(() => [true, undefined] as DbxActionTransitionSafetyRaceResult)
-              ),
-              this._handleIsModifiedState(transition, safetyType).pipe(
-                first(),
-                map((x) => [undefined, x] as DbxActionTransitionSafetyRaceResult)
+          return isModified
+            ? race([
+                // Watch for success to occur. At that point, close everything.
+                this.source.success$.pipe(
+                  first(),
+                  map(() => [true, undefined] as DbxActionTransitionSafetyRaceResult)
+                ),
+                this._handleIsModifiedState(transition, safetyType).pipe(
+                  first(),
+                  map((x) => [undefined, x] as DbxActionTransitionSafetyRaceResult)
+                )
+              ]).pipe(
+                map(([saveSuccess, handleResult]: DbxActionTransitionSafetyRaceResult) => {
+                  return saveSuccess ? true : handleResult;
+                }),
+                tap(() => this._closeDialog()), // Close dialog if it is still open.
+                delay(10) // Delay to allow dialog to close before transition.
               )
-            ]).pipe(
-              map(([saveSuccess, handleResult]: DbxActionTransitionSafetyRaceResult) => {
-                return saveSuccess ? true : handleResult;
-              }),
-              tap(() => this._closeDialog()), // Close dialog if it is still open.
-              delay(10) // Delay to allow dialog to close before transition.
-            );
-          }
-
-          return of(true);
+            : of(true);
         })
       )
     ).then((x) => x); // Resolve/Flatten potential promise result.
@@ -155,30 +153,38 @@ export class DbxActionTransitionSafetyDirective<T, O> implements OnInit, OnDestr
   }
 
   private _showDialog(_transition: Transition): Observable<HookResult> {
+    let result: Observable<HookResult>;
+
     if (this.checkIsDestroyed()) {
-      return of(true);
+      result = of(true);
+    } else {
+      if (!this._currentDialogRef) {
+        this._currentDialogRef = this.dialog.open(DbxActionUIRouterTransitionSafetyDialogComponent, {
+          viewContainerRef: this.viewContainerRef
+        });
+      }
+
+      result = this._currentDialogRef.afterClosed().pipe(
+        first(),
+        map((dialogResult: DbxActionTransitionSafetyDialogResult | undefined = 'stay') => {
+          // Default to Stay if the user clicks outside.
+          let outcome: boolean;
+          switch (dialogResult) {
+            case 'discard':
+            case 'success':
+            case 'none':
+              outcome = true;
+              break;
+            case 'stay':
+              outcome = false;
+              break;
+          }
+          return outcome;
+        })
+      );
     }
 
-    if (!this._currentDialogRef) {
-      this._currentDialogRef = this.dialog.open(DbxActionUIRouterTransitionSafetyDialogComponent, {
-        viewContainerRef: this.viewContainerRef
-      });
-    }
-
-    return this._currentDialogRef.afterClosed().pipe(
-      first(),
-      map((result: DbxActionTransitionSafetyDialogResult | undefined = 'stay') => {
-        // Default to Stay if the user clicks outside.
-        switch (result) {
-          case 'discard':
-          case 'success':
-          case 'none':
-            return true;
-          case 'stay':
-            return false;
-        }
-      })
-    );
+    return result;
   }
 
   private _closeDialog(): void {

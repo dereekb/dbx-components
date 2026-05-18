@@ -39,7 +39,7 @@ export interface ZohoPageResult<T, I extends ZohoPageResultInfo = ZohoPageResult
  * Creates an empty {@link ZohoPageResult} with no data and `more_records: false`.
  * Useful as a fallback when the API returns `null` instead of an empty result.
  *
- * @returns An empty page result with default pagination info
+ * @returns An empty page result with default pagination info.
  */
 export function emptyZohoPageResult<T = unknown>(): ZohoPageResult<T> {
   return {
@@ -95,9 +95,9 @@ export type ZohoFetchPageFetchFunction<I extends ZohoPageFilter, R extends ZohoP
  * The factory reads `info.more_records` from each response to determine if additional
  * pages exist, and automatically increments the `page` parameter for subsequent requests.
  *
- * @param fetch - The Zoho fetch function to paginate over
- * @param defaults - Optional default configuration for the page factory
- * @returns A page factory that produces iterable page fetchers
+ * @param fetch - The Zoho fetch function to paginate over.
+ * @param defaults - Optional default configuration for the page factory.
+ * @returns A page factory that produces iterable page fetchers.
  *
  * @example
  * ```typescript
@@ -110,6 +110,7 @@ export type ZohoFetchPageFetchFunction<I extends ZohoPageFilter, R extends ZohoP
  *   const secondPage = await firstPage.fetchNext();
  * }
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function zohoFetchPageFactory<I extends ZohoPageFilter, R extends ZohoPageResult<any>>(fetch: ZohoFetchPageFetchFunction<I, R>, defaults?: Maybe<FetchPageFactoryConfigDefaults>) {

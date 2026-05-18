@@ -22,7 +22,7 @@ export interface State {
 }
 
 /**
- * Reducers mapping for the DbxAppContextFeatureState
+ * Reducers mapping for the DbxAppContextFeatureState.
  *
  * @param state - The current feature state, or undefined for initialization.
  * @param action - The dispatched action to reduce.

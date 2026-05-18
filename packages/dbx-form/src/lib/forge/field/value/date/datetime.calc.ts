@@ -56,7 +56,7 @@ export interface DateTimeFieldCalc {
    * Sync "before" values contribute a minimum date (this field must be after that value).
    * Sync "after" values contribute a maximum date (this field must be before that value).
    */
-  mergePickerConfig(config: Maybe<DbxDateTimePickerConfiguration>, syncBeforeValue: Date | null, syncAfterValue: Date | null): Maybe<DbxDateTimePickerConfiguration>;
+  mergePickerConfig(config: Maybe<DbxDateTimePickerConfiguration>, syncBeforeValue: Maybe<Date>, syncAfterValue: Maybe<Date>): Maybe<DbxDateTimePickerConfiguration>;
 
   /**
    * Filters presets based on selected date, fullDay/timeOnly state, and config limits.
@@ -80,7 +80,7 @@ export interface DateTimeFieldCalc {
 /**
  * Creates a {@link DateTimeFieldCalc} instance with all datetime calculation functions.
  *
- * @returns A DateTimeFieldCalc instance bundling all pure datetime calculation functions
+ * @returns A DateTimeFieldCalc instance bundling all pure datetime calculation functions.
  */
 export function dateTimeFieldCalc(): DateTimeFieldCalc {
   return {
@@ -100,8 +100,9 @@ export function dateTimeFieldCalc(): DateTimeFieldCalc {
  * Handles fullDay, timeOnly, cleared states, and timeDate fallbacks to produce
  * a unified datetime value from the separate date and time form controls.
  *
- * @param input - The datetime calculation input containing date, time, and mode information
- * @returns The combined Date value, or undefined if the input is cleared or incomplete
+ * @param input - The datetime calculation input containing date, time, and mode information.
+ * @returns The combined Date value, or undefined if the input is cleared or incomplete.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildCombinedDateTime(input: DateTimeCalcInput): Maybe<Date> {
@@ -148,8 +149,8 @@ export interface ApplyTimeOffsetInput {
 /**
  * Applies a keyboard time offset (in step increments) and clamps to picker config limits.
  *
- * @param input - The time offset input containing date, step offset, minute step, and optional config
- * @returns The offset date, clamped to the picker config limits
+ * @param input - The time offset input containing date, step offset, minute step, and optional config.
+ * @returns The offset date, clamped to the picker config limits.
  */
 export function applyTimeOffset(input: ApplyTimeOffsetInput): Date {
   const { date, stepsOffset, minuteStep, config } = input;
@@ -176,12 +177,12 @@ export function applyTimeOffset(input: ApplyTimeOffsetInput): Date {
  * Sync "before" values contribute a minimum date (this field must be after that value).
  * Sync "after" values contribute a maximum date (this field must be before that value).
  *
- * @param config - The base picker configuration to merge into
- * @param syncBeforeValue - Minimum date constraint from a synced "before" field, or null
- * @param syncAfterValue - Maximum date constraint from a synced "after" field, or null
- * @returns The merged picker configuration with updated limits, or the original config if no sync values
+ * @param config - The base picker configuration to merge into.
+ * @param syncBeforeValue - Minimum date constraint from a synced "before" field, or null.
+ * @param syncAfterValue - Maximum date constraint from a synced "after" field, or null.
+ * @returns The merged picker configuration with updated limits, or the original config if no sync values.
  */
-export function mergePickerConfig(config: Maybe<DbxDateTimePickerConfiguration>, syncBeforeValue: Date | null, syncAfterValue: Date | null): Maybe<DbxDateTimePickerConfiguration> {
+export function mergePickerConfig(config: Maybe<DbxDateTimePickerConfiguration>, syncBeforeValue: Maybe<Date>, syncAfterValue: Maybe<Date>): Maybe<DbxDateTimePickerConfiguration> {
   let result: Maybe<DbxDateTimePickerConfiguration> = config;
 
   if (syncBeforeValue != null || syncAfterValue != null) {
@@ -220,8 +221,8 @@ export interface FilterPresetsInput {
  * Returns all presets unfiltered when timeOnly (no date-based filtering needed).
  * Otherwise evaluates each preset against the selected date and config limits.
  *
- * @param input - The filter presets input containing presets, selected date, mode flags, and optional config
- * @returns The filtered array of applicable presets
+ * @param input - The filter presets input containing presets, selected date, mode flags, and optional config.
+ * @returns The filtered array of applicable presets.
  */
 export function filterPresets(input: FilterPresetsInput): DateTimePreset[] {
   const { presets, selectedDate, isFullDay, isTimeOnly, config } = input;
@@ -232,7 +233,7 @@ export function filterPresets(input: FilterPresetsInput): DateTimePreset[] {
   } else if (isTimeOnly) {
     result = presets;
   } else if (selectedDate) {
-    const isAllowedDate = config ? (x: Date | null) => (x == null ? true : dateTimeMinuteDecisionFunction(config)(x)) : () => true;
+    const isAllowedDate = config ? (x: Maybe<Date>) => (x == null ? true : dateTimeMinuteDecisionFunction(config)(x)) : () => true;
 
     result = presets.filter((preset) => {
       const value = preset.value();
@@ -261,9 +262,9 @@ export function filterPresets(input: FilterPresetsInput): DateTimePreset[] {
  *
  * Checks for required, schedule, time range, and pattern errors in priority order.
  *
- * @param errors - The validation error record from the form field, or null/undefined
+ * @param errors - The validation error record from the form field, or null/undefined.
  * @param isRequired - Whether the field is required (affects the "required" error message)
- * @returns A human-readable error message string, or undefined if no errors exist
+ * @returns A human-readable error message string, or undefined if no errors exist.
  */
 export function computeErrorMessage(errors: Maybe<Record<string, unknown>>, isRequired: boolean): string | undefined {
   let result: string | undefined;
@@ -297,12 +298,12 @@ export function computeErrorMessage(errors: Maybe<Record<string, unknown>>, isRe
  *
  * Returns null if the event is not a recognized arrow key.
  *
- * @param event - The keyboard event to evaluate
- * @returns A KeyboardStepResult with direction and offset, or null if the key is not an arrow key
+ * @param event - The keyboard event to evaluate.
+ * @returns A KeyboardStepResult with direction and offset, or null if the key is not an arrow key.
  */
-export function computeDateKeyboardStep(event: KeyboardEvent): KeyboardStepResult | null {
-  let result: KeyboardStepResult | null = null;
-  let direction: number | null = null;
+export function computeDateKeyboardStep(event: KeyboardEvent): Maybe<KeyboardStepResult> {
+  let result: Maybe<KeyboardStepResult> = null;
+  let direction: Maybe<number> = null;
 
   switch (event.key?.toLowerCase()) {
     case 'arrowup':
@@ -340,12 +341,12 @@ export function computeDateKeyboardStep(event: KeyboardEvent): KeyboardStepResul
  *
  * Returns null if the event is not a recognized arrow key.
  *
- * @param event - The keyboard event to evaluate
- * @returns A KeyboardStepResult with direction and offset, or null if the key is not an arrow key
+ * @param event - The keyboard event to evaluate.
+ * @returns A KeyboardStepResult with direction and offset, or null if the key is not an arrow key.
  */
-export function computeTimeKeyboardStep(event: KeyboardEvent): KeyboardStepResult | null {
-  let result: KeyboardStepResult | null = null;
-  let direction: number | null = null;
+export function computeTimeKeyboardStep(event: KeyboardEvent): Maybe<KeyboardStepResult> {
+  let result: Maybe<KeyboardStepResult> = null;
+  let direction: Maybe<number> = null;
 
   switch (event.key?.toLowerCase()) {
     case 'arrowup':
@@ -378,10 +379,10 @@ export function computeTimeKeyboardStep(event: KeyboardEvent): KeyboardStepResul
 /**
  * Navigates to a new date by applying a keyboard step, validating against the schedule, and clamping to limits.
  *
- * @param currentDate - The current date to navigate from
+ * @param currentDate - The current date to navigate from.
  * @param step - The keyboard step result (direction + offset in days)
- * @param config - Optional picker config for schedule/limit validation
- * @returns The new date, or null if no valid date is available in the requested direction
+ * @param config - Optional picker config for schedule/limit validation.
+ * @returns The new date, or null if no valid date is available in the requested direction.
  */
 export function navigateDate(currentDate: Date, step: KeyboardStepResult, config: Maybe<DbxDateTimePickerConfiguration>): Maybe<Date> {
   const newDate = startOfDay(addDays(currentDate, step.offset * step.direction));

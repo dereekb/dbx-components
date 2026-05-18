@@ -21,11 +21,6 @@ export interface DbxForgeValueSelectionFieldConfig<T = unknown> extends Omit<Dbx
  */
 export type DbxForgeValueSelectionFieldFunction = <T = unknown>(config: DbxForgeValueSelectionFieldConfig<T>) => DbxForgeField<DbxForgeValueSelectionFieldDef<T>>;
 
-/**
- * @deprecated Use {@link DbxForgeValueSelectionFieldFunction} instead.
- */
-export type ForgeValueSelectionFieldFunction = DbxForgeValueSelectionFieldFunction;
-
 // MARK: Factory
 /**
  * Single-select dropdown over a static or async value list. Simpler than `source-select` when metadata lookup is unnecessary.
@@ -57,3 +52,9 @@ export const dbxForgeValueSelectionField = dbxForgeFieldFunction<DbxForgeValueSe
   type: FORGE_VALUE_SELECTION_FIELD_TYPE,
   buildProps: dbxForgeFieldFunctionConfigPropsWithHintBuilder()
 }) as DbxForgeValueSelectionFieldFunction;
+
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated Use {@link DbxForgeValueSelectionFieldFunction} instead.
+ */
+export type ForgeValueSelectionFieldFunction = DbxForgeValueSelectionFieldFunction;

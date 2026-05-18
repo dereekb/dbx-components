@@ -128,8 +128,8 @@ export const WEBSITE_FILE_LINK_WEBSITE_LINK_TYPE = 'f';
 /**
  * Converts a {@link WebsiteFileLink} to a {@link WebsiteLink} by encoding its fields into the data string.
  *
- * @param input - the file link to convert
- * @returns a WebsiteLink with type "f" and pipe-encoded data
+ * @param input - The file link to convert.
+ * @returns A WebsiteLink with type "f" and pipe-encoded data.
  *
  * @example
  * ```typescript
@@ -148,8 +148,8 @@ export function websiteFileLinkToWebsiteLink(input: WebsiteFileLink): WebsiteLin
 /**
  * Converts a {@link WebsiteLink} back to a {@link WebsiteFileLink} by decoding the pipe-separated data string.
  *
- * @param input - a WebsiteLink whose data field contains an encoded file link
- * @returns the decoded file link with type, MIME, name, and data fields
+ * @param input - A WebsiteLink whose data field contains an encoded file link.
+ * @returns The decoded file link with type, MIME, name, and data fields.
  *
  * @example
  * ```typescript
@@ -173,8 +173,8 @@ export const WEBSITE_FILE_LINK_ENCODE_SEPARATOR = '|';
  *
  * Fields are encoded in order: type, MIME, data, name. Empty/undefined fields become empty strings.
  *
- * @param input - the file link to encode
- * @returns a pipe-separated encoded string
+ * @param input - The file link to encode.
+ * @returns A pipe-separated encoded string.
  *
  * @example
  * ```typescript
@@ -196,8 +196,8 @@ export function encodeWebsiteFileLinkToWebsiteLinkEncodedData(input: WebsiteFile
  *
  * Empty fields in the encoded string are omitted from the result (falsy values are filtered out).
  *
- * @param input - the pipe-separated encoded string
- * @returns the decoded file link
+ * @param input - The pipe-separated encoded string.
+ * @returns The decoded file link.
  *
  * @example
  * ```typescript

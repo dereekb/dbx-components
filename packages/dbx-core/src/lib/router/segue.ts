@@ -102,11 +102,11 @@ export type SegueRefOrSegueRefRouterLink<O = object> = SegueRef<O> | SegueRefRou
 /**
  * Type guard that checks whether the given input is a {@link SegueRef} object (as opposed to a raw router link string).
  *
- * @typeParam O - The type of the transition options.
  * @param input - The value to test.
  * @returns `true` if the input is a {@link SegueRef} with a non-empty `ref` property.
  *
  * @see {@link asSegueRef} for converting an input to a SegueRef
+ * @typeParam O - The type of the transition options.
  */
 export function isSegueRef<O = object>(input: Maybe<SegueRefOrSegueRefRouterLink<O>>): input is SegueRef<O> {
   return typeof input === 'object' && hasValueOrNotEmpty((input as SegueRef).ref);
@@ -173,10 +173,11 @@ export function asSegueRefString<O = object>(input: Maybe<SegueRefOrSegueRefRout
 /**
  * Creates a {@link SegueRef} from a string ref path and optional segue options.
  *
- * @typeParam O - The type of the transition options.
  * @param ref - The string ref path to wrap.
  * @param options - Optional parameters and transition options to include.
  * @returns A new {@link SegueRef} containing the given ref and options.
+ *
+ * @typeParam O - The type of the transition options.
  */
 export function refStringToSegueRef<O = object>(ref: string, options?: SegueRefOptions<O>): SegueRef<O> {
   return { ...options, ref };
@@ -185,12 +186,12 @@ export function refStringToSegueRef<O = object>(ref: string, options?: SegueRefO
 /**
  * Maps an observable of string ref paths to an observable of {@link SegueRef} objects.
  *
- * @typeParam O - The type of the transition options.
  * @param obs - The source observable emitting string ref paths.
  * @param options - Optional parameters and transition options to include in each emitted SegueRef.
  * @returns An observable that emits {@link SegueRef} objects.
  *
  * @see {@link refStringToSegueRef}
+ * @typeParam O - The type of the transition options.
  */
 export function mapRefStringObsToSegueRefObs<O = object>(obs: Observable<string>, options?: SegueRefOptions<O>): Observable<SegueRef<O>> {
   return obs.pipe(map((x) => refStringToSegueRef(x, options)));

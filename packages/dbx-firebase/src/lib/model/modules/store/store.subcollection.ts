@@ -44,31 +44,38 @@ export class AbstractDbxFirebaseCollectionWithParentStore<T, PT, D extends Fires
       distinctUntilChanged(),
       switchMap((inputMode) => {
         const mode = inputMode?.toLowerCase() ?? 'parent'; // default to parent mode
+        let result: Observable<unknown>;
 
         if (mode === 'group') {
-          return this.currentCollectionGroup$.pipe(
+          result = this.currentCollectionGroup$.pipe(
             tap((collectionGroup) => {
               this.setFirestoreCollection(collectionGroup);
             })
           );
+        } else {
+          // parent document collection
+          result = this.currentParent$.pipe(
+            switchMap((parent) => {
+              let innerResult: Observable<unknown>;
+
+              if (parent) {
+                innerResult = this.collectionFactory$.pipe(
+                  tap((collectionFactory) => {
+                    const collection = collectionFactory(parent);
+                    this.setFirestoreCollection(collection);
+                  })
+                );
+              } else {
+                this.setFirestoreCollection(undefined);
+                innerResult = NEVER;
+              }
+
+              return innerResult;
+            })
+          );
         }
 
-        // parent document collection
-        return this.currentParent$.pipe(
-          switchMap((parent) => {
-            if (parent) {
-              return this.collectionFactory$.pipe(
-                tap((collectionFactory) => {
-                  const collection = collectionFactory(parent);
-                  this.setFirestoreCollection(collection);
-                })
-              );
-            }
-
-            this.setFirestoreCollection(undefined);
-            return NEVER;
-          })
-        );
+        return result;
       })
     );
   });

@@ -13,14 +13,15 @@ export type KeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey> = (valu
 /**
  * Creates a KeyValueMapFactory that maps values by their key using a ReadKeyFunction.
  *
+ * @param read - Function that extracts a key from each value.
+ * @returns A factory that creates Maps from arrays of values.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags map, key, factory, lookup, index
  * @dbxUtilRelated multi-key-value-map-factory, read-keys-to-map
  *
- * @param read - Function that extracts a key from each value
- * @returns A factory that creates Maps from arrays of values
  * @__NO_SIDE_EFFECTS__
  */
 export function keyValueMapFactory<T, K extends PrimativeKey = PrimativeKey>(read: ReadKeyFunction<T, K>): KeyValueMapFactory<T, K> {
@@ -42,9 +43,9 @@ export function keyValueMapFactory<T, K extends PrimativeKey = PrimativeKey>(rea
 /**
  * Reads keys off the input values and places them in a Map using a ReadKeyFunction.
  *
- * @param values - The array of values to map
- * @param read - Function that extracts a key from each value
- * @returns A Map keyed by the extracted keys
+ * @param values - Source items whose keys are derived during indexing.
+ * @param read - Resolver that extracts the comparison key from each value.
+ * @returns Lookup keyed by derived key; the last entry per key wins.
  */
 export function readKeysToMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], read: ReadKeyFunction<T, K>): Map<K, T> {
   return keyValueMapFactory(read)(values);
@@ -54,14 +55,15 @@ export function readKeysToMap<T, K extends PrimativeKey = PrimativeKey>(values: 
  * Creates a KeyValueMapFactory that maps values by multiple keys using a ReadMultipleKeysFunction.
  * Each value can appear under multiple keys.
  *
+ * @param read - Function that extracts multiple keys from each value.
+ * @returns A factory that creates Maps from arrays of values.
+ *
  * @dbxUtil
  * @dbxUtilCategory value
  * @dbxUtilKind factory
  * @dbxUtilTags map, key, multi, factory, lookup, index
  * @dbxUtilRelated key-value-map-factory, read-multiple-keys-to-map
  *
- * @param read - Function that extracts multiple keys from each value
- * @returns A factory that creates Maps from arrays of values
  * @__NO_SIDE_EFFECTS__
  */
 export function multiKeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey>(read: ReadMultipleKeysFunction<T, K>): KeyValueMapFactory<T, K> {
@@ -80,9 +82,9 @@ export function multiKeyValueMapFactory<T, K extends PrimativeKey = PrimativeKey
 /**
  * Reads multiple keys off the input values and places them in a Map using a ReadMultipleKeysFunction.
  *
- * @param values - The array of values to map
- * @param read - Function that extracts multiple keys from each value
- * @returns A Map keyed by the extracted keys
+ * @param values - Source items whose keys are derived during indexing.
+ * @param read - Resolver that extracts every comparison key from each value.
+ * @returns Lookup keyed by every derived key; the last entry per key wins.
  */
 export function readMultipleKeysToMap<T, K extends PrimativeKey = PrimativeKey>(values: T[], read: ReadMultipleKeysFunction<T, K>): Map<K, T> {
   return multiKeyValueMapFactory(read)(values);
@@ -157,7 +159,7 @@ export interface MultiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey> 
 /**
  * Creates a new MultiValueMapBuilder for building Maps where each key maps to an array of values.
  *
- * @returns A new MultiValueMapBuilder instance
+ * @returns A new MultiValueMapBuilder instance.
  */
 export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>(): MultiValueMapBuilder<T, K> {
   const map = new Map<Maybe<K>, T[]>();
@@ -200,20 +202,23 @@ export function multiValueMapBuilder<T, K extends PrimativeKey = PrimativeKey>()
 /**
  * Determines if two maps have the same keys.
  *
- * @param a - The first map
- * @param b - The second map
- * @returns true if the maps have the same keys, false otherwise
+ * @param a - The first map.
+ * @param b - The second map.
+ * @returns True if the maps have the same keys, false otherwise.
  */
 export function mapsHaveSameKeys<K>(a: Map<K, unknown>, b: Map<K, unknown>): boolean {
-  if (a.size !== b.size) {
-    return false; // must be same size to have same keys
-  }
+  let same = true;
 
-  for (const key of a.keys()) {
-    if (!b.has(key)) {
-      return false; // b does not have the same key as a
+  if (a.size === b.size) {
+    for (const key of a.keys()) {
+      if (!b.has(key)) {
+        same = false; // b does not have the same key as a
+        break;
+      }
     }
+  } else {
+    same = false; // must be same size to have same keys
   }
 
-  return true;
+  return same;
 }

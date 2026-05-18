@@ -15,21 +15,21 @@ import { loginMethodTypeToFirebaseProviderId } from './login.provider.id';
  * Configuration for a login button's appearance and action handler.
  */
 export interface DbxFirebaseLoginButtonConfig {
-  text: string;
-  iconUrl?: string;
-  icon?: string;
-  iconFilter?: string;
-  buttonColor?: string;
-  buttonTextColor?: string;
+  readonly text: string;
+  readonly iconUrl?: string;
+  readonly icon?: string;
+  readonly iconFilter?: string;
+  readonly buttonColor?: string;
+  readonly buttonTextColor?: string;
   /**
    * Material theme color or {@link DbxColorConfig} to apply to the underlying button (e.g., 'warn', 'primary').
    */
-  color?: DbxColorInput;
+  readonly color?: DbxColorInput;
   /**
    * Optional confirmation dialog config. When set, the action will prompt the user before executing.
    */
-  confirmConfig?: DbxActionConfirmConfig;
-  handleLogin: () => Promise<unknown>;
+  readonly confirmConfig?: DbxActionConfirmConfig;
+  readonly handleLogin: () => Promise<unknown>;
 }
 
 /**
@@ -70,7 +70,10 @@ export class DbxFirebaseLoginButtonComponent {
   readonly iconSignal = computed(() => this.config()?.icon);
   readonly iconFilterSignal = computed(() => this.config()?.iconFilter);
   readonly textSignal = computed(() => this.config()?.text ?? '');
-  readonly buttonColorSignal = computed(() => this.config()?.buttonColor ?? (this.config()?.color ? undefined : 'transparent'));
+  readonly buttonColorSignal = computed(() => {
+    const config = this.config();
+    return config?.buttonColor ?? (config?.color ? undefined : 'transparent');
+  });
   readonly buttonTextColorSignal = computed(() => this.config()?.buttonTextColor);
   readonly colorSignal = computed(() => this.config()?.color);
   readonly confirmConfigSignal = computed(() => this.config()?.confirmConfig);
@@ -163,7 +166,7 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
 
   private readonly _injectionData = inject<DbxFirebaseLoginButtonInjectionData>(DBX_INJECTION_COMPONENT_DATA, { optional: true });
 
-  private readonly _config = signal<DbxFirebaseLoginButtonConfig | null>(null);
+  private readonly _config = signal<Maybe<DbxFirebaseLoginButtonConfig>>(null);
   readonly configSignal = computed(() => this._config());
 
   /**
@@ -199,7 +202,8 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
    * Handles the link action. Override in subclasses that support linking.
    * Throws by default for providers that do not support linking.
    *
-   * @returns A promise that resolves when the link action completes.
+   * @returns Resolves when the link action completes.
+   * @throws {Error} Always, in the base implementation; subclasses override to perform the link.
    */
   handleLink(): Promise<unknown> {
     throw new Error(`Linking is not supported for the "${this.loginProvider}" provider.`);
@@ -209,7 +213,8 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
    * Handles the unlink action by removing the provider from the current user.
    * Uses the {@link LOGIN_METHOD_TYPE_TO_FIREBASE_PROVIDER_ID_MAP} to resolve the Firebase provider ID.
    *
-   * @returns A promise that resolves when the unlink action completes.
+   * @returns Resolves when the unlink action completes.
+   * @throws {Error} When `loginProvider` does not map to a known Firebase provider ID.
    */
   handleUnlink(): Promise<unknown> {
     const providerId = loginMethodTypeToFirebaseProviderId(this.loginProvider);

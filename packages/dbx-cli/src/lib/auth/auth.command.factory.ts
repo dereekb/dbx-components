@@ -27,6 +27,29 @@ export interface CreateAuthCommandInput {
   readonly defaultEnvs?: readonly CliEnvDefault[];
 }
 
+interface ResolveAuthSetupPromptInput {
+  readonly argvValue: string | undefined;
+  readonly existingValue: string | undefined;
+  readonly prompt: string;
+  readonly mask?: boolean;
+}
+
+async function resolveAuthSetupPrompt(input: ResolveAuthSetupPromptInput): Promise<string | undefined> {
+  const { argvValue, existingValue, prompt, mask } = input;
+  let result: string | undefined;
+
+  if (argvValue) {
+    result = argvValue;
+  } else if (existingValue) {
+    result = existingValue;
+  } else {
+    const answer = (await promptLine({ question: prompt, mask })).trim();
+    result = answer.length > 0 ? answer : existingValue;
+  }
+
+  return result;
+}
+
 /**
  * Factory for the built-in `auth` command tree.
  *
@@ -77,20 +100,12 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       const defaultEnv = findCliEnvDefault({ name: envName, defaults: defaultEnvs })?.env;
       const existing = mergeCliEnvWithDefault({ env: stored, defaultEnv });
 
-      async function resolve(promptInput: { argvValue: string | undefined; existingValue: string | undefined; prompt: string; mask?: boolean }): Promise<string | undefined> {
-        const { argvValue, existingValue, prompt, mask } = promptInput;
-        if (argvValue) return argvValue;
-        if (existingValue) return existingValue;
-        const answer = (await promptLine({ question: prompt, mask })).trim();
-        return answer.length > 0 ? answer : existingValue;
-      }
-
-      const apiBaseUrl = await resolve({ argvValue: argv.apiBaseUrl as string | undefined, existingValue: existing?.apiBaseUrl, prompt: `API base URL [${existing?.apiBaseUrl ?? ''}]: ` });
-      const oidcIssuer = await resolve({ argvValue: argv.oidcIssuer as string | undefined, existingValue: existing?.oidcIssuer, prompt: `OIDC issuer [${existing?.oidcIssuer ?? ''}]: ` });
+      const apiBaseUrl = await resolveAuthSetupPrompt({ argvValue: argv.apiBaseUrl as string | undefined, existingValue: existing?.apiBaseUrl, prompt: `API base URL [${existing?.apiBaseUrl ?? ''}]: ` });
+      const oidcIssuer = await resolveAuthSetupPrompt({ argvValue: argv.oidcIssuer as string | undefined, existingValue: existing?.oidcIssuer, prompt: `OIDC issuer [${existing?.oidcIssuer ?? ''}]: ` });
       const appClientUrl = (argv.appClientUrl as string | undefined) ?? existing?.appClientUrl;
-      const clientId = await resolve({ argvValue: argv.clientId as string | undefined, existingValue: existing?.clientId, prompt: 'Client ID: ' });
-      const clientSecret = await resolve({ argvValue: argv.clientSecret as string | undefined, existingValue: existing?.clientSecret, prompt: 'Client secret: ', mask: true });
-      const redirectUri = (await resolve({ argvValue: argv.redirectUri as string | undefined, existingValue: existing?.redirectUri, prompt: `Redirect URI [${existing?.redirectUri ?? DEFAULT_CLI_REDIRECT_URI}]: ` })) ?? DEFAULT_CLI_REDIRECT_URI;
+      const clientId = await resolveAuthSetupPrompt({ argvValue: argv.clientId as string | undefined, existingValue: existing?.clientId, prompt: 'Client ID: ' });
+      const clientSecret = await resolveAuthSetupPrompt({ argvValue: argv.clientSecret as string | undefined, existingValue: existing?.clientSecret, prompt: 'Client secret: ', mask: true });
+      const redirectUri = (await resolveAuthSetupPrompt({ argvValue: argv.redirectUri as string | undefined, existingValue: existing?.redirectUri, prompt: `Redirect URI [${existing?.redirectUri ?? DEFAULT_CLI_REDIRECT_URI}]: ` })) ?? DEFAULT_CLI_REDIRECT_URI;
       const scopes = (argv.scopes as string | undefined) ?? existing?.scopes;
 
       if (!apiBaseUrl || !oidcIssuer || !clientId || !clientSecret) {
@@ -244,30 +259,28 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       const { envName, env } = await resolveCliEnvOrThrow({ cliName, paths, flagEnv: argv.env, envVarName, defaultEnvs });
       const entry = await tokens.get(envName);
 
-      if (!entry) {
+      if (entry) {
+        const expired = isTokenExpired(entry);
+        const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
+        const userinfoEndpoint = meta.userinfo_endpoint;
+
+        if (userinfoEndpoint) {
+          const claims = await fetchUserInfo({ userinfoEndpoint, accessToken: entry.accessToken });
+          outputResult({
+            env: envName,
+            authenticated: !expired,
+            expiresAt: entry.expiresAt,
+            expired,
+            scope: entry.scope,
+            sub: claims.sub,
+            claims
+          });
+        } else {
+          outputResult({ env: envName, authenticated: !expired, expiresAt: entry.expiresAt, expired, scope: entry.scope });
+        }
+      } else {
         outputResult({ env: envName, authenticated: false, suggestion: `Run: ${cliName} auth login --env ${envName}` });
-        return;
       }
-
-      const expired = isTokenExpired(entry);
-      const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-      const userinfoEndpoint = meta.userinfo_endpoint;
-
-      if (!userinfoEndpoint) {
-        outputResult({ env: envName, authenticated: !expired, expiresAt: entry.expiresAt, expired, scope: entry.scope });
-        return;
-      }
-
-      const claims = await fetchUserInfo({ userinfoEndpoint, accessToken: entry.accessToken });
-      outputResult({
-        env: envName,
-        authenticated: !expired,
-        expiresAt: entry.expiresAt,
-        expired,
-        scope: entry.scope,
-        sub: claims.sub,
-        claims
-      });
     })
   };
 

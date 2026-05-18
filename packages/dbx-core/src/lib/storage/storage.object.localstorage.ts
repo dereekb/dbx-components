@@ -27,16 +27,19 @@ export class FullLocalStorageObject implements FullStorageObject {
 
   get isAvailable(): boolean {
     const test = '_T_E_S_T_';
+    let result: boolean;
 
     try {
       // Tests setting and removing an item. These will throw an
       // exception if the localstorage is not available
       this._localStorage.setItem(test, test);
       this._localStorage.removeItem(test);
-      return true;
+      result = true;
     } catch {
-      return false;
+      result = false;
     }
+
+    return result;
   }
 
   get length(): number {
@@ -55,7 +58,7 @@ export class FullLocalStorageObject implements FullStorageObject {
     this._localStorage.removeItem(key);
   }
 
-  key(index: number): string | null {
+  key(index: number): Maybe<string> {
     return this._localStorage.key(index);
   }
 

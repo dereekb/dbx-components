@@ -1,4 +1,4 @@
-import { DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY, type KnownFirebaseLoginMethodType, OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY } from './login';
+import { DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY, OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY } from './login';
 import { DbxFirebaseLoginAnonymousComponent } from './login.anonymous.component';
 import { DbxFirebaseLoginAppleComponent } from './login.apple.component';
 import { DbxFirebaseLoginEmailComponent } from './login.email.component';
@@ -12,7 +12,8 @@ import { DbxFirebaseRegisterEmailComponent } from './register.email.component';
 /**
  * Factory function for creating the default Firebase auth login providers.
  *
- * @returns Array of DbxFirebaseAuthLoginProvider
+ * @returns Array of DbxFirebaseAuthLoginProvider.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLoginProvider[] {
@@ -24,7 +25,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
   return [
     {
       category: DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY,
-      loginMethodType: 'email' as KnownFirebaseLoginMethodType,
+      loginMethodType: 'email',
       componentClass: DbxFirebaseLoginEmailComponent,
       registrationComponentClass: DbxFirebaseRegisterEmailComponent,
       allowLinking: false,
@@ -38,7 +39,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     },
     {
       category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-      loginMethodType: 'google' as KnownFirebaseLoginMethodType,
+      loginMethodType: 'google',
       componentClass: DbxFirebaseLoginGoogleComponent,
       assets: {
         providerName: 'Google',
@@ -50,7 +51,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     },
     {
       category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-      loginMethodType: 'facebook' as KnownFirebaseLoginMethodType,
+      loginMethodType: 'facebook',
       componentClass: DbxFirebaseLoginFacebookComponent,
       assets: {
         providerName: 'Facebook',
@@ -63,7 +64,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     },
     {
       category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-      loginMethodType: 'twitter' as KnownFirebaseLoginMethodType,
+      loginMethodType: 'twitter',
       componentClass: DbxFirebaseLoginTwitterComponent,
       assets: {
         providerName: 'X',
@@ -75,7 +76,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     },
     {
       category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-      loginMethodType: 'github' as KnownFirebaseLoginMethodType,
+      loginMethodType: 'github',
       componentClass: DbxFirebaseLoginGitHubComponent,
       assets: {
         providerName: 'GitHub',
@@ -88,7 +89,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     },
     {
       category: OAUTH_FIREBASE_LOGIN_METHOD_CATEGORY,
-      loginMethodType: 'apple' as KnownFirebaseLoginMethodType,
+      loginMethodType: 'apple',
       componentClass: DbxFirebaseLoginAppleComponent,
       assets: {
         providerName: 'Apple',
@@ -100,7 +101,7 @@ export function defaultFirebaseAuthLoginProvidersFactory(): DbxFirebaseAuthLogin
     },
     {
       category: DEFAULT_FIREBASE_LOGIN_METHOD_CATEGORY,
-      loginMethodType: 'anonymous' as KnownFirebaseLoginMethodType,
+      loginMethodType: 'anonymous',
       componentClass: DbxFirebaseLoginAnonymousComponent,
       allowLinking: false,
       assets: {

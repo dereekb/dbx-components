@@ -26,7 +26,7 @@ export function zoomWebhookEvent<T>(event: UntypedZoomWebhookEvent): ZoomWebhook
   return {
     event: event.event,
     event_ts: event.event_ts,
-    payload: event.payload as unknown as T
+    payload: event.payload as T
   };
 }
 

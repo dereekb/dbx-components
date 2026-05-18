@@ -45,8 +45,8 @@ export class NotificationTemplateService {
   /**
    * Returns the default factory and optional type-specific config for the given template type.
    *
-   * @param type - the notification template type to look up
-   * @returns a tuple of [defaultFactory, typeConfig] where either may be undefined
+   * @param type - The notification template type to look up.
+   * @returns A tuple of [defaultFactory, typeConfig] where either may be undefined.
    */
   configPairForType(type: NotificationTemplateType): [NotificationMessageFunctionFactory, Maybe<NotificationTemplateServiceTypeConfig>] {
     return [this._defaults[type], this._config.get(type)];
@@ -56,8 +56,8 @@ export class NotificationTemplateService {
    * Creates a {@link NotificationTemplateServiceInstance} scoped to a single template type,
    * pre-wired with the resolved factory for that type.
    *
-   * @param type - the notification template type
-   * @returns a new {@link NotificationTemplateServiceInstance} bound to the given type
+   * @param type - The notification template type.
+   * @returns A new {@link NotificationTemplateServiceInstance} bound to the given type.
    */
   templateInstanceForType(type: NotificationTemplateType): NotificationTemplateServiceInstance {
     return notificationTemplateServiceInstance(this, type);
@@ -100,9 +100,9 @@ export interface NotificationTemplateServiceInstance {
  * Resolves the factory from the service's type-specific config first, falling back to
  * a no-content default factory when no config is registered for the type.
  *
- * @param service - the parent template service
- * @param type - the template type to bind
- * @returns a {@link NotificationTemplateServiceInstance} with the resolved factory for the type
+ * @param service - The parent template service.
+ * @param type - The template type to bind.
+ * @returns A {@link NotificationTemplateServiceInstance} with the resolved factory for the type.
  *
  * @example
  * ```ts

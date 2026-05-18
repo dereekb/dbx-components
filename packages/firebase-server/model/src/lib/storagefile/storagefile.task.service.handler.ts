@@ -148,8 +148,8 @@ export const storageFileProcessingNotificationTaskHandlerDefaultCleanup = (): St
  * determines its purpose, and dispatches to the appropriate purpose-specific processor.
  * Includes optional StorageFileGroup processors (e.g., ZIP generation) by default.
  *
- * @param config - handler configuration including processors, storage accessor, and Firestore collections
- * @returns a NotificationTaskServiceTaskHandlerConfig wired for storage file processing
+ * @param config - Handler configuration including processors, storage accessor, and Firestore collections.
+ * @returns A NotificationTaskServiceTaskHandlerConfig wired for storage file processing.
  */
 export function storageFileProcessingNotificationTaskHandler(config: StorageFileProcessingNotificationTaskHandlerConfig): NotificationTaskServiceTaskHandlerConfig<StorageFileProcessingNotificationTaskData> {
   const { processors: inputProcessors, storageAccessor, storageFileFirestoreCollections, allStorageFileGroupProcessorConfig } = config;
@@ -263,8 +263,8 @@ export interface AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessor
 /**
  * Assembles all built-in StorageFileGroup subtask processors, such as ZIP generation.
  *
- * @param config - configuration controlling which group processors to include
- * @returns an array of subtask processor configs for StorageFileGroup processing purposes
+ * @param config - Configuration controlling which group processors to include.
+ * @returns The subtask processor configs for StorageFileGroup processing purposes.
  */
 export function allStorageFileGroupStorageFileProcessingPurposeSubtaskProcessors(config: AllStorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget[] {
   const { excludeZipProcessing } = config;
@@ -358,8 +358,8 @@ export interface StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsCo
  * This processor streams all files in the group into a ZIP archive, attaches an info JSON
  * manifest, and uploads the result to the group's designated storage path.
  *
- * @param config - configuration providing Firestore collections, storage accessor, and ZIP options
- * @returns a subtask processor config targeting the StorageFileGroup ZIP purpose
+ * @param config - Configuration providing Firestore collections, storage accessor, and ZIP options.
+ * @returns A subtask processor config targeting the StorageFileGroup ZIP purpose.
  */
 export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(config: StorageFileGroupStorageFileProcessingPurposeSubtaskProcessorsConfig): StorageFileProcessingPurposeSubtaskProcessorConfigWithTarget<StorageFileGroupZipStorageFileProcessingSubtaskMetadata, StorageFileGroupZipStorageFileProcessingSubtask> {
   const { storageFileFirestoreCollections, storageAccessor, zip } = config;
@@ -441,7 +441,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                           const fileSlashPathDetails = slashPathDetails(metadata.name);
 
                           const storageFileGroupEmbeddedFile = embeddedFilesMap.get(storageFile.id) as StorageFileGroupEmbeddedFile;
-                          const { n: embeddedFileNameOverride } = storageFileGroupEmbeddedFile as StorageFileGroupEmbeddedFile;
+                          const { n: embeddedFileNameOverride } = storageFileGroupEmbeddedFile;
 
                           const nameFromFactory = await zipFileDisplayNameFunction({ metadata, fileAccessor, storageFile, storageFileDocument, storageFileGroupEmbeddedFile });
 

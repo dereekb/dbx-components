@@ -256,6 +256,8 @@ export const ModelFirebaseIndexEntry = type({
   scope: '"COLLECTION" | "COLLECTION_GROUP"',
   manual: 'boolean',
   skip: 'boolean',
+  'specOnly?': 'boolean',
+  'excluded?': 'boolean',
   category: 'string',
   params: ModelFirebaseIndexParamEntry.array(),
   returns: 'string',

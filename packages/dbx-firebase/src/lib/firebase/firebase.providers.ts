@@ -68,7 +68,7 @@ export interface ProvideDbxFirebaseAppConfig {
  * derived from `dbxFirebaseAppOptions.emulators`.
  *
  * @param config
- * @returns EnvironmentProviders
+ * @returns EnvironmentProviders.
  *
  * @example
  * ```ts
@@ -117,7 +117,7 @@ export function provideDbxFirebaseApp(config: ProvideDbxFirebaseAppConfig): Envi
  * Parses a {@link DbxFirebaseEmulatorsConfig} into a fully-resolved {@link DbxFirebaseParsedEmulatorsConfig}.
  *
  * @param config
- * @returns DbxFirebaseParsedEmulatorsConfig
+ * @returns DbxFirebaseParsedEmulatorsConfig.
  *
  * @example
  * ```ts
@@ -162,12 +162,13 @@ export interface CreateDbxFirebaseAppCheckParams {
  * or when no App Check options are configured.
  *
  * @param params
- * @returns AppCheck
+ * @returns AppCheck.
  *
  * @example
  * ```ts
  * const appCheck = createDbxFirebaseAppCheck({ app, options });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseAppCheck(params: CreateDbxFirebaseAppCheckParams): AppCheck {
@@ -209,12 +210,13 @@ export interface CreateDbxFirebaseFirestoreParams {
  * Initializes Firestore for the given FirebaseApp with persistence and emulator settings derived from options.
  *
  * @param params
- * @returns Firestore
+ * @returns Firestore.
  *
  * @example
  * ```ts
  * const firestore = createDbxFirebaseFirestore({ app, options, emulators });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseFirestore(params: CreateDbxFirebaseFirestoreParams): Firestore {
@@ -253,12 +255,13 @@ export interface CreateDbxFirebaseAuthParams {
  * Returns the Firebase Auth instance for the given app, wired up to the auth emulator if configured.
  *
  * @param params
- * @returns Auth
+ * @returns Auth.
  *
  * @example
  * ```ts
  * const auth = createDbxFirebaseAuth({ app, emulators });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseAuth(params: CreateDbxFirebaseAuthParams): Auth {
@@ -285,12 +288,13 @@ export interface CreateDbxFirebaseStorageParams {
  * Returns the Firebase Storage instance for the given app, wired up to the storage emulator if configured.
  *
  * @param params
- * @returns FirebaseStorage
+ * @returns FirebaseStorage.
  *
  * @example
  * ```ts
  * const storage = createDbxFirebaseStorage({ app, emulators });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseStorage(params: CreateDbxFirebaseStorageParams): FirebaseStorage {
@@ -318,12 +322,13 @@ export interface CreateDbxFirebaseFunctionsParams {
  * Returns the Firebase Functions instance for the given app, wired up to the functions emulator if configured.
  *
  * @param params
- * @returns Functions
+ * @returns Functions.
  *
  * @example
  * ```ts
  * const functions = createDbxFirebaseFunctions({ app, options, emulators });
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createDbxFirebaseFunctions(params: CreateDbxFirebaseFunctionsParams): Functions {

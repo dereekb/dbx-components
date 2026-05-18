@@ -75,8 +75,9 @@ export interface ModelFirebaseIndexRegistry {
 /**
  * Builds a {@link ModelFirebaseIndexRegistry} from a loader result.
  *
- * @param loaded - the merged registry returned by `loadModelFirebaseIndexManifests`
- * @returns a domain-friendly read API over the merged entries
+ * @param loaded - The merged registry returned by `loadModelFirebaseIndexManifests`
+ * @returns A domain-friendly read API over the merged entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createModelFirebaseIndexRegistry(loaded: LoadModelFirebaseIndexManifestsResult): ModelFirebaseIndexRegistry {
@@ -89,10 +90,11 @@ export function createModelFirebaseIndexRegistry(loaded: LoadModelFirebaseIndexM
  * Used by tests that need to drive the tools without going through the
  * loader pipeline.
  *
- * @param input - the entries plus the source labels to advertise
- * @param input.entries - the full entry list
- * @param input.loadedSources - source labels reported via `registry.loadedSources`
- * @returns a domain-friendly read API over the supplied entries
+ * @param input - The entries plus the source labels to advertise.
+ * @param input.entries - The full entry list.
+ * @param input.loadedSources - Source labels reported via `registry.loadedSources`
+ * @returns A domain-friendly read API over the supplied entries.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createModelFirebaseIndexRegistryFromEntries(input: { readonly entries: readonly ModelFirebaseIndexEntryInfo[]; readonly loadedSources: readonly string[] }): ModelFirebaseIndexRegistry {
@@ -167,8 +169,8 @@ export const EMPTY_MODEL_FIREBASE_INDEX_REGISTRY: ModelFirebaseIndexRegistry = c
  * back to safe defaults so a partially-populated entry still renders
  * cleanly.
  *
- * @param entry - the manifest entry to convert
- * @returns the matching ModelFirebaseIndexEntryInfo
+ * @param entry - The manifest entry to convert.
+ * @returns The matching ModelFirebaseIndexEntryInfo.
  */
 export function toModelFirebaseIndexEntryInfo(entry: ModelFirebaseIndexEntry): ModelFirebaseIndexEntryInfo {
   return {

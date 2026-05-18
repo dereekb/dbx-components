@@ -829,7 +829,7 @@ describe('DbxFormSourceDirective with forge form', () => {
       await settle(fixture);
 
       // Only `name` is defined; `age` is undefined — matching the real OIDC case.
-      source$.next({ name: 'NameOnly', age: undefined } as Partial<TestFormValue>);
+      source$.next({ name: 'NameOnly', age: undefined });
       await settle(fixture);
 
       const result = await tryGetValue(context);

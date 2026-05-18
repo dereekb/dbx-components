@@ -171,36 +171,34 @@ const PDF_NAME_MASK = PDFName.of('Mask');
 
 function isCompressibleImageStream(stream: PDFRawStream): boolean {
   const dict = stream.dict;
+  let result = false;
 
   // Must be Type /XObject (when present) and Subtype /Image
   const type = dict.get(PDF_NAME_TYPE);
-  if (type !== undefined && !pdfNameEquals(type, PDF_NAME_XOBJECT)) {
-    return false;
-  }
+  const typeOk = type === undefined || pdfNameEquals(type, PDF_NAME_XOBJECT);
 
-  const subtype = dict.get(PDF_NAME_SUBTYPE);
-  if (subtype === undefined || !pdfNameEquals(subtype, PDF_NAME_IMAGE)) {
-    return false;
-  }
+  if (typeOk) {
+    const subtype = dict.get(PDF_NAME_SUBTYPE);
+    const subtypeOk = subtype !== undefined && pdfNameEquals(subtype, PDF_NAME_IMAGE);
 
-  // Skip images with masks; replacing them risks breaking the mask alignment.
-  if (dict.get(PDF_NAME_SMASK) !== undefined || dict.get(PDF_NAME_MASK) !== undefined) {
-    return false;
-  }
+    // Skip images with masks; replacing them risks breaking the mask alignment.
+    const hasMask = dict.get(PDF_NAME_SMASK) !== undefined || dict.get(PDF_NAME_MASK) !== undefined;
 
-  // Only DCTDecode (JPEG) streams in v1.
-  const filter = dict.get(PDF_NAME_FILTER);
-  let isDct = false;
+    if (subtypeOk && !hasMask) {
+      // Only DCTDecode (JPEG) streams in v1.
+      const filter = dict.get(PDF_NAME_FILTER);
 
-  if (filter !== undefined) {
-    if (filter instanceof PDFArray) {
-      isDct = filter.size() === 1 && pdfNameEquals(filter.get(0), PDF_NAME_DCTDECODE);
-    } else {
-      isDct = pdfNameEquals(filter, PDF_NAME_DCTDECODE);
+      if (filter !== undefined) {
+        if (filter instanceof PDFArray) {
+          result = filter.size() === 1 && pdfNameEquals(filter.get(0), PDF_NAME_DCTDECODE);
+        } else {
+          result = pdfNameEquals(filter, PDF_NAME_DCTDECODE);
+        }
+      }
     }
   }
 
-  return isDct;
+  return result;
 }
 
 function pdfNameEquals(candidate: unknown, name: PDFName): boolean {

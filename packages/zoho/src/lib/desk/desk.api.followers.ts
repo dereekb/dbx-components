@@ -25,8 +25,8 @@ export type ZohoDeskGetTicketFollowersFunction = (input: ZohoDeskGetTicketFollow
 /**
  * Creates a {@link ZohoDeskGetTicketFollowersFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that retrieves followers for a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that retrieves followers for a ticket.
  */
 export function zohoDeskGetTicketFollowers(context: ZohoDeskContext): ZohoDeskGetTicketFollowersFunction {
   return (input: ZohoDeskGetTicketFollowersInput) => context.fetchJson<ZohoDeskTicketFollower[]>(`/tickets/${input.ticketId}/followers`, zohoDeskFollowerApiFetchJsonInput('GET')).then((x) => x ?? []);
@@ -49,8 +49,8 @@ export type ZohoDeskAddTicketFollowersFunction = (input: ZohoDeskAddTicketFollow
 /**
  * Creates a {@link ZohoDeskAddTicketFollowersFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that adds followers to a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that adds followers to a ticket.
  */
 export function zohoDeskAddTicketFollowers(context: ZohoDeskContext): ZohoDeskAddTicketFollowersFunction {
   return (input: ZohoDeskAddTicketFollowersInput) => {
@@ -76,8 +76,8 @@ export type ZohoDeskRemoveTicketFollowersFunction = (input: ZohoDeskRemoveTicket
 /**
  * Creates a {@link ZohoDeskRemoveTicketFollowersFunction} bound to the given context.
  *
- * @param context - Authenticated Zoho Desk context
- * @returns Function that removes followers from a ticket
+ * @param context - Authenticated Zoho Desk context.
+ * @returns Function that removes followers from a ticket.
  */
 export function zohoDeskRemoveTicketFollowers(context: ZohoDeskContext): ZohoDeskRemoveTicketFollowersFunction {
   return (input: ZohoDeskRemoveTicketFollowersInput) => {

@@ -17,6 +17,11 @@ export interface DemoEnvironment extends DbxAppEnvironment {
   mapbox: DbxMapboxEnvironmentOptions;
 }
 
+/**
+ * Shared base environment used by environment.ts / environment.prod.ts.
+ *
+ * @dbxAllowConstantName Angular environment files conventionally export camelCase singletons.
+ */
 export const base: DemoEnvironment = {
   production: false,
   testing: false,

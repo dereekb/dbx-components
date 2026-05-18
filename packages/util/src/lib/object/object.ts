@@ -30,13 +30,13 @@ export type EmptyObject = Record<string, never>;
 /**
  * Checks whether the object has no own enumerable keys.
  *
+ * @param obj - Object to check.
+ * @returns `true` if the object has zero keys.
+ *
  * @dbxUtil
  * @dbxUtilCategory object
  * @dbxUtilTags object, empty, keys, check, type-guard
  * @dbxUtilRelated object-has-key, object-has-keys, has-value-or-not-empty-object
- *
- * @param obj - Object to check
- * @returns `true` if the object has zero keys
  */
 export function objectHasNoKeys(obj: object): obj is EmptyObject {
   return Object.keys(obj).length === 0;
@@ -84,9 +84,9 @@ export function objectHasKeys<T>(obj: T, keys: ObjectKey[], mode?: SetIncludesMo
 /**
  * Creates a partial object with the same value assigned to each of the specified fields.
  *
- * @param value - The value to assign to each field
- * @param fields - Array of field names to set
- * @returns A partial object with the value set on each specified field
+ * @param value - The value to assign to each field.
+ * @param fields - Array of field names to set.
+ * @returns A partial object with the value set on each specified field.
  */
 export function applyToMultipleFields<T extends object, X = unknown>(value: X, fields: FieldOfType<T>[]): Partial<{ [K in keyof T]: X }> {
   const result = {} as { [K in keyof T]: X };
@@ -101,12 +101,12 @@ export function applyToMultipleFields<T extends object, X = unknown>(value: X, f
 /**
  * Converts a Map to a plain object by iterating entries and assigning key-value pairs.
  *
+ * @param map - Map to convert.
+ * @returns A plain object with the same key-value pairs.
+ *
  * @dbxUtil
  * @dbxUtilCategory object
  * @dbxUtilTags object, map, convert, transform, dictionary
- *
- * @param map - Map to convert
- * @returns A plain object with the same key-value pairs
  */
 export function mapToObject<T, K extends PropertyKey>(map: Map<K, T>): { [key: PropertyKey]: T } {
   const object = {} as { [key: PropertyKey]: T };
@@ -126,13 +126,13 @@ export type CopyObjectFunction<T> = (input: T) => T;
 /**
  * Creates a shallow copy of an object using the spread operator.
  *
+ * @param input - Object to copy.
+ * @returns A new object with the same properties.
+ *
  * @dbxUtil
  * @dbxUtilCategory object
  * @dbxUtilTags object, copy, clone, shallow, spread
  * @dbxUtilRelated copy-array
- *
- * @param input - Object to copy
- * @returns A new object with the same properties
  */
 export function copyObject<T extends object>(input: T): T {
   return { ...input };

@@ -13,12 +13,12 @@ import { type Type } from '@angular/core';
  * This is useful for reactive streams where an upstream value may indicate "use the default component"
  * rather than providing an explicit configuration.
  *
- * @typeParam T - The specific {@link DbxInjectionComponentConfig} subtype.
- * @typeParam X - The component type.
  * @param defaultConfig - A static value, getter, or component class to use as the fallback config.
  * @returns An RxJS operator compatible with `pipe()`.
  *
  * @see {@link DbxInjectionComponentConfig}
+ * @typeParam T - The specific {@link DbxInjectionComponentConfig} subtype.
+ * @typeParam X - The component type.
  *
  * @example
  * ```typescript

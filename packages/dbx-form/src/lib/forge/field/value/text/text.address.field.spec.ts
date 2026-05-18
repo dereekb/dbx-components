@@ -454,7 +454,7 @@ describe('dbxForgeAddressGroup() scenarios', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      fixture.componentInstance.setValue({ address: { state: 'tx' } } as never);
+      fixture.componentInstance.setValue({ address: { state: 'tx' } });
       await settle();
 
       const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { address: { state: string } };
@@ -469,7 +469,7 @@ describe('dbxForgeAddressGroup() scenarios', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      fixture.componentInstance.setValue({ address: { state: 'tx' } } as never);
+      fixture.componentInstance.setValue({ address: { state: 'tx' } });
       await settle();
 
       const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { address: { state: string } };
@@ -549,7 +549,7 @@ describe('dbxForgeAddressListField() scenarios', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      fixture.componentInstance.setValue({ addresses: [{ state: 'tx' }, { state: 'ca' }] } as never);
+      fixture.componentInstance.setValue({ addresses: [{ state: 'tx' }, { state: 'ca' }] });
       await settle();
 
       const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { addresses: { state: string }[] };
@@ -565,7 +565,7 @@ describe('dbxForgeAddressListField() scenarios', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      fixture.componentInstance.setValue({ addresses: [{ state: 'tx' }] } as never);
+      fixture.componentInstance.setValue({ addresses: [{ state: 'tx' }] });
       await settle();
 
       const value = (await firstValueFrom(fixture.componentInstance.getValue())) as { addresses: { state: string }[] };

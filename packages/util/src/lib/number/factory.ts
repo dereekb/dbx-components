@@ -9,18 +9,18 @@ export interface IncrementingNumberFactoryConfig {
   /**
    * Value to start at. Defaults to 0.
    */
-  startAt?: number;
+  readonly startAt?: number;
   /**
    * Getter to increase by. Defaults to 1.
    */
-  increaseBy?: GetterOrValue<number>;
+  readonly increaseBy?: GetterOrValue<number>;
 }
 
 /**
  * Creates a factory that returns sequentially increasing numbers, starting from a configurable value and incrementing by a configurable step.
  *
  * @param config - Configuration with optional `startAt` (default 0) and `increaseBy` (default 1)
- * @returns A factory function that returns the next number in the sequence on each call
+ * @returns A factory function that returns the next number in the sequence on each call.
  *
  * @dbxUtil
  * @dbxUtilCategory number
@@ -35,6 +35,7 @@ export interface IncrementingNumberFactoryConfig {
  * factory(); // 15
  * factory(); // 20
  * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function incrementingNumberFactory(config: IncrementingNumberFactoryConfig = {}): NumberFactory {

@@ -3,7 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
-import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
+import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
 
 const tagsListCommand: CommandModule = {
   command: 'list',
@@ -16,7 +16,7 @@ const tagsListCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.getAllTags(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -44,7 +44,7 @@ const tagsSearchCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.searchTags(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -110,7 +110,7 @@ const tagsDissociateCommand: CommandModule = {
   }
 };
 
-export const deskTagsCommand: CommandModule = {
+export const DESK_TAGS_COMMAND: CommandModule = {
   command: 'tags',
   describe: 'Desk tag operations',
   builder: (yargs: Argv) => yargs.command(tagsListCommand).command(tagsSearchCommand).command(tagsForTicketCommand).command(tagsAssociateCommand).command(tagsDissociateCommand).demandCommand(1),

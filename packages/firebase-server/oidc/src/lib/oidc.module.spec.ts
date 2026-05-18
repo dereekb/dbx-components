@@ -26,7 +26,7 @@ function makeEnvService(overrides: Partial<FirebaseServerEnvService> = {}): Fire
     developerToolsEnabled: false,
     developmentSchedulerEnabled: false,
     ...overrides
-  } as unknown as FirebaseServerEnvService;
+  };
 }
 
 describe('oidcModuleConfigFactory()', () => {

@@ -86,8 +86,8 @@ export const DOLLAR_AMOUNT_PRECISION = 2;
 /**
  * Checks whether the input string matches the expected dollar amount format (e.g., "12.50" or "$12.50").
  *
- * @param value - String to test
- * @returns `true` if the string matches the dollar amount regex
+ * @param value - String to test.
+ * @returns `true` if the string matches the dollar amount regex.
  */
 export function isDollarAmountString(value: string): boolean {
   return DOLLAR_AMOUNT_STRING_REGEX.test(value);
@@ -98,7 +98,7 @@ export function isDollarAmountString(value: string): boolean {
  *
  * Truncates (does not round) excess precision: e.g., 1.115 becomes "1.11". Returns "0.00" for null/undefined.
  *
- * @param number - The dollar amount to format
+ * @param number - The dollar amount to format.
  * @returns Formatted string with two decimal places (e.g., "12.50")
  */
 export function dollarAmountString(number: Maybe<number>): string {
@@ -118,14 +118,15 @@ export type DollarAmountStringWithUnitFunction<U extends DollarAmountUnit> = ((a
 /**
  * Creates a function that formats dollar amounts as strings with a unit prefix (e.g., "$12.50").
  *
+ * @param unit - The unit prefix to prepend; defaults to "$".
+ * @returns Formats dollar amounts with the configured unit.
+ *
  * @dbxUtil
  * @dbxUtilCategory number
  * @dbxUtilKind factory
  * @dbxUtilTags number, dollar, currency, format, factory, unit
  * @dbxUtilRelated dollar-amount-string
  *
- * @param unit - The unit prefix to prepend; defaults to "$"
- * @returns A function that formats dollar amounts with the configured unit
  * @__NO_SIDE_EFFECTS__
  */
 export function dollarAmountStringWithUnitFunction<U extends DollarAmountUnit>(unit: U = '$' as U): DollarAmountStringWithUnitFunction<U> {

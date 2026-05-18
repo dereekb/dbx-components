@@ -18,7 +18,7 @@ export interface DbxValueListGridViewConfig<T, I extends DbxValueListItem<T> = D
   /**
    * Optional grid sizing configuration for column layout and gap spacing.
    */
-  grid?: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>;
+  readonly grid?: Maybe<Partial<DbxValueListGridItemViewGridSizeConfig>>;
 }
 
 /**

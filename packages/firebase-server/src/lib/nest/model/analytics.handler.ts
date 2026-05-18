@@ -84,6 +84,7 @@ export function noopOnCallModelAnalyticsService(): OnCallModelAnalyticsService {
 }
 
 // MARK: Compat
+// COMPAT: Deprecated aliases
 /**
  * @deprecated Use {@link OnCallModelAnalyticsService} instead.
  */

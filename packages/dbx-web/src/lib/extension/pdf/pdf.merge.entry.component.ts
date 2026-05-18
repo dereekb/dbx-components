@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import type { Maybe } from '@dereekb/util';
 import { CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -94,7 +95,7 @@ export class DbxPdfMergeEntryComponent {
 
   readonly statusLabelSignal = computed(() => {
     const entry = this.entry();
-    let label: string | null;
+    let label: Maybe<string>;
 
     if (entry.status === 'validating') {
       label = 'Checking…';

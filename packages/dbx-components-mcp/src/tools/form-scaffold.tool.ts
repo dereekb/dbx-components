@@ -231,37 +231,39 @@ export interface CreateFormScaffoldToolConfig {
  * Builds the `dbx_form_scaffold` tool against a forge-fields registry. Called by
  * {@link registerTools} once the registry has loaded at server startup.
  *
- * @param config - the registry to resolve slugs / factory names against
- * @returns a registered {@link DbxTool} ready to add to the dispatch table
+ * @param config - The registry to resolve slugs / factory names against.
+ * @returns A registered {@link DbxTool} ready to add to the dispatch table.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createFormScaffoldTool(config: CreateFormScaffoldToolConfig): DbxTool {
   const { registry } = config;
 
   function run(rawArgs: unknown): ToolResult {
-    let args: ParsedScaffoldArgs;
+    let result: ToolResult;
     try {
-      args = parseScaffoldArgs(rawArgs);
+      const args = parseScaffoldArgs(rawArgs);
+      const parsed = args.fields.map((raw) => parseFieldSpec(raw, registry));
+      const errors = parsed.filter((p): p is SpecError => 'reason' in p);
+      if (errors.length > 0) {
+        const lines: string[] = ['Invalid field specs:', ''];
+        for (const error of errors) {
+          lines.push(`- \`${error.raw}\` — ${error.reason}`);
+        }
+        lines.push('', 'Expected format: `"<slug>:<key>"` (e.g. `"text:email"`) or `"<slug>"` for auto-keyed entries. Run `dbx_form_lookup topic="list"` for every slug.');
+        result = toolError(lines.join('\n'));
+      } else {
+        const specs = parsed as readonly FieldSpec[];
+        const code = renderScaffold(specs, args.valueTypeName, args.wrapInSection);
+        const slugList = specs.map((s) => s.slug).join(', ');
+        const preamble = `# Scaffold\n\nGenerated from \`${slugList}\` (${specs.length} field${specs.length === 1 ? '' : 's'}).`;
+        const text = `${preamble}\n\n\`\`\`ts\n${code}\n\`\`\``;
+        result = { content: [{ type: 'text', text }] };
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      return toolError(message);
+      result = toolError(message);
     }
-    const parsed = args.fields.map((raw) => parseFieldSpec(raw, registry));
-    const errors = parsed.filter((p): p is SpecError => 'reason' in p);
-    if (errors.length > 0) {
-      const lines: string[] = ['Invalid field specs:', ''];
-      for (const error of errors) {
-        lines.push(`- \`${error.raw}\` — ${error.reason}`);
-      }
-      lines.push('', 'Expected format: `"<slug>:<key>"` (e.g. `"text:email"`) or `"<slug>"` for auto-keyed entries. Run `dbx_form_lookup topic="list"` for every slug.');
-      return toolError(lines.join('\n'));
-    }
-    const specs = parsed as readonly FieldSpec[];
-    const code = renderScaffold(specs, args.valueTypeName, args.wrapInSection);
-    const slugList = specs.map((s) => s.slug).join(', ');
-    const preamble = `# Scaffold\n\nGenerated from \`${slugList}\` (${specs.length} field${specs.length === 1 ? '' : 's'}).`;
-    const text = `${preamble}\n\n\`\`\`ts\n${code}\n\`\`\``;
-    const result: ToolResult = { content: [{ type: 'text', text }] };
     return result;
   }
 

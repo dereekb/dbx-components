@@ -23,9 +23,9 @@ export interface ListAppSystemOptions {
  * with a single `status` entry and an empty pairing list — callers can
  * surface the situation without crashing.
  *
- * @param componentAbs - absolute path to the `-firebase` component package
- * @param options - workspace-relative paths used to relativise the output
- * @returns the system-state pairing report
+ * @param componentAbs - Absolute path to the `-firebase` component package.
+ * @param options - Workspace-relative paths used to relativise the output.
+ * @returns The system-state pairing report.
  */
 export async function listAppSystem(componentAbs: string, options: ListAppSystemOptions): Promise<SystemMListAppReport> {
   const systemPath = `${componentAbs.replace(/[/\\]+$/, '')}/src/lib/model/system`;
@@ -38,9 +38,9 @@ export async function listAppSystem(componentAbs: string, options: ListAppSystem
  * prepared inspection so the listing report stays in sync with the
  * folder validator.
  *
- * @param inspection - prepared folder inspection (typically from `inspectFolder`)
- * @param options - workspace directories used to relativise emitted paths
- * @returns the listing report
+ * @param inspection - Prepared folder inspection (typically from `inspectFolder`)
+ * @param options - Workspace directories used to relativise emitted paths.
+ * @returns The listing report.
  */
 export function collectAppSystem(inspection: SystemFolderInspection, options: ListAppSystemOptions): SystemMListAppReport {
   if (inspection.status !== 'ok' || inspection.systemSource === undefined) {

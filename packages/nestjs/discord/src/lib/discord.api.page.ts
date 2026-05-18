@@ -5,7 +5,7 @@ import { type DiscordMessageId } from './discord.type';
 /**
  * Default number of messages per page when fetching Discord channel messages.
  */
-export const DISCORD_DEFAULT_MESSAGES_PER_PAGE = 100;
+export const DEFAULT_DISCORD_MESSAGES_PER_PAGE = 100;
 
 /**
  * Base pagination parameters for Discord channel message endpoints.
@@ -29,7 +29,7 @@ export interface DiscordMessagePageFilter {
   /**
    * Maximum number of messages to return per page (1-100).
    *
-   * Defaults to {@link DISCORD_DEFAULT_MESSAGES_PER_PAGE}.
+   * Defaults to {@link DEFAULT_DISCORD_MESSAGES_PER_PAGE}.
    */
   readonly limit?: Maybe<number>;
 }
@@ -94,8 +94,8 @@ export interface DiscordFetchMessagePageFactoryInput<I extends DiscordMessagePag
  * message's ID from each response and sets it as the `before` cursor for the next request.
  * When the number of returned messages is less than the requested limit, pagination stops.
  *
- * @param input - The factory input configuration
- * @returns A page factory that produces iterable page fetchers
+ * @param input - The factory input configuration.
+ * @returns A page factory that produces iterable page fetchers.
  *
  * @example
  * ```typescript
@@ -127,21 +127,25 @@ export function discordFetchMessagePageFactory<I extends DiscordMessagePageFilte
     },
     buildInputForNextPage(pageResult: Partial<FetchPageResult<DiscordMessagePageResult<T>>>, input: I, options: FetchPageFactoryInputOptions): PromiseOrValue<Maybe<Partial<I>>> {
       const nextCursor = pageResult.nextPageCursor;
-      const effectiveLimit = options.maxItemsPerPage ?? input.limit ?? DISCORD_DEFAULT_MESSAGES_PER_PAGE;
+      const effectiveLimit = options.maxItemsPerPage ?? input.limit ?? DEFAULT_DISCORD_MESSAGES_PER_PAGE;
       const resultCount = pageResult.result?.data.length ?? 0;
+
+      let nextInput: Maybe<Partial<I>>;
 
       // Discord signals no more results when fewer items than the limit are returned
       if (!nextCursor || resultCount < effectiveLimit) {
-        return undefined;
+        nextInput = undefined;
+      } else {
+        nextInput = {
+          ...input,
+          before: nextCursor,
+          after: undefined,
+          around: undefined,
+          limit: effectiveLimit
+        };
       }
 
-      return {
-        ...input,
-        before: nextCursor,
-        after: undefined,
-        around: undefined,
-        limit: effectiveLimit
-      } as Partial<I>;
+      return nextInput;
     }
   });
 }

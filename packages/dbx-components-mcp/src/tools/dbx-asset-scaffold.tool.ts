@@ -33,7 +33,7 @@ type AssetBuilderKind = (typeof ASSET_BUILDERS)[number]['kind'];
 
 const KIND_VALUES: readonly AssetBuilderKind[] = ASSET_BUILDERS.map((b) => b.kind);
 
-const DBX_ASSET_SCAFFOLD_TOOL: Tool = {
+const DBX_ASSET_SCAFFOLD_TOOL_DEFINITION: Tool = {
   name: 'dbx_asset_scaffold',
   description: [
     "Scaffold a new `AssetPathRef` constant for a downstream `-firebase` component's `src/lib/assets.ts`.",
@@ -223,23 +223,23 @@ function renderScaffold(args: ParsedScaffoldArgs): string {
  * Tool handler for `dbx_asset_scaffold`. Validates the request, renders
  * the scaffold output, and packages it as tool content.
  *
- * @param rawArgs - the unvalidated tool arguments object from the MCP runtime
- * @returns the rendered scaffold, or an error result when args fail validation
+ * @param rawArgs - The unvalidated tool arguments object from the MCP runtime.
+ * @returns The rendered scaffold, or an error result when args fail validation.
  */
 export function runAssetScaffold(rawArgs: unknown): ToolResult {
-  let args: ParsedScaffoldArgs;
+  let result: ToolResult;
   try {
-    args = parseScaffoldArgs(rawArgs);
+    const args = parseScaffoldArgs(rawArgs);
+    const text = renderScaffold(args);
+    result = { content: [{ type: 'text', text }] };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return toolError(message);
+    result = toolError(message);
   }
-  const text = renderScaffold(args);
-  const result: ToolResult = { content: [{ type: 'text', text }] };
   return result;
 }
 
-export const dbxAssetScaffoldTool: DbxTool = {
-  definition: DBX_ASSET_SCAFFOLD_TOOL,
+export const DBX_ASSET_SCAFFOLD_TOOL: DbxTool = {
+  definition: DBX_ASSET_SCAFFOLD_TOOL_DEFINITION,
   run: runAssetScaffold
 };

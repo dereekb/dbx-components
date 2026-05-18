@@ -34,15 +34,19 @@ export interface DbxFirebaseEmailFormConfig {
 export class DbxFirebaseEmailForgeFormComponent extends AbstractConfigAsyncForgeFormDirective<DbxFirebaseEmailFormValue, DbxFirebaseEmailFormConfig> {
   readonly formConfig$: Observable<Maybe<FormConfig>> = this.currentConfig$.pipe(
     map((config) => {
-      if (!config) {
-        return undefined;
+      let result: Maybe<FormConfig>;
+
+      if (config) {
+        const loginMode = config.loginMode ?? 'login';
+        const passwordConfig = config.passwordConfig;
+
+        const fields = [dbxForgeUsernameLoginField('email'), dbxForgeTextPasswordField(passwordConfig), ...(loginMode === 'register' ? [dbxForgeTextVerifyPasswordField()] : [])];
+        result = { fields };
+      } else {
+        result = undefined;
       }
 
-      const loginMode = config.loginMode ?? 'login';
-      const passwordConfig = config.passwordConfig;
-
-      const fields = [dbxForgeUsernameLoginField('email'), dbxForgeTextPasswordField(passwordConfig), ...(loginMode === 'register' ? [dbxForgeTextVerifyPasswordField()] : [])];
-      return { fields };
+      return result;
     })
   );
 }

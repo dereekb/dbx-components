@@ -1,12 +1,12 @@
 import { createOutputCommand, createOutputMiddleware } from '@dereekb/dbx-cli';
 import yargs, { type CommandModule } from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { authCommand } from './lib/commands/auth.command';
-import { doctorCommand } from './lib/commands/doctor.command';
-import { recruitCommand } from './lib/commands/recruit.command';
-import { crmCommand } from './lib/commands/crm.command';
-import { deskCommand } from './lib/commands/desk.command';
-import { requestCommand } from './lib/commands/request.command';
+import { AUTH_COMMAND } from './lib/commands/auth.command';
+import { DOCTOR_COMMAND } from './lib/commands/doctor.command';
+import { RECRUIT_COMMAND } from './lib/commands/recruit.command';
+import { CRM_COMMAND } from './lib/commands/crm.command';
+import { DESK_COMMAND } from './lib/commands/desk.command';
+import { REQUEST_COMMAND } from './lib/commands/request.command';
 import { createAuthMiddleware } from './lib/middleware/auth.middleware';
 import { clearOutputConfig, loadCliConfig, mergeCliConfig } from './lib/config/cli.config';
 // Importing this module registers the Zoho secret-redaction pattern + Zoho-aware error mapper
@@ -27,14 +27,14 @@ const outputCommand = createOutputCommand({
  * - support pick/dump output filtering
  * - support --set-pick / --set-dump-dir auto-save
  */
-const apiCommands: CommandModule[] = [recruitCommand, crmCommand, deskCommand, requestCommand];
+const apiCommands: CommandModule[] = [RECRUIT_COMMAND, CRM_COMMAND, DESK_COMMAND, REQUEST_COMMAND];
 
 /**
  * Config/utility commands that manage CLI settings. These commands:
  * - skip authentication
  * - skip pick/dump output filtering (their own JSON output is never filtered)
  */
-const configCommands: CommandModule[] = [authCommand, outputCommand, doctorCommand];
+const configCommands: CommandModule[] = [AUTH_COMMAND, outputCommand, DOCTOR_COMMAND];
 
 function commandName(cmd: CommandModule): string {
   const raw = cmd.command as string;
