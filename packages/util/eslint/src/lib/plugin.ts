@@ -23,6 +23,8 @@ import { type UtilRequireDbxRuleCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_RU
 import { type UtilRequireConstantNamingRuleDefinition, UTIL_REQUIRE_CONSTANT_NAMING_RULE } from './require-constant-naming.rule';
 import { type UtilRequireDefaultPrefixNamingRuleDefinition, UTIL_REQUIRE_DEFAULT_PREFIX_NAMING_RULE } from './require-default-prefix-naming.rule';
 import { type UtilRequireExportedJsdocExampleRuleDefinition, UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE } from './require-exported-jsdoc-example.rule';
+import { type UtilNoInlineStringEmptyObjectIntersectionRuleDefinition, UTIL_NO_INLINE_STRING_EMPTY_OBJECT_INTERSECTION_RULE } from './no-inline-string-empty-object-intersection.rule';
+import { type UtilPreferSuggestedStringRuleDefinition, UTIL_PREFER_SUGGESTED_STRING_RULE } from './prefer-suggested-string.rule';
 
 /**
  * ESLint plugin interface for @dereekb/util rules.
@@ -55,6 +57,8 @@ export interface UtilEslintPlugin {
     readonly 'require-constant-naming': UtilRequireConstantNamingRuleDefinition;
     readonly 'require-default-prefix-naming': UtilRequireDefaultPrefixNamingRuleDefinition;
     readonly 'require-exported-jsdoc-example': UtilRequireExportedJsdocExampleRuleDefinition;
+    readonly 'no-inline-string-empty-object-intersection': UtilNoInlineStringEmptyObjectIntersectionRuleDefinition;
+    readonly 'prefer-suggested-string': UtilPreferSuggestedStringRuleDefinition;
   };
 }
 
@@ -91,6 +95,8 @@ export const UTIL_ESLINT_PLUGIN: UtilEslintPlugin = {
     'require-dbx-rule-companion-tags': UTIL_REQUIRE_DBX_RULE_COMPANION_TAGS_RULE,
     'require-constant-naming': UTIL_REQUIRE_CONSTANT_NAMING_RULE,
     'require-default-prefix-naming': UTIL_REQUIRE_DEFAULT_PREFIX_NAMING_RULE,
-    'require-exported-jsdoc-example': UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE
+    'require-exported-jsdoc-example': UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE,
+    'no-inline-string-empty-object-intersection': UTIL_NO_INLINE_STRING_EMPTY_OBJECT_INTERSECTION_RULE,
+    'prefer-suggested-string': UTIL_PREFER_SUGGESTED_STRING_RULE
   }
 };

@@ -1,4 +1,4 @@
-import { type EmailAddress, type ISO8601DateStringUTCFull, type TimezoneString, type WebsiteUrl } from '@dereekb/util';
+import { type EmailAddress, type ISO8601DateStringUTCFull, type SuggestedString, type TimezoneString, type WebsiteUrl } from '@dereekb/util';
 import { type ZoomClientVersion, type ZoomUserId } from '../zoom.type';
 
 /**
@@ -285,7 +285,7 @@ export interface ZoomUserPhoneNumber {
    *
    * @example "Mobile"
    */
-  readonly label: 'Mobile' | 'Office' | 'Home' | 'Fax' | (string & {});
+  readonly label: SuggestedString<'Mobile' | 'Office' | 'Home' | 'Fax'>;
   /**
    * The user's phone number.
    *

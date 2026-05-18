@@ -1,4 +1,4 @@
-import { type EmailAddress, type FileSize, type HexColorCode, type PageNumber, type Pixels, type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
+import { type EmailAddress, type FileSize, type HexColorCode, type SuggestedString, type PageNumber, type Pixels, type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
 
 // MARK: Data Types
 /**
@@ -50,7 +50,7 @@ export type ZohoSignFieldTypeId = string;
 /**
  * Status of a Zoho Sign request.
  */
-export type ZohoSignRequestStatus = 'inprogress' | 'completed' | 'recalled' | 'declined' | 'expired' | (string & {});
+export type ZohoSignRequestStatus = SuggestedString<'inprogress' | 'completed' | 'recalled' | 'declined' | 'expired'>;
 
 /**
  * Recipient action type in Zoho Sign.
@@ -65,7 +65,7 @@ export type ZohoSignVerificationType = 'EMAIL' | 'SMS' | 'OFFLINE';
 /**
  * Field type name for document fields.
  */
-export type ZohoSignFieldTypeName = 'Checkbox' | 'Radiogroup' | 'Signature' | 'Initial' | 'Textfield' | 'Email' | 'Date' | 'Name' | 'Company' | 'Jobtitle' | 'CustomDate' | 'Dropdown' | 'Attachment' | 'Checkout' | (string & {});
+export type ZohoSignFieldTypeName = SuggestedString<'Checkbox' | 'Radiogroup' | 'Signature' | 'Initial' | 'Textfield' | 'Email' | 'Date' | 'Name' | 'Company' | 'Jobtitle' | 'CustomDate' | 'Dropdown' | 'Attachment' | 'Checkout'>;
 
 /**
  * Name format for name fields.
@@ -75,7 +75,7 @@ export type ZohoSignNameFormat = 'FIRST_NAME' | 'LAST_NAME' | 'FULL_NAME';
 /**
  * Field category classification.
  */
-export type ZohoSignFieldCategory = 'textfield' | 'image' | 'datefield' | (string & {});
+export type ZohoSignFieldCategory = SuggestedString<'textfield' | 'image' | 'datefield'>;
 
 // MARK: Field Type
 /**

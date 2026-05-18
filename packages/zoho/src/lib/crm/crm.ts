@@ -1,4 +1,4 @@
-import { type CommaSeparatedString, type EmailAddress, type ISO8601DateString, type Maybe, type UniqueModelWithId, type WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
+import { type CommaSeparatedString, type EmailAddress, type ISO8601DateString, type SuggestedString, type Maybe, type UniqueModelWithId, type WebsiteUrl, isStandardInternetAccessibleWebsiteUrl } from '@dereekb/util';
 
 // MARK: Data Types
 /**
@@ -246,7 +246,7 @@ export interface ZohoCrmRecordEmailMetadata {
   status: ZohoCrmRecordEmailMetadataStatus[];
 }
 
-export type ZohoCrmRecordEmailMetadataStatusType = 'sent' | (string & {});
+export type ZohoCrmRecordEmailMetadataStatusType = SuggestedString<'sent'>;
 
 export interface ZohoCrmRecordEmailMetadataStatus {
   type: ZohoCrmRecordEmailMetadataStatusType;

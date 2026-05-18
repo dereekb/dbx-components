@@ -7,6 +7,36 @@ import { type Maybe } from './value/maybe.type';
 export type PrimativeValue = boolean | string | number;
 
 /**
+ * Open-ended union of known string literals `T` plus an arbitrary string fallback.
+ *
+ * `T | string` collapses to `string` in TypeScript and erases IDE autocomplete for the
+ * literal members. The `(string & {})` intersection is the canonical workaround: at
+ * runtime it is just `string`, but the compiler keeps the literal members visible in
+ * the union so editors still suggest them.
+ *
+ * Always prefer this named alias over writing the intersection inline. Two lint rules
+ * enforce that:
+ *
+ * - `dereekb-util/no-inline-string-empty-object-intersection` (error) — flags every
+ *   inline `T | (string & {})` and tells the developer to switch to `SuggestedString<T>`.
+ * - `dereekb-util/prefer-suggested-string` (warn) — flags `T | string` where `T` is a
+ *   literal-string union; if you actually want autocomplete-preserving behavior, switch
+ *   to `SuggestedString<T>`, otherwise drop the literal half and keep plain `string`.
+ *
+ * Reach for `SuggestedString` only when the API genuinely accepts unknown string values
+ * alongside a known set (e.g. third-party APIs that document a literal set but allow
+ * custom strings). For closed sets, use a plain literal union; for unconstrained input,
+ * use plain `string`.
+ *
+ * @example
+ * ```ts
+ * type ZohoDeskTicketPriority = SuggestedString<'Low' | 'Medium' | 'High' | 'Urgent'>;
+ * // accepts any string, but autocompletes the four known priorities.
+ * ```
+ */
+export type SuggestedString<T extends string> = T | (string & Record<never, never>);
+
+/**
  * Class typing, restricted to types that have a constructor via the new keyword.
  */
 export type ClassType<T = unknown> = {

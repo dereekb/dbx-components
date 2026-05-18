@@ -1,4 +1,4 @@
-import { type Maybe, type PromiseOrValue } from '@dereekb/util';
+import { type SuggestedString, type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { fetchPageFactory, type ReadFetchPageResultInfo, type FetchPageResult, type FetchPageFactoryInputOptions, type FetchPageFactoryConfigDefaults } from '@dereekb/util/fetch';
 
 // MARK: Page Filter
@@ -30,7 +30,7 @@ export interface ZohoSignPageFilter {
 /**
  * Known sortable column names for Zoho Sign list endpoints, with a `string` fallback for custom columns.
  */
-export type ZohoSignSortColumn = 'request_name' | 'folder_name' | 'owner_full_name' | 'recipient_email' | 'form_name' | 'created_time' | (string & {});
+export type ZohoSignSortColumn = SuggestedString<'request_name' | 'folder_name' | 'owner_full_name' | 'recipient_email' | 'form_name' | 'created_time'>;
 
 /**
  * Sort direction for Zoho Sign list queries.

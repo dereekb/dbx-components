@@ -1,4 +1,4 @@
-import { type JsonSerializableObject, type Maybe } from '@dereekb/util';
+import { type JsonSerializableObject, type SuggestedString, type Maybe } from '@dereekb/util';
 import { AbstractFirestoreDocument, type CollectionReference, type FirestoreCollection, type FirestoreContext, firestoreModelIdentity, snapshotConverterFunctions, optionalFirestoreDate, optionalFirestoreNumber, optionalFirestoreString, firestoreString, type FirebaseAuthOwnershipKey, firestorePassThroughField, type FirebaseAuthUserId } from '../../common';
 import { type GrantedDeleteRole, type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 
@@ -35,7 +35,7 @@ export const oidcEntryIdentity = firestoreModelIdentity('oidcEntry', 'oidc_e');
  *
  * Used as the discriminator in the {@link OidcEntry.type} field.
  */
-export type OidcEntryType = 'Session' | 'AccessToken' | 'AuthorizationCode' | 'RefreshToken' | 'DeviceCode' | 'ClientCredentials' | 'Client' | 'InitialAccessToken' | 'RegistrationAccessToken' | 'Interaction' | 'ReplayDetection' | 'PushedAuthorizationRequest' | 'Grant' | 'BackchannelAuthenticationRequest' | (string & {});
+export type OidcEntryType = SuggestedString<'Session' | 'AccessToken' | 'AuthorizationCode' | 'RefreshToken' | 'DeviceCode' | 'ClientCredentials' | 'Client' | 'InitialAccessToken' | 'RegistrationAccessToken' | 'Interaction' | 'ReplayDetection' | 'PushedAuthorizationRequest' | 'Grant' | 'BackchannelAuthenticationRequest'>;
 
 /**
  * Type value for Client adapter entries.

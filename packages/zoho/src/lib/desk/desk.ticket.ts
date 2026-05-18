@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type SuggestedString, type Maybe } from '@dereekb/util';
 import { type ZohoDateTimeString } from '../zoho.type';
 import { type ZohoDeskTicketId, type ZohoDeskContactId, type ZohoDeskProductId, type ZohoDeskDepartmentId, type ZohoDeskAgentId, type ZohoDeskTeamId, type ZohoDeskAccountId, type ZohoDeskContractId } from './desk';
 
@@ -13,14 +13,14 @@ export type ZohoDeskTicketStatusType = 'Open' | 'Closed' | 'On Hold';
  *
  * Known values include Low, Medium, High, and Urgent. Custom priorities may also be defined.
  */
-export type ZohoDeskTicketPriority = 'Low' | 'Medium' | 'High' | 'Urgent' | (string & {});
+export type ZohoDeskTicketPriority = SuggestedString<'Low' | 'Medium' | 'High' | 'Urgent'>;
 
 /**
  * Communication channel through which a Zoho Desk ticket was created.
  *
  * Known values include Phone, Email, Social, Web, Chat, and Forums. Custom channels may also be present.
  */
-export type ZohoDeskTicketChannel = 'Phone' | 'Email' | 'Social' | 'Web' | 'Chat' | 'Forums' | (string & {});
+export type ZohoDeskTicketChannel = SuggestedString<'Phone' | 'Email' | 'Social' | 'Web' | 'Chat' | 'Forums'>;
 
 // MARK: Ticket Sort / Include
 /**
@@ -261,7 +261,7 @@ export interface ZohoDeskTicketTimer {
 /**
  * Communication channel for a thread.
  */
-export type ZohoDeskThreadChannel = 'EMAIL' | 'PHONE' | 'WEB' | 'CUSTOMERPORTAL' | 'FORUMS' | 'FACEBOOK' | 'TWITTER' | 'TWITTER_DM' | 'ONLINE_CHAT' | 'OFFLINE_CHAT' | 'FEEDBACK' | 'FEEDBACK_WIDGET' | (string & {});
+export type ZohoDeskThreadChannel = SuggestedString<'EMAIL' | 'PHONE' | 'WEB' | 'CUSTOMERPORTAL' | 'FORUMS' | 'FACEBOOK' | 'TWITTER' | 'TWITTER_DM' | 'ONLINE_CHAT' | 'OFFLINE_CHAT' | 'FEEDBACK' | 'FEEDBACK_WIDGET'>;
 
 /**
  * Direction of a thread message relative to the support team.

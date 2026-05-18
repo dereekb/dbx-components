@@ -141,7 +141,9 @@ export default [
       'dereekb-util/require-dbx-rule-companion-tags': 'warn', // dbx-components-mcp rule catalog: enforce @dbxRuleSeverity/Applies/NotApplies/Fix on @dbxRule-tagged enum members
       'dereekb-util/require-constant-naming': 'warn', // dbx__note__typescript-programming → Constant Naming: camelCase or UPPER_SNAKE_CASE for function-typed exported const, UPPER_SNAKE_CASE (or PascalCase) for value-typed. Ambiguous initializers (CallExpression aliases, etc.) are skipped; `@dbxAllowConstantName` JSDoc opts an export out.
       'dereekb-util/require-default-prefix-naming': 'warn', // SCREAMING_CASE const names containing `_DEFAULT` as a non-leading segment (e.g. `FOO_DEFAULT_BAR`, `FOO_BAR_DEFAULT`) must put `DEFAULT_` at the front (`DEFAULT_FOO_BAR`). Skips PascalCase/camelCase/underscored bindings; `@dbxAllowDefaultPrefix` JSDoc opts a declaration out.
-      'dereekb-util/require-exported-jsdoc-example': 'off' // dbx__note__typescript-jsdocs → "Function JSDocs Must Include Examples". Staged off — surfaces ~700+ warnings workspace-wide because the convention itself has a soft escape ("when the description and signature already communicate clearly"); flip to 'warn' as part of a future JSDoc-enrichment sweep. Opt-out tag is `@dbxAllowSkipExample`.
+      'dereekb-util/require-exported-jsdoc-example': 'off', // dbx__note__typescript-jsdocs → "Function JSDocs Must Include Examples". Staged off — surfaces ~700+ warnings workspace-wide because the convention itself has a soft escape ("when the description and signature already communicate clearly"); flip to 'warn' as part of a future JSDoc-enrichment sweep. Opt-out tag is `@dbxAllowSkipExample`.
+      'dereekb-util/no-inline-string-empty-object-intersection': 'error', // forbid inline `(string & {})` — the autocomplete-preserving trick must be expressed via `SuggestedString<T>` from `@dereekb/util` so the intent is named at the call site
+      'dereekb-util/prefer-suggested-string': 'warn' // flag `'a' | 'b' | string` unions — TypeScript collapses them and erases literal autocomplete; switch to `SuggestedString<T>` or drop the literals
     }
   },
   {

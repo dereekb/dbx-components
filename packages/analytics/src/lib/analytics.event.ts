@@ -1,4 +1,4 @@
-import { type Maybe, type PrimativeKey } from '@dereekb/util';
+import { type SuggestedString, type Maybe, type PrimativeKey } from '@dereekb/util';
 
 /**
  * Name identifier for an analytics event (e.g., `'User Registered'`, `'Page Viewed'`).
@@ -62,7 +62,7 @@ export interface UserAnalyticsEvent extends AnalyticsEvent {
 /**
  * Registration method used to create a new user account (e.g., `'facebook'`, `'google'`, `'email'`).
  */
-export type NewUserRegistrationMethod = 'facebook' | 'google' | 'email' | (string & {});
+export type NewUserRegistrationMethod = SuggestedString<'facebook' | 'google' | 'email'>;
 
 /**
  * Event data for new user registration events, requiring the registration method.
