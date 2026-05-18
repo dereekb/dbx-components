@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy NgModule that wraps the deprecated DbxFormMapboxZoomFieldComponent; replacement is provideDbxForgeMapboxFieldDeclarations() */
 import { NgModule } from '@angular/core';
 import { DbxFormMapboxZoomFieldComponent } from './zoom.field.component';
 import { FormlyModule } from '@ngx-formly/core';

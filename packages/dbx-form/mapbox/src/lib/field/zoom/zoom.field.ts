@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly mapbox factory; references deprecated config interfaces and is itself deprecated in favor of dbxForgeMapboxZoomField() */
 import { type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledBaseFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormMapboxZoomComponentFieldProps } from './zoom.field.component';

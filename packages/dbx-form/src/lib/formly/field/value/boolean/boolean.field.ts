@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DefaultValueFieldConfig and DescriptionFieldConfig retained for the formly layer until full migration to forge */
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type LabeledFieldConfig, formlyField, type DefaultValueFieldConfig, type DescriptionFieldConfig, propsAndConfigForFieldConfig, type MaterialFormFieldConfig } from '../../field';
 import { AUTO_TOUCH_WRAPPER_KEY, STYLE_WRAPPER_KEY } from '../../wrapper/wrapper.key';

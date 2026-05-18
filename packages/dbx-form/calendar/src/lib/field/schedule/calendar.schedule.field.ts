@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly calendar factory; references deprecated config interfaces and is itself deprecated in favor of dbxForgeDateScheduleRangeField() */
 import { type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledBaseFieldConfig, propsAndConfigForFieldConfig } from '@dereekb/dbx-form';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type DbxFormCalendarDateCellScheduleRangeFieldProps } from './calendar.schedule.field.component';

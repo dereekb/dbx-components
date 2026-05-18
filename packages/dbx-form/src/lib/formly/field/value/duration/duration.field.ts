@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DescriptionFieldConfig retained for the formly layer until full migration to forge */
 import { type ValidatorFn, type AbstractControl, type ValidationErrors } from '@angular/forms';
 import { type Maybe, type TimeUnit, type HoursAndMinutes, TIME_UNIT_LABEL_MAP, millisecondsToTimeUnit, hoursAndMinutesToTimeUnit } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';

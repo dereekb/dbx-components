@@ -32,6 +32,7 @@ function createDialogConfig<O = { name: string }>(overrides?: Partial<DbxForgeAc
   } as DbxForgeActionDialogComponentConfig<O>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- provideNoopAnimations remains the standard no-op animations provider for TestBed; the new `animate.enter`/`animate.leave` API targets templates, not providers
 const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideNoopAnimations(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }, { provide: DbxRouterTransitionService, useClass: MockDbxRouterTransitionService }];
 
 // MARK: Test Host

@@ -1137,6 +1137,7 @@ export function dbxForgeFieldFunctionConfigPropsWithHintBuilder<C extends DbxFor
     if ('hint' in input) {
       (props as DbxForgeFieldHintValueRef<any>).hint = input.hint;
     } else if ('description' in input) {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- intentionally accepts the deprecated `description` input as a fallback for `hint`
       (props as DbxForgeFieldHintValueRef<any>).hint = input.description;
     }
 

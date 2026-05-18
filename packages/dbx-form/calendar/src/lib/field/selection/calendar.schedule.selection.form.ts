@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly day-selection field factory; replacement is dbxScheduleSelectionCalendarDateDaysForgeFormFields() */
 import { formlyFlexLayoutWrapper, formlyToggleField } from '@dereekb/dbx-form';
 import { getDaysOfWeekNames } from '@dereekb/util';
 

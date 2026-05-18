@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DescriptionFieldConfig and FieldValueParser retained for the formly layer until full migration to forge */
 import { asObservable, type ObservableOrValue } from '@dereekb/rxjs';
 import { convertMaybeToArray, firstValue, type Maybe } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';

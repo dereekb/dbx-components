@@ -53,23 +53,24 @@ export function isPhoneExtension(): ValidatorFn {
 export function isE164PhoneNumberWithValidExtension(): ValidatorFn {
   return (control: AbstractControl): Maybe<ValidationErrors> => {
     const value: string | undefined = control.value;
+    let errors: ValidationErrors = {};
 
     if (value != null) {
       if (isE164PhoneNumberFunction(value, true)) {
         const pair = e164PhoneNumberExtensionPair(value);
 
         if (pair.extension && !isValidPhoneExtensionNumber(pair.extension)) {
-          return {
+          errors = {
             [INVALID_PHONE_NUMBER_EXTENSION_MESSAGE.name]: true
           };
         }
       } else {
-        return {
+        errors = {
           [INVALID_PHONE_NUMBER_MESSAGE.name]: true
         };
       }
     }
 
-    return {};
+    return errors;
   };
 }

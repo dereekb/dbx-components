@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated AttributesFieldConfig, DescriptionFieldConfig, FieldConfigParsersRef, and FieldValueParser retained for the formly layer until full migration to forge */
 import { type ValidatorFn } from '@angular/forms';
 import { concatArrays, type TransformNumberFunctionConfigRef, transformNumberFunction, mapMaybeFunction, DOLLAR_AMOUNT_PRECISION } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';

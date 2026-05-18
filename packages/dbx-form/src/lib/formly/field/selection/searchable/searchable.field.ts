@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references the deprecated DescriptionFieldConfig interface retained for the formly layer until full migration to forge */
 import { arrayToMap, type Maybe, type PrimativeKey, separateValues } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type Observable, of, switchMap, map } from 'rxjs';

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy DbxFormMapboxLatLngFieldComponent retained for backward compatibility; replacement is DbxForgeMapboxLatLngFieldComponent and intra-file references are part of the deprecated layer */
 import { type AbstractControl, type FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { CompactContextStore, mapCompactModeObs } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, Injector, type OnDestroy, type OnInit, inject } from '@angular/core';

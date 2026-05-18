@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- marker component injects the deprecated DbxFormMapboxLatLngFieldComponent; both belong to the legacy mapbox formly layer being replaced by forge */
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { shareReplay, map, type Observable, combineLatest } from 'rxjs';
 import { type DbxMapboxMarker, DbxMapboxMarkerComponent } from '@dereekb/dbx-web/mapbox';

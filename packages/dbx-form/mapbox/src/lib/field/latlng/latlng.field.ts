@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly mapbox factory; references deprecated config interfaces and is itself deprecated in favor of dbxForgeMapboxLatLngField() */
 import { DEFAULT_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE, DEFAULT_LAT_LNG_TEXT_FIELD_PLACEHOLDER, type DescriptionFieldConfig, type FieldConfig, formlyField, type LabeledBaseFieldConfig, propsAndConfigForFieldConfig, validatorsForFieldConfig } from '@dereekb/dbx-form';
 import { LAT_LNG_PATTERN } from '@dereekb/util';
 import { type FormlyFieldConfig } from '@ngx-formly/core';

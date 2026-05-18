@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- defines and references the deprecated formly config interfaces (LabeledBaseFieldConfig, AttributesFieldConfig, DescriptionFieldConfig, FieldConfigParsersRef, FieldValueParser, DefaultValueFieldConfig) retained for the legacy formly layer until full migration to forge */
 import { type AsyncValidatorFn, type ValidatorFn } from '@angular/forms';
 import { mergeObjects, filterFromPOJO, mergeObjectsFunction, filterFromPOJOFunction, type FilterKeyValueTuplesInput, type GeneralFilterFromPOJOFunction, type ArrayOrValue, type Maybe, asArray, objectHasNoKeys, type MapFunction } from '@dereekb/util';
 import { type FormlyFieldConfig, type FormlyFieldProps } from '@ngx-formly/core';

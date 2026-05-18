@@ -22,10 +22,14 @@ export function dbxForgeFieldDisabled(): Signal<boolean> {
   const formOptions = inject(FORM_OPTIONS, { optional: true });
 
   return computed(() => {
+    let disabled = false;
+
     try {
-      return formOptions?.()?.disabled ?? false;
+      disabled = formOptions?.()?.disabled ?? false;
     } catch {
-      return false;
+      disabled = false;
     }
+
+    return disabled;
   });
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-deprecated -- legacy formly field factory; references deprecated DescriptionFieldConfig retained for the formly layer until full migration to forge */
 import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { Validators, type AbstractControl } from '@angular/forms';
 import { type TextFieldConfig, formlyTextField } from './text.field';

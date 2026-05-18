@@ -222,12 +222,16 @@ export class DbxForgeDateTimeFieldComponent {
   });
 
   readonly isRequired = computed(() => {
+    let required = false;
+
     try {
       const state = this.field()?.() as any;
-      return (state?.required?.() as boolean) ?? false;
+      required = (state?.required?.() as boolean) ?? false;
     } catch {
-      return false;
+      required = false;
     }
+
+    return required;
   });
 
   readonly isDateRequired = computed(() => this.isRequired());
