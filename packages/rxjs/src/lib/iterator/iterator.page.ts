@@ -553,7 +553,7 @@ function mapItemPageLoadingStateFromResultPageLoadingState<V>(): OperatorFunctio
 
 function itemPageLoadingStateFromResultPageLoadingState<V>(input: PageLoadingState<ItemPageIteratorResult<V>>): PageLoadingState<V> {
   // TODO(breaking-change): refactor to build the result as an object literal so mapValue narrows V and hasNextPage can be assigned without the cast. See https://github.com/dereekb/dbx-components issue tracking for cleanup.
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- cast widens mapValue's V|undefined inference to V and removes readonly so hasNextPage can be assigned; tsc reports both errors without it
+  // TODO: Fix eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- cast widens mapValue's V|undefined inference to V and removes readonly so hasNextPage can be assigned; tsc reports both errors without it
   const result = mapLoadingStateResults(input, {
     mapValue: (result: ItemPageIteratorResult<V>) => result.value
   }) as Configurable<PageLoadingState<V>>;
