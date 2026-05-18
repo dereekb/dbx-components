@@ -135,9 +135,9 @@ function parseArgs(raw: unknown): ParsedRecommendArgs {
     throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedRecommendArgs = {
-    questionnaire: parsed.questionnaire as ArchetypeQuestionnaire,
+    questionnaire: parsed.questionnaire,
     archetypeHint: parsed.archetypeHint,
-    scope: (parsed.scope ?? 'all') as RecommendScope,
+    scope: parsed.scope ?? 'all',
     componentDirs: parsed.componentDirs,
     maxResults: parsed.maxResults ?? DEFAULT_MAX_RESULTS,
     peerCount: parsed.peerCount ?? DEFAULT_PEER_COUNT,
@@ -259,7 +259,7 @@ function pickTopArchetype(scoreResult: ReturnType<typeof scoreCatalog>, archetyp
   return hinted ?? scoreResult.top;
 }
 
-export const archetypeRecommendTool: DbxTool = {
+export const ARCHETYPE_RECOMMEND_TOOL: DbxTool = {
   definition: DBX_MODEL_ARCHETYPE_RECOMMEND_TOOL,
   run: runArchetypeRecommend
 };

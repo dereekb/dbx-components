@@ -49,6 +49,7 @@ const LOOKUP_ARGS_TYPE = type({
  *
  * @param raw - The unvalidated tool arguments from the MCP runtime.
  * @returns The parsed args with `depth` defaulted to `'full'`
+ * @throws {TypeError} When `raw` fails the lookup args schema (missing `topic` or invalid `depth`).
  */
 export function parseLookupArgs(raw: unknown): ParsedLookupArgs {
   const parsed = LOOKUP_ARGS_TYPE(raw);

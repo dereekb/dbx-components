@@ -125,7 +125,7 @@ function collectCountedReturns(node: AstNode, out: AstNode[]): void {
  *
  * @see `dbx__note__typescript-programming` → Single Return Per Function
  */
-export const utilRequireSingleReturnRule: UtilRequireSingleReturnRuleDefinition = {
+export const UTIL_REQUIRE_SINGLE_RETURN_RULE: UtilRequireSingleReturnRuleDefinition = {
   meta: {
     type: 'suggestion',
     docs: {

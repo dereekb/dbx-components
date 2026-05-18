@@ -322,7 +322,7 @@ export type ZohoCrmUpdateRecordFunction = ZohoCrmUpdateRecordLikeFunction;
  * ```
  */
 export function zohoCrmUpdateRecord(context: ZohoCrmContext): ZohoCrmUpdateRecordFunction {
-  return updateRecordLikeFunction(context, '', 'PUT') as ZohoCrmUpdateRecordFunction;
+  return updateRecordLikeFunction(context, '', 'PUT');
 }
 
 // MARK: Delete Record
@@ -562,7 +562,7 @@ export function zohoCrmSearchRecords(context: ZohoCrmContext): ZohoCrmSearchReco
     return zohoCrmUrlSearchParamsMinusModule(baseInput);
   }
 
-  return (<T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) => context.fetchJson<ZohoCrmSearchRecordsResponse<T>>(`/v8/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoCrmSearchRecordsFunction;
+  return <T = ZohoCrmRecord>(input: ZohoCrmSearchRecordsInput<T>) => context.fetchJson<ZohoCrmSearchRecordsResponse<T>>(`/v8/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoCrmApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } });
 }
 
 /**
@@ -1168,6 +1168,7 @@ export function zohoCrmApiFetchJsonInput(method: string, body?: Maybe<FetchJsonB
  *
  * @param e - The error to catch and potentially convert.
  * @returns The error data array wrapped as a change object response.
+ * @throws Re-throws `e` when it is not a {@link ZohoServerFetchResponseDataArrayError}.
  */
 export function zohoCrmCatchZohoCrmChangeObjectLikeResponseError<R extends ZohoCrmChangeObjectLikeResponse<any>>(e: unknown): R {
   let result: R;

@@ -76,7 +76,10 @@ export class DbxLoadingComponent {
 
   readonly context = input<MaybeObservableOrValue<LoadingContext>>();
 
-  readonly contextSignal: Signal<MaybeObservableOrValue<LoadingContext>> = computed(() => this._contextOverrideSignal() ?? this.context());
+  readonly contextSignal: Signal<MaybeObservableOrValue<LoadingContext>> = computed(() => {
+    const context = this.context();
+    return this._contextOverrideSignal() ?? context;
+  });
 
   readonly contextStream$: Observable<Maybe<LoadingContextEvent>> = toObservable(this.contextSignal).pipe(maybeValueFromObservableOrValue(), switchMapMaybeLoadingContextStream(), shareReplay(1));
   readonly contextStreamSignal = toSignal(this.contextStream$);

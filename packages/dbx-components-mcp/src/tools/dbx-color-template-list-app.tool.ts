@@ -16,7 +16,7 @@ import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { formatReportAsJson, formatReportAsMarkdown, inspectColorTemplates, listAppColorTemplates } from './dbx-color-template-list-app/index.js';
 
-const DBX_COLOR_TEMPLATE_LIST_APP_TOOL: Tool = {
+const DBX_COLOR_TEMPLATE_LIST_APP_TOOL_DEFINITION: Tool = {
   name: 'dbx_color_template_list_app',
   description: [
     'List every `DbxColorConfigTemplate` registered through `provideDbxStyleService({ dbxColorServiceConfig: { templates: [...] } })` in an Angular app. Each entry reports its `key`, the resolved `DbxColorConfig` fields (color / contrast / tone / tonal / template), and the source file:line of the literal.',
@@ -78,7 +78,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   return result;
 }
 
-export const dbxColorTemplateListAppTool: DbxTool = {
-  definition: DBX_COLOR_TEMPLATE_LIST_APP_TOOL,
+export const DBX_COLOR_TEMPLATE_LIST_APP_TOOL: DbxTool = {
+  definition: DBX_COLOR_TEMPLATE_LIST_APP_TOOL_DEFINITION,
   run
 };

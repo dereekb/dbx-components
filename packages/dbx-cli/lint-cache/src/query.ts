@@ -27,6 +27,7 @@ export interface QueryResult {
  * @param cachePath - Absolute path to the lint cache JSON file previously written by `runBuild`.
  * @param filters - Rule / severity / file / message / limit filters to apply over the cached messages.
  * @returns The cache, the filtered (and possibly truncated) message slice, and the pre-limit match count.
+ * @throws {Error} When the cache file does not exist at `cachePath`.
  */
 export function runQuery(cachePath: string, filters: QueryFilters): QueryResult {
   if (!existsSync(cachePath)) {

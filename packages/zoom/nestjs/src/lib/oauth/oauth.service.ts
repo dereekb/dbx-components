@@ -74,6 +74,7 @@ export function logMergeZoomOAuthAccessTokenCacheServiceErrorFunction(failedUpda
  * @param inputServicesToMerge - Must include at least one service. Empty arrays will throw an error.
  * @param logError - Optional error logging configuration. Pass a function, true for default logging, or false to disable.
  * @returns A merged ZoomOAuthAccessTokenCacheService.
+ * @throws {Error} When `inputServicesToMerge` is empty.
  */
 export function mergeZoomOAuthAccessTokenCacheServices(inputServicesToMerge: ZoomOAuthAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeZoomOAuthAccessTokenCacheServiceErrorFunction>): ZoomOAuthAccessTokenCacheService {
   const allServices = [...inputServicesToMerge];
@@ -196,9 +197,9 @@ function reviveZoomAccessTokenFile(raw: unknown): Maybe<ZoomAccessToken> {
       result = undefined;
     } else {
       const rawExpiresAt = (token as ZoomAccessToken & { expiresAt?: unknown }).expiresAt;
-      const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
+      const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt) : rawExpiresAt;
 
-      result = { ...token, expiresAt: expiresAt as Date };
+      result = { ...token, expiresAt: expiresAt };
     }
   }
 

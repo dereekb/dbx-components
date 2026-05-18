@@ -335,7 +335,7 @@ function updateAnswerForCurrentQuestionOnState(state: QuizStoreState, answerData
     }
   }
 
-  return nextState as QuizStoreState;
+  return nextState;
 }
 
 function updateAnswersOnState(state: QuizStoreState, inputAnswers: Maybe<ArrayOrValue<QuizAnswer>>): QuizStoreState {

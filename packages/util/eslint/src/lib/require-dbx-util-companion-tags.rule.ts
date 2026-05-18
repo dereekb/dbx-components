@@ -18,22 +18,25 @@ interface UtilReportContext {
 
 function handleUtilCategoryViolation(ctx: UtilReportContext, v: DbxTagViolation): boolean {
   if (v.suffix !== 'Category') return false;
+  let kebabFailed = false;
   switch (v.kind) {
     case 'missing':
       reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'missingCategory', report: ctx.report });
-      return false;
+      break;
     case 'empty':
       reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'emptyCategory', report: ctx.report });
-      return false;
+      break;
     case 'invalid-kebab':
       reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'invalidCategoryFormat', data: { value: v.value }, report: ctx.report });
-      return true;
+      kebabFailed = true;
+      break;
     case 'duplicate':
       reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: v.lineIndex, messageId: 'multipleCategoryTags', report: ctx.report });
-      return false;
+      break;
     default:
-      return false;
+      break;
   }
+  return kebabFailed;
 }
 
 function handleUtilTagsViolation(ctx: UtilReportContext, v: DbxTagViolation): void {
@@ -163,7 +166,7 @@ export interface UtilRequireDbxUtilCompanionTagsRuleDefinition {
  * Only the `@dbxUtilTags` lowercase fix is auto-applied. Category, kind, and related-slug
  * violations are report-only — they require human / agent judgment on the correct value.
  */
-export const utilRequireDbxUtilCompanionTagsRule: UtilRequireDbxUtilCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_UTIL_COMPANION_TAGS_RULE: UtilRequireDbxUtilCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

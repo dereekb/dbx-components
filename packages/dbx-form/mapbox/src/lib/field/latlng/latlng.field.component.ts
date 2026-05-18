@@ -9,7 +9,7 @@ import { asObservableFromGetter, filterMaybe, type ObservableFactoryWithRequired
 import { type Maybe, type LatLngPoint, type LatLngPointFunctionConfig, type LatLngStringFunction, latLngStringFunction, type Milliseconds, latLngPointFunction, isDefaultLatLngPoint, isValidLatLngPoint, type LatLngPointFunction, isSameLatLngPoint, defaultLatLngPoint } from '@dereekb/util';
 import { WaGeolocationService } from '@ng-web-apis/geolocation';
 import { type Marker } from 'mapbox-gl';
-import { DbxMapboxInjectionStore, DbxMapboxMapStore, type DbxMapboxMarkerDisplayConfig, DbxMapboxModule, type MapboxEaseTo, type MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
+import { DbxMapboxInjectionStore, DbxMapboxMapStore, type DbxMapboxMarkerDisplayConfig, DbxMapboxModule, type MapboxZoomLevel, provideMapboxStoreIfParentIsUnavailable } from '@dereekb/dbx-web/mapbox';
 import { DbxFormMapboxLatLngFieldMarkerComponent } from './latlng.field.marker.component';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
@@ -313,7 +313,7 @@ export class DbxFormMapboxLatLngFieldComponent<T extends DbxFormMapboxLatLngComp
     this.dbxMapboxMapStore.easeTo(
       this.nonZeroLatLng$.pipe(
         first(),
-        map((x) => ({ center: x }) as MapboxEaseTo)
+        map((x) => ({ center: x }))
       )
     );
   }

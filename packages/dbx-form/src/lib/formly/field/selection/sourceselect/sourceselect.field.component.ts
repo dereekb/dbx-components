@@ -151,7 +151,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
               const value: SourceSelectValueGroup<T, M>[] = statesWithValues.map((y) => {
                 const group: SourceSelectValueGroup<T, M> = {
                   label: y.label,
-                  values: (y.value as M[]).map((meta) => ({ meta, value: valueReader(meta) }))
+                  values: y.value.map((meta) => ({ meta, value: valueReader(meta) }))
                 };
 
                 return group;
@@ -469,7 +469,7 @@ export class DbxFormSourceSelectFieldComponent<T extends PrimativeKey = Primativ
           obs = displayValuesObs.pipe(
             first(),
             map((displayResults) => {
-              const displayResultsMapping: [SourceSelectDisplayValue<T, M>, T][] = (displayResults as SourceSelectDisplayValue<T, M>[]).map((x) => [x, x.value]);
+              const displayResultsMapping: [SourceSelectDisplayValue<T, M>, T][] = displayResults.map((x) => [x, x.value]);
               const valueIndexHashMap = new Map(displayResultsMapping.map(([x, hash]) => [hash, x]));
 
               // Update metaMap. No need to push an update notification.

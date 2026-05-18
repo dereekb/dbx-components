@@ -9,8 +9,8 @@
     </div>
   }
   <div class="dbx-pickable-item-field-chips">
-    <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonly()" [disabled]="isDisabledOrReadonly()" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()">
-      @if (showSelectAllButtonSignal() && multiSelectSignal() && !isDisabledOrReadonly()) {
+    <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonlySignal()" [disabled]="isDisabledOrReadonlySignal()" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-describedby]="ariaDescribedBySignal()">
+      @if (showSelectAllButtonSignal() && multiSelectSignal() && !isDisabledOrReadonlySignal()) {
         <mat-chip-option (click)="toggleAll()" [selected]="allSelectedSignal()">
           <span class="dbx-chip-label">All</span>
         </mat-chip-option>

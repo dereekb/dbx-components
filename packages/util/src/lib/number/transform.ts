@@ -39,7 +39,7 @@ export type TransformNumberFunctionConfigInput<S extends number = number> = Tran
  * @returns The normalized config, or undefined.
  */
 export function transformNumberFunctionConfig<S extends number = number>(config?: TransformNumberFunctionConfigInput<S>): Maybe<TransformNumberFunctionConfig<S>> {
-  return config ? (typeof config === 'function' ? { transform: config } : (config as TransformNumberFunctionConfig<S>)) : undefined;
+  return config ? (typeof config === 'function' ? { transform: config } : config) : undefined;
 }
 
 /**

@@ -396,7 +396,7 @@ const authClearCommand: CommandModule = {
 };
 
 // MARK: Auth
-export const authCommand: CommandModule = {
+export const AUTH_COMMAND: CommandModule = {
   command: 'auth',
   describe: 'Manage Zoho API credentials',
   builder: (yargs: Argv) => yargs.command(authSetupCommand).command(authSetCommand).command(authShowCommand).command(authCheckCommand).command(authClearCommand).demandCommand(1, 'Please specify an auth subcommand.'),

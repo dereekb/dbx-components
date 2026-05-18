@@ -33,10 +33,10 @@ import { DbxFirebaseOAuthConsentScopeFormComponent } from './oauth.consent.scope
 @Component({
   selector: 'dbx-firebase-oauth-consent-scope-default-view',
   template: `
-    @if (alwaysGrantedLabel(); as label) {
+    @if (alwaysGrantedLabelSignal(); as label) {
       <p class="dbx-firebase-oauth-consent-always-granted dbx-hint">Always granted: {{ label }}</p>
     }
-    <dbx-firebase-oauth-consent-scope-form dbxActionForm [config]="formFieldsConfig()"></dbx-firebase-oauth-consent-scope-form>
+    <dbx-firebase-oauth-consent-scope-form dbxActionForm [config]="formFieldsConfigSignal()"></dbx-firebase-oauth-consent-scope-form>
   `,
   imports: [DbxFirebaseOAuthConsentScopeFormComponent, DbxActionFormDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,7 +46,7 @@ export class DbxFirebaseOAuthConsentScopeDefaultViewComponent {
   private readonly _oidcConfigService = inject(DbxFirebaseOidcConfigService);
   private readonly _data = inject<DbxFirebaseOAuthConsentScopesViewData>(DBX_INJECTION_COMPONENT_DATA);
 
-  readonly mappedScopes = computed<OAuthConsentScope[]>(() => {
+  readonly mappedScopesSignal = computed<OAuthConsentScope[]>(() => {
     const availableScopes = this._oidcConfigService.availableScopes;
     const availableScopeValues = new Set(availableScopes.map((s) => s.value));
     const { included: knownScopes, excluded: unknownScopes } = separateValues(this._data.scopes, (name) => availableScopeValues.has(name));
@@ -60,17 +60,17 @@ export class DbxFirebaseOAuthConsentScopeDefaultViewComponent {
     ];
   });
 
-  readonly optionalScopes = computed<OAuthConsentScope[]>(() => {
+  readonly optionalScopesSignal = computed<OAuthConsentScope[]>(() => {
     const requiredSet = new Set<OidcScope>(this._data.requiredScopes ?? []);
-    return this.mappedScopes().filter((scope) => !requiredSet.has(scope.name));
+    return this.mappedScopesSignal().filter((scope) => !requiredSet.has(scope.name));
   });
 
-  readonly alwaysGrantedLabel = computed<Maybe<string>>(() => {
+  readonly alwaysGrantedLabelSignal = computed<Maybe<string>>(() => {
     const required = this._data.requiredScopes ?? [];
     return required.length > 0 ? required.join(', ') : null;
   });
 
-  readonly formFieldsConfig = computed<OAuthConsentScopesFormFieldsConfig>(() => ({
-    optionalScopes: this.optionalScopes()
+  readonly formFieldsConfigSignal = computed<OAuthConsentScopesFormFieldsConfig>(() => ({
+    optionalScopes: this.optionalScopesSignal()
   }));
 }

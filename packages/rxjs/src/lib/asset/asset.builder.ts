@@ -154,7 +154,7 @@ export function remoteAssetBaseUrl(baseUrl: WebsiteUrlWithPrefix): RemoteAssetBu
   const normalizedBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
 
   function resolveChildUrl(path: SlashPath): WebsiteUrlWithPrefix {
-    return new URL(path, normalizedBase).href as WebsiteUrlWithPrefix;
+    return new URL(path, normalizedBase).href;
   }
 
   const builder: RemoteAssetBuilder = {

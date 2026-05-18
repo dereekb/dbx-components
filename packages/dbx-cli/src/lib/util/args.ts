@@ -14,7 +14,7 @@ export function withEnv<T>(yargs: Argv<T>): Argv<T & EnvOptions> {
   return yargs.option('env', {
     type: 'string',
     describe: 'Named env to target (overrides activeEnv in config and the *_ENV var)'
-  }) as unknown as Argv<T & EnvOptions>;
+  });
 }
 
 export interface OutputOptions {
@@ -42,7 +42,7 @@ export function withOutput<T>(yargs: Argv<T>): Argv<T & OutputOptions> {
     .option('pick-all', {
       type: 'boolean',
       describe: 'Ignore any configured pick filters and return full response data'
-    }) as unknown as Argv<T & OutputOptions>;
+    });
 }
 
 /**
@@ -139,5 +139,5 @@ export function withCallModelArgs<T>(yargs: Argv<T>): Argv<T & CallModelArgs> {
       describe: 'CRUD verb or custom action type (create, read, update, delete, query, or app-specific)'
     })
     .positional('specifier', { type: 'string', describe: 'Optional sub-function specifier' })
-    .option('data', { type: 'string', describe: 'JSON-encoded payload (defaults to {} when omitted)' }) as unknown as Argv<T & CallModelArgs>;
+    .option('data', { type: 'string', describe: 'JSON-encoded payload (defaults to {} when omitted)' });
 }

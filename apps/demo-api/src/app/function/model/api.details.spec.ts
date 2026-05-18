@@ -58,7 +58,7 @@ describe('demo api.details integration', () => {
     let details: ModelApiDetailsResult;
 
     beforeEach(() => {
-      details = getModelApiDetails(callModel as unknown as OnCallApiDetailsRef)!;
+      details = getModelApiDetails(callModel)!;
     });
 
     it('should return a ModelApiDetailsResult', () => {

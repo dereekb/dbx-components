@@ -1054,7 +1054,7 @@ function _finalizeValidators<C extends DbxForgeFieldFunctionDef<any>>(instance: 
         // Return a clean ValidatorConfig without fn or reusableDefinition
         result = { ...rest, functionName } as ValidatorConfig;
       } else {
-        result = entry as ValidatorConfig;
+        result = entry;
       }
 
       return result;

@@ -107,20 +107,22 @@ export class DbxForgeTextEditorFieldComponent implements OnInit, OnDestroy {
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as any);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   // ARIA
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const hintId = this.hintIdSignal();
+    if (this.errorsToDisplaySignal().length > 0) return errorId;
+    if (this.props()?.hint) return hintId;
     return null;
   });
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'ngx-editor' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'ngx-editor' });
   }
 
   get editor(): Editor {

@@ -67,9 +67,9 @@ export function dbxForgeMapboxLatLngField(config: DbxForgeMapboxLatLngFieldConfi
     key,
     type: FORGE_MAPBOX_LATLNG_FIELD_TYPE,
     label: label ?? 'Location',
-    value: undefined as unknown,
+    value: undefined,
     required,
     readonly: isReadonly,
     props: Object.keys(props).length > 0 ? props : undefined
-  }) as DbxForgeMapboxLatLngFieldDef;
+  });
 }

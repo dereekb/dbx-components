@@ -41,7 +41,7 @@ export interface UtilRequireDbxWebCompanionTagsRuleDefinition {
  * ESLint rule enforcing `@dbxWebComponent` companion tags. Mirrors the scanner
  * schema at `packages/dbx-components-mcp/src/scan/ui-components-extract.ts`.
  */
-export const utilRequireDbxWebCompanionTagsRule: UtilRequireDbxWebCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_WEB_COMPANION_TAGS_RULE: UtilRequireDbxWebCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

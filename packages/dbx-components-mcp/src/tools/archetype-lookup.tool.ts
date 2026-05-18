@@ -97,7 +97,7 @@ function formatLookup(archetype: ModelArchetypeInfo, axesFilter: { readonly [k: 
   return formatArchetypeEntry(archetype, { axes, showFullAxes: true });
 }
 
-export const archetypeLookupTool: DbxTool = {
+export const ARCHETYPE_LOOKUP_TOOL: DbxTool = {
   definition: DBX_MODEL_ARCHETYPE_LOOKUP_TOOL,
   run: runArchetypeLookup
 };

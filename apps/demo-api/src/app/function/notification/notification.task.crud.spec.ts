@@ -154,7 +154,7 @@ demoApiFunctionContextFactory((f) => {
                                     result: {
                                       canRunNextCheckpoint: true
                                     }
-                                  } as ExampleNotificationTaskData
+                                  }
                                 }
                               });
                             });
@@ -191,7 +191,7 @@ demoApiFunctionContextFactory((f) => {
                                         canRunNextCheckpoint: true,
                                         delayUntil: 1 // 1 ms delay, or any delay is fine
                                       } as NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>
-                                    } as ExampleNotificationTaskData
+                                    }
                                   }
                                 });
                               });
@@ -232,7 +232,7 @@ demoApiFunctionContextFactory((f) => {
                                         },
                                         canRunNextCheckpoint: true
                                       }
-                                    } as ExampleNotificationTaskData
+                                    }
                                   }
                                 });
                               });

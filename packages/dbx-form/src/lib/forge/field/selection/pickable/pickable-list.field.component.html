@@ -8,14 +8,14 @@
       <mat-divider></mat-divider>
     </div>
   }
-  @if (showSelectAllButtonSignal() && multiSelectSignal() && !isDisabledOrReadonly()) {
+  @if (showSelectAllButtonSignal() && multiSelectSignal() && !isDisabledOrReadonlySignal()) {
     <div class="dbx-pickable-item-field-select-all">
       <button class="dbx-pickable-select-all-button" type="button" (click)="toggleAll()">{{ allSelectedSignal() ? 'Deselect All' : 'Select All' }}</button>
       <mat-divider></mat-divider>
     </div>
   }
   <div class="dbx-pickable-item-field-list-content">
-    <mat-selection-list [multiple]="multiSelectSignal()" [disabled]="isDisabledOrReadonly()" (selectionChange)="onSelectionChange($event)" [attr.aria-invalid]="ariaInvalid()" [attr.aria-describedby]="ariaDescribedBy()">
+    <mat-selection-list [multiple]="multiSelectSignal()" [disabled]="isDisabledOrReadonlySignal()" (selectionChange)="onSelectionChange($event)" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-describedby]="ariaDescribedBySignal()">
       @for (item of itemsSignal(); track item.key) {
         <mat-list-option class="dbx-list-view-item" [value]="item.itemValue.value" [selected]="item.selected" [disabled]="readonlySignal() || item.disabled">
           @if (item.itemValue.icon) {

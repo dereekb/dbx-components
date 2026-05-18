@@ -83,4 +83,4 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   return result;
 }
 
-export const systemMListAppTool: DbxTool = { definition: TOOL, run };
+export const SYSTEM_M_LIST_APP_TOOL: DbxTool = { definition: TOOL, run };

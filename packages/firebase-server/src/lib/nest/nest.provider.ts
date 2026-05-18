@@ -221,7 +221,7 @@ export abstract class AbstractFirebaseNestContext<A, Y extends FirebaseModelsSer
     );
 
     const successful = taskResult.results.map(([, reader]) => reader);
-    const errors = taskResult.errors.map(([key, error]) => ({ key, error }) as UseMultipleModelsFailedItem<Y, T>);
+    const errors = taskResult.errors.map(([key, error]) => ({ key, error }));
     const hasErrors = errors.length > 0;
 
     // throwOnFirstError (default when useOnFirstError is not set): throw the first error directly

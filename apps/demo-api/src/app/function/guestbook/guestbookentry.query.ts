@@ -50,4 +50,4 @@ export const guestbookEntryQuery: DemoQueryModelFunction<QueryGuestbookEntriesPa
       }
     });
   }
-}) as any;
+});

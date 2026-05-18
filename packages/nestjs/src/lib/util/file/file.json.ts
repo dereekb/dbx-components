@@ -14,7 +14,7 @@ export function readJsonFile<T>(filePath: string): Promise<Maybe<T>> {
   return new Promise<Maybe<T>>((resolve, reject) => {
     readFile(filePath, { encoding: 'utf-8' }, (err, data) => {
       if (err) {
-        if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        if (err.code === 'ENOENT') {
           resolve(undefined);
         } else {
           reject(err);

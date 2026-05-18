@@ -402,7 +402,7 @@ function buildUnmatchedMessage(hint: string | undefined, document: Document): st
   return lines.join('\n');
 }
 
-export const modelDecodeTool: DbxTool = {
+export const MODEL_DECODE_TOOL: DbxTool = {
   definition: DBX_MODEL_DECODE_TOOL,
   run: runModelDecode
 };

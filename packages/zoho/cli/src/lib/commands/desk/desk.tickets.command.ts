@@ -3,7 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
-import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
+import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
 
 const ticketsListCommand: CommandModule = {
   command: 'list',
@@ -16,7 +16,7 @@ const ticketsListCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.getTickets(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -60,7 +60,7 @@ const ticketsSearchCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.searchTickets(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -88,7 +88,7 @@ const ticketsByContactCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.getTicketsForContact(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -138,7 +138,7 @@ const ticketsAgentCountsCommand: CommandModule = {
   }
 };
 
-export const deskTicketsCommand: CommandModule = {
+export const DESK_TICKETS_COMMAND: CommandModule = {
   command: 'tickets',
   describe: 'Desk ticket operations',
   builder: (yargs: Argv) => yargs.command(ticketsListCommand).command(ticketsGetCommand).command(ticketsSearchCommand).command(ticketsByContactCommand).command(ticketsMetricsCommand).command(ticketsAgentCountsCommand).demandCommand(1),

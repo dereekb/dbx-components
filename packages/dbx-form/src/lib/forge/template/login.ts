@@ -13,17 +13,17 @@ export const DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND = 'passwordsMatch';
 /**
  * Default validation message used when the passwords do not match.
  */
-export const DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE = 'The passwords do not match.';
+export const DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE = 'The passwords do not match.';
 
 /**
  * Default autocomplete value for password fields.
  */
-export const DBX_FORGE_TEXT_PASSWORD_DEFAULT_AUTOCOMPLETE = 'current-password';
+export const DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE = 'current-password';
 
 /**
  * Default autocomplete value for verify password fields.
  */
-export const DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE = 'new-password';
+export const DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE = 'new-password';
 
 // MARK: Password Field
 /**
@@ -53,7 +53,7 @@ export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldC
 export function dbxForgeTextPasswordField(config?: DbxForgeTextPasswordFieldConfig) {
   return dbxForgeTextField({
     key: 'password',
-    autocomplete: DBX_FORGE_TEXT_PASSWORD_DEFAULT_AUTOCOMPLETE,
+    autocomplete: DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE,
     ...config,
     label: config?.label ?? 'Password',
     inputType: 'password',
@@ -84,7 +84,7 @@ export function dbxForgeTextVerifyPasswordField(config?: DbxForgeTextPasswordFie
   return dbxForgeTextPasswordField({
     key: 'verifyPassword',
     label: 'Verify Password',
-    autocomplete: DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE,
+    autocomplete: DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE,
     ...config,
     required: true
   });
@@ -129,9 +129,9 @@ export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswor
   /**
    * Utilize the verify password autocomplete if it is for a new password.
    */
-  const passwordFieldAutocomplete = config?.password?.autocomplete ?? DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE;
+  const passwordFieldAutocomplete = config?.password?.autocomplete ?? DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE;
   const passwordField = dbxForgeTextPasswordField({ ...config?.password, autocomplete: passwordFieldAutocomplete });
-  const passwordKey = passwordField.key as string;
+  const passwordKey = passwordField.key;
   const verifyPasswordKey = config?.verifyPassword?.key ?? `verify${capitalizeFirstLetter(passwordKey)}`;
   const verifyPasswordLabel = config?.verifyPassword?.label ?? `Verify ${passwordField.label ?? 'Password'}`;
 
@@ -141,7 +141,7 @@ export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswor
     kind: DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND
   };
 
-  const inputValidators = (config?.verifyPassword?.validators ?? []) as ValidatorConfig[];
+  const inputValidators = config?.verifyPassword?.validators ?? [];
   const inputValidationMessages = config?.verifyPassword?.validationMessages;
 
   const verifyPasswordField = dbxForgeTextVerifyPasswordField({
@@ -151,7 +151,7 @@ export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswor
     label: verifyPasswordLabel,
     validators: [...inputValidators, matchValidator],
     validationMessages: {
-      [DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND]: DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE,
+      [DBX_FORGE_PASSWORDS_MATCH_VALIDATION_KIND]: DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE,
       ...inputValidationMessages
     }
   });
@@ -283,3 +283,23 @@ export function dbxForgeUsernameLoginField(username: DbxForgeUsernameLoginFieldU
 
   return result;
 }
+
+// MARK: Compat
+// COMPAT: Deprecated aliases
+/**
+ * @deprecated use DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE instead.
+ * @dbxAllowDefaultPrefix
+ */
+export const DBX_FORGE_DEFAULT_PASSWORDS_MATCH_VALIDATION_MESSAGE = DEFAULT_DBX_FORGE_PASSWORDS_MATCH_VALIDATION_MESSAGE;
+
+/**
+ * @deprecated use DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE instead.
+ * @dbxAllowDefaultPrefix
+ */
+export const DBX_FORGE_TEXT_PASSWORD_DEFAULT_AUTOCOMPLETE = DEFAULT_DBX_FORGE_TEXT_PASSWORD_AUTOCOMPLETE;
+
+/**
+ * @deprecated use DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE instead.
+ * @dbxAllowDefaultPrefix
+ */
+export const DBX_FORGE_TEXT_VERIFY_PASSWORD_DEFAULT_AUTOCOMPLETE = DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE;

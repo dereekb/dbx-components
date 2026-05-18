@@ -62,10 +62,10 @@ export function logMergeZohoAccountsAccessTokenCacheServiceErrorFunction(failedU
  * never short-circuits the lookup. Updates and clears run across all services in parallel
  * via `Promise.allSettled`, mirroring the previous behavior, with optional error logging.
  *
- * @param inputServicesToMerge - Cache services to merge in priority order.
+ * @param inputServicesToMerge - Cache services to merge in priority order. Must include at least one service.
  * @param logError - Optional error logging toggle or custom logging function.
- * @param servicesToMerge - Must include atleast one service. Empty arrays will throw an error.
  * @returns A merged ZohoAccountsAccessTokenCacheService that delegates across all inputs.
+ * @throws {Error} When `inputServicesToMerge` is empty.
  */
 export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: ZohoAccountsAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction>): ZohoAccountsAccessTokenCacheService {
   const services = [...inputServicesToMerge];
@@ -184,7 +184,7 @@ function reviveZohoAccessToken(raw: unknown): Maybe<ZohoAccessToken> {
   } else {
     const value = raw as ZohoAccessToken & { expiresAt?: unknown };
     const rawExpiresAt = value.expiresAt;
-    const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
+    const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt) : rawExpiresAt;
 
     result = { ...value, expiresAt: expiresAt };
   }

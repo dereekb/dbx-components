@@ -48,18 +48,18 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
       // oidc-provider uses `accountId` as the user identifier on Grant, AccessToken,
       // RefreshToken, etc. — `payload.uid` is only populated on Session/Interaction.
       // Fall back to `accountId` so the indexed `uid` column works for all entry types.
-      const uid = (payload.uid as string | undefined) ?? (payload.accountId as string | undefined);
+      const uid = payload.uid ?? payload.accountId;
 
       // oidc-provider stores the OAuth client id as `clientId` on every grantable
       // model (Grant, AccessToken, RefreshToken, AuthorizationCode, DeviceCode, etc.).
       // Client entries themselves use `client_id` in the payload, so we read both.
-      const clientId = (payload.clientId as string | undefined) ?? (payload.client_id as string | undefined);
+      const clientId = payload.clientId ?? payload.client_id;
 
       // Derive a stable `createdAt` from the payload so it survives upserts
       // (e.g. `consume`). Grant/AccessToken/RefreshToken/AuthorizationCode all
       // inherit `iat` (epoch seconds) from BaseToken; Client entries use
       // `created_at` (ISO string).
-      const iat = payload.iat as number | undefined;
+      const iat = payload.iat;
       const createdAtIso = payload.created_at as string | undefined;
       let createdAt: Maybe<Date>;
 
@@ -74,16 +74,16 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
         payload: encryptionService.encryptAdapterPayload(payload),
         o,
         uid,
-        grantId: payload.grantId as string | undefined,
+        grantId: payload.grantId,
         clientId,
-        userCode: payload.userCode as string | undefined,
+        userCode: payload.userCode,
         consumed: payload.consumed as number | undefined,
         ...(createdAt ? { createdAt } : undefined),
         ...(expiresIn ? { expiresAt: unixDateTimeSecondsNumberToDate(unixDateTimeSecondsNumberForNow() + expiresIn) } : undefined)
       };
 
       const doc = this.collection.documentAccessor().loadDocumentForId(id);
-      await doc.accessor.set(data as Partial<OidcEntry>, { merge: true });
+      await doc.accessor.set(data, { merge: true });
     }
 
     async find(id: OidcEntryId): Promise<AdapterPayload | undefined> {

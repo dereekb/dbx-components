@@ -56,9 +56,9 @@ export function dbxForgeMapboxZoomField(config: DbxForgeMapboxZoomFieldConfig = 
     key,
     type: FORGE_MAPBOX_ZOOM_FIELD_TYPE,
     label: label ?? 'Zoom',
-    value: undefined as unknown,
+    value: undefined,
     required,
     readonly: isReadonly,
     props: Object.keys(props).length > 0 ? props : undefined
-  }) as DbxForgeMapboxZoomFieldDef;
+  });
 }

@@ -155,7 +155,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   return result;
 }
 
-export const mcpConfigTool: DbxTool = {
+export const MCP_CONFIG_TOOL: DbxTool = {
   definition: TOOL,
   run
 };

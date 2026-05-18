@@ -1092,7 +1092,7 @@ export const notificationLoggedEventDayPageIdentity = firestoreModelIdentity(not
  * day pages. Wraps the existing {@link firestoreNotificationItem} sub-object converter so individual
  * items round-trip through the same field rules used everywhere else NotificationItems are persisted.
  */
-export const notificationLoggedEventDayItemConverter: PagedItemConverter<NotificationItem> = {
+export const NOTIFICATION_LOGGED_EVENT_DAY_ITEM_CONVERTER: PagedItemConverter<NotificationItem> = {
   fromData: (data) => firestoreNotificationItem.mapFunctions.from(data),
   toData: (item) => firestoreNotificationItem.mapFunctions.to(item)
 };
@@ -1281,7 +1281,7 @@ export function notificationLoggedEventDayPagedItemsCollectionFactory(firestoreC
       makeDocument: (accessor, documentAccessor) => new NotificationLoggedEventDayPageDocument(accessor, documentAccessor),
       firestoreContext,
       parent,
-      itemConverter: notificationLoggedEventDayItemConverter
+      itemConverter: NOTIFICATION_LOGGED_EVENT_DAY_ITEM_CONVERTER
     });
   };
 }

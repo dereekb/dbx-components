@@ -95,7 +95,7 @@ export function firestoreNotificationSummarySendService(config: FirestoreNotific
         await runAsyncTasksForValues(messagesGroups, async ([notificationSummaryId, messages]) => {
           await firestoreContext
             .runTransaction(async (transaction) => {
-              const notificationSummaryDocument = notificationSummaryCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationSummaryId as NotificationSummaryId);
+              const notificationSummaryDocument = notificationSummaryCollection.documentAccessorForTransaction(transaction).loadDocumentForId(notificationSummaryId);
               const notificationSummary = await notificationSummaryDocument.snapshotData();
 
               let updated = false;

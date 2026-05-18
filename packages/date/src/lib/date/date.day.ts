@@ -226,11 +226,11 @@ export function yearMonthDayCodeFactory(config?: YearMonthDayCodeConfig): YearMo
     let pair: YearMonthDayCodePair;
 
     if (isDate(dateOrYear)) {
-      const normalDate = normal.systemDateToTargetDate(dateOrYear as Date);
+      const normalDate = normal.systemDateToTargetDate(dateOrYear);
       pair = yearMonthDayCodePairFromDate(normalDate);
     } else {
       pair = {
-        year: dateOrYear as number,
+        year: dateOrYear,
         month: month as number,
         day: day as number
       };

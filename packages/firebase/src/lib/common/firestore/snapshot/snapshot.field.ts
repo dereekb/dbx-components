@@ -454,7 +454,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
       if (typeof inputDefaultReadValue === 'function') {
         loadDefaultReadValueFn = inputDefaultReadValue as Getter<D>;
       } else {
-        loadDefaultReadValueFn = () => inputDefaultReadValue as D;
+        loadDefaultReadValueFn = () => inputDefaultReadValue;
       }
 
       fromData = (x) => transformFrom(x ?? (loadDefaultReadValueFn as Getter<D>)());
@@ -471,7 +471,7 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
       dontStoreIf = isEqualToValueDecisionFunction(inputDontStoreIf as D | DecisionFunction<D>);
     } else if (dontStoreDefaultReadValue && loadDefaultReadValueFn != null) {
       // only applicable to one-type transforms.
-      dontStoreIf = (x) => x === (loadDefaultReadValueFn as unknown as Getter<D>)();
+      dontStoreIf = (x) => x === loadDefaultReadValueFn();
     }
 
     let toData: MapFunction<Maybe<V>, Maybe<D>>;
@@ -1166,7 +1166,7 @@ export type FirestoreArrayFieldConfig<T> = DefaultMapConfiguredFirestoreFieldCon
 export function firestoreArray<T>(config: FirestoreArrayFieldConfig<T>) {
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
   return firestoreField<T[], T[]>({
-    default: config.default ?? ((() => []) as Getter<T[]>),
+    default: config.default ?? (() => []),
     defaultBeforeSave: config.defaultBeforeSave,
     fromData: (x: T[]) => sortFn(x, false),
     toData: (x: T[]) => sortFn(x, true)
@@ -1288,7 +1288,7 @@ export function firestoreUniqueArray<T, K extends PrimativeKey = T extends Prima
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   return firestoreField<T[], T[]>({
-    default: config.default ?? ((() => []) as Getter<T[]>),
+    default: config.default ?? (() => []),
     defaultBeforeSave: config.defaultBeforeSave,
     fromData: (x: T[]) => sortFn(filterUnique(x), false),
     toData: (x: T[]) => sortFn(filterUnique(x), true)
@@ -1470,7 +1470,7 @@ export function firestoreEncodedArray<T, E extends string | number>(config: Fire
   const sortFn = sortValuesFunctionOrMapIdentityWithSortRef(config);
 
   return firestoreField<T[], E[]>({
-    default: config.default ?? ((() => []) as Getter<T[]>),
+    default: config.default ?? (() => []),
     defaultBeforeSave: config.defaultBeforeSave,
     fromData: (input: E[]) => sortFn((input as MaybeSo<E>[]).map(fromData), false),
     toData: (input: T[]) => filterMaybeArrayValues((sortFn(input, true) as MaybeSo<T>[]).map(toData))
@@ -1507,10 +1507,10 @@ export type FirestoreDencoderArrayFieldConfig<D extends PrimativeKey, E extends 
 export function firestoreDencoderArray<D extends PrimativeKey, E extends PrimativeKey>(config: FirestoreDencoderArrayFieldConfig<D, E>) {
   const { dencoder } = config;
   return firestoreField<D[], E[]>({
-    default: config.default ?? ((() => []) as Getter<D[]>),
+    default: config.default ?? (() => []),
     defaultBeforeSave: config.defaultBeforeSave,
-    fromData: dencoder as (input: E[]) => D[],
-    toData: dencoder as (input: D[]) => E[]
+    fromData: dencoder,
+    toData: dencoder
   });
 }
 
@@ -1545,10 +1545,10 @@ export type FirestoreDencoderStringArrayFieldConfig<D extends PrimativeKey, E ex
 export function firestoreDencoderStringArray<D extends PrimativeKey, E extends PrimativeKey, S extends string = string>(config: FirestoreDencoderStringArrayFieldConfig<D, E, S>) {
   const { dencoder } = config;
   return firestoreField<D[], S>({
-    default: config.default ?? ((() => []) as Getter<D[]>),
+    default: config.default ?? (() => []),
     defaultBeforeSave: config.defaultBeforeSave,
     fromData: dencoder as (input: S) => D[],
-    toData: dencoder as (input: D[]) => S
+    toData: dencoder
   });
 }
 
@@ -1906,11 +1906,11 @@ export function firestoreObjectArray<T extends object, O extends object = Firest
   const to: ModelMapToFunction<T, O> = (x) => {
     // remove null/undefined values from each field when converting to in order to mirror firestore usage (undefined is treated like null)
     const base = baseTo(x);
-    return filterNullAndUndefinedValues(base) as O;
+    return filterNullAndUndefinedValues(base);
   };
 
   return firestoreField<T[], O[]>({
-    default: config.default ?? ((() => []) as Getter<T[]>),
+    default: config.default ?? (() => []),
     defaultBeforeSave: config.defaultBeforeSave,
     fromData: (input: O[]) => sortFn(performFiltering(input.map((x) => from(x))), false), // map then filter then sort
     toData: (input: T[]) => filterMaybeArrayValues(sortFn(performFiltering(input), true)).map((x) => to(x)) // filter then sort then map

@@ -31,7 +31,7 @@ export interface DeskPaginationOptions {
  * @returns The same builder, typed with {@link DeskPaginationOptions} and {@link MultiplePagesOptions}.
  */
 export function withDeskPagination<T>(yargs: Argv<T>): Argv<T & DeskPaginationOptions & MultiplePagesOptions> {
-  return withMultiplePages(yargs.option('from', { type: 'number', default: 1, describe: 'Start index (1-based)' }).option('limit', { type: 'number', default: 25, describe: 'Max records (max 50)' })) as unknown as Argv<T & DeskPaginationOptions & MultiplePagesOptions>;
+  return withMultiplePages(yargs.option('from', { type: 'number', default: 1, describe: 'Start index (1-based)' }).option('limit', { type: 'number', default: 25, describe: 'Max records (max 50)' }));
 }
 
 export interface ModuleOptions {
@@ -50,7 +50,7 @@ export function withModule<T>(yargs: Argv<T>): Argv<T & ModuleOptions> {
     type: 'string',
     demandOption: true,
     describe: 'Zoho module name (e.g. Candidates, Contacts, Leads)'
-  }) as unknown as Argv<T & ModuleOptions>;
+  });
 }
 
 export interface RecordIdOptions {
@@ -68,7 +68,7 @@ export function withRecordId<T>(yargs: Argv<T>): Argv<T & RecordIdOptions> {
     type: 'string',
     demandOption: true,
     describe: 'Record ID'
-  }) as unknown as Argv<T & RecordIdOptions>;
+  });
 }
 
 export interface FieldsOptions {
@@ -87,7 +87,7 @@ export function withFields<T>(yargs: Argv<T>, required = false): Argv<T & Fields
     type: 'string',
     demandOption: required,
     describe: 'Comma-separated field names to return'
-  }) as unknown as Argv<T & FieldsOptions>;
+  });
 }
 
 export interface SortOptions {
@@ -102,5 +102,5 @@ export interface SortOptions {
  * @returns The same builder, typed with {@link SortOptions}.
  */
 export function withSort<T>(yargs: Argv<T>): Argv<T & SortOptions> {
-  return yargs.option('sort-by', { type: 'string', describe: 'Field to sort by' }).option('sort-order', { type: 'string', choices: ['asc', 'desc'] as const, describe: 'Sort direction' }) as unknown as Argv<T & SortOptions>;
+  return yargs.option('sort-by', { type: 'string', describe: 'Field to sort by' }).option('sort-order', { type: 'string', choices: ['asc', 'desc'] as const, describe: 'Sort direction' });
 }

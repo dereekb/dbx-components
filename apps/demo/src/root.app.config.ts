@@ -181,7 +181,7 @@ export function dbxFirebaseModelEntitiesWidgetServiceConfigFactory(): DbxFirebas
   return config;
 }
 
-export const appConfig: ApplicationConfig = {
+export const APP_CONFIG: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection(), // dbx-components is not zoneless yet
     // formly

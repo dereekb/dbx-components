@@ -443,7 +443,7 @@ export function slashPathFolderFactory(config: SlashPathFolderFactoryConfig = {}
       path = addTrailingSlash(path);
     }
 
-    return path as InferredSlashPathFolder;
+    return path;
   };
 }
 
@@ -974,7 +974,7 @@ export function slashPathDetails(path: SlashPath): SlashPathDetails {
 
     if (fileParts.length === 2) {
       typedFile = file as SlashPathTypedFile;
-      typedFileExtension = fileParts[1] as SlashPathTypedFileExtension;
+      typedFileExtension = fileParts[1];
     }
   }
 
@@ -1146,6 +1146,7 @@ export type SlashPathPathMatcherConfigInput<N extends PrimativeValue = Primative
  *
  * @param input - The configuration input.
  * @returns The configuration.
+ * @throws {Error} When `input` is not an array, string, or config object.
  *
  * @dbxUtil
  * @dbxUtilCategory path

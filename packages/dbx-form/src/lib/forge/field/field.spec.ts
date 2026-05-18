@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { AsyncCustomValidator, BaseValueField, CustomValidator, FieldMeta, LogicConfig } from '@ng-forge/dynamic-forms';
+import type { AsyncCustomValidator, BaseValueField, CustomValidator, LogicConfig } from '@ng-forge/dynamic-forms';
 import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction, type DbxForgeBuildFieldDefFunction } from './field';
 import type { DbxForgeField } from '../form/forge.form';
 
@@ -209,7 +209,7 @@ describe('configure parameter', () => {
 
         const formConfig = (field as DbxForgeField<any>)._formConfig;
         expect(formConfig?.customFnConfig?.validators).toBeDefined();
-        expect(Object.values(formConfig!.customFnConfig!.validators!)).toContain(myValidator);
+        expect(Object.values(formConfig!.customFnConfig!.validators)).toContain(myValidator);
       });
 
       it('should register an async validator fn and replace with auto-generated functionName', () => {
@@ -233,7 +233,7 @@ describe('configure parameter', () => {
 
         const formConfig = (field as DbxForgeField<any>)._formConfig;
         expect(formConfig?.customFnConfig?.asyncValidators).toBeDefined();
-        expect(Object.values(formConfig!.customFnConfig!.asyncValidators!)).toContain(myAsyncValidator);
+        expect(Object.values(formConfig!.customFnConfig!.asyncValidators)).toContain(myAsyncValidator);
       });
 
       it('should preserve explicit functionName when provided alongside fn', () => {
@@ -334,7 +334,7 @@ describe('configure parameter', () => {
   describe('meta', () => {
     it('should set meta via addMeta()', () => {
       const field = forgeTestField({ key: 'x' }, (x) => {
-        x.addMeta({ autocomplete: 'name' } as FieldMeta);
+        x.addMeta({ autocomplete: 'name' });
       });
 
       expect(field.meta).toBeDefined();
@@ -343,8 +343,8 @@ describe('configure parameter', () => {
 
     it('should merge meta from multiple addMeta() calls', () => {
       const field = forgeTestField({ key: 'x' }, (x) => {
-        x.addMeta({ autocomplete: 'name' } as FieldMeta);
-        x.addMeta({ inputmode: 'text' } as FieldMeta);
+        x.addMeta({ autocomplete: 'name' });
+        x.addMeta({ inputmode: 'text' });
       });
 
       expect((field.meta as any)?.autocomplete).toBe('name');
@@ -353,8 +353,8 @@ describe('configure parameter', () => {
 
     it('should replace meta entirely via setMeta()', () => {
       const field = forgeTestField({ key: 'x' }, (x) => {
-        x.addMeta({ autocomplete: 'name' } as FieldMeta);
-        x.setMeta({ inputmode: 'numeric' } as FieldMeta);
+        x.addMeta({ autocomplete: 'name' });
+        x.setMeta({ inputmode: 'numeric' });
       });
 
       expect((field.meta as any)?.autocomplete).toBeUndefined();
@@ -363,7 +363,7 @@ describe('configure parameter', () => {
 
     it('should return current meta via getMeta()', () => {
       forgeTestField({ key: 'x' }, (x) => {
-        x.addMeta({ autocomplete: 'email' } as FieldMeta);
+        x.addMeta({ autocomplete: 'email' });
         const meta = x.getMeta();
         expect((meta as any)?.autocomplete).toBe('email');
       });
@@ -371,7 +371,7 @@ describe('configure parameter', () => {
 
     it('should not modify meta when addMeta() is called with undefined', () => {
       const field = forgeTestField({ key: 'x' }, (x) => {
-        x.addMeta({ autocomplete: 'name' } as FieldMeta);
+        x.addMeta({ autocomplete: 'name' });
         x.addMeta(undefined);
       });
 

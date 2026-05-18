@@ -51,7 +51,7 @@ export function makeModelMapFunctions<V extends object, D extends object>(fields
   const toConversions: [keyof V, ModelFieldMapFunction][] = conversionsByKey.map(([key, configs]) => [key, configs.to]);
 
   const from = makeModelConversionFieldValuesFunction<D, V>(fromConversions) as ModelMapFromFunction<V, D>;
-  const to = makeModelConversionFieldValuesFunction<V, D>(toConversions) as ModelMapToFunction<V, D>;
+  const to = makeModelConversionFieldValuesFunction<V, D>(toConversions);
 
   return {
     from,

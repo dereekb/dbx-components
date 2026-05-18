@@ -53,7 +53,7 @@ const followersRemoveCommand: CommandModule = {
   }
 };
 
-export const deskFollowersCommand: CommandModule = {
+export const DESK_FOLLOWERS_COMMAND: CommandModule = {
   command: 'followers',
   describe: 'Desk ticket follower operations',
   builder: (yargs: Argv) => yargs.command(followersListCommand).command(followersAddCommand).command(followersRemoveCommand).demandCommand(1),

@@ -113,9 +113,9 @@ export function dbxForgeDateScheduleRangeField(config: DbxForgeCalendarDateSched
     key,
     type: FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE,
     label: label ?? 'Schedule',
-    value: undefined as unknown,
+    value: undefined,
     required,
     readonly: isReadonly,
     props: Object.keys(props).length > 0 ? props : undefined
-  }) as DbxForgeCalendarDateScheduleRangeFieldDef;
+  });
 }

@@ -1,6 +1,6 @@
 import { Linter } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
-import { utilEslintPlugin } from './plugin';
+import { UTIL_ESLINT_PLUGIN } from './plugin';
 
 const RULE_ID = 'dereekb-util/require-exported-jsdoc-example';
 
@@ -9,14 +9,14 @@ function makeConfig(): Linter.Config[] {
     {
       files: ['**/*.ts'],
       languageOptions: {
-        parser: tsParser as any,
+        parser: tsParser,
         parserOptions: {
           ecmaVersion: 2022,
           sourceType: 'module'
         }
       },
       plugins: {
-        'dereekb-util': utilEslintPlugin as any
+        'dereekb-util': UTIL_ESLINT_PLUGIN as any
       },
       rules: {
         [RULE_ID]: 'error'
@@ -144,10 +144,10 @@ export default function defaultFn(a: number): number {
         {
           files: ['**/*.ts'],
           languageOptions: {
-            parser: tsParser as any,
+            parser: tsParser,
             parserOptions: { ecmaVersion: 2022, sourceType: 'module' }
           },
-          plugins: { 'dereekb-util': utilEslintPlugin as any },
+          plugins: { 'dereekb-util': UTIL_ESLINT_PLUGIN as any },
           rules: { [RULE_ID]: ['error', { exemptJsdocTag: '@mySkipTag' }] }
         }
       ];
@@ -172,10 +172,10 @@ export function add(a: number, b: number): number {
         {
           files: ['**/*.ts'],
           languageOptions: {
-            parser: tsParser as any,
+            parser: tsParser,
             parserOptions: { ecmaVersion: 2022, sourceType: 'module' }
           },
-          plugins: { 'dereekb-util': utilEslintPlugin as any },
+          plugins: { 'dereekb-util': UTIL_ESLINT_PLUGIN as any },
           rules: { [RULE_ID]: ['error', { exemptNoArguments: false }] }
         }
       ];

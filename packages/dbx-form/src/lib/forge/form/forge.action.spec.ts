@@ -107,7 +107,7 @@ describe('DbxActionFormDirective with forge form', () => {
       const value = await firstValueFrom(directive.sourceInstance.valueReady$.pipe(timeout(2000), first()));
 
       expect(value).toBeDefined();
-      expect((value as any).name).toBe('Valid');
+      expect(value.name).toBe('Valid');
 
       fixture.destroy();
     });
@@ -637,7 +637,7 @@ describe('DbxActionFormDirective with forge form', () => {
       const value = await firstValueFrom(directive.sourceInstance.valueReady$.pipe(timeout(2000), first()));
 
       expect(value).toBeDefined();
-      expect((value as any).name).toBe('From Source');
+      expect(value.name).toBe('From Source');
 
       fixture.destroy();
     });
@@ -662,7 +662,7 @@ describe('DbxActionFormDirective with forge form', () => {
 
       const value = await firstValueFrom(directive.sourceInstance.valueReady$.pipe(timeout(2000), first()));
 
-      expect((value as any).name).toBe('Initial');
+      expect(value.name).toBe('Initial');
 
       fixture.destroy();
     });

@@ -61,7 +61,7 @@ describe('FirestoreCollection', () => {
         expect(ref!).toBeDefined();
 
         const loadedDoc = firestoreCollection.documentAccessor().loadDocument(ref!);
-        const loadedData: DocumentSnapshot<MockItem> = (await loadedDoc.accessor.get()) as DocumentSnapshot<MockItem>;
+        const loadedData: DocumentSnapshot<MockItem> = await loadedDoc.accessor.get();
 
         expect(loadedData).toBeDefined();
         expect(loadedData.data()).toBeDefined();

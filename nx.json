@@ -61,7 +61,12 @@
     },
     "@nx/eslint:lint": {
       "cache": false,
-      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"]
+      "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"],
+      "options": {
+        "cache": true,
+        "cacheLocation": ".cache/eslint",
+        "cacheStrategy": "content"
+      }
     },
     "@nx/vitest:test": {
       "cache": true,

@@ -2,7 +2,7 @@ import { environment } from './environments/environment';
 import { onRequest } from 'firebase-functions/v2/https';
 import admin from 'firebase-admin';
 import { allAppFunctions, allScheduledAppFunctions, initNestServer } from './app/app';
-import { demoDevelopmentFunctionMap } from './app/function/model/development.functions';
+import { DEMO_DEVELOPMENT_FUNCTION_MAP } from './app/function/model/development.functions';
 import { firebaseServerDevFunctions } from '@dereekb/firebase-server';
 import { onCallWithDemoNestContext } from './app/function/function.context';
 
@@ -23,7 +23,7 @@ export const { exampleSchedule } = allScheduledFunctions;
 export const { dev } = firebaseServerDevFunctions({
   enabled: true,
   nest,
-  developerFunctionsMap: demoDevelopmentFunctionMap,
+  developerFunctionsMap: DEMO_DEVELOPMENT_FUNCTION_MAP,
   onCallFactory: onCallWithDemoNestContext,
   allScheduledFunctions
 });

@@ -329,7 +329,7 @@ describe('dbxForgeSearchableTextField()', () => {
   it('should pass logic through to the inner field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
     const inner = getInnerField(dbxForgeSearchableTextField({ ...minimalConfig(), logic }) as any);
-    expect((inner as any).logic).toEqual(logic);
+    expect(inner.logic).toEqual(logic);
   });
 });
 
@@ -439,13 +439,13 @@ describe('DbxForgeSearchableTextFieldComponent', () => {
     await settle(fixture);
 
     const afterSelect = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-    expect((afterSelect as any)?.pick).toBe('1');
+    expect(afterSelect?.pick).toBe('1');
 
     context.setValue({ pick: null } as any);
     await settle(fixture);
 
     const afterClear = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-    expect((afterClear as any)?.pick).toBeFalsy();
+    expect(afterClear?.pick).toBeFalsy();
 
     fixture.destroy();
   });

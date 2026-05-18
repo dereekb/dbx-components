@@ -63,8 +63,8 @@ export type PartialPotentialFieldConfig = Partial<FieldConfig> & Partial<Labeled
  * Validates the configuration on the input field.
  *
  * @param fieldConfig - The Formly field configuration to validate.
- * @param fieldConfig - The Formly field configuration to validate.
  * @returns The validated field configuration.
+ * @throws {Error} When `fieldConfig.key` is missing.
  */
 export function formlyField<T extends FormlyFieldConfig = FormlyFieldConfig>(fieldConfig: T): T {
   if (!fieldConfig.key) {
@@ -96,25 +96,25 @@ export function propsAndConfigForFieldConfig<O extends object = object>(fieldCon
 /**
  * Keys from {@link PartialPotentialFieldConfig} that are merged into Formly props.
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const partialPotentialFieldConfigKeys: (keyof PartialPotentialFieldConfig)[] = ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete'];
+
+export const PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS: (keyof PartialPotentialFieldConfig)[] = ['label', 'placeholder', 'required', 'readonly', 'description', 'autocomplete'];
 /**
  * Filter configuration for extracting field config keys from objects.
  */
-export const partialPotentialFieldConfigKeysFilter: FilterKeyValueTuplesInput<PartialPotentialFieldConfig> = {
-  keysFilter: partialPotentialFieldConfigKeys
+export const PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS_FILTER: FilterKeyValueTuplesInput<PartialPotentialFieldConfig> = {
+  keysFilter: PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS
 };
 
 /**
  * Merge function that combines multiple partial field configs, picking only the recognized keys.
  */
-export const mergePropsValueObjects = mergeObjectsFunction<PartialPotentialFieldConfig>(partialPotentialFieldConfigKeysFilter);
+export const mergePropsValueObjects = mergeObjectsFunction<PartialPotentialFieldConfig>(PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS_FILTER);
 
 /**
  * Filter function that extracts only the recognized field config keys from an object.
  */
 export const filterPartialPotentialFieldConfigValuesFromObject = filterFromPOJOFunction<PartialPotentialFieldConfig>({
-  filter: partialPotentialFieldConfigKeysFilter
+  filter: PARTIAL_POTENTIAL_FIELD_CONFIG_KEYS_FILTER
 }) as GeneralFilterFromPOJOFunction<PartialPotentialFieldConfig>;
 
 /**

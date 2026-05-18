@@ -20,7 +20,7 @@ import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatTreeAsJson, formatTreeAsMarkdown, inspectSpecFile, type SpecTreeView } from './model-test-shared/index.js';
+import { formatTreeAsJson, formatTreeAsMarkdown, inspectSpecFile } from './model-test-shared/index.js';
 
 const TreeArgsType = type({
   specFile: 'string',
@@ -87,7 +87,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     if (inspectError !== undefined || tree === undefined) {
       result = toolError(inspectError ?? 'Failed to inspect spec file.');
     } else {
-      const view = (parsed.view ?? 'all') as SpecTreeView;
+      const view = parsed.view ?? 'all';
       const filters = { filterByModel: parsed.filterByModel, filterByDescribePath: parsed.filterByDescribePath };
       const text = parsed.format === 'json' ? formatTreeAsJson(tree, view, filters) : formatTreeAsMarkdown(tree, view, filters);
       result = { content: [{ type: 'text', text }] };
@@ -98,4 +98,4 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   return result;
 }
 
-export const modelTestTreeTool: DbxTool = { definition: TOOL, run };
+export const MODEL_TEST_TREE_TOOL: DbxTool = { definition: TOOL, run };

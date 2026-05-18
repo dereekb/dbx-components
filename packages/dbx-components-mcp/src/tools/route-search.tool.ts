@@ -204,7 +204,7 @@ export async function runRouteSearch(rawArgs: unknown): Promise<ToolResult> {
   return result;
 }
 
-export const routeSearchTool: DbxTool = {
+export const ROUTE_SEARCH_TOOL: DbxTool = {
   definition: DBX_ROUTE_SEARCH_TOOL,
   run: runRouteSearch
 };

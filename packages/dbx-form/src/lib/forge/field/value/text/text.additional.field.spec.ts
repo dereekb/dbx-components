@@ -265,7 +265,7 @@ describe('dbxForgeStateField()', () => {
         fixture.detectChanges();
         await fixture.whenStable();
 
-        fixture.componentInstance.setValue({ state: 'tx' } as never);
+        fixture.componentInstance.setValue({ state: 'tx' });
         await settle();
 
         const value = await firstValueFrom(fixture.componentInstance.getValue());
@@ -279,7 +279,7 @@ describe('dbxForgeStateField()', () => {
         fixture.detectChanges();
         await fixture.whenStable();
 
-        fixture.componentInstance.setValue({ state: 'tx' } as never);
+        fixture.componentInstance.setValue({ state: 'tx' });
         await settle();
 
         const value = await firstValueFrom(fixture.componentInstance.getValue());
@@ -293,7 +293,7 @@ describe('dbxForgeStateField()', () => {
         fixture.detectChanges();
         await fixture.whenStable();
 
-        fixture.componentInstance.setValue({ state: 'tx' } as never);
+        fixture.componentInstance.setValue({ state: 'tx' });
         await settle();
 
         const value = await firstValueFrom(fixture.componentInstance.getValue());

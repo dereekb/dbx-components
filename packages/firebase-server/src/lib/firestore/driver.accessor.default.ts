@@ -48,7 +48,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   }
 
   set(data: WithFieldValue<T>, options?: SetOptions): Promise<GoogleCloudWriteResult> {
-    return options ? this.documentRef.set(data as Partial<T>, options) : this.documentRef.set(data as T);
+    return options ? this.documentRef.set(data, options) : this.documentRef.set(data);
   }
 
   increment(data: FirestoreAccessorIncrementUpdate<T>, params?: FirestoreDocumentUpdateParams): Promise<GoogleCloudWriteResult> {

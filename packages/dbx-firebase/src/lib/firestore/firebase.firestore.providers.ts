@@ -10,6 +10,7 @@ import { FIREBASE_FIRESTORE_TOKEN } from '../firebase/firebase.tokens';
  *
  * @param appCollection - The app collection class to use.
  * @returns Provider factory for the SystemStateFirestoreCollections.
+ * @throws {Error} When `appCollection` does not expose a `systemStateCollection`.
  */
 export function provideSystemStateFirestoreCollections(appCollection: SystemStateFirestoreCollections): SystemStateFirestoreCollections {
   if (!appCollection.systemStateCollection) {
@@ -24,6 +25,7 @@ export function provideSystemStateFirestoreCollections(appCollection: SystemStat
  *
  * @param appCollection - The app collection class to use.
  * @returns Provider factory for the NotificationFirestoreCollections.
+ * @throws {Error} When `appCollection` does not expose a `notificationSummaryCollection`.
  */
 export function provideNotificationFirestoreCollections(appCollection: NotificationFirestoreCollections): NotificationFirestoreCollections {
   if (!appCollection.notificationSummaryCollection) {
@@ -38,6 +40,7 @@ export function provideNotificationFirestoreCollections(appCollection: Notificat
  *
  * @param appCollection - The app collection class to use.
  * @returns Provider factory for the StorageFileFirestoreCollections.
+ * @throws {Error} When `appCollection` does not expose a `storageFileCollection`.
  */
 export function provideStorageFileFirestoreCollections(appCollection: StorageFileFirestoreCollections): StorageFileFirestoreCollections {
   if (!appCollection.storageFileCollection) {

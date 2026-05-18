@@ -94,7 +94,7 @@ function parseArgs(raw: unknown): ScaffoldArtifactInput {
     throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ScaffoldArtifactInput = {
-    artifact: parsed.artifact as ArtifactKind,
+    artifact: parsed.artifact,
     name: parsed.name,
     componentDir: parsed.componentDir,
     apiDir: parsed.apiDir,
@@ -173,7 +173,7 @@ export async function runArtifactScaffold(rawArgs: unknown): Promise<ToolResult>
   return result;
 }
 
-export const artifactScaffoldTool: DbxTool = {
+export const ARTIFACT_SCAFFOLD_TOOL: DbxTool = {
   definition: DBX_ARTIFACT_SCAFFOLD_TOOL,
   run: runArtifactScaffold
 };

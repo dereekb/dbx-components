@@ -1,4 +1,4 @@
-import { type DocumentReference, type WriteBatch as FirebaseFirestoreWriteBatch, type UpdateData as FirestoreUpdateData } from 'firebase/firestore';
+import { type DocumentReference, type WriteBatch as FirebaseFirestoreWriteBatch } from 'firebase/firestore';
 import { type FirestoreDocumentContext, type UpdateData, type DocumentData, type WithFieldValue, FirestoreDocumentContextType, type FirestoreDocumentDataAccessor, type FirestoreDocumentDataAccessorFactory, type SetOptions, assertFirestoreUpdateHasData } from '../../common/firestore';
 import { DefaultFirestoreDocumentDataAccessor } from './driver.accessor.default';
 
@@ -34,7 +34,7 @@ export class WriteBatchFirestoreDocumentDataAccessor<T> extends DefaultFirestore
 
   override update(data: UpdateData<object>): Promise<void> {
     assertFirestoreUpdateHasData(data);
-    this.batch.update(this.documentRef, data as FirestoreUpdateData<object>);
+    this.batch.update(this.documentRef, data);
     return Promise.resolve();
   }
 }

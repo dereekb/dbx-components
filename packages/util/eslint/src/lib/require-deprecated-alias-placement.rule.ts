@@ -301,10 +301,11 @@ interface MarkerLocation {
  * Reports the `missingCompatMarker` violation, choosing between the marker-only and interleaved
  * fix strategies based on whether the deprecated tail is already at the bottom of the file.
  *
- * @param context - The ESLint rule context.
- * @param sourceCode - The ESLint `SourceCode` instance.
- * @param analyzable - All analyzable top-level statements in source order.
- * @param deprecatedStatements - The subset that carry `@deprecated`.
+ * @param args - Inputs grouped as a single config object.
+ * @param args.context - The ESLint rule context.
+ * @param args.sourceCode - The ESLint `SourceCode` instance.
+ * @param args.analyzable - All analyzable top-level statements in source order.
+ * @param args.deprecatedStatements - The subset that carry `@deprecated`.
  */
 function reportMissingMarker(args: { readonly context: RuleContext; readonly sourceCode: AstNode; readonly analyzable: readonly AstNode[]; readonly deprecatedStatements: readonly AstNode[] }): void {
   const { context, sourceCode, analyzable, deprecatedStatements } = args;
@@ -367,10 +368,11 @@ function buildMoveNonDeprecatedFix(sourceCode: AstNode, stmt: AstNode, marker: M
  * non-deprecated block (below the marker). At most one of each is reported per pass; ESLint's
  * autofix loop converges across multiple violations.
  *
- * @param context - The ESLint rule context.
- * @param sourceCode - The ESLint `SourceCode` instance.
- * @param analyzable - All analyzable top-level statements in source order.
- * @param markerOffset - The marker comment's start offset.
+ * @param args - Inputs grouped as a single config object.
+ * @param args.context - The ESLint rule context.
+ * @param args.sourceCode - The ESLint `SourceCode` instance.
+ * @param args.analyzable - All analyzable top-level statements in source order.
+ * @param args.markerOffset - The marker comment's start offset.
  */
 function reportMisplacedStatements(args: { readonly context: RuleContext; readonly sourceCode: AstNode; readonly analyzable: readonly AstNode[]; readonly markerOffset: number }): void {
   const { context, sourceCode, analyzable, markerOffset } = args;
@@ -445,7 +447,7 @@ function collectDeprecatedStatements(sourceCode: AstNode, analyzable: readonly A
  *
  * @see `dbx__note__typescript-programming` → Deprecated Alias Placement
  */
-export const utilRequireDeprecatedAliasPlacementRule: UtilRequireDeprecatedAliasPlacementRuleDefinition = {
+export const UTIL_REQUIRE_DEPRECATED_ALIAS_PLACEMENT_RULE: UtilRequireDeprecatedAliasPlacementRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

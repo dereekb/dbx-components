@@ -223,16 +223,13 @@ describe('iterateDbxCliCallModel()', () => {
   });
 
   it('stops on hasMore: false even when a cursorDocumentKey is present', async () => {
-    const callModel = vi.fn(
-      async () =>
-        ({
-          results: [{ value: 1 }],
-          keys: ['k/1'],
-          count: 1,
-          cursorDocumentKey: 'k/1',
-          hasMore: false
-        }) as unknown as Record<string, unknown>
-    );
+    const callModel = vi.fn(async () => ({
+      results: [{ value: 1 }],
+      keys: ['k/1'],
+      count: 1,
+      cursorDocumentKey: 'k/1',
+      hasMore: false
+    }));
     const context = buildStubContext(callModel);
 
     const result = await iterateDbxCliCallModel<TestParams, TestItem>({

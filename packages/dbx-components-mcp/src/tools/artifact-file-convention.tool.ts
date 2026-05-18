@@ -71,7 +71,7 @@ function parseArgs(raw: unknown): ParsedArgs {
     throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
   const result: ParsedArgs = {
-    artifact: parsed.artifact as ArtifactKind,
+    artifact: parsed.artifact,
     componentDir: parsed.componentDir,
     apiDir: parsed.apiDir,
     name: parsed.name
@@ -106,7 +106,7 @@ export function runArtifactFileConvention(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const artifactFileConventionTool: DbxTool = {
+export const ARTIFACT_FILE_CONVENTION_TOOL: DbxTool = {
   definition: DBX_ARTIFACT_FILE_CONVENTION_TOOL,
   run: runArtifactFileConvention
 };

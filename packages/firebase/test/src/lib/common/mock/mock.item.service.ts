@@ -33,9 +33,9 @@ import {
   mockItemUserFirestoreCollectionGroup,
   type MockItemUserFirestoreCollectionGroup,
   type MockItemUserRoles,
-  mockItemSystemStateStoredDataConverterMap,
+  MOCK_ITEM_SYSTEM_STATE_STORED_DATA_CONVERTER_MAP,
   mockItemPagedFirestoreCollection,
-  mockItemPagedAlphaDistributionScheme,
+  MOCK_ITEM_PAGED_ALPHA_DISTRIBUTION_SCHEME,
   mockItemPagedFirestoreCollectionGroup,
   type MockItemPagedDocument,
   type MockItemPagedDocumentData,
@@ -99,10 +99,10 @@ export function makeMockItemCollections(firestoreContext: FirestoreContext): Moc
     mockItemSubItemDeepCollectionFactory: mockItemSubItemDeepFirestoreCollection(firestoreContext),
     mockItemSubItemDeepCollectionGroup: mockItemSubItemDeepFirestoreCollectionGroup(firestoreContext),
     mockItemPagedCollectionFactory: mockItemPagedFirestoreCollection(firestoreContext),
-    mockItemPagedStaticCollectionFactory: mockItemPagedFirestoreCollection(firestoreContext, { distributionScheme: mockItemPagedAlphaDistributionScheme }),
+    mockItemPagedStaticCollectionFactory: mockItemPagedFirestoreCollection(firestoreContext, { distributionScheme: MOCK_ITEM_PAGED_ALPHA_DISTRIBUTION_SCHEME }),
     mockItemPagedCollectionFactoryWithConfig: (config) => mockItemPagedFirestoreCollection(firestoreContext, config),
     mockItemPagedCollectionGroup: mockItemPagedFirestoreCollectionGroup(firestoreContext),
-    mockItemSystemStateCollection: systemStateFirestoreCollection(firestoreContext, mockItemSystemStateStoredDataConverterMap)
+    mockItemSystemStateCollection: systemStateFirestoreCollection(firestoreContext, MOCK_ITEM_SYSTEM_STATE_STORED_DATA_CONVERTER_MAP)
   };
 }
 

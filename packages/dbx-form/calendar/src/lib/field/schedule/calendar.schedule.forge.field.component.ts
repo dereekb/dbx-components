@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, type InputSignal, type Signal } from '@angular/core';
 import { type ArrayOrValue, type TimezoneString, type Maybe } from '@dereekb/util';
-import { type Subscription, distinctUntilChanged, skip } from 'rxjs';
+import { distinctUntilChanged, skip } from 'rxjs';
 import { type ObservableOrValue, asObservable } from '@dereekb/rxjs';
 import { isSameDateCellScheduleDateRange, type DateRange, type DateCellScheduleDateFilterConfig, type DateCellScheduleDayCode, type DateOrDateRangeOrDateCellIndexOrDateCellRange } from '@dereekb/date';
 import { type CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore } from '../../calendar.schedule.selection.store';
@@ -84,12 +84,12 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent {
   private readonly _exclusionsSub = cleanSubscription();
 
   // Field value signal (double-call pattern: field()() to get FieldState)
-  readonly fieldValue = computed(() => {
+  readonly fieldValueSignal = computed(() => {
     const state = this.field()?.() as any;
     return state?.value?.() as unknown;
   });
 
-  readonly isDisabled = computed(() => {
+  readonly isDisabledSignal = computed(() => {
     const state = this.field()?.() as any;
     return (state?.disabled?.() as boolean) ?? false;
   });
@@ -102,7 +102,10 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent {
   // Computed props
   readonly labelTextSignal: Signal<Maybe<string>> = computed(() => this.props()?.label);
   readonly descriptionSignal: Signal<Maybe<string>> = computed(() => this.props()?.description);
-  readonly isReadonlyOrDisabledSignal = computed(() => (this.props() as any)?.readonly || this.isDisabled());
+  readonly isReadonlyOrDisabledSignal = computed(() => {
+    const isDisabled = this.isDisabledSignal();
+    return (this.props() as any)?.readonly || isDisabled;
+  });
   readonly openPickerOnTextClickSignal = computed(() => this.props()?.allowTextInput !== true);
   readonly showCustomizeSignal = computed(() => !this.props()?.hideCustomize);
   readonly dialogContentConfigSignal = computed(() => this.props()?.dialogContentConfig);
@@ -110,7 +113,8 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent {
   readonly allowCustomizeWithoutDateRangeSignal = computed(() => this.props()?.allowCustomizeWithoutDateRange ?? false);
 
   readonly disableCustomizeSignal = computed(() => {
-    return this.allowCustomizeWithoutDateRangeSignal() ? false : !this.fieldValue();
+    const fieldValue = this.fieldValueSignal();
+    return this.allowCustomizeWithoutDateRangeSignal() ? false : !fieldValue;
   });
 
   private _setFieldValue(value: unknown): void {
@@ -125,10 +129,10 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent {
   }
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'dbx-schedule-selection-calendar-date-range' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'dbx-schedule-selection-calendar-date-range' });
 
     // Convert field value to observable for store sync
-    const fieldValue$ = toObservable(this.fieldValue);
+    const fieldValue$ = toObservable(this.fieldValueSignal);
 
     // Sync field value → store (skip initial emission)
     this._syncSub.subscription = fieldValue$
@@ -155,19 +159,19 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent {
       const { outputTimezone, minMaxDateRange, filter, exclusions, defaultScheduleDays, initialSelectionState, computeSelectionResultRelativeToFilter, cellContentFactory } = p;
 
       if (filter != null) {
-        this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter)) as Subscription;
+        this._filterSub.subscription = this.dbxCalendarScheduleSelectionStore.setFilter(asObservable(filter));
       }
 
       if (defaultScheduleDays != null) {
-        this._defaultWeekSub.subscription = this.dbxCalendarScheduleSelectionStore.setDefaultScheduleDays(asObservable(defaultScheduleDays)) as Subscription;
+        this._defaultWeekSub.subscription = this.dbxCalendarScheduleSelectionStore.setDefaultScheduleDays(asObservable(defaultScheduleDays));
       }
 
       if (minMaxDateRange != null) {
-        this._minMaxDateRangeSub.subscription = this.dbxCalendarScheduleSelectionStore.setMinMaxDateRange(asObservable(minMaxDateRange)) as Subscription;
+        this._minMaxDateRangeSub.subscription = this.dbxCalendarScheduleSelectionStore.setMinMaxDateRange(asObservable(minMaxDateRange));
       }
 
       if (exclusions != null) {
-        this._exclusionsSub.subscription = this.dbxCalendarScheduleSelectionStore.setExclusions(asObservable(exclusions)) as Subscription;
+        this._exclusionsSub.subscription = this.dbxCalendarScheduleSelectionStore.setExclusions(asObservable(exclusions));
       }
 
       if (outputTimezone != null) {

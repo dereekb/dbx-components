@@ -14,7 +14,7 @@ import { parseGetArgs } from './get-args.helper';
  *
  * Backend: `GET <apiBaseUrl>/model/<modelType>/get?key=<key>` (ModelApiController.getOne).
  */
-export const getCommand: CommandModule = {
+export const GET_COMMAND: CommandModule = {
   command: 'get <modelOrKey> [key]',
   describe: 'Read a document by key. ModelType is inferred from the key prefix when only one positional is supplied.',
   builder: (yargs: Argv) =>

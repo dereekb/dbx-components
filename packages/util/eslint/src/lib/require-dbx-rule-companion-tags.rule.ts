@@ -42,7 +42,15 @@ function reportDuplicates(ctx: RuleReportContext, companions: ReadonlyMap<string
   }
 }
 
-function reportSeverity(ctx: RuleReportContext, severityTags: readonly ParsedJsdocTag[], triggerLine: number, allowedSeverities: readonly string[]): void {
+interface ReportSeverityInput {
+  readonly ctx: RuleReportContext;
+  readonly severityTags: readonly ParsedJsdocTag[];
+  readonly triggerLine: number;
+  readonly allowedSeverities: readonly string[];
+}
+
+function reportSeverity(input: ReportSeverityInput): void {
+  const { ctx, severityTags, triggerLine, allowedSeverities } = input;
   if (severityTags.length === 0 || severityTags[0].description.trim().length === 0) {
     reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingSeverity', report: ctx.report });
     return;
@@ -111,7 +119,7 @@ export interface UtilRequireDbxRuleCompanionTagsRuleDefinition {
  * `codes.ts` files. Mirrors the extractor at
  * `packages/dbx-components-mcp/scripts/extract-rule-catalog.mjs`.
  */
-export const utilRequireDbxRuleCompanionTagsRule: UtilRequireDbxRuleCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_RULE_COMPANION_TAGS_RULE: UtilRequireDbxRuleCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',
@@ -161,7 +169,7 @@ export const utilRequireDbxRuleCompanionTagsRule: UtilRequireDbxRuleCompanionTag
 
       reportUnknownCompanions(ctx, companions, knownCompanions);
       reportDuplicates(ctx, companions);
-      reportSeverity(ctx, companions.get('Severity') ?? [], triggerLine, allowedSeverities);
+      reportSeverity({ ctx, severityTags: companions.get('Severity') ?? [], triggerLine, allowedSeverities });
 
       for (const [suffix, messageId] of REQUIRED_SIMPLE_COMPANIONS) {
         const tags = companions.get(suffix) ?? [];

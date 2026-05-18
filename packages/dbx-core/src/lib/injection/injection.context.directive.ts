@@ -154,7 +154,7 @@ export class DbxInjectionContextDirective<O = unknown> implements DbxInjectionCo
       } else if (typeof error === 'object') {
         message = JSON.stringify(error);
       } else {
-        message = String(error as string | number | boolean | symbol | bigint);
+        message = String(error);
       }
 
       throw new Error(message);

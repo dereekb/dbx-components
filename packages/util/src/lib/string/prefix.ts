@@ -145,7 +145,7 @@ export function characterPrefixSuffixInstance<P extends CharacterPrefix = '', S 
         result = `${result}${suffix}` as CharacterPrefixSuffixString<P, S, T>;
       }
     } else {
-      result = `${prefix}${clean}${suffix}` as CharacterPrefixSuffixString<P, S, T>;
+      result = `${prefix}${clean}${suffix}`;
     }
 
     return result;

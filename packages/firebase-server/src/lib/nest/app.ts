@@ -143,7 +143,7 @@ export function nestServerInstance<T>(config: NestServerInstanceConfig<T>): Nest
       const nest: Promise<INestApplication> = createNestServer(server).catch((err) => {
         console.error('Nest failed startup.', err);
         throw err;
-      }) as Promise<INestApplication>;
+      });
 
       nestServer = { server, nest: makeGetter(nest) };
       serversCache.set(appName, nestServer);

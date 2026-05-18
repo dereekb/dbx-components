@@ -188,6 +188,7 @@ export const MAX_BATCH_SEND_RECIPIENTS = 1000;
  *
  * @param config - The conversion configuration containing the email request, default sender, and recipient variable settings.
  * @returns The constructed {@link MailgunMessageData} ready to be sent via the Mailgun API.
+ * @throws {Error} When `batchSend` is enabled with `cc`/`bcc` set, when the recipient list exceeds {@link MAX_BATCH_SEND_RECIPIENTS}, or when attachments are supplied via both `messageData` and `request.attachments`.
  */
 export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: ConvertMailgunTemplateEmailRequestToMailgunMessageDataConfig): MailgunMessageData {
   const {
@@ -405,6 +406,7 @@ export function convertMailgunRecipientToString(recipient: MailgunRecipient): Em
  *
  * @param value - The value to encode.
  * @returns The encoded value, or undefined if the value is null or undefined.
+ * @throws {Error} When `value` has an unsupported runtime type.
  */
 export function encodeMailgunTemplateVariableValue(value: unknown): Maybe<string> {
   let encodedValue: Maybe<string>;

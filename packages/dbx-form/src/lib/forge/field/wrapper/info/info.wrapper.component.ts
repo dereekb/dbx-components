@@ -18,7 +18,7 @@ import { type FieldWrapper } from '@ng-forge/dynamic-forms';
         <ng-container #fieldComponent></ng-container>
       </div>
       <div class="dbx-form-info-wrapper-info dbx-flex-noshrink dbx-flex-column dbx-flex-center">
-        <button mat-icon-button type="button" (click)="onClick()" [attr.aria-label]="ariaLabelValue()">
+        <button mat-icon-button type="button" (click)="onClick()" [attr.aria-label]="ariaLabelValueSignal()">
           <mat-icon>info</mat-icon>
         </button>
       </div>
@@ -34,7 +34,7 @@ export class DbxForgeInfoWrapperComponent implements FieldWrapper {
   readonly onInfoClick = input<() => void>();
   readonly ariaLabel = input<string>();
 
-  readonly ariaLabelValue = computed(() => {
+  readonly ariaLabelValueSignal = computed(() => {
     return this.ariaLabel() ?? 'More information';
   });
 

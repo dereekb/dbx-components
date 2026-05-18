@@ -400,7 +400,7 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
         const apiResponse = x[2];
 
         const result: GoogleCloudListResult = {
-          files: files as GoogleCloudFile[],
+          files: files,
           nextQuery,
           apiResponse: apiResponse as object
         };

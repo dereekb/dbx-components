@@ -1,5 +1,5 @@
 import type { RowField, GroupField, ContainerField, FieldDef, ConditionalExpression, WrapperConfig } from '@ng-forge/dynamic-forms';
-import { FORGE_EXPAND_FIELD_TYPE_NAME, type DbxForgeExpandButtonType, type DbxForgeExpandFieldDef, type DbxForgeExpandFieldProps } from './expand/expand.field';
+import { FORGE_EXPAND_FIELD_TYPE_NAME, type DbxForgeExpandButtonType, type DbxForgeExpandFieldDef } from './expand/expand.field';
 import { DBX_FORGE_FLEX_WRAPPER_TYPE_NAME, type DbxForgeFlexWrapper } from './flex/flex.wrapper';
 /**
  * Logic configuration for container fields (group, row, array).
@@ -421,8 +421,8 @@ export function dbxForgeExpandWrapper(config: DbxForgeExpandWrapperConfig): Cont
     props: {
       buttonType: config.buttonType ?? 'text',
       expandLabel: config.label ?? ''
-    } as DbxForgeExpandFieldProps
-  } as DbxForgeExpandFieldDef;
+    }
+  };
 
   const hiddenCondition: DbxForgeContainerLogicConfig = {
     type: 'hidden',

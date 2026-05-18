@@ -251,7 +251,7 @@ function parseArgs(rawArgs: unknown): ParsedSearchModelArgs {
   return {
     query: parsed.query,
     limit: parsed.limit,
-    scope: (parsed.scope ?? 'all') as SearchScope,
+    scope: parsed.scope ?? 'all',
     componentDirs: parsed.componentDirs
   };
 }
@@ -327,7 +327,7 @@ const EMPTY_DOWNSTREAM_CATALOG: DownstreamCatalog = {
   discoveryUsed: false
 };
 
-export const searchModelTool: DbxTool = {
+export const SEARCH_MODEL_TOOL: DbxTool = {
   definition: DBX_MODEL_SEARCH_TOOL,
   run: runSearchModel
 };

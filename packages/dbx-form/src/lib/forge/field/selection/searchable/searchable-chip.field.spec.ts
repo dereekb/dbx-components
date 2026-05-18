@@ -332,7 +332,7 @@ describe('dbxForgeSearchableChipField()', () => {
   it('should pass logic through to the inner field definition', () => {
     const logic: LogicConfig[] = [{ type: 'hidden', condition: { type: 'fieldValue', fieldPath: 'toggle', operator: 'equals', value: true } }];
     const inner = getInnerField(dbxForgeSearchableChipField({ ...minimalConfig(), logic }) as any);
-    expect((inner as any).logic).toEqual(logic);
+    expect(inner.logic).toEqual(logic);
   });
 });
 
@@ -474,13 +474,13 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
     await settle(fixture);
 
     const afterFirstSelect = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-    expect((afterFirstSelect as any)?.pickOne).toBe('a');
+    expect(afterFirstSelect?.pickOne).toBe('a');
 
     context.setValue({ pickOne: 'b' } as any);
     await settle(fixture);
 
     const afterSecondSelect = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-    expect((afterSecondSelect as any)?.pickOne).toBe('b');
+    expect(afterSecondSelect?.pickOne).toBe('b');
 
     fixture.destroy();
   });
@@ -544,7 +544,7 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
     await settle(fixture);
 
     const afterAdd = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-    expect((afterAdd as any)?.urls).toEqual(['https://example.com']);
+    expect(afterAdd?.urls).toEqual(['https://example.com']);
 
     // A second Enter should append another chip (multi-select is the default).
     component.inputCtrl.setValue('https://other.example.com');
@@ -560,7 +560,7 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
     await settle(fixture);
 
     const afterSecond = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-    expect((afterSecond as any)?.urls).toEqual(['https://example.com', 'https://other.example.com']);
+    expect(afterSecond?.urls).toEqual(['https://example.com', 'https://other.example.com']);
 
     fixture.destroy();
   });
@@ -593,14 +593,14 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
       await settle(fixture);
 
       const afterFirst = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-      expect((afterFirst as any)?.tags).toEqual(['x']);
+      expect(afterFirst?.tags).toEqual(['x']);
 
       // Set a two-element array value
       context.setValue({ tags: ['x', 'y'] } as any);
       await settle(fixture);
 
       const afterSecond = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-      expect((afterSecond as any)?.tags).toEqual(['x', 'y']);
+      expect(afterSecond?.tags).toEqual(['x', 'y']);
 
       fixture.destroy();
     });
@@ -631,14 +631,14 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
       await settle(fixture);
 
       const afterFirst = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-      expect((afterFirst as any)?.pick).toBe('a');
+      expect(afterFirst?.pick).toBe('a');
 
       // Replace with a different single value
       context.setValue({ pick: 'b' } as any);
       await settle(fixture);
 
       const afterSecond = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-      expect((afterSecond as any)?.pick).toBe('b');
+      expect(afterSecond?.pick).toBe('b');
 
       fixture.destroy();
     });
@@ -680,7 +680,7 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
     await settle(fixture);
 
     const afterInvalid = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-    expect((afterInvalid as any)?.urls ?? []).toEqual([]);
+    expect(afterInvalid?.urls ?? []).toEqual([]);
 
     component.inputCtrl.setValue('https://valid.example.com');
     await settle(fixture);
@@ -695,7 +695,7 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
     await settle(fixture);
 
     const afterValid = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
-    expect((afterValid as any)?.urls).toEqual(['https://valid.example.com']);
+    expect(afterValid?.urls).toEqual(['https://valid.example.com']);
 
     fixture.destroy();
   });

@@ -113,7 +113,7 @@ function suggestedName(name: string): string {
  *
  * @see `dbx__note__typescript-programming` → Constant Naming.
  */
-export const utilRequireDefaultPrefixNamingRule: UtilRequireDefaultPrefixNamingRuleDefinition = {
+export const UTIL_REQUIRE_DEFAULT_PREFIX_NAMING_RULE: UtilRequireDefaultPrefixNamingRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: undefined,

@@ -152,35 +152,43 @@ export function groupCompanionsBySuffix(familyTags: readonly ParsedJsdocTag[], m
   return result;
 }
 
+interface ValueValidatorContext {
+  readonly spec: DbxCompanionTagSpec;
+  readonly tag: ParsedJsdocTag;
+  readonly value: string;
+  readonly lineIndex: number;
+  readonly emit: (v: DbxTagViolation) => void;
+}
+
 /**
- * Per-format validators dispatched from {@link validateNonEmptyValue}. Each entry validates
+ * Per-format validators dispatched from {@link validateCompanionValue}. Each entry validates
  * a single non-empty tag value and emits zero or more violations.
  */
-const VALUE_VALIDATORS: Record<DbxTagFormat['kind'], (spec: DbxCompanionTagSpec, tag: ParsedJsdocTag, value: string, lineIndex: number, emit: (v: DbxTagViolation) => void) => void> = {
+const VALUE_VALIDATORS: Record<DbxTagFormat['kind'], (ctx: ValueValidatorContext) => void> = {
   marker: () => undefined,
   'free-text': () => undefined,
   'comma-list-free-text': () => undefined,
-  'kebab-slug': (spec, _tag, value, lineIndex, emit) => {
+  'kebab-slug': ({ spec, value, lineIndex, emit }) => {
     if (!KEBAB_SLUG_PATTERN.test(value)) emit({ kind: 'invalid-kebab', suffix: spec.suffix, value, lineIndex });
   },
-  enum: (spec, _tag, value, lineIndex, emit) => {
+  enum: ({ spec, value, lineIndex, emit }) => {
     const format = spec.format as { readonly kind: 'enum'; readonly values: readonly string[] };
     if (!format.values.includes(value)) emit({ kind: 'invalid-enum', suffix: spec.suffix, value, allowed: format.values, lineIndex });
   },
-  'pascal-identifier': (spec, _tag, value, lineIndex, emit) => {
+  'pascal-identifier': ({ spec, value, lineIndex, emit }) => {
     if (!PASCAL_IDENTIFIER_PATTERN.test(value)) emit({ kind: 'invalid-pascal', suffix: spec.suffix, value, lineIndex });
   },
-  'comma-list-kebab-slug': (spec, _tag, value, lineIndex, emit) => {
+  'comma-list-kebab-slug': ({ spec, value, lineIndex, emit }) => {
     for (const item of splitCommaSeparated(value)) {
       if (!KEBAB_SLUG_PATTERN.test(item)) emit({ kind: 'comma-item-not-kebab', suffix: spec.suffix, value: item, lineIndex });
     }
   },
-  'comma-list-lowercase': (spec, tag, value, lineIndex, emit) => {
+  'comma-list-lowercase': ({ spec, tag, value, lineIndex, emit }) => {
     for (const item of splitCommaSeparated(value)) {
       if (/[A-Z]/.test(item)) emit({ kind: 'tags-not-lowercase', suffix: spec.suffix, value: item, lineIndex, raw: tag });
     }
   },
-  boolean: (spec, _tag, value, lineIndex, emit) => {
+  boolean: ({ spec, value, lineIndex, emit }) => {
     if (parseBooleanTagValue(value) === undefined) emit({ kind: 'invalid-boolean', suffix: spec.suffix, value, lineIndex });
   }
 };
@@ -204,7 +212,7 @@ function validateCompanionValue(spec: DbxCompanionTagSpec, tags: readonly Parsed
       continue;
     }
     const validator = VALUE_VALIDATORS[spec.format.kind];
-    if (validator) validator(spec, tag, value, lineIndex, emit);
+    if (validator) validator({ spec, tag, value, lineIndex, emit });
   }
 }
 
@@ -232,18 +240,6 @@ export interface CheckDbxTagFamilyInput {
   readonly emit: (violation: DbxTagViolation) => void;
 }
 
-/**
- * Validates a `@dbx<Family>` marker plus its companion tags against the supplied spec.
- * Reports unknown companions, missing required companions, duplicates, and per-companion
- * value violations through `input.emit`.
- *
- * @param input - Parsed JSDoc, family spec, resolved marker/companion tags, and emit sink.
- *
- * @example
- * ```ts
- * checkDbxTagFamily({ parsed, spec, markerTag, familyTags, emit });
- * ```
- */
 function emitUnknownCompanions(groups: Map<string, ParsedJsdocTag[]>, knownSuffixes: ReadonlySet<string>, emit: (v: DbxTagViolation) => void): void {
   for (const [suffix, instances] of groups.entries()) {
     if (knownSuffixes.has(suffix)) continue;
@@ -257,7 +253,15 @@ function emitDuplicateCompanions(companion: DbxCompanionTagSpec, instances: read
   }
 }
 
-function checkCompanion(companion: DbxCompanionTagSpec, instances: readonly ParsedJsdocTag[], markerLineIndex: number, emit: (v: DbxTagViolation) => void): void {
+interface CheckCompanionInput {
+  readonly companion: DbxCompanionTagSpec;
+  readonly instances: readonly ParsedJsdocTag[];
+  readonly markerLineIndex: number;
+  readonly emit: (v: DbxTagViolation) => void;
+}
+
+function checkCompanion(input: CheckCompanionInput): void {
+  const { companion, instances, markerLineIndex, emit } = input;
   if (instances.length === 0) {
     if (companion.required) emit({ kind: 'missing', suffix: companion.suffix, lineIndex: markerLineIndex });
     return;
@@ -266,6 +270,18 @@ function checkCompanion(companion: DbxCompanionTagSpec, instances: readonly Pars
   validateCompanionValue(companion, instances, emit);
 }
 
+/**
+ * Validates a `@dbx<Family>` marker plus its companion tags against the supplied spec.
+ * Reports unknown companions, missing required companions, duplicates, and per-companion
+ * value violations through `input.emit`.
+ *
+ * @param input - Parsed JSDoc, family spec, resolved marker/companion tags, and emit sink.
+ *
+ * @example
+ * ```ts
+ * checkDbxTagFamily({ parsed, spec, markerTag, familyTags, emit });
+ * ```
+ */
 export function checkDbxTagFamily(input: CheckDbxTagFamilyInput): void {
   const { spec, markerTag, familyTags, emit } = input;
   const knownSuffixes = new Set(spec.companions.map((c) => c.suffix));
@@ -275,7 +291,7 @@ export function checkDbxTagFamily(input: CheckDbxTagFamilyInput): void {
 
   for (const companion of spec.companions) {
     const instances = groups.get(companion.suffix) ?? [];
-    checkCompanion(companion, instances, markerTag.startLineIndex, emit);
+    checkCompanion({ companion, instances, markerLineIndex: markerTag.startLineIndex, emit });
   }
 }
 

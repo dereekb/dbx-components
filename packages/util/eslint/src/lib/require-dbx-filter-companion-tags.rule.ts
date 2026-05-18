@@ -39,7 +39,7 @@ export interface UtilRequireDbxFilterCompanionTagsRuleDefinition {
  * Applies to classes (filter directives) and exported interfaces (filter
  * patterns); the scanner reads both as filter entries.
  */
-export const utilRequireDbxFilterCompanionTagsRule: UtilRequireDbxFilterCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_FILTER_COMPANION_TAGS_RULE: UtilRequireDbxFilterCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

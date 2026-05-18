@@ -648,7 +648,7 @@ export function addOrReplaceLimitInConstraints(limit: number, addedLimitType: ty
         type,
         data: {
           limit
-        } as LimitQueryConstraintData | LimitToLastQueryConstraintData
+        }
       };
     },
     [FIRESTORE_LIMIT_QUERY_CONSTRAINT_TYPE, FIRESTORE_LIMIT_TO_LAST_QUERY_CONSTRAINT_TYPE]

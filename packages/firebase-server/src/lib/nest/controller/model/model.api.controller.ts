@@ -157,6 +157,7 @@ export class ModelApiController {
    *
    * @param req - The Express request containing wildcard path params.
    * @returns Parsed path components with modelType, call, and specifier (defaults to '_').
+   * @throws {HttpException} `400 BAD_REQUEST` when `modelType` or `call` is missing from the path.
    */
   private _parsePath(req: Request): { modelType: string; call: string; specifier: string } {
     const pathSegments = ((req.params as any).path ?? (req.params as any)[0] ?? '').split('/').filter((s: string) => s.length > 0);

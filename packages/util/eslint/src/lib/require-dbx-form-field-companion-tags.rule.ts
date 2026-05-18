@@ -59,8 +59,7 @@ function determineTier(markers: readonly ParsedJsdocTag[], tierTags: readonly Pa
   if (derived !== undefined) {
     return derived;
   }
-  const explicitTier = tierTags.length > 0 ? tierTags[0].description.trim() : undefined;
-  return explicitTier;
+  return tierTags.length > 0 ? tierTags[0].description.trim() : undefined;
 }
 
 interface FormReportContext {
@@ -114,7 +113,15 @@ function reportFormProduces(ctx: FormReportContext, producesTags: readonly Parse
   }
 }
 
-function reportFormArrayOutput(ctx: FormReportContext, arrayOutputTags: readonly ParsedJsdocTag[], allowedArrayOutputs: readonly string[], triggerLine: number): void {
+interface ReportFormArrayOutputInput {
+  readonly ctx: FormReportContext;
+  readonly arrayOutputTags: readonly ParsedJsdocTag[];
+  readonly allowedArrayOutputs: readonly string[];
+  readonly triggerLine: number;
+}
+
+function reportFormArrayOutput(input: ReportFormArrayOutputInput): void {
+  const { ctx, arrayOutputTags, allowedArrayOutputs, triggerLine } = input;
   if (arrayOutputTags.length === 0 || arrayOutputTags[0].description.trim().length === 0) {
     reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingArrayOutput', report: ctx.report });
     return;
@@ -125,7 +132,17 @@ function reportFormArrayOutput(ctx: FormReportContext, arrayOutputTags: readonly
   }
 }
 
-function reportFormTier(ctx: FormReportContext, markers: readonly ParsedJsdocTag[], tierTags: readonly ParsedJsdocTag[], tier: Maybe<string>, allowedTiers: readonly string[], triggerLine: number): void {
+interface ReportFormTierInput {
+  readonly ctx: FormReportContext;
+  readonly markers: readonly ParsedJsdocTag[];
+  readonly tierTags: readonly ParsedJsdocTag[];
+  readonly tier: Maybe<string>;
+  readonly allowedTiers: readonly string[];
+  readonly triggerLine: number;
+}
+
+function reportFormTier(input: ReportFormTierInput): void {
+  const { ctx, markers, tierTags, tier, allowedTiers, triggerLine } = input;
   if (!markers.some((m) => m.tag === 'dbxFormField')) return;
   if (tier == null) {
     reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingTier', report: ctx.report });
@@ -134,7 +151,15 @@ function reportFormTier(ctx: FormReportContext, markers: readonly ParsedJsdocTag
   }
 }
 
-function reportFormWrapperPattern(ctx: FormReportContext, wrapperTags: readonly ParsedJsdocTag[], allowedWrapperPatterns: readonly string[], triggerLine: number): void {
+interface ReportFormWrapperPatternInput {
+  readonly ctx: FormReportContext;
+  readonly wrapperTags: readonly ParsedJsdocTag[];
+  readonly allowedWrapperPatterns: readonly string[];
+  readonly triggerLine: number;
+}
+
+function reportFormWrapperPattern(input: ReportFormWrapperPatternInput): void {
+  const { ctx, wrapperTags, allowedWrapperPatterns, triggerLine } = input;
   if (wrapperTags.length === 0 || wrapperTags[0].description.trim().length === 0) {
     reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingWrapperPattern', report: ctx.report });
     return;
@@ -145,15 +170,31 @@ function reportFormWrapperPattern(ctx: FormReportContext, wrapperTags: readonly 
   }
 }
 
-function reportFormFieldFactoryTier(ctx: FormReportContext, companions: ReadonlyMap<string, ParsedJsdocTag[]>, allowedWrapperPatterns: readonly string[], triggerLine: number): void {
-  reportFormWrapperPattern(ctx, companions.get('WrapperPattern') ?? [], allowedWrapperPatterns, triggerLine);
+interface ReportFormFieldFactoryTierInput {
+  readonly ctx: FormReportContext;
+  readonly companions: ReadonlyMap<string, ParsedJsdocTag[]>;
+  readonly allowedWrapperPatterns: readonly string[];
+  readonly triggerLine: number;
+}
+
+function reportFormFieldFactoryTier(input: ReportFormFieldFactoryTierInput): void {
+  const { ctx, companions, allowedWrapperPatterns, triggerLine } = input;
+  reportFormWrapperPattern({ ctx, wrapperTags: companions.get('WrapperPattern') ?? [], allowedWrapperPatterns, triggerLine });
   const ngFormTags = companions.get('NgFormType') ?? [];
   if (ngFormTags.length === 0 || ngFormTags[0].description.trim().length === 0) {
     reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingNgFormType', report: ctx.report });
   }
 }
 
-function reportFormCompositeBuilderTier(ctx: FormReportContext, suffixTags: readonly ParsedJsdocTag[], allowedSuffixes: readonly string[], triggerLine: number): void {
+interface ReportFormCompositeBuilderTierInput {
+  readonly ctx: FormReportContext;
+  readonly suffixTags: readonly ParsedJsdocTag[];
+  readonly allowedSuffixes: readonly string[];
+  readonly triggerLine: number;
+}
+
+function reportFormCompositeBuilderTier(input: ReportFormCompositeBuilderTierInput): void {
+  const { ctx, suffixTags, allowedSuffixes, triggerLine } = input;
   if (suffixTags.length === 0 || suffixTags[0].description.trim().length === 0) {
     reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingSuffix', report: ctx.report });
     return;
@@ -164,7 +205,15 @@ function reportFormCompositeBuilderTier(ctx: FormReportContext, suffixTags: read
   }
 }
 
-function reportFormDerivativeTier(ctx: FormReportContext, markers: readonly ParsedJsdocTag[], composesFromTags: readonly ParsedJsdocTag[], triggerLine: number): void {
+interface ReportFormDerivativeTierInput {
+  readonly ctx: FormReportContext;
+  readonly markers: readonly ParsedJsdocTag[];
+  readonly composesFromTags: readonly ParsedJsdocTag[];
+  readonly triggerLine: number;
+}
+
+function reportFormDerivativeTier(input: ReportFormDerivativeTierInput): void {
+  const { ctx, markers, composesFromTags, triggerLine } = input;
   const markerCarriesComposes = markers.some((m) => COMPOSES_FROM_MARKERS.has(m.tag) && m.description.trim().length > 0);
   if (composesFromTags.length === 0 && !markerCarriesComposes) {
     reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: triggerLine, messageId: 'missingComposesFrom', report: ctx.report });
@@ -220,7 +269,7 @@ export interface UtilRequireDbxFormFieldCompanionTagsRuleDefinition {
  * schema at `packages/dbx-components-mcp/src/scan/forge-fields-extract.ts`,
  * including the tier-conditional required-tag matrix.
  */
-export const utilRequireDbxFormFieldCompanionTagsRule: UtilRequireDbxFormFieldCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_FORM_FIELD_COMPANION_TAGS_RULE: UtilRequireDbxFormFieldCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',
@@ -285,19 +334,19 @@ export const utilRequireDbxFormFieldCompanionTagsRule: UtilRequireDbxFormFieldCo
       reportFormDuplicateCompanions(ctx, companions);
       reportFormSlug(ctx, companions.get('Slug') ?? [], triggerLine);
       reportFormProduces(ctx, companions.get('Produces') ?? [], triggerLine);
-      reportFormArrayOutput(ctx, companions.get('ArrayOutput') ?? [], allowedArrayOutputs, triggerLine);
+      reportFormArrayOutput({ ctx, arrayOutputTags: companions.get('ArrayOutput') ?? [], allowedArrayOutputs, triggerLine });
 
       const tierTags = companions.get('Tier') ?? [];
       const tier = determineTier(markers, tierTags);
-      reportFormTier(ctx, markers, tierTags, tier, allowedTiers, triggerLine);
+      reportFormTier({ ctx, markers, tierTags, tier, allowedTiers, triggerLine });
 
       const composesFromTags = companions.get('ComposesFrom') ?? [];
       if (tier === 'field-factory') {
-        reportFormFieldFactoryTier(ctx, companions, allowedWrapperPatterns, triggerLine);
+        reportFormFieldFactoryTier({ ctx, companions, allowedWrapperPatterns, triggerLine });
       } else if (tier === 'composite-builder') {
-        reportFormCompositeBuilderTier(ctx, companions.get('Suffix') ?? [], allowedSuffixes, triggerLine);
+        reportFormCompositeBuilderTier({ ctx, suffixTags: companions.get('Suffix') ?? [], allowedSuffixes, triggerLine });
       } else if (tier === 'field-derivative' || tier === 'template-builder') {
-        reportFormDerivativeTier(ctx, markers, composesFromTags, triggerLine);
+        reportFormDerivativeTier({ ctx, markers, composesFromTags, triggerLine });
       }
 
       reportFormComposesFromKebab(ctx, composesFromTags, markers);

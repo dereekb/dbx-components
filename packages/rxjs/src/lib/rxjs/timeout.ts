@@ -28,7 +28,7 @@ export function tapAfterTimeout<T>(timeoutDelay: number, useFn: () => void): Mon
   return timeout({
     first: timeoutDelay,
     with: () => of(null as unknown as T).pipe(tap(useFn), filterMaybe())
-  }) as MonoTypeOperatorFunction<T>;
+  });
 }
 
 /**

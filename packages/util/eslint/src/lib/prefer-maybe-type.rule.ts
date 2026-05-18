@@ -130,16 +130,6 @@ function renderUnionLabel(types: readonly AstNode[]): string {
   return labels.join(' | ');
 }
 
-/**
- * Returns true when the file already imports `Maybe` (or has it as a top-level type alias / interface
- * declaration) regardless of source path. Used to skip the auto-fix's `import type { Maybe }`
- * insertion when an equivalent name is already in scope — this matters for files inside the
- * `@dereekb/util` package itself, which import `Maybe` from a relative path (e.g.
- * `../value/maybe.type`), and for files that re-export `Maybe` from another barrel.
- *
- * @param program - The `Program` AST node.
- * @returns True when an existing import or declaration brings `Maybe` into scope.
- */
 function importBringsMaybeIntoScope(stmt: AstNode): boolean {
   const specifiers: AstNode[] = stmt.specifiers ?? [];
   return specifiers.some((spec) => spec.type === 'ImportSpecifier' && spec.imported?.type === 'Identifier' && spec.imported.name === MAYBE_IDENTIFIER);
@@ -156,6 +146,16 @@ function statementBringsMaybeIntoScope(stmt: AstNode): boolean {
   return false;
 }
 
+/**
+ * Returns true when the file already imports `Maybe` (or has it as a top-level type alias / interface
+ * declaration) regardless of source path. Used to skip the auto-fix's `import type { Maybe }`
+ * insertion when an equivalent name is already in scope — this matters for files inside the
+ * `@dereekb/util` package itself, which import `Maybe` from a relative path (e.g.
+ * `../value/maybe.type`), and for files that re-export `Maybe` from another barrel.
+ *
+ * @param program - The `Program` AST node.
+ * @returns True when an existing import or declaration brings `Maybe` into scope.
+ */
 function hasMaybeImportFromDereekbUtil(program: AstNode): boolean {
   const body: AstNode[] = program?.body ?? [];
   return body.some(statementBringsMaybeIntoScope);
@@ -218,7 +218,7 @@ function buildMaybeReplacement(sourceCode: AstNode, unionTypes: readonly AstNode
  *
  * @see `dbx__note__typescript-programming` → Maybe<T> Usage
  */
-export const utilPreferMaybeTypeRule: UtilPreferMaybeTypeRuleDefinition = {
+export const UTIL_PREFER_MAYBE_TYPE_RULE: UtilPreferMaybeTypeRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

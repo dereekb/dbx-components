@@ -49,12 +49,11 @@ export function flattenAccumulatorResultItemArray<T, I = unknown>(accumulator: I
  */
 export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulator: PageItemAccumulator<T[], I>): Observable<PageListLoadingState<T>> {
   return combineLatest([accumulator.itemIteration.currentState$, flattenAccumulatorResultItemArray(accumulator)]).pipe(
-    map(
-      ([state, values]) =>
-        mapLoadingStateResults(state, {
-          alwaysMapValue: true,
-          mapValue: () => values
-        }) as PageListLoadingState<T>
+    map(([state, values]) =>
+      mapLoadingStateResults(state, {
+        alwaysMapValue: true,
+        mapValue: () => values
+      })
     ),
     shareReplay(1)
   );
@@ -72,12 +71,11 @@ export function accumulatorFlattenPageListLoadingState<T, I = unknown>(accumulat
  */
 export function accumulatorCurrentPageListLoadingState<V, I = unknown>(accumulator: PageItemAccumulator<V, I>): Observable<PageListLoadingState<V>> {
   return combineLatest([accumulator.itemIteration.currentState$, accumulator.currentAllItems$]).pipe(
-    map(
-      ([state, values]) =>
-        mapLoadingStateResults(state, {
-          alwaysMapValue: true,
-          mapValue: () => values
-        }) as PageListLoadingState<V>
+    map(([state, values]) =>
+      mapLoadingStateResults(state, {
+        alwaysMapValue: true,
+        mapValue: () => values
+      })
     ),
     shareReplay(1)
   );

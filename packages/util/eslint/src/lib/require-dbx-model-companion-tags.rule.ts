@@ -174,7 +174,7 @@ export interface UtilRequireDbxModelCompanionTagsRuleDefinition {
  * Does NOT enforce a Slug / Category / Tags shape because the scanner does
  * not consume those for this family.
  */
-export const utilRequireDbxModelCompanionTagsRule: UtilRequireDbxModelCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE: UtilRequireDbxModelCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

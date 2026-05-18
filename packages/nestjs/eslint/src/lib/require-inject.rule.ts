@@ -187,7 +187,7 @@ export interface NestjsRequireInjectRuleDefinition {
  * Register as a plugin in your flat ESLint config, then enable individual rules
  * under the chosen plugin prefix (e.g. 'dereekb-nestjs/require-nest-inject').
  */
-export const nestjsRequireInjectRule: NestjsRequireInjectRuleDefinition = {
+export const NESTJS_REQUIRE_INJECT_RULE: NestjsRequireInjectRuleDefinition = {
   meta: {
     type: 'problem',
     fixable: 'code',

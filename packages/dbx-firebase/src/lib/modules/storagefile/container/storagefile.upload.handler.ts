@@ -324,7 +324,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
 
   const allFilesAndLatestProgress: Maybe<DbxFirebaseStorageFileUploadStoreFileProgress>[] = new Array(allFiles.length);
   const allFilesAndDetails: FileUploadDetails[] = allFiles.map((file) => ({ file }));
-  const overallProgressPerCompletedFile: PercentDecimal = (1 / allFilesAndLatestProgress.length) as PercentDecimal;
+  const overallProgressPerCompletedFile: PercentDecimal = 1 / allFilesAndLatestProgress.length;
 
   /**
    * Once set, any new file upload task that hits this will return an cancel failure.

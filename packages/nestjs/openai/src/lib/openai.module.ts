@@ -16,7 +16,7 @@ export function openAIServiceConfigFactory(configService: ConfigService): OpenAI
   const config: OpenAIServiceConfig = {
     openai: {
       config: {
-        apiKey: configService.get<OpenAIApiKey>(OPENAI_API_KEY_ENV_VAR) as OpenAIApiKey,
+        apiKey: configService.get<OpenAIApiKey>(OPENAI_API_KEY_ENV_VAR),
         baseURL: configService.get<string | undefined>(OPENAI_BASE_URL_ENV_VAR) ?? undefined,
         organization: configService.get<OpenAIOrganizationId>(OPENAI_ORGANIZATION_ID_ENV_VAR),
         project: configService.get<OpenAIProjectId>(OPENAI_PROJECT_ID_ENV_VAR)

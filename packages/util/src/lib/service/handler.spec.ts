@@ -93,7 +93,7 @@ describe('handler()', () => {
         handler.set('specific', specificFn);
         handler.set(catchAllHandlerKey(), catchAllFn);
 
-        await handler('specific' as any);
+        await handler('specific');
 
         expect(specificFn).toHaveBeenCalled();
         expect(catchAllFn).not.toHaveBeenCalled();
@@ -106,10 +106,10 @@ describe('handler()', () => {
         await handler(1); // key is '1', should not match
         expect(fn).not.toHaveBeenCalled();
 
-        await handler('key1' as any);
+        await handler('key1');
         expect(fn).toHaveBeenCalledTimes(1);
 
-        await handler('key2' as any);
+        await handler('key2');
         expect(fn).toHaveBeenCalledTimes(2);
       });
     });

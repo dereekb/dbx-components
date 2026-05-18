@@ -93,7 +93,7 @@ export class DbxFirebaseCollectionLoaderInstance<T = unknown, D extends Firestor
   );
 
   readonly iteratorFilter$: Observable<FirestoreItemPageIteratorFilter> = combineLatest([this._itemsPerPage.pipe(distinctUntilChanged()), this.constraints$]).pipe(
-    map(([limit, constraints]) => ({ limit, constraints, maxPageLoadLimit: this.maxPages }) as FirestoreItemPageIteratorFilter),
+    map(([limit, constraints]) => ({ limit, constraints, maxPageLoadLimit: this.maxPages })),
     shareReplay(1)
   );
 

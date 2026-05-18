@@ -67,7 +67,7 @@ describe('dbxForgeTimezoneStringField()', () => {
       const selected = results[0];
       expect(selected).toBeDefined();
 
-      const reSearchResults = await firstValueFrom(searchFn(selected.value as string));
+      const reSearchResults = await firstValueFrom(searchFn(selected.value));
       const found = reSearchResults.find((r) => r.value === selected.value);
       expect(found).toBeDefined();
     });

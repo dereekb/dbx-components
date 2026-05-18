@@ -175,7 +175,7 @@ export const UTF_PRIVATE_USAGE_AREA_START = '\uf8ff';
  * @returns A record mapping each character to its index in the input string.
  */
 export function stringCharactersToIndexRecord(chars: string): Record<string, number> {
-  const record: Record<string, number> = {} as Record<string, number>;
+  const record: Record<string, number> = {};
 
   for (const [i, char] of [...chars].entries()) {
     record[char] = i;

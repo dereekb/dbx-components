@@ -71,6 +71,7 @@ const LookupFormArgsType = type({
  *
  * @param raw - The unvalidated tool arguments from the MCP runtime.
  * @returns The canonical args with `depth` defaulted to `'full'`
+ * @throws {TypeError} When `raw` fails the lookup-form args schema (missing `topic` or invalid `depth`).
  */
 function parseLookupFormArgs(raw: unknown): { readonly topic: string; readonly depth: 'brief' | 'full' } {
   const parsed = LookupFormArgsType(raw);

@@ -109,7 +109,7 @@ function isNamedExportPurelyTypeOnly(node: AstNode): boolean {
  * Sister packages are identified by `options.patterns` (glob-style; `*` matches any run of characters).
  * Relative re-exports (`./local`, `../sibling`) are always allowed.
  */
-export const utilNoSisterReExportRule: UtilNoSisterReExportRuleDefinition = {
+export const UTIL_NO_SISTER_RE_EXPORT_RULE: UtilNoSisterReExportRuleDefinition = {
   meta: {
     type: 'problem',
     docs: {

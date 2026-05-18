@@ -21,7 +21,7 @@
  *    `assertSnapshotData(...)`, etc.) are not descended into.
  */
 
-import { Node, Project, SyntaxKind, type ArrowFunction, type Block, type CallExpression, type FunctionExpression, type Identifier, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
+import { Node, Project, SyntaxKind, type ArrowFunction, type Block, type CallExpression, type FunctionExpression, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
 import type { HelperDescribe, PrefixSource, SpecFileTree, SpecNode } from './types.js';
 
 /**
@@ -500,7 +500,7 @@ function readParentVars(obj: ObjectLiteralExpression): readonly string[] {
     if (Node.isPropertyAssignment(prop)) {
       const init = prop.getInitializer();
       if (init !== undefined && Node.isIdentifier(init)) {
-        out.push((init as Identifier).getText());
+        out.push(init.getText());
       }
     }
   }

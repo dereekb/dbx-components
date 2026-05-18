@@ -1368,7 +1368,7 @@ export function isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRa
   } else if (isDateRangeStart(inputRange)) {
     dateRange = inputRange;
   } else {
-    rangeInput = inputRange as DateCell | DateCellRange;
+    rangeInput = inputRange;
   }
 
   if (!inputStartsAt && dateRange && isDateInput) {

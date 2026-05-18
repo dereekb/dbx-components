@@ -40,11 +40,11 @@ export const STORAGE_FILE_UPLOAD_USER_ROLE = 'uploads';
  * @example
  * ```ts
  * const claimsConfig = {
- *   fr: storageFileUploadUserSimpleClaimsConfiguration
+ *   fr: STORAGE_FILE_UPLOAD_USER_SIMPLE_CLAIMS_CONFIGURATION
  * };
  * ```
  */
-export const storageFileUploadUserSimpleClaimsConfiguration: AuthRoleClaimsFactoryConfigEntrySimpleOptions<StorageFileUploadUserRestriction> = {
+export const STORAGE_FILE_UPLOAD_USER_SIMPLE_CLAIMS_CONFIGURATION: AuthRoleClaimsFactoryConfigEntrySimpleOptions<StorageFileUploadUserRestriction> = {
   roles: STORAGE_FILE_UPLOAD_USER_ROLE,
   inverse: true
 };

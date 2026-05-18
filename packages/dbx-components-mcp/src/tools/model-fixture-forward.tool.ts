@@ -152,4 +152,4 @@ function appendListSection(lines: string[], heading: string, names: readonly str
   }
 }
 
-export const modelFixtureForwardTool: DbxTool = { definition: TOOL, run };
+export const MODEL_FIXTURE_FORWARD_TOOL: DbxTool = { definition: TOOL, run };

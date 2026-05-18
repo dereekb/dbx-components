@@ -64,7 +64,7 @@ export class DbxFirebaseStorageFileUploadActionHandlerDirective {
           }),
           filter((x) => x.isComplete),
           tap((x) => {
-            this.uploadStore.setUploadResult(x.result as StorageFileUploadFilesFinalResult);
+            this.uploadStore.setUploadResult(x.result);
           }),
           map((x) => {
             const result = x.result as StorageFileUploadFilesFinalResult;

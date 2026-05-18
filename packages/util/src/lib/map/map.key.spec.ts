@@ -55,11 +55,11 @@ describe('keyValueMapFactory()', () => {
     const values = [1, undefined, 3, null, 5];
     const readKeyWithNulls: ReadKeyFunction<number | null | undefined, string> = (x) => (x != null ? String(x) : x);
     const factory = keyValueMapFactory(readKeyWithNulls);
-    const result = factory(values.filter((x) => x != null) as number[]); // factory expects T[], ensure correct type
+    const result = factory(values.filter((x) => x != null)); // factory expects T[], ensure correct type
 
     // test values manually to ensure it is ignoring the values with null/undefined keys
     const testFactory = keyValueMapFactory<number | null | undefined, string>(readKeyWithNulls);
-    const testResult = testFactory(values as (number | null | undefined)[]);
+    const testResult = testFactory(values);
 
     expect(testResult.size).toBe(3);
     expect(testResult.get('1')).toBe(1);

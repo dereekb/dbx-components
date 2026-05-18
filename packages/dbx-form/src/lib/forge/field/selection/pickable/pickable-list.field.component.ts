@@ -27,7 +27,7 @@ export class DbxForgePickableListFieldComponent<T = unknown, M = unknown, H exte
 
   constructor() {
     super();
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'mat-selection-list' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'mat-selection-list' });
   }
 
   onSelectionChange(event: MatSelectionListChange): void {

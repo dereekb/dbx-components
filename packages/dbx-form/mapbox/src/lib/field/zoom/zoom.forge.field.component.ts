@@ -94,17 +94,20 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   private readonly _center = completeOnDestroy(new BehaviorSubject<Maybe<LatLngPoint>>(undefined));
 
   // Field value signal (double-call pattern)
-  readonly fieldValue = computed(() => {
+  readonly fieldValueSignal = computed(() => {
     const state = this.field()?.() as any;
     return state?.value?.() as unknown;
   });
 
-  readonly isDisabled = computed(() => {
+  readonly isDisabledSignal = computed(() => {
     const state = this.field()?.() as any;
     return (state?.disabled?.() as boolean) ?? false;
   });
 
-  readonly isReadonlyOrDisabledSignal = computed(() => (this.props() as any)?.readonly || this.isDisabled());
+  readonly isReadonlyOrDisabledSignal = computed(() => {
+    const isDisabled = this.isDisabledSignal();
+    return (this.props() as any)?.readonly || isDisabled;
+  });
 
   // Computed props
   readonly showMapSignal = computed(() => this.props()?.showMap ?? true);
@@ -113,7 +116,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   readonly maxZoomSignal = computed(() => mapboxZoomLevel(this.props()?.maxZoom || MAPBOX_MAX_ZOOM_LEVEL));
   readonly zoomStepSignal = computed(() => mapboxZoomLevel(this.props()?.zoomStep || 1));
 
-  readonly fieldValue$ = toObservable(this.fieldValue);
+  readonly fieldValue$ = toObservable(this.fieldValueSignal);
   readonly zoom$ = this.fieldValue$.pipe(filterMaybe(), shareReplay(1)) as unknown as Observable<MapboxZoomLevel>;
   readonly center$ = this._center.pipe(filterMaybe());
 
@@ -129,7 +132,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
   }
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'input' });
 
     // Initialize on first props emission
     effect(() => {
@@ -169,7 +172,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
 
     // Sync field value → number control (inbound)
     effect(() => {
-      const value = this.fieldValue();
+      const value = this.fieldValueSignal();
 
       if (!this._syncing) {
         this._syncing = true;
@@ -196,7 +199,7 @@ export class DbxForgeMapboxZoomFieldComponent implements OnDestroy {
 
   setZoomValue(zoom?: Maybe<ZoomLevel>) {
     this._syncing = true;
-    this.numberCtrl.setValue((zoom as number) ?? null, { emitEvent: false });
+    this.numberCtrl.setValue(zoom ?? null, { emitEvent: false });
     this._setFieldValue(zoom ?? null);
     this._syncing = false;
   }

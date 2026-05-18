@@ -45,6 +45,7 @@ export interface ParsedSearchArgs {
  * @param config.defaultLimit - Applied when `limit` is omitted from `raw`
  * @param config.maxLimit - Upper bound; values above this clamp down.
  * @returns The parsed args with `limit` clamped to `[1, maxLimit]`
+ * @throws {TypeError} When `raw` fails the search args schema (missing `query` or non-numeric `limit`).
  */
 export function parseSearchArgs(raw: unknown, config: { readonly defaultLimit: number; readonly maxLimit: number }): ParsedSearchArgs {
   const parsed = SEARCH_ARGS_TYPE(raw);

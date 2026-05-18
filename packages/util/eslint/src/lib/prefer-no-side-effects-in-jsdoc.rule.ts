@@ -41,7 +41,7 @@ export interface UtilPreferNoSideEffectsInJsdocRuleDefinition {
  * (and treats line comments between overloads — but not directly above the impl —
  * as ordinary orphans to migrate).
  */
-export const utilPreferNoSideEffectsInJsdocRule: UtilPreferNoSideEffectsInJsdocRuleDefinition = {
+export const UTIL_PREFER_NO_SIDE_EFFECTS_IN_JSDOC_RULE: UtilPreferNoSideEffectsInJsdocRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

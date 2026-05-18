@@ -343,7 +343,7 @@ export type DateRangeInput = (DateRangeTypedInput | DateRangeDistanceInput) & {
  * ```
  */
 export function dateRange(input: DateRangeType | DateRangeInput, inputRoundToMinute?: boolean): DateRange {
-  const config: DateRangeInput = typeof input === 'string' ? { type: input } : (input as DateRangeInput);
+  const config: DateRangeInput = typeof input === 'string' ? { type: input } : input;
   const { type = DateRangeType.DAYS_RANGE, date: inputDate, distance: inputDistance, roundToMinute: inputConfigRoundToMinute = false } = config;
   const rawDistance = inputDistance ?? undefined;
   const roundToMinute = inputRoundToMinute ?? inputConfigRoundToMinute;
@@ -582,7 +582,7 @@ export function iterateDaysInDateRangeFunction(input: IterateDaysInDateRangeFunc
       }
     }
 
-    return results as T[];
+    return results;
   };
 }
 

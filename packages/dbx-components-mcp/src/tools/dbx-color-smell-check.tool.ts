@@ -19,7 +19,7 @@ import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { extractHtmlLiterals, extractTsLiterals, formatResultAsJson, formatResultAsMarkdown, groupColorSmells, type ColorSmellEquivalenceMode } from './dbx-color-smell-check/index.js';
 import { extractColorTemplates, inspectColorTemplates, type ColorTemplateEntry } from './dbx-color-template-list-app/index.js';
 
-const DBX_COLOR_SMELL_CHECK_TOOL: Tool = {
+const DBX_COLOR_SMELL_CHECK_TOOL_DEFINITION: Tool = {
   name: 'dbx_color_smell_check',
   description: [
     'Scan TS + HTML for inline `DbxColorConfig` literals, group equivalent ones, and recommend extracting them into a `DbxColorConfigTemplate`.',
@@ -148,7 +148,7 @@ async function resolveCrossReferenceTemplates(input: ResolveTemplatesInput): Pro
   return result;
 }
 
-export const dbxColorSmellCheckTool: DbxTool = {
-  definition: DBX_COLOR_SMELL_CHECK_TOOL,
+export const DBX_COLOR_SMELL_CHECK_TOOL: DbxTool = {
+  definition: DBX_COLOR_SMELL_CHECK_TOOL_DEFINITION,
   run
 };

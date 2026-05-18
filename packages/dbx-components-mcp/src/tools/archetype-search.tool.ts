@@ -70,7 +70,7 @@ function parseArgs(raw: unknown): ParsedSearchArgs {
   return {
     archetype: parsed.archetype,
     axes: parsed.axes,
-    scope: (parsed.scope ?? 'all') as SearchScope,
+    scope: parsed.scope ?? 'all',
     componentDirs: parsed.componentDirs,
     limit: parsed.limit ?? DEFAULT_LIMIT
   };
@@ -189,7 +189,7 @@ export async function runArchetypeSearch(rawArgs: unknown): Promise<ToolResult> 
   return result;
 }
 
-export const archetypeSearchTool: DbxTool = {
+export const ARCHETYPE_SEARCH_TOOL: DbxTool = {
   definition: DBX_MODEL_ARCHETYPE_SEARCH_TOOL,
   run: runArchetypeSearch
 };

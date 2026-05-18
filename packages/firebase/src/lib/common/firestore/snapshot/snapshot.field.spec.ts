@@ -55,8 +55,8 @@ describe('firestoreField()', () => {
   it('should return the conversion config', () => {
     const result = firestoreField(config);
 
-    expect(result.from!.convert).toBe(fromData);
-    expect(result.to!.convert).toBe(toData);
+    expect(result.from.convert).toBe(fromData);
+    expect(result.to.convert).toBe(toData);
   });
 
   describe('conversion', () => {
@@ -140,9 +140,9 @@ describe('firestoreDate()', () => {
     const dateString: ISO8601DateString = '2021-08-16T05:00:00.000Z';
     const value = new Date(dateString);
 
-    const converted = dateField.from!.convert!(dateString);
+    const converted = dateField.from.convert(dateString);
     expect(converted).toBeDefined();
-    expect(converted!.getTime()).toBe(value.getTime());
+    expect(converted.getTime()).toBe(value.getTime());
     expect(isValid(converted)).toBe(true);
   });
 
@@ -150,7 +150,7 @@ describe('firestoreDate()', () => {
     const dateString = '2021-08-16T05:00:00.000Z';
     const value = new Date(dateString);
 
-    const converted = dateField.to!.convert!(value);
+    const converted = dateField.to.convert(value);
     expect(converted).toBeDefined();
     expect(converted).toBe(dateString);
   });
@@ -170,20 +170,20 @@ describe('firestoreUnixDateTimeSecondsNumber()', () => {
   it('should convert data from a date string to a Date.', () => {
     const dateString: ISO8601DateString = '2021-08-16T05:00:00.000Z';
     const unixDateTimeSecondsNumber = unixDateTimeSecondsNumberFromDate(new Date(dateString));
-    const value = dateFromDateOrTimeSecondsNumber(unixDateTimeSecondsNumber) as Date;
+    const value = dateFromDateOrTimeSecondsNumber(unixDateTimeSecondsNumber);
 
-    const converted = dateField.from!.convert!(unixDateTimeSecondsNumber);
+    const converted = dateField.from.convert(unixDateTimeSecondsNumber);
     expect(converted).toBeDefined();
-    expect(converted!.getTime()).toBe(value.getTime());
+    expect(converted.getTime()).toBe(value.getTime());
     expect(isValid(converted)).toBe(true);
   });
 
   it('should convert data from a date to a UnixDateTimeSecondsNumber.', () => {
     const dateString = '2021-08-16T05:00:00.000Z';
     const unixDateTimeSecondsNumber = unixDateTimeSecondsNumberFromDate(new Date(dateString));
-    const value = dateFromDateOrTimeSecondsNumber(unixDateTimeSecondsNumber) as Date;
+    const value = dateFromDateOrTimeSecondsNumber(unixDateTimeSecondsNumber);
 
-    const converted = dateField.to!.convert!(value);
+    const converted = dateField.to.convert(value);
     expect(converted).toBeDefined();
     expect(converted).toBe(unixDateTimeSecondsNumber);
   });

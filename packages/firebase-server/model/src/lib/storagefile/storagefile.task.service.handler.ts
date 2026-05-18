@@ -441,7 +441,7 @@ export function storageFileGroupZipStorageFileProcessingPurposeSubtaskProcessor(
                           const fileSlashPathDetails = slashPathDetails(metadata.name);
 
                           const storageFileGroupEmbeddedFile = embeddedFilesMap.get(storageFile.id) as StorageFileGroupEmbeddedFile;
-                          const { n: embeddedFileNameOverride } = storageFileGroupEmbeddedFile as StorageFileGroupEmbeddedFile;
+                          const { n: embeddedFileNameOverride } = storageFileGroupEmbeddedFile;
 
                           const nameFromFactory = await zipFileDisplayNameFunction({ metadata, fileAccessor, storageFile, storageFileDocument, storageFileGroupEmbeddedFile });
 

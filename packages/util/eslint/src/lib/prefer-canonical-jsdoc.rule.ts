@@ -806,7 +806,7 @@ function applyCanonicalNormalizations(input: ApplyCanonicalNormalizationsInput):
  * Heuristics are tuned to pass on the canonical examples in the existing codebase; warnings on
  * older non-canonical JSDocs are expected and acceptable per workspace policy.
  */
-export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinition = {
+export const UTIL_PREFER_CANONICAL_JSDOC_RULE: UtilPreferCanonicalJsdocRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',
@@ -994,7 +994,8 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       }
     }
 
-    function reportParamOrderMismatch(commentNode: AstNode, parsed: ParsedJsdoc, paramTags: readonly ParsedJsdocTag[], functionNode: AstNode): void {
+    function reportParamOrderMismatch(input: { readonly commentNode: AstNode; readonly parsed: ParsedJsdoc; readonly paramTags: readonly ParsedJsdocTag[]; readonly functionNode: AstNode }): void {
+      const { commentNode, parsed, paramTags, functionNode } = input;
       const declared = functionNode.params.map((p: AstNode) => extractParamName(p)).filter((n: Maybe<string>): n is string => typeof n === 'string');
       // Collapse JSDoc dot-notation (e.g. `input.foo`) and consecutive dot-notation runs to the parent param.
       // `@param input.a` and `@param input.b` both reference the single declared `input` parameter.
@@ -1016,13 +1017,14 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       }
     }
 
-    function checkParamTags(commentNode: AstNode, parsed: ParsedJsdoc, paramTags: readonly ParsedJsdocTag[], functionNode: Maybe<AstNode>): void {
+    function checkParamTags(input: { readonly commentNode: AstNode; readonly parsed: ParsedJsdoc; readonly paramTags: readonly ParsedJsdocTag[]; readonly functionNode: Maybe<AstNode> }): void {
+      const { commentNode, parsed, paramTags, functionNode } = input;
       for (const tag of paramTags) {
         checkParamFormat(commentNode, parsed, tag);
       }
 
       if (functionNode && Array.isArray(functionNode.params) && paramTags.length > 0) {
-        reportParamOrderMismatch(commentNode, parsed, paramTags, functionNode);
+        reportParamOrderMismatch({ commentNode, parsed, paramTags, functionNode });
       }
     }
 
@@ -1031,13 +1033,14 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
 
       const paramTags = parsed.tags.filter((t) => t.tag === 'param');
 
-      if (checkParam) checkParamTags(commentNode, parsed, paramTags, functionNode);
-      if (checkReturns) checkTagsByName(commentNode, parsed, ['returns', 'return'], checkReturnsFormat);
-      if (checkThrows) checkTagsByName(commentNode, parsed, ['throws'], checkThrowsFormat);
-      if (checkExampleFence) checkTagsByName(commentNode, parsed, ['example'], checkExampleFormat);
+      if (checkParam) checkParamTags({ commentNode, parsed, paramTags, functionNode });
+      if (checkReturns) checkTagsByName({ commentNode, parsed, names: ['returns', 'return'], handler: checkReturnsFormat });
+      if (checkThrows) checkTagsByName({ commentNode, parsed, names: ['throws'], handler: checkThrowsFormat });
+      if (checkExampleFence) checkTagsByName({ commentNode, parsed, names: ['example'], handler: checkExampleFormat });
     }
 
-    function checkFirstParagraph(commentNode: AstNode, parsed: ParsedJsdoc, first: string, firstLineIdx: number): void {
+    function checkFirstParagraph(input: { readonly commentNode: AstNode; readonly parsed: ParsedJsdoc; readonly first: string; readonly firstLineIdx: number }): void {
+      const { commentNode, parsed, first, firstLineIdx } = input;
       if (!startsCanonically(first, 'capital')) {
         reportRangeMessage(commentNode, parsed, { messageId: 'descriptionMissingCapital', lineIndex: firstLineIdx });
       }
@@ -1077,7 +1080,7 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
       if (paragraphs.length === 0) return;
 
       const firstLineIdx = firstDescriptionLineIndex(parsed);
-      checkFirstParagraph(commentNode, parsed, paragraphs[0], firstLineIdx);
+      checkFirstParagraph({ commentNode, parsed, first: paragraphs[0], firstLineIdx });
 
       if (paragraphs.length > 1) {
         checkParagraphSeparators(commentNode, parsed);
@@ -1188,20 +1191,25 @@ export const utilPreferCanonicalJsdocRule: UtilPreferCanonicalJsdocRuleDefinitio
   }
 };
 
+interface CheckTagsByNameInput {
+  readonly commentNode: AstNode;
+  readonly parsed: ParsedJsdoc;
+  readonly names: readonly string[];
+  readonly handler: (commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag) => void;
+}
+
 /**
  * Iterates over the tags in a parsed JSDoc and invokes the handler for each tag whose name matches the provided list.
  *
- * @param commentNode - The JSDoc comment AST node.
- * @param parsed - The parsed JSDoc model.
- * @param names - Tag names to match (e.g. `['returns', 'return']`).
- * @param handler - Callback invoked for every matched tag.
+ * @param input - The comment node, parsed JSDoc, tag-name list, and handler callback.
  *
  * @example
  * ```ts
- * checkTagsByName(commentNode, parsed, ['returns', 'return'], checkReturnsFormat);
+ * checkTagsByName({ commentNode, parsed, names: ['returns', 'return'], handler: checkReturnsFormat });
  * ```
  */
-function checkTagsByName(commentNode: AstNode, parsed: ParsedJsdoc, names: readonly string[], handler: (commentNode: AstNode, parsed: ParsedJsdoc, tag: ParsedJsdocTag) => void): void {
+function checkTagsByName(input: CheckTagsByNameInput): void {
+  const { commentNode, parsed, names, handler } = input;
   for (const tag of parsed.tags) {
     if (names.includes(tag.tag)) {
       handler(commentNode, parsed, tag);

@@ -98,6 +98,7 @@ export class DbxSectionHeaderComponent {
   readonly hintInlineDefault = signal<Maybe<boolean>>(undefined);
 
   readonly headerConfigSignal = computed(() => {
+    const hintInlineDefault = this.hintInlineDefault();
     const headerConfig = this.headerConfig();
 
     const config: DbxSectionHeaderConfig = {
@@ -107,7 +108,7 @@ export class DbxSectionHeaderComponent {
       onlyHeader: this.onlyHeader() ?? headerConfig?.onlyHeader,
       icon: this.icon() ?? headerConfig?.icon,
       hint: this.hint() ?? headerConfig?.hint,
-      hintInline: this.hintInline() ?? headerConfig?.hintInline ?? this.hintInlineDefault()
+      hintInline: this.hintInline() ?? headerConfig?.hintInline ?? hintInlineDefault
     };
 
     return config;

@@ -175,7 +175,7 @@ export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(ma
  * @__NO_SIDE_EFFECTS__
  */
 export function flattenTreeToArrayFunction<N extends TreeNode<unknown, N>, V>(mapNodeFnOrConfig?: FlattenTreeToArrayFunctionConfig<N, V> | ((node: N) => V), defaultAddNodeFn?: Maybe<FlattenTreeAddNodeDecisionFunction<N, V>>): FlattenTreeFunction<N, V> {
-  const config: FlattenTreeToArrayFunctionConfig<N, V> = typeof mapNodeFnOrConfig === 'function' ? ({ mapNodeFunction: mapNodeFnOrConfig } as FlattenTreeToArrayFunctionConfig<N, V>) : (mapNodeFnOrConfig ?? {});
+  const config: FlattenTreeToArrayFunctionConfig<N, V> = typeof mapNodeFnOrConfig === 'function' ? { mapNodeFunction: mapNodeFnOrConfig } : (mapNodeFnOrConfig ?? {});
 
   const exploreFn = exploreTreeFunction<N, V>({
     ...config,

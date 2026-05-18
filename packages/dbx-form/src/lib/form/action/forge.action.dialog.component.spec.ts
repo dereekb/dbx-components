@@ -29,7 +29,7 @@ function createDialogConfig<O = { name: string }>(overrides?: Partial<DbxForgeAc
     header: 'Test Dialog',
     config: of(createSimpleConfig()),
     ...overrides
-  } as DbxForgeActionDialogComponentConfig<O>;
+  };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- provideNoopAnimations remains the standard no-op animations provider for TestBed; the new `animate.enter`/`animate.leave` API targets templates, not providers
@@ -188,7 +188,7 @@ describe('DbxForgeActionDialogComponent', () => {
 
       const component = dialogRef.componentInstance;
       const mockContext = { success: vi.fn() };
-      component.handleSubmitValue({ name: 'Submitted' } as any, mockContext as any);
+      component.handleSubmitValue({ name: 'Submitted' }, mockContext as any);
 
       const result = await resultPromise;
       expect(result).toEqual({ name: 'Submitted' });

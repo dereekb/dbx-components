@@ -331,6 +331,8 @@ function buildModelCommand(model: string, entries: readonly CliApiManifestEntry[
  * @param manifest - The generated model manifest used to look up the model's `collectionPrefix`
  *   and `parentIdentityConst`. When omitted, the key passes through unchanged.
  * @returns The resolved Firestore model key ready for `context.getModel(model, key)`.
+ * @throws {CliError} When `model` resolves to a subcollection entry and only a bare doc id is supplied.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function resolvePerModelGetKey(model: string, key: string, manifest: CliModelManifest | undefined): string {

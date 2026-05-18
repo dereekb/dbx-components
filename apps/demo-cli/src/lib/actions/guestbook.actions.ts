@@ -28,7 +28,7 @@ export interface QueryGuestbookEntriesForGuestbookOutput {
  *
  * Exposed as a plain async function so other actions can compose it directly
  * (no string-keyed action registry, full TypeScript inference). The matching
- * {@link queryGuestbookEntriesForGuestbookAction} is a thin yargs adapter that
+ * {@link QUERY_GUESTBOOK_ENTRIES_FOR_GUESTBOOK_ACTION} is a thin yargs adapter that
  * delegates to this function.
  *
  * @param input - The function inputs.
@@ -66,7 +66,7 @@ export async function queryGuestbookEntriesForGuestbook(input: QueryGuestbookEnt
 /**
  * Action: list GuestbookEntries for a single Guestbook (paginated).
  */
-export const queryGuestbookEntriesForGuestbookAction: ActionCommandSpec = {
+export const QUERY_GUESTBOOK_ENTRIES_FOR_GUESTBOOK_ACTION: ActionCommandSpec = {
   command: 'entries <guestbook>',
   describe: 'List GuestbookEntries for a Guestbook (paginates guestbookEntry.query).',
   model: 'guestbook',
@@ -142,7 +142,7 @@ export async function queryAllPublishedGuestbookEntries(input: QueryAllPublished
 /**
  * Action: enumerate every published Guestbook and gather its published entries.
  */
-export const queryAllPublishedGuestbookEntriesAction: ActionCommandSpec = {
+export const QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION: ActionCommandSpec = {
   command: 'all-published-entries',
   describe: 'Paginate every published Guestbook and gather its published entries.',
   model: 'guestbook',

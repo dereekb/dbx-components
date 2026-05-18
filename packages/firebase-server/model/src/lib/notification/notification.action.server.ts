@@ -913,7 +913,7 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
 
         if (targetRecipient) {
           nextRecipient.i = targetRecipient.i;
-          nextRecipient = mergeNotificationBoxRecipients(targetRecipient, nextRecipient) as NotificationBoxRecipient;
+          nextRecipient = mergeNotificationBoxRecipients(targetRecipient, nextRecipient);
           r[targetRecipientIndex] = nextRecipient; // override in the array
         } else {
           const nextI = computeNextFreeIndexOnSortedValuesFunction(readIndexNumber)(notificationBox.r); // r is sorted by index in ascending order, so the last value is the largest i

@@ -32,7 +32,7 @@ export function useValue<I, O = void>(input: Maybe<I>, use: UseValue<I, O>, defa
   let result: Maybe<O>;
 
   if (input != null) {
-    result = use(input) as Maybe<O>;
+    result = use(input);
   } else {
     result = getValueFromGetter(defaultValue);
   }
@@ -99,9 +99,9 @@ export function mappedUseFunction<A, I>(map: MapFunction<A, Maybe<I>>): MappedUs
  * @__NO_SIDE_EFFECTS__
  */
 export function wrapUseFunction<A, B, I>(mappedUseFn: MappedUseFunction<A, B>, map: MapFunction<B, Maybe<I>>): MappedUseFunction<A, I> {
-  return (<O = void>(input: Maybe<A>, useFn: UseValue<I, O>, defaultValue?: Maybe<GetterOrValue<O>>) => {
+  return <O = void>(input: Maybe<A>, useFn: UseValue<I, O>, defaultValue?: Maybe<GetterOrValue<O>>) => {
     return mappedUseFn<O>(input, ((value: B) => useValue(map(value), useFn, defaultValue)) as UseValue<B, O>, defaultValue);
-  }) as MappedUseFunction<A, I>;
+  };
 }
 
 /**
@@ -164,7 +164,7 @@ export async function useAsync<I, O = void>(input: Maybe<I>, use: UseValue<I, O>
   let result: Maybe<O>;
 
   if (input != null) {
-    result = (await use(input)) as Maybe<O>;
+    result = await use(input);
   } else {
     result = getValueFromGetter(defaultValue);
   }
@@ -227,7 +227,7 @@ export function mappedUseAsyncFunction<A, I>(map: MapFunction<A, Maybe<PromiseOr
  * @__NO_SIDE_EFFECTS__
  */
 export function wrapUseAsyncFunction<A, B, I>(mappedUsePromiseFn: MappedUseAsyncFunction<A, B>, map: MapFunction<B, Maybe<PromiseOrValue<Maybe<I>>>>): MappedUseAsyncFunction<A, I> {
-  return (<O = void>(input: Maybe<A>, useFn: UseAsync<I, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => {
+  return <O = void>(input: Maybe<A>, useFn: UseAsync<I, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => {
     return mappedUsePromiseFn<O>(input, (async (value: B) => useValue(await map(value), useFn, defaultValue)) as UseAsync<B, O>, defaultValue);
-  }) as MappedUseAsyncFunction<A, I>;
+  };
 }

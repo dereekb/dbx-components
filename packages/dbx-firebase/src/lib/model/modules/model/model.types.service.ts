@@ -99,7 +99,7 @@ export class DbxFirebaseModelTypesService {
           throw x;
         }
 
-        return x as DbxFirebaseModelTypeInfo;
+        return x;
       })
     );
   }

@@ -112,6 +112,8 @@ export function combineLoadingStates<O>(...args: any[]): Observable<LoadingState
       return !x.some((_, i) => x[i] !== y[i]);
     }), // Prevent remerging the same values!
     map((states: LoadingState<any>[]) => {
+      // TODO(breaking-change): pass O explicitly (mergeLoadingStates<O>(...states, mergeFn)) or restructure the variadic signature so O is inferable without the cast.
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- mergeLoadingStates is variadic; the generic O cannot be inferred from the call, so tsc widens the result to LoadingState<unknown> without this cast
       return mergeLoadingStates(...states, mergeFn) as LoadingState<O>;
     }),
     shareReplay(1) // Share the result.
@@ -535,6 +537,8 @@ export function catchLoadingStateErrorWithOperator<L extends Partial<PageLoading
           mappedObs = of(state as L & LoadingStateWithError).pipe(
             operator,
             // if the operator does not return nearly instantly, then return the current state, minus a value
+            // TODO(breaking-change): consider tightening this operator's generic constraints (or accepting Partial<L> for the placeholder) so the structural spread can satisfy L without the double cast.
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- L is a generic Partial<PageLoadingState> subtype; the spread literal cannot structurally satisfy that intersection without this cast
             timeoutStartWith({ ...state, loading: true, value: undefined } as unknown as L, 0)
           );
         } else {
@@ -627,7 +631,7 @@ export function distinctLoadingState<L extends Partial<PageLoadingState>>(inputC
           if (isLoadingStateWithDefinedValue(state) || (compareOnUndefinedValue && isLoadingStateFinishedLoading(state) && !isLoadingStateWithError(state))) {
             // if the value is the same, then
             isSameValue = valueComparator(nextValue, acc.value);
-          } else if (passRetainedValue(nextValue as Maybe<LoadingStateValue<L>>, acc.value, state, acc.previous)) {
+          } else if (passRetainedValue(nextValue, acc.value, state, acc.previous)) {
             isSameValue = true;
           }
 

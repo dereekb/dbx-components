@@ -979,7 +979,7 @@ function _downloadMultipleStorageFilesFactory(context: StorageFileServerActionsC
           fileName: metadata.name ? slashPathDetails(metadata.name).end : undefined,
           mimeType: itemResponseContentType ?? metadata.contentType,
           expiresAt: unixDateTimeSecondsNumberFromDate(downloadUrlExpiresAt)
-        } as DownloadMultipleStorageFileSuccessItem;
+        };
       },
       {
         throwError: throwOnFirstError ?? false,
@@ -1318,7 +1318,7 @@ export function syncAllFlaggedStorageFilesWithGroupsFactory(context: StorageFile
       const syncStorageFileWithGroupsInstance = await syncStorageFileWithGroups({
         key: firestoreDummyKey(),
         force: true // force anyways; they should all be flagged for sync when the query hits
-      } as SyncStorageFileWithGroupsParams);
+      });
 
       let storageFilesSynced = 0;
       let storageFilesGroupsCreated = 0;
@@ -1469,7 +1469,7 @@ export function regenerateAllFlaggedStorageFileGroupsContentFactory(context: Sto
     return async () => {
       const regenerateStorageFileGroupContentInstance = await regenerateStorageFileGroupContent({
         key: firestoreDummyKey()
-      } as RegenerateStorageFileGroupContentParams);
+      });
 
       let storageFileGroupsUpdated = 0;
       let contentStorageFilesFlaggedForProcessing = 0;

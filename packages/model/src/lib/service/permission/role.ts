@@ -233,7 +233,7 @@ export class GrantedRoleMapReaderInstance<R extends GrantedRole = string> implem
     forEachKeyValue(input, {
       forEach: ([role, value]) => {
         if (this.hasRole(role as R)) {
-          result[role as R] = value as any;
+          result[role as R] = value;
         }
       }
     });

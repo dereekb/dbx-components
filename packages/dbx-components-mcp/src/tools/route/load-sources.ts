@@ -78,6 +78,7 @@ export async function loadRouteSources(args: LoadSourcesArgs): Promise<LoadedSou
  *
  * @param requestedCwd - The original cwd argument from the caller.
  * @param resolvedCwd - The resolved absolute path.
+ * @throws {Error} When `resolvedCwd` lies outside the server cwd.
  */
 function guardCwdInsideServer(requestedCwd: string | undefined, resolvedCwd: string): void {
   if (!requestedCwd) {

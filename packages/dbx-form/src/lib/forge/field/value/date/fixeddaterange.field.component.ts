@@ -215,7 +215,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
   });
 
   // MARK: Computed signals from props
-  readonly isRequired = computed(() => {
+  readonly isRequiredSignal = computed(() => {
     let result = false;
 
     try {
@@ -230,33 +230,36 @@ export class DbxForgeFixedDateRangeFieldComponent {
 
   readonly isDisabled = dbxForgeFieldDisabled();
 
-  readonly valueMode = computed(() => this.props()?.valueMode ?? DbxDateTimeValueMode.DATE);
-  readonly showRangeInput = computed(() => this.props()?.showRangeInput ?? true);
-  readonly showTimezone = computed(() => this.props()?.showTimezone ?? true);
+  readonly valueModeSignal = computed(() => this.props()?.valueMode ?? DbxDateTimeValueMode.DATE);
+  readonly showRangeInputSignal = computed(() => this.props()?.showRangeInput ?? true);
+  readonly showTimezoneSignal = computed(() => this.props()?.showTimezone ?? true);
 
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as any);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   // ARIA
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequiredSignal = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const props = this.props();
+    const hintId = this.hintIdSignal();
     let result: Maybe<string> = null;
 
-    if (this.errorsToDisplay().length > 0) {
-      result = this.errorId();
-    } else if (this.props()?.hint) {
-      result = this.hintId();
+    if (this.errorsToDisplaySignal().length > 0) {
+      result = errorId;
+    } else if (props?.hint) {
+      result = hintId;
     }
 
     return result;
   });
 
-  readonly hasRequiredError = computed(() => {
+  readonly hasRequiredErrorSignal = computed(() => {
     let result = false;
 
     try {
@@ -279,7 +282,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
   });
 
   // MARK: Field value reading
-  readonly fieldValue = computed(() => {
+  readonly fieldValueSignal = computed(() => {
     let result: unknown = undefined;
 
     try {
@@ -292,7 +295,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
     return result;
   });
 
-  readonly fieldValue$ = toObservable(this.fieldValue);
+  readonly fieldValue$ = toObservable(this.fieldValueSignal);
 
   // MARK: Observable pipelines
   readonly config$: Observable<DbxFixedDateRangePickerConfiguration> = this._config.pipe(
@@ -330,7 +333,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
     combineLatestWith(this.timezoneInstance$),
     map(([raw, timezoneInstance]) => {
       if (raw == null) return undefined;
-      const inputFactory = fixedDateRangeInputValueFactory(this.valueMode(), timezoneInstance);
+      const inputFactory = fixedDateRangeInputValueFactory(this.valueModeSignal(), timezoneInstance);
       return inputFactory(raw as Maybe<DateRangeWithDateOrStringValue>);
     }),
     throttleTime(20, undefined, { leading: false, trailing: true }),
@@ -386,7 +389,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
             distinctUntilChanged(isSameDateDayRange),
             map((inputDateRange) => {
               const date = inputDateRange?.start;
-              return date ? (minMaxClamp(dateRange({ ...dateRangeInput, date } as DateRangeInput)) as DateRange) : null;
+              return date ? minMaxClamp(dateRange({ ...dateRangeInput, date } as DateRangeInput)) : null;
             })
           );
         } else {
@@ -503,8 +506,8 @@ export class DbxForgeFixedDateRangeFieldComponent {
                 result = {
                   lastPickType: pickType,
                   lastDateRange: result.lastDateRange,
-                  boundary: result.boundary ? (minMaxClamp(result.boundary) as DateRange) : undefined,
-                  range: result.range ? (minMaxClamp(result.range) as DateRange) : undefined
+                  boundary: result.boundary ? minMaxClamp(result.boundary) : undefined,
+                  range: result.range ? minMaxClamp(result.range) : undefined
                 };
               }
 
@@ -561,7 +564,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
   readonly pickerFilterSignal = toSignal(this.pickerFilter$, { initialValue: this.defaultPickerFilter });
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'mat-calendar' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'mat-calendar' });
 
     // MARK: Effect — subscribe to async props
     effect(() => {
@@ -605,7 +608,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
     // The old switchMap pattern re-subscribed to dateRangeSelection (which has shareReplay(1))
     // whenever the field value changed externally, causing the cached user selection to replay
     // and overwrite the external value.
-    this._sub.subscription = dateRangeSelection.pipe(skipAllInitialMaybe(), withLatestFrom(this.valueInSystemTimezone$, this.timezoneInstance$.pipe(map((timezoneInstance) => fixedDateRangeOutputValueFactory(this.valueMode(), timezoneInstance)))), throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true })).subscribe(([rawValue, currentValue, valueFactory]) => {
+    this._sub.subscription = dateRangeSelection.pipe(skipAllInitialMaybe(), withLatestFrom(this.valueInSystemTimezone$, this.timezoneInstance$.pipe(map((timezoneInstance) => fixedDateRangeOutputValueFactory(this.valueModeSignal(), timezoneInstance)))), throttleTime(TIME_OUTPUT_THROTTLE_TIME, undefined, { leading: false, trailing: true })).subscribe(([rawValue, currentValue, valueFactory]) => {
       const value = rawValue ? valueFactory(rawValue) : null;
       const isSameRange = dbxDateRangeIsSameDateRangeFieldValue(value, currentValue);
 
@@ -670,7 +673,7 @@ export class DbxForgeFixedDateRangeFieldComponent {
 
     // MARK: Text input subscription (outbound: text inputs → selection)
     effect(() => {
-      const showRange = this.showRangeInput();
+      const showRange = this.showRangeInputSignal();
 
       untracked(() => {
         this._inputRangeFormValueSub.destroy();

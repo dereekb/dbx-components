@@ -3,9 +3,9 @@ import { hideBin } from 'yargs/helpers';
 import { type ActionCommandSpec } from '../action/action.command.factory';
 import { buildActionCommands } from '../action/build-action-commands';
 import { createAuthCommand } from '../auth/auth.command.factory';
-import { callPassthroughCommand } from '../api/call.passthrough.command';
-import { getCommand } from '../api/get.command';
-import { getManyCommand } from '../api/get-many.command';
+import { CALL_PASSTHROUGH_COMMAND } from '../api/call.passthrough.command';
+import { GET_COMMAND } from '../api/get.command';
+import { GET_MANY_COMMAND } from '../api/get-many.command';
 import { type CliEnvDefault } from '../config/env';
 import { type CliContext } from '../context/cli.context';
 import { createDoctorCommand, type DoctorCheck } from '../doctor/doctor.command.factory';
@@ -183,10 +183,10 @@ export function createCli(input: CreateCliInput): Argv {
   }
 
   const allConfigCommands = [...builtInConfigCommands, ...(input.configCommands ?? [])];
-  const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [callPassthroughCommand];
+  const builtInApiCommands: CommandModule[] = input.disableCallPassthrough ? [] : [CALL_PASSTHROUGH_COMMAND];
 
   if (input.disableModelGet !== true) {
-    builtInApiCommands.push(getCommand, getManyCommand);
+    builtInApiCommands.push(GET_COMMAND, GET_MANY_COMMAND);
   }
 
   const actionCommands = buildActionCommands(input.actionCommands ?? []);

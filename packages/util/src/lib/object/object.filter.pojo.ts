@@ -185,7 +185,7 @@ export function overrideInObjectFunctionFactory<T extends object>({ filter, copy
       const template = {};
 
       from.forEach((x) => {
-        const relevantValues = filterToRelevantValuesObject({ ...x } as T);
+        const relevantValues = filterToRelevantValuesObject({ ...x });
         Object.assign(template, relevantValues);
       });
 
@@ -299,7 +299,7 @@ export function mergeObjectsFunction<T extends object>(filter?: FilterKeyValueTu
  */
 export function filterUndefinedValues<T extends object>(obj: T, filterNull = false): T {
   const filterFn = filterNull ? filterNullAndUndefinedValues : filterOnlyUndefinedValues;
-  return filterFn(obj) as T;
+  return filterFn(obj);
 }
 
 /**
@@ -312,7 +312,7 @@ export function filterUndefinedValues<T extends object>(obj: T, filterNull = fal
  * // { a: 1, c: null }
  * ```
  */
-export const filterOnlyUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.UNDEFINED } }) as GeneralFilterFromPOJOFunction;
+export const filterOnlyUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.UNDEFINED } });
 
 /**
  * Pre-built filter that returns a copy of the input object with all `null` and `undefined` values removed.
@@ -324,7 +324,7 @@ export const filterOnlyUndefinedValues: GeneralFilterFromPOJOFunction = filterFr
  * // { a: 1, d: 0 }
  * ```
  */
-export const filterNullAndUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.NULL } }) as GeneralFilterFromPOJOFunction;
+export const filterNullAndUndefinedValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.NULL } });
 
 /**
  * Pre-built filter that returns a copy of the input object with all empty values removed.
@@ -336,7 +336,7 @@ export const filterNullAndUndefinedValues: GeneralFilterFromPOJOFunction = filte
  * // { a: 1, e: 'hello' }
  * ```
  */
-export const filterEmptyPojoValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.EMPTY } }) as GeneralFilterFromPOJOFunction;
+export const filterEmptyPojoValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.EMPTY } });
 
 /**
  * Pre-built filter that returns a copy of the input object with all falsy and empty values removed.
@@ -348,7 +348,7 @@ export const filterEmptyPojoValues: GeneralFilterFromPOJOFunction = filterFromPO
  * // { a: 1, e: 'hello' }
  * ```
  */
-export const filterFalsyAndEmptyValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.FALSY_AND_EMPTY } }) as GeneralFilterFromPOJOFunction;
+export const filterFalsyAndEmptyValues: GeneralFilterFromPOJOFunction = filterFromPOJOFunction({ copy: true, filter: { valueFilter: KeyValueTypleValueFilter.FALSY_AND_EMPTY } });
 
 /**
  * Pre-built function that returns all keys from a POJO whose values are not `undefined`.

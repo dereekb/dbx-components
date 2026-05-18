@@ -122,7 +122,7 @@ export const MAP_IDENTITY: <T>(input: T) => T = ((input: unknown) => input) as <
  * @__NO_SIDE_EFFECTS__
  */
 export function mapIdentityFunction<T>(): MapFunction<T, T> {
-  return MAP_IDENTITY as MapFunction<T, T>;
+  return MAP_IDENTITY;
 }
 
 /**

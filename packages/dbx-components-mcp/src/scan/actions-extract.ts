@@ -344,7 +344,7 @@ function buildStateEntries(input: { readonly decl: EnumDeclaration; readonly fil
       continue;
     }
     const stateValue = stateValueRaw as DbxActionStateValue;
-    const memberJsDocs = (member as EnumMember).getJsDocs();
+    const memberJsDocs = member.getJsDocs();
     const memberRaw = readJsDocs(memberJsDocs);
     const transitionsFrom = filterStates(flattenList(memberRaw.tagText.get(ACTION_STATE_TRANSITIONS_FROM_TAG) ?? []));
     const transitionsTo = filterStates(flattenList(memberRaw.tagText.get(ACTION_STATE_TRANSITIONS_TO_TAG) ?? []));

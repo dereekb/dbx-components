@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { JsonPipe } from '@angular/common';
 import { combineLatestWith, delay, map, of, type Observable } from 'rxjs';
-import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponent, DbxScheduleSelectionCalendarDateRangeComponent, type DbxScheduleSelectionCalendarComponentConfig, type DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction, type CalendarScheduleSelectionMetadata } from '@dereekb/dbx-form/calendar';
-import { type DateCellScheduleDateFilterConfig, type DateCellScheduleEncodedWeek } from '@dereekb/date';
+import { DbxCalendarScheduleSelectionStore, DbxScheduleSelectionCalendarComponent, DbxScheduleSelectionCalendarDateRangeComponent, type DbxScheduleSelectionCalendarComponentConfig, type DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction } from '@dereekb/dbx-form/calendar';
+import { type DateCellScheduleDateFilterConfig } from '@dereekb/date';
 import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxContentPitDirective, DbxButtonComponent, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { compareStrings } from '@dereekb/util';
@@ -28,7 +28,7 @@ const FILTER: DateCellScheduleDateFilterConfig = {
   startsAt: FILTER_STARTS_AT,
   end: FILTER_END,
   timezone: TIMEZONE,
-  w: '8' as DateCellScheduleEncodedWeek,
+  w: '8',
   d: [],
   ex: []
 };
@@ -74,8 +74,8 @@ export class DocBugsCalendarComponent {
   // This is the call site that exposes the bug as a visible phantom-day annotation.
   private readonly _bugCustomizeDay$: Observable<DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction> = this.dbxCalendarScheduleSelectionStore.selectionValueSelectedIndexes$.pipe(
     map((selectedIndexesFromStore) => {
-      return ((day) => {
-        const meta = day.meta as CalendarScheduleSelectionMetadata | undefined;
+      return (day) => {
+        const meta = day.meta;
         if (meta == null) return;
         const stateIndex = meta.i;
         // BUG: selectedIndexesFromStore is anchored to dateScheduleRange.start (the OUTPUT start).
@@ -84,7 +84,7 @@ export class DocBugsCalendarComponent {
         if (selectedIndexesFromStore.has(stateIndex)) {
           day.cssClass = `${day.cssClass ?? ''} doc-bugs-phantom-marker`.trim();
         }
-      }) as DbxScheduleSelectionCalendarBeforeMonthViewRenderModifyDayFunction;
+      };
     })
   );
 
@@ -121,7 +121,7 @@ export class DocBugsCalendarComponent {
       // The state's indexFactory is anchored at state.start (filter.start = 4/16).
       // A consumer that reads "selectionValueSelectedIndexes" and treats them as state-anchored
       // would compute these dates:
-      const dateFactory = state.indexFactory._timing ? (i: number) => new Date((state.start as Date).getTime() + i * 24 * 60 * 60 * 1000) : (i: number) => new Date(i);
+      const dateFactory = state.indexFactory._timing ? (i: number) => new Date(state.start.getTime() + i * 24 * 60 * 60 * 1000) : (i: number) => new Date(i);
       return Array.from(outputIndexes)
         .sort((a, b) => a - b)
         .map((i) => dateFactory(i).toISOString().slice(0, 10));

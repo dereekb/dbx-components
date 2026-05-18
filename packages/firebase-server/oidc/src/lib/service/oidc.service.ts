@@ -261,8 +261,8 @@ export class OidcService {
           const remaining = readRemainingGrantSeconds(ctx);
           return Math.min(remaining ?? config.tokenLifetimes.refreshToken, config.tokenLifetimes.refreshToken);
         },
-        Session: (ctx, _session) => resolveDurationFromCtx(ctx as KoaContextWithOIDC | undefined, undefined, config.tokenLifetimes.session),
-        Grant: (ctx, _grant, client) => resolveDurationFromCtx(ctx as KoaContextWithOIDC | undefined, client as { dbx_max_session_ttl?: number } | undefined, config.tokenLifetimes.grant),
+        Session: (ctx, _session) => resolveDurationFromCtx(ctx, undefined, config.tokenLifetimes.session),
+        Grant: (ctx, _grant, client) => resolveDurationFromCtx(ctx, client as { dbx_max_session_ttl?: number } | undefined, config.tokenLifetimes.grant),
         Interaction: 60 * 60,
         DeviceCode: 10 * 60
       },

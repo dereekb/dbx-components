@@ -6,9 +6,9 @@ export interface State {
   // None
 }
 
-export const initialState: State = {};
+export const INITIAL_STATE: State = {};
 
-export const ROOT_REDUCER = createReducer(initialState);
+export const ROOT_REDUCER = createReducer(INITIAL_STATE);
 
 /**
  * Meta-reducer that logs all dispatched actions, previous state, and next state to the console.

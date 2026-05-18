@@ -291,7 +291,7 @@ demoApiFunctionContextFactory((f) => {
             acceptsStreaming: false
           };
 
-          const authContext = authService.context(callableContext as any);
+          const authContext = authService.context(callableContext);
           expect(authContext).toBeDefined();
           expect(authContext.uid).toBe(u.uid);
         });
@@ -306,7 +306,7 @@ demoApiFunctionContextFactory((f) => {
             acceptsStreaming: false
           };
 
-          const authContext = authService.context(callableContext as any);
+          const authContext = authService.context(callableContext);
           expect(authContext.isAdmin).toBe(true);
         });
       });

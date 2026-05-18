@@ -88,7 +88,7 @@ function getImportName(node: AstNode): string {
  *
  * @see `dbx__note__typescript-programming` → No Inline Type Imports
  */
-export const utilNoInlineTypeImportRule: UtilNoInlineTypeImportRuleDefinition = {
+export const UTIL_NO_INLINE_TYPE_IMPORT_RULE: UtilNoInlineTypeImportRuleDefinition = {
   meta: {
     type: 'suggestion',
     docs: {

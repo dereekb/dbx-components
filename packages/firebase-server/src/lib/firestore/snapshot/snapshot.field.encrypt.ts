@@ -59,7 +59,7 @@ export function firestoreEncryptedField<T>(config: FirestoreEncryptedFieldConfig
   const getKey = resolveEncryptionKey(secret);
 
   return firestoreField<T, string>({
-    default: defaultValue as GetterOrValue<T>,
+    default: defaultValue,
     fromData: (data: string) => {
       return decryptValue<T>(data, getKey());
     },

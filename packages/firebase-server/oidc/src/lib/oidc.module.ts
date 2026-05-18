@@ -182,7 +182,7 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     jwksKeyConverterConfig: {
       encryptionSecret
     }
-  } as OidcModuleConfig;
+  };
 
   OidcModuleConfig.assertValidConfig(config);
   return config;

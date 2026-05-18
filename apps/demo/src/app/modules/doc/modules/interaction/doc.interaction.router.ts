@@ -13,80 +13,80 @@ import { DocInteractionLoadingComponent } from './container/loading.component';
 import { DocInteractionIframeComponent } from './container/iframe.component';
 import { DocInteractionUploadComponent } from './container/upload.component';
 
-export const layoutState: Ng2StateDeclaration = {
+export const LAYOUT_STATE: Ng2StateDeclaration = {
   url: '/interaction',
   name: 'doc.interaction',
   component: DocInteractionLayoutComponent,
   redirectTo: 'doc.interaction.home'
 };
 
-export const homeState: Ng2StateDeclaration = {
+export const HOME_STATE: Ng2StateDeclaration = {
   url: '/home',
   name: 'doc.interaction.home',
   component: DocInteractionHomeComponent
 };
 
-export const docInteractionDetachState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_DETACH_STATE: Ng2StateDeclaration = {
   url: '/detach',
   name: 'doc.interaction.detach',
   component: DocInteractionDetachComponent
 };
 
-export const docInteractionButtonState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_BUTTON_STATE: Ng2StateDeclaration = {
   url: '/button',
   name: 'doc.interaction.button',
   component: DocInteractionButtonComponent
 };
 
-export const docInteractionErrorState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_ERROR_STATE: Ng2StateDeclaration = {
   url: '/error',
   name: 'doc.interaction.error',
   component: DocInteractionErrorComponent
 };
 
-export const docInteractionLoadingState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_LOADING_STATE: Ng2StateDeclaration = {
   url: '/loading',
   name: 'doc.interaction.loading',
   component: DocInteractionLoadingComponent
 };
 
-export const docInteractionDialogState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_DIALOG_STATE: Ng2StateDeclaration = {
   url: '/dialog',
   name: 'doc.interaction.dialog',
   component: DocInteractionDialogComponent
 };
 
-export const docInteractionIframeState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_IFRAME_STATE: Ng2StateDeclaration = {
   url: '/iframe',
   name: 'doc.interaction.iframe',
   component: DocInteractionIframeComponent
 };
 
-export const docInteractionFilterState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_FILTER_STATE: Ng2StateDeclaration = {
   url: '/filter',
   name: 'doc.interaction.filter',
   component: DocInteractionFilterComponent
 };
 
-export const docInteractionPromptState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_PROMPT_STATE: Ng2StateDeclaration = {
   url: '/prompt',
   name: 'doc.interaction.prompt',
   component: DocInteractionPromptComponent
 };
 
-export const docInteractionPopupState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_POPUP_STATE: Ng2StateDeclaration = {
   url: '/popup',
   name: 'doc.interaction.popup',
   component: DocInteractionPopupComponent
 };
 
-export const docInteractionPopoverState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_POPOVER_STATE: Ng2StateDeclaration = {
   url: '/popover',
   name: 'doc.interaction.popover',
   component: DocInteractionPopoverComponent
 };
 
-export const docInteractionUploadState: Ng2StateDeclaration = {
+export const DOC_INTERACTION_UPLOAD_STATE: Ng2StateDeclaration = {
   url: '/upload',
   name: 'doc.interaction.upload',
   component: DocInteractionUploadComponent
@@ -94,17 +94,17 @@ export const docInteractionUploadState: Ng2StateDeclaration = {
 
 export const STATES: Ng2StateDeclaration[] = [
   //
-  layoutState,
-  homeState,
-  docInteractionDetachState,
-  docInteractionButtonState,
-  docInteractionErrorState,
-  docInteractionLoadingState,
-  docInteractionDialogState,
-  docInteractionFilterState,
-  docInteractionPromptState,
-  docInteractionPopupState,
-  docInteractionPopoverState,
-  docInteractionIframeState,
-  docInteractionUploadState
+  LAYOUT_STATE,
+  HOME_STATE,
+  DOC_INTERACTION_DETACH_STATE,
+  DOC_INTERACTION_BUTTON_STATE,
+  DOC_INTERACTION_ERROR_STATE,
+  DOC_INTERACTION_LOADING_STATE,
+  DOC_INTERACTION_DIALOG_STATE,
+  DOC_INTERACTION_FILTER_STATE,
+  DOC_INTERACTION_PROMPT_STATE,
+  DOC_INTERACTION_POPUP_STATE,
+  DOC_INTERACTION_POPOVER_STATE,
+  DOC_INTERACTION_IFRAME_STATE,
+  DOC_INTERACTION_UPLOAD_STATE
 ];

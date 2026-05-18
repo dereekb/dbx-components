@@ -116,7 +116,7 @@ export function openStreamingDump(params: OpenStreamingDumpParams): StreamingDum
     const writeDataByLinePage = (result: PaginatedResponse, append: boolean): void => {
       // data_by_line — one record per line. For `replace` mode, truncate on first record then append the rest.
       const records = result.data ?? [];
-      const pickedRecords: Maybe<unknown[]> = pickPath ? (pickFields(records as unknown[], pick as string) as unknown[]) : undefined;
+      const pickedRecords: Maybe<unknown[]> = pickPath ? pickFields(records as unknown[], pick as string) : undefined;
 
       if (records.length === 0) {
         // Still ensure file is created/truncated on first iteration even when empty.

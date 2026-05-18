@@ -267,6 +267,7 @@ export function zohoCrmAddTagsToRecords(context: ZohoCrmContext): ZohoCrmAddTags
  *
  * @param input - The add/remove tags request containing tag names, tag objects, and record IDs.
  * @returns The formatted request body with merged tags and record IDs.
+ * @throws {Error} When `input.ids` exceeds {@link ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED}.
  */
 export function zohoCrmAddTagsToRecordsRequestBody(input: ZohoCrmAddTagsToRecordsRequest) {
   if (Array.isArray(input.ids) && input.ids.length > ZOHO_CRM_ADD_TAGS_TO_RECORDS_MAX_IDS_ALLOWED) {

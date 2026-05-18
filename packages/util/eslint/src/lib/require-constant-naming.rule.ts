@@ -161,7 +161,7 @@ function classifyConstant(declarator: AstNode): ConstantKind {
  *
  * @see `dbx__note__typescript-programming` → Constant Naming.
  */
-export const utilRequireConstantNamingRule: UtilRequireConstantNamingRuleDefinition = {
+export const UTIL_REQUIRE_CONSTANT_NAMING_RULE: UtilRequireConstantNamingRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: undefined,

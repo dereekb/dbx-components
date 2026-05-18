@@ -23,7 +23,7 @@ import { cleanSubscription } from '@dereekb/dbx-core';
   `,
   host: {
     class: 'dbx-forge',
-    '[class.dbx-forge-form-disabled]': 'isDisabled()'
+    '[class.dbx-forge-form-disabled]': 'isDisabledSignal()'
   },
   providers: [EventDispatcher, { provide: DbxForgeDynamicFormSignalRef, useExisting: DbxForgeFormComponent }, DbxForgeFormContextService, { provide: DbxForm, useExisting: DbxForgeFormContext }, { provide: DbxMutableForm, useExisting: DbxForgeFormContext }],
   imports: [DynamicForm],
@@ -70,10 +70,10 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
    */
   private _pendingValue: Maybe<{ value: Maybe<Partial<T>> }> = undefined;
 
-  readonly isDisabled = computed(() => BooleanStringKeyArrayUtility.isTrue(this._disabled()));
+  readonly isDisabledSignal = computed(() => BooleanStringKeyArrayUtility.isTrue(this._disabled()));
 
   readonly formOptionsSignal = computed((): FormOptions | undefined => {
-    return this.isDisabled() ? { disabled: true } : undefined;
+    return this.isDisabledSignal() ? { disabled: true } : undefined;
   });
 
   /**
@@ -85,7 +85,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
    * DynamicForm.valid(). They register their nested validity via
    * {@link DbxForgeFormContext.registerWrapperValidity}, and this computed combines both sources.
    */
-  readonly formValid = computed(() => (this.dynamicForm()?.valid() ?? false) && this._context.allWrappersValid());
+  readonly formValidSignal = computed(() => (this.dynamicForm()?.valid() ?? false) && this._context.allWrappersValid());
 
   /**
    * Track form value changes and update the context value + changes count.
@@ -154,7 +154,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
   protected readonly _parentFormTreeEffect = effect(() => {
     const formTree = this.dynamicForm()?.form();
     untracked(() => {
-      this._context.setParentFormTree(formTree as any);
+      this._context.setParentFormTree(formTree);
     });
   });
 
@@ -165,7 +165,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
    * update isComplete and status without incrementing changesCount.
    */
   protected readonly _validityEffect = effect(() => {
-    const isValid = this.formValid();
+    const isValid = this.formValidSignal();
 
     untracked(() => {
       this._context.updateIsValid(isValid);
@@ -174,13 +174,13 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
   });
 
   protected _emitFormState(): void {
-    const isValid = this.formValid();
+    const isValid = this.formValidSignal();
     const isReset = this._isReset();
     const changesCount = this._changesCount();
 
-    const suppressComplete = this.isDisabled() && !this._context.emitValueWhenDisabled;
+    const suppressComplete = this.isDisabledSignal() && !this._context.emitValueWhenDisabled;
     let status: DbxFormEvent['status'];
-    if (this.isDisabled()) {
+    if (this.isDisabledSignal()) {
       status = 'DISABLED';
     } else if (isValid) {
       status = 'VALID';
@@ -195,7 +195,7 @@ export class DbxForgeFormComponent<T extends object = object> implements DbxForg
       pristine: isReset,
       untouched: isReset,
       changesCount,
-      isDisabled: this.isDisabled(),
+      isDisabled: this.isDisabledSignal(),
       disabled: this._disabled(),
       lastResetAt: this._lastResetAt()
     };

@@ -57,7 +57,7 @@ export class DbxFirebaseModelKeyComponent {
   readonly modelIdentitySignal = toSignal(this.modelIdentity$);
   readonly typeInfoSignal = toSignal(this.typeInfo$);
 
-  readonly typeCanSegueToView = computed(() => this.typeInfoSignal()?.canSegueToView ?? false);
+  readonly typeCanSegueToViewSignal = computed(() => this.typeInfoSignal()?.canSegueToView ?? false);
 
   readonly sref$ = this.modelTypeInstance$.pipe(switchMap((x) => x?.segueRef$ ?? of(undefined)));
   readonly srefSignal = toSignal(this.sref$);

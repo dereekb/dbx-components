@@ -39,7 +39,7 @@ export interface UtilRequireDbxDocsUiExampleCompanionTagsRuleDefinition {
  * ESLint rule enforcing `@dbxDocsUiExample` companion tags. Mirrors the
  * scanner schema at `packages/dbx-components-mcp/src/scan/dbx-docs-ui-examples-extract.ts`.
  */
-export const utilRequireDbxDocsUiExampleCompanionTagsRule: UtilRequireDbxDocsUiExampleCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_DOCS_UI_EXAMPLE_COMPANION_TAGS_RULE: UtilRequireDbxDocsUiExampleCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

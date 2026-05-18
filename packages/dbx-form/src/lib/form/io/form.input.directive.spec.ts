@@ -179,7 +179,7 @@ describe('dbxFormSourceObservableFromStream()', () => {
 
           subscriptionObject.subscription = obs$.subscribe({
             next: (x) => {
-              received.push(x as number);
+              received.push(x);
 
               if (received.length === 2) {
                 expect(received).toEqual([0, 2]);

@@ -50,18 +50,18 @@ describe('getOidcScopesFromRequest', () => {
   });
 
   it('returns the parsed scope set when an OIDC scope string is present', () => {
-    const scopes = getOidcScopesFromRequest({ auth: { token: { scope: 'openid model.read model.create' } } } as any);
+    const scopes = getOidcScopesFromRequest({ auth: { token: { scope: 'openid model.read model.create' } } });
     expect(scopes).toEqual(new Set(['openid', 'model.read', 'model.create']));
   });
 
   it('returns an empty Set (not undefined) when scope is the empty string', () => {
-    const scopes = getOidcScopesFromRequest({ auth: { token: { scope: '' } } } as any);
+    const scopes = getOidcScopesFromRequest({ auth: { token: { scope: '' } } });
     expect(scopes).toBeDefined();
     expect(scopes!.size).toBe(0);
   });
 
   it('drops empty tokens caused by repeated separators', () => {
-    const scopes = getOidcScopesFromRequest({ auth: { token: { scope: '  model.read   model.update ' } } } as any);
+    const scopes = getOidcScopesFromRequest({ auth: { token: { scope: '  model.read   model.update ' } } });
     expect(scopes).toEqual(new Set(['model.read', 'model.update']));
   });
 });

@@ -111,4 +111,4 @@ function identityToModel(identity: string): string {
   return stem.charAt(0).toUpperCase() + stem.slice(1);
 }
 
-export const modelApiListAppTool: DbxTool = { definition: TOOL, run };
+export const MODEL_API_LIST_APP_TOOL: DbxTool = { definition: TOOL, run };

@@ -377,7 +377,7 @@ export function aggregateModelApiDetails(map: { readonly [key: string]: Maybe<On
     }
   }
 
-  return hasAny ? (result as OnCallModelApiDetails) : undefined;
+  return hasAny ? result : undefined;
 }
 
 // MARK: Model-First View

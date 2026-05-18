@@ -387,7 +387,7 @@ export function groupToDateCellRanges(input: (DateCell | DateCellRange)[]): Date
  * @returns Every DateCellIndex covered by the range, inclusive on both ends.
  */
 export function allIndexesInDateCellRange(input: DateCellRange): DateCellIndex[] {
-  return input.to != null ? range((input as DateCellRange).i, input.to + 1) : [input.i];
+  return input.to != null ? range(input.i, input.to + 1) : [input.i];
 }
 
 /**
@@ -883,6 +883,8 @@ type DateCellRangePriorityPair<B extends DateCellRange | UniqueDateCell> = {
  * const result = expand([{ i: 2, to: 5 }, { i: 8, to: 10 }]);
  * // result.blocks => [{ i: 2, to: 5 }, { i: 8, to: 10 }]
  * ```
+ *
+ * @throws {Error} When `fillOption` is `'fill'` but no `fillFactory` is supplied.
  *
  * @__NO_SIDE_EFFECTS__
  */

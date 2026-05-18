@@ -5,34 +5,34 @@ import { DemoAppOidcClientListPageRightComponent } from './container/list.right.
 import { DemoAppOidcClientCreatePageComponent } from './container/list.create.component';
 import { DemoAppOidcGrantListPageComponent } from './container/grants.component';
 
-export const oidcLayoutState: Ng2StateDeclaration = {
+export const OIDC_LAYOUT_STATE: Ng2StateDeclaration = {
   url: '/oidc',
   name: 'demo.app.oidc',
   redirectTo: 'demo.app.oidc.clients',
   component: DemoAppOidcLayoutComponent
 };
 
-export const oidcClientListState: Ng2StateDeclaration = {
+export const OIDC_CLIENT_LIST_STATE: Ng2StateDeclaration = {
   name: 'demo.app.oidc.clients',
   component: DemoAppOidcClientListPageComponent
 };
 
-export const oidcClientCreateState: Ng2StateDeclaration = {
+export const OIDC_CLIENT_CREATE_STATE: Ng2StateDeclaration = {
   url: '/create',
   name: 'demo.app.oidc.clients.create',
   component: DemoAppOidcClientCreatePageComponent
 };
 
-export const oidcClientDetailState: Ng2StateDeclaration = {
+export const OIDC_CLIENT_DETAIL_STATE: Ng2StateDeclaration = {
   url: '/:id',
   name: 'demo.app.oidc.clients.client',
   component: DemoAppOidcClientListPageRightComponent
 };
 
-export const oidcGrantListState: Ng2StateDeclaration = {
+export const OIDC_GRANT_LIST_STATE: Ng2StateDeclaration = {
   url: '/grants',
   name: 'demo.app.oidc.grants',
   component: DemoAppOidcGrantListPageComponent
 };
 
-export const DEMO_APP_OIDC_STATES: Ng2StateDeclaration[] = [oidcLayoutState, oidcClientListState, oidcClientCreateState, oidcClientDetailState, oidcGrantListState];
+export const DEMO_APP_OIDC_STATES: Ng2StateDeclaration[] = [OIDC_LAYOUT_STATE, OIDC_CLIENT_LIST_STATE, OIDC_CLIENT_CREATE_STATE, OIDC_CLIENT_DETAIL_STATE, OIDC_GRANT_LIST_STATE];

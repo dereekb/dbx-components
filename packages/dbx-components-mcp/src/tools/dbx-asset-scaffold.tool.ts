@@ -33,7 +33,7 @@ type AssetBuilderKind = (typeof ASSET_BUILDERS)[number]['kind'];
 
 const KIND_VALUES: readonly AssetBuilderKind[] = ASSET_BUILDERS.map((b) => b.kind);
 
-const DBX_ASSET_SCAFFOLD_TOOL: Tool = {
+const DBX_ASSET_SCAFFOLD_TOOL_DEFINITION: Tool = {
   name: 'dbx_asset_scaffold',
   description: [
     "Scaffold a new `AssetPathRef` constant for a downstream `-firebase` component's `src/lib/assets.ts`.",
@@ -239,7 +239,7 @@ export function runAssetScaffold(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const dbxAssetScaffoldTool: DbxTool = {
-  definition: DBX_ASSET_SCAFFOLD_TOOL,
+export const DBX_ASSET_SCAFFOLD_TOOL: DbxTool = {
+  definition: DBX_ASSET_SCAFFOLD_TOOL_DEFINITION,
   run: runAssetScaffold
 };

@@ -269,7 +269,7 @@ export function dateCellScheduleDayCodesSetFromDaysOfWeek(input: Iterable<DayOfW
   const codes = new Set<DateCellScheduleDayCode>();
 
   forEachInIterable(input, (code) => {
-    codes.add((code + 1) as DateCellScheduleDayCode);
+    codes.add(code + 1);
   });
 
   return codes;
@@ -330,7 +330,7 @@ export function rawDateCellScheduleDayCodes(input: DateCellScheduleDayCodesInput
 
   switch (typeof input) {
     case 'string':
-      dayCodes = Array.from(new Set(input)).map(Number) as DateCellScheduleDayCode[];
+      dayCodes = Array.from(new Set(input)).map(Number);
       break;
     case 'number':
       dayCodes = [input];
@@ -512,6 +512,7 @@ export type DateCellScheduleDateRangeInput = DateCellSchedule & Partial<Timezone
  *
  * @param input - Schedule and partial date range information to assemble.
  * @returns A fully resolved schedule date range with timezone-aware start/end.
+ * @throws {Error} When neither `start`, `startsAt`, nor `end` is provided in the input.
  */
 export function dateCellScheduleDateRange(input: DateCellScheduleDateRangeInput): DateCellScheduleDateRange {
   const { w, ex, d, start: inputStart, startsAt: inputStartsAt, end: inputEnd, timezone: inputTimezone } = input as DateCellSchedule & Partial<FullDateCellScheduleRange>;

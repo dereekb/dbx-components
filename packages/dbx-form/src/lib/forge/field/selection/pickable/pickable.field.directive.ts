@@ -62,29 +62,38 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     const fieldState = typeof fieldGetter === 'function' ? (fieldGetter as any)() : undefined;
     return fieldState?.readonly?.() ?? false;
   });
-  readonly isDisabledOrReadonly = computed(() => this.isDisabled() || this.readonlySignal());
+  readonly isDisabledOrReadonlySignal = computed(() => {
+    const readonly = this.readonlySignal();
+    return this.isDisabled() || readonly;
+  });
   readonly showSelectAllButtonSignal = computed(() => this.props()?.showSelectAllButton ?? false);
-  readonly showTextFilterSignal = computed(() => this.props()?.showTextFilter ?? Boolean(this.props()?.filterValues));
+  readonly showTextFilterSignal = computed(() => {
+    const props = this.props();
+    return this.props()?.showTextFilter ?? Boolean(props?.filterValues);
+  });
   readonly filterLabelSignal = computed(() => this.props()?.filterLabel);
   readonly footerConfigSignal = computed(() => this.props()?.footerConfig);
 
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as InputSignal<any>, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as InputSignal<any>);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   // ARIA
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequiredSignal = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const props = this.props();
+    const hintId = this.hintIdSignal();
     let result: Maybe<string> = null;
 
-    if (this.errorsToDisplay().length > 0) {
-      result = this.errorId();
-    } else if (this.props()?.hint) {
-      result = this.hintId();
+    if (this.errorsToDisplaySignal().length > 0) {
+      result = errorId;
+    } else if (props?.hint) {
+      result = hintId;
     }
 
     return result;
@@ -321,7 +330,7 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
               const valueIndexHashMap = new Map(displayResultsWithHash.map((x) => [x._hash, x]));
               displayResultsWithHash.forEach((x) => displayMap.set(x._hash, x));
 
-              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1])) as PickableDisplayValueWithHash<T, M, H>[];
+              return mappingResult.map((x) => x[3] ?? valueIndexHashMap.get(x[1]));
             })
           );
         }

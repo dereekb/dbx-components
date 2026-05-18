@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 interface AstNode {
   readonly type: string;
   // index signature keeps the loose-typed semantics of the original `= any`
@@ -54,9 +55,9 @@ export interface UtilRequireExportedJsdocExampleRuleDefinition {
  * @param node - The AST node to inspect.
  * @returns The leading JSDoc block comment node, or `null` when none is present.
  */
-function getLeadingJsdoc(sourceCode: AstNode, node: AstNode): AstNode | null {
+function getLeadingJsdoc(sourceCode: AstNode, node: AstNode): Maybe<AstNode> {
   const comments = sourceCode.getCommentsBefore(node) || [];
-  let result: AstNode | null = null;
+  let result: Maybe<AstNode> = null;
 
   for (const comment of comments) {
     if (comment.type === 'Block' && typeof comment.value === 'string' && comment.value.startsWith('*')) {
@@ -82,7 +83,7 @@ function getLeadingJsdoc(sourceCode: AstNode, node: AstNode): AstNode | null {
  *
  * @see `dbx__note__typescript-jsdocs` → "Function JSDocs Must Include Examples".
  */
-export const utilRequireExportedJsdocExampleRule: UtilRequireExportedJsdocExampleRuleDefinition = {
+export const UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE: UtilRequireExportedJsdocExampleRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: undefined,

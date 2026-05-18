@@ -73,7 +73,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
     // MARK: API Key Auth (static token, no refresh)
     if (useApiKey) {
       const apiKeyToken: CalcomAccessToken = {
-        accessToken: config.apiKey as string,
+        accessToken: config.apiKey,
         refreshToken: '',
         expiresIn: Number.MAX_SAFE_INTEGER,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 100), // 100 years
@@ -94,7 +94,7 @@ export function calcomOAuthFactory(factoryConfig: CalcomOAuthFactoryConfig): Cal
         config
       };
 
-      return { oauthContext } as CalcomOAuth;
+      return { oauthContext };
     }
 
     // MARK: OAuth Auth (refresh token flow)

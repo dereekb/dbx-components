@@ -452,7 +452,7 @@ const notificationBoxRecipientTemplateConfigDencoder = bitwiseObjectDencoder<Not
       object.sn = false;
     }
 
-    return object as NotificationBoxRecipientTemplateConfig;
+    return object;
   }
 });
 

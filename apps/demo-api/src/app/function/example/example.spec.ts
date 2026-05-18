@@ -1,4 +1,4 @@
-import { demoDevelopmentFunctionMap } from './../model/development.functions';
+import { DEMO_DEVELOPMENT_FUNCTION_MAP } from './../model/development.functions';
 import { demoExampleUsageOfSchedule } from '../model/schedule.functions';
 import { type DemoDevelopmentExampleParams, type DemoDevelopmentExampleResult, DEMO_APP_EXAMPLE_DEVELOPMENT_FUNCTION_SPECIFIER, loadExampleSystemState } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext } from '../../../test/fixture';
@@ -30,7 +30,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
   });
 
-  describeCallableRequestTest('exampleDevelopmentFunction', { f, fns: { dev: onCallWithDemoNestContext(onCallDevelopmentFunction(demoDevelopmentFunctionMap)) } }, ({ devWrappedFn }) => {
+  describeCallableRequestTest('exampleDevelopmentFunction', { f, fns: { dev: onCallWithDemoNestContext(onCallDevelopmentFunction(DEMO_DEVELOPMENT_FUNCTION_MAP)) } }, ({ devWrappedFn }) => {
     demoAuthorizedUserContext({ f }, (u) => {
       it('should execute the development function.', async () => {
         const params: DemoDevelopmentExampleParams = {

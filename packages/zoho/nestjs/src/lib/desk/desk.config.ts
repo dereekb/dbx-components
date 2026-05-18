@@ -26,6 +26,7 @@ export abstract class ZohoDeskServiceConfig {
    * Validates that the required Zoho Desk connection fields are present and well-formed.
    *
    * @param config - The Desk service config to validate.
+   * @throws {Error} When `config.zohoDesk.orgId` is missing or fails the shared Zoho config assertion.
    */
   static assertValidConfig(config: ZohoDeskServiceConfig) {
     assertValidZohoConfig(config.zohoDesk);

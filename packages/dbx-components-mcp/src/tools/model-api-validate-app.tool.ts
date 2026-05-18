@@ -116,4 +116,4 @@ function identityToModel(identity: string): string {
   return stem.charAt(0).toUpperCase() + stem.slice(1);
 }
 
-export const modelApiValidateAppTool: DbxTool = { definition: TOOL, run };
+export const MODEL_API_VALIDATE_APP_TOOL: DbxTool = { definition: TOOL, run };

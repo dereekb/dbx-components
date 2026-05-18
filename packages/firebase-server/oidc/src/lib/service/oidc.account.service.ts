@@ -78,7 +78,7 @@ export class OidcAccountServiceUserContext<S extends OidcScope = OidcScope, U ex
     private readonly _service: OidcAccountService<S, U>,
     private readonly _uid: string
   ) {
-    this.authUserContext = this._service.authService.userContext(this._uid) as U;
+    this.authUserContext = this._service.authService.userContext(this._uid);
   }
 
   get uid(): string {

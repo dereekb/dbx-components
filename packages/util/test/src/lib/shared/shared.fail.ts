@@ -30,6 +30,7 @@ export function failSuccessfullyError(message?: string): ExpectedFailError {
  * `it()` block causes the test to fail because the error propagates uncaught.
  *
  * @param message - Optional error message.
+ * @throws {ExpectedFailError} Always; never returns normally.
  */
 export function failSuccessfully(message?: string): never {
   throw failSuccessfullyError(message);
@@ -67,6 +68,7 @@ export class ExpectedErrorOfSpecificTypeError extends BaseError {
  * Use when a code path should not have been reached.
  *
  * @param message - Optional error message.
+ * @throws {UnexpectedSuccessFailureError} Always; never returns normally.
  */
 export function failTest(message?: string): never {
   throw failDueToSuccessError(message);
@@ -75,6 +77,8 @@ export function failTest(message?: string): never {
 /**
  * Throws an {@link UnexpectedSuccessFailureError} with a default message.
  * Typically called when an operation succeeds but was expected to throw.
+ *
+ * @throws {UnexpectedSuccessFailureError} Always; never returns normally.
  */
 export function failDueToSuccess(): never {
   throw failDueToSuccessError();
@@ -85,6 +89,7 @@ export function failDueToSuccess(): never {
  * instances and re-throws all other errors.
  *
  * @param e - The caught error to evaluate.
+ * @throws Re-throws the supplied error when it is not an {@link ExpectedFailError}.
  */
 export function EXPECT_ERROR_DEFAULT_HANDLER(e: unknown) {
   if (e instanceof ExpectedFailError) {
@@ -158,7 +163,7 @@ export function expectFail(errorFn: () => PromiseOrValue<any>, assertFailType?: 
     const result = errorFn();
 
     if (isPromise(result)) {
-      promiseResult = result.then(failDueToSuccess).catch(handleError) as Promise<void>;
+      promiseResult = result.then(failDueToSuccess).catch(handleError);
     } else {
       failDueToSuccess();
       promiseResult = Promise.resolve();
@@ -265,7 +270,7 @@ export function shouldFail(fn: ShouldFailProvidesCallback): () => Promise<unknow
             }
           });
 
-          const callbackWithDoneResult = (fn as TestProvidesCallbackWithDone)(fakeDone as unknown as ShouldFailDoneCallback);
+          const callbackWithDoneResult = (fn as TestProvidesCallbackWithDone)(fakeDone);
 
           if (isPromise(callbackWithDoneResult)) {
             fakeDone.reject(new Error('Configured to use "done" value while returning a promise. Configure your test to use one or the other.'));

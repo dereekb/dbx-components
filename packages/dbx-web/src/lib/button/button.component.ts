@@ -104,19 +104,24 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly mode = input<Maybe<ProgressSpinnerMode>>();
 
   readonly styleTypeSignal = computed(() => {
+    const iconOnly = this.iconOnly();
+    const raised = this.raised();
+    const stroked = this.stroked();
+    const flat = this.flat();
+    const tonal = this.tonal();
     const style = this.buttonStyle();
     let type = this.type() ?? style?.type;
 
     if (!type) {
-      if (this.iconOnly()) {
+      if (iconOnly) {
         type = 'icon';
-      } else if (this.raised()) {
+      } else if (raised) {
         type = 'raised';
-      } else if (this.stroked()) {
+      } else if (stroked) {
         type = 'stroked';
-      } else if (this.flat()) {
+      } else if (flat) {
         type = 'flat';
-      } else if (this.tonal()) {
+      } else if (tonal) {
         type = 'tonal';
       }
     }
@@ -126,6 +131,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
 
   readonly configSignal = computed<DbxProgressButtonConfig>(() => {
     // configure custom style
+    const customContent = this.customContent();
     const customStyle = {} as {
       [key: string]: string;
     };
@@ -159,7 +165,7 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     const buttonIcon = iconValue ? { fontIcon: iconValue } : undefined;
 
     const textValue = this.textSignal();
-    const hasTextContent = !!textValue || this._hasProjectedContent || this.customContent();
+    const hasTextContent = !!textValue || this._hasProjectedContent || customContent;
 
     const isIconOnlyButton = buttonIcon && !hasTextContent;
     const fab = this.fab() || buttonStyle?.fab;

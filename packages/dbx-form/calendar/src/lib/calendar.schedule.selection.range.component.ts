@@ -123,9 +123,12 @@ export class DbxScheduleSelectionCalendarDateRangeComponent implements OnInit {
   readonly timezoneReleventDateSignal = toSignal(this.timezoneReleventDate$, { initialValue: new Date() });
   readonly isCustomizedSignal = toSignal(this.isCustomized$, { initialValue: false });
 
-  readonly showCustomLabelSignal = computed(() => this.showCustomize() && this.isCustomizedSignal());
+  readonly showCustomLabelSignal = computed(() => {
+    const isCustomized = this.isCustomizedSignal();
+    return this.showCustomize() && isCustomized;
+  });
   readonly currentErrorMessageSignal = toSignal(this.currentErrorMessage$);
-  readonly datePickerFilterSignal = toSignal(this.datePickerFilter$, { initialValue: (() => true) as DateFilterFn<Date> });
+  readonly datePickerFilterSignal = toSignal(this.datePickerFilter$, { initialValue: () => true });
 
   protected readonly _requiredUpdateValidatorsEffect = effect(() => {
     const validators = this.required()

@@ -75,7 +75,10 @@ export class DbxErrorComponent {
   readonly iconOnly = input<Maybe<boolean>>(false);
 
   private readonly _errorOverrideSignal = signal<Maybe<ErrorInput>>(undefined);
-  readonly errorSignal = computed(() => this._errorOverrideSignal() ?? this.error());
+  readonly errorSignal = computed(() => {
+    const error = this.error();
+    return this._errorOverrideSignal() ?? error;
+  });
 
   readonly stateSignal = computed<DbxErrorComponentState>(() => {
     const rawError = this.errorSignal();

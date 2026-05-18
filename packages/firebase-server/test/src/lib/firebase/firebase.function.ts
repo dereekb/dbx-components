@@ -208,7 +208,7 @@ export function firebaseAdminCloudFunctionWrapper(instance: FeaturesList): Fireb
         acceptsStreaming: false
       };
 
-      return (await wrappedCloudFunction(request)) as O;
+      return wrappedCloudFunction(request);
     };
   };
 

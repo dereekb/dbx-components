@@ -1,6 +1,6 @@
 import type { DynamicText } from '@ng-forge/dynamic-forms';
 import type { MatToggleField, MatCheckboxField } from '@ng-forge/dynamic-forms-material';
-import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../../field';
+import { dbxForgeFieldFunction, dbxForgeBuildFieldDef, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 import { configureDbxForgeFormFieldWrapperWith } from '../../wrapper/formfield/formfield.wrapper';
 
 /**
@@ -74,7 +74,7 @@ export const dbxForgeToggleField = dbxForgeFieldFunction<DbxForgeToggleFieldConf
       }
     }
   })
-}) as DbxForgeFieldFunction<DbxForgeToggleFieldConfig, MatToggleField>;
+});
 
 // MARK: Checkbox Field
 /**
@@ -141,7 +141,7 @@ export const dbxForgeCheckboxField = dbxForgeFieldFunction<DbxForgeCheckboxField
       }
     }
   })
-}) as DbxForgeFieldFunction<DbxForgeCheckboxFieldConfig, MatCheckboxField>;
+});
 
 // COMPAT: Deprecated aliases
 /**

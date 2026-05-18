@@ -2,7 +2,6 @@ import { Inject, Logger, type MiddlewareConsumer, Module, Optional } from '@nest
 import { FirebaseAppCheckMiddleware, FirebaseAppCheckMiddlewareConfig } from './appcheck.middleware';
 import { GlobalRoutePrefixConfig } from './globalprefix';
 import { DEFAULT_BASE_WEBHOOK_PATH } from '@dereekb/nestjs';
-import { type SlashPath } from '@dereekb/util';
 
 /**
  * Middleware module that configures `FirebaseAppCheckMiddleware` route coverage
@@ -38,7 +37,7 @@ export class ConfigureFirebaseAppCheckMiddlewareModule {
     // add additional protected paths
     const protectedPaths = this.config?.protectedPaths ?? [];
 
-    if (globalPrefix && protectedPaths.includes(globalPrefix as SlashPath)) {
+    if (globalPrefix && protectedPaths.includes(globalPrefix)) {
       throw new Error(`FirebaseAppCheckMiddlewareConfig: protectedPaths must not contain the global route prefix "${globalPrefix}" since it is always protected.`);
     }
 

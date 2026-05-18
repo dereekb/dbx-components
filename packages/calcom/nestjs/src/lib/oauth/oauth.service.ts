@@ -92,6 +92,7 @@ export function logMergeCalcomOAuthAccessTokenCacheServiceErrorFunction(failedUp
  * @param inputServicesToMerge - Must include at least one service. Empty arrays will throw an error.
  * @param logError - Optional error logging configuration; pass a function, true for default logging, or false to disable.
  * @returns A merged CalcomOAuthAccessTokenCacheService that delegates across all input services.
+ * @throws {Error} When `inputServicesToMerge` is empty.
  */
 export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: CalcomOAuthAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeCalcomOAuthAccessTokenCacheServiceErrorFunction>): CalcomOAuthAccessTokenCacheService {
   const allServices = [...inputServicesToMerge];
@@ -230,9 +231,9 @@ function reviveCalcomAccessTokenFile(raw: unknown): Maybe<CalcomAccessToken> {
       result = undefined;
     } else {
       const rawExpiresAt = (token as CalcomAccessToken & { expiresAt?: unknown }).expiresAt;
-      const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt as string | number) : rawExpiresAt;
+      const expiresAt = rawExpiresAt != null && !(rawExpiresAt instanceof Date) ? new Date(rawExpiresAt) : rawExpiresAt;
 
-      result = { ...token, expiresAt: expiresAt as Date };
+      result = { ...token, expiresAt: expiresAt };
     }
   }
 

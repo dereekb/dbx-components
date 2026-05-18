@@ -30,8 +30,7 @@ export const ParseRawBody = createParamDecorator(async (_, context: ExecutionCon
     throw new BadRequestException('Invalid body');
   }
 
-  const body = await rawbody(req);
-  return body as RawBodyBuffer;
+  return rawbody(req);
 });
 
 /**

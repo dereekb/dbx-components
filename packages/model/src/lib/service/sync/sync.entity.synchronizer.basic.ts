@@ -391,7 +391,7 @@ export function basicSyncEntityCommonTypeSynchronizerInstanceFactory(config: Bas
           };
         }
 
-        return result as PerformSynchronizationOfSourcesResult;
+        return result;
       }
 
       const result = await performSynchronizationOfSources({ syncRecursionDepth: 0 });

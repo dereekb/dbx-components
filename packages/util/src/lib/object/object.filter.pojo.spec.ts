@@ -315,7 +315,7 @@ describe('stripObject()', () => {
   });
 
   it('should return undefined when the input is null', () => {
-    const result = stripObject(null as unknown as Maybe<{ a: number }>);
+    const result = stripObject(null);
     expect(result).toBeUndefined();
   });
 
@@ -406,7 +406,7 @@ describe('stripObjectFunction()', () => {
     const strip = stripObjectFunction<{ a?: number }>(KeyValueTypleValueFilter.UNDEFINED);
 
     expect(strip(undefined)).toBeUndefined();
-    expect(strip(null as unknown as Maybe<{ a?: number }>)).toBeUndefined();
+    expect(strip(null)).toBeUndefined();
   });
 
   it('should return undefined when filtering leaves an empty object', () => {

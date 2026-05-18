@@ -100,7 +100,7 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
     case DbxDateTimeValueMode.DATE_STRING:
     case DbxDateTimeValueMode.DATE:
     default:
-      factory = (x) => (x != null ? toJsDate(x as Date | string | number) : x);
+      factory = (x) => (x != null ? toJsDate(x) : x);
       break;
   }
 

@@ -1,13 +1,13 @@
 import { Linter } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
-import { utilEslintPlugin } from './plugin';
+import { UTIL_ESLINT_PLUGIN } from './plugin';
 
 function buildConfig(): Linter.Config[] {
   return [
     {
       files: ['**/*.ts'],
-      languageOptions: { parser: tsParser as any, parserOptions: { ecmaVersion: 2022, sourceType: 'module' } },
-      plugins: { 'dereekb-util': utilEslintPlugin as any },
+      languageOptions: { parser: tsParser, parserOptions: { ecmaVersion: 2022, sourceType: 'module' } },
+      plugins: { 'dereekb-util': UTIL_ESLINT_PLUGIN as any },
       rules: { 'dereekb-util/require-dbx-action-companion-tags': 'error' }
     }
   ];

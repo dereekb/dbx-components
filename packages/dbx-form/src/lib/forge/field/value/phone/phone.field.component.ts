@@ -105,12 +105,12 @@ export class DbxForgePhoneFieldComponent {
   readonly extensionCtrl = new FormControl<string>('', { validators: [isPhoneExtension()] });
 
   // Computed props
-  readonly preferredCountries: Signal<string[]> = computed(() => this.props()?.preferredCountries ?? DEFAULT_FORGE_PREFERRED_COUNTRIES);
-  readonly onlyCountries: Signal<string[]> = computed(() => this.props()?.onlyCountries ?? []);
-  readonly enableSearch: Signal<boolean> = computed(() => this.props()?.enableSearch ?? true);
-  readonly allowExtension: Signal<boolean> = computed(() => this.props()?.allowExtension ?? false);
-  readonly effectiveAppearance = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
-  readonly effectiveAutocomplete = computed(() => this.props()?.autocomplete ?? 'off');
+  readonly preferredCountriesSignal: Signal<string[]> = computed(() => this.props()?.preferredCountries ?? DEFAULT_FORGE_PREFERRED_COUNTRIES);
+  readonly onlyCountriesSignal: Signal<string[]> = computed(() => this.props()?.onlyCountries ?? []);
+  readonly enableSearchSignal: Signal<boolean> = computed(() => this.props()?.enableSearch ?? true);
+  readonly allowExtensionSignal: Signal<boolean> = computed(() => this.props()?.allowExtension ?? false);
+  readonly effectiveAppearanceSignal = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
+  readonly effectiveAutocompleteSignal = computed(() => this.props()?.autocomplete ?? 'off');
 
   // Disabled state
   readonly isDisabled = dbxForgeFieldDisabled();
@@ -118,16 +118,18 @@ export class DbxForgePhoneFieldComponent {
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   // ARIA
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequiredSignal = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const hintId = this.hintIdSignal();
+    if (this.errorsToDisplaySignal().length > 0) return errorId;
+    if (this.props()?.hint) return hintId;
     return null;
   });
 
@@ -137,7 +139,7 @@ export class DbxForgePhoneFieldComponent {
   private _syncing = false;
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'ngx-mat-input-tel' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'ngx-mat-input-tel' });
 
     // Disabled state propagation
     effect(() => {
@@ -202,7 +204,7 @@ export class DbxForgePhoneFieldComponent {
     const fieldState = fieldTree();
     let outputValue: string;
 
-    if (phone && this.allowExtension()) {
+    if (phone && this.allowExtensionSignal()) {
       outputValue = e164PhoneNumberFromE164PhoneNumberExtensionPair({
         number: phone as E164PhoneNumber,
         extension: extension ?? undefined

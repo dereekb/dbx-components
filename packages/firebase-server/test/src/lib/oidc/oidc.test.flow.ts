@@ -75,7 +75,7 @@ async function createTestIdToken(nestApp: INestApplication, uid: string): Promis
  * @returns The `uid` query parameter from the redirect URL (the interaction identifier issued by `oidc-provider`).
  */
 function extractInteractionUid(res: request.Response): string {
-  const location = res.headers['location'] as string;
+  const location = res.headers['location'];
   const url = location.startsWith('/') ? new URL(location, 'http://localhost') : new URL(location);
   return url.searchParams.get('uid')!;
 }

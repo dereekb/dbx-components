@@ -62,15 +62,19 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
    * add button is disabled. Returns false when `maxLength` is not set.
    */
   readonly atMaxLengthSignal = computed(() => {
+    const itemCount = this.itemCountSignal();
     const maxLength = this.props()?.maxLength;
-    return typeof maxLength === 'number' && this.itemCountSignal() >= maxLength;
+    return typeof maxLength === 'number' && itemCount >= maxLength;
   });
 
   /**
    * Add button disabled state — combines the standard disabled flag with the
    * `maxLength` cap so clicking past the limit is prevented.
    */
-  readonly addButtonDisabledSignal = computed(() => this.isDisabled() || this.atMaxLengthSignal());
+  readonly addButtonDisabledSignal = computed(() => {
+    const atMaxLength = this.atMaxLengthSignal();
+    return this.isDisabled() || atMaxLength;
+  });
 
   drop(event: CdkDragDrop<unknown>): void {
     if (event.previousIndex === event.currentIndex) {
@@ -121,7 +125,7 @@ export class DbxForgeArrayFieldWrapperComponent implements FieldWrapper {
     }
 
     const formValue = this._formContextService.formValue();
-    const value = (formValue as Record<string, unknown>)[key];
+    const value = formValue[key];
     return Array.isArray(value) ? value : [];
   }
 

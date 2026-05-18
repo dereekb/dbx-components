@@ -295,7 +295,7 @@ export function calculateAllConversions<T = number>(date: Date, converter: DateT
   options.forEach((from) => {
     options.forEach((to) => {
       if (from !== to) {
-        conversions[`${from}-${to}`] = map(converter.getCurrentOffset(date, from, to)) as unknown as T;
+        conversions[`${from}-${to}`] = map(converter.getCurrentOffset(date, from, to));
       }
     });
   });
@@ -320,6 +320,8 @@ export type DateTimezoneUtcNormalInstanceTransformType = 'targetDateToBaseDate' 
  * inverseDateTimezoneUtcNormalInstanceTransformType('targetDateToBaseDate'); // 'baseDateToTargetDate'
  * inverseDateTimezoneUtcNormalInstanceTransformType('systemDateToTargetDate'); // 'targetDateToSystemDate'
  * ```
+ *
+ * @throws {Error} When `input` is not a recognized transform type.
  */
 export function inverseDateTimezoneUtcNormalInstanceTransformType(input: DateTimezoneUtcNormalInstanceTransformType): DateTimezoneUtcNormalInstanceTransformType {
   let result: DateTimezoneUtcNormalInstanceTransformType;

@@ -168,7 +168,7 @@ const crmAttachmentsCommand: CommandModule = {
   }
 };
 
-export const crmCommand: CommandModule = {
+export const CRM_COMMAND: CommandModule = {
   command: 'crm',
   describe: 'Zoho CRM operations',
   builder: (yargs: Argv) =>

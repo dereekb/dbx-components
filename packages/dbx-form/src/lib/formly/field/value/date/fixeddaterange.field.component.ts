@@ -273,7 +273,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
             distinctUntilChanged(isSameDateDayRange),
             map((inputDateRange) => {
               const date = inputDateRange?.start;
-              return date ? (minMaxClamp(dateRange({ ...dateRangeInput, date } as DateRangeInput)) as DateRange) : null;
+              return date ? minMaxClamp(dateRange({ ...dateRangeInput, date } as DateRangeInput)) : null;
             })
           );
         }
@@ -362,8 +362,8 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
                     case 'start':
                       // retain the boundary as potential boundary, and set our new range from the single date.
                       range = {
-                        start: startOrNextDate as Date,
-                        end: startOrNextDate as Date
+                        start: startOrNextDate,
+                        end: startOrNextDate
                       };
                       break;
                   }
@@ -407,8 +407,8 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
               result = {
                 lastPickType: pickType,
                 lastDateRange: result.lastDateRange,
-                boundary: result.boundary ? (minMaxClamp(result.boundary) as DateRange) : undefined,
-                range: result.range ? (minMaxClamp(result.range) as DateRange) : undefined
+                boundary: result.boundary ? minMaxClamp(result.boundary) : undefined,
+                range: result.range ? minMaxClamp(result.range) : undefined
               };
             }
 

@@ -219,7 +219,7 @@ export function runFilterScaffold(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const filterScaffoldTool: DbxTool = {
+export const FILTER_SCAFFOLD_TOOL: DbxTool = {
   definition: DBX_FILTER_SCAFFOLD_TOOL,
   run: runFilterScaffold
 };

@@ -96,10 +96,28 @@ export class DbxStepBlockComponent {
   readonly color = input<Maybe<DbxColorInput>>();
   readonly center = input<Maybe<boolean>>();
 
-  readonly stepSignal = computed(() => this.step() ?? this.config()?.step ?? 1);
-  readonly iconSignal = computed(() => this.icon() ?? this.config()?.icon);
-  readonly headerSignal = computed(() => this.header() ?? this.config()?.header);
-  readonly hintSignal = computed(() => this.hint() ?? this.config()?.hint);
-  readonly colorSignal = computed(() => this.color() ?? this.config()?.color ?? 'primary');
-  readonly centerSignal = computed(() => this.center() ?? this.config()?.center ?? false);
+  readonly stepSignal = computed(() => {
+    const config = this.config();
+    return this.step() ?? config?.step ?? 1;
+  });
+  readonly iconSignal = computed(() => {
+    const config = this.config();
+    return this.icon() ?? config?.icon;
+  });
+  readonly headerSignal = computed(() => {
+    const config = this.config();
+    return this.header() ?? config?.header;
+  });
+  readonly hintSignal = computed(() => {
+    const config = this.config();
+    return this.hint() ?? config?.hint;
+  });
+  readonly colorSignal = computed(() => {
+    const config = this.config();
+    return this.color() ?? config?.color ?? 'primary';
+  });
+  readonly centerSignal = computed(() => {
+    const config = this.config();
+    return this.center() ?? config?.center ?? false;
+  });
 }

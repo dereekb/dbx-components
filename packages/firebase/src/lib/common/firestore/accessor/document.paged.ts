@@ -153,6 +153,7 @@ interface DistributeAndWritePagesInput<T> {
  *
  * @param input - Distribution and write context.
  * @returns Resolves once every page write is queued onto the supplied context.
+ * @throws {Error} When `distributionScheme.distribute()` returns a page id that is not declared in the scheme.
  */
 function distributeAndWritePages<T>(input: DistributeAndWritePagesInput<T>): Promise<void> {
   const { items, distributionScheme, maxItemsPerPage, itemConverter, existingPageIds, collectionRef, indexRef, firestoreAccessorDriver, context } = input;

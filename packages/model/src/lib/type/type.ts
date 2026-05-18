@@ -31,7 +31,7 @@ export type Clearable<T> = Maybe<T>;
  * export const doSomethingParamsType = emptyType<DoSomethingParams>();
  * ```
  */
-export const EMPTY_ARKTYPE_TYPE: Type<{}> = type({}) as Type<{}>;
+export const EMPTY_ARKTYPE_TYPE: Type<{}> = type({});
 
 /**
  * Returns the shared {@link EMPTY_ARKTYPE_TYPE} cast to the requested type, providing a typed empty-object schema

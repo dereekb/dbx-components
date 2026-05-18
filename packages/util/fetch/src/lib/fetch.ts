@@ -236,7 +236,7 @@ export function fetchRequestFactory(config: FetchRequestFactoryInput): FetchRequ
 
     async function combineRequestInits(request: PromiseOrValue<Request>, requestInit: PromiseOrValue<Maybe<RequestInit>>) {
       const baseRequest = await computeBaseRequest();
-      const merged: RequestInit = mergeRequestInits(baseRequest, await requestInit) as RequestInitWithTimeout;
+      const merged: RequestInit = mergeRequestInits(baseRequest, await requestInit);
       const timeout = (merged as RequestInitWithTimeout).timeout === undefined ? (request as RequestWithTimeout).timeout : (merged as RequestInitWithTimeout).timeout;
       return { ...merged, timeout } as RequestInitWithTimeout;
     }

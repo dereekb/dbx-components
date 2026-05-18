@@ -148,7 +148,7 @@ export const filterMaybeStrict = filterMaybe as <T>() => OperatorFunction<Maybe<
  * @returns Operator that maps each emitted array to a version with null/undefined elements removed.
  */
 export function filterMaybeArray<T>(): OperatorFunction<Maybe<T>[], T[]> {
-  return map(filterMaybeArrayValues) as OperatorFunction<Maybe<T>[], T[]>;
+  return map(filterMaybeArrayValues);
 }
 
 /**
@@ -328,7 +328,7 @@ export function switchMapFilterMaybe<T = unknown>(): OperatorFunction<Maybe<Obse
  */
 export function switchMapMaybe<T = unknown>(): OperatorFunction<Maybe<Observable<Maybe<T>>>, Maybe<T>> {
   return (source: Observable<Maybe<Observable<Maybe<T>>>>) => {
-    const subscriber: Observable<Maybe<T>> = source.pipe(switchMap((x) => x ?? of(undefined))) as Observable<Maybe<T>>;
+    const subscriber: Observable<Maybe<T>> = source.pipe(switchMap((x) => x ?? of(undefined)));
     return subscriber;
   };
 }

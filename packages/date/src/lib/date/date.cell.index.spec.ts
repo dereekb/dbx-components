@@ -749,7 +749,7 @@ wrapDateTests(() => {
               expect(result.discarded.length).toBe(0);
               expect(result.blocks[0].id).toBe(overlappingBlocksAtDifferentRange[0].id);
               expect(result.blocks[1].id).toBe(overlappingBlocksAtDifferentRange[1].id);
-              expect(result.blocks[0].to).toBe(overlappingBlocksAtDifferentRange[1].i! - 1);
+              expect(result.blocks[0].to).toBe(overlappingBlocksAtDifferentRange[1].i - 1);
               expect(result.blocks[1].i).toBe(overlappingBlocksAtDifferentRange[1].i);
               expect(result.blocks[1].to).toBe(overlappingBlocksAtDifferentRange[1].to);
             });
@@ -763,7 +763,7 @@ wrapDateTests(() => {
               expect(result.discarded.length).toBe(0);
               expect(result.blocks[0].id).toBe(overlappingBlocksFirstEclipseSecond[0].id);
               expect(result.blocks[1].id).toBe(overlappingBlocksFirstEclipseSecond[1].id);
-              expect(result.blocks[0].to).toBe(overlappingBlocksFirstEclipseSecond[1].i! - 1);
+              expect(result.blocks[0].to).toBe(overlappingBlocksFirstEclipseSecond[1].i - 1);
               expect(result.blocks[1].i).toBe(overlappingBlocksFirstEclipseSecond[1].i);
               expect(result.blocks[1].to).toBe(overlappingBlocksFirstEclipseSecond[1].to);
             });
@@ -943,7 +943,7 @@ wrapDateTests(() => {
             expect(result.discarded.length).toBe(0);
             expect(result.blocks.length).toBe(blocksWithStartGap.length + 1);
             expect(result.blocks[0].i).toBe(0);
-            expect(result.blocks[0].to).toBe(blocksWithStartGap[0].i! - 1);
+            expect(result.blocks[0].to).toBe(blocksWithStartGap[0].i - 1);
             expect(result.blocks[1].i).toBe(blocksWithStartGap[0].i);
             expect(result.blocks[1].to).toBe(blocksWithStartGap[0].to);
           });

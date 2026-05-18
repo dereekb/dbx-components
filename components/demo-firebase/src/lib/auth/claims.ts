@@ -1,5 +1,5 @@
 import { AUTH_ADMIN_ROLE, authRoleClaimsService, AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
-import { type StorageFileUploadUserClaims, storageFileUploadUserSimpleClaimsConfiguration } from '@dereekb/firebase';
+import { type StorageFileUploadUserClaims, STORAGE_FILE_UPLOAD_USER_SIMPLE_CLAIMS_CONFIGURATION } from '@dereekb/firebase';
 
 export const DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN = 'o';
 
@@ -40,5 +40,5 @@ export const DEMO_AUTH_CLAIMS_SERVICE = authRoleClaimsService<DemoApiAuthClaims>
   a: {
     roles: AUTH_ADMIN_ROLE
   },
-  fr: storageFileUploadUserSimpleClaimsConfiguration
+  fr: STORAGE_FILE_UPLOAD_USER_SIMPLE_CLAIMS_CONFIGURATION
 });

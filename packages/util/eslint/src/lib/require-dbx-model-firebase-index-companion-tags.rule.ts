@@ -38,7 +38,7 @@ export interface UtilRequireDbxModelFirebaseIndexCompanionTagsRuleDefinition {
  * ESLint rule enforcing `@dbxModelFirebaseIndex` companion tags. Mirrors the
  * scanner schema at `packages/dbx-components-mcp/src/scan/model-firebase-index-extract.ts`.
  */
-export const utilRequireDbxModelFirebaseIndexCompanionTagsRule: UtilRequireDbxModelFirebaseIndexCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE: UtilRequireDbxModelFirebaseIndexCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',
@@ -97,7 +97,8 @@ export const utilRequireDbxModelFirebaseIndexCompanionTagsRule: UtilRequireDbxMo
       companions: allCompanions.filter((c) => knownCompanions.includes(c.suffix))
     };
 
-    function handleCommaItem(commentNode: AstNode, parsed: ReturnType<typeof parseJsdocComment>, suffix: string, value: string, lineIndex: number): void {
+    function handleCommaItem(input: { readonly commentNode: AstNode; readonly parsed: ReturnType<typeof parseJsdocComment>; readonly suffix: string; readonly value: string; readonly lineIndex: number }): void {
+      const { commentNode, parsed, suffix, value, lineIndex } = input;
       if (suffix === 'Related') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex, messageId: 'relatedNotKebab', data: { value }, report: context.report });
       else if (suffix === 'SkillRefs') reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex, messageId: 'skillRefsNotKebab', data: { value }, report: context.report });
     }
@@ -128,7 +129,7 @@ export const utilRequireDbxModelFirebaseIndexCompanionTagsRule: UtilRequireDbxMo
           reportOnJsdocLine({ commentNode, parsed, sourceCode, lineIndex: v.lineIndex, messageId: 'invalidBooleanValue', data: { name: v.suffix, value: v.value }, report: context.report });
           break;
         case 'comma-item-not-kebab':
-          handleCommaItem(commentNode, parsed, v.suffix, v.value, v.lineIndex);
+          handleCommaItem({ commentNode, parsed, suffix: v.suffix, value: v.value, lineIndex: v.lineIndex });
           break;
         case 'tags-not-lowercase':
           handleTagsNotLowercase(commentNode, parsed, v);

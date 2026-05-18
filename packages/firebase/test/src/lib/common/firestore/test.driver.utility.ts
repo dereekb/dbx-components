@@ -611,8 +611,8 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
           const data = documentData(snapshot, true);
 
           expect(data).toBeDefined();
-          expect(data!.id).toBe(items[0].id);
-          expect(data!.key).toBe(items[0].key);
+          expect(data.id).toBe(items[0].id);
+          expect(data.key).toBe(items[0].key);
         });
 
         it('should return raw data when withId is false', async () => {
@@ -653,9 +653,9 @@ export function describeFirestoreDocumentUtilityTests(f: MockItemCollectionFixtu
           const data = documentDataWithIdAndKey(snapshot);
 
           expect(data).toBeDefined();
-          expect(data!.id).toBe(items[0].id);
-          expect(data!.key).toBe(items[0].key);
-          expect(data!.test).toBe(true);
+          expect(data.id).toBe(items[0].id);
+          expect(data.key).toBe(items[0].key);
+          expect(data.test).toBe(true);
         });
 
         it('should return undefined for a non-existent document', async () => {

@@ -72,6 +72,8 @@ export interface BuildAuthorizationUrlInput {
  * @param input.state - The opaque OAuth state token used for CSRF protection.
  * @param input.codeChallenge - The PKCE code challenge derived from the verifier.
  * @returns The full authorization URL with all OAuth params merged in.
+ * @throws {CliError} When `requestedSessionTtlSeconds` is provided but is not a positive integer.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string {
@@ -276,6 +278,7 @@ function parseUrlRedirect(trimmed: string, expectedState: string | undefined): P
  * @param input.pasted - The redirect URL or bare authorization code pasted by the user.
  * @param input.expectedState - Optional state value to assert against `state` when present in the URL.
  * @returns The {@link ParsedRedirect} containing `code` and (when present) `state`.
+ * @throws {CliError} When `pasted` is empty, when the URL contains no `code` parameter, or when `expectedState` does not match the URL's `state`.
  */
 export function parsePastedRedirect(input: ParsePastedRedirectInput): ParsedRedirect {
   const trimmed = input.pasted.trim();

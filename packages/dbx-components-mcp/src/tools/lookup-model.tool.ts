@@ -119,7 +119,7 @@ function parseLookupModelArgs(raw: unknown): ParsedLookupModelArgs {
   return {
     topic: parsed.topic,
     depth: parsed.depth ?? ('full' as const),
-    scope: (parsed.scope ?? 'all') as LookupScope,
+    scope: parsed.scope ?? 'all',
     componentDirs: parsed.componentDirs,
     fields: normalizeFieldsFilter(parsed.fields)
   };
@@ -288,7 +288,7 @@ export async function runLookupModel(rawArgs: unknown): Promise<ToolResult> {
   return result;
 }
 
-export const lookupModelTool: DbxTool = {
+export const LOOKUP_MODEL_TOOL: DbxTool = {
   definition: DBX_MODEL_LOOKUP_TOOL,
   run: runLookupModel
 };

@@ -77,7 +77,10 @@ export class DbxPdfMergeEditorComponent {
   /**
    * Computed gate for the Preview and Download affordances. Disabled while no entry is `ready` or while the registered validator delegate reports invalid.
    */
-  readonly canMergeSignal = computed(() => this.hasReadyEntriesSignal() && this.isValidSignal());
+  readonly canMergeSignal = computed(() => {
+    const isValid = this.isValidSignal();
+    return this.hasReadyEntriesSignal() && isValid;
+  });
 
   /**
    * Latest merged blob (or `undefined` while validation/merge is in flight or no entries are ready). Sourced from {@link DbxPdfMergeEditorStore.currentMergeOutput$} so the download button always reflects the current merge without needing the user to click Preview first.

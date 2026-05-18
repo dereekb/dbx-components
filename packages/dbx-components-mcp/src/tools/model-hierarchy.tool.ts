@@ -105,9 +105,9 @@ function parseHierarchyArgs(raw: unknown): ParsedHierarchyArgs {
   return {
     rootModel: parsed.rootModel,
     maxDepth: parsed.maxDepth,
-    format: (parsed.format ?? 'tree') as HierarchyFormat,
-    output: (parsed.output ?? 'markdown') as HierarchyOutput,
-    scope: (parsed.scope ?? 'all') as HierarchyScope,
+    format: parsed.format ?? 'tree',
+    output: parsed.output ?? 'markdown',
+    scope: parsed.scope ?? 'all',
     componentDirs: parsed.componentDirs
   };
 }
@@ -245,7 +245,7 @@ export async function runModelHierarchy(rawArgs: unknown): Promise<ToolResult> {
   return toolResult;
 }
 
-export const modelHierarchyTool: DbxTool = {
+export const MODEL_HIERARCHY_TOOL: DbxTool = {
   definition: DBX_MODEL_HIERARCHY_TOOL,
   run: runModelHierarchy
 };

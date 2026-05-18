@@ -68,8 +68,9 @@ export class DbxColorDirective {
    * Effective tone used for opacity. The standalone `[dbxColorTone]` input wins when set; otherwise `config.tone` applies.
    */
   readonly effectiveToneSignal = computed<Maybe<DbxColorTone>>(() => {
+    const _config = this._configSignal();
     const inputTone = this.dbxColorTone();
-    return inputTone ?? this._configSignal()?.tone;
+    return inputTone ?? _config?.tone;
   });
 
   /**
@@ -82,11 +83,12 @@ export class DbxColorDirective {
    * from `config.tone`.
    */
   readonly isTonalSignal = computed(() => {
+    const _config = this._configSignal();
     const inputTone = this.dbxColorTone();
     let tonal = false;
 
     if (inputTone == null) {
-      const config = this._configSignal();
+      const config = _config;
 
       if (config?.tonal != null) {
         tonal = config.tonal;

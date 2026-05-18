@@ -314,7 +314,7 @@ export async function runRouteLookup(rawArgs: unknown): Promise<ToolResult> {
   return result;
 }
 
-export const routeLookupTool: DbxTool = {
+export const ROUTE_LOOKUP_TOOL: DbxTool = {
   definition: DBX_ROUTE_LOOKUP_TOOL,
   run: runRouteLookup
 };

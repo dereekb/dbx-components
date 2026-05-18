@@ -27,6 +27,7 @@ export interface ValidatorSource {
  *
  * @param relative - The caller-supplied relative path.
  * @param cwd - The server cwd to bound the path against.
+ * @throws {Error} When `relative` resolves outside of `cwd`.
  */
 export function ensurePathInsideCwd(relative: string, cwd: string): void {
   const cwdPrefix = cwd.endsWith(sep) ? cwd : cwd + sep;

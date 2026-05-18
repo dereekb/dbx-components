@@ -54,6 +54,8 @@ export type DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T exten
  *
  * @param config - Configuration with the claims service and optional auth state customization.
  * @returns A DbxFirebaseAuthServiceDelegate configured for claims-based auth.
+ * @throws {Error} When more than one of `stateForLoggedInUser`, `stateForLoggedInUserToken`, or `authUserStateObs` is supplied.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends AuthClaimsObject>(config: DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T>): DbxFirebaseAuthServiceDelegate {

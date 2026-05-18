@@ -142,11 +142,11 @@ export function transformAndValidateObjectResult<T extends object, O, I extends 
   const { schema, fn } = config;
 
   return async (input: I) => {
-    const out = schema(input as unknown);
+    const out = schema(input);
     let output: TransformAndValidateObjectResultOutput<T, O>;
 
     if (out instanceof type.errors) {
-      output = { validationErrors: out as ArkErrors, success: false as const };
+      output = { validationErrors: out, success: false as const };
     } else {
       const object = out as T;
       const result = await fn(object);

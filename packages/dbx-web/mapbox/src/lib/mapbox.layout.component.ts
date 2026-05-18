@@ -65,12 +65,16 @@ export class DbxMapboxLayoutComponent implements OnInit {
   });
 
   readonly storeHasDrawerContent = toSignal(this.dbxMapboxMapStore.hasDrawerContent$);
-  readonly drawerHasContentSignal = computed(() => this.forceHasDrawerContent() ?? this.storeHasDrawerContent());
+  readonly drawerHasContentSignal = computed(() => {
+    const storeHasDrawerContent = this.storeHasDrawerContent();
+    return this.forceHasDrawerContent() ?? storeHasDrawerContent;
+  });
 
   readonly refreshContentMargins$ = this._refreshContentMargins;
 
   readonly isOpenAndHasContentSignal = computed(() => {
-    return this.drawerHasContentSignal() && this.isDrawerOpenSignal();
+    const isDrawerOpen = this.isDrawerOpenSignal();
+    return this.drawerHasContentSignal() && isDrawerOpen;
   });
 
   readonly viewResized$ = this._viewResized.asObservable();

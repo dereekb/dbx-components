@@ -310,6 +310,7 @@ export function isValidDateCellTimingStartDate(date: Date): boolean {
  * @param rangeInput - Specifies the date range: a number of days, a DateRange, or a DateRangeDayDistanceInput.
  * @param timezoneInput - Optional timezone configuration; defaults to the system timezone if omitted.
  * @returns A fully computed FullDateCellTiming with start, startsAt, end, duration, and timezone.
+ * @throws {Error} When `durationInput.duration` exceeds 24 hours.
  */
 export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: DateCellTimingRangeInput, timezoneInput?: DateCellTimingTimezoneInput): FullDateCellTiming {
   const { duration } = durationInput;

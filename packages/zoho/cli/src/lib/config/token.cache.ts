@@ -35,7 +35,7 @@ export function createFileTokenCache(filePath: string): ZohoAccessTokenCache {
           } else if (rawExpiresAt == null) {
             expiresAt = undefined;
           } else {
-            expiresAt = new Date(rawExpiresAt as string | number);
+            expiresAt = new Date(rawExpiresAt);
           }
 
           if (expiresAt == null || Number.isNaN(expiresAt.getTime())) {

@@ -24,7 +24,7 @@ describe('MaybeSoStrict', () => {
   });
 
   it('should compile for a nested object', () => {
-    const a: MaybeSoStrict<Maybe<{ a: boolean }>> = null as any;
+    const a: MaybeSoStrict<Maybe<{ a: boolean }>> = null;
     expect(a?.a).toBe(undefined);
   });
 

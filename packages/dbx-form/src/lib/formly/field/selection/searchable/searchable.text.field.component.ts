@@ -44,7 +44,10 @@ export class DbxSearchableTextFieldComponent<T, M = unknown, H extends Primative
 
   readonly selectedDisplayValueSignal = toSignal(this.selectedDisplayValue$);
   readonly hasValueSignal = computed(() => Boolean(this.selectedDisplayValueSignal()));
-  readonly showSelectedDisplayValueSignal = computed(() => this.showSelectedValue && this.hasValueSignal());
+  readonly showSelectedDisplayValueSignal = computed(() => {
+    const hasValue = this.hasValueSignal();
+    return this.showSelectedValue && hasValue;
+  });
 
   override get searchableField(): SearchableTextValueFieldsFieldProps<T, M, H> {
     return this.props;

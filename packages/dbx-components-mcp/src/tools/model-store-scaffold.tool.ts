@@ -696,7 +696,7 @@ export function runModelStoreScaffold(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const modelStoreScaffoldTool: DbxTool = {
+export const MODEL_STORE_SCAFFOLD_TOOL: DbxTool = {
   definition: DBX_MODEL_STORE_SCAFFOLD_TOOL,
   run: runModelStoreScaffold
 };

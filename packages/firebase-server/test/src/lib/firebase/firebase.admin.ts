@@ -218,7 +218,7 @@ export const firebaseAdminTestBuilder = testContextBuilder<FirebaseAdminTestCont
     return new FirebaseAdminTestContextInstance(app);
   },
   teardownInstance: async (instance, _config) => {
-    await (instance as FirebaseAdminTestContextInstance).app.delete(); // clean up the instance
+    await instance.app.delete(); // clean up the instance
   }
 });
 

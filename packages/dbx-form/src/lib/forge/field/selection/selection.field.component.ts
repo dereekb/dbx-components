@@ -147,35 +147,37 @@ export class DbxForgeValueSelectionFieldComponent<T = unknown> {
   readonly resolvedOptionsSignal = toSignal(this.resolvedOptions$);
 
   readonly multipleSignal = computed(() => this.props()?.multiple ?? false);
-  readonly effectiveAppearance = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
-  readonly effectiveSubscriptSizing = computed(() => this.props()?.subscriptSizing ?? this.materialConfig?.subscriptSizing ?? 'dynamic');
+  readonly effectiveAppearanceSignal = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
+  readonly effectiveSubscriptSizingSignal = computed(() => this.props()?.subscriptSizing ?? this.materialConfig?.subscriptSizing ?? 'dynamic');
   readonly compareWithSignal = computed(() => this.props()?.compareWith ?? Object.is);
 
   // Error display
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as any, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as any);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   /**
    * Unique ID for the hint element
    */
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
 
   /**
    * Base ID for error elements
    */
-  protected readonly errorId = computed(() => `${this.key()}-error`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
 
   // Accessibility
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequiredSignal = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const hintId = this.hintIdSignal();
+    if (this.errorsToDisplaySignal().length > 0) return errorId;
+    if (this.props()?.hint) return hintId;
     return null;
   });
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'mat-select' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'mat-select' });
   }
 }

@@ -131,7 +131,7 @@ export class DbxForgeDateRangeFieldComponent {
   readonly startLabelSignal: Signal<string> = computed(() => this.props()?.startLabel ?? 'Start');
   readonly endLabelSignal: Signal<string> = computed(() => this.props()?.endLabel ?? 'End');
   readonly showTimeSignal: Signal<boolean> = computed(() => this.props()?.showTime ?? false);
-  readonly effectiveAppearance = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
+  readonly effectiveAppearanceSignal = computed(() => this.props()?.appearance ?? this.materialConfig?.appearance ?? 'outline');
   readonly minDateSignal = computed(() => {
     const minDate = this.props()?.minDate;
     return minDate ? safeToJsDate(minDate) : null;
@@ -144,16 +144,18 @@ export class DbxForgeDateRangeFieldComponent {
   // Error handling
   readonly resolvedErrors = createResolvedErrorsSignal(this.field as Signal<FieldTree<unknown>>, this.validationMessages, this.defaultValidationMessages);
   readonly showErrors = shouldShowErrors(this.field as Signal<FieldTree<unknown>>);
-  readonly errorsToDisplay = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
+  readonly errorsToDisplaySignal = computed(() => (this.showErrors() ? this.resolvedErrors() : []));
 
   // ARIA
-  protected readonly hintId = computed(() => `${this.key()}-hint`);
-  protected readonly errorId = computed(() => `${this.key()}-error`);
-  protected readonly ariaInvalid = computed(() => (this.showErrors() ? 'true' : null));
-  protected readonly ariaRequired = computed(() => (this.field()().required() ? 'true' : null));
-  protected readonly ariaDescribedBy = computed(() => {
-    if (this.errorsToDisplay().length > 0) return this.errorId();
-    if (this.props()?.hint) return this.hintId();
+  protected readonly hintIdSignal = computed(() => `${this.key()}-hint`);
+  protected readonly errorIdSignal = computed(() => `${this.key()}-error`);
+  protected readonly ariaInvalidSignal = computed(() => (this.showErrors() ? 'true' : null));
+  protected readonly ariaRequiredSignal = computed(() => (this.field()().required() ? 'true' : null));
+  protected readonly ariaDescribedBySignal = computed(() => {
+    const errorId = this.errorIdSignal();
+    const hintId = this.hintIdSignal();
+    if (this.errorsToDisplaySignal().length > 0) return errorId;
+    if (this.props()?.hint) return hintId;
     return null;
   });
 
@@ -163,7 +165,7 @@ export class DbxForgeDateRangeFieldComponent {
   private _syncing = false;
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'input' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'input' });
 
     // Sync Signal Forms field -> FormControls (inbound)
     effect(() => {

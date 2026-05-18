@@ -445,7 +445,7 @@ export function findBestIndexMatchFunction<T extends IndexRef>(items: Iterable<T
     result = (input) => {
       const { i } = input;
       const bestMatch = bestMatchArray.find((matchOption) => i >= matchOption.i);
-      return (bestMatch ?? defaultMatch) as T;
+      return bestMatch ?? defaultMatch;
     };
   }
 

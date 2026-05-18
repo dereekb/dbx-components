@@ -296,16 +296,16 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       comp!.setTime('2:00PM');
       await settle(fixture);
 
-      expect(comp!.resolvedTimezone()).toBe('America/New_York');
+      expect(comp!.resolvedTimezoneSignal()).toBe('America/New_York');
 
       // Change timezone
       timezone$.next('Asia/Tokyo');
       await settle(fixture);
 
-      expect(comp!.resolvedTimezone()).toBe('Asia/Tokyo');
+      expect(comp!.resolvedTimezoneSignal()).toBe('Asia/Tokyo');
       // The timezone change should trigger the output pipeline to reconvert
       // (verified by checking the component updated its timezone instance)
-      expect(comp!.timezoneInstance()).toBeDefined();
+      expect(comp!.timezoneInstanceSignal()).toBeDefined();
       fixture.destroy();
     });
   });
@@ -321,8 +321,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.showTimeInput()).toBe(false);
-      expect(comp!.isDateOnly()).toBe(true);
+      expect(comp!.showTimeInputSignal()).toBe(false);
+      expect(comp!.isDateOnlySignal()).toBe(true);
       fixture.destroy();
     });
 
@@ -352,7 +352,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.hideDatePicker()).toBe(true);
+      expect(comp!.hideDatePickerSignal()).toBe(true);
       fixture.destroy();
     });
 
@@ -365,8 +365,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.valueMode()).toBe(DbxDateTimeValueMode.DAY_STRING);
-      expect(comp!.isDateOnly()).toBe(true);
+      expect(comp!.valueModeSignal()).toBe(DbxDateTimeValueMode.DAY_STRING);
+      expect(comp!.isDateOnlySignal()).toBe(true);
       fixture.destroy();
     });
   });
@@ -381,8 +381,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.showDateInput()).toBe(true);
-      expect(comp!.showTimeInput()).toBe(true);
+      expect(comp!.showDateInputSignal()).toBe(true);
+      expect(comp!.showTimeInputSignal()).toBe(true);
       fixture.destroy();
     });
 
@@ -431,9 +431,9 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
       // timeMode defaults to REQUIRED
-      expect(comp!.timeMode()).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
-      expect(comp!.showDateInput()).toBe(true);
-      expect(comp!.showTimeInput()).toBe(true);
+      expect(comp!.timeModeSignal()).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
+      expect(comp!.showDateInputSignal()).toBe(true);
+      expect(comp!.showTimeInputSignal()).toBe(true);
       fixture.destroy();
     });
 
@@ -607,8 +607,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.valueMode()).toBe(DbxDateTimeValueMode.DATE_STRING);
-      expect(comp!.hideDateHint()).toBe(true);
+      expect(comp!.valueModeSignal()).toBe(DbxDateTimeValueMode.DATE_STRING);
+      expect(comp!.hideDateHintSignal()).toBe(true);
       fixture.destroy();
     });
 
@@ -621,7 +621,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.hideDateHint()).toBe(true);
+      expect(comp!.hideDateHintSignal()).toBe(true);
       fixture.destroy();
     });
   });
@@ -647,7 +647,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.alwaysShowDateInput()).toBe(false);
+      expect(comp!.alwaysShowDateInputSignal()).toBe(false);
       fixture.destroy();
     });
   });
@@ -662,7 +662,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.timeMode()).toBe(DbxDateTimeFieldTimeMode.OPTIONAL);
+      expect(comp!.timeModeSignal()).toBe(DbxDateTimeFieldTimeMode.OPTIONAL);
       fixture.destroy();
     });
 
@@ -679,8 +679,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       comp!.addTime();
       await settle(fixture);
 
-      expect(comp!.showTimeInput()).toBe(true);
-      expect(comp!.isFullDay()).toBe(false);
+      expect(comp!.showTimeInputSignal()).toBe(true);
+      expect(comp!.isFullDaySignal()).toBe(false);
       fixture.destroy();
     });
 
@@ -696,13 +696,13 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       comp!.addTime();
       await settle(fixture);
-      expect(comp!.showTimeInput()).toBe(true);
+      expect(comp!.showTimeInputSignal()).toBe(true);
 
       comp!.removeTime();
       await settle(fixture);
 
-      expect(comp!.showTimeInput()).toBe(false);
-      expect(comp!.isFullDay()).toBe(true);
+      expect(comp!.showTimeInputSignal()).toBe(false);
+      expect(comp!.isFullDaySignal()).toBe(true);
       fixture.destroy();
     });
   });
@@ -717,8 +717,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.showTimeInput()).toBe(false);
-      expect(comp!.isDateOnly()).toBe(true);
+      expect(comp!.showTimeInputSignal()).toBe(false);
+      expect(comp!.isDateOnlySignal()).toBe(true);
       fixture.destroy();
     });
   });
@@ -743,9 +743,9 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.isTimeOnly()).toBe(true);
-      expect(comp!.showDateInput()).toBe(false);
-      expect(comp!.showTimezone()).toBe(false);
+      expect(comp!.isTimeOnlySignal()).toBe(true);
+      expect(comp!.showDateInputSignal()).toBe(false);
+      expect(comp!.showTimezoneSignal()).toBe(false);
       fixture.destroy();
     });
 
@@ -797,7 +797,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.showClearButton()).toBe(false);
+      expect(comp!.showClearButtonSignal()).toBe(false);
       fixture.destroy();
     });
   });
@@ -832,7 +832,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.resolvedTimezone()).toBe('America/New_York');
+      expect(comp!.resolvedTimezoneSignal()).toBe('America/New_York');
       fixture.destroy();
     });
   });
@@ -847,8 +847,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.resolvedTimezone()).toBe('Asia/Tokyo');
-      expect(comp!.showTimeInput()).toBe(false);
+      expect(comp!.resolvedTimezoneSignal()).toBe('Asia/Tokyo');
+      expect(comp!.showTimeInputSignal()).toBe(false);
       fixture.destroy();
     });
   });
@@ -863,8 +863,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.resolvedTimezone()).toBe('America/New_York');
-      expect(comp!.isTimeOnly()).toBe(true);
+      expect(comp!.resolvedTimezoneSignal()).toBe('America/New_York');
+      expect(comp!.isTimeOnlySignal()).toBe(true);
       fixture.destroy();
     });
   });
@@ -879,9 +879,9 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.valueMode()).toBe(DbxDateTimeValueMode.MINUTE_OF_DAY);
-      expect(comp!.isTimeOnly()).toBe(true);
-      expect(comp!.showDateInput()).toBe(false);
+      expect(comp!.valueModeSignal()).toBe(DbxDateTimeValueMode.MINUTE_OF_DAY);
+      expect(comp!.isTimeOnlySignal()).toBe(true);
+      expect(comp!.showDateInputSignal()).toBe(false);
       fixture.destroy();
     });
 
@@ -911,8 +911,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.showTimezone()).toBe(true);
-      expect(comp!.resolvedTimezone()).toBe('America/New_York');
+      expect(comp!.showTimezoneSignal()).toBe(true);
+      expect(comp!.resolvedTimezoneSignal()).toBe('America/New_York');
       fixture.destroy();
     });
   });
@@ -927,7 +927,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.valueMode()).toBe(DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY);
+      expect(comp!.valueModeSignal()).toBe(DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY);
       fixture.destroy();
     });
   });
@@ -943,8 +943,8 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.valueMode()).toBe(DbxDateTimeValueMode.DATE_STRING);
-      expect(comp!.resolvedTimezone()).toBe('America/New_York');
+      expect(comp!.valueModeSignal()).toBe(DbxDateTimeValueMode.DATE_STRING);
+      expect(comp!.resolvedTimezoneSignal()).toBe('America/New_York');
       fixture.destroy();
     });
 
@@ -963,7 +963,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.resolvedTimezone()).toBe('Asia/Tokyo');
+      expect(comp!.resolvedTimezoneSignal()).toBe('Asia/Tokyo');
       fixture.destroy();
     });
   });
@@ -1093,7 +1093,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.resolvedTimezone()).toBe('America/Chicago');
+      expect(comp!.resolvedTimezoneSignal()).toBe('America/Chicago');
 
       // Pick a valid date
       comp!.onDatePicked({ value: validDate } as any);
@@ -1171,7 +1171,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.showClearButton()).toBe(false);
+      expect(comp!.showClearButtonSignal()).toBe(false);
 
       pickerConfig$.next({ limits: { min: addHours(startOfDay(new Date()), 5) } });
       await settle(fixture);
@@ -1265,7 +1265,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       expect(comp).toBeDefined();
 
       // --- Step 1: Required marker is visible ---
-      expect(comp!.isRequired()).toBe(true);
+      expect(comp!.isRequiredSignal()).toBe(true);
 
       // --- Step 2: Pick a date + time → form outputs a value ---
       const firstDate = addDays(startOfDay(new Date()), 3);
@@ -1282,7 +1282,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       expect(comp!.dateValueSignal()).not.toBeNull();
 
       // Required marker still visible
-      expect(comp!.isRequired()).toBe(true);
+      expect(comp!.isRequiredSignal()).toBe(true);
 
       // --- Step 3: Clear the value → output is cleared ---
       comp!.clearValue();
@@ -1301,7 +1301,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       expect(comp!.dateValueSignal()).toBeNull();
 
       // Required marker must still be visible after clear
-      expect(comp!.isRequired()).toBe(true);
+      expect(comp!.isRequiredSignal()).toBe(true);
 
       // --- Step 4: Pick a new date + time → new value is emitted ---
       const secondDate = addDays(startOfDay(new Date()), 7);
@@ -1322,7 +1322,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       expect(comp!.dateValueSignal()).not.toBeNull();
 
       // Required marker still visible
-      expect(comp!.isRequired()).toBe(true);
+      expect(comp!.isRequiredSignal()).toBe(true);
 
       fixture.destroy();
     });
@@ -1380,11 +1380,11 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       comp!.addTime();
       await settle(fixture);
-      expect(comp!.isFullDay()).toBe(false);
+      expect(comp!.isFullDaySignal()).toBe(false);
 
       comp!.removeTime();
       await settle(fixture);
-      expect(comp!.isFullDay()).toBe(true);
+      expect(comp!.isFullDaySignal()).toBe(true);
       fixture.destroy();
     });
   });
@@ -1757,7 +1757,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
 
       const comp = getDateTimeComponent(fixture);
       expect(comp).toBeDefined();
-      expect(comp!.minuteStep()).toBe(15);
+      expect(comp!.minuteStepSignal()).toBe(15);
 
       comp!.dateCtrl.setValue(startOfDay(new Date()));
       comp!.setTime('2:00PM');
@@ -2090,14 +2090,14 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       await settle(fixture);
 
       const comp = getDateTimeComponent(fixture);
-      expect(comp!.isRequired()).toBe(true);
+      expect(comp!.isRequiredSignal()).toBe(true);
 
       // Clear the value
       comp!.clearValue();
       await settle(fixture);
 
       // Required state should be preserved — not corrupted by null/undefined
-      expect(comp!.isRequired()).toBe(true);
+      expect(comp!.isRequiredSignal()).toBe(true);
       fixture.destroy();
     });
   });
@@ -2265,10 +2265,10 @@ describe('dbxForgeDateRangeRow() integration', () => {
     const comps = getAllDateTimeComponents(fixture);
     expect(comps.length).toBe(2);
     // dbxForgeDateRangeRow sets timeMode to NONE on both fields
-    expect(comps[0].timeMode()).toBe(DbxDateTimeFieldTimeMode.NONE);
-    expect(comps[1].timeMode()).toBe(DbxDateTimeFieldTimeMode.NONE);
-    expect(comps[0].isDateOnly()).toBe(true);
-    expect(comps[1].isDateOnly()).toBe(true);
+    expect(comps[0].timeModeSignal()).toBe(DbxDateTimeFieldTimeMode.NONE);
+    expect(comps[1].timeModeSignal()).toBe(DbxDateTimeFieldTimeMode.NONE);
+    expect(comps[0].isDateOnlySignal()).toBe(true);
+    expect(comps[1].isDateOnlySignal()).toBe(true);
     fixture.destroy();
   });
 
@@ -2377,14 +2377,14 @@ describe('dbxForgeDateRangeRow() integration', () => {
       fixture,
       predicate: () => {
         const comps = getAllDateTimeComponents(fixture);
-        return comps.length === 2 && comps[0].resolvedTimezone() === 'America/Chicago' && comps[1].resolvedTimezone() === 'America/Chicago';
+        return comps.length === 2 && comps[0].resolvedTimezoneSignal() === 'America/Chicago' && comps[1].resolvedTimezoneSignal() === 'America/Chicago';
       }
     });
 
     const comps = getAllDateTimeComponents(fixture);
     expect(comps.length).toBe(2);
-    expect(comps[0].resolvedTimezone()).toBe('America/Chicago');
-    expect(comps[1].resolvedTimezone()).toBe('America/Chicago');
+    expect(comps[0].resolvedTimezoneSignal()).toBe('America/Chicago');
+    expect(comps[1].resolvedTimezoneSignal()).toBe('America/Chicago');
     fixture.destroy();
   });
 });
@@ -2419,8 +2419,8 @@ describe('dbxForgeDateTimeRangeRow() integration', () => {
 
     const comps = getAllDateTimeComponents(fixture);
     expect(comps.length).toBe(2);
-    expect(comps[0].isTimeOnly()).toBe(true);
-    expect(comps[1].isTimeOnly()).toBe(true);
+    expect(comps[0].isTimeOnlySignal()).toBe(true);
+    expect(comps[1].isTimeOnlySignal()).toBe(true);
     fixture.destroy();
   });
 
@@ -2433,8 +2433,8 @@ describe('dbxForgeDateTimeRangeRow() integration', () => {
 
     const comps = getAllDateTimeComponents(fixture);
     expect(comps.length).toBe(2);
-    expect(comps[0].timeMode()).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
-    expect(comps[1].timeMode()).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
+    expect(comps[0].timeModeSignal()).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
+    expect(comps[1].timeModeSignal()).toBe(DbxDateTimeFieldTimeMode.REQUIRED);
     fixture.destroy();
   });
 
@@ -2474,8 +2474,8 @@ describe('dbxForgeDateTimeRangeRow() integration', () => {
 
     const comps = getAllDateTimeComponents(fixture);
     expect(comps.length).toBe(2);
-    expect(comps[0].resolvedTimezone()).toBe('America/New_York');
-    expect(comps[1].resolvedTimezone()).toBe('America/New_York');
+    expect(comps[0].resolvedTimezoneSignal()).toBe('America/New_York');
+    expect(comps[1].resolvedTimezoneSignal()).toBe('America/New_York');
     fixture.destroy();
   });
 

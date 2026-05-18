@@ -565,4 +565,4 @@ function formatJson(report: AggregatedReport): string {
   return JSON.stringify(report, null, 2);
 }
 
-export const appValidateTool: DbxTool = { definition: TOOL, run };
+export const APP_VALIDATE_TOOL: DbxTool = { definition: TOOL, run };

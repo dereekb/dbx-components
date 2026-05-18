@@ -134,7 +134,7 @@ export function zohoSignFetchPageFactory<I extends ZohoSignPageFilter, R extends
       const rowCount = options.maxItemsPerPage ?? input.row_count ?? previousPageContext?.row_count ?? 20;
       const nextStartIndex = (previousPageContext?.start_index ?? input.start_index ?? 1) + rowCount;
 
-      return { ...input, start_index: nextStartIndex, row_count: rowCount } as Partial<I>;
+      return { ...input, start_index: nextStartIndex, row_count: rowCount };
     }
   });
 }

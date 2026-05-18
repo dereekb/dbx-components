@@ -138,8 +138,9 @@ export type ExpandMailgunRecipientBatchSendTargetRequestFactory = (recipients: M
 /**
  * Creates a ExpandMailgunRecipientBatchSendTargetRequestFactory from the input config.
  *
- * @param config
- * @returns
+ * @param config - Factory configuration providing the base request, recipient lookup, and per-recipient variable handling.
+ * @returns A factory that expands `MailgunRecipientBatchSendTarget` lists into individual `MailgunTemplateEmailRequest` objects.
+ * @throws {Error} When no subject is configured and `useSubjectFromRecipientUserVariables` is false.
  */
 export function expandMailgunRecipientBatchSendTargetRequestFactory(config: ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig): ExpandMailgunRecipientBatchSendTargetRequestFactory {
   const { request: inputBaseRequest, useSubjectFromRecipientUserVariables, allowSingleRecipientBatchSendRequests, recipientVariablesConfig, mailgunRecipientBatchSendTargetEntityKeyRecipientLookup, overrideCarbonCopyVariablesWithCarbonCopyKeyRecipients } = config;

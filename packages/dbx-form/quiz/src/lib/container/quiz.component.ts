@@ -131,7 +131,7 @@ export class QuizComponent {
     })
   );
 
-  readonly viewConfigSignal: Signal<QuizComponentViewConfig> = toSignal(this.viewConfig$, { initialValue: { state: 'init' } as QuizComponentViewConfig });
+  readonly viewConfigSignal: Signal<QuizComponentViewConfig> = toSignal(this.viewConfig$, { initialValue: { state: 'init' } });
   readonly viewStateSignal: Signal<QuizComponentState> = computed(() => this.viewConfigSignal()?.state ?? 'init');
 
   readonly preQuizComponentConfigSignal: Signal<Maybe<DbxInjectionComponentConfig>> = computed(() => (this.viewConfigSignal() as QuizComponentViewPreQuizConfig)?.preQuizComponent);

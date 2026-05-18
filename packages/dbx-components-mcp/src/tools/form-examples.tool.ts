@@ -124,7 +124,7 @@ export function runFormExamples(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const formExamplesTool: DbxTool = {
+export const FORM_EXAMPLES_TOOL: DbxTool = {
   definition: DBX_FORM_EXAMPLES_TOOL,
   run: runFormExamples
 };

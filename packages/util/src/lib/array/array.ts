@@ -340,6 +340,7 @@ export function splitFront<T>(values: T[], maxToTake: number): SplitFrontResult<
  * @param maxToTake - Max number of values to take from the end of the input array.
  * @param keepFromFront - Number of values to retain in the front of the array. These are not taken.
  * @returns New array with the subset of taken values.
+ * @throws {Error} When `maxToTake` is smaller than `keepFromFront`.
  *
  * @dbxUtil
  * @dbxUtilCategory array

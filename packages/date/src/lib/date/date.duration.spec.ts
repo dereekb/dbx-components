@@ -43,7 +43,7 @@ wrapDateTests(() => {
       const dateRange: DateRange = { start, end };
       const expectedSpan: DateDurationSpan = {
         startsAt: start,
-        duration: 90 as Minutes
+        duration: 90
       };
       expect(durationSpanFromDateRange(dateRange)).toEqual(expectedSpan);
     });
@@ -53,7 +53,7 @@ wrapDateTests(() => {
       const dateRange: DateRange = { start, end: start };
       const expectedSpan: DateDurationSpan = {
         startsAt: start,
-        duration: 0 as Minutes
+        duration: 0
       };
       expect(durationSpanFromDateRange(dateRange)).toEqual(expectedSpan);
     });
@@ -86,16 +86,16 @@ wrapDateTests(() => {
 
   describe('fractionalHoursInDurationSpan', () => {
     it('should convert duration to fractional hours', () => {
-      const span1: DateDurationSpan = { startsAt: new Date(), duration: 60 as Minutes };
+      const span1: DateDurationSpan = { startsAt: new Date(), duration: 60 };
       expect(fractionalHoursInDurationSpan(span1)).toBe(1);
 
-      const span2: DateDurationSpan = { startsAt: new Date(), duration: 30 as Minutes };
+      const span2: DateDurationSpan = { startsAt: new Date(), duration: 30 };
       expect(fractionalHoursInDurationSpan(span2)).toBe(0.5);
 
-      const span3: DateDurationSpan = { startsAt: new Date(), duration: 90 as Minutes };
+      const span3: DateDurationSpan = { startsAt: new Date(), duration: 90 };
       expect(fractionalHoursInDurationSpan(span3)).toBe(1.5);
 
-      const span4: DateDurationSpan = { startsAt: new Date(), duration: 0 as Minutes };
+      const span4: DateDurationSpan = { startsAt: new Date(), duration: 0 };
       expect(fractionalHoursInDurationSpan(span4)).toBe(0);
     });
   });
@@ -104,10 +104,10 @@ wrapDateTests(() => {
     const dateA = new Date(2024, 0, 1, 10, 0, 0);
     const dateB = new Date(2024, 0, 2, 10, 0, 0);
 
-    const spanA1: DateDurationSpan = { startsAt: dateA, duration: 60 as Minutes };
-    const spanA2: DateDurationSpan = { startsAt: dateA, duration: 60 as Minutes }; // same as A1
-    const spanB: DateDurationSpan = { startsAt: dateB, duration: 60 as Minutes }; // different date
-    const spanC: DateDurationSpan = { startsAt: dateA, duration: 30 as Minutes }; // different duration
+    const spanA1: DateDurationSpan = { startsAt: dateA, duration: 60 };
+    const spanA2: DateDurationSpan = { startsAt: dateA, duration: 60 }; // same as A1
+    const spanB: DateDurationSpan = { startsAt: dateB, duration: 60 }; // different date
+    const spanC: DateDurationSpan = { startsAt: dateA, duration: 30 }; // different duration
 
     it('should return true for two identical DateDurationSpan objects', () => {
       expect(isSameDurationSpan(spanA1, spanA2)).toBe(true);

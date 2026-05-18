@@ -256,7 +256,7 @@ export function makeFirestoreContextCache(config: MakeFirestoreContextCacheConfi
           emitEvent: (type, key) => emitEvent(type, collectionType, key),
           delegate: createDelegate<T>(collectionType)
         });
-        collectionCaches.set(collectionType, cache as FirestoreCollectionCache<unknown>);
+        collectionCaches.set(collectionType, cache);
       }
 
       return cache;

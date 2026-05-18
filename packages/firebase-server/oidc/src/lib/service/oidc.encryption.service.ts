@@ -70,7 +70,7 @@ export class OidcEncryptionService {
    */
   encryptAdapterPayload(payload: AdapterPayload): JsonSerializableObject {
     const filtered = filterUndefinedValues(payload);
-    return this.adapterPayloadEncryptor.encrypt(filtered) as JsonSerializableObject;
+    return this.adapterPayloadEncryptor.encrypt(filtered);
   }
 
   /**
@@ -80,6 +80,6 @@ export class OidcEncryptionService {
    * @returns The decrypted adapter payload.
    */
   decryptAdapterPayload(payload: JsonSerializableObject): AdapterPayload {
-    return this.adapterPayloadEncryptor.decrypt(payload as any) as AdapterPayload;
+    return this.adapterPayloadEncryptor.decrypt(payload as any);
   }
 }

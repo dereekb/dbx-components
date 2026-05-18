@@ -5,7 +5,7 @@ export { type PaginatedResponse, type PaginationAdapter, type RunPaginatedListOu
 
 /**
  * Zoho-specific extension of {@link PaginatedResponse} that exposes the `info` block returned
- * by Zoho CRM/Recruit list endpoints. Used by {@link zohoPagePaginationAdapter} to detect
+ * by Zoho CRM/Recruit list endpoints. Used by {@link ZOHO_PAGE_PAGINATION_ADAPTER} to detect
  * end-of-data and to derive single-page meta.
  */
 export interface ZohoPaginatedResponse extends PaginatedResponse {
@@ -18,7 +18,7 @@ export interface ZohoPaginatedResponse extends PaginatedResponse {
  * Typed loosely on input so any command's literal input shape (with `page` / `per_page` keys plus
  * arbitrary other fields) satisfies the {@link PaginationAdapter} contract.
  */
-export const zohoPagePaginationAdapter: PaginationAdapter<any, ZohoPaginatedResponse> = {
+export const ZOHO_PAGE_PAGINATION_ADAPTER: PaginationAdapter<any, ZohoPaginatedResponse> = {
   nextInput: (input, last) => {
     let next: typeof input | undefined;
 
@@ -46,7 +46,7 @@ export const zohoPagePaginationAdapter: PaginationAdapter<any, ZohoPaginatedResp
  * Desk responses have no `more_records` flag; a page that returns fewer records than `limit` is
  * treated as the final page.
  */
-export const zohoDeskPaginationAdapter: PaginationAdapter<any, ZohoPaginatedResponse> = {
+export const ZOHO_DESK_PAGINATION_ADAPTER: PaginationAdapter<any, ZohoPaginatedResponse> = {
   nextInput: (input, last) => {
     const limit = (input as { limit?: number }).limit ?? 25;
     const count = last.data?.length ?? 0;
@@ -91,7 +91,7 @@ export interface RunZohoPaginatedListInput<TInput, TResponse extends ZohoPaginat
 /**
  * Convenience runner for Zoho CRM/Recruit list-style commands.
  *
- * Wires {@link runPaginatedList} with {@link zohoPagePaginationAdapter} and,
+ * Wires {@link runPaginatedList} with {@link ZOHO_PAGE_PAGINATION_ADAPTER} and,
  * when the call resolves to a single-page response, prints the standard
  * `data` + `{page, per_page, more_records}` meta envelope every command in
  * those CLIs uses. Multi-page invocations are streamed/printed by
@@ -106,7 +106,7 @@ export async function runZohoPaginatedList<TInput, TResponse extends ZohoPaginat
   const outcome = await runPaginatedList({
     initialInput,
     fetchPage,
-    adapter: zohoPagePaginationAdapter,
+    adapter: ZOHO_PAGE_PAGINATION_ADAPTER,
     multiplePages: argv.multiplePages,
     multiplePagesOutput: argv.multiplePagesOutput,
     dumpOutput: argv.dumpOutput,

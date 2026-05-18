@@ -336,7 +336,7 @@ export function runActionScaffold(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const actionScaffoldTool: DbxTool = {
+export const ACTION_SCAFFOLD_TOOL: DbxTool = {
   definition: DBX_ACTION_SCAFFOLD_TOOL,
   run: runActionScaffold
 };

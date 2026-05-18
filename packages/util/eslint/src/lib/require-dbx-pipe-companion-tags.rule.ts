@@ -40,7 +40,7 @@ export interface UtilRequireDbxPipeCompanionTagsRuleDefinition {
  * at `packages/dbx-components-mcp/src/scan/pipes-extract.ts` so violations
  * surface at lint time instead of at manifest-regeneration time.
  */
-export const utilRequireDbxPipeCompanionTagsRule: UtilRequireDbxPipeCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_PIPE_COMPANION_TAGS_RULE: UtilRequireDbxPipeCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

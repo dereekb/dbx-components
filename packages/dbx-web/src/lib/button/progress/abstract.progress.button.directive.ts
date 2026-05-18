@@ -170,7 +170,8 @@ export abstract class AbstractProgressButtonDirective {
    * Whether button content should be hidden via opacity (working spinner or echo overlay active).
    */
   readonly hideContentSignal = computed(() => {
-    return this.showProgressSignal() || this.echoActiveSignal();
+    const echoActive = this.echoActiveSignal();
+    return this.showProgressSignal() || echoActive;
   });
 
   /**

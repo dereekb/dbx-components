@@ -544,7 +544,7 @@ export function mergeLoadingStates<O>(...args: any[]): LoadingState<O> {
   if (error) {
     // ignore all loading states, except for any error-prone item that is still loading
     const currentLoadings: Maybe<boolean>[] = loadingStates.map((x) => (x.error ? x.loading : false));
-    const nonMaybeLoadings = currentLoadings.filter((x) => x != null) as boolean[];
+    const nonMaybeLoadings = currentLoadings.filter((x) => x != null);
     const loading = nonMaybeLoadings.length > 0 ? reduceBooleansWithOr(nonMaybeLoadings) : undefined;
 
     // TODO: Merge loadingProgress values, probably only if they're all defined though, otherwise undefined
@@ -692,8 +692,8 @@ export interface MapLoadingStateResultsConfiguration<A, B, L extends LoadingStat
  * @param config - mapping configuration
  * @returns the transformed loading state
  */
-export function mapLoadingStateResults<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends PageLoadingState<A> = PageLoadingState<A>, O extends PageLoadingState<B> = PageLoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
+export function mapLoadingStateResults<A, B, L extends LoadingState<A> = LoadingState<A>, O extends LoadingState<B> = LoadingState<B>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O;
 export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<A>> = Partial<PageLoadingState<A>>, O extends Partial<PageLoadingState<B>> = Partial<PageLoadingState<B>>>(input: L, config: MapLoadingStateResultsConfiguration<A, B, L, O>): O {
   const { mapValue, mapState, alwaysMapValue = false } = config;

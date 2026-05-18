@@ -9,7 +9,7 @@ function makeArrayContext(arrayKey: string, indexSignal: Signal<number>): ArrayC
     arrayKey,
     index: indexSignal,
     formValue: undefined,
-    field: { key: arrayKey, type: 'array' } as ArrayContext['field']
+    field: { key: arrayKey, type: 'array' }
   };
 }
 

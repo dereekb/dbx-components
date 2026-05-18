@@ -137,7 +137,7 @@ export interface UtilRequireDbxActionCompanionTagsRuleDefinition {
  * `@dbxActionStateEnum` marker, and `@dbxActionStateTransitionsFrom/To` are
  * valid on enum-member JSDocs.
  */
-export const utilRequireDbxActionCompanionTagsRule: UtilRequireDbxActionCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_ACTION_COMPANION_TAGS_RULE: UtilRequireDbxActionCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

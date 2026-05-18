@@ -3,7 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
-import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
+import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
 
 const attachmentsListCommand: CommandModule = {
   command: 'list <ticketId>',
@@ -16,7 +16,7 @@ const attachmentsListCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.getTicketAttachments(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -49,7 +49,7 @@ const attachmentsDeleteCommand: CommandModule = {
   }
 };
 
-export const deskAttachmentsCommand: CommandModule = {
+export const DESK_ATTACHMENTS_COMMAND: CommandModule = {
   command: 'attachments',
   describe: 'Desk attachment operations',
   builder: (yargs: Argv) => yargs.command(attachmentsListCommand).command(attachmentsDeleteCommand).demandCommand(1),

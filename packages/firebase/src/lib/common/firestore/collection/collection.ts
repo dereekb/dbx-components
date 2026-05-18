@@ -262,8 +262,10 @@ export interface FirestoreModelTypeRef<M extends FirestoreModelType = FirestoreM
 /**
  * Reads the FirestoreModelType from a FirestoreModelType or FirestoreModelTypeRef.
  *
- * @param modelTypeInput
- * @returns
+ * @param modelTypeInput - Either a raw `FirestoreModelType` string or an object exposing one via `.modelType`.
+ * @returns The resolved `FirestoreModelType` string.
+ * @throws {Error} When the resolved model type is empty.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreModelType(modelTypeInput: FirestoreModelType | FirestoreModelTypeRef): FirestoreModelType {
@@ -718,6 +720,7 @@ export function firestoreIdentityTypeArray(input: FirestoreModelIdentity): Fires
  *
  * @param input - Key or reference whose path segments are parsed.
  * @returns Collection names extracted from the key, or undefined when no key is available.
+ * @throws {Error} When the decoded key has an odd number of path segments (e.g. a collection ref instead of a document ref).
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -814,6 +817,7 @@ export function firestoreModelKeyTypePair<T = unknown>(input: ReadFirestoreModel
  *
  * @param input - Key or reference whose path segments are decoded.
  * @returns Ordered collection/id pairs decoded from the key, or undefined when no key is available.
+ * @throws {Error} When the decoded key has an odd number of path segments (e.g. a collection ref instead of a document ref).
  *
  * @__NO_SIDE_EFFECTS__
  */

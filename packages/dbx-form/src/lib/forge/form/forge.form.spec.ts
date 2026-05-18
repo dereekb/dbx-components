@@ -153,7 +153,7 @@ describe('copyFormConfigCustomFnConfig()', () => {
     const result = copyFormConfigCustomFnConfig(input);
 
     expect(result!.customFunctions).toEqual({ a: fn });
-    expect(result!.customFunctions).not.toBe(input!.customFunctions);
+    expect(result!.customFunctions).not.toBe(input.customFunctions);
   });
 
   it('should copy multiple sub-properties independently', () => {
@@ -168,8 +168,8 @@ describe('copyFormConfigCustomFnConfig()', () => {
 
     expect(result!.customFunctions).toEqual({ a: fn });
     expect(result!.validators).toEqual({ v: validator });
-    expect(result!.customFunctions).not.toBe(input!.customFunctions);
-    expect(result!.validators).not.toBe(input!.validators);
+    expect(result!.customFunctions).not.toBe(input.customFunctions);
+    expect(result!.validators).not.toBe(input.validators);
   });
 });
 
@@ -528,7 +528,7 @@ describe('dbxForgeFinalizeFormConfig()', () => {
         const stateInField = findFieldByKey(result.config.fields, 'state') as FieldDef<unknown> & { logic?: LogicConfig[] };
         expect(stateInField).toBeDefined();
 
-        const derivationLogic = stateInField.logic?.find((entry) => entry.type === 'derivation') as (LogicConfig & { type: 'derivation'; functionName?: string; dependsOn?: string[] }) | undefined;
+        const derivationLogic = stateInField.logic?.find((entry) => entry.type === 'derivation');
 
         expect(derivationLogic).toBeDefined();
         expect(derivationLogic?.functionName).toBe(derivationName);
@@ -554,10 +554,10 @@ describe('dbxForgeFinalizeFormConfig()', () => {
       });
 
       it('should still attach a derivation logic entry on the deeply-nested state field referencing the registered derivation', () => {
-        const stateInField = findFieldByKey(result.config.fields, 'state') as (FieldDef<unknown> & { logic?: LogicConfig[] }) | undefined;
+        const stateInField = findFieldByKey(result.config.fields, 'state');
         expect(stateInField).toBeDefined();
 
-        const derivationLogic = stateInField?.logic?.find((entry) => entry.type === 'derivation') as (LogicConfig & { type: 'derivation'; functionName?: string; dependsOn?: string[] }) | undefined;
+        const derivationLogic = stateInField?.logic?.find((entry) => entry.type === 'derivation');
 
         expect(derivationLogic).toBeDefined();
         expect(derivationLogic?.functionName).toBe(derivationName);
@@ -585,10 +585,10 @@ describe('dbxForgeFinalizeFormConfig()', () => {
       });
 
       it('should attach the derivation logic entry on the state field inside the array item template', () => {
-        const stateInField = findFieldByKey(result.config.fields, 'state') as (FieldDef<unknown> & { logic?: LogicConfig[] }) | undefined;
+        const stateInField = findFieldByKey(result.config.fields, 'state');
         expect(stateInField).toBeDefined();
 
-        const derivationLogic = stateInField?.logic?.find((entry) => entry.type === 'derivation') as (LogicConfig & { type: 'derivation'; functionName?: string; dependsOn?: string[] }) | undefined;
+        const derivationLogic = stateInField?.logic?.find((entry) => entry.type === 'derivation');
 
         expect(derivationLogic).toBeDefined();
         expect(derivationLogic?.functionName).toBe(derivationName);
@@ -638,7 +638,7 @@ describe('dbxForgeFinalizeFormConfig()', () => {
 
       const result = dbxForgeFinalizeFormConfig(input);
       const derivedInField = findFieldByKey(result.config.fields, 'derived') as FieldDef<unknown> & { logic?: LogicConfig[] };
-      const derivationLogic = derivedInField.logic?.find((entry) => entry.type === 'derivation') as (LogicConfig & { type: 'derivation'; dependsOn?: string[] }) | undefined;
+      const derivationLogic = derivedInField.logic?.find((entry) => entry.type === 'derivation');
 
       expect(derivationLogic).toBeDefined();
       expect(derivationLogic?.dependsOn).toEqual(['line1']);
@@ -665,7 +665,7 @@ describe('dbxForgeFinalizeFormConfig()', () => {
 
       const result = dbxForgeFinalizeFormConfig(input);
       const derivedInField = findFieldByKey(result.config.fields, 'derived') as FieldDef<unknown> & { logic?: LogicConfig[] };
-      const derivationLogic = derivedInField.logic?.find((entry) => entry.type === 'derivation') as (LogicConfig & { type: 'derivation'; dependsOn?: string[] }) | undefined;
+      const derivationLogic = derivedInField.logic?.find((entry) => entry.type === 'derivation');
 
       expect(derivationLogic?.dependsOn).toEqual(['name']);
     });

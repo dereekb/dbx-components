@@ -56,7 +56,7 @@ export interface DbxForgeComponentFieldDef<T = unknown> extends BaseValueField<D
   standalone: true,
   host: {
     '[class]': 'className()',
-    '[class.dbx-forge-disabled]': 'showDisabledState()'
+    '[class.dbx-forge-disabled]': 'showDisabledStateSignal()'
   }
 })
 export class DbxForgeComponentFieldComponent<T = unknown> {
@@ -76,10 +76,13 @@ export class DbxForgeComponentFieldComponent<T = unknown> {
 
   // Disabled state
   readonly isDisabled = dbxForgeFieldDisabled();
-  readonly showDisabledState = computed(() => this.isDisabled() && (this.props()?.allowDisabledEffects ?? true));
+  readonly showDisabledStateSignal = computed(() => {
+    const props = this.props();
+    return this.isDisabled() && (props?.allowDisabledEffects ?? true);
+  });
 
   constructor() {
-    setupMetaTracking(this.elementRef, this.meta as any, { selector: 'dbx-injection' });
+    setupMetaTracking(this.elementRef, this.meta, { selector: 'dbx-injection' });
   }
 
   readonly configSignal = computed((): Maybe<DbxInjectionComponentConfig<T>> => {

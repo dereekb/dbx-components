@@ -87,4 +87,4 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   return result;
 }
 
-export const serverActionsListAppTool: DbxTool = { definition: TOOL, run };
+export const SERVER_ACTIONS_LIST_APP_TOOL: DbxTool = { definition: TOOL, run };

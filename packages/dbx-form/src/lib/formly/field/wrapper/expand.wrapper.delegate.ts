@@ -82,7 +82,7 @@ export class AbstractFormExpandSectionWrapperDirective<T extends object = object
   }
 
   get hasValueFn(): (value: T) => boolean {
-    return this.expandSection.hasValueFn ?? (DEFAULT_HAS_VALUE_FN as (value: T) => boolean);
+    return this.expandSection.hasValueFn ?? DEFAULT_HAS_VALUE_FN;
   }
 
   get expandLabel(): Maybe<string> {

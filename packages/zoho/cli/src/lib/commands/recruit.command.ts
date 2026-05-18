@@ -168,7 +168,7 @@ const recruitAttachmentsCommand: CommandModule = {
   }
 };
 
-export const recruitCommand: CommandModule = {
+export const RECRUIT_COMMAND: CommandModule = {
   command: 'recruit',
   describe: 'Zoho Recruit operations',
   builder: (yargs: Argv) =>

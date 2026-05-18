@@ -238,7 +238,7 @@ describe('authRoleClaimsFactory()', () => {
       describe('copyClaims', () => {
         it('should copy only the registered claim keys from the source.', () => {
           const source = { test: 'n', u: 10, m: 1, ignoredValue: true, extra: 'x' } as unknown as AuthClaimsObject;
-          const result = service.copyClaims(source as never);
+          const result = service.copyClaims(source);
 
           expect(result).toEqual({ test: 'n', u: 10, m: 1 });
           expect(objectHasKey(result, 'ignoredValue')).toBe(false);
@@ -247,7 +247,7 @@ describe('authRoleClaimsFactory()', () => {
 
         it('should omit registered keys whose source value is undefined.', () => {
           const source = { u: 10 } as unknown as AuthClaimsObject;
-          const result = service.copyClaims(source as never);
+          const result = service.copyClaims(source);
 
           expect(result).toEqual({ u: 10 });
           expect(objectHasKey(result, 'test')).toBe(false);
@@ -256,14 +256,14 @@ describe('authRoleClaimsFactory()', () => {
 
         it('should preserve null values so it can be used on a claims update.', () => {
           const source = { test: null, u: 10, m: null } as unknown as AuthClaimsObject;
-          const result = service.copyClaims(source as never);
+          const result = service.copyClaims(source);
 
           expect(result).toEqual({ test: null, u: 10, m: null });
         });
 
         it('should return an empty object when the source has no registered keys.', () => {
           const source = { other: 'x' } as unknown as AuthClaimsObject;
-          const result = service.copyClaims(source as never);
+          const result = service.copyClaims(source);
 
           expect(result).toEqual({});
         });

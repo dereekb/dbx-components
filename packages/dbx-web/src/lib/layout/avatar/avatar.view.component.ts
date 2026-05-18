@@ -96,9 +96,10 @@ export class DbxAvatarViewComponent {
   });
 
   readonly avatarIconSignal = computed(() => {
+    const hasAvatarError = this.hasAvatarErrorSignal();
     let icon = this.avatarIcon() ?? this.defaultContext?.icon;
 
-    if (!icon && this.hasAvatarErrorSignal()) {
+    if (!icon && hasAvatarError) {
       icon = this.avatarService.defaultAvatarErrorIcon;
     } else {
       icon = icon ?? this.avatarService.defaultAvatarIcon;

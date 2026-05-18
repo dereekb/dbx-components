@@ -39,7 +39,7 @@ export interface UtilRequireDbxAuthCompanionTagsRuleDefinition {
  * - `@dbxAuthClaim` (bare) on a `PropertySignature` inside an interface.
  * - `@dbxAuthClaimsService <slug>` on an exported `VariableDeclaration`.
  */
-export const utilRequireDbxAuthCompanionTagsRule: UtilRequireDbxAuthCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_AUTH_COMPANION_TAGS_RULE: UtilRequireDbxAuthCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

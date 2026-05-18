@@ -167,7 +167,7 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
       apiPrefixPath = apiPrefix.startsWith('/') ? (apiPrefix as WebsitePath) : `/${apiPrefix}`;
     }
     const appApiUrl = config.envConfig.appApiUrl ?? (isApiEnabled && appUrl && apiPrefixPath ? websiteUrlFromPaths(appUrl, apiPrefixPath) : undefined);
-    const webhookPaths: WebsitePath[] = apiPrefixPath ? [apiPrefixPath, DEFAULT_BASE_WEBHOOK_PATH as WebsitePath] : [DEFAULT_BASE_WEBHOOK_PATH as WebsitePath];
+    const webhookPaths: WebsitePath[] = apiPrefixPath ? [apiPrefixPath, DEFAULT_BASE_WEBHOOK_PATH] : [DEFAULT_BASE_WEBHOOK_PATH];
     const appWebhookUrl = config.envConfig.appWebhookUrl ?? (isWebhooksEnabled && appUrl ? websiteUrlFromPaths(appUrl, webhookPaths) : undefined);
 
     const augmentedEnvConfig: FirebaseServerEnvironmentConfig = {

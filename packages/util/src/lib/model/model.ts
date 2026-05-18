@@ -315,7 +315,7 @@ export function readModelKey<T>(input: Maybe<ModelOrKey<T>>, { required = false,
   let key: Maybe<ModelKey>;
 
   if (typeof input === 'string') {
-    key = input as ModelKey;
+    key = input;
   } else if (input != null && typeof input === 'object') {
     // typeof null === 'object', so guard against null before passing to `read`.
     key = read(input);

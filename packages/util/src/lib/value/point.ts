@@ -582,10 +582,10 @@ export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngP
       latLng = latLngPointFromString(lat as string);
     } else if (Array.isArray(lat)) {
       if (readLonLatTuples) {
-        const tuple = lat as LonLatTuple;
+        const tuple = lat;
         latLng = { lat: tuple[1], lng: tuple[0] };
       } else {
-        const tuple = lat as LatLngTuple;
+        const tuple = lat;
         latLng = { lat: tuple[0], lng: tuple[1] };
       }
     } else if (latType === 'object') {

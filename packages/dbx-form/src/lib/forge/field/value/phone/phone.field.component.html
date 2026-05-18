@@ -1,19 +1,31 @@
-<mat-form-field [appearance]="effectiveAppearance()" subscriptSizing="dynamic">
+<mat-form-field [appearance]="effectiveAppearanceSignal()" subscriptSizing="dynamic">
   @if (label()) {
     <mat-label>{{ label() | dynamicText | async }}</mat-label>
   }
   <div class="dbx-form-phone-field">
-    <ngx-mat-input-tel name="phone" class="dbx-form-phone-field-phone-content" [formControl]="phoneCtrl" [autocomplete]="effectiveAutocomplete()" [enableSearch]="enableSearch()" [preferredCountries]="preferredCountries()" [onlyCountries]="onlyCountries()" [enablePlaceholder]="false" [placeholder]="(placeholder() | dynamicText | async) ?? ''" [attr.aria-invalid]="ariaInvalid()" [attr.aria-required]="ariaRequired()" [attr.aria-describedby]="ariaDescribedBy()"></ngx-mat-input-tel>
-    @if (allowExtension()) {
+    <ngx-mat-input-tel
+      name="phone"
+      class="dbx-form-phone-field-phone-content"
+      [formControl]="phoneCtrl"
+      [autocomplete]="effectiveAutocompleteSignal()"
+      [enableSearch]="enableSearchSignal()"
+      [preferredCountries]="preferredCountriesSignal()"
+      [onlyCountries]="onlyCountriesSignal()"
+      [enablePlaceholder]="false"
+      [placeholder]="(placeholder() | dynamicText | async) ?? ''"
+      [attr.aria-invalid]="ariaInvalidSignal()"
+      [attr.aria-required]="ariaRequiredSignal()"
+      [attr.aria-describedby]="ariaDescribedBySignal()"></ngx-mat-input-tel>
+    @if (allowExtensionSignal()) {
       <div class="dbx-form-phone-field-extension-content">
         <span class="dbx-hint dbx-button-spacer">Ext.</span>
         <input name="phone-extension" class="dbx-form-phone-field-extension-input" placeholder="123" minlength="0" maxlength="6" [formControl]="extensionCtrl" aria-label="Phone extension" />
       </div>
     }
   </div>
-  @if (errorsToDisplay()[0]; as error) {
-    <mat-error [id]="errorId()">{{ error.message }}</mat-error>
+  @if (errorsToDisplaySignal()[0]; as error) {
+    <mat-error [id]="errorIdSignal()">{{ error.message }}</mat-error>
   } @else if (props()?.hint; as hint) {
-    <mat-hint [id]="hintId()">{{ hint | dynamicText | async }}</mat-hint>
+    <mat-hint [id]="hintIdSignal()">{{ hint | dynamicText | async }}</mat-hint>
   }
 </mat-form-field>

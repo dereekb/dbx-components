@@ -1,6 +1,6 @@
 import { Linter } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
-import { nestjsEslintPlugin } from './plugin';
+import { NESTJS_ESLINT_PLUGIN } from './plugin';
 
 function lintCode(code: string): Linter.LintMessage[] {
   const linter = new Linter({ configType: 'flat' });
@@ -8,14 +8,14 @@ function lintCode(code: string): Linter.LintMessage[] {
     {
       files: ['**/*.ts'],
       languageOptions: {
-        parser: tsParser as any,
+        parser: tsParser,
         parserOptions: {
           ecmaVersion: 2022,
           sourceType: 'module'
         }
       },
       plugins: {
-        'dereekb-nestjs': nestjsEslintPlugin as any
+        'dereekb-nestjs': NESTJS_ESLINT_PLUGIN as any
       },
       rules: {
         'dereekb-nestjs/require-nest-inject': 'error'
@@ -32,14 +32,14 @@ function fixCode(code: string): string {
     {
       files: ['**/*.ts'],
       languageOptions: {
-        parser: tsParser as any,
+        parser: tsParser,
         parserOptions: {
           ecmaVersion: 2022,
           sourceType: 'module'
         }
       },
       plugins: {
-        'dereekb-nestjs': nestjsEslintPlugin as any
+        'dereekb-nestjs': NESTJS_ESLINT_PLUGIN as any
       },
       rules: {
         'dereekb-nestjs/require-nest-inject': 'error'

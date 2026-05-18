@@ -33,6 +33,7 @@ function splitWords(input: string): readonly string[] {
  *
  * @param name - The raw artifact name supplied by the caller.
  * @returns The resolved tokens for substitution.
+ * @throws {Error} When no word fragments can be extracted from `name`.
  */
 export function deriveNameTokens(name: string): NameTokens {
   const parts = splitWords(name);

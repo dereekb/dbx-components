@@ -77,6 +77,7 @@ export class DbxAccordionHeaderHeightDirective {
   readonly widthTypeSignal = toSignal(this._screenMediaService.widthType$);
 
   readonly expansionPanelHeightSignal = computed(() => {
+    const heightTextSmallScreenMultiplier = this.heightTextSmallScreenMultiplier();
     const baseHeight = this.dbxAccordionHeaderHeight();
     const text = this.heightText();
     const textLines = this.heightTextLines();
@@ -101,7 +102,7 @@ export class DbxAccordionHeaderHeightDirective {
 
       // on small screens text wraps more, so scale up estimated lines
       if (isSmallScreen) {
-        const multiplier = this.heightTextSmallScreenMultiplier() ?? 1.6;
+        const multiplier = heightTextSmallScreenMultiplier ?? 1.6;
         lines = Math.ceil(lines * multiplier);
       }
 

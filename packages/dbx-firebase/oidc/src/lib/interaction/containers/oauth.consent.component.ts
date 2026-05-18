@@ -52,7 +52,7 @@ export interface DbxOAuthConsentComponentConfig {
   standalone: true,
   imports: [DbxFirebaseOAuthConsentViewComponent],
   template: `
-    <dbx-firebase-oauth-consent-view [details]="resolvedDetails()" [consentStateCase]="consentStateCase()" [scopeInjectionConfig]="scopeInjectionConfig()" [requiredScopes]="requiredScopes" [approveHandler]="handleApprove" [denyHandler]="handleDeny">
+    <dbx-firebase-oauth-consent-view [details]="resolvedDetailsSignal()" [consentStateCase]="consentStateCaseSignal()" [scopeInjectionConfig]="scopeInjectionConfigSignal()" [requiredScopes]="requiredScopes" [approveHandler]="handleApprove" [denyHandler]="handleDeny">
       <ng-content />
     </dbx-firebase-oauth-consent-view>
   `,
@@ -90,8 +90,8 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   readonly isLoggedIn: Signal<Maybe<boolean>> = toSignal(this.dbxFirebaseAuthService.isLoggedIn$);
 
   // Resolved values
-  readonly resolvedInteractionUid = computed(() => this.routeUid());
-  readonly resolvedDetails = computed<Maybe<OAuthInteractionLoginDetails>>(() => {
+  readonly resolvedInteractionUidSignal = computed(() => this.routeUid());
+  readonly resolvedDetailsSignal = computed<Maybe<OAuthInteractionLoginDetails>>(() => {
     const client_id = this.routeClientId() ?? '';
     const client_name = this.routeClientName();
     const client_uri = this.routeClientUri();
@@ -108,7 +108,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   });
 
   // Scope injection config: built from the configured scope list view class, falling back to config service, then the default
-  readonly scopeInjectionConfig = computed<DbxInjectionComponentConfig>(() => ({
+  readonly scopeInjectionConfigSignal = computed<DbxInjectionComponentConfig>(() => ({
     componentClass: this.config()?.consentScopeListViewClass ?? this.oidcConfigService.consentScopeListViewClass ?? DbxFirebaseOAuthConsentScopeDefaultViewComponent
   }));
 
@@ -118,7 +118,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
    */
   readonly requiredScopes: readonly OidcScope[] = OAUTH_CONSENT_REQUIRED_SCOPES;
 
-  readonly consentStateCase = computed<OidcConsentStateCase>(() => {
+  readonly consentStateCaseSignal = computed<OidcConsentStateCase>(() => {
     const isLoggedIn = this.isLoggedIn();
     let result: OidcConsentStateCase;
 
@@ -152,7 +152,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
    * @param context - The Work context driving the approval flow.
    */
   readonly handleApprove: WorkUsingContext<OAuthConsentScopesFormValue, OAuthInteractionConsentResponse> = (formValue, context) => {
-    const uid = this.resolvedInteractionUid();
+    const uid = this.resolvedInteractionUidSignal();
 
     if (!uid) {
       context.reject(new Error('Missing interaction UID'));
@@ -180,7 +180,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
    * @param context - The Work context driving the denial flow.
    */
   readonly handleDeny: WorkUsingContext<void, OAuthInteractionConsentResponse> = (_value, context) => {
-    const uid = this.resolvedInteractionUid();
+    const uid = this.resolvedInteractionUidSignal();
 
     if (!uid) {
       context.reject(new Error('Missing interaction UID'));

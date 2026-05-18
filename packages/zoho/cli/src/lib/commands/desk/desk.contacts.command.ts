@@ -3,7 +3,7 @@ import { getDeskApi } from '../../middleware/auth.middleware';
 import { noop } from '@dereekb/util';
 import { outputResult, outputError } from '../../util/output';
 import { withDeskPagination } from '../../util/args';
-import { runPaginatedList, zohoDeskPaginationAdapter } from '../../util/pagination';
+import { runPaginatedList, ZOHO_DESK_PAGINATION_ADAPTER } from '../../util/pagination';
 
 const contactsListCommand: CommandModule = {
   command: 'list',
@@ -16,7 +16,7 @@ const contactsListCommand: CommandModule = {
       const outcome = await runPaginatedList({
         initialInput,
         fetchPage: (input) => api.getContacts(input),
-        adapter: zohoDeskPaginationAdapter,
+        adapter: ZOHO_DESK_PAGINATION_ADAPTER,
         multiplePages: argv.multiplePages,
         multiplePagesOutput: argv.multiplePagesOutput,
         dumpOutput: argv.dumpOutput,
@@ -49,7 +49,7 @@ const contactsGetCommand: CommandModule = {
   }
 };
 
-export const deskContactsCommand: CommandModule = {
+export const DESK_CONTACTS_COMMAND: CommandModule = {
   command: 'contacts',
   describe: 'Desk contact operations',
   builder: (yargs: Argv) => yargs.command(contactsListCommand).command(contactsGetCommand).demandCommand(1),

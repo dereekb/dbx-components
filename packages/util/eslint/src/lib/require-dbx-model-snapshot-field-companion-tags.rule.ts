@@ -40,7 +40,7 @@ export interface UtilRequireDbxModelSnapshotFieldCompanionTagsRuleDefinition {
  * ESLint rule enforcing `@dbxModelSnapshotField` companion tags. Mirrors the
  * scanner schema at `packages/dbx-components-mcp/src/scan/model-snapshot-fields-extract.ts`.
  */
-export const utilRequireDbxModelSnapshotFieldCompanionTagsRule: UtilRequireDbxModelSnapshotFieldCompanionTagsRuleDefinition = {
+export const UTIL_REQUIRE_DBX_MODEL_SNAPSHOT_FIELD_COMPANION_TAGS_RULE: UtilRequireDbxModelSnapshotFieldCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

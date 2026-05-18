@@ -302,7 +302,7 @@ export function firebaseServerErrorInfo(e: unknown): FirebaseServerErrorInfo {
 
       if (httpsError.details && isServerError(httpsError.details)) {
         httpsErrorDetailsServerError = httpsError.details;
-        serverErrorCode = httpsErrorDetailsServerError.code as StringErrorCode;
+        serverErrorCode = httpsErrorDetailsServerError.code;
       }
     } else if (isFirebaseError(e)) {
       type = 'firebaseError';

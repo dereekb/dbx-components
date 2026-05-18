@@ -112,4 +112,4 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   return out;
 }
 
-export const modelTestSearchTool: DbxTool = { definition: TOOL, run };
+export const MODEL_TEST_SEARCH_TOOL: DbxTool = { definition: TOOL, run };

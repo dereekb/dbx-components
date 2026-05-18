@@ -239,4 +239,4 @@ function collectConflicts(extraction: ReturnType<typeof extractAppFixturesFromTe
   return [...new Set(out)];
 }
 
-export const modelFixtureScaffoldTool: DbxTool = { definition: TOOL, run };
+export const MODEL_FIXTURE_SCAFFOLD_TOOL: DbxTool = { definition: TOOL, run };

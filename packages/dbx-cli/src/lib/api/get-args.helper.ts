@@ -37,6 +37,7 @@ export interface ParsedGetManyArgs {
  * @param input.key - The optional second positional from yargs.
  * @param input.manifest - The generated model manifest (for prefix lookup).
  * @returns The parsed `{ modelType, key }` pair.
+ * @throws {CliError} When `modelOrKey` is missing, when no manifest is wired but inference is required, when the bare positional is not a full key, or when the manifest cannot resolve the key's prefix.
  *
  * @__NO_SIDE_EFFECTS__
  */
@@ -104,6 +105,7 @@ export function parseGetArgs(input: { readonly modelOrKey: string | undefined; r
  * @param input.rest - The remaining positionals from yargs.
  * @param input.manifest - The generated model manifest (used only in the inferred-key branch).
  * @returns The parsed `{ modelType, keys }` pair.
+ * @throws {CliError} When positionals are missing, when an inferred-key call lacks a manifest, when one or more keys cannot be resolved, or when the keys span multiple `modelType`s.
  *
  * @__NO_SIDE_EFFECTS__
  */

@@ -174,7 +174,7 @@ export function firebaseServerActionsTransformFactory(options?: FirebaseServerAc
     handleValidationError: async (validationErrors: ArkErrors) => {
       const serverError = firebaseServerValidationServerError(validationErrors);
       const { data } = serverError;
-      logErrorFunction(data as object);
+      logErrorFunction(data);
       throw badRequestError(serverError);
     }
   });

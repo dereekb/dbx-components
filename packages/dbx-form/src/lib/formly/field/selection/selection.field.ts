@@ -53,7 +53,7 @@ export function formlyValueSelectionField<T>(config: ValueSelectionFieldConfig<T
 
   if (inputSelectAllOption) {
     selectAllOptionConfig = {
-      selectAllOption: typeof inputSelectAllOption === 'boolean' ? 'Select All' : (inputSelectAllOption as string)
+      selectAllOption: typeof inputSelectAllOption === 'boolean' ? 'Select All' : inputSelectAllOption
     };
   }
 

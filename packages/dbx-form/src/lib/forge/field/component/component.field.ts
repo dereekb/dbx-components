@@ -1,5 +1,5 @@
 import { FORGE_COMPONENT_FIELD_TYPE, type DbxForgeComponentFieldDef, type DbxForgeComponentFieldProps } from './component.field.component';
-import { dbxForgeFieldFunction, type DbxForgeFieldFunctionDef, type DbxForgeFieldFunction } from '../field';
+import { dbxForgeFieldFunction, type DbxForgeFieldFunctionDef } from '../field';
 import type { DbxForgeField } from '../../form/forge.form';
 
 // MARK: Config
@@ -36,7 +36,7 @@ export type DbxForgeComponentFieldFunction = <T = unknown>(config: DbxForgeCompo
 
 const _dbxForgeComponentField = dbxForgeFieldFunction<_DbxForgeComponentFieldConfig>({
   type: FORGE_COMPONENT_FIELD_TYPE
-}) as DbxForgeFieldFunction<_DbxForgeComponentFieldConfig, DbxForgeComponentFieldDef>;
+});
 
 /**
  * Escape hatch — injects any Angular component as the field renderer via DbxInjection. Use when no existing form field fits.

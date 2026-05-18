@@ -11,7 +11,7 @@ export function calcomWebhookEvent<T>(event: UntypedCalcomWebhookEvent): CalcomW
   return {
     triggerEvent: event.triggerEvent,
     createdAt: event.createdAt,
-    payload: event.payload as unknown as T
+    payload: event.payload
   };
 }
 

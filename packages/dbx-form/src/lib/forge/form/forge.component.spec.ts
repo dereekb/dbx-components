@@ -107,7 +107,7 @@ describe('DbxForgeFormComponent', () => {
       );
 
       expect(result.received).toBe(true);
-      expect((result.value as any)?.name).toBe('Test');
+      expect(result.value?.name).toBe('Test');
       fixture.destroy();
     });
 
@@ -207,7 +207,7 @@ describe('DbxForgeFormComponent', () => {
         fields: [
           dbxForgeToggleWrapper({
             label: 'Show details',
-            fields: [dbxForgeTextField({ key: 'detail', label: 'Detail' }) as any]
+            fields: [dbxForgeTextField({ key: 'detail', label: 'Detail' })]
           })
         ]
       };
@@ -234,7 +234,7 @@ describe('DbxForgeFormComponent', () => {
           dbxForgeToggleWrapper({
             label: 'Show details',
             defaultOpen: true,
-            fields: [dbxForgeTextField({ key: 'name', label: 'Name' }) as any]
+            fields: [dbxForgeTextField({ key: 'name', label: 'Name' })]
           }) as any
         ]
       };
@@ -247,7 +247,7 @@ describe('DbxForgeFormComponent', () => {
 
       const value = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
       expect(value).toHaveProperty('name');
-      expect((value as any).name).toBe('Test');
+      expect(value.name).toBe('Test');
 
       fixture.destroy();
     });
@@ -264,7 +264,7 @@ describe('DbxForgeFormComponent', () => {
         fields: [
           dbxForgeToggleWrapper({
             label: 'Show details',
-            fields: [dbxForgeTextField({ key: 'detail', label: 'Detail' }) as any]
+            fields: [dbxForgeTextField({ key: 'detail', label: 'Detail' })]
           }) as any
         ]
       };
@@ -428,7 +428,7 @@ describe('DbxForgeFormComponent', () => {
       await settle(fixture);
 
       // Initially not disabled
-      expect(forgeComponent.isDisabled()).toBe(false);
+      expect(forgeComponent.isDisabledSignal()).toBe(false);
       expect(forgeComponent.formOptionsSignal()).toBeUndefined();
 
       // Disable via context
@@ -436,7 +436,7 @@ describe('DbxForgeFormComponent', () => {
       await settle(fixture);
 
       // formOptionsSignal should now return { disabled: true }
-      expect(forgeComponent.isDisabled()).toBe(true);
+      expect(forgeComponent.isDisabledSignal()).toBe(true);
       expect(forgeComponent.formOptionsSignal()).toEqual({ disabled: true });
 
       // The DynamicForm should report disabled
@@ -586,7 +586,7 @@ describe('DbxForgeFormComponent stripEmptyValues with empty number fields', () =
     expect(result).toEqual({});
     expect(Object.keys(result as object)).not.toContain('test');
     expect(Object.keys(result as object)).not.toContain('steptest');
-    expect(Number.isNaN((result as any)?.test)).toBe(false);
+    expect(Number.isNaN(result?.test)).toBe(false);
 
     fixture.destroy();
   });
@@ -596,7 +596,7 @@ describe('DbxForgeFormComponent stripEmptyValues with empty number fields', () =
   // emits NaN for an empty number field — the strip must remove the NaN.
   it('should strip NaN from updateValue() before getValue() emits', async () => {
     const fixture = TestBed.createComponent(TestForgeFormHostComponent);
-    const context = fixture.componentInstance.context as DbxForgeFormContext<any>;
+    const context = fixture.componentInstance.context;
     context.requireValid = false;
 
     await settle(fixture);
@@ -606,8 +606,8 @@ describe('DbxForgeFormComponent stripEmptyValues with empty number fields', () =
     const result = await firstValueFrom(context.getValue().pipe(timeout(500), first()));
 
     expect(result).toEqual({ kept: 5 });
-    expect(Number.isNaN((result as any)?.test)).toBe(false);
-    expect(Number.isNaN((result as any)?.steptest)).toBe(false);
+    expect(Number.isNaN(result?.test)).toBe(false);
+    expect(Number.isNaN(result?.steptest)).toBe(false);
 
     fixture.destroy();
   });

@@ -1,4 +1,4 @@
-import { type NestjsRequireInjectRuleDefinition, nestjsRequireInjectRule } from './require-inject.rule';
+import { type NestjsRequireInjectRuleDefinition, NESTJS_REQUIRE_INJECT_RULE } from './require-inject.rule';
 
 /**
  * ESLint plugin interface for NestJS rules.
@@ -15,8 +15,8 @@ export interface NestjsEslintPlugin {
  * Register as a plugin in your flat ESLint config, then enable individual rules
  * under the chosen plugin prefix (e.g. 'dereekb-nestjs/require-nest-inject').
  */
-export const nestjsEslintPlugin: NestjsEslintPlugin = {
+export const NESTJS_ESLINT_PLUGIN: NestjsEslintPlugin = {
   rules: {
-    'require-nest-inject': nestjsRequireInjectRule
+    'require-nest-inject': NESTJS_REQUIRE_INJECT_RULE
   }
 };

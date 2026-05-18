@@ -62,7 +62,7 @@ export class ChecklistItemFieldDataSetBuilder<D extends object, C extends Checkl
       ...currentField,
       ...config,
       key
-    } as any;
+    };
 
     if (currentField.displayContent && config.displayContent) {
       mergedConfig.displayContent = combineLatest([currentField.displayContent, config.displayContent]).pipe(

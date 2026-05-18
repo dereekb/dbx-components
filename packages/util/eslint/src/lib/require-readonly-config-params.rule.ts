@@ -99,7 +99,7 @@ function hasExemptJsdoc(sourceCode: AstNode, node: AstNode, exemptTag: string): 
  *
  * @see `dbx__note__typescript-programming` → Readonly Interface Properties
  */
-export const utilRequireReadonlyConfigParamsRule: UtilRequireReadonlyConfigParamsRuleDefinition = {
+export const UTIL_REQUIRE_READONLY_CONFIG_PARAMS_RULE: UtilRequireReadonlyConfigParamsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

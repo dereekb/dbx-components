@@ -2173,7 +2173,7 @@
         {
           "name": "tone",
           "type": "Maybe<DbxColorTone>",
-          "description": "Background tone level for tonal appearance. Defaults to {@link DBX_CHIP_DEFAULT_TONE}.\n\nSet to `100` for fully opaque background.",
+          "description": "Background tone level for tonal appearance. Defaults to {@link DEFAULT_DBX_CHIP_TONE}.\n\nSet to `100` for fully opaque background.",
           "required": false
         }
       ],

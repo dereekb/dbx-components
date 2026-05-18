@@ -28,7 +28,7 @@ import { guestbookQuery } from '../guestbook/guestbook.query';
 import { guestbookEntryQuery } from '../guestbook/guestbookentry.query';
 
 // MARK: Create
-export const demoCreateModelMap: DemoOnCallCreateModelMap = {
+export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
   guestbook: guestbookCreate,
   //
   // Without Auth Examples
@@ -48,7 +48,7 @@ export const demoCreateModelMap: DemoOnCallCreateModelMap = {
 };
 
 // MARK: Read
-export const demoReadModelMap: DemoOnCallReadModelMap = {
+export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   systemState: onCallSpecifierHandler({
     exampleread: systemStateExampleread
   }),
@@ -62,7 +62,7 @@ export const demoReadModelMap: DemoOnCallReadModelMap = {
 };
 
 // MARK: Update
-export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
+export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   guestbook: onCallSpecifierHandler({
     subscribeToNotifications: guestbookSubscribeToNotifications
   }),
@@ -107,7 +107,7 @@ export const demoUpdateModelMap: DemoOnCallUpdateModelMap = {
 };
 
 // MARK: Delete
-export const demoDeleteModelMap: DemoOnCallDeleteModelMap = {
+export const DEMO_DELETE_MODEL_MAP: DemoOnCallDeleteModelMap = {
   guestbookEntry: guestbookEntryDelete,
   profile: profileDelete,
   storageFile: onCallSpecifierHandler({
@@ -120,18 +120,18 @@ export const demoDeleteModelMap: DemoOnCallDeleteModelMap = {
 };
 
 // MARK: Query
-export const demoQueryModelMap: DemoOnCallQueryModelMap = {
+export const DEMO_QUERY_MODEL_MAP: DemoOnCallQueryModelMap = {
   guestbook: guestbookQuery,
   guestbookEntry: guestbookEntryQuery
 };
 
 // MARK: Call
-export const demoCallModelMap: OnCallModelMap = {
-  create: onCallCreateModel(demoCreateModelMap),
-  read: onCallReadModel(demoReadModelMap),
-  update: onCallUpdateModel(demoUpdateModelMap),
-  delete: onCallDeleteModel(demoDeleteModelMap),
-  query: onCallQueryModel(demoQueryModelMap)
+export const DEMO_CALL_MODEL_MAP: OnCallModelMap = {
+  create: onCallCreateModel(DEMO_CREATE_MODEL_MAP),
+  read: onCallReadModel(DEMO_READ_MODEL_MAP),
+  update: onCallUpdateModel(DEMO_UPDATE_MODEL_MAP),
+  delete: onCallDeleteModel(DEMO_DELETE_MODEL_MAP),
+  query: onCallQueryModel(DEMO_QUERY_MODEL_MAP)
 };
 
 /**
@@ -143,7 +143,7 @@ export const demoCallModelMap: OnCallModelMap = {
  * Wires {@link oidcCallModelScopePreAssert} so that callers authenticated via
  * an OIDC bearer token must hold the matching `model.<call>` scope.
  */
-export const demoCallModelFn = onCallModel(demoCallModelMap, {
+export const demoCallModelFn = onCallModel(DEMO_CALL_MODEL_MAP, {
   preAssert: oidcCallModelScopePreAssert()
 });
 

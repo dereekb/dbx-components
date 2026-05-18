@@ -79,4 +79,4 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   return result;
 }
 
-export const modelFixtureListAppTool: DbxTool = { definition: TOOL, run };
+export const MODEL_FIXTURE_LIST_APP_TOOL: DbxTool = { definition: TOOL, run };

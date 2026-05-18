@@ -121,7 +121,7 @@ export class JwksService {
    * @returns The generated key pair result containing the stored JwksKey and signing key.
    */
   async generateKeyPair(): Promise<GenerateKeyPairResult> {
-    const { publicKey, privateKey } = generateKeyPairSync('rsa' as any, {
+    const { publicKey, privateKey } = generateKeyPairSync('rsa', {
       modulusLength: 2048,
       publicKeyEncoding: { type: 'spki', format: 'jwk' } as any,
       privateKeyEncoding: { type: 'pkcs8', format: 'jwk' } as any

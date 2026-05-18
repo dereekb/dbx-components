@@ -95,7 +95,7 @@ export function defaultProvideFirebaseServerStorageServiceSimple(): ProvideFireb
   return {
     provide: FirebaseServerStorageService,
     useFactory: (context: FirebaseStorageContext) => new FirebaseServerStorageService(context)
-  } as ProvideFirebaseServerStorageServiceSimple<FirebaseServerStorageService>;
+  };
 }
 
 export type ProvideFirebaseServerStorageService<T extends FirebaseServerStorageService> = FactoryProvider<T> | ProvideFirebaseServerStorageServiceSimple<T>;

@@ -26,7 +26,7 @@ import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../
   standalone: true,
   imports: [DbxFirebaseOAuthLoginViewComponent],
   template: `
-    <dbx-firebase-oauth-login-view [loginStateCase]="loginStateCase()" [error]="errorMessage()" (retryClick)="retry()">
+    <dbx-firebase-oauth-login-view [loginStateCase]="loginStateCaseSignal()" [error]="errorMessage()" (retryClick)="retry()">
       <ng-content />
     </dbx-firebase-oauth-login-view>
   `,
@@ -47,7 +47,7 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
   readonly submitting = signal(false);
   readonly errorMessage = signal<Maybe<string>>(null);
 
-  readonly loginStateCase = computed<OidcLoginStateCase>(() => {
+  readonly loginStateCaseSignal = computed<OidcLoginStateCase>(() => {
     let result: OidcLoginStateCase;
 
     if (this.submitting()) {
@@ -72,7 +72,7 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
   constructor() {
     // Auto-submit when user is logged in
     effect(() => {
-      if (this.loginStateCase() === 'user') {
+      if (this.loginStateCaseSignal() === 'user') {
         this._submitIdToken();
       }
     });

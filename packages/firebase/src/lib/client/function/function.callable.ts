@@ -114,7 +114,7 @@ export function convertHttpsCallableErrorToReadableError(error: unknown) {
 
   if (typeof error === 'object') {
     if (isClientFirebaseError(error) && (error as Partial<{ details: object }>).details != null) {
-      result = FirebaseServerError.fromFirebaseError(error as FirebaseError);
+      result = FirebaseServerError.fromFirebaseError(error);
     } else {
       result = toReadableError(error);
     }

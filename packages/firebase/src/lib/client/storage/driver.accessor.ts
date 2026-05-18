@@ -1,6 +1,6 @@
 import { type StorageListFilesPageToken, type FirebaseStorageAccessorDriver, type FirebaseStorageAccessorFile, type FirebaseStorageAccessorFolder, type StorageListFilesOptions, type StorageListFilesResult, type StorageListItemResult } from '../../common/storage/driver/accessor';
 import { firebaseStorageFilePathFromStorageFilePath, type StoragePath } from '../../common/storage/storage';
-import { type ConfigurableStorageMetadata, type StorageCustomMetadata, type StorageUploadTask, type StorageUploadTaskSnapshot, type FirebaseStorage, type StorageClientUploadBytesInput, type StorageDataString, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
+import { type ConfigurableStorageMetadata, type StorageCustomMetadata, type StorageUploadTask, type StorageUploadTaskSnapshot, type FirebaseStorage, type StorageDeleteFileOptions, type StorageUploadOptions } from '../../common/storage/types';
 import { type ListResult, list, type StorageReference, getDownloadURL, type FirebaseStorage as ClientFirebaseStorage, ref, getBytes, getMetadata, updateMetadata, uploadBytes, uploadBytesResumable, type UploadMetadata, uploadString, deleteObject, getBlob, type SettableMetadata, type UploadTask, type UploadTaskSnapshot } from 'firebase/storage';
 import { assertStorageUploadOptionsStringFormat, storageListFilesResultFactory, type StorageListFilesResultFactoryInput } from '../../common';
 import { cachedGetter, type ErrorInput, errorMessageContainsString, filterUndefinedValues, type Maybe } from '@dereekb/util';
@@ -130,13 +130,13 @@ export function firebaseStorageClientAccessorFile(storage: ClientFirebaseStorage
       const inputType = typeof input === 'string';
       const metadataOption: UploadMetadata | undefined = uploadMetadataFromStorageUploadOptions(options);
 
-      return inputType ? uploadString(ref, input as StorageDataString, assertStorageUploadOptionsStringFormat(options), metadataOption) : uploadBytes(ref, input as StorageClientUploadBytesInput, metadataOption);
+      return inputType ? uploadString(ref, input, assertStorageUploadOptionsStringFormat(options), metadataOption) : uploadBytes(ref, input, metadataOption);
     },
     getBytes: (maxDownloadSizeBytes) => getBytes(ref, maxDownloadSizeBytes).then((x) => new Uint8Array(x)),
     getBlob: (maxDownloadSizeBytes) => getBlob(ref, maxDownloadSizeBytes),
     uploadResumable: (input, options) => {
       const metadataOption: UploadMetadata | undefined = uploadMetadataFromStorageUploadOptions(options);
-      const uploadBytesTask = uploadBytesResumable(ref, input as StorageClientUploadBytesInput, metadataOption);
+      const uploadBytesTask = uploadBytesResumable(ref, input, metadataOption);
 
       function wrapSnapshot(currentSnapshot: UploadTaskSnapshot): StorageUploadTaskSnapshot<UploadTask> {
         const snapshot: StorageUploadTaskSnapshot<UploadTask> = {

@@ -91,7 +91,10 @@ export class DbxChipDirective {
    */
   readonly tone = input<Maybe<DbxColorTone>>();
 
-  readonly colorSignal = computed(() => this.color() ?? this.display()?.color);
+  readonly colorSignal = computed(() => {
+    const display = this.display();
+    return this.color() ?? display?.color;
+  });
 
   private readonly _configSignal = computed<Maybe<DbxColorConfig>>(() => {
     const value = this.colorSignal();
@@ -108,7 +111,11 @@ export class DbxChipDirective {
    */
   readonly colorStyleSignal = computed(() => this._configSignal()?.contrast ?? null);
 
-  readonly toneSignal = computed(() => this.tone() ?? this.display()?.tone ?? this._configSignal()?.tone ?? DEFAULT_DBX_CHIP_TONE);
+  readonly toneSignal = computed(() => {
+    const display = this.display();
+    const _config = this._configSignal();
+    return this.tone() ?? display?.tone ?? _config?.tone ?? DEFAULT_DBX_CHIP_TONE;
+  });
 
   readonly styleSignal = computed(() => {
     const display = this.display();
@@ -134,10 +141,11 @@ export class DbxChipDirective {
    * Only applied when a color is set.
    */
   readonly bgToneStyleSignal = computed(() => {
+    const tone = this.toneSignal();
     const color = this.colorSignal();
 
     if (color) {
-      return `${this.toneSignal()}%`;
+      return `${tone}%`;
     }
 
     return null;
@@ -149,7 +157,8 @@ export class DbxChipDirective {
    * an inline style binding (which would conflict with `[ngStyle]`).
    */
   readonly isTonalSignal = computed(() => {
+    const tone = this.toneSignal();
     const color = this.colorSignal();
-    return Boolean(color) && this.toneSignal() < 100;
+    return Boolean(color) && tone < 100;
   });
 }

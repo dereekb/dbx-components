@@ -8,7 +8,7 @@
  * block is fully missing) without crashing.
  */
 
-import { Node, Project, SyntaxKind, type ClassDeclaration, type InterfaceDeclaration, type ObjectLiteralExpression, type PropertyAssignment, type SourceFile, type TypeAliasDeclaration, type TypeNode, type VariableStatement } from 'ts-morph';
+import { Node, Project, SyntaxKind, type ClassDeclaration, type InterfaceDeclaration, type ObjectLiteralExpression, type SourceFile, type TypeAliasDeclaration, type TypeNode, type VariableStatement } from 'ts-morph';
 import type { ExtractedCrudConfigConst, ExtractedCrudConfigType, ExtractedField, ExtractedFile, ExtractedFunctionMap, ExtractedFunctionsClass, ExtractedParamsDecl, ExtractedParamsValidator, ExtractedResultDecl, ExtractedTypeAlias, ExtractedValidatorProperty, ExtractedVariable, MarkComment, ValidatorSource } from './types.js';
 
 // MARK: Entry
@@ -601,7 +601,7 @@ function extractValidatorProperties(initializer: Node): readonly ExtractedValida
 
 function parseValidatorProperty(prop: Node): ExtractedValidatorProperty | undefined {
   if (!Node.isPropertyAssignment(prop)) return undefined;
-  const propAssignment = prop as PropertyAssignment;
+  const propAssignment = prop;
   const rawName = propAssignment.getName();
   const stripped = rawName.replaceAll(/^['"`]|['"`]$/g, '');
   const optional = stripped.endsWith('?');

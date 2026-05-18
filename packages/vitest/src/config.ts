@@ -151,6 +151,8 @@ function resolveVitestSetupFile(name: string, rootDir: string, pathFromRoot: str
  *
  * @param options - Project-specific configuration options including project name, type, and paths.
  * @returns A Vitest {@link UserConfig} ready for use in `vitest.config.ts`.
+ * @throws {Error} When `type` is `'angular'` and `projectSpecificSetupFiles` is empty.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function createVitestConfig(options: DbxComponentsVitestPresetConfigOptions) {

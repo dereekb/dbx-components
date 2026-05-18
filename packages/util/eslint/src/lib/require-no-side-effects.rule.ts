@@ -107,7 +107,7 @@ export interface UtilRequireNoSideEffectsRuleDefinition {
  * declaration (other than the required impl-leading line comment on overloaded functions), and
  * when no JSDoc is present, creates a minimal one carrying both tags.
  */
-export const utilRequireNoSideEffectsRule: UtilRequireNoSideEffectsRuleDefinition = {
+export const UTIL_REQUIRE_NO_SIDE_EFFECTS_RULE: UtilRequireNoSideEffectsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

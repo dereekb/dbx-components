@@ -334,7 +334,7 @@ export function latLngBoundFunction(config?: LatLngBoundFunctionConfig): LatLngB
 
     if (Array.isArray(input)) {
       if (input.length === 2) {
-        const [sw, ne] = input as LatLngBoundTuple;
+        const [sw, ne] = input;
         bound = {
           sw: latLngPoint(sw),
           ne: latLngPoint(ne)
@@ -482,7 +482,7 @@ export function isWithinLatLngBoundFunction(bound: LatLngBound): IsWithinLatLngB
     return isLatLngPoint(boundOrPoint) ? isLatLngPointWithinLatLngBound(boundOrPoint, bound) : isLatLngBoundWithinLatLngBound(boundOrPoint, bound);
   }) as unknown as Writable<IsWithinLatLngBoundFunction>;
 
-  (fn as unknown as Writable<IsWithinLatLngBoundFunction>)._bound = bound;
+  fn._bound = bound;
 
   return fn as IsWithinLatLngBoundFunction;
 }
@@ -572,7 +572,7 @@ export function overlapsLatLngBoundFunction(bound: LatLngBound): OverlapsLatLngB
     return isLatLngPoint(boundOrPoint) ? isLatLngPointWithinLatLngBound(boundOrPoint, bound) : rectangleOverlapsRectangle(a, boundToRectangle(boundOrPoint));
   }) as unknown as Writable<IsWithinLatLngBoundFunction>;
 
-  (fn as unknown as Writable<IsWithinLatLngBoundFunction>)._bound = bound;
+  fn._bound = bound;
 
   return fn as IsWithinLatLngBoundFunction;
 }

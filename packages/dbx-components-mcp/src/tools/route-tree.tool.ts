@@ -142,7 +142,7 @@ function describeTitle(args: ParsedTreeArgs): string {
   return 'inline sources';
 }
 
-export const routeTreeTool: DbxTool = {
+export const ROUTE_TREE_TOOL: DbxTool = {
   definition: DBX_ROUTE_TREE_TOOL,
   run: runRouteTree
 };

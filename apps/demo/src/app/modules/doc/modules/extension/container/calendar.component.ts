@@ -325,7 +325,7 @@ export class DocExtensionCalendarComponent implements OnInit {
         };
       }
 
-      return x as DbxScheduleSelectionCalendarComponentConfig;
+      return x;
     }),
     shareReplay(1)
   );

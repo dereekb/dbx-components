@@ -127,7 +127,7 @@ export function runActionExamples(rawArgs: unknown): ToolResult {
   return result;
 }
 
-export const actionExamplesTool: DbxTool = {
+export const ACTION_EXAMPLES_TOOL: DbxTool = {
   definition: DBX_ACTION_EXAMPLES_TOOL,
   run: runActionExamples
 };

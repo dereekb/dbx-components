@@ -111,6 +111,8 @@ function runHandler(manifest: CliModelManifest, argv: ModelDecodeArgv): void {
  * @param rawKey - The Firestore key string.
  * @param manifest - The generated model manifest.
  * @returns The decoded key with leaf, ancestors, and any unresolved prefixes.
+ * @throws {CliError} When `rawKey` is empty or does not parse into an even number of `prefix/id` segments.
+ *
  * @__NO_SIDE_EFFECTS__
  */
 export function decodeFirestoreModelKey(rawKey: string, manifest: CliModelManifest): DecodedKey {

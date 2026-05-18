@@ -42,8 +42,8 @@ describe('DbxActionDirective', () => {
 
     fixture.detectChanges();
 
-    directive = testComponent.directive() as DbxActionDirective<number, number>;
-    handlerDirective = testComponent.handlerDirective() as DbxActionHandlerDirective<number, number>;
+    directive = testComponent.directive();
+    handlerDirective = testComponent.handlerDirective();
   });
 
   afterEach(() => {

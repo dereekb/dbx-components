@@ -270,6 +270,7 @@ export interface ResolveEffectiveSubsetInput {
  *
  * @param input - Missing entries plus optional subset, always-granted, and already-encountered lists.
  * @returns `granted` to add to the grant and `rejected` to record on the grant.
+ * @throws {HttpException} `400 BAD_REQUEST` when `requestedSubset` includes a value that is neither missing nor already-encountered.
  */
 export function resolveEffectiveSubset(input: ResolveEffectiveSubsetInput): { granted: string[]; rejected: string[] } {
   const { missing, requestedSubset, alwaysGranted = [], alreadyEncountered = [] } = input;

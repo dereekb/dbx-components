@@ -200,6 +200,7 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
    * Throws by default for providers that do not support linking.
    *
    * @returns Resolves when the link action completes.
+   * @throws {Error} Always, in the base implementation; subclasses override to perform the link.
    */
   handleLink(): Promise<unknown> {
     throw new Error(`Linking is not supported for the "${this.loginProvider}" provider.`);
@@ -210,6 +211,7 @@ export abstract class AbstractConfiguredDbxFirebaseLoginButtonDirective implemen
    * Uses the {@link LOGIN_METHOD_TYPE_TO_FIREBASE_PROVIDER_ID_MAP} to resolve the Firebase provider ID.
    *
    * @returns Resolves when the unlink action completes.
+   * @throws {Error} When `loginProvider` does not map to a known Firebase provider ID.
    */
   handleUnlink(): Promise<unknown> {
     const providerId = loginMethodTypeToFirebaseProviderId(this.loginProvider);

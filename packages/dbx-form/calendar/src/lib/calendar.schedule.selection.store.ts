@@ -502,7 +502,7 @@ export class DbxCalendarScheduleSelectionStore extends ComponentStore<CalendarSc
         currentValueWithTimezone = {
           dateScheduleRange: changeDateCellScheduleDateRangeToTimezone(x.dateScheduleRange, timezoneNormal),
           minMaxRange: x.minMaxRange
-        } as CalendarScheduleSelectionValue;
+        };
       }
 
       return currentValueWithTimezone;
@@ -752,7 +752,7 @@ export function updateStateWithFilter(currentState: CalendarScheduleSelectionSta
       }
     } else {
       enabledFilter = {
-        w: '89' as DateCellScheduleEncodedWeek,
+        w: '89',
         ex: exclusions as number[]
       };
     }
@@ -1431,7 +1431,7 @@ export function computeScheduleSelectionRangeAndExclusion(state: CalendarSchedul
 export function computeCalendarScheduleSelectionRange(state: CalendarScheduleSelectionState): Maybe<DateRange> {
   const dateFactory = dateCellTimingDateFactory({ startsAt: state.start, timezone: state.systemTimezone });
   const dateCellRange = computeCalendarScheduleSelectionDateCellRange(state);
-  const dateRange: Maybe<DateRange> = dateCellRange != null ? { start: dateFactory(dateCellRange.i), end: dateFactory(dateCellRange.to as number) } : undefined;
+  const dateRange: Maybe<DateRange> = dateCellRange != null ? { start: dateFactory(dateCellRange.i), end: dateFactory(dateCellRange.to) } : undefined;
   return dateRange;
 }
 

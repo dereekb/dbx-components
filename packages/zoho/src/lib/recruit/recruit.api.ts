@@ -295,7 +295,7 @@ export type ZohoRecruitUpdateRecordFunction = ZohoRecruitUpdateRecordLikeFunctio
  * ```
  */
 export function zohoRecruitUpdateRecord(context: ZohoRecruitContext): ZohoRecruitUpdateRecordFunction {
-  return updateRecordLikeFunction(context, '', 'PUT') as ZohoRecruitUpdateRecordFunction;
+  return updateRecordLikeFunction(context, '', 'PUT');
 }
 
 // MARK: Delete Record
@@ -554,7 +554,7 @@ export function zohoRecruitSearchRecords(context: ZohoRecruitContext): ZohoRecru
     return zohoRecruitUrlSearchParamsMinusModule(baseInput);
   }
 
-  return (<T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => context.fetchJson<ZohoRecruitSearchRecordsResponse<T>>(`/v2/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } })) as ZohoRecruitSearchRecordsFunction;
+  return <T = ZohoRecruitRecord>(input: ZohoRecruitSearchRecordsInput<T>) => context.fetchJson<ZohoRecruitSearchRecordsResponse<T>>(`/v2/${input.module}/search?${searchRecordsUrlSearchParams(input).toString()}`, zohoRecruitApiFetchJsonInput('GET')).then((x) => x ?? { data: [], info: { more_records: false } });
 }
 
 /**

@@ -666,5 +666,5 @@ export function performTasksFromFactoryInParallelFunction<I, K extends Primative
  * @__NO_SIDE_EFFECTS__
  */
 export function makeDefaultNonConcurrentTaskKeyFactory(): StringFactory<any> {
-  return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString()) as unknown as StringFactory<any>;
+  return stringFactoryFromFactory(incrementingNumberFactory(), (x) => x.toString());
 }

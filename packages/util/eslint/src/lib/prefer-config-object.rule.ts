@@ -224,7 +224,7 @@ function createPreferConfigObjectRule(config: PreferConfigObjectRuleConfig): Uti
  *
  * @see `dbx__note__typescript-programming` → Prefer Single Config Object
  */
-export const utilPreferConfigObjectRule: UtilPreferConfigObjectRuleDefinition = createPreferConfigObjectRule({
+export const UTIL_PREFER_CONFIG_OBJECT_RULE: UtilPreferConfigObjectRuleDefinition = createPreferConfigObjectRule({
   defaultMaxParams: DEFAULT_MAX_PARAMS_WARN,
   description: 'Prefer a single config object when a function takes more than two positional parameters.'
 });
@@ -237,7 +237,7 @@ export const utilPreferConfigObjectRule: UtilPreferConfigObjectRuleDefinition = 
  *
  * @see `dbx__note__typescript-programming` → Prefer Single Config Object
  */
-export const utilPreferConfigObjectHardRule: UtilPreferConfigObjectRuleDefinition = createPreferConfigObjectRule({
+export const UTIL_PREFER_CONFIG_OBJECT_HARD_RULE: UtilPreferConfigObjectRuleDefinition = createPreferConfigObjectRule({
   defaultMaxParams: DEFAULT_MAX_PARAMS_HARD,
   description: 'Reject function signatures with more than four positional parameters; require a single config object.'
 });
