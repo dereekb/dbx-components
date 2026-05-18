@@ -5,9 +5,9 @@ import prettierConfig from 'eslint-config-prettier';
 import jsdocPlugin from 'eslint-plugin-jsdoc';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import unicornPlugin from 'eslint-plugin-unicorn';
-import { nestjsEslintPlugin } from './dist/packages/nestjs/eslint/index.esm.js';
+import { NESTJS_ESLINT_PLUGIN } from './dist/packages/nestjs/eslint/index.esm.js';
 import { DBX_WEB_ESLINT_PLUGIN } from './dist/packages/dbx-web/eslint/index.esm.js';
-import { utilEslintPlugin } from './dist/packages/util/eslint/index.esm.js';
+import { UTIL_ESLINT_PLUGIN } from './dist/packages/util/eslint/index.esm.js';
 
 export default [
   importPlugin.flatConfigs.recommended,
@@ -71,8 +71,7 @@ export default [
       /**
        * Helps catch "single-return" violations trivial locations
        */
-      'no-else-return': ['error', { allowElseIf: false }],
-      'no-negated-condition': 'warn' // matches Sonar S7735; flags `if (!a) {…} else {…}` and `!a ? x : y`
+      'no-else-return': ['error', { allowElseIf: false }]
     }
   },
   {
@@ -90,7 +89,7 @@ export default [
   {
     files: ['**/*.ts'],
     plugins: {
-      'dereekb-nestjs': nestjsEslintPlugin
+      'dereekb-nestjs': NESTJS_ESLINT_PLUGIN
     },
     rules: {
       'dereekb-nestjs/require-nest-inject': 'error' // required: emitDecoratorMetadata is disabled; only flags @nestjs/common decorators
@@ -106,14 +105,15 @@ export default [
       'dereekb-dbx-web/require-complete-on-destroy': 'error',
       'dereekb-dbx-web/no-redundant-on-destroy': 'error',
       'dereekb-dbx-web/require-computed-signal-suffix': 'warn', // dbx__note__angular-conventions ANG-C2: computed() class properties end with Signal; raw input()/model() properties don't.
-      'dereekb-dbx-web/require-component-config-input': 'off' // NOTE(dbx-components-v14): re-enable at 'warn'. dbx__note__angular-conventions ANG-C1: consolidate >3 signal inputs into a single config input. Disabled here for now; flip to 'warn' for dbx-components v14 alongside the breaking-change refactor pass that consolidates wide-input components (DbxButtonComponent, DbxLoadingComponent, DbxForge*FieldComponent cluster, ~60 total) into a single config input.
+      'dereekb-dbx-web/require-component-config-input': 'off', // NOTE(dbx-components-v14): re-enable at 'warn'. dbx__note__angular-conventions ANG-C1: consolidate >3 signal inputs into a single config input. Disabled here for now; flip to 'warn' for dbx-components v14 alongside the breaking-change refactor pass that consolidates wide-input components (DbxButtonComponent, DbxLoadingComponent, DbxForge*FieldComponent cluster, ~60 total) into a single config input.
+      'dereekb-dbx-web/require-top-level-computed-signals': 'warn' // Angular `computed(...)` re-tracks dependencies on every run. Zero-arg signal reads nested inside if/else, ternary, short-circuit, switch, loop, or catch branches escape tracking when the other branch executes — hoist them to unconditional top-level reads before the branch so the computed sees them on every run.
     }
   },
   {
     files: ['**/*.ts'],
     ignores: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts'],
     plugins: {
-      'dereekb-util': utilEslintPlugin
+      'dereekb-util': UTIL_ESLINT_PLUGIN
     },
     rules: {
       'dereekb-util/require-no-side-effects': 'warn', // start at warn to surface any factories the annotation pass missed; promote to error after a clean lint sweep
@@ -153,6 +153,12 @@ export default [
       '@typescript-eslint/no-inferrable-types': 'off',
       'no-unused-vars': 'off',
       'no-extra-semi': 'error'
+    }
+  },
+  {
+    files: ['packages/vitest/**/*.ts'],
+    rules: {
+      'dereekb-util/require-constant-naming': 'off' // vitest matcher conventions: collections like `allDateMatchers` and individual `toBe*` matchers are intentionally camelCase to match the `expect.extend()` registration pattern.
     }
   },
   {
