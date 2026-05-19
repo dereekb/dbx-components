@@ -41,6 +41,9 @@
  * | dbx_model_fixture_validate_app      | Verification  | "Is every fixture<->instance pair forwarded?"          |
  * | dbx_model_fixture_scaffold          | Generation    | "Add a new fixture/instance triplet for model X"       |
  * | dbx_model_fixture_forward           | Generation    | "Add the missing Fixture forwarders for instance methods" |
+ * | dbx_model_test_convention           | Documentation | "Where does a new test for model X go? Pure-data lookup of the canonical path." |
+ * | dbx_model_test_list_app             | Discovery     | "Inventory + drift audit of every spec in this API app."     |
+ * | dbx_model_test_validate_app         | Verification  | "Enforce the model-test naming convention with severity-tagged violations." |
  * | dbx_model_test_tree                 | Discovery     | "Show me the describe/fixture structure of this spec file."  |
  * | dbx_model_test_search               | Discovery     | "Find every place this spec uses model X / chain Y."         |
  * | dbx_model_archetype_recommend       | Decision      | "Given a questionnaire, which archetype best fits this proposed model?" |
@@ -122,8 +125,11 @@ import { MODEL_FIXTURE_LOOKUP_TOOL } from './model-fixture-lookup.tool.js';
 import { createModelFixtureValidateAppTool } from './model-fixture-validate-app.tool.js';
 import { MODEL_FIXTURE_SCAFFOLD_TOOL } from './model-fixture-scaffold.tool.js';
 import { MODEL_FIXTURE_FORWARD_TOOL } from './model-fixture-forward.tool.js';
+import { MODEL_TEST_LIST_APP_TOOL } from './model-test-list-app.tool.js';
 import { MODEL_TEST_TREE_TOOL } from './model-test-tree.tool.js';
 import { MODEL_TEST_SEARCH_TOOL } from './model-test-search.tool.js';
+import { MODEL_TEST_CONVENTION_TOOL } from './model-test-convention.tool.js';
+import { MODEL_TEST_VALIDATE_APP_TOOL } from './model-test-validate-app.tool.js';
 import { ARCHETYPE_RECOMMEND_TOOL } from './archetype-recommend.tool.js';
 import { ARCHETYPE_LOOKUP_TOOL } from './archetype-lookup.tool.js';
 import { ARCHETYPE_SEARCH_TOOL } from './archetype-search.tool.js';
@@ -222,6 +228,9 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   MODEL_FIXTURE_LOOKUP_TOOL,
   MODEL_FIXTURE_SCAFFOLD_TOOL,
   MODEL_FIXTURE_FORWARD_TOOL,
+  MODEL_TEST_CONVENTION_TOOL,
+  MODEL_TEST_LIST_APP_TOOL,
+  MODEL_TEST_VALIDATE_APP_TOOL,
   MODEL_TEST_TREE_TOOL,
   MODEL_TEST_SEARCH_TOOL,
   ARCHETYPE_RECOMMEND_TOOL,

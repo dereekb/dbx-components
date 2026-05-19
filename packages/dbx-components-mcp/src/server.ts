@@ -77,6 +77,7 @@ Model-extension validators (walk a downstream app to verify wiring):
 - storagefile_m, notification_m, system_m — *_validate_app, *_list_app, *_validate_folder
 - asset — *_validate_app, *_list_app, *_validate_folder, *_scaffold (component-side \`assets.ts\` + Angular front-end wiring)
 - model_fixture — list/lookup/validate/scaffold/forward an app's \`src/test/fixture.ts\` (TestContextFixture/Instance triplets)
+- model_test — \`dbx_model_test_list_app\` enumerates every \`<apiDir>/src/app/function/<group>/*.spec.ts\`, classifies them against the \`<group>.crud[.<sub>].spec.ts\` / \`<group>.scenario[.<sub>].spec.ts\` convention, and renders the canonical paths for new tests (answers "where do I add this test?"). \`dbx_model_test_tree\` / \`dbx_model_test_search\` operate on a single known spec file.
 
 Resource URIs are namespaced by domain:
 - dbx://form/fields[/{slug}|/produces/{produces}|/tier/{tier}|/array-output/{arrayOutput}]

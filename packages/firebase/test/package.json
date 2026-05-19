@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/firebase/test",
-  "version": "13.11.16",
+  "version": "13.11.17",
   "peerDependencies": {
-    "@dereekb/date": "13.11.16",
-    "@dereekb/firebase": "13.11.16",
-    "@dereekb/model": "13.11.16",
-    "@dereekb/rxjs": "13.11.16",
-    "@dereekb/util": "13.11.16",
+    "@dereekb/date": "13.11.17",
+    "@dereekb/firebase": "13.11.17",
+    "@dereekb/model": "13.11.17",
+    "@dereekb/rxjs": "13.11.17",
+    "@dereekb/util": "13.11.17",
     "@firebase/rules-unit-testing": "5.0.0",
     "date-fns": "^4.1.0",
     "firebase": "^12.12.1",

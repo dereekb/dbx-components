@@ -1,5 +1,41 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { addCommentToCard, addLabelToCard, addMemberToCard, createBoard, createCard, createList, createWebhook, deleteBoard, deleteCard, deleteWebhook, getBoard, getCard, getList, getMe, getMember, getWebhook, listBoardCards, listBoardLabels, listBoardLists, listBoardMembers, listCardActions, listCardsInList, listWebhooksForToken, trelloFactory, updateBoard, updateCard, updateList, updateWebhook, type Trello, type TrelloContext } from '@dereekb/trello';
+import {
+  addAttachmentToCard,
+  addCommentToCard,
+  addLabelToCard,
+  addMemberToCard,
+  createBoard,
+  createCard,
+  createList,
+  createWebhook,
+  deleteAttachmentFromCard,
+  deleteBoard,
+  deleteCard,
+  deleteWebhook,
+  downloadCardAttachment,
+  getBoard,
+  getCard,
+  getCardAttachment,
+  getList,
+  getMe,
+  getMember,
+  getWebhook,
+  listBoardCards,
+  listBoardLabels,
+  listBoardLists,
+  listBoardMembers,
+  listCardActions,
+  listCardAttachments,
+  listCardsInList,
+  listWebhooksForToken,
+  trelloFactory,
+  updateBoard,
+  updateCard,
+  updateList,
+  updateWebhook,
+  type Trello,
+  type TrelloContext
+} from '@dereekb/trello';
 import { TrelloServiceConfig } from './trello.config';
 
 @Injectable()
@@ -99,6 +135,27 @@ export class TrelloApi {
 
   get listCardActions() {
     return listCardActions(this.trelloContext);
+  }
+
+  // MARK: Card Attachments
+  get listCardAttachments() {
+    return listCardAttachments(this.trelloContext);
+  }
+
+  get getCardAttachment() {
+    return getCardAttachment(this.trelloContext);
+  }
+
+  get addAttachmentToCard() {
+    return addAttachmentToCard(this.trelloContext);
+  }
+
+  get deleteAttachmentFromCard() {
+    return deleteAttachmentFromCard(this.trelloContext);
+  }
+
+  get downloadCardAttachment() {
+    return downloadCardAttachment(this.trelloContext);
   }
 
   // MARK: Members

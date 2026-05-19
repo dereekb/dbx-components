@@ -18,6 +18,8 @@
  *   8. `dbx_asset_validate_app` — only when `webDir` is supplied
  *      (the asset cluster targets the Angular front-end app, which is
  *      a different package from the API app).
+ *   9. `dbx_model_test_validate_app` — model-test convention audit
+ *      (filename drift + missing baseline CRUD specs per model group).
  *
  * Returns a severity-grouped report with each finding tagged by source
  * cluster, code, file/line, and (when the rule catalog has an entry) a
@@ -42,11 +44,14 @@ import { inspectFolder as inspectSystemFolder, validateSystemFolders } from './s
 import { checkManifestCompositeKeyFrom, checkManifestIdentityDuplicates } from './model-validate/manifest-rules.js';
 import { inspectAppAssets, validateAppAssets } from './dbx-asset-validate-app/index.js';
 import { validateAppModelApi } from './model-api-validate-app/index.js';
+import { validateModelTestApp } from './model-test-validate-app/index.js';
+import { discoverSpecFilesByGroup } from './model-test-shared/index.js';
+import { extractComponentModels } from './model-list-component/extract.js';
 import { FIREBASE_MODELS } from '../registry/firebase-models.js';
 import { getDownstreamCatalog } from '../registry/downstream-models-runtime.js';
 import { buildModelFirebaseIndexManifest, createModelFirebaseIndexRegistryFromEntries, generateFirestoreIndexesJson, toModelFirebaseIndexEntryInfo, type FirestoreIndexesJson } from '@dereekb/dbx-cli/firestore-indexes';
 
-const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest' | 'model_api' | 'firebase_index' | 'asset'";
+const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest' | 'model_api' | 'firebase_index' | 'asset' | 'model_test'";
 
 const AppValidateArgsType = type({
   componentDir: 'string',
@@ -57,12 +62,12 @@ const AppValidateArgsType = type({
   'skip?': `(${Cluster})[]`
 });
 
-type ClusterName = 'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest' | 'model_api' | 'firebase_index' | 'asset';
+type ClusterName = 'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest' | 'model_api' | 'firebase_index' | 'asset' | 'model_test';
 
 const TOOL: Tool = {
   name: 'dbx_app_validate',
   description: [
-    'Aggregate validator for a downstream `-firebase` component + API app pair. Runs every per-domain validator (`storagefile_m`, `notification_m`, model-folder, `system_m`, fixture, manifest, `model_api`, `firebase_index`, optional `asset`) and returns one severity-grouped report.',
+    'Aggregate validator for a downstream `-firebase` component + API app pair. Runs every per-domain validator (`storagefile_m`, `notification_m`, model-folder, `system_m`, fixture, manifest, `model_api`, `firebase_index`, `model_test`, optional `asset`) and returns one severity-grouped report.',
     '',
     'The `model_folder` cluster includes both folder-structure findings (canonical 5-file layout) and per-file content findings forwarded from `dbx_model_validate` — including the JSDoc-tag rules (`MODEL_IDENTITY_NOT_TAGGED`, `MODEL_GROUP_INTERFACE_MISSING_TAG`, `MODEL_INTERFACE_MISSING_TAG`) that flag downstream apps where `firestoreModelIdentity(...)` calls lack catalog tagging.',
     '',
@@ -74,6 +79,8 @@ const TOOL: Tool = {
     '',
     'The `asset` cluster runs only when `webDir` is supplied — it points at the Angular front-end (e.g. `apps/demo`), which is a different package from the API app. Without `webDir` the cluster is skipped.',
     '',
+    'The `model_test` cluster audits the model-test convention: filenames under `<apiDir>/src/app/function/<group>/` must be `<group>.crud[.<sub>].spec.ts` or `<group>.scenario[.<sub>].spec.ts`, and every model group on the component side must have a baseline `<group>.crud.spec.ts`. Emits `TEST_FILE_DRIFT_RENAME`, `TEST_FILE_MISSING_BUCKET`, `TEST_FILE_NON_GROUP_PLACEMENT`, and `MODEL_GROUP_MISSING_CRUD_SPEC` — all warnings.',
+    '',
     'Each finding is tagged with its source cluster, code, file/line, and canonical-fix line (when the rule catalog has an entry).',
     '',
     'Inputs:',
@@ -82,7 +89,7 @@ const TOOL: Tool = {
     '- `webDir` (optional): relative path to the Angular front-end app (e.g. `apps/demo`). Required for the `asset` cluster.',
     '- `indexesFile` (optional): relative path to `firestore.indexes.json` for the `firebase_index` cluster. Defaults to `firestore.indexes.json` at the workspace root.',
     '- `format` (optional): `markdown` (default) or `json`.',
-    '- `skip` (optional): clusters to opt out of (`storagefile_m`, `notification_m`, `model_folder`, `system_m`, `fixture`, `manifest`, `model_api`, `firebase_index`, `asset`).',
+    '- `skip` (optional): clusters to opt out of (`storagefile_m`, `notification_m`, `model_folder`, `system_m`, `fixture`, `manifest`, `model_api`, `firebase_index`, `asset`, `model_test`).',
     '',
     'Use `dbx_explain_rule code="<code>"` to dig into any finding.'
   ].join('\n'),
@@ -96,7 +103,7 @@ const TOOL: Tool = {
       format: { type: 'string', enum: ['markdown', 'json'], description: 'Output format. Defaults to markdown.' },
       skip: {
         type: 'array',
-        items: { type: 'string', enum: ['storagefile_m', 'notification_m', 'model_folder', 'system_m', 'fixture', 'manifest', 'model_api', 'firebase_index', 'asset'] },
+        items: { type: 'string', enum: ['storagefile_m', 'notification_m', 'model_folder', 'system_m', 'fixture', 'manifest', 'model_api', 'firebase_index', 'asset', 'model_test'] },
         description: 'Clusters to opt out of.'
       }
     },
@@ -216,6 +223,7 @@ async function runAllClusters(input: RunAllClustersInput): Promise<void> {
   await runModelApi(componentApiCtx);
   await runFirebaseIndex({ ...componentOnlyCtx, indexesAbs, indexesRel });
   await runAsset({ ...componentOnlyCtx, webAbs, webRel: parsed.webDir });
+  await runModelTest(componentApiCtx);
 }
 
 interface FanOutCtx {
@@ -461,6 +469,28 @@ async function runAsset(ctx: AssetCtx): Promise<void> {
     }
   } catch (err) {
     ctx.clusterErrors.push({ cluster: 'asset', message: err instanceof Error ? err.message : String(err) });
+  }
+}
+
+async function runModelTest(ctx: ComponentApiCtx): Promise<void> {
+  if (ctx.skip.has('model_test')) {
+    ctx.skipped.push('model_test');
+    return;
+  }
+  try {
+    const specCatalog = await discoverSpecFilesByGroup({ apiAbs: ctx.apiAbs, apiRel: ctx.apiRel });
+    const componentExtraction = await extractComponentModels(ctx.componentAbs);
+    const result = validateModelTestApp({
+      componentDir: ctx.componentRel,
+      apiDir: ctx.apiRel,
+      specCatalog,
+      componentExtraction
+    });
+    for (const v of result.violations) {
+      ctx.findings.push(toFinding({ cluster: 'model_test', code: v.code, severity: v.severity, message: v.message, file: v.file, line: undefined }));
+    }
+  } catch (err) {
+    ctx.clusterErrors.push({ cluster: 'model_test', message: err instanceof Error ? err.message : String(err) });
   }
 }
 

@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/date",
-  "version": "13.11.16",
+  "version": "13.11.17",
   "sideEffects": false,
   "peerDependencies": {
-    "@dereekb/model": "13.11.16",
-    "@dereekb/rxjs": "13.11.16",
-    "@dereekb/util": "13.11.16",
+    "@dereekb/model": "13.11.17",
+    "@dereekb/rxjs": "13.11.17",
+    "@dereekb/util": "13.11.17",
     "@vvo/tzdb": "^6.198.0",
     "arktype": "^2.2.0",
     "date-fns": "^4.1.0",
@@ -15,6 +15,6 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@dereekb/rxjs": "13.11.16"
+    "@dereekb/rxjs": "13.11.17"
   }
 }

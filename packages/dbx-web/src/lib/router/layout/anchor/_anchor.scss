@@ -23,9 +23,25 @@
     height: 40px; // match the height of the icon
   }
 
+  /// @dbx-utility link
+  /// @intent clickable link affordance — underlined text with pointer cursor; pair with `[dbxTextColor]` or a text color utility for the link color. NOTE: `<dbx-anchor>` renders an inner `<a class="dbx-anchor-a">` with `text-decoration: none`, so apply this class to the projected content (e.g. a `<span>` inside the anchor) rather than the `<dbx-anchor>` host.
+  /// @role interaction
+  /// @see-also link-hover, dbx-u
   .dbx-link {
     text-decoration: underline;
     cursor: pointer;
+  }
+
+  /// @dbx-utility link-hover
+  /// @intent clickable link affordance with hover-only underline — pointer cursor always, underline only on hover; pair with `[dbxTextColor]` or a text color utility for the link color. NOTE: `<dbx-anchor>` renders an inner `<a class="dbx-anchor-a">` with `text-decoration: none`, so apply this class to the projected content (e.g. a `<span>` inside the anchor) rather than the `<dbx-anchor>` host.
+  /// @role interaction
+  /// @see-also link, dbx-u
+  .dbx-link-hover {
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   .dbx-link-spacer:before {

@@ -1548,6 +1548,50 @@
       ]
     },
     {
+      "slug": "link",
+      "selector": ".dbx-link",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/router/layout/anchor/_anchor.scss",
+      "line": 30,
+      "declarations": [
+        {
+          "property": "text-decoration",
+          "value": "underline"
+        },
+        {
+          "property": "cursor",
+          "value": "pointer"
+        }
+      ],
+      "role": "interaction",
+      "intent": "clickable link affordance — underlined text with pointer cursor; pair with `[dbxTextColor]` or a text color utility for the link color. NOTE: `<dbx-anchor>` renders an inner `<a class=\"dbx-anchor-a\">` with `text-decoration: none`, so apply this class to the projected content (e.g. a `<span>` inside the anchor) rather than the `<dbx-anchor>` host.",
+      "seeAlso": [
+        "link-hover",
+        "dbx-u"
+      ]
+    },
+    {
+      "slug": "link-hover",
+      "selector": ".dbx-link-hover",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/router/layout/anchor/_anchor.scss",
+      "line": 39,
+      "declarations": [
+        {
+          "property": "cursor",
+          "value": "pointer"
+        }
+      ],
+      "role": "interaction",
+      "intent": "clickable link affordance with hover-only underline — pointer cursor always, underline only on hover; pair with `[dbxTextColor]` or a text color utility for the link color. NOTE: `<dbx-anchor>` renders an inner `<a class=\"dbx-anchor-a\">` with `text-decoration: none`, so apply this class to the projected content (e.g. a `<span>` inside the anchor) rather than the `<dbx-anchor>` host.",
+      "seeAlso": [
+        "link",
+        "dbx-u"
+      ]
+    },
+    {
       "slug": "list-card-items-list",
       "selector": ".dbx-list-card-items-list",
       "source": "@dereekb/dbx-web",

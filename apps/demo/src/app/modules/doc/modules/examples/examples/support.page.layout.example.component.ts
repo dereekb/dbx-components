@@ -73,14 +73,20 @@ const SUPPORT_PAGE_TOPICS: ReadonlyArray<SupportPageTopicGroup> = [
  * `dbx-grow-button` + `dbx-button-big` utilities for full-width / tall
  * presentation. Topic-card avatars are `<dbx-icon-tile [round]>` with
  * `[dbxColor]="'primary'"` + `[dbxColorTone]="18"` for the tonal swatch,
- * and topic links use `[dbxTextColor]="'primary'"` instead of hand-rolled
- * color rules.
+ * and topic links use `[dbxTextColor]="'primary'"` for the link color
+ * with a `<span class="dbx-link-hover">` wrapper around the projected
+ * label for the hover-only-underline link affordance (the `.dbx-link-hover`
+ * / `.dbx-link` utilities pair with `.dbx-u` — pointer cursor always,
+ * underline on hover for `.dbx-link-hover`, always underlined for `.dbx-link`).
+ * The class lives on the projected `<span>` rather than the `<dbx-anchor>`
+ * host because `dbx-anchor`'s internal `<a class="dbx-anchor-a">` bakes in
+ * `text-decoration: none` and would strip a host-level `.dbx-link`.
  *
  * @dbxDocsUiExample
  * @dbxDocsUiExampleSlug layout-support-page
  * @dbxDocsUiExampleCategory layout
  * @dbxDocsUiExampleSummary Static support landing page — outlined hero card with a dbx-button CTA and search input plus a responsive 3-column grid of topic mat-cards whose rows are dbx-anchor onClick handlers that pop a snackbar.
- * @dbxDocsUiExampleRelated mat-card, dbx-button, dbx-anchor, dbx-icon-tile, mat-form-field, mat-snack-bar
+ * @dbxDocsUiExampleRelated mat-card, dbx-button, dbx-anchor, dbx-icon-tile, mat-form-field, mat-snack-bar, dbx-link, dbx-link-hover
  */
 @Component({
   selector: 'doc-support-page-layout-example',
@@ -157,11 +163,31 @@ const SUPPORT_PAGE_TOPICS: ReadonlyArray<SupportPageTopicGroup> = [
           <code>&lt;li&gt;</code>
           so the browser's default disc marker supplies the bullet, and topic links use
           <code>[dbxTextColor]="'primary'"</code>
-          (the
-          <code>&lt;a&gt;</code>
-          inside
+          for the link color plus a
+          <code>&lt;span class="dbx-link-hover"&gt;</code>
+          wrapper around the projected label for the hover-only-underline affordance. The
+          <code>.dbx-link-hover</code>
+          /
+          <code>.dbx-link</code>
+          utilities pair with
+          <code>.dbx-u</code>
+          —
+          <code>.dbx-link</code>
+          is always underlined,
+          <code>.dbx-link-hover</code>
+          underlines on hover, both keep a pointer cursor. The class lives on the projected
+          <code>&lt;span&gt;</code>
+          rather than the
+          <code>&lt;dbx-anchor&gt;</code>
+          host because
           <code>dbx-anchor</code>
-          already inherits color and is text-decoration-none by default).
+          's internal
+          <code>&lt;a class="dbx-anchor-a"&gt;</code>
+          bakes in
+          <code>text-decoration: none</code>
+          and would strip a host-level
+          <code>.dbx-link</code>
+          .
         </p>
         <p>
           Each topic row supplies a
@@ -209,7 +235,9 @@ const SUPPORT_PAGE_TOPICS: ReadonlyArray<SupportPageTopicGroup> = [
                   <ul class="doc-support-topic-links">
                     @for (link of group.links; track link.label) {
                       <li class="dbx-pb2">
-                        <dbx-anchor [dbxTextColor]="'primary'" [anchor]="anchorFor(link)">{{ link.label }}</dbx-anchor>
+                        <dbx-anchor [dbxTextColor]="'primary'" [anchor]="anchorFor(link)">
+                          <span class="dbx-link-hover">{{ link.label }}</span>
+                        </dbx-anchor>
                       </li>
                     }
                   </ul>
