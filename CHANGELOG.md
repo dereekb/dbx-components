@@ -1,3 +1,19 @@
+## [13.11.17](https://github.com/dereekb/dbx-components/compare/v13.11.16-dev...v13.11.17) (2026-05-19)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([4959fb1d](https://github.com/dereekb/dbx-components/commit/4959fb1d22478c1b7ad914f0be5c18546ce2ca0e))
+
+
+### Code Refactoring
+
+- bumped ng-forge to 0.9.0-next.11 ([3ff5cf36](https://github.com/dereekb/dbx-components/commit/3ff5cf36af96b09a20164ec4eba38dd9a2095601))
+- **dbx-components-mcp:** add dbx_model_test_list_app tool ([d9db3a2d](https://github.com/dereekb/dbx-components/commit/d9db3a2d3b87ee2100f415c37e8581ad9f492444))
+- **dbx-components-mcp:** add model-test convention + validator ([8d69b57e](https://github.com/dereekb/dbx-components/commit/8d69b57e3b63a989910f6d8d34a4ae489c4a8222))
+- **dbx-web:** register .dbx-link, add .dbx-link-hover ([bc5e8f0c](https://github.com/dereekb/dbx-components/commit/bc5e8f0c3bc5f9d073c3376cc6f56552e91bf00a))
+- **trello:** added card attachment crud + download ([83bd5749](https://github.com/dereekb/dbx-components/commit/83bd574904a362ae76beeaf3a7d5b57ba7db34f5))
+
 ## [13.11.16](https://github.com/dereekb/dbx-components/compare/v13.11.15-dev...v13.11.16) (2026-05-19)
 
 

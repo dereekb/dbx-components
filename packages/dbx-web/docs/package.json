@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/dbx-web/docs",
-  "version": "13.11.16",
+  "version": "13.11.17",
   "peerDependencies": {
     "@angular/common": "21.2.11",
     "@angular/core": "21.2.11",
-    "@dereekb/dbx-web": "13.11.16",
-    "@dereekb/util": "13.11.16",
-    "@dereekb/vitest": "13.11.16"
+    "@dereekb/dbx-web": "13.11.17",
+    "@dereekb/util": "13.11.17",
+    "@dereekb/vitest": "13.11.17"
   }
 }
