@@ -8,9 +8,13 @@
  * "where to add a new test" block with the two canonical paths, plus a
  * consolidated drift report at the end.
  *
- * This is the answer to "where should I create a new test for model X?":
- * the caller sees what already exists, the canonical filenames for the
- * common buckets, and any files that need renaming — in one response.
+ * Inventory + drift audit for an entire API app. Companion tools answer
+ * narrower variants of the same question:
+ *  - `dbx_model_test_convention` — pure-data lookup of the canonical path
+ *    for a single group (no disk walk).
+ *  - `dbx_model_test_validate_app` — enforces the convention with
+ *    severity-tagged violations + remediation; this tool only surfaces
+ *    drift as a footer block.
  */
 
 import { resolve } from 'node:path';
@@ -29,7 +33,7 @@ const ListAppArgsType = type({
 const TOOL: Tool = {
   name: 'dbx_model_test_list_app',
   description: [
-    'Walk an API app\'s `src/app/function/<group>/` tree and list every `*.spec.ts`, grouped by model group and classified against the spec-file naming convention. Use this to answer **"where should I create a new test for model X?"** — each group is followed by a `Where to add a new test` block with the canonical paths for both buckets, and any files off-convention surface in a consolidated drift report.',
+    'Walk an API app\'s `src/app/function/<group>/` tree and list every `*.spec.ts`, grouped by model group and classified against the spec-file naming convention. Use this for an **inventory + drift audit** of an entire API app — each group is followed by a `Where to add a new test` block, and any files off-convention surface in a consolidated drift report. For the focused **"where does a new test for model X go?"** question, prefer `dbx_model_test_convention` (no disk walk). For severity-tagged violations + CI-style enforcement, use `dbx_model_test_validate_app`.',
     '',
     'Canonical naming:',
     '- `<group>.crud.spec.ts` — non-scenario CRUD tests for the function map.',
@@ -47,7 +51,7 @@ const TOOL: Tool = {
     '- `group` (optional): restrict the listing to a single model group.',
     '- `format` (optional): `markdown` (default) or `json`.',
     '',
-    "Paths escaping the server cwd are rejected. For navigating a specific spec file's structure, follow up with `dbx_model_test_tree` / `dbx_model_test_search`."
+    'Paths escaping the server cwd are rejected. For navigating a specific spec file\'s structure, follow up with `dbx_model_test_tree` / `dbx_model_test_search`. For just "give me the canonical path for model X", use `dbx_model_test_convention`.'
   ].join('\n'),
   inputSchema: {
     type: 'object',

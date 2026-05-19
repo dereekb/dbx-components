@@ -648,6 +648,70 @@
     ]
   },
   {
+    "code": "MODEL_GROUP_MISSING_CRUD_SPEC",
+    "source": "dbx_model_test_validate_app",
+    "severity": "warning",
+    "title": "A model group declared on the component side has no `<group>.crud.spec.ts`",
+    "whatItFlags": "A model group declared on the component side has no `<group>.crud.spec.ts`\nfile on the API side. Every model group is expected to have at least a\nbaseline CRUD spec exercising create / read / update / delete plus\npermission paths. Scenario specs are optional.",
+    "whenItApplies": "Every model group enumerated from the `-firebase` component (`<componentDir>/src/lib/model/<group>/`) that doesn't have a matching `<group>.crud.spec.ts` under `<apiDir>/src/app/function/<group>/`.",
+    "whenItDoesNotApply": "Reserved folders (`system`, `notification`, `storagefile`) — those follow distinct test layouts. Cross-group integration tests likewise don't satisfy this rule for their host group.",
+    "canonicalFix": "Add `<apiDir>/src/app/function/<group>/<group>.crud.spec.ts` covering the CRUD function map for the group. Use `dbx_model_test_convention` to fetch the canonical path.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_test_convention"
+      }
+    ]
+  },
+  {
+    "code": "TEST_FILE_DRIFT_RENAME",
+    "source": "dbx_model_test_validate_app",
+    "severity": "warning",
+    "title": "Spec filename uses a `crud` / `scenario` segment that is not directly",
+    "whatItFlags": "Spec filename uses a `crud` / `scenario` segment that is not directly\nafter the group name (e.g. `worker.payroll.scenario.spec.ts` or\n`worker.pay.crud.spec.ts`). The canonical form places the bucket\nmarker immediately after the group: `<group>.scenario.<sub>.spec.ts`\nor `<group>.crud.<sub>.spec.ts`.",
+    "whenItApplies": "Any spec file under `<apiDir>/src/app/function/<group>/` where the `crud` / `scenario` segment is not the first non-group segment.",
+    "whenItDoesNotApply": "Canonical subgroup names like `job.crud.requirement.spec.ts` — there `crud` is already first.",
+    "canonicalFix": "Rename to the canonical `<group>.<bucket>.<sub>.spec.ts` form. The validator emits the recommended filename as part of the violation message.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_test_convention"
+      }
+    ]
+  },
+  {
+    "code": "TEST_FILE_MISSING_BUCKET",
+    "source": "dbx_model_test_validate_app",
+    "severity": "warning",
+    "title": "Spec filename is missing a `crud` / `scenario` bucket segment entirely",
+    "whatItFlags": "Spec filename is missing a `crud` / `scenario` bucket segment entirely\n(e.g. `worker.system.spec.ts`). The validator can't tell whether the\nfile documents CRUD behavior or a workflow scenario — the author must\nchoose one.",
+    "whenItApplies": "Spec files where no segment after the group name is `crud` or `scenario`.",
+    "whenItDoesNotApply": "Files that already have a `crud` / `scenario` marker anywhere in the name (those surface `TEST_FILE_DRIFT_RENAME` instead when misplaced).",
+    "canonicalFix": "Decide whether the file's tests are CRUD-flavored or scenario-flavored, then rename to `<group>.crud.<sub>.spec.ts` or `<group>.scenario.<sub>.spec.ts`. Default to `scenario` when in doubt.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_test_convention"
+      }
+    ]
+  },
+  {
+    "code": "TEST_FILE_NON_GROUP_PLACEMENT",
+    "source": "dbx_model_test_validate_app",
+    "severity": "warning",
+    "title": "Spec file's first filename segment doesn't match its parent folder",
+    "whatItFlags": "Spec file's first filename segment doesn't match its parent folder\n(e.g. `storagefile.scenario.jobrequirement.spec.ts` placed under the\n`job/` folder). Tests should live in the folder of the model group\nnamed by their filename prefix.",
+    "whenItApplies": "Any `.spec.ts` whose first dot-separated segment differs from the immediate parent folder name.",
+    "whenItDoesNotApply": "Spec files that intentionally test cross-model integration — move those to the primary group's folder and rename so the prefix matches, or keep them as scenario sub-buckets of one side.",
+    "canonicalFix": "Move the file into `<apiDir>/src/app/function/<first-segment>/` so the prefix matches the folder, or rename the file's first segment to match the current folder.",
+    "seeAlso": [
+      {
+        "kind": "tool",
+        "target": "dbx_model_test_convention"
+      }
+    ]
+  },
+  {
     "code": "FILE_GROUP_INTERFACE_AFTER_MODEL",
     "source": "dbx_model_validate",
     "severity": "error",

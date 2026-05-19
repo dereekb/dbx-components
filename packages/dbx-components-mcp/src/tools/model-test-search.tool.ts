@@ -35,7 +35,7 @@ const TOOL: Tool = {
   description: [
     'Search one API `.spec.ts` file for `describe`s, `it`s, or `<prefix><Model>Context(...)` fixture calls matching a single criterion. Each hit is returned with the full describe path and fixture chain leading to it, plus its line range, so callers can jump straight to the right block.',
     '',
-    'For **"where should I add a new test for model X?"** start with `dbx_model_test_list_app` — it enumerates every spec file in the app, classifies them against the `<group>.crud[.sub].spec.ts` / `<group>.scenario[.sub].spec.ts` convention, and renders the canonical paths for new tests.',
+    'For **"where should I add a new test for model X?"** call `dbx_model_test_convention` (pure-data lookup of the canonical path). For an inventory + drift audit of the whole app, use `dbx_model_test_list_app`. For severity-tagged enforcement, use `dbx_model_test_validate_app`.',
     '',
     'Provide exactly one of:',
     '- `model`: bare PascalCase model name (e.g. `Job`) — matches every `<prefix>JobContext(...)` site.',

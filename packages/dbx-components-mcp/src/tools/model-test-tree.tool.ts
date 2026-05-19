@@ -36,7 +36,7 @@ const TOOL: Tool = {
   description: [
     'Parse one API `.spec.ts` file and return its structural skeleton — nested `describe`/`it` calls, `<prefix><Model>Context(...)` fixture chains, locally-defined helper-describe functions, and the wrapper calls between them. Each node carries its 1-based line range so callers can navigate by line offset instead of grepping.',
     '',
-    'For **"where should I add a new test for model X?"** start with `dbx_model_test_list_app` instead — it lists every spec under the app, classifies them against the `<group>.crud[.sub].spec.ts` / `<group>.scenario[.sub].spec.ts` convention, and renders the canonical paths for new tests.',
+    'For **"where should I add a new test for model X?"** call `dbx_model_test_convention` (pure-data lookup of the canonical path). For an inventory + drift audit of the whole app, use `dbx_model_test_list_app`. For severity-tagged enforcement, use `dbx_model_test_validate_app`.',
     '',
     'Provide:',
     '- `specFile`: relative path to the `.spec.ts` file (e.g. `apps/hellosubs-api/src/app/function/job/job.crud.instruction.spec.ts`).',

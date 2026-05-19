@@ -44,6 +44,7 @@ const CLUSTER_TO_SOURCE = {
   'model-api-validate-app': 'dbx_model_api_validate_app',
   'model-firebase-index-validate-app': 'dbx_model_firebase_index_validate_app',
   'model-fixture-shared': 'dbx_model_fixture_validate_app',
+  'model-test-validate-app': 'dbx_model_test_validate_app',
   'storagefile-m-validate-app': 'dbx_storagefile_m_validate_app',
   'storagefile-m-validate-folder': 'dbx_storagefile_m_validate_folder',
   'notification-m-validate-app': 'dbx_notification_m_validate_app',
