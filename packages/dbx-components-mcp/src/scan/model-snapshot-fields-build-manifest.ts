@@ -21,7 +21,7 @@ import { type } from 'arktype';
 import { ModelSnapshotFieldManifest, type ModelSnapshotFieldEntry } from '../manifest/model-snapshot-fields-schema.js';
 import { extractModelSnapshotFieldEntries, type ExtractedModelSnapshotFieldEntry, type ModelSnapshotFieldExtractWarning } from './model-snapshot-fields-extract.js';
 import { DEFAULT_MODEL_SNAPSHOT_FIELDS_SCAN_OUT_PATH, MODEL_SNAPSHOT_FIELDS_SCAN_CONFIG_FILENAME, ModelSnapshotFieldsScanConfig } from './model-snapshot-fields-scan-config-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 export type BuildModelSnapshotFieldsReadFile = ScanReadFile;

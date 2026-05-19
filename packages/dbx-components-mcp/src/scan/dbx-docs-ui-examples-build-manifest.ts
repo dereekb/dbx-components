@@ -14,7 +14,7 @@ import { type } from 'arktype';
 import { DbxDocsUiExampleManifest, type DbxDocsUiExampleEntry } from '../manifest/dbx-docs-ui-examples-schema.js';
 import { extractDbxDocsUiExampleEntries, type ExtractedDbxDocsUiExampleEntry, type DbxDocsUiExamplesExtractWarning } from './dbx-docs-ui-examples-extract.js';
 import { DBX_DOCS_UI_EXAMPLES_SCAN_CONFIG_FILENAME, DEFAULT_DBX_DOCS_UI_EXAMPLES_SCAN_OUT_PATH, DbxDocsUiExamplesScanConfig } from './dbx-docs-ui-examples-scan-config-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 export type BuildDbxDocsUiExamplesManifestReadFile = ScanReadFile;

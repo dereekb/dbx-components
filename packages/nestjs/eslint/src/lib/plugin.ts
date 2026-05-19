@@ -20,3 +20,10 @@ export const NESTJS_ESLINT_PLUGIN: NestjsEslintPlugin = {
     'require-nest-inject': NESTJS_REQUIRE_INJECT_RULE
   }
 };
+
+/**
+ * camelCase alias of {@link NESTJS_ESLINT_PLUGIN} matching the conventional ESLint plugin export name.
+ *
+ * @dbxAllowConstantName
+ */
+export const nestjsESLintPlugin: NestjsEslintPlugin = NESTJS_ESLINT_PLUGIN;

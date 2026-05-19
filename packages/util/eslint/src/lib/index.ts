@@ -14,7 +14,6 @@ export { UTIL_REQUIRE_DBX_FILTER_COMPANION_TAGS_RULE, type UtilRequireDbxFilterC
 export { UTIL_REQUIRE_DBX_WEB_COMPANION_TAGS_RULE, type UtilRequireDbxWebCompanionTagsRuleOptions, type UtilRequireDbxWebCompanionTagsRuleDefinition } from './require-dbx-web-companion-tags.rule';
 export { UTIL_REQUIRE_DBX_DOCS_UI_EXAMPLE_COMPANION_TAGS_RULE, type UtilRequireDbxDocsUiExampleCompanionTagsRuleOptions, type UtilRequireDbxDocsUiExampleCompanionTagsRuleDefinition } from './require-dbx-docs-ui-example-companion-tags.rule';
 export { UTIL_REQUIRE_DBX_MODEL_SNAPSHOT_FIELD_COMPANION_TAGS_RULE, type UtilRequireDbxModelSnapshotFieldCompanionTagsRuleOptions, type UtilRequireDbxModelSnapshotFieldCompanionTagsRuleDefinition } from './require-dbx-model-snapshot-field-companion-tags.rule';
-export { UTIL_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE, type UtilRequireDbxModelFirebaseIndexCompanionTagsRuleOptions, type UtilRequireDbxModelFirebaseIndexCompanionTagsRuleDefinition } from './require-dbx-model-firebase-index-companion-tags.rule';
 export { UTIL_REQUIRE_DBX_ACTION_COMPANION_TAGS_RULE, type UtilRequireDbxActionCompanionTagsRuleOptions, type UtilRequireDbxActionCompanionTagsRuleDefinition } from './require-dbx-action-companion-tags.rule';
 export { UTIL_REQUIRE_DBX_FORM_FIELD_COMPANION_TAGS_RULE, type UtilRequireDbxFormFieldCompanionTagsRuleOptions, type UtilRequireDbxFormFieldCompanionTagsRuleDefinition } from './require-dbx-form-field-companion-tags.rule';
 export { UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE, type UtilRequireDbxModelCompanionTagsRuleOptions, type UtilRequireDbxModelCompanionTagsRuleDefinition } from './require-dbx-model-companion-tags.rule';
@@ -23,4 +22,4 @@ export { UTIL_REQUIRE_DBX_RULE_COMPANION_TAGS_RULE, type UtilRequireDbxRuleCompa
 export { UTIL_REQUIRE_CONSTANT_NAMING_RULE, type UtilRequireConstantNamingRuleOptions, type UtilRequireConstantNamingRuleDefinition } from './require-constant-naming.rule';
 export { UTIL_REQUIRE_DEFAULT_PREFIX_NAMING_RULE, type UtilRequireDefaultPrefixNamingRuleOptions, type UtilRequireDefaultPrefixNamingRuleDefinition } from './require-default-prefix-naming.rule';
 export { UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE, type UtilRequireExportedJsdocExampleRuleOptions, type UtilRequireExportedJsdocExampleRuleDefinition } from './require-exported-jsdoc-example.rule';
-export { UTIL_ESLINT_PLUGIN, type UtilEslintPlugin } from './plugin';
+export { UTIL_ESLINT_PLUGIN, utilESLintPlugin, type UtilEslintPlugin } from './plugin';

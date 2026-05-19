@@ -16,7 +16,7 @@
 import { describe, expect, it } from 'vitest';
 import { analyzeEntry } from './model-firebase-index-analyze.js';
 import type { ExtractedModelFirebaseIndexEntry } from './model-firebase-index-extract.js';
-import type { ConstraintSequence, FirestoreQueryScope } from '../manifest/model-firebase-index-schema.js';
+import type { ConstraintSequence, FirestoreQueryScope } from './model-firebase-index-schema.js';
 
 interface BuildEntryInput {
   readonly name?: string;

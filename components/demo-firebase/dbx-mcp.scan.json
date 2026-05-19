@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "modelFirebaseIndex": {
+    "include": ["src/lib/**/*.query.ts"],
+    "exclude": ["**/*.spec.ts", "**/*.test.ts"]
+  }
+}

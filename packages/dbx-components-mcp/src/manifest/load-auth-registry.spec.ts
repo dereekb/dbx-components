@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { resolve } from 'node:path';
 import { loadAuthRegistry } from './load-auth-registry.js';
-import type { ScanReadFile } from '../scan/scan-io.js';
+import type { ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 import { WORKSPACE_AUTH_APPS, WORKSPACE_AUTH_CLAIMS } from '../registry/auth-builtin.js';
 
 function readFromMap(map: Map<string, string>): ScanReadFile {

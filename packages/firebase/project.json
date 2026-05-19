@@ -4,7 +4,7 @@
   "sourceRoot": "packages/firebase/src",
   "projectType": "library",
   "tags": ["publishable"],
-  "implicitDependencies": ["!firebase-test", "util"],
+  "implicitDependencies": ["!firebase-test", "!firebase-eslint", "util"],
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -16,6 +16,9 @@
           },
           {
             "command": "npx nx run firebase-test:build-base"
+          },
+          {
+            "command": "npx nx run firebase-eslint:build-base"
           }
         ],
         "parallel": false

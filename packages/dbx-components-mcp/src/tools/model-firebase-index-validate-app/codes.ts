@@ -252,7 +252,7 @@ export enum ModelFirebaseIndexValidateAppCode {
    * @dbxRuleSeverity error
    * @dbxRuleApplies Every entry in the generated composite set that has no equal entry in the committed JSON.
    * @dbxRuleNotApplies Factories tagged `@dbxModelFirebaseIndexManual` — their shapes are author-managed and excluded from drift.
-   * @dbxRuleFix Run the `scan-model-firebase-indexes` / `generate-firestore-indexes` CLIs and commit the regenerated `firestore.indexes.json`.
+   * @dbxRuleFix Run `dbx-cli-generate-firestore-indexes --component <dir>` (and the `scan-model-firebase-indexes` CLI if the manifest is also stale) and commit the regenerated `firestore.indexes.json`.
    */
   MODEL_FIREBASE_INDEX_COMPOSITE_ADDED = 'MODEL_FIREBASE_INDEX_COMPOSITE_ADDED',
 

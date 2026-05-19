@@ -24,6 +24,9 @@
             "command": "npx nx run dbx-cli-lint-cache:build-base"
           },
           {
+            "command": "npx nx run dbx-cli-generate-firestore-indexes:build-base"
+          },
+          {
             "command": "npx nx run dbx-cli-test:build-base"
           }
         ],

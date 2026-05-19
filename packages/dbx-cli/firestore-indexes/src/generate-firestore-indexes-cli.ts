@@ -24,7 +24,7 @@ import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile, writeFile as nodeWriteFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { buildModelFirebaseIndexManifest, type BuildModelFirebaseIndexManifestOutcome } from './model-firebase-index-build-manifest.js';
-import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
+import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from './model-firebase-index-runtime.js';
 import { generateFirestoreIndexesJson, serializeFirestoreIndexesJson, type FirestoreIndexesJson } from './firestore-indexes-generate.js';
 
 // MARK: Public types
@@ -70,6 +70,13 @@ export interface RunGenerateFirestoreIndexesCliInput {
    */
   readonly generator: string;
   /**
+   * Optional binary name printed in the `--help` usage banner so embedders
+   * (e.g. the `dbx-components-mcp generate-firestore-indexes` subcommand)
+   * can advertise the right invocation to their users. Defaults to
+   * `dbx-cli-generate-firestore-indexes`.
+   */
+  readonly binName?: string;
+  /**
    * Optional now() override. Unused at present; reserved so callers can
    * inject a stable clock when adding wall-time metadata in the future.
    */
@@ -90,18 +97,22 @@ export interface RunGenerateFirestoreIndexesCliInput {
   readonly stderr?: GenerateFirestoreIndexesCliLogger;
 }
 
-const USAGE = [
-  'Usage: dbx-components-mcp generate-firestore-indexes --component <dir> [--output <path>] [--check] [--json] [--help]',
-  '',
-  'Generates `firestore.indexes.json` from `@dbxModelFirebaseIndex`-tagged factories.',
-  '',
-  'Options:',
-  '  --component <dir>  Required. Relative path to the `-firebase` component package.',
-  '  --output <path>    Output path. Defaults to `firestore.indexes.json` at the cwd.',
-  '  --check            Compare against the on-disk file; exit 1 on drift, do not write.',
-  '  --json             Print the diff summary as JSON instead of human-readable text.',
-  '  --help             Show this message.'
-].join('\n');
+const DEFAULT_BIN_NAME = 'dbx-cli-generate-firestore-indexes';
+
+function buildUsage(binName: string): string {
+  return [
+    `Usage: ${binName} --component <dir> [--output <path>] [--check] [--json] [--help]`,
+    '',
+    'Generates `firestore.indexes.json` from `@dbxModelFirebaseIndex`-tagged factories.',
+    '',
+    'Options:',
+    '  --component <dir>  Required. Relative path to the `-firebase` component package.',
+    '  --output <path>    Output path. Defaults to `firestore.indexes.json` at the cwd.',
+    '  --check            Compare against the on-disk file; exit 1 on drift, do not write.',
+    '  --json             Print the diff summary as JSON instead of human-readable text.',
+    '  --help             Show this message.'
+  ].join('\n');
+}
 
 interface ParsedArgs {
   readonly component?: string;
@@ -122,21 +133,22 @@ interface ParsedArgs {
  * @returns The CLI's exit code (0 on success / no drift, 1 on drift / failure, 2 on usage error)
  */
 export async function runGenerateFirestoreIndexesCli(input: RunGenerateFirestoreIndexesCliInput): Promise<RunGenerateFirestoreIndexesCliResult> {
-  const { argv, cwd, generator, readFile = (path) => nodeReadFile(path, 'utf-8'), writeFile = nodeWriteFile, stdout = (m) => console.log(m), stderr = (m) => console.error(m) } = input;
+  const { argv, cwd, generator, binName = DEFAULT_BIN_NAME, readFile = (path) => nodeReadFile(path, 'utf-8'), writeFile = nodeWriteFile, stdout = (m) => console.log(m), stderr = (m) => console.error(m) } = input;
+  const usage = buildUsage(binName);
 
   const parsed = parseArgv(argv);
   if (parsed.help) {
-    stdout(USAGE);
+    stdout(usage);
     return { exitCode: 0 };
   }
   if (parsed.error !== undefined) {
     stderr(parsed.error);
-    stderr(USAGE);
+    stderr(usage);
     return { exitCode: 2 };
   }
   if (parsed.component === undefined) {
     stderr('generate-firestore-indexes: --component is required');
-    stderr(USAGE);
+    stderr(usage);
     return { exitCode: 2 };
   }
 

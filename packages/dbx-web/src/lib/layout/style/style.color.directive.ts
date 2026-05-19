@@ -16,6 +16,14 @@ import { type Maybe } from '@dereekb/util';
  * The standalone `[dbxColorTone]` input wins over `config.tone` when both are set; the same precedence
  * applies to tonal mode.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug color
+ * @dbxWebCategory layout
+ * @dbxWebRelated text-color, color-service
+ * @dbxWebMinimalExample ```html
+ * <div [dbxColor]="'primary'"></div>
+ * ```
+ *
  * @example
  * ```html
  * <div [dbxColor]="'primary'">Themed background</div>

@@ -14,7 +14,6 @@ import { type UtilRequireDbxFilterCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_
 import { type UtilRequireDbxWebCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_WEB_COMPANION_TAGS_RULE } from './require-dbx-web-companion-tags.rule';
 import { type UtilRequireDbxDocsUiExampleCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_DOCS_UI_EXAMPLE_COMPANION_TAGS_RULE } from './require-dbx-docs-ui-example-companion-tags.rule';
 import { type UtilRequireDbxModelSnapshotFieldCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_MODEL_SNAPSHOT_FIELD_COMPANION_TAGS_RULE } from './require-dbx-model-snapshot-field-companion-tags.rule';
-import { type UtilRequireDbxModelFirebaseIndexCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE } from './require-dbx-model-firebase-index-companion-tags.rule';
 import { type UtilRequireDbxActionCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_ACTION_COMPANION_TAGS_RULE } from './require-dbx-action-companion-tags.rule';
 import { type UtilRequireDbxFormFieldCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_FORM_FIELD_COMPANION_TAGS_RULE } from './require-dbx-form-field-companion-tags.rule';
 import { type UtilRequireDbxModelCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE } from './require-dbx-model-companion-tags.rule';
@@ -48,7 +47,6 @@ export interface UtilEslintPlugin {
     readonly 'require-dbx-web-companion-tags': UtilRequireDbxWebCompanionTagsRuleDefinition;
     readonly 'require-dbx-docs-ui-example-companion-tags': UtilRequireDbxDocsUiExampleCompanionTagsRuleDefinition;
     readonly 'require-dbx-model-snapshot-field-companion-tags': UtilRequireDbxModelSnapshotFieldCompanionTagsRuleDefinition;
-    readonly 'require-dbx-model-firebase-index-companion-tags': UtilRequireDbxModelFirebaseIndexCompanionTagsRuleDefinition;
     readonly 'require-dbx-action-companion-tags': UtilRequireDbxActionCompanionTagsRuleDefinition;
     readonly 'require-dbx-form-field-companion-tags': UtilRequireDbxFormFieldCompanionTagsRuleDefinition;
     readonly 'require-dbx-model-companion-tags': UtilRequireDbxModelCompanionTagsRuleDefinition;
@@ -87,7 +85,6 @@ export const UTIL_ESLINT_PLUGIN: UtilEslintPlugin = {
     'require-dbx-web-companion-tags': UTIL_REQUIRE_DBX_WEB_COMPANION_TAGS_RULE,
     'require-dbx-docs-ui-example-companion-tags': UTIL_REQUIRE_DBX_DOCS_UI_EXAMPLE_COMPANION_TAGS_RULE,
     'require-dbx-model-snapshot-field-companion-tags': UTIL_REQUIRE_DBX_MODEL_SNAPSHOT_FIELD_COMPANION_TAGS_RULE,
-    'require-dbx-model-firebase-index-companion-tags': UTIL_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE,
     'require-dbx-action-companion-tags': UTIL_REQUIRE_DBX_ACTION_COMPANION_TAGS_RULE,
     'require-dbx-form-field-companion-tags': UTIL_REQUIRE_DBX_FORM_FIELD_COMPANION_TAGS_RULE,
     'require-dbx-model-companion-tags': UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE,
@@ -100,3 +97,10 @@ export const UTIL_ESLINT_PLUGIN: UtilEslintPlugin = {
     'prefer-suggested-string': UTIL_PREFER_SUGGESTED_STRING_RULE
   }
 };
+
+/**
+ * camelCase alias of {@link UTIL_ESLINT_PLUGIN} matching the conventional ESLint plugin export name.
+ *
+ * @dbxAllowConstantName
+ */
+export const utilESLintPlugin: UtilEslintPlugin = UTIL_ESLINT_PLUGIN;

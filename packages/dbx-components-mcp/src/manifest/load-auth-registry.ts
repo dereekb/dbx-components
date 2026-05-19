@@ -23,7 +23,7 @@ import { Project } from 'ts-morph';
 import { createAuthRegistryFromEntries, type AuthAppInfo, type AuthClaimInfo, type AuthRegistry, type AuthRoleInfo, type AuthScopeInfo } from '../registry/auth-runtime.js';
 import { BUILTIN_AUTH_CLAIMS, BUILTIN_AUTH_ROLES, BUILTIN_AUTH_SCOPES } from '../registry/auth-builtin.js';
 import { extractAuthEntries, type AuthExtractKnownRoles, type AuthExtractWarning, type ExtractAuthEntriesResult, type ExtractedAuthApp, type ExtractedAuthClaim } from '../scan/auth-extract.js';
-import { defaultReadFile, type ScanReadFile } from '../scan/scan-io.js';
+import { defaultReadFile, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 /**

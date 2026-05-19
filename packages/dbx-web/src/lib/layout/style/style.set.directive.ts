@@ -22,6 +22,14 @@ export type DbxSetStyleMode = 'both' | 'global' | 'self';
  * Accepts a {@link DbxStyleName} and optional suffixes, then applies the computed style class
  * depending on the configured {@link DbxSetStyleMode}.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug set-style
+ * @dbxWebCategory layout
+ * @dbxWebRelated style, style-service, style-body
+ * @dbxWebMinimalExample ```html
+ * <div [dbxSetStyle]="'my-app'"></div>
+ * ```
+ *
  * @example
  * ```html
  * <div [dbxSetStyle]="'my-app'" [setStyleMode]="'both'" [suffixes]="'dark'">

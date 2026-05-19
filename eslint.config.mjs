@@ -8,6 +8,7 @@ import unicornPlugin from 'eslint-plugin-unicorn';
 import { NESTJS_ESLINT_PLUGIN } from './dist/packages/nestjs/eslint/index.esm.js';
 import { DBX_WEB_ESLINT_PLUGIN } from './dist/packages/dbx-web/eslint/index.esm.js';
 import { UTIL_ESLINT_PLUGIN } from './dist/packages/util/eslint/index.esm.js';
+import { FIREBASE_ESLINT_PLUGIN } from './dist/packages/firebase/eslint/index.esm.js';
 
 export default [
   importPlugin.flatConfigs.recommended,
@@ -97,6 +98,19 @@ export default [
   },
   {
     files: ['**/*.ts'],
+    ignores: ['**/*.spec.ts', '**/*.test.ts', '**/*.d.ts', '**/test/src/**', 'packages/firebase/eslint/**', 'packages/dbx-components-mcp/**/scan/**'],
+    plugins: {
+      'dereekb-firebase': FIREBASE_ESLINT_PLUGIN
+    },
+    rules: {
+      'dereekb-firebase/require-tagged-firestore-constraints': 'error', // dbx-components-mcp firebase-index registry: forbid inline `@dereekb/firebase` constraint factory calls (`where`/`orderBy`/...) outside a `@dbxModelFirebaseIndex`-tagged query factory
+      'dereekb-firebase/require-dbx-model-firebase-index-query-suffix': 'error', // dbx-components-mcp firebase-index registry: require the canonical `Query` suffix on `@dbxModelFirebaseIndex`-tagged factories (e.g. `fooBarQuery`, not `fooBarFilter`)
+      'dereekb-firebase/require-dbx-model-firebase-index-companion-tags': 'warn', // dbx-components-mcp firebase-index registry: enforce `@dbxModelFirebaseIndexModel` + body coherence (constraint factory present, generic args match model, field paths are string literals) on `@dbxModelFirebaseIndex`-tagged factories
+      'dereekb-firebase/require-dbx-model-firebase-index-valid-dispatcher': 'error' // dbx-components-mcp firebase-index registry: forbid inline `@dereekb/firebase` constraint factory calls and ad-hoc constraint-array construction inside `@dbxModelFirebaseIndexDispatcher`-tagged factories — dispatchers must delegate to other tagged `*Query` factories
+    }
+  },
+  {
+    files: ['**/*.ts'],
     plugins: {
       'dereekb-dbx-web': DBX_WEB_ESLINT_PLUGIN
     },
@@ -133,7 +147,6 @@ export default [
       'dereekb-util/require-dbx-web-companion-tags': 'warn', // dbx-components-mcp ui-components registry: enforce @dbxWebSlug + @dbxWebCategory enum on @dbxWebComponent-tagged classes
       'dereekb-util/require-dbx-docs-ui-example-companion-tags': 'warn', // dbx-components-mcp docs-ui-examples registry: enforce @dbxDocsUiExampleSlug + Category + Summary on @dbxDocsUiExample-tagged classes
       'dereekb-util/require-dbx-model-snapshot-field-companion-tags': 'warn', // dbx-components-mcp snapshot-fields registry: validate @dbxModelSnapshotField* companion formats
-      'dereekb-util/require-dbx-model-firebase-index-companion-tags': 'warn', // dbx-components-mcp firebase-index registry: enforce @dbxModelFirebaseIndexModel on @dbxModelFirebaseIndex-tagged factories
       'dereekb-util/require-dbx-action-companion-tags': 'warn', // dbx-components-mcp actions registry: enforce @dbxActionSlug + state enum on @dbxAction-tagged classes/enums
       'dereekb-util/require-dbx-form-field-companion-tags': 'warn', // dbx-components-mcp forge-fields registry: enforce tier-specific @dbxForm* tags on @dbxFormField-tagged factories
       'dereekb-util/require-dbx-model-companion-tags': 'warn', // dbx-components-mcp model registry: enforce @dbxModel marker semantics, archetype/aggregatesFrom/compositeKey formats

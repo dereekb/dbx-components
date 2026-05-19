@@ -23,7 +23,7 @@ import { runActionsScanCli } from '../src/scan/actions-cli.js';
 import { runFiltersScanCli } from '../src/scan/filters-cli.js';
 import { runPipesScanCli } from '../src/scan/pipes-cli.js';
 import { runDbxDocsUiExamplesScanCli } from '../src/scan/dbx-docs-ui-examples-cli.js';
-import { runGenerateFirestoreIndexesCli } from '../src/scan/generate-firestore-indexes-cli.js';
+import { runGenerateFirestoreIndexesCli } from '@dereekb/dbx-cli/firestore-indexes';
 import { runStdioServer } from '../src/server.js';
 
 const TOP_LEVEL_USAGE = [
@@ -137,7 +137,8 @@ async function main(): Promise<number> {
     const result = await runGenerateFirestoreIndexesCli({
       argv: argv.slice(1),
       cwd: process.cwd(),
-      generator: `@dereekb/dbx-components-mcp@${packageJson.version}`
+      generator: `@dereekb/dbx-components-mcp@${packageJson.version}`,
+      binName: 'dbx-components-mcp generate-firestore-indexes'
     });
     exitCode = result.exitCode;
   } else {

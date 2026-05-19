@@ -10,6 +10,14 @@ import { type DbxStyleClass } from './style';
  *
  * Use this directive to propagate the active style class onto any element or component.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug style
+ * @dbxWebCategory layout
+ * @dbxWebRelated style-service, style-body, set-style
+ * @dbxWebMinimalExample ```html
+ * <div dbxStyle></div>
+ * ```
+ *
  * @example
  * ```html
  * <div dbxStyle>Styled content</div>

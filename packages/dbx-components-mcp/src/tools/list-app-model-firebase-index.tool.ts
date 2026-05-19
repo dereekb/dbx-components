@@ -25,11 +25,10 @@ import { type } from 'arktype';
 import { type FunctionDeclaration, type Project, type SourceFile } from 'ts-morph';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, type BuildModelFirebaseIndexManifestOutcome } from '../scan/model-firebase-index-build-manifest.js';
-import type { DerivedComposite, DerivedFieldOverride, ModelFirebaseIndexEntry } from '../manifest/model-firebase-index-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile } from '../scan/scan-io.js';
-import { MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME } from '../scan/model-firebase-index-scan-config-schema.js';
+import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME, type BuildModelFirebaseIndexManifestOutcome, type DerivedComposite, type DerivedFieldOverride, type ModelFirebaseIndexEntry } from '@dereekb/dbx-cli/firestore-indexes';
+import { buildScanProject, defaultGlobber, defaultReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount, type FactoryReferenceSite } from '../scan/model-firebase-index-reference-scan.js';
+import { buildDispatcherCreditByName, type DispatcherCredit } from '../scan/model-firebase-index-dispatcher-credit.js';
 
 // MARK: Args
 const ListAppArgsType = type({
@@ -118,6 +117,14 @@ interface TaggedFactoryUsage {
    * Sample call-sites for the factory. Each `file` is workspace-root-relative (e.g. `apps/hellosubs-api/src/lib/.../foo.ts`) and `line` is the 1-based line of the textual reference. Capped to keep payloads bounded; the precise reference count lives in `referenceCount`.
    */
   readonly referencedBy: readonly FactoryReferenceSite[];
+  /**
+   * Caller count routed through any tagged `@dbxModelFirebaseIndexDispatcher` whose body delegates to this factory by name. Summed when multiple dispatchers delegate to the same factory. Counts the dispatcher's *production* (non-spec) caller references. Added to `productionReferenceCount` when determining the unused-factory warning so dispatcher-only primitives don't false-positive.
+   */
+  readonly dispatcherCreditedProductionCount: number;
+  /**
+   * Spec-only counterpart of {@link dispatcherCreditedProductionCount}. Counts the spec callers of any tagged `@dbxModelFirebaseIndexDispatcher` that delegates to this factory by name. Added to `specReferenceCount` for the unused-factory check on `@dbxModelFirebaseIndexSpecFilesOnly` entries.
+   */
+  readonly dispatcherCreditedSpecCount: number;
   readonly composites: readonly DerivedComposite[];
   readonly fieldOverrides: readonly DerivedFieldOverride[];
 }
@@ -250,7 +257,8 @@ async function resolveBuildOutcome(input: ResolveBuildOutcomeInput): Promise<Lis
         include: WORKSPACE_FACTORY_SCAN_INCLUDE,
         exclude: WORKSPACE_FACTORY_SCAN_EXCLUDE
       });
-      const taggedAll = buildOutcome.manifest.entries.map((entry) => toTaggedFactoryUsage(entry, references.get(entry.slug)));
+      const dispatcherCreditByName = buildDispatcherCreditByName(buildOutcome.dispatcherSummaries, references);
+      const taggedAll = buildOutcome.manifest.entries.map((entry) => toTaggedFactoryUsage(entry, references.get(entry.slug), dispatcherCreditByName.get(entry.name)));
       const tagged = applyTaggedFilters(taggedAll, filters);
       const untagged = filters.includeUntagged ? await collectUntaggedCandidates({ componentAbs, tagged: buildOutcome.manifest.entries }) : [];
       const compositeCount = tagged.reduce((acc, t) => acc + t.composites.length, 0);
@@ -322,6 +330,11 @@ function emptyReport(componentDir: string, warning: string, filters: ListAppFilt
  * state, not "unused"). Matches the validator's rule for emitting
  * `MODEL_FIREBASE_INDEX_UNUSED_FACTORY`.
  *
+ * Caller counts include both direct references and the
+ * `dispatcherCreditedProductionCount` / `dispatcherCreditedSpecCount`
+ * routed through tagged `@dbxModelFirebaseIndexDispatcher` factories that
+ * delegate to this entry by name.
+ *
  * @param t - Usage record to test.
  * @returns True when the factory is a candidate for the unused warning.
  */
@@ -329,10 +342,12 @@ function isUnused(t: TaggedFactoryUsage): boolean {
   if (t.skip || t.manual) {
     return false;
   }
+  const totalProduction = t.productionReferenceCount + t.dispatcherCreditedProductionCount;
+  const totalSpec = t.specReferenceCount + t.dispatcherCreditedSpecCount;
   if (t.specOnly) {
-    return t.productionReferenceCount === 0 && t.specReferenceCount === 0;
+    return totalProduction === 0 && totalSpec === 0;
   }
-  return t.productionReferenceCount === 0;
+  return totalProduction === 0;
 }
 
 /**
@@ -360,7 +375,7 @@ function applyTaggedFilters(tagged: readonly TaggedFactoryUsage[], filters: List
 
 const MAX_REFERENCE_SAMPLES = 10;
 
-function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry, references: FactoryReferenceCount | undefined): TaggedFactoryUsage {
+function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry, references: FactoryReferenceCount | undefined, dispatcherCredit: DispatcherCredit | undefined): TaggedFactoryUsage {
   const referenceCount = references?.count ?? 0;
   const productionReferenceCount = references?.productionCount ?? 0;
   const specReferenceCount = references?.specCount ?? 0;
@@ -383,6 +398,8 @@ function toTaggedFactoryUsage(entry: ModelFirebaseIndexEntry, references: Factor
     productionReferenceCount,
     specReferenceCount,
     referencedBy,
+    dispatcherCreditedProductionCount: dispatcherCredit?.productionCount ?? 0,
+    dispatcherCreditedSpecCount: dispatcherCredit?.specCount ?? 0,
     composites: entry.derivedComposites.map((c) => ({ ...c, fields: c.fields.map((f) => ({ ...f })) })),
     fieldOverrides: entry.derivedFieldOverrides.map((f) => ({ ...f, variants: f.variants.map((v) => ({ ...v })) }))
   };

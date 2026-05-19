@@ -14,6 +14,20 @@ export const DEFAULT_DBX_STYLE_CONFIG_TOKEN = new InjectionToken('DbxStyleServic
  *
  * Consumers can set a default style config, override it with an observable config,
  * and toggle style suffixes to switch between style variants at runtime.
+ *
+ * Provided via `provideDbxStyleService()` from `style.providers`.
+ *
+ * @dbxWebComponent
+ * @dbxWebSlug style-service
+ * @dbxWebCategory layout
+ * @dbxWebRelated style, set-style, style-body, color-service
+ *
+ * @example
+ * ```ts
+ * const styleService = inject(DbxStyleService);
+ * styleService.toggleDarkSuffix();           // toggle dark mode on/off
+ * styleService.setStyleClassSuffix('dark');  // force dark mode
+ * ```
  */
 @Injectable()
 export class DbxStyleService implements Destroyable {

@@ -26,7 +26,7 @@
 
 import { Node, type FunctionDeclaration, type JSDoc, type ParameterDeclaration, type Project, type SourceFile, type VariableDeclaration, type VariableStatement } from 'ts-morph';
 import type { ModelSnapshotFieldKindValue, ModelSnapshotFieldParamEntry } from '../manifest/model-snapshot-fields-schema.js';
-import { splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { splitListTagText, unwrapFenced } from '../../../dbx-cli/src/lib/scan-helpers/scan-extract-utils.js';
 
 // MARK: Tag names
 const FIELD_MARKER = 'dbxModelSnapshotField';

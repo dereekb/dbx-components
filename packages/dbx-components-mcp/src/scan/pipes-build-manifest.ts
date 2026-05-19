@@ -20,7 +20,7 @@ import { type } from 'arktype';
 import { PipeManifest, type PipeEntry } from '../manifest/pipes-schema.js';
 import { extractPipeEntries, type ExtractedPipeEntry, type PipeExtractWarning } from './pipes-extract.js';
 import { DEFAULT_PIPES_SCAN_OUT_PATH, PIPES_SCAN_CONFIG_FILENAME, PipesScanConfig } from './pipes-scan-config-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 export type BuildPipesReadFile = ScanReadFile;

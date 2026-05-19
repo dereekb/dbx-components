@@ -23,7 +23,7 @@
 
 import { Node, type ClassDeclaration, type FunctionDeclaration, type JSDoc, type ParameterDeclaration, type Project, type SourceFile, type VariableDeclaration, type VariableStatement } from 'ts-morph';
 import type { UtilEntry, UtilKindValue, UtilParamEntry } from '../manifest/utils-schema.js';
-import { splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { splitListTagText, unwrapFenced } from '../../../dbx-cli/src/lib/scan-helpers/scan-extract-utils.js';
 
 // MARK: Tag names
 const UTIL_MARKER = 'dbxUtil';

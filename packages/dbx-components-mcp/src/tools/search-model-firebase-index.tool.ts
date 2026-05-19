@@ -14,7 +14,7 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import type { ModelFirebaseIndexEntryInfo, ModelFirebaseIndexRegistry } from '../registry/model-firebase-index-runtime.js';
+import type { ModelFirebaseIndexEntryInfo, ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';
 import { type DbxTool, type ToolResult } from './types.js';
 

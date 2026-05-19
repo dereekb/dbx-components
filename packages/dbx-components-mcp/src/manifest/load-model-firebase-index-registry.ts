@@ -22,7 +22,7 @@ import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { findAndLoadConfig, type ConfigWarning } from '../config/load-config.js';
-import { createModelFirebaseIndexRegistry, EMPTY_MODEL_FIREBASE_INDEX_REGISTRY, type ModelFirebaseIndexRegistry } from '../registry/model-firebase-index-runtime.js';
+import { createModelFirebaseIndexRegistry, EMPTY_MODEL_FIREBASE_INDEX_REGISTRY, type ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { loadModelFirebaseIndexManifests, type ModelFirebaseIndexLoaderWarning, type ModelFirebaseIndexManifestReadFile, type ModelFirebaseIndexManifestSource } from './model-firebase-index-loader.js';
 
 // MARK: Public types

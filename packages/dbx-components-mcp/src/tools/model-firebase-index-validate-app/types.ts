@@ -13,7 +13,7 @@
  * without per-warning prose duplication.
  */
 
-import type { FirestoreIndexesDiff } from '../../scan/firestore-indexes-generate.js';
+import type { FirestoreIndexesDiff } from '@dereekb/dbx-cli/firestore-indexes';
 import type { ViolationLine, ViolationSeverity } from '../validate-format.js';
 import type { ModelFirebaseIndexValidateAppCodeString } from './codes.js';
 

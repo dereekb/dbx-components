@@ -1,0 +1,60 @@
+{
+  "name": "dbx-cli-generate-firestore-indexes",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-cli/generate-firestore-indexes/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/generate-firestore-indexes"],
+      "options": {
+        "command": "npx nx run dbx-cli-generate-firestore-indexes:build-base",
+        "color": true
+      },
+      "dependsOn": ["^build"]
+    },
+    "build-base": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/generate-firestore-indexes"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/packages/dbx-cli/generate-firestore-indexes",
+        "main": "packages/dbx-cli/generate-firestore-indexes/src/main.ts",
+        "tsConfig": "packages/dbx-cli/generate-firestore-indexes/tsconfig.tool.json",
+        "format": ["esm"],
+        "platform": "node",
+        "target": "node20",
+        "bundle": true,
+        "thirdParty": false,
+        "skipTypeCheck": false,
+        "declaration": false,
+        "esbuildOptions": {
+          "banner": {
+            "js": "#!/usr/bin/env node\nimport { createRequire as __createRequire } from 'node:module';\nconst require = __createRequire(import.meta.url);"
+          }
+        }
+      },
+      "configurations": {
+        "production": {
+          "minify": false,
+          "sourcemap": false
+        }
+      }
+    },
+    "regenerate": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-base"],
+      "options": {
+        "command": "node dist/packages/dbx-cli/generate-firestore-indexes/main.js --component components/demo-firebase",
+        "cwd": "{workspaceRoot}",
+        "color": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    }
+  }
+}

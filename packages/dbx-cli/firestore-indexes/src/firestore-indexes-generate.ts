@@ -26,8 +26,8 @@
  * `unchanged`) so the CLI / MCP tool can render a clear CI report.
  */
 
-import { type DerivedComposite, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder, DEFAULT_FIRESTORE_INDEX_DENSITY } from '../manifest/model-firebase-index-schema.js';
-import type { ModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
+import { type DerivedComposite, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder, DEFAULT_FIRESTORE_INDEX_DENSITY } from './model-firebase-index-schema.js';
+import type { ModelFirebaseIndexEntryInfo } from './model-firebase-index-runtime.js';
 
 // MARK: firestore.indexes.json shape
 /**

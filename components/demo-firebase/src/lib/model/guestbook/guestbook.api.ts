@@ -1,6 +1,6 @@
-import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type AbstractSubscribeToNotificationBoxParams, type TargetModelParams, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams } from '@dereekb/firebase';
+import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseQueryFunction, type AbstractSubscribeToNotificationBoxParams, type TargetModelParams, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams, type OnCallQueryModelResult } from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
-import { type GuestbookTypes } from './guestbook';
+import { type Guestbook, type GuestbookEntry, type GuestbookTypes } from './guestbook';
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 import { type GuestbookKey } from './guestbook.id';
@@ -83,6 +83,7 @@ export type GuestbookModelCrudFunctionsConfig = {
     update: {
       subscribeToNotifications: SubscribeToGuestbookNotificationsParams;
     };
+    query: [QueryGuestbooksParams, OnCallQueryModelResult<Guestbook>];
   };
   guestbookEntry: {
     update: {
@@ -90,12 +91,13 @@ export type GuestbookModelCrudFunctionsConfig = {
       like: LikeGuestbookEntryParams;
     };
     delete: GuestbookEntryParams;
+    query: [QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];
   };
 };
 
 export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookModelCrudFunctionsConfig, GuestbookTypes> = {
-  guestbook: ['create', 'update:subscribeToNotifications'],
-  guestbookEntry: ['update:insert,like', 'delete']
+  guestbook: ['create', 'update:subscribeToNotifications', 'query'],
+  guestbookEntry: ['update:insert,like', 'delete', 'query']
 };
 
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory(guestbookFunctionTypeConfigMap, guestbookModelCrudFunctionsConfig);
@@ -106,6 +108,7 @@ export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<Gue
     updateGuestbook: {
       subscribeToNotifications: ModelFirebaseCrudFunction<SubscribeToGuestbookNotificationsParams>;
     };
+    queryGuestbook: ModelFirebaseQueryFunction<QueryGuestbooksParams, OnCallQueryModelResult<Guestbook>>;
   };
   abstract guestbookEntry: {
     updateGuestbookEntry: {
@@ -113,5 +116,6 @@ export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<Gue
       like: ModelFirebaseCrudFunction<LikeGuestbookEntryParams>;
     };
     deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams>;
+    queryGuestbookEntry: ModelFirebaseQueryFunction<QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>>;
   };
 }

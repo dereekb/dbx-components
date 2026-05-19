@@ -19,7 +19,7 @@ import type { Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { Node, type InterfaceDeclaration, type JSDoc, type Project, type PropertySignature, type SourceFile, type TypeAliasDeclaration, type TypeNode, type TypeReferenceNode, type UnionTypeNode } from 'ts-morph';
 import { type ForgeFieldEntry, type ForgeFieldPropertyEntry } from '../manifest/forge-fields-schema.js';
-import { splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { splitListTagText, unwrapFenced } from '../../../dbx-cli/src/lib/scan-helpers/scan-extract-utils.js';
 
 // MARK: Tag names
 const FORM_FIELD_MARKER = 'dbxFormField';

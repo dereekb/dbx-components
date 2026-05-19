@@ -835,6 +835,82 @@ describe('extractModelFirebaseIndexEntries — dispatcher tag', () => {
     const dispatcher = result.entries.find((e) => e.name === 'jobsDispatcher');
     expect(dispatcher).toBeDefined();
     expect(dispatcher?.constraintSequences).toEqual([]);
+    expect(dispatcher?.dispatcher).toBe(true);
+    expect(dispatcher?.dispatcherDelegates).toEqual(['jobsByStatusQuery']);
+    const delegated = result.entries.find((e) => e.name === 'jobsByStatusQuery');
+    expect(delegated?.dispatcher).toBe(false);
+    expect(delegated?.dispatcherDelegates).toEqual([]);
+  });
+
+  it('captures every distinct delegate identifier-callee in a dispatcher body in source order without duplicates', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/dispatch.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { t: string; p: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function jobsByStatusQuery(s: string): unknown[] {
+          return [where<Job>('t', '==', s)];
+        }
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         */
+        export function jobsByPriorityQuery(p: string): unknown[] {
+          return [where<Job>('p', '==', p)];
+        }
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexDispatcher
+         */
+        export function jobsMultiDispatcher(mode: string): unknown[] {
+          switch (mode) {
+            case 'byStatus':
+              return jobsByStatusQuery('a');
+            case 'byPriority':
+              return jobsByPriorityQuery('p');
+            case 'byStatusAgain':
+              return jobsByStatusQuery('b');
+            default:
+              return jobsByPriorityQuery('default');
+          }
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    const dispatcher = result.entries.find((e) => e.name === 'jobsMultiDispatcher');
+    expect(dispatcher?.dispatcher).toBe(true);
+    expect(dispatcher?.dispatcherDelegates).toEqual(['jobsByStatusQuery', 'jobsByPriorityQuery']);
+  });
+
+  it('returns an empty delegate list when a non-delegating dispatcher calls only constraint helpers', () => {
+    const project = projectWith({
+      '/proj/src/lib/model/identity.ts': IDENTITY_FIXTURE,
+      '/proj/src/lib/model/job/dispatch.query.ts': `
+        function where<T>(_a: keyof T, _op: string, _v: unknown): unknown { return {}; }
+        type Job = { t: string };
+
+        /**
+         * @dbxModelFirebaseIndex
+         * @dbxModelFirebaseIndexModel Job
+         * @dbxModelFirebaseIndexDispatcher
+         */
+        export function jobsConstraintDispatcher(s: string): unknown[] {
+          return [where<Job>('t', '==', s)];
+        }
+      `
+    });
+    const result = extractModelFirebaseIndexEntries({ project, identityResolver: buildIdentityResolverFromProject(project) });
+    const dispatcher = result.entries.find((e) => e.name === 'jobsConstraintDispatcher');
+    expect(dispatcher?.dispatcher).toBe(true);
+    expect(dispatcher?.dispatcherDelegates).toEqual([]);
   });
 
   it('errors with non-delegating-dispatcher when a dispatcher calls where() directly', () => {

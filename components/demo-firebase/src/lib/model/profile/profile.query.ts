@@ -1,3 +1,4 @@
+/* eslint-disable dereekb-firebase/require-tagged-firestore-constraints -- legacy single-`FirestoreQueryConstraint` helper in this demo package; refactor to array-returning `@dbxModelFirebaseIndex`-tagged `*Query` factory in a future migration sweep */
 import { type FirestoreQueryConstraint, where } from '@dereekb/firebase';
 
 /**

@@ -269,7 +269,7 @@ export const RULE_CATALOG: readonly RuleEntry[] = [
     whatItFlags: 'A composite index required by tagged factories is missing from the committed `firestore.indexes.json`.',
     whenItApplies: 'Every entry in the generated composite set that has no equal entry in the committed JSON.',
     whenItDoesNotApply: 'Factories tagged `@dbxModelFirebaseIndexManual` — their shapes are author-managed and excluded from drift.',
-    canonicalFix: 'Run the `scan-model-firebase-indexes` / `generate-firestore-indexes` CLIs and commit the regenerated `firestore.indexes.json`.'
+    canonicalFix: 'Run `dbx-cli-generate-firestore-indexes --component <dir>` (and the `scan-model-firebase-indexes` CLI if the manifest is also stale) and commit the regenerated `firestore.indexes.json`.'
   },
   {
     code: 'MODEL_FIREBASE_INDEX_COMPOSITE_REMOVED',

@@ -11,7 +11,7 @@
 
 import { Node, SyntaxKind, type ClassDeclaration, type EnumDeclaration, type EnumMember, type JSDoc, type Project, type MethodDeclaration } from 'ts-morph';
 import type { ActionInputEntry, ActionOutputEntry, ActionStoreMethodEntry, ActionStoreObservableEntry, DbxActionStateValue } from '../manifest/actions-schema.js';
-import { flattenList, isVisibleProperty, readDirectiveDecorator, readPropertyDescription, unwrapFenced } from './scan-extract-utils.js';
+import { flattenList, isVisibleProperty, readDirectiveDecorator, readPropertyDescription, unwrapFenced } from '../../../dbx-cli/src/lib/scan-helpers/scan-extract-utils.js';
 import { extractAngularInputs, extractAngularOutputs } from './scan-angular-io.js';
 
 // MARK: Tag names

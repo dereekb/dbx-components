@@ -29,8 +29,8 @@
 
 import type { Maybe } from '@dereekb/util';
 import { relative, resolve as resolvePath } from 'node:path';
-import { defaultGlobber, defaultReadFile, type ScanGlobber, type ScanReadFile } from './scan-io.js';
-import type { ExtractedModelFirebaseIndexEntry } from './model-firebase-index-extract.js';
+import { defaultGlobber, defaultReadFile, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
+import type { ExtractedModelFirebaseIndexEntry } from '@dereekb/dbx-cli/firestore-indexes';
 
 // MARK: Public types
 /**

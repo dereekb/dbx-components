@@ -22,7 +22,7 @@
  * faithful to the source factory.
  */
 
-import type { ConstraintSequenceEntry, FirestoreWhereOperator } from '../manifest/model-firebase-index-schema.js';
+import type { ConstraintSequenceEntry, FirestoreWhereOperator } from './model-firebase-index-schema.js';
 
 /**
  * Description of one base constraint a helper expands into. `direction`

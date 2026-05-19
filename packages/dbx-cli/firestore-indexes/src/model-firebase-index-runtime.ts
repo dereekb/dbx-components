@@ -11,8 +11,25 @@
  * without touching disk.
  */
 
-import type { LoadModelFirebaseIndexManifestsResult } from '../manifest/model-firebase-index-loader.js';
-import type { ConstraintSequence, DerivedComposite, DerivedFieldOverride, FirestoreQueryScope, ModelFirebaseIndexEntry, ModelFirebaseIndexParamEntry } from '../manifest/model-firebase-index-schema.js';
+import type { ConstraintSequence, DerivedComposite, DerivedFieldOverride, FirestoreQueryScope, ModelFirebaseIndexEntry, ModelFirebaseIndexParamEntry } from './model-firebase-index-schema.js';
+
+/**
+ * Subset of the `LoadModelFirebaseIndexManifestsResult` shape (defined by
+ * `model-firebase-index-loader.ts` in `@dereekb/dbx-components-mcp`) that
+ * `createModelFirebaseIndexRegistry` consumes. Inlined here so this
+ * runtime stays free of any back-import into the MCP server package.
+ *
+ * `warnings` is typed as `readonly unknown[]` because the registry never
+ * reads them — the loader collects them and surfaces them through its own
+ * (more strongly typed) return shape. Any `readonly Warning[]` is
+ * structurally assignable to `readonly unknown[]`.
+ */
+export interface LoadModelFirebaseIndexManifestsResult {
+  readonly entries: ReadonlyMap<string, ModelFirebaseIndexEntry>;
+  readonly collectionIndex: ReadonlyMap<string, readonly string[]>;
+  readonly warnings: readonly unknown[];
+  readonly loadedSources: readonly string[];
+}
 
 // MARK: Public types
 /**

@@ -20,7 +20,7 @@ import { type } from 'arktype';
 import { FilterManifest, type FilterEntry } from '../manifest/filters-schema.js';
 import { extractFilterEntries, type ExtractedFilterEntry, type FilterExtractWarning } from './filters-extract.js';
 import { DEFAULT_FILTERS_SCAN_OUT_PATH, FILTERS_SCAN_CONFIG_FILENAME, FiltersScanConfig, type FiltersScanSection } from './filters-scan-config-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 export type BuildFiltersReadFile = ScanReadFile;

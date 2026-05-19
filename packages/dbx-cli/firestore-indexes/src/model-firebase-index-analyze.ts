@@ -24,7 +24,7 @@
  * companion fieldOverrides).
  */
 
-import { type ConstraintSequence, type ConstraintSequenceEntry, type DerivedComposite, type DerivedFieldOverride, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder, type FirestoreQueryScope, type FirestoreWhereOperator, DEFAULT_FIRESTORE_INDEX_DENSITY } from '../manifest/model-firebase-index-schema.js';
+import { type ConstraintSequence, type ConstraintSequenceEntry, type DerivedComposite, type DerivedFieldOverride, type DerivedFieldOverrideVariant, type DerivedIndexField, type FirestoreIndexOrder, type FirestoreQueryScope, type FirestoreWhereOperator, DEFAULT_FIRESTORE_INDEX_DENSITY } from './model-firebase-index-schema.js';
 import type { ExtractedModelFirebaseIndexEntry } from './model-firebase-index-extract.js';
 
 // MARK: Public types
