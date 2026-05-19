@@ -116,49 +116,126 @@ export function dateCellScheduleDayCodesFromEnabledDays(input: Maybe<EnabledDays
 }
 
 /**
- * Encoded days of the week that the job block schedule should contain.
+ * Compact, sortable string encoding of the seven days of the week using {@link DateCellScheduleDayCode} digits.
+ *
+ * The string contains zero or more single-character digits in ascending order, where each digit is a single
+ * {@link DateCellScheduleDayCode} value. The empty string represents "no days selected".
+ *
+ * Digit meanings:
+ * - `1` SUNDAY, `2` MONDAY, `3` TUESDAY, `4` WEDNESDAY, `5` THURSDAY, `6` FRIDAY, `7` SATURDAY
+ * - `8` WEEKDAY shorthand (replaces the individual `23456` digits)
+ * - `9` WEEKEND shorthand (replaces the individual `17` digits)
+ *
+ * Use {@link dateCellScheduleEncodedWeek} to build a simplified encoding from an iterable of day codes,
+ * {@link isDateCellScheduleEncodedWeek} as a runtime type guard, and {@link DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX}
+ * for a loose regex check. The type uses {@link StringOrder} to constrain digits to ascending order at the type
+ * level; the regex itself does not enforce ordering or uniqueness.
+ *
+ * @example
+ * ```ts
+ * const empty: DateCellScheduleEncodedWeek = '';      // no days
+ * const monWed: DateCellScheduleEncodedWeek = '24';   // Monday + Wednesday
+ * const weekdays: DateCellScheduleEncodedWeek = '8';  // Mon-Fri via WEEKDAY shorthand
+ * const everyDay: DateCellScheduleEncodedWeek = '89'; // WEEKDAY + WEEKEND
+ * ```
  */
 export type DateCellScheduleEncodedWeek = '' | StringOrder<`${DateCellScheduleDayCode}`, ''>;
 
+/**
+ * Regex that loosely validates a {@link DateCellScheduleEncodedWeek}.
+ *
+ * Matches zero-to-nine digit characters (any of `0-9`). Does not enforce ascending order or uniqueness of
+ * digits — use {@link isDateCellScheduleEncodedWeek} for a runtime check that mirrors the type, or
+ * {@link dateCellScheduleEncodedWeek} to build a guaranteed-valid encoding from {@link DateCellScheduleDayCode}
+ * values.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilKind const
+ * @dbxUtilTags date, schedule, encoded, week, regex, validate, days
+ * @dbxUtilRelated is-date-cell-schedule-encoded-week, date-cell-schedule-encoded-week
+ */
 export const DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX = /^\d{0,9}$/;
 
 /**
- * Returns true if the input is a DateCellScheduleEncodedWeek.
+ * Type guard that returns true if the input matches the {@link DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX} encoded-week format.
+ *
+ * The regex check is loose — it allows duplicate digits and any digit ordering. To produce a canonically simplified
+ * encoding, use {@link dateCellScheduleEncodedWeek}.
  *
  * @param input - String to validate against the encoded week regex.
  * @returns Whether the string matches the encoded week format.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, schedule, encoded, week, type-guard, validate, check, days
+ * @dbxUtilRelated date-cell-schedule-encoded-week-regex, is-empty-date-cell-schedule-encoded-week, date-cell-schedule-encoded-week
+ *
+ * @example
+ * ```ts
+ * isDateCellScheduleEncodedWeek('24');  // true (Mon + Wed)
+ * isDateCellScheduleEncodedWeek('8');   // true (WEEKDAY shorthand)
+ * isDateCellScheduleEncodedWeek('');    // true (no days)
+ * isDateCellScheduleEncodedWeek('abc'); // false
+ * ```
  */
 export function isDateCellScheduleEncodedWeek(input: string): input is DateCellScheduleEncodedWeek {
   return DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX.test(input);
 }
 
 /**
- * Returns true if the input string represents an empty DateCellScheduleEncodedWeek (no days selected).
+ * Returns true if the input represents an empty (no days selected) {@link DateCellScheduleEncodedWeek}.
+ *
+ * Both the empty string `''` and `'0'` are treated as empty since `0` corresponds to
+ * {@link DateCellScheduleDayCode.NONE}, the no-op day code.
  *
  * @param input - String to check for emptiness.
  * @returns Whether the encoded week represents no selected days.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, schedule, encoded, week, empty, check, type-guard, days
+ * @dbxUtilRelated is-date-cell-schedule-encoded-week, date-cell-schedule-encoded-week
+ *
+ * @example
+ * ```ts
+ * isEmptyDateCellScheduleEncodedWeek('');  // true
+ * isEmptyDateCellScheduleEncodedWeek('0'); // true (NONE code)
+ * isEmptyDateCellScheduleEncodedWeek('8'); // false (WEEKDAY)
+ * isEmptyDateCellScheduleEncodedWeek('24'); // false (Mon + Wed)
+ * ```
  */
 export function isEmptyDateCellScheduleEncodedWeek(input: string): input is DateCellScheduleEncodedWeek {
   return input === '' || input === '0';
 }
 
 /**
- * Creates a DateCellScheduleEncodedWeek from an array of DateCellScheduleDayCode values.
+ * Creates a simplified {@link DateCellScheduleEncodedWeek} from an iterable of {@link DateCellScheduleDayCode} values.
  *
- * The returned encoded week is simplified so redundant individual day codes are replaced with shorthand (e.g., Mon-Fri becomes WEEKDAY).
+ * Codes are passed through {@link simplifyDateCellScheduleDayCodes} so redundant individual day codes are collapsed
+ * into shorthand (e.g. Mon-Fri becomes WEEKDAY `8`, Sat+Sun becomes WEEKEND `9`) and digits are emitted in ascending order.
  *
  * @param codes - Day codes to encode into the compact string representation.
  * @returns The encoded week string.
  *
+ * @dbxUtil
+ * @dbxUtilCategory date
+ * @dbxUtilTags date, schedule, encoded, week, encode, days, simplify, weekday, weekend
+ * @dbxUtilRelated is-date-cell-schedule-encoded-week, simplify-date-cell-schedule-day-codes, expand-date-cell-schedule-day-codes
+ *
  * @example
  * ```ts
- * // Encode weekdays only
+ * // Encode weekdays only — collapses into the WEEKDAY shorthand
  * dateCellScheduleEncodedWeek([DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.TUESDAY, DateCellScheduleDayCode.WEDNESDAY, DateCellScheduleDayCode.THURSDAY, DateCellScheduleDayCode.FRIDAY]);
- * // Returns '8' (WEEKDAY shorthand)
+ * // Returns '8'
  *
  * // Encode specific days
  * dateCellScheduleEncodedWeek([DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.WEDNESDAY]);
  * // Returns '24'
+ *
+ * // Encode the full week
+ * dateCellScheduleEncodedWeek([DateCellScheduleDayCode.WEEKDAY, DateCellScheduleDayCode.WEEKEND]);
+ * // Returns '89'
  * ```
  */
 export function dateCellScheduleEncodedWeek(codes: Iterable<DateCellScheduleDayCode>): DateCellScheduleEncodedWeek {
