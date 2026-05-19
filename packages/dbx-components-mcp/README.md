@@ -13,6 +13,7 @@ Clusters with the `_m` suffix are **model extensions** — tools that walk a dow
 | form           | `dbx_form_lookup`, `dbx_form_search`, `dbx_form_examples`, `dbx_form_scaffold`                                                         |
 | ui             | `dbx_ui_lookup`, `dbx_ui_search`, `dbx_ui_examples`                                                                                    |
 | model          | `dbx_model_lookup`, `dbx_model_search`, `dbx_model_hierarchy`, `dbx_model_decode`, `dbx_model_validate`, `dbx_model_validate_api`, `dbx_model_validate_folder`, `dbx_model_store_scaffold` |
+| model_test     | `dbx_model_test_list_app`, `dbx_model_test_tree`, `dbx_model_test_search`                                                              |
 | storagefile_m  | `dbx_storagefile_m_validate_app`, `dbx_storagefile_m_list_app`, `dbx_storagefile_m_validate_folder`                                    |
 | notification_m | `dbx_notification_m_validate_app`, `dbx_notification_m_list_app`, `dbx_notification_m_validate_folder`                                 |
 | system_m       | `dbx_system_m_validate_folder`                                                                                                         |

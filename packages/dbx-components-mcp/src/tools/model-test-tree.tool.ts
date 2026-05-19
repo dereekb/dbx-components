@@ -36,6 +36,8 @@ const TOOL: Tool = {
   description: [
     'Parse one API `.spec.ts` file and return its structural skeleton — nested `describe`/`it` calls, `<prefix><Model>Context(...)` fixture chains, locally-defined helper-describe functions, and the wrapper calls between them. Each node carries its 1-based line range so callers can navigate by line offset instead of grepping.',
     '',
+    'For **"where should I add a new test for model X?"** start with `dbx_model_test_list_app` instead — it lists every spec under the app, classifies them against the `<group>.crud[.sub].spec.ts` / `<group>.scenario[.sub].spec.ts` convention, and renders the canonical paths for new tests.',
+    '',
     'Provide:',
     '- `specFile`: relative path to the `.spec.ts` file (e.g. `apps/hellosubs-api/src/app/function/job/job.crud.instruction.spec.ts`).',
     "- `apiDir` (optional but recommended): relative path to the API app (e.g. `apps/hellosubs-api`). When supplied the tool reuses `inspectAppFixtures()` for the authoritative workspace prefix and the full set of `<prefix><Model>Context` names. When omitted the prefix is detected from the spec's own imports off `**/test/fixture`.",
