@@ -90,6 +90,23 @@ interface DbxForgeFieldLogicAsyncFnFunctionRef<O = any, I = any> {
 }
 
 /**
+ * Internal narrowed view of a derivation entry that carries an inline `fn`.
+ *
+ * The dbx-form abstraction lets callers pass `fn` on sync, async, and (no-op) http
+ * derivations alike, but ng-forge's `LogicConfig` union now declares `fn?: never`
+ * on the http / asyncFunction variants. Intersecting the entry with the function
+ * refs therefore collapses the union and narrows `source` to `undefined`, so we
+ * use this hand-built shape at the `finalizeDerivationEntry` destructure to
+ * preserve the `source` discriminator at the type level.
+ */
+interface DbxForgeFieldLogicDerivationFnEntry {
+  readonly fn: DbxForgeFieldLogicFn | DbxForgeFieldLogicAsyncFn;
+  readonly functionName?: string;
+  readonly source?: 'http' | 'asyncFunction';
+  readonly asyncFunctionName?: string;
+}
+
+/**
  * The externalData declared within a logic declaration.
  *
  * Is merged into the final form config later.
@@ -849,7 +866,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
 
   function finalizeDerivationEntry(derivationEntry: LogicConfig & { type: 'derivation' }) {
     if ('fn' in derivationEntry) {
-      const { fn, functionName, source, asyncFunctionName } = derivationEntry as unknown as (DbxForgeFieldLogicFnFunctionRef | DbxForgeFieldLogicAsyncFnFunctionRef) & typeof derivationEntry;
+      const { fn, functionName, source, asyncFunctionName } = derivationEntry as unknown as DbxForgeFieldLogicDerivationFnEntry;
 
       /**
        * Generates a default function name for the given entry, and sets it on the entry.
