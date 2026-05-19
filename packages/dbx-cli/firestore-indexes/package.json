@@ -1,0 +1,6 @@
+{
+  "name": "@dereekb/dbx-cli-firestore-indexes",
+  "version": "13.11.15",
+  "private": true,
+  "type": "module"
+}

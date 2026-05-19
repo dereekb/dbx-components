@@ -20,7 +20,7 @@ import { type } from 'arktype';
 import { CssUtilityManifest, type CssUtilityEntry } from '../manifest/css-utilities-schema.js';
 import { extractCssUtilityEntries, type ExtractedCssUtilityEntry, type ExtractWarning } from './css-utilities-extract.js';
 import { DEFAULT_CSS_UTILITIES_SCAN_OUT_PATH, CSS_UTILITIES_SCAN_CONFIG_FILENAME, CssUtilitiesScanConfig } from './css-utilities-scan-config-schema.js';
-import { defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 export type BuildCssUtilitiesReadFile = ScanReadFile;

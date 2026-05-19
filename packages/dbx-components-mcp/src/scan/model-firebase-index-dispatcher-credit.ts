@@ -12,7 +12,7 @@
  * tools share a single resolution rule.
  */
 
-import type { ModelFirebaseIndexDispatcherSummary } from './model-firebase-index-build-manifest.js';
+import type { ModelFirebaseIndexDispatcherSummary } from '@dereekb/dbx-cli/firestore-indexes';
 import type { FactoryReferenceCount } from './model-firebase-index-reference-scan.js';
 
 /**

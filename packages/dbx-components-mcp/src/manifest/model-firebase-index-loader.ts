@@ -11,7 +11,7 @@
  * loads successfully the loader throws.
  */
 
-import { ModelFirebaseIndexManifest, type ModelFirebaseIndexEntry } from './model-firebase-index-schema.js';
+import { ModelFirebaseIndexManifest, type ModelFirebaseIndexEntry } from '@dereekb/dbx-cli/firestore-indexes';
 import { loadManifestsBase, type ManifestLoaderWarning, type ManifestReadFile, type ManifestSource } from './manifest-loader-base.js';
 
 // MARK: Public types

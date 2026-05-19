@@ -12,7 +12,7 @@ import { type } from 'arktype';
 import { ActionManifest, type ActionDirectiveEntry, type ActionEntry, type ActionStateEntry, type ActionStoreEntry } from '../manifest/actions-schema.js';
 import { extractActionEntries, type ExtractedActionDirective, type ExtractedActionEntry, type ExtractedActionState, type ExtractedActionStore, type ActionExtractWarning } from './actions-extract.js';
 import { ACTIONS_SCAN_CONFIG_FILENAME, ActionsScanConfig, DEFAULT_ACTIONS_SCAN_OUT_PATH } from './actions-scan-config-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 export type BuildActionsReadFile = ScanReadFile;

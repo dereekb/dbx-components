@@ -10,7 +10,7 @@
  */
 
 import { Node, type CallExpression, type ClassDeclaration, type PropertyDeclaration } from 'ts-morph';
-import { isVisibleProperty, readPropertyDescription, readStringProperty } from './scan-extract-utils.js';
+import { isVisibleProperty, readPropertyDescription, readStringProperty } from '../../../dbx-cli/src/lib/scan-helpers/scan-extract-utils.js';
 
 // MARK: Public types
 /**

@@ -16,8 +16,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type Maybe } from '@dereekb/util';
-import type { DerivedComposite, DerivedFieldOverride } from '../manifest/model-firebase-index-schema.js';
-import type { ModelFirebaseIndexEntryInfo, ModelFirebaseIndexRegistry } from '../registry/model-firebase-index-runtime.js';
+import type { DerivedComposite, DerivedFieldOverride, ModelFirebaseIndexEntryInfo, ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { createLookupTool, type FuzzyField, type LookupDepth } from './_lookup.factory.js';
 import { type DbxTool } from './types.js';
 

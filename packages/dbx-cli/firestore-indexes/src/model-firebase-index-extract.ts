@@ -29,10 +29,10 @@
  */
 
 import { Node, SyntaxKind, type CallExpression, type FunctionDeclaration, type Identifier, type JSDoc, type ParameterDeclaration, type Project, type SourceFile } from 'ts-morph';
-import { type ConstraintSequence, type ConstraintSequenceEntry, type FirestoreQueryScope, type FirestoreWhereOperator, type ModelFirebaseIndexParamEntry, FIRESTORE_WHERE_OPERATORS } from '../manifest/model-firebase-index-schema.js';
+import { type ConstraintSequence, type ConstraintSequenceEntry, type FirestoreQueryScope, type FirestoreWhereOperator, type ModelFirebaseIndexParamEntry, FIRESTORE_WHERE_OPERATORS } from './model-firebase-index-schema.js';
 import { type FirestoreModelIdentityResolver, type ResolvedFirestoreModelIdentity } from './firestore-model-identity-resolver.js';
-import { expandFirestoreQueryHelper, getFirestoreQueryHelperDescriptor } from '../registry/firestore-query-helpers.js';
-import { splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { expandFirestoreQueryHelper, getFirestoreQueryHelperDescriptor } from './firestore-query-helpers.js';
+import { splitListTagText, unwrapFenced } from '../../src/lib/scan-helpers/scan-extract-utils.js';
 
 // MARK: Tag names
 const INDEX_MARKER = 'dbxModelFirebaseIndex';

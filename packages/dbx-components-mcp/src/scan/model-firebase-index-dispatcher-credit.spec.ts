@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { buildDispatcherCreditByName } from './model-firebase-index-dispatcher-credit.js';
-import type { ModelFirebaseIndexDispatcherSummary } from './model-firebase-index-build-manifest.js';
+import type { ModelFirebaseIndexDispatcherSummary } from '@dereekb/dbx-cli/firestore-indexes';
 import type { FactoryReferenceCount } from './model-firebase-index-reference-scan.js';
 
 function refs(productionCount: number, specCount: number): FactoryReferenceCount {

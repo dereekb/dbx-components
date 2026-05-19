@@ -4,11 +4,15 @@
   "sideEffects": false,
   "bin": {
     "dbx-cli-generate-firebase-api-manifest": "firebase-api-manifest/main.js",
+    "dbx-cli-generate-firestore-indexes": "generate-firestore-indexes/main.js",
     "dbx-cli-lint-cache": "lint-cache/main.js"
   },
   "exports": {
     "./firebase-api-manifest": {
       "default": "./firebase-api-manifest/main.js"
+    },
+    "./generate-firestore-indexes": {
+      "default": "./generate-firestore-indexes/main.js"
     },
     "./lint-cache": {
       "default": "./lint-cache/main.js"

@@ -20,7 +20,7 @@ import { type } from 'arktype';
 import { UiComponentManifest, type UiComponentEntry } from '../manifest/ui-components-schema.js';
 import { extractUiEntries, type ExtractedUiEntry, type ExtractWarning } from './ui-components-extract.js';
 import { DEFAULT_UI_COMPONENTS_SCAN_OUT_PATH, UI_COMPONENTS_SCAN_CONFIG_FILENAME, UiComponentsScanConfig } from './ui-components-scan-config-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 export type BuildUiManifestReadFile = ScanReadFile;

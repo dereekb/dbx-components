@@ -12,7 +12,7 @@
 
 import { ModelFirebaseIndexValidateAppCode } from './codes.js';
 import { attachRemediation } from '../rule-catalog/index.js';
-import type { ModelFirebaseIndexBuildWarning } from '../../scan/model-firebase-index-build-manifest.js';
+import type { ModelFirebaseIndexBuildWarning } from '@dereekb/dbx-cli/firestore-indexes';
 import type { ModelFirebaseIndexValidateAppViolation, ModelFirebaseIndexValidateAppViolationCode } from './types.js';
 import type { ViolationSeverity } from '../validate-format.js';
 

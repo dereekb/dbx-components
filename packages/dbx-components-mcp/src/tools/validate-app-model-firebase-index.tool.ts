@@ -34,12 +34,9 @@ import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { buildModelFirebaseIndexManifest } from '../scan/model-firebase-index-build-manifest.js';
+import { buildModelFirebaseIndexManifest, createModelFirebaseIndexRegistryFromEntries, generateFirestoreIndexesJson, toModelFirebaseIndexEntryInfo, type FirestoreIndexesJson, type ModelFirebaseIndexEntry } from '@dereekb/dbx-cli/firestore-indexes';
 import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount } from '../scan/model-firebase-index-reference-scan.js';
 import { buildDispatcherCreditByName, type DispatcherCredit } from '../scan/model-firebase-index-dispatcher-credit.js';
-import type { ModelFirebaseIndexEntry } from '../manifest/model-firebase-index-schema.js';
-import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
-import { generateFirestoreIndexesJson, type FirestoreIndexesJson } from '../scan/firestore-indexes-generate.js';
 import { ModelFirebaseIndexValidateAppCode } from './model-firebase-index-validate-app/codes.js';
 import { buildFirebaseIndexValidateAppViolation, mapModelFirebaseIndexBuildWarning } from './model-firebase-index-validate-app/format-warnings.js';
 import type { ModelFirebaseIndexValidateAppReport, ModelFirebaseIndexValidateAppViolation } from './model-firebase-index-validate-app/types.js';
@@ -581,7 +578,7 @@ function formatReportAsMarkdown(report: ModelFirebaseIndexValidateAppReport): st
   if (report.indexesFileExists) {
     lines.push(`Indexes file: \`${report.indexesFile}\``, '');
   } else {
-    lines.push(`> \`${report.indexesFile}\` does not exist. Run \`dbx-components-mcp generate-firestore-indexes --component ${report.componentDir}\` to create it.`, '');
+    lines.push(`> \`${report.indexesFile}\` does not exist. Run \`dbx-cli-generate-firestore-indexes --component ${report.componentDir}\` to create it.`, '');
   }
   if (report.drift) {
     lines.push('## ❌ Drift detected', '');

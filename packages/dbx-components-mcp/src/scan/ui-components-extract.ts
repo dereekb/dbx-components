@@ -17,7 +17,7 @@ import type { Maybe } from '@dereekb/util';
 import { type } from 'arktype';
 import { type ClassDeclaration, type Decorator, type JSDoc, type ObjectLiteralExpression, type Project, type PropertyDeclaration, type SourceFile, Node } from 'ts-morph';
 import { type UiComponentEntry, type UiComponentInputEntry, type UiComponentOutputEntry } from '../manifest/ui-components-schema.js';
-import { isVisibleProperty, readStringProperty, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { isVisibleProperty, readStringProperty, splitListTagText, unwrapFenced } from '../../../dbx-cli/src/lib/scan-helpers/scan-extract-utils.js';
 import { collectClassPropertiesWithInheritance, extractAngularInputs, extractAngularOutputs } from './scan-angular-io.js';
 
 // MARK: Tag names

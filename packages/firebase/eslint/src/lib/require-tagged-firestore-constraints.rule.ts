@@ -53,7 +53,7 @@ export const FIREBASE_REQUIRE_TAGGED_FIRESTORE_CONSTRAINTS_RULE: FirebaseRequire
       recommended: true
     },
     messages: {
-      inlineConstraintOutsideTaggedQuery: '`{{name}}(...)` from `@dereekb/firebase` must be called inside a `@dbxModelFirebaseIndex`-tagged query factory. Extract this constraint into a dedicated `*Query` function tagged with `@dbxModelFirebaseIndex` so dbx-components-mcp can index it.'
+      inlineConstraintOutsideTaggedQuery: '`{{name}}(...)` from `@dereekb/firebase` must be called inside a `@dbxModelFirebaseIndex`-tagged query factory. Extract this constraint into a dedicated `*Query` function tagged with `@dbxModelFirebaseIndex` so dbx-components-mcp can index it, then run `dbx-cli-generate-firestore-indexes --component <dir>` to regenerate `firestore.indexes.json`.'
     },
     schema: [
       {

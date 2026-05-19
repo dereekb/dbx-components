@@ -25,10 +25,8 @@ import { type } from 'arktype';
 import { type FunctionDeclaration, type Project, type SourceFile } from 'ts-morph';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, type BuildModelFirebaseIndexManifestOutcome } from '../scan/model-firebase-index-build-manifest.js';
-import type { DerivedComposite, DerivedFieldOverride, ModelFirebaseIndexEntry } from '../manifest/model-firebase-index-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile } from '../scan/scan-io.js';
-import { MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME } from '../scan/model-firebase-index-scan-config-schema.js';
+import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME, type BuildModelFirebaseIndexManifestOutcome, type DerivedComposite, type DerivedFieldOverride, type ModelFirebaseIndexEntry } from '@dereekb/dbx-cli/firestore-indexes';
+import { buildScanProject, defaultGlobber, defaultReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount, type FactoryReferenceSite } from '../scan/model-firebase-index-reference-scan.js';
 import { buildDispatcherCreditByName, type DispatcherCredit } from '../scan/model-firebase-index-dispatcher-credit.js';
 

@@ -14,7 +14,7 @@
 
 import { Node, type ClassDeclaration, type Decorator, type JSDoc, type MethodDeclaration, type ObjectLiteralExpression, type ParameterDeclaration, type Project, type SourceFile } from 'ts-morph';
 import type { PipeArgEntry, PipeEntry } from '../manifest/pipes-schema.js';
-import { readStringProperty, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { readStringProperty, splitListTagText, unwrapFenced } from '../../../dbx-cli/src/lib/scan-helpers/scan-extract-utils.js';
 
 // MARK: Tag names
 const PIPE_MARKER = 'dbxPipe';

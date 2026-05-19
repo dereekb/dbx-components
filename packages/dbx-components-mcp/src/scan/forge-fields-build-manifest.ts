@@ -20,7 +20,7 @@ import { type } from 'arktype';
 import { ForgeFieldManifest, type ForgeFieldEntry } from '../manifest/forge-fields-schema.js';
 import { extractForgeFieldEntries, type ExtractedForgeFieldEntry, type ForgeExtractWarning } from './forge-fields-extract.js';
 import { DEFAULT_FORGE_FIELDS_SCAN_OUT_PATH, FORGE_FIELDS_SCAN_CONFIG_FILENAME, ForgeFieldsScanConfig } from './forge-fields-scan-config-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 export type BuildForgeFieldsReadFile = ScanReadFile;

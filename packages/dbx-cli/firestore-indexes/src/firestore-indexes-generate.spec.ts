@@ -17,7 +17,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { ModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
+import type { ModelFirebaseIndexEntryInfo } from './model-firebase-index-runtime.js';
 import { generateFirestoreIndexesJson, serializeFirestoreIndexesJson, type FirestoreIndexesJson } from './firestore-indexes-generate.js';
 
 function makeEntry(input: { readonly slug: string; readonly manual?: boolean; readonly skip?: boolean; readonly composites?: ModelFirebaseIndexEntryInfo['derivedComposites']; readonly fieldOverrides?: ModelFirebaseIndexEntryInfo['derivedFieldOverrides'] }): ModelFirebaseIndexEntryInfo {

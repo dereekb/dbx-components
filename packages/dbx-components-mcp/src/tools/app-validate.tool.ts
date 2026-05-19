@@ -44,9 +44,7 @@ import { inspectAppAssets, validateAppAssets } from './dbx-asset-validate-app/in
 import { validateAppModelApi } from './model-api-validate-app/index.js';
 import { FIREBASE_MODELS } from '../registry/firebase-models.js';
 import { getDownstreamCatalog } from '../registry/downstream-models-runtime.js';
-import { buildModelFirebaseIndexManifest } from '../scan/model-firebase-index-build-manifest.js';
-import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
-import { generateFirestoreIndexesJson, type FirestoreIndexesJson } from '../scan/firestore-indexes-generate.js';
+import { buildModelFirebaseIndexManifest, createModelFirebaseIndexRegistryFromEntries, generateFirestoreIndexesJson, toModelFirebaseIndexEntryInfo, type FirestoreIndexesJson } from '@dereekb/dbx-cli/firestore-indexes';
 
 const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest' | 'model_api' | 'firebase_index' | 'asset'";
 

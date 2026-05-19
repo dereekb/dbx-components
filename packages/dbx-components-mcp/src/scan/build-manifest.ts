@@ -19,7 +19,7 @@ import { relative, resolve } from 'node:path';
 import { type } from 'arktype';
 import { SemanticTypeManifest, type SemanticTypeEntry } from '../manifest/semantic-types-schema.js';
 import { extractEntries, type ExtractedEntry } from './extract.js';
-import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 import { DEFAULT_SCAN_OUT_PATH, SCAN_CONFIG_FILENAME, SemanticTypeScanConfig } from './scan-config-schema.js';
 
 // MARK: Public types

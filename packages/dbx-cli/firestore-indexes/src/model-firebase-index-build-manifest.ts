@@ -20,12 +20,12 @@
 
 import { relative, resolve } from 'node:path';
 import { type } from 'arktype';
-import { ModelFirebaseIndexManifest, type ModelFirebaseIndexEntry } from '../manifest/model-firebase-index-schema.js';
+import { ModelFirebaseIndexManifest, type ModelFirebaseIndexEntry } from './model-firebase-index-schema.js';
 import { analyzeModelFirebaseIndexEntries, type AnalyzedEntry, type AnalyzerWarning } from './model-firebase-index-analyze.js';
 import { extractModelFirebaseIndexEntries, type ExtractedModelFirebaseIndexEntry, type ModelFirebaseIndexExtractWarning } from './model-firebase-index-extract.js';
 import { buildIdentityResolverFromProject } from './firestore-model-identity-resolver.js';
 import { DEFAULT_MODEL_FIREBASE_INDEX_SCAN_OUT_PATH, MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME, ModelFirebaseIndexScanConfig } from './model-firebase-index-scan-config-schema.js';
-import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from './scan-io.js';
+import { buildScanProject, defaultGlobber, defaultReadFile, loadPackageName, loadScanSection, type ScanGlobber, type ScanReadFile } from '../../src/lib/scan-helpers/scan-io.js';
 
 // MARK: Public types
 export type BuildModelFirebaseIndexReadFile = ScanReadFile;

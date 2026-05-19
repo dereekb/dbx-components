@@ -12,7 +12,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE } from './model-firebase-index-reference-scan.js';
-import { globToRegex } from './scan-io.js';
+import { globToRegex } from '../../../dbx-cli/src/lib/scan-helpers/scan-io.js';
 
 interface FakeFs {
   readonly globber: (input: { readonly projectRoot: string; readonly include: readonly string[]; readonly exclude: readonly string[] }) => Promise<readonly string[]>;

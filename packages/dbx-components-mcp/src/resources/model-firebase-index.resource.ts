@@ -12,7 +12,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { ModelFirebaseIndexRegistry } from '../registry/model-firebase-index-runtime.js';
+import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { buildSlugDetailResponse, pickFirstVariable } from './_resource-helpers.js';
 
 const CATALOG_URI = 'dbx://model-firebase-index/entries';

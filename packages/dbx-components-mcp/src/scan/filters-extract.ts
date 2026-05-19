@@ -16,7 +16,7 @@
 
 import { type ClassDeclaration, type InterfaceDeclaration, type JSDoc, type Project } from 'ts-morph';
 import type { FilterInputEntry } from '../manifest/filters-schema.js';
-import { readDirectiveDecorator, splitListTagText, unwrapFenced } from './scan-extract-utils.js';
+import { readDirectiveDecorator, splitListTagText, unwrapFenced } from '../../../dbx-cli/src/lib/scan-helpers/scan-extract-utils.js';
 import { extractAngularInputs, extractAngularOutputs } from './scan-angular-io.js';
 
 // MARK: Tag names

@@ -5,7 +5,7 @@
  * model-firebase-index domain config.
  */
 
-import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, serializeModelFirebaseIndexManifest, type BuildModelFirebaseIndexGlobber } from './model-firebase-index-build-manifest.js';
+import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, serializeModelFirebaseIndexManifest, type BuildModelFirebaseIndexGlobber } from '../../../dbx-cli/firestore-indexes/src/model-firebase-index-build-manifest.js';
 import { runScanCliBase, type RunScanCliBaseInput, type RunScanCliResult, type ScanCliBaseLogger, type ScanCliBaseReadFile, type ScanCliBaseWriteFile } from './scan-cli-base.js';
 
 // MARK: Public types
