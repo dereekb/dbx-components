@@ -1,7 +1,7 @@
 import { FIREBASE_REQUIRE_TAGGED_FIRESTORE_CONSTRAINTS_RULE } from './require-tagged-firestore-constraints.rule';
 import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_QUERY_SUFFIX_RULE } from './require-dbx-model-firebase-index-query-suffix.rule';
 import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE } from './require-dbx-model-firebase-index-companion-tags.rule';
-import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_DISPATCHER_USES_TAGGED_QUERIES_RULE } from './require-dbx-model-firebase-index-dispatcher-uses-tagged-queries.rule';
+import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE } from './require-dbx-model-firebase-index-valid-dispatcher.rule';
 
 /**
  * ESLint plugin interface for `@dereekb/firebase` rules.
@@ -11,7 +11,7 @@ export interface FirebaseEslintPlugin {
     readonly 'require-tagged-firestore-constraints': typeof FIREBASE_REQUIRE_TAGGED_FIRESTORE_CONSTRAINTS_RULE;
     readonly 'require-dbx-model-firebase-index-query-suffix': typeof FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_QUERY_SUFFIX_RULE;
     readonly 'require-dbx-model-firebase-index-companion-tags': typeof FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE;
-    readonly 'require-dbx-model-firebase-index-dispatcher-uses-tagged-queries': typeof FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_DISPATCHER_USES_TAGGED_QUERIES_RULE;
+    readonly 'require-dbx-model-firebase-index-valid-dispatcher': typeof FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE;
   };
 }
 
@@ -26,7 +26,7 @@ export const FIREBASE_ESLINT_PLUGIN: FirebaseEslintPlugin = {
     'require-tagged-firestore-constraints': FIREBASE_REQUIRE_TAGGED_FIRESTORE_CONSTRAINTS_RULE,
     'require-dbx-model-firebase-index-query-suffix': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_QUERY_SUFFIX_RULE,
     'require-dbx-model-firebase-index-companion-tags': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE,
-    'require-dbx-model-firebase-index-dispatcher-uses-tagged-queries': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_DISPATCHER_USES_TAGGED_QUERIES_RULE
+    'require-dbx-model-firebase-index-valid-dispatcher': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE
   }
 };
 

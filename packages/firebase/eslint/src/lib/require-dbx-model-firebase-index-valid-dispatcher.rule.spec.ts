@@ -1,15 +1,15 @@
 import { Linter } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
-import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_DISPATCHER_USES_TAGGED_QUERIES_RULE } from './require-dbx-model-firebase-index-dispatcher-uses-tagged-queries.rule';
+import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE } from './require-dbx-model-firebase-index-valid-dispatcher.rule';
 
-const RULE_ID = 'dereekb-firebase/require-dbx-model-firebase-index-dispatcher-uses-tagged-queries';
+const RULE_ID = 'dereekb-firebase/require-dbx-model-firebase-index-valid-dispatcher';
 
 function buildConfig(): Linter.Config[] {
   return [
     {
       files: ['**/*.ts'],
       languageOptions: { parser: tsParser, parserOptions: { ecmaVersion: 2022, sourceType: 'module' } },
-      plugins: { 'dereekb-firebase': { rules: { 'require-dbx-model-firebase-index-dispatcher-uses-tagged-queries': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_DISPATCHER_USES_TAGGED_QUERIES_RULE } } as any },
+      plugins: { 'dereekb-firebase': { rules: { 'require-dbx-model-firebase-index-valid-dispatcher': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE } } as any },
       rules: { [RULE_ID]: 'error' }
     }
   ];
@@ -20,7 +20,7 @@ function lintCode(code: string): Linter.LintMessage[] {
   return linter.verify(code, buildConfig(), { filename: 'test.ts' }).filter((m) => m.ruleId === RULE_ID);
 }
 
-describe('require-dbx-model-firebase-index-dispatcher-uses-tagged-queries rule', () => {
+describe('require-dbx-model-firebase-index-valid-dispatcher rule', () => {
   it('allows a dispatcher that returns another tagged query factory result directly', () => {
     const errors = lintCode(`
 /**

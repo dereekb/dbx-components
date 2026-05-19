@@ -15,7 +15,7 @@ const DEFAULT_DISPATCHER_TAG = 'dbxModelFirebaseIndexDispatcher';
 const DEFAULT_PRESUMED_TAGGED_SUFFIX = 'Query';
 
 /**
- * Options for the require-dbx-model-firebase-index-dispatcher-uses-tagged-queries rule.
+ * Options for the require-dbx-model-firebase-index-valid-dispatcher rule.
  */
 export interface FirebaseRequireDbxModelFirebaseIndexValidDispatcherRuleOptions {
   readonly constraintNames?: readonly string[];
@@ -26,7 +26,7 @@ export interface FirebaseRequireDbxModelFirebaseIndexValidDispatcherRuleOptions 
 }
 
 /**
- * ESLint rule definition for require-dbx-model-firebase-index-dispatcher-uses-tagged-queries.
+ * ESLint rule definition for require-dbx-model-firebase-index-valid-dispatcher.
  */
 export interface FirebaseRequireDbxModelFirebaseIndexValidDispatcherRuleDefinition {
   readonly meta: {
