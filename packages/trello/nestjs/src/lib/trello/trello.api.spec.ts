@@ -301,6 +301,75 @@ describe('trello.api', () => {
           });
         });
 
+        describe('attachments', () => {
+          // 67-byte 1x1 transparent PNG used as a synthetic screenshot upload.
+          const PNG_BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x62, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82]);
+
+          it('uploads a screenshot and reads it back via the api', async () => {
+            const fileName = `screenshot-${Date.now()}.png`;
+
+            const uploaded = await api.addAttachmentToCard({
+              cardId,
+              file: { content: PNG_BYTES, fileName, mimeType: 'image/png' }
+            });
+
+            expect(uploaded.id).toBeDefined();
+            expect(uploaded.fileName).toBe(fileName);
+            expect(uploaded.mimeType).toBe('image/png');
+            expect(uploaded.bytes).toBe(PNG_BYTES.byteLength);
+            expect(uploaded.isUpload).toBe(true);
+
+            const list = await api.listCardAttachments({ cardId });
+            expect(list.some((attachment) => attachment.id === uploaded.id)).toBe(true);
+
+            const fetched = await api.getCardAttachment({ cardId, attachmentId: uploaded.id });
+            expect(fetched.id).toBe(uploaded.id);
+            expect(fetched.fileName).toBe(fileName);
+            expect(fetched.mimeType).toBe('image/png');
+
+            const downloaded = await api.downloadCardAttachment({ cardId, attachmentId: uploaded.id, attachment: fetched });
+            expect(downloaded.response.ok).toBe(true);
+            expect(downloaded.attachment.id).toBe(uploaded.id);
+
+            const downloadedBytes = new Uint8Array(await downloaded.arrayBuffer());
+            expect(downloadedBytes.byteLength).toBe(PNG_BYTES.byteLength);
+            expect(Array.from(downloadedBytes)).toEqual(Array.from(PNG_BYTES));
+          });
+
+          describe('getCardAttachment()', () => {
+            itShouldFail('with a TrelloServerFetchResponseError when the attachment does not exist on the card', async () => {
+              await expectFail(() => api.getCardAttachment({ cardId, attachmentId: NON_EXISTENT_TRELLO_ID }), expectFailAssertErrorType(TrelloServerFetchResponseError));
+            });
+          });
+
+          describe('downloadCardAttachment()', () => {
+            itShouldFail('with a TrelloServerFetchResponseError when the attachment does not exist on the card', async () => {
+              await expectFail(() => api.downloadCardAttachment({ cardId, attachmentId: NON_EXISTENT_TRELLO_ID }), expectFailAssertErrorType(TrelloServerFetchResponseError));
+            });
+
+            describe('with an uploaded attachment', () => {
+              let stubAttachmentId: string;
+              let stubFileName: string;
+
+              beforeEach(async () => {
+                stubFileName = `download-not-found-${Date.now()}.png`;
+                const uploaded = await api.addAttachmentToCard({
+                  cardId,
+                  file: { content: PNG_BYTES, fileName: stubFileName, mimeType: 'image/png' }
+                });
+                stubAttachmentId = uploaded.id;
+              });
+
+              itShouldFail('with a TrelloServerFetchResponseError when the file no longer exists', async () => {
+                await api.deleteAttachmentFromCard({ cardId, attachmentId: stubAttachmentId });
+
+                // The metadata is gone too, so this also exercises the internal getCardAttachment() lookup failing.
+                await expectFail(() => api.downloadCardAttachment({ cardId, attachmentId: stubAttachmentId }), expectFailAssertErrorType(TrelloServerFetchResponseError));
+              });
+            });
+          });
+        });
+
         describe('addLabelToCard()', () => {
           describe('a label exists on the board', () => {
             let labelId: TrelloLabelId;
