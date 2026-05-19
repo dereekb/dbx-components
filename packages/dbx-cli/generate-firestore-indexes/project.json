@@ -43,6 +43,15 @@
         }
       }
     },
+    "regenerate": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build-base"],
+      "options": {
+        "command": "node dist/packages/dbx-cli/generate-firestore-indexes/main.js --component components/demo-firebase",
+        "cwd": "{workspaceRoot}",
+        "color": true
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"]

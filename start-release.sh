@@ -12,13 +12,16 @@ fi
 echo regenerating dbx-components-mcp files before starting release
 ./regenerate-dbx-components-mcp.sh
 
+echo regenerating firestore.indexes.json before starting release
+./regenerate-firestore-indexes.sh
+
 echo running lint-fix before starting release
 ./lint-fix-all.sh
 
 # if has changes then create a commit for the lint fix
 if [[ `git status --porcelain` ]]; then
   echo lint-fix created changes. Comitting to git.
-  git commit --no-verify -a -m "build: lint fix + mcp regeneration"
+  git commit --no-verify -a -m "build: lint fix + mcp regeneration + firestore indexes"
   git push origin develop
 fi
 
