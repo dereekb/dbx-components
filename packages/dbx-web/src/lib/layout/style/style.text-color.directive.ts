@@ -10,6 +10,14 @@ import { type Maybe } from '@dereekb/util';
  * object carrying an arbitrary CSS color value. Unlike {@link DbxColorDirective} which sets the background,
  * this directive only sets the foreground text color.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug text-color
+ * @dbxWebCategory layout
+ * @dbxWebRelated color, color-service
+ * @dbxWebMinimalExample ```html
+ * <span [dbxTextColor]="'primary'"></span>
+ * ```
+ *
  * @example
  * ```html
  * <mat-icon [dbxTextColor]="'warn'">error</mat-icon>

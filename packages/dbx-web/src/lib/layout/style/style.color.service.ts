@@ -16,9 +16,22 @@ export abstract class DbxColorServiceConfig {
  * Service that registers named {@link DbxColorConfigTemplate} entries and expands
  * {@link DbxColorConfig} values that reference a template by key.
  *
- * The pattern mirrors {@link DbxHelpWidgetService} and {@link DbxFirebaseModelEntitiesWidgetService}:
- * an internal Map keyed by template key, optional seeding from {@link DbxColorServiceConfig},
- * and a `register` method for adding entries at runtime.
+ * Seeded via `provideDbxStyleService({ dbxColorServiceConfig: { templates: [...] } })`,
+ * then injected by {@link DbxColorDirective} and {@link DbxTextColorDirective} to resolve
+ * template references at render time.
+ *
+ * @dbxWebComponent
+ * @dbxWebSlug color-service
+ * @dbxWebCategory layout
+ * @dbxWebRelated color, text-color, style-service
+ *
+ * @example
+ * ```ts
+ * const colorService = inject(DbxColorService);
+ * colorService.register({ key: 'brand-positive', config: { color: '#1f9b59', contrast: 'white', tone: 18 } });
+ * colorService.expandColorConfig({ template: 'brand-positive' });
+ * // -> { template: 'brand-positive', color: '#1f9b59', contrast: 'white', tone: 18 }
+ * ```
  */
 @Injectable()
 export class DbxColorService {

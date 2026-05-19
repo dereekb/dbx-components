@@ -10,6 +10,14 @@ import { type Maybe } from '@dereekb/util';
  *
  * Place this directive on a root-level element so that the body tag receives the active style class.
  *
+ * @dbxWebComponent
+ * @dbxWebSlug style-body
+ * @dbxWebCategory layout
+ * @dbxWebRelated style, style-service, set-style
+ * @dbxWebMinimalExample ```html
+ * <div dbxStyleBody></div>
+ * ```
+ *
  * @example
  * ```html
  * <div dbxStyleBody></div>

@@ -867,6 +867,146 @@
       ]
     },
     {
+      "slug": "date-cell-schedule-encoded-week-regex",
+      "name": "DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX",
+      "kind": "const",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.schedule",
+      "signature": "const DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX: RegExp",
+      "description": "Regex that loosely validates a {@link DateCellScheduleEncodedWeek}.\n\nMatches zero-to-nine digit characters (any of `0-9`). Does not enforce ascending order or uniqueness of\ndigits — use {@link isDateCellScheduleEncodedWeek} for a runtime check that mirrors the type, or\n{@link dateCellScheduleEncodedWeek} to build a guaranteed-valid encoding from {@link DateCellScheduleDayCode}\nvalues.",
+      "params": [],
+      "returns": "RegExp",
+      "tags": [
+        "date",
+        "schedule",
+        "encoded",
+        "week",
+        "regex",
+        "validate",
+        "days",
+        "cell",
+        "date_cell_schedule_encoded_week_regex"
+      ],
+      "relatedSlugs": [
+        "is-date-cell-schedule-encoded-week",
+        "date-cell-schedule-encoded-week"
+      ]
+    },
+    {
+      "slug": "is-date-cell-schedule-encoded-week",
+      "name": "isDateCellScheduleEncodedWeek",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.schedule",
+      "signature": "isDateCellScheduleEncodedWeek(input: string): input is DateCellScheduleEncodedWeek",
+      "description": "Type guard that returns true if the input matches the {@link DATE_CELL_SCHEDULE_ENCODED_WEEK_REGEX} encoded-week format.\n\nThe regex check is loose — it allows duplicate digits and any digit ordering. To produce a canonically simplified\nencoding, use {@link dateCellScheduleEncodedWeek}.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- String to validate against the encoded week regex.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the string matches the encoded week format.",
+      "tags": [
+        "date",
+        "schedule",
+        "encoded",
+        "week",
+        "type-guard",
+        "validate",
+        "check",
+        "days",
+        "is",
+        "cell",
+        "isdatecellscheduleencodedweek"
+      ],
+      "example": "isDateCellScheduleEncodedWeek('24');  // true (Mon + Wed)\nisDateCellScheduleEncodedWeek('8');   // true (WEEKDAY shorthand)\nisDateCellScheduleEncodedWeek('');    // true (no days)\nisDateCellScheduleEncodedWeek('abc'); // false",
+      "relatedSlugs": [
+        "date-cell-schedule-encoded-week-regex",
+        "is-empty-date-cell-schedule-encoded-week",
+        "date-cell-schedule-encoded-week"
+      ]
+    },
+    {
+      "slug": "is-empty-date-cell-schedule-encoded-week",
+      "name": "isEmptyDateCellScheduleEncodedWeek",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.schedule",
+      "signature": "isEmptyDateCellScheduleEncodedWeek(input: string): input is DateCellScheduleEncodedWeek",
+      "description": "Returns true if the input represents an empty (no days selected) {@link DateCellScheduleEncodedWeek}.\n\nBoth the empty string `''` and `'0'` are treated as empty since `0` corresponds to\n{@link DateCellScheduleDayCode.NONE}, the no-op day code.",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "description": "- String to check for emptiness.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the encoded week represents no selected days.",
+      "tags": [
+        "date",
+        "schedule",
+        "encoded",
+        "week",
+        "empty",
+        "check",
+        "type-guard",
+        "days",
+        "is",
+        "cell",
+        "isemptydatecellscheduleencodedweek"
+      ],
+      "example": "isEmptyDateCellScheduleEncodedWeek('');  // true\nisEmptyDateCellScheduleEncodedWeek('0'); // true (NONE code)\nisEmptyDateCellScheduleEncodedWeek('8'); // false (WEEKDAY)\nisEmptyDateCellScheduleEncodedWeek('24'); // false (Mon + Wed)",
+      "relatedSlugs": [
+        "is-date-cell-schedule-encoded-week",
+        "date-cell-schedule-encoded-week"
+      ]
+    },
+    {
+      "slug": "date-cell-schedule-encoded-week",
+      "name": "dateCellScheduleEncodedWeek",
+      "kind": "function",
+      "category": "date",
+      "module": "@dereekb/date",
+      "subpath": "date/date.cell.schedule",
+      "signature": "dateCellScheduleEncodedWeek(codes: Iterable<DateCellScheduleDayCode>): DateCellScheduleEncodedWeek",
+      "description": "Creates a simplified {@link DateCellScheduleEncodedWeek} from an iterable of {@link DateCellScheduleDayCode} values.\n\nCodes are passed through {@link simplifyDateCellScheduleDayCodes} so redundant individual day codes are collapsed\ninto shorthand (e.g. Mon-Fri becomes WEEKDAY `8`, Sat+Sun becomes WEEKEND `9`) and digits are emitted in ascending order.",
+      "params": [
+        {
+          "name": "codes",
+          "type": "Iterable<DateCellScheduleDayCode>",
+          "description": "- Day codes to encode into the compact string representation.",
+          "optional": false
+        }
+      ],
+      "returns": "The encoded week string.",
+      "tags": [
+        "date",
+        "schedule",
+        "encoded",
+        "week",
+        "encode",
+        "days",
+        "simplify",
+        "weekday",
+        "weekend",
+        "cell",
+        "datecellscheduleencodedweek"
+      ],
+      "example": "// Encode weekdays only — collapses into the WEEKDAY shorthand\ndateCellScheduleEncodedWeek([DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.TUESDAY, DateCellScheduleDayCode.WEDNESDAY, DateCellScheduleDayCode.THURSDAY, DateCellScheduleDayCode.FRIDAY]);\n// Returns '8'\n\n// Encode specific days\ndateCellScheduleEncodedWeek([DateCellScheduleDayCode.MONDAY, DateCellScheduleDayCode.WEDNESDAY]);\n// Returns '24'\n\n// Encode the full week\ndateCellScheduleEncodedWeek([DateCellScheduleDayCode.WEEKDAY, DateCellScheduleDayCode.WEEKEND]);\n// Returns '89'",
+      "relatedSlugs": [
+        "is-date-cell-schedule-encoded-week",
+        "simplify-date-cell-schedule-day-codes",
+        "expand-date-cell-schedule-day-codes"
+      ]
+    },
+    {
       "slug": "time-duration-data-is-empty",
       "name": "timeDurationDataIsEmpty",
       "kind": "function",

@@ -1929,6 +1929,170 @@
       "minimalExample": "<dbx-spacer></dbx-spacer>"
     },
     {
+      "slug": "style-body",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxStyleBody]",
+      "className": "DbxStyleBodyDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Applies the current application style class from {@link DbxStyleService} to the document `<body>` element.\n\nPlace this directive on a root-level element so that the body tag receives the active style class.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "style",
+        "style-service",
+        "set-style"
+      ],
+      "example": "<div dbxStyleBody></div>",
+      "minimalExample": "<div dbxStyleBody></div>"
+    },
+    {
+      "slug": "color",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxColor]",
+      "className": "DbxColorDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Applies a themed background color to the host element.\n\nAccepts either a {@link DbxThemeColor} string (e.g. `'primary'`, `'success'`) or a {@link DbxColorConfig}\nobject carrying arbitrary CSS color values (any hex, `rgb()`, `hsl()`, `var(...)`, `color-mix(...)`, etc.).\n\nOptionally set {@link dbxColorTone} (0-100) to control background opacity for a tonal/muted appearance.\nWhen tonal mode is active, the `dbx-color-tonal` CSS class is added and a CSS rule overrides the text\ncolor to the vibrant color (via `--dbx-bg-color-current`).\n\nThe standalone `[dbxColorTone]` input wins over `config.tone` when both are set; the same precedence\napplies to tonal mode.",
+      "inputs": [
+        {
+          "name": "dbxColor",
+          "type": "Maybe<DbxColorInput>",
+          "description": "",
+          "required": false
+        },
+        {
+          "name": "dbxColorTone",
+          "type": "Maybe<DbxColorTone>",
+          "description": "Background tone level (0-100). When set, the background becomes semi-transparent\nand text color switches to the vibrant theme color for a tonal appearance.",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "text-color",
+        "color-service"
+      ],
+      "example": "<div [dbxColor]=\"'primary'\">Themed background</div>\n<div [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\">Tonal themed</div>\n<div [dbxColor]=\"{ color: '#ff0066', contrast: 'white' }\">Custom hex</div>\n<div [dbxColor]=\"{ color: 'var(--mat-sys-tertiary)', contrast: 'var(--mat-sys-on-tertiary)', tone: 18 }\">Custom tonal</div>",
+      "minimalExample": "<div [dbxColor]=\"'primary'\"></div>"
+    },
+    {
+      "slug": "color-service",
+      "category": "layout",
+      "kind": "service",
+      "selector": "",
+      "className": "DbxColorService",
+      "module": "@dereekb/dbx-web",
+      "description": "Service that registers named {@link DbxColorConfigTemplate} entries and expands\n{@link DbxColorConfig} values that reference a template by key.\n\nSeeded via `provideDbxStyleService({ dbxColorServiceConfig: { templates: [...] } })`,\nthen injected by {@link DbxColorDirective} and {@link DbxTextColorDirective} to resolve\ntemplate references at render time.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "color",
+        "text-color",
+        "style-service"
+      ],
+      "example": "const colorService = inject(DbxColorService);\ncolorService.register({ key: 'brand-positive', config: { color: '#1f9b59', contrast: 'white', tone: 18 } });\ncolorService.expandColorConfig({ template: 'brand-positive' });\n// -> { template: 'brand-positive', color: '#1f9b59', contrast: 'white', tone: 18 }"
+    },
+    {
+      "slug": "style",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "dbx-style, [dbxStyle], .dbx-style",
+      "className": "DbxStyleDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Applies the current application style class from {@link DbxStyleService} to the host element.\n\nUse this directive to propagate the active style class onto any element or component.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "style-service",
+        "style-body",
+        "set-style"
+      ],
+      "example": "<div dbxStyle>Styled content</div>",
+      "minimalExample": "<div dbxStyle></div>"
+    },
+    {
+      "slug": "style-service",
+      "category": "layout",
+      "kind": "service",
+      "selector": "",
+      "className": "DbxStyleService",
+      "module": "@dereekb/dbx-web",
+      "description": "Manages application-wide style classes and suffix modes (e.g., dark mode).\n\nConsumers can set a default style config, override it with an observable config,\nand toggle style suffixes to switch between style variants at runtime.\n\nProvided via `provideDbxStyleService()` from `style.providers`.",
+      "inputs": [],
+      "outputs": [],
+      "relatedSlugs": [
+        "style",
+        "set-style",
+        "style-body",
+        "color-service"
+      ],
+      "example": "const styleService = inject(DbxStyleService);\nstyleService.toggleDarkSuffix();           // toggle dark mode on/off\nstyleService.setStyleClassSuffix('dark');  // force dark mode"
+    },
+    {
+      "slug": "set-style",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxSetStyle]",
+      "className": "DbxSetStyleDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Sets the active application style for child elements and/or the global {@link DbxStyleService}.\n\nAccepts a {@link DbxStyleName} and optional suffixes, then applies the computed style class\ndepending on the configured {@link DbxSetStyleMode}.",
+      "inputs": [
+        {
+          "name": "setStyleMode",
+          "type": "DbxSetStyleMode",
+          "description": "The mode for the style.\n\n- global: The style will be set on the parent DbxStyleService.\n- self: The style will be applied to the host element.",
+          "required": false,
+          "default": "'self'"
+        },
+        {
+          "name": "dbxSetStyle",
+          "type": "DbxStyleName",
+          "description": "The input DbxStyleName to style the host element with.",
+          "required": false
+        },
+        {
+          "name": "suffixes",
+          "type": "Maybe<string>",
+          "description": "The input suffixes to allow to be applied to the",
+          "required": false,
+          "default": "undefined"
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "style",
+        "style-service",
+        "style-body"
+      ],
+      "example": "<div [dbxSetStyle]=\"'my-app'\" [setStyleMode]=\"'both'\" [suffixes]=\"'dark'\">\n  <!-- Children inherit 'my-app' or 'my-app-dark' styling -->\n</div>",
+      "minimalExample": "<div [dbxSetStyle]=\"'my-app'\"></div>"
+    },
+    {
+      "slug": "text-color",
+      "category": "layout",
+      "kind": "directive",
+      "selector": "[dbxTextColor]",
+      "className": "DbxTextColorDirective",
+      "module": "@dereekb/dbx-web",
+      "description": "Applies a themed text color to the host element.\n\nAccepts either a {@link DbxThemeColor} string (e.g. `'primary'`, `'warn'`) or a {@link DbxColorConfig}\nobject carrying an arbitrary CSS color value. Unlike {@link DbxColorDirective} which sets the background,\nthis directive only sets the foreground text color.",
+      "inputs": [
+        {
+          "name": "dbxTextColor",
+          "type": "Maybe<DbxColorInput>",
+          "description": "",
+          "required": false
+        }
+      ],
+      "outputs": [],
+      "relatedSlugs": [
+        "color",
+        "color-service"
+      ],
+      "example": "<mat-icon [dbxTextColor]=\"'warn'\">error</mat-icon>\n<span [dbxTextColor]=\"'primary'\">Themed text</span>\n<span [dbxTextColor]=\"{ color: '#0066ff' }\">Custom hex text</span>",
+      "minimalExample": "<span [dbxTextColor]=\"'primary'\"></span>"
+    },
+    {
       "slug": "click-to-copy-text",
       "category": "text",
       "kind": "component",
