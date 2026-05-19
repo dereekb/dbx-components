@@ -8,6 +8,12 @@
       "types": "./test/index.d.ts",
       "import": "./test/index.cjs.mjs",
       "default": "./test/index.cjs.js"
+    },
+    "./eslint": {
+      "module": "./eslint/index.esm.js",
+      "types": "./eslint/index.d.ts",
+      "import": "./eslint/index.cjs.mjs",
+      "default": "./eslint/index.cjs.js"
     }
   },
   "peerDependencies": {

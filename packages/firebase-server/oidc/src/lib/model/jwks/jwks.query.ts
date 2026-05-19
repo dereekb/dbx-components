@@ -6,6 +6,9 @@ import { type JwksKey, type JwksKeyStatus } from './jwks';
  *
  * @param status - The lifecycle status to filter by.
  * @returns Firestore query constraints filtering by the given status.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel JwksKey
  */
 export function jwksKeysWithStatusQuery(status: JwksKeyStatus): FirestoreQueryConstraint[] {
   return [where<JwksKey>('status', '==', status)];
@@ -24,6 +27,9 @@ export function activeJwksKeysQuery(): FirestoreQueryConstraint[] {
  * Query for non-retired JwksKey documents (active + rotated).
  *
  * @returns Firestore query constraints filtering for non-retired keys.
+ *
+ * @dbxModelFirebaseIndex
+ * @dbxModelFirebaseIndexModel JwksKey
  */
 export function nonRetiredJwksKeysQuery(): FirestoreQueryConstraint[] {
   return [where<JwksKey>('status', 'in', ['active', 'rotated'])];
