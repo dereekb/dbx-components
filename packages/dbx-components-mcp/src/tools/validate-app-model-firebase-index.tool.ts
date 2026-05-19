@@ -36,6 +36,7 @@ import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { buildModelFirebaseIndexManifest } from '../scan/model-firebase-index-build-manifest.js';
 import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount } from '../scan/model-firebase-index-reference-scan.js';
+import { buildDispatcherCreditByName, type DispatcherCredit } from '../scan/model-firebase-index-dispatcher-credit.js';
 import type { ModelFirebaseIndexEntry } from '../manifest/model-firebase-index-schema.js';
 import { createModelFirebaseIndexRegistryFromEntries, toModelFirebaseIndexEntryInfo } from '../registry/model-firebase-index-runtime.js';
 import { generateFirestoreIndexesJson, type FirestoreIndexesJson } from '../scan/firestore-indexes-generate.js';
@@ -277,6 +278,7 @@ interface PushFactoryCallerViolationsInput {
   readonly buffer: ViolationBuffer;
   readonly entry: ModelFirebaseIndexEntry;
   readonly references: ReadonlyMap<string, FactoryReferenceCount>;
+  readonly dispatcherCreditByName: ReadonlyMap<string, DispatcherCredit>;
   readonly filePath: string | undefined;
 }
 
@@ -287,14 +289,23 @@ interface PushFactoryCallerViolationsInput {
  * no production callers (and, for spec-only factories, no spec callers
  * either).
  *
- * @param input - The validator's buffer, the manifest entry, scanner refs, and the factory's source file.
+ * Caller counts for a factory include both direct references and credit
+ * routed through any tagged `@dbxModelFirebaseIndexDispatcher` that
+ * delegates to the factory by name — without this credit, every primitive
+ * only reached through a dispatcher would false-positive on
+ * `MODEL_FIREBASE_INDEX_UNUSED_FACTORY`.
+ *
+ * @param input - The validator's buffer, the manifest entry, scanner refs, dispatcher credit table, and the factory's source file.
  */
 function pushFactoryCallerViolations(input: PushFactoryCallerViolationsInput): void {
-  const { buffer, entry, references, filePath } = input;
+  const { buffer, entry, references, dispatcherCreditByName, filePath } = input;
   if (entry.skip || entry.manual) return;
   const refs = references.get(entry.slug);
-  const productionCount = refs?.productionCount ?? 0;
-  const specCount = refs?.specCount ?? 0;
+  const directProduction = refs?.productionCount ?? 0;
+  const directSpec = refs?.specCount ?? 0;
+  const credit = dispatcherCreditByName.get(entry.name);
+  const productionCount = directProduction + (credit?.productionCount ?? 0);
+  const specCount = directSpec + (credit?.specCount ?? 0);
   if (entry.specOnly === true) {
     pushSpecOnlyCallerViolations({ buffer, entry, refs, productionCount, specCount, filePath });
     return;
@@ -393,8 +404,9 @@ async function buildValidateAppReport(input: BuildValidateAppReportInput): Promi
     include: WORKSPACE_FACTORY_SCAN_INCLUDE,
     exclude: WORKSPACE_FACTORY_SCAN_EXCLUDE
   });
+  const dispatcherCreditByName = buildDispatcherCreditByName(buildOutcome.dispatcherSummaries, references);
   for (const entry of buildOutcome.manifest.entries) {
-    pushFactoryCallerViolations({ buffer, entry, references, filePath: buildOutcome.entryFilePathsBySlug.get(entry.slug) });
+    pushFactoryCallerViolations({ buffer, entry, references, dispatcherCreditByName, filePath: buildOutcome.entryFilePathsBySlug.get(entry.slug) });
   }
   if (readError !== undefined) {
     pushViolation(buffer, {

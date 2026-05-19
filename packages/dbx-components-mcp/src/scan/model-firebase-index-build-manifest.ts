@@ -51,10 +51,24 @@ export interface BuildModelFirebaseIndexManifestInput {
 }
 
 /**
+ * One dispatcher-tagged factory's delegate summary. The `name` is the
+ * dispatcher's exported function name (matched against scanner reference
+ * counts) and `delegates` are the identifier-callee names captured from
+ * its body. Surfaced by {@link buildModelFirebaseIndexManifest} so the
+ * validator can credit dispatcher caller counts against the factories
+ * the dispatcher returns into.
+ */
+export interface ModelFirebaseIndexDispatcherSummary {
+  readonly slug: string;
+  readonly name: string;
+  readonly delegates: readonly string[];
+}
+
+/**
  * Outcome of one generator run.
  */
 export type BuildModelFirebaseIndexManifestOutcome =
-  | { readonly kind: 'success'; readonly manifest: ModelFirebaseIndexManifest; readonly outPath: string; readonly scannedFileCount: number; readonly extractWarnings: readonly ModelFirebaseIndexBuildWarning[]; readonly entryFilePathsBySlug: ReadonlyMap<string, string> }
+  | { readonly kind: 'success'; readonly manifest: ModelFirebaseIndexManifest; readonly outPath: string; readonly scannedFileCount: number; readonly extractWarnings: readonly ModelFirebaseIndexBuildWarning[]; readonly entryFilePathsBySlug: ReadonlyMap<string, string>; readonly dispatcherSummaries: readonly ModelFirebaseIndexDispatcherSummary[] }
   | { readonly kind: 'no-config'; readonly configPath: string }
   | { readonly kind: 'invalid-scan-config'; readonly configPath: string; readonly error: string }
   | { readonly kind: 'no-package'; readonly packagePath: string }
@@ -143,8 +157,13 @@ export async function buildModelFirebaseIndexManifest(input: BuildModelFirebaseI
   } else {
     const outPath = resolve(projectRoot, scanSection.out ?? DEFAULT_MODEL_FIREBASE_INDEX_SCAN_OUT_PATH);
     const entryFilePathsBySlug = new Map<string, string>();
+    const dispatcherSummaries: ModelFirebaseIndexDispatcherSummary[] = [];
     for (const analyzedEntry of analyzed) {
-      entryFilePathsBySlug.set(analyzedEntry.extractedEntry.slug, analyzedEntry.extractedEntry.filePath);
+      const extracted = analyzedEntry.extractedEntry;
+      entryFilePathsBySlug.set(extracted.slug, extracted.filePath);
+      if (extracted.dispatcher) {
+        dispatcherSummaries.push({ slug: extracted.slug, name: extracted.name, delegates: [...extracted.dispatcherDelegates] });
+      }
     }
     outcome = {
       kind: 'success',
@@ -152,7 +171,8 @@ export async function buildModelFirebaseIndexManifest(input: BuildModelFirebaseI
       outPath,
       scannedFileCount: filePaths.length,
       extractWarnings: buildWarnings,
-      entryFilePathsBySlug
+      entryFilePathsBySlug,
+      dispatcherSummaries
     };
   }
   return outcome;

@@ -102,6 +102,23 @@ export interface ExtractedModelFirebaseIndexEntry {
    * exclusion is auditable.
    */
   readonly excluded: boolean;
+  /**
+   * True when the factory carries `@dbxModelFirebaseIndexDispatcher`. The
+   * factory itself produces no composite/fieldOverride (its
+   * `constraintSequences` is always empty), but the validator credits its
+   * caller count to every name listed in `dispatcherDelegates` so a
+   * dispatcher-only primitive does not perpetually false-positive on
+   * `MODEL_FIREBASE_INDEX_UNUSED_FACTORY`.
+   */
+  readonly dispatcher: boolean;
+  /**
+   * Identifier-callee names captured from the body of a dispatcher-tagged
+   * factory. Populated only when `dispatcher` is true; empty otherwise.
+   * Names are reported as written in source (no resolution to slugs) — the
+   * validator matches them against other tagged factories' `name` fields
+   * when crediting unused-factory references.
+   */
+  readonly dispatcherDelegates: readonly string[];
   readonly allowArrayContainsAny: boolean;
   readonly category: string;
   readonly signature: string;
@@ -536,7 +553,7 @@ function composeEntry(input: ComposeEntryInput): ExtractedModelFirebaseIndexEntr
   const category = tags.category && tags.category.length > 0 ? tags.category : 'misc';
   const tagSet = buildTagSet({ name, slug, summary: tags.summary, explicit: tags.explicitTags, category, model: modelTag });
 
-  const constraintSequences = resolveConstraintSequences({ candidate, tags, name, line, filePath, warnings });
+  const { constraintSequences, dispatcherDelegates } = resolveConstraintSequences({ candidate, tags, name, line, filePath, warnings });
 
   if (tags.excluded) {
     warnings.push({ kind: 'excluded-factory', severity: 'warning', name, filePath, line });
@@ -553,6 +570,8 @@ function composeEntry(input: ComposeEntryInput): ExtractedModelFirebaseIndexEntr
     skip: tags.skip,
     specOnly: tags.specOnly,
     excluded: tags.excluded,
+    dispatcher: tags.dispatcher,
+    dispatcherDelegates,
     allowArrayContainsAny: tags.allowArrayContainsAny,
     category,
     signature,
@@ -580,16 +599,21 @@ interface ResolveConstraintSequencesInput {
   readonly warnings: ModelFirebaseIndexExtractWarning[];
 }
 
-function resolveConstraintSequences(input: ResolveConstraintSequencesInput): readonly ConstraintSequence[] {
+interface ResolveConstraintSequencesResult {
+  readonly constraintSequences: readonly ConstraintSequence[];
+  readonly dispatcherDelegates: readonly string[];
+}
+
+function resolveConstraintSequences(input: ResolveConstraintSequencesInput): ResolveConstraintSequencesResult {
   const { candidate, tags, name, line, filePath, warnings } = input;
   const bodyResult = extractConstraintsFromBody({ decl: candidate.decl, factoryName: name, filePath, dispatcher: tags.dispatcher });
   for (const warning of bodyResult.warnings) {
     warnings.push(warning);
   }
   if (tags.skip || tags.specOnly || tags.dispatcher || bodyResult.skipped) {
-    return [];
+    return { constraintSequences: [], dispatcherDelegates: bodyResult.dispatcherDelegates };
   }
-  return buildConstraintSequences({
+  const constraintSequences = buildConstraintSequences({
     bodyEntries: bodyResult.entries,
     conditionalFields: bodyResult.conditionalFields,
     paths: tags.paths,
@@ -598,6 +622,7 @@ function resolveConstraintSequences(input: ResolveConstraintSequencesInput): rea
     line,
     warnings
   });
+  return { constraintSequences, dispatcherDelegates: [] };
 }
 
 interface ResolveScopeInput {
@@ -735,6 +760,12 @@ interface ExtractConstraintsFromBodyResult {
    * the entries as unusable.
    */
   readonly skipped: boolean;
+  /**
+   * Identifier-callee names captured from a dispatcher body, in
+   * source order with duplicates removed. Empty when the body is not a
+   * dispatcher.
+   */
+  readonly dispatcherDelegates: readonly string[];
 }
 
 function extractConstraintsFromBody(input: ExtractConstraintsFromBodyInput): ExtractConstraintsFromBodyResult {
@@ -749,14 +780,15 @@ function extractConstraintsFromBody(input: ExtractConstraintsFromBodyInput): Ext
     if (violation !== undefined) {
       warnings.push({ kind: 'non-delegating-dispatcher', severity: 'error', name: factoryName, callee: violation.callee, filePath, line: violation.line });
     }
-    return { entries, conditionalFields: [], warnings, skipped: true };
+    const dispatcherDelegates = body === undefined ? [] : collectDispatcherDelegates(body);
+    return { entries, conditionalFields: [], warnings, skipped: true, dispatcherDelegates };
   }
 
   if (body !== undefined) {
     const branch = findFirstBranchNode(body);
     if (branch !== undefined) {
       warnings.push({ kind: 'complex-query-body', severity: 'error', name: factoryName, branchKind: branch.branchKind, filePath, line: branch.line });
-      return { entries, conditionalFields: [], warnings, skipped: true };
+      return { entries, conditionalFields: [], warnings, skipped: true, dispatcherDelegates: [] };
     }
   }
 
@@ -782,7 +814,44 @@ function extractConstraintsFromBody(input: ExtractConstraintsFromBodyInput): Ext
     }
   }
 
-  return { entries, conditionalFields, warnings, skipped: false };
+  return { entries, conditionalFields, warnings, skipped: false, dispatcherDelegates: [] };
+}
+
+/**
+ * Walks a dispatcher body and returns every identifier-callee name in
+ * declaration order, with duplicates removed and `where` / `orderBy` /
+ * known query helpers filtered out (those are independently flagged via
+ * the `non-delegating-dispatcher` warning).
+ *
+ * The validator uses this list to credit dispatcher caller counts against
+ * the delegated factories — without it, every factory only ever reached
+ * through a dispatcher would false-positive on
+ * `MODEL_FIREBASE_INDEX_UNUSED_FACTORY`.
+ *
+ * @param bodyNode - The outer dispatcher function body block.
+ * @returns Deduplicated delegate names in source order.
+ */
+function collectDispatcherDelegates(bodyNode: Node): readonly string[] {
+  const calls = bodyNode.getDescendantsOfKind(SyntaxKind.CallExpression);
+  calls.sort((a, b) => a.getStart() - b.getStart());
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const call of calls) {
+    const expression = call.getExpression();
+    if (!Node.isIdentifier(expression)) {
+      continue;
+    }
+    const name = expression.getText();
+    if (name.length === 0 || seen.has(name)) {
+      continue;
+    }
+    if (name === 'where' || name === 'orderBy' || getFirestoreQueryHelperDescriptor(name) !== undefined) {
+      continue;
+    }
+    seen.add(name);
+    out.push(name);
+  }
+  return out;
 }
 
 // MARK: Recursive body walker
