@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-cli-generate-firestore-indexes",
-  "version": "13.11.15",
+  "version": "13.11.16",
   "private": true,
   "type": "module",
   "devDependencies": {

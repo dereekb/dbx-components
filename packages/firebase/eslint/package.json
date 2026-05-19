@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/firebase/eslint",
-  "version": "13.11.15",
+  "version": "13.11.16",
   "peerDependencies": {
     "@typescript-eslint/utils": "8.59.3"
   },
   "devDependencies": {
-    "@dereekb/util": "13.11.15",
+    "@dereekb/util": "13.11.16",
     "@typescript-eslint/parser": "8.59.3",
     "eslint": "10.4.0"
   }

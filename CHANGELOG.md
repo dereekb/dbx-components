@@ -1,3 +1,30 @@
+## [13.11.16](https://github.com/dereekb/dbx-components/compare/v13.11.15-dev...v13.11.16) (2026-05-19)
+
+
+### Bug Fixes
+
+- **dbx-components-mcp:** credit dispatcher refs to delegates ([da532030](https://github.com/dereekb/dbx-components/commit/da5320307670b98d5f88b1a7e81059c28c60db10))
+
+
+### Build System
+
+- **release:** regenerate firestore.indexes.json in start-release ([1b8dbc60](https://github.com/dereekb/dbx-components/commit/1b8dbc601d9a8e5ae44f5f3df45152dc5f71d30d))
+
+
+### Code Refactoring
+
+- **dbx-cli:** relocate firestore-indexes from dbx-components-mcp ([20e97a4a](https://github.com/dereekb/dbx-components/commit/20e97a4a18372b247083c40364e73c55b256b661))
+- **demo-firebase:** declare guestbook query verb + scan config ([edecf123](https://github.com/dereekb/dbx-components/commit/edecf1233d9a505ae87239dae4c3f0c499bf6d5d))
+- **eslint:** add @dereekb/firebase/eslint with 4 index rules ([f10f506c](https://github.com/dereekb/dbx-components/commit/f10f506c0dbea1196316ffa1b81f4cda7d275439))
+- export eslint plugins camel case ([ee343614](https://github.com/dereekb/dbx-components/commit/ee3436148809343df373490204fd2a955d781fcd))
+- **firebase-eslint:** rename dispatcher rule ([cbbe755a](https://github.com/dereekb/dbx-components/commit/cbbe755a4f7b56ef78621c752bc0b7430efa196d))
+
+
+### Documentation
+
+- **dbx-web:** tag style/color services and directives for UI catalog ([15143815](https://github.com/dereekb/dbx-components/commit/1514381545f1d2b462c01354a9c2aad21a049791))
+- expanded DateCellScheduleEncodedWeek jsdocs ([0b46f709](https://github.com/dereekb/dbx-components/commit/0b46f709a4ac28a7eac535cc993b87ea64325b44))
+
 ## [13.11.15](https://github.com/dereekb/dbx-components/compare/v13.11.14-dev...v13.11.15) (2026-05-18)
 
 
