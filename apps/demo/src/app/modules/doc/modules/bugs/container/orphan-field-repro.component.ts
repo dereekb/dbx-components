@@ -7,6 +7,7 @@ import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxContentPitDirective, DbxButtonComponent, DbxButtonSpacerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
+import { completeOnDestroy } from '@dereekb/dbx-core';
 
 const TIMEZONE = 'America/Chicago';
 const FILTER_START = new Date('2026-04-16T05:00:00.000Z');
@@ -37,14 +38,14 @@ export class DocBugsOrphanFieldReproComponent implements OnInit, OnDestroy {
   // Start with a complete value so the form renders correctly on first mount.
   // Subsequent "Emit partial" / "Emit empty" pushes drop the dateScheduleRange
   // slot — exactly the shape that triggers NG01902 under dbxFormSourceMode="always".
-  readonly source$ = new BehaviorSubject<Partial<OrphanReproFormValue>>({
+  readonly source$ = completeOnDestroy(new BehaviorSubject<Partial<OrphanReproFormValue>>({
     n: 'Initial',
     dateScheduleRange: {
       start: FILTER_START,
       end: FILTER_END,
       w: '8'
     }
-  });
+  }));
 
   readonly formConfig: FormConfig = {
     fields: [dbxForgeTextField({ key: 'n', label: 'Name' }), dbxForgeDateScheduleRangeField({ key: 'dateScheduleRange', required: true, outputTimezone: TIMEZONE })]
@@ -64,7 +65,6 @@ export class DocBugsOrphanFieldReproComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this._restoreConsole();
-    this.source$.complete();
   }
 
   resetCounters(): void {
