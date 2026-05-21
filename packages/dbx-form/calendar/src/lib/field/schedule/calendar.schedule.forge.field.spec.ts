@@ -1,9 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { addDays, startOfDay } from 'date-fns';
 import { type DateCellScheduleDateFilterConfig, dateCellTiming, type DateRange } from '@dereekb/date';
 import { BehaviorSubject } from 'rxjs';
-import { type Maybe, type TimezoneString } from '@dereekb/util';
-import { type CalendarScheduleSelectionState, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithComputeSelectionResultRelativeToFilter, updateStateWithDateCellScheduleRangeValue, updateStateWithFilter, updateStateWithInitialSelectionState, updateStateWithMinMaxDateRange, updateStateWithTimezoneValue } from '../../calendar.schedule.selection.store';
+import { type Maybe, type TimezoneString, waitForMs } from '@dereekb/util';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection, inject } from '@angular/core';
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- provideNoopAnimations remains the standard no-op animations provider for TestBed
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import { provideDbxForgeFormFieldDeclarations, provideDbxFormConfiguration, DbxForgeFormComponent, DbxForgeFormContext, provideDbxForgeFormContext, DbxFormSourceDirective, type DbxFormSourceDirectiveMode, dbxForgeTextField } from '@dereekb/dbx-form';
+import type { ObservableOrValue } from '@dereekb/rxjs';
+import { type CalendarScheduleSelectionState, DbxCalendarScheduleSelectionStore, initialCalendarScheduleSelectionState, updateStateWithChangedDates, updateStateWithChangedRange, updateStateWithComputeSelectionResultRelativeToFilter, updateStateWithDateCellScheduleRangeValue, updateStateWithFilter, updateStateWithInitialSelectionState, updateStateWithMinMaxDateRange, updateStateWithTimezoneValue } from '../../calendar.schedule.selection.store';
+import { DBX_FORGE_CALENDAR_FIELD_TYPES } from '../../forge.providers';
+import { DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { dbxForgeDateScheduleRangeField, FORGE_CALENDAR_DATE_SCHEDULE_RANGE_FIELD_TYPE } from './calendar.schedule.forge.field';
 
 describe('dbxForgeDateScheduleRangeField()', () => {
@@ -479,5 +488,223 @@ describe('dbxForgeDateScheduleRangeField()', () => {
       expect(field.props).toBeDefined();
       expect(field.props?.label).toBe('Schedule');
     });
+  });
+});
+
+// MARK: NG01902 Orphan-field regression
+//
+// Hosts the real dbxForgeDateScheduleRangeField inside a dbx-forge form and
+// feeds it partial values through dbxFormSource (mode 'always'). The
+// production HelloSubs school create-job page used to hit NG01902 "Orphan
+// field" from @angular/forms/_validation_errors-chunk.mjs during change
+// detection when the source pushed a partial value that dropped the
+// dateScheduleRange slot after it had been registered by a complete value.
+//
+// Root cause: DbxForgeCalendarDateScheduleRangeFieldComponent's store→field
+// sync wrote `undefined` to the FieldTree state when the selection store
+// had no current value. Signal Forms' deepSignal.set propagates the write
+// up to the parent's value signal as `{ ...current, dateScheduleRange:
+// undefined }`. The parent's children-map then drops the key (see
+// createChildrenMap in @angular/forms _validation_errors-chunk), and the
+// child node's `createKeyInParent` computed throws NG01902 on the next read.
+//
+// Fix: coerce `undefined` to `null` in `_setFieldValue`. `null` preserves
+// the key in the children-map while still representing "no selection".
+//
+// These two scenarios mirror apps/demo/.../orphan-field-repro.component.ts
+// (complete → partial, complete → cascade) and exist to prevent the
+// regression from coming back.
+
+interface OrphanTestFormValue {
+  readonly n?: string;
+  readonly dateScheduleRange?: {
+    readonly start: Date;
+    readonly end: Date;
+    readonly w?: string;
+  };
+}
+
+@Component({
+  template: `
+    <dbx-forge [dbxFormSource]="source$ ?? undefined" [dbxFormSourceMode]="sourceMode"></dbx-forge>
+  `,
+  standalone: true,
+  imports: [DbxForgeFormComponent, DbxFormSourceDirective],
+  providers: [provideDbxForgeFormContext(), DbxCalendarStore, DbxCalendarScheduleSelectionStore],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+class TestForgeCalendarOrphanHostComponent {
+  readonly context = inject(DbxForgeFormContext) as DbxForgeFormContext<OrphanTestFormValue>;
+
+  source$: Maybe<ObservableOrValue<Maybe<Partial<OrphanTestFormValue>>>>;
+  sourceMode: Maybe<DbxFormSourceDirectiveMode>;
+}
+
+const ORPHAN_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideNoopAnimations(), provideDbxFormConfiguration(), provideDbxForgeFormFieldDeclarations(...DBX_FORGE_CALENDAR_FIELD_TYPES), { provide: DynamicFormLogger, useClass: NoopLogger }];
+
+// Match the demo repro: an explicit, deterministic date range over a
+// reasonable filter window plus the `w: '8'` weekday mask.
+const REPRO_FILTER_START = new Date('2026-04-16T05:00:00.000Z');
+const REPRO_FILTER_END = new Date('2026-05-28T05:00:00.000Z');
+
+function createCompleteScheduleValue(name = 'Test'): Partial<OrphanTestFormValue> {
+  return {
+    n: name,
+    dateScheduleRange: {
+      start: REPRO_FILTER_START,
+      end: REPRO_FILTER_END,
+      w: '8'
+    }
+  };
+}
+
+async function settleOrphan(fixture: ComponentFixture<unknown>): Promise<void> {
+  fixture.detectChanges();
+  await fixture.whenStable();
+  await waitForMs(50);
+  fixture.detectChanges();
+  await fixture.whenStable();
+}
+
+function isOrphanFieldError(value: unknown): boolean {
+  if (value == null) {
+    return false;
+  }
+  const text = typeof value === 'string' ? value : value instanceof Error ? `${value.message}\n${value.stack ?? ''}` : String(value);
+  return /NG01902|Orphan field/i.test(text);
+}
+
+function consoleHasOrphan(spy: ReturnType<typeof vi.spyOn>): { matched: boolean; matches: unknown[][] } {
+  const matches = spy.mock.calls.filter((args: unknown[]) => args.some(isOrphanFieldError));
+  return { matched: matches.length > 0, matches };
+}
+
+function createScheduleAndTextConfig(): FormConfig {
+  return {
+    fields: [dbxForgeTextField({ key: 'n', label: 'Name' }) as any, dbxForgeDateScheduleRangeField({ key: 'dateScheduleRange', required: true }) as any]
+  };
+}
+
+describe('dbxForgeDateScheduleRangeField() NG01902 orphan-field regression', () => {
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [TestForgeCalendarOrphanHostComponent],
+      providers: ORPHAN_TEST_PROVIDERS
+    });
+
+    // The orphan-field RuntimeError is thrown during change detection.
+    // Angular's default ErrorHandler routes it to console.error.
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+    TestBed.resetTestingModule();
+  });
+
+  // Regression: NG01902 no longer fires for this scenario after the fix in
+  // calendar.schedule.forge.field.component.ts (`_setFieldValue` coerces the
+  // store's undefined emission to null so the field's key isn't dropped from
+  // the parent's children-map).
+  it('does not throw NG01902 when complete value is followed by a partial that omits dateScheduleRange (always mode)', async () => {
+    const fixture = TestBed.createComponent(TestForgeCalendarOrphanHostComponent);
+    const host = fixture.componentInstance;
+    const context = host.context;
+    context.config = createScheduleAndTextConfig();
+
+    const source$ = new BehaviorSubject<Partial<OrphanTestFormValue>>(createCompleteScheduleValue('Initial'));
+    host.source$ = source$ as any;
+    host.sourceMode = 'always';
+    fixture.detectChanges();
+
+    let caughtError: unknown = undefined;
+    try {
+      // First settle: complete value registers the dateScheduleRange slot.
+      // Extra waitForMs gives the lazy `loadComponent: () => import(...)`
+      // time to resolve and the field's child controls (the embedded
+      // MatDateRangePicker FormGroup) time to register in the parent's
+      // children-map. Without this wait the partial emission can outrun the
+      // child registration and the orphan check has nothing to fire on.
+      await settleOrphan(fixture);
+      await waitForMs(150);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      // Mirror the demo recipe: re-emit a complete value first (as the demo's
+      // "Emit complete" button does) before dropping the slot. This guarantees
+      // the slot is registered against the parent at the time of the partial.
+      source$.next(createCompleteScheduleValue('Test'));
+      await settleOrphan(fixture);
+
+      // Drop the slot — this is what NG01902 fires on. Catches the orphan
+      // either as a synchronous throw out of change detection OR as a
+      // console.error / console.warn under Angular's default ErrorHandler.
+      source$.next({ n: 'Test' });
+      await settleOrphan(fixture);
+    } catch (err) {
+      caughtError = err;
+    }
+
+    const errResult = consoleHasOrphan(consoleErrorSpy);
+    const warnResult = consoleHasOrphan(consoleWarnSpy);
+    const synchronousMatch = isOrphanFieldError(caughtError);
+    const reproduced = errResult.matched || warnResult.matched || synchronousMatch;
+
+    expect(reproduced).toBe(false);
+
+    fixture.destroy();
+  });
+
+  // Regression: NG01902 no longer fires for the cascade scenario after the
+  // fix in calendar.schedule.forge.field.component.ts.
+  it('does not throw NG01902 when complete value is followed by a cascade of three partials in one tick (always mode)', async () => {
+    const fixture = TestBed.createComponent(TestForgeCalendarOrphanHostComponent);
+    const host = fixture.componentInstance;
+    const context = host.context;
+    context.config = createScheduleAndTextConfig();
+
+    const source$ = new BehaviorSubject<Partial<OrphanTestFormValue>>(createCompleteScheduleValue('Initial'));
+    host.source$ = source$ as any;
+    host.sourceMode = 'always';
+    fixture.detectChanges();
+
+    let caughtError: unknown = undefined;
+    try {
+      // Same prelude as the partial case: settle, then wait for the lazy
+      // calendar field component to fully mount and register its children.
+      await settleOrphan(fixture);
+      await waitForMs(150);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      // Re-emit a complete value (matches the demo's "Emit complete" click).
+      source$.next(createCompleteScheduleValue('Test'));
+      await settleOrphan(fixture);
+
+      // Three partials in a single tick — mirrors the production per-field
+      // setValue cascade. The browser sees three orphan throws; we assert
+      // "at least one" so the test isn't tied to an exact implementation
+      // detail.
+      source$.next({ n: 'A' });
+      source$.next({ n: 'AB' });
+      source$.next({ n: 'ABC' });
+      await settleOrphan(fixture);
+    } catch (err) {
+      caughtError = err;
+    }
+
+    const errResult = consoleHasOrphan(consoleErrorSpy);
+    const warnResult = consoleHasOrphan(consoleWarnSpy);
+    const synchronousMatch = isOrphanFieldError(caughtError);
+    const reproduced = errResult.matched || warnResult.matched || synchronousMatch;
+
+    expect(reproduced).toBe(false);
+
+    fixture.destroy();
   });
 });

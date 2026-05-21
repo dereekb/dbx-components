@@ -121,7 +121,12 @@ export class DbxForgeCalendarDateScheduleRangeFieldComponent {
     try {
       const state = this.field()?.() as any;
       if (state?.value?.set) {
-        state.value.set(value);
+        // Coerce undefined to null: writing undefined through Signal Forms'
+        // deepSignal removes this field's key from the parent's children-map
+        // (see @angular/forms _validation_errors-chunk createChildrenMap), so
+        // the next read throws NG01902 "Orphan field". null preserves the
+        // key while still representing "no selection".
+        state.value.set(value === undefined ? null : value);
       }
     } catch {
       // field input may not be available yet (NG0950) during early store emissions
