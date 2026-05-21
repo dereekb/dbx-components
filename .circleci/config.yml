@@ -37,6 +37,11 @@ jobs:
     environment:
       CYPRESS_INSTALL_BINARY: 0
       NX_NO_CLOUD: "true"
+      # Prevents the root postinstall from running sync-peer-deps.mjs, which can mutate tracked
+      # packages/*/package.json and apps/*/package.json files. Those files feed the nx cache hash via
+      # the `production` named input, so any mutation in the build job that isn't replayed in the
+      # downstream test jobs (which don't run npm ci) causes hash drift and cache misses.
+      SKIP_SYNC_PEER_DEPS: "true"
     steps:
       - checkout
       # NOTE: We cache node_modules directly instead of using the circleci/node orb's install-packages command
@@ -80,6 +85,16 @@ jobs:
                   - node_modules
                   - dist
                   - .nx/cache
+                  # Without workspace-data, every downstream job recomputes the project graph and
+                  # related metadata. Keeping it stable across jobs also prevents subtle hash drift
+                  # in tasks whose inputs reference the lockfile/project graph state.
+                  - .nx/workspace-data
+                  # dbx-components-mcp's generate-* targets rewrite files under this directory. The
+                  # files are tracked in git, so checkout in the test job will populate them, but if
+                  # anything ever drifts between git and the regenerated output we want the test job
+                  # to see the same bytes the build job saw — otherwise the build cache key won't
+                  # match and the test step ends up re-running build + generate-*.
+                  - packages/dbx-components-mcp/generated
   # Runs tests for the projects that do not require the firebase emulators and are more basic
   test-with-node-basic:
     <<: *defaults
