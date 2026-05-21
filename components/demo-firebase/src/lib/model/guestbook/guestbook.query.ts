@@ -1,5 +1,6 @@
 /* eslint-disable dereekb-firebase/require-tagged-firestore-constraints -- legacy single-`FirestoreQueryConstraint` helpers in this demo package; refactor to array-returning `@dbxModelFirebaseIndex`-tagged `*Query` factories in a future migration sweep */
 import { type FirestoreQueryConstraint, where } from '@dereekb/firebase';
+import { type Guestbook, type GuestbookEntry } from './guestbook';
 
 /**
  * Creates a Firestore query constraint that filters guestbooks by their published status.
@@ -8,7 +9,7 @@ import { type FirestoreQueryConstraint, where } from '@dereekb/firebase';
  * @returns A FirestoreQueryConstraint filtering on the 'published' field.
  */
 export function publishedGuestbook(published = true): FirestoreQueryConstraint {
-  return where('published', '==', published);
+  return where<Guestbook>('published', '==', published);
 }
 
 /**
@@ -18,5 +19,5 @@ export function publishedGuestbook(published = true): FirestoreQueryConstraint {
  * @returns A FirestoreQueryConstraint filtering on the 'published' field.
  */
 export function publishedGuestbookEntry(published = true): FirestoreQueryConstraint {
-  return where('published', '==', published);
+  return where<GuestbookEntry>('published', '==', published);
 }

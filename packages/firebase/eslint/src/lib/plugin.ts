@@ -2,6 +2,7 @@ import { FIREBASE_REQUIRE_TAGGED_FIRESTORE_CONSTRAINTS_RULE } from './require-ta
 import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_QUERY_SUFFIX_RULE } from './require-dbx-model-firebase-index-query-suffix.rule';
 import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE } from './require-dbx-model-firebase-index-companion-tags.rule';
 import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE } from './require-dbx-model-firebase-index-valid-dispatcher.rule';
+import { FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE } from './require-firestore-constraint-type-parameter.rule';
 
 /**
  * ESLint plugin interface for `@dereekb/firebase` rules.
@@ -12,6 +13,7 @@ export interface FirebaseEslintPlugin {
     readonly 'require-dbx-model-firebase-index-query-suffix': typeof FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_QUERY_SUFFIX_RULE;
     readonly 'require-dbx-model-firebase-index-companion-tags': typeof FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE;
     readonly 'require-dbx-model-firebase-index-valid-dispatcher': typeof FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE;
+    readonly 'require-firestore-constraint-type-parameter': typeof FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE;
   };
 }
 
@@ -26,7 +28,8 @@ export const FIREBASE_ESLINT_PLUGIN: FirebaseEslintPlugin = {
     'require-tagged-firestore-constraints': FIREBASE_REQUIRE_TAGGED_FIRESTORE_CONSTRAINTS_RULE,
     'require-dbx-model-firebase-index-query-suffix': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_QUERY_SUFFIX_RULE,
     'require-dbx-model-firebase-index-companion-tags': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE,
-    'require-dbx-model-firebase-index-valid-dispatcher': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE
+    'require-dbx-model-firebase-index-valid-dispatcher': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE,
+    'require-firestore-constraint-type-parameter': FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE
   }
 };
 
