@@ -84,6 +84,31 @@
         "parallel": false
       }
     },
+    "run-all-tests": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "run dbx-cli tests",
+            "command": "npx nx test dbx-cli"
+          },
+          {
+            "description": "run dbx-cli-firestore-indexes tests",
+            "command": "npx nx test dbx-cli-firestore-indexes"
+          },
+          {
+            "description": "run dbx-cli-manifest-extract tests",
+            "command": "npx nx test dbx-cli-manifest-extract"
+          },
+          {
+            "description": "run dbx-cli-test tests",
+            "command": "npx nx run-tests dbx-cli-test"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
     "ci-publish-npmjs": {
       "executor": "nx:run-commands",
       "options": {
