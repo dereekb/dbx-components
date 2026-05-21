@@ -10,6 +10,12 @@ export const DOC_BUGS_ROUTES = [
     title: 'Calendar',
     detail: 'calendar selection store filter + minMaxDateRange bug',
     ref: 'doc.bugs.calendar'
+  },
+  {
+    icon: 'report_problem',
+    title: 'Orphan Field (NG01902)',
+    detail: 'dbx-forge + dbxFormSourceMode="always" partial-emission orphan flood',
+    ref: 'doc.bugs.orphanfield'
   }
 ];
 

@@ -88,6 +88,11 @@ $dbx-border-opacity-default: 20%;
     overflow-y: scroll;
   }
 
+  /// @dbx-utility content-pit-floating-button
+  /// @intent floats a button (typically a `dbx-button`) to the top-right of a `.dbx-content-pit` using `position: sticky` so it stays visible while the pit scrolls — used for inline pit actions like expand/collapse or copy
+  /// @role layout
+  /// @parent content-pit
+  /// @see-also dbx-content-pit, dbx-content-pit-scrollable
   .dbx-content-pit-floating-button {
     float: right;
     position: sticky;
@@ -123,6 +128,10 @@ $dbx-border-opacity-default: 20%;
     height: 100% !important;
   }
 
+  /// @dbx-utility content-scroll-lock
+  /// @intent locks a region to `height: 100%` with `overflow: hidden` so its children can scroll independently of the page — wrap potentially-infinite-height content (calendars, virtual lists) and let the inner element handle its own `overflow: scroll`
+  /// @role layout
+  /// @see-also dbx-content, dbx-content-page, dbx-scroll-content
   .dbx-content-scroll-lock {
     height: 100%;
     overflow: hidden;
@@ -200,6 +209,10 @@ $dbx-border-opacity-default: 20%;
     padding: $content-container-padding-small-screen;
   }
 
+  /// @dbx-utility scroll-content
+  /// @intent adds a small bottom padding (~42px) to a scrollable content region so the last item doesn't sit flush against the bottom edge of the viewport — apply to the scrolling element itself (typically a `.dbx-content-container` rendered inside a `dbx-two-column-right`, `dbx-content-page`, or any host whose body overflows)
+  /// @role spacing
+  /// @see-also dbx-content-container, dbx-content-page, dbx-content-pit-scrollable
   .dbx-scroll-content {
     padding-bottom: $scroll-content-bottom-padding;
   }

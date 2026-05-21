@@ -3,6 +3,7 @@ import { DocBugsLayoutComponent } from './container/layout.component';
 import { DocBugsHomeComponent } from './container/home.component';
 import { DocBugsFormsComponent } from './container/forms.component';
 import { DocBugsCalendarComponent } from './container/calendar.component';
+import { DocBugsOrphanFieldReproComponent } from './container/orphan-field-repro.component';
 
 export const LAYOUT_STATE: Ng2StateDeclaration = {
   url: '/bugs',
@@ -29,10 +30,17 @@ export const CALENDAR_STATE: Ng2StateDeclaration = {
   component: DocBugsCalendarComponent
 };
 
+export const ORPHAN_FIELD_STATE: Ng2StateDeclaration = {
+  url: '/orphan-field-repro',
+  name: 'doc.bugs.orphanfield',
+  component: DocBugsOrphanFieldReproComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   LAYOUT_STATE,
   HOME_STATE,
   FORMS_STATE,
-  CALENDAR_STATE
+  CALENDAR_STATE,
+  ORPHAN_FIELD_STATE
 ];

@@ -106,7 +106,17 @@ export default [
       'dereekb-firebase/require-tagged-firestore-constraints': 'error', // dbx-components-mcp firebase-index registry: forbid inline `@dereekb/firebase` constraint factory calls (`where`/`orderBy`/...) outside a `@dbxModelFirebaseIndex`-tagged query factory
       'dereekb-firebase/require-dbx-model-firebase-index-query-suffix': 'error', // dbx-components-mcp firebase-index registry: require the canonical `Query` suffix on `@dbxModelFirebaseIndex`-tagged factories (e.g. `fooBarQuery`, not `fooBarFilter`)
       'dereekb-firebase/require-dbx-model-firebase-index-companion-tags': 'warn', // dbx-components-mcp firebase-index registry: enforce `@dbxModelFirebaseIndexModel` + body coherence (constraint factory present, generic args match model, field paths are string literals) on `@dbxModelFirebaseIndex`-tagged factories
-      'dereekb-firebase/require-dbx-model-firebase-index-valid-dispatcher': 'error' // dbx-components-mcp firebase-index registry: forbid inline `@dereekb/firebase` constraint factory calls and ad-hoc constraint-array construction inside `@dbxModelFirebaseIndexDispatcher`-tagged factories — dispatchers must delegate to other tagged `*Query` factories
+      'dereekb-firebase/require-dbx-model-firebase-index-valid-dispatcher': 'error', // dbx-components-mcp firebase-index registry: forbid inline `@dereekb/firebase` constraint factory calls and ad-hoc constraint-array construction inside `@dbxModelFirebaseIndexDispatcher`-tagged factories — dispatchers must delegate to other tagged `*Query` factories
+      'dereekb-firebase/require-firestore-constraint-type-parameter': 'warn' // require a generic on `@dereekb/firebase` field-path constraint factories (`where<Model>`, `orderBy<Model>`) so TypeScript validates the field path against the model
+    }
+  },
+  {
+    files: ['**/*.api.ts'],
+    plugins: {
+      'dereekb-firebase': FIREBASE_ESLINT_PLUGIN
+    },
+    rules: {
+      'dereekb-firebase/require-complete-crud-function-config-map': 'error' // backstop for the `ModelFirebaseCrudFunctionConfigMap<ConfigType, ...>` mapped-type enforcement: verify the object-literal initializer's model keys, verbs, and specifiers match the companion `ConfigType` (defined in the same *.api.ts file) — needed because the TypeScript template-literal union for verb:specifier combinations decays past the type checker's combinatorial budget
     }
   },
   {

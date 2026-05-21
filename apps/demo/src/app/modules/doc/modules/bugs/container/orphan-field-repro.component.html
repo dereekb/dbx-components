@@ -1,0 +1,92 @@
+<dbx-content-container>
+  <doc-feature-layout header="NG01902 Orphan Field Repro" hint="Reproduces the Angular Signal Forms NG01902 'Orphan field' flood thrown by a dbx-forge form with dbxFormSourceMode=&quot;always&quot; when the source observable emits a partial value that omits a registered field key.">
+    <doc-feature-example header="What this page reproduces" hint="">
+      <dbx-content-pit>
+        <p>
+          The production "Create Another Job" flow on HelloSubs' school create-job page emits 9–11
+          <code>NG01902 / Orphan field</code>
+          errors per reset cycle. The errors are thrown from
+          <code>node_modules/&#64;angular/forms/fesm2022/_validation_errors-chunk.mjs:955</code>
+          whenever Signal Forms' children-map sees a registered slot drop out of the parent value.
+        </p>
+        <p>
+          The mechanism: a
+          <code>dbx-forge</code>
+          form runs with
+          <code>dbxFormSourceMode="always"</code>
+          , which re-applies the source observable on every emission. The source is a reset / per-field setValue cascade whose partial emissions drop the
+          <code>dateScheduleRange</code>
+          slot — Angular treats the orphaned field as an error and pays a stack-formatting cost that freezes Chrome on slower hardware.
+        </p>
+        <p>
+          ng-forge's
+          <code>DynamicForm</code>
+          layer cannot reproduce the orphan in isolation:
+          <code>FormStateManager.entity</code>
+          deep-merges declared defaults into the partial input. The bug lives above that layer, in
+          <code>&#64;dereekb/dbx-form</code>
+          's
+          <code>DbxFormSourceDirective</code>
+          +
+          <code>DbxForgeFormComponent</code>
+          plumbing. This page is the simplest harness that wires those two together with the calendar field and lets you drive the cascade by hand.
+        </p>
+      </dbx-content-pit>
+    </doc-feature-example>
+
+    <doc-feature-example header="Console Error Counters" hint="Counts console.error calls captured while this page is mounted. The patch is installed in ngOnInit and restored in ngOnDestroy.">
+      <dbx-content-pit>
+        <p>
+          <strong>NG01902 / Orphan field errors:</strong>
+          {{ orphanErrors() }}
+        </p>
+        <p>
+          <strong>Total console.error calls:</strong>
+          {{ totalErrors() }}
+        </p>
+        <p><strong>Most recent error:</strong></p>
+        <pre>{{ lastError() || '(none)' }}</pre>
+        <dbx-button [raised]="true" text="Reset Counters" (buttonClick)="resetCounters()"></dbx-button>
+      </dbx-content-pit>
+    </doc-feature-example>
+
+    <doc-feature-example header='Form (dbxFormSourceMode="always")' hint="Driven by a component-owned BehaviorSubject. Buttons below push different shapes through it.">
+      @switch (viewState()) {
+        @case ('form') {
+          <dbx-forge [dbxFormSource]="source$" dbxFormSourceMode="always"></dbx-forge>
+        }
+        @case ('success') {
+          <dbx-content-pit>
+            <p><em>Form unmounted — simulating the "Create Another Job" success view.</em></p>
+          </dbx-content-pit>
+        }
+      }
+
+      <dbx-content-border>
+        <div class="dbx-button-wrap-group">
+          <dbx-button [raised]="true" text="Emit complete value" (buttonClick)="emitComplete()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-button [raised]="true" text="Emit partial (omit dateScheduleRange)" (buttonClick)="emitPartial()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-button [raised]="true" text="Emit empty" (buttonClick)="emitEmpty()"></dbx-button>
+          <dbx-button-spacer></dbx-button-spacer>
+          <dbx-button [raised]="true" text="Emit cascade (3 partials in a tick)" (buttonClick)="emitCascade()"></dbx-button>
+        </div>
+        <p></p>
+        <div class="dbx-button-wrap-group">
+          <dbx-button [raised]="true" text="Run reset cycle (form → success → form)" (buttonClick)="runResetCycle()"></dbx-button>
+        </div>
+      </dbx-content-border>
+    </doc-feature-example>
+
+    <doc-feature-example header="If the counter stays at zero" hint="">
+      <dbx-content-pit>
+        <p>
+          The orphan throw is sensitive to which control children were registered before the parent value omitted the slot. If "Emit partial" alone does not move the counter, try interacting with the calendar field's
+          <em>Customize</em>
+          popover first (so its nested controls register), then re-emit a partial value. The reset-cycle button covers the unmount → remount → partial-emission path that mirrors the production flow most closely.
+        </p>
+      </dbx-content-pit>
+    </doc-feature-example>
+  </doc-feature-layout>
+</dbx-content-container>

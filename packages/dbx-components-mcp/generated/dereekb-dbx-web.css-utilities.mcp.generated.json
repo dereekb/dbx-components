@@ -706,7 +706,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 135,
+      "line": 144,
       "declarations": [
         {
           "property": "margin",
@@ -763,6 +763,47 @@
       ]
     },
     {
+      "slug": "content-pit-floating-button",
+      "selector": ".dbx-content-pit-floating-button",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/content/_content.scss",
+      "line": 96,
+      "declarations": [
+        {
+          "property": "float",
+          "value": "right"
+        },
+        {
+          "property": "position",
+          "value": "sticky"
+        },
+        {
+          "property": "top",
+          "value": "$dbx-content-pit-floating-button-margin"
+        },
+        {
+          "property": "z-index",
+          "value": "10"
+        },
+        {
+          "property": "margin-right",
+          "value": "$dbx-content-pit-floating-button-margin"
+        },
+        {
+          "property": "margin-bottom",
+          "value": "$dbx-content-pit-floating-button-margin"
+        }
+      ],
+      "role": "layout",
+      "intent": "floats a button (typically a `dbx-button`) to the top-right of a `.dbx-content-pit` using `position: sticky` so it stays visible while the pit scrolls — used for inline pit actions like expand/collapse or copy",
+      "seeAlso": [
+        "dbx-content-pit",
+        "dbx-content-pit-scrollable"
+      ],
+      "parent": "content-pit"
+    },
+    {
       "slug": "content-pit-rounded",
       "selector": ".dbx-content-pit-rounded",
       "source": "@dereekb/dbx-web",
@@ -809,6 +850,35 @@
         "dbx-content-pit"
       ],
       "parent": "content-pit"
+    },
+    {
+      "slug": "content-scroll-lock",
+      "selector": ".dbx-content-scroll-lock",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/content/_content.scss",
+      "line": 135,
+      "declarations": [
+        {
+          "property": "height",
+          "value": "100%"
+        },
+        {
+          "property": "overflow",
+          "value": "hidden"
+        },
+        {
+          "property": "padding",
+          "value": "0 2px"
+        }
+      ],
+      "role": "layout",
+      "intent": "locks a region to `height: 100%` with `overflow: hidden` so its children can scroll independently of the page — wrap potentially-infinite-height content (calendars, virtual lists) and let the inner element handle its own `overflow: scroll`",
+      "seeAlso": [
+        "dbx-content",
+        "dbx-content-page",
+        "dbx-scroll-content"
+      ]
     },
     {
       "slug": "detail-block",
@@ -2027,6 +2097,27 @@
       "seeAlso": [
         "content-box",
         "content-elevate"
+      ]
+    },
+    {
+      "slug": "scroll-content",
+      "selector": ".dbx-scroll-content",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/content/_content.scss",
+      "line": 216,
+      "declarations": [
+        {
+          "property": "padding-bottom",
+          "value": "$scroll-content-bottom-padding"
+        }
+      ],
+      "role": "spacing",
+      "intent": "adds a small bottom padding (~42px) to a scrollable content region so the last item doesn't sit flush against the bottom edge of the viewport — apply to the scrolling element itself (typically a `.dbx-content-container` rendered inside a `dbx-two-column-right`, `dbx-content-page`, or any host whose body overflows)",
+      "seeAlso": [
+        "dbx-content-container",
+        "dbx-content-page",
+        "dbx-content-pit-scrollable"
       ]
     },
     {

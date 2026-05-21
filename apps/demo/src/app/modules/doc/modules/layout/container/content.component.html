@@ -142,6 +142,36 @@
         </div>
       </dbx-content>
     </doc-feature-example>
+    <doc-feature-example header=".dbx-scroll-content" hint="Adds a small bottom padding to a scrollable region so the last item doesn't sit flush against the bottom edge. Apply to the element that actually scrolls — typically a dbx-content-container inside a dbx-two-column-right, dbx-content-page, or any host whose body overflows.">
+      <p>
+        Without
+        <code>.dbx-scroll-content</code>
+        the last line bumps into the bottom edge of its container:
+      </p>
+      <div style="height: 120px; overflow: auto; background: rgba(0, 0, 0, 0.05)">
+        <dbx-content-container>
+          <p>Line 1</p>
+          <p>Line 2</p>
+          <p>Line 3</p>
+          <p>Line 4</p>
+          <p>Last line — bumps the bottom edge.</p>
+        </dbx-content-container>
+      </div>
+      <p>
+        With
+        <code>.dbx-scroll-content</code>
+        the last line gets breathing room:
+      </p>
+      <div style="height: 120px; overflow: auto; background: rgba(0, 0, 0, 0.05)">
+        <dbx-content-container class="dbx-scroll-content">
+          <p>Line 1</p>
+          <p>Line 2</p>
+          <p>Line 3</p>
+          <p>Line 4</p>
+          <p>Last line — has breathing room.</p>
+        </dbx-content-container>
+      </div>
+    </doc-feature-example>
     <doc-feature-example header=".dbx-content-end" hint="CSS class only that adds a margin to the bottom of a section.">
       <dbx-content-border class="dbx-content-end" color="warn">
         <p>A</p>

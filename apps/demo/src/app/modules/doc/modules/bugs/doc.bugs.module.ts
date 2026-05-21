@@ -6,6 +6,7 @@ import { DocBugsHomeComponent } from './container/home.component';
 import { DocBugsLayoutComponent } from './container/layout.component';
 import { DocBugsFormsComponent } from './container/forms.component';
 import { DocBugsCalendarComponent } from './container/calendar.component';
+import { DocBugsOrphanFieldReproComponent } from './container/orphan-field-repro.component';
 
 @NgModule({
   imports: [
@@ -16,7 +17,8 @@ import { DocBugsCalendarComponent } from './container/calendar.component';
     DocBugsHomeComponent,
     DocBugsLayoutComponent,
     DocBugsFormsComponent,
-    DocBugsCalendarComponent
+    DocBugsCalendarComponent,
+    DocBugsOrphanFieldReproComponent
   ]
 })
 export class DocBugsModule {}
