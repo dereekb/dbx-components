@@ -111,6 +111,15 @@ export default [
     }
   },
   {
+    files: ['**/*.api.ts'],
+    plugins: {
+      'dereekb-firebase': FIREBASE_ESLINT_PLUGIN
+    },
+    rules: {
+      'dereekb-firebase/require-complete-crud-function-config-map': 'error' // backstop for the `ModelFirebaseCrudFunctionConfigMap<ConfigType, ...>` mapped-type enforcement: verify the object-literal initializer's model keys, verbs, and specifiers match the companion `ConfigType` (defined in the same *.api.ts file) — needed because the TypeScript template-literal union for verb:specifier combinations decays past the type checker's combinatorial budget
+    }
+  },
+  {
     files: ['**/*.ts'],
     plugins: {
       'dereekb-dbx-web': DBX_WEB_ESLINT_PLUGIN

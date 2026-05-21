@@ -3,6 +3,7 @@ import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_QUERY_SUFFIX_RULE } from './r
 import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE } from './require-dbx-model-firebase-index-companion-tags.rule';
 import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE } from './require-dbx-model-firebase-index-valid-dispatcher.rule';
 import { FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE } from './require-firestore-constraint-type-parameter.rule';
+import { FIREBASE_REQUIRE_COMPLETE_CRUD_FUNCTION_CONFIG_MAP_RULE } from './require-complete-crud-function-config-map.rule';
 
 /**
  * ESLint plugin interface for `@dereekb/firebase` rules.
@@ -14,6 +15,7 @@ export interface FirebaseEslintPlugin {
     readonly 'require-dbx-model-firebase-index-companion-tags': typeof FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE;
     readonly 'require-dbx-model-firebase-index-valid-dispatcher': typeof FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE;
     readonly 'require-firestore-constraint-type-parameter': typeof FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE;
+    readonly 'require-complete-crud-function-config-map': typeof FIREBASE_REQUIRE_COMPLETE_CRUD_FUNCTION_CONFIG_MAP_RULE;
   };
 }
 
@@ -29,7 +31,8 @@ export const FIREBASE_ESLINT_PLUGIN: FirebaseEslintPlugin = {
     'require-dbx-model-firebase-index-query-suffix': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_QUERY_SUFFIX_RULE,
     'require-dbx-model-firebase-index-companion-tags': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE,
     'require-dbx-model-firebase-index-valid-dispatcher': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE,
-    'require-firestore-constraint-type-parameter': FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE
+    'require-firestore-constraint-type-parameter': FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE,
+    'require-complete-crud-function-config-map': FIREBASE_REQUIRE_COMPLETE_CRUD_FUNCTION_CONFIG_MAP_RULE
   }
 };
 
