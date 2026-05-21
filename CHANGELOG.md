@@ -1,3 +1,28 @@
+## [13.11.18](https://github.com/dereekb/dbx-components/compare/v13.11.17-dev...v13.11.18) (2026-05-21)
+
+
+### Bug Fixes
+
+- **dbx-form-calendar:** orphan-field on partial source emissions ([5c5b1c4e](https://github.com/dereekb/dbx-components/commit/5c5b1c4ee197a2bab8968ce84e66cf19930c3abf))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([777e366f](https://github.com/dereekb/dbx-components/commit/777e366ff31230a0bdc2b863b2e0e78ce435d28c))
+
+
+### Code Refactoring
+
+- added require-complete-crud-function-config-map lint rule ([ac023eb0](https://github.com/dereekb/dbx-components/commit/ac023eb07a62b8bf2910ebdb2f0a68bdfa45ecad))
+- bump dynamic-forms to 0.9.0-next.12 ([b78a3418](https://github.com/dereekb/dbx-components/commit/b78a341827be106a2eb0e05af25aea03590e4782))
+- **dbx-web:** tagged content utilities for mcp ([863b25a7](https://github.com/dereekb/dbx-components/commit/863b25a7014df05b7565a7348622868ef151e553))
+- **firebase-eslint:** require type param on where/orderBy ([f0f53609](https://github.com/dereekb/dbx-components/commit/f0f53609858bc039a4290ed92bca842dcffd901b))
+
+
+### Continuous Integration
+
+- add dbx-cli tests to test-with-node-basic ([eb3a6bb0](https://github.com/dereekb/dbx-components/commit/eb3a6bb00723bff93cfaa1066d17f29f263804ff))
+
 ## [13.11.17](https://github.com/dereekb/dbx-components/compare/v13.11.16-dev...v13.11.17) (2026-05-19)
 
 
