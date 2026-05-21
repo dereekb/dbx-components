@@ -7,6 +7,7 @@
   "targets": {
     "generate-firebase-models": {
       "executor": "nx:run-commands",
+      "cache": true,
       "outputs": ["{projectRoot}/generated/firebase-models.generated.ts"],
       "inputs": ["{projectRoot}/scripts/extract-firebase-models.mjs", "{workspaceRoot}/packages/firebase/src/lib/model/**/*.ts"],
       "options": {
@@ -16,6 +17,7 @@
     },
     "generate-rule-catalog": {
       "executor": "nx:run-commands",
+      "cache": true,
       "outputs": ["{projectRoot}/generated/rule-catalog.generated.json", "{projectRoot}/generated/rule-catalog.generated.ts"],
       "inputs": ["{projectRoot}/scripts/extract-rule-catalog.mjs", "{projectRoot}/src/tools/*/codes.ts"],
       "options": {
@@ -25,6 +27,7 @@
     },
     "generate-manifests": {
       "executor": "nx:run-commands",
+      "cache": true,
       "outputs": [
         "{projectRoot}/generated/dereekb-util.semantic-types.mcp.generated.json",
         "{projectRoot}/generated/dereekb-model.semantic-types.mcp.generated.json",
@@ -72,6 +75,7 @@
     },
     "generate-css-tokens": {
       "executor": "nx:run-commands",
+      "cache": true,
       "outputs": ["{projectRoot}/generated/dereekb-dbx-web.tokens.mcp.generated.json", "{projectRoot}/generated/angular-material-m3.tokens.mcp.generated.json", "{projectRoot}/generated/angular-material-mdc.tokens.mcp.generated.json"],
       "inputs": ["{projectRoot}/scripts/generate-css-tokens.mjs", "{projectRoot}/src/manifest/sources/angular-material-m3.tokens.source.json", "{projectRoot}/src/manifest/sources/angular-material-mdc.tokens.source.json", "{workspaceRoot}/packages/dbx-web/src/lib/style/_variables.scss", "{workspaceRoot}/packages/dbx-web/src/lib/style/_root-variables.scss", "{workspaceRoot}/packages/dbx-web/src/lib/style/_config.scss"],
       "options": {
