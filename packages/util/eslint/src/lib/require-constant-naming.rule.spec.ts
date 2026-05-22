@@ -4,7 +4,8 @@ import { UTIL_ESLINT_PLUGIN } from './plugin';
 
 const RULE_ID = 'dereekb-util/require-constant-naming';
 
-function makeConfig(): Linter.Config[] {
+function makeConfig(ruleOptions?: unknown): Linter.Config[] {
+  const ruleEntry: Linter.RuleEntry = ruleOptions === undefined ? 'error' : ['error', ruleOptions as Linter.RuleSeverityAndOptions[1]];
   return [
     {
       files: ['**/*.ts'],
@@ -19,15 +20,15 @@ function makeConfig(): Linter.Config[] {
         'dereekb-util': UTIL_ESLINT_PLUGIN as any
       },
       rules: {
-        [RULE_ID]: 'error'
+        [RULE_ID]: ruleEntry
       }
     }
   ];
 }
 
-function lintCode(code: string): Linter.LintMessage[] {
+function lintCode(code: string, ruleOptions?: unknown): Linter.LintMessage[] {
   const linter = new Linter({ configType: 'flat' });
-  return linter.verify(code, makeConfig(), { filename: 'test.ts' }).filter((m) => m.ruleId === RULE_ID);
+  return linter.verify(code, makeConfig(ruleOptions), { filename: 'test.ts' }).filter((m) => m.ruleId === RULE_ID);
 }
 
 describe('require-constant-naming rule', () => {
@@ -166,6 +167,93 @@ describe('require-constant-naming rule', () => {
     it('let/var declarations are not checked', () => {
       const errors = lintCode(`export let mutableThing = 'x';`);
       expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe('exemptTypeAnnotations', () => {
+    it('Ng2StateDeclaration is exempt by default', () => {
+      const errors = lintCode(`
+        type Ng2StateDeclaration = { name: string };
+        export const layoutState: Ng2StateDeclaration = { name: 'layout' };
+      `);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('ApplicationConfig is exempt by default', () => {
+      const errors = lintCode(`
+        type ApplicationConfig = { providers: unknown[] };
+        export const appConfig: ApplicationConfig = { providers: [] };
+      `);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('Routes is exempt by default', () => {
+      const errors = lintCode(`
+        type Routes = readonly { path: string }[];
+        export const appRoutes: Routes = [{ path: 'home' }];
+      `);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('non-default type annotation is still flagged', () => {
+      const errors = lintCode(`
+        type CustomType = { id: string };
+        export const myThing: CustomType = { id: 'a' };
+      `);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].messageId).toBe('valueConstantShouldBeUpperSnakeCase');
+    });
+
+    it('custom type passes when added to exemptTypeAnnotations', () => {
+      const errors = lintCode(
+        `
+          type CustomType = { id: string };
+          export const myThing: CustomType = { id: 'a' };
+        `,
+        { exemptTypeAnnotations: ['CustomType'] }
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('qualified type name uses leftmost segment for matching', () => {
+      const errors = lintCode(
+        `
+        const Ng = {} as any;
+        type _Ng_Routes = readonly { path: string }[];
+        export const x: Ng.Routes = [];
+      `,
+        { exemptTypeAnnotations: ['Ng'] }
+      );
+      expect(errors).toHaveLength(0);
+    });
+
+    it('no type annotation is still flagged with default exemptions', () => {
+      const errors = lintCode(`export const layoutState = { name: 'layout' };`);
+      expect(errors).toHaveLength(1);
+      expect(errors[0].messageId).toBe('valueConstantShouldBeUpperSnakeCase');
+    });
+
+    it('empty exemptTypeAnnotations array overrides defaults (strict mode)', () => {
+      const errors = lintCode(
+        `
+          type Ng2StateDeclaration = { name: string };
+          export const layoutState: Ng2StateDeclaration = { name: 'layout' };
+        `,
+        { exemptTypeAnnotations: [] }
+      );
+      expect(errors).toHaveLength(1);
+      expect(errors[0].messageId).toBe('valueConstantShouldBeUpperSnakeCase');
+    });
+
+    it('non-empty exemptTypeAnnotations replaces defaults', () => {
+      const errors = lintCode(
+        `
+          type Ng2StateDeclaration = { name: string };
+          export const layoutState: Ng2StateDeclaration = { name: 'layout' };
+        `,
+        { exemptTypeAnnotations: ['CustomType'] }
+      );
+      expect(errors).toHaveLength(1);
     });
   });
 });
