@@ -98,6 +98,7 @@
  * | dbx_auth_role_lookup                | Documentation | "Forward / tag / reverse role lookup."                    |
  * | dbx_auth_token_explain              | Decoding      | "Decode this JWT and annotate every claim."               |
  * | dbx_auth_list_app                   | Discovery     | "Enumerate one app's claims, scopes, and gates."         |
+ * | dbx_log_search                      | Discovery     | "Search per-change markdown logs (fuzzy/keyword/list)."  |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -176,6 +177,7 @@ import { APP_VALIDATE_TOOL } from './app-validate.tool.js';
 import { MODEL_LIST_COMPONENT_TOOL } from './model-list-component.tool.js';
 import { SERVER_ACTIONS_LIST_APP_TOOL } from './server-actions-list-app.tool.js';
 import { MCP_CONFIG_TOOL } from './mcp-config.tool.js';
+import { LOG_SEARCH_TOOL } from './log-search.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
@@ -275,7 +277,9 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   MODEL_LIST_COMPONENT_TOOL,
   SERVER_ACTIONS_LIST_APP_TOOL,
   // workspace config audit / setup
-  MCP_CONFIG_TOOL
+  MCP_CONFIG_TOOL,
+  // log (change-log search)
+  LOG_SEARCH_TOOL
 ];
 
 /**

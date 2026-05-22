@@ -22,6 +22,7 @@ Clusters with the `_m` suffix are **model extensions** — tools that walk a dow
 | filter         | `dbx_filter_lookup`, `dbx_filter_scaffold`                                                                                             |
 | pipe           | `dbx_pipe_lookup`                                                                                                                      |
 | artifact       | `dbx_artifact_scaffold`, `dbx_artifact_file_convention`                                                                                |
+| log            | `dbx_log_search`                                                                                                                       |
 
 ## Resources
 

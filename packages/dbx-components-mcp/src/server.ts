@@ -72,6 +72,7 @@ Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
 - asset        — \`AssetPathRef\` constants in a \`-firebase\` component + \`provideDbxAssetLoader()\` wiring in the Angular app; list/scaffold/validate
 - color        — \`DbxColorConfigTemplate\` registry: list registered templates in an Angular app, smell-check duplicate inline \`DbxColorConfig\` literals that should be templates
 - auth         — Firebase Auth claims/roles/OIDC scopes catalog: claim_lookup (key or \`*ApiAuthClaims\` interface), scope_lookup (\`model.read\`, …), role_lookup (forward / by-tag / reverse), token_explain (decode JWT or claims object), list_app (per-app surface)
+- log          — \`dbx_log_search\` searches per-change markdown logs written by the change-log Stop-event hook. Reads \`$DBX_LOG_PATH\` (or an explicit \`basePath\` arg), scopes to the current project by default, last 3 days; modes: \`fuzzy\`, \`keyword\`, \`list\`.
 
 Model-extension validators (walk a downstream app to verify wiring):
 - storagefile_m, notification_m, system_m — *_validate_app, *_list_app, *_validate_folder
