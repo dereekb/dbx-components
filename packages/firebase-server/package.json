@@ -15,6 +15,12 @@
       "import": "./mailgun/index.cjs.mjs",
       "default": "./mailgun/index.cjs.js"
     },
+    "./twilio": {
+      "module": "./twilio/index.esm.js",
+      "types": "./twilio/index.d.ts",
+      "import": "./twilio/index.cjs.mjs",
+      "default": "./twilio/index.cjs.js"
+    },
     "./zoho": {
       "module": "./zoho/index.esm.js",
       "types": "./zoho/index.d.ts",

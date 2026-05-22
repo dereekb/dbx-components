@@ -27,6 +27,9 @@
             "command": "npx nx run nestjs-openai:build-base"
           },
           {
+            "command": "npx nx run nestjs-twilio:build-base"
+          },
+          {
             "command": "npx nx run nestjs-typeform:build-base"
           },
           {
@@ -102,6 +105,10 @@
           {
             "description": "run nestjs-openai tests",
             "command": "npx nx test nestjs-openai"
+          },
+          {
+            "description": "run nestjs-twilio tests",
+            "command": "npx nx test nestjs-twilio"
           },
           {
             "description": "run nestjs-typeform tests",

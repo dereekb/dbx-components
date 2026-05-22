@@ -29,6 +29,12 @@
       "import": "./openai/index.cjs.mjs",
       "default": "./openai/index.cjs.js"
     },
+    "./twilio": {
+      "module": "./twilio/index.esm.js",
+      "types": "./twilio/index.d.ts",
+      "import": "./twilio/index.cjs.mjs",
+      "default": "./twilio/index.cjs.js"
+    },
     "./typeform": {
       "module": "./typeform/index.esm.js",
       "types": "./typeform/index.d.ts",
@@ -62,7 +68,8 @@
     "mailgun.js": "^12.9.0",
     "openai": "^6.34.0",
     "raw-body": "^3.0.2",
-    "stripe": "^20.4.1"
+    "stripe": "^20.4.1",
+    "twilio": "^6.0.2"
   },
   "dependencies": {},
   "devDependencies": {

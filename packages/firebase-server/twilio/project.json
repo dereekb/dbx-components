@@ -1,0 +1,56 @@
+{
+  "name": "firebase-server-twilio",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/firebase-server/twilio/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build-base": {
+      "executor": "@nx/rollup:rollup",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "importPath": "@dereekb/firebase-server/twilio",
+        "outputPath": "dist/packages/firebase-server/twilio",
+        "tsConfig": "packages/firebase-server/twilio/tsconfig.lib.json",
+        "project": "packages/firebase-server/twilio/package.json",
+        "main": "packages/firebase-server/twilio/src/index.ts",
+        "format": ["esm", "cjs"],
+        "generateExportsField": true,
+        "external": "all",
+        "assets": [
+          {
+            "glob": "packages/firebase-server/twilio/README.md",
+            "input": ".",
+            "output": "."
+          },
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ],
+        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "compiler": "swc"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "sourceMap": false,
+          "extractLicenses": true
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/firebase-server/twilio"
+      }
+    }
+  }
+}
