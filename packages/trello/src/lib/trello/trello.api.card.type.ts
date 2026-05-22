@@ -141,3 +141,24 @@ export interface TrelloCommentCardActionData {
 }
 
 export type TrelloCommentCardAction = TrelloAction<TrelloCommentCardActionData>;
+
+/**
+ * Payload of an `updateCard:idList` action — emitted by Trello whenever a card moves between lists.
+ *
+ * Pair with `listBoardActions(...)<TrelloUpdateCardIdListActionData>({ filter: 'updateCard:idList', ... })`
+ * to audit list movements.
+ */
+export interface TrelloUpdateCardIdListActionData {
+  readonly card: {
+    readonly id: TrelloCardId;
+    readonly idShort?: number;
+    readonly name?: string;
+    readonly shortLink?: string;
+  };
+  readonly old?: { readonly idList?: TrelloListId };
+  readonly listAfter?: { readonly id: TrelloListId; readonly name?: string };
+  readonly listBefore?: { readonly id: TrelloListId; readonly name?: string };
+  readonly board?: { readonly id: TrelloBoardId; readonly name?: string };
+}
+
+export type TrelloUpdateCardIdListAction = TrelloAction<TrelloUpdateCardIdListActionData>;
