@@ -255,6 +255,27 @@
       ]
     },
     {
+      "slug": "card-support-chat-banner",
+      "category": "card",
+      "summary": "Outlined mat-card status banner with `[dbxColor]` + `[dbxColorTone]` painting the tonal background. The `.dbx-card-banner` utility lays out a `.dbx-card-banner-header` row inside `<mat-card-content>` (skipping mat-card-header) pairing a vibrant-colored `<dbx-icon-tile [round]>` avatar with a `<mat-card-title>` plus a `<mat-card-footer>` wrap-row of action buttons — toggles between an active-chat (notice) and ending-chat (warn) variant.",
+      "header": "Support Chat Banner Card",
+      "className": "DocSupportBannerCardExampleComponent",
+      "selector": "doc-support-banner-card-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Outlined mat-card with [dbxColor] tonal background, mat-card-header icon + title, content body, and a footer action row.",
+      "relatedSlugs": [
+        "mat-card",
+        "dbx-card-banner",
+        "dbx-icon-tile",
+        "dbx-color",
+        "dbx-button"
+      ],
+      "info": "<p>\n  Reimplements the \"you're already in a chat\" / \"your chat is wrapping up\" status banner from a downstream support page using stock Material card slots plus dbx-web color theming. The host is\n  <code>&lt;mat-card class=\"dbx-card-banner\" appearance=\"outlined\" [dbxColor]=\"view.color\" [dbxColorTone]=\"18\"&gt;</code>\n  . The dbx-web card stylesheet contributes two pieces here: a generic\n  <code>mat-card.dbx-color</code>\n  rule that re-emits the dbx-color background paint at higher specificity than MDC's\n  <code>.mat-mdc-card</code>\n  background-color (so the tonal wash actually shows through every appearance variant), and the\n  <code>.dbx-card-banner</code>\n  utility that centers an\n  <code>&lt;mat-icon mat-card-avatar&gt;</code>\n  and turns\n  <code>&lt;mat-card-footer&gt;</code>\n  into a wrapping action row.\n</p>\n<p>\n  <code>&lt;mat-card-header&gt;</code>\n  is dropped on purpose — its default padding made the banner feel tall. Instead a\n  <code>&lt;dbx-icon-tile&gt;</code>\n  +\n  <code>&lt;mat-card-title&gt;</code>\n  row lives inside\n  <code>&lt;mat-card-content&gt;</code>\n  via a\n  <code>.dbx-card-banner-header</code>\n  child (centered flex row, gap from\n  <code>--dbx-padding-3</code>\n  ), the body paragraph follows directly underneath, and the action buttons live in\n  <code>&lt;mat-card-footer&gt;</code>\n  . The icon tile passes\n  <code>[dbxColor]=\"view.color\"</code>\n  with\n  <code>[round]=\"true\"</code>\n  so it renders as a solid circular avatar in the vibrant theme color, popping out of the tonal banner without any per-component CSS. The\n  <code>.dbx-card-banner</code>\n  utility supplies the header-row flex and the footer wrap-row spacing + padding. The toggle controls at the top reuse the existing\n  <code>.dbx-button-wrap-group</code>\n  utility.\n</p>\n<p>\n  The \"Open chat\" action passes\n  <code>[color]=\"view.color\"</code>\n  so its label tracks the banner's vibrant color while keeping a transparent background that lets the tonal wash show through; \"Dismiss\" stays as a basic\n  <code>&lt;dbx-button&gt;</code>\n  . Action clicks pop a\n  <code>MatSnackBar</code>\n  so the demo proves the wiring without depending on routing or chat infrastructure.\n</p>\n<p>\n  The\n  <code>kindSignal</code>\n  swaps the entire view between the two presets without re-templating, modelling the real-world pattern where the banner is driven by a derived store selector.\n</p>",
+      "snippet": "<div class=\"dbx-button-wrap-group dbx-mb3\">\n  <button mat-stroked-button (click)=\"setKind('activeChat')\" [disabled]=\"kindSignal() === 'activeChat'\">Show active chat</button>\n  <button mat-stroked-button (click)=\"setKind('endedChat')\" [disabled]=\"kindSignal() === 'endedChat'\">Show ending chat</button>\n</div>\n@if (viewSignal(); as view) {\n  <mat-card class=\"dbx-card-banner\" appearance=\"outlined\" role=\"status\" [dbxColor]=\"view.color\" [dbxColorTone]=\"18\">\n    <mat-card-content>\n      <div class=\"dbx-card-banner-header\">\n        <dbx-icon-tile [icon]=\"view.icon\" [round]=\"true\" [dbxColor]=\"view.color\"></dbx-icon-tile>\n        <mat-card-title>{{ view.title }}</mat-card-title>\n      </div>\n      <p>{{ view.text }}</p>\n    </mat-card-content>\n    <mat-card-footer>\n      <dbx-button [color]=\"view.color\" text=\"Open chat\" icon=\"chat_bubble\" (buttonClick)=\"resumeChat()\"></dbx-button>\n      <dbx-button text=\"Dismiss\" (buttonClick)=\"dismissBanner()\"></dbx-button>\n    </mat-card-footer>\n  </mat-card>\n}",
+      "uses": []
+    },
+    {
       "slug": "layout-support-page",
       "category": "layout",
       "summary": "Static support landing page — outlined hero card with a dbx-button CTA and search input plus a responsive 3-column grid of topic mat-cards whose rows are dbx-anchor onClick handlers that pop a snackbar.",

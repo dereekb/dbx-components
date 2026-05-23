@@ -534,6 +534,26 @@
       ]
     },
     {
+      "slug": "card-banner",
+      "selector": ".dbx-card-banner",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 24,
+      "declarations": [],
+      "role": "layout",
+      "intent": "banner-style `<mat-card>` — pair with `[dbxColor]` (+ `[dbxColorTone]`) for the tonal surface. Drop `<mat-card-header>` entirely; put the icon + `<mat-card-title>` row inside `<mat-card-content>` via a `.dbx-card-banner-header` child, and the action buttons inside `<mat-card-footer>`.",
+      "seeAlso": [
+        "color",
+        "color-tonal",
+        "button-wrap-group"
+      ],
+      "tokensRead": [
+        "--dbx-padding-2",
+        "--dbx-padding-3"
+      ]
+    },
+    {
       "slug": "chip",
       "selector": ".dbx-chip",
       "source": "@dereekb/dbx-web",
