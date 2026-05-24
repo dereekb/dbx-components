@@ -48,6 +48,7 @@ export const profileUpdateResetPassword: DemoUpdateModelFunction<ResetProfilePas
       await passwordResetService.beginPasswordReset({
         uid: auth.uid,
         sendResetContent: true,
+        sendResetIgnoreThrottle: true,
         sendResetThrowErrors: true
       });
     } else if (data.resetPassword && data.newPassword) {
