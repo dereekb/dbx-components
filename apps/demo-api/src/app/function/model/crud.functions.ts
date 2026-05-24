@@ -3,9 +3,9 @@ import { guestbookCreate } from '../guestbook/guestbook.create';
 import { profileUpdate, profileUpdateCreateTestNotification, profileUpdateResetPassword, profileUpdateUsername, profileUpdateOnboard } from '../profile/profile.update';
 import { guestbookEntryInsert, guestbookEntryLike } from '../guestbook/guestbookentry.update';
 import { guestbookEntryDelete } from '../guestbook/guestbookentry.delete';
-import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallQueryModel, onCallSpecifierHandler, onCallReadModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
+import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallQueryModel, onCallSpecifierHandler, onCallReadModel, onCallInvokeModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
 import { oidcCallModelScopePreAssert } from '@dereekb/firebase-server/oidc';
-import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, type DemoOnCallQueryModelMap, onCallWithDemoNestContext } from '../function.context';
+import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, type DemoOnCallQueryModelMap, type DemoOnCallInvokeModelMap, onCallWithDemoNestContext } from '../function.context';
 import { notificationUserUpdate, notificationUserResync } from '../notification/notificationuser.update';
 import { notificationBoxUpdate, notificationBoxRecipient } from '../notification/notificationbox.update';
 import { notificationSummaryUpdate } from '../notification/notificationsummary.update';
@@ -19,6 +19,7 @@ import { storageFileCreate, storageFileFromUpload, storageFileAllFromUpload } fr
 import { storageFileDelete } from '../storagefile/storagefile.delete';
 import { storageFileDownload, storageFileDownloadMultiple } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
+import { storageFileRecomputeChecksums } from '../storagefile/storagefile.invoke';
 import { profileDownloadArchive } from '../profile/profile.read';
 import { oidcEntryCreateClient } from '../oidc/oidcclient.create';
 import { oidcEntryUpdateClient, oidcEntryRotateClientSecret } from '../oidc/oidcclient.update';
@@ -125,13 +126,21 @@ export const DEMO_QUERY_MODEL_MAP: DemoOnCallQueryModelMap = {
   guestbookEntry: guestbookEntryQuery
 };
 
+// MARK: Invoke
+export const DEMO_INVOKE_MODEL_MAP: DemoOnCallInvokeModelMap = {
+  storageFile: onCallSpecifierHandler({
+    recomputeChecksums: storageFileRecomputeChecksums
+  })
+};
+
 // MARK: Call
 export const DEMO_CALL_MODEL_MAP: OnCallModelMap = {
   create: onCallCreateModel(DEMO_CREATE_MODEL_MAP),
   read: onCallReadModel(DEMO_READ_MODEL_MAP),
   update: onCallUpdateModel(DEMO_UPDATE_MODEL_MAP),
   delete: onCallDeleteModel(DEMO_DELETE_MODEL_MAP),
-  query: onCallQueryModel(DEMO_QUERY_MODEL_MAP)
+  query: onCallQueryModel(DEMO_QUERY_MODEL_MAP),
+  invoke: onCallInvokeModel(DEMO_INVOKE_MODEL_MAP)
 };
 
 /**

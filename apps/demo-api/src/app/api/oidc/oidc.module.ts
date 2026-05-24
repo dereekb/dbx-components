@@ -21,7 +21,8 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     'model.read': [],
     'model.update': [],
     'model.delete': [],
-    'model.query': []
+    'model.query': [],
+    'model.invoke': []
   },
   responseTypes: ['code'],
   grantTypes: ['authorization_code', 'refresh_token']

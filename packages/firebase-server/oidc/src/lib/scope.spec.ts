@@ -3,7 +3,7 @@ import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, CALL_MODEL_OIDC_SCOPES, CALL_
 import { getOidcScopesFromRequest } from './service/oidc.auth';
 import { type AssertModelCrudRequestFunctionContext } from '@dereekb/firebase-server';
 
-const KNOWN_CALL_TYPES: ReadonlyArray<KnownOnCallFunctionType> = ['create', 'read', 'update', 'delete', 'query'];
+const KNOWN_CALL_TYPES: ReadonlyArray<KnownOnCallFunctionType> = ['create', 'read', 'update', 'delete', 'query', 'invoke'];
 
 function buildContext(call: string | undefined, scope: string | undefined): AssertModelCrudRequestFunctionContext<unknown, OnCallTypedModelParams> {
   const auth = scope === undefined ? undefined : { uid: 'user-1', token: { scope } };
@@ -32,7 +32,7 @@ describe('callModelOidcScopeForCallType', () => {
   });
 
   it('exposes a stable scope string per call type', () => {
-    expect(CALL_MODEL_OIDC_SCOPES).toEqual(['model.create', 'model.read', 'model.update', 'model.delete', 'model.query']);
+    expect(CALL_MODEL_OIDC_SCOPES).toEqual(['model.create', 'model.read', 'model.update', 'model.delete', 'model.query', 'model.invoke']);
   });
 });
 

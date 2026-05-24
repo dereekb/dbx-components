@@ -14,35 +14,38 @@ export const READ_MODEL_OIDC_SCOPE = `${CALL_MODEL_OIDC_SCOPE_PREFIX}read` as co
 export const UPDATE_MODEL_OIDC_SCOPE = `${CALL_MODEL_OIDC_SCOPE_PREFIX}update` as const;
 export const DELETE_MODEL_OIDC_SCOPE = `${CALL_MODEL_OIDC_SCOPE_PREFIX}delete` as const;
 export const QUERY_MODEL_OIDC_SCOPE = `${CALL_MODEL_OIDC_SCOPE_PREFIX}query` as const;
+export const INVOKE_MODEL_OIDC_SCOPE = `${CALL_MODEL_OIDC_SCOPE_PREFIX}invoke` as const;
 
 export type CreateModelOidcScope = typeof CREATE_MODEL_OIDC_SCOPE;
 export type ReadModelOidcScope = typeof READ_MODEL_OIDC_SCOPE;
 export type UpdateModelOidcScope = typeof UPDATE_MODEL_OIDC_SCOPE;
 export type DeleteModelOidcScope = typeof DELETE_MODEL_OIDC_SCOPE;
 export type QueryModelOidcScope = typeof QUERY_MODEL_OIDC_SCOPE;
+export type InvokeModelOidcScope = typeof INVOKE_MODEL_OIDC_SCOPE;
 
 /**
- * Canonical CRUD scopes enforced on the `callModel` API.
+ * Canonical CRUD + invoke scopes enforced on the `callModel` API.
  *
  * Each scope corresponds 1:1 to a {@link KnownOnCallFunctionType}; see
  * {@link CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE}.
  */
-export const CALL_MODEL_OIDC_SCOPES = [CREATE_MODEL_OIDC_SCOPE, READ_MODEL_OIDC_SCOPE, UPDATE_MODEL_OIDC_SCOPE, DELETE_MODEL_OIDC_SCOPE, QUERY_MODEL_OIDC_SCOPE] as const;
+export const CALL_MODEL_OIDC_SCOPES = [CREATE_MODEL_OIDC_SCOPE, READ_MODEL_OIDC_SCOPE, UPDATE_MODEL_OIDC_SCOPE, DELETE_MODEL_OIDC_SCOPE, QUERY_MODEL_OIDC_SCOPE, INVOKE_MODEL_OIDC_SCOPE] as const;
 
 /**
- * Union of the five canonical callModel CRUD scope strings.
+ * Union of the six canonical callModel scope strings (CRUDQ + invoke).
  */
-export type CallModelOidcScope = CreateModelOidcScope | ReadModelOidcScope | UpdateModelOidcScope | DeleteModelOidcScope | QueryModelOidcScope;
+export type CallModelOidcScope = CreateModelOidcScope | ReadModelOidcScope | UpdateModelOidcScope | DeleteModelOidcScope | QueryModelOidcScope | InvokeModelOidcScope;
 
 /**
- * Maps each known CRUD call type to the scope an OIDC token must carry to invoke it.
+ * Maps each known call type to the scope an OIDC token must carry to invoke it.
  */
 export const CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE: Readonly<Record<KnownOnCallFunctionType, CallModelOidcScope>> = {
   create: 'model.create',
   read: 'model.read',
   update: 'model.update',
   delete: 'model.delete',
-  query: 'model.query'
+  query: 'model.query',
+  invoke: 'model.invoke'
 };
 
 /**
@@ -71,7 +74,8 @@ export const CALL_MODEL_OIDC_SCOPE_DETAILS: readonly LabeledValueWithDescription
   { label: 'Read models', value: 'model.read', description: 'Read model records via the callModel API' },
   { label: 'Update models', value: 'model.update', description: 'Update model records via the callModel API' },
   { label: 'Delete models', value: 'model.delete', description: 'Delete model records via the callModel API' },
-  { label: 'Query models', value: 'model.query', description: 'Query model records via the callModel API' }
+  { label: 'Query models', value: 'model.query', description: 'Query model records via the callModel API' },
+  { label: 'Invoke model operations', value: 'model.invoke', description: 'Invoke RPC-style operations on model records via the callModel API' }
 ];
 
 // MARK: Standard OIDC Scopes

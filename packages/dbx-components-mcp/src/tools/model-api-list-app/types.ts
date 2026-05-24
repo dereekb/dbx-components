@@ -24,6 +24,7 @@ export interface ApiListVerbCounts {
   readonly update: number;
   readonly delete: number;
   readonly query: number;
+  readonly invoke: number;
   readonly standalone: number;
 }
 

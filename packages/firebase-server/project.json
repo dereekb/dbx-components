@@ -30,6 +30,9 @@
             "command": "npx nx run firebase-server-oidc:build-base"
           },
           {
+            "command": "npx nx run firebase-server-mcp:build-base"
+          },
+          {
             "command": "npx nx run firebase-server-test:build-base"
           }
         ],

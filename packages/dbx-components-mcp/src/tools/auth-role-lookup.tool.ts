@@ -37,7 +37,7 @@ const DBX_AUTH_ROLE_LOOKUP_TOOL: Tool = {
       topic: { type: 'string', description: 'Role string (`admin`), const name (`AUTH_ADMIN_ROLE`), or "list".' },
       tag: { type: 'string', description: 'Tag to filter by (`privileged`, `verified-user`).' },
       model: { type: 'string', description: 'Model name for reverse lookup (e.g. `StorageFile`).' },
-      verb: { type: 'string', description: 'CRUD verb for reverse lookup (`create | read | update | delete | query`).' },
+      verb: { type: 'string', description: 'Call verb for reverse lookup (`create | read | update | delete | query | invoke`).' },
       depth: { type: 'string', enum: ['brief', 'full'], default: 'full' }
     }
   }

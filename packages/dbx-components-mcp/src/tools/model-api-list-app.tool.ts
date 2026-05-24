@@ -37,7 +37,7 @@ const TOOL: Tool = {
     '',
     'For each `<model>.api.ts` file under `<componentDir>/src/lib/**` that calls `callModelFirebaseFunctionMapFactory(...)`, the tool walks the `<Group>ModelCrudFunctionsConfig` type literal and `<Group>FunctionTypeMap` to enumerate every callable leaf:',
     '- `model` — the top-level model key from the CRUD config (e.g. `profile`, `guestbookEntry`); for standalone entries, the firebase function key.',
-    '- `verb` — `create` / `read` / `update` / `delete` / `query` / `standalone`.',
+    '- `verb` — `create` / `read` / `update` / `delete` / `query` / `invoke` / `standalone`.',
     '- `specifier` — sub-key like `username`, `_`, `subscribeToNotifications`, or `—` when the verb has no nested specifier.',
     '- `params` — the bare params type name resolved at the leaf.',
     '- `result` — the result type name when the leaf is a `[Params, Result]` tuple, else `void`.',

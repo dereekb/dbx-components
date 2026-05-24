@@ -120,7 +120,7 @@ async function collectApiFiles(root: string): Promise<readonly string[]> {
 }
 
 function countVerbs(entries: readonly ApiListEntry[]): ApiListVerbCounts {
-  const counts: Record<CrudVerb, number> = { create: 0, read: 0, update: 0, delete: 0, query: 0, standalone: 0 };
+  const counts: Record<CrudVerb, number> = { create: 0, read: 0, update: 0, delete: 0, query: 0, invoke: 0, standalone: 0 };
   for (const entry of entries) {
     counts[entry.verb] += 1;
   }

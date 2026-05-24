@@ -20,7 +20,7 @@
 import { Node, Project, type JSDocableNode, type SourceFile, type TypeAliasDeclaration, type TypeNode } from 'ts-morph';
 import type { CrudEntry, CrudEntryDocField, CrudExtraction, CrudVerb } from './types';
 
-const SUPPORTED_VERBS: ReadonlySet<CrudVerb> = new Set(['create', 'read', 'update', 'delete', 'query']);
+const SUPPORTED_VERBS: ReadonlySet<CrudVerb> = new Set(['create', 'read', 'update', 'delete', 'query', 'invoke']);
 
 /**
  * Inputs for {@link extractCrudEntries}.

@@ -10,7 +10,7 @@
  * `@dereekb/dbx-cli/manifest-extract`.
  */
 
-export type CrudVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'standalone';
+export type CrudVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'invoke' | 'standalone';
 
 export interface CrudEntryDocField {
   readonly name: string;
