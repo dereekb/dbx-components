@@ -117,6 +117,7 @@ export interface FirebaseAuthNewUserClaimsData {
 
 export const FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY = 'resetPassword';
 export const FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY = 'resetCommunicationAt';
+export const FIREBASE_SERVER_AUTH_CLAIMS_RESET_EXPIRES_AT_KEY = 'resetExpiresAt';
 
 /**
  * Custom claims data set on a Firebase Auth user during a password reset flow.
@@ -132,4 +133,11 @@ export interface FirebaseAuthResetUserPasswordClaimsData {
    * ISO 8601 timestamp of the last reset-related communication (e.g., reset email).
    */
   readonly resetCommunicationAt: ISO8601DateString;
+  /**
+   * ISO 8601 timestamp after which the reset code is no longer valid.
+   *
+   * Set when the reset is initiated; checked at completion. Resets older than this expiry
+   * are rejected with the same opaque "invalid code" error as a wrong code.
+   */
+  readonly resetExpiresAt: ISO8601DateString;
 }

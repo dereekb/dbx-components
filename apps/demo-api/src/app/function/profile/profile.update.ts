@@ -4,7 +4,7 @@ import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';
 import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
 import { firestoreModelKey } from '@dereekb/firebase';
-import { catchAndThrowPasswordResetServerErrors } from '@dereekb/firebase-server';
+import { catchAndThrowPasswordResetServerErrors, isAdminInRequest } from '@dereekb/firebase-server';
 
 export const profileUpdate: DemoUpdateModelFunction<UpdateProfileParams> = async (request) => {
   const { nest, auth: _auth, data } = request;
@@ -48,7 +48,6 @@ export const profileUpdateResetPassword: DemoUpdateModelFunction<ResetProfilePas
       await passwordResetService.beginPasswordReset({
         uid: auth.uid,
         sendResetContent: true,
-        sendResetIgnoreThrottle: true,
         sendResetThrowErrors: true
       });
     } else if (data.resetPassword && data.newPassword) {
@@ -57,7 +56,7 @@ export const profileUpdateResetPassword: DemoUpdateModelFunction<ResetProfilePas
         newPassword: data.newPassword
       });
     }
-  });
+  }, isAdminInRequest(request));
 };
 
 export const profileUpdateCreateTestNotification: DemoUpdateModelFunction<ProfileCreateTestNotificationParams> = async (request) => {
