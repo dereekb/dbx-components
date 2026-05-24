@@ -113,32 +113,6 @@ export const updateStorageFileParamsType = targetModelParamsType.merge({
   'sdat?': clearable(ARKTYPE_DATE_DTO_TYPE)
 }) as Type<UpdateStorageFileParams>;
 
-/**
- * Parameters for the `storageFile / invoke / recomputeChecksums` RPC.
- *
- * Side-effecting recompute of derived data on a single StorageFile record.
- * Uses the `invoke` call type because it is neither a read nor a CRUD mutation —
- * it triggers a backend job against an existing record.
- */
-export interface RecomputeStorageFileChecksumsParams extends TargetModelParams {
-  /**
-   * When true, recompute even if the file already has a stored checksum.
-   */
-  readonly force?: Maybe<boolean>;
-}
-
-export const recomputeStorageFileChecksumsParamsType = targetModelParamsType.merge({
-  'force?': clearable('boolean')
-}) as Type<RecomputeStorageFileChecksumsParams>;
-
-/**
- * Result of a recompute-checksums invoke.
- */
-export interface RecomputeStorageFileChecksumsResult {
-  readonly key: FirestoreModelKey;
-  readonly recomputed: boolean;
-}
-
 export interface DeleteStorageFileParams extends TargetModelParams {
   readonly force?: Maybe<boolean>;
 }
@@ -418,9 +392,6 @@ export type StorageFileModelCrudFunctionsConfig = {
     delete: {
       _: DeleteStorageFileParams;
     };
-    invoke: {
-      recomputeChecksums: [RecomputeStorageFileChecksumsParams, RecomputeStorageFileChecksumsResult];
-    };
   };
   readonly storageFileGroup: {
     update: {
@@ -431,7 +402,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 };
 
 export const STORAGE_FILE_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple', 'invoke:recomputeChecksums'],
+  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple'],
   storageFileGroup: ['update:_,regenerateContent']
 };
 
@@ -459,9 +430,6 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
     };
     deleteStorageFile: {
       delete: ModelFirebaseCrudFunction<DeleteStorageFileParams>;
-    };
-    invokeStorageFile: {
-      recomputeChecksums: ModelFirebaseCrudFunction<RecomputeStorageFileChecksumsParams, RecomputeStorageFileChecksumsResult>;
     };
   };
   abstract storageFileGroup: {

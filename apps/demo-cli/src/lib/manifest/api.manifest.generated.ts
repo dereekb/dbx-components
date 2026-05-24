@@ -26,7 +26,7 @@ import {
   updateStorageFileGroupParamsType,
   updateStorageFileParamsType
 } from '@dereekb/firebase';
-import { createGuestbookParamsType, downloadProfileArchiveParamsType, exampleReadParamsType, finishOnboardingProfileParamsType, guestbookEntryParamsType, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType, profileCreateTestNotificationParamsType, resetProfilePasswordParamsType, setProfileUsernameParamsType, subscribeToGuestbookNotificationsParamsType, updateProfileParamsType } from 'demo-firebase';
+import { allPublishedGuestbookEntriesParamsType, createGuestbookParamsType, downloadProfileArchiveParamsType, exampleReadParamsType, finishOnboardingProfileParamsType, guestbookEntryParamsType, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType, profileCreateTestNotificationParamsType, resetProfilePasswordParamsType, setProfileUsernameParamsType, subscribeToGuestbookNotificationsParamsType, updateProfileParamsType } from 'demo-firebase';
 import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
@@ -42,8 +42,52 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'published', typeText: 'Maybe<boolean>' }
     ]
   },
+  { model: 'guestbook', verb: 'query', paramsTypeName: 'QueryGuestbooksParams', resultTypeName: 'OnCallQueryModelResult', groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsTypeDescription: 'Query parameters for searching guestbooks.', paramsFields: [{ name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all guestbooks.' }] },
   { model: 'guestbook', verb: 'update', specifier: 'subscribeToNotifications', paramsTypeName: 'SubscribeToGuestbookNotificationsParams', paramsValidator: subscribeToGuestbookNotificationsParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
   { model: 'guestbookEntry', verb: 'delete', paramsTypeName: 'GuestbookEntryParams', paramsValidator: guestbookEntryParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsFields: [{ name: 'guestbook', typeText: 'string' }] },
+  {
+    model: 'guestbookEntry',
+    verb: 'invoke',
+    specifier: 'allPublishedEntries',
+    paramsTypeName: 'AllPublishedGuestbookEntriesParams',
+    paramsValidator: allPublishedGuestbookEntriesParamsType,
+    resultTypeName: 'AllPublishedGuestbookEntriesResult',
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsTypeDescription: 'Parameters for the `guestbookEntry / invoke / allPublishedEntries` RPC.\n\nServer-side equivalent of the client-side\n{@link QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION} composition — paginates\nthe cross-guestbook query internally and returns one aggregate response. Use\nthis when the caller wants a single round trip instead of driving pagination.',
+    paramsFields: [{ name: 'limit', typeText: 'Maybe<number>', description: 'Cap the number of entries returned. The server enforces an additional hard upper bound.' }],
+    resultTypeDescription: 'Result of an all-published-entries invoke.',
+    resultFields: [
+      { name: 'count', typeText: 'number' },
+      { name: 'entries', typeText: 'ReadonlyArray<GuestbookEntry>' },
+      { name: 'hitLimit', typeText: 'boolean' }
+    ]
+  },
+  {
+    model: 'guestbookEntry',
+    verb: 'query',
+    specifier: '_',
+    paramsTypeName: 'QueryGuestbookEntriesParams',
+    resultTypeName: 'OnCallQueryModelResult',
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsTypeDescription: 'Query parameters for searching guestbook entries for one guestbook.\n\nUsed with the default `guestbookEntry.query._` specifier — for cross-guestbook\ncollection-group queries, see {@link QueryAllGuestbookEntriesParams}.',
+    paramsFields: [
+      { name: 'guestbook', typeText: 'GuestbookKey', description: 'Key of the parent guestbook to query entries from. Required.' },
+      { name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all entries.' }
+    ]
+  },
+  {
+    model: 'guestbookEntry',
+    verb: 'query',
+    specifier: 'entries',
+    paramsTypeName: 'QueryAllGuestbookEntriesParams',
+    resultTypeName: 'OnCallQueryModelResult',
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsTypeDescription: 'Query parameters for searching GuestbookEntry across all guestbooks via the collection group.\n\nUsed with the `guestbookEntry.query.entries` specifier — unlike\n{@link QueryGuestbookEntriesParams}, the parent guestbook key is NOT required.',
+    paramsFields: [{ name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all entries the caller is allowed to see\n(server-side admin gate may restrict non-admins to `published: true`).' }]
+  },
   {
     model: 'guestbookEntry',
     verb: 'update',

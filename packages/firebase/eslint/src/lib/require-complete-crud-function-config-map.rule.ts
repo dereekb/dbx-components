@@ -13,7 +13,7 @@ export const MODEL_FIREBASE_CRUD_FUNCTION_CONFIG_MAP_TYPE_NAME = 'ModelFirebaseC
  * `create | read | update | delete | query` verbs in the type definition at
  * `packages/firebase/src/lib/client/function/model.function.factory.ts`.
  */
-export const DEFAULT_CRUD_VERB_NAMES: readonly string[] = ['create', 'read', 'update', 'delete', 'query'];
+export const DEFAULT_CRUD_VERB_NAMES: readonly string[] = ['create', 'read', 'update', 'delete', 'query', 'invoke'];
 
 /**
  * Options for the require-complete-crud-function-config-map rule.
@@ -373,7 +373,7 @@ export const FIREBASE_REQUIRE_COMPLETE_CRUD_FUNCTION_CONFIG_MAP_RULE: FirebaseRe
       missingSpecifiersForVerb: 'CRUD entry "{{entry}}" for "{{key}}.{{verb}}" is missing its specifier list (expected `{{verb}}:<specifier>,...`).',
       unexpectedSpecifiersForVerb: 'CRUD entry "{{entry}}" for "{{key}}.{{verb}}" includes specifiers but the type declares the verb without any.',
       unsupportedConfigShape: 'Property "{{key}}" in "{{typeName}}" has an unsupported shape. Expected null or an object type with verbs.',
-      unsupportedVerbInType: 'Verb "{{verb}}" on "{{key}}" in "{{typeName}}" is not a recognized CRUD verb. Expected one of: create, read, update, delete, query.'
+      unsupportedVerbInType: 'Verb "{{verb}}" on "{{key}}" in "{{typeName}}" is not a recognized CRUD verb. Expected one of: create, read, update, delete, query, invoke.'
     },
     schema: [
       {

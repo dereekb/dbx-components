@@ -19,14 +19,14 @@ import { storageFileCreate, storageFileFromUpload, storageFileAllFromUpload } fr
 import { storageFileDelete } from '../storagefile/storagefile.delete';
 import { storageFileDownload, storageFileDownloadMultiple } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
-import { storageFileRecomputeChecksums } from '../storagefile/storagefile.invoke';
+import { guestbookEntryAllPublishedEntries } from '../guestbook/guestbookentry.invoke';
 import { profileDownloadArchive } from '../profile/profile.read';
 import { oidcEntryCreateClient } from '../oidc/oidcclient.create';
 import { oidcEntryUpdateClient, oidcEntryRotateClientSecret } from '../oidc/oidcclient.update';
 import { oidcEntryDeleteClient } from '../oidc/oidcclient.delete';
 import { oidcEntryDeleteToken } from '../oidc/oidcentry.delete';
 import { guestbookQuery } from '../guestbook/guestbook.query';
-import { guestbookEntryQuery } from '../guestbook/guestbookentry.query';
+import { guestbookEntryQuery, guestbookEntryEntriesQuery } from '../guestbook/guestbookentry.query';
 
 // MARK: Create
 export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
@@ -123,13 +123,16 @@ export const DEMO_DELETE_MODEL_MAP: DemoOnCallDeleteModelMap = {
 // MARK: Query
 export const DEMO_QUERY_MODEL_MAP: DemoOnCallQueryModelMap = {
   guestbook: guestbookQuery,
-  guestbookEntry: guestbookEntryQuery
+  guestbookEntry: onCallSpecifierHandler({
+    _: guestbookEntryQuery,
+    entries: guestbookEntryEntriesQuery
+  })
 };
 
 // MARK: Invoke
 export const DEMO_INVOKE_MODEL_MAP: DemoOnCallInvokeModelMap = {
-  storageFile: onCallSpecifierHandler({
-    recomputeChecksums: storageFileRecomputeChecksums
+  guestbookEntry: onCallSpecifierHandler({
+    allPublishedEntries: guestbookEntryAllPublishedEntries
   })
 };
 

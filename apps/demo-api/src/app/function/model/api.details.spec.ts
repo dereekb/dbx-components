@@ -1,8 +1,7 @@
-import { withApiDetails, readApiDetails, getModelApiDetails, onCallSpecifierHandler, onCallCreateModel, onCallUpdateModel, onCallReadModel, onCallDeleteModel, onCallInvokeModel, onCallModel, type OnCallApiDetailsRef, type OnCallModelMap, type ModelApiDetailsResult } from '@dereekb/firebase-server';
+import { withApiDetails, readApiDetails, getModelApiDetails, onCallSpecifierHandler, onCallCreateModel, onCallUpdateModel, onCallReadModel, onCallDeleteModel, onCallModel, type OnCallApiDetailsRef, type OnCallModelMap, type ModelApiDetailsResult } from '@dereekb/firebase-server';
 import { createGuestbookParamsType, insertGuestbookEntryParamsType, subscribeToGuestbookNotificationsParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
-import { recomputeStorageFileChecksumsParamsType } from '@dereekb/firebase';
 import { DEMO_CREATE_MODEL_MAP, demoCallModelFn } from './crud.functions';
-import { type DemoOnCallCreateModelMap, type DemoOnCallInvokeModelMap, type DemoOnCallUpdateModelMap } from '../function.context';
+import { type DemoOnCallCreateModelMap, type DemoOnCallUpdateModelMap } from '../function.context';
 
 /**
  * Tests the model-first API details view using actual demo ArkType param types.
@@ -23,12 +22,12 @@ describe('demo api.details integration', () => {
       expect(getModelApiDetails(callModel)).toBeUndefined();
     });
 
-    it('should surface the demo invoke handler in the real demoCallModelFn _apiDetails tree', () => {
+    it('should surface the demo guestbookEntry invoke handler in the real demoCallModelFn _apiDetails tree', () => {
       const details = getModelApiDetails(demoCallModelFn as unknown as OnCallApiDetailsRef);
       expect(details).toBeDefined();
-      expect(details!.models['storageFile']).toBeDefined();
-      expect(details!.models['storageFile'].calls.invoke).toBeDefined();
-      expect(details!.models['storageFile'].calls.invoke!.specifiers['recomputeChecksums']).toBeDefined();
+      expect(details!.models['guestbookEntry']).toBeDefined();
+      expect(details!.models['guestbookEntry'].calls.invoke).toBeDefined();
+      expect(details!.models['guestbookEntry'].calls.invoke!.specifiers['allPublishedEntries']).toBeDefined();
     });
   });
 
@@ -42,12 +41,6 @@ describe('demo api.details integration', () => {
       // Demonstrates withApiDetails({ optionalAuth: true }) replacing optionalAuthContext
       notification: onCallSpecifierHandler({
         _: withApiDetails({ optionalAuth: true, mcp: { description: 'Create a notification (no auth required)' }, fn: async () => ({ modelKeys: [] }) }) as any
-      })
-    };
-
-    const demoInvokeMap: DemoOnCallInvokeModelMap = {
-      storageFile: onCallSpecifierHandler({
-        recomputeChecksums: withApiDetails({ inputType: recomputeStorageFileChecksumsParamsType, mcp: { description: 'Recompute storage file checksums' }, fn: async () => ({ key: 'k', recomputed: false }) }) as any
       })
     };
 
@@ -66,8 +59,7 @@ describe('demo api.details integration', () => {
       create: onCallCreateModel(demoCreateMap),
       update: onCallUpdateModel(demoUpdateMap as any),
       read: onCallReadModel({}),
-      delete: onCallDeleteModel({}),
-      invoke: onCallInvokeModel(demoInvokeMap as any)
+      delete: onCallDeleteModel({})
     };
 
     const callModel = onCallModel(callModelMap);
@@ -160,20 +152,6 @@ describe('demo api.details integration', () => {
         // to JSON Schema without a fallback handler. Verify the type reference is preserved
         // so the MCP layer can call toJsonSchema() with appropriate options.
         expect(updateSpecifiers['username']!.inputType).toBe(setProfileUsernameParamsType);
-      });
-    });
-
-    // MARK: storageFile (invoke)
-    describe('models.storageFile', () => {
-      it('should have invoke call with specifier recomputeChecksums', () => {
-        const storageFile = details.models['storageFile'];
-        expect(storageFile.calls.invoke).toBeDefined();
-        expect(storageFile.calls.invoke!.isSpecifier).toBe(true);
-
-        const invokeSpecifiers = storageFile.calls.invoke!.specifiers;
-        expect(invokeSpecifiers['recomputeChecksums']).toBeDefined();
-        expect(invokeSpecifiers['recomputeChecksums']!.inputType).toBe(recomputeStorageFileChecksumsParamsType);
-        expect(invokeSpecifiers['recomputeChecksums']!.mcp?.description).toBe('Recompute storage file checksums');
       });
     });
 

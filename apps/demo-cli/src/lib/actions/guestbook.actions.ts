@@ -1,6 +1,6 @@
 import { type ActionCommandSpec, type CliContext, iterateDbxCliCallModel } from '@dereekb/dbx-cli';
 import { type OnCallQueryModelResult } from '@dereekb/firebase';
-import { type Guestbook, type GuestbookEntry, type GuestbookKey, type QueryGuestbookEntriesParams, type QueryGuestbooksParams } from 'demo-firebase';
+import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, type Guestbook, type GuestbookEntry, type GuestbookKey, type QueryGuestbookEntriesParams, type QueryGuestbooksParams } from 'demo-firebase';
 
 // MARK: queryGuestbookEntriesForGuestbook
 
@@ -152,5 +152,59 @@ export const QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION: ActionCommandSpec = {
       context,
       limit: (argv as { readonly limit?: number }).limit,
       parallel: (argv as { readonly parallel?: number }).parallel
+    })
+};
+
+// MARK: allPublishedGuestbookEntries (invoke)
+
+/**
+ * Input for {@link allPublishedGuestbookEntries}.
+ */
+export interface AllPublishedGuestbookEntriesInput {
+  readonly context: CliContext;
+  readonly limit?: number;
+}
+
+/**
+ * Calls the `guestbookEntry / invoke / allPublishedEntries` RPC — the invoke equivalent of
+ * {@link queryAllPublishedGuestbookEntries}, which does the same aggregation client-side
+ * via two-level pagination.
+ *
+ * Unlike the paginated query actions above, this is a single-shot call: the server
+ * paginates the collection group internally and returns one aggregate response.
+ *
+ * @param input - The function inputs.
+ * @returns Server-side aggregate including count, entries, and whether the cap was hit.
+ *
+ * @example
+ * ```ts
+ * const { count, entries, hitLimit } = await allPublishedGuestbookEntries({ context, limit: 50 });
+ * ```
+ */
+export async function allPublishedGuestbookEntries(input: AllPublishedGuestbookEntriesInput): Promise<AllPublishedGuestbookEntriesResult> {
+  const { context, limit } = input;
+
+  const result = await context.callModel<AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult>({
+    modelType: 'guestbookEntry',
+    call: 'invoke',
+    specifier: 'allPublishedEntries',
+    data: limit === undefined ? {} : { limit }
+  });
+
+  return result;
+}
+
+/**
+ * Action: aggregate every published GuestbookEntry server-side in one call.
+ */
+export const ALL_PUBLISHED_GUESTBOOK_ENTRIES_INVOKE_ACTION: ActionCommandSpec = {
+  command: 'all-published-entries-invoke',
+  describe: 'Aggregate every published GuestbookEntry server-side (guestbookEntry.invoke.allPublishedEntries).',
+  model: 'guestbookEntry',
+  builder: (y) => y.option('limit', { type: 'number', describe: 'Server-side limit on entries returned.' }),
+  handler: ({ context, argv }) =>
+    allPublishedGuestbookEntries({
+      context,
+      limit: (argv as { readonly limit?: number }).limit
     })
 };

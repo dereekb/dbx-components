@@ -60,7 +60,10 @@ export interface QueryGuestbooksParams extends OnCallQueryModelRequestParams {
 }
 
 /**
- * Query parameters for searching guestbook entries.
+ * Query parameters for searching guestbook entries for one guestbook.
+ *
+ * Used with the default `guestbookEntry.query._` specifier — for cross-guestbook
+ * collection-group queries, see {@link QueryAllGuestbookEntriesParams}.
  */
 export interface QueryGuestbookEntriesParams extends OnCallQueryModelRequestParams {
   /**
@@ -71,6 +74,49 @@ export interface QueryGuestbookEntriesParams extends OnCallQueryModelRequestPara
    * Filter by published status. When omitted, returns all entries.
    */
   readonly published?: boolean;
+}
+
+/**
+ * Query parameters for searching GuestbookEntry across all guestbooks via the collection group.
+ *
+ * Used with the `guestbookEntry.query.entries` specifier — unlike
+ * {@link QueryGuestbookEntriesParams}, the parent guestbook key is NOT required.
+ */
+export interface QueryAllGuestbookEntriesParams extends OnCallQueryModelRequestParams {
+  /**
+   * Filter by published status. When omitted, returns all entries the caller is allowed to see
+   * (server-side admin gate may restrict non-admins to `published: true`).
+   */
+  readonly published?: boolean;
+}
+
+// MARK: Invoke
+/**
+ * Parameters for the `guestbookEntry / invoke / allPublishedEntries` RPC.
+ *
+ * Server-side equivalent of the client-side
+ * {@link QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION} composition — paginates
+ * the cross-guestbook query internally and returns one aggregate response. Use
+ * this when the caller wants a single round trip instead of driving pagination.
+ */
+export interface AllPublishedGuestbookEntriesParams {
+  /**
+   * Cap the number of entries returned. The server enforces an additional hard upper bound.
+   */
+  readonly limit?: Maybe<number>;
+}
+
+export const allPublishedGuestbookEntriesParamsType = type({
+  'limit?': clearable('number > 0')
+}) as Type<AllPublishedGuestbookEntriesParams>;
+
+/**
+ * Result of an all-published-entries invoke.
+ */
+export interface AllPublishedGuestbookEntriesResult {
+  readonly count: number;
+  readonly entries: ReadonlyArray<GuestbookEntry>;
+  readonly hitLimit: boolean;
 }
 
 export type GuestbookFunctionTypeMap = {};
@@ -91,13 +137,19 @@ export type GuestbookModelCrudFunctionsConfig = {
       like: LikeGuestbookEntryParams;
     };
     delete: GuestbookEntryParams;
-    query: [QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];
+    query: {
+      _: [QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];
+      entries: [QueryAllGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];
+    };
+    invoke: {
+      allPublishedEntries: [AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult];
+    };
   };
 };
 
 export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookModelCrudFunctionsConfig, GuestbookTypes> = {
   guestbook: ['create', 'update:subscribeToNotifications', 'query'],
-  guestbookEntry: ['update:insert,like', 'delete', 'query']
+  guestbookEntry: ['update:insert,like', 'delete', 'query:_,entries', 'invoke:allPublishedEntries']
 };
 
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory(guestbookFunctionTypeConfigMap, guestbookModelCrudFunctionsConfig);
@@ -116,6 +168,12 @@ export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<Gue
       like: ModelFirebaseCrudFunction<LikeGuestbookEntryParams>;
     };
     deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams>;
-    queryGuestbookEntry: ModelFirebaseQueryFunction<QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>>;
+    queryGuestbookEntry: {
+      query: ModelFirebaseQueryFunction<QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>>;
+      entries: ModelFirebaseQueryFunction<QueryAllGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>>;
+    };
+    invokeGuestbookEntry: {
+      allPublishedEntries: ModelFirebaseCrudFunction<AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult>;
+    };
   };
 }

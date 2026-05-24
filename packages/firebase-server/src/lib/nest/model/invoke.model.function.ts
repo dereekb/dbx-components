@@ -85,8 +85,8 @@ export interface OnCallInvokeModelConfig<N> {
  * @example
  * ```typescript
  * const invokeHandler = onCallInvokeModel<DemoNestContext>({
- *   storageFile: onCallSpecifierHandler({
- *     recomputeChecksums: storageFileRecomputeChecksums
+ *   guestbookEntry: onCallSpecifierHandler({
+ *     recomputeLikes: guestbookEntryRecomputeLikes
  *   })
  * });
  * ```

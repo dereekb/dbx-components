@@ -71,11 +71,14 @@ export interface JsonSchemaGenerationOptions {
  *
  * ArkType throws on predicate definitions and on `undefined` fields by default;
  * these fallback handlers downgrade those errors so a partial schema is emitted
- * for tools that mostly fit JSON Schema.
+ * for tools that mostly fit JSON Schema. The `unit` fallback covers `clearable(t)`
+ * from `@dereekb/model` (which expands to `t | undefined` and surfaces as an ArkType
+ * `unit: undefined` schema node).
  */
 export const DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS: JsonSchemaGenerationOptions = {
   fallback: {
     predicate: () => ({}),
+    unit: () => ({}),
     undefinedAsClearable: () => ({})
   }
 };

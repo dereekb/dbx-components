@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { McpModuleConfig, mcpModuleMetadata } from '@dereekb/firebase-server/mcp';
-import { ModelApiCallModelDispatchService, MODEL_API_NEST_APPLICATION_CONTEXT } from '@dereekb/firebase-server';
 import { DemoModelApiModule } from '../model/model.module';
 
 /**
@@ -20,8 +19,8 @@ export const DEMO_MCP_MODULE_CONFIG: McpModuleConfig = {
 /**
  * Dependency module for the Demo MCP module.
  *
- * Re-exports the dispatch service + nest-application context tokens from the
- * already-wired {@link DemoModelApiModule}, plus the MCP module config provider.
+ * Re-exports {@link DemoModelApiModule} so its `ModelApiCallModelDispatchService`
+ * export propagates to `McpServerFactoryService`, plus the MCP module config provider.
  */
 @Module({
   imports: [DemoModelApiModule],
@@ -31,7 +30,7 @@ export const DEMO_MCP_MODULE_CONFIG: McpModuleConfig = {
       useValue: DEMO_MCP_MODULE_CONFIG
     }
   ],
-  exports: [McpModuleConfig, ModelApiCallModelDispatchService, MODEL_API_NEST_APPLICATION_CONTEXT]
+  exports: [McpModuleConfig, DemoModelApiModule]
 })
 export class DemoMcpDependencyModule {}
 
