@@ -33,9 +33,39 @@ export interface CompressPdfImagesToTargetSizeConfig {
 }
 
 /**
+ * Per-filter image stream counts (e.g. `{ DCTDecode: 2, FlateDecode: 1 }`). Streams
+ * with no `/Filter` entry are bucketed under `'none'`; multi-filter chains are
+ * joined with `+` (e.g. `'FlateDecode+DCTDecode'`).
+ */
+export type CompressPdfImageStreamsByFilter = Readonly<Record<string, number>>;
+
+/**
+ * Diagnostic context describing the source PDF — useful for explaining why a
+ * compression attempt did or did not hit its target.
+ */
+export interface CompressPdfImagesToTargetSizeContext {
+  /**
+   * Number of pages in the source PDF.
+   */
+  readonly pageCount: number;
+  /**
+   * Total number of image XObjects (Subtype `/Image`) found in the PDF, regardless
+   * of whether they were compressible by this implementation.
+   */
+  readonly imageStreamCount: number;
+  /**
+   * Breakdown of image XObjects by their PDF filter. If `hitTarget` is `false` and
+   * this map only contains non-JPEG filters (e.g. `FlateDecode`, `CCITTFaxDecode`,
+   * `JBIG2Decode`, `JPXDecode`), the v1 compressor cannot help — callers should
+   * reject the upload or queue a downscale fallback.
+   */
+  readonly imageStreamsByFilter: CompressPdfImageStreamsByFilter;
+}
+
+/**
  * Result of {@link compressPdfImagesToTargetSize}.
  */
-export interface CompressPdfImagesToTargetSizeResult {
+export interface CompressPdfImagesToTargetSizeResult extends CompressPdfImagesToTargetSizeContext {
   /**
    * Best-effort compressed PDF bytes. Equal to the original buffer if recompression
    * produced no smaller result.
@@ -89,14 +119,23 @@ export async function compressPdfImagesToTargetSize(input: Buffer, config: Compr
   const originalSizeBytes = input.byteLength;
 
   const pdfDoc = await PDFDocument.load(input, { ignoreEncryption: true, updateMetadata: false });
+  const pageCount = pdfDoc.getPageCount();
   const indirectObjects = pdfDoc.context.enumerateIndirectObjects();
 
   let imagesCompressed = 0;
   let imagesSkipped = 0;
+  let imageStreamCount = 0;
+  const imageStreamsByFilter: Record<string, number> = {};
 
   for (const [ref, obj] of indirectObjects) {
     if (!(obj instanceof PDFRawStream)) {
       continue;
+    }
+
+    if (isImageStream(obj)) {
+      imageStreamCount += 1;
+      const filterKey = imageStreamFilterKey(obj);
+      imageStreamsByFilter[filterKey] = (imageStreamsByFilter[filterKey] ?? 0) + 1;
     }
 
     const candidate = isCompressibleImageStream(obj);
@@ -155,9 +194,50 @@ export async function compressPdfImagesToTargetSize(input: Buffer, config: Compr
     compressedSizeBytes,
     imagesCompressed,
     imagesSkipped,
-    hitTarget: compressedSizeBytes <= targetSizeBytes
+    hitTarget: compressedSizeBytes <= targetSizeBytes,
+    pageCount,
+    imageStreamCount,
+    imageStreamsByFilter
   };
   return result;
+}
+
+function isImageStream(stream: PDFRawStream): boolean {
+  const dict = stream.dict;
+  const type = dict.get(PDF_NAME_TYPE);
+  const typeOk = type === undefined || pdfNameEquals(type, PDF_NAME_XOBJECT);
+  let result = false;
+
+  if (typeOk) {
+    const subtype = dict.get(PDF_NAME_SUBTYPE);
+    result = subtype !== undefined && pdfNameEquals(subtype, PDF_NAME_IMAGE);
+  }
+
+  return result;
+}
+
+function imageStreamFilterKey(stream: PDFRawStream): string {
+  const filter = stream.dict.get(PDF_NAME_FILTER);
+  let result: string;
+
+  if (filter === undefined) {
+    result = 'none';
+  } else if (filter instanceof PDFArray) {
+    result = filter
+      .asArray()
+      .map((entry) => (entry instanceof PDFName ? stripPdfNameSlash(entry.asString()) : 'unknown'))
+      .join('+');
+  } else if (filter instanceof PDFName) {
+    result = stripPdfNameSlash(filter.asString());
+  } else {
+    result = 'unknown';
+  }
+
+  return result;
+}
+
+function stripPdfNameSlash(name: string): string {
+  return name.startsWith('/') ? name.slice(1) : name;
 }
 
 const PDF_NAME_TYPE = PDFName.of('Type');
