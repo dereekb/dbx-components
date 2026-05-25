@@ -1,5 +1,41 @@
 import { JPEG_MIME_TYPE, JPEG_MIME_TYPES, PNG_MIME_TYPE, type FileSize, type Maybe, type MimeTypeWithoutParameters } from '@dereekb/util';
-import { DEFAULT_PDF_MERGE_JPEG_QUALITY, type DbxPdfMergeImageCompressionConfig, type PdfMergeEntryCompressionStatus } from './pdf.merge';
+
+/**
+ * Describes whether an image file went through client-side compression.
+ *
+ * - `unchanged` — the original file is returned as-is.
+ * - `resized` — the image was downscaled but its MIME type was preserved.
+ * - `converted` — the image's MIME type was converted (e.g. PNG → JPEG) without resizing.
+ * - `resized_and_converted` — the image was both downscaled and converted.
+ */
+export type ImageCompressionStatus = 'unchanged' | 'resized' | 'converted' | 'resized_and_converted';
+
+/**
+ * Configures client-side image compression for an image `File`.
+ */
+export interface DbxImageCompressionConfig {
+  /**
+   * Maximum allowed value for the larger image dimension in pixels. Images larger than this are scaled down so neither width nor height exceeds the limit, preserving aspect ratio. `null`/undefined disables resizing.
+   */
+  readonly maxDimension?: Maybe<number>;
+  /**
+   * Convert PNG inputs to JPEG. Defaults to `false`. JPEGs that need resizing are always re-encoded as JPEG.
+   */
+  readonly convertPngToJpeg?: Maybe<boolean>;
+  /**
+   * JPEG encode quality in [0,1]. Defaults to `0.85`. Used for PNG→JPEG conversion and for resized JPEG re-encoding.
+   */
+  readonly jpegQuality?: Maybe<number>;
+  /**
+   * Skip compression when the file is already smaller than this many bytes. `null`/undefined applies no minimum.
+   */
+  readonly minSizeBytes?: Maybe<FileSize>;
+}
+
+/**
+ * Default JPEG quality used when re-encoding images during compression.
+ */
+export const DEFAULT_IMAGE_JPEG_QUALITY = 0.85;
 
 /**
  * Pixel dimensions captured from a decoded image.
@@ -24,7 +60,7 @@ export interface CompressImageFileResult {
   /**
    * What happened to the file. `'unchanged'` when no compression was applied.
    */
-  readonly compression: PdfMergeEntryCompressionStatus;
+  readonly compression: ImageCompressionStatus;
   /**
    * Dimensions of the source image, captured during decoding. Only set when the source was decoded (i.e. compression actually ran).
    */
@@ -159,8 +195,8 @@ function rewriteFileName(originalName: string, targetExtension: string): string 
   return result;
 }
 
-function determineStatus(resized: boolean, converted: boolean): PdfMergeEntryCompressionStatus {
-  let status: PdfMergeEntryCompressionStatus;
+function determineStatus(resized: boolean, converted: boolean): ImageCompressionStatus {
+  let status: ImageCompressionStatus;
 
   if (resized && converted) {
     status = 'resized_and_converted';
@@ -176,24 +212,24 @@ function determineStatus(resized: boolean, converted: boolean): PdfMergeEntryCom
 }
 
 /**
- * Compresses an image `File` according to the supplied {@link DbxPdfMergeImageCompressionConfig}.
+ * Compresses an image `File` according to the supplied {@link DbxImageCompressionConfig}.
  *
  * Behavior:
  * - When the file is not a PNG/JPEG, or the config disables every compression path, returns the file unchanged.
  * - When the file fits inside `maxDimension` and no PNG→JPEG conversion is required, returns the file unchanged.
- * - Otherwise decodes via `createImageBitmap`, draws onto an {@link OffscreenCanvas} (or HTMLCanvasElement fallback), encodes the result using {@link DEFAULT_PDF_MERGE_JPEG_QUALITY} or the configured `jpegQuality`, and wraps the blob into a new `File` with rewritten extension.
+ * - Otherwise decodes via `createImageBitmap`, draws onto an {@link OffscreenCanvas} (or HTMLCanvasElement fallback), encodes the result using {@link DEFAULT_IMAGE_JPEG_QUALITY} or the configured `jpegQuality`, and wraps the blob into a new `File` with rewritten extension.
  * - Safety: if the encoded output is larger than the original, returns the original (compression is reported as `'unchanged'`).
  *
  * @param file - Source image file.
  * @param config - Compression configuration.
  * @param encoder - Optional injectable encoder used by tests to bypass real canvas APIs. Defaults to {@link DEFAULT_IMAGE_BITMAP_TO_BLOB_ENCODER}.
- * @returns Result describing the final file plus the {@link PdfMergeEntryCompressionStatus} for it.
+ * @returns Result describing the final file plus the {@link ImageCompressionStatus} for it.
  */
-export async function compressImageFile(file: File, config: Maybe<DbxPdfMergeImageCompressionConfig>, encoder: ImageBitmapToBlobEncoder = DEFAULT_IMAGE_BITMAP_TO_BLOB_ENCODER): Promise<CompressImageFileResult> {
+export async function compressImageFile(file: File, config: Maybe<DbxImageCompressionConfig>, encoder: ImageBitmapToBlobEncoder = DEFAULT_IMAGE_BITMAP_TO_BLOB_ENCODER): Promise<CompressImageFileResult> {
   const mimeType = (file.type ?? '').toLowerCase();
   const maxDimension = config?.maxDimension;
   const convertPngToJpeg = config?.convertPngToJpeg ?? false;
-  const jpegQuality = config?.jpegQuality ?? DEFAULT_PDF_MERGE_JPEG_QUALITY;
+  const jpegQuality = config?.jpegQuality ?? DEFAULT_IMAGE_JPEG_QUALITY;
   const minSizeBytes: Maybe<FileSize> = config?.minSizeBytes;
 
   const isPng = mimeType === PNG_MIME_TYPE;

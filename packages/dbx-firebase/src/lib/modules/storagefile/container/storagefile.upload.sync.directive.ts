@@ -18,6 +18,6 @@ export class DbxFirebaseStorageFileUploadSyncDirective {
   constructor() {
     cleanSubscription(this.uploadStore.fileTypesAllowed$.subscribe((x) => this.uploadComponent.setAccept(x)));
     cleanSubscription(this.uploadStore.isMultiUploadAllowed$.subscribe((x) => this.uploadComponent.setMultiple(x)));
-    cleanSubscription(this.uploadComponent.filesChanged.subscribe((files) => this.uploadStore.setFiles(files.matchResult.accepted)));
+    cleanSubscription(this.uploadComponent.filesChanged.subscribe((files) => this.uploadStore.setRawFiles(files.matchResult.accepted)));
   }
 }

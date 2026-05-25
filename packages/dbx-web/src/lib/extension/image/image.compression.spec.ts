@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { compressImageFile, type ImageBitmapToBlobEncoder } from './pdf.merge.image.compression';
+import { compressImageFile, type ImageBitmapToBlobEncoder } from './image.compression';
 
 interface FakeBitmap {
   readonly width: number;

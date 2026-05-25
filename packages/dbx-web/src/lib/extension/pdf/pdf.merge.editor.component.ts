@@ -11,7 +11,8 @@ import { DbxFileUploadComponent } from '../../interaction/upload/upload.componen
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorConfig, type DbxPdfMergeImageCompressionConfig, type DbxPdfMergeOutputSizeLimitsConfig, type PdfMergeEntry } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorConfig, type DbxPdfMergeOutputSizeLimitsConfig, type PdfMergeEntry } from './pdf.merge';
+import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeListComponent } from './pdf.merge.list.component';
 import { buildPdfMergeEntry, formatPdfMergeEntrySize } from './pdf.merge.utility';
@@ -95,7 +96,7 @@ export class DbxPdfMergeEditorComponent {
     };
   });
 
-  readonly imageCompressionConfigSignal = computed<Maybe<DbxPdfMergeImageCompressionConfig>>(() => this.effectiveConfigSignal().imageCompression);
+  readonly imageCompressionConfigSignal = computed<Maybe<DbxImageCompressionConfig>>(() => this.effectiveConfigSignal().imageCompression);
   readonly outputSizeLimitsSignal = computed<Maybe<DbxPdfMergeOutputSizeLimitsConfig>>(() => this.effectiveConfigSignal().outputSizeLimits);
   readonly warnBytesSignal = computed<Maybe<FileSize>>(() => this.outputSizeLimitsSignal()?.warnBytes);
   readonly errorBytesSignal = computed<Maybe<FileSize>>(() => this.outputSizeLimitsSignal()?.errorBytes);

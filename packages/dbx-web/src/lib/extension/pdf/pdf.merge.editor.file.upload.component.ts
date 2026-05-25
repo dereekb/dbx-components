@@ -6,7 +6,8 @@ import { type Maybe } from '@dereekb/util';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
 import { DbxFileUploadComponent, type DbxFileUploadMode } from '../../interaction/upload/upload.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type DbxPdfMergeImageCompressionConfig, type PdfMergeEntry } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry } from './pdf.merge';
+import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeEditorFileUploadValidatorDirective } from './pdf.merge.editor.file.upload.validator.directive';
 import { DbxPdfMergeEntryComponent } from './pdf.merge.entry.component';
@@ -68,7 +69,7 @@ export interface DbxPdfMergeEditorFileUploadConfig {
   /**
    * Optional per-slot image compression override. When omitted, the slot falls back to the ancestor {@link DbxPdfMergeEditorComponent} input config and finally to the workspace-wide {@link DBX_PDF_MERGE_EDITOR_CONFIG} token.
    */
-  readonly imageCompression?: Maybe<DbxPdfMergeImageCompressionConfig>;
+  readonly imageCompression?: Maybe<DbxImageCompressionConfig>;
 }
 
 const DEFAULT_MIN_FILES = 1;
@@ -250,7 +251,7 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   /**
    * Resolves the active image compression config: per-slot override → workspace-wide DI token. The intermediate ancestor {@link DbxPdfMergeEditorComponent} config is not visible from a slot, so consumers needing per-editor compression should either set the slot's `imageCompression` directly or rely on the injection token.
    */
-  readonly effectiveImageCompressionSignal = computed<Maybe<DbxPdfMergeImageCompressionConfig>>(() => this.config()?.imageCompression ?? this._injectedConfig?.imageCompression ?? null);
+  readonly effectiveImageCompressionSignal = computed<Maybe<DbxImageCompressionConfig>>(() => this.config()?.imageCompression ?? this._injectedConfig?.imageCompression ?? null);
 
   async onFiles(event: DbxFileUploadFilesChangedEvent): Promise<void> {
     const accepted = event.matchResult.accepted;

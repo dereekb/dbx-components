@@ -2,10 +2,21 @@ import { Injectable } from '@angular/core';
 import { type FileAcceptFilterTypeString } from '@dereekb/dbx-web';
 import { type FirebaseStorageAccessorFile, type StoragePathInput } from '@dereekb/firebase';
 import { distinctUntilHasDifferentValues, filterMaybe } from '@dereekb/rxjs';
-import { type ArrayOrValue, asArray, type Maybe, type PercentDecimal } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type Maybe, type PercentDecimal, type PromiseOrValue } from '@dereekb/util';
 import { ComponentStore } from '@ngrx/component-store';
-import { distinctUntilChanged, map, shareReplay } from 'rxjs';
+import { combineLatest, distinctUntilChanged, from, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
 import { type StorageFileUploadFilesEvent, type StorageFileUploadFilesFinalResult } from '../container';
+
+/**
+ * Per-file transform applied to each entry of `rawFiles` before it reaches `files$`
+ * and the upload pipeline. Lets callers plug in client-side compression, resizing,
+ * renaming, etc.
+ *
+ * If the modifier throws or rejects, `files$` propagates the error — fail-closed
+ * by default. Callers that prefer fail-open behavior should swallow inside the
+ * modifier and return the original file.
+ */
+export type DbxFirebaseStorageFileUploadFileModifier = (file: File) => PromiseOrValue<File>;
 
 /**
  * The stage of the upload process.
@@ -109,9 +120,14 @@ export interface DbxFirebaseStorageFileUploadStoreState {
 
   // Files Step
   /**
-   * The current file(s) to upload.
+   * The current raw file(s) to upload (before the modifier is applied).
    */
-  readonly files?: Maybe<File[]>;
+  readonly rawFiles?: Maybe<File[]>;
+
+  /**
+   * Optional per-file modifier applied to every `rawFiles` entry before it flows out through `files$`.
+   */
+  readonly fileModifier?: Maybe<DbxFirebaseStorageFileUploadFileModifier>;
 
   // Upload Step
   /**
@@ -158,8 +174,23 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   readonly isMultiUploadAllowed$ = this.select((state) => state.isComponentMultiUploadAllowed !== false && state.isMultiUploadAllowed).pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly uploadPath$ = this.select((state) => state.uploadPath).pipe(distinctUntilChanged(), shareReplay(1));
-  readonly currentFiles$ = this.select((state) => state.files).pipe(distinctUntilChanged(), shareReplay(1));
-  readonly files$ = this.currentFiles$.pipe(filterMaybe());
+  readonly rawFiles$ = this.select((state) => state.rawFiles).pipe(distinctUntilChanged(), shareReplay(1));
+  readonly fileModifier$ = this.select((state) => state.fileModifier).pipe(distinctUntilChanged(), shareReplay(1));
+
+  readonly files$: Observable<File[]> = combineLatest([this.rawFiles$.pipe(filterMaybe()), this.fileModifier$]).pipe(
+    switchMap(([rawFiles, modifier]) => {
+      let result$: Observable<File[]>;
+
+      if (!modifier || rawFiles.length === 0) {
+        result$ = of(rawFiles);
+      } else {
+        result$ = from(Promise.all(rawFiles.map((file) => Promise.resolve(modifier(file)))));
+      }
+
+      return result$;
+    }),
+    shareReplay(1)
+  );
 
   readonly isUploadHandlerWorking$ = this.select((state) => state.isUploadHandlerWorking).pipe(distinctUntilChanged(), shareReplay(1));
   readonly latestProgressEvent$ = this.select((state) => state.latestProgressEvent).pipe(distinctUntilChanged(), shareReplay(1));
@@ -174,11 +205,18 @@ export class DbxFirebaseStorageFileUploadStore extends ComponentStore<DbxFirebas
   readonly setFileTypesAccepted = this.updater((state, fileTypesAccepted: Maybe<ArrayOrValue<FileAcceptFilterTypeString>>) => ({ ...state, fileTypesAccepted: fileTypesAccepted ? asArray(fileTypesAccepted) : undefined }));
 
   /**
-   * Sets the file list to upload.
+   * Sets the raw file list to upload.
    *
-   * If the upload handler is working, the file list cannot be changed.
+   * If the upload handler is working, the rawFiles list cannot be changed.
    */
-  readonly setFiles = this.updater((state, files: Maybe<File[]>) => ({ ...state, files: state.isUploadHandlerWorking ? state.files : files }));
+  readonly setRawFiles = this.updater((state, rawFiles: Maybe<File[]>) => ({ ...state, rawFiles: state.isUploadHandlerWorking ? state.rawFiles : rawFiles }));
+
+  /**
+   * Sets the per-file modifier applied to each entry of `rawFiles` before it flows through `files$`.
+   *
+   * Pass `null` / `undefined` to clear the modifier.
+   */
+  readonly setFileModifier = this.updater((state, fileModifier: Maybe<DbxFirebaseStorageFileUploadFileModifier>) => ({ ...state, fileModifier }));
   readonly setIsMultiUploadAllowed = this.updater((state, isMultiUploadAllowed: Maybe<boolean>) => ({ ...state, isMultiUploadAllowed }));
 
   /**

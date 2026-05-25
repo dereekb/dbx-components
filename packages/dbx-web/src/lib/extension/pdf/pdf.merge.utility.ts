@@ -1,7 +1,7 @@
 import { PDFDocument } from '@cantoo/pdf-lib';
 import { JPEG_MIME_TYPE, JPEG_MIME_TYPES, mimeTypeForFileExtension, PDF_ENCRYPT_MARKER, PDF_EOF_MARKER, PDF_HEADER, PDF_MIME_TYPE, PNG_MIME_TYPE, sequentialIncrementingNumberStringModelIdFactory, slashPathDetails, type Building, type FileSize, type Maybe, type MimeTypeWithoutParameters, type ModelIdFactory } from '@dereekb/util';
-import { PDF_MERGE_RESULT_MIME_TYPE, type DbxPdfMergeImageCompressionConfig, type PdfMergeEntry, type PdfMergeEntryCompressionStatus, type PdfMergeEntryKind, type PdfMergeEntryOriginal, type PdfMergeEntryValidationResult } from './pdf.merge';
-import { compressImageFile, type CompressImageDimensions } from './pdf.merge.image.compression';
+import { PDF_MERGE_RESULT_MIME_TYPE, type PdfMergeEntry, type PdfMergeEntryKind, type PdfMergeEntryOriginal, type PdfMergeEntryValidationResult } from './pdf.merge';
+import { compressImageFile, type CompressImageDimensions, type DbxImageCompressionConfig, type ImageCompressionStatus } from '../image';
 
 const TEXT_DECODER = new TextDecoder('latin1');
 
@@ -91,14 +91,14 @@ export interface BuildPdfMergeEntryConfig {
   /**
    * Optional client-side image compression config to apply to image files before the entry is constructed. Ignored for PDFs.
    */
-  readonly imageCompression?: Maybe<DbxPdfMergeImageCompressionConfig>;
+  readonly imageCompression?: Maybe<DbxImageCompressionConfig>;
 }
 
 interface BuildEntryFromFileInput {
   readonly file: File;
   readonly kind: PdfMergeEntryKind;
   readonly original: PdfMergeEntryOriginal;
-  readonly compression: PdfMergeEntryCompressionStatus;
+  readonly compression: ImageCompressionStatus;
   readonly idFactory: ModelIdFactory;
   readonly slotId: Maybe<string>;
 }
