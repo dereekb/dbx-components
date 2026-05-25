@@ -69,6 +69,7 @@ import {
 import { type YearWeekCode, yearWeekCode } from '@dereekb/date';
 import { objectHasKeys, type Maybe, type AsyncGetterOrValue, getValueFromGetter, type AsyncFactory } from '@dereekb/util';
 import { markStorageFileForDeleteTemplate, NotificationExpediteService, NotificationInitServerActions, NotificationSendService, NotificationServerActions, NotificationTaskService, StorageFileInitServerActions, StorageFileServerActions } from '@dereekb/firebase-server/model';
+import { type FirebaseServerEnvironmentConfig } from '@dereekb/firebase-server';
 import { DemoApiAuthService, DemoFirebaseServerActionsContext, DemoFirebaseServerActionsContextWithNotificationServices, GuestbookServerActions, ProfileServerActions } from '../app/common';
 import { MailgunService } from '@dereekb/nestjs/mailgun';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -236,9 +237,20 @@ export class DemoApiContextFixtureInstance<F extends FirebaseAdminTestContextIns
   }
 }
 
+// Mirror the dev runtime: explicitly configure `appMcpUrl` so the OIDC resource-server
+// wiring and the MCP module's advertised `mcpUrl` share an origin in tests. Without this,
+// the OIDC `resourceServers` map (derived from `envService.appMcpUrl`) would be empty and
+// every /authorize?...&resource=<mcpUrl> request would fail with `invalid_target`.
+const DEMO_API_TEST_ENV_CONFIG: FirebaseServerEnvironmentConfig = {
+  production: false,
+  appUrl: 'http://localhost:404',
+  appMcpUrl: 'http://localhost:404/mcp'
+};
+
 const _demoApiContextFactory = firebaseAdminNestContextFactory({
   nestModules: TestDemoApiAppModule,
   serverInstanceConfig: DEMO_API_NEST_SERVER_CONFIG,
+  envConfig: DEMO_API_TEST_ENV_CONFIG,
   injectFirebaseServerAppTokenProvider: true,
   makeFixture: (parent) => new DemoApiContextFixture(parent),
   makeInstance: (instance, nest) => new DemoApiContextFixtureInstance<FirebaseAdminTestContextInstance>(instance, nest)
@@ -381,6 +393,7 @@ export class DemoApiFunctionContextFixtureInstance<F extends FirebaseAdminFuncti
 const _demoApiFunctionContextFactory = firebaseAdminFunctionNestContextFactory({
   nestModules: TestDemoApiAppModule,
   serverInstanceConfig: DEMO_API_NEST_SERVER_CONFIG,
+  envConfig: DEMO_API_TEST_ENV_CONFIG,
   injectFirebaseServerAppTokenProvider: true,
   makeFixture: (parent) => new DemoApiFunctionContextFixture(parent),
   makeInstance: (instance, nest) => new DemoApiFunctionContextFixtureInstance<FirebaseAdminFunctionTestContextInstance>(instance, nest)

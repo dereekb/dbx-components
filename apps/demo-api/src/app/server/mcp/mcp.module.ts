@@ -1,33 +1,53 @@
 import { Module } from '@nestjs/common';
+import { FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { McpModuleConfig, mcpModuleMetadata } from '@dereekb/firebase-server/mcp';
+import { OidcModuleConfig } from '@dereekb/firebase-server/oidc';
+import { DemoApiOidcModule } from '../../api/oidc/oidc.module';
 import { DemoModelApiModule } from '../model/model.module';
+import packageJson from '../../../../package.json';
+
+const serverVersion: string = packageJson.version;
 
 /**
- * The Demo API serves MCP at `${appUrl}/mcp` with the OIDC issuer at `${appUrl}/oidc`.
+ * Builds the MCP module config for the Demo API.
  *
- * Real deployments should source these values from environment variables; the demo
- * uses fixed local URLs so the protected-resource discovery document is deterministic
- * across test runs.
+ * `mcpUrl` is taken from `envService.appMcpUrl` when set; otherwise it falls back to
+ * `<api-origin>/mcp` derived from `appApiUrl`. `oidcIssuer` is sourced verbatim from
+ * the resolved {@link OidcModuleConfig.issuer} so the protected-resource discovery
+ * doc always advertises the same issuer the OIDC provider itself uses — even when
+ * the OIDC issuer is overridden via `oidcModuleMetadata` config.
+ *
+ * @param envService - The Firebase server environment service used to read app/API/MCP URLs.
+ * @param oidcModuleConfig - The resolved OIDC module config, used as the authoritative issuer source.
+ * @returns The MCP module configuration with discovery URLs aligned to the live origins.
  */
-export const DEMO_MCP_MODULE_CONFIG: McpModuleConfig = {
-  oidcIssuer: 'http://localhost:9904/oidc',
-  mcpUrl: 'http://localhost:9904/mcp',
-  serverName: 'demo-api-mcp',
-  serverVersion: '0.0.0'
-};
+export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService, oidcModuleConfig: OidcModuleConfig): McpModuleConfig {
+  const apiBaseUrl = envService.appApiUrl ?? envService.appUrl;
+  const apiOrigin = new URL(apiBaseUrl as string).origin;
+  const mcpUrl = envService.appMcpUrl ?? `${apiOrigin}/mcp`;
+  return {
+    oidcIssuer: oidcModuleConfig.issuer,
+    mcpUrl,
+    serverName: 'demo-api-mcp',
+    serverVersion
+  };
+}
 
 /**
  * Dependency module for the Demo MCP module.
  *
  * Re-exports {@link DemoModelApiModule} so its `ModelApiCallModelDispatchService`
  * export propagates to `McpServerFactoryService`, plus the MCP module config provider.
+ * Imports {@link DemoApiOidcModule} so {@link OidcModuleConfig} is available to the
+ * MCP config factory.
  */
 @Module({
-  imports: [DemoModelApiModule],
+  imports: [DemoApiOidcModule, DemoModelApiModule],
   providers: [
     {
       provide: McpModuleConfig,
-      useValue: DEMO_MCP_MODULE_CONFIG
+      useFactory: demoMcpModuleConfigFactory,
+      inject: [FirebaseServerEnvService, OidcModuleConfig]
     }
   ],
   exports: [McpModuleConfig, DemoModelApiModule]

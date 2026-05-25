@@ -4,6 +4,7 @@ import { type INestApplication } from '@nestjs/common';
 import { SignJWT, exportJWK, generateKeyPair, decodeJwt } from 'jose';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext } from '../../../test/fixture';
 import { OidcModuleConfig, JwksServiceStorageConfig, type JwksService, type OidcService, type OidcClientService } from '@dereekb/firebase-server/oidc';
+import { McpModuleConfig } from '@dereekb/firebase-server/mcp';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
 import { callableRequestTest } from '@dereekb/firebase-server/test';
 import { type DeleteOidcTokenParams, firestoreModelKey, oidcEntriesByUidQuery, oidcEntryIdentity, onCallDeleteModelParams } from '@dereekb/firebase';
@@ -47,6 +48,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   let oidcService: OidcService;
   let oidcClientService: OidcClientService;
   let oidcModuleConfig: OidcModuleConfig;
+  let mcpModuleConfig: McpModuleConfig;
 
   beforeEach(async () => {
     const serverContext = f.instance.apiServerNestContext;
@@ -54,6 +56,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     oidcService = serverContext.oidcService;
     oidcClientService = serverContext.oidcClientService;
     oidcModuleConfig = f.instance.nest.get(OidcModuleConfig);
+    mcpModuleConfig = f.instance.nest.get(McpModuleConfig);
 
     // Generate keys so JWKS endpoints work
     await jwksService.rotateKeys();
@@ -118,11 +121,110 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
 
     describe('GET /.well-known/oauth-protected-resource', () => {
-      it('should return authorization_servers with the issuer', async () => {
+      it('should return authorization_servers with the issuer and resource with the MCP URL', async () => {
         const res = await request(app.getHttpServer()).get('/.well-known/oauth-protected-resource').expect(200);
 
         expect(res.body.authorization_servers).toEqual([oidcModuleConfig.issuer]);
+        expect(res.body.resource).toBe(mcpModuleConfig.mcpUrl);
       });
+    });
+  });
+
+  // The protected-resource discovery doc advertises `mcpModuleConfig.mcpUrl` as the
+  // resource indicator that clients must pass to /authorize and /token. The OIDC
+  // provider rejects any unknown resource indicator with `invalid_target`, so the
+  // advertised mcpUrl MUST appear as a key in `oidcModuleConfig.resourceServers`
+  // or every Claude/mcp-inspector auth attempt will fail before consent.
+  describe('MCP resource indicator wiring (RFC 8707 + RFC 9728)', () => {
+    it('exposes the advertised mcpUrl as a registered resource server on the OIDC provider', () => {
+      expect(mcpModuleConfig.mcpUrl).toBeDefined();
+      expect(oidcModuleConfig.resourceServers).toBeDefined();
+      expect(oidcModuleConfig.resourceServers![mcpModuleConfig.mcpUrl]).toBeDefined();
+    });
+
+    it('derives the protected-resource metadata URL from the same origin as mcpUrl', () => {
+      expect(oidcModuleConfig.resourceMetadataUrl).toBeDefined();
+      expect(new URL(oidcModuleConfig.resourceMetadataUrl!).origin).toBe(new URL(mcpModuleConfig.mcpUrl).origin);
+    });
+  });
+
+  describe('POST /mcp (OIDC-protected)', () => {
+    it('returns 401 with WWW-Authenticate Bearer challenge when no token is presented', async () => {
+      const res = await request(app.getHttpServer()).post('/mcp').send({}).expect(401);
+
+      expect(res.headers['www-authenticate']).toBeDefined();
+      expect(res.headers['www-authenticate']).toMatch(/^Bearer\b/);
+      expect(res.headers['www-authenticate']).toMatch(/error="invalid_request"/);
+    });
+
+    it('returns 401 with WWW-Authenticate including resource_metadata when configured', async () => {
+      if (!oidcModuleConfig.resourceMetadataUrl) {
+        // resource_metadata is only emitted when oidcModuleConfig.resourceMetadataUrl is set
+        // (which requires envService.appMcpUrl). Skip when the test env doesn't configure it.
+        return;
+      }
+
+      const res = await request(app.getHttpServer()).post('/mcp').send({}).expect(401);
+      expect(res.headers['www-authenticate']).toContain(`resource_metadata="${oidcModuleConfig.resourceMetadataUrl}"`);
+    });
+  });
+
+  // Regression coverage for the exact failure mode reported when the demo's MCP
+  // URL was unified on http://localhost:9010/mcp: hitting /oidc/auth with the
+  // configured resource parameter returned `server_error` instead of starting
+  // the login interaction. The OIDC provider must accept the advertised
+  // resource indicator and 303-redirect to /interaction/<uid>/login.
+  describe('GET /oidc/auth with `resource` (RFC 8707)', () => {
+    async function startAuthRequestWithResource(resource: string, scope: string = 'openid email demo'): Promise<request.Response> {
+      const { client_id } = await oidcClientService.createClient({
+        client_name: 'mcp-resource-test',
+        redirect_uris: ['https://example.com/callback'],
+        token_endpoint_auth_method: 'client_secret_post'
+      });
+
+      const codeVerifier = randomBytes(32).toString('base64url');
+      const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+
+      return request(app.getHttpServer())
+        .get('/oidc/auth')
+        .query({
+          client_id,
+          redirect_uri: 'https://example.com/callback',
+          response_type: 'code',
+          scope,
+          code_challenge: codeChallenge,
+          code_challenge_method: 'S256',
+          state: 'mcp-resource-state',
+          resource
+        })
+        .redirects(0);
+    }
+
+    it('303-redirects to the configured app-side OAuth interaction UI when the resource is a registered resource server', async () => {
+      const authRes = await startAuthRequestWithResource(mcpModuleConfig.mcpUrl);
+
+      expect(authRes.status).toBe(303);
+      // The demo wires `appOAuthInteractionPath`, so oidc-provider redirects through the
+      // app's SPA route (e.g. `/demo/oauth/login`) rather than the default `/interaction/<uid>`.
+      // What matters for this regression test is that the response is NOT an error callback
+      // and IS a login-step redirect with a `uid` query param.
+      const location = authRes.headers['location'];
+      expect(location).toBeDefined();
+      const locationUrl = new URL(location, 'http://localhost');
+      expect(locationUrl.searchParams.get('uid')).toBeDefined();
+      expect(locationUrl.searchParams.get('error')).toBeNull();
+      // crucially, not a server_error JSON response
+      expect(authRes.body?.error).toBeUndefined();
+    });
+
+    it('redirects to the callback with error=invalid_target when the resource is unknown', async () => {
+      const authRes = await startAuthRequestWithResource('https://attacker.example/mcp', 'openid');
+
+      // oidc-provider sends invalid_target back to the callback URL via 303
+      expect(authRes.status).toBe(303);
+      const location = authRes.headers['location'];
+      const url = new URL(location);
+      expect(url.searchParams.get('error')).toBe('invalid_target');
     });
   });
 
@@ -254,18 +356,23 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
 
     describe('POST /oidc/reg (dynamic client registration)', () => {
-      it('should reject registration when registrationEnabled is false (default)', async () => {
+      it('should register a public client (PKCE) returning a client_id without a secret', async () => {
         const res = await request(app.getHttpServer())
           .post('/oidc/reg')
+          .set('Content-Type', 'application/json')
           .send({
-            redirect_uris: ['https://example.com/callback'],
+            redirect_uris: ['http://localhost:62676/callback'],
             response_types: ['code'],
-            grant_types: ['authorization_code'],
-            token_endpoint_auth_method: 'client_secret_post'
+            grant_types: ['authorization_code', 'refresh_token'],
+            token_endpoint_auth_method: 'none',
+            scope: 'openid offline_access profile email'
           });
 
-        // Registration endpoint is disabled, so the provider should return 404
-        expect(res.status).toBe(404);
+        expect(res.status).toBe(201);
+        expect(res.body.client_id).toBeDefined();
+        // public/PKCE clients must not be issued a secret
+        expect(res.body.client_secret).toBeUndefined();
+        expect(res.body.token_endpoint_auth_method).toBe('none');
       });
     });
   });

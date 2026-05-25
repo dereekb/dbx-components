@@ -9,12 +9,32 @@
     "secure": false,
     "logLevel": "debug"
   },
+  "/oidc/.well-known/**": {
+    "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
+    "secure": false,
+    "logLevel": "debug"
+  },
   "/oidc/**": {
     "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
     "secure": false,
     "logLevel": "debug"
   },
   "/interaction/**": {
+    "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
+    "secure": false,
+    "logLevel": "debug"
+  },
+  "/mcp/**": {
+    "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
+    "secure": false,
+    "logLevel": "debug"
+  },
+  "/mcp": {
+    "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
+    "secure": false,
+    "logLevel": "debug"
+  },
+  "/reg/**": {
     "target": "http://0.0.0.0:9902/dereekb-components/us-central1/api",
     "secure": false,
     "logLevel": "debug"

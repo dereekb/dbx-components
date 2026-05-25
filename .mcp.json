@@ -4,6 +4,10 @@
       "type": "stdio",
       "command": "node",
       "args": ["dist/packages/dbx-components-mcp/dbx-components-mcp.js"]
+    },
+    "demo-api-mcp": {
+      "type": "http",
+      "url": "http://localhost:9010/mcp"
     }
   }
 }

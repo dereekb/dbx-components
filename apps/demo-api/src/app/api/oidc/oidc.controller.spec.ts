@@ -25,7 +25,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     beforeEach(async () => {
       // Generate and upload JWKS to storage so getJwksStoragePublicUrl() resolves.
       await jwksService.rotateKeys();
-      controller = new OidcWellKnownController(oidcModuleConfig, providerConfigService, jwksService);
+      controller = new OidcWellKnownController(providerConfigService, jwksService);
     });
 
     describe('getOpenIdConfiguration()', () => {
@@ -64,13 +64,6 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         expect(result.keys.length).toBeGreaterThanOrEqual(1);
         expect(result.keys[0].kty).toBe('RSA');
         expect(result.keys[0].kid).toBeDefined();
-      });
-    });
-
-    describe('getProtectedResource()', () => {
-      it('should return authorization_servers with the issuer', () => {
-        const result = controller.getProtectedResource();
-        expect(result.authorization_servers).toEqual([oidcModuleConfig.issuer]);
       });
     });
 
@@ -158,7 +151,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     let controller: OidcInteractionController;
 
     beforeEach(() => {
-      controller = new OidcInteractionController(oidcInteractionService, providerConfigService, accountService);
+      controller = new OidcInteractionController(oidcInteractionService, providerConfigService, accountService, oidcService);
     });
 
     describe('getInteraction()', () => {

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
+import { type Maybe } from '@dereekb/util';
 import { EMAIL_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE, PROFILE_OIDC_SCOPE } from '@dereekb/firebase';
-import { JwksServiceStorageConfig, type OidcAccountClaims, OidcAccountService, oidcModuleMetadata, type OidcAccountServiceDelegate, type OidcProviderConfig, type OidcRenderErrorFunction } from '@dereekb/firebase-server/oidc';
+import { JwksServiceStorageConfig, type OidcAccountClaims, OidcAccountService, oidcModuleMetadata, type OidcAccountServiceDelegate, type OidcProviderConfig, type OidcRenderErrorFunction, type OidcResourceServerInfo } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { type FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
@@ -111,6 +112,35 @@ const demoOidcRenderError: OidcRenderErrorFunction = (ctx, out) => {
   });
 };
 
+/**
+ * Space-delimited list of every scope the demo OIDC provider knows about,
+ * derived from `DEMO_OIDC_PROVIDER_CONFIG.claims`. Used as the resource-server
+ * `scope` value so RFC 8707 access tokens bound to the MCP resource can carry
+ * any scope the demo issues.
+ */
+const DEMO_OIDC_ALL_SCOPES = Object.keys(DEMO_OIDC_PROVIDER_CONFIG.claims).join(' ');
+
+/**
+ * Registers the demo's MCP endpoint as a recognized OAuth resource indicator
+ * (RFC 8707) when `appMcpUrl` is configured. Without this, oidc-provider
+ * rejects every `resource`-bearing authorization request with `invalid_target`.
+ *
+ * @param appMcpUrl - The MCP endpoint URL from the active environment config.
+ * @returns Resource-server map keyed by the MCP URL, or `undefined` when no MCP URL is set.
+ */
+function buildDemoResourceServers(appMcpUrl: Maybe<string>): Record<string, OidcResourceServerInfo> | undefined {
+  if (!appMcpUrl) {
+    return undefined;
+  }
+
+  return {
+    [appMcpUrl]: {
+      scope: DEMO_OIDC_ALL_SCOPES,
+      audience: appMcpUrl
+    }
+  };
+}
+
 @Module(
   oidcModuleMetadata({
     dependencyModule: DemoApiOidcDependencyModule,
@@ -120,7 +150,20 @@ const demoOidcRenderError: OidcRenderErrorFunction = (ctx, out) => {
       protectedPaths: ['/api/model', '/mcp'],
       appOAuthInteractionPath: DEMO_APP_OAUTH_INTERACTION_PATH,
       tokenEndpointAuthMethods: DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS
-    }
+    },
+    // Both fields below must be derived from `envService` rather than baked into the
+    // static `config` block:
+    // - `resourceServers` must agree with `McpModuleConfig.mcpUrl` (also envService-derived),
+    //   or `/authorize?...&resource=<mcpUrl>` returns `invalid_target` before consent.
+    // - `registrationEnabled` (DCR) is unauthenticated and rate-limit-free, so any caller
+    //   can write Firestore client docs unbounded. Allow it in non-prod (dev, emulator,
+    //   tests) so Claude/mcp-inspector can self-register, but lock it down in prod —
+    //   prod clients should be provisioned out-of-band as public PKCE clients
+    //   (`token_endpoint_auth_method: 'none'`) via `oidcClientService.createClient()`.
+    configFactory: (envService) => ({
+      registrationEnabled: !envService.isProduction,
+      resourceServers: buildDemoResourceServers(envService.appMcpUrl)
+    })
   })
 )
 export class DemoApiOidcModule {}

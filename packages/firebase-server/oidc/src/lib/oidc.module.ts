@@ -176,6 +176,7 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES,
     trustProxy: envService.isProduction, // defaults to true in production
     trustProxyInNonProduction: false,
+    resourceMetadataUrl: deriveResourceMetadataUrlFromEnv(envService),
     jwksServiceConfig: {
       encryptionSecret
     },
@@ -186,6 +187,31 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
 
   OidcModuleConfig.assertValidConfig(config);
   return config;
+}
+
+/**
+ * Derives the RFC 9728 protected-resource metadata URL from `envService.appMcpUrl`.
+ *
+ * For `appMcpUrl = http://localhost:9902/dereekb-components/us-central1/api/mcp`, this
+ * returns `http://localhost:9902/dereekb-components/us-central1/api/.well-known/oauth-protected-resource` —
+ * i.e. the discovery doc colocated with the MCP endpoint, regardless of any URL prefix
+ * imposed by the runtime (Firebase Functions emulator, Cloud Run path, etc.).
+ *
+ * Returns `undefined` when no `appMcpUrl` is configured.
+ *
+ * @param envService - The Firebase server environment service.
+ * @returns The discovery URL, or `undefined` if `appMcpUrl` is not set.
+ */
+export function deriveResourceMetadataUrlFromEnv(envService: FirebaseServerEnvService): string | undefined {
+  const mcpUrl = envService.appMcpUrl;
+
+  if (!mcpUrl) {
+    return undefined;
+  }
+
+  const parsed = new URL(mcpUrl);
+  const trimmedPath = parsed.pathname.replace(/\/[^/]*\/?$/, '');
+  return `${parsed.origin}${trimmedPath}/.well-known/oauth-protected-resource`;
 }
 
 /**
@@ -204,6 +230,12 @@ export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreConte
 }
 
 // MARK: App Oidc Module
+/**
+ * Subset of {@link OidcModuleConfig} that consumers may override via
+ * `oidcModuleMetadata`'s `config` or `configFactory`.
+ */
+export type OidcModuleMetadataOverrides = Partial<Pick<OidcModuleConfig, 'issuer' | 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy' | 'trustProxyInNonProduction' | 'tokenLifetimes' | 'maxRequestedLoginDuration' | 'minRequestedLoginDuration' | 'defaultRequestedLoginDuration' | 'resourceServers' | 'resourceMetadataUrl'>>;
+
 export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
   /**
    * Module that exports the required dependencies for this module.
@@ -211,14 +243,37 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
    */
   readonly dependencyModule: Required<ModuleMetadata>['imports']['0'];
   /**
-   * Optional overrides to merge into the {@link OidcModuleConfig} produced by the factory.
+   * Optional static overrides to merge into the {@link OidcModuleConfig} produced by the factory.
    *
    * The `issuer` override is honored verbatim and takes precedence over the factory-derived issuer
    * (which is normally built from `envService.appApiUrl` origin ?? `envService.appUrl`). Pass an
    * explicit `issuer` when the consumer wants a canonical issuer URL that does not match either
    * environment URL — e.g., when serving OIDC behind a non-`/oidc` path or under a vanity host.
+   *
+   * For values that must be derived from runtime services (e.g. `resourceServers` keyed on
+   * `envService.appMcpUrl`), use {@link configFactory} instead. When both are supplied,
+   * `configFactory`'s result is merged on top of `config`.
    */
-  readonly config?: Partial<Pick<OidcModuleConfig, 'issuer' | 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy' | 'trustProxyInNonProduction' | 'tokenLifetimes' | 'maxRequestedLoginDuration' | 'minRequestedLoginDuration' | 'defaultRequestedLoginDuration'>>;
+  readonly config?: OidcModuleMetadataOverrides;
+  /**
+   * Optional dynamic overrides that depend on runtime services. Called inside the
+   * `OidcModuleConfig` factory with the resolved {@link FirebaseServerEnvService} and
+   * {@link ConfigService}. Merged on top of {@link config} (so `configFactory` values win).
+   *
+   * Use this when an override field (typically `resourceServers` or `resourceMetadataUrl`)
+   * must be derived from `envService.appMcpUrl` rather than from a value that's stable
+   * at module-import time.
+   *
+   * @example
+   * ```ts
+   * configFactory: (envService) => ({
+   *   resourceServers: envService.appMcpUrl
+   *     ? { [envService.appMcpUrl]: { scope: ALL_SCOPES, audience: envService.appMcpUrl } }
+   *     : undefined
+   * })
+   * ```
+   */
+  readonly configFactory?: (envService: FirebaseServerEnvService, configService: ConfigService) => OidcModuleMetadataOverrides;
 }
 
 /**
@@ -235,7 +290,7 @@ export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata,
  * @returns The NestJS module metadata for the OIDC module.
  */
 export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataConfig): ModuleMetadata {
-  const { dependencyModule, config, imports, exports, providers } = metadataConfig;
+  const { dependencyModule, config, configFactory, imports, exports, providers } = metadataConfig;
   const dependencyModuleImport = [dependencyModule];
 
   return {
@@ -248,12 +303,14 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
         inject: [ConfigService, FirebaseServerEnvService],
         useFactory: (configService: ConfigService, envService: FirebaseServerEnvService) => {
           const moduleConfig = oidcModuleConfigFactory(configService, envService);
+          const dynamicOverrides = configFactory ? configFactory(envService, configService) : undefined;
+          const merged: OidcModuleMetadataOverrides | undefined = config || dynamicOverrides ? { ...(config ?? {}), ...(dynamicOverrides ?? {}) } : undefined;
           let result: OidcModuleConfig = moduleConfig;
 
-          if (config) {
-            result = { ...moduleConfig, ...config };
+          if (merged) {
+            result = { ...moduleConfig, ...merged };
 
-            if (config.trustProxyInNonProduction && !envService.isProduction) {
+            if (merged.trustProxyInNonProduction && !envService.isProduction) {
               (result as Configurable<OidcModuleConfig>).trustProxy = true;
             }
           }
@@ -263,7 +320,7 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
       },
       {
         provide: OidcAuthMiddlewareConfig,
-        useFactory: (x: OidcModuleConfig) => ({ protectedPaths: x.protectedPaths ?? [] }),
+        useFactory: (x: OidcModuleConfig) => ({ protectedPaths: x.protectedPaths ?? [], resourceMetadataUrl: x.resourceMetadataUrl }),
         inject: [OidcModuleConfig]
       },
       {

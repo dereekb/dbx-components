@@ -232,7 +232,29 @@ export class OidcService {
       features: {
         devInteractions: { enabled: false },
         registration: { enabled: this.providerConfigService.oidcRegistrationRouteEnabled },
-        registrationManagement: { enabled: this.providerConfigService.oidcRegistrationRouteEnabled }
+        registrationManagement: { enabled: this.providerConfigService.oidcRegistrationRouteEnabled },
+        resourceIndicators: {
+          enabled: true,
+          // useGrantedResource: return true so the token endpoint will bind tokens to a previously
+          // granted resource without requiring the client to re-send the `resource` parameter on each
+          // refresh — Claude and other MCP clients send `resource` on `/authorize` but not on
+          // `/token` refresh.
+          useGrantedResource: () => true,
+          getResourceServerInfo: async (_ctx, resourceIndicator) => {
+            const info = config.resourceServers?.[resourceIndicator];
+
+            if (!info) {
+              throw new OidcProviderErrors.InvalidTarget(`Unrecognized resource indicator: ${resourceIndicator}`);
+            }
+
+            return {
+              scope: info.scope,
+              ...(info.audience !== undefined ? { audience: info.audience } : {}),
+              ...(info.accessTokenTTL !== undefined ? { accessTokenTTL: info.accessTokenTTL } : {}),
+              ...(info.accessTokenFormat !== undefined ? { accessTokenFormat: info.accessTokenFormat } : { accessTokenFormat: 'opaque' as const })
+            };
+          }
+        }
       },
       extraParams: [DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM],
       extraClientMetadata: {

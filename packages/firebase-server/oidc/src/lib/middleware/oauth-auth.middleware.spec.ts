@@ -1,4 +1,5 @@
 import { OidcAuthBearerTokenMiddleware } from './oauth-auth.middleware';
+import { type OidcAuthMiddlewareConfig } from './oauth-auth.module';
 import { type OidcAuthenticatedRequest, type OidcAuthData } from '../service/oidc.auth';
 import { UnauthorizedException } from '@nestjs/common';
 import { type OidcService } from '../service/oidc.service';
@@ -17,6 +18,16 @@ function createMockRequest(authHeader?: string): OidcAuthenticatedRequest {
   } as any;
 }
 
+function createMockResponse(): { headers: Record<string, string>; setHeader: (k: string, v: string) => void } {
+  const headers: Record<string, string> = {};
+  return {
+    headers,
+    setHeader: (key: string, value: string) => {
+      headers[key.toLowerCase()] = value;
+    }
+  };
+}
+
 describe('OidcAuthBearerTokenMiddleware', () => {
   const validToken = 'valid-token-123';
   const expectedAuthContext: OidcAuthData = {
@@ -29,20 +40,21 @@ describe('OidcAuthBearerTokenMiddleware', () => {
       client_id: 'client-1'
     }
   };
+  const baseConfig: OidcAuthMiddlewareConfig = { protectedPaths: [] };
 
   let middleware: OidcAuthBearerTokenMiddleware;
 
   beforeEach(() => {
     const tokens = new Map<string, OidcAuthData>();
     tokens.set(validToken, expectedAuthContext);
-    middleware = new OidcAuthBearerTokenMiddleware(createMockOidcService(tokens));
+    middleware = new OidcAuthBearerTokenMiddleware(createMockOidcService(tokens), baseConfig);
   });
 
   it('should attach auth context for valid bearer token', async () => {
     const req = createMockRequest(`Bearer ${validToken}`);
     const next = vi.fn();
 
-    await middleware.use(req, {} as any, next);
+    await middleware.use(req, createMockResponse() as any, next);
 
     expect(req.auth).toBeDefined();
     expect(req.auth!.uid).toBe('user-uid-1');
@@ -56,7 +68,7 @@ describe('OidcAuthBearerTokenMiddleware', () => {
     const req = createMockRequest();
     const next = vi.fn();
 
-    await expect(middleware.use(req, {} as any, next)).rejects.toThrow(UnauthorizedException);
+    await expect(middleware.use(req, createMockResponse() as any, next)).rejects.toThrow(UnauthorizedException);
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -64,7 +76,7 @@ describe('OidcAuthBearerTokenMiddleware', () => {
     const req = createMockRequest('Basic dXNlcjpwYXNz');
     const next = vi.fn();
 
-    await expect(middleware.use(req, {} as any, next)).rejects.toThrow(UnauthorizedException);
+    await expect(middleware.use(req, createMockResponse() as any, next)).rejects.toThrow(UnauthorizedException);
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -72,7 +84,25 @@ describe('OidcAuthBearerTokenMiddleware', () => {
     const req = createMockRequest('Bearer invalid-token');
     const next = vi.fn();
 
-    await expect(middleware.use(req, {} as any, next)).rejects.toThrow(UnauthorizedException);
+    await expect(middleware.use(req, createMockResponse() as any, next)).rejects.toThrow(UnauthorizedException);
     expect(next).not.toHaveBeenCalled();
+  });
+
+  it('should set WWW-Authenticate with resource_metadata when configured', async () => {
+    const resourceMetadataUrl = 'https://api.example.com/.well-known/oauth-protected-resource';
+    const configured = new OidcAuthBearerTokenMiddleware(createMockOidcService(new Map()), { protectedPaths: [], resourceMetadataUrl });
+    const req = createMockRequest();
+    const res = createMockResponse();
+
+    await expect(configured.use(req, res as any, vi.fn())).rejects.toThrow(UnauthorizedException);
+    expect(res.headers['www-authenticate']).toBe(`Bearer resource_metadata="${resourceMetadataUrl}", error="invalid_request"`);
+  });
+
+  it('should set WWW-Authenticate without resource_metadata when not configured', async () => {
+    const req = createMockRequest('Bearer invalid-token');
+    const res = createMockResponse();
+
+    await expect(middleware.use(req, res as any, vi.fn())).rejects.toThrow(UnauthorizedException);
+    expect(res.headers['www-authenticate']).toBe('Bearer error="invalid_token"');
   });
 });
