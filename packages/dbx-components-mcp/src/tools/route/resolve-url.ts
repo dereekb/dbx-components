@@ -411,7 +411,7 @@ interface BuildMatchInput {
 async function buildMatch(input: BuildMatchInput): Promise<ResolveUrlMatch> {
   const { app, via, node, parsed, params, cwd, includeSiblings } = input;
   const ancestors = collectAncestors(node);
-  const siblings = includeSiblings ? (node.parent ? node.parent.children.filter((c) => c.data.name !== node.data.name) : []) : undefined;
+  const siblings = includeSiblings ? collectSiblings(node) : undefined;
   const componentFile = node.data.component ? await resolveComponentFile({ routerFile: node.data.file, component: node.data.component, cwd }) : undefined;
   const urlParamKeys = extractUrlParamKeys(node.fullUrl);
   const result: ResolveUrlMatch = {
@@ -447,27 +447,29 @@ function extractUrlParamKeys(fullUrl: string | undefined): readonly string[] {
   }
   const seen = new Set<string>();
   const keys: string[] = [];
-  const segments = fullUrl.split('/');
-  for (const segment of segments) {
-    if (segment.startsWith(':')) {
-      const key = segment.slice(1);
-      if (key.length > 0 && !seen.has(key)) {
-        seen.add(key);
-        keys.push(key);
-      }
-      continue;
-    }
-    if (segment.startsWith('{') && segment.endsWith('}')) {
-      const inner = segment.slice(1, -1);
-      const colonIdx = inner.indexOf(':');
-      const key = (colonIdx >= 0 ? inner.slice(0, colonIdx) : inner).trim();
-      if (key.length > 0 && !seen.has(key)) {
-        seen.add(key);
-        keys.push(key);
-      }
+  for (const segment of fullUrl.split('/')) {
+    const key = extractParamKeyFromSegment(segment);
+    if (key !== undefined && !seen.has(key)) {
+      seen.add(key);
+      keys.push(key);
     }
   }
   return keys;
+}
+
+function extractParamKeyFromSegment(segment: string): string | undefined {
+  if (segment.startsWith(':')) {
+    const key = segment.slice(1);
+    return key.length > 0 ? key : undefined;
+  }
+  if (segment.startsWith('{') && segment.endsWith('}')) {
+    const inner = segment.slice(1, -1);
+    const colonIdx = inner.indexOf(':');
+    const rawKey = colonIdx >= 0 ? inner.slice(0, colonIdx) : inner;
+    const key = rawKey.trim();
+    return key.length > 0 ? key : undefined;
+  }
+  return undefined;
 }
 
 function collectAncestors(node: RouteTreeNode): readonly RouteTreeNode[] {
@@ -478,6 +480,10 @@ function collectAncestors(node: RouteTreeNode): readonly RouteTreeNode[] {
     cursor = cursor.parent;
   }
   return chain;
+}
+
+function collectSiblings(node: RouteTreeNode): readonly RouteTreeNode[] {
+  return node.parent ? node.parent.children.filter((c) => c.data.name !== node.data.name) : [];
 }
 
 // MARK: Component file resolution
@@ -533,13 +539,20 @@ async function resolveSpecifierToFile(input: ResolveSpecifierInput): Promise<Res
       break;
     }
   }
-  const relativePath = resolved === undefined ? specifier : resolved.startsWith(cwdPrefix) ? resolved.slice(cwdPrefix.length) : resolved;
+  const relativePath = relativizePath(resolved, specifier, cwdPrefix);
   const result: ResolvedComponentFile = { path: relativePath, moduleSpecifier: specifier };
   return result;
 }
 
+function relativizePath(resolved: string | undefined, specifier: string, cwdPrefix: string): string {
+  if (resolved === undefined) {
+    return specifier;
+  }
+  return resolved.startsWith(cwdPrefix) ? resolved.slice(cwdPrefix.length) : resolved;
+}
+
 function findImportSpecifier(text: string, component: string): string | undefined {
-  const importRegex = /import\s+(?:type\s+)?(?:[\w*]+\s*,\s*)?(?:\{[^}]*\}|[\w*\s,]+)\s+from\s+['"]([^'"]+)['"]/gu;
+  const importRegex = /import\s+[^'"]+from\s+['"]([^'"]+)['"]/gu;
   let result: string | undefined;
   let match = importRegex.exec(text);
   while (match !== null) {
@@ -566,7 +579,7 @@ function containsImportedSymbol(importStatement: string, symbol: string): boolea
       }
     }
   }
-  const defaultRegex = new RegExp(`^import\\s+(?:type\\s+)?(${symbol})\\s+from\\s+`, 'u');
+  const defaultRegex = new RegExp(String.raw`^import\s+(?:type\s+)?(${symbol})\s+from\s+`, 'u');
   return defaultRegex.test(importStatement);
 }
 

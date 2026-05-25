@@ -19,6 +19,38 @@ vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
  * matches the project ID the Admin SDK was initialized with. We craft the token
  * directly to ensure the audience matches the dynamic test project ID.
  */
+interface StartAuthRequestWithResourceInput {
+  readonly app: INestApplication;
+  readonly oidcClientService: OidcClientService;
+  readonly resource: string;
+  readonly scope: string;
+}
+
+async function startAuthRequestWithResourceHelper(input: StartAuthRequestWithResourceInput): Promise<request.Response> {
+  const { app, oidcClientService, resource, scope } = input;
+  const { client_id } = await oidcClientService.createClient({
+    client_name: 'mcp-resource-test',
+    redirect_uris: ['https://example.com/callback'],
+    token_endpoint_auth_method: 'client_secret_post'
+  });
+
+  const codeChallenge = createHash('sha256').update(randomBytes(32)).digest('base64url');
+
+  return request(app.getHttpServer())
+    .get('/oidc/auth')
+    .query({
+      client_id,
+      redirect_uri: 'https://example.com/callback',
+      response_type: 'code',
+      scope,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      state: 'mcp-resource-state',
+      resource
+    })
+    .redirects(0);
+}
+
 async function createTestIdToken(nestApp: INestApplication, uid: string): Promise<string> {
   const { OidcAccountService } = await import('@dereekb/firebase-server/oidc');
   const accountService = nestApp.get(OidcAccountService);
@@ -175,30 +207,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   // the login interaction. The OIDC provider must accept the advertised
   // resource indicator and 303-redirect to /interaction/<uid>/login.
   describe('GET /oidc/auth with `resource` (RFC 8707)', () => {
-    async function startAuthRequestWithResource(resource: string, scope: string = 'openid email demo'): Promise<request.Response> {
-      const { client_id } = await oidcClientService.createClient({
-        client_name: 'mcp-resource-test',
-        redirect_uris: ['https://example.com/callback'],
-        token_endpoint_auth_method: 'client_secret_post'
-      });
-
-      const codeVerifier = randomBytes(32).toString('base64url');
-      const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
-
-      return request(app.getHttpServer())
-        .get('/oidc/auth')
-        .query({
-          client_id,
-          redirect_uri: 'https://example.com/callback',
-          response_type: 'code',
-          scope,
-          code_challenge: codeChallenge,
-          code_challenge_method: 'S256',
-          state: 'mcp-resource-state',
-          resource
-        })
-        .redirects(0);
-    }
+    const startAuthRequestWithResource = (resource: string, scope: string = 'openid email demo'): Promise<request.Response> => startAuthRequestWithResourceHelper({ app, oidcClientService, resource, scope });
 
     it('303-redirects to the configured app-side OAuth interaction UI when the resource is a registered resource server', async () => {
       const authRes = await startAuthRequestWithResource(mcpModuleConfig.mcpUrl);

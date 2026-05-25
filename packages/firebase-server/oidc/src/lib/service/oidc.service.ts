@@ -249,9 +249,9 @@ export class OidcService {
 
             return {
               scope: info.scope,
-              ...(info.audience !== undefined ? { audience: info.audience } : {}),
-              ...(info.accessTokenTTL !== undefined ? { accessTokenTTL: info.accessTokenTTL } : {}),
-              ...(info.accessTokenFormat !== undefined ? { accessTokenFormat: info.accessTokenFormat } : { accessTokenFormat: 'opaque' as const })
+              ...(info.audience === undefined ? {} : { audience: info.audience }),
+              ...(info.accessTokenTTL === undefined ? {} : { accessTokenTTL: info.accessTokenTTL }),
+              ...(info.accessTokenFormat === undefined ? { accessTokenFormat: 'opaque' as const } : { accessTokenFormat: info.accessTokenFormat })
             };
           }
         }

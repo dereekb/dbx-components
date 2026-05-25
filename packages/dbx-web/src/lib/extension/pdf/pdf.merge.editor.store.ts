@@ -225,12 +225,12 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
     } else {
       const objectInput = input as { readonly files?: readonly File[]; readonly slotId?: Maybe<string>; readonly entries?: readonly PdfMergeEntry[] };
 
-      if (objectInput.entries != null) {
-        newEntries = [...objectInput.entries];
-      } else {
+      if (objectInput.entries == null) {
         const files = objectInput.files ?? [];
         const slotId = objectInput.slotId;
         newEntries = files.map((file) => buildPdfMergeEntrySync(file, { slotId })).filter((entry): entry is PdfMergeEntry => entry != null);
+      } else {
+        newEntries = [...objectInput.entries];
       }
     }
 

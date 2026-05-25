@@ -122,63 +122,24 @@ export async function compressPdfImagesToTargetSize(input: Buffer, config: Compr
   const pageCount = pdfDoc.getPageCount();
   const indirectObjects = pdfDoc.context.enumerateIndirectObjects();
 
-  let imagesCompressed = 0;
-  let imagesSkipped = 0;
-  let imageStreamCount = 0;
-  const imageStreamsByFilter: Record<string, number> = {};
+  const counters: ImageCompressionCounters = {
+    imagesCompressed: 0,
+    imagesSkipped: 0,
+    imageStreamCount: 0,
+    imageStreamsByFilter: {}
+  };
 
   for (const [ref, obj] of indirectObjects) {
     if (!(obj instanceof PDFRawStream)) {
       continue;
     }
-
-    if (isImageStream(obj)) {
-      imageStreamCount += 1;
-      const filterKey = imageStreamFilterKey(obj);
-      imageStreamsByFilter[filterKey] = (imageStreamsByFilter[filterKey] ?? 0) + 1;
-    }
-
-    const candidate = isCompressibleImageStream(obj);
-    if (!candidate) {
-      continue;
-    }
-
-    if (obj.contents.byteLength < imageSizeThresholdBytes) {
-      // tiny image — not worth recompressing
-      continue;
-    }
-
-    try {
-      const compressedImage = await compressImageBufferToTargetSize(Buffer.from(obj.contents), {
-        targetSizeBytes: obj.contents.byteLength, // we just want it smaller than the current image
-        maxDimension: imageMaxDimension,
-        initialQuality: imageQuality,
-        format: 'jpeg'
-      });
-
-      if (compressedImage.compressedSizeBytes >= obj.contents.byteLength) {
-        // no gain — leave it alone
-        continue;
-      }
-
-      replaceImageStream({
-        pdfDoc,
-        ref,
-        newImageBytes: compressedImage.buffer,
-        newWidth: compressedImage.finalWidth,
-        newHeight: compressedImage.finalHeight
-      });
-
-      imagesCompressed += 1;
-    } catch {
-      imagesSkipped += 1;
-    }
+    await processPdfStream({ pdfDoc, ref, obj, counters, imageMaxDimension, imageQuality, imageSizeThresholdBytes });
   }
 
   let outputBuffer: Buffer = input;
   let compressedSizeBytes = originalSizeBytes;
 
-  if (imagesCompressed > 0) {
+  if (counters.imagesCompressed > 0) {
     const savedBytes = await pdfDoc.save({ useObjectStreams: true });
     const savedBuffer = Buffer.from(savedBytes);
 
@@ -192,14 +153,74 @@ export async function compressPdfImagesToTargetSize(input: Buffer, config: Compr
     buffer: outputBuffer,
     originalSizeBytes,
     compressedSizeBytes,
-    imagesCompressed,
-    imagesSkipped,
+    imagesCompressed: counters.imagesCompressed,
+    imagesSkipped: counters.imagesSkipped,
     hitTarget: compressedSizeBytes <= targetSizeBytes,
     pageCount,
-    imageStreamCount,
-    imageStreamsByFilter
+    imageStreamCount: counters.imageStreamCount,
+    imageStreamsByFilter: counters.imageStreamsByFilter
   };
   return result;
+}
+
+interface ImageCompressionCounters {
+  imagesCompressed: number;
+  imagesSkipped: number;
+  imageStreamCount: number;
+  imageStreamsByFilter: Record<string, number>;
+}
+
+interface ProcessPdfStreamInput {
+  readonly pdfDoc: PDFDocument;
+  readonly ref: PDFRef;
+  readonly obj: PDFRawStream;
+  readonly counters: ImageCompressionCounters;
+  readonly imageMaxDimension: number;
+  readonly imageQuality: number;
+  readonly imageSizeThresholdBytes: number;
+}
+
+async function processPdfStream(input: ProcessPdfStreamInput): Promise<void> {
+  const { pdfDoc, ref, obj, counters, imageMaxDimension, imageQuality, imageSizeThresholdBytes } = input;
+
+  if (isImageStream(obj)) {
+    counters.imageStreamCount += 1;
+    const filterKey = imageStreamFilterKey(obj);
+    counters.imageStreamsByFilter[filterKey] = (counters.imageStreamsByFilter[filterKey] ?? 0) + 1;
+  }
+
+  if (!isCompressibleImageStream(obj)) {
+    return;
+  }
+
+  if (obj.contents.byteLength < imageSizeThresholdBytes) {
+    return; // tiny image — not worth recompressing
+  }
+
+  try {
+    const compressedImage = await compressImageBufferToTargetSize(Buffer.from(obj.contents), {
+      targetSizeBytes: obj.contents.byteLength, // we just want it smaller than the current image
+      maxDimension: imageMaxDimension,
+      initialQuality: imageQuality,
+      format: 'jpeg'
+    });
+
+    if (compressedImage.compressedSizeBytes >= obj.contents.byteLength) {
+      return; // no gain — leave it alone
+    }
+
+    replaceImageStream({
+      pdfDoc,
+      ref,
+      newImageBytes: compressedImage.buffer,
+      newWidth: compressedImage.finalWidth,
+      newHeight: compressedImage.finalHeight
+    });
+
+    counters.imagesCompressed += 1;
+  } catch {
+    counters.imagesSkipped += 1;
+  }
 }
 
 function isImageStream(stream: PDFRawStream): boolean {

@@ -147,17 +147,17 @@ export class DbxPdfMergeEditorComponent {
 
   readonly formattedOutputSizeSignal = computed<Maybe<string>>(() => {
     const size = this.outputSizeSignal();
-    return size != null ? formatPdfMergeEntrySize(size) : null;
+    return size == null ? null : formatPdfMergeEntrySize(size);
   });
 
   readonly formattedWarnLimitSignal = computed<Maybe<string>>(() => {
     const warnBytes = this.warnBytesSignal();
-    return warnBytes != null ? formatPdfMergeEntrySize(warnBytes) : null;
+    return warnBytes == null ? null : formatPdfMergeEntrySize(warnBytes);
   });
 
   readonly formattedErrorLimitSignal = computed<Maybe<string>>(() => {
     const errorBytes = this.errorBytesSignal();
-    return errorBytes != null ? formatPdfMergeEntrySize(errorBytes) : null;
+    return errorBytes == null ? null : formatPdfMergeEntrySize(errorBytes);
   });
 
   readonly downloadConfigSignal = computed<DbxDownloadBlobButtonConfig>(() => ({

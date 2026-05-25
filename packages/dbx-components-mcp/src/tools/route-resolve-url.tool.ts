@@ -122,22 +122,15 @@ function renderResolution(resolution: ResolveUrlResult, format: 'markdown' | 'js
 // MARK: Markdown
 function formatMatchMarkdown(match: ResolveUrlMatch): string {
   const node = match.node;
-  const lines: string[] = [];
-  lines.push(`# ${match.pathname} → ${node.data.name}`);
-  lines.push('');
-  lines.push(`Matched via ${match.via} URL${match.via === 'param' ? ' pattern' : ''}.`);
-  lines.push('');
   const portSuffix = match.app.ports.length > 0 ? ` (port ${match.app.ports.join(', ')})` : '';
-  lines.push(`- **App:** \`${match.app.name}\`${portSuffix}`);
-  lines.push(`- **State name:** \`${node.data.name}\``);
+  const lines: string[] = [`# ${match.pathname} → ${node.data.name}`, '', `Matched via ${match.via} URL${match.via === 'param' ? ' pattern' : ''}.`, '', `- **App:** \`${match.app.name}\`${portSuffix}`, `- **State name:** \`${node.data.name}\``];
   if (node.data.declaredAs) {
     lines.push(`- **Declared as:** \`${node.data.declaredAs}\``);
   }
   if (node.data.component) {
     lines.push(`- **Component class:** \`${node.data.component}\``);
   }
-  lines.push(`- **Composed URL:** \`${match.matchedFullUrl}\``);
-  lines.push(`- **Router file:** \`${node.data.file}:${node.data.line}\``);
+  lines.push(`- **Composed URL:** \`${match.matchedFullUrl}\``, `- **Router file:** \`${node.data.file}:${node.data.line}\``);
   if (match.componentFile) {
     lines.push(`- **Component file:** \`${match.componentFile.path}\``);
   } else if (node.data.component) {
@@ -226,9 +219,7 @@ function appendSiblings(lines: string[], siblings: readonly RouteTreeNode[] | un
 }
 
 function formatMultipleMarkdown(multiple: ResolveUrlMultiple): string {
-  const lines: string[] = [];
-  lines.push(`# ${multiple.pathname} matched ${multiple.nodes.length} states in \`${multiple.app.name}\``);
-  lines.push('');
+  const lines: string[] = [`# ${multiple.pathname} matched ${multiple.nodes.length} states in \`${multiple.app.name}\``, ''];
   for (const node of multiple.nodes) {
     const urlPart = node.fullUrl === undefined ? '' : ` \`${node.fullUrl}\``;
     const componentPart = node.data.component ? ` → \`${node.data.component}\`` : '';
@@ -238,9 +229,7 @@ function formatMultipleMarkdown(multiple: ResolveUrlMultiple): string {
 }
 
 function formatNotFoundMarkdown(notFound: ResolveUrlNotFound): string {
-  const lines: string[] = [];
-  lines.push(`No state matched \`${notFound.pathname}\` in app \`${notFound.app.name}\`.`);
-  lines.push('');
+  const lines: string[] = [`No state matched \`${notFound.pathname}\` in app \`${notFound.app.name}\`.`, ''];
   if (notFound.candidates.length > 0) {
     lines.push('Closest candidates:', '');
     for (const cand of notFound.candidates) {

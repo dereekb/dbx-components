@@ -99,7 +99,7 @@ function isJpegMime(mimeType: MimeTypeWithoutParameters): boolean {
   return JPEG_MIME_TYPES.includes(mimeType);
 }
 
-function decideEncodeTarget(sourceMimeType: MimeTypeWithoutParameters, convertPngToJpeg: boolean, needsResize: boolean): ImageEncodeTarget {
+function decideEncodeTarget(sourceMimeType: MimeTypeWithoutParameters, convertPngToJpeg: boolean): ImageEncodeTarget {
   let mimeType: MimeTypeWithoutParameters;
   let extension: string;
 
@@ -110,11 +110,7 @@ function decideEncodeTarget(sourceMimeType: MimeTypeWithoutParameters, convertPn
     if (convertPngToJpeg) {
       mimeType = JPEG_MIME_TYPE;
       extension = JPG_EXTENSION;
-    } else if (needsResize) {
-      mimeType = PNG_MIME_TYPE;
-      extension = PNG_EXTENSION;
     } else {
-      // No work needed at all.
       mimeType = PNG_MIME_TYPE;
       extension = PNG_EXTENSION;
     }
@@ -155,13 +151,13 @@ export const DEFAULT_IMAGE_BITMAP_TO_BLOB_ENCODER: ImageBitmapToBlobEncoder = as
   const { bitmap, targetWidth, targetHeight, mimeType, quality } = input;
   let canvas: OffscreenCanvas | HTMLCanvasElement;
 
-  if (typeof OffscreenCanvas !== 'undefined') {
-    canvas = new OffscreenCanvas(targetWidth, targetHeight);
-  } else {
+  if (typeof OffscreenCanvas === 'undefined') {
     const htmlCanvas = document.createElement('canvas');
     htmlCanvas.width = targetWidth;
     htmlCanvas.height = targetHeight;
     canvas = htmlCanvas;
+  } else {
+    canvas = new OffscreenCanvas(targetWidth, targetHeight);
   }
 
   const ctx = (canvas as OffscreenCanvas).getContext('2d') as Maybe<CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D>;
@@ -241,50 +237,84 @@ export async function compressImageFile(file: File, config: Maybe<DbxImageCompre
   const isSupported = isPng || isJpeg;
 
   let result: CompressImageFileResult;
+  const shouldConvertPng = isPng && convertPngToJpeg;
 
   if (!isSupported || config == null) {
     result = { file, mimeType: mimeType || file.type, compression: 'unchanged' };
-  } else if ((maxDimension == null || maxDimension <= 0) && !(isPng && convertPngToJpeg)) {
+  } else if ((maxDimension == null || maxDimension <= 0) && !shouldConvertPng) {
     // No-op config for this file.
     result = { file, mimeType, compression: 'unchanged' };
-  } else if (minSizeBytes != null && file.size <= minSizeBytes && !(isPng && convertPngToJpeg)) {
+  } else if (minSizeBytes != null && file.size <= minSizeBytes && !shouldConvertPng) {
     // File is already small enough; skip when conversion is not required.
     result = { file, mimeType, compression: 'unchanged' };
   } else {
-    let bitmap: Maybe<ImageBitmap> = null;
-
-    try {
-      bitmap = await createImageBitmap(file);
-      const originalDimensions: CompressImageDimensions = { width: bitmap.width, height: bitmap.height };
-      const scale = computeScale(bitmap.width, bitmap.height, maxDimension);
-      const targetWidth = Math.max(1, Math.round(bitmap.width * scale));
-      const targetHeight = Math.max(1, Math.round(bitmap.height * scale));
-      const needsResize = scale < 1;
-      const needsConvert = isPng && convertPngToJpeg;
-
-      if (!needsResize && !needsConvert) {
-        result = { file, mimeType, compression: 'unchanged', originalDimensions, finalDimensions: originalDimensions };
-      } else {
-        const target = decideEncodeTarget(mimeType, convertPngToJpeg, needsResize);
-        const blob = await encoder({ bitmap, targetWidth, targetHeight, mimeType: target.mimeType, quality: jpegQuality });
-
-        if (blob == null || blob.size <= 0) {
-          result = { file, mimeType, compression: 'unchanged', originalDimensions, finalDimensions: originalDimensions };
-        } else if (blob.size >= file.size) {
-          // Recompression grew the file; keep the original (common for tiny PNG → JPEG conversions).
-          result = { file, mimeType, compression: 'unchanged', originalDimensions, finalDimensions: originalDimensions };
-        } else {
-          const nextName = needsConvert ? rewriteFileName(file.name, target.extension) : file.name;
-          const nextFile = new File([blob], nextName, { type: target.mimeType, lastModified: file.lastModified });
-          const status = determineStatus(needsResize, needsConvert);
-          const finalDimensions: CompressImageDimensions = { width: targetWidth, height: targetHeight };
-          result = { file: nextFile, mimeType: target.mimeType, compression: status, originalDimensions, finalDimensions };
-        }
-      }
-    } finally {
-      bitmap?.close?.();
-    }
+    result = await encodeCompressedImage({ file, mimeType, maxDimension, convertPngToJpeg, jpegQuality, isPng, encoder });
   }
 
   return result;
+}
+
+interface EncodeCompressedImageInput {
+  readonly file: File;
+  readonly mimeType: MimeTypeWithoutParameters;
+  readonly maxDimension: Maybe<number>;
+  readonly convertPngToJpeg: boolean;
+  readonly jpegQuality: number;
+  readonly isPng: boolean;
+  readonly encoder: ImageBitmapToBlobEncoder;
+}
+
+async function encodeCompressedImage(input: EncodeCompressedImageInput): Promise<CompressImageFileResult> {
+  const { file, mimeType, maxDimension, convertPngToJpeg, jpegQuality, isPng, encoder } = input;
+  let bitmap: Maybe<ImageBitmap> = null;
+  let result: CompressImageFileResult;
+
+  try {
+    bitmap = await createImageBitmap(file);
+    const originalDimensions: CompressImageDimensions = { width: bitmap.width, height: bitmap.height };
+    const scale = computeScale(bitmap.width, bitmap.height, maxDimension);
+    const targetWidth = Math.max(1, Math.round(bitmap.width * scale));
+    const targetHeight = Math.max(1, Math.round(bitmap.height * scale));
+    const needsResize = scale < 1;
+    const needsConvert = isPng && convertPngToJpeg;
+
+    if (!needsResize && !needsConvert) {
+      result = { file, mimeType, compression: 'unchanged', originalDimensions, finalDimensions: originalDimensions };
+    } else {
+      const target = decideEncodeTarget(mimeType, convertPngToJpeg);
+      const blob = await encoder({ bitmap, targetWidth, targetHeight, mimeType: target.mimeType, quality: jpegQuality });
+      result = buildEncodeResult({ blob, file, mimeType, originalDimensions, targetWidth, targetHeight, target, needsResize, needsConvert });
+    }
+  } finally {
+    bitmap?.close?.();
+  }
+
+  return result;
+}
+
+interface BuildEncodeResultInput {
+  readonly blob: Maybe<Blob>;
+  readonly file: File;
+  readonly mimeType: MimeTypeWithoutParameters;
+  readonly originalDimensions: CompressImageDimensions;
+  readonly targetWidth: number;
+  readonly targetHeight: number;
+  readonly target: ImageEncodeTarget;
+  readonly needsResize: boolean;
+  readonly needsConvert: boolean;
+}
+
+function buildEncodeResult(input: BuildEncodeResultInput): CompressImageFileResult {
+  const { blob, file, mimeType, originalDimensions, targetWidth, targetHeight, target, needsResize, needsConvert } = input;
+
+  if (blob == null || blob.size <= 0 || blob.size >= file.size) {
+    // No blob, empty blob, or recompression grew the file; keep the original.
+    return { file, mimeType, compression: 'unchanged', originalDimensions, finalDimensions: originalDimensions };
+  }
+
+  const nextName = needsConvert ? rewriteFileName(file.name, target.extension) : file.name;
+  const nextFile = new File([blob], nextName, { type: target.mimeType, lastModified: file.lastModified });
+  const status = determineStatus(needsResize, needsConvert);
+  const finalDimensions: CompressImageDimensions = { width: targetWidth, height: targetHeight };
+  return { file: nextFile, mimeType: target.mimeType, compression: status, originalDimensions, finalDimensions };
 }

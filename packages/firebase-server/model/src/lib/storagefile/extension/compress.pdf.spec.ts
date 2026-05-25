@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readFile } from 'fs/promises';
-import { resolve } from 'path';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import sharp from 'sharp';
 import { PDFDocument } from '@cantoo/pdf-lib';
 import { bufferHasValidPdfMarkings } from '@dereekb/util';

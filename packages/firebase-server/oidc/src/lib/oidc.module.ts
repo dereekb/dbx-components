@@ -304,7 +304,7 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
         useFactory: (configService: ConfigService, envService: FirebaseServerEnvService) => {
           const moduleConfig = oidcModuleConfigFactory(configService, envService);
           const dynamicOverrides = configFactory ? configFactory(envService, configService) : undefined;
-          const merged: OidcModuleMetadataOverrides | undefined = config || dynamicOverrides ? { ...(config ?? {}), ...(dynamicOverrides ?? {}) } : undefined;
+          const merged: OidcModuleMetadataOverrides | undefined = config || dynamicOverrides ? { ...config, ...dynamicOverrides } : undefined;
           let result: OidcModuleConfig = moduleConfig;
 
           if (merged) {

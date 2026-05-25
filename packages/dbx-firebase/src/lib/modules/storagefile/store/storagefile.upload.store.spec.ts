@@ -32,8 +32,8 @@ function fakeEncoder(blobSize: number, blobType = 'image/jpeg'): ImageBitmapToBl
 }
 
 function installCreateImageBitmap(returnedBitmap: FakeBitmap): void {
-  const mock = vi.fn(async () => returnedBitmap as unknown as ImageBitmap);
-  (globalThis as { createImageBitmap?: typeof createImageBitmap }).createImageBitmap = mock as unknown as typeof createImageBitmap;
+  const mock = vi.fn(async () => returnedBitmap);
+  (globalThis as { createImageBitmap?: unknown }).createImageBitmap = mock;
 }
 
 describe('DbxFirebaseStorageFileUploadStore.files$', () => {
