@@ -6,11 +6,12 @@ import { type Request } from 'express';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
-import { ModelApiCallModelDispatchService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { ModelApiCallModelDispatchService, ModelApiGetService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestToolEntry } from './mcp.manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult } from './mcp.tool-generator';
+import { createModelGetTool, MODEL_GET_TOOL_NAME } from './tools/mcp.tool.model-get';
 
 /**
  * Optional per-request context passed when invoking the MCP server through a
@@ -35,6 +36,7 @@ export interface McpRequestContext {
 export class McpServerFactoryService {
   private readonly _logger = new Logger(McpServerFactoryService.name);
   private _cachedTools: McpToolGenerationResult | undefined;
+  private _cachedStaticTools: ReadonlyArray<McpToolDefinition> | undefined;
   private _cachedManifest: ReadonlyMap<string, McpManifestToolEntry> | undefined;
   private _manifestLoaded = false;
   private _loggedSkips = false;
@@ -43,6 +45,7 @@ export class McpServerFactoryService {
   constructor(
     @Inject(McpModuleConfig) private readonly mcpConfig: McpModuleConfig,
     @Inject(ModelApiCallModelDispatchService) private readonly dispatchService: ModelApiCallModelDispatchService,
+    @Optional() @Inject(ModelApiGetService) private readonly modelApiGetService?: ModelApiGetService,
     @Optional() @Inject(MCP_AUTH_ROLE_READER) private readonly roleReader?: McpAuthRoleReader
   ) {}
 
@@ -69,9 +72,11 @@ export class McpServerFactoryService {
     server.server.registerCapabilities({ tools: {} });
 
     const toolGeneration = this._resolveToolDefinitions();
+    const staticTools = this._resolveStaticTools();
     const scopes = this._resolveScopes(ctx);
     const authRoles = this._resolveAuthRoles(ctx);
-    const visibleTools = this._filterToolsForRequest(toolGeneration.tools, { ctx, scopes, authRoles });
+    const combinedTools: ReadonlyArray<McpToolDefinition> = [...toolGeneration.tools, ...staticTools];
+    const visibleTools = this._filterToolsForRequest(combinedTools, { ctx, scopes, authRoles });
     const definitionsByName = new Map<string, McpToolDefinition>(visibleTools.map((tool) => [tool.name, tool]));
 
     server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -122,6 +127,47 @@ export class McpServerFactoryService {
       for (const skip of result.skipped) {
         this._logger.warn(`Skipped MCP tool ${skip.toolName} (${skip.reason})${skip.error ? `: ${skip.error.message}` : ''}`);
       }
+    }
+
+    return result;
+  }
+
+  /**
+   * Builds the list of statically-registered (non-callModel) MCP tools.
+   *
+   * Currently just the built-in `model-get` tool. The list is cached for the lifetime of the
+   * process since static tools share the same boot-time inputs as the auto-generated ones.
+   *
+   * Static tools are only registered when {@link ModelApiGetService} is available via DI; this
+   * keeps the factory testable without spinning up the full model module.
+   */
+  private _resolveStaticTools(): ReadonlyArray<McpToolDefinition> {
+    let result = this._cachedStaticTools;
+
+    if (result == null) {
+      const getService = this.modelApiGetService;
+
+      if (getService == null) {
+        result = [];
+      } else {
+        const modelGetTool = createModelGetTool({
+          readDocuments: (modelType, keys, auth) => getService.readDocuments(modelType, keys, auth),
+          resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth)
+        });
+
+        // Guard against the auto-generated tools accidentally claiming the static tool name. The
+        // first dispatch wins via Map.set order, so a collision would silently shadow one side.
+        const generatedNames = new Set(this._cachedTools?.tools.map((t) => t.name) ?? []);
+
+        if (generatedNames.has(MODEL_GET_TOOL_NAME)) {
+          this._logger.warn(`Static MCP tool "${MODEL_GET_TOOL_NAME}" collides with an auto-generated tool of the same name; the auto-generated tool will win.`);
+          result = [];
+        } else {
+          result = [modelGetTool];
+        }
+      }
+
+      this._cachedStaticTools = result;
     }
 
     return result;
@@ -193,8 +239,7 @@ export class McpServerFactoryService {
    */
   private _resolveScopes(ctx: McpRequestContext): Maybe<ReadonlySet<string>> {
     const oidcValidatedToken = (ctx.auth as { oidcValidatedToken?: unknown } | undefined)?.oidcValidatedToken;
-    const result = oidcValidatedToken == null ? undefined : getOidcScopesFromRequest({ auth: { token: oidcValidatedToken } });
-    return result;
+    return oidcValidatedToken == null ? undefined : getOidcScopesFromRequest({ auth: { token: oidcValidatedToken } });
   }
 
   /**
@@ -280,24 +325,47 @@ export class McpServerFactoryService {
 
   private async _handleToolCall(request: { params: { name: string; arguments?: Record<string, unknown> } }, definitionsByName: Map<string, McpToolDefinition>, ctx: McpRequestContext): Promise<CallToolResult> {
     const definition = definitionsByName.get(request.params.name);
+    const args = request.params.arguments ?? {};
     let response: CallToolResult;
 
     if (definition == null) {
       response = formatMcpToolErrorResponse(new Error(`Unknown tool: ${request.params.name}`)) as CallToolResult;
+    } else if (definition.staticHandler != null) {
+      response = await this._handleStaticToolCall(definition, args, ctx);
     } else {
-      const params: OnCallTypedModelParams = {
-        call: definition.dispatch.call,
-        modelType: definition.dispatch.modelType,
-        specifier: definition.dispatch.specifier,
-        data: request.params.arguments ?? {}
-      };
+      response = await this._handleCallModelToolCall(definition, args, ctx);
+    }
 
-      try {
-        const result = await this.dispatchService.dispatch(params, ctx.auth, ctx.rawRequest);
-        response = formatMcpToolResponse(result, params, definition.details) as CallToolResult;
-      } catch (error) {
-        response = formatMcpToolErrorResponse(error) as CallToolResult;
-      }
+    return response;
+  }
+
+  private async _handleStaticToolCall(definition: McpToolDefinition, args: Record<string, unknown>, ctx: McpRequestContext): Promise<CallToolResult> {
+    let response: CallToolResult;
+
+    try {
+      response = await definition.staticHandler!(args, ctx);
+    } catch (error) {
+      response = formatMcpToolErrorResponse(error) as CallToolResult;
+    }
+
+    return response;
+  }
+
+  private async _handleCallModelToolCall(definition: McpToolDefinition, args: Record<string, unknown>, ctx: McpRequestContext): Promise<CallToolResult> {
+    const params: OnCallTypedModelParams = {
+      call: definition.dispatch.call,
+      modelType: definition.dispatch.modelType,
+      specifier: definition.dispatch.specifier,
+      data: args
+    };
+
+    let response: CallToolResult;
+
+    try {
+      const result = await this.dispatchService.dispatch(params, ctx.auth, ctx.rawRequest);
+      response = formatMcpToolResponse(result, params, definition.details) as CallToolResult;
+    } catch (error) {
+      response = formatMcpToolErrorResponse(error) as CallToolResult;
     }
 
     return response;

@@ -1,5 +1,7 @@
 import { type Maybe } from '@dereekb/util';
-import { type ModelApiDetailsResult, type ModelCallApiDetails, type OnCallModelFunctionApiDetails } from '@dereekb/firebase-server';
+import { type ModelApiDetailsResult, type ModelCallApiDetails, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { type Request } from 'express';
+import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { mcpManifestKey, type McpManifestToolEntry } from './mcp.manifest';
 import { classifyVisibility, resolveEffectiveReadOnly, resolveRequiredScope, type McpToolFilterMetadata } from './mcp.visibility';
 
@@ -40,17 +42,48 @@ export interface McpToolDefinition {
   /**
    * The original handler-level API details. Carries response formatters, analytics
    * config, etc. — the controller resolves Tier 1/2/3 response shape from this.
+   *
+   * `undefined` for statically-registered tools that don't go through the callModel chain.
    */
-  readonly details: OnCallModelFunctionApiDetails;
+  readonly details?: OnCallModelFunctionApiDetails;
   /**
    * The dispatch coordinates extracted from the position in the call model tree.
    * The controller uses these to build the `OnCallTypedModelParams` envelope at call time.
+   *
+   * For statically-registered tools the coordinates are synthetic (they identify the tool to
+   * dynamic visibility predicates) but {@link staticHandler} runs instead of the callModel chain.
    */
   readonly dispatch: McpToolDispatchTarget;
+  /**
+   * When present, the per-request controller calls this handler directly instead of going
+   * through the callModel dispatch chain. Used for built-in MCP tools (e.g. `model-get`) that
+   * read from the Firebase model surface without a corresponding `callModel` handler.
+   */
+  readonly staticHandler?: McpStaticToolHandler;
   /**
    * Precomputed boot-time filter metadata consumed by the per-request `tools/list` filter.
    */
   readonly filterMetadata: McpToolFilterMetadata;
+}
+
+/**
+ * Per-request handler for a statically-registered MCP tool.
+ *
+ * Receives the raw tool arguments and the MCP request context (auth + raw request); returns the
+ * MCP `CallToolResult` envelope verbatim. The factory wraps the call in a try/catch so handlers
+ * may surface user-visible errors by throwing.
+ */
+export type McpStaticToolHandler = (args: Record<string, unknown>, ctx: McpStaticToolHandlerContext) => Promise<CallToolResult>;
+
+/**
+ * Request-scoped context passed to {@link McpStaticToolHandler} implementations.
+ *
+ * Identical in shape to `McpRequestContext` but redeclared here so the tool generator does not
+ * depend on the server factory module (the dependency goes the other way).
+ */
+export interface McpStaticToolHandlerContext {
+  readonly auth?: FirebaseServerAuthData;
+  readonly rawRequest: Request;
 }
 
 /**

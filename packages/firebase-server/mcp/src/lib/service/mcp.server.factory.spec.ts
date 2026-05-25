@@ -44,7 +44,7 @@ function makeDispatchService(apiDetails: ModelApiDetailsResult, dispatch: (param
 }
 
 function makeFactory(apiDetails: ModelApiDetailsResult, options: { config?: Partial<McpModuleConfig>; roleReader?: McpAuthRoleReader; dispatch?: (params: OnCallTypedModelParams) => unknown } = {}): McpServerFactoryService {
-  return new McpServerFactoryService(makeMcpConfig(options.config), makeDispatchService(apiDetails, options.dispatch ?? (() => ({ ok: true }))), options.roleReader);
+  return new McpServerFactoryService(makeMcpConfig(options.config), makeDispatchService(apiDetails, options.dispatch ?? (() => ({ ok: true }))), undefined, options.roleReader);
 }
 
 async function listTools(factory: McpServerFactoryService, ctx: { auth?: FirebaseServerAuthData; rawRequest?: any } = {}): Promise<ReadonlyArray<{ name: string; description?: string }>> {
