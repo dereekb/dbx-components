@@ -1,5 +1,6 @@
 import { type ResyncNotificationUserParams, type ResyncNotificationUserResult, type UpdateNotificationUserParams, updateNotificationUserParamsType, resyncNotificationUserParamsType } from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
+import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 import { type DemoUpdateModelFunction } from '../function.context';
 
 export const notificationUserUpdate: DemoUpdateModelFunction<UpdateNotificationUserParams> = withApiDetails({
@@ -21,6 +22,9 @@ export const notificationUserUpdate: DemoUpdateModelFunction<UpdateNotificationU
 
 export const notificationUserResync: DemoUpdateModelFunction<ResyncNotificationUserParams, ResyncNotificationUserResult> = withApiDetails({
   inputType: resyncNotificationUserParamsType,
+  mcp: {
+    visibility: { requiredRoles: [AUTH_ADMIN_ROLE] }
+  },
   fn: async (request) => {
     const { nest, auth: _auth, data } = request;
 

@@ -1,12 +1,16 @@
+import * as path from 'node:path';
 import { Module } from '@nestjs/common';
 import { FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { McpModuleConfig, mcpModuleMetadata } from '@dereekb/firebase-server/mcp';
+import { McpModuleConfig, mcpModuleMetadata, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '@dereekb/firebase-server/mcp';
 import { OidcModuleConfig } from '@dereekb/firebase-server/oidc';
+import { DEMO_AUTH_CLAIMS_SERVICE } from 'demo-firebase';
 import { DemoApiOidcModule } from '../../api/oidc/oidc.module';
 import { DemoModelApiModule } from '../model/model.module';
 import packageJson from '../../../../package.json';
 
 const serverVersion: string = packageJson.version;
+
+const MCP_MANIFEST_PATH = path.join(process.cwd(), 'dist/apps/demo-api/mcp.manifest.json');
 
 /**
  * Builds the MCP module config for the Demo API.
@@ -29,9 +33,17 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     oidcIssuer: oidcModuleConfig.issuer,
     mcpUrl,
     serverName: 'demo-api-mcp',
-    serverVersion
+    serverVersion,
+    mcpManifestPath: MCP_MANIFEST_PATH
   };
 }
+
+/**
+ * McpAuthRoleReader implementation for the demo app — maps a caller's Firebase
+ * custom claims through the demo's `authRoleClaimsService` to the AuthRoleSet
+ * the declarative {@link McpVisibilityRule.requiredRoles} check consumes.
+ */
+const demoMcpAuthRoleReader: McpAuthRoleReader = (claims) => DEMO_AUTH_CLAIMS_SERVICE.toRoles(claims);
 
 /**
  * Dependency module for the Demo MCP module.
@@ -48,9 +60,13 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
       provide: McpModuleConfig,
       useFactory: demoMcpModuleConfigFactory,
       inject: [FirebaseServerEnvService, OidcModuleConfig]
+    },
+    {
+      provide: MCP_AUTH_ROLE_READER,
+      useValue: demoMcpAuthRoleReader
     }
   ],
-  exports: [McpModuleConfig, DemoModelApiModule]
+  exports: [McpModuleConfig, MCP_AUTH_ROLE_READER, DemoModelApiModule]
 })
 export class DemoMcpDependencyModule {}
 
