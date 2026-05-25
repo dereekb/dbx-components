@@ -8,6 +8,7 @@
 import type { Maybe } from '@dereekb/util';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { dirname, isAbsolute, resolve as resolvePath } from 'node:path';
 import { findAndLoadConfig } from './config/load-config.js';
 import { loadActionRegistry, type LoadActionRegistryResult } from './manifest/load-actions-registry.js';
 import { loadFilterRegistry, type LoadFilterRegistryResult } from './manifest/load-filters-registry.js';
@@ -40,6 +41,7 @@ import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
 import type { RuleOptions } from './tools/model-validate/index.js';
+import type { LogSearchConfig } from './tools/log-search.tool.js';
 import { discoverDownstreamPackages, DOWNSTREAM_CLUSTERS, type DownstreamCluster, type DownstreamPackage } from './scan/discover-downstream-packages.js';
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -72,7 +74,7 @@ Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
 - asset        — \`AssetPathRef\` constants in a \`-firebase\` component + \`provideDbxAssetLoader()\` wiring in the Angular app; list/scaffold/validate
 - color        — \`DbxColorConfigTemplate\` registry: list registered templates in an Angular app, smell-check duplicate inline \`DbxColorConfig\` literals that should be templates
 - auth         — Firebase Auth claims/roles/OIDC scopes catalog: claim_lookup (key or \`*ApiAuthClaims\` interface), scope_lookup (\`model.read\`, …), role_lookup (forward / by-tag / reverse), token_explain (decode JWT or claims object), list_app (per-app surface)
-- log          — \`dbx_log_search\` searches per-change markdown logs written by the change-log Stop-event hook. Reads \`$DBX_LOG_PATH\` (or an explicit \`basePath\` arg), scopes to the current project by default, last 3 days; modes: \`fuzzy\`, \`keyword\`, \`list\`.
+- log          — \`dbx_log_search\` searches per-change markdown logs written by the change-log Stop-event hook. Resolves root via per-call \`basePath\` → \`$DBX_LOG_PATH\` → \`dbx-mcp.config.json\` \`logs.basePath\`; scopes to the current project by default (override with \`logs.defaultProject\`), last 3 days; modes: \`fuzzy\`, \`keyword\`, \`list\`.
 
 Model-extension validators (walk a downstream app to verify wiring):
 - storagefile_m, notification_m, system_m — *_validate_app, *_list_app, *_validate_folder
@@ -199,6 +201,8 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     process.stderr.write(`[dbx-components-mcp] config-warning: ${warning.kind} ${warning.path}\n`);
   }
   const modelValidateRuleOptions = resolveModelValidateRuleOptions(configResult.config);
+  const configBaseDir = configResult.configPath !== null && configResult.configPath !== undefined ? dirname(configResult.configPath) : cwd;
+  const logSearchConfig = resolveLogSearchConfig(configResult.config, configBaseDir);
 
   const registry = await resolveOptionalRegistry({
     injected: options.semanticTypeRegistry,
@@ -359,7 +363,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
   await emitDownstreamHints({ cwd, externalCounts, onDownstreamHints: options.onDownstreamHints });
 
   registerResources(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, authRegistry });
-  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd });
+  registerTools(server, { semanticTypeRegistry: registry, forgeFieldRegistry: forgeRegistry, pipeRegistry, utilRegistry, modelSnapshotFieldRegistry, modelFirebaseIndexRegistry, uiComponentRegistry: uiRegistry, dbxDocsUiExamplesRegistry, actionRegistry, filterRegistry, tokenRegistry, cssUtilityRegistry, fixtureModelRegistry, modelValidateRuleOptions, authRegistry, cwd, logSearchConfig });
 
   return server;
 }
@@ -426,6 +430,39 @@ function resolveModelValidateRuleOptions(config: Maybe<{ readonly modelValidate?
     maxFieldNameLength: block.maxFieldNameLength,
     ignoredFieldNames,
     ignoredExternalParents
+  };
+  return result;
+}
+
+/**
+ * Resolves the loaded config's `logs` block into a {@link LogSearchConfig}.
+ * Returns `undefined` when no block is configured so the tool keeps relying
+ * on the per-call `basePath` arg or the `DBX_LOG_PATH` env var. Relative
+ * `basePath` values are resolved against the directory of
+ * `dbx-mcp.config.json` (matching the convention used for cluster `sources`).
+ *
+ * @param config - The parsed `dbx-mcp.config.json`, or `null` when missing.
+ * @param configBaseDir - The directory the config file lives in (used to
+ *   resolve relative `basePath` values).
+ * @returns The resolved logs config, or `undefined` when none is set.
+ */
+function resolveLogSearchConfig(config: Maybe<{ readonly logs?: { readonly basePath?: string; readonly defaultProject?: string } }>, configBaseDir: string): LogSearchConfig | undefined {
+  const block = config?.logs;
+  if (block === undefined) {
+    return undefined;
+  }
+  let absoluteBasePath: string | undefined;
+  const rawBasePath = block.basePath?.trim();
+  if (rawBasePath !== undefined && rawBasePath.length > 0) {
+    absoluteBasePath = isAbsolute(rawBasePath) ? rawBasePath : resolvePath(configBaseDir, rawBasePath);
+  }
+  const defaultProject = block.defaultProject?.trim();
+  if (absoluteBasePath === undefined && (defaultProject === undefined || defaultProject.length === 0)) {
+    return undefined;
+  }
+  const result: LogSearchConfig = {
+    basePath: absoluteBasePath,
+    defaultProject: defaultProject !== undefined && defaultProject.length > 0 ? defaultProject : undefined
   };
   return result;
 }

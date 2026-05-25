@@ -94,6 +94,10 @@ export const DbxMcpConfig = type({
     'ignoredFieldNames?': 'string[]',
     'ignoredExternalParents?': 'string[]'
   },
+  'logs?': {
+    'basePath?': 'string',
+    'defaultProject?': 'string'
+  },
   'semanticTypes?': ClusterSection,
   'uiComponents?': ClusterSection,
   'forgeFields?': ClusterSection,

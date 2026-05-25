@@ -19,31 +19,39 @@ export const DBX_LOG_PATH_ENV_VAR = 'DBX_LOG_PATH';
 export interface ResolveLogBasePathInput {
   readonly basePath: string | undefined;
   readonly env: NodeJS.ProcessEnv;
+  /**
+   * Pre-resolved absolute fallback sourced from `dbx-mcp.config.json`'s
+   * `logs.basePath`. Used only when neither the per-call arg nor
+   * {@link DBX_LOG_PATH_ENV_VAR} is set.
+   */
+  readonly configBasePath?: string;
 }
 
 /**
  * Result of {@link resolveLogBasePath}. Returns the absolute path on success;
  * otherwise an `error` describing why no path was available.
  */
-export type ResolveLogBasePathResult = { readonly kind: 'ok'; readonly absolutePath: string; readonly source: 'arg' | 'env' } | { readonly kind: 'error'; readonly message: string };
+export type ResolveLogBasePathResult = { readonly kind: 'ok'; readonly absolutePath: string; readonly source: 'arg' | 'env' | 'config' } | { readonly kind: 'error'; readonly message: string };
 
 /**
- * Resolves the absolute log-root path from the caller args or env. Does not
- * touch the filesystem — callers verify existence separately so they can
- * differentiate "unset" from "set but missing".
+ * Resolves the absolute log-root path from the caller args, env, or config.
+ * Does not touch the filesystem — callers verify existence separately so they
+ * can differentiate "unset" from "set but missing". Resolution order:
+ * per-call `basePath` arg → `DBX_LOG_PATH` env → config `logs.basePath`.
  */
 export function resolveLogBasePath(input: ResolveLogBasePathInput): ResolveLogBasePathResult {
   let result: ResolveLogBasePathResult;
   const fromArg = input.basePath?.trim();
+  const fromEnv = input.env[DBX_LOG_PATH_ENV_VAR]?.trim();
+  const fromConfig = input.configBasePath?.trim();
   if (fromArg !== undefined && fromArg.length > 0) {
     result = { kind: 'ok', absolutePath: resolve(fromArg), source: 'arg' };
+  } else if (fromEnv !== undefined && fromEnv.length > 0) {
+    result = { kind: 'ok', absolutePath: resolve(fromEnv), source: 'env' };
+  } else if (fromConfig !== undefined && fromConfig.length > 0) {
+    result = { kind: 'ok', absolutePath: resolve(fromConfig), source: 'config' };
   } else {
-    const fromEnv = input.env[DBX_LOG_PATH_ENV_VAR]?.trim();
-    if (fromEnv !== undefined && fromEnv.length > 0) {
-      result = { kind: 'ok', absolutePath: resolve(fromEnv), source: 'env' };
-    } else {
-      result = { kind: 'error', message: `No log path configured. Set ${DBX_LOG_PATH_ENV_VAR} or pass basePath.` };
-    }
+    result = { kind: 'error', message: `No log path configured. Set ${DBX_LOG_PATH_ENV_VAR}, pass basePath, or add a logs.basePath block to dbx-mcp.config.json.` };
   }
   return result;
 }

@@ -177,7 +177,7 @@ import { APP_VALIDATE_TOOL } from './app-validate.tool.js';
 import { MODEL_LIST_COMPONENT_TOOL } from './model-list-component.tool.js';
 import { SERVER_ACTIONS_LIST_APP_TOOL } from './server-actions-list-app.tool.js';
 import { MCP_CONFIG_TOOL } from './mcp-config.tool.js';
-import { LOG_SEARCH_TOOL } from './log-search.tool.js';
+import { createLogSearchTool, type LogSearchConfig } from './log-search.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
@@ -277,9 +277,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   MODEL_LIST_COMPONENT_TOOL,
   SERVER_ACTIONS_LIST_APP_TOOL,
   // workspace config audit / setup
-  MCP_CONFIG_TOOL,
-  // log (change-log search)
-  LOG_SEARCH_TOOL
+  MCP_CONFIG_TOOL
 ];
 
 /**
@@ -363,6 +361,13 @@ export interface RegisterToolsOptions {
    * omitted those tools are skipped.
    */
   readonly authRegistry?: AuthRegistry;
+  /**
+   * Optional `logs` block resolved from `dbx-mcp.config.json`. Provides a
+   * workspace-level fallback for `dbx_log_search` when neither a per-call
+   * `basePath` nor `DBX_LOG_PATH` is set. `basePath` should already be
+   * absolute (the bootstrap resolves it against the config file's directory).
+   */
+  readonly logSearchConfig?: LogSearchConfig;
 }
 
 /**
@@ -378,7 +383,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
-  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }), createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }), createModelValidateFolderTool({ ruleOptions: options.modelValidateRuleOptions }), createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
+  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }), createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }), createModelValidateFolderTool({ ruleOptions: options.modelValidateRuleOptions }), createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }), createLogSearchTool(options.logSearchConfig));
   if (options.forgeFieldRegistry !== undefined) {
     tools.push(createLookupFormTool({ registry: options.forgeFieldRegistry }), createSearchFormTool({ registry: options.forgeFieldRegistry }), createFormScaffoldTool({ registry: options.forgeFieldRegistry }));
   }

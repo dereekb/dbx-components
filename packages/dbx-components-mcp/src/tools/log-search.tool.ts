@@ -81,8 +81,13 @@ interface ParsedArgs {
   readonly limit: number;
 }
 
-function parseArgs(raw: unknown): ParsedArgs {
-  const parsed = LogSearchArgsType(raw ?? {});
+interface ParseArgsInput {
+  readonly raw: unknown;
+  readonly configDefaultProject: string | undefined;
+}
+
+function parseArgs(input: ParseArgsInput): ParsedArgs {
+  const parsed = LogSearchArgsType(input.raw ?? {});
   if (parsed instanceof type.errors) {
     throw new TypeError(`Invalid arguments: ${parsed.summary}`);
   }
@@ -92,7 +97,9 @@ function parseArgs(raw: unknown): ParsedArgs {
   const limit = clamp(parsed.limit ?? DEFAULT_LIMIT, 1, MAX_LIMIT);
   const days = clamp(parsed.days ?? DEFAULT_DAYS, 1, MAX_DAYS);
   const cwd = parsed.cwd ?? process.cwd();
-  const project = parsed.project ?? basename(cwd);
+  const configDefaultProject = input.configDefaultProject?.trim();
+  const fallbackProject = configDefaultProject !== undefined && configDefaultProject.length > 0 ? configDefaultProject : basename(cwd);
+  const project = parsed.project ?? fallbackProject;
   const { sinceMs, windowLabel } = resolveWindow(parsed.since, days);
   const result: ParsedArgs = {
     query,
@@ -132,15 +139,29 @@ function resolveWindow(since: string | undefined, days: number): { readonly sinc
 
 // MARK: Handler
 /**
- * Tool handler for `dbx_log_search`. Resolves the log root from args/env,
- * walks the project directory, parses matching files, and dispatches to one of
- * the three formatters based on `mode`.
+ * Config block sourced from `dbx-mcp.config.json`'s `logs` section.
+ * `basePath` is pre-resolved to an absolute path by the bootstrap so the
+ * handler can pass it straight to {@link resolveLogBasePath}.
  */
-export async function runLogSearch(rawArgs: unknown): Promise<ToolResult> {
+export interface LogSearchConfig {
+  readonly basePath?: string;
+  readonly defaultProject?: string;
+}
+
+/**
+ * Tool handler for `dbx_log_search`. Resolves the log root from arg / env /
+ * config, walks the project directory, parses matching files, and dispatches
+ * to one of the three formatters based on `mode`.
+ *
+ * @param rawArgs - The MCP tool call arguments.
+ * @param config - Optional `logs` block from `dbx-mcp.config.json`, used as a
+ *   fallback when neither the per-call arg nor `DBX_LOG_PATH` is set.
+ */
+export async function runLogSearch(rawArgs: unknown, config?: LogSearchConfig): Promise<ToolResult> {
   let args: ParsedArgs | undefined;
   let parseError: string | undefined;
   try {
-    args = parseArgs(rawArgs);
+    args = parseArgs({ raw: rawArgs, configDefaultProject: config?.defaultProject });
   } catch (err) {
     parseError = err instanceof Error ? err.message : String(err);
   }
@@ -149,7 +170,7 @@ export async function runLogSearch(rawArgs: unknown): Promise<ToolResult> {
   if (parseError !== undefined || args === undefined) {
     result = toolError(parseError ?? 'Failed to parse arguments.');
   } else {
-    const baseRes = resolveLogBasePath({ basePath: args.basePath, env: process.env });
+    const baseRes = resolveLogBasePath({ basePath: args.basePath, env: process.env, configBasePath: config?.basePath });
     if (baseRes.kind === 'error') {
       result = toolError(baseRes.message);
     } else {
@@ -213,7 +234,20 @@ function dispatch(args: ParsedArgs, logs: readonly ParsedLog[], header: FormatHe
   return result;
 }
 
-export const LOG_SEARCH_TOOL: DbxTool = {
-  definition: DBX_LOG_SEARCH_TOOL,
-  run: runLogSearch
-};
+/**
+ * Builds a {@link DbxTool} bound to an optional `logs` config block from
+ * `dbx-mcp.config.json`. Used by `registerTools` so the handler can fall
+ * back to the workspace-configured base path when neither the per-call
+ * `basePath` nor `DBX_LOG_PATH` is set.
+ *
+ * @param config - The resolved logs config (paths already made absolute).
+ * @returns The tool wired to forward the config into every invocation.
+ */
+export function createLogSearchTool(config?: LogSearchConfig): DbxTool {
+  return {
+    definition: DBX_LOG_SEARCH_TOOL,
+    run: (args) => runLogSearch(args, config)
+  };
+}
+
+export const LOG_SEARCH_TOOL: DbxTool = createLogSearchTool();

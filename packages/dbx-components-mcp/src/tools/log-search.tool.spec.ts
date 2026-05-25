@@ -130,6 +130,37 @@ describe('dbx_log_search', () => {
     expect(result.content[0].text).toContain('env test');
   });
 
+  it('falls back to config basePath when arg and env are both unset', async () => {
+    await writeEntry({ root, project: PROJECT, name: 'config-test', body: SAMPLE_BODY('config test', 'via config.'), ageDays: 0 });
+    const result = await runLogSearch({ project: PROJECT }, { basePath: root });
+    expect(result.isError).toBeFalsy();
+    expect(result.content[0].text).toContain('config test');
+  });
+
+  it('uses config defaultProject when no project arg is given', async () => {
+    await writeEntry({ root, project: 'custom-default', name: 'pick-me', body: SAMPLE_BODY('pick me', 'In the configured default project.'), ageDays: 0 });
+    const result = await runLogSearch({ basePath: root }, { defaultProject: 'custom-default' });
+    expect(result.isError).toBeFalsy();
+    const text = result.content[0].text;
+    expect(text).toContain('scope: custom-default');
+    expect(text).toContain('pick me');
+  });
+
+  it('per-call basePath arg wins over the config fallback', async () => {
+    await writeEntry({ root, project: PROJECT, name: 'arg-win', body: SAMPLE_BODY('arg wins', 'Picked from the per-call arg.'), ageDays: 0 });
+    const result = await runLogSearch({ basePath: root, project: PROJECT }, { basePath: join(root, 'does-not-exist') });
+    expect(result.isError).toBeFalsy();
+    expect(result.content[0].text).toContain('arg wins');
+  });
+
+  it('DBX_LOG_PATH env wins over the config fallback', async () => {
+    await writeEntry({ root, project: PROJECT, name: 'env-win', body: SAMPLE_BODY('env wins', 'Picked from the env var.'), ageDays: 0 });
+    process.env[DBX_LOG_PATH_ENV_VAR] = root;
+    const result = await runLogSearch({ project: PROJECT }, { basePath: join(root, 'does-not-exist') });
+    expect(result.isError).toBeFalsy();
+    expect(result.content[0].text).toContain('env wins');
+  });
+
   it('falls back to the filename stem when the H1 title is missing', async () => {
     const body = ['## Summary', '', 'Has no H1.'].join('\n');
     await writeEntry({ root, project: PROJECT, name: 'fallback-title', body, ageDays: 0 });
