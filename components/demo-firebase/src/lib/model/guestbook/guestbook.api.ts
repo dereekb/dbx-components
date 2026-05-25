@@ -44,6 +44,13 @@ export type LikeGuestbookEntryParams = TargetModelParams;
 
 export { targetModelParamsType as likeGuestbookEntryParamsType } from '@dereekb/firebase';
 
+/**
+ * Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.
+ */
+export type PublishGuestbookParams = TargetModelParams;
+
+export { targetModelParamsType as publishGuestbookParamsType } from '@dereekb/firebase';
+
 export type SubscribeToGuestbookNotificationsParams = AbstractSubscribeToNotificationBoxParams;
 
 export { abstractSubscribeToNotificationBoxParamsType as subscribeToGuestbookNotificationsParamsType } from '@dereekb/firebase';
@@ -128,6 +135,7 @@ export type GuestbookModelCrudFunctionsConfig = {
     create: CreateGuestbookParams;
     update: {
       subscribeToNotifications: SubscribeToGuestbookNotificationsParams;
+      publish: PublishGuestbookParams;
     };
     query: [QueryGuestbooksParams, OnCallQueryModelResult<Guestbook>];
   };
@@ -148,7 +156,7 @@ export type GuestbookModelCrudFunctionsConfig = {
 };
 
 export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookModelCrudFunctionsConfig, GuestbookTypes> = {
-  guestbook: ['create', 'update:subscribeToNotifications', 'query'],
+  guestbook: ['create', 'update:subscribeToNotifications,publish', 'query'],
   guestbookEntry: ['update:insert,like', 'delete', 'query:_,entries', 'invoke:allPublishedEntries']
 };
 
@@ -159,6 +167,7 @@ export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<Gue
     createGuestbook: ModelFirebaseCreateFunction<CreateGuestbookParams>;
     updateGuestbook: {
       subscribeToNotifications: ModelFirebaseCrudFunction<SubscribeToGuestbookNotificationsParams>;
+      publish: ModelFirebaseCrudFunction<PublishGuestbookParams>;
     };
     queryGuestbook: ModelFirebaseQueryFunction<QueryGuestbooksParams, OnCallQueryModelResult<Guestbook>>;
   };

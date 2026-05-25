@@ -1,5 +1,5 @@
 import { demoCallModel } from './../model/crud.functions';
-import { type CreateGuestbookParams, type QueryGuestbooksParams, type QueryGuestbookEntriesParams, guestbookIdentity, guestbookEntryIdentity, type InsertGuestbookEntryParams } from 'demo-firebase';
+import { type CreateGuestbookParams, type QueryGuestbooksParams, type QueryGuestbookEntriesParams, guestbookIdentity, guestbookEntryIdentity, type InsertGuestbookEntryParams, type PublishGuestbookParams } from 'demo-firebase';
 import { type DemoApiFunctionContextFixture, demoApiFunctionContextFactory, demoAuthorizedUserContext, demoGuestbookContext } from '../../../test/fixture';
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { type OnCallCreateModelResult, type OnCallQueryModelResult, onCallCreateModelParams, onCallQueryModelParams, onCallUpdateModelParams } from '@dereekb/firebase';
@@ -198,6 +198,60 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
           const errorInfo = firebaseServerErrorInfo(e);
           expect(errorInfo.serverErrorCode).toBe(BAD_DOCUMENT_QUERY_CURSOR_ERROR_CODE);
         }
+      });
+    });
+  });
+
+  // MARK: Publish
+  describeCallableRequestTest('guestbookPublish', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
+    demoAuthorizedUserContext({ f }, (u) => {
+      describe('when caller is admin', () => {
+        beforeEach(async () => {
+          await f.instance.authService.userContext(u.uid).addRoles([AUTH_ADMIN_ROLE]);
+        });
+
+        demoGuestbookContext({ f, published: false }, (g) => {
+          it('should publish an unpublished guestbook', async () => {
+            const params: PublishGuestbookParams = { key: g.document.key };
+            await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookIdentity, params, 'publish'));
+
+            const data = await g.document.snapshotData();
+            expect(data?.published).toBe(true);
+          });
+
+          it('should be idempotent when publishing an already-published guestbook', async () => {
+            const params: PublishGuestbookParams = { key: g.document.key };
+            await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookIdentity, params, 'publish'));
+            await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookIdentity, params, 'publish'));
+
+            const data = await g.document.snapshotData();
+            expect(data?.published).toBe(true);
+          });
+        });
+
+        demoGuestbookContext({ f, published: false, locked: true }, (g) => {
+          it('should reject publishing a locked guestbook', async () => {
+            const params: PublishGuestbookParams = { key: g.document.key };
+
+            await expect(u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookIdentity, params, 'publish'))).rejects.toThrow();
+
+            const data = await g.document.snapshotData();
+            expect(data?.published).toBe(false);
+          });
+        });
+      });
+
+      describe('when caller is not admin', () => {
+        demoGuestbookContext({ f, published: false }, (g) => {
+          it('should be forbidden from publishing', async () => {
+            const params: PublishGuestbookParams = { key: g.document.key };
+
+            await expect(u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookIdentity, params, 'publish'))).rejects.toThrow();
+
+            const data = await g.document.snapshotData();
+            expect(data?.published).toBe(false);
+          });
+        });
       });
     });
   });

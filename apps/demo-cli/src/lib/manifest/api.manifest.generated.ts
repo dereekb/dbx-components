@@ -26,7 +26,7 @@ import {
   updateStorageFileGroupParamsType,
   updateStorageFileParamsType
 } from '@dereekb/firebase';
-import { allPublishedGuestbookEntriesParamsType, createGuestbookParamsType, downloadProfileArchiveParamsType, exampleReadParamsType, finishOnboardingProfileParamsType, guestbookEntryParamsType, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType, profileCreateTestNotificationParamsType, resetProfilePasswordParamsType, setProfileUsernameParamsType, subscribeToGuestbookNotificationsParamsType, updateProfileParamsType } from 'demo-firebase';
+import { allPublishedGuestbookEntriesParamsType, createGuestbookParamsType, downloadProfileArchiveParamsType, exampleReadParamsType, finishOnboardingProfileParamsType, guestbookEntryParamsType, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType, profileCreateTestNotificationParamsType, publishGuestbookParamsType, resetProfilePasswordParamsType, setProfileUsernameParamsType, subscribeToGuestbookNotificationsParamsType, updateProfileParamsType } from 'demo-firebase';
 import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
@@ -43,6 +43,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     ]
   },
   { model: 'guestbook', verb: 'query', paramsTypeName: 'QueryGuestbooksParams', resultTypeName: 'OnCallQueryModelResult', groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsTypeDescription: 'Query parameters for searching guestbooks.', paramsFields: [{ name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all guestbooks.' }] },
+  { model: 'guestbook', verb: 'update', specifier: 'publish', paramsTypeName: 'PublishGuestbookParams', paramsValidator: publishGuestbookParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsTypeDescription: 'Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.' },
   { model: 'guestbook', verb: 'update', specifier: 'subscribeToNotifications', paramsTypeName: 'SubscribeToGuestbookNotificationsParams', paramsValidator: subscribeToGuestbookNotificationsParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
   { model: 'guestbookEntry', verb: 'delete', paramsTypeName: 'GuestbookEntryParams', paramsValidator: guestbookEntryParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsFields: [{ name: 'guestbook', typeText: 'string' }] },
   {

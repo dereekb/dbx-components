@@ -80,7 +80,7 @@ export interface Guestbook {
   cby?: Maybe<ProfileId>;
 }
 
-export type GuestbookRoles = 'admin' | 'subscribeToNotifications' | GrantedReadRole;
+export type GuestbookRoles = 'admin' | 'subscribeToNotifications' | 'publish' | GrantedReadRole;
 
 export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument, typeof guestbookIdentity> {
   get modelIdentity() {

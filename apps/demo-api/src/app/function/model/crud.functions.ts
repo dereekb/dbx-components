@@ -9,7 +9,7 @@ import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type Demo
 import { notificationUserUpdate, notificationUserResync } from '../notification/notificationuser.update';
 import { notificationBoxUpdate, notificationBoxRecipient } from '../notification/notificationbox.update';
 import { notificationSummaryUpdate } from '../notification/notificationsummary.update';
-import { guestbookSubscribeToNotifications } from '../guestbook/guestbook.update';
+import { guestbookSubscribeToNotifications, guestbookPublish } from '../guestbook/guestbook.update';
 import { profileCreate } from '../profile/profile.create';
 import { profileDelete } from '../profile/profile.delete';
 import { notificationCreate } from '../notification/notification.create';
@@ -65,7 +65,8 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
 // MARK: Update
 export const DEMO_UPDATE_MODEL_MAP: DemoOnCallUpdateModelMap = {
   guestbook: onCallSpecifierHandler({
-    subscribeToNotifications: guestbookSubscribeToNotifications
+    subscribeToNotifications: guestbookSubscribeToNotifications,
+    publish: guestbookPublish
   }),
   guestbookEntry: onCallSpecifierHandler({
     insert: guestbookEntryInsert,
