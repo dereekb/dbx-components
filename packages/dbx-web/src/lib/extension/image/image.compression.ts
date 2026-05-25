@@ -65,6 +65,10 @@ export interface CompressImageFileResult {
    * Dimensions of the source image, captured during decoding. Only set when the source was decoded (i.e. compression actually ran).
    */
   readonly originalDimensions?: Maybe<CompressImageDimensions>;
+  /**
+   * Dimensions of the final image. When the source was decoded but the original file was kept (e.g. recompression grew the file), this equals {@link originalDimensions}. Only set when the source was decoded.
+   */
+  readonly finalDimensions?: Maybe<CompressImageDimensions>;
 }
 
 interface ImageEncodeTarget {
@@ -259,21 +263,22 @@ export async function compressImageFile(file: File, config: Maybe<DbxImageCompre
       const needsConvert = isPng && convertPngToJpeg;
 
       if (!needsResize && !needsConvert) {
-        result = { file, mimeType, compression: 'unchanged', originalDimensions };
+        result = { file, mimeType, compression: 'unchanged', originalDimensions, finalDimensions: originalDimensions };
       } else {
         const target = decideEncodeTarget(mimeType, convertPngToJpeg, needsResize);
         const blob = await encoder({ bitmap, targetWidth, targetHeight, mimeType: target.mimeType, quality: jpegQuality });
 
         if (blob == null || blob.size <= 0) {
-          result = { file, mimeType, compression: 'unchanged', originalDimensions };
+          result = { file, mimeType, compression: 'unchanged', originalDimensions, finalDimensions: originalDimensions };
         } else if (blob.size >= file.size) {
           // Recompression grew the file; keep the original (common for tiny PNG → JPEG conversions).
-          result = { file, mimeType, compression: 'unchanged', originalDimensions };
+          result = { file, mimeType, compression: 'unchanged', originalDimensions, finalDimensions: originalDimensions };
         } else {
           const nextName = needsConvert ? rewriteFileName(file.name, target.extension) : file.name;
           const nextFile = new File([blob], nextName, { type: target.mimeType, lastModified: file.lastModified });
           const status = determineStatus(needsResize, needsConvert);
-          result = { file: nextFile, mimeType: target.mimeType, compression: status, originalDimensions };
+          const finalDimensions: CompressImageDimensions = { width: targetWidth, height: targetHeight };
+          result = { file: nextFile, mimeType: target.mimeType, compression: status, originalDimensions, finalDimensions };
         }
       }
     } finally {

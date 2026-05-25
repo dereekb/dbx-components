@@ -67,4 +67,79 @@ describe('dbxFirebaseStorageFileImageCompressionFileModifier()', () => {
 
     await expect(modifier(file)).rejects.toThrow();
   });
+
+  describe('log option', () => {
+    it('invokes a custom logger function for every outcome (including unchanged)', async () => {
+      const logger = vi.fn();
+      const modifier = dbxFirebaseStorageFileImageCompressionFileModifier({ compression: { maxDimension: 1000 }, log: logger });
+      const file = fakeFile('note.txt', 'text/plain', 100);
+
+      const result = await modifier(file);
+
+      expect(result).toBe(file);
+      expect(logger).toHaveBeenCalledTimes(1);
+      const [loggedInput, loggedResult] = logger.mock.calls[0];
+      expect(loggedInput).toBe(file);
+      expect(loggedResult.compression).toBe('unchanged');
+    });
+
+    it('logs to console.info only when compression status is not unchanged (log=true)', async () => {
+      const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+      try {
+        installCreateImageBitmap(fakeBitmap(2000, 2000));
+        const modifier = dbxFirebaseStorageFileImageCompressionFileModifier({
+          compression: { maxDimension: 1000 },
+          encoder: fakeEncoder(2000, 'image/jpeg'),
+          log: true
+        });
+        const file = fakeFile('big.jpg', 'image/jpeg', 10_000);
+
+        await modifier(file);
+
+        expect(infoSpy).toHaveBeenCalledTimes(1);
+        const [, payload] = infoSpy.mock.calls[0];
+        expect(payload).toMatchObject({
+          status: 'resized',
+          originalSize: 10_000,
+          finalSize: 2000,
+          originalDimensions: { width: 2000, height: 2000 },
+          finalDimensions: { width: 1000, height: 1000 }
+        });
+      } finally {
+        infoSpy.mockRestore();
+      }
+    });
+
+    it('does not log to console.info when result is unchanged (log=true)', async () => {
+      const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+      try {
+        const modifier = dbxFirebaseStorageFileImageCompressionFileModifier({ compression: { maxDimension: 1000 }, log: true });
+        const file = fakeFile('note.txt', 'text/plain', 100);
+
+        await modifier(file);
+
+        expect(infoSpy).not.toHaveBeenCalled();
+      } finally {
+        infoSpy.mockRestore();
+      }
+    });
+
+    it('does not log when log is unset', async () => {
+      const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+      try {
+        installCreateImageBitmap(fakeBitmap(2000, 2000));
+        const modifier = dbxFirebaseStorageFileImageCompressionFileModifier({
+          compression: { maxDimension: 1000 },
+          encoder: fakeEncoder(2000, 'image/jpeg')
+        });
+        const file = fakeFile('big.jpg', 'image/jpeg', 10_000);
+
+        await modifier(file);
+
+        expect(infoSpy).not.toHaveBeenCalled();
+      } finally {
+        infoSpy.mockRestore();
+      }
+    });
+  });
 });

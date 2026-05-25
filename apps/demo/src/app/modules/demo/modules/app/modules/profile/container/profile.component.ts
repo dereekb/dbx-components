@@ -1,13 +1,26 @@
 import { ChangeDetectionStrategy, type OnInit, Component, inject } from '@angular/core';
 import { type WorkUsingContext, type IsModifiedFunction, loadingStateContext } from '@dereekb/rxjs';
-import { DbxFirebaseAuthService, DbxFirebaseStorageFileDownloadButtonComponent, type DbxFirebaseStorageFileDownloadButtonConfig, type DbxFirebaseStorageFileDownloadButtonSource, dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs, DbxFirebaseStorageFileUploadModule, DbxFirebaseStorageService, type StorageFileUploadConfig, storageFileUploadHandler, type StorageFileUploadHandler } from '@dereekb/dbx-firebase';
+import {
+  DbxFirebaseAuthService,
+  type DbxFirebaseStorageFileUploadFileModifier,
+  dbxFirebaseStorageFileImageCompressionFileModifier,
+  DbxFirebaseStorageFileDownloadButtonComponent,
+  type DbxFirebaseStorageFileDownloadButtonConfig,
+  type DbxFirebaseStorageFileDownloadButtonSource,
+  dbxFirebaseStorageFileDownloadServiceCustomSourceFromObs,
+  DbxFirebaseStorageFileUploadModule,
+  DbxFirebaseStorageService,
+  type StorageFileUploadConfig,
+  storageFileUploadHandler,
+  type StorageFileUploadHandler
+} from '@dereekb/dbx-firebase';
 import { first, map } from 'rxjs';
 import { DemoProfileFormComponent, type DemoProfileFormValue, DemoProfileUsernameFormComponent, type DemoProfileUsernameFormValue, ProfileDocumentStore } from 'demo-components';
 import { DbxActionErrorDirective, DbxActionModule, DbxAvatarComponent, DbxButtonModule, DbxContentBoxDirective, DbxErrorComponent, DbxLabelBlockComponent, DbxLoadingComponent, DbxLoadingProgressComponent, DbxSectionComponent, DbxSectionLayoutModule } from '@dereekb/dbx-web';
 import { DbxActionFormDirective, DbxFormSourceDirective } from '@dereekb/dbx-form';
 import { userAvatarUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
+import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './profile.component.html',
@@ -37,6 +50,7 @@ import { type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DemoProfileViewComponent implements OnInit {
+  readonly environmentService = inject(DbxAppEnvironmentService);
   readonly profileDocumentStore = inject(ProfileDocumentStore);
 
   readonly auth = inject(DbxFirebaseAuthService);
@@ -70,6 +84,15 @@ export class DemoProfileViewComponent implements OnInit {
         storagePath
       };
     }
+  });
+
+  readonly avatarFileModifierFn: DbxFirebaseStorageFileUploadFileModifier = dbxFirebaseStorageFileImageCompressionFileModifier({
+    compression: {
+      maxDimension: 1280,
+      convertPngToJpeg: true,
+      jpegQuality: 0.95
+    },
+    log: !this.environmentService.isProduction
   });
 
   readonly profileData$ = this.profileDocumentStore.data$;

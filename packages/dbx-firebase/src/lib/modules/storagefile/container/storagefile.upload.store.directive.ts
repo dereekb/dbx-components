@@ -1,6 +1,6 @@
 import { Directive, inject, input } from '@angular/core';
 import { skipAllInitialMaybe } from '@dereekb/rxjs';
-import { DbxFirebaseStorageFileUploadStore } from '../store';
+import { DbxFirebaseStorageFileUploadStore, type DbxFirebaseStorageFileUploadFileModifier } from '../store';
 import { type ArrayOrValue, type Maybe } from '@dereekb/util';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { shareReplay } from 'rxjs';
@@ -21,12 +21,15 @@ export class DbxFirebaseStorageFileUploadStoreDirective {
 
   readonly multipleUpload = input<Maybe<boolean>>();
   readonly fileTypesAccepted = input<Maybe<ArrayOrValue<FileAcceptFilterTypeString>>>();
+  readonly fileModifier = input<Maybe<DbxFirebaseStorageFileUploadFileModifier>>();
 
   readonly fileTypesAccepted$ = toObservable(this.fileTypesAccepted).pipe(skipAllInitialMaybe(), shareReplay(1));
   readonly isMultiUploadAllowed$ = toObservable(this.multipleUpload).pipe(skipAllInitialMaybe(), shareReplay(1));
+  readonly fileModifier$ = toObservable(this.fileModifier).pipe(skipAllInitialMaybe(), shareReplay(1));
 
   constructor() {
     cleanSubscription(this.fileTypesAccepted$.subscribe((x) => this.uploadStore.setFileTypesAccepted(x)));
     cleanSubscription(this.isMultiUploadAllowed$.subscribe((x) => this.uploadStore.setIsMultiUploadAllowed(x)));
+    cleanSubscription(this.fileModifier$.subscribe((x) => this.uploadStore.setFileModifier(x)));
   }
 }

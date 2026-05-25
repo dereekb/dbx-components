@@ -68,6 +68,7 @@ describe('compressImageFile()', () => {
     expect(result.compression).toBe('resized');
     expect(result.mimeType).toBe('image/jpeg');
     expect(result.originalDimensions).toEqual({ width: 4000, height: 3000 });
+    expect(result.finalDimensions).toEqual({ width: 1000, height: 750 });
     expect(result.file).not.toBe(file);
     expect(result.file.size).toBe(2000);
     expect(result.file.name).toBe('big.jpg');
