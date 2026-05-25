@@ -4,7 +4,6 @@ import { withApiDetails } from '@dereekb/firebase-server';
 
 export const notificationCreate: DemoCreateModelFunction<{}> = withApiDetails({
   optionalAuth: true,
-  mcp: { description: 'Create a notification (no auth required)' },
   fn: async (request) => {
     const { nest: _nest, auth: _auth, data: _data } = request;
 

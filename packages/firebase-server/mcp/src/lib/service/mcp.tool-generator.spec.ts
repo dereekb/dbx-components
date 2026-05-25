@@ -78,7 +78,7 @@ describe('generateMcpToolDefinitions', () => {
     expect(createTool.dispatch).toEqual({ call: 'create', modelType: 'guestbook', specifier: undefined });
   });
 
-  it('honors handler-level mcp.name and mcp.description overrides', () => {
+  it('honors handler-level mcp.name override', () => {
     const apiDetails: ModelApiDetailsResult = {
       models: {
         widget: {
@@ -88,7 +88,7 @@ describe('generateMcpToolDefinitions', () => {
               specifiers: {
                 _: {
                   inputType: makeSchemaRef('WidgetInvokeParams'),
-                  mcp: { name: 'custom-widget-tool', description: 'Custom description' }
+                  mcp: { name: 'custom-widget-tool' }
                 }
               }
             }
@@ -100,7 +100,6 @@ describe('generateMcpToolDefinitions', () => {
     const { tools } = generateMcpToolDefinitions(apiDetails);
     expect(tools).toHaveLength(1);
     expect(tools[0].name).toBe('custom-widget-tool');
-    expect(tools[0].description).toBe('Custom description');
   });
 
   it('skips handlers without an inputType and reports the gap', () => {
@@ -276,14 +275,11 @@ describe('generateMcpToolDefinitions manifest integration', () => {
     };
   }
 
-  it('resolves description in order: handler explicit > manifest > default', () => {
+  it('resolves description in order: manifest > default', () => {
     const manifest = new Map([['guestbook.query._', { description: 'manifest description' }]]);
 
-    const withHandlerOverride = generateMcpToolDefinitions(makeOneEntry({ description: 'handler description' }), undefined, manifest);
-    expect(withHandlerOverride.tools[0].description).toBe('handler description');
-
-    const withManifestOnly = generateMcpToolDefinitions(makeOneEntry(undefined), undefined, manifest);
-    expect(withManifestOnly.tools[0].description).toBe('manifest description');
+    const withManifest = generateMcpToolDefinitions(makeOneEntry(undefined), undefined, manifest);
+    expect(withManifest.tools[0].description).toBe('manifest description');
 
     const noManifest = generateMcpToolDefinitions(makeOneEntry(undefined));
     expect(noManifest.tools[0].description).toContain('"query"');

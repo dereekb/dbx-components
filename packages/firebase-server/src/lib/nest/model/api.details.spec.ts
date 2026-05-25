@@ -43,11 +43,10 @@ describe('api.details', () => {
     });
 
     it('should attach mcp details', () => {
-      const mcp = { description: 'Create a widget', name: 'widget-create' };
+      const mcp = { name: 'widget-create' };
       const wrapped = withApiDetails({ mcp, fn: mockHandler() });
 
       expect(wrapped._apiDetails!.mcp).toBe(mcp);
-      expect(wrapped._apiDetails!.mcp!.description).toBe('Create a widget');
       expect(wrapped._apiDetails!.mcp!.name).toBe('widget-create');
     });
 
@@ -450,7 +449,7 @@ describe('api.details', () => {
 
       const specHandler = onCallSpecifierHandler({
         _: withApiDetails({ inputType: specInputA, fn: mockHandler() }) as any,
-        custom: withApiDetails({ inputType: specInputB, mcp: { description: 'Custom operation' }, fn: mockHandler() }) as any
+        custom: withApiDetails({ inputType: specInputB, mcp: { name: 'custom-tool' }, fn: mockHandler() }) as any
       });
 
       const callModelMap: OnCallModelMap = {
@@ -467,7 +466,7 @@ describe('api.details', () => {
       expect(widgetUpdate.isSpecifier).toBe(true);
       expect(widgetUpdate.specifiers['_']!.inputType).toBe(specInputA);
       expect(widgetUpdate.specifiers['custom']!.inputType).toBe(specInputB);
-      expect(widgetUpdate.specifiers['custom']!.mcp?.description).toBe('Custom operation');
+      expect(widgetUpdate.specifiers['custom']!.mcp?.name).toBe('custom-tool');
     });
 
     it('should return undefined when no _apiDetails are present', () => {

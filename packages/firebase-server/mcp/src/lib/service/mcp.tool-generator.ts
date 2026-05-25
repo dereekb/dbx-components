@@ -21,7 +21,7 @@ export interface McpToolDefinition {
   /**
    * Human-readable description surfaced to MCP clients.
    *
-   * Uses {@link OnCallModelFunctionApiDetails.mcp.description} when set; otherwise auto-generated.
+   * Resolved from the build-time MCP manifest entry when present; otherwise auto-generated.
    */
   readonly description: string;
   /**
@@ -153,8 +153,8 @@ export function buildMcpToolName(modelType: string, callType: string, specifier?
 }
 
 /**
- * Builds the default description used when the handler hasn't set
- * {@link OnCallModelFunctionApiDetails.mcp.description}.
+ * Builds the default description used when no build-time MCP manifest
+ * entry is available for the (modelType, callType, specifier) tuple.
  */
 export function buildDefaultMcpToolDescription(modelType: string, callType: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
@@ -167,8 +167,9 @@ export function buildDefaultMcpToolDescription(modelType: string, callType: stri
  *
  * Walks each (modelType, callType, specifier) triple in the tree, calls
  * `inputType.toJsonSchema(options)` for the schema, and applies any handler-level
- * MCP overrides (name / description). Tools without an `inputType` are skipped
- * and reported so callers can log the gap at startup.
+ * MCP `name` override. Descriptions and input/output schemas are pulled from the
+ * build-time manifest when supplied. Tools without an `inputType` are skipped and
+ * reported so callers can log the gap at startup.
  *
  * @param apiDetails - The model-first API details tree returned by `getModelApiDetails(callModelFn)`.
  * @param options - Optional schema generation options forwarded to `toJsonSchema()`. Defaults to {@link DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS}.
@@ -221,7 +222,7 @@ function generateToolsForModelCall(context: GenerateToolsForModelCallContext): v
     const name = customName ?? buildMcpToolName(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined);
     const manifestEntry = manifest?.get(mcpManifestKey(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined));
 
-    const description = handlerDetails.mcp?.description ?? manifestEntry?.description ?? buildDefaultMcpToolDescription(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined);
+    const description = manifestEntry?.description ?? buildDefaultMcpToolDescription(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined);
 
     let inputSchema: object | undefined = manifestEntry?.inputSchema;
 

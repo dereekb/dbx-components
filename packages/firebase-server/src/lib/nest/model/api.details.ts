@@ -123,10 +123,6 @@ export type McpToolVisibility = boolean | McpVisibilityRule | ((context: McpVisi
  */
 export interface OnCallModelFunctionMcpDetails {
   /**
-   * Custom tool description for the MCP tool.
-   */
-  readonly description?: string;
-  /**
    * Custom tool name override.
    */
   readonly name?: string;

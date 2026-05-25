@@ -4,7 +4,7 @@ import { executeOnCallQuery, resolveAdminOnlyValue, withApiDetails, type OnCallQ
 import { type DemoQueryModelFunction, type DemoApiNestContext } from '../function.context';
 
 export const guestbookEntryQuery: DemoQueryModelFunction<QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>> = withApiDetails({
-  mcp: { description: 'Query guestbook entries for a specific guestbook with optional filtering by published status', visibility: true },
+  mcp: { visibility: true },
   fn: async (request: OnCallQueryModelRequest<DemoApiNestContext, QueryGuestbookEntriesParams>) => {
     const { nest, data } = request;
 
@@ -60,7 +60,6 @@ export const guestbookEntryQuery: DemoQueryModelFunction<QueryGuestbookEntriesPa
  */
 export const guestbookEntryEntriesQuery: DemoQueryModelFunction<QueryAllGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>> = withApiDetails({
   mcp: {
-    description: 'Query GuestbookEntry across all guestbooks (collection group) with optional filtering by published status. Non-admin callers are restricted to published entries.',
     visibility: ({ auth }) => auth != null
   },
   fn: async (request: OnCallQueryModelRequest<DemoApiNestContext, QueryAllGuestbookEntriesParams>) => {

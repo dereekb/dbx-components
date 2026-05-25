@@ -19,7 +19,6 @@ export const ALL_PUBLISHED_GUESTBOOK_ENTRIES_HARD_CAP = 500;
  */
 export const guestbookEntryAllPublishedEntries: DemoInvokeModelFunction<AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult> = withApiDetails({
   inputType: allPublishedGuestbookEntriesParamsType,
-  mcp: { description: 'Return every published GuestbookEntry across all guestbooks in one aggregate response. Paginates the collection-group query server-side.' },
   fn: async (request) => {
     const { nest, data } = request;
     const limit = Math.min(data.limit ?? ALL_PUBLISHED_GUESTBOOK_ENTRIES_HARD_CAP, ALL_PUBLISHED_GUESTBOOK_ENTRIES_HARD_CAP);
