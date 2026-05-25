@@ -10,6 +10,27 @@
     margin-top: 12px;
   }
 
+  .dbx-pdf-merge-editor-size-warning,
+  .dbx-pdf-merge-editor-size-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-top: 12px;
+    border-radius: var(--mat-sys-corner-small);
+    font: var(--mat-sys-body-medium);
+  }
+
+  .dbx-pdf-merge-editor-size-warning {
+    background-color: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
+  }
+
+  .dbx-pdf-merge-editor-size-error {
+    background-color: var(--mat-sys-error-container);
+    color: var(--mat-sys-on-error-container);
+  }
+
   // Slot upload
   .dbx-pdf-merge-editor-file-upload-header {
     display: flex;
@@ -85,6 +106,15 @@
   .dbx-pdf-merge-entry-meta {
     display: flex;
     gap: 8px;
+    align-items: center;
+  }
+
+  .dbx-pdf-merge-entry-compression {
+    padding: 1px 6px;
+    border-radius: var(--mat-sys-corner-extra-small);
+    background-color: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+    font-size: 11px;
   }
 
   // CDK animations

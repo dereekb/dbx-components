@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 import { moveItemInArray } from '@angular/cdk/drag-drop';
 import { ComponentStore } from '@ngrx/component-store';
 import { BehaviorSubject, catchError, combineLatest, defaultIfEmpty, distinctUntilChanged, from, map, type Observable, of, shareReplay, startWith, switchMap } from 'rxjs';
-import { type Building, type Maybe } from '@dereekb/util';
+import { type Building, type FileSize, type Maybe } from '@dereekb/util';
 import { type DbxPdfMergeEditorValidator, type PdfMergeEditorState, type PdfMergeEntry, type PdfMergeEntryMove, type PdfMergeEntryStatus } from './pdf.merge';
-import { buildPdfMergeEntry, mergePdfMergeEntries } from './pdf.merge.utility';
+import { buildPdfMergeEntrySync, mergePdfMergeEntries } from './pdf.merge.utility';
 import { filterMaybe } from '@dereekb/rxjs';
 
 /**
@@ -15,13 +15,16 @@ export const DBX_PDF_MERGE_EDITOR_INITIAL_STATE: PdfMergeEditorState = {
 };
 
 /**
- * Input accepted by {@link DbxPdfMergeEditorStore.addFiles}: either a bare list of files (treated as unscoped) or `{ files, slotId }` to attribute the new entries to a slot.
+ * Input accepted by {@link DbxPdfMergeEditorStore.addFiles}: either a bare list of files (treated as unscoped, synchronously wrapped into entries) or `{ files, slotId }` to attribute the new entries to a slot. Callers that need client-side compression should construct entries via the async `buildPdfMergeEntry` and pass `{ entries }` instead.
  */
 export type DbxPdfMergeEditorAddFilesInput =
   | readonly File[]
   | {
       readonly files: readonly File[];
       readonly slotId?: Maybe<string>;
+    }
+  | {
+      readonly entries: readonly PdfMergeEntry[];
     };
 
 /**
@@ -30,6 +33,7 @@ export type DbxPdfMergeEditorAddFilesInput =
 @Injectable()
 export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> {
   private readonly _validator$ = new BehaviorSubject<Maybe<DbxPdfMergeEditorValidator>>(undefined);
+  private readonly _outputSizeLimit$ = new BehaviorSubject<Maybe<FileSize>>(undefined);
 
   constructor() {
     super(DBX_PDF_MERGE_EDITOR_INITIAL_STATE);
@@ -96,23 +100,23 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   );
 
   /**
-   * Emits the boolean output of the registered {@link DbxPdfMergeEditorValidator} delegate, or a constant `true` when no delegate is registered. {@link currentMergeOutput$} gates merge emissions on this stream.
+   * Emits the boolean output of the registered {@link DbxPdfMergeEditorValidator} delegate, or a constant `true` when no delegate is registered. Composed with {@link sizeLimitValid$} into {@link isValid$} to gate {@link currentMergeOutput$}.
    */
-  readonly isValid$: Observable<boolean> = this._validator$.pipe(
+  readonly validatorValid$: Observable<boolean> = this._validator$.pipe(
     switchMap((validator) => (validator ? validator(this.entries$) : of(true))),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   /**
-   * Emits the merged PDF blob whenever every entry has finished validating (see {@link isValidating$}), at least one is `ready`, and the registered validator delegate (if any) reports `true`. Emits `undefined` while validation is in flight, when the list is empty, when the delegate reports invalid, or when the most recent merge failed. Multicast via {@link shareReplay} so multiple subscribers share a single merge.
+   * Internal pre-validity merge stream produced without consulting {@link isValid$}. Drives both {@link outputSize$} and the eventual {@link currentMergeOutput$} so size-based gating can observe the would-be blob without creating a cycle.
    */
-  readonly currentMergeOutput$: Observable<Maybe<Blob>> = combineLatest([this.entries$, this.isValidating$, this.isValid$]).pipe(
-    switchMap(([entries, isValidating, isValid]) => {
+  private readonly _candidateMergeOutput$: Observable<Maybe<Blob>> = combineLatest([this.entries$, this.isValidating$, this.validatorValid$]).pipe(
+    switchMap(([entries, isValidating, validatorValid]) => {
       const hasReady = entries.some((entry) => entry.status === 'ready');
       let next$: Observable<Maybe<Blob>>;
 
-      if (isValidating || !hasReady || !isValid) {
+      if (isValidating || !hasReady || !validatorValid) {
         next$ = of(undefined);
       } else {
         next$ = from(mergePdfMergeEntries(entries)).pipe(catchError(() => of(undefined)));
@@ -120,6 +124,51 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
 
       return next$;
     }),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits the byte size of the most recent candidate merge output, or `undefined` while there is none.
+   */
+  readonly outputSize$: Observable<Maybe<FileSize>> = this._candidateMergeOutput$.pipe(
+    map((blob) => blob?.size),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits `true` while the candidate merge fits inside the active output-size limit (or when no limit is set). Cleared when the merge has not yet produced a blob — emits `true` in that case to avoid blocking the UI before there is anything to gate on.
+   */
+  readonly sizeLimitValid$: Observable<boolean> = combineLatest([this._outputSizeLimit$, this.outputSize$]).pipe(
+    map(([limit, size]) => {
+      let valid: boolean;
+
+      if (limit == null || size == null) {
+        valid = true;
+      } else {
+        valid = size <= limit;
+      }
+
+      return valid;
+    }),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits `true` while both the registered {@link DbxPdfMergeEditorValidator} delegate (if any) and the optional output-size limit are satisfied. {@link currentMergeOutput$} gates merge emissions on this stream.
+   */
+  readonly isValid$: Observable<boolean> = combineLatest([this.validatorValid$, this.sizeLimitValid$]).pipe(
+    map(([validatorValid, sizeLimitValid]) => validatorValid && sizeLimitValid),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits the merged PDF blob whenever every entry has finished validating (see {@link isValidating$}), at least one is `ready`, and {@link isValid$} reports `true`. Emits `undefined` while validation is in flight, when the list is empty, when the delegate or size limit reports invalid, or when the most recent merge failed.
+   */
+  readonly currentMergeOutput$: Observable<Maybe<Blob>> = combineLatest([this._candidateMergeOutput$, this.sizeLimitValid$]).pipe(
+    map(([blob, sizeLimitValid]) => (sizeLimitValid ? blob : undefined)),
     shareReplay(1)
   );
 
@@ -149,20 +198,42 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   }
 
   /**
-   * Clears any registered validator delegate so {@link isValid$} returns to its default `true` stream.
+   * Clears any registered validator delegate so {@link validatorValid$} returns to its default `true` stream.
    */
   clearValidator(): void {
     this._validator$.next(undefined);
   }
 
+  /**
+   * Sets the maximum allowed output blob size in bytes. When the candidate merge exceeds this limit, {@link sizeLimitValid$} (and therefore {@link isValid$}) emits `false` and {@link currentMergeOutput$} suppresses the blob. Pass `null`/`undefined` to clear the limit.
+   *
+   * @param maxBytes - Output byte ceiling, or a falsy value to remove the limit.
+   */
+  setOutputSizeLimit(maxBytes: Maybe<FileSize>): void {
+    this._outputSizeLimit$.next(maxBytes ?? undefined);
+  }
+
   // MARK: Updaters
   /**
-   * Builds {@link PdfMergeEntry} objects from the supplied files (skipping unsupported types) and appends them to state. Each entry's validation promise starts when the entry is built; {@link entries$} reflects each result as it resolves. When `input` is an object with a `slotId`, the resulting entries are tagged with that slot id.
+   * Appends entries (already constructed) or builds them from raw files and appends them to state. Each entry's validation promise starts when the entry is built; {@link entries$} reflects each result as it resolves. When `input` is an object with `files` and `slotId`, the resulting entries are tagged with that slot id. When `input` is `{ entries }`, the entries are appended as-is — use this shape for entries that went through async client-side compression upstream.
    */
   readonly addFiles = this.updater((state, input: DbxPdfMergeEditorAddFilesInput) => {
-    const files = Array.isArray(input) ? (input as readonly File[]) : (input as { readonly files: readonly File[] }).files;
-    const slotId = Array.isArray(input) ? undefined : (input as { readonly slotId?: Maybe<string> }).slotId;
-    const newEntries = files.map((file) => buildPdfMergeEntry(file, { slotId })).filter((entry): entry is PdfMergeEntry => entry != null);
+    let newEntries: PdfMergeEntry[];
+
+    if (Array.isArray(input)) {
+      newEntries = (input as readonly File[]).map((file) => buildPdfMergeEntrySync(file)).filter((entry): entry is PdfMergeEntry => entry != null);
+    } else {
+      const objectInput = input as { readonly files?: readonly File[]; readonly slotId?: Maybe<string>; readonly entries?: readonly PdfMergeEntry[] };
+
+      if (objectInput.entries != null) {
+        newEntries = [...objectInput.entries];
+      } else {
+        const files = objectInput.files ?? [];
+        const slotId = objectInput.slotId;
+        newEntries = files.map((file) => buildPdfMergeEntrySync(file, { slotId })).filter((entry): entry is PdfMergeEntry => entry != null);
+      }
+    }
+
     return newEntries.length > 0 ? { ...state, rawEntries: [...state.rawEntries, ...newEntries] } : state;
   });
 

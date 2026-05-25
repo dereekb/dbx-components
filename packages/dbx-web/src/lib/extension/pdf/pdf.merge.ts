@@ -1,3 +1,4 @@
+import { InjectionToken, type Provider } from '@angular/core';
 import { JPEG_MIME_TYPE, PDF_MIME_TYPE, PNG_MIME_TYPE, type FileSize, type Maybe, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 
@@ -8,6 +9,29 @@ import { type Observable } from 'rxjs';
  * - `image` — a raster image (PNG/JPEG) embedded as a single page in the merged output.
  */
 export type PdfMergeEntryKind = 'pdf' | 'image';
+
+/**
+ * Describes whether a {@link PdfMergeEntry}'s underlying file went through client-side compression on upload.
+ *
+ * - `unchanged` — the original user-supplied file is what the editor stores.
+ * - `resized` — the image was downscaled but its MIME type was preserved.
+ * - `converted` — the image's MIME type was converted (e.g. PNG → JPEG) without resizing.
+ * - `resized_and_converted` — the image was both downscaled and converted.
+ */
+export type PdfMergeEntryCompressionStatus = 'unchanged' | 'resized' | 'converted' | 'resized_and_converted';
+
+/**
+ * Captured pre-compression metadata for a {@link PdfMergeEntry}. When no compression ran, the values match the post-compression entry fields.
+ */
+export interface PdfMergeEntryOriginal {
+  readonly name: string;
+  readonly mimeType: MimeTypeWithoutParameters;
+  readonly size: FileSize;
+  /**
+   * Pixel dimensions of the source image. Only set for images that were decoded during compression.
+   */
+  readonly dimensions?: Maybe<{ readonly width: number; readonly height: number }>;
+}
 
 /**
  * Lifecycle status of a {@link PdfMergeEntry} as it is added, validated, and (potentially) merged.
@@ -76,6 +100,14 @@ export interface PdfMergeEntry extends Pick<PdfMergeEntryValidationResult, 'erro
    * Optional slot identifier. Set when the entry was added through a {@link DbxPdfMergeEditorFileUploadComponent} slot, used by the store to filter entries per slot and clean them up when the slot component is destroyed. Entries added through the editor's default upload area have no slot id.
    */
   readonly slotId?: Maybe<string>;
+  /**
+   * Metadata captured from the user-supplied file before any client-side compression. When no compression ran, the values match {@link PdfMergeEntry.name}, {@link PdfMergeEntry.mimeType}, {@link PdfMergeEntry.size}.
+   */
+  readonly original: PdfMergeEntryOriginal;
+  /**
+   * Result of the client-side compression step on upload. `'unchanged'` when no compression ran.
+   */
+  readonly compression: PdfMergeEntryCompressionStatus;
 }
 
 /**
@@ -113,4 +145,74 @@ export interface PdfMergeEditorState {
 export interface PdfMergeEntryMove {
   readonly previousIndex: number;
   readonly currentIndex: number;
+}
+
+/**
+ * Configures client-side image compression performed by {@link DbxPdfMergeEditorComponent} (and slot uploaders) before files enter the entry list. PDFs are never compressed; only image entries are subject to compression.
+ */
+export interface DbxPdfMergeImageCompressionConfig {
+  /**
+   * Maximum allowed value for the larger image dimension in pixels. Images larger than this are scaled down so neither width nor height exceeds the limit, preserving aspect ratio. `null`/undefined disables resizing.
+   */
+  readonly maxDimension?: Maybe<number>;
+  /**
+   * Convert PNG inputs to JPEG. Defaults to `false`. JPEGs that need resizing are always re-encoded as JPEG.
+   */
+  readonly convertPngToJpeg?: Maybe<boolean>;
+  /**
+   * JPEG encode quality in [0,1]. Defaults to `0.85`. Used for PNG→JPEG conversion and for resized JPEG re-encoding.
+   */
+  readonly jpegQuality?: Maybe<number>;
+  /**
+   * Skip compression when the file is already smaller than this many bytes. `null`/undefined applies no minimum.
+   */
+  readonly minSizeBytes?: Maybe<FileSize>;
+}
+
+/**
+ * Output size limits enforced by {@link DbxPdfMergeEditorComponent} on its merged blob.
+ */
+export interface DbxPdfMergeOutputSizeLimitsConfig {
+  /**
+   * Soft cap in bytes. Above this the editor surfaces a warning banner but Preview/Download stay enabled.
+   */
+  readonly warnBytes?: Maybe<FileSize>;
+  /**
+   * Hard cap in bytes. Above this the editor blocks Preview/Download via the store's validity pipeline.
+   */
+  readonly errorBytes?: Maybe<FileSize>;
+}
+
+/**
+ * Top-level configuration object accepted by {@link DbxPdfMergeEditorComponent} (via input) and by {@link DBX_PDF_MERGE_EDITOR_CONFIG} (via dependency injection).
+ */
+export interface DbxPdfMergeEditorConfig {
+  /**
+   * Image compression to run on uploads. When omitted, files enter the entry list unchanged.
+   */
+  readonly imageCompression?: Maybe<DbxPdfMergeImageCompressionConfig>;
+  /**
+   * Soft/hard output-size limits surfaced via warning/error banners and (for `errorBytes`) the store's validity gate.
+   */
+  readonly outputSizeLimits?: Maybe<DbxPdfMergeOutputSizeLimitsConfig>;
+}
+
+/**
+ * Default JPEG quality used when re-encoding images during compression.
+ */
+export const DEFAULT_PDF_MERGE_JPEG_QUALITY = 0.85;
+
+/**
+ * Injection token for a workspace-wide default {@link DbxPdfMergeEditorConfig}. Use {@link provideDbxPdfMergeEditorConfig} to register a value.
+ */
+export const DBX_PDF_MERGE_EDITOR_CONFIG = new InjectionToken<DbxPdfMergeEditorConfig>('DBX_PDF_MERGE_EDITOR_CONFIG');
+
+/**
+ * Helper that returns a {@link Provider} binding {@link DBX_PDF_MERGE_EDITOR_CONFIG} to the given config value.
+ *
+ * @param config - Configuration to register.
+ * @returns Provider entry suitable for inclusion in `providers`.
+ */
+export function provideDbxPdfMergeEditorConfig(config: DbxPdfMergeEditorConfig): Provider {
+  return { provide: DBX_PDF_MERGE_EDITOR_CONFIG, useValue: config };
 }

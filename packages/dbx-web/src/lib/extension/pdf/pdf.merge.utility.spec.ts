@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type PdfMergeEntry } from './pdf.merge';
-import { buildPdfMergeEntry, classifyPdfMergeFile, validatePdfMergeEntry } from './pdf.merge.utility';
+import { buildPdfMergeEntry, buildPdfMergeEntrySync, classifyPdfMergeFile, formatPdfMergeEntrySize, validatePdfMergeEntry } from './pdf.merge.utility';
 
 function makeFile(name: string, type: string, contents = 'placeholder'): File {
   return new File([contents], name, { type });
@@ -32,19 +32,57 @@ describe('classifyPdfMergeFile()', () => {
   });
 });
 
-describe('buildPdfMergeEntry()', () => {
+describe('buildPdfMergeEntrySync()', () => {
   it('builds a validating entry for a supported file', () => {
     let counter = 0;
-    const entry = buildPdfMergeEntry(makeFile('a.pdf', 'application/pdf'), { idFactory: () => `id-${++counter}` });
+    const entry = buildPdfMergeEntrySync(makeFile('a.pdf', 'application/pdf'), { idFactory: () => `id-${++counter}` });
     expect(entry).not.toBeNull();
     expect(entry!.id).toBe('id-1');
     expect(entry!.kind).toBe('pdf');
     expect(entry!.status).toBe('validating');
     expect(entry!.name).toBe('a.pdf');
+    expect(entry!.compression).toBe('unchanged');
+    expect(entry!.original.name).toBe('a.pdf');
+    expect(entry!.original.size).toBe(entry!.size);
   });
 
   it('returns null for an unsupported file', () => {
-    expect(buildPdfMergeEntry(makeFile('archive.zip', 'application/zip'))).toBeNull();
+    expect(buildPdfMergeEntrySync(makeFile('archive.zip', 'application/zip'))).toBeNull();
+  });
+});
+
+describe('buildPdfMergeEntry()', () => {
+  it('returns the same entry shape as the sync builder when no compression config is provided', async () => {
+    const entry = await buildPdfMergeEntry(makeFile('a.pdf', 'application/pdf'), { idFactory: () => 'id-1' });
+    expect(entry).not.toBeNull();
+    expect(entry!.kind).toBe('pdf');
+    expect(entry!.compression).toBe('unchanged');
+    expect(entry!.original.name).toBe('a.pdf');
+    expect(entry!.original.size).toBe(entry!.size);
+  });
+
+  it('skips compression for PDFs even when imageCompression is configured', async () => {
+    const entry = await buildPdfMergeEntry(makeFile('a.pdf', 'application/pdf'), { imageCompression: { maxDimension: 256 } });
+    expect(entry).not.toBeNull();
+    expect(entry!.compression).toBe('unchanged');
+  });
+
+  it('returns null for an unsupported file', async () => {
+    expect(await buildPdfMergeEntry(makeFile('archive.zip', 'application/zip'))).toBeNull();
+  });
+});
+
+describe('formatPdfMergeEntrySize()', () => {
+  it('formats bytes', () => {
+    expect(formatPdfMergeEntrySize(900)).toBe('900 B');
+  });
+
+  it('formats kilobytes', () => {
+    expect(formatPdfMergeEntrySize(2048)).toBe('2.0 KB');
+  });
+
+  it('formats megabytes', () => {
+    expect(formatPdfMergeEntrySize(2 * 1024 * 1024)).toBe('2.0 MB');
   });
 });
 
@@ -59,7 +97,9 @@ describe('validatePdfMergeEntry()', () => {
       mimeType: file.type,
       size: file.size,
       kind: 'pdf',
-      status: 'validating'
+      status: 'validating',
+      original: { name: file.name, mimeType: file.type, size: file.size },
+      compression: 'unchanged'
     };
   }
 
@@ -71,7 +111,9 @@ describe('validatePdfMergeEntry()', () => {
       mimeType: file.type,
       size: file.size,
       kind: 'image',
-      status: 'validating'
+      status: 'validating',
+      original: { name: file.name, mimeType: file.type, size: file.size },
+      compression: 'unchanged'
     };
   }
 

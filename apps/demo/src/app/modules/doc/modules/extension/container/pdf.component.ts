@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { DbxContentBorderDirective, DbxContentContainerDirective, DbxContentLayoutModule, DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, type DbxPdfMergeEditorFileUploadConfig, DbxPdfMergeEditorFileUploadHasStateDirective, DbxPdfMergeEditorStore, DbxPdfMergeEditorFileUploadValidatorDirective } from '@dereekb/dbx-web';
+import { DbxContentBorderDirective, DbxContentContainerDirective, DbxContentLayoutModule, type DbxPdfMergeEditorConfig, DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, type DbxPdfMergeEditorFileUploadConfig, DbxPdfMergeEditorFileUploadHasStateDirective, DbxPdfMergeEditorStore, DbxPdfMergeEditorFileUploadValidatorDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { distinctUntilChanged, map } from 'rxjs';
@@ -113,9 +113,46 @@ export class DocPdfMergeEditorMaxFilesExampleComponent {
 }
 
 @Component({
+  selector: 'doc-pdf-merge-editor-config-example',
+  template: `
+    <dbx-content-border>
+      <dbx-pdf-merge-editor [config]="editorConfig" [showPreviewButton]="true" [showDownloadButton]="true"></dbx-pdf-merge-editor>
+    </dbx-content-border>
+    @if (configBlobSizeSignal(); as size) {
+      <p class="dbx-hint">Config example merged blob size: {{ size }} bytes</p>
+    }
+  `,
+  standalone: true,
+  imports: [DbxContentBorderDirective, DbxPdfMergeEditorComponent],
+  providers: [DbxPdfMergeEditorStore],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DocPdfMergeEditorConfigExampleComponent {
+  readonly store = inject(DbxPdfMergeEditorStore);
+
+  readonly editorConfig: DbxPdfMergeEditorConfig = {
+    imageCompression: {
+      maxDimension: 1600,
+      convertPngToJpeg: true,
+      jpegQuality: 0.85
+    },
+    outputSizeLimits: {
+      warnBytes: 2 * 1024 * 1024,
+      errorBytes: 8 * 1024 * 1024
+    }
+  };
+
+  readonly mergedBlobSize$ = this.store.mergeOutput$.pipe(
+    map((blob) => blob.size),
+    distinctUntilChanged()
+  );
+  readonly configBlobSizeSignal = toSignal(this.mergedBlobSize$, { initialValue: undefined });
+}
+
+@Component({
   templateUrl: './pdf.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocPdfMergeEditorDefaultExampleComponent, DocPdfMergeEditorSlotsExampleComponent, DocPdfMergeEditorMaxFilesExampleComponent],
+  imports: [DbxContentContainerDirective, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocPdfMergeEditorDefaultExampleComponent, DocPdfMergeEditorSlotsExampleComponent, DocPdfMergeEditorMaxFilesExampleComponent, DocPdfMergeEditorConfigExampleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionPdfComponent {}

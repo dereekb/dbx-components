@@ -1,4 +1,5 @@
 export * from './pdf.merge';
+export * from './pdf.merge.image.compression';
 export * from './pdf.merge.utility';
 export * from './pdf.merge.editor.store';
 export * from './pdf.merge.editor.component';

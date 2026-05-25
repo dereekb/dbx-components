@@ -6,10 +6,11 @@ import { type Maybe } from '@dereekb/util';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
 import { DbxFileUploadComponent, type DbxFileUploadMode } from '../../interaction/upload/upload.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
-import { DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type DbxPdfMergeImageCompressionConfig, type PdfMergeEntry } from './pdf.merge';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeEditorFileUploadValidatorDirective } from './pdf.merge.editor.file.upload.validator.directive';
 import { DbxPdfMergeEntryComponent } from './pdf.merge.entry.component';
+import { buildPdfMergeEntry } from './pdf.merge.utility';
 
 /**
  * Possible high-level UI states for a {@link DbxPdfMergeEditorFileUploadComponent}.
@@ -64,6 +65,10 @@ export interface DbxPdfMergeEditorFileUploadConfig {
    * Display mode for the underlying {@link DbxFileUploadComponent}. Defaults to `'default'` (area + button).
    */
   readonly mode?: Maybe<DbxFileUploadMode>;
+  /**
+   * Optional per-slot image compression override. When omitted, the slot falls back to the ancestor {@link DbxPdfMergeEditorComponent} input config and finally to the workspace-wide {@link DBX_PDF_MERGE_EDITOR_CONFIG} token.
+   */
+  readonly imageCompression?: Maybe<DbxPdfMergeImageCompressionConfig>;
 }
 
 const DEFAULT_MIN_FILES = 1;
@@ -116,6 +121,7 @@ const DEFAULT_REQUIRED = true;
 export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, DbxPdfMergeEditorFileUploadValidatorSlot {
   readonly store = inject(DbxPdfMergeEditorStore);
   private readonly _validator = inject(DbxPdfMergeEditorFileUploadValidatorDirective, { optional: true });
+  private readonly _injectedConfig = inject(DBX_PDF_MERGE_EDITOR_CONFIG, { optional: true });
 
   readonly slotId = input.required<string>();
   readonly config = input<Maybe<DbxPdfMergeEditorFileUploadConfig>>();
@@ -241,7 +247,12 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
     });
   }
 
-  onFiles(event: DbxFileUploadFilesChangedEvent): void {
+  /**
+   * Resolves the active image compression config: per-slot override → workspace-wide DI token. The intermediate ancestor {@link DbxPdfMergeEditorComponent} config is not visible from a slot, so consumers needing per-editor compression should either set the slot's `imageCompression` directly or rely on the injection token.
+   */
+  readonly effectiveImageCompressionSignal = computed<Maybe<DbxPdfMergeImageCompressionConfig>>(() => this.config()?.imageCompression ?? this._injectedConfig?.imageCompression ?? null);
+
+  async onFiles(event: DbxFileUploadFilesChangedEvent): Promise<void> {
     const accepted = event.matchResult.accepted;
     const ownedCount = this.ownedEntriesSignal().length;
     const capacity = this.capacitySignal();
@@ -256,8 +267,17 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
       filesToAdd = accepted;
     }
 
-    if (filesToAdd.length > 0) {
-      this.store.addFiles({ files: filesToAdd, slotId: this.slotId() });
+    if (filesToAdd.length === 0) {
+      return;
+    }
+
+    const slotId = this.slotId();
+    const imageCompression = this.effectiveImageCompressionSignal();
+    const entries = await Promise.all(filesToAdd.map((file) => buildPdfMergeEntry(file, { slotId, imageCompression })));
+    const filtered = entries.filter((entry): entry is PdfMergeEntry => entry != null);
+
+    if (filtered.length > 0) {
+      this.store.addFiles({ entries: filtered });
     }
   }
 }
