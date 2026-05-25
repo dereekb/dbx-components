@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -7,6 +8,7 @@ import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { ModelApiCallModelDispatchService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
+import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestToolEntry } from './mcp.manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult } from './mcp.tool-generator';
 
@@ -33,6 +35,8 @@ export interface McpRequestContext {
 export class McpServerFactoryService {
   private readonly _logger = new Logger(McpServerFactoryService.name);
   private _cachedTools: McpToolGenerationResult | undefined;
+  private _cachedManifest: ReadonlyMap<string, McpManifestToolEntry> | undefined;
+  private _manifestLoaded = false;
   private _loggedSkips = false;
   private _warnedMissingRoleReader = false;
 
@@ -71,11 +75,19 @@ export class McpServerFactoryService {
     const definitionsByName = new Map<string, McpToolDefinition>(visibleTools.map((tool) => [tool.name, tool]));
 
     server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: visibleTools.map((tool) => ({
-        name: tool.name,
-        description: tool.description,
-        inputSchema: tool.inputSchema ?? { type: 'object' }
-      }))
+      tools: visibleTools.map((tool) => {
+        const wire: { name: string; description: string; inputSchema: object; outputSchema?: object } = {
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema ?? { type: 'object' }
+        };
+
+        if (tool.outputSchema != null) {
+          wire.outputSchema = tool.outputSchema;
+        }
+
+        return wire;
+      })
     }));
 
     server.server.setRequestHandler(CallToolRequestSchema, async (request) => this._handleToolCall(request, definitionsByName, ctx));
@@ -94,11 +106,12 @@ export class McpServerFactoryService {
 
     if (result == null) {
       const apiDetails = this.dispatchService.getApiDetails();
+      const manifest = this._resolveManifest();
 
       if (apiDetails == null) {
         result = { tools: [], neverVisibleTools: [], skipped: [] };
       } else {
-        result = generateMcpToolDefinitions(apiDetails);
+        result = generateMcpToolDefinitions(apiDetails, undefined, manifest);
       }
 
       this._cachedTools = result;
@@ -109,6 +122,62 @@ export class McpServerFactoryService {
       for (const skip of result.skipped) {
         this._logger.warn(`Skipped MCP tool ${skip.toolName} (${skip.reason})${skip.error ? `: ${skip.error.message}` : ''}`);
       }
+    }
+
+    return result;
+  }
+
+  /**
+   * Reads the pre-rendered MCP manifest JSON once, validates its version, and caches the
+   * resulting `key → entry` map for the process lifetime.
+   *
+   * Missing file or wrong version fall back to "no manifest" with a single boot warning;
+   * the runtime still produces tools using the auto-generated descriptions and
+   * ArkType-derived schemas.
+   */
+  private _resolveManifest(): ReadonlyMap<string, McpManifestToolEntry> | undefined {
+    if (!this._manifestLoaded) {
+      this._manifestLoaded = true;
+      const path = this.mcpConfig.mcpManifestPath;
+
+      if (path == null) {
+        this._cachedManifest = undefined;
+      } else if (!existsSync(path)) {
+        this._logger.warn(`MCP manifest path is set but the file is missing: ${path}. Falling back to runtime defaults.`);
+        this._cachedManifest = undefined;
+      } else {
+        this._cachedManifest = this._parseManifestFile(path);
+      }
+    }
+
+    return this._cachedManifest;
+  }
+
+  private _parseManifestFile(path: string): ReadonlyMap<string, McpManifestToolEntry> | undefined {
+    let result: ReadonlyMap<string, McpManifestToolEntry> | undefined;
+
+    try {
+      const raw = readFileSync(path, 'utf8');
+      const parsed = JSON.parse(raw) as McpManifest;
+
+      if (parsed.version !== MCP_MANIFEST_VERSION) {
+        this._logger.warn(`MCP manifest version mismatch at ${path}: got ${String(parsed.version)}, expected ${MCP_MANIFEST_VERSION}. Falling back to runtime defaults.`);
+        result = undefined;
+      } else {
+        const map = new Map<string, McpManifestToolEntry>();
+
+        for (const [key, entry] of Object.entries(parsed.tools)) {
+          if (entry != null) {
+            map.set(key, entry);
+          }
+        }
+
+        this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries.`);
+        result = map;
+      }
+    } catch (error) {
+      this._logger.warn(`Failed to read MCP manifest at ${path}: ${(error as Error).message}. Falling back to runtime defaults.`);
+      result = undefined;
     }
 
     return result;

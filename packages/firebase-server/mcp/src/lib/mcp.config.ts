@@ -65,6 +65,17 @@ export abstract class McpModuleConfig {
    */
   readonly serverVersion?: string;
   /**
+   * Absolute path to a pre-rendered MCP manifest JSON file produced by
+   * `dbx-cli-generate-mcp-manifest`. When set, the runtime reads it once at
+   * boot and uses each tool's `description`, `inputSchema`, and `outputSchema`
+   * during tool generation — no per-request file I/O.
+   *
+   * Optional. When unset or the file is missing, the runtime falls back to
+   * today's behavior (auto-generated descriptions, ArkType-derived input
+   * schemas, no output schemas) and emits a single boot warning.
+   */
+  readonly mcpManifestPath?: string;
+  /**
    * When `true`, the MCP server only advertises tools whose effective read-only classification is `true`.
    *
    * Write tools (`create`/`update`/`delete`) and tools with unknown classification (e.g., `invoke`

@@ -1,5 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type ModelApiDetailsResult, type ModelCallApiDetails, type OnCallModelFunctionApiDetails } from '@dereekb/firebase-server';
+import { mcpManifestKey, type McpManifestToolEntry } from './mcp.manifest';
 import { classifyVisibility, resolveEffectiveReadOnly, resolveRequiredScope, type McpToolFilterMetadata } from './mcp.visibility';
 
 /**
@@ -24,12 +25,18 @@ export interface McpToolDefinition {
    */
   readonly description: string;
   /**
-   * JSON Schema for the tool input. Derived from the handler's `inputType.toJsonSchema()`.
+   * JSON Schema for the tool input.
    *
-   * `undefined` when the handler has no `inputType` — those tools are skipped during
-   * registration but logged so the gap is visible.
+   * Resolved in order: manifest entry's `inputSchema` (when a manifest is supplied) > handler's
+   * `inputType.toJsonSchema()` > `undefined`. `undefined` means the tool is skipped during
+   * registration; the gap is logged so it's visible.
    */
   readonly inputSchema?: object;
+  /**
+   * JSON Schema for the tool output, when the manifest provides one. The wire `tools/list`
+   * response only includes this when the pinned MCP SDK type allows it.
+   */
+  readonly outputSchema?: object;
   /**
    * The original handler-level API details. Carries response formatters, analytics
    * config, etc. — the controller resolves Tier 1/2/3 response shape from this.
@@ -167,7 +174,7 @@ export function buildDefaultMcpToolDescription(modelType: string, callType: stri
  * @param options - Optional schema generation options forwarded to `toJsonSchema()`. Defaults to {@link DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS}.
  * @returns The list of generated tool definitions plus any skip reports.
  */
-export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, options: JsonSchemaGenerationOptions = DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS): McpToolGenerationResult {
+export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, options: JsonSchemaGenerationOptions = DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS, manifest?: ReadonlyMap<string, McpManifestToolEntry>): McpToolGenerationResult {
   const tools: McpToolDefinition[] = [];
   const neverVisibleTools: McpToolDefinition[] = [];
   const skipped: McpToolGenerationSkip[] = [];
@@ -178,15 +185,27 @@ export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, op
         continue;
       }
 
-      generateToolsForModelCall(modelType, callType, callDetails, options, tools, neverVisibleTools, skipped);
+      generateToolsForModelCall({ modelType, callType, callDetails, options, manifest, outTools: tools, outNeverVisibleTools: neverVisibleTools, outSkipped: skipped });
     }
   }
 
   return { tools, neverVisibleTools, skipped };
 }
 
-// eslint-disable-next-line @typescript-eslint/max-params
-function generateToolsForModelCall(modelType: string, callType: string, callDetails: ModelCallApiDetails, options: JsonSchemaGenerationOptions, outTools: McpToolDefinition[], outNeverVisibleTools: McpToolDefinition[], outSkipped: McpToolGenerationSkip[]): void {
+interface GenerateToolsForModelCallContext {
+  readonly modelType: string;
+  readonly callType: string;
+  readonly callDetails: ModelCallApiDetails;
+  readonly options: JsonSchemaGenerationOptions;
+  readonly manifest?: ReadonlyMap<string, McpManifestToolEntry>;
+  readonly outTools: McpToolDefinition[];
+  readonly outNeverVisibleTools: McpToolDefinition[];
+  readonly outSkipped: McpToolGenerationSkip[];
+}
+
+function generateToolsForModelCall(context: GenerateToolsForModelCallContext): void {
+  const { modelType, callType, callDetails, options, manifest, outTools, outNeverVisibleTools, outSkipped } = context;
+
   for (const [specifierKey, handlerDetails] of Object.entries(callDetails.specifiers)) {
     if (handlerDetails == null) {
       continue;
@@ -200,20 +219,24 @@ function generateToolsForModelCall(modelType: string, callType: string, callDeta
 
     const customName = handlerDetails.mcp?.name;
     const name = customName ?? buildMcpToolName(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined);
-    const description = handlerDetails.mcp?.description ?? buildDefaultMcpToolDescription(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined);
+    const manifestEntry = manifest?.get(mcpManifestKey(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined));
 
-    let inputSchema: object | undefined;
+    const description = handlerDetails.mcp?.description ?? manifestEntry?.description ?? buildDefaultMcpToolDescription(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined);
 
-    if (handlerDetails.inputType) {
-      try {
-        inputSchema = handlerDetails.inputType.toJsonSchema(options);
-      } catch (error) {
-        outSkipped.push({ toolName: name, reason: 'schema_generation_failed', dispatch, error: error as Error });
+    let inputSchema: object | undefined = manifestEntry?.inputSchema;
+
+    if (inputSchema == null) {
+      if (handlerDetails.inputType) {
+        try {
+          inputSchema = handlerDetails.inputType.toJsonSchema(options);
+        } catch (error) {
+          outSkipped.push({ toolName: name, reason: 'schema_generation_failed', dispatch, error: error as Error });
+          continue;
+        }
+      } else {
+        outSkipped.push({ toolName: name, reason: 'missing_input_type', dispatch });
         continue;
       }
-    } else {
-      outSkipped.push({ toolName: name, reason: 'missing_input_type', dispatch });
-      continue;
     }
 
     const classified = classifyVisibility(handlerDetails.mcp?.visibility);
@@ -225,7 +248,7 @@ function generateToolsForModelCall(modelType: string, callType: string, callDeta
       effectiveReadOnly: resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType)
     };
 
-    const definition: McpToolDefinition = { name, description, inputSchema, details: handlerDetails, dispatch, filterMetadata };
+    const definition: McpToolDefinition = { name, description, inputSchema, outputSchema: manifestEntry?.outputSchema, details: handlerDetails, dispatch, filterMetadata };
 
     if (filterMetadata.visibilityKind === 'never') {
       outNeverVisibleTools.push(definition);

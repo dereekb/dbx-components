@@ -1,5 +1,9 @@
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Logger } from '@nestjs/common';
 import { McpServerFactoryService } from './mcp.server.factory';
+import { MCP_MANIFEST_VERSION } from './mcp.manifest';
 import { type McpModuleConfig, type McpAuthRoleReader } from '../mcp.config';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
@@ -274,6 +278,70 @@ describe('McpServerFactoryService readOnly mode', () => {
     const server = factory.createServer({ rawRequest: {} as any });
     const info = (server.server as any)._serverInfo as { name: string };
     expect(info.name).toBe('demo-mcp');
+  });
+});
+
+describe('McpServerFactoryService manifest loader', () => {
+  function writeManifest(content: object): string {
+    const dir = mkdtempSync(join(tmpdir(), 'mcp-manifest-'));
+    const path = join(dir, 'mcp.manifest.json');
+    writeFileSync(path, JSON.stringify(content));
+    return path;
+  }
+
+  it('warns and falls back when mcpManifestPath points at a missing file', async () => {
+    const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: '/tmp/definitely-not-there.json' } });
+
+    try {
+      const tools = await listTools(factory);
+      expect(tools.map((t) => t.name)).toEqual(['guestbook-query']);
+      expect(warnSpy.mock.calls.some(([msg]) => typeof msg === 'string' && msg.includes('the file is missing'))).toBe(true);
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('warns and falls back when the manifest version does not match', async () => {
+    const path = writeManifest({ version: 999, generatedAt: '2026-05-25T00:00:00.000Z', tools: {} });
+    const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+
+    try {
+      const tools = await listTools(factory);
+      expect(tools.map((t) => t.name)).toEqual(['guestbook-query']);
+      expect(warnSpy.mock.calls.some(([msg]) => typeof msg === 'string' && msg.includes('version mismatch'))).toBe(true);
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('loads a valid manifest and exposes pre-rendered description + outputSchema on tools/list', async () => {
+    const path = writeManifest({
+      version: MCP_MANIFEST_VERSION,
+      generatedAt: '2026-05-25T00:00:00.000Z',
+      tools: {
+        'guestbook.query._': {
+          description: 'Pre-rendered query description.',
+          outputSchema: { type: 'object', properties: { count: { type: 'number' } } }
+        }
+      }
+    });
+    const logSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+
+    try {
+      const server = factory.createServer({ rawRequest: {} as any });
+      const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<{ name: string; description?: string; outputSchema?: object }> }>>;
+      const result = await handlers.get(ListToolsRequestSchema.shape.method.value)!({ method: 'tools/list', params: {} }, {} as any);
+
+      const tool = result.tools.find((t) => t.name === 'guestbook-query');
+      expect(tool?.description).toBe('Pre-rendered query description.');
+      expect(tool?.outputSchema).toEqual({ type: 'object', properties: { count: { type: 'number' } } });
+      expect(logSpy.mock.calls.some(([msg]) => typeof msg === 'string' && msg.includes('1 tool entries'))).toBe(true);
+    } finally {
+      logSpy.mockRestore();
+    }
   });
 });
 

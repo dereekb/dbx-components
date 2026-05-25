@@ -257,3 +257,53 @@ describe('generateMcpToolDefinitions filter metadata', () => {
     expect(tools[0].filterMetadata.visibilityFn).toBeUndefined();
   });
 });
+
+describe('generateMcpToolDefinitions manifest integration', () => {
+  function makeOneEntry(mcp?: object): ModelApiDetailsResult {
+    return {
+      models: {
+        guestbook: {
+          calls: {
+            query: {
+              isSpecifier: false,
+              specifiers: {
+                _: { inputType: makeSchemaRef('QueryGuestbooksParams'), mcp }
+              }
+            }
+          }
+        }
+      }
+    };
+  }
+
+  it('resolves description in order: handler explicit > manifest > default', () => {
+    const manifest = new Map([['guestbook.query._', { description: 'manifest description' }]]);
+
+    const withHandlerOverride = generateMcpToolDefinitions(makeOneEntry({ description: 'handler description' }), undefined, manifest);
+    expect(withHandlerOverride.tools[0].description).toBe('handler description');
+
+    const withManifestOnly = generateMcpToolDefinitions(makeOneEntry(undefined), undefined, manifest);
+    expect(withManifestOnly.tools[0].description).toBe('manifest description');
+
+    const noManifest = generateMcpToolDefinitions(makeOneEntry(undefined));
+    expect(noManifest.tools[0].description).toContain('"query"');
+  });
+
+  it('prefers manifest inputSchema over the ArkType-derived schema', () => {
+    const manifest = new Map([['guestbook.query._', { inputSchema: { type: 'object', title: 'FromManifest' } }]]);
+    const result = generateMcpToolDefinitions(makeOneEntry(undefined), undefined, manifest);
+    expect(result.tools[0].inputSchema).toEqual({ type: 'object', title: 'FromManifest' });
+  });
+
+  it('attaches outputSchema from the manifest entry', () => {
+    const outputSchema = { type: 'object', properties: { count: { type: 'number' } } };
+    const manifest = new Map([['guestbook.query._', { outputSchema }]]);
+    const result = generateMcpToolDefinitions(makeOneEntry(undefined), undefined, manifest);
+    expect(result.tools[0].outputSchema).toEqual(outputSchema);
+  });
+
+  it('leaves outputSchema undefined when no manifest entry exists', () => {
+    const result = generateMcpToolDefinitions(makeOneEntry(undefined));
+    expect(result.tools[0].outputSchema).toBeUndefined();
+  });
+});
