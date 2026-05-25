@@ -1,11 +1,12 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type Request } from 'express';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
-import { ModelApiCallModelDispatchService } from '@dereekb/firebase-server';
-import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME } from '../mcp.config';
-import { type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
+import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
+import { ModelApiCallModelDispatchService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult } from './mcp.tool-generator';
 
@@ -33,10 +34,12 @@ export class McpServerFactoryService {
   private readonly _logger = new Logger(McpServerFactoryService.name);
   private _cachedTools: McpToolGenerationResult | undefined;
   private _loggedSkips = false;
+  private _warnedMissingRoleReader = false;
 
   constructor(
     @Inject(McpModuleConfig) private readonly mcpConfig: McpModuleConfig,
-    @Inject(ModelApiCallModelDispatchService) private readonly dispatchService: ModelApiCallModelDispatchService
+    @Inject(ModelApiCallModelDispatchService) private readonly dispatchService: ModelApiCallModelDispatchService,
+    @Optional() @Inject(MCP_AUTH_ROLE_READER) private readonly roleReader?: McpAuthRoleReader
   ) {}
 
   /**
@@ -46,9 +49,12 @@ export class McpServerFactoryService {
    * @returns A configured MCP server ready to be `connect()`-ed to a transport.
    */
   createServer(ctx: McpRequestContext): McpServer {
+    const baseServerName = this.mcpConfig.serverName ?? DEFAULT_MCP_SERVER_NAME;
+    const serverName = this.mcpConfig.readOnly === true ? `${baseServerName} (read-only)` : baseServerName;
+
     const server = new McpServer(
       {
-        name: this.mcpConfig.serverName ?? DEFAULT_MCP_SERVER_NAME,
+        name: serverName,
         version: this.mcpConfig.serverVersion ?? '0.0.0'
       },
       {
@@ -59,10 +65,13 @@ export class McpServerFactoryService {
     server.server.registerCapabilities({ tools: {} });
 
     const toolGeneration = this._resolveToolDefinitions();
-    const definitionsByName = new Map<string, McpToolDefinition>(toolGeneration.tools.map((tool) => [tool.name, tool]));
+    const scopes = this._resolveScopes(ctx);
+    const authRoles = this._resolveAuthRoles(ctx);
+    const visibleTools = this._filterToolsForRequest(toolGeneration.tools, { ctx, scopes, authRoles });
+    const definitionsByName = new Map<string, McpToolDefinition>(visibleTools.map((tool) => [tool.name, tool]));
 
     server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: toolGeneration.tools.map((tool) => ({
+      tools: visibleTools.map((tool) => ({
         name: tool.name,
         description: tool.description,
         inputSchema: tool.inputSchema ?? { type: 'object' }
@@ -99,6 +108,101 @@ export class McpServerFactoryService {
       this._loggedSkips = true;
       for (const skip of result.skipped) {
         this._logger.warn(`Skipped MCP tool ${skip.toolName} (${skip.reason})${skip.error ? `: ${skip.error.message}` : ''}`);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Reads the caller's OIDC scopes from the raw Express request via the auth context.
+   *
+   * Synthesizes the same `{ auth: { token } }` shape that `getOidcScopesFromRequest`
+   * expects post-dispatch, so the upstream helper stays the single source of scope parsing.
+   * Returns `undefined` for non-OIDC callers (no `oidcValidatedToken.scope`) — the filter
+   * loop treats that as "skip scope enforcement", matching `oidcCallModelScopePreAssert`.
+   */
+  private _resolveScopes(ctx: McpRequestContext): Maybe<ReadonlySet<string>> {
+    const oidcValidatedToken = (ctx.auth as { oidcValidatedToken?: unknown } | undefined)?.oidcValidatedToken;
+    const result = oidcValidatedToken == null ? undefined : getOidcScopesFromRequest({ auth: { token: oidcValidatedToken } });
+    return result;
+  }
+
+  /**
+   * Maps the caller's Firebase custom claims through the optional role reader.
+   * Emits one boot-time warning when a declarative `requiredRoles` rule will be checked
+   * but no reader is wired — that path will fail closed.
+   */
+  private _resolveAuthRoles(ctx: McpRequestContext): Maybe<AuthRoleSet> {
+    let result: Maybe<AuthRoleSet>;
+
+    if (ctx.auth?.token != null && this.roleReader != null) {
+      result = this.roleReader(ctx.auth.token as unknown as AuthClaims);
+    }
+
+    return result;
+  }
+
+  private _filterToolsForRequest(tools: ReadonlyArray<McpToolDefinition>, context: { ctx: McpRequestContext; scopes: Maybe<ReadonlySet<string>>; authRoles: Maybe<AuthRoleSet> }): ReadonlyArray<McpToolDefinition> {
+    const { ctx, scopes, authRoles } = context;
+    const readOnlyMode = this.mcpConfig.readOnly === true;
+    const visible: McpToolDefinition[] = [];
+
+    for (const tool of tools) {
+      const { filterMetadata } = tool;
+
+      if (scopes != null && filterMetadata.requiredScope != null && !scopes.has(filterMetadata.requiredScope)) {
+        continue;
+      }
+
+      if (readOnlyMode && filterMetadata.effectiveReadOnly !== true) {
+        continue;
+      }
+
+      if (!this._passesVisibility(tool, ctx, scopes, authRoles)) {
+        continue;
+      }
+
+      visible.push(tool);
+    }
+
+    return visible;
+  }
+
+  private _passesVisibility(tool: McpToolDefinition, ctx: McpRequestContext, scopes: Maybe<ReadonlySet<string>>, authRoles: Maybe<AuthRoleSet>): boolean {
+    const { filterMetadata } = tool;
+    let result: boolean;
+
+    if (filterMetadata.visibilityKind === 'declarative') {
+      result = this._checkDeclarativeVisibility(filterMetadata.rule!, ctx, authRoles);
+    } else if (filterMetadata.visibilityKind === 'dynamic') {
+      try {
+        result = filterMetadata.visibilityFn!({ auth: ctx.auth, scopes: scopes ?? undefined, tool: tool.dispatch }) === true;
+      } catch (error) {
+        this._logger.warn(`MCP tool ${tool.name} visibility predicate threw; treating as not visible: ${(error as Error).message}`);
+        result = false;
+      }
+    } else {
+      result = true;
+    }
+
+    return result;
+  }
+
+  private _checkDeclarativeVisibility(rule: { requireAuthenticated?: boolean; requiredRoles?: ReadonlyArray<string> }, ctx: McpRequestContext, authRoles: Maybe<AuthRoleSet>): boolean {
+    let result = true;
+
+    if (rule.requireAuthenticated === true && ctx.auth == null) {
+      result = false;
+    } else if (rule.requiredRoles != null && rule.requiredRoles.length > 0) {
+      if (authRoles == null) {
+        if (this.roleReader == null && !this._warnedMissingRoleReader) {
+          this._warnedMissingRoleReader = true;
+          this._logger.warn('MCP tool visibility rule declared requiredRoles but no McpAuthRoleReader is provided. Tools gated by role will be hidden.');
+        }
+        result = false;
+      } else {
+        result = authRolesSetHasRoles(authRoles, rule.requiredRoles);
       }
     }
 
