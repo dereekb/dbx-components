@@ -28,7 +28,7 @@ describe('renderMcpManifest', () => {
   it('keys tools by mcpManifestKey and collapses default specifier to "_"', () => {
     const result = render([makeEntry({ model: 'guestbook', verb: 'query' }), makeEntry({ model: 'profile', verb: 'update', specifier: 'username' }), makeEntry({ model: 'profile', verb: 'update', specifier: '_' })]);
 
-    expect(Object.keys(result.tools).sort()).toEqual(['guestbook.query._', 'profile.update._', 'profile.update.username']);
+    expect(Object.keys(result.tools).sort((a, b) => a.localeCompare(b))).toEqual(['guestbook.query._', 'profile.update._', 'profile.update.username']);
   });
 
   it('skips standalone entries', () => {

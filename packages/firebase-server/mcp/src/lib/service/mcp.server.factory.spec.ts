@@ -132,13 +132,13 @@ describe('McpServerFactoryService scope filter', () => {
   it('drops tools whose required scope the OIDC caller lacks', async () => {
     const factory = makeFactory(apiDetails);
     const tools = await listTools(factory, { auth: oidcAuth('model.read') });
-    expect(tools.map((t) => t.name).sort()).toEqual(['guestbook-read']);
+    expect(tools.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['guestbook-read']);
   });
 
   it('keeps tools whose required scope the OIDC caller holds', async () => {
     const factory = makeFactory(apiDetails);
     const tools = await listTools(factory, { auth: oidcAuth('model.read model.create model.update model.delete model.query') });
-    expect(tools.map((t) => t.name).sort()).toEqual(['guestbook-create', 'guestbook-delete', 'guestbook-query', 'guestbook-read', 'guestbook-update']);
+    expect(tools.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['guestbook-create', 'guestbook-delete', 'guestbook-query', 'guestbook-read', 'guestbook-update']);
   });
 
   it('bypasses scope filtering when the caller has no OIDC scope claim', async () => {
@@ -162,7 +162,7 @@ describe('McpServerFactoryService visibility filter', () => {
     ]);
 
     const allScopes = await listTools(makeFactory(apiDetails), { auth: oidcAuth('model.read') });
-    expect(allScopes.map((t) => t.name).sort()).toEqual(['widget-read-shown']);
+    expect(allScopes.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['widget-read-shown']);
 
     const noScopes = await listTools(makeFactory(apiDetails), { auth: oidcAuth('') });
     expect(noScopes.map((t) => t.name)).toEqual([]);
@@ -247,7 +247,7 @@ describe('McpServerFactoryService readOnly mode', () => {
   it('keeps only reads/queries when readOnly is true', async () => {
     const factory = makeFactory(apiDetails, { config: { readOnly: true } });
     const tools = await listTools(factory);
-    expect(tools.map((t) => t.name).sort()).toEqual(['guestbook-query', 'guestbook-read']);
+    expect(tools.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['guestbook-query', 'guestbook-read']);
   });
 
   it('drops unknown-classification (invoke) tools as a fail-safe when readOnly is true', async () => {
@@ -263,7 +263,7 @@ describe('McpServerFactoryService readOnly mode', () => {
     ]);
     const factory = makeFactory(apiDetailsOverride, { config: { readOnly: true } });
     const tools = await listTools(factory);
-    expect(tools.map((t) => t.name).sort()).toEqual(['widget-invoke-safe']);
+    expect(tools.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['widget-invoke-safe']);
   });
 
   it('appends " (read-only)" to the advertised serverName when readOnly is true', () => {
@@ -291,7 +291,7 @@ describe('McpServerFactoryService manifest loader', () => {
 
   it('warns and falls back when mcpManifestPath points at a missing file', async () => {
     const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: '/tmp/definitely-not-there.json' } });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: join(tmpdir(), 'mcp-manifest-missing', 'manifest.json') } });
 
     try {
       const tools = await listTools(factory);

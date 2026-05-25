@@ -205,56 +205,71 @@ interface GenerateToolsForModelCallContext {
 }
 
 function generateToolsForModelCall(context: GenerateToolsForModelCallContext): void {
+  for (const [specifierKey, handlerDetails] of Object.entries(context.callDetails.specifiers)) {
+    if (handlerDetails != null) {
+      generateToolForSpecifier(context, specifierKey, handlerDetails);
+    }
+  }
+}
+
+function generateToolForSpecifier(context: GenerateToolsForModelCallContext, specifierKey: string, handlerDetails: OnCallModelFunctionApiDetails): void {
   const { modelType, callType, callDetails, options, manifest, outTools, outNeverVisibleTools, outSkipped } = context;
+  const specifier = callDetails.isSpecifier ? specifierKey : undefined;
+  const dispatch: McpToolDispatchTarget = { call: callType, modelType, specifier };
 
-  for (const [specifierKey, handlerDetails] of Object.entries(callDetails.specifiers)) {
-    if (handlerDetails == null) {
-      continue;
-    }
+  const name = handlerDetails.mcp?.name ?? buildMcpToolName(modelType, callType, specifier);
+  const manifestEntry = manifest?.get(mcpManifestKey(modelType, callType, specifier));
+  const description = manifestEntry?.description ?? buildDefaultMcpToolDescription(modelType, callType, specifier);
 
-    const dispatch: McpToolDispatchTarget = {
-      call: callType,
-      modelType,
-      specifier: callDetails.isSpecifier ? specifierKey : undefined
-    };
+  const inputSchema = resolveInputSchema({ handlerDetails, manifestEntry, options, dispatch, toolName: name, outSkipped });
 
-    const customName = handlerDetails.mcp?.name;
-    const name = customName ?? buildMcpToolName(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined);
-    const manifestEntry = manifest?.get(mcpManifestKey(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined));
+  if (inputSchema == null) {
+    return;
+  }
 
-    const description = manifestEntry?.description ?? buildDefaultMcpToolDescription(modelType, callType, callDetails.isSpecifier ? specifierKey : undefined);
+  const classified = classifyVisibility(handlerDetails.mcp?.visibility);
+  const filterMetadata: McpToolFilterMetadata = {
+    requiredScope: resolveRequiredScope(callType) ?? undefined,
+    visibilityKind: classified.visibilityKind,
+    rule: classified.rule,
+    visibilityFn: classified.visibilityFn,
+    effectiveReadOnly: resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType)
+  };
 
-    let inputSchema: object | undefined = manifestEntry?.inputSchema;
+  const definition: McpToolDefinition = { name, description, inputSchema, outputSchema: manifestEntry?.outputSchema, details: handlerDetails, dispatch, filterMetadata };
 
-    if (inputSchema == null) {
-      if (handlerDetails.inputType) {
-        try {
-          inputSchema = handlerDetails.inputType.toJsonSchema(options);
-        } catch (error) {
-          outSkipped.push({ toolName: name, reason: 'schema_generation_failed', dispatch, error: error as Error });
-          continue;
-        }
-      } else {
-        outSkipped.push({ toolName: name, reason: 'missing_input_type', dispatch });
-        continue;
-      }
-    }
+  if (filterMetadata.visibilityKind === 'never') {
+    outNeverVisibleTools.push(definition);
+  } else {
+    outTools.push(definition);
+  }
+}
 
-    const classified = classifyVisibility(handlerDetails.mcp?.visibility);
-    const filterMetadata: McpToolFilterMetadata = {
-      requiredScope: resolveRequiredScope(callType) ?? undefined,
-      visibilityKind: classified.visibilityKind,
-      rule: classified.rule,
-      visibilityFn: classified.visibilityFn,
-      effectiveReadOnly: resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType)
-    };
+interface ResolveInputSchemaContext {
+  readonly handlerDetails: OnCallModelFunctionApiDetails;
+  readonly manifestEntry: Maybe<McpManifestToolEntry>;
+  readonly options: JsonSchemaGenerationOptions;
+  readonly dispatch: McpToolDispatchTarget;
+  readonly toolName: string;
+  readonly outSkipped: McpToolGenerationSkip[];
+}
 
-    const definition: McpToolDefinition = { name, description, inputSchema, outputSchema: manifestEntry?.outputSchema, details: handlerDetails, dispatch, filterMetadata };
+function resolveInputSchema(context: ResolveInputSchemaContext): object | undefined {
+  const { handlerDetails, manifestEntry, options, dispatch, toolName, outSkipped } = context;
 
-    if (filterMetadata.visibilityKind === 'never') {
-      outNeverVisibleTools.push(definition);
-    } else {
-      outTools.push(definition);
-    }
+  if (manifestEntry?.inputSchema != null) {
+    return manifestEntry.inputSchema;
+  }
+
+  if (handlerDetails.inputType == null) {
+    outSkipped.push({ toolName, reason: 'missing_input_type', dispatch });
+    return undefined;
+  }
+
+  try {
+    return handlerDetails.inputType.toJsonSchema(options);
+  } catch (error) {
+    outSkipped.push({ toolName, reason: 'schema_generation_failed', dispatch, error: error as Error });
+    return undefined;
   }
 }
