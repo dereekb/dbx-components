@@ -5,9 +5,9 @@
       "command": "node",
       "args": ["dist/packages/dbx-components-mcp/dbx-components-mcp.js"]
     },
-    "demo-api-mcp": {
+    "demo-mcp": {
       "type": "http",
-      "url": "http://localhost:9010/mcp"
+      "url": "http://localhost:9902/dereekb-components/us-central1/api/mcp"
     }
   }
 }
