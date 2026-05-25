@@ -175,3 +175,64 @@ export interface CliApiManifestEntry {
 }
 
 export type CliApiManifest = readonly CliApiManifestEntry[];
+
+// MARK: MCP Manifest
+/**
+ * Version stamp embedded in the build-time MCP manifest JSON. Runtime loaders
+ * refuse manifests whose `version` does not match this constant.
+ */
+export const MCP_MANIFEST_VERSION = 1 as const;
+
+/**
+ * One tool entry inside the build-time MCP manifest JSON.
+ *
+ * The renderer pre-merges descriptions, enriches the input schema with per-field
+ * `description` text, and synthesizes an `outputSchema` from `resultFields[]` so the
+ * runtime only has to do map lookups.
+ */
+export interface McpManifestToolEntry {
+  /**
+   * Merged tool description: `entry.description` joined with `entry.paramsTypeDescription`.
+   * Omitted when both source fields are absent.
+   */
+  readonly description?: string;
+  /**
+   * JSON Schema produced from the params validator and enriched with `paramsFields[]` descriptions.
+   * Omitted when neither validator nor fields produced a schema.
+   */
+  readonly inputSchema?: object;
+  /**
+   * JSON Schema synthesized from `resultFields[]` / `resultTypeDescription`. Omitted when both absent.
+   */
+  readonly outputSchema?: object;
+}
+
+/**
+ * Build-time MCP manifest JSON shape consumed by the runtime MCP module's optional manifest loader.
+ *
+ * `tools` is keyed by {@link mcpManifestKey} so the runtime can do O(1) lookups per registered tool.
+ */
+export interface McpManifest {
+  readonly version: typeof MCP_MANIFEST_VERSION;
+  /**
+   * ISO-8601 timestamp captured when the manifest was rendered. Useful for diagnostics.
+   */
+  readonly generatedAt: string;
+  readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
+}
+
+/**
+ * Builds the canonical MCP manifest key for a (modelType, callType, specifier) triple.
+ *
+ * The default-specifier entry collapses to `_` so the runtime can compose the same
+ * key from its dispatch coordinates without first checking whether the handler is
+ * behind a specifier router.
+ *
+ * @param modelType - The Firestore model type (e.g., `guestbook`).
+ * @param call - The call type / verb (e.g., `query`).
+ * @param specifier - The specifier key, or `_` / undefined for the default entry.
+ */
+export function mcpManifestKey(modelType: string, call: string, specifier?: string | null): string {
+  const isDefault = specifier == null || specifier === '_';
+  return isDefault ? `${modelType}.${call}._` : `${modelType}.${call}.${specifier}`;
+}
