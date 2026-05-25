@@ -1,5 +1,5 @@
 import type * as admin from 'firebase-admin';
-import { timingSafeEqual } from 'crypto';
+import { timingSafeEqual } from 'node:crypto';
 import {
   type FirebaseAuthContextInfo,
   type FirebaseAuthDetails,

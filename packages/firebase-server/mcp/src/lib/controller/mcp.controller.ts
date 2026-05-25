@@ -29,7 +29,7 @@ export class McpController {
     try {
       await handleStreamableHttpMcpRequest(req, res, server);
     } catch (error) {
-      this._logger.error('MCP request handling failed', error as Error);
+      this._logger.error('MCP request handling failed', error);
 
       if (!res.headersSent) {
         res.status(500).json({ statusCode: 500, message: 'MCP request handling failed' });

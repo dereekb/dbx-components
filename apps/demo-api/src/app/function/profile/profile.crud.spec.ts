@@ -1,41 +1,33 @@
 import { describeCallableRequestTest } from '@dereekb/firebase-server/test';
 import { DBX_FIREBASE_SERVER_PASSWORD_RESET_INVALID_CODE_ERROR_CODE, FIREBASE_SERVER_AUTH_CLAIMS_RESET_EXPIRES_AT_KEY, FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY, onCallUpdateModelParams } from '@dereekb/firebase';
 import { type ServerError } from '@dereekb/util';
+import { captureRejection } from '@dereekb/util/test';
 import { profileIdentity, type ResetProfilePasswordParams } from 'demo-firebase';
 import { HttpsError } from 'firebase-functions/https';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoProfileContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
 
+function expectInvalidCodeError(error: unknown): void {
+  expect(error).toBeInstanceOf(HttpsError);
+  const { code } = (error as HttpsError).details as ServerError;
+  expect(code).toBe(DBX_FIREBASE_SERVER_PASSWORD_RESET_INVALID_CODE_ERROR_CODE);
+}
+
 demoApiFunctionContextFactory((f) => {
   describeCallableRequestTest('profile.crud', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
     describe('Profile', () => {
       demoAuthorizedUserAdminContext({ f, addContactInfo: true }, (u) => {
+        async function callResetPassword(params: ResetProfilePasswordParams) {
+          return u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(profileIdentity, params, 'resetPassword'));
+        }
+
         demoProfileContext({ f, u }, (_p) => {
           describe('resetPassword', () => {
-            async function callResetPassword(params: ResetProfilePasswordParams) {
-              return u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(profileIdentity, params, 'resetPassword'));
-            }
-
             async function beginAndLoadCode(): Promise<string> {
               await callResetPassword({ requestReset: true });
               const claims = await f.authService.userContext(u.uid).loadResetPasswordClaims();
               expect(claims?.resetPassword).toBeDefined();
               return claims!.resetPassword;
-            }
-
-            async function captureRejection<T>(fn: () => Promise<T>): Promise<unknown> {
-              try {
-                await fn();
-              } catch (e) {
-                return e;
-              }
-              throw new Error('expected the call to reject');
-            }
-
-            function expectInvalidCodeError(error: unknown): void {
-              expect(error).toBeInstanceOf(HttpsError);
-              const { code } = (error as HttpsError).details as ServerError;
-              expect(code).toBe(DBX_FIREBASE_SERVER_PASSWORD_RESET_INVALID_CODE_ERROR_CODE);
             }
 
             it('should begin a password reset and then complete it with the generated code', async () => {

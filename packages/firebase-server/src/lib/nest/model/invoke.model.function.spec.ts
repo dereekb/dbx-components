@@ -65,7 +65,7 @@ describe('onCallInvokeModel', () => {
       })
     } as OnCallInvokeModelMap<any>);
 
-    const result = await invokeFn(buildDispatchRequest('storageFile', 'recomputeChecksums', { foo: 1 }) as any);
+    const result = await invokeFn(buildDispatchRequest('storageFile', 'recomputeChecksums', { foo: 1 }));
 
     expect(result).toEqual({ ran: true });
     expect(received).toBeDefined();
@@ -83,7 +83,7 @@ describe('onCallInvokeModel', () => {
     let caught: any;
 
     try {
-      invokeFn(buildDispatchRequest('nonexistent', undefined, {}) as any);
+      invokeFn(buildDispatchRequest('nonexistent', undefined, {}));
     } catch (e) {
       caught = e;
     }

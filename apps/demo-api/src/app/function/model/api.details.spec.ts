@@ -23,7 +23,7 @@ describe('demo api.details integration', () => {
     });
 
     it('should surface the demo guestbookEntry invoke handler in the real demoCallModelFn _apiDetails tree', () => {
-      const details = getModelApiDetails(demoCallModelFn as unknown as OnCallApiDetailsRef);
+      const details = getModelApiDetails(demoCallModelFn);
       expect(details).toBeDefined();
       expect(details!.models['guestbookEntry']).toBeDefined();
       expect(details!.models['guestbookEntry'].calls.invoke).toBeDefined();
@@ -37,21 +37,21 @@ describe('demo api.details integration', () => {
     // simulating the Phase 5 retrofit using real ArkType param types.
 
     const demoCreateMap: DemoOnCallCreateModelMap = {
-      guestbook: withApiDetails({ inputType: createGuestbookParamsType, mcp: { description: 'Create a new guestbook' }, fn: async () => ({ modelKeys: [] }) }) as any,
+      guestbook: withApiDetails({ inputType: createGuestbookParamsType, fn: async () => ({ modelKeys: [] }) }) as any,
       // Demonstrates withApiDetails({ optionalAuth: true }) replacing optionalAuthContext
       notification: onCallSpecifierHandler({
-        _: withApiDetails({ optionalAuth: true, mcp: { description: 'Create a notification (no auth required)' }, fn: async () => ({ modelKeys: [] }) }) as any
+        _: withApiDetails({ optionalAuth: true, fn: async () => ({ modelKeys: [] }) }) as any
       })
     };
 
     const demoUpdateMap: DemoOnCallUpdateModelMap = {
       guestbookEntry: withApiDetails({ inputType: insertGuestbookEntryParamsType, fn: async () => undefined }) as any,
       guestbook: onCallSpecifierHandler({
-        subscribeToNotifications: withApiDetails({ inputType: subscribeToGuestbookNotificationsParamsType, mcp: { description: 'Subscribe user to guestbook notifications' }, fn: async () => undefined }) as any
+        subscribeToNotifications: withApiDetails({ inputType: subscribeToGuestbookNotificationsParamsType, fn: async () => undefined }) as any
       }),
       profile: onCallSpecifierHandler({
         _: withApiDetails({ inputType: updateProfileParamsType, fn: async () => undefined }) as any,
-        username: withApiDetails({ inputType: setProfileUsernameParamsType, mcp: { description: 'Set profile username' }, fn: async () => undefined }) as any
+        username: withApiDetails({ inputType: setProfileUsernameParamsType, fn: async () => undefined }) as any
       })
     };
 
@@ -91,7 +91,6 @@ describe('demo api.details integration', () => {
 
         const createDetails = guestbook.calls.create!.specifiers['_']!;
         expect(createDetails.inputType).toBe(createGuestbookParamsType);
-        expect(createDetails.mcp?.description).toBe('Create a new guestbook');
       });
 
       it('should have update call with specifier for subscribeToNotifications', () => {
@@ -102,7 +101,6 @@ describe('demo api.details integration', () => {
         const updateSpecifiers = guestbook.calls.update!.specifiers;
         expect(updateSpecifiers['subscribeToNotifications']).toBeDefined();
         expect(updateSpecifiers['subscribeToNotifications']!.inputType).toBe(subscribeToGuestbookNotificationsParamsType);
-        expect(updateSpecifiers['subscribeToNotifications']!.mcp?.description).toBe('Subscribe user to guestbook notifications');
       });
 
       it('should have the ArkType inputType reference accessible on create', () => {
@@ -143,7 +141,6 @@ describe('demo api.details integration', () => {
         expect(updateSpecifiers['_']!.inputType).toBe(updateProfileParamsType);
         expect(updateSpecifiers['username']).toBeDefined();
         expect(updateSpecifiers['username']!.inputType).toBe(setProfileUsernameParamsType);
-        expect(updateSpecifiers['username']!.mcp?.description).toBe('Set profile username');
       });
 
       it('should have the ArkType inputType reference accessible on the username specifier', () => {

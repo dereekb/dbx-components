@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type McpToolResponseContent, type OnCallModelFunctionApiDetails } from '@dereekb/firebase-server';
 
@@ -64,7 +65,7 @@ function stringifyResult(result: unknown): string {
     try {
       text = JSON.stringify(result, null, 2);
     } catch {
-      text = String(result);
+      text = inspect(result, { depth: 4 });
     }
   }
 
