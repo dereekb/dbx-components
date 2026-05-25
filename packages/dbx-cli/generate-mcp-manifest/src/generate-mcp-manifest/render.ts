@@ -67,14 +67,14 @@ function buildDescription(entry: CliApiManifestEntry): string | undefined {
 
 function buildInputSchema(entry: CliApiManifestEntry): JsonObject | undefined {
   const validator = entry.paramsValidator;
-  const baseSchema = validator != null ? safeToJsonSchema(validator) : undefined;
+  const baseSchema = validator == null ? undefined : safeToJsonSchema(validator);
   const hasFields = entry.paramsFields != null && entry.paramsFields.length > 0;
 
   if (baseSchema == null && !hasFields) {
     return undefined;
   }
 
-  const schema: JsonObject = baseSchema != null ? cloneJsonObject(baseSchema) : { type: 'object' };
+  const schema: JsonObject = baseSchema == null ? { type: 'object' } : cloneJsonObject(baseSchema);
   const properties = ensureProperties(schema);
 
   if (entry.paramsFields != null) {
@@ -103,7 +103,7 @@ function buildOutputSchema(entry: CliApiManifestEntry): JsonObject | undefined {
   if (hasFields) {
     const properties: JsonObject = {};
 
-    for (const field of entry.resultFields!) {
+    for (const field of entry.resultFields) {
       properties[field.name] = buildPropertyFromField(field);
     }
 
@@ -193,12 +193,12 @@ function inferJsonSchemaType(typeText: string | undefined): string | undefined {
   return result;
 }
 
-function safeToJsonSchema(validator: CliApiManifestEntry['paramsValidator']): JsonObject | undefined {
+function safeToJsonSchema(validator: NonNullable<CliApiManifestEntry['paramsValidator']>): JsonObject | undefined {
   let result: JsonObject | undefined;
 
   try {
-    const schema = validator!.toJsonSchema(ARKTYPE_FALLBACK_OPTIONS as never);
-    result = schema as unknown as JsonObject;
+    const schema = validator.toJsonSchema(ARKTYPE_FALLBACK_OPTIONS);
+    result = schema as JsonObject;
   } catch {
     result = undefined;
   }
@@ -207,5 +207,5 @@ function safeToJsonSchema(validator: CliApiManifestEntry['paramsValidator']): Js
 }
 
 function cloneJsonObject(value: JsonObject): JsonObject {
-  return JSON.parse(JSON.stringify(value)) as JsonObject;
+  return structuredClone(value);
 }

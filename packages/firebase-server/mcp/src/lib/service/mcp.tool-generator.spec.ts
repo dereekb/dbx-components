@@ -12,6 +12,40 @@ function makeSchemaRef(name: string, throws?: boolean) {
   };
 }
 
+function makeApiDetailsWithMcp(callType: string, mcp: object | undefined): ModelApiDetailsResult {
+  return {
+    models: {
+      widget: {
+        calls: {
+          [callType]: {
+            isSpecifier: false,
+            specifiers: {
+              _: { inputType: makeSchemaRef('WidgetParams'), mcp }
+            }
+          }
+        }
+      }
+    }
+  };
+}
+
+function makeOneEntry(mcp?: object): ModelApiDetailsResult {
+  return {
+    models: {
+      guestbook: {
+        calls: {
+          query: {
+            isSpecifier: false,
+            specifiers: {
+              _: { inputType: makeSchemaRef('QueryGuestbooksParams'), mcp }
+            }
+          }
+        }
+      }
+    }
+  };
+}
+
 describe('buildMcpToolName', () => {
   it('omits the specifier for the default `_` entry', () => {
     expect(buildMcpToolName('guestbook', 'create')).toBe('guestbook-create');
@@ -149,23 +183,6 @@ describe('generateMcpToolDefinitions', () => {
 });
 
 describe('generateMcpToolDefinitions filter metadata', () => {
-  function makeApiDetailsWithMcp(callType: string, mcp: object | undefined): ModelApiDetailsResult {
-    return {
-      models: {
-        widget: {
-          calls: {
-            [callType]: {
-              isSpecifier: false,
-              specifiers: {
-                _: { inputType: makeSchemaRef('WidgetParams'), mcp }
-              }
-            }
-          }
-        }
-      }
-    };
-  }
-
   it('classifies all three visibility forms at boot', () => {
     const fn = (_ctx: McpVisibilityContext) => true;
     const rule = { requiredRoles: ['admin'] };
@@ -258,48 +275,31 @@ describe('generateMcpToolDefinitions filter metadata', () => {
 });
 
 describe('generateMcpToolDefinitions manifest integration', () => {
-  function makeOneEntry(mcp?: object): ModelApiDetailsResult {
-    return {
-      models: {
-        guestbook: {
-          calls: {
-            query: {
-              isSpecifier: false,
-              specifiers: {
-                _: { inputType: makeSchemaRef('QueryGuestbooksParams'), mcp }
-              }
-            }
-          }
-        }
-      }
-    };
-  }
-
   it('resolves description in order: manifest > default', () => {
     const manifest = new Map([['guestbook.query._', { description: 'manifest description' }]]);
 
-    const withManifest = generateMcpToolDefinitions(makeOneEntry(undefined), undefined, manifest);
+    const withManifest = generateMcpToolDefinitions(makeOneEntry(), undefined, manifest);
     expect(withManifest.tools[0].description).toBe('manifest description');
 
-    const noManifest = generateMcpToolDefinitions(makeOneEntry(undefined));
+    const noManifest = generateMcpToolDefinitions(makeOneEntry());
     expect(noManifest.tools[0].description).toContain('"query"');
   });
 
   it('prefers manifest inputSchema over the ArkType-derived schema', () => {
     const manifest = new Map([['guestbook.query._', { inputSchema: { type: 'object', title: 'FromManifest' } }]]);
-    const result = generateMcpToolDefinitions(makeOneEntry(undefined), undefined, manifest);
+    const result = generateMcpToolDefinitions(makeOneEntry(), undefined, manifest);
     expect(result.tools[0].inputSchema).toEqual({ type: 'object', title: 'FromManifest' });
   });
 
   it('attaches outputSchema from the manifest entry', () => {
     const outputSchema = { type: 'object', properties: { count: { type: 'number' } } };
     const manifest = new Map([['guestbook.query._', { outputSchema }]]);
-    const result = generateMcpToolDefinitions(makeOneEntry(undefined), undefined, manifest);
+    const result = generateMcpToolDefinitions(makeOneEntry(), undefined, manifest);
     expect(result.tools[0].outputSchema).toEqual(outputSchema);
   });
 
   it('leaves outputSchema undefined when no manifest entry exists', () => {
-    const result = generateMcpToolDefinitions(makeOneEntry(undefined));
+    const result = generateMcpToolDefinitions(makeOneEntry());
     expect(result.tools[0].outputSchema).toBeUndefined();
   });
 });

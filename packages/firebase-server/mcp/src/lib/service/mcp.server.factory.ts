@@ -142,11 +142,11 @@ export class McpServerFactoryService {
 
       if (path == null) {
         this._cachedManifest = undefined;
-      } else if (!existsSync(path)) {
+      } else if (existsSync(path)) {
+        this._cachedManifest = this._parseManifestFile(path);
+      } else {
         this._logger.warn(`MCP manifest path is set but the file is missing: ${path}. Falling back to runtime defaults.`);
         this._cachedManifest = undefined;
-      } else {
-        this._cachedManifest = this._parseManifestFile(path);
       }
     }
 
@@ -160,10 +160,7 @@ export class McpServerFactoryService {
       const raw = readFileSync(path, 'utf8');
       const parsed = JSON.parse(raw) as McpManifest;
 
-      if (parsed.version !== MCP_MANIFEST_VERSION) {
-        this._logger.warn(`MCP manifest version mismatch at ${path}: got ${String(parsed.version)}, expected ${MCP_MANIFEST_VERSION}. Falling back to runtime defaults.`);
-        result = undefined;
-      } else {
+      if (parsed.version === MCP_MANIFEST_VERSION) {
         const map = new Map<string, McpManifestToolEntry>();
 
         for (const [key, entry] of Object.entries(parsed.tools)) {
@@ -174,6 +171,9 @@ export class McpServerFactoryService {
 
         this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries.`);
         result = map;
+      } else {
+        this._logger.warn(`MCP manifest version mismatch at ${path}: got ${String(parsed.version)}, expected ${MCP_MANIFEST_VERSION}. Falling back to runtime defaults.`);
+        result = undefined;
       }
     } catch (error) {
       this._logger.warn(`Failed to read MCP manifest at ${path}: ${(error as Error).message}. Falling back to runtime defaults.`);

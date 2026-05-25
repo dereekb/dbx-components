@@ -1,4 +1,4 @@
-import { type CliApiManifest, type CliApiManifestEntry, MCP_MANIFEST_VERSION } from '@dereekb/dbx-cli';
+import { type CliApiManifestEntry, MCP_MANIFEST_VERSION } from '@dereekb/dbx-cli';
 import { renderMcpManifest } from './render';
 
 const FIXED_NOW = new Date('2026-05-25T00:00:00.000Z');
@@ -14,7 +14,7 @@ function makeEntry(overrides: Partial<CliApiManifestEntry> = {}): CliApiManifest
 }
 
 function render(entries: ReadonlyArray<CliApiManifestEntry>) {
-  return renderMcpManifest(entries as CliApiManifest, FIXED_NOW);
+  return renderMcpManifest(entries, FIXED_NOW);
 }
 
 describe('renderMcpManifest', () => {

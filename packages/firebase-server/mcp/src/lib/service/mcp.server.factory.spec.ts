@@ -16,6 +16,16 @@ function makeSchemaRef(name: string) {
   };
 }
 
+function makeManifestTempDir(): string {
+  return mkdtempSync(join(tmpdir(), 'mcp-manifest-'));
+}
+
+function writeManifest(content: object): string {
+  const path = join(makeManifestTempDir(), 'mcp.manifest.json');
+  writeFileSync(path, JSON.stringify(content));
+  return path;
+}
+
 function makeMcpConfig(overrides: Partial<McpModuleConfig> = {}): McpModuleConfig {
   return {
     oidcIssuer: 'https://example.test/oidc',
@@ -23,7 +33,7 @@ function makeMcpConfig(overrides: Partial<McpModuleConfig> = {}): McpModuleConfi
     serverName: 'test-mcp',
     serverVersion: '0.0.1',
     ...overrides
-  } as McpModuleConfig;
+  };
 }
 
 function makeDispatchService(apiDetails: ModelApiDetailsResult, dispatch: (params: OnCallTypedModelParams) => unknown) {
@@ -55,7 +65,7 @@ function makeApiDetails(spec: ReadonlyArray<{ model: string; call: string; speci
     callEntry.specifiers[key] = { inputType: makeSchemaRef(`${entry.model}-${entry.call}-${key}`), mcp: entry.mcp };
   }
 
-  return { models } as ModelApiDetailsResult;
+  return { models };
 }
 
 function oidcAuth(scopes: string, roles?: AuthRoleSet): FirebaseServerAuthData {
@@ -282,16 +292,9 @@ describe('McpServerFactoryService readOnly mode', () => {
 });
 
 describe('McpServerFactoryService manifest loader', () => {
-  function writeManifest(content: object): string {
-    const dir = mkdtempSync(join(tmpdir(), 'mcp-manifest-'));
-    const path = join(dir, 'mcp.manifest.json');
-    writeFileSync(path, JSON.stringify(content));
-    return path;
-  }
-
   it('warns and falls back when mcpManifestPath points at a missing file', async () => {
     const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: join(tmpdir(), 'mcp-manifest-missing', 'manifest.json') } });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: join(makeManifestTempDir(), 'missing-manifest.json') } });
 
     try {
       const tools = await listTools(factory);

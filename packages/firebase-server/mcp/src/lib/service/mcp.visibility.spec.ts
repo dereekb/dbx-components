@@ -3,7 +3,7 @@ import { type McpVisibilityContext } from '@dereekb/firebase-server';
 
 describe('classifyVisibility', () => {
   it('treats undefined as always-visible', () => {
-    expect(classifyVisibility(undefined).visibilityKind).toBe('always');
+    expect(classifyVisibility().visibilityKind).toBe('always');
   });
 
   it('treats true as always-visible', () => {
