@@ -70,6 +70,7 @@
  * | dbx_route_tree                      | Discovery     | "What states does this app expose?"                    |
  * | dbx_route_lookup                    | Documentation | "What's the route definition for X?"                   |
  * | dbx_route_search                    | Discovery     | "Where do we have routes mentioning X?"                |
+ * | dbx_route_resolve_url               | Resolution    | "What state and component owns this dev-server URL?"   |
  * | dbx_filter_lookup                   | Documentation | "Tell me about filter directive / preset X"            |
  * | dbx_filter_scaffold                 | Generation    | "Scaffold a filter source + presets for model X"       |
  * | dbx_pipe_lookup                     | Documentation | "Tell me about Angular pipe X"                         |
@@ -157,6 +158,7 @@ import { ACTION_SCAFFOLD_TOOL } from './action-scaffold.tool.js';
 import { ROUTE_TREE_TOOL } from './route-tree.tool.js';
 import { ROUTE_LOOKUP_TOOL } from './route-lookup.tool.js';
 import { ROUTE_SEARCH_TOOL } from './route-search.tool.js';
+import { ROUTE_RESOLVE_URL_TOOL } from './route-resolve-url.tool.js';
 import { createLookupFilterTool } from './lookup-filter.tool.js';
 import { FILTER_SCAFFOLD_TOOL } from './filter-scaffold.tool.js';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
@@ -264,6 +266,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   ROUTE_TREE_TOOL,
   ROUTE_LOOKUP_TOOL,
   ROUTE_SEARCH_TOOL,
+  ROUTE_RESOLVE_URL_TOOL,
   // filter
   FILTER_SCAFFOLD_TOOL,
   // artifact (cross-domain dispatchers)

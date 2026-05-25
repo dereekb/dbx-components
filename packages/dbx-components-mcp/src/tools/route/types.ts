@@ -76,6 +76,13 @@ export interface RouteNode {
    */
   readonly file: string;
   readonly line: number;
+  /**
+   * Identifier of the `export const` (or `const`) the state object literal is
+   * assigned to, when the state was declared as `const FOO: Ng2StateDeclaration = { ... }`.
+   * `undefined` for inline literals inside a `STATES` array or
+   * `provideStates({ states: [...] })` call.
+   */
+  readonly declaredAs: string | undefined;
 }
 
 /**
