@@ -87,7 +87,7 @@ export class McpServerFactoryService {
       const apiDetails = this.dispatchService.getApiDetails();
 
       if (apiDetails == null) {
-        result = { tools: [], skipped: [] };
+        result = { tools: [], neverVisibleTools: [], skipped: [] };
       } else {
         result = generateMcpToolDefinitions(apiDetails);
       }

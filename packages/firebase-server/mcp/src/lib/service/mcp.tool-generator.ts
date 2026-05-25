@@ -1,5 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type ModelApiDetailsResult, type ModelCallApiDetails, type OnCallModelFunctionApiDetails } from '@dereekb/firebase-server';
+import { classifyVisibility, resolveEffectiveReadOnly, resolveRequiredScope, type McpToolFilterMetadata } from './mcp.visibility';
 
 /**
  * A single MCP tool definition generated from one (modelType, callType, specifier) triple.
@@ -39,6 +40,10 @@ export interface McpToolDefinition {
    * The controller uses these to build the `OnCallTypedModelParams` envelope at call time.
    */
   readonly dispatch: McpToolDispatchTarget;
+  /**
+   * Precomputed boot-time filter metadata consumed by the per-request `tools/list` filter.
+   */
+  readonly filterMetadata: McpToolFilterMetadata;
 }
 
 /**
@@ -102,7 +107,16 @@ export interface McpToolGenerationSkip {
  * Aggregated output of {@link generateMcpToolDefinitions}.
  */
 export interface McpToolGenerationResult {
+  /**
+   * Tools that may be visible on `tools/list`, subject to the per-request filter.
+   * Excludes anything classified as `'never'` visible at boot.
+   */
   readonly tools: ReadonlyArray<McpToolDefinition>;
+  /**
+   * Tools whose `visibility` was classified as `'never'` at boot.
+   * Partitioned out so the per-request loop never touches them.
+   */
+  readonly neverVisibleTools: ReadonlyArray<McpToolDefinition>;
   /**
    * Tools that could not be generated (no inputType, or `toJsonSchema()` threw).
    * Surfaced so the caller can log them at startup.
@@ -155,6 +169,7 @@ export function buildDefaultMcpToolDescription(modelType: string, callType: stri
  */
 export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, options: JsonSchemaGenerationOptions = DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS): McpToolGenerationResult {
   const tools: McpToolDefinition[] = [];
+  const neverVisibleTools: McpToolDefinition[] = [];
   const skipped: McpToolGenerationSkip[] = [];
 
   for (const [modelType, modelEntry] of Object.entries(apiDetails.models)) {
@@ -163,15 +178,15 @@ export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, op
         continue;
       }
 
-      generateToolsForModelCall(modelType, callType, callDetails, options, tools, skipped);
+      generateToolsForModelCall(modelType, callType, callDetails, options, tools, neverVisibleTools, skipped);
     }
   }
 
-  return { tools, skipped };
+  return { tools, neverVisibleTools, skipped };
 }
 
 // eslint-disable-next-line @typescript-eslint/max-params
-function generateToolsForModelCall(modelType: string, callType: string, callDetails: ModelCallApiDetails, options: JsonSchemaGenerationOptions, outTools: McpToolDefinition[], outSkipped: McpToolGenerationSkip[]): void {
+function generateToolsForModelCall(modelType: string, callType: string, callDetails: ModelCallApiDetails, options: JsonSchemaGenerationOptions, outTools: McpToolDefinition[], outNeverVisibleTools: McpToolDefinition[], outSkipped: McpToolGenerationSkip[]): void {
   for (const [specifierKey, handlerDetails] of Object.entries(callDetails.specifiers)) {
     if (handlerDetails == null) {
       continue;
@@ -180,7 +195,7 @@ function generateToolsForModelCall(modelType: string, callType: string, callDeta
     const dispatch: McpToolDispatchTarget = {
       call: callType,
       modelType,
-      specifier: callDetails.isSpecifier && specifierKey !== DEFAULT_SPECIFIER_KEY ? specifierKey : callDetails.isSpecifier ? specifierKey : undefined
+      specifier: callDetails.isSpecifier ? specifierKey : undefined
     };
 
     const customName = handlerDetails.mcp?.name;
@@ -201,6 +216,21 @@ function generateToolsForModelCall(modelType: string, callType: string, callDeta
       continue;
     }
 
-    outTools.push({ name, description, inputSchema, details: handlerDetails, dispatch });
+    const classified = classifyVisibility(handlerDetails.mcp?.visibility);
+    const filterMetadata: McpToolFilterMetadata = {
+      requiredScope: resolveRequiredScope(callType) ?? undefined,
+      visibilityKind: classified.visibilityKind,
+      rule: classified.rule,
+      visibilityFn: classified.visibilityFn,
+      effectiveReadOnly: resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType)
+    };
+
+    const definition: McpToolDefinition = { name, description, inputSchema, details: handlerDetails, dispatch, filterMetadata };
+
+    if (filterMetadata.visibilityKind === 'never') {
+      outNeverVisibleTools.push(definition);
+    } else {
+      outTools.push(definition);
+    }
   }
 }
