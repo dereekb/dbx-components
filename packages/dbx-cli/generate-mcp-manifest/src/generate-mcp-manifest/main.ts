@@ -28,7 +28,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { createJiti } from 'jiti';
 
-import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';
+import { type AuthRegistry, type CliApiManifest, type CliModelManifest, loadAuthRegistry } from '@dereekb/dbx-cli';
 import { renderMcpManifest } from './render';
 
 interface LoadedManifest {
@@ -39,6 +39,8 @@ interface LoadedManifest {
 interface Flags {
   readonly input: string | undefined;
   readonly output: string | undefined;
+  readonly app: string | undefined;
+  readonly claimsInputs: readonly string[];
   readonly regenerateInput: boolean;
 }
 
@@ -62,7 +64,8 @@ async function main(): Promise<void> {
   }
 
   const loaded = await loadManifest(inputPath);
-  const rendered = renderMcpManifest(loaded);
+  const auth = await maybeLoadAuth(flags);
+  const rendered = renderMcpManifest({ ...loaded, ...(auth == null ? {} : { auth }) });
   const serialized = `${JSON.stringify(rendered, null, 2)}\n`;
 
   ensureOutputDir(dirname(outputPath));
@@ -71,7 +74,26 @@ async function main(): Promise<void> {
   renameSync(tmpPath, outputPath);
 
   const modelCount = rendered.models?.length ?? 0;
-  console.log(`[wrote] ${relative(WORKSPACE_ROOT, outputPath)} — ${Object.keys(rendered.tools).length} tools, ${modelCount} models`);
+  const authCount = rendered.auth?.claims.length ?? 0;
+  console.log(`[wrote] ${relative(WORKSPACE_ROOT, outputPath)} — ${Object.keys(rendered.tools).length} tools, ${modelCount} models, ${authCount} auth claims`);
+}
+
+async function maybeLoadAuth(flags: Flags): Promise<{ readonly registry: AuthRegistry; readonly app: string } | undefined> {
+  if (flags.app == null || flags.claimsInputs.length === 0) {
+    return undefined;
+  }
+
+  const extraFiles = flags.claimsInputs.map((p) => relative(WORKSPACE_ROOT, resolveWorkspacePath(p)));
+  const result = await loadAuthRegistry({ cwd: WORKSPACE_ROOT, extraFiles, skipDiscovery: true });
+
+  for (const warning of result.fileWarnings) {
+    console.error(`[generate-mcp-manifest] auth file warning (${warning.kind}): ${warning.relPath} — ${warning.error}`);
+  }
+  for (const warning of result.extractWarnings) {
+    console.error(`[generate-mcp-manifest] auth extract warning: ${JSON.stringify(warning)}`);
+  }
+
+  return { registry: result.registry, app: flags.app };
 }
 
 async function loadManifest(path: string): Promise<LoadedManifest> {
@@ -126,6 +148,8 @@ function resolveWorkspacePath(value: string): string {
 function parseFlags(argv: readonly string[]): Flags {
   let input: string | undefined;
   let output: string | undefined;
+  let app: string | undefined;
+  const claimsInputs: string[] = [];
   let regenerateInput = false;
 
   for (const arg of argv) {
@@ -135,10 +159,14 @@ function parseFlags(argv: readonly string[]): Flags {
       input = arg.slice('--input='.length);
     } else if (arg.startsWith('--output=')) {
       output = arg.slice('--output='.length);
+    } else if (arg.startsWith('--app=')) {
+      app = arg.slice('--app='.length);
+    } else if (arg.startsWith('--claims-input=')) {
+      claimsInputs.push(arg.slice('--claims-input='.length));
     }
   }
 
-  return { input, output, regenerateInput };
+  return { input, output, app, claimsInputs, regenerateInput };
 }
 
 function printUsageAndExit(): void {
@@ -154,7 +182,11 @@ Required flags:
   --output=<path>            Path to the MCP manifest JSON to write (workspace-relative ok).
 
 Optional:
-  --regenerate-input         Reserved for a future revision.`);
+  --regenerate-input         Reserved for a future revision.
+  --app=<slug>               Host app slug whose auth catalog to project (e.g. demo-api).
+                              When set alongside --claims-input, emits an \`auth\` section.
+  --claims-input=<path>      Path to a claims.ts module. Repeatable. Skips workspace
+                              discovery — only the explicit paths are scanned.`);
   process.exit(1);
 }
 

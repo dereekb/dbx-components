@@ -246,10 +246,59 @@ export interface McpManifestModelEntry {
 }
 
 /**
+ * One auth claim entry in the pre-rendered MCP manifest JSON. Powers the
+ * runtime `whoami` tool. Source paths and line numbers are stripped — only
+ * the catalog-facing fields survive.
+ */
+export interface McpManifestAuthClaim {
+  readonly key: string;
+  readonly description: string;
+  readonly type: string;
+  readonly app?: string;
+  readonly interfaceName?: string;
+  readonly source: 'system' | 'app';
+  readonly mapping: {
+    readonly roles: readonly string[];
+    readonly inverse: boolean;
+    readonly inverseMode?: 'any' | 'all';
+    readonly claimValue?: string | number | boolean;
+    readonly customEncodeDecode: boolean;
+  };
+  readonly tags: readonly string[];
+}
+
+/**
+ * One auth app entry in the pre-rendered MCP manifest JSON.
+ *
+ * `auth.app` denotes the manifest's primary app (the host that emitted the
+ * manifest). `auth.apps` carries the full list, which may include the primary
+ * plus inherited apps (e.g. `storageFile-upload-user`).
+ */
+export interface McpManifestAuthApp {
+  readonly app: string;
+  readonly claimsInterfaceName: string;
+  readonly serviceConstName: string;
+  readonly claimKeys: readonly string[];
+  readonly scopes: readonly string[];
+  readonly description?: string;
+}
+
+/**
+ * Auth section of the pre-rendered MCP manifest JSON. Optional — runtimes
+ * built before this section landed simply skip registering whoami.
+ */
+export interface McpManifestAuth {
+  readonly app?: McpManifestAuthApp;
+  readonly apps: readonly McpManifestAuthApp[];
+  readonly claims: readonly McpManifestAuthClaim[];
+}
+
+/**
  * Build-time MCP manifest JSON shape consumed by the runtime MCP module's optional manifest loader.
  *
  * `tools` is keyed by {@link mcpManifestKey} so the runtime can do O(1) lookups per registered tool.
  * `models` is optional — the runtime skips the catalog-introspection tools when missing.
+ * `auth` is optional — drives the runtime `whoami` tool.
  */
 export interface McpManifest {
   readonly version: typeof MCP_MANIFEST_VERSION;
@@ -259,6 +308,7 @@ export interface McpManifest {
   readonly generatedAt: string;
   readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
   readonly models?: readonly McpManifestModelEntry[];
+  readonly auth?: McpManifestAuth;
 }
 
 /**

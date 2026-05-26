@@ -62,18 +62,72 @@ export interface McpManifestModelEntry {
 }
 
 /**
+ * One auth claim entry in the pre-rendered MCP manifest JSON.
+ *
+ * Source paths and line numbers are deliberately stripped — the `whoami`
+ * runtime tool only needs the claim key, the interface it belongs to, the
+ * roles it grants, and the human-readable description.
+ */
+export interface McpManifestAuthClaim {
+  readonly key: string;
+  readonly description: string;
+  readonly type: string;
+  readonly app?: string;
+  readonly interfaceName?: string;
+  readonly source: 'system' | 'app';
+  readonly mapping: {
+    readonly roles: readonly string[];
+    readonly inverse: boolean;
+    readonly inverseMode?: 'any' | 'all';
+    readonly claimValue?: string | number | boolean;
+    readonly customEncodeDecode: boolean;
+  };
+  readonly tags: readonly string[];
+}
+
+/**
+ * One auth app entry in the pre-rendered MCP manifest JSON.
+ *
+ * `auth.app` denotes the manifest's primary app (the host that emitted the
+ * manifest). `auth.apps` carries the full list, which may include the primary
+ * plus inherited apps (e.g. `storageFile-upload-user`).
+ */
+export interface McpManifestAuthApp {
+  readonly app: string;
+  readonly claimsInterfaceName: string;
+  readonly serviceConstName: string;
+  readonly claimKeys: readonly string[];
+  readonly scopes: readonly string[];
+  readonly description?: string;
+}
+
+/**
+ * Auth section of the pre-rendered MCP manifest JSON. Drives the built-in
+ * `whoami` static tool. Optional — runtimes that pre-date this section skip
+ * registering whoami.
+ */
+export interface McpManifestAuth {
+  readonly app?: McpManifestAuthApp;
+  readonly apps: readonly McpManifestAuthApp[];
+  readonly claims: readonly McpManifestAuthClaim[];
+}
+
+/**
  * Full MCP manifest JSON shape consumed at boot.
  *
  * The optional `models` array carries the Firestore model catalog used by the
  * built-in `model-info` / `model-decode` static tools. When absent (e.g., legacy
  * manifests rendered before model catalog support landed), the runtime skips
  * registering those tools instead of failing the boot.
+ *
+ * The optional `auth` section drives the built-in `whoami` static tool.
  */
 export interface McpManifest {
   readonly version: typeof MCP_MANIFEST_VERSION;
   readonly generatedAt: string;
   readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
   readonly models?: readonly McpManifestModelEntry[];
+  readonly auth?: McpManifestAuth;
 }
 
 /**

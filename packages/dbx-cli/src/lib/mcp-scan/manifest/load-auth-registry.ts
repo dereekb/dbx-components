@@ -51,11 +51,16 @@ export interface LoadAuthRegistryResult {
 /**
  * Input to {@link loadAuthRegistry}. `extraFiles` is reserved for tests
  * that want to inject in-memory claims modules instead of touching disk.
+ *
+ * `skipDiscovery: true` disables the workspace glob walk so only `extraFiles`
+ * are scanned. Used by build-time CLIs (e.g. `generate-mcp-manifest`) when
+ * the caller knows exactly which claims module(s) belong to their app.
  */
 export interface LoadAuthRegistryInput {
   readonly cwd: string;
   readonly readFile?: ScanReadFile;
   readonly extraFiles?: readonly string[];
+  readonly skipDiscovery?: boolean;
 }
 
 // MARK: Defaults
@@ -76,9 +81,9 @@ const SERVICE_TAG_MARKER = '@dbxAuthClaimsService';
  * @returns The merged registry plus loader/extractor diagnostics.
  */
 export async function loadAuthRegistry(input: LoadAuthRegistryInput): Promise<LoadAuthRegistryResult> {
-  const { cwd, readFile = defaultReadFile, extraFiles = [] } = input;
+  const { cwd, readFile = defaultReadFile, extraFiles = [], skipDiscovery = false } = input;
 
-  const discovered = await discoverClaimsFiles(cwd);
+  const discovered = skipDiscovery ? [] : await discoverClaimsFiles(cwd);
   const candidatePaths = mergeAndNormalisePaths(discovered, extraFiles);
 
   const fileWarnings: AuthLoaderFileWarning[] = [];

@@ -1,4 +1,4 @@
-import { type CliApiManifest, type CliApiManifestEntry, type CliApiManifestField, type CliModelField, type CliModelManifest, type CliModelManifestEntry, MCP_MANIFEST_VERSION, type McpManifest, type McpManifestModelEntry, type McpManifestModelField, type McpManifestToolEntry, mcpManifestKey } from '@dereekb/dbx-cli';
+import { type AuthAppInfo, type AuthClaimInfo, type AuthRegistry, type CliApiManifest, type CliApiManifestEntry, type CliApiManifestField, type CliModelField, type CliModelManifest, type CliModelManifestEntry, MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestAuthApp, type McpManifestAuthClaim, type McpManifestModelEntry, type McpManifestModelField, type McpManifestToolEntry, mcpManifestKey } from '@dereekb/dbx-cli';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type Type } from 'arktype';
 
@@ -18,6 +18,16 @@ export interface RenderMcpManifestInput {
    * on the output JSON for the runtime's built-in catalog tools.
    */
   readonly modelManifest?: CliModelManifest;
+  /**
+   * Optional auth registry + primary-app slug used to project the runtime
+   * `auth` section on the manifest. The renderer filters entries to the
+   * primary app's claim catalog (inherited claims like `fr` are included
+   * via the app's `claimKeys` list).
+   */
+  readonly auth?: {
+    readonly registry: AuthRegistry;
+    readonly app: string;
+  };
 }
 
 /**
@@ -44,10 +54,64 @@ export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new
   }
 
   const models = input.modelManifest != null && input.modelManifest.length > 0 ? input.modelManifest.map(projectModelEntry) : undefined;
+  const auth = input.auth != null ? projectAuthSection(input.auth.registry, input.auth.app) : undefined;
 
-  const result: McpManifest = models == null ? { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools } : { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools, models };
+  const base: { version: typeof MCP_MANIFEST_VERSION; generatedAt: string; tools: Record<string, McpManifestToolEntry> } = { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools };
+  const result: McpManifest = {
+    ...base,
+    ...(models == null ? {} : { models }),
+    ...(auth == null ? {} : { auth })
+  };
 
   return result;
+}
+
+function projectAuthSection(registry: AuthRegistry, appSlug: string): McpManifestAuth | undefined {
+  const primary = registry.findApp(appSlug);
+  if (primary == null) {
+    return undefined;
+  }
+
+  const apps: readonly McpManifestAuthApp[] = [projectAuthApp(primary)];
+  const ownedKeys = new Set(primary.claimKeys);
+  const claims = registry.claims.filter((claim) => ownedKeys.has(claim.key)).map(projectAuthClaim);
+
+  return {
+    app: apps[0],
+    apps,
+    claims
+  };
+}
+
+function projectAuthApp(info: AuthAppInfo): McpManifestAuthApp {
+  return {
+    app: info.app,
+    claimsInterfaceName: info.claimsInterfaceName,
+    serviceConstName: info.serviceConstName ?? '',
+    claimKeys: info.claimKeys,
+    scopes: info.scopes,
+    ...(info.description == null ? {} : { description: info.description })
+  };
+}
+
+function projectAuthClaim(info: AuthClaimInfo): McpManifestAuthClaim {
+  const mapping: McpManifestAuthClaim['mapping'] = {
+    roles: info.mapping.roles,
+    inverse: info.mapping.inverse,
+    customEncodeDecode: info.mapping.customEncodeDecode,
+    ...(info.mapping.inverseMode == null ? {} : { inverseMode: info.mapping.inverseMode }),
+    ...(info.mapping.claimValue == null ? {} : { claimValue: info.mapping.claimValue })
+  };
+  return {
+    key: info.key,
+    description: info.description,
+    type: info.type,
+    source: info.source,
+    mapping,
+    tags: info.tags,
+    ...(info.app == null ? {} : { app: info.app }),
+    ...(info.interfaceName == null ? {} : { interfaceName: info.interfaceName })
+  };
 }
 
 function projectModelEntry(entry: CliModelManifestEntry): McpManifestModelEntry {

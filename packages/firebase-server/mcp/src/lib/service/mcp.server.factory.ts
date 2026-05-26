@@ -8,12 +8,13 @@ import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { ModelApiCallModelDispatchService, ModelApiGetService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
-import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
+import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
+import { createWhoamiTool } from './tools/mcp.tool.whoami';
 
 /**
  * Optional per-request context passed when invoking the MCP server through a
@@ -41,6 +42,7 @@ export class McpServerFactoryService {
   private _cachedStaticTools: ReadonlyArray<McpToolDefinition> | undefined;
   private _cachedManifest: ReadonlyMap<string, McpManifestToolEntry> | undefined;
   private _cachedManifestModels: ReadonlyArray<McpManifestModelEntry> | undefined;
+  private _cachedManifestAuth: McpManifestAuth | undefined;
   private _manifestLoaded = false;
   private _loggedSkips = false;
   private _warnedMissingRoleReader = false;
@@ -163,6 +165,12 @@ export class McpServerFactoryService {
         staticTools.push(createModelInfoTool({ manifest: modelManifest }), createModelDecodeTool({ manifest: modelManifest }));
       }
 
+      const authManifest = this._cachedManifestAuth;
+
+      if (authManifest != null) {
+        staticTools.push(createWhoamiTool({ auth: authManifest, roleReader: this.roleReader }));
+      }
+
       // Guard against the auto-generated tools accidentally claiming a static tool name. The first
       // dispatch wins via Map.set order, so a collision would silently shadow one side.
       const generatedNames = new Set(this._cachedTools?.tools.map((t) => t.name) ?? []);
@@ -201,12 +209,14 @@ export class McpServerFactoryService {
       if (path == null) {
         this._cachedManifest = undefined;
         this._cachedManifestModels = undefined;
+        this._cachedManifestAuth = undefined;
       } else if (existsSync(path)) {
         this._parseManifestFile(path);
       } else {
         this._logger.warn(`MCP manifest path is set but the file is missing: ${path}. Falling back to runtime defaults.`);
         this._cachedManifest = undefined;
         this._cachedManifestModels = undefined;
+        this._cachedManifestAuth = undefined;
       }
     }
 
@@ -229,19 +239,24 @@ export class McpServerFactoryService {
 
         const models = Array.isArray(parsed.models) && parsed.models.length > 0 ? (parsed.models as ReadonlyArray<McpManifestModelEntry>) : undefined;
         const modelSuffix = models == null ? '' : `, ${models.length} model entries`;
+        const auth = parsed.auth != null && Array.isArray(parsed.auth.claims) ? (parsed.auth as McpManifestAuth) : undefined;
+        const authSuffix = auth == null ? '' : `, ${auth.claims.length} auth claim entries`;
 
-        this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries${modelSuffix}.`);
+        this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries${modelSuffix}${authSuffix}.`);
         this._cachedManifest = map;
         this._cachedManifestModels = models;
+        this._cachedManifestAuth = auth;
       } else {
         this._logger.warn(`MCP manifest version mismatch at ${path}: got ${String(parsed.version)}, expected ${MCP_MANIFEST_VERSION}. Falling back to runtime defaults.`);
         this._cachedManifest = undefined;
         this._cachedManifestModels = undefined;
+        this._cachedManifestAuth = undefined;
       }
     } catch (error) {
       this._logger.warn(`Failed to read MCP manifest at ${path}: ${(error as Error).message}. Falling back to runtime defaults.`);
       this._cachedManifest = undefined;
       this._cachedManifestModels = undefined;
+      this._cachedManifestAuth = undefined;
     }
   }
 
