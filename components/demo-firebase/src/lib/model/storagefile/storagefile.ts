@@ -1,5 +1,5 @@
 import { ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
-import { type Maybe, mergeSlashPaths, type Milliseconds, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
+import { type ContentTypeMimeType, type Maybe, mergeSlashPaths, type Milliseconds, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 import { profileIdentity } from '../profile';
 
 // MARK: User File Types
@@ -239,5 +239,105 @@ export function userLogFileStoragePath(userId: FirebaseAuthUserId, name: SlashPa
 export function userLogFileGroupIds(userId: FirebaseAuthUserId): StorageFileGroupId[] {
   return [userProfileStorageFileGroupId(userId)];
 }
+
+// MARK: Upload Policy Registry
+/**
+ * Per-purpose constraints for generating short-lived signed upload URLs.
+ *
+ * Used by the `storageFile.generateSignedUploadUrl` callModel handler to ensure
+ * the URL it signs targets a path and content-type that both `storage.rules`
+ * and the matching `StorageFileInitializeFromUploadService` initializer accept.
+ */
+export interface StorageFilePurposeUploadPolicy {
+  readonly purpose: StorageFilePurpose;
+  readonly allowedMimeTypes: readonly ContentTypeMimeType[];
+  readonly maxFileSizeBytes: number;
+  readonly buildUploadPath: (input: StorageFilePurposeUploadPolicyBuildPathInput) => SlashPath;
+  /**
+   * When true, the caller MUST provide a filename for `buildUploadPath`.
+   * When false (e.g. avatar), the path is derived solely from the uid.
+   */
+  readonly requiresFilenameInput: boolean;
+}
+
+export interface StorageFilePurposeUploadPolicyBuildPathInput {
+  readonly uid: FirebaseAuthUserId;
+  readonly filename?: Maybe<SlashPathFile>;
+}
+
+/**
+ * Soft cap for user avatar uploads. Matches the 16 MB ceiling declared in
+ * `storage.rules` for `/uploads/u/{uid}/avatar.img`.
+ */
+export const USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES = 16 * 1024 * 1024;
+
+/**
+ * Soft cap for user test file uploads.
+ */
+export const USER_TEST_FILE_UPLOADS_MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
+
+/**
+ * Allowed mime types for user test file uploads.
+ *
+ * Test files are intentionally permissive — any plain text or image content
+ * is accepted so the demo exercise covers the full upload pipeline.
+ */
+export const USER_TEST_FILE_UPLOADS_ALLOWED_FILE_TYPES = ['text/plain', 'image/jpeg', 'image/png'];
+
+/**
+ * Soft cap for user log file uploads.
+ */
+export const USER_LOG_FILE_UPLOADS_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Upload policy for {@link USER_AVATAR_PURPOSE}.
+ */
+export const USER_AVATAR_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
+  purpose: USER_AVATAR_PURPOSE,
+  allowedMimeTypes: USER_AVATAR_UPLOADS_ALLOWED_FILE_TYPES,
+  maxFileSizeBytes: USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES,
+  buildUploadPath: ({ uid }) => userAvatarUploadsFilePath(uid),
+  requiresFilenameInput: false
+};
+
+/**
+ * Upload policy for {@link USER_TEST_FILE_PURPOSE}.
+ */
+export const USER_TEST_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
+  purpose: USER_TEST_FILE_PURPOSE,
+  allowedMimeTypes: USER_TEST_FILE_UPLOADS_ALLOWED_FILE_TYPES,
+  maxFileSizeBytes: USER_TEST_FILE_UPLOADS_MAX_FILE_SIZE_BYTES,
+  buildUploadPath: ({ uid, filename }) => userTestFileUploadsFilePath(uid, filename as SlashPathFile),
+  requiresFilenameInput: true
+};
+
+/**
+ * Upload policy for {@link USER_LOG_FILE_PURPOSE}.
+ */
+export const USER_LOG_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
+  purpose: USER_LOG_FILE_PURPOSE,
+  allowedMimeTypes: USER_LOG_FILE_UPLOADS_ALLOWED_FILE_TYPES,
+  maxFileSizeBytes: USER_LOG_FILE_UPLOADS_MAX_FILE_SIZE_BYTES,
+  buildUploadPath: ({ uid, filename }) => userLogFileUploadsFilePath(uid, filename as SlashPathFile),
+  requiresFilenameInput: true
+};
+
+/**
+ * Registry of {@link StorageFilePurposeUploadPolicy} keyed by {@link StorageFilePurpose}.
+ *
+ * The signed-upload-url handler reads this map at request time. Adding a new
+ * upload-eligible purpose means appending an entry here AND updating
+ * `storage.rules` so the corresponding path is writable.
+ */
+export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: Readonly<Record<StorageFilePurpose, StorageFilePurposeUploadPolicy>> = {
+  [USER_AVATAR_PURPOSE]: USER_AVATAR_UPLOAD_POLICY,
+  [USER_TEST_FILE_PURPOSE]: USER_TEST_FILE_UPLOAD_POLICY,
+  [USER_LOG_FILE_PURPOSE]: USER_LOG_FILE_UPLOAD_POLICY
+};
+
+/**
+ * The list of {@link StorageFilePurpose} values that support signed-upload-url generation.
+ */
+export const STORAGE_FILE_PURPOSE_UPLOAD_POLICY_KEYS: readonly StorageFilePurpose[] = Object.keys(STORAGE_FILE_PURPOSE_UPLOAD_POLICIES);
 
 // MARK: System File Types

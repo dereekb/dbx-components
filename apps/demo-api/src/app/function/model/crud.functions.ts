@@ -1,4 +1,4 @@
-import { systemStateExampleread } from './../system/systemstate.read';
+import { systemStateExampleRead } from './../system/systemstate.read';
 import { guestbookCreate } from '../guestbook/guestbook.create';
 import { profileUpdate, profileUpdateCreateTestNotification, profileUpdateResetPassword, profileUpdateUsername, profileUpdateOnboard } from '../profile/profile.update';
 import { guestbookEntryInsert, guestbookEntryLike } from '../guestbook/guestbookentry.update';
@@ -18,6 +18,7 @@ import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from
 import { storageFileCreate, storageFileFromUpload, storageFileAllFromUpload } from '../storagefile/storagefile.create';
 import { storageFileDelete } from '../storagefile/storagefile.delete';
 import { storageFileDownload, storageFileDownloadMultiple } from '../storagefile/storagefile.read';
+import { storageFileGenerateSignedUploadUrl } from '../storagefile/storagefile.signed-upload-url';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
 import { guestbookEntryAllPublishedEntries } from '../guestbook/guestbookentry.invoke';
 import { profileDownloadArchive } from '../profile/profile.read';
@@ -51,11 +52,12 @@ export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
 // MARK: Read
 export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   systemState: onCallSpecifierHandler({
-    exampleread: systemStateExampleread
+    exampleread: systemStateExampleRead
   }),
   storageFile: onCallSpecifierHandler({
     download: storageFileDownload,
-    downloadMultiple: storageFileDownloadMultiple
+    downloadMultiple: storageFileDownloadMultiple,
+    generateSignedUploadUrl: storageFileGenerateSignedUploadUrl
   }),
   profile: onCallSpecifierHandler({
     downloadArchive: profileDownloadArchive
