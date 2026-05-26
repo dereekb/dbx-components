@@ -58,9 +58,9 @@ function projectModelEntry(entry: CliModelManifestEntry): McpManifestModelEntry 
     sourcePackage: entry.sourcePackage,
     sourceFile: entry.sourceFile,
     fields: entry.fields.map(projectModelField),
-    ...(entry.modelGroup != null ? { modelGroup: entry.modelGroup } : {}),
-    ...(entry.parentIdentityConst != null ? { parentIdentityConst: entry.parentIdentityConst } : {}),
-    ...(entry.description != null ? { description: entry.description } : {})
+    ...(entry.modelGroup == null ? {} : { modelGroup: entry.modelGroup }),
+    ...(entry.parentIdentityConst == null ? {} : { parentIdentityConst: entry.parentIdentityConst }),
+    ...(entry.description == null ? {} : { description: entry.description })
   };
   return projected;
 }
@@ -70,12 +70,12 @@ function projectModelField(field: CliModelField): McpManifestModelField {
     name: field.name,
     longName: field.longName,
     optional: field.optional,
-    ...(field.tsType != null ? { tsType: field.tsType } : {}),
-    ...(field.description != null ? { description: field.description } : {}),
-    ...(field.enumRef != null ? { enumRef: field.enumRef } : {}),
-    ...(field.syncFlag != null ? { syncFlag: field.syncFlag } : {}),
-    ...(field.nestedFields != null ? { nestedFields: field.nestedFields.map(projectModelField) } : {}),
-    ...(field.nestedIsArray != null ? { nestedIsArray: field.nestedIsArray } : {})
+    ...(field.tsType == null ? {} : { tsType: field.tsType }),
+    ...(field.description == null ? {} : { description: field.description }),
+    ...(field.enumRef == null ? {} : { enumRef: field.enumRef }),
+    ...(field.syncFlag == null ? {} : { syncFlag: field.syncFlag }),
+    ...(field.nestedFields == null ? {} : { nestedFields: field.nestedFields.map(projectModelField) }),
+    ...(field.nestedIsArray == null ? {} : { nestedIsArray: field.nestedIsArray })
   };
   return projected;
 }

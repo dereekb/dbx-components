@@ -192,8 +192,8 @@ function toSegment(prefix: string, id: string, entry: McpManifestModelEntry | un
         identityConst: entry.identityConst,
         sourcePackage: entry.sourcePackage,
         sourceFile: entry.sourceFile,
-        ...(entry.modelGroup != null ? { modelGroup: entry.modelGroup } : {}),
-        ...(entry.parentIdentityConst != null ? { parentIdentityConst: entry.parentIdentityConst } : {})
+        ...(entry.modelGroup == null ? {} : { modelGroup: entry.modelGroup }),
+        ...(entry.parentIdentityConst == null ? {} : { parentIdentityConst: entry.parentIdentityConst })
       }
     : { prefix, id };
   return segment;

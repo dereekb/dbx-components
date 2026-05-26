@@ -58,7 +58,7 @@ interface PendingMarker {
 function collectPendingMarkers(source: string): PendingMarker[] {
   const markers: PendingMarker[] = [];
   MIRRORS_POLICY_KEY_MARKER_REGEX.lastIndex = 0;
-  let m: RegExpExecArray | null = MIRRORS_POLICY_KEY_MARKER_REGEX.exec(source);
+  let m: Maybe<RegExpExecArray> = MIRRORS_POLICY_KEY_MARKER_REGEX.exec(source);
   while (m) {
     markers.push({ key: m[1], index: m.index, consumed: false });
     m = MIRRORS_POLICY_KEY_MARKER_REGEX.exec(source);
@@ -176,16 +176,7 @@ function handleMatchBlock(block: RawBlock, matchSegment: string, bodyOffset: num
 function recordMirroredBlock(block: RawBlock, fullPath: string, headerSourceOffset: number, scopeFunctions: Map<string, string>, markerKey: string, ctx: WalkContext): void {
   const predicate: Maybe<string> = extractAllowWritePredicate(block.body);
   const { line, column } = indexToLineColumn(ctx.source, headerSourceOffset);
-  if (!predicate) {
-    ctx.results.push({
-      mirrorsPolicyKey: markerKey,
-      matchPath: fullPath,
-      branches: [],
-      sourceLine: line,
-      sourceColumn: column,
-      unsupported: 'no allow write/create/update predicate found in match block'
-    });
-  } else {
+  if (predicate) {
     const helpers: HelperFunctionTable = { definitions: scopeFunctions };
     const reduced = evaluatePredicate(predicate, helpers);
     const entry: ParsedStorageRulesBlock = {
@@ -197,6 +188,15 @@ function recordMirroredBlock(block: RawBlock, fullPath: string, headerSourceOffs
       ...(reduced.unsupported ? { unsupported: reduced.unsupported } : {})
     };
     ctx.results.push(entry);
+  } else {
+    ctx.results.push({
+      mirrorsPolicyKey: markerKey,
+      matchPath: fullPath,
+      branches: [],
+      sourceLine: line,
+      sourceColumn: column,
+      unsupported: 'no allow write/create/update predicate found in match block'
+    });
   }
 }
 
@@ -210,7 +210,7 @@ function recordMirroredBlock(block: RawBlock, fullPath: string, headerSourceOffs
 function extractAllowWritePredicate(body: string): Maybe<string> {
   let result: Maybe<string> = null;
   ALLOW_WRITE_RE.lastIndex = 0;
-  const match: RegExpExecArray | null = ALLOW_WRITE_RE.exec(body);
+  const match: Maybe<RegExpExecArray> = ALLOW_WRITE_RE.exec(body);
   if (match) {
     result = match[1].trim();
   }

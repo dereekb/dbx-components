@@ -109,16 +109,9 @@ function evaluateNumericNode(node: AstNode, constants: ReadonlyMap<string, numbe
     if (node.type === 'Literal' && typeof node.value === 'number') {
       result = node.value;
     } else if (node.type === 'UnaryExpression' && (node.operator === '-' || node.operator === '+')) {
-      const arg: Maybe<number> = evaluateNumericNode(node.argument, constants);
-      if (typeof arg === 'number') {
-        result = node.operator === '-' ? -arg : arg;
-      }
+      result = evaluateNumericUnary(node, constants);
     } else if (node.type === 'BinaryExpression') {
-      const left: Maybe<number> = evaluateNumericNode(node.left, constants);
-      const right: Maybe<number> = evaluateNumericNode(node.right, constants);
-      if (typeof left === 'number' && typeof right === 'number') {
-        result = applyBinaryOperator(node.operator, left, right);
-      }
+      result = evaluateNumericBinary(node, constants);
     } else if (node.type === 'Identifier') {
       const value: Maybe<number> = constants.get(node.name);
       if (typeof value === 'number') {
@@ -127,6 +120,25 @@ function evaluateNumericNode(node: AstNode, constants: ReadonlyMap<string, numbe
     } else if (node.type === 'TSAsExpression' && node.expression) {
       result = evaluateNumericNode(node.expression, constants);
     }
+  }
+  return result;
+}
+
+function evaluateNumericUnary(node: AstNode, constants: ReadonlyMap<string, number>): Maybe<number> {
+  let result: Maybe<number> = null;
+  const arg: Maybe<number> = evaluateNumericNode(node.argument, constants);
+  if (typeof arg === 'number') {
+    result = node.operator === '-' ? -arg : arg;
+  }
+  return result;
+}
+
+function evaluateNumericBinary(node: AstNode, constants: ReadonlyMap<string, number>): Maybe<number> {
+  let result: Maybe<number> = null;
+  const left: Maybe<number> = evaluateNumericNode(node.left, constants);
+  const right: Maybe<number> = evaluateNumericNode(node.right, constants);
+  if (typeof left === 'number' && typeof right === 'number') {
+    result = applyBinaryOperator(node.operator, left, right);
   }
   return result;
 }
@@ -195,19 +207,7 @@ function evaluateStringArrayNode(node: AstNode, constants: ReadonlyMap<string, r
   let result: Maybe<readonly string[]> = null;
   if (node) {
     if (node.type === 'ArrayExpression') {
-      const items: string[] = [];
-      let allLiterals: boolean = true;
-      for (const element of node.elements ?? []) {
-        if (element && element.type === 'Literal' && typeof element.value === 'string') {
-          items.push(element.value);
-        } else {
-          allLiterals = false;
-          break;
-        }
-      }
-      if (allLiterals) {
-        result = items;
-      }
+      result = evaluateStringArrayLiteral(node);
     } else if (node.type === 'Identifier') {
       const value: Maybe<readonly string[]> = constants.get(node.name);
       if (value) {
@@ -216,6 +216,24 @@ function evaluateStringArrayNode(node: AstNode, constants: ReadonlyMap<string, r
     } else if (node.type === 'TSAsExpression' && node.expression) {
       result = evaluateStringArrayNode(node.expression, constants);
     }
+  }
+  return result;
+}
+
+function evaluateStringArrayLiteral(node: AstNode): Maybe<readonly string[]> {
+  let result: Maybe<readonly string[]> = null;
+  const items: string[] = [];
+  let allLiterals: boolean = true;
+  for (const element of node.elements ?? []) {
+    if (element?.type === 'Literal' && typeof element.value === 'string') {
+      items.push(element.value);
+    } else {
+      allLiterals = false;
+      break;
+    }
+  }
+  if (allLiterals) {
+    result = items;
   }
   return result;
 }
@@ -261,7 +279,7 @@ function indexProgramConstants(programNode: AstNode): ProgramConstants {
 function collectTopLevelDeclarators(programNode: AstNode): AstNode[] {
   const declarators: AstNode[] = [];
   for (const statement of programNode.body ?? []) {
-    const declaration: Maybe<AstNode> = statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement.type === 'VariableDeclaration' ? statement : null;
+    const declaration: Maybe<AstNode> = unwrapVariableDeclaration(statement);
     if (declaration?.type === 'VariableDeclaration') {
       for (const declarator of declaration.declarations ?? []) {
         declarators.push(declarator);
@@ -269,6 +287,16 @@ function collectTopLevelDeclarators(programNode: AstNode): AstNode[] {
     }
   }
   return declarators;
+}
+
+function unwrapVariableDeclaration(statement: AstNode): Maybe<AstNode> {
+  let result: Maybe<AstNode> = null;
+  if (statement.type === 'ExportNamedDeclaration') {
+    result = statement.declaration;
+  } else if (statement.type === 'VariableDeclaration') {
+    result = statement;
+  }
+  return result;
 }
 
 /**
@@ -296,7 +324,7 @@ function collectTypedPolicyDeclarators(programNode: AstNode, typeName: string): 
     }
 
     let init: Maybe<AstNode> = declarator.init;
-    while (init && init.type === 'TSAsExpression') {
+    while (init?.type === 'TSAsExpression') {
       init = init.expression;
     }
     if (init?.type === 'ObjectExpression') {
@@ -317,7 +345,7 @@ function collectTypedPolicyDeclarators(programNode: AstNode, typeName: string): 
  */
 function buildResolvedPolicy(declarator: AstNode, constants: ProgramConstants): ResolvedPolicy {
   let init: Maybe<AstNode> = declarator.init;
-  while (init && init.type === 'TSAsExpression') {
+  while (init?.type === 'TSAsExpression') {
     init = init.expression;
   }
   let policyKey: Maybe<string> = null;
@@ -350,9 +378,7 @@ function buildResolvedPolicy(declarator: AstNode, constants: ProgramConstants): 
 function branchesAcceptingMimeType(branches: readonly ParsedRuleBranch[], mimeType: string): ParsedRuleBranch[] {
   const matches: ParsedRuleBranch[] = [];
   for (const branch of branches) {
-    if (branch.allowedMimeLiterals.includes(mimeType)) {
-      matches.push(branch);
-    } else if (branchRegexAcceptsMime(branch, mimeType)) {
+    if (branch.allowedMimeLiterals.includes(mimeType) || branchRegexAcceptsMime(branch, mimeType)) {
       matches.push(branch);
     }
   }

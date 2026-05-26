@@ -132,7 +132,7 @@ function parseModelInfoInput(args: Record<string, unknown>): ModelInfoToolInput 
     }
     model = trimmed;
   } else {
-    throw new Error('model-info: "model" must be a string when provided.');
+    throw new TypeError('model-info: "model" must be a string when provided.');
   }
 
   return { model };
@@ -147,9 +147,9 @@ function buildListOutput(manifest: ReadonlyArray<McpManifestModelEntry>): ModelI
       collectionPrefix: entry.collectionPrefix,
       sourcePackage: entry.sourcePackage,
       fieldCount: entry.fields.length,
-      ...(entry.modelGroup != null ? { modelGroup: entry.modelGroup } : {}),
-      ...(entry.parentIdentityConst != null ? { parentIdentityConst: entry.parentIdentityConst } : {}),
-      ...(entry.description != null ? { description: entry.description } : {})
+      ...(entry.modelGroup == null ? {} : { modelGroup: entry.modelGroup }),
+      ...(entry.parentIdentityConst == null ? {} : { parentIdentityConst: entry.parentIdentityConst }),
+      ...(entry.description == null ? {} : { description: entry.description })
     };
     return row;
   });

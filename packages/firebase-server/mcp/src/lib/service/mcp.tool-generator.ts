@@ -210,7 +210,7 @@ interface BuildStaticWireEntryInput {
  */
 export function buildStaticWireEntry(input: BuildStaticWireEntryInput): McpToolListEntry {
   const inputSchema = input.inputSchema ?? { type: 'object' };
-  const entry: McpToolListEntry = input.outputSchema != null ? { name: input.name, description: input.description, inputSchema, outputSchema: input.outputSchema } : { name: input.name, description: input.description, inputSchema };
+  const entry: McpToolListEntry = input.outputSchema == null ? { name: input.name, description: input.description, inputSchema } : { name: input.name, description: input.description, inputSchema, outputSchema: input.outputSchema };
   return Object.freeze(entry);
 }
 
@@ -311,13 +311,17 @@ function generateToolForSpecifier(context: GenerateToolsForModelCallContext, spe
   }
 
   const classified = classifyVisibility(handlerDetails.mcp?.visibility);
-  const filterMetadata: McpToolFilterMetadata = {
-    requiredScope: resolveRequiredScope(callType) ?? undefined,
-    visibilityKind: classified.visibilityKind,
-    rule: classified.rule,
-    visibilityFn: classified.visibilityFn,
-    effectiveReadOnly: resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType)
-  };
+  const requiredScope = resolveRequiredScope(callType) ?? undefined;
+  const effectiveReadOnly = resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType);
+  let filterMetadata: McpToolFilterMetadata;
+
+  if (classified.visibilityKind === 'declarative') {
+    filterMetadata = { visibilityKind: 'declarative', rule: classified.rule, requiredScope, effectiveReadOnly };
+  } else if (classified.visibilityKind === 'dynamic') {
+    filterMetadata = { visibilityKind: 'dynamic', visibilityFn: classified.visibilityFn, requiredScope, effectiveReadOnly };
+  } else {
+    filterMetadata = { visibilityKind: classified.visibilityKind, requiredScope, effectiveReadOnly };
+  }
 
   const outputSchema = manifestEntry?.outputSchema;
   const staticWireEntry = buildStaticWireEntry({ name, description, inputSchema, outputSchema });
@@ -365,7 +369,7 @@ function resolveInputSchema(context: ResolveInputSchemaContext): object | undefi
     const exported = arktypeToJsonSchemaForExport(handlerDetails.inputType as unknown as Type<unknown>);
 
     if (exported && typeof exported === 'object') {
-      return exported as object;
+      return exported;
     }
 
     // arktypeToJsonSchemaForExport returned a non-object (shouldn't happen for object schemas).

@@ -38,8 +38,8 @@ export interface ParsedFirestoreMatchBlock {
 }
 
 const ALLOW_RE: RegExp = /\ballow\s+([A-Za-z, \t]+?)\s*:\s*if\b/g;
-const COLLECTION_GROUP_PREFIX: RegExp = /^\/\{[A-Za-z_][A-Za-z0-9_]*=\*\*\}\//;
-const BARE_IDENTIFIER_RE: RegExp = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const COLLECTION_GROUP_PREFIX: RegExp = /^\/\{[A-Za-z_]\w*=\*\*\}\//;
+const BARE_IDENTIFIER_RE: RegExp = /^[A-Za-z_]\w*$/;
 
 /**
  * Extracts every `allow <op>[,<op>...]: if ...;` directive header from a match block's
@@ -54,7 +54,7 @@ const BARE_IDENTIFIER_RE: RegExp = /^[A-Za-z_][A-Za-z0-9_]*$/;
 function extractAllowDirectives(body: string): string[] {
   const seen: Set<string> = new Set();
   ALLOW_RE.lastIndex = 0;
-  let match: RegExpExecArray | null = ALLOW_RE.exec(body);
+  let match: Maybe<RegExpExecArray> = ALLOW_RE.exec(body);
   while (match) {
     const ops: string[] = match[1]
       .split(',')

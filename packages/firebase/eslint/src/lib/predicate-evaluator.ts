@@ -76,30 +76,35 @@ export function evaluatePredicate(predicate: string, helpers: HelperFunctionTabl
     parseFailure = `cel-js parse error: ${message}`;
   }
 
-  if (!ast) {
-    result = { branches: [], unsupported: parseFailure ?? 'cel-js parse error: unknown' };
-  } else {
-    const expanded: AstNode = inlineHelpers(ast, helpers, 0);
-    const clauses: AstNode[][] = toDnf(expanded);
-    const branches: PredicateBranch[] = [];
-    const seen: Set<string> = new Set();
-    for (const clause of clauses) {
-      const branch: Maybe<PredicateBranch> = reduceClause(clause);
-      if (branch) {
-        const key: string = branchSignature(branch);
-        if (!seen.has(key)) {
-          seen.add(key);
-          branches.push(branch);
-        }
-      }
-    }
+  if (ast) {
+    const branches = collectUniqueBranches(ast, helpers);
     if (branches.length === 0) {
       result = { branches: [], unsupported: 'no branch of the allow predicate carries both a request.resource.size cap and a contentType constraint' };
     } else {
       result = { branches };
     }
+  } else {
+    result = { branches: [], unsupported: parseFailure ?? 'cel-js parse error: unknown' };
   }
   return result;
+}
+
+function collectUniqueBranches(ast: AstNode, helpers: HelperFunctionTable): PredicateBranch[] {
+  const expanded: AstNode = inlineHelpers(ast, helpers, 0);
+  const clauses: AstNode[][] = toDnf(expanded);
+  const branches: PredicateBranch[] = [];
+  const seen: Set<string> = new Set();
+  for (const clause of clauses) {
+    const branch: Maybe<PredicateBranch> = reduceClause(clause);
+    if (branch) {
+      const key: string = branchSignature(branch);
+      if (!seen.has(key)) {
+        seen.add(key);
+        branches.push(branch);
+      }
+    }
+  }
+  return branches;
 }
 
 /**
@@ -172,7 +177,7 @@ function mapChildren(node: AstNode, fn: (child: AstNode) => AstNode): AstNode {
     const entries = args as [AstNode, AstNode][];
     result = { op, args: entries.map(([k, v]) => [fn(k), fn(v)] as [AstNode, AstNode]) };
   } else if (Array.isArray(args) && args.length === 2 && isAstNode(args[0]) && isAstNode(args[1])) {
-    result = { op, args: [fn(args[0] as AstNode), fn(args[1] as AstNode)] };
+    result = { op, args: [fn(args[0]), fn(args[1])] };
   } else {
     result = node;
   }
@@ -404,15 +409,7 @@ function isMemberPath(node: AstNode, segments: readonly string[], endIndex: numb
 function foldNumericNode(node: AstNode): Maybe<number> {
   let result: Maybe<number> = null;
   if (node.op === 'value') {
-    const value: unknown = node.args;
-    if (typeof value === 'bigint') {
-      const num: number = Number(value);
-      if (Number.isFinite(num)) {
-        result = num;
-      }
-    } else if (typeof value === 'number' && Number.isFinite(value)) {
-      result = value;
-    }
+    result = foldNumericValueLeaf(node.args);
   } else if (node.op === '-_') {
     const inner: Maybe<number> = foldNumericNode(node.args as AstNode);
     if (typeof inner === 'number') {
@@ -423,16 +420,35 @@ function foldNumericNode(node: AstNode): Maybe<number> {
     const left: Maybe<number> = foldNumericNode(l);
     const right: Maybe<number> = foldNumericNode(r);
     if (typeof left === 'number' && typeof right === 'number') {
-      if (node.op === '+') {
-        result = left + right;
-      } else if (node.op === '-') {
-        result = left - right;
-      } else if (node.op === '*') {
-        result = left * right;
-      } else if (right !== 0) {
-        result = left / right;
-      }
+      result = applyNumericBinaryOp(node.op, left, right);
     }
+  }
+  return result;
+}
+
+function foldNumericValueLeaf(value: unknown): Maybe<number> {
+  let result: Maybe<number> = null;
+  if (typeof value === 'bigint') {
+    const num: number = Number(value);
+    if (Number.isFinite(num)) {
+      result = num;
+    }
+  } else if (typeof value === 'number' && Number.isFinite(value)) {
+    result = value;
+  }
+  return result;
+}
+
+function applyNumericBinaryOp(op: '+' | '-' | '*' | '/', left: number, right: number): Maybe<number> {
+  let result: Maybe<number> = null;
+  if (op === '+') {
+    result = left + right;
+  } else if (op === '-') {
+    result = left - right;
+  } else if (op === '*') {
+    result = left * right;
+  } else if (right !== 0) {
+    result = left / right;
   }
   return result;
 }
@@ -446,7 +462,7 @@ function foldNumericNode(node: AstNode): Maybe<number> {
  * @returns A signature string usable as a Map/Set key.
  */
 function branchSignature(branch: PredicateBranch): string {
-  const literals: string[] = [...branch.allowedMimeLiterals].sort();
-  const regexes: string[] = [...branch.allowedMimeRegexes].sort();
+  const literals: string[] = [...branch.allowedMimeLiterals].sort((a, b) => a.localeCompare(b));
+  const regexes: string[] = [...branch.allowedMimeRegexes].sort((a, b) => a.localeCompare(b));
   return `${branch.maxFileSizeBytes}|${literals.join(',')}|${regexes.join(',')}`;
 }

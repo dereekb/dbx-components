@@ -61,14 +61,15 @@ function enrichSignedUploadUrlInputSchema(defaultInputSchema: Maybe<object>, pur
     const purposeProperty = base.properties?.purpose;
 
     if (purposeProperty != null && typeof purposeProperty === 'object') {
+      const quotedPurposes = purposeKeys.map((purpose) => `"${purpose}"`).join(', ');
       result = {
         ...base,
         properties: {
           ...base.properties,
           purpose: {
-            ...(purposeProperty as object),
+            ...purposeProperty,
             enum: [...purposeKeys],
-            description: `One of: ${purposeKeys.map((purpose) => `"${purpose}"`).join(', ')}.`
+            description: `One of: ${quotedPurposes}.`
           }
         }
       };

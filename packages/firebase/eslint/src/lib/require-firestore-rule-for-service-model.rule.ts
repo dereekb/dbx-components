@@ -176,7 +176,7 @@ function collectIdentityCallsFromProgram(programNode: AstNode, identityFactoryNa
     const id: AstNode = declarator.id;
     if (id?.type !== 'Identifier' || !declarator.init) continue;
     let init: AstNode = declarator.init;
-    while (init && init.type === 'TSAsExpression') {
+    while (init?.type === 'TSAsExpression') {
       init = init.expression;
     }
     if (init?.type !== 'CallExpression') continue;
@@ -238,7 +238,7 @@ function isStringLiteralNode(node: AstNode): boolean {
 function collectTopLevelDeclarators(programNode: AstNode): AstNode[] {
   const declarators: AstNode[] = [];
   for (const statement of programNode.body ?? []) {
-    const declaration: Maybe<AstNode> = statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement.type === 'VariableDeclaration' ? statement : null;
+    const declaration: Maybe<AstNode> = unwrapVariableDeclaration(statement);
     if (declaration?.type === 'VariableDeclaration') {
       for (const declarator of declaration.declarations ?? []) {
         declarators.push(declarator);
@@ -246,6 +246,16 @@ function collectTopLevelDeclarators(programNode: AstNode): AstNode[] {
     }
   }
   return declarators;
+}
+
+function unwrapVariableDeclaration(statement: AstNode): Maybe<AstNode> {
+  let result: Maybe<AstNode> = null;
+  if (statement.type === 'ExportNamedDeclaration') {
+    result = statement.declaration;
+  } else if (statement.type === 'VariableDeclaration') {
+    result = statement;
+  }
+  return result;
 }
 
 /**
@@ -266,30 +276,40 @@ function buildIdentityRegistry(cwd: string, searchRoots: readonly string[], iden
   const accumulator: Map<string, IdentityEntry> = new Map();
   const seenFiles: Set<string> = new Set();
   for (const pattern of searchRoots) {
-    let files: readonly string[] = [];
-    try {
-      files = globSync(pattern, { cwd });
-    } catch {
-      files = [];
-    }
+    const files = safeGlobSync(pattern, cwd);
     for (const relativeFile of files) {
       const absoluteFile: string = isAbsolute(relativeFile) ? relativeFile : resolve(cwd, relativeFile);
       if (seenFiles.has(absoluteFile)) continue;
       seenFiles.add(absoluteFile);
-      try {
-        const source: string = readFileSync(absoluteFile, 'utf8');
-        if (!source.includes(identityFactoryName)) continue;
-        const programNode: AstNode = parseTypescriptSource(source, { ecmaVersion: 2022, sourceType: 'module', loc: false, range: false, jsx: false });
-        collectIdentityCallsFromProgram(programNode, identityFactoryName, accumulator);
-      } catch {
-        // Best-effort discovery — unparsable files are skipped silently so the rule does not
-        // crash on syntactically-invalid fixtures or generated files.
-      }
+      scanIdentityFile(absoluteFile, identityFactoryName, accumulator);
     }
   }
   const registry: IdentityRegistry = finalizeIdentityRegistry(accumulator);
   identityRegistryCache.set(cacheKey, registry);
   return registry;
+}
+
+function safeGlobSync(pattern: string, cwd: string): readonly string[] {
+  let result: readonly string[];
+  try {
+    result = globSync(pattern, { cwd });
+  } catch {
+    result = [];
+  }
+  return result;
+}
+
+function scanIdentityFile(absoluteFile: string, identityFactoryName: string, accumulator: Map<string, IdentityEntry>): void {
+  try {
+    const source: string = readFileSync(absoluteFile, 'utf8');
+    if (source.includes(identityFactoryName)) {
+      const programNode: AstNode = parseTypescriptSource(source, { ecmaVersion: 2022, sourceType: 'module', loc: false, range: false, jsx: false });
+      collectIdentityCallsFromProgram(programNode, identityFactoryName, accumulator);
+    }
+  } catch {
+    // Best-effort discovery — unparsable files are skipped silently so the rule does not
+    // crash on syntactically-invalid fixtures or generated files.
+  }
 }
 
 /**
@@ -364,7 +384,7 @@ function resolveCollectionChain(modelName: string, registry: IdentityRegistry): 
 
 /**
  * Locates the model registry passed to a `firebaseModelsService(<registry>)` call in this
- * file and resolves it to a list of model-name keys. The registry argument may be:
+ * file and resolves it to a list of model-name keys. The registry argument may be:.
  *
  * - an `ObjectExpression` inlined at the call site, or
  * - an `Identifier` referring to a top-level `const <name> = { ... }` declaration in the
@@ -375,21 +395,36 @@ function resolveCollectionChain(modelName: string, registry: IdentityRegistry): 
  * @returns The discovery record, or null when no registry can be found.
  */
 function discoverServiceRegistry(programNode: AstNode, registryFactoryCallName: string): Maybe<RegistryDiscovery> {
+  let result: Maybe<RegistryDiscovery> = null;
   const callNode: Maybe<AstNode> = findRegistryFactoryCall(programNode, registryFactoryCallName);
-  if (!callNode) return null;
+  if (callNode) {
+    const objectLiteral = resolveRegistryObjectLiteral(callNode, programNode);
+    if (objectLiteral) {
+      const modelKeys = collectRegistryModelKeys(objectLiteral);
+      result = { modelKeys, registryCallNode: callNode };
+    }
+  }
+  return result;
+}
+
+function resolveRegistryObjectLiteral(callNode: AstNode, programNode: AstNode): Maybe<AstNode> {
+  let result: Maybe<AstNode> = null;
   const args: readonly AstNode[] = callNode.arguments ?? [];
-  if (args.length === 0) return null;
-  let candidate: AstNode = args[0];
-  while (candidate && candidate.type === 'TSAsExpression') {
-    candidate = candidate.expression;
+  if (args.length > 0) {
+    let candidate: AstNode = args[0];
+    while (candidate?.type === 'TSAsExpression') {
+      candidate = candidate.expression;
+    }
+    if (candidate?.type === 'ObjectExpression') {
+      result = candidate;
+    } else if (candidate?.type === 'Identifier') {
+      result = resolveObjectInitializerForIdentifier(programNode, candidate.name);
+    }
   }
-  let objectLiteral: Maybe<AstNode> = null;
-  if (candidate?.type === 'ObjectExpression') {
-    objectLiteral = candidate;
-  } else if (candidate?.type === 'Identifier') {
-    objectLiteral = resolveObjectInitializerForIdentifier(programNode, candidate.name);
-  }
-  if (!objectLiteral) return null;
+  return result;
+}
+
+function collectRegistryModelKeys(objectLiteral: AstNode): { name: string; node: AstNode }[] {
   const modelKeys: { name: string; node: AstNode }[] = [];
   for (const property of objectLiteral.properties ?? []) {
     if (property.type === 'Property' && !property.computed) {
@@ -400,7 +435,7 @@ function discoverServiceRegistry(programNode: AstNode, registryFactoryCallName: 
       }
     }
   }
-  return { modelKeys, registryCallNode: callNode };
+  return modelKeys;
 }
 
 /**
@@ -461,7 +496,7 @@ function extractRegistryFactoryCallFromStatement(statement: AstNode, registryFac
 function unwrapRegistryFactoryCall(expression: Maybe<AstNode>, registryFactoryCallName: string): Maybe<AstNode> {
   let result: Maybe<AstNode> = null;
   let current: Maybe<AstNode> = expression;
-  while (current && current.type === 'TSAsExpression') {
+  while (current?.type === 'TSAsExpression') {
     current = current.expression;
   }
   if (current?.type === 'CallExpression' && current.callee?.type === 'Identifier' && current.callee.name === registryFactoryCallName) {
@@ -485,7 +520,7 @@ function resolveObjectInitializerForIdentifier(programNode: AstNode, identifierN
   for (const declarator of declarators) {
     if (declarator.id?.type === 'Identifier' && declarator.id.name === identifierName && declarator.init) {
       let init: AstNode = declarator.init;
-      while (init && init.type === 'TSAsExpression') {
+      while (init?.type === 'TSAsExpression') {
         init = init.expression;
       }
       if (init?.type === 'ObjectExpression') {
@@ -514,7 +549,7 @@ function chainExistsInTree(chain: readonly string[], blocks: readonly ParsedFire
   } else if (matchChainAlongDescent(chain, blocks)) {
     result = true;
   } else {
-    const leaf: string = chain[chain.length - 1];
+    const leaf = chain.at(-1) as string;
     for (const block of blocks) {
       if (block.isCollectionGroup && block.collectionName === leaf) {
         result = true;
@@ -542,11 +577,9 @@ function matchChainAlongDescent(chain: readonly string[], blocks: readonly Parse
     const rest: readonly string[] = chain.slice(1);
     for (const block of blocks) {
       if (block.isCollectionGroup) continue;
-      if (block.collectionName === head) {
-        if (matchChainAlongDescent(rest, block.children)) {
-          result = true;
-          break;
-        }
+      if (block.collectionName === head && matchChainAlongDescent(rest, block.children)) {
+        result = true;
+        break;
       }
     }
   }
@@ -639,28 +672,37 @@ export const FIREBASE_REQUIRE_FIRESTORE_RULE_FOR_SERVICE_MODEL_RULE: FirebaseReq
         const parsedTree: readonly ParsedFirestoreMatchBlock[] = rulesResolution.blocks ?? [];
         const rulesPath: string = rulesResolution.absolutePath ?? DEFAULT_FIRESTORE_RULES_FILENAME;
 
+        const reportContext: ReportModelKeyContext = { ruleContext: context, registry, parsedTree, rulesPath };
         for (const modelKey of discovery.modelKeys) {
-          if (allowedMissingCollectionNames.has(modelKey.name)) continue;
-
-          const chain: Maybe<readonly string[]> = resolveCollectionChain(modelKey.name, registry);
-          if (!chain) {
-            context.report({ node: modelKey.node, messageId: 'unresolvedModelIdentity', data: { model: modelKey.name } });
-            continue;
-          }
-          if (chain.length === 0) continue;
-          const leaf: string = chain[chain.length - 1];
-          if (!chainExistsInTree(chain, parsedTree)) {
-            if (chain.length === 1) {
-              context.report({ node: modelKey.node, messageId: 'missingMatchBlock', data: { model: modelKey.name, collection: leaf, path: rulesPath } });
-            } else {
-              context.report({ node: modelKey.node, messageId: 'wrongNestingDepth', data: { model: modelKey.name, chain: chain.join(' / '), collection: leaf, path: rulesPath, path_wildcard: 'path=**' } });
-            }
+          if (!allowedMissingCollectionNames.has(modelKey.name)) {
+            reportModelKey(reportContext, modelKey);
           }
         }
       }
     };
   }
 };
+
+interface ReportModelKeyContext {
+  readonly ruleContext: RuleContext;
+  readonly registry: IdentityRegistry;
+  readonly parsedTree: readonly ParsedFirestoreMatchBlock[];
+  readonly rulesPath: string;
+}
+
+function reportModelKey(context: ReportModelKeyContext, modelKey: { name: string; node: AstNode }): void {
+  const chain: Maybe<readonly string[]> = resolveCollectionChain(modelKey.name, context.registry);
+  if (!chain) {
+    context.ruleContext.report({ node: modelKey.node, messageId: 'unresolvedModelIdentity', data: { model: modelKey.name } });
+  } else if (chain.length > 0 && !chainExistsInTree(chain, context.parsedTree)) {
+    const leaf = chain.at(-1) as string;
+    if (chain.length === 1) {
+      context.ruleContext.report({ node: modelKey.node, messageId: 'missingMatchBlock', data: { model: modelKey.name, collection: leaf, path: context.rulesPath } });
+    } else {
+      context.ruleContext.report({ node: modelKey.node, messageId: 'wrongNestingDepth', data: { model: modelKey.name, chain: chain.join(' / '), collection: leaf, path: context.rulesPath, path_wildcard: 'path=**' } });
+    }
+  }
+}
 
 interface FirestoreRulesResolution {
   readonly blocks?: readonly ParsedFirestoreMatchBlock[];

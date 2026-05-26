@@ -93,7 +93,7 @@ import {
   type CreateStorageFileSignedUploadUrlParams,
   type CreateStorageFileSignedUploadUrlResult,
   createStorageFileSignedUploadUrlParamsType,
-  CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS,
+  DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS,
   CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS,
   CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH,
   CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS,
@@ -263,11 +263,11 @@ function _sanitizeSignedUploadUrlFilenameOrThrow(filename: string): SlashPathFil
     throw badRequestError({ message: 'filename contains disallowed characters', code: 'INVALID_FILENAME' });
   }
 
-  return trimmed.normalize('NFC') as SlashPathFile;
+  return trimmed.normalize('NFC');
 }
 
 function _clampSignedUploadUrlExpiresInMs(input: Maybe<Milliseconds>): Milliseconds {
-  const candidate = input ?? CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS;
+  const candidate = input ?? DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS;
   return Math.min(Math.max(candidate, CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS), CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS);
 }
 
@@ -344,7 +344,12 @@ export function createStorageFileSignedUploadUrlFactory(context: StorageFileServ
       const expiresAtDate = addMilliseconds(new Date(), expiresInMs);
 
       const file = storageService.file({ pathString });
-      const uploadUrl = await file.getSignedUrl!({
+
+      if (!file.getSignedUrl) {
+        throw internalServerError('Signed url function appears to not be available.');
+      }
+
+      const uploadUrl = await file.getSignedUrl({
         action: 'write',
         expiresIn: expiresInMs,
         contentType

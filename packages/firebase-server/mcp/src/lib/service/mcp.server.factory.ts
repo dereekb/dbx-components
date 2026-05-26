@@ -10,7 +10,7 @@ import { ModelApiCallModelDispatchService, ModelApiGetService, type FirebaseServ
 import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
-import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult, type McpToolListEntry } from './mcp.tool-generator';
+import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
@@ -297,10 +297,10 @@ export class McpServerFactoryService {
     let result: boolean;
 
     if (filterMetadata.visibilityKind === 'declarative') {
-      result = this._checkDeclarativeVisibility(filterMetadata.rule!, ctx, authRoles);
+      result = this._checkDeclarativeVisibility(filterMetadata.rule, ctx, authRoles);
     } else if (filterMetadata.visibilityKind === 'dynamic') {
       try {
-        result = filterMetadata.visibilityFn!({ auth: ctx.auth, scopes: scopes ?? undefined, tool: tool.dispatch }) === true;
+        result = filterMetadata.visibilityFn({ auth: ctx.auth, scopes: scopes ?? undefined, tool: tool.dispatch }) === true;
       } catch (error) {
         this._logger.warn(`MCP tool ${tool.name} visibility predicate threw; treating as not visible: ${(error as Error).message}`);
         result = false;
@@ -393,24 +393,22 @@ export class McpServerFactoryService {
     const args = request.params.arguments ?? {};
     let response: CallToolResult;
 
-    if (definition != null) {
-      if (definition.staticHandler != null) {
-        response = await this._handleStaticToolCall(definition, args, ctx);
-      } else {
-        response = await this._handleCallModelToolCall(definition, args, ctx);
-      }
-    } else {
+    if (definition == null) {
       response = formatMcpToolErrorResponse(new Error(`Unknown tool: ${request.params.name}`)) as CallToolResult;
+    } else if (definition.staticHandler == null) {
+      response = await this._handleCallModelToolCall(definition, args, ctx);
+    } else {
+      response = await this._handleStaticToolCall(definition.staticHandler, args, ctx);
     }
 
     return response;
   }
 
-  private async _handleStaticToolCall(definition: McpToolDefinition, args: Record<string, unknown>, ctx: McpRequestContext): Promise<CallToolResult> {
+  private async _handleStaticToolCall(staticHandler: McpStaticToolHandler, args: Record<string, unknown>, ctx: McpRequestContext): Promise<CallToolResult> {
     let response: CallToolResult;
 
     try {
-      response = await definition.staticHandler!(args, ctx);
+      response = await staticHandler(args, ctx);
     } catch (error) {
       response = formatMcpToolErrorResponse(error) as CallToolResult;
     }

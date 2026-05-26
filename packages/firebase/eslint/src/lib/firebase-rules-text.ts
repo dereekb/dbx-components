@@ -12,11 +12,11 @@ export interface RawBlock {
   readonly bodyStart: number;
 }
 
-const PATH_VARIABLE_RE: RegExp = /\{([A-Za-z_][A-Za-z0-9_]*(?:=\*\*)?)\}/g;
+const PATH_VARIABLE_RE: RegExp = /\{([A-Za-z_]\w*(?:=\*\*)?)\}/g;
 const MASK_OPEN_CHAR: string = '';
 const MASK_CLOSE_CHAR: string = '';
 const UNMASK_RE: RegExp = /([^]+)/g;
-const IDENTIFIER_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const IDENTIFIER_RE = /^[A-Za-z_]\w*$/;
 
 /**
  * Strips `//`-style line comments from a Firebase rules source string so the brace
@@ -63,8 +63,9 @@ export function unmaskPathVariables(text: string): string {
 export function indexToLineColumn(source: string, index: number): { line: number; column: number } {
   let line: number = 1;
   let column: number = 1;
-  for (let i = 0; i < index && i < source.length; i++) {
-    if (source.charCodeAt(i) === 10) {
+  const end = Math.min(index, source.length);
+  for (let i = 0; i < end; i++) {
+    if (source.codePointAt(i) === 10) {
       line += 1;
       column = 1;
     } else {
@@ -87,7 +88,7 @@ export function findMatchingBrace(source: string, openIndex: number): number {
   let depth: number = 0;
   let result: number = -1;
   for (let i = openIndex; i < source.length; i++) {
-    const ch = source.charCodeAt(i);
+    const ch = source.codePointAt(i);
     if (ch === 123) {
       depth += 1;
     } else if (ch === 125) {
@@ -207,9 +208,15 @@ export function functionHeaderName(header: string): Maybe<string> {
  * @param body - The inner body of a function block (already line-comment-stripped).
  * @returns The expression text after `return`, or null when no `return` is present.
  */
+/**
+ * Matches the `return` keyword followed by whitespace, used to locate the start of a Firebase
+ * rules function's `return <expression>` body.
+ */
+const RETURN_KEYWORD_RE = /return\s+/;
+
 export function functionReturnExpression(body: string): Maybe<string> {
   let result: Maybe<string> = null;
-  const match: RegExpMatchArray | null = body.match(/return\s+/);
+  const match: Maybe<RegExpExecArray> = RETURN_KEYWORD_RE.exec(body);
   if (match && typeof match.index === 'number') {
     let rest: string = body.slice(match.index + match[0].length);
     rest = rest.trim();
@@ -250,5 +257,5 @@ export function joinMatchPath(parentPath: string, childSegment: string): string 
  * @returns True for catch-all wildcards.
  */
 export function isCatchAllSegment(segment: string): boolean {
-  return /^\/\{[A-Za-z_][A-Za-z0-9_]*=\*\*\}$/.test(segment.trim());
+  return /^\/\{[A-Za-z_]\w*=\*\*\}$/.test(segment.trim());
 }
