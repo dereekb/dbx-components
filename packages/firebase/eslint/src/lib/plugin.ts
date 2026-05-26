@@ -5,6 +5,7 @@ import { FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE } from 
 import { FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE } from './require-firestore-constraint-type-parameter.rule';
 import { FIREBASE_REQUIRE_COMPLETE_CRUD_FUNCTION_CONFIG_MAP_RULE } from './require-complete-crud-function-config-map.rule';
 import { FIREBASE_REQUIRE_API_DETAILS_FOR_CRUD_FUNCTION_RULE } from './require-api-details-for-crud-function.rule';
+import { FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE } from './require-storagefile-policy-matches-rules.rule';
 
 /**
  * ESLint plugin interface for `@dereekb/firebase` rules.
@@ -18,6 +19,7 @@ export interface FirebaseEslintPlugin {
     readonly 'require-firestore-constraint-type-parameter': typeof FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE;
     readonly 'require-complete-crud-function-config-map': typeof FIREBASE_REQUIRE_COMPLETE_CRUD_FUNCTION_CONFIG_MAP_RULE;
     readonly 'require-api-details-for-crud-function': typeof FIREBASE_REQUIRE_API_DETAILS_FOR_CRUD_FUNCTION_RULE;
+    readonly 'require-storagefile-policy-matches-rules': typeof FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE;
   };
 }
 
@@ -35,7 +37,8 @@ export const FIREBASE_ESLINT_PLUGIN: FirebaseEslintPlugin = {
     'require-dbx-model-firebase-index-valid-dispatcher': FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE,
     'require-firestore-constraint-type-parameter': FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE,
     'require-complete-crud-function-config-map': FIREBASE_REQUIRE_COMPLETE_CRUD_FUNCTION_CONFIG_MAP_RULE,
-    'require-api-details-for-crud-function': FIREBASE_REQUIRE_API_DETAILS_FOR_CRUD_FUNCTION_RULE
+    'require-api-details-for-crud-function': FIREBASE_REQUIRE_API_DETAILS_FOR_CRUD_FUNCTION_RULE,
+    'require-storagefile-policy-matches-rules': FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE
   }
 };
 

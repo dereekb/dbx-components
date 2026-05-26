@@ -110,6 +110,7 @@
     "@commitlint/config-angular": "20.5.0",
     "@eslint/js": "10.0.1",
     "@firebase/rules-unit-testing": "5.0.0",
+    "@marcbachmann/cel-js": "^7.6.1",
     "@nestjs/event-emitter": "^3.1.0",
     "@nestjs/schematics": "11.1.0",
     "@nestjs/testing": "^11.1.19",
