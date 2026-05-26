@@ -145,6 +145,8 @@ export function formatFirebaseModelEntry(model: FirebaseModel, depth: LookupDept
   if (keyingLabel) lines.push(`**User keying:** ${keyingLabel}`);
   const archetypeLabel = formatArchetypeLabel(model);
   if (archetypeLabel) lines.push(`**Archetype:** ${archetypeLabel}`);
+  const readLabel = formatReadPostureLabel(model);
+  if (readLabel) lines.push(`**Read:** ${readLabel}`);
   lines.push(`**Source:** \`${model.sourceFile}\``, '', fieldsHeader, '');
 
   if (filtered) {
@@ -292,6 +294,31 @@ function formatArchetypeLabel(model: FirebaseModel): string | undefined {
     result = `${labels.join(' + ')} — call ${lookupHints} for catalog details`;
   }
   return result;
+}
+
+/**
+ * Glosses for the closed `@dbxModelRead` enum. `system` / `owner` / `admin-only`
+ * are statically inferable from the common `roleMapForModel` helpers; `permissions`
+ * is the escape hatch for non-trivial computed read grants.
+ */
+const READ_POSTURE_GLOSS: Readonly<Record<NonNullable<FirebaseModel['read']>, string>> = {
+  system: 'readable by any authenticated user',
+  owner: 'readable by the record owner (and admins)',
+  'admin-only': 'readable by admins only',
+  permissions: 'computed/custom read grants'
+};
+
+/**
+ * Renders the inline "Read" label for a model from its `@dbxModelRead <level>`
+ * posture. Returns `undefined` when the tag is absent so the caller can skip the
+ * line entirely.
+ *
+ * @param model - The registry entry to inspect.
+ * @returns The human-readable label, or `undefined` when no read posture is declared.
+ */
+function formatReadPostureLabel(model: FirebaseModel): string | undefined {
+  const read = model.read;
+  return read ? `\`${read}\` — ${READ_POSTURE_GLOSS[read]}` : undefined;
 }
 
 function formatUserKeyingLabel(model: FirebaseModel): string | undefined {

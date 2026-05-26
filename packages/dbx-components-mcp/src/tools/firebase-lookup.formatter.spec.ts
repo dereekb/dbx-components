@@ -49,6 +49,25 @@ describe('formatFirebaseModelEntry user-keying line', () => {
   });
 });
 
+describe('formatFirebaseModelEntry read posture line', () => {
+  it('omits the Read line when no read posture is declared', () => {
+    const output = formatFirebaseModelEntry(BASE_MODEL, 'brief');
+    expect(output).not.toContain('**Read:**');
+  });
+
+  it('renders the read posture with its gloss', () => {
+    const model: FirebaseModel = { ...BASE_MODEL, read: 'owner' };
+    const output = formatFirebaseModelEntry(model, 'brief');
+    expect(output).toContain('**Read:** `owner` — readable by the record owner (and admins)');
+  });
+
+  it('renders the permissions escape-hatch posture', () => {
+    const model: FirebaseModel = { ...BASE_MODEL, read: 'permissions' };
+    const output = formatFirebaseModelEntry(model, 'full');
+    expect(output).toContain('**Read:** `permissions` — computed/custom read grants');
+  });
+});
+
 describe('formatFirebaseModelEntry sub-object rendering', () => {
   const SUB_OBJECT_MODEL: FirebaseModel = {
     ...BASE_MODEL,

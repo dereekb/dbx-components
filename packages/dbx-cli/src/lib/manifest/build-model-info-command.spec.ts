@@ -146,6 +146,33 @@ describe('renderModelManifestEntry()', () => {
     expect(text).toContain('firestoreString()');
   });
 
+  it('omits the Read line when no read posture is declared', () => {
+    const text = renderModelManifestEntry({
+      modelType: 'p',
+      modelName: 'P',
+      identityConst: 'pIdentity',
+      collectionPrefix: 'p',
+      sourcePackage: 'demo',
+      sourceFile: 'p.ts',
+      fields: [{ name: 'fn', longName: 'firstName', tsType: 'string', optional: false }]
+    });
+    expect(text).not.toContain('Read:');
+  });
+
+  it('renders the Read line with its gloss when a read posture is declared', () => {
+    const text = renderModelManifestEntry({
+      modelType: 'p',
+      modelName: 'P',
+      identityConst: 'pIdentity',
+      collectionPrefix: 'p',
+      sourcePackage: 'demo',
+      sourceFile: 'p.ts',
+      read: 'owner',
+      fields: [{ name: 'fn', longName: 'firstName', tsType: 'string', optional: false }]
+    });
+    expect(text).toContain('Read: owner — readable by the record owner (and admins)');
+  });
+
   it('renders nested fields under their parent field', () => {
     const text = renderModelManifestEntry({
       modelType: 'p',
