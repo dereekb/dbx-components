@@ -3,6 +3,15 @@ import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type McpToolResponseContent, type OnCallModelFunctionApiDetails } from '@dereekb/firebase-server';
 
 /**
+ * Default structured value emitted by MCP when a handler returns `undefined`.
+ *
+ * Keeps the response usable by clients that key off either the text content or the
+ * structured/object body. Tests and any future overrides should compare against this
+ * constant rather than re-literalling `{ ok: true }`.
+ */
+export const DEFAULT_VOID_MCP_SUCCESS_VALUE = Object.freeze({ ok: true }) as { readonly ok: true };
+
+/**
  * Resolves a dispatch result + handler API details into the MCP `CallToolResult` shape.
  *
  * Three-tier resolution as documented on {@link OnCallModelFunctionApiDetails.mcp}:
@@ -33,7 +42,7 @@ export function formatMcpToolResponse(result: unknown, params: OnCallTypedModelP
   } else {
     response = {
       content: [{ type: 'text', text: stringifyResult(result) }],
-      structuredContent: result
+      structuredContent: result === undefined ? DEFAULT_VOID_MCP_SUCCESS_VALUE : result
     };
   }
 
@@ -58,7 +67,7 @@ function stringifyResult(result: unknown): string {
   let text: string;
 
   if (result === undefined) {
-    text = 'undefined';
+    text = JSON.stringify(DEFAULT_VOID_MCP_SUCCESS_VALUE);
   } else if (typeof result === 'string') {
     text = result;
   } else {

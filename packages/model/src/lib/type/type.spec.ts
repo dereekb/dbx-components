@@ -1,5 +1,5 @@
 import { type, type Type } from 'arktype';
-import { clearable, emptyType, EMPTY_ARKTYPE_TYPE } from './type';
+import { arktypeToJsonSchemaForExport, clearable, emptyType, EMPTY_ARKTYPE_TYPE, pruneFalseUnionBranches } from './type';
 import { ARKTYPE_DATE_DTO_TYPE } from './date';
 
 describe('emptyType()', () => {
@@ -573,5 +573,68 @@ describe('clearable()', () => {
       const result = schema({ color: 'green' });
       expect(result instanceof type.errors).toBe(true);
     });
+  });
+});
+
+describe('pruneFalseUnionBranches()', () => {
+  it('drops `false` entries from anyOf', () => {
+    const schema = { anyOf: [{ type: 'string' }, false, { type: 'null' }] };
+    expect(pruneFalseUnionBranches(schema)).toEqual({ anyOf: [{ type: 'string' }, { type: 'null' }] });
+  });
+
+  it('drops `false` entries from oneOf', () => {
+    const schema = { oneOf: [false, { type: 'string' }] };
+    expect(pruneFalseUnionBranches(schema)).toEqual({ oneOf: [{ type: 'string' }] });
+  });
+
+  it('removes the anyOf key entirely if all branches were false', () => {
+    const schema = { type: 'object', properties: { value: { anyOf: [false] } } };
+    expect(pruneFalseUnionBranches(schema)).toEqual({ type: 'object', properties: { value: {} } });
+  });
+
+  it('recurses into nested anyOf inside properties', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        flag: { anyOf: [{ type: 'boolean' }, false] }
+      }
+    };
+    expect(pruneFalseUnionBranches(schema)).toEqual({
+      type: 'object',
+      properties: {
+        flag: { anyOf: [{ type: 'boolean' }] }
+      }
+    });
+  });
+
+  it('returns primitives unchanged', () => {
+    expect(pruneFalseUnionBranches('hello')).toBe('hello');
+    expect(pruneFalseUnionBranches(42)).toBe(42);
+    expect(pruneFalseUnionBranches(null)).toBe(null);
+  });
+});
+
+describe('arktypeToJsonSchemaForExport()', () => {
+  it('exports a narrowed string base instead of an empty {} schema', () => {
+    const narrowed = type('string > 0').narrow(() => true) as unknown as Type<unknown>;
+    const result = arktypeToJsonSchemaForExport(narrowed) as { type?: string; minLength?: number };
+
+    expect(result.type).toBe('string');
+    expect(result.minLength).toBe(1);
+  });
+
+  it('removes the undefined branch from clearable() unions', () => {
+    const schema = type({ value: clearable('string > 0') });
+    const result = arktypeToJsonSchemaForExport(schema as unknown as Type<unknown>) as {
+      properties?: { value?: { anyOf?: ReadonlyArray<unknown> } };
+    };
+
+    const branches = result.properties?.value?.anyOf;
+    expect(branches).toBeDefined();
+    // Should have exactly the string base + null branch (the undefined branch is pruned).
+    expect(branches?.length).toBe(2);
+    expect(branches).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'string', minLength: 1 }), expect.objectContaining({ type: 'null' })]));
+    // No empty-object junk branch.
+    expect(branches?.some((b) => b !== null && typeof b === 'object' && Object.keys(b as object).length === 0)).toBe(false);
   });
 });

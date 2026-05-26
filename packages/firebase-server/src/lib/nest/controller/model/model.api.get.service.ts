@@ -5,6 +5,7 @@ import { type AbstractFirebaseNestContext } from '../../nest.provider';
 import { type AuthData } from '../../../type';
 import { ModelApiDispatchConfig, MODEL_API_NEST_APPLICATION_CONTEXT } from './model.api.dispatch';
 import { type FirebaseServerAuthData } from '../auth.context.server';
+import { firebaseServerErrorInfo } from '../../../function/error';
 
 // MARK: Types
 /**
@@ -35,6 +36,38 @@ export interface ModelAccessReadError {
   readonly key: FirestoreModelKey;
   readonly message: string;
   readonly code?: string;
+}
+
+/**
+ * Shape of a single failed-key entry from `useMultipleModels({ throwOnFirstError: false })`.
+ * Exposed so the mapper below stays testable without a live nest context.
+ */
+export interface ModelAccessUseMultipleModelsFailureEntry {
+  readonly key: FirestoreModelKey;
+  readonly error: unknown;
+}
+
+/**
+ * Maps a single `useMultipleModels` failure entry into the public {@link ModelAccessReadError}
+ * shape. Unwraps the typical Firebase error shapes via {@link firebaseServerErrorInfo} so
+ * permission-denied / not-found errors surface a real message + code instead of the generic
+ * `"Unknown error"` fallback the inline mapping used previously.
+ *
+ * @param entry - A failed-key entry from the underlying multi-read.
+ * @returns A `{ key, message, code? }` triple safe to return to API/MCP callers.
+ */
+export function modelAccessReadErrorFromUseMultipleModelsFailure(entry: ModelAccessUseMultipleModelsFailureEntry): ModelAccessReadError {
+  const info = firebaseServerErrorInfo(entry.error);
+  const serverMessage = info.httpsErrorDetailsServerError?.message;
+  const httpsMessage = info.httpsError?.message;
+  const plainMessage = entry.error instanceof Error ? entry.error.message : undefined;
+  const code = info.serverErrorCode ?? info.firebaseErrorCode;
+
+  return {
+    key: entry.key,
+    message: serverMessage ?? httpsMessage ?? plainMessage ?? 'permission denied or not found',
+    code
+  };
 }
 
 // MARK: Service
@@ -152,11 +185,7 @@ export class ModelApiGetService {
           })
         );
 
-        const errors: ModelAccessReadError[] = failure.errors.map((e: any) => ({
-          key: e.key,
-          message: e.error?.message ?? 'Unknown error',
-          code: e.error?.code
-        }));
+        const errors: ModelAccessReadError[] = failure.errors.map(modelAccessReadErrorFromUseMultipleModelsFailure);
 
         return { results, errors };
       }

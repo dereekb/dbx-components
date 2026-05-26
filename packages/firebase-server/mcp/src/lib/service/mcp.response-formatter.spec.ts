@@ -1,4 +1,4 @@
-import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
+import { DEFAULT_VOID_MCP_SUCCESS_VALUE, formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { type OnCallTypedModelParams, type OnCallInvokeModelParams } from '@dereekb/firebase';
 
 const PARAMS: OnCallInvokeModelParams = {
@@ -16,9 +16,10 @@ describe('formatMcpToolResponse', () => {
     expect(response.isError).toBeUndefined();
   });
 
-  it('Tier 1: handles undefined as the result', () => {
+  it('Tier 1: coerces undefined to the default void-success value', () => {
     const response = formatMcpToolResponse(undefined, PARAMS, {});
-    expect(response.content[0]).toEqual({ type: 'text', text: 'undefined' });
+    expect(response.content[0]).toEqual({ type: 'text', text: JSON.stringify(DEFAULT_VOID_MCP_SUCCESS_VALUE) });
+    expect(response.structuredContent).toBe(DEFAULT_VOID_MCP_SUCCESS_VALUE);
   });
 
   it('Tier 1: passes string results through unchanged', () => {

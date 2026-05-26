@@ -1,21 +1,6 @@
 import { type CliApiManifest, type CliApiManifestEntry, type CliApiManifestField, MCP_MANIFEST_VERSION, type McpManifest, type McpManifestToolEntry, mcpManifestKey } from '@dereekb/dbx-cli';
-
-/**
- * Default fallback handlers passed to `paramsValidator.toJsonSchema(...)`.
- *
- * Mirrors {@link DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS} in `@dereekb/firebase-server/mcp`
- * — defined locally so this build-time tool doesn't take a runtime dependency on the
- * firebase-server/mcp package. ArkType throws on predicate definitions, on `undefined`
- * fields, and on `clearable(...)` factories by default; these downgrades emit an empty
- * schema node for those cases instead of failing the whole render.
- */
-const ARKTYPE_FALLBACK_OPTIONS = {
-  fallback: {
-    predicate: () => ({}),
-    unit: () => ({}),
-    undefinedAsClearable: () => ({})
-  }
-};
+import { arktypeToJsonSchemaForExport } from '@dereekb/model';
+import { type Type } from 'arktype';
 
 type JsonObject = Record<string, unknown>;
 
@@ -197,8 +182,11 @@ function safeToJsonSchema(validator: NonNullable<CliApiManifestEntry['paramsVali
   let result: JsonObject | undefined;
 
   try {
-    const schema = validator.toJsonSchema(ARKTYPE_FALLBACK_OPTIONS);
-    result = schema as JsonObject;
+    const schema = arktypeToJsonSchemaForExport(validator as unknown as Type<unknown>);
+
+    if (schema != null && typeof schema === 'object') {
+      result = schema as JsonObject;
+    }
   } catch {
     result = undefined;
   }

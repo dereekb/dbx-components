@@ -1,4 +1,6 @@
 import { type Maybe } from '@dereekb/util';
+import { type Type } from 'arktype';
+import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type ModelApiDetailsResult, type ModelCallApiDetails, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { type Request } from 'express';
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -300,6 +302,14 @@ function resolveInputSchema(context: ResolveInputSchemaContext): object | undefi
   }
 
   try {
+    const exported = arktypeToJsonSchemaForExport(handlerDetails.inputType as unknown as Type<unknown>);
+
+    if (exported && typeof exported === 'object') {
+      return exported as object;
+    }
+
+    // arktypeToJsonSchemaForExport returned a non-object (shouldn't happen for object schemas).
+    // Fall back to the raw arktype output preserving the legacy options for safety.
     return handlerDetails.inputType.toJsonSchema(options);
   } catch (error) {
     outSkipped.push({ toolName, reason: 'schema_generation_failed', dispatch, error: error as Error });
