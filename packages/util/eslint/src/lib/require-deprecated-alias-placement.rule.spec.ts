@@ -44,7 +44,7 @@ export const OTHER = 'bar';
       expect(errors).toHaveLength(0);
     });
 
-    it('file with deprecated exports correctly placed below the marker passes', () => {
+    it('file with deprecated aliases correctly placed below the marker passes', () => {
       const errors = lintCode(`
 export const NEW_NAME = 'foo';
 
@@ -88,26 +88,61 @@ export const oldB = B;
 `);
       expect(errors).toHaveLength(0);
     });
-  });
 
-  describe('invalid', () => {
-    it('flags missing marker when a @deprecated export is present', () => {
-      const errors = lintCode(`
+    it('deprecated literal-valued const referenced by later code is left untouched (no marker required)', () => {
+      // Regression: a @deprecated primary definition (a literal-valued const) is NOT an alias.
+      // It must not be relocated below the runtime array/type that references it, otherwise the
+      // autofix introduces a use-before-declaration error.
+      const input = `/**
+ * @deprecated will be removed in the future.
+ */
+export const SPECIAL_TYPE = 'SPED';
+
+export const OPTIONS = [{ label: 'Special', value: SPECIAL_TYPE }];
+
+export type SpecialUnion = typeof SPECIAL_TYPE;
+`;
+      expect(lintCode(input)).toHaveLength(0);
+      // Nothing is moved or marked.
+      expect(fixCode(input)).toBe(input);
+    });
+
+    it('deprecated value alias referenced elsewhere in the file is left in place (safety net)', () => {
+      // Even a genuine alias must not be relocated when other code still references it.
+      const input = `export const NEW_NAME = 'foo';
+
 /**
  * @deprecated use NEW_NAME instead.
  */
-export const oldName = 'foo';
+export const OLD_NAME = NEW_NAME;
+
+export const ARR = [OLD_NAME];
+`;
+      expect(lintCode(input)).toHaveLength(0);
+      expect(fixCode(input)).toBe(input);
+    });
+  });
+
+  describe('invalid', () => {
+    it('flags missing marker when a @deprecated alias is present', () => {
+      const errors = lintCode(`
+export const NEW_NAME = 'foo';
+
+/**
+ * @deprecated use NEW_NAME instead.
+ */
+export const oldName = NEW_NAME;
 `);
       expect(errors).toHaveLength(1);
       expect(errors[0].messageId).toBe('missingCompatMarker');
     });
 
-    it('flags a @deprecated export sitting above the marker', () => {
+    it('flags a @deprecated alias sitting above the marker', () => {
       const errors = lintCode(`
 /**
  * @deprecated use NEW_NAME instead.
  */
-export const oldName = 'foo';
+export const oldName = NEW_NAME;
 
 export const NEW_NAME = 'foo';
 
@@ -115,7 +150,7 @@ export const NEW_NAME = 'foo';
 /**
  * @deprecated also deprecated.
  */
-export const anotherOld = 'bar';
+export const anotherOld = NEW_NAME;
 `);
       expect(errors.length).toBeGreaterThanOrEqual(1);
       expect(errors.some((e) => e.messageId === 'deprecatedAliasNotAtBottom')).toBe(true);
@@ -138,7 +173,7 @@ export const oldName = NEW_NAME;
   });
 
   describe('autofix', () => {
-    it('inserts the marker before the first deprecated export when all deprecated are at the bottom', () => {
+    it('inserts the marker before the first deprecated alias when all aliases are at the bottom', () => {
       const input = `export const NEW_NAME = 'foo';
 
 /**
@@ -157,27 +192,29 @@ export const oldName = NEW_NAME;
       expect(lintCode(output)).toHaveLength(0);
     });
 
-    it('inserts the marker when the file contains only deprecated exports', () => {
-      const input = `/**
+    it('inserts the marker when the file contains only deprecated aliases (aliasing imports)', () => {
+      const input = `import { newOne, newTwo } from './x';
+
+/**
  * @deprecated use newOne instead.
  */
-export const oldOne = 'a';
+export const oldOne = newOne;
 
 /**
  * @deprecated use newTwo instead.
  */
-export const oldTwo = 'b';
+export const oldTwo = newTwo;
 `;
       const output = fixCode(input);
       expect(output).toContain('// COMPAT: Deprecated aliases');
       expect(lintCode(output)).toHaveLength(0);
     });
 
-    it('moves interleaved deprecated exports to the bottom under a marker', () => {
+    it('moves interleaved deprecated aliases to the bottom under a marker', () => {
       const input = `/**
  * @deprecated use NEW_NAME instead.
  */
-export const oldName = 'foo';
+export const oldName = NEW_NAME;
 
 export const NEW_NAME = 'foo';
 `;
@@ -193,18 +230,18 @@ export const NEW_NAME = 'foo';
       expect(lintCode(output)).toHaveLength(0);
     });
 
-    it('consolidates multiple interleaved deprecated blocks in source order at the bottom', () => {
+    it('consolidates multiple interleaved deprecated alias blocks in source order at the bottom', () => {
       const input = `/**
  * @deprecated use A instead.
  */
-export const oldA = 'a';
+export const oldA = A;
 
 export const A = 'a';
 
 /**
  * @deprecated use B instead.
  */
-export const oldB = 'b';
+export const oldB = B;
 
 export const B = 'b';
 `;
@@ -227,7 +264,7 @@ export const B = 'b';
       const input = `/**
  * @deprecated use NEW_NAME instead.
  */
-export const oldName = 'foo';
+export const oldName = NEW_NAME;
 
 export const NEW_NAME = 'foo';
 
@@ -235,7 +272,7 @@ export const NEW_NAME = 'foo';
 /**
  * @deprecated also deprecated.
  */
-export const anotherOld = 'bar';
+export const anotherOld = NEW_NAME;
 `;
       const output = fixCode(input);
       const markerIdx = output.indexOf('// COMPAT: Deprecated aliases');
@@ -245,6 +282,24 @@ export const anotherOld = 'bar';
       expect(newNameIdx).toBeGreaterThanOrEqual(0);
       expect(newNameIdx).toBeLessThan(markerIdx);
       expect(oldNameIdx).toBeGreaterThan(markerIdx);
+      expect(lintCode(output)).toHaveLength(0);
+    });
+
+    it('relocates a deprecated type alias under the marker (type-only declarations are runtime-safe)', () => {
+      const input = `/**
+ * @deprecated use NewType instead.
+ */
+export type OldType = NewType;
+
+export type NewType = string;
+`;
+      const output = fixCode(input);
+      const markerIdx = output.indexOf('// COMPAT: Deprecated aliases');
+      const oldTypeIdx = output.indexOf('export type OldType');
+      const newTypeIdx = output.indexOf('export type NewType');
+      expect(markerIdx).toBeGreaterThan(0);
+      expect(newTypeIdx).toBeLessThan(markerIdx);
+      expect(oldTypeIdx).toBeGreaterThan(markerIdx);
       expect(lintCode(output)).toHaveLength(0);
     });
 
@@ -258,10 +313,12 @@ export function foo(a: number, b?: number): string {
   return String(a) + (b ?? '');
 }
 
+export const NEW_NAME = 'foo';
+
 /**
  * @deprecated use NEW_NAME instead.
  */
-export const oldAlias = 'foo';
+export const oldAlias = NEW_NAME;
 `;
       const output = fixCode(input);
       // Marker should be inserted for the sibling alias.
