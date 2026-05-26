@@ -86,7 +86,7 @@ export interface ModelDecodeToolOutput {
 export function createModelDecodeTool(deps: CreateModelDecodeToolDeps): McpToolDefinition {
   const handler: McpStaticToolHandler = (args, ctx) => Promise.resolve(modelDecodeToolHandler(args, ctx, deps));
   const name = MODEL_DECODE_TOOL_NAME;
-  const description = `Decode a Firestore model key ("prefix/id", or subcollection path "parentPrefix/parentId/childPrefix/childId") into { leaf, ancestors, unresolvedPrefixes } using the registered manifest (${deps.manifest.length} model${deps.manifest.length === 1 ? '' : 's'}). Mirrors dbx-cli \`model-decode\`.`;
+  const description = `Decode a Firestore model key ("prefix/id", or subcollection path "parentPrefix/parentId/childPrefix/childId") into { leaf, ancestors, unresolvedPrefixes } using the registered manifest (${deps.manifest.length} model${deps.manifest.length === 1 ? '' : 's'}).`;
 
   return {
     name,

@@ -40,6 +40,8 @@ describe('createModelInfoTool', () => {
       }
 
       expect(tool.inputSchema).toMatchObject({ type: 'object', additionalProperties: false });
+      // MCP SDK's tools/list validator requires outputSchema.type === 'object' at the root.
+      expect(tool.outputSchema).toMatchObject({ type: 'object' });
     });
 
     it('mentions the manifest size in the description', () => {

@@ -79,7 +79,7 @@ export type ModelInfoToolOutput = { readonly mode: 'list'; readonly models: Read
 export function createModelInfoTool(deps: CreateModelInfoToolDeps): McpToolDefinition {
   const handler: McpStaticToolHandler = (args, ctx) => Promise.resolve(modelInfoToolHandler(args, ctx, deps));
   const name = MODEL_INFO_TOOL_NAME;
-  const description = `Browse the Firestore model catalog (${deps.manifest.length} model${deps.manifest.length === 1 ? '' : 's'}). Without \`model\`, returns a summary list of every model. With \`model\` (matched by modelType, identityConst, or collectionPrefix), returns the full entry with persisted fields. Mirrors dbx-cli \`model-info\`.`;
+  const description = `Browse the Firestore model catalog (${deps.manifest.length} model${deps.manifest.length === 1 ? '' : 's'}). Without \`model\`, returns a summary list of every model. With \`model\` (matched by modelType, identityConst, or collectionPrefix), returns the full entry with persisted fields.`;
 
   return {
     name,
@@ -199,60 +199,57 @@ const MODEL_INFO_INPUT_SCHEMA = {
   additionalProperties: false
 } as const;
 
+// MCP's `tools/list` validator requires `outputSchema.type === 'object'` at the root
+// (see @modelcontextprotocol/sdk Zod schema), so the list/single union is expressed via a
+// top-level object whose nested `oneOf` discriminates by the `mode` literal.
 const MODEL_INFO_OUTPUT_SCHEMA = {
-  oneOf: [
-    {
-      type: 'object',
-      required: ['mode', 'models'],
-      description: 'List of every model in the manifest (returned when `model` is omitted).',
-      properties: {
-        mode: { type: 'string', enum: ['list'] },
-        models: {
-          type: 'array',
-          items: {
-            type: 'object',
-            required: ['modelType', 'modelName', 'identityConst', 'collectionPrefix', 'sourcePackage', 'fieldCount'],
-            properties: {
-              modelType: { type: 'string' },
-              modelName: { type: 'string' },
-              modelGroup: { type: 'string' },
-              identityConst: { type: 'string' },
-              collectionPrefix: { type: 'string' },
-              parentIdentityConst: { type: 'string' },
-              sourcePackage: { type: 'string' },
-              fieldCount: { type: 'integer' },
-              description: { type: 'string' }
-            }
-          }
+  type: 'object',
+  required: ['mode'],
+  description: 'Either lists every model in the manifest (when `model` is omitted) or returns a full entry for the requested model (when `model` is provided). The `mode` field discriminates the variant.',
+  properties: {
+    mode: { type: 'string', enum: ['list', 'single'] },
+    models: {
+      type: 'array',
+      description: 'Present when `mode` is `"list"`. One summary entry per registered model.',
+      items: {
+        type: 'object',
+        required: ['modelType', 'modelName', 'identityConst', 'collectionPrefix', 'sourcePackage', 'fieldCount'],
+        properties: {
+          modelType: { type: 'string' },
+          modelName: { type: 'string' },
+          modelGroup: { type: 'string' },
+          identityConst: { type: 'string' },
+          collectionPrefix: { type: 'string' },
+          parentIdentityConst: { type: 'string' },
+          sourcePackage: { type: 'string' },
+          fieldCount: { type: 'integer' },
+          description: { type: 'string' }
         }
       }
     },
-    {
+    model: {
       type: 'object',
-      required: ['mode', 'model'],
-      description: 'Full entry for the requested model (returned when `model` is provided).',
+      description: 'Present when `mode` is `"single"`. The full manifest entry for the requested model.',
+      required: ['modelType', 'modelName', 'identityConst', 'collectionPrefix', 'sourcePackage', 'sourceFile', 'fields'],
       properties: {
-        mode: { type: 'string', enum: ['single'] },
-        model: {
-          type: 'object',
-          required: ['modelType', 'modelName', 'identityConst', 'collectionPrefix', 'sourcePackage', 'sourceFile', 'fields'],
-          properties: {
-            modelType: { type: 'string' },
-            modelName: { type: 'string' },
-            modelGroup: { type: 'string' },
-            identityConst: { type: 'string' },
-            collectionPrefix: { type: 'string' },
-            parentIdentityConst: { type: 'string' },
-            description: { type: 'string' },
-            sourcePackage: { type: 'string' },
-            sourceFile: { type: 'string' },
-            fields: {
-              type: 'array',
-              items: { type: 'object' }
-            }
-          }
+        modelType: { type: 'string' },
+        modelName: { type: 'string' },
+        modelGroup: { type: 'string' },
+        identityConst: { type: 'string' },
+        collectionPrefix: { type: 'string' },
+        parentIdentityConst: { type: 'string' },
+        description: { type: 'string' },
+        sourcePackage: { type: 'string' },
+        sourceFile: { type: 'string' },
+        fields: {
+          type: 'array',
+          items: { type: 'object' }
         }
       }
     }
+  },
+  oneOf: [
+    { required: ['models'], properties: { mode: { const: 'list' } } },
+    { required: ['model'], properties: { mode: { const: 'single' } } }
   ]
 } as const;

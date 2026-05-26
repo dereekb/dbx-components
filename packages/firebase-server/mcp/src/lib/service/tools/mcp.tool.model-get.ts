@@ -95,7 +95,7 @@ export interface ModelGetToolInput {
 export function createModelGetTool(deps: CreateModelGetToolDeps): McpToolDefinition {
   const handler: McpStaticToolHandler = (args, ctx) => modelGetToolHandler(args, ctx, deps);
   const name = MODEL_GET_TOOL_NAME;
-  const description = 'Fetch one or more Firestore model documents by key or bare id. Values containing `/` are treated as full keys; bare ids are auto-promoted to `<collectionName>/<id>` for root models. Subcollection models require full keys. Mirrors dbx-cli `get` / `get-many`.';
+  const description = 'Fetch one or more Firestore model documents by key or bare id. Values containing `/` are treated as full keys; bare ids are auto-promoted to `<collectionName>/<id>` for root models. Subcollection models require full keys.';
 
   return {
     name,
