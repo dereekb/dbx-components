@@ -38,6 +38,12 @@
       "types": "./oidc/index.d.ts",
       "import": "./oidc/index.cjs.mjs",
       "default": "./oidc/index.cjs.js"
+    },
+    "./mcp": {
+      "module": "./mcp/index.esm.js",
+      "types": "./mcp/index.d.ts",
+      "import": "./mcp/index.cjs.mjs",
+      "default": "./mcp/index.cjs.js"
     }
   },
   "main": "./src/index.js",
