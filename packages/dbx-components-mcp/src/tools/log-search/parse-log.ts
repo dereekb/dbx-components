@@ -64,8 +64,8 @@ function extractTitle(lines: readonly string[], ref: LogFileRef): string {
 
 function extractSectionBody(lines: readonly string[], headingRegex: RegExp): string | undefined {
   let startIndex = -1;
-  for (let i = 0; i < lines.length; i += 1) {
-    if (headingRegex.test(lines[i])) {
+  for (const [i, line] of lines.entries()) {
+    if (headingRegex.test(line)) {
       startIndex = i + 1;
       break;
     }
@@ -92,8 +92,8 @@ interface FencedBlock {
 
 function extractFirstFencedBlock(lines: readonly string[]): FencedBlock {
   let openIdx = -1;
-  for (let i = 0; i < lines.length; i += 1) {
-    if (/^```/.test(lines[i])) {
+  for (const [i, line] of lines.entries()) {
+    if (line.startsWith('```')) {
       openIdx = i;
       break;
     }
@@ -102,7 +102,7 @@ function extractFirstFencedBlock(lines: readonly string[]): FencedBlock {
   if (openIdx >= 0) {
     let closeIdx = -1;
     for (let i = openIdx + 1; i < lines.length; i += 1) {
-      if (/^```/.test(lines[i])) {
+      if (lines[i].startsWith('```')) {
         closeIdx = i;
         break;
       }

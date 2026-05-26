@@ -112,7 +112,6 @@ export function clearable(definition: string | Type): any {
  * @returns The pruned JSON Schema fragment as a plain object.
  */
 export function arktypeToJsonSchemaForExport(t: Type<unknown>): unknown {
-  // NOSONAR (typescript:S7784): structuredClone bypasses arktype's boxed-node toJSON()
   const raw = t.toJsonSchema({
     fallback: {
       predicate: (ctx) => ctx.base,
@@ -122,7 +121,8 @@ export function arktypeToJsonSchemaForExport(t: Type<unknown>): unknown {
       default: (() => false) as unknown as (ctx: unknown) => never
     }
   });
-  return pruneFalseUnionBranches(JSON.parse(JSON.stringify(raw)));
+  // structuredClone would skip arktype's boxed-node toJSON() callbacks, so JSON round-trip is required here.
+  return pruneFalseUnionBranches(JSON.parse(JSON.stringify(raw))); // NOSONAR typescript:S7784
 }
 
 /**

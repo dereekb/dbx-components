@@ -412,12 +412,12 @@ export type MockItemUserData = FirestoreModelData<MockItemUser, {}>;
 /**
  * Firestore collection path name.
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention -- camelCase chosen to match neighboring mock exports in this test fixture
+
 export const MOCK_ITEM_USER_COLLECTION_NAME = 'mockItemUser';
 /**
  * Default document identifier used for MockItemUser in tests.
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention -- camelCase chosen to match neighboring mock exports in this test fixture
+
 export const MOCK_ITEM_USER_IDENTIFIER = '0';
 
 /**

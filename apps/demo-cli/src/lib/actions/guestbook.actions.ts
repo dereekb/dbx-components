@@ -184,14 +184,12 @@ export interface AllPublishedGuestbookEntriesInput {
 export async function allPublishedGuestbookEntries(input: AllPublishedGuestbookEntriesInput): Promise<AllPublishedGuestbookEntriesResult> {
   const { context, limit } = input;
 
-  const result = await context.callModel<AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult>({
+  return await context.callModel<AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult>({
     modelType: 'guestbookEntry',
     call: 'invoke',
     specifier: 'allPublishedEntries',
     data: limit === undefined ? {} : { limit }
   });
-
-  return result;
 }
 
 /**

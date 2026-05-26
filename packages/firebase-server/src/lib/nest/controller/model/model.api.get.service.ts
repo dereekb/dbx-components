@@ -101,10 +101,7 @@ export class ModelApiGetService {
    * @returns The matching identity or `undefined`.
    */
   getModelIdentity(modelType: FirestoreModelType, auth: Maybe<FirebaseServerAuthData>): Maybe<FirestoreModelIdentity> {
-    if (this._identityByModelType == null) {
-      this._identityByModelType = this._buildIdentityMap(auth);
-    }
-
+    this._identityByModelType ??= this._buildIdentityMap(auth);
     return this._identityByModelType.get(modelType);
   }
 
