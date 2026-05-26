@@ -6,7 +6,7 @@
  * table, enum decodings, and foreign-key relationship hints.
  */
 
-import type { FirebaseEnum, FirebaseField, FirebaseModel } from '../registry/firebase-models.js';
+import type { FirebaseEnum, FirebaseField, FirebaseModel } from '@dereekb/dbx-cli';
 
 /**
  * A single decoded field row with value + any enum decoding applied.

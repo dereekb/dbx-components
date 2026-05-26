@@ -8,7 +8,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { FILTER_KIND_ORDER, type FilterKind, type FilterRegistry } from '../registry/filters-runtime.js';
+import { FILTER_KIND_ORDER, type FilterKind, type FilterRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const FILTERS_URI = 'dbx://filter/entries';

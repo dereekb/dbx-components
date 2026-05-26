@@ -14,10 +14,10 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { UI_COMPONENT_CATEGORIES, type UiComponentCategoryValue, type UiComponentEntry } from '../manifest/ui-components-schema.js';
-import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
-import { type DbxDocsUiExamplesRegistry, EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY } from '../registry/dbx-docs-ui-examples-runtime.js';
-import { type DbxDocsUiExampleEntry } from '../manifest/dbx-docs-ui-examples-schema.js';
+import { UI_COMPONENT_CATEGORIES, type UiComponentCategoryValue, type UiComponentEntry } from '@dereekb/dbx-cli';
+import type { UiComponentRegistry } from '@dereekb/dbx-cli';
+import { type DbxDocsUiExamplesRegistry, EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY } from '@dereekb/dbx-cli';
+import { type DbxDocsUiExampleEntry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_LIMIT = 10;

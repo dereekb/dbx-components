@@ -6,7 +6,7 @@
  * every declared enum, and the source path for further reading.
  */
 
-import type { FirebaseField, FirebaseModel, FirebaseSubObject } from '../registry/firebase-models.js';
+import type { FirebaseField, FirebaseModel, FirebaseSubObject } from '@dereekb/dbx-cli';
 
 export type LookupDepth = 'brief' | 'full';
 

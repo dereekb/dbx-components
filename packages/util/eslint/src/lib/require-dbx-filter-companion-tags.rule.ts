@@ -35,7 +35,7 @@ export interface UtilRequireDbxFilterCompanionTagsRuleDefinition {
 
 /**
  * ESLint rule enforcing `@dbxFilter` companion tags. Mirrors the scanner
- * schema at `packages/dbx-components-mcp/src/scan/filters-extract.ts`.
+ * schema at `packages/dbx-cli/src/lib/mcp-scan/scan/filters-extract.ts`.
  * Applies to classes (filter directives) and exported interfaces (filter
  * patterns); the scanner reads both as filter entries.
  */

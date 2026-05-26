@@ -20,7 +20,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
+import type { SemanticTypeRegistry } from '@dereekb/dbx-cli';
 
 const SEMANTIC_TYPES_URI = 'dbx://semantic-type/entries';
 const SEMANTIC_TYPE_ENTRY_TEMPLATE = 'dbx://semantic-type/entries/{name}';

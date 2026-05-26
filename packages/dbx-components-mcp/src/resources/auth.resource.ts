@@ -7,7 +7,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { AuthRegistry } from '../registry/auth-runtime.js';
+import type { AuthRegistry } from '@dereekb/dbx-cli';
 import { pickFirstVariable } from './_resource-helpers.js';
 
 const AUTH_CATALOG_URI = 'dbx://auth/catalog';

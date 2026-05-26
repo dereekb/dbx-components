@@ -7,8 +7,8 @@
  *   • browse / no-match — grouped table or "no confident match" notice.
  */
 
-import type { TokenEntry } from '../../manifest/tokens-schema.js';
-import type { ScoredTokenMatch, TokenRegistry } from '../../registry/tokens-runtime.js';
+import type { TokenEntry } from '@dereekb/dbx-cli';
+import type { ScoredTokenMatch, TokenRegistry } from '@dereekb/dbx-cli';
 import type { ResolveTokenInput, ResolveTokenResult } from './resolve.js';
 
 /**

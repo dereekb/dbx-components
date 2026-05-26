@@ -33,6 +33,7 @@ import { fileURLToPath } from 'node:url';
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = resolve(SCRIPT_DIR, '..');
 const WORKSPACE_ROOT = resolve(PACKAGE_ROOT, '..', '..');
+const GENERATED_ROOT = resolve(WORKSPACE_ROOT, 'packages/dbx-cli/generated');
 
 const BUNDLED_GENERATED_AT = '1970-01-01T00:00:00.000Z';
 const GENERATOR_LABEL = '@dereekb/dbx-components-mcp/scripts/generate-css-tokens.mjs';
@@ -70,7 +71,7 @@ async function runDbxWeb(flags) {
   const variablesPath = resolve(WORKSPACE_ROOT, 'packages/dbx-web/src/lib/style/_variables.scss');
   const rootVariablesPath = resolve(WORKSPACE_ROOT, 'packages/dbx-web/src/lib/style/_root-variables.scss');
   const configPath = resolve(WORKSPACE_ROOT, 'packages/dbx-web/src/lib/style/_config.scss');
-  const outPath = resolve(PACKAGE_ROOT, 'generated/dereekb-dbx-web.tokens.mcp.generated.json');
+  const outPath = resolve(GENERATED_ROOT, 'dereekb-dbx-web.tokens.mcp.generated.json');
 
   const entries = extractDbxWebTokens({ variablesPath, rootVariablesPath, configPath });
   const manifest = {
@@ -85,8 +86,8 @@ async function runDbxWeb(flags) {
 }
 
 async function runCuratedSource(srcName, outName, flags) {
-  const srcPath = resolve(PACKAGE_ROOT, 'src/manifest/sources', srcName);
-  const outPath = resolve(PACKAGE_ROOT, 'generated', outName);
+  const srcPath = resolve(WORKSPACE_ROOT, 'packages/dbx-cli/src/lib/mcp-scan/manifest/sources', srcName);
+  const outPath = resolve(GENERATED_ROOT, outName);
   const raw = readFileSync(srcPath, 'utf-8');
   const parsed = JSON.parse(raw);
   parsed.generatedAt = BUNDLED_GENERATED_AT;

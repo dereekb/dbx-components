@@ -25,7 +25,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import type { AuthClaimInfo, AuthRegistry, AuthRoleInfo, AuthScopeInfo } from '../registry/auth-runtime.js';
+import type { AuthClaimInfo, AuthRegistry, AuthRoleInfo, AuthScopeInfo } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DBX_AUTH_ROLE_LOOKUP_TOOL: Tool = {

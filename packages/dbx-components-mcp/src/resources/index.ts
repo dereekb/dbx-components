@@ -30,18 +30,18 @@
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { ActionRegistry } from '../registry/actions-runtime.js';
-import type { AuthRegistry } from '../registry/auth-runtime.js';
-import type { FilterRegistry } from '../registry/filters-runtime.js';
-import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
-import type { PipeRegistry } from '../registry/pipes-runtime.js';
-import type { UtilRegistry } from '../registry/utils-runtime.js';
-import type { ModelSnapshotFieldRegistry } from '../registry/model-snapshot-fields-runtime.js';
+import type { ActionRegistry } from '@dereekb/dbx-cli';
+import type { AuthRegistry } from '@dereekb/dbx-cli';
+import type { FilterRegistry } from '@dereekb/dbx-cli';
+import type { ForgeFieldRegistry } from '@dereekb/dbx-cli';
+import type { PipeRegistry } from '@dereekb/dbx-cli';
+import type { UtilRegistry } from '@dereekb/dbx-cli';
+import type { ModelSnapshotFieldRegistry } from '@dereekb/dbx-cli';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
-import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
-import type { TokenRegistry } from '../registry/tokens-runtime.js';
-import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
-import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
+import type { SemanticTypeRegistry } from '@dereekb/dbx-cli';
+import type { TokenRegistry } from '@dereekb/dbx-cli';
+import type { CssUtilityRegistry } from '@dereekb/dbx-cli';
+import type { UiComponentRegistry } from '@dereekb/dbx-cli';
 import { registerFormFieldsResource } from './form-fields.resource.js';
 import { registerFirebaseModelsResource } from './firebase-models.resource.js';
 import { registerModelArchetypesResource } from './archetypes.resource.js';

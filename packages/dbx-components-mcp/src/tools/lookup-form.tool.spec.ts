@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { FORM_FIELDS, type FormFieldInfo } from '../registry/index.js';
-import { createForgeFieldRegistryFromEntries } from '../registry/forge-fields.js';
+import { FORM_FIELDS, type FormFieldInfo } from '@dereekb/dbx-cli';
+import { createForgeFieldRegistryFromEntries } from '@dereekb/dbx-cli';
 import { createLookupFormTool } from './lookup-form.tool.js';
 import { resolveTopicAlias } from './form-alias-resolver.js';
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createUtilRegistryFromEntries, type UtilEntryInfo } from '../registry/utils-runtime.js';
+import { createUtilRegistryFromEntries, type UtilEntryInfo } from '@dereekb/dbx-cli';
 import { createLookupUtilTool } from './lookup-util.tool.js';
 
 const FIXTURE_ENTRIES: readonly UtilEntryInfo[] = [

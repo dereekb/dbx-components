@@ -1,6 +1,6 @@
 /**
  * Shared helpers for the `@dbx<Family>` companion-tag ESLint rules. Mirrors the
- * scanner schemas in `packages/dbx-components-mcp/src/scan/*-extract.ts` so
+ * scanner schemas in `packages/dbx-cli/src/lib/mcp-scan/scan/*-extract.ts` so
  * violations surface at lint time instead of at manifest-regeneration time.
  *
  * Each per-family rule supplies a {@link DbxTagFamilySpec} describing which

@@ -7,7 +7,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { PIPE_CATEGORY_ORDER, type PipeCategory, type PipeRegistry } from '../registry/pipes-runtime.js';
+import { PIPE_CATEGORY_ORDER, type PipeCategory, type PipeRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const PIPES_URI = 'dbx://pipe/entries';

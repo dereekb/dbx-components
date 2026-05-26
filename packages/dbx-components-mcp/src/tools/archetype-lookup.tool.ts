@@ -8,7 +8,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { MODEL_ARCHETYPES, resolveModelArchetype, type ModelArchetypeInfo } from '../registry/index.js';
+import { MODEL_ARCHETYPES, resolveModelArchetype, type ModelArchetypeInfo } from '@dereekb/dbx-cli';
 import { formatArchetypeCatalog, formatArchetypeEntry } from './archetype/format.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 

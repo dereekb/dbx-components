@@ -8,7 +8,7 @@
  * one rule set.
  */
 
-import type { ModelArchetypeInfo } from '../../registry/archetypes.js';
+import type { ModelArchetypeInfo } from '@dereekb/dbx-cli';
 import type { ArchetypeQuestionnaire } from './types.js';
 
 /**

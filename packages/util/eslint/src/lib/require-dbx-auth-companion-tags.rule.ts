@@ -33,7 +33,7 @@ export interface UtilRequireDbxAuthCompanionTagsRuleDefinition {
 
 /**
  * ESLint rule enforcing the three `@dbxAuth*` marker families. Mirrors the
- * scanner schema at `packages/dbx-components-mcp/src/scan/auth-extract.ts`.
+ * scanner schema at `packages/dbx-cli/src/lib/mcp-scan/scan/auth-extract.ts`.
  *
  * - `@dbxAuthClaimsApp <slug>` on an interface / type alias.
  * - `@dbxAuthClaim` (bare) on a `PropertySignature` inside an interface.

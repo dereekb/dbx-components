@@ -169,7 +169,7 @@ export interface UtilRequireDbxModelCompanionTagsRuleDefinition {
 /**
  * ESLint rule enforcing `@dbxModel` / `@dbxModelSubObject` / `@dbxModelOrganizationalGroupRoot`
  * companion tags. Mirrors the scanner schema at
- * `packages/dbx-components-mcp/src/scan/extract-models/find-interfaces.ts`.
+ * `packages/dbx-cli/src/lib/mcp-scan/scan/extract-models/find-interfaces.ts`.
  *
  * Does NOT enforce a Slug / Category / Tags shape because the scanner does
  * not consume those for this family.

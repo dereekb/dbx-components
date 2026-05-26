@@ -23,7 +23,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { FIREBASE_MODELS, getFirebaseModel, getFirebaseModelByPrefix, type FirebaseModel } from '../registry/index.js';
+import { FIREBASE_MODELS, getFirebaseModel, getFirebaseModelByPrefix, type FirebaseModel } from '@dereekb/dbx-cli';
 import { formatDecode } from './decode.formatter.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 

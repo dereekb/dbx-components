@@ -6,7 +6,7 @@
  * its own renderer so the wording stays specific to the op's purpose.
  */
 
-import { DOWNSTREAM_CLUSTERS, type DownstreamCluster } from '../../scan/discover-downstream-packages.js';
+import { DOWNSTREAM_CLUSTERS, type DownstreamCluster } from '@dereekb/dbx-cli';
 import type { InitPlan } from './init.js';
 import type { RefreshResult } from './refresh.js';
 import type { PackageSnapshot, WorkspaceSnapshot } from './snapshot.js';

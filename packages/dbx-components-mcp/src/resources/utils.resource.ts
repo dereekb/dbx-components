@@ -8,7 +8,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { UtilRegistry } from '../registry/utils-runtime.js';
+import type { UtilRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse, pickFirstVariable } from './_resource-helpers.js';
 
 const UTILS_URI = 'dbx://util/entries';

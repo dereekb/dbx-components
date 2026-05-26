@@ -14,7 +14,7 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import type { ModelSnapshotFieldEntryInfo, ModelSnapshotFieldRegistry } from '../registry/model-snapshot-fields-runtime.js';
+import type { ModelSnapshotFieldEntryInfo, ModelSnapshotFieldRegistry } from '@dereekb/dbx-cli';
 import { DEFAULT_CATALOG_LIMIT, MAX_CATALOG_LIMIT, buildCatalogSearchInputSchema, formatCatalogSearchResults, scoreCatalogEntryToken } from './_search/catalog-search.js';
 import { runSearchTool } from './_search/score.js';
 import { resolveSnapshotFieldTopicAlias } from './snapshot-field-alias-resolver.js';

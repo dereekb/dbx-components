@@ -15,7 +15,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { FIREBASE_MODELS, getDownstreamCatalog, getFirebaseModel, getFirebaseModelByPrefix, type DownstreamCatalog, type FirebaseModel } from '../registry/index.js';
+import { FIREBASE_MODELS, getDownstreamCatalog, getFirebaseModel, getFirebaseModelByPrefix, type DownstreamCatalog, type FirebaseModel } from '@dereekb/dbx-cli';
 import { formatFirebaseModelCatalog, formatFirebaseModelEntry, formatFirebaseStoreShapeTaxonomy } from './firebase-lookup.formatter.js';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

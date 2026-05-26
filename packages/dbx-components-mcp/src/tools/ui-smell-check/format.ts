@@ -10,7 +10,7 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import type { TokenRegistry } from '../../registry/tokens-runtime.js';
+import type { TokenRegistry } from '@dereekb/dbx-cli';
 import type { DetectSmellsResult, SmellMatch, SmellMatchWithExtras } from './smells.js';
 
 /**

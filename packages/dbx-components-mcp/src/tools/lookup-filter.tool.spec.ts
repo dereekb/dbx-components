@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createFilterRegistryFromEntries, type FilterEntryInfo } from '../registry/filters-runtime.js';
+import { createFilterRegistryFromEntries, type FilterEntryInfo } from '@dereekb/dbx-cli';
 import { createLookupFilterTool } from './lookup-filter.tool.js';
 
 const FIXTURE_ENTRIES: readonly FilterEntryInfo[] = [

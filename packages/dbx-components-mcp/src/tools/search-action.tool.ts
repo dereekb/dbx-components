@@ -12,7 +12,7 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { ACTION_ROLE_ORDER, type ActionEntryInfo, type ActionEntryRole, type ActionRegistry } from '../registry/actions-runtime.js';
+import { ACTION_ROLE_ORDER, type ActionEntryInfo, type ActionEntryRole, type ActionRegistry } from '@dereekb/dbx-cli';
 import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';
 import { type DbxTool, type ToolResult } from './types.js';
 

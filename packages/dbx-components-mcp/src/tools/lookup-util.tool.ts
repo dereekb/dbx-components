@@ -15,7 +15,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type Maybe } from '@dereekb/util';
-import type { UtilEntryInfo, UtilRegistry } from '../registry/utils-runtime.js';
+import type { UtilEntryInfo, UtilRegistry } from '@dereekb/dbx-cli';
 import { createLookupTool, type FuzzyField, type LookupDepth } from './_lookup.factory.js';
 import { type DbxTool } from './types.js';
 

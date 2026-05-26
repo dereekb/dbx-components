@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { CssUtilityEntry } from '../manifest/css-utilities-schema.js';
-import { createCssUtilityRegistryFromEntries } from '../registry/css-utilities-runtime.js';
+import type { CssUtilityEntry } from '@dereekb/dbx-cli';
+import { createCssUtilityRegistryFromEntries } from '@dereekb/dbx-cli';
 import { createCssClassLookupTool } from './css-class-lookup.tool.js';
 
 const ENTRIES: readonly CssUtilityEntry[] = [

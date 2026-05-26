@@ -37,7 +37,7 @@ export interface UtilRequireDbxPipeCompanionTagsRuleDefinition {
 
 /**
  * ESLint rule enforcing `@dbxPipe` companion tags. Mirrors the scanner schema
- * at `packages/dbx-components-mcp/src/scan/pipes-extract.ts` so violations
+ * at `packages/dbx-cli/src/lib/mcp-scan/scan/pipes-extract.ts` so violations
  * surface at lint time instead of at manifest-regeneration time.
  */
 export const UTIL_REQUIRE_DBX_PIPE_COMPANION_TAGS_RULE: UtilRequireDbxPipeCompanionTagsRuleDefinition = {

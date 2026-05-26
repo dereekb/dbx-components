@@ -7,7 +7,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { FIREBASE_MODELS, getFirebaseBucketKeyedByIdModels, getFirebaseDistrictKeyedByIdModels, getFirebaseExternalIdKeyedByIdModels, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseRegionKeyedByIdModels, getFirebaseSubcollectionsOf, getFirebaseUserKeyedByIdModels, getFirebaseUserRelatedModels, type FirebaseModel } from '../registry/index.js';
+import { FIREBASE_MODELS, getFirebaseBucketKeyedByIdModels, getFirebaseDistrictKeyedByIdModels, getFirebaseExternalIdKeyedByIdModels, getFirebaseModel, getFirebaseModelByPrefix, getFirebaseModels, getFirebasePrefixCatalog, getFirebaseRegionKeyedByIdModels, getFirebaseSubcollectionsOf, getFirebaseUserKeyedByIdModels, getFirebaseUserRelatedModels, type FirebaseModel } from '@dereekb/dbx-cli';
 import { buildModelHierarchy } from '../tools/model-hierarchy.formatter.js';
 
 const FIREBASE_MODELS_URI = 'dbx://model/firebase';

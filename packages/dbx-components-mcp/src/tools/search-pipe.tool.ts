@@ -12,7 +12,7 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import type { PipeEntryInfo, PipeRegistry } from '../registry/pipes-runtime.js';
+import type { PipeEntryInfo, PipeRegistry } from '@dereekb/dbx-cli';
 import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';
 import { type DbxTool, type ToolResult } from './types.js';
 

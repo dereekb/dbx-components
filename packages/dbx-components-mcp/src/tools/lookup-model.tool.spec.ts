@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { clearDownstreamCatalogCache } from '../registry/downstream-models-runtime.js';
+import { clearDownstreamCatalogCache } from '@dereekb/dbx-cli';
 import { runLookupModel } from './lookup-model.tool.js';
 
 const REPO_ROOT = resolve(__dirname, '../../../..');

@@ -13,7 +13,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import type { AuthAppInfo, AuthClaimInfo, AuthRegistry } from '../registry/auth-runtime.js';
+import type { AuthAppInfo, AuthClaimInfo, AuthRegistry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DBX_AUTH_LIST_APP_TOOL: Tool = {

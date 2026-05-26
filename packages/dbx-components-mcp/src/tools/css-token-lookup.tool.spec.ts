@@ -1,12 +1,12 @@
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { loadTokenManifests } from '../manifest/tokens-loader.js';
-import { createTokenRegistry } from '../registry/tokens-runtime.js';
+import { loadTokenManifests } from '@dereekb/dbx-cli';
+import { createTokenRegistry } from '@dereekb/dbx-cli';
 import { resolveToken, parseColor, parseLength, parseShadow, colorDistance } from './css-token-lookup/index.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
 
 const PACKAGE_ROOT = resolve(__dirname, '..', '..');
-const MANIFESTS_DIR = resolve(PACKAGE_ROOT, 'generated');
+const MANIFESTS_DIR = resolve(PACKAGE_ROOT, '..', 'dbx-cli', 'generated');
 
 async function buildRegistry() {
   const loaded = await loadTokenManifests({

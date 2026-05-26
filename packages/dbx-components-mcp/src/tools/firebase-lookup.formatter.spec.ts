@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { FirebaseModel } from '../registry/firebase-models.js';
+import type { FirebaseModel } from '@dereekb/dbx-cli';
 import { formatFirebaseModelEntry } from './firebase-lookup.formatter.js';
 
 const BASE_MODEL: FirebaseModel = {

@@ -132,7 +132,7 @@ export interface UtilRequireDbxActionCompanionTagsRuleDefinition {
 
 /**
  * ESLint rule enforcing `@dbxAction` companion tags. Mirrors the scanner
- * schema at `packages/dbx-components-mcp/src/scan/actions-extract.ts`. Class
+ * schema at `packages/dbx-cli/src/lib/mcp-scan/scan/actions-extract.ts`. Class
  * declarations carry the `@dbxAction` marker; enum declarations carry the
  * `@dbxActionStateEnum` marker, and `@dbxActionStateTransitionsFrom/To` are
  * valid on enum-member JSDocs.

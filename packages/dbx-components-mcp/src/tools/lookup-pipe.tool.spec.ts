@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createPipeRegistryFromEntries, type PipeEntryInfo } from '../registry/pipes-runtime.js';
+import { createPipeRegistryFromEntries, type PipeEntryInfo } from '@dereekb/dbx-cli';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
 
 const FIXTURE_ENTRIES: readonly PipeEntryInfo[] = [

@@ -15,7 +15,7 @@
  * name (the registry already sorts; the formatter just keeps order).
  */
 
-import type { SemanticTypeEntry } from '../manifest/semantic-types-schema.js';
+import type { SemanticTypeEntry } from '@dereekb/dbx-cli';
 
 // MARK: Single-entry rendering
 /**

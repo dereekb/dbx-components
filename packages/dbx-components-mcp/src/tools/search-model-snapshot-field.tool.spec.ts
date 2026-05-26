@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createModelSnapshotFieldRegistryFromEntries, type ModelSnapshotFieldEntryInfo } from '../registry/model-snapshot-fields-runtime.js';
+import { createModelSnapshotFieldRegistryFromEntries, type ModelSnapshotFieldEntryInfo } from '@dereekb/dbx-cli';
 import { searchEntries, tokenize } from './_search/score.js';
 import { createSearchModelSnapshotFieldTool } from './search-model-snapshot-field.tool.js';
 import { resolveSnapshotFieldTopicAlias } from './snapshot-field-alias-resolver.js';

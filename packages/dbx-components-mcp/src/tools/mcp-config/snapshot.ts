@@ -13,9 +13,9 @@
 import type { Maybe } from '@dereekb/util';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { stat } from 'node:fs/promises';
-import { findAndLoadConfig, type ConfigWarning } from '../../config/load-config.js';
-import type { DbxMcpConfig } from '../../config/config-schema.js';
-import { discoverDownstreamPackages, DOWNSTREAM_CLUSTERS, type DownstreamCluster, type DownstreamPackage } from '../../scan/discover-downstream-packages.js';
+import { findAndLoadConfig, type ConfigWarning } from '@dereekb/dbx-cli';
+import type { DbxMcpConfig } from '@dereekb/dbx-cli';
+import { discoverDownstreamPackages, DOWNSTREAM_CLUSTERS, type DownstreamCluster, type DownstreamPackage } from '@dereekb/dbx-cli';
 
 /**
  * One declared external source from `dbx-mcp.config.json` plus whether the
