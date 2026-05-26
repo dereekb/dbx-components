@@ -89,9 +89,19 @@ import {
   type UpdateStorageFileGroupParams,
   updateStorageFileGroupParamsType,
   type StorageFileGroupEmbeddedFile,
-  type DownloadStorageFileOptions
+  type DownloadStorageFileOptions,
+  type CreateStorageFileSignedUploadUrlParams,
+  type CreateStorageFileSignedUploadUrlResult,
+  createStorageFileSignedUploadUrlParamsType,
+  CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS,
+  CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS,
+  CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH,
+  CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS,
+  type StorageFilePurposeUploadPolicy,
+  type FirebaseAuthUserId,
+  type AsyncFirebaseFunctionCreateAction
 } from '@dereekb/firebase';
-import { assertSnapshotData, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
+import { assertSnapshotData, badRequestError, type FirebaseServerStorageServiceRef, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef, internalServerError } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
 import { type InjectionToken } from '@nestjs/common';
 import { type NotificationExpediteServiceInstance, type NotificationExpediteServiceRef } from '../notification';
@@ -111,7 +121,7 @@ import {
   createStorageFileGroupInputError,
   storageFileGroupQueuedForInitializationError
 } from './storagefile.error';
-import { expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
+import { addMilliseconds, type ContentTypeMimeType, expirationDetails, isPast, isThrottled, type Maybe, mergeSlashPaths, type Milliseconds, ModelRelationUtility, MS_IN_MINUTE, performAsyncTasks, runAsyncTasksForValues, type SlashPathFile, slashPathDetails, unixDateTimeSecondsNumberFromDate } from '@dereekb/util';
 import { type HttpsError } from 'firebase-functions/https';
 import { findMinDate } from '@dereekb/date';
 import { addDays } from 'date-fns';
@@ -137,9 +147,12 @@ export interface BaseStorageFileServerActionsContext extends FirebaseServerActio
 
 /**
  * Full context for storage file server actions, extending the base with the
- * upload initialization service.
+ * upload initialization service and the per-purpose signed-upload policy
+ * registry consulted by `createStorageFileSignedUploadUrl`.
  */
-export interface StorageFileServerActionsContext extends BaseStorageFileServerActionsContext, StorageFileInitializeFromUploadServiceRef {}
+export interface StorageFileServerActionsContext extends BaseStorageFileServerActionsContext, StorageFileInitializeFromUploadServiceRef {
+  readonly storageFileSignedUploadPolicies: readonly StorageFilePurposeUploadPolicy[];
+}
 
 /**
  * Abstract service class defining all server-side storage file CRUD, upload processing, and group management actions.
@@ -158,6 +171,7 @@ export interface StorageFileServerActionsContext extends BaseStorageFileServerAc
  */
 export abstract class StorageFileServerActions {
   abstract createStorageFile(params: CreateStorageFileParams): AsyncStorageFileCreateAction<CreateStorageFileParams>;
+  abstract createStorageFileSignedUploadUrl(params: CreateStorageFileSignedUploadUrlParams): AsyncFirebaseFunctionCreateAction<CreateStorageFileSignedUploadUrlParams, CreateStorageFileSignedUploadUrlResult, { readonly uid: FirebaseAuthUserId }>;
   abstract initializeAllStorageFilesFromUploads(params: InitializeAllStorageFilesFromUploadsParams): Promise<TransformAndValidateFunctionResult<InitializeAllStorageFilesFromUploadsParams, () => Promise<InitializeAllStorageFilesFromUploadsResult>>>;
   abstract initializeStorageFileFromUpload(params: InitializeStorageFileFromUploadParams): AsyncStorageFileCreateAction<InitializeStorageFileFromUploadParams>;
   abstract updateStorageFile(params: UpdateStorageFileParams): AsyncStorageFileUpdateAction<UpdateStorageFileParams>;
@@ -193,6 +207,7 @@ export abstract class StorageFileServerActions {
 export function storageFileServerActions(context: StorageFileServerActionsContext): StorageFileServerActions {
   return {
     createStorageFile: createStorageFileFactory(context),
+    createStorageFileSignedUploadUrl: createStorageFileSignedUploadUrlFactory(context),
     initializeAllStorageFilesFromUploads: initializeAllStorageFilesFromUploadsFactory(context),
     initializeStorageFileFromUpload: initializeStorageFileFromUploadFactory(context),
     updateStorageFile: updateStorageFileFactory(context),
@@ -230,6 +245,120 @@ export function createStorageFileFactory(context: BaseStorageFileServerActionsCo
       // TODO: check the file exists, and pull the metadata, and create the document
 
       return null as unknown as StorageFileDocument;
+    };
+  });
+}
+
+// Filenames must not contain slashes, spaces, or `..` parent-path segments.
+const _SIGNED_UPLOAD_URL_FILENAME_DISALLOWED_PATTERN = /[\\/ ]|\.{2}/;
+
+function _sanitizeSignedUploadUrlFilenameOrThrow(filename: string): SlashPathFile {
+  const trimmed = filename.trim();
+
+  if (trimmed.length === 0 || trimmed.length > CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH) {
+    throw badRequestError({ message: 'filename has invalid length', code: 'INVALID_FILENAME' });
+  }
+
+  if (_SIGNED_UPLOAD_URL_FILENAME_DISALLOWED_PATTERN.test(trimmed)) {
+    throw badRequestError({ message: 'filename contains disallowed characters', code: 'INVALID_FILENAME' });
+  }
+
+  return trimmed.normalize('NFC') as SlashPathFile;
+}
+
+function _clampSignedUploadUrlExpiresInMs(input: Maybe<Milliseconds>): Milliseconds {
+  const candidate = input ?? CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS;
+  return Math.min(Math.max(candidate, CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS), CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS);
+}
+
+function _resolveSignedUploadUrlPolicyOrThrow(policies: readonly StorageFilePurposeUploadPolicy[], purpose: string): StorageFilePurposeUploadPolicy {
+  const policy = policies.find((p) => p.purpose === purpose);
+
+  if (!policy) {
+    throw badRequestError({ message: `purpose "${purpose}" does not support signed upload URLs`, code: 'UNKNOWN_PURPOSE' });
+  }
+
+  return policy;
+}
+
+function _assertSignedUploadUrlContentTypeAllowed(policy: StorageFilePurposeUploadPolicy, contentType: ContentTypeMimeType): void {
+  if (!policy.allowedMimeTypes.includes(contentType)) {
+    throw badRequestError({ message: `content-type "${contentType}" is not allowed for purpose "${policy.purpose}"`, code: 'INVALID_CONTENT_TYPE' });
+  }
+}
+
+function _assertSignedUploadUrlFileSizeAllowed(policy: StorageFilePurposeUploadPolicy, fileSizeBytes: number): void {
+  if (fileSizeBytes > policy.maxFileSizeBytes) {
+    throw badRequestError({ message: `fileSizeBytes ${fileSizeBytes} exceeds policy max ${policy.maxFileSizeBytes} for purpose "${policy.purpose}"`, code: 'FILE_TOO_LARGE' });
+  }
+}
+
+function _resolveSignedUploadUrlFilenameOrThrow(policy: StorageFilePurposeUploadPolicy, filename: Maybe<string>): SlashPathFile | undefined {
+  let resolved: SlashPathFile | undefined;
+
+  if (policy.requiresFilenameInput) {
+    if (!filename) {
+      throw badRequestError({ message: `filename is required for purpose "${policy.purpose}"`, code: 'MISSING_FILENAME' });
+    }
+
+    resolved = _sanitizeSignedUploadUrlFilenameOrThrow(filename);
+  }
+
+  return resolved;
+}
+
+/**
+ * Factory for the `createStorageFileSignedUploadUrl` action.
+ *
+ * Issues a short-lived, content-type-pinned signed PUT URL into the caller's
+ * `/uploads/u/{uid}/...` namespace. The path, content-type, and size cap are
+ * derived from the per-purpose policy resolved from the
+ * `storageFileSignedUploadPolicies` registry on the context, so the URL can
+ * only write to a location that both `storage.rules` and the
+ * `StorageFileInitializeFromUploadService` initializer accept.
+ *
+ * Minting a URL does NOT create a StorageFile document — `result.modelKeys` is
+ * always empty. The document is created later by the upload-complete pipeline.
+ *
+ * @param context - The storage file server actions context. Must carry
+ *   `storageFileSignedUploadPolicies` — the list of `StorageFilePurposeUploadPolicy` entries to resolve by purpose.
+ * @returns An async transform-and-validate function whose inner stage takes
+ *   `{ uid }` (the authenticated user) and returns the signed-upload-url
+ *   payload.
+ */
+export function createStorageFileSignedUploadUrlFactory(context: StorageFileServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory, storageService, storageFileSignedUploadPolicies } = context;
+
+  return firebaseServerActionTransformFunctionFactory(createStorageFileSignedUploadUrlParamsType, async (params) => {
+    const policy = _resolveSignedUploadUrlPolicyOrThrow(storageFileSignedUploadPolicies, params.purpose);
+
+    _assertSignedUploadUrlContentTypeAllowed(policy, params.contentType);
+    _assertSignedUploadUrlFileSizeAllowed(policy, params.fileSizeBytes);
+
+    const filename = _resolveSignedUploadUrlFilenameOrThrow(policy, params.filename);
+    const expiresInMs = _clampSignedUploadUrlExpiresInMs(params.expiresInMs);
+    const contentType = params.contentType;
+
+    return async ({ uid }: { readonly uid: FirebaseAuthUserId }): Promise<CreateStorageFileSignedUploadUrlResult> => {
+      const pathString = policy.buildUploadPath({ uid, filename });
+      const expiresAtDate = addMilliseconds(new Date(), expiresInMs);
+
+      const file = storageService.file({ pathString });
+      const uploadUrl = await file.getSignedUrl!({
+        action: 'write',
+        expiresIn: expiresInMs,
+        contentType
+      });
+
+      return {
+        modelKeys: [],
+        uploadUrl,
+        uploadPath: pathString,
+        expiresAt: expiresAtDate.getTime(),
+        requiredHeaders: { 'content-type': contentType },
+        maxFileSizeBytes: policy.maxFileSizeBytes,
+        purpose: policy.purpose
+      };
     };
   });
 }

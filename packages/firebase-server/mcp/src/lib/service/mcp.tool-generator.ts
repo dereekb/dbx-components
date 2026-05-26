@@ -1,11 +1,25 @@
 import { type Maybe } from '@dereekb/util';
 import { type Type } from 'arktype';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
-import { type ModelApiDetailsResult, type ModelCallApiDetails, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData } from '@dereekb/firebase-server';
+import { type ModelApiDetailsResult, type ModelCallApiDetails, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpToolDetailsBuilder } from '@dereekb/firebase-server';
 import { type Request } from 'express';
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { mcpManifestKey, type McpManifestToolEntry } from './mcp.manifest';
 import { classifyVisibility, resolveEffectiveReadOnly, resolveRequiredScope, type McpToolFilterMetadata } from './mcp.visibility';
+
+/**
+ * Frozen wire-shape entry returned on `tools/list`.
+ *
+ * Built once at boot per tool and reused for every request when no
+ * {@link McpToolDefinition.toolDetailsBuilder} is configured. Tools that opt in
+ * to dynamic details produce a fresh wire entry per request.
+ */
+export interface McpToolListEntry {
+  readonly name: string;
+  readonly description: string;
+  readonly inputSchema: object;
+  readonly outputSchema?: object;
+}
 
 /**
  * A single MCP tool definition generated from one (modelType, callType, specifier) triple.
@@ -66,6 +80,20 @@ export interface McpToolDefinition {
    * Precomputed boot-time filter metadata consumed by the per-request `tools/list` filter.
    */
   readonly filterMetadata: McpToolFilterMetadata;
+  /**
+   * The frozen `tools/list` wire entry for this tool, computed once at boot from the
+   * static description / inputSchema / outputSchema. The factory returns this verbatim
+   * when {@link toolDetailsBuilder} is `undefined`, avoiding a per-request allocation.
+   */
+  readonly staticWireEntry: McpToolListEntry;
+  /**
+   * The handler's per-request builder, hoisted from `details.mcp.toolDetails` once at
+   * boot so the request hot path doesn't dereference through the details tree.
+   *
+   * `undefined` for tools that did not opt in (the common case) and for statically
+   * registered tools.
+   */
+  readonly toolDetailsBuilder?: McpToolDetailsBuilder;
 }
 
 /**
@@ -164,6 +192,26 @@ export interface McpToolGenerationResult {
    * Surfaced so the caller can log them at startup.
    */
   readonly skipped: ReadonlyArray<McpToolGenerationSkip>;
+}
+
+// MARK: Wire Entry
+interface BuildStaticWireEntryInput {
+  readonly name: string;
+  readonly description: string;
+  readonly inputSchema?: object;
+  readonly outputSchema?: object;
+}
+
+/**
+ * Builds the frozen wire-shape entry used by the per-request `tools/list` hot path.
+ *
+ * Tools without an `inputSchema` default to `{ type: 'object' }` to match the runtime
+ * behaviour the factory used before the precompute optimisation existed.
+ */
+export function buildStaticWireEntry(input: BuildStaticWireEntryInput): McpToolListEntry {
+  const inputSchema = input.inputSchema ?? { type: 'object' };
+  const entry: McpToolListEntry = input.outputSchema != null ? { name: input.name, description: input.description, inputSchema, outputSchema: input.outputSchema } : { name: input.name, description: input.description, inputSchema };
+  return Object.freeze(entry);
 }
 
 // MARK: Naming
@@ -271,7 +319,19 @@ function generateToolForSpecifier(context: GenerateToolsForModelCallContext, spe
     effectiveReadOnly: resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType)
   };
 
-  const definition: McpToolDefinition = { name, description, inputSchema, outputSchema: manifestEntry?.outputSchema, details: handlerDetails, dispatch, filterMetadata };
+  const outputSchema = manifestEntry?.outputSchema;
+  const staticWireEntry = buildStaticWireEntry({ name, description, inputSchema, outputSchema });
+  const definition: McpToolDefinition = {
+    name,
+    description,
+    inputSchema,
+    outputSchema,
+    details: handlerDetails,
+    dispatch,
+    filterMetadata,
+    staticWireEntry,
+    toolDetailsBuilder: handlerDetails.mcp?.toolDetails
+  };
 
   if (filterMetadata.visibilityKind === 'never') {
     outNeverVisibleTools.push(definition);

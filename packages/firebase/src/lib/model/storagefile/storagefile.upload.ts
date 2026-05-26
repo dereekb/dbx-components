@@ -1,6 +1,7 @@
-import { type FactoryWithRequiredInput, type Maybe, type SlashPath, toAbsoluteSlashPathStartType } from '@dereekb/util';
+import { type ContentTypeMimeType, type FactoryWithRequiredInput, type Maybe, type SlashPath, type SlashPathFile, toAbsoluteSlashPathStartType } from '@dereekb/util';
 import { type StoragePath } from '../../common/storage/storage';
 import { type FirebaseAuthUserId } from '../../common';
+import { type StorageFilePurpose } from './storagefile.id';
 
 /**
  * Root path for all uploaded files in Firebase Storage.
@@ -114,3 +115,37 @@ export type UploadedFileTypeIdentifier = string;
  * - `permanent_initializer_failure` — the initializer failed permanently; the file should be deleted
  */
 export type StorageFileInitializeFromUploadResultType = 'success' | 'no_determiner_match' | 'no_initializer_configured' | 'initializer_error' | 'permanent_initializer_failure';
+
+// MARK: StorageFile Upload Policy
+/**
+ * Input passed to {@link StorageFilePurposeUploadPolicy.buildUploadPath} when
+ * computing the upload destination for a signed-upload-url.
+ */
+export interface StorageFilePurposeUploadPolicyBuildPathInput {
+  readonly uid: FirebaseAuthUserId;
+  readonly filename?: Maybe<SlashPathFile>;
+}
+
+/**
+ * Per-purpose constraints for generating short-lived signed upload URLs.
+ *
+ * Implementations are kept in app-level registries (e.g.
+ * `STORAGE_FILE_PURPOSE_UPLOAD_POLICIES` in demo-firebase) and wired into the
+ * server-action context so the `createStorageFileSignedUploadUrl` action can
+ * resolve the policy by purpose at request time.
+ *
+ * The policy ensures the URL it signs targets a path and content-type that
+ * both `storage.rules` and the matching `StorageFileInitializeFromUploadService`
+ * initializer accept.
+ */
+export interface StorageFilePurposeUploadPolicy {
+  readonly purpose: StorageFilePurpose;
+  readonly allowedMimeTypes: readonly ContentTypeMimeType[];
+  readonly maxFileSizeBytes: number;
+  readonly buildUploadPath: (input: StorageFilePurposeUploadPolicyBuildPathInput) => SlashPath;
+  /**
+   * When true, the caller MUST provide a filename for `buildUploadPath`.
+   * When false (e.g. avatar), the path is derived solely from the uid.
+   */
+  readonly requiresFilenameInput: boolean;
+}

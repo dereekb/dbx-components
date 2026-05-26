@@ -34,8 +34,8 @@ service firebase.storage {
       }
 
       function isAllowedAvatarSize() {
-        // max 16mb image (server-side compression downsizes after upload)
-        return request.resource.size < 16 * 1024 * 1024 && request.resource.contentType.matches('image/.*')
+        // max 2mb image (client-side compression downsizes before upload)
+        return request.resource.size < 2 * 1024 * 1024 && request.resource.contentType.matches('image/.*')
       }
 
       function isAllowedTestFile() {

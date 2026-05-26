@@ -255,14 +255,14 @@ export interface DownloadMultipleStorageFilesResult {
   readonly errors: DownloadMultipleStorageFileErrorItem[];
 }
 
-// MARK: Generate Signed Upload URL
+// MARK: Create Signed Upload URL
 /**
  * Lower bound for caller-supplied `expiresInMs` on signed-upload-url generation.
  *
  * Anything shorter than 30 seconds is unrealistic for a caller to pick up a
  * URL, perform the PUT, and acknowledge before the URL expires.
  */
-export const GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS: Milliseconds = 30 * 1000;
+export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS: Milliseconds = 30 * 1000;
 
 /**
  * Upper bound for caller-supplied `expiresInMs` on signed-upload-url generation.
@@ -271,21 +271,21 @@ export const GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS: Millisec
  * legitimate caller should be uploading within this window; longer windows
  * increase the blast radius if the URL leaks.
  */
-export const GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS: Milliseconds = 10 * 60 * 1000;
+export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS: Milliseconds = 10 * 60 * 1000;
 
 /**
  * Default `expiresInMs` applied when the caller does not supply one.
  */
-export const GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS: Milliseconds = 5 * 60 * 1000;
+export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS: Milliseconds = 5 * 60 * 1000;
 
 /**
  * Maximum length of a caller-supplied filename. Enforced both at the ArkType
  * layer and again by the handler's sanitizer.
  */
-export const GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH = 200;
+export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH = 200;
 
 /**
- * Parameters for generating a short-lived signed PUT URL for a StorageFile upload.
+ * Parameters for creating a short-lived signed PUT URL for a StorageFile upload.
  *
  * The resulting URL is restricted to a specific {@link StorageFilePurpose}, MIME
  * type, and file size and lands the bytes inside the authenticated caller's
@@ -293,7 +293,7 @@ export const GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH = 200;
  * `StorageFileInitializeFromUploadService` flow picks the file up and creates
  * the matching `StorageFile` document.
  */
-export interface GenerateStorageFileSignedUploadUrlParams {
+export interface CreateStorageFileSignedUploadUrlParams {
   /**
    * The {@link StorageFilePurpose} to upload as. Must be supported by the
    * app's signed-upload-url policy registry. The chosen policy decides where
@@ -310,7 +310,7 @@ export interface GenerateStorageFileSignedUploadUrlParams {
    * Filename to place inside the policy's upload folder. Required when the
    * policy has `requiresFilenameInput: true`. Sanitized server-side — must not
    * contain `/`, `..`, or NUL bytes; capped at
-   * {@link GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH} chars.
+   * {@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH} chars.
    */
   readonly filename?: Maybe<SlashPathFile>;
   /**
@@ -321,30 +321,35 @@ export interface GenerateStorageFileSignedUploadUrlParams {
   readonly fileSizeBytes: number;
   /**
    * Lifetime of the signed URL in milliseconds. Clamped to
-   * [{@link GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},
-   * {@link GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].
-   * Defaults to {@link GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS}
+   * [{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},
+   * {@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].
+   * Defaults to {@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS}
    * when omitted.
    */
   readonly expiresInMs?: Maybe<Milliseconds>;
 }
 
-export const generateStorageFileSignedUploadUrlParamsType = /* @__PURE__ */ type({
+export const createStorageFileSignedUploadUrlParamsType = /* @__PURE__ */ type({
   purpose: 'string > 0',
   contentType: 'string > 0',
-  'filename?': clearable(`string > 0 & string <= ${GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH}`),
+  'filename?': clearable(`string > 0 & string <= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH}`),
   fileSizeBytes: 'number > 0',
-  'expiresInMs?': clearable(`number >= ${GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS} & number <= ${GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}`)
-}) as Type<GenerateStorageFileSignedUploadUrlParams>;
+  'expiresInMs?': clearable(`number >= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS} & number <= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}`)
+}) as Type<CreateStorageFileSignedUploadUrlParams>;
 
 /**
- * Result of generating a signed upload URL.
+ * Result of creating a signed upload URL.
  *
  * The caller PUTs the file bytes to {@link uploadUrl} with the headers in
  * {@link requiredHeaders}. The existing initializer flow then picks the file
  * up from {@link uploadPath} and creates the StorageFile document.
+ *
+ * `modelKeys` is intentionally empty — minting the URL does not create a
+ * StorageFile document; the document is created later by the upload-complete
+ * pipeline.
  */
-export interface GenerateStorageFileSignedUploadUrlResult {
+export interface CreateStorageFileSignedUploadUrlResult extends OnCallCreateModelResult {
+  readonly modelKeys: [];
   /**
    * Short-lived, content-type-pinned PUT URL.
    */
@@ -497,6 +502,7 @@ export type StorageFileModelCrudFunctionsConfig = {
       _: CreateStorageFileParams;
       fromUpload: InitializeStorageFileFromUploadParams;
       allFromUpload: [InitializeAllStorageFilesFromUploadsParams, InitializeAllStorageFilesFromUploadsResult];
+      signedUploadUrl: [CreateStorageFileSignedUploadUrlParams, CreateStorageFileSignedUploadUrlResult];
     };
     update: {
       _: UpdateStorageFileParams;
@@ -506,7 +512,6 @@ export type StorageFileModelCrudFunctionsConfig = {
     read: {
       download: [DownloadStorageFileParams, DownloadStorageFileResult];
       downloadMultiple: [DownloadMultipleStorageFilesParams, DownloadMultipleStorageFilesResult];
-      generateSignedUploadUrl: [GenerateStorageFileSignedUploadUrlParams, GenerateStorageFileSignedUploadUrlResult];
     };
     delete: {
       _: DeleteStorageFileParams;
@@ -521,7 +526,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 };
 
 export const STORAGE_FILE_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple,generateSignedUploadUrl'],
+  storageFile: ['create:_,fromUpload,allFromUpload,signedUploadUrl', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple'],
   storageFileGroup: ['update:_,regenerateContent']
 };
 
@@ -537,6 +542,7 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
       create: ModelFirebaseCreateFunction<CreateStorageFileParams, OnCallCreateModelResult>;
       fromUpload: ModelFirebaseCreateFunction<InitializeStorageFileFromUploadParams, OnCallCreateModelResult>;
       allFromUpload: ModelFirebaseCrudFunction<InitializeAllStorageFilesFromUploadsParams, InitializeAllStorageFilesFromUploadsResult>;
+      signedUploadUrl: ModelFirebaseCreateFunction<CreateStorageFileSignedUploadUrlParams, CreateStorageFileSignedUploadUrlResult>;
     };
     updateStorageFile: {
       update: ModelFirebaseCrudFunction<UpdateStorageFileParams>;
@@ -546,7 +552,6 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
     readStorageFile: {
       download: ModelFirebaseCrudFunction<DownloadStorageFileParams, DownloadStorageFileResult>;
       downloadMultiple: ModelFirebaseCrudFunction<DownloadMultipleStorageFilesParams, DownloadMultipleStorageFilesResult>;
-      generateSignedUploadUrl: ModelFirebaseCrudFunction<GenerateStorageFileSignedUploadUrlParams, GenerateStorageFileSignedUploadUrlResult>;
     };
     deleteStorageFile: {
       delete: ModelFirebaseCrudFunction<DeleteStorageFileParams>;

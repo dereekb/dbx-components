@@ -108,6 +108,46 @@ export interface McpVisibilityContext {
  */
 export type McpToolVisibility = boolean | McpVisibilityRule | ((context: McpVisibilityContext) => boolean);
 
+// MARK: MCP Tool Details Builder
+/**
+ * Input passed to a {@link McpToolDetailsBuilder}.
+ *
+ * `defaultDescription` and `defaultInputSchema` reflect the framework's boot-time resolved
+ * values (manifest entry if present, otherwise the auto-generated defaults). Builders can
+ * return them verbatim, mutate a copy, or replace them entirely.
+ *
+ * `auth` and `scopes` come from the same per-request context the MCP visibility predicate
+ * sees. `undefined` for anonymous / non-OIDC callers.
+ */
+export interface McpToolDetailsBuilderInput {
+  readonly dispatch: McpToolVisibilityDispatchTarget;
+  readonly defaultDescription: string;
+  readonly defaultInputSchema?: object;
+  readonly auth?: FirebaseServerAuthData;
+  readonly scopes?: ReadonlySet<string>;
+}
+
+/**
+ * Builder output. Either field can be omitted to keep the framework default;
+ * returning an empty object is a no-op.
+ */
+export interface McpToolDetailsBuilderResult {
+  readonly description?: string;
+  readonly inputSchema?: object;
+}
+
+/**
+ * Synchronous builder invoked once per `tools/list` request, after the visibility filter
+ * has accepted the tool.
+ *
+ * MUST be synchronous — async work would introduce unbounded `tools/list` latency, matching
+ * the visibility-predicate constraint.
+ *
+ * If the builder throws, the framework falls back to the defaults and logs a warning
+ * (fail-soft).
+ */
+export type McpToolDetailsBuilder = (input: McpToolDetailsBuilderInput) => McpToolDetailsBuilderResult;
+
 // MARK: Handler-Level API Details
 /**
  * MCP-specific customization for a model function.
@@ -162,6 +202,14 @@ export interface OnCallModelFunctionMcpDetails {
    * for fail-safe filtering when `McpModuleConfig.readOnly` is on).
    */
   readonly readOnly?: boolean;
+  /**
+   * Optional per-request builder that produces enriched tool description / inputSchema
+   * for `tools/list`. See {@link McpToolDetailsBuilder}.
+   *
+   * Tools without a builder reuse a precomputed wire entry, so this opt-in only adds
+   * overhead to the handlers that need it.
+   */
+  readonly toolDetails?: McpToolDetailsBuilder;
 }
 
 /**

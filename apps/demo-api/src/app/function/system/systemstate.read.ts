@@ -2,7 +2,7 @@ import { type ExampleReadParams, type ExampleReadResponse, exampleReadParamsType
 import { type DemoReadModelFunction } from '../function.context';
 import { withApiDetails } from '@dereekb/firebase-server';
 
-export const systemStateExampleread: DemoReadModelFunction<ExampleReadParams, ExampleReadResponse> = withApiDetails({
+export const systemStateExampleRead: DemoReadModelFunction<ExampleReadParams, ExampleReadResponse> = withApiDetails({
   inputType: exampleReadParamsType,
   fn: async (request) => {
     const { nest: _nest, data, auth: _auth } = request;
@@ -13,5 +13,8 @@ export const systemStateExampleread: DemoReadModelFunction<ExampleReadParams, Ex
       read: true,
       message: data.message
     };
+  },
+  mcp: {
+    visibility: false // example not available to mcp
   }
 });

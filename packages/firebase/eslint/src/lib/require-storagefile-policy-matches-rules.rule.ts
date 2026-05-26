@@ -5,10 +5,11 @@ import { type AstNode } from './util';
 import { parseStorageRules, type ParsedRuleBranch, type ParsedStorageRulesBlock } from './storage-rules-parser';
 
 /**
- * Default registry identifier inspected by the rule. Variables exported with this name
- * (or whose declarator binds to it) trigger the cross-check against `storage.rules`.
+ * Default type name the rule looks for on top-level declarators. Variables whose type
+ * annotation resolves to this identifier are treated as upload policies and validated
+ * against `storage.rules`.
  */
-export const DEFAULT_STORAGE_FILE_UPLOAD_POLICIES_REGISTRY_NAME: string = 'STORAGE_FILE_PURPOSE_UPLOAD_POLICIES';
+export const DEFAULT_STORAGE_FILE_UPLOAD_POLICY_TYPE_NAME: string = 'StorageFilePurposeUploadPolicy';
 
 /**
  * Default file name searched relative to the lint root when `storageRulesPath` is omitted.
@@ -29,10 +30,10 @@ export interface FirebaseRequireStorageFilePolicyMatchesRulesRuleOptions {
    */
   readonly virtualStorageRules?: string;
   /**
-   * Identifier name of the upload-policy registry. Defaults to
-   * {@link DEFAULT_STORAGE_FILE_UPLOAD_POLICIES_REGISTRY_NAME}.
+   * Type-annotation identifier the rule treats as the upload-policy marker. Defaults to
+   * {@link DEFAULT_STORAGE_FILE_UPLOAD_POLICY_TYPE_NAME}.
    */
-  readonly registryName?: string;
+  readonly policyTypeName?: string;
 }
 
 /**
@@ -56,7 +57,7 @@ interface RuleContext {
 }
 
 interface ResolvedPolicy {
-  readonly policyKey: string;
+  readonly policyKey: Maybe<string>;
   readonly policyDeclaratorNode: AstNode;
   readonly maxFileSizeBytes: Maybe<number>;
   readonly allowedMimeTypes: Maybe<readonly string[]>;
@@ -65,7 +66,6 @@ interface ResolvedPolicy {
 interface ProgramConstants {
   readonly numericConstants: ReadonlyMap<string, number>;
   readonly stringArrayConstants: ReadonlyMap<string, readonly string[]>;
-  readonly policyDeclarators: ReadonlyMap<string, AstNode>;
 }
 
 const rulesFileCache: Map<string, ParsedStorageRulesBlock[]> = new Map();
@@ -154,6 +154,36 @@ function applyBinaryOperator(operator: string, left: number, right: number): May
 }
 
 /**
+ * Extracts the cross-reference key used to pair a policy with its `storage.rules` `Mirrors`
+ * block.
+ *
+ * - When `purpose` is an `Identifier`, the constant name (e.g. `USER_AVATAR_PURPOSE`) is the
+ *   key — this is what `// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[USER_AVATAR_PURPOSE]`
+ *   comments reference.
+ * - When `purpose` is a string literal, the literal value is used so a policy that inlines
+ *   `purpose: 'avatar'` can still pair with `Mirrors ...[avatar]`.
+ * - `TSAsExpression` is unwrapped transparently.
+ * - Anything else (computed expression, member access, function call) returns null and
+ *   triggers `unresolvedPolicyField`.
+ *
+ * @param node - The expression node for the policy's `purpose` field.
+ * @returns The mirror-cross-reference key, or null when unresolvable.
+ */
+function extractPolicyKey(node: AstNode): Maybe<string> {
+  let result: Maybe<string> = null;
+  if (node) {
+    if (node.type === 'Identifier') {
+      result = node.name;
+    } else if (node.type === 'Literal' && typeof node.value === 'string') {
+      result = node.value;
+    } else if (node.type === 'TSAsExpression' && node.expression) {
+      result = extractPolicyKey(node.expression);
+    }
+  }
+  return result;
+}
+
+/**
  * Folds a string-array expression node to a list of strings using array literals of string
  * literals and identifier lookups in `constants`.
  *
@@ -191,8 +221,8 @@ function evaluateStringArrayNode(node: AstNode, constants: ReadonlyMap<string, r
 }
 
 /**
- * Walks the Program body to index every top-level numeric / string-array `const` and every
- * declarator whose initializer is an object literal — the latter feeds the policy lookup.
+ * Walks the Program body to index every top-level numeric / string / string-array `const` so
+ * later folding can resolve identifier references inside policy literals.
  *
  * @param programNode - The Program AST node.
  * @returns The constants index for the file.
@@ -200,7 +230,6 @@ function evaluateStringArrayNode(node: AstNode, constants: ReadonlyMap<string, r
 function indexProgramConstants(programNode: AstNode): ProgramConstants {
   const numericConstants: Map<string, number> = new Map();
   const stringArrayConstants: Map<string, readonly string[]> = new Map();
-  const policyDeclarators: Map<string, AstNode> = new Map();
 
   const declarators: AstNode[] = collectTopLevelDeclarators(programNode);
 
@@ -216,13 +245,10 @@ function indexProgramConstants(programNode: AstNode): ProgramConstants {
       if (stringArray) {
         stringArrayConstants.set(name, stringArray);
       }
-      if (init.type === 'ObjectExpression') {
-        policyDeclarators.set(name, declarator);
-      }
     }
   }
 
-  return { numericConstants, stringArrayConstants, policyDeclarators };
+  return { numericConstants, stringArrayConstants };
 }
 
 /**
@@ -246,91 +272,63 @@ function collectTopLevelDeclarators(programNode: AstNode): AstNode[] {
 }
 
 /**
- * Finds the registry declarator (e.g. `STORAGE_FILE_PURPOSE_UPLOAD_POLICIES = { ... }`) in
- * the Program body, looking through `ExportNamedDeclaration` and `TSAsExpression` wrappers.
+ * Collects every top-level declarator whose type annotation is the given identifier (e.g.
+ * `const X: StorageFilePurposeUploadPolicy = { ... }`). Both bare object initializers and
+ * `TSAsExpression`-wrapped initializers are accepted.
  *
  * @param programNode - The Program AST node.
- * @param registryName - The expected registry identifier name.
- * @returns The registry declarator, or null when absent.
+ * @param typeName - The expected type-reference identifier name.
+ * @returns The declarators that look like typed policy declarations.
  */
-function findRegistryDeclarator(programNode: AstNode, registryName: string): Maybe<AstNode> {
-  let result: Maybe<AstNode> = null;
+function collectTypedPolicyDeclarators(programNode: AstNode, typeName: string): AstNode[] {
+  const matched: AstNode[] = [];
   const declarators: AstNode[] = collectTopLevelDeclarators(programNode);
+
   for (const declarator of declarators) {
-    if (declarator.id?.type === 'Identifier' && declarator.id.name === registryName) {
-      result = declarator;
-      break;
+    if (declarator.id?.type !== 'Identifier' || !declarator.init) {
+      continue;
+    }
+
+    const typeAnnotation: Maybe<AstNode> = declarator.id?.typeAnnotation?.typeAnnotation;
+    const isTargetType: boolean = typeAnnotation?.type === 'TSTypeReference' && typeAnnotation.typeName?.type === 'Identifier' && typeAnnotation.typeName.name === typeName;
+    if (!isTargetType) {
+      continue;
+    }
+
+    let init: Maybe<AstNode> = declarator.init;
+    while (init && init.type === 'TSAsExpression') {
+      init = init.expression;
+    }
+    if (init?.type === 'ObjectExpression') {
+      matched.push(declarator);
     }
   }
-  return result;
+
+  return matched;
 }
 
 /**
- * Resolves the inner ObjectExpression from a registry declarator's initializer, looking
- * through `TSAsExpression` casts.
+ * Pulls `purpose`, `maxFileSizeBytes`, and `allowedMimeTypes` from a policy declarator's
+ * object literal, folding numeric / string / string-array references via `constants`.
  *
- * @param declarator - The registry declarator.
- * @returns The ObjectExpression, or null when the initializer is not an object literal.
- */
-function registryObjectExpression(declarator: AstNode): Maybe<AstNode> {
-  let result: Maybe<AstNode> = null;
-  let init: Maybe<AstNode> = declarator.init;
-  while (init && init.type === 'TSAsExpression') {
-    init = init.expression;
-  }
-  if (init?.type === 'ObjectExpression') {
-    result = init;
-  }
-  return result;
-}
-
-/**
- * Walks each property of the registry object literal and produces a `ResolvedPolicy` per
- * entry by following the value identifier to its declarator and folding the policy
- * object's `maxFileSizeBytes` / `allowedMimeTypes` fields.
- *
- * @param registryObject - The registry ObjectExpression.
- * @param constants - The Program constants index.
- * @returns Per-entry resolved policy view, plus the set of policy keys present.
- */
-function resolveRegistryPolicies(registryObject: AstNode, constants: ProgramConstants): ResolvedPolicy[] {
-  const resolved: ResolvedPolicy[] = [];
-  for (const property of registryObject.properties ?? []) {
-    if (property.type === 'Property' && property.computed && property.key?.type === 'Identifier' && property.value?.type === 'Identifier') {
-      const policyKey: string = property.key.name;
-      const policyDeclName: string = property.value.name;
-      const policyDeclarator: Maybe<AstNode> = constants.policyDeclarators.get(policyDeclName);
-      if (policyDeclarator) {
-        const policyView: ResolvedPolicy = buildResolvedPolicy(policyKey, policyDeclarator, constants);
-        resolved.push(policyView);
-      } else {
-        resolved.push({ policyKey, policyDeclaratorNode: property, maxFileSizeBytes: null, allowedMimeTypes: null });
-      }
-    }
-  }
-  return resolved;
-}
-
-/**
- * Pulls `maxFileSizeBytes` and `allowedMimeTypes` from a policy declarator's object literal,
- * folding numeric expressions and string-array references via `constants`.
- *
- * @param policyKey - The policy key from the registry computed key.
  * @param declarator - The policy declarator (e.g. `USER_AVATAR_UPLOAD_POLICY = {...}`).
  * @param constants - The Program constants index.
- * @returns The resolved policy with folded numeric/string-array values.
+ * @returns The resolved policy with folded values.
  */
-function buildResolvedPolicy(policyKey: string, declarator: AstNode, constants: ProgramConstants): ResolvedPolicy {
+function buildResolvedPolicy(declarator: AstNode, constants: ProgramConstants): ResolvedPolicy {
   let init: Maybe<AstNode> = declarator.init;
   while (init && init.type === 'TSAsExpression') {
     init = init.expression;
   }
+  let policyKey: Maybe<string> = null;
   let maxFileSizeBytes: Maybe<number> = null;
   let allowedMimeTypes: Maybe<readonly string[]> = null;
   if (init?.type === 'ObjectExpression') {
     for (const property of init.properties ?? []) {
       if (property.type === 'Property' && property.key?.type === 'Identifier' && !property.computed) {
-        if (property.key.name === 'maxFileSizeBytes') {
+        if (property.key.name === 'purpose') {
+          policyKey = extractPolicyKey(property.value);
+        } else if (property.key.name === 'maxFileSizeBytes') {
           maxFileSizeBytes = evaluateNumericNode(property.value, constants.numericConstants);
         } else if (property.key.name === 'allowedMimeTypes') {
           allowedMimeTypes = evaluateStringArrayNode(property.value, constants.stringArrayConstants);
@@ -403,11 +401,11 @@ function resolveStorageRulesPath(options: FirebaseRequireStorageFilePolicyMatche
 }
 
 /**
- * ESLint rule that cross-checks every entry of `STORAGE_FILE_PURPOSE_UPLOAD_POLICIES` in
- * a `*-firebase` component against the workspace's `storage.rules`. Each policy must have
- * a paired `// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[<KEY>]` match block whose
- * `request.resource.size` cap and `request.resource.contentType` predicate are at least
- * as permissive as the TypeScript policy's `maxFileSizeBytes` and `allowedMimeTypes`.
+ * ESLint rule that cross-checks every `StorageFilePurposeUploadPolicy`-typed declaration in
+ * a `*-firebase` component against the workspace's `storage.rules`. Each policy must have a
+ * paired `// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[<KEY>]` match block whose
+ * `request.resource.size` cap and `request.resource.contentType` predicate are at least as
+ * permissive as the TypeScript policy's `maxFileSizeBytes` and `allowedMimeTypes`.
  *
  * Reports on the TS side so drift surfaces in the normal lint pipeline; mismatches almost
  * always originate from editing one side and forgetting the other.
@@ -429,17 +427,17 @@ export const FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE: FirebaseReq
     type: 'problem',
     fixable: undefined,
     docs: {
-      description: 'Cross-check STORAGE_FILE_PURPOSE_UPLOAD_POLICIES entries against the workspace storage.rules so the TS-side upload policy (maxFileSizeBytes + allowedMimeTypes) stays in sync with the Firebase Storage security rule that gates the same path.',
+      description: 'Cross-check every StorageFilePurposeUploadPolicy declaration against the workspace storage.rules so the TS-side upload policy (maxFileSizeBytes + allowedMimeTypes) stays in sync with the Firebase Storage security rule that gates the same path.',
       recommended: true
     },
     messages: {
       maxFileSizeMismatch: "Upload policy '{{policy}}' has maxFileSizeBytes {{tsValue}} but storage.rules allows < {{rulesValue}} for MIME type '{{mime}}'. Update either side so the rules cap matches or exceeds the policy cap.",
       mimeTypeNotAllowed: "Upload policy '{{policy}}' allows MIME type '{{mime}}' but no storage.rules branch under 'Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[{{policy}}]' accepts it.",
       missingRuleBlock: "Upload policy '{{policy}}' has no matching '// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[{{policy}}]' block in storage.rules at {{path}}.",
-      orphanRuleBlock: "storage.rules block 'Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[{{policy}}]' (line {{line}}) has no matching policy in the registry.",
+      orphanRuleBlock: "storage.rules block 'Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[{{policy}}]' (line {{line}}) has no matching StorageFilePurposeUploadPolicy declaration in this file.",
       unsupportedRuleShape: "storage.rules block for '{{policy}}' (line {{line}}) could not be parsed: {{reason}}. Refactor the rule or extend the validator.",
       rulesFileMissing: 'Could not read storage.rules at {{path}}. Set the rule option `storageRulesPath` or place the file at the workspace root.',
-      unresolvedPolicyField: "Upload policy '{{policy}}' has unresolvable {{field}}; the rule cannot statically fold the value to compare against storage.rules."
+      unresolvedPolicyField: 'Upload policy{{policyLabel}} has unresolvable {{field}}; the rule cannot statically fold the value to compare against storage.rules.'
     },
     schema: [
       {
@@ -448,36 +446,33 @@ export const FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE: FirebaseReq
         properties: {
           storageRulesPath: { type: 'string' as const },
           virtualStorageRules: { type: 'string' as const },
-          registryName: { type: 'string' as const }
+          policyTypeName: { type: 'string' as const }
         }
       }
     ]
   },
   create(context) {
     const options: FirebaseRequireStorageFilePolicyMatchesRulesRuleOptions = context.options[0] ?? {};
-    const registryName: string = options.registryName ?? DEFAULT_STORAGE_FILE_UPLOAD_POLICIES_REGISTRY_NAME;
+    const policyTypeName: string = options.policyTypeName ?? DEFAULT_STORAGE_FILE_UPLOAD_POLICY_TYPE_NAME;
     const cwd: string = context.cwd ?? process.cwd();
 
     return {
       Program: (programNode: AstNode) => {
-        const registryDeclarator: Maybe<AstNode> = findRegistryDeclarator(programNode, registryName);
-        if (!registryDeclarator) return;
-
-        const registryObject: Maybe<AstNode> = registryObjectExpression(registryDeclarator);
-        if (!registryObject) return;
+        const typedDeclarators: readonly AstNode[] = collectTypedPolicyDeclarators(programNode, policyTypeName);
+        if (typedDeclarators.length === 0) return;
 
         const rulesResolution = loadParsedRules(options, cwd);
         if (rulesResolution.error) {
-          context.report({ node: registryDeclarator, messageId: 'rulesFileMissing', data: { path: rulesResolution.absolutePath ?? DEFAULT_STORAGE_RULES_FILENAME } });
+          context.report({ node: typedDeclarators[0], messageId: 'rulesFileMissing', data: { path: rulesResolution.absolutePath ?? DEFAULT_STORAGE_RULES_FILENAME } });
           return;
         }
 
         const parsedBlocks: readonly ParsedStorageRulesBlock[] = rulesResolution.blocks ?? [];
         const constants: ProgramConstants = indexProgramConstants(programNode);
-        const resolvedPolicies: readonly ResolvedPolicy[] = resolveRegistryPolicies(registryObject, constants);
+        const resolvedPolicies: readonly ResolvedPolicy[] = typedDeclarators.map((declarator) => buildResolvedPolicy(declarator, constants));
 
         compareResolvedPolicies(resolvedPolicies, parsedBlocks, rulesResolution.absolutePath ?? DEFAULT_STORAGE_RULES_FILENAME, context);
-        reportOrphanRuleBlocks(parsedBlocks, resolvedPolicies, registryDeclarator, context);
+        reportOrphanRuleBlocks(parsedBlocks, resolvedPolicies, programNode, context);
       }
     };
   }
@@ -516,7 +511,7 @@ function loadParsedRules(options: FirebaseRequireStorageFilePolicyMatchesRulesRu
 /**
  * Reports each resolved policy that mismatches the parsed `storage.rules` blocks.
  *
- * @param resolvedPolicies - Per-entry view of registry policies with folded values.
+ * @param resolvedPolicies - Per-declaration view of typed policies with folded values.
  * @param parsedBlocks - Mirrored blocks parsed from `storage.rules`.
  * @param rulesPath - Absolute path to the rules file (for error messages).
  * @param context - ESLint rule context.
@@ -528,24 +523,29 @@ function compareResolvedPolicies(resolvedPolicies: readonly ResolvedPolicy[], pa
   }
 
   for (const policy of resolvedPolicies) {
-    const block: Maybe<ParsedStorageRulesBlock> = blocksByKey.get(policy.policyKey);
+    if (typeof policy.policyKey !== 'string') {
+      context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policyLabel: '', field: 'purpose' } });
+      continue;
+    }
+    const policyKey: string = policy.policyKey;
+    const block: Maybe<ParsedStorageRulesBlock> = blocksByKey.get(policyKey);
     if (!block) {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'missingRuleBlock', data: { policy: policy.policyKey, path: rulesPath } });
+      context.report({ node: policy.policyDeclaratorNode, messageId: 'missingRuleBlock', data: { policy: policyKey, path: rulesPath } });
       continue;
     }
     if (block.unsupported) {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'unsupportedRuleShape', data: { policy: policy.policyKey, line: String(block.sourceLine), reason: block.unsupported } });
+      context.report({ node: policy.policyDeclaratorNode, messageId: 'unsupportedRuleShape', data: { policy: policyKey, line: String(block.sourceLine), reason: block.unsupported } });
       continue;
     }
     if (typeof policy.maxFileSizeBytes !== 'number') {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policy: policy.policyKey, field: 'maxFileSizeBytes' } });
+      context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policyLabel: ` '${policyKey}'`, field: 'maxFileSizeBytes' } });
       continue;
     }
     if (!policy.allowedMimeTypes) {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policy: policy.policyKey, field: 'allowedMimeTypes' } });
+      context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policyLabel: ` '${policyKey}'`, field: 'allowedMimeTypes' } });
       continue;
     }
-    comparePolicyToBlock(policy, block, context);
+    comparePolicyToBlock(policyKey, policy, block, context);
   }
 }
 
@@ -553,17 +553,18 @@ function compareResolvedPolicies(resolvedPolicies: readonly ResolvedPolicy[], pa
  * Validates that each MIME the policy permits is accepted by at least one branch and that
  * the branch's size cap is ≥ the policy cap. Emits ESLint reports for any mismatch.
  *
+ * @param policyKey - The resolved purpose key.
  * @param policy - The resolved policy.
  * @param block - The parsed rules block paired by `mirrorsPolicyKey`.
  * @param context - ESLint rule context.
  */
-function comparePolicyToBlock(policy: ResolvedPolicy, block: ParsedStorageRulesBlock, context: RuleContext): void {
+function comparePolicyToBlock(policyKey: string, policy: ResolvedPolicy, block: ParsedStorageRulesBlock, context: RuleContext): void {
   const tsCap: number = policy.maxFileSizeBytes as number;
   const mimes: readonly string[] = policy.allowedMimeTypes as readonly string[];
   for (const mime of mimes) {
     const accepting: ParsedRuleBranch[] = branchesAcceptingMimeType(block.branches, mime);
     if (accepting.length === 0) {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'mimeTypeNotAllowed', data: { policy: policy.policyKey, mime } });
+      context.report({ node: policy.policyDeclaratorNode, messageId: 'mimeTypeNotAllowed', data: { policy: policyKey, mime } });
     } else {
       let largest: number = Number.NEGATIVE_INFINITY;
       for (const branch of accepting) {
@@ -572,29 +573,32 @@ function comparePolicyToBlock(policy: ResolvedPolicy, block: ParsedStorageRulesB
         }
       }
       if (tsCap > largest) {
-        context.report({ node: policy.policyDeclaratorNode, messageId: 'maxFileSizeMismatch', data: { policy: policy.policyKey, tsValue: String(tsCap), rulesValue: String(largest), mime } });
+        context.report({ node: policy.policyDeclaratorNode, messageId: 'maxFileSizeMismatch', data: { policy: policyKey, tsValue: String(tsCap), rulesValue: String(largest), mime } });
       }
     }
   }
 }
 
 /**
- * Reports each parsed rules block whose `mirrorsPolicyKey` has no corresponding entry in
- * the registry — signals stale `Mirrors ...` markers left over after a policy was removed.
+ * Reports each parsed rules block whose `mirrorsPolicyKey` has no corresponding typed
+ * declaration in this file — signals stale `Mirrors ...` markers left over after a policy
+ * was removed.
  *
  * @param parsedBlocks - Mirrored blocks parsed from `storage.rules`.
- * @param resolvedPolicies - Per-entry view of registry policies.
- * @param registryDeclarator - Reported on the registry declarator since the block lives in a separate file.
+ * @param resolvedPolicies - Per-declaration view of typed policies.
+ * @param programNode - Reported on the Program node since the block lives in a separate file.
  * @param context - ESLint rule context.
  */
-function reportOrphanRuleBlocks(parsedBlocks: readonly ParsedStorageRulesBlock[], resolvedPolicies: readonly ResolvedPolicy[], registryDeclarator: AstNode, context: RuleContext): void {
+function reportOrphanRuleBlocks(parsedBlocks: readonly ParsedStorageRulesBlock[], resolvedPolicies: readonly ResolvedPolicy[], programNode: AstNode, context: RuleContext): void {
   const knownKeys: Set<string> = new Set();
   for (const policy of resolvedPolicies) {
-    knownKeys.add(policy.policyKey);
+    if (typeof policy.policyKey === 'string') {
+      knownKeys.add(policy.policyKey);
+    }
   }
   for (const block of parsedBlocks) {
     if (!knownKeys.has(block.mirrorsPolicyKey)) {
-      context.report({ node: registryDeclarator, messageId: 'orphanRuleBlock', data: { policy: block.mirrorsPolicyKey, line: String(block.sourceLine) } });
+      context.report({ node: programNode, messageId: 'orphanRuleBlock', data: { policy: block.mirrorsPolicyKey, line: String(block.sourceLine) } });
     }
   }
 }

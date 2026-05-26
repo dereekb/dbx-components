@@ -1,4 +1,4 @@
-import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, StorageFileProcessingSubtask, StorageFileProcessingSubtaskMetadata, StorageFilePurpose, UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { ALL_USER_UPLOADS_FOLDER_PATH, FirebaseAuthUserId, StorageFileProcessingSubtask, StorageFileProcessingSubtaskMetadata, StorageFilePurpose, StorageFilePurposeUploadPolicy, UploadedFileTypeIdentifier } from '@dereekb/firebase';
 import { Maybe, mergeSlashPaths, SlashPath, SlashPathFile, SlashPathFolder, SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 
 // MARK: User File Types
@@ -48,3 +48,31 @@ export function makeUserAvatarFileStoragePath(userId: FirebaseAuthUserId): Slash
 
 export const USER_AVATAR_IMAGE_WIDTH = 512;
 export const USER_AVATAR_IMAGE_HEIGHT = USER_AVATAR_IMAGE_WIDTH;
+
+// MARK: Upload Policy Registry
+/**
+ * Soft cap for user avatar uploads. Should match the ceiling declared in
+ * `storage.rules` for `/uploads/u/{uid}/avatar.img`.
+ */
+export const USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Upload policy for {@link USER_AVATAR_PURPOSE}.
+ */
+export const USER_AVATAR_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
+  purpose: USER_AVATAR_PURPOSE,
+  allowedMimeTypes: USER_AVATAR_UPLOADS_ALLOWED_FILE_TYPES,
+  maxFileSizeBytes: USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES,
+  buildUploadPath: ({ uid }) => userAvatarUploadsFilePath(uid),
+  requiresFilenameInput: false
+};
+
+/**
+ * Registry of every {@link StorageFilePurposeUploadPolicy} the app supports.
+ *
+ * The signed-upload-url handler reads this list at request time and resolves
+ * the entry whose `purpose` matches the request. Adding a new upload-eligible
+ * purpose means appending an entry here AND updating `storage.rules` so the
+ * corresponding path is writable.
+ */
+export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: readonly StorageFilePurposeUploadPolicy[] = [USER_AVATAR_UPLOAD_POLICY];

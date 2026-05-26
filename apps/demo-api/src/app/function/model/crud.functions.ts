@@ -15,10 +15,9 @@ import { profileDelete } from '../profile/profile.delete';
 import { notificationCreate } from '../notification/notification.create';
 import { notificationSend } from '../notification/notification.update';
 import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
-import { storageFileCreate, storageFileFromUpload, storageFileAllFromUpload } from '../storagefile/storagefile.create';
+import { storageFileCreate, storageFileCreateSignedUploadUrl, storageFileFromUpload, storageFileAllFromUpload } from '../storagefile/storagefile.create';
 import { storageFileDelete } from '../storagefile/storagefile.delete';
 import { storageFileDownload, storageFileDownloadMultiple } from '../storagefile/storagefile.read';
-import { storageFileGenerateSignedUploadUrl } from '../storagefile/storagefile.signed-upload-url';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
 import { guestbookEntryAllPublishedEntries } from '../guestbook/guestbookentry.invoke';
 import { profileDownloadArchive } from '../profile/profile.read';
@@ -42,7 +41,8 @@ export const DEMO_CREATE_MODEL_MAP: DemoOnCallCreateModelMap = {
   storageFile: onCallSpecifierHandler({
     _: storageFileCreate,
     fromUpload: storageFileFromUpload,
-    allFromUpload: storageFileAllFromUpload
+    allFromUpload: storageFileAllFromUpload,
+    signedUploadUrl: storageFileCreateSignedUploadUrl
   }),
   oidcEntry: onCallSpecifierHandler({
     client: oidcEntryCreateClient
@@ -56,8 +56,7 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   }),
   storageFile: onCallSpecifierHandler({
     download: storageFileDownload,
-    downloadMultiple: storageFileDownloadMultiple,
-    generateSignedUploadUrl: storageFileGenerateSignedUploadUrl
+    downloadMultiple: storageFileDownloadMultiple
   }),
   profile: onCallSpecifierHandler({
     downloadArchive: profileDownloadArchive

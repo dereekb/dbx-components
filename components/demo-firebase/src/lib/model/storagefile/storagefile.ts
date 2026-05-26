@@ -1,5 +1,5 @@
-import { ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
-import { type ContentTypeMimeType, type Maybe, mergeSlashPaths, type Milliseconds, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
+import { ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type StorageFilePurposeUploadPolicy, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { type Maybe, mergeSlashPaths, type Milliseconds, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 import { profileIdentity } from '../profile';
 
 // MARK: User File Types
@@ -242,34 +242,10 @@ export function userLogFileGroupIds(userId: FirebaseAuthUserId): StorageFileGrou
 
 // MARK: Upload Policy Registry
 /**
- * Per-purpose constraints for generating short-lived signed upload URLs.
- *
- * Used by the `storageFile.generateSignedUploadUrl` callModel handler to ensure
- * the URL it signs targets a path and content-type that both `storage.rules`
- * and the matching `StorageFileInitializeFromUploadService` initializer accept.
- */
-export interface StorageFilePurposeUploadPolicy {
-  readonly purpose: StorageFilePurpose;
-  readonly allowedMimeTypes: readonly ContentTypeMimeType[];
-  readonly maxFileSizeBytes: number;
-  readonly buildUploadPath: (input: StorageFilePurposeUploadPolicyBuildPathInput) => SlashPath;
-  /**
-   * When true, the caller MUST provide a filename for `buildUploadPath`.
-   * When false (e.g. avatar), the path is derived solely from the uid.
-   */
-  readonly requiresFilenameInput: boolean;
-}
-
-export interface StorageFilePurposeUploadPolicyBuildPathInput {
-  readonly uid: FirebaseAuthUserId;
-  readonly filename?: Maybe<SlashPathFile>;
-}
-
-/**
- * Soft cap for user avatar uploads. Matches the 16 MB ceiling declared in
+ * Soft cap for user avatar uploads. Matches the 2 MB ceiling declared in
  * `storage.rules` for `/uploads/u/{uid}/avatar.img`.
  */
-export const USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES = 16 * 1024 * 1024;
+export const USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
 
 /**
  * Soft cap for user test file uploads.
@@ -323,21 +299,11 @@ export const USER_LOG_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
 };
 
 /**
- * Registry of {@link StorageFilePurposeUploadPolicy} keyed by {@link StorageFilePurpose}.
+ * Registry of every {@link StorageFilePurposeUploadPolicy} the app supports.
  *
- * The signed-upload-url handler reads this map at request time. Adding a new
- * upload-eligible purpose means appending an entry here AND updating
- * `storage.rules` so the corresponding path is writable.
+ * The signed-upload-url handler reads this list at request time and resolves
+ * the entry whose `purpose` matches the request. Adding a new upload-eligible
+ * purpose means appending an entry here AND updating `storage.rules` so the
+ * corresponding path is writable.
  */
-export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: Readonly<Record<StorageFilePurpose, StorageFilePurposeUploadPolicy>> = {
-  [USER_AVATAR_PURPOSE]: USER_AVATAR_UPLOAD_POLICY,
-  [USER_TEST_FILE_PURPOSE]: USER_TEST_FILE_UPLOAD_POLICY,
-  [USER_LOG_FILE_PURPOSE]: USER_LOG_FILE_UPLOAD_POLICY
-};
-
-/**
- * The list of {@link StorageFilePurpose} values that support signed-upload-url generation.
- */
-export const STORAGE_FILE_PURPOSE_UPLOAD_POLICY_KEYS: readonly StorageFilePurpose[] = Object.keys(STORAGE_FILE_PURPOSE_UPLOAD_POLICIES);
-
-// MARK: System File Types
+export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: readonly StorageFilePurposeUploadPolicy[] = [USER_AVATAR_UPLOAD_POLICY, USER_TEST_FILE_UPLOAD_POLICY, USER_LOG_FILE_UPLOAD_POLICY];

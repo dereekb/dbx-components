@@ -29,6 +29,7 @@ import {
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
   NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING,
   delayCompletion,
+  onCallCreateModelParams,
   onCallReadModelParams,
   type DownloadStorageFileParams,
   type StorageFileDocument,
@@ -50,8 +51,8 @@ import {
   type StorageFilePurpose,
   type FirebaseAuthUserId,
   MODEL_NOT_AVAILABLE_ERROR_CODE,
-  type GenerateStorageFileSignedUploadUrlParams,
-  type GenerateStorageFileSignedUploadUrlResult
+  type CreateStorageFileSignedUploadUrlParams,
+  type CreateStorageFileSignedUploadUrlResult
 } from '@dereekb/firebase';
 import { addMilliseconds, type GetterOrValue, getValueFromGetter, type Maybe, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -1147,17 +1148,17 @@ demoApiFunctionContextFactory((f) => {
           });
         });
 
-        describe('generateSignedUploadUrl', () => {
+        describe('signedUploadUrl', () => {
           // NOTE: the Firebase Storage emulator does not actually sign URLs.
           // The server-side accessor falls back to the public URL when the
           // signing call throws in-emulator (see driver.accessor.ts), so these
           // tests assert the URL/headers/path-resolution shape rather than the
           // GCS signature payload itself.
-          const callGenerate = (data: GenerateStorageFileSignedUploadUrlParams) => au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, data, 'generateSignedUploadUrl')) as Promise<GenerateStorageFileSignedUploadUrlResult>;
+          const callCreateSignedUploadUrl = (data: CreateStorageFileSignedUploadUrlParams) => au.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(storageFileIdentity, data, 'signedUploadUrl')) as Promise<CreateStorageFileSignedUploadUrlResult>;
 
           describe('avatar purpose', () => {
             it('returns an upload url that targets the avatar upload path', async () => {
-              const result = await callGenerate({
+              const result = await callCreateSignedUploadUrl({
                 purpose: USER_AVATAR_PURPOSE,
                 contentType: 'image/jpeg',
                 fileSizeBytes: 100_000
@@ -1175,7 +1176,7 @@ demoApiFunctionContextFactory((f) => {
             itShouldFail('with INVALID_CONTENT_TYPE when the content-type is not in the policy', async () => {
               await expectFail(
                 () =>
-                  callGenerate({
+                  callCreateSignedUploadUrl({
                     purpose: USER_AVATAR_PURPOSE,
                     contentType: 'application/zip',
                     fileSizeBytes: 100
@@ -1187,7 +1188,7 @@ demoApiFunctionContextFactory((f) => {
             itShouldFail('with FILE_TOO_LARGE when fileSizeBytes exceeds the policy cap', async () => {
               await expectFail(
                 () =>
-                  callGenerate({
+                  callCreateSignedUploadUrl({
                     purpose: USER_AVATAR_PURPOSE,
                     contentType: 'image/png',
                     fileSizeBytes: 32 * 1024 * 1024
@@ -1199,7 +1200,7 @@ demoApiFunctionContextFactory((f) => {
 
           describe('test file purpose', () => {
             it('returns an upload url that targets the test upload path with the caller-supplied filename', async () => {
-              const result = await callGenerate({
+              const result = await callCreateSignedUploadUrl({
                 purpose: USER_TEST_FILE_PURPOSE,
                 contentType: 'text/plain',
                 filename: 'hello.txt',
@@ -1214,7 +1215,7 @@ demoApiFunctionContextFactory((f) => {
             itShouldFail('with MISSING_FILENAME when filename is required but not provided', async () => {
               await expectFail(
                 () =>
-                  callGenerate({
+                  callCreateSignedUploadUrl({
                     purpose: USER_TEST_FILE_PURPOSE,
                     contentType: 'text/plain',
                     fileSizeBytes: 11
@@ -1226,7 +1227,7 @@ demoApiFunctionContextFactory((f) => {
             itShouldFail('with INVALID_FILENAME when the filename contains a slash', async () => {
               await expectFail(
                 () =>
-                  callGenerate({
+                  callCreateSignedUploadUrl({
                     purpose: USER_TEST_FILE_PURPOSE,
                     contentType: 'text/plain',
                     filename: 'evil/hello.txt',
@@ -1239,7 +1240,7 @@ demoApiFunctionContextFactory((f) => {
             itShouldFail('with INVALID_FILENAME when the filename contains a parent path segment', async () => {
               await expectFail(
                 () =>
-                  callGenerate({
+                  callCreateSignedUploadUrl({
                     purpose: USER_TEST_FILE_PURPOSE,
                     contentType: 'text/plain',
                     filename: 'hello..txt',
@@ -1254,7 +1255,7 @@ demoApiFunctionContextFactory((f) => {
             itShouldFail('with UNKNOWN_PURPOSE for a purpose not registered in STORAGE_FILE_PURPOSE_UPLOAD_POLICIES', async () => {
               await expectFail(
                 () =>
-                  callGenerate({
+                  callCreateSignedUploadUrl({
                     purpose: 'definitely-not-a-real-purpose',
                     contentType: 'text/plain',
                     filename: 'x.txt',

@@ -3,7 +3,7 @@ import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreMode
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type ModelAccessMultiReadResult, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
-import { type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
+import { buildStaticWireEntry, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
 // MARK: Constants
 /**
@@ -94,10 +94,12 @@ export interface ModelGetToolInput {
  */
 export function createModelGetTool(deps: CreateModelGetToolDeps): McpToolDefinition {
   const handler: McpStaticToolHandler = (args, ctx) => modelGetToolHandler(args, ctx, deps);
+  const name = MODEL_GET_TOOL_NAME;
+  const description = 'Fetch one or more Firestore model documents by key or bare id. Values containing `/` are treated as full keys; bare ids are auto-promoted to `<collectionName>/<id>` for root models. Subcollection models require full keys. Mirrors dbx-cli `get` / `get-many`.';
 
   return {
-    name: MODEL_GET_TOOL_NAME,
-    description: 'Fetch one or more Firestore model documents by key or bare id. Values containing `/` are treated as full keys; bare ids are auto-promoted to `<collectionName>/<id>` for root models. Subcollection models require full keys. Mirrors dbx-cli `get` / `get-many`.',
+    name,
+    description,
     inputSchema: MODEL_GET_INPUT_SCHEMA,
     outputSchema: MODEL_GET_OUTPUT_SCHEMA,
     dispatch: {
@@ -109,7 +111,8 @@ export function createModelGetTool(deps: CreateModelGetToolDeps): McpToolDefinit
       visibilityKind: 'declarative',
       rule: { requireAuthenticated: true },
       effectiveReadOnly: true
-    }
+    },
+    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema: MODEL_GET_INPUT_SCHEMA, outputSchema: MODEL_GET_OUTPUT_SCHEMA })
   };
 }
 

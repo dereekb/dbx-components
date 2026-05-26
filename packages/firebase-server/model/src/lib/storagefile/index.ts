@@ -2,6 +2,7 @@ export * from './extension';
 export * from './storagefile.action.server';
 export * from './storagefile.action.server.init';
 export * from './storagefile.error';
+export * from './storagefile.mcp';
 export * from './storagefile.module';
 export * from './storagefile.task.service.handler';
 export * from './storagefile.upload.service';

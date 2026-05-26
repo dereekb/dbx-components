@@ -22,7 +22,7 @@ function lintCode(code: string, options?: object): Linter.LintMessage[] {
   return linter.verify(code, buildConfig(options), { filename: 'test.ts' }).filter((m) => m.ruleId === RULE_ID);
 }
 
-const REGISTRY_TYPE_DEFS = `
+const POLICY_TYPE_DEFS = `
 type StorageFilePurpose = string;
 type StorageFilePurposeUploadPolicy = { purpose: string; allowedMimeTypes: readonly string[]; maxFileSizeBytes: number; buildUploadPath: (input: { uid: string; filename?: string }) => string; requiresFilenameInput: boolean };
 declare function userAvatarUploadsFilePath(uid: string): string;
@@ -167,10 +167,10 @@ service firebase.storage {
 }
 `;
 
-// === Registry fixtures ===
+// === Typed-declaration fixtures ===
 
-function singlePolicyRegistry(maxFileSizeBytes: string, mimeTypes: string): string {
-  return `${REGISTRY_TYPE_DEFS}
+function singleAvatarPolicy(maxFileSizeBytes: string, mimeTypes: string): string {
+  return `${POLICY_TYPE_DEFS}
 export const USER_AVATAR_PURPOSE: StorageFilePurpose = 'avatar';
 export const USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES = ${maxFileSizeBytes};
 export const USER_AVATAR_UPLOADS_ALLOWED_FILE_TYPES = ${mimeTypes};
@@ -180,9 +180,6 @@ export const USER_AVATAR_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
   maxFileSizeBytes: USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES,
   buildUploadPath: ({ uid }) => userAvatarUploadsFilePath(uid),
   requiresFilenameInput: false
-};
-export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: Readonly<Record<StorageFilePurpose, StorageFilePurposeUploadPolicy>> = {
-  [USER_AVATAR_PURPOSE]: USER_AVATAR_UPLOAD_POLICY
 };
 `;
 }
@@ -270,14 +267,14 @@ service firebase.storage {
 });
 
 describe('require-storagefile-policy-matches-rules rule', () => {
-  it('does not flag when storage.rules matches the registry exactly', () => {
-    const code = singlePolicyRegistry('16 * 1024 * 1024', "['image/jpeg', 'image/png']");
+  it('does not flag when storage.rules matches the typed policy exactly', () => {
+    const code = singleAvatarPolicy('16 * 1024 * 1024', "['image/jpeg', 'image/png']");
     const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_OK });
     expect(messages).toEqual([]);
   });
 
   it('flags maxFileSizeMismatch when policy cap exceeds the rules cap', () => {
-    const code = singlePolicyRegistry('32 * 1024 * 1024', "['image/jpeg', 'image/png']");
+    const code = singleAvatarPolicy('32 * 1024 * 1024', "['image/jpeg', 'image/png']");
     const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_OK });
     expect(messages).toHaveLength(2);
     for (const msg of messages) {
@@ -289,13 +286,13 @@ describe('require-storagefile-policy-matches-rules rule', () => {
   });
 
   it('does NOT flag when policy cap is below the rules cap (policy is stricter)', () => {
-    const code = singlePolicyRegistry('4 * 1024 * 1024', "['image/jpeg', 'image/png']");
+    const code = singleAvatarPolicy('4 * 1024 * 1024', "['image/jpeg', 'image/png']");
     const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_OK });
     expect(messages).toEqual([]);
   });
 
   it('flags mimeTypeNotAllowed when a TS MIME has no matching rule branch', () => {
-    const code = singlePolicyRegistry('16 * 1024 * 1024', "['image/webp']");
+    const code = singleAvatarPolicy('16 * 1024 * 1024', "['image/webp']");
     const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_MIME_ONLY_JPEG });
     expect(messages).toHaveLength(1);
     expect(messages[0].messageId).toBe('mimeTypeNotAllowed');
@@ -303,13 +300,13 @@ describe('require-storagefile-policy-matches-rules rule', () => {
   });
 
   it('accepts MIME types covered by a regex branch', () => {
-    const code = singlePolicyRegistry('16 * 1024 * 1024', "['image/jpeg', 'image/png', 'image/webp']");
+    const code = singleAvatarPolicy('16 * 1024 * 1024', "['image/jpeg', 'image/png', 'image/webp']");
     const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_OK });
     expect(messages).toEqual([]);
   });
 
   it('flags missingRuleBlock when the policy has no Mirrors marker', () => {
-    const code = singlePolicyRegistry('16 * 1024 * 1024', "['image/jpeg']");
+    const code = singleAvatarPolicy('16 * 1024 * 1024', "['image/jpeg']");
     const noMarkerRules = `
 service firebase.storage {
   match /b/{bucket}/o {
@@ -324,8 +321,8 @@ service firebase.storage {
     expect(messages[0].messageId).toBe('missingRuleBlock');
   });
 
-  it('flags orphanRuleBlock when storage.rules has a marker for a key not in the registry', () => {
-    const code = singlePolicyRegistry('16 * 1024 * 1024', "['image/jpeg']");
+  it('flags orphanRuleBlock when storage.rules has a marker for a key with no matching typed declaration', () => {
+    const code = singleAvatarPolicy('16 * 1024 * 1024', "['image/jpeg']");
     const combined = `
 service firebase.storage {
   match /b/{bucket}/o {
@@ -347,27 +344,27 @@ service firebase.storage {
   });
 
   it('flags unsupportedRuleShape when the parser cannot reduce the allow predicate', () => {
-    const code = singlePolicyRegistry('16 * 1024 * 1024', "['image/jpeg']");
+    const code = singleAvatarPolicy('16 * 1024 * 1024', "['image/jpeg']");
     const messages = lintCode(code, { virtualStorageRules: UNSUPPORTED_RULES });
     expect(messages).toHaveLength(1);
     expect(messages[0].messageId).toBe('unsupportedRuleShape');
   });
 
   it('flags rulesFileMissing when neither virtual rules nor a readable file is provided', () => {
-    const code = singlePolicyRegistry('16 * 1024 * 1024', "['image/jpeg']");
+    const code = singleAvatarPolicy('16 * 1024 * 1024', "['image/jpeg']");
     const messages = lintCode(code, { storageRulesPath: '/nonexistent/storage.rules' });
     expect(messages).toHaveLength(1);
     expect(messages[0].messageId).toBe('rulesFileMissing');
   });
 
-  it('no-ops on TS files that do not export the registry', () => {
+  it('no-ops on TS files that do not declare any StorageFilePurposeUploadPolicy', () => {
     const code = `export const FOO = 1;`;
     const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_OK });
     expect(messages).toEqual([]);
   });
 
   it('accepts a multi-branch (PDF || image) helper disjunction', () => {
-    const code = `${REGISTRY_TYPE_DEFS}
+    const code = `${POLICY_TYPE_DEFS}
 export const USER_JOB_REQUIREMENT_PURPOSE: StorageFilePurpose = 'job_requirement';
 export const USER_JR_MAX_FILE_SIZE_BYTES = 16 * 1024 * 1024;
 export const USER_JR_ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -379,16 +376,13 @@ export const USER_JOB_REQUIREMENT_UPLOAD_POLICY: StorageFilePurposeUploadPolicy 
   buildUploadPath: ({ uid, filename }) => userJobRequirementUploadPath(uid, filename as string),
   requiresFilenameInput: true
 };
-export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: Readonly<Record<StorageFilePurpose, StorageFilePurposeUploadPolicy>> = {
-  [USER_JOB_REQUIREMENT_PURPOSE]: USER_JOB_REQUIREMENT_UPLOAD_POLICY
-};
 `;
     const messages = lintCode(code, { virtualStorageRules: JOB_REQUIREMENT_RULES });
     expect(messages).toEqual([]);
   });
 
   it('flags size mismatch when the smaller branch cap is below the TS cap for a specific MIME', () => {
-    const code = `${REGISTRY_TYPE_DEFS}
+    const code = `${POLICY_TYPE_DEFS}
 export const USER_JOB_REQUIREMENT_PURPOSE: StorageFilePurpose = 'job_requirement';
 export const USER_JOB_REQUIREMENT_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
   purpose: USER_JOB_REQUIREMENT_PURPOSE,
@@ -396,9 +390,6 @@ export const USER_JOB_REQUIREMENT_UPLOAD_POLICY: StorageFilePurposeUploadPolicy 
   maxFileSizeBytes: 32 * 1024 * 1024,
   buildUploadPath: ({ uid, filename }) => '' + uid + filename,
   requiresFilenameInput: true
-};
-export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: Readonly<Record<StorageFilePurpose, StorageFilePurposeUploadPolicy>> = {
-  [USER_JOB_REQUIREMENT_PURPOSE]: USER_JOB_REQUIREMENT_UPLOAD_POLICY
 };
 `;
     const messages = lintCode(code, { virtualStorageRules: JOB_REQUIREMENT_RULES });
@@ -408,7 +399,7 @@ export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: Readonly<Record<StorageFilePu
   });
 
   it('does not flag unsupportedRuleShape on an auth-only OR resource-conjunction predicate', () => {
-    const code = `${REGISTRY_TYPE_DEFS}
+    const code = `${POLICY_TYPE_DEFS}
 export const USER_TEST_FILE_PURPOSE: StorageFilePurpose = 'test_file';
 export const USER_TEST_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
   purpose: USER_TEST_FILE_PURPOSE,
@@ -417,29 +408,41 @@ export const USER_TEST_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
   buildUploadPath: ({ uid, filename }) => userTestFileUploadsFilePath(uid, filename as string),
   requiresFilenameInput: true
 };
-export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: Readonly<Record<StorageFilePurpose, StorageFilePurposeUploadPolicy>> = {
-  [USER_TEST_FILE_PURPOSE]: USER_TEST_FILE_UPLOAD_POLICY
-};
 `;
     const messages = lintCode(code, { virtualStorageRules: AUTH_OR_RESOURCE_RULES });
     expect(messages).toEqual([]);
   });
 
-  it('respects a custom registryName option', () => {
-    const code = `${REGISTRY_TYPE_DEFS}
+  it('respects a custom policyTypeName option', () => {
+    const code = `${POLICY_TYPE_DEFS}
+type AppUploadPolicy = StorageFilePurposeUploadPolicy;
 export const USER_AVATAR_PURPOSE: StorageFilePurpose = 'avatar';
-export const USER_AVATAR_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
+export const USER_AVATAR_UPLOAD_POLICY: AppUploadPolicy = {
   purpose: USER_AVATAR_PURPOSE,
   allowedMimeTypes: ['image/jpeg'],
   maxFileSizeBytes: 16 * 1024 * 1024,
   buildUploadPath: ({ uid }) => userAvatarUploadsFilePath(uid),
   requiresFilenameInput: false
 };
-export const APP_UPLOAD_POLICIES: Readonly<Record<StorageFilePurpose, StorageFilePurposeUploadPolicy>> = {
-  [USER_AVATAR_PURPOSE]: USER_AVATAR_UPLOAD_POLICY
+`;
+    const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_OK, policyTypeName: 'AppUploadPolicy' });
+    expect(messages).toEqual([]);
+  });
+
+  it('flags unresolvedPolicyField when the purpose value is neither an identifier nor a literal', () => {
+    const code = `${POLICY_TYPE_DEFS}
+declare function buildPurpose(): string;
+export const SOME_POLICY: StorageFilePurposeUploadPolicy = {
+  purpose: buildPurpose(),
+  allowedMimeTypes: ['image/jpeg'],
+  maxFileSizeBytes: 1024,
+  buildUploadPath: ({ uid }) => userAvatarUploadsFilePath(uid),
+  requiresFilenameInput: false
 };
 `;
-    const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_OK, registryName: 'APP_UPLOAD_POLICIES' });
-    expect(messages).toEqual([]);
+    const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_OK });
+    // purpose unresolvable + the existing storage.rules block becomes an orphan
+    const ids = messages.map((m) => m.messageId).sort();
+    expect(ids).toEqual(['orphanRuleBlock', 'unresolvedPolicyField']);
   });
 });

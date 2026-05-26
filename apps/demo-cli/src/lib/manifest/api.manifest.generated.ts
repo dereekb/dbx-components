@@ -5,12 +5,12 @@
 import {
   createOidcClientParamsType,
   createStorageFileParamsType,
+  createStorageFileSignedUploadUrlParamsType,
   deleteOidcClientParamsType,
   deleteOidcTokenParamsType,
   deleteStorageFileParamsType,
   downloadMultipleStorageFilesParamsType,
   downloadStorageFileParamsType,
-  generateStorageFileSignedUploadUrlParamsType,
   initializeAllStorageFilesFromUploadsParamsType,
   initializeStorageFileFromUploadParamsType,
   processStorageFileParamsType,
@@ -348,6 +348,34 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'expediteProcessing', typeText: 'Maybe<boolean>' }
     ]
   },
+  {
+    model: 'storageFile',
+    verb: 'create',
+    specifier: 'signedUploadUrl',
+    paramsTypeName: 'CreateStorageFileSignedUploadUrlParams',
+    paramsValidator: createStorageFileSignedUploadUrlParamsType,
+    resultTypeName: 'CreateStorageFileSignedUploadUrlResult',
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: "Parameters for creating a short-lived signed PUT URL for a StorageFile upload.\n\nThe resulting URL is restricted to a specific {@link StorageFilePurpose}, MIME\ntype, and file size and lands the bytes inside the authenticated caller's\n`/uploads/u/{uid}/...` namespace. Once uploaded, the existing\n`StorageFileInitializeFromUploadService` flow picks the file up and creates\nthe matching `StorageFile` document.",
+    paramsFields: [
+      { name: 'purpose', typeText: 'StorageFilePurpose', description: "The {@link StorageFilePurpose} to upload as. Must be supported by the\napp's signed-upload-url policy registry. The chosen policy decides where\nthe file lands and which content-types/sizes are allowed." },
+      { name: 'contentType', typeText: 'ContentTypeMimeType', description: "The MIME type the client intends to PUT. Validated against the policy's\n`allowedMimeTypes` and signed into the URL so GCS rejects any PUT with a\ndifferent `Content-Type`." },
+      { name: 'filename', typeText: 'Maybe<SlashPathFile>', description: "Filename to place inside the policy's upload folder. Required when the\npolicy has `requiresFilenameInput: true`. Sanitized server-side — must not\ncontain `/`, `..`, or NUL bytes; capped at\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH} chars." },
+      { name: 'fileSizeBytes', typeText: 'number', description: "Client-declared size in bytes for the upload. Validated against the\npolicy's `maxFileSizeBytes` cap. The storage rules independently enforce\nthe same cap via `request.resource.size`." },
+      { name: 'expiresInMs', typeText: 'Maybe<Milliseconds>', description: 'Lifetime of the signed URL in milliseconds. Clamped to\n[{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].\nDefaults to {@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS}\nwhen omitted.' }
+    ],
+    resultTypeDescription: 'Result of creating a signed upload URL.\n\nThe caller PUTs the file bytes to {@link uploadUrl} with the headers in\n{@link requiredHeaders}. The existing initializer flow then picks the file\nup from {@link uploadPath} and creates the StorageFile document.\n\n`modelKeys` is intentionally empty — minting the URL does not create a\nStorageFile document; the document is created later by the upload-complete\npipeline.',
+    resultFields: [
+      { name: 'modelKeys', typeText: '[]' },
+      { name: 'uploadUrl', typeText: 'string', description: 'Short-lived, content-type-pinned PUT URL.' },
+      { name: 'uploadPath', typeText: 'SlashPath', description: 'The full storage path the URL writes to (inside `/uploads/u/{uid}/...`).\nReturned so the caller can confirm where the file landed.' },
+      { name: 'expiresAt', typeText: 'UnixDateTimeMillisecondsNumber', description: 'Unix millisecond timestamp at which the URL expires.' },
+      { name: 'requiredHeaders', typeText: 'Readonly<Record<string, string>>', description: 'Headers the caller MUST send on the PUT for the signature to validate.\nAt minimum, the `content-type` matches the signed value.' },
+      { name: 'maxFileSizeBytes', typeText: 'number', description: "Echo of the policy's `maxFileSizeBytes` cap, for caller-side validation." },
+      { name: 'purpose', typeText: 'StorageFilePurpose', description: 'The resolved {@link StorageFilePurpose}.' }
+    ]
+  },
   { model: 'storageFile', verb: 'delete', specifier: '_', paramsTypeName: 'DeleteStorageFileParams', paramsValidator: deleteStorageFileParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }] },
   {
     model: 'storageFile',
@@ -385,33 +413,6 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultFields: [
       { name: 'success', typeText: 'DownloadMultipleStorageFileSuccessItem[]' },
       { name: 'errors', typeText: 'DownloadMultipleStorageFileErrorItem[]' }
-    ]
-  },
-  {
-    model: 'storageFile',
-    verb: 'read',
-    specifier: 'generateSignedUploadUrl',
-    paramsTypeName: 'GenerateStorageFileSignedUploadUrlParams',
-    paramsValidator: generateStorageFileSignedUploadUrlParamsType,
-    resultTypeName: 'GenerateStorageFileSignedUploadUrlResult',
-    groupName: 'StorageFile',
-    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
-    paramsTypeDescription: "Parameters for generating a short-lived signed PUT URL for a StorageFile upload.\n\nThe resulting URL is restricted to a specific {@link StorageFilePurpose}, MIME\ntype, and file size and lands the bytes inside the authenticated caller's\n`/uploads/u/{uid}/...` namespace. Once uploaded, the existing\n`StorageFileInitializeFromUploadService` flow picks the file up and creates\nthe matching `StorageFile` document.",
-    paramsFields: [
-      { name: 'purpose', typeText: 'StorageFilePurpose', description: "The {@link StorageFilePurpose} to upload as. Must be supported by the\napp's signed-upload-url policy registry. The chosen policy decides where\nthe file lands and which content-types/sizes are allowed." },
-      { name: 'contentType', typeText: 'ContentTypeMimeType', description: "The MIME type the client intends to PUT. Validated against the policy's\n`allowedMimeTypes` and signed into the URL so GCS rejects any PUT with a\ndifferent `Content-Type`." },
-      { name: 'filename', typeText: 'Maybe<SlashPathFile>', description: "Filename to place inside the policy's upload folder. Required when the\npolicy has `requiresFilenameInput: true`. Sanitized server-side — must not\ncontain `/`, `..`, or NUL bytes; capped at\n{@link GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH} chars." },
-      { name: 'fileSizeBytes', typeText: 'number', description: "Client-declared size in bytes for the upload. Validated against the\npolicy's `maxFileSizeBytes` cap. The storage rules independently enforce\nthe same cap via `request.resource.size`." },
-      { name: 'expiresInMs', typeText: 'Maybe<Milliseconds>', description: 'Lifetime of the signed URL in milliseconds. Clamped to\n[{@link GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},\n{@link GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].\nDefaults to {@link GENERATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS}\nwhen omitted.' }
-    ],
-    resultTypeDescription: 'Result of generating a signed upload URL.\n\nThe caller PUTs the file bytes to {@link uploadUrl} with the headers in\n{@link requiredHeaders}. The existing initializer flow then picks the file\nup from {@link uploadPath} and creates the StorageFile document.',
-    resultFields: [
-      { name: 'uploadUrl', typeText: 'string', description: 'Short-lived, content-type-pinned PUT URL.' },
-      { name: 'uploadPath', typeText: 'SlashPath', description: 'The full storage path the URL writes to (inside `/uploads/u/{uid}/...`).\nReturned so the caller can confirm where the file landed.' },
-      { name: 'expiresAt', typeText: 'UnixDateTimeMillisecondsNumber', description: 'Unix millisecond timestamp at which the URL expires.' },
-      { name: 'requiredHeaders', typeText: 'Readonly<Record<string, string>>', description: 'Headers the caller MUST send on the PUT for the signature to validate.\nAt minimum, the `content-type` matches the signed value.' },
-      { name: 'maxFileSizeBytes', typeText: 'number', description: "Echo of the policy's `maxFileSizeBytes` cap, for caller-side validation." },
-      { name: 'purpose', typeText: 'StorageFilePurpose', description: 'The resolved {@link StorageFilePurpose}.' }
     ]
   },
   { model: 'storageFile', verb: 'update', specifier: '_', paramsTypeName: 'UpdateStorageFileParams', paramsValidator: updateStorageFileParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'sdat', typeText: 'Maybe<Date>' }] },
