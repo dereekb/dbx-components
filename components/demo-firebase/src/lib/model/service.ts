@@ -169,10 +169,16 @@ export const systemStateFirebaseModelServiceFactory = firebaseModelServiceFactor
 export const guestbookFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Guestbook, GuestbookDocument, GuestbookRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<Guestbook, GuestbookDocument>, context: DemoFirebaseContext, _model: GuestbookDocument): PromiseOrValue<GrantedRoleMap<GuestbookRoles>> {
     return grantFullAccessIfAdmin(context, () => {
-      let roles: GuestbookRoles[] = [];
+      const roles: GuestbookRoles[] = [];
 
+      // the creator can read and publish their own guestbook
+      if (context.auth?.uid && output.data?.cby === context.auth.uid) {
+        roles.push('read', 'publish');
+      }
+
+      // a published guestbook is readable by anyone
       if (output.data?.published) {
-        roles.push('publish');
+        roles.push('read');
       }
 
       return grantedRoleKeysMapFromArray(roles);

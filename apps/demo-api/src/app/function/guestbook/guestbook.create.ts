@@ -20,7 +20,13 @@ export const guestbookCreate: DemoCreateModelFunction<CreateGuestbookParams> = w
     }
   },
   fn: async (request) => {
-    const { nest, auth: _auth, data } = request;
+    const { nest, auth, data: inputData } = request;
+
+    const data: CreateGuestbookParams = {
+      ...inputData,
+      cby: auth.uid
+    };
+
     const createGuestbook = await nest.guestbookActions.createGuestbook(data);
     const guestbook = await createGuestbook();
     return onCallCreateModelResultWithDocs(guestbook);

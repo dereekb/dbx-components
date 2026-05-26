@@ -6,6 +6,10 @@ import { type OnCallCreateModelResult, type OnCallQueryModelResult, onCallCreate
 import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 import { BAD_DOCUMENT_QUERY_CURSOR_ERROR_CODE } from '@dereekb/firebase';
 import { firebaseServerErrorInfo } from '@dereekb/firebase-server';
+import { MODEL_GET_TOOL_NAME } from '@dereekb/firebase-server/mcp';
+import { callMcpTool } from '../../../test/mcp';
+
+vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
 
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   describeCallableRequestTest('guestbookCreate', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
@@ -34,6 +38,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const data = await document.snapshotData();
         expect(data).toBeDefined();
         expect(data?.name).toBe(name);
+        // the create function stamps the authed caller as the creator
+        expect(data?.cby).toBe(u.uid);
       });
     });
   });
@@ -252,6 +258,76 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             expect(data?.published).toBe(false);
           });
         });
+      });
+    });
+  });
+
+  // MARK: Read & creator permissions
+  describeCallableRequestTest('guestbookRead', { f, fns: { demoCallModel } }, ({ demoCallModelWrappedFn }) => {
+    demoAuthorizedUserContext({ f }, (u) => {
+      async function createGuestbookForUser(name: string): Promise<string> {
+        const params: CreateGuestbookParams = { name };
+        const result = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(guestbookIdentity, params))) as OnCallCreateModelResult;
+        return result.modelKeys[0];
+      }
+
+      it('should allow a non-admin to read a published guestbook by key', async () => {
+        const key = await createGuestbookForUser('ReadablePublished');
+
+        // publish it via a merge update so the cby stamped by the create function is preserved
+        const guestbookAccessor = f.instance.demoFirestoreCollections.guestbookCollection.documentAccessor();
+        await guestbookAccessor.loadDocumentForKey(key).accessor.update({ published: true });
+
+        const result = await callMcpTool({ f, u, name: MODEL_GET_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [key] } });
+
+        expect(result.isError).toBeUndefined();
+
+        const structured = result.structuredContent as { readonly results: ReadonlyArray<{ readonly key: string; readonly data: { readonly name: string } }>; readonly errors: ReadonlyArray<unknown> };
+        expect(structured.errors).toHaveLength(0);
+        expect(structured.results).toHaveLength(1);
+        expect(structured.results[0].key).toBe(key);
+        expect(structured.results[0].data.name).toBe('ReadablePublished');
+      });
+
+      it('should allow the creator to read their own unpublished guestbook', async () => {
+        const key = await createGuestbookForUser('OwnerReadableUnpublished');
+
+        const result = await callMcpTool({ f, u, name: MODEL_GET_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [key] } });
+
+        expect(result.isError).toBeUndefined();
+
+        const structured = result.structuredContent as { readonly results: ReadonlyArray<{ readonly key: string; readonly data: { readonly published: boolean } }>; readonly errors: ReadonlyArray<unknown> };
+        expect(structured.errors).toHaveLength(0);
+        expect(structured.results).toHaveLength(1);
+        expect(structured.results[0].key).toBe(key);
+        expect(structured.results[0].data.published).toBe(false);
+      });
+
+      it('should forbid a non-admin from reading an unpublished guestbook they do not own', async () => {
+        // seed an unpublished guestbook owned by a different user
+        const guestbookAccessor = f.instance.demoFirestoreCollections.guestbookCollection.documentAccessor();
+        const document = guestbookAccessor.newDocument();
+        await document.create({ name: 'PrivateBook', published: false, locked: false, cby: 'some-other-uid' });
+
+        const result = await callMcpTool({ f, u, name: MODEL_GET_TOOL_NAME, args: { modelType: guestbookIdentity.modelType, keys: [document.key] } });
+
+        expect(result.isError).toBeUndefined();
+
+        const structured = result.structuredContent as { readonly results: ReadonlyArray<unknown>; readonly errors: ReadonlyArray<{ readonly key: string }> };
+        expect(structured.results).toHaveLength(0);
+        expect(structured.errors).toHaveLength(1);
+        expect(structured.errors[0].key).toBe(document.key);
+      });
+
+      it('should allow the creator (cby) to publish their own guestbook', async () => {
+        const key = await createGuestbookForUser('OwnerPublishable');
+
+        const params: PublishGuestbookParams = { key };
+        await u.callWrappedFunction(demoCallModelWrappedFn, onCallUpdateModelParams(guestbookIdentity, params, 'publish'));
+
+        const guestbookAccessor = f.instance.demoFirestoreCollections.guestbookCollection.documentAccessor();
+        const data = await guestbookAccessor.loadDocumentForKey(key).snapshotData();
+        expect(data?.published).toBe(true);
       });
     });
   });

@@ -4,6 +4,7 @@ import { type Guestbook, type GuestbookEntry, type GuestbookTypes } from './gues
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 import { type GuestbookKey } from './guestbook.id';
+import { ProfileId } from '../profile';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
 
@@ -13,6 +14,7 @@ export const GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH = 40;
 export interface CreateGuestbookParams {
   readonly name: string;
   readonly published?: Maybe<boolean>;
+  readonly cby?: Maybe<ProfileId>;
 }
 
 export const createGuestbookParamsType = type({
