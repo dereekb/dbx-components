@@ -23,12 +23,57 @@ export interface McpManifestToolEntry {
 }
 
 /**
+ * One persisted field on a {@link McpManifestModelEntry}.
+ *
+ * Structural mirror of `@dereekb/dbx-cli`'s `CliModelField` minus the
+ * converter-text fields (CLI-only). The runtime keeps the payload narrow so the
+ * built-in `model-info` / `model-decode` tools can answer catalog queries without
+ * round-tripping back through the source packages.
+ */
+export interface McpManifestModelField {
+  readonly name: string;
+  readonly longName: string;
+  readonly tsType?: string;
+  readonly optional: boolean;
+  readonly description?: string;
+  readonly enumRef?: string;
+  readonly syncFlag?: string;
+  readonly nestedFields?: readonly McpManifestModelField[];
+  readonly nestedIsArray?: boolean;
+}
+
+/**
+ * One Firestore model entry in the pre-rendered MCP manifest JSON.
+ *
+ * Structural mirror of `@dereekb/dbx-cli`'s `CliModelManifestEntry`. Drives the
+ * built-in `model-info` and `model-decode` MCP tools.
+ */
+export interface McpManifestModelEntry {
+  readonly modelType: string;
+  readonly modelName: string;
+  readonly modelGroup?: string;
+  readonly identityConst: string;
+  readonly collectionPrefix: string;
+  readonly parentIdentityConst?: string;
+  readonly description?: string;
+  readonly sourcePackage: string;
+  readonly sourceFile: string;
+  readonly fields: readonly McpManifestModelField[];
+}
+
+/**
  * Full MCP manifest JSON shape consumed at boot.
+ *
+ * The optional `models` array carries the Firestore model catalog used by the
+ * built-in `model-info` / `model-decode` static tools. When absent (e.g., legacy
+ * manifests rendered before model catalog support landed), the runtime skips
+ * registering those tools instead of failing the boot.
  */
 export interface McpManifest {
   readonly version: typeof MCP_MANIFEST_VERSION;
   readonly generatedAt: string;
   readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
+  readonly models?: readonly McpManifestModelEntry[];
 }
 
 /**

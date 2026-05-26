@@ -28,8 +28,13 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { createJiti } from 'jiti';
 
-import { type CliApiManifest } from '@dereekb/dbx-cli';
+import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';
 import { renderMcpManifest } from './render';
+
+interface LoadedManifest {
+  readonly apiManifest: CliApiManifest;
+  readonly modelManifest?: CliModelManifest;
+}
 
 interface Flags {
   readonly input: string | undefined;
@@ -56,8 +61,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const manifest = await loadManifest(inputPath);
-  const rendered = renderMcpManifest(manifest);
+  const loaded = await loadManifest(inputPath);
+  const rendered = renderMcpManifest(loaded);
   const serialized = `${JSON.stringify(rendered, null, 2)}\n`;
 
   ensureOutputDir(dirname(outputPath));
@@ -65,22 +70,27 @@ async function main(): Promise<void> {
   writeFileSync(tmpPath, serialized);
   renameSync(tmpPath, outputPath);
 
-  console.log(`[wrote] ${relative(WORKSPACE_ROOT, outputPath)} — ${Object.keys(rendered.tools).length} tools`);
+  const modelCount = rendered.models?.length ?? 0;
+  console.log(`[wrote] ${relative(WORKSPACE_ROOT, outputPath)} — ${Object.keys(rendered.tools).length} tools, ${modelCount} models`);
 }
 
-async function loadManifest(path: string): Promise<CliApiManifest> {
+async function loadManifest(path: string): Promise<LoadedManifest> {
   const alias = loadTsconfigPathAliases();
   const jiti = createJiti(import.meta.url, { interopDefault: true, alias });
   const loaded = (await jiti.import(path)) as Record<string, unknown>;
-  const named = Object.entries(loaded).find(([key]) => key.endsWith('_API_MANIFEST'));
+  const namedApi = Object.entries(loaded).find(([key]) => key.endsWith('_API_MANIFEST'));
   const fallback = loaded['default'];
-  const manifest = (named?.[1] ?? fallback) as CliApiManifest | undefined;
+  const apiManifest = (namedApi?.[1] ?? fallback) as CliApiManifest | undefined;
 
-  if (manifest == null || !Array.isArray(manifest)) {
+  if (apiManifest == null || !Array.isArray(apiManifest)) {
     throw new Error(`generate-mcp-manifest: ${path} does not export an *_API_MANIFEST array or a default export of CliApiManifest.`);
   }
 
-  return manifest;
+  const namedModel = Object.entries(loaded).find(([key]) => key.endsWith('_MODEL_MANIFEST'));
+  const modelManifestValue = namedModel?.[1];
+  const modelManifest = Array.isArray(modelManifestValue) ? (modelManifestValue as CliModelManifest) : undefined;
+
+  return { apiManifest, modelManifest };
 }
 
 /**

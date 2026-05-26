@@ -1,4 +1,4 @@
-import { type CliApiManifestEntry, MCP_MANIFEST_VERSION } from '@dereekb/dbx-cli';
+import { type CliApiManifestEntry, type CliModelManifest, type CliModelManifestEntry, MCP_MANIFEST_VERSION } from '@dereekb/dbx-cli';
 import { renderMcpManifest } from './render';
 
 const FIXED_NOW = new Date('2026-05-25T00:00:00.000Z');
@@ -13,8 +13,8 @@ function makeEntry(overrides: Partial<CliApiManifestEntry> = {}): CliApiManifest
   };
 }
 
-function render(entries: ReadonlyArray<CliApiManifestEntry>) {
-  return renderMcpManifest(entries, FIXED_NOW);
+function render(entries: ReadonlyArray<CliApiManifestEntry>, modelManifest?: CliModelManifest) {
+  return renderMcpManifest({ apiManifest: entries, modelManifest }, FIXED_NOW);
 }
 
 describe('renderMcpManifest', () => {
@@ -152,5 +152,108 @@ describe('renderMcpManifest', () => {
     const result = render([makeEntry({ resultFields: [{ name: 'created', typeText: 'CustomShape' }] })]);
     const schema = result.tools['guestbook.query._']?.outputSchema as { properties: Record<string, object> };
     expect(schema.properties['created']).toEqual({});
+  });
+
+  describe('model manifest', () => {
+    function makeModelEntry(overrides: Partial<CliModelManifestEntry> = {}): CliModelManifestEntry {
+      return {
+        modelType: 'guestbook',
+        modelName: 'Guestbook',
+        identityConst: 'guestbookIdentity',
+        collectionPrefix: 'gb',
+        sourcePackage: 'demo-firebase',
+        sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
+        fields: [{ name: 'n', longName: 'name', optional: false, tsType: 'string' }],
+        ...overrides
+      };
+    }
+
+    it('omits models when no model manifest is supplied', () => {
+      const result = render([makeEntry({})]);
+      expect(result.models).toBeUndefined();
+    });
+
+    it('omits models when the supplied manifest is empty', () => {
+      const result = render([makeEntry({})], []);
+      expect(result.models).toBeUndefined();
+    });
+
+    it('projects each model entry, dropping converter text and keeping field metadata', () => {
+      const result = render(
+        [makeEntry({})],
+        [
+          makeModelEntry({
+            modelGroup: 'Guestbook',
+            description: 'A guestbook.',
+            fields: [
+              { name: 'n', longName: 'name', optional: false, tsType: 'string', description: 'The name.', converter: 'firestoreString()' },
+              { name: 'cat', longName: 'createdAt', optional: false, tsType: 'Date', converter: 'firestoreDate()' }
+            ]
+          })
+        ]
+      );
+
+      expect(result.models).toEqual([
+        {
+          modelType: 'guestbook',
+          modelName: 'Guestbook',
+          modelGroup: 'Guestbook',
+          identityConst: 'guestbookIdentity',
+          collectionPrefix: 'gb',
+          description: 'A guestbook.',
+          sourcePackage: 'demo-firebase',
+          sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
+          fields: [
+            { name: 'n', longName: 'name', optional: false, tsType: 'string', description: 'The name.' },
+            { name: 'cat', longName: 'createdAt', optional: false, tsType: 'Date' }
+          ]
+        }
+      ]);
+    });
+
+    it('recurses into nestedFields for object-array and sub-object fields', () => {
+      const result = render(
+        [makeEntry({})],
+        [
+          makeModelEntry({
+            fields: [
+              {
+                name: 'r',
+                longName: 'recipients',
+                optional: false,
+                tsType: 'Recipient[]',
+                converter: 'firestoreObjectArray(...)',
+                nestedFields: [
+                  { name: 'id', longName: 'id', optional: false, tsType: 'string' },
+                  { name: 'em', longName: 'email', optional: true, tsType: 'Maybe<string>' }
+                ],
+                nestedIsArray: true
+              }
+            ]
+          })
+        ]
+      );
+
+      expect(result.models?.[0].fields[0]).toEqual({
+        name: 'r',
+        longName: 'recipients',
+        optional: false,
+        tsType: 'Recipient[]',
+        nestedFields: [
+          { name: 'id', longName: 'id', optional: false, tsType: 'string' },
+          { name: 'em', longName: 'email', optional: true, tsType: 'Maybe<string>' }
+        ],
+        nestedIsArray: true
+      });
+    });
+
+    it('keeps parentIdentityConst on subcollection entries', () => {
+      const result = render([makeEntry({})], [makeModelEntry({ modelType: 'guestbookEntry', identityConst: 'guestbookEntryIdentity', collectionPrefix: 'gbe', parentIdentityConst: 'guestbookIdentity' })]);
+
+      expect(result.models?.[0]).toMatchObject({
+        modelType: 'guestbookEntry',
+        parentIdentityConst: 'guestbookIdentity'
+      });
+    });
   });
 });

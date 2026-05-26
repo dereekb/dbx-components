@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 import { type Type } from 'arktype';
 
 /**
@@ -208,9 +209,47 @@ export interface McpManifestToolEntry {
 }
 
 /**
+ * One persisted field on a {@link McpManifestModelEntry}.
+ *
+ * Structural projection of {@link CliModelField} minus the converter expression
+ * text (CLI-only). Keeps the runtime payload narrow for downstream MCP tools.
+ */
+export interface McpManifestModelField {
+  readonly name: string;
+  readonly longName: string;
+  readonly tsType?: string;
+  readonly optional: boolean;
+  readonly description?: string;
+  readonly enumRef?: string;
+  readonly syncFlag?: string;
+  readonly nestedFields?: readonly McpManifestModelField[];
+  readonly nestedIsArray?: boolean;
+}
+
+/**
+ * One Firestore model entry in the build-time MCP manifest JSON.
+ *
+ * Structural projection of {@link CliModelManifestEntry} consumed at runtime by
+ * the firebase-server/mcp built-in `model-info` and `model-decode` tools.
+ */
+export interface McpManifestModelEntry {
+  readonly modelType: string;
+  readonly modelName: string;
+  readonly modelGroup?: string;
+  readonly identityConst: string;
+  readonly collectionPrefix: string;
+  readonly parentIdentityConst?: string;
+  readonly description?: string;
+  readonly sourcePackage: string;
+  readonly sourceFile: string;
+  readonly fields: readonly McpManifestModelField[];
+}
+
+/**
  * Build-time MCP manifest JSON shape consumed by the runtime MCP module's optional manifest loader.
  *
  * `tools` is keyed by {@link mcpManifestKey} so the runtime can do O(1) lookups per registered tool.
+ * `models` is optional — the runtime skips the catalog-introspection tools when missing.
  */
 export interface McpManifest {
   readonly version: typeof MCP_MANIFEST_VERSION;
@@ -219,6 +258,7 @@ export interface McpManifest {
    */
   readonly generatedAt: string;
   readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
+  readonly models?: readonly McpManifestModelEntry[];
 }
 
 /**
@@ -232,7 +272,7 @@ export interface McpManifest {
  * @param call - The call type / verb (e.g., `query`).
  * @param specifier - The specifier key, or `_` / undefined for the default entry.
  */
-export function mcpManifestKey(modelType: string, call: string, specifier?: string | null): string {
+export function mcpManifestKey(modelType: string, call: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === '_';
   return isDefault ? `${modelType}.${call}._` : `${modelType}.${call}.${specifier}`;
 }

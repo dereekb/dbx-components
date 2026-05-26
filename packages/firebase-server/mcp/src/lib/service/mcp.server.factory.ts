@@ -8,10 +8,12 @@ import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { ModelApiCallModelDispatchService, ModelApiGetService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
-import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestToolEntry } from './mcp.manifest';
+import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
-import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult } from './mcp.tool-generator';
-import { createModelGetTool, MODEL_GET_TOOL_NAME } from './tools/mcp.tool.model-get';
+import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult, type McpToolListEntry } from './mcp.tool-generator';
+import { createModelGetTool } from './tools/mcp.tool.model-get';
+import { createModelInfoTool } from './tools/mcp.tool.model-info';
+import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
 
 /**
  * Optional per-request context passed when invoking the MCP server through a
@@ -38,6 +40,7 @@ export class McpServerFactoryService {
   private _cachedTools: McpToolGenerationResult | undefined;
   private _cachedStaticTools: ReadonlyArray<McpToolDefinition> | undefined;
   private _cachedManifest: ReadonlyMap<string, McpManifestToolEntry> | undefined;
+  private _cachedManifestModels: ReadonlyArray<McpManifestModelEntry> | undefined;
   private _manifestLoaded = false;
   private _loggedSkips = false;
   private _warnedMissingRoleReader = false;
@@ -80,19 +83,7 @@ export class McpServerFactoryService {
     const definitionsByName = new Map<string, McpToolDefinition>(visibleTools.map((tool) => [tool.name, tool]));
 
     server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: visibleTools.map((tool) => {
-        const wire: { name: string; description: string; inputSchema: object; outputSchema?: object } = {
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema ?? { type: 'object' }
-        };
-
-        if (tool.outputSchema != null) {
-          wire.outputSchema = tool.outputSchema;
-        }
-
-        return wire;
-      })
+      tools: visibleTools.map((tool) => this._buildToolListEntry(tool, ctx, scopes))
     }));
 
     server.server.setRequestHandler(CallToolRequestSchema, async (request) => this._handleToolCall(request, definitionsByName, ctx));
@@ -125,7 +116,8 @@ export class McpServerFactoryService {
     if (!this._loggedSkips && result.skipped.length > 0) {
       this._loggedSkips = true;
       for (const skip of result.skipped) {
-        this._logger.warn(`Skipped MCP tool ${skip.toolName} (${skip.reason})${skip.error ? `: ${skip.error.message}` : ''}`);
+        const errorSuffix = skip.error ? `: ${skip.error.message}` : '';
+        this._logger.warn(`Skipped MCP tool ${skip.toolName} (${skip.reason})${errorSuffix}`);
       }
     }
 
@@ -135,38 +127,51 @@ export class McpServerFactoryService {
   /**
    * Builds the list of statically-registered (non-callModel) MCP tools.
    *
-   * Currently just the built-in `model-get` tool. The list is cached for the lifetime of the
-   * process since static tools share the same boot-time inputs as the auto-generated ones.
-   *
-   * Static tools are only registered when {@link ModelApiGetService} is available via DI; this
-   * keeps the factory testable without spinning up the full model module.
+   * Includes `model-get` whenever {@link ModelApiGetService} is available, plus
+   * `model-info` and `model-decode` whenever the boot-time MCP manifest provided
+   * a non-empty `models` catalog. The list is cached for the lifetime of the
+   * process since static tools share the same boot-time inputs as the
+   * auto-generated ones.
    */
   private _resolveStaticTools(): ReadonlyArray<McpToolDefinition> {
     let result = this._cachedStaticTools;
 
     if (result == null) {
+      // Ensure the manifest has been loaded so its `models` array is available for the catalog tools.
+      this._resolveManifest();
+
+      const staticTools: McpToolDefinition[] = [];
       const getService = this.modelApiGetService;
 
-      if (getService == null) {
-        result = [];
-      } else {
-        const modelGetTool = createModelGetTool({
-          readDocuments: (modelType, keys, auth) => getService.readDocuments(modelType, keys, auth),
-          resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth)
-        });
+      if (getService != null) {
+        staticTools.push(
+          createModelGetTool({
+            readDocuments: (modelType, keys, auth) => getService.readDocuments(modelType, keys, auth),
+            resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth)
+          })
+        );
+      }
 
-        // Guard against the auto-generated tools accidentally claiming the static tool name. The
-        // first dispatch wins via Map.set order, so a collision would silently shadow one side.
-        const generatedNames = new Set(this._cachedTools?.tools.map((t) => t.name) ?? []);
+      const modelManifest = this._cachedManifestModels;
 
-        if (generatedNames.has(MODEL_GET_TOOL_NAME)) {
-          this._logger.warn(`Static MCP tool "${MODEL_GET_TOOL_NAME}" collides with an auto-generated tool of the same name; the auto-generated tool will win.`);
-          result = [];
+      if (modelManifest != null && modelManifest.length > 0) {
+        staticTools.push(createModelInfoTool({ manifest: modelManifest }), createModelDecodeTool({ manifest: modelManifest }));
+      }
+
+      // Guard against the auto-generated tools accidentally claiming a static tool name. The first
+      // dispatch wins via Map.set order, so a collision would silently shadow one side.
+      const generatedNames = new Set(this._cachedTools?.tools.map((t) => t.name) ?? []);
+      const filtered: McpToolDefinition[] = [];
+
+      for (const tool of staticTools) {
+        if (generatedNames.has(tool.name)) {
+          this._logger.warn(`Static MCP tool "${tool.name}" collides with an auto-generated tool of the same name; the auto-generated tool will win.`);
         } else {
-          result = [modelGetTool];
+          filtered.push(tool);
         }
       }
 
+      result = filtered;
       this._cachedStaticTools = result;
     }
 
@@ -175,7 +180,7 @@ export class McpServerFactoryService {
 
   /**
    * Reads the pre-rendered MCP manifest JSON once, validates its version, and caches the
-   * resulting `key → entry` map for the process lifetime.
+   * resulting `key → entry` map plus the optional `models` catalog for the process lifetime.
    *
    * Missing file or wrong version fall back to "no manifest" with a single boot warning;
    * the runtime still produces tools using the auto-generated descriptions and
@@ -188,20 +193,20 @@ export class McpServerFactoryService {
 
       if (path == null) {
         this._cachedManifest = undefined;
+        this._cachedManifestModels = undefined;
       } else if (existsSync(path)) {
-        this._cachedManifest = this._parseManifestFile(path);
+        this._parseManifestFile(path);
       } else {
         this._logger.warn(`MCP manifest path is set but the file is missing: ${path}. Falling back to runtime defaults.`);
         this._cachedManifest = undefined;
+        this._cachedManifestModels = undefined;
       }
     }
 
     return this._cachedManifest;
   }
 
-  private _parseManifestFile(path: string): ReadonlyMap<string, McpManifestToolEntry> | undefined {
-    let result: ReadonlyMap<string, McpManifestToolEntry> | undefined;
-
+  private _parseManifestFile(path: string): void {
     try {
       const raw = readFileSync(path, 'utf8');
       const parsed = JSON.parse(raw) as McpManifest;
@@ -215,18 +220,22 @@ export class McpServerFactoryService {
           }
         }
 
-        this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries.`);
-        result = map;
+        const models = Array.isArray(parsed.models) && parsed.models.length > 0 ? (parsed.models as ReadonlyArray<McpManifestModelEntry>) : undefined;
+        const modelSuffix = models == null ? '' : `, ${models.length} model entries`;
+
+        this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries${modelSuffix}.`);
+        this._cachedManifest = map;
+        this._cachedManifestModels = models;
       } else {
         this._logger.warn(`MCP manifest version mismatch at ${path}: got ${String(parsed.version)}, expected ${MCP_MANIFEST_VERSION}. Falling back to runtime defaults.`);
-        result = undefined;
+        this._cachedManifest = undefined;
+        this._cachedManifestModels = undefined;
       }
     } catch (error) {
       this._logger.warn(`Failed to read MCP manifest at ${path}: ${(error as Error).message}. Falling back to runtime defaults.`);
-      result = undefined;
+      this._cachedManifest = undefined;
+      this._cachedManifestModels = undefined;
     }
-
-    return result;
   }
 
   /**
@@ -323,17 +332,75 @@ export class McpServerFactoryService {
     return result;
   }
 
+  /**
+   * Resolves the wire-shape `tools/list` entry for a single tool.
+   *
+   * Hot-path short-circuit: tools without a `toolDetailsBuilder` reuse the precomputed,
+   * frozen {@link McpToolDefinition.staticWireEntry} verbatim — zero allocations per
+   * request for the common case.
+   *
+   * Tools that opted in to {@link McpToolDetailsBuilder} get a fresh wire entry built
+   * from the builder's overrides. If the builder throws, the framework falls back to
+   * the static defaults and logs a warning (fail-soft, matching `_passesVisibility`).
+   */
+  private _buildToolListEntry(tool: McpToolDefinition, ctx: McpRequestContext, scopes: Maybe<ReadonlySet<string>>): McpToolListEntry {
+    let result: McpToolListEntry;
+
+    if (tool.toolDetailsBuilder == null) {
+      result = tool.staticWireEntry;
+    } else {
+      let description = tool.description;
+      let inputSchema: object | undefined = tool.inputSchema;
+
+      try {
+        const overrides = tool.toolDetailsBuilder({
+          dispatch: tool.dispatch,
+          defaultDescription: description,
+          defaultInputSchema: inputSchema,
+          auth: ctx.auth,
+          scopes: scopes ?? undefined
+        });
+
+        if (overrides.description != null) {
+          description = overrides.description;
+        }
+
+        if (overrides.inputSchema != null) {
+          inputSchema = overrides.inputSchema;
+        }
+      } catch (error) {
+        this._logger.warn(`MCP tool ${tool.name} toolDetails builder threw; falling back to defaults: ${(error as Error).message}`);
+      }
+
+      const wire: { name: string; description: string; inputSchema: object; outputSchema?: object } = {
+        name: tool.name,
+        description,
+        inputSchema: inputSchema ?? { type: 'object' }
+      };
+
+      if (tool.outputSchema != null) {
+        wire.outputSchema = tool.outputSchema;
+      }
+
+      result = wire;
+    }
+
+    return result;
+  }
+
   private async _handleToolCall(request: { params: { name: string; arguments?: Record<string, unknown> } }, definitionsByName: Map<string, McpToolDefinition>, ctx: McpRequestContext): Promise<CallToolResult> {
     const definition = definitionsByName.get(request.params.name);
     const args = request.params.arguments ?? {};
     let response: CallToolResult;
 
-    if (definition == null) {
-      response = formatMcpToolErrorResponse(new Error(`Unknown tool: ${request.params.name}`)) as CallToolResult;
-    } else if (definition.staticHandler != null) {
-      response = await this._handleStaticToolCall(definition, args, ctx);
+    if (definition != null) {
+      if (definition.staticHandler != null) {
+        response = await this._handleStaticToolCall(definition, args, ctx);
+      } else {
+        response = await this._handleCallModelToolCall(definition, args, ctx);
+      }
     } else {
-      response = await this._handleCallModelToolCall(definition, args, ctx);
+      response = formatMcpToolErrorResponse(new Error(`Unknown tool: ${request.params.name}`)) as CallToolResult;
     }
 
     return response;

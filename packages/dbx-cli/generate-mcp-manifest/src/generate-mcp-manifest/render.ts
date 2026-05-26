@@ -1,22 +1,39 @@
-import { type CliApiManifest, type CliApiManifestEntry, type CliApiManifestField, MCP_MANIFEST_VERSION, type McpManifest, type McpManifestToolEntry, mcpManifestKey } from '@dereekb/dbx-cli';
+import { type CliApiManifest, type CliApiManifestEntry, type CliApiManifestField, type CliModelField, type CliModelManifest, type CliModelManifestEntry, MCP_MANIFEST_VERSION, type McpManifest, type McpManifestModelEntry, type McpManifestModelField, type McpManifestToolEntry, mcpManifestKey } from '@dereekb/dbx-cli';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type Type } from 'arktype';
 
 type JsonObject = Record<string, unknown>;
 
 /**
- * Pure renderer: turns a {@link CliApiManifest} into the {@link McpManifest} JSON shape.
+ * Inputs to {@link renderMcpManifest}.
+ */
+export interface RenderMcpManifestInput {
+  /**
+   * Generated API manifest used to render tool entries.
+   */
+  readonly apiManifest: CliApiManifest;
+  /**
+   * Optional generated model manifest. When present, projects each entry into
+   * the runtime {@link McpManifestModelEntry} shape and emits a `models` array
+   * on the output JSON for the runtime's built-in catalog tools.
+   */
+  readonly modelManifest?: CliModelManifest;
+}
+
+/**
+ * Pure renderer: turns a {@link CliApiManifest} (and optional {@link CliModelManifest})
+ * into the {@link McpManifest} JSON shape.
  *
  * No file I/O — the main entry handles writing. Skips `verb === 'standalone'` entries
  * (they aren't dispatched through callModel and have no MCP tool counterpart).
  *
- * @param input - The source API manifest.
+ * @param input - The render config carrying the API manifest and optional model manifest.
  * @param now - Override for the `generatedAt` timestamp. Tests pass a fixed value.
  */
-export function renderMcpManifest(input: CliApiManifest, now: Date = new Date()): McpManifest {
+export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new Date()): McpManifest {
   const tools: Record<string, McpManifestToolEntry> = {};
 
-  for (const entry of input) {
+  for (const entry of input.apiManifest) {
     if (entry.verb === 'standalone') {
       continue;
     }
@@ -25,11 +42,42 @@ export function renderMcpManifest(input: CliApiManifest, now: Date = new Date())
     tools[key] = buildToolEntry(entry);
   }
 
-  return {
-    version: MCP_MANIFEST_VERSION,
-    generatedAt: now.toISOString(),
-    tools
+  const models = input.modelManifest != null && input.modelManifest.length > 0 ? input.modelManifest.map(projectModelEntry) : undefined;
+
+  const result: McpManifest = models == null ? { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools } : { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools, models };
+
+  return result;
+}
+
+function projectModelEntry(entry: CliModelManifestEntry): McpManifestModelEntry {
+  const projected: McpManifestModelEntry = {
+    modelType: entry.modelType,
+    modelName: entry.modelName,
+    identityConst: entry.identityConst,
+    collectionPrefix: entry.collectionPrefix,
+    sourcePackage: entry.sourcePackage,
+    sourceFile: entry.sourceFile,
+    fields: entry.fields.map(projectModelField),
+    ...(entry.modelGroup != null ? { modelGroup: entry.modelGroup } : {}),
+    ...(entry.parentIdentityConst != null ? { parentIdentityConst: entry.parentIdentityConst } : {}),
+    ...(entry.description != null ? { description: entry.description } : {})
   };
+  return projected;
+}
+
+function projectModelField(field: CliModelField): McpManifestModelField {
+  const projected: McpManifestModelField = {
+    name: field.name,
+    longName: field.longName,
+    optional: field.optional,
+    ...(field.tsType != null ? { tsType: field.tsType } : {}),
+    ...(field.description != null ? { description: field.description } : {}),
+    ...(field.enumRef != null ? { enumRef: field.enumRef } : {}),
+    ...(field.syncFlag != null ? { syncFlag: field.syncFlag } : {}),
+    ...(field.nestedFields != null ? { nestedFields: field.nestedFields.map(projectModelField) } : {}),
+    ...(field.nestedIsArray != null ? { nestedIsArray: field.nestedIsArray } : {})
+  };
+  return projected;
 }
 
 function buildToolEntry(entry: CliApiManifestEntry): McpManifestToolEntry {

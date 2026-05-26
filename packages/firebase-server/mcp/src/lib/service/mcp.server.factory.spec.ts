@@ -7,7 +7,7 @@ import { MCP_MANIFEST_VERSION } from './mcp.manifest';
 import { type McpModuleConfig, type McpAuthRoleReader } from '../mcp.config';
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
-import { type ModelApiDetailsResult, type FirebaseServerAuthData, type McpToolVisibility, type McpVisibilityContext } from '@dereekb/firebase-server';
+import { type ModelApiDetailsResult, type FirebaseServerAuthData, type McpToolVisibility, type McpVisibilityContext, type McpToolDetailsBuilder, type McpToolDetailsBuilderInput } from '@dereekb/firebase-server';
 import { AUTH_ADMIN_ROLE, type AuthRoleSet } from '@dereekb/util';
 
 function makeSchemaRef(name: string) {
@@ -345,6 +345,172 @@ describe('McpServerFactoryService manifest loader', () => {
     } finally {
       logSpy.mockRestore();
     }
+  });
+});
+
+describe('McpServerFactoryService model catalog tools', () => {
+  const MODEL_ENTRY = {
+    modelType: 'guestbook',
+    modelName: 'Guestbook',
+    identityConst: 'guestbookIdentity',
+    collectionPrefix: 'gb',
+    sourcePackage: 'demo-firebase',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
+    modelGroup: 'Guestbook',
+    fields: [{ name: 'n', longName: 'name', optional: false, tsType: 'string' }]
+  };
+
+  it('does not register model-info / model-decode when the manifest is absent', async () => {
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]));
+    const tools = await listTools(factory);
+    expect(tools.map((t) => t.name)).not.toContain('model-info');
+    expect(tools.map((t) => t.name)).not.toContain('model-decode');
+  });
+
+  it('does not register model-info / model-decode when the manifest has no models', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {} });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory);
+    expect(tools.map((t) => t.name)).not.toContain('model-info');
+    expect(tools.map((t) => t.name)).not.toContain('model-decode');
+  });
+
+  it('registers model-info and model-decode when the manifest carries a non-empty models[] array', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory, { auth: firebaseAuth() });
+    expect(tools.map((t) => t.name)).toEqual(expect.arrayContaining(['model-info', 'model-decode']));
+  });
+
+  it('hides model-info and model-decode from unauthenticated callers', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory);
+    expect(tools.map((t) => t.name)).not.toContain('model-info');
+    expect(tools.map((t) => t.name)).not.toContain('model-decode');
+  });
+
+  it('logs the model entry count alongside the tool entry count on boot', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
+    const logSpy = vi.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+
+    try {
+      await listTools(factory, { auth: firebaseAuth() });
+      expect(logSpy.mock.calls.some(([msg]) => typeof msg === 'string' && msg.includes('1 model entries'))).toBe(true);
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
+
+  it('answers tools/call for model-info in list mode', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const server = factory.createServer({ rawRequest: {} as any, auth: firebaseAuth() });
+    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
+    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
+
+    const result = (await callHandler({ method: 'tools/call', params: { name: 'model-info', arguments: {} } }, {} as any)) as { isError?: boolean; structuredContent?: { mode?: string; models?: ReadonlyArray<{ modelType: string }> } };
+
+    expect(result.isError).toBeUndefined();
+    expect(result.structuredContent?.mode).toBe('list');
+    expect(result.structuredContent?.models?.map((m) => m.modelType)).toEqual(['guestbook']);
+  });
+
+  it('answers tools/call for model-decode against a registered prefix', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const server = factory.createServer({ rawRequest: {} as any, auth: firebaseAuth() });
+    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
+    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
+
+    const result = (await callHandler({ method: 'tools/call', params: { name: 'model-decode', arguments: { key: 'gb/abc' } } }, {} as any)) as { isError?: boolean; structuredContent?: { leaf?: { modelType?: string } } };
+
+    expect(result.isError).toBeUndefined();
+    expect(result.structuredContent?.leaf?.modelType).toBe('guestbook');
+  });
+});
+
+describe('McpServerFactoryService toolDetails builder', () => {
+  async function listToolEntries(factory: McpServerFactoryService, ctx: { auth?: FirebaseServerAuthData; rawRequest?: any } = {}): Promise<ReadonlyArray<{ name: string; description: string; inputSchema: object; outputSchema?: object }>> {
+    const server = factory.createServer({ rawRequest: ctx.rawRequest ?? ({} as any), auth: ctx.auth });
+    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<{ name: string; description: string; inputSchema: object; outputSchema?: object }> }>>;
+    const result = await handlers.get(ListToolsRequestSchema.shape.method.value)!({ method: 'tools/list', params: {} }, {} as any);
+    return result.tools;
+  }
+
+  it('overrides description when the builder returns one', async () => {
+    const toolDetails: McpToolDetailsBuilder = () => ({ description: 'dynamic description from builder' });
+    const apiDetails = makeApiDetails([{ model: 'widget', call: 'read', specifier: 'enriched', mcp: { toolDetails } }]);
+
+    const tools = await listToolEntries(makeFactory(apiDetails));
+    expect(tools[0]?.description).toBe('dynamic description from builder');
+  });
+
+  it('overrides inputSchema when the builder returns one (default not present)', async () => {
+    const overrideSchema = { type: 'object', properties: { override: { type: 'string', enum: ['x'] } } };
+    const toolDetails: McpToolDetailsBuilder = () => ({ inputSchema: overrideSchema });
+    const apiDetails = makeApiDetails([{ model: 'widget', call: 'read', specifier: 'enriched', mcp: { toolDetails } }]);
+
+    const tools = await listToolEntries(makeFactory(apiDetails));
+    expect(tools[0]?.inputSchema).toEqual(overrideSchema);
+    expect((tools[0]?.inputSchema as { title?: string }).title).toBeUndefined();
+  });
+
+  it('falls back to defaults and warns when the builder throws', async () => {
+    const toolDetails: McpToolDetailsBuilder = () => {
+      throw new Error('boom');
+    };
+    const apiDetails = makeApiDetails([{ model: 'widget', call: 'read', specifier: 'broken', mcp: { toolDetails } }]);
+    const warnSpy = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+
+    try {
+      const tools = await listToolEntries(makeFactory(apiDetails));
+      expect(tools[0]?.description).toContain('Performs the "read" call');
+      expect((tools[0]?.inputSchema as { title?: string }).title).toBe('widget-read-broken');
+      expect(warnSpy.mock.calls.some(([msg]) => typeof msg === 'string' && msg.includes('toolDetails builder threw'))).toBe(true);
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('passes the per-request auth and scopes to the builder', async () => {
+    const received: McpToolDetailsBuilderInput[] = [];
+    const toolDetails: McpToolDetailsBuilder = (input) => {
+      received.push(input);
+      return {};
+    };
+    const apiDetails = makeApiDetails([{ model: 'widget', call: 'read', mcp: { toolDetails } }]);
+    const factory = makeFactory(apiDetails);
+
+    await listToolEntries(factory, { auth: oidcAuth('model.read') });
+    expect(received).toHaveLength(1);
+    expect(received[0]?.auth?.uid).toBe('user-1');
+    expect(received[0]?.scopes?.has('model.read')).toBe(true);
+    expect(received[0]?.dispatch).toEqual({ call: 'read', modelType: 'widget', specifier: undefined });
+  });
+
+  it('reuses the same staticWireEntry across requests for tools without a builder', async () => {
+    const apiDetails = makeApiDetails([{ model: 'widget', call: 'read' }]);
+    const factory = makeFactory(apiDetails);
+
+    const firstCall = await listToolEntries(factory);
+    const secondCall = await listToolEntries(factory);
+    expect(firstCall[0]).toBe(secondCall[0]);
+    expect(Object.isFrozen(firstCall[0])).toBe(true);
+  });
+
+  it('does not invoke builders for tools that did not opt in', async () => {
+    const optInBuilder = vi.fn<McpToolDetailsBuilder>(() => ({ description: 'enriched' }));
+    const apiDetails = makeApiDetails([
+      { model: 'widget', call: 'read', specifier: 'static' },
+      { model: 'widget', call: 'read', specifier: 'enriched', mcp: { toolDetails: optInBuilder } }
+    ]);
+    const factory = makeFactory(apiDetails);
+
+    await listToolEntries(factory);
+    expect(optInBuilder).toHaveBeenCalledTimes(1);
+    expect(optInBuilder.mock.calls[0]?.[0]?.dispatch).toEqual({ call: 'read', modelType: 'widget', specifier: 'enriched' });
   });
 });
 
