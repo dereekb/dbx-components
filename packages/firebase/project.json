@@ -9,6 +9,7 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/firebase"],
+      "inputs": ["production", "^production", "{workspaceRoot}/packages/firebase/eslint/**/*", "!{workspaceRoot}/packages/firebase/eslint/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)", "{workspaceRoot}/packages/firebase/test/**/*", "!{workspaceRoot}/packages/firebase/test/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"],
       "options": {
         "commands": [
           {
