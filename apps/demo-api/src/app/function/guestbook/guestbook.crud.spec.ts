@@ -184,9 +184,10 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         }
       });
 
-      it('should throw BAD_DOCUMENT_QUERY_CURSOR when user lacks permission to read the cursor document', async () => {
-        // Do NOT grant admin — the user can query published guestbooks but can't read cursor via useModel
-        await createGuestbook('CursorTarget');
+      it('should let a non-admin paginate published guestbooks since published cursor docs are readable', async () => {
+        // Do NOT grant admin — published guestbooks are readable by anyone, so the cursor document loads fine
+        await createGuestbook('CursorTargetA');
+        await createGuestbook('CursorTargetB');
 
         // First page succeeds (published=true, no cursor)
         const firstPageParams: QueryGuestbooksParams = { published: true, limit: 1 };
@@ -194,15 +195,17 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
         expect(firstPage.cursorDocumentKey).toBeDefined();
 
-        // Second page with cursor — fails because non-admin can't read cursor document via useModel
+        // Second page with cursor — succeeds because the published cursor document is readable by a non-admin
         const secondPageParams: QueryGuestbooksParams = { published: true, limit: 1, cursorDocumentKey: firstPage.cursorDocumentKey };
+        const secondPage = (await u.callWrappedFunction(demoCallModelWrappedFn, onCallQueryModelParams(guestbookIdentity, secondPageParams))) as OnCallQueryModelResult;
 
-        try {
-          await u.callWrappedFunction(demoCallModelWrappedFn, onCallQueryModelParams(guestbookIdentity, secondPageParams));
-          expect.fail('Expected an error to be thrown');
-        } catch (e: unknown) {
-          const errorInfo = firebaseServerErrorInfo(e);
-          expect(errorInfo.serverErrorCode).toBe(BAD_DOCUMENT_QUERY_CURSOR_ERROR_CODE);
+        expect(secondPage).toBeDefined();
+
+        // keys should not overlap between pages
+        const firstPageKeys = new Set(firstPage.keys);
+
+        for (const key of secondPage.keys) {
+          expect(firstPageKeys.has(key)).toBe(false);
         }
       });
     });

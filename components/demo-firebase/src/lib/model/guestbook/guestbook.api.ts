@@ -4,7 +4,7 @@ import { type Guestbook, type GuestbookEntry, type GuestbookTypes } from './gues
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 import { type GuestbookKey } from './guestbook.id';
-import { ProfileId } from '../profile';
+import { type ProfileId } from '../profile';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
 
