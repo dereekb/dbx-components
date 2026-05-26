@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-cli",
-  "version": "13.11.18",
+  "version": "13.12.0",
   "type": "module",
   "sideEffects": false,
   "bin": {
@@ -36,10 +36,10 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "13.11.18",
-    "@dereekb/firebase": "13.11.18",
-    "@dereekb/nestjs": "13.11.18",
-    "@dereekb/util": "13.11.18",
+    "@dereekb/date": "13.12.0",
+    "@dereekb/firebase": "13.12.0",
+    "@dereekb/nestjs": "13.12.0",
+    "@dereekb/util": "13.12.0",
     "arktype": "^2.2.0",
     "ts-morph": "^21.0.0",
     "yargs": "^18.0.0"

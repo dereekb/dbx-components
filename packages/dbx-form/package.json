@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-form",
-  "version": "13.11.18",
+  "version": "13.12.0",
   "sideEffects": [
     "*.scss",
     "*.css"
@@ -14,13 +14,13 @@
     "@angular/material-date-fns-adapter": "21.2.9",
     "@angular/platform-browser": "21.2.11",
     "@bobbyquantum/ngx-editor": "21.0.0",
-    "@dereekb/date": "13.11.18",
-    "@dereekb/dbx-core": "13.11.18",
-    "@dereekb/dbx-web": "13.11.18",
-    "@dereekb/model": "13.11.18",
-    "@dereekb/rxjs": "13.11.18",
-    "@dereekb/util": "13.11.18",
-    "@dereekb/vitest": "13.11.18",
+    "@dereekb/date": "13.12.0",
+    "@dereekb/dbx-core": "13.12.0",
+    "@dereekb/dbx-web": "13.12.0",
+    "@dereekb/model": "13.12.0",
+    "@dereekb/rxjs": "13.12.0",
+    "@dereekb/util": "13.12.0",
+    "@dereekb/vitest": "13.12.0",
     "@ng-forge/dynamic-forms": "0.9.0",
     "@ng-forge/dynamic-forms-material": "0.9.0",
     "@ng-web-apis/geolocation": "^5.2.0",

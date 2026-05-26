@@ -1,3 +1,90 @@
+# [13.12.0](https://github.com/dereekb/dbx-components/compare/v13.11.18-dev...v13.12.0) (2026-05-26)
+
+
+### ai
+
+- add block-pnpm pretooluse bash hook ([1daa7325](https://github.com/dereekb/dbx-components/commit/1daa7325bd2ca03da0b0e91540b3a798a08193eb))
+
+
+### Bug Fixes
+
+- **firebase-server-mcp:** make model-info outputSchema a root object ([050d7e69](https://github.com/dereekb/dbx-components/commit/050d7e69b7c49105bae3e4d75d4d9b8906c8f976))
+- persist guestbook cby and grant creator read/publish ([4a1b761c](https://github.com/dereekb/dbx-components/commit/4a1b761c19d3662ddf75dc8d1d070c9fc3abef88))
+
+
+### Code Refactoring
+
+- add @dbxModelRead/@dbxModelServiceFactory + lint follow-ups ([4e9d34a5](https://github.com/dereekb/dbx-components/commit/4e9d34a52c4323fb1f8e63046c82a34084129536))
+- add allPublishedEntries invoke + MCP guestbook tests ([f224132a](https://github.com/dereekb/dbx-components/commit/f224132a4ab925c4aa2fe2d72d230da5e6112654))
+- add invoke call type and firebase-server/mcp package ([595b998a](https://github.com/dereekb/dbx-components/commit/595b998ae039785d9fedcfdc774c8ac29cf62289))
+- added banner example ([a2c2d18d](https://github.com/dereekb/dbx-components/commit/a2c2d18d7e99eab9e3ca40400a452264186cbb80))
+- build-all change ([a637da9e](https://github.com/dereekb/dbx-components/commit/a637da9e8231540d9e26c7c3bfb6c59f9f75b4af))
+- **dbx-cli:** add generate-mcp-manifest build tool ([dab88b3b](https://github.com/dereekb/dbx-components/commit/dab88b3b0abe4279641266e2899b990f4edd2d04))
+- **dbx-cli:** relocate MCP scan infrastructure ([add7bfc7](https://github.com/dereekb/dbx-components/commit/add7bfc7181f49e140110c792da4ccd4d1975f92))
+- **dbx-components-mcp:** add dbx_log_search tool ([33ca3e0c](https://github.com/dereekb/dbx-components/commit/33ca3e0c547fcd91e6e31c2ed2612bce9512b72b))
+- **dbx-components-mcp:** add dbx_route_resolve_url tool ([2f119b66](https://github.com/dereekb/dbx-components/commit/2f119b66ffadc9c3fd649920283e58c2ccaa5035))
+- **dbx-components-mcp:** add logs config block ([d1455c0f](https://github.com/dereekb/dbx-components/commit/d1455c0f63d969b357b6d8864a0dc8de11b9d15f))
+- **dbx-components-mcp:** cache generate-* targets ([f6b501f9](https://github.com/dereekb/dbx-components/commit/f6b501f94486022684417f7e737df568cfd5e2a9))
+- **dbx-web:** add DbxPdfMergeEditorConfig ([eaca23a2](https://github.com/dereekb/dbx-components/commit/eaca23a242612d019eb01341978e7fec1f967f45))
+- dedupe dbx-components-mcp extractors and search tools ([50ce4e8e](https://github.com/dereekb/dbx-components/commit/50ce4e8e006a672eba3ef903a650f4fef91b5774))
+- dedupe firebase-eslint helpers via @dereekb/util/eslint ([74c34ce5](https://github.com/dereekb/dbx-components/commit/74c34ce5fce6cf00056642ac156b4fc09ad22007))
+- **demo-api:** add storageFile generateSignedUploadUrl ([b8ea7eff](https://github.com/dereekb/dbx-components/commit/b8ea7effb3f8529b26e729523b98951e2898c626))
+- **demo-api:** route demo-mcp direct to Functions emulator ([734488ac](https://github.com/dereekb/dbx-components/commit/734488ac4d072c7d628613cc7998b3a94386a4c5))
+- **demo-api:** wire MCP manifest pipeline + visibility examples ([4f05b76e](https://github.com/dereekb/dbx-components/commit/4f05b76e4197d7d60eea6ad55caedf706283c358))
+- **demo-api:** wrap CRUD handlers in withApiDetails ([e8afc076](https://github.com/dereekb/dbx-components/commit/e8afc0769c7fbd271b4aa7dbc05a5146ba52c38e))
+- **demo:** added one-way guestbook publish crud function ([0f2ac859](https://github.com/dereekb/dbx-components/commit/0f2ac85915ae0bc18b4f4a5a80d140b59dddd6c4))
+- **firebase-eslint:** add service-model firestore lint rule ([1f2d06e7](https://github.com/dereekb/dbx-components/commit/1f2d06e79210a42665ab9a370eb900982eb42f15))
+- **firebase-eslint:** add storagefile policy lint rule ([44d3bc92](https://github.com/dereekb/dbx-components/commit/44d3bc92568ca374f212a4832faec883392eda9d))
+- **firebase-eslint:** move require-dbx-model-companion-tags rule ([aac60f7c](https://github.com/dereekb/dbx-components/commit/aac60f7c3356fd809f4a528eb48749db93263c09))
+- **firebase-eslint:** warn on missing withApiDetails wrappers ([ec16a5fa](https://github.com/dereekb/dbx-components/commit/ec16a5faae5a0f737422d150e4ccfefcd5ec2b85))
+- **firebase-server-mcp:** add built-in model-get tool ([aca33cae](https://github.com/dereekb/dbx-components/commit/aca33caecd2e43736d447b33da6953548cb5c2ef))
+- **firebase-server-mcp:** add model-info and model-decode tools ([fa1cf542](https://github.com/dereekb/dbx-components/commit/fa1cf54277409eac43472da09f5849f8a480f735))
+- **firebase-server-mcp:** add visibility + filter metadata ([ceba46ba](https://github.com/dereekb/dbx-components/commit/ceba46ba34738ea315fc74972f90c9819b7f3db6))
+- **firebase-server-mcp:** consume build-time MCP manifest at boot ([2120d2fa](https://github.com/dereekb/dbx-components/commit/2120d2fad661123dcc58854fa4a92a24d50cc8b1))
+- **firebase-server-mcp:** filter tools/list per request ([49826db8](https://github.com/dereekb/dbx-components/commit/49826db81ed2e3184c70cb143bc6fa4883939ba3))
+- **firebase-server-model:** extend compress-pdf result context ([50992665](https://github.com/dereekb/dbx-components/commit/509926658a1826774d4412de2d588fbab20a5ee8))
+- **firebase-server/oidc:** wire MCP resource indicators end-to-end ([232909a2](https://github.com/dereekb/dbx-components/commit/232909a27f396931e5841ee5a82d494892dfc55e))
+- **firebase-server:** drop mcp.description handler override ([4d245447](https://github.com/dereekb/dbx-components/commit/4d245447ee784fe01db75050f32dfad4e22ee55c))
+- harden password reset against enumeration ([1c9feecc](https://github.com/dereekb/dbx-components/commit/1c9feecc61af2246b11eff4c83386c684809e9d0))
+- improve mcp tool schemas and error/void responses ([4fe22817](https://github.com/dereekb/dbx-components/commit/4fe2281721a6e0a6a1d25a1f3a8e8fb9a2370e55))
+- lift image compression to dbx-web, add upload modifier ([0d4decf1](https://github.com/dereekb/dbx-components/commit/0d4decf109d0650aa5a477b636874bb44b8ec1a0))
+- lint cleanup + firebase-eslint dist resolution ([f8cd556b](https://github.com/dereekb/dbx-components/commit/f8cd556bd8cfcf334d25e5ca1e9177b8ed894359)), closes [Array#push](https://github.com/dereekb/Array/issues/push)
+- lint-fix ([be9e5ad5](https://github.com/dereekb/dbx-components/commit/be9e5ad5d6755db9a2eb21437de446cf56d02440))
+- non-admin can paginate published guestbooks ([a360b47f](https://github.com/dereekb/dbx-components/commit/a360b47f3728e2035716aca5a725607283ea98d2))
+- reduce cognitive complexity in dbx-model factory rule ([ad2a69ad](https://github.com/dereekb/dbx-components/commit/ad2a69adc56e23dd4add743c57c6af31e7ffbb17))
+- require-constant-naming fixes ([5573d652](https://github.com/dereekb/dbx-components/commit/5573d652b9c6203be2cb5c0d984e18074cf71713))
+- resolve sonar issues from 2026-05-24 scan ([35dc355e](https://github.com/dereekb/dbx-components/commit/35dc355e4042da521a4992a04c70dcc083e500d6))
+- resolve sonar issues from 2026-05-25 scan ([80f6ace7](https://github.com/dereekb/dbx-components/commit/80f6ace79bdd836c9e59c36949cd6bd1a100be34)), closes [Array#push](https://github.com/dereekb/Array/issues/push)
+- resolve sonar issues from 2026-05-25 scan (batch 2) ([e58d5b0c](https://github.com/dereekb/dbx-components/commit/e58d5b0cc26011102ac4c19ddaafe22f62e9ab49))
+- resolve sonar issues from 2026-05-25 scan (batch 3) ([ac3cf9f3](https://github.com/dereekb/dbx-components/commit/ac3cf9f350695dad87ddd6afce2b3675d5db48f4))
+- resolve sonar issues from 2026-05-26 scan ([efc1ef1c](https://github.com/dereekb/dbx-components/commit/efc1ef1c1cfdd07bf12ea94db812eb4d672c4a14))
+- resolve sonar issues from 2026-05-26 scan (batch 2) ([9f9824fa](https://github.com/dereekb/dbx-components/commit/9f9824fa6a6181804f6f16a543fbd533c820b9b9))
+- resolved lint warnings across workspace ([29746f8a](https://github.com/dereekb/dbx-components/commit/29746f8a4c4986462d50c1587c208e090887edc2))
+- resolved new sonarqube issues ([a69de9ed](https://github.com/dereekb/dbx-components/commit/a69de9ed3aaf053304a8ae9cfee27b87ece372d5))
+- rework storagefile signed-upload-url and policy wiring ([d784e368](https://github.com/dereekb/dbx-components/commit/d784e368b87a6e132742c42b6d8aca19c53dab5d))
+- surface @dbxModelRead posture in model output ([5cd7a949](https://github.com/dereekb/dbx-components/commit/5cd7a949369c0b564d285ad909a8cdfb192fc125))
+- **trello:** add listBoardActions ([8eeee3aa](https://github.com/dereekb/dbx-components/commit/8eeee3aaf85dccf6a8608696b38a616ff7debcc7))
+- **twilio:** add nestjs/twilio and firebase-server/twilio ([137c8389](https://github.com/dereekb/dbx-components/commit/137c838914c886db2521e34b6828c5b20a4a2b30))
+- update ng-forge to v0.9.0 ([5b083419](https://github.com/dereekb/dbx-components/commit/5b083419660e803d4885606058d4a3089cf07968))
+- update ng-forge to v0.9.0-next.13 ([427980d2](https://github.com/dereekb/dbx-components/commit/427980d24875bac5458b42d3b220ca2ce0a15327))
+- wire image compression into storagefile uploads ([1f3b8dce](https://github.com/dereekb/dbx-components/commit/1f3b8dce97f294ced5ad288422b595e3cbbdd348))
+
+
+### Continuous Integration
+
+- stabilize nx cache across jobs ([f3b7a1f2](https://github.com/dereekb/dbx-components/commit/f3b7a1f212a046e728a66a54c21f6cc41091bea9))
+
+
+### Features
+
+- **firebase-server-mcp:** add whoami tool with persisted auth manifest ([0779182b](https://github.com/dereekb/dbx-components/commit/0779182bf3cc94f6890d28d2d84e875bcfb46b4c))
+
+
+### Tests
+
+- **demo-api:** add resetPassword crud test ([0073b002](https://github.com/dereekb/dbx-components/commit/0073b0027f62afbe02eff76475f4e91d250fbf03))
+- **nestjs-discord:** gate integration suite and share login ([2196832b](https://github.com/dereekb/dbx-components/commit/2196832b58e26863f4a24bedae4140de597e1e4c))
+
 ## [13.11.18](https://github.com/dereekb/dbx-components/compare/v13.11.17-dev...v13.11.18) (2026-05-21)
 
 

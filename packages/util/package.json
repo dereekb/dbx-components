@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util",
-  "version": "13.11.18",
+  "version": "13.12.0",
   "sideEffects": false,
   "exports": {
     "./test": {
