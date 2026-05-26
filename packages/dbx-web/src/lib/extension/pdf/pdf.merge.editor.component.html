@@ -7,6 +7,20 @@
 @if (showFileList()) {
   <dbx-pdf-merge-list></dbx-pdf-merge-list>
 }
+@switch (outputSizeStateSignal()) {
+  @case ('warn') {
+    <div class="dbx-pdf-merge-editor-size-warning">
+      <mat-icon>warning</mat-icon>
+      <span>Merged file is {{ formattedOutputSizeSignal() }} — above the recommended {{ formattedWarnLimitSignal() }} limit.</span>
+    </div>
+  }
+  @case ('error') {
+    <div class="dbx-pdf-merge-editor-size-error">
+      <mat-icon>error</mat-icon>
+      <span>Merged file is {{ formattedOutputSizeSignal() }}, exceeds the {{ formattedErrorLimitSignal() }} limit. Remove or compress files to continue.</span>
+    </div>
+  }
+}
 <div class="dbx-pdf-merge-editor-actions">
   <span class="dbx-hint dbx-small">{{ entryCountSignal() }} file(s)</span>
   <span class="dbx-spacer"></span>

@@ -70,6 +70,7 @@
  * | dbx_route_tree                      | Discovery     | "What states does this app expose?"                    |
  * | dbx_route_lookup                    | Documentation | "What's the route definition for X?"                   |
  * | dbx_route_search                    | Discovery     | "Where do we have routes mentioning X?"                |
+ * | dbx_route_resolve_url               | Resolution    | "What state and component owns this dev-server URL?"   |
  * | dbx_filter_lookup                   | Documentation | "Tell me about filter directive / preset X"            |
  * | dbx_filter_scaffold                 | Generation    | "Scaffold a filter source + presets for model X"       |
  * | dbx_pipe_lookup                     | Documentation | "Tell me about Angular pipe X"                         |
@@ -98,6 +99,7 @@
  * | dbx_auth_role_lookup                | Documentation | "Forward / tag / reverse role lookup."                    |
  * | dbx_auth_token_explain              | Decoding      | "Decode this JWT and annotate every claim."               |
  * | dbx_auth_list_app                   | Discovery     | "Enumerate one app's claims, scopes, and gates."         |
+ * | dbx_log_search                      | Discovery     | "Search per-change markdown logs (fuzzy/keyword/list)."  |
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -156,6 +158,7 @@ import { ACTION_SCAFFOLD_TOOL } from './action-scaffold.tool.js';
 import { ROUTE_TREE_TOOL } from './route-tree.tool.js';
 import { ROUTE_LOOKUP_TOOL } from './route-lookup.tool.js';
 import { ROUTE_SEARCH_TOOL } from './route-search.tool.js';
+import { ROUTE_RESOLVE_URL_TOOL } from './route-resolve-url.tool.js';
 import { createLookupFilterTool } from './lookup-filter.tool.js';
 import { FILTER_SCAFFOLD_TOOL } from './filter-scaffold.tool.js';
 import { createLookupPipeTool } from './lookup-pipe.tool.js';
@@ -176,6 +179,7 @@ import { APP_VALIDATE_TOOL } from './app-validate.tool.js';
 import { MODEL_LIST_COMPONENT_TOOL } from './model-list-component.tool.js';
 import { SERVER_ACTIONS_LIST_APP_TOOL } from './server-actions-list-app.tool.js';
 import { MCP_CONFIG_TOOL } from './mcp-config.tool.js';
+import { createLogSearchTool, type LogSearchConfig } from './log-search.tool.js';
 import { createSemanticTypeLookupTool } from './lookup-semantic-type.tool.js';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
@@ -186,19 +190,8 @@ import { createAuthScopeLookupTool } from './auth-scope-lookup.tool.js';
 import { createAuthRoleLookupTool } from './auth-role-lookup.tool.js';
 import { createAuthTokenExplainTool } from './auth-token-explain.tool.js';
 import { createAuthListAppTool } from './auth-list-app.tool.js';
-import type { ActionRegistry } from '../registry/actions-runtime.js';
-import type { AuthRegistry } from '../registry/auth-runtime.js';
-import type { FilterRegistry } from '../registry/filters-runtime.js';
-import type { ForgeFieldRegistry } from '../registry/forge-fields.js';
-import type { PipeRegistry } from '../registry/pipes-runtime.js';
-import type { UtilRegistry } from '../registry/utils-runtime.js';
-import type { ModelSnapshotFieldRegistry } from '../registry/model-snapshot-fields-runtime.js';
+import { type ActionRegistry, type AuthRegistry, type FilterRegistry, type ForgeFieldRegistry, type PipeRegistry, type UtilRegistry, type ModelSnapshotFieldRegistry, type SemanticTypeRegistry, type TokenRegistry, type CssUtilityRegistry, type UiComponentRegistry, type DbxDocsUiExamplesRegistry } from '@dereekb/dbx-cli';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
-import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
-import type { TokenRegistry } from '../registry/tokens-runtime.js';
-import type { CssUtilityRegistry } from '../registry/css-utilities-runtime.js';
-import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
-import type { DbxDocsUiExamplesRegistry } from '../registry/dbx-docs-ui-examples-runtime.js';
 import { toolError, type DbxTool } from './types.js';
 
 /**
@@ -262,6 +255,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   ROUTE_TREE_TOOL,
   ROUTE_LOOKUP_TOOL,
   ROUTE_SEARCH_TOOL,
+  ROUTE_RESOLVE_URL_TOOL,
   // filter
   FILTER_SCAFFOLD_TOOL,
   // artifact (cross-domain dispatchers)
@@ -359,6 +353,13 @@ export interface RegisterToolsOptions {
    * omitted those tools are skipped.
    */
   readonly authRegistry?: AuthRegistry;
+  /**
+   * Optional `logs` block resolved from `dbx-mcp.config.json`. Provides a
+   * workspace-level fallback for `dbx_log_search` when neither a per-call
+   * `basePath` nor `DBX_LOG_PATH` is set. `basePath` should already be
+   * absolute (the bootstrap resolves it against the config file's directory).
+   */
+  readonly logSearchConfig?: LogSearchConfig;
 }
 
 /**
@@ -374,7 +375,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions =
   const underlyingServer = server.server;
 
   const tools: DbxTool[] = [...DBX_TOOLS];
-  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }), createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }), createModelValidateFolderTool({ ruleOptions: options.modelValidateRuleOptions }), createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }));
+  tools.push(createUiExamplesTool({ examplesRegistry: options.dbxDocsUiExamplesRegistry }), createModelValidateTool({ ruleOptions: options.modelValidateRuleOptions }), createModelValidateFolderTool({ ruleOptions: options.modelValidateRuleOptions }), createModelFixtureValidateAppTool({ getRegistry: () => options.fixtureModelRegistry }), createLogSearchTool(options.logSearchConfig));
   if (options.forgeFieldRegistry !== undefined) {
     tools.push(createLookupFormTool({ registry: options.forgeFieldRegistry }), createSearchFormTool({ registry: options.forgeFieldRegistry }), createFormScaffoldTool({ registry: options.forgeFieldRegistry }));
   }

@@ -11,13 +11,7 @@
  * `downstream-models-runtime.ts`.
  */
 
-import { runActionsScanCli } from '../../scan/actions-cli.js';
-import { runFiltersScanCli } from '../../scan/filters-cli.js';
-import { runForgeFieldsScanCli } from '../../scan/forge-fields-cli.js';
-import { runPipesScanCli } from '../../scan/pipes-cli.js';
-import { runUiComponentsScanCli } from '../../scan/ui-components-cli.js';
-import { runScanCli } from '../../scan/cli.js';
-import type { DownstreamCluster } from '../../scan/discover-downstream-packages.js';
+import { runActionsScanCli, runFiltersScanCli, runForgeFieldsScanCli, runPipesScanCli, runUiComponentsScanCli, runScanCli, type DownstreamCluster } from '@dereekb/dbx-cli';
 import type { WorkspaceSnapshot } from './snapshot.js';
 
 /**

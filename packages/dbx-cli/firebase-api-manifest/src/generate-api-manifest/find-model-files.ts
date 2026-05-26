@@ -45,7 +45,7 @@ export function findModelFiles(packageRoot: string): ModelFileMatch[] {
       const text = readFileSync(filePath, 'utf8');
       if (!textHasModelMarker(text)) continue;
       const extraction = extractModelsFromSource({ name: filePath, text });
-      if (extraction.identities.length === 0 && extraction.modelGroups.length === 0 && extraction.converters.length === 0) continue;
+      if (extraction.identities.length === 0 && extraction.modelGroups.length === 0 && extraction.converters.length === 0 && extraction.serviceFactories.length === 0) continue;
       out.push({ filePath, extraction });
     }
   }
@@ -54,10 +54,10 @@ export function findModelFiles(packageRoot: string): ModelFileMatch[] {
 }
 
 function textHasModelMarker(text: string): boolean {
-  // Source files that hold model definitions, converters, or model-group containers we care
-  // about. Files like helpers/utility files that import none of these are skipped to keep the
-  // ts-morph parse off the hot path.
-  return text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup') || text.includes('snapshotConverterFunctions') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray');
+  // Source files that hold model definitions, converters, model-group containers, or
+  // `@dbxModelServiceFactory`-tagged factories we care about. Files like helpers/utility files
+  // that import none of these are skipped to keep the ts-morph parse off the hot path.
+  return text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup') || text.includes('snapshotConverterFunctions') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray') || text.includes('@dbxModelServiceFactory');
 }
 
 function* walkSourceFiles(dir: string): Generator<string> {

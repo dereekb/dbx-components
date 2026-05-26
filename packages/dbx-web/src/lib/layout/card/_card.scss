@@ -4,6 +4,42 @@
 
 // MARK: Mixin
 @mixin core() {
+  /// @dbx-utility mat-card-dbx-color
+  /// @intent re-emits the dbx-color background paint at higher specificity than MDC's `.mat-mdc-card` `background-color` rule, so a host-level `[dbxColor]` on `<mat-card>` shows through every appearance variant (elevated / outlined / filled). Tonal opacity is honoured via the existing `--dbx-color-bg-tone` channel; in tonal mode the text color flips to the vibrant theme color so contrast survives the light wash.
+  /// @role color
+  /// @see-also color, color-bg, color-tonal
+  mat-card.dbx-color {
+    background: color-mix(in srgb, var(#{theming.$dbx-bg-color-var}) var(#{theming.$dbx-bg-tone-var}, 100%), transparent);
+    color: var(#{theming.$dbx-color-var});
+
+    &.dbx-color-tonal {
+      color: var(#{theming.$dbx-bg-color-var});
+    }
+  }
+
+  /// @dbx-utility card-banner
+  /// @intent banner-style `<mat-card>` — pair with `[dbxColor]` (+ `[dbxColorTone]`) for the tonal surface. Drop `<mat-card-header>` entirely; put the icon + `<mat-card-title>` row inside `<mat-card-content>` via a `.dbx-card-banner-header` child, and the action buttons inside `<mat-card-footer>`.
+  /// @role layout
+  /// @see-also color, color-tonal, button-wrap-group
+  .dbx-card-banner {
+    > mat-card-content > .dbx-card-banner-header {
+      display: flex;
+      align-items: center;
+      gap: var(--dbx-padding-3);
+
+      > dbx-icon-tile {
+        flex-shrink: 0;
+      }
+    }
+
+    > mat-card-footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+      padding: var(--dbx-padding-2) var(--dbx-padding-3) var(--dbx-padding-3);
+    }
+  }
 }
 
 @mixin theme($theme-config) {

@@ -34,33 +34,42 @@ export function runQuery(cachePath: string, filters: QueryFilters): QueryResult 
     throw new Error(`lint cache not found: ${cachePath} — run \`build\` first`);
   }
   const cache = JSON.parse(readFileSync(cachePath, 'utf8')) as LintCache;
+  const compiled = compileFilters(filters);
 
-  const ruleSet = filters.rule && filters.rule.length > 0 ? new Set(filters.rule) : null;
-  const fileNeedle = filters.file && filters.file.length > 0 ? filters.file : null;
-  const fileMatcher = fileNeedle && isGlobPattern(fileNeedle) ? globToRegExp(fileNeedle) : null;
-  const messageNeedle = filters.message && filters.message.length > 0 ? filters.message.toLowerCase() : null;
-  const severity = filters.severity;
-
-  const matched: LintCacheMessage[] = [];
-  for (const m of cache.messages) {
-    if (ruleSet && (m.ruleId == null || !ruleSet.has(m.ruleId))) continue;
-    if (severity && m.severity !== severity) continue;
-    if (fileNeedle) {
-      if (fileMatcher) {
-        if (!fileMatcher.test(m.filePath)) continue;
-      } else if (!m.filePath.includes(fileNeedle)) {
-        continue;
-      }
-    }
-    if (messageNeedle && !m.message.toLowerCase().includes(messageNeedle)) continue;
-    matched.push(m);
-  }
-
+  const matched = cache.messages.filter((m) => matchesFilters(m, compiled));
   const totalMatched = matched.length;
   const truncated = filters.limit != null && totalMatched > filters.limit;
   const limited = filters.limit == null ? matched : matched.slice(0, filters.limit);
 
   return { cache, matched: limited, totalMatched, truncated };
+}
+
+interface CompiledFilters {
+  readonly ruleSet: Maybe<ReadonlySet<string>>;
+  readonly severity: 'error' | 'warning' | undefined;
+  readonly fileNeedle: Maybe<string>;
+  readonly fileMatcher: Maybe<RegExp>;
+  readonly messageNeedle: Maybe<string>;
+}
+
+function compileFilters(filters: QueryFilters): CompiledFilters {
+  const ruleSet = filters.rule && filters.rule.length > 0 ? new Set(filters.rule) : null;
+  const fileNeedle = filters.file && filters.file.length > 0 ? filters.file : null;
+  const fileMatcher = fileNeedle && isGlobPattern(fileNeedle) ? globToRegExp(fileNeedle) : null;
+  const messageNeedle = filters.message && filters.message.length > 0 ? filters.message.toLowerCase() : null;
+  return { ruleSet, severity: filters.severity ?? undefined, fileNeedle, fileMatcher, messageNeedle };
+}
+
+function matchesFilters(m: LintCacheMessage, c: CompiledFilters): boolean {
+  if (c.ruleSet && (m.ruleId == null || !c.ruleSet.has(m.ruleId))) return false;
+  if (c.severity && m.severity !== c.severity) return false;
+  if (c.fileNeedle && !matchesFile(m.filePath, c.fileNeedle, c.fileMatcher)) return false;
+  if (c.messageNeedle && !m.message.toLowerCase().includes(c.messageNeedle)) return false;
+  return true;
+}
+
+function matchesFile(filePath: string, needle: string, matcher: Maybe<RegExp>): boolean {
+  return matcher ? matcher.test(filePath) : filePath.includes(needle);
 }
 
 function isGlobPattern(s: string): boolean {

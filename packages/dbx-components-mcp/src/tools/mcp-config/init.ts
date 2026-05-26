@@ -24,7 +24,7 @@
 import type { Maybe } from '@dereekb/util';
 import { writeFile as nodeWriteFile, mkdir as nodeMkdir, readFile as nodeReadFile } from 'node:fs/promises';
 import { dirname, relative, resolve } from 'node:path';
-import { DOWNSTREAM_CLUSTERS, type DownstreamCluster } from '../../scan/discover-downstream-packages.js';
+import { DOWNSTREAM_CLUSTERS, type DownstreamCluster } from '@dereekb/dbx-cli';
 import type { WorkspaceSnapshot, PackageSnapshot } from './snapshot.js';
 
 /**

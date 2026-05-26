@@ -6,7 +6,7 @@
  * downstream catalog.
  */
 
-import type { FirebaseModel } from '../registry/firebase-models.js';
+import type { FirebaseModel } from '@dereekb/dbx-cli';
 
 /**
  * Format selector for {@link buildModelHierarchy}: tree shape, flat list, or

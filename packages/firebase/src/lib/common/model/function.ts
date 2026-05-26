@@ -4,8 +4,11 @@ import { type FirestoreModelKey, type FirestoreModelType, type FirestoreModelTyp
 
 /**
  * Standard CRUD call types used by the `callModel` Firebase function pattern.
+ *
+ * CRUDQ + I: 'invoke' covers side-effecting RPC-style operations that don't fit any CRUD verb
+ * (e.g. regenerate-thumbnails, resync-with-external, recompute-index).
  */
-export type KnownOnCallFunctionType = 'create' | 'read' | 'update' | 'delete' | 'query';
+export type KnownOnCallFunctionType = 'create' | 'read' | 'update' | 'delete' | 'query' | 'invoke';
 
 /**
  * Call type identifier — one of the standard CRUD types or a custom string.
@@ -106,6 +109,11 @@ export const onCallDeleteModelParams = onCallTypedModelParamsFunction('delete');
 export const onCallQueryModelParams = onCallTypedModelParamsFunction('query');
 
 /**
+ * Pre-configured OnCallTypedModelParamsFunctions for 'invoke'
+ */
+export const onCallInvokeModelParams = onCallTypedModelParamsFunction('invoke');
+
+/**
  * Key used on the front-end and backend that refers to the call function.
  */
 export const CALL_MODEL_APP_FUNCTION_KEY = 'callModel';
@@ -134,6 +142,11 @@ export type OnCallDeleteModelParams<T = unknown> = OnCallTypedModelParams<T>;
  * OnCallTypedModelParams for Query calls.
  */
 export type OnCallQueryModelParams<T extends OnCallQueryModelRequestParams = OnCallQueryModelRequestParams> = OnCallTypedModelParams<T>;
+
+/**
+ * OnCallTypedModelParams for Invoke calls.
+ */
+export type OnCallInvokeModelParams<T = unknown> = OnCallTypedModelParams<T>;
 
 /**
  * Default maximum items per page for query operations.

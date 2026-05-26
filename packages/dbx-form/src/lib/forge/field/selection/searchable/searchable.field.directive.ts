@@ -63,8 +63,9 @@ export abstract class AbstractForgeSearchableFieldDirective<T = unknown, M = unk
 
   readonly searchInputPlaceholderSignal = computed(() => {
     const p = this.props();
+    const placeholderValue = this.placeholder();
     const searchOnEmpty = p?.searchOnEmptyText ?? false;
-    const placeholder = typeof this.placeholder() === 'string' ? (this.placeholder() as string) : undefined;
+    const placeholder = typeof placeholderValue === 'string' ? placeholderValue : undefined;
     return placeholder || (searchOnEmpty ? '' : DEFAULT_SEARCH_INPUT_PLACEHOLDER);
   });
 

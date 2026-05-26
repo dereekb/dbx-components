@@ -12,6 +12,39 @@ import { type JwksKeyConverterConfig } from './model';
  */
 export type OidcRenderErrorFunction = Configuration['renderError'];
 
+// MARK: Resource Indicators
+/**
+ * Per-resource configuration returned by `features.resourceIndicators.getResourceServerInfo`
+ * to oidc-provider when a client requests an access token bound to a specific resource
+ * (RFC 8707).
+ *
+ * Shape mirrors oidc-provider's `ResourceServer` documented at
+ * `features.resourceIndicators.getResourceServerInfo` in
+ * `node_modules/oidc-provider/lib/helpers/defaults.js`.
+ */
+export interface OidcResourceServerInfo {
+  /**
+   * Space-delimited scopes valid on this resource server. Issued access tokens
+   * are filtered to the intersection of the client-requested scopes and this
+   * allow-list.
+   */
+  readonly scope: string;
+  /**
+   * `aud` claim placed on tokens bound to this resource. Defaults to the
+   * resource indicator URL when omitted.
+   */
+  readonly audience?: string;
+  /**
+   * Access-token TTL override for this resource (seconds). Falls back to the
+   * provider's `ttl.AccessToken` when omitted.
+   */
+  readonly accessTokenTTL?: number;
+  /**
+   * Access-token format. Defaults to `'opaque'`.
+   */
+  readonly accessTokenFormat?: 'opaque' | 'jwt';
+}
+
 // MARK: Provider Config
 /**
  * OIDC provider-level configuration for scopes, grant types, response types,
@@ -211,6 +244,50 @@ export abstract class OidcModuleConfig {
    * since those are typically protected by AppCheck.
    */
   readonly protectedPaths?: SlashPath[];
+
+  /**
+   * Map of recognized OAuth resource indicator URLs (RFC 8707) to their
+   * {@link OidcResourceServerInfo}. When non-empty, oidc-provider's
+   * `features.resourceIndicators.getResourceServerInfo` is wired to look up
+   * each requested `resource` parameter against this map and reject unknown
+   * resources with `invalid_target`.
+   *
+   * Required for OAuth-aware MCP clients (Claude, mcp-inspector) — they pass
+   * the MCP URL from the protected-resource discovery doc as the `resource`
+   * parameter on `/authorize` and `/token`, and oidc-provider rejects every
+   * such request with `invalid_target` unless that URL is recognized here.
+   *
+   * @example
+   * ```ts
+   * resourceServers: {
+   *   'http://localhost:9902/dereekb-components/us-central1/api/mcp': {
+   *     scope: 'openid profile email offline_access demo model.create model.read model.update model.delete model.query model.invoke',
+   *     audience: 'http://localhost:9902/dereekb-components/us-central1/api/mcp'
+   *   }
+   * }
+   * ```
+   */
+  readonly resourceServers?: Readonly<Record<string, OidcResourceServerInfo>>;
+
+  /**
+   * Absolute URL of the OAuth 2.0 Protected Resource Metadata document
+   * (RFC 9728) for the resources guarded by {@link protectedPaths}.
+   *
+   * When set, the OIDC bearer middleware emits
+   * `WWW-Authenticate: Bearer resource_metadata="<url>", error="invalid_token"`
+   * on 401 responses, so OAuth-aware clients (Claude, mcp-inspector) can
+   * locate the discovery doc without relying on RFC 9728's origin-rooted
+   * path-walkback rule — which only works when the resource server is
+   * actually mounted at the origin root.
+   *
+   * Typically derived from `appMcpUrl` (or the equivalent protected-resource
+   * URL) — e.g. for `appMcpUrl = https://api.example.com/mcp`, the value is
+   * `https://api.example.com/.well-known/oauth-protected-resource`.
+   *
+   * @example
+   * resourceMetadataUrl: 'http://localhost:9902/dereekb-components/us-central1/api/.well-known/oauth-protected-resource'
+   */
+  readonly resourceMetadataUrl?: string;
 
   /**
    * Supported token endpoint authentication methods.

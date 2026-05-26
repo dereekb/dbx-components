@@ -8,7 +8,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { ModelSnapshotFieldRegistry } from '../registry/model-snapshot-fields-runtime.js';
+import type { ModelSnapshotFieldRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse, pickFirstVariable } from './_resource-helpers.js';
 
 const URI = 'dbx://model-snapshot-field/entries';

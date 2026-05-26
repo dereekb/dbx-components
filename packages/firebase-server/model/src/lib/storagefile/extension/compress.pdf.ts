@@ -33,9 +33,39 @@ export interface CompressPdfImagesToTargetSizeConfig {
 }
 
 /**
+ * Per-filter image stream counts (e.g. `{ DCTDecode: 2, FlateDecode: 1 }`). Streams
+ * with no `/Filter` entry are bucketed under `'none'`; multi-filter chains are
+ * joined with `+` (e.g. `'FlateDecode+DCTDecode'`).
+ */
+export type CompressPdfImageStreamsByFilter = Readonly<Record<string, number>>;
+
+/**
+ * Diagnostic context describing the source PDF — useful for explaining why a
+ * compression attempt did or did not hit its target.
+ */
+export interface CompressPdfImagesToTargetSizeContext {
+  /**
+   * Number of pages in the source PDF.
+   */
+  readonly pageCount: number;
+  /**
+   * Total number of image XObjects (Subtype `/Image`) found in the PDF, regardless
+   * of whether they were compressible by this implementation.
+   */
+  readonly imageStreamCount: number;
+  /**
+   * Breakdown of image XObjects by their PDF filter. If `hitTarget` is `false` and
+   * this map only contains non-JPEG filters (e.g. `FlateDecode`, `CCITTFaxDecode`,
+   * `JBIG2Decode`, `JPXDecode`), the v1 compressor cannot help — callers should
+   * reject the upload or queue a downscale fallback.
+   */
+  readonly imageStreamsByFilter: CompressPdfImageStreamsByFilter;
+}
+
+/**
  * Result of {@link compressPdfImagesToTargetSize}.
  */
-export interface CompressPdfImagesToTargetSizeResult {
+export interface CompressPdfImagesToTargetSizeResult extends CompressPdfImagesToTargetSizeContext {
   /**
    * Best-effort compressed PDF bytes. Equal to the original buffer if recompression
    * produced no smaller result.
@@ -89,57 +119,27 @@ export async function compressPdfImagesToTargetSize(input: Buffer, config: Compr
   const originalSizeBytes = input.byteLength;
 
   const pdfDoc = await PDFDocument.load(input, { ignoreEncryption: true, updateMetadata: false });
+  const pageCount = pdfDoc.getPageCount();
   const indirectObjects = pdfDoc.context.enumerateIndirectObjects();
 
-  let imagesCompressed = 0;
-  let imagesSkipped = 0;
+  const counters: ImageCompressionCounters = {
+    imagesCompressed: 0,
+    imagesSkipped: 0,
+    imageStreamCount: 0,
+    imageStreamsByFilter: {}
+  };
 
   for (const [ref, obj] of indirectObjects) {
     if (!(obj instanceof PDFRawStream)) {
       continue;
     }
-
-    const candidate = isCompressibleImageStream(obj);
-    if (!candidate) {
-      continue;
-    }
-
-    if (obj.contents.byteLength < imageSizeThresholdBytes) {
-      // tiny image — not worth recompressing
-      continue;
-    }
-
-    try {
-      const compressedImage = await compressImageBufferToTargetSize(Buffer.from(obj.contents), {
-        targetSizeBytes: obj.contents.byteLength, // we just want it smaller than the current image
-        maxDimension: imageMaxDimension,
-        initialQuality: imageQuality,
-        format: 'jpeg'
-      });
-
-      if (compressedImage.compressedSizeBytes >= obj.contents.byteLength) {
-        // no gain — leave it alone
-        continue;
-      }
-
-      replaceImageStream({
-        pdfDoc,
-        ref,
-        newImageBytes: compressedImage.buffer,
-        newWidth: compressedImage.finalWidth,
-        newHeight: compressedImage.finalHeight
-      });
-
-      imagesCompressed += 1;
-    } catch {
-      imagesSkipped += 1;
-    }
+    await processPdfStream({ pdfDoc, ref, obj, counters, imageMaxDimension, imageQuality, imageSizeThresholdBytes });
   }
 
   let outputBuffer: Buffer = input;
   let compressedSizeBytes = originalSizeBytes;
 
-  if (imagesCompressed > 0) {
+  if (counters.imagesCompressed > 0) {
     const savedBytes = await pdfDoc.save({ useObjectStreams: true });
     const savedBuffer = Buffer.from(savedBytes);
 
@@ -153,11 +153,112 @@ export async function compressPdfImagesToTargetSize(input: Buffer, config: Compr
     buffer: outputBuffer,
     originalSizeBytes,
     compressedSizeBytes,
-    imagesCompressed,
-    imagesSkipped,
-    hitTarget: compressedSizeBytes <= targetSizeBytes
+    imagesCompressed: counters.imagesCompressed,
+    imagesSkipped: counters.imagesSkipped,
+    hitTarget: compressedSizeBytes <= targetSizeBytes,
+    pageCount,
+    imageStreamCount: counters.imageStreamCount,
+    imageStreamsByFilter: counters.imageStreamsByFilter
   };
   return result;
+}
+
+interface ImageCompressionCounters {
+  imagesCompressed: number;
+  imagesSkipped: number;
+  imageStreamCount: number;
+  imageStreamsByFilter: Record<string, number>;
+}
+
+interface ProcessPdfStreamInput {
+  readonly pdfDoc: PDFDocument;
+  readonly ref: PDFRef;
+  readonly obj: PDFRawStream;
+  readonly counters: ImageCompressionCounters;
+  readonly imageMaxDimension: number;
+  readonly imageQuality: number;
+  readonly imageSizeThresholdBytes: number;
+}
+
+async function processPdfStream(input: ProcessPdfStreamInput): Promise<void> {
+  const { pdfDoc, ref, obj, counters, imageMaxDimension, imageQuality, imageSizeThresholdBytes } = input;
+
+  if (isImageStream(obj)) {
+    counters.imageStreamCount += 1;
+    const filterKey = imageStreamFilterKey(obj);
+    counters.imageStreamsByFilter[filterKey] = (counters.imageStreamsByFilter[filterKey] ?? 0) + 1;
+  }
+
+  if (!isCompressibleImageStream(obj)) {
+    return;
+  }
+
+  if (obj.contents.byteLength < imageSizeThresholdBytes) {
+    return; // tiny image — not worth recompressing
+  }
+
+  try {
+    const compressedImage = await compressImageBufferToTargetSize(Buffer.from(obj.contents), {
+      targetSizeBytes: obj.contents.byteLength, // we just want it smaller than the current image
+      maxDimension: imageMaxDimension,
+      initialQuality: imageQuality,
+      format: 'jpeg'
+    });
+
+    if (compressedImage.compressedSizeBytes >= obj.contents.byteLength) {
+      return; // no gain — leave it alone
+    }
+
+    replaceImageStream({
+      pdfDoc,
+      ref,
+      newImageBytes: compressedImage.buffer,
+      newWidth: compressedImage.finalWidth,
+      newHeight: compressedImage.finalHeight
+    });
+
+    counters.imagesCompressed += 1;
+  } catch {
+    counters.imagesSkipped += 1;
+  }
+}
+
+function isImageStream(stream: PDFRawStream): boolean {
+  const dict = stream.dict;
+  const type = dict.get(PDF_NAME_TYPE);
+  const typeOk = type === undefined || pdfNameEquals(type, PDF_NAME_XOBJECT);
+  let result = false;
+
+  if (typeOk) {
+    const subtype = dict.get(PDF_NAME_SUBTYPE);
+    result = subtype !== undefined && pdfNameEquals(subtype, PDF_NAME_IMAGE);
+  }
+
+  return result;
+}
+
+function imageStreamFilterKey(stream: PDFRawStream): string {
+  const filter = stream.dict.get(PDF_NAME_FILTER);
+  let result: string;
+
+  if (filter === undefined) {
+    result = 'none';
+  } else if (filter instanceof PDFArray) {
+    result = filter
+      .asArray()
+      .map((entry) => (entry instanceof PDFName ? stripPdfNameSlash(entry.asString()) : 'unknown'))
+      .join('+');
+  } else if (filter instanceof PDFName) {
+    result = stripPdfNameSlash(filter.asString());
+  } else {
+    result = 'unknown';
+  }
+
+  return result;
+}
+
+function stripPdfNameSlash(name: string): string {
+  return name.startsWith('/') ? name.slice(1) : name;
 }
 
 const PDF_NAME_TYPE = PDFName.of('Type');

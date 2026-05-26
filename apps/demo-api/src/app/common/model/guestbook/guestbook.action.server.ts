@@ -16,7 +16,9 @@ import {
   guestbookEntryLikedNotificationTemplate,
   type SubscribeToGuestbookNotificationsParams,
   subscribeToGuestbookNotificationsParamsType,
-  type AsyncGuestbookUpdateAction
+  type AsyncGuestbookUpdateAction,
+  type PublishGuestbookParams,
+  publishGuestbookParamsType
 } from 'demo-firebase';
 import { type FirestoreContextReference, type NotificationFirestoreCollections, type UpdateNotificationBoxRecipientParams, createNotificationDocument, firestoreDummyKey } from '@dereekb/firebase';
 import { type BaseNotificationServerActionsContext, updateNotificationBoxRecipientInTransactionFactory } from '@dereekb/firebase-server/model';
@@ -34,6 +36,7 @@ export abstract class GuestbookServerActions {
   abstract insertGuestbookEntry(params: InsertGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<InsertGuestbookEntryParams>;
   abstract likeGuestbookEntry(params: LikeGuestbookEntryParams): AsyncGuestbookEntryUpdateAction<LikeGuestbookEntryParams>;
   abstract subscribeToGuestbookNotifications(params: SubscribeToGuestbookNotificationsParams): AsyncGuestbookUpdateAction<SubscribeToGuestbookNotificationsParams>;
+  abstract publishGuestbook(params: PublishGuestbookParams): AsyncGuestbookUpdateAction<PublishGuestbookParams>;
 }
 
 /**
@@ -47,7 +50,8 @@ export function guestbookServerActions(context: GuestbookServerActionsContext): 
     createGuestbook: guestbookCreateGuestbookFactory(context),
     insertGuestbookEntry: guestbookEntryInsertEntryFactory(context),
     likeGuestbookEntry: likeGuestbookEntryFactory(context),
-    subscribeToGuestbookNotifications: subscribeToGuestbookNotificationsFactory(context)
+    subscribeToGuestbookNotifications: subscribeToGuestbookNotificationsFactory(context),
+    publishGuestbook: publishGuestbookFactory(context)
   };
 }
 
@@ -63,7 +67,7 @@ export function guestbookServerActions(context: GuestbookServerActionsContext): 
 export function guestbookCreateGuestbookFactory({ firebaseServerActionTransformFunctionFactory, guestbookCollection }: GuestbookServerActionsContext) {
   return firebaseServerActionTransformFunctionFactory(createGuestbookParamsType, async (params) => {
     const guestbookAccessor = guestbookCollection.documentAccessor();
-    const { name, published } = params;
+    const { name, published, cby } = params;
 
     return async () => {
       const document: GuestbookDocument = guestbookAccessor.newDocument();
@@ -72,7 +76,8 @@ export function guestbookCreateGuestbookFactory({ firebaseServerActionTransformF
       await document.create({
         name,
         published: published || false,
-        locked: false
+        locked: false,
+        cby
       });
 
       return document;
@@ -172,6 +177,38 @@ export function likeGuestbookEntryFactory(context: GuestbookServerActionsContext
             guestbookEntryKey: document.key
           })
         });
+      });
+
+      return document;
+    };
+  });
+}
+
+/**
+ * Creates a server action factory that one-way publishes a guestbook within a transaction.
+ * Refuses to publish when the guestbook is locked. No-op when the guestbook is already published.
+ *
+ * @param context - Server actions context providing Firestore collections and transaction support.
+ * @returns An action transform function that validates params and flips `published` to true.
+ * @throws {Error} When the target guestbook does not exist or is locked.
+ */
+export function publishGuestbookFactory(context: GuestbookServerActionsContext) {
+  const { firestoreContext, firebaseServerActionTransformFunctionFactory, guestbookCollection } = context;
+
+  return firebaseServerActionTransformFunctionFactory(publishGuestbookParamsType, async (_params) => {
+    return async (document: GuestbookDocument) => {
+      await firestoreContext.runTransaction(async (transaction) => {
+        const guestbookDocumentInTransaction = guestbookCollection.documentAccessorForTransaction(transaction).loadDocumentFrom(document);
+        const guestbook = await guestbookDocumentInTransaction.snapshotData();
+
+        if (!guestbook) {
+          throw new Error('The target guestbook does not exist.');
+        } else if (guestbook.locked) {
+          throw new Error('The guestbook has been locked.');
+        } else if (!guestbook.published) {
+          // one-way: only write if currently unpublished
+          await guestbookDocumentInTransaction.update({ published: true });
+        }
       });
 
       return document;

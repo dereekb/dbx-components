@@ -294,7 +294,8 @@ function addNode(options: AddNodeOptions): void {
     paramKeys,
     resolveKeys,
     file,
-    line
+    line,
+    declaredAs: fallbackConstName
   };
 
   // Same file may declare both `const layoutState: Ng2StateDeclaration = {...}`

@@ -1,8 +1,33 @@
 import { PDFDocument } from '@cantoo/pdf-lib';
-import { JPEG_MIME_TYPE, JPEG_MIME_TYPES, mimeTypeForFileExtension, PDF_ENCRYPT_MARKER, PDF_EOF_MARKER, PDF_HEADER, PDF_MIME_TYPE, PNG_MIME_TYPE, sequentialIncrementingNumberStringModelIdFactory, slashPathDetails, type Building, type Maybe, type MimeTypeWithoutParameters, type ModelIdFactory } from '@dereekb/util';
-import { PDF_MERGE_RESULT_MIME_TYPE, type PdfMergeEntry, type PdfMergeEntryKind, type PdfMergeEntryValidationResult } from './pdf.merge';
+import { JPEG_MIME_TYPE, JPEG_MIME_TYPES, mimeTypeForFileExtension, PDF_ENCRYPT_MARKER, PDF_EOF_MARKER, PDF_HEADER, PDF_MIME_TYPE, PNG_MIME_TYPE, sequentialIncrementingNumberStringModelIdFactory, slashPathDetails, type Building, type FileSize, type Maybe, type MimeTypeWithoutParameters, type ModelIdFactory } from '@dereekb/util';
+import { PDF_MERGE_RESULT_MIME_TYPE, type PdfMergeEntry, type PdfMergeEntryKind, type PdfMergeEntryOriginal, type PdfMergeEntryValidationResult } from './pdf.merge';
+import { compressImageFile, type CompressImageDimensions, type DbxImageCompressionConfig, type ImageCompressionStatus } from '../image';
 
 const TEXT_DECODER = new TextDecoder('latin1');
+
+const FORMAT_KILOBYTE = 1024;
+const FORMAT_MEGABYTE = FORMAT_KILOBYTE * 1024;
+
+/**
+ * Formats a byte count as a short human-readable string (`B` / `KB` / `MB`). Used by the merge editor banner and entry rows.
+ *
+ * @param size - Byte count to format.
+ * @returns Human-readable string.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function formatPdfMergeEntrySize(size: FileSize): string {
+  let result: string;
+
+  if (size >= FORMAT_MEGABYTE) {
+    result = `${(size / FORMAT_MEGABYTE).toFixed(1)} MB`;
+  } else if (size >= FORMAT_KILOBYTE) {
+    result = `${(size / FORMAT_KILOBYTE).toFixed(1)} KB`;
+  } else {
+    result = `${size} B`;
+  }
+
+  return result;
+}
 
 /**
  * Returns the {@link PdfMergeEntryKind} for a file based on its MIME type, with a small fallback to file-extension matching when the browser provided no MIME type.
@@ -52,7 +77,7 @@ function resolvePdfMergeMimeType(file: File, kind: PdfMergeEntryKind): MimeTypeW
 const DEFAULT_ENTRY_ID_FACTORY: ModelIdFactory = sequentialIncrementingNumberStringModelIdFactory();
 
 /**
- * Optional input for {@link buildPdfMergeEntry}.
+ * Optional input for {@link buildPdfMergeEntry} / {@link buildPdfMergeEntrySync}.
  */
 export interface BuildPdfMergeEntryConfig {
   /**
@@ -63,17 +88,58 @@ export interface BuildPdfMergeEntryConfig {
    * Optional id factory override (used by tests for deterministic ids).
    */
   readonly idFactory?: ModelIdFactory;
+  /**
+   * Optional client-side image compression config to apply to image files before the entry is constructed. Ignored for PDFs.
+   */
+  readonly imageCompression?: Maybe<DbxImageCompressionConfig>;
+}
+
+interface BuildEntryFromFileInput {
+  readonly file: File;
+  readonly kind: PdfMergeEntryKind;
+  readonly original: PdfMergeEntryOriginal;
+  readonly compression: ImageCompressionStatus;
+  readonly idFactory: ModelIdFactory;
+  readonly slotId: Maybe<string>;
+}
+
+function buildEntryFromFile(input: BuildEntryFromFileInput): PdfMergeEntry {
+  const { file, kind, original, compression, idFactory, slotId } = input;
+  const nextEntry = {
+    id: idFactory(),
+    file,
+    name: file.name,
+    mimeType: resolvePdfMergeMimeType(file, kind),
+    size: file.size,
+    kind,
+    status: 'validating' as const,
+    slotId,
+    original,
+    compression
+  };
+
+  (nextEntry as Building<PdfMergeEntry>).validation = validatePdfMergeEntry(nextEntry);
+  return nextEntry as PdfMergeEntry;
+}
+
+function originalFromFile(file: File, kind: PdfMergeEntryKind, dimensions?: Maybe<CompressImageDimensions>): PdfMergeEntryOriginal {
+  return {
+    name: file.name,
+    mimeType: resolvePdfMergeMimeType(file, kind),
+    size: file.size,
+    dimensions
+  };
 }
 
 /**
- * Builds a {@link PdfMergeEntry} from a user-provided file, classifying its kind and assigning a fresh id. Returns `null` for unsupported file types so the caller can drop them.
+ * Builds a {@link PdfMergeEntry} synchronously from a user-provided file, classifying its kind and assigning a fresh id. Skips image compression — callers that need it must use the async {@link buildPdfMergeEntry}. Returns `null` for unsupported file types so the caller can drop them.
  *
  * @param file - File the user added.
- * @param config - Optional config for slot attribution and id factory override.
+ * @param config - Optional config for slot attribution and id factory override. `imageCompression` is ignored here.
  * @returns The new entry with `validating` status, or `null` when the file is not a supported PDF/PNG/JPEG.
  * @__NO_SIDE_EFFECTS__
  */
-export function buildPdfMergeEntry(file: File, config?: Maybe<BuildPdfMergeEntryConfig>): Maybe<PdfMergeEntry> {
+export function buildPdfMergeEntrySync(file: File, config?: Maybe<BuildPdfMergeEntryConfig>): Maybe<PdfMergeEntry> {
   const kind = classifyPdfMergeFile(file);
   const idFactory = config?.idFactory ?? DEFAULT_ENTRY_ID_FACTORY;
   const slotId = config?.slotId;
@@ -82,19 +148,36 @@ export function buildPdfMergeEntry(file: File, config?: Maybe<BuildPdfMergeEntry
   if (kind == null) {
     entry = null;
   } else {
-    const nextEntry = {
-      id: idFactory(),
-      file,
-      name: file.name,
-      mimeType: resolvePdfMergeMimeType(file, kind),
-      size: file.size,
-      kind,
-      status: 'validating' as const,
-      slotId
-    };
+    const original = originalFromFile(file, kind);
+    entry = buildEntryFromFile({ file, kind, original, compression: 'unchanged', idFactory, slotId });
+  }
 
-    (nextEntry as Building<PdfMergeEntry>).validation = validatePdfMergeEntry(nextEntry);
-    entry = nextEntry as PdfMergeEntry;
+  return entry;
+}
+
+/**
+ * Builds a {@link PdfMergeEntry} from a user-provided file, classifying its kind and assigning a fresh id. For image files with an `imageCompression` config the source is downscaled and/or PNG→JPEG converted before the entry is constructed; the original file metadata is captured under {@link PdfMergeEntry.original} regardless. Returns `null` for unsupported file types so the caller can drop them.
+ *
+ * @param file - File the user added.
+ * @param config - Optional config for slot attribution, id factory override, and image compression.
+ * @returns The new entry with `validating` status, or `null` when the file is not a supported PDF/PNG/JPEG.
+ */
+export async function buildPdfMergeEntry(file: File, config?: Maybe<BuildPdfMergeEntryConfig>): Promise<Maybe<PdfMergeEntry>> {
+  const kind = classifyPdfMergeFile(file);
+  const idFactory = config?.idFactory ?? DEFAULT_ENTRY_ID_FACTORY;
+  const slotId = config?.slotId;
+  const imageCompression = config?.imageCompression;
+  let entry: Maybe<PdfMergeEntry>;
+
+  if (kind == null) {
+    entry = null;
+  } else if (kind === 'image' && imageCompression != null) {
+    const compressionResult = await compressImageFile(file, imageCompression);
+    const original = originalFromFile(file, kind, compressionResult.originalDimensions);
+    entry = buildEntryFromFile({ file: compressionResult.file, kind, original, compression: compressionResult.compression, idFactory, slotId });
+  } else {
+    const original = originalFromFile(file, kind);
+    entry = buildEntryFromFile({ file, kind, original, compression: 'unchanged', idFactory, slotId });
   }
 
   return entry;

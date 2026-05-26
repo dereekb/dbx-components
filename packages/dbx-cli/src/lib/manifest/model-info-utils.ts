@@ -2,6 +2,19 @@ import { findCliModelManifestEntry } from '../api/expand-keys';
 import type { CliModelField, CliModelManifest, CliModelManifestEntry } from './types';
 
 /**
+ * Glosses for the closed `@dbxModelRead` enum surfaced on each model entry.
+ * `system` / `owner` / `admin-only` are statically inferable from the common
+ * `roleMapForModel` helpers; `permissions` is the escape hatch for non-trivial
+ * computed read grants.
+ */
+const READ_POSTURE_GLOSS: Readonly<Record<NonNullable<CliModelManifestEntry['read']>, string>> = {
+  system: 'readable by any authenticated user',
+  owner: 'readable by the record owner (and admins)',
+  'admin-only': 'readable by admins only',
+  permissions: 'computed/custom read grants'
+};
+
+/**
  * Resolves the manifest entry for `query` against `modelType`, `identityConst`,
  * and `collectionPrefix` in that order.
  *
@@ -50,6 +63,7 @@ export function renderModelManifestEntry(entry: CliModelManifestEntry): string {
   const groupSuffix = entry.modelGroup ? ` · group ${entry.modelGroup}` : '';
   const lines: string[] = [`# ${entry.modelType}${groupSuffix}`, `Identity: ${entry.identityConst}`, `Collection prefix: ${entry.collectionPrefix}`];
   if (entry.parentIdentityConst) lines.push(`Parent identity: ${entry.parentIdentityConst}`);
+  if (entry.read) lines.push(`Read: ${entry.read} — ${READ_POSTURE_GLOSS[entry.read]}`);
   lines.push(`Source package: ${entry.sourcePackage}`, `Source file: ${entry.sourceFile}`);
   if (entry.description) {
     lines.push('', entry.description);

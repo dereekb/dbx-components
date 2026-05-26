@@ -1,10 +1,12 @@
 {
   "name": "@dereekb/dbx-cli",
-  "version": "13.11.18",
+  "version": "13.12.0",
+  "type": "module",
   "sideEffects": false,
   "bin": {
     "dbx-cli-generate-firebase-api-manifest": "firebase-api-manifest/main.js",
     "dbx-cli-generate-firestore-indexes": "generate-firestore-indexes/main.js",
+    "dbx-cli-generate-mcp-manifest": "generate-mcp-manifest/main.js",
     "dbx-cli-lint-cache": "lint-cache/main.js"
   },
   "exports": {
@@ -13,6 +15,9 @@
     },
     "./generate-firestore-indexes": {
       "default": "./generate-firestore-indexes/main.js"
+    },
+    "./generate-mcp-manifest": {
+      "default": "./generate-mcp-manifest/main.js"
     },
     "./lint-cache": {
       "default": "./lint-cache/main.js"
@@ -31,11 +36,12 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "13.11.18",
-    "@dereekb/firebase": "13.11.18",
-    "@dereekb/nestjs": "13.11.18",
-    "@dereekb/util": "13.11.18",
+    "@dereekb/date": "13.12.0",
+    "@dereekb/firebase": "13.12.0",
+    "@dereekb/nestjs": "13.12.0",
+    "@dereekb/util": "13.12.0",
     "arktype": "^2.2.0",
+    "ts-morph": "^21.0.0",
     "yargs": "^18.0.0"
   },
   "devDependencies": {

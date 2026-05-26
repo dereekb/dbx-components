@@ -1,5 +1,6 @@
-import { type Configurable, type Maybe } from '@dereekb/util';
+import { type AuthRole, type Configurable, type Maybe } from '@dereekb/util';
 import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier } from '@dereekb/firebase';
+import { type FirebaseServerAuthData } from '../controller/auth.context.server';
 import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
 
 // MARK: JSON Schema
@@ -47,6 +48,106 @@ export interface McpToolResponseContentBlock {
   readonly data?: string;
 }
 
+// MARK: MCP Visibility
+/**
+ * Minimal dispatch coordinates surfaced to a dynamic visibility predicate so a
+ * shared function can branch by tool identity.
+ *
+ * Structurally satisfied by the MCP tool generator's `McpToolDispatchTarget`.
+ */
+export interface McpToolVisibilityDispatchTarget {
+  readonly call: string;
+  readonly modelType: string;
+  readonly specifier?: string;
+}
+
+/**
+ * Declarative visibility rule. Evaluated per-request without invoking user code.
+ */
+export interface McpVisibilityRule {
+  /**
+   * Caller must hold every role listed (AND-semantics). Empty array is vacuously true.
+   */
+  readonly requiredRoles?: ReadonlyArray<AuthRole>;
+  /**
+   * When true, the caller must be authenticated (`ctx.auth != null`).
+   */
+  readonly requireAuthenticated?: boolean;
+}
+
+/**
+ * Context passed to the dynamic visibility function form.
+ */
+export interface McpVisibilityContext {
+  /**
+   * The authenticated caller, when present. `undefined` for anonymous callers.
+   */
+  readonly auth?: FirebaseServerAuthData;
+  /**
+   * The caller's OIDC scopes, when the request was authenticated with a `scope`-bearing token.
+   * `undefined` for non-OIDC callers — treated the same as `oidcCallModelScopePreAssert` bypass.
+   */
+  readonly scopes?: ReadonlySet<string>;
+  /**
+   * Dispatch identity of the tool being evaluated. Lets a shared predicate branch by tool.
+   */
+  readonly tool: McpToolVisibilityDispatchTarget;
+}
+
+/**
+ * Per-handler MCP visibility, evaluated cheap-to-expensive at request time.
+ *
+ * - `boolean`: `true` means "always visible (subject to scope)"; `false` means "never visible".
+ * - {@link McpVisibilityRule}: declarative check (role / auth gate), no user code invoked.
+ * - Function: synchronous predicate invoked per request. MUST be synchronous — async checks
+ *   introduce unbounded `tools/list` latency. If the function throws, the framework treats the
+ *   result as `false` (fail-closed) and logs a warning.
+ *
+ * `visibility: true` does NOT bypass the OIDC scope filter — scope is the absolute first gate
+ * and `visibility` only narrows further.
+ */
+export type McpToolVisibility = boolean | McpVisibilityRule | ((context: McpVisibilityContext) => boolean);
+
+// MARK: MCP Tool Details Builder
+/**
+ * Input passed to a {@link McpToolDetailsBuilder}.
+ *
+ * `defaultDescription` and `defaultInputSchema` reflect the framework's boot-time resolved
+ * values (manifest entry if present, otherwise the auto-generated defaults). Builders can
+ * return them verbatim, mutate a copy, or replace them entirely.
+ *
+ * `auth` and `scopes` come from the same per-request context the MCP visibility predicate
+ * sees. `undefined` for anonymous / non-OIDC callers.
+ */
+export interface McpToolDetailsBuilderInput {
+  readonly dispatch: McpToolVisibilityDispatchTarget;
+  readonly defaultDescription: string;
+  readonly defaultInputSchema?: object;
+  readonly auth?: FirebaseServerAuthData;
+  readonly scopes?: ReadonlySet<string>;
+}
+
+/**
+ * Builder output. Either field can be omitted to keep the framework default;
+ * returning an empty object is a no-op.
+ */
+export interface McpToolDetailsBuilderResult {
+  readonly description?: string;
+  readonly inputSchema?: object;
+}
+
+/**
+ * Synchronous builder invoked once per `tools/list` request, after the visibility filter
+ * has accepted the tool.
+ *
+ * MUST be synchronous — async work would introduce unbounded `tools/list` latency, matching
+ * the visibility-predicate constraint.
+ *
+ * If the builder throws, the framework falls back to the defaults and logs a warning
+ * (fail-soft).
+ */
+export type McpToolDetailsBuilder = (input: McpToolDetailsBuilderInput) => McpToolDetailsBuilderResult;
+
 // MARK: Handler-Level API Details
 /**
  * MCP-specific customization for a model function.
@@ -61,10 +162,6 @@ export interface McpToolResponseContentBlock {
  * Resolution order: formatResponse > summarizeResponse > auto-generated default.
  */
 export interface OnCallModelFunctionMcpDetails {
-  /**
-   * Custom tool description for the MCP tool.
-   */
-  readonly description?: string;
   /**
    * Custom tool name override.
    */
@@ -90,6 +187,29 @@ export interface OnCallModelFunctionMcpDetails {
    * @returns The full MCP tool response content.
    */
   readonly formatResponse?: (result: unknown, params: OnCallTypedModelParams) => McpToolResponseContent;
+  /**
+   * Controls whether this handler's tool is advertised on `tools/list` for a given request.
+   *
+   * See {@link McpToolVisibility} for the three accepted forms. Always applied after the
+   * OIDC scope filter and the module-level `readOnly` check.
+   */
+  readonly visibility?: McpToolVisibility;
+  /**
+   * Explicit override for the effective read-only classification of this handler.
+   *
+   * When unset, the framework infers from the call type: `read` and `query` → true,
+   * `create`/`update`/`delete` → false, anything else → undefined (treated as a write
+   * for fail-safe filtering when `McpModuleConfig.readOnly` is on).
+   */
+  readonly readOnly?: boolean;
+  /**
+   * Optional per-request builder that produces enriched tool description / inputSchema
+   * for `tools/list`. See {@link McpToolDetailsBuilder}.
+   *
+   * Tools without a builder reuse a precomputed wire entry, so this opt-in only adds
+   * overhead to the handlers that need it.
+   */
+  readonly toolDetails?: McpToolDetailsBuilder;
 }
 
 /**

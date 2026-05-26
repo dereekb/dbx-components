@@ -1,7 +1,7 @@
 import { describeCallableRequestTest, expectFailAssertHttpErrorServerErrorCode } from '@dereekb/firebase-server/test';
 import { demoApiFunctionContextFactory, demoAuthorizedUserAdminContext, demoAuthorizedUserContext, demoNotificationContext, demoStorageFileContext, demoStorageFileGroupContext } from '../../../test/fixture';
 import { demoCallModel } from '../model/crud.functions';
-import { USER_TEST_FILE_PURPOSE, USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, userAvatarUploadsFilePath, userProfileStorageFileGroupId, type UserTestFileProcessingSubtask, type UserTestFileProcessingSubtaskMetadata, userTestFileUploadsFilePath } from 'demo-firebase';
+import { USER_AVATAR_PURPOSE, USER_TEST_FILE_PURPOSE, USER_TEST_FILE_PURPOSE_PART_A_SUBTASK, USER_TEST_FILE_PURPOSE_PART_B_SUBTASK, userAvatarUploadsFilePath, userProfileStorageFileGroupId, type UserTestFileProcessingSubtask, type UserTestFileProcessingSubtaskMetadata, userTestFileUploadsFilePath } from 'demo-firebase';
 import {
   combineUploadFileTypeDeterminers,
   determineByFileName,
@@ -29,6 +29,7 @@ import {
   STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS,
   NOTIFICATION_TASK_SUBTASK_CHECKPOINT_PROCESSING,
   delayCompletion,
+  onCallCreateModelParams,
   onCallReadModelParams,
   type DownloadStorageFileParams,
   type StorageFileDocument,
@@ -49,7 +50,9 @@ import {
   storageFilePurposeAndUserQuery,
   type StorageFilePurpose,
   type FirebaseAuthUserId,
-  MODEL_NOT_AVAILABLE_ERROR_CODE
+  MODEL_NOT_AVAILABLE_ERROR_CODE,
+  type CreateStorageFileSignedUploadUrlParams,
+  type CreateStorageFileSignedUploadUrlResult
 } from '@dereekb/firebase';
 import { addMilliseconds, type GetterOrValue, getValueFromGetter, type Maybe, slashPathDetails, ZIP_FILE_MIME_TYPE, type SlashPathFolder, type SlashPathPart } from '@dereekb/util';
 import { assertSnapshotData } from '@dereekb/firebase-server';
@@ -1141,6 +1144,125 @@ demoApiFunctionContextFactory((f) => {
                   expect(storageFile.fs).toBe(StorageFileState.OK);
                 });
               });
+            });
+          });
+        });
+
+        describe('signedUploadUrl', () => {
+          // NOTE: the Firebase Storage emulator does not actually sign URLs.
+          // The server-side accessor falls back to the public URL when the
+          // signing call throws in-emulator (see driver.accessor.ts), so these
+          // tests assert the URL/headers/path-resolution shape rather than the
+          // GCS signature payload itself.
+          const callCreateSignedUploadUrl = (data: CreateStorageFileSignedUploadUrlParams) => au.callWrappedFunction(demoCallModelWrappedFn, onCallCreateModelParams(storageFileIdentity, data, 'signedUploadUrl')) as Promise<CreateStorageFileSignedUploadUrlResult>;
+
+          describe('avatar purpose', () => {
+            it('returns an upload url that targets the avatar upload path', async () => {
+              const result = await callCreateSignedUploadUrl({
+                purpose: USER_AVATAR_PURPOSE,
+                contentType: 'image/jpeg',
+                fileSizeBytes: 100_000
+              });
+
+              expect(result.uploadUrl).toBeDefined();
+              expect(result.uploadUrl.length).toBeGreaterThan(0);
+              expect(result.uploadPath).toBe(userAvatarUploadsFilePath(au.uid));
+              expect(result.requiredHeaders['content-type']).toBe('image/jpeg');
+              expect(result.purpose).toBe(USER_AVATAR_PURPOSE);
+              expect(result.maxFileSizeBytes).toBeGreaterThan(0);
+              expect(result.expiresAt).toBeGreaterThan(Date.now());
+            });
+
+            itShouldFail('with INVALID_CONTENT_TYPE when the content-type is not in the policy', async () => {
+              await expectFail(
+                () =>
+                  callCreateSignedUploadUrl({
+                    purpose: USER_AVATAR_PURPOSE,
+                    contentType: 'application/zip',
+                    fileSizeBytes: 100
+                  }),
+                expectFailAssertHttpErrorServerErrorCode('INVALID_CONTENT_TYPE')
+              );
+            });
+
+            itShouldFail('with FILE_TOO_LARGE when fileSizeBytes exceeds the policy cap', async () => {
+              await expectFail(
+                () =>
+                  callCreateSignedUploadUrl({
+                    purpose: USER_AVATAR_PURPOSE,
+                    contentType: 'image/png',
+                    fileSizeBytes: 32 * 1024 * 1024
+                  }),
+                expectFailAssertHttpErrorServerErrorCode('FILE_TOO_LARGE')
+              );
+            });
+          });
+
+          describe('test file purpose', () => {
+            it('returns an upload url that targets the test upload path with the caller-supplied filename', async () => {
+              const result = await callCreateSignedUploadUrl({
+                purpose: USER_TEST_FILE_PURPOSE,
+                contentType: 'text/plain',
+                filename: 'hello.txt',
+                fileSizeBytes: 11
+              });
+
+              expect(result.uploadUrl).toBeDefined();
+              expect(result.uploadPath).toBe(userTestFileUploadsFilePath(au.uid, 'hello.txt'));
+              expect(result.purpose).toBe(USER_TEST_FILE_PURPOSE);
+            });
+
+            itShouldFail('with MISSING_FILENAME when filename is required but not provided', async () => {
+              await expectFail(
+                () =>
+                  callCreateSignedUploadUrl({
+                    purpose: USER_TEST_FILE_PURPOSE,
+                    contentType: 'text/plain',
+                    fileSizeBytes: 11
+                  }),
+                expectFailAssertHttpErrorServerErrorCode('MISSING_FILENAME')
+              );
+            });
+
+            itShouldFail('with INVALID_FILENAME when the filename contains a slash', async () => {
+              await expectFail(
+                () =>
+                  callCreateSignedUploadUrl({
+                    purpose: USER_TEST_FILE_PURPOSE,
+                    contentType: 'text/plain',
+                    filename: 'evil/hello.txt',
+                    fileSizeBytes: 11
+                  }),
+                expectFailAssertHttpErrorServerErrorCode('INVALID_FILENAME')
+              );
+            });
+
+            itShouldFail('with INVALID_FILENAME when the filename contains a parent path segment', async () => {
+              await expectFail(
+                () =>
+                  callCreateSignedUploadUrl({
+                    purpose: USER_TEST_FILE_PURPOSE,
+                    contentType: 'text/plain',
+                    filename: 'hello..txt',
+                    fileSizeBytes: 11
+                  }),
+                expectFailAssertHttpErrorServerErrorCode('INVALID_FILENAME')
+              );
+            });
+          });
+
+          describe('unknown purpose', () => {
+            itShouldFail('with UNKNOWN_PURPOSE for a purpose not registered in STORAGE_FILE_PURPOSE_UPLOAD_POLICIES', async () => {
+              await expectFail(
+                () =>
+                  callCreateSignedUploadUrl({
+                    purpose: 'definitely-not-a-real-purpose',
+                    contentType: 'text/plain',
+                    filename: 'x.txt',
+                    fileSizeBytes: 1
+                  }),
+                expectFailAssertHttpErrorServerErrorCode('UNKNOWN_PURPOSE')
+              );
             });
           });
         });

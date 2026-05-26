@@ -1,75 +1,90 @@
-import { type FinishOnboardingProfileParams, type ProfileCreateTestNotificationParams, type ProfileDocument, type ResetProfilePasswordParams, type SetProfileUsernameParams, type UpdateProfileParams, profileIdentity } from 'demo-firebase';
+import { type FinishOnboardingProfileParams, type ProfileCreateTestNotificationParams, type ProfileDocument, type ResetProfilePasswordParams, type SetProfileUsernameParams, type UpdateProfileParams, finishOnboardingProfileParamsType, profileCreateTestNotificationParamsType, profileIdentity, resetProfilePasswordParamsType, setProfileUsernameParamsType, updateProfileParamsType } from 'demo-firebase';
 import { type DemoUpdateModelFunction } from '../function.context';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';
 import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
 import { firestoreModelKey } from '@dereekb/firebase';
-import { catchAndThrowPasswordResetServerErrors } from '@dereekb/firebase-server';
+import { catchAndThrowPasswordResetServerErrors, isAdminInRequest, withApiDetails } from '@dereekb/firebase-server';
 
-export const profileUpdate: DemoUpdateModelFunction<UpdateProfileParams> = async (request) => {
-  const { nest, auth: _auth, data } = request;
-  const updateProfile = await nest.profileActions.updateProfile(data);
-  const profileDocument: ProfileDocument = await profileForUserRequest(request);
-  await updateProfile(profileDocument);
-};
-
-export const profileUpdateUsername: DemoUpdateModelFunction<SetProfileUsernameParams> = async (request) => {
-  const { nest, auth, data } = request;
-  const setProfileUsername = await nest.profileActions.setProfileUsername(data);
-  const profileDocument: ProfileDocument = await profileForUserRequest(request);
-  const exists = await profileDocument.accessor.exists();
-
-  if (!exists) {
-    throw userHasNoProfileError(auth.uid);
+export const profileUpdate: DemoUpdateModelFunction<UpdateProfileParams> = withApiDetails({
+  inputType: updateProfileParamsType,
+  fn: async (request) => {
+    const { nest, auth: _auth, data } = request;
+    const updateProfile = await nest.profileActions.updateProfile(data);
+    const profileDocument: ProfileDocument = await profileForUserRequest(request);
+    await updateProfile(profileDocument);
   }
+});
 
-  await setProfileUsername(profileDocument);
-};
+export const profileUpdateUsername: DemoUpdateModelFunction<SetProfileUsernameParams> = withApiDetails({
+  inputType: setProfileUsernameParamsType,
+  fn: async (request) => {
+    const { nest, auth, data } = request;
+    const setProfileUsername = await nest.profileActions.setProfileUsername(data);
+    const profileDocument: ProfileDocument = await profileForUserRequest(request);
+    const exists = await profileDocument.accessor.exists();
 
-export const profileUpdateOnboard: DemoUpdateModelFunction<FinishOnboardingProfileParams, boolean> = async (request) => {
-  const { nest, auth, data: _data } = request;
-  const uid = auth.uid;
-
-  if (uid) {
-    await nest.profileActions.initProfileForUid(uid);
-  }
-
-  await nest.authService.userContext(uid).addRoles([AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE]);
-
-  return true;
-};
-
-export const profileUpdateResetPassword: DemoUpdateModelFunction<ResetProfilePasswordParams> = async (request) => {
-  const { nest, auth, data } = request;
-  const passwordResetService = nest.authService.passwordReset();
-
-  await catchAndThrowPasswordResetServerErrors(async () => {
-    if (data.requestReset) {
-      await passwordResetService.beginPasswordReset({
-        uid: auth.uid,
-        sendResetContent: true,
-        sendResetThrowErrors: true
-      });
-    } else if (data.resetPassword && data.newPassword) {
-      await passwordResetService.completePasswordReset(auth.uid, {
-        resetPassword: data.resetPassword,
-        newPassword: data.newPassword
-      });
+    if (!exists) {
+      throw userHasNoProfileError(auth.uid);
     }
-  });
-};
 
-export const profileUpdateCreateTestNotification: DemoUpdateModelFunction<ProfileCreateTestNotificationParams> = async (request) => {
-  const { nest, auth, data } = request;
-  const uid = auth.uid;
+    await setProfileUsername(profileDocument);
+  }
+});
 
-  const profileDocument = await nest.useModel('profile', {
-    request,
-    key: firestoreModelKey(profileIdentity, uid),
-    roles: 'owner',
-    use: (x) => x.document
-  });
+export const profileUpdateOnboard: DemoUpdateModelFunction<FinishOnboardingProfileParams, boolean> = withApiDetails({
+  inputType: finishOnboardingProfileParamsType,
+  fn: async (request) => {
+    const { nest, auth, data: _data } = request;
+    const uid = auth.uid;
 
-  const createTestNotification = await nest.profileActions.createTestNotification(data);
-  await createTestNotification(profileDocument);
-};
+    if (uid) {
+      await nest.profileActions.initProfileForUid(uid);
+    }
+
+    await nest.authService.userContext(uid).addRoles([AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE]);
+
+    return true;
+  }
+});
+
+export const profileUpdateResetPassword: DemoUpdateModelFunction<ResetProfilePasswordParams> = withApiDetails({
+  inputType: resetProfilePasswordParamsType,
+  fn: async (request) => {
+    const { nest, auth, data } = request;
+    const passwordResetService = nest.authService.passwordReset();
+
+    await catchAndThrowPasswordResetServerErrors(async () => {
+      if (data.requestReset) {
+        await passwordResetService.beginPasswordReset({
+          uid: auth.uid,
+          sendResetContent: true,
+          sendResetThrowErrors: true
+        });
+      } else if (data.resetPassword && data.newPassword) {
+        await passwordResetService.completePasswordReset(auth.uid, {
+          resetPassword: data.resetPassword,
+          newPassword: data.newPassword
+        });
+      }
+    }, isAdminInRequest(request));
+  }
+});
+
+export const profileUpdateCreateTestNotification: DemoUpdateModelFunction<ProfileCreateTestNotificationParams> = withApiDetails({
+  inputType: profileCreateTestNotificationParamsType,
+  fn: async (request) => {
+    const { nest, auth, data } = request;
+    const uid = auth.uid;
+
+    const profileDocument = await nest.useModel('profile', {
+      request,
+      key: firestoreModelKey(profileIdentity, uid),
+      roles: 'owner',
+      use: (x) => x.document
+    });
+
+    const createTestNotification = await nest.profileActions.createTestNotification(data);
+    await createTestNotification(profileDocument);
+  }
+});

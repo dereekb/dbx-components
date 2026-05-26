@@ -6,27 +6,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { type PdfMergeEntry } from './pdf.merge';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
+import { formatPdfMergeEntrySize } from './pdf.merge.utility';
 
 const PDF_ICON = 'picture_as_pdf';
 const IMAGE_ICON = 'image';
 const ERROR_ICON = 'error';
-
-const KILOBYTE = 1024;
-const MEGABYTE = KILOBYTE * 1024;
-
-function formatPdfMergeEntrySize(size: number): string {
-  let result: string;
-
-  if (size >= MEGABYTE) {
-    result = `${(size / MEGABYTE).toFixed(1)} MB`;
-  } else if (size >= KILOBYTE) {
-    result = `${(size / KILOBYTE).toFixed(1)} KB`;
-  } else {
-    result = `${size} B`;
-  }
-
-  return result;
-}
 
 /**
  * Single row inside the {@link DbxPdfMergeListComponent}: shows the file's icon, name, formatted size, status, drag handle, and a remove button. The component's template is itself a `cdkDrag` element so each row can be reordered inside the parent's `cdkDropList`.
@@ -46,6 +30,9 @@ function formatPdfMergeEntrySize(size: number): string {
         <div class="dbx-pdf-merge-entry-name dbx-text-truncate" [title]="entry().name">{{ entry().name }}</div>
         <div class="dbx-pdf-merge-entry-meta dbx-hint dbx-small">
           <span>{{ sizeSignal() }}</span>
+          @if (compressionLabelSignal(); as compressionLabel) {
+            <span class="dbx-pdf-merge-entry-compression">{{ compressionLabel }}</span>
+          }
           @if (statusLabelSignal(); as label) {
             <span class="dbx-pdf-merge-entry-status" [class.dbx-warn]="isErrorSignal()">{{ label }}</span>
           }
@@ -103,6 +90,31 @@ export class DbxPdfMergeEntryComponent {
       label = entry.errorMessage ?? 'Cannot merge';
     } else {
       label = null;
+    }
+
+    return label;
+  });
+
+  readonly compressionLabelSignal = computed<Maybe<string>>(() => {
+    const entry = this.entry();
+    const compression = entry.compression;
+    let label: Maybe<string>;
+
+    if (compression === 'unchanged') {
+      label = null;
+    } else {
+      const wasSize = formatPdfMergeEntrySize(entry.original.size);
+      let prefix: string;
+
+      if (compression === 'resized') {
+        prefix = 'Resized';
+      } else if (compression === 'converted') {
+        prefix = 'Converted PNG → JPEG';
+      } else {
+        prefix = 'Resized + converted';
+      }
+
+      label = `${prefix} (was ${wasSize})`;
     }
 
     return label;

@@ -1,15 +1,18 @@
 import { type DemoCreateModelFunction } from '../function.context';
 import { type OnCallCreateModelResult } from '@dereekb/firebase';
-import { optionalAuthContext } from '@dereekb/firebase-server';
+import { withApiDetails } from '@dereekb/firebase-server';
 
-export const profileCreate: DemoCreateModelFunction<{}> = optionalAuthContext(async (request) => {
-  const { nest: _nest, auth: _auth, data: _data } = request;
+export const profileCreate: DemoCreateModelFunction<{}> = withApiDetails({
+  optionalAuth: true,
+  fn: async (request) => {
+    const { nest: _nest, auth: _auth, data: _data } = request;
 
-  // Does nothing. This is just to demonstrate the optionalAuthContext function and handling.
+    // Does nothing. This is just to demonstrate the optionalAuth handling.
 
-  const response: OnCallCreateModelResult = {
-    modelKeys: []
-  };
+    const response: OnCallCreateModelResult = {
+      modelKeys: []
+    };
 
-  return response;
+    return response;
+  }
 });

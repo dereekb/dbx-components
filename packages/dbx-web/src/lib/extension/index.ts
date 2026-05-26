@@ -8,4 +8,5 @@ export * from './title';
 export * from './widget';
 export * from './zip';
 export * from './help';
+export * from './image';
 export * from './pdf';

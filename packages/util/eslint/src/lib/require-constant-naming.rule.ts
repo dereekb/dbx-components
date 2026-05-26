@@ -14,6 +14,21 @@ interface AstNode {
 const DEFAULT_EXEMPT_JSDOC_TAG = '@dbxAllowConstantName';
 
 /**
+ * Default set of type annotation identifier names whose `export const X: T = {...}` declarations
+ * are exempt from the rule.
+ *
+ * These are framework-prescribed singleton types whose author-facing convention is camelCase, so
+ * enforcing UPPER_SNAKE_CASE would diverge from upstream documentation and break import sites.
+ *
+ * - `Ng2StateDeclaration` / `StateDeclaration` — UIRouter state config objects.
+ * - `ApplicationConfig` — Angular standalone bootstrap config.
+ * - `Routes` / `Route` — Angular Router config arrays/entries.
+ * - `ModelFirebaseCrudFunctionConfigMap` — @dereekb/firebase CRUD function declaration map exported per model group.
+ * - `FirebaseFunctionTypeConfigMap` — @dereekb/firebase function-type configuration map exported per model group.
+ */
+const DEFAULT_EXEMPT_TYPE_ANNOTATIONS: readonly string[] = ['Ng2StateDeclaration', 'StateDeclaration', 'ApplicationConfig', 'Routes', 'Route', 'ModelFirebaseCrudFunctionConfigMap', 'FirebaseFunctionTypeConfigMap', 'DevelopmentFirebaseFunctionConfigMap', 'SystemStateStoredDataConverterMap'];
+
+/**
  * camelCase pattern accepted for function-typed constants.
  */
 const CAMEL_CASE = /^[a-z][a-zA-Z0-9]*$/;
@@ -57,6 +72,17 @@ export interface UtilRequireConstantNamingRuleOptions {
    * Defaults to `@dbxAllowConstantName`.
    */
   readonly exemptJsdocTag?: string;
+  /**
+   * Type annotation identifier names whose `export const X: T = {...}` declarations are exempt
+   * from the rule.
+   *
+   * When the declarator's type annotation is a `TSTypeReference` whose identifier (or leftmost
+   * segment of a `TSQualifiedName`) is in this list, the constant is skipped regardless of casing.
+   *
+   * Defaults to {@link DEFAULT_EXEMPT_TYPE_ANNOTATIONS}. Pass an empty array to opt out of the
+   * defaults entirely (strict mode); pass a non-empty array to replace the defaults.
+   */
+  readonly exemptTypeAnnotations?: readonly string[];
 }
 
 /**
@@ -98,6 +124,43 @@ function hasExemptJsdoc(sourceCode: AstNode, node: AstNode, exemptTag: string): 
   }
 
   return exempt;
+}
+
+/**
+ * Returns the identifier text of a declarator's type annotation when the annotation is a simple
+ * `TSTypeReference` to a named type.
+ *
+ * For `TSQualifiedName` (e.g. `Ng.Routes`) the leftmost segment is returned, which is the form
+ * users would typically allowlist (the imported namespace).
+ *
+ * Returns `undefined` for shapes the allowlist can't meaningfully match: missing annotation,
+ * `TSFunctionType`, `TSTypeLiteral`, intersections/unions, etc.
+ *
+ * @param declarator - The VariableDeclarator AST node.
+ * @returns The identifier name of the type annotation, or `undefined` when the annotation has no
+ *   single matchable identifier.
+ */
+function getTypeAnnotationIdentifierName(declarator: AstNode): string | undefined {
+  const typeAnnotation = declarator.id?.typeAnnotation?.typeAnnotation;
+  let result: string | undefined;
+
+  if (typeAnnotation?.type === 'TSTypeReference') {
+    const typeName = typeAnnotation.typeName;
+
+    if (typeName?.type === 'Identifier') {
+      result = typeName.name;
+    } else if (typeName?.type === 'TSQualifiedName') {
+      let leftmost = typeName;
+      while (leftmost.left?.type === 'TSQualifiedName') {
+        leftmost = leftmost.left;
+      }
+      if (leftmost.left?.type === 'Identifier') {
+        result = leftmost.left.name;
+      }
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -156,6 +219,12 @@ function classifyConstant(declarator: AstNode): ConstantKind {
  * Use the exempt JSDoc tag (default `@dbxAllowConstantName`) to silence the rule on a specific
  * declaration when the heuristics get it wrong.
  *
+ * Framework-prescribed singleton types (UIRouter's `Ng2StateDeclaration`, Angular's
+ * `ApplicationConfig`, `Routes`, etc.) are exempt by default via the `exemptTypeAnnotations` option:
+ * any `export const X: T = {...}` whose type annotation is a `TSTypeReference` to one of those
+ * names is skipped regardless of casing. Pass `exemptTypeAnnotations: []` to opt out of the
+ * defaults, or pass a non-empty array to replace the default allowlist with a project-specific set.
+ *
  * Not auto-fixable: renaming an exported binding has cross-file impact that an autofix can't safely
  * propagate.
  *
@@ -180,6 +249,11 @@ export const UTIL_REQUIRE_CONSTANT_NAMING_RULE: UtilRequireConstantNamingRuleDef
           exemptJsdocTag: {
             type: 'string' as const,
             description: 'JSDoc tag that opts a const declaration out of the rule.'
+          },
+          exemptTypeAnnotations: {
+            type: 'array' as const,
+            items: { type: 'string' as const },
+            description: 'Type annotation identifier names whose `export const X: T = {...}` declarations are exempt. Pass an empty array to opt out of the defaults; pass a non-empty array to replace the defaults.'
           }
         },
         additionalProperties: false
@@ -189,6 +263,7 @@ export const UTIL_REQUIRE_CONSTANT_NAMING_RULE: UtilRequireConstantNamingRuleDef
   create(context) {
     const options = context.options[0] ?? {};
     const exemptTag: string = options.exemptJsdocTag ?? DEFAULT_EXEMPT_JSDOC_TAG;
+    const exemptTypeAnnotations: ReadonlySet<string> = new Set(options.exemptTypeAnnotations ?? DEFAULT_EXEMPT_TYPE_ANNOTATIONS);
     const sourceCode = context.sourceCode;
 
     function checkExportNamedDeclaration(node: AstNode): void {
@@ -210,6 +285,12 @@ export const UTIL_REQUIRE_CONSTANT_NAMING_RULE: UtilRequireConstantNamingRuleDef
         const name: string = declarator.id.name;
 
         if (name.startsWith('_')) {
+          continue;
+        }
+
+        const typeAnnotationName = getTypeAnnotationIdentifierName(declarator);
+
+        if (typeAnnotationName !== undefined && exemptTypeAnnotations.has(typeAnnotationName)) {
           continue;
         }
 

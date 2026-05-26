@@ -11,3 +11,4 @@ export * from './read.model.function';
 export * from './update.model.function';
 export * from './delete.model.function';
 export * from './query.model.function';
+export * from './invoke.model.function';

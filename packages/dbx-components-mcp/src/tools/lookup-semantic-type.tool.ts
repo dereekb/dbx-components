@@ -14,7 +14,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import type { SemanticTypeRegistry } from '../registry/semantic-types.js';
+import type { SemanticTypeRegistry } from '@dereekb/dbx-cli';
 import { formatSemanticTypeCatalog, formatSemanticTypeCollision, formatSemanticTypeEntry } from './semantic-type-lookup.formatter.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 

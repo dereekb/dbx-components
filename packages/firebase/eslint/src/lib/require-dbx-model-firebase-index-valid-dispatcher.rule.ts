@@ -1,7 +1,5 @@
 import type { Maybe } from '@dereekb/util';
-import { leadingJsdocFor } from './comments';
-import { parseJsdocComment } from './jsdoc-parser';
-import { parseBooleanTagValue } from './dbx-tag-families';
+import { leadingJsdocFor, parseBooleanTagValue, parseJsdocComment } from '@dereekb/util/eslint';
 import { type AstNode, type ImportRegistry, createImportRegistry, DBX_MODEL_FIREBASE_INDEX_MARKER, DEFAULT_CONSTRAINT_FACTORY_NAMES, FIREBASE_MODULE, getFunctionJsdocAnchor, isImportedFrom, trackImportDeclaration } from './util';
 
 /**

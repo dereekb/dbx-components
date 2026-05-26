@@ -1,5 +1,6 @@
 import { type Argv, type CommandModule } from 'yargs';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
+import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { requireCliContext } from '../context/cli.context';
 import { STANDARD_GLOBAL_OPTION_NAMES } from '../runner/run';
 import { CliError, outputResult } from '../util/output';
@@ -637,33 +638,7 @@ function renderJsonSchemaSection(entry: CliApiManifestEntry): string | undefined
 
   if (entry.paramsValidator) {
     try {
-      // arktype's default `toJsonSchema` throws on any sub-schema that has no
-      // JSON Schema equivalent (custom predicates, morphs, `undefined`/symbol/
-      // bigint units or domains, etc.). Provide targeted fallbacks so help
-      // output stays useful:
-      //   - `predicate` / `morph`: drop the lossy part, keep the JSON-shaped
-      //     base — e.g. `string > 0 & narrow(isFirestoreModelKey)` becomes
-      //     `{ type: 'string', minLength: 1 }`.
-      //   - everything else (e.g. the `undefined` unit in `clearable(T)`):
-      //     return `false` (matches nothing). It's a no-op inside `anyOf`, and
-      //     we strip it below so `T | null | undefined` reads as `T | null`.
-      const raw = entry.paramsValidator.toJsonSchema({
-        fallback: {
-          predicate: (ctx) => ctx.base,
-          morph: (ctx) => ctx.base,
-          // `false` is a valid JSON Schema value ("matches nothing"), but
-          // arktype's TS types reject `false` for the fallback return — cast
-          // through `unknown` to keep the runtime behavior we want.
-          default: (() => false) as unknown as (ctx: unknown) => never
-        }
-      });
-      // arktype's fallback returns boxed schema nodes (objects with a `toJSON()`
-      // method that emits the bare JSON Schema value, e.g. `false`). Round-trip
-      // through JSON to invoke those `toJSON()` callbacks before pruning;
-      // `structuredClone` would not call them.
-      // NOSONAR (typescript:S7784): structuredClone bypasses toJSON()
-      const normalized = JSON.parse(JSON.stringify(raw));
-      const pruned = pruneFalseUnionBranches(normalized);
+      const pruned = arktypeToJsonSchemaForExport(entry.paramsValidator);
       result = `Params Schema (JSON Schema):\n${JSON.stringify(pruned, null, 2)}`;
     } catch {
       const expression = readArktypeExpression(entry);
@@ -683,43 +658,6 @@ function renderArktypeExpressionSection(entry: CliApiManifestEntry): string | un
 
 function readArktypeExpression(entry: CliApiManifestEntry): string | undefined {
   return (entry.paramsValidator as { readonly expression?: string } | undefined)?.expression;
-}
-
-/**
- * Walks a JSON Schema and removes `false` entries from `anyOf` / `oneOf`
- * arrays. `false` schemas match nothing, so dropping them does not change
- * what the schema accepts — it just keeps the rendered output clean when
- * `toJsonSchema` was given a `() => false` fallback for unjsonifiable types
- * like `undefined`.
- *
- * @param value - JSON Schema fragment to clean.
- * @returns A structurally equivalent fragment with `false` branches dropped
- *   from any `anyOf` / `oneOf` arrays.
- */
-function pruneFalseUnionBranches(value: unknown): unknown {
-  let result: unknown = value;
-
-  if (Array.isArray(value)) {
-    result = value.map(pruneFalseUnionBranches);
-  } else if (value && typeof value === 'object') {
-    const out: Record<string, unknown> = {};
-
-    for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
-      if ((key === 'anyOf' || key === 'oneOf') && Array.isArray(raw)) {
-        const filtered = raw.filter((v) => v !== false).map(pruneFalseUnionBranches);
-
-        if (filtered.length > 0) {
-          out[key] = filtered;
-        }
-      } else {
-        out[key] = pruneFalseUnionBranches(raw);
-      }
-    }
-
-    result = out;
-  }
-
-  return result;
 }
 
 interface CallEntryOptions {

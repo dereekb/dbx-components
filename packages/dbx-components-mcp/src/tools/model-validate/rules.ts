@@ -7,8 +7,9 @@
  * re-run rather than silence individual codes.
  */
 
+import type { FirestoreCollectionKind } from '@dereekb/dbx-cli';
 import { attachRemediation } from '../rule-catalog/index.js';
-import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type CrossFileInterfaceEntry, type CrossFileRuleContext, type DeclarationKind, type ExtractedFile, type ExtractedModel, type FirestoreCollectionKind, type RuleOptions, type Violation, type ViolationSeverity } from './types.js';
+import { MAX_FIELD_NAME_LENGTH, ROOT_MODEL_ORDER, SUBCOLLECTION_MODEL_ORDER, type CrossFileInterfaceEntry, type CrossFileRuleContext, type DeclarationKind, type ExtractedFile, type ExtractedModel, type RuleOptions, type Violation, type ViolationSeverity } from './types.js';
 
 // MARK: Entry
 /**

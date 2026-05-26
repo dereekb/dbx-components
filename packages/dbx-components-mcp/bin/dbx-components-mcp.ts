@@ -12,17 +12,7 @@
  */
 
 import packageJson from '../package.json' with { type: 'json' };
-import { runForgeFieldsScanCli } from '../src/scan/forge-fields-cli.js';
-import { runScanCli } from '../src/scan/cli.js';
-import { runUiComponentsScanCli } from '../src/scan/ui-components-cli.js';
-import { runCssUtilitiesScanCli } from '../src/scan/css-utilities-cli.js';
-import { runModelFirebaseIndexScanCli } from '../src/scan/model-firebase-index-cli.js';
-import { runModelSnapshotFieldsScanCli } from '../src/scan/model-snapshot-fields-cli.js';
-import { runUtilsScanCli } from '../src/scan/utils-cli.js';
-import { runActionsScanCli } from '../src/scan/actions-cli.js';
-import { runFiltersScanCli } from '../src/scan/filters-cli.js';
-import { runPipesScanCli } from '../src/scan/pipes-cli.js';
-import { runDbxDocsUiExamplesScanCli } from '../src/scan/dbx-docs-ui-examples-cli.js';
+import { runForgeFieldsScanCli, runScanCli, runUiComponentsScanCli, runCssUtilitiesScanCli, runModelFirebaseIndexScanCli, runModelSnapshotFieldsScanCli, runUtilsScanCli, runActionsScanCli, runFiltersScanCli, runPipesScanCli, runDbxDocsUiExamplesScanCli } from '@dereekb/dbx-cli';
 import { runGenerateFirestoreIndexesCli } from '@dereekb/dbx-cli/firestore-indexes';
 import { runStdioServer } from '../src/server.js';
 

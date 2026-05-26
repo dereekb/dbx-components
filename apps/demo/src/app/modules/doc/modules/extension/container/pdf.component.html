@@ -17,5 +17,9 @@
       <p>Slot capacity defaults to `1` for single-file slots and to `maxFiles` when set. Once the slot reaches capacity its `dbx-file-upload` is hidden — the user must remove an existing entry before adding more.</p>
       <doc-pdf-merge-editor-max-files-example></doc-pdf-merge-editor-max-files-example>
     </doc-feature-example>
+    <doc-feature-example header="dbx-pdf-merge-editor with compression + size limits" hint="Drop large phone photos to see them downscale on upload. PNGs are converted to JPEG. Cross the 2 MB warn or 8 MB error threshold to see the banner.">
+      <p>Configure the editor with `imageCompression` to downscale and (optionally) convert images on upload, and `outputSizeLimits` to surface warn/error banners. Crossing `errorBytes` blocks Preview/Download via the store's validity gate. Each compressed entry shows a "Resized" / "Converted PNG → JPEG" chip with the original byte count.</p>
+      <doc-pdf-merge-editor-config-example></doc-pdf-merge-editor-config-example>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

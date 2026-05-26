@@ -103,7 +103,7 @@ const DEFAULT_KNOWN_COMPANIONS: readonly string[] = ['Category', 'Kind', 'Tags',
 
 /**
  * Allowed values for `@dbxUtilKind`. Mirrors the enum in
- * `packages/dbx-components-mcp/src/scan/utils-extract.ts`.
+ * `packages/dbx-cli/src/lib/mcp-scan/scan/utils-extract.ts`.
  */
 const DEFAULT_ALLOWED_KINDS: readonly string[] = ['function', 'class', 'const', 'factory'];
 
@@ -151,7 +151,7 @@ export interface UtilRequireDbxUtilCompanionTagsRuleDefinition {
 /**
  * ESLint rule enforcing that exports tagged `@dbxUtil` carry the registry-required companion tags
  * with valid value formats. Mirrors the scanner schema at
- * `packages/dbx-components-mcp/src/scan/utils-extract.ts` so violations surface at lint time
+ * `packages/dbx-cli/src/lib/mcp-scan/scan/utils-extract.ts` so violations surface at lint time
  * instead of at manifest-regeneration time.
  *
  * Checks:

@@ -149,6 +149,57 @@ function getInjectTokenName(param: AstNode): Maybe<string> {
 }
 
 /**
+ * Returns the first class decorator that is both in `classDecorators` and imported from '@nestjs/common'.
+ *
+ * @param classNode - The ClassDeclaration AST node.
+ * @param classDecorators - Class decorator names that trigger this rule.
+ * @param nestjsImports - Identifiers known to be imported from '@nestjs/common'.
+ * @returns The matched decorator node, or undefined when none matches.
+ */
+function findMatchedClassDecorator(classNode: AstNode, classDecorators: ReadonlySet<string>, nestjsImports: ReadonlySet<string>): AstNode {
+  const decorators = classNode.decorators;
+  if (!decorators || decorators.length === 0) return undefined;
+  return decorators.find((d: AstNode) => {
+    const name = getDecoratorName(d);
+    return classDecorators.has(name) && nestjsImports.has(name);
+  });
+}
+
+/**
+ * Returns the constructor parameter list of a class declaration, if a constructor is present.
+ *
+ * @param classNode - The ClassDeclaration AST node.
+ * @returns The parameter list, or undefined when there's no constructor.
+ */
+function findConstructorParams(classNode: AstNode): AstNode {
+  const constructor = classNode.body.body.find((member: AstNode) => member.type === 'MethodDefinition' && member.kind === 'constructor');
+  return constructor?.value.params;
+}
+
+/**
+ * Builds the fixer for converting a type-only import into a value import so it
+ * can be used as an `@Inject()` token at runtime.
+ *
+ * @param fixer - The ESLint fixer instance.
+ * @param typeImportInfo - Info about the type-only import to convert.
+ * @returns The fixer command produced by `fixer.removeRange`.
+ */
+function buildTypeOnlyImportFix(fixer: AstNode, typeImportInfo: TypeOnlyImportInfo): AstNode {
+  let fixResult: AstNode;
+  if (typeImportInfo.isDeclarationLevel) {
+    // `import type { X } from '...'` → `import { X } from '...'`
+    const importKeywordEnd = typeImportInfo.declaration.range[0] + 'import '.length;
+    fixResult = fixer.removeRange([importKeywordEnd, importKeywordEnd + 'type '.length]);
+  } else {
+    // `import { type X }` → `import { X }`
+    const specRange = typeImportInfo.specifier.range;
+    const importedRange = typeImportInfo.specifier.imported.range;
+    fixResult = fixer.removeRange([specRange[0], importedRange[0]]);
+  }
+  return fixResult;
+}
+
+/**
  * ESLint rule definition for require-nest-inject.
  */
 export interface NestjsRequireInjectRuleDefinition {
@@ -274,98 +325,72 @@ export const NESTJS_REQUIRE_INJECT_RULE: NestjsRequireInjectRuleDefinition = {
         }
       },
       ClassDeclaration(classNode: AstNode) {
-        const decorators = classNode.decorators;
-        const matchedClassDecorator =
-          decorators && decorators.length > 0
-            ? decorators.find((d: AstNode) => {
-                const name = getDecoratorName(d);
-                return classDecorators.has(name) && nestjsImports.has(name);
-              })
-            : undefined;
-        const constructor = matchedClassDecorator ? classNode.body.body.find((member: AstNode) => member.type === 'MethodDefinition' && member.kind === 'constructor') : undefined;
-        const params = constructor?.value.params;
-        const shouldCheckParams = Boolean(matchedClassDecorator && params && params.length > 0);
+        const matchedClassDecorator = findMatchedClassDecorator(classNode, classDecorators, nestjsImports);
+        if (!matchedClassDecorator) return;
 
-        if (shouldCheckParams) {
-          const classDecoratorName = getDecoratorName(matchedClassDecorator);
+        const params = findConstructorParams(classNode);
+        if (!params || params.length === 0) return;
 
-          for (const param of params) {
-            const paramDecoratorsOnNode = param.decorators;
-            const hasValidDecorator = paramDecoratorsOnNode && paramDecoratorsOnNode.length > 0 && paramDecoratorsOnNode.some((d: AstNode) => paramDecorators.has(getDecoratorName(d)));
-
-            if (hasValidDecorator) {
-              // Has @Inject() — check if the injection token is a type-only import
-              for (const decorator of paramDecoratorsOnNode) {
-                const tokenName = getInjectTokenFromDecorator(decorator);
-
-                if (tokenName) {
-                  const typeImportInfo = typeOnlyImports.get(tokenName);
-
-                  if (typeImportInfo) {
-                    context.report({
-                      node: decorator,
-                      messageId: 'typeOnlyInjectToken',
-                      data: { token: tokenName },
-                      fix: (fixer: AstNode) => {
-                        let fixResult: AstNode;
-
-                        if (typeImportInfo.isDeclarationLevel) {
-                          // `import type { X } from '...'` → `import { X } from '...'`
-                          // Remove 'type ' after 'import '
-                          const importKeywordEnd = typeImportInfo.declaration.range[0] + 'import '.length;
-                          fixResult = fixer.removeRange([importKeywordEnd, importKeywordEnd + 'type '.length]);
-                        } else {
-                          // `import { type X }` → `import { X }`
-                          // The specifier range includes 'type X', so remove 'type ' prefix
-                          const specRange = typeImportInfo.specifier.range;
-                          const importedRange = typeImportInfo.specifier.imported.range;
-                          fixResult = fixer.removeRange([specRange[0], importedRange[0]]);
-                        }
-
-                        return fixResult;
-                      }
-                    });
-
-                    // Remove from tracking so we don't report the same import twice
-                    typeOnlyImports.delete(tokenName);
-                  }
-                }
-              }
-            } else {
-              // Missing @Inject() entirely
-              const tokenName = getInjectTokenName(param);
-
-              context.report({
-                node: param,
-                messageId: 'missingInject',
-                data: {
-                  name: getParamName(param),
-                  classDecorator: classDecoratorName
-                },
-                fix: tokenName
-                  ? (fixer: AstNode) => {
-                      const fixes = [];
-
-                      fixes.push(fixer.insertTextBefore(param, `@Inject(${tokenName}) `));
-
-                      if (!nestjsImports.has('Inject') && nestjsImportNode) {
-                        const lastSpecifier = nestjsImportNode.specifiers[nestjsImportNode.specifiers.length - 1];
-
-                        if (lastSpecifier) {
-                          fixes.push(fixer.insertTextAfter(lastSpecifier, ', Inject'));
-                        }
-
-                        nestjsImports.add('Inject');
-                      }
-
-                      return fixes;
-                    }
-                  : undefined
-              });
-            }
-          }
+        const classDecoratorName = getDecoratorName(matchedClassDecorator);
+        for (const param of params) {
+          processConstructorParam(param, classDecoratorName);
         }
       }
     };
+
+    function processConstructorParam(param: AstNode, classDecoratorName: string): void {
+      const paramDecoratorsOnNode = param.decorators;
+      const hasValidDecorator = paramDecoratorsOnNode && paramDecoratorsOnNode.length > 0 && paramDecoratorsOnNode.some((d: AstNode) => paramDecorators.has(getDecoratorName(d)));
+
+      if (hasValidDecorator) {
+        for (const decorator of paramDecoratorsOnNode) {
+          reportTypeOnlyTokenIfAny(decorator);
+        }
+      } else {
+        reportMissingInject(param, classDecoratorName);
+      }
+    }
+
+    function reportTypeOnlyTokenIfAny(decorator: AstNode): void {
+      const tokenName = getInjectTokenFromDecorator(decorator);
+      if (!tokenName) return;
+      const typeImportInfo = typeOnlyImports.get(tokenName);
+      if (!typeImportInfo) return;
+
+      context.report({
+        node: decorator,
+        messageId: 'typeOnlyInjectToken',
+        data: { token: tokenName },
+        fix: (fixer: AstNode) => buildTypeOnlyImportFix(fixer, typeImportInfo)
+      });
+
+      // Remove from tracking so we don't report the same import twice
+      typeOnlyImports.delete(tokenName);
+    }
+
+    function reportMissingInject(param: AstNode, classDecoratorName: string): void {
+      const tokenName = getInjectTokenName(param);
+      context.report({
+        node: param,
+        messageId: 'missingInject',
+        data: {
+          name: getParamName(param),
+          classDecorator: classDecoratorName
+        },
+        fix: tokenName ? (fixer: AstNode) => buildMissingInjectFix(fixer, param, tokenName) : undefined
+      });
+    }
+
+    function buildMissingInjectFix(fixer: AstNode, param: AstNode, tokenName: string): AstNode {
+      const fixes = [fixer.insertTextBefore(param, `@Inject(${tokenName}) `)];
+      if (!nestjsImports.has('Inject') && nestjsImportNode) {
+        const lastSpecifier = nestjsImportNode.specifiers[nestjsImportNode.specifiers.length - 1];
+        if (lastSpecifier) {
+          fixes.push(fixer.insertTextAfter(lastSpecifier, ', Inject'));
+        }
+        nestjsImports.add('Inject');
+      }
+      return fixes;
+    }
   }
 };

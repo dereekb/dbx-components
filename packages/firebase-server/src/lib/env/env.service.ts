@@ -48,6 +48,15 @@ export abstract class FirebaseServerEnvService {
    */
   abstract readonly appApiUrl: Maybe<WebsiteUrl>;
   /**
+   * The full MCP endpoint URL (e.g., 'https://api.example.com/mcp').
+   *
+   * When set, advertised verbatim in `/.well-known/oauth-protected-resource` and
+   * used to derive the OIDC bearer middleware's `WWW-Authenticate`
+   * `resource_metadata` hint. When omitted, modules fall back to deriving the
+   * URL from `appApiUrl` / `appUrl`.
+   */
+  abstract readonly appMcpUrl: Maybe<WebsiteUrl>;
+  /**
    * The full webhook URL (e.g., 'https://app.example.com/webhook').
    */
   abstract readonly appWebhookUrl: Maybe<WebsiteUrl>;

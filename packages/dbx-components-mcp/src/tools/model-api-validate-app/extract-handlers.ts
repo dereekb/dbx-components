@@ -33,7 +33,8 @@ const VERB_TOKENS: ReadonlyArray<{ readonly token: string; readonly verb: CrudVe
   { token: 'Read', verb: 'read' },
   { token: 'Update', verb: 'update' },
   { token: 'Delete', verb: 'delete' },
-  { token: 'Query', verb: 'query' }
+  { token: 'Query', verb: 'query' },
+  { token: 'Invoke', verb: 'invoke' }
 ];
 
 export interface HandlerExtractionResult {

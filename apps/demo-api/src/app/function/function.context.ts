@@ -13,6 +13,8 @@ import {
   type OnCallCreateModelMap,
   type OnCallQueryModelFunction,
   type OnCallQueryModelMap,
+  type OnCallInvokeModelFunction,
+  type OnCallInvokeModelMap,
   type OnScheduleWithNestContext,
   type OnCallDevelopmentFunction,
   type OnCallDevelopmentFunctionMap,
@@ -118,6 +120,9 @@ export type DemoOnCallDeleteModelMap = OnCallDeleteModelMap<DemoApiNestContext, 
 
 export type DemoQueryModelFunction<I extends OnCallQueryModelRequestParams, O> = OnCallQueryModelFunction<DemoApiNestContext, I, O>;
 export type DemoOnCallQueryModelMap = OnCallQueryModelMap<DemoApiNestContext, DemoCallModelTypes>;
+
+export type DemoInvokeModelFunction<I, O = unknown> = OnCallInvokeModelFunction<DemoApiNestContext, I, O>;
+export type DemoOnCallInvokeModelMap = OnCallInvokeModelMap<DemoApiNestContext, DemoCallModelTypes>;
 
 // MARK: Schedule Functions
 export type DemoScheduleFunction = OnScheduleWithNestContext<DemoApiNestContext>;

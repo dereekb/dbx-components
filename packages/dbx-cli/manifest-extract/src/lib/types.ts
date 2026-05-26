@@ -10,7 +10,7 @@
  * `@dereekb/dbx-cli/manifest-extract`.
  */
 
-export type CrudVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'standalone';
+export type CrudVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'invoke' | 'standalone';
 
 export interface CrudEntryDocField {
   readonly name: string;
@@ -132,6 +132,11 @@ export interface ModelExtractionInterface {
   readonly hasDbxModelTag: boolean;
   readonly extendsNames: readonly string[];
   readonly props: readonly ModelExtractionInterfaceProp[];
+  /**
+   * Closed-enum read posture from `@dbxModelRead <level>` (`system` / `owner` / `admin-only`
+   * / `permissions`). Absent when the interface omits the tag or declares an invalid value.
+   */
+  readonly dbxModelRead?: 'system' | 'owner' | 'admin-only' | 'permissions';
 }
 
 /**
@@ -244,4 +249,25 @@ export interface ModelExtraction {
   readonly converters: readonly ModelExtractionConverter[];
   readonly enums: readonly ModelExtractionEnum[];
   readonly modelGroups: readonly ModelExtractionGroup[];
+  /**
+   * `@dbxModelServiceFactory <modelType>`-tagged variable exports found in this file. The
+   * orchestrator joins these onto matching model entries by `modelType` so the runtime
+   * manifest can surface the implementing factory alongside each model.
+   */
+  readonly serviceFactories: readonly ModelExtractionServiceFactory[];
+}
+
+/**
+ * One `@dbxModelServiceFactory <modelType>`-tagged variable export.
+ */
+export interface ModelExtractionServiceFactory {
+  /**
+   * Canonical model-type string from the tag value (camelCase, e.g. `guestbook`).
+   * Invalid values are silently dropped at scan time.
+   */
+  readonly modelType: string;
+  /**
+   * Name of the exported binding (e.g. `guestbookFirebaseModelServiceFactory`).
+   */
+  readonly exportName: string;
 }

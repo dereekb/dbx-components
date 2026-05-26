@@ -44,6 +44,7 @@ export const guestbookIdentity = firestoreModelIdentity('guestbook', 'gb');
  * A guestbook record that owns a list of {@link GuestbookEntry} signatures.
  *
  * @dbxModel
+ * @dbxModelRead permissions
  */
 export interface Guestbook {
   /**
@@ -80,7 +81,7 @@ export interface Guestbook {
   cby?: Maybe<ProfileId>;
 }
 
-export type GuestbookRoles = 'admin' | 'subscribeToNotifications' | GrantedReadRole;
+export type GuestbookRoles = 'admin' | 'subscribeToNotifications' | 'publish' | GrantedReadRole;
 
 export class GuestbookDocument extends AbstractFirestoreDocument<Guestbook, GuestbookDocument, typeof guestbookIdentity> {
   get modelIdentity() {
@@ -134,6 +135,7 @@ export const guestbookEntryIdentity = firestoreModelIdentity(guestbookIdentity, 
  * A signed entry in a {@link Guestbook}.
  *
  * @dbxModel
+ * @dbxModelRead owner
  */
 export interface GuestbookEntry extends UserRelated, UserRelatedById {
   /**

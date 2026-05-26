@@ -1,9 +1,10 @@
-import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseQueryFunction, type AbstractSubscribeToNotificationBoxParams, type TargetModelParams, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams, type OnCallQueryModelResult } from '@dereekb/firebase';
+import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseQueryFunction, type AbstractSubscribeToNotificationBoxParams, abstractSubscribeToNotificationBoxParamsType, type TargetModelParams, targetModelParamsType, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams, type OnCallQueryModelResult } from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
 import { type Guestbook, type GuestbookEntry, type GuestbookTypes } from './guestbook';
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 import { type GuestbookKey } from './guestbook.id';
+import { type ProfileId } from '../profile';
 
 export const GUESTBOOK_NAME_MAX_LENGTH = 40;
 
@@ -13,6 +14,7 @@ export const GUESTBOOK_ENTRY_SIGNED_MAX_LENGTH = 40;
 export interface CreateGuestbookParams {
   readonly name: string;
   readonly published?: Maybe<boolean>;
+  readonly cby?: Maybe<ProfileId>;
 }
 
 export const createGuestbookParamsType = type({
@@ -40,13 +42,20 @@ export const insertGuestbookEntryParamsType = guestbookEntryParamsType.merge({
   'published?': clearable('boolean')
 }) as Type<InsertGuestbookEntryParams>;
 
-export type LikeGuestbookEntryParams = TargetModelParams;
+export interface LikeGuestbookEntryParams extends TargetModelParams {}
 
-export { targetModelParamsType as likeGuestbookEntryParamsType } from '@dereekb/firebase';
+export const likeGuestbookEntryParamsType = targetModelParamsType as Type<LikeGuestbookEntryParams>;
 
-export type SubscribeToGuestbookNotificationsParams = AbstractSubscribeToNotificationBoxParams;
+/**
+ * Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.
+ */
+export interface PublishGuestbookParams extends TargetModelParams {}
 
-export { abstractSubscribeToNotificationBoxParamsType as subscribeToGuestbookNotificationsParamsType } from '@dereekb/firebase';
+export const publishGuestbookParamsType = targetModelParamsType as Type<PublishGuestbookParams>;
+
+export interface SubscribeToGuestbookNotificationsParams extends AbstractSubscribeToNotificationBoxParams {}
+
+export const subscribeToGuestbookNotificationsParamsType = abstractSubscribeToNotificationBoxParamsType as Type<SubscribeToGuestbookNotificationsParams>;
 
 // MARK: Query
 /**
@@ -60,7 +69,10 @@ export interface QueryGuestbooksParams extends OnCallQueryModelRequestParams {
 }
 
 /**
- * Query parameters for searching guestbook entries.
+ * Query parameters for searching guestbook entries for one guestbook.
+ *
+ * Used with the default `guestbookEntry.query._` specifier — for cross-guestbook
+ * collection-group queries, see {@link QueryAllGuestbookEntriesParams}.
  */
 export interface QueryGuestbookEntriesParams extends OnCallQueryModelRequestParams {
   /**
@@ -73,6 +85,49 @@ export interface QueryGuestbookEntriesParams extends OnCallQueryModelRequestPara
   readonly published?: boolean;
 }
 
+/**
+ * Query parameters for searching GuestbookEntry across all guestbooks via the collection group.
+ *
+ * Used with the `guestbookEntry.query.entries` specifier — unlike
+ * {@link QueryGuestbookEntriesParams}, the parent guestbook key is NOT required.
+ */
+export interface QueryAllGuestbookEntriesParams extends OnCallQueryModelRequestParams {
+  /**
+   * Filter by published status. When omitted, returns all entries the caller is allowed to see
+   * (server-side admin gate may restrict non-admins to `published: true`).
+   */
+  readonly published?: boolean;
+}
+
+// MARK: Invoke
+/**
+ * Parameters for the `guestbookEntry / invoke / allPublishedEntries` RPC.
+ *
+ * Server-side equivalent of the client-side
+ * {@link QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION} composition — paginates
+ * the cross-guestbook query internally and returns one aggregate response. Use
+ * this when the caller wants a single round trip instead of driving pagination.
+ */
+export interface AllPublishedGuestbookEntriesParams {
+  /**
+   * Cap the number of entries returned. The server enforces an additional hard upper bound.
+   */
+  readonly limit?: Maybe<number>;
+}
+
+export const allPublishedGuestbookEntriesParamsType = type({
+  'limit?': clearable('number > 0')
+}) as Type<AllPublishedGuestbookEntriesParams>;
+
+/**
+ * Result of an all-published-entries invoke.
+ */
+export interface AllPublishedGuestbookEntriesResult {
+  readonly count: number;
+  readonly entries: ReadonlyArray<GuestbookEntry>;
+  readonly hitLimit: boolean;
+}
+
 export type GuestbookFunctionTypeMap = {};
 
 export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<GuestbookFunctionTypeMap> = {};
@@ -82,6 +137,7 @@ export type GuestbookModelCrudFunctionsConfig = {
     create: CreateGuestbookParams;
     update: {
       subscribeToNotifications: SubscribeToGuestbookNotificationsParams;
+      publish: PublishGuestbookParams;
     };
     query: [QueryGuestbooksParams, OnCallQueryModelResult<Guestbook>];
   };
@@ -91,13 +147,19 @@ export type GuestbookModelCrudFunctionsConfig = {
       like: LikeGuestbookEntryParams;
     };
     delete: GuestbookEntryParams;
-    query: [QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];
+    query: {
+      _: [QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];
+      entries: [QueryAllGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];
+    };
+    invoke: {
+      allPublishedEntries: [AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult];
+    };
   };
 };
 
 export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookModelCrudFunctionsConfig, GuestbookTypes> = {
-  guestbook: ['create', 'update:subscribeToNotifications', 'query'],
-  guestbookEntry: ['update:insert,like', 'delete', 'query']
+  guestbook: ['create', 'update:subscribeToNotifications,publish', 'query'],
+  guestbookEntry: ['update:insert,like', 'delete', 'query:_,entries', 'invoke:allPublishedEntries']
 };
 
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory(guestbookFunctionTypeConfigMap, guestbookModelCrudFunctionsConfig);
@@ -107,6 +169,7 @@ export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<Gue
     createGuestbook: ModelFirebaseCreateFunction<CreateGuestbookParams>;
     updateGuestbook: {
       subscribeToNotifications: ModelFirebaseCrudFunction<SubscribeToGuestbookNotificationsParams>;
+      publish: ModelFirebaseCrudFunction<PublishGuestbookParams>;
     };
     queryGuestbook: ModelFirebaseQueryFunction<QueryGuestbooksParams, OnCallQueryModelResult<Guestbook>>;
   };
@@ -116,6 +179,12 @@ export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<Gue
       like: ModelFirebaseCrudFunction<LikeGuestbookEntryParams>;
     };
     deleteGuestbookEntry: ModelFirebaseCrudFunction<GuestbookEntryParams>;
-    queryGuestbookEntry: ModelFirebaseQueryFunction<QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>>;
+    queryGuestbookEntry: {
+      query: ModelFirebaseQueryFunction<QueryGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>>;
+      entries: ModelFirebaseQueryFunction<QueryAllGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>>;
+    };
+    invokeGuestbookEntry: {
+      allPublishedEntries: ModelFirebaseCrudFunction<AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult>;
+    };
   };
 }

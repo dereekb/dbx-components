@@ -3,7 +3,8 @@ import { type TrelloContext } from './trello.factory';
 import { type TrelloBoardId, type TrelloMemberId } from '../trello.type';
 import { type CreateBoardBody, type TrelloBoard, type UpdateBoardBody } from './trello.api.board.type';
 import { type TrelloList } from './trello.api.list.type';
-import { type TrelloCard, type TrelloLabel } from './trello.api.card.type';
+import { type TrelloAction, type TrelloCard, type TrelloLabel } from './trello.api.card.type';
+import { type TrelloActionType } from './trello.api.card';
 import { type TrelloMember } from './trello.api.member.type';
 
 export interface GetBoardInput {
@@ -159,4 +160,45 @@ export type ListBoardMembersFunction = (input: ListBoardMembersInput) => Promise
  */
 export function listBoardMembers(context: TrelloContext): ListBoardMembersFunction {
   return (input) => context.fetchJson(`/boards/${input.boardId}/members`, 'GET');
+}
+
+export interface ListBoardActionsInput {
+  readonly boardId: TrelloBoardId;
+  /**
+   * Comma-separated list of action types to include, or `all`. Examples: `'updateCard:idList'`, `'updateCard:idList,createCard'`.
+   *
+   * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/action-types/
+   */
+  readonly filter?: TrelloActionType;
+  /**
+   * Maximum number of actions to return. Defaults to 50 server-side; max is 1000.
+   */
+  readonly limit?: number;
+  /**
+   * Cursor: return actions before this action id (older). Also accepts an ISO 8601 date string.
+   */
+  readonly before?: string;
+  /**
+   * Cursor: return actions since this action id (newer). Also accepts an ISO 8601 date string.
+   */
+  readonly since?: string;
+}
+
+export type ListBoardActionsFunction = <D = unknown>(input: ListBoardActionsInput) => Promise<ReadonlyArray<TrelloAction<D>>>;
+
+/**
+ * Https://developer.atlassian.com/cloud/trello/rest/api-group-boards/#api-boards-id-actions-get.
+ *
+ * Returns the board action stream. Useful for list-movement audits via `filter: 'updateCard:idList'` paired with
+ * the {@link TrelloUpdateCardIdListActionData} payload type — answers "which cards moved into list X since time Y?".
+ *
+ * @param context - The Trello API context.
+ * @returns Lists actions on a board.
+ */
+export function listBoardActions(context: TrelloContext): ListBoardActionsFunction {
+  return (input) => {
+    const { boardId, ...query } = input;
+    const queryString = makeUrlSearchParams(query);
+    return context.fetchJson(`/boards/${boardId}/actions?${queryString}`, 'GET');
+  };
 }

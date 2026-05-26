@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createActionRegistryFromEntries, type ActionEntryInfo } from '../registry/actions-runtime.js';
+import { createActionRegistryFromEntries, type ActionEntryInfo } from '@dereekb/dbx-cli';
 import { createLookupActionTool } from './lookup-action.tool.js';
 
 const FIXTURE_ENTRIES: readonly ActionEntryInfo[] = [

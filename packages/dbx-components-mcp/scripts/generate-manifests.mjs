@@ -27,6 +27,7 @@ const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = resolve(SCRIPT_DIR, '..');
 const WORKSPACE_ROOT = resolve(PACKAGE_ROOT, '..', '..');
 const ROOT_CONFIG_PATH = resolve(WORKSPACE_ROOT, 'dbx-mcp.config.json');
+const SCAN_ROOT = resolve(WORKSPACE_ROOT, 'packages', 'dbx-cli', 'src', 'lib', 'mcp-scan', 'scan');
 
 // Register ts-node so we can import the canonical TypeScript entry point.
 // Use transpile-only mode + an inline compilerOptions override: the workspace's `tsconfig.base.json`
@@ -42,17 +43,17 @@ process.env.TS_NODE_COMPILER_OPTIONS = JSON.stringify({
 });
 register('ts-node/esm', pathToFileURL(`${WORKSPACE_ROOT}/`));
 
-const { runScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/cli.ts`);
-const { runUiComponentsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/ui-components-cli.ts`);
-const { runForgeFieldsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/forge-fields-cli.ts`);
-const { runPipesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/pipes-cli.ts`);
-const { runUtilsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/utils-cli.ts`);
-const { runModelSnapshotFieldsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/model-snapshot-fields-cli.ts`);
-const { runActionsScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/actions-cli.ts`);
-const { runFiltersScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/filters-cli.ts`);
-const { runDbxDocsUiExamplesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/dbx-docs-ui-examples-cli.ts`);
-const { runCssUtilitiesScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/css-utilities-cli.ts`);
-const { runModelFirebaseIndexScanCli } = await import(`${pathToFileURL(PACKAGE_ROOT).href}/src/scan/model-firebase-index-cli.ts`);
+const { runScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/cli.ts`);
+const { runUiComponentsScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/ui-components-cli.ts`);
+const { runForgeFieldsScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/forge-fields-cli.ts`);
+const { runPipesScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/pipes-cli.ts`);
+const { runUtilsScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/utils-cli.ts`);
+const { runModelSnapshotFieldsScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/model-snapshot-fields-cli.ts`);
+const { runActionsScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/actions-cli.ts`);
+const { runFiltersScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/filters-cli.ts`);
+const { runDbxDocsUiExamplesScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/dbx-docs-ui-examples-cli.ts`);
+const { runCssUtilitiesScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/css-utilities-cli.ts`);
+const { runModelFirebaseIndexScanCli } = await import(`${pathToFileURL(SCAN_ROOT).href}/model-firebase-index-cli.ts`);
 
 /**
  * Bundled manifests stamp a fixed `generatedAt` so the produced JSON is

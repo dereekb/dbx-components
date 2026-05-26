@@ -1168,7 +1168,7 @@ export function zohoCrmApiFetchJsonInput(method: string, body?: Maybe<FetchJsonB
  *
  * @param e - The error to catch and potentially convert.
  * @returns The error data array wrapped as a change object response.
- * @throws Re-throws `e` when it is not a {@link ZohoServerFetchResponseDataArrayError}.
+ * @throws {Error} Re-throws `e` when it is not a {@link ZohoServerFetchResponseDataArrayError}.
  */
 export function zohoCrmCatchZohoCrmChangeObjectLikeResponseError<R extends ZohoCrmChangeObjectLikeResponse<any>>(e: unknown): R {
   let result: R;

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, STORAGE_FILE_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, StorageFileInitializeFromUploadService, appStorageFileModuleMetadata } from '@dereekb/firebase-server/model';
+import { STORAGE_FILE_PURPOSE_UPLOAD_POLICIES } from 'demo-firebase';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { DemoApiActionModule } from '../../firebase/action.module';
 import { demoStorageFileUploadServiceFactory } from './storagefile.upload.service';
@@ -35,7 +36,8 @@ export class StorageFileDependencyModule {}
  */
 @Module(
   appStorageFileModuleMetadata({
-    dependencyModule: StorageFileDependencyModule
+    dependencyModule: StorageFileDependencyModule,
+    storageFileSignedUploadPolicies: STORAGE_FILE_PURPOSE_UPLOAD_POLICIES
   })
 )
 export class StorageFileModule {}

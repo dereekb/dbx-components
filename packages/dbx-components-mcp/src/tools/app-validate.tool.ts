@@ -38,7 +38,7 @@ import { attachRemediation, type RemediationHint } from './rule-catalog/index.js
 import { inspectAppStorageFiles, validateAppStorageFiles } from './storagefile-m-validate-app/index.js';
 import { inspectAppNotifications, validateAppNotifications } from './notification-m-validate-app/index.js';
 import { inspectAppFixtures, validateAppFixtures, type FixtureDiagnostic } from './model-fixture-shared/index.js';
-import { RESERVED_MODEL_FOLDERS } from './model-validate-folder/types.js';
+import { FIREBASE_MODELS, getDownstreamCatalog, RESERVED_MODEL_FOLDERS } from '@dereekb/dbx-cli';
 import { inspectFolder as inspectModelFolder, validateModelFolders } from './model-validate-folder/index.js';
 import { inspectFolder as inspectSystemFolder, validateSystemFolders } from './system-m-validate-folder/index.js';
 import { checkManifestCompositeKeyFrom, checkManifestIdentityDuplicates } from './model-validate/manifest-rules.js';
@@ -47,8 +47,6 @@ import { validateAppModelApi } from './model-api-validate-app/index.js';
 import { validateModelTestApp } from './model-test-validate-app/index.js';
 import { discoverSpecFilesByGroup } from './model-test-shared/index.js';
 import { extractComponentModels } from './model-list-component/extract.js';
-import { FIREBASE_MODELS } from '../registry/firebase-models.js';
-import { getDownstreamCatalog } from '../registry/downstream-models-runtime.js';
 import { buildModelFirebaseIndexManifest, createModelFirebaseIndexRegistryFromEntries, generateFirestoreIndexesJson, toModelFirebaseIndexEntryInfo, type FirestoreIndexesJson } from '@dereekb/dbx-cli/firestore-indexes';
 
 const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest' | 'model_api' | 'firebase_index' | 'asset' | 'model_test'";

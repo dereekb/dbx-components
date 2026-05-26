@@ -8,7 +8,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ACTION_ROLE_ORDER, type ActionEntryRole, type ActionRegistry } from '../registry/actions-runtime.js';
+import { ACTION_ROLE_ORDER, type ActionEntryRole, type ActionRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const ACTIONS_URI = 'dbx://action/entries';

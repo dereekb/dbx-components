@@ -7,8 +7,7 @@
  * considered" section. The lookup tool reuses {@link formatArchetypeEntry}.
  */
 
-import type { FirebaseModel } from '../../registry/firebase-models.js';
-import type { ModelArchetypeInfo } from '../../registry/archetypes.js';
+import { type FirebaseModel, type ModelArchetypeInfo } from '@dereekb/dbx-cli';
 import type { ScoredArchetype } from './score.js';
 import type { ResolvedAxes, ResolvedAxisAlternatives } from './axes.js';
 

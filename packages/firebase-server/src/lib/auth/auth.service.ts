@@ -1,4 +1,5 @@
 import type * as admin from 'firebase-admin';
+import { timingSafeEqual } from 'node:crypto';
 import {
   type FirebaseAuthContextInfo,
   type FirebaseAuthDetails,
@@ -10,6 +11,7 @@ import {
   FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY,
   FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY,
   FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY,
+  FIREBASE_SERVER_AUTH_CLAIMS_RESET_EXPIRES_AT_KEY,
   FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR,
   FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR,
   FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR
@@ -17,7 +19,7 @@ import {
 import { type Milliseconds, filterUndefinedValues, AUTH_ADMIN_ROLE, type AuthClaims, type AuthRoleSet, cachedGetter, filterNullAndUndefinedValues, type ArrayOrValue, type AuthRole, forEachKeyValue, type ObjectMap, type AuthClaimsUpdate, asSet, KeyValueTypleValueFilter, type AuthClaimsObject, type Maybe, AUTH_TOS_SIGNED_ROLE, type EmailAddress, type E164PhoneNumber, randomNumberFactory, type PasswordString, isThrottled } from '@dereekb/util';
 import { assertIsContextWithAuthData, type CallableContextWithAuthData } from '../function/context';
 import { type AuthDataRef, firebaseAuthTokenFromDecodedIdToken } from './auth.context';
-import { hoursToMs, toISODateString } from '@dereekb/date';
+import { hoursToMs, minutesToMs, toISODateString } from '@dereekb/date';
 import { getAuthUserOrUndefined } from './auth.util';
 import { type AuthUserIdentifier } from '@dereekb/dbx-core';
 import { FirebaseServerAuthNewUserSendSetupDetailsNoSetupConfigError, FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError, FirebaseServerAuthPasswordResetInvalidCodeError, FirebaseServerAuthPasswordResetNoResetConfigError, FirebaseServerAuthPasswordResetSendOnceError, FirebaseServerAuthPasswordResetThrottleError, FirebaseServerAuthUserBadInputError, FirebaseServerAuthUserExistsError } from './auth.service.error';
@@ -240,9 +242,12 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
 
   async beginResetPassword(): Promise<FirebaseServerAuthResetUserPasswordClaims> {
     const password = this._generateResetPasswordKey();
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + this._resetCodeExpiresInMs());
     const passwordClaimsData: FirebaseServerAuthResetUserPasswordClaims = {
       [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: password,
-      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: toISODateString(new Date())
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: toISODateString(now),
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_EXPIRES_AT_KEY]: toISODateString(expiresAt)
     };
 
     // set the claims
@@ -252,6 +257,16 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     await this.updateUser({ password });
 
     return passwordClaimsData;
+  }
+
+  /**
+   * Returns the TTL (in milliseconds) for newly-generated reset codes. Subclasses may override
+   * to customize expiry.
+   *
+   * @returns The TTL in milliseconds for newly-generated reset codes.
+   */
+  protected _resetCodeExpiresInMs(): Milliseconds {
+    return DEFAULT_RESET_CODE_EXPIRES_IN;
   }
 
   async loadResetPasswordClaims<T extends FirebaseServerAuthResetUserPasswordClaims = FirebaseServerAuthResetUserPasswordClaims>(): Promise<Maybe<T>> {
@@ -267,7 +282,8 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     // clear password reset claims
     await this.updateClaims({
       [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: null,
-      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: null
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: null,
+      [FIREBASE_SERVER_AUTH_CLAIMS_RESET_EXPIRES_AT_KEY]: null
     });
 
     return record;
@@ -1154,11 +1170,20 @@ export interface FirebaseServerUserPasswordResetService<D = unknown, U extends F
 }
 
 /**
- * Default throttle duration (1 hour) between reset content sends to prevent spam.
+ * Default throttle duration (60 seconds) between reset content re-sends to prevent spam while
+ * remaining responsive for legitimate users who didn't receive the first email.
  *
  * Used by {@link AbstractFirebaseServerUserPasswordResetService.sendResetContent} to rate-limit delivery.
  */
-export const DEFAULT_RESET_COM_THROTTLE_TIME = hoursToMs(1);
+export const DEFAULT_RESET_COM_THROTTLE_TIME = minutesToMs(1);
+
+/**
+ * Default lifetime (15 minutes) of a reset code before it expires.
+ *
+ * Used by {@link AbstractFirebaseServerAuthUserContext.beginResetPassword} to set
+ * `resetExpiresAt` in the user's claims.
+ */
+export const DEFAULT_RESET_CODE_EXPIRES_IN = minutesToMs(15);
 
 /**
  * Base implementation of {@link FirebaseServerUserPasswordResetService} that handles reset initiation,
@@ -1211,10 +1236,13 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
     const claims = await userContext.beginResetPassword();
 
     if (sendResetContent) {
+      // beginResetPassword() just refreshed the claims (including resetCommunicationAt = now),
+      // so the throttle window from any previous send no longer applies — this is the first send
+      // of the newly-rotated code and must not be self-throttled.
       await this.sendResetContent(resolvedUid, {
         data,
         sendResetDetailsOnce,
-        ignoreSendThrottleTime: sendResetIgnoreThrottle,
+        ignoreSendThrottleTime: sendResetIgnoreThrottle ?? true,
         throwErrors: sendResetThrowErrors,
         sendDetailsInTestEnvironment
       });
@@ -1275,7 +1303,8 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
         userContext,
         claims: {
           resetPassword: claims.resetPassword,
-          resetCommunicationAt: claims.resetCommunicationAt
+          resetCommunicationAt: claims.resetCommunicationAt,
+          resetExpiresAt: claims.resetExpiresAt
         },
         data: config?.data,
         sendDetailsInTestEnvironment: config?.sendDetailsInTestEnvironment
@@ -1301,8 +1330,21 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
   async completePasswordReset(uid: FirebaseAuthUserId, input: FirebaseServerAuthCompletePasswordResetInput): Promise<admin.auth.UserRecord> {
     const userContext = this.authService.userContext(uid);
     const claims = await userContext.loadResetPasswordClaims();
+    const storedCode = claims?.resetPassword;
+    const expiresAt = claims?.resetExpiresAt;
 
-    if (claims?.resetPassword !== input.resetPassword) {
+    // Reject if no active reset OR the stored code is missing/wrong length OR the code is expired.
+    // All failure cases throw the same opaque error so callers cannot distinguish them.
+    if (!storedCode || !expiresAt || storedCode.length !== input.resetPassword.length || new Date(expiresAt).getTime() <= Date.now()) {
+      throw new FirebaseServerAuthPasswordResetInvalidCodeError();
+    }
+
+    // Constant-time comparison to avoid leaking timing information about how many leading
+    // characters of the provided code matched. Lengths are equal per the guard above.
+    const storedBuf = Buffer.from(storedCode);
+    const inputBuf = Buffer.from(input.resetPassword);
+
+    if (!timingSafeEqual(storedBuf, inputBuf)) {
       throw new FirebaseServerAuthPasswordResetInvalidCodeError();
     }
 

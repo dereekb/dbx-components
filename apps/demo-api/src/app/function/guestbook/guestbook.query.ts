@@ -4,7 +4,6 @@ import { executeOnCallQuery, resolveAdminOnlyValue, withApiDetails, type OnCallQ
 import { type DemoQueryModelFunction, type DemoApiNestContext } from '../function.context';
 
 export const guestbookQuery: DemoQueryModelFunction<QueryGuestbooksParams, OnCallQueryModelResult<Guestbook>> = withApiDetails({
-  mcp: { description: 'Query guestbooks with optional filtering by published status' },
   fn: async (request: OnCallQueryModelRequest<DemoApiNestContext, QueryGuestbooksParams>) => {
     const { nest, data } = request;
 

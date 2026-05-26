@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { FirebaseModel } from '../registry/firebase-models.js';
+import type { FirebaseModel } from '@dereekb/dbx-cli';
 import { buildModelHierarchy, renderModelHierarchy, type FlatHierarchyEntry, type HierarchyNode, type HierarchyResult } from './model-hierarchy.formatter.js';
 
 function model(input: { readonly name: string; readonly identityConst: string; readonly modelType?: string; readonly prefix?: string; readonly parentIdentityConst?: string; readonly modelGroup?: string; readonly sourcePackage?: string; readonly collectionKind?: FirebaseModel['collectionKind'] }): FirebaseModel {

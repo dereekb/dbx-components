@@ -1,21 +1,32 @@
-import { type ModuleMetadata } from '@nestjs/common';
+import { type InjectionToken, type ModuleMetadata } from '@nestjs/common';
 import { type Maybe } from '@dereekb/util';
 import { ConfigModule } from '@nestjs/config';
+import { type StorageFilePurposeUploadPolicy } from '@dereekb/firebase';
 import { BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, type BaseStorageFileServerActionsContext, STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, storageFileServerActions, StorageFileServerActions, type StorageFileServerActionsContext } from './storagefile.action.server';
 import { StorageFileInitializeFromUploadService } from './storagefile.upload.service';
 import { STORAGE_FILE_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, storageFileInitServerActions, StorageFileInitServerActions, type StorageFileInitServerActionsContextConfig } from './storagefile.action.server.init';
 
+/**
+ * NestJS injection token for the per-purpose `StorageFilePurposeUploadPolicy[]`
+ * registry that the `createStorageFileSignedUploadUrl` factory consults.
+ *
+ * Apps bind this token via {@link appStorageFileModuleMetadata} by passing
+ * `storageFileSignedUploadPolicies` in {@link ProvideAppStorageFileMetadataConfig}.
+ */
+export const STORAGE_FILE_SIGNED_UPLOAD_POLICIES_TOKEN: InjectionToken = 'STORAGE_FILE_SIGNED_UPLOAD_POLICIES';
+
 // MARK: Provider Factories
 /**
  * Factory that assembles the full {@link StorageFileServerActionsContext} by combining
- * the base context with the upload initialization service.
+ * the base context with the upload initialization service and the signed-upload policy registry.
  *
  * @param context - The base server actions context providing Firebase infrastructure.
  * @param storageFileInitializeFromUploadService - The service for initializing storage files from uploads.
+ * @param storageFileSignedUploadPolicies - The per-purpose upload policy registry consulted by `createStorageFileSignedUploadUrl`.
  * @returns The fully assembled StorageFileServerActionsContext.
  */
-export function storageFileServerActionsContextFactory(context: BaseStorageFileServerActionsContext, storageFileInitializeFromUploadService: StorageFileInitializeFromUploadService): StorageFileServerActionsContext {
-  return { ...context, storageFileInitializeFromUploadService };
+export function storageFileServerActionsContextFactory(context: BaseStorageFileServerActionsContext, storageFileInitializeFromUploadService: StorageFileInitializeFromUploadService, storageFileSignedUploadPolicies: readonly StorageFilePurposeUploadPolicy[]): StorageFileServerActionsContext {
+  return { ...context, storageFileInitializeFromUploadService, storageFileSignedUploadPolicies };
 }
 
 /**
@@ -54,6 +65,13 @@ export interface ProvideAppStorageFileMetadataConfig extends Pick<ModuleMetadata
    * This module declaration makes it easier to import a module that exports those depenendencies.
    */
   readonly dependencyModule?: Maybe<Required<ModuleMetadata>['imports']['0']>;
+  /**
+   * Per-purpose upload policy registry. Bound to
+   * {@link STORAGE_FILE_SIGNED_UPLOAD_POLICIES_TOKEN} and consulted by the
+   * `createStorageFileSignedUploadUrl` action to resolve the storage path,
+   * allowed content types, and max file size for each purpose.
+   */
+  readonly storageFileSignedUploadPolicies: readonly StorageFilePurposeUploadPolicy[];
 }
 
 /**
@@ -70,7 +88,7 @@ export interface ProvideAppStorageFileMetadataConfig extends Pick<ModuleMetadata
  * @returns The assembled {@link ModuleMetadata} for the storage file module.
  */
 export function appStorageFileModuleMetadata(config: ProvideAppStorageFileMetadataConfig): ModuleMetadata {
-  const { dependencyModule, imports, exports, providers } = config;
+  const { dependencyModule, imports, exports, providers, storageFileSignedUploadPolicies } = config;
   const dependencyModuleImport = dependencyModule ? [dependencyModule] : [];
 
   return {
@@ -78,9 +96,13 @@ export function appStorageFileModuleMetadata(config: ProvideAppStorageFileMetada
     exports: [STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, StorageFileServerActions, StorageFileInitServerActions, ...(exports ?? [])],
     providers: [
       {
+        provide: STORAGE_FILE_SIGNED_UPLOAD_POLICIES_TOKEN,
+        useValue: storageFileSignedUploadPolicies
+      },
+      {
         provide: STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN,
         useFactory: storageFileServerActionsContextFactory,
-        inject: [BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, StorageFileInitializeFromUploadService]
+        inject: [BASE_STORAGE_FILE_SERVER_ACTION_CONTEXT_TOKEN, StorageFileInitializeFromUploadService, STORAGE_FILE_SIGNED_UPLOAD_POLICIES_TOKEN]
       },
       {
         provide: StorageFileServerActions,

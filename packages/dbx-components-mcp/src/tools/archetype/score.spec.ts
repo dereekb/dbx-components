@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { scoreArchetypeAgainstQuestionnaire, scoreCatalog } from './score.js';
-import { MODEL_ARCHETYPES, getModelArchetypeBySlug, type ModelArchetypeSlug } from '../../registry/archetypes.js';
+import { MODEL_ARCHETYPES, getModelArchetypeBySlug, type ModelArchetypeSlug } from '@dereekb/dbx-cli';
 import type { ArchetypeQuestionnaire } from './types.js';
 
 function archetype(slug: ModelArchetypeSlug) {

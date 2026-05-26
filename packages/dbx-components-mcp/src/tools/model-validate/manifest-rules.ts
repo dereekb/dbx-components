@@ -13,7 +13,7 @@
  */
 
 import { attachRemediation } from '../rule-catalog/index.js';
-import type { FirebaseModel } from '../../registry/firebase-models.js';
+import type { FirebaseModel } from '@dereekb/dbx-cli';
 import type { Violation, ViolationCode } from './types.js';
 
 // MARK: Entry

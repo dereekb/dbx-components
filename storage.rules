@@ -12,11 +12,19 @@ service firebase.storage {
       allow read: if isUploadUser() || userClaimsIsSysAdmin();
 
       // MARK: Test File
-      match /test {
-        allow write: if isUploadUser() || userClaimsIsSysAdmin();
+      // Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[USER_TEST_FILE_PURPOSE].
+      match /test/{filename=**} {
+        allow write: if (isUploadUser() && isAllowedTestFile()) || userClaimsIsSysAdmin();
+      }
+
+      // MARK: Log File
+      // Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[USER_LOG_FILE_PURPOSE].
+      match /log/{filename=**} {
+        allow write: if (isUploadUser() && isAllowedLogFile()) || userClaimsIsSysAdmin();
       }
 
       // MARK: Avatar
+      // Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[USER_AVATAR_PURPOSE].
       match /avatar.img {
         allow write: if isUploadUser() || userClaimsIsSysAdmin() && isAllowedAvatarSize();
       }
@@ -26,8 +34,22 @@ service firebase.storage {
       }
 
       function isAllowedAvatarSize() {
-        // max 16mb image (server-side compression downsizes after upload)
-        return request.resource.size < 16 * 1024 * 1024 && request.resource.contentType.matches('image/.*')
+        // max 2mb image (client-side compression downsizes before upload)
+        return request.resource.size < 2 * 1024 * 1024 && request.resource.contentType.matches('image/.*')
+      }
+
+      function isAllowedTestFile() {
+        // max 8mb; text/plain or image/jpeg or image/png
+        return request.resource.size < 8 * 1024 * 1024 && (
+          request.resource.contentType == 'text/plain'
+            || request.resource.contentType == 'image/jpeg'
+            || request.resource.contentType == 'image/png'
+        )
+      }
+
+      function isAllowedLogFile() {
+        // max 2mb; text/plain only
+        return request.resource.size < 2 * 1024 * 1024 && request.resource.contentType == 'text/plain'
       }
     }
 

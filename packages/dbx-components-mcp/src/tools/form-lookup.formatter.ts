@@ -7,7 +7,7 @@
  *   - `full`  — complete documentation with config table and full example
  */
 
-import { FORM_TIER_ORDER, type FormFieldInfo } from '../registry/index.js';
+import { FORM_TIER_ORDER, type FormFieldInfo } from '@dereekb/dbx-cli';
 
 type Depth = 'brief' | 'full';
 

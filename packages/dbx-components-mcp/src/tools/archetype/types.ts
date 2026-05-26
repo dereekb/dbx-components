@@ -7,7 +7,7 @@
  * source of truth.
  */
 
-import type { ModelArchetypeDocIdSource, ModelArchetypeMutability, ModelArchetypeParentRelation, ModelArchetypeSyncMode, ModelArchetypeUserRelation } from '../../registry/archetypes.js';
+import type { ModelArchetypeDocIdSource, ModelArchetypeMutability, ModelArchetypeParentRelation, ModelArchetypeSyncMode, ModelArchetypeUserRelation } from '@dereekb/dbx-cli';
 
 /**
  * Filled questionnaire — the recommender's primary input. Mirrors the schema

@@ -15,6 +15,22 @@ export interface FirebaseServerEnvironmentConfig extends ServerEnvironmentConfig
    */
   readonly appApiUrl?: Maybe<WebsiteUrlWithPrefix>;
   /**
+   * The MCP endpoint URL (e.g., 'https://api.example.com/mcp').
+   *
+   * When set, the firebase-server MCP module advertises this URL as the protected
+   * resource in `/.well-known/oauth-protected-resource`, and the OIDC bearer
+   * middleware uses its origin to construct the `WWW-Authenticate`
+   * `resource_metadata` hint on 401 responses.
+   *
+   * Set explicitly when the MCP endpoint lives on a different origin than the
+   * frontend `appUrl` (e.g., dev: behind a different port than the SPA proxy;
+   * prod: a dedicated `api.*` subdomain that bypasses Firebase Hosting).
+   *
+   * When omitted, the MCP module falls back to deriving the URL from
+   * `appApiUrl` (or `appUrl`).
+   */
+  readonly appMcpUrl?: Maybe<WebsiteUrlWithPrefix>;
+  /**
    * The webhook URL. When not set explicitly, `buildNestServerRootModule()` computes
    * it from `appUrl + /webhook`.
    */

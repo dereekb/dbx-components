@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "13.11.18",
+  "version": "13.12.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "{ [ -f .env.local ] || { rm -rf .env.local && : > .env.local; }; } && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal > /dev/null 2>&1; fi",
@@ -28,13 +28,13 @@
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/pubsub": "^5.3.0",
     "@google-cloud/storage": "^7.19.0",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.19",
     "@nestjs/platform-express": "^11.1.19",
-    "@modelcontextprotocol/sdk": "1.29.0",
-    "@ng-forge/dynamic-forms": "0.9.0-next.12",
-    "@ng-forge/dynamic-forms-material": "0.9.0-next.12",
+    "@ng-forge/dynamic-forms": "0.9.0",
+    "@ng-forge/dynamic-forms-material": "0.9.0",
     "@ng-web-apis/common": "^5.2.0",
     "@ng-web-apis/geolocation": "^5.2.0",
     "@ngbracket/ngx-layout": "^21.0.0",
@@ -90,6 +90,7 @@
     "stripe": "^20.4.1",
     "ts-essentials": "^10.2.0",
     "tslib": "^2.8.1",
+    "twilio": "^6.0.2",
     "zone.js": "^0.16.1"
   },
   "devDependencies": {
@@ -109,6 +110,7 @@
     "@commitlint/config-angular": "20.5.0",
     "@eslint/js": "10.0.1",
     "@firebase/rules-unit-testing": "5.0.0",
+    "@marcbachmann/cel-js": "^7.6.1",
     "@nestjs/event-emitter": "^3.1.0",
     "@nestjs/schematics": "11.1.0",
     "@nestjs/testing": "^11.1.19",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { SemanticTypeEntry } from '../manifest/semantic-types-schema.js';
-import { createSemanticTypeRegistryFromEntries } from '../registry/semantic-types.js';
+import type { SemanticTypeEntry } from '@dereekb/dbx-cli';
+import { createSemanticTypeRegistryFromEntries } from '@dereekb/dbx-cli';
 import { createSemanticTypeSearchTool } from './search-semantic-type.tool.js';
 
 function entryFixture(overrides: Partial<SemanticTypeEntry> = {}): SemanticTypeEntry {

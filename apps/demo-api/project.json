@@ -9,6 +9,7 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/demo-api"],
+      "dependsOn": ["generate-mcp-manifest"],
       "options": {
         "commands": [
           {
@@ -17,6 +18,19 @@
           }
         ],
         "color": true
+      }
+    },
+    "generate-mcp-manifest": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/demo-api/mcp.manifest.json"],
+      "dependsOn": [
+        { "projects": ["demo-cli"], "target": "generate-api-manifest" },
+        { "projects": ["dbx-cli-generate-mcp-manifest"], "target": "build" }
+      ],
+      "inputs": ["{workspaceRoot}/apps/demo-cli/src/lib/manifest/api.manifest.generated.ts", "{workspaceRoot}/components/demo-firebase/src/lib/auth/claims.ts", "{workspaceRoot}/dist/packages/dbx-cli/generate-mcp-manifest/main.js"],
+      "options": {
+        "command": "node dist/packages/dbx-cli/generate-mcp-manifest/main.js --input=apps/demo-cli/src/lib/manifest/api.manifest.generated.ts --claims-input=components/demo-firebase/src/lib/auth/claims.ts --app=demo-api --output=dist/apps/demo-api/mcp.manifest.json",
+        "cwd": "{workspaceRoot}"
       }
     },
     "build-base": {

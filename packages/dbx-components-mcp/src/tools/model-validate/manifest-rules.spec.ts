@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { checkManifestCompositeKeyFrom, checkManifestIdentityDuplicates } from './manifest-rules.js';
-import type { FirebaseModel } from '../../registry/firebase-models.js';
+import type { FirebaseModel } from '@dereekb/dbx-cli';
 
 function makeModel(overrides: Partial<FirebaseModel> & Pick<FirebaseModel, 'name' | 'identityConst' | 'modelType' | 'collectionPrefix'>): FirebaseModel {
   return {

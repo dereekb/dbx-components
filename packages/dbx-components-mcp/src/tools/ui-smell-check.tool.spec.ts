@@ -1,15 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { loadTokenManifests } from '../manifest/tokens-loader.js';
-import { loadUiComponentManifests } from '../manifest/ui-components-loader.js';
-import { createTokenRegistry, EMPTY_TOKEN_REGISTRY } from '../registry/tokens-runtime.js';
-import { createUiComponentRegistry, EMPTY_UI_COMPONENT_REGISTRY } from '../registry/ui-components-runtime.js';
+import { loadTokenManifests, loadUiComponentManifests, createTokenRegistry, EMPTY_TOKEN_REGISTRY, createUiComponentRegistry, EMPTY_UI_COMPONENT_REGISTRY } from '@dereekb/dbx-cli';
 import { detectSmells, detectSmellsDetailed } from './ui-smell-check/index.js';
 import { createUiSmellCheckTool } from './ui-smell-check.tool.js';
 
 const PACKAGE_ROOT = resolve(__dirname, '..', '..');
-const MANIFESTS_DIR = resolve(PACKAGE_ROOT, 'generated');
+const MANIFESTS_DIR = resolve(PACKAGE_ROOT, '..', 'dbx-cli', 'generated');
 
 async function buildTokenRegistry() {
   const loaded = await loadTokenManifests({

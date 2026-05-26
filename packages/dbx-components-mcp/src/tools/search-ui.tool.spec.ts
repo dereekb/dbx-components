@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { type UiComponentEntry } from '../manifest/ui-components-schema.js';
-import { createUiComponentRegistryFromEntries } from '../registry/ui-components-runtime.js';
+import { type UiComponentEntry } from '@dereekb/dbx-cli';
+import { createUiComponentRegistryFromEntries } from '@dereekb/dbx-cli';
 import { createSearchUiTool } from './search-ui.tool.js';
 
 const FIXTURE_ENTRIES: readonly UiComponentEntry[] = [

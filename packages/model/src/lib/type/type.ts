@@ -89,3 +89,74 @@ export function clearable(definition: string | Type): any {
 
   return result;
 }
+
+/**
+ * JSON Schema export helper that compensates for arktype's lossy export of narrow predicates,
+ * morphs, and `undefined`. Without this:.
+ *
+ *   - narrowed strings like `type('string > 0').narrow(...)` export as the empty schema `{}`
+ *     because arktype drops the narrow predicate and has no JSON-shaped base to fall back on.
+ *   - {@link clearable} (a `T | null | undefined` union) exports as `anyOf: [<T>, {}, {type:"null"}]`
+ *     because `undefined` has no JSON Schema equivalent.
+ *
+ * The fallback config:
+ *   - `predicate` / `morph` — drop the lossy wrapper, keep the JSON-shaped base (e.g. a narrowed
+ *     `string > 0` becomes `{type:"string", minLength:1}`).
+ *   - `default` — emit `false` (matches nothing). This is a no-op inside `anyOf`, and
+ *     {@link pruneFalseUnionBranches} strips it so `T | null | undefined` reads as `T | null`.
+ *
+ * The result is round-tripped through `JSON.parse(JSON.stringify(...))` to invoke arktype's
+ * boxed-node `toJSON()` callbacks before pruning; `structuredClone` would not call them.
+ *
+ * @param t - The arktype Type to export.
+ * @returns The pruned JSON Schema fragment as a plain object.
+ */
+export function arktypeToJsonSchemaForExport(t: Type<unknown>): unknown {
+  const raw = t.toJsonSchema({
+    fallback: {
+      predicate: (ctx) => ctx.base,
+      morph: (ctx) => ctx.base,
+      // `false` is a valid JSON Schema value ("matches nothing"), but arktype's TS types
+      // reject `false` as the fallback return — cast through `unknown` to keep runtime behavior.
+      default: (() => false) as unknown as (ctx: unknown) => never
+    }
+  });
+  // structuredClone would skip arktype's boxed-node toJSON() callbacks, so JSON round-trip is required here.
+  return pruneFalseUnionBranches(JSON.parse(JSON.stringify(raw))); // NOSONAR typescript:S7784
+}
+
+/**
+ * Walks a JSON Schema and removes `false` entries from `anyOf` / `oneOf` arrays. `false`
+ * schemas match nothing, so dropping them does not change what the schema accepts — it
+ * just keeps the rendered output clean when {@link arktypeToJsonSchemaForExport}'s
+ * `() => false` fallback emitted no-op branches for unjsonifiable types like `undefined`.
+ *
+ * @param value - JSON Schema fragment to clean.
+ * @returns A structurally equivalent fragment with `false` branches dropped from any
+ *   `anyOf` / `oneOf` arrays.
+ */
+export function pruneFalseUnionBranches(value: unknown): unknown {
+  let result: unknown = value;
+
+  if (Array.isArray(value)) {
+    result = value.map(pruneFalseUnionBranches);
+  } else if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+
+    for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
+      if ((key === 'anyOf' || key === 'oneOf') && Array.isArray(raw)) {
+        const filtered = raw.filter((v) => v !== false).map(pruneFalseUnionBranches);
+
+        if (filtered.length > 0) {
+          out[key] = filtered;
+        }
+      } else {
+        out[key] = pruneFalseUnionBranches(raw);
+      }
+    }
+
+    result = out;
+  }
+
+  return result;
+}

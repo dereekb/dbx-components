@@ -266,7 +266,7 @@ export interface UtilRequireDbxFormFieldCompanionTagsRuleDefinition {
 
 /**
  * ESLint rule enforcing `@dbxFormField` companion tags. Mirrors the scanner
- * schema at `packages/dbx-components-mcp/src/scan/forge-fields-extract.ts`,
+ * schema at `packages/dbx-cli/src/lib/mcp-scan/scan/forge-fields-extract.ts`,
  * including the tier-conditional required-tag matrix.
  */
 export const UTIL_REQUIRE_DBX_FORM_FIELD_COMPANION_TAGS_RULE: UtilRequireDbxFormFieldCompanionTagsRuleDefinition = {

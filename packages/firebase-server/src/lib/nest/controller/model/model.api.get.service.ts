@@ -1,10 +1,11 @@
 import { type Maybe } from '@dereekb/util';
-import { type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
+import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
 import { Injectable, Inject, type INestApplicationContext } from '@nestjs/common';
 import { type AbstractFirebaseNestContext } from '../../nest.provider';
 import { type AuthData } from '../../../type';
 import { ModelApiDispatchConfig, MODEL_API_NEST_APPLICATION_CONTEXT } from './model.api.dispatch';
 import { type FirebaseServerAuthData } from '../auth.context.server';
+import { firebaseServerErrorInfo } from '../../../function/error';
 
 // MARK: Types
 /**
@@ -37,6 +38,38 @@ export interface ModelAccessReadError {
   readonly code?: string;
 }
 
+/**
+ * Shape of a single failed-key entry from `useMultipleModels({ throwOnFirstError: false })`.
+ * Exposed so the mapper below stays testable without a live nest context.
+ */
+export interface ModelAccessUseMultipleModelsFailureEntry {
+  readonly key: FirestoreModelKey;
+  readonly error: unknown;
+}
+
+/**
+ * Maps a single `useMultipleModels` failure entry into the public {@link ModelAccessReadError}
+ * shape. Unwraps the typical Firebase error shapes via {@link firebaseServerErrorInfo} so
+ * permission-denied / not-found errors surface a real message + code instead of the generic
+ * `"Unknown error"` fallback the inline mapping used previously.
+ *
+ * @param entry - A failed-key entry from the underlying multi-read.
+ * @returns A `{ key, message, code? }` triple safe to return to API/MCP callers.
+ */
+export function modelAccessReadErrorFromUseMultipleModelsFailure(entry: ModelAccessUseMultipleModelsFailureEntry): ModelAccessReadError {
+  const info = firebaseServerErrorInfo(entry.error);
+  const serverMessage = info.httpsErrorDetailsServerError?.message;
+  const httpsMessage = info.httpsError?.message;
+  const plainMessage = entry.error instanceof Error ? entry.error.message : undefined;
+  const code = info.serverErrorCode ?? info.firebaseErrorCode;
+
+  return {
+    key: entry.key,
+    message: serverMessage ?? httpsMessage ?? plainMessage ?? 'permission denied or not found',
+    code
+  };
+}
+
 // MARK: Service
 /**
  * Service for direct document reads using the `useModel()` permission-checking pattern.
@@ -48,9 +81,48 @@ export interface ModelAccessReadError {
 @Injectable()
 export class ModelApiGetService {
   private readonly _nestContext: AbstractFirebaseNestContext<any, any>;
+  private _identityByModelType: Map<string, FirestoreModelIdentity> | undefined;
 
   constructor(@Inject(ModelApiDispatchConfig) config: ModelApiDispatchConfig, @Inject(MODEL_API_NEST_APPLICATION_CONTEXT) nestApplication: INestApplicationContext) {
     this._nestContext = config.makeNestContext(nestApplication) as AbstractFirebaseNestContext<any, any>;
+  }
+
+  /**
+   * Returns the registered {@link FirestoreModelIdentity} for the given `modelType` string, or
+   * `undefined` when no model of that type is registered.
+   *
+   * Identities are read from `firebaseModelsService` and cached on first successful call. The
+   * lookup uses the provided `auth` to build a real model context — `getFirestoreCollection(ctx)`
+   * is context-dependent (calls `ctx.collection(...)` or similar), so a synthetic empty context
+   * is not sufficient.
+   *
+   * @param modelType - The Firestore model type string (e.g., 'guestbook', 'profile').
+   * @param auth - The request's auth data; used to build a context for the (one-time) lookup.
+   * @returns The matching identity or `undefined`.
+   */
+  getModelIdentity(modelType: FirestoreModelType, auth: Maybe<FirebaseServerAuthData>): Maybe<FirestoreModelIdentity> {
+    this._identityByModelType ??= this._buildIdentityMap(auth);
+    return this._identityByModelType.get(modelType);
+  }
+
+  private _buildIdentityMap(auth: Maybe<FirebaseServerAuthData>): Map<string, FirestoreModelIdentity> {
+    const map = new Map<string, FirestoreModelIdentity>();
+    const authRef = this._makeAuthRef(auth);
+    const inContextService = this._nestContext.model(authRef);
+    const allTypes = inContextService.allTypes();
+
+    for (const type of allTypes) {
+      try {
+        const modelService = inContextService(type as never) as unknown as { getFirestoreCollection: () => { modelIdentity: FirestoreModelIdentity } };
+        const identity = modelService.getFirestoreCollection().modelIdentity;
+        map.set(type, identity);
+      } catch {
+        // identity unavailable for this type — skipped silently. A subsequent get attempt for a
+        // missing type surfaces a user-visible "Unknown modelType" error at the tool layer.
+      }
+    }
+
+    return map;
   }
 
   /**
@@ -110,11 +182,7 @@ export class ModelApiGetService {
           })
         );
 
-        const errors: ModelAccessReadError[] = failure.errors.map((e: any) => ({
-          key: e.key,
-          message: e.error?.message ?? 'Unknown error',
-          code: e.error?.code
-        }));
+        const errors: ModelAccessReadError[] = failure.errors.map(modelAccessReadErrorFromUseMultipleModelsFailure);
 
         return { results, errors };
       }

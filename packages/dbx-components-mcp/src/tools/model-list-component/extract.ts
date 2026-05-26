@@ -15,9 +15,7 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { basename, join, relative, sep } from 'node:path';
 import { Node, Project, type SourceFile } from 'ts-morph';
-import { extractModels } from '../../scan/extract-models/index.js';
-import type { FirebaseModel } from '../../registry/firebase-models.js';
-import { RESERVED_MODEL_FOLDERS } from '../model-validate-folder/types.js';
+import { extractModels, RESERVED_MODEL_FOLDERS, type FirebaseModel } from '@dereekb/dbx-cli';
 import type { ComponentModelEntry, SkippedReservedFolder } from './types.js';
 
 const MODEL_SUBPATH = 'src/lib/model';

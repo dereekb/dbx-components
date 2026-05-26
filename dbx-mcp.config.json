@@ -8,7 +8,7 @@
         "topicNamespace": "dereekb-util",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-util.semantic-types.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-util.semantic-types.mcp.generated.json"
       },
       {
         "project": "packages/model",
@@ -16,7 +16,7 @@
         "topicNamespace": "dereekb-model",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-model.semantic-types.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-model.semantic-types.mcp.generated.json"
       },
       {
         "project": "packages/date",
@@ -24,7 +24,7 @@
         "topicNamespace": "dereekb-date",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-date.semantic-types.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-date.semantic-types.mcp.generated.json"
       },
       {
         "project": "packages/firebase",
@@ -32,7 +32,7 @@
         "topicNamespace": "dereekb-firebase",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-firebase.semantic-types.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-firebase.semantic-types.mcp.generated.json"
       },
       {
         "project": "packages/firebase-server",
@@ -40,7 +40,7 @@
         "topicNamespace": "dereekb-firebase-server",
         "include": ["src/lib/**/*.ts", "test/src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-firebase-server.semantic-types.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-firebase-server.semantic-types.mcp.generated.json"
       }
     ]
   },
@@ -52,7 +52,7 @@
         "module": "@dereekb/dbx-web",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-web.ui-components.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-dbx-web.ui-components.mcp.generated.json"
       },
       {
         "project": "packages/dbx-firebase",
@@ -60,7 +60,7 @@
         "module": "@dereekb/dbx-firebase",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-firebase.ui-components.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-dbx-firebase.ui-components.mcp.generated.json"
       }
     ]
   },
@@ -72,7 +72,7 @@
         "module": "@dereekb/dbx-form",
         "include": ["src/lib/forge/**/*.ts", "src/lib/field/field.autocomplete.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-form.forge-fields.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-dbx-form.forge-fields.mcp.generated.json"
       }
     ]
   },
@@ -84,7 +84,7 @@
         "module": "@dereekb/dbx-core",
         "include": ["src/lib/pipe/**/*.pipe.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-core.pipes.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-dbx-core.pipes.mcp.generated.json"
       }
     ]
   },
@@ -96,7 +96,7 @@
         "module": "@dereekb/dbx-core",
         "include": ["src/lib/action/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-core.actions.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-dbx-core.actions.mcp.generated.json"
       }
     ]
   },
@@ -108,7 +108,7 @@
         "module": "@dereekb/dbx-core",
         "include": ["src/lib/filter/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts", "**/filter.abstract.*.ts", "**/filter.module.ts", "**/filter.content.ts", "**/filter.map.instance.directive.ts", "**/index.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-core.filters.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-dbx-core.filters.mcp.generated.json"
       }
     ]
   },
@@ -120,7 +120,7 @@
         "module": "@dereekb/util",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-util.utils.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-util.utils.mcp.generated.json"
       },
       {
         "project": "packages/date",
@@ -128,7 +128,7 @@
         "module": "@dereekb/date",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-date.utils.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-date.utils.mcp.generated.json"
       },
       {
         "project": "packages/rxjs",
@@ -136,7 +136,7 @@
         "module": "@dereekb/rxjs",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-rxjs.utils.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-rxjs.utils.mcp.generated.json"
       },
       {
         "project": "packages/model",
@@ -144,7 +144,7 @@
         "module": "@dereekb/model",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-model.utils.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-model.utils.mcp.generated.json"
       },
       {
         "project": "packages/firebase",
@@ -152,7 +152,7 @@
         "module": "@dereekb/firebase",
         "include": ["src/lib/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-firebase.utils.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-firebase.utils.mcp.generated.json"
       }
     ]
   },
@@ -164,7 +164,7 @@
         "module": "@dereekb/firebase",
         "include": ["src/lib/common/firestore/snapshot/**/*.ts", "src/lib/model/**/*.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-firebase.model-snapshot-fields.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-firebase.model-snapshot-fields.mcp.generated.json"
       }
     ]
   },
@@ -176,7 +176,7 @@
         "module": "apps/demo",
         "include": ["src/app/modules/doc/modules/examples/**/examples/*.example.component.ts"],
         "exclude": ["**/*.spec.ts", "**/*.test.ts"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-demo.dbx-docs-ui-examples.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-demo.dbx-docs-ui-examples.mcp.generated.json"
       }
     ]
   },
@@ -188,7 +188,7 @@
         "module": "@dereekb/dbx-web",
         "include": ["src/lib/**/*.scss"],
         "exclude": ["src/lib/extension/**", "**/_variables.scss", "**/_root-variables.scss"],
-        "out": "packages/dbx-components-mcp/generated/dereekb-dbx-web.css-utilities.mcp.generated.json"
+        "out": "packages/dbx-cli/generated/dereekb-dbx-web.css-utilities.mcp.generated.json"
       }
     ]
   }

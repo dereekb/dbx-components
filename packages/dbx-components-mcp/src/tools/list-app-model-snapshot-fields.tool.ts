@@ -27,7 +27,7 @@ import { type } from 'arktype';
 import { Node, Project, type CallExpression, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import type { ModelSnapshotFieldRegistry } from '../registry/model-snapshot-fields-runtime.js';
+import type { ModelSnapshotFieldRegistry } from '@dereekb/dbx-cli';
 
 // MARK: Args
 const ListAppArgsType = type({

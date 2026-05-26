@@ -1,3 +1,4 @@
+import type { Maybe } from '@dereekb/util';
 import { type Type } from 'arktype';
 
 /**
@@ -124,6 +125,20 @@ export interface CliModelManifestEntry {
    * Persisted-field metadata in source order.
    */
   readonly fields: readonly CliModelField[];
+  /**
+   * Read posture declared by `@dbxModelRead <level>` on the model interface. Closed enum:
+   * `system` / `owner` / `admin-only` / `permissions`. Absent when the model interface omits the tag.
+   */
+  readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions';
+  /**
+   * Resolved `@dbxModelServiceFactory <modelType>`-tagged export that implements this model.
+   * Joined by `modelType` during model-manifest assembly. Absent when no factory was found
+   * (surfaced as an orphan by the cross-file ESLint rule).
+   */
+  readonly serviceFactory?: {
+    readonly exportName: string;
+    readonly sourceFile: string;
+  };
 }
 
 /**
@@ -175,3 +190,154 @@ export interface CliApiManifestEntry {
 }
 
 export type CliApiManifest = readonly CliApiManifestEntry[];
+
+// MARK: MCP Manifest
+/**
+ * Version stamp embedded in the build-time MCP manifest JSON. Runtime loaders
+ * refuse manifests whose `version` does not match this constant.
+ */
+export const MCP_MANIFEST_VERSION = 1 as const;
+
+/**
+ * One tool entry inside the build-time MCP manifest JSON.
+ *
+ * The renderer pre-merges descriptions, enriches the input schema with per-field
+ * `description` text, and synthesizes an `outputSchema` from `resultFields[]` so the
+ * runtime only has to do map lookups.
+ */
+export interface McpManifestToolEntry {
+  /**
+   * Merged tool description: `entry.description` joined with `entry.paramsTypeDescription`.
+   * Omitted when both source fields are absent.
+   */
+  readonly description?: string;
+  /**
+   * JSON Schema produced from the params validator and enriched with `paramsFields[]` descriptions.
+   * Omitted when neither validator nor fields produced a schema.
+   */
+  readonly inputSchema?: object;
+  /**
+   * JSON Schema synthesized from `resultFields[]` / `resultTypeDescription`. Omitted when both absent.
+   */
+  readonly outputSchema?: object;
+}
+
+/**
+ * One persisted field on a {@link McpManifestModelEntry}.
+ *
+ * Structural projection of {@link CliModelField} minus the converter expression
+ * text (CLI-only). Keeps the runtime payload narrow for downstream MCP tools.
+ */
+export interface McpManifestModelField {
+  readonly name: string;
+  readonly longName: string;
+  readonly tsType?: string;
+  readonly optional: boolean;
+  readonly description?: string;
+  readonly enumRef?: string;
+  readonly syncFlag?: string;
+  readonly nestedFields?: readonly McpManifestModelField[];
+  readonly nestedIsArray?: boolean;
+}
+
+/**
+ * One Firestore model entry in the build-time MCP manifest JSON.
+ *
+ * Structural projection of {@link CliModelManifestEntry} consumed at runtime by
+ * the firebase-server/mcp built-in `model-info` and `model-decode` tools.
+ */
+export interface McpManifestModelEntry {
+  readonly modelType: string;
+  readonly modelName: string;
+  readonly modelGroup?: string;
+  readonly identityConst: string;
+  readonly collectionPrefix: string;
+  readonly parentIdentityConst?: string;
+  readonly description?: string;
+  readonly sourcePackage: string;
+  readonly sourceFile: string;
+  readonly fields: readonly McpManifestModelField[];
+}
+
+/**
+ * One auth claim entry in the pre-rendered MCP manifest JSON. Powers the
+ * runtime `whoami` tool. Source paths and line numbers are stripped — only
+ * the catalog-facing fields survive.
+ */
+export interface McpManifestAuthClaim {
+  readonly key: string;
+  readonly description: string;
+  readonly type: string;
+  readonly app?: string;
+  readonly interfaceName?: string;
+  readonly source: 'system' | 'app';
+  readonly mapping: {
+    readonly roles: readonly string[];
+    readonly inverse: boolean;
+    readonly inverseMode?: 'any' | 'all';
+    readonly claimValue?: string | number | boolean;
+    readonly customEncodeDecode: boolean;
+  };
+  readonly tags: readonly string[];
+}
+
+/**
+ * One auth app entry in the pre-rendered MCP manifest JSON.
+ *
+ * `auth.app` denotes the manifest's primary app (the host that emitted the
+ * manifest). `auth.apps` carries the full list, which may include the primary
+ * plus inherited apps (e.g. `storageFile-upload-user`).
+ */
+export interface McpManifestAuthApp {
+  readonly app: string;
+  readonly claimsInterfaceName: string;
+  readonly serviceConstName: string;
+  readonly claimKeys: readonly string[];
+  readonly scopes: readonly string[];
+  readonly description?: string;
+}
+
+/**
+ * Auth section of the pre-rendered MCP manifest JSON. Optional — runtimes
+ * built before this section landed simply skip registering whoami.
+ */
+export interface McpManifestAuth {
+  readonly app?: McpManifestAuthApp;
+  readonly apps: readonly McpManifestAuthApp[];
+  readonly claims: readonly McpManifestAuthClaim[];
+}
+
+/**
+ * Build-time MCP manifest JSON shape consumed by the runtime MCP module's optional manifest loader.
+ *
+ * `tools` is keyed by {@link mcpManifestKey} so the runtime can do O(1) lookups per registered tool.
+ * `models` is optional — the runtime skips the catalog-introspection tools when missing.
+ * `auth` is optional — drives the runtime `whoami` tool.
+ */
+export interface McpManifest {
+  readonly version: typeof MCP_MANIFEST_VERSION;
+  /**
+   * ISO-8601 timestamp captured when the manifest was rendered. Useful for diagnostics.
+   */
+  readonly generatedAt: string;
+  readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
+  readonly models?: readonly McpManifestModelEntry[];
+  readonly auth?: McpManifestAuth;
+}
+
+/**
+ * Builds the canonical MCP manifest key for a (modelType, callType, specifier) triple.
+ *
+ * The default-specifier entry collapses to `_` so the runtime can compose the same
+ * key from its dispatch coordinates without first checking whether the handler is
+ * behind a specifier router.
+ *
+ * @param modelType - The Firestore model type (e.g., `guestbook`).
+ * @param call - The call type / verb (e.g., `query`).
+ * @param specifier - The specifier key, or `_` / undefined for the default entry.
+ * @returns The canonical `modelType.call.specifier` lookup key, with the default specifier normalized to `_`.
+ */
+export function mcpManifestKey(modelType: string, call: string, specifier?: Maybe<string>): string {
+  const isDefault = specifier == null || specifier === '_';
+  return isDefault ? `${modelType}.${call}._` : `${modelType}.${call}.${specifier}`;
+}

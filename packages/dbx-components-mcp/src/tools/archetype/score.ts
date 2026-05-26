@@ -22,7 +22,7 @@
  * Mismatch on a 2+ weight subtracts the weight. Unset answers contribute zero.
  */
 
-import { MODEL_ARCHETYPES, type ModelArchetypeInfo, type ModelArchetypeSlug } from '../../registry/archetypes.js';
+import { MODEL_ARCHETYPES, type ModelArchetypeInfo, type ModelArchetypeSlug } from '@dereekb/dbx-cli';
 import type { ArchetypeQuestionnaire } from './types.js';
 
 /**

@@ -13,7 +13,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { FIREBASE_MODELS, getDownstreamCatalog, resolveModelArchetype, type DownstreamCatalog, type FirebaseModel, type ModelArchetypeInfo } from '../registry/index.js';
+import { FIREBASE_MODELS, getDownstreamCatalog, resolveModelArchetype, type DownstreamCatalog, type FirebaseModel, type ModelArchetypeInfo } from '@dereekb/dbx-cli';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { scoreCatalog, type ScoredArchetype } from './archetype/score.js';

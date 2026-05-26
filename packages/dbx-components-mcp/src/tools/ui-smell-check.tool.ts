@@ -16,9 +16,7 @@ import { readFile as nodeReadFile } from 'node:fs/promises';
 import { basename, extname, isAbsolute, resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { findAndLoadConfig, type ConfigReadFile } from '../config/load-config.js';
-import type { TokenRegistry } from '../registry/tokens-runtime.js';
-import type { UiComponentRegistry } from '../registry/ui-components-runtime.js';
+import { findAndLoadConfig, type ConfigReadFile, type TokenRegistry, type UiComponentRegistry } from '@dereekb/dbx-cli';
 import { detectSmellsDetailed, formatBatchSmellResult, formatSmellResult, type ProjectConventions, type SmellResultFile } from './ui-smell-check/index.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 

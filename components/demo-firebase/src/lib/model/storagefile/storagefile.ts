@@ -1,4 +1,4 @@
-import { ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
+import { ALL_USER_UPLOADS_FOLDER_PATH, firestoreModelKey, type StorageFileGroupId, twoWayFlatFirestoreModelKey, type FirebaseAuthUserId, type StorageFileProcessingSubtask, type StorageFileProcessingSubtaskMetadata, type StorageFilePurpose, type StorageFilePurposeUploadPolicy, type UploadedFileTypeIdentifier } from '@dereekb/firebase';
 import { type Maybe, mergeSlashPaths, type Milliseconds, type SlashPath, type SlashPathFile, type SlashPathFolder, type SlashPathUntypedFile, stringFromTimeFactory } from '@dereekb/util';
 import { profileIdentity } from '../profile';
 
@@ -240,4 +240,70 @@ export function userLogFileGroupIds(userId: FirebaseAuthUserId): StorageFileGrou
   return [userProfileStorageFileGroupId(userId)];
 }
 
-// MARK: System File Types
+// MARK: Upload Policy Registry
+/**
+ * Soft cap for user avatar uploads. Matches the 2 MB ceiling declared in
+ * `storage.rules` for `/uploads/u/{uid}/avatar.img`.
+ */
+export const USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Soft cap for user test file uploads.
+ */
+export const USER_TEST_FILE_UPLOADS_MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
+
+/**
+ * Allowed mime types for user test file uploads.
+ *
+ * Test files are intentionally permissive — any plain text or image content
+ * is accepted so the demo exercise covers the full upload pipeline.
+ */
+export const USER_TEST_FILE_UPLOADS_ALLOWED_FILE_TYPES = ['text/plain', 'image/jpeg', 'image/png'];
+
+/**
+ * Soft cap for user log file uploads.
+ */
+export const USER_LOG_FILE_UPLOADS_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Upload policy for {@link USER_AVATAR_PURPOSE}.
+ */
+export const USER_AVATAR_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
+  purpose: USER_AVATAR_PURPOSE,
+  allowedMimeTypes: USER_AVATAR_UPLOADS_ALLOWED_FILE_TYPES,
+  maxFileSizeBytes: USER_AVATAR_UPLOADS_MAX_FILE_SIZE_BYTES,
+  buildUploadPath: ({ uid }) => userAvatarUploadsFilePath(uid),
+  requiresFilenameInput: false
+};
+
+/**
+ * Upload policy for {@link USER_TEST_FILE_PURPOSE}.
+ */
+export const USER_TEST_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
+  purpose: USER_TEST_FILE_PURPOSE,
+  allowedMimeTypes: USER_TEST_FILE_UPLOADS_ALLOWED_FILE_TYPES,
+  maxFileSizeBytes: USER_TEST_FILE_UPLOADS_MAX_FILE_SIZE_BYTES,
+  buildUploadPath: ({ uid, filename }) => userTestFileUploadsFilePath(uid, filename as SlashPathFile),
+  requiresFilenameInput: true
+};
+
+/**
+ * Upload policy for {@link USER_LOG_FILE_PURPOSE}.
+ */
+export const USER_LOG_FILE_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
+  purpose: USER_LOG_FILE_PURPOSE,
+  allowedMimeTypes: USER_LOG_FILE_UPLOADS_ALLOWED_FILE_TYPES,
+  maxFileSizeBytes: USER_LOG_FILE_UPLOADS_MAX_FILE_SIZE_BYTES,
+  buildUploadPath: ({ uid, filename }) => userLogFileUploadsFilePath(uid, filename as SlashPathFile),
+  requiresFilenameInput: true
+};
+
+/**
+ * Registry of every {@link StorageFilePurposeUploadPolicy} the app supports.
+ *
+ * The signed-upload-url handler reads this list at request time and resolves
+ * the entry whose `purpose` matches the request. Adding a new upload-eligible
+ * purpose means appending an entry here AND updating `storage.rules` so the
+ * corresponding path is writable.
+ */
+export const STORAGE_FILE_PURPOSE_UPLOAD_POLICIES: readonly StorageFilePurposeUploadPolicy[] = [USER_AVATAR_UPLOAD_POLICY, USER_TEST_FILE_UPLOAD_POLICY, USER_LOG_FILE_UPLOAD_POLICY];

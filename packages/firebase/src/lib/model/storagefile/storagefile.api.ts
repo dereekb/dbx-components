@@ -4,9 +4,9 @@ import { firestoreModelKeyType, firestoreModelIdType } from '../../common/model/
 import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction } from '../../client';
 import { type StorageFileSignedDownloadUrl, type StorageFileTypes } from './storagefile';
-import { type StorageFileKey, type StorageFileId } from './storagefile.id';
+import { type StorageFileKey, type StorageFileId, type StorageFilePurpose } from './storagefile.id';
 import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
-import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type UnixDateTimeSecondsNumber } from '@dereekb/util';
+import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type SlashPath, type SlashPathFile, type UnixDateTimeMillisecondsNumber, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 import { type SendNotificationResult } from '../notification/notification.api';
 import { clearable, ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
 
@@ -255,6 +255,129 @@ export interface DownloadMultipleStorageFilesResult {
   readonly errors: DownloadMultipleStorageFileErrorItem[];
 }
 
+// MARK: Create Signed Upload URL
+/**
+ * Lower bound for caller-supplied `expiresInMs` on signed-upload-url generation.
+ *
+ * Anything shorter than 30 seconds is unrealistic for a caller to pick up a
+ * URL, perform the PUT, and acknowledge before the URL expires.
+ */
+export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS: Milliseconds = 30 * 1000;
+
+/**
+ * Upper bound for caller-supplied `expiresInMs` on signed-upload-url generation.
+ *
+ * 10 minutes is the longest acceptable window for a one-shot upload URL. Any
+ * legitimate caller should be uploading within this window; longer windows
+ * increase the blast radius if the URL leaks.
+ */
+export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS: Milliseconds = 10 * 60 * 1000;
+
+/**
+ * Default `expiresInMs` applied when the caller does not supply one.
+ */
+export const DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS: Milliseconds = 5 * 60 * 1000;
+
+/**
+ * Maximum length of a caller-supplied filename. Enforced both at the ArkType
+ * layer and again by the handler's sanitizer.
+ */
+export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH = 200;
+
+/**
+ * Parameters for creating a short-lived signed PUT URL for a StorageFile upload.
+ *
+ * The resulting URL is restricted to a specific {@link StorageFilePurpose}, MIME
+ * type, and file size and lands the bytes inside the authenticated caller's
+ * `/uploads/u/{uid}/...` namespace. Once uploaded, the existing
+ * `StorageFileInitializeFromUploadService` flow picks the file up and creates
+ * the matching `StorageFile` document.
+ */
+export interface CreateStorageFileSignedUploadUrlParams {
+  /**
+   * The {@link StorageFilePurpose} to upload as. Must be supported by the
+   * app's signed-upload-url policy registry. The chosen policy decides where
+   * the file lands and which content-types/sizes are allowed.
+   */
+  readonly purpose: StorageFilePurpose;
+  /**
+   * The MIME type the client intends to PUT. Validated against the policy's
+   * `allowedMimeTypes` and signed into the URL so GCS rejects any PUT with a
+   * different `Content-Type`.
+   */
+  readonly contentType: ContentTypeMimeType;
+  /**
+   * Filename to place inside the policy's upload folder. Required when the
+   * policy has `requiresFilenameInput: true`. Sanitized server-side — must not
+   * contain `/`, `..`, or NUL bytes; capped at
+   * {@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH} chars.
+   */
+  readonly filename?: Maybe<SlashPathFile>;
+  /**
+   * Client-declared size in bytes for the upload. Validated against the
+   * policy's `maxFileSizeBytes` cap. The storage rules independently enforce
+   * the same cap via `request.resource.size`.
+   */
+  readonly fileSizeBytes: number;
+  /**
+   * Lifetime of the signed URL in milliseconds. Clamped to
+   * [{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},
+   * {@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].
+   * Defaults to {@link DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS}
+   * when omitted.
+   */
+  readonly expiresInMs?: Maybe<Milliseconds>;
+}
+
+export const createStorageFileSignedUploadUrlParamsType = /* @__PURE__ */ type({
+  purpose: 'string > 0',
+  contentType: 'string > 0',
+  'filename?': clearable(`string > 0 & string <= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH}`),
+  fileSizeBytes: 'number > 0',
+  'expiresInMs?': clearable(`number >= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS} & number <= ${CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}`)
+}) as Type<CreateStorageFileSignedUploadUrlParams>;
+
+/**
+ * Result of creating a signed upload URL.
+ *
+ * The caller PUTs the file bytes to {@link uploadUrl} with the headers in
+ * {@link requiredHeaders}. The existing initializer flow then picks the file
+ * up from {@link uploadPath} and creates the StorageFile document.
+ *
+ * `modelKeys` is intentionally empty — minting the URL does not create a
+ * StorageFile document; the document is created later by the upload-complete
+ * pipeline.
+ */
+export interface CreateStorageFileSignedUploadUrlResult extends OnCallCreateModelResult {
+  readonly modelKeys: [];
+  /**
+   * Short-lived, content-type-pinned PUT URL.
+   */
+  readonly uploadUrl: string;
+  /**
+   * The full storage path the URL writes to (inside `/uploads/u/{uid}/...`).
+   * Returned so the caller can confirm where the file landed.
+   */
+  readonly uploadPath: SlashPath;
+  /**
+   * Unix millisecond timestamp at which the URL expires.
+   */
+  readonly expiresAt: UnixDateTimeMillisecondsNumber;
+  /**
+   * Headers the caller MUST send on the PUT for the signature to validate.
+   * At minimum, the `content-type` matches the signed value.
+   */
+  readonly requiredHeaders: Readonly<Record<string, string>>;
+  /**
+   * Echo of the policy's `maxFileSizeBytes` cap, for caller-side validation.
+   */
+  readonly maxFileSizeBytes: number;
+  /**
+   * The resolved {@link StorageFilePurpose}.
+   */
+  readonly purpose: StorageFilePurpose;
+}
+
 /**
  * Used for creating or initializing a new StorageFileGroup for a StorageFile.
  *
@@ -379,6 +502,7 @@ export type StorageFileModelCrudFunctionsConfig = {
       _: CreateStorageFileParams;
       fromUpload: InitializeStorageFileFromUploadParams;
       allFromUpload: [InitializeAllStorageFilesFromUploadsParams, InitializeAllStorageFilesFromUploadsResult];
+      signedUploadUrl: [CreateStorageFileSignedUploadUrlParams, CreateStorageFileSignedUploadUrlResult];
     };
     update: {
       _: UpdateStorageFileParams;
@@ -402,7 +526,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 };
 
 export const STORAGE_FILE_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple'],
+  storageFile: ['create:_,fromUpload,allFromUpload,signedUploadUrl', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple'],
   storageFileGroup: ['update:_,regenerateContent']
 };
 
@@ -418,6 +542,7 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
       create: ModelFirebaseCreateFunction<CreateStorageFileParams, OnCallCreateModelResult>;
       fromUpload: ModelFirebaseCreateFunction<InitializeStorageFileFromUploadParams, OnCallCreateModelResult>;
       allFromUpload: ModelFirebaseCrudFunction<InitializeAllStorageFilesFromUploadsParams, InitializeAllStorageFilesFromUploadsResult>;
+      signedUploadUrl: ModelFirebaseCreateFunction<CreateStorageFileSignedUploadUrlParams, CreateStorageFileSignedUploadUrlResult>;
     };
     updateStorageFile: {
       update: ModelFirebaseCrudFunction<UpdateStorageFileParams>;

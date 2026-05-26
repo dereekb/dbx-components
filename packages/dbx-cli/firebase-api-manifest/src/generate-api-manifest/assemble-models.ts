@@ -62,20 +62,27 @@ interface GlobalRegistries {
   readonly converterRegistry: ReadonlyMap<string, ModelExtractionConverter>;
   readonly interfaceRegistry: ReadonlyMap<string, ModelExtractionInterface>;
   readonly groupByModelName: ReadonlyMap<string, string>;
+  readonly serviceFactoryByModelType: ReadonlyMap<string, { readonly exportName: string; readonly sourceFile: string }>;
 }
 
 function buildGlobalRegistries(extractions: AssembleModelsInput['extractions']): GlobalRegistries {
   const converterRegistry = new Map<string, ModelExtractionConverter>();
   const interfaceRegistry = new Map<string, ModelExtractionInterface>();
   const groupByModelName = new Map<string, string>();
+  const serviceFactoryByModelType = new Map<string, { readonly exportName: string; readonly sourceFile: string }>();
 
-  for (const { extraction } of extractions) {
+  for (const { extraction, sourceFile } of extractions) {
     registerConverters(extraction.converters, converterRegistry);
     registerInterfaces(extraction.interfaces, interfaceRegistry);
     registerModelGroups(extraction.modelGroups, groupByModelName);
+    for (const factory of extraction.serviceFactories) {
+      if (!serviceFactoryByModelType.has(factory.modelType)) {
+        serviceFactoryByModelType.set(factory.modelType, { exportName: factory.exportName, sourceFile });
+      }
+    }
   }
 
-  return { converterRegistry, interfaceRegistry, groupByModelName };
+  return { converterRegistry, interfaceRegistry, groupByModelName, serviceFactoryByModelType };
 }
 
 function registerConverters(converters: ModelExtraction['converters'], registry: Map<string, ModelExtractionConverter>): void {
@@ -140,6 +147,7 @@ function buildEntryForIdentity(input: BuildEntryInput): CliModelManifestEntry | 
         });
 
         const modelGroup = registries.groupByModelName.get(modelName);
+        const serviceFactory = registries.serviceFactoryByModelType.get(identity.modelType);
         result = {
           modelType: identity.modelType,
           modelName,
@@ -150,7 +158,9 @@ function buildEntryForIdentity(input: BuildEntryInput): CliModelManifestEntry | 
           ...(iface.description ? { description: iface.description } : {}),
           sourcePackage: source.sourcePackage,
           sourceFile: source.sourceFile,
-          fields
+          fields,
+          ...(iface.dbxModelRead ? { read: iface.dbxModelRead } : {}),
+          ...(serviceFactory ? { serviceFactory } : {})
         };
       }
     }

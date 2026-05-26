@@ -140,7 +140,9 @@ function renderModelEntry(entry: CliModelManifestEntry, emitConverters: boolean)
     entry.description ? `description: ${JSON.stringify(entry.description)}` : undefined,
     `sourcePackage: ${JSON.stringify(entry.sourcePackage)}`,
     `sourceFile: ${JSON.stringify(entry.sourceFile)}`,
-    `fields: ${renderModelFields(entry.fields, emitConverters)}`
+    `fields: ${renderModelFields(entry.fields, emitConverters)}`,
+    entry.read ? `read: ${JSON.stringify(entry.read)}` : undefined,
+    entry.serviceFactory ? `serviceFactory: { exportName: ${JSON.stringify(entry.serviceFactory.exportName)}, sourceFile: ${JSON.stringify(entry.serviceFactory.sourceFile)} }` : undefined
   ];
   return `  { ${fields.filter((v): v is string => Boolean(v)).join(', ')} }`;
 }

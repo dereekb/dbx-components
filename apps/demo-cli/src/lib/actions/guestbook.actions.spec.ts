@@ -31,6 +31,14 @@ const demoOAuthSuperTestContextWithoutQueryScope = oAuthAuthorizedSuperTestConte
 });
 
 /**
+ * OAuth fixture deliberately missing the `model.invoke` scope, used to prove that even an
+ * admin user gets rejected when their token can't satisfy the invoke scope pre-assert.
+ */
+const demoOAuthSuperTestContextWithoutInvokeScope = oAuthAuthorizedSuperTestContextFactory({
+  scopes: 'openid profile email demo offline_access model.read model.create model.update model.delete model.query'
+});
+
+/**
  * Integration coverage for the demo-cli `action guestbook ...` surface introduced in
  * `refactor(dbx-cli): add ActionCommandSpec + callModel iterator`.
  *
@@ -161,6 +169,63 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 expect(envelope.data?.perGuestbook).toEqual([]);
               });
             });
+
+            describe('demo-cli action guestbookEntry all-published-entries-invoke', () => {
+              describe('with two published guestbooks containing a mix of published and unpublished entries', () => {
+                demoGuestbookContext({ f, name: 'Invoke A', published: true }, (gA) => {
+                  demoGuestbookContext({ f, name: 'Invoke B', published: true }, (gB) => {
+                    demoGuestbookEntryContext({ f, u: adminUser, g: gA, message: 'invoke-a-pub', published: true }, () => {
+                      demoGuestbookEntryContext({ f, u: secondaryUser, g: gA, message: 'invoke-a-unpub', published: false }, () => {
+                        demoGuestbookEntryContext({ f, u: adminUser, g: gB, message: 'invoke-b-pub', published: true }, () => {
+                          it('aggregates only published entries server-side across the collection group', async () => {
+                            const result = await runCli(['action', 'guestbookEntry', 'all-published-entries-invoke']);
+
+                            expect(result.error).toBeUndefined();
+                            expect(result.exitCode).toBeUndefined();
+
+                            const envelope = parseCliJson<{ readonly count: number; readonly entries: ReadonlyArray<{ readonly message: string; readonly published: boolean }>; readonly hitLimit: boolean }>(result.stdoutText);
+                            expect(envelope.ok).toBe(true);
+                            expect(envelope.data?.count).toBeGreaterThanOrEqual(2);
+                            expect(envelope.data?.count).toBe(envelope.data?.entries.length);
+
+                            const messages = (envelope.data?.entries ?? []).map((e) => e.message);
+                            expect(messages).toContain('invoke-a-pub');
+                            expect(messages).toContain('invoke-b-pub');
+                            // The unpublished entry must not leak through.
+                            expect(messages).not.toContain('invoke-a-unpub');
+
+                            for (const entry of envelope.data?.entries ?? []) {
+                              expect(entry.published).toBe(true);
+                            }
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+
+              describe('with three published entries in one guestbook', () => {
+                demoGuestbookContext({ f, name: 'Invoke Limit', published: true }, (g) => {
+                  demoGuestbookEntryContext({ f, u: adminUser, g, message: 'invoke-limit-1', published: true }, () => {
+                    demoGuestbookEntryContext({ f, u: secondaryUser, g, message: 'invoke-limit-2', published: true }, () => {
+                      demoGuestbookEntryContext({ f, u: tertiaryUser, g, message: 'invoke-limit-3', published: true }, () => {
+                        it('respects --limit and surfaces hitLimit: true when the cap is reached', async () => {
+                          const result = await runCli(['action', 'guestbookEntry', 'all-published-entries-invoke', '--limit', '2']);
+
+                          expect(result.error).toBeUndefined();
+                          const envelope = parseCliJson<{ readonly count: number; readonly entries: ReadonlyArray<unknown>; readonly hitLimit: boolean }>(result.stdoutText);
+                          expect(envelope.ok).toBe(true);
+                          expect(envelope.data?.count).toBe(2);
+                          expect(envelope.data?.entries).toHaveLength(2);
+                          expect(envelope.data?.hitLimit).toBe(true);
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
           });
         });
       });
@@ -215,6 +280,29 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 expect(envelope.ok).toBe(false);
                 expect(envelope.code).toBe('AUTH_FORBIDDEN');
                 expect(envelope.error ?? '').toMatch(/Missing required OIDC scope for callModel: model\.query/);
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  // MARK: Auth — admin caller, but their OIDC token is missing the `model.invoke` scope
+  describe('admin caller with token missing model.invoke scope', () => {
+    demoAuthorizedUserAdminContext({ f }, (adminUser) => {
+      demoOAuthSuperTestContextWithoutInvokeScope({ f, u: adminUser }, (oauth) => {
+        withDemoTestCli({ f, oauth }, ({ runCli }) => {
+          demoGuestbookContext({ f, name: 'MissingInvokeScope Test', published: true }, (g) => {
+            demoGuestbookEntryContext({ f, u: adminUser, g, message: 'irrelevant', published: true }, () => {
+              it('rejects `action guestbookEntry all-published-entries-invoke` with AUTH_FORBIDDEN + missing-invoke-scope error message', async () => {
+                const result = await runCli(['action', 'guestbookEntry', 'all-published-entries-invoke']);
+
+                expect(result.exitCode).toBe(1);
+                const envelope = parseCliJson<unknown>(result.stdoutText);
+                expect(envelope.ok).toBe(false);
+                expect(envelope.code).toBe('AUTH_FORBIDDEN');
+                expect(envelope.error ?? '').toMatch(/Missing required OIDC scope for callModel: model\.invoke/);
               });
             });
           });

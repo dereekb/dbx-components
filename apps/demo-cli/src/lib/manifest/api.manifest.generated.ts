@@ -5,6 +5,7 @@
 import {
   createOidcClientParamsType,
   createStorageFileParamsType,
+  createStorageFileSignedUploadUrlParamsType,
   deleteOidcClientParamsType,
   deleteOidcTokenParamsType,
   deleteStorageFileParamsType,
@@ -26,7 +27,7 @@ import {
   updateStorageFileGroupParamsType,
   updateStorageFileParamsType
 } from '@dereekb/firebase';
-import { createGuestbookParamsType, downloadProfileArchiveParamsType, exampleReadParamsType, finishOnboardingProfileParamsType, guestbookEntryParamsType, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType, profileCreateTestNotificationParamsType, resetProfilePasswordParamsType, setProfileUsernameParamsType, subscribeToGuestbookNotificationsParamsType, updateProfileParamsType } from 'demo-firebase';
+import { allPublishedGuestbookEntriesParamsType, createGuestbookParamsType, downloadProfileArchiveParamsType, exampleReadParamsType, finishOnboardingProfileParamsType, guestbookEntryParamsType, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType, profileCreateTestNotificationParamsType, publishGuestbookParamsType, resetProfilePasswordParamsType, setProfileUsernameParamsType, subscribeToGuestbookNotificationsParamsType, updateProfileParamsType } from 'demo-firebase';
 import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
@@ -39,11 +40,57 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
     paramsFields: [
       { name: 'name', typeText: 'string' },
-      { name: 'published', typeText: 'Maybe<boolean>' }
+      { name: 'published', typeText: 'Maybe<boolean>' },
+      { name: 'cby', typeText: 'Maybe<ProfileId>' }
     ]
   },
+  { model: 'guestbook', verb: 'query', paramsTypeName: 'QueryGuestbooksParams', resultTypeName: 'OnCallQueryModelResult', groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsTypeDescription: 'Query parameters for searching guestbooks.', paramsFields: [{ name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all guestbooks.' }] },
+  { model: 'guestbook', verb: 'update', specifier: 'publish', paramsTypeName: 'PublishGuestbookParams', paramsValidator: publishGuestbookParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsTypeDescription: 'Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.' },
   { model: 'guestbook', verb: 'update', specifier: 'subscribeToNotifications', paramsTypeName: 'SubscribeToGuestbookNotificationsParams', paramsValidator: subscribeToGuestbookNotificationsParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts' },
   { model: 'guestbookEntry', verb: 'delete', paramsTypeName: 'GuestbookEntryParams', paramsValidator: guestbookEntryParamsType, groupName: 'Guestbook', sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts', paramsFields: [{ name: 'guestbook', typeText: 'string' }] },
+  {
+    model: 'guestbookEntry',
+    verb: 'invoke',
+    specifier: 'allPublishedEntries',
+    paramsTypeName: 'AllPublishedGuestbookEntriesParams',
+    paramsValidator: allPublishedGuestbookEntriesParamsType,
+    resultTypeName: 'AllPublishedGuestbookEntriesResult',
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsTypeDescription: 'Parameters for the `guestbookEntry / invoke / allPublishedEntries` RPC.\n\nServer-side equivalent of the client-side\n{@link QUERY_ALL_PUBLISHED_GUESTBOOK_ENTRIES_ACTION} composition — paginates\nthe cross-guestbook query internally and returns one aggregate response. Use\nthis when the caller wants a single round trip instead of driving pagination.',
+    paramsFields: [{ name: 'limit', typeText: 'Maybe<number>', description: 'Cap the number of entries returned. The server enforces an additional hard upper bound.' }],
+    resultTypeDescription: 'Result of an all-published-entries invoke.',
+    resultFields: [
+      { name: 'count', typeText: 'number' },
+      { name: 'entries', typeText: 'ReadonlyArray<GuestbookEntry>' },
+      { name: 'hitLimit', typeText: 'boolean' }
+    ]
+  },
+  {
+    model: 'guestbookEntry',
+    verb: 'query',
+    specifier: '_',
+    paramsTypeName: 'QueryGuestbookEntriesParams',
+    resultTypeName: 'OnCallQueryModelResult',
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsTypeDescription: 'Query parameters for searching guestbook entries for one guestbook.\n\nUsed with the default `guestbookEntry.query._` specifier — for cross-guestbook\ncollection-group queries, see {@link QueryAllGuestbookEntriesParams}.',
+    paramsFields: [
+      { name: 'guestbook', typeText: 'GuestbookKey', description: 'Key of the parent guestbook to query entries from. Required.' },
+      { name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all entries.' }
+    ]
+  },
+  {
+    model: 'guestbookEntry',
+    verb: 'query',
+    specifier: 'entries',
+    paramsTypeName: 'QueryAllGuestbookEntriesParams',
+    resultTypeName: 'OnCallQueryModelResult',
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsTypeDescription: 'Query parameters for searching GuestbookEntry across all guestbooks via the collection group.\n\nUsed with the `guestbookEntry.query.entries` specifier — unlike\n{@link QueryGuestbookEntriesParams}, the parent guestbook key is NOT required.',
+    paramsFields: [{ name: 'published', typeText: 'boolean', description: 'Filter by published status. When omitted, returns all entries the caller is allowed to see\n(server-side admin gate may restrict non-admins to `published: true`).' }]
+  },
   {
     model: 'guestbookEntry',
     verb: 'update',
@@ -302,6 +349,34 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'expediteProcessing', typeText: 'Maybe<boolean>' }
     ]
   },
+  {
+    model: 'storageFile',
+    verb: 'create',
+    specifier: 'signedUploadUrl',
+    paramsTypeName: 'CreateStorageFileSignedUploadUrlParams',
+    paramsValidator: createStorageFileSignedUploadUrlParamsType,
+    resultTypeName: 'CreateStorageFileSignedUploadUrlResult',
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: "Parameters for creating a short-lived signed PUT URL for a StorageFile upload.\n\nThe resulting URL is restricted to a specific {@link StorageFilePurpose}, MIME\ntype, and file size and lands the bytes inside the authenticated caller's\n`/uploads/u/{uid}/...` namespace. Once uploaded, the existing\n`StorageFileInitializeFromUploadService` flow picks the file up and creates\nthe matching `StorageFile` document.",
+    paramsFields: [
+      { name: 'purpose', typeText: 'StorageFilePurpose', description: "The {@link StorageFilePurpose} to upload as. Must be supported by the\napp's signed-upload-url policy registry. The chosen policy decides where\nthe file lands and which content-types/sizes are allowed." },
+      { name: 'contentType', typeText: 'ContentTypeMimeType', description: "The MIME type the client intends to PUT. Validated against the policy's\n`allowedMimeTypes` and signed into the URL so GCS rejects any PUT with a\ndifferent `Content-Type`." },
+      { name: 'filename', typeText: 'Maybe<SlashPathFile>', description: "Filename to place inside the policy's upload folder. Required when the\npolicy has `requiresFilenameInput: true`. Sanitized server-side — must not\ncontain `/`, `..`, or NUL bytes; capped at\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_FILENAME_LENGTH} chars." },
+      { name: 'fileSizeBytes', typeText: 'number', description: "Client-declared size in bytes for the upload. Validated against the\npolicy's `maxFileSizeBytes` cap. The storage rules independently enforce\nthe same cap via `request.resource.size`." },
+      { name: 'expiresInMs', typeText: 'Maybe<Milliseconds>', description: 'Lifetime of the signed URL in milliseconds. Clamped to\n[{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},\n{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].\nDefaults to {@link DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS}\nwhen omitted.' }
+    ],
+    resultTypeDescription: 'Result of creating a signed upload URL.\n\nThe caller PUTs the file bytes to {@link uploadUrl} with the headers in\n{@link requiredHeaders}. The existing initializer flow then picks the file\nup from {@link uploadPath} and creates the StorageFile document.\n\n`modelKeys` is intentionally empty — minting the URL does not create a\nStorageFile document; the document is created later by the upload-complete\npipeline.',
+    resultFields: [
+      { name: 'modelKeys', typeText: '[]' },
+      { name: 'uploadUrl', typeText: 'string', description: 'Short-lived, content-type-pinned PUT URL.' },
+      { name: 'uploadPath', typeText: 'SlashPath', description: 'The full storage path the URL writes to (inside `/uploads/u/{uid}/...`).\nReturned so the caller can confirm where the file landed.' },
+      { name: 'expiresAt', typeText: 'UnixDateTimeMillisecondsNumber', description: 'Unix millisecond timestamp at which the URL expires.' },
+      { name: 'requiredHeaders', typeText: 'Readonly<Record<string, string>>', description: 'Headers the caller MUST send on the PUT for the signature to validate.\nAt minimum, the `content-type` matches the signed value.' },
+      { name: 'maxFileSizeBytes', typeText: 'number', description: "Echo of the policy's `maxFileSizeBytes` cap, for caller-side validation." },
+      { name: 'purpose', typeText: 'StorageFilePurpose', description: 'The resolved {@link StorageFilePurpose}.' }
+    ]
+  },
   { model: 'storageFile', verb: 'delete', specifier: '_', paramsTypeName: 'DeleteStorageFileParams', paramsValidator: deleteStorageFileParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'force', typeText: 'Maybe<boolean>' }] },
   {
     model: 'storageFile',
@@ -424,7 +499,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'locked', longName: 'locked', tsType: 'boolean', optional: false, description: "Whether or not this guestbook and it's entries can still be edited." },
       { name: 'lockedAt', longName: 'lockedAt', tsType: 'Maybe<Date>', optional: true, description: 'Date the guestbook was locked at.' },
       { name: 'cby', longName: 'createdBy', tsType: 'Maybe<ProfileId>', optional: true, description: 'User who created the guestbook.' }
-    ]
+    ],
+    read: 'permissions',
+    serviceFactory: { exportName: 'guestbookFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'guestbookEntry',
@@ -444,7 +521,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'createdAt', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Date the entry was originally created at.' },
       { name: 'published', longName: 'published', tsType: 'boolean', optional: false, description: 'Whether or not the entry has been published. It can be unpublished at any time by the user.' },
       { name: 'likes', longName: 'likes', tsType: 'number', optional: false, description: 'The number of likes the entry has recieved from users.' }
-    ]
+    ],
+    read: 'owner',
+    serviceFactory: { exportName: 'guestbookEntryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notification',
@@ -494,7 +573,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'esr', longName: 'emailRecipients', tsType: 'EmailAddress[]', optional: false, description: 'Email addresses that have already received the email for this notification.' },
       { name: 'tpr', longName: 'taskCheckpoints', tsType: 'NotificationTaskCheckpointString[]', optional: false, description: 'Completed checkpoint strings for multi-step task notifications.' },
       { name: 'ut', longName: 'uniqueTask', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Unique task flag. Only used for task-type notifications.' }
-    ]
+    ],
+    read: 'system',
+    serviceFactory: { exportName: 'notificationFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationBox',
@@ -531,7 +612,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'w', longName: 'latestWeek', tsType: 'YearWeekCode', optional: false, description: 'Year-week code of the latest {@link NotificationWeek} subcollection document.' },
       { name: 's', longName: 'needsSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether this box needs server-side sync/initialization with its source model. Cleared when `fi` is set true (flagged invalid).' },
       { name: 'fi', longName: 'flaggedInvalid', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Flagged invalid — set when the box cannot be properly initialized (e.g., source model deleted).' }
-    ]
+    ],
+    read: 'system',
+    serviceFactory: { exportName: 'notificationBoxFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationLoggedEventDay',
@@ -542,7 +625,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     description: "Day-keyed wrapper document for a single day's worth of archived logged-event notifications under a {@link NotificationBox}.",
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
-    fields: [{ name: 'd', longName: 'day', tsType: 'string', optional: false, description: 'ISO 8601 day string identifying this day. Matches the document ID.' }]
+    fields: [{ name: 'd', longName: 'day', tsType: 'string', optional: false, description: 'ISO 8601 day string identifying this day. Matches the document ID.' }],
+    read: 'system',
+    serviceFactory: { exportName: 'notificationLoggedEventDayFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationSummary',
@@ -579,7 +664,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'rat', longName: 'lastReadAt', tsType: 'Maybe<Date>', optional: true, description: 'Timestamp of when the user last read this summary. Items with dates after this are considered unread.' },
       { name: 's', longName: 'needsSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether this summary needs server-side sync/initialization with its source model.' },
       { name: 'fi', longName: 'flaggedInvalid', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this model has been flagged invalid.' }
-    ]
+    ],
+    read: 'system',
+    serviceFactory: { exportName: 'notificationSummaryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationUser',
@@ -619,7 +706,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         nestedIsArray: true
       },
       { name: 'ns', longName: 'needsConfigSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether one or more configs need to be synced to their corresponding NotificationBox recipients.' }
-    ]
+    ],
+    read: 'system',
+    serviceFactory: { exportName: 'notificationUserFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationWeek',
@@ -651,7 +740,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         ],
         nestedIsArray: true
       }
-    ]
+    ],
+    read: 'system',
+    serviceFactory: { exportName: 'notificationWeekFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'oidcEntry',
@@ -672,7 +763,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'consumed', longName: 'consumedAt', tsType: 'Maybe<number>', optional: true, description: 'Epoch timestamp when this entry was consumed. Extracted from the payload for indexed queries.' },
       { name: 'createdAt', longName: 'createdAt', tsType: 'Maybe<Date>', optional: true, description: 'When this entry was created. Derived from `payload.iat` on grantable tokens (AccessToken, RefreshToken, AuthorizationCode, Grant, etc.) and from `payload.created_at` on Client entries.' },
       { name: 'expiresAt', longName: 'expiresAt', tsType: 'Maybe<Date>', optional: true, description: 'When this entry expires.' }
-    ]
+    ],
+    read: 'permissions',
+    serviceFactory: { exportName: 'oidcEntryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'storageFile',
@@ -702,7 +795,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'sdat', longName: 'scheduledDeleteAt', tsType: 'Maybe<Date>', optional: true, description: 'Scheduled delete at date. The StorageFile cannot be deleted before this set time.' },
       { name: 'g', longName: 'groupIds', tsType: 'StorageFileGroupId[]', optional: false, description: 'StorageFileGroup id(s) that this StorageFile should be associated with.' },
       { name: 'gs', longName: 'groupsNeedSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'If true, this file should be re-synced with each StorageFileGroup that it references.' }
-    ]
+    ],
+    read: 'permissions',
+    serviceFactory: { exportName: 'storageFileFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'storageFileGroup',
@@ -736,7 +831,20 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'fi', longName: 'flaggedInvalid', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this model has been flagged invalid.' },
       { name: 're', longName: 'shouldRegenerate', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this StorageFileGroup should flag regeneration of output StorageFiles/content.' },
       { name: 'c', longName: 'shouldCleanup', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this StorageFileGroup should clean up file references.' }
-    ]
+    ],
+    read: 'admin-only',
+    serviceFactory: { exportName: 'storageFileGroupFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
-  { modelType: 'systemState', modelName: 'SystemState', identityConst: 'systemStateIdentity', collectionPrefix: 'sys', description: 'A singleton Firestore document storing the current state of a system subcomponent.', sourcePackage: '@dereekb/firebase', sourceFile: 'packages/firebase/src/lib/model/system/system.ts', fields: [{ name: 'data', longName: 'data', tsType: 'T', optional: false, description: 'Arbitrary persisted data for this system state singleton.' }] }
+  {
+    modelType: 'systemState',
+    modelName: 'SystemState',
+    identityConst: 'systemStateIdentity',
+    collectionPrefix: 'sys',
+    description: 'A singleton Firestore document storing the current state of a system subcomponent.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
+    fields: [{ name: 'data', longName: 'data', tsType: 'T', optional: false, description: 'Arbitrary persisted data for this system state singleton.' }],
+    read: 'system',
+    serviceFactory: { exportName: 'systemStateFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  }
 ];

@@ -2,7 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { clearDownstreamCatalogCache } from '../registry/downstream-models-runtime.js';
+import { clearDownstreamCatalogCache } from '@dereekb/dbx-cli';
 import { runSearchModel } from './search-model.tool.js';
 
 const REPO_ROOT = resolve(__dirname, '../../../..');

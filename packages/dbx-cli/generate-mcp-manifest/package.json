@@ -1,0 +1,6 @@
+{
+  "name": "@dereekb/dbx-cli-generate-mcp-manifest",
+  "version": "13.12.0",
+  "private": true,
+  "type": "module"
+}

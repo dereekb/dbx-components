@@ -177,6 +177,43 @@ export function expectFail(errorFn: () => PromiseOrValue<any>, assertFailType?: 
 }
 
 /**
+ * Invokes `fn` and returns the value it rejects with. Throws {@link UnexpectedSuccessFailureError}
+ * when `fn` resolves successfully.
+ *
+ * Use this when a test needs the thrown value in hand to assert on multiple of its properties
+ * (e.g. inspect a structured `details.code`). For "did it throw at all" checks, prefer
+ * {@link expectFail} or vitest's `await expect(fn()).rejects.toThrow(...)`.
+ *
+ * @param fn - Async function expected to reject.
+ * @returns The thrown value as `unknown`.
+ * @throws {UnexpectedSuccessFailureError} When `fn` resolves successfully.
+ *
+ * @example
+ * ```ts
+ * const error = await captureRejection(() => callResetPassword({ resetPassword: '000000' }));
+ * expect(error).toBeInstanceOf(HttpsError);
+ * expect((error as HttpsError).code).toBe('invalid-argument');
+ * ```
+ */
+export async function captureRejection<T>(fn: () => Promise<T>): Promise<unknown> {
+  let thrown: unknown;
+  let didThrow = false;
+
+  try {
+    await fn();
+  } catch (e) {
+    thrown = e;
+    didThrow = true;
+  }
+
+  if (!didThrow) {
+    failDueToSuccess();
+  }
+
+  return thrown;
+}
+
+/**
  * Function that expects an {@link ExpectedFailError} to be thrown by `errorFn`.
  *
  * Lower-level building block used by {@link shouldFail}; most consumer tests should use

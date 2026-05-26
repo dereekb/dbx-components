@@ -53,12 +53,17 @@
 
     <doc-feature-example header="dbx-file-upload-button" hint="Used to render a dbx-button that opens a file picker when clicked.">
       <dbx-content-border>
-        <dbx-file-upload-button icon="upload">
-          <div style="width: 200px">
-            <p>This custom content inside the button.</p>
-            <p>Line Two</p>
-          </div>
-        </dbx-file-upload-button>
+        <div class="dbx-pb3">
+          <dbx-file-upload-button icon="upload" (filesChanged)="buttonCustomUploaded = $event">
+            <div style="width: 200px">
+              <p>This custom content inside the button.</p>
+              <p>Line Two</p>
+            </div>
+          </dbx-file-upload-button>
+        </div>
+        <dbx-content-pit>
+          <div class="dbx-json">{{ filesChangeResult(buttonCustomUploaded) | json }}</div>
+        </dbx-content-pit>
       </dbx-content-border>
       <p>
         It can be configured like a usual input field, with both the
@@ -69,7 +74,12 @@
       </p>
       <ng-container *ngTemplateOutlet="acceptTemplate"></ng-container>
       <dbx-content-border>
-        <dbx-file-upload-button icon="upload" text="Upload Images" multiple accept="image/*"></dbx-file-upload-button>
+        <div class="dbx-pb3">
+          <dbx-file-upload-button icon="upload" text="Upload Images" multiple accept="image/*" (filesChanged)="buttonImagesUploaded = $event"></dbx-file-upload-button>
+        </div>
+        <dbx-content-pit>
+          <div class="dbx-json">{{ filesChangeResult(buttonImagesUploaded) | json }}</div>
+        </dbx-content-pit>
       </dbx-content-border>
     </doc-feature-example>
   </doc-feature-layout>

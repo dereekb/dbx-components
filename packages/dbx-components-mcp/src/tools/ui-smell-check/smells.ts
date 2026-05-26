@@ -8,9 +8,7 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import type { TokenEntry } from '../../manifest/tokens-schema.js';
-import type { TokenRegistry } from '../../registry/tokens-runtime.js';
-import type { UiComponentRegistry } from '../../registry/ui-components-runtime.js';
+import { type TokenEntry, type TokenRegistry, type UiComponentRegistry } from '@dereekb/dbx-cli';
 
 // MARK: Public types
 /**

@@ -4,9 +4,10 @@
  * point is {@link validateModelFolders} in `./validate.ts`.
  */
 
+import { RESERVED_MODEL_FOLDERS, type ReservedModelFolder } from '@dereekb/dbx-cli';
 import { attachRemediation } from '../rule-catalog/index.js';
 import { validateFirebaseModelSources, type RuleOptions } from '../model-validate/index.js';
-import { buildRequiredFiles, RESERVED_MODEL_FOLDERS, type FolderInspection, type ReservedModelFolder, type Violation, type ViolationSeverity } from './types.js';
+import { buildRequiredFiles, type FolderInspection, type Violation, type ViolationSeverity } from './types.js';
 
 /**
  * Applies every folder-level rule to a single inspection and returns the

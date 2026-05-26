@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FORM_FIELDS } from '../registry/index.js';
-import { createForgeFieldRegistryFromEntries } from '../registry/forge-fields.js';
+import { FORM_FIELDS, createForgeFieldRegistryFromEntries } from '@dereekb/dbx-cli';
 import { createSearchFormTool } from './search-form.tool.js';
 
 const tool = createSearchFormTool({

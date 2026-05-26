@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { type ConfigService } from '@nestjs/config';
 import { type FirebaseServerEnvService } from '@dereekb/firebase-server';
-import { oidcModuleConfigFactory, OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY } from './oidc.module';
+import { deriveResourceMetadataUrlFromEnv, oidcModuleConfigFactory, OIDC_JWKS_ENCRYPTION_SECRET_ENV_KEY } from './oidc.module';
 import { type OidcModuleConfig } from './oidc.config';
 
 const TEST_ENCRYPTION_SECRET = `54686520717569636b2062726f776e20f09fa68a206a756d7073206f76657220`;
@@ -19,6 +19,7 @@ function makeEnvService(overrides: Partial<FirebaseServerEnvService> = {}): Fire
     isTestingEnv: false,
     appUrl: 'https://app.example.com',
     appApiUrl: undefined,
+    appMcpUrl: undefined,
     appWebhookUrl: undefined,
     isApiEnabled: true,
     isWebhooksEnabled: false,
@@ -63,5 +64,33 @@ describe('config.issuer override on oidcModuleMetadata', () => {
     const override: Partial<OidcModuleConfig> = { issuer: 'https://canonical.example.com/oidc' };
     const result = { ...moduleConfig, ...override };
     expect(result.issuer).toBe('https://canonical.example.com/oidc');
+  });
+});
+
+describe('deriveResourceMetadataUrlFromEnv()', () => {
+  it('returns undefined when appMcpUrl is not set', () => {
+    expect(deriveResourceMetadataUrlFromEnv(makeEnvService())).toBeUndefined();
+  });
+
+  it('roots the discovery doc at the MCP path parent when appMcpUrl has a function-emulator prefix', () => {
+    const envService = makeEnvService({ appMcpUrl: 'http://localhost:9902/dereekb-components/us-central1/api/mcp' });
+    expect(deriveResourceMetadataUrlFromEnv(envService)).toBe('http://localhost:9902/dereekb-components/us-central1/api/.well-known/oauth-protected-resource');
+  });
+
+  it('roots the discovery doc at the origin when appMcpUrl lives at the host root', () => {
+    const envService = makeEnvService({ appMcpUrl: 'https://api.example.com/mcp' });
+    expect(deriveResourceMetadataUrlFromEnv(envService)).toBe('https://api.example.com/.well-known/oauth-protected-resource');
+  });
+});
+
+describe('oidcModuleConfigFactory() resourceMetadataUrl', () => {
+  it('auto-derives resourceMetadataUrl from envService.appMcpUrl', () => {
+    const config = oidcModuleConfigFactory(makeConfigService(), makeEnvService({ appMcpUrl: 'https://api.example.com/mcp' }));
+    expect(config.resourceMetadataUrl).toBe('https://api.example.com/.well-known/oauth-protected-resource');
+  });
+
+  it('returns undefined resourceMetadataUrl when appMcpUrl is not set', () => {
+    const config = oidcModuleConfigFactory(makeConfigService(), makeEnvService());
+    expect(config.resourceMetadataUrl).toBeUndefined();
   });
 });
