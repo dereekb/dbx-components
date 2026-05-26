@@ -1,7 +1,5 @@
 import type { Maybe } from '@dereekb/util';
-import { getStatementAnchor, leadingJsdocFor } from './comments';
-import { parseJsdocComment } from './jsdoc-parser';
-import { buildLowercaseTagsFix, checkDbxTagFamily, type DbxCompanionTagSpec, type DbxTagFamilySpec, findFamilyTags, parseBooleanTagValue, reportOnJsdocLine } from './dbx-tag-families';
+import { buildLowercaseTagsFix, checkDbxTagFamily, type DbxCompanionTagSpec, type DbxTagFamilySpec, findFamilyTags, getStatementAnchor, leadingJsdocFor, parseBooleanTagValue, parseJsdocComment, reportOnJsdocLine } from '@dereekb/util/eslint';
 import { type AstNode, DBX_MODEL_FIREBASE_INDEX_MARKER, DEFAULT_CONSTRAINT_FACTORY_NAMES, getFunctionName } from './util';
 
 const DEFAULT_ALLOWED_SCOPES: readonly string[] = ['COLLECTION', 'COLLECTION_GROUP'];

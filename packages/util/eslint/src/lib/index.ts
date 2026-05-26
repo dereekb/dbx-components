@@ -23,3 +23,6 @@ export { UTIL_REQUIRE_CONSTANT_NAMING_RULE, type UtilRequireConstantNamingRuleOp
 export { UTIL_REQUIRE_DEFAULT_PREFIX_NAMING_RULE, type UtilRequireDefaultPrefixNamingRuleOptions, type UtilRequireDefaultPrefixNamingRuleDefinition } from './require-default-prefix-naming.rule';
 export { UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE, type UtilRequireExportedJsdocExampleRuleOptions, type UtilRequireExportedJsdocExampleRuleDefinition } from './require-exported-jsdoc-example.rule';
 export { UTIL_ESLINT_PLUGIN, utilESLintPlugin, type UtilEslintPlugin } from './plugin';
+export { getStatementAnchor, leadingJsdocFor } from './comments';
+export { parseJsdocComment } from './jsdoc-parser';
+export { buildLowercaseTagsFix, checkDbxTagFamily, findFamilyTags, parseBooleanTagValue, reportOnJsdocLine, type DbxCompanionTagSpec, type DbxTagFamilySpec } from './dbx-tag-families';

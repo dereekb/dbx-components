@@ -1,6 +1,5 @@
 import type { Maybe } from '@dereekb/util';
-import { leadingJsdocFor } from './comments';
-import { parseJsdocComment } from './jsdoc-parser';
+import { leadingJsdocFor, parseJsdocComment } from '@dereekb/util/eslint';
 import { type AstNode, DBX_MODEL_FIREBASE_INDEX_MARKER, QUERY_SUFFIX, getFunctionJsdocAnchor, getFunctionName, getFunctionNameNode } from './util';
 
 /**
