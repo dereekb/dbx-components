@@ -111,7 +111,8 @@ export default [
       'dereekb-firebase/require-api-details-for-crud-function': 'warn', // require CRUD function declarations (`On(?:Call)?<Verb>ModelFunction` or app-side aliases ending with `<Verb>ModelFunction`) to be wrapped in `withApiDetails(...)` — handlers without the wrapper attach no `_apiDetails` metadata and silently fail to surface in the MCP manifest built by `packages/firebase-server-mcp`
       'dereekb-firebase/require-storagefile-policy-matches-rules': 'warn', // cross-check STORAGE_FILE_PURPOSE_UPLOAD_POLICIES entries against the workspace `storage.rules` — each policy's `maxFileSizeBytes` and `allowedMimeTypes` must match the paired `// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[<KEY>]` rule block so signed-upload URLs never sign a request the bucket then rejects
       'dereekb-firebase/require-dbx-model-service-factory-tag': 'warn', // dbx-components-mcp model registry: require `@dbxModelServiceFactory <modelType>` JSDoc on every `firebaseModelServiceFactory(...)` export so the MCP catalog can join factory metadata onto model entries
-      'dereekb-firebase/require-service-factory-for-dbx-model': 'warn' // dbx-components-mcp model registry: cross-file check that every `@dbxModel`-marked interface has a matching `@dbxModelServiceFactory <modelType>` declaration somewhere in the workspace
+      'dereekb-firebase/require-service-factory-for-dbx-model': 'warn', // dbx-components-mcp model registry: cross-file check that every `@dbxModel`-marked interface has a matching `@dbxModelServiceFactory <modelType>` declaration somewhere in the workspace
+      'dereekb-firebase/require-dbx-model-companion-tags': 'warn' // dbx-components-mcp model registry: enforce @dbxModel marker semantics, archetype/aggregatesFrom/compositeKey formats
     }
   },
   {
@@ -180,7 +181,6 @@ export default [
       'dereekb-util/require-dbx-model-snapshot-field-companion-tags': 'warn', // dbx-components-mcp snapshot-fields registry: validate @dbxModelSnapshotField* companion formats
       'dereekb-util/require-dbx-action-companion-tags': 'warn', // dbx-components-mcp actions registry: enforce @dbxActionSlug + state enum on @dbxAction-tagged classes/enums
       'dereekb-util/require-dbx-form-field-companion-tags': 'warn', // dbx-components-mcp forge-fields registry: enforce tier-specific @dbxForm* tags on @dbxFormField-tagged factories
-      'dereekb-util/require-dbx-model-companion-tags': 'warn', // dbx-components-mcp model registry: enforce @dbxModel marker semantics, archetype/aggregatesFrom/compositeKey formats
       'dereekb-util/require-dbx-auth-companion-tags': 'warn', // dbx-components-mcp auth registry: enforce @dbxAuthClaimsApp / @dbxAuthClaim / @dbxAuthClaimsService location + slug formats
       'dereekb-util/require-dbx-rule-companion-tags': 'warn', // dbx-components-mcp rule catalog: enforce @dbxRuleSeverity/Applies/NotApplies/Fix on @dbxRule-tagged enum members
       'dereekb-util/require-constant-naming': 'warn', // dbx__note__typescript-programming → Constant Naming: camelCase or UPPER_SNAKE_CASE for function-typed exported const, UPPER_SNAKE_CASE (or PascalCase) for value-typed. Ambiguous initializers (CallExpression aliases, etc.) are skipped; `@dbxAllowConstantName` JSDoc opts an export out.

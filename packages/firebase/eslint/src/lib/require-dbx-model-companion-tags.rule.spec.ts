@@ -1,21 +1,23 @@
 import { Linter } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
-import { UTIL_ESLINT_PLUGIN } from './plugin';
+import { FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE } from './require-dbx-model-companion-tags.rule';
+
+const RULE_ID = 'dereekb-firebase/require-dbx-model-companion-tags';
 
 function buildConfig(): Linter.Config[] {
   return [
     {
       files: ['**/*.ts'],
       languageOptions: { parser: tsParser, parserOptions: { ecmaVersion: 2022, sourceType: 'module' } },
-      plugins: { 'dereekb-util': UTIL_ESLINT_PLUGIN as any },
-      rules: { 'dereekb-util/require-dbx-model-companion-tags': 'error' }
+      plugins: { 'dereekb-firebase': { rules: { 'require-dbx-model-companion-tags': FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE } } as any },
+      rules: { [RULE_ID]: 'error' }
     }
   ];
 }
 
 function lintCode(code: string): Linter.LintMessage[] {
   const linter = new Linter({ configType: 'flat' });
-  return linter.verify(code, buildConfig(), { filename: 'test.ts' }).filter((m) => m.ruleId === 'dereekb-util/require-dbx-model-companion-tags');
+  return linter.verify(code, buildConfig(), { filename: 'test.ts' }).filter((m) => m.ruleId === RULE_ID);
 }
 
 function messagesById(messages: Linter.LintMessage[]): Record<string, number> {

@@ -1,7 +1,5 @@
-import { leadingJsdocFor } from './comments';
 import type { Maybe } from '@dereekb/util';
-import { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag } from './jsdoc-parser';
-import { PASCAL_IDENTIFIER_PATTERN, reportOnJsdocLine } from './dbx-tag-families';
+import { leadingJsdocFor, parseJsdocComment, reportOnJsdocLine, type ParsedJsdoc, type ParsedJsdocTag } from '@dereekb/util/eslint';
 
 interface AstNode {
   readonly type: string;
@@ -15,6 +13,7 @@ const PROPERTY_COMPANIONS: readonly string[] = ['Variable', 'VariableSyncFlag'];
 const DEFAULT_ALLOWED_ENCODINGS: readonly string[] = ['two-way', 'one-way'];
 const ARCHETYPE_SLUG_PATTERN = /^[a-z][a-z0-9-]*$/;
 const ARCHETYPE_AXIS_PATTERN = /^([A-Za-z_$][A-Za-z0-9_$]*)=([^,]+)$/;
+const PASCAL_IDENTIFIER_PATTERN = /^[A-Z][A-Za-z0-9_$]*$/;
 
 /**
  * Allowed `@dbxModelRead` values. Statically-inferable cases plus the `permissions` escape hatch
@@ -171,7 +170,7 @@ function collectInterfaceTags(parsed: ParsedJsdoc): { readonly markers: ParsedJs
 /**
  * Options for the require-dbx-model-companion-tags rule.
  */
-export interface UtilRequireDbxModelCompanionTagsRuleOptions {
+export interface FirebaseRequireDbxModelCompanionTagsRuleOptions {
   readonly allowedEncodings?: readonly string[];
   readonly knownCompanions?: readonly string[];
   readonly requireBareMarker?: boolean;
@@ -181,7 +180,7 @@ export interface UtilRequireDbxModelCompanionTagsRuleOptions {
 /**
  * ESLint rule definition for require-dbx-model-companion-tags.
  */
-export interface UtilRequireDbxModelCompanionTagsRuleDefinition {
+export interface FirebaseRequireDbxModelCompanionTagsRuleDefinition {
   readonly meta: {
     readonly type: 'suggestion';
     readonly fixable: 'code';
@@ -189,7 +188,7 @@ export interface UtilRequireDbxModelCompanionTagsRuleDefinition {
     readonly messages: Readonly<Record<string, string>>;
     readonly schema: readonly object[];
   };
-  create(context: { options: UtilRequireDbxModelCompanionTagsRuleOptions[]; report: (descriptor: { loc?: AstNode; messageId: string; data?: Record<string, string> }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
+  create(context: { options: FirebaseRequireDbxModelCompanionTagsRuleOptions[]; report: (descriptor: { loc?: AstNode; messageId: string; data?: Record<string, string> }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
 }
 
 /**
@@ -200,7 +199,7 @@ export interface UtilRequireDbxModelCompanionTagsRuleDefinition {
  * Does NOT enforce a Slug / Category / Tags shape because the scanner does
  * not consume those for this family.
  */
-export const UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE: UtilRequireDbxModelCompanionTagsRuleDefinition = {
+export const FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE: FirebaseRequireDbxModelCompanionTagsRuleDefinition = {
   meta: {
     type: 'suggestion',
     fixable: 'code',

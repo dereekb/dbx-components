@@ -16,7 +16,6 @@ import { type UtilRequireDbxDocsUiExampleCompanionTagsRuleDefinition, UTIL_REQUI
 import { type UtilRequireDbxModelSnapshotFieldCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_MODEL_SNAPSHOT_FIELD_COMPANION_TAGS_RULE } from './require-dbx-model-snapshot-field-companion-tags.rule';
 import { type UtilRequireDbxActionCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_ACTION_COMPANION_TAGS_RULE } from './require-dbx-action-companion-tags.rule';
 import { type UtilRequireDbxFormFieldCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_FORM_FIELD_COMPANION_TAGS_RULE } from './require-dbx-form-field-companion-tags.rule';
-import { type UtilRequireDbxModelCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE } from './require-dbx-model-companion-tags.rule';
 import { type UtilRequireDbxAuthCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_AUTH_COMPANION_TAGS_RULE } from './require-dbx-auth-companion-tags.rule';
 import { type UtilRequireDbxRuleCompanionTagsRuleDefinition, UTIL_REQUIRE_DBX_RULE_COMPANION_TAGS_RULE } from './require-dbx-rule-companion-tags.rule';
 import { type UtilRequireConstantNamingRuleDefinition, UTIL_REQUIRE_CONSTANT_NAMING_RULE } from './require-constant-naming.rule';
@@ -49,7 +48,6 @@ export interface UtilEslintPlugin {
     readonly 'require-dbx-model-snapshot-field-companion-tags': UtilRequireDbxModelSnapshotFieldCompanionTagsRuleDefinition;
     readonly 'require-dbx-action-companion-tags': UtilRequireDbxActionCompanionTagsRuleDefinition;
     readonly 'require-dbx-form-field-companion-tags': UtilRequireDbxFormFieldCompanionTagsRuleDefinition;
-    readonly 'require-dbx-model-companion-tags': UtilRequireDbxModelCompanionTagsRuleDefinition;
     readonly 'require-dbx-auth-companion-tags': UtilRequireDbxAuthCompanionTagsRuleDefinition;
     readonly 'require-dbx-rule-companion-tags': UtilRequireDbxRuleCompanionTagsRuleDefinition;
     readonly 'require-constant-naming': UtilRequireConstantNamingRuleDefinition;
@@ -87,7 +85,6 @@ export const UTIL_ESLINT_PLUGIN: UtilEslintPlugin = {
     'require-dbx-model-snapshot-field-companion-tags': UTIL_REQUIRE_DBX_MODEL_SNAPSHOT_FIELD_COMPANION_TAGS_RULE,
     'require-dbx-action-companion-tags': UTIL_REQUIRE_DBX_ACTION_COMPANION_TAGS_RULE,
     'require-dbx-form-field-companion-tags': UTIL_REQUIRE_DBX_FORM_FIELD_COMPANION_TAGS_RULE,
-    'require-dbx-model-companion-tags': UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE,
     'require-dbx-auth-companion-tags': UTIL_REQUIRE_DBX_AUTH_COMPANION_TAGS_RULE,
     'require-dbx-rule-companion-tags': UTIL_REQUIRE_DBX_RULE_COMPANION_TAGS_RULE,
     'require-constant-naming': UTIL_REQUIRE_CONSTANT_NAMING_RULE,

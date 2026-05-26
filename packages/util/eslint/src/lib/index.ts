@@ -16,7 +16,6 @@ export { UTIL_REQUIRE_DBX_DOCS_UI_EXAMPLE_COMPANION_TAGS_RULE, type UtilRequireD
 export { UTIL_REQUIRE_DBX_MODEL_SNAPSHOT_FIELD_COMPANION_TAGS_RULE, type UtilRequireDbxModelSnapshotFieldCompanionTagsRuleOptions, type UtilRequireDbxModelSnapshotFieldCompanionTagsRuleDefinition } from './require-dbx-model-snapshot-field-companion-tags.rule';
 export { UTIL_REQUIRE_DBX_ACTION_COMPANION_TAGS_RULE, type UtilRequireDbxActionCompanionTagsRuleOptions, type UtilRequireDbxActionCompanionTagsRuleDefinition } from './require-dbx-action-companion-tags.rule';
 export { UTIL_REQUIRE_DBX_FORM_FIELD_COMPANION_TAGS_RULE, type UtilRequireDbxFormFieldCompanionTagsRuleOptions, type UtilRequireDbxFormFieldCompanionTagsRuleDefinition } from './require-dbx-form-field-companion-tags.rule';
-export { UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE, type UtilRequireDbxModelCompanionTagsRuleOptions, type UtilRequireDbxModelCompanionTagsRuleDefinition } from './require-dbx-model-companion-tags.rule';
 export { UTIL_REQUIRE_DBX_AUTH_COMPANION_TAGS_RULE, type UtilRequireDbxAuthCompanionTagsRuleOptions, type UtilRequireDbxAuthCompanionTagsRuleDefinition } from './require-dbx-auth-companion-tags.rule';
 export { UTIL_REQUIRE_DBX_RULE_COMPANION_TAGS_RULE, type UtilRequireDbxRuleCompanionTagsRuleOptions, type UtilRequireDbxRuleCompanionTagsRuleDefinition } from './require-dbx-rule-companion-tags.rule';
 export { UTIL_REQUIRE_CONSTANT_NAMING_RULE, type UtilRequireConstantNamingRuleOptions, type UtilRequireConstantNamingRuleDefinition } from './require-constant-naming.rule';
@@ -24,5 +23,5 @@ export { UTIL_REQUIRE_DEFAULT_PREFIX_NAMING_RULE, type UtilRequireDefaultPrefixN
 export { UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE, type UtilRequireExportedJsdocExampleRuleOptions, type UtilRequireExportedJsdocExampleRuleDefinition } from './require-exported-jsdoc-example.rule';
 export { UTIL_ESLINT_PLUGIN, utilESLintPlugin, type UtilEslintPlugin } from './plugin';
 export { getStatementAnchor, leadingJsdocFor } from './comments';
-export { parseJsdocComment } from './jsdoc-parser';
+export { parseJsdocComment, type ParsedJsdoc, type ParsedJsdocTag, type ParsedJsdocLine } from './jsdoc-parser';
 export { buildLowercaseTagsFix, checkDbxTagFamily, findFamilyTags, parseBooleanTagValue, reportOnJsdocLine, type DbxCompanionTagSpec, type DbxTagFamilySpec } from './dbx-tag-families';
