@@ -38,18 +38,18 @@ export interface McpModuleMetadataConfig extends Pick<ModuleMetadata, 'imports' 
  * @param metadataConfig - Configuration including the dependency module.
  * @returns NestJS module metadata exposing the MCP transport + well-known controller.
  *
- * @example
- * ```typescript
- * @Module({
+ * @Module ({
  *   imports: [DemoModelApiModule],
  *   providers: [{ provide: McpModuleConfig, useValue: { oidcIssuer, mcpUrl } }],
  *   exports: [McpModuleConfig, ModelApiCallModelDispatchService, MODEL_API_NEST_APPLICATION_CONTEXT]
  * })
  * export class DemoMcpDependencyModule {}
- *
- * @Module(mcpModuleMetadata({ dependencyModule: DemoMcpDependencyModule }))
+ * @Module (mcpModuleMetadata({ dependencyModule: DemoMcpDependencyModule }))
  * export class DemoMcpModule {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function mcpModuleMetadata(metadataConfig: McpModuleMetadataConfig): ModuleMetadata {
   const { dependencyModule, imports, exports, providers } = metadataConfig;

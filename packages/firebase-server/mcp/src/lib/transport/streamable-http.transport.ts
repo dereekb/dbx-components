@@ -21,7 +21,7 @@ export async function handleStreamableHttpMcpRequest(req: Request, res: Response
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
 
   res.on('close', () => {
-    transport.close();
+    void transport.close();
   });
 
   await server.connect(transport);

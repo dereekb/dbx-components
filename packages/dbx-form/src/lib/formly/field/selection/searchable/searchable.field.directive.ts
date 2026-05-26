@@ -205,7 +205,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
     return this.searchableField.searchOnEmptyText ?? false;
   }
 
-  get searchInputPlaceholder(): string | '' {
+  get searchInputPlaceholder(): string {
     const searchOnEmpty = this.searchOnEmptyText;
     const placeholder = this.searchableField.placeholder;
     return placeholder || (searchOnEmpty ? undefined : this.defaultSearchInputPlaceholder) || '';

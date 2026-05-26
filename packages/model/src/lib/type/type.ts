@@ -92,7 +92,7 @@ export function clearable(definition: string | Type): any {
 
 /**
  * JSON Schema export helper that compensates for arktype's lossy export of narrow predicates,
- * morphs, and `undefined`. Without this:
+ * morphs, and `undefined`. Without this:.
  *
  *   - narrowed strings like `type('string > 0').narrow(...)` export as the empty schema `{}`
  *     because arktype drops the narrow predicate and has no JSON-shaped base to fall back on.

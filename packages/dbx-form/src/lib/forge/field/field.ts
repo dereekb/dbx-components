@@ -85,10 +85,6 @@ interface DbxForgeFieldLogicFnFunctionRef<O = any, I = any> {
  */
 export type DbxForgeFieldLogicAsyncFn<O = any, I = any> = (ctx: EvaluationContext<I>) => Promise<O>;
 
-interface DbxForgeFieldLogicAsyncFnFunctionRef<O = any, I = any> {
-  readonly fn: DbxForgeFieldLogicAsyncFn<O, I>;
-}
-
 /**
  * Internal narrowed view of a derivation entry that carries an inline `fn`.
  *

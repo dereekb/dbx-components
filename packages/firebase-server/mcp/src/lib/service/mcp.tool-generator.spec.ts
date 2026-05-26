@@ -209,10 +209,19 @@ describe('generateMcpToolDefinitions filter metadata', () => {
     const byName = new Map(tools.map((t) => [t.name, t]));
 
     expect(byName.get('widget-read-always')?.filterMetadata.visibilityKind).toBe('always');
-    expect(byName.get('widget-read-declarative')?.filterMetadata.visibilityKind).toBe('declarative');
-    expect(byName.get('widget-read-declarative')?.filterMetadata.rule).toBe(rule);
-    expect(byName.get('widget-read-dynamic')?.filterMetadata.visibilityKind).toBe('dynamic');
-    expect(byName.get('widget-read-dynamic')?.filterMetadata.visibilityFn).toBe(fn);
+
+    const declarativeMeta = byName.get('widget-read-declarative')?.filterMetadata;
+    expect(declarativeMeta?.visibilityKind).toBe('declarative');
+    if (declarativeMeta?.visibilityKind === 'declarative') {
+      expect(declarativeMeta.rule).toBe(rule);
+    }
+
+    const dynamicMeta = byName.get('widget-read-dynamic')?.filterMetadata;
+    expect(dynamicMeta?.visibilityKind).toBe('dynamic');
+    if (dynamicMeta?.visibilityKind === 'dynamic') {
+      expect(dynamicMeta.visibilityFn).toBe(fn);
+    }
+
     expect(byName.get('widget-read-bare')?.filterMetadata.visibilityKind).toBe('always');
 
     expect(neverVisibleTools.map((t) => t.name)).toEqual(['widget-read-never']);
@@ -269,8 +278,6 @@ describe('generateMcpToolDefinitions filter metadata', () => {
   it('defaults visibility to always when mcp.visibility is omitted', () => {
     const { tools } = generateMcpToolDefinitions(makeApiDetailsWithMcp('read', undefined));
     expect(tools[0].filterMetadata.visibilityKind).toBe('always');
-    expect(tools[0].filterMetadata.rule).toBeUndefined();
-    expect(tools[0].filterMetadata.visibilityFn).toBeUndefined();
   });
 });
 

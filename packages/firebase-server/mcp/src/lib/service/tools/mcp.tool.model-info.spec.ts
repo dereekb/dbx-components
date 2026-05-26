@@ -34,7 +34,11 @@ describe('createModelInfoTool', () => {
       expect(tool.staticHandler).toBeDefined();
       expect(tool.filterMetadata.effectiveReadOnly).toBe(true);
       expect(tool.filterMetadata.visibilityKind).toBe('declarative');
-      expect(tool.filterMetadata.rule?.requireAuthenticated).toBe(true);
+
+      if (tool.filterMetadata.visibilityKind === 'declarative') {
+        expect(tool.filterMetadata.rule.requireAuthenticated).toBe(true);
+      }
+
       expect(tool.inputSchema).toMatchObject({ type: 'object', additionalProperties: false });
     });
 

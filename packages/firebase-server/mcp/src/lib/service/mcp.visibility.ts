@@ -2,8 +2,6 @@ import { type Maybe } from '@dereekb/util';
 import { callModelOidcScopeForCallType, type CallModelOidcScope } from '@dereekb/firebase';
 import { type McpToolVisibility, type McpVisibilityContext, type McpVisibilityRule } from '@dereekb/firebase-server';
 
-export type { McpToolVisibility, McpVisibilityContext, McpVisibilityRule, McpToolVisibilityDispatchTarget } from '@dereekb/firebase-server';
-
 /**
  * Normalized classification of a {@link McpToolVisibility} value computed at boot.
  *
@@ -16,31 +14,44 @@ export type McpToolVisibilityKind = 'always' | 'never' | 'declarative' | 'dynami
 
 /**
  * Boot-time classification result for one tool's `visibility` field.
+ *
+ * Discriminated by {@link McpToolVisibilityKind} so consumers can narrow `rule` /
+ * `visibilityFn` presence without optional-chain assertions.
  */
-export interface ClassifiedMcpToolVisibility {
-  readonly visibilityKind: McpToolVisibilityKind;
-  readonly rule?: McpVisibilityRule;
-  readonly visibilityFn?: (context: McpVisibilityContext) => boolean;
+export type ClassifiedMcpToolVisibility = ClassifiedMcpToolVisibilityAlways | ClassifiedMcpToolVisibilityNever | ClassifiedMcpToolVisibilityDeclarative | ClassifiedMcpToolVisibilityDynamic;
+
+export interface ClassifiedMcpToolVisibilityAlways {
+  readonly visibilityKind: 'always';
+}
+
+export interface ClassifiedMcpToolVisibilityNever {
+  readonly visibilityKind: 'never';
+}
+
+export interface ClassifiedMcpToolVisibilityDeclarative {
+  readonly visibilityKind: 'declarative';
+  readonly rule: McpVisibilityRule;
+}
+
+export interface ClassifiedMcpToolVisibilityDynamic {
+  readonly visibilityKind: 'dynamic';
+  readonly visibilityFn: (context: McpVisibilityContext) => boolean;
 }
 
 /**
  * Per-tool boot-time filter metadata. The per-request loop reads these fields directly.
+ *
+ * Discriminated by {@link McpToolVisibilityKind} so the request loop narrows to the
+ * exact variant carrying `rule` or `visibilityFn` without optional-chain assertions.
  */
-export interface McpToolFilterMetadata {
+export type McpToolFilterMetadata = McpToolFilterMetadataAlways | McpToolFilterMetadataNever | McpToolFilterMetadataDeclarative | McpToolFilterMetadataDynamic;
+
+interface McpToolFilterMetadataBase {
   /**
    * OIDC scope required to invoke this tool. Precomputed from the dispatch call type.
    * `undefined` for non-CRUD call types (apps gate those via their own preAssert if needed).
    */
   readonly requiredScope?: CallModelOidcScope;
-  readonly visibilityKind: McpToolVisibilityKind;
-  /**
-   * Present only when `visibilityKind === 'declarative'`.
-   */
-  readonly rule?: McpVisibilityRule;
-  /**
-   * Present only when `visibilityKind === 'dynamic'`.
-   */
-  readonly visibilityFn?: (context: McpVisibilityContext) => boolean;
   /**
    * Effective read-only classification used by the module-level `readOnly` filter.
    *
@@ -49,6 +60,24 @@ export interface McpToolFilterMetadata {
    * Unknown counts as a write for fail-safe filtering.
    */
   readonly effectiveReadOnly?: boolean;
+}
+
+export interface McpToolFilterMetadataAlways extends McpToolFilterMetadataBase {
+  readonly visibilityKind: 'always';
+}
+
+export interface McpToolFilterMetadataNever extends McpToolFilterMetadataBase {
+  readonly visibilityKind: 'never';
+}
+
+export interface McpToolFilterMetadataDeclarative extends McpToolFilterMetadataBase {
+  readonly visibilityKind: 'declarative';
+  readonly rule: McpVisibilityRule;
+}
+
+export interface McpToolFilterMetadataDynamic extends McpToolFilterMetadataBase {
+  readonly visibilityKind: 'dynamic';
+  readonly visibilityFn: (context: McpVisibilityContext) => boolean;
 }
 
 /**

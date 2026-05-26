@@ -5,7 +5,7 @@ import { BehaviorSubject } from 'rxjs';
 import { type Maybe, type TimezoneString, waitForMs } from '@dereekb/util';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, ChangeDetectionStrategy, provideZonelessChangeDetection, inject } from '@angular/core';
- 
+
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { type FormConfig, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { provideDbxForgeFormFieldDeclarations, provideDbxFormConfiguration, DbxForgeFormComponent, DbxForgeFormContext, provideDbxForgeFormContext, DbxFormSourceDirective, type DbxFormSourceDirectiveMode, dbxForgeTextField } from '@dereekb/dbx-form';
@@ -540,6 +540,7 @@ class TestForgeCalendarOrphanHostComponent {
   sourceMode: Maybe<DbxFormSourceDirectiveMode>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- provideNoopAnimations remains the standard no-op animations provider for TestBed; the new `animate.enter`/`animate.leave` API targets templates, not providers
 const ORPHAN_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideNoopAnimations(), provideDbxFormConfiguration(), provideDbxForgeFormFieldDeclarations(...DBX_FORGE_CALENDAR_FIELD_TYPES), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 // Match the demo repro: an explicit, deterministic date range over a

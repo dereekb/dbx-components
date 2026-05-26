@@ -276,7 +276,7 @@ export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS: Millisecon
 /**
  * Default `expiresInMs` applied when the caller does not supply one.
  */
-export const CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS: Milliseconds = 5 * 60 * 1000;
+export const DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS: Milliseconds = 5 * 60 * 1000;
 
 /**
  * Maximum length of a caller-supplied filename. Enforced both at the ArkType
@@ -323,7 +323,7 @@ export interface CreateStorageFileSignedUploadUrlParams {
    * Lifetime of the signed URL in milliseconds. Clamped to
    * [{@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MIN_EXPIRES_IN_MS},
    * {@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_MAX_EXPIRES_IN_MS}].
-   * Defaults to {@link CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_DEFAULT_EXPIRES_IN_MS}
+   * Defaults to {@link DEFAULT_CREATE_STORAGE_FILE_SIGNED_UPLOAD_URL_EXPIRES_IN_MS}
    * when omitted.
    */
   readonly expiresInMs?: Maybe<Milliseconds>;
