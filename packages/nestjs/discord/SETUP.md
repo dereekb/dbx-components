@@ -60,6 +60,14 @@ The unit tests don't require a real bot token — they test the Ed25519 verifier
 pnpm nx test nestjs-discord
 ```
 
+The integration suite in `discord.api.spec.ts` connects to the live Discord gateway and is **skipped by default** to preserve the bot's daily session quota. Opt in explicitly:
+
+```bash
+DISCORD_RUN_INTEGRATION_TESTS=true pnpm nx test nestjs-discord
+```
+
+Within a single run, all integration spec files share one logged-in client via `discord.api.spec.client.ts`, so only one `client.login()` call happens regardless of how many integration spec files exist.
+
 ## Step 6: Integration Testing (Manual)
 
 To test the bot connects and can send/receive messages, you can write a quick integration test or script:
@@ -97,7 +105,8 @@ api.onMessage((message) => {
 |---|---|---|
 | `DISCORD_BOT_TOKEN` | `DiscordModule` | Bot token from Developer Portal > Bot > Reset Token |
 | `DISCORD_PUBLIC_KEY` | `DiscordWebhookModule` | Public key from Developer Portal > General Information |
-| `DISCORD_TEST_CHANNEL_ID` | Integration tests | Channel ID for send/receive tests (see Step 3) |
+| `DISCORD_TEST_CHANNEL_ID` | Integration tests | Channel ID for send/receive tests (see Step 3). Optional — auto-discovered from the bot's first guild when unset. |
+| `DISCORD_RUN_INTEGRATION_TESTS` | Integration tests | Set to `true` to opt in to the live-gateway integration suite in `discord.api.spec.ts`. Skipped by default so dev test runs do not consume Discord's daily session quota. |
 
 ## Module Usage
 

@@ -1,59 +1,20 @@
-import { DiscordApi } from './discord.api';
-import { type DiscordServiceConfig } from './discord.config';
-import { Events, type Message, type TextChannel, ChannelType } from 'discord.js';
+import { type DiscordApi } from './discord.api';
+import { getSharedDiscordTestClient } from './discord.api.spec.client';
+import { type Message } from 'discord.js';
 
-// provided in environment variables
-const botToken = process.env['DISCORD_BOT_TOKEN'] as string;
-const envChannelId = process.env['DISCORD_TEST_CHANNEL_ID'];
+// Integration tests hit the live Discord gateway and consume a daily session quota.
+// They only run when explicitly opted into via DISCORD_RUN_INTEGRATION_TESTS=true.
+const integrationTestsEnabled = process.env['DISCORD_RUN_INTEGRATION_TESTS'] === 'true';
 
-describe('DiscordApi', () => {
+describe.runIf(integrationTestsEnabled)('DiscordApi', () => {
   let discordApi: DiscordApi;
   let testChannelId: string;
 
   beforeAll(async () => {
-    const config: DiscordServiceConfig = {
-      discord: {
-        botToken,
-        autoLogin: false
-      }
-    };
-
-    discordApi = new DiscordApi(config);
-    await discordApi.client.login(botToken);
-
-    // wait for the client to be ready
-    await new Promise<void>((resolve) => {
-      if (discordApi.client.isReady()) {
-        resolve();
-      } else {
-        discordApi.client.once(Events.ClientReady, () => resolve());
-      }
-    });
-
-    // use env var if provided, otherwise auto-discover from bot's guilds
-    if (envChannelId) {
-      testChannelId = envChannelId;
-    } else {
-      const guild = discordApi.client.guilds.cache.first();
-
-      if (!guild) {
-        throw new Error('Bot is not in any guilds. Invite the bot to a server first (see SETUP.md).');
-      }
-
-      const channels = await guild.channels.fetch();
-      const textChannel = channels.find((ch): ch is TextChannel => ch !== null && ch.type === ChannelType.GuildText);
-
-      if (!textChannel) {
-        throw new Error(`No text channels found in guild "${guild.name}".`);
-      }
-
-      testChannelId = textChannel.id;
-    }
+    const shared = await getSharedDiscordTestClient();
+    discordApi = shared.discordApi;
+    testChannelId = shared.testChannelId;
   }, 15000);
-
-  afterAll(async () => {
-    void discordApi.client.destroy();
-  });
 
   describe('sendMessage()', () => {
     it('should send a text message to a channel', async () => {
