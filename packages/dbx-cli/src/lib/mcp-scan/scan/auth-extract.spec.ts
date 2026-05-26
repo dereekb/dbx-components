@@ -187,4 +187,144 @@ describe('extractAuthEntries', () => {
     expect(result.apps).toHaveLength(0);
     expect(result.claims).toHaveLength(0);
   });
+
+  it('resolves project-local string-literal role constants without warning', () => {
+    const project = projectWith({
+      '/app/claims.ts': `
+        import { authRoleClaimsService } from '@dereekb/util';
+
+        export const APP_WORKER_ROLE = 'worker';
+        export const APP_INVITE_ROLE = 'has_invite';
+
+        /** @dbxAuthClaimsApp app-api */
+        export interface AppAuthClaims {
+          /** @dbxAuthClaim */
+          w?: 1;
+          /** @dbxAuthClaim */
+          i?: 1;
+        }
+
+        /** @dbxAuthClaimsService app-api */
+        export const APP_AUTH_CLAIMS_SERVICE = authRoleClaimsService<AppAuthClaims>({
+          w: { roles: [APP_WORKER_ROLE] },
+          i: { roles: APP_INVITE_ROLE }
+        });
+      `
+    });
+
+    const result = extractAuthEntries({ project, knownRoles: KNOWN_ROLES });
+
+    expect(result.warnings).toHaveLength(0);
+    expect(result.claims.find((c) => c.key === 'w')?.mapping.roles).toEqual(['worker']);
+    expect(result.claims.find((c) => c.key === 'i')?.mapping.roles).toEqual(['has_invite']);
+  });
+
+  it('lets built-in roles win over a same-named project-local const', () => {
+    const project = projectWith({
+      '/conflict/claims.ts': `
+        import { authRoleClaimsService } from '@dereekb/util';
+
+        // A downstream file must never be able to shadow the built-in 'admin'.
+        export const AUTH_ADMIN_ROLE = 'downstream-admin';
+
+        /** @dbxAuthClaimsApp conflict-api */
+        export interface ConflictAuthClaims {
+          /** @dbxAuthClaim */
+          a?: 1;
+        }
+
+        /** @dbxAuthClaimsService conflict-api */
+        export const CONFLICT_AUTH_CLAIMS_SERVICE = authRoleClaimsService<ConflictAuthClaims>({
+          a: { roles: [AUTH_ADMIN_ROLE] }
+        });
+      `
+    });
+
+    const result = extractAuthEntries({ project, knownRoles: KNOWN_ROLES });
+
+    expect(result.warnings).toHaveLength(0);
+    expect(result.claims.find((c) => c.key === 'a')?.mapping.roles).toEqual(['admin']);
+  });
+
+  it('flattens project-local array-aggregate role constants', () => {
+    const project = projectWith({
+      '/agg/claims.ts': `
+        import { AUTH_ADMIN_ROLE, authRoleClaimsService } from '@dereekb/util';
+
+        export const APP_SUPERVISOR_ROLE = 'supervisor';
+        export const APP_EXTRA_ADMIN_ROLES = ['auditor'];
+        export const ALL_APP_ADMIN_ROLES = [AUTH_ADMIN_ROLE, APP_SUPERVISOR_ROLE, 'root', ...APP_EXTRA_ADMIN_ROLES];
+
+        /** @dbxAuthClaimsApp agg-api */
+        export interface AggAuthClaims {
+          /** @dbxAuthClaim */
+          a?: 1;
+        }
+
+        /** @dbxAuthClaimsService agg-api */
+        export const AGG_AUTH_CLAIMS_SERVICE = authRoleClaimsService<AggAuthClaims>({
+          a: { roles: ALL_APP_ADMIN_ROLES }
+        });
+      `
+    });
+
+    const result = extractAuthEntries({ project, knownRoles: KNOWN_ROLES });
+
+    expect(result.warnings).toHaveLength(0);
+    expect(result.claims.find((c) => c.key === 'a')?.mapping.roles).toEqual(['admin', 'supervisor', 'root', 'auditor']);
+  });
+
+  it('flattens an array-aggregate spread inside a roles array literal', () => {
+    const project = projectWith({
+      '/spread/claims.ts': `
+        import { AUTH_ADMIN_ROLE, authRoleClaimsService } from '@dereekb/util';
+
+        export const APP_WORKER_ROLE = 'worker';
+        export const ALL_APP_ADMIN_ROLES = [AUTH_ADMIN_ROLE, 'root'];
+
+        /** @dbxAuthClaimsApp spread-api */
+        export interface SpreadAuthClaims {
+          /** @dbxAuthClaim */
+          m?: 1;
+        }
+
+        /** @dbxAuthClaimsService spread-api */
+        export const SPREAD_AUTH_CLAIMS_SERVICE = authRoleClaimsService<SpreadAuthClaims>({
+          m: { roles: [...ALL_APP_ADMIN_ROLES, APP_WORKER_ROLE] }
+        });
+      `
+    });
+
+    const result = extractAuthEntries({ project, knownRoles: KNOWN_ROLES });
+
+    expect(result.warnings).toHaveLength(0);
+    expect(result.claims.find((c) => c.key === 'm')?.mapping.roles).toEqual(['admin', 'root', 'worker']);
+  });
+
+  it('still warns for an identifier role const that cannot be resolved locally', () => {
+    const project = projectWith({
+      '/imported/claims.ts': `
+        import { authRoleClaimsService } from '@dereekb/util';
+        import { SOME_EXTERNAL_ROLE } from '@some/other-package';
+
+        /** @dbxAuthClaimsApp imported-api */
+        export interface ImportedAuthClaims {
+          /** @dbxAuthClaim */
+          x?: 1;
+        }
+
+        /** @dbxAuthClaimsService imported-api */
+        export const IMPORTED_AUTH_CLAIMS_SERVICE = authRoleClaimsService<ImportedAuthClaims>({
+          x: { roles: [SOME_EXTERNAL_ROLE] }
+        });
+      `
+    });
+
+    const result = extractAuthEntries({ project, knownRoles: KNOWN_ROLES });
+
+    const unresolved = result.warnings.filter((w) => w.kind === 'unresolved-role-const');
+    expect(unresolved).toHaveLength(1);
+    expect(unresolved[0]).toMatchObject({ kind: 'unresolved-role-const', key: 'x', constName: 'SOME_EXTERNAL_ROLE' });
+    expect(result.claims.find((c) => c.key === 'x')?.mapping.roles).toEqual(['SOME_EXTERNAL_ROLE']);
+  });
 });

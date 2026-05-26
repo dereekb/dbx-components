@@ -15,11 +15,16 @@
  * The extractor is intentionally syntactic — no type checker calls — so it
  * runs cheaply on in-memory fixtures and the demo's `claims.ts`. Role
  * constants like `AUTH_ADMIN_ROLE` are resolved through the supplied
- * {@link AuthExtractKnownRoles} map; unresolved identifiers fall through as
- * the identifier text so callers can still see them in registry output.
+ * {@link AuthExtractKnownRoles} map. In addition, role constants declared in
+ * the scanned source itself (an `export const WORKER_ROLE = 'worker'`, or an
+ * `export const ALL_ADMIN_ROLES = [...]` aggregate) are resolved by reading
+ * their `StringLiteral` / `ArrayLiteralExpression` initializers — built-ins
+ * always win on conflict. Identifiers that still can't be resolved fall
+ * through as the identifier text so callers can still see them in registry
+ * output (and emit an `unresolved-role-const` warning).
  */
 
-import { Node, type Expression, type InterfaceDeclaration, type JSDoc, type JSDocTag, type ObjectLiteralExpression, type PropertyAssignment, type PropertySignature, type Project, type TypeAliasDeclaration, type VariableStatement } from 'ts-morph';
+import { Node, type ArrayLiteralExpression, type Expression, type InterfaceDeclaration, type JSDoc, type JSDocTag, type ObjectLiteralExpression, type PropertyAssignment, type PropertySignature, type Project, type TypeAliasDeclaration, type VariableStatement } from 'ts-morph';
 import type { AuthClaimRoleMappingInfo } from '../registry/auth-runtime.js';
 
 // MARK: Tag names
@@ -77,9 +82,11 @@ export type AuthExtractWarning =
 
 /**
  * Map from role-constant name (e.g. `AUTH_ADMIN_ROLE`) to its resolved
- * role string (`'admin'`). The built-in roles populate this; downstream
- * apps that introduce their own role constants can extend the map at the
- * loader layer once that becomes a workflow.
+ * role string (`'admin'`). The built-in roles populate this. Role consts an
+ * app declares in its own scanned source are resolved automatically by
+ * {@link extractAuthEntries} (string-literal consts are merged into this map,
+ * array-aggregate consts are flattened on demand) — built-ins always win on
+ * conflict so a downstream file can never shadow a `@dereekb/util` role.
  */
 export type AuthExtractKnownRoles = ReadonlyMap<string, string>;
 
@@ -116,6 +123,12 @@ export function extractAuthEntries(input: ExtractAuthEntriesInput): ExtractAuthE
   const { project, knownRoles } = input;
   const warnings: AuthExtractWarning[] = [];
 
+  // Resolve role constants declared in the scanned source itself — downstream
+  // apps define their own role consts in their `claims.ts`. Built-ins win on
+  // conflict so an app can never shadow a `@dereekb/util` role string.
+  const localRoleConsts = collectLocalRoleConsts(project);
+  const mergedKnownRoles = mergeKnownRoles(knownRoles, localRoleConsts.scalars);
+
   const taggedAppDecls = collectTaggedAppDecls(project, warnings);
   const serviceMappings = collectServiceMappings(project, warnings, taggedAppDecls);
 
@@ -132,7 +145,8 @@ export function extractAuthEntries(input: ExtractAuthEntriesInput): ExtractAuthE
       interfaceName: tagged.interfaceName,
       filePath: tagged.filePath,
       service: serviceForApp,
-      knownRoles,
+      knownRoles: mergedKnownRoles,
+      localArrayRoles: localRoleConsts.arrays,
       warnings
     });
 
@@ -381,6 +395,13 @@ function readRoleAtom(node: Node): { readonly text: string; readonly resolvable:
     result = { text: node.getLiteralText(), resolvable: true };
   } else if (Node.isIdentifier(node)) {
     result = { text: node.getText(), resolvable: false };
+  } else if (Node.isSpreadElement(node)) {
+    // `...ALL_ADMIN_ROLES` — carry the spread source through as an unresolved
+    // const so the array-aggregate resolver can flatten it later.
+    const inner = node.getExpression();
+    if (Node.isIdentifier(inner)) {
+      result = { text: inner.getText(), resolvable: false };
+    }
   }
   return result;
 }
@@ -420,6 +441,7 @@ interface CollectClaimsFromDeclInput {
   readonly filePath: string;
   readonly service: ServiceMapping | undefined;
   readonly knownRoles: AuthExtractKnownRoles;
+  readonly localArrayRoles: ReadonlyMap<string, ArrayLiteralExpression>;
   readonly warnings: AuthExtractWarning[];
 }
 
@@ -457,7 +479,7 @@ interface BuildClaimFromPropertyInput extends CollectClaimsFromDeclInput {
 }
 
 function buildClaimFromProperty(input: BuildClaimFromPropertyInput): ExtractedAuthClaim | undefined {
-  const { property, app, interfaceName, filePath, service, knownRoles, warnings } = input;
+  const { property, app, interfaceName, filePath, service, knownRoles, localArrayRoles, warnings } = input;
   const tagState = readPropertyTagState(property.getJsDocs());
 
   let result: ExtractedAuthClaim | undefined;
@@ -472,7 +494,7 @@ function buildClaimFromProperty(input: BuildClaimFromPropertyInput): ExtractedAu
       warnings.push({ kind: 'claim-missing-mapping', app, key, filePath, line });
     }
 
-    const mapping: AuthClaimRoleMappingInfo = parsed === undefined ? { roles: [], inverse: false, customEncodeDecode: false } : resolveMappingRoles({ mapping: parsed.mapping, unresolvedRoleConsts: parsed.unresolvedRoleConsts, knownRoles, app, key, filePath, line, warnings });
+    const mapping: AuthClaimRoleMappingInfo = parsed === undefined ? { roles: [], inverse: false, customEncodeDecode: false } : resolveMappingRoles({ mapping: parsed.mapping, unresolvedRoleConsts: parsed.unresolvedRoleConsts, knownRoles, localArrayRoles, app, key, filePath, line, warnings });
 
     result = {
       key,
@@ -493,6 +515,7 @@ interface ResolveMappingRolesInput {
   readonly mapping: AuthClaimRoleMappingInfo;
   readonly unresolvedRoleConsts: readonly string[];
   readonly knownRoles: AuthExtractKnownRoles;
+  readonly localArrayRoles: ReadonlyMap<string, ArrayLiteralExpression>;
   readonly app: string;
   readonly key: string;
   readonly filePath: string;
@@ -501,19 +524,183 @@ interface ResolveMappingRolesInput {
 }
 
 function resolveMappingRoles(input: ResolveMappingRolesInput): AuthClaimRoleMappingInfo {
-  const { mapping, knownRoles, app, key, filePath, line, warnings } = input;
+  const { mapping, knownRoles, localArrayRoles, app, key, filePath, line, warnings } = input;
   const resolved: string[] = [];
   for (const role of mapping.roles) {
     if (knownRoles.has(role)) {
       resolved.push(knownRoles.get(role) as string);
     } else if (input.unresolvedRoleConsts.includes(role)) {
-      warnings.push({ kind: 'unresolved-role-const', app, key, constName: role, filePath, line });
-      resolved.push(role);
+      // Not a scalar const — try resolving it as a project-local array-aggregate
+      // const (e.g. `ALL_ADMIN_ROLES = [...]`) before treating it as unresolved.
+      const aggregate = resolveRoleConstByName(role, { knownRoles, localArrayRoles, seen: new Set() });
+      if (aggregate.unresolved.length === 0) {
+        for (const aggregateRole of aggregate.roles) resolved.push(aggregateRole);
+      } else {
+        warnings.push({ kind: 'unresolved-role-const', app, key, constName: role, filePath, line });
+        resolved.push(role);
+      }
     } else {
       resolved.push(role);
     }
   }
   return { ...mapping, roles: resolved };
+}
+
+// MARK: Project-local role constants
+/**
+ * Role constants declared in the scanned source itself. `scalars` maps an
+ * `export const NAME = 'role'` to its literal value; `arrays` retains the
+ * `ArrayLiteralExpression` of an `export const NAME = [...]` aggregate so it
+ * can be flattened on demand by {@link resolveRoleConstByName}.
+ */
+interface LocalRoleConsts {
+  readonly scalars: ReadonlyMap<string, string>;
+  readonly arrays: ReadonlyMap<string, ArrayLiteralExpression>;
+}
+
+/**
+ * Walks every source file in the project for exported variable statements
+ * whose declaration initializer is a string literal or an array literal,
+ * building the {@link LocalRoleConsts} maps used to resolve app-defined role
+ * constants. Purely syntactic — only initializer AST nodes are read.
+ *
+ * @param project - The ts-morph project to scan.
+ * @returns The collected scalar and array role-const maps.
+ */
+function collectLocalRoleConsts(project: Project): LocalRoleConsts {
+  const scalars = new Map<string, string>();
+  const arrays = new Map<string, ArrayLiteralExpression>();
+  for (const sourceFile of project.getSourceFiles()) {
+    for (const stmt of sourceFile.getVariableStatements()) {
+      if (!stmt.isExported()) continue;
+      for (const decl of stmt.getDeclarations()) {
+        const initializer = decl.getInitializer();
+        const name = decl.getName();
+        if (initializer === undefined) continue;
+        if (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer)) {
+          if (!scalars.has(name)) scalars.set(name, initializer.getLiteralText());
+        } else if (Node.isArrayLiteralExpression(initializer)) {
+          if (!arrays.has(name)) arrays.set(name, initializer);
+        }
+      }
+    }
+  }
+  return { scalars, arrays };
+}
+
+/**
+ * Merges the project-local scalar role consts under the built-in map so the
+ * built-ins always win on conflict (a downstream file can never redefine a
+ * `@dereekb/util` role string).
+ *
+ * @param builtins - The built-in `constName → role` map supplied by the caller.
+ * @param localScalars - Project-local string-literal role consts.
+ * @returns The merged map with built-ins taking precedence.
+ */
+function mergeKnownRoles(builtins: AuthExtractKnownRoles, localScalars: ReadonlyMap<string, string>): AuthExtractKnownRoles {
+  const out = new Map<string, string>();
+  for (const [name, role] of localScalars) out.set(name, role);
+  for (const [name, role] of builtins) out.set(name, role);
+  return out;
+}
+
+/**
+ * Resolution context threaded through the recursive array-aggregate flattener.
+ * `seen` guards against cyclic const references (e.g. `A = [...A]`).
+ */
+interface RoleConstResolveContext {
+  readonly knownRoles: AuthExtractKnownRoles;
+  readonly localArrayRoles: ReadonlyMap<string, ArrayLiteralExpression>;
+  readonly seen: ReadonlySet<string>;
+}
+
+/**
+ * Outcome of resolving a role const reference: the resolved role strings plus
+ * any const names that could not be resolved locally (so callers can keep the
+ * `unresolved-role-const` warning meaningful).
+ */
+interface RoleConstResolution {
+  readonly roles: readonly string[];
+  readonly unresolved: readonly string[];
+}
+
+const EMPTY_ROLE_CONST_RESOLUTION: RoleConstResolution = { roles: [], unresolved: [] };
+
+/**
+ * Resolves a role-constant name to its role string(s). Scalar consts resolve
+ * via `knownRoles`; array-aggregate consts are flattened recursively. A name
+ * that matches neither (e.g. imported from another package with no literal in
+ * scope) is reported in `unresolved`. Stays syntactic — no type checker.
+ *
+ * @param name - The role-constant identifier text.
+ * @param ctx - The resolution context (known roles, local arrays, cycle guard).
+ * @returns The resolved roles and any unresolved const names.
+ */
+function resolveRoleConstByName(name: string, ctx: RoleConstResolveContext): RoleConstResolution {
+  let result: RoleConstResolution;
+  const scalar = ctx.knownRoles.get(name);
+  if (scalar !== undefined) {
+    result = { roles: [scalar], unresolved: [] };
+  } else {
+    const arrayExpr = ctx.localArrayRoles.get(name);
+    if (arrayExpr === undefined) {
+      result = { roles: [], unresolved: [name] };
+    } else if (ctx.seen.has(name)) {
+      result = EMPTY_ROLE_CONST_RESOLUTION; // cycle — stop without re-flagging
+    } else {
+      const nextSeen = new Set(ctx.seen);
+      nextSeen.add(name);
+      result = resolveRoleArrayLiteral(arrayExpr, { ...ctx, seen: nextSeen });
+    }
+  }
+  return result;
+}
+
+/**
+ * Flattens an array-literal role aggregate into resolved role strings,
+ * recursing through identifier elements and spreads of other array consts.
+ *
+ * @param arrayExpr - The array literal to flatten.
+ * @param ctx - The resolution context.
+ * @returns The flattened roles and any unresolved const names.
+ */
+function resolveRoleArrayLiteral(arrayExpr: ArrayLiteralExpression, ctx: RoleConstResolveContext): RoleConstResolution {
+  const roles: string[] = [];
+  const unresolved: string[] = [];
+  for (const element of arrayExpr.getElements()) {
+    const elementResult = resolveRoleArrayElement(element, ctx);
+    for (const role of elementResult.roles) roles.push(role);
+    for (const name of elementResult.unresolved) unresolved.push(name);
+  }
+  return { roles, unresolved };
+}
+
+/**
+ * Resolves a single element of a role array literal: a string literal yields
+ * its value, an identifier resolves via {@link resolveRoleConstByName}, and a
+ * spread flattens its identifier or inline-array source.
+ *
+ * @param element - The array element node.
+ * @param ctx - The resolution context.
+ * @returns The resolved roles and any unresolved const names for this element.
+ */
+function resolveRoleArrayElement(element: Node, ctx: RoleConstResolveContext): RoleConstResolution {
+  let result: RoleConstResolution = EMPTY_ROLE_CONST_RESOLUTION;
+  if (Node.isStringLiteral(element) || Node.isNoSubstitutionTemplateLiteral(element)) {
+    result = { roles: [element.getLiteralText()], unresolved: [] };
+  } else if (Node.isIdentifier(element)) {
+    result = resolveRoleConstByName(element.getText(), ctx);
+  } else if (Node.isSpreadElement(element)) {
+    const inner = element.getExpression();
+    if (Node.isIdentifier(inner)) {
+      result = resolveRoleConstByName(inner.getText(), ctx);
+    } else if (Node.isArrayLiteralExpression(inner)) {
+      result = resolveRoleArrayLiteral(inner, ctx);
+    } else {
+      result = { roles: [], unresolved: [inner.getText()] };
+    }
+  }
+  return result;
 }
 
 interface PropertyTagState {
