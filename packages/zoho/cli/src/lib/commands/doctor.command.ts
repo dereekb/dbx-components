@@ -26,8 +26,7 @@ export const DOCTOR_COMMAND: CommandModule = {
 
     if (config) {
       const products = configuredProducts(config);
-      checks.push(checkConfiguredProducts(products));
-      checks.push(...(await checkTokenExchanges(config, products)));
+      checks.push(checkConfiguredProducts(products), ...(await checkTokenExchanges(config, products)));
       const deskCheck = checkDeskOrgId(config, products);
       if (deskCheck) checks.push(deskCheck);
     }

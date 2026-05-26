@@ -23,8 +23,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { CSS_UTILITY_ROLES, type CssUtilityEntry } from '@dereekb/dbx-cli';
-import type { CssUtilityRegistry, ScoredCssUtilityMatch } from '@dereekb/dbx-cli';
+import { CSS_UTILITY_ROLES, type CssUtilityEntry, type CssUtilityRegistry, type ScoredCssUtilityMatch } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool advertisement

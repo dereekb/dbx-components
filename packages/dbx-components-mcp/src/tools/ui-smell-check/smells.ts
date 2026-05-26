@@ -8,9 +8,7 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import type { TokenEntry } from '@dereekb/dbx-cli';
-import type { TokenRegistry } from '@dereekb/dbx-cli';
-import type { UiComponentRegistry } from '@dereekb/dbx-cli';
+import { type TokenEntry, type TokenRegistry, type UiComponentRegistry } from '@dereekb/dbx-cli';
 
 // MARK: Public types
 /**

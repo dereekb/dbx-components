@@ -9,6 +9,7 @@
  * expected to be correctable by the caller.
  */
 
+import type { FirestoreCollectionKind } from '@dereekb/dbx-cli';
 import type { ModelValidateCode } from './codes.js';
 import type { RemediationHint } from '../rule-catalog/types.js';
 
@@ -98,13 +99,6 @@ export interface ValidatorSource {
 }
 
 export type ModelVariant = 'root' | 'subcollection';
-
-/**
- * Canonical taxonomy of Firestore-collection shapes a model can declare.
- * Canonical definition lives in `@dereekb/dbx-cli` (mcp-scan registry) so
- * the scanners and validator share one source of truth.
- */
-export type { FirestoreCollectionKind } from '@dereekb/dbx-cli';
 
 /**
  * Canonical order of required declarations for a root-collection model.

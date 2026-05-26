@@ -16,8 +16,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { FORM_TIER_ORDER, type FormFieldInfo, type FormTier } from '@dereekb/dbx-cli';
-import type { ForgeFieldRegistry } from '@dereekb/dbx-cli';
+import { FORM_TIER_ORDER, type FormFieldInfo, type FormTier, type ForgeFieldRegistry } from '@dereekb/dbx-cli';
 import { resolveTopicAlias } from './form-alias-resolver.js';
 import { formatFormFieldEntry, formatFormFieldGroup } from './form-lookup.formatter.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';

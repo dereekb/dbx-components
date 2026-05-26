@@ -8,8 +8,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { FORM_TIER_ORDER, type FormTier, type FormArrayOutput } from '@dereekb/dbx-cli';
-import type { ForgeFieldRegistry } from '@dereekb/dbx-cli';
+import { FORM_TIER_ORDER, type FormTier, type FormArrayOutput, type ForgeFieldRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const FORM_FIELDS_URI = 'dbx://form/fields';

@@ -13,8 +13,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { TOKEN_ROLES } from '@dereekb/dbx-cli';
-import type { TokenRegistry } from '@dereekb/dbx-cli';
+import { TOKEN_ROLES, type TokenRegistry } from '@dereekb/dbx-cli';
 import { resolveToken, formatCssTokenLookup, type ResolveTokenInput } from './css-token-lookup/index.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 

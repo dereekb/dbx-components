@@ -21,7 +21,8 @@ function makeEntry(overrides: Partial<McpManifestModelEntry> = {}): McpManifestM
 }
 
 function unwrap(result: CallToolResult): ModelInfoToolOutput {
-  return result.structuredContent as unknown as ModelInfoToolOutput;
+  const content: unknown = result.structuredContent;
+  return content as ModelInfoToolOutput;
 }
 
 describe('createModelInfoTool', () => {
@@ -144,7 +145,7 @@ describe('createModelInfoTool', () => {
     it('rejects non-string and empty `model`', async () => {
       const tool = createModelInfoTool({ manifest: [makeEntry()] });
 
-      const wrong = await tool.staticHandler!({ model: 123 as unknown as string }, makeCtx());
+      const wrong = await tool.staticHandler!({ model: 123 }, makeCtx());
       expect(wrong.isError).toBe(true);
 
       const empty = await tool.staticHandler!({ model: '   ' }, makeCtx());

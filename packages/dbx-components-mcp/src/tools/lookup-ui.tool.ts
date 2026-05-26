@@ -14,8 +14,7 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
-import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentEntry } from '@dereekb/dbx-cli';
-import type { UiComponentRegistry } from '@dereekb/dbx-cli';
+import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentEntry, type UiComponentRegistry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool advertisement

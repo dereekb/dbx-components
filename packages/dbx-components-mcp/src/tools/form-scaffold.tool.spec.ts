@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FORM_FIELDS } from '@dereekb/dbx-cli';
-import { createForgeFieldRegistryFromEntries } from '@dereekb/dbx-cli';
+import { FORM_FIELDS, createForgeFieldRegistryFromEntries } from '@dereekb/dbx-cli';
 import { createFormScaffoldTool } from './form-scaffold.tool.js';
 
 const tool = createFormScaffoldTool({

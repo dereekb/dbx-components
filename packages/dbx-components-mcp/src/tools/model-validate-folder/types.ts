@@ -34,9 +34,6 @@ export type Violation = FolderGroupedViolation<ViolationCode>;
 
 export type ValidationResult = FolderGroupedResult<Violation>;
 
-export type { ReservedModelFolder } from '@dereekb/dbx-cli';
-export { RESERVED_MODEL_FOLDERS } from '@dereekb/dbx-cli';
-
 /**
  * One folder inspection result passed into the pure rules core. The MCP
  * tool populates this via `node:fs/promises` before calling into the

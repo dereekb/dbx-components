@@ -47,6 +47,13 @@ function makeFactory(apiDetails: ModelApiDetailsResult, options: { config?: Part
   return new McpServerFactoryService(makeMcpConfig(options.config), makeDispatchService(apiDetails, options.dispatch ?? (() => ({ ok: true }))), undefined, options.roleReader);
 }
 
+async function listToolEntries(factory: McpServerFactoryService, ctx: { auth?: FirebaseServerAuthData; rawRequest?: any } = {}): Promise<ReadonlyArray<{ name: string; description: string; inputSchema: object; outputSchema?: object }>> {
+  const server = factory.createServer({ rawRequest: ctx.rawRequest ?? ({} as any), auth: ctx.auth });
+  const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<{ name: string; description: string; inputSchema: object; outputSchema?: object }> }>>;
+  const result = await handlers.get(ListToolsRequestSchema.shape.method.value)!({ method: 'tools/list', params: {} }, {} as any);
+  return result.tools;
+}
+
 async function listTools(factory: McpServerFactoryService, ctx: { auth?: FirebaseServerAuthData; rawRequest?: any } = {}): Promise<ReadonlyArray<{ name: string; description?: string }>> {
   const server = factory.createServer({ rawRequest: ctx.rawRequest ?? ({} as any), auth: ctx.auth });
   const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<{ name: string; description?: string }> }>>;
@@ -432,13 +439,6 @@ describe('McpServerFactoryService model catalog tools', () => {
 });
 
 describe('McpServerFactoryService toolDetails builder', () => {
-  async function listToolEntries(factory: McpServerFactoryService, ctx: { auth?: FirebaseServerAuthData; rawRequest?: any } = {}): Promise<ReadonlyArray<{ name: string; description: string; inputSchema: object; outputSchema?: object }>> {
-    const server = factory.createServer({ rawRequest: ctx.rawRequest ?? ({} as any), auth: ctx.auth });
-    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<{ name: string; description: string; inputSchema: object; outputSchema?: object }> }>>;
-    const result = await handlers.get(ListToolsRequestSchema.shape.method.value)!({ method: 'tools/list', params: {} }, {} as any);
-    return result.tools;
-  }
-
   it('overrides description when the builder returns one', async () => {
     const toolDetails: McpToolDetailsBuilder = () => ({ description: 'dynamic description from builder' });
     const apiDetails = makeApiDetails([{ model: 'widget', call: 'read', specifier: 'enriched', mcp: { toolDetails } }]);

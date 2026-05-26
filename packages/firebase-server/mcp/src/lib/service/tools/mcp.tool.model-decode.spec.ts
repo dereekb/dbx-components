@@ -8,7 +8,8 @@ function makeCtx(): McpStaticToolHandlerContext {
 }
 
 function unwrap(result: CallToolResult): ModelDecodeToolOutput {
-  return result.structuredContent as unknown as ModelDecodeToolOutput;
+  const content: unknown = result.structuredContent;
+  return content as ModelDecodeToolOutput;
 }
 
 const MANIFEST: ReadonlyArray<McpManifestModelEntry> = [

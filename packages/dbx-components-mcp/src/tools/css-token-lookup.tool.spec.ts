@@ -1,7 +1,6 @@
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { loadTokenManifests } from '@dereekb/dbx-cli';
-import { createTokenRegistry } from '@dereekb/dbx-cli';
+import { loadTokenManifests, createTokenRegistry } from '@dereekb/dbx-cli';
 import { resolveToken, parseColor, parseLength, parseShadow, colorDistance } from './css-token-lookup/index.js';
 import { createCssTokenLookupTool } from './css-token-lookup.tool.js';
 

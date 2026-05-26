@@ -62,17 +62,15 @@ export function unmaskPathVariables(text: string): string {
  */
 export function indexToLineColumn(source: string, index: number): { line: number; column: number } {
   let line: number = 1;
-  let column: number = 1;
+  let lastNewlineIndex: number = -1;
   const end = Math.min(index, source.length);
   for (let i = 0; i < end; i++) {
     if (source.codePointAt(i) === 10) {
       line += 1;
-      column = 1;
-    } else {
-      column += 1;
+      lastNewlineIndex = i;
     }
   }
-  return { line, column };
+  return { line, column: end - lastNewlineIndex };
 }
 
 /**

@@ -8,8 +8,9 @@
  * resolution needed, so a lightweight in-memory Project is sufficient.
  */
 
+import type { FirestoreCollectionKind } from '@dereekb/dbx-cli';
 import { Node, Project, SyntaxKind, type ClassDeclaration, type GetAccessorDeclaration, type InterfaceDeclaration, type JSDoc, type JSDocTag, type SourceFile, type TypeAliasDeclaration } from 'ts-morph';
-import { SUB_OBJECT_FACTORY_NAMES, type ExtractedArchetypeTagInfo, type ExtractedCompositeKeyTagInfo, type ExtractedDataInterface, type ExtractedDecl, type ExtractedDocumentClass, type ExtractedField, type ExtractedFile, type ExtractedGroupInterface, type ExtractedGroupTypes, type ExtractedIdentity, type ExtractedModel, type ExtractedSubObjectFactoryCall, type FirestoreCollectionKind, type ModelVariant, type SubObjectFactoryName, type ValidatorSource } from './types.js';
+import { SUB_OBJECT_FACTORY_NAMES, type ExtractedArchetypeTagInfo, type ExtractedCompositeKeyTagInfo, type ExtractedDataInterface, type ExtractedDecl, type ExtractedDocumentClass, type ExtractedField, type ExtractedFile, type ExtractedGroupInterface, type ExtractedGroupTypes, type ExtractedIdentity, type ExtractedModel, type ExtractedSubObjectFactoryCall, type ModelVariant, type SubObjectFactoryName, type ValidatorSource } from './types.js';
 
 // MARK: Entry
 /**

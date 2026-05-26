@@ -14,10 +14,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { UI_COMPONENT_CATEGORIES, type UiComponentCategoryValue, type UiComponentEntry } from '@dereekb/dbx-cli';
-import type { UiComponentRegistry } from '@dereekb/dbx-cli';
-import { type DbxDocsUiExamplesRegistry, EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY } from '@dereekb/dbx-cli';
-import { type DbxDocsUiExampleEntry } from '@dereekb/dbx-cli';
+import { UI_COMPONENT_CATEGORIES, type UiComponentCategoryValue, type UiComponentEntry, type UiComponentRegistry, type DbxDocsUiExamplesRegistry, EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY, type DbxDocsUiExampleEntry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_LIMIT = 10;

@@ -17,6 +17,19 @@ function render(entries: ReadonlyArray<CliApiManifestEntry>, modelManifest?: Cli
   return renderMcpManifest({ apiManifest: entries, modelManifest }, FIXED_NOW);
 }
 
+function makeModelEntry(overrides: Partial<CliModelManifestEntry> = {}): CliModelManifestEntry {
+  return {
+    modelType: 'guestbook',
+    modelName: 'Guestbook',
+    identityConst: 'guestbookIdentity',
+    collectionPrefix: 'gb',
+    sourcePackage: 'demo-firebase',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
+    fields: [{ name: 'n', longName: 'name', optional: false, tsType: 'string' }],
+    ...overrides
+  };
+}
+
 describe('renderMcpManifest', () => {
   it('stamps the version and ISO timestamp', () => {
     const result = render([]);
@@ -155,19 +168,6 @@ describe('renderMcpManifest', () => {
   });
 
   describe('model manifest', () => {
-    function makeModelEntry(overrides: Partial<CliModelManifestEntry> = {}): CliModelManifestEntry {
-      return {
-        modelType: 'guestbook',
-        modelName: 'Guestbook',
-        identityConst: 'guestbookIdentity',
-        collectionPrefix: 'gb',
-        sourcePackage: 'demo-firebase',
-        sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.ts',
-        fields: [{ name: 'n', longName: 'name', optional: false, tsType: 'string' }],
-        ...overrides
-      };
-    }
-
     it('omits models when no model manifest is supplied', () => {
       const result = render([makeEntry({})]);
       expect(result.models).toBeUndefined();

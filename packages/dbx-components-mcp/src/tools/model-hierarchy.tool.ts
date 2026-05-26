@@ -215,7 +215,7 @@ export async function runModelHierarchy(rawArgs: unknown): Promise<ToolResult> {
 
   const downstream = args.scope === 'upstream' ? EMPTY_DOWNSTREAM_CATALOG : await getDownstreamCatalog({ workspaceRoot: cwd, componentDirs: args.componentDirs });
   const models = selectModels(args.scope, downstream);
-  const rootModel = args.rootModel !== undefined ? resolveRootModel(args.rootModel, args.scope, downstream) : undefined;
+  const rootModel = args.rootModel === undefined ? undefined : resolveRootModel(args.rootModel, args.scope, downstream);
 
   if (args.rootModel !== undefined && !rootModel) {
     const candidates = fuzzyCandidates(models, args.rootModel.trim().toLowerCase());

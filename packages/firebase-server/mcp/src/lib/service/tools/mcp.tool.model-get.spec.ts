@@ -15,7 +15,7 @@ function makeIdentity(modelType: string, collectionName: string, type: 'root' | 
     modelType,
     collectionName,
     collectionType: type === 'root' ? collectionName : `parent/${collectionName}`
-  } as FirestoreModelIdentity;
+  };
 }
 
 function makeCtx(): McpStaticToolHandlerContext {
@@ -23,7 +23,8 @@ function makeCtx(): McpStaticToolHandlerContext {
 }
 
 function unwrapStructured(result: CallToolResult): ModelAccessMultiReadResult {
-  return result.structuredContent as unknown as ModelAccessMultiReadResult;
+  const content: unknown = result.structuredContent;
+  return content as ModelAccessMultiReadResult;
 }
 
 describe('createModelGetTool', () => {

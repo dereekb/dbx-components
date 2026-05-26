@@ -13,8 +13,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, getModelArchetypeBySlug, getModelArchetypesByCollectionKind, getModelArchetypesBySyncMode, getModelArchetypesByAxisValue, resolveModelArchetype, type ModelArchetypeSyncMode, type ModelArchetypeSlug } from '@dereekb/dbx-cli';
-import type { FirestoreCollectionKind } from '@dereekb/dbx-cli';
+import { MODEL_ARCHETYPES, MODEL_ARCHETYPE_SYNC_MODES, getModelArchetypeBySlug, getModelArchetypesByCollectionKind, getModelArchetypesBySyncMode, getModelArchetypesByAxisValue, resolveModelArchetype, type ModelArchetypeSyncMode, type ModelArchetypeSlug, type FirestoreCollectionKind } from '@dereekb/dbx-cli';
 
 const ARCHETYPES_URI = 'dbx://model-archetype/entries';
 const ARCHETYPE_TEMPLATE = 'dbx://model-archetype/entries/{slug}';

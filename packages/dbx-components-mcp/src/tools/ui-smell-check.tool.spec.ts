@@ -1,10 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { loadTokenManifests } from '@dereekb/dbx-cli';
-import { loadUiComponentManifests } from '@dereekb/dbx-cli';
-import { createTokenRegistry, EMPTY_TOKEN_REGISTRY } from '@dereekb/dbx-cli';
-import { createUiComponentRegistry, EMPTY_UI_COMPONENT_REGISTRY } from '@dereekb/dbx-cli';
+import { loadTokenManifests, loadUiComponentManifests, createTokenRegistry, EMPTY_TOKEN_REGISTRY, createUiComponentRegistry, EMPTY_UI_COMPONENT_REGISTRY } from '@dereekb/dbx-cli';
 import { detectSmells, detectSmellsDetailed } from './ui-smell-check/index.js';
 import { createUiSmellCheckTool } from './ui-smell-check.tool.js';
 

@@ -21,8 +21,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { DBX_ACTION_STATE_VALUES, type DbxActionStateValue } from '@dereekb/dbx-cli';
-import { ACTION_ROLE_ORDER, type ActionDirectiveInfo, type ActionEntryInfo, type ActionEntryRole, type ActionRegistry, type ActionStateInfo, type ActionStoreInfo } from '@dereekb/dbx-cli';
+import { DBX_ACTION_STATE_VALUES, type DbxActionStateValue, ACTION_ROLE_ORDER, type ActionDirectiveInfo, type ActionEntryInfo, type ActionEntryRole, type ActionRegistry, type ActionStateInfo, type ActionStoreInfo } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool registry

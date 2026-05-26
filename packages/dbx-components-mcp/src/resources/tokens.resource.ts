@@ -7,8 +7,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { TOKEN_ROLES, TOKEN_SOURCES, type TokenRoleValue, type TokenSourceValue } from '@dereekb/dbx-cli';
-import type { TokenRegistry } from '@dereekb/dbx-cli';
+import { TOKEN_ROLES, TOKEN_SOURCES, type TokenRoleValue, type TokenSourceValue, type TokenRegistry } from '@dereekb/dbx-cli';
 
 const TOKENS_URI = 'dbx://token/entries';
 const TOKENS_BY_SOURCE_TEMPLATE = 'dbx://token/source/{source}';

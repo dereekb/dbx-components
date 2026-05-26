@@ -7,8 +7,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentKindValue } from '@dereekb/dbx-cli';
-import type { UiComponentRegistry } from '@dereekb/dbx-cli';
+import { UI_COMPONENT_CATEGORIES, UI_COMPONENT_KINDS, type UiComponentCategoryValue, type UiComponentKindValue, type UiComponentRegistry } from '@dereekb/dbx-cli';
 import { buildSlugDetailResponse } from './_resource-helpers.js';
 
 const UI_COMPONENTS_URI = 'dbx://ui/components';

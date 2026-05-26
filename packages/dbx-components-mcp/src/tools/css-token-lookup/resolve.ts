@@ -15,8 +15,7 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import type { TokenEntry } from '@dereekb/dbx-cli';
-import type { ScoredTokenMatch, TokenRegistry } from '@dereekb/dbx-cli';
+import { type TokenEntry, type ScoredTokenMatch, type TokenRegistry } from '@dereekb/dbx-cli';
 import { expandIntentQuery } from './synonyms.js';
 
 // MARK: Public types

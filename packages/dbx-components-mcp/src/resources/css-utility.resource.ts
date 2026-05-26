@@ -7,8 +7,7 @@
  */
 
 import { type McpServer, ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { CSS_UTILITY_ROLES, type CssUtilityRoleValue } from '@dereekb/dbx-cli';
-import type { CssUtilityRegistry } from '@dereekb/dbx-cli';
+import { CSS_UTILITY_ROLES, type CssUtilityRoleValue, type CssUtilityRegistry } from '@dereekb/dbx-cli';
 
 const CSS_UTILITY_URI = 'dbx://css-utility/entries';
 const CSS_UTILITY_BY_SLUG_TEMPLATE = 'dbx://css-utility/entries/{slug}';

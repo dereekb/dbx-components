@@ -12,8 +12,8 @@
 
 export * from './config/config-schema.js';
 export * from './config/load-config.js';
-/* eslint-disable import-x/export */
+
 export * from './registry/index.js';
 export * from './scan/index.js';
-/* eslint-enable import-x/export */
+
 export * from './manifest/index.js';

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BUILTIN_AUTH_CLAIMS, BUILTIN_AUTH_ROLES, BUILTIN_AUTH_SCOPES, WORKSPACE_AUTH_APPS, WORKSPACE_AUTH_CLAIMS } from '@dereekb/dbx-cli';
-import { createAuthRegistryFromEntries } from '@dereekb/dbx-cli';
+import { BUILTIN_AUTH_CLAIMS, BUILTIN_AUTH_ROLES, BUILTIN_AUTH_SCOPES, WORKSPACE_AUTH_APPS, WORKSPACE_AUTH_CLAIMS, createAuthRegistryFromEntries } from '@dereekb/dbx-cli';
 import { createAuthClaimLookupTool } from './auth-claim-lookup.tool.js';
 import { createAuthListAppTool } from './auth-list-app.tool.js';
 import { createAuthRoleLookupTool } from './auth-role-lookup.tool.js';

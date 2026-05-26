@@ -26,9 +26,7 @@ import { type FunctionDeclaration, type Project, type SourceFile } from 'ts-morp
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME, type BuildModelFirebaseIndexManifestOutcome, type DerivedComposite, type DerivedFieldOverride, type ModelFirebaseIndexEntry } from '@dereekb/dbx-cli/firestore-indexes';
-import { buildScanProject, defaultGlobber, defaultReadFile } from '@dereekb/dbx-cli';
-import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount, type FactoryReferenceSite } from '@dereekb/dbx-cli';
-import { buildDispatcherCreditByName, type DispatcherCredit } from '@dereekb/dbx-cli';
+import { buildScanProject, defaultGlobber, defaultReadFile, scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount, type FactoryReferenceSite, buildDispatcherCreditByName, type DispatcherCredit } from '@dereekb/dbx-cli';
 
 // MARK: Args
 const ListAppArgsType = type({

@@ -190,19 +190,8 @@ import { createAuthScopeLookupTool } from './auth-scope-lookup.tool.js';
 import { createAuthRoleLookupTool } from './auth-role-lookup.tool.js';
 import { createAuthTokenExplainTool } from './auth-token-explain.tool.js';
 import { createAuthListAppTool } from './auth-list-app.tool.js';
-import type { ActionRegistry } from '@dereekb/dbx-cli';
-import type { AuthRegistry } from '@dereekb/dbx-cli';
-import type { FilterRegistry } from '@dereekb/dbx-cli';
-import type { ForgeFieldRegistry } from '@dereekb/dbx-cli';
-import type { PipeRegistry } from '@dereekb/dbx-cli';
-import type { UtilRegistry } from '@dereekb/dbx-cli';
-import type { ModelSnapshotFieldRegistry } from '@dereekb/dbx-cli';
+import { type ActionRegistry, type AuthRegistry, type FilterRegistry, type ForgeFieldRegistry, type PipeRegistry, type UtilRegistry, type ModelSnapshotFieldRegistry, type SemanticTypeRegistry, type TokenRegistry, type CssUtilityRegistry, type UiComponentRegistry, type DbxDocsUiExamplesRegistry } from '@dereekb/dbx-cli';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
-import type { SemanticTypeRegistry } from '@dereekb/dbx-cli';
-import type { TokenRegistry } from '@dereekb/dbx-cli';
-import type { CssUtilityRegistry } from '@dereekb/dbx-cli';
-import type { UiComponentRegistry } from '@dereekb/dbx-cli';
-import type { DbxDocsUiExamplesRegistry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool } from './types.js';
 
 /**

@@ -200,7 +200,7 @@ describe('storage-rules-parser', () => {
     expect(blocks).toHaveLength(1);
     expect(blocks[0].matchPath).toBe('/uploads/u/{uid}/jr/{shortKey}');
     expect(blocks[0].branches).toHaveLength(2);
-    const caps = blocks[0].branches.map((b) => b.maxFileSizeBytes).sort();
+    const caps = blocks[0].branches.map((b) => b.maxFileSizeBytes).sort((a, b) => a - b);
     expect(caps).toEqual([16 * 1024 * 1024, 16 * 1024 * 1024]);
     const literals = new Set(blocks[0].branches.flatMap((b) => b.allowedMimeLiterals));
     const regexes = new Set(blocks[0].branches.flatMap((b) => b.allowedMimeRegexes));
@@ -442,7 +442,7 @@ export const SOME_POLICY: StorageFilePurposeUploadPolicy = {
 `;
     const messages = lintCode(code, { virtualStorageRules: AVATAR_RULES_OK });
     // purpose unresolvable + the existing storage.rules block becomes an orphan
-    const ids = messages.map((m) => m.messageId).sort();
+    const ids = messages.map((m) => m.messageId ?? '').sort((a, b) => a.localeCompare(b));
     expect(ids).toEqual(['orphanRuleBlock', 'unresolvedPolicyField']);
   });
 });

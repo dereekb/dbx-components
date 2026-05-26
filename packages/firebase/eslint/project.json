@@ -20,7 +20,7 @@
         "generateExportsField": true,
         "external": "all",
         "assets": [],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
+        "rollupConfig": ["packages/firebase/eslint/rollup.alias-internal.config.ts", "rollup.visualizer.config.ts"],
         "compiler": "swc"
       },
       "configurations": {

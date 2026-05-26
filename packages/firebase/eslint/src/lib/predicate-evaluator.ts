@@ -70,7 +70,7 @@ export function evaluatePredicate(predicate: string, helpers: HelperFunctionTabl
   let ast: Maybe<AstNode> = null;
   let parseFailure: Maybe<string> = null;
   try {
-    ast = parse(predicate).ast as unknown as AstNode;
+    ast = parse(predicate).ast;
   } catch (error) {
     const message: string = error instanceof ParseError || error instanceof Error ? error.message : String(error);
     parseFailure = `cel-js parse error: ${message}`;

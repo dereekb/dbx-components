@@ -15,8 +15,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { type FormFieldInfo } from '@dereekb/dbx-cli';
-import type { ForgeFieldRegistry } from '@dereekb/dbx-cli';
+import { type FormFieldInfo, type ForgeFieldRegistry } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DEFAULT_VALUE_TYPE_NAME = 'ScaffoldedFormValue';

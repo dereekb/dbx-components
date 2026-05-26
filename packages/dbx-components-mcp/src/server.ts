@@ -9,40 +9,58 @@ import type { Maybe } from '@dereekb/util';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { dirname, isAbsolute, resolve as resolvePath } from 'node:path';
-import { findAndLoadConfig } from '@dereekb/dbx-cli';
-import { loadActionRegistry, type LoadActionRegistryResult } from '@dereekb/dbx-cli';
-import { loadFilterRegistry, type LoadFilterRegistryResult } from '@dereekb/dbx-cli';
-import { loadForgeFieldRegistry, type LoadForgeFieldRegistryResult } from '@dereekb/dbx-cli';
-import { loadPipeRegistry, type LoadPipeRegistryResult } from '@dereekb/dbx-cli';
-import { loadUtilRegistry, type LoadUtilRegistryResult } from '@dereekb/dbx-cli';
-import { loadModelSnapshotFieldRegistry, type LoadModelSnapshotFieldRegistryResult } from '@dereekb/dbx-cli';
-import { loadModelFirebaseIndexRegistry, type LoadModelFirebaseIndexRegistryResult } from '@dereekb/dbx-cli';
-import { loadSemanticTypeRegistry, type LoadSemanticTypeRegistryResult } from '@dereekb/dbx-cli';
-import { loadTokenRegistry, type LoadTokenRegistryResult } from '@dereekb/dbx-cli';
-import { loadCssUtilityRegistry, type LoadCssUtilityRegistryResult } from '@dereekb/dbx-cli';
-import { loadUiComponentRegistry, type LoadUiComponentRegistryResult } from '@dereekb/dbx-cli';
-import { loadDbxDocsUiExamplesRegistry, type LoadDbxDocsUiExamplesRegistryResult } from '@dereekb/dbx-cli';
-import type { ActionRegistry } from '@dereekb/dbx-cli';
-import type { FilterRegistry } from '@dereekb/dbx-cli';
-import type { ForgeFieldRegistry } from '@dereekb/dbx-cli';
-import type { PipeRegistry } from '@dereekb/dbx-cli';
-import type { UtilRegistry } from '@dereekb/dbx-cli';
-import type { ModelSnapshotFieldRegistry } from '@dereekb/dbx-cli';
+import {
+  findAndLoadConfig,
+  loadActionRegistry,
+  type LoadActionRegistryResult,
+  loadFilterRegistry,
+  type LoadFilterRegistryResult,
+  loadForgeFieldRegistry,
+  type LoadForgeFieldRegistryResult,
+  loadPipeRegistry,
+  type LoadPipeRegistryResult,
+  loadUtilRegistry,
+  type LoadUtilRegistryResult,
+  loadModelSnapshotFieldRegistry,
+  type LoadModelSnapshotFieldRegistryResult,
+  loadModelFirebaseIndexRegistry,
+  type LoadModelFirebaseIndexRegistryResult,
+  loadSemanticTypeRegistry,
+  type LoadSemanticTypeRegistryResult,
+  loadTokenRegistry,
+  type LoadTokenRegistryResult,
+  loadCssUtilityRegistry,
+  type LoadCssUtilityRegistryResult,
+  loadUiComponentRegistry,
+  type LoadUiComponentRegistryResult,
+  loadDbxDocsUiExamplesRegistry,
+  type LoadDbxDocsUiExamplesRegistryResult,
+  type ActionRegistry,
+  type FilterRegistry,
+  type ForgeFieldRegistry,
+  type PipeRegistry,
+  type UtilRegistry,
+  type ModelSnapshotFieldRegistry,
+  type SemanticTypeRegistry,
+  type TokenRegistry,
+  type CssUtilityRegistry,
+  type UiComponentRegistry,
+  type DbxDocsUiExamplesRegistry,
+  FIREBASE_MODELS,
+  type AuthRegistry,
+  loadAuthRegistry,
+  type LoadAuthRegistryResult,
+  discoverDownstreamPackages,
+  DOWNSTREAM_CLUSTERS,
+  type DownstreamCluster,
+  type DownstreamPackage
+} from '@dereekb/dbx-cli';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
-import type { SemanticTypeRegistry } from '@dereekb/dbx-cli';
-import type { TokenRegistry } from '@dereekb/dbx-cli';
-import type { CssUtilityRegistry } from '@dereekb/dbx-cli';
-import type { UiComponentRegistry } from '@dereekb/dbx-cli';
-import type { DbxDocsUiExamplesRegistry } from '@dereekb/dbx-cli';
-import { FIREBASE_MODELS } from '@dereekb/dbx-cli';
-import type { AuthRegistry } from '@dereekb/dbx-cli';
-import { loadAuthRegistry, type LoadAuthRegistryResult } from '@dereekb/dbx-cli';
 import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
 import type { RuleOptions } from './tools/model-validate/index.js';
 import type { LogSearchConfig } from './tools/log-search.tool.js';
-import { discoverDownstreamPackages, DOWNSTREAM_CLUSTERS, type DownstreamCluster, type DownstreamPackage } from '@dereekb/dbx-cli';
 import packageJson from '../package.json' with { type: 'json' };
 
 export const SERVER_NAME = 'dbx-components-mcp';

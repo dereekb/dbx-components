@@ -12,8 +12,7 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
-import { type FormFieldInfo } from '@dereekb/dbx-cli';
-import type { ForgeFieldRegistry } from '@dereekb/dbx-cli';
+import { type FormFieldInfo, type ForgeFieldRegistry } from '@dereekb/dbx-cli';
 import { resolveTopicAlias } from './form-alias-resolver.js';
 import { runSearchTool, type QueryToken, type SearchHit } from './_search/score.js';
 import { type DbxTool, type ToolResult } from './types.js';

@@ -110,7 +110,7 @@ export function createWhoamiTool(deps: CreateWhoamiToolDeps): McpToolDefinition 
 function whoamiToolHandler(ctx: McpStaticToolHandlerContext, deps: CreateWhoamiToolDeps): CallToolResult {
   const auth = ctx.auth;
 
-  if (auth == null || auth.uid == null) {
+  if (auth?.uid == null) {
     const output: WhoamiToolOutput = {
       authenticated: false,
       claims: {},
@@ -192,7 +192,8 @@ function renderText(output: WhoamiToolOutput): string {
     lines.push(`- **email:** \`${output.email}\``);
   }
   if (output.roles.length > 0) {
-    lines.push(`- **roles:** ${output.roles.map((role) => `\`${role}\``).join(', ')}`);
+    const rolesText = output.roles.map((role) => `\`${role}\``).join(', ');
+    lines.push(`- **roles:** ${rolesText}`);
   } else {
     lines.push('- **roles:** _(none)_');
   }
