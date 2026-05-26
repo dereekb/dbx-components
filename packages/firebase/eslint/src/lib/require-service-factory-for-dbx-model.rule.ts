@@ -123,20 +123,8 @@ export const FIREBASE_REQUIRE_SERVICE_FACTORY_FOR_DBX_MODEL_RULE: FirebaseRequir
       const roots = options.factorySearchRoots ?? DEFAULT_FACTORY_SEARCH_ROOTS;
       const out = new Set<string>();
       for (const pattern of roots) {
-        const matches = globSync(pattern, { cwd });
-        for (const rel of matches) {
-          if (typeof rel !== 'string') continue;
-          const abs = resolve(cwd, rel);
-          let text: string;
-          try {
-            text = readFileSync(abs, 'utf8');
-          } catch {
-            continue;
-          }
-          if (!text.includes(`@${factoryTag}`)) continue;
-          for (const modelType of extractFactoryModelTypes(text, factoryTag)) {
-            out.add(modelType);
-          }
+        for (const rel of globSync(pattern, { cwd })) {
+          collectFactoryModelTypesFromFile({ rel, cwd, factoryTag, out });
         }
       }
       return out;
@@ -168,28 +156,46 @@ function lowercaseFirstLetter(name: string): string {
   return name.length === 0 ? name : name.charAt(0).toLowerCase() + name.slice(1);
 }
 
+function collectFactoryModelTypesFromFile(input: { rel: unknown; cwd: string; factoryTag: string; out: Set<string> }): void {
+  const { rel, cwd, factoryTag, out } = input;
+  if (typeof rel !== 'string') return;
+  const abs = resolve(cwd, rel);
+  let text: string;
+  try {
+    text = readFileSync(abs, 'utf8');
+  } catch {
+    return;
+  }
+  if (!text.includes(`@${factoryTag}`)) return;
+  for (const modelType of extractFactoryModelTypes(text, factoryTag)) {
+    out.add(modelType);
+  }
+}
+
+function modelTypesFromFactoryComment(comment: { type: string; value: string }, factoryTag: string): readonly string[] {
+  if (comment.type !== 'Block' || !comment.value.includes(`@${factoryTag}`)) return [];
+  const out: string[] = [];
+  for (const tag of parseJsdocComment(comment.value).tags) {
+    if (tag.tag !== factoryTag) continue;
+    const firstToken = tag.description.trim().split(/\s+/)[0];
+    if (firstToken.length > 0 && MODEL_TYPE_VALUE_PATTERN.test(firstToken)) {
+      out.push(firstToken);
+    }
+  }
+  return out;
+}
+
 function extractFactoryModelTypes(text: string, factoryTag: string): readonly string[] {
+  const out: string[] = [];
   let ast: any;
   try {
     ast = parseTypescriptSource(text, { range: true, loc: true, comment: true, sourceType: 'module', ecmaVersion: 2022 });
   } catch {
-    return [];
+    ast = undefined;
   }
-  const out: string[] = [];
   const comments = (ast?.comments ?? []) as Array<{ type: string; value: string; range: [number, number] }>;
   for (const comment of comments) {
-    if (comment.type !== 'Block') continue;
-    if (!comment.value.includes(`@${factoryTag}`)) continue;
-    const parsed = parseJsdocComment(comment.value);
-    for (const tag of parsed.tags) {
-      if (tag.tag !== factoryTag) continue;
-      const value = tag.description.trim();
-      if (value.length === 0) continue;
-      const firstToken = value.split(/\s+/)[0];
-      if (MODEL_TYPE_VALUE_PATTERN.test(firstToken)) {
-        out.push(firstToken);
-      }
-    }
+    out.push(...modelTypesFromFactoryComment(comment, factoryTag));
   }
   return out;
 }
