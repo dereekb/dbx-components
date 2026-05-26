@@ -62,13 +62,21 @@ export interface ExtractedCompositeKeyTag {
 }
 
 /**
+ * Allowed `@dbxModelRead` levels. Three statically-inferable cases plus the `permissions`
+ * escape hatch for any non-trivial computed read grant. Mirrors the ESLint rule's
+ * `READ_LEVEL_VALUES` (see `require-dbx-model-companion-tags.rule.ts`).
+ */
+export type DbxModelReadLevel = 'system' | 'owner' | 'admin-only' | 'permissions';
+
+/**
  * JSDoc-derived tag bag attached to one `export interface` declaration.
  * `dbxModelArchetypes` is repeatable — every `@dbxModelArchetype` occurrence
  * appends to the array. `dbxModelAggregatesFrom` is also repeatable.
  * `dbxModelOrganizationalGroupRoot` is a boolean presence flag.
  * `dbxModelCompositeKey` is at most one per interface — if multiple are
  * declared, only the first is captured and the rest produce validation
- * findings.
+ * findings. `dbxModelRead` is at most one per interface; invalid values are
+ * dropped silently (the ESLint rule is the user-facing gate).
  */
 export interface ExtractedInterfaceTags {
   readonly dbxModel: boolean;
@@ -77,6 +85,7 @@ export interface ExtractedInterfaceTags {
   readonly dbxModelAggregatesFrom: readonly string[];
   readonly dbxModelOrganizationalGroupRoot: boolean;
   readonly dbxModelCompositeKey?: ExtractedCompositeKeyTag;
+  readonly dbxModelRead?: DbxModelReadLevel;
 }
 
 /**
@@ -150,4 +159,23 @@ export interface ExtractedSubObjectConst {
   readonly constName: string;
   readonly interfaceName: string;
   readonly factoryName: 'firestoreSubObject' | 'firestoreObjectArray' | 'firestoreMap';
+}
+
+/**
+ * One `@dbxModelServiceFactory <modelType>`-tagged variable export. The model extractor
+ * joins these onto matching {@link ExtractedInterface}s by `modelType` so each
+ * {@link FirebaseModel} entry surfaces the factory that implements it.
+ */
+export interface ExtractedServiceFactory {
+  /**
+   * The `FirestoreModelIdentity.modelType` string declared by the tag (e.g. `guestbook`,
+   * `guestbookEntry`). Only camelCase identifiers are emitted — invalid values are dropped
+   * silently at scan time.
+   */
+  readonly modelType: string;
+  /**
+   * Name of the exported binding the factory call was assigned to
+   * (e.g. `guestbookFirebaseModelServiceFactory`).
+   */
+  readonly exportName: string;
 }

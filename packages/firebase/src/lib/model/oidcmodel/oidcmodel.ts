@@ -55,6 +55,7 @@ export const OIDC_ENTRY_CLIENT_TYPE: OidcEntryType = 'Client';
  * (used primarily for Client entries so users can query their own registered OAuth clients).
  *
  * @dbxModel
+ * @dbxModelRead permissions
  * @dbxModelArchetype reference-registry hasChildren=false,hasInheritance=false
  */
 export interface OidcEntry {

@@ -28,9 +28,19 @@ import { findEnums } from './find-enums.js';
 import { findIdentities } from './find-identities.js';
 import { findInterfaces } from './find-interfaces.js';
 import { findModelGroups } from './find-model-groups.js';
+import { findServiceFactories } from './find-service-factories.js';
 import { findSubObjectConsts } from './find-sub-object-consts.js';
 import { findCollectionFactoryCalls } from './infer-collection-kind.js';
 import type { ExtractedInterface } from './types.js';
+
+/**
+ * One service-factory entry indexed during the parse pass and joined onto each {@link FirebaseModel}
+ * by its `modelType` in the post-pass.
+ */
+interface ServiceFactoryIndexEntry {
+  readonly exportName: string;
+  readonly sourceFile: string;
+}
 
 /**
  * Outcome of one model-root scan. The `errors` array carries per-file
@@ -114,10 +124,18 @@ function indexSubObjectFactsFromFile(sf: SourceFile, subObjectConstIndex: Map<st
   }
 }
 
-function fileHasAnyMarker(text: string): { readonly hasModelMarker: boolean; readonly hasSubObjectMarker: boolean } {
+function indexServiceFactoriesFromFile(sf: SourceFile, sourceFileRel: string, factoryIndex: Map<string, ServiceFactoryIndexEntry>): void {
+  for (const factory of findServiceFactories(sf)) {
+    if (factoryIndex.has(factory.modelType)) continue;
+    factoryIndex.set(factory.modelType, { exportName: factory.exportName, sourceFile: sourceFileRel });
+  }
+}
+
+function fileHasAnyMarker(text: string): { readonly hasModelMarker: boolean; readonly hasSubObjectMarker: boolean; readonly hasServiceFactoryMarker: boolean } {
   const hasModelMarker = text.includes('firestoreModelIdentity(') || text.includes('@dbxModelGroup');
   const hasSubObjectMarker = text.includes('@dbxModelSubObject') || text.includes('firestoreSubObject') || text.includes('firestoreObjectArray') || text.includes('firestoreMap');
-  return { hasModelMarker, hasSubObjectMarker };
+  const hasServiceFactoryMarker = text.includes('@dbxModelServiceFactory');
+  return { hasModelMarker, hasSubObjectMarker, hasServiceFactoryMarker };
 }
 
 interface ParseAndIndexInput {
@@ -126,6 +144,7 @@ interface ParseAndIndexInput {
   readonly project: Project;
   readonly subObjectConstIndex: Map<string, SubObjectConstEntry>;
   readonly subObjectInterfaceIndex: Map<string, ExtractedInterface>;
+  readonly serviceFactoryIndex: Map<string, ServiceFactoryIndexEntry>;
 }
 
 interface ParseAndIndexResult {
@@ -134,20 +153,23 @@ interface ParseAndIndexResult {
 }
 
 async function parseAndIndexFiles(input: ParseAndIndexInput): Promise<ParseAndIndexResult> {
-  const { files, baseDir, project, subObjectConstIndex, subObjectInterfaceIndex } = input;
+  const { files, baseDir, project, subObjectConstIndex, subObjectInterfaceIndex, serviceFactoryIndex } = input;
   const parsedFiles: ParsedSourceFile[] = [];
   const errors: ExtractError[] = [];
   for (const filePath of files) {
     const sourceFileRel = relative(baseDir, filePath).split(sep).join(posix.sep);
     try {
       const text = await readFile(filePath, 'utf8');
-      const { hasModelMarker, hasSubObjectMarker } = fileHasAnyMarker(text);
-      if (!hasModelMarker && !hasSubObjectMarker) {
+      const { hasModelMarker, hasSubObjectMarker, hasServiceFactoryMarker } = fileHasAnyMarker(text);
+      if (!hasModelMarker && !hasSubObjectMarker && !hasServiceFactoryMarker) {
         continue;
       }
       const sf = project.createSourceFile(`/scan/${basename(filePath)}-${parsedFiles.length}.ts`, text, { overwrite: true });
       parsedFiles.push({ filePath, sourceFileRel, sf, hasModelMarker });
       indexSubObjectFactsFromFile(sf, subObjectConstIndex, subObjectInterfaceIndex);
+      if (hasServiceFactoryMarker) {
+        indexServiceFactoriesFromFile(sf, sourceFileRel, serviceFactoryIndex);
+      }
     } catch (error) {
       errors.push({ sourceFile: sourceFileRel, message: error instanceof Error ? error.message : String(error) });
     }
@@ -228,19 +250,43 @@ export async function extractModels(input: ExtractModelsInput): Promise<ExtractM
   // `worker.ts`).
   const subObjectConstIndex = new Map<string, SubObjectConstEntry>();
   const subObjectInterfaceIndex = new Map<string, ExtractedInterface>();
-  const parsePass = await parseAndIndexFiles({ files, baseDir, project, subObjectConstIndex, subObjectInterfaceIndex });
+  const serviceFactoryIndex = new Map<string, ServiceFactoryIndexEntry>();
+  const parsePass = await parseAndIndexFiles({ files, baseDir, project, subObjectConstIndex, subObjectInterfaceIndex, serviceFactoryIndex });
   const assemblePass = assembleAllParsedFiles({ parsedFiles: parsePass.parsedFiles, sourcePackage, subObjectConstIndex, subObjectInterfaceIndex });
 
   const assembled: FirebaseModel[] = [...assemblePass.models];
   const modelGroups: FirebaseModelGroup[] = [...assemblePass.modelGroups];
   const errors: ExtractError[] = [...parsePass.errors, ...assemblePass.errors];
 
-  const models = applyArchetypePostPass(assembled);
+  const archetyped = applyArchetypePostPass(assembled);
+  const models = applyServiceFactoryPostPass(archetyped, serviceFactoryIndex);
 
   sortModels(models);
   modelGroups.sort((a, b) => a.name.localeCompare(b.name));
 
   return { models, modelGroups, errors };
+}
+
+/**
+ * Joins each {@link ServiceFactoryIndexEntry} onto the matching {@link FirebaseModel} by
+ * `modelType`. Models without a matching factory entry pass through unchanged — the orphan
+ * lint rule surfaces those as warnings.
+ *
+ * @param models - Models produced by {@link applyArchetypePostPass}.
+ * @param index - Per-modelType factory entries collected during the parse pass.
+ * @returns The models with `serviceFactory` populated where a match was found.
+ */
+function applyServiceFactoryPostPass(models: readonly FirebaseModel[], index: ReadonlyMap<string, ServiceFactoryIndexEntry>): FirebaseModel[] {
+  const out: FirebaseModel[] = [];
+  for (const model of models) {
+    const entry = index.get(model.modelType);
+    if (entry === undefined) {
+      out.push(model);
+    } else {
+      out.push({ ...model, serviceFactory: { exportName: entry.exportName, sourceFile: entry.sourceFile } });
+    }
+  }
+  return out;
 }
 
 /**

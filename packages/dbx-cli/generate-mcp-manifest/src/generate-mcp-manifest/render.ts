@@ -125,7 +125,9 @@ function projectModelEntry(entry: CliModelManifestEntry): McpManifestModelEntry 
     fields: entry.fields.map(projectModelField),
     ...(entry.modelGroup == null ? {} : { modelGroup: entry.modelGroup }),
     ...(entry.parentIdentityConst == null ? {} : { parentIdentityConst: entry.parentIdentityConst }),
-    ...(entry.description == null ? {} : { description: entry.description })
+    ...(entry.description == null ? {} : { description: entry.description }),
+    ...(entry.read == null ? {} : { read: entry.read }),
+    ...(entry.serviceFactory == null ? {} : { serviceFactory: entry.serviceFactory })
   };
   return projected;
 }

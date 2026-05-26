@@ -321,6 +321,7 @@ export type StorageFileDownloadUrl = StorageFilePublicDownloadUrl | StorageFileS
  *
  * @template M - type of the arbitrary metadata stored in the `d` field
  * @dbxModel
+ * @dbxModelRead permissions
  * @dbxModelArchetype root-entity
  * @dbxModelArchetype state-machine-item
  */
@@ -615,6 +616,7 @@ export const storageFileGroupEmbeddedFile = firestoreSubObject<StorageFileGroupE
  * the `s` (needs sync) flag is set on creation and cleared once initialized.
  *
  * @dbxModel
+ * @dbxModelRead admin-only
  */
 export interface StorageFileGroup extends InitializedStorageFileModel {
   /**

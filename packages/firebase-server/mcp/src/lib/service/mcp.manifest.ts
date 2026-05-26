@@ -59,6 +59,19 @@ export interface McpManifestModelEntry {
   readonly sourcePackage: string;
   readonly sourceFile: string;
   readonly fields: readonly McpManifestModelField[];
+  /**
+   * Read posture declared by `@dbxModelRead <level>` on the model interface (`system` /
+   * `owner` / `admin-only` / `permissions`). Absent when the source model omits the tag.
+   */
+  readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions';
+  /**
+   * Resolved `@dbxModelServiceFactory`-tagged export that implements this model, joined onto
+   * the model entry by `modelType`. Absent when no factory was found in the same scan.
+   */
+  readonly serviceFactory?: {
+    readonly exportName: string;
+    readonly sourceFile: string;
+  };
 }
 
 /**

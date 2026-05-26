@@ -125,6 +125,20 @@ export interface CliModelManifestEntry {
    * Persisted-field metadata in source order.
    */
   readonly fields: readonly CliModelField[];
+  /**
+   * Read posture declared by `@dbxModelRead <level>` on the model interface. Closed enum:
+   * `system` / `owner` / `admin-only` / `permissions`. Absent when the model interface omits the tag.
+   */
+  readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions';
+  /**
+   * Resolved `@dbxModelServiceFactory <modelType>`-tagged export that implements this model.
+   * Joined by `modelType` during model-manifest assembly. Absent when no factory was found
+   * (surfaced as an orphan by the cross-file ESLint rule).
+   */
+  readonly serviceFactory?: {
+    readonly exportName: string;
+    readonly sourceFile: string;
+  };
 }
 
 /**

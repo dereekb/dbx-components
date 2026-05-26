@@ -1,4 +1,4 @@
-import { type DownloadStorageFileParams, type DownloadStorageFileResult, type FirebaseFunctionMapFunction, type FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { type DownloadStorageFileParams, downloadStorageFileParamsType, type DownloadStorageFileResult, type FirebaseFunctionMapFunction, type FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseReadFunction, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
@@ -68,9 +68,9 @@ export const updateProfileParamsType = inferredTargetModelParamsType.merge({
   'bio?': clearable(`string > 0 & string <= ${PROFILE_BIO_MAX_LENGTH}`)
 }) as Type<UpdateProfileParams>;
 
-export type FinishOnboardingProfileParams = InferredTargetModelParams;
+export interface FinishOnboardingProfileParams extends InferredTargetModelParams {}
 
-export { inferredTargetModelParamsType as finishOnboardingProfileParamsType } from '@dereekb/firebase';
+export const finishOnboardingProfileParamsType = inferredTargetModelParamsType as Type<FinishOnboardingProfileParams>;
 
 /**
  * Params for initiating or completing a password reset for the current user's profile.
@@ -99,9 +99,9 @@ export const resetProfilePasswordParamsType = inferredTargetModelParamsType.merg
   'newPassword?': clearable('string')
 }) as Type<ResetProfilePasswordParams>;
 
-export type DownloadProfileArchiveParams = DownloadStorageFileParams;
+export interface DownloadProfileArchiveParams extends DownloadStorageFileParams {}
 
-export { downloadStorageFileParamsType as downloadProfileArchiveParamsType } from '@dereekb/firebase';
+export const downloadProfileArchiveParamsType = downloadStorageFileParamsType as Type<DownloadProfileArchiveParams>;
 
 export type DownloadProfileArchiveResult = DownloadStorageFileResult;
 

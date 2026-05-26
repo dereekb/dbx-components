@@ -326,6 +326,25 @@ export interface FirebaseModel {
     readonly from: readonly string[] | '*';
     readonly encoding: 'two-way' | 'one-way';
   };
+  /**
+   * Read posture declared by `@dbxModelRead <level>` on the model interface. Closed enum:
+   * `system` / `owner` / `admin-only` are statically inferable from common `roleMapForModel`
+   * helpers; `permissions` is the escape hatch for non-trivial computed read grants.
+   *
+   * Absent when the model interface omits the tag — surfaced as `undefined` to MCP catalog
+   * consumers so they can distinguish "not declared" from "declared as permissions".
+   */
+  readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions';
+  /**
+   * Joined entry from the `@dbxModelServiceFactory <modelType>`-tagged export that implements
+   * this model. Populated by the model extractor's post-pass when a factory with a matching
+   * modelType is found in the same scan. Absent when no factory is declared — picked up by
+   * the orphan-model lint rule.
+   */
+  readonly serviceFactory?: {
+    readonly exportName: string;
+    readonly sourceFile: string;
+  };
 }
 
 /**

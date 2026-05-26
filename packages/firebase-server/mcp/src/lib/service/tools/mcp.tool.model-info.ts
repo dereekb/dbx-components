@@ -53,6 +53,8 @@ export interface ModelInfoSummaryRow {
   readonly sourcePackage: string;
   readonly fieldCount: number;
   readonly description?: string;
+  readonly read?: 'system' | 'owner' | 'admin-only' | 'permissions';
+  readonly serviceFactoryExport?: string;
 }
 
 /**
@@ -149,7 +151,9 @@ function buildListOutput(manifest: ReadonlyArray<McpManifestModelEntry>): ModelI
       fieldCount: entry.fields.length,
       ...(entry.modelGroup == null ? {} : { modelGroup: entry.modelGroup }),
       ...(entry.parentIdentityConst == null ? {} : { parentIdentityConst: entry.parentIdentityConst }),
-      ...(entry.description == null ? {} : { description: entry.description })
+      ...(entry.description == null ? {} : { description: entry.description }),
+      ...(entry.read == null ? {} : { read: entry.read }),
+      ...(entry.serviceFactory == null ? {} : { serviceFactoryExport: entry.serviceFactory.exportName })
     };
     return row;
   });
@@ -223,7 +227,9 @@ const MODEL_INFO_OUTPUT_SCHEMA = {
           parentIdentityConst: { type: 'string' },
           sourcePackage: { type: 'string' },
           fieldCount: { type: 'integer' },
-          description: { type: 'string' }
+          description: { type: 'string' },
+          read: { type: 'string', enum: ['system', 'owner', 'admin-only', 'permissions'] },
+          serviceFactoryExport: { type: 'string' }
         }
       }
     },
@@ -244,6 +250,15 @@ const MODEL_INFO_OUTPUT_SCHEMA = {
         fields: {
           type: 'array',
           items: { type: 'object' }
+        },
+        read: { type: 'string', enum: ['system', 'owner', 'admin-only', 'permissions'] },
+        serviceFactory: {
+          type: 'object',
+          required: ['exportName', 'sourceFile'],
+          properties: {
+            exportName: { type: 'string' },
+            sourceFile: { type: 'string' }
+          }
         }
       }
     }

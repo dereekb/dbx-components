@@ -195,6 +195,25 @@ describe('require-constant-naming rule', () => {
       expect(errors).toHaveLength(0);
     });
 
+    it('ModelFirebaseCrudFunctionConfigMap is exempt by default', () => {
+      const errors = lintCode(`
+        type ModelFirebaseCrudFunctionConfigMap<C, T> = Record<string, readonly string[]>;
+        type GuestbookCrudConfig = { guestbook: { create: unknown } };
+        type GuestbookTypes = unknown;
+        export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookCrudConfig, GuestbookTypes> = { guestbook: ['create'] };
+      `);
+      expect(errors).toHaveLength(0);
+    });
+
+    it('FirebaseFunctionTypeConfigMap is exempt by default', () => {
+      const errors = lintCode(`
+        type FirebaseFunctionTypeConfigMap<T> = Record<string, unknown>;
+        type GuestbookFunctionTypeMap = {};
+        export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<GuestbookFunctionTypeMap> = {};
+      `);
+      expect(errors).toHaveLength(0);
+    });
+
     it('non-default type annotation is still flagged', () => {
       const errors = lintCode(`
         type CustomType = { id: string };

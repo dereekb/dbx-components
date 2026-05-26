@@ -1,4 +1,4 @@
-import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseQueryFunction, type AbstractSubscribeToNotificationBoxParams, type TargetModelParams, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams, type OnCallQueryModelResult } from '@dereekb/firebase';
+import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseQueryFunction, type AbstractSubscribeToNotificationBoxParams, abstractSubscribeToNotificationBoxParamsType, type TargetModelParams, targetModelParamsType, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams, type OnCallQueryModelResult } from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
 import { type Guestbook, type GuestbookEntry, type GuestbookTypes } from './guestbook';
 import { type Maybe } from '@dereekb/util';
@@ -40,20 +40,20 @@ export const insertGuestbookEntryParamsType = guestbookEntryParamsType.merge({
   'published?': clearable('boolean')
 }) as Type<InsertGuestbookEntryParams>;
 
-export type LikeGuestbookEntryParams = TargetModelParams;
+export interface LikeGuestbookEntryParams extends TargetModelParams {}
 
-export { targetModelParamsType as likeGuestbookEntryParamsType } from '@dereekb/firebase';
+export const likeGuestbookEntryParamsType = targetModelParamsType as Type<LikeGuestbookEntryParams>;
 
 /**
  * Parameters for the `guestbook / update / publish` call. One-way publish of the targeted guestbook.
  */
-export type PublishGuestbookParams = TargetModelParams;
+export interface PublishGuestbookParams extends TargetModelParams {}
 
-export { targetModelParamsType as publishGuestbookParamsType } from '@dereekb/firebase';
+export const publishGuestbookParamsType = targetModelParamsType as Type<PublishGuestbookParams>;
 
-export type SubscribeToGuestbookNotificationsParams = AbstractSubscribeToNotificationBoxParams;
+export interface SubscribeToGuestbookNotificationsParams extends AbstractSubscribeToNotificationBoxParams {}
 
-export { abstractSubscribeToNotificationBoxParamsType as subscribeToGuestbookNotificationsParamsType } from '@dereekb/firebase';
+export const subscribeToGuestbookNotificationsParamsType = abstractSubscribeToNotificationBoxParamsType as Type<SubscribeToGuestbookNotificationsParams>;
 
 // MARK: Query
 /**

@@ -44,6 +44,7 @@ export const guestbookIdentity = firestoreModelIdentity('guestbook', 'gb');
  * A guestbook record that owns a list of {@link GuestbookEntry} signatures.
  *
  * @dbxModel
+ * @dbxModelRead permissions
  */
 export interface Guestbook {
   /**
@@ -134,6 +135,7 @@ export const guestbookEntryIdentity = firestoreModelIdentity(guestbookIdentity, 
  * A signed entry in a {@link Guestbook}.
  *
  * @dbxModel
+ * @dbxModelRead owner
  */
 export interface GuestbookEntry extends UserRelated, UserRelatedById {
   /**

@@ -10,11 +10,17 @@ interface AstNode {
 
 const MODEL_MARKERS: ReadonlySet<string> = new Set(['dbxModel', 'dbxModelSubObject', 'dbxModelOrganizationalGroupRoot', 'dbxModelGroup']);
 const EXCLUSIVE_MODEL_MARKERS: ReadonlySet<string> = new Set(['dbxModel', 'dbxModelSubObject', 'dbxModelOrganizationalGroupRoot']);
-const MODEL_COMPANIONS: readonly string[] = ['Archetype', 'AggregatesFrom', 'CompositeKey'];
+const MODEL_COMPANIONS: readonly string[] = ['Archetype', 'AggregatesFrom', 'CompositeKey', 'Read'];
 const PROPERTY_COMPANIONS: readonly string[] = ['Variable', 'VariableSyncFlag'];
 const DEFAULT_ALLOWED_ENCODINGS: readonly string[] = ['two-way', 'one-way'];
 const ARCHETYPE_SLUG_PATTERN = /^[a-z][a-z0-9-]*$/;
 const ARCHETYPE_AXIS_PATTERN = /^([A-Za-z_$][A-Za-z0-9_$]*)=([^,]+)$/;
+
+/**
+ * Allowed `@dbxModelRead` values. Statically-inferable cases plus the `permissions` escape hatch
+ * for any non-trivial computed read grant.
+ */
+const READ_LEVEL_VALUES: readonly string[] = ['system', 'owner', 'admin-only', 'permissions'];
 
 interface ModelReportContext {
   readonly commentNode: AstNode;
@@ -78,6 +84,25 @@ function reportArchetypeTag(ctx: ModelReportContext, tag: ParsedJsdocTag): void 
       reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'archetypeBadAxisPair', data: { value: trimmed }, report: ctx.report });
     }
   }
+}
+
+function reportReadTag(ctx: ModelReportContext, tag: ParsedJsdocTag): void {
+  const value = tag.description.trim();
+  if (value.length === 0) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'readMissingValue', data: { allowed: READ_LEVEL_VALUES.join(', ') }, report: ctx.report });
+    return;
+  }
+  const firstToken = value.split(/\s+/)[0];
+  if (!READ_LEVEL_VALUES.includes(firstToken)) {
+    reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: tag.startLineIndex, messageId: 'readInvalidValue', data: { value: firstToken, allowed: READ_LEVEL_VALUES.join(', ') }, report: ctx.report });
+  }
+}
+
+function reportMissingRead(ctx: ModelReportContext, markers: readonly ParsedJsdocTag[], companions: ReadonlyMap<string, ParsedJsdocTag[]>): void {
+  const rootMarker = markers.find((m) => m.tag === 'dbxModel');
+  if (rootMarker == null) return;
+  if ((companions.get('Read') ?? []).length > 0) return;
+  reportOnJsdocLine({ commentNode: ctx.commentNode, parsed: ctx.parsed, sourceCode: ctx.sourceCode, lineIndex: rootMarker.startLineIndex, messageId: 'readMissing', data: { allowed: READ_LEVEL_VALUES.join(', ') }, report: ctx.report });
 }
 
 function reportCompositeKeyTag(ctx: ModelReportContext, tag: ParsedJsdocTag, allowedEncodings: readonly string[]): void {
@@ -150,6 +175,7 @@ export interface UtilRequireDbxModelCompanionTagsRuleOptions {
   readonly allowedEncodings?: readonly string[];
   readonly knownCompanions?: readonly string[];
   readonly requireBareMarker?: boolean;
+  readonly requireRead?: boolean;
 }
 
 /**
@@ -192,7 +218,10 @@ export const UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE: UtilRequireDbxModelComp
       mutuallyExclusiveMarkers: '`@dbxModel`, `@dbxModelSubObject`, and `@dbxModelOrganizationalGroupRoot` are mutually exclusive markers; only one is allowed.',
       variableTagOutsideProperty: '`@dbxModel{{name}}` is only valid on interface property declarations.',
       unknownDbxModelTag: '`@dbxModel{{name}}` is not a recognized companion tag. Known companions: {{known}}.',
-      duplicateCompanionTag: '`@dbxModel{{name}}` is declared more than once.'
+      duplicateCompanionTag: '`@dbxModel{{name}}` is declared more than once.',
+      readMissing: '`@dbxModel`-marked interface is missing `@dbxModelRead <level>`. Allowed levels: {{allowed}}.',
+      readMissingValue: '`@dbxModelRead` requires a value. Allowed levels: {{allowed}}.',
+      readInvalidValue: '`@dbxModelRead {{value}}` is not a valid read level. Allowed levels: {{allowed}}.'
     },
     schema: [
       {
@@ -201,7 +230,8 @@ export const UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE: UtilRequireDbxModelComp
         properties: {
           allowedEncodings: { type: 'array' as const, items: { type: 'string' as const } },
           knownCompanions: { type: 'array' as const, items: { type: 'string' as const } },
-          requireBareMarker: { type: 'boolean' as const }
+          requireBareMarker: { type: 'boolean' as const },
+          requireRead: { type: 'boolean' as const }
         }
       }
     ]
@@ -212,6 +242,7 @@ export const UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE: UtilRequireDbxModelComp
     const allowedEncodings = options.allowedEncodings ?? DEFAULT_ALLOWED_ENCODINGS;
     const knownCompanions = options.knownCompanions ?? MODEL_COMPANIONS;
     const requireBareMarker = options.requireBareMarker !== false;
+    const requireRead = options.requireRead !== false;
 
     function checkInterfaceJsdoc(commentNode: AstNode): void {
       const parsed = parseJsdocComment(commentNode.value);
@@ -235,6 +266,10 @@ export const UTIL_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE: UtilRequireDbxModelComp
       }
 
       for (const tag of companions.get('CompositeKey') ?? []) reportCompositeKeyTag(ctx, tag, allowedEncodings);
+
+      for (const tag of companions.get('Read') ?? []) reportReadTag(ctx, tag);
+
+      if (requireRead) reportMissingRead(ctx, markers, companions);
     }
 
     function visitInterface(node: AstNode): void {

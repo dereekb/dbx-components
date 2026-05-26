@@ -498,7 +498,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'locked', longName: 'locked', tsType: 'boolean', optional: false, description: "Whether or not this guestbook and it's entries can still be edited." },
       { name: 'lockedAt', longName: 'lockedAt', tsType: 'Maybe<Date>', optional: true, description: 'Date the guestbook was locked at.' },
       { name: 'cby', longName: 'createdBy', tsType: 'Maybe<ProfileId>', optional: true, description: 'User who created the guestbook.' }
-    ]
+    ],
+    read: 'permissions',
+    serviceFactory: { exportName: 'guestbookFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'guestbookEntry',
@@ -518,7 +520,9 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'createdAt', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Date the entry was originally created at.' },
       { name: 'published', longName: 'published', tsType: 'boolean', optional: false, description: 'Whether or not the entry has been published. It can be unpublished at any time by the user.' },
       { name: 'likes', longName: 'likes', tsType: 'number', optional: false, description: 'The number of likes the entry has recieved from users.' }
-    ]
+    ],
+    read: 'owner',
+    serviceFactory: { exportName: 'guestbookEntryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notification',
@@ -568,7 +572,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'esr', longName: 'emailRecipients', tsType: 'EmailAddress[]', optional: false, description: 'Email addresses that have already received the email for this notification.' },
       { name: 'tpr', longName: 'taskCheckpoints', tsType: 'NotificationTaskCheckpointString[]', optional: false, description: 'Completed checkpoint strings for multi-step task notifications.' },
       { name: 'ut', longName: 'uniqueTask', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Unique task flag. Only used for task-type notifications.' }
-    ]
+    ],
+    serviceFactory: { exportName: 'notificationFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationBox',
@@ -605,7 +610,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'w', longName: 'latestWeek', tsType: 'YearWeekCode', optional: false, description: 'Year-week code of the latest {@link NotificationWeek} subcollection document.' },
       { name: 's', longName: 'needsSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether this box needs server-side sync/initialization with its source model. Cleared when `fi` is set true (flagged invalid).' },
       { name: 'fi', longName: 'flaggedInvalid', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Flagged invalid — set when the box cannot be properly initialized (e.g., source model deleted).' }
-    ]
+    ],
+    serviceFactory: { exportName: 'notificationBoxFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationLoggedEventDay',
@@ -616,7 +622,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     description: "Day-keyed wrapper document for a single day's worth of archived logged-event notifications under a {@link NotificationBox}.",
     sourcePackage: '@dereekb/firebase',
     sourceFile: 'packages/firebase/src/lib/model/notification/notification.ts',
-    fields: [{ name: 'd', longName: 'day', tsType: 'string', optional: false, description: 'ISO 8601 day string identifying this day. Matches the document ID.' }]
+    fields: [{ name: 'd', longName: 'day', tsType: 'string', optional: false, description: 'ISO 8601 day string identifying this day. Matches the document ID.' }],
+    serviceFactory: { exportName: 'notificationLoggedEventDayFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationSummary',
@@ -653,7 +660,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'rat', longName: 'lastReadAt', tsType: 'Maybe<Date>', optional: true, description: 'Timestamp of when the user last read this summary. Items with dates after this are considered unread.' },
       { name: 's', longName: 'needsSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether this summary needs server-side sync/initialization with its source model.' },
       { name: 'fi', longName: 'flaggedInvalid', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this model has been flagged invalid.' }
-    ]
+    ],
+    serviceFactory: { exportName: 'notificationSummaryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationUser',
@@ -693,7 +701,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         nestedIsArray: true
       },
       { name: 'ns', longName: 'needsConfigSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'Whether one or more configs need to be synced to their corresponding NotificationBox recipients.' }
-    ]
+    ],
+    serviceFactory: { exportName: 'notificationUserFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'notificationWeek',
@@ -725,7 +734,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
         ],
         nestedIsArray: true
       }
-    ]
+    ],
+    serviceFactory: { exportName: 'notificationWeekFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'oidcEntry',
@@ -746,7 +756,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'consumed', longName: 'consumedAt', tsType: 'Maybe<number>', optional: true, description: 'Epoch timestamp when this entry was consumed. Extracted from the payload for indexed queries.' },
       { name: 'createdAt', longName: 'createdAt', tsType: 'Maybe<Date>', optional: true, description: 'When this entry was created. Derived from `payload.iat` on grantable tokens (AccessToken, RefreshToken, AuthorizationCode, Grant, etc.) and from `payload.created_at` on Client entries.' },
       { name: 'expiresAt', longName: 'expiresAt', tsType: 'Maybe<Date>', optional: true, description: 'When this entry expires.' }
-    ]
+    ],
+    serviceFactory: { exportName: 'oidcEntryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'storageFile',
@@ -776,7 +787,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'sdat', longName: 'scheduledDeleteAt', tsType: 'Maybe<Date>', optional: true, description: 'Scheduled delete at date. The StorageFile cannot be deleted before this set time.' },
       { name: 'g', longName: 'groupIds', tsType: 'StorageFileGroupId[]', optional: false, description: 'StorageFileGroup id(s) that this StorageFile should be associated with.' },
       { name: 'gs', longName: 'groupsNeedSync', tsType: 'Maybe<NeedsSyncBoolean>', optional: true, description: 'If true, this file should be re-synced with each StorageFileGroup that it references.' }
-    ]
+    ],
+    serviceFactory: { exportName: 'storageFileFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
     modelType: 'storageFileGroup',
@@ -810,7 +822,18 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'fi', longName: 'flaggedInvalid', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this model has been flagged invalid.' },
       { name: 're', longName: 'shouldRegenerate', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this StorageFileGroup should flag regeneration of output StorageFiles/content.' },
       { name: 'c', longName: 'shouldCleanup', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'True if this StorageFileGroup should clean up file references.' }
-    ]
+    ],
+    serviceFactory: { exportName: 'storageFileGroupFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
-  { modelType: 'systemState', modelName: 'SystemState', identityConst: 'systemStateIdentity', collectionPrefix: 'sys', description: 'A singleton Firestore document storing the current state of a system subcomponent.', sourcePackage: '@dereekb/firebase', sourceFile: 'packages/firebase/src/lib/model/system/system.ts', fields: [{ name: 'data', longName: 'data', tsType: 'T', optional: false, description: 'Arbitrary persisted data for this system state singleton.' }] }
+  {
+    modelType: 'systemState',
+    modelName: 'SystemState',
+    identityConst: 'systemStateIdentity',
+    collectionPrefix: 'sys',
+    description: 'A singleton Firestore document storing the current state of a system subcomponent.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/system/system.ts',
+    fields: [{ name: 'data', longName: 'data', tsType: 'T', optional: false, description: 'Arbitrary persisted data for this system state singleton.' }],
+    serviceFactory: { exportName: 'systemStateFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  }
 ];

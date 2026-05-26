@@ -23,8 +23,10 @@ const DEFAULT_EXEMPT_JSDOC_TAG = '@dbxAllowConstantName';
  * - `Ng2StateDeclaration` / `StateDeclaration` — UIRouter state config objects.
  * - `ApplicationConfig` — Angular standalone bootstrap config.
  * - `Routes` / `Route` — Angular Router config arrays/entries.
+ * - `ModelFirebaseCrudFunctionConfigMap` — @dereekb/firebase CRUD function declaration map exported per model group.
+ * - `FirebaseFunctionTypeConfigMap` — @dereekb/firebase function-type configuration map exported per model group.
  */
-const DEFAULT_EXEMPT_TYPE_ANNOTATIONS: readonly string[] = ['Ng2StateDeclaration', 'StateDeclaration', 'ApplicationConfig', 'Routes', 'Route'];
+const DEFAULT_EXEMPT_TYPE_ANNOTATIONS: readonly string[] = ['Ng2StateDeclaration', 'StateDeclaration', 'ApplicationConfig', 'Routes', 'Route', 'ModelFirebaseCrudFunctionConfigMap', 'FirebaseFunctionTypeConfigMap', 'DevelopmentFirebaseFunctionConfigMap', 'SystemStateStoredDataConverterMap'];
 
 /**
  * camelCase pattern accepted for function-typed constants.

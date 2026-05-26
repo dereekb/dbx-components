@@ -152,6 +152,9 @@ export function makeDemoFirestoreCollections(firestoreContext: FirestoreContext)
 }
 
 // MARK: System
+/**
+ * @dbxModelServiceFactory systemState
+ */
 export const systemStateFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, SystemState, SystemStateDocument, SystemStateRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<SystemState, SystemStateDocument>, context: DemoFirebaseContext, _model: SystemStateDocument): PromiseOrValue<GrantedRoleMap<SystemStateRoles>> {
     return grantFullAccessIfAdmin(context);
@@ -160,13 +163,27 @@ export const systemStateFirebaseModelServiceFactory = firebaseModelServiceFactor
 });
 
 // MARK: Guestbook
+/**
+ * @dbxModelServiceFactory guestbook
+ */
 export const guestbookFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Guestbook, GuestbookDocument, GuestbookRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<Guestbook, GuestbookDocument>, context: DemoFirebaseContext, _model: GuestbookDocument): PromiseOrValue<GrantedRoleMap<GuestbookRoles>> {
-    return grantFullAccessIfAdmin(context);
+    return grantFullAccessIfAdmin(context, () => {
+      let roles: GuestbookRoles[] = [];
+
+      if (output.data?.published) {
+        roles.push('publish');
+      }
+
+      return grantedRoleKeysMapFromArray(roles);
+    });
   },
   getFirestoreCollection: (c) => c.app.guestbookCollection
 });
 
+/**
+ * @dbxModelServiceFactory guestbookEntry
+ */
 export const guestbookEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, GuestbookEntry, GuestbookEntryDocument, GuestbookEntryRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<GuestbookEntry, GuestbookEntryDocument>, context: DemoFirebaseContext, model: GuestbookEntryDocument): PromiseOrValue<GrantedRoleMap<GuestbookEntryRoles>> {
     return grantFullAccessIfAuthUserRelated({ context, document: model }, () => {
@@ -183,6 +200,9 @@ export const guestbookEntryFirebaseModelServiceFactory = firebaseModelServiceFac
 });
 
 // MARK: Profile
+/**
+ * @dbxModelServiceFactory profile
+ */
 export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Profile, ProfileDocument, ProfileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<Profile, ProfileDocument>, context: DemoFirebaseContext, model: ProfileDocument): PromiseOrValue<GrantedRoleMap<ProfileRoles>> {
     return grantFullAccessIfAuthUserRelated({ context, document: model });
@@ -190,6 +210,9 @@ export const profileFirebaseModelServiceFactory = firebaseModelServiceFactory<De
   getFirestoreCollection: (c) => c.app.profileCollection
 });
 
+/**
+ * @dbxModelServiceFactory profilePrivateData
+ */
 export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, ProfilePrivateData, ProfilePrivateDataDocument, ProfilePrivateDataRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<ProfilePrivateData, ProfilePrivateDataDocument>, context: DemoFirebaseContext, _model: ProfilePrivateDataDocument): PromiseOrValue<GrantedRoleMap<ProfilePrivateDataRoles>> {
     return grantFullAccessIfAdmin(context);
@@ -198,6 +221,9 @@ export const profilePrivateDataFirebaseModelServiceFactory = firebaseModelServic
 });
 
 // MARK: NotificationBox
+/**
+ * @dbxModelServiceFactory notificationUser
+ */
 export const notificationUserFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationUser, NotificationUserDocument, NotificationUserRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationUser, NotificationUserDocument>, context: DemoFirebaseContext, model: NotificationUserDocument): PromiseOrValue<GrantedRoleMap<NotificationUserRoles>> {
     return grantModelRolesIfAdmin(
@@ -214,6 +240,9 @@ export const notificationUserFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.notificationUserCollection
 });
 
+/**
+ * @dbxModelServiceFactory notificationSummary
+ */
 export const notificationSummaryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationSummary, NotificationSummaryDocument, NotificationSummaryRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationSummary, NotificationSummaryDocument>, context: DemoFirebaseContext, _model: NotificationSummaryDocument): PromiseOrValue<GrantedRoleMap<NotificationSummaryRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
@@ -221,6 +250,9 @@ export const notificationSummaryFirebaseModelServiceFactory = firebaseModelServi
   getFirestoreCollection: (c) => c.app.notificationSummaryCollection
 });
 
+/**
+ * @dbxModelServiceFactory notificationBox
+ */
 export const notificationBoxFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationBox, NotificationBoxDocument, NotificationBoxRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationBox, NotificationBoxDocument>, context: DemoFirebaseContext, _model: NotificationBoxDocument): PromiseOrValue<GrantedRoleMap<NotificationBoxRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
@@ -228,6 +260,9 @@ export const notificationBoxFirebaseModelServiceFactory = firebaseModelServiceFa
   getFirestoreCollection: (c) => c.app.notificationBoxCollection
 });
 
+/**
+ * @dbxModelServiceFactory notification
+ */
 export const notificationFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, Notification, NotificationDocument, NotificationRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<Notification, NotificationDocument>, context: DemoFirebaseContext, _model: NotificationDocument): PromiseOrValue<GrantedRoleMap<NotificationRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
@@ -235,6 +270,9 @@ export const notificationFirebaseModelServiceFactory = firebaseModelServiceFacto
   getFirestoreCollection: (c) => c.app.notificationCollectionGroup
 });
 
+/**
+ * @dbxModelServiceFactory notificationWeek
+ */
 export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationWeek, NotificationWeekDocument, NotificationWeekRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationWeek, NotificationWeekDocument>, context: DemoFirebaseContext, _model: NotificationWeekDocument): PromiseOrValue<GrantedRoleMap<NotificationWeekRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
@@ -242,6 +280,9 @@ export const notificationWeekFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.notificationWeekCollectionGroup
 });
 
+/**
+ * @dbxModelServiceFactory notificationLoggedEventDay
+ */
 export const notificationLoggedEventDayFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationLoggedEventDay, NotificationLoggedEventDayDocument, NotificationLoggedEventDayRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationLoggedEventDay, NotificationLoggedEventDayDocument>, context: DemoFirebaseContext, _model: NotificationLoggedEventDayDocument): PromiseOrValue<GrantedRoleMap<NotificationLoggedEventDayRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
@@ -249,6 +290,9 @@ export const notificationLoggedEventDayFirebaseModelServiceFactory = firebaseMod
   getFirestoreCollection: (c) => c.app.notificationLoggedEventDayCollectionGroup
 });
 
+/**
+ * @dbxModelServiceFactory notificationLoggedEventDayPage
+ */
 export const notificationLoggedEventDayPageFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument, NotificationLoggedEventDayRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<NotificationLoggedEventDayPageDocumentData, NotificationLoggedEventDayPageDocument>, context: DemoFirebaseContext, _model: NotificationLoggedEventDayPageDocument): PromiseOrValue<GrantedRoleMap<NotificationLoggedEventDayRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only — pages are framework-internal
@@ -256,6 +300,9 @@ export const notificationLoggedEventDayPageFirebaseModelServiceFactory = firebas
   getFirestoreCollection: (c) => c.app.notificationLoggedEventDayPageCollectionGroup
 });
 
+/**
+ * @dbxModelServiceFactory storageFile
+ */
 export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, StorageFile, StorageFileDocument, StorageFileRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFile, StorageFileDocument>, context: DemoFirebaseContext, model: StorageFileDocument): PromiseOrValue<GrantedRoleMap<StorageFileRoles>> {
     const grantStorageFileRolesForUser = grantStorageFileRolesForUserAuthFunction({ output, context, model });
@@ -276,6 +323,9 @@ export const storageFileFirebaseModelServiceFactory = firebaseModelServiceFactor
   getFirestoreCollection: (c) => c.app.storageFileCollection
 });
 
+/**
+ * @dbxModelServiceFactory storageFileGroup
+ */
 export const storageFileGroupFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, StorageFileGroup, StorageFileGroupDocument, StorageFileGroupRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<StorageFileGroup, StorageFileGroupDocument>, context: DemoFirebaseContext, _model: StorageFileGroupDocument): PromiseOrValue<GrantedRoleMap<StorageFileGroupRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap()); // system admin only
@@ -283,6 +333,9 @@ export const storageFileGroupFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.storageFileGroupCollection
 });
 
+/**
+ * @dbxModelServiceFactory oidcEntry
+ */
 export const oidcEntryFirebaseModelServiceFactory = firebaseModelServiceFactory<DemoFirebaseContext, OidcEntry, OidcEntryDocument, OidcEntryRoles>({
   roleMapForModel: function (output: FirebasePermissionServiceModel<OidcEntry, OidcEntryDocument>, context: DemoFirebaseContext, _model: OidcEntryDocument): PromiseOrValue<GrantedRoleMap<OidcEntryRoles>> {
     return grantModelRolesIfAdmin(context, fullAccessRoleMap(), async () => {

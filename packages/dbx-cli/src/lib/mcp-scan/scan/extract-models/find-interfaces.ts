@@ -10,7 +10,13 @@
  */
 
 import { Node, type ExpressionWithTypeArguments, type InterfaceDeclaration, type JSDoc, type SourceFile, type TypeNode } from 'ts-morph';
-import type { ExtractedArchetypeTag, ExtractedCompositeKeyTag, ExtractedInterface, ExtractedInterfaceProp, ExtractedInterfaceTags } from './types.js';
+import type { DbxModelReadLevel, ExtractedArchetypeTag, ExtractedCompositeKeyTag, ExtractedInterface, ExtractedInterfaceProp, ExtractedInterfaceTags } from './types.js';
+
+/**
+ * Allowed `@dbxModelRead` values. Mirrors the ESLint rule's `READ_LEVEL_VALUES`. Invalid tag
+ * values are silently dropped at scan time — the ESLint rule is the user-facing gate.
+ */
+const READ_LEVEL_VALUES: ReadonlySet<DbxModelReadLevel> = new Set<DbxModelReadLevel>(['system', 'owner', 'admin-only', 'permissions']);
 
 /**
  * TS utility/structural wrappers that don't change the field surface for
@@ -121,6 +127,7 @@ interface MutableInterfaceTagState {
   dbxModelSubObject: boolean;
   dbxModelOrganizationalGroupRoot: boolean;
   dbxModelCompositeKey: ExtractedCompositeKeyTag | undefined;
+  dbxModelRead: DbxModelReadLevel | undefined;
   readonly dbxModelArchetypes: ExtractedArchetypeTag[];
   readonly dbxModelAggregatesFrom: string[];
 }
@@ -131,6 +138,7 @@ function readInterfaceTags(jsDocs: readonly JSDoc[]): ExtractedInterfaceTags {
     dbxModelSubObject: false,
     dbxModelOrganizationalGroupRoot: false,
     dbxModelCompositeKey: undefined,
+    dbxModelRead: undefined,
     dbxModelArchetypes: [],
     dbxModelAggregatesFrom: []
   };
@@ -145,7 +153,8 @@ function readInterfaceTags(jsDocs: readonly JSDoc[]): ExtractedInterfaceTags {
     dbxModelArchetypes: state.dbxModelArchetypes,
     dbxModelAggregatesFrom: state.dbxModelAggregatesFrom,
     dbxModelOrganizationalGroupRoot: state.dbxModelOrganizationalGroupRoot,
-    ...(state.dbxModelCompositeKey ? { dbxModelCompositeKey: state.dbxModelCompositeKey } : {})
+    ...(state.dbxModelCompositeKey ? { dbxModelCompositeKey: state.dbxModelCompositeKey } : {}),
+    ...(state.dbxModelRead ? { dbxModelRead: state.dbxModelRead } : {})
   };
 }
 
@@ -171,8 +180,20 @@ function applyInterfaceTag(state: MutableInterfaceTagState, tagName: string, val
     case 'dbxModelCompositeKey':
       applyCompositeKeyTag(state, value);
       break;
+    case 'dbxModelRead':
+      applyReadTag(state, value);
+      break;
     default:
       break;
+  }
+}
+
+function applyReadTag(state: MutableInterfaceTagState, value: string | undefined): void {
+  if (value === undefined || value.length === 0) return;
+  if (state.dbxModelRead !== undefined) return;
+  const firstToken = value.split(/\s+/)[0] as DbxModelReadLevel;
+  if (READ_LEVEL_VALUES.has(firstToken)) {
+    state.dbxModelRead = firstToken;
   }
 }
 

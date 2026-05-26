@@ -176,4 +176,64 @@ describe('findInterfaces() JSDoc tag parsing', () => {
     const iface = result.find((i) => i.name === 'X');
     expect([...iface!.tags.dbxModelAggregatesFrom]).toEqual(['ValidModel']);
   });
+
+  it('captures @dbxModelRead permissions', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelRead permissions
+       */
+      export interface Foo { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'Foo');
+    expect(iface?.tags.dbxModelRead).toBe('permissions');
+  });
+
+  it('captures @dbxModelRead admin-only', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelRead admin-only
+       */
+      export interface Foo { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'Foo');
+    expect(iface?.tags.dbxModelRead).toBe('admin-only');
+  });
+
+  it('omits dbxModelRead from the tag bag when the tag is missing', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       */
+      export interface Foo { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'Foo');
+    expect(iface?.tags.dbxModelRead).toBeUndefined();
+  });
+
+  it('silently drops invalid @dbxModelRead values', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelRead public
+       */
+      export interface Foo { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'Foo');
+    expect(iface?.tags.dbxModelRead).toBeUndefined();
+  });
+
+  it('keeps only the first @dbxModelRead when multiple are declared', () => {
+    const result = interfaces(`
+      /**
+       * @dbxModel
+       * @dbxModelRead owner
+       * @dbxModelRead permissions
+       */
+      export interface Foo { a: string; }
+    `);
+    const iface = result.find((i) => i.name === 'Foo');
+    expect(iface?.tags.dbxModelRead).toBe('owner');
+  });
 });

@@ -14,7 +14,11 @@
  */
 
 import { Node, type CallExpression, type ExpressionWithTypeArguments, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile, type TypeNode } from 'ts-morph';
-import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionEnum, ModelExtractionEnumValue, ModelExtractionGroup, ModelExtractionIdentity, ModelExtractionInterface, ModelExtractionInterfaceProp } from './types';
+import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionEnum, ModelExtractionEnumValue, ModelExtractionGroup, ModelExtractionIdentity, ModelExtractionInterface, ModelExtractionInterfaceProp, ModelExtractionServiceFactory } from './types';
+
+const READ_LEVEL_VALUES: ReadonlySet<'system' | 'owner' | 'admin-only' | 'permissions'> = new Set(['system', 'owner', 'admin-only', 'permissions']);
+const SERVICE_FACTORY_TAG = 'dbxModelServiceFactory';
+const MODEL_TYPE_VALUE_PATTERN = /^[a-z][A-Za-z0-9_$]*$/;
 
 /**
  * TS utility/structural wrappers that don't change the field surface for
@@ -63,7 +67,8 @@ export function extractModelsFromSource(input: ExtractModelsFromSourceInput): Mo
   const converters = readConverters(sourceFile);
   const enums = readEnums(sourceFile);
   const modelGroups = readModelGroups(sourceFile);
-  return { identities, interfaces, converters, enums, modelGroups };
+  const serviceFactories = readServiceFactories(sourceFile);
+  return { identities, interfaces, converters, enums, modelGroups, serviceFactories };
 }
 
 function readIdentities(sourceFile: SourceFile): readonly ModelExtractionIdentity[] {
@@ -128,6 +133,7 @@ function readInterfaces(sourceFile: SourceFile): readonly ModelExtractionInterfa
 function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
   const jsDocs = decl.getJsDocs();
   const hasDbxModelTag = jsDocsHaveTag(jsDocs, 'dbxModel');
+  const dbxModelRead = readDbxModelReadTag(jsDocs);
   const extendsNames = decl.getExtends().map(resolveExtendsName);
   const props: ModelExtractionInterfaceProp[] = [];
   for (const prop of decl.getProperties()) {
@@ -150,8 +156,56 @@ function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
     description: readJsDocDescription(jsDocs),
     hasDbxModelTag,
     extendsNames,
-    props
+    props,
+    ...(dbxModelRead === undefined ? {} : { dbxModelRead })
   };
+}
+
+function readDbxModelReadTag(jsDocs: readonly JSDoc[]): 'system' | 'owner' | 'admin-only' | 'permissions' | undefined {
+  let result: 'system' | 'owner' | 'admin-only' | 'permissions' | undefined;
+  for (const doc of jsDocs) {
+    for (const tag of doc.getTags()) {
+      if (tag.getTagName() !== 'dbxModelRead') continue;
+      if (result !== undefined) continue;
+      const raw = tag.getCommentText()?.trim();
+      if (raw === undefined || raw.length === 0) continue;
+      const firstToken = raw.split(/\s+/)[0] as 'system' | 'owner' | 'admin-only' | 'permissions';
+      if (READ_LEVEL_VALUES.has(firstToken)) {
+        result = firstToken;
+      }
+    }
+  }
+  return result;
+}
+
+function readServiceFactories(sourceFile: SourceFile): readonly ModelExtractionServiceFactory[] {
+  const out: ModelExtractionServiceFactory[] = [];
+  for (const statement of sourceFile.getVariableStatements()) {
+    if (!statement.isExported()) continue;
+    const modelType = readServiceFactoryModelType(statement.getJsDocs());
+    if (modelType === undefined) continue;
+    for (const decl of statement.getDeclarations()) {
+      out.push({ modelType, exportName: decl.getName() });
+    }
+  }
+  return out;
+}
+
+function readServiceFactoryModelType(jsDocs: readonly JSDoc[]): string | undefined {
+  let result: string | undefined;
+  for (const doc of jsDocs) {
+    for (const tag of doc.getTags()) {
+      if (tag.getTagName() !== SERVICE_FACTORY_TAG) continue;
+      if (result !== undefined) continue;
+      const raw = tag.getCommentText()?.trim();
+      if (raw === undefined || raw.length === 0) continue;
+      const firstToken = raw.split(/\s+/)[0];
+      if (MODEL_TYPE_VALUE_PATTERN.test(firstToken)) {
+        result = firstToken;
+      }
+    }
+  }
+  return result;
 }
 
 /**

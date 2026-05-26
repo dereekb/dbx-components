@@ -234,7 +234,8 @@ function buildModelEntry(args: BuildModelEntryInput): FirebaseModel | undefined 
     ...(markers.aggregatesFromNonEmpty ? { aggregatesFrom: markers.aggregatesFrom } : {}),
     ...(archetypeInfo.archetypes.length > 0 ? { archetypes: archetypeInfo.archetypes } : {}),
     ...(archetypeInfo.archetypeAxesBySlug ? { archetypeAxesBySlug: archetypeInfo.archetypeAxesBySlug } : {}),
-    ...(compositeKey ? { compositeKey } : {})
+    ...(compositeKey ? { compositeKey } : {}),
+    ...(iface.tags.dbxModelRead ? { read: iface.tags.dbxModelRead } : {})
   };
 }
 
