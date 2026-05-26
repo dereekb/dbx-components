@@ -54,7 +54,7 @@ export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new
   }
 
   const models = input.modelManifest != null && input.modelManifest.length > 0 ? input.modelManifest.map(projectModelEntry) : undefined;
-  const auth = input.auth != null ? projectAuthSection(input.auth.registry, input.auth.app) : undefined;
+  const auth = input.auth == null ? undefined : projectAuthSection(input.auth.registry, input.auth.app);
 
   const base: { version: typeof MCP_MANIFEST_VERSION; generatedAt: string; tools: Record<string, McpManifestToolEntry> } = { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools };
   const result: McpManifest = {

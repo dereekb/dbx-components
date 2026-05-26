@@ -335,26 +335,36 @@ export interface FormatCatalogSearchResultsInput<TEntry extends CatalogHitEntry>
 export function formatCatalogSearchResults<TEntry extends CatalogHitEntry>(input: FormatCatalogSearchResultsInput<TEntry>): string {
   const { query, tokens, hits, filters, entityLabel, emptyHint, hitOptions } = input;
   const tokenDisplay = tokens.map((t) => t.display).join(', ');
+  const filterSuffix = buildFilterSuffix(filters);
+
+  let result: string;
+  if (hits.length === 0) {
+    result = [`No ${entityLabel} matched \`${query}\`${filterSuffix} (tokens: \`${tokenDisplay}\`).`, '', emptyHint].join('\n');
+  } else {
+    const headerLines = [`# Search: \`${query}\`${filterSuffix}`, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
+    const hitLines = renderCatalogHits<TEntry>(hits, hitOptions);
+    result = [...headerLines, ...hitLines].join('\n').trimEnd();
+  }
+  return result;
+}
+
+function buildFilterSuffix(filters: readonly CatalogSearchFilter[]): string {
   const filterParts: string[] = [];
   for (const { key, value } of filters) {
     if (value !== undefined) {
       filterParts.push(`${key}=\`${value}\``);
     }
   }
-  const filterSuffix = filterParts.length > 0 ? ` (filters: ${filterParts.join(', ')})` : '';
+  return filterParts.length > 0 ? ` (filters: ${filterParts.join(', ')})` : '';
+}
 
-  let result: string;
-  if (hits.length === 0) {
-    result = [`No ${entityLabel} matched \`${query}\`${filterSuffix} (tokens: \`${tokenDisplay}\`).`, '', emptyHint].join('\n');
-  } else {
-    const lines: string[] = [`# Search: \`${query}\`${filterSuffix}`, '', `Tokens: \`${tokenDisplay}\` · ${hits.length} result${hits.length === 1 ? '' : 's'}`, ''];
-    for (const hit of hits) {
-      const options = typeof hitOptions === 'function' ? hitOptions(hit) : hitOptions;
-      for (const line of formatCatalogHit<TEntry>({ hit, options })) {
-        lines.push(line);
-      }
+function renderCatalogHits<TEntry extends CatalogHitEntry>(hits: ReadonlyArray<SearchHit<TEntry>>, hitOptions: CatalogHitDisplayOptions | ((hit: SearchHit<TEntry>) => CatalogHitDisplayOptions)): readonly string[] {
+  const lines: string[] = [];
+  for (const hit of hits) {
+    const options = typeof hitOptions === 'function' ? hitOptions(hit) : hitOptions;
+    for (const line of formatCatalogHit<TEntry>({ hit, options })) {
+      lines.push(line);
     }
-    result = lines.join('\n').trimEnd();
   }
-  return result;
+  return lines;
 }

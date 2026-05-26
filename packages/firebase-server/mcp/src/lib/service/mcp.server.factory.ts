@@ -207,20 +207,22 @@ export class McpServerFactoryService {
       const path = this.mcpConfig.mcpManifestPath;
 
       if (path == null) {
-        this._cachedManifest = undefined;
-        this._cachedManifestModels = undefined;
-        this._cachedManifestAuth = undefined;
+        this._resetManifestCache();
       } else if (existsSync(path)) {
         this._parseManifestFile(path);
       } else {
         this._logger.warn(`MCP manifest path is set but the file is missing: ${path}. Falling back to runtime defaults.`);
-        this._cachedManifest = undefined;
-        this._cachedManifestModels = undefined;
-        this._cachedManifestAuth = undefined;
+        this._resetManifestCache();
       }
     }
 
     return this._cachedManifest;
+  }
+
+  private _resetManifestCache(): void {
+    this._cachedManifest = undefined;
+    this._cachedManifestModels = undefined;
+    this._cachedManifestAuth = undefined;
   }
 
   private _parseManifestFile(path: string): void {
@@ -229,35 +231,35 @@ export class McpServerFactoryService {
       const parsed = JSON.parse(raw) as McpManifest;
 
       if (parsed.version === MCP_MANIFEST_VERSION) {
-        const map = new Map<string, McpManifestToolEntry>();
-
-        for (const [key, entry] of Object.entries(parsed.tools)) {
-          if (entry != null) {
-            map.set(key, entry);
-          }
-        }
-
-        const models = Array.isArray(parsed.models) && parsed.models.length > 0 ? (parsed.models as ReadonlyArray<McpManifestModelEntry>) : undefined;
-        const modelSuffix = models == null ? '' : `, ${models.length} model entries`;
-        const auth = parsed.auth != null && Array.isArray(parsed.auth.claims) ? (parsed.auth as McpManifestAuth) : undefined;
-        const authSuffix = auth == null ? '' : `, ${auth.claims.length} auth claim entries`;
-
-        this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries${modelSuffix}${authSuffix}.`);
-        this._cachedManifest = map;
-        this._cachedManifestModels = models;
-        this._cachedManifestAuth = auth;
+        this._applyParsedManifest(parsed, path);
       } else {
         this._logger.warn(`MCP manifest version mismatch at ${path}: got ${String(parsed.version)}, expected ${MCP_MANIFEST_VERSION}. Falling back to runtime defaults.`);
-        this._cachedManifest = undefined;
-        this._cachedManifestModels = undefined;
-        this._cachedManifestAuth = undefined;
+        this._resetManifestCache();
       }
     } catch (error) {
       this._logger.warn(`Failed to read MCP manifest at ${path}: ${(error as Error).message}. Falling back to runtime defaults.`);
-      this._cachedManifest = undefined;
-      this._cachedManifestModels = undefined;
-      this._cachedManifestAuth = undefined;
+      this._resetManifestCache();
     }
+  }
+
+  private _applyParsedManifest(parsed: McpManifest, path: string): void {
+    const map = new Map<string, McpManifestToolEntry>();
+
+    for (const [key, entry] of Object.entries(parsed.tools)) {
+      if (entry != null) {
+        map.set(key, entry);
+      }
+    }
+
+    const models = Array.isArray(parsed.models) && parsed.models.length > 0 ? (parsed.models as ReadonlyArray<McpManifestModelEntry>) : undefined;
+    const modelSuffix = models == null ? '' : `, ${models.length} model entries`;
+    const auth = parsed.auth != null && Array.isArray(parsed.auth.claims) ? parsed.auth : undefined;
+    const authSuffix = auth == null ? '' : `, ${auth.claims.length} auth claim entries`;
+
+    this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries${modelSuffix}${authSuffix}.`);
+    this._cachedManifest = map;
+    this._cachedManifestModels = models;
+    this._cachedManifestAuth = auth;
   }
 
   /**

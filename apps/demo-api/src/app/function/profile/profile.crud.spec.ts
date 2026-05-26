@@ -23,6 +23,7 @@ demoApiFunctionContextFactory((f) => {
 
         demoProfileContext({ f, u }, (_p) => {
           describe('resetPassword', () => {
+            // NOSONAR (typescript:S7721): helper closes over `f`, `u`, and `callResetPassword` from describe contexts — hoisting would require threading them as params on every call site.
             async function beginAndLoadCode(): Promise<string> {
               await callResetPassword({ requestReset: true });
               const claims = await f.authService.userContext(u.uid).loadResetPasswordClaims();

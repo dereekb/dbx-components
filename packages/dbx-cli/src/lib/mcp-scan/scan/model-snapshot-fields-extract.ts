@@ -27,7 +27,7 @@
 import { Node, type Project } from 'ts-morph';
 import type { ModelSnapshotFieldKindValue, ModelSnapshotFieldParamEntry } from '../manifest/model-snapshot-fields-schema.js';
 import { splitListTagText, unwrapFenced } from '../../scan-helpers/scan-extract-utils.js';
-import { buildTagSet, collectTaggedExports, deriveCategoryFromPath, extractCandidateParams, toKebabCase, walkJsDocs, type TaggedExportCandidate, type TaggedExportFunctionCandidate, type TaggedExportVariableCandidate } from './_jsdoc-tagged-export/extract-base.js';
+import { buildTagSet, collectTaggedExports, deriveCategoryFromPath, extractCandidateParams, toKebabCase, walkJsDocs, type TaggedExportFunctionCandidate, type TaggedExportVariableCandidate } from './_jsdoc-tagged-export/extract-base.js';
 
 // MARK: Tag names
 const FIELD_MARKER = 'dbxModelSnapshotField';
@@ -330,9 +330,7 @@ function buildEntry(input: BuildEntryInput): BuildEntryResult {
 
   const slug = tags.slug && tags.slug.length > 0 ? tags.slug : toKebabCase(meta.name);
   const category = tags.category && tags.category.length > 0 ? tags.category : deriveCategoryFromPath(filePath);
-  // extractCandidateParams accepts the wider TaggedExportCandidate union; our
-  // local TaggedCandidate is a subset (no `class` kind) so the cast is safe.
-  const params = extractCandidateParams(candidate as TaggedExportCandidate, tags.paramDescriptions);
+  const params = extractCandidateParams(candidate, tags.paramDescriptions);
   const returns = tags.returnsText && tags.returnsText.length > 0 ? tags.returnsText : meta.defaultReturnTypeText;
   const signature = buildSignature({ name: meta.name, kind, params, returnType: meta.defaultReturnTypeText });
   const example = tags.examples.length > 0 ? tags.examples[0] : '';

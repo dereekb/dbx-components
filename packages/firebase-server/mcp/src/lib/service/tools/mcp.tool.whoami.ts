@@ -126,7 +126,7 @@ function whoamiToolHandler(ctx: McpStaticToolHandlerContext, deps: CreateWhoamiT
     .filter(([, value]) => value !== undefined)
     .map(([key]) => key);
 
-  const roleSet: AuthRoleSet = deps.roleReader != null ? deps.roleReader(token) : new Set<string>();
+  const roleSet: AuthRoleSet = deps.roleReader == null ? new Set<string>() : deps.roleReader(token);
   const roles = [...roleSet].sort((a, b) => a.localeCompare(b));
 
   const claimsByKey = new Map<string, McpManifestAuthClaim>();
@@ -181,7 +181,13 @@ function buildResult(output: WhoamiToolOutput, text: string): CallToolResult {
 
 function renderText(output: WhoamiToolOutput): string {
   const lines: string[] = ['# whoami', ''];
+  appendHeaderLines(lines, output);
+  appendClaimDetailLines(lines, output.claimDetails);
+  appendUnknownClaimLines(lines, output.unknownClaimKeys);
+  return lines.join('\n');
+}
 
+function appendHeaderLines(lines: string[], output: WhoamiToolOutput): void {
   if (output.uid != null) {
     lines.push(`- **uid:** \`${output.uid}\``);
   }
@@ -197,28 +203,32 @@ function renderText(output: WhoamiToolOutput): string {
   } else {
     lines.push('- **roles:** _(none)_');
   }
+}
 
-  if (output.claimDetails.length > 0) {
-    lines.push('', '## Claims on this token');
-    for (const detail of output.claimDetails) {
-      const headerInterfacePart = detail.interfaceName == null ? '' : ` on \`${detail.interfaceName}\``;
-      const grants = detail.grantedRoles.length > 0 ? detail.grantedRoles.map((role) => `\`${role}\``).join(', ') : '_(no roles)_';
-      const action = detail.inverse ? 'revokes' : 'grants';
-      lines.push(`- \`${detail.key}\`${headerInterfacePart} — ${action} ${grants}`);
-      if (detail.description.length > 0) {
-        lines.push(`  ${detail.description}`);
-      }
+function appendClaimDetailLines(lines: string[], claimDetails: readonly WhoamiClaimDetail[]): void {
+  if (claimDetails.length === 0) {
+    return;
+  }
+  lines.push('', '## Claims on this token');
+  for (const detail of claimDetails) {
+    const headerInterfacePart = detail.interfaceName == null ? '' : ` on \`${detail.interfaceName}\``;
+    const grants = detail.grantedRoles.length > 0 ? detail.grantedRoles.map((role) => `\`${role}\``).join(', ') : '_(no roles)_';
+    const action = detail.inverse ? 'revokes' : 'grants';
+    lines.push(`- \`${detail.key}\`${headerInterfacePart} — ${action} ${grants}`);
+    if (detail.description.length > 0) {
+      lines.push(`  ${detail.description}`);
     }
   }
+}
 
-  if (output.unknownClaimKeys.length > 0) {
-    lines.push('', '## Unknown claim keys');
-    for (const key of output.unknownClaimKeys) {
-      lines.push(`- \`${key}\``);
-    }
+function appendUnknownClaimLines(lines: string[], unknownClaimKeys: readonly string[]): void {
+  if (unknownClaimKeys.length === 0) {
+    return;
   }
-
-  return lines.join('\n');
+  lines.push('', '## Unknown claim keys');
+  for (const key of unknownClaimKeys) {
+    lines.push(`- \`${key}\``);
+  }
 }
 
 // MARK: Schemas

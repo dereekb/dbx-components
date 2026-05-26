@@ -635,6 +635,6 @@ describe('arktypeToJsonSchemaForExport()', () => {
     expect(branches?.length).toBe(2);
     expect(branches).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'string', minLength: 1 }), expect.objectContaining({ type: 'null' })]));
     // No empty-object junk branch.
-    expect(branches?.some((b) => b !== null && typeof b === 'object' && Object.keys(b as object).length === 0)).toBe(false);
+    expect(branches?.some((b) => b !== null && typeof b === 'object' && Object.keys(b).length === 0)).toBe(false);
   });
 });
