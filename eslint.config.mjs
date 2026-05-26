@@ -108,7 +108,25 @@ export default [
       'dereekb-firebase/require-dbx-model-firebase-index-companion-tags': 'warn', // dbx-components-mcp firebase-index registry: enforce `@dbxModelFirebaseIndexModel` + body coherence (constraint factory present, generic args match model, field paths are string literals) on `@dbxModelFirebaseIndex`-tagged factories
       'dereekb-firebase/require-dbx-model-firebase-index-valid-dispatcher': 'error', // dbx-components-mcp firebase-index registry: forbid inline `@dereekb/firebase` constraint factory calls and ad-hoc constraint-array construction inside `@dbxModelFirebaseIndexDispatcher`-tagged factories — dispatchers must delegate to other tagged `*Query` factories
       'dereekb-firebase/require-firestore-constraint-type-parameter': 'warn', // require a generic on `@dereekb/firebase` field-path constraint factories (`where<Model>`, `orderBy<Model>`) so TypeScript validates the field path against the model
-      'dereekb-firebase/require-api-details-for-crud-function': 'warn' // require CRUD function declarations (`On(?:Call)?<Verb>ModelFunction` or app-side aliases ending with `<Verb>ModelFunction`) to be wrapped in `withApiDetails(...)` — handlers without the wrapper attach no `_apiDetails` metadata and silently fail to surface in the MCP manifest built by `packages/firebase-server-mcp`
+      'dereekb-firebase/require-api-details-for-crud-function': 'warn', // require CRUD function declarations (`On(?:Call)?<Verb>ModelFunction` or app-side aliases ending with `<Verb>ModelFunction`) to be wrapped in `withApiDetails(...)` — handlers without the wrapper attach no `_apiDetails` metadata and silently fail to surface in the MCP manifest built by `packages/firebase-server-mcp`
+      'dereekb-firebase/require-storagefile-policy-matches-rules': 'warn' // cross-check STORAGE_FILE_PURPOSE_UPLOAD_POLICIES entries against the workspace `storage.rules` — each policy's `maxFileSizeBytes` and `allowedMimeTypes` must match the paired `// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[<KEY>]` rule block so signed-upload URLs never sign a request the bucket then rejects
+    }
+  },
+  {
+    files: ['components/*/src/lib/model/service.ts', 'apps/*/src/app/**/service.ts'],
+    plugins: {
+      'dereekb-firebase': FIREBASE_ESLINT_PLUGIN
+    },
+    rules: {
+      'dereekb-firebase/require-firestore-rule-for-service-model': [
+        'warn',
+        {
+          // Models intentionally registered without a matching `firestore.rules` block
+          // (treated as system-admin-only via the model service layer until a customer-facing
+          // permission story is needed). Shrink as `firestore.rules` is filled in.
+          allowedMissingCollectionNames: ['systemState', 'profilePrivate', 'notificationLoggedEventDay', 'notificationLoggedEventDayPage']
+        }
+      ]
     }
   },
   {
