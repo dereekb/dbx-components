@@ -24,9 +24,10 @@
  *     variants and the registry can cross-link them via `relatedSlugs`.
  */
 
-import { Node, type FunctionDeclaration, type JSDoc, type ParameterDeclaration, type Project, type SourceFile, type VariableDeclaration, type VariableStatement } from 'ts-morph';
+import { Node, type Project } from 'ts-morph';
 import type { ModelSnapshotFieldKindValue, ModelSnapshotFieldParamEntry } from '../manifest/model-snapshot-fields-schema.js';
 import { splitListTagText, unwrapFenced } from '../../../dbx-cli/src/lib/scan-helpers/scan-extract-utils.js';
+import { buildTagSet, collectTaggedExports, deriveCategoryFromPath, extractCandidateParams, toKebabCase, walkJsDocs, type TaggedExportCandidate, type TaggedExportFunctionCandidate, type TaggedExportVariableCandidate } from './_jsdoc-tagged-export/extract-base.js';
 
 // MARK: Tag names
 const FIELD_MARKER = 'dbxModelSnapshotField';
@@ -101,6 +102,8 @@ const VALID_KIND_OVERRIDES: ReadonlySet<string> = new Set(['factory', 'const']);
 const TRUE_TAG_VALUES: ReadonlySet<string> = new Set(['', 'true', 'yes', 'optional']);
 const FALSE_TAG_VALUES: ReadonlySet<string> = new Set(['false', 'no', 'required']);
 
+type TaggedCandidate = TaggedExportFunctionCandidate | TaggedExportVariableCandidate;
+
 // MARK: Entry point
 /**
  * Walks the supplied project and returns every export tagged with the
@@ -118,7 +121,9 @@ export function extractModelSnapshotFieldEntries(input: ExtractModelSnapshotFiel
 
   for (const sourceFile of project.getSourceFiles()) {
     const filePath = sourceFile.getFilePath();
-    const candidates = collectTaggedExports(sourceFile);
+    // includeClasses is false (default), so the returned candidates only
+    // contain `function` and `variable` kinds — narrow via the local alias.
+    const candidates = collectTaggedExports(sourceFile, FIELD_MARKER) as readonly TaggedCandidate[];
     for (const candidate of candidates) {
       const built = buildEntry({ candidate, filePath });
       if (built.kind === 'ok') {
@@ -137,62 +142,6 @@ export function extractModelSnapshotFieldEntries(input: ExtractModelSnapshotFiel
   }
 
   return { entries, warnings };
-}
-
-// MARK: Candidate collection
-type TaggedCandidate = { readonly kind: 'function'; readonly decl: FunctionDeclaration; readonly jsDocs: readonly JSDoc[] } | { readonly kind: 'variable'; readonly statement: VariableStatement; readonly decl: VariableDeclaration; readonly jsDocs: readonly JSDoc[] };
-
-function collectTaggedExports(sourceFile: SourceFile): readonly TaggedCandidate[] {
-  const combined: TaggedCandidate[] = [...collectTaggedFunctions(sourceFile), ...collectTaggedVariables(sourceFile)];
-  combined.sort((a, b) => candidateSourceStart(a) - candidateSourceStart(b));
-  return combined;
-}
-
-function candidateSourceStart(candidate: TaggedCandidate): number {
-  return candidate.kind === 'variable' ? candidate.statement.getStart() : candidate.decl.getStart();
-}
-
-function collectTaggedFunctions(sourceFile: SourceFile): readonly TaggedCandidate[] {
-  const out: TaggedCandidate[] = [];
-  for (const decl of sourceFile.getFunctions()) {
-    if (!decl.isExported()) {
-      continue;
-    }
-    const jsDocs = findTaggedDocs(decl.getJsDocs());
-    if (jsDocs.length > 0) {
-      out.push({ kind: 'function', decl, jsDocs });
-    }
-  }
-  return out;
-}
-
-function collectTaggedVariables(sourceFile: SourceFile): readonly TaggedCandidate[] {
-  const out: TaggedCandidate[] = [];
-  for (const statement of sourceFile.getVariableStatements()) {
-    if (!statement.isExported()) {
-      continue;
-    }
-    const jsDocs = findTaggedDocs(statement.getJsDocs());
-    if (jsDocs.length === 0) {
-      continue;
-    }
-    for (const decl of statement.getDeclarations()) {
-      out.push({ kind: 'variable', statement, decl, jsDocs });
-    }
-  }
-  return out;
-}
-
-function findTaggedDocs(jsDocs: readonly JSDoc[]): readonly JSDoc[] {
-  let hasMarker = false;
-  for (const doc of jsDocs) {
-    for (const tag of doc.getTags()) {
-      if (tag.getTagName() === FIELD_MARKER) {
-        hasMarker = true;
-      }
-    }
-  }
-  return hasMarker ? jsDocs : [];
 }
 
 // MARK: JSDoc parsing
@@ -228,7 +177,7 @@ interface MutableTagState {
   since: string | undefined;
 }
 
-function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedFieldTags {
+function readJsDocTags(candidate: TaggedCandidate): ParsedFieldTags {
   const state: MutableTagState = {
     summaries: [],
     slug: undefined,
@@ -245,24 +194,11 @@ function readJsDocTags(jsDocs: readonly JSDoc[]): ParsedFieldTags {
     since: undefined
   };
 
-  for (const jsDoc of jsDocs) {
-    const description = jsDoc.getDescription().trim();
-    if (description.length > 0) {
-      state.summaries.push(description);
-    }
-    for (const tag of jsDoc.getTags()) {
-      const tagName = tag.getTagName();
-      const text = tag.getCommentText()?.trim() ?? '';
-      if (tagName === 'param') {
-        const paramName = (tag as unknown as { getName?: () => string }).getName?.() ?? extractParamName(tag.getText());
-        if (paramName !== undefined && paramName.length > 0) {
-          state.paramDescriptions.set(paramName, text);
-        }
-      } else {
-        applyJsDocTag(state, tagName, text);
-      }
-    }
-  }
+  walkJsDocs(candidate.jsDocs, {
+    onSummary: (summary) => state.summaries.push(summary),
+    onParam: (paramName, text) => state.paramDescriptions.set(paramName, text),
+    onTag: (tagName, text) => applyJsDocTag(state, tagName, text)
+  });
 
   return {
     summary: state.summaries.join('\n\n'),
@@ -343,11 +279,6 @@ function parseOptionalText(text: string): boolean | undefined {
   return result;
 }
 
-function extractParamName(rawTag: string): string | undefined {
-  const match = /@param\s+(?:\{[^}]*\}\s+)?(\S+)/.exec(rawTag);
-  return match?.[1];
-}
-
 // MARK: Entry construction
 interface BuildEntryInput {
   readonly candidate: TaggedCandidate;
@@ -389,7 +320,7 @@ function buildEntry(input: BuildEntryInput): BuildEntryResult {
     return { kind: 'skipped', warnings };
   }
 
-  const tags = readJsDocTags(candidate.jsDocs);
+  const tags = readJsDocTags(candidate);
   const kindResult = resolveEntryKind({ name: meta.name, kindOverride: tags.kindOverride, defaultKind: meta.defaultKind, filePath, line: meta.line });
   if (!kindResult.ok) {
     warnings.push(kindResult.warning);
@@ -399,7 +330,9 @@ function buildEntry(input: BuildEntryInput): BuildEntryResult {
 
   const slug = tags.slug && tags.slug.length > 0 ? tags.slug : toKebabCase(meta.name);
   const category = tags.category && tags.category.length > 0 ? tags.category : deriveCategoryFromPath(filePath);
-  const params = collectParams(candidate, tags.paramDescriptions);
+  // extractCandidateParams accepts the wider TaggedExportCandidate union; our
+  // local TaggedCandidate is a subset (no `class` kind) so the cast is safe.
+  const params = extractCandidateParams(candidate as TaggedExportCandidate, tags.paramDescriptions);
   const returns = tags.returnsText && tags.returnsText.length > 0 ? tags.returnsText : meta.defaultReturnTypeText;
   const signature = buildSignature({ name: meta.name, kind, params, returnType: meta.defaultReturnTypeText });
   const example = tags.examples.length > 0 ? tags.examples[0] : '';
@@ -469,28 +402,6 @@ function readCandidateMeta(candidate: TaggedCandidate): CandidateMeta {
   return result;
 }
 
-function collectParams(candidate: TaggedCandidate, descriptions: ReadonlyMap<string, string>): readonly ModelSnapshotFieldParamEntry[] {
-  let params: readonly ParameterDeclaration[] = [];
-  if (candidate.kind === 'function') {
-    params = candidate.decl.getParameters();
-  } else {
-    const initializer = candidate.decl.getInitializer();
-    if (initializer !== undefined && (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer))) {
-      params = initializer.getParameters();
-    }
-  }
-  const out: ModelSnapshotFieldParamEntry[] = [];
-  for (const param of params) {
-    const name = param.getName();
-    const typeNode = param.getTypeNode()?.getText();
-    const type = typeNode ?? param.getType().getText() ?? 'unknown';
-    const description = descriptions.get(name) ?? '';
-    const optional = param.isOptional() || param.hasInitializer();
-    out.push({ name, type, description, optional });
-  }
-  return out;
-}
-
 interface BuildSignatureInput {
   readonly name: string;
   readonly kind: ModelSnapshotFieldKindValue;
@@ -512,28 +423,6 @@ function buildSignature(input: BuildSignatureInput): string {
 
 // MARK: Defaults
 /**
- * Converts an export name into its kebab-case slug form. Handles
- * camelCase (`firestoreObjectArray` → `firestore-object-array`) and
- * SCREAMING_SNAKE_CASE (`FIRESTORE_PASSTHROUGH_FIELD` →
- * `firestore-passthrough-field`); already-kebab inputs pass through
- * unchanged.
- *
- * @param name - The export identifier.
- * @returns The kebab-case slug.
- */
-export function toKebabCase(name: string): string {
-  if (name.length === 0) {
-    return '';
-  }
-  const withSeparators = name
-    .replaceAll(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
-    .replaceAll(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replaceAll(/_+/g, '-')
-    .replaceAll(/\s+/g, '-');
-  return withSeparators.toLowerCase();
-}
-
-/**
  * Heuristic that flags `optionalFirestore*` exports as optional. The user
  * can override this with `@dbxModelSnapshotFieldOptional false`.
  *
@@ -542,93 +431,4 @@ export function toKebabCase(name: string): string {
  */
 export function deriveOptionalFromName(name: string): boolean {
   return name.startsWith('optional') || name.startsWith('OPTIONAL_');
-}
-
-const PROJECT_PREFIX_PATTERNS = ['/src/lib/', '/src/'];
-
-/**
- * Picks a default `category` from a source file path. The category is the
- * first folder beneath `src/lib/` (or `src/` when `src/lib/` isn't
- * present), so `packages/firebase/src/lib/common/firestore/snapshot/snapshot.field.ts` → `common`.
- *
- * Authors should override with `@dbxModelSnapshotFieldCategory` to land in
- * the canonical buckets (`primitive`, `date`, `array`, `map`, `object`,
- * `model-key`, `geo`, …) — the path-derived default is a fallback so an
- * untagged scan still produces a usable manifest.
- *
- * @param filePath - The absolute or repo-relative path to the source file.
- * @returns The derived category slug, or `'misc'` when no folder is found.
- */
-export function deriveCategoryFromPath(filePath: string): string {
-  const normalised = filePath.replaceAll('\\', '/');
-  let category: string | undefined;
-  for (const prefix of PROJECT_PREFIX_PATTERNS) {
-    const idx = normalised.indexOf(prefix);
-    if (idx >= 0) {
-      const remainder = normalised.slice(idx + prefix.length);
-      const parts = remainder.split('/');
-      if (parts.length >= 2 && parts[0].length > 0) {
-        category = parts[0];
-        break;
-      }
-    }
-  }
-  return category ?? 'misc';
-}
-
-const STOPWORDS: ReadonlySet<string> = new Set(['the', 'a', 'an', 'and', 'or', 'of', 'for', 'to', 'in', 'on', 'at', 'is', 'are', 'be', 'this', 'that', 'with', 'when', 'if', 'as', 'by', 'from', 'into', 'one', 'two', 'true', 'false', 'returns', 'return', 'value', 'values']);
-
-interface BuildTagSetInput {
-  readonly name: string;
-  readonly slug: string;
-  readonly summary: string;
-  readonly explicit: readonly string[];
-  readonly category: string;
-}
-
-function buildTagSet(input: BuildTagSetInput): readonly string[] {
-  const { name, slug, summary, explicit, category } = input;
-  const out: string[] = [];
-  const seen = new Set<string>();
-
-  function add(token: string): void {
-    const lower = token.toLowerCase();
-    if (lower.length === 0 || seen.has(lower)) {
-      return;
-    }
-    seen.add(lower);
-    out.push(lower);
-  }
-
-  for (const tag of explicit) {
-    add(tag);
-  }
-  add(category);
-  for (const piece of slug.split('-')) {
-    add(piece);
-  }
-  add(name);
-  for (const piece of toKebabCase(name).split('-')) {
-    add(piece);
-  }
-
-  if (explicit.length === 0) {
-    const summaryTokens = summary
-      .toLowerCase()
-      .replaceAll(/[^a-z0-9\s]+/g, ' ')
-      .split(/\s+/)
-      .filter((t) => t.length > 2 && !STOPWORDS.has(t));
-    let added = 0;
-    for (const token of summaryTokens) {
-      if (added >= 8) {
-        break;
-      }
-      const before = out.length;
-      add(token);
-      if (out.length > before) {
-        added += 1;
-      }
-    }
-  }
-  return out;
 }
