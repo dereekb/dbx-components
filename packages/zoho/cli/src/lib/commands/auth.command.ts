@@ -1,6 +1,6 @@
 import type { CommandModule, Argv } from 'yargs';
-import { loadCliConfig, mergeCliConfig, clearCliConfig, maskSecret, configuredProducts, ZOHO_CLI_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentials, type ZohoCliProductConfig } from '../config/cli.config';
-import { noop } from '@dereekb/util';
+import { loadCliConfig, mergeCliConfig, clearCliConfig, maskSecret, configuredProducts, ZOHO_CLI_PRODUCTS, type ZohoCliConfig, type ZohoCliProduct, type ZohoCliCredentials } from '../config/cli.config';
+import { noop, type Maybe } from '@dereekb/util';
 import { createCliContext } from '../context/cli.context';
 import { outputResult, outputError } from '../util/output';
 
@@ -86,142 +86,18 @@ const authSetupCommand: CommandModule = {
   handler: async (argv: any) => {
     try {
       const existingConfig = await loadCliConfig();
-      const product = argv.product as ZohoCliProduct | undefined;
-      const clientId = (argv.clientId as string | undefined) ?? existingConfig?.shared?.clientId;
-      const clientSecret = (argv.clientSecret as string | undefined) ?? existingConfig?.shared?.clientSecret;
-      const redirectUri = argv.redirectUri as string;
-      const region = (argv.region as string | undefined) ?? existingConfig?.shared?.region ?? 'us';
-      const scopes = (argv.scopes as string).split(',').map((p: string) => p.trim());
-      const code = parseCodeFromInput(argv.code as string | undefined);
-      const token = argv.token as string | undefined;
-      const accountsUrl = ZOHO_ACCOUNTS_URLS[region] ?? ZOHO_ACCOUNTS_URLS['us'];
+      const ctx = buildAuthSetupContext(argv, existingConfig);
 
-      if (!clientId || !clientSecret) {
+      if (!ctx.clientId || !ctx.clientSecret) {
         throw new Error('--client-id and --client-secret are required. Get them from https://api-console.zoho.com/');
       }
 
-      if (token) {
-        // Direct token set
-        const creds: ZohoCliCredentials = { clientId, clientSecret, refreshToken: token };
-
-        if (product) {
-          // Per-product credentials
-          const productUpdate: ZohoCliProductConfig = {
-            ...creds,
-            apiUrl: argv.apiMode,
-            orgId: product === 'desk' ? argv.orgId : undefined
-          };
-
-          const merged = await mergeCliConfig({
-            shared: existingConfig?.shared ?? { clientId: '', clientSecret: '', refreshToken: '' },
-            [product]: productUpdate
-          });
-
-          outputResult({
-            success: true,
-            product,
-            refreshToken: maskSecret(token),
-            configSaved: true,
-            configuredProducts: configuredProducts(merged)
-          });
-        } else {
-          // Shared credentials
-          const merged = await mergeCliConfig({
-            shared: { ...creds, region, apiMode: argv.apiMode },
-            desk: argv.orgId ? { orgId: argv.orgId } : undefined
-          });
-
-          outputResult({
-            success: true,
-            refreshToken: maskSecret(token),
-            configSaved: true,
-            configuredProducts: configuredProducts(merged)
-          });
-        }
-      } else if (code) {
-        // Step 2: Exchange code for refresh token
-        const tokenUrl = `${accountsUrl}/oauth/v2/token`;
-        const params = new URLSearchParams({
-          grant_type: 'authorization_code',
-          client_id: clientId,
-          client_secret: clientSecret,
-          redirect_uri: redirectUri,
-          code
-        });
-
-        const response = await fetch(tokenUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params.toString()
-        });
-        const body = await response.json();
-
-        if (body.error) {
-          throw new Error(`Token exchange failed: ${body.error}`);
-        }
-
-        const refreshToken = body.refresh_token;
-
-        if (!refreshToken) {
-          throw new Error('No refresh_token in response. The authorization code may have expired (valid for 2 minutes). Generate a new one.');
-        }
-
-        const creds: ZohoCliCredentials = { clientId, clientSecret, refreshToken };
-        let merged: ZohoCliConfig;
-
-        if (product) {
-          merged = await mergeCliConfig({
-            shared: existingConfig?.shared ?? { clientId: '', clientSecret: '', refreshToken: '' },
-            [product]: { ...creds, apiUrl: argv.apiMode, orgId: product === 'desk' ? argv.orgId : undefined }
-          });
-        } else {
-          merged = await mergeCliConfig({
-            shared: { ...creds, region, apiMode: argv.apiMode },
-            desk: argv.orgId ? { orgId: argv.orgId } : undefined
-          });
-        }
-
-        outputResult({
-          step: 2,
-          success: true,
-          product: product ?? 'shared',
-          refreshToken: maskSecret(refreshToken),
-          accessToken: body.access_token ? maskSecret(body.access_token) : null,
-          scope: body.scope,
-          configSaved: true,
-          configuredProducts: configuredProducts(merged)
-        });
+      if (ctx.token) {
+        await handleAuthSetupToken(ctx, existingConfig);
+      } else if (ctx.code) {
+        await handleAuthSetupCode(ctx, existingConfig);
       } else {
-        // Step 1: Generate authorization URL and save client credentials
-        const scopeStrings = scopes.flatMap((p) => ZOHO_SCOPES[p] ?? []);
-
-        if (scopeStrings.length === 0) {
-          throw new Error(`No valid products specified. Choose from: ${Object.keys(ZOHO_SCOPES).join(', ')}`);
-        }
-
-        const authUrl = `${accountsUrl}/oauth/v2/auth?scope=${scopeStrings.join(',')}&client_id=${encodeURIComponent(clientId)}&response_type=code&access_type=offline&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
-        // Save client credentials
-        await mergeCliConfig({
-          shared: {
-            clientId,
-            clientSecret,
-            refreshToken: existingConfig?.shared?.refreshToken ?? '',
-            region,
-            apiMode: argv.apiMode ?? existingConfig?.shared?.apiMode
-          },
-          desk: argv.orgId ? { orgId: argv.orgId } : undefined
-        });
-
-        outputResult({
-          step: 1,
-          instructions: 'Open the authorization URL in a browser. Authorize the application. Copy the "code" parameter from the redirect URL.',
-          authorizationUrl: authUrl,
-          redirectUri,
-          scopes: scopeStrings,
-          credentialsSaved: true,
-          nextStep: 'zoho-cli auth setup --code "PASTE_REDIRECT_URL_OR_AUTH_CODE"'
-        });
+        await handleAuthSetupStep1(ctx, existingConfig);
       }
     } catch (e) {
       outputError(e);
@@ -229,6 +105,130 @@ const authSetupCommand: CommandModule = {
     }
   }
 };
+
+interface AuthSetupContext {
+  readonly product: ZohoCliProduct | undefined;
+  readonly clientId: string | undefined;
+  readonly clientSecret: string | undefined;
+  readonly redirectUri: string;
+  readonly region: string;
+  readonly scopes: readonly string[];
+  readonly code: string | undefined;
+  readonly token: string | undefined;
+  readonly accountsUrl: string;
+  readonly apiMode: string | undefined;
+  readonly orgId: string | undefined;
+}
+
+function buildAuthSetupContext(argv: any, existingConfig: Maybe<ZohoCliConfig>): AuthSetupContext {
+  const region = (argv.region as string | undefined) ?? existingConfig?.shared?.region ?? 'us';
+  return {
+    product: argv.product as ZohoCliProduct | undefined,
+    clientId: (argv.clientId as string | undefined) ?? existingConfig?.shared?.clientId,
+    clientSecret: (argv.clientSecret as string | undefined) ?? existingConfig?.shared?.clientSecret,
+    redirectUri: argv.redirectUri as string,
+    region,
+    scopes: (argv.scopes as string).split(',').map((p: string) => p.trim()),
+    code: parseCodeFromInput(argv.code as string | undefined),
+    token: argv.token as string | undefined,
+    accountsUrl: ZOHO_ACCOUNTS_URLS[region] ?? ZOHO_ACCOUNTS_URLS['us'],
+    apiMode: argv.apiMode as string | undefined,
+    orgId: argv.orgId as string | undefined
+  };
+}
+
+async function mergeCredsConfig(ctx: AuthSetupContext, creds: ZohoCliCredentials, existingShared: ZohoCliCredentials | undefined): Promise<ZohoCliConfig> {
+  if (ctx.product) {
+    return mergeCliConfig({
+      shared: existingShared ?? { clientId: '', clientSecret: '', refreshToken: '' },
+      [ctx.product]: { ...creds, apiUrl: ctx.apiMode, orgId: ctx.product === 'desk' ? ctx.orgId : undefined }
+    });
+  }
+  return mergeCliConfig({
+    shared: { ...creds, region: ctx.region, apiMode: ctx.apiMode },
+    desk: ctx.orgId ? { orgId: ctx.orgId } : undefined
+  });
+}
+
+async function handleAuthSetupToken(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<void> {
+  const creds: ZohoCliCredentials = { clientId: ctx.clientId as string, clientSecret: ctx.clientSecret as string, refreshToken: ctx.token as string };
+  const merged = await mergeCredsConfig(ctx, creds, existingConfig?.shared);
+  outputResult({
+    success: true,
+    ...(ctx.product ? { product: ctx.product } : {}),
+    refreshToken: maskSecret(ctx.token as string),
+    configSaved: true,
+    configuredProducts: configuredProducts(merged)
+  });
+}
+
+async function handleAuthSetupCode(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<void> {
+  const tokenUrl = `${ctx.accountsUrl}/oauth/v2/token`;
+  const params = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: ctx.clientId as string,
+    client_secret: ctx.clientSecret as string,
+    redirect_uri: ctx.redirectUri,
+    code: ctx.code as string
+  });
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  });
+  const body = await response.json();
+
+  if (body.error) {
+    throw new Error(`Token exchange failed: ${body.error}`);
+  }
+  const refreshToken = body.refresh_token;
+  if (!refreshToken) {
+    throw new Error('No refresh_token in response. The authorization code may have expired (valid for 2 minutes). Generate a new one.');
+  }
+
+  const creds: ZohoCliCredentials = { clientId: ctx.clientId as string, clientSecret: ctx.clientSecret as string, refreshToken };
+  const merged = await mergeCredsConfig(ctx, creds, existingConfig?.shared);
+
+  outputResult({
+    step: 2,
+    success: true,
+    product: ctx.product ?? 'shared',
+    refreshToken: maskSecret(refreshToken),
+    accessToken: body.access_token ? maskSecret(body.access_token) : null,
+    scope: body.scope,
+    configSaved: true,
+    configuredProducts: configuredProducts(merged)
+  });
+}
+
+async function handleAuthSetupStep1(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<void> {
+  const scopeStrings = ctx.scopes.flatMap((p) => ZOHO_SCOPES[p] ?? []);
+  if (scopeStrings.length === 0) {
+    throw new Error(`No valid products specified. Choose from: ${Object.keys(ZOHO_SCOPES).join(', ')}`);
+  }
+  const authUrl = `${ctx.accountsUrl}/oauth/v2/auth?scope=${scopeStrings.join(',')}&client_id=${encodeURIComponent(ctx.clientId as string)}&response_type=code&access_type=offline&redirect_uri=${encodeURIComponent(ctx.redirectUri)}`;
+
+  await mergeCliConfig({
+    shared: {
+      clientId: ctx.clientId as string,
+      clientSecret: ctx.clientSecret as string,
+      refreshToken: existingConfig?.shared?.refreshToken ?? '',
+      region: ctx.region,
+      apiMode: ctx.apiMode ?? existingConfig?.shared?.apiMode
+    },
+    desk: ctx.orgId ? { orgId: ctx.orgId } : undefined
+  });
+
+  outputResult({
+    step: 1,
+    instructions: 'Open the authorization URL in a browser. Authorize the application. Copy the "code" parameter from the redirect URL.',
+    authorizationUrl: authUrl,
+    redirectUri: ctx.redirectUri,
+    scopes: scopeStrings,
+    credentialsSaved: true,
+    nextStep: 'zoho-cli auth setup --code "PASTE_REDIRECT_URL_OR_AUTH_CODE"'
+  });
+}
 
 // MARK: Set
 const authSetCommand: CommandModule = {

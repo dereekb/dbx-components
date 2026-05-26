@@ -84,6 +84,9 @@ export interface McpToolFilterMetadataDynamic extends McpToolFilterMetadataBase 
  * Classifies a {@link McpToolVisibility} value into its normalized boot-time form.
  *
  * Defaults `undefined` to `'always'` so handlers without a visibility field stay visible.
+ *
+ * @param visibility - The raw visibility value from the handler's `mcp.visibility` field.
+ * @returns The discriminated classification used by the per-request filter loop.
  */
 export function classifyVisibility(visibility?: McpToolVisibility): ClassifiedMcpToolVisibility {
   let result: ClassifiedMcpToolVisibility;
@@ -121,6 +124,10 @@ const READ_ONLY_BY_CALL_TYPE: Readonly<Record<string, boolean | undefined>> = {
  *
  * Explicit handler override wins. Otherwise infers from the call type. Returns
  * `undefined` when neither source provides a definite classification.
+ *
+ * @param explicitReadOnly - The handler's explicit `mcp.readOnly` value, if any.
+ * @param callType - The dispatch call type used to infer read-only when no override is present.
+ * @returns The effective read-only flag, or `undefined` when neither source resolves a value.
  */
 export function resolveEffectiveReadOnly(explicitReadOnly: Maybe<boolean>, callType: string): boolean | undefined {
   if (explicitReadOnly != null) {
@@ -134,6 +141,9 @@ export function resolveEffectiveReadOnly(explicitReadOnly: Maybe<boolean>, callT
  * Resolves the OIDC scope required to invoke a given call type, or `undefined` for
  * non-CRUD calls. Thin re-export so the tool generator doesn't need to reach into
  * `@dereekb/firebase` directly.
+ *
+ * @param callType - The dispatch call type to map to a CRUD OIDC scope.
+ * @returns The required scope for this call type, or `undefined` when no scope is enforced.
  */
 export function resolveRequiredScope(callType: string): Maybe<CallModelOidcScope> {
   return callModelOidcScopeForCallType(callType);

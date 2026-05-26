@@ -129,7 +129,7 @@ async function modelGetToolHandler(args: Record<string, unknown>, ctx: McpStatic
     }
 
     const resolvedKeys = resolveKeys(input.keys, identity);
-    const merged = await readInChunks(input.modelType, resolvedKeys, ctx.auth, deps.readDocuments);
+    const merged = await readInChunks({ modelType: input.modelType, keys: resolvedKeys, auth: ctx.auth, readDocuments: deps.readDocuments });
 
     result = {
       content: [{ type: 'text', text: JSON.stringify(merged) }],
@@ -181,7 +181,15 @@ function resolveKeys(keys: ReadonlyArray<string>, identity: FirestoreModelIdenti
   return resolved;
 }
 
-async function readInChunks(modelType: FirestoreModelType, keys: FirestoreModelKey[], auth: Maybe<FirebaseServerAuthData>, readDocuments: McpModelGetReadDocuments): Promise<ModelAccessMultiReadResult> {
+interface ReadInChunksInput {
+  readonly modelType: FirestoreModelType;
+  readonly keys: FirestoreModelKey[];
+  readonly auth: Maybe<FirebaseServerAuthData>;
+  readonly readDocuments: McpModelGetReadDocuments;
+}
+
+async function readInChunks(input: ReadInChunksInput): Promise<ModelAccessMultiReadResult> {
+  const { modelType, keys, auth, readDocuments } = input;
   const merged: ModelAccessMultiReadResult = { results: [], errors: [] };
 
   for (let offset = 0; offset < keys.length; offset += MCP_MODEL_GET_BATCH_SIZE) {

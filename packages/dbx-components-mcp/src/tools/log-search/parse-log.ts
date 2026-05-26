@@ -13,6 +13,10 @@ const MAX_SUMMARY_LENGTH = 1200;
  * Reads and parses a single change-log file. Missing sections are returned as
  * `undefined` rather than throwing — historical logs predate the enforcement
  * hook and don't always have every section.
+ *
+ * @param ref - Discovered log-file metadata, including its absolute path.
+ * @returns The parsed log; on read failure the entry is parsed against an
+ *   empty body so the file still appears in results with `undefined` sections.
  */
 export async function parseLog(ref: LogFileRef): Promise<ParsedLog> {
   let rawText = '';
@@ -26,6 +30,12 @@ export async function parseLog(ref: LogFileRef): Promise<ParsedLog> {
 
 /**
  * Pure parser exposed for testing without disk I/O.
+ *
+ * @param ref - Log-file metadata used to derive a fallback title from the
+ *   filename when no H1 is present.
+ * @param rawText - The full markdown body of the log file.
+ * @returns The structured `ParsedLog` with title, ISO date, summary, and the
+ *   leading fenced block split into commit subject/body.
  */
 export function parseLogText(ref: LogFileRef, rawText: string): ParsedLog {
   const lines = rawText.split(/\r?\n/);

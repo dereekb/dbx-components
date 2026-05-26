@@ -88,17 +88,41 @@ function consumePrecedingMarker(markers: PendingMarker[], sourceOffset: number):
   return result;
 }
 
+interface WalkBlockInput {
+  readonly body: string;
+  readonly bodyOffset: number;
+  readonly parentPath: string;
+  readonly inheritedFunctions: Map<string, string>;
+  readonly ctx: WalkContext;
+}
+
+interface HandleMatchBlockInput {
+  readonly block: RawBlock;
+  readonly matchSegment: string;
+  readonly bodyOffset: number;
+  readonly parentPath: string;
+  readonly scopeFunctions: Map<string, string>;
+  readonly ctx: WalkContext;
+}
+
+interface RecordMirroredBlockInput {
+  readonly block: RawBlock;
+  readonly fullPath: string;
+  readonly headerSourceOffset: number;
+  readonly scopeFunctions: Map<string, string>;
+  readonly markerKey: string;
+  readonly ctx: WalkContext;
+}
+
 /**
  * Recursively walks the brace tree of the rules source, accumulating match paths and
  * helper-function definitions in scope so each `allow write` block can be reduced.
  *
- * @param body - The current slice to walk (path-variable-masked).
- * @param bodyOffset - Offset of `body` within the original source.
- * @param parentPath - Accumulated parent match path (unmasked).
- * @param inheritedFunctions - Helper functions inherited from outer scopes.
- * @param ctx - The walk context.
+ * @param input - The walk inputs: current body slice, source offset, parent path,
+ *   inherited helper functions, and the walk context.
  */
-function walkBlock(body: string, bodyOffset: number, parentPath: string, inheritedFunctions: Map<string, string>, ctx: WalkContext): void {
+function walkBlock(input: WalkBlockInput): void {
+  const { body, bodyOffset, parentPath, inheritedFunctions, ctx } = input;
   const localFunctions: Map<string, string> = new Map(inheritedFunctions);
   const blocks: RawBlock[] = extractTopLevelBlocks(body);
 
@@ -114,12 +138,12 @@ function walkBlock(body: string, bodyOffset: number, parentPath: string, inherit
 
   for (const block of blocks) {
     if (isTransparentBlockHeader(block.header)) {
-      walkBlock(block.body, bodyOffset + block.bodyStart, parentPath, localFunctions, ctx);
+      walkBlock({ body: block.body, bodyOffset: bodyOffset + block.bodyStart, parentPath, inheritedFunctions: localFunctions, ctx });
       continue;
     }
     const matchSegment: Maybe<string> = matchHeaderPath(block.header);
     if (matchSegment) {
-      handleMatchBlock(block, matchSegment, bodyOffset, parentPath, localFunctions, ctx);
+      handleMatchBlock({ block, matchSegment, bodyOffset, parentPath, scopeFunctions: localFunctions, ctx });
     }
   }
 }
@@ -142,23 +166,20 @@ function isTransparentBlockHeader(header: string): boolean {
  * skips catch-all deny blocks, and (when a `Mirrors ...` marker precedes the block)
  * reduces the `allow write` predicate to `ParsedRuleBranch[]`.
  *
- * @param block - The raw block descriptor.
- * @param matchSegment - The header's unmasked path segment.
- * @param bodyOffset - Offset of the enclosing body within the original source.
- * @param parentPath - Accumulated parent path.
- * @param scopeFunctions - Helper functions in scope at this block.
- * @param ctx - The walk context.
+ * @param input - The match-block inputs: block descriptor, unmasked path segment,
+ *   enclosing body offset, parent path, scope functions, and walk context.
  */
-function handleMatchBlock(block: RawBlock, matchSegment: string, bodyOffset: number, parentPath: string, scopeFunctions: Map<string, string>, ctx: WalkContext): void {
+function handleMatchBlock(input: HandleMatchBlockInput): void {
+  const { block, matchSegment, bodyOffset, parentPath, scopeFunctions, ctx } = input;
   const fullPath: string = joinMatchPath(parentPath, matchSegment);
   const headerSourceOffset: number = bodyOffset + block.headerStart;
   const markerKey: Maybe<string> = consumePrecedingMarker(ctx.pendingMarkers, headerSourceOffset);
 
   if (!isCatchAllSegment(matchSegment)) {
     if (markerKey) {
-      recordMirroredBlock(block, fullPath, headerSourceOffset, scopeFunctions, markerKey, ctx);
+      recordMirroredBlock({ block, fullPath, headerSourceOffset, scopeFunctions, markerKey, ctx });
     }
-    walkBlock(block.body, bodyOffset + block.bodyStart, fullPath, scopeFunctions, ctx);
+    walkBlock({ body: block.body, bodyOffset: bodyOffset + block.bodyStart, parentPath: fullPath, inheritedFunctions: scopeFunctions, ctx });
   }
 }
 
@@ -166,14 +187,11 @@ function handleMatchBlock(block: RawBlock, matchSegment: string, bodyOffset: num
  * Reduces a match block paired with a `// Mirrors ...` marker and pushes a
  * `ParsedStorageRulesBlock` onto the results.
  *
- * @param block - The raw block descriptor.
- * @param fullPath - The accumulated match path (unmasked).
- * @param headerSourceOffset - Offset of the block's header in the original source.
- * @param scopeFunctions - Helper functions in scope.
- * @param markerKey - The policy key from the `Mirrors ...` marker.
- * @param ctx - The walk context.
+ * @param input - The record inputs: block descriptor, accumulated unmasked path,
+ *   header source offset, scope functions, marker key, and walk context.
  */
-function recordMirroredBlock(block: RawBlock, fullPath: string, headerSourceOffset: number, scopeFunctions: Map<string, string>, markerKey: string, ctx: WalkContext): void {
+function recordMirroredBlock(input: RecordMirroredBlockInput): void {
+  const { block, fullPath, headerSourceOffset, scopeFunctions, markerKey, ctx } = input;
   const predicate: Maybe<string> = extractAllowWritePredicate(block.body);
   const { line, column } = indexToLineColumn(ctx.source, headerSourceOffset);
   if (predicate) {
@@ -233,6 +251,6 @@ export function parseStorageRules(source: string): ParsedStorageRulesBlock[] {
     results: [],
     pendingMarkers: collectPendingMarkers(source)
   };
-  walkBlock(masked, 0, '', new Map(), ctx);
+  walkBlock({ body: masked, bodyOffset: 0, parentPath: '', inheritedFunctions: new Map(), ctx });
   return ctx.results;
 }

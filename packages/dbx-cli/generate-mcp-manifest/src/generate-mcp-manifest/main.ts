@@ -97,6 +97,8 @@ async function loadManifest(path: string): Promise<LoadedManifest> {
  * Reads tsconfig.base.json's `compilerOptions.paths` and returns a flat alias map
  * pointing at workspace-absolute paths. Lets jiti resolve `@dereekb/firebase` (and
  * sibling workspace imports) the same way the bundled demo-cli does at runtime.
+ *
+ * @returns Workspace-absolute alias targets keyed by tsconfig path-alias, empty when no tsconfig is present.
  */
 function loadTsconfigPathAliases(): Record<string, string> {
   const tsconfigPath = resolve(WORKSPACE_ROOT, 'tsconfig.base.json');

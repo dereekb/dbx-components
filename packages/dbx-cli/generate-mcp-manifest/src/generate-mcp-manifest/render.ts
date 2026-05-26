@@ -29,6 +29,7 @@ export interface RenderMcpManifestInput {
  *
  * @param input - The render config carrying the API manifest and optional model manifest.
  * @param now - Override for the `generatedAt` timestamp. Tests pass a fixed value.
+ * @returns The rendered MCP manifest with tools keyed by {@link mcpManifestKey} and an optional models array.
  */
 export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new Date()): McpManifest {
   const tools: Record<string, McpManifestToolEntry> = {};
@@ -200,6 +201,9 @@ function buildPropertyFromField(field: CliApiManifestField): JsonObject {
  *
  * Only handles the obvious cases (`string`, `number`, `boolean`, `T[]`, `Maybe<T>`).
  * Anything else returns `undefined` so the property's description still surfaces.
+ *
+ * @param typeText - Raw TypeScript type text captured from the API manifest field.
+ * @returns The matching JSON Schema primitive type (`string`, `number`, `boolean`, `array`), or `undefined` when the type isn't a recognized primitive.
  */
 function inferJsonSchemaType(typeText: string | undefined): string | undefined {
   if (typeText == null) {

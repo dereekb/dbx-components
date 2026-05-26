@@ -497,8 +497,8 @@ export const FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE: FirebaseReq
         const constants: ProgramConstants = indexProgramConstants(programNode);
         const resolvedPolicies: readonly ResolvedPolicy[] = typedDeclarators.map((declarator) => buildResolvedPolicy(declarator, constants));
 
-        compareResolvedPolicies(resolvedPolicies, parsedBlocks, rulesResolution.absolutePath ?? DEFAULT_STORAGE_RULES_FILENAME, context);
-        reportOrphanRuleBlocks(parsedBlocks, resolvedPolicies, programNode, context);
+        compareResolvedPolicies({ resolvedPolicies, parsedBlocks, rulesPath: rulesResolution.absolutePath ?? DEFAULT_STORAGE_RULES_FILENAME, context });
+        reportOrphanRuleBlocks({ parsedBlocks, resolvedPolicies, programNode, context });
       }
     };
   }
@@ -534,15 +534,34 @@ function loadParsedRules(options: FirebaseRequireStorageFilePolicyMatchesRulesRu
   return result;
 }
 
+interface CompareResolvedPoliciesInput {
+  readonly resolvedPolicies: readonly ResolvedPolicy[];
+  readonly parsedBlocks: readonly ParsedStorageRulesBlock[];
+  readonly rulesPath: string;
+  readonly context: RuleContext;
+}
+
+interface ComparePolicyToBlockInput {
+  readonly policyKey: string;
+  readonly policy: ResolvedPolicy;
+  readonly block: ParsedStorageRulesBlock;
+  readonly context: RuleContext;
+}
+
+interface ReportOrphanRuleBlocksInput {
+  readonly parsedBlocks: readonly ParsedStorageRulesBlock[];
+  readonly resolvedPolicies: readonly ResolvedPolicy[];
+  readonly programNode: AstNode;
+  readonly context: RuleContext;
+}
+
 /**
  * Reports each resolved policy that mismatches the parsed `storage.rules` blocks.
  *
- * @param resolvedPolicies - Per-declaration view of typed policies with folded values.
- * @param parsedBlocks - Mirrored blocks parsed from `storage.rules`.
- * @param rulesPath - Absolute path to the rules file (for error messages).
- * @param context - ESLint rule context.
+ * @param input - Bundle of resolved policies, parsed blocks, rules path, and ESLint context.
  */
-function compareResolvedPolicies(resolvedPolicies: readonly ResolvedPolicy[], parsedBlocks: readonly ParsedStorageRulesBlock[], rulesPath: string, context: RuleContext): void {
+function compareResolvedPolicies(input: CompareResolvedPoliciesInput): void {
+  const { resolvedPolicies, parsedBlocks, rulesPath, context } = input;
   const blocksByKey: Map<string, ParsedStorageRulesBlock> = new Map();
   for (const block of parsedBlocks) {
     blocksByKey.set(block.mirrorsPolicyKey, block);
@@ -571,7 +590,7 @@ function compareResolvedPolicies(resolvedPolicies: readonly ResolvedPolicy[], pa
       context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policyLabel: ` '${policyKey}'`, field: 'allowedMimeTypes' } });
       continue;
     }
-    comparePolicyToBlock(policyKey, policy, block, context);
+    comparePolicyToBlock({ policyKey, policy, block, context });
   }
 }
 
@@ -579,12 +598,10 @@ function compareResolvedPolicies(resolvedPolicies: readonly ResolvedPolicy[], pa
  * Validates that each MIME the policy permits is accepted by at least one branch and that
  * the branch's size cap is ≥ the policy cap. Emits ESLint reports for any mismatch.
  *
- * @param policyKey - The resolved purpose key.
- * @param policy - The resolved policy.
- * @param block - The parsed rules block paired by `mirrorsPolicyKey`.
- * @param context - ESLint rule context.
+ * @param input - Policy/block pair plus the ESLint context.
  */
-function comparePolicyToBlock(policyKey: string, policy: ResolvedPolicy, block: ParsedStorageRulesBlock, context: RuleContext): void {
+function comparePolicyToBlock(input: ComparePolicyToBlockInput): void {
+  const { policyKey, policy, block, context } = input;
   const tsCap: number = policy.maxFileSizeBytes as number;
   const mimes: readonly string[] = policy.allowedMimeTypes as readonly string[];
   for (const mime of mimes) {
@@ -610,12 +627,10 @@ function comparePolicyToBlock(policyKey: string, policy: ResolvedPolicy, block: 
  * declaration in this file — signals stale `Mirrors ...` markers left over after a policy
  * was removed.
  *
- * @param parsedBlocks - Mirrored blocks parsed from `storage.rules`.
- * @param resolvedPolicies - Per-declaration view of typed policies.
- * @param programNode - Reported on the Program node since the block lives in a separate file.
- * @param context - ESLint rule context.
+ * @param input - Parsed blocks, resolved policies, program node, and ESLint context.
  */
-function reportOrphanRuleBlocks(parsedBlocks: readonly ParsedStorageRulesBlock[], resolvedPolicies: readonly ResolvedPolicy[], programNode: AstNode, context: RuleContext): void {
+function reportOrphanRuleBlocks(input: ReportOrphanRuleBlocksInput): void {
+  const { parsedBlocks, resolvedPolicies, programNode, context } = input;
   const knownKeys: Set<string> = new Set();
   for (const policy of resolvedPolicies) {
     if (typeof policy.policyKey === 'string') {

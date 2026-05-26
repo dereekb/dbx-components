@@ -15,6 +15,7 @@ import { type Request, type Response } from 'express';
  * @param req - The Express request carrying the JSON-RPC body.
  * @param res - The Express response.
  * @param server - The MCP server instance to back the transport.
+ * @param server.connect - The MCP server's connect method that binds the transport before request handling.
  */
 export async function handleStreamableHttpMcpRequest(req: Request, res: Response, server: { connect: (transport: StreamableHTTPServerTransport) => Promise<void> }): Promise<void> {
   // sessionIdGenerator: undefined → stateless mode.

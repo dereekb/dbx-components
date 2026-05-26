@@ -271,6 +271,7 @@ export interface McpManifest {
  * @param modelType - The Firestore model type (e.g., `guestbook`).
  * @param call - The call type / verb (e.g., `query`).
  * @param specifier - The specifier key, or `_` / undefined for the default entry.
+ * @returns The canonical `modelType.call.specifier` lookup key, with the default specifier normalized to `_`.
  */
 export function mcpManifestKey(modelType: string, call: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === '_';

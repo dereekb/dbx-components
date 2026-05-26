@@ -45,6 +45,7 @@ export class McpServerFactoryService {
   private _loggedSkips = false;
   private _warnedMissingRoleReader = false;
 
+  // eslint-disable-next-line @typescript-eslint/max-params -- NestJS DI requires individual constructor parameters
   constructor(
     @Inject(McpModuleConfig) private readonly mcpConfig: McpModuleConfig,
     @Inject(ModelApiCallModelDispatchService) private readonly dispatchService: ModelApiCallModelDispatchService,
@@ -96,6 +97,8 @@ export class McpServerFactoryService {
    *
    * The underlying call model `_apiDetails` is built at boot and doesn't change at runtime,
    * so the generation result is safe to cache for the lifetime of the process.
+   *
+   * @returns The cached or freshly-generated tool generation result.
    */
   private _resolveToolDefinitions(): McpToolGenerationResult {
     let result = this._cachedTools;
@@ -132,6 +135,8 @@ export class McpServerFactoryService {
    * a non-empty `models` catalog. The list is cached for the lifetime of the
    * process since static tools share the same boot-time inputs as the
    * auto-generated ones.
+   *
+   * @returns The cached array of static tool definitions, filtered for collisions with generated tools.
    */
   private _resolveStaticTools(): ReadonlyArray<McpToolDefinition> {
     let result = this._cachedStaticTools;
@@ -185,6 +190,8 @@ export class McpServerFactoryService {
    * Missing file or wrong version fall back to "no manifest" with a single boot warning;
    * the runtime still produces tools using the auto-generated descriptions and
    * ArkType-derived schemas.
+   *
+   * @returns The cached tool-entry map, or `undefined` when no manifest was loaded.
    */
   private _resolveManifest(): ReadonlyMap<string, McpManifestToolEntry> | undefined {
     if (!this._manifestLoaded) {
@@ -245,6 +252,9 @@ export class McpServerFactoryService {
    * expects post-dispatch, so the upstream helper stays the single source of scope parsing.
    * Returns `undefined` for non-OIDC callers (no `oidcValidatedToken.scope`) — the filter
    * loop treats that as "skip scope enforcement", matching `oidcCallModelScopePreAssert`.
+   *
+   * @param ctx - The per-request context carrying the validated auth payload.
+   * @returns The set of granted OIDC scopes, or `undefined` when scope enforcement should be skipped.
    */
   private _resolveScopes(ctx: McpRequestContext): Maybe<ReadonlySet<string>> {
     const oidcValidatedToken = (ctx.auth as { oidcValidatedToken?: unknown } | undefined)?.oidcValidatedToken;
@@ -255,6 +265,9 @@ export class McpServerFactoryService {
    * Maps the caller's Firebase custom claims through the optional role reader.
    * Emits one boot-time warning when a declarative `requiredRoles` rule will be checked
    * but no reader is wired — that path will fail closed.
+   *
+   * @param ctx - The per-request context carrying the authenticated user's token.
+   * @returns The resolved auth role set, or `undefined` when no auth or reader is available.
    */
   private _resolveAuthRoles(ctx: McpRequestContext): Maybe<AuthRoleSet> {
     let result: Maybe<AuthRoleSet>;
@@ -282,7 +295,7 @@ export class McpServerFactoryService {
         continue;
       }
 
-      if (!this._passesVisibility(tool, ctx, scopes, authRoles)) {
+      if (!this._passesVisibility({ tool, ctx, scopes, authRoles })) {
         continue;
       }
 
@@ -292,7 +305,8 @@ export class McpServerFactoryService {
     return visible;
   }
 
-  private _passesVisibility(tool: McpToolDefinition, ctx: McpRequestContext, scopes: Maybe<ReadonlySet<string>>, authRoles: Maybe<AuthRoleSet>): boolean {
+  private _passesVisibility(input: { tool: McpToolDefinition; ctx: McpRequestContext; scopes: Maybe<ReadonlySet<string>>; authRoles: Maybe<AuthRoleSet> }): boolean {
+    const { tool, ctx, scopes, authRoles } = input;
     const { filterMetadata } = tool;
     let result: boolean;
 
@@ -342,6 +356,11 @@ export class McpServerFactoryService {
    * Tools that opted in to {@link McpToolDetailsBuilder} get a fresh wire entry built
    * from the builder's overrides. If the builder throws, the framework falls back to
    * the static defaults and logs a warning (fail-soft, matching `_passesVisibility`).
+   *
+   * @param tool - The tool definition whose wire entry is being resolved.
+   * @param ctx - The per-request context forwarded to any dynamic details builder.
+   * @param scopes - The caller's granted OIDC scopes forwarded to any dynamic details builder.
+   * @returns The wire-shape entry to emit for this tool on `tools/list`.
    */
   private _buildToolListEntry(tool: McpToolDefinition, ctx: McpRequestContext, scopes: Maybe<ReadonlySet<string>>): McpToolListEntry {
     let result: McpToolListEntry;

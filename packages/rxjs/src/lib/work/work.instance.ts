@@ -169,7 +169,7 @@ export class WorkInstance<I = unknown, O = unknown> implements Destroyable {
    * If an error is thrown, the error is forwarded to the reject function.
    *
    * @param fn - Synchronous function that returns the result value or throws an error.
-   * @throws Re-throws the error from `fn` after forwarding it to the reject function.
+   * @throws {Error} Re-throws the error from `fn` after forwarding it to the reject function.
    */
   performTaskWithReturnValue(fn: () => O): void {
     try {

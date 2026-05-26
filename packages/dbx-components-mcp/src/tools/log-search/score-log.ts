@@ -16,6 +16,10 @@ const WEIGHT_BODY = 1;
 /**
  * Scores a single log against one raw query token. Multiple matches across
  * fields stack additively, mirroring the weighting in {@link route-search}.
+ *
+ * @param entry - The parsed log entry being scored.
+ * @param token - One raw query token from the user (case-insensitive match).
+ * @returns The accumulated field-weighted score; `0` means no field matched.
  */
 function scoreLogToken(entry: ParsedLog, token: string): number {
   const needle = token.toLowerCase();
@@ -51,6 +55,10 @@ export interface RankLogsInput {
  * Ranks parsed logs against a fuzzy query and slices to `limit`. Uses
  * `tokenMatchMode: 'any'` because logs are short and full-AND semantics drop
  * too many obvious hits.
+ *
+ * @param input - The candidate logs, raw query, and result cap.
+ * @returns The top-`limit` ranked hits sorted by score, ties broken by
+ *   relative path for stable ordering.
  */
 export function rankLogs(input: RankLogsInput): readonly SearchHit<ParsedLog>[] {
   const tokens = tokenize(input.query);

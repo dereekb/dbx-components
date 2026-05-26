@@ -24,6 +24,10 @@ export interface FormatHeader {
 
 /**
  * Renders the `list` mode output (no query, just recent entries).
+ *
+ * @param header - Shared metadata rendered above the result block.
+ * @param logs - Parsed log entries already sliced to the requested limit.
+ * @returns A markdown string ready to wrap in a `ToolResult` text part.
  */
 export function formatListResults(header: FormatHeader, logs: readonly ParsedLog[]): string {
   const lines: string[] = [];
@@ -40,7 +44,12 @@ export function formatListResults(header: FormatHeader, logs: readonly ParsedLog
 }
 
 /**
- * Renders the `fuzzy` mode output.
+ * Renders the `fuzzy` mode output, annotating each entry with the matched
+ * tokens so callers can see why a result ranked.
+ *
+ * @param header - Shared metadata rendered above the result block.
+ * @param hits - Scored hits already sliced to the requested limit.
+ * @returns A markdown string ready to wrap in a `ToolResult` text part.
  */
 export function formatFuzzyResults(header: FormatHeader, hits: readonly SearchHit<ParsedLog>[]): string {
   const lines: string[] = [];
@@ -60,6 +69,10 @@ export function formatFuzzyResults(header: FormatHeader, hits: readonly SearchHi
 /**
  * Renders the `keyword` mode output, using the matched-line snippet rather
  * than the Summary section.
+ *
+ * @param header - Shared metadata rendered above the result block.
+ * @param hits - Keyword-mode hits with the matched-line context snippet.
+ * @returns A markdown string ready to wrap in a `ToolResult` text part.
  */
 export function formatKeywordResults(header: FormatHeader, hits: readonly KeywordHit[]): string {
   const lines: string[] = [];

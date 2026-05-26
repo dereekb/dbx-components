@@ -8,7 +8,7 @@
  * resolution needed, so a lightweight in-memory Project is sufficient.
  */
 
-import { Node, Project, SyntaxKind, type ClassDeclaration, type GetAccessorDeclaration, type InterfaceDeclaration, type JSDoc, type SourceFile, type TypeAliasDeclaration } from 'ts-morph';
+import { Node, Project, SyntaxKind, type ClassDeclaration, type GetAccessorDeclaration, type InterfaceDeclaration, type JSDoc, type JSDocTag, type SourceFile, type TypeAliasDeclaration } from 'ts-morph';
 import { SUB_OBJECT_FACTORY_NAMES, type ExtractedArchetypeTagInfo, type ExtractedCompositeKeyTagInfo, type ExtractedDataInterface, type ExtractedDecl, type ExtractedDocumentClass, type ExtractedField, type ExtractedFile, type ExtractedGroupInterface, type ExtractedGroupTypes, type ExtractedIdentity, type ExtractedModel, type ExtractedSubObjectFactoryCall, type FirestoreCollectionKind, type ModelVariant, type SubObjectFactoryName, type ValidatorSource } from './types.js';
 
 // MARK: Entry
@@ -334,29 +334,34 @@ function readDbxModelArchetypeTags(jsDocs: readonly JSDoc[]): readonly Extracted
   const out: ExtractedArchetypeTagInfo[] = [];
   for (const jsDoc of jsDocs) {
     for (const tag of jsDoc.getTags()) {
-      if (tag.getTagName() !== 'dbxModelArchetype') continue;
-      const value = tag.getCommentText()?.trim() ?? '';
-      if (value.length === 0) continue;
-      const spaceIdx = value.indexOf(' ');
-      const slug = spaceIdx >= 0 ? value.slice(0, spaceIdx).trim() : value;
-      if (!VALIDATOR_ARCHETYPE_SLUG_RE.test(slug)) continue;
-      const axes: { [key: string]: string } = {};
-      if (spaceIdx >= 0) {
-        for (const pair of value
-          .slice(spaceIdx + 1)
-          .trim()
-          .split(',')) {
-          const eq = pair.indexOf('=');
-          if (eq <= 0) continue;
-          const key = pair.slice(0, eq).trim();
-          const v = pair.slice(eq + 1).trim();
-          if (key.length > 0 && v.length > 0) axes[key] = v;
-        }
-      }
-      out.push({ slug, axes, line: tag.getStartLineNumber() });
+      const parsed = parseArchetypeTag(tag);
+      if (parsed) out.push(parsed);
     }
   }
   return out;
+}
+
+function parseArchetypeTag(tag: JSDocTag): ExtractedArchetypeTagInfo | undefined {
+  if (tag.getTagName() !== 'dbxModelArchetype') return undefined;
+  const value = tag.getCommentText()?.trim() ?? '';
+  if (value.length === 0) return undefined;
+  const spaceIdx = value.indexOf(' ');
+  const slug = spaceIdx >= 0 ? value.slice(0, spaceIdx).trim() : value;
+  if (!VALIDATOR_ARCHETYPE_SLUG_RE.test(slug)) return undefined;
+  const axes = spaceIdx >= 0 ? parseArchetypeAxes(value.slice(spaceIdx + 1).trim()) : {};
+  return { slug, axes, line: tag.getStartLineNumber() };
+}
+
+function parseArchetypeAxes(axesText: string): { [key: string]: string } {
+  const axes: { [key: string]: string } = {};
+  for (const pair of axesText.split(',')) {
+    const eq = pair.indexOf('=');
+    if (eq <= 0) continue;
+    const key = pair.slice(0, eq).trim();
+    const v = pair.slice(eq + 1).trim();
+    if (key.length > 0 && v.length > 0) axes[key] = v;
+  }
+  return axes;
 }
 
 /**
@@ -376,34 +381,39 @@ function readDbxModelCompositeKeyTag(jsDocs: readonly JSDoc[]): ExtractedComposi
     for (const tag of jsDoc.getTags()) {
       if (tag.getTagName() !== 'dbxModelCompositeKey') continue;
       if (result !== undefined) continue; // first-tag-wins; extra tags ignored
-      const value = tag.getCommentText()?.trim() ?? '';
-      let fromValue: readonly string[] | '*' = [];
-      let encoding: 'two-way' | 'one-way' | undefined;
-      for (const token of value.split(/\s+/).filter((t) => t.length > 0)) {
-        const eq = token.indexOf('=');
-        if (eq <= 0) continue;
-        const key = token.slice(0, eq).trim();
-        const v = token.slice(eq + 1).trim();
-        if (key === 'from') {
-          if (v === '*') {
-            fromValue = '*';
-          } else if (v.length > 0) {
-            const parts = v
-              .split(',')
-              .map((p) => p.trim())
-              .filter((p) => p.length > 0);
-            if (parts.includes('*')) {
-              fromValue = parts;
-            } else {
-              fromValue = parts.filter((p) => VALIDATOR_COMPOSITE_KEY_MODEL_NAME_RE.test(p));
-            }
-          }
-        } else if (key === 'encoding' && (v === 'two-way' || v === 'one-way')) encoding = v;
-      }
-      result = { from: fromValue, encoding, line: tag.getStartLineNumber() };
+      result = parseCompositeKeyTag(tag);
     }
   }
   return result;
+}
+
+function parseCompositeKeyTag(tag: JSDocTag): ExtractedCompositeKeyTagInfo {
+  const value = tag.getCommentText()?.trim() ?? '';
+  let fromValue: readonly string[] | '*' = [];
+  let encoding: 'two-way' | 'one-way' | undefined;
+  for (const token of value.split(/\s+/).filter((t) => t.length > 0)) {
+    const eq = token.indexOf('=');
+    if (eq <= 0) continue;
+    const key = token.slice(0, eq).trim();
+    const v = token.slice(eq + 1).trim();
+    if (key === 'from') {
+      fromValue = parseCompositeKeyFromValue(v);
+    } else if (key === 'encoding' && (v === 'two-way' || v === 'one-way')) {
+      encoding = v;
+    }
+  }
+  return { from: fromValue, encoding, line: tag.getStartLineNumber() };
+}
+
+function parseCompositeKeyFromValue(v: string): readonly string[] | '*' {
+  if (v === '*') return '*';
+  if (v.length === 0) return [];
+  const parts = v
+    .split(',')
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+  if (parts.includes('*')) return parts;
+  return parts.filter((p) => VALIDATOR_COMPOSITE_KEY_MODEL_NAME_RE.test(p));
 }
 
 /**

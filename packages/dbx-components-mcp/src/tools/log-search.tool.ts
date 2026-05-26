@@ -156,6 +156,8 @@ export interface LogSearchConfig {
  * @param rawArgs - The MCP tool call arguments.
  * @param config - Optional `logs` block from `dbx-mcp.config.json`, used as a
  *   fallback when neither the per-call arg nor `DBX_LOG_PATH` is set.
+ * @returns A `ToolResult` whose text content is the formatted markdown for the
+ *   chosen mode, or an error message when arg parsing or path resolution failed.
  */
 export async function runLogSearch(rawArgs: unknown, config?: LogSearchConfig): Promise<ToolResult> {
   let args: ParsedArgs | undefined;

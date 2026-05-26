@@ -23,6 +23,10 @@ export interface KeywordHit {
  * Returns all logs in which `query` appears as a case-insensitive substring,
  * each with a small snippet around the first match. The result preserves input
  * order so callers (which typically sort by recency) keep their ordering.
+ *
+ * @param logs - Parsed log entries to scan.
+ * @param query - Raw user query; an empty/whitespace value yields no hits.
+ * @returns One hit per matching log, ordered the same as the input.
  */
 export function keywordMatchLogs(logs: readonly ParsedLog[], query: string): readonly KeywordHit[] {
   const needle = query.toLowerCase();

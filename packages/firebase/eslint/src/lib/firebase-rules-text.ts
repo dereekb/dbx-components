@@ -200,6 +200,12 @@ export function functionHeaderName(header: string): Maybe<string> {
 }
 
 /**
+ * Matches the `return` keyword followed by whitespace, used to locate the start of a Firebase
+ * rules function's `return <expression>` body.
+ */
+const RETURN_KEYWORD_RE = /return\s+/;
+
+/**
  * Pulls the `return <expression>` body out of a function definition's inner block. The
  * body may span multiple lines (CEL expressions wrap freely across newlines); we capture
  * everything from after `return ` to the closing `}`-relative end of `body`, then strip
@@ -208,12 +214,6 @@ export function functionHeaderName(header: string): Maybe<string> {
  * @param body - The inner body of a function block (already line-comment-stripped).
  * @returns The expression text after `return`, or null when no `return` is present.
  */
-/**
- * Matches the `return` keyword followed by whitespace, used to locate the start of a Firebase
- * rules function's `return <expression>` body.
- */
-const RETURN_KEYWORD_RE = /return\s+/;
-
 export function functionReturnExpression(body: string): Maybe<string> {
   let result: Maybe<string> = null;
   const match: Maybe<RegExpExecArray> = RETURN_KEYWORD_RE.exec(body);

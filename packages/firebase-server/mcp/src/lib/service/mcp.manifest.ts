@@ -81,6 +81,11 @@ export interface McpManifest {
  *
  * Default-specifier entries collapse to `_`. Must stay in sync with the build-time
  * helper of the same name in `@dereekb/dbx-cli`.
+ *
+ * @param modelType - The Firestore model type segment of the key.
+ * @param call - The call type segment of the key.
+ * @param specifier - The specifier segment, or `_` / undefined for the default entry.
+ * @returns The canonical `modelType.call.specifier` manifest key.
  */
 export function mcpManifestKey(modelType: string, call: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === '_';

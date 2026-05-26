@@ -20,6 +20,9 @@ export interface StorageFileCreateSignedUploadUrlToolDetailsFactoryConfig {
  * The factory captures the policy list once at wiring time; the returned builder is a pure
  * synchronous function called by the framework on every `tools/list` request.
  *
+ * @param config - Factory config containing the upload policies that drive the description and `purpose` enum.
+ * @returns A builder that emits the policy-aware tool description and an input schema with the `purpose` enum constrained to the configured purposes.
+ *
  * @example
  * ```ts
  * const toolDetails = storageFileCreateSignedUploadUrlToolDetailsFactory({

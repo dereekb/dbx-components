@@ -61,48 +61,44 @@ const ColorSmellCheckArgs = type({
 
 async function run(rawArgs: unknown): Promise<ToolResult> {
   const parsed = ColorSmellCheckArgs(rawArgs);
-  let toolResult: ToolResult;
   if (parsed instanceof type.errors) {
-    toolResult = toolError(`Invalid arguments: ${parsed.summary}`);
-  } else {
-    const hasAny = (parsed.paths && parsed.paths.length > 0) || parsed.glob;
-    if (hasAny) {
-      const cwd = process.cwd();
-      let sources: readonly { readonly name: string; readonly text: string }[] | undefined;
-      let sourcesError: string | undefined;
-      try {
-        sources = await resolveValidatorSources({ sources: undefined, paths: parsed.paths, glob: parsed.glob, cwd });
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        sourcesError = `Failed to read sources: ${message}`;
-      }
-
-      if (sourcesError === undefined) {
-        if ((sources as readonly { readonly name: string; readonly text: string }[]).length === 0) {
-          toolResult = toolError('No matching source files found.');
-        } else {
-          const resolvedSources = sources as readonly { readonly name: string; readonly text: string }[];
-          const equivalenceMode: ColorSmellEquivalenceMode = parsed.equivalenceMode ?? 'normalized';
-          const minDuplicates = parsed.minDuplicates !== undefined && parsed.minDuplicates > 1 ? parsed.minDuplicates : 2;
-
-          const templates = await resolveCrossReferenceTemplates({ apiDir: parsed.apiDir, cwd });
-          if (templates.kind === 'error') {
-            toolResult = templates.error;
-          } else {
-            const literals = resolvedSources.flatMap((source) => extractLiteralsFromSource(source));
-            const result = groupColorSmells({ literals, equivalenceMode, minDuplicates, filesScanned: resolvedSources.length, templates: templates.value });
-            const text = parsed.format === 'json' ? formatResultAsJson(result) : formatResultAsMarkdown(result);
-            toolResult = { content: [{ type: 'text', text }] };
-          }
-        }
-      } else {
-        toolResult = toolError(sourcesError);
-      }
-    } else {
-      toolResult = toolError('Must provide at least one of `paths` or `glob`.');
-    }
+    return toolError(`Invalid arguments: ${parsed.summary}`);
   }
-  return toolResult;
+
+  const hasAny = (parsed.paths && parsed.paths.length > 0) || parsed.glob;
+  if (!hasAny) {
+    return toolError('Must provide at least one of `paths` or `glob`.');
+  }
+
+  const cwd = process.cwd();
+  type SourcesResult = { readonly kind: 'value'; readonly value: readonly { readonly name: string; readonly text: string }[] } | { readonly kind: 'error'; readonly error: ToolResult };
+  let sourcesResult: SourcesResult;
+  try {
+    const resolved = await resolveValidatorSources({ sources: undefined, paths: parsed.paths, glob: parsed.glob, cwd });
+    sourcesResult = { kind: 'value', value: resolved };
+  } catch (err) {
+    sourcesResult = { kind: 'error', error: toolError(`Failed to read sources: ${err instanceof Error ? err.message : String(err)}`) };
+  }
+  if (sourcesResult.kind === 'error') {
+    return sourcesResult.error;
+  }
+  const sources = sourcesResult.value;
+
+  if (sources.length === 0) {
+    return toolError('No matching source files found.');
+  }
+
+  const templates = await resolveCrossReferenceTemplates({ apiDir: parsed.apiDir, cwd });
+  if (templates.kind === 'error') {
+    return templates.error;
+  }
+
+  const equivalenceMode: ColorSmellEquivalenceMode = parsed.equivalenceMode ?? 'normalized';
+  const minDuplicates = parsed.minDuplicates !== undefined && parsed.minDuplicates > 1 ? parsed.minDuplicates : 2;
+  const literals = sources.flatMap((source) => extractLiteralsFromSource(source));
+  const result = groupColorSmells({ literals, equivalenceMode, minDuplicates, filesScanned: sources.length, templates: templates.value });
+  const text = parsed.format === 'json' ? formatResultAsJson(result) : formatResultAsMarkdown(result);
+  return { content: [{ type: 'text', text }] };
 }
 
 function extractLiteralsFromSource(source: { readonly name: string; readonly text: string }) {

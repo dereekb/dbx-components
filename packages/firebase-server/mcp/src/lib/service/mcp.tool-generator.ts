@@ -207,6 +207,9 @@ interface BuildStaticWireEntryInput {
  *
  * Tools without an `inputSchema` default to `{ type: 'object' }` to match the runtime
  * behaviour the factory used before the precompute optimisation existed.
+ *
+ * @param input - The tool name, description, and optional input/output schemas used to assemble the wire entry.
+ * @returns A frozen wire entry safe to share across requests.
  */
 export function buildStaticWireEntry(input: BuildStaticWireEntryInput): McpToolListEntry {
   const inputSchema = input.inputSchema ?? { type: 'object' };
@@ -229,6 +232,7 @@ export const DEFAULT_SPECIFIER_KEY = '_';
  * @param modelType - The Firestore model type (e.g., `storageFile`).
  * @param callType - The call type (e.g., `invoke`).
  * @param specifier - The specifier key, or `_` / undefined for the default entry.
+ * @returns The hyphen-joined tool name advertised on `tools/list`.
  */
 export function buildMcpToolName(modelType: string, callType: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
@@ -238,6 +242,11 @@ export function buildMcpToolName(modelType: string, callType: string, specifier?
 /**
  * Builds the default description used when no build-time MCP manifest
  * entry is available for the (modelType, callType, specifier) tuple.
+ *
+ * @param modelType - The Firestore model type segment used in the generated description.
+ * @param callType - The call type segment used in the generated description.
+ * @param specifier - The specifier segment, or `_` / undefined for the default entry.
+ * @returns A human-readable fallback description for the tool.
  */
 export function buildDefaultMcpToolDescription(modelType: string, callType: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
@@ -256,6 +265,7 @@ export function buildDefaultMcpToolDescription(modelType: string, callType: stri
  *
  * @param apiDetails - The model-first API details tree returned by `getModelApiDetails(callModelFn)`.
  * @param options - Optional schema generation options forwarded to `toJsonSchema()`. Defaults to {@link DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS}.
+ * @param manifest - Optional build-time manifest map; supplies overrides for descriptions and input/output schemas keyed by {@link mcpManifestKey}.
  * @returns The list of generated tool definitions plus any skip reports.
  */
 export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, options: JsonSchemaGenerationOptions = DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS, manifest?: ReadonlyMap<string, McpManifestToolEntry>): McpToolGenerationResult {
@@ -365,18 +375,22 @@ function resolveInputSchema(context: ResolveInputSchemaContext): object | undefi
     return undefined;
   }
 
+  let result: object | undefined;
+
   try {
     const exported = arktypeToJsonSchemaForExport(handlerDetails.inputType as unknown as Type<unknown>);
 
     if (exported && typeof exported === 'object') {
-      return exported;
+      result = exported;
+    } else {
+      // arktypeToJsonSchemaForExport returned a non-object (shouldn't happen for object schemas).
+      // Fall back to the raw arktype output preserving the legacy options for safety.
+      result = handlerDetails.inputType.toJsonSchema(options);
     }
-
-    // arktypeToJsonSchemaForExport returned a non-object (shouldn't happen for object schemas).
-    // Fall back to the raw arktype output preserving the legacy options for safety.
-    return handlerDetails.inputType.toJsonSchema(options);
   } catch (error) {
     outSkipped.push({ toolName, reason: 'schema_generation_failed', dispatch, error: error as Error });
-    return undefined;
+    result = undefined;
   }
+
+  return result;
 }

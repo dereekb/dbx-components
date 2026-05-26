@@ -38,6 +38,10 @@ export type ResolveLogBasePathResult = { readonly kind: 'ok'; readonly absoluteP
  * Does not touch the filesystem — callers verify existence separately so they
  * can differentiate "unset" from "set but missing". Resolution order:
  * per-call `basePath` arg → `DBX_LOG_PATH` env → config `logs.basePath`.
+ *
+ * @param input - The candidate sources to consult, in priority order.
+ * @returns An `ok` result carrying the absolute path and which source it came
+ *   from, or an `error` result with a user-facing message when nothing is set.
  */
 export function resolveLogBasePath(input: ResolveLogBasePathInput): ResolveLogBasePathResult {
   let result: ResolveLogBasePathResult;
@@ -94,6 +98,12 @@ export interface DiscoverLogsResult {
  * Walks the log root and returns every `.md` file matching the project scope
  * and the time window. Follows symlinks via the default `stat` (the user's
  * production log dir is itself a symlink target).
+ *
+ * @param input - The resolved base path, project scope, sibling-fallback flag,
+ *   and lower-bound mtime.
+ * @returns The discovered log refs alongside diagnostic flags (`missingBase`,
+ *   `missingProject`, `fellBackToSiblings`) so callers can render precise
+ *   messages without re-stat'ing the filesystem.
  */
 export async function discoverLogs(input: DiscoverLogsInput): Promise<DiscoverLogsResult> {
   const baseExists = await pathIsDir(input.basePath);
