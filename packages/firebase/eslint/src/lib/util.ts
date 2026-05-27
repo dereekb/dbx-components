@@ -18,6 +18,28 @@ const FIREBASE_MODEL_SUBPATH: string = join('src', 'lib', 'model');
 const installedFirebaseModelDirCache: Map<string, Maybe<string>> = new Map();
 
 /**
+ * Directory names the layout-agnostic discovery globs never descend into: installed dependencies
+ * and build/cache output. Excluding these keeps a broad `**\/*.ts` scan from walking a downstream
+ * consumer's `node_modules` (which can hold tens of thousands of declaration files) and from
+ * double-counting compiled output under `dist`.
+ */
+export const DEFAULT_DISCOVERY_EXCLUDED_DIRS: readonly string[] = ['node_modules', 'dist', '.git', '.nx', 'coverage', 'tmp'];
+
+/**
+ * Builds the `exclude` predicate passed to `fs.globSync(pattern, { cwd, exclude })` for the broad,
+ * layout-agnostic discovery globs. Node invokes the predicate on each visited path (directories
+ * included) and prunes the subtree when it returns true, so excluding a directory name here stops
+ * the walk from ever descending into it.
+ *
+ * @param excludedDirs - Directory names to prune. Defaults to {@link DEFAULT_DISCOVERY_EXCLUDED_DIRS}.
+ * @returns A predicate that returns true for any path containing an excluded directory segment.
+ */
+export function discoveryGlobExcludeFilter(excludedDirs: readonly string[] = DEFAULT_DISCOVERY_EXCLUDED_DIRS): (path: string) => boolean {
+  const excluded: Set<string> = new Set(excludedDirs);
+  return (path: string) => path.split(/[\\/]/).some((segment) => excluded.has(segment));
+}
+
+/**
  * Resolves the absolute path to the installed `@dereekb/firebase` package's `src/lib/model`
  * directory, as seen from the ESLint `cwd`. Used by rules that need to read the framework model
  * declarations (identities, service factories) directly from the package a consumer has installed —
