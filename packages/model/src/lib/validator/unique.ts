@@ -7,10 +7,17 @@ import { type } from 'arktype';
  * @param readKey - Function that extracts the key from each array element.
  * @returns An ArkType schema that narrows `T[]` to ensure uniqueness.
  *
+ * @dbxUtil
+ * @dbxUtilCategory validator
+ * @dbxUtilKind factory
+ * @dbxUtilTags validator, arktype, array, unique, uniqueness, keyed
+ *
  * @example
  * ```typescript
  * const uniqueItemsType = uniqueKeyedType((item: Item) => item.id);
  * ```
+ *
+ * @__NO_SIDE_EFFECTS__
  */
 export function uniqueKeyedType<T>(readKey: ReadKeyFunction<T>) {
   const isUniqueKeyed = isUniqueKeyedFunction(readKey);

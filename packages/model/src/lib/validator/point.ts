@@ -3,6 +3,17 @@ import { type } from 'arktype';
 
 /**
  * ArkType schema for a valid {@link LatLngPoint} with lat in [-90, 90] and lng in [-180, 180].
+ *
+ * @dbxUtil
+ * @dbxUtilCategory validator
+ * @dbxUtilKind const
+ * @dbxUtilTags validator, arktype, lat-lng, point, geo, coordinates
+ * @dbxUtilRelated lat-lng-string-type
+ *
+ * @example
+ * ```ts
+ * type({ location: latLngPointType });
+ * ```
  */
 export const latLngPointType = type({
   lat: '-90 <= number <= 90',
@@ -11,5 +22,16 @@ export const latLngPointType = type({
 
 /**
  * ArkType schema for a valid {@link LatLngString} (comma-separated lat/lng, e.g. "30.5,-96.3").
+ *
+ * @dbxUtil
+ * @dbxUtilCategory validator
+ * @dbxUtilKind const
+ * @dbxUtilTags validator, arktype, lat-lng, geo, coordinates, string
+ * @dbxUtilRelated lat-lng-point-type
+ *
+ * @example
+ * ```ts
+ * type({ location: latLngStringType });
+ * ```
  */
 export const latLngStringType = type('string > 0').narrow((val, ctx) => (val != null && isLatLngString(val)) || ctx.mustBe('a valid lat,lng string (e.g. "30.5,-96.3")'));
