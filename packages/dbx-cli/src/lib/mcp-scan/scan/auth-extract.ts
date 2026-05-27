@@ -579,9 +579,7 @@ function collectLocalRoleConsts(project: Project): LocalRoleConsts {
         if (initializer === undefined) continue;
         if (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer)) {
           if (!scalars.has(name)) scalars.set(name, initializer.getLiteralText());
-        } else if (Node.isArrayLiteralExpression(initializer)) {
-          if (!arrays.has(name)) arrays.set(name, initializer);
-        }
+        } else if (Node.isArrayLiteralExpression(initializer) && !arrays.has(name)) arrays.set(name, initializer);
       }
     }
   }
