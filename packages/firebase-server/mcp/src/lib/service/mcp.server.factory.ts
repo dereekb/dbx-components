@@ -7,7 +7,8 @@ import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { ModelApiCallModelDispatchService, ModelApiGetService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
-import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
+import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIONS, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
+import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
@@ -38,6 +39,7 @@ export interface McpRequestContext {
 @Injectable()
 export class McpServerFactoryService {
   private readonly _logger = new Logger(McpServerFactoryService.name);
+
   private _cachedTools: McpToolGenerationResult | undefined;
   private _cachedStaticTools: ReadonlyArray<McpToolDefinition> | undefined;
   private _cachedManifest: ReadonlyMap<string, McpManifestToolEntry> | undefined;
@@ -46,14 +48,18 @@ export class McpServerFactoryService {
   private _manifestLoaded = false;
   private _loggedSkips = false;
   private _warnedMissingRoleReader = false;
+  private readonly _analyticsService: McpAnalyticsService;
 
   // eslint-disable-next-line @typescript-eslint/max-params -- NestJS DI requires individual constructor parameters
   constructor(
     @Inject(McpModuleConfig) private readonly mcpConfig: McpModuleConfig,
     @Inject(ModelApiCallModelDispatchService) private readonly dispatchService: ModelApiCallModelDispatchService,
     @Optional() @Inject(ModelApiGetService) private readonly modelApiGetService?: ModelApiGetService,
-    @Optional() @Inject(MCP_AUTH_ROLE_READER) private readonly roleReader?: McpAuthRoleReader
-  ) {}
+    @Optional() @Inject(MCP_AUTH_ROLE_READER) private readonly roleReader?: McpAuthRoleReader,
+    @Optional() @Inject(MCP_ANALYTICS_SERVICE) analyticsService?: McpAnalyticsService
+  ) {
+    this._analyticsService = analyticsService ?? noopMcpAnalyticsService();
+  }
 
   /**
    * Builds a configured MCP server with tool listing + dispatch handlers wired up.
@@ -71,7 +77,7 @@ export class McpServerFactoryService {
         version: this.mcpConfig.serverVersion ?? '0.0.0'
       },
       {
-        instructions: 'Model-bound RPC tools generated from the callModel _apiDetails tree.'
+        instructions: this.mcpConfig.serverInstructions ?? DEFAULT_MCP_SERVER_INSTRUCTIONS
       }
     );
 
@@ -424,35 +430,88 @@ export class McpServerFactoryService {
     return result;
   }
 
-  private async _handleToolCall(request: { params: { name: string; arguments?: Record<string, unknown> } }, definitionsByName: Map<string, McpToolDefinition>, ctx: McpRequestContext): Promise<CallToolResult> {
-    const definition = definitionsByName.get(request.params.name);
+  /**
+   * Central dispatch point for every MCP tool call. Runs the underlying handler — callModel,
+   * static, or unknown-tool — then emits a single analytics event on completion so every call
+   * is tracked uniformly.
+   *
+   * Success vs error is decided by the resolved outcome: an outcome that carries a thrown
+   * error, or a response flagged `isError`, counts as a failure. The original thrown error
+   * (when present) is forwarded on the event.
+   *
+   * @param request - The `tools/call` request carrying the tool name and arguments.
+   * @param definitionsByName - The visible tool definitions keyed by name for this request.
+   * @param ctx - The per-request context (auth, raw request) forwarded to the handler.
+   * @returns The MCP tool response.
+   */
+  private async _handleToolCall(request: McpCallToolRequest, definitionsByName: Map<string, McpToolDefinition>, ctx: McpRequestContext): Promise<CallToolResult> {
+    const toolName = request.params.name;
+    const definition = definitionsByName.get(toolName);
     const args = request.params.arguments ?? {};
-    let response: CallToolResult;
+    const startedAt = Date.now();
+
+    let outcome: McpToolCallOutcome;
 
     if (definition == null) {
-      response = formatMcpToolErrorResponse(new Error(`Unknown tool: ${request.params.name}`)) as CallToolResult;
+      outcome = { response: formatMcpToolErrorResponse(new Error(`Unknown tool: ${toolName}`)) as CallToolResult };
     } else if (definition.staticHandler == null) {
-      response = await this._handleCallModelToolCall(definition, args, ctx);
+      outcome = await this._handleCallModelToolCall(definition, args, ctx);
     } else {
-      response = await this._handleStaticToolCall(definition.staticHandler, args, ctx);
+      outcome = await this._handleStaticToolCall(definition.staticHandler, args, ctx);
     }
 
-    return response;
+    const isSuccessful = outcome.error == null && outcome.response.isError !== true;
+
+    // Unknown tools never reached a handler; classify as 'static' since no callModel dispatch occurred.
+    const toolKind: McpAnalyticsEvent['toolKind'] = definition != null && definition.staticHandler == null ? 'callModel' : 'static';
+
+    this._emitMcpAnalytics({
+      event: toolName,
+      toolName,
+      toolKind,
+      call: definition?.dispatch.call,
+      modelType: definition?.dispatch.modelType,
+      specifier: definition?.dispatch.specifier,
+      uid: ctx.auth?.uid,
+      auth: ctx.auth,
+      readOnly: this.mcpConfig.readOnly === true,
+      args,
+      isSuccessful,
+      error: outcome.error,
+      durationMs: Date.now() - startedAt
+    });
+
+    return outcome.response;
   }
 
-  private async _handleStaticToolCall(staticHandler: McpStaticToolHandler, args: Record<string, unknown>, ctx: McpRequestContext): Promise<CallToolResult> {
-    let response: CallToolResult;
+  /**
+   * Forwards an event to the registered {@link McpAnalyticsService}, swallowing any failure so
+   * a faulty analytics implementation can never break tool dispatch (fail-soft, matching the
+   * visibility-predicate guards above).
+   *
+   * @param event - The MCP analytics event to forward.
+   */
+  private _emitMcpAnalytics(event: McpAnalyticsEvent): void {
+    try {
+      this._analyticsService.handleMcpAnalyticsEvent(event);
+    } catch (error) {
+      this._logger.warn(`MCP analytics handler threw for tool ${event.toolName}; ignoring: ${(error as Error).message}`);
+    }
+  }
+
+  private async _handleStaticToolCall(staticHandler: McpStaticToolHandler, args: Record<string, unknown>, ctx: McpRequestContext): Promise<McpToolCallOutcome> {
+    let outcome: McpToolCallOutcome;
 
     try {
-      response = await staticHandler(args, ctx);
+      outcome = { response: await staticHandler(args, ctx) };
     } catch (error) {
-      response = formatMcpToolErrorResponse(error) as CallToolResult;
+      outcome = { response: formatMcpToolErrorResponse(error) as CallToolResult, error };
     }
 
-    return response;
+    return outcome;
   }
 
-  private async _handleCallModelToolCall(definition: McpToolDefinition, args: Record<string, unknown>, ctx: McpRequestContext): Promise<CallToolResult> {
+  private async _handleCallModelToolCall(definition: McpToolDefinition, args: Record<string, unknown>, ctx: McpRequestContext): Promise<McpToolCallOutcome> {
     const params: OnCallTypedModelParams = {
       call: definition.dispatch.call,
       modelType: definition.dispatch.modelType,
@@ -460,15 +519,29 @@ export class McpServerFactoryService {
       data: args
     };
 
-    let response: CallToolResult;
+    let outcome: McpToolCallOutcome;
 
     try {
       const result = await this.dispatchService.dispatch(params, ctx.auth, ctx.rawRequest);
-      response = formatMcpToolResponse(result, params, definition.details) as CallToolResult;
+      outcome = { response: formatMcpToolResponse(result, params, definition.details) as CallToolResult };
     } catch (error) {
-      response = formatMcpToolErrorResponse(error) as CallToolResult;
+      outcome = { response: formatMcpToolErrorResponse(error) as CallToolResult, error };
     }
 
-    return response;
+    return outcome;
   }
+}
+
+/**
+ * The parsed `tools/call` request shape consumed by the dispatch chain.
+ */
+type McpCallToolRequest = { params: { name: string; arguments?: Record<string, unknown> } };
+
+/**
+ * Internal resolved outcome of a single MCP tool invocation: the wire response plus the
+ * original thrown error (when one occurred), so the dispatch lifecycle can forward it to analytics.
+ */
+interface McpToolCallOutcome {
+  readonly response: CallToolResult;
+  readonly error?: unknown;
 }

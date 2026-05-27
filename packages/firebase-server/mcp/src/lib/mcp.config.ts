@@ -18,6 +18,12 @@ export const DEFAULT_MCP_PATH = '/mcp';
 export const DEFAULT_MCP_SERVER_NAME = 'dbx-firebase-server-mcp';
 
 /**
+ * Default `instructions` string advertised by the MCP server on the JSON-RPC `initialize`
+ * handshake. Apps may override this via {@link McpModuleConfig.serverInstructions}.
+ */
+export const DEFAULT_MCP_SERVER_INSTRUCTIONS = 'A set of call-model tools generated automatically.';
+
+/**
  * Configuration for the firebase-server/mcp module.
  *
  * Apps construct this in their `*McpModule` provider and pass it through
@@ -64,6 +70,12 @@ export abstract class McpModuleConfig {
    * Optional version advertised on the MCP `initialize` handshake.
    */
   readonly serverVersion?: string;
+  /**
+   * Optional override for the `instructions` string passed to `new McpServer(...)` and
+   * advertised on the JSON-RPC `initialize` handshake. Defaults to
+   * {@link DEFAULT_MCP_SERVER_INSTRUCTIONS}.
+   */
+  readonly serverInstructions?: string;
   /**
    * Absolute path to a pre-rendered MCP manifest JSON file produced by
    * `dbx-cli-generate-mcp-manifest`. When set, the runtime reads it once at
