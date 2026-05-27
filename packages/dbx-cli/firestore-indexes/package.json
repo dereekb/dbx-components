@@ -2,5 +2,9 @@
   "name": "@dereekb/dbx-cli-firestore-indexes",
   "version": "13.12.2",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "peerDependencies": {
+    "@dereekb/util": "13.12.2",
+    "arktype": "^2.2.0"
+  }
 }

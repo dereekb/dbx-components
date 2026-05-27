@@ -9,9 +9,11 @@
   "peerDependencies": {
     "@dereekb/dbx-cli": "13.12.2",
     "@dereekb/firebase": "13.12.2",
+    "@dereekb/firebase-server": "13.12.2",
     "@dereekb/util": "13.12.2",
     "arktype": "^2.2.0",
     "demo-firebase": "*",
+    "vitest": "4.1.5",
     "yargs": "^18.0.0"
   },
   "devDependencies": {

@@ -4,5 +4,8 @@
   "sideEffects": false,
   "peerDependencies": {
     "ts-morph": "^21.0.0"
+  },
+  "devDependencies": {
+    "@dereekb/firebase": "13.12.2"
   }
 }

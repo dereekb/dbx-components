@@ -5,5 +5,8 @@
   "type": "module",
   "devDependencies": {
     "eslint": "10.4.0"
+  },
+  "peerDependencies": {
+    "@dereekb/dbx-cli": "13.12.2"
   }
 }

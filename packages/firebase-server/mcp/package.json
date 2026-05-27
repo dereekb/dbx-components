@@ -15,6 +15,7 @@
     "@modelcontextprotocol/sdk": "1.29.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/core": "^11.1.19",
+    "arktype": "^2.2.0",
     "express": "^5.2.1",
     "firebase-admin": "^13.8.0"
   }

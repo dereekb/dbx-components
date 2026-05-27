@@ -29,6 +29,8 @@
     "ts-essentials": "^10.2.0"
   },
   "devDependencies": {
-    "date-fns": "4.1.0"
+    "@typescript-eslint/parser": "8.59.3",
+    "date-fns": "4.1.0",
+    "eslint": "10.4.0"
   }
 }

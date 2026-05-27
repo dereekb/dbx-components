@@ -49,6 +49,7 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "peerDependencies": {
+    "@cantoo/pdf-lib": "^2.6.5",
     "@dereekb/analytics": "13.12.2",
     "@dereekb/date": "13.12.2",
     "@dereekb/dbx-core": "13.12.2",
@@ -60,6 +61,7 @@
     "@dereekb/zoho": "13.12.2",
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/storage": "^7.19.0",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.19",
@@ -77,6 +79,7 @@
     "nanoid": "^5.1.9",
     "oidc-provider": "^9.8.2",
     "rxjs": "^7.8.2",
+    "sharp": "0.34.5",
     "supertest": "^7.2.2",
     "ts-essentials": "^10.2.0"
   }
