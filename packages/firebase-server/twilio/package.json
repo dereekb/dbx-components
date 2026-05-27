@@ -1,13 +1,13 @@
 {
   "name": "@dereekb/firebase-server/twilio",
-  "version": "13.12.0",
+  "version": "13.12.1",
   "peerDependencies": {
-    "@dereekb/date": "13.12.0",
-    "@dereekb/firebase": "13.12.0",
-    "@dereekb/firebase-server": "13.12.0",
-    "@dereekb/model": "13.12.0",
-    "@dereekb/nestjs": "13.12.0",
-    "@dereekb/rxjs": "13.12.0",
-    "@dereekb/util": "13.12.0"
+    "@dereekb/date": "13.12.1",
+    "@dereekb/firebase": "13.12.1",
+    "@dereekb/firebase-server": "13.12.1",
+    "@dereekb/model": "13.12.1",
+    "@dereekb/nestjs": "13.12.1",
+    "@dereekb/rxjs": "13.12.1",
+    "@dereekb/util": "13.12.1"
   }
 }

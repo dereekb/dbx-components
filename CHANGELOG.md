@@ -1,3 +1,25 @@
+## [13.12.1](https://github.com/dereekb/dbx-components/compare/v13.12.0-dev...v13.12.1) (2026-05-27)
+
+
+### Bug Fixes
+
+- **dbx-cli:** discover lint-cache projects under any top-level dir ([89528e28](https://github.com/dereekb/dbx-components/commit/89528e28664afcdd80f560867a2997c66b22dd30))
+- **dbx-cli:** resolve downstream role consts in auth extractor ([d269b5ca](https://github.com/dereekb/dbx-components/commit/d269b5caf1b897032f47a0074cf6cd5a60888166))
+- **firebase:** bundle cel-js into eslint plugin ([a18452d9](https://github.com/dereekb/dbx-components/commit/a18452d974c6eb6deca45e2861a2740f63724ce6))
+- ship missing mcp packaging artifacts ([461a6ff2](https://github.com/dereekb/dbx-components/commit/461a6ff2bdbd6c01a983d2c9469af9fddc8e8514))
+- **util-eslint:** deprecated-alias rule only moves true aliases ([f82b1c5f](https://github.com/dereekb/dbx-components/commit/f82b1c5f92d273d3e5a9ba1ecf029db74a5a3fd3))
+
+
+### Build System
+
+- **firebase:** invalidate build cache on nested eslint changes ([2c75d492](https://github.com/dereekb/dbx-components/commit/2c75d4923a05766d5c75c38468960d0f2c809822))
+- lint fix + mcp regeneration + firestore indexes ([84086910](https://github.com/dereekb/dbx-components/commit/840869105f90a356e1eee58494507edefdda2395))
+
+
+### Code Refactoring
+
+- **firebase-eslint:** autofix api-details + require inputType rule ([cb6cc48b](https://github.com/dereekb/dbx-components/commit/cb6cc48be5421198cc79ee9cfcb002361092006d))
+
 # [13.12.0](https://github.com/dereekb/dbx-components/compare/v13.11.18-dev...v13.12.0) (2026-05-26)
 
 
