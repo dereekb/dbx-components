@@ -1,22 +1,5 @@
 import type { Maybe } from '@dereekb/util';
-import { type AstNode } from './util';
-
-/**
- * Default CRUD verb names that combine with the `ModelFunction` suffix to form a type-name
- * pattern this rule treats as a CRUD function declaration (e.g. `OnCallCreateModelFunction`,
- * `DemoUpdateModelFunction`).
- *
- * Mirrors the verbs supported by `ModelFirebaseCrudFunctionConfigMap` — see
- * `packages/firebase/src/lib/client/function/model.function.factory.ts`.
- */
-export const DEFAULT_CRUD_FUNCTION_TYPE_VERBS: readonly string[] = ['Create', 'Read', 'Update', 'Delete', 'Query', 'Invoke'];
-
-/**
- * Default factory function name that wraps CRUD function declarations and attaches the
- * `_apiDetails` metadata (`inputType`, `outputType`, `mcp.visibility`, `analytics`) consumed
- * by the MCP manifest builder. Defined in `packages/firebase-server/src/lib/nest/model/api.details.ts`.
- */
-export const DEFAULT_API_DETAILS_FACTORY_NAME: string = 'withApiDetails';
+import { type AstNode, API_DETAILS_IMPORT_MODULE, DEFAULT_API_DETAILS_FACTORY_NAME, DEFAULT_CRUD_FUNCTION_TYPE_VERBS, declaratorName, isFactoryNameInScope, findImportInsertionOffset, isApiDetailsCall, isCrudFunctionTypeName, typeReferenceTypeName, unwrapTypeAssertion } from './util';
 
 /**
  * Options for the require-api-details-for-crud-function rule.
@@ -43,100 +26,12 @@ export interface FirebaseRequireApiDetailsForCrudFunctionRuleOptions {
 export interface FirebaseRequireApiDetailsForCrudFunctionRuleDefinition {
   readonly meta: {
     readonly type: 'problem';
-    readonly fixable: undefined;
+    readonly fixable: 'code';
     readonly docs: { readonly description: string; readonly recommended: boolean };
     readonly messages: Readonly<Record<string, string>>;
     readonly schema: readonly object[];
   };
-  create(context: { options: FirebaseRequireApiDetailsForCrudFunctionRuleOptions[]; report: (descriptor: { node: AstNode; messageId: string; data?: Record<string, string> }) => void }): Record<string, (node: AstNode) => void>;
-}
-
-/**
- * Unwraps `TSAsExpression` and `TSTypeAssertion` wrappers around an initializer so the rule
- * sees the underlying expression (matches the helper in `require-complete-crud-function-config-map.rule.ts`).
- *
- * @param node - The AST node to unwrap.
- * @returns The innermost wrapped expression, or `node` when no cast is present.
- */
-function unwrapTypeAssertion(node: AstNode): AstNode {
-  let current: AstNode = node;
-  while (current && (current.type === 'TSAsExpression' || current.type === 'TSTypeAssertion') && current.expression) {
-    current = current.expression;
-  }
-  return current;
-}
-
-/**
- * Resolves the identifier name from a `TSTypeReference` annotation, when present.
- *
- * @param node - A `TSTypeReference` node (or anything else).
- * @returns The identifier name when `node` is a TSTypeReference whose typeName is an Identifier; otherwise null.
- */
-function typeReferenceTypeName(node: AstNode): Maybe<string> {
-  let result: Maybe<string> = null;
-  if (node?.type === 'TSTypeReference' && node.typeName?.type === 'Identifier') {
-    result = node.typeName.name;
-  }
-  return result;
-}
-
-/**
- * Resolves the callee identifier name from a `CallExpression`, looking through both bare
- * identifier callees (`withApiDetails(...)`) and member-expression callees
- * (`api.withApiDetails(...)`).
- *
- * @param callee - The `CallExpression.callee` node.
- * @returns The callee name when resolvable; otherwise null.
- */
-function callExpressionCalleeName(callee: AstNode): Maybe<string> {
-  let result: Maybe<string> = null;
-  if (callee?.type === 'Identifier') {
-    result = callee.name;
-  } else if (callee?.type === 'MemberExpression' && callee.property?.type === 'Identifier') {
-    result = callee.property.name;
-  }
-  return result;
-}
-
-/**
- * Determines whether the (already-unwrapped) initializer is a call to the configured
- * api-details factory.
- *
- * @param initializer - The unwrapped initializer node.
- * @param factoryName - The expected factory identifier name.
- * @returns True when the initializer is a `CallExpression` whose callee resolves to `factoryName`.
- */
-function isApiDetailsCall(initializer: AstNode, factoryName: string): boolean {
-  return initializer?.type === 'CallExpression' && callExpressionCalleeName(initializer.callee) === factoryName;
-}
-
-/**
- * Returns the declarator's identifier name, when present.
- *
- * @param declaratorId - The `VariableDeclarator.id` node.
- * @returns The identifier name, or null when the declarator binds a destructuring pattern.
- */
-function declaratorName(declaratorId: AstNode): Maybe<string> {
-  return declaratorId?.type === 'Identifier' ? (declaratorId.name as Maybe<string>) : null;
-}
-
-/**
- * Returns true when `typeName` ends with `<Verb>ModelFunction` for one of the configured
- * verbs (e.g. `OnCallCreateModelFunction`, `DemoUpdateModelFunction`).
- *
- * @param typeName - The type-reference identifier name.
- * @param verbs - The allowed verb fragments (already de-duplicated).
- * @returns True when the suffix matches a recognized CRUD verb.
- */
-function isCrudFunctionTypeName(typeName: string, verbs: ReadonlySet<string>): boolean {
-  let result: boolean = false;
-  for (const verb of verbs) {
-    if (typeName.endsWith(`${verb}ModelFunction`)) {
-      result = true;
-      break;
-    }
-  }
-  return result;
+  create(context: { options: FirebaseRequireApiDetailsForCrudFunctionRuleOptions[]; sourceCode: AstNode; report: (descriptor: { node: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => AstNode | AstNode[] }) => void }): Record<string, (node: AstNode) => void>;
 }
 
 /**
@@ -153,6 +48,12 @@ function isCrudFunctionTypeName(typeName: string, verbs: ReadonlySet<string>): b
  * initializer's `CallExpression` callee name. Type assertions (`as`, `<T>`) on the initializer
  * are unwrapped before the check.
  *
+ * Auto-fix: wraps the existing initializer as `withApiDetails({ fn: <initializer> })` (`inputType`
+ * is optional on the config, so the minimal wrap compiles) and — when the default factory is used
+ * and not already in scope — inserts `import { withApiDetails } from '@dereekb/firebase-server';`.
+ * The developer is still expected to add `inputType`; the companion `require-input-type-for-api-details`
+ * rule flags that follow-up where it matters.
+ *
  * @example
  * ```ts
  * // OK — wrapped, surfaces to MCP
@@ -160,14 +61,14 @@ function isCrudFunctionTypeName(typeName: string, verbs: ReadonlySet<string>): b
  *   inputType, fn: async (req) => ({})
  * });
  *
- * // WARN — missingApiDetails, never reaches MCP
+ * // WARN — missingApiDetails, never reaches MCP (auto-fix wraps it)
  * export const fooDelete: FooDeleteModelFunction<X> = async (req) => {};
  * ```
  */
 export const FIREBASE_REQUIRE_API_DETAILS_FOR_CRUD_FUNCTION_RULE: FirebaseRequireApiDetailsForCrudFunctionRuleDefinition = {
   meta: {
     type: 'problem',
-    fixable: undefined,
+    fixable: 'code',
     docs: {
       description: 'Require CRUD function declarations (`On(?:Call)?<Verb>ModelFunction` or aliases) to be initialized with `withApiDetails(...)` so they attach the `_apiDetails` metadata consumed by the MCP manifest builder.',
       recommended: true
@@ -192,8 +93,19 @@ export const FIREBASE_REQUIRE_API_DETAILS_FOR_CRUD_FUNCTION_RULE: FirebaseRequir
     const typeVerbs: ReadonlySet<string> = new Set(options.typeVerbs ?? DEFAULT_CRUD_FUNCTION_TYPE_VERBS);
     const factoryName: string = options.factoryName ?? DEFAULT_API_DETAILS_FACTORY_NAME;
     const ignoreNames: ReadonlySet<string> = new Set(options.ignoreNames ?? []);
+    const sourceCode = context.sourceCode;
+
+    let programNode: Maybe<AstNode> = null;
+    let factoryInScope = false;
+    // Tracks whether we've already requested the import-add fix for this lint pass — only the first
+    // report emits it so ESLint does not see multiple inserts at the same offset (a fix conflict).
+    let importFixRequested = false;
 
     return {
+      Program: (node: AstNode) => {
+        programNode = node;
+        factoryInScope = isFactoryNameInScope(node, factoryName);
+      },
       VariableDeclarator: (node: AstNode) => {
         const name = declaratorName(node.id);
         if (!name || ignoreNames.has(name)) return;
@@ -207,7 +119,25 @@ export const FIREBASE_REQUIRE_API_DETAILS_FOR_CRUD_FUNCTION_RULE: FirebaseRequir
         const initializer = unwrapTypeAssertion(node.init);
         if (isApiDetailsCall(initializer, factoryName)) return;
 
-        context.report({ node: node.init, messageId: 'missingApiDetails', data: { name, typeName, factoryName } });
+        context.report({
+          node: node.init,
+          messageId: 'missingApiDetails',
+          data: { name, typeName, factoryName },
+          fix: (fixer: AstNode) => {
+            const fixes: AstNode[] = [];
+            const initText: string = sourceCode.getText(node.init);
+            fixes.push(fixer.replaceText(node.init, `${factoryName}({ fn: ${initText} })`));
+
+            // Only the default factory has a known import module — skip the import for custom factory names.
+            if (factoryName === DEFAULT_API_DETAILS_FACTORY_NAME && !factoryInScope && !importFixRequested && programNode) {
+              const insertOffset = findImportInsertionOffset(programNode);
+              fixes.push(fixer.insertTextBeforeRange([insertOffset, insertOffset], `import { ${DEFAULT_API_DETAILS_FACTORY_NAME} } from '${API_DETAILS_IMPORT_MODULE}';\n`));
+              importFixRequested = true;
+            }
+
+            return fixes;
+          }
+        });
       }
     };
   }

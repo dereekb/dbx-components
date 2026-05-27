@@ -21,6 +21,21 @@ function lintCode(code: string): Linter.LintMessage[] {
   return linter.verify(code, buildConfig(), { filename: 'test.ts' }).filter((m) => m.ruleId === RULE_ID);
 }
 
+function fixCode(code: string): string {
+  const linter = new Linter({ configType: 'flat' });
+  return linter.verifyAndFix(code, buildConfig(), { filename: 'test.ts' }).output;
+}
+
+const IMPORT_LINE = "import { withApiDetails } from '@dereekb/firebase-server';";
+
+// Type defs without `withApiDetails` in scope — used to exercise the auto-fix's import insertion.
+const MINIMAL_DEFS = `
+type DemoApiNestContext = object;
+type OnCallDeleteModelFunction<C, I, O = void> = (req: { context: C; data: I }) => Promise<O>;
+type DemoDeleteModelFunction<I, O = void> = OnCallDeleteModelFunction<DemoApiNestContext, I, O>;
+type DeleteFooParams = object;
+`;
+
 const TYPE_DEFS = `
 type DemoApiNestContext = object;
 type OnCallCreateModelFunction<C, I, O = unknown> = (req: { context: C; data: I }) => Promise<O>;
@@ -144,5 +159,55 @@ export const skipMe: DemoDeleteModelFunction<DeleteFooParams> = async (request) 
 `;
     const messages = linter.verify(code, config, { filename: 'test.ts' }).filter((m) => m.ruleId === RULE_ID);
     expect(messages).toEqual([]);
+  });
+
+  describe('auto-fix', () => {
+    it('wraps an unwrapped arrow and inserts the missing withApiDetails import', () => {
+      const output = fixCode(`${MINIMAL_DEFS}
+export const fooDelete: DemoDeleteModelFunction<DeleteFooParams> = async (request) => {};
+`);
+      expect(output).toContain('withApiDetails({ fn: async (request) => {} })');
+      expect(output).toContain(IMPORT_LINE);
+    });
+
+    it('wraps without adding a duplicate import when withApiDetails is already imported', () => {
+      const output = fixCode(`${IMPORT_LINE}${MINIMAL_DEFS}
+export const fooDelete: DemoDeleteModelFunction<DeleteFooParams> = async (request) => {};
+`);
+      expect(output).toContain('withApiDetails({ fn: async (request) => {} })');
+      const importCount = output.split('\n').filter((line) => line.includes("from '@dereekb/firebase-server'")).length;
+      expect(importCount).toBe(1);
+    });
+
+    it('wraps a function-expression initializer', () => {
+      const output = fixCode(`${TYPE_DEFS}
+export const fooDelete: DemoDeleteModelFunction<DeleteFooParams> = function (request) { return undefined; };
+`);
+      expect(output).toContain('withApiDetails({ fn: function (request) { return undefined; } })');
+    });
+
+    it('produces a fixed output that no longer triggers the rule (converges)', () => {
+      const output = fixCode(`${MINIMAL_DEFS}
+export const fooDelete: DemoDeleteModelFunction<DeleteFooParams> = async (request) => {};
+`);
+      expect(lintCode(output)).toEqual([]);
+    });
+
+    it('does not fix declarators covered by ignoreNames', () => {
+      const linter = new Linter({ configType: 'flat' });
+      const config: Linter.Config[] = [
+        {
+          files: ['**/*.ts'],
+          languageOptions: { parser: tsParser, parserOptions: { ecmaVersion: 2022, sourceType: 'module' } },
+          plugins: { 'dereekb-firebase': { rules: { 'require-api-details-for-crud-function': FIREBASE_REQUIRE_API_DETAILS_FOR_CRUD_FUNCTION_RULE } } as any },
+          rules: { [RULE_ID]: ['warn', { ignoreNames: ['skipMe'] }] }
+        }
+      ];
+      const input = `${MINIMAL_DEFS}
+export const skipMe: DemoDeleteModelFunction<DeleteFooParams> = async (request) => {};
+`;
+      const output = linter.verifyAndFix(input, config, { filename: 'test.ts' }).output;
+      expect(output).toBe(input);
+    });
   });
 });

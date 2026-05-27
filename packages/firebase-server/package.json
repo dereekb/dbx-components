@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "13.12.0",
+  "version": "13.12.1",
   "sideEffects": false,
   "exports": {
     "./test": {
@@ -38,20 +38,26 @@
       "types": "./oidc/index.d.ts",
       "import": "./oidc/index.cjs.mjs",
       "default": "./oidc/index.cjs.js"
+    },
+    "./mcp": {
+      "module": "./mcp/index.esm.js",
+      "types": "./mcp/index.d.ts",
+      "import": "./mcp/index.cjs.mjs",
+      "default": "./mcp/index.cjs.js"
     }
   },
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "peerDependencies": {
-    "@dereekb/analytics": "13.12.0",
-    "@dereekb/date": "13.12.0",
-    "@dereekb/dbx-core": "13.12.0",
-    "@dereekb/firebase": "13.12.0",
-    "@dereekb/model": "13.12.0",
-    "@dereekb/nestjs": "13.12.0",
-    "@dereekb/rxjs": "13.12.0",
-    "@dereekb/util": "13.12.0",
-    "@dereekb/zoho": "13.12.0",
+    "@dereekb/analytics": "13.12.1",
+    "@dereekb/date": "13.12.1",
+    "@dereekb/dbx-core": "13.12.1",
+    "@dereekb/firebase": "13.12.1",
+    "@dereekb/model": "13.12.1",
+    "@dereekb/nestjs": "13.12.1",
+    "@dereekb/rxjs": "13.12.1",
+    "@dereekb/util": "13.12.1",
+    "@dereekb/zoho": "13.12.1",
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/storage": "^7.19.0",
     "@nestjs/common": "^11.1.19",

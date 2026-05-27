@@ -190,3 +190,320 @@ export function getFunctionNameNode(node: AstNode): AstNode {
 
   return result;
 }
+
+// MARK: CRUD Function / Api Details
+/**
+ * Default CRUD verb names that combine with the `ModelFunction` suffix to form a type-name
+ * pattern the api-details rules treat as a CRUD function declaration (e.g. `OnCallCreateModelFunction`,
+ * `DemoUpdateModelFunction`).
+ *
+ * Mirrors the verbs supported by `ModelFirebaseCrudFunctionConfigMap` — see
+ * `packages/firebase/src/lib/client/function/model.function.factory.ts`.
+ */
+export const DEFAULT_CRUD_FUNCTION_TYPE_VERBS: readonly string[] = ['Create', 'Read', 'Update', 'Delete', 'Query', 'Invoke'];
+
+/**
+ * Default factory function name that wraps CRUD function declarations and attaches the
+ * `_apiDetails` metadata (`inputType`, `outputType`, `mcp.visibility`, `analytics`) consumed
+ * by the MCP manifest builder. Defined in `packages/firebase-server/src/lib/nest/model/api.details.ts`.
+ */
+export const DEFAULT_API_DETAILS_FACTORY_NAME: string = 'withApiDetails';
+
+/**
+ * Property name on the `withApiDetails(...)` config object that declares the handler's input
+ * parameter type (consumed by the MCP manifest builder to generate the tool input schema).
+ */
+export const INPUT_TYPE_PROPERTY_NAME: string = 'inputType';
+
+/**
+ * Module the default api-details factory ({@link DEFAULT_API_DETAILS_FACTORY_NAME}) is exported
+ * from. Used by the require-api-details auto-fix to insert a missing import.
+ */
+export const API_DETAILS_IMPORT_MODULE: string = '@dereekb/firebase-server';
+
+/**
+ * Unwraps `TSAsExpression` and `TSTypeAssertion` wrappers around an initializer so callers see the
+ * underlying expression (matches the helper in `require-complete-crud-function-config-map.rule.ts`).
+ *
+ * @param node - The AST node to unwrap.
+ * @returns The innermost wrapped expression, or `node` when no cast is present.
+ */
+export function unwrapTypeAssertion(node: AstNode): AstNode {
+  let current: AstNode = node;
+  while (current && (current.type === 'TSAsExpression' || current.type === 'TSTypeAssertion') && current.expression) {
+    current = current.expression;
+  }
+  return current;
+}
+
+/**
+ * Resolves the identifier name from a `TSTypeReference` annotation, when present.
+ *
+ * @param node - A `TSTypeReference` node (or anything else).
+ * @returns The identifier name when `node` is a TSTypeReference whose typeName is an Identifier; otherwise null.
+ */
+export function typeReferenceTypeName(node: AstNode): Maybe<string> {
+  let result: Maybe<string> = null;
+  if (node?.type === 'TSTypeReference' && node.typeName?.type === 'Identifier') {
+    result = node.typeName.name;
+  }
+  return result;
+}
+
+/**
+ * Resolves the type-argument nodes of a `TSTypeReference`, normalizing across `@typescript-eslint`
+ * versions (`typeArguments` in v6+, `typeParameters` in older releases).
+ *
+ * @param node - A `TSTypeReference` node (or anything else).
+ * @returns The generic argument nodes, or null when the reference has no type arguments.
+ */
+export function typeReferenceTypeArguments(node: AstNode): Maybe<AstNode[]> {
+  const container: Maybe<AstNode> = node?.typeArguments ?? node?.typeParameters;
+  return (container?.params as Maybe<AstNode[]>) ?? null;
+}
+
+/**
+ * Resolves the callee identifier name from a `CallExpression`, looking through both bare identifier
+ * callees (`withApiDetails(...)`) and member-expression callees (`api.withApiDetails(...)`).
+ *
+ * @param callee - The `CallExpression.callee` node.
+ * @returns The callee name when resolvable; otherwise null.
+ */
+export function callExpressionCalleeName(callee: AstNode): Maybe<string> {
+  let result: Maybe<string> = null;
+  if (callee?.type === 'Identifier') {
+    result = callee.name;
+  } else if (callee?.type === 'MemberExpression' && callee.property?.type === 'Identifier') {
+    result = callee.property.name;
+  }
+  return result;
+}
+
+/**
+ * Determines whether the (already-unwrapped) initializer is a call to the configured api-details factory.
+ *
+ * @param initializer - The unwrapped initializer node.
+ * @param factoryName - The expected factory identifier name.
+ * @returns True when the initializer is a `CallExpression` whose callee resolves to `factoryName`.
+ */
+export function isApiDetailsCall(initializer: AstNode, factoryName: string): boolean {
+  return initializer?.type === 'CallExpression' && callExpressionCalleeName(initializer.callee) === factoryName;
+}
+
+/**
+ * Returns the declarator's identifier name, when present.
+ *
+ * @param declaratorId - The `VariableDeclarator.id` node.
+ * @returns The identifier name, or null when the declarator binds a destructuring pattern.
+ */
+export function declaratorName(declaratorId: AstNode): Maybe<string> {
+  return declaratorId?.type === 'Identifier' ? (declaratorId.name as Maybe<string>) : null;
+}
+
+/**
+ * Returns the CRUD verb fragment that `typeName` ends with — i.e. the `<Verb>` in a
+ * `<Verb>ModelFunction` suffix for one of the configured verbs (e.g. `OnCallCreateModelFunction` →
+ * `Create`, `DemoUpdateModelFunction` → `Update`).
+ *
+ * @param typeName - The type-reference identifier name.
+ * @param verbs - The allowed verb fragments.
+ * @returns The matched verb, or null when the suffix matches no recognized CRUD verb.
+ */
+export function matchedCrudFunctionVerb(typeName: string, verbs: Iterable<string>): Maybe<string> {
+  let result: Maybe<string> = null;
+  for (const verb of verbs) {
+    if (typeName.endsWith(`${verb}ModelFunction`)) {
+      result = verb;
+      break;
+    }
+  }
+  return result;
+}
+
+/**
+ * Returns true when `typeName` ends with `<Verb>ModelFunction` for one of the configured verbs.
+ *
+ * @param typeName - The type-reference identifier name.
+ * @param verbs - The allowed verb fragments.
+ * @returns True when the suffix matches a recognized CRUD verb.
+ */
+export function isCrudFunctionTypeName(typeName: string, verbs: Iterable<string>): boolean {
+  return matchedCrudFunctionVerb(typeName, verbs) != null;
+}
+
+/**
+ * Index of the input-parameter generic argument within a CRUD function type reference. Canonical
+ * `On(?:Call)?<Verb>ModelFunction<Context, Input, Output>` names place the context at index 0 and the
+ * input at index 1; app-side aliases (`Demo<Verb>ModelFunction<Input, Output>`) place the input at
+ * index 0. Distinguished by the `On` prefix (a syntactic heuristic).
+ *
+ * @param typeName - The CRUD function type-reference name.
+ * @returns The generic-argument index that holds the input type.
+ */
+function crudFunctionInputGenericIndex(typeName: string): number {
+  return typeName.startsWith('On') ? 1 : 0;
+}
+
+/**
+ * Resolves the input-parameter type-argument node from a CRUD function type reference.
+ *
+ * @param typeRef - The `TSTypeReference` annotation node.
+ * @param typeName - The resolved type-reference name (selects the generic position).
+ * @returns The input type-argument node, or null when absent.
+ */
+export function crudFunctionInputTypeArgNode(typeRef: AstNode, typeName: string): Maybe<AstNode> {
+  const params = typeReferenceTypeArguments(typeRef);
+  const index = crudFunctionInputGenericIndex(typeName);
+  return params?.[index] ?? null;
+}
+
+/**
+ * Returns true when an input type-argument node is an empty object type literal (`{}`).
+ *
+ * @param node - The type-argument node.
+ * @returns True when the node is a `TSTypeLiteral` with no members.
+ */
+function isEmptyObjectTypeNode(node: AstNode): boolean {
+  return node?.type === 'TSTypeLiteral' && (node.members?.length ?? 0) === 0;
+}
+
+/**
+ * Returns true when a CRUD function declares no meaningful input — either the input generic argument
+ * is absent or it is an empty object type literal (`{}`). Such handlers need no MCP input schema, so
+ * the require-input-type rule exempts them.
+ *
+ * @param typeRef - The `TSTypeReference` annotation node.
+ * @param typeName - The resolved type-reference name.
+ * @returns True when the input generic is empty or absent.
+ */
+export function isEmptyOrAbsentInputGeneric(typeRef: AstNode, typeName: string): boolean {
+  const inputArg = crudFunctionInputTypeArgNode(typeRef, typeName);
+  return inputArg == null || isEmptyObjectTypeNode(inputArg);
+}
+
+/**
+ * Resolves the static name of an object-literal property key (`Identifier` or string `Literal`).
+ *
+ * @param key - The property `key` node.
+ * @returns The key name, or null for computed/non-static keys.
+ */
+function propertyKeyName(key: AstNode): Maybe<string> {
+  let result: Maybe<string> = null;
+  if (key?.type === 'Identifier') {
+    result = key.name;
+  } else if (key?.type === 'Literal' && typeof key.value === 'string') {
+    result = key.value;
+  }
+  return result;
+}
+
+/**
+ * Returns true when an `ObjectExpression` has an own (non-computed) property with the given name.
+ *
+ * @param objExpr - The `ObjectExpression` node.
+ * @param propName - The property name to look for.
+ * @returns True when a matching property is present.
+ */
+export function objectExpressionHasProperty(objExpr: AstNode, propName: string): boolean {
+  const properties: AstNode[] = objExpr?.properties ?? [];
+  return properties.some((p) => p.type === 'Property' && !p.computed && propertyKeyName(p.key) === propName);
+}
+
+/**
+ * Returns true when an `ObjectExpression` contains a spread element (`{ ...base }`), whose contents
+ * cannot be introspected statically.
+ *
+ * @param objExpr - The `ObjectExpression` node.
+ * @returns True when any property is a spread element.
+ */
+export function objectExpressionHasSpread(objExpr: AstNode): boolean {
+  const properties: AstNode[] = objExpr?.properties ?? [];
+  return properties.some((p) => p.type === 'SpreadElement' || p.type === 'ExperimentalSpreadProperty');
+}
+
+/**
+ * Returns the character offset at which an auto-fixer should insert a new import — the start of the
+ * first existing `ImportDeclaration`, or offset 0 when the file has no imports yet.
+ *
+ * @param program - The `Program` AST node.
+ * @returns The character offset for the import-insertion point.
+ */
+export function findImportInsertionOffset(program: AstNode): number {
+  const body: AstNode[] = program?.body ?? [];
+  let offset = 0;
+
+  for (const stmt of body) {
+    if (stmt.type === 'ImportDeclaration' && offset === 0) {
+      offset = stmt.range[0];
+    }
+  }
+
+  return offset;
+}
+
+/**
+ * Returns true when an import declaration binds the given local name.
+ *
+ * @param stmt - The `ImportDeclaration` node.
+ * @param name - The local binding name to look for.
+ * @returns True when a specifier's local name matches.
+ */
+function importBindsLocalName(stmt: AstNode, name: string): boolean {
+  const specifiers: AstNode[] = stmt.specifiers ?? [];
+  return specifiers.some((spec) => spec.local?.name === name);
+}
+
+/**
+ * Returns true when a declaration node binds the given name (function/declare-function/class
+ * declarations by id, variable declarations by any declarator identifier).
+ *
+ * @param node - The declaration node.
+ * @param name - The binding name to look for.
+ * @returns True when the declaration introduces `name`.
+ */
+function declarationBindsName(node: AstNode, name: string): boolean {
+  let result = false;
+
+  if ((node.type === 'FunctionDeclaration' || node.type === 'TSDeclareFunction' || node.type === 'ClassDeclaration') && node.id?.name === name) {
+    result = true;
+  } else if (node.type === 'VariableDeclaration') {
+    result = (node.declarations ?? []).some((d: AstNode) => d.id?.type === 'Identifier' && d.id.name === name);
+  }
+
+  return result;
+}
+
+/**
+ * Returns true when a top-level statement brings the given name into the module scope — via an
+ * import specifier, a top-level declaration, or an `export`-wrapped declaration.
+ *
+ * @param stmt - The top-level statement node.
+ * @param name - The binding name to look for.
+ * @returns True when the statement binds `name`.
+ */
+function statementBindsName(stmt: AstNode, name: string): boolean {
+  let result = false;
+
+  if (stmt.type === 'ImportDeclaration') {
+    result = importBindsLocalName(stmt, name);
+  } else if (stmt.type === 'ExportNamedDeclaration' && stmt.declaration) {
+    result = declarationBindsName(stmt.declaration, name);
+  } else {
+    result = declarationBindsName(stmt, name);
+  }
+
+  return result;
+}
+
+/**
+ * Returns true when the given identifier name is already in the module's top-level scope (imported
+ * or declared). Used by the require-api-details auto-fix to avoid inserting a duplicate import.
+ *
+ * @param program - The `Program` AST node.
+ * @param name - The identifier name to check.
+ * @returns True when an existing import or declaration brings `name` into scope.
+ */
+export function isFactoryNameInScope(program: AstNode, name: string): boolean {
+  const body: AstNode[] = program?.body ?? [];
+  return body.some((stmt) => statementBindsName(stmt, name));
+}
