@@ -51,15 +51,15 @@ export type ImageFileExtension = 'jpeg' | 'jpg' | 'png' | 'webp' | 'gif' | 'svg'
 /**
  * MIME type for JPEG images.
  */
-export const JPEG_MIME_TYPE: MimeTypeWithoutParameters = 'image/jpeg';
+export const JPEG_MIME_TYPE = 'image/jpeg';
 /**
  * Non-canonical MIME type sometimes emitted by older browsers/clients for JPEG images.
  */
-export const JPG_MIME_TYPE: MimeTypeWithoutParameters = 'image/jpg';
+export const JPG_MIME_TYPE = 'image/jpg';
 /**
  * Progressive JPEG MIME type emitted by some legacy clients (notably Internet Explorer).
  */
-export const PJPEG_MIME_TYPE: MimeTypeWithoutParameters = 'image/pjpeg';
+export const PJPEG_MIME_TYPE = 'image/pjpeg';
 /**
  * All MIME type variants that should be treated as JPEG images, including the canonical
  * `image/jpeg` and the non-standard `image/jpg` and `image/pjpeg` variants emitted by
@@ -69,31 +69,31 @@ export const JPEG_MIME_TYPES: readonly MimeTypeWithoutParameters[] = [JPEG_MIME_
 /**
  * MIME type for PNG images.
  */
-export const PNG_MIME_TYPE: MimeTypeWithoutParameters = 'image/png';
+export const PNG_MIME_TYPE = 'image/png';
 /**
  * MIME type for WebP images.
  */
-export const WEBP_MIME_TYPE: MimeTypeWithoutParameters = 'image/webp';
+export const WEBP_MIME_TYPE = 'image/webp';
 /**
  * MIME type for GIF images.
  */
-export const GIF_MIME_TYPE: MimeTypeWithoutParameters = 'image/gif';
+export const GIF_MIME_TYPE = 'image/gif';
 /**
  * MIME type for HEIF images.
  */
-export const HEIF_MIME_TYPE: MimeTypeWithoutParameters = 'image/heif';
+export const HEIF_MIME_TYPE = 'image/heif';
 /**
  * MIME type for TIFF images.
  */
-export const TIFF_MIME_TYPE: MimeTypeWithoutParameters = 'image/tiff';
+export const TIFF_MIME_TYPE = 'image/tiff';
 /**
  * MIME type for SVG images.
  */
-export const SVG_MIME_TYPE: MimeTypeWithoutParameters = 'image/svg+xml';
+export const SVG_MIME_TYPE = 'image/svg+xml';
 /**
  * MIME type for RAW images.
  */
-export const RAW_MIME_TYPE: MimeTypeWithoutParameters = 'image/raw';
+export const RAW_MIME_TYPE = 'image/raw';
 
 /**
  * Maps image file extensions to their corresponding MIME types.
@@ -146,43 +146,43 @@ export type DocumentFileExtension = 'pdf' | 'docx' | 'xlsx' | 'txt' | 'csv' | 'h
 /**
  * MIME type for PDF documents.
  */
-export const PDF_MIME_TYPE: MimeTypeWithoutParameters = 'application/pdf';
+export const PDF_MIME_TYPE = 'application/pdf';
 /**
  * MIME type for DOCX (Word) documents.
  */
-export const DOCX_MIME_TYPE: MimeTypeWithoutParameters = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+export const DOCX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 /**
  * MIME type for XLSX (Excel) spreadsheets.
  */
-export const XLSX_MIME_TYPE: MimeTypeWithoutParameters = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+export const XLSX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 /**
  * MIME type for plain text files.
  */
-export const TXT_MIME_TYPE: MimeTypeWithoutParameters = 'text/plain';
+export const TXT_MIME_TYPE = 'text/plain';
 /**
  * MIME type for CSV files.
  */
-export const CSV_MIME_TYPE: MimeTypeWithoutParameters = 'text/csv';
+export const CSV_MIME_TYPE = 'text/csv';
 /**
  * MIME type for HTML files.
  */
-export const HTML_MIME_TYPE: MimeTypeWithoutParameters = 'text/html';
+export const HTML_MIME_TYPE = 'text/html';
 /**
  * MIME type for XML files.
  */
-export const XML_MIME_TYPE: MimeTypeWithoutParameters = 'application/xml';
+export const XML_MIME_TYPE = 'application/xml';
 /**
  * MIME type for JSON files.
  */
-export const JSON_MIME_TYPE: MimeTypeWithoutParameters = 'application/json';
+export const JSON_MIME_TYPE = 'application/json';
 /**
  * MIME type for YAML files.
  */
-export const YAML_MIME_TYPE: MimeTypeWithoutParameters = 'application/yaml';
+export const YAML_MIME_TYPE = 'application/yaml';
 /**
  * MIME type for Markdown files.
  */
-export const MARKDOWN_MIME_TYPE: MimeTypeWithoutParameters = 'text/markdown';
+export const MARKDOWN_MIME_TYPE = 'text/markdown';
 
 /**
  * Maps document file extensions to their corresponding MIME types.
@@ -236,7 +236,7 @@ export type ApplicationFileExtension = 'zip';
 /**
  * MIME type for ZIP archive files.
  */
-export const ZIP_FILE_MIME_TYPE: MimeTypeWithoutParameters = 'application/zip';
+export const ZIP_FILE_MIME_TYPE = 'application/zip';
 
 /**
  * Maps application file extensions to their corresponding MIME types.
