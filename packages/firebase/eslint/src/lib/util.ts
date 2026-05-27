@@ -1,9 +1,87 @@
+import { createRequire } from 'node:module';
+import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import type { Maybe } from '@dereekb/util';
 
 /**
  * Module that publishes the `@dereekb/firebase` Firestore constraint factories (`where`, `orderBy`, etc.).
  */
 export const FIREBASE_MODULE = '@dereekb/firebase';
+
+/**
+ * Subpath, relative to the `@dereekb/firebase` package root, where the framework Firestore model
+ * declarations live (`firestoreModelIdentity(...)` calls in source, identity type-annotations in the
+ * shipped `.d.ts`).
+ */
+const FIREBASE_MODEL_SUBPATH: string = join('src', 'lib', 'model');
+
+const installedFirebaseModelDirCache: Map<string, Maybe<string>> = new Map();
+
+/**
+ * Resolves the absolute path to the installed `@dereekb/firebase` package's `src/lib/model`
+ * directory, as seen from the ESLint `cwd`. Used by rules that need to read the framework model
+ * declarations (identities, service factories) directly from the package a consumer has installed —
+ * the downstream case where these live under `node_modules/@dereekb/firebase/...` as compiled
+ * bundles plus `.d.ts` rather than a scannable source tree.
+ *
+ * Resolution uses Node's own module resolver (`require.resolve('@dereekb/firebase/package.json')`
+ * anchored at `cwd`), so it transparently handles hoisting / nested `node_modules`. Returns null
+ * when `@dereekb/firebase` is not resolvable as a dependency from `cwd` (e.g. inside the
+ * dbx-components monorepo itself, where it is consumed via TS path mapping rather than
+ * `node_modules`) — callers fall back to their cwd-relative source globs in that case.
+ *
+ * @param cwd - The ESLint working directory to resolve the dependency from.
+ * @returns The absolute model directory, or null when it cannot be resolved.
+ */
+export function resolveInstalledFirebaseModelDir(cwd: string): Maybe<string> {
+  let result: Maybe<string>;
+  if (installedFirebaseModelDirCache.has(cwd)) {
+    result = installedFirebaseModelDirCache.get(cwd) ?? null;
+  } else {
+    result = null;
+    try {
+      const requireFromCwd = createRequire(join(cwd, '__dbx_firebase_model_resolver__.js'));
+      const packageJsonPath: string = requireFromCwd.resolve(`${FIREBASE_MODULE}/package.json`, { paths: [cwd] });
+      const candidate: string = join(dirname(packageJsonPath), FIREBASE_MODEL_SUBPATH);
+      if (existsSync(candidate)) {
+        result = candidate;
+      }
+    } catch {
+      result = null;
+    }
+    installedFirebaseModelDirCache.set(cwd, result);
+  }
+  return result;
+}
+
+/**
+ * Resolves the referenced type name from either a `TSTypeReference` (`Foo<…>` / `ns.Foo<…>`) or a
+ * `TSImportType` (`import("…").Foo<…>` — the form the TypeScript compiler emits in declaration
+ * files for cross-module type references). Returns the rightmost identifier name in a qualified
+ * name.
+ *
+ * @param node - A `TSTypeReference` or `TSImportType` node (or anything else).
+ * @returns The referenced type name, or null when the node is neither shape.
+ */
+export function referencedTypeName(node: AstNode): Maybe<string> {
+  let result: Maybe<string> = null;
+  if (node?.type === 'TSTypeReference') {
+    result = qualifiedNameTail(node.typeName);
+  } else if (node?.type === 'TSImportType') {
+    result = qualifiedNameTail(node.qualifier);
+  }
+  return result;
+}
+
+function qualifiedNameTail(node: AstNode): Maybe<string> {
+  let result: Maybe<string> = null;
+  if (node?.type === 'Identifier') {
+    result = node.name;
+  } else if (node?.type === 'TSQualifiedName' && node.right?.type === 'Identifier') {
+    result = node.right.name;
+  }
+  return result;
+}
 
 /**
  * JSDoc tag name that marks an exported query factory whose body should be scanned by
