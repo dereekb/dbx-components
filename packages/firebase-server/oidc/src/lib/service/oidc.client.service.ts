@@ -1,4 +1,4 @@
-import { type CreateOidcClientParams, type CreateOidcClientResult, type UpdateOidcClientParams, type RotateOidcClientSecretResult, type OidcEntryClientId, oidcEntryIdentity, firestoreModelKey } from '@dereekb/firebase';
+import { type CreateOidcClientParams, type CreateOidcClientResult, type UpdateOidcClientParams, type RotateOidcClientSecretResult, type OidcEntryClientId, oidcEntryIdentity, firestoreModelKey, PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD } from '@dereekb/firebase';
 import type { ClientMetadata } from 'oidc-provider';
 import { nanoid } from 'nanoid';
 import { randomBytes } from 'node:crypto';
@@ -17,14 +17,19 @@ export class OidcClientService {
   /**
    * Creates a new OIDC client through the oidc-provider.
    *
-   * Generates `client_id` and `client_secret` using the same defaults as oidc-provider's
-   * registration flow, validates via `Client.validate`, and persists through the adapter.
+   * Generates `client_id` (and, when the auth method requires one, a `client_secret`) using the
+   * same defaults as oidc-provider's registration flow, validates via `Client.validate`, and
+   * persists through the adapter.
+   *
+   * A secret is only generated when `ProviderClient.needsSecret()` returns `true`. The secret-less
+   * methods `private_key_jwt` and `'none'` (public PKCE client) therefore persist no secret and the
+   * returned `client_secret` is `undefined`.
    *
    * @param params - Client registration parameters.
    * @param validatedMetadata - Optional pre-validated metadata to merge into the client properties.
    *   Use this for server-side fields (e.g., inline `jwks`) that have already been validated
    *   and should not be exposed through the API params.
-   * @returns The generated client ID and secret (plaintext, returned only once).
+   * @returns The generated client ID and, for secret-based methods, the secret (plaintext, returned only once).
    */
   async createClient(params: CreateOidcClientParams, validatedMetadata?: Partial<Pick<ClientMetadata, 'jwks'>>): Promise<CreateOidcClientResult> {
     const provider = await this.oidcService.getProvider();
@@ -142,9 +147,12 @@ export class OidcClientService {
    * Generates a new `client_secret`, re-validates via `Client.validate()`, and persists.
    * The new secret is returned in plaintext — this is the only time it is available.
    *
+   * Rejects public PKCE clients (`token_endpoint_auth_method === 'none'`): they have no secret,
+   * so there is nothing to rotate.
+   *
    * @param clientId - The client's document/adapter entry ID.
    * @returns The client ID and new secret (plaintext, returned only once).
-   * @throws {Error} When the client is not found.
+   * @throws {Error} When the client is not found, or is a public PKCE (`none`) client.
    */
   async rotateClientSecret(clientId: OidcEntryClientId): Promise<RotateOidcClientSecretResult> {
     const provider = await this.oidcService.getProvider();
@@ -153,6 +161,10 @@ export class OidcClientService {
 
     if (!existing) {
       throw new Error('Client not found.');
+    }
+
+    if (existing.token_endpoint_auth_method === PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD) {
+      throw new Error('Cannot rotate a client secret for a public PKCE client (token_endpoint_auth_method "none"). Public clients have no secret.');
     }
 
     const newSecret = randomBytes(64).toString('base64url');

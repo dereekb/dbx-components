@@ -50,10 +50,28 @@ export type OidcRedirectUri = string;
 
 /**
  * Supported values for `token_endpoint_auth_method` when creating an OIDC client.
+ *
+ * The four `client_secret_*` / `private_key_jwt` methods are for confidential clients.
+ *
+ * `'none'` designates a public client: it holds no secret and authenticates the
+ * `authorization_code` flow with PKCE alone. This is the canonical pattern for clients
+ * that cannot keep a secret (native apps, SPAs, CLIs) and is what the MCP / Claude
+ * connector ecosystem (claude.ai connector, Claude Code CLI, mcp-inspector via DCR)
+ * expects. oidc-provider enforces PKCE on the `authorization_code` flow for every
+ * client regardless of auth method, so all clients get PKCE; `'none'` simply unlocks
+ * the secret-less variant.
  */
-export type OidcTokenEndpointAuthMethod = 'client_secret_basic' | 'client_secret_post' | 'client_secret_jwt' | 'private_key_jwt';
+export type OidcTokenEndpointAuthMethod = 'client_secret_basic' | 'client_secret_post' | 'client_secret_jwt' | 'private_key_jwt' | 'none';
 
 export const PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD: OidcTokenEndpointAuthMethod = 'private_key_jwt';
+
+/**
+ * The public-client auth method (`'none'`): no client secret, PKCE-only.
+ *
+ * Mirrors {@link PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD}. Use this when provisioning
+ * public OAuth clients that cannot keep a secret.
+ */
+export const PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD: OidcTokenEndpointAuthMethod = 'none';
 
 /**
  * All available token endpoint auth method options with display labels.
@@ -62,7 +80,8 @@ export const ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS: LabeledValue<OidcToken
   { label: 'Client Secret Basic', value: 'client_secret_basic' },
   { label: 'Client Secret Post', value: 'client_secret_post' },
   { label: 'Client Secret JWT', value: 'client_secret_jwt' },
-  { label: 'Private Key JWT', value: PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD }
+  { label: 'Private Key JWT', value: PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD },
+  { label: 'None (Public PKCE)', value: PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD }
 ];
 
 /**

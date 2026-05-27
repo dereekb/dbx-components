@@ -39,7 +39,7 @@ export const updateOidcClientFieldParamsType = /* @__PURE__ */ type({
 
 export const createOidcClientFieldParamsType = updateOidcClientFieldParamsType.merge(
   type({
-    token_endpoint_auth_method: "'client_secret_basic' | 'client_secret_post' | 'client_secret_jwt' | 'private_key_jwt'"
+    token_endpoint_auth_method: "'client_secret_basic' | 'client_secret_post' | 'client_secret_jwt' | 'private_key_jwt' | 'none'"
   })
 );
 
@@ -77,7 +77,9 @@ export interface CreateOidcClientResult extends OnCallCreateModelResult {
   readonly client_id: OidcEntryClientId;
   /**
    * The generated client secret in plaintext. Only returned for auth methods that require a secret
-   * (e.g., `client_secret_basic`, `client_secret_post`). Undefined for `private_key_jwt`.
+   * (e.g., `client_secret_basic`, `client_secret_post`, `client_secret_jwt`). Undefined for the
+   * secret-less methods `private_key_jwt` and `none` (public PKCE client) — those clients never
+   * have a secret to return.
    */
   readonly client_secret?: string;
 }
