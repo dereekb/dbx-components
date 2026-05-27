@@ -1,3 +1,25 @@
+## [13.12.2](https://github.com/dereekb/dbx-components/compare/v13.12.1-dev...v13.12.2) (2026-05-27)
+
+
+### Bug Fixes
+
+- **firebase-eslint:** layout-agnostic service-factory discovery ([8c8989fb](https://github.com/dereekb/dbx-components/commit/8c8989fbf84e76686648c1b4932ff86c9571c6d9))
+- **firebase-eslint:** resolve framework identities downstream ([fb8be541](https://github.com/dereekb/dbx-components/commit/fb8be541f6ee8f244c7fa141dcd89735cfb11fd2))
+- **util-eslint:** ignore @-lines in fenced @example blocks ([585e8f4c](https://github.com/dereekb/dbx-components/commit/585e8f4c570beee2133ec7b88aeca2b70c86acef))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([3732ad63](https://github.com/dereekb/dbx-components/commit/3732ad63535d48769095c9dec430e53423418dbb))
+- regenerate dbx-cli mcp utils json for path rename ([f8a8802b](https://github.com/dereekb/dbx-components/commit/f8a8802bc94cb8eb55d2ba9e704506cf8c948357))
+
+
+### Code Refactoring
+
+- added arktype string/number validation constants ([5e91e47b](https://github.com/dereekb/dbx-components/commit/5e91e47bc8ef6ecaae87f3a2732175c42fdeae3d))
+- **firebase-server-mcp:** add global MCP analytics service ([67d892ce](https://github.com/dereekb/dbx-components/commit/67d892cef82c498126713c8abd27a22dca81f393))
+- fixed require-storagefile-policy-matches-rules ([072702bd](https://github.com/dereekb/dbx-components/commit/072702bdbefbfa9732777f4da7f5238dfe4dc2af))
+
 ## [13.12.1](https://github.com/dereekb/dbx-components/compare/v13.12.0-dev...v13.12.1) (2026-05-27)
 
 
