@@ -1,3 +1,13 @@
+## [13.12.3](https://github.com/dereekb/dbx-components/compare/v13.12.2-dev...v13.12.3) (2026-05-27)
+
+
+### Code Refactoring
+
+- **mcp:** expand model-info tool modes ([35fdd957](https://github.com/dereekb/dbx-components/commit/35fdd957a2f42ef7ced3118182a5b79f64a6ae87))
+- **model:** tag arktype validators for mcp util lookup ([ed924350](https://github.com/dereekb/dbx-components/commit/ed924350de6e0281108b3651383632e53a6456fc))
+- oidc env variable fixes ([a2128fe2](https://github.com/dereekb/dbx-components/commit/a2128fe223f638c686b5521408ed98ce5f0c0b2a))
+- update-peer-deps ([8c1c60e7](https://github.com/dereekb/dbx-components/commit/8c1c60e734bb2b2c99372f4c08674e588ea6ebb4))
+
 ## [13.12.2](https://github.com/dereekb/dbx-components/compare/v13.12.1-dev...v13.12.2) (2026-05-27)
 
 
