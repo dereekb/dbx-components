@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/util",
-  "version": "13.12.2",
+  "version": "13.12.3",
   "sideEffects": false,
   "exports": {
     "./test": {
@@ -29,6 +29,8 @@
     "ts-essentials": "^10.2.0"
   },
   "devDependencies": {
-    "date-fns": "4.1.0"
+    "@typescript-eslint/parser": "8.59.3",
+    "date-fns": "4.1.0",
+    "eslint": "10.4.0"
   }
 }

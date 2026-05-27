@@ -20,11 +20,11 @@ export abstract class FirebaseServerEnvService {
    */
   abstract readonly isTestingEnv: boolean;
   /**
-   * Whether the server is running in production.
+   * Whether the server is running in production mode. (This may be true in both prod or a staging running as production).
    */
   abstract readonly isProduction: boolean;
   /**
-   * Whether the server is running in a staging environment.
+   * Whether the server is running in a staging environment. isProduction is also typically true when this is true.
    */
   abstract readonly isStaging: boolean;
   /**

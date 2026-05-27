@@ -410,18 +410,25 @@ describe('McpServerFactoryService model catalog tools', () => {
     }
   });
 
-  it('answers tools/call for model-info in list mode', async () => {
+  it('answers tools/call for model-info in groups mode by default, and list mode for all:true', async () => {
     const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
     const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
     const server = factory.createServer({ rawRequest: {} as any, auth: firebaseAuth() });
     const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
     const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
 
-    const result = (await callHandler({ method: 'tools/call', params: { name: 'model-info', arguments: {} } }, {} as any)) as { isError?: boolean; structuredContent?: { mode?: string; models?: ReadonlyArray<{ modelType: string }> } };
+    const groups = (await callHandler({ method: 'tools/call', params: { name: 'model-info', arguments: {} } }, {} as any)) as { isError?: boolean; structuredContent?: { mode?: string; groups?: ReadonlyArray<{ modelGroup: string; modelCount: number }>; totalModels?: number } };
 
-    expect(result.isError).toBeUndefined();
-    expect(result.structuredContent?.mode).toBe('list');
-    expect(result.structuredContent?.models?.map((m) => m.modelType)).toEqual(['guestbook']);
+    expect(groups.isError).toBeUndefined();
+    expect(groups.structuredContent?.mode).toBe('groups');
+    expect(groups.structuredContent?.groups).toEqual([{ modelGroup: 'Guestbook', modelCount: 1 }]);
+    expect(groups.structuredContent?.totalModels).toBe(1);
+
+    const list = (await callHandler({ method: 'tools/call', params: { name: 'model-info', arguments: { all: true } } }, {} as any)) as { isError?: boolean; structuredContent?: { mode?: string; models?: ReadonlyArray<{ modelType: string }> } };
+
+    expect(list.isError).toBeUndefined();
+    expect(list.structuredContent?.mode).toBe('list');
+    expect(list.structuredContent?.models?.map((m) => m.modelType)).toEqual(['guestbook']);
   });
 
   it('answers tools/call for model-decode against a registered prefix', async () => {
