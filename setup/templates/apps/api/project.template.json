@@ -104,7 +104,9 @@
     "build-package-json": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node ./make-api-package.js > API_APP_FOLDER/package.json"
+        "cache": false,
+        "inputs": ["{workspaceRoot}/package.json"],
+        "command": "node ./make-api-package.js"
       }
     },
     "make-env-staging": {
