@@ -3,14 +3,20 @@ import { resolve } from 'node:path';
 import { parse as parseTypescriptSource } from '@typescript-eslint/parser';
 import { leadingJsdocFor, parseJsdocComment } from '@dereekb/util/eslint';
 import type { Maybe } from '@dereekb/util';
-import type { AstNode } from './util';
+import { type AstNode, discoveryGlobExcludeFilter } from './util';
 
 /**
- * Default glob patterns (relative to ESLint `cwd`) used to locate model + factory source files.
- * Mirrors {@link require-firestore-rule-for-service-model}'s search roots so the orphan rule
- * picks up factories declared anywhere a model interface might also live.
+ * Default glob pattern (relative to ESLint `cwd`) used to locate `@dbxModelServiceFactory` source
+ * files. A single layout-agnostic `**\/*.ts` scan finds a consumer's own factory declarations no
+ * matter where they live, rather than assuming the dbx-components monorepo layout
+ * (`components/*\/src/lib/model`, `apps/*\/src/app`) — which a downstream consumer of
+ * `@dereekb/firebase` does not share. The walk prunes `node_modules`/build dirs
+ * (see {@link discoveryGlobExcludeFilter}) and the cheap `text.includes('@'+factoryTag)` pre-filter
+ * in {@link collectFactoryModelTypesFromFile} keeps it from parsing files that carry no tag, so the
+ * broad glob stays fast even in a large consumer repo. In-repo this is a superset of the former
+ * monorepo-specific roots, so the demo app's framework + local factories still resolve.
  */
-export const DEFAULT_FACTORY_SEARCH_ROOTS: readonly string[] = ['packages/firebase/src/lib/model/**/*.ts', 'components/*/src/lib/model/**/*.ts', 'apps/*/src/app/**/*.ts'];
+export const DEFAULT_FACTORY_SEARCH_ROOTS: readonly string[] = ['**/*.ts'];
 
 /**
  * Default name of the `@dbxModel` marker tag that triggers the orphan check.
@@ -23,6 +29,13 @@ export const DEFAULT_MODEL_MARKER_TAG: string = 'dbxModel';
 export const DEFAULT_FACTORY_TAG: string = 'dbxModelServiceFactory';
 
 const MODEL_TYPE_VALUE_PATTERN = /^[a-z][A-Za-z0-9_$]*$/;
+
+/**
+ * Cache of discovered factory model-type sets keyed by `cwd + factoryTag + searchRoots`. ESLint
+ * calls `create()` once per linted file; without this the broad `**\/*.ts` scan would re-run for
+ * every file. The set is stable for the lifetime of a lint process.
+ */
+const factoryModelTypeSetCache: Map<string, ReadonlySet<string>> = new Map();
 
 /**
  * Options for the require-service-factory-for-dbx-model rule.
@@ -121,12 +134,17 @@ export const FIREBASE_REQUIRE_SERVICE_FACTORY_FOR_DBX_MODEL_RULE: FirebaseRequir
     function loadFactorySet(): ReadonlySet<string> {
       if (options.virtualFactoryModelTypes) return new Set(options.virtualFactoryModelTypes);
       const roots = options.factorySearchRoots ?? DEFAULT_FACTORY_SEARCH_ROOTS;
+      const cacheKey = `${cwd}::${factoryTag}::${roots.join('|')}`;
+      const cached = factoryModelTypeSetCache.get(cacheKey);
+      if (cached) return cached;
       const out = new Set<string>();
+      const exclude = discoveryGlobExcludeFilter();
       for (const pattern of roots) {
-        for (const rel of globSync(pattern, { cwd })) {
+        for (const rel of safeGlobSync(pattern, cwd, exclude)) {
           collectFactoryModelTypesFromFile({ rel, cwd, factoryTag, out });
         }
       }
+      factoryModelTypeSetCache.set(cacheKey, out);
       return out;
     }
 
@@ -156,9 +174,20 @@ function lowercaseFirstLetter(name: string): string {
   return name.length === 0 ? name : name.charAt(0).toLowerCase() + name.slice(1);
 }
 
+function safeGlobSync(pattern: string, cwd: string, exclude: (path: string) => boolean): readonly string[] {
+  let result: readonly string[];
+  try {
+    result = globSync(pattern, { cwd, exclude });
+  } catch {
+    result = [];
+  }
+  return result;
+}
+
 function collectFactoryModelTypesFromFile(input: { rel: unknown; cwd: string; factoryTag: string; out: Set<string> }): void {
   const { rel, cwd, factoryTag, out } = input;
   if (typeof rel !== 'string') return;
+  if (rel.endsWith('.spec.ts') || rel.endsWith('.test.ts')) return;
   const abs = resolve(cwd, rel);
   let text: string;
   try {

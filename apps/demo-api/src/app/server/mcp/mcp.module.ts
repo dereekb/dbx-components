@@ -59,6 +59,7 @@ export function demoMcpModuleConfigFactory(envService: FirebaseServerEnvService,
     mcpUrl,
     serverName: 'demo-api-mcp',
     serverVersion,
+    serverInstructions: 'Demo API MCP tools for the dbx-components guestbook/profile sample models. Generated from the callModel _apiDetails tree.',
     mcpManifestPath: MCP_MANIFEST_PATH
   };
 }

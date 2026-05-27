@@ -1,6 +1,7 @@
 import type { Maybe } from '@dereekb/util';
 import { evaluatePredicate, type PredicateBranch, type HelperFunctionTable } from './predicate-evaluator';
 import { extractTopLevelBlocks, functionHeaderName, functionReturnExpression, indexToLineColumn, isCatchAllSegment, joinMatchPath, maskPathVariables, matchHeaderPath, stripLineComments, type RawBlock } from './firebase-rules-text';
+import type { FoldedPathSegment } from './storagefile-path-fold';
 
 /**
  * Marker comment that pairs a `storage.rules` match block with a TypeScript policy key
@@ -19,18 +20,39 @@ export const MIRRORS_POLICY_KEY_MARKER_REGEX = /\/\/\s*Mirrors\s+STORAGE_FILE_PU
 export type ParsedRuleBranch = PredicateBranch;
 
 /**
- * One `match /<path>` block in `storage.rules` paired with a `// Mirrors ...` marker.
- * `branches` carries the disjunction of (size, MIME) tuples extracted from the block's
- * `allow write` predicate; `unsupported` is set when the parser cannot reduce the
- * predicate to >=1 valid branch.
+ * One leaf `match /<path>` block in `storage.rules` that carries an `allow write|create|update`
+ * predicate. `branches` carries the disjunction of (size, MIME) tuples extracted from the
+ * predicate; `unsupported` is set when the parser cannot reduce the predicate to >=1 valid
+ * branch. `matchPath` is the full accumulated path stack used to pair the block with a folded
+ * upload-policy path. `mirrorsPolicyKey` is the legacy `// Mirrors ...` marker key when present
+ * — purely informational now that pairing is by path, retained for backward compatibility.
  */
 export interface ParsedStorageRulesBlock {
-  readonly mirrorsPolicyKey: string;
+  readonly mirrorsPolicyKey?: Maybe<string>;
   readonly matchPath: string;
   readonly branches: readonly ParsedRuleBranch[];
   readonly sourceLine: number;
   readonly sourceColumn: number;
   readonly unsupported?: string;
+}
+
+/**
+ * Converts a parsed leaf block's `matchPath` (e.g. `/uploads/u/{uid}/jr/{shortKey}`) into a
+ * structural segment list for comparison against a folded upload-policy path. Empty segments
+ * (leading/trailing/duplicate slashes) are dropped; `{var}` / `{var=**}` path variables become
+ * wildcards; every other segment is a literal.
+ *
+ * @param matchPath - The accumulated match-path string.
+ * @returns The structural segment list.
+ */
+export function rulesMatchPathToSegments(matchPath: string): FoldedPathSegment[] {
+  const segments: FoldedPathSegment[] = [];
+  for (const raw of matchPath.split('/')) {
+    if (raw.length > 0) {
+      segments.push(/^\{[^}]*\}$/.test(raw) ? { kind: 'wildcard', value: '' } : { kind: 'literal', value: raw });
+    }
+  }
+  return segments;
 }
 
 const ALLOW_WRITE_RE = /allow\s+(?:write|create|update)(?:\s*,\s*(?:write|create|update))*\s*:\s*if\s+([\s\S]+?);/g;
@@ -105,12 +127,12 @@ interface HandleMatchBlockInput {
   readonly ctx: WalkContext;
 }
 
-interface RecordMirroredBlockInput {
-  readonly block: RawBlock;
+interface RecordLeafBlockInput {
   readonly fullPath: string;
   readonly headerSourceOffset: number;
   readonly scopeFunctions: Map<string, string>;
-  readonly markerKey: string;
+  readonly markerKey: Maybe<string>;
+  readonly predicate: string;
   readonly ctx: WalkContext;
 }
 
@@ -162,9 +184,10 @@ function isTransparentBlockHeader(header: string): boolean {
 }
 
 /**
- * Processes a single `match /<segment> { ... }` block: descends into nested matches,
- * skips catch-all deny blocks, and (when a `Mirrors ...` marker precedes the block)
- * reduces the `allow write` predicate to `ParsedRuleBranch[]`.
+ * Processes a single `match /<segment> { ... }` block: skips catch-all deny blocks, records
+ * the block as a leaf when it carries an `allow write|create|update` predicate (reducing the
+ * predicate to `ParsedRuleBranch[]`), and always descends into nested matches so deeper leaf
+ * blocks are collected too.
  *
  * @param input - The match-block inputs: block descriptor, unmasked path segment,
  *   enclosing body offset, parent path, scope functions, and walk context.
@@ -176,46 +199,62 @@ function handleMatchBlock(input: HandleMatchBlockInput): void {
   const markerKey: Maybe<string> = consumePrecedingMarker(ctx.pendingMarkers, headerSourceOffset);
 
   if (!isCatchAllSegment(matchSegment)) {
-    if (markerKey) {
-      recordMirroredBlock({ block, fullPath, headerSourceOffset, scopeFunctions, markerKey, ctx });
+    const predicate: Maybe<string> = extractAllowWritePredicate(topLevelBlockText(block.body));
+    if (predicate) {
+      recordLeafBlock({ fullPath, headerSourceOffset, scopeFunctions, markerKey, predicate, ctx });
     }
     walkBlock({ body: block.body, bodyOffset: bodyOffset + block.bodyStart, parentPath: fullPath, inheritedFunctions: scopeFunctions, ctx });
   }
 }
 
 /**
- * Reduces a match block paired with a `// Mirrors ...` marker and pushes a
- * `ParsedStorageRulesBlock` onto the results.
+ * Reduces a leaf match block's `allow write` predicate and pushes a `ParsedStorageRulesBlock`
+ * onto the results. Pairing with a TypeScript upload policy is by `matchPath`; any legacy
+ * `// Mirrors ...` marker key is recorded for backward compatibility only.
  *
- * @param input - The record inputs: block descriptor, accumulated unmasked path,
- *   header source offset, scope functions, marker key, and walk context.
+ * @param input - The record inputs: accumulated unmasked path, header source offset, scope
+ *   functions, optional marker key, the allow-write predicate text, and walk context.
  */
-function recordMirroredBlock(input: RecordMirroredBlockInput): void {
-  const { block, fullPath, headerSourceOffset, scopeFunctions, markerKey, ctx } = input;
-  const predicate: Maybe<string> = extractAllowWritePredicate(block.body);
+function recordLeafBlock(input: RecordLeafBlockInput): void {
+  const { fullPath, headerSourceOffset, scopeFunctions, markerKey, predicate, ctx } = input;
   const { line, column } = indexToLineColumn(ctx.source, headerSourceOffset);
-  if (predicate) {
-    const helpers: HelperFunctionTable = { definitions: scopeFunctions };
-    const reduced = evaluatePredicate(predicate, helpers);
-    const entry: ParsedStorageRulesBlock = {
-      mirrorsPolicyKey: markerKey,
-      matchPath: fullPath,
-      branches: reduced.branches,
-      sourceLine: line,
-      sourceColumn: column,
-      ...(reduced.unsupported ? { unsupported: reduced.unsupported } : {})
-    };
-    ctx.results.push(entry);
-  } else {
-    ctx.results.push({
-      mirrorsPolicyKey: markerKey,
-      matchPath: fullPath,
-      branches: [],
-      sourceLine: line,
-      sourceColumn: column,
-      unsupported: 'no allow write/create/update predicate found in match block'
-    });
+  const helpers: HelperFunctionTable = { definitions: scopeFunctions };
+  const reduced = evaluatePredicate(predicate, helpers);
+  const entry: ParsedStorageRulesBlock = {
+    mirrorsPolicyKey: markerKey,
+    matchPath: fullPath,
+    branches: reduced.branches,
+    sourceLine: line,
+    sourceColumn: column,
+    ...(reduced.unsupported ? { unsupported: reduced.unsupported } : {})
+  };
+  ctx.results.push(entry);
+}
+
+/**
+ * Blanks out everything nested inside braces, leaving only this block's own top-level text.
+ * Used so a block's `allow write` predicate is detected only when it belongs to the block
+ * itself — not when it appears inside a nested `match` / `function` block (whose predicates
+ * belong to those deeper leaf blocks instead).
+ *
+ * @param body - The (masked) block body.
+ * @returns The body with nested-brace content replaced by spaces (offsets preserved).
+ */
+function topLevelBlockText(body: string): string {
+  let depth: number = 0;
+  let result: string = '';
+  for (const char of body) {
+    if (char === '{') {
+      depth += 1;
+      result += ' ';
+    } else if (char === '}') {
+      depth -= 1;
+      result += ' ';
+    } else {
+      result += depth === 0 ? char : ' ';
+    }
   }
+  return result;
 }
 
 /**
@@ -236,12 +275,14 @@ function extractAllowWritePredicate(body: string): Maybe<string> {
 }
 
 /**
- * Parses a `storage.rules` source string and returns every match block paired with a
- * `// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[<KEY>]` marker. Catch-all deny blocks
- * are skipped; the rest of the tree is walked normally.
+ * Parses a `storage.rules` source string and returns every leaf `match` block that carries an
+ * `allow write|create|update` predicate, each with its full accumulated `matchPath`. Catch-all
+ * deny blocks are skipped; the rest of the tree is walked normally. Pairing with TypeScript
+ * upload policies is by path (see {@link rulesMatchPathToSegments}); the `// Mirrors ...` marker
+ * is no longer required.
  *
  * @param source - The raw rules source text.
- * @returns Parsed mirrored blocks in source order.
+ * @returns Parsed leaf blocks in source order.
  */
 export function parseStorageRules(source: string): ParsedStorageRulesBlock[] {
   const stripped: string = stripLineComments(source);

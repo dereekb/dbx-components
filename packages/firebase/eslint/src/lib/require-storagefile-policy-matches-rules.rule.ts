@@ -1,8 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
 import type { Maybe } from '@dereekb/util';
-import { type AstNode } from './util';
-import { parseStorageRules, type ParsedRuleBranch, type ParsedStorageRulesBlock } from './storage-rules-parser';
+import { type AstNode, type ImportRegistry, createImportRegistry, trackImportDeclaration } from './util';
+import { parseStorageRules, rulesMatchPathToSegments, type ParsedRuleBranch, type ParsedStorageRulesBlock } from './storage-rules-parser';
+import { type FoldScope, type FoldedUploadPath, describeFoldedPath, foldUploadPath, foldedPathMatchesRuleSegments, foldNumericExpression, foldStringArrayExpression, type FoldUploadPathResult } from './storagefile-path-fold';
+import { createImportedBindingResolver, type ParserServicesLike } from './storagefile-import-resolver';
 
 /**
  * Default type name the rule looks for on top-level declarators. Variables whose type
@@ -34,6 +36,12 @@ export interface FirebaseRequireStorageFilePolicyMatchesRulesRuleOptions {
    * {@link DEFAULT_STORAGE_FILE_UPLOAD_POLICY_TYPE_NAME}.
    */
   readonly policyTypeName?: string;
+  /**
+   * Policies whose `buildUploadPath` is legitimately dynamic (e.g. injects a runtime timestamp)
+   * and cannot be statically folded. Each entry matches a policy's `purpose` key or its
+   * declarator name; matching policies are skipped instead of reporting `unresolvablePolicyPath`.
+   */
+  readonly allowUnresolvablePolicies?: readonly string[];
 }
 
 /**
@@ -53,19 +61,18 @@ export interface FirebaseRequireStorageFilePolicyMatchesRulesRuleDefinition {
 interface RuleContext {
   readonly options: FirebaseRequireStorageFilePolicyMatchesRulesRuleOptions[];
   readonly cwd?: string;
+  readonly sourceCode?: { readonly parserServices?: Maybe<ParserServicesLike> };
+  readonly parserServices?: Maybe<ParserServicesLike>;
   readonly report: (descriptor: { node: AstNode; messageId: string; data?: Record<string, string> }) => void;
 }
 
 interface ResolvedPolicy {
   readonly policyKey: Maybe<string>;
+  readonly declaratorName: Maybe<string>;
   readonly policyDeclaratorNode: AstNode;
+  readonly buildUploadPathNode: Maybe<AstNode>;
   readonly maxFileSizeBytes: Maybe<number>;
   readonly allowedMimeTypes: Maybe<readonly string[]>;
-}
-
-interface ProgramConstants {
-  readonly numericConstants: ReadonlyMap<string, number>;
-  readonly stringArrayConstants: ReadonlyMap<string, readonly string[]>;
 }
 
 const rulesFileCache: Map<string, ParsedStorageRulesBlock[]> = new Map();
@@ -91,76 +98,6 @@ function loadParsedRulesFromPath(absolutePath: string): Maybe<ParsedStorageRules
     } catch {
       result = null;
     }
-  }
-  return result;
-}
-
-/**
- * Folds a numeric expression node to a number using literals, binary `*`/`+`/`-`/`/`,
- * unary `-`/`+`, parenthesized expressions, and identifier lookups in `constants`.
- *
- * @param node - The expression node.
- * @param constants - Numeric constants resolvable by identifier name.
- * @returns The folded number, or null when any operand is unresolvable.
- */
-function evaluateNumericNode(node: AstNode, constants: ReadonlyMap<string, number>): Maybe<number> {
-  let result: Maybe<number> = null;
-  if (node) {
-    if (node.type === 'Literal' && typeof node.value === 'number') {
-      result = node.value;
-    } else if (node.type === 'UnaryExpression' && (node.operator === '-' || node.operator === '+')) {
-      result = evaluateNumericUnary(node, constants);
-    } else if (node.type === 'BinaryExpression') {
-      result = evaluateNumericBinary(node, constants);
-    } else if (node.type === 'Identifier') {
-      const value: Maybe<number> = constants.get(node.name);
-      if (typeof value === 'number') {
-        result = value;
-      }
-    } else if (node.type === 'TSAsExpression' && node.expression) {
-      result = evaluateNumericNode(node.expression, constants);
-    }
-  }
-  return result;
-}
-
-function evaluateNumericUnary(node: AstNode, constants: ReadonlyMap<string, number>): Maybe<number> {
-  let result: Maybe<number> = null;
-  const arg: Maybe<number> = evaluateNumericNode(node.argument, constants);
-  if (typeof arg === 'number') {
-    result = node.operator === '-' ? -arg : arg;
-  }
-  return result;
-}
-
-function evaluateNumericBinary(node: AstNode, constants: ReadonlyMap<string, number>): Maybe<number> {
-  let result: Maybe<number> = null;
-  const left: Maybe<number> = evaluateNumericNode(node.left, constants);
-  const right: Maybe<number> = evaluateNumericNode(node.right, constants);
-  if (typeof left === 'number' && typeof right === 'number') {
-    result = applyBinaryOperator(node.operator, left, right);
-  }
-  return result;
-}
-
-/**
- * Applies a binary operator to two folded operands, returning null for unsupported operators.
- *
- * @param operator - The binary operator (`+`, `-`, `*`, `/`).
- * @param left - Left operand.
- * @param right - Right operand.
- * @returns The result, or null when the operator is unsupported.
- */
-function applyBinaryOperator(operator: string, left: number, right: number): Maybe<number> {
-  let result: Maybe<number> = null;
-  if (operator === '*') {
-    result = left * right;
-  } else if (operator === '+') {
-    result = left + right;
-  } else if (operator === '-') {
-    result = left - right;
-  } else if (operator === '/' && right !== 0) {
-    result = left / right;
   }
   return result;
 }
@@ -193,80 +130,6 @@ function extractPolicyKey(node: AstNode): Maybe<string> {
     }
   }
   return result;
-}
-
-/**
- * Folds a string-array expression node to a list of strings using array literals of string
- * literals and identifier lookups in `constants`.
- *
- * @param node - The expression node.
- * @param constants - String-array constants resolvable by identifier name.
- * @returns The resolved string array, or null when any element is unresolvable.
- */
-function evaluateStringArrayNode(node: AstNode, constants: ReadonlyMap<string, readonly string[]>): Maybe<readonly string[]> {
-  let result: Maybe<readonly string[]> = null;
-  if (node) {
-    if (node.type === 'ArrayExpression') {
-      result = evaluateStringArrayLiteral(node);
-    } else if (node.type === 'Identifier') {
-      const value: Maybe<readonly string[]> = constants.get(node.name);
-      if (value) {
-        result = value;
-      }
-    } else if (node.type === 'TSAsExpression' && node.expression) {
-      result = evaluateStringArrayNode(node.expression, constants);
-    }
-  }
-  return result;
-}
-
-function evaluateStringArrayLiteral(node: AstNode): Maybe<readonly string[]> {
-  let result: Maybe<readonly string[]> = null;
-  const items: string[] = [];
-  let allLiterals: boolean = true;
-  for (const element of node.elements ?? []) {
-    if (element?.type === 'Literal' && typeof element.value === 'string') {
-      items.push(element.value);
-    } else {
-      allLiterals = false;
-      break;
-    }
-  }
-  if (allLiterals) {
-    result = items;
-  }
-  return result;
-}
-
-/**
- * Walks the Program body to index every top-level numeric / string / string-array `const` so
- * later folding can resolve identifier references inside policy literals.
- *
- * @param programNode - The Program AST node.
- * @returns The constants index for the file.
- */
-function indexProgramConstants(programNode: AstNode): ProgramConstants {
-  const numericConstants: Map<string, number> = new Map();
-  const stringArrayConstants: Map<string, readonly string[]> = new Map();
-
-  const declarators: AstNode[] = collectTopLevelDeclarators(programNode);
-
-  for (const declarator of declarators) {
-    if (declarator.id?.type === 'Identifier' && declarator.init) {
-      const name: string = declarator.id.name;
-      const init: AstNode = declarator.init.type === 'TSAsExpression' ? declarator.init.expression : declarator.init;
-      const numeric: Maybe<number> = evaluateNumericNode(init, numericConstants);
-      if (typeof numeric === 'number') {
-        numericConstants.set(name, numeric);
-      }
-      const stringArray: Maybe<readonly string[]> = evaluateStringArrayNode(init, stringArrayConstants);
-      if (stringArray) {
-        stringArrayConstants.set(name, stringArray);
-      }
-    }
-  }
-
-  return { numericConstants, stringArrayConstants };
 }
 
 /**
@@ -336,19 +199,24 @@ function collectTypedPolicyDeclarators(programNode: AstNode, typeName: string): 
 }
 
 /**
- * Pulls `purpose`, `maxFileSizeBytes`, and `allowedMimeTypes` from a policy declarator's
- * object literal, folding numeric / string / string-array references via `constants`.
+ * Pulls `purpose`, `maxFileSizeBytes`, and `allowedMimeTypes` from a policy declarator's object
+ * literal. `maxFileSizeBytes` and `allowedMimeTypes` are folded with the same scope-based scalar
+ * folders the path evaluator uses, so an imported / annotated-widened const (e.g. a branded MIME
+ * constant from `@dereekb/util`) resolves to its literal value via the AST initializer rather than
+ * bailing on the checker's widened type.
  *
  * @param declarator - The policy declarator (e.g. `USER_AVATAR_UPLOAD_POLICY = {...}`).
- * @param constants - The Program constants index.
+ * @param scope - The fold scope (import registry + cross-module resolver) for the linted file.
  * @returns The resolved policy with folded values.
  */
-function buildResolvedPolicy(declarator: AstNode, constants: ProgramConstants): ResolvedPolicy {
+function buildResolvedPolicy(declarator: AstNode, scope: FoldScope): ResolvedPolicy {
   let init: Maybe<AstNode> = declarator.init;
   while (init?.type === 'TSAsExpression') {
     init = init.expression;
   }
+  const declaratorName: Maybe<string> = declarator.id?.type === 'Identifier' ? declarator.id.name : null;
   let policyKey: Maybe<string> = null;
+  let buildUploadPathNode: Maybe<AstNode> = null;
   let maxFileSizeBytes: Maybe<number> = null;
   let allowedMimeTypes: Maybe<readonly string[]> = null;
   if (init?.type === 'ObjectExpression') {
@@ -356,15 +224,17 @@ function buildResolvedPolicy(declarator: AstNode, constants: ProgramConstants): 
       if (property.type === 'Property' && property.key?.type === 'Identifier' && !property.computed) {
         if (property.key.name === 'purpose') {
           policyKey = extractPolicyKey(property.value);
+        } else if (property.key.name === 'buildUploadPath') {
+          buildUploadPathNode = property.value;
         } else if (property.key.name === 'maxFileSizeBytes') {
-          maxFileSizeBytes = evaluateNumericNode(property.value, constants.numericConstants);
+          maxFileSizeBytes = foldNumericExpression(property.value, scope);
         } else if (property.key.name === 'allowedMimeTypes') {
-          allowedMimeTypes = evaluateStringArrayNode(property.value, constants.stringArrayConstants);
+          allowedMimeTypes = foldStringArrayExpression(property.value, scope);
         }
       }
     }
   }
-  return { policyKey, policyDeclaratorNode: declarator, maxFileSizeBytes, allowedMimeTypes };
+  return { policyKey, declaratorName, policyDeclaratorNode: declarator, buildUploadPathNode, maxFileSizeBytes, allowedMimeTypes };
 }
 
 /**
@@ -428,17 +298,25 @@ function resolveStorageRulesPath(options: FirebaseRequireStorageFilePolicyMatche
 
 /**
  * ESLint rule that cross-checks every `StorageFilePurposeUploadPolicy`-typed declaration in
- * a `*-firebase` component against the workspace's `storage.rules`. Each policy must have a
- * paired `// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[<KEY>]` match block whose
- * `request.resource.size` cap and `request.resource.contentType` predicate are at least as
- * permissive as the TypeScript policy's `maxFileSizeBytes` and `allowedMimeTypes`.
+ * a `*-firebase` component against the workspace's `storage.rules`. The policy's
+ * `buildUploadPath` builder is statically folded to a concrete path template (an ordered list
+ * of literal / wildcard segments) and paired with the `storage.rules` `allow write` match
+ * block at the same path. On the paired block the `request.resource.size` cap and
+ * `request.resource.contentType` predicate must be at least as permissive as the policy's
+ * `maxFileSizeBytes` and `allowedMimeTypes`.
+ *
+ * Pairing is derived from the resolved path — not a marker comment — so the linker proves the
+ * policy's actual upload path lands in the rules block rather than trusting an unchecked
+ * assertion. When the builder cannot be folded (unknown const, unmodeled call, runtime value)
+ * the rule reports `unresolvablePolicyPath` and never guesses; genuinely dynamic builders opt
+ * out via `allowUnresolvablePolicies`.
  *
  * Reports on the TS side so drift surfaces in the normal lint pipeline; mismatches almost
  * always originate from editing one side and forgetting the other.
  *
  * @example
  * ```ts
- * // OK — storage.rules has `Mirrors ...[USER_AVATAR_PURPOSE]` block with matching constraints
+ * // OK — storage.rules has `match /uploads/u/{uid}/avatar.img` with matching constraints
  * export const USER_AVATAR_UPLOAD_POLICY: StorageFilePurposeUploadPolicy = {
  *   purpose: USER_AVATAR_PURPOSE,
  *   allowedMimeTypes: ['image/jpeg', 'image/png'],
@@ -457,13 +335,13 @@ export const FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE: FirebaseReq
       recommended: true
     },
     messages: {
-      maxFileSizeMismatch: "Upload policy '{{policy}}' has maxFileSizeBytes {{tsValue}} but storage.rules allows < {{rulesValue}} for MIME type '{{mime}}'. Update either side so the rules cap matches or exceeds the policy cap.",
-      mimeTypeNotAllowed: "Upload policy '{{policy}}' allows MIME type '{{mime}}' but no storage.rules branch under 'Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[{{policy}}]' accepts it.",
-      missingRuleBlock: "Upload policy '{{policy}}' has no matching '// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[{{policy}}]' block in storage.rules at {{path}}.",
-      orphanRuleBlock: "storage.rules block 'Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[{{policy}}]' (line {{line}}) has no matching StorageFilePurposeUploadPolicy declaration in this file.",
-      unsupportedRuleShape: "storage.rules block for '{{policy}}' (line {{line}}) could not be parsed: {{reason}}. Refactor the rule or extend the validator.",
+      maxFileSizeMismatch: "Upload policy '{{policy}}' has maxFileSizeBytes {{tsValue}} but storage.rules allows < {{rulesValue}} for MIME type '{{mime}}' at path '{{path}}'. Update either side so the rules cap matches or exceeds the policy cap.",
+      mimeTypeNotAllowed: "Upload policy '{{policy}}' allows MIME type '{{mime}}' but no storage.rules branch at path '{{path}}' accepts it.",
+      noMatchingRuleBlock: "Upload policy '{{policy}}' resolves to upload path '{{path}}' but storage.rules has no matching `allow write` match block. Add a match block for that path or fix the path builder.",
+      unsupportedRuleShape: "storage.rules block at path '{{path}}' (line {{line}}) could not be parsed: {{reason}}. Refactor the rule or extend the validator.",
       rulesFileMissing: 'Could not read storage.rules at {{path}}. Set the rule option `storageRulesPath` or place the file at the workspace root.',
-      unresolvedPolicyField: 'Upload policy{{policyLabel}} has unresolvable {{field}}; the rule cannot statically fold the value to compare against storage.rules.'
+      unresolvedPolicyField: 'Upload policy{{policyLabel}} has unresolvable {{field}}; the rule cannot statically fold the value to compare against storage.rules.',
+      unresolvablePolicyPath: "Upload policy '{{policy}}' has a buildUploadPath that cannot be statically folded to a concrete path: {{reason}}. Make the builder a composition of literals, consts, and @dereekb/util path combinators, or add the purpose/declarator name to the `allowUnresolvablePolicies` option."
     },
     schema: [
       {
@@ -472,7 +350,8 @@ export const FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE: FirebaseReq
         properties: {
           storageRulesPath: { type: 'string' as const },
           virtualStorageRules: { type: 'string' as const },
-          policyTypeName: { type: 'string' as const }
+          policyTypeName: { type: 'string' as const },
+          allowUnresolvablePolicies: { type: 'array' as const, items: { type: 'string' as const } }
         }
       }
     ]
@@ -481,6 +360,7 @@ export const FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE: FirebaseReq
     const options: FirebaseRequireStorageFilePolicyMatchesRulesRuleOptions = context.options[0] ?? {};
     const policyTypeName: string = options.policyTypeName ?? DEFAULT_STORAGE_FILE_UPLOAD_POLICY_TYPE_NAME;
     const cwd: string = context.cwd ?? process.cwd();
+    const allowUnresolvable: ReadonlySet<string> = new Set(options.allowUnresolvablePolicies ?? []);
 
     return {
       Program: (programNode: AstNode) => {
@@ -494,15 +374,36 @@ export const FIREBASE_REQUIRE_STORAGEFILE_POLICY_MATCHES_RULES_RULE: FirebaseReq
         }
 
         const parsedBlocks: readonly ParsedStorageRulesBlock[] = rulesResolution.blocks ?? [];
-        const constants: ProgramConstants = indexProgramConstants(programNode);
-        const resolvedPolicies: readonly ResolvedPolicy[] = typedDeclarators.map((declarator) => buildResolvedPolicy(declarator, constants));
+        const scope: FoldScope = buildFoldScope(programNode, context);
+        const resolvedPolicies: readonly ResolvedPolicy[] = typedDeclarators.map((declarator) => buildResolvedPolicy(declarator, scope));
 
-        compareResolvedPolicies({ resolvedPolicies, parsedBlocks, rulesPath: rulesResolution.absolutePath ?? DEFAULT_STORAGE_RULES_FILENAME, context });
-        reportOrphanRuleBlocks({ parsedBlocks, resolvedPolicies, programNode, context });
+        for (const policy of resolvedPolicies) {
+          evaluatePolicy({ policy, parsedBlocks, scope, allowUnresolvable, context });
+        }
       }
     };
   }
 };
+
+/**
+ * Builds the {@link FoldScope} for the linted file: the module's import registry plus a
+ * type-checker-backed cross-module resolver when parser services are available (a no-op
+ * resolver otherwise, so pure-AST folding still works).
+ *
+ * @param programNode - The Program AST node.
+ * @param context - The ESLint rule context.
+ * @returns The fold scope.
+ */
+function buildFoldScope(programNode: AstNode, context: RuleContext): FoldScope {
+  const importRegistry: ImportRegistry = createImportRegistry();
+  for (const statement of programNode.body ?? []) {
+    if (statement?.type === 'ImportDeclaration') {
+      trackImportDeclaration(importRegistry, statement);
+    }
+  }
+  const services: Maybe<ParserServicesLike> = context.sourceCode?.parserServices ?? context.parserServices ?? null;
+  return { program: programNode, importRegistry, resolver: createImportedBindingResolver(services) };
+}
 
 interface RulesResolution {
   readonly blocks?: readonly ParsedStorageRulesBlock[];
@@ -534,80 +435,118 @@ function loadParsedRules(options: FirebaseRequireStorageFilePolicyMatchesRulesRu
   return result;
 }
 
-interface CompareResolvedPoliciesInput {
-  readonly resolvedPolicies: readonly ResolvedPolicy[];
+interface EvaluatePolicyInput {
+  readonly policy: ResolvedPolicy;
   readonly parsedBlocks: readonly ParsedStorageRulesBlock[];
-  readonly rulesPath: string;
+  readonly scope: FoldScope;
+  readonly allowUnresolvable: ReadonlySet<string>;
   readonly context: RuleContext;
 }
 
 interface ComparePolicyToBlockInput {
-  readonly policyKey: string;
+  readonly policyLabel: string;
+  readonly pathDisplay: string;
   readonly policy: ResolvedPolicy;
   readonly block: ParsedStorageRulesBlock;
   readonly context: RuleContext;
 }
 
-interface ReportOrphanRuleBlocksInput {
-  readonly parsedBlocks: readonly ParsedStorageRulesBlock[];
-  readonly resolvedPolicies: readonly ResolvedPolicy[];
-  readonly programNode: AstNode;
-  readonly context: RuleContext;
+/**
+ * Returns the human-readable label for a policy in diagnostics: its `purpose` key, else its
+ * declarator name, else a placeholder.
+ *
+ * @param policy - The resolved policy.
+ * @returns The display label.
+ */
+function policyLabelOf(policy: ResolvedPolicy): string {
+  return policy.policyKey ?? policy.declaratorName ?? '(anonymous policy)';
 }
 
 /**
- * Reports each resolved policy that mismatches the parsed `storage.rules` blocks.
+ * Returns true when a policy is opted out of path folding via `allowUnresolvablePolicies`
+ * (matched by `purpose` key or declarator name).
  *
- * @param input - Bundle of resolved policies, parsed blocks, rules path, and ESLint context.
+ * @param policy - The resolved policy.
+ * @param allowUnresolvable - The opt-out set.
+ * @returns True when the policy is exempt from `unresolvablePolicyPath`.
  */
-function compareResolvedPolicies(input: CompareResolvedPoliciesInput): void {
-  const { resolvedPolicies, parsedBlocks, rulesPath, context } = input;
-  const blocksByKey: Map<string, ParsedStorageRulesBlock> = new Map();
-  for (const block of parsedBlocks) {
-    blocksByKey.set(block.mirrorsPolicyKey, block);
+function isPolicyOptedOut(policy: ResolvedPolicy, allowUnresolvable: ReadonlySet<string>): boolean {
+  return (typeof policy.policyKey === 'string' && allowUnresolvable.has(policy.policyKey)) || (typeof policy.declaratorName === 'string' && allowUnresolvable.has(policy.declaratorName));
+}
+
+/**
+ * Folds one policy's `buildUploadPath`, pairs it with the matching `storage.rules` leaf block
+ * by path, then cross-checks the block's size + MIME constraints. Reports the first failure on
+ * the policy declarator; an unfoldable builder reports `unresolvablePolicyPath` unless opted out.
+ *
+ * @param input - The policy, parsed blocks, fold scope, opt-out set, and ESLint context.
+ */
+function evaluatePolicy(input: EvaluatePolicyInput): void {
+  const { policy, parsedBlocks, scope, allowUnresolvable, context } = input;
+  const label: string = policyLabelOf(policy);
+
+  const fold: FoldUploadPathResult = policy.buildUploadPathNode ? foldUploadPath(policy.buildUploadPathNode, scope) : { ok: false, reason: 'policy has no buildUploadPath property' };
+  if (!fold.ok) {
+    if (!isPolicyOptedOut(policy, allowUnresolvable)) {
+      context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvablePolicyPath', data: { policy: label, reason: fold.reason } });
+    }
+    return;
   }
 
-  for (const policy of resolvedPolicies) {
-    if (typeof policy.policyKey !== 'string') {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policyLabel: '', field: 'purpose' } });
-      continue;
-    }
-    const policyKey: string = policy.policyKey;
-    const block: Maybe<ParsedStorageRulesBlock> = blocksByKey.get(policyKey);
-    if (!block) {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'missingRuleBlock', data: { policy: policyKey, path: rulesPath } });
-      continue;
-    }
-    if (block.unsupported) {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'unsupportedRuleShape', data: { policy: policyKey, line: String(block.sourceLine), reason: block.unsupported } });
-      continue;
-    }
-    if (typeof policy.maxFileSizeBytes !== 'number') {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policyLabel: ` '${policyKey}'`, field: 'maxFileSizeBytes' } });
-      continue;
-    }
-    if (!policy.allowedMimeTypes) {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policyLabel: ` '${policyKey}'`, field: 'allowedMimeTypes' } });
-      continue;
-    }
-    comparePolicyToBlock({ policyKey, policy, block, context });
+  const folded: FoldedUploadPath = fold.path;
+  const pathDisplay: string = describeFoldedPath(folded);
+  const block: Maybe<ParsedStorageRulesBlock> = findMatchingBlock(parsedBlocks, folded);
+  if (!block) {
+    context.report({ node: policy.policyDeclaratorNode, messageId: 'noMatchingRuleBlock', data: { policy: label, path: pathDisplay } });
+    return;
   }
+  if (block.unsupported) {
+    context.report({ node: policy.policyDeclaratorNode, messageId: 'unsupportedRuleShape', data: { path: pathDisplay, line: String(block.sourceLine), reason: block.unsupported } });
+    return;
+  }
+  if (typeof policy.maxFileSizeBytes !== 'number') {
+    context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policyLabel: ` '${label}'`, field: 'maxFileSizeBytes' } });
+    return;
+  }
+  if (!policy.allowedMimeTypes) {
+    context.report({ node: policy.policyDeclaratorNode, messageId: 'unresolvedPolicyField', data: { policyLabel: ` '${label}'`, field: 'allowedMimeTypes' } });
+    return;
+  }
+  comparePolicyToBlock({ policyLabel: label, pathDisplay, policy, block, context });
+}
+
+/**
+ * Finds the first parsed leaf block whose match path structurally matches the folded upload
+ * path (literal==literal, wildcard=={var}).
+ *
+ * @param parsedBlocks - The parsed leaf blocks.
+ * @param folded - The folded upload path.
+ * @returns The matching block, or null.
+ */
+function findMatchingBlock(parsedBlocks: readonly ParsedStorageRulesBlock[], folded: FoldedUploadPath): Maybe<ParsedStorageRulesBlock> {
+  let result: Maybe<ParsedStorageRulesBlock> = null;
+  for (const block of parsedBlocks) {
+    if (!result && foldedPathMatchesRuleSegments(folded, rulesMatchPathToSegments(block.matchPath))) {
+      result = block;
+    }
+  }
+  return result;
 }
 
 /**
  * Validates that each MIME the policy permits is accepted by at least one branch and that
  * the branch's size cap is ≥ the policy cap. Emits ESLint reports for any mismatch.
  *
- * @param input - Policy/block pair plus the ESLint context.
+ * @param input - Policy/block pair, the display path, and the ESLint context.
  */
 function comparePolicyToBlock(input: ComparePolicyToBlockInput): void {
-  const { policyKey, policy, block, context } = input;
+  const { policyLabel, pathDisplay, policy, block, context } = input;
   const tsCap: number = policy.maxFileSizeBytes as number;
   const mimes: readonly string[] = policy.allowedMimeTypes as readonly string[];
   for (const mime of mimes) {
     const accepting: ParsedRuleBranch[] = branchesAcceptingMimeType(block.branches, mime);
     if (accepting.length === 0) {
-      context.report({ node: policy.policyDeclaratorNode, messageId: 'mimeTypeNotAllowed', data: { policy: policyKey, mime } });
+      context.report({ node: policy.policyDeclaratorNode, messageId: 'mimeTypeNotAllowed', data: { policy: policyLabel, mime, path: pathDisplay } });
     } else {
       let largest: number = Number.NEGATIVE_INFINITY;
       for (const branch of accepting) {
@@ -616,30 +555,8 @@ function comparePolicyToBlock(input: ComparePolicyToBlockInput): void {
         }
       }
       if (tsCap > largest) {
-        context.report({ node: policy.policyDeclaratorNode, messageId: 'maxFileSizeMismatch', data: { policy: policyKey, tsValue: String(tsCap), rulesValue: String(largest), mime } });
+        context.report({ node: policy.policyDeclaratorNode, messageId: 'maxFileSizeMismatch', data: { policy: policyLabel, tsValue: String(tsCap), rulesValue: String(largest), mime, path: pathDisplay } });
       }
-    }
-  }
-}
-
-/**
- * Reports each parsed rules block whose `mirrorsPolicyKey` has no corresponding typed
- * declaration in this file — signals stale `Mirrors ...` markers left over after a policy
- * was removed.
- *
- * @param input - Parsed blocks, resolved policies, program node, and ESLint context.
- */
-function reportOrphanRuleBlocks(input: ReportOrphanRuleBlocksInput): void {
-  const { parsedBlocks, resolvedPolicies, programNode, context } = input;
-  const knownKeys: Set<string> = new Set();
-  for (const policy of resolvedPolicies) {
-    if (typeof policy.policyKey === 'string') {
-      knownKeys.add(policy.policyKey);
-    }
-  }
-  for (const block of parsedBlocks) {
-    if (!knownKeys.has(block.mirrorsPolicyKey)) {
-      context.report({ node: programNode, messageId: 'orphanRuleBlock', data: { policy: block.mirrorsPolicyKey, line: String(block.sourceLine) } });
     }
   }
 }

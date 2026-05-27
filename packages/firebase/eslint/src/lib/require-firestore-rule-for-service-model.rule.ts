@@ -2,7 +2,7 @@ import { readFileSync, globSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
 import { parse as parseTypescriptSource } from '@typescript-eslint/parser';
 import type { Maybe } from '@dereekb/util';
-import type { AstNode } from './util';
+import { type AstNode, referencedTypeName, resolveInstalledFirebaseModelDir, typeReferenceTypeArguments } from './util';
 import { parseFirestoreRules, type ParsedFirestoreMatchBlock } from './firestore-rules-parser';
 
 /**
@@ -38,6 +38,22 @@ export interface VirtualModelIdentity {
   readonly identityVariableName: string;
   readonly parentIdentityVariableName?: string;
 }
+
+/**
+ * Identity-type-reference names emitted into `@dereekb/firebase`'s shipped `.d.ts` for the two
+ * `firestoreModelIdentity(...)` return shapes. Downstream consumers only have these declaration
+ * files (no `firestoreModelIdentity(...)` call expressions), so the rule reads model name +
+ * collection name + parent chain from these type annotations — they carry every literal inline,
+ * e.g. `FirestoreModelIdentityWithParent<RootFirestoreModelIdentity<"notificationBox","nb">, "notification","nbn">`.
+ */
+const ROOT_IDENTITY_TYPE_NAME: string = 'RootFirestoreModelIdentity';
+const WITH_PARENT_IDENTITY_TYPE_NAME: string = 'FirestoreModelIdentityWithParent';
+
+/**
+ * Cheap substring used to skip files that cannot contain an identity type-annotation before paying
+ * for a full parse (`RootFirestoreModelIdentity` / `FirestoreModelIdentityWithParent` both contain it).
+ */
+const IDENTITY_TYPE_SOURCE_MARKER: string = 'FirestoreModelIdentity';
 
 /**
  * Options for the require-firestore-rule-for-service-model rule.
@@ -229,6 +245,124 @@ function isStringLiteralNode(node: AstNode): boolean {
 }
 
 /**
+ * Walks a parsed file's Program body for top-level `export declare const <name>: <IdentityType>`
+ * declarations and records each resolvable identity. This is the downstream path: a consumer only
+ * has `@dereekb/firebase`'s shipped `.d.ts`, which carries no `firestoreModelIdentity(...)` calls —
+ * only the identity *type annotation* on each exported const. The parent chain is embedded inline in
+ * the type arguments, so the parent's model name is captured here and linked to its declaring
+ * variable in a later pass ({@link resolveTypeAnnotationParents}).
+ *
+ * @param programNode - The Program AST node.
+ * @param state - The scan state whose accumulator + pending-parent map are populated.
+ */
+function collectIdentityTypeAnnotationsFromProgram(programNode: AstNode, state: IdentityScanState): void {
+  const declarators: AstNode[] = collectTopLevelDeclarators(programNode);
+  for (const declarator of declarators) {
+    const id: AstNode = declarator.id;
+    if (id?.type !== 'Identifier' || state.accumulator.has(id.name)) continue;
+    const typeNode: Maybe<AstNode> = id.typeAnnotation?.typeAnnotation;
+    if (!typeNode) continue;
+    const parsed: Maybe<{ readonly modelName: string; readonly collectionName: string; readonly parentModelName?: string }> = parseIdentityTypeAnnotation(typeNode);
+    if (parsed) {
+      state.accumulator.set(id.name, { modelName: parsed.modelName, collectionName: parsed.collectionName, identityVariableName: id.name });
+      if (parsed.parentModelName != null) {
+        state.pendingParentModelNameByVariable.set(id.name, parsed.parentModelName);
+      }
+    }
+  }
+}
+
+/**
+ * Reduces an identity type annotation (`RootFirestoreModelIdentity<M, C>` or
+ * `FirestoreModelIdentityWithParent<<ParentType>, M, C>`, whether written as a `TSTypeReference` or
+ * the `import("…").X<…>` `TSImportType` shape the compiler emits in `.d.ts`) to its model name,
+ * collection name, and — for the nested form — its parent's model name.
+ *
+ * @param typeNode - The type-annotation node.
+ * @returns The resolved identity, or null when the type is not a recognized identity shape.
+ */
+function parseIdentityTypeAnnotation(typeNode: AstNode): Maybe<{ readonly modelName: string; readonly collectionName: string; readonly parentModelName?: string }> {
+  let result: Maybe<{ modelName: string; collectionName: string; parentModelName?: string }> = null;
+  const name: Maybe<string> = referencedTypeName(typeNode);
+  const args: Maybe<AstNode[]> = typeReferenceTypeArguments(typeNode);
+  if (name === ROOT_IDENTITY_TYPE_NAME && args && args.length >= 2) {
+    const modelName: Maybe<string> = tsLiteralStringValue(args[0]);
+    const collectionName: Maybe<string> = tsLiteralStringValue(args[1]);
+    if (modelName != null && collectionName != null) {
+      result = { modelName, collectionName };
+    }
+  } else if (name === WITH_PARENT_IDENTITY_TYPE_NAME && args && args.length >= 3) {
+    const modelName: Maybe<string> = tsLiteralStringValue(args[1]);
+    const collectionName: Maybe<string> = tsLiteralStringValue(args[2]);
+    const parentModelName: Maybe<string> = identityTypeAnnotationModelName(args[0]);
+    if (modelName != null && collectionName != null) {
+      result = { modelName, collectionName, ...(parentModelName != null ? { parentModelName } : {}) };
+    }
+  }
+  return result;
+}
+
+/**
+ * Resolves just the model name from an identity type annotation node (root or with-parent shape),
+ * used to recover a parent identity's model name from its embedded type.
+ *
+ * @param typeNode - The type-annotation node.
+ * @returns The model name, or null when the type is not a recognized identity shape.
+ */
+function identityTypeAnnotationModelName(typeNode: AstNode): Maybe<string> {
+  let result: Maybe<string> = null;
+  const name: Maybe<string> = referencedTypeName(typeNode);
+  const args: Maybe<AstNode[]> = typeReferenceTypeArguments(typeNode);
+  if (name === ROOT_IDENTITY_TYPE_NAME && args && args.length >= 1) {
+    result = tsLiteralStringValue(args[0]);
+  } else if (name === WITH_PARENT_IDENTITY_TYPE_NAME && args && args.length >= 2) {
+    result = tsLiteralStringValue(args[1]);
+  }
+  return result;
+}
+
+/**
+ * Returns the string value of a `TSLiteralType` wrapping a string literal (e.g. the `"nu"` in
+ * `RootFirestoreModelIdentity<"notificationUser", "nu">`).
+ *
+ * @param node - The type-argument node.
+ * @returns The literal string, or null when the node is not a string-literal type.
+ */
+function tsLiteralStringValue(node: AstNode): Maybe<string> {
+  let result: Maybe<string> = null;
+  if (node?.type === 'TSLiteralType' && node.literal?.type === 'Literal' && typeof node.literal.value === 'string') {
+    result = node.literal.value;
+  }
+  return result;
+}
+
+/**
+ * Links each type-annotation-discovered child identity to its parent's declaring variable by
+ * matching the parent's model name (captured from the inline parent type) to an accumulated entry.
+ * Entries already carrying a parent reference (e.g. from a call-expression scan) are left untouched.
+ *
+ * @param state - The scan state; its accumulator is mutated in place using the pending-parent map.
+ */
+function resolveTypeAnnotationParents(state: IdentityScanState): void {
+  const { accumulator, pendingParentModelNameByVariable } = state;
+  if (pendingParentModelNameByVariable.size === 0) return;
+  const variableByModelName: Map<string, string> = new Map();
+  for (const entry of accumulator.values()) {
+    if (!variableByModelName.has(entry.modelName)) {
+      variableByModelName.set(entry.modelName, entry.identityVariableName);
+    }
+  }
+  for (const [variableName, parentModelName] of pendingParentModelNameByVariable) {
+    const entry: Maybe<IdentityEntry> = accumulator.get(variableName);
+    if (!entry || entry.parentIdentityVariableName) continue;
+    const parentVariableName: Maybe<string> = variableByModelName.get(parentModelName);
+    if (parentVariableName) {
+      accumulator.set(variableName, { ...entry, parentIdentityVariableName: parentVariableName });
+    }
+  }
+}
+
+/**
  * Collects every `VariableDeclarator` directly under the Program body, looking through
  * `ExportNamedDeclaration` wrappers.
  *
@@ -259,8 +393,29 @@ function unwrapVariableDeclaration(statement: AstNode): Maybe<AstNode> {
 }
 
 /**
- * Builds the workspace identity registry by globbing each search root and parsing each
- * matched `.ts` file. Results are cached by the joined absolute-glob-pattern key.
+ * Mutable accumulators threaded through the per-file scan. `accumulator` holds the resolved entries
+ * keyed by identity variable name; `pendingParentModelNameByVariable` records each type-annotation
+ * child's parent model name for linking once every file has been scanned.
+ */
+interface IdentityScanState {
+  readonly accumulator: Map<string, IdentityEntry>;
+  readonly pendingParentModelNameByVariable: Map<string, string>;
+}
+
+/**
+ * Builds the workspace identity registry from two complementary discovery passes that feed one
+ * accumulator.
+ *
+ * 1. The cwd-relative `searchRoots` globs — pick up `firestoreModelIdentity(...)` call expressions
+ *    in the in-repo source and in consumer-local `components/*` / `apps/*` model files.
+ * 2. The installed `@dereekb/firebase` package's `src/lib/model` directory (resolved from `cwd` via
+ *    {@link resolveInstalledFirebaseModelDir}) — picks up framework identities downstream, where the
+ *    package ships `.d.ts` declarations (identity type-annotations) rather than scannable call
+ *    expressions. No-op inside the monorepo, where pass 1 already covers the framework source.
+ *
+ * Each file is parsed once and run through both the call-expression and type-annotation extractors;
+ * the first writer per identity-variable name wins, so consumer-local declarations always take
+ * precedence over framework ones. Results are cached by cwd + factory + roots + framework dir.
  *
  * @param cwd - ESLint working directory.
  * @param searchRoots - Relative glob patterns.
@@ -268,25 +423,48 @@ function unwrapVariableDeclaration(statement: AstNode): Maybe<AstNode> {
  * @returns The registry indexed by identity variable name and model name.
  */
 function buildIdentityRegistry(cwd: string, searchRoots: readonly string[], identityFactoryName: string): IdentityRegistry {
-  const cacheKey: string = `${cwd}::${identityFactoryName}::${searchRoots.join('|')}`;
+  const frameworkModelDir: Maybe<string> = resolveInstalledFirebaseModelDir(cwd);
+  const cacheKey: string = `${cwd}::${identityFactoryName}::${searchRoots.join('|')}::${frameworkModelDir ?? ''}`;
   const cached: Maybe<IdentityRegistry> = identityRegistryCache.get(cacheKey);
   if (cached) {
     return cached;
   }
-  const accumulator: Map<string, IdentityEntry> = new Map();
+  const state: IdentityScanState = { accumulator: new Map(), pendingParentModelNameByVariable: new Map() };
   const seenFiles: Set<string> = new Set();
-  for (const pattern of searchRoots) {
-    const files = safeGlobSync(pattern, cwd);
-    for (const relativeFile of files) {
-      const absoluteFile: string = isAbsolute(relativeFile) ? relativeFile : resolve(cwd, relativeFile);
+  const scanFiles = (relativeFiles: readonly string[], baseDir: string): void => {
+    for (const relativeFile of relativeFiles) {
+      const absoluteFile: string = isAbsolute(relativeFile) ? relativeFile : resolve(baseDir, relativeFile);
       if (seenFiles.has(absoluteFile)) continue;
       seenFiles.add(absoluteFile);
-      scanIdentityFile(absoluteFile, identityFactoryName, accumulator);
+      scanIdentityFile(absoluteFile, identityFactoryName, state);
     }
+  };
+  for (const pattern of searchRoots) {
+    scanFiles(safeGlobSync(pattern, cwd), cwd);
   }
-  const registry: IdentityRegistry = finalizeIdentityRegistry(accumulator);
+  if (frameworkModelDir) {
+    scanFiles(safeGlobSync('**/*.ts', frameworkModelDir), frameworkModelDir);
+  }
+  resolveTypeAnnotationParents(state);
+  const registry: IdentityRegistry = finalizeIdentityRegistry(state.accumulator);
   identityRegistryCache.set(cacheKey, registry);
   return registry;
+}
+
+/**
+ * Converts a {@link VirtualModelIdentity} stub into a registry {@link IdentityEntry}, omitting
+ * the optional parent reference when absent.
+ *
+ * @param virtual - The identity stub.
+ * @returns The identity entry.
+ */
+function virtualModelIdentityToEntry(virtual: VirtualModelIdentity): IdentityEntry {
+  return {
+    modelName: virtual.modelName,
+    collectionName: virtual.collectionName,
+    identityVariableName: virtual.identityVariableName,
+    ...(virtual.parentIdentityVariableName ? { parentIdentityVariableName: virtual.parentIdentityVariableName } : {})
+  };
 }
 
 function safeGlobSync(pattern: string, cwd: string): readonly string[] {
@@ -299,12 +477,16 @@ function safeGlobSync(pattern: string, cwd: string): readonly string[] {
   return result;
 }
 
-function scanIdentityFile(absoluteFile: string, identityFactoryName: string, accumulator: Map<string, IdentityEntry>): void {
+function scanIdentityFile(absoluteFile: string, identityFactoryName: string, state: IdentityScanState): void {
+  if (absoluteFile.endsWith('.spec.ts') || absoluteFile.endsWith('.test.ts') || absoluteFile.endsWith('.id.ts')) {
+    return;
+  }
   try {
     const source: string = readFileSync(absoluteFile, 'utf8');
-    if (source.includes(identityFactoryName)) {
+    if (source.includes(identityFactoryName) || source.includes(IDENTITY_TYPE_SOURCE_MARKER)) {
       const programNode: AstNode = parseTypescriptSource(source, { ecmaVersion: 2022, sourceType: 'module', loc: false, range: false, jsx: false });
-      collectIdentityCallsFromProgram(programNode, identityFactoryName, accumulator);
+      collectIdentityCallsFromProgram(programNode, identityFactoryName, state.accumulator);
+      collectIdentityTypeAnnotationsFromProgram(programNode, state);
     }
   } catch {
     // Best-effort discovery — unparsable files are skipped silently so the rule does not
@@ -339,12 +521,7 @@ function finalizeIdentityRegistry(accumulator: ReadonlyMap<string, IdentityEntry
 function buildVirtualIdentityRegistry(virtualIdentities: readonly VirtualModelIdentity[]): IdentityRegistry {
   const accumulator: Map<string, IdentityEntry> = new Map();
   for (const virtual of virtualIdentities) {
-    accumulator.set(virtual.identityVariableName, {
-      modelName: virtual.modelName,
-      collectionName: virtual.collectionName,
-      identityVariableName: virtual.identityVariableName,
-      ...(virtual.parentIdentityVariableName ? { parentIdentityVariableName: virtual.parentIdentityVariableName } : {})
-    });
+    accumulator.set(virtual.identityVariableName, virtualModelIdentityToEntry(virtual));
   }
   return finalizeIdentityRegistry(accumulator);
 }

@@ -153,16 +153,56 @@ function buildParsedLines(commentValue: string): ParsedJsdocLine[] {
 }
 
 /**
+ * Computes, per line, whether it sits inside a fenced code block (a ```` ``` ```` block, typically
+ * an `@example` body) and therefore must not be treated as a tag boundary. Fence delimiter lines
+ * themselves are flagged too. Without this, `@`-prefixed lines inside a fence — decorators like
+ * `@Global()` / `@Module()`, or JSDoc snippets — would be mis-parsed as standalone JSDoc tags.
+ *
+ * @param lines - Parsed lines in source order.
+ * @returns Boolean mask where `true` marks a line that must not start a tag.
+ */
+function computeFenceMask(lines: readonly ParsedJsdocLine[]): boolean[] {
+  const mask: boolean[] = lines.map(() => false);
+  let fenceOpen = false;
+
+  for (const [i, line] of lines.entries()) {
+    const isDelimiter = line.text.trimStart().startsWith('```');
+
+    if (isDelimiter) {
+      mask[i] = true;
+      fenceOpen = !fenceOpen;
+    } else {
+      mask[i] = fenceOpen;
+    }
+  }
+
+  return mask;
+}
+
+/**
+ * Returns true when the line at `index` opens a JSDoc tag and is not masked out by a code fence.
+ *
+ * @param lines - Parsed lines in source order.
+ * @param fenceMask - Mask from {@link computeFenceMask} marking fenced lines.
+ * @param index - Line index to test.
+ * @returns True when the line begins a tag that should be treated as a tag boundary.
+ */
+function isTagStart(lines: readonly ParsedJsdocLine[], fenceMask: readonly boolean[], index: number): boolean {
+  return !fenceMask[index] && TAG_LINE_REGEX.test(lines[index].text);
+}
+
+/**
  * Returns the index of the first line that begins with a JSDoc `@tag`, or `-1` when none exists.
  *
  * @param lines - Parsed lines in source order.
+ * @param fenceMask - Mask from {@link computeFenceMask} marking fenced lines.
  * @returns Zero-based line index of the first tag, or `-1` when no tag is present.
  */
-function findFirstTagIndex(lines: readonly ParsedJsdocLine[]): number {
+function findFirstTagIndex(lines: readonly ParsedJsdocLine[], fenceMask: readonly boolean[]): number {
   let firstTagIndex = -1;
 
-  for (const [i, line] of lines.entries()) {
-    if (TAG_LINE_REGEX.test(line.text)) {
+  for (let i = 0; i < lines.length; i += 1) {
+    if (isTagStart(lines, fenceMask, i)) {
       firstTagIndex = i;
       break;
     }
@@ -258,15 +298,16 @@ function extractParamName(tagName: string, remainder: string): { readonly name: 
  * Collects the tag line at `startIndex` plus every following non-tag continuation line.
  *
  * @param lines - All parsed lines in the comment.
+ * @param fenceMask - Mask from {@link computeFenceMask} marking fenced lines.
  * @param startIndex - Index of the `@tag` opening line.
  * @returns The collected tag lines and the index of the next unconsumed line.
  */
-function collectTagLines(lines: readonly ParsedJsdocLine[], startIndex: number): { readonly tagLines: ParsedJsdocLine[]; readonly nextIndex: number } {
+function collectTagLines(lines: readonly ParsedJsdocLine[], fenceMask: readonly boolean[], startIndex: number): { readonly tagLines: ParsedJsdocLine[]; readonly nextIndex: number } {
   const tagLines: ParsedJsdocLine[] = [lines[startIndex]];
   let j = startIndex + 1;
 
   while (j < lines.length) {
-    if (TAG_LINE_REGEX.test(lines[j].text)) break;
+    if (isTagStart(lines, fenceMask, j)) break;
     tagLines.push(lines[j]);
     j += 1;
   }
@@ -301,16 +342,17 @@ function buildTagDescription(remainder: string, tagLines: readonly ParsedJsdocLi
  * Builds a single parsed-tag record starting at `startIndex` in the line array.
  *
  * @param lines - All parsed lines in the comment.
+ * @param fenceMask - Mask from {@link computeFenceMask} marking fenced lines.
  * @param startIndex - Index of the `@tag` opening line.
  * @returns The parsed tag and the next unconsumed line index.
  */
-function parseTagAt(lines: readonly ParsedJsdocLine[], startIndex: number): { readonly tag: ParsedJsdocTag; readonly nextIndex: number } {
+function parseTagAt(lines: readonly ParsedJsdocLine[], fenceMask: readonly boolean[], startIndex: number): { readonly tag: ParsedJsdocTag; readonly nextIndex: number } {
   const line = lines[startIndex];
   const match = TAG_LINE_REGEX.exec(line.text) as RegExpExecArray;
   const tagName = match[1];
   const { type, rest: afterType } = extractTypeAnnotation(match[2]);
   const { name, rest: afterName } = extractParamName(tagName, afterType);
-  const { tagLines, nextIndex } = collectTagLines(lines, startIndex);
+  const { tagLines, nextIndex } = collectTagLines(lines, fenceMask, startIndex);
   const description = buildTagDescription(afterName, tagLines);
 
   return {
@@ -331,20 +373,21 @@ function parseTagAt(lines: readonly ParsedJsdocLine[], startIndex: number): { re
  * Parses every `@tag` block starting from `firstTagIndex` to the end of the line array.
  *
  * @param lines - All parsed lines in the comment.
+ * @param fenceMask - Mask from {@link computeFenceMask} marking fenced lines.
  * @param firstTagIndex - Index where tag parsing should begin (`-1` skips entirely).
  * @returns All parsed tags in source order.
  */
-function parseTags(lines: readonly ParsedJsdocLine[], firstTagIndex: number): ParsedJsdocTag[] {
+function parseTags(lines: readonly ParsedJsdocLine[], fenceMask: readonly boolean[], firstTagIndex: number): ParsedJsdocTag[] {
   const tags: ParsedJsdocTag[] = [];
 
   if (firstTagIndex !== -1) {
     let i = firstTagIndex;
     while (i < lines.length) {
-      if (!TAG_LINE_REGEX.test(lines[i].text)) {
+      if (!isTagStart(lines, fenceMask, i)) {
         i += 1;
         continue;
       }
-      const { tag, nextIndex } = parseTagAt(lines, i);
+      const { tag, nextIndex } = parseTagAt(lines, fenceMask, i);
       tags.push(tag);
       i = nextIndex;
     }
@@ -371,12 +414,13 @@ function parseTags(lines: readonly ParsedJsdocLine[], firstTagIndex: number): Pa
 export function parseJsdocComment(commentValue: string): ParsedJsdoc {
   const singleLine = !commentValue.includes('\n');
   const lines = buildParsedLines(commentValue);
-  const firstTagIndex = findFirstTagIndex(lines);
+  const fenceMask = computeFenceMask(lines);
+  const firstTagIndex = findFirstTagIndex(lines, fenceMask);
   const descriptionLines = firstTagIndex === -1 ? lines.slice() : lines.slice(0, firstTagIndex);
   const trimmedDescription = trimBlankBoundaries(descriptionLines);
   const description = trimmedDescription.map((l) => l.text).join('\n');
   const descriptionParagraphs = buildDescriptionParagraphs(trimmedDescription);
-  const tags = parseTags(lines, firstTagIndex);
+  const tags = parseTags(lines, fenceMask, firstTagIndex);
 
   return {
     lines,
