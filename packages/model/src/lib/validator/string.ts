@@ -18,9 +18,11 @@ export const EMAIL_STRING = 'string.email' as const;
  * @returns The ArkType string definition.
  *
  * @example
+ * ```ts
  * const userType = type({
  *   displayName: nonEmptyStringWithMaxLength(64)
  * });
+ * ```
  */
 export function nonEmptyStringWithMaxLength<N extends number>(maxLength: N) {
   return `${NON_EMPTY_STRING} & string <= ${maxLength}` as const;

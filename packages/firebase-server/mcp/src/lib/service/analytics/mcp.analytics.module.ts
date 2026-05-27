@@ -29,12 +29,13 @@ export interface AppMcpAnalyticsMetadataConfig extends Pick<ModuleMetadata, 'imp
  * @param config - Optional metadata + analytics config to merge in.
  * @returns NestJS module metadata providing + exporting the MCP analytics service and token.
  *
- * @example
- * ```typescript
- * @Global()
- * @Module(appMcpAnalyticsModuleMetadata())
+ * @Global ()
+ * @Module (appMcpAnalyticsModuleMetadata())
  * export class AppMcpAnalyticsModule {}
  * ```
+ *
+ * @example
+ * ```typescript
  */
 export function appMcpAnalyticsModuleMetadata(config: AppMcpAnalyticsMetadataConfig = {}): ModuleMetadata {
   const { mcpAnalyticsConfig, imports, exports, providers } = config;
