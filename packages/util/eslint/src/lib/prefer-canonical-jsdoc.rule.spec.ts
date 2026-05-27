@@ -688,6 +688,26 @@ function reduceBooleansWithAnd(array: boolean[], emptyArrayValue?: boolean): boo
       expect(fixCode(input)).toBe(input);
     });
 
+    it('does not treat @-prefixed lines inside a fenced @example as tags', () => {
+      const input = `
+/**
+ * Builds module metadata.
+ *
+ * @example
+ * \`\`\`typescript
+ * @Global()
+ * @Module(appMcpAnalyticsModuleMetadata())
+ * export class AppMcpAnalyticsModule {}
+ * \`\`\`
+ */
+function appMcpAnalyticsModuleMetadata(): number { return 1; }
+`;
+      // The decorators (@Global / @Module) live inside the fenced example and must not be
+      // parsed as JSDoc tags, reordered above @example, or have a space injected after the @name.
+      expect(lintCode(input)).toHaveLength(0);
+      expect(fixCode(input)).toBe(input);
+    });
+
     it('does not autofix @throws missing {ErrorType} braces', () => {
       const input = `
 /**
