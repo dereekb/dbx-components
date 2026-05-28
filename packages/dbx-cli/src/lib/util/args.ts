@@ -136,7 +136,7 @@ export function withCallModelArgs<T>(yargs: Argv<T>): Argv<T & CallModelArgs> {
     .positional('verb', {
       type: 'string',
       demandOption: true,
-      describe: 'CRUD verb or custom action type (create, read, update, delete, query, or app-specific)'
+      describe: 'CRUD verb, invoke, or custom action type (create, read, update, delete, query, invoke, or app-specific)'
     })
     .positional('specifier', { type: 'string', describe: 'Optional sub-function specifier' })
     .option('data', { type: 'string', describe: 'JSON-encoded payload (defaults to {} when omitted)' });

@@ -148,7 +148,7 @@ export interface CliModelManifestEntry {
  */
 export type CliModelManifest = readonly CliModelManifestEntry[];
 
-export type CliApiVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'standalone';
+export type CliApiVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'invoke' | 'standalone';
 
 export interface CliApiManifestField {
   readonly name: string;
