@@ -10,6 +10,12 @@ import { type FirebaseError } from 'firebase/app';
  * @param error - The value to check.
  * @returns `true` if the input matches the shape of a client-side `FirebaseError`
  *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-error
+ * @dbxUtilKind function
+ * @dbxUtilTags firebase, client, error, type-guard, callable
+ * @dbxUtilRelated convert-https-callable-error-to-readable-error, firebase-server-error
+ *
  * @example
  * ```ts
  * try {

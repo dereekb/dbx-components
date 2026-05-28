@@ -67,6 +67,12 @@ export const FIREBASE_AUTH_QUOTA_EXCEEDED_ERROR = 'auth/quota-exceeded';
  * @param inputError - The Firebase Auth error to convert.
  * @returns A {@link ReadableError} with a human-readable message suitable for display.
  *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-auth
+ * @dbxUtilKind function
+ * @dbxUtilTags firebase, auth, error, readable, convert, decode, message, login, signin
+ * @dbxUtilRelated convert-https-callable-error-to-readable-error, firebase-server-error
+ *
  * @example
  * ```ts
  * try {

@@ -1,5 +1,7 @@
 import { AUTH_ADMIN_ROLE, AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE, DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE, objectHasNoKeys } from '@dereekb/util';
 import { itShouldFail, expectFail } from '@dereekb/util/test';
+import { FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR } from '@dereekb/firebase';
+import { FirebaseServerAuthUserExistsError } from '@dereekb/firebase-server';
 import { demoApiFunctionContextFactory, demoAuthorizedUserContext, demoAuthorizedUserAdminContext } from './../../../test/fixture';
 import { type DemoApiAuthService } from './auth.service';
 
@@ -239,6 +241,32 @@ demoApiFunctionContextFactory((f) => {
               const afterContext = authService.userContext(u.uid);
               resetPasswordClaims = await afterContext.loadResetPasswordClaims();
               expect(resetPasswordClaims).not.toBeDefined();
+            });
+          });
+
+          describe('updateUser()', () => {
+            const otherUserEmail = 'updateuser-conflict-other@test.com';
+
+            beforeEach(async () => {
+              await authService.auth.createUser({
+                email: otherUserEmail,
+                password: 'testpassword123'
+              });
+            });
+
+            itShouldFail('with FirebaseServerAuthUserExistsError when updating email to one already in use by another user', async () => {
+              const userContext = authService.userContext(u.uid);
+
+              await expectFail(
+                () => userContext.updateUser({ email: otherUserEmail }),
+                (error) => {
+                  expect(error).toBeInstanceOf(FirebaseServerAuthUserExistsError);
+                  const typedError = error as FirebaseServerAuthUserExistsError;
+                  expect(typedError.code).toBe(FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR);
+                  expect(typedError.identifierType).toBe('email');
+                  expect(typedError.identifierValue).toBe(otherUserEmail);
+                }
+              );
             });
           });
         });

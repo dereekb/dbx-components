@@ -119,7 +119,14 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
   /**
    * Applies an arbitrary update to the user's Firebase Auth record.
    *
+   * When Firebase rejects the update because the new email or phone number is already
+   * associated with another account, throws a typed {@link FirebaseServerAuthUserExistsError}
+   * (with `identifierType` set to `'email'` or `'phone'`). When the phone number is malformed,
+   * throws a {@link FirebaseServerAuthUserBadInputError}. All other errors propagate unchanged.
+   *
    * @param template - The update fields to apply.
+   * @throws {FirebaseServerAuthUserExistsError} When the email/phone is already in use.
+   * @throws {FirebaseServerAuthUserBadInputError} When the phone number is invalid.
    */
   updateUser(template: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord>;
 
@@ -287,7 +294,23 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   }
 
   async updateUser(template: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord> {
-    return this.service.auth.updateUser(this.uid, template);
+    try {
+      return await this.service.auth.updateUser(this.uid, template);
+    } catch (e: unknown) {
+      const firebaseError = e as { code?: string };
+      const errorCode = firebaseError.code;
+      const { email, phoneNumber } = template;
+
+      if (errorCode === FIREBASE_AUTH_PHONE_NUMBER_ALREADY_EXISTS_ERROR && phoneNumber) {
+        throw new FirebaseServerAuthUserExistsError(errorCode, 'phone', phoneNumber);
+      } else if (errorCode === FIREBASE_AUTH_EMAIL_ALREADY_EXISTS_ERROR && email) {
+        throw new FirebaseServerAuthUserExistsError(errorCode, 'email', email);
+      } else if (errorCode === FIREBASE_AUTH_INVALID_PHONE_NUMBER_ERROR && phoneNumber) {
+        throw new FirebaseServerAuthUserBadInputError(errorCode, phoneNumber);
+      }
+
+      throw e;
+    }
   }
 
   async loadRoles(): Promise<AuthRoleSet> {

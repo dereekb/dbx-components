@@ -11,6 +11,12 @@ import { type FirebaseError } from 'firebase/app';
  * Typically created via {@link convertHttpsCallableErrorToReadableError} when an `HttpsCallable`
  * invocation fails with a server-side error that includes structured details.
  *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-error
+ * @dbxUtilKind class
+ * @dbxUtilTags firebase, https, callable, error, server-error, client, response, details
+ * @dbxUtilRelated convert-https-callable-error-to-readable-error, is-client-firebase-error
+ *
  * @example
  * ```ts
  * try {
