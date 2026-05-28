@@ -291,11 +291,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: resetProfilePasswordParamsType,
     groupName: 'Profile',
     sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
-    description: 'Initiates or completes a password reset for the current user.\n\nSet `requestReset: true` to start a new reset (generates a temporary\ncode and sends an email). Provide `resetPassword` + `newPassword` to\ncomplete the reset by verifying the code and setting the new password.',
-    paramsTypeDescription: "Params for initiating or completing a password reset for the current user's profile.\n\nSet `requestReset: true` to initiate a new password reset (generates a temporary code and sends an email).\nProvide `resetPassword` and `newPassword` to complete the reset by verifying the code and setting the new password.",
+    description: 'Initiates or completes a password reset for the current user.\n\nSet `requestReset: true` to start a new reset (generates a temporary\ncode and sends an email). Provide `oobCode` + `newPassword` to\ncomplete the reset by verifying the code and setting the new password.',
+    paramsTypeDescription: "Params for initiating or completing a password reset for the current user's profile.\n\nSet `requestReset: true` to initiate a new password reset (generates a temporary code and sends an email).\nProvide `oobCode` and `newPassword` to complete the reset by verifying the code and setting the new password.",
     paramsFields: [
       { name: 'requestReset', typeText: 'Maybe<boolean>', description: 'When true, initiates a new password reset and sends the reset email.' },
-      { name: 'resetPassword', typeText: 'Maybe<string>', description: 'The temporary reset code received via email. Required to complete the reset.' },
+      { name: 'email', typeText: 'Maybe<string>', description: "Email address identifying the target user for a logged-out forgot-password request.\nOnly consulted when the caller has no authenticated user context; an authenticated\ncaller's `auth.uid` always takes precedence." },
+      { name: 'oobCode', typeText: 'Maybe<string>', description: 'The full oob token from the recovery email — includes the embedded uid; do not split or mutate.\nThe server decodes the token to resolve the target user, so this single value is sufficient\neven for a logged-out forgot-password flow.' },
       { name: 'newPassword', typeText: 'Maybe<string>', description: 'The new password to set. Required to complete the reset.' }
     ]
   },

@@ -76,7 +76,7 @@ export const finishOnboardingProfileParamsType = inferredTargetModelParamsType a
  * Params for initiating or completing a password reset for the current user's profile.
  *
  * Set `requestReset: true` to initiate a new password reset (generates a temporary code and sends an email).
- * Provide `resetPassword` and `newPassword` to complete the reset by verifying the code and setting the new password.
+ * Provide `oobCode` and `newPassword` to complete the reset by verifying the code and setting the new password.
  */
 export interface ResetProfilePasswordParams extends InferredTargetModelParams {
   /**
@@ -84,9 +84,17 @@ export interface ResetProfilePasswordParams extends InferredTargetModelParams {
    */
   readonly requestReset?: Maybe<boolean>;
   /**
-   * The temporary reset code received via email. Required to complete the reset.
+   * Email address identifying the target user for a logged-out forgot-password request.
+   * Only consulted when the caller has no authenticated user context; an authenticated
+   * caller's `auth.uid` always takes precedence.
    */
-  readonly resetPassword?: Maybe<string>;
+  readonly email?: Maybe<string>;
+  /**
+   * The full oob token from the recovery email — includes the embedded uid; do not split or mutate.
+   * The server decodes the token to resolve the target user, so this single value is sufficient
+   * even for a logged-out forgot-password flow.
+   */
+  readonly oobCode?: Maybe<string>;
   /**
    * The new password to set. Required to complete the reset.
    */
@@ -95,7 +103,8 @@ export interface ResetProfilePasswordParams extends InferredTargetModelParams {
 
 export const resetProfilePasswordParamsType = inferredTargetModelParamsType.merge({
   'requestReset?': clearable('boolean'),
-  'resetPassword?': clearable('string'),
+  'email?': clearable('string'),
+  'oobCode?': clearable('string'),
   'newPassword?': clearable('string')
 }) as Type<ResetProfilePasswordParams>;
 
@@ -174,7 +183,7 @@ export type ProfileModelCrudFunctionsConfig = {
        * Initiates or completes a password reset for the current user.
        *
        * Set `requestReset: true` to start a new reset (generates a temporary
-       * code and sends an email). Provide `resetPassword` + `newPassword` to
+       * code and sends an email). Provide `oobCode` + `newPassword` to
        * complete the reset by verifying the code and setting the new password.
        */
       resetPassword: ResetProfilePasswordParams;

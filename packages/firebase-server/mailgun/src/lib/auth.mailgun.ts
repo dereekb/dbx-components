@@ -115,7 +115,11 @@ export abstract class AbstractMailgunContentFirebaseServerUserPasswordResetServi
 
   protected async sendPasswordResetContentToUser(details: FirebaseServerAuthPasswordResetDetails<U, D>): Promise<void> {
     const userRecord = await details.userContext.loadRecord();
-    const { resetPassword } = details.claims;
+
+    // Inject the encoded oob code (carries both the raw code and the target uid) so the link
+    // embedded in the email is self-sufficient — the recipient does not need to be signed in
+    // to complete the reset.
+    const { oobCode } = details;
     const { uid, displayName, email } = userRecord;
 
     if (!email) {
@@ -132,7 +136,7 @@ export abstract class AbstractMailgunContentFirebaseServerUserPasswordResetServi
         name: baseRequestTo?.name,
         email,
         userVariables: {
-          resetPassword,
+          resetPassword: oobCode,
           ...baseRequestTo?.userVariables,
           displayName,
           uid

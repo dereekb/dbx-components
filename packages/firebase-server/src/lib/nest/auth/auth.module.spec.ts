@@ -121,10 +121,15 @@ describe('firebase server nest auth', () => {
           });
 
           describe('beginResetPassword()', () => {
-            it('should add password reset claims to the user and change their password.', async () => {
+            it('should add password reset claims to the user without touching their existing password.', async () => {
+              // Seed a real password so we can prove begin does not clobber it.
+              const existingPassword = 'existingPassword1!';
+              await authUserContext.setPassword(existingPassword);
+
+              authUserContext = authService.userContext(u.uid);
               let record = await authUserContext.loadRecord();
-              const passwordHash = record.passwordHash;
-              expect(passwordHash).not.toBeDefined(); // no password set in this test
+              const passwordHashBefore = record.passwordHash;
+              expect(passwordHashBefore).toBeDefined();
 
               let resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
               expect(resetPasswordClaims).toBeUndefined();
@@ -134,7 +139,10 @@ describe('firebase server nest auth', () => {
               authUserContext = authService.userContext(u.uid);
               record = await authUserContext.loadRecord();
 
-              expect(record.passwordHash).not.toBe(passwordHash);
+              // The user's actual Firebase Auth password must remain untouched until
+              // completePasswordReset() runs — they should still be able to log in with the
+              // existing credential throughout the reset window.
+              expect(record.passwordHash).toBe(passwordHashBefore);
 
               resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
               expect(resetPasswordClaims).toBeDefined();
@@ -143,6 +151,7 @@ describe('firebase server nest auth', () => {
 
           describe('setPassword()', () => {
             it('should clear any reset password claims.', async () => {
+              await authUserContext.setPassword('existingPassword1!');
               await authUserContext.beginResetPassword();
 
               authUserContext = authService.userContext(u.uid);
