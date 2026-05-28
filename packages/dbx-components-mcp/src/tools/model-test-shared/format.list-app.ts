@@ -7,7 +7,7 @@
  * already here and where do I add the next one?" lives in a single response.
  */
 
-import { CANONICAL_KINDS, recommendBucketsForGroup, type SpecBucketRecommendation, type SpecFileKind } from './conventions.js';
+import { CANONICAL_KINDS, recommendBucketsForGroup, type SpecBucketRecommendation, type SpecFileKind } from '@dereekb/util';
 import type { DiscoveredSpecCatalog, DiscoveredSpecFile, DiscoveredSpecGroup } from './discover.js';
 
 const KIND_LABEL: Record<SpecFileKind, string> = {

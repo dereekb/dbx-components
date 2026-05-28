@@ -1,9 +1,10 @@
 /**
- * Spec-file naming conventions for the `dbx_model_test_*` cluster.
+ * Spec-file naming conventions for API test files.
  *
- * One downstream API app keeps its tests under `<apiDir>/src/app/function/<group>/`,
- * with each spec file named so that "what does this test, and where do I add the
- * next one?" can be answered from the filename alone. The canonical forms are:
+ * Downstream Firebase Functions API apps keep their tests under
+ * `<apiDir>/src/app/function/<group>/`, with each spec file named so that
+ * "what does this test, and where do I add the next one?" can be answered
+ * from the filename alone. The canonical forms are:
  *
  * - `<group>.crud.spec.ts` — non-scenario tests of the CRUD function map for the group.
  * - `<group>.crud.<sub>[.<sub>...].spec.ts` — CRUD tests focused on a sub-area
@@ -23,9 +24,11 @@
  *   (e.g. `worker.system.spec.ts`). Defaults to a scenario rename suggestion
  *   because the missing bucket is more often scenario-like.
  *
- * This module is pure: classification, canonical-path rendering, and the
- * "where do I add a new test?" guidance live here. Disk I/O is handled by
- * the `discover.ts` companion.
+ * This module is pure: classification and canonical-path rendering live
+ * here, with no disk I/O. It's consumed by `@dereekb/dbx-components-mcp`
+ * (the `dbx_model_test_*` tool cluster) and by
+ * `@dereekb/firebase/eslint` (the `require-canonical-api-spec-filename`
+ * and `require-api-crud-spec-for-group` rules).
  */
 
 /**
@@ -123,11 +126,11 @@ function classifyRemainingSegments(config: { readonly filename: string; readonly
       result = { filename, group, kind: 'scenario-subgroup', subgroups: rest.slice(1), isCanonical: true };
     }
   } else if (crudIdx > 0) {
-    const subgroups = rest.filter((p, i) => i !== crudIdx);
+    const subgroups = rest.filter((_, i) => i !== crudIdx);
     const recommendedRename = buildCanonicalFilename({ group, bucket: 'crud', subgroups });
     result = { filename, group, kind: 'crud-misplaced', subgroups, isCanonical: false, recommendedRename, driftReason: '`crud` segment is not directly after the group name.' };
   } else if (scenarioIdx > 0) {
-    const subgroups = rest.filter((p, i) => i !== scenarioIdx);
+    const subgroups = rest.filter((_, i) => i !== scenarioIdx);
     const recommendedRename = buildCanonicalFilename({ group, bucket: 'scenario', subgroups });
     result = { filename, group, kind: 'scenario-misplaced', subgroups, isCanonical: false, recommendedRename, driftReason: '`scenario` segment is not directly after the group name.' };
   } else if (rest.length === 0) {

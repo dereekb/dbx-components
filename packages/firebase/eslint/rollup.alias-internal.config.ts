@@ -1,17 +1,20 @@
 import { resolve as resolvePath } from 'node:path';
 
 const INTERNAL_ALIASES: Record<string, string> = {
-  '@dereekb/util/eslint': resolvePath(__dirname, '../../util/eslint/src/index.ts')
+  '@dereekb/util/eslint': resolvePath(__dirname, '../../util/eslint/src/index.ts'),
+  '@dereekb/util': resolvePath(__dirname, '../../util/src/index.ts')
 };
 
 // Dependencies that must be inlined into the published bundle rather than left external.
 // `@marcbachmann/cel-js` powers the storage-rules CEL evaluator and is imported eagerly, so
 // consumers that have not installed it would otherwise fail to load the entire plugin. Bundling
 // it removes that runtime requirement.
-// `@dereekb/util/eslint` is aliased to its TS source above; it must also be dropped from the
-// external set so @nx/rollup's `external: "all"` callback doesn't short-circuit before our
-// resolveId hook can redirect the import.
-const BUNDLED_DEPENDENCIES = ['@marcbachmann/cel-js', '@dereekb/util/eslint'];
+// `@dereekb/util/eslint` and `@dereekb/util` are aliased to their TS sources above; they must
+// also be dropped from the external set so @nx/rollup's `external: "all"` callback doesn't
+// short-circuit before our resolveId hook can redirect the import. `@dereekb/util` is included
+// so the rules consuming `classifySpecFile` / `buildCanonicalFilename` from the package root
+// resolve to source at build time and get tree-shaken into the eslint bundle.
+const BUNDLED_DEPENDENCIES = ['@marcbachmann/cel-js', '@dereekb/util/eslint', '@dereekb/util'];
 
 /**
  * Whether a module id should be inlined into the bundle rather than left external.
