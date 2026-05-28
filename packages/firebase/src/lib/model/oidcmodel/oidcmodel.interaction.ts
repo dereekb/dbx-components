@@ -49,37 +49,127 @@ export type OidcScopeDetails<T extends OidcScope = OidcScope> = LabeledValueWith
 export type OidcRedirectUri = string;
 
 /**
- * Supported values for `token_endpoint_auth_method` when creating an OIDC client.
+ * The `client_secret_basic` confidential-client auth method (RFC 6749 §2.3.1, the
+ * OAuth 2.0 default): the client sends its `client_id` and `client_secret` in the
+ * `Authorization: Basic` header on token-endpoint requests. Standard pick for
+ * server-side confidential clients.
  *
- * The four `client_secret_*` / `private_key_jwt` methods are for confidential clients.
- *
- * `'none'` designates a public client: it holds no secret and authenticates the
- * `authorization_code` flow with PKCE alone. This is the canonical pattern for clients
- * that cannot keep a secret (native apps, SPAs, CLIs) and is what the MCP / Claude
- * connector ecosystem (claude.ai connector, Claude Code CLI, mcp-inspector via DCR)
- * expects. oidc-provider enforces PKCE on the `authorization_code` flow for every
- * client regardless of auth method, so all clients get PKCE; `'none'` simply unlocks
- * the secret-less variant.
+ * @example
+ * ```ts
+ * await oidcClientService.createClient({
+ *   token_endpoint_auth_method: CLIENT_SECRET_BASIC_TOKEN_ENDPOINT_AUTH_METHOD,
+ *   // ...
+ * });
+ * ```
  */
-export type OidcTokenEndpointAuthMethod = 'client_secret_basic' | 'client_secret_post' | 'client_secret_jwt' | 'private_key_jwt' | 'none';
-
-export const PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD: OidcTokenEndpointAuthMethod = 'private_key_jwt';
+export const CLIENT_SECRET_BASIC_TOKEN_ENDPOINT_AUTH_METHOD = 'client_secret_basic';
 
 /**
- * The public-client auth method (`'none'`): no client secret, PKCE-only.
+ * The `client_secret_post` confidential-client auth method (RFC 6749 §2.3.1, the
+ * form-body variant): the client sends `client_id` and `client_secret` as form-encoded
+ * parameters in the token-endpoint request body. Equivalent in security to
+ * {@link CLIENT_SECRET_BASIC_TOKEN_ENDPOINT_AUTH_METHOD}; pick it for clients that
+ * cannot set the `Authorization` header (some older HTTP stacks).
  *
- * Mirrors {@link PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD}. Use this when provisioning
- * public OAuth clients that cannot keep a secret.
+ * @example
+ * ```ts
+ * await oidcClientService.createClient({
+ *   token_endpoint_auth_method: CLIENT_SECRET_POST_TOKEN_ENDPOINT_AUTH_METHOD,
+ *   // ...
+ * });
+ * ```
  */
-export const PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD: OidcTokenEndpointAuthMethod = 'none';
+export const CLIENT_SECRET_POST_TOKEN_ENDPOINT_AUTH_METHOD = 'client_secret_post';
+
+/**
+ * The `client_secret_jwt` confidential-client auth method (OIDC Core §9): the client
+ * signs a JWT client assertion using its `client_secret` as the HMAC key (HS256/HS384/HS512)
+ * and sends it as `client_assertion` on token-endpoint requests. The secret never goes on
+ * the wire — only the signed assertion — which is the upgrade over the plain
+ * `client_secret_*` methods, without requiring asymmetric keys like
+ * {@link PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD}.
+ *
+ * @example
+ * ```ts
+ * await oidcClientService.createClient({
+ *   token_endpoint_auth_method: CLIENT_SECRET_JWT_TOKEN_ENDPOINT_AUTH_METHOD,
+ *   // ...
+ * });
+ * ```
+ */
+export const CLIENT_SECRET_JWT_TOKEN_ENDPOINT_AUTH_METHOD = 'client_secret_jwt';
+
+/**
+ * The `private_key_jwt` confidential-client auth method (OIDC Core §9): the client signs
+ * a JWT client assertion with its private key (RS256/ES256/PS256) and sends it as
+ * `client_assertion`; the server verifies via the client's published `jwks` / `jwks_uri`.
+ * Strongest of the confidential-client methods — no shared secret is ever held by the
+ * server — and the canonical pick for high-trust server-to-server integrations.
+ *
+ * @example
+ * ```ts
+ * await oidcClientService.createClient({
+ *   token_endpoint_auth_method: PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD,
+ *   jwks: { keys: [publicJwk] },
+ *   // ...
+ * });
+ * ```
+ */
+export const PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD = 'private_key_jwt';
+
+/**
+ * The public-client auth method (`'none'`): no client secret, PKCE-only. The client
+ * authenticates the `authorization_code` flow with PKCE (RFC 7636) alone — there is no
+ * shared secret and no client assertion. Canonical pick for clients that cannot keep a
+ * secret (native apps, SPAs, CLIs) and what the MCP / Claude connector ecosystem
+ * (claude.ai connector, Claude Code CLI, mcp-inspector via DCR) registers as.
+ *
+ * Mirrors {@link PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD}. `oidc-provider` still
+ * enforces PKCE on the `authorization_code` flow for every client regardless of auth
+ * method, so `'none'` simply unlocks the secret-less variant rather than disabling any
+ * client authentication.
+ *
+ * @example
+ * ```ts
+ * await oidcClientService.createClient({
+ *   token_endpoint_auth_method: PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD,
+ *   // no client_secret — public PKCE client
+ *   // ...
+ * });
+ * ```
+ */
+export const PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD = 'none';
+
+/**
+ * Supported values for `token_endpoint_auth_method` when creating an OIDC client.
+ * Derived as the union of each `*_TOKEN_ENDPOINT_AUTH_METHOD` literal const so the
+ * type and the constants stay in lock-step — add a new const and it auto-joins
+ * the union.
+ *
+ * The four `client_secret_*` / `private_key_jwt` methods are for confidential clients:
+ * - {@link CLIENT_SECRET_BASIC_TOKEN_ENDPOINT_AUTH_METHOD}
+ * - {@link CLIENT_SECRET_POST_TOKEN_ENDPOINT_AUTH_METHOD}
+ * - {@link CLIENT_SECRET_JWT_TOKEN_ENDPOINT_AUTH_METHOD}
+ * - {@link PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD}
+ *
+ * {@link PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD} (`'none'`) designates a public
+ * client: it holds no secret and authenticates the `authorization_code` flow with
+ * PKCE alone. This is the canonical pattern for clients that cannot keep a secret
+ * (native apps, SPAs, CLIs) and is what the MCP / Claude connector ecosystem
+ * (claude.ai connector, Claude Code CLI, mcp-inspector via DCR) expects.
+ * oidc-provider enforces PKCE on the `authorization_code` flow for every client
+ * regardless of auth method, so all clients get PKCE; `'none'` simply unlocks
+ * the secret-less variant.
+ */
+export type OidcTokenEndpointAuthMethod = typeof CLIENT_SECRET_BASIC_TOKEN_ENDPOINT_AUTH_METHOD | typeof CLIENT_SECRET_POST_TOKEN_ENDPOINT_AUTH_METHOD | typeof CLIENT_SECRET_JWT_TOKEN_ENDPOINT_AUTH_METHOD | typeof PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD | typeof PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD;
 
 /**
  * All available token endpoint auth method options with display labels.
  */
 export const ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS: LabeledValue<OidcTokenEndpointAuthMethod>[] = [
-  { label: 'Client Secret Basic', value: 'client_secret_basic' },
-  { label: 'Client Secret Post', value: 'client_secret_post' },
-  { label: 'Client Secret JWT', value: 'client_secret_jwt' },
+  { label: 'Client Secret Basic', value: CLIENT_SECRET_BASIC_TOKEN_ENDPOINT_AUTH_METHOD },
+  { label: 'Client Secret Post', value: CLIENT_SECRET_POST_TOKEN_ENDPOINT_AUTH_METHOD },
+  { label: 'Client Secret JWT', value: CLIENT_SECRET_JWT_TOKEN_ENDPOINT_AUTH_METHOD },
   { label: 'Private Key JWT', value: PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD },
   { label: 'None (Public PKCE)', value: PUBLIC_PKCE_TOKEN_ENDPOINT_AUTH_METHOD }
 ];
