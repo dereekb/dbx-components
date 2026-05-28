@@ -1,5 +1,5 @@
 import { Injectable, Logger, Optional, Inject } from '@nestjs/common';
-import { FirebaseServerAnalyticsService } from '@dereekb/firebase-server';
+import { FirebaseServerAnalyticsService, FirebaseServerEnvService } from '@dereekb/firebase-server';
 import { McpAnalyticsService, type McpAnalyticsEvent } from './mcp.analytics.handler';
 import { DEFAULT_MCP_ANALYTICS_EVENT_NAME, FIREBASE_SERVER_MCP_ANALYTICS_CONFIG, type FirebaseServerMcpAnalyticsConfig } from './mcp.analytics.config';
 
@@ -15,16 +15,18 @@ import { DEFAULT_MCP_ANALYTICS_EVENT_NAME, FIREBASE_SERVER_MCP_ANALYTICS_CONFIG,
 @Injectable()
 export class FirebaseServerMcpAnalyticsService extends McpAnalyticsService {
   private readonly _logger = new Logger(FirebaseServerMcpAnalyticsService.name);
+
   private readonly _eventName: string;
   private readonly _logEvents: boolean;
 
   constructor(
+    @Inject(FirebaseServerEnvService) private readonly firebaseServerEnvService: FirebaseServerEnvService,
     @Optional() @Inject(FirebaseServerAnalyticsService) private readonly analyticsService?: FirebaseServerAnalyticsService,
     @Optional() @Inject(FIREBASE_SERVER_MCP_ANALYTICS_CONFIG) config?: FirebaseServerMcpAnalyticsConfig
   ) {
     super();
     this._eventName = config?.eventName ?? DEFAULT_MCP_ANALYTICS_EVENT_NAME;
-    this._logEvents = config?.logEvents ?? true;
+    this._logEvents = config?.logEvents ?? !this.firebaseServerEnvService.isProduction;
   }
 
   handleMcpAnalyticsEvent(event: McpAnalyticsEvent): void {

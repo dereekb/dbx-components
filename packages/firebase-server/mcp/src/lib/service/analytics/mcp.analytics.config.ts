@@ -4,7 +4,7 @@ import { type InjectionToken } from '@nestjs/common';
  * Default analytics event name used by {@link FirebaseServerMcpAnalyticsService} when
  * forwarding a completed MCP tool call to the downstream analytics pipeline.
  */
-export const DEFAULT_MCP_ANALYTICS_EVENT_NAME = 'mcp-tool';
+export const DEFAULT_MCP_ANALYTICS_EVENT_NAME = 'Mcp Tool Call';
 
 /**
  * Configuration for {@link FirebaseServerMcpAnalyticsService}.
@@ -20,7 +20,9 @@ export interface FirebaseServerMcpAnalyticsConfig {
    */
   readonly eventName?: string;
   /**
-   * Whether to emit a per-call `Logger` line for each completed tool call. Defaults to `true`.
+   * Whether to emit a per-call `Logger` line for each completed tool call.
+   *
+   * Defaults to `true` on non-production environments.
    */
   readonly logEvents?: boolean;
 }
@@ -30,7 +32,7 @@ export interface FirebaseServerMcpAnalyticsConfig {
  *
  * @example
  * ```typescript
- * @Module(appMcpAnalyticsModuleMetadata({ mcpAnalyticsConfig: { eventName: 'mcp-tool', logEvents: true } }))
+ * @Module(appMcpAnalyticsModuleMetadata({ mcpAnalyticsConfig: { eventName: 'Mcp Tool Call', logEvents: true } }))
  * export class AppMcpAnalyticsModule {}
  * ```
  */
