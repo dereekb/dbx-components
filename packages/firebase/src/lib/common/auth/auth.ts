@@ -1,4 +1,4 @@
-import { type ISO8601DateString, type Maybe, type PasswordString, type PhoneNumber, type WebsiteUrl } from '@dereekb/util';
+import { type ISO8601DateString, type Maybe, type PasswordString, type PhoneNumber, splitStringAtFirstCharacterOccurence, type WebsiteUrl } from '@dereekb/util';
 
 /**
  * Minimum password length enforced by Firebase Authentication.
@@ -106,6 +106,76 @@ export type FirebaseAuthOobCode = string;
  * Password used for completing setup or resetting a user.
  */
 export type FirebaseAuthSetupPassword = PasswordString;
+
+/**
+ * Delimiter used when encoding a {@link FirebaseAuthOobCodeDataPair} into a {@link FirebaseAuthOobCode}.
+ *
+ * The encoded form is `${code}-${uid}` and splitting happens on the first delimiter occurrence,
+ * so this only requires that the generated code/password not contain `-`. The uid is unrestricted
+ * and may itself contain `-`.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-auth
+ * @dbxUtilTags firebase, auth, oob, code, delimiter, constant
+ * @dbxUtilRelated encode-firebase-auth-oob-code, decode-firebase-auth-oob-code
+ */
+export const FIREBASE_AUTH_OOB_CODE_DATA_PAIR_DELIMITER = '-';
+
+/**
+ * Data pair embedded in a {@link FirebaseAuthOobCode} for out-of-band auth flows.
+ *
+ * Pairs the Firebase user uid with the one-time setup/reset code so the server can
+ * identify the user and validate the code in a single round-trip without a
+ * separate lookup step.
+ */
+export interface FirebaseAuthOobCodeDataPair {
+  readonly uid: FirebaseAuthUserId;
+  readonly code: FirebaseAuthSetupPassword;
+}
+
+/**
+ * Encodes a {@link FirebaseAuthOobCodeDataPair} into a URL-safe {@link FirebaseAuthOobCode}.
+ *
+ * The encoded form is `${code}-${uid}` — code first so that splitting on the first delimiter
+ * still works even when the uid itself contains `-` (Firebase uids occasionally do).
+ *
+ * @example
+ * encodeFirebaseAuthOobCode({ uid: 'abc-123', code: 'xyz789' });  // 'xyz789-abc-123'
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-auth
+ * @dbxUtilTags firebase, auth, oob, code, encode, uid, password, reset, setup, serialize
+ * @dbxUtilRelated decode-firebase-auth-oob-code, firebase-auth-oob-code-data-pair-delimiter
+ */
+export function encodeFirebaseAuthOobCode(pair: FirebaseAuthOobCodeDataPair): FirebaseAuthOobCode {
+  return `${pair.code}${FIREBASE_AUTH_OOB_CODE_DATA_PAIR_DELIMITER}${pair.uid}`;
+}
+
+/**
+ * Decodes a {@link FirebaseAuthOobCode} back into its {@link FirebaseAuthOobCodeDataPair}.
+ *
+ * Splits on the first `-` so uids containing additional `-` characters survive the round-trip
+ * intact. Returns null when the input is missing the delimiter or has empty parts.
+ *
+ * @example
+ * decodeFirebaseAuthOobCode('xyz789-abc-123');  // { uid: 'abc-123', code: 'xyz789' }
+ * decodeFirebaseAuthOobCode('invalid');         // null
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-auth
+ * @dbxUtilTags firebase, auth, oob, code, decode, parse, uid, password, reset, setup, deserialize
+ * @dbxUtilRelated encode-firebase-auth-oob-code, firebase-auth-oob-code-data-pair-delimiter
+ */
+export function decodeFirebaseAuthOobCode(oobCode: FirebaseAuthOobCode): Maybe<FirebaseAuthOobCodeDataPair> {
+  const [code, uid] = splitStringAtFirstCharacterOccurence(oobCode, FIREBASE_AUTH_OOB_CODE_DATA_PAIR_DELIMITER);
+  let result: Maybe<FirebaseAuthOobCodeDataPair> = null;
+
+  if (uid && code) {
+    result = { uid, code };
+  }
+
+  return result;
+}
 
 export const FIREBASE_SERVER_AUTH_CLAIMS_SETUP_PASSWORD_KEY = 'setupPassword';
 export const FIREBASE_SERVER_AUTH_CLAIMS_SETUP_LAST_COM_DATE_KEY = 'setupCommunicationAt';
