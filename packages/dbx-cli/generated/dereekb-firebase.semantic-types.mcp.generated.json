@@ -90,6 +90,20 @@
       "notes": "A string key used to test for ownership of a particular set of objects.\n\nFor instance, a database model (or its parent) may have an ownership key associated with it that is compared with the user's current claims."
     },
     {
+      "name": "FirebaseAuthOobCode",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/common/auth/auth",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "identifier",
+        "string",
+        "dereekb-firebase:auth"
+      ],
+      "notes": "Out-of-band (oob) code returned by Firebase Auth flows such as password reset and email verification.\n\nForwarded back to Firebase (e.g. via `confirmPasswordReset`) to complete the flow."
+    },
+    {
       "name": "DevelopmentFirebaseFunctionSpecifier",
       "package": "@dereekb/firebase",
       "module": "src/lib/common/development/function",
