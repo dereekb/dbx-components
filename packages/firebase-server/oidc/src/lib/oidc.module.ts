@@ -1,7 +1,8 @@
 import { type ModuleMetadata } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwksService, JwksServiceConfig } from './service/oidc.jwks.service';
-import { OidcModuleConfig, DEFAULT_OIDC_TOKEN_LIFETIMES } from './oidc.config';
+import { OIDC_JSON_RENDER_ERROR_FUNCTION, DEFAULT_OIDC_TOKEN_LIFETIMES, OidcModuleConfig, type OidcProviderConfig, type OidcResourceServerInfo, allOidcScopesStringForProviderConfig } from './oidc.config';
+import { OidcAccountService } from './service/oidc.account.service';
 import { OidcService } from './service/oidc.service';
 import { OidcWellKnownController, OidcInteractionController, OidcProviderController } from './controller';
 import { oidcEntryFirestoreCollection, type FirestoreContext } from '@dereekb/firebase';
@@ -215,6 +216,60 @@ export function deriveResourceMetadataUrlFromEnv(envService: FirebaseServerEnvSe
 }
 
 /**
+ * Input for {@link buildFirebaseServerMcpResourceServer}.
+ */
+export interface BuildFirebaseServerMcpResourceServerInput {
+  /**
+   * The Firebase server environment service. The MCP URL is read from `envService.appMcpUrl`.
+   */
+  readonly envService: FirebaseServerEnvService;
+  /**
+   * The OIDC provider config whose scopes back the resource server's `scope` value.
+   */
+  readonly providerConfig: OidcProviderConfig;
+}
+
+/**
+ * Builds a single-entry {@link OidcResourceServerInfo} map for the MCP endpoint
+ * declared on `envService.appMcpUrl`, with `scope` set to every scope declared
+ * on `providerConfig.claims` (so any scope the provider issues is valid on the
+ * resource server) and `audience` set to the MCP URL.
+ *
+ * Returns `undefined` when no `appMcpUrl` is configured.
+ *
+ * Used internally by {@link oidcModuleMetadata} when {@link OidcModuleConfig.configureMcpResourceServer}
+ * is enabled, and exported for apps that need to combine the MCP resource server
+ * with additional app-specific entries:
+ *
+ * @example
+ * ```ts
+ * resourceServers: {
+ *   ...(buildFirebaseServerMcpResourceServer({ envService, providerConfig: APP_PROVIDER_CONFIG }) ?? {}),
+ *   'https://api.example.com/extras': {
+ *     scope: 'openid profile',
+ *     audience: 'https://api.example.com/extras'
+ *   }
+ * }
+ * ```
+ */
+export function buildFirebaseServerMcpResourceServer(input: BuildFirebaseServerMcpResourceServerInput): Record<string, OidcResourceServerInfo> | undefined {
+  const { envService, providerConfig } = input;
+  const mcpUrl = envService.appMcpUrl;
+  let result: Record<string, OidcResourceServerInfo> | undefined;
+
+  if (mcpUrl) {
+    result = {
+      [mcpUrl]: {
+        scope: allOidcScopesStringForProviderConfig(providerConfig),
+        audience: mcpUrl
+      }
+    };
+  }
+
+  return result;
+}
+
+/**
  * Factory that creates {@link OidcServerFirestoreCollections} using the provided Firestore context
  * and JWKS encryption config from {@link OidcModuleConfig}.
  *
@@ -234,7 +289,9 @@ export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreConte
  * Subset of {@link OidcModuleConfig} that consumers may override via
  * `oidcModuleMetadata`'s `config` or `configFactory`.
  */
-export type OidcModuleMetadataOverrides = Partial<Pick<OidcModuleConfig, 'issuer' | 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy' | 'trustProxyInNonProduction' | 'tokenLifetimes' | 'maxRequestedLoginDuration' | 'minRequestedLoginDuration' | 'defaultRequestedLoginDuration' | 'resourceServers' | 'resourceMetadataUrl'>>;
+export type OidcModuleMetadataOverrides = Partial<
+  Pick<OidcModuleConfig, 'issuer' | 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy' | 'trustProxyInNonProduction' | 'tokenLifetimes' | 'maxRequestedLoginDuration' | 'minRequestedLoginDuration' | 'defaultRequestedLoginDuration' | 'resourceServers' | 'resourceMetadataUrl' | 'configureMcpResourceServer'>
+>;
 
 export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {
   /**
@@ -300,8 +357,8 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
     providers: [
       {
         provide: OidcModuleConfig,
-        inject: [ConfigService, FirebaseServerEnvService],
-        useFactory: (configService: ConfigService, envService: FirebaseServerEnvService) => {
+        inject: [ConfigService, FirebaseServerEnvService, OidcAccountService],
+        useFactory: (configService: ConfigService, envService: FirebaseServerEnvService, oidcAccountService: OidcAccountService) => {
           const moduleConfig = oidcModuleConfigFactory(configService, envService);
           const dynamicOverrides = configFactory ? configFactory(envService, configService) : undefined;
           const merged: OidcModuleMetadataOverrides | undefined = config || dynamicOverrides ? { ...config, ...dynamicOverrides } : undefined;
@@ -312,6 +369,25 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
 
             if (merged.trustProxyInNonProduction && !envService.isProduction) {
               (result as Configurable<OidcModuleConfig>).trustProxy = true;
+            }
+          }
+
+          // Apply the default JSON error renderer when no custom renderError is configured.
+          if (!result.renderError) {
+            (result as Configurable<OidcModuleConfig>).renderError = OIDC_JSON_RENDER_ERROR_FUNCTION;
+          }
+
+          // Auto-derive the MCP resource-server entry from envService.appMcpUrl and the
+          // registered OidcAccountService's providerConfig. Any explicit resourceServers
+          // entry from the consumer wins on key collisions.
+          if (result.configureMcpResourceServer) {
+            const mcpResourceServer = buildFirebaseServerMcpResourceServer({
+              envService,
+              providerConfig: oidcAccountService.providerConfig
+            });
+
+            if (mcpResourceServer) {
+              (result as Configurable<OidcModuleConfig>).resourceServers = { ...mcpResourceServer, ...result.resourceServers };
             }
           }
 

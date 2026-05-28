@@ -115,12 +115,14 @@ export function demoAuthDelegateFactory(injector: Injector): DbxFirebaseAuthServ
       const y = token.claims[DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN];
       return y ? 'user' : 'new';
     },
-    sendPasswordReset: async () => {
-      await profileFunctions.profile.updateProfile.resetPassword({ requestReset: true });
+    sendPasswordReset: async (_service, email) => {
+      // Forward `email` so a logged-out caller on /demo/auth/login can identify the target user;
+      // the server prefers auth.uid when present and falls back to this field otherwise.
+      await profileFunctions.profile.updateProfile.resetPassword({ requestReset: true, email });
     },
     completePasswordReset: async (_service, input) => {
       await profileFunctions.profile.updateProfile.resetPassword({
-        resetPassword: input.oobCode,
+        oobCode: input.oobCode,
         newPassword: input.newPassword
       });
     }

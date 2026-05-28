@@ -5,10 +5,10 @@ import { reauthenticateWithPopup, type User, type IdTokenResult, type ParsedToke
 import { FIREBASE_AUTH_TOKEN } from '../../firebase/firebase.tokens';
 import { firebaseAuthState, firebaseIdToken } from './firebase.auth.rxjs.util';
 import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY, Subject, merge, tap } from 'rxjs';
-import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, type Maybe } from '@dereekb/util';
+import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, type AuthRoleSet, AUTH_ADMIN_ROLE, cachedGetter, type Maybe, type PasswordString } from '@dereekb/util';
 import { type AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
-import { type FirebaseAuthIdToken, type FirebaseAuthContextInfo } from '@dereekb/firebase';
+import { type FirebaseAuthIdToken, type FirebaseAuthContextInfo, type FirebaseAuthOobCode } from '@dereekb/firebase';
 
 /**
  * Returns an observable that derives the current {@link AuthUserState} from the given auth service.
@@ -34,11 +34,11 @@ export interface DbxFirebaseCompletePasswordResetInput {
   /**
    * Verification code from the password reset email. Semantics depend on the delegate implementation.
    */
-  readonly oobCode: string;
+  readonly oobCode: FirebaseAuthOobCode;
   /**
    * The new password to set for the user's account.
    */
-  readonly newPassword: string;
+  readonly newPassword: PasswordString;
 }
 
 // MARK: Delegate

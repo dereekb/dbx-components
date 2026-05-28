@@ -44,6 +44,7 @@ export interface AuthorizedUserTestContext {
   loadDecodedIdToken(): Promise<DecodedIdToken>;
   makeContextOptions(): Promise<ContextOptions>;
   callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>>;
+  callWrappedFunctionWithoutUserContext<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, options?: CallableContextOptions): Promise<WrappedCallableRequestOutput<F>>;
   /**
    * Used for calling any non-callable gen 2 function (e.g. scheduled functions, cloud functions, blocking functions) or any gen 1 function.
    *
@@ -94,7 +95,20 @@ export class AuthorizedUserTestContextFixture<PI extends FirebaseAdminTestContex
   }
 
   callWrappedFunction<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, skipJsonConversion?: boolean): Promise<WrappedCallableRequestOutput<F>> {
-    return this.instance.callWrappedFunction(fn, params as any, skipJsonConversion);
+    return this.instance.callWrappedFunction<F>(fn, params, skipJsonConversion);
+  }
+
+  /**
+   * Convenience function for calling the function without an authenticated user context.
+   *
+   * Equivalent to `fn(params, options ?? {})`.
+   *
+   * @param fn
+   * @param params
+   * @returns
+   */
+  callWrappedFunctionWithoutUserContext<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, options?: CallableContextOptions): Promise<WrappedCallableRequestOutput<F>> {
+    return this.instance.callWrappedFunctionWithoutUserContext<F>(fn, params, options);
   }
 
   callCloudFunction<F extends WrappedCloudFunction<I, O>, I extends object, O = unknown>(fn: F, params: I, skipJsonConversion?: boolean): Promise<O>;
@@ -178,6 +192,20 @@ export class AuthorizedUserTestContextInstance<PI extends FirebaseAdminTestConte
     // Parse to JSON then back to simulate sending JSON to the server, and the server parsing it as a POJO.
     const parsedParams = params == null || skipJsonConversion ? params : convertParamsToParsedJsonObjectAndBack(params);
     return this.makeContextOptions().then((options) => (fn as WrappedFunction<unknown>)(parsedParams, options));
+  }
+
+  /**
+   * Convenience function for calling the function without an authenticated user context.
+   *
+   * Equivalent to `fn(params, options ?? {})`.
+   *
+   * @param fn - Wrapped gen 2 callable request to invoke.
+   * @param params - Request payload to pass to the callable, simulating the JSON body of an HTTP call.
+   * @param options - Optional callable options.
+   * @returns Promise resolving to the callable's return value.
+   */
+  callWrappedFunctionWithoutUserContext<F extends WrappedCallableRequest<any, any>>(fn: F, params: WrappedCallableRequestParams<F>, options?: CallableContextOptions): Promise<WrappedCallableRequestOutput<F>> {
+    return fn(params, options ?? {});
   }
 
   /**

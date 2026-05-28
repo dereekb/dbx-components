@@ -32,8 +32,8 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
 
     describe(MODEL_INFO_TOOL_NAME, () => {
-      it('returns the full model list when called without arguments', async () => {
-        const result = await callMcpTool({ f, u, name: MODEL_INFO_TOOL_NAME, args: {} });
+      it('returns the full model list when called with all:true', async () => {
+        const result = await callMcpTool({ f, u, name: MODEL_INFO_TOOL_NAME, args: { all: true } });
 
         expect(result.isError).toBeUndefined();
         const structured = result.structuredContent as { readonly mode: string; readonly models: ReadonlyArray<{ readonly modelType: string; readonly collectionPrefix: string }> };
@@ -78,7 +78,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const result = await callMcpTool({ f, u, name: MODEL_INFO_TOOL_NAME, args: { model: 'not-a-real-model' } });
 
         expect(result.isError).toBe(true);
-        expect((result.content[0] as { text: string }).text).toContain('no model matches');
+        expect((result.content[0] as { text: string }).text).toContain('no exact match');
       });
     });
 

@@ -10,7 +10,7 @@ export const MODEL_FIREBASE_CRUD_FUNCTION_CONFIG_MAP_TYPE_NAME = 'ModelFirebaseC
 
 /**
  * CRUD verb names supported by `ModelFirebaseCrudFunctionConfigMap`. Mirrors the
- * `create | read | update | delete | query` verbs in the type definition at
+ * `create | read | update | delete | query | invoke` verbs in the type definition at
  * `packages/firebase/src/lib/client/function/model.function.factory.ts`.
  */
 export const DEFAULT_CRUD_VERB_NAMES: readonly string[] = ['create', 'read', 'update', 'delete', 'query', 'invoke'];

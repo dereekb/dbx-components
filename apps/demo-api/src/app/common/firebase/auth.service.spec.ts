@@ -208,7 +208,7 @@ demoApiFunctionContextFactory((f) => {
           });
 
           describe('beginResetPassword()', () => {
-            it('should set a password and add reset password claims', async () => {
+            it('should add reset password claims', async () => {
               const userContext = authService.userContext(u.uid);
 
               let resetPasswordClaims = await userContext.loadResetPasswordClaims();
@@ -218,7 +218,7 @@ demoApiFunctionContextFactory((f) => {
 
               const freshContext = authService.userContext(u.uid);
               const record = await freshContext.loadRecord();
-              expect(record.passwordHash).toBeDefined();
+              expect(record.passwordHash).toBeUndefined(); // should not change/set/alter existing password
 
               resetPasswordClaims = await freshContext.loadResetPasswordClaims();
               expect(resetPasswordClaims).toBeDefined();

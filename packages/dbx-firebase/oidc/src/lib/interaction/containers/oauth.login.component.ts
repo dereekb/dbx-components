@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject, computed, signal, effect, type OnDestroy, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, computed, signal, effect, type Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
+import { clean, dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
 import { DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY } from '../../service/oidc.configuration.service';
@@ -35,11 +35,11 @@ import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../
   },
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
+export class DbxFirebaseOAuthLoginComponent {
   private readonly dbxRouterService = inject(DbxRouterService);
   private readonly dbxFirebaseAuthService = inject(DbxFirebaseAuthService);
   private readonly interactionService = inject(DbxFirebaseOidcInteractionService);
-  readonly uidParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY);
+  readonly uidParamReader = clean(dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY));
 
   readonly interactionUid: Signal<Maybe<OidcInteractionUid>> = toSignal(this.uidParamReader.value$);
   readonly isLoggedIn: Signal<Maybe<boolean>> = toSignal(this.dbxFirebaseAuthService.isLoggedIn$);
@@ -76,10 +76,6 @@ export class DbxFirebaseOAuthLoginComponent implements OnDestroy {
         this._submitIdToken();
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this.uidParamReader.destroy();
   }
 
   retry(): void {

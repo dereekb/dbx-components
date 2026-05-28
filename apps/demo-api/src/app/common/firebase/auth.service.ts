@@ -21,14 +21,14 @@ export class DemoApiFirebaseServerNewUserService extends AbstractMailgunContentF
 
 export class DemoApiFirebaseServerUserPasswordResetService extends AbstractMailgunContentFirebaseServerUserPasswordResetService<DemoApiFirebaseServerAuthUserContext> {
   protected async buildPasswordResetMailgunContentRequest(details: FirebaseServerAuthPasswordResetDetails<DemoApiFirebaseServerAuthUserContext>): Promise<ResetPasswordMailgunContentRequest> {
-    const { resetPassword } = details.claims;
     const request: ResetPasswordMailgunContentRequest = {
       subject: 'Password Reset - dbx-components Demo',
       template: 'password-reset',
       templateVariables: {
-        resetCode: resetPassword
+        resetCode: details.oobCode
       }
     };
+
     return request;
   }
 }

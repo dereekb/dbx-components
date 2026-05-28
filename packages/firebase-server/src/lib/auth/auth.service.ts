@@ -253,9 +253,6 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     // set the claims
     await this.updateClaims(passwordClaimsData);
 
-    // update the user
-    await this.updateUser({ password });
-
     return passwordClaimsData;
   }
 
@@ -1077,23 +1074,101 @@ export interface FirebaseServerAuthPasswordResetSendContentConfig<D = unknown> {
 }
 
 /**
+ * Opaque composite token returned to the user during a password reset. Encodes both
+ * the raw reset code and the target uid in a single value so the completion call does
+ * not need a separate uid argument (which a logged-out forgot-password flow cannot provide).
+ *
+ * The on-the-wire shape is `<code>-<uid>`. The raw code is the numeric string produced by
+ * {@link DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR}, so the first `-` cleanly splits the token.
+ * Do not split or mutate the token outside of {@link decodeFirebaseServerUserPasswordResetOobCode}.
+ */
+export type FirebaseServerUserPasswordResetOobCode = string & { __firebaseServerUserPasswordResetOobCode: true };
+
+/**
+ * Builds the composite oob code from a raw reset code (the numeric value stored in
+ * {@link FirebaseServerAuthResetUserPasswordClaims.resetPassword}) and the target user's uid.
+ *
+ * @param uid - The target user's UID.
+ * @param code - The raw reset code from the user's claims.
+ *
+ * @example
+ * ```typescript
+ * const oobCode = encodeFirebaseServerUserPasswordResetOobCode(user.uid, claims.resetPassword);
+ * // e.g. '482910-abcDEF123'
+ * ```
+ */
+export function encodeFirebaseServerUserPasswordResetOobCode(uid: FirebaseAuthUserId, code: string): FirebaseServerUserPasswordResetOobCode {
+  return `${code}-${uid}` as FirebaseServerUserPasswordResetOobCode;
+}
+
+/**
+ * Decodes a composite oob code back into its `{ uid, code }` parts. Returns `undefined`
+ * when the token is malformed (missing separator, non-numeric code, empty uid).
+ *
+ * @param token - The composite oob token, typically received from the password-reset email.
+ *
+ * @example
+ * ```typescript
+ * const decoded = decodeFirebaseServerUserPasswordResetOobCode('482910-abcDEF123');
+ * // decoded = { uid: 'abcDEF123', code: '482910' }
+ * ```
+ */
+export function decodeFirebaseServerUserPasswordResetOobCode(token: string): { uid: FirebaseAuthUserId; code: string } | undefined {
+  let result: { uid: FirebaseAuthUserId; code: string } | undefined;
+
+  if (typeof token === 'string') {
+    const dashIndex = token.indexOf('-');
+
+    if (dashIndex > 0 && dashIndex < token.length - 1) {
+      const code = token.slice(0, dashIndex);
+      const uid = token.slice(dashIndex + 1);
+
+      // Code must be purely digits (matches DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR output).
+      if (/^\d+$/.test(code)) {
+        result = { uid, code };
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
  * Details about a user that is in the password reset phase, including their user context,
- * reset claims data, and the send configuration that was used.
+ * reset claims data, the encoded oob code intended for the user, and the send configuration that was used.
  */
 export interface FirebaseServerAuthPasswordResetDetails<U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext, D = unknown> extends FirebaseServerAuthPasswordResetSendContentConfig<D> {
   readonly userContext: U;
   readonly claims: FirebaseAuthResetUserPasswordClaimsData;
+  /**
+   * The encoded oob code intended for the user (carries the raw reset code AND the target uid).
+   * Subclasses that send password-reset emails should embed this value, not `claims.resetPassword`.
+   */
+  readonly oobCode: FirebaseServerUserPasswordResetOobCode;
 }
 
 /**
- * Input for completing a password reset, containing the temporary reset code
- * and the desired new password.
+ * Result of {@link FirebaseServerUserPasswordResetService.beginPasswordReset}, exposing both the
+ * stored reset claims and the encoded composite oob code intended for the user.
+ */
+export interface FirebaseServerAuthBeginPasswordResetResult {
+  readonly claims: FirebaseServerAuthResetUserPasswordClaims;
+  /**
+   * The encoded oob code that should be delivered to the user (e.g. embedded in the reset email).
+   */
+  readonly oobCode: FirebaseServerUserPasswordResetOobCode;
+}
+
+/**
+ * Input for completing a password reset, containing the composite oob code from the recovery email
+ * (which encodes both the temporary reset code AND the target uid) and the desired new password.
  */
 export interface FirebaseServerAuthCompletePasswordResetInput {
   /**
-   * The temporary reset code from the reset email, to be verified against claims.
+   * The full oob token from the recovery email — encodes both the raw reset code AND the target uid.
+   * The service decodes this internally to resolve the user and verify the embedded code.
    */
-  readonly resetPassword: string;
+  readonly oobCode: FirebaseServerUserPasswordResetOobCode;
   /**
    * The new password to set after verification succeeds.
    */
@@ -1109,9 +1184,9 @@ export interface FirebaseServerAuthCompletePasswordResetInput {
  * @example
  * ```typescript
  * const resetSvc = authService.passwordReset();
- * const claims = await resetSvc.beginPasswordReset({ uid: 'some-uid', sendResetContent: true });
- * // Later, after user verifies identity:
- * await resetSvc.completePasswordReset('some-uid', { resetPassword: '123456', newPassword: 'newSecure' });
+ * const { oobCode } = await resetSvc.beginPasswordReset({ uid: 'some-uid', sendResetContent: true });
+ * // Later, after the user clicks the link in their reset email:
+ * await resetSvc.completePasswordReset({ oobCode, newPassword: 'newSecure' });
  * ```
  */
 export interface FirebaseServerUserPasswordResetService<D = unknown, U extends FirebaseServerAuthUserContext = FirebaseServerAuthUserContext> {
@@ -1122,13 +1197,16 @@ export interface FirebaseServerUserPasswordResetService<D = unknown, U extends F
    * When `sendResetContent` is true, this method delegates to {@link sendResetContent} and
    * may throw the same errors (throttle, send-once, no-config) depending on the configuration.
    *
+   * Returns both the stored reset claims and the encoded composite oob code that should be
+   * delivered to the user (the value the user will later submit to {@link completePasswordReset}).
+   *
    * @param input - Configuration for the reset, including user identification and send options.
    * @throws {Error} Throws if neither uid nor email is provided.
    * @throws {FirebaseServerAuthPasswordResetThrottleError} When send is throttled and `sendResetThrowErrors` is true.
    * @throws {FirebaseServerAuthPasswordResetSendOnceError} When already sent and `sendResetDetailsOnce` + `sendResetThrowErrors` are true.
    * @throws {FirebaseServerAuthPasswordResetNoResetConfigError} When no reset claims exist and `sendResetThrowErrors` is true.
    */
-  beginPasswordReset(input: FirebaseServerAuthInitiatePasswordReset<D>): Promise<FirebaseServerAuthResetUserPasswordClaims>;
+  beginPasswordReset(input: FirebaseServerAuthInitiatePasswordReset<D>): Promise<FirebaseServerAuthBeginPasswordResetResult>;
   /**
    * Sends reset content (e.g., a reset email) to the user.
    *
@@ -1159,14 +1237,19 @@ export interface FirebaseServerUserPasswordResetService<D = unknown, U extends F
    */
   loadResetDetailsForUserContext(userContext: U, config?: FirebaseServerAuthPasswordResetSendContentConfig<D>): Promise<Maybe<FirebaseServerAuthPasswordResetDetails<U, D>>>;
   /**
-   * Completes the password reset by verifying the temporary reset code against the user's
-   * claims and setting the new password. Clears reset claims on success.
+   * Completes the password reset by decoding the composite oob token, resolving the target user,
+   * verifying the embedded reset code against the user's claims, and setting the new password.
+   * Clears reset claims on success.
    *
-   * @param uid - The target user's UID.
-   * @param input - The reset code and new password.
-   * @throws {FirebaseServerAuthPasswordResetInvalidCodeError} When the reset code is invalid or no reset is active.
+   * The target uid is read from the encoded token — callers do not need to know it separately,
+   * which is what enables the logged-out "forgot password" flow.
+   *
+   * @param input - The encoded oob token and new password.
+   * @throws {FirebaseServerAuthPasswordResetInvalidCodeError} When the token is malformed, the
+   *   embedded uid does not own an active reset, the code is expired, or the code does not match.
+   *   The same opaque error is thrown for every failure mode.
    */
-  completePasswordReset(uid: FirebaseAuthUserId, input: FirebaseServerAuthCompletePasswordResetInput): Promise<admin.auth.UserRecord>;
+  completePasswordReset(input: FirebaseServerAuthCompletePasswordResetInput): Promise<admin.auth.UserRecord>;
 }
 
 /**
@@ -1218,7 +1301,7 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
     return this._authService;
   }
 
-  async beginPasswordReset(input: FirebaseServerAuthInitiatePasswordReset<D>): Promise<FirebaseServerAuthResetUserPasswordClaims> {
+  async beginPasswordReset(input: FirebaseServerAuthInitiatePasswordReset<D>): Promise<FirebaseServerAuthBeginPasswordResetResult> {
     const { uid, email, sendResetContent, sendResetDetailsOnce, sendResetIgnoreThrottle, sendResetThrowErrors, data, sendDetailsInTestEnvironment } = input;
 
     let resolvedUid: Maybe<FirebaseAuthUserId>;
@@ -1248,7 +1331,8 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
       });
     }
 
-    return claims;
+    const oobCode = encodeFirebaseServerUserPasswordResetOobCode(resolvedUid, claims.resetPassword);
+    return { claims, oobCode };
   }
 
   async sendResetContent(uid: FirebaseAuthUserId, config?: FirebaseServerAuthPasswordResetSendContentConfig<D>): Promise<boolean> {
@@ -1306,6 +1390,7 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
           resetCommunicationAt: claims.resetCommunicationAt,
           resetExpiresAt: claims.resetExpiresAt
         },
+        oobCode: encodeFirebaseServerUserPasswordResetOobCode(userContext.uid, claims.resetPassword),
         data: config?.data,
         sendDetailsInTestEnvironment: config?.sendDetailsInTestEnvironment
       };
@@ -1327,22 +1412,39 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
     });
   }
 
-  async completePasswordReset(uid: FirebaseAuthUserId, input: FirebaseServerAuthCompletePasswordResetInput): Promise<admin.auth.UserRecord> {
-    const userContext = this.authService.userContext(uid);
-    const claims = await userContext.loadResetPasswordClaims();
+  async completePasswordReset(input: FirebaseServerAuthCompletePasswordResetInput): Promise<admin.auth.UserRecord> {
+    // Decode the composite token. A malformed token is treated identically to every other
+    // failure mode below — the caller cannot distinguish between "bad encoding", "unknown uid",
+    // "no active reset", "expired", or "wrong code".
+    const decoded = decodeFirebaseServerUserPasswordResetOobCode(input.oobCode);
+
+    if (!decoded) {
+      throw new FirebaseServerAuthPasswordResetInvalidCodeError();
+    }
+
+    const userContext = this.authService.userContext(decoded.uid);
+    // The decoded uid might not correspond to a real user — if loadResetPasswordClaims throws
+    // (user not found, etc.), surface the same opaque error rather than leaking the underlying cause.
+    let claims: Maybe<FirebaseServerAuthResetUserPasswordClaims>;
+
+    try {
+      claims = await userContext.loadResetPasswordClaims();
+    } catch {
+      claims = undefined;
+    }
+
     const storedCode = claims?.resetPassword;
     const expiresAt = claims?.resetExpiresAt;
 
     // Reject if no active reset OR the stored code is missing/wrong length OR the code is expired.
-    // All failure cases throw the same opaque error so callers cannot distinguish them.
-    if (!storedCode || !expiresAt || storedCode.length !== input.resetPassword.length || new Date(expiresAt).getTime() <= Date.now()) {
+    if (!storedCode || !expiresAt || storedCode.length !== decoded.code.length || new Date(expiresAt).getTime() <= Date.now()) {
       throw new FirebaseServerAuthPasswordResetInvalidCodeError();
     }
 
     // Constant-time comparison to avoid leaking timing information about how many leading
     // characters of the provided code matched. Lengths are equal per the guard above.
     const storedBuf = Buffer.from(storedCode);
-    const inputBuf = Buffer.from(input.resetPassword);
+    const inputBuf = Buffer.from(decoded.code);
 
     if (!timingSafeEqual(storedBuf, inputBuf)) {
       throw new FirebaseServerAuthPasswordResetInvalidCodeError();

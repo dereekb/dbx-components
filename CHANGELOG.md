@@ -1,3 +1,31 @@
+## [13.12.4](https://github.com/dereekb/dbx-components/compare/v13.12.3-dev...v13.12.4) (2026-05-28)
+
+
+### Bug Fixes
+
+- **firebase-eslint:** inline util/eslint into bundle ([c650f010](https://github.com/dereekb/dbx-components/commit/c650f0105a7894dd0f1248dd2e9742c9ea3ab92f))
+- **setup:** atomic write for generated api package.json ([0b4c70d3](https://github.com/dereekb/dbx-components/commit/0b4c70d3a8ef512749c6fe8a7d6b84ff9f4b6601))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([64acdfe1](https://github.com/dereekb/dbx-components/commit/64acdfe133c0d8fddd7bfd8216b1f069d788436c))
+
+
+### Code Refactoring
+
+- added 'none' public PKCE OIDC auth method ([1291044d](https://github.com/dereekb/dbx-components/commit/1291044db8ae8422efe2c2a5458d9404c1e06f64))
+- **dbx-cli:** widen CliApiVerb to include 'invoke' ([b6dfbc2c](https://github.com/dereekb/dbx-components/commit/b6dfbc2c4498d1deac38bdbad91d098ee9e36ec9))
+- **firebase-server:** password-reset surface overhaul ([3532b1f9](https://github.com/dereekb/dbx-components/commit/3532b1f9ecae528fa57b360b2cc8502f3a44528a))
+- **oidc:** add JSON renderError default and MCP resource helper ([63dad472](https://github.com/dereekb/dbx-components/commit/63dad472c8558e26ef5cee5e51b1115daa9db513))
+- renamed DEFAULT_MCP_ANALYTICS_EVENT_NAME ([16d267f9](https://github.com/dereekb/dbx-components/commit/16d267f966fe2799b851acd4d43ad0053a7fd348))
+- **setup:** align eslint config template with workspace ([a539e34d](https://github.com/dereekb/dbx-components/commit/a539e34d3558f573e8bbabe5f3f420ce5fa0b804))
+
+
+### Tests
+
+- **demo-api:** align model-info MCP spec with groups-default ([69813bc9](https://github.com/dereekb/dbx-components/commit/69813bc972f6c4cfe08fc357f9e3d0c074322c50))
+
 ## [13.12.3](https://github.com/dereekb/dbx-components/compare/v13.12.2-dev...v13.12.3) (2026-05-27)
 
 

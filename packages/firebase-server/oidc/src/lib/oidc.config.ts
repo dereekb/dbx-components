@@ -12,6 +12,22 @@ import { type JwksKeyConverterConfig } from './model';
  */
 export type OidcRenderErrorFunction = Configuration['renderError'];
 
+/**
+ * Default {@link OidcRenderErrorFunction} that emits a JSON body with `error` and
+ * `error_description` fields, with `Content-Type: application/json`.
+ *
+ * Wired by {@link oidcModuleMetadata} when {@link OidcModuleConfig.renderError} is
+ * not provided. API-focused OIDC providers (the common case in dbx-components apps)
+ * want JSON errors rather than the HTML page oidc-provider renders by default.
+ */
+export const OIDC_JSON_RENDER_ERROR_FUNCTION: OidcRenderErrorFunction = (ctx, out) => {
+  ctx.type = 'application/json';
+  ctx.body = JSON.stringify({
+    error: out.error,
+    error_description: out.error_description
+  });
+};
+
 // MARK: Resource Indicators
 /**
  * Per-resource configuration returned by `features.resourceIndicators.getResourceServerInfo`
@@ -83,6 +99,19 @@ export interface OidcProviderConfig<S extends OidcScope = OidcScope> {
    * Supported OAuth 2.0 grant types (e.g., `['authorization_code', 'refresh_token']`).
    */
   readonly grantTypes: string[];
+}
+
+/**
+ * Returns the space-delimited list of every scope declared on `providerConfig.claims`.
+ *
+ * Suitable as the `scope` value on an {@link OidcResourceServerInfo} when the
+ * resource server should accept any scope the provider issues.
+ *
+ * @param providerConfig - The OIDC provider configuration whose scopes to enumerate.
+ * @returns Space-delimited string of all scope names from `providerConfig.claims`.
+ */
+export function allOidcScopesStringForProviderConfig<S extends OidcScope = OidcScope>(providerConfig: OidcProviderConfig<S>): string {
+  return Object.keys(providerConfig.claims).join(' ');
 }
 
 // MARK: Token Lifetimes
@@ -217,8 +246,10 @@ export abstract class OidcModuleConfig {
   /**
    * Custom error rendering function for the oidc-provider.
    *
-   * When not provided, defaults to a JSON error response with `error` and `error_description` fields.
-   * Set this to customize how OIDC errors are presented (e.g. redirect to an error page).
+   * When not provided, {@link OIDC_JSON_RENDER_ERROR_FUNCTION} is wired by
+   * {@link oidcModuleMetadata} so OIDC errors are returned as a JSON body with
+   * `error` and `error_description` fields. Set this to customize how OIDC
+   * errors are presented (e.g. redirect to an error page).
    *
    * The function signature matches oidc-provider's `renderError` configuration option.
    */
@@ -268,6 +299,24 @@ export abstract class OidcModuleConfig {
    * ```
    */
   readonly resourceServers?: Readonly<Record<string, OidcResourceServerInfo>>;
+
+  /**
+   * When `true`, {@link oidcModuleMetadata} automatically derives a resource-server
+   * entry from `envService.appMcpUrl` and the registered {@link OidcAccountService}'s
+   * provider config, then merges it into {@link resourceServers}. Any explicit entry
+   * supplied via {@link resourceServers} wins on key collisions.
+   *
+   * Required for OAuth-aware MCP clients (Claude, mcp-inspector) — they pass the
+   * MCP URL as the `resource` parameter on `/authorize` and `/token`, and oidc-provider
+   * rejects every such request with `invalid_target` unless that URL is registered.
+   *
+   * No effect when `envService.appMcpUrl` is unset.
+   *
+   * Defaults to `false`.
+   *
+   * @see buildFirebaseServerMcpResourceServer
+   */
+  readonly configureMcpResourceServer?: boolean;
 
   /**
    * Absolute URL of the OAuth 2.0 Protected Resource Metadata document

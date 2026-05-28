@@ -80,4 +80,17 @@ const result = {
 // ======================================
 // Finish Configuration
 // ======================================
-console.log(JSON.stringify(result, undefined, 2)); // output to console/stdout to allow piping.
+// Write atomically: build the full content in memory above (where all the throwable
+// logic lives), then write to a temp file and rename into place. We must NOT use a shell
+// redirect (`> package.json`) because the shell truncates the target to 0 bytes BEFORE this
+// script runs - and if the script throws, the empty file breaks Nx's project graph for the
+// whole workspace (the nx/core/package-json plugin can't parse an empty file).
+const outputPath = './API_APP_FOLDER/package.json';
+const tmpPath = `${outputPath}.tmp`;
+const contents = `${JSON.stringify(result, undefined, 2)}\n`;
+
+fs.writeFileSync(tmpPath, contents);
+fs.renameSync(tmpPath, outputPath);
+
+console.log(contents); // also echo the generated package.json to stdout.
+console.error(`Wrote ${outputPath}`); // status line to stderr.

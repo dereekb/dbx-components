@@ -3,8 +3,8 @@ import { type DemoUpdateModelFunction } from '../function.context';
 import { profileForUserRequest } from './profile.util';
 import { userHasNoProfileError } from '../../common';
 import { AUTH_ONBOARDED_ROLE, AUTH_TOS_SIGNED_ROLE } from '@dereekb/util';
-import { firestoreModelKey } from '@dereekb/firebase';
-import { catchAndThrowPasswordResetServerErrors, isAdminInRequest, withApiDetails } from '@dereekb/firebase-server';
+import { type FirebaseAuthError, FIREBASE_AUTH_USER_NOT_FOUND_ERROR, firestoreModelKey } from '@dereekb/firebase';
+import { catchAndThrowPasswordResetServerErrors, type FirebaseServerUserPasswordResetOobCode, isAdminInRequest, withApiDetails } from '@dereekb/firebase-server';
 
 export const profileUpdate: DemoUpdateModelFunction<UpdateProfileParams> = withApiDetails({
   inputType: updateProfileParamsType,
@@ -50,24 +50,50 @@ export const profileUpdateOnboard: DemoUpdateModelFunction<FinishOnboardingProfi
 
 export const profileUpdateResetPassword: DemoUpdateModelFunction<ResetProfilePasswordParams> = withApiDetails({
   inputType: resetProfilePasswordParamsType,
+  // The complete branch is meaningful only for a logged-out caller (the uid is encoded in the
+  // oobCode), and the begin branch supports a logged-out forgot-password flow via `data.email`.
+  // Both branches therefore opt out of the dispatch-level auth gate; per-branch checks below.
+  optionalAuth: true,
   fn: async (request) => {
     const { nest, auth, data } = request;
     const passwordResetService = nest.authService.passwordReset();
 
+    // Skip the admin check when the caller has no auth context — `isAdminInRequest` reads
+    // `request.nest.authService.context(request)` which asserts auth and would throw NO_AUTH
+    // for a logged-out forgot-password caller. Anonymous callers are never admins anyway.
+    const isAdmin = auth?.uid ? isAdminInRequest(request) : false;
+
     await catchAndThrowPasswordResetServerErrors(async () => {
       if (data.requestReset) {
-        await passwordResetService.beginPasswordReset({
-          uid: auth.uid,
-          sendResetContent: true,
-          sendResetThrowErrors: true
-        });
-      } else if (data.resetPassword && data.newPassword) {
-        await passwordResetService.completePasswordReset(auth.uid, {
-          resetPassword: data.resetPassword,
+        // Prefer the authenticated uid; fall back to the wire-level email so a logged-out
+        // forgot-password caller can identify the target user.
+        try {
+          await passwordResetService.beginPasswordReset({
+            uid: auth?.uid,
+            email: auth?.uid ? undefined : data.email,
+            sendResetContent: true,
+            sendResetThrowErrors: true
+          });
+        } catch (error: unknown) {
+          // Treat "no account for this email" as a success on the wire so an anonymous caller
+          // cannot use the forgot-password endpoint as an email-enumeration oracle. We only
+          // absorb this for the email-based path; an authenticated caller hitting this error
+          // is a genuine bug and should still surface.
+          const isUserNotFound = (error as FirebaseAuthError | undefined)?.code === FIREBASE_AUTH_USER_NOT_FOUND_ERROR;
+
+          if (!isUserNotFound || auth?.uid) {
+            throw error;
+          }
+        }
+      } else if (data.oobCode && data.newPassword) {
+        // Wire-level `oobCode` arrives as a raw string; the embedded uid lets the service
+        // resolve the user without an `auth.uid` argument (so a logged-out caller could submit it too).
+        await passwordResetService.completePasswordReset({
+          oobCode: data.oobCode as FirebaseServerUserPasswordResetOobCode,
           newPassword: data.newPassword
         });
       }
-    }, isAdminInRequest(request));
+    }, isAdmin);
   }
 });
 

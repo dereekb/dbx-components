@@ -91,6 +91,18 @@ export interface FirebaseAuthDetails extends FirebaseAuthToken, Readonly<Firebas
 export type FirebaseAuthOwnershipKey = string;
 
 /**
+ * Out-of-band (oob) code returned by Firebase Auth flows such as password reset and email verification.
+ *
+ * Forwarded back to Firebase (e.g. via `confirmPasswordReset`) to complete the flow.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:auth
+ */
+export type FirebaseAuthOobCode = string;
+
+/**
  * Password used for completing setup or resetting a user.
  */
 export type FirebaseAuthSetupPassword = PasswordString;

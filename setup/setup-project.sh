@@ -67,6 +67,12 @@ DEP__FIREBASE_FUNCTIONS_VERSION=^7.0.0        # firebase-functions
 DEP__FIREBASE_FUNCTIONS_TEST_VERSION=3.4.1    # firebase-functions-test
 DEP__PRETTIER_VERSION=3.8.1                   # prettier
 DEP__PRETTY_QUICK_VERSION=^4.2.2              # pretty-quick
+DEP__ESLINT_PLUGIN_IMPORT_X_VERSION=^4.16.2   # eslint-plugin-import-x
+DEP__ESLINT_PLUGIN_UNUSED_IMPORTS_VERSION=4.4.1 # eslint-plugin-unused-imports
+DEP__ESLINT_CONFIG_PRETTIER_VERSION=10.1.8    # eslint-config-prettier
+DEP__ESLINT_PLUGIN_JSDOC_VERSION=^62.9.0      # eslint-plugin-jsdoc
+DEP__ESLINT_PLUGIN_SONARJS_VERSION=^4.0.3     # eslint-plugin-sonarjs
+DEP__ESLINT_PLUGIN_UNICORN_VERSION=^64.0.0    # eslint-plugin-unicorn
 DEP__MAILGUN_JS_VERSION=^12.0.0               # mailgun.js
 DEP__RXJS_VERSION=^7.8.0                      # rxjs
 DEP__MAPBOX_GL_VERSION=^3.10.0                # mapbox-gl
@@ -442,7 +448,7 @@ git add --all
 git commit --no-verify -m "checkpoint: added Docker files and other utility files"
 
 # add semver for semantic versioning, husky for pre-commit hooks, and pretty-quick for running prettier
-npm install -D husky prettier@$DEP__PRETTIER_VERSION pretty-quick@$DEP__PRETTY_QUICK_VERSION @commitlint/cli @commitlint/config-angular eslint-plugin-import eslint-plugin-unused-imports
+npm install -D husky prettier@$DEP__PRETTIER_VERSION pretty-quick@$DEP__PRETTY_QUICK_VERSION @commitlint/cli @commitlint/config-angular eslint-plugin-import-x@$DEP__ESLINT_PLUGIN_IMPORT_X_VERSION eslint-plugin-unused-imports@$DEP__ESLINT_PLUGIN_UNUSED_IMPORTS_VERSION eslint-config-prettier@$DEP__ESLINT_CONFIG_PRETTIER_VERSION eslint-plugin-jsdoc@$DEP__ESLINT_PLUGIN_JSDOC_VERSION eslint-plugin-sonarjs@$DEP__ESLINT_PLUGIN_SONARJS_VERSION eslint-plugin-unicorn@$DEP__ESLINT_PLUGIN_UNICORN_VERSION
 curl https://raw.githubusercontent.com/dereekb/dbx-components/$SOURCE_BRANCH/.commitlintrc.json -o .commitlintrc.json
 
 mkdir .husky

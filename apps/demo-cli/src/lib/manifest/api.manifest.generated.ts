@@ -217,7 +217,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultTypeDescription: 'Result of creating a new OAuth client.\n\nIncludes the generated `client_secret` in plaintext — this is the only time\nit is returned to the caller.',
     resultFields: [
       { name: 'client_id', typeText: 'OidcEntryClientId' },
-      { name: 'client_secret', typeText: 'string', description: 'The generated client secret in plaintext. Only returned for auth methods that require a secret\n(e.g., `client_secret_basic`, `client_secret_post`). Undefined for `private_key_jwt`.' }
+      { name: 'client_secret', typeText: 'string', description: 'The generated client secret in plaintext. Only returned for auth methods that require a secret\n(e.g., `client_secret_basic`, `client_secret_post`, `client_secret_jwt`). Undefined for the\nsecret-less methods `private_key_jwt` and `none` (public PKCE client) — those clients never\nhave a secret to return.' }
     ]
   },
   { model: 'oidcEntry', verb: 'delete', specifier: 'client', paramsTypeName: 'DeleteOidcClientParams', paramsValidator: deleteOidcClientParamsType, groupName: 'Oidc', sourceFile: 'packages/firebase/src/lib/model/oidcmodel/oidcmodel.api.ts', paramsTypeDescription: 'Parameters for revoking/deleting an OAuth client.' },
@@ -291,11 +291,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     paramsValidator: resetProfilePasswordParamsType,
     groupName: 'Profile',
     sourceFile: 'components/demo-firebase/src/lib/model/profile/profile.api.ts',
-    description: 'Initiates or completes a password reset for the current user.\n\nSet `requestReset: true` to start a new reset (generates a temporary\ncode and sends an email). Provide `resetPassword` + `newPassword` to\ncomplete the reset by verifying the code and setting the new password.',
-    paramsTypeDescription: "Params for initiating or completing a password reset for the current user's profile.\n\nSet `requestReset: true` to initiate a new password reset (generates a temporary code and sends an email).\nProvide `resetPassword` and `newPassword` to complete the reset by verifying the code and setting the new password.",
+    description: 'Initiates or completes a password reset for the current user.\n\nSet `requestReset: true` to start a new reset (generates a temporary\ncode and sends an email). Provide `oobCode` + `newPassword` to\ncomplete the reset by verifying the code and setting the new password.',
+    paramsTypeDescription: "Params for initiating or completing a password reset for the current user's profile.\n\nSet `requestReset: true` to initiate a new password reset (generates a temporary code and sends an email).\nProvide `oobCode` and `newPassword` to complete the reset by verifying the code and setting the new password.",
     paramsFields: [
       { name: 'requestReset', typeText: 'Maybe<boolean>', description: 'When true, initiates a new password reset and sends the reset email.' },
-      { name: 'resetPassword', typeText: 'Maybe<string>', description: 'The temporary reset code received via email. Required to complete the reset.' },
+      { name: 'email', typeText: 'Maybe<string>', description: "Email address identifying the target user for a logged-out forgot-password request.\nOnly consulted when the caller has no authenticated user context; an authenticated\ncaller's `auth.uid` always takes precedence." },
+      { name: 'oobCode', typeText: 'Maybe<string>', description: 'The full oob token from the recovery email — includes the embedded uid; do not split or mutate.\nThe server decodes the token to resolve the target user, so this single value is sufficient\neven for a logged-out forgot-password flow.' },
       { name: 'newPassword', typeText: 'Maybe<string>', description: 'The new password to set. Required to complete the reset.' }
     ]
   },
