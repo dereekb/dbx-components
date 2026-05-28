@@ -1,10 +1,38 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { JsonPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { DbxContentBorderDirective, DbxContentContainerDirective, DbxContentLayoutModule, type DbxPdfMergeEditorConfig, DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, type DbxPdfMergeEditorFileUploadConfig, DbxPdfMergeEditorFileUploadHasStateDirective, DbxPdfMergeEditorStore, DbxPdfMergeEditorFileUploadValidatorDirective } from '@dereekb/dbx-web';
+import {
+  DbxButtonComponent,
+  DbxContentBorderDirective,
+  DbxContentContainerDirective,
+  DbxContentLayoutModule,
+  type DbxPdfMergeEditorConfig,
+  DbxPdfMergeEditorComponent,
+  DbxPdfMergeEditorFileUploadComponent,
+  type DbxPdfMergeEditorFileUploadConfig,
+  DbxPdfMergeEditorFileUploadHasStateDirective,
+  DbxPdfMergeEditorStore,
+  DbxPdfMergeEditorFileUploadValidatorDirective,
+  DbxPdfMergeEditorStoreDirective,
+  DbxPdfMergeUploadButtonDirective,
+  type DbxPdfMergeUploadButtonConfig,
+  DbxPdfMergeUploadActionDirective,
+  DbxContentPitDirective
+} from '@dereekb/dbx-web';
+import { DbxActionButtonDirective, DbxActionContextLoggerDirective, DbxActionDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
+import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { distinctUntilChanged, map } from 'rxjs';
+import { distinctUntilChanged, delay, map, of } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
+
+interface DocPdfMergeUploadResult {
+  readonly size: number;
+  readonly type: string;
+  readonly receivedAt: Date;
+}
+
+const DOC_PDF_MERGE_UPLOAD_DELAY_MS = 3000;
 
 @Component({
   selector: 'doc-pdf-merge-editor-default-example',
@@ -150,9 +178,129 @@ export class DocPdfMergeEditorConfigExampleComponent {
 }
 
 @Component({
+  selector: 'doc-pdf-merge-upload-button-custom-content',
+  template: `
+    <dbx-pdf-merge-editor [showAddFiles]="false" [showFileList]="false" [showPreviewButton]="true" [showDownloadButton]="false">
+      <div dbxPdfMergeEditorFileUploadValidator>
+        <dbx-pdf-merge-editor-file-upload slotId="receipts" [config]="receiptsConfig"></dbx-pdf-merge-editor-file-upload>
+      </div>
+    </dbx-pdf-merge-editor>
+  `,
+  standalone: true,
+  imports: [DbxPdfMergeEditorComponent, DbxPdfMergeEditorFileUploadComponent, DbxPdfMergeEditorFileUploadValidatorDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DocPdfMergeUploadButtonCustomContentComponent {
+  readonly receiptsConfig: DbxPdfMergeEditorFileUploadConfig = {
+    label: 'Receipts (up to 3)',
+    accept: ['application/pdf', 'image/png', 'image/jpeg'],
+    multiple: true,
+    minFiles: 1,
+    maxFiles: 3,
+    hint: 'Drop up to three receipt PDFs or images.'
+  };
+}
+
+@Component({
+  selector: 'doc-pdf-merge-upload-button-default-example',
+  template: `
+    <dbx-content-border>
+      <div dbxAction [dbxActionHandler]="handleUpload">
+        <div dbxPdfMergeEditorStore>
+          <dbx-button text="Upload PDF" icon="picture_as_pdf" raised color="primary" dbxActionButton dbxPdfMergeUploadAction dbxPdfMergeUploadButton></dbx-button>
+        </div>
+      </div>
+    </dbx-content-border>
+    @if (lastResultSignal(); as result) {
+      <p class="dbx-hint">Last upload handled by the action ({{ DOC_PDF_MERGE_UPLOAD_DELAY_MS }}ms delay):</p>
+      <dbx-content-pit class="dbx-mt2">
+        <pre class="dbx-mb0">{{ result | json }}</pre>
+      </dbx-content-pit>
+    }
+  `,
+  standalone: true,
+  imports: [DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DocPdfMergeUploadButtonDefaultExampleComponent {
+  readonly DOC_PDF_MERGE_UPLOAD_DELAY_MS = DOC_PDF_MERGE_UPLOAD_DELAY_MS;
+  private readonly _lastResult = signal<DocPdfMergeUploadResult | undefined>(undefined);
+  readonly lastResultSignal = this._lastResult.asReadonly();
+
+  readonly handleUpload: WorkUsingObservable<Blob, boolean> = (blob: Blob) => {
+    return of(true).pipe(
+      delay(DOC_PDF_MERGE_UPLOAD_DELAY_MS),
+      map(() => {
+        this._lastResult.set({ size: blob.size, type: blob.type, receivedAt: new Date() });
+        return true;
+      })
+    );
+  };
+}
+
+@Component({
+  selector: 'doc-pdf-merge-upload-button-custom-example',
+  template: `
+    <dbx-content-border>
+      <div dbxAction [dbxActionHandler]="handleUpload">
+        <div dbxPdfMergeEditorStore [config]="storeConfig">
+          <dbx-button text="Upload Receipts" icon="cloud_upload" raised color="primary" dbxActionButton dbxPdfMergeUploadAction [dbxPdfMergeUploadButton]="buttonConfig"></dbx-button>
+        </div>
+      </div>
+    </dbx-content-border>
+    @if (lastResultSignal(); as result) {
+      <p class="dbx-hint">Last upload handled by the action (limit 8 MB, {{ DOC_PDF_MERGE_UPLOAD_DELAY_MS }}ms delay). The dialog's footer Upload button is themed via the directive's uploadButtonConfig:</p>
+      <dbx-content-pit class="dbx-mt2">
+        <pre class="dbx-mb0">{{ result | json }}</pre>
+      </dbx-content-pit>
+    }
+  `,
+  standalone: true,
+  imports: [DbxButtonComponent, DbxContentBorderDirective, DbxContentPitDirective, DbxPdfMergeEditorStoreDirective, DbxPdfMergeUploadButtonDirective, DbxPdfMergeUploadActionDirective, DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective, JsonPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class DocPdfMergeUploadButtonCustomExampleComponent {
+  readonly DOC_PDF_MERGE_UPLOAD_DELAY_MS = DOC_PDF_MERGE_UPLOAD_DELAY_MS;
+
+  private readonly _lastResult = signal<DocPdfMergeUploadResult | undefined>(undefined);
+
+  readonly lastResultSignal = this._lastResult.asReadonly();
+
+  readonly storeConfig: DbxPdfMergeEditorConfig = {
+    outputSizeLimits: {
+      warnBytes: 2 * 1024 * 1024,
+      errorBytes: 8 * 1024 * 1024
+    }
+  };
+
+  readonly buttonConfig: DbxPdfMergeUploadButtonConfig = {
+    customDialogContent: {
+      componentClass: DocPdfMergeUploadButtonCustomContentComponent
+    },
+    uploadButtonConfig: {
+      text: 'Send Receipts',
+      icon: 'send',
+      color: 'accent',
+      raised: false,
+      stroked: true
+    }
+  };
+
+  readonly handleUpload: WorkUsingObservable<Blob, boolean> = (blob: Blob) => {
+    return of(true).pipe(
+      delay(DOC_PDF_MERGE_UPLOAD_DELAY_MS),
+      map(() => {
+        this._lastResult.set({ size: blob.size, type: blob.type, receivedAt: new Date() });
+        return true;
+      })
+    );
+  };
+}
+
+@Component({
   templateUrl: './pdf.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocPdfMergeEditorDefaultExampleComponent, DocPdfMergeEditorSlotsExampleComponent, DocPdfMergeEditorMaxFilesExampleComponent, DocPdfMergeEditorConfigExampleComponent],
+  imports: [DbxContentContainerDirective, DbxContentLayoutModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocPdfMergeEditorDefaultExampleComponent, DocPdfMergeEditorSlotsExampleComponent, DocPdfMergeEditorMaxFilesExampleComponent, DocPdfMergeEditorConfigExampleComponent, DocPdfMergeUploadButtonDefaultExampleComponent, DocPdfMergeUploadButtonCustomExampleComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocExtensionPdfComponent {}
