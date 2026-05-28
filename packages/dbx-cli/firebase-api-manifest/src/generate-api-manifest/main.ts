@@ -175,6 +175,11 @@ async function main(): Promise<void> {
           const specPart = entry.specifier ? '/' + entry.specifier : '';
           console.warn(`[no-validator] ${pkg.packageName} · ${entry.model}/${entry.verb}${specPart} → ${validatorName} not exported`);
         }
+
+        if (entry.paramsHasApiParamsTag === false) {
+          const specPart = entry.specifier ? '/' + entry.specifier : '';
+          console.warn(`[no-api-params-tag] ${pkg.packageName} · ${entry.model}/${entry.verb}${specPart} → ${entry.paramsTypeName} missing @dbxModelApiParams`);
+        }
       }
 
       collected.push(enriched);

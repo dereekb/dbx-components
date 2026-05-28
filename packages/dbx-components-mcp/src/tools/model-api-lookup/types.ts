@@ -8,6 +8,11 @@ export interface ApiLookupEntry extends CrudEntry {
   readonly sourceFile: string;
   readonly paramsJsDoc: string | undefined;
   readonly paramsFields: readonly ApiLookupField[];
+  /**
+   * `true` when the params interface carries `@dbxModelApiParams`. `false` when present but untagged.
+   * `undefined` when no params interface could be resolved.
+   */
+  readonly paramsApiParamsTag: boolean | undefined;
   readonly resultJsDoc: string | undefined;
   readonly resultFields: readonly ApiLookupField[];
   readonly action: ActionResolution | undefined;
@@ -18,6 +23,10 @@ export interface ApiLookupField {
   readonly name: string;
   readonly typeText: string;
   readonly jsDoc: string | undefined;
+  /**
+   * `'adminOnly'` when the field is tagged `@dbxModelApiAdminOnly`, otherwise `'public'`.
+   */
+  readonly accessLevel: 'public' | 'adminOnly';
 }
 
 export interface ActionResolution {

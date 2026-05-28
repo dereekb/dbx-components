@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { lookupModelApi, formatLookupAsMarkdown } from './index.js';
+import type { ApiLookupReport } from './types.js';
 
 const WORKSPACE_ROOT = resolve(fileURLToPath(import.meta.url), '../../../../../..');
 const COMPONENT_DIR = 'components/demo-firebase';
@@ -75,6 +76,61 @@ describe('lookupModelApi (demo-firebase + demo-api)', () => {
     expect(markdown).toContain('# Model API lookup');
     expect(markdown).toContain('setProfileUsernameFactory');
     expect(markdown).toContain("sets a profile's username within a transaction");
+  });
+
+  it('renders admin-only badge and missing @dbxModelApiParams marker hint', () => {
+    const report: ApiLookupReport = {
+      componentDir: 'components/demo-firebase',
+      apiDir: undefined,
+      groupName: 'Guestbook',
+      modelFilter: 'guestbook',
+      sourceFile: 'src/lib/model/guestbook/guestbook.api.ts',
+      modelKeys: ['guestbook'],
+      actionLookupStatus: { kind: 'skipped', reason: 'apiDir not provided — action JSDoc skipped.' },
+      entries: [
+        {
+          model: 'guestbook',
+          verb: 'update',
+          specifier: undefined,
+          paramsTypeName: 'UpdateGuestbookParams',
+          resultTypeName: undefined,
+          line: 42,
+          sourceFile: 'src/lib/model/guestbook/guestbook.api.ts',
+          paramsJsDoc: 'Update a guestbook.',
+          paramsApiParamsTag: true,
+          paramsFields: [
+            { name: 'name', typeText: 'string', jsDoc: 'New name visible to readers.', accessLevel: 'public' },
+            { name: 'forcePublish', typeText: 'boolean', jsDoc: 'Force-publish without moderation review.', accessLevel: 'adminOnly' }
+          ],
+          resultJsDoc: undefined,
+          resultFields: [],
+          action: undefined,
+          factory: undefined
+        },
+        {
+          model: 'guestbook',
+          verb: 'create',
+          specifier: undefined,
+          paramsTypeName: 'CreateGuestbookParams',
+          resultTypeName: undefined,
+          line: 50,
+          sourceFile: 'src/lib/model/guestbook/guestbook.api.ts',
+          paramsJsDoc: 'Create a guestbook.',
+          paramsApiParamsTag: false,
+          paramsFields: [{ name: 'name', typeText: 'string', jsDoc: 'Display name.', accessLevel: 'public' }],
+          resultJsDoc: undefined,
+          resultFields: [],
+          action: undefined,
+          factory: undefined
+        }
+      ]
+    };
+
+    const markdown = formatLookupAsMarkdown(report);
+    expect(markdown).toContain('`forcePublish: boolean` _(admin only)_');
+    expect(markdown).not.toContain('`name: string` _(admin only)_');
+    expect(markdown).toContain('Missing `@dbxModelApiParams` marker on the params interface.');
+    expect(markdown.match(/Missing `@dbxModelApiParams`/g)?.length).toBe(1);
   });
 
   it('surfaces the per-call CRUD property JSDoc on each entry', async () => {

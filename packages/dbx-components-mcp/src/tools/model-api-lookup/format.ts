@@ -71,7 +71,7 @@ function formatEntry(entry: ApiLookupEntry): string {
   if (entry.description) lines.push(entry.description, '');
   lines.push(`- Wire key: \`${wireKey}\``, `- Params: ${paramsLabel}`, `- Result: ${resultLabel}`, `- Source: \`${entry.sourceFile}:${entry.line}\``, '');
 
-  appendFieldsSection({ lines, label: 'Params', jsDoc: entry.paramsJsDoc, fields: entry.paramsFields });
+  appendFieldsSection({ lines, label: 'Params', jsDoc: entry.paramsJsDoc, fields: entry.paramsFields, missingApiParamsTag: entry.paramsApiParamsTag === false });
   appendFieldsSection({ lines, label: 'Result', jsDoc: entry.resultJsDoc, fields: entry.resultFields });
   appendActionMethodSection(lines, entry.action);
   appendActionFactorySection(lines, entry.factory);
@@ -88,13 +88,15 @@ interface AppendFieldsSectionInput {
   readonly label: 'Params' | 'Result';
   readonly jsDoc: string | undefined;
   readonly fields: readonly ApiLookupField[];
+  readonly missingApiParamsTag?: boolean;
 }
 
 function appendFieldsSection(input: AppendFieldsSectionInput): void {
-  const { lines, label, jsDoc, fields } = input;
-  if (!jsDoc && fields.length === 0) return;
+  const { lines, label, jsDoc, fields, missingApiParamsTag } = input;
+  if (!jsDoc && fields.length === 0 && !missingApiParamsTag) return;
   lines.push(`### ${label}`);
   if (jsDoc) lines.push('', jsDoc);
+  if (missingApiParamsTag) lines.push('', '_Missing `@dbxModelApiParams` marker on the params interface._');
   if (fields.length > 0) {
     lines.push('');
     for (const field of fields) lines.push(formatField(field));
@@ -127,6 +129,7 @@ function formatWireKey(entry: ApiLookupEntry): string {
 }
 
 function formatField(field: ApiLookupField): string {
+  const adminBadge = field.accessLevel === 'adminOnly' ? ' _(admin only)_' : '';
   const doc = field.jsDoc ? ` — ${field.jsDoc.split('\n')[0]}` : '';
-  return `- \`${field.name}: ${field.typeText}\`${doc}`;
+  return `- \`${field.name}: ${field.typeText}\`${adminBadge}${doc}`;
 }
