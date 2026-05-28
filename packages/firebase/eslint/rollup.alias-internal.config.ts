@@ -8,7 +8,10 @@ const INTERNAL_ALIASES: Record<string, string> = {
 // `@marcbachmann/cel-js` powers the storage-rules CEL evaluator and is imported eagerly, so
 // consumers that have not installed it would otherwise fail to load the entire plugin. Bundling
 // it removes that runtime requirement.
-const BUNDLED_DEPENDENCIES = ['@marcbachmann/cel-js'];
+// `@dereekb/util/eslint` is aliased to its TS source above; it must also be dropped from the
+// external set so @nx/rollup's `external: "all"` callback doesn't short-circuit before our
+// resolveId hook can redirect the import.
+const BUNDLED_DEPENDENCIES = ['@marcbachmann/cel-js', '@dereekb/util/eslint'];
 
 /**
  * Whether a module id should be inlined into the bundle rather than left external.

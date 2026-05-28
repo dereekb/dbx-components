@@ -4,7 +4,7 @@ import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseAuthService } from '../service/firebase.auth.service';
 import { from, tap } from 'rxjs';
 import { type DbxFirebasePasswordResetFormConfig, type DbxFirebasePasswordResetFormValue, DbxFirebasePasswordResetFormComponent } from './login.password.reset.form.component';
-import { DbxActionErrorDirective, DbxActionModule, DbxActionSnackbarErrorDirective, DbxButtonComponent, DbxErrorComponent } from '@dereekb/dbx-web';
+import { DbxActionErrorDirective, DbxActionModule, DbxButtonComponent, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxActionFormDirective } from '@dereekb/dbx-form';
 import { type FirebaseAuthOobCode, firebaseAuthErrorToReadableError } from '@dereekb/firebase';
 

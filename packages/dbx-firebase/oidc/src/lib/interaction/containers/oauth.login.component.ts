@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, computed, signal, effect, type OnDestroy, type Signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, computed, signal, effect, type Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { clean, dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
 import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
@@ -7,7 +7,6 @@ import { DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY } from '../../service/oidc.confi
 import { type OidcInteractionUid } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { type OidcLoginStateCase, DbxFirebaseOAuthLoginViewComponent } from '../components/oauth.login.view.component';
-import { cleanupDestroyable } from '@dereekb/rxjs';
 
 /**
  * Container component for the OIDC OAuth login interaction flow.

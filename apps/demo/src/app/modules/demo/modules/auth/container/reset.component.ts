@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxContentBoxDirective } from '@dereekb/dbx-web';
 import { DbxFirebasePasswordResetComponent } from '@dereekb/dbx-firebase';
 import { clean, dbxRouteParamReaderInstance, DbxRouterService } from '@dereekb/dbx-core';
-import { DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY } from '@dereekb/dbx-firebase/oidc';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 /**
