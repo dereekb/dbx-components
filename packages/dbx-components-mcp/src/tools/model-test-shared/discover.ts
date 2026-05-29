@@ -14,7 +14,7 @@
 
 import { readdir, stat, type Dirent } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
-import { classifySpecFile, type SpecFileClassification } from './conventions.js';
+import { classifySpecFile, type SpecFileClassification } from '@dereekb/util';
 
 /**
  * Conventional subdirectory under an API app that houses model-group tests.

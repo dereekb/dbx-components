@@ -252,6 +252,12 @@ export interface FirebaseServerErrorInfo {
  *
  * @param input - The value to check.
  * @returns `true` if the input is a Firebase {@link HttpsError}.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-error
+ * @dbxUtilKind function
+ * @dbxUtilTags firebase, https, error, type-guard, server, callable
+ * @dbxUtilRelated is-firebase-error, firebase-server-error-info
  */
 export function isFirebaseHttpsError(input: unknown | HttpsError): input is HttpsError {
   return typeof input === 'object' && input != null && 'code' in input && 'httpErrorCode' in input && 'toJSON' in input;
@@ -262,6 +268,12 @@ export function isFirebaseHttpsError(input: unknown | HttpsError): input is Http
  *
  * @param input - The value to check.
  * @returns `true` if the input is a Firebase Admin {@link admin.FirebaseError}.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-error
+ * @dbxUtilKind function
+ * @dbxUtilTags firebase, admin, error, type-guard, server
+ * @dbxUtilRelated is-firebase-https-error, firebase-server-error-info
  */
 export function isFirebaseError(input: unknown | admin.FirebaseError): input is admin.FirebaseError {
   return typeof input === 'object' && input != null && 'code' in input && 'message' in input && 'toJSON' in input;
@@ -275,6 +287,12 @@ export function isFirebaseError(input: unknown | admin.FirebaseError): input is 
  *
  * @param e - The caught error to analyze.
  * @returns Structured {@link FirebaseServerErrorInfo} with classified error details.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-error
+ * @dbxUtilKind function
+ * @dbxUtilTags firebase, error, decode, analyze, https, admin, server, classify, server-error
+ * @dbxUtilRelated firebase-server-error-info-code-pair, firebase-server-error-info-server-error-pair, firebase-server-error-info-server-error-code-pair, is-firebase-https-error, is-firebase-error
  *
  * @example
  * ```typescript
@@ -327,6 +345,12 @@ export function firebaseServerErrorInfo(e: unknown): FirebaseServerErrorInfo {
  *
  * @param e - The caught error to analyze.
  * @returns A tuple of the Firebase error code (if present) and the full error info.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-error
+ * @dbxUtilKind function
+ * @dbxUtilTags firebase, error, code, pair, tuple, pattern-match, decode
+ * @dbxUtilRelated firebase-server-error-info, firebase-server-error-info-server-error-pair, firebase-server-error-info-server-error-code-pair
  */
 export function firebaseServerErrorInfoCodePair(e: unknown): [Maybe<FirebaseErrorCode>, FirebaseServerErrorInfo] {
   const info = firebaseServerErrorInfo(e);
@@ -338,6 +362,12 @@ export function firebaseServerErrorInfoCodePair(e: unknown): [Maybe<FirebaseErro
  *
  * @param e - The caught error to analyze.
  * @returns A tuple of the server error (if present) and the full error info.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-error
+ * @dbxUtilKind function
+ * @dbxUtilTags firebase, error, server-error, pair, tuple, pattern-match, decode, details
+ * @dbxUtilRelated firebase-server-error-info, firebase-server-error-info-code-pair, firebase-server-error-info-server-error-code-pair
  */
 export function firebaseServerErrorInfoServerErrorPair(e: unknown): [Maybe<ServerError>, FirebaseServerErrorInfo] {
   const info = firebaseServerErrorInfo(e);
@@ -349,6 +379,12 @@ export function firebaseServerErrorInfoServerErrorPair(e: unknown): [Maybe<Serve
  *
  * @param e - The caught error to analyze.
  * @returns A tuple of the server error code (if present) and the full error info.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-error
+ * @dbxUtilKind function
+ * @dbxUtilTags firebase, error, server-error, code, string-code, pair, tuple, pattern-match, decode
+ * @dbxUtilRelated firebase-server-error-info, firebase-server-error-info-code-pair, firebase-server-error-info-server-error-pair
  */
 export function firebaseServerErrorInfoServerErrorCodePair(e: unknown): [Maybe<StringErrorCode>, FirebaseServerErrorInfo] {
   const info = firebaseServerErrorInfo(e);
@@ -362,6 +398,12 @@ export function firebaseServerErrorInfoServerErrorCodePair(e: unknown): [Maybe<S
  *
  * @param e - The caught error.
  * @param handleFirebaseErrorFn - Handler that receives the typed {@link admin.FirebaseError}.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory firebase-error
+ * @dbxUtilKind function
+ * @dbxUtilTags firebase, admin, error, handler, catch, conditional, rethrow
+ * @dbxUtilRelated is-firebase-error, firebase-server-error-info
  */
 export function handleFirebaseError(e: unknown, handleFirebaseErrorFn: ThrowErrorFunction<admin.FirebaseError>): never | void {
   const firebaseError = (e as admin.FirebaseError).code ? (e as admin.FirebaseError) : undefined;

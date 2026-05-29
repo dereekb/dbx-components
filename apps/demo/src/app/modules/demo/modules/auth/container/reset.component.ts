@@ -14,9 +14,15 @@ import { toSignal } from '@angular/core/rxjs-interop';
     <dbx-content-box>
       <h2>Reset Password</h2>
       <dbx-firebase-password-reset [oobCode]="oobCodeSignal()">
-        <div>Custom Content</div>
-        <div success>Success Content</div>
-        <div error>Error Content</div>
+        <div class="dbx-pt2">
+          <div>Custom Content Example</div>
+        </div>
+        <div success class="dbx-pt2">
+          <div>Success Content</div>
+        </div>
+        <div error class="dbx-pt2">
+          <div>Error Content</div>
+        </div>
       </dbx-firebase-password-reset>
     </dbx-content-box>
   `,

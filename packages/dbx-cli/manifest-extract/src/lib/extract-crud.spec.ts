@@ -101,6 +101,50 @@ export const guestbookModelCrudFunctionsConfig = {
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory({}, guestbookModelCrudFunctionsConfig);
 `;
 
+const ADMIN_ONLY_SOURCE = `import { callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+
+/**
+ * Update a guestbook.
+ * @dbxModelApiParams
+ */
+export interface UpdateGuestbookParams {
+  /**
+   * New name visible to readers.
+   */
+  readonly name?: string;
+  /**
+   * Force-publish without moderation review.
+   * @dbxModelApiAdminOnly
+   */
+  readonly forcePublish?: boolean;
+}
+
+/**
+ * Create a guestbook. Intentionally missing the marker tag for tests.
+ */
+export interface CreateGuestbookParams {
+  /**
+   * Display name.
+   */
+  readonly name: string;
+}
+
+export type GuestbookFunctionTypeMap = {};
+
+export type GuestbookModelCrudFunctionsConfig = {
+  guestbook: {
+    create: CreateGuestbookParams;
+    update: UpdateGuestbookParams;
+  };
+};
+
+export const guestbookModelCrudFunctionsConfig = {
+  guestbook: ['create', 'update']
+};
+
+export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory({}, guestbookModelCrudFunctionsConfig);
+`;
+
 const DOCS_SOURCE = `import { callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
 
 /**
@@ -221,6 +265,23 @@ describe('extractCrudEntries', () => {
     expect(entryQuery?.specifier).toBeUndefined();
     expect(entryQuery?.paramsTypeName).toBe('QueryGuestbooksParams');
     expect(entryQuery?.resultTypeName).toBeUndefined();
+  });
+
+  it('surfaces @dbxModelApiParams marker and @dbxModelApiAdminOnly field access level', () => {
+    const extraction = extractCrudEntries({ name: 'guestbook.api.ts', text: ADMIN_ONLY_SOURCE });
+
+    const update = extraction.entries.find((e) => e.verb === 'update');
+    expect(update?.paramsTypeName).toBe('UpdateGuestbookParams');
+    expect(update?.paramsHasApiParamsTag).toBe(true);
+    expect(update?.paramsFields).toEqual([
+      { name: 'name', typeText: 'string', description: 'New name visible to readers.' },
+      { name: 'forcePublish', typeText: 'boolean', description: 'Force-publish without moderation review.', accessLevel: 'adminOnly' }
+    ]);
+
+    const create = extraction.entries.find((e) => e.verb === 'create');
+    expect(create?.paramsTypeName).toBe('CreateGuestbookParams');
+    expect(create?.paramsHasApiParamsTag).toBe(false);
+    expect(create?.paramsFields).toEqual([{ name: 'name', typeText: 'string', description: 'Display name.' }]);
   });
 
   it('reads JSDoc on params and result interfaces and surfaces functionsClassName', () => {

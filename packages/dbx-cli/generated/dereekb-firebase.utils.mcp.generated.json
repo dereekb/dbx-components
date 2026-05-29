@@ -6,6 +6,264 @@
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
   "entries": [
     {
+      "slug": "is-client-firebase-error",
+      "name": "isClientFirebaseError",
+      "kind": "function",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase",
+      "subpath": "client/error/error",
+      "signature": "isClientFirebaseError(error: unknown): error is FirebaseError",
+      "description": "Type guard that checks whether an error is a client-side {@link FirebaseError} from the `firebase/app` package.\n\nDistinguishes client Firebase errors from server-side errors or generic errors by checking\nfor the `FirebaseError` name and a string `code` property. Used by {@link convertHttpsCallableErrorToReadableError}\nto determine the appropriate error wrapping strategy.",
+      "params": [
+        {
+          "name": "error",
+          "type": "unknown",
+          "description": "- The value to check.",
+          "optional": false
+        }
+      ],
+      "returns": "`true` if the input matches the shape of a client-side `FirebaseError`",
+      "tags": [
+        "firebase",
+        "client",
+        "error",
+        "type-guard",
+        "callable",
+        "firebase-error",
+        "is",
+        "isclientfirebaseerror"
+      ],
+      "example": "try {\n  await someFirebaseOperation();\n} catch (e) {\n  if (isClientFirebaseError(e)) {\n    console.log(e.code); // e.g., 'auth/user-not-found'\n  }\n}",
+      "relatedSlugs": [
+        "convert-https-callable-error-to-readable-error",
+        "firebase-server-error"
+      ]
+    },
+    {
+      "slug": "firebase-server-error",
+      "name": "FirebaseServerError",
+      "kind": "class",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase",
+      "subpath": "client/function/error",
+      "signature": "class FirebaseServerError",
+      "description": "Client-side representation of an error originating from a Firebase Cloud Function.\n\nWraps a {@link FirebaseError} with structured server error details (status, message, code)\nextracted from the error's `details` property. Extends {@link ServerErrorResponse} for\nconsistent error handling across the application.\n\nTypically created via {@link convertHttpsCallableErrorToReadableError} when an `HttpsCallable`\ninvocation fails with a server-side error that includes structured details.",
+      "params": [
+        {
+          "name": "firebaseError",
+          "type": "FirebaseError",
+          "description": "",
+          "optional": false
+        },
+        {
+          "name": "serverError",
+          "type": "ServerError<T>",
+          "description": "",
+          "optional": false
+        }
+      ],
+      "returns": "FirebaseServerError",
+      "tags": [
+        "firebase",
+        "https",
+        "callable",
+        "error",
+        "server-error",
+        "client",
+        "response",
+        "details",
+        "firebase-error",
+        "server",
+        "firebaseservererror"
+      ],
+      "example": "try {\n  await callableFunction(data);\n} catch (e) {\n  if (e instanceof FirebaseServerError) {\n    console.log(e.code, e.message, e.firebaseError.code);\n  }\n}",
+      "relatedSlugs": [
+        "convert-https-callable-error-to-readable-error",
+        "is-client-firebase-error"
+      ]
+    },
+    {
+      "slug": "convert-https-callable-error-to-readable-error",
+      "name": "convertHttpsCallableErrorToReadableError",
+      "kind": "function",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase",
+      "subpath": "client/function/function.callable",
+      "signature": "convertHttpsCallableErrorToReadableError(error: unknown): unknown",
+      "description": "Converts errors from `HttpsCallable` calls into more readable error types.\n\nIf the error is a client-side {@link FirebaseError} with `details`, wraps it as a {@link FirebaseServerError}\nto preserve server-side error context. Otherwise, converts it to a generic readable error via `toReadableError`.",
+      "params": [
+        {
+          "name": "error",
+          "type": "unknown",
+          "description": "- The caught error from an `HttpsCallable` invocation.",
+          "optional": false
+        }
+      ],
+      "returns": "A {@link FirebaseServerError } if the error has structured details, or a generic readable error otherwise.",
+      "tags": [
+        "firebase",
+        "https",
+        "callable",
+        "error",
+        "decode",
+        "convert",
+        "readable",
+        "client",
+        "server",
+        "firebase-error",
+        "to",
+        "converthttpscallableerrortoreadableerror"
+      ],
+      "relatedSlugs": [
+        "firebase-server-error",
+        "is-client-firebase-error",
+        "firebase-auth-error-to-readable-error"
+      ]
+    },
+    {
+      "slug": "firebase-auth-error-to-readable-error",
+      "name": "firebaseAuthErrorToReadableError",
+      "kind": "function",
+      "category": "firebase-auth",
+      "module": "@dereekb/firebase",
+      "subpath": "common/auth/auth.error",
+      "signature": "firebaseAuthErrorToReadableError(inputError: FirebaseAuthError): ReadableError",
+      "description": "Converts a {@link FirebaseAuthError} into a user-friendly {@link ReadableError} with a human-readable message.\n\nMaps known error codes (wrong password, user not found, network errors) to contextual messages\nsuitable for display in the UI.",
+      "params": [
+        {
+          "name": "inputError",
+          "type": "FirebaseAuthError",
+          "description": "- The Firebase Auth error to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "A {@link ReadableError } with a human-readable message suitable for display.",
+      "tags": [
+        "firebase",
+        "auth",
+        "error",
+        "readable",
+        "convert",
+        "decode",
+        "message",
+        "login",
+        "signin",
+        "firebase-auth",
+        "to",
+        "firebaseautherrortoreadableerror"
+      ],
+      "example": "try {\n  await signIn(email, password);\n} catch (e) {\n  const readable = firebaseAuthErrorToReadableError(e as FirebaseAuthError);\n  showToast(readable.message);\n}",
+      "relatedSlugs": [
+        "convert-https-callable-error-to-readable-error",
+        "firebase-server-error"
+      ]
+    },
+    {
+      "slug": "firebase-auth-oob-code-data-pair-delimiter",
+      "name": "FIREBASE_AUTH_OOB_CODE_DATA_PAIR_DELIMITER",
+      "kind": "const",
+      "category": "firebase-auth",
+      "module": "@dereekb/firebase",
+      "subpath": "common/auth/auth",
+      "signature": "const FIREBASE_AUTH_OOB_CODE_DATA_PAIR_DELIMITER: \"-\"",
+      "description": "Delimiter used when encoding a {@link FirebaseAuthOobCodeDataPair} into a {@link FirebaseAuthOobCode}.\n\nThe encoded form is `${code}-${uid}` and splitting happens on the first delimiter occurrence,\nso this only requires that the generated code/password not contain `-`. The uid is unrestricted\nand may itself contain `-`.",
+      "params": [],
+      "returns": "\"-\"",
+      "tags": [
+        "firebase",
+        "auth",
+        "oob",
+        "code",
+        "delimiter",
+        "constant",
+        "firebase-auth",
+        "data",
+        "pair",
+        "firebase_auth_oob_code_data_pair_delimiter"
+      ],
+      "relatedSlugs": [
+        "encode-firebase-auth-oob-code",
+        "decode-firebase-auth-oob-code"
+      ]
+    },
+    {
+      "slug": "encode-firebase-auth-oob-code",
+      "name": "encodeFirebaseAuthOobCode",
+      "kind": "function",
+      "category": "firebase-auth",
+      "module": "@dereekb/firebase",
+      "subpath": "common/auth/auth",
+      "signature": "encodeFirebaseAuthOobCode(pair: FirebaseAuthOobCodeDataPair): FirebaseAuthOobCode",
+      "description": "Encodes a {@link FirebaseAuthOobCodeDataPair} into a URL-safe {@link FirebaseAuthOobCode}.\n\nThe encoded form is `${code}-${uid}` — code first so that splitting on the first delimiter\nstill works even when the uid itself contains `-` (Firebase uids occasionally do).",
+      "params": [
+        {
+          "name": "pair",
+          "type": "FirebaseAuthOobCodeDataPair",
+          "description": "",
+          "optional": false
+        }
+      ],
+      "returns": "FirebaseAuthOobCode",
+      "tags": [
+        "firebase",
+        "auth",
+        "oob",
+        "code",
+        "encode",
+        "uid",
+        "password",
+        "reset",
+        "setup",
+        "serialize",
+        "firebase-auth",
+        "encodefirebaseauthoobcode"
+      ],
+      "example": "encodeFirebaseAuthOobCode({ uid: 'abc-123', code: 'xyz789' });  // 'xyz789-abc-123'",
+      "relatedSlugs": [
+        "decode-firebase-auth-oob-code",
+        "firebase-auth-oob-code-data-pair-delimiter"
+      ]
+    },
+    {
+      "slug": "decode-firebase-auth-oob-code",
+      "name": "decodeFirebaseAuthOobCode",
+      "kind": "function",
+      "category": "firebase-auth",
+      "module": "@dereekb/firebase",
+      "subpath": "common/auth/auth",
+      "signature": "decodeFirebaseAuthOobCode(oobCode: FirebaseAuthOobCode): Maybe<FirebaseAuthOobCodeDataPair>",
+      "description": "Decodes a {@link FirebaseAuthOobCode} back into its {@link FirebaseAuthOobCodeDataPair}.\n\nSplits on the first `-` so uids containing additional `-` characters survive the round-trip\nintact. Returns null when the input is missing the delimiter or has empty parts.",
+      "params": [
+        {
+          "name": "oobCode",
+          "type": "FirebaseAuthOobCode",
+          "description": "",
+          "optional": false
+        }
+      ],
+      "returns": "Maybe<FirebaseAuthOobCodeDataPair>",
+      "tags": [
+        "firebase",
+        "auth",
+        "oob",
+        "code",
+        "decode",
+        "parse",
+        "uid",
+        "password",
+        "reset",
+        "setup",
+        "deserialize",
+        "firebase-auth",
+        "decodefirebaseauthoobcode"
+      ],
+      "example": "decodeFirebaseAuthOobCode('xyz789-abc-123');  // { uid: 'abc-123', code: 'xyz789' }\ndecodeFirebaseAuthOobCode('invalid');         // null",
+      "relatedSlugs": [
+        "encode-firebase-auth-oob-code",
+        "firebase-auth-oob-code-data-pair-delimiter"
+      ]
+    },
+    {
       "slug": "new-documents",
       "name": "newDocuments",
       "kind": "function",
@@ -1165,7 +1423,7 @@
       "category": "firestore",
       "module": "@dereekb/firebase",
       "subpath": "common/firestore/accessor/document.utility",
-      "signature": "useDocumentSnapshotData(): <D extends import(\"/Users/dereekb/development/git/dbx-components/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocument<any, import(\"/Users/dereekb/development/git/dbx-components/packages/firebase/src/lib/common/firestore/collection/collection\").FirestoreModelIdentity>, O = void>(document: Maybe<D>, use: UseAsync<import(\"/Users/dereekb/development/git/dbx-components/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocumentData<D>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => Promise<Maybe<O>>",
+      "signature": "useDocumentSnapshotData(): <D extends import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocument<any, import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/collection/collection\").FirestoreModelIdentity>, O = void>(document: Maybe<D>, use: UseAsync<import(\"/Users/dereekb/development/git/dbcomponents/packages/firebase/src/lib/common/firestore/accessor/document\").FirestoreDocumentData<D>, O>, defaultValue?: Maybe<AsyncGetterOrValue<O>>) => Promise<Maybe<O>>",
       "description": "Fetches a document's snapshot data (via `snapshot.data()`) and passes it to a `use` callback.\n\nWraps {@link useDocumentSnapshot} with a mapping step that extracts raw data from the snapshot.\nIf the document doesn't exist (data is `undefined`), the `use` callback is not invoked\nand `defaultValue` is returned instead.",
       "params": [],
       "returns": "The result of `use`, or the default value",

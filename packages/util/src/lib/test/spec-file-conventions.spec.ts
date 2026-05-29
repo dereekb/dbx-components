@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildCanonicalFilename, classifySpecFile, recommendBucketsForGroup, recommendSpecPath } from './conventions.js';
+import { buildCanonicalFilename, classifySpecFile, recommendBucketsForGroup, recommendSpecPath } from './spec-file-conventions';
 
 describe('classifySpecFile', () => {
   it('recognises a canonical `<group>.crud.spec.ts`', () => {

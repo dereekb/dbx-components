@@ -6,7 +6,7 @@ import { type Maybe } from '@dereekb/util';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
 import { DbxFileUploadComponent, type DbxFileUploadMode } from '../../interaction/upload/upload.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry } from './pdf.merge';
 import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeEditorFileUploadValidatorDirective } from './pdf.merge.editor.file.upload.validator.directive';
@@ -123,6 +123,7 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   readonly store = inject(DbxPdfMergeEditorStore);
   private readonly _validator = inject(DbxPdfMergeEditorFileUploadValidatorDirective, { optional: true });
   private readonly _injectedConfig = inject(DBX_PDF_MERGE_EDITOR_CONFIG, { optional: true });
+  private readonly _preserveEntriesOnDestroy = inject(DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, { optional: true }) ?? false;
 
   readonly slotId = input.required<string>();
   readonly config = input<Maybe<DbxPdfMergeEditorFileUploadConfig>>();
@@ -237,7 +238,14 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
 
   ngOnDestroy(): void {
     this._validator?.unregisterSlot(this);
-    this.store.removeEntriesBySlotId(this.slotId());
+
+    // Default behavior: removing a slot from a template (e.g. via `@if`) also drops the slot's
+    // entries from the store. Opt out by providing `DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY`
+    // (the PDF merge upload dialog supplies it automatically so dialog-hosted slots preserve
+    // entries when the dialog tears down, while the user's selection lives on the ancestor store).
+    if (!this._preserveEntriesOnDestroy) {
+      this.store.removeEntriesBySlotId(this.slotId());
+    }
   }
 
   onDrop(event: CdkDragDrop<unknown>): void {

@@ -180,3 +180,18 @@ export const DBX_PDF_MERGE_EDITOR_CONFIG = new InjectionToken<DbxPdfMergeEditorC
 export function provideDbxPdfMergeEditorConfig(config: DbxPdfMergeEditorConfig): Provider {
   return { provide: DBX_PDF_MERGE_EDITOR_CONFIG, useValue: config };
 }
+
+/**
+ * Injection token that, when bound to `true`, makes `<dbx-pdf-merge-editor-file-upload>` slots skip their default `ngOnDestroy` cleanup (which removes the slot's entries from the shared store). Use when slots are hosted inside an ephemeral container — for example, the PDF merge upload dialog — and the store outlives that container, so the user's selection should survive when the container is torn down. Defaults to `false` (slot destroy removes its entries) which keeps the in-page editor's behavior for the common case where adding/removing a slot via `@if` should drop its entries with it.
+ */
+export const DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY = new InjectionToken<boolean>('DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY');
+
+/**
+ * Helper that returns a {@link Provider} binding {@link DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY}.
+ *
+ * @param preserve - When `true`, descendant `<dbx-pdf-merge-editor-file-upload>` slots skip the destroy-time entry removal. Defaults to `true` because that is the value callers typically want when they bother to reach for the helper.
+ * @returns Provider entry suitable for inclusion in `providers`.
+ */
+export function provideDbxPdfMergeEditorPreserveEntriesOnSlotDestroy(preserve: boolean = true): Provider {
+  return { provide: DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, useValue: preserve };
+}

@@ -16,6 +16,11 @@ export interface CrudEntryDocField {
   readonly name: string;
   readonly typeText: string;
   readonly description?: string;
+  /**
+   * Access posture parsed from the property's `@dbxModelApiAdminOnly` JSDoc flag.
+   * Omitted when the flag is absent (treated as `'public'` by consumers).
+   */
+  readonly accessLevel?: 'public' | 'adminOnly';
 }
 
 export interface CrudEntry {
@@ -60,6 +65,13 @@ export interface CrudEntry {
    * Per-field JSDocs read from the params interface's properties.
    */
   readonly paramsFields?: readonly CrudEntryDocField[];
+  /**
+   * `true` when the resolved params interface carries the `@dbxModelApiParams` marker tag,
+   * `false` when it is present but untagged. `undefined` when no params interface could be
+   * resolved (e.g. bare primitive params). Used by the manifest builder to warn about
+   * params types referenced from CRUD config that are missing the marker.
+   */
+  readonly paramsHasApiParamsTag?: boolean;
   /**
    * JSDoc summary on the result interface itself (e.g. on `DownloadProfileArchiveResult`).
    */

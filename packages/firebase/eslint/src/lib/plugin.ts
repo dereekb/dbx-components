@@ -11,6 +11,8 @@ import { FIREBASE_REQUIRE_FIRESTORE_RULE_FOR_SERVICE_MODEL_RULE } from './requir
 import { FIREBASE_REQUIRE_DBX_MODEL_SERVICE_FACTORY_TAG_RULE } from './require-dbx-model-service-factory-tag.rule';
 import { FIREBASE_REQUIRE_SERVICE_FACTORY_FOR_DBX_MODEL_RULE } from './require-service-factory-for-dbx-model.rule';
 import { FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE } from './require-dbx-model-companion-tags.rule';
+import { FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE } from './require-canonical-api-spec-filename.rule';
+import { FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE } from './require-api-crud-spec-for-group.rule';
 
 /**
  * ESLint plugin interface for `@dereekb/firebase` rules.
@@ -30,6 +32,8 @@ export interface FirebaseEslintPlugin {
     readonly 'require-dbx-model-service-factory-tag': typeof FIREBASE_REQUIRE_DBX_MODEL_SERVICE_FACTORY_TAG_RULE;
     readonly 'require-service-factory-for-dbx-model': typeof FIREBASE_REQUIRE_SERVICE_FACTORY_FOR_DBX_MODEL_RULE;
     readonly 'require-dbx-model-companion-tags': typeof FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE;
+    readonly 'require-canonical-api-spec-filename': typeof FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE;
+    readonly 'require-api-crud-spec-for-group': typeof FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE;
   };
 }
 
@@ -53,7 +57,9 @@ export const FIREBASE_ESLINT_PLUGIN: FirebaseEslintPlugin = {
     'require-firestore-rule-for-service-model': FIREBASE_REQUIRE_FIRESTORE_RULE_FOR_SERVICE_MODEL_RULE,
     'require-dbx-model-service-factory-tag': FIREBASE_REQUIRE_DBX_MODEL_SERVICE_FACTORY_TAG_RULE,
     'require-service-factory-for-dbx-model': FIREBASE_REQUIRE_SERVICE_FACTORY_FOR_DBX_MODEL_RULE,
-    'require-dbx-model-companion-tags': FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE
+    'require-dbx-model-companion-tags': FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE,
+    'require-canonical-api-spec-filename': FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE,
+    'require-api-crud-spec-for-group': FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE
   }
 };
 

@@ -10,7 +10,7 @@ export { inspectSpecFile } from './inspect.js';
 export { searchSpecTree } from './search.js';
 export { formatTreeAsJson, formatSearchAsJson } from './format.json.js';
 export { formatTreeAsMarkdown, formatSearchAsMarkdown } from './format.markdown.js';
-export { buildCanonicalFilename, CANONICAL_KINDS, classifySpecFile, recommendBucketsForGroup, recommendSpecPath, type SpecBucketRecommendation, type SpecFileClassification, type SpecFileKind } from './conventions.js';
+export { buildCanonicalFilename, CANONICAL_KINDS, classifySpecFile, recommendBucketsForGroup, recommendSpecPath, type SpecBucketRecommendation, type SpecFileClassification, type SpecFileKind } from '@dereekb/util';
 export { discoverSpecFilesByGroup, FUNCTION_DIR_REL, type DiscoveredSpecCatalog, type DiscoveredSpecFile, type DiscoveredSpecGroup } from './discover.js';
 export { formatListAppAsJson, formatListAppAsMarkdown } from './format.list-app.js';
 export type { HelperDescribe, PrefixSource, SpecFileTree, SpecNode, SpecNodeKind, SpecSearchHit, SpecSearchQuery, SpecSearchResult, SpecTreeFilters, SpecTreeView } from './types.js';

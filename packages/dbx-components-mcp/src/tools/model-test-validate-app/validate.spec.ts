@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { classifySpecFile } from '../model-test-shared/conventions.js';
+import { classifySpecFile } from '@dereekb/util';
 import type { DiscoveredSpecCatalog, DiscoveredSpecFile, DiscoveredSpecGroup } from '../model-test-shared/index.js';
 import type { ExtractionOutcome } from '../model-list-component/extract.js';
 import type { ComponentModelEntry } from '../model-list-component/types.js';

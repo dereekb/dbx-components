@@ -143,6 +143,24 @@ export default [
     }
   },
   {
+    files: ['apps/**/src/app/function/**/*.spec.ts'],
+    plugins: {
+      'dereekb-firebase': FIREBASE_ESLINT_PLUGIN
+    },
+    rules: {
+      'dereekb-firebase/require-canonical-api-spec-filename': 'warn' // enforce the `<group>.crud[.<sub>...].spec.ts` / `<group>.scenario[.<sub>...].spec.ts` convention on API spec files (mirrors `dbx_model_test_validate_app` filename-drift checks via the shared `classifySpecFile` classifier in `@dereekb/util`)
+    }
+  },
+  {
+    files: ['apps/**/src/app/function/*/index.ts'],
+    plugins: {
+      'dereekb-firebase': FIREBASE_ESLINT_PLUGIN
+    },
+    rules: {
+      'dereekb-firebase/require-api-crud-spec-for-group': 'warn' // require every API model-group function folder to ship a `<group>.crud.spec.ts` covering the CRUD function map (mirrors `dbx_model_test_validate_app` coverage check)
+    }
+  },
+  {
     files: ['**/*.ts'],
     plugins: {
       'dereekb-dbx-web': DBX_WEB_ESLINT_PLUGIN

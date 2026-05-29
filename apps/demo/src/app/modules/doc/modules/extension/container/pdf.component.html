@@ -21,5 +21,41 @@
       <p>Configure the editor with `imageCompression` to downscale and (optionally) convert images on upload, and `outputSizeLimits` to surface warn/error banners. Crossing `errorBytes` blocks Preview/Download via the store's validity gate. Each compressed entry shows a "Resized" / "Converted PNG → JPEG" chip with the original byte count.</p>
       <doc-pdf-merge-editor-config-example></doc-pdf-merge-editor-config-example>
     </doc-feature-example>
+    <doc-feature-example header="dbxPdfMergeUploadButton directive" hint="Compose dbxPdfMergeUploadButton on a stock dbx-button alongside dbxActionButton. The directive intercepts the click to open the editor in a dialog; on confirm it pre-sets the action's readyValue with the merged Blob and lets dbxActionButton's trigger flow run as usual.">
+      <p>
+        Wrap the trigger in
+        <code>[dbxPdfMergeEditorStore]</code>
+        and (optionally) a
+        <code>dbxAction</code>
+        with a handler. The
+        <code>dbxPdfMergeUploadButton</code>
+        directive registers a
+        <code>DbxButtonInterceptor</code>
+        on the host
+        <code>dbx-button</code>
+        — when the dialog returns a confirmed Blob it calls
+        <code>readyValue(blob)</code>
+        on the surrounding action source, and the sibling
+        <code>dbxActionButton</code>
+        directive handles the resulting click and pipes working/disabled state back to the button. Close the dialog without confirming to keep the editor entries for a later attempt.
+      </p>
+      <doc-pdf-merge-upload-button-default-example></doc-pdf-merge-upload-button-default-example>
+    </doc-feature-example>
+    <doc-feature-example header="dbxPdfMergeUploadButton with custom dialog content + themed footer button" hint="Set customDialogContent on the directive's config to render a tailored merge editor inside the dialog, and uploadButtonConfig to fully restyle the dialog's footer Upload button (text/icon/color/raised/variant).">
+      <p>
+        Pass a
+        <code>DbxPdfMergeUploadButtonConfig</code>
+        whose
+        <code>customDialogContent</code>
+        renders any custom
+        <code>dbx-pdf-merge-editor</code>
+        configuration (slots, multiple uploaders, etc.) and whose
+        <code>uploadButtonConfig</code>
+        overrides the dialog footer Upload button (text, icon, color, raised, flat/stroked/tonal/basic variant flags). Leave the inner component config's
+        <code>injector</code>
+        unset so the injected component inherits the dialog's injector and sees the same store.
+      </p>
+      <doc-pdf-merge-upload-button-custom-example></doc-pdf-merge-upload-button-custom-example>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

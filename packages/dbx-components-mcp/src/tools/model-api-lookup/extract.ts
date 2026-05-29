@@ -93,6 +93,7 @@ function mapEntry(entry: CrudEntry, sourceFile: string, actionLookup: Awaited<Re
     sourceFile,
     paramsJsDoc: entry.paramsTypeDescription,
     paramsFields: mapDocFields(entry.paramsFields),
+    paramsApiParamsTag: entry.paramsHasApiParamsTag,
     resultJsDoc: entry.resultTypeDescription,
     resultFields: mapDocFields(entry.resultFields),
     action,
@@ -101,14 +102,15 @@ function mapEntry(entry: CrudEntry, sourceFile: string, actionLookup: Awaited<Re
 }
 
 function mapDocFields(fields: readonly CrudEntryDocField[] | undefined): readonly ApiLookupField[] {
-  if (!fields) {
-    return [];
-  }
-  return fields.map((field) => ({
-    name: field.name,
-    typeText: field.typeText,
-    jsDoc: field.description
-  }));
+  const result: readonly ApiLookupField[] = fields
+    ? fields.map((field) => ({
+        name: field.name,
+        typeText: field.typeText,
+        jsDoc: field.description,
+        accessLevel: field.accessLevel ?? 'public'
+      }))
+    : [];
+  return result;
 }
 
 async function collectApiSources(componentAbs: string): Promise<readonly ApiSource[]> {

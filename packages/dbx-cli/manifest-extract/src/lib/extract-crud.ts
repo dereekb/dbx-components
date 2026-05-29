@@ -126,6 +126,7 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
           description: readJsDocSummary(member),
           paramsTypeDescription: paramsDocs?.typeDescription,
           paramsFields: paramsDocs?.fields,
+          paramsHasApiParamsTag: paramsDocs?.hasApiParamsTag,
           resultTypeDescription: resultDocs?.typeDescription,
           resultFields: resultDocs?.fields
         });
@@ -231,6 +232,7 @@ function collectVerbEntries(input: CollectVerbEntriesInput): void {
         description: readJsDocSummary(specMember),
         paramsTypeDescription: paramsDocs?.typeDescription,
         paramsFields: paramsDocs?.fields,
+        paramsHasApiParamsTag: paramsDocs?.hasApiParamsTag,
         resultTypeDescription: resultDocs?.typeDescription,
         resultFields: resultDocs?.fields
       });
@@ -250,6 +252,7 @@ function collectVerbEntries(input: CollectVerbEntriesInput): void {
     description: fallbackDescription,
     paramsTypeDescription: paramsDocs?.typeDescription,
     paramsFields: paramsDocs?.fields,
+    paramsHasApiParamsTag: paramsDocs?.hasApiParamsTag,
     resultTypeDescription: resultDocs?.typeDescription,
     resultFields: resultDocs?.fields
   });
@@ -293,6 +296,11 @@ function typeNodeName(node: TypeNode): string | undefined {
 interface TypeDocs {
   readonly typeDescription?: string;
   readonly fields?: readonly CrudEntryDocField[];
+  /**
+   * `true` when the resolved interface carries the `@dbxModelApiParams` marker tag.
+   * Only populated for interface declarations; type aliases stay `undefined`.
+   */
+  readonly hasApiParamsTag?: boolean;
 }
 
 function readTypeDocs(sourceFile: SourceFile, typeName: string): TypeDocs | undefined {
@@ -300,17 +308,28 @@ function readTypeDocs(sourceFile: SourceFile, typeName: string): TypeDocs | unde
   const interfaceDecl = sourceFile.getInterface(typeName);
   if (interfaceDecl) {
     const typeDescription = readJsDocSummary(interfaceDecl);
+    const hasApiParamsTag = hasJsDocFlag(interfaceDecl, 'dbxModelApiParams');
     const fields: CrudEntryDocField[] = [];
     for (const property of interfaceDecl.getProperties()) {
       const fieldName = property.getName();
       const description = readJsDocSummary(property);
       const typeNode = property.getTypeNode();
       const typeText = typeNode?.getText().trim() ?? '';
-      const field: CrudEntryDocField = description ? { name: fieldName, typeText, description } : { name: fieldName, typeText };
+      const adminOnly = hasJsDocFlag(property, 'dbxModelApiAdminOnly');
+      const field: CrudEntryDocField = {
+        name: fieldName,
+        typeText,
+        ...(description ? { description } : {}),
+        ...(adminOnly ? { accessLevel: 'adminOnly' as const } : {})
+      };
       fields.push(field);
     }
-    if (typeDescription || fields.length > 0) {
-      result = { typeDescription, fields: fields.length > 0 ? fields : undefined };
+    if (typeDescription || fields.length > 0 || hasApiParamsTag) {
+      result = {
+        ...(typeDescription ? { typeDescription } : {}),
+        ...(fields.length > 0 ? { fields } : {}),
+        hasApiParamsTag
+      };
     }
   } else {
     const typeAlias = sourceFile.getTypeAlias(typeName);
@@ -318,6 +337,28 @@ function readTypeDocs(sourceFile: SourceFile, typeName: string): TypeDocs | unde
       const typeDescription = readJsDocSummary(typeAlias);
       if (typeDescription) {
         result = { typeDescription };
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Returns `true` when any JSDoc block on `node` carries the bare `@<tagName>` flag.
+ *
+ * Used for boolean marker tags like `@dbxModelApiParams` and `@dbxModelApiAdminOnly`
+ * where the presence of the tag is the entire signal (no value parsing needed).
+ *
+ * @param node - Any JSDocable ts-morph node (interface, property, etc.).
+ * @param tagName - Tag name without the leading `@` (e.g. `'dbxModelApiAdminOnly'`).
+ * @returns `true` when at least one JSDoc tag with `tagName` is present.
+ */
+function hasJsDocFlag(node: JSDocableNode, tagName: string): boolean {
+  let result = false;
+  for (const doc of node.getJsDocs()) {
+    for (const tag of doc.getTags()) {
+      if (tag.getTagName() === tagName) {
+        result = true;
       }
     }
   }

@@ -35,3 +35,4 @@ export * from './path';
 export * from './sort';
 export * from './type';
 export * from './encryption';
+export * from './test';

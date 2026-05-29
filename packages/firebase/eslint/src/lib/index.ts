@@ -11,6 +11,8 @@ export { FIREBASE_REQUIRE_FIRESTORE_RULE_FOR_SERVICE_MODEL_RULE, DEFAULT_FIRESTO
 export { FIREBASE_REQUIRE_DBX_MODEL_SERVICE_FACTORY_TAG_RULE, FIREBASE_MODEL_SERVICE_FACTORY_NAME, FIREBASE_MODEL_SERVICE_FACTORY_MODULE, DBX_MODEL_SERVICE_FACTORY_TAG, type FirebaseRequireDbxModelServiceFactoryTagRuleOptions, type FirebaseRequireDbxModelServiceFactoryTagRuleDefinition } from './require-dbx-model-service-factory-tag.rule';
 export { FIREBASE_REQUIRE_SERVICE_FACTORY_FOR_DBX_MODEL_RULE, DEFAULT_FACTORY_SEARCH_ROOTS, DEFAULT_MODEL_MARKER_TAG, DEFAULT_FACTORY_TAG, type FirebaseRequireServiceFactoryForDbxModelRuleOptions, type FirebaseRequireServiceFactoryForDbxModelRuleDefinition } from './require-service-factory-for-dbx-model.rule';
 export { FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE, type FirebaseRequireDbxModelCompanionTagsRuleOptions, type FirebaseRequireDbxModelCompanionTagsRuleDefinition } from './require-dbx-model-companion-tags.rule';
+export { FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE, DEFAULT_FUNCTION_DIR_SEGMENT, type FirebaseRequireCanonicalApiSpecFilenameRuleOptions, type FirebaseRequireCanonicalApiSpecFilenameRuleDefinition } from './require-canonical-api-spec-filename.rule';
+export { FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE, type FirebaseRequireApiCrudSpecForGroupRuleOptions, type FirebaseRequireApiCrudSpecForGroupRuleDefinition } from './require-api-crud-spec-for-group.rule';
 export { parseStorageRules, MIRRORS_POLICY_KEY_MARKER_REGEX, type ParsedRuleBranch, type ParsedStorageRulesBlock } from './storage-rules-parser';
 export { parseFirestoreRules, type ParsedFirestoreMatchBlock } from './firestore-rules-parser';
 export { FIREBASE_ESLINT_PLUGIN, firebaseESLintPlugin, type FirebaseEslintPlugin } from './plugin';
