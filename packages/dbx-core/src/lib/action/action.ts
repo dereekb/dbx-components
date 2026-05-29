@@ -1,3 +1,4 @@
+import { type Type, type Provider, forwardRef } from '@angular/core';
 import { LoadingStateType } from '@dereekb/rxjs';
 import { type PercentNumber, type Maybe } from '@dereekb/util';
 
@@ -45,6 +46,47 @@ export function dbxActionWorkProgress(workOrWorkProgress: Maybe<DbxActionWorkOrW
   }
 
   return workingProgress;
+}
+
+/**
+ * Abstract interface for anything whose disabled/working state can be driven by the action system.
+ *
+ * Used purely as a DI token so a sync directive (e.g. {@link DbxFileUploadActionSyncDirective}) can
+ * reflect an action's disabled/working state onto any compatible target -- a button
+ * ({@link DbxButton}) or a file upload component ({@link DbxFileUploadActionCompatable}), both of
+ * which extend this class and register it via their respective `provide...` helpers.
+ */
+export abstract class DbxActionWorkable {
+  /**
+   * Sets the disabled state of the target. If null/undefined the target is treated as disabled.
+   */
+  abstract setDisabled(disabled?: Maybe<boolean>): void;
+  /**
+   * Sets the working state of the target.
+   *
+   * If a number is passed, it is treated as a progress percentage; `true` is indeterminate
+   * progress; `false`/null/undefined is not working.
+   */
+  abstract setWorking(working?: Maybe<DbxActionWorkOrWorkProgress>): void;
+}
+
+/**
+ * Creates Angular providers that register a {@link DbxActionWorkable} implementation for DI.
+ *
+ * Intended to be composed into a target type's own provider helper (e.g. {@link provideDbxButton},
+ * {@link provideDbxFileUploadActionCompatable}) so that a single source type is exposed both under
+ * its specific token and under {@link DbxActionWorkable}.
+ *
+ * @param sourceType - The concrete class that implements {@link DbxActionWorkable}.
+ * @returns Array of Angular providers for {@link DbxActionWorkable}.
+ */
+export function provideDbxActionWorkable<S extends DbxActionWorkable>(sourceType: Type<S>): Provider[] {
+  return [
+    {
+      provide: DbxActionWorkable,
+      useExisting: forwardRef(() => sourceType)
+    }
+  ];
 }
 
 /**

@@ -6,3 +6,4 @@ export * from './storagefile.upload.image.compression.modifier';
 export * from './storagefile.upload.initialize.document.directive';
 export * from './storagefile.upload.store.directive';
 export * from './storagefile.upload.sync.directive';
+export * from './storagefile.pdfmerge.upload.sync.directive';

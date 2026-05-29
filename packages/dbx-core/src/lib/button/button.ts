@@ -1,7 +1,7 @@
 import { type Type, type Provider, forwardRef } from '@angular/core';
 import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { type Observable } from 'rxjs';
-import { type DbxActionWorkProgress, type DbxActionWorkOrWorkProgress } from '../action/action';
+import { DbxActionWorkable, provideDbxActionWorkable, type DbxActionWorkProgress, type DbxActionWorkOrWorkProgress } from '../action/action';
 
 /**
  * Progress value for a button's working state, expressed as a percentage (0-100).
@@ -108,7 +108,7 @@ export interface DbxButtonEcho {
  * @see {@link AbstractDbxButtonDirective} for the default implementation.
  * @see {@link DbxButtonDirective} for the concrete directive.
  */
-export abstract class DbxButton {
+export abstract class DbxButton extends DbxActionWorkable {
   /**
    * Observable of the disabled state of the button.
    */
@@ -128,9 +128,11 @@ export abstract class DbxButton {
   /**
    * Sets the disabled state of the button. If null/undefined the button will be disabled.
    *
+   * Inherited from {@link DbxActionWorkable}.
+   *
    * @param disabled
    */
-  abstract setDisabled(disabled?: Maybe<boolean>): void;
+  abstract override setDisabled(disabled?: Maybe<boolean>): void;
   /**
    * Sets the working state of the button.
    *
@@ -139,8 +141,10 @@ export abstract class DbxButton {
    * If true is passed, then it is treated as an indeterminate progress.
    *
    * If null/undefined is passed, then the button will not be working.
+   *
+   * Inherited from {@link DbxActionWorkable}.
    */
-  abstract setWorking(working?: Maybe<DbxButtonWorking>): void;
+  abstract override setWorking(working?: Maybe<DbxButtonWorking>): void;
   /**
    * Sets the display content of the button.
    *
@@ -187,7 +191,8 @@ export function provideDbxButton<S extends DbxButton>(sourceType: Type<S>): Prov
     {
       provide: DbxButton,
       useExisting: forwardRef(() => sourceType)
-    }
+    },
+    ...provideDbxActionWorkable(sourceType)
   ];
 }
 
