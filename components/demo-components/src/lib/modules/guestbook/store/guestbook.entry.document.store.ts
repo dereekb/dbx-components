@@ -1,7 +1,7 @@
 import { first, type Observable, shareReplay, from, switchMap } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
-import { AbstractDbxFirebaseDocumentWithParentStore } from '@dereekb/dbx-firebase';
+import { AbstractDbxFirebaseDocumentWithParentStore, firebaseDocumentStoreCrudFunction, firebaseDocumentStoreInvokeFunction } from '@dereekb/dbx-firebase';
 import { DemoFirestoreCollections, type Guestbook, type GuestbookDocument, type GuestbookEntry, type GuestbookEntryDocument, GuestbookFunctions, type InsertGuestbookEntryParams } from 'demo-firebase';
 import { GuestbookDocumentStore } from './guestbook.document.store';
 
@@ -18,6 +18,18 @@ export class GuestbookEntryDocumentStore extends AbstractDbxFirebaseDocumentWith
       this.setParentStore(parent);
     }
   }
+
+  /**
+   * Un-keyed invoke — collection-wide RPC that returns every published GuestbookEntry across all guestbooks.
+   * Uses `firebaseDocumentStoreCrudFunction` because the params don't target the store's current document.
+   */
+  readonly allPublishedEntries = firebaseDocumentStoreCrudFunction(this.guestbookFunctions.guestbookEntry.invokeGuestbookEntry.allPublishedEntries);
+
+  /**
+   * Keyed invoke — returns a computed projection of the store's current entry.
+   * Uses `firebaseDocumentStoreInvokeFunction` which injects `store.key$` into the request.
+   */
+  readonly entryDetails = firebaseDocumentStoreInvokeFunction(this, this.guestbookFunctions.guestbookEntry.invokeGuestbookEntry.entryDetails);
 
   insertEntry(params: Omit<InsertGuestbookEntryParams, 'guestbook'>): Observable<LoadingState<void>> {
     return this.parent$.pipe(

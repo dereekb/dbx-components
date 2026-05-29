@@ -27,7 +27,23 @@ import {
   updateStorageFileGroupParamsType,
   updateStorageFileParamsType
 } from '@dereekb/firebase';
-import { allPublishedGuestbookEntriesParamsType, createGuestbookParamsType, downloadProfileArchiveParamsType, exampleReadParamsType, finishOnboardingProfileParamsType, guestbookEntryParamsType, insertGuestbookEntryParamsType, likeGuestbookEntryParamsType, profileCreateTestNotificationParamsType, publishGuestbookParamsType, resetProfilePasswordParamsType, setProfileUsernameParamsType, subscribeToGuestbookNotificationsParamsType, updateProfileParamsType } from 'demo-firebase';
+import {
+  allPublishedGuestbookEntriesParamsType,
+  createGuestbookParamsType,
+  downloadProfileArchiveParamsType,
+  entryDetailsGuestbookEntryParamsType,
+  exampleReadParamsType,
+  finishOnboardingProfileParamsType,
+  guestbookEntryParamsType,
+  insertGuestbookEntryParamsType,
+  likeGuestbookEntryParamsType,
+  profileCreateTestNotificationParamsType,
+  publishGuestbookParamsType,
+  resetProfilePasswordParamsType,
+  setProfileUsernameParamsType,
+  subscribeToGuestbookNotificationsParamsType,
+  updateProfileParamsType
+} from 'demo-firebase';
 import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
@@ -64,6 +80,26 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'count', typeText: 'number' },
       { name: 'entries', typeText: 'ReadonlyArray<GuestbookEntry>' },
       { name: 'hitLimit', typeText: 'boolean' }
+    ]
+  },
+  {
+    model: 'guestbookEntry',
+    verb: 'invoke',
+    specifier: 'entryDetails',
+    paramsTypeName: 'EntryDetailsGuestbookEntryParams',
+    paramsValidator: entryDetailsGuestbookEntryParamsType,
+    resultTypeName: 'EntryDetailsGuestbookEntryResult',
+    groupName: 'Guestbook',
+    sourceFile: 'components/demo-firebase/src/lib/model/guestbook/guestbook.api.ts',
+    paramsTypeDescription: "Parameters for the `guestbookEntry / invoke / entryDetails` RPC.\n\nTargets a single GuestbookEntry by key (the store's current document) and\nreturns a computed summary. Exists primarily as a keyed-invoke example\nexercising {@link firebaseDocumentStoreInvokeFunction}.",
+    resultTypeDescription: 'Result of an entry-details invoke — a small computed projection of the targeted GuestbookEntry.',
+    resultFields: [
+      { name: 'key', typeText: 'FirestoreModelKey' },
+      { name: 'messageLength', typeText: 'number' },
+      { name: 'signedLength', typeText: 'number' },
+      { name: 'published', typeText: 'boolean' },
+      { name: 'likes', typeText: 'number' },
+      { name: 'ageMs', typeText: 'Milliseconds' }
     ]
   },
   {

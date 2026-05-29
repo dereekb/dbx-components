@@ -1,4 +1,4 @@
-import { type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction, type ModelFirebaseUpdateFunction, type OnCallCreateModelResult, type TargetModelParams, type InferredTargetModelParams, type ModelFirebaseCrudFunction, type ModelFirebaseReadFunction } from '@dereekb/firebase';
+import { type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction, type ModelFirebaseUpdateFunction, type OnCallCreateModelResult, type TargetModelParams, type InferredTargetModelParams, type ModelFirebaseCrudFunction, type ModelFirebaseReadFunction, type ModelFirebaseInvokeFunction } from '@dereekb/firebase';
 import { lazyFrom, type LoadingState, loadingStateFromObs } from '@dereekb/rxjs';
 import { firstValue, type PartialOnKeys } from '@dereekb/util';
 import { shareReplay, exhaustMap, first, from, type Observable } from 'rxjs';
@@ -120,6 +120,25 @@ export function firebaseDocumentStoreUpdateFunction<I extends DbxFirebaseDocumen
         shareReplay(1)
       )
     );
+}
+
+// MARK: Invoke
+/**
+ * Creates a DbxFirebaseDocumentStoreFunction for invoke.
+ *
+ * The store's current key is always injected into the params of the request.
+ *
+ * For invokes that do not target the store's current document (e.g. collection-wide
+ * RPCs that take no key), use firebaseDocumentStoreCrudFunction() instead.
+ *
+ * @param store - The document store whose current key is injected into the request params.
+ * @param fn - The Firebase invoke function to wrap.
+ * @param config - Optional config with an `onResult` callback.
+ * @returns Executes the invoke with the store's key injected.
+ * @__NO_SIDE_EFFECTS__
+ */
+export function firebaseDocumentStoreInvokeFunction<I extends DbxFirebaseDocumentStoreFunctionParams, O = void>(store: DbxFirebaseDocumentStore<any, any>, fn: ModelFirebaseInvokeFunction<I, O>, config?: FirebaseDocumentStoreFunctionConfig<DbxFirebaseDocumentStoreFunctionParamsInput<I>, O>): DbxFirebaseDocumentStoreFunction<I, O> {
+  return firebaseDocumentStoreUpdateFunction(store, fn, config);
 }
 
 // MARK: Delete
