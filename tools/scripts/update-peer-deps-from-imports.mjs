@@ -97,30 +97,110 @@ function isSelfReference(importPath, ownPkgName) {
 }
 
 /**
- * Strip single-line (//) and multi-line block comments from source text.
- * Preserves string literals containing '//' or '/*'.
+ * Tokeniser-style pass that walks the source once and erases:
+ *   - line comments (`// ...` to end of line)
+ *   - block comments (`/* ... *​/`)
+ *   - the contents of template literals (preserves outer backticks so later
+ *     passes can still see expression boundaries)
+ * Single- and double-quoted string literals are passed through unchanged so
+ * `from 'X'` import targets survive intact.
+ *
+ * Doing comments and template literals in one pass is required because each
+ * can appear inside the other in real source — e.g. `\`// not a comment\``
+ * versus `// has a \` backtick in a comment` — and stripping either one first
+ * mangles the other.
  */
-function stripComments(source) {
-  // Replace block comments (/* ... */) and line comments (// ...)
-  // while preserving strings. This is a simplified approach that handles
-  // the vast majority of real-world TypeScript.
-  return source.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+function stripCommentsAndTemplateLiterals(source) {
+  let out = '';
+  let i = 0;
+  const n = source.length;
+  while (i < n) {
+    const c = source[i];
+    const next = source[i + 1];
+    if (c === '/' && next === '/') {
+      while (i < n && source[i] !== '\n') i += 1;
+      continue;
+    }
+    if (c === '/' && next === '*') {
+      i += 2;
+      while (i < n && !(source[i] === '*' && source[i + 1] === '/')) i += 1;
+      i = Math.min(n, i + 2);
+      continue;
+    }
+    if (c === "'" || c === '"') {
+      const quote = c;
+      out += quote;
+      i += 1;
+      while (i < n) {
+        const ch = source[i];
+        if (ch === '\\') {
+          out += ch;
+          if (i + 1 < n) out += source[i + 1];
+          i += 2;
+          continue;
+        }
+        if (ch === '\n') break;
+        out += ch;
+        if (ch === quote) {
+          i += 1;
+          break;
+        }
+        i += 1;
+      }
+      continue;
+    }
+    if (c === '`') {
+      out += '`';
+      i += 1;
+      while (i < n) {
+        const ch = source[i];
+        if (ch === '\\') {
+          i += 2;
+          continue;
+        }
+        if (ch === '`') {
+          out += '`';
+          i += 1;
+          break;
+        }
+        if (ch === '$' && source[i + 1] === '{') {
+          i += 2;
+          let depth = 1;
+          while (i < n && depth > 0) {
+            const c2 = source[i];
+            if (c2 === '{') depth += 1;
+            else if (c2 === '}') depth -= 1;
+            i += 1;
+          }
+          continue;
+        }
+        i += 1;
+      }
+      continue;
+    }
+    out += c;
+    i += 1;
+  }
+  return out;
 }
 
 /**
  * Extract all non-relative import specifiers from a TypeScript file.
  */
 function extractImportsFromFile(filePath) {
-  const content = stripComments(readFileSync(filePath, 'utf-8'));
+  const content = stripCommentsAndTemplateLiterals(readFileSync(filePath, 'utf-8'));
   const imports = new Set();
 
-  // from 'pkg'  — covers import/export, type imports, re-exports
-  for (const m of content.matchAll(/\bfrom\s+['"]([^'"]+)['"]/g)) {
+  // import { ... } from 'pkg' / export { ... } from 'pkg' / type imports / re-exports.
+  // Anchored to a statement start (line start or after `;`) so a `from 'X'` substring
+  // inside a string argument (e.g. `.replace("...from 'X'", ...)`) is not counted.
+  // The character class `[^;]` allows newlines for multi-line import statements.
+  for (const m of content.matchAll(/(?:^|[;{}])\s*(?:import|export)\b[^;]*?\bfrom\s+['"]([^'"]+)['"]/gm)) {
     if (!isSkippedImport(m[1])) imports.add(m[1]);
   }
 
-  // import 'pkg'  — side-effect imports (must NOT have { or identifier before quote)
-  for (const m of content.matchAll(/\bimport\s+['"]([^'"]+)['"]/g)) {
+  // Side-effect imports `import 'pkg';` (no identifier between `import` and the quote).
+  for (const m of content.matchAll(/(?:^|[;{}])\s*import\s+['"]([^'"]+)['"]/gm)) {
     if (!isSkippedImport(m[1])) imports.add(m[1]);
   }
 

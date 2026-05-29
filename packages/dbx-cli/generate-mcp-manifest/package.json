@@ -1,11 +1,11 @@
 {
   "name": "@dereekb/dbx-cli-generate-mcp-manifest",
-  "version": "13.12.5",
+  "version": "13.12.6",
   "private": true,
   "type": "module",
   "peerDependencies": {
-    "@dereekb/dbx-cli": "13.12.5",
-    "@dereekb/model": "13.12.5",
+    "@dereekb/dbx-cli": "13.12.6",
+    "@dereekb/model": "13.12.6",
     "arktype": "^2.2.0",
     "jiti": "2.6.1"
   }

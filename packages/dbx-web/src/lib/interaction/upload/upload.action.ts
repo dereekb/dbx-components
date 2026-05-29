@@ -1,14 +1,14 @@
 import { type Type, type Provider, forwardRef } from '@angular/core';
 import { type Maybe } from '@dereekb/util';
 import { type FileArrayAcceptMatchConfig } from './upload.accept';
-import { type DbxButtonWorking } from '@dereekb/dbx-core';
+import { DbxActionWorkable, provideDbxActionWorkable } from '@dereekb/dbx-core';
 
 /**
  * Abstract interface for file upload components that can be controlled by the action system (disabled, working, multiple, accept states).
+ *
+ * Extends {@link DbxActionWorkable} (disabled/working), adding upload-specific multiple/accept controls.
  */
-export abstract class DbxFileUploadActionCompatable {
-  abstract setDisabled(disabled?: Maybe<boolean>): void;
-  abstract setWorking(working?: Maybe<DbxButtonWorking>): void;
+export abstract class DbxFileUploadActionCompatable extends DbxActionWorkable {
   abstract setMultiple(multiple?: Maybe<boolean>): void;
   abstract setAccept(accept?: Maybe<FileArrayAcceptMatchConfig['accept']>): void;
 }
@@ -30,6 +30,7 @@ export function provideDbxFileUploadActionCompatable<S extends DbxFileUploadActi
     {
       provide: DbxFileUploadActionCompatable,
       useExisting: forwardRef(() => sourceType)
-    }
+    },
+    ...provideDbxActionWorkable(sourceType)
   ];
 }

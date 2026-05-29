@@ -1,5 +1,5 @@
 import { DbxActionLoadingContextDirective, DbxActionModule, DbxActionSnackbarErrorDirective, DbxFileUploadComponent, DbxFileUploadActionSyncDirective, DbxLoadingComponent } from '@dereekb/dbx-web';
-import { DbxFirebaseStorageFileUploadActionHandlerDirective, DbxFirebaseStorageFileUploadStoreDirective, DbxFirebaseStorageFileUploadSyncDirective, DbxFirebaseStorageFileUploadInitializeDocumentDirective } from './container';
+import { DbxFirebaseStorageFileUploadActionHandlerDirective, DbxFirebaseStorageFileUploadStoreDirective, DbxFirebaseStorageFileUploadSyncDirective, DbxFirebaseStoragePdfMergeUploadSyncDirective, DbxFirebaseStorageFileUploadInitializeDocumentDirective } from './container';
 import { NgModule } from '@angular/core';
 import { DbxFirebaseStorageFileDocumentStoreDirective } from './store/storagefile.document.store.directive';
 import { DbxFirebaseStorageFileCollectionStoreDirective } from './store';
@@ -16,6 +16,7 @@ export const IMPORTS_AND_EXPORTS = [
   DbxFirebaseStorageFileUploadActionHandlerDirective,
   DbxFirebaseStorageFileUploadStoreDirective,
   DbxFirebaseStorageFileUploadSyncDirective,
+  DbxFirebaseStoragePdfMergeUploadSyncDirective,
   DbxFirebaseStorageFileUploadInitializeDocumentDirective,
   // stores
   DbxFirebaseStorageFileCollectionStoreDirective,
@@ -30,6 +31,7 @@ export const IMPORTS_AND_EXPORTS = [
  * - DbxFirebaseStorageFileUploadActionHandlerDirective
  * - DbxFirebaseStorageFileUploadStoreDirective
  * - DbxFirebaseStorageFileUploadSyncDirective
+ * - DbxFirebaseStoragePdfMergeUploadSyncDirective
  * - DbxFirebaseStorageFileUploadInitializeDocumentDirective
  * - DbxFirebaseStorageFileUploadStore
  */
