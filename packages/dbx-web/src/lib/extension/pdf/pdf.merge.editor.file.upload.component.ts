@@ -6,7 +6,7 @@ import { type Maybe } from '@dereekb/util';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
 import { DbxFileUploadComponent, type DbxFileUploadMode } from '../../interaction/upload/upload.component';
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DBX_PDF_MERGE_EDITOR_PRESERVE_ENTRIES_ON_SLOT_DESTROY, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorFileUploadValidatorSlot, type PdfMergeEntry, type PdfMergeEntryView } from './pdf.merge';
 import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeEditorFileUploadValidatorDirective } from './pdf.merge.editor.file.upload.validator.directive';
@@ -160,14 +160,14 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   });
 
   /**
-   * Live entries owned by this slot, derived from {@link DbxPdfMergeEditorStore.entriesForSlotId$}.
+   * Live entries owned by this slot, derived from {@link DbxPdfMergeEditorStore.entriesForSlotId$}. Each entry carries the `ignored` flag set by the store under the active {@link DbxPdfMergeEncryptedHandling}.
    */
-  readonly ownedEntries$: Observable<PdfMergeEntry[]> = toObservable(this.slotId).pipe(
+  readonly ownedEntries$: Observable<PdfMergeEntryView[]> = toObservable(this.slotId).pipe(
     switchMap((slotId) => this.store.entriesForSlotId$(slotId)),
     shareReplay(1)
   );
 
-  readonly ownedEntriesSignal = toSignal(this.ownedEntries$, { initialValue: [] as PdfMergeEntry[] });
+  readonly ownedEntriesSignal = toSignal(this.ownedEntries$, { initialValue: [] as PdfMergeEntryView[] });
 
   /**
    * Whether the slot still has room for more files. Drives visibility of the upload UI — once the slot is at capacity, the uploader is hidden and the user must remove an existing entry to add another.

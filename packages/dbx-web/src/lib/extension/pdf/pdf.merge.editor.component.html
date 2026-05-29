@@ -7,6 +7,12 @@
 @if (showFileListSignal()) {
   <dbx-pdf-merge-list></dbx-pdf-merge-list>
 }
+@if (focusActiveSignal()) {
+  <div class="dbx-pdf-merge-editor-encrypted-banner">
+    <mat-icon>lock</mat-icon>
+    <span>Encrypted PDF detected — only the encrypted file will be used; other files are ignored.</span>
+  </div>
+}
 @switch (outputSizeStateSignal()) {
   @case ('warn') {
     <div class="dbx-pdf-merge-editor-size-warning">

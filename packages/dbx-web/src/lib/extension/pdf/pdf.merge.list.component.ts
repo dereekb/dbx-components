@@ -32,7 +32,7 @@ import { DbxPdfMergeEntryComponent } from './pdf.merge.entry.component';
 export class DbxPdfMergeListComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
 
-  readonly entries$ = this.store.entries$;
+  readonly entries$ = this.store.displayEntries$;
 
   onDrop(event: CdkDragDrop<unknown>): void {
     this.store.moveEntry({ previousIndex: event.previousIndex, currentIndex: event.currentIndex });

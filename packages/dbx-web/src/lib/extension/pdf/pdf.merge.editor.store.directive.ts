@@ -61,5 +61,11 @@ export class DbxPdfMergeEditorStoreDirective {
     effect(() => {
       this.store.setImageCompression(this.config()?.imageCompression);
     });
+
+    // Same channel for encryptedHandling — pushes the directive-level mode onto the store
+    // so any descendant editor (including the upload dialog's bare editor) picks it up.
+    effect(() => {
+      this.store.setEncryptedHandling(this.config()?.encryptedHandling);
+    });
   }
 }

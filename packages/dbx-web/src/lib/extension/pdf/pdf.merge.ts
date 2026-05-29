@@ -41,7 +41,30 @@ export type PdfMergeEntryStatus = 'validating' | 'ready' | 'error';
 export interface PdfMergeEntryValidationResult {
   readonly ok: boolean;
   readonly errorMessage?: Maybe<string>;
+  /**
+   * Whether the file appears to be encrypted (contains a `/Encrypt` dictionary). Reported as a fact independent of `ok` so consumers can decide whether to focus on, ignore, or reject the entry. Validation does not fail an entry purely because it is encrypted.
+   */
+  readonly encrypted?: Maybe<boolean>;
 }
+
+/**
+ * Strategy for how the editor reacts when an encrypted PDF is added.
+ *
+ * - `focus` (default) — the encrypted entry stays `ready` and all non-encrypted entries are hidden from the merge (greyed out in the list). The merge output is the encrypted file's bytes passed through unchanged so downstream upload flows still receive a usable blob.
+ * - `error` — encrypted entries are marked as `error` with a "Password-protected PDFs cannot be merged." message. Preserves the legacy hard-reject behavior.
+ * - `allow` — encrypted entries stay `ready` and participate in the merge alongside other entries. The client-side `pdf-lib` merge will fail; useful only for consumers that bypass `mergeOutput$` and upload raw entries themselves.
+ */
+export type DbxPdfMergeEncryptedHandling = 'focus' | 'error' | 'allow';
+
+/**
+ * Default {@link DbxPdfMergeEncryptedHandling} when no consumer or token overrides it.
+ */
+export const DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING: DbxPdfMergeEncryptedHandling = 'focus';
+
+/**
+ * Error message used when an encrypted entry is projected to the `error` status under {@link DbxPdfMergeEncryptedHandling} `'error'` mode.
+ */
+export const DBX_PDF_MERGE_ENCRYPTED_ERROR_MESSAGE = 'Password-protected PDFs cannot be merged.';
 
 /**
  * MIME types accepted by the PDF merge editor by default: PDF documents and PNG/JPEG images.
@@ -101,6 +124,20 @@ export interface PdfMergeEntry extends Pick<PdfMergeEntryValidationResult, 'erro
    * Result of the client-side compression step on upload. `'unchanged'` when no compression ran.
    */
   readonly compression: ImageCompressionStatus;
+  /**
+   * Whether the entry's source file appears to be encrypted (contains a `/Encrypt` dictionary). Set during validation; defaults to `false`. The store decides how to react via {@link DbxPdfMergeEncryptedHandling}.
+   */
+  readonly encrypted: boolean;
+}
+
+/**
+ * Read-only view of a {@link PdfMergeEntry} enriched with the `ignored` flag derived by the store from the active {@link DbxPdfMergeEncryptedHandling}. When `ignored` is `true`, the entry is still present in the list but is excluded from the merge output and rendered in a greyed-out state.
+ */
+export interface PdfMergeEntryView extends PdfMergeEntry {
+  /**
+   * Whether the editor is currently ignoring this entry for merge purposes. Only `true` under `focus` mode when at least one encrypted entry exists and this entry is not itself the encrypted focus target.
+   */
+  readonly ignored: boolean;
 }
 
 /**
@@ -198,6 +235,10 @@ export interface DbxPdfMergeEditorConfig {
    * When `false`, hides the shared file list below the slot content. Useful when each slot displays its owned files inline. Defaults to `true`.
    */
   readonly showFileList?: Maybe<boolean>;
+  /**
+   * Strategy for how encrypted PDFs are handled — see {@link DbxPdfMergeEncryptedHandling}. Defaults to {@link DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING} (`'focus'`).
+   */
+  readonly encryptedHandling?: Maybe<DbxPdfMergeEncryptedHandling>;
 }
 
 /**

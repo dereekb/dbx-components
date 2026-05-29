@@ -115,7 +115,8 @@ function buildEntryFromFile(input: BuildEntryFromFileInput): PdfMergeEntry {
     status: 'validating' as const,
     slotId,
     original,
-    compression
+    compression,
+    encrypted: false
   };
 
   (nextEntry as Building<PdfMergeEntry>).validation = validatePdfMergeEntry(nextEntry);
@@ -184,10 +185,10 @@ export async function buildPdfMergeEntry(file: File, config?: Maybe<BuildPdfMerg
 }
 
 /**
- * Lightly inspects a file's bytes to confirm the entry can participate in a merge. PDFs are checked for the standard `%PDF-` header, the `%%EOF` marker, and absence of an `/Encrypt` dictionary. Images are accepted as-is — the actual decode happens during merge.
+ * Lightly inspects a file's bytes to confirm the entry can participate in a merge. PDFs are checked for the standard `%PDF-` header and the `%%EOF` marker. Encrypted PDFs (presence of `/Encrypt`) are still reported as `ok: true` with `encrypted: true` so the editor can decide whether to focus, ignore, or reject the entry — see {@link DbxPdfMergeEncryptedHandling}. Images are accepted as-is — the actual decode happens during merge.
  *
  * @param entry - Entry to validate.
- * @returns Result indicating whether the entry can be merged plus an error message when validation fails.
+ * @returns Result indicating whether the entry can be merged, optional error message when validation fails, and whether the entry is encrypted.
  */
 export async function validatePdfMergeEntry(entry: Omit<PdfMergeEntry, 'validation'>): Promise<PdfMergeEntryValidationResult> {
   let result: PdfMergeEntryValidationResult;
@@ -206,7 +207,7 @@ export async function validatePdfMergeEntry(entry: Omit<PdfMergeEntry, 'validati
       if (!text.startsWith(PDF_HEADER) || !text.includes(PDF_EOF_MARKER)) {
         result = { ok: false, errorMessage: 'File does not appear to be a valid PDF.' };
       } else if (text.includes(PDF_ENCRYPT_MARKER)) {
-        result = { ok: false, errorMessage: 'Password-protected PDFs cannot be merged.' };
+        result = { ok: true, encrypted: true };
       } else {
         result = { ok: true };
       }
@@ -234,28 +235,40 @@ async function appendImagePage(target: PDFDocument, entry: PdfMergeEntry): Promi
 }
 
 /**
- * Merges every `ready` entry in the provided array order into a single PDF and returns it as a `Blob`. PDF entries contribute their full set of pages in order; image entries contribute one page sized to the image. Throws if no `ready` entries are provided.
+ * Merges every `ready` entry in the provided array order into a single PDF and returns it as a `Blob`. PDF entries contribute their full set of pages in order; image entries contribute one page sized to the image.
+ *
+ * Special case: when the only `ready` entry is a single encrypted PDF, returns a passthrough `Blob` of its original bytes — `pdf-lib` cannot read encrypted PDFs even with `ignoreEncryption: true`, and downstream upload flows still need a usable blob.
+ *
+ * Throws if no `ready` entries are provided, or if multiple encrypted entries are passed in (the editor only routes here under focus mode where it has narrowed to one).
  *
  * @param entries - Ordered entries to merge.
  * @returns A Blob with `application/pdf` MIME type.
  */
 export async function mergePdfMergeEntries(entries: readonly PdfMergeEntry[]): Promise<Blob> {
   const ready = entries.filter((entry) => entry.status === 'ready');
+  let result: Blob;
 
   if (ready.length === 0) {
     throw new Error('No ready entries to merge.');
-  }
+  } else if (ready.length === 1 && ready[0].encrypted) {
+    const bytes = await ready[0].file.arrayBuffer();
+    result = new Blob([bytes as BlobPart], { type: PDF_MERGE_RESULT_MIME_TYPE });
+  } else if (ready.some((entry) => entry.encrypted)) {
+    throw new Error('Encrypted PDFs cannot be merged with other files.');
+  } else {
+    const target = await PDFDocument.create();
 
-  const target = await PDFDocument.create();
-
-  for (const entry of ready) {
-    if (entry.kind === 'pdf') {
-      await appendPdfPages(target, entry);
-    } else {
-      await appendImagePage(target, entry);
+    for (const entry of ready) {
+      if (entry.kind === 'pdf') {
+        await appendPdfPages(target, entry);
+      } else {
+        await appendImagePage(target, entry);
+      }
     }
+
+    const bytes = await target.save();
+    result = new Blob([bytes as BlobPart], { type: PDF_MERGE_RESULT_MIME_TYPE });
   }
 
-  const bytes = await target.save();
-  return new Blob([bytes as BlobPart], { type: PDF_MERGE_RESULT_MIME_TYPE });
+  return result;
 }

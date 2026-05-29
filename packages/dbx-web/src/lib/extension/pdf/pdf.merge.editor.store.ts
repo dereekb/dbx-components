@@ -3,7 +3,7 @@ import { moveItemInArray } from '@angular/cdk/drag-drop';
 import { ComponentStore } from '@ngrx/component-store';
 import { BehaviorSubject, catchError, combineLatest, defaultIfEmpty, distinctUntilChanged, from, map, type Observable, of, shareReplay, startWith, switchMap } from 'rxjs';
 import { type Building, type FileSize, type Maybe } from '@dereekb/util';
-import { type DbxPdfMergeEditorValidator, type PdfMergeEditorState, type PdfMergeEntry, type PdfMergeEntryMove, type PdfMergeEntryStatus } from './pdf.merge';
+import { DBX_PDF_MERGE_ENCRYPTED_ERROR_MESSAGE, DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING, type DbxPdfMergeEditorValidator, type DbxPdfMergeEncryptedHandling, type PdfMergeEditorState, type PdfMergeEntry, type PdfMergeEntryMove, type PdfMergeEntryStatus, type PdfMergeEntryView } from './pdf.merge';
 import { buildPdfMergeEntrySync, mergePdfMergeEntries } from './pdf.merge.utility';
 import { type DbxImageCompressionConfig } from '../image';
 import { filterMaybe } from '@dereekb/rxjs';
@@ -36,6 +36,7 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   private readonly _validator$ = new BehaviorSubject<Maybe<DbxPdfMergeEditorValidator>>(undefined);
   private readonly _outputSizeLimit$ = new BehaviorSubject<Maybe<FileSize>>(undefined);
   private readonly _imageCompression$ = new BehaviorSubject<Maybe<DbxImageCompressionConfig>>(undefined);
+  private readonly _encryptedHandling$ = new BehaviorSubject<Maybe<DbxPdfMergeEncryptedHandling>>(undefined);
 
   constructor() {
     super(DBX_PDF_MERGE_EDITOR_INITIAL_STATE);
@@ -62,10 +63,16 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
                   status = 'error';
                 }
 
+                // Mutate the rawEntries entry so subsequent state re-emissions (e.g. when another
+                // file is added) take the `of(entry)` branch below and skip re-validation.
                 (entry as Building<PdfMergeEntry>).status = status;
                 (entry as Building<PdfMergeEntry>).errorMessage = validationResult.errorMessage;
+                (entry as Building<PdfMergeEntry>).encrypted = validationResult.encrypted ?? false;
 
-                return entry;
+                // Emit a new reference so consumer signal inputs notice the status transition —
+                // returning `entry` would leave `DbxPdfMergeEntryComponent.entry` pointing at the
+                // same object and its computeds wouldn't re-run, stranding the row at "Checking…".
+                return { ...entry };
               }),
               startWith(entry)
             );
@@ -86,14 +93,63 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
     shareReplay(1)
   );
 
-  readonly hasReadyEntries$: Observable<boolean> = this.entries$.pipe(
-    map((entries) => entries.some((entry) => entry.status === 'ready')),
+  /**
+   * Emits the active {@link DbxPdfMergeEncryptedHandling} mode (defaults to {@link DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING}). Pushed onto the store via {@link setEncryptedHandling} by the editor component or {@link DbxPdfMergeEditorStoreDirective}.
+   */
+  readonly encryptedHandling$: Observable<DbxPdfMergeEncryptedHandling> = this._encryptedHandling$.pipe(
+    map((handling) => handling ?? DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING),
     distinctUntilChanged(),
     shareReplay(1)
   );
 
   /**
-   * Emits `true` while any entry's validation promise has not yet resolved (i.e. one or more entries are still in `validating` status).
+   * Entries enriched with the `ignored` flag derived from {@link encryptedHandling$}. Under `focus` mode (the default) the *first* ready encrypted entry is the focus target — every other entry (encrypted or not) is marked `ignored`, so the merge stream always sees a single encrypted entry and routes through the passthrough branch in {@link mergePdfMergeEntries}. Under `error` mode, encrypted entries are demoted to `status: 'error'` with the standard "Password-protected" message. Under `allow` mode, entries pass through unchanged.
+   */
+  readonly displayEntries$: Observable<PdfMergeEntryView[]> = combineLatest([this.entries$, this.encryptedHandling$]).pipe(
+    map(([entries, handling]) => {
+      const focusTarget = handling === 'focus' ? entries.find((entry) => entry.encrypted && entry.status === 'ready') : undefined;
+      return entries.map((entry) => {
+        let view: PdfMergeEntryView;
+
+        if (handling === 'error' && entry.encrypted && entry.status !== 'validating') {
+          view = { ...entry, status: 'error', errorMessage: DBX_PDF_MERGE_ENCRYPTED_ERROR_MESSAGE, ignored: false };
+        } else if (focusTarget != null && entry !== focusTarget) {
+          view = { ...entry, ignored: true };
+        } else {
+          view = { ...entry, ignored: false };
+        }
+
+        return view;
+      });
+    }),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits `true` while {@link encryptedHandling$} is `'focus'` and at least one ready encrypted entry exists. Drives the editor's focus banner and is the same condition used to mark non-encrypted entries as `ignored` in {@link displayEntries$}.
+   */
+  readonly focusActive$: Observable<boolean> = combineLatest([this.entries$, this.encryptedHandling$]).pipe(
+    map(([entries, handling]) => handling === 'focus' && entries.some((entry) => entry.encrypted && entry.status === 'ready')),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits the encrypted, `ready` entries currently in the list. Useful for consumers that want to surface UI specifically for encrypted files.
+   */
+  readonly encryptedEntries$: Observable<PdfMergeEntry[]> = this.entries$.pipe(
+    map((entries) => entries.filter((entry) => entry.encrypted && entry.status === 'ready')),
+    shareReplay(1)
+  );
+
+  readonly hasReadyEntries$: Observable<boolean> = this.displayEntries$.pipe(
+    map((entries) => entries.some((entry) => entry.status === 'ready' && !entry.ignored)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * Emits `true` while any entry's validation promise has not yet resolved (i.e. one or more entries are still in `validating` status). Reads from {@link entries$} (not {@link displayEntries$}) so validation gating ignores the `ignored`/`error` projection done by encryption handling.
    */
   readonly isValidating$: Observable<boolean> = this.entries$.pipe(
     map((entries) => entries.some((entry) => entry.status === 'validating')),
@@ -111,17 +167,18 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   );
 
   /**
-   * Internal pre-validity merge stream produced without consulting {@link isValid$}. Drives both {@link outputSize$} and the eventual {@link currentMergeOutput$} so size-based gating can observe the would-be blob without creating a cycle.
+   * Internal pre-validity merge stream produced without consulting {@link isValid$}. Drives both {@link outputSize$} and the eventual {@link currentMergeOutput$} so size-based gating can observe the would-be blob without creating a cycle. Consumes {@link displayEntries$} so the merge respects the active {@link DbxPdfMergeEncryptedHandling} (encrypted-focused entries pass through, ignored entries are dropped, `error` mode demotions are honored).
    */
-  private readonly _candidateMergeOutput$: Observable<Maybe<Blob>> = combineLatest([this.entries$, this.isValidating$, this.validatorValid$]).pipe(
+  private readonly _candidateMergeOutput$: Observable<Maybe<Blob>> = combineLatest([this.displayEntries$, this.isValidating$, this.validatorValid$]).pipe(
     switchMap(([entries, isValidating, validatorValid]) => {
-      const hasReady = entries.some((entry) => entry.status === 'ready');
+      const mergeable = entries.filter((entry) => !entry.ignored);
+      const hasReady = mergeable.some((entry) => entry.status === 'ready');
       let next$: Observable<Maybe<Blob>>;
 
       if (isValidating || !hasReady || !validatorValid) {
         next$ = of(undefined);
       } else {
-        next$ = from(mergePdfMergeEntries(entries)).pipe(catchError(() => of(undefined)));
+        next$ = from(mergePdfMergeEntries(mergeable)).pipe(catchError(() => of(undefined)));
       }
 
       return next$;
@@ -182,13 +239,13 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   readonly imageCompression$: Observable<Maybe<DbxImageCompressionConfig>> = this._imageCompression$.asObservable();
 
   /**
-   * Returns an observable of entries belonging to the given slot id. The result is filtered from {@link entries$} so the per-slot stream still reflects validation progress and removals.
+   * Returns an observable of entries belonging to the given slot id. The result is filtered from {@link displayEntries$} so per-slot rows honor the active {@link DbxPdfMergeEncryptedHandling} (ignored / error projection).
    *
    * @param slotId - Slot identifier to filter for.
-   * @returns Observable of entries whose `slotId` matches.
+   * @returns Observable of entries whose `slotId` matches, enriched with the `ignored` flag.
    */
-  entriesForSlotId$(slotId: string): Observable<PdfMergeEntry[]> {
-    return this.entries$.pipe(
+  entriesForSlotId$(slotId: string): Observable<PdfMergeEntryView[]> {
+    return this.displayEntries$.pipe(
       map((entries) => entries.filter((entry) => entry.slotId === slotId)),
       shareReplay(1)
     );
@@ -227,6 +284,15 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
    */
   setImageCompression(config: Maybe<DbxImageCompressionConfig>): void {
     this._imageCompression$.next(config ?? undefined);
+  }
+
+  /**
+   * Sets the active {@link DbxPdfMergeEncryptedHandling} mode, exposed via {@link encryptedHandling$}. Pass `null`/`undefined` to clear the value and fall back to {@link DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING}.
+   *
+   * @param handling - Encryption handling mode, or a falsy value to clear.
+   */
+  setEncryptedHandling(handling: Maybe<DbxPdfMergeEncryptedHandling>): void {
+    this._encryptedHandling$.next(handling ?? undefined);
   }
 
   // MARK: Updaters
