@@ -1,10 +1,10 @@
-@if (showAddFiles()) {
+@if (showAddFilesSignal()) {
   <div class="dbx-pdf-merge-editor-upload d-block dbx-mb3">
-    <dbx-file-upload [accept]="accept()" [multiple]="multiple()" (filesChanged)="onFiles($event)" [hint]="'Drop PDFs or images here, or click to browse'" [text]="'Add files'" icon="upload_file"></dbx-file-upload>
+    <dbx-file-upload [accept]="acceptSignal()" [multiple]="multipleSignal()" (filesChanged)="onFiles($event)" [hint]="'Drop PDFs or images here, or click to browse'" [text]="'Add files'" icon="upload_file"></dbx-file-upload>
   </div>
 }
 <ng-content></ng-content>
-@if (showFileList()) {
+@if (showFileListSignal()) {
   <dbx-pdf-merge-list></dbx-pdf-merge-list>
 }
 @switch (outputSizeStateSignal()) {
@@ -25,10 +25,10 @@
   <span class="dbx-hint dbx-small">{{ entryCountSignal() }} file(s)</span>
   <span class="dbx-spacer"></span>
   <dbx-button text="Clear" icon="delete" [disabled]="entryCountSignal() === 0" (buttonClick)="onClear()"></dbx-button>
-  @if (showPreviewButton()) {
+  @if (showPreviewButtonSignal()) {
     <dbx-button text="Preview" icon="picture_as_pdf" [disabled]="!canMergeSignal()" (buttonClick)="onPreview()"></dbx-button>
   }
-  @if (showDownloadButton() && canMergeSignal()) {
+  @if (showDownloadButtonSignal() && canMergeSignal()) {
     <dbx-download-blob-button [config]="downloadConfigSignal()"></dbx-download-blob-button>
   }
 </div>

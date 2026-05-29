@@ -2,6 +2,8 @@ import { InjectionToken, type Provider } from '@angular/core';
 import { JPEG_MIME_TYPE, PDF_MIME_TYPE, PNG_MIME_TYPE, type FileSize, type Maybe, type MimeTypeWithoutParameters } from '@dereekb/util';
 import { type Observable } from 'rxjs';
 import { type DbxImageCompressionConfig, type ImageCompressionStatus } from '../image';
+import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
+import { type DbxButtonDisplayStylePair } from '../../button/button';
 
 /**
  * Identifies which kind of source file a {@link PdfMergeEntry} represents.
@@ -164,6 +166,38 @@ export interface DbxPdfMergeEditorConfig {
    * Soft/hard output-size limits surfaced via warning/error banners and (for `errorBytes`) the store's validity gate.
    */
   readonly outputSizeLimits?: Maybe<DbxPdfMergeOutputSizeLimitsConfig>;
+  /**
+   * Accept filter for the editor's default "Add files" upload area. Defaults to {@link DEFAULT_PDF_MERGE_ACCEPT}.
+   */
+  readonly accept?: Maybe<FileArrayAcceptMatchConfig['accept']>;
+  /**
+   * Whether the default upload area accepts multiple files. Defaults to `true`.
+   */
+  readonly multiple?: Maybe<boolean>;
+  /**
+   * File name used for the merged output (download + preview). Defaults to `merged.pdf`.
+   */
+  readonly fileName?: Maybe<string>;
+  /**
+   * Whether to show the embedded download button. Defaults to `false`.
+   */
+  readonly showDownloadButton?: Maybe<boolean>;
+  /**
+   * Whether to show the Preview button. Defaults to `true`.
+   */
+  readonly showPreviewButton?: Maybe<boolean>;
+  /**
+   * Display/style pair for the embedded download button.
+   */
+  readonly downloadButton?: Maybe<DbxButtonDisplayStylePair>;
+  /**
+   * When `false`, hides the default "Add files" upload area. Use when projecting {@link DbxPdfMergeEditorFileUploadComponent} slots through `<ng-content>` instead of the unscoped uploader. Defaults to `true`.
+   */
+  readonly showAddFiles?: Maybe<boolean>;
+  /**
+   * When `false`, hides the shared file list below the slot content. Useful when each slot displays its owned files inline. Defaults to `true`.
+   */
+  readonly showFileList?: Maybe<boolean>;
 }
 
 /**

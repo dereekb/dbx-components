@@ -17,8 +17,13 @@
       <p>Slot capacity defaults to `1` for single-file slots and to `maxFiles` when set. Once the slot reaches capacity its `dbx-file-upload` is hidden — the user must remove an existing entry before adding more.</p>
       <doc-pdf-merge-editor-max-files-example></doc-pdf-merge-editor-max-files-example>
     </doc-feature-example>
-    <doc-feature-example header="dbx-pdf-merge-editor with compression + size limits" hint="Drop large phone photos to see them downscale on upload. PNGs are converted to JPEG. Cross the 2 MB warn or 8 MB error threshold to see the banner.">
-      <p>Configure the editor with `imageCompression` to downscale and (optionally) convert images on upload, and `outputSizeLimits` to surface warn/error banners. Crossing `errorBytes` blocks Preview/Download via the store's validity gate. Each compressed entry shows a "Resized" / "Converted PNG → JPEG" chip with the original byte count.</p>
+    <doc-feature-example header="dbx-pdf-merge-editor with a single config object" hint="Drop large phone photos to see them downscale on upload. PNGs are converted to JPEG. Cross the 2 MB warn or 8 MB error threshold to see the banner.">
+      <p>
+        A single
+        <code>[config]</code>
+        object (`DbxPdfMergeEditorConfig`) drives the whole editor: `imageCompression` to downscale and (optionally) convert images on upload, `outputSizeLimits` to surface warn/error banners, plus the display options (`fileName`, `showPreviewButton`, `showDownloadButton`, `showAddFiles`, `showFileList`, `accept`, `multiple`, `downloadButton`). Any individual input still overrides the matching config field. Crossing `errorBytes` blocks Preview/Download via the store's validity gate. Each
+        compressed entry shows a "Resized" / "Converted PNG → JPEG" chip with the original byte count.
+      </p>
       <doc-pdf-merge-editor-config-example></doc-pdf-merge-editor-config-example>
     </doc-feature-example>
     <doc-feature-example header="dbxPdfMergeUploadButton directive" hint="Compose dbxPdfMergeUploadButton on a stock dbx-button alongside dbxActionButton. The directive intercepts the click to open the editor in a dialog; on confirm it pre-sets the action's readyValue with the merged Blob and lets dbxActionButton's trigger flow run as usual.">
@@ -38,6 +43,15 @@
         on the surrounding action source, and the sibling
         <code>dbxActionButton</code>
         directive handles the resulting click and pipes working/disabled state back to the button. Close the dialog without confirming to keep the editor entries for a later attempt.
+      </p>
+      <p>
+        The
+        <code>[dbxPdfMergeEditorStore]</code>
+        wrapper also accepts a
+        <code>[config]</code>
+        (`DbxPdfMergeEditorConfig`) — here `imageCompression` — that flows through the button into the dialog's default
+        <code>dbx-pdf-merge-editor</code>
+        , so large images are downscaled before the merge even though the dialog's editor has no inline config.
       </p>
       <doc-pdf-merge-upload-button-default-example></doc-pdf-merge-upload-button-default-example>
     </doc-feature-example>
