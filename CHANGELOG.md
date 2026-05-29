@@ -1,3 +1,20 @@
+## [13.12.5](https://github.com/dereekb/dbx-components/compare/v13.12.4-dev...v13.12.5) (2026-05-29)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([a6283586](https://github.com/dereekb/dbx-components/commit/a628358602874ecd84f0d128bd2e36aa21ea5c31))
+
+
+### Code Refactoring
+
+- **dbx-web:** pdf-merge upload via interceptor + action bridge ([9ee755b4](https://github.com/dereekb/dbx-components/commit/9ee755b4e6fa79c4ea7f73d796517e11c09d925b))
+- detect @dbxModelApiParams + admin-only api tag ([11e60c98](https://github.com/dereekb/dbx-components/commit/11e60c9891521074c50e4553f7199c14cf4635ed))
+- **firebase-eslint:** add api spec-naming rules ([e56d8cac](https://github.com/dereekb/dbx-components/commit/e56d8cacdbd17ce22ff95a33d2c83d0b6bc61658))
+- **firebase:** add FirebaseAuthOobCodeDataPair encode/decode ([bb5229b4](https://github.com/dereekb/dbx-components/commit/bb5229b42abe2b5e4de48d975d74bfdc3cc11bd3))
+- **firebase:** derive auth method union from typeof consts ([20222068](https://github.com/dereekb/dbx-components/commit/20222068be11b20db89e2852df72e0f07c1bf5b8))
+- **firebase:** tag error utils + updateUser known errors ([01adcdff](https://github.com/dereekb/dbx-components/commit/01adcdff93f1883124a7968c258d07090ce7fd4e))
+
 ## [13.12.4](https://github.com/dereekb/dbx-components/compare/v13.12.3-dev...v13.12.4) (2026-05-28)
 
 
