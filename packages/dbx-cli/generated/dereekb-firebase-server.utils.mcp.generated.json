@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "source": "@dereekb/firebase-server",
+  "module": "@dereekb/firebase-server",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-manifests.mjs",
+  "entries": [
+    {
+      "slug": "is-firebase-https-error",
+      "name": "isFirebaseHttpsError",
+      "kind": "function",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase-server",
+      "subpath": "function/error",
+      "signature": "isFirebaseHttpsError(input: unknown | HttpsError): input is HttpsError",
+      "description": "Type guard for Firebase {@link HttpsError} instances.",
+      "params": [
+        {
+          "name": "input",
+          "type": "unknown | HttpsError",
+          "description": "- The value to check.",
+          "optional": false
+        }
+      ],
+      "returns": "`true` if the input is a Firebase {@link HttpsError }.",
+      "tags": [
+        "firebase",
+        "https",
+        "error",
+        "type-guard",
+        "server",
+        "callable",
+        "firebase-error",
+        "is",
+        "isfirebasehttpserror"
+      ],
+      "relatedSlugs": [
+        "is-firebase-error",
+        "firebase-server-error-info"
+      ]
+    },
+    {
+      "slug": "is-firebase-error",
+      "name": "isFirebaseError",
+      "kind": "function",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase-server",
+      "subpath": "function/error",
+      "signature": "isFirebaseError(input: unknown | admin.FirebaseError): input is admin.FirebaseError",
+      "description": "Type guard for Firebase Admin {@link admin.FirebaseError} instances.",
+      "params": [
+        {
+          "name": "input",
+          "type": "unknown | admin.FirebaseError",
+          "description": "- The value to check.",
+          "optional": false
+        }
+      ],
+      "returns": "`true` if the input is a Firebase Admin {@link admin.FirebaseError }.",
+      "tags": [
+        "firebase",
+        "admin",
+        "error",
+        "type-guard",
+        "server",
+        "firebase-error",
+        "is",
+        "isfirebaseerror"
+      ],
+      "relatedSlugs": [
+        "is-firebase-https-error",
+        "firebase-server-error-info"
+      ]
+    },
+    {
+      "slug": "firebase-server-error-info",
+      "name": "firebaseServerErrorInfo",
+      "kind": "function",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase-server",
+      "subpath": "function/error",
+      "signature": "firebaseServerErrorInfo(e: unknown): FirebaseServerErrorInfo",
+      "description": "Analyzes a caught error and extracts structured Firebase error information.\n\nClassifies the error as an {@link HttpsError}, {@link admin.FirebaseError}, or unknown,\nand extracts any embedded error codes and {@link ServerError} details.",
+      "params": [
+        {
+          "name": "e",
+          "type": "unknown",
+          "description": "- The caught error to analyze.",
+          "optional": false
+        }
+      ],
+      "returns": "Structured {@link FirebaseServerErrorInfo } with classified error details.",
+      "tags": [
+        "firebase",
+        "error",
+        "decode",
+        "analyze",
+        "https",
+        "admin",
+        "server",
+        "classify",
+        "server-error",
+        "firebase-error",
+        "info",
+        "firebaseservererrorinfo"
+      ],
+      "example": "try {\n  await someFirebaseOperation();\n} catch (e) {\n  const info = firebaseServerErrorInfo(e);\n  if (info.serverErrorCode === 'MODEL_NOT_AVAILABLE') { ... }\n}",
+      "relatedSlugs": [
+        "firebase-server-error-info-code-pair",
+        "firebase-server-error-info-server-error-pair",
+        "firebase-server-error-info-server-error-code-pair",
+        "is-firebase-https-error",
+        "is-firebase-error"
+      ]
+    },
+    {
+      "slug": "firebase-server-error-info-code-pair",
+      "name": "firebaseServerErrorInfoCodePair",
+      "kind": "function",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase-server",
+      "subpath": "function/error",
+      "signature": "firebaseServerErrorInfoCodePair(e: unknown): [Maybe<FirebaseErrorCode>, FirebaseServerErrorInfo]",
+      "description": "Returns a tuple of [firebaseErrorCode, errorInfo] for pattern-matching on Firebase error codes.",
+      "params": [
+        {
+          "name": "e",
+          "type": "unknown",
+          "description": "- The caught error to analyze.",
+          "optional": false
+        }
+      ],
+      "returns": "A tuple of the Firebase error code (if present) and the full error info.",
+      "tags": [
+        "firebase",
+        "error",
+        "code",
+        "pair",
+        "tuple",
+        "pattern-match",
+        "decode",
+        "firebase-error",
+        "server",
+        "info",
+        "firebaseservererrorinfocodepair"
+      ],
+      "relatedSlugs": [
+        "firebase-server-error-info",
+        "firebase-server-error-info-server-error-pair",
+        "firebase-server-error-info-server-error-code-pair"
+      ]
+    },
+    {
+      "slug": "firebase-server-error-info-server-error-pair",
+      "name": "firebaseServerErrorInfoServerErrorPair",
+      "kind": "function",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase-server",
+      "subpath": "function/error",
+      "signature": "firebaseServerErrorInfoServerErrorPair(e: unknown): [Maybe<ServerError>, FirebaseServerErrorInfo]",
+      "description": "Returns a tuple of [serverError, errorInfo] for pattern-matching on embedded server error details.",
+      "params": [
+        {
+          "name": "e",
+          "type": "unknown",
+          "description": "- The caught error to analyze.",
+          "optional": false
+        }
+      ],
+      "returns": "A tuple of the server error (if present) and the full error info.",
+      "tags": [
+        "firebase",
+        "error",
+        "server-error",
+        "pair",
+        "tuple",
+        "pattern-match",
+        "decode",
+        "details",
+        "firebase-error",
+        "server",
+        "info",
+        "firebaseservererrorinfoservererrorpair"
+      ],
+      "relatedSlugs": [
+        "firebase-server-error-info",
+        "firebase-server-error-info-code-pair",
+        "firebase-server-error-info-server-error-code-pair"
+      ]
+    },
+    {
+      "slug": "firebase-server-error-info-server-error-code-pair",
+      "name": "firebaseServerErrorInfoServerErrorCodePair",
+      "kind": "function",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase-server",
+      "subpath": "function/error",
+      "signature": "firebaseServerErrorInfoServerErrorCodePair(e: unknown): [Maybe<StringErrorCode>, FirebaseServerErrorInfo]",
+      "description": "Returns a tuple of [serverErrorCode, errorInfo] for pattern-matching on server error string codes.",
+      "params": [
+        {
+          "name": "e",
+          "type": "unknown",
+          "description": "- The caught error to analyze.",
+          "optional": false
+        }
+      ],
+      "returns": "A tuple of the server error code (if present) and the full error info.",
+      "tags": [
+        "firebase",
+        "error",
+        "server-error",
+        "code",
+        "string-code",
+        "pair",
+        "tuple",
+        "pattern-match",
+        "decode",
+        "firebase-error",
+        "server",
+        "info",
+        "firebaseservererrorinfoservererrorcodepair"
+      ],
+      "relatedSlugs": [
+        "firebase-server-error-info",
+        "firebase-server-error-info-code-pair",
+        "firebase-server-error-info-server-error-pair"
+      ]
+    },
+    {
+      "slug": "handle-firebase-error",
+      "name": "handleFirebaseError",
+      "kind": "function",
+      "category": "firebase-error",
+      "module": "@dereekb/firebase-server",
+      "subpath": "function/error",
+      "signature": "handleFirebaseError(e: unknown, handleFirebaseErrorFn: ThrowErrorFunction<admin.FirebaseError>): never | void",
+      "description": "Handles a caught error if it is a Firebase Admin error, passing it to the given handler function.\n\nIf the error is not a Firebase error (no `code` property), this is a no-op.",
+      "params": [
+        {
+          "name": "e",
+          "type": "unknown",
+          "description": "- The caught error.",
+          "optional": false
+        },
+        {
+          "name": "handleFirebaseErrorFn",
+          "type": "ThrowErrorFunction<admin.FirebaseError>",
+          "description": "- Handler that receives the typed {@link admin.FirebaseError }.",
+          "optional": false
+        }
+      ],
+      "returns": "never | void",
+      "tags": [
+        "firebase",
+        "admin",
+        "error",
+        "handler",
+        "catch",
+        "conditional",
+        "rethrow",
+        "firebase-error",
+        "handle",
+        "handlefirebaseerror"
+      ],
+      "relatedSlugs": [
+        "is-firebase-error",
+        "firebase-server-error-info"
+      ]
+    }
+  ]
+}

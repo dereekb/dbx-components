@@ -19,7 +19,7 @@ import {
   DbxPdfMergeUploadActionDirective,
   DbxContentPitDirective
 } from '@dereekb/dbx-web';
-import { DbxActionButtonDirective, DbxActionContextLoggerDirective, DbxActionDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
+import { DbxActionButtonDirective, DbxActionDirective, DbxActionHandlerDirective } from '@dereekb/dbx-core';
 import { type WorkUsingObservable } from '@dereekb/rxjs';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';

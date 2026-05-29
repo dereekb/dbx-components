@@ -139,13 +139,15 @@ export interface FirebaseAuthOobCodeDataPair {
  * The encoded form is `${code}-${uid}` — code first so that splitting on the first delimiter
  * still works even when the uid itself contains `-` (Firebase uids occasionally do).
  *
- * @example
- * encodeFirebaseAuthOobCode({ uid: 'abc-123', code: 'xyz789' });  // 'xyz789-abc-123'
- *
  * @dbxUtil
  * @dbxUtilCategory firebase-auth
  * @dbxUtilTags firebase, auth, oob, code, encode, uid, password, reset, setup, serialize
  * @dbxUtilRelated decode-firebase-auth-oob-code, firebase-auth-oob-code-data-pair-delimiter
+ *
+ * @example
+ * ```ts
+ * encodeFirebaseAuthOobCode({ uid: 'abc-123', code: 'xyz789' });  // 'xyz789-abc-123'
+ * ```
  */
 export function encodeFirebaseAuthOobCode(pair: FirebaseAuthOobCodeDataPair): FirebaseAuthOobCode {
   return `${pair.code}${FIREBASE_AUTH_OOB_CODE_DATA_PAIR_DELIMITER}${pair.uid}`;
@@ -157,14 +159,16 @@ export function encodeFirebaseAuthOobCode(pair: FirebaseAuthOobCodeDataPair): Fi
  * Splits on the first `-` so uids containing additional `-` characters survive the round-trip
  * intact. Returns null when the input is missing the delimiter or has empty parts.
  *
- * @example
- * decodeFirebaseAuthOobCode('xyz789-abc-123');  // { uid: 'abc-123', code: 'xyz789' }
- * decodeFirebaseAuthOobCode('invalid');         // null
- *
  * @dbxUtil
  * @dbxUtilCategory firebase-auth
  * @dbxUtilTags firebase, auth, oob, code, decode, parse, uid, password, reset, setup, deserialize
  * @dbxUtilRelated encode-firebase-auth-oob-code, firebase-auth-oob-code-data-pair-delimiter
+ *
+ * @example
+ * ```ts
+ * decodeFirebaseAuthOobCode('xyz789-abc-123');  // { uid: 'abc-123', code: 'xyz789' }
+ * decodeFirebaseAuthOobCode('invalid');         // null
+ * ```
  */
 export function decodeFirebaseAuthOobCode(oobCode: FirebaseAuthOobCode): Maybe<FirebaseAuthOobCodeDataPair> {
   const [code, uid] = splitStringAtFirstCharacterOccurence(oobCode, FIREBASE_AUTH_OOB_CODE_DATA_PAIR_DELIMITER);
