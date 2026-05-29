@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/dbx-web/eslint",
-  "version": "13.12.5",
+  "version": "13.12.6",
   "peerDependencies": {
-    "@dereekb/util": "13.12.5",
+    "@dereekb/util": "13.12.6",
     "@typescript-eslint/utils": "8.59.3"
   },
   "devDependencies": {
     "@angular/core": "21.2.11",
-    "@dereekb/dbx-core": "13.12.5",
-    "@dereekb/rxjs": "13.12.5",
+    "@dereekb/dbx-core": "13.12.6",
+    "@dereekb/rxjs": "13.12.6",
     "@typescript-eslint/parser": "8.59.3",
     "eslint": "10.4.0",
     "rxjs": "^7.8.2"

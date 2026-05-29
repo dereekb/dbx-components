@@ -1,3 +1,16 @@
+## [13.12.6](https://github.com/dereekb/dbx-components/compare/v13.12.5-dev...v13.12.6) (2026-05-29)
+
+
+### Bug Fixes
+
+- **nestjs:** skip discord autoLogin for placeholder token + tests ([cc372daa](https://github.com/dereekb/dbx-components/commit/cc372daa5989baa7142311366683b028f6e14d92))
+- **tools:** peer-dep scanner skips strings and template content ([2aef6a26](https://github.com/dereekb/dbx-components/commit/2aef6a26f9c81f82f85f534f953ab92125774a1d))
+
+
+### Code Refactoring
+
+- add action-workable token + pdf-merge upload sync ([5dc5a8cd](https://github.com/dereekb/dbx-components/commit/5dc5a8cd1ae60cfa70caece7637d835b17d11bd2))
+
 ## [13.12.5](https://github.com/dereekb/dbx-components/compare/v13.12.4-dev...v13.12.5) (2026-05-29)
 
 
