@@ -144,7 +144,7 @@ export class DocPdfMergeEditorMaxFilesExampleComponent {
   selector: 'doc-pdf-merge-editor-config-example',
   template: `
     <dbx-content-border>
-      <dbx-pdf-merge-editor [config]="editorConfig" [showPreviewButton]="true" [showDownloadButton]="true"></dbx-pdf-merge-editor>
+      <dbx-pdf-merge-editor [config]="editorConfig"></dbx-pdf-merge-editor>
     </dbx-content-border>
     @if (configBlobSizeSignal(); as size) {
       <p class="dbx-hint">Config example merged blob size: {{ size }} bytes</p>
@@ -158,6 +158,8 @@ export class DocPdfMergeEditorMaxFilesExampleComponent {
 export class DocPdfMergeEditorConfigExampleComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
 
+  // Single config object drives the whole editor: image compression, output-size limits,
+  // the merged file name, and the Preview/Download affordances — no separate inputs needed.
   readonly editorConfig: DbxPdfMergeEditorConfig = {
     imageCompression: {
       maxDimension: 1600,
@@ -167,7 +169,10 @@ export class DocPdfMergeEditorConfigExampleComponent {
     outputSizeLimits: {
       warnBytes: 2 * 1024 * 1024,
       errorBytes: 8 * 1024 * 1024
-    }
+    },
+    fileName: 'compressed-merge.pdf',
+    showPreviewButton: true,
+    showDownloadButton: true
   };
 
   readonly mergedBlobSize$ = this.store.mergeOutput$.pipe(
@@ -206,7 +211,7 @@ export class DocPdfMergeUploadButtonCustomContentComponent {
   template: `
     <dbx-content-border>
       <div dbxAction [dbxActionHandler]="handleUpload">
-        <div dbxPdfMergeEditorStore>
+        <div dbxPdfMergeEditorStore [config]="storeConfig">
           <dbx-button text="Upload PDF" icon="picture_as_pdf" raised color="primary" dbxActionButton dbxPdfMergeUploadAction dbxPdfMergeUploadButton></dbx-button>
         </div>
       </div>
@@ -226,6 +231,16 @@ export class DocPdfMergeUploadButtonDefaultExampleComponent {
   readonly DOC_PDF_MERGE_UPLOAD_DELAY_MS = DOC_PDF_MERGE_UPLOAD_DELAY_MS;
   private readonly _lastResult = signal<DocPdfMergeUploadResult | undefined>(undefined);
   readonly lastResultSignal = this._lastResult.asReadonly();
+
+  // imageCompression set on the store directive flows through dbxPdfMergeUploadButton into the
+  // dialog's default <dbx-pdf-merge-editor>, so large images are downscaled before the merge.
+  readonly storeConfig: DbxPdfMergeEditorConfig = {
+    imageCompression: {
+      maxDimension: 1600,
+      convertPngToJpeg: true,
+      jpegQuality: 0.85
+    }
+  };
 
   readonly handleUpload: WorkUsingObservable<Blob, boolean> = (blob: Blob) => {
     return of(true).pipe(
@@ -267,6 +282,11 @@ export class DocPdfMergeUploadButtonCustomExampleComponent {
   readonly lastResultSignal = this._lastResult.asReadonly();
 
   readonly storeConfig: DbxPdfMergeEditorConfig = {
+    imageCompression: {
+      maxDimension: 1600,
+      convertPngToJpeg: true,
+      jpegQuality: 0.85
+    },
     outputSizeLimits: {
       warnBytes: 2 * 1024 * 1024,
       errorBytes: 8 * 1024 * 1024

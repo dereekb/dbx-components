@@ -287,6 +287,116 @@ describe('firebase server nest auth', () => {
               expect(objectHasNoKeys(claims)).toBe(true);
             });
           });
+
+          // Regression coverage for the class of bug where a password operation or a targeted role
+          // change silently drops an unrelated application claim (e.g. an "onboarded" flag), which
+          // forces a fully set-up user back into onboarding. The update-style operations must always
+          // read-then-merge existing claims; only the explicit override (setRoles/setClaims) clears them.
+          describe('unrelated custom claim retention', () => {
+            // Stands in for an app claim like an "onboarded" flag that is unrelated to the
+            // operation being performed (the test claims service only knows about the `a` role).
+            const APP_CLAIM_KEY = 'app';
+
+            describe('beginResetPassword()', () => {
+              it('should retain unrelated custom claims while adding the reset claims.', async () => {
+                await authUserContext.updateClaims({ [APP_CLAIM_KEY]: 1 });
+
+                await authUserContext.beginResetPassword();
+
+                authUserContext = authService.userContext(u.uid);
+                const claims = await authUserContext.loadClaims<{ app?: number }>();
+                expect(claims[APP_CLAIM_KEY]).toBe(1); // retained alongside the reset claims
+
+                const resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
+                expect(resetPasswordClaims).toBeDefined();
+              });
+            });
+
+            describe('setPassword()', () => {
+              it('should retain unrelated custom claims while clearing the reset claims.', async () => {
+                await authUserContext.updateClaims({ [APP_CLAIM_KEY]: 1 });
+                await authUserContext.beginResetPassword();
+
+                await authUserContext.setPassword('newpassword1!');
+
+                authUserContext = authService.userContext(u.uid);
+                const claims = await authUserContext.loadClaims<{ app?: number }>();
+                expect(claims[APP_CLAIM_KEY]).toBe(1); // retained after the reset claims were cleared
+
+                const resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
+                expect(resetPasswordClaims).not.toBeDefined();
+              });
+            });
+
+            describe('addRoles()', () => {
+              it('should retain unrelated custom claims while adding the role claim.', async () => {
+                await authUserContext.updateClaims({ [APP_CLAIM_KEY]: 1 });
+
+                await authUserContext.addRoles(AUTH_ADMIN_ROLE);
+
+                authUserContext = authService.userContext(u.uid);
+                const claims = await authUserContext.loadClaims<{ a?: number; app?: number }>();
+                expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
+                expect(claims[APP_CLAIM_KEY]).toBe(1); // retained
+              });
+            });
+
+            describe('full beginPasswordReset() -> completePasswordReset() round-trip', () => {
+              it('should retain unrelated custom claims through the entire reset flow.', async () => {
+                // Mirrors the forgot-password flow: the user already has a real password plus app
+                // claims, and after completing the oob-token reset those app claims must still be present.
+                await authUserContext.setPassword('originalPassword1!');
+                await authUserContext.updateClaims({ [APP_CLAIM_KEY]: 1 });
+                await authUserContext.addRoles(AUTH_ADMIN_ROLE);
+
+                const passwordReset = authService.passwordReset();
+                const { oobCode } = await passwordReset.beginPasswordReset({ uid: u.uid });
+
+                // claims survive the begin step
+                authUserContext = authService.userContext(u.uid);
+                let claims = await authUserContext.loadClaims<{ a?: number; app?: number }>();
+                expect(claims[APP_CLAIM_KEY]).toBe(1);
+                expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
+
+                await passwordReset.completePasswordReset({ oobCode, newPassword: 'brandNewPassword1!' });
+
+                // claims survive the completion step too, and the reset claims are cleared
+                authUserContext = authService.userContext(u.uid);
+                claims = await authUserContext.loadClaims<{ a?: number; app?: number }>();
+                expect(claims[APP_CLAIM_KEY]).toBe(1);
+                expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
+
+                const resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
+                expect(resetPasswordClaims).not.toBeDefined();
+              });
+            });
+
+            describe('setRoles()', () => {
+              it('should override (clear) unrelated custom claims that are not passed via claimsToRetain.', async () => {
+                await authUserContext.updateClaims({ [APP_CLAIM_KEY]: 1 });
+
+                // setRoles is a direct override (setClaims). Any claim that is neither derived from the
+                // given roles nor passed explicitly in claimsToRetain is intentionally discarded.
+                await authUserContext.setRoles([AUTH_ADMIN_ROLE]);
+
+                authUserContext = authService.userContext(u.uid);
+                const claims = await authUserContext.loadClaims<{ a?: number; app?: number }>();
+                expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE); // role claim applied
+                expect(claims[APP_CLAIM_KEY]).toBeUndefined(); // override wiped the unrelated claim
+              });
+
+              it('should retain custom claims that are explicitly passed via claimsToRetain.', async () => {
+                await authUserContext.updateClaims({ [APP_CLAIM_KEY]: 1 });
+
+                await authUserContext.setRoles<{ app?: number }>([AUTH_ADMIN_ROLE], { [APP_CLAIM_KEY]: 1 });
+
+                authUserContext = authService.userContext(u.uid);
+                const claims = await authUserContext.loadClaims<{ a?: number; app?: number }>();
+                expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
+                expect(claims[APP_CLAIM_KEY]).toBe(1); // retained because passed explicitly
+              });
+            });
+          });
         });
       });
 

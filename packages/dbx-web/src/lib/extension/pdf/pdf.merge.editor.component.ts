@@ -63,41 +63,87 @@ export class DbxPdfMergeEditorComponent {
    */
   private readonly _pendingPreview = cleanSubscription();
 
-  readonly accept = input<FileArrayAcceptMatchConfig['accept']>(DEFAULT_PDF_MERGE_ACCEPT as FileArrayAcceptMatchConfig['accept']);
-  readonly multiple = input<boolean>(true);
-  readonly fileName = input<string>(DEFAULT_MERGED_FILE_NAME);
-  readonly showDownloadButton = input<boolean>(false);
-  readonly showPreviewButton = input<boolean>(true);
-  readonly downloadButton = input<Maybe<DbxButtonDisplayStylePair>>(DEFAULT_DOWNLOAD_BUTTON);
   /**
-   * When `false`, hides the default "Add files" upload area. Use when projecting one or more {@link DbxPdfMergeEditorFileUploadComponent} slots through `<ng-content>` instead of relying on the unscoped uploader.
+   * Individual inputs. Each takes precedence over the matching field on {@link config} (and the workspace-wide token), with defaults applied in the corresponding `*Signal` computed. See {@link DbxPdfMergeEditorConfig} for field docs.
    */
-  readonly showAddFiles = input<boolean>(true);
+  readonly accept = input<Maybe<FileArrayAcceptMatchConfig['accept']>>();
+  readonly multiple = input<Maybe<boolean>>();
+  readonly fileName = input<Maybe<string>>();
+  readonly showDownloadButton = input<Maybe<boolean>>();
+  readonly showPreviewButton = input<Maybe<boolean>>();
+  readonly downloadButton = input<Maybe<DbxButtonDisplayStylePair>>();
+  readonly showAddFiles = input<Maybe<boolean>>();
+  readonly showFileList = input<Maybe<boolean>>();
   /**
-   * When `false`, hides the shared {@link DbxPdfMergeListComponent} below the slot content. Useful when each slot displays its owned files inline and you don't want a duplicate unified list.
-   */
-  readonly showFileList = input<boolean>(true);
-  /**
-   * Optional configuration override for image compression and output-size limits. When omitted, falls back to the value provided via {@link DBX_PDF_MERGE_EDITOR_CONFIG} (if any).
+   * Bundles every editor option into one object (see {@link DbxPdfMergeEditorConfig}). Individual inputs override the matching field here, which in turn overrides the workspace-wide {@link DBX_PDF_MERGE_EDITOR_CONFIG} token.
    */
   readonly config = input<Maybe<DbxPdfMergeEditorConfig>>();
 
   readonly entriesChanged = output<readonly PdfMergeEntry[]>();
 
   /**
-   * Merged config — the editor's own `config` input wins over the workspace-wide token.
+   * Store-level image-compression default pushed by {@link DbxPdfMergeEditorStoreDirective}. Resolved between the editor's own `config` input and the workspace-wide token so a store-level default flows through the upload dialog's bare editor.
+   */
+  readonly storeImageCompressionSignal = toSignal(this.store.imageCompression$, { initialValue: undefined });
+
+  /**
+   * Merged config — the editor's own `config` input wins over the store-level default (for `imageCompression`), which in turn wins over the workspace-wide token. The individual inputs are resolved on top of this object in the per-field `*Signal` computeds below.
    */
   readonly effectiveConfigSignal = computed<DbxPdfMergeEditorConfig>(() => {
     const fromInput = this.config();
     const fromToken = this._injectedConfig;
+    const storeImageCompression = this.storeImageCompressionSignal();
     return {
-      imageCompression: fromInput?.imageCompression ?? fromToken?.imageCompression ?? null,
-      outputSizeLimits: fromInput?.outputSizeLimits ?? fromToken?.outputSizeLimits ?? null
+      imageCompression: fromInput?.imageCompression ?? storeImageCompression ?? fromToken?.imageCompression ?? null,
+      outputSizeLimits: fromInput?.outputSizeLimits ?? fromToken?.outputSizeLimits ?? null,
+      accept: fromInput?.accept ?? fromToken?.accept,
+      multiple: fromInput?.multiple ?? fromToken?.multiple,
+      fileName: fromInput?.fileName ?? fromToken?.fileName,
+      showDownloadButton: fromInput?.showDownloadButton ?? fromToken?.showDownloadButton,
+      showPreviewButton: fromInput?.showPreviewButton ?? fromToken?.showPreviewButton,
+      downloadButton: fromInput?.downloadButton ?? fromToken?.downloadButton,
+      showAddFiles: fromInput?.showAddFiles ?? fromToken?.showAddFiles,
+      showFileList: fromInput?.showFileList ?? fromToken?.showFileList
     };
   });
 
   readonly imageCompressionConfigSignal = computed<Maybe<DbxImageCompressionConfig>>(() => this.effectiveConfigSignal().imageCompression);
   readonly outputSizeLimitsSignal = computed<Maybe<DbxPdfMergeOutputSizeLimitsConfig>>(() => this.effectiveConfigSignal().outputSizeLimits);
+
+  // Per-field resolution: dedicated input → config (input/token) → default. The config signal is
+  // read unconditionally at the top of each computed so the computed tracks it on every run.
+  readonly acceptSignal = computed<FileArrayAcceptMatchConfig['accept']>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.accept() ?? config.accept ?? (DEFAULT_PDF_MERGE_ACCEPT as FileArrayAcceptMatchConfig['accept']);
+  });
+  readonly multipleSignal = computed<boolean>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.multiple() ?? config.multiple ?? true;
+  });
+  readonly fileNameSignal = computed<string>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.fileName() ?? config.fileName ?? DEFAULT_MERGED_FILE_NAME;
+  });
+  readonly showDownloadButtonSignal = computed<boolean>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.showDownloadButton() ?? config.showDownloadButton ?? false;
+  });
+  readonly showPreviewButtonSignal = computed<boolean>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.showPreviewButton() ?? config.showPreviewButton ?? true;
+  });
+  readonly downloadButtonSignal = computed<DbxButtonDisplayStylePair>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.downloadButton() ?? config.downloadButton ?? DEFAULT_DOWNLOAD_BUTTON;
+  });
+  readonly showAddFilesSignal = computed<boolean>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.showAddFiles() ?? config.showAddFiles ?? true;
+  });
+  readonly showFileListSignal = computed<boolean>(() => {
+    const config = this.effectiveConfigSignal();
+    return this.showFileList() ?? config.showFileList ?? true;
+  });
   readonly warnBytesSignal = computed<Maybe<FileSize>>(() => this.outputSizeLimitsSignal()?.warnBytes);
   readonly errorBytesSignal = computed<Maybe<FileSize>>(() => this.outputSizeLimitsSignal()?.errorBytes);
 
@@ -162,8 +208,8 @@ export class DbxPdfMergeEditorComponent {
 
   readonly downloadConfigSignal = computed<DbxDownloadBlobButtonConfig>(() => ({
     blob: this.mergeBlobSignal(),
-    fileName: this.fileName(),
-    buttonStylePair: this.downloadButton() ?? DEFAULT_DOWNLOAD_BUTTON
+    fileName: this.fileNameSignal(),
+    buttonStylePair: this.downloadButtonSignal()
   }));
 
   constructor() {
@@ -216,7 +262,7 @@ export class DbxPdfMergeEditorComponent {
   private openPreviewDialog(blob: Blob): void {
     openPdfPreviewDialog(this._matDialog, {
       blob,
-      downloadFileName: this.fileName(),
+      downloadFileName: this.fileNameSignal(),
       width: '90vw',
       maxWidth: '1200px',
       height: '90vh'

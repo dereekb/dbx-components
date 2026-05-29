@@ -1,3 +1,15 @@
+## [13.12.7](https://github.com/dereekb/dbx-components/compare/v13.12.6-dev...v13.12.7) (2026-05-29)
+
+
+### Bug Fixes
+
+- **dbx-web:** flow imageCompression through merge store + dialog ([b6ea743e](https://github.com/dereekb/dbx-components/commit/b6ea743e2ffd9b32b7c71834ebdfb6dca55a04f0))
+
+
+### Code Refactoring
+
+- added authUserContext regression coverage ([3e841036](https://github.com/dereekb/dbx-components/commit/3e841036bfa94aa6d2fda9572ad1a0e309f04b7e))
+
 ## [13.12.6](https://github.com/dereekb/dbx-components/compare/v13.12.5-dev...v13.12.6) (2026-05-29)
 
 

@@ -5,6 +5,7 @@ import { BehaviorSubject, catchError, combineLatest, defaultIfEmpty, distinctUnt
 import { type Building, type FileSize, type Maybe } from '@dereekb/util';
 import { type DbxPdfMergeEditorValidator, type PdfMergeEditorState, type PdfMergeEntry, type PdfMergeEntryMove, type PdfMergeEntryStatus } from './pdf.merge';
 import { buildPdfMergeEntrySync, mergePdfMergeEntries } from './pdf.merge.utility';
+import { type DbxImageCompressionConfig } from '../image';
 import { filterMaybe } from '@dereekb/rxjs';
 
 /**
@@ -34,6 +35,7 @@ export type DbxPdfMergeEditorAddFilesInput =
 export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> {
   private readonly _validator$ = new BehaviorSubject<Maybe<DbxPdfMergeEditorValidator>>(undefined);
   private readonly _outputSizeLimit$ = new BehaviorSubject<Maybe<FileSize>>(undefined);
+  private readonly _imageCompression$ = new BehaviorSubject<Maybe<DbxImageCompressionConfig>>(undefined);
 
   constructor() {
     super(DBX_PDF_MERGE_EDITOR_INITIAL_STATE);
@@ -175,6 +177,11 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
   readonly mergeOutput$: Observable<Blob> = this.currentMergeOutput$.pipe(filterMaybe());
 
   /**
+   * Emits the active client-side image-compression config pushed via {@link setImageCompression}, or `undefined` when none is set. Consumed by the editor and its slot uploaders as the middle tier of compression resolution (own `[config]` input → store → {@link DBX_PDF_MERGE_EDITOR_CONFIG} token), letting {@link DbxPdfMergeEditorStoreDirective} supply a store-level default that flows through the upload dialog's bare editor.
+   */
+  readonly imageCompression$: Observable<Maybe<DbxImageCompressionConfig>> = this._imageCompression$.asObservable();
+
+  /**
    * Returns an observable of entries belonging to the given slot id. The result is filtered from {@link entries$} so the per-slot stream still reflects validation progress and removals.
    *
    * @param slotId - Slot identifier to filter for.
@@ -211,6 +218,15 @@ export class DbxPdfMergeEditorStore extends ComponentStore<PdfMergeEditorState> 
    */
   setOutputSizeLimit(maxBytes: Maybe<FileSize>): void {
     this._outputSizeLimit$.next(maxBytes ?? undefined);
+  }
+
+  /**
+   * Sets the store-level client-side image-compression config exposed via {@link imageCompression$}. The editor and its slot uploaders apply it as the middle tier of compression resolution (own `[config]` input → store → {@link DBX_PDF_MERGE_EDITOR_CONFIG} token), so a value pushed here by {@link DbxPdfMergeEditorStoreDirective} reaches the upload dialog's bare editor while a per-input/per-slot override still wins. Pass `null`/`undefined` to clear the store-level default.
+   *
+   * @param config - Image-compression config, or a falsy value to clear the store-level default.
+   */
+  setImageCompression(config: Maybe<DbxImageCompressionConfig>): void {
+    this._imageCompression$.next(config ?? undefined);
   }
 
   // MARK: Updaters

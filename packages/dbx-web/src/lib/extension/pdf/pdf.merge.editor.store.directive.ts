@@ -52,5 +52,14 @@ export class DbxPdfMergeEditorStoreDirective {
         this.store.setOutputSizeLimit(errorBytes);
       }
     });
+
+    // Push the directive's image-compression config onto the store so it reaches the
+    // upload dialog's bare <dbx-pdf-merge-editor> (which renders with no own [config]).
+    // Only the store directive pushes — the editor reads the store as the middle tier of
+    // its resolution chain (own [config] → store → token) — so the bare editor never
+    // clobbers this value with an empty config.
+    effect(() => {
+      this.store.setImageCompression(this.config()?.imageCompression);
+    });
   }
 }

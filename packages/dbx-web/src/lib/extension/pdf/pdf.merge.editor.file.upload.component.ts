@@ -257,9 +257,17 @@ export class DbxPdfMergeEditorFileUploadComponent implements OnInit, OnDestroy, 
   }
 
   /**
-   * Resolves the active image compression config: per-slot override → workspace-wide DI token. The intermediate ancestor {@link DbxPdfMergeEditorComponent} config is not visible from a slot, so consumers needing per-editor compression should either set the slot's `imageCompression` directly or rely on the injection token.
+   * Store-level image-compression default pushed by {@link DbxPdfMergeEditorStoreDirective}. Resolved between the slot's own override and the workspace-wide token.
    */
-  readonly effectiveImageCompressionSignal = computed<Maybe<DbxImageCompressionConfig>>(() => this.config()?.imageCompression ?? this._injectedConfig?.imageCompression ?? null);
+  readonly storeImageCompressionSignal = toSignal(this.store.imageCompression$, { initialValue: undefined });
+
+  /**
+   * Resolves the active image compression config: per-slot override → store-level default → workspace-wide DI token. The store tier lets a {@link DbxPdfMergeEditorStoreDirective} `[config]` supply a shared default (e.g. through the upload dialog) while a slot's own `imageCompression` still wins.
+   */
+  readonly effectiveImageCompressionSignal = computed<Maybe<DbxImageCompressionConfig>>(() => {
+    const storeImageCompression = this.storeImageCompressionSignal();
+    return this.config()?.imageCompression ?? storeImageCompression ?? this._injectedConfig?.imageCompression ?? null;
+  });
 
   async onFiles(event: DbxFileUploadFilesChangedEvent): Promise<void> {
     const accepted = event.matchResult.accepted;
