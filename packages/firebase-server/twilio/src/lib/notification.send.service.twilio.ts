@@ -230,11 +230,11 @@ export function twilioNotificationTextSendService(config: TwilioNotificationText
             const results = await twilioService.sendBulkSms(inputBatch);
             results.forEach((result) => {
               if (result.error || result.status === 'failed' || result.status === 'undelivered') {
-                pushArrayItemsIntoArray(failed, [result.to as E164PhoneNumber]);
+                pushArrayItemsIntoArray(failed, [result.to]);
               } else if (result.sandboxed) {
-                pushArrayItemsIntoArray(ignored, [result.to as E164PhoneNumber]);
+                pushArrayItemsIntoArray(ignored, [result.to]);
               } else {
-                pushArrayItemsIntoArray(success, [result.to as E164PhoneNumber]);
+                pushArrayItemsIntoArray(success, [result.to]);
               }
             });
           },

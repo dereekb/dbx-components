@@ -117,15 +117,7 @@ export async function discoverLogs(input: DiscoverLogsInput): Promise<DiscoverLo
   } else {
     const primaryAbs = join(input.basePath, input.project);
     const primaryExists = await pathIsDir(primaryAbs);
-    if (!primaryExists) {
-      if (input.includeSiblings) {
-        const siblings = await listChildDirs(input.basePath);
-        const logs = await collectFromProjects({ basePath: input.basePath, projects: siblings, since: input.since });
-        result = { logs, scannedProjects: siblings, missingBase: false, missingProject: true, fellBackToSiblings: true };
-      } else {
-        result = { logs: [], scannedProjects: [], missingBase: false, missingProject: true, fellBackToSiblings: false };
-      }
-    } else {
+    if (primaryExists) {
       const primaryLogs = await collectFromProjects({ basePath: input.basePath, projects: [input.project], since: input.since });
       if (primaryLogs.length === 0 && input.includeSiblings) {
         const siblings = (await listChildDirs(input.basePath)).filter((p) => p !== input.project);
@@ -134,6 +126,12 @@ export async function discoverLogs(input: DiscoverLogsInput): Promise<DiscoverLo
       } else {
         result = { logs: primaryLogs, scannedProjects: [input.project], missingBase: false, missingProject: false, fellBackToSiblings: false };
       }
+    } else if (input.includeSiblings) {
+      const siblings = await listChildDirs(input.basePath);
+      const logs = await collectFromProjects({ basePath: input.basePath, projects: siblings, since: input.since });
+      result = { logs, scannedProjects: siblings, missingBase: false, missingProject: true, fellBackToSiblings: true };
+    } else {
+      result = { logs: [], scannedProjects: [], missingBase: false, missingProject: true, fellBackToSiblings: false };
     }
   }
   return result;

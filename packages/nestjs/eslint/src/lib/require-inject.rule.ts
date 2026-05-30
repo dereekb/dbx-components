@@ -340,7 +340,7 @@ export const NESTJS_REQUIRE_INJECT_RULE: NestjsRequireInjectRuleDefinition = {
 
     function processConstructorParam(param: AstNode, classDecoratorName: string): void {
       const paramDecoratorsOnNode = param.decorators;
-      const hasValidDecorator = paramDecoratorsOnNode && paramDecoratorsOnNode.length > 0 && paramDecoratorsOnNode.some((d: AstNode) => paramDecorators.has(getDecoratorName(d)));
+      const hasValidDecorator = !!paramDecoratorsOnNode && paramDecoratorsOnNode.some((d: AstNode) => paramDecorators.has(getDecoratorName(d)));
 
       if (hasValidDecorator) {
         for (const decorator of paramDecoratorsOnNode) {

@@ -109,7 +109,7 @@ export type ModelFirebaseCrudFunctionQueryTypeConfig = {
 };
 
 export type ModelFirebaseCrudFunctionInvokeTypeConfig = {
-  readonly invoke: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
+  readonly invoke: unknown;
 };
 
 /**

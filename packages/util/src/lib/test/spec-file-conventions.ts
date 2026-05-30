@@ -92,18 +92,18 @@ const SPEC_SUFFIX = '.spec.ts';
 export function classifySpecFile(config: { readonly filename: string; readonly parentFolderName: string }): SpecFileClassification {
   const { filename, parentFolderName } = config;
   let result: SpecFileClassification;
-  if (!filename.endsWith(SPEC_SUFFIX)) {
-    result = { filename, group: '', kind: 'non-spec', subgroups: [], isCanonical: false };
-  } else {
+  if (filename.endsWith(SPEC_SUFFIX)) {
     const stem = filename.slice(0, -SPEC_SUFFIX.length);
     const parts = stem.split('.');
     const group = parts[0] ?? '';
-    if (group !== parentFolderName) {
-      result = { filename, group, kind: 'non-group', subgroups: [], isCanonical: false };
-    } else {
+    if (group === parentFolderName) {
       const rest = parts.slice(1);
       result = classifyRemainingSegments({ filename, group, rest });
+    } else {
+      result = { filename, group, kind: 'non-group', subgroups: [], isCanonical: false };
     }
+  } else {
+    result = { filename, group: '', kind: 'non-spec', subgroups: [], isCanonical: false };
   }
   return result;
 }

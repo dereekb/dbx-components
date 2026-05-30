@@ -111,15 +111,15 @@ export function foldUploadPath(builderNode: AstNode, scope: FoldScope): FoldUplo
     const env: Map<string, EnvValue> = new Map();
     bindParamsAsWildcards(fn.params ?? [], env);
     const body: Maybe<AstNode> = functionBodyExpression(fn);
-    if (!body) {
-      result = { ok: false, reason: 'buildUploadPath body is not a single return expression' };
-    } else {
+    if (body) {
       const frags: Maybe<readonly Frag[]> = foldFrags(body, { scope, env }, 0);
-      if (!frags) {
-        result = { ok: false, reason: 'buildUploadPath does not fold to a constant path (unknown const, unmodeled call, or runtime value)' };
-      } else {
+      if (frags) {
         result = { ok: true, path: { segments: fragsToSegments(frags) } };
+      } else {
+        result = { ok: false, reason: 'buildUploadPath does not fold to a constant path (unknown const, unmodeled call, or runtime value)' };
       }
+    } else {
+      result = { ok: false, reason: 'buildUploadPath body is not a single return expression' };
     }
   }
   return result;
@@ -837,9 +837,7 @@ export function foldedPathMatchesRuleSegments(folded: FoldedUploadPath, ruleSegm
   for (let i = 0; result && i < folded.segments.length; i++) {
     const a: FoldedPathSegment = folded.segments[i];
     const b: FoldedPathSegment = ruleSegments[i];
-    if (a.kind !== b.kind) {
-      result = false;
-    } else if (a.kind === 'literal' && a.value !== b.value) {
+    if (a.kind !== b.kind || (a.kind === 'literal' && a.value !== b.value)) {
       result = false;
     }
   }

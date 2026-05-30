@@ -252,7 +252,7 @@ export async function mergePdfMergeEntries(entries: readonly PdfMergeEntry[]): P
     throw new Error('No ready entries to merge.');
   } else if (ready.length === 1 && ready[0].encrypted) {
     const bytes = await ready[0].file.arrayBuffer();
-    result = new Blob([bytes as BlobPart], { type: PDF_MERGE_RESULT_MIME_TYPE });
+    result = new Blob([bytes], { type: PDF_MERGE_RESULT_MIME_TYPE });
   } else if (ready.some((entry) => entry.encrypted)) {
     throw new Error('Encrypted PDFs cannot be merged with other files.');
   } else {

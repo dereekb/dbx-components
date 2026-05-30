@@ -1007,10 +1007,9 @@ describe('DbxForgeDateTimeFieldComponent', () => {
       // Find the next Monday/Wednesday/Friday from today for a valid date
       const today = new Date();
       let validDate = startOfDay(today);
-      const dayOfWeek = validDate.getDay();
       // M=1, W=3, F=5 — find the nearest valid day
-      const validDays = [1, 3, 5];
-      while (!validDays.includes(validDate.getDay())) {
+      const validDays = new Set([1, 3, 5]);
+      while (!validDays.has(validDate.getDay())) {
         validDate = addDays(validDate, 1);
       }
 

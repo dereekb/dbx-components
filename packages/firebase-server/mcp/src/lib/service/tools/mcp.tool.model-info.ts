@@ -322,9 +322,8 @@ function buildGroupFilterOutput(config: GroupFilterConfig): ModelInfoToolOutput 
   return result;
 }
 
-function buildAllOutput(manifest: ReadonlyArray<McpManifestModelEntry>, fields?: boolean): ModelInfoToolOutput {
-  const detailed = fields ?? false;
-  return { mode: 'list', models: manifest.map((entry) => toModelRow(entry, detailed)) };
+function buildAllOutput(manifest: ReadonlyArray<McpManifestModelEntry>, fields: boolean = false): ModelInfoToolOutput {
+  return { mode: 'list', models: manifest.map((entry) => toModelRow(entry, fields)) };
 }
 
 interface ModelLookupConfig {

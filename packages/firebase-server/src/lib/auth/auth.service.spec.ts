@@ -16,7 +16,7 @@ describe('FirebaseServerUserPasswordResetOobCode', () => {
 
   describe('decode malformed input', () => {
     it('should return undefined for a token with no separator', () => {
-      expect(decodeFirebaseServerUserPasswordResetOobCode('no-dash-no-uid'.replace(/-/g, ''))).toBeUndefined();
+      expect(decodeFirebaseServerUserPasswordResetOobCode('no-dash-no-uid'.replaceAll('-', ''))).toBeUndefined();
     });
 
     it('should return undefined when the code segment is not purely digits', () => {

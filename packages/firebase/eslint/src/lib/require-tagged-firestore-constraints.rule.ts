@@ -91,13 +91,13 @@ export const FIREBASE_REQUIRE_TAGGED_FIRESTORE_CONSTRAINTS_RULE: FirebaseRequire
     function pushFrame(node: AstNode): void {
       const anchor = getFunctionJsdocAnchor(node);
       const tagged = anchor ? jsdocHasMarker(anchor) : false;
-      const parent = stack.length > 0 ? stack[stack.length - 1] : null;
+      const parent = stack.at(-1) ?? null;
       const taggedDeep = tagged || (parent?.taggedDeep ?? false);
       stack.push({ node, tagged, taggedDeep });
     }
 
     function popFrame(node: AstNode): void {
-      if (stack.length > 0 && stack[stack.length - 1].node === node) {
+      if (stack.at(-1)?.node === node) {
         stack.pop();
       }
     }
