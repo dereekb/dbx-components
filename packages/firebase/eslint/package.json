@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/firebase/eslint",
-  "version": "13.12.7",
+  "version": "13.12.8",
   "peerDependencies": {
-    "@dereekb/util": "13.12.7",
+    "@dereekb/util": "13.12.8",
     "@marcbachmann/cel-js": "^7.6.1",
     "@typescript-eslint/parser": "8.59.3",
     "@typescript-eslint/utils": "8.59.3"
   },
   "devDependencies": {
-    "@dereekb/firebase": "13.12.7",
+    "@dereekb/firebase": "13.12.8",
     "eslint": "10.4.0",
     "firebase": "^12.12.1"
   }

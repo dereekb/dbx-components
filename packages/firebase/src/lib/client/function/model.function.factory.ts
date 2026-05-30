@@ -55,6 +55,12 @@ export type ModelFirebaseUpdateFunction<I, O = void> = ModelFirebaseCrudFunction
 export type ModelFirebaseDeleteFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
 
 /**
+ * Invoke function for a model. Covers RPC-style operations that don't fit
+ * a CRUD verb (e.g. regenerate-thumbnails, resync-with-external). Returns void by default.
+ */
+export type ModelFirebaseInvokeFunction<I, O = void> = ModelFirebaseCrudFunction<I, O>;
+
+/**
  * Query function for a model. Returns {@link OnCallQueryModelResult} (a paged, cursorable
  * collection) by default. The input type defaults to {@link OnCallQueryModelRequestParams}
  * (cursor + limit) but is typically extended with model-specific filter fields.
@@ -77,7 +83,7 @@ export type ModelFirebaseCrudFunctionTypeMap<T extends FirestoreModelIdentity = 
  * Can be `null`/`undefined` (no CRUD functions for this model) or a partial record of
  * create/read/update/delete/query configurations, each optionally with specifiers.
  */
-export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionReadTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig & ModelFirebaseCrudFunctionQueryTypeConfig>;
+export type ModelFirebaseCrudFunctionTypeMapEntry = MaybeNot | Partial<ModelFirebaseCrudFunctionCreateTypeConfig & ModelFirebaseCrudFunctionReadTypeConfig & ModelFirebaseCrudFunctionUpdateTypeConfig & ModelFirebaseCrudFunctionDeleteTypeConfig & ModelFirebaseCrudFunctionQueryTypeConfig & ModelFirebaseCrudFunctionInvokeTypeConfig>;
 
 export type ModelFirebaseCrudFunctionTypeMapEntryWithReturnType<I = unknown, O = unknown> = [I, O];
 export type ModelFirebaseCrudFunctionTypeSpecifierConfig = Record<string | number, unknown | ModelFirebaseCrudFunctionTypeMapEntryWithReturnType>;
@@ -100,6 +106,10 @@ export type ModelFirebaseCrudFunctionDeleteTypeConfig = {
 
 export type ModelFirebaseCrudFunctionQueryTypeConfig = {
   readonly query: unknown;
+};
+
+export type ModelFirebaseCrudFunctionInvokeTypeConfig = {
+  readonly invoke: unknown | ModelFirebaseCrudFunctionTypeSpecifierConfig;
 };
 
 /**
@@ -281,6 +291,7 @@ export function callModelFirebaseFunctionMapFactory<M extends FirebaseFunctionTy
           addCallFunctions('update', _callFn, modelType);
           addCallFunctions('delete', _callFn, modelType);
           addCallFunctions('query', _callFn, modelType);
+          addCallFunctions('invoke', _callFn, modelType);
 
           // tslint:disable-next-line
           (x as any)[modelType] = modelTypeCalls;

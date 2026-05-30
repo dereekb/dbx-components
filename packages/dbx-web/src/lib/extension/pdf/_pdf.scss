@@ -11,7 +11,8 @@
   }
 
   .dbx-pdf-merge-editor-size-warning,
-  .dbx-pdf-merge-editor-size-error {
+  .dbx-pdf-merge-editor-size-error,
+  .dbx-pdf-merge-editor-encrypted-banner {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -29,6 +30,11 @@
   .dbx-pdf-merge-editor-size-error {
     background-color: var(--mat-sys-error-container);
     color: var(--mat-sys-on-error-container);
+  }
+
+  .dbx-pdf-merge-editor-encrypted-banner {
+    background-color: var(--mat-sys-tertiary-container);
+    color: var(--mat-sys-on-tertiary-container);
   }
 
   // Slot upload
@@ -115,6 +121,28 @@
     background-color: var(--mat-sys-secondary-container);
     color: var(--mat-sys-on-secondary-container);
     font-size: 11px;
+  }
+
+  .dbx-pdf-merge-entry-encrypted-chip {
+    gap: 4px;
+  }
+
+  // Chain `.mat-icon` so we beat the global `.mat-icon { width: 24px; height: 24px }` defaults
+  // (equal specificity, loaded later in some builds).
+  .dbx-pdf-merge-entry-encrypted-icon.mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    flex-shrink: 0;
+  }
+
+  .dbx-pdf-merge-entry--ignored .dbx-pdf-merge-entry-row {
+    opacity: 0.45;
+  }
+
+  .dbx-pdf-merge-entry--ignored .dbx-pdf-merge-entry-handle {
+    cursor: not-allowed;
   }
 
   // CDK animations

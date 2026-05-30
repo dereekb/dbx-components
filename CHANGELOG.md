@@ -1,3 +1,22 @@
+## [13.12.8](https://github.com/dereekb/dbx-components/compare/v13.12.7-dev...v13.12.8) (2026-05-30)
+
+
+### Bug Fixes
+
+- **dbx-web:** file-upload-area hint position in safari ([4db06c11](https://github.com/dereekb/dbx-components/commit/4db06c11cbae102108da546e0fb021a1bfaeae93))
+- **dbx-web:** show close button on pdf preview dialog ([ebc36b71](https://github.com/dereekb/dbx-components/commit/ebc36b71f49560706f2a758b1a4683a8809fe28e))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([6e7ba773](https://github.com/dereekb/dbx-components/commit/6e7ba773943d3468f4e4686d6b21fe9ff821cf4d))
+
+
+### Code Refactoring
+
+- **dbx-web:** pdf-merge encrypted-PDF handling ([78b918fb](https://github.com/dereekb/dbx-components/commit/78b918fbe3b284527090f6ba6f84f231a41047de))
+- **firebase:** wire invoke as a callModel action ([1f1c6ce8](https://github.com/dereekb/dbx-components/commit/1f1c6ce8686d3d832f1a0b52577e3edb183ebbfe))
+
 ## [13.12.7](https://github.com/dereekb/dbx-components/compare/v13.12.6-dev...v13.12.7) (2026-05-29)
 
 

@@ -11,7 +11,7 @@ import { DbxFileUploadComponent } from '../../interaction/upload/upload.componen
 import { type DbxFileUploadFilesChangedEvent } from '../../interaction/upload/abstract.upload.component';
 import { DbxDownloadBlobButtonComponent, type DbxDownloadBlobButtonConfig } from '../download/blob/download.blob.button.component';
 import { type FileArrayAcceptMatchConfig } from '../../interaction/upload/upload.accept';
-import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorConfig, type DbxPdfMergeOutputSizeLimitsConfig, type PdfMergeEntry } from './pdf.merge';
+import { DBX_PDF_MERGE_EDITOR_CONFIG, DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING, DEFAULT_PDF_MERGE_ACCEPT, type DbxPdfMergeEditorConfig, type DbxPdfMergeEncryptedHandling, type DbxPdfMergeOutputSizeLimitsConfig, type PdfMergeEntry } from './pdf.merge';
 import { type DbxImageCompressionConfig } from '../image';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { DbxPdfMergeListComponent } from './pdf.merge.list.component';
@@ -87,12 +87,18 @@ export class DbxPdfMergeEditorComponent {
   readonly storeImageCompressionSignal = toSignal(this.store.imageCompression$, { initialValue: undefined });
 
   /**
+   * Store-level encryption handling default pushed by {@link DbxPdfMergeEditorStoreDirective}. Resolved between the editor's own `config` input and the workspace-wide token in {@link effectiveConfigSignal}.
+   */
+  readonly storeEncryptedHandlingSignal = toSignal(this.store.encryptedHandling$, { initialValue: undefined });
+
+  /**
    * Merged config — the editor's own `config` input wins over the store-level default (for `imageCompression`), which in turn wins over the workspace-wide token. The individual inputs are resolved on top of this object in the per-field `*Signal` computeds below.
    */
   readonly effectiveConfigSignal = computed<DbxPdfMergeEditorConfig>(() => {
     const fromInput = this.config();
     const fromToken = this._injectedConfig;
     const storeImageCompression = this.storeImageCompressionSignal();
+    const storeEncryptedHandling = this.storeEncryptedHandlingSignal();
     return {
       imageCompression: fromInput?.imageCompression ?? storeImageCompression ?? fromToken?.imageCompression ?? null,
       outputSizeLimits: fromInput?.outputSizeLimits ?? fromToken?.outputSizeLimits ?? null,
@@ -103,9 +109,12 @@ export class DbxPdfMergeEditorComponent {
       showPreviewButton: fromInput?.showPreviewButton ?? fromToken?.showPreviewButton,
       downloadButton: fromInput?.downloadButton ?? fromToken?.downloadButton,
       showAddFiles: fromInput?.showAddFiles ?? fromToken?.showAddFiles,
-      showFileList: fromInput?.showFileList ?? fromToken?.showFileList
+      showFileList: fromInput?.showFileList ?? fromToken?.showFileList,
+      encryptedHandling: fromInput?.encryptedHandling ?? storeEncryptedHandling ?? fromToken?.encryptedHandling ?? DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING
     };
   });
+
+  readonly encryptedHandlingSignal = computed<DbxPdfMergeEncryptedHandling>(() => this.effectiveConfigSignal().encryptedHandling ?? DEFAULT_DBX_PDF_MERGE_ENCRYPTED_HANDLING);
 
   readonly imageCompressionConfigSignal = computed<Maybe<DbxImageCompressionConfig>>(() => this.effectiveConfigSignal().imageCompression);
   readonly outputSizeLimitsSignal = computed<Maybe<DbxPdfMergeOutputSizeLimitsConfig>>(() => this.effectiveConfigSignal().outputSizeLimits);
@@ -149,6 +158,10 @@ export class DbxPdfMergeEditorComponent {
 
   readonly hasReadyEntriesSignal = toSignal(this.store.hasReadyEntries$, { initialValue: false });
   readonly entryCountSignal = toSignal(this.store.entryCount$, { initialValue: 0 });
+  /**
+   * Mirrors {@link DbxPdfMergeEditorStore.focusActive$} — `true` while `encryptedHandling === 'focus'` and at least one ready encrypted entry exists. Drives the encrypted-PDF focus banner.
+   */
+  readonly focusActiveSignal = toSignal(this.store.focusActive$, { initialValue: false });
   /**
    * Mirrors {@link DbxPdfMergeEditorStore.isValid$}. Defaults to `true` when no validator delegate is registered, so the Preview/Download buttons are gated only by the registered validator's output (if any).
    */
@@ -218,6 +231,11 @@ export class DbxPdfMergeEditorComponent {
     effect(() => {
       const errorBytes = this.errorBytesSignal();
       this.store.setOutputSizeLimit(errorBytes);
+    });
+
+    effect(() => {
+      const handling = this.encryptedHandlingSignal();
+      this.store.setEncryptedHandling(handling);
     });
   }
 

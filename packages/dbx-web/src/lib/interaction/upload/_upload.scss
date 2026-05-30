@@ -3,6 +3,7 @@
 // Sections
 @mixin core() {
   .dbx-file-upload-area {
+    display: block;
     position: relative;
   }
 

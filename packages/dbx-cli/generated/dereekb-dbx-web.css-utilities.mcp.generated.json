@@ -1023,7 +1023,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/interaction/upload/_upload.scss",
-      "line": 29,
+      "line": 30,
       "declarations": [
         {
           "property": "border-radius",
@@ -1042,7 +1042,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/interaction/upload/_upload.scss",
-      "line": 37,
+      "line": 38,
       "declarations": [
         {
           "property": "border-radius",

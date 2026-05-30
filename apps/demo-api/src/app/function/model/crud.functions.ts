@@ -19,7 +19,7 @@ import { storageFileCreate, storageFileCreateSignedUploadUrl, storageFileFromUpl
 import { storageFileDelete } from '../storagefile/storagefile.delete';
 import { storageFileDownload, storageFileDownloadMultiple } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
-import { guestbookEntryAllPublishedEntries } from '../guestbook/guestbookentry.invoke';
+import { guestbookEntryAllPublishedEntries, guestbookEntryEntryDetails } from '../guestbook/guestbookentry.invoke';
 import { profileDownloadArchive } from '../profile/profile.read';
 import { oidcEntryCreateClient } from '../oidc/oidcclient.create';
 import { oidcEntryUpdateClient, oidcEntryRotateClientSecret } from '../oidc/oidcclient.update';
@@ -134,7 +134,8 @@ export const DEMO_QUERY_MODEL_MAP: DemoOnCallQueryModelMap = {
 // MARK: Invoke
 export const DEMO_INVOKE_MODEL_MAP: DemoOnCallInvokeModelMap = {
   guestbookEntry: onCallSpecifierHandler({
-    allPublishedEntries: guestbookEntryAllPublishedEntries
+    allPublishedEntries: guestbookEntryAllPublishedEntries,
+    entryDetails: guestbookEntryEntryDetails
   })
 };
 

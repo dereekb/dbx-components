@@ -1,7 +1,23 @@
-import { type FirebaseFunctionTypeConfigMap, type ModelFirebaseCreateFunction, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseQueryFunction, type AbstractSubscribeToNotificationBoxParams, abstractSubscribeToNotificationBoxParamsType, type TargetModelParams, targetModelParamsType, callModelFirebaseFunctionMapFactory, type OnCallQueryModelRequestParams, type OnCallQueryModelResult } from '@dereekb/firebase';
+import {
+  type FirebaseFunctionTypeConfigMap,
+  type FirestoreModelKey,
+  type ModelFirebaseCreateFunction,
+  type ModelFirebaseCrudFunction,
+  type ModelFirebaseCrudFunctionConfigMap,
+  type ModelFirebaseFunctionMap,
+  type ModelFirebaseInvokeFunction,
+  type ModelFirebaseQueryFunction,
+  type AbstractSubscribeToNotificationBoxParams,
+  abstractSubscribeToNotificationBoxParamsType,
+  type TargetModelParams,
+  targetModelParamsType,
+  callModelFirebaseFunctionMapFactory,
+  type OnCallQueryModelRequestParams,
+  type OnCallQueryModelResult
+} from '@dereekb/firebase';
 import { type, type Type } from 'arktype';
 import { type Guestbook, type GuestbookEntry, type GuestbookTypes } from './guestbook';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
 import { type GuestbookKey } from './guestbook.id';
 import { type ProfileId } from '../profile';
@@ -128,6 +144,29 @@ export interface AllPublishedGuestbookEntriesResult {
   readonly hitLimit: boolean;
 }
 
+/**
+ * Parameters for the `guestbookEntry / invoke / entryDetails` RPC.
+ *
+ * Targets a single GuestbookEntry by key (the store's current document) and
+ * returns a computed summary. Exists primarily as a keyed-invoke example
+ * exercising {@link firebaseDocumentStoreInvokeFunction}.
+ */
+export interface EntryDetailsGuestbookEntryParams extends TargetModelParams {}
+
+export const entryDetailsGuestbookEntryParamsType = targetModelParamsType as Type<EntryDetailsGuestbookEntryParams>;
+
+/**
+ * Result of an entry-details invoke — a small computed projection of the targeted GuestbookEntry.
+ */
+export interface EntryDetailsGuestbookEntryResult {
+  readonly key: FirestoreModelKey;
+  readonly messageLength: number;
+  readonly signedLength: number;
+  readonly published: boolean;
+  readonly likes: number;
+  readonly ageMs: Milliseconds;
+}
+
 export type GuestbookFunctionTypeMap = {};
 
 export const guestbookFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<GuestbookFunctionTypeMap> = {};
@@ -153,13 +192,14 @@ export type GuestbookModelCrudFunctionsConfig = {
     };
     invoke: {
       allPublishedEntries: [AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult];
+      entryDetails: [EntryDetailsGuestbookEntryParams, EntryDetailsGuestbookEntryResult];
     };
   };
 };
 
 export const guestbookModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<GuestbookModelCrudFunctionsConfig, GuestbookTypes> = {
   guestbook: ['create', 'update:subscribeToNotifications,publish', 'query'],
-  guestbookEntry: ['update:insert,like', 'delete', 'query:_,entries', 'invoke:allPublishedEntries']
+  guestbookEntry: ['update:insert,like', 'delete', 'query:_,entries', 'invoke:allPublishedEntries,entryDetails']
 };
 
 export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory(guestbookFunctionTypeConfigMap, guestbookModelCrudFunctionsConfig);
@@ -185,6 +225,7 @@ export abstract class GuestbookFunctions implements ModelFirebaseFunctionMap<Gue
     };
     invokeGuestbookEntry: {
       allPublishedEntries: ModelFirebaseCrudFunction<AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult>;
+      entryDetails: ModelFirebaseInvokeFunction<EntryDetailsGuestbookEntryParams, EntryDetailsGuestbookEntryResult>;
     };
   };
 }

@@ -22,7 +22,6 @@ export interface DbxPdfPreviewDialogConfig extends Omit<MatDialogConfig, 'data'>
 export function openPdfPreviewDialog(matDialog: MatDialog, config: DbxPdfPreviewDialogConfig): MatDialogRef<DbxInjectionDialogComponent<DbxPdfPreviewComponent>, void> {
   return DbxInjectionDialogComponent.openDialog(matDialog, {
     ...config,
-    showCloseButton: false,
     componentConfig: {
       componentClass: DbxPdfPreviewComponent,
       init: (x) => {

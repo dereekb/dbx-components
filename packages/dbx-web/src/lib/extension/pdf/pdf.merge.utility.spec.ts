@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { type PdfMergeEntry } from './pdf.merge';
-import { buildPdfMergeEntry, buildPdfMergeEntrySync, classifyPdfMergeFile, formatPdfMergeEntrySize, validatePdfMergeEntry } from './pdf.merge.utility';
+import { buildPdfMergeEntry, buildPdfMergeEntrySync, classifyPdfMergeFile, formatPdfMergeEntrySize, mergePdfMergeEntries, validatePdfMergeEntry } from './pdf.merge.utility';
 
 function makeFile(name: string, type: string, contents = 'placeholder'): File {
   return new File([contents], name, { type });
@@ -42,6 +42,7 @@ describe('buildPdfMergeEntrySync()', () => {
     expect(entry!.status).toBe('validating');
     expect(entry!.name).toBe('a.pdf');
     expect(entry!.compression).toBe('unchanged');
+    expect(entry!.encrypted).toBe(false);
     expect(entry!.original.name).toBe('a.pdf');
     expect(entry!.original.size).toBe(entry!.size);
   });
@@ -99,7 +100,8 @@ describe('validatePdfMergeEntry()', () => {
       kind: 'pdf',
       status: 'validating',
       original: { name: file.name, mimeType: file.type, size: file.size },
-      compression: 'unchanged'
+      compression: 'unchanged',
+      encrypted: false
     };
   }
 
@@ -113,7 +115,8 @@ describe('validatePdfMergeEntry()', () => {
       kind: 'image',
       status: 'validating',
       original: { name: file.name, mimeType: file.type, size: file.size },
-      compression: 'unchanged'
+      compression: 'unchanged',
+      encrypted: false
     };
   }
 
@@ -128,10 +131,17 @@ describe('validatePdfMergeEntry()', () => {
     expect(result.errorMessage).toContain('valid PDF');
   });
 
-  it('marks an encrypted PDF as error', async () => {
+  it('marks an encrypted PDF as ready with encrypted=true', async () => {
     const result = await validatePdfMergeEntry(pdfEntry(makePdfFile('locked.pdf', '/Encrypt 1 0 R')));
-    expect(result.ok).toBe(false);
-    expect(result.errorMessage).toContain('Password-protected');
+    expect(result.ok).toBe(true);
+    expect(result.encrypted).toBe(true);
+    expect(result.errorMessage).toBeUndefined();
+  });
+
+  it('does not flag a non-encrypted PDF as encrypted', async () => {
+    const result = await validatePdfMergeEntry(pdfEntry(makePdfFile('plain.pdf', 'body')));
+    expect(result.ok).toBe(true);
+    expect(result.encrypted).toBeUndefined();
   });
 
   it('marks an empty image as error', async () => {
@@ -142,5 +152,46 @@ describe('validatePdfMergeEntry()', () => {
   it('marks a non-empty image as ready', async () => {
     const result = await validatePdfMergeEntry(imageEntry(makeFile('a.png', 'image/png', 'imgdata')));
     expect(result.ok).toBe(true);
+  });
+});
+
+describe('mergePdfMergeEntries()', () => {
+  function readyEntry(overrides: Partial<PdfMergeEntry>): PdfMergeEntry {
+    const file = overrides.file ?? new File(['placeholder'], 'a.pdf', { type: 'application/pdf' });
+    return {
+      id: 'id',
+      file,
+      name: file.name,
+      mimeType: file.type,
+      size: file.size,
+      kind: 'pdf',
+      status: 'ready',
+      original: { name: file.name, mimeType: file.type, size: file.size },
+      compression: 'unchanged',
+      encrypted: false,
+      validation: Promise.resolve({ ok: true }),
+      ...overrides
+    };
+  }
+
+  it('throws when no ready entries are provided', async () => {
+    await expect(mergePdfMergeEntries([])).rejects.toThrow('No ready entries');
+  });
+
+  it('returns the original file bytes when the only ready entry is a single encrypted PDF', async () => {
+    const file = new File(['ENCRYPTED-BYTES'], 'locked.pdf', { type: 'application/pdf' });
+    const entry = readyEntry({ file, encrypted: true });
+    const blob = await mergePdfMergeEntries([entry]);
+    const text = await blob.text();
+
+    expect(blob.type).toBe('application/pdf');
+    expect(text).toBe('ENCRYPTED-BYTES');
+    expect(blob.size).toBe(file.size);
+  });
+
+  it('throws when an encrypted entry is mixed with other ready entries', async () => {
+    const encrypted = readyEntry({ file: new File(['x'], 'enc.pdf', { type: 'application/pdf' }), encrypted: true });
+    const plain = readyEntry({ id: 'other', file: new File(['y'], 'plain.pdf', { type: 'application/pdf' }) });
+    await expect(mergePdfMergeEntries([encrypted, plain])).rejects.toThrow('Encrypted PDFs cannot be merged with other files.');
   });
 });

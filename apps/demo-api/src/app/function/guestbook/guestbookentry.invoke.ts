@@ -1,4 +1,4 @@
-import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, allPublishedGuestbookEntriesParamsType, publishedGuestbookEntry, type GuestbookEntry } from 'demo-firebase';
+import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, allPublishedGuestbookEntriesParamsType, publishedGuestbookEntry, type GuestbookEntry, type EntryDetailsGuestbookEntryParams, type EntryDetailsGuestbookEntryResult, entryDetailsGuestbookEntryParamsType } from 'demo-firebase';
 import { type FirestoreQueryConstraint, type OnCallQueryModelResult } from '@dereekb/firebase';
 import { executeOnCallQuery, withApiDetails } from '@dereekb/firebase-server';
 import { type DemoInvokeModelFunction } from '../function.context';
@@ -68,6 +68,41 @@ export const guestbookEntryAllPublishedEntries: DemoInvokeModelFunction<AllPubli
       count: entries.length,
       entries,
       hitLimit
+    };
+  }
+});
+
+/**
+ * Demo guestbookEntry invoke handler — returns a small computed projection of a
+ * single entry. Targets the entry identified by the request's `key` and exists
+ * primarily as a keyed-invoke example exercising `firebaseDocumentStoreInvokeFunction`
+ * on the Angular store side.
+ */
+export const guestbookEntryEntryDetails: DemoInvokeModelFunction<EntryDetailsGuestbookEntryParams, EntryDetailsGuestbookEntryResult> = withApiDetails({
+  inputType: entryDetailsGuestbookEntryParamsType,
+  fn: async (request) => {
+    const { nest, data } = request;
+
+    const document = await nest.useModel('guestbookEntry', {
+      request,
+      key: data.key,
+      roles: 'read',
+      use: (x) => x.document
+    });
+
+    const entry = await document.snapshotData();
+
+    if (!entry) {
+      throw new Error(`Guestbook entry not found at key ${data.key}.`);
+    }
+
+    return {
+      key: data.key,
+      messageLength: entry.message.length,
+      signedLength: entry.signed.length,
+      published: entry.published,
+      likes: entry.likes,
+      ageMs: Date.now() - entry.createdAt.getTime()
     };
   }
 });

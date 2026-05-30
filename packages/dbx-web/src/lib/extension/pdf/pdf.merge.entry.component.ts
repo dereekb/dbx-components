@@ -4,9 +4,10 @@ import { CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-dr
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { type PdfMergeEntry } from './pdf.merge';
+import { type PdfMergeEntry, type PdfMergeEntryView } from './pdf.merge';
 import { DbxPdfMergeEditorStore } from './pdf.merge.editor.store';
 import { formatPdfMergeEntrySize } from './pdf.merge.utility';
+import { DbxChipDirective } from '../../layout/text/text.chip.directive';
 
 const PDF_ICON = 'picture_as_pdf';
 const IMAGE_ICON = 'image';
@@ -30,6 +31,12 @@ const ERROR_ICON = 'error';
         <div class="dbx-pdf-merge-entry-name dbx-text-truncate" [title]="entry().name">{{ entry().name }}</div>
         <div class="dbx-pdf-merge-entry-meta dbx-hint dbx-small">
           <span>{{ sizeSignal() }}</span>
+          @if (isEncryptedSignal()) {
+            <dbx-chip class="dbx-pdf-merge-entry-encrypted-chip" color="warn" [small]="true">
+              <mat-icon class="dbx-pdf-merge-entry-encrypted-icon">lock</mat-icon>
+              <span>Encrypted</span>
+            </dbx-chip>
+          }
           @if (compressionLabelSignal(); as compressionLabel) {
             <span class="dbx-pdf-merge-entry-compression">{{ compressionLabel }}</span>
           }
@@ -49,16 +56,21 @@ const ERROR_ICON = 'error';
   host: {
     class: 'dbx-pdf-merge-entry d-block',
     '[class.dbx-pdf-merge-entry--error]': 'isErrorSignal()',
-    '[class.dbx-pdf-merge-entry--validating]': 'isValidatingSignal()'
+    '[class.dbx-pdf-merge-entry--validating]': 'isValidatingSignal()',
+    '[class.dbx-pdf-merge-entry--ignored]': 'isIgnoredSignal()',
+    '[class.dbx-pdf-merge-entry--encrypted]': 'isEncryptedSignal()'
   },
-  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [CdkDrag, CdkDragHandle, CdkDragPlaceholder, MatIconModule, MatButtonModule, MatProgressSpinnerModule, DbxChipDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
 export class DbxPdfMergeEntryComponent {
   readonly store = inject(DbxPdfMergeEditorStore);
 
-  readonly entry = input.required<PdfMergeEntry>();
+  readonly entry = input.required<PdfMergeEntry | PdfMergeEntryView>();
+
+  readonly isIgnoredSignal = computed(() => (this.entry() as PdfMergeEntryView).ignored === true);
+  readonly isEncryptedSignal = computed(() => this.entry().encrypted === true);
 
   readonly iconSignal = computed(() => {
     const entry = this.entry();
