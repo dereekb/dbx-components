@@ -1,6 +1,11 @@
 import type { Maybe } from '@dereekb/util';
 import { type AstNode, type ImportRegistry, createImportRegistry, DEFAULT_INDEX_AFFECTING_CONSTRAINT_NAMES, FIREBASE_MODULE, isImportedFrom, trackImportDeclaration } from './util';
 
+function hasTypeArgument(node: AstNode): boolean {
+  const args = node.typeArguments ?? node.typeParameters;
+  return Boolean(args && Array.isArray(args.params) && args.params.length > 0);
+}
+
 /**
  * Options for the require-firestore-constraint-type-parameter rule.
  */
@@ -80,11 +85,6 @@ export const FIREBASE_REQUIRE_FIRESTORE_CONSTRAINT_TYPE_PARAMETER_RULE: Firebase
         }
       }
       return result;
-    }
-
-    function hasTypeArgument(node: AstNode): boolean {
-      const args = node.typeArguments ?? node.typeParameters;
-      return Boolean(args && Array.isArray(args.params) && args.params.length > 0);
     }
 
     return {

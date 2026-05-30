@@ -53,6 +53,12 @@ interface DispatcherBodyScan {
   readonly pushReceivers: ReadonlySet<string>;
 }
 
+function recordVariableDeclarator(node: AstNode, emptyArrayDeclarators: CollectedEmptyArrayDeclarator[]): void {
+  if (node.id?.type === 'Identifier' && node.init?.type === 'ArrayExpression' && Array.isArray(node.init.elements) && node.init.elements.length === 0) {
+    emptyArrayDeclarators.push({ node, name: node.id.name });
+  }
+}
+
 /**
  * ESLint rule enforcing that `@dbxModelFirebaseIndexDispatcher`-tagged factories delegate to
  * other `@dbxModelFirebaseIndex`-tagged query factories instead of building constraints directly.
@@ -151,12 +157,6 @@ export const FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_VALID_DISPATCHER_RULE: Fi
       }
       if (node.callee?.type === 'MemberExpression' && node.callee.property?.type === 'Identifier' && node.callee.property.name === 'push' && node.callee.object?.type === 'Identifier') {
         pushReceivers.add(node.callee.object.name);
-      }
-    }
-
-    function recordVariableDeclarator(node: AstNode, emptyArrayDeclarators: CollectedEmptyArrayDeclarator[]): void {
-      if (node.id?.type === 'Identifier' && node.init?.type === 'ArrayExpression' && Array.isArray(node.init.elements) && node.init.elements.length === 0) {
-        emptyArrayDeclarators.push({ node, name: node.id.name });
       }
     }
 

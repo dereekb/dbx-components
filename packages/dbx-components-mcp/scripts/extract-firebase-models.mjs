@@ -367,8 +367,13 @@ function applyArchetypePostPass(models) {
   for (const m of models) {
     const isTreeNode = Array.isArray(m.archetypes) && m.archetypes.includes('model-tree-node');
     if (isTreeNode) {
-      const role = !m.parentIdentityConst ? 'root' : referencedAsParent.has(m.identityConst) ? 'intermediate' : 'leaf';
-      const existing = (m.archetypeAxesBySlug && m.archetypeAxesBySlug['model-tree-node']) || {};
+      let role;
+      if (!m.parentIdentityConst) {
+        role = 'root';
+      } else {
+        role = referencedAsParent.has(m.identityConst) ? 'intermediate' : 'leaf';
+      }
+      const existing = m.archetypeAxesBySlug?.['model-tree-node'] || {};
       const nextSlugAxes = { ...existing, treeRole: role };
       m.archetypeAxesBySlug = { ...(m.archetypeAxesBySlug || {}), 'model-tree-node': nextSlugAxes };
     }
