@@ -139,7 +139,8 @@ export default [
       'dereekb-firebase': FIREBASE_ESLINT_PLUGIN
     },
     rules: {
-      'dereekb-firebase/require-complete-crud-function-config-map': 'error' // backstop for the `ModelFirebaseCrudFunctionConfigMap<ConfigType, ...>` mapped-type enforcement: verify the object-literal initializer's model keys, verbs, and specifiers match the companion `ConfigType` (defined in the same *.api.ts file) — needed because the TypeScript template-literal union for verb:specifier combinations decays past the type checker's combinatorial budget
+      'dereekb-firebase/require-complete-crud-function-config-map': 'error', // backstop for the `ModelFirebaseCrudFunctionConfigMap<ConfigType, ...>` mapped-type enforcement: verify the object-literal initializer's model keys, verbs, and specifiers match the companion `ConfigType` (defined in the same *.api.ts file) — needed because the TypeScript template-literal union for verb:specifier combinations decays past the type checker's combinatorial budget
+      'dereekb-firebase/require-dbx-model-api-params-tag': 'warn' // require the `@dbxModelApiParams` marker on params interfaces referenced by a `*ModelCrudFunctionsConfig` / `*FunctionTypeMap` alias and declared in the same file — surfaces in-editor the same gap the manifest extractor reports as `[no-api-params-tag]` and the `dbx_model_api_lookup` MCP tool hints at
     }
   },
   {
