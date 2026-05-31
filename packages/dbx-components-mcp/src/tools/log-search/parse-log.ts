@@ -101,33 +101,36 @@ interface FencedBlock {
 }
 
 function extractFirstFencedBlock(lines: readonly string[]): FencedBlock {
-  let openIdx = -1;
-  for (const [i, line] of lines.entries()) {
-    if (line.startsWith('```')) {
-      openIdx = i;
-      break;
-    }
-  }
+  const openIdx = findLineStarting(lines, '```', 0);
   let result: FencedBlock = { subject: undefined, body: undefined };
   if (openIdx >= 0) {
-    let closeIdx = -1;
-    for (let i = openIdx + 1; i < lines.length; i += 1) {
-      if (lines[i].startsWith('```')) {
-        closeIdx = i;
-        break;
-      }
-    }
+    const closeIdx = findLineStarting(lines, '```', openIdx + 1);
     if (closeIdx > openIdx) {
-      const inner = lines.slice(openIdx + 1, closeIdx);
-      const subject = inner[0]?.trim();
-      const body = inner.slice(2).join('\n').trim();
-      result = {
-        subject: subject !== undefined && subject.length > 0 ? subject : undefined,
-        body: body.length > 0 ? body : undefined
-      };
+      result = sliceFencedBlock(lines, openIdx, closeIdx);
     }
   }
   return result;
+}
+
+function findLineStarting(lines: readonly string[], prefix: string, fromIndex: number): number {
+  let found = -1;
+  for (let i = fromIndex; i < lines.length; i += 1) {
+    if (lines[i].startsWith(prefix)) {
+      found = i;
+      break;
+    }
+  }
+  return found;
+}
+
+function sliceFencedBlock(lines: readonly string[], openIdx: number, closeIdx: number): FencedBlock {
+  const inner = lines.slice(openIdx + 1, closeIdx);
+  const subject = inner[0]?.trim();
+  const body = inner.slice(2).join('\n').trim();
+  return {
+    subject: subject !== undefined && subject.length > 0 ? subject : undefined,
+    body: body.length > 0 ? body : undefined
+  };
 }
 
 function isIsoDate(value: string | undefined): value is string {

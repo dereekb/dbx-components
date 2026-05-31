@@ -58,38 +58,69 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     return toolError('Provide either `model` (PascalCase model name) or `identity` (the `<camelName>Identity` const string).');
   }
   const cwd = process.cwd();
+  const ensureError = runEnsurePathInsideCwd(parsed.apiDir, cwd);
   let result: ToolResult;
-  let ensureError: string | undefined;
-  try {
-    ensurePathInsideCwd(parsed.apiDir, cwd);
-  } catch (err) {
-    ensureError = err instanceof Error ? err.message : String(err);
-  }
-  if (ensureError === undefined) {
-    const apiAbs = resolve(cwd, parsed.apiDir);
-    let extraction;
-    let inspectError: string | undefined;
-    try {
-      extraction = await inspectAppFixtures(apiAbs, parsed.apiDir);
-    } catch (err) {
-      inspectError = `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}`;
-    }
-    if (inspectError === undefined && extraction !== undefined) {
-      const lookupModel = parsed.model ?? identityToModel(parsed.identity as string);
-      const entry = extraction.entries.find((e) => e.model === lookupModel);
-      if (entry) {
-        const text = parsed.format === 'json' ? formatLookupAsJson(extraction, entry) : formatLookupAsMarkdown(extraction, entry);
-        result = { content: [{ type: 'text', text }] };
-      } else {
-        const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
-        const usedIdentity = parsed.identity && !parsed.model ? ` (resolved \`identity="${parsed.identity}"\` → \`${lookupModel}\`)` : '';
-        result = toolError(`Model \`${lookupModel}\` not found in \`${extraction.fixturePath}\`${usedIdentity}. Known: ${known}.`);
-      }
-    } else {
-      result = toolError(inspectError ?? 'Failed to inspect fixtures.');
-    }
-  } else {
+  if (ensureError !== undefined) {
     result = toolError(ensureError);
+  } else {
+    const apiAbs = resolve(cwd, parsed.apiDir);
+    const inspection = await inspectFixturesSafe(apiAbs, parsed.apiDir);
+    if (inspection.kind === 'error') {
+      result = toolError(inspection.message);
+    } else {
+      result = formatFixtureLookupResult({
+        extraction: inspection.extraction,
+        model: parsed.model,
+        identity: parsed.identity,
+        format: parsed.format
+      });
+    }
+  }
+  return result;
+}
+
+function runEnsurePathInsideCwd(apiDir: string, cwd: string): string | undefined {
+  let error: string | undefined;
+  try {
+    ensurePathInsideCwd(apiDir, cwd);
+  } catch (err) {
+    error = err instanceof Error ? err.message : String(err);
+  }
+  return error;
+}
+
+type FixtureInspection = { readonly kind: 'ok'; readonly extraction: Awaited<ReturnType<typeof inspectAppFixtures>> } | { readonly kind: 'error'; readonly message: string };
+
+async function inspectFixturesSafe(apiAbs: string, apiDir: string): Promise<FixtureInspection> {
+  let inspection: FixtureInspection;
+  try {
+    const extraction = await inspectAppFixtures(apiAbs, apiDir);
+    inspection = { kind: 'ok', extraction };
+  } catch (err) {
+    inspection = { kind: 'error', message: `Failed to read fixture file: ${err instanceof Error ? err.message : String(err)}` };
+  }
+  return inspection;
+}
+
+interface FormatFixtureLookupInput {
+  readonly extraction: Awaited<ReturnType<typeof inspectAppFixtures>>;
+  readonly model: string | undefined;
+  readonly identity: string | undefined;
+  readonly format: 'markdown' | 'json' | undefined;
+}
+
+function formatFixtureLookupResult(input: FormatFixtureLookupInput): ToolResult {
+  const { extraction, model, identity, format } = input;
+  const lookupModel = model ?? identityToModel(identity as string);
+  const entry = extraction.entries.find((e) => e.model === lookupModel);
+  let result: ToolResult;
+  if (entry) {
+    const text = format === 'json' ? formatLookupAsJson(extraction, entry) : formatLookupAsMarkdown(extraction, entry);
+    result = { content: [{ type: 'text', text }] };
+  } else {
+    const known = extraction.entries.map((e) => e.model).join(', ') || '(none)';
+    const usedIdentity = identity && !model ? ` (resolved \`identity="${identity}"\` → \`${lookupModel}\`)` : '';
+    result = toolError(`Model \`${lookupModel}\` not found in \`${extraction.fixturePath}\`${usedIdentity}. Known: ${known}.`);
   }
   return result;
 }

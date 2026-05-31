@@ -171,37 +171,68 @@ interface CollectFromProjectsInput {
 async function collectFromProjects(input: CollectFromProjectsInput): Promise<readonly LogFileRef[]> {
   const collected: LogFileRef[] = [];
   for (const project of input.projects) {
-    const projectDir = join(input.basePath, project);
-    let entries: { name: string; isFile: boolean }[] = [];
-    try {
-      const dirents = await readdir(projectDir, { withFileTypes: true });
-      entries = dirents.map((d) => ({ name: d.name, isFile: d.isFile() || d.isSymbolicLink() }));
-    } catch {
-      entries = [];
-    }
-    for (const entry of entries) {
-      if (entry.isFile && entry.name.endsWith('.md')) {
-        const absolutePath = join(projectDir, entry.name);
-        let info: Awaited<ReturnType<typeof stat>> | undefined;
-        try {
-          info = await stat(absolutePath);
-        } catch {
-          info = undefined;
-        }
-        if (info !== undefined && info.isFile() && info.mtimeMs >= input.since) {
-          const ref: LogFileRef = {
-            absolutePath,
-            relativePath: join(project, entry.name),
-            project,
-            fileName: basename(entry.name),
-            mtimeMs: info.mtimeMs,
-            sizeBytes: info.size
-          };
-          collected.push(ref);
-        }
-      }
-    }
+    const refs = await collectProjectLogs({ basePath: input.basePath, project, since: input.since });
+    collected.push(...refs);
   }
   collected.sort((a, b) => b.mtimeMs - a.mtimeMs);
   return collected;
+}
+
+interface CollectProjectLogsInput {
+  readonly basePath: string;
+  readonly project: string;
+  readonly since: number;
+}
+
+async function collectProjectLogs(input: CollectProjectLogsInput): Promise<readonly LogFileRef[]> {
+  const projectDir = join(input.basePath, input.project);
+  const entries = await readMarkdownEntries(projectDir);
+  const refs: LogFileRef[] = [];
+  for (const entry of entries) {
+    const ref = await buildLogRefIfRecent({ projectDir, project: input.project, fileName: entry, since: input.since });
+    if (ref !== undefined) {
+      refs.push(ref);
+    }
+  }
+  return refs;
+}
+
+async function readMarkdownEntries(projectDir: string): Promise<readonly string[]> {
+  let entries: string[] = [];
+  try {
+    const dirents = await readdir(projectDir, { withFileTypes: true });
+    entries = dirents.filter((d) => (d.isFile() || d.isSymbolicLink()) && d.name.endsWith('.md')).map((d) => d.name);
+  } catch {
+    entries = [];
+  }
+  return entries;
+}
+
+interface BuildLogRefInput {
+  readonly projectDir: string;
+  readonly project: string;
+  readonly fileName: string;
+  readonly since: number;
+}
+
+async function buildLogRefIfRecent(input: BuildLogRefInput): Promise<LogFileRef | undefined> {
+  const absolutePath = join(input.projectDir, input.fileName);
+  let info: Awaited<ReturnType<typeof stat>> | undefined;
+  try {
+    info = await stat(absolutePath);
+  } catch {
+    info = undefined;
+  }
+  let ref: LogFileRef | undefined;
+  if (info !== undefined && info.isFile() && info.mtimeMs >= input.since) {
+    ref = {
+      absolutePath,
+      relativePath: join(input.project, input.fileName),
+      project: input.project,
+      fileName: basename(input.fileName),
+      mtimeMs: info.mtimeMs,
+      sizeBytes: info.size
+    };
+  }
+  return ref;
 }

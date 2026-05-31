@@ -89,22 +89,9 @@ function parseArgs(rawArgs: unknown, defaultCwd: string): ParsedArgs | string {
   if (parsed instanceof type.errors) {
     return `Invalid arguments: ${parsed.summary}`;
   }
-  let workspaceRoot = defaultCwd;
-  if (parsed.cwd !== undefined && parsed.cwd.length > 0) {
-    workspaceRoot = resolve(defaultCwd, parsed.cwd);
-  }
+  const workspaceRoot = parsed.cwd !== undefined && parsed.cwd.length > 0 ? resolve(defaultCwd, parsed.cwd) : defaultCwd;
+  const invalidDirError = validateExplicitDirs(parsed.explicitDirs, workspaceRoot);
   let result: ParsedArgs | string;
-  let invalidDirError: string | undefined;
-  if (parsed.explicitDirs !== undefined) {
-    for (const dir of parsed.explicitDirs) {
-      if (invalidDirError !== undefined) break;
-      try {
-        ensurePathInsideCwd(dir, workspaceRoot);
-      } catch (err) {
-        invalidDirError = err instanceof Error ? err.message : String(err);
-      }
-    }
-  }
   if (invalidDirError === undefined) {
     result = {
       op: parsed.op,
@@ -116,6 +103,21 @@ function parseArgs(rawArgs: unknown, defaultCwd: string): ParsedArgs | string {
     result = invalidDirError;
   }
   return result;
+}
+
+function validateExplicitDirs(explicitDirs: readonly string[] | undefined, workspaceRoot: string): string | undefined {
+  let invalidDirError: string | undefined;
+  if (explicitDirs !== undefined) {
+    for (const dir of explicitDirs) {
+      if (invalidDirError !== undefined) break;
+      try {
+        ensurePathInsideCwd(dir, workspaceRoot);
+      } catch (err) {
+        invalidDirError = err instanceof Error ? err.message : String(err);
+      }
+    }
+  }
+  return invalidDirError;
 }
 
 // MARK: Run
