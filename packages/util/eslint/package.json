@@ -1,8 +1,8 @@
 {
   "name": "@dereekb/util/eslint",
-  "version": "13.12.8",
+  "version": "13.12.9",
   "peerDependencies": {
-    "@dereekb/util": "13.12.8",
+    "@dereekb/util": "13.12.9",
     "@typescript-eslint/utils": "8.59.3"
   },
   "devDependencies": {

@@ -1,17 +1,17 @@
 {
   "name": "@dereekb/zoho/cli",
-  "version": "13.12.8",
+  "version": "13.12.9",
   "type": "module",
   "bin": {
     "zoho-cli": "index.js"
   },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "13.12.8",
-    "@dereekb/nestjs": "13.12.8",
-    "@dereekb/rxjs": "13.12.8",
-    "@dereekb/util": "13.12.8",
-    "@dereekb/zoho": "13.12.8",
-    "@dereekb/zoho/nestjs": "13.12.8",
+    "@dereekb/dbx-cli": "13.12.9",
+    "@dereekb/nestjs": "13.12.9",
+    "@dereekb/rxjs": "13.12.9",
+    "@dereekb/util": "13.12.9",
+    "@dereekb/zoho": "13.12.9",
+    "@dereekb/zoho/nestjs": "13.12.9",
     "yargs": "^18.0.0"
   },
   "devDependencies": {

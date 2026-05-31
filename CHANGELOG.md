@@ -1,3 +1,14 @@
+## [13.12.9](https://github.com/dereekb/dbx-components/compare/v13.12.8-dev...v13.12.9) (2026-05-31)
+
+
+### Code Refactoring
+
+- added dbx-claude config ([eaa74ddf](https://github.com/dereekb/dbx-components/commit/eaa74ddffe584f1ad535eae2f219b740e1aac532))
+- **firebase:** add require-dbx-model-api-params-tag rule ([a880a807](https://github.com/dereekb/dbx-components/commit/a880a807d837e70c485fe734ac8b63b36468eb48))
+- reduce sonarqube cognitive complexity in mcp/cli ([d79ddbbd](https://github.com/dereekb/dbx-components/commit/d79ddbbdf3fbb93a38badf67cb307a949cdf15e4))
+- resolved more sonarqube mechanical issues ([d67f6d0b](https://github.com/dereekb/dbx-components/commit/d67f6d0baaf7505cf476190ce7766c3f9e83f398))
+- resolved sonarqube mechanical issues ([2ee29d57](https://github.com/dereekb/dbx-components/commit/2ee29d57332088a919f6452b248c9d8c9809ef6b)), closes [Array#push](https://github.com/dereekb/Array/issues/push) [String#replace](https://github.com/dereekb/String/issues/replace) [String#replaceAll](https://github.com/dereekb/String/issues/replaceAll) [Set#has](https://github.com/dereekb/Set/issues/has)
+
 ## [13.12.8](https://github.com/dereekb/dbx-components/compare/v13.12.7-dev...v13.12.8) (2026-05-30)
 
 

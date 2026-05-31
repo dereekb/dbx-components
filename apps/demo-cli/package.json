@@ -1,16 +1,16 @@
 {
   "name": "@dereekb/demo-cli",
-  "version": "13.12.8",
+  "version": "13.12.9",
   "type": "module",
   "private": true,
   "bin": {
     "demo-cli": "index.js"
   },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "13.12.8",
-    "@dereekb/firebase": "13.12.8",
-    "@dereekb/firebase-server": "13.12.8",
-    "@dereekb/util": "13.12.8",
+    "@dereekb/dbx-cli": "13.12.9",
+    "@dereekb/firebase": "13.12.9",
+    "@dereekb/firebase-server": "13.12.9",
+    "@dereekb/util": "13.12.9",
     "arktype": "^2.2.0",
     "demo-firebase": "*",
     "vitest": "4.1.5",
