@@ -118,9 +118,6 @@ export class DbxFirebaseLoginListComponent {
         mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: (x.registrationComponentClass ?? x.componentClass) as Type<unknown>, loginMethodType: x.loginMethodType, data: { loginMode } });
         break;
       case 'link':
-        providers = providers.filter((x) => x.allowLinking !== false);
-        mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode } });
-        break;
       case 'unlink':
         providers = providers.filter((x) => x.allowLinking !== false);
         mapFn = (x: DbxFirebaseAuthLoginProvider) => ({ componentClass: x.componentClass, loginMethodType: x.loginMethodType, data: { loginMode } });

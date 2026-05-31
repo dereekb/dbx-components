@@ -281,18 +281,10 @@ function isSignalFactoryCall(callExpression: AstNode, imports: ImportRegistry): 
 
   if (callee?.type === 'Identifier') {
     const name: string = callee.name;
-
-    if (ANGULAR_CORE_SIGNAL_FACTORIES.has(name) && isImportedFrom(imports, name, ANGULAR_CORE_MODULE)) {
-      result = true;
-    } else if (ANGULAR_CORE_RXJS_INTEROP_SIGNAL_FACTORIES.has(name) && isImportedFrom(imports, name, ANGULAR_CORE_RXJS_INTEROP_MODULE)) {
-      result = true;
-    }
+    result = (ANGULAR_CORE_SIGNAL_FACTORIES.has(name) && isImportedFrom(imports, name, ANGULAR_CORE_MODULE)) || (ANGULAR_CORE_RXJS_INTEROP_SIGNAL_FACTORIES.has(name) && isImportedFrom(imports, name, ANGULAR_CORE_RXJS_INTEROP_MODULE));
   } else if (callee?.type === 'MemberExpression' && callee.computed === false && callee.object?.type === 'Identifier' && callee.property?.type === 'Identifier' && callee.property.name === 'required') {
     const rootName: string = callee.object.name;
-
-    if (ANGULAR_CORE_REQUIRED_FACTORIES.has(rootName) && isImportedFrom(imports, rootName, ANGULAR_CORE_MODULE)) {
-      result = true;
-    }
+    result = ANGULAR_CORE_REQUIRED_FACTORIES.has(rootName) && isImportedFrom(imports, rootName, ANGULAR_CORE_MODULE);
   }
 
   return result;
@@ -517,10 +509,6 @@ function classifySignalRead(callee: AstNode, state: WalkState): Maybe<{ readonly
 function walkChildren(node: AstNode, conditional: boolean, state: WalkState): void {
   switch (node.type) {
     case 'IfStatement':
-      walk(node.test, conditional, state);
-      walk(node.consequent, true, state);
-      walk(node.alternate, true, state);
-      break;
     case 'ConditionalExpression':
       walk(node.test, conditional, state);
       walk(node.consequent, true, state);

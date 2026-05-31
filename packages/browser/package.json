@@ -1,9 +1,9 @@
 {
   "name": "@dereekb/browser",
-  "version": "13.12.8",
+  "version": "13.12.9",
   "peerDependencies": {
-    "@dereekb/util": "13.12.8",
-    "@dereekb/rxjs": "13.12.8",
+    "@dereekb/util": "13.12.9",
+    "@dereekb/rxjs": "13.12.9",
     "rxjs": "^7.8.2"
   },
   "dependencies": {}

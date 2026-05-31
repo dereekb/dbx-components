@@ -148,21 +148,15 @@ const DRIFT_RULES: readonly string[] = ['`<group>.<sub>.crud.spec.ts` → rename
 
 function formatMarkdown(report: ConventionReport): string {
   const lines: string[] = [];
-  lines.push(`# Spec convention for \`${report.group}\``, '');
-  lines.push(`Tests live under \`${report.apiDir}/src/app/function/${report.group}/\`. Canonical name segments:`, '');
+  lines.push(`# Spec convention for \`${report.group}\``, '', `Tests live under \`${report.apiDir}/src/app/function/${report.group}/\`. Canonical name segments:`, '');
   for (const rec of report.recommendations) {
-    lines.push(`## ${rec.label} bucket`);
-    lines.push('', `- **Path:** \`${rec.canonicalPath}\``);
-    lines.push(`- **Filename:** \`${rec.canonicalFilename}\``);
-    lines.push(`- ${rec.summary}`);
-    lines.push('');
+    lines.push(`## ${rec.label} bucket`, '', `- **Path:** \`${rec.canonicalPath}\``, `- **Filename:** \`${rec.canonicalFilename}\``, `- ${rec.summary}`, '');
   }
   lines.push('## Drift rules', '');
   for (const rule of report.driftRules) {
     lines.push(`- ${rule}`);
   }
-  lines.push('');
-  lines.push('For an inventory + drift audit across an existing API app, run `dbx_model_test_list_app`. For naming-convention enforcement (errors / warnings), run `dbx_model_test_validate_app`.');
+  lines.push('', 'For an inventory + drift audit across an existing API app, run `dbx_model_test_list_app`. For naming-convention enforcement (errors / warnings), run `dbx_model_test_validate_app`.');
   return lines.join('\n').trimEnd();
 }
 

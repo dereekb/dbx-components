@@ -134,21 +134,21 @@ describe('OidcClientService', () => {
   });
 });
 
+function buildConfiguration() {
+  const config = { tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES } as unknown as OidcModuleConfig;
+  const providerConfigService = {
+    providerConfig: { claims: { openid: ['sub'] }, responseTypes: ['code'], grantTypes: ['authorization_code', 'refresh_token'] },
+    routes: DEFAULT_OIDC_ROUTES,
+    appLoginUrl: 'https://app.example.com/oauth/login',
+    appConsentUrl: 'https://app.example.com/oauth/consent',
+    oidcRegistrationRouteEnabled: false
+  } as unknown as OidcProviderConfigService;
+
+  const service = new OidcService(config, providerConfigService, {} as never, {} as never, {} as never, {} as never);
+  return service.buildProviderConfiguration(['test-cookie-key']);
+}
+
 describe('OidcService.buildProviderConfiguration()', () => {
-  function buildConfiguration() {
-    const config = { tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES } as unknown as OidcModuleConfig;
-    const providerConfigService = {
-      providerConfig: { claims: { openid: ['sub'] }, responseTypes: ['code'], grantTypes: ['authorization_code', 'refresh_token'] },
-      routes: DEFAULT_OIDC_ROUTES,
-      appLoginUrl: 'https://app.example.com/oauth/login',
-      appConsentUrl: 'https://app.example.com/oauth/consent',
-      oidcRegistrationRouteEnabled: false
-    } as unknown as OidcProviderConfigService;
-
-    const service = new OidcService(config, providerConfigService, {} as never, {} as never, {} as never, {} as never);
-    return service.buildProviderConfiguration(['test-cookie-key']);
-  }
-
   it('should require PKCE for every client, so public ("none") clients without a code_challenge are rejected', () => {
     const built = buildConfiguration();
     const pkceRequired = (built.pkce as { required?: () => boolean }).required;

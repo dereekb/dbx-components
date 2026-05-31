@@ -83,13 +83,7 @@ export function formatKeywordResults(header: FormatHeader, hits: readonly Keywor
     lines.push(`${hits.length} match(es) of ${header.totalCandidates} log(s) in window.`, '');
     for (const hit of hits) {
       const entry = hit.entry;
-      lines.push(`### ${entry.title}`);
-      lines.push(`_${formatMeta(entry)}_`);
-      lines.push('');
-      lines.push('```');
-      lines.push(sanitizeFence(hit.snippet));
-      lines.push('```');
-      lines.push('');
+      lines.push(`### ${entry.title}`, `_${formatMeta(entry)}_`, '', '```', sanitizeFence(hit.snippet), '```', '');
     }
   }
   return lines.join('\n').trimEnd();
@@ -103,14 +97,10 @@ function buildHeading(header: FormatHeader): string {
 function renderEntry(entry: ParsedLog, matchedSuffix: string | undefined, maxSnippetLen: number): readonly string[] {
   const lines: string[] = [];
   const suffix = matchedSuffix ?? '';
-  lines.push(`### ${entry.title}${suffix}`);
-  lines.push(`_${formatMeta(entry)}_`);
+  lines.push(`### ${entry.title}${suffix}`, `_${formatMeta(entry)}_`);
   const snippet = pickSnippet(entry, maxSnippetLen);
   if (snippet !== undefined) {
-    lines.push('');
-    for (const line of snippet.split('\n')) {
-      lines.push(`> ${line}`);
-    }
+    lines.push('', ...snippet.split('\n').map((line) => `> ${line}`));
   }
   lines.push('');
   return lines;
@@ -140,5 +130,5 @@ function pickSnippet(entry: ParsedLog, maxLen: number): string | undefined {
 }
 
 function sanitizeFence(text: string): string {
-  return text.replace(/```/g, '`​``');
+  return text.replaceAll('```', '`​``');
 }

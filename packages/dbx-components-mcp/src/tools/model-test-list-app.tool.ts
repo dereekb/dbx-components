@@ -77,9 +77,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     ensureError = err instanceof Error ? err.message : String(err);
   }
   let result: ToolResult;
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const apiAbs = resolve(cwd, parsed.apiDir);
     let catalog: DiscoveredSpecCatalog | undefined;
     let discoveryError: string | undefined;
@@ -88,13 +86,15 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     } catch (err) {
       discoveryError = `Failed to walk \`${parsed.apiDir}/src/app/function\`: ${err instanceof Error ? err.message : String(err)}`;
     }
-    if (catalog === undefined || discoveryError !== undefined) {
-      result = toolError(discoveryError ?? 'Failed to discover spec files.');
-    } else {
+    if (catalog !== undefined && discoveryError === undefined) {
       const filtered = parsed.group === undefined ? catalog : filterCatalogByGroup(catalog, parsed.group);
       const text = parsed.format === 'json' ? formatListAppAsJson(filtered) : formatListAppAsMarkdown(filtered, { group: parsed.group });
       result = { content: [{ type: 'text', text }] };
+    } else {
+      result = toolError(discoveryError ?? 'Failed to discover spec files.');
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

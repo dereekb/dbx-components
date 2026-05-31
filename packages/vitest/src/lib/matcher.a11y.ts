@@ -1,9 +1,22 @@
 import { expect } from 'vitest';
-import * as matchers from 'vitest-axe/matchers.js';
 import { axe } from 'vitest-axe';
 import type AxeCore from 'axe-core';
 
 export type { AxeMatchers } from 'vitest-axe/matchers.js';
+
+/**
+ * All vitest-axe matchers, ready to register via `expect.extend()`.
+ *
+ * @example
+ * ```typescript
+ * import { allA11yMatchers } from '@dereekb/vitest';
+ * expect.extend(allA11yMatchers);
+ *
+ * const results = await axe(document.body);
+ * expect(results).toHaveNoViolations();
+ * ```
+ */
+export * as allA11yMatchers from 'vitest-axe/matchers.js';
 
 /**
  * Object or wrapper that exposes a native DOM element, such as Angular's `ComponentFixture`.
@@ -20,20 +33,6 @@ export type A11yTestTarget = Element | NativeElementRef;
 function resolveElement(target: A11yTestTarget): Element {
   return 'nativeElement' in target ? target.nativeElement : target;
 }
-
-/**
- * All vitest-axe matchers, ready to register via `expect.extend()`.
- *
- * @example
- * ```typescript
- * import { allA11yMatchers } from '@dereekb/vitest';
- * expect.extend(allA11yMatchers);
- *
- * const results = await axe(document.body);
- * expect(results).toHaveNoViolations();
- * ```
- */
-export const allA11yMatchers = matchers;
 
 /**
  * Runs axe-core on a target element and asserts zero accessibility violations.

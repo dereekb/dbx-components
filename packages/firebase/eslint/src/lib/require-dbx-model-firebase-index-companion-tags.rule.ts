@@ -38,6 +38,18 @@ interface CollectedConstraintCall {
   readonly fieldPathArgIsLiteral: boolean;
 }
 
+function extractGenericIdentifier(callNode: AstNode): Maybe<string> {
+  const params = callNode.typeArguments ?? callNode.typeParameters;
+  let result: Maybe<string> = null;
+  if (params && Array.isArray(params.params) && params.params.length > 0) {
+    const first = params.params[0];
+    if (first?.type === 'TSTypeReference' && first.typeName?.type === 'Identifier') {
+      result = first.typeName.name;
+    }
+  }
+  return result;
+}
+
 /**
  * ESLint rule enforcing `@dbxModelFirebaseIndex` companion tags and body coherence.
  * Mirrors the scanner schema at
@@ -209,18 +221,6 @@ export const FIREBASE_REQUIRE_DBX_MODEL_FIREBASE_INDEX_COMPANION_TAGS_RULE: Fire
           collectConstraintCallsIntoArray(value, results);
         }
       }
-    }
-
-    function extractGenericIdentifier(callNode: AstNode): Maybe<string> {
-      const params = callNode.typeArguments ?? callNode.typeParameters;
-      let result: Maybe<string> = null;
-      if (params && Array.isArray(params.params) && params.params.length > 0) {
-        const first = params.params[0];
-        if (first?.type === 'TSTypeReference' && first.typeName?.type === 'Identifier') {
-          result = first.typeName.name;
-        }
-      }
-      return result;
     }
 
     function checkBody(node: AstNode, parsed: ReturnType<typeof parseJsdocComment>): void {

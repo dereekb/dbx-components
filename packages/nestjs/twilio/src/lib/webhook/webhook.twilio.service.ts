@@ -32,9 +32,7 @@ export class TwilioWebhookService {
   async handleStatusCallback(req: Request, rawBody: Buffer): Promise<void> {
     const { valid, params } = this._verifier(req, rawBody);
 
-    if (!valid) {
-      this.logger.warn('Received Twilio status callback with invalid signature.');
-    } else {
+    if (valid) {
       const event: TwilioStatusCallbackEvent = {
         type: 'status',
         payload: {
@@ -51,15 +49,15 @@ export class TwilioWebhookService {
       };
 
       await this.dispatchEvent(event);
+    } else {
+      this.logger.warn('Received Twilio status callback with invalid signature.');
     }
   }
 
   async handleIncomingMessage(req: Request, rawBody: Buffer): Promise<void> {
     const { valid, params } = this._verifier(req, rawBody);
 
-    if (!valid) {
-      this.logger.warn('Received Twilio incoming message with invalid signature.');
-    } else {
+    if (valid) {
       const numMedia = Number(params['NumMedia'] ?? '0');
       const numSegments = params['NumSegments'] !== undefined ? Number(params['NumSegments']) : undefined;
       const mediaUrls: string[] = [];
@@ -91,6 +89,8 @@ export class TwilioWebhookService {
       };
 
       await this.dispatchEvent(event);
+    } else {
+      this.logger.warn('Received Twilio incoming message with invalid signature.');
     }
   }
 

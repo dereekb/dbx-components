@@ -73,34 +73,50 @@ export function createAuthRoleLookupTool(input: CreateAuthRoleLookupToolInput): 
       if (parsed instanceof type.errors) {
         result = toolError(`Invalid arguments: ${parsed.summary}`);
       } else {
-        const { topic, tag, model, verb, depth = 'full' } = parsed;
-        let text: string | undefined;
-
-        if (model !== undefined || verb !== undefined) {
-          text = formatReverseLookup({ registry, model, verb });
-        } else if (tag !== undefined && tag.length > 0) {
-          text = formatTagLookup(registry, tag, depth);
-        } else if (topic !== undefined && topic.length > 0) {
-          const normalized = topic.trim();
-          if (isCatalogTopic(normalized)) {
-            text = formatCatalog(registry.roles);
-          } else {
-            const role = registry.findRole(normalized);
-            if (role === undefined) {
-              text = formatNotFound(normalized, registry.roles);
-            } else {
-              const claims = registry.findClaimsForRole(role.role);
-              text = formatRole(role, claims, depth);
-            }
-          }
-        }
-
+        const text = dispatchRoleLookup(registry, parsed);
         result = text === undefined ? toolError('Provide one of `topic`, `tag`, or `model` + `verb`.') : { content: [{ type: 'text', text }] };
       }
       return result;
     }
   };
   return tool;
+}
+
+interface RoleLookupArgs {
+  readonly topic?: string;
+  readonly tag?: string;
+  readonly model?: string;
+  readonly verb?: string;
+  readonly depth?: 'brief' | 'full';
+}
+
+function dispatchRoleLookup(registry: AuthRegistry, args: RoleLookupArgs): string | undefined {
+  const { topic, tag, model, verb, depth = 'full' } = args;
+  let text: string | undefined;
+  if (model !== undefined || verb !== undefined) {
+    text = formatReverseLookup({ registry, model, verb });
+  } else if (tag !== undefined && tag.length > 0) {
+    text = formatTagLookup(registry, tag, depth);
+  } else if (topic !== undefined && topic.length > 0) {
+    text = formatTopicLookup(registry, topic.trim(), depth);
+  }
+  return text;
+}
+
+function formatTopicLookup(registry: AuthRegistry, normalized: string, depth: 'brief' | 'full'): string {
+  let text: string;
+  if (isCatalogTopic(normalized)) {
+    text = formatCatalog(registry.roles);
+  } else {
+    const role = registry.findRole(normalized);
+    if (role === undefined) {
+      text = formatNotFound(normalized, registry.roles);
+    } else {
+      const claims = registry.findClaimsForRole(role.role);
+      text = formatRole(role, claims, depth);
+    }
+  }
+  return text;
 }
 
 function isCatalogTopic(topic: string): boolean {

@@ -572,18 +572,24 @@ function collectLocalRoleConsts(project: Project): LocalRoleConsts {
   const arrays = new Map<string, ArrayLiteralExpression>();
   for (const sourceFile of project.getSourceFiles()) {
     for (const stmt of sourceFile.getVariableStatements()) {
-      if (!stmt.isExported()) continue;
-      for (const decl of stmt.getDeclarations()) {
-        const initializer = decl.getInitializer();
-        const name = decl.getName();
-        if (initializer === undefined) continue;
-        if (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer)) {
-          if (!scalars.has(name)) scalars.set(name, initializer.getLiteralText());
-        } else if (Node.isArrayLiteralExpression(initializer) && !arrays.has(name)) arrays.set(name, initializer);
-      }
+      collectRoleConstsFromVariableStatement(stmt, scalars, arrays);
     }
   }
   return { scalars, arrays };
+}
+
+function collectRoleConstsFromVariableStatement(stmt: VariableStatement, scalars: Map<string, string>, arrays: Map<string, ArrayLiteralExpression>): void {
+  if (!stmt.isExported()) return;
+  for (const decl of stmt.getDeclarations()) {
+    const initializer = decl.getInitializer();
+    if (initializer === undefined) continue;
+    const name = decl.getName();
+    if (Node.isStringLiteral(initializer) || Node.isNoSubstitutionTemplateLiteral(initializer)) {
+      if (!scalars.has(name)) scalars.set(name, initializer.getLiteralText());
+    } else if (Node.isArrayLiteralExpression(initializer) && !arrays.has(name)) {
+      arrays.set(name, initializer);
+    }
+  }
 }
 
 /**

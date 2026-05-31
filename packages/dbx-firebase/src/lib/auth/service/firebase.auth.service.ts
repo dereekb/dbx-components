@@ -223,7 +223,7 @@ export class DbxFirebaseAuthService implements DbxAuthService {
       obs = this._authState$.pipe(
         distinctUntilChanged(),
         switchMap((x) => {
-          return x == null ? of('none' as AuthUserState) : delegateAuthUserStateObs;
+          return x == null ? of<AuthUserState>('none') : delegateAuthUserStateObs;
         })
       );
     }

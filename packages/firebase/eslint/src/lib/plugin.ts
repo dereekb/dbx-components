@@ -13,6 +13,7 @@ import { FIREBASE_REQUIRE_SERVICE_FACTORY_FOR_DBX_MODEL_RULE } from './require-s
 import { FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE } from './require-dbx-model-companion-tags.rule';
 import { FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE } from './require-canonical-api-spec-filename.rule';
 import { FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE } from './require-api-crud-spec-for-group.rule';
+import { FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE } from './require-dbx-model-api-params-tag.rule';
 
 /**
  * ESLint plugin interface for `@dereekb/firebase` rules.
@@ -34,6 +35,7 @@ export interface FirebaseEslintPlugin {
     readonly 'require-dbx-model-companion-tags': typeof FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE;
     readonly 'require-canonical-api-spec-filename': typeof FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE;
     readonly 'require-api-crud-spec-for-group': typeof FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE;
+    readonly 'require-dbx-model-api-params-tag': typeof FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE;
   };
 }
 
@@ -59,7 +61,8 @@ export const FIREBASE_ESLINT_PLUGIN: FirebaseEslintPlugin = {
     'require-service-factory-for-dbx-model': FIREBASE_REQUIRE_SERVICE_FACTORY_FOR_DBX_MODEL_RULE,
     'require-dbx-model-companion-tags': FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE,
     'require-canonical-api-spec-filename': FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE,
-    'require-api-crud-spec-for-group': FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE
+    'require-api-crud-spec-for-group': FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE,
+    'require-dbx-model-api-params-tag': FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE
   }
 };
 

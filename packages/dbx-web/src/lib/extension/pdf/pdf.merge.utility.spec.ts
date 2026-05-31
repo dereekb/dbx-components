@@ -10,6 +10,24 @@ function makePdfFile(name: string, body: string): File {
   return new File([`%PDF-1.4\n${body}\n%%EOF\n`], name, { type: 'application/pdf' });
 }
 
+function readyEntry(overrides: Partial<PdfMergeEntry>): PdfMergeEntry {
+  const file = overrides.file ?? new File(['placeholder'], 'a.pdf', { type: 'application/pdf' });
+  return {
+    id: 'id',
+    file,
+    name: file.name,
+    mimeType: file.type,
+    size: file.size,
+    kind: 'pdf',
+    status: 'ready',
+    original: { name: file.name, mimeType: file.type, size: file.size },
+    compression: 'unchanged',
+    encrypted: false,
+    validation: Promise.resolve({ ok: true }),
+    ...overrides
+  };
+}
+
 describe('classifyPdfMergeFile()', () => {
   it('classifies a PDF mime type as pdf', () => {
     expect(classifyPdfMergeFile(makeFile('a.pdf', 'application/pdf'))).toBe('pdf');
@@ -156,24 +174,6 @@ describe('validatePdfMergeEntry()', () => {
 });
 
 describe('mergePdfMergeEntries()', () => {
-  function readyEntry(overrides: Partial<PdfMergeEntry>): PdfMergeEntry {
-    const file = overrides.file ?? new File(['placeholder'], 'a.pdf', { type: 'application/pdf' });
-    return {
-      id: 'id',
-      file,
-      name: file.name,
-      mimeType: file.type,
-      size: file.size,
-      kind: 'pdf',
-      status: 'ready',
-      original: { name: file.name, mimeType: file.type, size: file.size },
-      compression: 'unchanged',
-      encrypted: false,
-      validation: Promise.resolve({ ok: true }),
-      ...overrides
-    };
-  }
-
   it('throws when no ready entries are provided', async () => {
     await expect(mergePdfMergeEntries([])).rejects.toThrow('No ready entries');
   });

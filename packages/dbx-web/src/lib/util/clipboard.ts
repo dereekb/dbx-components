@@ -174,9 +174,9 @@ export function injectCopyToClipboardFunctionWithSnackbarMessage(config?: CopyTo
     if (config != null) {
       const { successMessage: inputSuccessMessage, failureMessage: inputFailureMessage, snackbarDuration: inputSnackbarDuration } = config;
 
-      successMessage = (inputSuccessMessage === undefined ? successMessage : inputSuccessMessage) ?? DEFAULT_SUCCESS_MESSAGE;
-      failureMessage = (inputFailureMessage === undefined ? failureMessage : inputFailureMessage) ?? DEFAULT_FAILURE_MESSAGE;
-      snackbarDuration = (inputSnackbarDuration === undefined ? snackbarDuration : inputSnackbarDuration) ?? DEFAULT_SNACKBAR_DURATION;
+      successMessage = inputSuccessMessage ?? successMessage ?? DEFAULT_SUCCESS_MESSAGE;
+      failureMessage = inputFailureMessage ?? failureMessage ?? DEFAULT_FAILURE_MESSAGE;
+      snackbarDuration = inputSnackbarDuration ?? snackbarDuration ?? DEFAULT_SNACKBAR_DURATION;
     }
   };
 

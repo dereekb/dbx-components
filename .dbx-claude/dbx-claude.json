@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "kind": "dbx-components",
+  "capabilities": ["audit", "dbx-components"],
+  "tests": {
+    "default": { "wrap": "none", "runner": "npx nx", "target": "test" }
+  }
+}
