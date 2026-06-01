@@ -48,6 +48,14 @@ import {
   type DownloadMultipleStorageFilesResult,
   type DownloadMultipleStorageFileSuccessItem,
   type DownloadMultipleStorageFileErrorItem,
+  type ReadStorageFileMetadataParams,
+  readStorageFileMetadataParamsType,
+  type ReadStorageFileMetadataResult,
+  type ReadMultipleStorageFilesMetadataParams,
+  readMultipleStorageFilesMetadataParamsType,
+  type ReadMultipleStorageFilesMetadataResult,
+  type ReadMultipleStorageFileMetadataSuccessItem,
+  type ReadMultipleStorageFileMetadataErrorItem,
   type FirestoreModelKey,
   type SyncStorageFileWithGroupsParams,
   syncStorageFileWithGroupsParamsType,
@@ -181,6 +189,8 @@ export abstract class StorageFileServerActions {
   abstract deleteStorageFile(params: DeleteStorageFileParams): AsyncStorageFileDeleteAction<DeleteStorageFileParams>;
   abstract downloadStorageFile(params: DownloadStorageFileParams): Promise<TransformAndValidateFunctionResult<DownloadStorageFileParams, (storageFileDocument?: Maybe<StorageFileDocument>) => Promise<DownloadStorageFileResult>>>;
   abstract downloadMultipleStorageFiles(params: DownloadMultipleStorageFilesParams): Promise<TransformAndValidateFunctionResult<DownloadMultipleStorageFilesParams, (storageFileDocuments?: Maybe<StorageFileDocument[]>) => Promise<DownloadMultipleStorageFilesResult>>>;
+  abstract readStorageFileMetadata(params: ReadStorageFileMetadataParams): Promise<TransformAndValidateFunctionResult<ReadStorageFileMetadataParams, (storageFileDocument?: Maybe<StorageFileDocument>) => Promise<ReadStorageFileMetadataResult>>>;
+  abstract readMultipleStorageFilesMetadata(params: ReadMultipleStorageFilesMetadataParams): Promise<TransformAndValidateFunctionResult<ReadMultipleStorageFilesMetadataParams, (storageFileDocuments?: Maybe<StorageFileDocument[]>) => Promise<ReadMultipleStorageFilesMetadataResult>>>;
   abstract createStorageFileGroup(params: CreateStorageFileGroupParams): AsyncStorageFileGroupCreateAction<CreateStorageFileGroupParams>;
   abstract updateStorageFileGroup(params: UpdateStorageFileGroupParams): Promise<TransformAndValidateFunctionResult<UpdateStorageFileGroupParams, (storageFileGroupDocument: StorageFileGroupDocument) => Promise<StorageFileGroupDocument>>>;
   abstract syncStorageFileWithGroups(params: SyncStorageFileWithGroupsParams): Promise<TransformAndValidateFunctionResult<SyncStorageFileWithGroupsParams, (storageFileDocument: StorageFileDocument) => Promise<SyncStorageFileWithGroupsResult>>>;
@@ -217,6 +227,8 @@ export function storageFileServerActions(context: StorageFileServerActionsContex
     deleteStorageFile: deleteStorageFileFactory(context),
     downloadStorageFile: downloadStorageFileFactory(context),
     downloadMultipleStorageFiles: downloadMultipleStorageFilesFactory(context),
+    readStorageFileMetadata: readStorageFileMetadataFactory(context),
+    readMultipleStorageFilesMetadata: readMultipleStorageFilesMetadataFactory(context),
     createStorageFileGroup: createStorageFileGroupFactory(context),
     updateStorageFileGroup: updateStorageFileGroupFactory(context),
     syncStorageFileWithGroups: syncStorageFileWithGroupsFactory(context),
@@ -1197,6 +1209,159 @@ export function downloadMultipleStorageFilesFactory(context: StorageFileServerAc
         expiresIn,
         responseDisposition,
         responseContentType,
+        throwOnFirstError: throwOnFirstError ?? false
+      });
+    };
+  });
+}
+
+// MARK: Read Metadata
+/**
+ * Per-item input for the internal multiple-metadata-read factory.
+ */
+export interface ReadMultipleStorageFilesMetadataFactoryInputItem {
+  readonly key: FirestoreModelKey;
+  readonly storageFileDocument?: Maybe<StorageFileDocument>;
+}
+
+/**
+ * Input configuration for {@link _readMultipleStorageFilesMetadataFactory}.
+ *
+ * @example
+ * ```ts
+ * const result = await readMultipleStorageFilesMetadata({
+ *   items: [{ key: 'storageFile/abc' }],
+ *   throwOnFirstError: true
+ * });
+ * ```
+ */
+export interface ReadMultipleStorageFilesMetadataFactoryInput {
+  readonly items: ReadMultipleStorageFilesMetadataFactoryInputItem[];
+  /**
+   * When true, throws on the first read failure instead of collecting errors.
+   *
+   * Used by the single-read path ({@link readStorageFileMetadataFactory}).
+   */
+  readonly throwOnFirstError?: Maybe<boolean>;
+  /**
+   * Maximum number of concurrent metadata read operations.
+   *
+   * Defaults to {@link DEFAULT_READ_MULTIPLE_STORAGE_FILES_METADATA_MAX_PARALLEL_TASKS}.
+   */
+  readonly maxParallelTasks?: Maybe<number>;
+}
+
+/**
+ * Default maximum number of concurrent metadata read operations when batch-reading StorageFile metadata.
+ */
+export const DEFAULT_READ_MULTIPLE_STORAGE_FILES_METADATA_MAX_PARALLEL_TASKS = 5;
+
+/**
+ * Internal factory that reads the underlying Cloud Storage object metadata for one or more StorageFiles.
+ *
+ * Uses {@link performAsyncTasks} with concurrency limiting to avoid overwhelming Cloud Storage.
+ * When the underlying object does not exist, the item resolves with `exists: false` rather than failing.
+ * When `throwOnFirstError` is true, the first failure throws immediately (single-read behavior).
+ * When false, failures are collected in the errors array (batch behavior).
+ *
+ * @param context - The storage file server actions context.
+ * @returns An async function that processes a {@link ReadMultipleStorageFilesMetadataFactoryInput} and returns a {@link ReadMultipleStorageFilesMetadataResult}
+ */
+function _readMultipleStorageFilesMetadataFactory(context: StorageFileServerActionsContext) {
+  const { storageService, storageFileCollection } = context;
+
+  return async (input: ReadMultipleStorageFilesMetadataFactoryInput): Promise<ReadMultipleStorageFilesMetadataResult> => {
+    const { items, throwOnFirstError, maxParallelTasks: inputMaxParallelTasks } = input;
+
+    const taskResult = await performAsyncTasks<ReadMultipleStorageFilesMetadataFactoryInputItem, ReadMultipleStorageFileMetadataSuccessItem>(
+      items,
+      async (item) => {
+        // Load document from key if not provided
+        const storageFileDocument = item.storageFileDocument ?? storageFileCollection.documentAccessor().loadDocumentForKey(item.key);
+        const storageFile = await assertSnapshotData(storageFileDocument);
+        const fileAccessor = storageService.file(storageFile);
+
+        const exists = await fileAccessor.exists();
+        let result: ReadMultipleStorageFileMetadataSuccessItem;
+
+        if (exists) {
+          const metadata = await fileAccessor.getMetadata();
+          result = { key: item.key, exists: true, metadata };
+        } else {
+          result = { key: item.key, exists: false };
+        }
+
+        return result;
+      },
+      {
+        throwError: throwOnFirstError ?? false,
+        maxParallelTasks: inputMaxParallelTasks ?? DEFAULT_READ_MULTIPLE_STORAGE_FILES_METADATA_MAX_PARALLEL_TASKS
+      }
+    );
+
+    const success = taskResult.results.map(([, result]) => result);
+    const errors: ReadMultipleStorageFileMetadataErrorItem[] = taskResult.errors.map(([item, error]) => ({
+      key: item.key,
+      error: error instanceof Error ? error.message : 'Metadata read failed'
+    }));
+
+    return { success, errors };
+  };
+}
+
+/**
+ * Factory for the `readStorageFileMetadata` action.
+ *
+ * Reads the underlying Cloud Storage object metadata for a single {@link StorageFile}.
+ * Delegates to {@link _readMultipleStorageFilesMetadataFactory} with a single item and `throwOnFirstError: true`.
+ *
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that reads a StorageFile's Cloud Storage metadata.
+ */
+export function readStorageFileMetadataFactory(context: StorageFileServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory } = context;
+  const readMultipleStorageFilesMetadata = _readMultipleStorageFilesMetadataFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(readStorageFileMetadataParamsType, async (params) => {
+    const { key } = params;
+
+    return async (storageFileDocument?: Maybe<StorageFileDocument>) => {
+      const result = await readMultipleStorageFilesMetadata({
+        items: [{ key, storageFileDocument }],
+        throwOnFirstError: true
+      });
+
+      // success item structurally satisfies ReadStorageFileMetadataResult (extra `key` is ignored)
+      return result.success[0];
+    };
+  });
+}
+
+/**
+ * Factory for the `readMultipleStorageFilesMetadata` action.
+ *
+ * Reads the underlying Cloud Storage object metadata for multiple {@link StorageFile} documents in a single call.
+ * By default, individual failures are collected in the errors array rather than failing the entire batch.
+ * Set `throwOnFirstError` in params to throw on the first failure instead.
+ *
+ * @param context - The storage file server actions context.
+ * @returns An async transform-and-validate function that reads Cloud Storage metadata for multiple files.
+ */
+export function readMultipleStorageFilesMetadataFactory(context: StorageFileServerActionsContext) {
+  const { firebaseServerActionTransformFunctionFactory } = context;
+  const readMultipleStorageFilesMetadata = _readMultipleStorageFilesMetadataFactory(context);
+
+  return firebaseServerActionTransformFunctionFactory(readMultipleStorageFilesMetadataParamsType, async (params) => {
+    const { files, throwOnFirstError } = params;
+
+    return async (storageFileDocuments?: Maybe<StorageFileDocument[]>) => {
+      const items: ReadMultipleStorageFilesMetadataFactoryInputItem[] = files.map((file, i) => ({
+        key: file.key,
+        storageFileDocument: storageFileDocuments?.[i]
+      }));
+
+      return readMultipleStorageFilesMetadata({
+        items,
         throwOnFirstError: throwOnFirstError ?? false
       });
     };

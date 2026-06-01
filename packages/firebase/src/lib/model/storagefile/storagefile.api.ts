@@ -5,7 +5,7 @@ import { targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction } from '../../client';
 import { type StorageFileSignedDownloadUrl, type StorageFileTypes } from './storagefile';
 import { type StorageFileKey, type StorageFileId, type StorageFilePurpose } from './storagefile.id';
-import { type StorageBucketId, type StoragePath, type StorageSlashPath } from '../../common/storage';
+import { type StorageBucketId, type StorageMetadata, type StoragePath, type StorageSlashPath } from '../../common/storage';
 import { type ContentDispositionString, type ContentTypeMimeType, type Maybe, type Milliseconds, type SlashPath, type SlashPathFile, type UnixDateTimeMillisecondsNumber, type UnixDateTimeSecondsNumber } from '@dereekb/util';
 import { type SendNotificationResult } from '../notification/notification.api';
 import { clearable, ARKTYPE_DATE_DTO_TYPE } from '@dereekb/model';
@@ -253,6 +253,91 @@ export const downloadMultipleStorageFilesParamsType = /* @__PURE__ */ type({
 export interface DownloadMultipleStorageFilesResult {
   readonly success: DownloadMultipleStorageFileSuccessItem[];
   readonly errors: DownloadMultipleStorageFileErrorItem[];
+}
+
+// MARK: Read Metadata
+/**
+ * Parameters for reading the underlying Cloud Storage object metadata of a single StorageFile.
+ *
+ * Unlike {@link DownloadStorageFileParams}, no signed URL is minted — only the object's
+ * {@link StorageMetadata} (size, md5Hash, generation, content headers, custom metadata, etc.) is returned.
+ * `asAdmin` only selects the read role used for permission gating. Validated with {@link readStorageFileMetadataParamsType}.
+ */
+export interface ReadStorageFileMetadataParams extends TargetModelParams {
+  readonly asAdmin?: Maybe<boolean>;
+}
+
+export const readStorageFileMetadataParamsType = targetModelParamsType.merge({
+  'asAdmin?': clearable('boolean')
+}) as Type<ReadStorageFileMetadataParams>;
+
+/**
+ * Result of reading a StorageFile's underlying Cloud Storage object metadata.
+ *
+ * When the underlying object does not exist, `exists` is false and `metadata` is omitted
+ * instead of the call throwing — useful for polling whether an upload has landed.
+ */
+export interface ReadStorageFileMetadataResult {
+  readonly exists: boolean;
+  readonly metadata?: Maybe<StorageMetadata>;
+}
+
+// MARK: Read Metadata Multiple
+/**
+ * Per-file parameters for a batch metadata read. Carries only the target model key.
+ */
+export interface ReadMultipleStorageFilesMetadataFileParams extends TargetModelParams {}
+
+export const readMultipleStorageFilesMetadataFileParamsType = targetModelParamsType.merge({}) as Type<ReadMultipleStorageFilesMetadataFileParams>;
+
+/**
+ * Success item in a batch metadata read result.
+ *
+ * Extends the single-file {@link ReadStorageFileMetadataResult} with the document key for correlation.
+ */
+export interface ReadMultipleStorageFileMetadataSuccessItem extends ReadStorageFileMetadataResult {
+  readonly key: StorageFileKey;
+}
+
+/**
+ * Error item in a batch metadata read result.
+ *
+ * Includes the document key and a human-readable error message.
+ */
+export interface ReadMultipleStorageFileMetadataErrorItem {
+  readonly key: StorageFileKey;
+  readonly error: string;
+}
+
+/**
+ * Parameters for batch-reading the Cloud Storage metadata of multiple StorageFiles.
+ *
+ * `asAdmin` selects the read role for the whole batch. Validated with {@link readMultipleStorageFilesMetadataParamsType}.
+ */
+export interface ReadMultipleStorageFilesMetadataParams {
+  readonly files: ReadMultipleStorageFilesMetadataFileParams[];
+  readonly asAdmin?: Maybe<boolean>;
+  /**
+   * When true, throws on the first failure instead of collecting it in the errors array.
+   */
+  readonly throwOnFirstError?: Maybe<boolean>;
+}
+
+export const readMultipleStorageFilesMetadataParamsType = /* @__PURE__ */ type({
+  files: readMultipleStorageFilesMetadataFileParamsType.array().atLeastLength(DOWNLOAD_MULTIPLE_STORAGE_FILES_MIN_FILES).atMostLength(DOWNLOAD_MULTIPLE_STORAGE_FILES_MAX_FILES),
+  'asAdmin?': clearable('boolean'),
+  'throwOnFirstError?': clearable('boolean')
+}) as Type<ReadMultipleStorageFilesMetadataParams>;
+
+/**
+ * Result of a batch StorageFile metadata read.
+ *
+ * Contains separate arrays for successful reads and failures.
+ * Individual read errors do not fail the entire batch.
+ */
+export interface ReadMultipleStorageFilesMetadataResult {
+  readonly success: ReadMultipleStorageFileMetadataSuccessItem[];
+  readonly errors: ReadMultipleStorageFileMetadataErrorItem[];
 }
 
 // MARK: Create Signed Upload URL
@@ -512,6 +597,8 @@ export type StorageFileModelCrudFunctionsConfig = {
     read: {
       download: [DownloadStorageFileParams, DownloadStorageFileResult];
       downloadMultiple: [DownloadMultipleStorageFilesParams, DownloadMultipleStorageFilesResult];
+      metadata: [ReadStorageFileMetadataParams, ReadStorageFileMetadataResult];
+      metadataMultiple: [ReadMultipleStorageFilesMetadataParams, ReadMultipleStorageFilesMetadataResult];
     };
     delete: {
       _: DeleteStorageFileParams;
@@ -526,7 +613,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 };
 
 export const STORAGE_FILE_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload,signedUploadUrl', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple'],
+  storageFile: ['create:_,fromUpload,allFromUpload,signedUploadUrl', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple,metadata,metadataMultiple'],
   storageFileGroup: ['update:_,regenerateContent']
 };
 
@@ -552,6 +639,8 @@ export abstract class StorageFileFunctions implements ModelFirebaseFunctionMap<S
     readStorageFile: {
       download: ModelFirebaseCrudFunction<DownloadStorageFileParams, DownloadStorageFileResult>;
       downloadMultiple: ModelFirebaseCrudFunction<DownloadMultipleStorageFilesParams, DownloadMultipleStorageFilesResult>;
+      metadata: ModelFirebaseCrudFunction<ReadStorageFileMetadataParams, ReadStorageFileMetadataResult>;
+      metadataMultiple: ModelFirebaseCrudFunction<ReadMultipleStorageFilesMetadataParams, ReadMultipleStorageFilesMetadataResult>;
     };
     deleteStorageFile: {
       delete: ModelFirebaseCrudFunction<DeleteStorageFileParams>;
