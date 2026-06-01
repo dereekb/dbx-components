@@ -14,6 +14,7 @@ export { FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE, type FirebaseRequireDbx
 export { FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE, DEFAULT_FUNCTION_DIR_SEGMENT, type FirebaseRequireCanonicalApiSpecFilenameRuleOptions, type FirebaseRequireCanonicalApiSpecFilenameRuleDefinition } from './require-canonical-api-spec-filename.rule';
 export { FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE, type FirebaseRequireApiCrudSpecForGroupRuleOptions, type FirebaseRequireApiCrudSpecForGroupRuleDefinition } from './require-api-crud-spec-for-group.rule';
 export { FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE, DBX_MODEL_API_PARAMS_MARKER, DEFAULT_CRUD_FUNCTIONS_CONFIG_SUFFIX, DEFAULT_FUNCTION_TYPE_MAP_SUFFIX, type FirebaseRequireDbxModelApiParamsTagRuleOptions, type FirebaseRequireDbxModelApiParamsTagRuleDefinition } from './require-dbx-model-api-params-tag.rule';
+export { FIREBASE_REQUIRE_USE_MODEL_ROLES_RULE, DEFAULT_USE_MODEL_METHOD_NAMES, type FirebaseRequireUseModelRolesRuleOptions, type FirebaseRequireUseModelRolesRuleDefinition } from './require-use-model-roles.rule';
 export { parseStorageRules, MIRRORS_POLICY_KEY_MARKER_REGEX, type ParsedRuleBranch, type ParsedStorageRulesBlock } from './storage-rules-parser';
 export { parseFirestoreRules, type ParsedFirestoreMatchBlock } from './firestore-rules-parser';
 export { FIREBASE_ESLINT_PLUGIN, firebaseESLintPlugin, type FirebaseEslintPlugin } from './plugin';

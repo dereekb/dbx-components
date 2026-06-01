@@ -113,7 +113,8 @@ export default [
       'dereekb-firebase/require-storagefile-policy-matches-rules': 'warn', // cross-check STORAGE_FILE_PURPOSE_UPLOAD_POLICIES entries against the workspace `storage.rules` — each policy's `maxFileSizeBytes` and `allowedMimeTypes` must match the paired `// Mirrors STORAGE_FILE_PURPOSE_UPLOAD_POLICIES[<KEY>]` rule block so signed-upload URLs never sign a request the bucket then rejects
       'dereekb-firebase/require-dbx-model-service-factory-tag': 'warn', // dbx-components-mcp model registry: require `@dbxModelServiceFactory <modelType>` JSDoc on every `firebaseModelServiceFactory(...)` export so the MCP catalog can join factory metadata onto model entries
       'dereekb-firebase/require-service-factory-for-dbx-model': 'warn', // dbx-components-mcp model registry: cross-file check that every `@dbxModel`-marked interface has a matching `@dbxModelServiceFactory <modelType>` declaration somewhere in the workspace
-      'dereekb-firebase/require-dbx-model-companion-tags': 'warn' // dbx-components-mcp model registry: enforce @dbxModel marker semantics, archetype/aggregatesFrom/compositeKey formats
+      'dereekb-firebase/require-dbx-model-companion-tags': 'warn', // dbx-components-mcp model registry: enforce @dbxModel marker semantics, archetype/aggregatesFrom/compositeKey formats
+      'dereekb-firebase/require-use-model-roles': 'warn' // require an explicit `roles` (or `roles: []`) on `nest.useModel` / `useMultipleModels` selections so model access asserts the roles it requires; silence with a `roles` value or an inline eslint-disable
     }
   },
   {

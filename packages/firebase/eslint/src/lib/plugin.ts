@@ -14,6 +14,7 @@ import { FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE } from './require-dbx-mo
 import { FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE } from './require-canonical-api-spec-filename.rule';
 import { FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE } from './require-api-crud-spec-for-group.rule';
 import { FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE } from './require-dbx-model-api-params-tag.rule';
+import { FIREBASE_REQUIRE_USE_MODEL_ROLES_RULE } from './require-use-model-roles.rule';
 
 /**
  * ESLint plugin interface for `@dereekb/firebase` rules.
@@ -36,6 +37,7 @@ export interface FirebaseEslintPlugin {
     readonly 'require-canonical-api-spec-filename': typeof FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE;
     readonly 'require-api-crud-spec-for-group': typeof FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE;
     readonly 'require-dbx-model-api-params-tag': typeof FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE;
+    readonly 'require-use-model-roles': typeof FIREBASE_REQUIRE_USE_MODEL_ROLES_RULE;
   };
 }
 
@@ -62,7 +64,8 @@ export const FIREBASE_ESLINT_PLUGIN: FirebaseEslintPlugin = {
     'require-dbx-model-companion-tags': FIREBASE_REQUIRE_DBX_MODEL_COMPANION_TAGS_RULE,
     'require-canonical-api-spec-filename': FIREBASE_REQUIRE_CANONICAL_API_SPEC_FILENAME_RULE,
     'require-api-crud-spec-for-group': FIREBASE_REQUIRE_API_CRUD_SPEC_FOR_GROUP_RULE,
-    'require-dbx-model-api-params-tag': FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE
+    'require-dbx-model-api-params-tag': FIREBASE_REQUIRE_DBX_MODEL_API_PARAMS_TAG_RULE,
+    'require-use-model-roles': FIREBASE_REQUIRE_USE_MODEL_ROLES_RULE
   }
 };
 
