@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/firebase-server",
-  "version": "13.12.9",
+  "version": "13.13.0",
   "sideEffects": false,
   "exports": {
     "./test": {
@@ -50,15 +50,15 @@
   "types": "./src/index.d.ts",
   "peerDependencies": {
     "@cantoo/pdf-lib": "^2.6.5",
-    "@dereekb/analytics": "13.12.9",
-    "@dereekb/date": "13.12.9",
-    "@dereekb/dbx-core": "13.12.9",
-    "@dereekb/firebase": "13.12.9",
-    "@dereekb/model": "13.12.9",
-    "@dereekb/nestjs": "13.12.9",
-    "@dereekb/rxjs": "13.12.9",
-    "@dereekb/util": "13.12.9",
-    "@dereekb/zoho": "13.12.9",
+    "@dereekb/analytics": "13.13.0",
+    "@dereekb/date": "13.13.0",
+    "@dereekb/dbx-core": "13.13.0",
+    "@dereekb/firebase": "13.13.0",
+    "@dereekb/model": "13.13.0",
+    "@dereekb/nestjs": "13.13.0",
+    "@dereekb/rxjs": "13.13.0",
+    "@dereekb/util": "13.13.0",
+    "@dereekb/zoho": "13.13.0",
     "@google-cloud/firestore": "^7.11.6",
     "@google-cloud/storage": "^7.19.0",
     "@modelcontextprotocol/sdk": "1.29.0",
