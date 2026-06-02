@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, viewChild, ViewContainerRef } from '@angular/core';
-import { DynamicTextPipe, type FieldWrapper, interpolateParams, type ValidationError, type WrapperFieldInputs } from '@ng-forge/dynamic-forms';
+import type { FieldWrapper, ValidationError } from '@ng-forge/dynamic-forms';
+import { DynamicTextPipe, interpolateParams, type WrapperFieldInputs } from '@ng-forge/dynamic-forms/integration';
 import { AsyncPipe } from '@angular/common';
 import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
 

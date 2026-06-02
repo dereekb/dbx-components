@@ -1,4 +1,5 @@
-import { type FieldTypeDefinition, provideDynamicForm } from '@ng-forge/dynamic-forms';
+import { provideDynamicForm } from '@ng-forge/dynamic-forms';
+import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms/integration';
 import { FORGE_MAPBOX_LATLNG_FIELD_TYPE } from './field/latlng/latlng.forge.field';
 import { mapboxLatLngFieldMapper } from './field/latlng/latlng.forge.field.component';
 import { FORGE_MAPBOX_ZOOM_FIELD_TYPE } from './field/zoom/zoom.forge.field';

@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { provideZonelessChangeDetection, signal, type Signal } from '@angular/core';
-import { type ArrayContext, type DynamicForm, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import { type DynamicForm, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
+import type { ArrayContext } from '@ng-forge/dynamic-forms/integration';
 import { DbxForgeDynamicFormSignalRef, DbxForgeFormContextService } from './forge.context.service';
 
 function makeArrayContext(arrayKey: string, indexSignal: Signal<number>): ArrayContext {

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild, ViewContainerRef } from '@angular/core';
-import { arrayEvent, type ArrayItemDefinitionTemplate, EventDispatcher, type FieldWrapper, type WrapperFieldInputs, DynamicTextPipe } from '@ng-forge/dynamic-forms';
+import { arrayEvent, type ArrayItemDefinitionTemplate, EventDispatcher, type FieldWrapper } from '@ng-forge/dynamic-forms';
+import { type WrapperFieldInputs, DynamicTextPipe } from '@ng-forge/dynamic-forms/integration';
 import { AsyncPipe } from '@angular/common';
 import { type CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { type DbxButtonStyle, DbxButtonComponent } from '@dereekb/dbx-web';
