@@ -22,7 +22,7 @@
     "@dereekb/rxjs": "13.12.9",
     "@dereekb/util": "13.12.9",
     "@dereekb/vitest": "13.12.9",
-    "@ng-forge/dynamic-forms": "0.9.0",
+    "@ng-forge/dynamic-forms": "0.10.0-next.4",
     "@ngbracket/ngx-layout": "^21.0.0",
     "@ngrx/effects": "^21.1.0",
     "@ngrx/store": "^21.1.0",
