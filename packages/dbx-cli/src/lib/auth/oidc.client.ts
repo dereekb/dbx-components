@@ -257,11 +257,11 @@ export async function fetchUserInfo(input: FetchUserInfoInput): Promise<Record<s
  */
 export interface OidcSessionInfo {
   readonly sub?: string;
-  readonly scope?: string | null;
+  readonly scope?: Maybe<string>;
   /**
    * Grant (session) expiry as unix epoch SECONDS, or `null` when the provider could not resolve it.
    */
-  readonly expiresAt?: number | null;
+  readonly expiresAt?: Maybe<number>;
   /**
    * Whether refresh-token rotation is disabled for this grant (a long-lived service token).
    */

@@ -1,6 +1,5 @@
 import { provideDynamicForm, type WrapperTypeDefinition } from '@ng-forge/dynamic-forms';
-import type { FieldTypeDefinition } from '@ng-forge/dynamic-forms/integration';
-import { valueFieldMapper } from '@ng-forge/dynamic-forms/integration';
+import { type FieldTypeDefinition, valueFieldMapper  } from '@ng-forge/dynamic-forms/integration';
 import { withMaterialFields } from '@ng-forge/dynamic-forms-material';
 import { phoneFieldMapper } from './field/value/phone/phone.field.component';
 import { dateTimeFieldMapper } from './field/value/date/datetime.field.component';
