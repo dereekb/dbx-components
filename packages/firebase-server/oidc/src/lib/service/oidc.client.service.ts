@@ -10,6 +10,10 @@ import { type OidcService } from './oidc.service';
  *
  * Mirrors the oidc-provider `registration.js` flow to ensure all provider
  * validation and lifecycle hooks run.
+ *
+ * Client create/update/rotate/delete are driven by callModel functions, so their
+ * analytics are captured by the callModel analytics layer (`OnCallModelAnalyticsService`)
+ * with the acting user — not by the OIDC analytics service.
  */
 export class OidcClientService {
   constructor(private readonly oidcService: OidcService) {}

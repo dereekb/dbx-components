@@ -99,6 +99,24 @@ export interface OidcProviderConfig<S extends OidcScope = OidcScope> {
    * Supported OAuth 2.0 grant types (e.g., `['authorization_code', 'refresh_token']`).
    */
   readonly grantTypes: string[];
+  /**
+   * Scopes that may only be granted to admin users. When a consent request includes any of these
+   * scopes and the resolving user is not an admin (per
+   * {@link OidcAccountServiceDelegate.isAdminUser}), the interaction is hard-rejected with
+   * `access_denied` rather than silently dropping the scope.
+   *
+   * Keeps the generic package app-agnostic: apps opt a scope (e.g. `token.service`) into admin-only
+   * behavior by listing it here, rather than the package hard-coding any scope name.
+   */
+  readonly adminOnlyScopes?: readonly string[];
+  /**
+   * Scopes whose grants must never rotate their refresh token. When a grant's scope set intersects
+   * this list, {@link buildProviderConfiguration}'s `rotateRefreshToken` hook returns `false`,
+   * yielding a stable refresh token suitable for storing in a server environment variable.
+   *
+   * All other grants keep oidc-provider's default rotation behavior.
+   */
+  readonly nonRotatingScopes?: readonly string[];
 }
 
 /**
@@ -162,6 +180,29 @@ export const DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS = 90 * SECONDS_IN_DAY;
  * Default global floor for a client-requested login duration, in seconds. 1 hour.
  */
 export const DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS = 60 * SECONDS_IN_MINUTE;
+
+/**
+ * Default ceiling (seconds) on a login duration for a non-admin user. 45 days.
+ *
+ * Tier 1 of the tiered ceiling resolved by `resolveTieredServerMaxSeconds`.
+ */
+export const DEFAULT_MAX_NONADMIN_LOGIN_DURATION_SECONDS = 45 * SECONDS_IN_DAY;
+
+/**
+ * Default ceiling (seconds) on a normal (non-service-token) login duration for an admin user. 90 days.
+ *
+ * Tier 2 of the tiered ceiling resolved by `resolveTieredServerMaxSeconds`.
+ */
+export const DEFAULT_MAX_ADMIN_LOGIN_DURATION_SECONDS = 90 * SECONDS_IN_DAY;
+
+/**
+ * Default ceiling (seconds) on a login duration carrying an admin-only service-token scope. 365 days.
+ *
+ * Tier 3 of the tiered ceiling resolved by `resolveTieredServerMaxSeconds`. Also matches
+ * node-oidc-provider's absolute refresh-token rotation cap (`totalLifetime >= 365.25d`), so a
+ * service token issued at this ceiling never rotates.
+ */
+export const DEFAULT_MAX_SERVICE_TOKEN_LOGIN_DURATION_SECONDS = 365 * SECONDS_IN_DAY;
 
 /**
  * Default token lifetimes: 15 min access tokens, 30-day refresh tokens, 30-day sessions/grants, 60 s auth codes.
@@ -235,6 +276,28 @@ export abstract class OidcModuleConfig {
    * auth-URL param. When undefined, falls back to {@link OidcTokenLifetimes.refreshToken}.
    */
   readonly defaultRequestedLoginDuration?: number;
+  /**
+   * Tiered ceiling (seconds) on the requested login duration for a non-admin user.
+   *
+   * Used by `resolveTieredServerMaxSeconds` when the resolving user is not an admin; the resolved
+   * tier value is used as the `serverMaxSeconds` ceiling (it replaces the flat
+   * {@link maxRequestedLoginDuration}, since service-token tokens intentionally exceed it).
+   *
+   * Defaults to {@link DEFAULT_MAX_NONADMIN_LOGIN_DURATION_SECONDS} (45 days).
+   */
+  readonly maxRequestedLoginDurationNonAdmin?: number;
+  /**
+   * Tiered ceiling (seconds) on a normal (non-service-token) requested login duration for an admin user.
+   *
+   * Defaults to {@link DEFAULT_MAX_ADMIN_LOGIN_DURATION_SECONDS} (90 days).
+   */
+  readonly maxRequestedLoginDurationAdmin?: number;
+  /**
+   * Tiered ceiling (seconds) on a requested login duration carrying an admin-only service-token scope.
+   *
+   * Defaults to {@link DEFAULT_MAX_SERVICE_TOKEN_LOGIN_DURATION_SECONDS} (365 days).
+   */
+  readonly maxRequestedLoginDurationServiceToken?: number;
   /**
    * JWKS service configuration (encryption secret, rotated key max age).
    */

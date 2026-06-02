@@ -1,3 +1,28 @@
+# [13.13.0](https://github.com/dereekb/dbx-components/compare/v13.12.9-dev...v13.13.0) (2026-06-02)
+
+
+### Bug Fixes
+
+- **forge:** import adapter-tier symbols from dynamic-forms/integration ([75d8b7aa](https://github.com/dereekb/dbx-components/commit/75d8b7aa1119804e02eecc74f636420e0d7183bf))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([f360f705](https://github.com/dereekb/dbx-components/commit/f360f70547f6914f25f6b7a7097d7b756c69192e))
+
+
+### Code Refactoring
+
+- **firebase:** add require-use-model-roles eslint rule ([1771358e](https://github.com/dereekb/dbx-components/commit/1771358e3b315dbaa0406344f2830c64277b135e))
+- **firebase:** add storagefile read metadata api ([656fe993](https://github.com/dereekb/dbx-components/commit/656fe993a029e3aa71f8bed4a54b4014c3d4cb04))
+- update ng-forge to v0.10.0-next.4 ([f8a97d67](https://github.com/dereekb/dbx-components/commit/f8a97d67534a12776ec0a8620aaab25821e6c9ec))
+
+
+### Features
+
+- **oidc:** add admin-only non-rotating long-lived service token ([c073c138](https://github.com/dereekb/dbx-components/commit/c073c138d3d8e61f40b7a4d5ebb17e68bfc9c9e1))
+- **oidc:** add login/consent analytics; client ops via callModel ([a014255b](https://github.com/dereekb/dbx-components/commit/a014255b5a92a4cd8060527c8be83699a08788f6))
+
 ## [13.12.9](https://github.com/dereekb/dbx-components/compare/v13.12.8-dev...v13.12.9) (2026-05-31)
 
 

@@ -1,4 +1,4 @@
-import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, type CallModelOidcScope, type OidcScopeDetails, type OidcTokenEndpointAuthMethod, STANDARD_OIDC_SCOPE_DETAILS, type StandardOidcScope } from '@dereekb/firebase';
+import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, type CallModelOidcScope, type OidcScopeDetails, type OidcTokenEndpointAuthMethod, SERVICE_TOKEN_OIDC_SCOPE_DETAILS, type ServiceTokenOidcScope, STANDARD_OIDC_SCOPE_DETAILS, type StandardOidcScope } from '@dereekb/firebase';
 
 // MARK: Scopes
 /**
@@ -11,8 +11,12 @@ import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, ty
  *   gate the corresponding `callModel` CRUD operation. Enforced by
  *   `oidcCallModelScopePreAssert` in `@dereekb/firebase-server/oidc`. Keep this
  *   union in sync with `CALL_MODEL_OIDC_SCOPES`.
+ * - {@link ServiceTokenOidcScope} (`token.service`): admin-only scope that makes the
+ *   issued grant long-lived and non-rotating, for non-interactive server/API use.
+ *   Hard-rejected for non-admins and disables refresh-token rotation (wired in
+ *   `DemoApiOidcModule`).
  */
-export type DemoOidcScope = StandardOidcScope | 'demo' | CallModelOidcScope;
+export type DemoOidcScope = StandardOidcScope | 'demo' | CallModelOidcScope | ServiceTokenOidcScope;
 
 /**
  * Frontend base path for the demo app's OAuth interaction pages.
@@ -27,7 +31,7 @@ export const DEMO_APP_OAUTH_INTERACTION_PATH = '/demo/oauth';
 /**
  * All available OIDC scopes for the demo app, suitable for use in scope picker fields.
  */
-export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [...STANDARD_OIDC_SCOPE_DETAILS, { label: 'Demo', value: 'demo', description: 'Full access to your Demo resources via the API' }, ...CALL_MODEL_OIDC_SCOPE_DETAILS];
+export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [...STANDARD_OIDC_SCOPE_DETAILS, { label: 'Demo', value: 'demo', description: 'Full access to your Demo resources via the API' }, ...CALL_MODEL_OIDC_SCOPE_DETAILS, SERVICE_TOKEN_OIDC_SCOPE_DETAILS];
 
 /**
  * All available OIDC token endpoint auth methods for the demo app, suitable for use in auth method picker fields.

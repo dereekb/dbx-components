@@ -1,3 +1,4 @@
+export * from './analytics';
 export * from './oidc.account';
 export * from './oidc.account.service';
 export * from './oidc.auth';

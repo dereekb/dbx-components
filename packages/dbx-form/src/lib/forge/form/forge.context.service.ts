@@ -1,5 +1,6 @@
 import { Injectable, type Signal, computed, inject, untracked } from '@angular/core';
-import { type ArrayContext, type EvaluationContext, type DynamicForm, DynamicFormLogger } from '@ng-forge/dynamic-forms';
+import { type EvaluationContext, type DynamicForm, DynamicFormLogger } from '@ng-forge/dynamic-forms';
+import type { ArrayContext } from '@ng-forge/dynamic-forms/integration';
 import type { FieldTree } from '@angular/forms/signals';
 
 /**

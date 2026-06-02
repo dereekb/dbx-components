@@ -1,5 +1,5 @@
 import type { MiddlewareFunction } from 'yargs';
-import { type CliEnvDefault } from '../config/env';
+import { type CliEnvDefault, readEnvTokenEntry } from '../config/env';
 import { resolveCliEnvOrThrow } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
@@ -66,16 +66,23 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
         requireComplete: true
       });
 
+      // Cache always wins; fall back to env-supplied tokens only when nothing is cached so the
+      // interactive flow is untouched. Env entries are flagged `fromEnv` and never written back.
       let entry: CliTokenEntry | undefined = (await tokens.get(envName)) ?? undefined;
 
-      if (!entry?.accessToken) {
+      if (!entry) {
+        entry = readEnvTokenEntry({ cliName: input.cliName }) ?? undefined;
+      }
+
+      if (!entry?.accessToken && !entry?.refreshToken) {
         throw new CliError({
           message: `No tokens for env "${envName}". Run \`${input.cliName} auth login --env ${envName}\`.`,
           code: 'NOT_LOGGED_IN'
         });
       }
 
-      if (isTokenExpired(entry)) {
+      // Mint an access token when none is present (env refresh-only case) or the cached one is expired.
+      if (!entry.accessToken || isTokenExpired(entry)) {
         if (!entry.refreshToken) {
           throw new CliError({
             message: `Token for env "${envName}" is expired and no refresh token is cached. Re-login.`,
@@ -85,11 +92,12 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
         }
 
         const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
+        const suppliedRefreshToken = entry.refreshToken;
         const refreshed = await refreshAccessToken({
           tokenEndpoint: meta.token_endpoint,
           clientId: env.clientId,
           clientSecret: env.clientSecret,
-          refreshToken: entry.refreshToken
+          refreshToken: suppliedRefreshToken
         });
 
         entry = {
@@ -100,7 +108,17 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
           scope: refreshed.scope ?? entry.scope,
           expiresAt: Date.now() + (refreshed.expires_in ?? 0) * 1000
         };
-        await tokens.set(envName, entry);
+
+        if (entry.fromEnv) {
+          // Service tokens do not rotate, so a one-shot env-sourced invocation is durable without
+          // persisting. If a *rotating* refresh token was supplied, the rotation is lost on exit —
+          // warn that env credentials should be non-rotating service tokens.
+          if (refreshed.refresh_token != null && refreshed.refresh_token !== suppliedRefreshToken) {
+            process.stderr.write('Warning: the refresh token supplied via environment rotated on use; the rotated token cannot be persisted for a one-shot invocation. Use a non-rotating service token (auth login --service-token).\n');
+          }
+        } else {
+          await tokens.set(envName, entry);
+        }
       }
 
       setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest }));

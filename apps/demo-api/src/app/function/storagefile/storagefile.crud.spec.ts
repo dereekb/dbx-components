@@ -36,6 +36,10 @@ import {
   type DownloadStorageFileResult,
   type DownloadMultipleStorageFilesParams,
   type DownloadMultipleStorageFilesResult,
+  type ReadStorageFileMetadataParams,
+  type ReadStorageFileMetadataResult,
+  type ReadMultipleStorageFilesMetadataParams,
+  type ReadMultipleStorageFilesMetadataResult,
   STORAGE_FILE_NOT_FLAGGED_FOR_GROUPS_SYNC_ERROR_CODE,
   type SyncStorageFileWithGroupsParams,
   type SyncStorageFileWithGroupsResult,
@@ -560,6 +564,72 @@ demoApiFunctionContextFactory((f) => {
                       expect(result.success).toHaveLength(1);
                       expect(result.success[0].expiresAt).toBeDefined();
                       expect(result.success[0].url).toBeDefined();
+                    });
+                  });
+
+                  describe('metadata', () => {
+                    it('should return the underlying Cloud Storage metadata for the file', async () => {
+                      const params: ReadStorageFileMetadataParams = {
+                        key: storageFileDocument.key
+                      };
+
+                      const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, params, 'metadata'))) as ReadStorageFileMetadataResult;
+
+                      expect(result).toBeDefined();
+                      expect(result.exists).toBe(true);
+                      expect(result.metadata).toBeDefined();
+                      expect(result.metadata?.size).toBeGreaterThan(0);
+                      expect(result.metadata?.contentType).toBeDefined();
+                      expect(result.metadata?.md5Hash).toBeDefined();
+                      expect(result.metadata?.updated).toBeDefined();
+                    });
+
+                    it('should return exists=false when the underlying object has been deleted', async () => {
+                      const storageFile = await assertSnapshotData(storageFileDocument);
+                      await f.storageContext.file(storageFile).delete();
+
+                      const params: ReadStorageFileMetadataParams = {
+                        key: storageFileDocument.key
+                      };
+
+                      const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, params, 'metadata'))) as ReadStorageFileMetadataResult;
+
+                      expect(result).toBeDefined();
+                      expect(result.exists).toBe(false);
+                      expect(result.metadata).not.toBeDefined();
+                    });
+                  });
+
+                  describe('metadataMultiple', () => {
+                    it('should read metadata for a single file successfully', async () => {
+                      const params: ReadMultipleStorageFilesMetadataParams = {
+                        files: [{ key: storageFileDocument.key }]
+                      };
+
+                      const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, params, 'metadataMultiple'))) as ReadMultipleStorageFilesMetadataResult;
+
+                      expect(result).toBeDefined();
+                      expect(result.success).toHaveLength(1);
+                      expect(result.success[0].key).toBe(storageFileDocument.key);
+                      expect(result.success[0].exists).toBe(true);
+                      expect(result.success[0].metadata?.size).toBeGreaterThan(0);
+                      expect(result.errors).toHaveLength(0);
+                    });
+
+                    it('should return errors for invalid keys without failing the whole call', async () => {
+                      const invalidKey = 'storageFile/nonexistent123';
+                      const params: ReadMultipleStorageFilesMetadataParams = {
+                        files: [{ key: storageFileDocument.key }, { key: invalidKey }]
+                      };
+
+                      const result = (await au.callWrappedFunction(demoCallModelWrappedFn, onCallReadModelParams(storageFileIdentity, params, 'metadataMultiple'))) as ReadMultipleStorageFilesMetadataResult;
+
+                      expect(result).toBeDefined();
+                      expect(result.success).toHaveLength(1);
+                      expect(result.success[0].key).toBe(storageFileDocument.key);
+                      expect(result.errors).toHaveLength(1);
+                      expect(result.errors[0].key).toBe(invalidKey);
+                      expect(result.errors[0].error).toBeDefined();
                     });
                   });
                 });

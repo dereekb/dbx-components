@@ -5,6 +5,14 @@ import { profileIdentity } from 'demo-firebase';
 
 export const oidcEntryCreateClient: DemoCreateModelFunction<CreateOidcClientParams, CreateOidcClientResult> = withApiDetails({
   inputType: createOidcClientParamsType,
+  analytics: {
+    onSuccess: (analytics, request, result) => {
+      analytics.sendEvent('OIDC Client Created', { client_id: result?.client_id });
+    },
+    onError: (analytics) => {
+      analytics.sendEventType('OIDC Client Create Failed');
+    }
+  },
   fn: async (request) => {
     const { nest, data } = request;
     let key: FirebaseAuthOwnershipKey | undefined;

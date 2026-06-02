@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { errors as OidcProviderErrors, type default as Provider, type Interaction, type Configuration, type KoaContextWithOIDC } from 'oidc-provider';
-import { DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS, DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS, OidcModuleConfig } from '../oidc.config';
-import { DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA, DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM, parseRequestedSessionTtlSeconds, readRemainingGrantSeconds, readRequestedSessionTtlSeconds, resolveLoginDurationSeconds } from './oidc.session-ttl';
+import { DEFAULT_MAX_ADMIN_LOGIN_DURATION_SECONDS, DEFAULT_MAX_NONADMIN_LOGIN_DURATION_SECONDS, DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS, DEFAULT_MAX_SERVICE_TOKEN_LOGIN_DURATION_SECONDS, DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS, OidcModuleConfig } from '../oidc.config';
+import { DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA, DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM, DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM, DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM, parseRequestedSessionTtlSeconds, readRemainingGrantSeconds, readRequestedSessionTtlSeconds, resolveLoginDurationSeconds, resolveTieredServerMaxSeconds, shouldRotateRefreshToken } from './oidc.session-ttl';
 import { JwksService } from './oidc.jwks.service';
 import { OidcAccountService } from './oidc.account.service';
 import { OidcServerFirestoreCollections } from '../model';
@@ -14,6 +14,22 @@ import { cachedGetter, filterUndefinedValues, firstValue, type Maybe, unixDateTi
 import { type OidcAuthData } from './oidc.auth';
 import { type DecodedIdToken } from 'firebase-admin/auth';
 import { makeUrlSearchParamsString } from '@dereekb/util/fetch';
+
+/**
+ * Tier flags that select the server-max login-duration ceiling for a grant.
+ *
+ * @see OidcService.resolveLoginDurationForGrant
+ */
+export interface ResolveLoginDurationTier {
+  /**
+   * Whether the resolving user is an admin.
+   */
+  readonly isAdmin: boolean;
+  /**
+   * Whether the grant being created carries an admin-only service-token scope.
+   */
+  readonly hasServiceScope: boolean;
+}
 
 // MARK: Service
 /**
@@ -53,13 +69,26 @@ export class OidcService {
    *
    * Mirrors the resolution used by the `Grant`/`Session` TTL functions in {@link buildProviderConfiguration}.
    *
+   * The `serverMaxSeconds` ceiling is tiered by {@link resolveTieredServerMaxSeconds}: a non-admin
+   * caps at the non-admin tier, an admin at the admin tier, and an admin whose grant carries a
+   * service-token scope at the (highest) service-token tier. This tiered value replaces the flat
+   * {@link OidcModuleConfig.maxRequestedLoginDuration} ceiling so a service token can intentionally
+   * exceed it.
+   *
    * @param requestedRawTtl - The raw `dbx_session_ttl` value from `interaction.params`, if any.
    * @param clientPayload - The persisted client metadata, used to read the per-client `dbx_max_session_ttl` cap.
+   * @param tier - Whether the resolving user is an admin and whether the grant carries a service-token scope.
    * @returns The resolved Grant TTL in seconds.
    */
-  resolveLoginDurationForGrant(requestedRawTtl: unknown, clientPayload: { dbx_max_session_ttl?: number } | undefined): number {
+  resolveLoginDurationForGrant(requestedRawTtl: unknown, clientPayload: { dbx_max_session_ttl?: number } | undefined, tier: ResolveLoginDurationTier): number {
     const config = this.config;
-    const serverMaxSeconds = config.maxRequestedLoginDuration ?? DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS;
+    const serverMaxSeconds = resolveTieredServerMaxSeconds({
+      isAdmin: tier.isAdmin,
+      hasServiceScope: tier.hasServiceScope,
+      nonAdminMax: config.maxRequestedLoginDurationNonAdmin ?? DEFAULT_MAX_NONADMIN_LOGIN_DURATION_SECONDS,
+      adminMax: config.maxRequestedLoginDurationAdmin ?? DEFAULT_MAX_ADMIN_LOGIN_DURATION_SECONDS,
+      serviceTokenMax: config.maxRequestedLoginDurationServiceToken ?? DEFAULT_MAX_SERVICE_TOKEN_LOGIN_DURATION_SECONDS
+    });
     const serverMinSeconds = config.minRequestedLoginDuration ?? DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS;
     const defaultSeconds = config.defaultRequestedLoginDuration ?? config.tokenLifetimes.grant;
 
@@ -332,12 +361,29 @@ export class OidcService {
         keys: cookieKeys
       },
       ...(config.renderError ? { renderError: config.renderError } : {}),
+      // Setting `rotateRefreshToken` disables oidc-provider's built-in default, so we both honor the
+      // dbx-components `nonRotatingScopes` extension (service tokens never rotate, keeping a stable
+      // refresh token for server env consumption) AND replicate the library default for every other
+      // grant. See `shouldRotateRefreshToken` — keep it in sync on oidc-provider upgrades.
+      rotateRefreshToken: (ctx: KoaContextWithOIDC) => {
+        const refreshToken = ctx.oidc.entities.RefreshToken as any;
+        const client = ctx.oidc.entities.Client as any;
+
+        return shouldRotateRefreshToken({
+          scope: refreshToken?.scope,
+          nonRotatingScopes: providerConfig.nonRotatingScopes ?? [],
+          totalLifetimeSeconds: refreshToken?.totalLifetime?.() ?? 0,
+          clientAuthMethod: client?.clientAuthMethod,
+          isSenderConstrained: refreshToken?.isSenderConstrained?.() ?? false,
+          ttlPercentagePassed: refreshToken?.ttlPercentagePassed?.() ?? 0
+        });
+      },
       // Bake account claims into the access token at issuance time so they're
       // available via `accessToken.extra` during verification without an extra DB call.
       extraTokenClaims: async (_ctx: unknown, token: any) => {
         const accountId = token.accountId;
         const scope = token.scope;
-        let result: Record<string, unknown> = {};
+        const result: Record<string, unknown> = {};
 
         if (accountId && scope) {
           const account = await this.accountService.userContext(accountId).findAccount();
@@ -347,7 +393,25 @@ export class OidcService {
             const { sub: _sub, ...extraClaims } = claims;
 
             // Filter out undefined values — the Firestore adapter cannot serialize them.
-            result = filterUndefinedValues(extraClaims);
+            Object.assign(result, filterUndefinedValues(extraClaims));
+          }
+        }
+
+        // Surface the resolved session lifetime + rotation status so clients (e.g. the CLI) can show
+        // "valid until <date>, rotation: disabled" without decoding the opaque access token. These ride
+        // on `accessToken.extra` and are read back by `verifyAccessToken` and the `GET /oidc/session` route.
+        if (scope != null) {
+          const nonRotatingScopes = providerConfig.nonRotatingScopes ?? [];
+          const scopeSet = new Set((scope as string).split(' ').filter(Boolean));
+          result[DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM] = nonRotatingScopes.some((nonRotatingScope) => scopeSet.has(nonRotatingScope));
+        }
+
+        if (token.grantId) {
+          const provider = await this.getProvider();
+          const grant = (await provider.Grant.find(token.grantId)) as unknown as { exp?: number } | undefined;
+
+          if (grant?.exp != null && Number.isFinite(grant.exp)) {
+            result[DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM] = grant.exp;
           }
         }
 

@@ -1,5 +1,23 @@
 import { type DemoReadModelFunction } from '../function.context';
-import { type DownloadStorageFileParams, type DownloadStorageFileResult, type DownloadMultipleStorageFilesParams, type DownloadMultipleStorageFilesResult, type DownloadMultipleStorageFileErrorItem, type DownloadMultipleStorageFilesFileParams, type StorageFileDocument, downloadMultipleStorageFilesParamsType, downloadStorageFileParamsType } from '@dereekb/firebase';
+import {
+  type DownloadStorageFileParams,
+  type DownloadStorageFileResult,
+  type DownloadMultipleStorageFilesParams,
+  type DownloadMultipleStorageFilesResult,
+  type DownloadMultipleStorageFileErrorItem,
+  type DownloadMultipleStorageFilesFileParams,
+  type StorageFileDocument,
+  downloadMultipleStorageFilesParamsType,
+  downloadStorageFileParamsType,
+  type ReadStorageFileMetadataParams,
+  type ReadStorageFileMetadataResult,
+  type ReadMultipleStorageFilesMetadataParams,
+  type ReadMultipleStorageFilesMetadataResult,
+  type ReadMultipleStorageFileMetadataErrorItem,
+  type ReadMultipleStorageFilesMetadataFileParams,
+  readStorageFileMetadataParamsType,
+  readMultipleStorageFilesMetadataParamsType
+} from '@dereekb/firebase';
 import { withApiDetails } from '@dereekb/firebase-server';
 
 export const storageFileDownload: DemoReadModelFunction<DownloadStorageFileParams, DownloadStorageFileResult> = withApiDetails({
@@ -63,6 +81,78 @@ export const storageFileDownloadMultiple: DemoReadModelFunction<DownloadMultiple
           result = {
             success: downloadResult.success,
             errors: [...errors, ...downloadResult.errors]
+          };
+        } else {
+          result = { success: [], errors };
+        }
+
+        return result;
+      }
+    });
+  }
+});
+
+export const storageFileReadMetadata: DemoReadModelFunction<ReadStorageFileMetadataParams, ReadStorageFileMetadataResult> = withApiDetails({
+  inputType: readStorageFileMetadataParamsType,
+  fn: async (request) => {
+    const { nest, data } = request;
+
+    const readStorageFileMetadata = await nest.storageFileServerActions.readStorageFileMetadata(data);
+    const storageFileDocument = await nest.useModel('storageFile', {
+      request,
+      key: data.key,
+      roles: data.asAdmin ? 'admin_download' : 'download',
+      use: (x) => x.document
+    });
+
+    return readStorageFileMetadata(storageFileDocument);
+  }
+});
+
+export const storageFileReadMetadataMultiple: DemoReadModelFunction<ReadMultipleStorageFilesMetadataParams, ReadMultipleStorageFilesMetadataResult> = withApiDetails({
+  inputType: readMultipleStorageFilesMetadataParamsType,
+  fn: async (request) => {
+    const { nest, data } = request;
+    const { files, asAdmin } = data;
+
+    return nest.useMultipleModels('storageFile', {
+      request,
+      keys: files.map((file) => file.key),
+      roles: asAdmin ? 'admin_download' : 'download',
+      throwOnFirstError: false,
+      use: async (successful, failure) => {
+        // Map successful readers back to their file params and documents
+        const permittedFiles: ReadMultipleStorageFilesMetadataFileParams[] = [];
+        const permittedDocuments: StorageFileDocument[] = [];
+
+        for (const reader of successful) {
+          const key = reader.document.key;
+          const file = files.find((f) => f.key === key);
+
+          if (file) {
+            permittedFiles.push(file);
+            permittedDocuments.push(reader.document);
+          }
+        }
+
+        const errors: ReadMultipleStorageFileMetadataErrorItem[] = failure.errors.map((item) => ({
+          key: item.key as string,
+          error: item.error instanceof Error ? item.error.message : 'Access denied'
+        }));
+
+        // Read metadata for permitted files via server action
+        let result: ReadMultipleStorageFilesMetadataResult;
+
+        if (permittedFiles.length > 0) {
+          const readFn = await nest.storageFileServerActions.readMultipleStorageFilesMetadata({
+            ...data,
+            files: permittedFiles
+          });
+
+          const readResult = await readFn(permittedDocuments);
+          result = {
+            success: readResult.success,
+            errors: [...errors, ...readResult.errors]
           };
         } else {
           result = { success: [], errors };

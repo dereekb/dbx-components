@@ -4,6 +4,14 @@ import { withApiDetails } from '@dereekb/firebase-server';
 
 export const oidcEntryDeleteClient: DemoDeleteModelFunction<DeleteOidcClientParams> = withApiDetails({
   inputType: deleteOidcClientParamsType,
+  analytics: {
+    onSuccess: (analytics) => {
+      analytics.sendEventType('OIDC Client Deleted');
+    },
+    onError: (analytics) => {
+      analytics.sendEventType('OIDC Client Delete Failed');
+    }
+  },
   fn: async (request) => {
     const { nest, data } = request;
 

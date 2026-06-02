@@ -1820,4 +1820,199 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
     });
   });
+
+  describe('service token grants (token.service scope)', () => {
+    const ONE_DAY = 24 * 60 * 60;
+    const ONE_YEAR = 365 * ONE_DAY;
+    const SLACK_SECONDS = 60; // wall-clock + tiering slack
+    const TWO_YEARS = 2 * ONE_YEAR;
+
+    demoAuthorizedUserContext({ f }, (nonAdmin) => {
+      demoAuthorizedUserAdminContext({ f }, (admin) => {
+        /**
+         * Drives the full auth-code flow (auth → login → consent[approved] → callback) for a given
+         * user, returning the final callback URL (which carries either `code` or `error`).
+         */
+        async function driveServiceFlow(input: { readonly uid: string; readonly clientId: string; readonly scope: string; readonly extraAuthParams?: Record<string, string | number> }): Promise<{ callbackUrl: URL; cookieHeader: string; codeVerifier: string }> {
+          const server = app.getHttpServer();
+          const cookieJar = new Map<string, string>();
+
+          function collectCookies(res: request.Response): void {
+            const setCookies = res.headers['set-cookie'];
+
+            if (setCookies) {
+              const items = Array.isArray(setCookies) ? setCookies : [setCookies];
+
+              for (const cookie of items) {
+                const [nameValue] = cookie.split(';');
+                const [name] = nameValue.split('=');
+                cookieJar.set(name, nameValue);
+              }
+            }
+          }
+
+          function cookieHeader(): string {
+            return [...cookieJar.values()].join('; ');
+          }
+
+          const codeVerifier = randomBytes(32).toString('base64url');
+          const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+          // offline_access only persists when the auth request also asks for prompt=consent.
+          const promptParams: Record<string, string> = input.scope.split(' ').includes('offline_access') ? { prompt: 'consent' } : {};
+
+          const authRes = await request(server)
+            .get('/oidc/auth')
+            .query({ client_id: input.clientId, redirect_uri: 'https://example.com/callback', response_type: 'code', scope: input.scope, code_challenge: codeChallenge, code_challenge_method: 'S256', state: 'svc-state', nonce: 'svc-nonce', ...promptParams, ...(input.extraAuthParams ?? {}) })
+            .redirects(0);
+          expect(authRes.status).toBe(303);
+          collectCookies(authRes);
+          const loginUid = new URL(authRes.headers['location'], 'http://localhost').searchParams.get('uid')!;
+
+          const idToken = await createTestIdToken(app, input.uid);
+          const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', cookieHeader()).send({ idToken });
+          expect(loginRes.status).toBe(200);
+
+          const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
+          const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', cookieHeader()).redirects(0);
+          expect(consentRedirectRes.status).toBe(303);
+          collectCookies(consentRedirectRes);
+          const consentUid = new URL(consentRedirectRes.headers['location'], 'http://localhost').searchParams.get('uid')!;
+
+          const consentRes = await request(server).post(`/interaction/${consentUid}/consent`).set('Cookie', cookieHeader()).send({ idToken, approved: true });
+          expect(consentRes.status).toBe(200);
+          collectCookies(consentRes);
+
+          const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
+          const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', cookieHeader()).redirects(0);
+          expect(callbackRedirectRes.status).toBe(303);
+
+          return { callbackUrl: new URL(callbackRedirectRes.headers['location']), cookieHeader: cookieHeader(), codeVerifier };
+        }
+
+        /**
+         * Returns the largest Grant TTL (`exp - iat`, seconds) currently persisted for the given uid,
+         * or undefined when none exist. Uses the max so a long-lived service grant is unambiguous even
+         * if other grants exist for the same user.
+         */
+        async function maxGrantTtlForUid(uid: string): Promise<number | undefined> {
+          const grantDocs = await f.instance.demoFirestoreCollections.oidcEntryCollection.query(oidcEntriesByUidQuery('Grant', uid)).getDocs();
+          let result: number | undefined;
+
+          if (!grantDocs.empty) {
+            const ttls = grantDocs.docs.map((d) => {
+              const payload = d.data().payload as { exp: number; iat: number };
+              return payload.exp - payload.iat;
+            });
+            result = Math.max(...ttls);
+          }
+
+          return result;
+        }
+
+        it('admin + token.service: consent succeeds, grant TTL ≈ 1 year, and the refresh token does not rotate', async () => {
+          const server = app.getHttpServer();
+          const { client_id, client_secret } = await oidcClientService.createClient({
+            client_name: 'svc-admin-success',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          // Request 2 years; the service-token tier clamps it to 1 year.
+          const { callbackUrl, cookieHeader, codeVerifier } = await driveServiceFlow({ uid: admin.uid, clientId: client_id, scope: 'openid email demo offline_access token.service', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
+
+          expect(callbackUrl.searchParams.get('error')).toBeNull();
+          const code = callbackUrl.searchParams.get('code')!;
+          expect(code).toBeDefined();
+
+          const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({ grant_type: 'authorization_code', code, redirect_uri: 'https://example.com/callback', client_id, client_secret, code_verifier: codeVerifier });
+          expect(tokenRes.status).toBe(200);
+          const refreshToken = tokenRes.body.refresh_token as string;
+          expect(refreshToken).toBeDefined();
+
+          const grantTtl = await maxGrantTtlForUid(admin.uid);
+          expect(grantTtl).toBeGreaterThanOrEqual(ONE_YEAR - SLACK_SECONDS);
+          expect(grantTtl).toBeLessThanOrEqual(ONE_YEAR + SLACK_SECONDS);
+
+          // First refresh: the returned refresh token (if any) must equal the original (no rotation).
+          const firstRefresh = await request(server).post('/oidc/token').type('form').send({ grant_type: 'refresh_token', refresh_token: refreshToken, client_id, client_secret });
+          expect(firstRefresh.status).toBe(200);
+
+          if (firstRefresh.body.refresh_token != null) {
+            expect(firstRefresh.body.refresh_token).toBe(refreshToken);
+          }
+
+          // Re-using the ORIGINAL refresh token still works — proving it was not rotated/invalidated.
+          const secondRefresh = await request(server).post('/oidc/token').type('form').send({ grant_type: 'refresh_token', refresh_token: refreshToken, client_id, client_secret });
+          expect(secondRefresh.status).toBe(200);
+          expect(secondRefresh.body.access_token).toBeDefined();
+        });
+
+        it('non-admin + token.service: consent ends in access_denied', async () => {
+          const { client_id } = await oidcClientService.createClient({
+            client_name: 'svc-nonadmin-denied',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          const { callbackUrl } = await driveServiceFlow({ uid: nonAdmin.uid, clientId: client_id, scope: 'openid email demo offline_access token.service', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
+
+          expect(callbackUrl.searchParams.get('error')).toBe('access_denied');
+          expect(callbackUrl.searchParams.get('code')).toBeNull();
+        });
+
+        it('admin normal login clamps to the 90-day ceiling', async () => {
+          const { client_id } = await oidcClientService.createClient({
+            client_name: 'svc-admin-normal',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          await driveServiceFlow({ uid: admin.uid, clientId: client_id, scope: 'openid email demo offline_access', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
+
+          const grantTtl = await maxGrantTtlForUid(admin.uid);
+          expect(grantTtl).toBeGreaterThanOrEqual(90 * ONE_DAY - SLACK_SECONDS);
+          expect(grantTtl).toBeLessThanOrEqual(90 * ONE_DAY + SLACK_SECONDS);
+        });
+
+        it('non-admin normal login clamps to the 45-day ceiling', async () => {
+          const { client_id } = await oidcClientService.createClient({
+            client_name: 'svc-nonadmin-normal',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          await driveServiceFlow({ uid: nonAdmin.uid, clientId: client_id, scope: 'openid email demo offline_access', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
+
+          const grantTtl = await maxGrantTtlForUid(nonAdmin.uid);
+          expect(grantTtl).toBeGreaterThanOrEqual(45 * ONE_DAY - SLACK_SECONDS);
+          expect(grantTtl).toBeLessThanOrEqual(45 * ONE_DAY + SLACK_SECONDS);
+        });
+
+        it('GET /oidc/session reports expiresAt and rotationDisabled for a service token', async () => {
+          const server = app.getHttpServer();
+          const { client_id, client_secret } = await oidcClientService.createClient({
+            client_name: 'svc-session-route',
+            redirect_uris: ['https://example.com/callback'],
+            token_endpoint_auth_method: 'client_secret_post'
+          });
+
+          const { callbackUrl, cookieHeader, codeVerifier } = await driveServiceFlow({ uid: admin.uid, clientId: client_id, scope: 'openid email demo offline_access token.service', extraAuthParams: { dbx_session_ttl: TWO_YEARS } });
+          const code = callbackUrl.searchParams.get('code')!;
+
+          const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({ grant_type: 'authorization_code', code, redirect_uri: 'https://example.com/callback', client_id, client_secret, code_verifier: codeVerifier });
+          expect(tokenRes.status).toBe(200);
+
+          const sessionRes = await request(server).get('/oidc/session').set('Authorization', `Bearer ${tokenRes.body.access_token}`).expect(200);
+
+          expect(sessionRes.body.rotationDisabled).toBe(true);
+          expect(sessionRes.body.expiresAt).toBeGreaterThan(unixDateTimeSecondsNumberForNow());
+          expect(sessionRes.body.scope).toContain('token.service');
+        });
+
+        it('GET /oidc/session returns 401 without a valid bearer token', async () => {
+          await request(app.getHttpServer()).get('/oidc/session').expect(401);
+        });
+      });
+    });
+  });
 });

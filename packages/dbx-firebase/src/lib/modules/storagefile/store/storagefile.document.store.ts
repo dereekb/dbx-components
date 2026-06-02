@@ -20,4 +20,5 @@ export class StorageFileDocumentStore extends AbstractDbxFirebaseDocumentStore<S
   readonly deleteStorageFile = firebaseDocumentStoreDeleteFunction(this, this.storageFileFunctions.storageFile.deleteStorageFile.delete);
 
   readonly downloadStorageFile = firebaseDocumentStoreReadFunction(this, this.storageFileFunctions.storageFile.readStorageFile.download);
+  readonly readStorageFileMetadata = firebaseDocumentStoreReadFunction(this, this.storageFileFunctions.storageFile.readStorageFile.metadata);
 }

@@ -14,6 +14,8 @@ import {
   initializeAllStorageFilesFromUploadsParamsType,
   initializeStorageFileFromUploadParamsType,
   processStorageFileParamsType,
+  readMultipleStorageFilesMetadataParamsType,
+  readStorageFileMetadataParamsType,
   regenerateStorageFileGroupContentParamsType,
   resyncNotificationUserParamsType,
   rotateOidcClientSecretParamsType,
@@ -451,6 +453,44 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     resultFields: [
       { name: 'success', typeText: 'DownloadMultipleStorageFileSuccessItem[]' },
       { name: 'errors', typeText: 'DownloadMultipleStorageFileErrorItem[]' }
+    ]
+  },
+  {
+    model: 'storageFile',
+    verb: 'read',
+    specifier: 'metadata',
+    paramsTypeName: 'ReadStorageFileMetadataParams',
+    paramsValidator: readStorageFileMetadataParamsType,
+    resultTypeName: 'ReadStorageFileMetadataResult',
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: "Parameters for reading the underlying Cloud Storage object metadata of a single StorageFile.\n\nUnlike {@link DownloadStorageFileParams}, no signed URL is minted — only the object's\n{@link StorageMetadata} (size, md5Hash, generation, content headers, custom metadata, etc.) is returned.\n`asAdmin` only selects the read role used for permission gating. Validated with {@link readStorageFileMetadataParamsType}.",
+    paramsFields: [{ name: 'asAdmin', typeText: 'Maybe<boolean>' }],
+    resultTypeDescription: "Result of reading a StorageFile's underlying Cloud Storage object metadata.\n\nWhen the underlying object does not exist, `exists` is false and `metadata` is omitted\ninstead of the call throwing — useful for polling whether an upload has landed.",
+    resultFields: [
+      { name: 'exists', typeText: 'boolean' },
+      { name: 'metadata', typeText: 'Maybe<StorageMetadata>' }
+    ]
+  },
+  {
+    model: 'storageFile',
+    verb: 'read',
+    specifier: 'metadataMultiple',
+    paramsTypeName: 'ReadMultipleStorageFilesMetadataParams',
+    paramsValidator: readMultipleStorageFilesMetadataParamsType,
+    resultTypeName: 'ReadMultipleStorageFilesMetadataResult',
+    groupName: 'StorageFile',
+    sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts',
+    paramsTypeDescription: 'Parameters for batch-reading the Cloud Storage metadata of multiple StorageFiles.\n\n`asAdmin` selects the read role for the whole batch. Validated with {@link readMultipleStorageFilesMetadataParamsType}.',
+    paramsFields: [
+      { name: 'files', typeText: 'ReadMultipleStorageFilesMetadataFileParams[]' },
+      { name: 'asAdmin', typeText: 'Maybe<boolean>' },
+      { name: 'throwOnFirstError', typeText: 'Maybe<boolean>', description: 'When true, throws on the first failure instead of collecting it in the errors array.' }
+    ],
+    resultTypeDescription: 'Result of a batch StorageFile metadata read.\n\nContains separate arrays for successful reads and failures.\nIndividual read errors do not fail the entire batch.',
+    resultFields: [
+      { name: 'success', typeText: 'ReadMultipleStorageFileMetadataSuccessItem[]' },
+      { name: 'errors', typeText: 'ReadMultipleStorageFileMetadataErrorItem[]' }
     ]
   },
   { model: 'storageFile', verb: 'update', specifier: '_', paramsTypeName: 'UpdateStorageFileParams', paramsValidator: updateStorageFileParamsType, groupName: 'StorageFile', sourceFile: 'packages/firebase/src/lib/model/storagefile/storagefile.api.ts', paramsFields: [{ name: 'sdat', typeText: 'Maybe<Date>' }] },

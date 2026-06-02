@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild,
 import { CdkDrag, CdkDragHandle, CdkDragPlaceholder } from '@angular/cdk/drag-drop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { type DynamicText, type FieldWrapper, type WrapperFieldInputs, ARRAY_CONTEXT } from '@ng-forge/dynamic-forms';
+import type { DynamicText, FieldWrapper } from '@ng-forge/dynamic-forms';
+import { type WrapperFieldInputs, ARRAY_CONTEXT } from '@ng-forge/dynamic-forms/integration';
 import { type IndexNumber } from '@dereekb/util';
 import { type DbxButtonDisplayStylePair, type DbxButtonStyle, type DbxChipDisplay, DbxButtonComponent, DbxButtonSpacerDirective, DbxChipDirective } from '@dereekb/dbx-web';
 import { dbxForgeFieldDisabled } from '../../field.util';

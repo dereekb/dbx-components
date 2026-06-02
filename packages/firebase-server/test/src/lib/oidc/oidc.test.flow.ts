@@ -114,7 +114,11 @@ function createCookieJar() {
 
 /**
  * Resolves the scopes string from config, or falls back to all registered scopes
- * from `OidcAccountService.allRegisteredScopes`.
+ * from the provider config — excluding any `adminOnlyScopes`.
+ *
+ * Admin-only scopes (e.g. `token.service`) are dropped from the default "all scopes" request because
+ * the provider hard-rejects them for non-admin users, and this default flow logs in an arbitrary
+ * (often non-admin) user. Tests that need an admin-only scope pass it explicitly via `config.scopes`.
  *
  * @param nestApp - Initialized NestJS application used to resolve {@link OidcAccountService} when no scopes override is given.
  * @param config - Optional flow config; when `config.scopes` is set, it is returned verbatim.
@@ -127,7 +131,11 @@ async function resolveScopes(nestApp: INestApplication, config?: OAuthTestFlowCo
     result = config.scopes;
   } else {
     const accountService = nestApp.get(OidcAccountService);
-    result = Object.keys(accountService.providerConfig.claims).join(' ');
+    const providerConfig = accountService.providerConfig;
+    const adminOnlyScopes = new Set(providerConfig.adminOnlyScopes ?? []);
+    result = Object.keys(providerConfig.claims)
+      .filter((scope) => !adminOnlyScopes.has(scope))
+      .join(' ');
   }
 
   return result;

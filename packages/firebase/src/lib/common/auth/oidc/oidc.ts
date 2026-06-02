@@ -158,3 +158,32 @@ export const OFFLINE_ACCESS_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<Offl
  * standard scopes render consistently across consent screens and admin pickers.
  */
 export const STANDARD_OIDC_SCOPE_DETAILS: readonly LabeledValueWithDescription<StandardOidcScope>[] = [OPENID_OIDC_SCOPE_DETAILS, PROFILE_OIDC_SCOPE_DETAILS, EMAIL_OIDC_SCOPE_DETAILS, OFFLINE_ACCESS_OIDC_SCOPE_DETAILS];
+
+// MARK: Service Token Scope
+/**
+ * Custom OIDC scope that requests a long-lived, non-rotating "service" token,
+ * intended for non-interactive server/API consumption (e.g. feeding a refresh
+ * token to a CLI via an environment variable).
+ *
+ * This scope is privileged: provider-side wiring is expected to hard-reject the
+ * request for non-admin users (via {@link OidcProviderConfig.adminOnlyScopes})
+ * and to disable refresh-token rotation for grants carrying it (via
+ * {@link OidcProviderConfig.nonRotatingScopes}). The generic
+ * `@dereekb/firebase-server/oidc` package stays app-agnostic — the scope is only
+ * activated when an app lists it in those config arrays and supplies an
+ * `isAdminUser` delegate predicate.
+ */
+export const SERVICE_TOKEN_OIDC_SCOPE = 'token.service' as const;
+
+export type ServiceTokenOidcScope = typeof SERVICE_TOKEN_OIDC_SCOPE;
+
+/**
+ * Pre-built scope picker entry for {@link SERVICE_TOKEN_OIDC_SCOPE}. Labeled as an
+ * admin-only scope so consent screens and admin pickers signal that it is
+ * restricted to privileged users.
+ */
+export const SERVICE_TOKEN_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<ServiceTokenOidcScope> = {
+  label: 'Service token (admin)',
+  value: SERVICE_TOKEN_OIDC_SCOPE,
+  description: 'Admin-only: issue a long-lived, non-rotating token for server/API use'
+};

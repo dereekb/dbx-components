@@ -1,5 +1,5 @@
 import { computed, inject, type Signal } from '@angular/core';
-import { FORM_OPTIONS } from '@ng-forge/dynamic-forms';
+import { FORM_OPTIONS } from '@ng-forge/dynamic-forms/integration';
 
 /**
  * Creates a computed signal that reads the disabled state from ng-forge's form-level options.

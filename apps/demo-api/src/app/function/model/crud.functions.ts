@@ -17,7 +17,7 @@ import { notificationSend } from '../notification/notification.update';
 import { storageFileUpdate, storageFileProcess, storageFileSyncWithGroups } from '../storagefile/storagefile.update';
 import { storageFileCreate, storageFileCreateSignedUploadUrl, storageFileFromUpload, storageFileAllFromUpload } from '../storagefile/storagefile.create';
 import { storageFileDelete } from '../storagefile/storagefile.delete';
-import { storageFileDownload, storageFileDownloadMultiple } from '../storagefile/storagefile.read';
+import { storageFileDownload, storageFileDownloadMultiple, storageFileReadMetadata, storageFileReadMetadataMultiple } from '../storagefile/storagefile.read';
 import { storageFileGroupRegenerateContent, storageFileGroupUpdate } from '../storagefile/storagefilegroup.update';
 import { guestbookEntryAllPublishedEntries, guestbookEntryEntryDetails } from '../guestbook/guestbookentry.invoke';
 import { profileDownloadArchive } from '../profile/profile.read';
@@ -56,7 +56,9 @@ export const DEMO_READ_MODEL_MAP: DemoOnCallReadModelMap = {
   }),
   storageFile: onCallSpecifierHandler({
     download: storageFileDownload,
-    downloadMultiple: storageFileDownloadMultiple
+    downloadMultiple: storageFileDownloadMultiple,
+    metadata: storageFileReadMetadata,
+    metadataMultiple: storageFileReadMetadataMultiple
   }),
   profile: onCallSpecifierHandler({
     downloadArchive: profileDownloadArchive

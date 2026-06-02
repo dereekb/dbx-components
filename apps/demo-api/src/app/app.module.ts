@@ -5,6 +5,7 @@ import { GlobalNotificationModule } from '@dereekb/firebase-server/model';
 import { DemoApiServerModule } from './server/server.module';
 import { appAnalyticsModuleMetadata, FirebaseServerAnalyticsSegmentModule } from '@dereekb/firebase-server';
 import { appMcpAnalyticsModuleMetadata } from '@dereekb/firebase-server/mcp';
+import { appOidcAnalyticsModuleMetadata } from '@dereekb/firebase-server/oidc';
 
 @Global()
 @Module(
@@ -18,9 +19,13 @@ export class DemoApiAppAnalyticsModule {}
 @Module(appMcpAnalyticsModuleMetadata())
 export class DemoApiAppMcpAnalyticsModule {}
 
+@Global()
+@Module(appOidcAnalyticsModuleMetadata())
+export class DemoApiAppOidcAnalyticsModule {}
+
 @Module({
-  imports: [GlobalNotificationModule, DemoApiAppAnalyticsModule, DemoApiAppMcpAnalyticsModule],
-  exports: [GlobalNotificationModule, DemoApiAppAnalyticsModule, DemoApiAppMcpAnalyticsModule]
+  imports: [GlobalNotificationModule, DemoApiAppAnalyticsModule, DemoApiAppMcpAnalyticsModule, DemoApiAppOidcAnalyticsModule],
+  exports: [GlobalNotificationModule, DemoApiAppAnalyticsModule, DemoApiAppMcpAnalyticsModule, DemoApiAppOidcAnalyticsModule]
 })
 export class DemoApiAppGlobalModule {}
 

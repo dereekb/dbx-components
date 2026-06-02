@@ -2,11 +2,11 @@ import type { Argv, CommandModule } from 'yargs';
 import { MS_IN_SECOND, noop } from '@dereekb/util';
 import { durationDataToMilliseconds, parseDurationString } from '@dereekb/date';
 import { loadCliConfig, maskEnv, maskSecret, mergeCliConfig } from '../config/cli.config';
-import { type CliEnvConfig, type CliEnvDefault, DEFAULT_CLI_REDIRECT_URI, filterReadOnlyModelScopes, findCliEnvDefault, mergeCliEnvWithDefault } from '../config/env';
+import { type CliEnvConfig, type CliEnvDefault, DEFAULT_CLI_REDIRECT_URI, filterReadOnlyModelScopes, findCliEnvDefault, mergeCliEnvWithDefault, withServiceTokenScopes } from '../config/env';
 import { resolveCliEnvOrThrow } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
-import { discoverOidcMetadata, exchangeAuthorizationCode, fetchUserInfo, refreshAccessToken, revokeToken } from './oidc.client';
+import { discoverOidcMetadata, exchangeAuthorizationCode, fetchSessionInfo, fetchUserInfo, type OidcSessionInfo, refreshAccessToken, revokeToken } from './oidc.client';
 import { buildAuthorizationUrl, generateOAuthState, generatePkceMaterial, parsePastedRedirect } from './oidc.flow';
 import { CliError, outputResult } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
@@ -45,6 +45,60 @@ async function resolveAuthSetupPrompt(input: ResolveAuthSetupPromptInput): Promi
   } else {
     const answer = (await promptLine({ question: prompt, mask })).trim();
     result = answer.length > 0 ? answer : existingValue;
+  }
+
+  return result;
+}
+
+/**
+ * Builds the `GET /oidc/session` endpoint URL from the env's OIDC issuer (`<oidcIssuer>/session`).
+ *
+ * @param oidcIssuer - The env's OIDC issuer URL.
+ * @returns The session endpoint URL.
+ */
+function buildSessionEndpoint(oidcIssuer: string): string {
+  return `${oidcIssuer.replace(/\/+$/, '')}/session`;
+}
+
+/**
+ * Best-effort fetch of the session lifetime metadata for an access token. Returns `undefined` when
+ * the route is unavailable or errors, so callers can treat the session info as supplemental.
+ *
+ * @param input - The lookup inputs.
+ * @param input.oidcIssuer - The env's OIDC issuer URL (used to derive the session endpoint).
+ * @param input.accessToken - The Bearer access token.
+ * @returns The {@link OidcSessionInfo}, or `undefined` on any failure.
+ */
+async function loadSessionInfoSafely(input: { readonly oidcIssuer: string; readonly accessToken: string }): Promise<OidcSessionInfo | undefined> {
+  let result: OidcSessionInfo | undefined;
+
+  try {
+    result = await fetchSessionInfo({ sessionEndpoint: buildSessionEndpoint(input.oidcIssuer), accessToken: input.accessToken });
+  } catch {
+    // Supplemental — older servers without the /oidc/session route, or transient errors, are non-fatal.
+    result = undefined;
+  }
+
+  return result;
+}
+
+/**
+ * Renders a human-readable session-lifetime summary, e.g. `valid until 2027-06-01T00:00:00.000Z (~365 days), rotation: disabled`.
+ *
+ * @param input - The session lifetime fields.
+ * @param input.sessionExpiresAt - Grant expiry as unix epoch seconds.
+ * @param input.rotationDisabled - Whether refresh-token rotation is disabled.
+ * @param input.nowMs - Current time in unix epoch milliseconds. Defaults to `Date.now()`.
+ * @returns The summary line, or `undefined` when no `sessionExpiresAt` is available.
+ */
+function describeSessionLifetime(input: { readonly sessionExpiresAt?: number; readonly rotationDisabled?: boolean; readonly nowMs?: number }): string | undefined {
+  let result: string | undefined;
+
+  if (input.sessionExpiresAt != null) {
+    const expiresMs = input.sessionExpiresAt * MS_IN_SECOND;
+    const days = Math.max(0, Math.round((expiresMs - (input.nowMs ?? Date.now())) / MS_IN_SECOND / 86400));
+    const rotation = input.rotationDisabled ? 'disabled' : 'enabled';
+    result = `valid until ${new Date(expiresMs).toISOString()} (~${days} days), rotation: ${rotation}`;
   }
 
   return result;
@@ -141,6 +195,7 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         .option('open', { type: 'boolean', default: false, describe: 'Print the auth URL only (does not auto-open a browser)' })
         .option('code', { type: 'string', describe: 'Skip the prompt and pass the redirect URL or bare code directly' })
         .option('read-only-scopes', { type: 'boolean', default: false, describe: 'Drop model.create/model.update/model.delete from the requested scopes (keeps model.read and model.query)' })
+        .option('service-token', { type: 'boolean', default: false, alias: 'long-lived', describe: 'Request a long-lived, non-rotating admin service token (adds token.service + offline_access). Combine with --login-for.' })
         .option('login-for', { type: 'string', describe: 'Requested login duration with a unit (e.g. 30d, 12h, 3600s). Mixed units are allowed (e.g. "1h30m", "2d 12h"). Subject to server/client caps. Applied to Session, Grant, and RefreshToken.' }),
     handler: wrapCommandHandler(async (argv: any) => {
       const { envName, env } = await resolveCliEnvOrThrow({ cliName, paths, flagEnv: argv.env, envVarName, defaultEnvs, requireComplete: true });
@@ -148,7 +203,14 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
       const { codeVerifier, codeChallenge } = await generatePkceMaterial();
       const state = generateOAuthState();
-      const requestedScopes = argv.readOnlyScopes ? filterReadOnlyModelScopes(env.scopes) : env.scopes;
+      let requestedScopes = argv.readOnlyScopes ? filterReadOnlyModelScopes(env.scopes) : env.scopes;
+
+      if (argv.serviceToken) {
+        // Adds token.service + offline_access (de-duped); applied after the read-only filter so a
+        // service token can still be read-only. The provider hard-rejects a non-admin and clamps
+        // the duration to the service-token tier (up to 1 year).
+        requestedScopes = withServiceTokenScopes(requestedScopes);
+      }
 
       let requestedSessionTtlSeconds: number | undefined;
 
@@ -195,16 +257,31 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
       });
 
       const expiresAt = Date.now() + (tokenResponse.expires_in ?? 0) * 1000;
+
+      // Surface the resolved session lifetime + rotation status (e.g. for a --service-token login).
+      const sessionInfo = await loadSessionInfoSafely({ oidcIssuer: env.oidcIssuer, accessToken: tokenResponse.access_token });
+      const sessionExpiresAt = sessionInfo?.expiresAt ?? undefined;
+      const rotationDisabled = sessionInfo?.rotationDisabled;
+
       const entry: CliTokenEntry = {
         accessToken: tokenResponse.access_token,
         refreshToken: tokenResponse.refresh_token,
         idToken: tokenResponse.id_token,
         tokenType: tokenResponse.token_type,
         scope: tokenResponse.scope,
-        expiresAt
+        expiresAt,
+        ...(sessionExpiresAt != null ? { sessionExpiresAt } : {}),
+        ...(rotationDisabled != null ? { rotationDisabled } : {})
       };
 
       await tokens.set(envName, entry);
+
+      const sessionSummary = describeSessionLifetime({ sessionExpiresAt, rotationDisabled });
+
+      if (sessionSummary) {
+        // Emit through stderr so JSON stdout stays parseable.
+        process.stderr.write(`Session: ${sessionSummary}\n`);
+      }
 
       outputResult({
         loggedIn: true,
@@ -213,7 +290,9 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         refreshToken: entry.refreshToken ? maskSecret(entry.refreshToken) : undefined,
         tokenType: entry.tokenType,
         scope: entry.scope,
-        expiresAt
+        expiresAt,
+        sessionExpiresAt,
+        rotationDisabled
       });
     })
   };
@@ -261,6 +340,10 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
 
       if (entry) {
         const expired = isTokenExpired(entry);
+        const sessionInfo = await loadSessionInfoSafely({ oidcIssuer: env.oidcIssuer, accessToken: entry.accessToken });
+        const sessionExpiresAt = sessionInfo?.expiresAt ?? entry.sessionExpiresAt;
+        const rotationDisabled = sessionInfo?.rotationDisabled ?? entry.rotationDisabled;
+        const session = describeSessionLifetime({ sessionExpiresAt: sessionExpiresAt ?? undefined, rotationDisabled });
         const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
         const userinfoEndpoint = meta.userinfo_endpoint;
 
@@ -272,11 +355,14 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
             expiresAt: entry.expiresAt,
             expired,
             scope: entry.scope,
+            sessionExpiresAt,
+            rotationDisabled,
+            session,
             sub: claims.sub,
             claims
           });
         } else {
-          outputResult({ env: envName, authenticated: !expired, expiresAt: entry.expiresAt, expired, scope: entry.scope });
+          outputResult({ env: envName, authenticated: !expired, expiresAt: entry.expiresAt, expired, scope: entry.scope, sessionExpiresAt, rotationDisabled, session });
         }
       } else {
         outputResult({ env: envName, authenticated: false, suggestion: `Run: ${cliName} auth login --env ${envName}` });
@@ -303,7 +389,10 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
               tokenType: entry.tokenType,
               scope: entry.scope,
               expiresAt: entry.expiresAt,
-              expired: isTokenExpired(entry)
+              expired: isTokenExpired(entry),
+              sessionExpiresAt: entry.sessionExpiresAt,
+              rotationDisabled: entry.rotationDisabled,
+              session: describeSessionLifetime({ sessionExpiresAt: entry.sessionExpiresAt, rotationDisabled: entry.rotationDisabled })
             }
           : null
       });

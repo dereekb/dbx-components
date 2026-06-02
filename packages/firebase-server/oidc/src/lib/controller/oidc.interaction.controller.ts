@@ -1,11 +1,12 @@
-import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, HttpCode, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, HttpCode, Body, Logger, Optional } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcProviderConfigService } from '../service';
-import { type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type OidcEntryClientId, type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope } from '@dereekb/firebase';
 import { OidcAccountService } from '../service/oidc.account.service';
 import { OidcInteractionService } from '../service/oidc.interaction.service';
 import { OidcService } from '../service/oidc.service';
 import { DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM } from '../service/oidc.session-ttl';
+import { OIDC_ANALYTICS_SERVICE, emitOidcAnalyticsEvent, noopOidcAnalyticsService, type OidcAnalyticsService } from '../service/analytics';
 
 /**
  * OIDC scopes that the server always grants on consent when they were
@@ -28,13 +29,19 @@ const ALWAYS_GRANTED_OIDC_SCOPES: readonly OidcScope[] = ['openid'];
  */
 @Controller('interaction')
 export class OidcInteractionController {
+  private readonly _logger = new Logger(OidcInteractionController.name);
+  private readonly _analytics: OidcAnalyticsService;
+
   // eslint-disable-next-line @typescript-eslint/max-params -- NestJS DI requires individual constructor parameters
   constructor(
     @Inject(OidcInteractionService) private readonly oidcInteractionService: OidcInteractionService,
     @Inject(OidcProviderConfigService) private readonly oidcProviderConfigService: OidcProviderConfigService,
     @Inject(OidcAccountService) private readonly accountService: OidcAccountService,
-    @Inject(OidcService) private readonly oidcService: OidcService
-  ) {}
+    @Inject(OidcService) private readonly oidcService: OidcService,
+    @Optional() @Inject(OIDC_ANALYTICS_SERVICE) analytics?: OidcAnalyticsService
+  ) {
+    this._analytics = analytics ?? noopOidcAnalyticsService();
+  }
 
   /**
    * GET /interaction/:uid.
@@ -75,10 +82,18 @@ export class OidcInteractionController {
   @Post(':uid/login')
   @HttpCode(HttpStatus.OK)
   async postLogin(@Param('uid') uid: OidcInteractionUid, @Body() body: OAuthInteractionLoginRequest, @Res() res: Response) {
-    const accountId = await this._verifyIdToken(body.idToken);
+    const startedAt = Date.now();
+    let accountId: string;
 
     try {
-      const redirectTo = await this.oidcInteractionService.finishInteractionByUid(
+      accountId = await this._verifyIdToken(body.idToken);
+    } catch (err) {
+      emitOidcAnalyticsEvent(this._analytics, { type: 'login', isSuccessful: false, reason: 'invalid_id_token', error: err, durationMs: Date.now() - startedAt }, this._logger);
+      throw err;
+    }
+
+    try {
+      const interaction = await this.oidcInteractionService.finishInteractionByUid(
         uid,
         {
           login: { accountId }
@@ -86,8 +101,10 @@ export class OidcInteractionController {
         { mergeWithLastSubmission: false }
       );
 
-      res.json({ redirectTo });
-    } catch {
+      emitOidcAnalyticsEvent(this._analytics, { type: 'login', isSuccessful: true, uid: accountId, durationMs: Date.now() - startedAt }, this._logger);
+      res.json({ redirectTo: interaction.returnTo });
+    } catch (err) {
+      emitOidcAnalyticsEvent(this._analytics, { type: 'login', isSuccessful: false, uid: accountId, reason: 'login_interaction_failed', error: err, durationMs: Date.now() - startedAt }, this._logger);
       throw new HttpException('Login interaction failed', HttpStatus.BAD_REQUEST);
     }
   }
@@ -106,11 +123,15 @@ export class OidcInteractionController {
   @Post(':uid/consent')
   @HttpCode(HttpStatus.OK)
   async postConsent(@Param('uid') uid: OidcInteractionUid, @Body() body: OAuthInteractionConsentRequest, @Res() res: Response) {
+    const startedAt = Date.now();
     await this._verifyIdToken(body.idToken);
+
+    let clientId: OidcEntryClientId | undefined;
+    let accountId: FirebaseAuthUserId | undefined;
 
     try {
       if (!body.approved) {
-        const redirectTo = await this.oidcInteractionService.finishInteractionByUid(
+        const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(
           uid,
           {
             error: 'access_denied',
@@ -125,28 +146,51 @@ export class OidcInteractionController {
 
       const interaction = await this.oidcInteractionService.findInteractionByUid(uid);
       const { prompt, params, session } = interaction;
-      const clientId = params.client_id as string;
 
-      // Resolve the requested login duration up-front. The configured Grant TTL function (in
-      // OidcService.buildProviderConfiguration) only fires when oidc-provider's koa middleware
-      // drives `grant.save()`, so its `ctx.oidc.params` lookup of `dbx_session_ttl` returns
-      // undefined when the consent submit runs in this controller. We pre-set `expiresIn` on
-      // newly-created grants so they persist with the correct TTL.
-      const requestedRawTtl = (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM];
-      const clientPayload = await this.oidcService.findClientPayload(clientId);
-      const clientMaxSessionTtl = clientPayload?.dbx_max_session_ttl ?? undefined;
-      const expiresInSeconds = this.oidcService.resolveLoginDurationForGrant(requestedRawTtl, { dbx_max_session_ttl: clientMaxSessionTtl });
+      clientId = params.client_id as string;
+      accountId = session?.accountId ?? '';
 
-      const grant = await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', clientId, expiresInSeconds);
+      const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
+
+      // When the grant already exists (re-consent), find it up-front so its encountered scopes feed
+      // both the admin-only gate below and the silent-no-op handling further down. A new grant is
+      // created later with the resolved TTL, since `findOrCreateGrant` only applies `expiresIn` on creation.
+      const existingGrant = interaction.grantId ? await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, accountId, clientId) : undefined;
 
       // Encountered = scopes/claims already granted (or rejected) on the existing Grant. oidc-provider
       // excludes these from `missingOIDCScope` etc. when the consent prompt is re-shown via `prompt=consent`,
       // but the consent UI sources its checkbox list from the auth URL's `scope=` param (the full request set)
       // and re-submits them all. We accept already-encountered values as silent no-ops so a re-consent on a
       // client the user has previously authorized doesn't fail validation.
-      const encounteredOIDCScopes = grant.getOIDCScopeEncountered().split(' ').filter(Boolean);
+      const encounteredOIDCScopes = existingGrant ? existingGrant.getOIDCScopeEncountered().split(' ').filter(Boolean) : [];
 
-      const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
+      // Admin-only scope gate. The requested OIDC scope set is `missingOIDCScope ∪ encounteredOIDCScopes`
+      // (a fresh consent has everything in `missing`; a re-consent may carry already-granted scopes in
+      // `encountered`). If that set intersects the provider's `adminOnlyScopes` and the resolving user is
+      // not an admin, hard-reject with `access_denied` rather than silently dropping the scope.
+      const requestedOIDCScopeSet = new Set<string>([...missingOIDCScope, ...encounteredOIDCScopes]);
+      const adminOnlyScopes = this.accountService.providerConfig.adminOnlyScopes ?? [];
+      const requestsServiceToken = adminOnlyScopes.some((scope) => requestedOIDCScopeSet.has(scope));
+      const isAdmin = accountId ? await (this.accountService.delegate.isAdminUser?.(this.accountService.userContext(accountId).authUserContext) ?? false) : false;
+
+      if (requestsServiceToken && !isAdmin) {
+        const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(uid, { error: 'access_denied', error_description: 'token.service is restricted to admins.' }, { mergeWithLastSubmission: true });
+        emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, serviceToken: true, isAdmin: false, reason: 'service_token_non_admin', durationMs: Date.now() - startedAt }, this._logger);
+        res.json({ redirectTo });
+        return;
+      }
+
+      // Resolve the requested login duration up-front. The configured Grant TTL function (in
+      // OidcService.buildProviderConfiguration) only fires when oidc-provider's koa middleware
+      // drives `grant.save()`, so its `ctx.oidc.params` lookup of `dbx_session_ttl` returns
+      // undefined when the consent submit runs in this controller. We pre-set `expiresIn` on
+      // newly-created grants so they persist with the correct (tiered) TTL.
+      const requestedRawTtl = (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM];
+      const clientPayload = await this.oidcService.findClientPayload(clientId);
+      const clientMaxSessionTtl = clientPayload?.dbx_max_session_ttl ?? undefined;
+      const expiresInSeconds = this.oidcService.resolveLoginDurationForGrant(requestedRawTtl, { dbx_max_session_ttl: clientMaxSessionTtl }, { isAdmin, hasServiceScope: requestsServiceToken });
+
+      const grant = existingGrant ?? (await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, accountId, clientId, expiresInSeconds));
 
       if (missingOIDCScope.length > 0) {
         const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: ALWAYS_GRANTED_OIDC_SCOPES, alreadyEncountered: encounteredOIDCScopes });
@@ -194,7 +238,7 @@ export class OidcInteractionController {
 
       const grantId = await grant.save();
 
-      const redirectTo = await this.oidcInteractionService.finishInteractionByUid(
+      const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(
         uid,
         {
           consent: { grantId }
@@ -202,8 +246,11 @@ export class OidcInteractionController {
         { mergeWithLastSubmission: true }
       );
 
+      emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: true, uid: accountId, clientId, scopes: Array.from(requestedOIDCScopeSet), serviceToken: requestsServiceToken, isAdmin, durationMs: Date.now() - startedAt }, this._logger);
       res.json({ redirectTo });
     } catch (err) {
+      emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, reason: 'consent_interaction_failed', error: err, durationMs: Date.now() - startedAt }, this._logger);
+
       if (err instanceof HttpException) {
         throw err;
       }
