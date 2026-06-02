@@ -87,9 +87,9 @@ export class OidcInteractionService {
    * @param result - The interaction results to apply.
    * @param options - Optional settings for merging with the last submission.
    * @param options.mergeWithLastSubmission - Whether to merge with the last submission (defaults to true)
-   * @returns The `returnTo` URL that the client should redirect to.
+   * @returns The interaction that was completed. It includes the returnTo property for the next step of the interaction.
    */
-  async finishInteractionByUid(uid: OidcInteractionUid, result: InteractionResults, options?: { mergeWithLastSubmission?: boolean }): Promise<string> {
+  async finishInteractionByUid(uid: OidcInteractionUid, result: InteractionResults, options?: { mergeWithLastSubmission?: boolean }): Promise<Interaction> {
     const interaction = await this.findInteractionByUid(uid);
     const mergeWithLastSubmission = options?.mergeWithLastSubmission ?? true;
 
@@ -100,7 +100,7 @@ export class OidcInteractionService {
     }
 
     await interaction.save(interaction.exp - unixDateTimeSecondsNumberForNow());
-    return interaction.returnTo;
+    return interaction;
   }
 
   /**

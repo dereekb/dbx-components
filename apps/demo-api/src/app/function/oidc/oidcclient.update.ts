@@ -4,6 +4,14 @@ import { withApiDetails } from '@dereekb/firebase-server';
 
 export const oidcEntryUpdateClient: DemoUpdateModelFunction<UpdateOidcClientParams> = withApiDetails({
   inputType: updateOidcClientParamsType,
+  analytics: {
+    onSuccess: (analytics) => {
+      analytics.sendEventType('OIDC Client Updated');
+    },
+    onError: (analytics) => {
+      analytics.sendEventType('OIDC Client Update Failed');
+    }
+  },
   fn: async (request) => {
     const { nest, data } = request;
 
@@ -20,6 +28,14 @@ export const oidcEntryUpdateClient: DemoUpdateModelFunction<UpdateOidcClientPara
 });
 export const oidcEntryRotateClientSecret: DemoUpdateModelFunction<RotateOidcClientSecretParams, RotateOidcClientSecretResult> = withApiDetails({
   inputType: rotateOidcClientSecretParamsType,
+  analytics: {
+    onSuccess: (analytics, request, result) => {
+      analytics.sendEvent('OIDC Client Secret Rotated', { client_id: result?.client_id });
+    },
+    onError: (analytics) => {
+      analytics.sendEventType('OIDC Client Secret Rotate Failed');
+    }
+  },
   fn: async (request) => {
     const { nest, data } = request;
 
