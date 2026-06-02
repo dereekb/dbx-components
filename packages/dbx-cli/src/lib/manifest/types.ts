@@ -187,6 +187,21 @@ export interface CliApiManifestEntry {
    * Per-field result descriptions read from the result interface's property JSDocs.
    */
   readonly resultFields?: readonly CliApiManifestField[];
+  /**
+   * Name of the MCP-mapped result interface declared via the `@dbxModelApiMcpResult <TypeName>`
+   * JSDoc tag on the CRUD leaf. Present only when a handler remaps its success result for MCP.
+   */
+  readonly mcpResultTypeName?: string;
+  /**
+   * Description from the MCP-mapped result interface's own JSDoc. The MCP manifest renderer prefers
+   * this over {@link resultTypeDescription} when building the tool output schema.
+   */
+  readonly mcpResultTypeDescription?: string;
+  /**
+   * Per-field descriptions read from the MCP-mapped result interface's property JSDocs. The MCP
+   * manifest renderer prefers these over {@link resultFields} when building the tool output schema.
+   */
+  readonly mcpResultFields?: readonly CliApiManifestField[];
 }
 
 export type CliApiManifest = readonly CliApiManifestEntry[];
@@ -220,6 +235,12 @@ export interface McpManifestToolEntry {
    * JSON Schema synthesized from `resultFields[]` / `resultTypeDescription`. Omitted when both absent.
    */
   readonly outputSchema?: object;
+  /**
+   * Name of the MCP-mapped result interface (from `@dbxModelApiMcpResult`) when the output schema was
+   * built from a mapped type. Present iff the source leaf was annotated — the runtime tool generator
+   * uses it to detect handlers whose `mapSuccessfulResult` lacks the matching `.api.ts` annotation.
+   */
+  readonly mcpResultTypeName?: string;
 }
 
 /**

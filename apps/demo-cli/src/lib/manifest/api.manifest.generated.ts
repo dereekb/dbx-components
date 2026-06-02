@@ -82,6 +82,12 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'count', typeText: 'number' },
       { name: 'entries', typeText: 'ReadonlyArray<GuestbookEntry>' },
       { name: 'hitLimit', typeText: 'boolean' }
+    ],
+    mcpResultTypeName: 'AllPublishedGuestbookEntriesMcpResult',
+    mcpResultTypeDescription: "MCP-mapped projection of {@link AllPublishedGuestbookEntriesResult}.\n\nReturned to MCP clients via the handler's `mapSuccessfulResult` mapper — drops the potentially\nlarge `entries` array (an LLM rarely needs every full entry document) down to the aggregate\ncounts, demonstrating how MCP access can strip unhelpful information from a callModel result.",
+    mcpResultFields: [
+      { name: 'count', typeText: 'number', description: 'Number of published entries gathered.' },
+      { name: 'hitLimit', typeText: 'boolean', description: 'Whether the server-side hard cap was hit before the collection group was exhausted.' }
     ]
   },
   {

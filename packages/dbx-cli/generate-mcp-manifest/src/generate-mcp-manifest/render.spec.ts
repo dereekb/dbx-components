@@ -144,6 +144,42 @@ describe('renderMcpManifest', () => {
     expect(result.tools['guestbook.query._']?.outputSchema).toBeUndefined();
   });
 
+  it('prefers the MCP-mapped result fields/description over the raw result for outputSchema', () => {
+    const result = render([
+      makeEntry({
+        resultTypeDescription: 'Raw, untrimmed page.',
+        resultFields: [{ name: 'secret', typeText: 'string', description: 'Should not be exposed.' }],
+        mcpResultTypeDescription: 'Trimmed projection for MCP clients.',
+        mcpResultFields: [{ name: 'count', typeText: 'number', description: 'Number of entries.' }]
+      })
+    ]);
+
+    expect(result.tools['guestbook.query._']?.outputSchema).toEqual({
+      type: 'object',
+      description: 'Trimmed projection for MCP clients.',
+      properties: {
+        count: { type: 'number', description: 'Number of entries.' }
+      }
+    });
+  });
+
+  it('falls back to the raw result for outputSchema when no mapped result is present', () => {
+    const result = render([makeEntry({ resultTypeDescription: 'Raw page.', resultFields: [{ name: 'entries', typeText: 'GuestbookEntry[]' }] })]);
+    const schema = result.tools['guestbook.query._']?.outputSchema as { description?: string; properties: Record<string, object> };
+    expect(schema.description).toBe('Raw page.');
+    expect(schema.properties['entries']).toEqual({ type: 'array' });
+  });
+
+  it('carries mcpResultTypeName onto the wire entry when the source leaf was annotated', () => {
+    const result = render([makeEntry({ mcpResultTypeName: 'GuestbookPageMcpResult', mcpResultFields: [{ name: 'count', typeText: 'number' }] })]);
+    expect(result.tools['guestbook.query._']?.mcpResultTypeName).toBe('GuestbookPageMcpResult');
+  });
+
+  it('omits mcpResultTypeName when the source leaf was not annotated', () => {
+    const result = render([makeEntry({ resultFields: [{ name: 'entries', typeText: 'GuestbookEntry[]' }] })]);
+    expect(result.tools['guestbook.query._']).not.toHaveProperty('mcpResultTypeName');
+  });
+
   it('drops paramsTypeName, resultTypeName, paramsValidator, groupName, sourceFile from the rendered entry', () => {
     const result = render([
       makeEntry({

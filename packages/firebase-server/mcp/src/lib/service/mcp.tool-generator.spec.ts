@@ -310,3 +310,33 @@ describe('generateMcpToolDefinitions manifest integration', () => {
     expect(result.tools[0].outputSchema).toBeUndefined();
   });
 });
+
+describe('generateMcpToolDefinitions mcp-result mapping consistency', () => {
+  const mapper = { mapSuccessfulResult: () => ({}) };
+
+  it('warns when a handler has mapSuccessfulResult but the manifest entry is not mapped', () => {
+    const manifest = new Map([['guestbook.query._', { outputSchema: { type: 'object' } }]]);
+    const result = generateMcpToolDefinitions(makeOneEntry(mapper), undefined, manifest);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0].reason).toBe('mapper_without_mapped_manifest');
+    expect(result.warnings[0].toolName).toBe('guestbook-query');
+  });
+
+  it('does not warn when the handler maps and the manifest entry carries mcpResultTypeName', () => {
+    const manifest = new Map([['guestbook.query._', { mcpResultTypeName: 'GuestbookPageMcpResult' }]]);
+    const result = generateMcpToolDefinitions(makeOneEntry(mapper), undefined, manifest);
+    expect(result.warnings).toHaveLength(0);
+  });
+
+  it('warns when the manifest entry is mapped but the handler no longer maps', () => {
+    const manifest = new Map([['guestbook.query._', { mcpResultTypeName: 'GuestbookPageMcpResult' }]]);
+    const result = generateMcpToolDefinitions(makeOneEntry(), undefined, manifest);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0].reason).toBe('mapped_manifest_without_mapper');
+  });
+
+  it('does not warn about mappers when no manifest is supplied', () => {
+    const result = generateMcpToolDefinitions(makeOneEntry(mapper));
+    expect(result.warnings).toHaveLength(0);
+  });
+});

@@ -174,6 +174,28 @@ export interface McpToolGenerationSkip {
 }
 
 /**
+ * Reason a generated tool's handler and build-time manifest disagree about MCP result mapping.
+ *
+ * - `mapper_without_mapped_manifest` — the handler declares `mcp.mapSuccessfulResult` but the
+ *   manifest entry was not built from a mapped result type, i.e. the `.api.ts` leaf is missing its
+ *   `@dbxModelApiMcpResult <TypeName>` annotation, so the advertised output schema describes the raw
+ *   (un-mapped) result.
+ * - `mapped_manifest_without_mapper` — the manifest entry is annotated for a mapped result but the
+ *   handler no longer declares `mapSuccessfulResult` (stale annotation).
+ */
+export type McpToolGenerationWarningReason = 'mapper_without_mapped_manifest' | 'mapped_manifest_without_mapper';
+
+/**
+ * One generated tool whose handler / manifest MCP-result mapping is inconsistent. The tool is still
+ * generated; the warning is surfaced so the caller can log the drift at startup.
+ */
+export interface McpToolGenerationWarning {
+  readonly toolName: string;
+  readonly reason: McpToolGenerationWarningReason;
+  readonly dispatch: McpToolDispatchTarget;
+}
+
+/**
  * Aggregated output of {@link generateMcpToolDefinitions}.
  */
 export interface McpToolGenerationResult {
@@ -192,6 +214,11 @@ export interface McpToolGenerationResult {
    * Surfaced so the caller can log them at startup.
    */
   readonly skipped: ReadonlyArray<McpToolGenerationSkip>;
+  /**
+   * Generated tools whose handler / manifest MCP-result mapping is inconsistent (only computed when a
+   * manifest is supplied). Surfaced so the caller can log the drift at startup.
+   */
+  readonly warnings: ReadonlyArray<McpToolGenerationWarning>;
 }
 
 // MARK: Wire Entry
@@ -272,6 +299,7 @@ export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, op
   const tools: McpToolDefinition[] = [];
   const neverVisibleTools: McpToolDefinition[] = [];
   const skipped: McpToolGenerationSkip[] = [];
+  const warnings: McpToolGenerationWarning[] = [];
 
   for (const [modelType, modelEntry] of Object.entries(apiDetails.models)) {
     for (const [callType, callDetails] of Object.entries(modelEntry.calls)) {
@@ -279,11 +307,11 @@ export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, op
         continue;
       }
 
-      generateToolsForModelCall({ modelType, callType, callDetails, options, manifest, outTools: tools, outNeverVisibleTools: neverVisibleTools, outSkipped: skipped });
+      generateToolsForModelCall({ modelType, callType, callDetails, options, manifest, outTools: tools, outNeverVisibleTools: neverVisibleTools, outSkipped: skipped, outWarnings: warnings });
     }
   }
 
-  return { tools, neverVisibleTools, skipped };
+  return { tools, neverVisibleTools, skipped, warnings };
 }
 
 interface GenerateToolsForModelCallContext {
@@ -295,6 +323,7 @@ interface GenerateToolsForModelCallContext {
   readonly outTools: McpToolDefinition[];
   readonly outNeverVisibleTools: McpToolDefinition[];
   readonly outSkipped: McpToolGenerationSkip[];
+  readonly outWarnings: McpToolGenerationWarning[];
 }
 
 function generateToolsForModelCall(context: GenerateToolsForModelCallContext): void {
@@ -306,7 +335,7 @@ function generateToolsForModelCall(context: GenerateToolsForModelCallContext): v
 }
 
 function generateToolForSpecifier(context: GenerateToolsForModelCallContext, specifierKey: string, handlerDetails: OnCallModelFunctionApiDetails): void {
-  const { modelType, callType, callDetails, options, manifest, outTools, outNeverVisibleTools, outSkipped } = context;
+  const { modelType, callType, callDetails, options, manifest, outTools, outNeverVisibleTools, outSkipped, outWarnings } = context;
   const specifier = callDetails.isSpecifier ? specifierKey : undefined;
   const dispatch: McpToolDispatchTarget = { call: callType, modelType, specifier };
 
@@ -318,6 +347,19 @@ function generateToolForSpecifier(context: GenerateToolsForModelCallContext, spe
 
   if (inputSchema == null) {
     return;
+  }
+
+  // Cross-check the handler's mapSuccessfulResult against the manifest's mapped-result signal. Only
+  // meaningful when a manifest is supplied (it carries the `.api.ts` annotation outcome).
+  if (manifest != null) {
+    const hasMapper = handlerDetails.mcp?.mapSuccessfulResult != null;
+    const manifestMapped = manifestEntry?.mcpResultTypeName != null;
+
+    if (hasMapper && !manifestMapped) {
+      outWarnings.push({ toolName: name, reason: 'mapper_without_mapped_manifest', dispatch });
+    } else if (!hasMapper && manifestMapped) {
+      outWarnings.push({ toolName: name, reason: 'mapped_manifest_without_mapper', dispatch });
+    }
   }
 
   const classified = classifyVisibility(handlerDetails.mcp?.visibility);

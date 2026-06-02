@@ -20,6 +20,12 @@ export interface McpManifestToolEntry {
   readonly description?: string;
   readonly inputSchema?: object;
   readonly outputSchema?: object;
+  /**
+   * Name of the MCP-mapped result interface (from `@dbxModelApiMcpResult`) when the output schema was
+   * built from a mapped type. Used at boot to detect a `mapSuccessfulResult` handler whose `.api.ts`
+   * leaf was never annotated (the output schema would then describe the raw, un-mapped result).
+   */
+  readonly mcpResultTypeName?: string;
 }
 
 /**

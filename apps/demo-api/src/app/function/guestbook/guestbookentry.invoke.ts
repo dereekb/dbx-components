@@ -1,4 +1,4 @@
-import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, allPublishedGuestbookEntriesParamsType, publishedGuestbookEntry, type GuestbookEntry, type EntryDetailsGuestbookEntryParams, type EntryDetailsGuestbookEntryResult, entryDetailsGuestbookEntryParamsType } from 'demo-firebase';
+import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, type AllPublishedGuestbookEntriesMcpResult, allPublishedGuestbookEntriesParamsType, publishedGuestbookEntry, type GuestbookEntry, type EntryDetailsGuestbookEntryParams, type EntryDetailsGuestbookEntryResult, entryDetailsGuestbookEntryParamsType } from 'demo-firebase';
 import { type FirestoreQueryConstraint, type OnCallQueryModelResult } from '@dereekb/firebase';
 import { executeOnCallQuery, withApiDetails } from '@dereekb/firebase-server';
 import { type DemoInvokeModelFunction } from '../function.context';
@@ -19,6 +19,10 @@ export const ALL_PUBLISHED_GUESTBOOK_ENTRIES_HARD_CAP = 500;
  */
 export const guestbookEntryAllPublishedEntries: DemoInvokeModelFunction<AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult> = withApiDetails({
   inputType: allPublishedGuestbookEntriesParamsType,
+  mcp: {
+    // Strip the potentially large `entries` array for MCP clients — see AllPublishedGuestbookEntriesMcpResult.
+    mapSuccessfulResult: (result): AllPublishedGuestbookEntriesMcpResult => ({ count: result.count, hitLimit: result.hitLimit })
+  },
   fn: async (request) => {
     const { nest, data } = request;
     const limit = Math.min(data.limit ?? ALL_PUBLISHED_GUESTBOOK_ENTRIES_HARD_CAP, ALL_PUBLISHED_GUESTBOOK_ENTRIES_HARD_CAP);

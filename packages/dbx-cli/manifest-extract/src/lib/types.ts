@@ -80,6 +80,20 @@ export interface CrudEntry {
    * Per-field JSDocs read from the result interface's properties.
    */
   readonly resultFields?: readonly CrudEntryDocField[];
+  /**
+   * Name of the MCP-mapped result interface declared via the `@dbxModelApiMcpResult <TypeName>`
+   * JSDoc tag on the leaf. Present only when a handler remaps its success result for MCP; the
+   * MCP manifest output schema is synthesized from this type instead of the raw result.
+   */
+  readonly mcpResultTypeName?: string;
+  /**
+   * JSDoc summary on the MCP-mapped result interface itself (resolved from `mcpResultTypeName`).
+   */
+  readonly mcpResultTypeDescription?: string;
+  /**
+   * Per-field JSDocs read from the MCP-mapped result interface's properties.
+   */
+  readonly mcpResultFields?: readonly CrudEntryDocField[];
 }
 
 export interface CrudExtraction {

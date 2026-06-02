@@ -1,4 +1,4 @@
-import { type AuthRole, type Configurable, type Maybe } from '@dereekb/util';
+import { type AuthRole, type Configurable, type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '../controller/auth.context.server';
 import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
@@ -150,43 +150,41 @@ export type McpToolDetailsBuilder = (input: McpToolDetailsBuilderInput) => McpTo
 
 // MARK: Handler-Level API Details
 /**
- * MCP-specific customization for a model function.
+ * Context object passed as the second argument to the {@link OnCallModelFunctionMcpDetails}
+ * response tiers (`summarizeResponse` / `formatResponse`).
  *
- * When omitted, defaults are auto-generated from the handler's position in the call model tree.
+ * Exposes both the raw, pre-mapped handler result and the effective value the tiers operate on,
+ * plus the dispatched params — so a formatter can reach the original data even when a
+ * `mapSuccessfulResult` mapper has already trimmed/enriched it.
  *
- * Response formatting uses a tiered system:
- * - **Tier 1 (default)**: Auto-generated summary from the result shape. No config needed.
- * - **Tier 2**: Provide {@link summarizeResponse} to return a natural language string. The framework wraps it into MCP content + structuredContent automatically.
- * - **Tier 3**: Provide {@link formatResponse} for complete control over the MCP response content blocks.
- *
- * Resolution order: formatResponse > summarizeResponse > auto-generated default.
+ * @typeParam R - The raw handler return type.
+ * @typeParam V - The effective value type (the mapper's output, or `R` when no mapper is defined).
  */
-export interface OnCallModelFunctionMcpDetails {
+export interface McpToolResponseContext<R = unknown, V = R> {
+  /**
+   * The raw, pre-mapped handler result.
+   */
+  readonly raw: R;
+  /**
+   * The effective value: the `mapSuccessfulResult` output when a mapper is defined, otherwise the
+   * raw result. Always identical to the tier callback's first argument.
+   */
+  readonly value: V;
+  /**
+   * The OnCallTypedModelParams that were dispatched.
+   */
+  readonly params: OnCallTypedModelParams;
+}
+
+/**
+ * Fields shared by both {@link OnCallModelFunctionMcpDetails} variants — everything that does not
+ * depend on the handler's result type.
+ */
+export interface OnCallModelFunctionMcpDetailsCommon {
   /**
    * Custom tool name override.
    */
   readonly name?: string;
-  /**
-   * Tier 2 response formatter: returns a natural language summary string.
-   *
-   * The framework wraps the string into a text content block and attaches the raw result
-   * as structuredContent automatically.
-   *
-   * @param result - The handler's return value.
-   * @param params - The OnCallTypedModelParams that were dispatched.
-   * @returns A human-readable summary of the operation result.
-   */
-  readonly summarizeResponse?: (result: unknown, params: OnCallTypedModelParams) => McpToolResponseSummary;
-  /**
-   * Tier 3 response formatter: complete control over the MCP tool response.
-   *
-   * When provided, takes precedence over {@link summarizeResponse} and the auto-generated default.
-   *
-   * @param result - The handler's return value.
-   * @param params - The OnCallTypedModelParams that were dispatched.
-   * @returns The full MCP tool response content.
-   */
-  readonly formatResponse?: (result: unknown, params: OnCallTypedModelParams) => McpToolResponseContent;
   /**
    * Controls whether this handler's tool is advertised on `tools/list` for a given request.
    *
@@ -213,12 +211,103 @@ export interface OnCallModelFunctionMcpDetails {
 }
 
 /**
+ * MCP-details variant for handlers that do NOT remap their success result. The response tiers see
+ * the raw handler result `R` directly.
+ *
+ * @typeParam R - The raw handler return type.
+ */
+export interface BaseOnCallModelFunctionMcpDetails<R = unknown> extends OnCallModelFunctionMcpDetailsCommon {
+  /**
+   * Discriminant — absent on this variant. Keeps the {@link OnCallModelFunctionMcpDetails} union exclusive.
+   */
+  readonly mapSuccessfulResult?: never;
+  /**
+   * Tier 2 response formatter: returns a natural language summary string. The framework wraps the
+   * string into a text content block and exposes the result as `structuredContent` automatically.
+   *
+   * @param value - The handler's result (no mapper is defined on this variant, so this is the raw result).
+   * @param context - The {@link McpToolResponseContext} carrying the raw result + params.
+   * @returns A human-readable summary of the operation result.
+   */
+  readonly summarizeResponse?: (value: R, context: McpToolResponseContext<R, R>) => McpToolResponseSummary;
+  /**
+   * Tier 3 response formatter: complete control over the MCP tool response. Takes precedence over
+   * {@link summarizeResponse} and the auto-generated default.
+   *
+   * @param value - The handler's result (no mapper is defined on this variant, so this is the raw result).
+   * @param context - The {@link McpToolResponseContext} carrying the raw result + params.
+   * @returns The full MCP tool response content.
+   */
+  readonly formatResponse?: (value: R, context: McpToolResponseContext<R, R>) => McpToolResponseContent;
+}
+
+/**
+ * MCP-details variant for handlers that remap their success result before it is exposed via MCP.
+ *
+ * `mapSuccessfulResult` runs first (success path only, async-capable); the response tiers and the
+ * default Tier-1 path then operate on the mapped value `M`. `context.raw` still exposes the
+ * original `R`. Declare the mapped type in the model's `.api.ts` and tag the CRUD leaf with
+ * `@dbxModelApiMcpResult <TypeName>` so the generated MCP manifest output schema matches.
+ *
+ * @typeParam R - The raw handler return type.
+ * @typeParam M - The mapped result type exposed via MCP.
+ */
+export interface OnCallModelFunctionMcpDetailsWithMappedResult<R = unknown, M = unknown> extends OnCallModelFunctionMcpDetailsCommon {
+  /**
+   * Maps the handler's raw success result to the shape exposed via MCP. Async-capable. Runs before
+   * `summarizeResponse` / `formatResponse` / the default path, and only on success (errors are
+   * formatted separately).
+   *
+   * @param result - The handler's raw return value.
+   * @param params - The OnCallTypedModelParams that were dispatched.
+   * @returns The mapped value (or a promise of it).
+   */
+  readonly mapSuccessfulResult: (result: R, params: OnCallTypedModelParams) => PromiseOrValue<M>;
+  /**
+   * Tier 2 response formatter: returns a natural language summary string. The framework wraps the
+   * string into a text content block and exposes the mapped value as `structuredContent` automatically.
+   *
+   * @param value - The mapped result (the `mapSuccessfulResult` output).
+   * @param context - The {@link McpToolResponseContext} carrying both the raw + mapped values and params.
+   * @returns A human-readable summary of the operation result.
+   */
+  readonly summarizeResponse?: (value: M, context: McpToolResponseContext<R, M>) => McpToolResponseSummary;
+  /**
+   * Tier 3 response formatter: complete control over the MCP tool response. Takes precedence over
+   * {@link summarizeResponse} and the auto-generated default.
+   *
+   * @param value - The mapped result (the `mapSuccessfulResult` output).
+   * @param context - The {@link McpToolResponseContext} carrying both the raw + mapped values and params.
+   * @returns The full MCP tool response content.
+   */
+  readonly formatResponse?: (value: M, context: McpToolResponseContext<R, M>) => McpToolResponseContent;
+}
+
+/**
+ * MCP-specific customization for a model function.
+ *
+ * When omitted, defaults are auto-generated from the handler's position in the call model tree.
+ *
+ * Response formatting uses a tiered system, with an optional pre-map step:
+ * - **mapSuccessfulResult** (optional): remap the raw success result before the tiers run. See {@link OnCallModelFunctionMcpDetailsWithMappedResult}.
+ * - **Tier 1 (default)**: Auto-generated summary from the (possibly mapped) result shape. No config needed.
+ * - **Tier 2**: Provide `summarizeResponse` to return a natural language string. The framework wraps it into MCP content + structuredContent automatically.
+ * - **Tier 3**: Provide `formatResponse` for complete control over the MCP response content blocks.
+ *
+ * Resolution order: formatResponse > summarizeResponse > auto-generated default.
+ *
+ * @typeParam R - The raw handler return type.
+ * @typeParam M - The mapped result type exposed via MCP (when `mapSuccessfulResult` is used).
+ */
+export type OnCallModelFunctionMcpDetails<R = unknown, M = unknown> = BaseOnCallModelFunctionMcpDetails<R> | OnCallModelFunctionMcpDetailsWithMappedResult<R, M>;
+
+/**
  * API details metadata for a single model call handler function.
  *
  * Carries schema info (input/output types) and MCP-specific customization.
  * Attached to handler functions via withApiDetails().
  */
-export interface OnCallModelFunctionApiDetails {
+export interface OnCallModelFunctionApiDetails<R = unknown, M = unknown> {
   /**
    * The input parameter type. Must implement toJsonSchema() for MCP tool input schema generation.
    */
@@ -230,7 +319,7 @@ export interface OnCallModelFunctionApiDetails {
   /**
    * MCP-specific customization. Auto-generated if omitted.
    */
-  readonly mcp?: OnCallModelFunctionMcpDetails;
+  readonly mcp?: OnCallModelFunctionMcpDetails<R, M>;
   /**
    * Analytics lifecycle configuration for this handler.
    * When provided, the dispatch chain will call lifecycle hooks around handler execution.
@@ -342,7 +431,7 @@ export function isActualSpecifier(details: OnCallModelTypeApiDetails): boolean {
  *
  * Combines API metadata, auth configuration, and the handler function into a single config object.
  */
-export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends OnCallModelFunctionApiDetails {
+export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends OnCallModelFunctionApiDetails<Awaited<ReturnType<F>>> {
   /**
    * When true, marks the handler as not requiring auth (equivalent to optionalAuthContext).
    * Sets `_requireAuth = false` on the function, allowing it to be called without auth data.
@@ -400,7 +489,8 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
  */
 export function withApiDetails<F extends (...args: any[]) => any>(config: WithApiDetailsConfig<F>): F & OnCallModelFunctionApiDetailsRef {
   const { optionalAuth, fn, ...apiDetails } = config;
-  (fn as Configurable<OnCallModelFunctionApiDetailsRef>)._apiDetails = apiDetails;
+  // Stored as the unknown-result form; the narrower handler-result typing lives on the config for authoring only.
+  (fn as Configurable<OnCallModelFunctionApiDetailsRef>)._apiDetails = apiDetails as OnCallModelFunctionApiDetails;
 
   if (optionalAuth) {
     (fn as Configurable<OnCallModelFunctionApiDetailsRef & { _requireAuth?: boolean }>)._requireAuth = false;

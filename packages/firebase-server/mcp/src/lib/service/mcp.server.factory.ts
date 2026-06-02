@@ -11,7 +11,7 @@ import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIO
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
-import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
+import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
@@ -116,7 +116,7 @@ export class McpServerFactoryService {
       const manifest = this._resolveManifest();
 
       if (apiDetails == null) {
-        result = { tools: [], neverVisibleTools: [], skipped: [] };
+        result = { tools: [], neverVisibleTools: [], skipped: [], warnings: [] };
       } else {
         result = generateMcpToolDefinitions(apiDetails, undefined, manifest);
       }
@@ -124,12 +124,34 @@ export class McpServerFactoryService {
       this._cachedTools = result;
     }
 
-    if (!this._loggedSkips && result.skipped.length > 0) {
+    if (!this._loggedSkips && (result.skipped.length > 0 || result.warnings.length > 0)) {
       this._loggedSkips = true;
       for (const skip of result.skipped) {
         const errorSuffix = skip.error ? `: ${skip.error.message}` : '';
         this._logger.warn(`Skipped MCP tool ${skip.toolName} (${skip.reason})${errorSuffix}`);
       }
+      for (const warning of result.warnings) {
+        this._logger.warn(this._describeToolGenerationWarning(warning));
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Renders a human-readable boot-time warning for an MCP-result mapping inconsistency between a
+   * handler's `mapSuccessfulResult` and the build-time manifest.
+   *
+   * @param warning - The tool-generation warning to describe.
+   * @returns The log line to emit at startup.
+   */
+  private _describeToolGenerationWarning(warning: McpToolGenerationWarning): string {
+    let result: string;
+
+    if (warning.reason === 'mapper_without_mapped_manifest') {
+      result = `MCP tool ${warning.toolName} declares mcp.mapSuccessfulResult but its manifest entry has no mapped result type — annotate the matching '.api.ts' leaf with '@dbxModelApiMcpResult <TypeName>' and regenerate the manifest so the advertised output schema matches the mapped result.`;
+    } else {
+      result = `MCP tool ${warning.toolName} has a '@dbxModelApiMcpResult' manifest annotation but its handler no longer declares mcp.mapSuccessfulResult — remove the stale annotation and regenerate the manifest, or restore the mapper.`;
     }
 
     return result;
@@ -523,7 +545,7 @@ export class McpServerFactoryService {
 
     try {
       const result = await this.dispatchService.dispatch(params, ctx.auth, ctx.rawRequest);
-      outcome = { response: formatMcpToolResponse(result, params, definition.details) as CallToolResult };
+      outcome = { response: (await formatMcpToolResponse(result, params, definition.details)) as CallToolResult };
     } catch (error) {
       outcome = { response: formatMcpToolErrorResponse(error) as CallToolResult, error };
     }

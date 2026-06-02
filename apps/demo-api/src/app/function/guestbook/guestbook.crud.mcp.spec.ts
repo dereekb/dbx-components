@@ -63,15 +63,17 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
             await f.instance.authService.userContext(u.uid).addRoles([AUTH_ADMIN_ROLE]);
           });
 
-          it('returns the seeded published entry across all guestbooks', async () => {
+          it('returns the MCP-mapped aggregate projection (entries stripped) for the seeded published entry', async () => {
             const params: AllPublishedGuestbookEntriesParams = { limit: 10 };
             const result = await callMcpTool({ f, u, name: guestbookEntryAllPublishedEntriesToolName, args: params as unknown as Record<string, unknown> });
 
             expect(result.isError).toBeUndefined();
 
-            const structured = result.structuredContent as { readonly count: number; readonly entries: ReadonlyArray<unknown>; readonly hitLimit: boolean };
+            // `mapSuccessfulResult` trims the raw result down to AllPublishedGuestbookEntriesMcpResult,
+            // so the MCP structuredContent carries the aggregate counts but not the `entries` array.
+            const structured = result.structuredContent as { readonly count: number; readonly hitLimit: boolean; readonly entries?: ReadonlyArray<unknown> };
             expect(structured.count).toBeGreaterThanOrEqual(1);
-            expect(structured.entries.length).toBe(structured.count);
+            expect(structured.entries).toBeUndefined();
             // `hitLimit` is only true when more entries exist beyond the cap. The seeded fixture
             // only inserts a single entry, so the loop exits on `!page.hasMore`, not on cap.
             expect(structured.hitLimit).toBe(false);

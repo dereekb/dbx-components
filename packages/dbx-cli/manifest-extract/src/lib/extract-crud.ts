@@ -23,6 +23,13 @@ import type { CrudEntry, CrudEntryDocField, CrudExtraction, CrudVerb } from './t
 const SUPPORTED_VERBS: ReadonlySet<CrudVerb> = new Set(['create', 'read', 'update', 'delete', 'query', 'invoke']);
 
 /**
+ * JSDoc tag (without leading `@`) on a CRUD leaf naming the interface that a handler's
+ * `mapSuccessfulResult` produces for MCP. When present, the MCP manifest output schema is
+ * synthesized from this type instead of the raw result type.
+ */
+const DBX_MODEL_API_MCP_RESULT_MARKER = 'dbxModelApiMcpResult';
+
+/**
  * Inputs for {@link extractCrudEntries}.
  */
 export interface ExtractCrudInput {
@@ -96,7 +103,7 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
             if (!verbValueNode) {
               continue;
             }
-            collectVerbEntries({ modelName, verb, valueNode: verbValueNode, entries, fallbackDescription: readJsDocSummary(verbMember), resolveTypeDocs });
+            collectVerbEntries({ modelName, verb, valueNode: verbValueNode, entries, fallbackDescription: readJsDocSummary(verbMember), fallbackMcpResultTypeName: readJsDocTagValue(verbMember, DBX_MODEL_API_MCP_RESULT_MARKER), resolveTypeDocs });
           }
         }
       }
@@ -116,6 +123,8 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
         const tuple = valueNode ? readTupleParamsResult(valueNode) : undefined;
         const paramsDocs = resolveTypeDocs(tuple?.params);
         const resultDocs = resolveTypeDocs(tuple?.result);
+        const mcpResultTypeName = readJsDocTagValue(member, DBX_MODEL_API_MCP_RESULT_MARKER);
+        const mcpResultDocs = resolveTypeDocs(mcpResultTypeName);
         entries.push({
           model: key,
           verb: 'standalone',
@@ -128,7 +137,10 @@ export function extractCrudEntries(source: ExtractCrudInput): CrudExtraction {
           paramsFields: paramsDocs?.fields,
           paramsHasApiParamsTag: paramsDocs?.hasApiParamsTag,
           resultTypeDescription: resultDocs?.typeDescription,
-          resultFields: resultDocs?.fields
+          resultFields: resultDocs?.fields,
+          mcpResultTypeName,
+          mcpResultTypeDescription: mcpResultDocs?.typeDescription,
+          mcpResultFields: mcpResultDocs?.fields
         });
       }
     }
@@ -207,11 +219,16 @@ interface CollectVerbEntriesInput {
   readonly valueNode: TypeNode;
   readonly entries: CrudEntry[];
   readonly fallbackDescription: string | undefined;
+  /**
+   * `@dbxModelApiMcpResult` value read from the verb member, used for bare (non-specifier) leaves
+   * where the verb member is itself the leaf.
+   */
+  readonly fallbackMcpResultTypeName: string | undefined;
   readonly resolveTypeDocs: (typeName: string | undefined) => TypeDocs | undefined;
 }
 
 function collectVerbEntries(input: CollectVerbEntriesInput): void {
-  const { modelName, verb, valueNode, entries, fallbackDescription, resolveTypeDocs } = input;
+  const { modelName, verb, valueNode, entries, fallbackDescription, fallbackMcpResultTypeName, resolveTypeDocs } = input;
   if (Node.isTypeLiteral(valueNode)) {
     for (const specMember of valueNode.getMembers()) {
       if (!Node.isPropertySignature(specMember)) {
@@ -222,6 +239,8 @@ function collectVerbEntries(input: CollectVerbEntriesInput): void {
       const leaf = leafNode ? (readTupleParamsResult(leafNode) ?? readBareParams(leafNode)) : undefined;
       const paramsDocs = resolveTypeDocs(leaf?.params);
       const resultDocs = resolveTypeDocs(leaf?.result);
+      const mcpResultTypeName = readJsDocTagValue(specMember, DBX_MODEL_API_MCP_RESULT_MARKER);
+      const mcpResultDocs = resolveTypeDocs(mcpResultTypeName);
       entries.push({
         model: modelName,
         verb,
@@ -234,7 +253,10 @@ function collectVerbEntries(input: CollectVerbEntriesInput): void {
         paramsFields: paramsDocs?.fields,
         paramsHasApiParamsTag: paramsDocs?.hasApiParamsTag,
         resultTypeDescription: resultDocs?.typeDescription,
-        resultFields: resultDocs?.fields
+        resultFields: resultDocs?.fields,
+        mcpResultTypeName,
+        mcpResultTypeDescription: mcpResultDocs?.typeDescription,
+        mcpResultFields: mcpResultDocs?.fields
       });
     }
     return;
@@ -242,6 +264,7 @@ function collectVerbEntries(input: CollectVerbEntriesInput): void {
   const leaf = readTupleParamsResult(valueNode) ?? readBareParams(valueNode);
   const paramsDocs = resolveTypeDocs(leaf?.params);
   const resultDocs = resolveTypeDocs(leaf?.result);
+  const mcpResultDocs = resolveTypeDocs(fallbackMcpResultTypeName);
   entries.push({
     model: modelName,
     verb,
@@ -254,7 +277,10 @@ function collectVerbEntries(input: CollectVerbEntriesInput): void {
     paramsFields: paramsDocs?.fields,
     paramsHasApiParamsTag: paramsDocs?.hasApiParamsTag,
     resultTypeDescription: resultDocs?.typeDescription,
-    resultFields: resultDocs?.fields
+    resultFields: resultDocs?.fields,
+    mcpResultTypeName: fallbackMcpResultTypeName,
+    mcpResultTypeDescription: mcpResultDocs?.typeDescription,
+    mcpResultFields: mcpResultDocs?.fields
   });
 }
 
@@ -362,6 +388,33 @@ function hasJsDocFlag(node: JSDocableNode, tagName: string): boolean {
       }
     }
   }
+  return result;
+}
+
+/**
+ * Reads the value token of a JSDoc tag (e.g. the `Foo` in `@dbxModelApiMcpResult Foo`).
+ *
+ * Used for value-carrying tags like `@dbxModelApiMcpResult` where the first token after the tag
+ * name names a type. Returns the first whitespace-delimited token of the tag's comment text.
+ *
+ * @param node - Any JSDocable ts-morph node (property signature, etc.).
+ * @param tagName - Tag name without the leading `@` (e.g. `'dbxModelApiMcpResult'`).
+ * @returns The first token of the tag's value, or `undefined` when the tag is absent or empty.
+ */
+function readJsDocTagValue(node: JSDocableNode, tagName: string): string | undefined {
+  let result: string | undefined;
+
+  for (const doc of node.getJsDocs()) {
+    for (const tag of doc.getTags()) {
+      if (tag.getTagName() === tagName) {
+        const token = tag.getCommentText()?.trim().split(/\s+/)[0];
+        if (token) {
+          result = token;
+        }
+      }
+    }
+  }
+
   return result;
 }
 

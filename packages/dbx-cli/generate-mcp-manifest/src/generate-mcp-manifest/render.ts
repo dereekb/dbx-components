@@ -151,11 +151,13 @@ function buildToolEntry(entry: CliApiManifestEntry): McpManifestToolEntry {
   const description = buildDescription(entry);
   const inputSchema = buildInputSchema(entry);
   const outputSchema = buildOutputSchema(entry);
-  const result: { description?: string; inputSchema?: object; outputSchema?: object } = {};
+  const result: { description?: string; inputSchema?: object; outputSchema?: object; mcpResultTypeName?: string } = {};
 
   if (description != null) result.description = description;
   if (inputSchema != null) result.inputSchema = inputSchema;
   if (outputSchema != null) result.outputSchema = outputSchema;
+  // Carry the MCP-mapped result type name so the runtime can detect a mapSuccessfulResult handler whose `.api.ts` leaf was never annotated.
+  if (entry.mcpResultTypeName != null) result.mcpResultTypeName = entry.mcpResultTypeName;
 
   return result;
 }
@@ -187,8 +189,13 @@ function buildInputSchema(entry: CliApiManifestEntry): JsonObject | undefined {
 }
 
 function buildOutputSchema(entry: CliApiManifestEntry): JsonObject | undefined {
-  const hasFields = entry.resultFields != null && entry.resultFields.length > 0;
-  const hasDescription = typeof entry.resultTypeDescription === 'string' && entry.resultTypeDescription.length > 0;
+  // Prefer the MCP-mapped result type (declared via `@dbxModelApiMcpResult`) when present — it
+  // describes what a `mapSuccessfulResult` handler actually exposes over MCP. Fall back to the raw
+  // result type otherwise.
+  const fields = entry.mcpResultFields != null && entry.mcpResultFields.length > 0 ? entry.mcpResultFields : entry.resultFields;
+  const description = typeof entry.mcpResultTypeDescription === 'string' && entry.mcpResultTypeDescription.length > 0 ? entry.mcpResultTypeDescription : entry.resultTypeDescription;
+  const hasFields = fields != null && fields.length > 0;
+  const hasDescription = typeof description === 'string' && description.length > 0;
 
   if (!hasFields && !hasDescription) {
     return undefined;
@@ -197,13 +204,13 @@ function buildOutputSchema(entry: CliApiManifestEntry): JsonObject | undefined {
   const schema: JsonObject = { type: 'object' };
 
   if (hasDescription) {
-    schema['description'] = entry.resultTypeDescription;
+    schema['description'] = description;
   }
 
   if (hasFields) {
     const properties: JsonObject = {};
 
-    for (const field of entry.resultFields) {
+    for (const field of fields) {
       properties[field.name] = buildPropertyFromField(field);
     }
 
