@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
-import { applyEnvVarOverrides, DEFAULT_CLI_OIDC_SCOPES, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault, resolveActiveEnvName, type CliEnvDefault } from './env';
+import { applyEnvVarOverrides, DEFAULT_CLI_OIDC_SCOPES, filterReadOnlyModelScopes, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault, readEnvTokenEntry, resolveActiveEnvName, withServiceTokenScopes, type CliEnvDefault } from './env';
 
 describe('resolveActiveEnvName', () => {
   const ENV_VAR = '__TEST_RESOLVE_ACTIVE_ENV_VAR__';
@@ -177,5 +177,78 @@ describe('filterReadOnlyModelScopes', () => {
 
   it('returns an empty string when every scope is a write scope', () => {
     expect(filterReadOnlyModelScopes('model.create model.update model.delete')).toBe('');
+  });
+});
+
+describe('withServiceTokenScopes', () => {
+  it('adds token.service and offline_access to the requested scopes', () => {
+    const result = withServiceTokenScopes('openid profile email demo').split(' ');
+    expect(result).toContain('token.service');
+    expect(result).toContain('offline_access');
+    expect(result).toContain('demo');
+  });
+
+  it('does not duplicate scopes already present', () => {
+    const result = withServiceTokenScopes('openid demo offline_access token.service').split(' ');
+    expect(result.filter((s) => s === 'token.service')).toHaveLength(1);
+    expect(result.filter((s) => s === 'offline_access')).toHaveLength(1);
+  });
+
+  it('augments the default scopes when input is undefined', () => {
+    const result = withServiceTokenScopes(undefined).split(' ');
+    expect(result).toContain('token.service');
+    expect(result).toContain('offline_access');
+    expect(result).toContain('openid');
+  });
+
+  it('composes with filterReadOnlyModelScopes (read-only service token)', () => {
+    const result = withServiceTokenScopes(filterReadOnlyModelScopes('openid demo model.create model.read model.update model.delete model.query')).split(' ');
+    expect(result).toContain('token.service');
+    expect(result).toContain('model.read');
+    expect(result).not.toContain('model.create');
+    expect(result).not.toContain('model.delete');
+  });
+});
+
+describe('readEnvTokenEntry', () => {
+  const KEYS = ['MY_CLI_REFRESH_TOKEN', 'MY_CLI_ACCESS_TOKEN', 'MY_CLI_TOKEN_SCOPE'];
+
+  beforeEach(() => {
+    KEYS.forEach((k) => delete process.env[k]);
+  });
+
+  afterEach(() => {
+    KEYS.forEach((k) => delete process.env[k]);
+  });
+
+  it('returns undefined when no refresh token is set', () => {
+    expect(readEnvTokenEntry({ cliName: 'my-cli' })).toBeUndefined();
+  });
+
+  it('returns a refresh-only entry forced to refresh on first use', () => {
+    process.env['MY_CLI_REFRESH_TOKEN'] = 'rt-123';
+    const entry = readEnvTokenEntry({ cliName: 'my-cli' });
+    expect(entry?.refreshToken).toBe('rt-123');
+    expect(entry?.accessToken).toBe('');
+    expect(entry?.expiresAt).toBe(0);
+    expect(entry?.fromEnv).toBe(true);
+  });
+
+  it('reads the optional access token and token scope', () => {
+    process.env['MY_CLI_REFRESH_TOKEN'] = 'rt-123';
+    process.env['MY_CLI_ACCESS_TOKEN'] = 'at-456';
+    process.env['MY_CLI_TOKEN_SCOPE'] = 'openid demo token.service';
+    const entry = readEnvTokenEntry({ cliName: 'my-cli' });
+    expect(entry?.refreshToken).toBe('rt-123');
+    expect(entry?.accessToken).toBe('at-456');
+    expect(entry?.scope).toBe('openid demo token.service');
+    expect(entry?.fromEnv).toBe(true);
+    // Still forces a refresh first since no reliable expiry is supplied via env.
+    expect(entry?.expiresAt).toBe(0);
+  });
+
+  it('derives the env-var prefix from the cli name (dashes → underscores, upper-cased)', () => {
+    process.env['MY_CLI_REFRESH_TOKEN'] = 'rt-xyz';
+    expect(readEnvTokenEntry({ cliName: 'my-cli' })?.refreshToken).toBe('rt-xyz');
   });
 });

@@ -63,6 +63,22 @@ export abstract class OidcAccountServiceDelegate<S extends OidcScope = OidcScope
    * @returns The claims to return for this user.
    */
   abstract buildClaimsForUser(userContext: U, scopes: Set<S>): Promise<OidcAccountClaims> | OidcAccountClaims;
+
+  /**
+   * Resolves whether the given user is an admin, used to gate
+   * {@link OidcProviderConfig.adminOnlyScopes} at consent time.
+   *
+   * Implementations should resolve admin status from the user's raw auth claims/roles
+   * independently of the requested OIDC scopes (do not rely on a scope-gated claim builder),
+   * so the check is authoritative regardless of which scopes the client requested.
+   *
+   * Optional: when omitted, the consent flow treats the user as a non-admin, hard-rejecting any
+   * request for an admin-only scope.
+   *
+   * @param userContext - The Firebase Auth user context.
+   * @returns Whether the user is an admin.
+   */
+  isAdminUser?(userContext: U): Promise<boolean>;
 }
 
 // MARK: User Context

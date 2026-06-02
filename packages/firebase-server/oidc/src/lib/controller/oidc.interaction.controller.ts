@@ -126,27 +126,48 @@ export class OidcInteractionController {
       const interaction = await this.oidcInteractionService.findInteractionByUid(uid);
       const { prompt, params, session } = interaction;
       const clientId = params.client_id as string;
+      const accountId = session?.accountId ?? '';
 
-      // Resolve the requested login duration up-front. The configured Grant TTL function (in
-      // OidcService.buildProviderConfiguration) only fires when oidc-provider's koa middleware
-      // drives `grant.save()`, so its `ctx.oidc.params` lookup of `dbx_session_ttl` returns
-      // undefined when the consent submit runs in this controller. We pre-set `expiresIn` on
-      // newly-created grants so they persist with the correct TTL.
-      const requestedRawTtl = (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM];
-      const clientPayload = await this.oidcService.findClientPayload(clientId);
-      const clientMaxSessionTtl = clientPayload?.dbx_max_session_ttl ?? undefined;
-      const expiresInSeconds = this.oidcService.resolveLoginDurationForGrant(requestedRawTtl, { dbx_max_session_ttl: clientMaxSessionTtl });
+      const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
 
-      const grant = await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, session?.accountId ?? '', clientId, expiresInSeconds);
+      // When the grant already exists (re-consent), find it up-front so its encountered scopes feed
+      // both the admin-only gate below and the silent-no-op handling further down. A new grant is
+      // created later with the resolved TTL, since `findOrCreateGrant` only applies `expiresIn` on creation.
+      const existingGrant = interaction.grantId ? await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, accountId, clientId) : undefined;
 
       // Encountered = scopes/claims already granted (or rejected) on the existing Grant. oidc-provider
       // excludes these from `missingOIDCScope` etc. when the consent prompt is re-shown via `prompt=consent`,
       // but the consent UI sources its checkbox list from the auth URL's `scope=` param (the full request set)
       // and re-submits them all. We accept already-encountered values as silent no-ops so a re-consent on a
       // client the user has previously authorized doesn't fail validation.
-      const encounteredOIDCScopes = grant.getOIDCScopeEncountered().split(' ').filter(Boolean);
+      const encounteredOIDCScopes = existingGrant ? existingGrant.getOIDCScopeEncountered().split(' ').filter(Boolean) : [];
 
-      const missingOIDCScope = (prompt.details.missingOIDCScope as string[] | undefined) ?? [];
+      // Admin-only scope gate. The requested OIDC scope set is `missingOIDCScope ∪ encounteredOIDCScopes`
+      // (a fresh consent has everything in `missing`; a re-consent may carry already-granted scopes in
+      // `encountered`). If that set intersects the provider's `adminOnlyScopes` and the resolving user is
+      // not an admin, hard-reject with `access_denied` rather than silently dropping the scope.
+      const requestedOIDCScopeSet = new Set<string>([...missingOIDCScope, ...encounteredOIDCScopes]);
+      const adminOnlyScopes = this.accountService.providerConfig.adminOnlyScopes ?? [];
+      const requestsServiceToken = adminOnlyScopes.some((scope) => requestedOIDCScopeSet.has(scope));
+      const isAdmin = accountId ? await (this.accountService.delegate.isAdminUser?.(this.accountService.userContext(accountId).authUserContext) ?? false) : false;
+
+      if (requestsServiceToken && !isAdmin) {
+        const redirectTo = await this.oidcInteractionService.finishInteractionByUid(uid, { error: 'access_denied', error_description: 'token.service is restricted to admins.' }, { mergeWithLastSubmission: true });
+        res.json({ redirectTo });
+        return;
+      }
+
+      // Resolve the requested login duration up-front. The configured Grant TTL function (in
+      // OidcService.buildProviderConfiguration) only fires when oidc-provider's koa middleware
+      // drives `grant.save()`, so its `ctx.oidc.params` lookup of `dbx_session_ttl` returns
+      // undefined when the consent submit runs in this controller. We pre-set `expiresIn` on
+      // newly-created grants so they persist with the correct (tiered) TTL.
+      const requestedRawTtl = (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM];
+      const clientPayload = await this.oidcService.findClientPayload(clientId);
+      const clientMaxSessionTtl = clientPayload?.dbx_max_session_ttl ?? undefined;
+      const expiresInSeconds = this.oidcService.resolveLoginDurationForGrant(requestedRawTtl, { dbx_max_session_ttl: clientMaxSessionTtl }, { isAdmin, hasServiceScope: requestsServiceToken });
+
+      const grant = existingGrant ?? (await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, accountId, clientId, expiresInSeconds));
 
       if (missingOIDCScope.length > 0) {
         const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: ALWAYS_GRANTED_OIDC_SCOPES, alreadyEncountered: encounteredOIDCScopes });

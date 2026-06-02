@@ -252,6 +252,56 @@ export async function fetchUserInfo(input: FetchUserInfoInput): Promise<Record<s
   return (await res.json()) as Record<string, unknown>;
 }
 
+/**
+ * Session lifetime metadata returned by the `GET /oidc/session` route.
+ */
+export interface OidcSessionInfo {
+  readonly sub?: string;
+  readonly scope?: string | null;
+  /**
+   * Grant (session) expiry as unix epoch SECONDS, or `null` when the provider could not resolve it.
+   */
+  readonly expiresAt?: number | null;
+  /**
+   * Whether refresh-token rotation is disabled for this grant (a long-lived service token).
+   */
+  readonly rotationDisabled?: boolean;
+}
+
+export interface FetchSessionInfoInput {
+  /**
+   * The `GET /oidc/session` endpoint URL (typically `<oidcIssuer>/session`).
+   */
+  readonly sessionEndpoint: string;
+  readonly accessToken: string;
+}
+
+/**
+ * Fetches the dbx-components `GET /oidc/session` route and returns the parsed session lifetime metadata.
+ *
+ * Mirrors {@link fetchUserInfo}, but reads the access token's baked-in session-lifetime claims
+ * (`dbx_session_expires_at` / `dbx_rotation_disabled`) which userinfo does not echo.
+ *
+ * @param input - The session request.
+ * @param input.sessionEndpoint - The `GET /oidc/session` endpoint URL.
+ * @param input.accessToken - The Bearer access token sent in the `Authorization` header.
+ * @returns The parsed {@link OidcSessionInfo}. Throws a {@link CliError} (`SESSION_INFO_FAILED`) on a non-OK response.
+ */
+export async function fetchSessionInfo(input: FetchSessionInfoInput): Promise<OidcSessionInfo> {
+  const res = await tracedFetch(undefined, input.sessionEndpoint, {
+    headers: { Authorization: `Bearer ${input.accessToken}`, Accept: 'application/json' }
+  });
+
+  if (!res.ok) {
+    throw new CliError({
+      message: `Session info request failed: ${res.status} ${res.statusText}`,
+      code: 'SESSION_INFO_FAILED'
+    });
+  }
+
+  return (await res.json()) as OidcSessionInfo;
+}
+
 interface PostTokenEndpointInput {
   readonly tokenEndpoint: string;
   readonly body: URLSearchParams;

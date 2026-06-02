@@ -14,6 +14,23 @@ export interface CliTokenEntry {
   readonly tokenType?: string;
   readonly scope?: string;
   readonly idToken?: string;
+  /**
+   * Unix epoch SECONDS at which the underlying grant (session) expires, as reported by the OIDC
+   * `GET /oidc/session` route (`dbx_session_expires_at`). Distinct from {@link expiresAt}, which is
+   * the short-lived access token's expiry in milliseconds. Used to surface the session lifetime.
+   */
+  readonly sessionExpiresAt?: number;
+  /**
+   * Whether refresh-token rotation is disabled for this grant (a long-lived service token).
+   * Sourced from the `GET /oidc/session` route (`dbx_rotation_disabled`).
+   */
+  readonly rotationDisabled?: boolean;
+  /**
+   * Transient (never persisted) marker that this entry was sourced from environment variables rather
+   * than the on-disk cache. Env-sourced entries are not written back after a refresh — see the auth
+   * middleware. Set by `readEnvTokenEntry`.
+   */
+  readonly fromEnv?: boolean;
 }
 
 /**

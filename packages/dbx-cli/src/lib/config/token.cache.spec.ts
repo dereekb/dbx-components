@@ -49,6 +49,16 @@ describe('createCliTokenCacheStore', () => {
     expect(await tokens.get('dev')).toEqual(entry);
   });
 
+  it('roundtrips the session lifetime fields (sessionExpiresAt / rotationDisabled)', async () => {
+    const tokens = createCliTokenCacheStore({ tokenCachePath });
+    const entry: CliTokenEntry = { accessToken: 'a', expiresAt: Date.now() + 60_000, refreshToken: 'r', scope: 'openid demo token.service', sessionExpiresAt: 1_900_000_000, rotationDisabled: true };
+
+    await tokens.set('dev', entry);
+    const result = await tokens.get('dev');
+    expect(result?.sessionExpiresAt).toBe(1_900_000_000);
+    expect(result?.rotationDisabled).toBe(true);
+  });
+
   it('persists to disk so a fresh store reads the same value', async () => {
     const writer = createCliTokenCacheStore({ tokenCachePath });
     const entry: CliTokenEntry = { accessToken: 'a', expiresAt: Date.now() + 60_000 };

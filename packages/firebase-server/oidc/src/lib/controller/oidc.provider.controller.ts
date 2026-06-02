@@ -1,7 +1,8 @@
-import { All, Controller, Get, Inject, Req, Res } from '@nestjs/common';
+import { All, Controller, Get, HttpStatus, Inject, Req, Res } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcService } from '../service/oidc.service';
 import { OidcProviderConfigService } from '../service/oidc.config.service';
+import { DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM, DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM } from '../service/oidc.session-ttl';
 
 // MARK: Provider Controller
 /**
@@ -40,6 +41,49 @@ export class OidcProviderController {
   @Get('login/client')
   redirectToClientLogin(@Req() req: Request, @Res() res: Response): void {
     res.redirect(mergeQueryParamsFromOriginalUrl({ baseUrl: this.oidcProviderConfigService.appLoginUrl, originalUrl: req.originalUrl }));
+  }
+
+  /**
+   * GET /oidc/session.
+   *
+   * Read route that verifies the presented bearer access token and returns its resolved session
+   * lifetime metadata: `{ sub, scope, expiresAt, rotationDisabled }`. `expiresAt` is the grant's
+   * expiry (unix seconds) and `rotationDisabled` flags a non-rotating (service) token. The values
+   * are sourced from the access token's baked-in `extra` claims (see `extraTokenClaims`), so this
+   * does not require decoding the opaque token client-side — cleaner than userinfo, which does not
+   * echo access-token `extra`.
+   *
+   * Declared ahead of the `@All('{*path}')` catch-all so it is matched here rather than proxied to
+   * the oidc-provider callback (mirrors `GET /oidc/login/client`).
+   *
+   * @param req - Inbound request; the `Authorization: Bearer <token>` header is read for the access token.
+   * @param res - Express response used to send the session JSON (401 when the token is missing/invalid).
+   */
+  @Get('session')
+  async getSession(@Req() req: Request, @Res() res: Response): Promise<void> {
+    const rawAuthHeader = req.headers['authorization'];
+    const authHeader = Array.isArray(rawAuthHeader) ? rawAuthHeader[0] : rawAuthHeader;
+    const bearer = /^Bearer\s+(.+)$/i.exec(authHeader ?? '')?.[1]?.trim();
+    let handled = false;
+
+    if (bearer) {
+      const authData = await this.oidcService.verifyAccessToken(bearer);
+
+      if (authData) {
+        const token = authData.token as Record<string, unknown>;
+        res.json({
+          sub: authData.uid,
+          scope: token['scope'] ?? null,
+          expiresAt: token[DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM] ?? null,
+          rotationDisabled: token[DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM] ?? false
+        });
+        handled = true;
+      }
+    }
+
+    if (!handled) {
+      res.status(HttpStatus.UNAUTHORIZED).json({ error: 'invalid_token', error_description: 'Missing or invalid bearer access token.' });
+    }
   }
 
   @All('{*path}')

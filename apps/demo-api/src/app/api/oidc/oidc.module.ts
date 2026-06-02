@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { EMAIL_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE, PROFILE_OIDC_SCOPE } from '@dereekb/firebase';
+import { AUTH_ADMIN_ROLE } from '@dereekb/util';
+import { EMAIL_OIDC_SCOPE, OFFLINE_ACCESS_OIDC_SCOPE, OPENID_OIDC_SCOPE, PROFILE_OIDC_SCOPE, SERVICE_TOKEN_OIDC_SCOPE } from '@dereekb/firebase';
 import { JwksServiceStorageConfig, type OidcAccountClaims, OidcAccountService, oidcModuleMetadata, type OidcAccountServiceDelegate, type OidcProviderConfig } from '@dereekb/firebase-server/oidc';
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
@@ -22,10 +23,15 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     'model.update': [],
     'model.delete': [],
     'model.query': [],
-    'model.invoke': []
+    'model.invoke': [],
+    // token.service is admin-only and adds no extra ID-token claims; it makes the grant long-lived and non-rotating.
+    [SERVICE_TOKEN_OIDC_SCOPE]: []
   },
   responseTypes: ['code'],
-  grantTypes: ['authorization_code', 'refresh_token']
+  grantTypes: ['authorization_code', 'refresh_token'],
+  // token.service is restricted to admins (hard-rejected at consent for non-admins) and its grants never rotate.
+  adminOnlyScopes: [SERVICE_TOKEN_OIDC_SCOPE],
+  nonRotatingScopes: [SERVICE_TOKEN_OIDC_SCOPE]
 };
 
 // MARK: Factories
@@ -65,6 +71,13 @@ export function demoOidcAccountServiceFactory(demoApiAuthService: DemoApiAuthSer
       }
 
       return claims;
+    },
+    // Resolve admin status from the raw auth claims directly — independent of the requested
+    // scopes (the `demo`-scope gate in buildClaimsForUser would otherwise hide admin from a
+    // token.service request that didn't also ask for `demo`).
+    async isAdminUser(userContext: FirebaseServerAuthUserContext): Promise<boolean> {
+      const authClaims = await userContext.loadClaims<DemoApiAuthClaims>();
+      return DEMO_AUTH_CLAIMS_SERVICE.toRoles(authClaims).has(AUTH_ADMIN_ROLE);
     }
   };
 

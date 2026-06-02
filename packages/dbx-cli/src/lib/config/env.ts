@@ -1,4 +1,5 @@
 import { type Maybe } from '@dereekb/util';
+import { type CliTokenEntry } from './token.cache';
 
 /**
  * The default OAuth/OIDC scopes requested by the CLI when none are configured.
@@ -22,6 +23,16 @@ export const MODEL_WRITE_OIDC_SCOPES = ['model.create', 'model.update', 'model.d
 export const DEFAULT_CLI_REDIRECT_URI = 'http://127.0.0.1:0/callback';
 
 /**
+ * The generic OIDC scopes a `--service-token` login adds to the requested set.
+ *
+ * `token.service` triggers the admin-only, long-lived, non-rotating behavior server-side;
+ * `offline_access` is required so a refresh token is issued (the durable credential the server env
+ * consumes). The app's own resource scope (e.g. `demo`) is intentionally NOT included here — it
+ * already lives in the configured `env.scopes`, keeping this generic CLI app-agnostic.
+ */
+export const SERVICE_TOKEN_REQUIRED_OIDC_SCOPES = ['token.service', 'offline_access'] as const;
+
+/**
  * Returns the input scope string with the `model.create`, `model.update`, and `model.delete`
  * scopes removed, preserving every other scope (including `model.read` and `model.query`).
  *
@@ -37,6 +48,26 @@ export function filterReadOnlyModelScopes(scopes: Maybe<string>): string {
     .split(/\s+/)
     .filter((s) => s.length > 0 && !writeScopes.has(s))
     .join(' ');
+}
+
+/**
+ * Returns the input scope string with the {@link SERVICE_TOKEN_REQUIRED_OIDC_SCOPES} unioned in
+ * (de-duplicated), preserving every other already-requested scope.
+ *
+ * Drives the `auth login --service-token` flag. Combinable with `filterReadOnlyModelScopes` — apply
+ * the read-only filter first, then this, so a service token can still be read-only.
+ *
+ * @param scopes - Space-separated scope list, or `undefined` to augment the default scopes.
+ * @returns The augmented space-separated scope list.
+ */
+export function withServiceTokenScopes(scopes: Maybe<string>): string {
+  const result = new Set<string>((scopes ?? DEFAULT_CLI_OIDC_SCOPES).split(/\s+/).filter((s) => s.length > 0));
+
+  for (const scope of SERVICE_TOKEN_REQUIRED_OIDC_SCOPES) {
+    result.add(scope);
+  }
+
+  return [...result].join(' ');
 }
 
 /**
@@ -265,4 +296,50 @@ export function applyEnvVarOverrides(input: EnvVarOverrideInput): Maybe<CliEnvCo
  */
 export function isCliEnvConfigComplete(env: Maybe<CliEnvConfig>): env is Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'clientSecret' | 'redirectUri'>> & CliEnvConfig {
   return Boolean(env?.apiBaseUrl && env?.oidcIssuer && env?.clientId && env?.clientSecret && env?.redirectUri);
+}
+
+/**
+ * Inputs to {@link readEnvTokenEntry}.
+ */
+export interface ReadEnvTokenEntryInput {
+  readonly cliName: string;
+}
+
+/**
+ * Reads an OAuth token entry from environment variables, for non-interactive server consumption.
+ *
+ * Reads `<PREFIX>_REFRESH_TOKEN` (required) plus the optional `<PREFIX>_ACCESS_TOKEN` and
+ * `<PREFIX>_TOKEN_SCOPE`, where `PREFIX = cliName.replaceAll('-', '_').toUpperCase()` (the existing
+ * env-var prefix convention). The intended credential is a long-lived, non-rotating service token
+ * (see `auth login --service-token`).
+ *
+ * Returns `undefined` when no refresh token is present. When only a refresh token is supplied, the
+ * returned entry has `accessToken: ''` and `expiresAt: 0` so the first use is forced to mint an
+ * access token via a refresh. The entry is flagged `fromEnv: true` so the middleware does not write
+ * it back to the on-disk cache.
+ *
+ * @param input - The lookup inputs.
+ * @param input.cliName - The CLI name used to derive the env-var prefix (e.g. `demo-cli` → `DEMO_CLI`).
+ * @returns The env-sourced {@link CliTokenEntry}, or `undefined` when no refresh token is set.
+ */
+export function readEnvTokenEntry(input: ReadEnvTokenEntryInput): Maybe<CliTokenEntry> {
+  const prefix = input.cliName.replaceAll('-', '_').toUpperCase();
+  const refreshToken = nonEmpty(process.env[`${prefix}_REFRESH_TOKEN`]);
+  let result: Maybe<CliTokenEntry>;
+
+  if (refreshToken) {
+    const accessToken = nonEmpty(process.env[`${prefix}_ACCESS_TOKEN`]);
+    const scope = nonEmpty(process.env[`${prefix}_TOKEN_SCOPE`]);
+
+    result = {
+      accessToken: accessToken ?? '',
+      refreshToken,
+      // No reliable expiry is supplied via env, so force a refresh on first use (expiresAt 0 = expired).
+      expiresAt: 0,
+      ...(scope ? { scope } : {}),
+      fromEnv: true
+    };
+  }
+
+  return result;
 }
