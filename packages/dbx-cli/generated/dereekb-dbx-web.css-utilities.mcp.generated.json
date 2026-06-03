@@ -403,7 +403,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 144,
+      "line": 177,
       "declarations": [
         {
           "property": "display",
@@ -471,6 +471,28 @@
       ]
     },
     {
+      "slug": "button-icon-tile",
+      "selector": ".dbx-button-icon-tile",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/button/_button.scss",
+      "line": 106,
+      "declarations": [],
+      "role": "layout",
+      "intent": "turn a `<dbx-button>` that wraps a `<dbx-icon-tile>` into a clickable tile — strips the button's padding/min-width so it hugs the tile, adopts the tile's `--dbx-icon-tile-border-radius`, and lifts a neutralized (`--mat-sys-on-surface`) state layer above the tile so hover/press/ripple reads on every color variant (including opaque full-color and primary-tonal tiles)",
+      "seeAlso": [
+        "icon-tile",
+        "button-neutral-interaction-color"
+      ],
+      "antiUse": "don't apply to a `<dbx-button>` with no inner `<dbx-icon-tile>` — there is no tile surface to shape the button to or to overlay",
+      "tokensRead": [
+        "--dbx-icon-tile-border-radius",
+        "--mat-button-text-container-shape",
+        "--mat-sys-corner-full",
+        "--mat-sys-on-surface"
+      ]
+    },
+    {
       "slug": "button-neutral-interaction-color",
       "selector": ".dbx-button-neutral-interaction-color",
       "source": "@dereekb/dbx-web",
@@ -490,7 +512,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 132,
+      "line": 165,
       "declarations": [
         {
           "property": "padding-right",
@@ -1315,7 +1337,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
-      "line": 120,
+      "line": 153,
       "declarations": [
         {
           "property": "width",

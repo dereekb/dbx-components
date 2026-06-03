@@ -98,6 +98,39 @@ $big-button-height: 46px; // 33% bigger
     }
   }
 
+  /// @dbx-utility button-icon-tile
+  /// @intent turn a `<dbx-button>` that wraps a `<dbx-icon-tile>` into a clickable tile — strips the button's padding/min-width so it hugs the tile, adopts the tile's `--dbx-icon-tile-border-radius`, and lifts a neutralized (`--mat-sys-on-surface`) state layer above the tile so hover/press/ripple reads on every color variant (including opaque full-color and primary-tonal tiles)
+  /// @role layout
+  /// @see-also icon-tile, button-neutral-interaction-color
+  /// @anti-use don't apply to a `<dbx-button>` with no inner `<dbx-icon-tile>` — there is no tile surface to shape the button to or to overlay
+  .dbx-button-icon-tile {
+    .mat-mdc-button.dbx-base-button {
+      border-radius: var(--dbx-icon-tile-border-radius, var(--mat-button-text-container-shape, var(--mat-sys-corner-full)));
+      padding: 0;
+      min-height: 0;
+      min-width: 0;
+
+      // Neutralize the interaction color so hover/press/ripple reads as a consistent
+      // darkening regardless of the tile's dbxColor. Without this the state layer keeps
+      // the default primary color, which is invisible on a primary-tonal tile.
+      $neutral: var(--mat-sys-on-surface, #000);
+
+      --mat-button-text-state-layer-color: #{$neutral};
+      --mat-button-text-pressed-state-layer-color: #{$neutral};
+      --mat-button-text-focus-state-layer-color: #{$neutral};
+      --mat-button-text-ripple-color: color-mix(in srgb, #{$neutral} 12%, transparent);
+    }
+
+    // The tile's background lives inside .mdc-button__label (z-index: 1), which would
+    // otherwise paint over the button's state layer / ripple — fully occluding it on an
+    // opaque (full-color) tile and washing it out on a tonal one. Lift the ripple above
+    // the label so the interaction feedback overlays the tile on every variant.
+    .mat-mdc-button-persistent-ripple,
+    .mat-mdc-button-ripple {
+      z-index: 2;
+    }
+  }
+
   .dbx-icon-button .mat-mdc-button .mdc-button__label {
     display: flex;
     align-items: center;

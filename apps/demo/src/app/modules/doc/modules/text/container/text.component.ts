@@ -23,7 +23,8 @@ import {
   DbxNumberWithLimitComponent,
   DbxClickToCopyTextDirective,
   DbxIconTileDirective,
-  DbxIconTileComponent
+  DbxIconTileComponent,
+  DbxButtonComponent
 } from '@dereekb/dbx-web';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -37,6 +38,7 @@ import { LOREM } from '../../shared';
   templateUrl: './text.component.html',
   standalone: true,
   imports: [
+    DbxButtonComponent,
     DbxContentContainerDirective,
     DocFeatureLayoutComponent,
     DocFeatureExampleComponent,
