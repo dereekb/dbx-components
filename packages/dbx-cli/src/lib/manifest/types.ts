@@ -423,7 +423,9 @@ export interface McpToolNameValidation {
  * @returns The hyphen-joined tool name.
  *
  * @example
+ * ```ts
  * buildMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-syncCheckHqEmployee'
+ * ```
  */
 export function buildMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
@@ -440,7 +442,9 @@ export function buildMcpToolName(modelSegment: string, callType: string, specifi
  *   {@link MCP_TOOL_NAME_WARN_LENGTH}, otherwise `ok`.
  *
  * @example
+ * ```ts
  * validateMcpToolName('worker-create').level; // 'ok'
+ * ```
  */
 export function validateMcpToolName(name: string): McpToolNameValidation {
   const length = name.length;
@@ -479,7 +483,9 @@ export const MCP_CALL_TYPE_ABBREVIATIONS: Readonly<Record<string, string>> = {
  * @returns The single-character abbreviation, or the original string for a custom call type.
  *
  * @example
+ * ```ts
  * abbreviateMcpCallType('update'); // 'u'
+ * ```
  */
 export function abbreviateMcpCallType(callType: string): string {
   return MCP_CALL_TYPE_ABBREVIATIONS[callType] ?? callType;
@@ -499,7 +505,9 @@ export function abbreviateMcpCallType(callType: string): string {
  * @returns The hyphen-joined disambiguated tool name.
  *
  * @example
+ * ```ts
  * buildDisambiguatedMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-u-syncCheckHqEmployee'
+ * ```
  */
 export function buildDisambiguatedMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
