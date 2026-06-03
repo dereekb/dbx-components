@@ -576,6 +576,50 @@
       ]
     },
     {
+      "slug": "card-select",
+      "selector": ".dbx-card-select",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 48,
+      "declarations": [
+        {
+          "property": "position",
+          "value": "relative"
+        },
+        {
+          "property": "cursor",
+          "value": "pointer"
+        },
+        {
+          "property": "text-align",
+          "value": "center"
+        },
+        {
+          "property": "height",
+          "value": "100%"
+        }
+      ],
+      "role": "layout",
+      "intent": "selectable \"choice\" `<mat-card appearance=\"outlined\">` whose content is centered in a column (large `<mat-icon>`, title, subtitle). Pair with `[dbxColor]` + `[dbxColorTone]` and toggle the `.dbx-card-selected` modifier to paint the selected border to match the tonal wash. Put the large glyph in a `.dbx-card-select-icon` `<mat-icon>` and an optional round selected checkmark in a `.dbx-card-select-check` `<dbx-icon-tile [round]>` (absolutely positioned top-right). Fills its parent's height (`height: 100%`) so a row of cards laid out with `dbxFlexGroup` + `[dbxFlexSize]` stays equal-height as it shrinks and wraps.",
+      "seeAlso": [
+        "color",
+        "color-tonal",
+        "icon-tile",
+        "card-banner",
+        "flex-group",
+        "flex-size"
+      ],
+      "tokensRead": [
+        "--dbx-bg-color-current",
+        "--dbx-card-select-icon-size",
+        "--dbx-padding-2",
+        "--dbx-padding-3",
+        "--mat-sys-on-surface",
+        "--mat-sys-surface"
+      ]
+    },
+    {
       "slug": "chip",
       "selector": ".dbx-chip",
       "source": "@dereekb/dbx-web",

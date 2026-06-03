@@ -42,6 +42,29 @@
       ]
     },
     {
+      "slug": "card-feedback-selection",
+      "category": "card",
+      "summary": "Single-select row of centered `.dbx-card-select` choice cards laid out with `dbxFlexGroup` + equal-width `[dbxFlexSize]` columns (equal-size as the screen shrinks, stacking below the `small` breakpoint). The selected `<mat-card appearance=\"outlined\">` gets a tonal `[dbxColor]` wash, a matching themed border, and a round `<dbx-icon-tile [round]>` checkmark badge in the top-right; unselected cards stay neutral. Large glyphs are plain `<mat-icon>` that inherit the card's flipped text color.",
+      "header": "Feedback Selection Cards",
+      "className": "DocFeedbackSelectionCardExampleComponent",
+      "selector": "doc-feedback-selection-card-example",
+      "module": "apps/demo",
+      "appRef": "apps/demo",
+      "hint": "Single-select row of equal-size centered choice cards (dbxFlexGroup) — the selected card gets a tonal [dbxColor] wash, a matching themed border, and a round checkmark badge.",
+      "relatedSlugs": [
+        "mat-card",
+        "dbx-card-select",
+        "dbx-icon-tile",
+        "dbx-color",
+        "dbx-chip",
+        "dbx-flex-group",
+        "dbx-flex-size"
+      ],
+      "info": "<p>\n  A \"selection\" / \"choice\" card lets the user pick exactly one option from a small set, with the chosen card emphasised. Each option is a stock\n  <code>&lt;mat-card appearance=\"outlined\"&gt;</code>\n  carrying the\n  <code>.dbx-card-select</code>\n  utility, which centers the card body in a column (a large\n  <code>&lt;mat-icon&gt;</code>\n  , a title, and a subtitle) and exposes a top-right slot for a checkmark badge via a\n  <code>.dbx-card-select-check</code>\n  child.\n</p>\n<p>\n  Selection is a single-select\n  <code>signal</code>\n  . The selected card receives\n  <code>[dbxColor]</code>\n  +\n  <code>[dbxColorTone]=\"16\"</code>\n  , so the existing\n  <code>mat-card.dbx-color</code>\n  /\n  <code>.dbx-color-tonal</code>\n  rules paint the tonal background wash and flip the card text to the vibrant theme color — which the centered\n  <code>&lt;mat-icon&gt;</code>\n  (rendered in\n  <code>currentColor</code>\n  ) and the title inherit for free. The\n  <code>.dbx-card-selected</code>\n  modifier repaints the outlined-card border to that same\n  <code>--dbx-bg-color-current</code>\n  value, so the border matches the wash without any hard-coded colour.\n</p>\n<p>\n  The round checkmark is a\n  <code>&lt;dbx-icon-tile [round]&gt;</code>\n  carrying its own\n  <code>[dbxColor]</code>\n  (no tone), so it renders as a solid vibrant circle with a contrast-colour check. The unselected card omits\n  <code>[dbxColor]</code>\n  entirely, so it keeps the neutral outline + on-surface text. Each choice carries its own semantic\n  <code>color</code>\n  (a positive\n  <code>'primary'</code>\n  , a destructive\n  <code>'warn'</code>\n  , and a\n  <code>'notice'</code>\n  review), so the emphasis colour follows the meaning of the option.\n</p>\n<p>\n  The options sit in a\n  <code>dbxFlexGroup</code>\n  row, each an equal-width\n  <code>[dbxFlexSize]=\"2\"</code>\n  column, so the cards stay the same size and shrink in unison as the viewport narrows — and\n  <code>.dbx-card-select</code>\n  fills its column height (\n  <code>height: 100%</code>\n  ) so they stay equal-height even if one subtitle wraps. Below the\n  <code>small</code>\n  breakpoint,\n  <code>[breakToColumn]</code>\n  stacks them into a single column.\n</p>",
+      "snippet": "<div class=\"dbx-flex-bar dbx-mb3\">\n  <span class=\"dbx-text-label-medium dbx-uppercase dbx-tracked-wide dbx-icon-spacer\">Feedback</span>\n  <dbx-chip [small]=\"true\" color=\"notice\">Required</dbx-chip>\n</div>\n<div dbxFlexGroup breakpoint=\"small\" [breakToColumn]=\"true\">\n  @for (choice of choices; track choice.key) {\n    <div [dbxFlexSize]=\"2\">\n      <mat-card appearance=\"outlined\" class=\"dbx-card-select\" role=\"button\" [class.dbx-card-selected]=\"isSelected(choice.key)\" [attr.aria-pressed]=\"isSelected(choice.key)\" [dbxColor]=\"isSelected(choice.key) ? choice.color : null\" [dbxColorTone]=\"isSelected(choice.key) ? 16 : null\" (click)=\"select(choice.key)\">\n        <mat-card-content>\n          @if (isSelected(choice.key)) {\n            <dbx-icon-tile class=\"dbx-card-select-check\" icon=\"check\" [round]=\"true\" [dbxColor]=\"choice.color\"></dbx-icon-tile>\n          }\n          <mat-icon class=\"dbx-card-select-icon\">{{ choice.icon }}</mat-icon>\n          <div class=\"dbx-text-title-medium\">{{ choice.title }}</div>\n          <div class=\"dbx-note\">{{ choice.subtitle }}</div>\n        </mat-card-content>\n      </mat-card>\n    </div>\n  }\n</div>",
+      "uses": []
+    },
+    {
       "slug": "card-hero-onboarding-progress",
       "category": "card",
       "summary": "Top-of-page hero card on an inverse surface — eyebrow, headline, progress bar, secondary CTA, and trailing percent.",

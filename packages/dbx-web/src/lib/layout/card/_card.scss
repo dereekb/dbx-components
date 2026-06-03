@@ -40,6 +40,55 @@
       padding: var(--dbx-padding-2) var(--dbx-padding-3) var(--dbx-padding-3);
     }
   }
+
+  /// @dbx-utility card-select
+  /// @intent selectable "choice" `<mat-card appearance="outlined">` whose content is centered in a column (large `<mat-icon>`, title, subtitle). Pair with `[dbxColor]` + `[dbxColorTone]` and toggle the `.dbx-card-selected` modifier to paint the selected border to match the tonal wash. Put the large glyph in a `.dbx-card-select-icon` `<mat-icon>` and an optional round selected checkmark in a `.dbx-card-select-check` `<dbx-icon-tile [round]>` (absolutely positioned top-right). Fills its parent's height (`height: 100%`) so a row of cards laid out with `dbxFlexGroup` + `[dbxFlexSize]` stays equal-height as it shrinks and wraps.
+  /// @role layout
+  /// @see-also color, color-tonal, icon-tile, card-banner, flex-group, flex-size
+  .dbx-card-select {
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+    height: 100%;
+
+    > mat-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--dbx-padding-2);
+    }
+
+    .dbx-card-select-icon {
+      width: var(--dbx-card-select-icon-size, 40px);
+      height: var(--dbx-card-select-icon-size, 40px);
+      font-size: var(--dbx-card-select-icon-size, 40px);
+      margin-bottom: var(--dbx-padding-2);
+    }
+
+    .dbx-card-select-check {
+      position: absolute;
+      top: var(--dbx-padding-3);
+      right: var(--dbx-padding-3);
+    }
+
+    // Unselected baseline — `[dbxColor]` always applies the `.dbx-color` class
+    // (even when bound to a nullish color), and its default-color paint would
+    // render the card body in the surface color (invisible). Restore a neutral
+    // outlined-card look so the unselected option stays legible. The `:not()`
+    // out-specifies the `mat-card.dbx-color` rule and excludes the selected
+    // (tonal) card, which keeps its themed paint.
+    &:not(.dbx-card-selected) {
+      background: var(--mat-sys-surface);
+      color: var(--mat-sys-on-surface);
+    }
+
+    // Selected state — repaint the outlined-card border to match the tonal
+    // `[dbxColor]` wash applied by DbxColorDirective (`--dbx-bg-color-current`).
+    &.dbx-card-selected {
+      --mat-outlined-card-outline-color: var(--dbx-bg-color-current);
+      --mat-outlined-card-outline-width: 2px;
+    }
+  }
 }
 
 @mixin theme($theme-config) {
