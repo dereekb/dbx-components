@@ -1,7 +1,8 @@
 import { type Maybe } from '@dereekb/util';
+import { type KnownOnCallFunctionType } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
-import { type ModelApiDetailsResult, type ModelCallApiDetails, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpToolDetailsBuilder } from '@dereekb/firebase-server';
+import { type ModelApiDetailsResult, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpToolDetailsBuilder } from '@dereekb/firebase-server';
 import { type Request } from 'express';
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { mcpManifestKey, type McpManifestToolEntry } from './mcp.manifest';
@@ -28,12 +29,14 @@ export interface McpToolDefinition {
   /**
    * Tool name advertised on `tools/list`.
    *
-   * Format: `<modelType>-<callType>` for default (`_`) specifiers,
-   * `<modelType>-<callType>-<specifier>` for non-default specifiers.
+   * Format: `<modelSegment>-<callType>` for default (`_`) specifiers; named specifiers drop the
+   * call-type segment (`<modelSegment>-<specifier>`) to stay short. When two visible tools would
+   * resolve to the same name, both are disambiguated with the abbreviated call type
+   * (`<modelSegment>-<abbrev>-<specifier>`); see {@link buildDisambiguatedMcpToolName}.
    *
    * @example 'guestbook-create'
-   * @example 'profile-update-username'
-   * @example 'storageFile-invoke-recomputeChecksums'
+   * @example 'profile-username'
+   * @example 'profile-u-username'
    */
   readonly name: string;
   /**
@@ -189,10 +192,17 @@ export interface McpToolGenerationSkip {
  *   (un-mapped) result.
  * - `mapped_manifest_without_mapper` — the manifest entry is annotated for a mapped result but the
  *   handler no longer declares `mapSuccessfulResult` (stale annotation).
- * - `name_length_warning` — the resolved name is over the soft {@link MCP_TOOL_NAME_WARN_LENGTH}
- *   limit but still within the hard cap. The tool is registered; the drift toward the cap is flagged.
+ *
+ * Both are runtime↔manifest consistency checks the build-time manifest renderer cannot perform on
+ * its own (it has the `.api.ts` annotation but not the handler's wired `mapSuccessfulResult`), so the
+ * runtime keeps them. Purely build-time-detectable conditions are deliberately *not* warned here to
+ * keep the server boot quiet:
+ * - Name length over the soft limit is surfaced by the manifest renderer, not at runtime (the hard
+ *   cap is still enforced as a `name_too_long` skip).
+ * - A preferred name that collided with another visible tool is re-derived with the abbreviated call
+ *   type ({@link buildDisambiguatedMcpToolName}) **silently** at runtime; the manifest renderer flags it.
  */
-export type McpToolGenerationWarningReason = 'mapper_without_mapped_manifest' | 'mapped_manifest_without_mapper' | 'name_length_warning';
+export type McpToolGenerationWarningReason = 'mapper_without_mapped_manifest' | 'mapped_manifest_without_mapper';
 
 /**
  * One generated tool whose handler / manifest MCP-result mapping is inconsistent. The tool is still
@@ -328,6 +338,10 @@ export function validateMcpToolName(name: string): McpToolNameValidation {
  * 64-character cap. Apps can override the whole name per handler via
  * {@link OnCallModelFunctionApiDetails.mcp.name}.
  *
+ * This is the preferred (short) form. When two visible tools collide on it — two call types share a
+ * specifier once the call-type segment is dropped — the generator re-derives both names with
+ * {@link buildDisambiguatedMcpToolName} instead.
+ *
  * @param modelSegment - The model segment of the name. Defaults to the model type, but may be a
  *   shorter per-model override (e.g. the collection prefix) resolved by the caller.
  * @param callType - The call type (e.g., `invoke`).
@@ -343,6 +357,66 @@ export function validateMcpToolName(name: string): McpToolNameValidation {
 export function buildMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
   return isDefault ? `${modelSegment}-${callType}` : `${modelSegment}-${specifier}`;
+}
+
+/**
+ * Single-character abbreviations for the standard CRUDQ + invoke call types, used to disambiguate
+ * colliding tool names without re-introducing the full call-type segment everywhere.
+ *
+ * @example
+ * ```ts
+ * MCP_CALL_TYPE_ABBREVIATIONS.update; // 'u'
+ * ```
+ */
+export const MCP_CALL_TYPE_ABBREVIATIONS: Readonly<Record<KnownOnCallFunctionType, string>> = {
+  create: 'c',
+  read: 'r',
+  update: 'u',
+  delete: 'd',
+  query: 'q',
+  invoke: 'i'
+};
+
+/**
+ * Abbreviates a call type for use in a disambiguated tool name. Known CRUDQ + invoke types collapse
+ * to a single character; a custom call type is returned unchanged so the name stays unambiguous.
+ *
+ * @param callType - The call type / verb.
+ * @returns The single-character abbreviation, or the original string for a custom call type.
+ *
+ * @example
+ * ```ts
+ * abbreviateMcpCallType('update'); // 'u'
+ * abbreviateMcpCallType('recompute'); // 'recompute'
+ * ```
+ */
+export function abbreviateMcpCallType(callType: string): string {
+  return MCP_CALL_TYPE_ABBREVIATIONS[callType as KnownOnCallFunctionType] ?? callType;
+}
+
+/**
+ * Builds the disambiguated MCP tool name for a (modelSegment, callType, specifier) triple — the form
+ * used only when the preferred {@link buildMcpToolName} output collides with another visible tool.
+ *
+ * Named specifiers re-insert the call type, abbreviated, between the segment and specifier
+ * (`worker-u-syncCheckHqEmployee`); since the two colliding tools differ only by call type, their
+ * abbreviations differ and the names no longer clash. Default (`_`) specifiers already carry the
+ * full call type, so they are returned in their {@link buildMcpToolName} form unchanged.
+ *
+ * @param modelSegment - The model segment of the name (model type, or a per-model override).
+ * @param callType - The call type / verb.
+ * @param specifier - The specifier key, or `_` / undefined for the default entry.
+ * @returns The hyphen-joined disambiguated tool name.
+ *
+ * @example
+ * ```ts
+ * buildDisambiguatedMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-u-syncCheckHqEmployee'
+ * buildDisambiguatedMcpToolName('worker', 'create'); // 'worker-create'
+ * ```
+ */
+export function buildDisambiguatedMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
+  const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
+  return isDefault ? `${modelSegment}-${callType}` : `${modelSegment}-${abbreviateMcpCallType(callType)}-${specifier}`;
 }
 
 /**
@@ -396,8 +470,14 @@ export interface GenerateMcpToolDefinitionsContext {
  * MCP `name` override. Descriptions and input/output schemas are pulled from the
  * build-time manifest when supplied. Tools without an `inputType` are skipped and
  * reported so callers can log the gap at startup. Tools whose resolved name exceeds
- * {@link MCP_TOOL_NAME_MAX_LENGTH} or collides with an already-registered visible tool are also
- * skipped so the advertised `tools/list` stays valid and unambiguous.
+ * {@link MCP_TOOL_NAME_MAX_LENGTH} are skipped so the advertised `tools/list` stays valid.
+ *
+ * Generation runs in two passes so a name clash is known before any name is finalized: the first
+ * pass plans every candidate and counts how many visible auto-named tools share each preferred name;
+ * the second builds each tool, re-deriving the colliding ones with the abbreviated call type
+ * ({@link buildDisambiguatedMcpToolName}) so both survive instead of one shadowing the other. A
+ * residual collision that disambiguation cannot resolve (e.g. an `mcp.name` override matching an auto
+ * name) drops the later tool so the dispatch map stays unambiguous.
  *
  * @param apiDetails - The model-first API details tree returned by `getModelApiDetails(callModelFn)`.
  * @param options - Optional schema generation options forwarded to `toJsonSchema()`. Defaults to {@link DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS}.
@@ -413,28 +493,110 @@ export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, op
   const manifest = context?.manifest;
   const naming = context?.naming;
 
+  const candidates = planMcpToolCandidates(apiDetails, naming);
+  const clashCounts = countVisibleAutoNameClashes(candidates);
+
+  for (const candidate of candidates) {
+    buildToolFromCandidate({ candidate, clashCounts, options, manifest, seenNames, outTools: tools, outNeverVisibleTools: neverVisibleTools, outSkipped: skipped, outWarnings: warnings });
+  }
+
+  return { tools, neverVisibleTools, skipped, warnings };
+}
+
+/**
+ * One planned tool, captured in the first (cheap) generation pass before schema generation. Holds
+ * everything needed to count name clashes and, in the second pass, build the definition without
+ * re-classifying visibility.
+ */
+interface McpToolCandidate {
+  readonly modelType: string;
+  readonly callType: string;
+  readonly handlerDetails: OnCallModelFunctionApiDetails;
+  readonly specifier: string | undefined;
+  readonly dispatch: McpToolDispatchTarget;
+  readonly modelSegment: string;
+  /**
+   * The per-handler `mcp.name` override, if any. Overridden names do not participate in
+   * auto-disambiguation (the app chose them explicitly).
+   */
+  readonly overrideName: Maybe<string>;
+  /**
+   * The preferred (short) name — the override, or {@link buildMcpToolName}.
+   */
+  readonly baseName: string;
+  readonly classified: ReturnType<typeof classifyVisibility>;
+  readonly isVisible: boolean;
+}
+
+/**
+ * First pass: walk the API tree and plan one {@link McpToolCandidate} per handler. No schema
+ * generation happens here — only the cheap naming + visibility classification needed to detect
+ * clashes before any name is finalized.
+ *
+ * @param apiDetails - The model-first API details tree.
+ * @param naming - Optional per-model name-segment overrides.
+ * @returns One candidate per non-null handler, in tree order.
+ */
+function planMcpToolCandidates(apiDetails: ModelApiDetailsResult, naming?: McpToolGenerationNamingOptions): McpToolCandidate[] {
+  const candidates: McpToolCandidate[] = [];
+
   for (const [modelType, modelEntry] of Object.entries(apiDetails.models)) {
     for (const [callType, callDetails] of Object.entries(modelEntry.calls)) {
       if (callDetails == null) {
         continue;
       }
 
-      generateToolsForModelCall({ modelType, callType, callDetails, options, manifest, naming, seenNames, outTools: tools, outNeverVisibleTools: neverVisibleTools, outSkipped: skipped, outWarnings: warnings });
+      for (const [specifierKey, handlerDetails] of Object.entries(callDetails.specifiers)) {
+        if (handlerDetails == null) {
+          continue;
+        }
+
+        const specifier = callDetails.isSpecifier ? specifierKey : undefined;
+        const dispatch: McpToolDispatchTarget = { call: callType, modelType, specifier };
+        const modelSegment = naming?.modelSegments?.get(modelType) ?? modelType;
+        const overrideName = handlerDetails.mcp?.name;
+        const baseName = overrideName ?? buildMcpToolName(modelSegment, callType, specifier);
+        const classified = classifyVisibility(handlerDetails.mcp?.visibility);
+        const isVisible = classified.visibilityKind !== 'never';
+
+        candidates.push({ modelType, callType, handlerDetails, specifier, dispatch, modelSegment, overrideName, baseName, classified, isVisible });
+      }
     }
   }
 
-  return { tools, neverVisibleTools, skipped, warnings };
+  return candidates;
 }
 
-interface GenerateToolsForModelCallContext {
-  readonly modelType: string;
-  readonly callType: string;
-  readonly callDetails: ModelCallApiDetails;
+/**
+ * Counts how many visible, auto-named (no `mcp.name` override) candidates share each preferred name.
+ * Only these participate in clash detection — hidden tools never reach the wire, and overrides are
+ * explicit. A base name with a count over 1 is a clash that the build pass disambiguates.
+ *
+ * @param candidates - The planned candidates from {@link planMcpToolCandidates}.
+ * @returns A map of preferred name to the number of visible auto-named candidates producing it.
+ */
+function countVisibleAutoNameClashes(candidates: ReadonlyArray<McpToolCandidate>): Map<string, number> {
+  const counts = new Map<string, number>();
+
+  for (const candidate of candidates) {
+    if (candidate.isVisible && candidate.overrideName == null) {
+      counts.set(candidate.baseName, (counts.get(candidate.baseName) ?? 0) + 1);
+    }
+  }
+
+  return counts;
+}
+
+interface BuildToolFromCandidateContext {
+  readonly candidate: McpToolCandidate;
+  /**
+   * Per-preferred-name clash counts from {@link countVisibleAutoNameClashes}.
+   */
+  readonly clashCounts: ReadonlyMap<string, number>;
   readonly options: JsonSchemaGenerationOptions;
   readonly manifest?: ReadonlyMap<string, McpManifestToolEntry>;
-  readonly naming?: McpToolGenerationNamingOptions;
   /**
-   * Names of already-registered visible tools, used to drop later collisions. Mutated as tools
+   * Names of already-registered visible tools, used to drop residual collisions. Mutated as tools
    * are registered across the whole generation pass.
    */
   readonly seenNames: Set<string>;
@@ -444,21 +606,22 @@ interface GenerateToolsForModelCallContext {
   readonly outWarnings: McpToolGenerationWarning[];
 }
 
-function generateToolsForModelCall(context: GenerateToolsForModelCallContext): void {
-  for (const [specifierKey, handlerDetails] of Object.entries(context.callDetails.specifiers)) {
-    if (handlerDetails != null) {
-      generateToolForSpecifier(context, specifierKey, handlerDetails);
-    }
-  }
-}
+/**
+ * Second pass: turn one planned {@link McpToolCandidate} into a tool definition, resolving its final
+ * name (disambiguating a clash with the abbreviated call type), generating its schema, and routing it
+ * to the visible or never-visible bucket.
+ *
+ * @param context - The candidate plus the shared generation accumulators.
+ */
+function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
+  const { candidate, clashCounts, options, manifest, seenNames, outTools, outNeverVisibleTools, outSkipped, outWarnings } = context;
+  const { modelType, callType, handlerDetails, specifier, dispatch, modelSegment, overrideName, baseName, classified, isVisible } = candidate;
 
-function generateToolForSpecifier(context: GenerateToolsForModelCallContext, specifierKey: string, handlerDetails: OnCallModelFunctionApiDetails): void {
-  const { modelType, callType, callDetails, options, manifest, naming, seenNames, outTools, outNeverVisibleTools, outSkipped, outWarnings } = context;
-  const specifier = callDetails.isSpecifier ? specifierKey : undefined;
-  const dispatch: McpToolDispatchTarget = { call: callType, modelType, specifier };
-
-  const modelSegment = naming?.modelSegments?.get(modelType) ?? modelType;
-  const name = handlerDetails.mcp?.name ?? buildMcpToolName(modelSegment, callType, specifier);
+  // A visible auto-named tool whose preferred name is produced by more than one visible tool is
+  // re-derived with the abbreviated call type so both survive on the wire. Overrides and hidden tools
+  // keep their preferred name (overrides are explicit; hidden tools never reach the wire).
+  const needsDisambiguation = isVisible && overrideName == null && (clashCounts.get(baseName) ?? 0) > 1;
+  const name = needsDisambiguation ? buildDisambiguatedMcpToolName(modelSegment, callType, specifier) : baseName;
   const nameValidation = validateMcpToolName(name);
 
   // A name over the hard cap would make remote clients reject the whole tools/list payload — never advertise it.
@@ -489,7 +652,6 @@ function generateToolForSpecifier(context: GenerateToolsForModelCallContext, spe
     }
   }
 
-  const classified = classifyVisibility(handlerDetails.mcp?.visibility);
   const requiredScope = resolveRequiredScope(callType) ?? undefined;
   const effectiveReadOnly = resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType);
   let filterMetadata: McpToolFilterMetadata;
@@ -502,12 +664,10 @@ function generateToolForSpecifier(context: GenerateToolsForModelCallContext, spe
     filterMetadata = { visibilityKind: classified.visibilityKind, requiredScope, effectiveReadOnly };
   }
 
-  // Dedup only matters for advertised tools — hidden ('never') tools never reach the wire or the
-  // dispatch map, so a hidden tool sharing a visible tool's name is harmless. Among visible tools a
-  // collision (e.g. two specifiers that coincide once the call-type segment is dropped) would let one
-  // silently shadow the other in the per-request name→definition map, so drop the later one.
-  const isVisible = filterMetadata.visibilityKind !== 'never';
-
+  // Disambiguation has already separated the common dropped-call-type clash; this is the backstop for
+  // a residual collision it cannot resolve (an `mcp.name` override matching an auto name, or two model
+  // segments coinciding on the same call type) which would otherwise let one tool silently shadow the
+  // other in the per-request name→definition map. Hidden tools never reach the map, so skip the check.
   if (isVisible) {
     if (seenNames.has(name)) {
       outSkipped.push({ toolName: name, reason: 'duplicate_name', dispatch });
@@ -515,10 +675,6 @@ function generateToolForSpecifier(context: GenerateToolsForModelCallContext, spe
     }
 
     seenNames.add(name);
-  }
-
-  if (nameValidation.level === 'warn') {
-    outWarnings.push({ toolName: name, reason: 'name_length_warning', dispatch });
   }
 
   const outputSchema = manifestEntry?.outputSchema;

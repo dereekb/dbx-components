@@ -1,4 +1,4 @@
-import { buildDefaultMcpToolDescription, buildMcpToolName, DEFAULT_SPECIFIER_KEY, generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, MCP_TOOL_NAME_WARN_LENGTH, validateMcpToolName, type McpToolGenerationNamingOptions } from './mcp.tool-generator';
+import { abbreviateMcpCallType, buildDefaultMcpToolDescription, buildDisambiguatedMcpToolName, buildMcpToolName, DEFAULT_SPECIFIER_KEY, generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, MCP_TOOL_NAME_WARN_LENGTH, validateMcpToolName, type McpToolGenerationNamingOptions } from './mcp.tool-generator';
 import { type ModelApiDetailsResult, type McpVisibilityContext } from '@dereekb/firebase-server';
 
 function makeSchemaRef(name: string, throws?: boolean) {
@@ -60,6 +60,37 @@ describe('buildMcpToolName', () => {
   it('uses the provided model segment in place of the model type', () => {
     expect(buildMcpToolName('wk', 'update', 'syncCheckHqEmployee')).toBe('wk-syncCheckHqEmployee');
     expect(buildMcpToolName('wk', 'create')).toBe('wk-create');
+  });
+});
+
+describe('abbreviateMcpCallType', () => {
+  it('abbreviates each known CRUDQ + invoke call type to a single character', () => {
+    expect(abbreviateMcpCallType('create')).toBe('c');
+    expect(abbreviateMcpCallType('read')).toBe('r');
+    expect(abbreviateMcpCallType('update')).toBe('u');
+    expect(abbreviateMcpCallType('delete')).toBe('d');
+    expect(abbreviateMcpCallType('query')).toBe('q');
+    expect(abbreviateMcpCallType('invoke')).toBe('i');
+  });
+
+  it('returns a custom call type unchanged', () => {
+    expect(abbreviateMcpCallType('recompute')).toBe('recompute');
+  });
+});
+
+describe('buildDisambiguatedMcpToolName', () => {
+  it('re-inserts the abbreviated call type for non-default entries', () => {
+    expect(buildDisambiguatedMcpToolName('worker', 'update', 'syncCheckHqEmployee')).toBe('worker-u-syncCheckHqEmployee');
+    expect(buildDisambiguatedMcpToolName('widget', 'read', 'foo')).toBe('widget-r-foo');
+  });
+
+  it('uses the full custom call type for non-default entries', () => {
+    expect(buildDisambiguatedMcpToolName('widget', 'recompute', 'foo')).toBe('widget-recompute-foo');
+  });
+
+  it('leaves the default `_` entry in its `<segment>-<callType>` form', () => {
+    expect(buildDisambiguatedMcpToolName('worker', 'create')).toBe('worker-create');
+    expect(buildDisambiguatedMcpToolName('worker', 'create', DEFAULT_SPECIFIER_KEY)).toBe('worker-create');
   });
 });
 
@@ -387,16 +418,15 @@ describe('generateMcpToolDefinitions name-length handling', () => {
     expect(warnings).toHaveLength(0);
   });
 
-  it('warns but still registers a tool over the soft limit', () => {
+  it('registers a tool over the soft limit without a runtime warning (the manifest renderer surfaces length drift)', () => {
     const specifier = 'a'.repeat(MCP_TOOL_NAME_WARN_LENGTH); // `widget-` + this is over warn, under cap
     const { tools, warnings } = generateMcpToolDefinitions(makeNamedSpecifier('widget', 'invoke', specifier));
 
     expect(tools).toHaveLength(1);
-    expect(warnings).toHaveLength(1);
-    expect(warnings[0].reason).toBe('name_length_warning');
+    expect(warnings).toHaveLength(0);
   });
 
-  it('drops a later visible tool that collides with an earlier name', () => {
+  it('disambiguates two visible tools that collide on the dropped-call-type name', () => {
     const apiDetails: ModelApiDetailsResult = {
       models: {
         widget: {
@@ -408,11 +438,13 @@ describe('generateMcpToolDefinitions name-length handling', () => {
       }
     };
 
-    const { tools, skipped } = generateMcpToolDefinitions(apiDetails);
+    const { tools, skipped, warnings } = generateMcpToolDefinitions(apiDetails);
 
-    expect(tools.map((t) => t.name)).toEqual(['widget-foo']);
-    expect(skipped).toHaveLength(1);
-    expect(skipped[0].reason).toBe('duplicate_name');
+    // Both survive: the abbreviated call type is re-inserted to break the clash. Disambiguation is
+    // silent at runtime — the manifest renderer surfaces the collision at build time.
+    expect(tools.map((t) => t.name)).toEqual(['widget-r-foo', 'widget-u-foo']);
+    expect(skipped).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
   });
 
   it('does not treat a hidden tool as colliding with a visible one of the same name', () => {
@@ -432,6 +464,32 @@ describe('generateMcpToolDefinitions name-length handling', () => {
     expect(tools.map((t) => t.name)).toEqual(['widget-foo']);
     expect(neverVisibleTools.map((t) => t.name)).toEqual(['widget-foo']);
     expect(skipped).toHaveLength(0);
+  });
+
+  it('uses the full custom call type when disambiguating a custom-call-type collision', () => {
+    const apiDetails: ModelApiDetailsResult = {
+      models: {
+        widget: {
+          calls: {
+            read: { isSpecifier: true, specifiers: { foo: { inputType: makeSchemaRef('ReadFoo') } } },
+            recompute: { isSpecifier: true, specifiers: { foo: { inputType: makeSchemaRef('RecomputeFoo') } } }
+          }
+        }
+      }
+    };
+
+    const { tools, skipped } = generateMcpToolDefinitions(apiDetails);
+
+    expect(tools.map((t) => t.name)).toEqual(['widget-r-foo', 'widget-recompute-foo']);
+    expect(skipped).toHaveLength(0);
+  });
+
+  it('keeps the short name for a named specifier with no colliding sibling', () => {
+    const { tools, skipped, warnings } = generateMcpToolDefinitions(makeNamedSpecifier('widget', 'update', 'syncCheckHqEmployee'));
+
+    expect(tools.map((t) => t.name)).toEqual(['widget-syncCheckHqEmployee']);
+    expect(skipped).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
   });
 });
 

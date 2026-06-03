@@ -2,6 +2,7 @@ import {
   type AuthAppInfo,
   type AuthClaimInfo,
   type AuthRegistry,
+  buildDisambiguatedMcpToolName,
   buildMcpToolName,
   type CliApiManifest,
   type CliApiManifestEntry,
@@ -101,21 +102,38 @@ export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new
     }
   }
 
-  for (const entry of input.apiManifest) {
-    if (entry.verb === 'standalone') {
-      continue;
-    }
+  const toolEntries = input.apiManifest.filter((entry) => entry.verb !== 'standalone');
 
+  // Count how many entries produce each preferred (short) name so colliding ones can be resolved the
+  // same way the runtime generator does. The renderer has no runtime visibility / `mcp.name` override
+  // info, so it conservatively counts every entry — the runtime generator is authoritative and only
+  // disambiguates visible auto-named collisions, but this matches it for the build-time length checks.
+  const nameCounts = new Map<string, number>();
+
+  for (const entry of toolEntries) {
+    const segment = segments.get(entry.model) ?? entry.model;
+    const baseName = buildMcpToolName(segment, entry.verb, entry.specifier);
+    nameCounts.set(baseName, (nameCounts.get(baseName) ?? 0) + 1);
+  }
+
+  for (const entry of toolEntries) {
     const key = mcpManifestKey(entry.model, entry.verb, entry.specifier);
     tools[key] = buildToolEntry(entry);
 
-    // Validate the auto-generated name. Per-handler `mcp.name` overrides and `mcp.visibility` are
-    // runtime-only (not carried in the manifest), so this checks the auto-generated name — the
-    // runtime generator is authoritative and accounts for both. The length cap is unambiguous, so
-    // an over-cap name is a hard error; duplicates can't be classified without visibility, so they
-    // are warnings (the runtime drops real visible collisions).
+    // Resolve the name the runtime will advertise: a preferred name produced by more than one entry is
+    // re-derived with the abbreviated call type ({@link buildDisambiguatedMcpToolName}) so both tools
+    // survive. The length cap then applies to that final name — an over-cap name is a hard error; an
+    // over-soft name is a warning. Disambiguation that auto-resolves a clash is surfaced as a warning
+    // (not an error) so the build still ships.
     const segment = segments.get(entry.model) ?? entry.model;
-    const toolName = buildMcpToolName(segment, entry.verb, entry.specifier);
+    const baseName = buildMcpToolName(segment, entry.verb, entry.specifier);
+    const clashes = (nameCounts.get(baseName) ?? 0) > 1;
+    const toolName = clashes ? buildDisambiguatedMcpToolName(segment, entry.verb, entry.specifier) : baseName;
+
+    if (toolName !== baseName) {
+      warnings.push(`Tool name "${baseName}" is produced by more than one entry; re-derived as "${toolName}" (${key}) with the abbreviated call type to disambiguate.`);
+    }
+
     const validation = validateMcpToolName(toolName);
 
     if (validation.level === 'error') {
@@ -127,7 +145,7 @@ export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new
     const priorKey = seenNames.get(toolName);
 
     if (priorKey != null) {
-      warnings.push(`Tool name "${toolName}" is produced by more than one entry (${priorKey} and ${key}); one shadows the other unless hidden or renamed at runtime.`);
+      warnings.push(`Tool name "${toolName}" is still produced by more than one entry (${priorKey} and ${key}) after disambiguation; one shadows the other unless hidden or renamed at runtime.`);
     } else {
       seenNames.set(toolName, key);
     }

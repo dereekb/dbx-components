@@ -328,10 +328,19 @@ describe('renderMcpManifest tool name validation', () => {
     expect(result.warnings[0]).toContain('soft limit');
   });
 
-  it('warns when two entries resolve to the same tool name', () => {
+  it('disambiguates two entries that resolve to the same tool name with the abbreviated call type', () => {
     const result = renderFull([makeEntry({ model: 'widget', verb: 'read', specifier: 'foo' }), makeEntry({ model: 'widget', verb: 'update', specifier: 'foo' })]);
     expect(result.errors).toEqual([]);
-    expect(result.warnings.some((w) => w.includes('produced by more than one entry'))).toBe(true);
+    // Both colliding entries are re-derived; the warning names the disambiguated form rather than dropping one.
+    expect(result.warnings.some((w) => w.includes('produced by more than one entry') && w.includes('widget-r-foo'))).toBe(true);
+    expect(result.warnings.some((w) => w.includes('widget-u-foo'))).toBe(true);
+  });
+
+  it('errors when disambiguating a collision pushes the name over the cap', () => {
+    const specifier = 'a'.repeat(57); // widget- (7) + 57 = 64 (fits); widget-u- (9) + 57 = 66 (over cap)
+    const result = renderFull([makeEntry({ model: 'widget', verb: 'read', specifier }), makeEntry({ model: 'widget', verb: 'update', specifier })]);
+    expect(result.errors.length).toBeGreaterThanOrEqual(1);
+    expect(result.errors.some((e) => e.includes('over the 64-char MCP cap'))).toBe(true);
   });
 
   it('uses a per-model segment from the model manifest, keeping an otherwise-too-long name under the cap', () => {

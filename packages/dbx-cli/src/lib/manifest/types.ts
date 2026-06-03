@@ -454,3 +454,54 @@ export function validateMcpToolName(name: string): McpToolNameValidation {
 
   return { name, length, level };
 }
+
+/**
+ * Single-character abbreviations for the standard CRUDQ + invoke call types.
+ *
+ * Mirrors `MCP_CALL_TYPE_ABBREVIATIONS` in `@dereekb/firebase-server/mcp` so the build-time renderer
+ * disambiguates colliding names exactly like the runtime generator.
+ */
+export const MCP_CALL_TYPE_ABBREVIATIONS: Readonly<Record<string, string>> = {
+  create: 'c',
+  read: 'r',
+  update: 'u',
+  delete: 'd',
+  query: 'q',
+  invoke: 'i'
+};
+
+/**
+ * Abbreviates a call type for a disambiguated tool name; a custom call type is returned unchanged.
+ *
+ * Mirrors `abbreviateMcpCallType` in `@dereekb/firebase-server/mcp`.
+ *
+ * @param callType - The call type / verb.
+ * @returns The single-character abbreviation, or the original string for a custom call type.
+ *
+ * @example
+ * abbreviateMcpCallType('update'); // 'u'
+ */
+export function abbreviateMcpCallType(callType: string): string {
+  return MCP_CALL_TYPE_ABBREVIATIONS[callType] ?? callType;
+}
+
+/**
+ * Builds the disambiguated MCP tool name — the form used only when {@link buildMcpToolName} collides
+ * with another visible tool. Named specifiers re-insert the abbreviated call type
+ * (`worker-u-syncCheckHqEmployee`); default (`_`) specifiers already carry the full call type and are
+ * returned unchanged.
+ *
+ * Mirrors `buildDisambiguatedMcpToolName` in `@dereekb/firebase-server/mcp`.
+ *
+ * @param modelSegment - The model segment of the name (model type, or a per-model override).
+ * @param callType - The call type / verb.
+ * @param specifier - The specifier key, or `_` / undefined for the default entry.
+ * @returns The hyphen-joined disambiguated tool name.
+ *
+ * @example
+ * buildDisambiguatedMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-u-syncCheckHqEmployee'
+ */
+export function buildDisambiguatedMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
+  const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
+  return isDefault ? `${modelSegment}-${callType}` : `${modelSegment}-${abbreviateMcpCallType(callType)}-${specifier}`;
+}

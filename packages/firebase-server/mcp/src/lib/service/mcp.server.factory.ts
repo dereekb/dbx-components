@@ -11,7 +11,7 @@ import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIO
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
-import { generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, MCP_TOOL_NAME_WARN_LENGTH, type McpToolDefinition, type McpToolGenerationNamingOptions, type McpToolGenerationResult, type McpToolGenerationSkip, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
+import { generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, type McpToolDefinition, type McpToolGenerationNamingOptions, type McpToolGenerationResult, type McpToolGenerationSkip, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
@@ -196,10 +196,8 @@ export class McpServerFactoryService {
 
     if (warning.reason === 'mapper_without_mapped_manifest') {
       result = `MCP tool ${warning.toolName} declares mcp.mapSuccessfulResult but its manifest entry has no mapped result type — annotate the matching '.api.ts' leaf with '@dbxModelApiMcpResult <TypeName>' and regenerate the manifest so the advertised output schema matches the mapped result.`;
-    } else if (warning.reason === 'mapped_manifest_without_mapper') {
-      result = `MCP tool ${warning.toolName} has a '@dbxModelApiMcpResult' manifest annotation but its handler no longer declares mcp.mapSuccessfulResult — remove the stale annotation and regenerate the manifest, or restore the mapper.`;
     } else {
-      result = `MCP tool ${warning.toolName} name is ${warning.toolName.length} chars, over the ${MCP_TOOL_NAME_WARN_LENGTH}-char soft limit (hard cap ${MCP_TOOL_NAME_MAX_LENGTH}). Consider a shorter specifier/model segment or an mcp.name override before it reaches the cap.`;
+      result = `MCP tool ${warning.toolName} has a '@dbxModelApiMcpResult' manifest annotation but its handler no longer declares mcp.mapSuccessfulResult — remove the stale annotation and regenerate the manifest, or restore the mapper.`;
     }
 
     return result;
