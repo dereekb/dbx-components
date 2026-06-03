@@ -125,6 +125,42 @@ describe('extractModelsFromSource()', () => {
     expect(empty.converters).toHaveLength(0);
   });
 
+  describe('@dbxModelMcpToolNameSegment tag', () => {
+    it('captures the first token as the tool-name segment', () => {
+      const source = `
+        /**
+         * A worker.
+         * @dbxModel
+         * @dbxModelMcpToolNameSegment wk
+         */
+        export interface Worker { name: string; }
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'worker.ts', text: source });
+      expect(interfaces.find((i) => i.name === 'Worker')?.mcpToolNameSegment).toBe('wk');
+    });
+
+    it('omits the segment when the tag is absent', () => {
+      const source = `
+        /** @dbxModel */
+        export interface Worker { name: string; }
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'worker.ts', text: source });
+      expect(interfaces.find((i) => i.name === 'Worker')).not.toHaveProperty('mcpToolNameSegment');
+    });
+
+    it('ignores an invalid (non-identifier) segment value', () => {
+      const source = `
+        /**
+         * @dbxModel
+         * @dbxModelMcpToolNameSegment 9bad-value
+         */
+        export interface Worker { name: string; }
+      `;
+      const { interfaces } = extractModelsFromSource({ name: 'worker.ts', text: source });
+      expect(interfaces.find((i) => i.name === 'Worker')).not.toHaveProperty('mcpToolNameSegment');
+    });
+  });
+
   describe('extends-name peeling for utility-type wrappers', () => {
     it('returns a bare extends identifier unchanged', () => {
       const source = `

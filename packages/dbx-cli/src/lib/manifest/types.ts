@@ -126,6 +126,12 @@ export interface CliModelManifestEntry {
    */
   readonly fields: readonly CliModelField[];
   /**
+   * Per-model override of the MCP tool-name model segment, from `@dbxModelMcpToolNameSegment
+   * <segment>` on the model interface. When present it replaces the model type in generated tool
+   * names (e.g. the collection prefix). Absent when the model omits the tag.
+   */
+  readonly mcpToolNameSegment?: string;
+  /**
    * Read posture declared by `@dbxModelRead <level>` on the model interface. Closed enum:
    * `system` / `owner` / `admin-only` / `permissions`. Absent when the model interface omits the tag.
    */
@@ -187,6 +193,21 @@ export interface CliApiManifestEntry {
    * Per-field result descriptions read from the result interface's property JSDocs.
    */
   readonly resultFields?: readonly CliApiManifestField[];
+  /**
+   * Name of the MCP-mapped result interface declared via the `@dbxModelApiMcpResult <TypeName>`
+   * JSDoc tag on the CRUD leaf. Present only when a handler remaps its success result for MCP.
+   */
+  readonly mcpResultTypeName?: string;
+  /**
+   * Description from the MCP-mapped result interface's own JSDoc. The MCP manifest renderer prefers
+   * this over {@link resultTypeDescription} when building the tool output schema.
+   */
+  readonly mcpResultTypeDescription?: string;
+  /**
+   * Per-field descriptions read from the MCP-mapped result interface's property JSDocs. The MCP
+   * manifest renderer prefers these over {@link resultFields} when building the tool output schema.
+   */
+  readonly mcpResultFields?: readonly CliApiManifestField[];
 }
 
 export type CliApiManifest = readonly CliApiManifestEntry[];
@@ -220,6 +241,12 @@ export interface McpManifestToolEntry {
    * JSON Schema synthesized from `resultFields[]` / `resultTypeDescription`. Omitted when both absent.
    */
   readonly outputSchema?: object;
+  /**
+   * Name of the MCP-mapped result interface (from `@dbxModelApiMcpResult`) when the output schema was
+   * built from a mapped type. Present iff the source leaf was annotated — the runtime tool generator
+   * uses it to detect handlers whose `mapSuccessfulResult` lacks the matching `.api.ts` annotation.
+   */
+  readonly mcpResultTypeName?: string;
 }
 
 /**
@@ -257,6 +284,12 @@ export interface McpManifestModelEntry {
   readonly sourcePackage: string;
   readonly sourceFile: string;
   readonly fields: readonly McpManifestModelField[];
+  /**
+   * Per-model override of the model segment used in generated MCP tool names (mirror of
+   * {@link CliModelManifestEntry.mcpToolNameSegment}). Consumed by the runtime generator and the
+   * build-time name validation so both compose the same names.
+   */
+  readonly mcpToolNameSegment?: string;
 }
 
 /**
@@ -340,4 +373,143 @@ export interface McpManifest {
 export function mcpManifestKey(modelType: string, call: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === '_';
   return isDefault ? `${modelType}.${call}._` : `${modelType}.${call}.${specifier}`;
+}
+
+/**
+ * Default specifier key used when a handler is not behind a specifier router.
+ *
+ * Mirrors `DEFAULT_SPECIFIER_KEY` in `@dereekb/firebase-server/mcp` — kept in sync so the
+ * build-time renderer composes the same tool names as the runtime generator.
+ */
+export const DEFAULT_SPECIFIER_KEY = '_';
+
+/**
+ * Soft limit for an MCP tool name. Mirrors `MCP_TOOL_NAME_WARN_LENGTH` in
+ * `@dereekb/firebase-server/mcp`. Names over this are flagged at manifest-generation time.
+ */
+export const MCP_TOOL_NAME_WARN_LENGTH = 55;
+
+/**
+ * Hard limit for an MCP tool name. Mirrors `MCP_TOOL_NAME_MAX_LENGTH` in
+ * `@dereekb/firebase-server/mcp`. Remote MCP clients reject a `tools/list` payload containing any
+ * tool whose `name` exceeds this, so manifest generation fails when a name is over the cap.
+ */
+export const MCP_TOOL_NAME_MAX_LENGTH = 64;
+
+/**
+ * Severity of a tool name's length relative to the soft / hard limits.
+ */
+export type McpToolNameLengthLevel = 'ok' | 'warn' | 'error';
+
+/**
+ * The outcome of validating a tool name's length.
+ */
+export interface McpToolNameValidation {
+  readonly name: string;
+  readonly length: number;
+  readonly level: McpToolNameLengthLevel;
+}
+
+/**
+ * Builds the MCP tool name for a (modelSegment, callType, specifier) triple.
+ *
+ * Mirrors `buildMcpToolName` in `@dereekb/firebase-server/mcp` so the build-time manifest validation
+ * sees the same names the runtime advertises. The call-type segment is only emitted for the default
+ * (`_`) specifier; named specifiers drop it (`worker-syncCheckHqEmployee`).
+ *
+ * @param modelSegment - The model segment of the name (model type, or a per-model override).
+ * @param callType - The call type / verb.
+ * @param specifier - The specifier key, or `_` / undefined for the default entry.
+ * @returns The hyphen-joined tool name.
+ *
+ * @example
+ * ```ts
+ * buildMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-syncCheckHqEmployee'
+ * ```
+ */
+export function buildMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
+  const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
+  return isDefault ? `${modelSegment}-${callType}` : `${modelSegment}-${specifier}`;
+}
+
+/**
+ * Classifies a tool name's length against the soft/hard MCP name-length limits.
+ *
+ * Mirrors `validateMcpToolName` in `@dereekb/firebase-server/mcp`.
+ *
+ * @param name - The fully-resolved tool name.
+ * @returns The length classification — `error` over {@link MCP_TOOL_NAME_MAX_LENGTH}, `warn` over
+ *   {@link MCP_TOOL_NAME_WARN_LENGTH}, otherwise `ok`.
+ *
+ * @example
+ * ```ts
+ * validateMcpToolName('worker-create').level; // 'ok'
+ * ```
+ */
+export function validateMcpToolName(name: string): McpToolNameValidation {
+  const length = name.length;
+  let level: McpToolNameLengthLevel = 'ok';
+
+  if (length > MCP_TOOL_NAME_MAX_LENGTH) {
+    level = 'error';
+  } else if (length > MCP_TOOL_NAME_WARN_LENGTH) {
+    level = 'warn';
+  }
+
+  return { name, length, level };
+}
+
+/**
+ * Single-character abbreviations for the standard CRUDQ + invoke call types.
+ *
+ * Mirrors `MCP_CALL_TYPE_ABBREVIATIONS` in `@dereekb/firebase-server/mcp` so the build-time renderer
+ * disambiguates colliding names exactly like the runtime generator.
+ */
+export const MCP_CALL_TYPE_ABBREVIATIONS: Readonly<Record<string, string>> = {
+  create: 'c',
+  read: 'r',
+  update: 'u',
+  delete: 'd',
+  query: 'q',
+  invoke: 'i'
+};
+
+/**
+ * Abbreviates a call type for a disambiguated tool name; a custom call type is returned unchanged.
+ *
+ * Mirrors `abbreviateMcpCallType` in `@dereekb/firebase-server/mcp`.
+ *
+ * @param callType - The call type / verb.
+ * @returns The single-character abbreviation, or the original string for a custom call type.
+ *
+ * @example
+ * ```ts
+ * abbreviateMcpCallType('update'); // 'u'
+ * ```
+ */
+export function abbreviateMcpCallType(callType: string): string {
+  return MCP_CALL_TYPE_ABBREVIATIONS[callType] ?? callType;
+}
+
+/**
+ * Builds the disambiguated MCP tool name — the form used only when {@link buildMcpToolName} collides
+ * with another visible tool. Named specifiers re-insert the abbreviated call type
+ * (`worker-u-syncCheckHqEmployee`); default (`_`) specifiers already carry the full call type and are
+ * returned unchanged.
+ *
+ * Mirrors `buildDisambiguatedMcpToolName` in `@dereekb/firebase-server/mcp`.
+ *
+ * @param modelSegment - The model segment of the name (model type, or a per-model override).
+ * @param callType - The call type / verb.
+ * @param specifier - The specifier key, or `_` / undefined for the default entry.
+ * @returns The hyphen-joined disambiguated tool name.
+ *
+ * @example
+ * ```ts
+ * buildDisambiguatedMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-u-syncCheckHqEmployee'
+ * ```
+ */
+export function buildDisambiguatedMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
+  const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
+  return isDefault ? `${modelSegment}-${callType}` : `${modelSegment}-${abbreviateMcpCallType(callType)}-${specifier}`;
 }

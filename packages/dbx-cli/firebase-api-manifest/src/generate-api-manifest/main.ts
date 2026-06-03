@@ -182,6 +182,14 @@ async function main(): Promise<void> {
         }
       }
 
+      // A `@dbxModelApiMcpResult <TypeName>` tag whose type resolved to no docs/fields means the named
+      // interface is not declared in the same `.api.ts` — the MCP output schema then silently falls
+      // back to the raw result type.
+      if (entry.mcpResultTypeName && entry.mcpResultFields == null && entry.mcpResultTypeDescription == null) {
+        const specPart = entry.specifier ? '/' + entry.specifier : '';
+        console.warn(`[mcp-result-type-unresolved] ${pkg.packageName} · ${entry.model}/${entry.verb}${specPart} → @dbxModelApiMcpResult ${entry.mcpResultTypeName} not declared in the same .api.ts file`);
+      }
+
       collected.push(enriched);
     }
   }

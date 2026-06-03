@@ -187,6 +187,78 @@ export const profileModelCrudFunctionsConfig = {
 export const profileFunctionMap = callModelFirebaseFunctionMapFactory({}, profileModelCrudFunctionsConfig);
 `;
 
+const MCP_RESULT_SOURCE = `import { callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+
+export interface AllPublishedEntriesParams {
+  readonly limit?: number;
+}
+
+export interface AllPublishedEntriesResult {
+  readonly entries: readonly string[];
+  readonly secret: string;
+}
+
+/**
+ * Trimmed projection exposed to MCP clients.
+ */
+export interface AllPublishedEntriesMcpResult {
+  /**
+   * Number of published entries.
+   */
+  readonly count: number;
+}
+
+export interface DeleteEntryParams {
+  readonly key: string;
+}
+
+/**
+ * Confirmation of a delete, trimmed for MCP.
+ */
+export interface DeleteEntryMcpResult {
+  readonly deleted: boolean;
+}
+
+export interface StandaloneParams {
+  readonly id: string;
+}
+
+/**
+ * Standalone MCP-mapped projection.
+ */
+export interface StandaloneMcpResult {
+  readonly ok: boolean;
+}
+
+export type GuestbookFunctionTypeMap = {
+  /**
+   * @dbxModelApiMcpResult StandaloneMcpResult
+   */
+  guestbookStandalone: [StandaloneParams, AllPublishedEntriesResult];
+};
+
+export type GuestbookModelCrudFunctionsConfig = {
+  guestbookEntry: {
+    invoke: {
+      /**
+       * @dbxModelApiMcpResult AllPublishedEntriesMcpResult
+       */
+      allPublishedEntries: [AllPublishedEntriesParams, AllPublishedEntriesResult];
+    };
+    /**
+     * @dbxModelApiMcpResult DeleteEntryMcpResult
+     */
+    delete: DeleteEntryParams;
+  };
+};
+
+export const guestbookModelCrudFunctionsConfig = {
+  guestbookEntry: ['invoke:allPublishedEntries', 'delete']
+};
+
+export const guestbookFunctionMap = callModelFirebaseFunctionMapFactory({}, guestbookModelCrudFunctionsConfig);
+`;
+
 describe('extractCrudEntries', () => {
   it('walks profile CRUD config and FunctionTypeMap', () => {
     const extraction = extractCrudEntries({ name: 'profile.api.ts', text: PROFILE_SOURCE });
@@ -298,5 +370,32 @@ describe('extractCrudEntries', () => {
       { name: 'downloadUrl', typeText: 'string', description: 'Signed URL the caller can fetch the archive from.' },
       { name: 'expiresAt', typeText: 'number' }
     ]);
+  });
+
+  it('reads @dbxModelApiMcpResult on specifier, bare, and standalone leaves and resolves the mapped result docs', () => {
+    const extraction = extractCrudEntries({ name: 'guestbook.api.ts', text: MCP_RESULT_SOURCE });
+
+    const invoke = extraction.entries.find((e) => e.verb === 'invoke' && e.specifier === 'allPublishedEntries');
+    expect(invoke?.resultTypeName).toBe('AllPublishedEntriesResult');
+    expect(invoke?.mcpResultTypeName).toBe('AllPublishedEntriesMcpResult');
+    expect(invoke?.mcpResultTypeDescription).toBe('Trimmed projection exposed to MCP clients.');
+    expect(invoke?.mcpResultFields).toEqual([{ name: 'count', typeText: 'number', description: 'Number of published entries.' }]);
+
+    const del = extraction.entries.find((e) => e.verb === 'delete');
+    expect(del?.specifier).toBeUndefined();
+    expect(del?.mcpResultTypeName).toBe('DeleteEntryMcpResult');
+    expect(del?.mcpResultTypeDescription).toBe('Confirmation of a delete, trimmed for MCP.');
+
+    const standalone = extraction.entries.find((e) => e.verb === 'standalone');
+    expect(standalone?.model).toBe('guestbookStandalone');
+    expect(standalone?.mcpResultTypeName).toBe('StandaloneMcpResult');
+    expect(standalone?.mcpResultTypeDescription).toBe('Standalone MCP-mapped projection.');
+  });
+
+  it('leaves mcpResult* undefined when no @dbxModelApiMcpResult tag is present', () => {
+    const extraction = extractCrudEntries({ name: 'guestbook.api.ts', text: QUERY_SOURCE });
+    const queryDefault = extraction.entries.find((e) => e.verb === 'query' && e.specifier === '_');
+    expect(queryDefault?.mcpResultTypeName).toBeUndefined();
+    expect(queryDefault?.mcpResultFields).toBeUndefined();
   });
 });

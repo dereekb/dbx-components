@@ -95,7 +95,7 @@ describe('McpServerFactoryService.createServer', () => {
   it('registers tools/list and returns one tool per generated definition', async () => {
     const apiDetails = makeApiDetails([{ model: 'storageFile', call: 'invoke', specifier: 'recomputeChecksums' }]);
     const tools = await listTools(makeFactory(apiDetails));
-    expect(tools.map((t) => t.name)).toEqual(['storageFile-invoke-recomputeChecksums']);
+    expect(tools.map((t) => t.name)).toEqual(['storageFile-recomputeChecksums']);
   });
 
   it('routes tools/call back through the dispatch service with the right params', async () => {
@@ -115,7 +115,7 @@ describe('McpServerFactoryService.createServer', () => {
     const callResult = (await callHandler(
       {
         method: 'tools/call',
-        params: { name: 'storageFile-invoke-recomputeChecksums', arguments: { foo: 1 } }
+        params: { name: 'storageFile-recomputeChecksums', arguments: { foo: 1 } }
       },
       {} as any
     )) as { isError?: boolean; structuredContent?: unknown };
@@ -179,7 +179,7 @@ describe('McpServerFactoryService visibility filter', () => {
     ]);
 
     const allScopes = await listTools(makeFactory(apiDetails), { auth: oidcAuth('model.read') });
-    expect(allScopes.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['widget-read-shown']);
+    expect(allScopes.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['widget-shown']);
 
     const noScopes = await listTools(makeFactory(apiDetails), { auth: oidcAuth('') });
     expect(noScopes.map((t) => t.name)).toEqual([]);
@@ -280,7 +280,7 @@ describe('McpServerFactoryService readOnly mode', () => {
     ]);
     const factory = makeFactory(apiDetailsOverride, { config: { readOnly: true } });
     const tools = await listTools(factory);
-    expect(tools.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['widget-invoke-safe']);
+    expect(tools.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['widget-safe']);
   });
 
   it('appends " (read-only)" to the advertised serverName when readOnly is true', () => {

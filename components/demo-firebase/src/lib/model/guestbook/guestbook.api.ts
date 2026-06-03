@@ -145,6 +145,24 @@ export interface AllPublishedGuestbookEntriesResult {
 }
 
 /**
+ * MCP-mapped projection of {@link AllPublishedGuestbookEntriesResult}.
+ *
+ * Returned to MCP clients via the handler's `mapSuccessfulResult` mapper — drops the potentially
+ * large `entries` array (an LLM rarely needs every full entry document) down to the aggregate
+ * counts, demonstrating how MCP access can strip unhelpful information from a callModel result.
+ */
+export interface AllPublishedGuestbookEntriesMcpResult {
+  /**
+   * Number of published entries gathered.
+   */
+  readonly count: number;
+  /**
+   * Whether the server-side hard cap was hit before the collection group was exhausted.
+   */
+  readonly hitLimit: boolean;
+}
+
+/**
  * Parameters for the `guestbookEntry / invoke / entryDetails` RPC.
  *
  * Targets a single GuestbookEntry by key (the store's current document) and
@@ -191,6 +209,9 @@ export type GuestbookModelCrudFunctionsConfig = {
       entries: [QueryAllGuestbookEntriesParams, OnCallQueryModelResult<GuestbookEntry>];
     };
     invoke: {
+      /**
+       * @dbxModelApiMcpResult AllPublishedGuestbookEntriesMcpResult
+       */
       allPublishedEntries: [AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult];
       entryDetails: [EntryDetailsGuestbookEntryParams, EntryDetailsGuestbookEntryResult];
     };

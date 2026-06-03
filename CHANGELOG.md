@@ -1,3 +1,19 @@
+# [13.14.0](https://github.com/dereekb/dbx-components/compare/v13.13.0-dev...v13.14.0) (2026-06-03)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([77dd88bc](https://github.com/dereekb/dbx-components/commit/77dd88bc8d44ced90cd2b77275c8937c9ce42acd))
+
+
+### Features
+
+- **dbx-web:** add .dbx-card-select centered selectable-card utility ([7693ca48](https://github.com/dereekb/dbx-components/commit/7693ca486faea36322f2ed09fa460e28b885dbba))
+- **dbx-web:** show .dbx-button-icon-tile ripple, register utility ([2e1b9b4e](https://github.com/dereekb/dbx-components/commit/2e1b9b4e883329c6d2bf0b2e2f87bb889412bc31))
+- **firebase-server:** add MCP tool-name length safety + shorter names ([c57416c4](https://github.com/dereekb/dbx-components/commit/c57416c4797cc656d2e2d39bfd99ee23b434bc0c))
+- **firebase-server:** add mcp.mapSuccessfulResult result hook ([d6686c57](https://github.com/dereekb/dbx-components/commit/d6686c571e8faf375a2e81c12555320a8fb2b670))
+- **firebase-server:** disambiguate colliding MCP tool names ([4cee2468](https://github.com/dereekb/dbx-components/commit/4cee2468f4dd152059f5e6304d4fee8ef4b4d6ba))
+
 # [13.13.0](https://github.com/dereekb/dbx-components/compare/v13.12.9-dev...v13.13.0) (2026-06-02)
 
 

@@ -80,6 +80,20 @@ export interface CrudEntry {
    * Per-field JSDocs read from the result interface's properties.
    */
   readonly resultFields?: readonly CrudEntryDocField[];
+  /**
+   * Name of the MCP-mapped result interface declared via the `@dbxModelApiMcpResult <TypeName>`
+   * JSDoc tag on the leaf. Present only when a handler remaps its success result for MCP; the
+   * MCP manifest output schema is synthesized from this type instead of the raw result.
+   */
+  readonly mcpResultTypeName?: string;
+  /**
+   * JSDoc summary on the MCP-mapped result interface itself (resolved from `mcpResultTypeName`).
+   */
+  readonly mcpResultTypeDescription?: string;
+  /**
+   * Per-field JSDocs read from the MCP-mapped result interface's properties.
+   */
+  readonly mcpResultFields?: readonly CrudEntryDocField[];
 }
 
 export interface CrudExtraction {
@@ -149,6 +163,11 @@ export interface ModelExtractionInterface {
    * / `permissions`). Absent when the interface omits the tag or declares an invalid value.
    */
   readonly dbxModelRead?: 'system' | 'owner' | 'admin-only' | 'permissions';
+  /**
+   * Per-model MCP tool-name segment from `@dbxModelMcpToolNameSegment <segment>`. Replaces the model
+   * type in generated tool names (e.g. the collection prefix). Absent when the tag is omitted or invalid.
+   */
+  readonly mcpToolNameSegment?: string;
 }
 
 /**

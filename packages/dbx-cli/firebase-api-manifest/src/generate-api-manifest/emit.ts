@@ -109,7 +109,10 @@ function renderEntry({ entry, validatorName }: CollectedEntry): string {
     entry.paramsTypeDescription ? `paramsTypeDescription: ${JSON.stringify(entry.paramsTypeDescription)}` : undefined,
     entry.paramsFields && entry.paramsFields.length > 0 ? `paramsFields: ${renderDocFields(entry.paramsFields)}` : undefined,
     entry.resultTypeDescription ? `resultTypeDescription: ${JSON.stringify(entry.resultTypeDescription)}` : undefined,
-    entry.resultFields && entry.resultFields.length > 0 ? `resultFields: ${renderDocFields(entry.resultFields)}` : undefined
+    entry.resultFields && entry.resultFields.length > 0 ? `resultFields: ${renderDocFields(entry.resultFields)}` : undefined,
+    entry.mcpResultTypeName ? `mcpResultTypeName: ${JSON.stringify(entry.mcpResultTypeName)}` : undefined,
+    entry.mcpResultTypeDescription ? `mcpResultTypeDescription: ${JSON.stringify(entry.mcpResultTypeDescription)}` : undefined,
+    entry.mcpResultFields && entry.mcpResultFields.length > 0 ? `mcpResultFields: ${renderDocFields(entry.mcpResultFields)}` : undefined
   ];
 
   return `  { ${fields.filter((v): v is string => Boolean(v)).join(', ')} }`;
@@ -141,6 +144,7 @@ function renderModelEntry(entry: CliModelManifestEntry, emitConverters: boolean)
     `sourcePackage: ${JSON.stringify(entry.sourcePackage)}`,
     `sourceFile: ${JSON.stringify(entry.sourceFile)}`,
     `fields: ${renderModelFields(entry.fields, emitConverters)}`,
+    entry.mcpToolNameSegment ? `mcpToolNameSegment: ${JSON.stringify(entry.mcpToolNameSegment)}` : undefined,
     entry.read ? `read: ${JSON.stringify(entry.read)}` : undefined,
     entry.serviceFactory ? `serviceFactory: { exportName: ${JSON.stringify(entry.serviceFactory.exportName)}, sourceFile: ${JSON.stringify(entry.serviceFactory.sourceFile)} }` : undefined
   ];

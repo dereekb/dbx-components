@@ -362,6 +362,107 @@
           <mat-icon>verified</mat-icon>
         </div>
       </div>
+      <h4>.dbx-button-icon-tile</h4>
+      <p>
+        Add the
+        <code>.dbx-button-icon-tile</code>
+        class to a
+        <code>&lt;dbx-button&gt;</code>
+        that wraps a
+        <code>&lt;dbx-icon-tile&gt;</code>
+        to make the tile itself the button. The class zeroes the button's default padding and min-width and adopts the tile's
+        <code>--dbx-icon-tile-border-radius</code>
+        , so the button hugs the tile exactly — the whole tile becomes the click target and picks up the button's ripple, hover, and focus state layers. Wire it up with
+        <code>[dbxAction]</code>
+        or a click handler like any other dbx-button.
+      </p>
+      <p>Size, shape, and color are all driven by the icon tile's inputs and CSS tokens — the button reflows to match. Here the tile grows from the default up through 48/64/80px (the last two also override the border radius).</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile" style="--dbx-icon-tile-width: 48px; --dbx-icon-tile-height: 48px; --dbx-icon-tile-icon-size: 28px">
+          <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile" style="--dbx-icon-tile-width: 64px; --dbx-icon-tile-height: 64px; --dbx-icon-tile-icon-size: 36px; --dbx-icon-tile-border-radius: 4px">
+          <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile" style="--dbx-icon-tile-width: 80px; --dbx-icon-tile-height: 80px; --dbx-icon-tile-icon-size: 48px; --dbx-icon-tile-border-radius: 50%">
+          <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+      </div>
+      <p>The tile's [dbxColor] + [dbxColorTone] drive the surface — the same tonal color set works here as on a standalone tile.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'favorite'" [dbxColor]="'accent'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'warning'" [dbxColor]="'warn'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'verified'" [dbxColor]="'success'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'info'" [dbxColor]="'notice'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'folder'" [dbxColor]="'grey'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+      </div>
+      <p>Omit [dbxColorTone] for a full-color tile button.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'favorite'" [dbxColor]="'accent'"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'warning'" [dbxColor]="'warn'"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [icon]="'verified'" [dbxColor]="'success'"></dbx-icon-tile>
+        </dbx-button>
+      </div>
+      <p>
+        For a circular button, set
+        <code>--dbx-icon-tile-border-radius: 50%</code>
+        on the button. The button and the tile both read that token, so they round together. The tile's own
+        <code>[round]</code>
+        flag only rounds the tile — it does not reach the button — so drive the radius from the token here.
+      </p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+        <dbx-button class="dbx-button-icon-tile" style="--dbx-icon-tile-border-radius: 50%">
+          <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile" style="--dbx-icon-tile-border-radius: 50%">
+          <dbx-icon-tile [icon]="'favorite'" [dbxColor]="'accent'" [dbxColorTone]="18"></dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile" style="--dbx-icon-tile-border-radius: 50%">
+          <dbx-icon-tile [icon]="'verified'" [dbxColor]="'success'"></dbx-icon-tile>
+        </dbx-button>
+      </div>
+      <p>Omit [icon] to project custom content — a letter or glyph makes a compact avatar / shortcut button.</p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [dbxColor]="'primary'" [dbxColorTone]="18">
+            <strong>A</strong>
+          </dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile">
+          <dbx-icon-tile [dbxColor]="'accent'" [dbxColorTone]="18">
+            <mat-icon>star</mat-icon>
+          </dbx-icon-tile>
+        </dbx-button>
+        <dbx-button class="dbx-button-icon-tile" style="--dbx-icon-tile-width: 56px; --dbx-icon-tile-height: 56px; --dbx-icon-tile-font-size: 22px; --dbx-icon-tile-font-weight: 600; --dbx-icon-tile-border-radius: 50%">
+          <dbx-icon-tile [dbxColor]="'success'" [dbxColorTone]="18">
+            <span>1</span>
+          </dbx-icon-tile>
+        </dbx-button>
+      </div>
     </doc-feature-example>
     <h4>Color Classes (css classes)</h4>
     <doc-feature-example header=".dbx-primary, .dbx-primary-bg">

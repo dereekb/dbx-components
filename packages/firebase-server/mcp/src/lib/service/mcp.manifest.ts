@@ -20,6 +20,12 @@ export interface McpManifestToolEntry {
   readonly description?: string;
   readonly inputSchema?: object;
   readonly outputSchema?: object;
+  /**
+   * Name of the MCP-mapped result interface (from `@dbxModelApiMcpResult`) when the output schema was
+   * built from a mapped type. Used at boot to detect a `mapSuccessfulResult` handler whose `.api.ts`
+   * leaf was never annotated (the output schema would then describe the raw, un-mapped result).
+   */
+  readonly mcpResultTypeName?: string;
 }
 
 /**
@@ -59,6 +65,13 @@ export interface McpManifestModelEntry {
   readonly sourcePackage: string;
   readonly sourceFile: string;
   readonly fields: readonly McpManifestModelField[];
+  /**
+   * Per-model override of the model segment used in generated MCP tool names (from
+   * `@dbxModelMcpToolNameSegment` on the model interface). When present it replaces the model type
+   * in tool names (e.g. the collection prefix), trading readability for shorter names. Absent when
+   * the model omits the tag — names then use the model type.
+   */
+  readonly mcpToolNameSegment?: string;
   /**
    * Read posture declared by `@dbxModelRead <level>` on the model interface (`system` /
    * `owner` / `admin-only` / `permissions`). Absent when the source model omits the tag.

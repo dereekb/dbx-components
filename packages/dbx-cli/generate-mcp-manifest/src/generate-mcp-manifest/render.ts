@@ -1,4 +1,28 @@
-import { type AuthAppInfo, type AuthClaimInfo, type AuthRegistry, type CliApiManifest, type CliApiManifestEntry, type CliApiManifestField, type CliModelField, type CliModelManifest, type CliModelManifestEntry, MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestAuthApp, type McpManifestAuthClaim, type McpManifestModelEntry, type McpManifestModelField, type McpManifestToolEntry, mcpManifestKey } from '@dereekb/dbx-cli';
+import {
+  type AuthAppInfo,
+  type AuthClaimInfo,
+  type AuthRegistry,
+  buildDisambiguatedMcpToolName,
+  buildMcpToolName,
+  type CliApiManifest,
+  type CliApiManifestEntry,
+  type CliApiManifestField,
+  type CliModelField,
+  type CliModelManifest,
+  type CliModelManifestEntry,
+  MCP_MANIFEST_VERSION,
+  MCP_TOOL_NAME_MAX_LENGTH,
+  MCP_TOOL_NAME_WARN_LENGTH,
+  type McpManifest,
+  type McpManifestAuth,
+  type McpManifestAuthApp,
+  type McpManifestAuthClaim,
+  type McpManifestModelEntry,
+  type McpManifestModelField,
+  type McpManifestToolEntry,
+  mcpManifestKey,
+  validateMcpToolName
+} from '@dereekb/dbx-cli';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type Type } from 'arktype';
 
@@ -31,6 +55,25 @@ export interface RenderMcpManifestInput {
 }
 
 /**
+ * Output of {@link renderMcpManifest}: the rendered manifest plus any tool-name validation findings.
+ */
+export interface RenderMcpManifestResult {
+  /**
+   * The rendered MCP manifest JSON shape.
+   */
+  readonly manifest: McpManifest;
+  /**
+   * Soft findings (names over the warn length, or names produced by more than one entry). Logged at
+   * build time but do not fail generation.
+   */
+  readonly warnings: readonly string[];
+  /**
+   * Hard findings (names over the 64-char MCP cap). A non-empty list should fail manifest generation.
+   */
+  readonly errors: readonly string[];
+}
+
+/**
  * Pure renderer: turns a {@link CliApiManifest} (and optional {@link CliModelManifest})
  * into the {@link McpManifest} JSON shape.
  *
@@ -41,29 +84,84 @@ export interface RenderMcpManifestInput {
  * @param now - Override for the `generatedAt` timestamp. Tests pass a fixed value.
  * @returns The rendered MCP manifest with tools keyed by {@link mcpManifestKey} and an optional models array.
  */
-export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new Date()): McpManifest {
+export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new Date()): RenderMcpManifestResult {
   const tools: Record<string, McpManifestToolEntry> = {};
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const seenNames = new Map<string, string>();
 
-  for (const entry of input.apiManifest) {
-    if (entry.verb === 'standalone') {
-      continue;
+  // Per-model tool-name segment overrides (e.g. collection prefix), sourced from the model manifest
+  // so the names validated here match what the runtime generator advertises.
+  const segments = new Map<string, string>();
+
+  if (input.modelManifest != null) {
+    for (const model of input.modelManifest) {
+      if (model.mcpToolNameSegment != null && model.mcpToolNameSegment.length > 0) {
+        segments.set(model.modelType, model.mcpToolNameSegment);
+      }
     }
+  }
 
+  const toolEntries = input.apiManifest.filter((entry) => entry.verb !== 'standalone');
+
+  // Count how many entries produce each preferred (short) name so colliding ones can be resolved the
+  // same way the runtime generator does. The renderer has no runtime visibility / `mcp.name` override
+  // info, so it conservatively counts every entry — the runtime generator is authoritative and only
+  // disambiguates visible auto-named collisions, but this matches it for the build-time length checks.
+  const nameCounts = new Map<string, number>();
+
+  for (const entry of toolEntries) {
+    const segment = segments.get(entry.model) ?? entry.model;
+    const baseName = buildMcpToolName(segment, entry.verb, entry.specifier);
+    nameCounts.set(baseName, (nameCounts.get(baseName) ?? 0) + 1);
+  }
+
+  for (const entry of toolEntries) {
     const key = mcpManifestKey(entry.model, entry.verb, entry.specifier);
     tools[key] = buildToolEntry(entry);
+
+    // Resolve the name the runtime will advertise: a preferred name produced by more than one entry is
+    // re-derived with the abbreviated call type ({@link buildDisambiguatedMcpToolName}) so both tools
+    // survive. The length cap then applies to that final name — an over-cap name is a hard error; an
+    // over-soft name is a warning. Disambiguation that auto-resolves a clash is surfaced as a warning
+    // (not an error) so the build still ships.
+    const segment = segments.get(entry.model) ?? entry.model;
+    const baseName = buildMcpToolName(segment, entry.verb, entry.specifier);
+    const clashes = (nameCounts.get(baseName) ?? 0) > 1;
+    const toolName = clashes ? buildDisambiguatedMcpToolName(segment, entry.verb, entry.specifier) : baseName;
+
+    if (toolName !== baseName) {
+      warnings.push(`Tool name "${baseName}" is produced by more than one entry; re-derived as "${toolName}" (${key}) with the abbreviated call type to disambiguate.`);
+    }
+
+    const validation = validateMcpToolName(toolName);
+
+    if (validation.level === 'error') {
+      errors.push(`Tool name "${toolName}" is ${validation.length} chars, over the ${MCP_TOOL_NAME_MAX_LENGTH}-char MCP cap (${key}). Shorten the model/specifier, set a per-model mcpToolNameSegment, or hide the tool.`);
+    } else if (validation.level === 'warn') {
+      warnings.push(`Tool name "${toolName}" is ${validation.length} chars, over the ${MCP_TOOL_NAME_WARN_LENGTH}-char soft limit (${key}).`);
+    }
+
+    const priorKey = seenNames.get(toolName);
+
+    if (priorKey != null) {
+      warnings.push(`Tool name "${toolName}" is still produced by more than one entry (${priorKey} and ${key}) after disambiguation; one shadows the other unless hidden or renamed at runtime.`);
+    } else {
+      seenNames.set(toolName, key);
+    }
   }
 
   const models = input.modelManifest != null && input.modelManifest.length > 0 ? input.modelManifest.map(projectModelEntry) : undefined;
   const auth = input.auth == null ? undefined : projectAuthSection(input.auth.registry, input.auth.app);
 
   const base: { version: typeof MCP_MANIFEST_VERSION; generatedAt: string; tools: Record<string, McpManifestToolEntry> } = { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools };
-  const result: McpManifest = {
+  const manifest: McpManifest = {
     ...base,
     ...(models == null ? {} : { models }),
     ...(auth == null ? {} : { auth })
   };
 
-  return result;
+  return { manifest, warnings, errors };
 }
 
 function projectAuthSection(registry: AuthRegistry, appSlug: string): McpManifestAuth | undefined {
@@ -126,6 +224,7 @@ function projectModelEntry(entry: CliModelManifestEntry): McpManifestModelEntry 
     ...(entry.modelGroup == null ? {} : { modelGroup: entry.modelGroup }),
     ...(entry.parentIdentityConst == null ? {} : { parentIdentityConst: entry.parentIdentityConst }),
     ...(entry.description == null ? {} : { description: entry.description }),
+    ...(entry.mcpToolNameSegment == null ? {} : { mcpToolNameSegment: entry.mcpToolNameSegment }),
     ...(entry.read == null ? {} : { read: entry.read }),
     ...(entry.serviceFactory == null ? {} : { serviceFactory: entry.serviceFactory })
   };
@@ -151,11 +250,13 @@ function buildToolEntry(entry: CliApiManifestEntry): McpManifestToolEntry {
   const description = buildDescription(entry);
   const inputSchema = buildInputSchema(entry);
   const outputSchema = buildOutputSchema(entry);
-  const result: { description?: string; inputSchema?: object; outputSchema?: object } = {};
+  const result: { description?: string; inputSchema?: object; outputSchema?: object; mcpResultTypeName?: string } = {};
 
   if (description != null) result.description = description;
   if (inputSchema != null) result.inputSchema = inputSchema;
   if (outputSchema != null) result.outputSchema = outputSchema;
+  // Carry the MCP-mapped result type name so the runtime can detect a mapSuccessfulResult handler whose `.api.ts` leaf was never annotated.
+  if (entry.mcpResultTypeName != null) result.mcpResultTypeName = entry.mcpResultTypeName;
 
   return result;
 }
@@ -187,8 +288,13 @@ function buildInputSchema(entry: CliApiManifestEntry): JsonObject | undefined {
 }
 
 function buildOutputSchema(entry: CliApiManifestEntry): JsonObject | undefined {
-  const hasFields = entry.resultFields != null && entry.resultFields.length > 0;
-  const hasDescription = typeof entry.resultTypeDescription === 'string' && entry.resultTypeDescription.length > 0;
+  // Prefer the MCP-mapped result type (declared via `@dbxModelApiMcpResult`) when present — it
+  // describes what a `mapSuccessfulResult` handler actually exposes over MCP. Fall back to the raw
+  // result type otherwise.
+  const fields = entry.mcpResultFields != null && entry.mcpResultFields.length > 0 ? entry.mcpResultFields : entry.resultFields;
+  const description = typeof entry.mcpResultTypeDescription === 'string' && entry.mcpResultTypeDescription.length > 0 ? entry.mcpResultTypeDescription : entry.resultTypeDescription;
+  const hasFields = fields != null && fields.length > 0;
+  const hasDescription = typeof description === 'string' && description.length > 0;
 
   if (!hasFields && !hasDescription) {
     return undefined;
@@ -197,13 +303,13 @@ function buildOutputSchema(entry: CliApiManifestEntry): JsonObject | undefined {
   const schema: JsonObject = { type: 'object' };
 
   if (hasDescription) {
-    schema['description'] = entry.resultTypeDescription;
+    schema['description'] = description;
   }
 
   if (hasFields) {
     const properties: JsonObject = {};
 
-    for (const field of entry.resultFields) {
+    for (const field of fields) {
       properties[field.name] = buildPropertyFromField(field);
     }
 

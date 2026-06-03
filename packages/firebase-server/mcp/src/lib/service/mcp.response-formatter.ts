@@ -1,6 +1,6 @@
 import { inspect } from 'node:util';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
-import { type McpToolResponseContent, type OnCallModelFunctionApiDetails } from '@dereekb/firebase-server';
+import { type McpToolResponseContent, type McpToolResponseContext, type OnCallModelFunctionApiDetails } from '@dereekb/firebase-server';
 
 /**
  * Default structured value emitted by MCP when a handler returns `undefined`.
@@ -14,35 +14,41 @@ export const DEFAULT_VOID_MCP_SUCCESS_VALUE = Object.freeze({ ok: true }) as { r
 /**
  * Resolves a dispatch result + handler API details into the MCP `CallToolResult` shape.
  *
+ * When `mcp.mapSuccessfulResult` is set, the raw result is first mapped (async-capable) to the value
+ * exposed via MCP; the tiers and the default path then operate on the mapped value. The tier
+ * callbacks receive `(value, context)` where `context` carries both the raw + mapped values + params.
+ *
  * Three-tier resolution as documented on {@link OnCallModelFunctionApiDetails.mcp}:
  *
  * - **Tier 3** — when `mcp.formatResponse` is set, its return value is used verbatim.
  * - **Tier 2** — when `mcp.summarizeResponse` is set, the summary string is wrapped into a
- *   single text content block with the raw `result` exposed as `structuredContent`.
- * - **Tier 1** — default: JSON-stringify `result` as a single text content block, also
- *   exposing the raw value as `structuredContent`.
+ *   single text content block with the (mapped) value exposed as `structuredContent`.
+ * - **Tier 1** — default: JSON-stringify the (mapped) value as a single text content block, also
+ *   exposing it as `structuredContent`.
  *
- * @param result - The handler's return value.
+ * @param result - The handler's raw return value.
  * @param params - The {@link OnCallTypedModelParams} that were dispatched.
- * @param details - The handler-level API details (carries Tier 2/3 formatters).
+ * @param details - The handler-level API details (carries the mapper + Tier 2/3 formatters).
  * @returns The MCP tool response content.
  */
-export function formatMcpToolResponse(result: unknown, params: OnCallTypedModelParams, details: OnCallModelFunctionApiDetails | undefined): McpToolResponseContent {
+export async function formatMcpToolResponse(result: unknown, params: OnCallTypedModelParams, details: OnCallModelFunctionApiDetails | undefined): Promise<McpToolResponseContent> {
   const mcp = details?.mcp;
+  const value = mcp?.mapSuccessfulResult ? await mcp.mapSuccessfulResult(result, params) : result;
+  const context: McpToolResponseContext = { raw: result, value, params };
   let response: McpToolResponseContent;
 
   if (mcp?.formatResponse) {
-    response = mcp.formatResponse(result, params);
+    response = mcp.formatResponse(value, context);
   } else if (mcp?.summarizeResponse) {
-    const summary = mcp.summarizeResponse(result, params);
+    const summary = mcp.summarizeResponse(value, context);
     response = {
       content: [{ type: 'text', text: summary }],
-      structuredContent: result
+      structuredContent: value
     };
   } else {
     response = {
-      content: [{ type: 'text', text: stringifyResult(result) }],
-      structuredContent: result === undefined ? DEFAULT_VOID_MCP_SUCCESS_VALUE : result
+      content: [{ type: 'text', text: stringifyResult(value) }],
+      structuredContent: value === undefined ? DEFAULT_VOID_MCP_SUCCESS_VALUE : value
     };
   }
 

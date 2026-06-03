@@ -14,6 +14,10 @@ function makeEntry(overrides: Partial<CliApiManifestEntry> = {}): CliApiManifest
 }
 
 function render(entries: ReadonlyArray<CliApiManifestEntry>, modelManifest?: CliModelManifest) {
+  return renderMcpManifest({ apiManifest: entries, modelManifest }, FIXED_NOW).manifest;
+}
+
+function renderFull(entries: ReadonlyArray<CliApiManifestEntry>, modelManifest?: CliModelManifest) {
   return renderMcpManifest({ apiManifest: entries, modelManifest }, FIXED_NOW);
 }
 
@@ -144,6 +148,42 @@ describe('renderMcpManifest', () => {
     expect(result.tools['guestbook.query._']?.outputSchema).toBeUndefined();
   });
 
+  it('prefers the MCP-mapped result fields/description over the raw result for outputSchema', () => {
+    const result = render([
+      makeEntry({
+        resultTypeDescription: 'Raw, untrimmed page.',
+        resultFields: [{ name: 'secret', typeText: 'string', description: 'Should not be exposed.' }],
+        mcpResultTypeDescription: 'Trimmed projection for MCP clients.',
+        mcpResultFields: [{ name: 'count', typeText: 'number', description: 'Number of entries.' }]
+      })
+    ]);
+
+    expect(result.tools['guestbook.query._']?.outputSchema).toEqual({
+      type: 'object',
+      description: 'Trimmed projection for MCP clients.',
+      properties: {
+        count: { type: 'number', description: 'Number of entries.' }
+      }
+    });
+  });
+
+  it('falls back to the raw result for outputSchema when no mapped result is present', () => {
+    const result = render([makeEntry({ resultTypeDescription: 'Raw page.', resultFields: [{ name: 'entries', typeText: 'GuestbookEntry[]' }] })]);
+    const schema = result.tools['guestbook.query._']?.outputSchema as { description?: string; properties: Record<string, object> };
+    expect(schema.description).toBe('Raw page.');
+    expect(schema.properties['entries']).toEqual({ type: 'array' });
+  });
+
+  it('carries mcpResultTypeName onto the wire entry when the source leaf was annotated', () => {
+    const result = render([makeEntry({ mcpResultTypeName: 'GuestbookPageMcpResult', mcpResultFields: [{ name: 'count', typeText: 'number' }] })]);
+    expect(result.tools['guestbook.query._']?.mcpResultTypeName).toBe('GuestbookPageMcpResult');
+  });
+
+  it('omits mcpResultTypeName when the source leaf was not annotated', () => {
+    const result = render([makeEntry({ resultFields: [{ name: 'entries', typeText: 'GuestbookEntry[]' }] })]);
+    expect(result.tools['guestbook.query._']).not.toHaveProperty('mcpResultTypeName');
+  });
+
   it('drops paramsTypeName, resultTypeName, paramsValidator, groupName, sourceFile from the rendered entry', () => {
     const result = render([
       makeEntry({
@@ -255,5 +295,63 @@ describe('renderMcpManifest', () => {
         parentIdentityConst: 'guestbookIdentity'
       });
     });
+
+    it('projects mcpToolNameSegment when present', () => {
+      const result = render([makeEntry({})], [makeModelEntry({ mcpToolNameSegment: 'gb' })]);
+      expect(result.models?.[0]).toMatchObject({ mcpToolNameSegment: 'gb' });
+    });
+
+    it('omits mcpToolNameSegment when absent', () => {
+      const result = render([makeEntry({})], [makeModelEntry({})]);
+      expect(result.models?.[0]).not.toHaveProperty('mcpToolNameSegment');
+    });
+  });
+});
+
+describe('renderMcpManifest tool name validation', () => {
+  it('returns no warnings or errors for short names', () => {
+    const result = renderFull([makeEntry({ verb: 'query' })]);
+    expect(result.warnings).toEqual([]);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('errors when an auto-generated name exceeds the 64-char cap', () => {
+    const result = renderFull([makeEntry({ verb: 'update', specifier: 'a'.repeat(70) })]);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('over the 64-char MCP cap');
+  });
+
+  it('warns when an auto-generated name exceeds the soft limit but fits the cap', () => {
+    const result = renderFull([makeEntry({ verb: 'update', specifier: 'a'.repeat(50) })]); // guestbook- (10) + 50 = 60
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('soft limit');
+  });
+
+  it('disambiguates two entries that resolve to the same tool name with the abbreviated call type', () => {
+    const result = renderFull([makeEntry({ model: 'widget', verb: 'read', specifier: 'foo' }), makeEntry({ model: 'widget', verb: 'update', specifier: 'foo' })]);
+    expect(result.errors).toEqual([]);
+    // Both colliding entries are re-derived; the warning names the disambiguated form rather than dropping one.
+    expect(result.warnings.some((w) => w.includes('produced by more than one entry') && w.includes('widget-r-foo'))).toBe(true);
+    expect(result.warnings.some((w) => w.includes('widget-u-foo'))).toBe(true);
+  });
+
+  it('errors when disambiguating a collision pushes the name over the cap', () => {
+    const specifier = 'a'.repeat(57); // widget- (7) + 57 = 64 (fits); widget-u- (9) + 57 = 66 (over cap)
+    const result = renderFull([makeEntry({ model: 'widget', verb: 'read', specifier }), makeEntry({ model: 'widget', verb: 'update', specifier })]);
+    expect(result.errors.length).toBeGreaterThanOrEqual(1);
+    expect(result.errors.some((e) => e.includes('over the 64-char MCP cap'))).toBe(true);
+  });
+
+  it('uses a per-model segment from the model manifest, keeping an otherwise-too-long name under the cap', () => {
+    const longSpecifier = 'a'.repeat(58); // guestbook- (10) + 58 = 68 (error); gb- (3) + 58 = 61 (warn)
+    const apiManifest = [makeEntry({ model: 'guestbook', verb: 'update', specifier: longSpecifier })];
+
+    const withoutSegment = renderFull(apiManifest, [makeModelEntry({})]);
+    expect(withoutSegment.errors).toHaveLength(1);
+
+    const withSegment = renderFull(apiManifest, [makeModelEntry({ mcpToolNameSegment: 'gb' })]);
+    expect(withSegment.errors).toEqual([]);
+    expect(withSegment.warnings).toHaveLength(1);
   });
 });
