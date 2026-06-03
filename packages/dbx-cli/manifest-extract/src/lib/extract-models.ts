@@ -18,7 +18,9 @@ import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverte
 
 const READ_LEVEL_VALUES: ReadonlySet<'system' | 'owner' | 'admin-only' | 'permissions'> = new Set(['system', 'owner', 'admin-only', 'permissions']);
 const SERVICE_FACTORY_TAG = 'dbxModelServiceFactory';
+const MCP_TOOL_NAME_SEGMENT_TAG = 'dbxModelMcpToolNameSegment';
 const MODEL_TYPE_VALUE_PATTERN = /^[a-z][A-Za-z0-9_$]*$/;
+const TOOL_NAME_SEGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9_$]*$/;
 
 /**
  * TS utility/structural wrappers that don't change the field surface for
@@ -134,6 +136,7 @@ function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
   const jsDocs = decl.getJsDocs();
   const hasDbxModelTag = jsDocsHaveTag(jsDocs, 'dbxModel');
   const dbxModelRead = readDbxModelReadTag(jsDocs);
+  const mcpToolNameSegment = readMcpToolNameSegmentTag(jsDocs);
   const extendsNames = decl.getExtends().map(resolveExtendsName);
   const props: ModelExtractionInterfaceProp[] = [];
   for (const prop of decl.getProperties()) {
@@ -157,8 +160,26 @@ function buildInterface(decl: InterfaceDeclaration): ModelExtractionInterface {
     hasDbxModelTag,
     extendsNames,
     props,
-    ...(dbxModelRead === undefined ? {} : { dbxModelRead })
+    ...(dbxModelRead === undefined ? {} : { dbxModelRead }),
+    ...(mcpToolNameSegment === undefined ? {} : { mcpToolNameSegment })
   };
+}
+
+function readMcpToolNameSegmentTag(jsDocs: readonly JSDoc[]): string | undefined {
+  let result: string | undefined;
+  for (const doc of jsDocs) {
+    for (const tag of doc.getTags()) {
+      if (tag.getTagName() !== MCP_TOOL_NAME_SEGMENT_TAG) continue;
+      if (result !== undefined) continue;
+      const raw = tag.getCommentText()?.trim();
+      if (raw === undefined || raw.length === 0) continue;
+      const firstToken = raw.split(/\s+/)[0];
+      if (TOOL_NAME_SEGMENT_PATTERN.test(firstToken)) {
+        result = firstToken;
+      }
+    }
+  }
+  return result;
 }
 
 function readDbxModelReadTag(jsDocs: readonly JSDoc[]): 'system' | 'owner' | 'admin-only' | 'permissions' | undefined {

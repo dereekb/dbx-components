@@ -14,6 +14,10 @@ function makeEntry(overrides: Partial<CliApiManifestEntry> = {}): CliApiManifest
 }
 
 function render(entries: ReadonlyArray<CliApiManifestEntry>, modelManifest?: CliModelManifest) {
+  return renderMcpManifest({ apiManifest: entries, modelManifest }, FIXED_NOW).manifest;
+}
+
+function renderFull(entries: ReadonlyArray<CliApiManifestEntry>, modelManifest?: CliModelManifest) {
   return renderMcpManifest({ apiManifest: entries, modelManifest }, FIXED_NOW);
 }
 
@@ -291,5 +295,54 @@ describe('renderMcpManifest', () => {
         parentIdentityConst: 'guestbookIdentity'
       });
     });
+
+    it('projects mcpToolNameSegment when present', () => {
+      const result = render([makeEntry({})], [makeModelEntry({ mcpToolNameSegment: 'gb' })]);
+      expect(result.models?.[0]).toMatchObject({ mcpToolNameSegment: 'gb' });
+    });
+
+    it('omits mcpToolNameSegment when absent', () => {
+      const result = render([makeEntry({})], [makeModelEntry({})]);
+      expect(result.models?.[0]).not.toHaveProperty('mcpToolNameSegment');
+    });
+  });
+});
+
+describe('renderMcpManifest tool name validation', () => {
+  it('returns no warnings or errors for short names', () => {
+    const result = renderFull([makeEntry({ verb: 'query' })]);
+    expect(result.warnings).toEqual([]);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('errors when an auto-generated name exceeds the 64-char cap', () => {
+    const result = renderFull([makeEntry({ verb: 'update', specifier: 'a'.repeat(70) })]);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0]).toContain('over the 64-char MCP cap');
+  });
+
+  it('warns when an auto-generated name exceeds the soft limit but fits the cap', () => {
+    const result = renderFull([makeEntry({ verb: 'update', specifier: 'a'.repeat(50) })]); // guestbook- (10) + 50 = 60
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings[0]).toContain('soft limit');
+  });
+
+  it('warns when two entries resolve to the same tool name', () => {
+    const result = renderFull([makeEntry({ model: 'widget', verb: 'read', specifier: 'foo' }), makeEntry({ model: 'widget', verb: 'update', specifier: 'foo' })]);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings.some((w) => w.includes('produced by more than one entry'))).toBe(true);
+  });
+
+  it('uses a per-model segment from the model manifest, keeping an otherwise-too-long name under the cap', () => {
+    const longSpecifier = 'a'.repeat(58); // guestbook- (10) + 58 = 68 (error); gb- (3) + 58 = 61 (warn)
+    const apiManifest = [makeEntry({ model: 'guestbook', verb: 'update', specifier: longSpecifier })];
+
+    const withoutSegment = renderFull(apiManifest, [makeModelEntry({})]);
+    expect(withoutSegment.errors).toHaveLength(1);
+
+    const withSegment = renderFull(apiManifest, [makeModelEntry({ mcpToolNameSegment: 'gb' })]);
+    expect(withSegment.errors).toEqual([]);
+    expect(withSegment.warnings).toHaveLength(1);
   });
 });

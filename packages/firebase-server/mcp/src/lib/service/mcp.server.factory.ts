@@ -11,7 +11,7 @@ import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIO
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
-import { generateMcpToolDefinitions, type McpToolDefinition, type McpToolGenerationResult, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
+import { generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, MCP_TOOL_NAME_WARN_LENGTH, type McpToolDefinition, type McpToolGenerationNamingOptions, type McpToolGenerationResult, type McpToolGenerationSkip, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
@@ -118,7 +118,7 @@ export class McpServerFactoryService {
       if (apiDetails == null) {
         result = { tools: [], neverVisibleTools: [], skipped: [], warnings: [] };
       } else {
-        result = generateMcpToolDefinitions(apiDetails, undefined, manifest);
+        result = generateMcpToolDefinitions(apiDetails, undefined, { manifest, naming: this._resolveToolNamingOptions() });
       }
 
       this._cachedTools = result;
@@ -127,8 +127,7 @@ export class McpServerFactoryService {
     if (!this._loggedSkips && (result.skipped.length > 0 || result.warnings.length > 0)) {
       this._loggedSkips = true;
       for (const skip of result.skipped) {
-        const errorSuffix = skip.error ? `: ${skip.error.message}` : '';
-        this._logger.warn(`Skipped MCP tool ${skip.toolName} (${skip.reason})${errorSuffix}`);
+        this._logSkip(skip);
       }
       for (const warning of result.warnings) {
         this._logger.warn(this._describeToolGenerationWarning(warning));
@@ -136,6 +135,53 @@ export class McpServerFactoryService {
     }
 
     return result;
+  }
+
+  /**
+   * Builds the per-model tool-name segment overrides from the loaded manifest's `models` catalog.
+   *
+   * Sourcing the segments from the manifest (rather than runtime config) keeps the runtime in
+   * agreement with the build-time manifest validation, which reads the same `mcpToolNameSegment`.
+   *
+   * @returns Naming options carrying the segment map, or `undefined` when no model declares one.
+   */
+  private _resolveToolNamingOptions(): McpToolGenerationNamingOptions | undefined {
+    const models = this._cachedManifestModels;
+    let result: McpToolGenerationNamingOptions | undefined;
+
+    if (models != null && models.length > 0) {
+      const modelSegments = new Map<string, string>();
+
+      for (const model of models) {
+        if (model.mcpToolNameSegment != null && model.mcpToolNameSegment.length > 0) {
+          modelSegments.set(model.modelType, model.mcpToolNameSegment);
+        }
+      }
+
+      if (modelSegments.size > 0) {
+        result = { modelSegments };
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Logs one skipped tool at the appropriate level: name-cap and collision skips are errors (they
+   * would otherwise break or shadow tools on the wire), the rest are warnings.
+   *
+   * @param skip - The skipped-tool report to log.
+   */
+  private _logSkip(skip: McpToolGenerationSkip): void {
+    const errorSuffix = skip.error ? `: ${skip.error.message}` : '';
+
+    if (skip.reason === 'name_too_long') {
+      this._logger.error(`Dropped MCP tool ${skip.toolName} — its name is ${skip.toolName.length} chars, over the ${MCP_TOOL_NAME_MAX_LENGTH}-char limit. Shorten the model/specifier, hide it (mcp.visibility: false), or set an mcp.name override.`);
+    } else if (skip.reason === 'duplicate_name') {
+      this._logger.error(`Dropped MCP tool ${skip.toolName} — another visible tool already resolved to this name. Give one an mcp.name override to disambiguate.`);
+    } else {
+      this._logger.warn(`Skipped MCP tool ${skip.toolName} (${skip.reason})${errorSuffix}`);
+    }
   }
 
   /**
@@ -150,8 +196,10 @@ export class McpServerFactoryService {
 
     if (warning.reason === 'mapper_without_mapped_manifest') {
       result = `MCP tool ${warning.toolName} declares mcp.mapSuccessfulResult but its manifest entry has no mapped result type — annotate the matching '.api.ts' leaf with '@dbxModelApiMcpResult <TypeName>' and regenerate the manifest so the advertised output schema matches the mapped result.`;
-    } else {
+    } else if (warning.reason === 'mapped_manifest_without_mapper') {
       result = `MCP tool ${warning.toolName} has a '@dbxModelApiMcpResult' manifest annotation but its handler no longer declares mcp.mapSuccessfulResult — remove the stale annotation and regenerate the manifest, or restore the mapper.`;
+    } else {
+      result = `MCP tool ${warning.toolName} name is ${warning.toolName.length} chars, over the ${MCP_TOOL_NAME_WARN_LENGTH}-char soft limit (hard cap ${MCP_TOOL_NAME_MAX_LENGTH}). Consider a shorter specifier/model segment or an mcp.name override before it reaches the cap.`;
     }
 
     return result;

@@ -1,4 +1,27 @@
-import { type AuthAppInfo, type AuthClaimInfo, type AuthRegistry, type CliApiManifest, type CliApiManifestEntry, type CliApiManifestField, type CliModelField, type CliModelManifest, type CliModelManifestEntry, MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestAuthApp, type McpManifestAuthClaim, type McpManifestModelEntry, type McpManifestModelField, type McpManifestToolEntry, mcpManifestKey } from '@dereekb/dbx-cli';
+import {
+  type AuthAppInfo,
+  type AuthClaimInfo,
+  type AuthRegistry,
+  buildMcpToolName,
+  type CliApiManifest,
+  type CliApiManifestEntry,
+  type CliApiManifestField,
+  type CliModelField,
+  type CliModelManifest,
+  type CliModelManifestEntry,
+  MCP_MANIFEST_VERSION,
+  MCP_TOOL_NAME_MAX_LENGTH,
+  MCP_TOOL_NAME_WARN_LENGTH,
+  type McpManifest,
+  type McpManifestAuth,
+  type McpManifestAuthApp,
+  type McpManifestAuthClaim,
+  type McpManifestModelEntry,
+  type McpManifestModelField,
+  type McpManifestToolEntry,
+  mcpManifestKey,
+  validateMcpToolName
+} from '@dereekb/dbx-cli';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type Type } from 'arktype';
 
@@ -31,6 +54,25 @@ export interface RenderMcpManifestInput {
 }
 
 /**
+ * Output of {@link renderMcpManifest}: the rendered manifest plus any tool-name validation findings.
+ */
+export interface RenderMcpManifestResult {
+  /**
+   * The rendered MCP manifest JSON shape.
+   */
+  readonly manifest: McpManifest;
+  /**
+   * Soft findings (names over the warn length, or names produced by more than one entry). Logged at
+   * build time but do not fail generation.
+   */
+  readonly warnings: readonly string[];
+  /**
+   * Hard findings (names over the 64-char MCP cap). A non-empty list should fail manifest generation.
+   */
+  readonly errors: readonly string[];
+}
+
+/**
  * Pure renderer: turns a {@link CliApiManifest} (and optional {@link CliModelManifest})
  * into the {@link McpManifest} JSON shape.
  *
@@ -41,8 +83,23 @@ export interface RenderMcpManifestInput {
  * @param now - Override for the `generatedAt` timestamp. Tests pass a fixed value.
  * @returns The rendered MCP manifest with tools keyed by {@link mcpManifestKey} and an optional models array.
  */
-export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new Date()): McpManifest {
+export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new Date()): RenderMcpManifestResult {
   const tools: Record<string, McpManifestToolEntry> = {};
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const seenNames = new Map<string, string>();
+
+  // Per-model tool-name segment overrides (e.g. collection prefix), sourced from the model manifest
+  // so the names validated here match what the runtime generator advertises.
+  const segments = new Map<string, string>();
+
+  if (input.modelManifest != null) {
+    for (const model of input.modelManifest) {
+      if (model.mcpToolNameSegment != null && model.mcpToolNameSegment.length > 0) {
+        segments.set(model.modelType, model.mcpToolNameSegment);
+      }
+    }
+  }
 
   for (const entry of input.apiManifest) {
     if (entry.verb === 'standalone') {
@@ -51,19 +108,42 @@ export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new
 
     const key = mcpManifestKey(entry.model, entry.verb, entry.specifier);
     tools[key] = buildToolEntry(entry);
+
+    // Validate the auto-generated name. Per-handler `mcp.name` overrides and `mcp.visibility` are
+    // runtime-only (not carried in the manifest), so this checks the auto-generated name — the
+    // runtime generator is authoritative and accounts for both. The length cap is unambiguous, so
+    // an over-cap name is a hard error; duplicates can't be classified without visibility, so they
+    // are warnings (the runtime drops real visible collisions).
+    const segment = segments.get(entry.model) ?? entry.model;
+    const toolName = buildMcpToolName(segment, entry.verb, entry.specifier);
+    const validation = validateMcpToolName(toolName);
+
+    if (validation.level === 'error') {
+      errors.push(`Tool name "${toolName}" is ${validation.length} chars, over the ${MCP_TOOL_NAME_MAX_LENGTH}-char MCP cap (${key}). Shorten the model/specifier, set a per-model mcpToolNameSegment, or hide the tool.`);
+    } else if (validation.level === 'warn') {
+      warnings.push(`Tool name "${toolName}" is ${validation.length} chars, over the ${MCP_TOOL_NAME_WARN_LENGTH}-char soft limit (${key}).`);
+    }
+
+    const priorKey = seenNames.get(toolName);
+
+    if (priorKey != null) {
+      warnings.push(`Tool name "${toolName}" is produced by more than one entry (${priorKey} and ${key}); one shadows the other unless hidden or renamed at runtime.`);
+    } else {
+      seenNames.set(toolName, key);
+    }
   }
 
   const models = input.modelManifest != null && input.modelManifest.length > 0 ? input.modelManifest.map(projectModelEntry) : undefined;
   const auth = input.auth == null ? undefined : projectAuthSection(input.auth.registry, input.auth.app);
 
   const base: { version: typeof MCP_MANIFEST_VERSION; generatedAt: string; tools: Record<string, McpManifestToolEntry> } = { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools };
-  const result: McpManifest = {
+  const manifest: McpManifest = {
     ...base,
     ...(models == null ? {} : { models }),
     ...(auth == null ? {} : { auth })
   };
 
-  return result;
+  return { manifest, warnings, errors };
 }
 
 function projectAuthSection(registry: AuthRegistry, appSlug: string): McpManifestAuth | undefined {
@@ -126,6 +206,7 @@ function projectModelEntry(entry: CliModelManifestEntry): McpManifestModelEntry 
     ...(entry.modelGroup == null ? {} : { modelGroup: entry.modelGroup }),
     ...(entry.parentIdentityConst == null ? {} : { parentIdentityConst: entry.parentIdentityConst }),
     ...(entry.description == null ? {} : { description: entry.description }),
+    ...(entry.mcpToolNameSegment == null ? {} : { mcpToolNameSegment: entry.mcpToolNameSegment }),
     ...(entry.read == null ? {} : { read: entry.read }),
     ...(entry.serviceFactory == null ? {} : { serviceFactory: entry.serviceFactory })
   };

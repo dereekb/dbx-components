@@ -126,6 +126,12 @@ export interface CliModelManifestEntry {
    */
   readonly fields: readonly CliModelField[];
   /**
+   * Per-model override of the MCP tool-name model segment, from `@dbxModelMcpToolNameSegment
+   * <segment>` on the model interface. When present it replaces the model type in generated tool
+   * names (e.g. the collection prefix). Absent when the model omits the tag.
+   */
+  readonly mcpToolNameSegment?: string;
+  /**
    * Read posture declared by `@dbxModelRead <level>` on the model interface. Closed enum:
    * `system` / `owner` / `admin-only` / `permissions`. Absent when the model interface omits the tag.
    */
@@ -278,6 +284,12 @@ export interface McpManifestModelEntry {
   readonly sourcePackage: string;
   readonly sourceFile: string;
   readonly fields: readonly McpManifestModelField[];
+  /**
+   * Per-model override of the model segment used in generated MCP tool names (mirror of
+   * {@link CliModelManifestEntry.mcpToolNameSegment}). Consumed by the runtime generator and the
+   * build-time name validation so both compose the same names.
+   */
+  readonly mcpToolNameSegment?: string;
 }
 
 /**
@@ -361,4 +373,84 @@ export interface McpManifest {
 export function mcpManifestKey(modelType: string, call: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === '_';
   return isDefault ? `${modelType}.${call}._` : `${modelType}.${call}.${specifier}`;
+}
+
+/**
+ * Default specifier key used when a handler is not behind a specifier router.
+ *
+ * Mirrors `DEFAULT_SPECIFIER_KEY` in `@dereekb/firebase-server/mcp` — kept in sync so the
+ * build-time renderer composes the same tool names as the runtime generator.
+ */
+export const DEFAULT_SPECIFIER_KEY = '_';
+
+/**
+ * Soft limit for an MCP tool name. Mirrors `MCP_TOOL_NAME_WARN_LENGTH` in
+ * `@dereekb/firebase-server/mcp`. Names over this are flagged at manifest-generation time.
+ */
+export const MCP_TOOL_NAME_WARN_LENGTH = 55;
+
+/**
+ * Hard limit for an MCP tool name. Mirrors `MCP_TOOL_NAME_MAX_LENGTH` in
+ * `@dereekb/firebase-server/mcp`. Remote MCP clients reject a `tools/list` payload containing any
+ * tool whose `name` exceeds this, so manifest generation fails when a name is over the cap.
+ */
+export const MCP_TOOL_NAME_MAX_LENGTH = 64;
+
+/**
+ * Severity of a tool name's length relative to the soft / hard limits.
+ */
+export type McpToolNameLengthLevel = 'ok' | 'warn' | 'error';
+
+/**
+ * The outcome of validating a tool name's length.
+ */
+export interface McpToolNameValidation {
+  readonly name: string;
+  readonly length: number;
+  readonly level: McpToolNameLengthLevel;
+}
+
+/**
+ * Builds the MCP tool name for a (modelSegment, callType, specifier) triple.
+ *
+ * Mirrors `buildMcpToolName` in `@dereekb/firebase-server/mcp` so the build-time manifest validation
+ * sees the same names the runtime advertises. The call-type segment is only emitted for the default
+ * (`_`) specifier; named specifiers drop it (`worker-syncCheckHqEmployee`).
+ *
+ * @param modelSegment - The model segment of the name (model type, or a per-model override).
+ * @param callType - The call type / verb.
+ * @param specifier - The specifier key, or `_` / undefined for the default entry.
+ * @returns The hyphen-joined tool name.
+ *
+ * @example
+ * buildMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-syncCheckHqEmployee'
+ */
+export function buildMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
+  const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
+  return isDefault ? `${modelSegment}-${callType}` : `${modelSegment}-${specifier}`;
+}
+
+/**
+ * Classifies a tool name's length against the soft/hard MCP name-length limits.
+ *
+ * Mirrors `validateMcpToolName` in `@dereekb/firebase-server/mcp`.
+ *
+ * @param name - The fully-resolved tool name.
+ * @returns The length classification — `error` over {@link MCP_TOOL_NAME_MAX_LENGTH}, `warn` over
+ *   {@link MCP_TOOL_NAME_WARN_LENGTH}, otherwise `ok`.
+ *
+ * @example
+ * validateMcpToolName('worker-create').level; // 'ok'
+ */
+export function validateMcpToolName(name: string): McpToolNameValidation {
+  const length = name.length;
+  let level: McpToolNameLengthLevel = 'ok';
+
+  if (length > MCP_TOOL_NAME_MAX_LENGTH) {
+    level = 'error';
+  } else if (length > MCP_TOOL_NAME_WARN_LENGTH) {
+    level = 'warn';
+  }
+
+  return { name, length, level };
 }

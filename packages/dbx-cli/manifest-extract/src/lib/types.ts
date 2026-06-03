@@ -163,6 +163,11 @@ export interface ModelExtractionInterface {
    * / `permissions`). Absent when the interface omits the tag or declares an invalid value.
    */
   readonly dbxModelRead?: 'system' | 'owner' | 'admin-only' | 'permissions';
+  /**
+   * Per-model MCP tool-name segment from `@dbxModelMcpToolNameSegment <segment>`. Replaces the model
+   * type in generated tool names (e.g. the collection prefix). Absent when the tag is omitted or invalid.
+   */
+  readonly mcpToolNameSegment?: string;
 }
 
 /**

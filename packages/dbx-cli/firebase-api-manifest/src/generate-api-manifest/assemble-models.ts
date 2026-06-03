@@ -159,6 +159,7 @@ function buildEntryForIdentity(input: BuildEntryInput): CliModelManifestEntry | 
           sourcePackage: source.sourcePackage,
           sourceFile: source.sourceFile,
           fields,
+          ...(iface.mcpToolNameSegment ? { mcpToolNameSegment: iface.mcpToolNameSegment } : {}),
           ...(iface.dbxModelRead ? { read: iface.dbxModelRead } : {}),
           ...(serviceFactory ? { serviceFactory } : {})
         };

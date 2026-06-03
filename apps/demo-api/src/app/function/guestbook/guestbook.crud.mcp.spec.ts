@@ -15,8 +15,9 @@ vi.setConfig({ hookTimeout: 30000, testTimeout: 30000 });
  *
  * Only tools generated from handlers that declare an `inputType` are exposed by
  * `generateMcpToolDefinitions` — at present that's `guestbook-create` (no specifier)
- * and `guestbookEntry-invoke-allPublishedEntries`. Update/query handlers in this model
- * group are skipped until their `withApiDetails` calls grow an `inputType`.
+ * and `guestbookEntry-allPublishedEntries` (named specifiers drop the call-type segment).
+ * Update/query handlers in this model group are skipped until their `withApiDetails`
+ * calls grow an `inputType`.
  */
 demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
   const guestbookCreateToolName = buildMcpToolName(guestbookIdentity.modelType, 'create');

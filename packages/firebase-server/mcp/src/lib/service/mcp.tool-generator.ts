@@ -160,8 +160,15 @@ export const DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS: JsonSchemaGenerationOptions
 
 /**
  * Reason a tool was skipped during generation.
+ *
+ * - `missing_input_type` — the handler has no `inputType` to build a schema from.
+ * - `schema_generation_failed` — `toJsonSchema()` threw for the handler's `inputType`.
+ * - `name_too_long` — the resolved name exceeds {@link MCP_TOOL_NAME_MAX_LENGTH}; advertising it
+ *   would make remote clients reject the whole `tools/list` payload, so it is dropped.
+ * - `duplicate_name` — another already-registered visible tool resolved to the same name (e.g. two
+ *   specifiers collide once the call-type segment is dropped); the later tool is dropped.
  */
-export type McpToolGenerationSkipReason = 'missing_input_type' | 'schema_generation_failed';
+export type McpToolGenerationSkipReason = 'missing_input_type' | 'schema_generation_failed' | 'name_too_long' | 'duplicate_name';
 
 /**
  * One tool that was skipped during generation.
@@ -182,8 +189,10 @@ export interface McpToolGenerationSkip {
  *   (un-mapped) result.
  * - `mapped_manifest_without_mapper` — the manifest entry is annotated for a mapped result but the
  *   handler no longer declares `mapSuccessfulResult` (stale annotation).
+ * - `name_length_warning` — the resolved name is over the soft {@link MCP_TOOL_NAME_WARN_LENGTH}
+ *   limit but still within the hard cap. The tool is registered; the drift toward the cap is flagged.
  */
-export type McpToolGenerationWarningReason = 'mapper_without_mapped_manifest' | 'mapped_manifest_without_mapper';
+export type McpToolGenerationWarningReason = 'mapper_without_mapped_manifest' | 'mapped_manifest_without_mapper' | 'name_length_warning';
 
 /**
  * One generated tool whose handler / manifest MCP-result mapping is inconsistent. The tool is still
@@ -251,19 +260,89 @@ export function buildStaticWireEntry(input: BuildStaticWireEntryInput): McpToolL
 export const DEFAULT_SPECIFIER_KEY = '_';
 
 /**
- * Builds the MCP tool name for a (modelType, callType, specifier) triple.
+ * Soft limit for an MCP tool name. Names longer than this still register, but the generator
+ * surfaces a `name_length_warning` so the drift toward the hard cap is visible at boot / build.
+ */
+export const MCP_TOOL_NAME_WARN_LENGTH = 55;
+
+/**
+ * Hard limit for an MCP tool name. Remote MCP clients reject a `tools/list` payload that contains
+ * any tool whose `name` exceeds this (`FrontendRemoteMcpToolDefinition.name: String should have at
+ * most 64 characters`), which fails the whole connection. Names over this are not registered.
+ */
+export const MCP_TOOL_NAME_MAX_LENGTH = 64;
+
+/**
+ * Severity of a tool name's length relative to {@link MCP_TOOL_NAME_WARN_LENGTH} /
+ * {@link MCP_TOOL_NAME_MAX_LENGTH}.
  *
- * Apps can override the auto-generated name by setting
- * {@link OnCallModelFunctionApiDetails.mcp.name} on the handler.
+ * - `error` — over the hard cap; the tool must not be advertised.
+ * - `warn` — over the soft limit but within the hard cap; advertised, but flagged.
+ * - `ok` — within the soft limit.
+ */
+export type McpToolNameLengthLevel = 'ok' | 'warn' | 'error';
+
+/**
+ * The outcome of validating a tool name's length.
+ */
+export interface McpToolNameValidation {
+  readonly name: string;
+  readonly length: number;
+  readonly level: McpToolNameLengthLevel;
+}
+
+/**
+ * Classifies a tool name's length against the soft/hard MCP name-length limits.
  *
- * @param modelType - The Firestore model type (e.g., `storageFile`).
+ * Shared by the runtime generator and the build-time manifest renderer so both apply the
+ * same thresholds and never drift.
+ *
+ * @param name - The fully-resolved tool name (including any per-handler override).
+ * @returns The length classification — `error` over {@link MCP_TOOL_NAME_MAX_LENGTH}, `warn` over
+ *   {@link MCP_TOOL_NAME_WARN_LENGTH}, otherwise `ok`.
+ *
+ * @example
+ * ```ts
+ * validateMcpToolName('worker-create'); // { name: 'worker-create', length: 13, level: 'ok' }
+ * ```
+ */
+export function validateMcpToolName(name: string): McpToolNameValidation {
+  const length = name.length;
+  let level: McpToolNameLengthLevel = 'ok';
+
+  if (length > MCP_TOOL_NAME_MAX_LENGTH) {
+    level = 'error';
+  } else if (length > MCP_TOOL_NAME_WARN_LENGTH) {
+    level = 'warn';
+  }
+
+  return { name, length, level };
+}
+
+/**
+ * Builds the MCP tool name for a (modelSegment, callType, specifier) triple.
+ *
+ * The call-type segment is only emitted for the default (`_`) specifier, where it carries the
+ * meaning (`worker-create`, `worker-update`). Named specifiers drop it — the specifier already
+ * disambiguates (`worker-syncCheckHqEmployee`), which keeps names short and within the MCP
+ * 64-character cap. Apps can override the whole name per handler via
+ * {@link OnCallModelFunctionApiDetails.mcp.name}.
+ *
+ * @param modelSegment - The model segment of the name. Defaults to the model type, but may be a
+ *   shorter per-model override (e.g. the collection prefix) resolved by the caller.
  * @param callType - The call type (e.g., `invoke`).
  * @param specifier - The specifier key, or `_` / undefined for the default entry.
  * @returns The hyphen-joined tool name advertised on `tools/list`.
+ *
+ * @example
+ * ```ts
+ * buildMcpToolName('worker', 'create'); // 'worker-create'
+ * buildMcpToolName('worker', 'update', 'syncCheckHqEmployee'); // 'worker-syncCheckHqEmployee'
+ * ```
  */
-export function buildMcpToolName(modelType: string, callType: string, specifier?: Maybe<string>): string {
+export function buildMcpToolName(modelSegment: string, callType: string, specifier?: Maybe<string>): string {
   const isDefault = specifier == null || specifier === DEFAULT_SPECIFIER_KEY;
-  return isDefault ? `${modelType}-${callType}` : `${modelType}-${callType}-${specifier}`;
+  return isDefault ? `${modelSegment}-${callType}` : `${modelSegment}-${specifier}`;
 }
 
 /**
@@ -282,24 +361,57 @@ export function buildDefaultMcpToolDescription(modelType: string, callType: stri
 
 // MARK: Generation
 /**
+ * Optional naming inputs for {@link generateMcpToolDefinitions}.
+ */
+export interface McpToolGenerationNamingOptions {
+  /**
+   * Per-model override of the tool-name model segment, keyed by model type. When a model type is
+   * present, its segment (e.g. the collection prefix) replaces the model type in generated names;
+   * otherwise the model type is used.
+   */
+  readonly modelSegments?: ReadonlyMap<string, string>;
+}
+
+/**
+ * Optional build-time context for {@link generateMcpToolDefinitions}. Grouped into one object so the
+ * function stays at three parameters and new build-time inputs extend it rather than the arg list.
+ */
+export interface GenerateMcpToolDefinitionsContext {
+  /**
+   * Build-time manifest map supplying overrides for descriptions and input/output schemas, keyed by
+   * {@link mcpManifestKey}.
+   */
+  readonly manifest?: ReadonlyMap<string, McpManifestToolEntry>;
+  /**
+   * Per-model name segment overrides (e.g. collection prefixes).
+   */
+  readonly naming?: McpToolGenerationNamingOptions;
+}
+
+/**
  * Generates MCP tool definitions from a model-first API details tree.
  *
  * Walks each (modelType, callType, specifier) triple in the tree, calls
  * `inputType.toJsonSchema(options)` for the schema, and applies any handler-level
  * MCP `name` override. Descriptions and input/output schemas are pulled from the
  * build-time manifest when supplied. Tools without an `inputType` are skipped and
- * reported so callers can log the gap at startup.
+ * reported so callers can log the gap at startup. Tools whose resolved name exceeds
+ * {@link MCP_TOOL_NAME_MAX_LENGTH} or collides with an already-registered visible tool are also
+ * skipped so the advertised `tools/list` stays valid and unambiguous.
  *
  * @param apiDetails - The model-first API details tree returned by `getModelApiDetails(callModelFn)`.
  * @param options - Optional schema generation options forwarded to `toJsonSchema()`. Defaults to {@link DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS}.
- * @param manifest - Optional build-time manifest map; supplies overrides for descriptions and input/output schemas keyed by {@link mcpManifestKey}.
+ * @param context - Optional build-time context (manifest overrides + per-model name segments).
  * @returns The list of generated tool definitions plus any skip reports.
  */
-export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, options: JsonSchemaGenerationOptions = DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS, manifest?: ReadonlyMap<string, McpManifestToolEntry>): McpToolGenerationResult {
+export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, options: JsonSchemaGenerationOptions = DEFAULT_JSON_SCHEMA_GENERATION_OPTIONS, context?: GenerateMcpToolDefinitionsContext): McpToolGenerationResult {
   const tools: McpToolDefinition[] = [];
   const neverVisibleTools: McpToolDefinition[] = [];
   const skipped: McpToolGenerationSkip[] = [];
   const warnings: McpToolGenerationWarning[] = [];
+  const seenNames = new Set<string>();
+  const manifest = context?.manifest;
+  const naming = context?.naming;
 
   for (const [modelType, modelEntry] of Object.entries(apiDetails.models)) {
     for (const [callType, callDetails] of Object.entries(modelEntry.calls)) {
@@ -307,7 +419,7 @@ export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, op
         continue;
       }
 
-      generateToolsForModelCall({ modelType, callType, callDetails, options, manifest, outTools: tools, outNeverVisibleTools: neverVisibleTools, outSkipped: skipped, outWarnings: warnings });
+      generateToolsForModelCall({ modelType, callType, callDetails, options, manifest, naming, seenNames, outTools: tools, outNeverVisibleTools: neverVisibleTools, outSkipped: skipped, outWarnings: warnings });
     }
   }
 
@@ -320,6 +432,12 @@ interface GenerateToolsForModelCallContext {
   readonly callDetails: ModelCallApiDetails;
   readonly options: JsonSchemaGenerationOptions;
   readonly manifest?: ReadonlyMap<string, McpManifestToolEntry>;
+  readonly naming?: McpToolGenerationNamingOptions;
+  /**
+   * Names of already-registered visible tools, used to drop later collisions. Mutated as tools
+   * are registered across the whole generation pass.
+   */
+  readonly seenNames: Set<string>;
   readonly outTools: McpToolDefinition[];
   readonly outNeverVisibleTools: McpToolDefinition[];
   readonly outSkipped: McpToolGenerationSkip[];
@@ -335,11 +453,20 @@ function generateToolsForModelCall(context: GenerateToolsForModelCallContext): v
 }
 
 function generateToolForSpecifier(context: GenerateToolsForModelCallContext, specifierKey: string, handlerDetails: OnCallModelFunctionApiDetails): void {
-  const { modelType, callType, callDetails, options, manifest, outTools, outNeverVisibleTools, outSkipped, outWarnings } = context;
+  const { modelType, callType, callDetails, options, manifest, naming, seenNames, outTools, outNeverVisibleTools, outSkipped, outWarnings } = context;
   const specifier = callDetails.isSpecifier ? specifierKey : undefined;
   const dispatch: McpToolDispatchTarget = { call: callType, modelType, specifier };
 
-  const name = handlerDetails.mcp?.name ?? buildMcpToolName(modelType, callType, specifier);
+  const modelSegment = naming?.modelSegments?.get(modelType) ?? modelType;
+  const name = handlerDetails.mcp?.name ?? buildMcpToolName(modelSegment, callType, specifier);
+  const nameValidation = validateMcpToolName(name);
+
+  // A name over the hard cap would make remote clients reject the whole tools/list payload — never advertise it.
+  if (nameValidation.level === 'error') {
+    outSkipped.push({ toolName: name, reason: 'name_too_long', dispatch });
+    return;
+  }
+
   const manifestEntry = manifest?.get(mcpManifestKey(modelType, callType, specifier));
   const description = manifestEntry?.description ?? buildDefaultMcpToolDescription(modelType, callType, specifier);
 
@@ -375,6 +502,25 @@ function generateToolForSpecifier(context: GenerateToolsForModelCallContext, spe
     filterMetadata = { visibilityKind: classified.visibilityKind, requiredScope, effectiveReadOnly };
   }
 
+  // Dedup only matters for advertised tools — hidden ('never') tools never reach the wire or the
+  // dispatch map, so a hidden tool sharing a visible tool's name is harmless. Among visible tools a
+  // collision (e.g. two specifiers that coincide once the call-type segment is dropped) would let one
+  // silently shadow the other in the per-request name→definition map, so drop the later one.
+  const isVisible = filterMetadata.visibilityKind !== 'never';
+
+  if (isVisible) {
+    if (seenNames.has(name)) {
+      outSkipped.push({ toolName: name, reason: 'duplicate_name', dispatch });
+      return;
+    }
+
+    seenNames.add(name);
+  }
+
+  if (nameValidation.level === 'warn') {
+    outWarnings.push({ toolName: name, reason: 'name_length_warning', dispatch });
+  }
+
   const outputSchema = manifestEntry?.outputSchema;
   const staticWireEntry = buildStaticWireEntry({ name, description, inputSchema, outputSchema });
   const definition: McpToolDefinition = {
@@ -389,10 +535,10 @@ function generateToolForSpecifier(context: GenerateToolsForModelCallContext, spe
     toolDetailsBuilder: handlerDetails.mcp?.toolDetails
   };
 
-  if (filterMetadata.visibilityKind === 'never') {
-    outNeverVisibleTools.push(definition);
-  } else {
+  if (isVisible) {
     outTools.push(definition);
+  } else {
+    outNeverVisibleTools.push(definition);
   }
 }
 

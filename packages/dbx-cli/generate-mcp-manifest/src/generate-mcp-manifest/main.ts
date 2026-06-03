@@ -28,7 +28,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { createJiti } from 'jiti';
 
-import { type AuthRegistry, type CliApiManifest, type CliModelManifest, loadAuthRegistry } from '@dereekb/dbx-cli';
+import { type AuthRegistry, type CliApiManifest, type CliModelManifest, loadAuthRegistry, MCP_TOOL_NAME_MAX_LENGTH } from '@dereekb/dbx-cli';
 import { renderMcpManifest } from './render';
 
 interface LoadedManifest {
@@ -65,17 +65,32 @@ async function main(): Promise<void> {
 
   const loaded = await loadManifest(inputPath);
   const auth = await maybeLoadAuth(flags);
-  const rendered = renderMcpManifest({ ...loaded, ...(auth == null ? {} : { auth }) });
-  const serialized = `${JSON.stringify(rendered, null, 2)}\n`;
+  const { manifest, warnings, errors } = renderMcpManifest({ ...loaded, ...(auth == null ? {} : { auth }) });
+
+  for (const warning of warnings) {
+    console.error(`[generate-mcp-manifest] tool name warning: ${warning}`);
+  }
+  for (const error of errors) {
+    console.error(`[generate-mcp-manifest] tool name error: ${error}`);
+  }
+
+  // A name over the 64-char MCP cap would make remote clients reject the whole tools/list payload —
+  // fail the build before the manifest ships rather than at connect time.
+  if (errors.length > 0) {
+    console.error(`generate-mcp-manifest: ${errors.length} tool name(s) exceed the ${MCP_TOOL_NAME_MAX_LENGTH}-char MCP limit; not writing ${relative(WORKSPACE_ROOT, outputPath)}.`);
+    process.exit(1);
+  }
+
+  const serialized = `${JSON.stringify(manifest, null, 2)}\n`;
 
   ensureOutputDir(dirname(outputPath));
   const tmpPath = `${outputPath}.tmp`;
   writeFileSync(tmpPath, serialized);
   renameSync(tmpPath, outputPath);
 
-  const modelCount = rendered.models?.length ?? 0;
-  const authCount = rendered.auth?.claims.length ?? 0;
-  console.log(`[wrote] ${relative(WORKSPACE_ROOT, outputPath)} — ${Object.keys(rendered.tools).length} tools, ${modelCount} models, ${authCount} auth claims`);
+  const modelCount = manifest.models?.length ?? 0;
+  const authCount = manifest.auth?.claims.length ?? 0;
+  console.log(`[wrote] ${relative(WORKSPACE_ROOT, outputPath)} — ${Object.keys(manifest.tools).length} tools, ${modelCount} models, ${authCount} auth claims`);
 }
 
 async function maybeLoadAuth(flags: Flags): Promise<{ readonly registry: AuthRegistry; readonly app: string } | undefined> {

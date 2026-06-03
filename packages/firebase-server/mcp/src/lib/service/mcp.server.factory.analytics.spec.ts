@@ -97,10 +97,10 @@ describe('McpServerFactoryService MCP analytics', () => {
     const apiDetails = makeApiDetails([{ model: 'storageFile', call: 'invoke', specifier: 'recomputeChecksums' }]);
     const factory = makeFactory(apiDetails, { analytics: service });
 
-    await callTool(factory, 'storageFile-invoke-recomputeChecksums', { args: { foo: 1 }, auth: firebaseAuth('u1') });
+    await callTool(factory, 'storageFile-recomputeChecksums', { args: { foo: 1 }, auth: firebaseAuth('u1') });
 
     expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ toolName: 'storageFile-invoke-recomputeChecksums', toolKind: 'callModel', call: 'invoke', modelType: 'storageFile', specifier: 'recomputeChecksums', uid: 'u1', args: { foo: 1 }, isSuccessful: true });
+    expect(events[0]).toMatchObject({ toolName: 'storageFile-recomputeChecksums', toolKind: 'callModel', call: 'invoke', modelType: 'storageFile', specifier: 'recomputeChecksums', uid: 'u1', args: { foo: 1 }, isSuccessful: true });
     expect(events[0].error).toBeUndefined();
     expect(typeof events[0].durationMs).toBe('number');
     expect(events[0].durationMs).toBeGreaterThanOrEqual(0);
