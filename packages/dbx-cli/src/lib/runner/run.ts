@@ -206,7 +206,7 @@ export function createCli(input: CreateCliInput): Argv {
     .option('set-pick', { type: 'string', global: true, describe: 'Save pick for this command and apply now' })
     .option('pick-all', { type: 'boolean', global: true, describe: 'Ignore configured pick filters' })
     .option('pretty', { type: 'boolean', default: false, global: true, describe: 'Pretty-print the stdout JSON envelope (2-space indent)' })
-    .option('timeout', { type: 'number', global: true, describe: 'Per-HTTP-request timeout in seconds (aborts via AbortController)' })
+    .option('timeout', { type: 'number', global: true, describe: 'Per-HTTP-request timeout in seconds (default 60; 0 disables; aborts via AbortController)' })
     .option('data-help', { type: 'string', choices: ['jsonschema', 'arktype', 'both'] as const, global: true, describe: 'Schema format shown in --help for manifest commands (default: jsonschema)' })
     .option('all-help', { type: 'boolean', global: true, describe: 'Show the full options table in --help even when --data-help is in focus mode' })
     .middleware([authMiddleware, createOutputMiddleware({ cliName, skipCommands: skipCommandNames })], true)

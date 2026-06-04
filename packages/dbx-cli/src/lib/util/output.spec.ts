@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { CliError, buildErrorOutput, configureCliSecretPatterns, DEFAULT_CLI_SECRET_PATTERNS, sanitizeString } from './output';
+import { CliError, buildErrorOutput, configureCliSecretPatterns, DEFAULT_CLI_HTTP_TIMEOUT_MS, DEFAULT_CLI_SECRET_PATTERNS, getCliTimeoutMs, sanitizeString, setCliTimeoutMs, tracedFetch } from './output';
 
 describe('output util', () => {
   beforeEach(() => {
@@ -43,6 +43,49 @@ describe('output util', () => {
     it('builds an envelope from a non-Error value', () => {
       const result = buildErrorOutput('weird');
       expect(result).toEqual({ ok: false, error: 'weird', code: 'UNKNOWN_ERROR' });
+    });
+  });
+
+  describe('tracedFetch timeout', () => {
+    beforeEach(() => {
+      setCliTimeoutMs(undefined); // reset to the default between cases
+    });
+
+    it('defaults to DEFAULT_CLI_HTTP_TIMEOUT_MS when no explicit timeout is set', () => {
+      expect(getCliTimeoutMs()).toBe(DEFAULT_CLI_HTTP_TIMEOUT_MS);
+    });
+
+    it('arms an abort signal by default (no --timeout flag)', async () => {
+      let capturedSignal: AbortSignal | null | undefined;
+      const fetcher = (async (_input: unknown, init?: RequestInit) => {
+        capturedSignal = init?.signal;
+        return new Response('ok');
+      }) as typeof fetch;
+
+      await tracedFetch(fetcher, 'http://localhost/api');
+      expect(capturedSignal).toBeInstanceOf(AbortSignal);
+    });
+
+    it('aborts a hanging request and throws a TIMEOUT CliError', async () => {
+      setCliTimeoutMs(20);
+      const hangingFetcher = ((_input: unknown, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
+        })) as typeof fetch;
+
+      await expect(tracedFetch(hangingFetcher, 'http://localhost/api')).rejects.toMatchObject({ code: 'TIMEOUT' });
+    });
+
+    it('does not arm an abort signal when the timeout is disabled with 0', async () => {
+      setCliTimeoutMs(0);
+      let capturedSignal: AbortSignal | null | undefined;
+      const fetcher = (async (_input: unknown, init?: RequestInit) => {
+        capturedSignal = init?.signal;
+        return new Response('ok');
+      }) as typeof fetch;
+
+      await tracedFetch(fetcher, 'http://localhost/api');
+      expect(capturedSignal).toBeUndefined();
     });
   });
 });

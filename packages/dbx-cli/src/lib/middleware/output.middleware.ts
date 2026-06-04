@@ -83,7 +83,8 @@ export function createOutputMiddleware(input: CreateOutputMiddlewareInput): Midd
     // (auth, env, doctor, output) — which bypass the auth middleware via skipCommands —
     // still respect `--verbose` and `--timeout`.
     setCliVerbose(Boolean(argv.verbose));
-    setCliTimeoutMs(typeof argv.timeout === 'number' && argv.timeout > 0 ? argv.timeout * 1000 : undefined);
+    // No `--timeout` flag → undefined → the default timeout applies. `--timeout 0` disables it.
+    setCliTimeoutMs(typeof argv.timeout === 'number' ? argv.timeout * 1000 : undefined);
 
     const commandPath: string[] = argv._ ? (argv._ as string[]).map(String) : [];
     const topCommand = commandPath[0];
