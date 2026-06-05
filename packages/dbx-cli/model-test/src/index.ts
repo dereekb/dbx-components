@@ -26,9 +26,11 @@ export { discoverSpecFilesByGroup, FUNCTION_DIR_REL, type DiscoveredSpecCatalog,
 export { extractSpecTreeFromText, type ExtractSpecTreeInput } from './lib/test/extract.js';
 export { inspectSpecFile } from './lib/test/inspect.js';
 export { searchSpecTree } from './lib/test/search.js';
+export { findModelTestHotspots, type FindModelTestHotspotsConfig, type ModelTestHotspot, type ModelTestHotspotsResult, type SpecBucket } from './lib/test/hotspots.js';
 export { formatTreeAsJson, formatSearchAsJson } from './lib/test/format.json.js';
 export { formatTreeAsMarkdown, formatSearchAsMarkdown } from './lib/test/format.markdown.js';
 export { formatListAppAsJson, formatListAppAsMarkdown } from './lib/test/format.list-app.js';
+export { formatHotspotsAsJson, formatHotspotsAsMarkdown } from './lib/test/format.hotspots.js';
 export type { HelperDescribe, PrefixSource, SpecFileTree, SpecNode, SpecNodeKind, SpecSearchHit, SpecSearchQuery, SpecSearchResult, SpecTreeFilters, SpecTreeView } from './lib/test/types.js';
 
 // fixture extraction + scaffolding

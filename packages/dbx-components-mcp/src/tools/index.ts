@@ -43,6 +43,7 @@
  * | dbx_model_fixture_forward           | Generation    | "Add the missing Fixture forwarders for instance methods" |
  * | dbx_model_test_convention           | Documentation | "Where does a new test for model X go? Pure-data lookup of the canonical path." |
  * | dbx_model_test_list_app             | Discovery     | "Inventory + drift audit of every spec in this API app."     |
+ * | dbx_model_test_hotspots             | Discovery     | "Which existing crud/scenario specs reference model X's fixture (or parents), else what to create?" |
  * | dbx_model_test_validate_app         | Verification  | "Enforce the model-test naming convention with severity-tagged violations." |
  * | dbx_model_test_tree                 | Discovery     | "Show me the describe/fixture structure of this spec file."  |
  * | dbx_model_test_search               | Discovery     | "Find every place this spec uses model X / chain Y."         |
@@ -131,6 +132,7 @@ import { MODEL_TEST_LIST_APP_TOOL } from './model-test-list-app.tool.js';
 import { MODEL_TEST_TREE_TOOL } from './model-test-tree.tool.js';
 import { MODEL_TEST_SEARCH_TOOL } from './model-test-search.tool.js';
 import { MODEL_TEST_CONVENTION_TOOL } from './model-test-convention.tool.js';
+import { MODEL_TEST_HOTSPOTS_TOOL } from './model-test-hotspots.tool.js';
 import { MODEL_TEST_VALIDATE_APP_TOOL } from './model-test-validate-app.tool.js';
 import { ARCHETYPE_RECOMMEND_TOOL } from './archetype-recommend.tool.js';
 import { ARCHETYPE_LOOKUP_TOOL } from './archetype-lookup.tool.js';
@@ -222,6 +224,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   MODEL_FIXTURE_FORWARD_TOOL,
   MODEL_TEST_CONVENTION_TOOL,
   MODEL_TEST_LIST_APP_TOOL,
+  MODEL_TEST_HOTSPOTS_TOOL,
   MODEL_TEST_VALIDATE_APP_TOOL,
   MODEL_TEST_TREE_TOOL,
   MODEL_TEST_SEARCH_TOOL,
