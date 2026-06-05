@@ -1,0 +1,34 @@
+{
+  "name": "dbx-cli-model-size",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-cli/model-size/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": ["dbx-cli-manifest-extract", "firebase"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/dbx-cli/model-size"
+      }
+    },
+    "size": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "description": "Run the snapshot-size calculator against a profile (set MODEL_SIZE_PROFILE to the profile JSON path).",
+            "command": "npx vitest run --config packages/dbx-cli/model-size/vitest.config.mts harness"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    }
+  }
+}

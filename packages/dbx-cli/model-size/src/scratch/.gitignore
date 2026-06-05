@@ -1,0 +1,4 @@
+# Keep the committed example; ignore ad-hoc scratch converters/profiles.
+*
+!.gitignore
+!example.scratch.ts
