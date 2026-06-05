@@ -19,11 +19,12 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd, modelListComponent, modelTestValidateApp } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { discoverSpecFilesByGroup, type DiscoveredSpecCatalog } from '@dereekb/dbx-cli/model-test';
-import { extractComponentModels, type ExtractionOutcome } from './model-list-component/extract.js';
-import { formatModelTestValidateAppJson, formatModelTestValidateAppMarkdown, validateModelTestApp } from './model-test-validate-app/index.js';
+const { extractComponentModels } = modelListComponent;
+type ExtractionOutcome = modelListComponent.ExtractionOutcome;
+const { formatModelTestValidateAppJson, formatModelTestValidateAppMarkdown, validateModelTestApp } = modelTestValidateApp;
 
 const ValidateAppArgsType = type({
   componentDir: 'string',

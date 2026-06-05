@@ -17,9 +17,9 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd, systemListApp } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatReportAsJson, formatReportAsMarkdown, listAppSystem } from './system-m-list-app/index.js';
+const { formatReportAsJson, formatReportAsMarkdown, listAppSystem } = systemListApp;
 
 const ListAppArgsType = type({
   componentDir: 'string',

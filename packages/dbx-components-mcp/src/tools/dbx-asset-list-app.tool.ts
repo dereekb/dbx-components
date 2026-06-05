@@ -13,10 +13,12 @@
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
+import { assetListApp, assetValidateApp } from '@dereekb/dbx-cli/validate';
 import { type DbxTool } from './types.js';
 import { createListAppTool } from './validate-tool.js';
-import { inspectAppAssets } from './dbx-asset-validate-app/index.js';
-import { formatReportAsJson, formatReportAsMarkdown, listAppAssets } from './dbx-asset-list-app/index.js';
+
+const { inspectAppAssets } = assetValidateApp;
+const { formatReportAsJson, formatReportAsMarkdown, listAppAssets } = assetListApp;
 
 const DBX_ASSET_LIST_APP_TOOL: Tool = {
   name: 'dbx_asset_list_app',

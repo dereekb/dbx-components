@@ -10,11 +10,9 @@
  * {@link buildFirebaseIndexValidateAppViolation} via `attachRemediation`.
  */
 
-import { ModelFirebaseIndexValidateAppCode } from './codes.js';
-import { attachRemediation } from '../rule-catalog/index.js';
+import { ModelFirebaseIndexValidateAppCode, attachRemediation, type ViolationSeverity } from '@dereekb/dbx-cli/validate';
 import type { ModelFirebaseIndexBuildWarning } from '@dereekb/dbx-cli/firestore-indexes';
 import type { ModelFirebaseIndexValidateAppViolation, ModelFirebaseIndexValidateAppViolationCode } from './types.js';
-import type { ViolationSeverity } from '../validate-format.js';
 
 interface MappedBuildWarning {
   readonly code: ModelFirebaseIndexValidateAppViolationCode;

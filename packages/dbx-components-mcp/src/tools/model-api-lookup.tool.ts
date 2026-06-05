@@ -17,9 +17,10 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd, modelApiLookup } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatLookupAsJson, formatLookupAsMarkdown, lookupModelApi } from './model-api-lookup/index.js';
+
+const { formatLookupAsJson, formatLookupAsMarkdown, lookupModelApi } = modelApiLookup;
 
 const LookupArgsType = type({
   componentDir: 'string',

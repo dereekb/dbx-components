@@ -23,8 +23,9 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createFolderValidateTool } from './validate-tool.js';
-import { formatResult, inspectFolder, validateModelFolders } from './model-validate-folder/index.js';
-import type { RuleOptions } from './model-validate/index.js';
+import { type modelValidate, modelValidateFolder } from '@dereekb/dbx-cli/validate';
+const { formatResult, inspectFolder, validateModelFolders } = modelValidateFolder;
+type RuleOptions = modelValidate.RuleOptions;
 
 // MARK: Tool definition
 const DBX_MODEL_VALIDATE_FOLDER_TOOL: Tool = {

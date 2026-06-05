@@ -24,10 +24,10 @@
  * this tool.
  */
 
-import type { FolderGroupedResult, FolderGroupedViolation } from '../validate-format.js';
+import type { FolderGroupedResult, FolderGroupedViolation, FolderInspectionStatus } from '../_core/validate-format.js';
 import type { SystemMValidateFolderCode } from './codes.js';
 
-export type { FolderInspectionStatus, ViolationSeverity } from '../validate-format.js';
+export type { FolderInspectionStatus, ViolationSeverity } from '../_core/validate-format.js';
 
 /**
  * String-literal union derived from {@link SystemMValidateFolderCode}.

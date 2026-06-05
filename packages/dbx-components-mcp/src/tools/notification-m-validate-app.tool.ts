@@ -17,7 +17,8 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createTwoSideValidateTool } from './validate-tool.js';
-import { formatResult, inspectAppNotifications, validateAppNotifications } from './notification-m-validate-app/index.js';
+import { notificationValidateApp } from '@dereekb/dbx-cli/validate';
+const { formatResult, inspectAppNotifications, validateAppNotifications } = notificationValidateApp;
 
 // MARK: Tool definition
 const DBX_NOTIFICATION_M_VALIDATE_APP_TOOL: Tool = {

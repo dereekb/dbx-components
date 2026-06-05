@@ -27,7 +27,8 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createTwoSideValidateTool } from './validate-tool.js';
-import { formatResult, inspectNotificationFolder, validateNotificationFolder } from './notification-m-validate-folder/index.js';
+import { notificationValidateFolder } from '@dereekb/dbx-cli/validate';
+const { formatResult, inspectNotificationFolder, validateNotificationFolder } = notificationValidateFolder;
 
 // MARK: Tool definition
 const DBX_NOTIFICATION_M_VALIDATE_FOLDER_TOOL: Tool = {

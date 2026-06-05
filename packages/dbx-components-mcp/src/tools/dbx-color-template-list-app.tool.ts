@@ -12,9 +12,10 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { colorTemplateListApp, ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatReportAsJson, formatReportAsMarkdown, inspectColorTemplates, listAppColorTemplates } from './dbx-color-template-list-app/index.js';
+
+const { formatReportAsJson, formatReportAsMarkdown, inspectColorTemplates, listAppColorTemplates } = colorTemplateListApp;
 
 const DBX_COLOR_TEMPLATE_LIST_APP_TOOL_DEFINITION: Tool = {
   name: 'dbx_color_template_list_app',

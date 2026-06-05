@@ -14,8 +14,7 @@
  */
 
 import type { FirestoreIndexesDiff } from '@dereekb/dbx-cli/firestore-indexes';
-import type { ViolationLine, ViolationSeverity } from '../validate-format.js';
-import type { ModelFirebaseIndexValidateAppCodeString } from './codes.js';
+import type { ViolationLine, ViolationSeverity, ModelFirebaseIndexValidateAppCodeString } from '@dereekb/dbx-cli/validate';
 
 // MARK: Violation
 /**

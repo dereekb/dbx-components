@@ -24,8 +24,6 @@ import { attachRemediation } from './rule-catalog/index.js';
 import type { RemediationHint } from './rule-catalog/types.js';
 import type { ViolationSeverity } from './validate-format.js';
 
-export type { ViolationSeverity } from './validate-format.js';
-
 /**
  * Side of a two-directory validator. `component` = the `-firebase`
  * package; `api` = the API app that wires the services.

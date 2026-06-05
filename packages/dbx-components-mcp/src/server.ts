@@ -56,10 +56,9 @@ import {
   type DownstreamPackage
 } from '@dereekb/dbx-cli';
 import type { ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
-import type { FixtureModelRegistry } from './tools/model-fixture-shared/index.js';
+import type { fixtureValidate, modelValidate } from '@dereekb/dbx-cli/validate';
 import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
-import type { RuleOptions } from './tools/model-validate/index.js';
 import type { LogSearchConfig } from './tools/log-search.tool.js';
 import packageJson from '../package.json' with { type: 'json' };
 
@@ -372,7 +371,7 @@ export async function createServer(options: CreateServerOptions = {}): Promise<M
     catchErrors: true
   });
 
-  const fixtureModelRegistry: FixtureModelRegistry = {
+  const fixtureModelRegistry: fixtureValidate.FixtureModelRegistry = {
     entries: FIREBASE_MODELS.map((m) => ({ name: m.name, modelType: m.modelType, collectionPrefix: m.collectionPrefix }))
   };
 
@@ -437,14 +436,14 @@ async function resolveOptionalRegistry<TRegistry, TResult>(args: ResolveOptional
  * @param config - The parsed `dbx-mcp.config.json`, or `null` when missing.
  * @returns The rule overrides, or `undefined` when none are configured.
  */
-function resolveModelValidateRuleOptions(config: Maybe<{ readonly modelValidate?: { readonly maxFieldNameLength?: number; readonly ignoredFieldNames?: readonly string[]; readonly ignoredExternalParents?: readonly string[] } }>): RuleOptions | undefined {
+function resolveModelValidateRuleOptions(config: Maybe<{ readonly modelValidate?: { readonly maxFieldNameLength?: number; readonly ignoredFieldNames?: readonly string[]; readonly ignoredExternalParents?: readonly string[] } }>): modelValidate.RuleOptions | undefined {
   const block = config?.modelValidate;
   if (block === undefined) {
     return undefined;
   }
   const ignoredFieldNames = block.ignoredFieldNames === undefined ? undefined : new Set(block.ignoredFieldNames);
   const ignoredExternalParents = block.ignoredExternalParents === undefined ? undefined : new Set(block.ignoredExternalParents);
-  const result: RuleOptions = {
+  const result: modelValidate.RuleOptions = {
     maxFieldNameLength: block.maxFieldNameLength,
     ignoredFieldNames,
     ignoredExternalParents

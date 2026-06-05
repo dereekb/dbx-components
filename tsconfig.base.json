@@ -32,6 +32,7 @@
       "@dereekb/dbx-cli/manifest-extract": ["packages/dbx-cli/manifest-extract/src/index.ts"],
       "@dereekb/dbx-cli/model-test": ["packages/dbx-cli/model-test/src/index.ts"],
       "@dereekb/dbx-cli/test": ["packages/dbx-cli/test/src/index.ts"],
+      "@dereekb/dbx-cli/validate": ["packages/dbx-cli/validate/src/index.ts"],
       "@dereekb/dbx-components-cli": ["packages/dbx-components-cli/src/index.ts"],
       "@dereekb/dbx-components-mcp": ["packages/dbx-components-mcp/src/index.ts"],
       "@dereekb/dbx-core": ["packages/dbx-core/src/index.ts"],

@@ -17,8 +17,12 @@ import { basename, extname, isAbsolute, resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { findAndLoadConfig, type ConfigReadFile, type TokenRegistry, type UiComponentRegistry } from '@dereekb/dbx-cli';
-import { detectSmellsDetailed, formatBatchSmellResult, formatSmellResult, type ProjectConventions, type SmellResultFile } from './ui-smell-check/index.js';
+import { uiSmellCheck } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
+
+const { detectSmellsDetailed, formatBatchSmellResult, formatSmellResult } = uiSmellCheck;
+type ProjectConventions = uiSmellCheck.ProjectConventions;
+type SmellResultFile = uiSmellCheck.SmellResultFile;
 
 // MARK: Tool advertisement
 const DBX_UI_SMELL_CHECK_TOOL: Tool = {

@@ -117,7 +117,7 @@ export interface UtilRequireDbxRuleCompanionTagsRuleDefinition {
 /**
  * ESLint rule enforcing `@dbxRule` companion tags on enum members in
  * `codes.ts` files. Mirrors the extractor at
- * `packages/dbx-components-mcp/scripts/extract-rule-catalog.mjs`.
+ * `packages/dbx-cli/validate/scripts/extract-rule-catalog.mjs`.
  */
 export const UTIL_REQUIRE_DBX_RULE_COMPANION_TAGS_RULE: UtilRequireDbxRuleCompanionTagsRuleDefinition = {
   meta: {

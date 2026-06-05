@@ -20,7 +20,9 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createSourceValidateTool } from './validate-tool.js';
-import { formatResult, validateFirebaseModelSources, type RuleOptions } from './model-validate/index.js';
+import { modelValidate } from '@dereekb/dbx-cli/validate';
+const { formatResult, validateFirebaseModelSources } = modelValidate;
+type RuleOptions = modelValidate.RuleOptions;
 
 // MARK: Tool definition
 const DBX_MODEL_VALIDATE_TOOL: Tool = {

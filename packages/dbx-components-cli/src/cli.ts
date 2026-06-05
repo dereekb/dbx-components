@@ -11,6 +11,8 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { FIXTURE_COMMAND } from './commands/fixture.command.js';
+import { LIST_COMMAND } from './commands/list.command.js';
+import { VALIDATE_COMMAND } from './commands/validate.command.js';
 import { SPEC_COMMAND } from './commands/spec.command.js';
 
 /**
@@ -26,7 +28,9 @@ export async function runDbxComponentsCli(argv: readonly string[]): Promise<void
     .usage('$0 <command> [options]')
     .command(SPEC_COMMAND)
     .command(FIXTURE_COMMAND)
-    .demandCommand(1, 'Specify a command (spec, fixture).')
+    .command(VALIDATE_COMMAND)
+    .command(LIST_COMMAND)
+    .demandCommand(1, 'Specify a command (spec, fixture, validate, list).')
     .strict()
     .help()
     .alias('h', 'help')

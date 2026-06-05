@@ -39,6 +39,9 @@
       "types": "./test/index.d.ts",
       "import": "./test/index.cjs.mjs",
       "default": "./test/index.cjs.js"
+    },
+    "./validate": {
+      "default": "./validate/index.js"
     }
   },
   "peerDependencies": {

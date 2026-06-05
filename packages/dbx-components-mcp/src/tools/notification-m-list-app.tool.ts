@@ -18,8 +18,9 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createListAppTool } from './validate-tool.js';
-import { inspectAppNotifications } from './notification-m-validate-app/index.js';
-import { formatReportAsJson, formatReportAsMarkdown, listAppNotifications } from './notification-m-list-app/index.js';
+import { notificationValidateApp, notificationListApp } from '@dereekb/dbx-cli/validate';
+const { inspectAppNotifications } = notificationValidateApp;
+const { formatReportAsJson, formatReportAsMarkdown, listAppNotifications } = notificationListApp;
 
 // MARK: Tool definition
 const DBX_NOTIFICATION_M_LIST_APP_TOOL: Tool = {

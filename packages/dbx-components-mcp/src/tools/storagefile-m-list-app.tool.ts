@@ -19,8 +19,9 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createListAppTool } from './validate-tool.js';
-import { inspectAppStorageFiles } from './storagefile-m-validate-app/index.js';
-import { formatReportAsJson, formatReportAsMarkdown, listAppStorageFiles } from './storagefile-m-list-app/index.js';
+import { storagefileValidateApp, storagefileListApp } from '@dereekb/dbx-cli/validate';
+const { inspectAppStorageFiles } = storagefileValidateApp;
+const { formatReportAsJson, formatReportAsMarkdown, listAppStorageFiles } = storagefileListApp;
 
 // MARK: Tool definition
 const DBX_STORAGEFILE_M_LIST_APP_TOOL: Tool = {

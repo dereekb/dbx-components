@@ -15,7 +15,8 @@
  */
 
 import type { ModelValidateApiCode } from './codes.js';
-import type { RemediationHint } from '../rule-catalog/types.js';
+import type { RemediationHint } from '../_core/rule-catalog/types.js';
+import type { ViolationSeverity } from '../_core/validate-format.js';
 
 /**
  * String-literal union derived from {@link ModelValidateApiCode}.
@@ -27,7 +28,7 @@ export type ViolationCode = `${ModelValidateApiCode}`;
  * codes flag convention deviations — validation is still considered a
  * pass.
  */
-export type { ViolationSeverity } from '../validate-format.js';
+export type { ViolationSeverity } from '../_core/validate-format.js';
 
 export interface Violation {
   readonly code: ViolationCode;

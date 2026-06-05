@@ -9,4 +9,6 @@
 export { runDbxComponentsCli, runDbxComponentsCliFromProcess } from './cli.js';
 export { SPEC_COMMAND } from './commands/spec.command.js';
 export { FIXTURE_COMMAND } from './commands/fixture.command.js';
+export { VALIDATE_COMMAND } from './commands/validate.command.js';
+export { LIST_COMMAND } from './commands/list.command.js';
 export { resolvePath, runCommand, type ResolvedPath } from './lib/run.js';
