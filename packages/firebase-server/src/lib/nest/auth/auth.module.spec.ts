@@ -13,6 +13,7 @@ import { type NestContextCallableRequestWithAuth } from '../function/nest';
 import { type AbstractFirebaseNestContext } from '../nest.provider';
 import { assertIsAdminOrTargetUserInRequestData, isAdminInRequest, isAdminOrTargetUserInRequestData } from './auth.util';
 import { addDays } from 'date-fns';
+import { hoursToMs } from '@dereekb/date';
 import { FirebaseServerAuthNewUserSendSetupDetailsSendOnceError, FirebaseServerAuthNewUserSendSetupDetailsThrottleError, FirebaseServerAuthUserBadInputError, FirebaseServerAuthUserExistsError } from '../../auth/auth.service.error';
 
 const TEST_CLAIMS_SERVICE_CONFIG = {
@@ -146,6 +147,24 @@ describe('firebase server nest auth', () => {
 
               resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
               expect(resetPasswordClaims).toBeDefined();
+            });
+
+            it('should honor a custom resetCodeExpiresIn override when setting the reset expiration.', async () => {
+              const customExpiresInMs = hoursToMs(48); // far beyond the 15-minute default
+              const before = Date.now();
+
+              await authUserContext.beginResetPassword({ resetCodeExpiresIn: customExpiresInMs });
+
+              const after = Date.now();
+
+              authUserContext = authService.userContext(u.uid);
+              const resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
+              expect(resetPasswordClaims).toBeDefined();
+
+              const expiresAtMs = new Date(resetPasswordClaims!.resetExpiresAt as string).getTime();
+              // The stored expiration must land within [now + custom, now + custom] bracketed by the call window.
+              expect(expiresAtMs).toBeGreaterThanOrEqual(before + customExpiresInMs);
+              expect(expiresAtMs).toBeLessThanOrEqual(after + customExpiresInMs);
             });
           });
 
@@ -366,6 +385,23 @@ describe('firebase server nest auth', () => {
                 expect(claims[APP_CLAIM_KEY]).toBe(1);
                 expect(claims.a).toBe(DEFAULT_AUTH_ROLE_CLAIMS_CLAIM_VALUE);
 
+                const resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
+                expect(resetPasswordClaims).not.toBeDefined();
+              });
+
+              it('should complete successfully when started with a long resetCodeExpiresIn (admin-initiated reset).', async () => {
+                // Mirrors the admin case where a reset is generated but not acted on for a day or two:
+                // a long-lived code must still be accepted by completePasswordReset.
+                await authUserContext.setPassword('originalPassword1!');
+
+                const passwordReset = authService.passwordReset();
+                const { oobCode } = await passwordReset.beginPasswordReset({ uid: u.uid, resetCodeExpiresIn: hoursToMs(48) });
+
+                const record = await passwordReset.completePasswordReset({ oobCode, newPassword: 'brandNewPassword1!' });
+                expect(record.uid).toBe(u.uid);
+
+                // the reset claims are cleared after a successful completion
+                authUserContext = authService.userContext(u.uid);
                 const resetPasswordClaims = await authUserContext.loadResetPasswordClaims();
                 expect(resetPasswordClaims).not.toBeDefined();
               });

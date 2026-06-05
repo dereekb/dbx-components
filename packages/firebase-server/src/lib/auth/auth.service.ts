@@ -71,6 +71,19 @@ export interface FirebaseServerAuthResetUserPasswordClaims extends FirebaseAuthR
  * await userCtx.addRoles(AUTH_ADMIN_ROLE);
  * ```
  */
+/**
+ * Optional overrides for {@link FirebaseServerAuthUserContext.beginResetPassword}.
+ */
+export interface FirebaseServerAuthBeginResetPasswordOptions {
+  /**
+   * Lifetime of the generated reset code, in milliseconds. When provided, overrides the context
+   * default ({@link AbstractFirebaseServerAuthUserContext._resetCodeExpiresInMs} / {@link DEFAULT_RESET_CODE_EXPIRES_IN}).
+   *
+   * Intended for admin-initiated resets that need a longer window than the self-service default.
+   */
+  readonly resetCodeExpiresIn?: Maybe<Milliseconds>;
+}
+
 export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIdentifierContext {
   /**
    * Checks whether the user exists in Firebase Auth.
@@ -97,8 +110,10 @@ export interface FirebaseServerAuthUserContext extends FirebaseServerAuthUserIde
    *
    * The returned claims contain the generated password and a timestamp, which can be
    * communicated to the user through an external channel (e.g., email).
+   *
+   * @param options - Optional overrides for the reset, such as a custom code lifetime.
    */
-  beginResetPassword(): Promise<FirebaseServerAuthResetUserPasswordClaims>;
+  beginResetPassword(options?: FirebaseServerAuthBeginResetPasswordOptions): Promise<FirebaseServerAuthResetUserPasswordClaims>;
 
   /**
    * Loads the reset password claims if a password reset is currently active.
@@ -247,10 +262,12 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
     return String(DEFAULT_FIREBASE_PASSWORD_NUMBER_GENERATOR());
   }
 
-  async beginResetPassword(): Promise<FirebaseServerAuthResetUserPasswordClaims> {
+  async beginResetPassword(options?: FirebaseServerAuthBeginResetPasswordOptions): Promise<FirebaseServerAuthResetUserPasswordClaims> {
     const password = this._generateResetPasswordKey();
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + this._resetCodeExpiresInMs());
+    // An explicit per-call lifetime wins over the context default; otherwise fall back to _resetCodeExpiresInMs().
+    const expiresInMs = options?.resetCodeExpiresIn ?? this._resetCodeExpiresInMs();
+    const expiresAt = new Date(now.getTime() + expiresInMs);
     const passwordClaimsData: FirebaseServerAuthResetUserPasswordClaims = {
       [FIREBASE_SERVER_AUTH_CLAIMS_RESET_PASSWORD_KEY]: password,
       [FIREBASE_SERVER_AUTH_CLAIMS_RESET_LAST_COM_DATE_KEY]: toISODateString(now),
@@ -1060,6 +1077,12 @@ export interface FirebaseServerAuthInitiatePasswordReset<D = unknown> {
    */
   readonly sendDetailsInTestEnvironment?: Maybe<boolean>;
   /**
+   * Optional override for the generated reset code's lifetime, in milliseconds. Defaults to the
+   * context default (15 min). Use a longer value for admin-initiated resets that may not be
+   * acted on for a day or two. Not exposed through the public API.
+   */
+  readonly resetCodeExpiresIn?: Maybe<Milliseconds>;
+  /**
    * Any additional reset context.
    */
   readonly data?: Maybe<D>;
@@ -1284,12 +1307,12 @@ export interface FirebaseServerUserPasswordResetService<D = unknown, U extends F
 export const DEFAULT_RESET_COM_THROTTLE_TIME = minutesToMs(1);
 
 /**
- * Default lifetime (15 minutes) of a reset code before it expires.
+ * Default lifetime (30 minutes) of a reset code before it expires.
  *
  * Used by {@link AbstractFirebaseServerAuthUserContext.beginResetPassword} to set
  * `resetExpiresAt` in the user's claims.
  */
-export const DEFAULT_RESET_CODE_EXPIRES_IN = minutesToMs(15);
+export const DEFAULT_RESET_CODE_EXPIRES_IN = minutesToMs(30);
 
 /**
  * Base implementation of {@link FirebaseServerUserPasswordResetService} that handles reset initiation,
@@ -1325,7 +1348,7 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
   }
 
   async beginPasswordReset(input: FirebaseServerAuthInitiatePasswordReset<D>): Promise<FirebaseServerAuthBeginPasswordResetResult> {
-    const { uid, email, sendResetContent, sendResetDetailsOnce, sendResetIgnoreThrottle, sendResetThrowErrors, data, sendDetailsInTestEnvironment } = input;
+    const { uid, email, sendResetContent, sendResetDetailsOnce, sendResetIgnoreThrottle, sendResetThrowErrors, data, sendDetailsInTestEnvironment, resetCodeExpiresIn } = input;
 
     let resolvedUid: Maybe<FirebaseAuthUserId>;
 
@@ -1339,7 +1362,7 @@ export abstract class AbstractFirebaseServerUserPasswordResetService<U extends F
     }
 
     const userContext = this.authService.userContext(resolvedUid);
-    const claims = await userContext.beginResetPassword();
+    const claims = await userContext.beginResetPassword({ resetCodeExpiresIn });
 
     if (sendResetContent) {
       // beginResetPassword() just refreshed the claims (including resetCommunicationAt = now),
