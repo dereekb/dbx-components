@@ -10,15 +10,15 @@
  *
  * Each hit is returned with the describe path and fixture chain leading to
  * the node — i.e. the data-setup chain a test sitting at that position
- * would inherit. Backed by the shared parser in `model-test-shared/`.
+ * would inherit. Backed by the shared parser in `@dereekb/dbx-cli/model-test`.
  */
 
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatSearchAsJson, formatSearchAsMarkdown, inspectSpecFile, searchSpecTree, type SpecSearchQuery } from './model-test-shared/index.js';
+import { formatSearchAsJson, formatSearchAsMarkdown, inspectSpecFile, searchSpecTree, type SpecSearchQuery } from '@dereekb/dbx-cli/model-test';
 
 const SearchArgsType = type({
   specFile: 'string',

@@ -19,9 +19,10 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd, modelApiListApp } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatReportAsJson, formatReportAsMarkdown, listAppModelApi } from './model-api-list-app/index.js';
+
+const { formatReportAsJson, formatReportAsMarkdown, listAppModelApi } = modelApiListApp;
 
 const ListArgsType = type({
   componentDir: 'string',

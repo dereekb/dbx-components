@@ -23,7 +23,8 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createSourceValidateTool } from './validate-tool.js';
-import { formatResult, validateModelApiSources } from './model-validate-api/index.js';
+import { modelValidateApi } from '@dereekb/dbx-cli/validate';
+const { formatResult, validateModelApiSources } = modelValidateApi;
 
 // MARK: Tool definition
 const DBX_MODEL_VALIDATE_API_TOOL: Tool = {

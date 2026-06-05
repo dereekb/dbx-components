@@ -1,0 +1,15 @@
+{
+  "name": "@dereekb/dbx-components-cli",
+  "version": "13.15.0",
+  "type": "module",
+  "bin": {
+    "dbx-components-cli": "dbx-components-cli.js"
+  },
+  "dependencies": {
+    "yargs": "^18.0.0"
+  },
+  "peerDependencies": {
+    "@dereekb/dbx-cli": "13.15.0",
+    "@dereekb/util": "13.15.0"
+  }
+}

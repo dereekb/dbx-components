@@ -2,7 +2,7 @@
  * `dbx_model_test_validate_app` tool.
  *
  * Audits a downstream `-firebase` component + API app pair against the
- * spec-file convention codified in `model-test-shared/conventions.ts`:
+ * spec-file convention codified in `@dereekb/util` (spec-file-conventions):
  *
  *  - Every spec under `<apiDir>/src/app/function/<group>/` must match
  *    `<group>.crud[.<sub>...].spec.ts` or `<group>.scenario[.<sub>...].spec.ts`.
@@ -19,11 +19,12 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd, modelListComponent, modelTestValidateApp } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { discoverSpecFilesByGroup, type DiscoveredSpecCatalog } from './model-test-shared/index.js';
-import { extractComponentModels, type ExtractionOutcome } from './model-list-component/extract.js';
-import { formatModelTestValidateAppJson, formatModelTestValidateAppMarkdown, validateModelTestApp } from './model-test-validate-app/index.js';
+import { discoverSpecFilesByGroup, type DiscoveredSpecCatalog } from '@dereekb/dbx-cli/model-test';
+const { extractComponentModels } = modelListComponent;
+type ExtractionOutcome = modelListComponent.ExtractionOutcome;
+const { formatModelTestValidateAppJson, formatModelTestValidateAppMarkdown, validateModelTestApp } = modelTestValidateApp;
 
 const ValidateAppArgsType = type({
   componentDir: 'string',

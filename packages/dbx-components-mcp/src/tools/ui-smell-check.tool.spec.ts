@@ -2,8 +2,10 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { loadTokenManifests, loadUiComponentManifests, createTokenRegistry, EMPTY_TOKEN_REGISTRY, createUiComponentRegistry, EMPTY_UI_COMPONENT_REGISTRY } from '@dereekb/dbx-cli';
-import { detectSmells, detectSmellsDetailed } from './ui-smell-check/index.js';
+import { uiSmellCheck } from '@dereekb/dbx-cli/validate';
 import { createUiSmellCheckTool } from './ui-smell-check.tool.js';
+
+const { detectSmells, detectSmellsDetailed } = uiSmellCheck;
 
 const PACKAGE_ROOT = resolve(__dirname, '..', '..');
 const MANIFESTS_DIR = resolve(PACKAGE_ROOT, '..', 'dbx-cli', 'generated');

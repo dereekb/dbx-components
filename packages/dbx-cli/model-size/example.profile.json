@@ -1,0 +1,16 @@
+{
+  "source": "./src/scratch/example.scratch.ts",
+  "export": "exampleScratchConverter",
+  "limitBytes": 1048576,
+  "includeOptional": true,
+  "defaults": { "string": 24, "number": 1000000, "arrayCount": 3, "mapCount": 3 },
+  "fields": {
+    "name": 40,
+    "note": 120,
+    "tags[]": 10,
+    "meta.k": 12,
+    "entries[]": 200,
+    "entries[].m": 80
+  },
+  "solveFor": "entries[]"
+}

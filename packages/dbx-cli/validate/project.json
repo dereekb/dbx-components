@@ -1,0 +1,76 @@
+{
+  "name": "dbx-cli-validate",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-cli/validate/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "targets": {
+    "generate-rule-catalog": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": ["{projectRoot}/src/generated/rule-catalog.generated.json", "{projectRoot}/src/generated/rule-catalog.generated.ts"],
+      "inputs": ["{projectRoot}/scripts/extract-rule-catalog.mjs", "{projectRoot}/src/lib/*/codes.ts"],
+      "options": {
+        "command": "node packages/dbx-cli/validate/scripts/extract-rule-catalog.mjs",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-cli/validate"],
+      "options": {
+        "command": "npx nx run dbx-cli-validate:build-base",
+        "color": true
+      },
+      "dependsOn": ["^build"]
+    },
+    "build-base": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["generate-rule-catalog"],
+      "options": {
+        "outputPath": "dist/packages/dbx-cli/validate",
+        "main": "packages/dbx-cli/validate/src/index.ts",
+        "tsConfig": "packages/dbx-cli/validate/tsconfig.lib.json",
+        "format": ["esm"],
+        "platform": "node",
+        "target": "node20",
+        "bundle": true,
+        "thirdParty": false,
+        "skipTypeCheck": true,
+        "declaration": false,
+        "assets": [
+          {
+            "glob": "LICENSE",
+            "input": ".",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "production": {
+          "minify": false,
+          "sourcemap": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "ci-publish-npmjs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd ./dist/packages/dbx-cli/validate && npm publish --access public"
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/dbx-cli/validate"
+      }
+    }
+  }
+}

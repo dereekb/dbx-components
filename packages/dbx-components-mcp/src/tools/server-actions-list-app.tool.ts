@@ -20,9 +20,10 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd, serverActionsListApp } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatReportAsJson, formatReportAsMarkdown, listAppServerActions } from './server-actions-list-app/index.js';
+
+const { formatReportAsJson, formatReportAsMarkdown, listAppServerActions } = serverActionsListApp;
 
 const ListArgsType = type({
   apiDir: 'string',

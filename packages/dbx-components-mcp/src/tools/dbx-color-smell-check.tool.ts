@@ -14,10 +14,13 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd, resolveValidatorSources } from './validate-input.js';
+import { colorSmellCheck, colorTemplateListApp, ensurePathInsideCwd, resolveValidatorSources } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { extractHtmlLiterals, extractTsLiterals, formatResultAsJson, formatResultAsMarkdown, groupColorSmells, type ColorSmellEquivalenceMode } from './dbx-color-smell-check/index.js';
-import { extractColorTemplates, inspectColorTemplates, type ColorTemplateEntry } from './dbx-color-template-list-app/index.js';
+
+const { extractHtmlLiterals, extractTsLiterals, formatResultAsJson, formatResultAsMarkdown, groupColorSmells } = colorSmellCheck;
+type ColorSmellEquivalenceMode = colorSmellCheck.ColorSmellEquivalenceMode;
+const { extractColorTemplates, inspectColorTemplates } = colorTemplateListApp;
+type ColorTemplateEntry = colorTemplateListApp.ColorTemplateEntry;
 
 const DBX_COLOR_SMELL_CHECK_TOOL_DEFINITION: Tool = {
   name: 'dbx_color_smell_check',

@@ -67,11 +67,19 @@ export const DEFAULT_CLI_SECRET_PATTERNS: CliSecretPattern[] = [/Bearer\s+\S+/gi
  */
 export type CliErrorMapper = (error: unknown) => Maybe<CliErrorOutput>;
 
+/**
+ * Default per-request HTTP timeout in milliseconds, applied when no explicit `--timeout` is set.
+ *
+ * Without a default, the HTTP layer's `fetch` waits indefinitely on an unresponsive server, which
+ * surfaces as a CLI (or CI test) that hangs forever rather than failing with a clear error.
+ */
+export const DEFAULT_CLI_HTTP_TIMEOUT_MS = 60_000;
+
 let _outputOptions: CliOutputOptions = {};
 let _secretPatterns: CliSecretPattern[] = [...DEFAULT_CLI_SECRET_PATTERNS];
 let _errorMapper: Maybe<CliErrorMapper>;
 let _verbose = false;
-let _timeoutMs: Maybe<number>;
+let _timeoutMs: Maybe<number> = DEFAULT_CLI_HTTP_TIMEOUT_MS;
 
 /**
  * Configures output options from parsed CLI arguments.
@@ -157,10 +165,12 @@ export async function tracedFetch(fetcher: typeof fetch | undefined, input: stri
   let timeoutHandle: Maybe<NodeJS.Timeout>;
   let finalInit: RequestInit | undefined = init;
 
-  if (timeoutMs != null && init?.signal == null) {
+  if (timeoutMs != null && timeoutMs > 0 && init?.signal == null) {
     const localController = new AbortController();
     controller = localController;
     timeoutHandle = setTimeout(() => localController.abort(), timeoutMs);
+    // Don't let the abort timer itself keep the Node event loop (or a test worker) alive.
+    timeoutHandle.unref?.();
     finalInit = { ...init, signal: localController.signal };
   }
 
@@ -183,13 +193,14 @@ export async function tracedFetch(fetcher: typeof fetch | undefined, input: stri
 /**
  * Sets the process-wide HTTP timeout (in milliseconds) honored by the HTTP layer.
  *
- * Pass `undefined` to clear. The HTTP helpers thread this into an `AbortController`
- * so individual `fetch` calls cancel after the configured duration.
+ * The HTTP helpers thread a positive value into an `AbortController` so individual `fetch` calls
+ * cancel after the configured duration. `undefined` falls back to {@link DEFAULT_CLI_HTTP_TIMEOUT_MS};
+ * `0` (or a negative value) disables the timeout entirely (the request waits indefinitely).
  *
- * @param ms - Timeout in ms, or `undefined` to clear.
+ * @param ms - Timeout in ms, `0`/negative to disable, or `undefined` to fall back to the default.
  */
 export function setCliTimeoutMs(ms: Maybe<number>): void {
-  _timeoutMs = ms;
+  _timeoutMs = ms === undefined ? DEFAULT_CLI_HTTP_TIMEOUT_MS : ms;
 }
 
 /**

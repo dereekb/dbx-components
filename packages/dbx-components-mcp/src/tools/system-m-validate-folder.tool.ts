@@ -24,7 +24,8 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createFolderValidateTool } from './validate-tool.js';
-import { formatResult, inspectFolder, validateSystemFolders } from './system-m-validate-folder/index.js';
+import { systemValidateFolder } from '@dereekb/dbx-cli/validate';
+const { formatResult, inspectFolder, validateSystemFolders } = systemValidateFolder;
 
 // MARK: Tool definition
 const DBX_SYSTEM_M_VALIDATE_FOLDER_TOOL: Tool = {

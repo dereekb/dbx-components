@@ -13,9 +13,9 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatListAsJson, formatListAsMarkdown, inspectAppFixtures } from './model-fixture-shared/index.js';
+import { formatListAsJson, formatListAsMarkdown, inspectAppFixtures } from '@dereekb/dbx-cli/model-test';
 
 const ListArgsType = type({
   apiDir: 'string',

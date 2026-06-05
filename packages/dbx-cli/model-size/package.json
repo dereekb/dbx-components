@@ -1,0 +1,15 @@
+{
+  "name": "@dereekb/dbx-cli-model-size",
+  "version": "13.15.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "devDependencies": {
+    "ts-morph": "^21.0.0"
+  },
+  "peerDependencies": {
+    "@dereekb/dbx-cli": "13.15.0",
+    "@dereekb/firebase": "13.15.0",
+    "@dereekb/util": "13.15.0"
+  }
+}

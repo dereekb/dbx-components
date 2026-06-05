@@ -21,7 +21,8 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createTwoSideValidateTool } from './validate-tool.js';
-import { formatResult, inspectAppAssets, validateAssetFolder } from './dbx-asset-validate-folder/index.js';
+import { assetValidateFolder } from '@dereekb/dbx-cli/validate';
+const { formatResult, inspectAppAssets, validateAssetFolder } = assetValidateFolder;
 
 const DBX_ASSET_VALIDATE_FOLDER_TOOL: Tool = {
   name: 'dbx_asset_validate_folder',

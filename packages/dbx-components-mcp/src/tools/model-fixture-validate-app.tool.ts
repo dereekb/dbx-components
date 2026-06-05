@@ -24,9 +24,12 @@
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd, fixtureValidate } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatValidationAsJson, formatValidationAsMarkdown, inspectAppFixtures, validateAppFixtures, type FixtureModelRegistry } from './model-fixture-shared/index.js';
+import { inspectAppFixtures } from '@dereekb/dbx-cli/model-test';
+
+const { formatValidationAsJson, formatValidationAsMarkdown, validateAppFixtures } = fixtureValidate;
+type FixtureModelRegistry = fixtureValidate.FixtureModelRegistry;
 
 const ValidateArgsType = type({
   apiDir: 'string',

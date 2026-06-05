@@ -43,6 +43,7 @@
  * | dbx_model_fixture_forward           | Generation    | "Add the missing Fixture forwarders for instance methods" |
  * | dbx_model_test_convention           | Documentation | "Where does a new test for model X go? Pure-data lookup of the canonical path." |
  * | dbx_model_test_list_app             | Discovery     | "Inventory + drift audit of every spec in this API app."     |
+ * | dbx_model_test_hotspots             | Discovery     | "Which existing crud/scenario specs reference model X's fixture (or parents), else what to create?" |
  * | dbx_model_test_validate_app         | Verification  | "Enforce the model-test naming convention with severity-tagged violations." |
  * | dbx_model_test_tree                 | Discovery     | "Show me the describe/fixture structure of this spec file."  |
  * | dbx_model_test_search               | Discovery     | "Find every place this spec uses model X / chain Y."         |
@@ -115,7 +116,7 @@ import { LOOKUP_MODEL_TOOL } from './lookup-model.tool.js';
 import { SEARCH_MODEL_TOOL } from './search-model.tool.js';
 import { MODEL_DECODE_TOOL } from './model-decode.tool.js';
 import { createModelValidateTool } from './model-validate.tool.js';
-import type { RuleOptions } from './model-validate/index.js';
+import type { modelValidate, fixtureValidate } from '@dereekb/dbx-cli/validate';
 import { modelValidateApiTool } from './model-validate-api.tool.js';
 import { MODEL_API_LIST_APP_TOOL } from './model-api-list-app.tool.js';
 import { MODEL_API_LOOKUP_TOOL } from './model-api-lookup.tool.js';
@@ -131,12 +132,12 @@ import { MODEL_TEST_LIST_APP_TOOL } from './model-test-list-app.tool.js';
 import { MODEL_TEST_TREE_TOOL } from './model-test-tree.tool.js';
 import { MODEL_TEST_SEARCH_TOOL } from './model-test-search.tool.js';
 import { MODEL_TEST_CONVENTION_TOOL } from './model-test-convention.tool.js';
+import { MODEL_TEST_HOTSPOTS_TOOL } from './model-test-hotspots.tool.js';
 import { MODEL_TEST_VALIDATE_APP_TOOL } from './model-test-validate-app.tool.js';
 import { ARCHETYPE_RECOMMEND_TOOL } from './archetype-recommend.tool.js';
 import { ARCHETYPE_LOOKUP_TOOL } from './archetype-lookup.tool.js';
 import { ARCHETYPE_SEARCH_TOOL } from './archetype-search.tool.js';
 import { MODEL_HIERARCHY_TOOL } from './model-hierarchy.tool.js';
-import type { FixtureModelRegistry } from './model-fixture-shared/index.js';
 import { storageFileMValidateAppTool } from './storagefile-m-validate-app.tool.js';
 import { storageFileMListAppTool } from './storagefile-m-list-app.tool.js';
 import { storageFileMValidateFolderTool } from './storagefile-m-validate-folder.tool.js';
@@ -223,6 +224,7 @@ export const DBX_TOOLS: readonly DbxTool[] = [
   MODEL_FIXTURE_FORWARD_TOOL,
   MODEL_TEST_CONVENTION_TOOL,
   MODEL_TEST_LIST_APP_TOOL,
+  MODEL_TEST_HOTSPOTS_TOOL,
   MODEL_TEST_VALIDATE_APP_TOOL,
   MODEL_TEST_TREE_TOOL,
   MODEL_TEST_SEARCH_TOOL,
@@ -340,13 +342,13 @@ export interface RegisterToolsOptions {
    * rules are skipped — the tool still validates forwarding and structural
    * concerns without it.
    */
-  readonly fixtureModelRegistry?: FixtureModelRegistry;
+  readonly fixtureModelRegistry?: fixtureValidate.FixtureModelRegistry;
   /**
    * Optional rule overrides for `dbx_model_validate`, resolved at server
    * bootstrap from the workspace's `dbx-mcp.config.json` `modelValidate`
    * block. When omitted, the validator runs with built-in defaults.
    */
-  readonly modelValidateRuleOptions?: RuleOptions;
+  readonly modelValidateRuleOptions?: modelValidate.RuleOptions;
   /**
    * Optional auth catalog registry consumed by the `dbx_auth_*` tool
    * cluster (claim/scope/role lookup, JWT explainer, app surface). When

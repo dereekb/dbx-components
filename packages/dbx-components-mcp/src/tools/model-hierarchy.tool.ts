@@ -16,7 +16,7 @@ import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { FIREBASE_MODELS, getDownstreamCatalog, getFirebaseModel, getFirebaseModelByPrefix, type DownstreamCatalog, type FirebaseModel } from '@dereekb/dbx-cli';
 import { buildModelHierarchy, renderModelHierarchy, type HierarchyFormat, type HierarchyOutput } from './model-hierarchy.formatter.js';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const DBX_MODEL_HIERARCHY_TOOL: Tool = {

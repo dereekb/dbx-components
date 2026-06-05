@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-cli",
-  "version": "13.14.0",
+  "version": "13.15.0",
   "type": "module",
   "sideEffects": false,
   "bin": {
@@ -28,19 +28,28 @@
       "import": "./manifest-extract/index.cjs.mjs",
       "default": "./manifest-extract/index.cjs.js"
     },
+    "./model-test": {
+      "module": "./model-test/index.esm.js",
+      "types": "./model-test/index.d.ts",
+      "import": "./model-test/index.cjs.mjs",
+      "default": "./model-test/index.cjs.js"
+    },
     "./test": {
       "module": "./test/index.esm.js",
       "types": "./test/index.d.ts",
       "import": "./test/index.cjs.mjs",
       "default": "./test/index.cjs.js"
+    },
+    "./validate": {
+      "default": "./validate/index.js"
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "13.14.0",
-    "@dereekb/firebase": "13.14.0",
-    "@dereekb/model": "13.14.0",
-    "@dereekb/nestjs": "13.14.0",
-    "@dereekb/util": "13.14.0",
+    "@dereekb/date": "13.15.0",
+    "@dereekb/firebase": "13.15.0",
+    "@dereekb/model": "13.15.0",
+    "@dereekb/nestjs": "13.15.0",
+    "@dereekb/util": "13.15.0",
     "@nestjs/common": "^11.1.19",
     "arktype": "^2.2.0",
     "jiti": "2.6.1",

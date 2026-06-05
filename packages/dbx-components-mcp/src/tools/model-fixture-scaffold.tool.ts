@@ -20,9 +20,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { FIXTURE_RELATIVE_PATH, extractAppFixturesFromText, inspectAppFixtures, renderFixtureScaffold, type ScaffoldParamsDependency } from './model-fixture-shared/index.js';
+import { FIXTURE_RELATIVE_PATH, extractAppFixturesFromText, inspectAppFixtures, renderFixtureScaffold, type ScaffoldParamsDependency } from '@dereekb/dbx-cli/model-test';
 
 const ScaffoldArgsType = type({
   apiDir: 'string',

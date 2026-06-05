@@ -19,8 +19,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { findRule, formatRuleAsJson, formatRuleAsMarkdown, RULE_CATALOG, searchRules } from './rule-catalog/index.js';
-import type { RuleEntry, RuleSeverity, RuleSource } from './rule-catalog/types.js';
+import { findRule, formatRuleAsJson, formatRuleAsMarkdown, RULE_CATALOG, searchRules, type RuleEntry, type RuleSeverity, type RuleSource } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 const ExplainRuleArgsType = type({

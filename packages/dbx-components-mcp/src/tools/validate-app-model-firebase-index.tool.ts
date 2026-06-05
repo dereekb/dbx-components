@@ -32,15 +32,12 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd, ModelFirebaseIndexValidateAppCode, attachRemediation, formatStatusLabel, formatViolationLine, groupViolations, type ViolationSeverity } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { buildModelFirebaseIndexManifest, createModelFirebaseIndexRegistryFromEntries, generateFirestoreIndexesJson, toModelFirebaseIndexEntryInfo, type FirestoreIndexesJson, type ModelFirebaseIndexEntry } from '@dereekb/dbx-cli/firestore-indexes';
 import { scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount, buildDispatcherCreditByName, type DispatcherCredit } from '@dereekb/dbx-cli';
-import { ModelFirebaseIndexValidateAppCode } from './model-firebase-index-validate-app/codes.js';
 import { buildFirebaseIndexValidateAppViolation, mapModelFirebaseIndexBuildWarning } from './model-firebase-index-validate-app/format-warnings.js';
 import type { ModelFirebaseIndexValidateAppReport, ModelFirebaseIndexValidateAppViolation } from './model-firebase-index-validate-app/types.js';
-import { attachRemediation } from './rule-catalog/index.js';
-import { formatStatusLabel, formatViolationLine, groupViolations, type ViolationSeverity } from './validate-format.js';
 
 // MARK: Args
 const ValidateAppArgsType = type({

@@ -49,7 +49,8 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
     // Configure verbose/timeout as early as possible so HTTP calls made from this very
     // middleware (OIDC discovery + token refresh) honor the flags.
     setCliVerbose(Boolean(argv.verbose));
-    setCliTimeoutMs(typeof argv.timeout === 'number' && argv.timeout > 0 ? argv.timeout * 1000 : undefined);
+    // No `--timeout` flag → undefined → the default timeout applies. `--timeout 0` disables it.
+    setCliTimeoutMs(typeof argv.timeout === 'number' ? argv.timeout * 1000 : undefined);
 
     const command = argv._?.[0];
 

@@ -19,7 +19,8 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type DbxTool } from './types.js';
 import { createTwoSideValidateTool } from './validate-tool.js';
-import { formatResult, inspectAppStorageFiles, validateAppStorageFiles } from './storagefile-m-validate-app/index.js';
+import { storagefileValidateApp } from '@dereekb/dbx-cli/validate';
+const { formatResult, inspectAppStorageFiles, validateAppStorageFiles } = storagefileValidateApp;
 
 // MARK: Tool definition
 const DBX_STORAGEFILE_M_VALIDATE_APP_TOOL: Tool = {

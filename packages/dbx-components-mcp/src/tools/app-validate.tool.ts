@@ -32,22 +32,23 @@ import { resolve, join } from 'node:path';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { attachRemediation, ensurePathInsideCwd, assetValidateApp, fixtureValidate, modelApiValidateApp, modelListComponent, modelTestValidateApp, modelValidate, modelValidateFolder, notificationValidateApp, storagefileValidateApp, systemValidateFolder, type RemediationHint } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { attachRemediation, type RemediationHint } from './rule-catalog/index.js';
-import { inspectAppStorageFiles, validateAppStorageFiles } from './storagefile-m-validate-app/index.js';
-import { inspectAppNotifications, validateAppNotifications } from './notification-m-validate-app/index.js';
-import { inspectAppFixtures, validateAppFixtures, type FixtureDiagnostic } from './model-fixture-shared/index.js';
+import { inspectAppFixtures, discoverSpecFilesByGroup } from '@dereekb/dbx-cli/model-test';
 import { FIREBASE_MODELS, getDownstreamCatalog, RESERVED_MODEL_FOLDERS } from '@dereekb/dbx-cli';
-import { inspectFolder as inspectModelFolder, validateModelFolders } from './model-validate-folder/index.js';
-import { inspectFolder as inspectSystemFolder, validateSystemFolders } from './system-m-validate-folder/index.js';
-import { checkManifestCompositeKeyFrom, checkManifestIdentityDuplicates } from './model-validate/manifest-rules.js';
-import { inspectAppAssets, validateAppAssets } from './dbx-asset-validate-app/index.js';
-import { validateAppModelApi } from './model-api-validate-app/index.js';
-import { validateModelTestApp } from './model-test-validate-app/index.js';
-import { discoverSpecFilesByGroup } from './model-test-shared/index.js';
-import { extractComponentModels } from './model-list-component/extract.js';
 import { buildModelFirebaseIndexManifest, createModelFirebaseIndexRegistryFromEntries, generateFirestoreIndexesJson, toModelFirebaseIndexEntryInfo, type FirestoreIndexesJson } from '@dereekb/dbx-cli/firestore-indexes';
+
+const { inspectAppStorageFiles, validateAppStorageFiles } = storagefileValidateApp;
+const { inspectAppNotifications, validateAppNotifications } = notificationValidateApp;
+const { validateAppFixtures } = fixtureValidate;
+type FixtureDiagnostic = fixtureValidate.FixtureDiagnostic;
+const { inspectFolder: inspectModelFolder, validateModelFolders } = modelValidateFolder;
+const { inspectFolder: inspectSystemFolder, validateSystemFolders } = systemValidateFolder;
+const { checkManifestCompositeKeyFrom, checkManifestIdentityDuplicates } = modelValidate;
+const { inspectAppAssets, validateAppAssets } = assetValidateApp;
+const { validateAppModelApi } = modelApiValidateApp;
+const { validateModelTestApp } = modelTestValidateApp;
+const { extractComponentModels } = modelListComponent;
 
 const Cluster = "'storagefile_m' | 'notification_m' | 'model_folder' | 'system_m' | 'fixture' | 'manifest' | 'model_api' | 'firebase_index' | 'asset' | 'model_test'";
 
