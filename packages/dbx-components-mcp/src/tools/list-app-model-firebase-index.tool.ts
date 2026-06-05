@@ -23,7 +23,7 @@ import { resolve } from 'node:path';
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { type FunctionDeclaration, type Project, type SourceFile } from 'ts-morph';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 import { buildModelFirebaseIndexManifest, formatModelFirebaseIndexBuildWarning, MODEL_FIREBASE_INDEX_SCAN_CONFIG_FILENAME, type BuildModelFirebaseIndexManifestOutcome, type DerivedComposite, type DerivedFieldOverride, type ModelFirebaseIndexEntry } from '@dereekb/dbx-cli/firestore-indexes';
 import { buildScanProject, defaultGlobber, defaultReadFile, scanFactoryReferences, WORKSPACE_FACTORY_SCAN_EXCLUDE, WORKSPACE_FACTORY_SCAN_INCLUDE, type FactoryReferenceCount, type FactoryReferenceSite, buildDispatcherCreditByName, type DispatcherCredit } from '@dereekb/dbx-cli';

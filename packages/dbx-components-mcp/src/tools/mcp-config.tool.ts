@@ -18,7 +18,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { ensurePathInsideCwd } from './validate-input.js';
+import { ensurePathInsideCwd } from '@dereekb/dbx-cli/validate';
 import { resolve } from 'node:path';
 import { applyInitPlan, buildInitPlan, buildSnapshot, formatInit, formatRefresh, formatStatus, formatValidate, refreshSnapshot } from './mcp-config/index.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
