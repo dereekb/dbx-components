@@ -178,7 +178,7 @@ function appendNode(lines: string[], node: SpecNode, depth: number): void {
   }
 }
 
-function describeOrItTitle(node: SpecNode & { readonly kind: 'describe' | 'it' }): string {
+function describeOrItTitle(node: SpecNode): string {
   if (node.title === undefined) return '_(no title)_';
   if (node.titleIsTemplate) return `\`${node.title}\` _(template)_`;
   return `\`${node.title}\``;

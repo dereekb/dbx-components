@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { classifySpecFile } from '@dereekb/util';
-import type { DiscoveredSpecCatalog, DiscoveredSpecFile, DiscoveredSpecGroup } from '../model-test-shared/index.js';
+import type { DiscoveredSpecCatalog, DiscoveredSpecFile, DiscoveredSpecGroup } from '@dereekb/dbx-cli/model-test';
 import type { ExtractionOutcome } from '../model-list-component/extract.js';
 import type { ComponentModelEntry } from '../model-list-component/types.js';
 import { validateModelTestApp } from './validate.js';

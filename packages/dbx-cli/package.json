@@ -28,6 +28,12 @@
       "import": "./manifest-extract/index.cjs.mjs",
       "default": "./manifest-extract/index.cjs.js"
     },
+    "./model-test": {
+      "module": "./model-test/index.esm.js",
+      "types": "./model-test/index.d.ts",
+      "import": "./model-test/index.cjs.mjs",
+      "default": "./model-test/index.cjs.js"
+    },
     "./test": {
       "module": "./test/index.esm.js",
       "types": "./test/index.d.ts",

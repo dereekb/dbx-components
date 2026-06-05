@@ -14,7 +14,7 @@ import { extractAppFixturesFromText } from './extract.js';
 
 describe('extractAppFixturesFromText — apps/demo-api fixture', () => {
   it('parses the real demo-api fixture file', async () => {
-    const path = resolve(__dirname, '../../../../../apps/demo-api/src/test/fixture.ts');
+    const path = resolve(__dirname, '../../../../../../apps/demo-api/src/test/fixture.ts');
     const text = await readFile(path, 'utf8');
     const extraction = extractAppFixturesFromText({ text, fixturePath: 'apps/demo-api/src/test/fixture.ts' });
     expect(extraction.prefix).toBe('DemoApi');

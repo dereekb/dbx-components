@@ -8,7 +8,7 @@
 import { readdir, readFile, stat, type Dirent } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 import { Node, Project, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
-import { inspectAppFixtures } from '../model-fixture-shared/index.js';
+import { inspectAppFixtures } from '@dereekb/dbx-cli/model-test';
 import type { ServerActionEntry, ServerActionFixtureCoverage, ServerActionModuleWiring } from './types.js';
 
 const ACTION_SERVER_SUFFIX = '.action.server.ts';

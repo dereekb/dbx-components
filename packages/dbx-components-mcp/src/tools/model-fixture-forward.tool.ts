@@ -19,7 +19,7 @@ import { type } from 'arktype';
 import { Project, type SourceFile } from 'ts-morph';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { FIXTURE_RELATIVE_PATH, inspectAppFixtures, renderForwarders } from './model-fixture-shared/index.js';
+import { FIXTURE_RELATIVE_PATH, inspectAppFixtures, renderForwarders } from '@dereekb/dbx-cli/model-test';
 
 const ForwardArgsType = type({
   apiDir: 'string',

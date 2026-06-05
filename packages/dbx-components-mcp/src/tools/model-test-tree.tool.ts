@@ -8,7 +8,7 @@
  * `helpers`) plus optional `filterByModel` / `filterByDescribePath` filters
  * keep the output focused.
  *
- * Backed by the shared parser in `model-test-shared/`. When `apiDir` is
+ * Backed by the shared parser in `@dereekb/dbx-cli/model-test`. When `apiDir` is
  * supplied the tool reuses `inspectAppFixtures()` to obtain the
  * authoritative workspace prefix and the full fixture-context name set;
  * otherwise the prefix is detected from the spec's own imports off
@@ -20,7 +20,7 @@ import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { ensurePathInsideCwd } from './validate-input.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { formatTreeAsJson, formatTreeAsMarkdown, inspectSpecFile } from './model-test-shared/index.js';
+import { formatTreeAsJson, formatTreeAsMarkdown, inspectSpecFile } from '@dereekb/dbx-cli/model-test';
 
 const TreeArgsType = type({
   specFile: 'string',

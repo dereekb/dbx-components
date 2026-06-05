@@ -16,7 +16,7 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
-import { buildCanonicalFilename, recommendBucketsForGroup, recommendSpecPath, type SpecBucketRecommendation } from './model-test-shared/index.js';
+import { buildCanonicalFilename, recommendBucketsForGroup, recommendSpecPath, type SpecBucketRecommendation } from '@dereekb/util';
 
 const API_DIR_PLACEHOLDER = '<apiDir>';
 

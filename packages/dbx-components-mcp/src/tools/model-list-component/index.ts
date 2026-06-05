@@ -4,7 +4,7 @@
  * report consumed by the formatter.
  */
 
-import { inspectAppFixtures } from '../model-fixture-shared/index.js';
+import { inspectAppFixtures } from '@dereekb/dbx-cli/model-test';
 import { extractComponentModels } from './extract.js';
 import type { ComponentModelEntry, ComponentModelReport } from './types.js';
 

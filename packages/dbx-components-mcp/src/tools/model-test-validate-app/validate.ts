@@ -5,7 +5,7 @@
  *
  *   1. **Filename drift** — walks the discovered spec catalog, emitting a
  *      violation for each non-canonical classification kind. The classifier
- *      in `model-test-shared/conventions.ts` does the heavy lifting; this
+ *      in `@dereekb/util` (spec-file-conventions) does the heavy lifting; this
  *      layer just maps each `SpecFileKind` to the appropriate
  *      {@link ModelTestValidateAppCode}.
  *   2. **Coverage** — for every non-reserved model group enumerated on the
@@ -19,7 +19,8 @@
  */
 
 import { attachRemediation } from '../rule-catalog/index.js';
-import { buildCanonicalFilename, type DiscoveredSpecCatalog, type DiscoveredSpecFile } from '../model-test-shared/index.js';
+import { buildCanonicalFilename } from '@dereekb/util';
+import type { DiscoveredSpecCatalog, DiscoveredSpecFile } from '@dereekb/dbx-cli/model-test';
 import type { ExtractionOutcome } from '../model-list-component/extract.js';
 import { DEFAULT_SEVERITY, type ModelTestValidateAppResult, type ValidateModelTestAppOptions, type Violation, type ViolationCode } from './types.js';
 import type { ViolationSeverity } from '../validate-format.js';

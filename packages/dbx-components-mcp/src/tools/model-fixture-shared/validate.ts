@@ -11,7 +11,8 @@
  */
 
 import { attachRemediation } from '../rule-catalog/index.js';
-import type { AppFixturesExtraction, FixtureDiagnostic, FixtureEntry, FixtureMethod, FixtureModelRegistry, FixtureValidationResult } from './types.js';
+import type { AppFixturesExtraction, FixtureEntry, FixtureMethod } from '@dereekb/dbx-cli/model-test';
+import type { FixtureDiagnostic, FixtureModelRegistry, FixtureValidationResult } from './types.js';
 
 /**
  * Runs every fixture-cluster diagnostic against the supplied extraction.

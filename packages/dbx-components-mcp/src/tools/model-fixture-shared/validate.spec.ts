@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { extractAppFixturesFromText } from './extract.js';
+import { extractAppFixturesFromText } from '@dereekb/dbx-cli/model-test';
 import type { FixtureModelRegistry } from './types.js';
 import { validateAppFixtures } from './validate.js';
 

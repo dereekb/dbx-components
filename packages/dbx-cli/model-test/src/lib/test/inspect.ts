@@ -12,7 +12,7 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { inspectAppFixtures } from '../model-fixture-shared/index.js';
+import { inspectAppFixtures } from '../fixture/inspect.js';
 import { extractSpecTreeFromText } from './extract.js';
 import type { SpecFileTree } from './types.js';
 

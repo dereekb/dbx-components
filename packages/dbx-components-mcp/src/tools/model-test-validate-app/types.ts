@@ -9,7 +9,7 @@
  *  - Every model group declared on the component side (`<componentDir>/src/lib/model/<group>/`)
  *    must have at least a baseline `<group>.crud.spec.ts` on the API side.
  *
- * The classifier in `model-test-shared/conventions.ts` already handles the
+ * The classifier in `@dereekb/util` (spec-file-conventions) already handles the
  * filename parsing. This module just wires the classifier output into the
  * standard violation / result shape used by the rest of the validator
  * cluster.

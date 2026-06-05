@@ -12,7 +12,8 @@
  * folder so the classifier's group-vs-folder check stays meaningful.
  */
 
-import { readdir, stat, type Dirent } from 'node:fs/promises';
+import { readdir, stat } from 'node:fs/promises';
+import { type Dirent } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 import { classifySpecFile, type SpecFileClassification } from '@dereekb/util';
 
