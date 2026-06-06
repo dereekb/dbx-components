@@ -13,7 +13,8 @@
  * `packages/dbx-cli/firebase-api-manifest/src/generate-api-manifest/`.
  */
 
-import { Node, type CallExpression, type ExpressionWithTypeArguments, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile, type TypeNode } from 'ts-morph';
+import { parseFirestoreModelIdentityArgs, resolveExtendsName } from '@dereekb/dbx-cli';
+import { Node, type CallExpression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile } from 'ts-morph';
 import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionEnum, ModelExtractionEnumValue, ModelExtractionGroup, ModelExtractionIdentity, ModelExtractionInterface, ModelExtractionInterfaceProp, ModelExtractionServiceFactory } from './types';
 
 const READ_LEVEL_VALUES: ReadonlySet<'system' | 'owner' | 'admin-only' | 'permissions'> = new Set(['system', 'owner', 'admin-only', 'permissions']);
@@ -21,19 +22,6 @@ const SERVICE_FACTORY_TAG = 'dbxModelServiceFactory';
 const MCP_TOOL_NAME_SEGMENT_TAG = 'dbxModelMcpToolNameSegment';
 const MODEL_TYPE_VALUE_PATTERN = /^[a-z][A-Za-z0-9_$]*$/;
 const TOOL_NAME_SEGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9_$]*$/;
-
-/**
- * TS utility/structural wrappers that don't change the field surface for
- * inheritance walks — `Partial<T>`, `Required<T>`, `Readonly<T>`,
- * `NonNullable<T>` preserve every property, and `Pick<T, K>` / `Omit<T, K>`
- * leave the original `T` reachable for long-name resolution. `MaybeMap<T>` is
- * the workspace's own pass-through that decorates each prop with `Maybe<…>`
- * without renaming. `extends` walks need to see through these to find the
- * concrete ancestor interface — `getExpression()` alone returns just the
- * leftmost identifier (`Partial`, `Pick`, …) and silently drops the inner
- * model, leaving every inherited `@dbxModelVariable` tag unreachable.
- */
-const PASSTHROUGH_TYPE_WRAPPERS: ReadonlySet<string> = new Set(['Partial', 'Required', 'Readonly', 'NonNullable', 'MaybeMap', 'Pick', 'Omit']);
 
 const IDENTITY_FN = 'firestoreModelIdentity';
 const CONVERTER_FN_NAMES = ['snapshotConverterFunctions', 'firestoreSubObject', 'firestoreObjectArray'] as const;
@@ -81,46 +69,13 @@ function readIdentities(sourceFile: SourceFile): readonly ModelExtractionIdentit
       const initializer = decl.getInitializer();
       if (!initializer || !Node.isCallExpression(initializer)) continue;
       if (initializer.getExpression().getText() !== IDENTITY_FN) continue;
-      const parsed = parseIdentityArgs(initializer);
+      const parsed = parseFirestoreModelIdentityArgs(initializer.getArguments());
       if (parsed) {
         out.push({ identityConst: decl.getName(), ...parsed });
       }
     }
   }
   return out;
-}
-
-interface ParsedIdentityArgs {
-  readonly modelType: string;
-  readonly collectionPrefix: string | undefined;
-  readonly parentIdentityConst: string | undefined;
-}
-
-function parseIdentityArgs(call: CallExpression): ParsedIdentityArgs | undefined {
-  const args = call.getArguments();
-  let result: ParsedIdentityArgs | undefined;
-  if (args.length === 1) {
-    const modelType = stringLiteralValue(args[0]);
-    if (modelType !== undefined) {
-      result = { modelType, collectionPrefix: undefined, parentIdentityConst: undefined };
-    }
-  } else if (args.length === 2) {
-    const first = stringLiteralValue(args[0]);
-    if (first === undefined) {
-      const modelType = stringLiteralValue(args[1]);
-      if (modelType !== undefined) {
-        result = { modelType, collectionPrefix: undefined, parentIdentityConst: identifierName(args[0]) };
-      }
-    } else {
-      result = { modelType: first, collectionPrefix: stringLiteralValue(args[1]), parentIdentityConst: undefined };
-    }
-  } else if (args.length >= 3) {
-    const modelType = stringLiteralValue(args[1]);
-    if (modelType !== undefined) {
-      result = { modelType, collectionPrefix: stringLiteralValue(args[2]), parentIdentityConst: identifierName(args[0]) };
-    }
-  }
-  return result;
 }
 
 function readInterfaces(sourceFile: SourceFile): readonly ModelExtractionInterface[] {
@@ -224,51 +179,6 @@ function readServiceFactoryModelType(jsDocs: readonly JSDoc[]): string | undefin
       if (MODEL_TYPE_VALUE_PATTERN.test(firstToken)) {
         result = firstToken;
       }
-    }
-  }
-  return result;
-}
-
-/**
- * Resolves an `extends` clause to the concrete ancestor interface name,
- * peeling any leading {@link PASSTHROUGH_TYPE_WRAPPERS}. Returns the leftmost
- * identifier of the unwrapped expression so the inheritance walker can chain
- * through utility-wrapped declarations like
- * `extends Partial<MaybeMap<Omit<Base, '…'>>>`.
- *
- * @param expr - The `ExpressionWithTypeArguments` produced by `getExtends()`
- * @returns The resolved interface name, or the original leftmost identifier when no inner reference is reachable.
- */
-function resolveExtendsName(expr: ExpressionWithTypeArguments): string {
-  const head = expr.getExpression().getText();
-  let result = head;
-  if (PASSTHROUGH_TYPE_WRAPPERS.has(head)) {
-    const typeArgs = expr.getTypeArguments();
-    if (typeArgs.length > 0) {
-      const peeled = peelTypeNode(typeArgs[0]);
-      if (peeled !== undefined) {
-        result = peeled;
-      }
-    }
-  }
-  return result;
-}
-
-function peelTypeNode(node: TypeNode): string | undefined {
-  let current: TypeNode = node;
-  while (Node.isParenthesizedTypeNode(current)) {
-    current = current.getTypeNode();
-  }
-  let result: string | undefined;
-  if (Node.isTypeReference(current)) {
-    const name = current.getTypeName().getText();
-    if (PASSTHROUGH_TYPE_WRAPPERS.has(name)) {
-      const inner = current.getTypeArguments();
-      if (inner.length > 0) {
-        result = peelTypeNode(inner[0]);
-      }
-    } else {
-      result = name;
     }
   }
   return result;
@@ -558,20 +468,4 @@ function firstParagraph(text: string): string {
     collected.push(line);
   }
   return collected.join(' ').trim();
-}
-
-function stringLiteralValue(node: Node): string | undefined {
-  let result: string | undefined;
-  if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
-    result = node.getLiteralText();
-  }
-  return result;
-}
-
-function identifierName(node: Node): string | undefined {
-  let result: string | undefined;
-  if (Node.isIdentifier(node)) {
-    result = node.getText();
-  }
-  return result;
 }
