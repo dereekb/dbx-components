@@ -14,9 +14,8 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { findPackageRoot } from './package-root.js';
 import { findAndLoadConfig, type ConfigWarning } from '../config/load-config.js';
 import { createSemanticTypeRegistry, EMPTY_SEMANTIC_TYPE_REGISTRY, type SemanticTypeRegistry } from '../registry/semantic-types.js';
 import { loadSemanticTypeManifests, type LoaderWarning, type ManifestReadFile, type ManifestSource } from './loader.js';
@@ -53,34 +52,6 @@ export interface LoadSemanticTypeRegistryResult {
 
 // MARK: Defaults
 const DEFAULT_BUNDLED_FILENAMES = ['dereekb-util.semantic-types.mcp.generated.json', 'dereekb-model.semantic-types.mcp.generated.json', 'dereekb-date.semantic-types.mcp.generated.json', 'dereekb-firebase.semantic-types.mcp.generated.json', 'dereekb-firebase-server.semantic-types.mcp.generated.json'] as const;
-
-/**
- * Walks up from {@link startUrl} until it finds a directory containing
- * `package.json`. Used so the bundled manifests resolve correctly whether the
- * package is consumed from source (`packages/dbx-components-mcp/src/...`) or
- * from the bundled output (`dist/packages/dbx-components-mcp/dbx-components-mcp.js`).
- *
- * @param startUrl - File URL to start the walk from (typically `import.meta.url`)
- * @returns The absolute path of the directory that contains `package.json`
- * @throws {Error} When no `package.json` is found before reaching the filesystem root.
- */
-function findPackageRoot(startUrl: string): string {
-  const startPath = fileURLToPath(startUrl);
-  let dir = dirname(startPath);
-  let result: string | undefined;
-  while (result === undefined) {
-    if (existsSync(resolve(dir, 'package.json'))) {
-      result = dir;
-    } else {
-      const parent = dirname(dir);
-      if (parent === dir) {
-        throw new Error(`findPackageRoot: no package.json found above ${startPath}`);
-      }
-      dir = parent;
-    }
-  }
-  return result;
-}
 
 const DEFAULT_BUNDLED_PATHS: BundledManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);

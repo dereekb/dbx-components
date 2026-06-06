@@ -9,9 +9,8 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { findPackageRoot } from './package-root.js';
 import { findAndLoadConfig, type ConfigWarning } from '../config/load-config.js';
 import { createDbxDocsUiExamplesRegistry, EMPTY_DBX_DOCS_UI_EXAMPLES_REGISTRY, type DbxDocsUiExamplesRegistry } from '../registry/dbx-docs-ui-examples-runtime.js';
 import { loadDbxDocsUiExamplesManifests, type DbxDocsUiExamplesLoaderWarning, type DbxDocsUiExamplesManifestReadFile, type DbxDocsUiExamplesManifestSource } from './dbx-docs-ui-examples-loader.js';
@@ -35,21 +34,6 @@ export interface LoadDbxDocsUiExamplesRegistryResult {
 
 // MARK: Defaults
 const DEFAULT_BUNDLED_FILENAMES = ['dereekb-demo.dbx-docs-ui-examples.mcp.generated.json'] as const;
-
-function findPackageRoot(startUrl: string): string {
-  const startPath = fileURLToPath(startUrl);
-  let dir = dirname(startPath);
-  while (true) {
-    if (existsSync(resolve(dir, 'package.json'))) {
-      return dir;
-    }
-    const parent = dirname(dir);
-    if (parent === dir) {
-      throw new Error(`findPackageRoot: no package.json found above ${startPath}`);
-    }
-    dir = parent;
-  }
-}
 
 const DEFAULT_BUNDLED_PATHS: BundledDbxDocsUiExamplesManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);

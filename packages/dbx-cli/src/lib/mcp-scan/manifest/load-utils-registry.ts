@@ -16,9 +16,8 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { findPackageRoot } from './package-root.js';
 import { findAndLoadConfig, type ConfigWarning } from '../config/load-config.js';
 import { createUtilRegistry, EMPTY_UTIL_REGISTRY, type UtilRegistry } from '../registry/utils-runtime.js';
 import { loadUtilManifests, type UtilLoaderWarning, type UtilManifestReadFile, type UtilManifestSource } from './utils-loader.js';
@@ -55,24 +54,6 @@ export interface LoadUtilRegistryResult {
 
 // MARK: Defaults
 const DEFAULT_BUNDLED_FILENAMES = ['dereekb-util.utils.mcp.generated.json', 'dereekb-date.utils.mcp.generated.json', 'dereekb-rxjs.utils.mcp.generated.json', 'dereekb-model.utils.mcp.generated.json'] as const;
-
-function findPackageRoot(startUrl: string): string {
-  const startPath = fileURLToPath(startUrl);
-  let dir = dirname(startPath);
-  let result: string | undefined;
-  while (result === undefined) {
-    if (existsSync(resolve(dir, 'package.json'))) {
-      result = dir;
-    } else {
-      const parent = dirname(dir);
-      if (parent === dir) {
-        throw new Error(`findPackageRoot: no package.json found above ${startPath}`);
-      }
-      dir = parent;
-    }
-  }
-  return result;
-}
 
 const DEFAULT_BUNDLED_PATHS: BundledUtilManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);

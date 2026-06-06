@@ -14,9 +14,8 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { findPackageRoot } from './package-root.js';
 import { findAndLoadConfig, type ConfigWarning } from '../config/load-config.js';
 import { createFilterRegistry, EMPTY_FILTER_REGISTRY, type FilterRegistry } from '../registry/filters-runtime.js';
 import { loadFilterManifests, type FilterLoaderWarning, type FilterManifestReadFile, type FilterManifestSource } from './filters-loader.js';
@@ -53,24 +52,6 @@ export interface LoadFilterRegistryResult {
 
 // MARK: Defaults
 const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-core.filters.mcp.generated.json'] as const;
-
-function findPackageRoot(startUrl: string): string {
-  const startPath = fileURLToPath(startUrl);
-  let dir = dirname(startPath);
-  let result: string | undefined;
-  while (result === undefined) {
-    if (existsSync(resolve(dir, 'package.json'))) {
-      result = dir;
-    } else {
-      const parent = dirname(dir);
-      if (parent === dir) {
-        throw new Error(`findPackageRoot: no package.json found above ${startPath}`);
-      }
-      dir = parent;
-    }
-  }
-  return result;
-}
 
 const DEFAULT_BUNDLED_PATHS: BundledFilterManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);
