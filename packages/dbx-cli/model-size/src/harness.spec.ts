@@ -16,11 +16,7 @@ import { formatModelSizeReport } from './lib/model-size.report';
 const profilePath = process.env['MODEL_SIZE_PROFILE'];
 
 describe('model-size harness', () => {
-  if (!profilePath) {
-    it.skip('set MODEL_SIZE_PROFILE to a profile JSON path and run the `size` target', () => {
-      // intentionally skipped — this is the design-tool entrypoint, not a unit test
-    });
-  } else {
+  if (profilePath) {
     it(`sizes the converter named by ${profilePath}`, async () => {
       const report = await computeModelSizeFromProfileFile(profilePath);
 
@@ -31,6 +27,10 @@ describe('model-size harness', () => {
       }
 
       expect(report.bytes).toBeGreaterThan(0);
+    });
+  } else {
+    it.skip('set MODEL_SIZE_PROFILE to a profile JSON path and run the `size` target', () => {
+      // intentionally skipped — this is the design-tool entrypoint, not a unit test
     });
   }
 });

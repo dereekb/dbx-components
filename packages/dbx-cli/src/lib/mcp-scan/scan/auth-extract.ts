@@ -643,9 +643,7 @@ const EMPTY_ROLE_CONST_RESOLUTION: RoleConstResolution = { roles: [], unresolved
 function resolveRoleConstByName(name: string, ctx: RoleConstResolveContext): RoleConstResolution {
   let result: RoleConstResolution;
   const scalar = ctx.knownRoles.get(name);
-  if (scalar !== undefined) {
-    result = { roles: [scalar], unresolved: [] };
-  } else {
+  if (scalar === undefined) {
     const arrayExpr = ctx.localArrayRoles.get(name);
     if (arrayExpr === undefined) {
       result = { roles: [], unresolved: [name] };
@@ -656,6 +654,8 @@ function resolveRoleConstByName(name: string, ctx: RoleConstResolveContext): Rol
       nextSeen.add(name);
       result = resolveRoleArrayLiteral(arrayExpr, { ...ctx, seen: nextSeen });
     }
+  } else {
+    result = { roles: [scalar], unresolved: [] };
   }
   return result;
 }

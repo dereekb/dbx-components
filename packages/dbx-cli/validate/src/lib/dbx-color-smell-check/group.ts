@@ -121,8 +121,8 @@ function proposeTemplateKey(normalized: NormalizedColorConfig): string {
     if (hex === null) {
       const sanitized = normalized.color
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+        .replaceAll(/[^a-z0-9]+/g, '-')
+        .replaceAll(/^-+|-+$/g, '');
       if (sanitized.length > 0) result = `brand-${sanitized}`.slice(0, 40);
     } else {
       result = `brand-${hex[1].toLowerCase()}`;

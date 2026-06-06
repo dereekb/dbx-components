@@ -173,7 +173,7 @@ export async function listenOnNestAppForTest(input: ListenOnNestAppForTestInput)
 
   const address = server.address();
   const port = typeof address === 'object' && address ? address.port : 0;
-  const trimmedPrefix = prefix.replace(/^\/+|\/+$/g, '');
+  const trimmedPrefix = prefix.replaceAll(/^\/+|\/+$/g, '');
   const apiBaseUrl = trimmedPrefix.length > 0 ? `http://${host}:${port}/${trimmedPrefix}` : `http://${host}:${port}`;
 
   return { apiBaseUrl, port };

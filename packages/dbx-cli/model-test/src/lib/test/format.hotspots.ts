@@ -41,8 +41,7 @@ export function formatHotspotsAsJson(result: ModelTestHotspotsResult): string {
  */
 export function formatHotspotsAsMarkdown(result: ModelTestHotspotsResult): string {
   const lines: string[] = [];
-  lines.push(`# Model-test hotspots — \`${result.model}\` (${result.apiRel})`, '');
-  lines.push(fixtureLine(result));
+  lines.push(`# Model-test hotspots — \`${result.model}\` (${result.apiRel})`, '', fixtureLine(result));
   if (result.hotspots.length > 0) {
     appendHotspotSections(lines, result);
   } else {

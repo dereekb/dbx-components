@@ -204,10 +204,10 @@ function stripParamsTypeSuffix(validatorName: string): string | undefined {
 }
 
 function readJsDoc(jsDocs: ReturnType<ReturnType<SourceFile['getFunctions']>[number]['getJsDocs']>): string | undefined {
-  if (jsDocs.length === 0) {
+  const last = jsDocs.at(-1);
+  if (!last) {
     return undefined;
   }
-  const last = jsDocs[jsDocs.length - 1];
   const description = last.getDescription().trim();
   return description.length > 0 ? description : undefined;
 }

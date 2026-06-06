@@ -421,8 +421,8 @@ function readJsDocTagValue(node: JSDocableNode, tagName: string): string | undef
 function readJsDocSummary(node: JSDocableNode): string | undefined {
   let result: string | undefined;
   const docs = node.getJsDocs();
-  if (docs.length > 0) {
-    const last = docs[docs.length - 1];
+  const last = docs.at(-1);
+  if (last) {
     const description = last.getDescription().trim();
     if (description.length > 0) {
       result = description;

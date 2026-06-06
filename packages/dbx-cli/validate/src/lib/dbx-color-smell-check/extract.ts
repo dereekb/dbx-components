@@ -200,7 +200,7 @@ function isInColorPosition(obj: ObjectLiteralExpression): boolean {
 }
 
 function collapseSnippet(text: string): string {
-  return text.replace(/\s+/g, ' ').trim();
+  return text.replaceAll(/\s+/g, ' ').trim();
 }
 
 const HTML_ATTR_RE = /\[(dbxColor|dbxTextColor|color)\]="([^"]+)"/g;
@@ -244,7 +244,7 @@ function parseHtmlObjectValue(input: ParseHtmlObjectValueInput): ExtractedLitera
   if (parsed.hasTemplate) return undefined;
   if (!parsed.hasKnownField) return undefined;
   const position = positionAt(text, matchIndex);
-  const snippet = `[dbxColor]="${value}"`.replace(/\s+/g, ' ').trim();
+  const snippet = `[dbxColor]="${value}"`.replaceAll(/\s+/g, ' ').trim();
   const literal: ExtractedLiteral = {
     file: filePath,
     line: position.line,

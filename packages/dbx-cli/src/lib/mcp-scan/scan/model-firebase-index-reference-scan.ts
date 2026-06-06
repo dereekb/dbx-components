@@ -241,7 +241,7 @@ function buildCombinedRegex(names: readonly string[]): RegExp | undefined {
 }
 
 function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 interface LineOffsetIndex {
