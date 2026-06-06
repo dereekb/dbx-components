@@ -168,7 +168,7 @@ export interface FirebaseServerActionsTransformFactoryOptions {
 export function firebaseServerActionsTransformFactory(options?: FirebaseServerActionsTransformFactoryOptions): TransformAndValidateObjectFactory {
   const { logError } = options ?? {};
 
-  const logErrorFunction = logError !== false ? (typeof logError === 'function' ? logError : defaultFirebaseServerActionsTransformFactoryLogErrorFunction) : mapIdentityFunction;
+  const logErrorFunction = logError === false ? mapIdentityFunction : typeof logError === 'function' ? logError : defaultFirebaseServerActionsTransformFactoryLogErrorFunction;
 
   return transformAndValidateObjectFactory({
     handleValidationError: async (validationErrors: ArkErrors) => {

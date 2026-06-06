@@ -35,7 +35,7 @@ export function valueFromObservableOrValue<T>(): OperatorFunction<ObservableOrVa
  * @returns An operator that unwraps Maybe<ObservableOrValue> emissions.
  */
 export function maybeValueFromObservableOrValue<T>(): OperatorFunction<MaybeObservableOrValue<T>, Maybe<T>> {
-  return switchMap((x) => (x != null ? asObservable(x) : of(undefined)));
+  return switchMap((x) => (x == null ? of(undefined) : asObservable(x)));
 }
 
 /**
@@ -79,7 +79,7 @@ export function valueFromObservableOrValueGetter<T>(): OperatorFunction<Observab
  * @returns An operator that unwraps Maybe<ObservableOrValueGetter> emissions, emitting undefined for nullish inputs.
  */
 export function maybeValueFromObservableOrValueGetter<T>(): OperatorFunction<MaybeObservableOrValueGetter<T>, Maybe<T>> {
-  return switchMap((x) => (x != null ? asObservableFromGetter(x) : of(undefined)));
+  return switchMap((x) => (x == null ? of(undefined) : asObservableFromGetter(x)));
 }
 
 /**

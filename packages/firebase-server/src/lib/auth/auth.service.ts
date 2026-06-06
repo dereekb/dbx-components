@@ -293,7 +293,7 @@ export abstract class AbstractFirebaseServerAuthUserContext<S extends FirebaseSe
   async loadResetPasswordClaims<T extends FirebaseServerAuthResetUserPasswordClaims = FirebaseServerAuthResetUserPasswordClaims>(): Promise<Maybe<T>> {
     const claims = await this.loadClaims<T>();
 
-    const result: Maybe<T> = claims.resetPassword != null ? claims : undefined;
+    const result: Maybe<T> = claims.resetPassword == null ? undefined : claims;
     return result;
   }
 
@@ -823,7 +823,9 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     let userRecordId: AuthUserIdentifier;
     let createdUser = false;
 
-    if (!userRecord) {
+    if (userRecord) {
+      userRecordId = userRecord.uid;
+    } else {
       const createResult = await this.createNewUser(input);
 
       // add the setup password to the user's credentials
@@ -833,8 +835,6 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
       createdUser = true;
       userRecordId = userContext.uid;
       userRecord = await userContext.loadRecord();
-    } else {
-      userRecordId = userRecord.uid;
     }
 
     // send content if necessary

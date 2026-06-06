@@ -1,4 +1,4 @@
-import { Readable } from 'stream';
+import { Readable } from 'node:stream';
 import { readableStreamToStringFunction, readableStreamToBase64, readableStreamToBuffer } from './stream';
 
 function makeReadableStream(content: string): NodeJS.ReadableStream {

@@ -244,10 +244,10 @@ export const firebaseRulesUnitTestBuilder: TestContextBuilderFunction<RulesUnitT
 function rulesTestContextForConfig(rulesTestEnv: RulesTestEnvironment, testingRulesConfig?: Maybe<RulesUnitTestingContextConfig>): RulesTestContext {
   let rulesTestContext: RulesTestContext;
 
-  if (testingRulesConfig != null) {
-    rulesTestContext = rulesTestEnv.authenticatedContext(testingRulesConfig.userId, testingRulesConfig.tokenOptions ?? undefined);
-  } else {
+  if (testingRulesConfig == null) {
     rulesTestContext = rulesTestEnv.unauthenticatedContext();
+  } else {
+    rulesTestContext = rulesTestEnv.authenticatedContext(testingRulesConfig.userId, testingRulesConfig.tokenOptions ?? undefined);
   }
 
   return rulesTestContext;

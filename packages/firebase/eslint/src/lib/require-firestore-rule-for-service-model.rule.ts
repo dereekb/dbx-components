@@ -296,7 +296,7 @@ function parseIdentityTypeAnnotation(typeNode: AstNode): Maybe<{ readonly modelN
     const collectionName: Maybe<string> = tsLiteralStringValue(args[2]);
     const parentModelName: Maybe<string> = identityTypeAnnotationModelName(args[0]);
     if (modelName != null && collectionName != null) {
-      result = { modelName, collectionName, ...(parentModelName != null ? { parentModelName } : {}) };
+      result = { modelName, collectionName, ...(parentModelName == null ? {} : { parentModelName }) };
     }
   }
   return result;

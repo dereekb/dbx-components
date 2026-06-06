@@ -90,16 +90,16 @@ export async function fetchFileFromUrl(input: FetchFileFromUrlInput, safe?: Mayb
   const response = await useFetch(url, { method: 'GET' });
   let result: Maybe<File>;
 
-  if (!response.ok) {
-    if (!safe) {
-      throw new Error(`Failed to fetch file from ${url}: ${response.status} ${response.statusText}`);
-    }
-  } else {
+  if (response.ok) {
     const buffer = await response.arrayBuffer();
     const responseMimeType = mimeType ?? response.headers.get('content-type') ?? undefined;
     const fileName = input.fileName ?? urlWithoutParameters(url).split('/').pop() ?? 'file';
     const options: FilePropertyBag = responseMimeType ? { type: responseMimeType } : {};
     result = new File([buffer], fileName, options);
+  } else {
+    if (!safe) {
+      throw new Error(`Failed to fetch file from ${url}: ${response.status} ${response.statusText}`);
+    }
   }
 
   return result;

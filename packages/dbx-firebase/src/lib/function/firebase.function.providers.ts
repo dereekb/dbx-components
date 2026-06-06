@@ -64,11 +64,10 @@ export function provideDbxFirebaseFunctions<T, M extends FirebaseFunctionsMap = 
           useFactory: (lazyFunctions: LazyFirebaseFunctions<M>) => {
             const getter = lazyFunctions[key as string];
 
-            if (!getter) {
-              throw new Error(`Could not create provider for firebase function getter "${provide}" as the getter was unavailable.`);
-            } else {
+            if (getter) {
               return getter();
             }
+            throw new Error(`Could not create provider for firebase function getter "${provide}" as the getter was unavailable.`);
           },
           deps: [config.functionsGetterToken]
         });

@@ -31,7 +31,7 @@ describe('HashSet', () => {
 
   describe('instance', () => {
     const allValues = [1, 2, 3, 4, 5];
-    const instance = new HashSet<string, number>({ readKey: (x) => String(x) }, allValues);
+    const instance = new HashSet<string, number>({ readKey: String }, allValues);
 
     describe('valuesKeyEntriesForKeys()', () => {
       it('should return entries with no value for unknown keys.', () => {

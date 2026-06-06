@@ -28,10 +28,10 @@ export class ZohoSignWebhookService {
   async updateForWebhook(req: Request, rawBody: Buffer): Promise<void> {
     const result = await this._verifier(req, rawBody);
 
-    if (!result.valid) {
-      this.logger.warn('Received invalid Zoho Sign webhook event.', req);
-    } else {
+    if (result.valid) {
       await this.updateForZohoSignEvent(result.event);
+    } else {
+      this.logger.warn('Received invalid Zoho Sign webhook event.', req);
     }
   }
 

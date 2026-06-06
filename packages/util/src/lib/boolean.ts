@@ -138,7 +138,7 @@ export function reduceBooleansWithOrFn(emptyArrayValue?: boolean): (array: boole
 export function reduceBooleansFn(reduceFn: (a: boolean, b: boolean) => boolean, emptyArrayValue?: boolean): (array: boolean[]) => boolean {
   const rFn = (array: boolean[]) => Boolean(array.reduce((a, b) => reduceFn(a, b)));
 
-  return emptyArrayValue != null ? (array: boolean[]) => (array.length ? rFn(array) : emptyArrayValue) : rFn;
+  return emptyArrayValue == null ? rFn : (array: boolean[]) => (array.length ? rFn(array) : emptyArrayValue);
 }
 
 // MARK: Random

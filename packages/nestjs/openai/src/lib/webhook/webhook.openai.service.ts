@@ -30,10 +30,10 @@ export class OpenAIWebhookService {
   async updateForWebhook(req: Request, rawBody: Buffer): Promise<void> {
     const result = await this._verifier(req, rawBody);
 
-    if (!result.valid) {
-      this.logger.warn('Received invalid OpenAI event.', req);
-    } else {
+    if (result.valid) {
       await this.updateForOpenAIEvent(result.event as OpenAIWebhookEvent);
+    } else {
+      this.logger.warn('Received invalid OpenAI event.', req);
     }
   }
 

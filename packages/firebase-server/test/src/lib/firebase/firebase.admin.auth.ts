@@ -471,7 +471,7 @@ export function authorizedUserContextFactory<PI extends FirebaseAdminTestContext
  *
  * Has the format 'test-uid-<number>'
  */
-export const testUidFactory: Factory<FirebaseAuthUserId> = mapGetter(incrementingNumberFactory(), (i) => `${new Date().getTime()}0${i}`);
+export const testUidFactory: Factory<FirebaseAuthUserId> = mapGetter(incrementingNumberFactory(), (i) => `${Date.now()}0${i}`);
 
 // MARK: Utility
 /**

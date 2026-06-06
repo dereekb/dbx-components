@@ -32,7 +32,7 @@ export class FirebaseServerMcpAnalyticsService extends McpAnalyticsService {
   handleMcpAnalyticsEvent(event: McpAnalyticsEvent): void {
     if (this._logEvents) {
       const uidSuffix = event.uid ? ` uid=${event.uid}` : '';
-      const durationSuffix = event.durationMs != null ? ` (${event.durationMs}ms)` : '';
+      const durationSuffix = event.durationMs == null ? '' : ` (${event.durationMs}ms)`;
       const outcome = event.isSuccessful ? 'Succeeded' : 'Failed';
       this._logger.log(`MCP ${event.toolName} [${event.toolKind}] ${outcome}${uidSuffix}${durationSuffix}`);
     }

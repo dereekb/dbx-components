@@ -221,7 +221,7 @@ export class DocLayoutListComponent implements OnInit {
     },
     dataForGroupValue: (value, _items) => ({
       title: pascalCase(value) + ' Group',
-      icon: value !== 'plain' ? 'group_work' : undefined,
+      icon: value === 'plain' ? undefined : 'group_work',
       value,
       hint: `This is the subtitle text/"hint" for this (${value}) group. It can be configured as needed.`
     }),

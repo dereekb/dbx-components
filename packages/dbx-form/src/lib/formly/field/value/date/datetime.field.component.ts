@@ -996,10 +996,10 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
         break;
     }
 
-    if (this.presets != null) {
-      this._presets.next(asObservableFromGetter(this.presets));
-    } else {
+    if (this.presets == null) {
       this._presets.next(this.dbxDateTimeFieldConfigService.configurations$);
+    } else {
+      this._presets.next(asObservableFromGetter(this.presets));
     }
 
     this._resyncTimeInputSub.subscription = this.resyncTimeInput$.pipe(switchMap((_x) => combineLatest([this.currentDate$, this.timeString$]).pipe(first()))).subscribe(([currentDate, timeString]) => {
@@ -1016,7 +1016,9 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
         const formValue = x.value as Maybe<Date>;
         let obs: Observable<ValidationErrors>;
 
-        if (formValue != null) {
+        if (formValue == null) {
+          obs = of({});
+        } else {
           obs = combineLatest([this.timezoneInstance$, this.dateTimePickerInstance$]).pipe(
             map(([timezoneInstance, x]) => {
               // the form value is going to be in the output form, so we need to parse it back to the "input" date before evaluating it
@@ -1044,8 +1046,6 @@ export class DbxDateTimeFieldComponent extends FieldType<FieldTypeConfig<DbxDate
             }),
             first()
           );
-        } else {
-          obs = of({});
         }
 
         return obs;

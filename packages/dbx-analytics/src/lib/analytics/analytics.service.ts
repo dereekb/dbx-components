@@ -471,7 +471,7 @@ export class DbxAnalyticsService implements DbxAnalyticsEventStreamService, DbxA
    */
   protected sendNextEvent(event: AnalyticsEvent = {}, type: DbxAnalyticsStreamEventType, userOverride?: Maybe<AnalyticsUser>): void {
     this.user$.pipe(first()).subscribe((analyticsUser) => {
-      const user: Maybe<AnalyticsUser> = userOverride !== undefined ? userOverride : analyticsUser;
+      const user: Maybe<AnalyticsUser> = userOverride === undefined ? analyticsUser : userOverride;
       const analyticsEvent: UserAnalyticsEvent = { ...event, user };
       this.nextEvent(analyticsEvent, type);
     });

@@ -1029,7 +1029,7 @@ export function limitedFirestoreDocumentAccessorSnapshotCache<T, D extends Fires
 
   async function getDocumentSnapshotDataPairsWithDataForKeys(keys: FirestoreModelKey[]): Promise<FirestoreDocumentSnapshotDataPairWithData<D>[]> {
     const pairs = await getDocumentSnapshotDataPairsForKeys(keys);
-    return filterMaybeArrayValues(pairs.map((pair) => (pair.data != null ? (pair as FirestoreDocumentSnapshotDataPairWithData<D>) : undefined)));
+    return filterMaybeArrayValues(pairs.map((pair) => (pair.data == null ? undefined : (pair as FirestoreDocumentSnapshotDataPairWithData<D>))));
   }
 
   return {

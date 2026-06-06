@@ -325,7 +325,7 @@ export function requireCurrentTimezone(): TimezoneString {
  * ```
  */
 export function safeToJsDate(input: Maybe<DateOrDateString | UTCDateString>): Maybe<Date> {
-  return input != null ? toJsDate(input) : undefined;
+  return input == null ? undefined : toJsDate(input);
 }
 
 /**
@@ -643,11 +643,11 @@ export function copyHoursAndMinutesToDate(values: CopyHoursAndMinutesToDateValue
   const { hours, minutes, removeSeconds, roundDownToMinute = true } = values;
   return setDateValues(target ?? new Date(), {
     hours,
-    ...(minutes != null
-      ? {
+    ...(minutes == null
+      ? undefined
+      : {
           minutes
-        }
-      : undefined),
+        }),
     // Remove Seconds/Milliseconds
     ...(roundDownToMinute || removeSeconds
       ? {

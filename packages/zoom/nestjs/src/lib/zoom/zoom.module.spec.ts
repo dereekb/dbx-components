@@ -70,7 +70,7 @@ describe('appZoomModuleMetadata()', () => {
           expect(result.accessToken).toBeDefined();
           expect(result.expiresIn).toBeDefined();
           expect(result.expiresAt).toBeDefined();
-          expect(result.expiresAt.getTime()).toBeGreaterThan(new Date().getTime());
+          expect(result.expiresAt.getTime()).toBeGreaterThan(Date.now());
           expect(result.apiDomain).toBeDefined();
 
           const cachedToken = await cacheService.loadZoomAccessTokenCache().loadCachedToken();

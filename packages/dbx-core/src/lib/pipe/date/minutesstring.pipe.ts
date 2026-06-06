@@ -41,11 +41,11 @@ export class MinutesStringPipe implements PipeTransform {
       if (minutes > MINUTES_IN_DAY * 2.5) {
         const unrounded = minutes / MINUTES_IN_DAY;
         const days = Math.ceil(unrounded);
-        result = (unrounded !== days ? '~' : '') + days + ' days';
+        result = (unrounded === days ? '' : '~') + days + ' days';
       } else if (minutes > MINUTES_IN_HOUR * 3) {
         const unrounded = minutes / MINUTES_IN_HOUR;
         const hours = Math.ceil(unrounded);
-        result = (unrounded !== hours ? '~' : '') + hours + ' hours';
+        result = (unrounded === hours ? '' : '~') + hours + ' hours';
       } else {
         result = minutes + ' minutes';
       }

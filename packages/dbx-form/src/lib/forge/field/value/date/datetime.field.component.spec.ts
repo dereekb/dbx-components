@@ -163,7 +163,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
     it('should not re-emit after initial value set (unix timestamp mode)', async () => {
       const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
       const host = fixture.componentInstance;
-      const testTimestamp = new Date().getTime();
+      const testTimestamp = Date.now();
 
       host.config = createConfig({ key: 'dt', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP });
       host.formValue.set({ dt: testTimestamp });
@@ -806,7 +806,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
     it('should accept number input and output number', async () => {
       const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
       const host = fixture.componentInstance;
-      const testTimestamp = new Date().getTime();
+      const testTimestamp = Date.now();
 
       host.config = createConfig({ key: 'unixTimeStamp', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, hideDateHint: true });
       host.formValue.set({ unixTimeStamp: testTimestamp });
@@ -824,7 +824,7 @@ describe('DbxForgeDateTimeFieldComponent', () => {
     it('should apply timezone', async () => {
       const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
       const host = fixture.componentInstance;
-      const testTimestamp = new Date().getTime();
+      const testTimestamp = Date.now();
 
       host.config = createConfig({ key: 'unixTS_NY', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timezone: 'America/New_York', hideDateHint: true });
       host.formValue.set({ unixTS_NY: testTimestamp });

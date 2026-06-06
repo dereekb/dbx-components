@@ -192,7 +192,7 @@ export function flattenArrayToSet<T>(array: T[][]): Set<T> {
  * @returns Intersection between the input values and the reference set.
  */
 export function keepFromSetCopy<T>(set: Set<T>, values: Maybe<IterableOrValue<T>>): Set<T> {
-  return values != null ? filterValuesToSet(asIterable(values), (x) => set.has(x)) : new Set();
+  return values == null ? new Set() : filterValuesToSet(asIterable(values), (x) => set.has(x));
 }
 
 /**
@@ -407,16 +407,16 @@ export function findValuesFrom<T, K extends PrimativeKey = PrimativeKey>(config:
 
   if (config.keysToFind != null) {
     set = asSet(config.keysToFind);
-  } else if (config.valuesToFind != null) {
-    set = readKeysSetFrom<T, K>(readKey, config.valuesToFind);
-  } else {
+  } else if (config.valuesToFind == null) {
     set = new Set();
+  } else {
+    set = readKeysSetFrom<T, K>(readKey, config.valuesToFind);
   }
 
   const filterFn = setHasValueFunction(set, exclude);
   return values.filter((x) => {
     const key = readKey(x);
-    return key != null ? filterFn(key) : exclude;
+    return key == null ? exclude : filterFn(key);
   });
 }
 

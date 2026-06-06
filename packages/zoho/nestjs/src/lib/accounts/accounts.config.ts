@@ -15,9 +15,7 @@ export abstract class ZohoAccountsServiceConfig {
   static assertValidConfig(config: ZohoAccountsServiceConfig) {
     const { zohoAccounts } = config;
 
-    if (!zohoAccounts) {
-      throw new Error('ZohoAccountsServiceConfig.zohoAccounts is required');
-    } else {
+    if (zohoAccounts) {
       if (!zohoAccounts.serviceAccessTokenKey) {
         throw new Error('ZohoAccountsServiceConfig.zohoAccounts.serviceAccessTokenKey is required');
       } else if (!zohoAccounts.refreshToken) {
@@ -27,6 +25,8 @@ export abstract class ZohoAccountsServiceConfig {
       } else if (!zohoAccounts.clientId) {
         throw new Error('ZohoAccountsServiceConfig.zohoAccounts.clientId is required');
       }
+    } else {
+      throw new Error('ZohoAccountsServiceConfig.zohoAccounts is required');
     }
   }
 }

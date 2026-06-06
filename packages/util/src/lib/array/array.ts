@@ -50,7 +50,7 @@ export function convertMaybeToNonEmptyArray<T>(arrayOrValue: Maybe<ArrayOrValue<
  * @dbxUtilRelated convert-maybe-to-non-empty-array, convert-to-array, as-array
  */
 export function convertMaybeToArray<T>(arrayOrValue: Maybe<ArrayOrValue<T>>): T[] {
-  return arrayOrValue != null ? convertToArray(arrayOrValue) : [];
+  return arrayOrValue == null ? [] : convertToArray(arrayOrValue);
 }
 
 /**

@@ -82,15 +82,15 @@ export async function verifyAppCheckInRequest(req: Request): Promise<Maybe<Error
   const appCheckToken = req.header('X-Firebase-AppCheck');
   let error: Maybe<Error>;
 
-  if (!appCheckToken) {
-    error = new ForbiddenException();
-  } else {
+  if (appCheckToken) {
     // verify the token
     try {
       await admin.appCheck().verifyToken(appCheckToken);
     } catch {
       error = new ForbiddenException();
     }
+  } else {
+    error = new ForbiddenException();
   }
 
   return error;

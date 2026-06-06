@@ -22,5 +22,5 @@ import { type Maybe } from '@dereekb/util';
  * ```
  */
 export function switchMapMaybeLoadingContextStream(): OperatorFunction<Maybe<LoadingContext>, Maybe<LoadingContextEvent>> {
-  return switchMap((x: Maybe<LoadingContext>) => (x != null ? x.stream$ : of(undefined)) as Observable<Maybe<LoadingContextEvent>>);
+  return switchMap((x: Maybe<LoadingContext>) => (x == null ? of(undefined) : x.stream$) as Observable<Maybe<LoadingContextEvent>>);
 }

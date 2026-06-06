@@ -28,7 +28,9 @@ export async function profileForUserRequest(request: NestContextCallableRequestW
   const { nest, data: params, auth } = request;
   let profileDocument: ProfileDocument;
 
-  if (params.key != null) {
+  if (params.key == null) {
+    profileDocument = profileForUser(nest, auth.uid);
+  } else {
     profileDocument = await nest.useModel('profile', {
       request,
       key: params.key,
@@ -42,8 +44,6 @@ export async function profileForUserRequest(request: NestContextCallableRequestW
       return x.document;
     });
     */
-  } else {
-    profileDocument = profileForUser(nest, auth.uid);
   }
 
   return profileDocument;

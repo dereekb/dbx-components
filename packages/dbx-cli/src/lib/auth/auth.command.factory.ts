@@ -270,8 +270,8 @@ export function createAuthCommand(input: CreateAuthCommandInput): CommandModule 
         tokenType: tokenResponse.token_type,
         scope: tokenResponse.scope,
         expiresAt,
-        ...(sessionExpiresAt != null ? { sessionExpiresAt } : {}),
-        ...(rotationDisabled != null ? { rotationDisabled } : {})
+        ...(sessionExpiresAt == null ? {} : { sessionExpiresAt }),
+        ...(rotationDisabled == null ? {} : { rotationDisabled })
       };
 
       await tokens.set(envName, entry);

@@ -360,7 +360,7 @@ export type StandardInternetAccessibleWebsiteUrl = string;
  */
 export function isStandardInternetAccessibleWebsiteUrl(input: string): input is StandardInternetAccessibleWebsiteUrl {
   const protocol = readWebsiteProtocol(input);
-  return hasWebsiteTopLevelDomain(input) && (protocol != null ? isKnownHttpWebsiteProtocol(protocol) : true);
+  return hasWebsiteTopLevelDomain(input) && (protocol == null ? true : isKnownHttpWebsiteProtocol(protocol));
 }
 
 /**
@@ -463,17 +463,18 @@ export interface IsolateWebsitePathFunctionConfig {
 export function isolateWebsitePathFunction(config: IsolateWebsitePathFunctionConfig = {}): IsolateWebsitePathFunction {
   const { removeQueryParameters, ignoredBasePath, isolatePathComponents, removeTrailingSlash } = config;
   const basePathRegex: Maybe<RegExp> = ignoredBasePath ? new RegExp('^' + escapeStringForRegex(toAbsoluteSlashPathStartType(ignoredBasePath))) : undefined;
-  const isolateRange = isolatePathComponents != null ? isolateSlashPathFunction({ range: isolatePathComponents, startType: 'absolute' }) : undefined;
+  const isolateRange = isolatePathComponents == null ? undefined : isolateSlashPathFunction({ range: isolatePathComponents, startType: 'absolute' });
   const replaceTrailingSlash = removeTrailingSlash === true ? replaceLastCharacterIfIsFunction('', SLASH_PATH_SEPARATOR) : undefined;
 
   const pathTransform: TransformStringFunction<WebsitePath> = chainMapSameFunctions([
     // remove any base path
-    basePathRegex != null ? (inputPath) => inputPath.replace(basePathRegex, '') as WebsitePath : undefined,
+    basePathRegex == null ? undefined : (inputPath) => inputPath.replace(basePathRegex, '') as WebsitePath,
     // remove the query parameters
-    removeQueryParameters != null ? (inputPath) => websitePathAndQueryPair(inputPath).path : undefined,
+    removeQueryParameters == null ? undefined : (inputPath) => websitePathAndQueryPair(inputPath).path,
     // isolate range
-    isolateRange != null
-      ? (inputPath) => {
+    isolateRange == null
+      ? undefined
+      : (inputPath) => {
           let result = isolateRange(inputPath);
 
           // retain the query if one is available.
@@ -486,15 +487,14 @@ export function isolateWebsitePathFunction(config: IsolateWebsitePathFunctionCon
           }
 
           return result as WebsitePath;
-        }
-      : undefined,
+        },
     // remove trailing slash from path
-    replaceTrailingSlash != null
-      ? (((inputPath) => {
+    replaceTrailingSlash == null
+      ? undefined
+      : (((inputPath) => {
           const { path, query } = websitePathAndQueryPair(inputPath);
           return replaceTrailingSlash(path) + (query ?? '');
         }) as TransformStringFunction<WebsitePath>)
-      : undefined
   ]);
 
   return (input: WebsitePath | WebsiteDomainAndPath | WebsiteUrl) => {

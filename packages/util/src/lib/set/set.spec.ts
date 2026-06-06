@@ -112,7 +112,7 @@ describe('keepFromSetCopy()', () => {
 
 describe('findValuesFrom()', () => {
   const values = [1, 2, 3, 4, 5];
-  const readKey: ReadKeyFunction<number, string> = (x) => String(x);
+  const readKey: ReadKeyFunction<number, string> = String;
 
   describe('exclude=true', () => {
     it('should return all values if both keysToFind and valuesToFind is undefined', () => {

@@ -8,7 +8,7 @@ describe('mapObjectMap()', () => {
       x: 1
     };
 
-    const result = mapObjectMap(object, (x) => String(x));
+    const result = mapObjectMap(object, String);
 
     expect(result[0]).toBe(String(object[0]));
     expect(result.a).toBe(String(object.a));
@@ -24,7 +24,7 @@ describe('mapObjectMap()', () => {
       x: 1
     };
 
-    const result = mapObjectMap(object, (x) => String(x));
+    const result = mapObjectMap(object, String);
 
     expect(result[0]).toBe(String(object[0]));
     expect(result.a).toBe(String(object.a));

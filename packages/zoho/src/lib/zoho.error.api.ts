@@ -453,5 +453,5 @@ export function parseZohoServerErrorResponseData(errorResponseData: ZohoServerEr
  * @returns
  */
 export function tryFindZohoServerErrorData(errorResponseData: ZohoServerErrorResponseDataArrayRef | ZohoServerErrorResponseData | ZohoServerErrorResponseDataError, responseError: FetchResponseError): Maybe<ZohoServerErrorResponseDataError> {
-  return (errorResponseData as ZohoServerErrorResponseData).error ?? (errorResponseData as ZohoServerErrorResponseDataArrayRef).data?.[0] ?? (!responseError.response.ok ? (errorResponseData as unknown as ZohoServerErrorResponseDataError) : undefined);
+  return (errorResponseData as ZohoServerErrorResponseData).error ?? (errorResponseData as ZohoServerErrorResponseDataArrayRef).data?.[0] ?? (responseError.response.ok ? undefined : (errorResponseData as unknown as ZohoServerErrorResponseDataError));
 }

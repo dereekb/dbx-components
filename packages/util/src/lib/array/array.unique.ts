@@ -93,7 +93,7 @@ export interface FilterUniqueFunctionAdditionalKeys<T, K extends PrimativeKey = 
  * @returns Flat array of resolved non-null keys.
  */
 export function readKeysFromFilterUniqueFunctionAdditionalKeysInput<T, K extends PrimativeKey = PrimativeKey>(additionalKeysInput: Maybe<FilterUniqueFunctionAdditionalKeysInput<T, K>>, readKey: ReadKeyFunction<T, K>): K[] {
-  return filterMaybeArrayValues(additionalKeysInput != null ? (Array.isArray(additionalKeysInput) ? additionalKeysInput : readKeysFromFilterUniqueFunctionAdditionalKeys<T, K>(additionalKeysInput, readKey)) : []);
+  return filterMaybeArrayValues(additionalKeysInput == null ? [] : Array.isArray(additionalKeysInput) ? additionalKeysInput : readKeysFromFilterUniqueFunctionAdditionalKeys<T, K>(additionalKeysInput, readKey));
 }
 
 /**

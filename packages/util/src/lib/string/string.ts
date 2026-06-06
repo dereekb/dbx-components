@@ -443,7 +443,7 @@ export type CutStringFunction = ((input: string) => string) & ((input: Maybe<str
 export function cutStringFunction(config: CutStringFunctionConfig): CutStringFunction {
   const { maxLength: inputMaxLength, maxLengthIncludesEndText, endText: inputEndText } = config;
   const endText = inputEndText === undefined ? DEFAULT_CUT_STRING_END_TEXT : '';
-  const maxLength = maxLengthIncludesEndText !== false ? inputMaxLength - endText.length : inputMaxLength;
+  const maxLength = maxLengthIncludesEndText === false ? inputMaxLength : inputMaxLength - endText.length;
 
   return ((input: Maybe<string>) => {
     let result: Maybe<string> = input;

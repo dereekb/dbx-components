@@ -18,7 +18,7 @@ describe('mapPromiseOrValue()', () => {
   });
 
   it('should handle mapping to a different type', async () => {
-    const result = mapPromiseOrValue(Promise.resolve(42), (x) => String(x));
+    const result = mapPromiseOrValue(Promise.resolve(42), String);
     expect(await result).toBe('42');
   });
 });

@@ -212,10 +212,10 @@ export class SimpleStorageAccessor<T> implements StorageAccessor<T> {
         if (storedData) {
           const readStoredData = this.readStoredData(storedData);
 
-          if (!readStoredData.expired) {
-            result = readStoredData.convertedData;
-          } else {
+          if (readStoredData.expired) {
             throw new DataIsExpiredError<T>(readStoredData);
+          } else {
+            result = readStoredData.convertedData;
           }
         } else {
           throw new DataDoesNotExistError();

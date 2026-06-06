@@ -26,7 +26,7 @@ const IDENTIFIER_RE = /^[A-Za-z_]\w*$/;
  * @returns The source with line comments replaced by equal-length whitespace (so offsets are preserved).
  */
 export function stripLineComments(source: string): string {
-  return source.replace(/\/\/[^\n]*/g, (match) => ' '.repeat(match.length));
+  return source.replaceAll(/\/\/[^\n]*/g, (match) => ' '.repeat(match.length));
 }
 
 /**
@@ -39,7 +39,7 @@ export function stripLineComments(source: string): string {
  * @returns The source with path-variable braces masked.
  */
 export function maskPathVariables(source: string): string {
-  return source.replace(PATH_VARIABLE_RE, (_match, inner: string) => `${MASK_OPEN_CHAR}${inner}${MASK_CLOSE_CHAR}`);
+  return source.replaceAll(PATH_VARIABLE_RE, (_match, inner: string) => `${MASK_OPEN_CHAR}${inner}${MASK_CLOSE_CHAR}`);
 }
 
 /**
@@ -50,7 +50,7 @@ export function maskPathVariables(source: string): string {
  * @returns The text with `{name}` braces restored.
  */
 export function unmaskPathVariables(text: string): string {
-  return text.replace(UNMASK_RE, (_match, inner: string) => `{${inner}}`);
+  return text.replaceAll(UNMASK_RE, (_match, inner: string) => `{${inner}}`);
 }
 
 /**

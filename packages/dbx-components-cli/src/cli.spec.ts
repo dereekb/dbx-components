@@ -13,7 +13,7 @@ const DEMO_API_ABS = resolve(__dirname, '../../../apps/demo-api');
 function captureStdout(): { readonly output: () => string; readonly restore: () => void } {
   const chunks: string[] = [];
   const spy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
-    chunks.push(args.map((a) => String(a)).join(' '));
+    chunks.push(args.map(String).join(' '));
   });
   return { output: () => chunks.join('\n'), restore: () => spy.mockRestore() };
 }

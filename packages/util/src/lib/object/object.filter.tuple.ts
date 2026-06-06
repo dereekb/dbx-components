@@ -93,14 +93,14 @@ export type FilterKeyValueTuplesFunction<T extends object = object, K extends ke
 export function filterKeyValueTuplesFunction<T extends object = object, K extends keyof T = keyof T>(filter?: FilterKeyValueTuplesInput<T, K>): FilterKeyValueTuplesFunction<T, K> {
   let result: FilterKeyValueTuplesFunction<T, K>;
 
-  if (filter != null) {
+  if (filter == null) {
+    result = allKeyValueTuples;
+  } else {
     const filterFn = filterKeyValueTupleFunction<T, K>(filter);
 
     result = (obj: T) => {
       return (allKeyValueTuples(obj) as KeyValueTuple<T, K>[]).filter((kv, i) => filterFn(kv, i));
     };
-  } else {
-    result = allKeyValueTuples;
   }
 
   return result;

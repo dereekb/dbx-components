@@ -286,10 +286,10 @@ export function shouldFail(fn: ShouldFailProvidesCallback): () => Promise<unknow
     const { done, _promise } = testDoneCallbackRef();
 
     function handleError(e: unknown) {
-      if (!(e instanceof ExpectedFailError)) {
-        failWithTestDoneCallback(done, e);
-      } else {
+      if (e instanceof ExpectedFailError) {
         done();
+      } else {
+        failWithTestDoneCallback(done, e);
       }
     }
 

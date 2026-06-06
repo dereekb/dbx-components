@@ -269,12 +269,12 @@ demoApiFunctionContextFactory((f) => {
                                         expect(notification.ps).toBe(NotificationSendState.QUEUED);
                                         expect(notification.ns).toBe(NotificationSendState.QUEUED);
 
-                                        if (!expectation.isAssociatedWithNotificationBox) {
-                                          expect(notificationBox.r).toHaveLength(0); // no recipients in the box
-                                          expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
-                                        } else {
+                                        if (expectation.isAssociatedWithNotificationBox) {
                                           expect(notificationBox.r).toHaveLength(1); // should have the recipient in the box
                                           expect(notification.r).toHaveLength(1); // the person who created the guestbook entry
+                                        } else {
+                                          expect(notificationBox.r).toHaveLength(0); // no recipients in the box
+                                          expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
                                         }
 
                                         expect(notification.r[0].uid).toBe(u.uid);
@@ -315,12 +315,12 @@ demoApiFunctionContextFactory((f) => {
                                         it('should expand the user recipient', async () => {
                                           const [notificationBox, notification] = await Promise.all([assertSnapshotDataWithKey(nb.document), assertSnapshotData(nbn.document)]);
 
-                                          if (!expectation.isAssociatedWithNotificationBox) {
-                                            expect(notificationBox.r).toHaveLength(0); // no recipients in the box
-                                            expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
-                                          } else {
+                                          if (expectation.isAssociatedWithNotificationBox) {
                                             expect(notificationBox.r).toHaveLength(1); // should have the recipient in the box
                                             expect(notification.r).toHaveLength(1); // the person who created the guestbook entry
+                                          } else {
+                                            expect(notificationBox.r).toHaveLength(0); // no recipients in the box
+                                            expect(notification.r).toHaveLength(1); // should have one recipient, the person who created the guestbook entry
                                           }
 
                                           expect(notification.r[0].uid).toBe(u.uid);
@@ -338,10 +338,10 @@ demoApiFunctionContextFactory((f) => {
                                           expect(result._internal.globalRecipients).toHaveLength(0);
                                           expect(result._internal.explicitRecipients).toHaveLength(1);
 
-                                          if (!expectation.isAssociatedWithNotificationBox) {
-                                            expect(result._internal.allBoxRecipientConfigs).toHaveLength(0);
-                                          } else {
+                                          if (expectation.isAssociatedWithNotificationBox) {
                                             expect(result._internal.allBoxRecipientConfigs).toHaveLength(1);
+                                          } else {
+                                            expect(result._internal.allBoxRecipientConfigs).toHaveLength(0);
                                           }
 
                                           const explicitRecipient = result._internal.explicitRecipients[0];

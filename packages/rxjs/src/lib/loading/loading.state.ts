@@ -708,13 +708,13 @@ export function mapLoadingStateResults<A, B, L extends Partial<PageLoadingState<
 
   let result: O;
 
-  if (!mapState) {
+  if (mapState) {
+    result = mapState(input, value);
+  } else {
     result = {
       ...input,
       value
     } as unknown as O;
-  } else {
-    result = mapState(input, value);
   }
 
   return result;

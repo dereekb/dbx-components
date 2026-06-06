@@ -48,7 +48,7 @@ export class TransactionFirestoreDocumentDataAccessor<T> implements FirestoreDoc
   }
 
   getWithConverter<U extends DocumentData = DocumentData>(converter: Maybe<FirestoreDataConverter<U>>): Promise<DocumentSnapshot<DocumentData, U>> {
-    const withConverter = (converter != null ? this.documentRef.withConverter<U, DocumentData>(converter) : this.documentRef.withConverter(null)) as DocumentReference<U, DocumentData>;
+    const withConverter = (converter == null ? this.documentRef.withConverter(null) : this.documentRef.withConverter<U, DocumentData>(converter)) as DocumentReference<U, DocumentData>;
     return this.transaction.get(withConverter) as Promise<DocumentSnapshot<DocumentData, U>>;
   }
 

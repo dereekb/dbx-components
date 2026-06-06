@@ -292,10 +292,10 @@ export function splitStringAtFirstCharacterOccurenceFunction(splitAt: string | S
     const firstOccurence = findFirstCharacterOccurence(splitSet, input);
     let result: [string, Maybe<string>];
 
-    if (firstOccurence != null) {
-      result = splitStringAtIndex(input, firstOccurence, false);
-    } else {
+    if (firstOccurence == null) {
       result = [input, undefined];
+    } else {
+      result = splitStringAtIndex(input, firstOccurence, false);
     }
 
     return result;

@@ -1,4 +1,4 @@
-import { type Readable } from 'stream';
+import { type Readable } from 'node:stream';
 import { type StorageUploadOptions } from '../types';
 import { type FirebaseStorageAccessorFile } from './accessor';
 import { StorageFileUploadStreamUnsupportedError } from './error';

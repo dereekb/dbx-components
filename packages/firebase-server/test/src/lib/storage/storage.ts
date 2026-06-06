@@ -82,7 +82,7 @@ export const googleCloudTestFirebaseStorageBuilder = testContextBuilder<GoogleCl
   setupInstance: async (config) => {
     const drivers = makeTestingFirebaseStorageDrivers(googleCloudFirebaseStorageDrivers());
 
-    const projectId = `firebase-storage-server-test-${new Date().getTime()}-${COUNTER++}`;
+    const projectId = `firebase-storage-server-test-${Date.now()}-${COUNTER++}`;
     const firebaseStorage = new GoogleCloudStorage({
       projectId,
       // ensure http:// is provided so the library doesn't default to/try https://

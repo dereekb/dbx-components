@@ -145,10 +145,10 @@ export class QuizComponent {
     switch (code) {
       case 'Enter':
         this.quizStore.startedQuiz$.pipe(first()).subscribe((started) => {
-          if (!started) {
-            this.quizStore.startQuiz();
-          } else {
+          if (started) {
             this.clickNextQuestion();
+          } else {
+            this.quizStore.startQuiz();
           }
         });
         break;

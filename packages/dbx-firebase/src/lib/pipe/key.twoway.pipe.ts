@@ -16,6 +16,6 @@ import { type Maybe } from '@dereekb/util';
 @Pipe({ name: 'twoWayFlatFirestoreModelKey', standalone: true })
 export class TwoWayFlatFirestoreModelKeyPipe implements PipeTransform {
   transform(input: Maybe<FirestoreModelKey>): string {
-    return input != null ? twoWayFlatFirestoreModelKey(input) : '';
+    return input == null ? '' : twoWayFlatFirestoreModelKey(input);
   }
 }

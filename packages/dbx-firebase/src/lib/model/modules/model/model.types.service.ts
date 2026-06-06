@@ -62,11 +62,11 @@ export class DbxFirebaseModelTypesService {
   getDisplayInfo<T>(typeInfo: DbxFirebaseModelTypeInfo<T>, data: T): DbxFirebaseModelDisplayInfo {
     let displayInfo: Configurable<DbxFirebaseModelDisplayInfo>;
 
-    if (data != null) {
+    if (data == null) {
+      displayInfo = this.getDefaultDisplayInfo(typeInfo);
+    } else {
       displayInfo = typeInfo.displayInfoFactory(data);
       displayInfo.icon = displayInfo.icon || typeInfo.icon; // set default icon
-    } else {
-      displayInfo = this.getDefaultDisplayInfo(typeInfo);
     }
 
     return displayInfo;

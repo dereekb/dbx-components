@@ -113,12 +113,11 @@ export function mailgunNotificationEmailSendService(config: MailgunNotificationE
           const sendTemplateNameToLowercase = sendTemplateName.toLowerCase();
           const builderForKey = lowercaseKeysMessageBuilders[sendTemplateNameToLowercase as any];
 
-          if (!builderForKey) {
-            throw new Error(`mailgunNotificationEmailSendService(): A template builder was not available for template type "${sendTemplateName}".`);
-          } else {
+          if (builderForKey) {
             const input = { mailgunService, sendTemplateName, messages };
             return builderForKey(input);
           }
+          throw new Error(`mailgunNotificationEmailSendService(): A template builder was not available for template type "${sendTemplateName}".`);
         })
       );
 

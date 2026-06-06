@@ -51,11 +51,11 @@ export function randomNumberFactory(maxOrArgs: RandomNumberFactoryInput, roundin
   const round = roundingInput ?? roundConfig;
   let fn: RandomNumberFactory;
 
-  if (min != null) {
+  if (min == null) {
+    fn = () => Math.random() * max;
+  } else {
     const range = max - min;
     fn = () => Math.random() * range + min;
-  } else {
-    fn = () => Math.random() * max;
   }
 
   if (round && round !== 'none') {

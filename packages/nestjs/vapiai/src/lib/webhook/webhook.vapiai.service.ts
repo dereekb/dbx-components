@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { type Request } from 'express';
 import { type UntypedVapiAiWebhookEvent, vapiaiEventHandlerConfigurerFactory, vapiaiEventHandlerFactory, type VapiAiWebhookEvent, type VapiAiWebhookEventType, type VapiAiWebhookResult } from './webhook.vapiai';
-import { type Handler  } from '@dereekb/util';
+import { type Handler } from '@dereekb/util';
 import { vapiAiWebhookEventVerifier, type VapiAiWebhookEventVerifier } from './webhook.vapiai.verify';
 import { VapiAiWebhookServiceConfig } from './webhook.vapi.config';
 
@@ -32,10 +32,10 @@ export class VapiAiWebhookService {
       handled: false
     };
 
-    if (!valid) {
-      this.logger.warn('Received invalid Vapi.ai event: ', event);
-    } else {
+    if (valid) {
       result = await this.updateForVapiAiEvent(event);
+    } else {
+      this.logger.warn('Received invalid Vapi.ai event: ', event);
     }
 
     const response: UpdateForVapiAiWebhookResponse = {

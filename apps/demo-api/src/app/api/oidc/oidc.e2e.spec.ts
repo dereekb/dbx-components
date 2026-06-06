@@ -1862,7 +1862,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
 
           const authRes = await request(server)
             .get('/oidc/auth')
-            .query({ client_id: input.clientId, redirect_uri: 'https://example.com/callback', response_type: 'code', scope: input.scope, code_challenge: codeChallenge, code_challenge_method: 'S256', state: 'svc-state', nonce: 'svc-nonce', ...promptParams, ...(input.extraAuthParams ?? {}) })
+            .query({ client_id: input.clientId, redirect_uri: 'https://example.com/callback', response_type: 'code', scope: input.scope, code_challenge: codeChallenge, code_challenge_method: 'S256', state: 'svc-state', nonce: 'svc-nonce', ...promptParams, ...input.extraAuthParams })
             .redirects(0);
           expect(authRes.status).toBe(303);
           collectCookies(authRes);

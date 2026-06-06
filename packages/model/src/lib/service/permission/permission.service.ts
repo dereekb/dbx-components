@@ -52,10 +52,10 @@ export abstract class AbstractModelPermissionService<C, T, R extends string = st
     const model = await this.modelLoader.loadModelForKey(key, context);
     let result: ContextGrantedModelRoles<O, C, R>;
 
-    if (model != null) {
-      result = await this.roleMapForModelContext(model, context);
-    } else {
+    if (model == null) {
       result = noAccessContextGrantedModelRoles<O, C, R>(context);
+    } else {
+      result = await this.roleMapForModelContext(model, context);
     }
 
     return result;

@@ -294,7 +294,9 @@ export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDoc
   override readonly setFirestoreCollection = this.updater((state, firestoreCollection: Maybe<FirestoreCollection<T, D>>) => {
     let result: typeof state;
 
-    if (firestoreCollection != null) {
+    if (firestoreCollection == null) {
+      result = { ...state, firestoreCollection: null };
+    } else {
       const id = (firestoreCollection as RootSingleItemFirestoreCollection<T, D>).singleItemIdentifier;
 
       if (id == null) {
@@ -302,8 +304,6 @@ export class AbstractRootSingleItemDbxFirebaseDocument<T, D extends FirestoreDoc
       } else {
         result = { ...state, firestoreCollection, id };
       }
-    } else {
-      result = { ...state, firestoreCollection: null };
     }
 
     return result;

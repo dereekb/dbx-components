@@ -78,7 +78,7 @@ export function logMergeZoomOAuthAccessTokenCacheServiceErrorFunction(failedUpda
  */
 export function mergeZoomOAuthAccessTokenCacheServices(inputServicesToMerge: ZoomOAuthAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeZoomOAuthAccessTokenCacheServiceErrorFunction>): ZoomOAuthAccessTokenCacheService {
   const allServices = [...inputServicesToMerge];
-  const logErrorFunction = typeof logError === 'function' ? logError : logError !== false ? logMergeZoomOAuthAccessTokenCacheServiceErrorFunction : undefined;
+  const logErrorFunction = typeof logError === 'function' ? logError : logError === false ? undefined : logMergeZoomOAuthAccessTokenCacheServiceErrorFunction;
 
   if (allServices.length === 0) {
     throw new Error('mergeZoomOAuthAccessTokenCacheServices() input cannot be empty.');

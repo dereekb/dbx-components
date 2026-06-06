@@ -298,7 +298,7 @@ describe('shouldFail()', () => {
     );
 
     testFailureCaseWithFunction('should fail if a non-expected error occurs.', async () => {
-      return Promise.reject(new Error('success'));
+      throw new Error('success');
     });
 
     testFailureCaseWithFunction('should fail if failSuccessfully() is not called within a promise-returning test.', () => {

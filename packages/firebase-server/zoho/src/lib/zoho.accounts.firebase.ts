@@ -65,10 +65,10 @@ export function firebaseZohoAccountsAccessTokenCacheService(systemStateCollectio
             };
 
             // create/update depending on the current document's existence
-            if (!existingData) {
-              await documentInTransaction.create(templateOrUpdate);
-            } else {
+            if (existingData) {
               await documentInTransaction.update(templateOrUpdate);
+            } else {
+              await documentInTransaction.create(templateOrUpdate);
             }
           });
         },

@@ -275,7 +275,7 @@ export function filterFromIterable<T>(values: Iterable<T>, fn: DecisionFunction<
  */
 export function wrapTuples<T>(input: IterableOrValue<T>): T[] {
   if (!Array.isArray(input)) {
-    throw new Error('Input is not an array/tuple...');
+    throw new TypeError('Input is not an array/tuple...');
   }
 
   let result: T[];

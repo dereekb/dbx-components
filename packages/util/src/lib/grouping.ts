@@ -397,10 +397,10 @@ export function makeValuesGroupMap<T, K extends PrimativeKey = PrimativeKey>(val
       const key = groupKeyFn(x);
       const array = map.get(key);
 
-      if (array != null) {
-        array.push(x);
-      } else {
+      if (array == null) {
         map.set(key, [x]);
+      } else {
+        array.push(x);
       }
     });
   }

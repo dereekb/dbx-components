@@ -84,7 +84,7 @@ describe('appZohoDeskModuleMetadata()', () => {
           expect(result.accessToken).toBeDefined();
           expect(result.expiresIn).toBeDefined();
           expect(result.expiresAt).toBeDefined();
-          expect(result.expiresAt.getTime()).toBeGreaterThan(new Date().getTime());
+          expect(result.expiresAt.getTime()).toBeGreaterThan(Date.now());
           expect(result.apiDomain).toBeDefined();
 
           const deskTokenCache = cacheService.loadZohoAccessTokenCache(ZOHO_DESK_SERVICE_NAME);

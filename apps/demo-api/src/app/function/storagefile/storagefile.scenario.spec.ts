@@ -4,7 +4,7 @@ import { demoCallModel } from '../model/crud.functions';
 import { type DownloadProfileArchiveParams, type DownloadProfileArchiveResult, profileIdentity, USER_AVATAR_IMAGE_HEIGHT, USER_AVATAR_IMAGE_WIDTH, userAvatarUploadsFilePath, userProfileStorageFileGroupId, userTestFileUploadsFilePath } from 'demo-firebase';
 import { type InitializeStorageFileFromUploadParams, onCallCreateModelParams, type OnCallCreateModelResult, onCallReadModelParams, onCallUpdateModelParams, STORAGE_FILE_GROUP_ZIP_STORAGE_FILE_PURPOSE, type StorageFileDisplayName, storageFileIdentity, storageFileGroupIdentity, StorageFileProcessingState, StorageFileState, type StoragePath, type UpdateStorageFileGroupParams } from '@dereekb/firebase';
 import { ZIP_FILE_MIME_TYPE, type MimeTypeWithoutParameters } from '@dereekb/util';
-import { readFile } from 'fs/promises';
+import { readFile } from 'node:fs/promises';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import sharp from 'sharp';
 import AdmZip from 'adm-zip';

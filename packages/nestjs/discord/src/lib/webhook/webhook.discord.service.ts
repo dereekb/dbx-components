@@ -28,10 +28,10 @@ export class DiscordWebhookService {
   async updateForWebhook(req: Request, rawBody: Buffer): Promise<void> {
     const result = await this._verifier(req, rawBody);
 
-    if (!result.valid) {
-      this.logger.warn('Received invalid Discord interaction event.', req);
-    } else {
+    if (result.valid) {
       await this.updateForDiscordInteraction(result.body as UntypedDiscordInteraction);
+    } else {
+      this.logger.warn('Received invalid Discord interaction event.', req);
     }
   }
 

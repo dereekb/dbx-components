@@ -51,7 +51,7 @@ export function updateNotificationBoxRecipientTemplateConfigRecord(a: Notificati
  */
 export function updateNotificationUserDefaultNotificationBoxRecipientConfig(a: NotificationUserDefaultNotificationBoxRecipientConfig, b: UpdateNotificationUserDefaultNotificationBoxRecipientConfigParams, limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): NotificationUserDefaultNotificationBoxRecipientConfig {
   const { configs: inputC, f: inputF, bk: inputBk, lk: inputLk } = b;
-  const c = (inputC != null ? updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes) : undefined) ?? a.c;
+  const c = (inputC == null ? undefined : updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes)) ?? a.c;
 
   return {
     ...updateNotificationRecipient(a, b),
@@ -75,7 +75,7 @@ export function updateNotificationUserDefaultNotificationBoxRecipientConfig(a: N
  */
 export function updateNotificationUserNotificationBoxRecipientConfigIfChanged(a: NotificationUserNotificationBoxRecipientConfig, b: UpdateNotificationUserNotificationBoxRecipientParams, limitToAllowedConfigTypes?: Maybe<Iterable<NotificationTemplateType>>): Maybe<NotificationUserNotificationBoxRecipientConfig> {
   const { configs: inputC, rm: inputRm, lk: inputLk, bk: inputBk } = b;
-  const c = (inputC != null ? updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes) : undefined) ?? a.c;
+  const c = (inputC == null ? undefined : updateNotificationBoxRecipientTemplateConfigRecord(a.c, inputC, limitToAllowedConfigTypes)) ?? a.c;
 
   const nextConfig: Building<NotificationUserNotificationBoxRecipientConfig> = {
     ...updateNotificationRecipient(a, b),

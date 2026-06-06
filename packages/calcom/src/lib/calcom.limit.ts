@@ -48,7 +48,7 @@ export type CalcomRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodP
  * @returns A CalcomRateLimitedFetchHandler that enforces rate limiting.
  */
 export function calcomRateLimitedFetchHandler(config?: Maybe<CalcomRateLimitedFetchHandlerConfig>): CalcomRateLimitedFetchHandler {
-  const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_CALCOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;
+  const onTooManyRequests = config?.onTooManyRequests === false ? undefined : (config?.onTooManyRequests ?? DEFAULT_CALCOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION);
   const defaultLimit = config?.maxRateLimit ?? DEFAULT_CALCOM_API_RATE_LIMIT;
   const defaultResetPeriod = config?.resetPeriod ?? DEFAULT_CALCOM_API_RATE_LIMIT_RESET_PERIOD;
 

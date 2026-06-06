@@ -299,7 +299,9 @@ export default [
       'unicorn/no-negated-condition': 'warn', // Sonar typescript:S7735 — invert a negated if/ternary that has an else branch
       'unicorn/prefer-single-call': 'warn', // Sonar typescript:S7778 — combine consecutive .push() / classList.add() calls
       'unicorn/prefer-string-replace-all': 'warn', // Sonar typescript:S7781 — .replace(/literal/g) → .replaceAll('literal')
-      'unicorn/prefer-at': 'warn', // Sonar typescript:S7755 — arr[arr.length - 1] → arr.at(-1)
+      // 'unicorn/prefer-at' (Sonar typescript:S7755) intentionally OMITTED: its autofix rewrites arr[arr.length - 1] → arr.at(-1),
+      // but .at() returns `T | undefined` while index access is typed `T` here (no noUncheckedIndexedAccess), so the fix breaks any
+      // chained access / non-optional assignment with TS2532. The fixer can't be made null-safe via config, so the rule is left off.
       'unicorn/consistent-function-scoping': ['warn', { checkArrowFunctions: false }], // Sonar typescript:S7721 — hoist closure-free nested functions to module scope. checkArrowFunctions:false limits it to named function declarations (matches Sonar's examples) and drops the bulk of the noise from inline arrow helpers.
       'unicorn/prefer-set-has': 'warn', // Sonar typescript:S7776 — repeated Array#includes existence checks → Set#has
       'unicorn/prefer-string-raw': 'warn', // Sonar typescript:S7780 — escaped backslashes in a literal → String.raw

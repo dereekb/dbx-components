@@ -17,7 +17,7 @@ export class JsonResponseParseError extends Error {
  * @returns
  */
 export function fetchJsonBodyString(body: Maybe<FetchJsonBody>): Maybe<string> {
-  return body != null ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined;
+  return body == null ? undefined : typeof body === 'string' ? body : JSON.stringify(body);
 }
 
 export interface FetchJsonInput extends Omit<RequestInit, 'body'> {

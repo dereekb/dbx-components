@@ -405,10 +405,7 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
 
               const notificationUserNotificationBoxConfig = notificationBoxConfigsToSyncInThisBatchMap.get(nb) as NotificationUserNotificationBoxRecipientConfig; // always exists
 
-              if (!notificationBox) {
-                // if the entire NotificationBox no longer exists, flag to remove it from the user as a cleanup measure
-                notificationBoxConfigsToRemoveFromNotificationUser.add(nb);
-              } else {
+              if (notificationBox) {
                 // update in the NotificationBox
                 const recipientIndex = notificationBox.r.findIndex((x) => x.uid === notificationUser.uid);
 
@@ -450,6 +447,9 @@ export function resyncNotificationUserFactory(context: NotificationServerActions
                   await document.update({ r });
                   notificationBoxesUpdatedInBatch += 1;
                 }
+              } else {
+                // if the entire NotificationBox no longer exists, flag to remove it from the user as a cleanup measure
+                notificationBoxConfigsToRemoveFromNotificationUser.add(nb);
               }
             });
 
@@ -900,7 +900,7 @@ export function updateNotificationBoxRecipientInTransactionFactory(context: Base
           throw notificationBoxRecipientDoesNotExistsError();
         }
 
-        const c = (inputC != null ? notificationBoxRecipientTemplateConfigArrayToRecord(inputC) : targetRecipient?.c) ?? {};
+        const c = (inputC == null ? targetRecipient?.c : notificationBoxRecipientTemplateConfigArrayToRecord(inputC)) ?? {};
 
         nextRecipient = {
           uid,
@@ -1038,19 +1038,19 @@ export function updateNotificationBoxRecipientFactory(context: NotificationServe
   return firebaseServerActionTransformFunctionFactory(updateNotificationBoxRecipientParamsType, async (params) => {
     return async (notificationBoxDocument: NotificationBoxDocument) => {
       await firestoreContext.runTransaction(async (transaction) => {
-        if (params.setExclusion != null) {
-          await updateNotificationBoxRecipientExclusionInTransaction(
+        if (params.setExclusion == null) {
+          await updateNotificationBoxRecipientInTransaction(
             {
               params,
+              throwErrorIfNotificationBoxDoesNotExist: true,
               notificationBoxDocument
             },
             transaction
           );
         } else {
-          await updateNotificationBoxRecipientInTransaction(
+          await updateNotificationBoxRecipientExclusionInTransaction(
             {
               params,
-              throwErrorIfNotificationBoxDoesNotExist: true,
               notificationBoxDocument
             },
             transaction
@@ -1632,7 +1632,10 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                   });
 
                 if (emailMessages?.length) {
-                  if (notificationSendService.emailSendService != null) {
+                  if (notificationSendService.emailSendService == null) {
+                    console.error(`Failed sending email notification "${notification.id}" with type "${notificationTemplateType}" due to no email service being configured.`);
+                    es = NotificationSendState.CONFIG_ERROR;
+                  } else {
                     let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendEmailMessagesResult>>;
 
                     try {
@@ -1650,9 +1653,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                         es = NotificationSendState.SEND_ERROR;
                       }
                     }
-                  } else {
-                    console.error(`Failed sending email notification "${notification.id}" with type "${notificationTemplateType}" due to no email service being configured.`);
-                    es = NotificationSendState.CONFIG_ERROR;
                   }
 
                   if (sendEmailsResult != null) {
@@ -1698,7 +1698,10 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                   });
 
                 if (textMessages?.length) {
-                  if (notificationSendService.textSendService != null) {
+                  if (notificationSendService.textSendService == null) {
+                    console.error(`Failed sending text notification "${notification.id}" with type "${notificationTemplateType}" due to no text service being configured.`);
+                    ts = NotificationSendState.CONFIG_ERROR;
+                  } else {
                     let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendTextMessagesResult>>;
 
                     try {
@@ -1716,9 +1719,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                         ts = NotificationSendState.SEND_ERROR;
                       }
                     }
-                  } else {
-                    console.error(`Failed sending text notification "${notification.id}" with type "${notificationTemplateType}" due to no text service being configured.`);
-                    ts = NotificationSendState.CONFIG_ERROR;
                   }
 
                   if (sendTextsResult != null) {
@@ -1761,7 +1761,10 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                   });
 
                 if (notificationSummaryMessages?.length) {
-                  if (notificationSendService.notificationSummarySendService != null) {
+                  if (notificationSendService.notificationSummarySendService == null) {
+                    console.error(`Failed sending notification summary notification "${notification.id}" with type "${notificationTemplateType}" due to no notification summary service being configured.`);
+                    ns = NotificationSendState.CONFIG_ERROR;
+                  } else {
                     let sendInstance: Maybe<NotificationSendMessagesInstance<NotificationSendNotificationSummaryMessagesResult>>;
 
                     try {
@@ -1780,9 +1783,6 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
                         ns = NotificationSendState.SEND_ERROR;
                       }
                     }
-                  } else {
-                    console.error(`Failed sending notification summary notification "${notification.id}" with type "${notificationTemplateType}" due to no notification summary service being configured.`);
-                    ns = NotificationSendState.CONFIG_ERROR;
                   }
                 } else {
                   ns = NotificationSendState.SENT;
@@ -2144,15 +2144,15 @@ export function cleanupSentNotificationsFactory(context: NotificationServerActio
 
                 const n: NotificationItem[] = [...(notificationWeek?.n ?? []), ...newItems];
 
-                if (!notificationWeek) {
-                  // create
-                  await notificationWeekDocument.create({
-                    w: yearWeekCode,
+                if (notificationWeek) {
+                  // update
+                  await notificationWeekDocument.update({
                     n
                   });
                 } else {
-                  // update
-                  await notificationWeekDocument.update({
+                  // create
+                  await notificationWeekDocument.create({
+                    w: yearWeekCode,
                     n
                   });
                 }

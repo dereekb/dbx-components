@@ -285,7 +285,7 @@ export function updateWithAccessorUpdateAndConverterFunction<T>(accessor: Firest
 
     // Only update
     if (!objectHasNoKeys(updateData)) {
-      return params != null ? accessor.update(updateData, params) : accessor.update(updateData);
+      return params == null ? accessor.update(updateData) : accessor.update(updateData, params);
     }
   };
 }

@@ -12,13 +12,13 @@ class MockStorageObject extends StorageObject {
   }
 
   setItem(key: StoredDataStorageKey, item: Maybe<string>): void {
-    if (item != null) {
+    if (item == null) {
+      this.removeItem(key);
+    } else {
       if (!this.store.has(key)) {
         this.keyOrder.push(key);
       }
       this.store.set(key, item);
-    } else {
-      this.removeItem(key);
     }
   }
 

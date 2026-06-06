@@ -27,7 +27,7 @@ export function safeZohoDateTimeString(date: Date): ZohoDateTimeString;
 export function safeZohoDateTimeString(date: MaybeNot): MaybeNot;
 export function safeZohoDateTimeString(date: Maybe<Date>): Maybe<ZohoDateTimeString>;
 export function safeZohoDateTimeString(date: Maybe<Date>): Maybe<ZohoDateTimeString> {
-  return date != null ? zohoDateTimeString(date) : date;
+  return date == null ? date : zohoDateTimeString(date);
 }
 
 /**

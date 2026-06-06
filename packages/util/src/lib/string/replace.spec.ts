@@ -17,17 +17,17 @@ describe('replaceStringsFunction', () => {
 describe('escapeStringForRegex', () => {
   it('should escape a single character', () => {
     const result = escapeStringForRegex('.');
-    expect(result).toBe('\\.');
+    expect(result).toBe(String.raw`\.`);
   });
 
   it('should escape the regex characters within a string', () => {
     const result = escapeStringForRegex('hello.world');
-    expect(result).toBe('hello\\.world');
+    expect(result).toBe(String.raw`hello\.world`);
   });
 
   it('should escape multiple regex characters within a string', () => {
     const result = escapeStringForRegex('h.e.l.l.o.w.o.r.l.d');
-    expect(result).toBe('h\\.e\\.l\\.l\\.o\\.w\\.o\\.r\\.l\\.d');
+    expect(result).toBe(String.raw`h\.e\.l\.l\.o\.w\.o\.r\.l\.d`);
   });
 });
 

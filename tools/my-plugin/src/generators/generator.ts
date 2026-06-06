@@ -51,16 +51,16 @@ function manipulateProjectTarget(tree: Tree, project: ProjectConfiguration, remo
     // Build target exists already
     if (project.targets.build) {
       // Ts config mising
-      if (!project.targets.build.options.tsConfig) {
+      if (project.targets.build.options.tsConfig) {
+        // Ts config exists, nothing to do
+        console.log(`[${project.root}]`, `Skipping, already exists`);
+      } else {
         project.targets.build.options = {
           ...project.targets.build.options,
           tsConfig: tsconfigPath,
           [TSCONFIG_TAG]: true
         };
         console.log(`[${project.root}]`, `Added tsconfig only`);
-      } else {
-        // Ts config exists, nothing to do
-        console.log(`[${project.root}]`, `Skipping, already exists`);
       }
       // Add build target with tsconfig
     } else {

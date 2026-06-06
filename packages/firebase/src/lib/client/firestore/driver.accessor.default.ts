@@ -44,7 +44,7 @@ export class DefaultFirestoreDocumentDataAccessor<T> implements FirestoreDocumen
   }
 
   getWithConverter<U = DocumentData>(converter: Maybe<FirestoreDataConverter<U>>): Promise<DocumentSnapshot<U>> {
-    const withConverter = (converter != null ? this.documentRef.withConverter<U, DocumentData>(converter) : this.documentRef.withConverter(null)) as DocumentReference<U, DocumentData>;
+    const withConverter = (converter == null ? this.documentRef.withConverter(null) : this.documentRef.withConverter<U, DocumentData>(converter)) as DocumentReference<U, DocumentData>;
     return getDoc(withConverter);
   }
 

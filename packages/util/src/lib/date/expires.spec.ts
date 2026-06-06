@@ -11,7 +11,7 @@ describe('expirationDetails()', () => {
     });
 
     it('should return false if the expiration time has not passed', () => {
-      const later = new Date(new Date().getTime() + 1000);
+      const later = new Date(Date.now() + 1000);
       const details = expirationDetails({ expires: { expiresAt: later } });
       expect(details.hasExpired()).toBe(false);
     });

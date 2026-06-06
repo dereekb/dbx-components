@@ -33,12 +33,12 @@ export class DateDistancePipe implements PipeTransform {
   transform(input: Maybe<DateOrDateString>, inputTo?: Maybe<Date>, unavailable: string = 'Not Available'): string {
     let result: string;
 
-    if (input != null) {
+    if (input == null) {
+      result = unavailable;
+    } else {
       const to = inputTo ?? new Date();
       const from = ToJsDatePipe.toJsDate(input);
       result = formatDateDistance(to, from);
-    } else {
-      result = unavailable;
     }
 
     return result;

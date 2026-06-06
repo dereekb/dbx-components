@@ -223,7 +223,7 @@ describe('DbxWebPageTitleService', () => {
     const customDelegate: DbxWebPageTitleDelegate = {
       buildPageTitleDetails: ({ chain, rootConfig }) => {
         const fullChain = rootConfig ? [rootConfig, ...chain] : chain;
-        const titles = fullChain.map((c) => c.title).filter((t): t is string => Boolean(t));
+        const titles = fullChain.map((c) => c.title).filter(Boolean);
         return {
           title: titles.length === 0 ? 'EMPTY' : titles.join('::'),
           description: undefined

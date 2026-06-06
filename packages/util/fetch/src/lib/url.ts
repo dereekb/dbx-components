@@ -35,10 +35,10 @@ export function fetchURL(input: FetchURLInput): string {
     if (input.queryParams) {
       const searchParams = queryParamsToSearchParams(input.queryParams);
 
-      if (!isEmptyIterable(searchParams)) {
-        url = fixExtraQueryParameters(baseUrl + `?${searchParams.toString()}`);
-      } else {
+      if (isEmptyIterable(searchParams)) {
         url = baseUrl;
+      } else {
+        url = fixExtraQueryParameters(baseUrl + `?${searchParams.toString()}`);
       }
     } else {
       url = baseUrl;

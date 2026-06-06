@@ -599,19 +599,19 @@ export function dateCellScheduleDateRange(input: DateCellScheduleDateRangeInput)
   let start: Date;
 
   // either start or startsAt is provided
-  if (inputStart != null) {
-    const startInSystemTimezone = normalInstance.systemDateToTargetDate(inputStart); // start needs to be in the system timezone normal before processing.
-    start = normalInstance.startOfDayInTargetTimezone(startInSystemTimezone); // ensure the start of the day is set/matches the timezone.
-  } else {
+  if (inputStart == null) {
     if (inputStartsAt != null) {
       // use ISO day string path to avoid system-timezone-dependent startOfDay; matches dateCellTiming behavior
       const startsAtInTarget = normalInstance.baseDateToTargetDate(inputStartsAt);
       start = normalInstance.startOfDayInTargetTimezone(formatToISO8601DayStringForUTC(startsAtInTarget));
-    } else if (inputEnd != null) {
-      start = normalInstance.startOfDayInTargetTimezone(inputEnd); // start on the same day as the end date
-    } else {
+    } else if (inputEnd == null) {
       throw new Error('Could not determine the proper start value for the dateCellScheduleDateRange().');
+    } else {
+      start = normalInstance.startOfDayInTargetTimezone(inputEnd); // start on the same day as the end date
     }
+  } else {
+    const startInSystemTimezone = normalInstance.systemDateToTargetDate(inputStart); // start needs to be in the system timezone normal before processing.
+    start = normalInstance.startOfDayInTargetTimezone(startInSystemTimezone); // ensure the start of the day is set/matches the timezone.
   }
 
   // set the end value
@@ -970,7 +970,7 @@ export function dateCellScheduleDateFilter(config: DateCellScheduleDateFilterCon
   // time may map to the wrong day in the filter timezone via baseDateToTargetDate. To fix this, extract the
   // intended calendar day from the system timezone as an ISO8601 day string, then use the index factory's
   // string path which correctly computes the day offset in UTC-normal space.
-  const minAllowedIndex = minMaxDateRange?.start != null ? Math.max(indexFloor, _minMaxDateRangeDateOrIndexToIndex(minMaxDateRange.start)) : indexFloor;
+  const minAllowedIndex = minMaxDateRange?.start == null ? indexFloor : Math.max(indexFloor, _minMaxDateRangeDateOrIndexToIndex(minMaxDateRange.start));
   let maxAllowedIndex: number;
   if (end != null) {
     maxAllowedIndex = _dateCellTimingRelativeIndexFactory(end);
