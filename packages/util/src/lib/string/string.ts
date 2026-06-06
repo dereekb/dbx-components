@@ -375,6 +375,122 @@ export function splitJoinNameString(input: string): FirstNameLastNameTuple {
 }
 
 /**
+ * Default maximum number of initials produced by a {@link NameToInitialsFunction}.
+ */
+export const DEFAULT_NAME_TO_INITIALS_MAX_INITIALS = 2;
+
+/**
+ * Default minimum number of initials produced by a {@link NameToInitialsFunction}.
+ */
+export const DEFAULT_NAME_TO_INITIALS_MIN_INITIALS = 1;
+
+/**
+ * Configuration for creating a {@link NameToInitialsFunction}.
+ */
+export interface NameToInitialsConfig {
+  /**
+   * Maximum number of initials to produce.
+   *
+   * Caps the number of leading words used for multi-word inputs and the number of leading characters used for single-word inputs. Defaults to {@link DEFAULT_NAME_TO_INITIALS_MAX_INITIALS}.
+   */
+  readonly maxInitials?: Maybe<number>;
+  /**
+   * Minimum number of initials to produce.
+   *
+   * For a single-word input this many leading characters are taken (capped by `maxInitials` and the word's length). Defaults to {@link DEFAULT_NAME_TO_INITIALS_MIN_INITIALS}.
+   */
+  readonly minInitials?: Maybe<number>;
+}
+
+/**
+ * Derives display initials from a name or short character string.
+ *
+ * Multi-word inputs use the first character of each of the first `maxInitials` words; single-word
+ * inputs use the first `minInitials` characters verbatim. The result is always uppercased.
+ */
+export type NameToInitialsFunction = (name: string) => string;
+
+/**
+ * Creates a {@link NameToInitialsFunction} that derives display initials from a name or short character string.
+ *
+ * Useful for avatar fallbacks where a name (e.g. `'Michelle B'`) or a literal token (e.g. `'BB'`)
+ * should collapse to a compact label. By default a single-word input yields a single initial; raise
+ * `minInitials` to pull more leading characters from a lone word.
+ *
+ * @param config - Configuration controlling the minimum and maximum number of initials.
+ * @returns A reusable function that derives initials from input names.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind factory
+ * @dbxUtilTags string, name, initials, avatar, abbreviate, person, factory
+ * @dbxUtilRelated split-join-name-string, capitalize-first-letter
+ *
+ * @example
+ * ```ts
+ * const toInitials = nameToInitialsFactory();
+ * toInitials('Michelle B'); // 'MB'
+ * toInitials('Michelle'); // 'M'
+ *
+ * const toPaddedInitials = nameToInitialsFactory({ minInitials: 2 });
+ * toPaddedInitials('Michelle'); // 'MI'
+ * toPaddedInitials('BB'); // 'BB'
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function nameToInitialsFactory(config?: Maybe<NameToInitialsConfig>): NameToInitialsFunction {
+  const maxInitials = config?.maxInitials ?? DEFAULT_NAME_TO_INITIALS_MAX_INITIALS;
+  const minInitials = Math.min(config?.minInitials ?? DEFAULT_NAME_TO_INITIALS_MIN_INITIALS, maxInitials);
+
+  return (name: string) => {
+    const trimmed = name.trim();
+    let result: string;
+
+    if (trimmed) {
+      const words = trimmed.split(/\s+/);
+
+      if (words.length > 1) {
+        result = words
+          .slice(0, maxInitials)
+          .map((word) => word.charAt(0))
+          .join('');
+      } else {
+        result = words[0].slice(0, minInitials);
+      }
+    } else {
+      result = '';
+    }
+
+    return result.toUpperCase();
+  };
+}
+
+/**
+ * Derives display initials from a name or short character string using the default configuration.
+ *
+ * Multi-word inputs use the first character of each of the first two words; single-word inputs use
+ * the first character verbatim. The result is always uppercased.
+ *
+ * @param name - Name or character string to derive initials from.
+ * @returns Uppercased initials, or an empty string when the input is blank.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, name, initials, avatar, abbreviate, person
+ * @dbxUtilRelated name-to-initials-factory, split-join-name-string, capitalize-first-letter
+ *
+ * @example
+ * ```ts
+ * nameToInitials('Michelle B'); // 'MB'
+ * nameToInitials('A'); // 'A'
+ * nameToInitials('BB'); // 'B'
+ * nameToInitials('Michelle'); // 'M'
+ * ```
+ */
+export const nameToInitials: NameToInitialsFunction = nameToInitialsFactory();
+
+/**
  * Creates a string that repeats the given string a specified number of times.
  *
  * @param string - The string to repeat.

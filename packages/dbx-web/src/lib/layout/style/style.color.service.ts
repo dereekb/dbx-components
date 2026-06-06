@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { type ArrayOrValue, type Maybe, useIterableOrValue } from '@dereekb/util';
-import { type DbxColorConfig, type DbxColorConfigTemplate, type DbxColorConfigTemplateKey } from './style';
+import { type DbxColorConfig, type DbxColorConfigTemplate, type DbxColorConfigTemplateKey, DBX_CURATED_COLOR_TEMPLATES, dbxCuratedColorConfigForString } from './style';
 
 /**
  * Configuration provided in the root module/environment for seeding {@link DbxColorService} with initial templates.
@@ -39,6 +39,10 @@ export class DbxColorService {
 
   constructor() {
     const initialConfig = inject(DbxColorServiceConfig, { optional: true });
+
+    // Register the default curated color set first so it is always available.
+    // App-provided templates are registered afterwards (override: true) so an app can replace a curated key.
+    this.register(DBX_CURATED_COLOR_TEMPLATES, false);
 
     if (initialConfig?.templates) {
       this.register(initialConfig.templates);
@@ -86,6 +90,30 @@ export class DbxColorService {
    */
   getAllRegisteredTemplateKeys(): DbxColorConfigTemplateKey[] {
     return [...this._templates.keys()];
+  }
+
+  /**
+   * Returns all registered templates flagged as part of the curated color set, in registration order.
+   *
+   * Includes the default {@link DBX_CURATED_COLOR_TEMPLATES} plus any app-registered curated templates.
+   *
+   * @returns The curated templates in insertion order.
+   */
+  getCuratedColorTemplates(): DbxColorConfigTemplate[] {
+    return [...this._templates.values()].filter((template) => template.curated === true);
+  }
+
+  /**
+   * Deterministically selects a curated {@link DbxColorConfig} for the given string from the registered curated set.
+   *
+   * The same input always maps to the same curated color, making it suitable for stable, name-derived
+   * colors such as avatar initials backgrounds.
+   *
+   * @param value - The string to derive a curated color from (e.g. a person's name).
+   * @returns The selected curated config, or `null` when the value is blank or no curated templates are registered.
+   */
+  getCuratedColorForValue(value: Maybe<string>): Maybe<DbxColorConfig> {
+    return dbxCuratedColorConfigForString(value, this.getCuratedColorTemplates());
   }
 
   /**

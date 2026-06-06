@@ -1,4 +1,5 @@
 @use './theming';
+@use './curated-colors' as curated;
 
 // Includes all theming config
 @mixin root-variables($root-selector, $theme-config) {
@@ -135,5 +136,8 @@
     #{theming.$dbx-outline-color-var}: var(--mat-sys-outline);
     #{theming.$dbx-outline-variant-color-var}: var(--mat-sys-outline-variant);
     #{theming.$dbx-error-color-var}: var(--mat-sys-error);
+
+    // Curated color set (avatar initials, etc.) — selects light/dark values from the theme's theme-type.
+    @include curated.curated-color-variables($theme-config);
   }
 }

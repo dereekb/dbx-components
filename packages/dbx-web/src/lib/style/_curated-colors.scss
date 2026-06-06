@@ -1,0 +1,129 @@
+@use 'sass:list';
+@use '@angular/material' as mat;
+
+// MARK: Curated Colors
+// Default values for the curated color set consumed by deterministic color pickers
+// (e.g. avatar initials backgrounds via `dbxCuratedColorConfigForString` / `DbxColorService.getCuratedColorForValue`).
+//
+// These are emitted as CSS custom properties (--dbx-curated-color-N / --dbx-curated-color-N-contrast)
+// so applications can override the palette by redefining the tokens. The number of entries here MUST
+// match DBX_CURATED_COLOR_COUNT in style.ts (12).
+//
+// Each entry is `index: (background, contrast)`.
+
+$dbx-curated-colors-light: (
+  1: (
+    #1565c0,
+    #ffffff
+  ),
+  2: (
+    #2e7d32,
+    #ffffff
+  ),
+  3: (
+    #c62828,
+    #ffffff
+  ),
+  4: (
+    #6a1b9a,
+    #ffffff
+  ),
+  5: (
+    #ef6c00,
+    #ffffff
+  ),
+  6: (
+    #00838f,
+    #ffffff
+  ),
+  7: (
+    #ad1457,
+    #ffffff
+  ),
+  8: (
+    #4527a0,
+    #ffffff
+  ),
+  9: (
+    #00695c,
+    #ffffff
+  ),
+  10: (
+    #5d4037,
+    #ffffff
+  ),
+  11: (
+    #283593,
+    #ffffff
+  ),
+  12: (
+    #9e9d24,
+    #ffffff
+  )
+);
+
+$dbx-curated-colors-dark: (
+  1: (
+    #90caf9,
+    #0b2545
+  ),
+  2: (
+    #a5d6a7,
+    #0c2912
+  ),
+  3: (
+    #ef9a9a,
+    #3b0d0d
+  ),
+  4: (
+    #ce93d8,
+    #2a0c38
+  ),
+  5: (
+    #ffb74d,
+    #3a2200
+  ),
+  6: (
+    #80deea,
+    #04282c
+  ),
+  7: (
+    #f48fb1,
+    #3a0c22
+  ),
+  8: (
+    #b39ddb,
+    #1e1147
+  ),
+  9: (
+    #80cbc4,
+    #03241f
+  ),
+  10: (
+    #bcaaa4,
+    #2a1a14
+  ),
+  11: (
+    #9fa8da,
+    #121a4a
+  ),
+  12: (
+    #e6ee9c,
+    #2c2c08
+  )
+);
+
+/// Emits the --dbx-curated-color-N / --dbx-curated-color-N-contrast CSS tokens for the given theme,
+/// selecting the light or dark palette based on the theme's color theme-type.
+///
+/// Call inside a theme root selector (see root-theme-color-variables) so each theme selector
+/// (e.g. light `.doc-app`, dark `.doc-app-dark`) receives its own curated set.
+@mixin curated-color-variables($theme-config) {
+  $theme-type: mat.get-theme-type($theme-config);
+  $curated-set: if($theme-type == dark, $dbx-curated-colors-dark, $dbx-curated-colors-light);
+
+  @each $index, $pair in $curated-set {
+    --dbx-curated-color-#{$index}: #{list.nth($pair, 1)};
+    --dbx-curated-color-#{$index}-contrast: #{list.nth($pair, 2)};
+  }
+}

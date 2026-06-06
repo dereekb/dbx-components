@@ -1,8 +1,28 @@
-import { makeHashDecodeMap, decodeHashedValuesWithDecodeMap, decodeHashedValues, type HashDecodeMap } from './hash';
+import { makeHashDecodeMap, decodeHashedValuesWithDecodeMap, decodeHashedValues, hashStringToNumber, type HashDecodeMap } from './hash';
 // Mock or ensure this is testable if it has side effects or complex logic not relevant here
 
 // Mock hash function for testing
 const mockHashFn = (value: string): string => `hashed(${value})`;
+
+describe('hashStringToNumber', () => {
+  it('should be deterministic for the same input', () => {
+    expect(hashStringToNumber('Michelle B')).toBe(hashStringToNumber('Michelle B'));
+  });
+
+  it('should return a non-negative integer', () => {
+    const values = ['', 'a', 'Michelle B', 'BB', 'a much longer string with spaces 12345'];
+
+    values.forEach((value) => {
+      const result = hashStringToNumber(value);
+      expect(Number.isInteger(result)).toBe(true);
+      expect(result).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  it('should produce different values for different inputs', () => {
+    expect(hashStringToNumber('Michelle B')).not.toBe(hashStringToNumber('John Smith'));
+  });
+});
 
 describe('makeHashDecodeMap', () => {
   it('should return an empty map if decodeValues is empty', () => {

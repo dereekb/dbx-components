@@ -42,6 +42,7 @@ export class DbxAvatarComponent {
   readonly avatarSelector = input<Maybe<DbxAvatarSelector>>();
   readonly avatarUid = input<Maybe<AuthUserIdentifier>>();
   readonly avatarUrl = input<Maybe<WebsiteUrlWithPrefix>>();
+  readonly avatarName = input<Maybe<string>>();
   readonly avatarKey = input<Maybe<DbxAvatarKey>>();
   readonly avatarIcon = input<Maybe<string>>();
   readonly avatarStyle = input<Maybe<DbxAvatarStyle>>();
@@ -54,6 +55,7 @@ export class DbxAvatarComponent {
     const selector = this.avatarSelector() ?? inputContext?.selector;
     const uid = this.avatarUid() ?? inputContext?.uid;
     const url = this.avatarUrl() ?? inputContext?.url;
+    const name = this.avatarName() ?? inputContext?.name;
     const key = this.avatarKey() ?? inputContext?.key;
     const icon = this.avatarIcon() ?? inputContext?.icon;
     const style = this.avatarStyle() ?? inputContext?.style;
@@ -63,6 +65,7 @@ export class DbxAvatarComponent {
       selector,
       uid,
       url,
+      name,
       key,
       icon,
       style,

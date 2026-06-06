@@ -74,3 +74,45 @@ export function decodeHashedValuesWithDecodeMap(hashedValues: string[], decodeMa
   const values = hashedValues.map((x) => decodeMap.get(x));
   return filterMaybeArrayValues(values);
 }
+
+/**
+ * FNV-1a 32-bit offset basis.
+ */
+const FNV_1A_OFFSET_BASIS = 0x811c9dc5;
+
+/**
+ * FNV-1a 32-bit prime.
+ */
+const FNV_1A_PRIME = 0x01000193;
+
+/**
+ * Computes a stable, non-negative 32-bit integer hash for the input string using the FNV-1a algorithm.
+ *
+ * Deterministic and dependency-free (no `Math.random`): the same input always yields the same value,
+ * making it suitable for deterministically mapping a string onto a fixed-size set (e.g. picking a
+ * curated color for a name via `hashStringToNumber(value) % colors.length`).
+ *
+ * @param value - String to hash.
+ * @returns A non-negative integer in the range `[0, 2^32)`.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory hash
+ * @dbxUtilTags hash, string, number, deterministic, fnv, bucket, index
+ * @dbxUtilRelated decode-hashed-values
+ *
+ * @example
+ * ```ts
+ * hashStringToNumber('Michelle B'); // stable integer, same every call
+ * hashStringToNumber('Michelle B') % 12; // deterministic bucket index 0-11
+ * ```
+ */
+export function hashStringToNumber(value: string): number {
+  let hash = FNV_1A_OFFSET_BASIS;
+
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, FNV_1A_PRIME);
+  }
+
+  return hash >>> 0;
+}
