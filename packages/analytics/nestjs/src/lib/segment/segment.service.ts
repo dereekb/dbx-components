@@ -42,7 +42,9 @@ export class SegmentService {
       throw new Error('No userId was provided to track().');
     }
 
-    if (!this.config.logOnly) {
+    if (this.config.logOnly) {
+      this.logger.debug(`Segment (Log Only) - Track: ${userId} ${event.event}`);
+    } else {
       this.segmentApi.analytics.track({
         userId,
         event: event.event,
@@ -53,8 +55,6 @@ export class SegmentService {
           ...this._appContext()
         }
       });
-    } else {
-      this.logger.debug(`Segment (Log Only) - Track: ${userId} ${event.event}`);
     }
   }
 
@@ -88,7 +88,9 @@ export class SegmentService {
    * ```
    */
   identify(params: SegmentIdentifyParams): void {
-    if (!this.config.logOnly) {
+    if (this.config.logOnly) {
+      this.logger.debug(`Segment (Log Only) - Identify: ${params.userId}`);
+    } else {
       this.segmentApi.analytics.identify({
         ...params,
         context: {
@@ -96,8 +98,6 @@ export class SegmentService {
           ...this._appContext()
         }
       });
-    } else {
-      this.logger.debug(`Segment (Log Only) - Identify: ${params.userId}`);
     }
   }
 

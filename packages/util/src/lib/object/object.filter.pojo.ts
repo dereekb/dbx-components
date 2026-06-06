@@ -178,7 +178,7 @@ export interface OverrideInObjectFunctionFactoryConfig<T extends object> {
  * @__NO_SIDE_EFFECTS__
  */
 export function overrideInObjectFunctionFactory<T extends object>({ filter, copy, dynamic = false }: OverrideInObjectFunctionFactoryConfig<T>): OverrideInObjectFunctionFactory<T> {
-  const filterToRelevantValuesObject = filter != null ? filterFromPOJOFunction({ filter, copy: false }) : defaultFilterFromPOJOFunctionNoCopy;
+  const filterToRelevantValuesObject = filter == null ? defaultFilterFromPOJOFunctionNoCopy : filterFromPOJOFunction({ filter, copy: false });
 
   return (from: Partial<T>[]) => {
     const rebuildTemplate: Getter<Partial<T>> = () => {

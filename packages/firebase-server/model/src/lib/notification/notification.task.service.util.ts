@@ -28,11 +28,11 @@ export function removeFromCompletionsArrayWithTaskResult<S extends NotificationT
 
   if (removeAllCompletedCheckpoints) {
     result = [];
-  } else if (removeFromCompletedCheckpoints != null) {
+  } else if (removeFromCompletedCheckpoints == null) {
+    result = inputCompletions;
+  } else {
     const removeFromCompletionsSet = new Set(asArray(removeFromCompletedCheckpoints));
     result = inputCompletions.filter((x) => !removeFromCompletionsSet.has(x));
-  } else {
-    result = inputCompletions;
   }
 
   return result;

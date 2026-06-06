@@ -363,7 +363,7 @@ export function minAndMaxIndexItemsFunction<T>(readIndex: ReadIndexFunction<T>):
  * @returns A HashSet keyed by index number.
  */
 export function hashSetForIndexed<T extends IndexRef>(input?: ArrayOrValue<T>): HashSet<IndexNumber, T> {
-  const values = input != null ? asArray(input) : undefined;
+  const values = input == null ? undefined : asArray(input);
   return new HashSet<IndexNumber, T>({ readKey: readIndexNumber }, values);
 }
 

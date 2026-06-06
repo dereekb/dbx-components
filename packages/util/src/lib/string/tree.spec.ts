@@ -72,7 +72,7 @@ describe('splitStringTreeFactory()', () => {
         }
 
         const mergeMeta = (a: TestMeta, b: TestMeta) => {
-          return a !== b ? { ...a, ...b } : a; // return the same value if a and b are the same
+          return a === b ? a : { ...a, ...b }; // return the same value if a and b are the same
         };
 
         const factory = splitStringTreeFactory<TestMeta>({ separator: '/', mergeMeta });

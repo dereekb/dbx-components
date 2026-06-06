@@ -10,7 +10,7 @@ describe('handler config', () => {
   let handler: Handler<number, string>;
 
   beforeEach(() => {
-    handler = makeHandler((x: number) => String(x));
+    handler = makeHandler(String);
   });
 
   describe('handlerBindAccessor()', () => {

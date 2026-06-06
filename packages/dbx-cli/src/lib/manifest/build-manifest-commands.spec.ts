@@ -184,7 +184,7 @@ describe('buildManifestCommands', () => {
 });
 
 function normalize(s: string): string {
-  return s.replace(/\s+/g, ' ').trim();
+  return s.replaceAll(/\s+/g, ' ').trim();
 }
 
 describe('buildManifestCommands per-model `get` help text', () => {

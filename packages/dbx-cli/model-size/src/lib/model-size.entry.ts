@@ -21,7 +21,7 @@ function applySampleFile(profile: ModelSizeProfile, profilePath: string): ModelS
   if (profile.sampleFile) {
     const fromFile = loadSampleFile(profile.sampleFile, profilePath);
     // Inline `sample` values win over the referenced file.
-    result = { ...profile, sample: { ...fromFile, ...(profile.sample ?? {}) } };
+    result = { ...profile, sample: { ...fromFile, ...profile.sample } };
   } else {
     result = profile;
   }

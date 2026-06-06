@@ -173,7 +173,7 @@ export function unitedStatesAddressString(input: Maybe<Partial<UnitedStatesAddre
  * ```
  */
 export function isCompleteUnitedStatesAddress(input: Maybe<UnitedStatesAddress>): boolean {
-  return input != null ? Boolean(input.line1 && input.city && input.state && input.zip) : false;
+  return input == null ? false : Boolean(input.line1 && input.city && input.state && input.zip);
 }
 
 /**

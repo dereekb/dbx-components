@@ -389,7 +389,7 @@ export function storageFileUploadFiles(input: StorageFileUploadFilesInput): Stor
         if (nextProgressPercent) {
           // update the overall percentage
           const previousProgress = allFilesAndLatestProgress[fileIndex];
-          const previousProgressPercent = previousProgress?.progress != null ? previousProgress.progress * 100 : 0;
+          const previousProgressPercent = previousProgress?.progress == null ? 0 : previousProgress.progress * 100;
           const progressPercentChange = nextProgressPercent - previousProgressPercent;
 
           // increase overall progress by the change

@@ -28,6 +28,6 @@ import { type DateRange, formatDateDistance } from '@dereekb/date';
 })
 export class DateRangeDistancePipe implements PipeTransform {
   transform(input: Maybe<Date | DateRange>, unavailable: string = 'Not Available'): string {
-    return input != null ? formatDateDistance(input as Date, new Date()) : unavailable;
+    return input == null ? unavailable : formatDateDistance(input as Date, new Date());
   }
 }

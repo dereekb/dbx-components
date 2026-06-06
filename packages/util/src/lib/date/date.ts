@@ -840,5 +840,5 @@ export function addMilliseconds(input: Date, ms: Maybe<Milliseconds>): Date;
 export function addMilliseconds(input: MaybeNot, ms: Maybe<Milliseconds>): MaybeNot;
 export function addMilliseconds(input: Maybe<Date>, ms: Maybe<Milliseconds>): Maybe<Date>;
 export function addMilliseconds(input: Maybe<Date>, ms: Maybe<Milliseconds>): Maybe<Date> {
-  return input != null ? new Date(input.getTime() + (ms ?? 0)) : input;
+  return input == null ? input : new Date(input.getTime() + (ms ?? 0));
 }

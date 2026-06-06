@@ -29,9 +29,7 @@ export class DbxFirebaseNotificationItemWidgetService {
     if (override || !this._entries.has(notificationTemplateType)) {
       const notificationTemplateTypeInfo = this.dbxFirebaseNotificationTemplateService.appNotificationTemplateTypeInfoRecordService.appNotificationTemplateTypeInfoRecord[notificationTemplateType];
 
-      if (!notificationTemplateTypeInfo) {
-        console.warn(`DbxFirebaseNotificationItemWidgetService.register(): No known template type info was found for notification type: ${notificationTemplateType}. The entry is not being registered.`);
-      } else {
+      if (notificationTemplateTypeInfo) {
         const entry: DbxFirebaseNotificationItemWidgetEntry = {
           notificationTemplateType,
           notificationTemplateTypeInfo,
@@ -44,6 +42,8 @@ export class DbxFirebaseNotificationItemWidgetService {
         this._entries.set(notificationTemplateType, entry);
         this.dbxWidgetService.register(entry.widget, override);
         result = true;
+      } else {
+        console.warn(`DbxFirebaseNotificationItemWidgetService.register(): No known template type info was found for notification type: ${notificationTemplateType}. The entry is not being registered.`);
       }
     }
 

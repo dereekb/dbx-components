@@ -1,4 +1,4 @@
-import { type CharacterPrefixSuffixCleanString, type CssClass, type CssToken, cssTokenVar, type CssTokenVar, DASH_CHARACTER_PREFIX_INSTANCE, type DashPrefixString, type Maybe } from '@dereekb/util';
+import { type CharacterPrefixSuffixCleanString, type CssClass, type CssToken, cssTokenVar, type CssTokenVar, DASH_CHARACTER_PREFIX_INSTANCE, type DashPrefixString, hashStringToNumber, type Maybe } from '@dereekb/util';
 
 // MARK: App Styling
 /**
@@ -127,6 +127,11 @@ export interface DbxColorConfigTemplate {
    * Template values applied when an input {@link DbxColorConfig} references this template.
    */
   readonly config: DbxColorConfig;
+  /**
+   * When true, the template participates in the "curated color set" — the pool of colors used by
+   * deterministic color pickers (e.g. avatar initials backgrounds via {@link dbxCuratedColorConfigForString}).
+   */
+  readonly curated?: Maybe<boolean>;
 }
 
 /**
@@ -198,6 +203,73 @@ export type DbxColorInput = DbxThemeColor | DbxColorConfig | '';
  */
 export function isDbxColorConfig(value: Maybe<DbxColorInput>): value is DbxColorConfig {
   return typeof value === 'object' && value !== null;
+}
+
+// MARK: Curated Colors
+/**
+ * Number of curated colors shipped in the default curated color set.
+ *
+ * Matches the `--dbx-curated-color-1` … `--dbx-curated-color-{@link DBX_CURATED_COLOR_COUNT}` CSS tokens
+ * declared by the dbx-web theme.
+ */
+export const DBX_CURATED_COLOR_COUNT = 12;
+
+/**
+ * Key prefix used for the default curated color templates ({@link DBX_CURATED_COLOR_TEMPLATES}).
+ */
+export const DBX_CURATED_COLOR_TEMPLATE_KEY_PREFIX = 'curated-';
+
+/**
+ * Default curated color templates ({@link DBX_CURATED_COLOR_COUNT} entries).
+ *
+ * Each template is flagged {@link DbxColorConfigTemplate.curated} and references the
+ * `--dbx-curated-color-N` / `--dbx-curated-color-N-contrast` CSS tokens (rather than literal color
+ * values) so applications can override the palette by overriding those tokens. The `var(...)` values
+ * are applied directly by `[dbxColor]` even when the `DbxColorService` has not expanded the template.
+ *
+ * Registered automatically by the `DbxColorService` so the curated set is always available.
+ */
+export const DBX_CURATED_COLOR_TEMPLATES: DbxColorConfigTemplate[] = Array.from({ length: DBX_CURATED_COLOR_COUNT }, (_, index) => {
+  const colorNumber = index + 1;
+
+  return {
+    key: `${DBX_CURATED_COLOR_TEMPLATE_KEY_PREFIX}${colorNumber}`,
+    curated: true,
+    config: {
+      color: `var(--dbx-curated-color-${colorNumber})`,
+      contrast: `var(--dbx-curated-color-${colorNumber}-contrast)`
+    }
+  };
+});
+
+/**
+ * Deterministically selects a curated {@link DbxColorConfig} for the given string.
+ *
+ * The same input string always maps to the same curated color (via {@link hashStringToNumber}),
+ * making it suitable for stable, name-derived colors such as avatar initials backgrounds. The
+ * returned config includes the picked template's `key` (so the `DbxColorService` can re-expand it
+ * with app overrides) alongside its `var(...)`-backed color values (so it renders even without the service).
+ *
+ * @param value - The string to derive a curated color from (e.g. a person's name).
+ * @param templates - Curated templates to pick from. Defaults to {@link DBX_CURATED_COLOR_TEMPLATES}.
+ * @returns The selected curated config, or `null` when the value is blank or no templates are available.
+ *
+ * @example
+ * ```ts
+ * dbxCuratedColorConfigForString('Michelle B');
+ * // -> { color: 'var(--dbx-curated-color-3)', contrast: 'var(--dbx-curated-color-3-contrast)', template: 'curated-3' }
+ * ```
+ */
+export function dbxCuratedColorConfigForString(value: Maybe<string>, templates: DbxColorConfigTemplate[] = DBX_CURATED_COLOR_TEMPLATES): Maybe<DbxColorConfig> {
+  let result: Maybe<DbxColorConfig>;
+
+  if (value && templates.length > 0) {
+    const index = hashStringToNumber(value) % templates.length;
+    const template = templates[index];
+    result = { ...template.config, template: template.key };
+  }
+
+  return result;
 }
 
 /**

@@ -263,7 +263,7 @@ export function where<T = object>(fieldPath: FieldPathOrStringPathOf<T> | FieldP
   switch (opStr) {
     case 'array-contains':
       if (Array.isArray(value)) {
-        throw new Error('array-contains does not accept array values. Did you mean "array-contains-any"?');
+        throw new TypeError('array-contains does not accept array values. Did you mean "array-contains-any"?');
       }
       break;
     case 'in':

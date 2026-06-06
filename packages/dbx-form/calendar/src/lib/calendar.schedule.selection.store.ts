@@ -670,8 +670,8 @@ export function updateStateWithMinMaxDateRange(state: CalendarScheduleSelectionS
     state = {
       ...state,
       minMaxDateRange: {
-        start: minMaxDateRange.start != null ? startOfDay(minMaxDateRange.start) : undefined,
-        end: minMaxDateRange.end != null ? endOfDay(minMaxDateRange.end) : undefined
+        start: minMaxDateRange.start == null ? undefined : startOfDay(minMaxDateRange.start),
+        end: minMaxDateRange.end == null ? undefined : endOfDay(minMaxDateRange.end)
       }
     };
   } else {
@@ -719,11 +719,11 @@ export function updateStateWithFilter(currentState: CalendarScheduleSelectionSta
         filterStart = inputFilter.start;
 
         // if no timezone is specified, then use the system timezone and align filterStart to the start of the day.
-        if (!inputFilter.timezone) {
+        if (inputFilter.timezone) {
+          nextFilterTimezone = inputFilter.timezone;
+        } else {
           filterStart = SYSTEM_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(inputFilter.startsAt);
           nextFilterTimezone = systemTimezone;
-        } else {
-          nextFilterTimezone = inputFilter.timezone;
         }
       } else if (inputFilter.startsAt) {
         if (inputFilter.timezone) {
@@ -780,14 +780,14 @@ export function updateStateWithFilter(currentState: CalendarScheduleSelectionSta
         finalEnabledStart = currentState.start;
         finalEnabledTimezone = systemTimezone;
       }
-    } else if (!enabledFilter.timezone) {
+    } else if (enabledFilter.timezone) {
+      finalEnabledStart = enabledFilter.start;
+      finalEnabledTimezone = enabledFilter.timezone;
+    } else {
       finalEnabledTimezone = systemTimezone;
 
       const timezoneNormal = dateTimezoneUtcNormal(finalEnabledTimezone);
       finalEnabledStart = timezoneNormal.startOfDayInTargetTimezone(enabledFilter.start); // get the start of the day for the target timezone
-    } else {
-      finalEnabledStart = enabledFilter.start;
-      finalEnabledTimezone = enabledFilter.timezone;
     }
 
     enabledFilter.start = finalEnabledStart;
@@ -1140,18 +1140,18 @@ export function updateStateWithChangedDates(state: CalendarScheduleSelectionStat
         // when the filter is not set, use the least and greatest indexes from the input set.
         const minAndMax = minAndMaxNumber(inputSetIndexes);
 
-        if (minAndMax != null) {
+        if (minAndMax == null) {
+          // equivalent to an empty set / using "none" with selectAll.
+          inputStart = null;
+          inputEnd = null;
+          toggledIndexes = new Set();
+        } else {
           minIndex = minAndMax.min;
           maxIndex = minAndMax.max;
           const dateFactory = dateCellTimingStartDateFactory(indexFactory._timing);
 
           inputStart = dateFactory(minAndMax.min);
           inputEnd = minAndMax.min === minAndMax.max ? inputStart : dateFactory(minAndMax.max);
-        } else {
-          // equivalent to an empty set / using "none" with selectAll.
-          inputStart = null;
-          inputEnd = null;
-          toggledIndexes = new Set();
         }
       }
 
@@ -1431,7 +1431,7 @@ export function computeScheduleSelectionRangeAndExclusion(state: CalendarSchedul
 export function computeCalendarScheduleSelectionRange(state: CalendarScheduleSelectionState): Maybe<DateRange> {
   const dateFactory = dateCellTimingDateFactory({ startsAt: state.start, timezone: state.systemTimezone });
   const dateCellRange = computeCalendarScheduleSelectionDateCellRange(state);
-  const dateRange: Maybe<DateRange> = dateCellRange != null ? { start: dateFactory(dateCellRange.i), end: dateFactory(dateCellRange.to) } : undefined;
+  const dateRange: Maybe<DateRange> = dateCellRange == null ? undefined : { start: dateFactory(dateCellRange.i), end: dateFactory(dateCellRange.to) };
   return dateRange;
 }
 
@@ -1458,8 +1458,8 @@ export function computeCalendarScheduleSelectionDateCellRange(state: CalendarSch
     const inputStartIndex = indexFactory(inputStart);
     const inputEndIndex = indexFactory(inputEnd);
 
-    startRange = startRange != null ? Math.min(inputStartIndex, startRange) : inputStartIndex;
-    endRange = endRange != null ? Math.max(inputEndIndex, endRange) : inputEndIndex;
+    startRange = startRange == null ? inputStartIndex : Math.min(inputStartIndex, startRange);
+    endRange = endRange == null ? inputEndIndex : Math.max(inputEndIndex, endRange);
   }
 
   if (startRange != null && endRange != null) {

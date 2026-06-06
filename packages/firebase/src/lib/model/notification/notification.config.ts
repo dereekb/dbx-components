@@ -162,7 +162,7 @@ export function updateNotificationRecipient(a: NotificationRecipient, b: Partial
     n: updateMaybeValue(a.n, inputN),
     e: updateMaybeValue(a.e, inputE),
     t: updateMaybeValue(a.t, inputT),
-    s: uid != null ? null : updateMaybeValue(a.s, inputS) // null if uid is defined
+    s: uid == null ? updateMaybeValue(a.s, inputS) : null // null if uid is defined
   };
 }
 

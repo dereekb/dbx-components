@@ -28,6 +28,6 @@ import { cutString, type Maybe } from '@dereekb/util';
 })
 export class CutTextPipe implements PipeTransform {
   transform(input: Maybe<string>, maxLength: number, endText?: Maybe<string>): Maybe<string> {
-    return input != null ? cutString(input, maxLength, endText) : input;
+    return input == null ? input : cutString(input, maxLength, endText);
   }
 }

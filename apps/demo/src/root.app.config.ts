@@ -214,7 +214,7 @@ export const APP_CONFIG: ApplicationConfig = {
         strictActionTypeUniqueness: true
       }
     }),
-    !environment.production ? provideStoreDevtools({ maxAge: 25, logOnly: environment.production, connectInZone: true }) : [],
+    environment.production ? [] : provideStoreDevtools({ maxAge: 25, logOnly: environment.production, connectInZone: true }),
     // dbx-analytics
     provideDbxAnalyticsSegmentApiService({
       dbxAnalyticsSegmentApiServiceConfigFactory

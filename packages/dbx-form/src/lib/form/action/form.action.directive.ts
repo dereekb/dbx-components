@@ -148,10 +148,10 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
       .subscribe((result: DbxActionValueGetterResult<O>) => {
         if (result.reject) {
           this.source.reject(result.reject);
-        } else if (result.value != null) {
-          this.source.readyValue(result.value);
-        } else {
+        } else if (result.value == null) {
           // value isn't ready
+        } else {
+          this.source.readyValue(result.value);
         }
       });
 
@@ -212,8 +212,8 @@ export class DbxActionFormDirective<T = object, O = T> implements OnInit {
    */
   checkIsValidAndIsModified(value: T, overrides?: CheckValidAndModifiedOverrides<T>): Observable<[IsValid, IsModified]> {
     const { isModifiedFunction: overrideIsModifiedFunction, isValidFunction: overrideIsValidFunction } = overrides ?? {};
-    const isValidFunctionObs = overrideIsValidFunction != null ? of(overrideIsValidFunction) : this.isValidFunction$;
-    const isModifiedFunctionObs = overrideIsModifiedFunction != null ? of(overrideIsModifiedFunction) : this.isModifiedFunction$;
+    const isValidFunctionObs = overrideIsValidFunction == null ? this.isValidFunction$ : of(overrideIsValidFunction);
+    const isModifiedFunctionObs = overrideIsModifiedFunction == null ? this.isModifiedFunction$ : of(overrideIsModifiedFunction);
 
     return combineLatest([isValidFunctionObs, isModifiedFunctionObs]).pipe(
       switchMap(([isValid, isModified]) => {

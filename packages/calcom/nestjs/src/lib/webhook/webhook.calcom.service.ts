@@ -33,10 +33,10 @@ export class CalcomWebhookService {
     const { valid, event } = this._verifier(rawBody, headers);
     let handled: boolean = false;
 
-    if (!valid) {
-      this.logger.warn('Received invalid calcom event: ', event);
-    } else {
+    if (valid) {
       handled = await this.updateForCalcomEvent(event);
+    } else {
+      this.logger.warn('Received invalid calcom event: ', event);
     }
 
     const result: CalcomUpdateForWebhookResponse = {

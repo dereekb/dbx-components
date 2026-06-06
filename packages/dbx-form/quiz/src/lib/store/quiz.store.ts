@@ -171,7 +171,9 @@ export class QuizStore extends ComponentStore<QuizStoreState> {
           result = this.currentQuestion$.pipe(switchMap((question) => this.answerForQuestion({ index: question?.index })));
         } else if (id != null) {
           result = this.answers$.pipe(map((answers) => answers.get(id)));
-        } else if (index != null) {
+        } else if (index == null) {
+          result = of(undefined);
+        } else {
           result = this.questions$.pipe(
             switchMap((questions) => {
               const question = questions[index];
@@ -186,8 +188,6 @@ export class QuizStore extends ComponentStore<QuizStoreState> {
               return result;
             })
           );
-        } else {
-          result = of(undefined);
         }
 
         return result;

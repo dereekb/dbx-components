@@ -91,7 +91,7 @@ function hasExemptJsdoc(sourceCode: AstNode, node: AstNode, exemptTag: string): 
  * @returns The suggested identifier with `DEFAULT_` prefixed.
  */
 function suggestedName(name: string): string {
-  const stripped = name.replace(/_DEFAULT(?=_|$)/g, '');
+  const stripped = name.replaceAll(/_DEFAULT(?=_|$)/g, '');
   return `DEFAULT_${stripped}`;
 }
 

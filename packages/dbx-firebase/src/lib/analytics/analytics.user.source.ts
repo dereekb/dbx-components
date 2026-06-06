@@ -40,15 +40,15 @@ export class DbxFirebaseAnalyticsUserSource implements DbxAnalyticsUserSource {
     switchMap(([userPropertiesFactory, x]) => {
       let analyticsUser: Observable<Maybe<AnalyticsUser>>;
 
-      if (x != null) {
+      if (x == null) {
+        analyticsUser = of(null);
+      } else {
         analyticsUser = userPropertiesFactory(x).pipe(
           map((properties) => ({
             user: x.uid,
             properties
           }))
         );
-      } else {
-        analyticsUser = of(null);
       }
 
       return analyticsUser;

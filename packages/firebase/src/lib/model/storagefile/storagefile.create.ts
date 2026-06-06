@@ -201,7 +201,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
   const { defaultCreationType: inputDefaultCreationType, defaultShouldBeProcessed: inputDefaultShouldBeProcessed, defaultPurposeSubgroup: inputDefaultPurposeSubgroup } = config;
   const defaultCreationType = inputDefaultCreationType ?? StorageFileCreationType.DIRECTLY_CREATED;
   const defaultShouldBeProcessed = inputDefaultShouldBeProcessed ?? false;
-  const defaultPurposeSubgroup = inputDefaultPurposeSubgroup != null ? (inputDefaultPurposeSubgroup === true ? EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP : inputDefaultPurposeSubgroup) : undefined;
+  const defaultPurposeSubgroup = inputDefaultPurposeSubgroup == null ? undefined : inputDefaultPurposeSubgroup === true ? EMPTY_STORAGE_FILE_PURPOSE_SUBGROUP : inputDefaultPurposeSubgroup;
 
   return async <M extends StorageFileMetadata = StorageFileMetadata>(input: CreateStorageFileDocumentPairInput<M>) => {
     const { template: inputTemplate, accessor: inputAccessor, transaction, context, now: inputNow, displayName, uploadedBy, user, ownershipKey, purpose, purposeSubgroup, metadata, shouldBeProcessed, parentStorageFileGroup, storageFileGroupIds, flagForStorageFileGroupsSync } = input;
@@ -227,7 +227,7 @@ export function createStorageFileDocumentPairFactory(config: CreateStorageFileDo
     let storageFileDocument;
 
     const p = purpose ?? inputTemplate?.p;
-    const pg = purposeSubgroup ?? inputTemplate?.pg ?? (p != null ? defaultPurposeSubgroup : undefined);
+    const pg = purposeSubgroup ?? inputTemplate?.pg ?? (p == null ? undefined : defaultPurposeSubgroup);
     const ct = inputTemplate?.ct ?? defaultCreationType;
 
     if (ct === StorageFileCreationType.FOR_STORAGE_FILE_GROUP) {

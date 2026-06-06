@@ -108,10 +108,10 @@ export class DbxActionValueGetterInstance<T> implements Initialized, Destroyable
         )
       )
       .subscribe((result: DbxActionValueGetterResult<T>) => {
-        if (result.value != null) {
-          this.source.readyValue(result.value);
-        } else {
+        if (result.value == null) {
           this.source.reject(result.reject);
+        } else {
+          this.source.readyValue(result.value);
         }
       });
   }

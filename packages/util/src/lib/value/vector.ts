@@ -70,8 +70,8 @@ export type VectorResizeFunction = (input: Vector) => Vector;
 export function vectorMinimumSizeResizeFunction(minSize: Partial<Vector>): VectorResizeFunction {
   return (input: Vector) => {
     return {
-      x: minSize.x != null ? Math.max(input.x, minSize.x) : input.x,
-      y: minSize.y != null ? Math.max(input.y, minSize.y) : input.y
+      x: minSize.x == null ? input.x : Math.max(input.x, minSize.x),
+      y: minSize.y == null ? input.y : Math.max(input.y, minSize.y)
     };
   };
 }

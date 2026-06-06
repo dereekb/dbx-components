@@ -62,7 +62,7 @@ describe('oauth.service', () => {
           expect(result.accessToken).toBeDefined();
           expect(result.expiresIn).toBeDefined();
           expect(result.expiresAt).toBeDefined();
-          expect(result.expiresAt.getTime()).toBeGreaterThan(new Date().getTime());
+          expect(result.expiresAt.getTime()).toBeGreaterThan(Date.now());
 
           const tokenCache = cacheService.loadZoomAccessTokenCache();
           const cachedToken = await tokenCache.loadCachedToken();

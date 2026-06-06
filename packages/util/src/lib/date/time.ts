@@ -313,5 +313,5 @@ export function toggleTimerRunning(timer: Timer, toggleRun?: boolean): void {
 export function approximateTimerEndDate(timer: Timer): Maybe<Date> {
   const durationRemaining = timer.durationRemaining;
 
-  return durationRemaining != null ? new Date(Date.now() + durationRemaining) : null;
+  return durationRemaining == null ? null : new Date(Date.now() + durationRemaining);
 }

@@ -13,10 +13,10 @@
  *    params type by stripping the `Type` suffix.
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { type Dirent } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { Project, SyntaxKind, type SourceFile } from 'ts-morph';
+import { collectFilesWithSuffix } from '../_core/collect-files.js';
 import type { ActionResolution, FactoryResolution } from './types.js';
 
 const ACTION_SERVER_SUFFIX = '.action.server.ts';
@@ -37,7 +37,7 @@ export interface ActionLookupResult {
  */
 export async function buildActionLookup(apiAbs: string): Promise<ActionLookupResult> {
   const modelRoot = join(apiAbs, COMMON_MODEL_SUBPATH);
-  const files = await collectActionFiles(modelRoot);
+  const files = await collectFilesWithSuffix(modelRoot, ACTION_SERVER_SUFFIX);
   const methodsByParams = new Map<string, ActionResolution>();
   const factoriesByParams = new Map<string, FactoryResolution>();
   if (files.length === 0) {
@@ -52,54 +52,6 @@ export async function buildActionLookup(apiAbs: string): Promise<ActionLookupRes
     collectFactoryFunctions({ sourceFile, sourceFileRel, factoriesByParams });
   }
   return { methodsByParams, factoriesByParams, filesScanned: files.length };
-}
-
-/**
- * Reads a directory's `Dirent` entries; returns an empty list when the
- * path is unreadable.
- *
- * @param path - Absolute directory path.
- * @returns The directory entries or `[]` on failure.
- */
-async function readDirSafe(path: string): Promise<readonly Dirent[]> {
-  let result: readonly Dirent[];
-  try {
-    result = await readdir(path, { withFileTypes: true });
-  } catch {
-    result = [];
-  }
-  return result;
-}
-
-async function collectActionFiles(root: string): Promise<readonly string[]> {
-  const out: string[] = [];
-  const stack: string[] = [];
-  let isDir = false;
-  try {
-    const stats = await stat(root);
-    isDir = stats.isDirectory();
-  } catch {
-    isDir = false;
-  }
-  if (isDir) {
-    stack.push(root);
-    while (stack.length > 0) {
-      const current = stack.pop() as string;
-      const entries = await readDirSafe(current);
-      for (const entry of entries) {
-        const full = join(current, entry.name);
-        if (entry.isDirectory()) {
-          stack.push(full);
-          continue;
-        }
-        if (entry.isFile() && entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-          out.push(full);
-        }
-      }
-    }
-    out.sort((a, b) => a.localeCompare(b));
-  }
-  return out;
 }
 
 interface CollectMethodsInput {
@@ -204,10 +156,10 @@ function stripParamsTypeSuffix(validatorName: string): string | undefined {
 }
 
 function readJsDoc(jsDocs: ReturnType<ReturnType<SourceFile['getFunctions']>[number]['getJsDocs']>): string | undefined {
-  if (jsDocs.length === 0) {
+  const last = jsDocs.at(-1);
+  if (!last) {
     return undefined;
   }
-  const last = jsDocs[jsDocs.length - 1];
   const description = last.getDescription().trim();
   return description.length > 0 ? description : undefined;
 }

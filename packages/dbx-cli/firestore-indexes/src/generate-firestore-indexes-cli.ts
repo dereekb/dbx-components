@@ -20,7 +20,6 @@
  * factory (round-tripped verbatim from the existing file).
  */
 
-import type { Maybe } from '@dereekb/util';
 import { readFile as nodeReadFile, writeFile as nodeWriteFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { buildModelFirebaseIndexManifest, type BuildModelFirebaseIndexManifestOutcome } from './model-firebase-index-build-manifest.js';
@@ -248,39 +247,79 @@ interface ReadExistingIndexesInput {
 }
 
 async function readExistingIndexes(input: ReadExistingIndexesInput): Promise<FirestoreIndexesJson | undefined> {
+  const text = await readExistingIndexesText(input);
+  let result: FirestoreIndexesJson | undefined;
+  if (text !== undefined) {
+    result = parseExistingIndexesJson(text, input.outputAbs, input.stderr);
+  }
+  return result;
+}
+
+/**
+ * Reads the existing indexes file, logging any non-`ENOENT` read error.
+ *
+ * @param input - The output path, file reader, and stderr logger.
+ * @returns The file text, or `undefined` when the file is absent or unreadable.
+ */
+async function readExistingIndexesText(input: ReadExistingIndexesInput): Promise<string | undefined> {
   const { outputAbs, readFile, stderr } = input;
-  let text: Maybe<string> = null;
-  let readFailed = false;
+  let text: string | undefined;
   try {
     text = await readFile(outputAbs);
   } catch (err) {
-    readFailed = true;
     const code = (err as NodeJS.ErrnoException).code;
     if (code !== 'ENOENT') {
       stderr(`generate-firestore-indexes: could not read existing ${outputAbs}: ${err instanceof Error ? err.message : String(err)}`);
     }
+    text = undefined;
   }
+  return text;
+}
 
+/**
+ * Parses the existing indexes file text into a {@link FirestoreIndexesJson},
+ * logging (and yielding `undefined`) on malformed JSON.
+ *
+ * @param text - The raw file contents.
+ * @param outputAbs - The file path, used in diagnostic messages.
+ * @param stderr - The stderr logger.
+ * @returns The parsed indexes object, or `undefined` when the JSON is invalid.
+ */
+function parseExistingIndexesJson(text: string, outputAbs: string, stderr: GenerateFirestoreIndexesCliLogger): FirestoreIndexesJson | undefined {
   let result: FirestoreIndexesJson | undefined;
-  if (!readFailed && text !== null) {
-    let parsed: unknown;
-    let parseFailed = false;
-    try {
-      parsed = JSON.parse(text);
-    } catch (err) {
-      parseFailed = true;
-      stderr(`generate-firestore-indexes: existing ${outputAbs} is not valid JSON: ${err instanceof Error ? err.message : String(err)}`);
-    }
-    if (!parseFailed) {
-      if (parsed === null || typeof parsed !== 'object') {
-        stderr(`generate-firestore-indexes: existing ${outputAbs} top-level value is not an object`);
-      } else {
-        const raw = parsed as { indexes?: unknown; fieldOverrides?: unknown };
-        const indexes = Array.isArray(raw.indexes) ? (raw.indexes as FirestoreIndexesJson['indexes']) : [];
-        const fieldOverrides = Array.isArray(raw.fieldOverrides) ? (raw.fieldOverrides as FirestoreIndexesJson['fieldOverrides']) : [];
-        result = { indexes, fieldOverrides };
-      }
-    }
+  let parsed: unknown;
+  let parseFailed = false;
+  try {
+    parsed = JSON.parse(text);
+  } catch (err) {
+    parseFailed = true;
+    stderr(`generate-firestore-indexes: existing ${outputAbs} is not valid JSON: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  if (!parseFailed) {
+    result = coerceFirestoreIndexesJson(parsed, outputAbs, stderr);
+  }
+  return result;
+}
+
+/**
+ * Coerces a parsed JSON value into a {@link FirestoreIndexesJson}, defaulting
+ * non-array `indexes` / `fieldOverrides` to empty lists. Logs (and yields
+ * `undefined`) when the top-level value is not an object.
+ *
+ * @param parsed - The parsed JSON value.
+ * @param outputAbs - The file path, used in diagnostic messages.
+ * @param stderr - The stderr logger.
+ * @returns The coerced indexes object, or `undefined` when the value is not an object.
+ */
+function coerceFirestoreIndexesJson(parsed: unknown, outputAbs: string, stderr: GenerateFirestoreIndexesCliLogger): FirestoreIndexesJson | undefined {
+  let result: FirestoreIndexesJson | undefined;
+  if (parsed === null || typeof parsed !== 'object') {
+    stderr(`generate-firestore-indexes: existing ${outputAbs} top-level value is not an object`);
+  } else {
+    const raw = parsed as { indexes?: unknown; fieldOverrides?: unknown };
+    const indexes = Array.isArray(raw.indexes) ? (raw.indexes as FirestoreIndexesJson['indexes']) : [];
+    const fieldOverrides = Array.isArray(raw.fieldOverrides) ? (raw.fieldOverrides as FirestoreIndexesJson['fieldOverrides']) : [];
+    result = { indexes, fieldOverrides };
   }
   return result;
 }

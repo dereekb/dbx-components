@@ -48,7 +48,9 @@ export function primativeKeyDencoderMap<D extends PrimativeKey, E extends Primat
 
   let valuesArray: [E, D][];
 
-  if (!Array.isArray(values)) {
+  if (Array.isArray(values)) {
+    valuesArray = values;
+  } else {
     valuesArray = [];
 
     forEachKeyValue(values, {
@@ -57,8 +59,6 @@ export function primativeKeyDencoderMap<D extends PrimativeKey, E extends Primat
       },
       filter: KeyValueTypleValueFilter.UNDEFINED
     });
-  } else {
-    valuesArray = values;
   }
 
   valuesArray.forEach((value) => {

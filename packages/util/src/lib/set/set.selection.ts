@@ -45,7 +45,7 @@ export function isSelectedDecisionFunctionFactory<T, K extends PrimativeKey = Pr
 
     return (value: T) => {
       const key = readKey(value);
-      return key != null ? selectedValuesSet.has(key) : defaultIfKeyNull;
+      return key == null ? defaultIfKeyNull : selectedValuesSet.has(key);
     };
   };
 }

@@ -60,7 +60,7 @@ export function formlyValueSelectionField<T>(config: ValueSelectionFieldConfig<T
   const options = addClearOption ? asObservable(inputOptions).pipe(map(formlyAddValueSelectionOptionFunction(typeof addClearOption === 'string' ? addClearOption : undefined))) : inputOptions;
   let parsers: FieldValueParser[] | undefined = undefined;
 
-  parsers = config.multiple !== true ? [firstValue] : [convertMaybeToArray];
+  parsers = config.multiple === true ? [convertMaybeToArray] : [firstValue];
 
   return formlyField({
     key,

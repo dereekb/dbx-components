@@ -31,7 +31,7 @@ export class DbxFirebaseNotificationItemStorePopoverButtonComponent extends Abst
 
   protected override _makePopoverRef(origin?: ElementRef): NgPopoverRef<unknown, unknown> {
     const config = this.config();
-    const notificationItemsLoadingState$ = config?.notificationItemsLoadingState$ ?? (this._dbxFirebaseNotificationItemStore != null ? loadingStateFromObs(this._dbxFirebaseNotificationItemStore.items$) : undefined);
+    const notificationItemsLoadingState$ = config?.notificationItemsLoadingState$ ?? (this._dbxFirebaseNotificationItemStore == null ? undefined : loadingStateFromObs(this._dbxFirebaseNotificationItemStore.items$));
 
     if (!origin) {
       throw new Error('Missing origin.');

@@ -346,14 +346,7 @@ export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: Date
     // input range is a number of days
     numberOfDayBlocks = rangeInput - 1;
     rangeInUtc = createRangeWithStart(startsAtInUtc);
-  } else if (!isDateRange(rangeInput)) {
-    // inputRange is a distance
-    numberOfDayBlocks = rangeInput.distance - 1;
-
-    const startDateInUtc = rangeInput.date ? normalInstance.baseDateToSystemDate(rangeInput.date) : startsAtInUtc;
-    rangeInUtc = createRangeWithStart(startDateInUtc);
-    hasRangeFromInput = true;
-  } else {
+  } else if (isDateRange(rangeInput)) {
     // input range is a DateRange
     if (!isValidDateCellTimingStartDate(rangeInput.start)) {
       throw new Error('Invalid dateCellTiming start date passed to dateCellTiming() via inputRange.');
@@ -361,6 +354,13 @@ export function dateCellTiming(durationInput: DateDurationSpan, rangeInput: Date
 
     rangeInUtc = normalInstance.transformDateRangeToTimezoneFunction('baseDateToSystemDate')(rangeInput);
     numberOfDayBlocks = differenceInDays(rangeInput.end, rangeInput.start); // min of 1 day. Uses system time as-is
+    hasRangeFromInput = true;
+  } else {
+    // inputRange is a distance
+    numberOfDayBlocks = rangeInput.distance - 1;
+
+    const startDateInUtc = rangeInput.date ? normalInstance.baseDateToSystemDate(rangeInput.date) : startsAtInUtc;
+    rangeInUtc = createRangeWithStart(startDateInUtc);
     hasRangeFromInput = true;
   }
 

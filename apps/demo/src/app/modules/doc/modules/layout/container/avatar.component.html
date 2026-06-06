@@ -57,6 +57,47 @@
         <dbx-avatar [avatarUrl]="demoBrokenAvatarUrl" avatarStyle="square" avatarIcon="cancel"></dbx-avatar>
       </div>
     </doc-feature-example>
+    <doc-feature-example header="Avatar with name (curated colors)" hint="When a name or characters are provided and no image is shown, the avatar renders initials on a curated color background.">
+      <h3>Named avatars</h3>
+      <p>Each name maps to a curated color from the curated color set. The same name always maps to the same color (deterministic).</p>
+      <p>Initials use the first letter of the first two words (e.g. "Michelle B" → "MB").</p>
+      <div class="avatar-example-row">
+        @for (name of demoAvatarNames; track name) {
+          <dbx-avatar [avatarName]="name"></dbx-avatar>
+          <span class="dbx-button-spacer"></span>
+        }
+      </div>
+      <h3>Sizes and styles</h3>
+      <p>Initials scale with the avatar size, and support both circle and square styles.</p>
+      <div class="avatar-example-row">
+        <dbx-avatar avatarSize="small" avatarName="Michelle B"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar avatarSize="small" avatarStyle="square" avatarName="Michelle B"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar avatarName="Michelle B"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar avatarStyle="square" avatarName="Michelle B"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar avatarSize="large" avatarName="Michelle B"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar avatarSize="large" avatarStyle="square" avatarName="Michelle B"></dbx-avatar>
+      </div>
+      <h3>Characters</h3>
+      <p>Single or double character strings pass through verbatim (e.g. "A" → "A", "BB" → "BB").</p>
+      <div class="avatar-example-row">
+        @for (characters of demoAvatarCharacters; track characters) {
+          <dbx-avatar [avatarName]="characters"></dbx-avatar>
+          <span class="dbx-button-spacer"></span>
+        }
+      </div>
+      <h3>Name with broken url</h3>
+      <p>When an image url fails to load and a name is set, the avatar falls back to the initials (instead of the icon).</p>
+      <div class="avatar-example-row">
+        <dbx-avatar [avatarUrl]="demoBrokenAvatarUrl" avatarName="Michelle B"></dbx-avatar>
+        <span class="dbx-button-spacer"></span>
+        <dbx-avatar [avatarUrl]="demoBrokenAvatarUrl" avatarStyle="square" avatarName="John Smith"></dbx-avatar>
+      </div>
+    </doc-feature-example>
     <doc-feature-example header="DbxAvatarViewService" hint="Service that contains the configuration for avatar customization.">
       <h4>DbxAvatarViewServiceConfig</h4>
       <p>You can provide this configuration in root.app.config.ts to configure the DbxAvatarViewService.</p>

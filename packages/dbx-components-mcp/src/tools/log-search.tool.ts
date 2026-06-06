@@ -93,7 +93,7 @@ function parseArgs(input: ParseArgsInput): ParsedArgs {
   }
   const rawQuery = parsed.query?.trim();
   const query = rawQuery !== undefined && rawQuery.length > 0 ? rawQuery : undefined;
-  const mode = parsed.mode ?? (query !== undefined ? 'fuzzy' : 'list');
+  const mode = parsed.mode ?? (query === undefined ? 'list' : 'fuzzy');
   const limit = clamp(parsed.limit ?? DEFAULT_LIMIT, 1, MAX_LIMIT);
   const days = clamp(parsed.days ?? DEFAULT_DAYS, 1, MAX_DAYS);
   const cwd = parsed.cwd ?? process.cwd();

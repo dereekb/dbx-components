@@ -51,7 +51,7 @@ export type VapiAiWebhookEventVerifier = (req: Request, rawBody: Buffer) => Prom
  */
 export function vapiAiWebhookEventVerifier(config: VapiApiWebhookEventVerificationConfig): VapiAiWebhookEventVerifier {
   const { verificationType: inputVerificationType, secret: inputSecret, hmacSecret: inputHmacSecret, signaturePrefix: inputSignaturePrefix } = config;
-  const verificationType = inputVerificationType ?? (inputHmacSecret != null ? 'hmac' : 'secret'); // default to secret always, never default to none
+  const verificationType = inputVerificationType ?? (inputHmacSecret == null ? 'secret' : 'hmac'); // default to secret always, never default to none
   const secretToken = (verificationType === 'hmac' ? (inputHmacSecret ?? inputSecret) : inputSecret) ?? '';
   const signaturePrefix = inputSignaturePrefix ?? '';
 

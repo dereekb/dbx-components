@@ -32,18 +32,11 @@ function formatPercent(fraction: number): string {
 export function formatModelSizeReport(report: ModelSizeReport): string {
   const lines: string[] = [];
 
-  lines.push(`Snapshot size — ${report.exportName}`);
-  lines.push(`  source: ${report.sourceFile}`);
-  lines.push('');
-  lines.push(`  stringified size : ${formatBytes(report.bytes)}  [headline]`);
-  lines.push(`  limit            : ${formatBytes(report.limitBytes)}`);
-  lines.push(`  used             : ${formatPercent(report.percentOfLimit)}  ${report.withinLimit ? 'OK — within limit' : 'OVER LIMIT'}`);
-  lines.push(`  firestore approx : ${formatBytes(report.firestoreApproxBytes)}  [secondary — ignores doc name/path + indexes]`);
+  lines.push(`Snapshot size — ${report.exportName}`, `  source: ${report.sourceFile}`, '', `  stringified size : ${formatBytes(report.bytes)}  [headline]`, `  limit            : ${formatBytes(report.limitBytes)}`, `  used             : ${formatPercent(report.percentOfLimit)}  ${report.withinLimit ? 'OK — within limit' : 'OVER LIMIT'}`, `  firestore approx : ${formatBytes(report.firestoreApproxBytes)}  [secondary — ignores doc name/path + indexes]`);
 
   if (report.breakdown.length > 0) {
     const keyWidth = Math.min(32, Math.max(...report.breakdown.map((entry) => entry.key.length)));
-    lines.push('');
-    lines.push('  Largest fields (of stringified size):');
+    lines.push('', '  Largest fields (of stringified size):');
 
     for (const entry of report.breakdown.slice(0, MODEL_SIZE_BREAKDOWN_LIMIT)) {
       lines.push(`    ${entry.key.padEnd(keyWidth)}  ${String(entry.bytes).padStart(10)} bytes  ${formatPercent(entry.percent).padStart(7)}`);
@@ -56,21 +49,17 @@ export function formatModelSizeReport(report: ModelSizeReport): string {
 
   if (report.solve) {
     const { solve } = report;
-    lines.push('');
-    lines.push(`  Solve-for-N — '${solve.path}':`);
+    lines.push('', `  Solve-for-N — '${solve.path}':`);
 
     if (solve.cappedAtProbeLimit) {
-      lines.push(`    at least ${solve.maxCount.toLocaleString('en-US')} fit within the limit (probe cap reached; raise it to find the true max)`);
-      lines.push(`    size at ${solve.maxCount.toLocaleString('en-US')} : ${formatBytes(solve.bytesAtMax)}`);
+      lines.push(`    at least ${solve.maxCount.toLocaleString('en-US')} fit within the limit (probe cap reached; raise it to find the true max)`, `    size at ${solve.maxCount.toLocaleString('en-US')} : ${formatBytes(solve.bytesAtMax)}`);
     } else {
-      lines.push(`    max that fits : ${solve.maxCount.toLocaleString('en-US')}  (${formatBytes(solve.bytesAtMax)})`);
-      lines.push(`    next (${(solve.maxCount + 1).toLocaleString('en-US')}) : ${formatBytes(solve.bytesAtNext)} — exceeds limit`);
+      lines.push(`    max that fits : ${solve.maxCount.toLocaleString('en-US')}  (${formatBytes(solve.bytesAtMax)})`, `    next (${(solve.maxCount + 1).toLocaleString('en-US')}) : ${formatBytes(solve.bytesAtNext)} — exceeds limit`);
     }
   }
 
   if (report.warnings.length > 0) {
-    lines.push('');
-    lines.push('  Warnings:');
+    lines.push('', '  Warnings:');
 
     for (const warning of report.warnings) {
       lines.push(`    - ${warning}`);

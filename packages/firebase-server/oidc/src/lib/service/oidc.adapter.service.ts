@@ -95,12 +95,12 @@ export function createAdapterFactory(collections: OidcServerFirestoreCollections
 
     async findByUserCode(userCode: string): Promise<AdapterPayload | undefined> {
       const results = await this.collection.query(oidcEntriesByUserCodeQuery(this.name, userCode)).getDocs();
-      return !results.empty ? this._toPayload(results.docs[0].data()) : undefined;
+      return results.empty ? undefined : this._toPayload(results.docs[0].data());
     }
 
     async findByUid(uid: string): Promise<AdapterPayload | undefined> {
       const results = await this.collection.query(oidcEntriesByUidQuery(this.name, uid)).getDocs();
-      return !results.empty ? this._toPayload(results.docs[0].data()) : undefined;
+      return results.empty ? undefined : this._toPayload(results.docs[0].data());
     }
 
     async consume(id: OidcEntryId): Promise<void> {

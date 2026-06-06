@@ -31,10 +31,10 @@ export type UseValue<I, O = void> = MapFunction<I, O>;
 export function useValue<I, O = void>(input: Maybe<I>, use: UseValue<I, O>, defaultValue?: Maybe<GetterOrValue<O>>): Maybe<O> {
   let result: Maybe<O>;
 
-  if (input != null) {
-    result = use(input);
-  } else {
+  if (input == null) {
     result = getValueFromGetter(defaultValue);
+  } else {
+    result = use(input);
   }
 
   return result;
@@ -130,10 +130,10 @@ export function useContextFunction<I, O>(use: UseValue<I, O>, defaultValue?: Get
   return ((input: Maybe<I>) => {
     let result: Maybe<O>;
 
-    if (input != null) {
-      result = use(input);
-    } else {
+    if (input == null) {
       result = getValueFromGetter(defaultValue);
+    } else {
+      result = use(input);
     }
 
     return result;
@@ -163,10 +163,10 @@ export type UseAsync<I, O = void> = MapFunction<I, PromiseOrValue<O>>;
 export async function useAsync<I, O = void>(input: Maybe<I>, use: UseValue<I, O>, defaultValue?: Maybe<GetterOrValue<O>>): Promise<Maybe<O>> {
   let result: Maybe<O>;
 
-  if (input != null) {
-    result = await use(input);
-  } else {
+  if (input == null) {
     result = getValueFromGetter(defaultValue);
+  } else {
+    result = await use(input);
   }
 
   return result;

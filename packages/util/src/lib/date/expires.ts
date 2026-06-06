@@ -147,7 +147,7 @@ export function expirationDetails<T extends Expires = Expires>(input: Expiration
     } else if (expiresAt != null) {
       expirationDate = expiresAt;
     } else if (expiresIn != null) {
-      const date = parsedExpiresFromDate ?? (defaultExpiresFromDateToNow !== false ? now : null);
+      const date = parsedExpiresFromDate ?? (defaultExpiresFromDateToNow === false ? null : now);
       expirationDate = addMilliseconds(date, expiresIn);
     }
 

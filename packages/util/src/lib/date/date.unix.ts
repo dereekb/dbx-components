@@ -72,7 +72,7 @@ export function unixDateTimeSecondsNumberForNow(): UnixDateTimeSecondsNumber {
 export function unixDateTimeSecondsNumberFromDate(date: Date): UnixDateTimeSecondsNumber;
 export function unixDateTimeSecondsNumberFromDate(date: MaybeNot): MaybeNot;
 export function unixDateTimeSecondsNumberFromDate(date: Maybe<Date>): Maybe<UnixDateTimeSecondsNumber> {
-  return date != null ? Math.ceil(date.getTime() / 1000) : date;
+  return date == null ? date : Math.ceil(date.getTime() / 1000);
 }
 
 /**
@@ -110,5 +110,5 @@ export function dateFromDateOrTimeSecondsNumber(input: Maybe<DateOrUnixDateTimeS
  * @dbxUtilRelated unix-date-time-seconds-number-from-date, date-from-date-or-time-seconds-number
  */
 export function unixDateTimeSecondsNumberToDate(dateTimeNumber: Maybe<UnixDateTimeSecondsNumber>): Maybe<Date> {
-  return dateTimeNumber != null ? new Date(dateTimeNumber * 1000) : dateTimeNumber;
+  return dateTimeNumber == null ? dateTimeNumber : new Date(dateTimeNumber * 1000);
 }

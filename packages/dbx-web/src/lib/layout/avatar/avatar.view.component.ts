@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { type Maybe, type WebsitePath, type WebsiteUrlWithPrefix } from '@dereekb/util';
+import { type Maybe, nameToInitials, type WebsitePath, type WebsiteUrlWithPrefix } from '@dereekb/util';
 import { DbxAvatarViewService } from './avatar.service';
 import { type DbxAvatarContext, DBX_AVATAR_CONTEXT_DATA_TOKEN, type DbxAvatarStyle } from './avatar';
+import { DbxColorDirective } from '../style/style.color.directive';
+import { DbxColorService } from '../style/style.color.service';
+import { type DbxColorConfig, dbxCuratedColorConfigForString } from '../style/style';
 
 /**
  * Displays an avatar image with automatic fallback to a Material icon when no image is available or when the image fails to load.
@@ -20,6 +23,8 @@ import { type DbxAvatarContext, DBX_AVATAR_CONTEXT_DATA_TOKEN, type DbxAvatarSty
   template: `
     @if (avatarUrlSignal()) {
       <img (error)="onAvatarImageError($event)" class="dbx-avatar-view-img" [src]="avatarUrlSignal()!" alt="." loading="lazy" decoding="async" />
+    } @else if (initialsSignal()) {
+      <div class="dbx-avatar-view-initials" [dbxColor]="curatedColorSignal()" aria-hidden="true">{{ initialsSignal() }}</div>
     } @else {
       <div class="dbx-avatar-view-fallback" aria-hidden="true">
         <mat-icon>{{ avatarIconSignal() }}</mat-icon>
@@ -33,9 +38,10 @@ import { type DbxAvatarContext, DBX_AVATAR_CONTEXT_DATA_TOKEN, type DbxAvatarSty
     '[class.dbx-avatar-view-square]': 'avatarStyleClassSignal() === "square"',
     '[class.dbx-avatar-view-with-avatar]': 'hasAvatarSignal()',
     '[class.dbx-avatar-view-no-avatar]': 'missingAvatarSignal()',
+    '[class.dbx-avatar-view-with-initials]': 'hasInitialsSignal()',
     '[class.dbx-avatar-view-hide-avatar]': 'hideAvatarSignal()'
   },
-  imports: [MatIconModule],
+  imports: [MatIconModule, DbxColorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -43,12 +49,14 @@ export class DbxAvatarViewComponent {
   readonly defaultContext: Maybe<DbxAvatarContext> = inject(DBX_AVATAR_CONTEXT_DATA_TOKEN, { optional: true });
 
   readonly avatarService = inject(DbxAvatarViewService);
+  readonly colorService = inject(DbxColorService, { optional: true });
 
   readonly defaultAvatarUrl = this.avatarService.defaultAvatarUrl;
 
   readonly avatarUrl = input<Maybe<WebsiteUrlWithPrefix>>();
   readonly avatarErrorUrlSignal = signal<Maybe<boolean | WebsiteUrlWithPrefix>>(null);
 
+  readonly avatarName = input<Maybe<string>>();
   readonly avatarStyle = input<Maybe<DbxAvatarStyle>>();
   readonly avatarIcon = input<Maybe<string>>();
   readonly avatarHideOnError = input<Maybe<boolean>>();
@@ -106,6 +114,23 @@ export class DbxAvatarViewComponent {
     }
 
     return icon ?? 'person';
+  });
+
+  readonly nameSignal = computed<Maybe<string>>(() => this.avatarName() ?? this.defaultContext?.name);
+
+  readonly initialsSignal = computed<Maybe<string>>(() => {
+    const name = this.nameSignal();
+    return name ? nameToInitials(name) : null;
+  });
+
+  readonly hasInitialsSignal = computed(() => {
+    const initials = this.initialsSignal();
+    return !this.avatarUrlSignal() && !!initials;
+  });
+
+  readonly curatedColorSignal = computed<Maybe<DbxColorConfig>>(() => {
+    const name = this.nameSignal();
+    return name ? (this.colorService?.getCuratedColorForValue(name) ?? dbxCuratedColorConfigForString(name)) : null;
   });
 
   onAvatarImageError(event: Event) {

@@ -85,11 +85,11 @@ export class DbxFirebaseLoginButtonComponent {
   readonly handleAction: WorkUsingContext = (_, context) => {
     const config = this.config();
 
-    if (config != null) {
+    if (config == null) {
+      context.reject();
+    } else {
       const loginPromise = config.handleLogin();
       context.startWorkingWithPromise(loginPromise);
-    } else {
-      context.reject();
     }
   };
 

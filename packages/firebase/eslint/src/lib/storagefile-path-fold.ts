@@ -753,7 +753,7 @@ function fragListsToStrings(items: readonly (readonly Frag[])[]): Maybe<readonly
       break;
     }
     const str: Maybe<string> = fragsToConcreteString(item);
-    result = str != null ? [...result, str] : null;
+    result = str == null ? null : [...result, str];
   }
   return result;
 }

@@ -17,7 +17,7 @@
  * `dbx-cli-firebase-api-manifest` build CLI.
  */
 
-import { Node, Project, type JSDocableNode, type SourceFile, type TypeAliasDeclaration, type TypeNode } from 'ts-morph';
+import { Node, Project, type InterfaceDeclaration, type JSDocableNode, type PropertySignature, type SourceFile, type TypeAliasDeclaration, type TypeNode } from 'ts-morph';
 import type { CrudEntry, CrudEntryDocField, CrudExtraction, CrudVerb } from './types';
 
 const SUPPORTED_VERBS: ReadonlySet<CrudVerb> = new Set(['create', 'read', 'update', 'delete', 'query', 'invoke']);
@@ -176,26 +176,26 @@ function findFunctionsClassName(sourceFile: SourceFile): string | undefined {
 }
 
 function inferGroupName(sourceFile: SourceFile): string | undefined {
+  return findTypeAliasStem(sourceFile, 'ModelCrudFunctionsConfig') ?? findTypeAliasStem(sourceFile, 'FunctionTypeMap');
+}
+
+/**
+ * Finds the first type alias whose name ends with `ending` and returns the
+ * non-empty stem (the name with `ending` stripped).
+ *
+ * @param sourceFile - The parsed `<model>.api.ts` source.
+ * @param ending - The type-alias name suffix to match.
+ * @returns The stem preceding `ending`, or `undefined` when no alias matches with a non-empty stem.
+ */
+function findTypeAliasStem(sourceFile: SourceFile, ending: string): string | undefined {
   let result: string | undefined;
   for (const alias of sourceFile.getTypeAliases()) {
     const name = alias.getName();
-    if (name.endsWith('ModelCrudFunctionsConfig')) {
-      const stem = name.slice(0, -'ModelCrudFunctionsConfig'.length);
+    if (name.endsWith(ending)) {
+      const stem = name.slice(0, -ending.length);
       if (stem.length > 0) {
         result = stem;
         break;
-      }
-    }
-  }
-  if (result === undefined) {
-    for (const alias of sourceFile.getTypeAliases()) {
-      const name = alias.getName();
-      if (name.endsWith('FunctionTypeMap')) {
-        const stem = name.slice(0, -'FunctionTypeMap'.length);
-        if (stem.length > 0) {
-          result = stem;
-          break;
-        }
       }
     }
   }
@@ -330,43 +330,66 @@ interface TypeDocs {
 }
 
 function readTypeDocs(sourceFile: SourceFile, typeName: string): TypeDocs | undefined {
-  let result: TypeDocs | undefined;
   const interfaceDecl = sourceFile.getInterface(typeName);
+  let result: TypeDocs | undefined;
   if (interfaceDecl) {
-    const typeDescription = readJsDocSummary(interfaceDecl);
-    const hasApiParamsTag = hasJsDocFlag(interfaceDecl, 'dbxModelApiParams');
-    const fields: CrudEntryDocField[] = [];
-    for (const property of interfaceDecl.getProperties()) {
-      const fieldName = property.getName();
-      const description = readJsDocSummary(property);
-      const typeNode = property.getTypeNode();
-      const typeText = typeNode?.getText().trim() ?? '';
-      const adminOnly = hasJsDocFlag(property, 'dbxModelApiAdminOnly');
-      const field: CrudEntryDocField = {
-        name: fieldName,
-        typeText,
-        ...(description ? { description } : {}),
-        ...(adminOnly ? { accessLevel: 'adminOnly' as const } : {})
-      };
-      fields.push(field);
-    }
-    if (typeDescription || fields.length > 0 || hasApiParamsTag) {
-      result = {
-        ...(typeDescription ? { typeDescription } : {}),
-        ...(fields.length > 0 ? { fields } : {}),
-        hasApiParamsTag
-      };
-    }
+    result = readInterfaceTypeDocs(interfaceDecl);
   } else {
     const typeAlias = sourceFile.getTypeAlias(typeName);
-    if (typeAlias) {
-      const typeDescription = readJsDocSummary(typeAlias);
-      if (typeDescription) {
-        result = { typeDescription };
-      }
-    }
+    result = typeAlias ? readTypeAliasDocs(typeAlias) : undefined;
   }
   return result;
+}
+
+/**
+ * Reads the type-level JSDoc (summary, fields, `@dbxModelApiParams` flag) of a
+ * resolved interface declaration.
+ *
+ * @param interfaceDecl - The interface naming a params/result type.
+ * @returns The collected docs, or `undefined` when the interface has no description, fields, or marker.
+ */
+function readInterfaceTypeDocs(interfaceDecl: InterfaceDeclaration): TypeDocs | undefined {
+  const typeDescription = readJsDocSummary(interfaceDecl);
+  const hasApiParamsTag = hasJsDocFlag(interfaceDecl, 'dbxModelApiParams');
+  const fields = interfaceDecl.getProperties().map((property) => readInterfaceField(property));
+  let result: TypeDocs | undefined;
+  if (typeDescription || fields.length > 0 || hasApiParamsTag) {
+    result = {
+      ...(typeDescription ? { typeDescription } : {}),
+      ...(fields.length > 0 ? { fields } : {}),
+      hasApiParamsTag
+    };
+  }
+  return result;
+}
+
+/**
+ * Reads one interface property into a {@link CrudEntryDocField}, capturing its
+ * type text, JSDoc summary, and `@dbxModelApiAdminOnly` access level.
+ *
+ * @param property - The interface property signature.
+ * @returns The doc field for the property.
+ */
+function readInterfaceField(property: PropertySignature): CrudEntryDocField {
+  const description = readJsDocSummary(property);
+  const adminOnly = hasJsDocFlag(property, 'dbxModelApiAdminOnly');
+  return {
+    name: property.getName(),
+    typeText: property.getTypeNode()?.getText().trim() ?? '',
+    ...(description ? { description } : {}),
+    ...(adminOnly ? { accessLevel: 'adminOnly' as const } : {})
+  };
+}
+
+/**
+ * Reads the type-level JSDoc summary of a resolved type alias.
+ *
+ * @param typeAlias - The type alias naming a params/result type.
+ * @returns The collected docs, or `undefined` when the alias has no description.
+ */
+function readTypeAliasDocs(typeAlias: TypeAliasDeclaration): TypeDocs | undefined {
+  const typeDescription = readJsDocSummary(typeAlias);
+  return typeDescription ? { typeDescription } : undefined;
 }
 
 /**
@@ -421,8 +444,8 @@ function readJsDocTagValue(node: JSDocableNode, tagName: string): string | undef
 function readJsDocSummary(node: JSDocableNode): string | undefined {
   let result: string | undefined;
   const docs = node.getJsDocs();
-  if (docs.length > 0) {
-    const last = docs[docs.length - 1];
+  const last = docs.at(-1);
+  if (last) {
     const description = last.getDescription().trim();
     if (description.length > 0) {
       result = description;

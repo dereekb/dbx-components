@@ -1,4 +1,70 @@
-import { COMMA_STRING_SPLIT_JOIN, DEFAULT_CUT_STRING_END_TEXT, SPACE_STRING_SPLIT_JOIN, cutStringFunction, flattenWhitespace, joinStrings, joinStringsInstance, joinStringsWithSpaces, repeatString, simplifyWhitespace, splitJoinNameString, splitJoinRemainder, stringSplitJoinInstance } from './string';
+import { COMMA_STRING_SPLIT_JOIN, DEFAULT_CUT_STRING_END_TEXT, SPACE_STRING_SPLIT_JOIN, cutStringFunction, flattenWhitespace, joinStrings, joinStringsInstance, joinStringsWithSpaces, nameToInitials, nameToInitialsFactory, repeatString, simplifyWhitespace, splitJoinNameString, splitJoinRemainder, stringSplitJoinInstance } from './string';
+
+describe('nameToInitials()', () => {
+  it('should use the first letter of the first two words for a multi-word name', () => {
+    expect(nameToInitials('Michelle B')).toBe('MB');
+    expect(nameToInitials('John Smith')).toBe('JS');
+  });
+
+  it('should use the first letter of the first two words for names with more than two words', () => {
+    expect(nameToInitials('John Michael Smith')).toBe('JM');
+  });
+
+  it('should pass through a single character for a single token', () => {
+    expect(nameToInitials('A')).toBe('A');
+    expect(nameToInitials('BB')).toBe('B');
+    expect(nameToInitials('Michelle')).toBe('M');
+  });
+
+  it('should uppercase the result', () => {
+    expect(nameToInitials('michelle b')).toBe('MB');
+    expect(nameToInitials('bb')).toBe('B');
+  });
+
+  it('should handle surrounding and repeated whitespace', () => {
+    expect(nameToInitials('  Michelle   B  ')).toBe('MB');
+  });
+
+  it('should return an empty string for blank input', () => {
+    expect(nameToInitials('')).toBe('');
+    expect(nameToInitials('   ')).toBe('');
+  });
+});
+
+describe('nameToInitialsFactory()', () => {
+  it('should default to a single initial for a single-word input', () => {
+    const fn = nameToInitialsFactory();
+    expect(fn('Michelle')).toBe('M');
+    expect(fn('BB')).toBe('B');
+    expect(fn('A')).toBe('A');
+  });
+
+  describe('minInitials', () => {
+    it('should pull additional leading characters from a single-word input', () => {
+      const fn = nameToInitialsFactory({ minInitials: 2 });
+      expect(fn('Michelle')).toBe('MI');
+      expect(fn('BB')).toBe('BB');
+      expect(fn('A')).toBe('A');
+    });
+
+    it('should be capped by maxInitials', () => {
+      const fn = nameToInitialsFactory({ minInitials: 5, maxInitials: 3 });
+      expect(fn('Michelle')).toBe('MIC');
+    });
+
+    it('should not affect multi-word inputs', () => {
+      const fn = nameToInitialsFactory({ minInitials: 2 });
+      expect(fn('Michelle B')).toBe('MB');
+    });
+  });
+
+  describe('maxInitials', () => {
+    it('should use the first letter of each of the first maxInitials words', () => {
+      const fn = nameToInitialsFactory({ maxInitials: 3 });
+      expect(fn('John Michael Smith')).toBe('JMS');
+    });
+  });
+});
 
 describe('joinStrings()', () => {
   it('should join the strings', () => {

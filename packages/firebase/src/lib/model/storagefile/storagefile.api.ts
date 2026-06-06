@@ -613,7 +613,7 @@ export type StorageFileModelCrudFunctionsConfig = {
 };
 
 export const STORAGE_FILE_MODEL_CRUD_FUNCTIONS_CONFIG: ModelFirebaseCrudFunctionConfigMap<StorageFileModelCrudFunctionsConfig, StorageFileTypes> = {
-  storageFile: ['create:_,fromUpload,allFromUpload,signedUploadUrl', 'update:_,process,syncWithGroups', 'delete:_', 'read:download,downloadMultiple,metadata,metadataMultiple'],
+  storageFile: ['create:_,fromUpload,allFromUpload,signedUploadUrl' as any, 'update:_,process,syncWithGroups' as any, 'delete:_', 'read:download,downloadMultiple,metadata,metadataMultiple' as any],
   storageFileGroup: ['update:_,regenerateContent']
 };
 

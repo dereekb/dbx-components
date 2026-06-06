@@ -25,14 +25,14 @@ import { clean } from '../rxjs/clean';
  */
 export function provideActionStoreSource<S extends ActionContextStoreSource>(sourceType: Maybe<Type<S>>): Provider[] {
   const storeSourceProvider: Provider =
-    sourceType != null
+    sourceType == null
       ? {
           provide: ActionContextStoreSource,
-          useExisting: forwardRef(() => sourceType)
+          useFactory: () => new DbxActionContextMachineAsService()
         }
       : {
           provide: ActionContextStoreSource,
-          useFactory: () => new DbxActionContextMachineAsService()
+          useExisting: forwardRef(() => sourceType)
         };
 
   return [

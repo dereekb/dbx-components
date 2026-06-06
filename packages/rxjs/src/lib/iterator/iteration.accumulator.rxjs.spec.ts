@@ -70,7 +70,7 @@ describe('iteration.rxjs', () => {
       let accumulatorWithMapping: ItemAccumulatorInstance<string[], number[], PageItemIteration<number[]>>;
 
       beforeEach(() => {
-        accumulatorWithMapping = itemAccumulator(iteration, (x: number[]) => x.map((y) => String(y)));
+        accumulatorWithMapping = itemAccumulator(iteration, (x: number[]) => x.map(String));
       });
 
       afterEach(() => {
@@ -168,13 +168,13 @@ describe('iteration.rxjs', () => {
               skip(1)
             )
             .subscribe((state) => {
-              if (!isLoadingStateFinishedLoading(state)) {
-                expect(state.value).toBeDefined();
-                expect(Array.isArray(state.value)).toBe(true);
-              } else {
+              if (isLoadingStateFinishedLoading(state)) {
                 expect(state.value).toBeDefined();
                 expect(Array.isArray(state.value)).toBe(true);
                 done();
+              } else {
+                expect(state.value).toBeDefined();
+                expect(Array.isArray(state.value)).toBe(true);
               }
             });
 

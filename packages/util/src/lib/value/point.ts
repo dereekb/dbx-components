@@ -570,8 +570,8 @@ export function latLngPoint(lat: LatLngPointInput, lng?: Longitude): LatLngPoint
  */
 export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngPointFunction {
   const { validate, wrap, default: defaultValue, precision = LAT_LONG_1MM_PRECISION, readLonLatTuples, precisionRounding } = config ?? {};
-  const precisionFunction: LatLngPointPrecisionFunction = precision != null ? latLngPointPrecisionFunction(precision, precisionRounding) : mapIdentityFunction();
-  const wrapFunction = wrap !== false ? wrapLatLngPoint : validate !== false ? validLatLngPointFunction(defaultValue) : undefined;
+  const precisionFunction: LatLngPointPrecisionFunction = precision == null ? mapIdentityFunction() : latLngPointPrecisionFunction(precision, precisionRounding);
+  const wrapFunction = wrap === false ? (validate === false ? undefined : validLatLngPointFunction(defaultValue)) : wrapLatLngPoint;
   const mapFn = chainMapSameFunctions([wrapFunction, precisionFunction]);
   return (lat: LatLngPointInput, lng?: Longitude) => {
     let latLng: LatLngPoint;
@@ -590,10 +590,10 @@ export function latLngPointFunction(config?: LatLngPointFunctionConfig): LatLngP
       }
     } else if (latType === 'object') {
       latLng = { lat: (lat as LatLngPoint).lat, lng: (lat as Partial<LatLngPoint>).lng ?? (lat as LonLatPoint).lon };
-    } else if (lng != null) {
-      latLng = { lat: lat as Latitude, lng };
-    } else {
+    } else if (lng == null) {
       throw new Error(`Invalid lat/lng input "${lat},${lng}"`);
+    } else {
+      latLng = { lat: lat as Latitude, lng };
     }
 
     return mapFn(latLng); // round to a given precision
@@ -762,7 +762,7 @@ export function randomLatLngFactory(config?: RandomLatLngFactoryConfig): RandomL
 
   const randomLatFactory = randomNumberFactory({ min: capLatValue(sw.lat), max: capLatValue(ne.lat) }, 'none');
   const randomLngFactory = randomNumberFactory({ min: wrapLngValue(sw.lng), max: wrapLngValue(ne.lng) }, 'none');
-  const precisionFunction = precision != null ? latLngPointPrecisionFunction(precision, 'round') : mapIdentityFunction<LatLngPoint>();
+  const precisionFunction = precision == null ? mapIdentityFunction<LatLngPoint>() : latLngPointPrecisionFunction(precision, 'round');
 
   return () => {
     return precisionFunction({ lat: randomLatFactory(), lng: randomLngFactory() });

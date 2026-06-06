@@ -1,6 +1,6 @@
 import type { MiddlewareFunction } from 'yargs';
 import { type CliEnvDefault, readEnvTokenEntry } from '../config/env';
-import { resolveCliEnvOrThrow } from '../config/env.resolve';
+import { type CliEnvConfigComplete, resolveCliEnvOrThrow } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { type CliTokenEntry, createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
 import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
@@ -67,60 +67,7 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
         requireComplete: true
       });
 
-      // Cache always wins; fall back to env-supplied tokens only when nothing is cached so the
-      // interactive flow is untouched. Env entries are flagged `fromEnv` and never written back.
-      let entry: CliTokenEntry | undefined = (await tokens.get(envName)) ?? undefined;
-
-      if (!entry) {
-        entry = readEnvTokenEntry({ cliName: input.cliName }) ?? undefined;
-      }
-
-      if (!entry?.accessToken && !entry?.refreshToken) {
-        throw new CliError({
-          message: `No tokens for env "${envName}". Run \`${input.cliName} auth login --env ${envName}\`.`,
-          code: 'NOT_LOGGED_IN'
-        });
-      }
-
-      // Mint an access token when none is present (env refresh-only case) or the cached one is expired.
-      if (!entry.accessToken || isTokenExpired(entry)) {
-        if (!entry.refreshToken) {
-          throw new CliError({
-            message: `Token for env "${envName}" is expired and no refresh token is cached. Re-login.`,
-            code: 'TOKEN_EXPIRED',
-            suggestion: `Run \`${input.cliName} auth login --env ${envName}\`.`
-          });
-        }
-
-        const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
-        const suppliedRefreshToken = entry.refreshToken;
-        const refreshed = await refreshAccessToken({
-          tokenEndpoint: meta.token_endpoint,
-          clientId: env.clientId,
-          clientSecret: env.clientSecret,
-          refreshToken: suppliedRefreshToken
-        });
-
-        entry = {
-          ...entry,
-          accessToken: refreshed.access_token,
-          refreshToken: refreshed.refresh_token ?? entry.refreshToken,
-          tokenType: refreshed.token_type ?? entry.tokenType,
-          scope: refreshed.scope ?? entry.scope,
-          expiresAt: Date.now() + (refreshed.expires_in ?? 0) * 1000
-        };
-
-        if (entry.fromEnv) {
-          // Service tokens do not rotate, so a one-shot env-sourced invocation is durable without
-          // persisting. If a *rotating* refresh token was supplied, the rotation is lost on exit —
-          // warn that env credentials should be non-rotating service tokens.
-          if (refreshed.refresh_token != null && refreshed.refresh_token !== suppliedRefreshToken) {
-            process.stderr.write('Warning: the refresh token supplied via environment rotated on use; the rotated token cannot be persisted for a one-shot invocation. Use a non-rotating service token (auth login --service-token).\n');
-          }
-        } else {
-          await tokens.set(envName, entry);
-        }
-      }
+      const entry = await resolveAccessTokenEntry({ cliName: input.cliName, envName, env, tokens });
 
       setCliContext(createCliContext({ cliName: input.cliName, envName, env, accessToken: entry.accessToken, modelManifest: input.modelManifest }));
     } catch (e) {
@@ -128,6 +75,109 @@ export function createAuthMiddleware(input: CreateAuthMiddlewareInput): Middlewa
       process.exit(CLI_EXIT_CODE_AUTH);
     }
   };
+}
+
+type CliTokenCacheStore = ReturnType<typeof createCliTokenCacheStore>;
+// `requireComplete: true` is passed at the call site, so the resolved env is the narrowed, fully-populated shape.
+type ResolvedCliEnv = CliEnvConfigComplete;
+
+interface ResolveAccessTokenEntryInput {
+  readonly cliName: string;
+  readonly envName: string;
+  readonly env: ResolvedCliEnv;
+  readonly tokens: CliTokenCacheStore;
+}
+
+/**
+ * Resolves the access-token entry for an env: prefers the cached token, falls
+ * back to an env-supplied token, requires at least one token to be present,
+ * and refreshes when the access token is missing or expired.
+ *
+ * @param input - The CLI name, resolved env, env name, and token cache store.
+ * @returns The resolved (and refreshed when necessary) token entry.
+ * @throws {CliError} When no tokens are available for the env.
+ */
+async function resolveAccessTokenEntry(input: ResolveAccessTokenEntryInput): Promise<CliTokenEntry> {
+  const { cliName, envName, env, tokens } = input;
+
+  // Cache always wins; fall back to env-supplied tokens only when nothing is cached so the
+  // interactive flow is untouched. Env entries are flagged `fromEnv` and never written back.
+  let entry: CliTokenEntry | undefined = (await tokens.get(envName)) ?? undefined;
+
+  if (!entry) {
+    entry = readEnvTokenEntry({ cliName }) ?? undefined;
+  }
+
+  if (!entry?.accessToken && !entry?.refreshToken) {
+    throw new CliError({
+      message: `No tokens for env "${envName}". Run \`${cliName} auth login --env ${envName}\`.`,
+      code: 'NOT_LOGGED_IN'
+    });
+  }
+
+  // Mint an access token when none is present (env refresh-only case) or the cached one is expired.
+  if (!entry.accessToken || isTokenExpired(entry)) {
+    entry = await refreshTokenEntry({ cliName, envName, env, tokens, entry });
+  }
+
+  return entry;
+}
+
+interface RefreshTokenEntryInput extends ResolveAccessTokenEntryInput {
+  readonly entry: CliTokenEntry;
+}
+
+/**
+ * Refreshes an absent/expired access token via OIDC. Cache-sourced entries are
+ * persisted; env-sourced service tokens are durable for the one-shot
+ * invocation and not written back (and a rotated env refresh token is warned
+ * about, since it cannot be persisted).
+ *
+ * @param input - The CLI name, env, env name, token store, and the entry to refresh.
+ * @returns The refreshed token entry.
+ * @throws {CliError} When the entry is expired and has no refresh token.
+ */
+async function refreshTokenEntry(input: RefreshTokenEntryInput): Promise<CliTokenEntry> {
+  const { cliName, envName, env, tokens, entry } = input;
+
+  if (!entry.refreshToken) {
+    throw new CliError({
+      message: `Token for env "${envName}" is expired and no refresh token is cached. Re-login.`,
+      code: 'TOKEN_EXPIRED',
+      suggestion: `Run \`${cliName} auth login --env ${envName}\`.`
+    });
+  }
+
+  const meta = await discoverOidcMetadata({ issuer: env.oidcIssuer, fallbackBaseUrl: env.apiBaseUrl });
+  const suppliedRefreshToken = entry.refreshToken;
+  const refreshed = await refreshAccessToken({
+    tokenEndpoint: meta.token_endpoint,
+    clientId: env.clientId,
+    clientSecret: env.clientSecret,
+    refreshToken: suppliedRefreshToken
+  });
+
+  const updated: CliTokenEntry = {
+    ...entry,
+    accessToken: refreshed.access_token,
+    refreshToken: refreshed.refresh_token ?? entry.refreshToken,
+    tokenType: refreshed.token_type ?? entry.tokenType,
+    scope: refreshed.scope ?? entry.scope,
+    expiresAt: Date.now() + (refreshed.expires_in ?? 0) * 1000
+  };
+
+  if (updated.fromEnv) {
+    // Service tokens do not rotate, so a one-shot env-sourced invocation is durable without
+    // persisting. If a *rotating* refresh token was supplied, the rotation is lost on exit —
+    // warn that env credentials should be non-rotating service tokens.
+    if (refreshed.refresh_token != null && refreshed.refresh_token !== suppliedRefreshToken) {
+      process.stderr.write('Warning: the refresh token supplied via environment rotated on use; the rotated token cannot be persisted for a one-shot invocation. Use a non-rotating service token (auth login --service-token).\n');
+    }
+  } else {
+    await tokens.set(envName, updated);
+  }
+
+  return updated;
 }
 
 /**

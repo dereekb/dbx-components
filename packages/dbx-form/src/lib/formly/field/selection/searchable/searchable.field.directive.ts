@@ -300,10 +300,10 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
             map((displayResults) => {
               // Assign the default component classes to complete configuration.
               (displayResults as Configurable<SearchableValueFieldDisplayValue<T, M>>[]).forEach((x) => {
-                if (!x.display) {
-                  x.display = defaultDisplay;
-                } else {
+                if (x.display) {
                   x.display = mergeDbxInjectionComponentConfigs([defaultDisplay, x.display]);
+                } else {
+                  x.display = defaultDisplay;
                 }
 
                 if (!x.anchor && anchorForValue) {
@@ -478,7 +478,7 @@ export abstract class AbstractDbxSearchableValueFieldDirective<T, M = unknown, H
 
   // MARK: Internal
   protected _getValueOnFormControl(valueOnFormControl: ArrayOrValue<T>): T[] {
-    const value: T[] = valueOnFormControl != null ? asArray(valueOnFormControl) : []; // Always return an array.
+    const value: T[] = valueOnFormControl == null ? [] : asArray(valueOnFormControl); // Always return an array.
     return value;
   }
 

@@ -90,7 +90,7 @@ export function formatKeywordResults(header: FormatHeader, hits: readonly Keywor
 }
 
 function buildHeading(header: FormatHeader): string {
-  const queryPart = header.query !== undefined ? ` — \`${header.query}\`` : '';
+  const queryPart = header.query === undefined ? '' : ` — \`${header.query}\``;
   return `# Log search${queryPart} (mode: ${header.mode}, scope: ${header.scope}, window: ${header.windowLabel})`;
 }
 

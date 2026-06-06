@@ -22,10 +22,10 @@ export type TestDoneCallback = ((...args: any[]) => any) & {
  * @param e - The error to pass to the callback; defaults to a generic error.
  */
 export function failWithTestDoneCallback(done: TestDoneCallback, e: unknown = new Error('failed test')) {
-  if (done.fail != null) {
-    done.fail(e as Error);
-  } else {
+  if (done.fail == null) {
     done(e);
+  } else {
+    done.fail(e as Error);
   }
 }
 

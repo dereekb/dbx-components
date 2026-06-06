@@ -1602,7 +1602,7 @@ describe('expandMailgunRecipientBatchSendTargetRequestFactory()', () => {
         },
         getRecipientsForKeys: (keys: any) => {
           const k = Array.isArray(keys) ? keys : [keys];
-          return k.map((key) => recipientsMap.get(key)).filter((x) => x) as any;
+          return k.map((key) => recipientsMap.get(key)).filter(Boolean) as any;
         }
       };
 

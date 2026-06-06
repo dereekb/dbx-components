@@ -131,11 +131,11 @@ export class DbxAnalyticsSegmentServiceListener extends AbstractDbxAnalyticsServ
       api.track(
         eventName,
         {
-          ...(value != null
-            ? {
+          ...(value == null
+            ? undefined
+            : {
                 value
-              }
-            : undefined),
+              }),
           ...data
         },
         {},

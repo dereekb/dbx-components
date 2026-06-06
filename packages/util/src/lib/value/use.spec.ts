@@ -22,7 +22,7 @@ describe('useAsync()', () => {
 });
 
 describe('mappedUseFunction()', () => {
-  const mapFn: MapFunction<number, string> = (number: number) => String(number);
+  const mapFn: MapFunction<number, string> = String;
 
   describe('function', () => {
     const mappedUseFn = mappedUseFunction(mapFn);
@@ -125,7 +125,7 @@ describe('mappedUseFunction()', () => {
 });
 
 describe('mappedUsePromiseFunction()', () => {
-  const mapFn: MapFunction<number, string> = (number: number) => String(number);
+  const mapFn: MapFunction<number, string> = String;
 
   describe('function', () => {
     const mappedUseAsyncFn = mappedUseAsyncFunction(mapFn);

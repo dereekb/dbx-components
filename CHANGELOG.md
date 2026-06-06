@@ -1,3 +1,28 @@
+# [13.16.0](https://github.com/dereekb/dbx-components/compare/v13.15.0-dev...v13.16.0) (2026-06-06)
+
+
+### Bug Fixes
+
+- **dbx-cli:** resolve SonarQube code smells + lint autofixes ([fdda8844](https://github.com/dereekb/dbx-components/commit/fdda88445f11da9b3b783011825f7033683e897d)), closes [Array#push](https://github.com/dereekb/Array/issues/push)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([2c595d77](https://github.com/dereekb/dbx-components/commit/2c595d77717839ffa74ddd0d0b66787563e169be))
+
+
+### Code Refactoring
+
+- apply eslint autofixes for recurring sonarqube rules ([1ad7724f](https://github.com/dereekb/dbx-components/commit/1ad7724fe70e31a446e68b1b3a3380d7371ea0d5))
+- **dbx-cli:** reduce cognitive complexity of 25 S3776 functions ([92a16a44](https://github.com/dereekb/dbx-components/commit/92a16a448dfc9c267ff9d54eb40ef19057bfb0f2))
+- updated linter rules ([62d07f20](https://github.com/dereekb/dbx-components/commit/62d07f205d6f5bc61b814958ce50a2d95439685a))
+- updated StorageFile functions config ([0c89b366](https://github.com/dereekb/dbx-components/commit/0c89b3666c61b2826c1ec60d2cc0e224784b2cbf))
+
+
+### Features
+
+- **dbx-web:** add initials/curated-color avatar mode ([8d964d45](https://github.com/dereekb/dbx-components/commit/8d964d4593d2575a5cc1a5c044b7df82a365d2c3))
+
 # [13.15.0](https://github.com/dereekb/dbx-components/compare/v13.14.0-dev...v13.15.0) (2026-06-05)
 
 

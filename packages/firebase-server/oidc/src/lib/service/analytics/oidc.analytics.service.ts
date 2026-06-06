@@ -39,7 +39,7 @@ export class FirebaseServerOidcAnalyticsService extends OidcAnalyticsService {
 
     if (this._logEvents) {
       const uidSuffix = event.uid ? ` uid=${event.uid}` : '';
-      const durationSuffix = event.durationMs != null ? ` (${event.durationMs}ms)` : '';
+      const durationSuffix = event.durationMs == null ? '' : ` (${event.durationMs}ms)`;
       const outcome = event.isSuccessful ? 'Succeeded' : 'Failed';
       const reasonSuffix = event.reason ? ` reason=${event.reason}` : '';
       this._logger.log(`${name} ${outcome}${uidSuffix}${reasonSuffix}${durationSuffix}`);

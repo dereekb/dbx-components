@@ -152,7 +152,7 @@ export function handlerFactory<T, K extends PrimativeKey = string, R = HandleRes
     return build<Handler<T, K, R>>({
       base: ((value: T) => {
         const key = readKey(value);
-        const handler = (key != null ? map.get(key) : undefined) ?? catchAll;
+        const handler = (key == null ? undefined : map.get(key)) ?? catchAll;
         let handled: Promise<R>;
 
         if (handler) {

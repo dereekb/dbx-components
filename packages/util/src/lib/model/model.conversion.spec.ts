@@ -47,11 +47,11 @@ const fields = modelFieldConversions<TestConversionModel, TestConversionDataMode
   },
   number: {
     from: {
-      convert: (x: string) => Number(x),
+      convert: Number,
       default: defaultNumberFromValue
     },
     to: {
-      convert: (x: number) => String(x),
+      convert: String,
       default: defaultNumberToValue
     }
   }

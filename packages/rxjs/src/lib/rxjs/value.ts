@@ -123,7 +123,7 @@ export function makeCheckIsFunction<T>(isCheckFunction: Maybe<IsModifiedFunction
  * @returns An observable boolean indicating whether the value passes the check.
  */
 export function checkIs<T>(isCheckFunction: Maybe<IsModifiedFunction<T>>, value: Maybe<T>, defaultValueOnMaybe = false): Observable<boolean> {
-  const is: Observable<boolean> = isCheckFunction ? (value != null ? isCheckFunction(value) : of(defaultValueOnMaybe)) : of(true);
+  const is: Observable<boolean> = isCheckFunction ? (value == null ? of(defaultValueOnMaybe) : isCheckFunction(value)) : of(true);
   return is;
 }
 

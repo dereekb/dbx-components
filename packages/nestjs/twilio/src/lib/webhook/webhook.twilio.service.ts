@@ -59,7 +59,7 @@ export class TwilioWebhookService {
 
     if (valid) {
       const numMedia = Number(params['NumMedia'] ?? '0');
-      const numSegments = params['NumSegments'] !== undefined ? Number(params['NumSegments']) : undefined;
+      const numSegments = params['NumSegments'] === undefined ? undefined : Number(params['NumSegments']);
       const mediaUrls: string[] = [];
 
       for (let i = 0; i < numMedia; i++) {

@@ -84,7 +84,7 @@ describe('appZohoSignModuleMetadata()', () => {
           expect(result.accessToken).toBeDefined();
           expect(result.expiresIn).toBeDefined();
           expect(result.expiresAt).toBeDefined();
-          expect(result.expiresAt.getTime()).toBeGreaterThan(new Date().getTime());
+          expect(result.expiresAt.getTime()).toBeGreaterThan(Date.now());
           expect(result.apiDomain).toBeDefined();
 
           const signTokenCache = cacheService.loadZohoAccessTokenCache(ZOHO_SIGN_SERVICE_NAME);

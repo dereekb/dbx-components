@@ -216,14 +216,41 @@ function buildModelEntry(args: BuildModelEntryInput): FirebaseModel | undefined 
     sourcePackage: input.sourcePackage,
     sourceFile: input.sourceFile,
     fields,
-    enums: relevantEnums.map((e) => ({
-      name: e.name,
-      values: e.values.map((v) => (v.description ? { name: v.name, value: v.value, description: v.description } : { name: v.name, value: v.value })),
-      ...(e.description ? { description: e.description } : {})
-    })),
+    enums: relevantEnums.map((e) => buildModelEnumEntry(e)),
     detectionHints,
     ...(groupName ? { modelGroup: groupName } : {}),
     ...(collectionKind ? { collectionKind } : {}),
+    ...buildModelMarkerFlags(markers),
+    ...buildModelArchetypeFields(archetypeInfo),
+    ...(compositeKey ? { compositeKey } : {}),
+    ...(iface.tags.dbxModelRead ? { read: iface.tags.dbxModelRead } : {})
+  };
+}
+
+/**
+ * Projects one extracted enum into the manifest enum shape, omitting empty
+ * value/enum descriptions.
+ *
+ * @param e - The extracted enum.
+ * @returns The manifest enum entry.
+ */
+function buildModelEnumEntry(e: ExtractedEnum): FirebaseModel['enums'][number] {
+  return {
+    name: e.name,
+    values: e.values.map((v) => (v.description ? { name: v.name, value: v.value, description: v.description } : { name: v.name, value: v.value })),
+    ...(e.description ? { description: e.description } : {})
+  };
+}
+
+/**
+ * Builds the optional keyed-by/aggregation marker flags portion of a model
+ * entry, including each flag only when set.
+ *
+ * @param markers - The computed marker flags.
+ * @returns A partial model entry with only the active marker fields.
+ */
+function buildModelMarkerFlags(markers: MarkerFlags): Partial<FirebaseModel> {
+  return {
     ...(markers.userKeyedById ? { userKeyedById: true } : {}),
     ...(markers.hasUserUidField ? { hasUserUidField: true } : {}),
     ...(markers.regionKeyedById ? { regionKeyedById: true } : {}),
@@ -231,11 +258,21 @@ function buildModelEntry(args: BuildModelEntryInput): FirebaseModel | undefined 
     ...(markers.externalIdKeyedById ? { externalIdKeyedById: true } : {}),
     ...(markers.bucketKeyedById ? { bucketKeyedById: true } : {}),
     ...(markers.organizationalGroupRoot ? { organizationalGroupRoot: true } : {}),
-    ...(markers.aggregatesFromNonEmpty ? { aggregatesFrom: markers.aggregatesFrom } : {}),
+    ...(markers.aggregatesFromNonEmpty ? { aggregatesFrom: markers.aggregatesFrom } : {})
+  };
+}
+
+/**
+ * Builds the optional archetype portion of a model entry, including the
+ * archetype list and per-slug axes only when present.
+ *
+ * @param archetypeInfo - The computed archetype info.
+ * @returns A partial model entry with only the present archetype fields.
+ */
+function buildModelArchetypeFields(archetypeInfo: ReturnType<typeof computeArchetypeInfo>): Partial<FirebaseModel> {
+  return {
     ...(archetypeInfo.archetypes.length > 0 ? { archetypes: archetypeInfo.archetypes } : {}),
-    ...(archetypeInfo.archetypeAxesBySlug ? { archetypeAxesBySlug: archetypeInfo.archetypeAxesBySlug } : {}),
-    ...(compositeKey ? { compositeKey } : {}),
-    ...(iface.tags.dbxModelRead ? { read: iface.tags.dbxModelRead } : {})
+    ...(archetypeInfo.archetypeAxesBySlug ? { archetypeAxesBySlug: archetypeInfo.archetypeAxesBySlug } : {})
   };
 }
 

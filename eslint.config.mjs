@@ -247,7 +247,10 @@ export default [
       'sonarjs/prefer-immediate-return': 'warn',
       'sonarjs/no-nested-template-literals': 'warn',
       'sonarjs/no-redundant-jump': 'warn',
-      'sonarjs/no-unused-collection': 'warn'
+      'sonarjs/no-unused-collection': 'warn',
+      // Recurring SonarQube findings from the sonar-fix history (no auto-fix — these flag for manual cleanup):
+      'sonarjs/no-nested-conditional': 'warn', // Sonar typescript:S3358 — nested ternary (keeps Sonar's JSX conditional-rendering exception)
+      'sonarjs/no-duplicated-branches': 'warn' // Sonar typescript:S1871 — two if/switch branches with identical bodies
     }
   },
   {
@@ -288,7 +291,33 @@ export default [
       'unicorn/no-for-loop': 'warn',
       'unicorn/prefer-includes': 'warn',
       'unicorn/prefer-optional-catch-binding': 'warn',
-      'unicorn/throw-new-error': 'warn'
+      'unicorn/throw-new-error': 'warn',
+      // --- Rules below mirror the most-recurring SonarQube findings from the sonar-fix commit history. ---
+      // Each maps to a SonarQube rule that kept reappearing after-the-fact in Sonar scans; enabling the
+      // equivalent ESLint rule here surfaces them in-editor / pre-commit instead. Started at 'warn' to match
+      // the staged-rollout convention used elsewhere in this config; most are auto-fixable via `lint --fix`.
+      'unicorn/no-negated-condition': 'warn', // Sonar typescript:S7735 — invert a negated if/ternary that has an else branch
+      'unicorn/prefer-single-call': 'warn', // Sonar typescript:S7778 — combine consecutive .push() / classList.add() calls
+      'unicorn/prefer-string-replace-all': 'warn', // Sonar typescript:S7781 — .replace(/literal/g) → .replaceAll('literal')
+      // 'unicorn/prefer-at' (Sonar typescript:S7755) intentionally OMITTED: its autofix rewrites arr[arr.length - 1] → arr.at(-1),
+      // but .at() returns `T | undefined` while index access is typed `T` here (no noUncheckedIndexedAccess), so the fix breaks any
+      // chained access / non-optional assignment with TS2532. The fixer can't be made null-safe via config, so the rule is left off.
+      'unicorn/consistent-function-scoping': ['warn', { checkArrowFunctions: false }], // Sonar typescript:S7721 — hoist closure-free nested functions to module scope. checkArrowFunctions:false limits it to named function declarations (matches Sonar's examples) and drops the bulk of the noise from inline arrow helpers.
+      'unicorn/prefer-set-has': 'warn', // Sonar typescript:S7776 — repeated Array#includes existence checks → Set#has
+      'unicorn/prefer-string-raw': 'warn', // Sonar typescript:S7780 — escaped backslashes in a literal → String.raw
+      'unicorn/prefer-type-error': 'warn', // Sonar typescript:S7786 — throw TypeError (not Error) after a failed type check
+      'unicorn/prefer-number-properties': 'warn', // Sonar typescript:S7773 — global parseInt/isNaN → Number.parseInt/Number.isNaN
+      'unicorn/prefer-native-coercion-functions': 'warn', // Sonar typescript:S7770 — drop pass-through wrappers over String/Number/Boolean
+      'unicorn/no-useless-fallback-in-spread': 'warn', // Sonar typescript:S7744 — { ...(foo || {}) } redundant fallback
+      'unicorn/no-useless-promise-resolve-reject': 'warn', // Sonar typescript:S7746 — redundant Promise.resolve/reject in async fns/callbacks
+      'unicorn/prefer-structured-clone': 'warn', // Sonar typescript:S7784 — JSON.parse(JSON.stringify(x)) → structuredClone(x)
+      'unicorn/no-useless-length-check': 'warn', // Sonar typescript:S7745 — redundant .length check before .some()/.every()
+      'unicorn/prefer-date-now': 'warn', // Sonar typescript:S7759 — new Date().getTime() → Date.now()
+      'unicorn/prefer-code-point': 'warn', // Sonar typescript:S7758 — charCodeAt/fromCharCode → codePointAt/fromCodePoint (surrogate-safe)
+      'unicorn/prefer-node-protocol': 'warn', // Sonar typescript:S7772 — import 'fs' → import 'node:fs'
+      'unicorn/no-abusive-eslint-disable': 'warn', // Sonar typescript:S7724 — a bare `eslint-disable` must name the rules it disables
+      'unicorn/prefer-dom-node-remove': 'warn', // Sonar typescript:S7762 — parent.removeChild(node) → node.remove()
+      'unicorn/prefer-top-level-await': 'warn' // Sonar typescript:S7785 — async IIFE wrapper → top-level await
     }
   },
   {

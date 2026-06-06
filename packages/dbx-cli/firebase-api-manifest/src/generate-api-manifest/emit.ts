@@ -115,7 +115,7 @@ function renderEntry({ entry, validatorName }: CollectedEntry): string {
     entry.mcpResultFields && entry.mcpResultFields.length > 0 ? `mcpResultFields: ${renderDocFields(entry.mcpResultFields)}` : undefined
   ];
 
-  return `  { ${fields.filter((v): v is string => Boolean(v)).join(', ')} }`;
+  return `  { ${fields.filter(Boolean).join(', ')} }`;
 }
 
 function renderDocFields(fields: readonly { readonly name: string; readonly typeText: string; readonly description?: string }[]): string {
@@ -148,7 +148,7 @@ function renderModelEntry(entry: CliModelManifestEntry, emitConverters: boolean)
     entry.read ? `read: ${JSON.stringify(entry.read)}` : undefined,
     entry.serviceFactory ? `serviceFactory: { exportName: ${JSON.stringify(entry.serviceFactory.exportName)}, sourceFile: ${JSON.stringify(entry.serviceFactory.sourceFile)} }` : undefined
   ];
-  return `  { ${fields.filter((v): v is string => Boolean(v)).join(', ')} }`;
+  return `  { ${fields.filter(Boolean).join(', ')} }`;
 }
 
 function renderModelFields(fields: readonly CliModelField[], emitConverters: boolean): string {
@@ -176,5 +176,5 @@ function renderModelField(field: CliModelField, emitConverters: boolean): string
     field.nestedFields ? `nestedFields: ${renderModelFields(field.nestedFields, emitConverters)}` : undefined,
     field.nestedFields ? `nestedIsArray: ${nestedIsArrayLiteral}` : undefined
   ];
-  return `{ ${parts.filter((v): v is string => Boolean(v)).join(', ')} }`;
+  return `{ ${parts.filter(Boolean).join(', ')} }`;
 }

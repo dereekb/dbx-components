@@ -4,7 +4,7 @@ import { type MultiValueMapBuilder, mapsHaveSameKeys, multiValueMapBuilder, read
 describe('readKeysToMap()', () => {
   it('should create a map.', () => {
     const values = [1, 2, 3, 4];
-    const readKey: ReadKeyFunction<number, string> = (x) => String(x);
+    const readKey: ReadKeyFunction<number, string> = String;
 
     const result = readKeysToMap(values, readKey);
 
@@ -32,7 +32,7 @@ describe('readMultipleKeysToMap()', () => {
 });
 
 describe('keyValueMapFactory()', () => {
-  const readKey: ReadKeyFunction<number, string> = (x) => String(x);
+  const readKey: ReadKeyFunction<number, string> = String;
 
   it('should return a function.', () => {
     const factory = keyValueMapFactory(readKey);
@@ -53,7 +53,7 @@ describe('keyValueMapFactory()', () => {
 
   it('should ignore values with null or undefined keys.', () => {
     const values = [1, undefined, 3, null, 5];
-    const readKeyWithNulls: ReadKeyFunction<number | null | undefined, string> = (x) => (x != null ? String(x) : x);
+    const readKeyWithNulls: ReadKeyFunction<number | null | undefined, string> = (x) => (x == null ? x : String(x));
     const factory = keyValueMapFactory(readKeyWithNulls);
     const result = factory(values.filter((x) => x != null)); // factory expects T[], ensure correct type
 

@@ -239,10 +239,10 @@ export class JwksService {
   private async _initializeKeysAndCloud() {
     const jwks = await this.getLatestPublicJwks();
 
-    if (!jwks.keys.length) {
-      await this.rotateKeys();
-    } else {
+    if (jwks.keys.length) {
       await this._syncKeysToCloud(); // sync the keys to the cloud if they exist
+    } else {
+      await this.rotateKeys();
     }
   }
 

@@ -100,7 +100,7 @@ export function dbxDateTimeInputValueParseFactory(mode: DbxDateTimeValueMode, ti
     case DbxDateTimeValueMode.DATE_STRING:
     case DbxDateTimeValueMode.DATE:
     default:
-      factory = (x) => (x != null ? toJsDate(x) : x);
+      factory = (x) => (x == null ? x : toJsDate(x));
       break;
   }
 
@@ -141,18 +141,18 @@ export function dbxDateTimeOutputValueFactory(mode: DbxDateTimeValueMode, timezo
 
   switch (mode) {
     case DbxDateTimeValueMode.DAY_STRING:
-      factory = (x) => (x != null ? formatToISO8601DayStringForSystem(x) : x);
+      factory = (x) => (x == null ? x : formatToISO8601DayStringForSystem(x));
       useTimezoneInstance = false; // day strings do not use timezones
       break;
     case DbxDateTimeValueMode.DATE_STRING:
-      factory = (x) => (x != null ? formatToISO8601DateString(x) : x);
+      factory = (x) => (x == null ? x : formatToISO8601DateString(x));
       break;
     case DbxDateTimeValueMode.UNIX_TIMESTAMP:
-      factory = (x) => (x != null ? x.getTime() : x);
+      factory = (x) => (x == null ? x : x.getTime());
       break;
     case DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY:
     case DbxDateTimeValueMode.MINUTE_OF_DAY:
-      factory = (x) => (x != null ? dateToMinuteOfDay(x) : x);
+      factory = (x) => (x == null ? x : dateToMinuteOfDay(x));
 
       if (mode === DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY) {
         useTimezoneInstance = false;

@@ -35,7 +35,7 @@ describe('fetchPageFactory()', () => {
       },
       buildInputForNextPage: function (pageResult: Partial<FetchPageResult<FetchPageTestResultObject>>, input: FetchPageTestRequestObject): PromiseOrValue<Maybe<Partial<FetchPageTestRequestObject>>> {
         return {
-          page: pageResult.page != null ? pageResult.page + 1 : 0
+          page: pageResult.page == null ? 0 : pageResult.page + 1
         };
       }
     });

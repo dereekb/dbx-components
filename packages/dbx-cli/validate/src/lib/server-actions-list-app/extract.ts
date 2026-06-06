@@ -5,11 +5,11 @@
  * sibling `*.module.ts`, common barrel, and fixture file.
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { type Dirent } from 'node:fs';
+import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, relative, sep } from 'node:path';
 import { Node, Project, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
 import { inspectAppFixtures } from '@dereekb/dbx-cli/model-test';
+import { collectFilesWithSuffix } from '../_core/collect-files.js';
 import type { ServerActionEntry, ServerActionFixtureCoverage, ServerActionModuleWiring } from './types.js';
 
 const ACTION_SERVER_SUFFIX = '.action.server.ts';
@@ -27,7 +27,7 @@ const COMMON_BARREL_REL = 'src/app/common/index.ts';
  */
 export async function extractServerActions(apiAbs: string, apiRel: string): Promise<{ readonly modelRoot: string; readonly entries: readonly ServerActionEntry[]; readonly fixtureStatus: 'ok' | { readonly kind: 'error'; readonly message: string } }> {
   const modelRoot = join(apiAbs, COMMON_MODEL_SUBPATH);
-  const actionFiles = await collectActionFiles(modelRoot);
+  const actionFiles = await collectFilesWithSuffix(modelRoot, ACTION_SERVER_SUFFIX);
   if (actionFiles.length === 0) {
     return { modelRoot, entries: [], fixtureStatus: 'ok' };
   }
@@ -71,54 +71,6 @@ export async function extractServerActions(apiAbs: string, apiRel: string): Prom
 
   entries.sort((a, b) => a.className.localeCompare(b.className));
   return { modelRoot, entries, fixtureStatus };
-}
-
-/**
- * Reads a directory's `Dirent` entries; returns an empty list when the
- * path is unreadable.
- *
- * @param path - Absolute directory path.
- * @returns The directory entries or `[]` on failure.
- */
-async function readDirSafe(path: string): Promise<readonly Dirent[]> {
-  let result: readonly Dirent[];
-  try {
-    result = await readdir(path, { withFileTypes: true });
-  } catch {
-    result = [];
-  }
-  return result;
-}
-
-async function collectActionFiles(root: string): Promise<readonly string[]> {
-  const out: string[] = [];
-  const stack: string[] = [];
-  let isDir = false;
-  try {
-    const stats = await stat(root);
-    isDir = stats.isDirectory();
-  } catch {
-    isDir = false;
-  }
-  if (isDir) {
-    stack.push(root);
-    while (stack.length > 0) {
-      const current = stack.pop() as string;
-      const entries = await readDirSafe(current);
-      for (const entry of entries) {
-        const full = join(current, entry.name);
-        if (entry.isDirectory()) {
-          stack.push(full);
-          continue;
-        }
-        if (entry.isFile() && entry.name.endsWith(ACTION_SERVER_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-          out.push(full);
-        }
-      }
-    }
-    out.sort((a, b) => a.localeCompare(b));
-  }
-  return out;
 }
 
 function findServerActionClasses(sourceFile: SourceFile): readonly string[] {

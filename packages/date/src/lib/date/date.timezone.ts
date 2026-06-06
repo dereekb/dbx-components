@@ -427,10 +427,10 @@ export class DateTimezoneUtcNormalInstance implements DateTimezoneBaseDateConver
       getOffsetInMsFn = getCurrentSystemOffsetInMs;
     } else if (config.timezoneOffset != null) {
       getOffsetInMsFn = () => this.config.timezoneOffset as number;
-    } else if (config.timezone != null) {
-      useTimezone(config.timezone);
-    } else {
+    } else if (config.timezone == null) {
       config = { noConversion: true };
+    } else {
+      useTimezone(config.timezone);
     }
 
     this.config = config;
@@ -1173,19 +1173,19 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
 
     if (!shortCircuited) {
       // set baseDate
-      if (inputDate != null) {
+      if (inputDate == null) {
+        baseDate = new Date();
+      } else {
         if (inputType === 'base') {
           // use dates directly as UTC
           baseDate = inputDate;
         } else {
           baseDate = timezoneInstance.convertDate(inputDate, 'base', inputType);
         }
-      } else {
-        baseDate = new Date();
       }
 
-      const hours: Maybe<number> = inputHours ?? (copyHours !== false ? copyFrom?.getUTCHours() : undefined);
-      const minutes: Maybe<number> = inputMinutes ?? (copyMinutes !== false ? copyFrom?.getUTCMinutes() : undefined);
+      const hours: Maybe<number> = inputHours ?? (copyHours === false ? undefined : copyFrom?.getUTCHours());
+      const minutes: Maybe<number> = inputMinutes ?? (copyMinutes === false ? undefined : copyFrom?.getUTCMinutes());
 
       // NOTE: We do the math this way to avoid issues surrounding daylight savings
       const time = baseDate.getTime();
@@ -1198,8 +1198,8 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
       const minutesInTime = minutesSecondsAndMillseconds - secondsAndMilliseconds;
 
       const nextDay = time - currentDayMillseconds;
-      const nextMinutes = minutes != null ? minutes * MS_IN_MINUTE : minutesInTime;
-      const nextHours = hours != null ? hours * MS_IN_HOUR : hoursInTimeInMs;
+      const nextMinutes = minutes == null ? minutesInTime : minutes * MS_IN_MINUTE;
+      const nextHours = hours == null ? hoursInTimeInMs : hours * MS_IN_HOUR;
 
       const nextTime = nextDay + nextHours + nextMinutes + (roundDownToMinute ? 0 : secondsAndMilliseconds);
       const nextBaseDate = new Date(nextTime);
@@ -1208,7 +1208,7 @@ export function setOnDateWithTimezoneNormalFunction(timezone: DateTimezoneUtcNor
       // one more test to limit the "range" of the change
       // if it is over 1 day, then we can infer there is a timezone mismatch issue. It only occurs in one direction here, so we can safely
       // infer that the real valid result can be derived by subtracting one day
-      const inputToResultDifferenceInHours = inputDate != null ? differenceInHours(result, inputDate) : 0;
+      const inputToResultDifferenceInHours = inputDate == null ? 0 : differenceInHours(result, inputDate);
 
       if (inputToResultDifferenceInHours >= 24) {
         result = addHours(result, -24);

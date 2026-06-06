@@ -89,66 +89,13 @@ export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new
   const warnings: string[] = [];
   const errors: string[] = [];
   const seenNames = new Map<string, string>();
-
-  // Per-model tool-name segment overrides (e.g. collection prefix), sourced from the model manifest
-  // so the names validated here match what the runtime generator advertises.
-  const segments = new Map<string, string>();
-
-  if (input.modelManifest != null) {
-    for (const model of input.modelManifest) {
-      if (model.mcpToolNameSegment != null && model.mcpToolNameSegment.length > 0) {
-        segments.set(model.modelType, model.mcpToolNameSegment);
-      }
-    }
-  }
+  const segments = buildSegmentMap(input.modelManifest);
 
   const toolEntries = input.apiManifest.filter((entry) => entry.verb !== 'standalone');
-
-  // Count how many entries produce each preferred (short) name so colliding ones can be resolved the
-  // same way the runtime generator does. The renderer has no runtime visibility / `mcp.name` override
-  // info, so it conservatively counts every entry — the runtime generator is authoritative and only
-  // disambiguates visible auto-named collisions, but this matches it for the build-time length checks.
-  const nameCounts = new Map<string, number>();
+  const nameCounts = countToolNames(toolEntries, segments);
 
   for (const entry of toolEntries) {
-    const segment = segments.get(entry.model) ?? entry.model;
-    const baseName = buildMcpToolName(segment, entry.verb, entry.specifier);
-    nameCounts.set(baseName, (nameCounts.get(baseName) ?? 0) + 1);
-  }
-
-  for (const entry of toolEntries) {
-    const key = mcpManifestKey(entry.model, entry.verb, entry.specifier);
-    tools[key] = buildToolEntry(entry);
-
-    // Resolve the name the runtime will advertise: a preferred name produced by more than one entry is
-    // re-derived with the abbreviated call type ({@link buildDisambiguatedMcpToolName}) so both tools
-    // survive. The length cap then applies to that final name — an over-cap name is a hard error; an
-    // over-soft name is a warning. Disambiguation that auto-resolves a clash is surfaced as a warning
-    // (not an error) so the build still ships.
-    const segment = segments.get(entry.model) ?? entry.model;
-    const baseName = buildMcpToolName(segment, entry.verb, entry.specifier);
-    const clashes = (nameCounts.get(baseName) ?? 0) > 1;
-    const toolName = clashes ? buildDisambiguatedMcpToolName(segment, entry.verb, entry.specifier) : baseName;
-
-    if (toolName !== baseName) {
-      warnings.push(`Tool name "${baseName}" is produced by more than one entry; re-derived as "${toolName}" (${key}) with the abbreviated call type to disambiguate.`);
-    }
-
-    const validation = validateMcpToolName(toolName);
-
-    if (validation.level === 'error') {
-      errors.push(`Tool name "${toolName}" is ${validation.length} chars, over the ${MCP_TOOL_NAME_MAX_LENGTH}-char MCP cap (${key}). Shorten the model/specifier, set a per-model mcpToolNameSegment, or hide the tool.`);
-    } else if (validation.level === 'warn') {
-      warnings.push(`Tool name "${toolName}" is ${validation.length} chars, over the ${MCP_TOOL_NAME_WARN_LENGTH}-char soft limit (${key}).`);
-    }
-
-    const priorKey = seenNames.get(toolName);
-
-    if (priorKey != null) {
-      warnings.push(`Tool name "${toolName}" is still produced by more than one entry (${priorKey} and ${key}) after disambiguation; one shadows the other unless hidden or renamed at runtime.`);
-    } else {
-      seenNames.set(toolName, key);
-    }
+    registerToolEntry({ entry, segments, nameCounts, tools, seenNames, warnings, errors });
   }
 
   const models = input.modelManifest != null && input.modelManifest.length > 0 ? input.modelManifest.map(projectModelEntry) : undefined;
@@ -162,6 +109,98 @@ export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new
   };
 
   return { manifest, warnings, errors };
+}
+
+/**
+ * Builds the per-model tool-name segment overrides (e.g. collection prefix)
+ * from the model manifest, so the names validated here match what the runtime
+ * generator advertises.
+ *
+ * @param modelManifest - The optional generated model manifest.
+ * @returns Each declaring model's tool-name segment override, keyed by `modelType`.
+ */
+function buildSegmentMap(modelManifest: CliModelManifest | undefined): ReadonlyMap<string, string> {
+  const segments = new Map<string, string>();
+  if (modelManifest != null) {
+    for (const model of modelManifest) {
+      if (model.mcpToolNameSegment != null && model.mcpToolNameSegment.length > 0) {
+        segments.set(model.modelType, model.mcpToolNameSegment);
+      }
+    }
+  }
+  return segments;
+}
+
+/**
+ * Counts how many entries produce each preferred (short) tool name so colliding
+ * ones can be resolved the same way the runtime generator does. The renderer has
+ * no runtime visibility / `mcp.name` override info, so it conservatively counts
+ * every entry — the runtime generator is authoritative and only disambiguates
+ * visible auto-named collisions, but this matches it for the build-time checks.
+ *
+ * @param toolEntries - The non-standalone API manifest entries.
+ * @param segments - The per-model tool-name segment overrides.
+ * @returns How many entries produce each preferred tool name, keyed by that name.
+ */
+function countToolNames(toolEntries: readonly CliApiManifestEntry[], segments: ReadonlyMap<string, string>): ReadonlyMap<string, number> {
+  const nameCounts = new Map<string, number>();
+  for (const entry of toolEntries) {
+    const segment = segments.get(entry.model) ?? entry.model;
+    const baseName = buildMcpToolName(segment, entry.verb, entry.specifier);
+    nameCounts.set(baseName, (nameCounts.get(baseName) ?? 0) + 1);
+  }
+  return nameCounts;
+}
+
+interface RegisterToolEntryInput {
+  readonly entry: CliApiManifestEntry;
+  readonly segments: ReadonlyMap<string, string>;
+  readonly nameCounts: ReadonlyMap<string, number>;
+  readonly tools: Record<string, McpManifestToolEntry>;
+  readonly seenNames: Map<string, string>;
+  readonly warnings: string[];
+  readonly errors: string[];
+}
+
+/**
+ * Renders one API entry into its tool entry and resolves the name the runtime
+ * will advertise: a preferred name produced by more than one entry is re-derived
+ * with the abbreviated call type ({@link buildDisambiguatedMcpToolName}) so both
+ * tools survive. The length cap applies to that final name — over-cap is a hard
+ * error, over-soft is a warning; auto-resolved clashes are surfaced as warnings
+ * (not errors) so the build still ships.
+ *
+ * @param input - The entry, the segment/name-count maps, and the accumulating tools/seen-names/warnings/errors collections.
+ */
+function registerToolEntry(input: RegisterToolEntryInput): void {
+  const { entry, segments, nameCounts, tools, seenNames, warnings, errors } = input;
+  const key = mcpManifestKey(entry.model, entry.verb, entry.specifier);
+  tools[key] = buildToolEntry(entry);
+
+  const segment = segments.get(entry.model) ?? entry.model;
+  const baseName = buildMcpToolName(segment, entry.verb, entry.specifier);
+  const clashes = (nameCounts.get(baseName) ?? 0) > 1;
+  const toolName = clashes ? buildDisambiguatedMcpToolName(segment, entry.verb, entry.specifier) : baseName;
+
+  if (toolName !== baseName) {
+    warnings.push(`Tool name "${baseName}" is produced by more than one entry; re-derived as "${toolName}" (${key}) with the abbreviated call type to disambiguate.`);
+  }
+
+  const validation = validateMcpToolName(toolName);
+
+  if (validation.level === 'error') {
+    errors.push(`Tool name "${toolName}" is ${validation.length} chars, over the ${MCP_TOOL_NAME_MAX_LENGTH}-char MCP cap (${key}). Shorten the model/specifier, set a per-model mcpToolNameSegment, or hide the tool.`);
+  } else if (validation.level === 'warn') {
+    warnings.push(`Tool name "${toolName}" is ${validation.length} chars, over the ${MCP_TOOL_NAME_WARN_LENGTH}-char soft limit (${key}).`);
+  }
+
+  const priorKey = seenNames.get(toolName);
+
+  if (priorKey == null) {
+    seenNames.set(toolName, key);
+  } else {
+    warnings.push(`Tool name "${toolName}" is still produced by more than one entry (${priorKey} and ${key}) after disambiguation; one shadows the other unless hidden or renamed at runtime.`);
+  }
 }
 
 function projectAuthSection(registry: AuthRegistry, appSlug: string): McpManifestAuth | undefined {

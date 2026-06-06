@@ -60,9 +60,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
   const cwd = process.cwd();
   const ensureError = runEnsurePathInsideCwd(parsed.apiDir, cwd);
   let result: ToolResult;
-  if (ensureError !== undefined) {
-    result = toolError(ensureError);
-  } else {
+  if (ensureError === undefined) {
     const apiAbs = resolve(cwd, parsed.apiDir);
     const inspection = await inspectFixturesSafe(apiAbs, parsed.apiDir);
     if (inspection.kind === 'error') {
@@ -75,6 +73,8 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
         format: parsed.format
       });
     }
+  } else {
+    result = toolError(ensureError);
   }
   return result;
 }

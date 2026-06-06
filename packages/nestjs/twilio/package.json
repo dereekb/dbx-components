@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/nestjs/twilio",
-  "version": "13.15.0",
+  "version": "13.16.0",
   "peerDependencies": {
-    "@dereekb/date": "13.15.0",
-    "@dereekb/model": "13.15.0",
-    "@dereekb/nestjs": "13.15.0",
-    "@dereekb/rxjs": "13.15.0",
-    "@dereekb/util": "13.15.0",
+    "@dereekb/date": "13.16.0",
+    "@dereekb/model": "13.16.0",
+    "@dereekb/nestjs": "13.16.0",
+    "@dereekb/rxjs": "13.16.0",
+    "@dereekb/util": "13.16.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "express": "^5.2.1",

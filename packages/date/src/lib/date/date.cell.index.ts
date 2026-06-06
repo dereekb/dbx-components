@@ -387,7 +387,7 @@ export function groupToDateCellRanges(input: (DateCell | DateCellRange)[]): Date
  * @returns Every DateCellIndex covered by the range, inclusive on both ends.
  */
 export function allIndexesInDateCellRange(input: DateCellRange): DateCellIndex[] {
-  return input.to != null ? range(input.i, input.to + 1) : [input.i];
+  return input.to == null ? [input.i] : range(input.i, input.to + 1);
 }
 
 /**
@@ -982,7 +982,7 @@ export function expandUniqueDateCellsFunction<B extends DateCellRange | UniqueDa
 
     function continueToNext(use?: B, priority?: DateCellRangePriority) {
       i += 1;
-      current = use != null ? ({ block: use, priority } as DateCellRangePriorityPair<B>) : sorted[i];
+      current = use == null ? sorted[i] : ({ block: use, priority } as DateCellRangePriorityPair<B>);
       next = sorted[i + 1];
 
       if (next) {

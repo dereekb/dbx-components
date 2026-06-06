@@ -29,10 +29,10 @@ export function filterMaybeArrayFunction<T>(filterFn: Parameters<Array<Maybe<T>>
   return (values: Maybe<Maybe<T[]>>) => {
     let result: T[];
 
-    if (values != null) {
-      result = values.filter((v, i, arr) => filterFn(v, i, arr));
-    } else {
+    if (values == null) {
       result = [];
+    } else {
+      result = values.filter((v, i, arr) => filterFn(v, i, arr));
     }
 
     return result;

@@ -278,7 +278,7 @@ function resolveGroup(config: ResolveGroupConfig): string {
   const existing = new Set(catalog.groups.map((group) => group.group.toLowerCase()));
   const candidates = [model, ...parentModels].map((name) => name.toLowerCase());
   const matched = candidates.find((candidate) => existing.has(candidate));
-  return matched ?? candidates[candidates.length - 1] ?? model.toLowerCase();
+  return matched ?? candidates.at(-1) ?? model.toLowerCase();
 }
 
 /**

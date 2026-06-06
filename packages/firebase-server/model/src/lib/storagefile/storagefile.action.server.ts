@@ -808,10 +808,10 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
     switch (storageFile.ps) {
       case StorageFileProcessingState.INIT_OR_NONE:
         // queue up for processing, unless it has no purpose
-        if (!storageFile.p) {
-          throw storageFileProcessingNotAvailableForTypeError();
-        } else {
+        if (storageFile.p) {
           await beginProcessing(false);
+        } else {
+          throw storageFileProcessingNotAvailableForTypeError();
         }
         break;
       case StorageFileProcessingState.QUEUED_FOR_PROCESSING:
@@ -822,9 +822,7 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
         // check if the processing task is still running
         const shouldCheckProcessing = !isThrottled(STORAGE_FILE_PROCESSING_STUCK_THROTTLE_CHECK_MS, storageFile.pat);
 
-        if (!storageFile.pn) {
-          await beginProcessing(true); // if no processing task is set, restart processing to recover from the broken state
-        } else {
+        if (storageFile.pn) {
           const { pn } = storageFile;
           const notificationDocument = notificationCollectionGroup.documentAccessorForTransaction(transaction).loadDocumentForKey(pn);
 
@@ -846,6 +844,8 @@ export function _processStorageFileInTransactionFactory(context: StorageFileServ
             // enqueue the existing notification to be run in the expedite instance
             expediteInstance.enqueue(notificationDocument);
           }
+        } else {
+          await beginProcessing(true); // if no processing task is set, restart processing to recover from the broken state
         }
         break;
       }
@@ -1515,7 +1515,7 @@ export function _syncStorageFileWithGroupsInTransactionFactory(context: StorageF
     await performAsyncTasks(storageFileGroupPairs, async (storageFileGroupPair) => {
       const { data: storageFileGroup, document: storageFileGroupDocument } = storageFileGroupPair;
       const existsInStorageFileGroup = storageFileGroup?.f.some((x) => x.s === storageFileDocument.id);
-      const change: Maybe<'add' | 'remove'> = removeAllStorageFileGroups ? (existsInStorageFileGroup ? 'remove' : undefined) : !existsInStorageFileGroup ? 'add' : undefined;
+      const change: Maybe<'add' | 'remove'> = removeAllStorageFileGroups ? (existsInStorageFileGroup ? 'remove' : undefined) : existsInStorageFileGroup ? undefined : 'add';
 
       switch (change) {
         case 'add': {
@@ -1530,14 +1530,14 @@ export function _syncStorageFileWithGroupsInTransactionFactory(context: StorageF
             allowRecalculateRegenerateFlag: false
           });
 
-          if (!storageFileGroup) {
-            // if the group does not exist, then create it
-            await createStorageFileGroupInTransaction({ storageFileGroupDocument, template: createTemplate }, transaction);
-            storageFilesGroupsCreated += 1;
-          } else {
+          if (storageFileGroup) {
             // if the group exists, then update it
             await storageFileGroupDocument.update(createTemplate);
             storageFilesGroupsUpdated += 1;
+          } else {
+            // if the group does not exist, then create it
+            await createStorageFileGroupInTransaction({ storageFileGroupDocument, template: createTemplate }, transaction);
+            storageFilesGroupsCreated += 1;
           }
 
           break;
@@ -1713,7 +1713,10 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
 
         if (regenerateZip) {
           // check that the storageFile exists, and if it doesn't, create a new one
-          if (!existingZipStorageFilePair?.data) {
+          if (existingZipStorageFilePair?.data) {
+            // flag it for processing again
+            await processStorageFileInTransaction({ params: { processAgainIfSuccessful: true }, storageFileDocument: existingZipStorageFilePair.document, storageFile: existingZipStorageFilePair.data }, transaction);
+          } else {
             const zipStorageFile = storageService.file(storageFileGroupZipFileStoragePath(storageFileGroupDocument.id));
 
             // create a new StorageFile
@@ -1730,9 +1733,6 @@ export function regenerateStorageFileGroupContentFactory(context: StorageFileSer
             });
 
             updateTemplate.zsf = storageFileDocument.id;
-          } else {
-            // flag it for processing again
-            await processStorageFileInTransaction({ params: { processAgainIfSuccessful: true }, storageFileDocument: existingZipStorageFilePair.document, storageFile: existingZipStorageFilePair.data }, transaction);
           }
 
           contentStorageFilesFlaggedForProcessing += 1;

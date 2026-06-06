@@ -123,7 +123,7 @@ export class DbxScheduleSelectionCalendarComponent<T> implements OnInit {
   readonly config$: Observable<Maybe<DbxScheduleSelectionCalendarComponentConfig>> = toObservable(this.config).pipe(distinctUntilChanged(), shareReplay(1));
 
   readonly readonly$: Observable<boolean> = this.config$.pipe(
-    switchMap((x) => (x?.readonly != null ? asObservableFromGetter(x.readonly) : of(undefined))),
+    switchMap((x) => (x?.readonly == null ? of(undefined) : asObservableFromGetter(x.readonly))),
     combineLatestWith(toObservable(this.readonly)),
     map(([configReadonly, inputReadonly]) => {
       return configReadonly || inputReadonly || false;

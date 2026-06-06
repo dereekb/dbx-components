@@ -173,10 +173,10 @@ export function transformStringFunction<S extends string = string>(config: Trans
   let transform: Maybe<TransformStringFunction> = baseTransform;
 
   if (config.trim) {
-    if (baseTransform != null) {
-      transform = (x) => baseTransform(stringTrimFunction(x));
-    } else {
+    if (baseTransform == null) {
       transform = stringTrimFunction;
+    } else {
+      transform = (x) => baseTransform(stringTrimFunction(x));
     }
   }
 

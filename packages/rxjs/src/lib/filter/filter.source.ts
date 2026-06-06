@@ -79,7 +79,7 @@ export class FilterSourceInstance<F> implements FilterSource<F>, Destroyable {
    * otherwise falling back to the initial/default filter. Deduplicated by deep value equality.
    */
   readonly filter$: Observable<F> = this._filter.pipe(
-    switchMap((x) => (x != null ? of(x) : this.initialFilter$)),
+    switchMap((x) => (x == null ? this.initialFilter$ : of(x))),
     filterMaybe(), // Only provided non-maybe filter values.
     distinctUntilObjectValuesChanged(),
     shareReplay(1)

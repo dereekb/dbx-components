@@ -462,7 +462,7 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
   }
 
   protected _getValueOnFormControl(valueOnFormControl: ArrayOrValue<T>): T[] {
-    const value: T[] = valueOnFormControl != null ? [...asArray(valueOnFormControl)] : []; // Always return an array.
+    const value: T[] = valueOnFormControl == null ? [] : [...asArray(valueOnFormControl)]; // Always return an array.
     return value;
   }
 

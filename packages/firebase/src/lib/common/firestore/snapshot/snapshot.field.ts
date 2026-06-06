@@ -220,13 +220,13 @@ export type FirestoreModelFieldMapFunctionsConfig<V, D> = ModelFieldMapFunctions
 export function firestoreField<V, D = unknown>(config: FirestoreFieldConfig<V, D>): FirestoreModelFieldMapFunctionsConfig<V, D> {
   return {
     from:
-      (config as FirestoreFieldConfigWithDefault<V, D>).default != null
+      (config as FirestoreFieldConfigWithDefault<V, D>).default == null
         ? {
-            default: asObjectCopyFactory((config as FirestoreFieldConfigWithDefault<V, D>).default),
+            defaultInput: asObjectCopyFactory((config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData),
             convert: config.fromData
           }
         : {
-            defaultInput: asObjectCopyFactory((config as FirestoreFieldConfigWithDefaultData<V, D>).defaultData),
+            default: asObjectCopyFactory((config as FirestoreFieldConfigWithDefault<V, D>).default),
             convert: config.fromData
           },
     to: {
@@ -436,14 +436,14 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
     const transformFrom = (transformFromData ?? transformData) as MapFunction<D, V>;
     const baseTransformTo = (transformToData ?? transformData) as MapFunction<V, Maybe<D>>;
 
-    const dontStoreValueIf = inputDontStoreValueIf != null ? (isEqualToValueDecisionFunction(inputDontStoreValueIf) as Maybe<DecisionFunction<V>>) : null;
+    const dontStoreValueIf = inputDontStoreValueIf == null ? null : (isEqualToValueDecisionFunction(inputDontStoreValueIf) as Maybe<DecisionFunction<V>>);
     const transformTo =
-      dontStoreValueIf != null
-        ? (value: V) => {
+      dontStoreValueIf == null
+        ? baseTransformTo
+        : (value: V) => {
             const dontStoreCheck = dontStoreValueIf(value);
             return dontStoreCheck ? null : baseTransformTo(value);
-          }
-        : baseTransformTo;
+          };
 
     let loadDefaultReadValueFn: Maybe<Getter<D>>; // set if a default read value is provided
 
@@ -458,10 +458,10 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
       }
 
       fromData = (x) => transformFrom(x ?? (loadDefaultReadValueFn as Getter<D>)());
-    } else if (transformFrom !== passThrough) {
-      fromData = ((x) => (x != null ? transformFrom(x) : x)) as MapFunction<Maybe<D>, Maybe<V>>;
-    } else {
+    } else if (transformFrom === passThrough) {
       fromData = passThrough as MapFunction<Maybe<D>, Maybe<V>>;
+    } else {
+      fromData = ((x) => (x == null ? x : transformFrom(x))) as MapFunction<Maybe<D>, Maybe<V>>;
     }
 
     // setup toData
@@ -476,7 +476,9 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
 
     let toData: MapFunction<Maybe<V>, Maybe<D>>;
 
-    if (dontStoreIf != null) {
+    if (dontStoreIf == null) {
+      toData = ((x: Maybe<V>) => (x == null ? x : (transformTo(x) ?? null))) as MapFunction<Maybe<V>, Maybe<D>>;
+    } else {
       const dontStoreValue = dontStoreIf;
 
       toData = (x: Maybe<V>) => {
@@ -489,8 +491,6 @@ export function optionalFirestoreField<V, D = V>(config?: unknown): FirestoreMod
 
         return result;
       };
-    } else {
-      toData = ((x: Maybe<V>) => (x != null ? (transformTo(x) ?? null) : x)) as MapFunction<Maybe<V>, Maybe<D>>;
     }
 
     result = firestoreField<Maybe<V>, Maybe<D>>({
@@ -1228,23 +1228,23 @@ export function optionalFirestoreArray<T>(config?: OptionalFirestoreArrayFieldCo
 
   let dontStoreIf: Maybe<DecisionFunction<T[]>>;
 
-  if (inputDontStoreIf != null) {
-    dontStoreIf = shouldNotStoreIfEmpty ? (x: T[]) => x.length === 0 || inputDontStoreIf(x) : inputDontStoreIf;
-  } else {
+  if (inputDontStoreIf == null) {
     dontStoreIf = shouldNotStoreIfEmpty
       ? (x: T[]) => {
           return x.length === 0;
         }
       : undefined;
+  } else {
+    dontStoreIf = shouldNotStoreIfEmpty ? (x: T[]) => x.length === 0 || inputDontStoreIf(x) : inputDontStoreIf;
   }
 
   const inputFilterUnique = config?.filterUnique === true ? (unique as FilterUniqueFunction<T, any>) : (config?.filterUnique as FilterUniqueFunction<T, any>);
   const filterUniqueValuesFn: Maybe<MapSameFunction<T[]>> =
-    inputFilterUnique != null
-      ? (x) => {
+    inputFilterUnique == null
+      ? undefined
+      : (x) => {
           return inputFilterUnique(x);
-        }
-      : undefined;
+        };
 
   const inputTransformData = config?.transformData;
   const sortArrayFn = isMapIdentityFunction(sortFn) ? undefined : (x: T[]) => sortFn(x, true);
@@ -1371,7 +1371,7 @@ export type FirestoreUniqueStringArrayFieldConfig<S extends string = string> = O
  * @__NO_SIDE_EFFECTS__
  */
 export function firestoreUniqueStringArray<S extends string = string>(config?: FirestoreUniqueStringArrayFieldConfig<S>) {
-  const filterUnique = (config != null ? filterUniqueTransform(config) : unique) as FilterUniqueFunction<S>;
+  const filterUnique = (config == null ? unique : filterUniqueTransform(config)) as FilterUniqueFunction<S>;
   return firestoreUniqueArray<S, S>({
     ...config,
     filterUnique: filterUnique

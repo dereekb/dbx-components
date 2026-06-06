@@ -260,7 +260,7 @@ export class ItemPageIterationInstance<V, F, C extends ItemPageIterationConfig<F
           let state: Maybe<PageLoadingState<ItemPageIteratorResult<V>>>;
 
           if (inputState != null) {
-            const end = inputState.value != null ? isItemPageIteratorResultEndResult(inputState.value) : undefined;
+            const end = inputState.value == null ? undefined : isItemPageIteratorResultEndResult(inputState.value);
             const hasNextPage = invertMaybeBoolean(end);
 
             // Reuse the same reference when hasNextPage hasn't changed to avoid

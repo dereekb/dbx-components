@@ -75,7 +75,7 @@ export function sequentialIncrementingNumberStringModelIdFactory(config: Sequent
   const increaseBy = inputIncreaseBy ?? 1;
   const dencoder = inputDencoder ?? NUMBER_STRING_DENCODER_64;
   const dencoderNumberValue = numberStringDencoderDecodedNumberValueFunction(dencoder);
-  const startAtFromCurrentIndex = currentIndex != null ? dencoderNumberValue(currentIndex) + increaseBy : undefined;
+  const startAtFromCurrentIndex = currentIndex == null ? undefined : dencoderNumberValue(currentIndex) + increaseBy;
   const startAt = inputStartAt == null ? (startAtFromCurrentIndex ?? 0) : dencoderNumberValue(inputStartAt);
   const transform = inputTranformFunction ?? mapIdentityFunction();
 

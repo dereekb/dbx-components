@@ -4,7 +4,7 @@ describe('handler()', () => {
   let handler: Handler<string | number, string>;
 
   it('should create a new handler.', () => {
-    handler = makeHandler((x: string | number) => String(x));
+    handler = makeHandler(String);
     expect(typeof handler).toBe('function');
     expect(typeof handler.set).toBe('function');
     expect(typeof handler.bindSet).toBe('function');
@@ -13,7 +13,7 @@ describe('handler()', () => {
 
   describe('function', () => {
     beforeEach(() => {
-      handler = makeHandler((x: string | number) => String(x));
+      handler = makeHandler(String);
     });
 
     describe('set', () => {
@@ -154,7 +154,7 @@ describe('handler()', () => {
 
 describe('handlerFactory()', () => {
   it('should create independent handler instances', async () => {
-    const factory = handlerFactory((x: number) => String(x));
+    const factory = handlerFactory(String);
     const handler1 = factory();
     const handler2 = factory();
 
@@ -185,7 +185,7 @@ describe('handlerFactory()', () => {
   });
 
   it('should handle void return from handler as true', async () => {
-    const handler = makeHandler((x: number) => String(x));
+    const handler = makeHandler(String);
     const fn = vi.fn(); // returns undefined
 
     handler.set('1', fn);

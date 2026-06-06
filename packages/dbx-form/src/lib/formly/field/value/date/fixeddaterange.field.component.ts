@@ -285,7 +285,11 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
             let result: FixedDateRangeScan;
             let pickType: Maybe<FixedDateRangeScanType> = 'start';
 
-            if (nextDateRange?.start != null) {
+            if (nextDateRange?.start == null) {
+              result = {
+                lastDateRange: nextDateRange
+              };
+            } else {
               const { start: startOrNextDate, end } = nextDateRange;
               const potentialBoundary = dateRange({ ...dateRangeInput, date: startOrNextDate } as DateRangeInput);
 
@@ -397,10 +401,6 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
                   range
                 };
               }
-            } else {
-              result = {
-                lastDateRange: nextDateRange
-              };
             }
 
             if (result) {
@@ -527,7 +527,7 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
       }
 
       const filter = dateTimeMinuteWholeDayDecisionFunction(x, false);
-      return (x: Maybe<Date>) => (x != null ? filter(x) : true);
+      return (x: Maybe<Date>) => (x == null ? true : filter(x));
     }),
     shareReplay(1)
   );
@@ -667,10 +667,10 @@ export class DbxFixedDateRangeFieldComponent extends FieldType<FieldTypeConfig<D
       }
     });
 
-    if (this.presets != null) {
-      this._presets.next(asObservableFromGetter(this.presets));
-    } else {
+    if (this.presets == null) {
       this._presets.next(this.dbxDateTimeFieldMenuPresetsService.configurations$);
+    } else {
+      this._presets.next(asObservableFromGetter(this.presets));
     }
 
     this._activeDateSub.subscription = this.calendarFocusDate$.subscribe((x) => {

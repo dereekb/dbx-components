@@ -96,7 +96,7 @@ export function logMergeCalcomOAuthAccessTokenCacheServiceErrorFunction(failedUp
  */
 export function mergeCalcomOAuthAccessTokenCacheServices(inputServicesToMerge: CalcomOAuthAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeCalcomOAuthAccessTokenCacheServiceErrorFunction>): CalcomOAuthAccessTokenCacheService {
   const allServices = [...inputServicesToMerge];
-  const logErrorFunction = typeof logError === 'function' ? logError : logError !== false ? logMergeCalcomOAuthAccessTokenCacheServiceErrorFunction : undefined;
+  const logErrorFunction = typeof logError === 'function' ? logError : logError === false ? undefined : logMergeCalcomOAuthAccessTokenCacheServiceErrorFunction;
 
   if (allServices.length === 0) {
     throw new Error('mergeCalcomOAuthAccessTokenCacheServices() input cannot be empty.');

@@ -150,14 +150,14 @@ function removeStore(state: DbxFirebaseDocumentStoreContextStoreState, store: Db
 
   let nextState: DbxFirebaseDocumentStoreContextStoreState;
 
-  if (!stores.has(store)) {
-    nextState = state;
-  } else {
+  if (stores.has(store)) {
     // remove the entry
     stores.delete(store);
 
     // update the last changed date
     nextState = { ...state, currentEntryCount: state.currentEntryCount - 1, lastStoresChangeAt: new Date() };
+  } else {
+    nextState = state;
   }
 
   return nextState;

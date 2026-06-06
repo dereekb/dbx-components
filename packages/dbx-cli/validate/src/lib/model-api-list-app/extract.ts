@@ -7,10 +7,10 @@
  * like `development.api.ts` don't pollute the output).
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { type Dirent } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { extractCrudEntries, type CrudVerb } from '@dereekb/dbx-cli/manifest-extract';
+import { collectFilesWithSuffix } from '../_core/collect-files.js';
 import type { ApiListEntry, ApiListFileSummary, ApiListVerbCounts } from './types.js';
 
 const API_SUFFIX = '.api.ts';
@@ -38,7 +38,7 @@ export interface ExtractApiListResult {
  */
 export async function extractApiList(input: ExtractApiListInput): Promise<ExtractApiListResult> {
   const modelRoot = join(input.componentAbs, MODEL_SUBPATH);
-  const apiFiles = await collectApiFiles(modelRoot);
+  const apiFiles = await collectFilesWithSuffix(modelRoot, API_SUFFIX);
   const entries: ApiListEntry[] = [];
   const files: ApiListFileSummary[] = [];
 
@@ -70,54 +70,6 @@ export async function extractApiList(input: ExtractApiListInput): Promise<Extrac
   }
 
   return { modelRoot, entries, files };
-}
-
-/**
- * Reads a directory's `Dirent` entries; returns an empty list when the
- * path is unreadable.
- *
- * @param path - Absolute directory path.
- * @returns The directory entries or `[]` on failure.
- */
-async function readDirSafe(path: string): Promise<readonly Dirent[]> {
-  let result: readonly Dirent[];
-  try {
-    result = await readdir(path, { withFileTypes: true });
-  } catch {
-    result = [];
-  }
-  return result;
-}
-
-async function collectApiFiles(root: string): Promise<readonly string[]> {
-  const out: string[] = [];
-  const stack: string[] = [];
-  let isDir = false;
-  try {
-    const stats = await stat(root);
-    isDir = stats.isDirectory();
-  } catch {
-    isDir = false;
-  }
-  if (isDir) {
-    stack.push(root);
-    while (stack.length > 0) {
-      const current = stack.pop() as string;
-      const entries = await readDirSafe(current);
-      for (const entry of entries) {
-        const full = join(current, entry.name);
-        if (entry.isDirectory()) {
-          stack.push(full);
-          continue;
-        }
-        if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-          out.push(full);
-        }
-      }
-    }
-    out.sort((a, b) => a.localeCompare(b));
-  }
-  return out;
 }
 
 function countVerbs(entries: readonly ApiListEntry[]): ApiListVerbCounts {

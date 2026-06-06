@@ -140,10 +140,10 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> {
     switchMap((enabled) => {
       let countObs: Observable<number>;
 
-      if (enabled !== false) {
-        countObs = this._triggerCount$;
-      } else {
+      if (enabled === false) {
         countObs = EMPTY;
+      } else {
+        countObs = this._triggerCount$;
       }
 
       return countObs;
@@ -152,7 +152,7 @@ export class DbxActionAutoTriggerDirective<T = unknown, O = unknown> {
 
   private readonly _isTriggerLimited$: Observable<readonly [number, boolean]> = combineLatest([this.triggerCount$, toObservable(this.triggerLimit)]).pipe(
     map(([triggerCount, limit]) => {
-      const isAllowedToRun = limit != null ? triggerCount < limit : true;
+      const isAllowedToRun = limit == null ? true : triggerCount < limit;
       return [triggerCount, isAllowedToRun] as const;
     }),
     shareReplay(1)

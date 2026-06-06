@@ -434,7 +434,7 @@ export interface DateCellTimingExpansionFactoryConfig<B extends DateCell | DateC
 export function dateCellTimingExpansionFactory<B extends DateCell | DateCellRange = DateCell>(config: DateCellTimingExpansionFactoryConfig): DateCellTimingExpansionFactory<B> {
   const { timing, rangeLimit, filter: inputFilter, durationSpanFilter: inputDurationSpanFilter, maxDateCellsToReturn = Number.MAX_SAFE_INTEGER, blocksEvaluationLimit = Number.MAX_SAFE_INTEGER } = config;
   const { duration } = timing;
-  const indexRange = rangeLimit !== false ? dateCellIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
+  const indexRange = rangeLimit === false ? { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER } : dateCellIndexRange(timing, rangeLimit);
 
   const isInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
   const filter: FilterFunction<B> = mergeFilterFunctions<B>((x: B) => isInRange(x.i), inputFilter);
@@ -618,7 +618,7 @@ export type DateCellDayTimingInfoFactory = ((date: DateOrDateCellIndex, now?: Da
 export function dateCellDayTimingInfoFactory(config: DateCellDayTimingInfoFactoryConfig): DateCellDayTimingInfoFactory {
   const { timing, rangeLimit } = config;
   const { duration } = timing;
-  const indexRange = rangeLimit !== false ? dateCellIndexRange(timing, rangeLimit) : { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER };
+  const indexRange = rangeLimit === false ? { minIndex: Number.MIN_SAFE_INTEGER, maxIndex: Number.MAX_SAFE_INTEGER } : dateCellIndexRange(timing, rangeLimit);
   const checkIsInRange = indexRangeCheckFunction({ indexRange, inclusiveMaxIndex: false });
   const indexFactory = dateCellTimingRelativeIndexFactory(timing);
   const dayFactory = dateCellTimingDateFactory(timing);
@@ -1384,7 +1384,7 @@ export function isDateWithinDateCellRangeFunction(config: IsDateWithinDateCellRa
   function convertDateRangeToIndexRange(range: DateRangeStart & Partial<DateRange>) {
     const i = indexFactory(range.start);
     const end = (range as Partial<DateRange>).end;
-    const to: Maybe<number> = end != null ? indexFactory(end) : undefined;
+    const to: Maybe<number> = end == null ? undefined : indexFactory(end);
     return { i, to };
   }
 

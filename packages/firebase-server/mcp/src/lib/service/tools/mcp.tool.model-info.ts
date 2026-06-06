@@ -421,11 +421,11 @@ function buildModelNotFoundMessage(query: string, manifest: ReadonlyArray<McpMan
   const groupMatch = findGroupCount(query, manifest);
   let message: string;
 
-  if (groupMatch != null) {
+  if (groupMatch == null) {
+    message = `model-info: no exact match for "${query}". Call \`model-info\` with no arguments to list groups, or pass all:true for the full catalog.`;
+  } else {
     const plural = groupMatch.modelCount === 1 ? '' : 's';
     message = `model-info: no exact match for "${query}" — did you mean group:"${groupMatch.modelGroup}" (${groupMatch.modelCount} model${plural})? Use modelGroup:"${groupMatch.modelGroup}", or all:true for everything.`;
-  } else {
-    message = `model-info: no exact match for "${query}". Call \`model-info\` with no arguments to list groups, or pass all:true for the full catalog.`;
   }
 
   return message;

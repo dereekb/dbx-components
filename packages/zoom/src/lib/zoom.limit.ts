@@ -51,7 +51,7 @@ export type ZoomRateLimitedFetchHandler = RateLimitedFetchHandler<ResetPeriodPro
  * @returns A configured rate-limited fetch handler.
  */
 export function zoomRateLimitedFetchHandler(config?: Maybe<ZoomRateLimitedFetchHandlerConfig>): ZoomRateLimitedFetchHandler {
-  const onTooManyRequests = config?.onTooManyRequests !== false ? (config?.onTooManyRequests ?? DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION) : undefined;
+  const onTooManyRequests = config?.onTooManyRequests === false ? undefined : (config?.onTooManyRequests ?? DEFAULT_ZOOM_RATE_LIMITED_TOO_MANY_REQUESTS_LOG_FUNCTION);
   const defaultLimit = config?.maxRateLimit ?? DEFAULT_ZOOM_API_RATE_LIMIT;
   const defaultResetPeriod = config?.resetPeriod ?? DEFAULT_ZOOM_API_RATE_LIMIT_RESET_PERIOD;
 

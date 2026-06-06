@@ -32,7 +32,7 @@ getTestBed().initTestEnvironment(BrowserTestingModule, platformBrowserTesting())
  *
  * https://github.com/firebase/firebase-js-sdk/issues/7845
  */
-import { TextEncoder, TextDecoder } from 'util';
+import { TextEncoder, TextDecoder } from 'node:util';
 (global as any).TextEncoder = TextEncoder;
 (global as any).TextDecoder = TextDecoder;
 

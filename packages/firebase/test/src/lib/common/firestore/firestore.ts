@@ -40,7 +40,7 @@ export interface TestingFirestoreAccessorDriver extends FirestoreAccessorDriver 
  */
 export function makeTestingFirestoreAccesorDriver(driver: FirestoreAccessorDriver): TestingFirestoreAccessorDriver {
   let fuzzerKey = 0;
-  const time = new Date().getTime();
+  const time = Date.now();
   const fuzzedMap = new Map<string, string>();
   const { collection, subcollection, collectionGroup } = driver;
 

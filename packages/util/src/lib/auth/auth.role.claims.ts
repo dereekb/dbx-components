@@ -212,7 +212,7 @@ export function authRoleClaimsService<T extends AuthClaimsObject>(config: AuthRo
         // since checking uses equivalence, the objects will never match equivalence via the === properly.
         // AuthRoleClaimsFactoryConfigEntryEncodeOptions is likely to be used for these cases unknownways, but this will help avoid unexpected errors.
         if (typeof expectedValue === 'object') {
-          throw new Error(`failed decoding claims. Expected value to be a string or number. Object isn't supported with simple claims.`);
+          throw new TypeError(`failed decoding claims. Expected value to be a string or number. Object isn't supported with simple claims.`);
         }
 
         if (inverse) {

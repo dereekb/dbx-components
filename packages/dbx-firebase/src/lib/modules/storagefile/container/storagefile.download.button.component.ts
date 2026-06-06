@@ -364,13 +364,13 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     const expiresAt = this.downloadUrlExpiresAtDateSignal();
 
     const details: Maybe<DbxFirebaseStorageFileDownloadDetails> =
-      downloadUrl != null
-        ? {
+      downloadUrl == null
+        ? undefined
+        : {
             downloadUrl,
             mimeType,
             expiresAt
-          }
-        : undefined;
+          };
 
     return details;
   });

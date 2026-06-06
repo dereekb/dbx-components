@@ -69,7 +69,7 @@ export function logMergeZohoAccountsAccessTokenCacheServiceErrorFunction(failedU
  */
 export function mergeZohoAccountsAccessTokenCacheServices(inputServicesToMerge: ZohoAccountsAccessTokenCacheService[], logError?: Maybe<boolean | LogMergeZohoAccountsAccessTokenCacheServiceErrorFunction>): ZohoAccountsAccessTokenCacheService {
   const services = [...inputServicesToMerge];
-  const logErrorFunction = typeof logError === 'function' ? logError : logError !== false ? logMergeZohoAccountsAccessTokenCacheServiceErrorFunction : undefined;
+  const logErrorFunction = typeof logError === 'function' ? logError : logError === false ? undefined : logMergeZohoAccountsAccessTokenCacheServiceErrorFunction;
 
   if (services.length === 0) {
     throw new Error('mergeZohoAccountsAccessTokenCacheServices() input cannot be empty.');

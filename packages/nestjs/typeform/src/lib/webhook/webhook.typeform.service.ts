@@ -29,10 +29,10 @@ export class TypeformWebhookService {
   async updateForWebhook(req: Request, rawBody: Buffer): Promise<void> {
     const result = await this._verifier(req, rawBody);
 
-    if (!result.valid) {
-      this.logger.warn('Received invalid Typeform event.', req);
-    } else {
+    if (result.valid) {
       await this.updateForTypeformEvent(result.event);
+    } else {
+      this.logger.warn('Received invalid Typeform event.', req);
     }
   }
 

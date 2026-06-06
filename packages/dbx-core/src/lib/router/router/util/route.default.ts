@@ -65,12 +65,12 @@ export class DbxRouteParamDefaultRedirectInstance<T> implements Initialized, Des
   protected redirectWithDefaultValue(value: Maybe<T>): Promise<boolean> {
     let result: Promise<boolean>;
 
-    if (value != null) {
-      // perform a segue once
-      result = this.redirectWithValue(value);
-    } else {
+    if (value == null) {
       // do nothing
       result = Promise.resolve(false);
+    } else {
+      // perform a segue once
+      result = this.redirectWithValue(value);
     }
 
     return result;

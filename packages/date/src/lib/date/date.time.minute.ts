@@ -451,9 +451,7 @@ export class DateTimeMinuteInstance {
           excludeInputDate: true
         });
 
-        if (nextFutureDate != null) {
-          nextAvailableDate = nextFutureDate.date;
-        } else {
+        if (nextFutureDate == null) {
           // check the past date clamp
           const previousPastDate = findNextDateInDateCellScheduleFilter({
             date,
@@ -466,6 +464,8 @@ export class DateTimeMinuteInstance {
           if (previousPastDate != null) {
             nextAvailableDate = previousPastDate.date;
           }
+        } else {
+          nextAvailableDate = nextFutureDate.date;
         }
 
         // set a default from the given input if applicable

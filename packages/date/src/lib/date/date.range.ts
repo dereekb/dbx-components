@@ -806,15 +806,15 @@ export function isDateInDateRangeFunction<T extends Partial<DateRange>>(dateRang
       const time = input.getTime();
       return time >= startTime;
     }) as IsDateInDateRangeFunction<T>;
-  } else if (dateRange.end != null) {
+  } else if (dateRange.end == null) {
+    fn = ((_input: Date) => true) as IsDateInDateRangeFunction<T>;
+  } else {
     // End Only
     const endTime = dateRange.end.getTime();
     fn = ((input: Date) => {
       const time = input.getTime();
       return time <= endTime;
     }) as IsDateInDateRangeFunction<T>;
-  } else {
-    fn = ((_input: Date) => true) as IsDateInDateRangeFunction<T>;
   }
 
   fn._dateRange = dateRange;

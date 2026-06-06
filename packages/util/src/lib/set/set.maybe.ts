@@ -10,5 +10,5 @@ import { type Maybe, type MaybeNot } from '../value/maybe.type';
  * @returns
  */
 export function maybeSet<T>(input: Maybe<ArrayOrValue<T>>): Maybe<Set<T>> {
-  return input != null ? new Set(asArray(input)) : (input as MaybeNot);
+  return input == null ? (input as MaybeNot) : new Set(asArray(input));
 }

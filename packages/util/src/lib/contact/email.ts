@@ -89,12 +89,12 @@ export function convertEmailParticipantStringToParticipant(participantString: Em
 export function coerceToEmailParticipants({ participants = [], emails = [] }: { participants?: EmailParticipant[]; emails?: EmailAddress[] }): EmailParticipant[] {
   let result: EmailParticipant[];
 
-  if (!emails.length) {
-    result = participants;
-  } else {
+  if (emails.length) {
     const participantEmails = participants.map((x) => x.email);
     const emailsWithoutParticipants = excludeValuesFromArray(emails, participantEmails);
     result = [...participants, ...emailsWithoutParticipants.map((email) => ({ email }))];
+  } else {
+    result = participants;
   }
 
   return result;

@@ -9,10 +9,10 @@
  * stays stable).
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { type Dirent } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { extractCrudEntries, type CrudEntry, type CrudEntryDocField } from '@dereekb/dbx-cli/manifest-extract';
+import { collectFilesWithSuffix } from '../_core/collect-files.js';
 import type { ApiLookupEntry, ApiLookupField, ApiLookupReport, ActionLookupStatus } from './types.js';
 import { buildActionLookup } from './extract-actions.js';
 
@@ -115,8 +115,7 @@ function mapDocFields(fields: readonly CrudEntryDocField[] | undefined): readonl
 
 async function collectApiSources(componentAbs: string): Promise<readonly ApiSource[]> {
   const root = join(componentAbs, COMPONENT_LIB_SUBPATH);
-  const files = await listApiFiles(root);
-  files.sort((a, b) => a.localeCompare(b));
+  const files = await collectFilesWithSuffix(root, API_SUFFIX);
   const sources: ApiSource[] = [];
   for (const fileAbs of files) {
     const text = await readFile(fileAbs, 'utf8');
@@ -125,45 +124,6 @@ async function collectApiSources(componentAbs: string): Promise<readonly ApiSour
     sources.push({ fileAbs, fileRel, text });
   }
   return sources;
-}
-
-async function listApiFiles(root: string): Promise<string[]> {
-  const files: string[] = [];
-  let isDir = false;
-  try {
-    const stats = await stat(root);
-    isDir = stats.isDirectory();
-  } catch {
-    isDir = false;
-  }
-  if (isDir) {
-    const stack: string[] = [root];
-    while (stack.length > 0) {
-      const current = stack.pop() as string;
-      const entries = await readDirEntries(current);
-      for (const entry of entries) {
-        const full = join(current, entry.name);
-        if (entry.isDirectory()) {
-          stack.push(full);
-          continue;
-        }
-        if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-          files.push(full);
-        }
-      }
-    }
-  }
-  return files;
-}
-
-async function readDirEntries(dir: string): Promise<Dirent[]> {
-  let result: Dirent[];
-  try {
-    result = await readdir(dir, { withFileTypes: true });
-  } catch {
-    result = [];
-  }
-  return result;
 }
 
 function pickMatchingSource(sources: readonly ApiSource[], modelFilter: string): ApiSource | undefined {

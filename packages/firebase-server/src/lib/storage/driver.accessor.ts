@@ -25,7 +25,7 @@ import { isTestNodeEnv } from '@dereekb/nestjs';
 import { fixMultiSlashesInSlashPath, type Maybe, type PromiseOrValue, type SlashPathFolder, slashPathName, SLASH_PATH_SEPARATOR, toRelativeSlashPathStartType, filterUndefinedValues, objectHasNoKeys } from '@dereekb/util';
 import { type SaveOptions, type CreateWriteStreamOptions, type GetFilesOptions, type Storage as GoogleCloudStorage, type File as GoogleCloudFile, type DownloadOptions, type GetFilesResponse, type FileMetadata, type Bucket, type MoveFileAtomicOptions, type CopyOptions, ApiError, type GetSignedUrlConfig } from '@google-cloud/storage';
 import { addHours, addMilliseconds } from 'date-fns';
-import { isArrayBuffer, isUint8Array } from 'util/types';
+import { isArrayBuffer, isUint8Array } from 'node:util/types';
 
 /**
  * Resolves a Google Cloud Storage {@link Bucket} from a {@link StoragePath}.
@@ -128,7 +128,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
       contentEncoding: options.metadata?.contentEncoding,
       contentLanguage: options.metadata?.contentLanguage,
       contentType: options.metadata?.contentType,
-      metadata: !objectHasNoKeys(customMetadata) ? customMetadata : undefined
+      metadata: objectHasNoKeys(customMetadata) ? undefined : customMetadata
     });
   }
 
@@ -203,9 +203,9 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     getSignedUrl: async (input) => {
       const expires =
         input?.expiresAt ??
-        (input?.expiresIn != null
-          ? addMilliseconds(new Date(), input.expiresIn) // use expiresIn if provided
-          : addHours(new Date(), 1)); // default expiration in 1 hour
+        (input?.expiresIn == null
+          ? addHours(new Date(), 1) // use expiresIn if provided
+          : addMilliseconds(new Date(), input.expiresIn)); // default expiration in 1 hour
 
       const config: GetSignedUrlConfig = {
         ...input,
@@ -297,7 +297,7 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
     copy,
     delete: (options: StorageDeleteFileOptions) => file.delete(options).then(() => undefined),
     isPublic: () => file.isPublic().then((x) => x[0]),
-    makePublic: (setPublic) => (setPublic !== false ? file.acl.add(PUBLIC_ACL) : file.acl.delete({ entity: PUBLIC_ACL.entity })).then(() => undefined),
+    makePublic: (setPublic) => (setPublic === false ? file.acl.delete({ entity: PUBLIC_ACL.entity }) : file.acl.add(PUBLIC_ACL)).then(() => undefined),
     makePrivate: (options) => file.makePrivate(options).then(() => undefined),
     getAcls: (options) => file.acl.get(options).then((x) => ({ acls: x[0], metadata: x[1] }))
   };

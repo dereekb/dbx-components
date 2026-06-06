@@ -28,6 +28,7 @@ export default [
       // '@typescript-eslint/no-unnecessary-condition' is disabled in base config (runtime guards needed despite types)
       // '@typescript-eslint/prefer-nullish-coalescing' is disabled — `||` vs `??` is intentional in most cases
       '@typescript-eslint/prefer-optional-chain': 'warn',
+      '@typescript-eslint/require-array-sort-compare': ['warn', { ignoreStringArrays: true }], // Sonar typescript:S2871 (reliability BUG) — .sort()/.toSorted() on non-string arrays must pass a compare fn; lexicographic default mis-sorts numbers. ignoreStringArrays mirrors Sonar's string-sort tolerance.
       '@typescript-eslint/switch-exhaustiveness-check': ['warn', { considerDefaultExhaustiveForUnions: true }],
       '@typescript-eslint/naming-convention': [
         'warn',

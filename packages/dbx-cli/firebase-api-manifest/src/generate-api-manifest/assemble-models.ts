@@ -145,29 +145,52 @@ function buildEntryForIdentity(input: BuildEntryInput): CliModelManifestEntry | 
           depth: 0,
           visitedConverters: new Set<string>()
         });
-
-        const modelGroup = registries.groupByModelName.get(modelName);
-        const serviceFactory = registries.serviceFactoryByModelType.get(identity.modelType);
-        result = {
-          modelType: identity.modelType,
-          modelName,
-          ...(modelGroup ? { modelGroup } : {}),
-          identityConst: identity.identityConst,
-          collectionPrefix: identity.collectionPrefix,
-          ...(identity.parentIdentityConst ? { parentIdentityConst: identity.parentIdentityConst } : {}),
-          ...(iface.description ? { description: iface.description } : {}),
-          sourcePackage: source.sourcePackage,
-          sourceFile: source.sourceFile,
-          fields,
-          ...(iface.mcpToolNameSegment ? { mcpToolNameSegment: iface.mcpToolNameSegment } : {}),
-          ...(iface.dbxModelRead ? { read: iface.dbxModelRead } : {}),
-          ...(serviceFactory ? { serviceFactory } : {})
-        };
+        result = buildManifestEntry({ identity, modelName, collectionPrefix: identity.collectionPrefix, iface, fields, source, registries });
       }
     }
   }
 
   return result;
+}
+
+interface BuildManifestEntryInput {
+  readonly identity: ModelExtraction['identities'][number];
+  readonly modelName: string;
+  readonly collectionPrefix: string;
+  readonly iface: ModelExtractionInterface;
+  readonly fields: readonly CliModelField[];
+  readonly source: AssembleModelsInput['extractions'][number];
+  readonly registries: GlobalRegistries;
+}
+
+/**
+ * Builds the runtime {@link CliModelManifestEntry} for one resolved
+ * (identity, interface, converter) triple, applying every optional field
+ * (group, parent identity, description, MCP segment, read level, service
+ * factory) only when present.
+ *
+ * @param input - The resolved identity, model name, narrowed collection prefix, tagged interface, built fields, source, and registries.
+ * @returns The assembled manifest entry.
+ */
+function buildManifestEntry(input: BuildManifestEntryInput): CliModelManifestEntry {
+  const { identity, modelName, collectionPrefix, iface, fields, source, registries } = input;
+  const modelGroup = registries.groupByModelName.get(modelName);
+  const serviceFactory = registries.serviceFactoryByModelType.get(identity.modelType);
+  return {
+    modelType: identity.modelType,
+    modelName,
+    ...(modelGroup ? { modelGroup } : {}),
+    identityConst: identity.identityConst,
+    collectionPrefix,
+    ...(identity.parentIdentityConst ? { parentIdentityConst: identity.parentIdentityConst } : {}),
+    ...(iface.description ? { description: iface.description } : {}),
+    sourcePackage: source.sourcePackage,
+    sourceFile: source.sourceFile,
+    fields,
+    ...(iface.mcpToolNameSegment ? { mcpToolNameSegment: iface.mcpToolNameSegment } : {}),
+    ...(iface.dbxModelRead ? { read: iface.dbxModelRead } : {}),
+    ...(serviceFactory ? { serviceFactory } : {})
+  };
 }
 
 function findConverterForInterface(extraction: ModelExtraction, interfaceName: string): ModelExtractionConverter | undefined {
@@ -246,23 +269,11 @@ interface ResolvedNested {
 }
 
 function resolveNestedFields(input: BuildFieldInput): ResolvedNested | undefined {
-  const { field } = input;
   let result: ResolvedNested | undefined;
 
   if (input.depth < MAX_NESTED_DEPTH) {
-    let nestedConverter: ModelExtractionConverter | undefined;
-    let aborted = false;
-    if (field.nestedConverterInline) {
-      nestedConverter = field.nestedConverterInline;
-    } else if (field.nestedConverterRef) {
-      if (input.visitedConverters.has(field.nestedConverterRef)) {
-        aborted = true;
-      } else {
-        nestedConverter = input.converterRegistry.get(field.nestedConverterRef);
-      }
-    }
-
-    if (!aborted && nestedConverter) {
+    const nestedConverter = selectNestedConverter(input);
+    if (nestedConverter) {
       const nextVisited = new Set(input.visitedConverters);
       if (nestedConverter.converterConst) nextVisited.add(nestedConverter.converterConst);
 
@@ -277,10 +288,29 @@ function resolveNestedFields(input: BuildFieldInput): ResolvedNested | undefined
         visitedConverters: nextVisited
       });
 
-      result = { fields, isArray: field.nestedIsArray ?? false };
+      result = { fields, isArray: input.field.nestedIsArray ?? false };
     }
   }
 
+  return result;
+}
+
+/**
+ * Selects the converter a nested field expands into: an inline converter
+ * directly, or a registry-resolved converter referenced by name (unless that
+ * reference is already on the current recursion path, which would cycle).
+ *
+ * @param input - The field plus the interface/converter registries and the visited-converter guard set.
+ * @returns The nested converter to expand, or `undefined` when there is none or the reference would cycle.
+ */
+function selectNestedConverter(input: BuildFieldInput): ModelExtractionConverter | undefined {
+  const { field } = input;
+  let result: ModelExtractionConverter | undefined;
+  if (field.nestedConverterInline) {
+    result = field.nestedConverterInline;
+  } else if (field.nestedConverterRef && !input.visitedConverters.has(field.nestedConverterRef)) {
+    result = input.converterRegistry.get(field.nestedConverterRef);
+  }
   return result;
 }
 

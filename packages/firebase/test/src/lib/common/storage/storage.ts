@@ -35,7 +35,7 @@ export function makeTestingFirebaseStorageAccesorDriver(driver: FirebaseStorageA
   const defaultBucket =
     (!driver.getDefaultBucket && useTestDefaultBucket !== false) || useTestDefaultBucket === true
       ? cachedGetter(() => {
-          const time = new Date().getTime();
+          const time = Date.now();
           const random = Math.ceil(Math.random() * 999999) % 999999;
           return `test-bucket-${time}-${random}-${(bucketTestNameKey += 1)}`;
         })

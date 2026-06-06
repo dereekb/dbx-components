@@ -36,14 +36,14 @@ export function demoNotificationTaskServiceFactory(demoFirebaseServerActionsCont
    * @returns
    */
   function _parseResult(result?: Maybe<NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>>) {
-    return result != null
-      ? filterUndefinedValues({
+    return result == null
+      ? undefined
+      : filterUndefinedValues({
           completion: result?.completion,
           updateMetadata: result?.updateMetadata,
           delayUntil: result?.delayUntil ? toJsDate(result?.delayUntil) : undefined,
           canRunNextCheckpoint: result?.canRunNextCheckpoint
-        })
-      : undefined;
+        });
   }
 
   function buildResult(taskData: Maybe<ExampleNotificationTaskData>, defaultResult: NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData>): NotificationTaskServiceHandleNotificationTaskResult<ExampleNotificationTaskData> {

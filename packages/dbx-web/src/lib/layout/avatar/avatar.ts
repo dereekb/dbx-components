@@ -43,6 +43,12 @@ export interface DbxAvatarContext {
    */
   readonly url?: Maybe<WebsiteUrlWithPrefix>;
   /**
+   * Name or characters used to render initials (e.g. `'Michelle B'` -> `'MB'`, `'BB'` -> `'BB'`) on a
+   * curated color background when no avatar image is shown. The same value always maps to the same
+   * curated color.
+   */
+  readonly name?: Maybe<string>;
+  /**
    * Arbitrary key that is used to configure an avatar.
    */
   readonly key?: Maybe<DbxAvatarKey>;
