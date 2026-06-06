@@ -18,7 +18,6 @@ export type ReadStringFunction<T, S extends string = string> = MapFunction<T, S>
  *
  * Optional generic typing exists for communicating what values are separated within the string.
  */
-
 export type SeparatedString<T = unknown> = string;
 
 /**
@@ -28,7 +27,6 @@ export type SeparatedString<T = unknown> = string;
  *
  * I.E. 0,1,2
  */
-
 export type CommaSeparatedString<T = unknown> = SeparatedString<T>;
 
 /**
@@ -38,7 +36,6 @@ export type CommaSeparatedString<T = unknown> = SeparatedString<T>;
  *
  * I.E. 0 1 2
  */
-
 export type SpaceSeparatedString<T = unknown> = SeparatedString<T>;
 
 /**
