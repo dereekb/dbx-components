@@ -243,10 +243,10 @@ $list-item-padded-min-height: 42px;
   }
 
   /// @dbx-utility list-no-item-padding
-  /// @intent zero the inner `.mat-mdc-list-item-content` padding on every nav-list row in a `.dbx-list`
+  /// @intent zero the padding on every list row in a `.dbx-list` — container-scope complement to `dbx-list-item-p0`
   /// @role spacing
   /// @see-also dbx-list-item-p0
-  .dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view > .mat-mdc-nav-list .dbx-list-view-item.mat-mdc-list-item > .mat-mdc-list-item-content {
+  .dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item {
     padding: 0;
   }
 
@@ -255,8 +255,8 @@ $list-item-padded-min-height: 42px;
   // their own padding/leading element — e.g. a `.dbx-icon-tile` in a
   // `.dbx-list-two-line-item-with-icon` — where Material's default item
   // padding would otherwise double up. Complements the container-scope
-  // `.dbx-list-no-item-padding`, which zeros the inner
-  // `.mat-mdc-list-item-content` padding for all items in the list.
+  // `.dbx-list-no-item-padding`, which zeros the same `.mat-mdc-list-item`
+  // padding for every row in the list.
   /// @dbx-utility list-item-p0
   /// @intent zero all padding on the host `.mat-mdc-list-item` — per-item complement to `.dbx-list-no-item-padding` for templates that supply their own padding/leading element
   /// @role spacing

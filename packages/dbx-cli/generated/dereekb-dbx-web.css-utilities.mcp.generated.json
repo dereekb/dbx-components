@@ -1928,11 +1928,11 @@
         }
       ],
       "role": "spacing",
-      "intent": "zero the inner `.mat-mdc-list-item-content` padding on every nav-list row in a `.dbx-list`",
+      "intent": "zero the padding on every list row in a `.dbx-list` — container-scope complement to `dbx-list-item-p0`",
       "seeAlso": [
         "dbx-list-item-p0"
       ],
-      "selectorContext": ".dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view > .mat-mdc-nav-list .dbx-list-view-item.mat-mdc-list-item > .mat-mdc-list-item-content"
+      "selectorContext": ".dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item"
     },
     {
       "slug": "list-sticky-headers",
