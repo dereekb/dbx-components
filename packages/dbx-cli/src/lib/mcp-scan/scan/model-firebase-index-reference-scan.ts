@@ -128,31 +128,62 @@ export async function scanFactoryReferences(input: ScanFactoryReferencesInput): 
     const combinedPattern = buildCombinedRegex(Array.from(namesBySlug.values()));
 
     if (combinedPattern !== undefined) {
-      const sitesBySlug = new Map<string, FactoryReferenceSite[]>();
-      for (const entry of entries) {
-        sitesBySlug.set(entry.slug, []);
-      }
-
-      for (const relPath of filePaths) {
-        const absolutePath = resolvePath(projectRoot, relPath);
-        if (declFilePaths.has(absolutePath)) {
-          continue;
-        }
-        await scanOneFile({ absolutePath, projectRoot, readFile, combinedPattern, namesBySlug, sitesBySlug });
-      }
-
+      const sitesBySlug = await collectReferenceSites({ entries, filePaths, projectRoot, declFilePaths, readFile, combinedPattern, namesBySlug });
       for (const [slug, sites] of sitesBySlug) {
-        let specCount = 0;
-        for (const site of sites) {
-          if (site.isSpec) {
-            specCount += 1;
-          }
-        }
-        result.set(slug, { count: sites.length, productionCount: sites.length - specCount, specCount, referencedBy: sites });
+        result.set(slug, tallyReferenceSites(sites));
       }
     }
   }
   return result;
+}
+
+interface CollectReferenceSitesInput {
+  readonly entries: ScanFactoryReferencesInput['entries'];
+  readonly filePaths: readonly string[];
+  readonly projectRoot: string;
+  readonly declFilePaths: ReadonlySet<string>;
+  readonly readFile: ScanReadFile;
+  readonly combinedPattern: RegExp;
+  readonly namesBySlug: ReadonlyMap<string, string>;
+}
+
+/**
+ * Seeds an empty site list per entry slug, then scans every non-declaration
+ * file for factory references, accumulating the hits per slug.
+ *
+ * @param input - The entries, globbed file paths, project root, declaration-file guard set, reader, combined pattern, and name lookup.
+ * @returns The reference sites discovered, keyed by entry slug.
+ */
+async function collectReferenceSites(input: CollectReferenceSitesInput): Promise<Map<string, FactoryReferenceSite[]>> {
+  const { entries, filePaths, projectRoot, declFilePaths, readFile, combinedPattern, namesBySlug } = input;
+  const sitesBySlug = new Map<string, FactoryReferenceSite[]>();
+  for (const entry of entries) {
+    sitesBySlug.set(entry.slug, []);
+  }
+  for (const relPath of filePaths) {
+    const absolutePath = resolvePath(projectRoot, relPath);
+    if (!declFilePaths.has(absolutePath)) {
+      await scanOneFile({ absolutePath, projectRoot, readFile, combinedPattern, namesBySlug, sitesBySlug });
+    }
+  }
+  return sitesBySlug;
+}
+
+/**
+ * Tallies one slug's reference sites into a {@link FactoryReferenceCount},
+ * splitting production callers from spec-only callers.
+ *
+ * @param sites - The reference sites found for one factory.
+ * @returns The total/production/spec counts plus the sites themselves.
+ */
+function tallyReferenceSites(sites: FactoryReferenceSite[]): FactoryReferenceCount {
+  let specCount = 0;
+  for (const site of sites) {
+    if (site.isSpec) {
+      specCount += 1;
+    }
+  }
+  return { count: sites.length, productionCount: sites.length - specCount, specCount, referencedBy: sites };
 }
 
 /**

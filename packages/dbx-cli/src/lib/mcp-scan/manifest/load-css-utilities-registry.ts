@@ -129,18 +129,28 @@ function collectExternalCssUtilitySources(configResult: LoadConfigResult): CssUt
     const baseDir = dirname(configResult.configPath);
     const cluster = configResult.config.cssUtilities;
     for (const source of cluster?.sources ?? []) {
-      const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
-      externalSources.push({ origin: 'external', path: absolute });
+      externalSources.push({ origin: 'external', path: toAbsolutePath(baseDir, source) });
     }
     for (const scan of cluster?.scan ?? []) {
       const out = scan.out;
       if (typeof out === 'string' && out.length > 0) {
-        const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
-        externalSources.push({ origin: 'external', path: absolute });
+        externalSources.push({ origin: 'external', path: toAbsolutePath(baseDir, out) });
       }
     }
   }
   return externalSources;
+}
+
+/**
+ * Resolves `value` against `baseDir` when it is relative, leaving an
+ * already-absolute path untouched (so its original spelling is preserved).
+ *
+ * @param baseDir - Directory a relative `value` is resolved against.
+ * @param value - An absolute or relative path.
+ * @returns The absolute path.
+ */
+function toAbsolutePath(baseDir: string, value: string): string {
+  return isAbsolute(value) ? value : resolve(baseDir, value);
 }
 
 /**

@@ -374,34 +374,68 @@ function readNestedFromExpression(expr: Node): NestedConverterMatch | undefined 
   if (Node.isCallExpression(expr)) {
     const fnName = expr.getExpression().getText();
     if (fnName === SUB_OBJECT_FN || fnName === OBJECT_ARRAY_FN) {
-      const args = expr.getArguments();
-      if (args.length > 0) {
-        const config = args[0];
-        if (Node.isObjectLiteralExpression(config)) {
-          const objectField = readPropertyValue(config, OBJECT_FIELD_KEY);
-          if (objectField) {
-            const isArray = fnName === OBJECT_ARRAY_FN;
-            if (Node.isIdentifier(objectField)) {
-              result = { ref: objectField.getText(), isArray };
-            } else if (Node.isObjectLiteralExpression(objectField)) {
-              const fieldsLiteral = readObjectProperty(objectField, FIELDS_LITERAL_KEY);
-              if (fieldsLiteral) {
-                const inlineFields = readFieldEntries(fieldsLiteral);
-                result = {
-                  inline: {
-                    converterConst: undefined,
-                    factory: fnName,
-                    interfaceName: readGenericInterfaceName(expr),
-                    fields: inlineFields,
-                    line: expr.getStartLineNumber()
-                  },
-                  isArray
-                };
-              }
-            }
-          }
-        }
+      result = readNestedConverterCall(expr, fnName);
+    }
+  }
+  return result;
+}
+
+/**
+ * Reads the `objectField` argument of a `firestoreSubObject` /
+ * `firestoreObjectArray` call into a {@link NestedConverterMatch}.
+ *
+ * @param call - The nested-converter call expression.
+ * @param fnName - The resolved factory name (`firestoreSubObject` or `firestoreObjectArray`).
+ * @returns The nested-converter match, or `undefined` when the call shape is malformed.
+ */
+function readNestedConverterCall(call: CallExpression, fnName: string): NestedConverterMatch | undefined {
+  let result: NestedConverterMatch | undefined;
+  const args = call.getArguments();
+  if (args.length > 0) {
+    const config = args[0];
+    if (Node.isObjectLiteralExpression(config)) {
+      const objectField = readPropertyValue(config, OBJECT_FIELD_KEY);
+      if (objectField) {
+        result = buildNestedConverterMatch({ objectField, call, fnName });
       }
+    }
+  }
+  return result;
+}
+
+interface BuildNestedConverterMatchInput {
+  readonly objectField: Node;
+  readonly call: CallExpression;
+  readonly fnName: string;
+}
+
+/**
+ * Builds a {@link NestedConverterMatch} from a resolved `objectField` node:
+ * an identifier yields a converter `ref`, an object literal yields an `inline`
+ * converter parsed from its `fields`.
+ *
+ * @param input - The `objectField` node, owning call expression, and factory name.
+ * @returns The nested-converter match, or `undefined` when neither shape applies.
+ */
+function buildNestedConverterMatch(input: BuildNestedConverterMatchInput): NestedConverterMatch | undefined {
+  const { objectField, call, fnName } = input;
+  const isArray = fnName === OBJECT_ARRAY_FN;
+  let result: NestedConverterMatch | undefined;
+  if (Node.isIdentifier(objectField)) {
+    result = { ref: objectField.getText(), isArray };
+  } else if (Node.isObjectLiteralExpression(objectField)) {
+    const fieldsLiteral = readObjectProperty(objectField, FIELDS_LITERAL_KEY);
+    if (fieldsLiteral) {
+      result = {
+        inline: {
+          converterConst: undefined,
+          factory: fnName,
+          interfaceName: readGenericInterfaceName(call),
+          fields: readFieldEntries(fieldsLiteral),
+          line: call.getStartLineNumber()
+        },
+        isArray
+      };
     }
   }
   return result;

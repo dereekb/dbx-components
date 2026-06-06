@@ -131,18 +131,28 @@ function collectExternalTokenSources(configResult: LoadConfigResult): TokenManif
     const baseDir = dirname(configResult.configPath);
     const tokensCluster = configResult.config.tokens;
     for (const source of tokensCluster?.sources ?? []) {
-      const absolute = isAbsolute(source) ? source : resolve(baseDir, source);
-      externalSources.push({ origin: 'external', path: absolute });
+      externalSources.push({ origin: 'external', path: toAbsolutePath(baseDir, source) });
     }
     for (const scan of tokensCluster?.scan ?? []) {
       const out = scan.out;
       if (typeof out === 'string' && out.length > 0) {
-        const absolute = isAbsolute(out) ? out : resolve(baseDir, out);
-        externalSources.push({ origin: 'external', path: absolute });
+        externalSources.push({ origin: 'external', path: toAbsolutePath(baseDir, out) });
       }
     }
   }
   return externalSources;
+}
+
+/**
+ * Resolves `value` against `baseDir` when it is relative, leaving an
+ * already-absolute path untouched (so its original spelling is preserved).
+ *
+ * @param baseDir - Directory a relative `value` is resolved against.
+ * @param value - An absolute or relative path.
+ * @returns The absolute path.
+ */
+function toAbsolutePath(baseDir: string, value: string): string {
+  return isAbsolute(value) ? value : resolve(baseDir, value);
 }
 
 /**

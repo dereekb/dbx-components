@@ -58,40 +58,78 @@ const EXPORT_DECL_PATTERNS: readonly RegExp[] = [/export\s+(?:declare\s+)?const\
 
 function findIdentifierInBarrelChain(filePath: string, identifier: string, visited: Set<string>): boolean {
   let result = false;
-
   if (!visited.has(filePath)) {
     visited.add(filePath);
-
-    let text: string | undefined;
-    try {
-      text = readFileSync(filePath, 'utf8');
-    } catch {
-      text = undefined;
-    }
-
+    const text = readFileTextSafe(filePath);
     if (text !== undefined) {
-      for (const pattern of EXPORT_DECL_PATTERNS) {
-        const re = new RegExp(pattern.source.replace('IDENT', escapeRegExp(identifier)));
-        if (re.test(text)) {
-          result = true;
-          break;
-        }
-      }
-
-      if (!result) {
-        const dir = dirname(filePath);
-        for (const reExportTarget of collectReExportTargets(text)) {
-          const resolved = resolveReExport(dir, reExportTarget);
-          if (!resolved) continue;
-          if (findIdentifierInBarrelChain(resolved, identifier, visited)) {
-            result = true;
-            break;
-          }
-        }
-      }
+      result = barrelTextDeclaresIdentifier(text, identifier) || reExportChainHasIdentifier({ fromFile: filePath, text, identifier, visited });
     }
   }
+  return result;
+}
 
+/**
+ * Reads a file's UTF-8 text, returning `undefined` on any read failure
+ * rather than throwing.
+ *
+ * @param filePath - Absolute path of the file to read.
+ * @returns The file contents, or `undefined` when unreadable.
+ */
+function readFileTextSafe(filePath: string): string | undefined {
+  let text: string | undefined;
+  try {
+    text = readFileSync(filePath, 'utf8');
+  } catch {
+    text = undefined;
+  }
+  return text;
+}
+
+/**
+ * Tests whether a barrel's text directly declares `identifier` via one of the
+ * {@link EXPORT_DECL_PATTERNS} (`export const`/`function`/`{ … }`).
+ *
+ * @param text - The barrel file's source text.
+ * @param identifier - The exported identifier to look for.
+ * @returns `true` when the identifier is declared directly in `text`.
+ */
+function barrelTextDeclaresIdentifier(text: string, identifier: string): boolean {
+  let result = false;
+  for (const pattern of EXPORT_DECL_PATTERNS) {
+    const re = new RegExp(pattern.source.replace('IDENT', escapeRegExp(identifier)));
+    if (re.test(text)) {
+      result = true;
+      break;
+    }
+  }
+  return result;
+}
+
+interface ReExportChainInput {
+  readonly fromFile: string;
+  readonly text: string;
+  readonly identifier: string;
+  readonly visited: Set<string>;
+}
+
+/**
+ * Follows every `export * / { … } from './…'` re-export in `text` and reports
+ * whether any reachable barrel in the chain declares `identifier`.
+ *
+ * @param input - The originating barrel path + text, the identifier to look for, and the visited-barrel cycle guard.
+ * @returns `true` when a re-exported barrel declares the identifier.
+ */
+function reExportChainHasIdentifier(input: ReExportChainInput): boolean {
+  const { fromFile, text, identifier, visited } = input;
+  let result = false;
+  const dir = dirname(fromFile);
+  for (const reExportTarget of collectReExportTargets(text)) {
+    const resolved = resolveReExport(dir, reExportTarget);
+    if (resolved && findIdentifierInBarrelChain(resolved, identifier, visited)) {
+      result = true;
+      break;
+    }
+  }
   return result;
 }
 

@@ -18,6 +18,7 @@ const TSCONFIG_BASE = 'tsconfig.base.json';
 const COMPONENT_PACKAGE_JSON = 'package.json';
 const SRC_LIB_SUBPATH = 'src/lib';
 const DBX_COMPONENTS_BASE_SCOPE = '@dereekb/';
+const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies'] as const;
 
 export interface ApiSourceRoot {
   /**
@@ -122,32 +123,56 @@ async function resolveUpstreamRoots(input: ResolveUpstreamInput): Promise<readon
 }
 
 async function readComponentDereekbDeps(componentAbs: string): Promise<readonly string[]> {
-  const pkgPath = join(componentAbs, COMPONENT_PACKAGE_JSON);
+  const json = await readJsonFileSafe(join(componentAbs, COMPONENT_PACKAGE_JSON));
+  const out = new Set<string>();
+  if (isRecord(json)) {
+    for (const field of DEPENDENCY_FIELDS) {
+      addScopedDependencyNames(json[field], out);
+    }
+  }
+  return [...out];
+}
+
+/**
+ * Adds every `@dereekb/*`-scoped key of one `package.json` dependency map
+ * to `out`. Non-object fields are ignored.
+ *
+ * @param field - The raw value of a `dependencies`/`devDependencies`/`peerDependencies` entry.
+ * @param out - The accumulating set of scoped dependency names.
+ */
+function addScopedDependencyNames(field: unknown, out: Set<string>): void {
+  if (isRecord(field)) {
+    for (const name of Object.keys(field)) {
+      if (name.startsWith(DBX_COMPONENTS_BASE_SCOPE)) out.add(name);
+    }
+  }
+}
+
+/**
+ * Reads and parses a JSON file, returning `undefined` on any read or parse
+ * failure rather than throwing. An optional `preprocess` step transforms the
+ * raw text before parsing (e.g. stripping comments from JSON-with-comments).
+ *
+ * @param path - Absolute path of the JSON file.
+ * @param preprocess - Optional transform applied to the raw text before `JSON.parse`.
+ * @returns The parsed value, or `undefined` when the file is missing or malformed.
+ */
+async function readJsonFileSafe(path: string, preprocess?: (raw: string) => string): Promise<unknown> {
   let raw: string | undefined;
   try {
-    raw = await readFile(pkgPath, 'utf8');
+    raw = await readFile(path, 'utf8');
   } catch {
     raw = undefined;
   }
   let json: unknown;
   if (raw !== undefined) {
     try {
-      json = JSON.parse(raw);
+      json = JSON.parse(preprocess ? preprocess(raw) : raw);
     } catch {
       json = undefined;
     }
   }
-  const out = new Set<string>();
-  if (isRecord(json)) {
-    for (const field of ['dependencies', 'devDependencies', 'peerDependencies'] as const) {
-      const map = json[field];
-      if (!isRecord(map)) continue;
-      for (const name of Object.keys(map)) {
-        if (name.startsWith(DBX_COMPONENTS_BASE_SCOPE)) out.add(name);
-      }
-    }
-  }
-  return [...out];
+  return json;
 }
 
 interface PackagePathsMap {
@@ -156,20 +181,7 @@ interface PackagePathsMap {
 
 async function readTsconfigPaths(workspaceRoot: string): Promise<PackagePathsMap | undefined> {
   const tsconfigPath = join(workspaceRoot, TSCONFIG_BASE);
-  let raw: string | undefined;
-  try {
-    raw = await readFile(tsconfigPath, 'utf8');
-  } catch {
-    raw = undefined;
-  }
-  let json: unknown;
-  if (raw !== undefined) {
-    try {
-      json = JSON.parse(stripJsonComments(raw));
-    } catch {
-      json = undefined;
-    }
-  }
+  const json = await readJsonFileSafe(tsconfigPath, stripJsonComments);
   let result: PackagePathsMap | undefined;
   if (isRecord(json) && isRecord(json.compilerOptions) && isRecord(json.compilerOptions.paths)) {
     const entries = new Map<string, string>();

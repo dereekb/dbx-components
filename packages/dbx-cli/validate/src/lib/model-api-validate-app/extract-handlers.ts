@@ -22,7 +22,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { Node, Project, type ObjectLiteralExpression } from 'ts-morph';
+import { Node, Project, type ObjectLiteralExpression, type SourceFile } from 'ts-morph';
 import type { HandlerEntry, HandlerMapStatus } from './types.js';
 import type { CrudVerb } from '@dereekb/dbx-cli/manifest-extract';
 
@@ -66,25 +66,40 @@ export async function extractHandlerEntries(apiAbs: string, apiDir: string): Pro
   } else {
     const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
     const sourceFile = project.createSourceFile(sourceFileRel, text, { overwrite: true });
-
-    const entries: HandlerEntry[] = [];
-    const verbsFound: CrudVerb[] = [];
-
-    for (const stmt of sourceFile.getVariableStatements()) {
-      for (const decl of stmt.getDeclarations()) {
-        const name = decl.getName();
-        const verb = matchVerbFromConstName(name);
-        if (!verb) continue;
-        const initializer = decl.getInitializer();
-        if (!initializer || !Node.isObjectLiteralExpression(initializer)) continue;
-        verbsFound.push(verb);
-        collectVerbMap({ verb, mapLiteral: initializer, sourceFileRel, entries });
-      }
-    }
-
+    const { entries, verbsFound } = collectHandlerMap(sourceFile, sourceFileRel);
     result = { path: fullPath, status: { kind: 'ok', verbsFound }, entries };
   }
   return result;
+}
+
+interface CollectedHandlerMap {
+  readonly entries: readonly HandlerEntry[];
+  readonly verbsFound: readonly CrudVerb[];
+}
+
+/**
+ * Walks every `<group><Verb>ModelMap` const in the handler-map source and
+ * flattens each into `(model, verb, specifier, handler)` records.
+ *
+ * @param sourceFile - The parsed `crud.functions.ts` source.
+ * @param sourceFileRel - Relative path used in emitted source citations.
+ * @returns The flattened handler entries and the verbs whose maps were found.
+ */
+function collectHandlerMap(sourceFile: SourceFile, sourceFileRel: string): CollectedHandlerMap {
+  const entries: HandlerEntry[] = [];
+  const verbsFound: CrudVerb[] = [];
+  for (const stmt of sourceFile.getVariableStatements()) {
+    for (const decl of stmt.getDeclarations()) {
+      const name = decl.getName();
+      const verb = matchVerbFromConstName(name);
+      if (!verb) continue;
+      const initializer = decl.getInitializer();
+      if (!initializer || !Node.isObjectLiteralExpression(initializer)) continue;
+      verbsFound.push(verb);
+      collectVerbMap({ verb, mapLiteral: initializer, sourceFileRel, entries });
+    }
+  }
+  return { entries, verbsFound };
 }
 
 function matchVerbFromConstName(name: string): CrudVerb | undefined {

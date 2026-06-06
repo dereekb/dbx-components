@@ -274,25 +274,36 @@ function parseCompositeKeyTagValue(value: string): ExtractedCompositeKeyTag {
     const key = token.slice(0, eq).trim();
     const v = token.slice(eq + 1).trim();
     if (key === 'from') {
-      if (v === '*') {
-        fromValue = '*';
-      } else if (v.length > 0) {
-        // Tolerate the wildcard mixed with concrete entries here; the
-        // validator emits MODEL_COMPOSITE_KEY_WILDCARD_MIXED when it sees both.
-        const parts = v
-          .split(',')
-          .map((p) => p.trim())
-          .filter((p) => p.length > 0);
-        if (parts.includes('*')) {
-          // Preserve the literal list so the validator can flag the mix.
-          fromValue = parts;
-        } else {
-          fromValue = parts.filter((p) => COMPOSITE_KEY_MODEL_NAME_RE.test(p));
-        }
-      }
+      const parsedFrom = parseCompositeKeyFromValue(v);
+      if (parsedFrom !== undefined) fromValue = parsedFrom;
     } else if (key === 'encoding' && (v === 'two-way' || v === 'one-way')) encoding = v;
   }
   return { from: fromValue, encoding };
+}
+
+/**
+ * Parses the `from=` value of a `@dbxModelCompositeKey` tag into the wildcard
+ * `'*'` or a concrete model-name list. Returns `undefined` for an empty value
+ * so the caller leaves any previously-parsed `from` untouched.
+ *
+ * @param v - The raw text after `from=`.
+ * @returns `'*'`, the parsed model-name list, or `undefined` when the value is empty.
+ */
+function parseCompositeKeyFromValue(v: string): readonly string[] | '*' | undefined {
+  let result: readonly string[] | '*' | undefined;
+  if (v === '*') {
+    result = '*';
+  } else if (v.length > 0) {
+    // Tolerate the wildcard mixed with concrete entries here; the validator
+    // emits MODEL_COMPOSITE_KEY_WILDCARD_MIXED when it sees both.
+    const parts = v
+      .split(',')
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+    // Preserve the literal list (incl. `*`) so the validator can flag the mix.
+    result = parts.includes('*') ? parts : parts.filter((p) => COMPOSITE_KEY_MODEL_NAME_RE.test(p));
+  }
+  return result;
 }
 
 interface PropertyTags {

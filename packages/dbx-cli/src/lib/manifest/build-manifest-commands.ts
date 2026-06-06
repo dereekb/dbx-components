@@ -7,7 +7,7 @@ import { CliError, outputResult } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';
 import { isStdinSentinel, readAllStdin } from '../util/stdin';
 import { expandModelKeys } from '../api/expand-keys';
-import { type CliApiManifest, type CliApiManifestEntry, type CliModelManifest } from './types';
+import { type CliApiManifest, type CliApiManifestEntry, type CliApiManifestField, type CliModelManifest } from './types';
 
 const SKIPPED_VERBS: ReadonlySet<string> = new Set(['standalone']);
 
@@ -501,37 +501,80 @@ function buildEntryEpilogue(entry: CliApiManifestEntry, context: BuilderContext)
     if (actionSection) sections.push(actionSection);
   }
 
-  let schemaSections: string[] = [];
-
-  if (showParams) {
-    const paramsSection = buildParamsSection(entry);
-    if (paramsSection) sections.push(paramsSection);
-
-    schemaSections = renderParamsSchemaSections(entry, dataHelpFormat);
-    sections.push(...schemaSections);
-
-    const resultSection = buildResultSection(entry);
-    if (resultSection) {
-      sections.push(resultSection);
-    } else if (entry.resultTypeName) {
-      sections.push(`Result: ${entry.resultTypeName}`);
-    }
-  }
+  const params = showParams ? collectParamsSections(entry, dataHelpFormat) : { sections: [], schemaCount: 0 };
+  sections.push(...params.sections);
 
   if (entry.sourceFile) {
     sections.push(`Source: ${entry.sourceFile}`);
   }
 
-  if (showParams && schemaSections.length > 0 && dataHelpFormat !== 'both') {
+  sections.push(...collectHelpHints({ entry, helpMode, dataHelpFormat, showParams, schemaCount: params.schemaCount }));
+
+  return sections.length > 0 ? sections.join('\n\n') : undefined;
+}
+
+interface ParamsSectionsResult {
+  readonly sections: readonly string[];
+  readonly schemaCount: number;
+}
+
+/**
+ * Collects the params-side help sections (params interface, schema renders,
+ * result) for an entry, reporting how many schema sections were produced so
+ * the caller can decide whether to surface the schema-format hint.
+ *
+ * @param entry - The manifest entry being documented.
+ * @param dataHelpFormat - The requested schema render format.
+ * @returns The ordered sections and the number of schema sections produced.
+ */
+function collectParamsSections(entry: CliApiManifestEntry, dataHelpFormat: ManifestHelpDataFormat): ParamsSectionsResult {
+  const sections: string[] = [];
+  const paramsSection = buildParamsSection(entry);
+  if (paramsSection) sections.push(paramsSection);
+
+  const schemaSections = renderParamsSchemaSections(entry, dataHelpFormat);
+  sections.push(...schemaSections);
+
+  const resultSection = buildResultSection(entry);
+  if (resultSection) {
+    sections.push(resultSection);
+  } else if (entry.resultTypeName) {
+    sections.push(`Result: ${entry.resultTypeName}`);
+  }
+
+  return { sections, schemaCount: schemaSections.length };
+}
+
+interface HelpHintsInput {
+  readonly entry: CliApiManifestEntry;
+  readonly helpMode: BuilderContext['helpMode'];
+  readonly dataHelpFormat: ManifestHelpDataFormat;
+  readonly showParams: boolean;
+  readonly schemaCount: number;
+}
+
+/**
+ * Builds the trailing `--help` hint lines: how to switch the schema format,
+ * and (in `both` mode, when there is something to focus on) how to narrow the
+ * help to a single section.
+ *
+ * @param input - The entry, help mode, schema format, params visibility, and schema-section count.
+ * @returns The hint lines (possibly empty).
+ */
+function collectHelpHints(input: HelpHintsInput): readonly string[] {
+  const { entry, helpMode, dataHelpFormat, showParams, schemaCount } = input;
+  const hints: string[] = [];
+
+  if (showParams && schemaCount > 0 && dataHelpFormat !== 'both') {
     const other = dataHelpFormat === 'jsonschema' ? 'arktype' : 'jsonschema';
-    sections.push(`(Pass --data-help=${other} or --data-help=both to switch the schema format above.)`);
+    hints.push(`(Pass --data-help=${other} or --data-help=both to switch the schema format above.)`);
   }
 
   if (helpMode === 'both' && (entry.description || entry.paramsTypeDescription || (entry.paramsFields && entry.paramsFields.length > 0))) {
-    sections.push(`(Pass --help-mode=action or --help-mode=params to focus this help on a single section.)`);
+    hints.push(`(Pass --help-mode=action or --help-mode=params to focus this help on a single section.)`);
   }
 
-  return sections.length > 0 ? sections.join('\n\n') : undefined;
+  return hints;
 }
 
 function buildActionSection(entry: CliApiManifestEntry): string | undefined {
@@ -548,18 +591,9 @@ function buildParamsSection(entry: CliApiManifestEntry): string | undefined {
     if (entry.paramsTypeDescription) {
       lines.push(indentLines(entry.paramsTypeDescription, '  '));
     }
-
     if (entry.paramsFields && entry.paramsFields.length > 0) {
-      lines.push('', 'Fields:');
-      for (const field of entry.paramsFields) {
-        const header = `  - ${field.name}: ${field.typeText}`;
-        lines.push(header);
-        if (field.description) {
-          lines.push(indentLines(field.description, '      '));
-        }
-      }
+      lines.push(...buildFieldLines(entry.paramsFields));
     }
-
     result = lines.join('\n');
   }
   return result;
@@ -575,21 +609,30 @@ function buildResultSection(entry: CliApiManifestEntry): string | undefined {
     if (entry.resultTypeDescription) {
       lines.push(indentLines(entry.resultTypeDescription, '  '));
     }
-
     if (entry.resultFields && entry.resultFields.length > 0) {
-      lines.push('', 'Fields:');
-      for (const field of entry.resultFields) {
-        const header = `  - ${field.name}: ${field.typeText}`;
-        lines.push(header);
-        if (field.description) {
-          lines.push(indentLines(field.description, '      '));
-        }
-      }
+      lines.push(...buildFieldLines(entry.resultFields));
     }
-
     result = lines.join('\n');
   }
   return result;
+}
+
+/**
+ * Renders the `Fields:` block shared by the params and result help sections —
+ * one `- name: type` header per field, with its indented description below.
+ *
+ * @param fields - The manifest fields to render.
+ * @returns The lines for the fields block, beginning with a blank line and the `Fields:` header.
+ */
+function buildFieldLines(fields: readonly CliApiManifestField[]): string[] {
+  const lines: string[] = ['', 'Fields:'];
+  for (const field of fields) {
+    lines.push(`  - ${field.name}: ${field.typeText}`);
+    if (field.description) {
+      lines.push(indentLines(field.description, '      '));
+    }
+  }
+  return lines;
 }
 
 function indentLines(text: string, indent: string): string {
@@ -600,33 +643,45 @@ function indentLines(text: string, indent: string): string {
 }
 
 function renderParamsSchemaSections(entry: CliApiManifestEntry, dataHelpFormat: ManifestHelpDataFormat): string[] {
+  let sections: string[] = [];
+  if (entry.paramsValidator) {
+    sections = collectSchemaSections(entry, dataHelpFormat);
+  }
+  return sections;
+}
+
+/**
+ * Renders the requested params-schema sections (JSON Schema and/or arktype),
+ * with a last-ditch arktype-expression fallback when the requested format
+ * produced nothing usable. Assumes the entry has a bound params validator.
+ *
+ * @param entry - The manifest entry whose params validator is rendered.
+ * @param dataHelpFormat - The requested schema render format.
+ * @returns The rendered schema sections (possibly empty).
+ */
+function collectSchemaSections(entry: CliApiManifestEntry, dataHelpFormat: ManifestHelpDataFormat): string[] {
   const sections: string[] = [];
 
-  if (entry.paramsValidator) {
-    if (dataHelpFormat === 'jsonschema' || dataHelpFormat === 'both') {
-      const jsonSchemaSection = renderJsonSchemaSection(entry);
-
-      if (jsonSchemaSection) {
-        sections.push(jsonSchemaSection);
-      }
+  if (dataHelpFormat === 'jsonschema' || dataHelpFormat === 'both') {
+    const jsonSchemaSection = renderJsonSchemaSection(entry);
+    if (jsonSchemaSection) {
+      sections.push(jsonSchemaSection);
     }
+  }
 
-    if (dataHelpFormat === 'arktype' || dataHelpFormat === 'both') {
-      const arktypeSection = renderArktypeExpressionSection(entry);
-
-      if (arktypeSection) {
-        sections.push(arktypeSection);
-      }
+  if (dataHelpFormat === 'arktype' || dataHelpFormat === 'both') {
+    const arktypeSection = renderArktypeExpressionSection(entry);
+    if (arktypeSection) {
+      sections.push(arktypeSection);
     }
+  }
 
-    if (sections.length === 0) {
-      // Last-ditch fallback when the requested format produced nothing usable
-      // (e.g. arktype was requested but the bound validator has no expression).
-      const expression = readArktypeExpression(entry);
-
-      if (expression) {
-        sections.push(`Params Schema (arktype): ${expression}`);
-      }
+  if (sections.length === 0) {
+    // Last-ditch fallback when the requested format produced nothing usable
+    // (e.g. arktype was requested but the bound validator has no expression).
+    const expression = readArktypeExpression(entry);
+    if (expression) {
+      sections.push(`Params Schema (arktype): ${expression}`);
     }
   }
 

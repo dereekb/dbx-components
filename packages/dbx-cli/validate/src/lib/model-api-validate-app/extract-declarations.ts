@@ -10,10 +10,10 @@
  * component-internal and upstream-package declarations.
  */
 
-import { readdir, readFile, stat } from 'node:fs/promises';
-import { type Dirent } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { relative, sep } from 'node:path';
 import { extractCrudEntries } from '@dereekb/dbx-cli/manifest-extract';
+import { collectFilesWithSuffix } from '../_core/collect-files.js';
 import type { DeclaredEntry } from './types.js';
 
 const API_SUFFIX = '.api.ts';
@@ -79,7 +79,7 @@ export async function extractDeclaredEntries(roots: readonly DeclaredEntriesSour
   const seen = new Set<string>();
   const out: DeclaredEntry[] = [];
   for (const root of roots) {
-    const files = await collectApiFiles(root.absDir);
+    const files = await collectFilesWithSuffix(root.absDir, API_SUFFIX);
     for (const fileAbs of files) {
       if (seen.has(fileAbs)) continue;
       seen.add(fileAbs);
@@ -88,52 +88,4 @@ export async function extractDeclaredEntries(roots: readonly DeclaredEntriesSour
     }
   }
   return out;
-}
-
-/**
- * Reads a directory's `Dirent` entries; returns an empty list when the
- * path is unreadable (e.g. permission denied, race-condition removal).
- *
- * @param path - Absolute directory path.
- * @returns The directory entries or `[]` on failure.
- */
-async function readDirSafe(path: string): Promise<readonly Dirent[]> {
-  let result: readonly Dirent[];
-  try {
-    result = await readdir(path, { withFileTypes: true });
-  } catch {
-    result = [];
-  }
-  return result;
-}
-
-async function collectApiFiles(rootAbs: string): Promise<readonly string[]> {
-  const files: string[] = [];
-  const stack: string[] = [];
-  let isDir = false;
-  try {
-    const stats = await stat(rootAbs);
-    isDir = stats.isDirectory();
-  } catch {
-    isDir = false;
-  }
-  if (isDir) {
-    stack.push(rootAbs);
-    while (stack.length > 0) {
-      const current = stack.pop() as string;
-      const entries = await readDirSafe(current);
-      for (const entry of entries) {
-        const full = join(current, entry.name);
-        if (entry.isDirectory()) {
-          stack.push(full);
-          continue;
-        }
-        if (entry.isFile() && entry.name.endsWith(API_SUFFIX) && !entry.name.endsWith('.spec.ts')) {
-          files.push(full);
-        }
-      }
-    }
-    files.sort((a, b) => a.localeCompare(b));
-  }
-  return files;
 }
