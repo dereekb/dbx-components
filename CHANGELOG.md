@@ -1,3 +1,35 @@
+# [13.15.0](https://github.com/dereekb/dbx-components/compare/v13.14.0-dev...v13.15.0) (2026-06-05)
+
+
+### Bug Fixes
+
+- **dbx-cli:** default HTTP request timeout to avoid indefinite hangs ([cd94e841](https://github.com/dereekb/dbx-components/commit/cd94e841931962784a8bd8147d99e7770b13d21e))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([7bc5ba3b](https://github.com/dereekb/dbx-components/commit/7bc5ba3bddec8fd3028bc62547ce8b9ddff6c89b))
+
+
+### Code Refactoring
+
+- added config to beginResetPassword ([21f107ca](https://github.com/dereekb/dbx-components/commit/21f107ca4861c060e759d251e76430a736b351e4))
+- **dbx-cli:** extract spec/fixture scanners + dbx-components-cli ([38704a34](https://github.com/dereekb/dbx-components/commit/38704a34b48e3b9ca5aa80d77b3336b74fc63d4c))
+- **dbx-cli:** extract validate/list tooling into dbx-cli/validate ([7b8fb9b3](https://github.com/dereekb/dbx-components/commit/7b8fb9b3497449c0bf14d1416b699e80aa5b2cb5))
+- **dbx-cli:** extract validate/list tooling into dbx-cli/validate ([cb99b7e5](https://github.com/dereekb/dbx-components/commit/cb99b7e5ab46a5fd0af75f146a5c2be414073ede))
+
+
+### Documentation
+
+- **dbx-components-cli:** document validate + list commands ([6a09ef13](https://github.com/dereekb/dbx-components/commit/6a09ef1394d7cecfc89d08ad711a39b4220cc0b8))
+
+
+### Features
+
+- **dbx-cli:** add model-size snapshot converter calculator tool ([5dcecbfc](https://github.com/dereekb/dbx-components/commit/5dcecbfcc3349a41f7d015a10bf0f6e6da087428))
+- **dbx-cli:** add model-test hotspots finder + MCP tool ([b6dbb3e5](https://github.com/dereekb/dbx-components/commit/b6dbb3e5a0816969040dc225b6b2c307fd9f9c96))
+- **firebase-server:** add file-driven batch-execute MCP tool ([d001e6a0](https://github.com/dereekb/dbx-components/commit/d001e6a04e2e75f392e1825dd7ad58d062a72fe3))
+
 # [13.14.0](https://github.com/dereekb/dbx-components/compare/v13.13.0-dev...v13.14.0) (2026-06-03)
 
 
