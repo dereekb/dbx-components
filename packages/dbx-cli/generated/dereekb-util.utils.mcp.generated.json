@@ -626,6 +626,40 @@
       ]
     },
     {
+      "slug": "hash-string-to-number",
+      "name": "hashStringToNumber",
+      "kind": "function",
+      "category": "hash",
+      "module": "@dereekb/util",
+      "subpath": "hash",
+      "signature": "hashStringToNumber(value: string): number",
+      "description": "Computes a stable, non-negative 32-bit integer hash for the input string using the FNV-1a algorithm.\n\nDeterministic and dependency-free (no `Math.random`): the same input always yields the same value,\nmaking it suitable for deterministically mapping a string onto a fixed-size set (e.g. picking a\ncurated color for a name via `hashStringToNumber(value) % colors.length`).",
+      "params": [
+        {
+          "name": "value",
+          "type": "string",
+          "description": "- String to hash.",
+          "optional": false
+        }
+      ],
+      "returns": "A non-negative integer in the range `[0, 2^32)`.",
+      "tags": [
+        "hash",
+        "string",
+        "number",
+        "deterministic",
+        "fnv",
+        "bucket",
+        "index",
+        "to",
+        "hashstringtonumber"
+      ],
+      "example": "hashStringToNumber('Michelle B'); // stable integer, same every call\nhashStringToNumber('Michelle B') % 12; // deterministic bucket index 0-11",
+      "relatedSlugs": [
+        "decode-hashed-values"
+      ]
+    },
+    {
       "slug": "iterate",
       "name": "iterate",
       "kind": "function",
@@ -2592,7 +2626,7 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.value",
-      "signature": "const filterMaybeArrayValues: import(\"/Users/dereekb/development/git/dbx-components/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
+      "signature": "const filterMaybeArrayValues: import(\"/Users/dereekb/development/git/dbcomponents/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
       "description": "Filters all maybe values from the input array. If a maybe value is input, returns an empty array.",
       "params": [],
       "returns": "An array containing only non-null and non-undefined values.",
@@ -2619,7 +2653,7 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.value",
-      "signature": "const filterEmptyArrayValues: import(\"/Users/dereekb/development/git/dbx-components/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
+      "signature": "const filterEmptyArrayValues: import(\"/Users/dereekb/development/git/dbcomponents/packages/util/src/lib/array/array.value\").UniversalFilterMaybeArrayFunction",
       "description": "Filters all empty and maybe values from the input array. If a maybe value is input, returns an empty array.",
       "params": [],
       "returns": "An array containing only non-null, non-undefined, and non-empty values.",
@@ -10687,7 +10721,7 @@
       "category": "string",
       "module": "@dereekb/util",
       "subpath": "string/replace",
-      "signature": "const escapeStringForRegex: import(\"/Users/dereekb/development/git/dbx-components/packages/util/src/lib/string/replace\").EscapeStringCharactersFunction",
+      "signature": "const escapeStringForRegex: import(\"/Users/dereekb/development/git/dbcomponents/packages/util/src/lib/string/replace\").EscapeStringCharactersFunction",
       "description": "Escapes the input string so it can be safely used as a literal value in a regular expression.\n\nFor instance, `'hello.world'` will be escaped to `'hello\\\\.world'`.",
       "params": [],
       "returns": "The escaped string with all regex special characters prefixed with a backslash.",
@@ -11429,6 +11463,69 @@
       ],
       "relatedSlugs": [
         "split-join-remainder"
+      ]
+    },
+    {
+      "slug": "name-to-initials-factory",
+      "name": "nameToInitialsFactory",
+      "kind": "factory",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "nameToInitialsFactory(config?: Maybe<NameToInitialsConfig>): NameToInitialsFunction",
+      "description": "Creates a {@link NameToInitialsFunction} that derives display initials from a name or short character string.\n\nUseful for avatar fallbacks where a name (e.g. `'Michelle B'`) or a literal token (e.g. `'BB'`)\nshould collapse to a compact label. By default a single-word input yields a single initial; raise\n`minInitials` to pull more leading characters from a lone word.",
+      "params": [
+        {
+          "name": "config",
+          "type": "Maybe<NameToInitialsConfig>",
+          "description": "- Configuration controlling the minimum and maximum number of initials.",
+          "optional": true
+        }
+      ],
+      "returns": "A reusable function that derives initials from input names.",
+      "tags": [
+        "string",
+        "name",
+        "initials",
+        "avatar",
+        "abbreviate",
+        "person",
+        "factory",
+        "to",
+        "nametoinitialsfactory"
+      ],
+      "example": "const toInitials = nameToInitialsFactory();\ntoInitials('Michelle B'); // 'MB'\ntoInitials('Michelle'); // 'M'\n\nconst toPaddedInitials = nameToInitialsFactory({ minInitials: 2 });\ntoPaddedInitials('Michelle'); // 'MI'\ntoPaddedInitials('BB'); // 'BB'",
+      "relatedSlugs": [
+        "split-join-name-string",
+        "capitalize-first-letter"
+      ]
+    },
+    {
+      "slug": "name-to-initials",
+      "name": "nameToInitials",
+      "kind": "const",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "const nameToInitials: NameToInitialsFunction",
+      "description": "Derives display initials from a name or short character string using the default configuration.\n\nMulti-word inputs use the first character of each of the first two words; single-word inputs use\nthe first character verbatim. The result is always uppercased.",
+      "params": [],
+      "returns": "Uppercased initials, or an empty string when the input is blank.",
+      "tags": [
+        "string",
+        "name",
+        "initials",
+        "avatar",
+        "abbreviate",
+        "person",
+        "to",
+        "nametoinitials"
+      ],
+      "example": "nameToInitials('Michelle B'); // 'MB'\nnameToInitials('A'); // 'A'\nnameToInitials('BB'); // 'B'\nnameToInitials('Michelle'); // 'M'",
+      "relatedSlugs": [
+        "name-to-initials-factory",
+        "split-join-name-string",
+        "capitalize-first-letter"
       ]
     },
     {

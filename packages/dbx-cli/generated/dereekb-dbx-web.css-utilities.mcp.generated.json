@@ -33,7 +33,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 55,
+      "line": 64,
       "declarations": [
         {
           "property": "width",
@@ -59,7 +59,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 39,
+      "line": 44,
       "declarations": [
         {
           "property": "width",
@@ -85,7 +85,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 14,
+      "line": 15,
       "declarations": [
         {
           "property": "position",
@@ -133,7 +133,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 86,
+      "line": 117,
       "declarations": [
         {
           "property": "border-radius",
@@ -149,12 +149,66 @@
       "parent": "avatar-view"
     },
     {
+      "slug": "avatar-view-initials",
+      "selector": ".dbx-avatar-view-initials",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/avatar/_avatar.scss",
+      "line": 100,
+      "declarations": [
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "align-items",
+          "value": "center"
+        },
+        {
+          "property": "justify-content",
+          "value": "center"
+        },
+        {
+          "property": "width",
+          "value": "100%"
+        },
+        {
+          "property": "height",
+          "value": "100%"
+        },
+        {
+          "property": "font-weight",
+          "value": "500"
+        },
+        {
+          "property": "line-height",
+          "value": "1"
+        },
+        {
+          "property": "text-transform",
+          "value": "uppercase"
+        },
+        {
+          "property": "user-select",
+          "value": "none"
+        }
+      ],
+      "role": "layout",
+      "intent": "initials surface for `.dbx-avatar-view` — centers up-to-2 name initials; background/text driven by `[dbxColor]` (curated color set)",
+      "seeAlso": [
+        "avatar-view",
+        "avatar-view-fallback"
+      ],
+      "parent": "avatar-view",
+      "component": "DbxAvatarViewComponent"
+    },
+    {
       "slug": "avatar-view-square",
       "selector": ".dbx-avatar-view-square",
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 95,
+      "line": 126,
       "declarations": [
         {
           "property": "border-radius",
