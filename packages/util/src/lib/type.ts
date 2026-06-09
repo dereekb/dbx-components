@@ -6,6 +6,52 @@ import { type Maybe } from './value/maybe.type';
  */
 export type PrimativeValue = boolean | string | number;
 
+// MARK: Brand
+/**
+ * Phantom key used to nominally brand a primitive type.
+ *
+ * Declared (never defined) so it exists only in the type system and carries no
+ * runtime cost. Two `Brand<number, A>` / `Brand<number, B>` types are distinct
+ * whenever `A !== B`, which is what gives branded ids/keys their nominal identity
+ * despite sharing the same underlying primitive at runtime.
+ */
+export declare const BRAND: unique symbol;
+
+/**
+ * Nominally brands a primitive `TValue` with the compile-time-only tag `TBrand`.
+ *
+ * The brand is a zero-cost nominal type: the `[BRAND]` phantom key is erased at
+ * runtime, so a `Brand<number, 'UserId'>` is just a `number` once compiled, but
+ * the compiler refuses to mix it with a `Brand<number, 'PostId'>` or with a bare
+ * `number`. Use it to stop two structurally identical primitives (two id spaces,
+ * a raw count vs. a currency amount, ciphertext vs. plaintext, ...) from being
+ * accidentally interchanged.
+ *
+ * Branded values are minted at a trusted edge — a parser, a decoder, or an `as`
+ * assertion inside a constructor function — and then flow through the rest of the
+ * code as the branded type, so the "is this the right kind of value?" check is
+ * paid once rather than at every call site.
+ *
+ * @typeParam TValue - The underlying runtime representation (e.g. `number`, `string`).
+ * @typeParam TBrand - A unique string tag distinguishing this brand from others.
+ *
+ * @example
+ * ```ts
+ * type UserId = Brand<number, 'UserId'>;
+ * type PostId = Brand<number, 'PostId'>;
+ *
+ * function loadUser(id: UserId): User { ... }
+ *
+ * const userId = 10 as UserId;
+ * const postId = 10 as PostId;
+ *
+ * loadUser(userId); // ok
+ * loadUser(postId); // compile error: PostId is not assignable to UserId
+ * loadUser(10); // compile error: number is not assignable to UserId
+ * ```
+ */
+export type Brand<TValue, TBrand extends string> = TValue & { readonly [BRAND]: TBrand };
+
 /**
  * Open-ended union of known string literals `T` plus an arbitrary string fallback.
  *
