@@ -14,6 +14,7 @@ async function buildTokenRegistry() {
   const loaded = await loadTokenManifests({
     sources: [
       { origin: 'bundled', path: resolve(MANIFESTS_DIR, 'dereekb-dbx-web.tokens.mcp.generated.json') },
+      { origin: 'bundled', path: resolve(MANIFESTS_DIR, 'dereekb-dbx-form.tokens.mcp.generated.json') },
       { origin: 'bundled', path: resolve(MANIFESTS_DIR, 'angular-material-m3.tokens.mcp.generated.json') },
       { origin: 'bundled', path: resolve(MANIFESTS_DIR, 'angular-material-mdc.tokens.mcp.generated.json') }
     ]

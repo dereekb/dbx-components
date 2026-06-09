@@ -51,7 +51,7 @@ export interface LoadTokenRegistryResult {
 }
 
 // MARK: Defaults
-const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-web.tokens.mcp.generated.json', 'angular-material-m3.tokens.mcp.generated.json', 'angular-material-mdc.tokens.mcp.generated.json'] as const;
+const DEFAULT_BUNDLED_FILENAMES = ['dereekb-dbx-web.tokens.mcp.generated.json', 'dereekb-dbx-form.tokens.mcp.generated.json', 'angular-material-m3.tokens.mcp.generated.json', 'angular-material-mdc.tokens.mcp.generated.json'] as const;
 
 const DEFAULT_BUNDLED_PATHS: BundledTokenManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);

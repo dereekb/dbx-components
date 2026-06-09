@@ -7,8 +7,9 @@
  *
  * Reads from a {@link TokenRegistry} supplied at construction time — the
  * server bootstrap composes the registry from the bundled
- * `dereekb-dbx-web` / `angular-material-m3` / `angular-material-mdc`
- * manifests plus any external manifests declared in `dbx-mcp.config.json`.
+ * `dereekb-dbx-web` / `dereekb-dbx-form` / `angular-material-m3` /
+ * `angular-material-mdc` manifests plus any external manifests declared in
+ * `dbx-mcp.config.json`.
  */
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
@@ -27,8 +28,8 @@ const DBX_CSS_TOKEN_LOOKUP_TOOL: Tool = {
     '  • `intent` — plain English ("hint text color", "card radius", "section gap", "primary button color");',
     '  • `value` — raw CSS value to reverse-lookup (`rgba(0,0,0,0.6)`, `12px`, `#26353f`, `0 1px 2px rgba(0,0,0,.06)`);',
     '  • `role` — narrow the candidate pool (color, text-color, surface, spacing, radius, elevation, shadow, typography, motion, state-layer, size, breakpoint);',
-    '  • `component` — Angular Material component slug ("mat-progress-bar", "mat-button", ...) to surface the relevant MDC tokens;',
-    '  • `category` — `"list"` for the full catalog, or `"dbx-web"|"mat-sys"|"mdc"|"app"` to browse one source.',
+    '  • `component` — component scope slug: an Angular Material slug ("mat-progress-bar", "mat-button", ...) for MDC tokens, or a dbx component scope ("sidenav", "list", "section", ...) for component-scoped `--dbx-*` tokens;',
+    '  • `category` — `"list"` for the full catalog, or `"dbx-web"|"dbx-form"|"mat-sys"|"mdc"|"app"` to browse one source.',
     '',
     'Returns the recommended `var(--…)` plus light/dark defaults, anti-use notes, the dbx-web utility class or primitive that wraps the underlying token, and any see-also references.'
   ].join('\n'),
@@ -38,8 +39,8 @@ const DBX_CSS_TOKEN_LOOKUP_TOOL: Tool = {
       intent: { type: 'string', description: 'Plain-English intent — what the value is for.' },
       value: { type: 'string', description: 'Raw CSS value to reverse-lookup.' },
       role: { type: 'string', enum: [...TOKEN_ROLES], description: 'Token-role filter.' },
-      component: { type: 'string', description: 'Angular Material component slug — narrows the lookup to MDC tokens scoped to that component.' },
-      category: { type: 'string', description: '"list" for the full catalog, or "dbx-web"|"mat-sys"|"mdc"|"app" to browse one source.' }
+      component: { type: 'string', description: 'Component scope slug — an Angular Material slug for MDC tokens, or a dbx component scope (e.g. "sidenav") for component-scoped --dbx-* tokens.' },
+      category: { type: 'string', description: '"list" for the full catalog, or "dbx-web"|"dbx-form"|"mat-sys"|"mdc"|"app" to browse one source.' }
     }
   }
 };

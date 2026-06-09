@@ -31,9 +31,10 @@ export type TokenRoleValue = (typeof TOKEN_ROLES)[number];
 /**
  * Origin of a token — used for filtering (`category=mat-sys`) and to indicate
  * authoritative source. `dbx-web` aliases live alongside `mat-sys` system
- * values; downstream apps surface as `app`.
+ * values; `dbx-form` carries the form package's component-scoped tokens;
+ * downstream apps surface as `app`.
  */
-export const TOKEN_SOURCES = ['dbx-web', 'mat-sys', 'mdc', 'app'] as const;
+export const TOKEN_SOURCES = ['dbx-web', 'dbx-form', 'mat-sys', 'mdc', 'app'] as const;
 
 /**
  * Static type for the closed token-source vocabulary.
@@ -69,7 +70,7 @@ export type TokenDefaults = typeof TokenDefaults.infer;
 export const TokenEntry = type({
   cssVariable: 'string',
   'scssVariable?': 'string',
-  source: '"dbx-web" | "mat-sys" | "mdc" | "app"',
+  source: '"dbx-web" | "dbx-form" | "mat-sys" | "mdc" | "app"',
   role: '"color" | "text-color" | "surface" | "spacing" | "radius" | "elevation" | "shadow" | "typography" | "motion" | "state-layer" | "size" | "breakpoint" | "misc"',
   intents: 'string[]',
   description: 'string',

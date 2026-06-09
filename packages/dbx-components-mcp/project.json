@@ -68,10 +68,10 @@
     "generate-css-tokens": {
       "executor": "nx:run-commands",
       "cache": true,
-      "outputs": ["{workspaceRoot}/packages/dbx-cli/generated/dereekb-dbx-web.tokens.mcp.generated.json", "{workspaceRoot}/packages/dbx-cli/generated/angular-material-m3.tokens.mcp.generated.json", "{workspaceRoot}/packages/dbx-cli/generated/angular-material-mdc.tokens.mcp.generated.json"],
-      "inputs": ["{projectRoot}/scripts/generate-css-tokens.mjs", "{workspaceRoot}/packages/dbx-cli/src/lib/mcp-scan/manifest/sources/angular-material-m3.tokens.source.json", "{workspaceRoot}/packages/dbx-cli/src/lib/mcp-scan/manifest/sources/angular-material-mdc.tokens.source.json", "{workspaceRoot}/packages/dbx-web/src/lib/style/_variables.scss", "{workspaceRoot}/packages/dbx-web/src/lib/style/_root-variables.scss", "{workspaceRoot}/packages/dbx-web/src/lib/style/_config.scss"],
+      "outputs": ["{workspaceRoot}/packages/dbx-cli/generated/dereekb-dbx-web.tokens.mcp.generated.json", "{workspaceRoot}/packages/dbx-cli/generated/dereekb-dbx-form.tokens.mcp.generated.json", "{workspaceRoot}/packages/dbx-cli/generated/angular-material-m3.tokens.mcp.generated.json", "{workspaceRoot}/packages/dbx-cli/generated/angular-material-mdc.tokens.mcp.generated.json"],
+      "inputs": ["{projectRoot}/scripts/generate-css-tokens.mjs", "{workspaceRoot}/packages/dbx-cli/src/lib/mcp-scan/manifest/sources/angular-material-m3.tokens.source.json", "{workspaceRoot}/packages/dbx-cli/src/lib/mcp-scan/manifest/sources/angular-material-mdc.tokens.source.json", "{workspaceRoot}/packages/dbx-web/src/lib/**/*.scss", "{workspaceRoot}/packages/dbx-form/src/lib/**/*.scss"],
       "options": {
-        "commands": ["node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=dbx-web", "node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=mat-sys", "node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=mdc"],
+        "commands": ["node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=dbx-web", "node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=dbx-form", "node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=mat-sys", "node packages/dbx-components-mcp/scripts/generate-css-tokens.mjs --source=mdc"],
         "cwd": "{workspaceRoot}",
         "parallel": false
       }

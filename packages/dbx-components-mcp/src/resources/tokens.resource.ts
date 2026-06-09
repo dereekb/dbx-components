@@ -68,7 +68,7 @@ export function registerTokensResource(server: McpServer, options: RegisterToken
     new ResourceTemplate(TOKENS_BY_SOURCE_TEMPLATE, { list: undefined }),
     {
       title: 'Tokens by Source',
-      description: 'Tokens filtered by origin: dbx-web, mat-sys, mdc, app.',
+      description: 'Tokens filtered by origin: dbx-web, dbx-form, mat-sys, mdc, app.',
       mimeType: 'application/json'
     },
     async (uri, variables) => {
