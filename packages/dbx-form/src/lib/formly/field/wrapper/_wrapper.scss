@@ -19,11 +19,11 @@ $form-flex-section-group-item-padding: $form-flex-section-group-padding * 2;
   .dbx-form-expand-wrapper-button {
     text-decoration: underline;
     margin-right: 8px;
-    margin-bottom: 6px;
+    margin-bottom: var(--dbx-padding-2);
   }
 
   .dbx-form-toggle-wrapper-toggle {
-    margin-bottom: 6px;
+    margin-bottom: var(--dbx-padding-2);
   }
 }
 

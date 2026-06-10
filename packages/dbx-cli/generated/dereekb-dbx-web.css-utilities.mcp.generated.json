@@ -444,11 +444,42 @@
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
       "line": 17,
-      "declarations": [],
+      "declarations": [
+        {
+          "property": "--mat-button-text-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        },
+        {
+          "property": "--mat-button-filled-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        },
+        {
+          "property": "--mat-button-protected-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        },
+        {
+          "property": "--mat-button-outlined-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        },
+        {
+          "property": "--mat-button-tonal-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        }
+      ],
       "role": "layout",
       "intent": "enlarge the inner `mat-mdc-button` height to 46px (33% taller than default) by setting Material's `--mat-button-*-container-height` tokens",
       "seeAlso": [
         "button-wide"
+      ],
+      "tokensRead": [
+        "--dbx-button-big-height"
+      ],
+      "tokensSet": [
+        "--mat-button-filled-container-height",
+        "--mat-button-outlined-container-height",
+        "--mat-button-protected-container-height",
+        "--mat-button-text-container-height",
+        "--mat-button-tonal-container-height"
       ]
     },
     {
@@ -477,6 +508,9 @@
       "seeAlso": [
         "button-wrap-group",
         "dbx-flex-column"
+      ],
+      "tokensRead": [
+        "--dbx-padding-2"
       ]
     },
     {
@@ -592,6 +626,9 @@
       "intent": "stretch the inner `.dbx-button` to a 120px minimum width (still capped by parent)",
       "seeAlso": [
         "button-grow"
+      ],
+      "tokensRead": [
+        "--dbx-button-wide-min-width"
       ]
     },
     {
@@ -607,6 +644,9 @@
       "seeAlso": [
         "button-column",
         "dbx-flex-bar"
+      ],
+      "tokensRead": [
+        "--dbx-padding-2"
       ]
     },
     {
@@ -683,11 +723,11 @@
       "declarations": [
         {
           "property": "font-size",
-          "value": "14px"
+          "value": "var(--mat-sys-label-large-size)"
         },
         {
           "property": "font-weight",
-          "value": "500"
+          "value": "var(--mat-sys-label-large-weight)"
         },
         {
           "property": "position",
@@ -709,7 +749,11 @@
         "chip-margin"
       ],
       "component": "DbxChipDirective",
-      "scope": "component-class"
+      "scope": "component-class",
+      "tokensRead": [
+        "--mat-sys-label-large-size",
+        "--mat-sys-label-large-weight"
+      ]
     },
     {
       "slug": "chip-margin",
@@ -858,7 +902,12 @@
         }
       ],
       "role": "layout",
-      "intent": "centered, padded content container with width-class and padding-class modifiers"
+      "intent": "centered, padded content container with width-class and padding-class modifiers",
+      "tokensRead": [
+        "--dbx-padding-1",
+        "--dbx-padding-2",
+        "--dbx-padding-3"
+      ]
     },
     {
       "slug": "content-elevate",
@@ -1009,7 +1058,7 @@
         },
         {
           "property": "padding",
-          "value": "0 2px"
+          "value": "0 var(--dbx-padding-1)"
         }
       ],
       "role": "layout",
@@ -1018,6 +1067,9 @@
         "dbx-content",
         "dbx-content-page",
         "dbx-scroll-content"
+      ],
+      "tokensRead": [
+        "--dbx-padding-1"
       ]
     },
     {
@@ -1044,7 +1096,10 @@
         "step-block"
       ],
       "component": "DbxDetailBlockComponent",
-      "scope": "component-class"
+      "scope": "component-class",
+      "tokensRead": [
+        "--dbx-detail-block-content-offset"
+      ]
     },
     {
       "slug": "dialog-content",
@@ -1060,13 +1115,17 @@
         },
         {
           "property": "padding",
-          "value": "$mat-dialog-container-padding"
+          "value": "var(--dbx-dialog-content-padding, var(--dbx-padding-4))"
         }
       ],
       "role": "layout",
       "intent": "dialog body — `<dbx-dialog-content>` host that wraps mat-dialog content with the standard 18px inset; compose with `.dbx-dialog-content-with-header` to reserve room for a sticky header, `.dbx-dialog-content-100` to fill the dialog height, or `.dbx-p0` to strip the inset",
       "component": "DbxDialogContentComponent",
-      "scope": "component-class"
+      "scope": "component-class",
+      "tokensRead": [
+        "--dbx-dialog-content-padding",
+        "--dbx-padding-4"
+      ]
     },
     {
       "slug": "error",
@@ -1860,11 +1919,11 @@
       "declarations": [
         {
           "property": "min-height",
-          "value": "$list-item-padded-min-height"
+          "value": "var(--dbx-list-item-padded-min-height, #{$list-item-padded-min-height})"
         },
         {
           "property": "padding",
-          "value": "2px 6px"
+          "value": "var(--dbx-padding-1) var(--dbx-padding-2)"
         }
       ],
       "role": "spacing",
@@ -1872,6 +1931,11 @@
       "seeAlso": [
         "dbx-list-item-padded-thick",
         "dbx-list-item-p0"
+      ],
+      "tokensRead": [
+        "--dbx-list-item-padded-min-height",
+        "--dbx-padding-1",
+        "--dbx-padding-2"
       ]
     },
     {
@@ -1884,7 +1948,7 @@
       "declarations": [
         {
           "property": "min-height",
-          "value": "$list-item-padded-min-height"
+          "value": "var(--dbx-list-item-padded-min-height, #{$list-item-padded-min-height})"
         },
         {
           "property": "padding",
@@ -1895,6 +1959,9 @@
       "intent": "thicker padded list-row spacing — same `min-height` as `.dbx-list-item-padded` with the workspace `theming.$padding-3` token",
       "seeAlso": [
         "dbx-list-item-padded"
+      ],
+      "tokensRead": [
+        "--dbx-list-item-padded-min-height"
       ]
     },
     {
@@ -2249,7 +2316,7 @@
       "declarations": [
         {
           "property": "padding-bottom",
-          "value": "$scroll-content-bottom-padding"
+          "value": "var(--dbx-scroll-content-bottom-padding, #{$scroll-content-bottom-padding})"
         }
       ],
       "role": "spacing",
@@ -2258,6 +2325,9 @@
         "dbx-content-container",
         "dbx-content-page",
         "dbx-content-pit-scrollable"
+      ],
+      "tokensRead": [
+        "--dbx-scroll-content-bottom-padding"
       ]
     },
     {
@@ -2407,7 +2477,7 @@
         },
         {
           "property": "--dbx-icon-tile-font-size",
-          "value": "var(--dbx-step-block-badge-font-size, #{$dbx-step-block-badge-font-size})"
+          "value": "var(--dbx-step-block-badge-font-size, var(--mat-sys-label-large-size, #{$dbx-step-block-badge-font-size}))"
         },
         {
           "property": "--dbx-icon-tile-font-weight",
@@ -2430,7 +2500,8 @@
         "--dbx-step-block-badge-font-weight",
         "--dbx-step-block-badge-icon-size",
         "--dbx-step-block-badge-shape",
-        "--dbx-step-block-badge-size"
+        "--dbx-step-block-badge-size",
+        "--mat-sys-label-large-size"
       ],
       "tokensSet": [
         "--dbx-icon-tile-border-radius",

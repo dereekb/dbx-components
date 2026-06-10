@@ -4,7 +4,7 @@
 $two-column-left-width-var: theming.$two-column-left-width-var;
 $two-column-left-width: theming.$two-column-left-width;
 $two-column-navbar-height: theming.$content-navbar-height;
-$two-columns-right-padding-size: 6px;
+$two-columns-right-padding-size: var(--dbx-padding-2);
 
 // MARK: Mixin
 @mixin core() {

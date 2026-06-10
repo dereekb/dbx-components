@@ -33,7 +33,7 @@ $header-left-reserved-space-small-screen: 120px;
       h5 {
         padding-top: 4px;
         padding-bottom: 1px;
-        min-height: $page-h1-height;
+        min-height: var(--dbx-section-header-title-height, #{$page-h1-height});
         display: inline-flex;
         align-items: center;
         margin: 0;
@@ -58,7 +58,7 @@ $header-left-reserved-space-small-screen: 120px;
       h3,
       h4,
       h5 {
-        height: $page-h1-height;
+        height: var(--dbx-section-header-title-height, #{$page-h1-height});
       }
     }
   }
@@ -78,7 +78,7 @@ $header-left-reserved-space-small-screen: 120px;
   .dbx-section-hint,
   .dbx-section-hint-inline {
     margin: 0;
-    font-size: 16px;
+    font-size: var(--mat-sys-body-large-size);
   }
 
   // MARK: Page
@@ -106,7 +106,7 @@ $header-left-reserved-space-small-screen: 120px;
         max-width: 100%;
 
         .dbx-section-header-content-title {
-          max-width: calc(80% - #{$header-left-reserved-space});
+          max-width: calc(80% - var(--dbx-section-page-header-reserved-space, #{$header-left-reserved-space}));
           min-width: 48px;
           flex-shrink: 1;
 
@@ -227,7 +227,7 @@ $header-left-reserved-space-small-screen: 120px;
     > .dbx-section-header > .dbx-section-header-content {
       .dbx-section-header-content-title {
         @include theming.if-small-screen($theme-config) {
-          max-width: calc(80% - #{$header-left-reserved-space-small-screen});
+          max-width: calc(80% - var(--dbx-section-page-header-reserved-space-small-screen, #{$header-left-reserved-space-small-screen}));
         }
       }
     }

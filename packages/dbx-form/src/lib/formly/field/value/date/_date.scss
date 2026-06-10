@@ -38,7 +38,7 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     width: 100%;
 
     .dbx-datetime-timezone {
-      padding: 0 6px;
+      padding: 0 var(--dbx-padding-2);
       pointer-events: none;
     }
 
@@ -68,7 +68,7 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
 
     &.add-time-button-full {
       width: 100%;
-      margin-bottom: 6px;
+      margin-bottom: var(--dbx-padding-2);
     }
   }
 
@@ -86,8 +86,8 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     .mat-calendar,
     .dbx-fixeddaterange-field-input {
       margin: auto;
-      min-width: 240px;
-      max-width: 320px;
+      min-width: var(--dbx-fixeddaterange-field-min-width, 240px);
+      max-width: var(--dbx-fixeddaterange-field-max-width, 320px);
     }
   }
 

@@ -6,14 +6,14 @@
 @mixin core() {
   .dbx-texteditor-field-compact {
     .dbx-texteditor-field-input {
-      min-height: 120px;
-      height: 300px;
+      min-height: var(--dbx-texteditor-field-compact-min-height, 120px);
+      height: var(--dbx-texteditor-field-compact-height, 300px);
       max-height: calc(var(--vh100) * 0.5);
     }
   }
 
   .dbx-texteditor-field-input {
-    max-height: 400px;
+    max-height: var(--dbx-texteditor-field-max-height, 400px);
     overflow: auto;
   }
 

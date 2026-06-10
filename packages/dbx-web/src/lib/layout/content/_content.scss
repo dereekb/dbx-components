@@ -135,7 +135,7 @@ $dbx-border-opacity-default: 20%;
   .dbx-content-scroll-lock {
     height: 100%;
     overflow: hidden;
-    padding: 0 2px; // Override padding
+    padding: 0 var(--dbx-padding-1); // Override padding
   }
 
   /// @dbx-utility content-container
@@ -153,7 +153,7 @@ $dbx-border-opacity-default: 20%;
     }
 
     &.container-padding-min {
-      padding: 0 2px;
+      padding: 0 var(--dbx-padding-1);
     }
 
     &.container-padding-small {
@@ -165,15 +165,15 @@ $dbx-border-opacity-default: 20%;
     }
 
     &.container-top-padding-min {
-      padding-top: 2px;
+      padding-top: var(--dbx-padding-1);
     }
 
     &.container-top-padding-small {
-      padding-top: 6px;
+      padding-top: var(--dbx-padding-2);
     }
 
     &.container-top-padding-normal {
-      padding-top: 12px;
+      padding-top: var(--dbx-padding-3);
     }
 
     // width
@@ -214,7 +214,7 @@ $dbx-border-opacity-default: 20%;
   /// @role spacing
   /// @see-also dbx-content-container, dbx-content-page, dbx-content-pit-scrollable
   .dbx-scroll-content {
-    padding-bottom: $scroll-content-bottom-padding;
+    padding-bottom: var(--dbx-scroll-content-bottom-padding, #{$scroll-content-bottom-padding});
   }
 
   .dbx-content-pit {

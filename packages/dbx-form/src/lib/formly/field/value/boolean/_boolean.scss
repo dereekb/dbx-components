@@ -19,7 +19,7 @@
           min-height: 60px;
           display: inline-flex;
           align-items: center;
-          padding: 6px 0;
+          padding: var(--dbx-padding-2) 0;
         }
       }
     }
@@ -40,8 +40,8 @@
           min-height: 60px;
           display: inline-flex;
           align-items: center;
-          padding-top: 6px;
-          padding-bottom: 6px;
+          padding-top: var(--dbx-padding-2);
+          padding-bottom: var(--dbx-padding-2);
         }
       }
     }

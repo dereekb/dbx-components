@@ -17,7 +17,7 @@ $dbx-checklist-item-spacing: 8px;
     .dbx-checklist-item-check {
       flex: auto 0 0;
       // margin-right: $dbx-checklist-item-spacing;
-      padding: 12px;
+      padding: var(--dbx-padding-3);
     }
 
     .dbx-checklist-item-content-wrapper {

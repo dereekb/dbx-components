@@ -38,12 +38,12 @@
 
       .dbx-form-repeat-array-field-content {
         display: block;
-        padding: 6px;
+        padding: var(--dbx-padding-2);
       }
     }
 
     .dbx-form-repeat-array-footer {
-      margin-top: 6px;
+      margin-top: var(--dbx-padding-2);
     }
   }
 

@@ -6,6 +6,32 @@
   "generator": "@dereekb/dbx-components-mcp/scripts/generate-css-tokens.mjs",
   "entries": [
     {
+      "cssVariable": "--dbx-fixeddaterange-field-max-width",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "fixeddaterange field max width"
+      ],
+      "description": "Component-scoped override point (`date`) read in `packages/dbx-form/src/lib/formly/field/value/date/_date.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `320px`.",
+      "defaults": {
+        "light": "320px"
+      },
+      "componentScope": "date"
+    },
+    {
+      "cssVariable": "--dbx-fixeddaterange-field-min-width",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "fixeddaterange field min width"
+      ],
+      "description": "Component-scoped override point (`date`) read in `packages/dbx-form/src/lib/formly/field/value/date/_date.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `240px`.",
+      "defaults": {
+        "light": "240px"
+      },
+      "componentScope": "date"
+    },
+    {
       "cssVariable": "--dbx-forge-list-item-field-height",
       "source": "dbx-form",
       "role": "size",
@@ -32,6 +58,19 @@
       "componentScope": "array"
     },
     {
+      "cssVariable": "--dbx-list-item-field-content-max-height",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "list item field content max height"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-form/src/lib/formly/field/selection/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `300px`.",
+      "defaults": {
+        "light": "300px"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-phone-field-country-selector-width",
       "source": "dbx-form",
       "role": "size",
@@ -56,6 +95,58 @@
         "light": "40px"
       },
       "componentScope": "phone"
+    },
+    {
+      "cssVariable": "--dbx-pickable-item-field-list-content-max-height",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "pickable item field list content max height"
+      ],
+      "description": "Component-scoped override point (`pickable`) read in `packages/dbx-form/src/lib/forge/field/selection/pickable/_pickable.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `300px`.",
+      "defaults": {
+        "light": "300px"
+      },
+      "componentScope": "pickable"
+    },
+    {
+      "cssVariable": "--dbx-texteditor-field-compact-height",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "texteditor field compact height"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/formly/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `300px`.",
+      "defaults": {
+        "light": "300px"
+      },
+      "componentScope": "texteditor"
+    },
+    {
+      "cssVariable": "--dbx-texteditor-field-compact-min-height",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "texteditor field compact min height"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/formly/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `120px`.",
+      "defaults": {
+        "light": "120px"
+      },
+      "componentScope": "texteditor"
+    },
+    {
+      "cssVariable": "--dbx-texteditor-field-max-height",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "texteditor field max height"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/formly/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `400px`.",
+      "defaults": {
+        "light": "400px"
+      },
+      "componentScope": "texteditor"
     }
   ]
 }

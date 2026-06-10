@@ -23,7 +23,7 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
   /// @scope component-class
   .dbx-dialog-content {
     display: block;
-    padding: $mat-dialog-container-padding;
+    padding: var(--dbx-dialog-content-padding, var(--dbx-padding-4));
   }
 
   .dbx-dialog-content-with-header {
@@ -79,7 +79,7 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
   }
 
   .dbx-dialog-content-close.dbx-dialog-content-close-padding {
-    padding-bottom: $mat-dialog-container-close-button-padding;
+    padding-bottom: var(--dbx-dialog-content-padding, var(--dbx-padding-4));
 
     > .dbx-dialog-content-close-button {
       top: $dbx-dialog-content-close-edge-padding;
@@ -98,7 +98,7 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
   }
 
   .dbx-dialog-content-100.dbx-dialog-content-100-padded-closed.dbx-dialog-content {
-    height: calc(100% - #{$mat-dialog-container-close-button-padding + ($mat-dialog-container-padding * 2)});
+    height: calc(100% - (var(--dbx-dialog-content-padding, var(--dbx-padding-4)) * 3));
   }
 }
 

@@ -122,8 +122,8 @@ $list-item-padded-min-height: 42px;
   /// @role spacing
   /// @see-also dbx-list-item-padded-thick, dbx-list-item-p0
   .dbx-list-item-padded {
-    min-height: $list-item-padded-min-height;
-    padding: 2px 6px;
+    min-height: var(--dbx-list-item-padded-min-height, #{$list-item-padded-min-height});
+    padding: var(--dbx-padding-1) var(--dbx-padding-2);
   }
 
   /// @dbx-utility list-item-padded-thick
@@ -131,7 +131,7 @@ $list-item-padded-min-height: 42px;
   /// @role spacing
   /// @see-also dbx-list-item-padded
   .dbx-list-item-padded-thick {
-    min-height: $list-item-padded-min-height;
+    min-height: var(--dbx-list-item-padded-min-height, #{$list-item-padded-min-height});
     padding: theming.$padding-3;
   }
 
@@ -182,7 +182,7 @@ $list-item-padded-min-height: 42px;
   // default `.item-icon` flat spacing with tile-appropriate margins. The
   // base `.dbx-icon-tile` rule lives in `_text.scss` next to its component.
   .dbx-list-two-line-item .item-icon.dbx-icon-tile {
-    padding: 8px;
+    padding: var(--dbx-icon-tile-padding, 8px);
     margin: 0 12px 0 4px;
   }
 

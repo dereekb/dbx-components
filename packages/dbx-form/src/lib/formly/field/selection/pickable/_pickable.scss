@@ -9,7 +9,7 @@
   }
 
   .dbx-pickable-item-field-list-content {
-    max-height: 400px;
+    max-height: var(--dbx-pickable-item-field-list-content-max-height, 400px);
     overflow: auto;
   }
 }

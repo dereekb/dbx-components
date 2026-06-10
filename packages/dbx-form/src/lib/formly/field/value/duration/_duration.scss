@@ -15,7 +15,7 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    gap: 12px;
+    gap: var(--dbx-padding-3);
     padding: 16px 8px;
     height: 100%;
     box-sizing: border-box;
@@ -27,7 +27,7 @@
     align-items: center;
     min-width: 48px;
     gap: 8px;
-    border-radius: 8px;
+    border-radius: var(--mat-sys-corner-small);
     padding: 4px;
     outline: none;
 
@@ -38,8 +38,8 @@
   }
 
   .dbx-duration-picker-label {
-    font-size: 12px;
-    font-weight: 500;
+    font-size: var(--mat-sys-label-medium-size);
+    font-weight: var(--mat-sys-label-medium-weight);
     text-transform: uppercase;
     opacity: 0.7;
     margin-bottom: 4px;

@@ -4,7 +4,7 @@
 @use '../style/theming';
 
 // MARK: Variables
-$button-spacer-width: 6px;
+$button-spacer-width: var(--dbx-padding-2);
 $big-button-height: 46px; // 33% bigger
 
 // MARK: Mixin
@@ -16,11 +16,11 @@ $big-button-height: 46px; // 33% bigger
   /// @see-also button-wide
   .dbx-button-big,
   .dbx-button-large {
-    --mat-button-text-container-height: #{$big-button-height};
-    --mat-button-filled-container-height: #{$big-button-height};
-    --mat-button-protected-container-height: #{$big-button-height};
-    --mat-button-outlined-container-height: #{$big-button-height};
-    --mat-button-tonal-container-height: #{$big-button-height};
+    --mat-button-text-container-height: var(--dbx-button-big-height, #{$big-button-height});
+    --mat-button-filled-container-height: var(--dbx-button-big-height, #{$big-button-height});
+    --mat-button-protected-container-height: var(--dbx-button-big-height, #{$big-button-height});
+    --mat-button-outlined-container-height: var(--dbx-button-big-height, #{$big-button-height});
+    --mat-button-tonal-container-height: var(--dbx-button-big-height, #{$big-button-height});
   }
 
   /// @dbx-utility button-form-field-height
@@ -68,7 +68,7 @@ $big-button-height: 46px; // 33% bigger
   /// @see-also button-grow
   .dbx-button-wide {
     .dbx-button {
-      min-width: 120px;
+      min-width: var(--dbx-button-wide-min-width, 120px);
       max-width: 100%;
     }
   }
@@ -81,12 +81,12 @@ $big-button-height: 46px; // 33% bigger
     > dbx-button,
     > dbx-anchor {
       display: inline-block;
-      padding: 0 6px 6px 0;
+      padding: 0 var(--dbx-padding-2) var(--dbx-padding-2) 0;
     }
 
     > button,
     > dbx-icon-button {
-      margin: 0 6px 6px 0;
+      margin: 0 var(--dbx-padding-2) var(--dbx-padding-2) 0;
     }
   }
 
@@ -138,7 +138,7 @@ $big-button-height: 46px; // 33% bigger
 
   .dbx-button-text-option-button {
     .dbx-button {
-      margin-bottom: 6px;
+      margin-bottom: var(--dbx-padding-2);
     }
 
     .dbx-base-button .mdc-button__label {
@@ -180,7 +180,7 @@ $big-button-height: 46px; // 33% bigger
     align-items: flex-start;
 
     > * {
-      margin-bottom: 6px !important;
+      margin-bottom: var(--dbx-padding-2) !important;
     }
   }
 

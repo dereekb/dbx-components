@@ -1,14 +1,14 @@
 @use '../../style/theming';
 
 // MARK: Variables
-$icon-spacing: 6px;
-$chip-spacing: 2px;
+$icon-spacing: var(--dbx-padding-2);
+$chip-spacing: var(--dbx-padding-1);
 $hint-opacity: 0.8;
 $faint-opacity: 0.54;
 $note-opacity: 0.7;
 $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
-$dbx-label-padded-padding: 6px;
-$dbx-detail-block-bottom-padding: 12px;
+$dbx-label-padded-padding: var(--dbx-padding-2);
+$dbx-detail-block-bottom-padding: var(--dbx-padding-3);
 $dbx-detail-block-content-offset: 30px;
 $click-to-copy-icon-size: 18px;
 $dbx-detail-block-big-header-icon-size: 18px;
@@ -92,7 +92,7 @@ $dbx-step-block-badge-font-weight: 600;
     align-items: center;
 
     .mat-icon {
-      padding-right: 6px;
+      padding-right: var(--dbx-padding-2);
       flex-shrink: 0; // do not allow shrinking
     }
 
@@ -104,7 +104,7 @@ $dbx-step-block-badge-font-weight: 600;
   }
 
   .dbx-detail-block-header-no-icon {
-    padding-left: $dbx-detail-block-content-offset;
+    padding-left: var(--dbx-detail-block-content-offset, #{$dbx-detail-block-content-offset});
   }
 
   .dbx-detail-line {
@@ -142,7 +142,7 @@ $dbx-step-block-badge-font-weight: 600;
     .dbx-detail-block-content {
       opacity: 0.8;
       font-size: 0.9em;
-      padding-left: $dbx-detail-block-content-offset;
+      padding-left: var(--dbx-detail-block-content-offset, #{$dbx-detail-block-content-offset});
     }
 
     padding-bottom: $dbx-detail-block-bottom-padding;
@@ -243,7 +243,7 @@ $dbx-step-block-badge-font-weight: 600;
     --dbx-icon-tile-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
     --dbx-icon-tile-height: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
     --dbx-icon-tile-min-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
-    --dbx-icon-tile-font-size: var(--dbx-step-block-badge-font-size, #{$dbx-step-block-badge-font-size});
+    --dbx-icon-tile-font-size: var(--dbx-step-block-badge-font-size, var(--mat-sys-label-large-size, #{$dbx-step-block-badge-font-size}));
     --dbx-icon-tile-font-weight: var(--dbx-step-block-badge-font-weight, #{$dbx-step-block-badge-font-weight});
     --dbx-icon-tile-icon-size: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
   }
@@ -311,8 +311,8 @@ $dbx-step-block-badge-font-weight: 600;
   /// @scope component-class
   /// @see-also chip-spacer, chip-margin
   .dbx-chip {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--mat-sys-label-large-size);
+    font-weight: var(--mat-sys-label-large-weight);
     position: relative;
     box-sizing: border-box;
     white-space: nowrap;
@@ -340,7 +340,7 @@ $dbx-step-block-badge-font-weight: 600;
 
   .dbx-chip.dbx-chip-small,
   .dbx-chip.mat-standard-chip.dbx-chip-small {
-    font-size: 12px;
+    font-size: var(--mat-sys-label-medium-size);
     padding: 2px 8px;
     min-height: 20px;
   }
@@ -453,7 +453,7 @@ $dbx-step-block-badge-font-weight: 600;
   }
 
   .dbx-number-with-limit {
-    padding: 2px 6px;
+    padding: var(--dbx-padding-1) var(--dbx-padding-2);
 
     .dbx-number-with-limit-divider {
       margin: 0 3px;
