@@ -1,24 +1,24 @@
 import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, type Signal, computed, inject, input, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type Signal, type Type, computed, inject, input, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { type Maybe } from '@dereekb/util';
-import { DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxPopoverService } from '@dereekb/dbx-web';
+import { DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxPopupService } from '@dereekb/dbx-web';
 import { type DbxStyleDemoSection, type DbxStyleDemoSectionId } from '../section/section';
 import { DbxStyleDemoSectionRegistry } from '../section/section.registry.service';
 import { type DbxStyleDemoStyleTemplateKey } from '../style-loader/style.template';
 import { DbxStyleDemoStyleLoaderDirective } from '../style-loader/style.loader.directive';
 import { type DbxStyleDemoTemplateToggle } from '../template-toggle/template.toggle';
 import { DBX_STYLE_DEMO_TEMPLATE_TOGGLE } from '../template-toggle/template.toggle.providers';
-import { type DbxStyleDemoConfig, type DbxStyleDemoControls } from './dbx.style.demo';
-import { DbxStyleDemoControlsPopoverComponent } from './dbx.style.demo.controls.popover.component';
+import { DBX_STYLE_DEMO_CONTROLS_COMPONENT, DBX_STYLE_DEMO_CONTROLS_POPUP_KEY, type DbxStyleDemoConfig, type DbxStyleDemoControls } from './dbx.style.demo';
 
 /**
  * Drop-in styling showcase for dbx-components apps.
  *
  * Renders the registered {@link DbxStyleDemoSection} components beneath a `[dbxStyleDemoStyleLoader]` host so they
  * paint purely through the host app's `--mat-sys-*` / `--dbx-*` tokens and `.dbx-*` utilities — the playground emits
- * no theme of its own. A controls popover toggles sections on/off and flips style-lever templates; flipping a lever
- * re-points CSS tokens that ripple through every rendered section live via the custom-property cascade.
+ * no theme of its own. A draggable controls popup toggles sections on/off and flips style-lever templates; flipping a
+ * lever re-points CSS tokens that ripple through every rendered section live via the custom-property cascade. The
+ * "Style controls" button only appears when a controls component is registered via {@link DBX_STYLE_DEMO_CONTROLS_COMPONENT}.
  *
  * This component is demo/debug-only and disposable — it is not a dbx-web core runtime primitive.
  *
@@ -34,7 +34,9 @@ import { DbxStyleDemoControlsPopoverComponent } from './dbx.style.demo.controls.
       <div class="dbx-flex-bar dbx-pb3">
         <span class="dbx-text-title-large">Style Demo</span>
         <span class="dbx-flex-fill"></span>
-        <dbx-button #controlsOrigin stroked icon="palette" text="Style controls" (buttonClick)="openControls()"></dbx-button>
+        @if (hasControlsSignal()) {
+          <dbx-button stroked icon="palette" text="Style controls" (buttonClick)="openControls()"></dbx-button>
+        }
       </div>
       <div [dbxStyleDemoStyleLoader]="activeTemplatesSignal()">
         <div dbxFlexGroup>
@@ -59,7 +61,8 @@ import { DbxStyleDemoControlsPopoverComponent } from './dbx.style.demo.controls.
 })
 export class DbxStyleDemoComponent implements DbxStyleDemoControls {
   private readonly _registry = inject(DbxStyleDemoSectionRegistry);
-  private readonly _popoverService = inject(DbxPopoverService);
+  private readonly _popupService = inject(DbxPopupService);
+  private readonly _controlsComponentClass = inject<Type<unknown>>(DBX_STYLE_DEMO_CONTROLS_COMPONENT, { optional: true });
   private readonly _toggles = inject<DbxStyleDemoTemplateToggle[]>(DBX_STYLE_DEMO_TEMPLATE_TOGGLE, { optional: true }) ?? [];
 
   /**
@@ -67,7 +70,10 @@ export class DbxStyleDemoComponent implements DbxStyleDemoControls {
    */
   readonly config = input<Maybe<DbxStyleDemoConfig>>(undefined);
 
-  readonly controlsOrigin = viewChild.required('controlsOrigin', { read: ElementRef });
+  /**
+   * True when a controls component is registered, gating the "Style controls" button.
+   */
+  readonly hasControlsSignal: Signal<boolean> = signal(this._controlsComponentClass != null);
 
   private readonly _sectionEnabledOverrides = signal<Map<DbxStyleDemoSectionId, boolean>>(new Map());
   private readonly _activeTemplateKeysOverride = signal<Maybe<Set<DbxStyleDemoStyleTemplateKey>>>(undefined);
@@ -135,9 +141,17 @@ export class DbxStyleDemoComponent implements DbxStyleDemoControls {
   }
 
   openControls(): void {
-    DbxStyleDemoControlsPopoverComponent.openPopover(this._popoverService, {
-      origin: this.controlsOrigin(),
-      controls: this
-    });
+    const componentClass = this._controlsComponentClass;
+
+    if (componentClass != null) {
+      this._popupService.open<void, DbxStyleDemoControls, unknown>({
+        key: DBX_STYLE_DEMO_CONTROLS_POPUP_KEY,
+        componentClass,
+        data: this,
+        isDraggable: true,
+        position: 'bottom_right',
+        width: '420px'
+      });
+    }
   }
 }
