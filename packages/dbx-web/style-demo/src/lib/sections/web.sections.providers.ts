@@ -17,10 +17,11 @@ import { DbxStyleDemoTypeRolesSectionComponent } from './type-roles.section.comp
 /**
  * The starter set of style-lever templates contributed by `@dereekb/dbx-web/style-demo`.
  *
- * The six `corner-shape-*` levers plus `surface-tint` reference the disposable `.dbx-style-demo-template-*` debug
- * classes (emitted by the `dbx-style-demo-debug-classes()` SCSS mixin); the `vivid-primary` `style` lever applies an
- * inline CSS-token override directly. The `corner-shape-*` levers share the `'Shape'` toggle group, so only one is
- * active at a time.
+ * The five `corner-shape-*` levers plus the controls-only `pill-controls` and `surface-tint` reference the disposable
+ * `.dbx-style-demo-template-*` debug classes (emitted by the `dbx-style-demo-debug-classes()` SCSS mixin); the
+ * `vivid-primary` `style` lever applies an inline CSS-token override directly. The `corner-shape-*` levers share the
+ * `'Shape'` toggle group, so only one is active at a time; `pill-controls` lives in its own `'Controls'` group so it
+ * composes with a corner lever instead of radio-excluding it.
  */
 export const DBX_WEB_STYLE_DEMO_TEMPLATES: DbxStyleDemoStyleTemplate[] = [
   { key: 'corner-shape-none', className: 'dbx-style-demo-template-corner-shape-none', label: 'Corners: none', curated: true },
@@ -28,7 +29,7 @@ export const DBX_WEB_STYLE_DEMO_TEMPLATES: DbxStyleDemoStyleTemplate[] = [
   { key: 'corner-shape-medium', className: 'dbx-style-demo-template-corner-shape-medium', label: 'Corners: medium', curated: true },
   { key: 'corner-shape-large', className: 'dbx-style-demo-template-corner-shape-large', label: 'Corners: large', curated: true },
   { key: 'corner-shape-extra-large', className: 'dbx-style-demo-template-corner-shape-extra-large', label: 'Corners: extra-large', curated: true },
-  { key: 'corner-shape-full', className: 'dbx-style-demo-template-corner-shape-full', label: 'Corners: full', curated: true },
+  { key: 'pill-controls', className: 'dbx-style-demo-template-pill-controls', label: 'Pill controls', curated: true },
   { key: 'surface-tint', className: 'dbx-style-demo-template-surface-tint', label: 'Surface tint', curated: true },
   // Inline-style POJO lever — an intentional demo override value, no debug class needed.
   { key: 'vivid-primary', style: { '--mat-sys-primary': '#ff0066', '--mat-sys-on-primary': '#ffffff' }, label: 'Vivid primary', curated: true }
@@ -37,8 +38,8 @@ export const DBX_WEB_STYLE_DEMO_TEMPLATES: DbxStyleDemoStyleTemplate[] = [
 /**
  * The controls levers exposed for {@link DBX_WEB_STYLE_DEMO_TEMPLATES}.
  *
- * The `corner-shape-*` levers share the `'Shape'` group (mutually exclusive); `surface-tint` and `vivid-primary`
- * are independent toggles in their own groups.
+ * The `corner-shape-*` levers share the `'Shape'` group (mutually exclusive); `pill-controls` (its own `'Controls'`
+ * group), `surface-tint` and `vivid-primary` are independent toggles in their own groups.
  */
 export const DBX_WEB_STYLE_DEMO_TEMPLATE_TOGGLES: DbxStyleDemoTemplateToggle[] = [
   { templateName: 'corner-shape-none', label: 'Corners: none', group: 'Shape' },
@@ -46,7 +47,7 @@ export const DBX_WEB_STYLE_DEMO_TEMPLATE_TOGGLES: DbxStyleDemoTemplateToggle[] =
   { templateName: 'corner-shape-medium', label: 'Corners: medium', group: 'Shape' },
   { templateName: 'corner-shape-large', label: 'Corners: large', group: 'Shape' },
   { templateName: 'corner-shape-extra-large', label: 'Corners: extra-large', group: 'Shape' },
-  { templateName: 'corner-shape-full', label: 'Corners: full', group: 'Shape' },
+  { templateName: 'pill-controls', label: 'Pill controls', group: 'Controls' },
   { templateName: 'surface-tint', label: 'Surface tint', group: 'Surface' },
   { templateName: 'vivid-primary', label: 'Vivid primary', group: 'Color' }
 ];

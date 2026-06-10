@@ -38,11 +38,11 @@ describe('mergeDbxStyleDemoStyleTemplates()', () => {
 
 describe('isDbxStyleDemoStyleTemplate()', () => {
   it('should return false for a bare template-key string', () => {
-    expect(isDbxStyleDemoStyleTemplate('corner-shape-full')).toBe(false);
+    expect(isDbxStyleDemoStyleTemplate('corner-shape-large')).toBe(false);
   });
 
   it('should return true for a template object carrying a string key', () => {
-    expect(isDbxStyleDemoStyleTemplate({ key: 'corner-shape-full' })).toBe(true);
+    expect(isDbxStyleDemoStyleTemplate({ key: 'corner-shape-large' })).toBe(true);
   });
 
   it('should return false for null/undefined', () => {
@@ -53,7 +53,7 @@ describe('isDbxStyleDemoStyleTemplate()', () => {
 
 describe('isDbxStyleDemoStyleLoaderConfig()', () => {
   it('should return false for a key string', () => {
-    expect(isDbxStyleDemoStyleLoaderConfig('corner-shape-full')).toBe(false);
+    expect(isDbxStyleDemoStyleLoaderConfig('corner-shape-large')).toBe(false);
   });
 
   it('should return false for an array of keys', () => {

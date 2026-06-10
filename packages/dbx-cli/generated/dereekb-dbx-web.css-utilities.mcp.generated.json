@@ -917,7 +917,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 144,
+      "line": 152,
       "declarations": [
         {
           "property": "margin",
@@ -970,12 +970,12 @@
         }
       ],
       "role": "layout",
-      "intent": "recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks)",
+      "intent": "recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`",
       "seeAlso": [
-        "dbx-content-pit-rounded",
         "dbx-content-pit-scrollable",
         "dbx-content-border",
-        "dbx-content-elevate"
+        "dbx-content-elevate",
+        "dbx-corners-none"
       ]
     },
     {
@@ -984,7 +984,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 96,
+      "line": 104,
       "declarations": [
         {
           "property": "float",
@@ -1025,7 +1025,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 72,
+      "line": 80,
       "declarations": [
         {
           "property": "border-radius",
@@ -1035,7 +1035,8 @@
       "role": "layout",
       "intent": "rounded modifier for `.dbx-content-pit` — applies the `theming.$dbx-content-pit-rounded-border-radius` corner radius",
       "seeAlso": [
-        "dbx-content-pit"
+        "dbx-content-pit",
+        "dbx-corners-none"
       ],
       "parent": "content-pit"
     },
@@ -1045,7 +1046,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 85,
+      "line": 93,
       "declarations": [
         {
           "property": "max-height",
@@ -1073,7 +1074,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 135,
+      "line": 143,
       "declarations": [
         {
           "property": "height",
@@ -1097,6 +1098,160 @@
       ],
       "tokensRead": [
         "--dbx-padding-1"
+      ]
+    },
+    {
+      "slug": "corners",
+      "selector": ".dbx-corners",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 22,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "theming.$dbx-corners-border-radius"
+        }
+      ],
+      "role": "layout",
+      "intent": "rounded-corner surface — applies the M3 \"medium\" corner radius via the app-overridable `--dbx-corners-border-radius` token, so it tracks the corner system / style-demo levers",
+      "seeAlso": [
+        "dbx-corners-small",
+        "dbx-corners-medium",
+        "dbx-corners-large",
+        "dbx-corners-extra-large",
+        "dbx-corners-full",
+        "dbx-corners-none"
+      ]
+    },
+    {
+      "slug": "corners-extra-large",
+      "selector": ".dbx-corners-extra-large",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 57,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-extra-large, 28px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"extra-large\" (28px) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-extra-large"
+      ]
+    },
+    {
+      "slug": "corners-full",
+      "selector": ".dbx-corners-full",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 65,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-full, 9999px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"full\" (pill) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-full"
+      ]
+    },
+    {
+      "slug": "corners-large",
+      "selector": ".dbx-corners-large",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 49,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-large, 16px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"large\" (16px) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-large"
+      ]
+    },
+    {
+      "slug": "corners-medium",
+      "selector": ".dbx-corners-medium",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 41,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-medium, 12px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"medium\" (12px) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-medium"
+      ]
+    },
+    {
+      "slug": "corners-none",
+      "selector": ".dbx-corners-none",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 73,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "0"
+        }
+      ],
+      "role": "layout",
+      "intent": "square corners (radius 0) — doubles as the common opt-out for components that round by default (e.g. `.dbx-content-pit`)",
+      "seeAlso": [
+        "dbx-corners",
+        "dbx-content-pit"
+      ]
+    },
+    {
+      "slug": "corners-small",
+      "selector": ".dbx-corners-small",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 33,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-small, 8px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"small\" (8px) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-small"
       ]
     },
     {
@@ -1922,7 +2077,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 264,
+      "line": 330,
       "declarations": [
         {
           "property": "padding",
@@ -1997,7 +2152,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 237,
+      "line": 303,
       "declarations": [
         {
           "property": "cursor",
@@ -2014,7 +2169,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 249,
+      "line": 315,
       "declarations": [
         {
           "property": "padding",
@@ -2027,6 +2182,166 @@
         "dbx-list-item-p0"
       ],
       "selectorContext": ".dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item"
+    },
+    {
+      "slug": "list-rounded-items",
+      "selector": ".dbx-list-rounded-items",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 193,
+      "declarations": [
+        {
+          "property": "--mat-list-active-indicator-shape",
+          "value": "var(--dbx-list-item-border-radius, var(--mat-sys-corner-full, 9999px))"
+        },
+        {
+          "property": "--mat-list-list-item-container-shape",
+          "value": "var(--dbx-list-item-border-radius, var(--mat-sys-corner-full, 9999px))"
+        }
+      ],
+      "role": "layout",
+      "intent": "rounds every list row to an M3 pill via `--dbx-list-item-border-radius`; pair with a `.dbx-list-rounded-items-*` level modifier to pick a fixed radius",
+      "seeAlso": [
+        "dbx-list-rounded-items-medium",
+        "dbx-list-card-items-list"
+      ],
+      "tokensRead": [
+        "--dbx-list-item-border-radius",
+        "--mat-list-list-item-container-shape",
+        "--mat-sys-corner-full"
+      ],
+      "tokensSet": [
+        "--mat-list-active-indicator-shape",
+        "--mat-list-list-item-container-shape"
+      ]
+    },
+    {
+      "slug": "list-rounded-items-full",
+      "selector": ".dbx-list-rounded-items-full",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 243,
+      "declarations": [
+        {
+          "property": "--dbx-list-item-border-radius",
+          "value": "var(--mat-sys-corner-full, 9999px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "sets `--dbx-list-item-border-radius` to the M3 \"full\" (pill) radius for `.dbx-list-rounded-items`",
+      "seeAlso": [
+        "dbx-list-rounded-items"
+      ],
+      "parent": "list-rounded-items",
+      "tokensRead": [
+        "--mat-sys-corner-full"
+      ],
+      "tokensSet": [
+        "--dbx-list-item-border-radius"
+      ]
+    },
+    {
+      "slug": "list-rounded-items-large",
+      "selector": ".dbx-list-rounded-items-large",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 234,
+      "declarations": [
+        {
+          "property": "--dbx-list-item-border-radius",
+          "value": "var(--mat-sys-corner-large, 16px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "sets `--dbx-list-item-border-radius` to the M3 \"large\" (16px) radius for `.dbx-list-rounded-items`",
+      "seeAlso": [
+        "dbx-list-rounded-items"
+      ],
+      "parent": "list-rounded-items",
+      "tokensRead": [
+        "--mat-sys-corner-large"
+      ],
+      "tokensSet": [
+        "--dbx-list-item-border-radius"
+      ]
+    },
+    {
+      "slug": "list-rounded-items-medium",
+      "selector": ".dbx-list-rounded-items-medium",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 225,
+      "declarations": [
+        {
+          "property": "--dbx-list-item-border-radius",
+          "value": "var(--mat-sys-corner-medium, 12px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "sets `--dbx-list-item-border-radius` to the M3 \"medium\" (12px) radius for `.dbx-list-rounded-items`",
+      "seeAlso": [
+        "dbx-list-rounded-items"
+      ],
+      "parent": "list-rounded-items",
+      "tokensRead": [
+        "--mat-sys-corner-medium"
+      ],
+      "tokensSet": [
+        "--dbx-list-item-border-radius"
+      ]
+    },
+    {
+      "slug": "list-rounded-items-none",
+      "selector": ".dbx-list-rounded-items-none",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 207,
+      "declarations": [
+        {
+          "property": "--dbx-list-item-border-radius",
+          "value": "0"
+        }
+      ],
+      "role": "layout",
+      "intent": "sets `--dbx-list-item-border-radius` to 0 (square rows) for `.dbx-list-rounded-items`",
+      "seeAlso": [
+        "dbx-list-rounded-items"
+      ],
+      "parent": "list-rounded-items",
+      "tokensSet": [
+        "--dbx-list-item-border-radius"
+      ]
+    },
+    {
+      "slug": "list-rounded-items-small",
+      "selector": ".dbx-list-rounded-items-small",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 216,
+      "declarations": [
+        {
+          "property": "--dbx-list-item-border-radius",
+          "value": "var(--mat-sys-corner-small, 8px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "sets `--dbx-list-item-border-radius` to the M3 \"small\" (8px) radius for `.dbx-list-rounded-items`",
+      "seeAlso": [
+        "dbx-list-rounded-items"
+      ],
+      "parent": "list-rounded-items",
+      "tokensRead": [
+        "--mat-sys-corner-small"
+      ],
+      "tokensSet": [
+        "--dbx-list-item-border-radius"
+      ]
     },
     {
       "slug": "list-sticky-headers",
@@ -2045,7 +2360,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 193,
+      "line": 259,
       "declarations": [
         {
           "property": "display",
@@ -2324,16 +2639,22 @@
         {
           "property": "max-width",
           "value": "$box-max-width"
+        },
+        {
+          "property": "border-radius",
+          "value": "var(--dbx-prompt-box-border-radius, var(--mat-sys-corner-medium, 12px))"
         }
       ],
       "role": "layout",
-      "intent": "centered prompt panel — auto-margined max-width box with a 40px inset (override via `--dbx-prompt-box-padding`); compose with `.elevate` to lift it with elevation 2",
+      "intent": "centered prompt panel — auto-margined max-width box with a 40px inset (override via `--dbx-prompt-box-padding`) and a \"medium\" corner radius (override via `--dbx-prompt-box-border-radius`); compose with `.elevate` to lift it with elevation 2",
       "seeAlso": [
         "content-box",
         "content-elevate"
       ],
       "tokensRead": [
-        "--dbx-prompt-box-padding"
+        "--dbx-prompt-box-border-radius",
+        "--dbx-prompt-box-padding",
+        "--mat-sys-corner-medium"
       ]
     },
     {
@@ -2342,7 +2663,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 216,
+      "line": 224,
       "declarations": [
         {
           "property": "padding-bottom",

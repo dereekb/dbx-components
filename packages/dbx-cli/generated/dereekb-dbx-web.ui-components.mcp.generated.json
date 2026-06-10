@@ -1306,7 +1306,7 @@
       "selector": "dbx-content-pit, [dbxContentPit]",
       "className": "DbxContentPitDirective",
       "module": "@dereekb/dbx-web",
-      "description": "Wraps content in a recessed \"pit\" container with optional scrollable overflow and rounded corners.\nUseful for displaying bounded content areas such as lists or previews with a constrained height.",
+      "description": "Wraps content in a recessed \"pit\" container with optional scrollable overflow and rounded corners.\nUseful for displaying bounded content areas such as lists or previews with a constrained height.\n\nPits round their corners by default. Pass `[rounded]=\"false\"` to square the pit — this applies the\ncommon `.dbx-corners-none` opt-out utility rather than a pit-specific class.",
       "inputs": [
         {
           "name": "scrollable",
@@ -1319,7 +1319,7 @@
           "type": "boolean",
           "description": "",
           "required": false,
-          "default": "false"
+          "default": "true"
         }
       ],
       "outputs": [],
@@ -1935,7 +1935,7 @@
       "selector": "[dbxStyleBody]",
       "className": "DbxStyleBodyDirective",
       "module": "@dereekb/dbx-web",
-      "description": "Applies the current application style class from {@link DbxStyleService} to the document `<body>` element.\n\nPlace this directive on a root-level element so that the body tag receives the active style class.",
+      "description": "Applies the current {@link DbxStyleService} body application — the active style class, any supplement classes, and\nsupplement inline styles (CSS custom properties) — to the document `<body>` element.\n\nPlace this directive on a root-level element so that the body tag receives the active style.",
       "inputs": [],
       "outputs": [],
       "relatedSlugs": [

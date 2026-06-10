@@ -441,7 +441,7 @@
         "rounded pit corner",
         "content pit radius"
       ],
-      "description": "Border radius for the `[dbxContentPit]` rounded variant. Defaults to `var(--mat-sys-corner-medium)`.",
+      "description": "Border radius for the `[dbxContentPit]`, applied by default to every pit. Defaults to `var(--mat-sys-corner-medium)`.",
       "defaults": {
         "light": "var(--mat-sys-corner-medium)"
       },
@@ -461,6 +461,24 @@
       "defaults": {
         "light": "140px"
       }
+    },
+    {
+      "cssVariable": "--dbx-corners-border-radius",
+      "scssVariable": "$dbx-corners-border-radius-var",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "corners radius",
+        "generic corner radius",
+        "dbx-corners radius"
+      ],
+      "description": "Border radius for the generic `.dbx-corners` utility class. Defaults to `var(--mat-sys-corner-medium)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-medium)"
+      },
+      "seeAlso": [
+        "--mat-sys-corner-medium"
+      ]
     },
     {
       "cssVariable": "--dbx-default-color",
@@ -733,6 +751,20 @@
       "componentScope": "list"
     },
     {
+      "cssVariable": "--dbx-list-item-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "list item border radius",
+        "list item border radius radius"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "0"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-list-item-card-background",
       "source": "dbx-web",
       "role": "misc",
@@ -771,6 +803,20 @@
         "light": "42px"
       },
       "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-navbar-item-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "navbar item border radius",
+        "navbar item border radius radius"
+      ],
+      "description": "Component-scoped override point (`navbar`) read in `packages/dbx-web/src/lib/router/layout/navbar/_navbar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-large, 16px)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-large, 16px)"
+      },
+      "componentScope": "navbar"
     },
     {
       "cssVariable": "--dbx-nested-content-height",
@@ -1178,6 +1224,20 @@
         "light": "5px"
       },
       "componentScope": "bar.button"
+    },
+    {
+      "cssVariable": "--dbx-prompt-box-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "prompt box border radius",
+        "prompt box border radius radius"
+      ],
+      "description": "Component-scoped override point (`prompt`) read in `packages/dbx-web/src/lib/interaction/prompt/_prompt.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-medium, 12px)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-medium, 12px)"
+      },
+      "componentScope": "prompt"
     },
     {
       "cssVariable": "--dbx-prompt-box-padding",

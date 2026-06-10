@@ -18,8 +18,15 @@
 /// Builds the component-shape token override map for a single corner-radius value.
 ///
 /// Re-points the same Material component shape tokens that `dbx-components-shapes()` pins to the
-/// baseline `8px`, EXCEPT the intentional `--mat-sidenav-container-shape` (0) and
-/// `--mat-list-active-indicator-shape` (2px) entries — those keep their deliberate non-default shapes.
+/// baseline `8px`, plus the dbx component corner tokens that track the system scale
+/// (`--dbx-content-pit-rounded-border-radius`, `--dbx-prompt-box-border-radius`,
+/// `--dbx-corners-border-radius`, `--dbx-navbar-item-border-radius`).
+///
+/// EXCEPT the intentional `--mat-sidenav-container-shape` (0) and `--mat-list-active-indicator-shape`
+/// (2px) entries — those keep their deliberate non-default shapes. For the same reason
+/// `--dbx-list-item-border-radius` (`.dbx-list-rounded-items` pill default) and
+/// `--dbx-list-item-card-border-radius` (card-list rows) stay excluded here — they are deliberate
+/// non-defaults, re-rounded only by the `pill-controls` lever.
 ///
 /// `$value` may be a literal (e.g. `0`) or a token reference (e.g. `var(--mat-sys-corner-medium)`); the
 /// emitting mixin interpolates either form via `#{$value}`. Private to this module (`-` prefix).
@@ -45,7 +52,33 @@
     '--mat-expansion-container-shape': $value,
     '--mat-datepicker-calendar-container-shape': $value,
     '--mat-bottom-sheet-container-shape': $value,
-    '--mat-tooltip-container-shape': $value
+    '--mat-tooltip-container-shape': $value,
+    // dbx component corner tokens that track the system scale.
+    '--dbx-content-pit-rounded-border-radius': $value,
+    '--dbx-prompt-box-border-radius': $value,
+    '--dbx-corners-border-radius': $value,
+    '--dbx-navbar-item-border-radius': $value // single radius; navbar keeps its top-only geometry
+  );
+}
+
+/// Builds the controls-only shape override map for a single corner-radius value.
+///
+/// Backs the `pill-controls` lever: re-rounds only the interactive "controls" surfaces (buttons, FABs,
+/// nav/anchor-list items, and `.dbx-list-rounded-items` rows via `--dbx-list-item-border-radius`) without
+/// touching content surfaces. Chips and form-fields are intentionally excluded — pilling them reads as a
+/// different design intent than rounding controls. Private to this module (`-` prefix).
+@function -dbx-style-demo-controls-shape-map($value) {
+  @return (
+    '--mat-button-filled-container-shape': $value,
+    '--mat-button-outlined-container-shape': $value,
+    '--mat-button-text-container-shape': $value,
+    '--mat-button-protected-container-shape': $value,
+    '--mat-button-tonal-container-shape': $value,
+    '--mat-fab-container-shape': $value,
+    '--mat-fab-small-container-shape': $value,
+    '--mat-list-active-indicator-shape': $value,
+    // nav/anchor-list items
+    '--dbx-list-item-border-radius': $value // .dbx-list-rounded-items lists
   );
 }
 
@@ -55,12 +88,17 @@ $dbx-style-demo-templates: (
   // pins to the baseline 8px, so cards / buttons / form-fields / etc. re-round live as the lever flips.
   // Values reference the `--mat-sys-corner-*` token where one exists; `none` is the literal 0.
   // 'corner-shape-small' is intentionally omitted — the baseline is already 8px (= small), so it would be a no-op.
+  // 'corner-shape-full' was removed — pilling every surface broke too many components; use the
+  // controls-only 'pill-controls' lever below instead.
   'corner-shape-none': -dbx-style-demo-shape-map(0),
   'corner-shape-extra-small': -dbx-style-demo-shape-map(var(--mat-sys-corner-extra-small)),
   'corner-shape-medium': -dbx-style-demo-shape-map(var(--mat-sys-corner-medium)),
   'corner-shape-large': -dbx-style-demo-shape-map(var(--mat-sys-corner-large)),
   'corner-shape-extra-large': -dbx-style-demo-shape-map(var(--mat-sys-corner-extra-large)),
-  'corner-shape-full': -dbx-style-demo-shape-map(var(--mat-sys-corner-full)),
+  // Controls-only pill preset. Emitted AFTER the corner-shape-* entries so that when it is composed
+  // with a corner lever (its own toggle group, not 'Shape'), this later emission wins the tokens they
+  // share (buttons / FABs / list items) — guard this ordering when reordering the map.
+  'pill-controls': -dbx-style-demo-controls-shape-map(var(--mat-sys-corner-full)),
   // Tints surfaces toward the primary color by mixing the theme's own system tokens — stays theme-correct.
   'surface-tint': (
       '--mat-sys-surface': color-mix(in srgb, var(--mat-sys-primary) 8%, var(--mat-sys-surface)),

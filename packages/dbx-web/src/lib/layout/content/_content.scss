@@ -57,18 +57,26 @@ $dbx-border-opacity-default: 20%;
   }
 
   /// @dbx-utility content-pit
-  /// @intent recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks)
+  /// @intent recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`
   /// @role layout
-  /// @see-also dbx-content-pit-rounded, dbx-content-pit-scrollable, dbx-content-border, dbx-content-elevate
+  /// @see-also dbx-content-pit-scrollable, dbx-content-border, dbx-content-elevate, dbx-corners-none
   .dbx-content-pit {
     padding: $pit-padding;
+  }
+
+  // Pits round by default. Kept OUT of the `.dbx-content-pit` rule and wrapped
+  // in `:where()` so specificity stays at 0 — any single-class utility
+  // (`.dbx-corners-none`, `.dbx-corners-large`, or an app class) overrides it.
+  :where(.dbx-content-pit) {
+    border-radius: theming.$dbx-content-pit-rounded-border-radius;
   }
 
   /// @dbx-utility content-pit-rounded
   /// @intent rounded modifier for `.dbx-content-pit` — applies the `theming.$dbx-content-pit-rounded-border-radius` corner radius
   /// @role layout
   /// @parent content-pit
-  /// @see-also dbx-content-pit
+  /// @see-also dbx-content-pit, dbx-corners-none
+  /// @deprecated Pits round by default now; this modifier is a harmless back-compat alias emitting the same radius. To square a pit use `.dbx-corners-none`.
   .dbx-content-pit-rounded {
     border-radius: theming.$dbx-content-pit-rounded-border-radius;
   }

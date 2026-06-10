@@ -6,5 +6,10 @@
       <h4>Custom Anchors</h4>
       <dbx-anchor-list [anchors]="customAnchors"></dbx-anchor-list>
     </doc-feature-example>
+    <doc-feature-example header="Rounded items" hint="Apply .dbx-list-rounded-items on the host to pill the rows (M3 full radius default); pair it with a level modifier such as .dbx-list-rounded-items-medium to pick a fixed radius.">
+      <dbx-anchor-list class="dbx-list-rounded-items" [anchors]="anchors"></dbx-anchor-list>
+      <h4>Medium radius (.dbx-list-rounded-items-medium)</h4>
+      <dbx-anchor-list class="dbx-list-rounded-items dbx-list-rounded-items-medium" [anchors]="anchors"></dbx-anchor-list>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>
