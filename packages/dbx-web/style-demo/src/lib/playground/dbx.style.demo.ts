@@ -5,17 +5,17 @@ import { type DbxStyleDemoStyleTemplateKey } from '../style-loader/style.templat
 import { type DbxStyleDemoTemplateToggle } from '../template-toggle/template.toggle';
 
 /**
- * Popup key used by the style-demo controls popup.
+ * Detach key used by the style-demo controls detach panel.
  */
-export const DBX_STYLE_DEMO_CONTROLS_POPUP_KEY = 'dbx-style-demo-controls';
+export const DBX_STYLE_DEMO_CONTROLS_DETACH_KEY = 'dbx-style-demo-controls';
 
 /**
- * Injection token carrying the component class rendered inside the style-demo controls popup.
+ * Injection token carrying the component class rendered inside the style-demo controls detach panel.
  *
- * The playground opens this component in a draggable `dbx-popup` and passes the playground's
- * {@link DbxStyleDemoControls} as the popup `data`. When unregistered, the playground hides its "Style controls" button.
+ * `DbxStyleDemoControlsService` opens this component via `DbxDetachService` (so it survives navigation and is available
+ * app-wide) reading the service's {@link DbxStyleDemoControls} state. When unregistered, the controls buttons are hidden.
  *
- * `@dereekb/dbx-form/style-demo` registers `DbxFormStyleDemoControlsPopupComponent` (a chip-field controls UI) here —
+ * `@dereekb/dbx-form/style-demo` registers `DbxFormStyleDemoControlsDetachComponent` (a chip-field controls UI) here —
  * the controls UI lives in dbx-form because it depends on `@dereekb/dbx-form`'s pickable chip field, which dbx-web cannot import.
  */
 export const DBX_STYLE_DEMO_CONTROLS_COMPONENT = new InjectionToken<Type<unknown>>('DbxStyleDemoControlsComponent');

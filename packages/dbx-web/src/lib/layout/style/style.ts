@@ -1,4 +1,4 @@
-import { type CharacterPrefixSuffixCleanString, type CssClass, type CssToken, cssTokenVar, type CssTokenVar, DASH_CHARACTER_PREFIX_INSTANCE, type DashPrefixString, hashStringToNumber, type Maybe } from '@dereekb/util';
+import { type CharacterPrefixSuffixCleanString, type CssClass, type CssStyleObject, type CssToken, cssTokenVar, type CssTokenVar, DASH_CHARACTER_PREFIX_INSTANCE, type DashPrefixString, hashStringToNumber, type Maybe } from '@dereekb/util';
 
 // MARK: App Styling
 /**
@@ -60,6 +60,41 @@ export interface DbxStyleConfig {
    * Set of all allowed DbxStyleClassSuffixes for the DbxStyleClass in the config, if applicable.
    */
   readonly suffixes?: Set<DbxStyleClassSuffix>;
+}
+
+/**
+ * Supplemental classes / inline styles (CSS custom properties) applied on top of the configured global style.
+ *
+ * Used by `DbxStyleService` to layer additional styling onto `document.body` (via `DbxStyleBodyDirective`) without
+ * replacing the configured root style class — e.g. the style-demo controls forward their active levers here so they
+ * repaint the entire app.
+ */
+export interface DbxStyleSupplement {
+  /**
+   * Supplemental classes added alongside the configured root style class.
+   */
+  readonly classes?: Maybe<CssClass[]>;
+  /**
+   * Supplemental inline styles (typically CSS custom properties such as `--mat-sys-*`).
+   */
+  readonly style?: Maybe<CssStyleObject>;
+}
+
+/**
+ * Flattened body application: the root style class plus any supplement classes, alongside the supplement inline styles.
+ *
+ * Emitted by `DbxStyleService.styleApplication$` and consumed by `DbxStyleBodyDirective` to apply both classes and
+ * inline custom properties to `document.body`.
+ */
+export interface DbxStyleApplication {
+  /**
+   * The root style class followed by any supplement classes.
+   */
+  readonly classes: CssClass[];
+  /**
+   * The supplement inline styles (empty when no supplement is set).
+   */
+  readonly style: CssStyleObject;
 }
 
 // MARK: Theme

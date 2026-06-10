@@ -1,6 +1,6 @@
 import { type EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { DBX_STYLE_DEMO_CONTROLS_COMPONENT, type DbxStyleDemoSectionGroup, provideDbxStyleDemoSections } from '@dereekb/dbx-web/style-demo';
-import { DbxFormStyleDemoControlsPopupComponent } from './controls.popup.component';
+import { DbxFormStyleDemoControlsDetachComponent } from './controls.detach.component';
 import { DbxFormStyleDemoFieldsSectionComponent } from './fields.section.component';
 
 /**
@@ -13,17 +13,17 @@ export const DBX_FORM_STYLE_DEMO_SECTION_GROUP: DbxStyleDemoSectionGroup = {
 
 /**
  * Registers the `@dereekb/dbx-form/style-demo` sections with the `<dbx-style-demo>` playground, and registers
- * {@link DbxFormStyleDemoControlsPopupComponent} as the playground's chip-field controls popup.
+ * {@link DbxFormStyleDemoControlsDetachComponent} as the style-demo controls detach panel.
  *
- * The Form Fields section and the controls popup both render `<dbx-formly>` forms, so the host app must register its
+ * The Form Fields section and the controls panel both render `<dbx-formly>` forms, so the host app must register its
  * formly field declarations (e.g. `provideDbxFormConfiguration()` + `provideDbxFormFormlyFieldDeclarations()`) for them to render.
  *
  * Pair with `provideDbxStyleDemo()` (the shell from `@dereekb/dbx-web/style-demo`).
  *
- * @returns EnvironmentProviders contributing the form sections and the controls popup component.
+ * @returns EnvironmentProviders contributing the form sections and the controls detach component.
  *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxFormStyleDemo(): EnvironmentProviders {
-  return makeEnvironmentProviders([provideDbxStyleDemoSections(DBX_FORM_STYLE_DEMO_SECTION_GROUP), { provide: DBX_STYLE_DEMO_CONTROLS_COMPONENT, useValue: DbxFormStyleDemoControlsPopupComponent }]);
+  return makeEnvironmentProviders([provideDbxStyleDemoSections(DBX_FORM_STYLE_DEMO_SECTION_GROUP), { provide: DBX_STYLE_DEMO_CONTROLS_COMPONENT, useValue: DbxFormStyleDemoControlsDetachComponent }]);
 }

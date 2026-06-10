@@ -1,8 +1,8 @@
 import { DASH_CHARACTER_PREFIX_INSTANCE, type Destroyable, type Maybe } from '@dereekb/util';
 import { asObservable, filterMaybe, type ObservableOrValue } from '@dereekb/rxjs';
-import { BehaviorSubject, type Observable, combineLatest, distinctUntilChanged, map, switchMap, shareReplay } from 'rxjs';
+import { BehaviorSubject, type Observable, combineLatest, distinctUntilChanged, map, of, switchMap, shareReplay } from 'rxjs';
 import { Injectable, InjectionToken, inject } from '@angular/core';
-import { DBX_DARK_STYLE_CLASS_SUFFIX, type DbxStyleClass, dbxStyleClassCleanSuffix, type DbxStyleClassCleanSuffix, type DbxStyleClassSuffix, type DbxStyleConfig } from './style';
+import { DBX_DARK_STYLE_CLASS_SUFFIX, type DbxStyleApplication, type DbxStyleClass, dbxStyleClassCleanSuffix, type DbxStyleClassCleanSuffix, type DbxStyleClassSuffix, type DbxStyleConfig, type DbxStyleSupplement } from './style';
 
 /**
  * Injection token for providing the default {@link DbxStyleConfig} to {@link DbxStyleService}.
@@ -35,6 +35,7 @@ export class DbxStyleService implements Destroyable {
 
   private readonly _config = new BehaviorSubject<Maybe<Observable<DbxStyleConfig>>>(undefined);
   private readonly _styleClassSuffix = new BehaviorSubject<Maybe<DbxStyleClassCleanSuffix>>(undefined);
+  private readonly _supplement = new BehaviorSubject<Maybe<Observable<Maybe<DbxStyleSupplement>>>>(undefined);
 
   readonly config$ = this._config.pipe(
     switchMap((x) => x ?? this._defaultConfig),
@@ -45,6 +46,26 @@ export class DbxStyleService implements Destroyable {
 
   readonly styleClassSuffix$ = this._styleClassSuffix.pipe(distinctUntilChanged(), shareReplay(1));
   readonly styleClassName$ = this.getStyleClassWithConfig(this.config$);
+
+  /**
+   * The currently active style supplement, or undefined when none is set.
+   */
+  readonly supplement$: Observable<Maybe<DbxStyleSupplement>> = this._supplement.pipe(
+    switchMap((x) => x ?? of(undefined)),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * The flattened body application: the root style class plus any supplement classes, alongside the supplement inline styles.
+   */
+  readonly styleApplication$: Observable<DbxStyleApplication> = combineLatest([this.styleClassName$, this.supplement$]).pipe(
+    map(([styleClassName, supplement]) => ({
+      classes: [styleClassName, ...(supplement?.classes ?? [])],
+      style: supplement?.style ?? {}
+    })),
+    shareReplay(1)
+  );
 
   /**
    * Returns the style class given the input configuration.
@@ -146,9 +167,30 @@ export class DbxStyleService implements Destroyable {
     }
   }
 
+  /**
+   * Sets the active style supplement (classes + inline styles) layered on top of the configured style on the body.
+   *
+   * @param supplement - A supplement value or observable, or nullish to clear the current supplement.
+   */
+  setSupplement(supplement: Maybe<ObservableOrValue<Maybe<DbxStyleSupplement>>>) {
+    this._supplement.next(supplement == null ? undefined : asObservable(supplement));
+  }
+
+  /**
+   * Clears the active supplement if it matches the given reference.
+   *
+   * @param supplement - The supplement reference to compare against the current supplement.
+   */
+  unsetSupplement(supplement: ObservableOrValue<Maybe<DbxStyleSupplement>>) {
+    if (this._supplement.value === supplement) {
+      this._supplement.next(undefined);
+    }
+  }
+
   destroy(): void {
     this._defaultConfig.complete();
     this._config.complete();
     this._styleClassSuffix.complete();
+    this._supplement.complete();
   }
 }

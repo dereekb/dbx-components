@@ -1,24 +1,25 @@
 import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, type Signal, type Type, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, type Signal, computed, effect, inject, input } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { type Maybe } from '@dereekb/util';
-import { DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxPopupService } from '@dereekb/dbx-web';
-import { type DbxStyleDemoSection, type DbxStyleDemoSectionId } from '../section/section';
+import { DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
+import { type DbxStyleDemoSection } from '../section/section';
 import { DbxStyleDemoSectionRegistry } from '../section/section.registry.service';
-import { type DbxStyleDemoStyleTemplateKey } from '../style-loader/style.template';
 import { DbxStyleDemoStyleLoaderDirective } from '../style-loader/style.loader.directive';
-import { type DbxStyleDemoTemplateToggle } from '../template-toggle/template.toggle';
-import { DBX_STYLE_DEMO_TEMPLATE_TOGGLE } from '../template-toggle/template.toggle.providers';
-import { DBX_STYLE_DEMO_CONTROLS_COMPONENT, DBX_STYLE_DEMO_CONTROLS_POPUP_KEY, type DbxStyleDemoConfig, type DbxStyleDemoControls } from './dbx.style.demo';
+import { DbxStyleDemoControlsService } from '../controls/controls.service';
+import { type DbxStyleDemoConfig } from './dbx.style.demo';
 
 /**
  * Drop-in styling showcase for dbx-components apps.
  *
  * Renders the registered {@link DbxStyleDemoSection} components beneath a `[dbxStyleDemoStyleLoader]` host so they
  * paint purely through the host app's `--mat-sys-*` / `--dbx-*` tokens and `.dbx-*` utilities — the playground emits
- * no theme of its own. A draggable controls popup toggles sections on/off and flips style-lever templates; flipping a
- * lever re-points CSS tokens that ripple through every rendered section live via the custom-property cascade. The
- * "Style controls" button only appears when a controls component is registered via {@link DBX_STYLE_DEMO_CONTROLS_COMPONENT}.
+ * no theme of its own. The "Style controls" button opens the shared {@link DbxStyleDemoControlsService} detach panel
+ * (also reachable from the app toolbar); flipping a lever re-points CSS tokens that ripple through every rendered
+ * section live via the custom-property cascade. The button only appears when a controls component is registered.
+ *
+ * Section enablement and active levers are held globally in {@link DbxStyleDemoControlsService}; this playground only
+ * adds its own tag filtering on top of the global enabled state.
  *
  * This component is demo/debug-only and disposable — it is not a dbx-web core runtime primitive.
  *
@@ -59,11 +60,9 @@ import { DBX_STYLE_DEMO_CONTROLS_COMPONENT, DBX_STYLE_DEMO_CONTROLS_POPUP_KEY, t
   imports: [NgComponentOutlet, MatCardModule, DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective, DbxStyleDemoStyleLoaderDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DbxStyleDemoComponent implements DbxStyleDemoControls {
+export class DbxStyleDemoComponent {
   private readonly _registry = inject(DbxStyleDemoSectionRegistry);
-  private readonly _popupService = inject(DbxPopupService);
-  private readonly _controlsComponentClass = inject<Type<unknown>>(DBX_STYLE_DEMO_CONTROLS_COMPONENT, { optional: true });
-  private readonly _toggles = inject<DbxStyleDemoTemplateToggle[]>(DBX_STYLE_DEMO_TEMPLATE_TOGGLE, { optional: true }) ?? [];
+  private readonly _controlsService = inject(DbxStyleDemoControlsService);
 
   /**
    * Playground configuration.
@@ -73,13 +72,16 @@ export class DbxStyleDemoComponent implements DbxStyleDemoControls {
   /**
    * True when a controls component is registered, gating the "Style controls" button.
    */
-  readonly hasControlsSignal: Signal<boolean> = signal(this._controlsComponentClass != null);
+  readonly hasControlsSignal: Signal<boolean> = this._controlsService.hasControlsSignal;
 
-  private readonly _sectionEnabledOverrides = signal<Map<DbxStyleDemoSectionId, boolean>>(new Map());
-  private readonly _activeTemplateKeysOverride = signal<Maybe<Set<DbxStyleDemoStyleTemplateKey>>>(undefined);
+  /**
+   * The active template keys held by the controls service, applied to this playground's style-loader host.
+   */
+  readonly activeTemplatesSignal: Signal<string[]> = this._controlsService.activeTemplateKeysArraySignal;
 
-  readonly templateTogglesSignal: Signal<DbxStyleDemoTemplateToggle[]> = signal(this._toggles);
-
+  /**
+   * The registry sections this playground instance considers, filtered by its configured tags (enablement stays global).
+   */
   readonly sectionsSignal = computed<DbxStyleDemoSection[]>(() => {
     const tags = this.config()?.tags;
     const sections = this._registry.sectionsSignal();
@@ -97,61 +99,19 @@ export class DbxStyleDemoComponent implements DbxStyleDemoControls {
   });
 
   readonly visibleSectionsSignal = computed<DbxStyleDemoSection[]>(() => {
-    const overrides = this._sectionEnabledOverrides();
-    return this.sectionsSignal().filter((section) => overrides.get(section.id) ?? section.defaultEnabled !== false);
+    const enabledIds = this._controlsService.enabledIdsSignal();
+    return this.sectionsSignal().filter((section) => enabledIds.has(section.id));
   });
 
-  readonly enabledIdsSignal = computed<Set<DbxStyleDemoSectionId>>(() => new Set(this.visibleSectionsSignal().map((section) => section.id)));
-
-  readonly activeTemplateKeysSignal = computed<Set<DbxStyleDemoStyleTemplateKey>>(() => {
-    const config = this.config();
-    const override = this._activeTemplateKeysOverride();
-    return override ?? new Set(config?.defaultActiveTemplates ?? []);
+  /**
+   * Seeds the controls service with this playground's configured default active templates.
+   */
+  protected readonly _seedDefaultTemplatesEffect = effect(() => {
+    const defaults = this.config()?.defaultActiveTemplates;
+    this._controlsService.setDefaultActiveTemplates(defaults ?? []);
   });
-
-  readonly activeTemplatesSignal = computed<DbxStyleDemoStyleTemplateKey[]>(() => [...this.activeTemplateKeysSignal()]);
-
-  setSectionEnabled(id: DbxStyleDemoSectionId, enabled: boolean): void {
-    const next = new Map(this._sectionEnabledOverrides());
-    next.set(id, enabled);
-    this._sectionEnabledOverrides.set(next);
-  }
-
-  setTemplateActive(key: DbxStyleDemoStyleTemplateKey, active: boolean): void {
-    const next = new Set(this.activeTemplateKeysSignal());
-
-    if (active) {
-      // Levers sharing a non-null group are mutually exclusive (radio-like): deactivate the others before activating this one.
-      const group = this._toggles.find((toggle) => toggle.templateName === key)?.group;
-
-      if (group != null) {
-        this._toggles.forEach((toggle) => {
-          if (toggle.group === group && toggle.templateName !== key) {
-            next.delete(toggle.templateName);
-          }
-        });
-      }
-
-      next.add(key);
-    } else {
-      next.delete(key);
-    }
-
-    this._activeTemplateKeysOverride.set(next);
-  }
 
   openControls(): void {
-    const componentClass = this._controlsComponentClass;
-
-    if (componentClass != null) {
-      this._popupService.open<void, DbxStyleDemoControls, unknown>({
-        key: DBX_STYLE_DEMO_CONTROLS_POPUP_KEY,
-        componentClass,
-        data: this,
-        isDraggable: true,
-        position: 'bottom_right',
-        width: '420px'
-      });
-    }
+    this._controlsService.openControls();
   }
 }

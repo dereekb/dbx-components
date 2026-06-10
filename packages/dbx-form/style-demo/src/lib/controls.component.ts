@@ -22,7 +22,7 @@ export interface DbxFormStyleDemoControlsFormValue {
  * `controls` input). The controls UI lives in dbx-form because the pickable chip field is a `@dereekb/dbx-form` field,
  * which `@dereekb/dbx-web` cannot import.
  *
- * {@link DbxFormStyleDemoControlsPopupComponent} wraps this in the playground's popup chrome, but the component renders
+ * {@link DbxFormStyleDemoControlsDetachComponent} wraps this in the shared detach chrome, but the component renders
  * standalone wherever a `DbxStyleDemoControls` is available.
  *
  * Because the chip fields are `dbx-formly` fields, the host app must register its formly field declarations (the demo
