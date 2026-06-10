@@ -24,7 +24,7 @@ import { DbxStyleDemoControlsPopoverComponent } from './dbx.style.demo.controls.
  *
  * @example
  * ```html
- * <dbx-style-demo [config]="{ defaultActiveTemplates: ['corner-shape-pill'] }"></dbx-style-demo>
+ * <dbx-style-demo [config]="{ defaultActiveTemplates: ['corner-shape-full'] }"></dbx-style-demo>
  * ```
  */
 @Component({
@@ -115,6 +115,17 @@ export class DbxStyleDemoComponent implements DbxStyleDemoControls {
     const next = new Set(this.activeTemplateKeysSignal());
 
     if (active) {
+      // Levers sharing a non-null group are mutually exclusive (radio-like): deactivate the others before activating this one.
+      const group = this._toggles.find((toggle) => toggle.templateName === key)?.group;
+
+      if (group != null) {
+        this._toggles.forEach((toggle) => {
+          if (toggle.group === group && toggle.templateName !== key) {
+            next.delete(toggle.templateName);
+          }
+        });
+      }
+
       next.add(key);
     } else {
       next.delete(key);

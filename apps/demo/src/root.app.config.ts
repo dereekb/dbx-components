@@ -16,6 +16,7 @@ import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
 import { provideDbxStyleDemo, provideDbxWebStyleDemo } from '@dereekb/dbx-web/style-demo';
 import { provideDbxFormStyleDemo } from '@dereekb/dbx-form/style-demo';
 import { provideDbxFirebaseStyleDemo } from '@dereekb/dbx-firebase/style-demo';
+import { provideDemoStyleDemo } from './app/modules/doc/modules/examples/component/demo.style.demo.providers';
 import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
@@ -246,6 +247,13 @@ export const APP_CONFIG: ApplicationConfig = {
       dbxStyleConfig: {
         style: 'doc-app',
         suffixes: new Set(['dark'])
+      },
+      // Seeds app-registered color templates so they appear alongside the curated set in the style-demo Color Templates section.
+      dbxColorServiceConfig: {
+        templates: [
+          { key: 'demo-brand', config: { color: '#312f7e', contrast: '#ffffff' } },
+          { key: 'demo-positive', config: { color: '#1f9b59', contrast: '#ffffff', tone: 18 } }
+        ]
       }
     }),
     provideDbxMapbox({
@@ -275,6 +283,7 @@ export const APP_CONFIG: ApplicationConfig = {
     provideDbxWebStyleDemo(),
     provideDbxFormStyleDemo(),
     provideDbxFirebaseStyleDemo(),
+    provideDemoStyleDemo(),
     // dbx-form, form related
     provideDbxFormConfiguration(),
     provideDbxFormFormlyFieldDeclarations(),

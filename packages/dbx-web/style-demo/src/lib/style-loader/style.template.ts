@@ -3,7 +3,7 @@ import { type ArrayOrValue, type CssClass, type CssStyleObject, type Maybe, asAr
 /**
  * Identifier for a {@link DbxStyleDemoStyleTemplate} registered with the {@link DbxStyleDemoStyleLoaderService}.
  *
- * Use a kebab-case string (e.g. `'corner-shape-pill'`) to reference a template by key.
+ * Use a kebab-case string (e.g. `'corner-shape-full'`) to reference a template by key.
  */
 export type DbxStyleDemoStyleTemplateKey = string;
 
@@ -27,7 +27,7 @@ export interface DbxStyleDemoStyleTemplate {
    */
   readonly style?: Maybe<CssStyleObject>;
   /**
-   * Debug class(es) applied to the loader host (e.g. `'dbx-style-demo-template-corner-shape-pill'`).
+   * Debug class(es) applied to the loader host (e.g. `'dbx-style-demo-template-corner-shape-full'`).
    *
    * When several templates are merged, classes accumulate and de-duplicate (order-preserving).
    */
@@ -123,8 +123,8 @@ export function mergeDbxStyleDemoStyleTemplates(templates: DbxStyleDemoStyleTemp
  *
  * @example
  * ```ts
- * isDbxStyleDemoStyleTemplate('corner-shape-pill'); // false
- * isDbxStyleDemoStyleTemplate({ key: 'corner-shape-pill' }); // true
+ * isDbxStyleDemoStyleTemplate('corner-shape-full'); // false
+ * isDbxStyleDemoStyleTemplate({ key: 'corner-shape-full' }); // true
  * ```
  */
 export function isDbxStyleDemoStyleTemplate(value: Maybe<DbxStyleDemoStyleTemplateKey | DbxStyleDemoStyleTemplate>): value is DbxStyleDemoStyleTemplate {
@@ -139,7 +139,7 @@ export function isDbxStyleDemoStyleTemplate(value: Maybe<DbxStyleDemoStyleTempla
  *
  * @example
  * ```ts
- * isDbxStyleDemoStyleLoaderConfig('corner-shape-pill'); // false
+ * isDbxStyleDemoStyleLoaderConfig('corner-shape-full'); // false
  * isDbxStyleDemoStyleLoaderConfig(['a', 'b']); // false
  * isDbxStyleDemoStyleLoaderConfig({ templates: ['a'] }); // true
  * ```

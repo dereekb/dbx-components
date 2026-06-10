@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { type DbxThemeColor, DbxColorDirective, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
+import { type DbxColorTone, type DbxThemeColor, DBX_THEME_COLORS_EXTRA, DBX_THEME_COLORS_MAIN, DbxColorDirective, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiExampleInfoComponent } from '@dereekb/dbx-web/docs';
 
 /**
@@ -24,7 +24,7 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
           <code>[dbxColor]</code>
           paints an element from a named theme color token; adding
           <code>[dbxColorTone]</code>
-          (0–100) mixes it toward the surface for a muted tonal wash. Each swatch below is shown full strength and at a tone of 18, so the same token reads correctly under any theme.
+          (0–100) mixes it toward the surface for a muted tonal wash. Every core and extra theme color is shown below at full strength and at tones of 40, 18, and 8, so each token reads correctly under any theme.
         </p>
       </dbx-docs-ui-example-info>
       <dbx-docs-ui-example-content>
@@ -34,9 +34,11 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
               <div class="dbx-p3 dbx-mb1" [dbxColor]="color">
                 <span class="dbx-text-label-large">{{ color }}</span>
               </div>
-              <div class="dbx-p3" [dbxColor]="color" [dbxColorTone]="18">
-                <span class="dbx-text-label-large">{{ color }} · tone 18</span>
-              </div>
+              @for (tone of tones; track tone) {
+                <div class="dbx-p3 dbx-mb1" [dbxColor]="color" [dbxColorTone]="tone">
+                  <span class="dbx-text-label-large">{{ color }} · tone {{ tone }}</span>
+                </div>
+              }
             </div>
           }
         </div>
@@ -45,5 +47,6 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
   `
 })
 export class DbxStyleDemoColorTonesSectionComponent {
-  readonly colors: DbxThemeColor[] = ['primary', 'secondary', 'tertiary', 'warn', 'success', 'notice'];
+  readonly colors: DbxThemeColor[] = [...DBX_THEME_COLORS_MAIN, ...DBX_THEME_COLORS_EXTRA];
+  readonly tones: DbxColorTone[] = [40, 18, 8];
 }

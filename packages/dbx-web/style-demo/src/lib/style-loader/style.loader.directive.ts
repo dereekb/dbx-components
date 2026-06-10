@@ -17,7 +17,7 @@ import { DbxStyleDemoStyleLoaderService } from './style.loader.service';
  *
  * @example
  * ```html
- * <div [dbxStyleDemoStyleLoader]="['corner-shape-pill', 'surface-tint']">…</div>
+ * <div [dbxStyleDemoStyleLoader]="['corner-shape-full', 'surface-tint']">…</div>
  * <div [dbxStyleDemoStyleLoader]="{ templates: [{ key: 'pink', style: { '--mat-sys-primary': '#ff0066' } }] }">…</div>
  * ```
  */

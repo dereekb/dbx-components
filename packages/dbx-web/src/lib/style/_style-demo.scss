@@ -15,19 +15,52 @@
 // global/root scope; the `var(--mat-sys-*)` references resolve per-theme at use-site,
 // so a single emission works under both light and dark themes.
 
+/// Builds the component-shape token override map for a single corner-radius value.
+///
+/// Re-points the same Material component shape tokens that `dbx-components-shapes()` pins to the
+/// baseline `8px`, EXCEPT the intentional `--mat-sidenav-container-shape` (0) and
+/// `--mat-list-active-indicator-shape` (2px) entries — those keep their deliberate non-default shapes.
+///
+/// `$value` may be a literal (e.g. `0`) or a token reference (e.g. `var(--mat-sys-corner-medium)`); the
+/// emitting mixin interpolates either form via `#{$value}`. Private to this module (`-` prefix).
+@function -dbx-style-demo-shape-map($value) {
+  @return (
+    '--mat-button-filled-container-shape': $value,
+    '--mat-button-outlined-container-shape': $value,
+    '--mat-button-text-container-shape': $value,
+    '--mat-button-protected-container-shape': $value,
+    '--mat-button-tonal-container-shape': $value,
+    '--mat-fab-container-shape': $value,
+    '--mat-fab-small-container-shape': $value,
+    '--mat-dialog-container-shape': $value,
+    '--mat-card-elevated-container-shape': $value,
+    '--mat-card-filled-container-shape': $value,
+    '--mat-card-outlined-container-shape': $value,
+    '--mat-chip-container-shape-radius': $value,
+    '--mat-form-field-filled-container-shape': $value,
+    '--mat-form-field-outlined-container-shape': $value,
+    '--mat-snack-bar-container-shape': $value,
+    '--mat-menu-container-shape': $value,
+    '--mat-autocomplete-container-shape': $value,
+    '--mat-expansion-container-shape': $value,
+    '--mat-datepicker-calendar-container-shape': $value,
+    '--mat-bottom-sheet-container-shape': $value,
+    '--mat-tooltip-container-shape': $value
+  );
+}
+
 /// Map of demo template key -> CSS custom-property overrides emitted for that template's debug class.
 $dbx-style-demo-templates: (
-  // Exaggerated corner rounding so the corner-shape lever is obvious. The px values are
-  // intentional demo override values, not theme tokens.
-  'corner-shape-pill': (
-      '--mat-card-outlined-container-shape': 24px,
-      '--mat-card-elevated-container-shape': 24px,
-      '--mat-card-filled-container-shape': 24px,
-      '--mat-button-outlined-container-shape': 9999px,
-      '--mat-button-filled-container-shape': 9999px,
-      '--mat-button-protected-container-shape': 9999px,
-      '--mat-button-tonal-container-shape': 9999px
-    ),
+  // M3 corner-radius scale levers. Each re-points the component shape tokens that `dbx-components-shapes()`
+  // pins to the baseline 8px, so cards / buttons / form-fields / etc. re-round live as the lever flips.
+  // Values reference the `--mat-sys-corner-*` token where one exists; `none` is the literal 0.
+  // 'corner-shape-small' is intentionally omitted — the baseline is already 8px (= small), so it would be a no-op.
+  'corner-shape-none': -dbx-style-demo-shape-map(0),
+  'corner-shape-extra-small': -dbx-style-demo-shape-map(var(--mat-sys-corner-extra-small)),
+  'corner-shape-medium': -dbx-style-demo-shape-map(var(--mat-sys-corner-medium)),
+  'corner-shape-large': -dbx-style-demo-shape-map(var(--mat-sys-corner-large)),
+  'corner-shape-extra-large': -dbx-style-demo-shape-map(var(--mat-sys-corner-extra-large)),
+  'corner-shape-full': -dbx-style-demo-shape-map(var(--mat-sys-corner-full)),
   // Tints surfaces toward the primary color by mixing the theme's own system tokens — stays theme-correct.
   'surface-tint': (
       '--mat-sys-surface': color-mix(in srgb, var(--mat-sys-primary) 8%, var(--mat-sys-surface)),

@@ -56,6 +56,9 @@ export interface DbxStyleDemoControls {
   setSectionEnabled(id: DbxStyleDemoSectionId, enabled: boolean): void;
   /**
    * Activates or deactivates a template lever by key.
+   *
+   * Activating a lever that belongs to a non-null toggle group deactivates the other active levers in that group
+   * (radio-like), so only one lever per group is active at a time.
    */
   setTemplateActive(key: DbxStyleDemoStyleTemplateKey, active: boolean): void;
 }
