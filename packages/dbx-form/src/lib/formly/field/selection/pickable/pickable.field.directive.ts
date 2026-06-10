@@ -7,7 +7,7 @@ import { MatInput } from '@angular/material/input';
 import { type FieldTypeConfig, type FormlyFieldProps } from '@ngx-formly/core';
 import { FieldType } from '@ngx-formly/material';
 import { BehaviorSubject, combineLatest, type Observable, of, filter, map, debounceTime, distinctUntilChanged, switchMap, startWith, shareReplay, mergeMap, first, delay } from 'rxjs';
-import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from './pickable';
+import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldFilterFunction, type PickableValueFieldFilterSelectedValuesFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction, type PickableValueFieldValue } from './pickable';
 import { type DbxValueListItem } from '@dereekb/dbx-web';
 import { camelCase } from 'change-case-all';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -52,6 +52,12 @@ export interface PickableValueFieldsFieldProps<T, M = unknown, H extends Primati
    * Should only be used to sort values.
    */
   readonly sortItems?: PickableItemFieldItemSortFn<T, M>;
+  /**
+   * Filters/modifies the selected values at selection time (user pick, remove, select-all).
+   *
+   * Lets the field enforce rules like group exclusivity internally instead of round-tripping conflicting values through external sync.
+   */
+  readonly filterSelectedValues?: PickableValueFieldFilterSelectedValuesFunction<T>;
   /**
    * Whether or not to allow multiple items to be selected.
    */
@@ -320,6 +326,10 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     return this.pickableField.sortItems;
   }
 
+  get filterSelectedValues(): Maybe<PickableValueFieldFilterSelectedValuesFunction<T>> {
+    return this.pickableField.filterSelectedValues;
+  }
+
   get hashForValue(): PickableValueFieldHashFunction<T, H> {
     return this.pickableField.hashForValue ?? ((x) => x as unknown as H);
   }
@@ -515,6 +525,12 @@ export class AbstractDbxPickableItemFieldDirective<T, M = unknown, H extends Pri
     // Use to filter non-unique values.
     if (this.hashForValue) {
       values = filterUniqueValues(values, this.hashForValue);
+    }
+
+    const filterSelectedValues = this.filterSelectedValues;
+
+    if (filterSelectedValues != null) {
+      values = filterSelectedValues({ beforeValues: this.values, afterValues: values });
     }
 
     if (this.pickOnlyOne) {
