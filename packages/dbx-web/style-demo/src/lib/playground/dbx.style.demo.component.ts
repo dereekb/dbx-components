@@ -1,5 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, type Signal, computed, effect, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, type Signal, computed, effect, inject, input, viewChild } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { type Maybe } from '@dereekb/util';
 import { DbxButtonComponent, DbxFlexGroupDirective, DbxFlexSizeDirective } from '@dereekb/dbx-web';
@@ -35,6 +35,9 @@ import { type DbxStyleDemoConfig } from './dbx.style.demo';
       <div class="dbx-flex-bar dbx-pb3">
         <span class="dbx-text-title-large">Style Demo</span>
         <span class="dbx-flex-fill"></span>
+        @if (hasSectionsSignal()) {
+          <dbx-button class="dbx-button-spacer" #sectionsButton stroked icon="tune" text="Sections" (buttonClick)="openSectionsPopover()"></dbx-button>
+        }
         @if (hasControlsSignal()) {
           <dbx-button stroked icon="palette" text="Style controls" (buttonClick)="openControls()"></dbx-button>
         }
@@ -75,6 +78,16 @@ export class DbxStyleDemoComponent {
   readonly hasControlsSignal: Signal<boolean> = this._controlsService.hasControlsSignal;
 
   /**
+   * True when a sections component is registered, gating the "Sections" button (which opens the sections popover).
+   */
+  readonly hasSectionsSignal: Signal<boolean> = this._controlsService.hasSectionsSignal;
+
+  /**
+   * The "Sections" button element, used as the sections popover's anchor origin (present only while the button renders).
+   */
+  readonly sectionsButton = viewChild<string, Maybe<ElementRef>>('sectionsButton', { read: ElementRef });
+
+  /**
    * The active template keys held by the controls service, applied to this playground's style-loader host.
    */
   readonly activeTemplatesSignal: Signal<string[]> = this._controlsService.activeTemplateKeysArraySignal;
@@ -113,5 +126,13 @@ export class DbxStyleDemoComponent {
 
   openControls(): void {
     this._controlsService.openControls();
+  }
+
+  openSectionsPopover(): void {
+    const origin = this.sectionsButton();
+
+    if (origin != null) {
+      this._controlsService.openSectionsPopover({ origin });
+    }
   }
 }

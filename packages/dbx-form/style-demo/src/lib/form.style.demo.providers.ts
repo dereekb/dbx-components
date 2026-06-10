@@ -1,6 +1,7 @@
 import { type EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
-import { DBX_STYLE_DEMO_CONTROLS_COMPONENT, type DbxStyleDemoSectionGroup, provideDbxStyleDemoSections } from '@dereekb/dbx-web/style-demo';
+import { DBX_STYLE_DEMO_CONTROLS_COMPONENT, DBX_STYLE_DEMO_SECTIONS_COMPONENT, type DbxStyleDemoSectionGroup, provideDbxStyleDemoSections } from '@dereekb/dbx-web/style-demo';
 import { DbxFormStyleDemoControlsDetachComponent } from './controls.detach.component';
+import { DbxFormStyleDemoSectionsPopoverComponent } from './controls.sections.popover.component';
 import { DbxFormStyleDemoFieldsSectionComponent } from './fields.section.component';
 
 /**
@@ -12,18 +13,19 @@ export const DBX_FORM_STYLE_DEMO_SECTION_GROUP: DbxStyleDemoSectionGroup = {
 };
 
 /**
- * Registers the `@dereekb/dbx-form/style-demo` sections with the `<dbx-style-demo>` playground, and registers
- * {@link DbxFormStyleDemoControlsDetachComponent} as the style-demo controls detach panel.
+ * Registers the `@dereekb/dbx-form/style-demo` sections with the `<dbx-style-demo>` playground, registers
+ * {@link DbxFormStyleDemoControlsDetachComponent} as the global style-demo controls (presets) detach panel, and registers
+ * {@link DbxFormStyleDemoSectionsPopoverComponent} as the style-demo sections popover opened from the playground header.
  *
- * The Form Fields section and the controls panel both render `<dbx-formly>` forms, so the host app must register its
- * formly field declarations (e.g. `provideDbxFormConfiguration()` + `provideDbxFormFormlyFieldDeclarations()`) for them to render.
+ * The Form Fields section, the controls panel, and the sections popover all render `<dbx-formly>` forms, so the host app
+ * must register its formly field declarations (e.g. `provideDbxFormConfiguration()` + `provideDbxFormFormlyFieldDeclarations()`) for them to render.
  *
  * Pair with `provideDbxStyleDemo()` (the shell from `@dereekb/dbx-web/style-demo`).
  *
- * @returns EnvironmentProviders contributing the form sections and the controls detach component.
+ * @returns EnvironmentProviders contributing the form sections, the controls detach component, and the sections popover component.
  *
  * @__NO_SIDE_EFFECTS__
  */
 export function provideDbxFormStyleDemo(): EnvironmentProviders {
-  return makeEnvironmentProviders([provideDbxStyleDemoSections(DBX_FORM_STYLE_DEMO_SECTION_GROUP), { provide: DBX_STYLE_DEMO_CONTROLS_COMPONENT, useValue: DbxFormStyleDemoControlsDetachComponent }]);
+  return makeEnvironmentProviders([provideDbxStyleDemoSections(DBX_FORM_STYLE_DEMO_SECTION_GROUP), { provide: DBX_STYLE_DEMO_CONTROLS_COMPONENT, useValue: DbxFormStyleDemoControlsDetachComponent }, { provide: DBX_STYLE_DEMO_SECTIONS_COMPONENT, useValue: DbxFormStyleDemoSectionsPopoverComponent }]);
 }

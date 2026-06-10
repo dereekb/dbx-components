@@ -15,10 +15,29 @@ export const DBX_STYLE_DEMO_CONTROLS_DETACH_KEY = 'dbx-style-demo-controls';
  * `DbxStyleDemoControlsService` opens this component via `DbxDetachService` (so it survives navigation and is available
  * app-wide) reading the service's {@link DbxStyleDemoControls} state. When unregistered, the controls buttons are hidden.
  *
- * `@dereekb/dbx-form/style-demo` registers `DbxFormStyleDemoControlsDetachComponent` (a chip-field controls UI) here —
- * the controls UI lives in dbx-form because it depends on `@dereekb/dbx-form`'s pickable chip field, which dbx-web cannot import.
+ * `@dereekb/dbx-form/style-demo` registers `DbxFormStyleDemoControlsDetachComponent` (a presets chip-field controls UI)
+ * here — the controls UI lives in dbx-form because it depends on `@dereekb/dbx-form`'s pickable chip field, which dbx-web
+ * cannot import.
  */
 export const DBX_STYLE_DEMO_CONTROLS_COMPONENT = new InjectionToken<Type<unknown>>('DbxStyleDemoControlsComponent');
+
+/**
+ * Popover key used by the style-demo sections popover, opened from the playground header.
+ */
+export const DBX_STYLE_DEMO_SECTIONS_POPOVER_KEY = 'dbx-style-demo-sections';
+
+/**
+ * Injection token carrying the component class rendered inside the style-demo sections popover.
+ *
+ * `DbxStyleDemoControlsService` opens this component via `DbxPopoverService`, anchored to the playground header's
+ * "Sections" button, because sections only affect the `<dbx-style-demo>` playground page (unlike presets, which restyle
+ * the whole app). When unregistered, the playground's "Sections" button is hidden.
+ *
+ * `@dereekb/dbx-form/style-demo` registers `DbxFormStyleDemoSectionsPopoverComponent` (a sections chip-field controls
+ * UI) here — the controls UI lives in dbx-form because it depends on `@dereekb/dbx-form`'s pickable chip field, which
+ * dbx-web cannot import.
+ */
+export const DBX_STYLE_DEMO_SECTIONS_COMPONENT = new InjectionToken<Type<unknown>>('DbxStyleDemoSectionsComponent');
 
 /**
  * Configuration for the `<dbx-style-demo>` playground.

@@ -51,6 +51,27 @@ $dbx-detach-controls-vertical-padding: 4px;
   .dbx-detach-overlay {
     height: 100%;
     overflow: hidden;
+
+    // The moved component host element (an arbitrary tag that defaults to inline) needs to fill
+    // the fixed-height overlay pane so its content chain can establish a flex column that scrolls.
+    > * {
+      display: block;
+      height: 100%;
+    }
+
+    // Inside the fixed-height overlay (vs. the viewport-based in-page mode), the content fills the
+    // pane and the container flexes to scroll within it rather than against the viewport height.
+    .dbx-detach-content {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dbx-detach-content-container {
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: none;
+    }
   }
 
   .dbx-detach-overlay-host {
