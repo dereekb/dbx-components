@@ -13,7 +13,7 @@ $country-selector-width: 85px !default;
   }
 
   .dbx-form-phone-field-phone-content button.country-selector {
-    opacity: 100;
+    opacity: 1;
     width: var(--dbx-phone-field-country-selector-width, #{$country-selector-width});
   }
 

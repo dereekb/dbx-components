@@ -41,13 +41,13 @@
     font-size: var(--mat-sys-label-medium-size);
     font-weight: var(--mat-sys-label-medium-weight);
     text-transform: uppercase;
-    opacity: 0.7;
+    color: var(--mat-sys-on-surface-variant);
     margin-bottom: 4px;
   }
 
   .dbx-duration-picker-value {
-    font-size: 18px;
-    font-weight: 500;
+    font-size: var(--mat-sys-title-medium-size);
+    font-weight: var(--mat-sys-title-medium-weight);
     min-height: 28px;
     display: flex;
     align-items: center;

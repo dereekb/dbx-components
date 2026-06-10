@@ -305,7 +305,7 @@ $dbx-step-block-badge-font-weight: 600;
   }
 
   /// @dbx-utility chip
-  /// @intent chip label — `<dbx-chip>` body that lays out a 14px/500 inline chip; compose with `.dbx-chip-small`, `.dbx-chip-block`, or `.dbx-chip-small-text` for size variants
+  /// @intent chip label — `<dbx-chip>` body that lays out an inline-flex chip (label-large text, 7px/12px padding, 32px min-height) with an M3 corner-small radius; override the radius via `--dbx-chip-container-shape` (e.g. set it to `var(--mat-sys-corner-full)` to restore a pill). Compose with `.dbx-chip-small`, `.dbx-chip-block`, or `.dbx-chip-small-text` for size variants
   /// @role layout
   /// @component DbxChipDirective
   /// @scope component-class
@@ -316,6 +316,12 @@ $dbx-step-block-badge-font-weight: 600;
     position: relative;
     box-sizing: border-box;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    cursor: default;
+    padding: 7px 12px;
+    min-height: 32px;
+    border-radius: var(--dbx-chip-container-shape, var(--mat-chip-container-shape-radius, var(--mat-sys-corner-small, 8px)));
   }
 
   /// @dbx-utility chip-spacer
@@ -326,20 +332,7 @@ $dbx-step-block-badge-font-weight: 600;
     margin-right: $chip-spacing;
   }
 
-  .dbx-chip.mat-standard-chip {
-    // include default mat-standard-chip styling
-    transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-flex;
-    padding: 7px 12px;
-    border-radius: var(--dbx-chip-container-shape, var(--mat-sys-corner-full, 9999px));
-    align-items: center;
-    cursor: default;
-    min-height: 32px;
-    height: 1px;
-  }
-
-  .dbx-chip.dbx-chip-small,
-  .dbx-chip.mat-standard-chip.dbx-chip-small {
+  .dbx-chip.dbx-chip-small {
     font-size: var(--mat-sys-label-medium-size);
     padding: 2px 8px;
     min-height: 20px;
@@ -348,7 +341,7 @@ $dbx-step-block-badge-font-weight: 600;
   .dbx-chip-small-text .dbx-chip,
   .dbx-chip-small-text.dbx-chip,
   .dbx-chip-small-text.dbx-chip.dbx-chip-small {
-    font-size: 10px;
+    font-size: var(--mat-sys-label-small-size, 10px);
   }
 
   .dbx-chip.dbx-chip-block {

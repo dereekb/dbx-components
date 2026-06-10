@@ -1,4 +1,40 @@
 
+## Migration of v13.x.x to v14.x.x
+### Overview
+Version 14 is a **breaking visual** release for `@dereekb/dbx-web` and `@dereekb/dbx-form`. It
+burns down the M2-era visual technical debt that prior passes deliberately preserved, leaning the
+component defaults onto Angular Material **M3** system tokens (`--mat-sys-*`). There are no API
+(TypeScript) breaking changes here — the breaks are in the emitted CSS and in two SCSS mixin /
+host-class contracts. Apps that adopt v14 will see shapes, dividers, and chips render differently
+unless they opt back in (see below).
+
+A full, per-rule before/after ledger lives in
+[`packages/dbx-web/VISUAL_CHANGES.md`](packages/dbx-web/VISUAL_CHANGES.md). To preview the new look
+under your own theme before upgrading, mount the `<dbx-style-demo>` showcase (from
+`@dereekb/dbx-web/style-demo`) in a sandbox route and toggle your light/dark themes.
+
+### Breaking Changes
+- **Removed the `dbx.m2-visual-compat()` SCSS mixin.** The `_m2-visual-compat.scss` partial was
+  renamed to `_shapes.scss`, and `@dereekb/dbx-web` now only forwards `dbx-components-shapes()`. The
+  `m2-visual-compat()` mixin (which restored M2 ~4px shapes, 16px pill chips, and a square list
+  indicator) no longer exists.
+- **`.dbx-chip` no longer emits the fake `mat-standard-chip` class** and its default corner radius
+  changed from a full pill to the M3 "small" corner (`--mat-sys-corner-small`). The chip layout rules
+  merged into the base `.dbx-chip` class. See the chip entry in `VISUAL_CHANGES.md`.
+
+### Migration Steps
+- **Replace `@include dbx.m2-visual-compat();`** in your theme mixin(s) with one of:
+  - `@include dbx.dbx-components-shapes();` — the recommended restrained 8px house style (what the
+    dbx-components demo and the new-app scaffold now use), **or**
+  - nothing — drop the include entirely to inherit Angular Material's full M3 default shapes, **or**
+  - your own root-selector block that sets the `--mat-*-container-shape*` custom properties to the
+    values you want to keep.
+- If you previously relied on the M2 pill chip, restore it per-app with
+  `--dbx-chip-container-shape: var(--mat-sys-corner-full);` (see the chip batch entry). If you
+  targeted `.mat-standard-chip` in your own CSS to style dbx chips, retarget `.dbx-chip`.
+- Review `packages/dbx-web/VISUAL_CHANGES.md` for the remaining color/divider/typography deltas;
+  none require code changes but they do change rendering.
+
 ## Migration of v11.x.x to v12.x.x
 ### Overview
 Version 11 to 12 stays upgrades dbx-component to Angular 18 and the equivalent Nx version. The minimum number of breaking changes are introduced as possible, but all "compat"/deprecated marked code is cleared again for this major version.

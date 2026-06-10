@@ -5,7 +5,6 @@ $dbx-detach-controls-height: 33px;
 $dbx-detach-content-padding: 8px;
 $dbx-detach-content-padding-top: 2px;
 $dbx-detach-controls-vertical-padding: 4px;
-$dbx-detach-border-radius: 4px;
 
 // MARK: Mixin
 @mixin core() {
@@ -29,7 +28,7 @@ $dbx-detach-border-radius: 4px;
     display: flex;
     align-items: center;
     padding: $dbx-detach-controls-vertical-padding $dbx-detach-content-padding;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
     box-sizing: border-box;
     color: var(--mat-sys-on-surface);
     background: var(--mat-sys-surface);

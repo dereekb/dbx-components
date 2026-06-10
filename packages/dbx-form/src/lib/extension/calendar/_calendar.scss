@@ -75,7 +75,7 @@ $cal-cell-min-width: 20px;
       margin-right: 3px;
       font-size: 0.8em;
       font-weight: bold;
-      border-radius: 25px;
+      border-radius: var(--mat-sys-corner-full);
     }
   }
 

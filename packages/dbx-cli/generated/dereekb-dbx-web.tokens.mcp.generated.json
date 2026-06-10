@@ -307,9 +307,9 @@
       "intents": [
         "chip container shape"
       ],
-      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-full, 9999px)`.",
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-chip-container-shape-radius, var(--mat-sys-corner-small, 8px))`.",
       "defaults": {
-        "light": "var(--mat-sys-corner-full, 9999px)"
+        "light": "var(--mat-chip-container-shape-radius, var(--mat-sys-corner-small, 8px))"
       },
       "componentScope": "text"
     },
@@ -1178,6 +1178,20 @@
         "light": "5px"
       },
       "componentScope": "bar.button"
+    },
+    {
+      "cssVariable": "--dbx-prompt-box-padding",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "prompt box padding",
+        "prompt box padding spacing"
+      ],
+      "description": "Component-scoped override point (`prompt`) read in `packages/dbx-web/src/lib/interaction/prompt/_prompt.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `40px`.",
+      "defaults": {
+        "light": "40px"
+      },
+      "componentScope": "prompt"
     },
     {
       "cssVariable": "--dbx-scroll-content-bottom-padding",

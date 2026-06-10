@@ -64,6 +64,6 @@ $dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
   @include dbx-form.theme($root-selector, $dark-doc-form-theme);
 
   #{$root-selector} {
-    @include dbx.m2-visual-compat();
+    @include dbx.dbx-components-shapes();
   }
 }

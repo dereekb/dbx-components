@@ -5,6 +5,9 @@
 // MARK: Mixin
 @mixin core() {
   // Generic forge disabled class for fields that only need CSS-based disabling.
+  // NOTE: the `opacity: 0.38` literal used here and in `.dbx-forge-form-disabled` below
+  // is the Material 3 disabled-state content opacity. M3 exposes no `--mat-sys-*`
+  // disabled-opacity token, so the literal is intentional (see VISUAL_CHANGES.md KEEP-2).
   .dbx-forge-disabled {
     opacity: 0.38;
     pointer-events: none;

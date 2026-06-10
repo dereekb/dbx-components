@@ -33,7 +33,7 @@ $dbx-checklist-item-spacing: 8px;
       flex: auto 1 1;
       padding: $dbx-checklist-item-spacing 0;
       padding-left: $dbx-checklist-item-spacing;
-      border-left: 1px solid black;
+      border-left: 1px solid var(--mat-sys-outline-variant);
     }
   }
 

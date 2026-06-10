@@ -1,10 +1,6 @@
 @use '../../../../style/theming';
 
 // MARK: Variables
-$dbx-datetime-button-spacing: 6px;
-$dbx-datetime-date-and-time-spacing: 6px;
-$dbx-datetime-button-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 for the spacing between the date and time inputs
-$dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 for the spacing between the date and time inputs
 
 // MARK: Mixin
 @mixin core() {
@@ -43,7 +39,7 @@ $dbx-datetime-row-width: 40px + ($dbx-datetime-button-spacing * 2); // times 2 f
     }
 
     .dbx-datetime-timezone-button .mat-mdc-button {
-      font-size: 18px;
+      font-size: var(--mat-sys-title-medium-size);
     }
   }
 

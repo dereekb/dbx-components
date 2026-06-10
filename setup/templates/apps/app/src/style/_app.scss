@@ -33,7 +33,7 @@ This mixin creates the app-theme components and elements for @angular/material a
   @include dbx-form.theme($root-selector, $app-form-theme);
 
   #{$root-selector} {
-    @include dbx.m2-visual-compat();
+    @include dbx.dbx-components-shapes();
   }
 }
 
@@ -63,6 +63,6 @@ $dark-app-form-theme: dbx-form.define-dbx-form-theme-config($dark-app-theme);
   @include dbx-form.theme($root-selector, $dark-app-form-theme);
 
   #{$root-selector} {
-    @include dbx.m2-visual-compat();
+    @include dbx.dbx-components-shapes();
   }
 }

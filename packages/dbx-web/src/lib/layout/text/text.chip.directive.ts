@@ -57,7 +57,7 @@ export const DEFAULT_DBX_CHIP_TONE = 18;
   // eslint-disable-next-line @angular-eslint/directive-selector
   selector: 'dbx-chip',
   host: {
-    class: 'dbx-chip mat-standard-chip',
+    class: 'dbx-chip',
     '[class]': 'styleSignal()',
     '[class.dbx-color-tonal]': 'isTonalSignal()',
     '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()',

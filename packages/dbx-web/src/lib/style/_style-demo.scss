@@ -10,7 +10,7 @@
 // tokens (per the component-token convention) except where an intentional demo
 // override value (e.g. an exaggerated corner radius) is the whole point of the lever.
 //
-// Authored like `_m2-visual-compat.scss` as an opt-in mixin and emitted via an
+// Authored like `_shapes.scss` as an opt-in mixin and emitted via an
 // `@each` map loop (the `_curated-colors.scss` pattern). Include the mixin once at a
 // global/root scope; the `var(--mat-sys-*)` references resolve per-theme at use-site,
 // so a single emission works under both light and dark themes.

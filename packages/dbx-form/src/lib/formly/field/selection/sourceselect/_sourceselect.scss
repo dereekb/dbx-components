@@ -20,7 +20,7 @@
     z-index: 1;
     background: var(--mat-select-panel-background-color, var(--mat-sys-surface-container));
     padding: 8px 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
   }
 
   .dbx-source-select-filter-input {

@@ -5,8 +5,8 @@
 // MARK: Mixin
 @mixin core() {
   .dbx-form-repeat-array-drag-placeholder {
-    background: #ccc;
-    border: dotted 3px #999;
+    background: var(--mat-sys-surface-container-highest);
+    border: dotted 3px var(--mat-sys-outline);
     min-height: 100px;
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 
