@@ -1,0 +1,54 @@
+// MARK: Style Demo (disposable demo/debug classes)
+//
+// These `.dbx-style-demo-template-<key>` classes back the `className` levers in
+// `@dereekb/dbx-web/style-demo` (DbxStyleDemoStyleTemplate.className). They are
+// DISPOSABLE demo/debug classes: they exist only to drive the styling showcase /
+// live token-override preview harness and should be removed once the styling
+// migration they support is complete. They are NOT a dbx-web core runtime primitive.
+//
+// Each template re-points CSS custom properties; values reference `--mat-sys-*`
+// tokens (per the component-token convention) except where an intentional demo
+// override value (e.g. an exaggerated corner radius) is the whole point of the lever.
+//
+// Authored like `_m2-visual-compat.scss` as an opt-in mixin and emitted via an
+// `@each` map loop (the `_curated-colors.scss` pattern). Include the mixin once at a
+// global/root scope; the `var(--mat-sys-*)` references resolve per-theme at use-site,
+// so a single emission works under both light and dark themes.
+
+/// Map of demo template key -> CSS custom-property overrides emitted for that template's debug class.
+$dbx-style-demo-templates: (
+  // Exaggerated corner rounding so the corner-shape lever is obvious. The px values are
+  // intentional demo override values, not theme tokens.
+  'corner-shape-pill': (
+      '--mat-card-outlined-container-shape': 24px,
+      '--mat-card-elevated-container-shape': 24px,
+      '--mat-card-filled-container-shape': 24px,
+      '--mat-button-outlined-container-shape': 9999px,
+      '--mat-button-filled-container-shape': 9999px,
+      '--mat-button-protected-container-shape': 9999px,
+      '--mat-button-tonal-container-shape': 9999px
+    ),
+  // Tints surfaces toward the primary color by mixing the theme's own system tokens — stays theme-correct.
+  'surface-tint': (
+      '--mat-sys-surface': color-mix(in srgb, var(--mat-sys-primary) 8%, var(--mat-sys-surface)),
+      '--mat-sys-surface-container': color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-surface-container)),
+      '--mat-sys-surface-container-high': color-mix(in srgb, var(--mat-sys-primary) 16%, var(--mat-sys-surface-container-high))
+    )
+);
+
+/// Opt-in mixin that emits the disposable `.dbx-style-demo-template-<key>` debug classes.
+///
+/// Usage (include once at a global/root scope):
+/// ```scss
+/// @use '@dereekb/dbx-web' as dbx;
+/// @include dbx.dbx-style-demo-debug-classes();
+/// ```
+@mixin dbx-style-demo-debug-classes() {
+  @each $key, $tokens in $dbx-style-demo-templates {
+    .dbx-style-demo-template-#{$key} {
+      @each $token, $value in $tokens {
+        #{$token}: #{$value};
+      }
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { DocExamplesListComponent } from './container/list.component';
 import { DocExamplesCardComponent } from './container/card.component';
 import { DocExamplesActionComponent } from './container/action.component';
 import { DocExamplesLayoutExamplesComponent } from './container/layout-examples.component';
+import { DocExamplesPlaygroundComponent } from './container/playground.component';
 
 export const LAYOUT_STATE: Ng2StateDeclaration = {
   url: '/examples',
@@ -43,6 +44,12 @@ export const LAYOUT_EXAMPLES_STATE: Ng2StateDeclaration = {
   component: DocExamplesLayoutExamplesComponent
 };
 
+export const PLAYGROUND_STATE: Ng2StateDeclaration = {
+  url: '/playground',
+  name: 'doc.examples.playground',
+  component: DocExamplesPlaygroundComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   LAYOUT_STATE,
@@ -50,5 +57,6 @@ export const STATES: Ng2StateDeclaration[] = [
   LIST_STATE,
   CARD_STATE,
   ACTION_STATE,
-  LAYOUT_EXAMPLES_STATE
+  LAYOUT_EXAMPLES_STATE,
+  PLAYGROUND_STATE
 ];

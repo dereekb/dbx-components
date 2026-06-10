@@ -13,6 +13,9 @@ import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormF
 import { DBX_FORGE_CALENDAR_FIELD_TYPES } from '@dereekb/dbx-form/calendar';
 import { DBX_FORGE_MAPBOX_FIELD_TYPES } from '@dereekb/dbx-form/mapbox';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
+import { provideDbxStyleDemo, provideDbxWebStyleDemo } from '@dereekb/dbx-web/style-demo';
+import { provideDbxFormStyleDemo } from '@dereekb/dbx-form/style-demo';
+import { provideDbxFirebaseStyleDemo } from '@dereekb/dbx-firebase/style-demo';
 import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
@@ -267,6 +270,11 @@ export const APP_CONFIG: ApplicationConfig = {
       rootConfig: { title: 'DbxComponents', description: 'A component library for Angular and Firebase.' }
     }),
     provideDbxHelpServices(),
+    // dbx-*/style-demo (Phase 1 styling showcase — disposable demo tooling)
+    provideDbxStyleDemo(),
+    provideDbxWebStyleDemo(),
+    provideDbxFormStyleDemo(),
+    provideDbxFirebaseStyleDemo(),
     // dbx-form, form related
     provideDbxFormConfiguration(),
     provideDbxFormFormlyFieldDeclarations(),

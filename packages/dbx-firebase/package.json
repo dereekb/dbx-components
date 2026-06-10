@@ -28,6 +28,7 @@
     ".": {
       "sass": "./_index.scss"
     },
-    "./oidc": {}
+    "./oidc": {},
+    "./style-demo": {}
   }
 }

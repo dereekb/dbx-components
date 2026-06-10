@@ -44,6 +44,7 @@
     ".": {
       "sass": "./_index.scss"
     },
-    "./mapbox": {}
+    "./mapbox": {},
+    "./style-demo": {}
   }
 }
