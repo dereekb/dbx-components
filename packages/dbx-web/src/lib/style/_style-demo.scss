@@ -23,10 +23,11 @@
 /// `--dbx-corners-border-radius`, `--dbx-navbar-item-border-radius`).
 ///
 /// EXCEPT the intentional `--mat-sidenav-container-shape` (0) and `--mat-list-active-indicator-shape`
-/// (2px) entries — those keep their deliberate non-default shapes. For the same reason
-/// `--dbx-list-item-border-radius` (`.dbx-list-rounded-items` pill default) and
-/// `--dbx-list-item-card-border-radius` (card-list rows) stay excluded here — they are deliberate
-/// non-defaults, re-rounded only by the `pill-controls` lever.
+/// (2px global pin) entries — those keep their deliberate non-default shapes. For the same reason
+/// `--dbx-list-item-border-radius` (the `.dbx-list` row radius; medium default) and
+/// `--dbx-list-item-card-border-radius` (card-list rows) stay excluded here — they are owned by the list
+/// component, re-rounded only by the `pill-controls` (`--dbx-list-item-border-radius` only) and the
+/// dedicated `list-corner-*` levers (both list tokens).
 ///
 /// `$value` may be a literal (e.g. `0`) or a token reference (e.g. `var(--mat-sys-corner-medium)`); the
 /// emitting mixin interpolates either form via `#{$value}`. Private to this module (`-` prefix).
@@ -64,9 +65,10 @@
 /// Builds the controls-only shape override map for a single corner-radius value.
 ///
 /// Backs the `pill-controls` lever: re-rounds only the interactive "controls" surfaces (buttons, FABs,
-/// nav/anchor-list items, and `.dbx-list-rounded-items` rows via `--dbx-list-item-border-radius`) without
-/// touching content surfaces. Chips and form-fields are intentionally excluded — pilling them reads as a
-/// different design intent than rounding controls. Private to this module (`-` prefix).
+/// `.dbx-list` rows via `--dbx-list-item-border-radius`, and `.dbx-anchor-list` rows via
+/// `--dbx-anchor-list-item-border-radius`) without touching content surfaces. The sidenav anchor list keeps
+/// its own token. Chips and form-fields are intentionally excluded — pilling them reads as a different design
+/// intent than rounding controls. Private to this module (`-` prefix).
 @function -dbx-style-demo-controls-shape-map($value) {
   @return (
     '--mat-button-filled-container-shape': $value,
@@ -77,9 +79,40 @@
     '--mat-fab-container-shape': $value,
     '--mat-fab-small-container-shape': $value,
     '--mat-list-active-indicator-shape': $value,
-    // nav/anchor-list items
-    '--dbx-list-item-border-radius': $value // .dbx-list-rounded-items lists
+    // list + nav/anchor-list rows (each list type reads its own token)
+    '--dbx-list-item-border-radius': $value,
+    '--dbx-anchor-list-item-border-radius': $value
   );
+}
+
+/// Builds the button-only shape override map for a single corner-radius value.
+///
+/// Backs the `button-corner-*` levers: re-rounds only the 5 `--mat-button-*-container-shape` tokens,
+/// leaving FABs / cards / lists / form-fields / etc. untouched. Composes on top of a
+/// `corner-shape-*` / `pill-controls` lever — emitted later in `$dbx-style-demo-templates` so this map
+/// wins the `--mat-button-*` tokens it shares with them. Private to this module (`-` prefix).
+@function -dbx-style-demo-button-shape-map($value) {
+  @return ('--mat-button-filled-container-shape': $value, '--mat-button-outlined-container-shape': $value, '--mat-button-text-container-shape': $value, '--mat-button-protected-container-shape': $value, '--mat-button-tonal-container-shape': $value);
+}
+
+/// Builds the dbx-list-only shape override map for a single corner-radius value.
+///
+/// Backs the `list-corner-*` levers: re-points the default `.dbx-list` row radius
+/// (`--dbx-list-item-border-radius`, medium by default) and card-list rows (`--dbx-list-item-card-border-radius`)
+/// — the two list tokens that `-dbx-style-demo-shape-map` deliberately excludes — without touching any other
+/// surface. Composes on top of `pill-controls` (emitted later → wins `--dbx-list-item-border-radius`).
+/// Private to this module (`-` prefix).
+@function -dbx-style-demo-list-shape-map($value) {
+  @return ('--dbx-list-item-border-radius': $value, '--dbx-list-item-card-border-radius': $value);
+}
+
+/// Builds the dbx-anchor-list-only shape override map for a single corner-radius value.
+///
+/// Backs the `anchor-list-corner-*` levers: re-points the default `.dbx-anchor-list` (nav) row radius
+/// (`--dbx-anchor-list-item-border-radius`, medium by default) independently of `.dbx-list` and the sidenav
+/// anchor list — which carry their own tokens. Private to this module (`-` prefix).
+@function -dbx-style-demo-anchor-list-shape-map($value) {
+  @return ('--dbx-anchor-list-item-border-radius': $value);
 }
 
 /// Map of demo template key -> CSS custom-property overrides emitted for that template's debug class.
@@ -99,6 +132,31 @@ $dbx-style-demo-templates: (
   // with a corner lever (its own toggle group, not 'Shape'), this later emission wins the tokens they
   // share (buttons / FABs / list items) — guard this ordering when reordering the map.
   'pill-controls': -dbx-style-demo-controls-shape-map(var(--mat-sys-corner-full)),
+  // Button-only corner levers (own 'Button Shape' toggle group). Emitted AFTER the corner-shape-* /
+  // pill-controls levers so this later emission wins the shared --mat-button-* shape tokens when composed
+  // (e.g. corner-shape-large + button-corner-none → buttons square, everything else large). Baseline is
+  // 8px (= small) so 'small' is omitted as a no-op; 'extra-small' (4px) is the meaningful step down.
+  'button-corner-none': -dbx-style-demo-button-shape-map(0),
+  'button-corner-extra-small': -dbx-style-demo-button-shape-map(var(--mat-sys-corner-extra-small)),
+  'button-corner-medium': -dbx-style-demo-button-shape-map(var(--mat-sys-corner-medium)),
+  'button-corner-large': -dbx-style-demo-button-shape-map(var(--mat-sys-corner-large)),
+  'button-corner-extra-large': -dbx-style-demo-button-shape-map(var(--mat-sys-corner-extra-large)),
+  // dbx-list-only corner levers (own 'List Shape' toggle group). Re-point the list item tokens that
+  // -dbx-style-demo-shape-map deliberately excludes; emitted after pill-controls so they win the shared
+  // --dbx-list-item-border-radius. The .dbx-list default is medium, so 'small' (8px) is meaningful and
+  // 'extra-small' is omitted.
+  'list-corner-none': -dbx-style-demo-list-shape-map(0),
+  'list-corner-small': -dbx-style-demo-list-shape-map(var(--mat-sys-corner-small)),
+  'list-corner-medium': -dbx-style-demo-list-shape-map(var(--mat-sys-corner-medium)),
+  'list-corner-large': -dbx-style-demo-list-shape-map(var(--mat-sys-corner-large)),
+  'list-corner-extra-large': -dbx-style-demo-list-shape-map(var(--mat-sys-corner-extra-large)),
+  // dbx-anchor-list-only corner levers (own 'Anchor List Shape' toggle group), independent of list-corner-*
+  // (anchor lists read their own --dbx-anchor-list-item-border-radius token). Same medium-baseline scale.
+  'anchor-list-corner-none': -dbx-style-demo-anchor-list-shape-map(0),
+  'anchor-list-corner-small': -dbx-style-demo-anchor-list-shape-map(var(--mat-sys-corner-small)),
+  'anchor-list-corner-medium': -dbx-style-demo-anchor-list-shape-map(var(--mat-sys-corner-medium)),
+  'anchor-list-corner-large': -dbx-style-demo-anchor-list-shape-map(var(--mat-sys-corner-large)),
+  'anchor-list-corner-extra-large': -dbx-style-demo-anchor-list-shape-map(var(--mat-sys-corner-extra-large)),
   // Tints surfaces toward the primary color by mixing the theme's own system tokens — stays theme-correct.
   'surface-tint': (
       '--mat-sys-surface': color-mix(in srgb, var(--mat-sys-primary) 8%, var(--mat-sys-surface)),

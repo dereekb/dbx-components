@@ -36,6 +36,20 @@
       }
     },
     {
+      "cssVariable": "--dbx-anchor-list-item-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "anchor list item border radius",
+        "anchor list item border radius radius"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "0"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-anchor-list-item-child-list-item-icon-size",
       "source": "dbx-web",
       "role": "size",
@@ -1402,6 +1416,20 @@
         "light": "color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent)"
       },
       "componentScope": "sidenav"
+    },
+    {
+      "cssVariable": "--dbx-sidenav-anchor-list-item-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "sidenav anchor list item border radius",
+        "sidenav anchor list item border radius radius"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))`.",
+      "defaults": {
+        "light": "var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))"
+      },
+      "componentScope": "list"
     },
     {
       "cssVariable": "--dbx-sidenav-background",

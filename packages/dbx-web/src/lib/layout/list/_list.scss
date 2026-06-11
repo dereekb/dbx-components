@@ -8,6 +8,50 @@ $list-item-padded-min-height: 42px;
   .dbx-list {
     overflow: hidden;
     height: 100%;
+
+    // dbx-list (selection/standard) rows default to an M3 medium corner via the overridable
+    // `--dbx-list-item-border-radius` token; `.dbx-list-square-items` zeroes it and the style-demo
+    // `list-corner-*` levers re-point it. Both shape tokens resolve to the same value, so no
+    // `border-radius` redeclaration is needed; the more specific `.dbx-list-card-items-list` item rule
+    // deliberately wins for card lists.
+    --mat-list-active-indicator-shape: var(--dbx-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+    --mat-list-list-item-container-shape: var(--dbx-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+
+    .mat-mdc-list-item {
+      --mat-focus-indicator-border-radius: var(--mat-list-list-item-container-shape);
+    }
+  }
+
+  // dbx-anchor-list (nav) rows default to an M3 medium corner via their OWN
+  // `--dbx-anchor-list-item-border-radius` token — separate from `.dbx-list` so the style-demo
+  // `anchor-list-corner-*` levers control anchor lists independently. `.dbx-list-square-items`
+  // zeroes this token too. The `.dbx-anchor-list` class lives on the inner `mat-nav-list`.
+  .dbx-anchor-list {
+    --mat-list-active-indicator-shape: var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+    --mat-list-list-item-container-shape: var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+
+    .mat-mdc-list-item {
+      --mat-focus-indicator-border-radius: var(--mat-list-list-item-container-shape);
+    }
+  }
+
+  // The sidenav anchor list rows sit flush against the left screen edge, so only the RIGHT corners round —
+  // the radius is composed into a `0 r r 0` shorthand (top-left / top-right / bottom-right / bottom-left),
+  // leaving the left corners square. The "how round" radius defaults to the regular anchor-list radius
+  // (`--dbx-anchor-list-item-border-radius`) so the sidenav tracks the `anchor-list-corner-*` lever by default,
+  // but `--dbx-sidenav-anchor-list-item-border-radius` overrides it for sidenav-specific tuning. Higher
+  // specificity than `.dbx-anchor-list`, so it wins for the inner nav-list inside a sidenav host.
+  .dbx-sidenav-anchor-list .dbx-anchor-list {
+    --mat-list-active-indicator-shape: 0 var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) 0;
+    --mat-list-list-item-container-shape: 0 var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) 0;
+  }
+
+  // MDC's two-line + leading-icon variant sizes the primary-text baseline-spacer `::before` to 32px, taller than
+  // the 28px the two-line (no-leading-icon) rule uses, which over-tall the title box and pushes the title/hint
+  // group off-center in dbx-anchor custom-anchor rows (reads as top-aligned). Pin the spacer back to 28px within
+  // anchor lists so the rows center vertically (selection lists, which keep MDC's structure, are untouched).
+  .dbx-anchor-list .mdc-list-item--with-leading-icon.mdc-list-item--with-two-lines .mdc-list-item__primary-text::before {
+    height: 28px;
   }
 
   .dbx-list-empty-content {
@@ -178,70 +222,18 @@ $list-item-padded-min-height: 42px;
     }
   }
 
-  // Rounds list rows by re-pointing the two Material list shape tokens at the
-  // overridable `--dbx-list-item-border-radius` (M3 pill default). Both rules
-  // resolve identically — the nav-list rule reads `--mat-list-active-indicator-shape`,
-  // the base `.mdc-list-item` rule reads `--mat-list-list-item-container-shape` —
-  // so no `border-radius` redeclaration is needed. Custom properties inherit, so
-  // applying this on a `dbx-anchor-list` / `dbx-list` host rounds nav and
-  // selection items alike. Combined with `.dbx-list-card-items-list`, the card
-  // class's item-level shape declaration deliberately wins.
-  /// @dbx-utility list-rounded-items
-  /// @intent rounds every list row to an M3 pill via `--dbx-list-item-border-radius`; pair with a `.dbx-list-rounded-items-*` level modifier to pick a fixed radius
+  // Opts a list out of the default medium-rounded rows back to square (0). Custom properties inherit, so
+  // applying this on a `dbx-list` / `dbx-anchor-list` host (or any ancestor) squares selection and nav rows
+  // alike by zeroing both the `.dbx-list` (`--dbx-list-item-border-radius`) and `.dbx-anchor-list`
+  // (`--dbx-anchor-list-item-border-radius`) row tokens. The sidenav keeps its own token; the card-list
+  // (`.dbx-list-card-items-list`) item rule is more specific and keeps its own shape.
+  /// @dbx-utility list-square-items
+  /// @intent opts a `.dbx-list` / `.dbx-anchor-list` out of the default medium-rounded rows back to square (0 radius) by zeroing their row radius tokens
   /// @role layout
-  /// @see-also dbx-list-rounded-items-medium, dbx-list-card-items-list
-  .dbx-list-rounded-items {
-    --mat-list-active-indicator-shape: var(--dbx-list-item-border-radius, var(--mat-sys-corner-full, 9999px));
-    --mat-list-list-item-container-shape: var(--dbx-list-item-border-radius, var(--mat-sys-corner-full, 9999px));
-
-    .mat-mdc-list-item {
-      --mat-focus-indicator-border-radius: var(--mat-list-list-item-container-shape);
-    }
-  }
-
-  /// @dbx-utility list-rounded-items-none
-  /// @intent sets `--dbx-list-item-border-radius` to 0 (square rows) for `.dbx-list-rounded-items`
-  /// @role layout
-  /// @parent list-rounded-items
-  /// @see-also dbx-list-rounded-items
-  .dbx-list-rounded-items-none {
+  /// @see-also dbx-list-card-items-list
+  .dbx-list-square-items {
     --dbx-list-item-border-radius: 0;
-  }
-
-  /// @dbx-utility list-rounded-items-small
-  /// @intent sets `--dbx-list-item-border-radius` to the M3 "small" (8px) radius for `.dbx-list-rounded-items`
-  /// @role layout
-  /// @parent list-rounded-items
-  /// @see-also dbx-list-rounded-items
-  .dbx-list-rounded-items-small {
-    --dbx-list-item-border-radius: var(--mat-sys-corner-small, 8px);
-  }
-
-  /// @dbx-utility list-rounded-items-medium
-  /// @intent sets `--dbx-list-item-border-radius` to the M3 "medium" (12px) radius for `.dbx-list-rounded-items`
-  /// @role layout
-  /// @parent list-rounded-items
-  /// @see-also dbx-list-rounded-items
-  .dbx-list-rounded-items-medium {
-    --dbx-list-item-border-radius: var(--mat-sys-corner-medium, 12px);
-  }
-
-  /// @dbx-utility list-rounded-items-large
-  /// @intent sets `--dbx-list-item-border-radius` to the M3 "large" (16px) radius for `.dbx-list-rounded-items`
-  /// @role layout
-  /// @parent list-rounded-items
-  /// @see-also dbx-list-rounded-items
-  .dbx-list-rounded-items-large {
-    --dbx-list-item-border-radius: var(--mat-sys-corner-large, 16px);
-  }
-
-  /// @dbx-utility list-rounded-items-full
-  /// @intent sets `--dbx-list-item-border-radius` to the M3 "full" (pill) radius for `.dbx-list-rounded-items`
-  /// @role layout
-  /// @parent list-rounded-items
-  /// @see-also dbx-list-rounded-items
-  .dbx-list-rounded-items-full {
-    --dbx-list-item-border-radius: var(--mat-sys-corner-full, 9999px);
+    --dbx-anchor-list-item-border-radius: 0;
   }
 
   // When the tile is the leading icon in a two-line list item, override the

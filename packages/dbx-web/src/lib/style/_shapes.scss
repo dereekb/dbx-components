@@ -50,6 +50,7 @@
   // Tooltip
   --mat-tooltip-container-shape: 8px;
 
-  // List: active indicator defaults to "full" (pill). Small = 8px.
-  --mat-list-active-indicator-shape: 2px;
+  // List item rounding (active indicator + container shape) is intentionally NOT pinned here —
+  // it is owned by the dbx-list / dbx-anchor-list component rules in `_list.scss` (medium default
+  // via `--dbx-list-item-border-radius`), so each list type controls its own radius.
 }
