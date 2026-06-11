@@ -328,6 +328,58 @@
       "componentScope": "card"
     },
     {
+      "cssVariable": "--dbx-card-horizontal-detail-icon-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "card horizontal detail icon size"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `18px`.",
+      "defaults": {
+        "light": "18px"
+      },
+      "componentScope": "card"
+    },
+    {
+      "cssVariable": "--dbx-card-horizontal-header-dot-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "card horizontal header dot size"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8px`.",
+      "defaults": {
+        "light": "8px"
+      },
+      "componentScope": "card"
+    },
+    {
+      "cssVariable": "--dbx-card-horizontal-item-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "card horizontal item width"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `300px`.",
+      "defaults": {
+        "light": "300px"
+      },
+      "componentScope": "card"
+    },
+    {
+      "cssVariable": "--dbx-card-horizontal-tab-overlap",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "card horizontal tab overlap"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `10px`.",
+      "defaults": {
+        "light": "10px"
+      },
+      "componentScope": "card"
+    },
+    {
       "cssVariable": "--dbx-card-select-icon-size",
       "source": "dbx-web",
       "role": "size",

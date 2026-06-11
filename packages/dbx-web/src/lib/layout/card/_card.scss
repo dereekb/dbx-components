@@ -113,6 +113,142 @@
       --mat-outlined-card-outline-width: 2px;
     }
   }
+
+  /// @dbx-utility card-horizontal
+  /// @intent horizontally scrolling row of fixed-width, equal-height `.dbx-card-horizontal-item` cards — `align-items: stretch` keeps the cards equal-height while `overflow-x: auto` scrolls the row on narrow viewports. Because `overflow-x: auto` forces vertical overflow to clip, the row reserves headroom via `padding-top` so a `.dbx-card-horizontal-tab` chip poking above a card stays inside the scrollable padding box instead of being clipped; override `--dbx-card-horizontal-tab-overlap` to change the headroom together with the tab.
+  /// @role layout
+  /// @see-also card-horizontal-item, flex-bar, chip
+  .dbx-card-horizontal {
+    display: flex;
+    align-items: stretch;
+    gap: var(--dbx-padding-3);
+    overflow-x: auto;
+    // overflow-x:auto computes overflow-y to auto — anything above the row's
+    // padding box is scroll-clipped and unreachable, so a poking tab must live
+    // INSIDE the padding box: reserve its overlap height as top padding.
+    padding-top: calc(var(--dbx-card-horizontal-tab-overlap, 10px) + var(--dbx-padding-1));
+    padding-bottom: var(--dbx-padding-2);
+  }
+
+  /// @dbx-utility card-horizontal-item
+  /// @intent fixed-width card for a `.dbx-card-horizontal` row — apply to `<mat-card appearance="outlined">`. Children: an optional `.dbx-card-horizontal-tab` `<dbx-chip>` (absolutely positioned poking above the top edge), an optional full-bleed `.dbx-card-horizontal-header` status bar (plain `<div>` placed BEFORE `<mat-card-content>` — mat-card children stack in a padding-less flex column, so the bar is edge-to-edge for free), the `<mat-card-content>` body, and a `<mat-card-footer>` CTA pushed to the card bottom via `margin-top: auto` so stretch-aligned cards keep their buttons on one line. Toggle `.dbx-card-horizontal-item-highlight` to repaint the outlined-card border in the primary color. Override `--dbx-card-horizontal-item-width` for a different card width.
+  /// @role layout
+  /// @see-also card-horizontal, card-horizontal-header, card-select, chip, color
+  .dbx-card-horizontal-item {
+    position: relative;
+    flex: 0 0 var(--dbx-card-horizontal-item-width, 300px);
+    width: var(--dbx-card-horizontal-item-width, 300px);
+
+    // the header div is the first child, so MDC's
+    // `mat-card-content:first-child { padding-top: 16px }` no longer fires —
+    // restore the body's top inset.
+    > mat-card-content {
+      padding-top: var(--dbx-padding-3);
+    }
+
+    // mat-card is already a flex column — anchor the CTA to the card bottom.
+    > mat-card-footer {
+      margin-top: auto;
+      padding: var(--dbx-padding-2) var(--dbx-padding-3) var(--dbx-padding-3);
+
+      > button,
+      > a {
+        width: 100%;
+      }
+    }
+
+    // highlight (e.g. "today") — repaint the outlined-card border (same
+    // pattern as `.dbx-card-select.dbx-card-selected`).
+    &.dbx-card-horizontal-item-highlight {
+      --mat-outlined-card-outline-color: var(--mat-sys-primary);
+      --mat-outlined-card-outline-width: 2px;
+    }
+  }
+
+  /// @dbx-utility card-horizontal-header
+  /// @intent full-bleed status bar across the top of a `.dbx-card-horizontal-item` — a plain `<div>` direct child of `<mat-card>` before `<mat-card-content>`. Pair with `[dbxColor]` for a solid bar or `[dbxColor]` + `[dbxColorTone]` for a tonal wash (tonal mode flips the label to the vibrant theme color). Compose the label from `.dbx-text-label-medium .dbx-uppercase .dbx-tracked-wide`; lead with a `<mat-icon>` or a `.dbx-card-horizontal-header-dot`.
+  /// @role layout
+  /// @see-also card-horizontal-item, card-horizontal-header-dot, color, color-tonal
+  .dbx-card-horizontal-header {
+    display: flex;
+    align-items: center;
+    gap: var(--dbx-padding-2);
+    padding: var(--dbx-padding-2) var(--dbx-padding-3);
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+  }
+
+  /// @dbx-utility card-horizontal-header-dot
+  /// @intent small status dot inside a `.dbx-card-horizontal-header` — painted from `currentColor` so it follows the header's (tonal) text color with no extra color wiring.
+  /// @role layout
+  /// @see-also card-horizontal-header
+  .dbx-card-horizontal-header-dot {
+    flex-shrink: 0;
+    width: var(--dbx-card-horizontal-header-dot-size, 8px);
+    height: var(--dbx-card-horizontal-header-dot-size, 8px);
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /// @dbx-utility card-horizontal-tab
+  /// @intent "TODAY"-style tab — apply to a `<dbx-chip [tone]="100" [small]="true">` inside a `.dbx-card-horizontal-item`; absolutely positioned so it pokes above the card's top edge by `--dbx-card-horizontal-tab-overlap` (which the `.dbx-card-horizontal` row also reserves as top padding so the scroll container does not clip it).
+  /// @role layout
+  /// @see-also card-horizontal, card-horizontal-item, chip
+  // Scoped under the item (0,2,0 specificity) so `position: absolute` beats
+  // `.dbx-chip`'s later-emitted `position: relative` (text.core() runs after
+  // card.core() in all-layout-core).
+  .dbx-card-horizontal-item .dbx-card-horizontal-tab {
+    position: absolute;
+    top: calc(-1 * var(--dbx-card-horizontal-tab-overlap, 10px));
+    left: var(--dbx-padding-3);
+    z-index: 1;
+  }
+
+  /// @dbx-utility card-horizontal-detail
+  /// @intent compact icon + text detail row (location / dates / time) inside a `.dbx-card-horizontal-item` body — muted `on-surface-variant` text with a small leading `<mat-icon>`; also fits a label/value row when composed with `.dbx-spacer`.
+  /// @role layout
+  /// @see-also card-horizontal-item, spacer, hint
+  .dbx-card-horizontal-detail {
+    display: flex;
+    align-items: center;
+    gap: var(--dbx-padding-2);
+    padding: var(--dbx-padding-1) 0;
+    color: var(--mat-sys-on-surface-variant);
+
+    > mat-icon {
+      flex-shrink: 0;
+      width: var(--dbx-card-horizontal-detail-icon-size, 18px);
+      height: var(--dbx-card-horizontal-detail-icon-size, 18px);
+      font-size: var(--dbx-card-horizontal-detail-icon-size, 18px);
+    }
+  }
+
+  /// @dbx-utility card-horizontal-divider
+  /// @intent hairline divider between `.dbx-card-horizontal-item` body sections — the standard `--mat-sys-outline-variant` border-bottom pattern with vertical rhythm baked in.
+  /// @role layout
+  /// @see-also card-horizontal-item
+  .dbx-card-horizontal-divider {
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    margin: var(--dbx-padding-2) 0;
+  }
+
+  /// @dbx-utility card-horizontal-mini
+  /// @intent small outlined "mini card" row inside a `.dbx-card-horizontal-item` body (e.g. a recommended job: name + detail left, price right) — outline-variant border, corner-small radius, space-between flex row.
+  /// @role layout
+  /// @see-also card-horizontal-item, color-text
+  .dbx-card-horizontal-mini {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--dbx-padding-2);
+    padding: var(--dbx-padding-2) var(--dbx-padding-3);
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: var(--mat-sys-corner-small, 8px);
+
+    & + & {
+      margin-top: var(--dbx-padding-2);
+    }
+  }
 }
 
 @mixin theme($theme-config) {
