@@ -302,6 +302,32 @@
       "componentScope": "calendar-month-view"
     },
     {
+      "cssVariable": "--dbx-card-accent-border-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "card accent border width"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `4px`.",
+      "defaults": {
+        "light": "4px"
+      },
+      "componentScope": "card"
+    },
+    {
+      "cssVariable": "--dbx-card-accent-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "card accent color"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-primary)`.",
+      "defaults": {
+        "light": "var(--mat-sys-primary)"
+      },
+      "componentScope": "card"
+    },
+    {
       "cssVariable": "--dbx-card-select-icon-size",
       "source": "dbx-web",
       "role": "size",
@@ -339,6 +365,32 @@
       "defaults": {}
     },
     {
+      "cssVariable": "--dbx-color-border-tone",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "color border tone"
+      ],
+      "description": "Component-scoped override point (`style`) read in `packages/dbx-web/src/lib/layout/style/_style.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `25%`.",
+      "defaults": {
+        "light": "25%"
+      },
+      "componentScope": "style"
+    },
+    {
+      "cssVariable": "--dbx-color-border-width",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "color border width"
+      ],
+      "description": "Component-scoped override point (`style`) read in `packages/dbx-web/src/lib/layout/style/_style.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `1px`.",
+      "defaults": {
+        "light": "1px"
+      },
+      "componentScope": "style"
+    },
+    {
       "cssVariable": "--dbx-color-current",
       "scssVariable": "$dbx-color-var",
       "source": "dbx-web",
@@ -348,6 +400,19 @@
       ],
       "description": "Auto-extracted token `--dbx-color-current`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
       "defaults": {}
+    },
+    {
+      "cssVariable": "--dbx-color-text-dim-tone",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "color text dim tone"
+      ],
+      "description": "Component-scoped override point (`style`) read in `packages/dbx-web/src/lib/layout/style/_style.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `72%`.",
+      "defaults": {
+        "light": "72%"
+      },
+      "componentScope": "style"
     },
     {
       "cssVariable": "--dbx-content-headers-count",
@@ -444,6 +509,19 @@
       "defaults": {
         "light": "56px"
       }
+    },
+    {
+      "cssVariable": "--dbx-content-pit-color-tone",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "content pit color tone"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `11%`.",
+      "defaults": {
+        "light": "11%"
+      },
+      "componentScope": "content"
     },
     {
       "cssVariable": "--dbx-content-pit-rounded-border-radius",

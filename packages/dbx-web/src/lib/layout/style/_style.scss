@@ -182,6 +182,22 @@
   .dbx-color-text {
     color: #{theming.$dbx-color};
   }
+
+  /// @dbx-utility color-border
+  /// @intent subtle themed solid border derived from the current dbxColor text color (`--dbx-color-current`) — pair with `[dbxColor]`/`[dbxTextColor]` on the element or any ancestor (custom properties inherit); override `--dbx-color-border-tone` (percentage) for subtlety or `--dbx-color-border-width` for thickness
+  /// @role color
+  /// @see-also color-bg, color-text, color-tonal
+  .dbx-color-border {
+    border: var(--dbx-color-border-width, 1px) solid color-mix(in srgb, #{theming.$dbx-color} var(--dbx-color-border-tone, 25%), transparent);
+  }
+
+  /// @dbx-utility color-text-dim
+  /// @intent de-emphasized themed text — paints text with a partially-transparent mix of the current dbxColor text color (`--dbx-color-current`), for secondary lines (eyebrows, hints, labels) on painted surfaces where a fixed grey would clash; override `--dbx-color-text-dim-tone` (percentage) to tune the emphasis
+  /// @role color
+  /// @see-also color-text, color-border, hint
+  .dbx-color-text-dim {
+    color: color-mix(in srgb, #{theming.$dbx-color} var(--dbx-color-text-dim-tone, 72%), transparent);
+  }
 }
 
 @mixin dbx-color-bg-body($default-bg-tone: 100%) {

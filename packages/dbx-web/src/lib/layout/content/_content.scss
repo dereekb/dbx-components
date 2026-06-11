@@ -229,6 +229,13 @@ $dbx-border-opacity-default: 20%;
     background: var(--mat-sys-surface-container);
   }
 
+  // pits on a [dbxColor]-painted surface wash from the current contrast color instead of the
+  // surface-container token, which would clash with the painted background (e.g. a dark inverse
+  // card). Override --dbx-content-pit-color-tone (percentage) to tune the wash.
+  .dbx-color .dbx-content-pit {
+    background: color-mix(in srgb, #{theming.$dbx-color} var(--dbx-content-pit-color-tone, 11%), transparent);
+  }
+
   .dbx-content-border {
     border: 3px dashed color-mix(in srgb, var(--dbx-border-color, var(--mat-sys-outline-variant)) var(--dbx-border-opacity, $dbx-border-opacity-default), transparent);
   }

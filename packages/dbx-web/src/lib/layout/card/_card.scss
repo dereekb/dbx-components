@@ -12,9 +12,33 @@
     background: color-mix(in srgb, var(#{theming.$dbx-bg-color-var}) var(#{theming.$dbx-bg-tone-var}, 100%), transparent);
     color: var(#{theming.$dbx-color-var});
 
+    // outlined buttons inside the painted card follow the card's contrast color — the M3 default
+    // primary label/outline may be illegible on the painted surface (e.g. an inverse-surface card).
+    --mat-button-outlined-label-text-color: var(#{theming.$dbx-color-var});
+    --mat-button-outlined-outline-color: color-mix(in srgb, var(#{theming.$dbx-color-var}) 30%, transparent);
+
     &.dbx-color-tonal {
       color: var(#{theming.$dbx-bg-color-var});
+      --mat-button-outlined-label-text-color: var(#{theming.$dbx-bg-color-var});
+      --mat-button-outlined-outline-color: color-mix(in srgb, var(#{theming.$dbx-bg-color-var}) 30%, transparent);
     }
+  }
+
+  /// @dbx-utility mat-card-content-flex-column
+  /// @intent re-emits the `.dbx-flex-column` display at higher specificity than MDC's `.mat-mdc-card-content` `display: block` rule, so the flex utilities work on `<mat-card-content>` — pair with `.dbx-flex-fill` on the content (fills the card's stretched height) and on a child (absorbs the remaining height).
+  /// @role flex
+  /// @see-also flex-column, flex-fill, mat-card-dbx-color
+  mat-card-content.dbx-flex-column {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /// @dbx-utility card-accent
+  /// @intent accent-edged `<mat-card>` — paints a solid border down the card's left edge to flag or categorize the card. Defaults to the M3 primary color; override `--dbx-card-accent-color` for a different hue or `--dbx-card-accent-border-width` for thickness.
+  /// @role layout
+  /// @see-also card-banner, card-select, color
+  .dbx-card-accent {
+    border-left: var(--dbx-card-accent-border-width, 4px) solid var(--dbx-card-accent-color, var(--mat-sys-primary));
   }
 
   /// @dbx-utility card-banner

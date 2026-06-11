@@ -252,7 +252,8 @@ export const APP_CONFIG: ApplicationConfig = {
       dbxColorServiceConfig: {
         templates: [
           { key: 'demo-brand', config: { color: '#312f7e', contrast: '#ffffff' } },
-          { key: 'demo-positive', config: { color: '#1f9b59', contrast: '#ffffff', tone: 18 } }
+          { key: 'demo-positive', config: { color: '#1f9b59', contrast: '#ffffff', tone: 18 } },
+          { key: 'demo-inverse', config: { color: 'var(--mat-sys-inverse-surface)', contrast: 'var(--mat-sys-inverse-on-surface)' } }
         ]
       }
     }),

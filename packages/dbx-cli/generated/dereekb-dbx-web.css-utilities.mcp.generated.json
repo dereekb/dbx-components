@@ -650,12 +650,38 @@
       ]
     },
     {
+      "slug": "card-accent",
+      "selector": ".dbx-card-accent",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 40,
+      "declarations": [
+        {
+          "property": "border-left",
+          "value": "var(--dbx-card-accent-border-width, 4px) solid var(--dbx-card-accent-color, var(--mat-sys-primary))"
+        }
+      ],
+      "role": "layout",
+      "intent": "accent-edged `<mat-card>` — paints a solid border down the card's left edge to flag or categorize the card. Defaults to the M3 primary color; override `--dbx-card-accent-color` for a different hue or `--dbx-card-accent-border-width` for thickness.",
+      "seeAlso": [
+        "card-banner",
+        "card-select",
+        "color"
+      ],
+      "tokensRead": [
+        "--dbx-card-accent-border-width",
+        "--dbx-card-accent-color",
+        "--mat-sys-primary"
+      ]
+    },
+    {
       "slug": "card-banner",
       "selector": ".dbx-card-banner",
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/card/_card.scss",
-      "line": 24,
+      "line": 48,
       "declarations": [],
       "role": "layout",
       "intent": "banner-style `<mat-card>` — pair with `[dbxColor]` (+ `[dbxColorTone]`) for the tonal surface. Drop `<mat-card-header>` entirely; put the icon + `<mat-card-title>` row inside `<mat-card-content>` via a `.dbx-card-banner-header` child, and the action buttons inside `<mat-card-footer>`.",
@@ -675,7 +701,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/card/_card.scss",
-      "line": 48,
+      "line": 72,
       "declarations": [
         {
           "property": "position",
@@ -833,6 +859,31 @@
       "intent": "generic themed-background class — pair with `[dbxColor]=\"config\"` to drive `--dbx-bg-color-current` / `--dbx-color-current` from arbitrary CSS color values"
     },
     {
+      "slug": "color-border",
+      "selector": ".dbx-color-border",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/style/_style.scss",
+      "line": 190,
+      "declarations": [
+        {
+          "property": "border",
+          "value": "var(--dbx-color-border-width, 1px) solid color-mix(in srgb, #{theming.$dbx-color} var(--dbx-color-border-tone, 25%), transparent)"
+        }
+      ],
+      "role": "color",
+      "intent": "subtle themed solid border derived from the current dbxColor text color (`--dbx-color-current`) — pair with `[dbxColor]`/`[dbxTextColor]` on the element or any ancestor (custom properties inherit); override `--dbx-color-border-tone` (percentage) for subtlety or `--dbx-color-border-width` for thickness",
+      "seeAlso": [
+        "color-bg",
+        "color-text",
+        "color-tonal"
+      ],
+      "tokensRead": [
+        "--dbx-color-border-tone",
+        "--dbx-color-border-width"
+      ]
+    },
+    {
       "slug": "color-text",
       "selector": ".dbx-color-text",
       "source": "@dereekb/dbx-web",
@@ -842,6 +893,30 @@
       "declarations": [],
       "role": "color",
       "intent": "generic themed-text class — pair with `[dbxTextColor]=\"config\"` to drive `--dbx-color-current` from an arbitrary CSS color value"
+    },
+    {
+      "slug": "color-text-dim",
+      "selector": ".dbx-color-text-dim",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/style/_style.scss",
+      "line": 198,
+      "declarations": [
+        {
+          "property": "color",
+          "value": "color-mix(in srgb, #{theming.$dbx-color} var(--dbx-color-text-dim-tone, 72%), transparent)"
+        }
+      ],
+      "role": "color",
+      "intent": "de-emphasized themed text — paints text with a partially-transparent mix of the current dbxColor text color (`--dbx-color-current`), for secondary lines (eyebrows, hints, labels) on painted surfaces where a fixed grey would clash; override `--dbx-color-text-dim-tone` (percentage) to tune the emphasis",
+      "seeAlso": [
+        "color-text",
+        "color-border",
+        "hint"
+      ],
+      "tokensRead": [
+        "--dbx-color-text-dim-tone"
+      ]
     },
     {
       "slug": "color-tonal",
@@ -2048,7 +2123,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 156,
+      "line": 200,
       "declarations": [
         {
           "property": "--dbx-list-card-items-list-gap",
@@ -2077,7 +2152,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 330,
+      "line": 322,
       "declarations": [
         {
           "property": "padding",
@@ -2097,7 +2172,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 124,
+      "line": 168,
       "declarations": [
         {
           "property": "min-height",
@@ -2126,7 +2201,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 133,
+      "line": 177,
       "declarations": [
         {
           "property": "min-height",
@@ -2152,7 +2227,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 303,
+      "line": 295,
       "declarations": [
         {
           "property": "cursor",
@@ -2169,7 +2244,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 315,
+      "line": 307,
       "declarations": [
         {
           "property": "padding",
@@ -2184,67 +2259,8 @@
       "selectorContext": ".dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item"
     },
     {
-      "slug": "list-rounded-items",
-      "selector": ".dbx-list-rounded-items",
-      "source": "@dereekb/dbx-web",
-      "module": "@dereekb/dbx-web",
-      "file": "src/lib/layout/list/_list.scss",
-      "line": 193,
-      "declarations": [
-        {
-          "property": "--mat-list-active-indicator-shape",
-          "value": "var(--dbx-list-item-border-radius, var(--mat-sys-corner-full, 9999px))"
-        },
-        {
-          "property": "--mat-list-list-item-container-shape",
-          "value": "var(--dbx-list-item-border-radius, var(--mat-sys-corner-full, 9999px))"
-        }
-      ],
-      "role": "layout",
-      "intent": "rounds every list row to an M3 pill via `--dbx-list-item-border-radius`; pair with a `.dbx-list-rounded-items-*` level modifier to pick a fixed radius",
-      "seeAlso": [
-        "dbx-list-rounded-items-medium",
-        "dbx-list-card-items-list"
-      ],
-      "tokensRead": [
-        "--dbx-list-item-border-radius",
-        "--mat-list-list-item-container-shape",
-        "--mat-sys-corner-full"
-      ],
-      "tokensSet": [
-        "--mat-list-active-indicator-shape",
-        "--mat-list-list-item-container-shape"
-      ]
-    },
-    {
-      "slug": "list-rounded-items-full",
-      "selector": ".dbx-list-rounded-items-full",
-      "source": "@dereekb/dbx-web",
-      "module": "@dereekb/dbx-web",
-      "file": "src/lib/layout/list/_list.scss",
-      "line": 243,
-      "declarations": [
-        {
-          "property": "--dbx-list-item-border-radius",
-          "value": "var(--mat-sys-corner-full, 9999px)"
-        }
-      ],
-      "role": "layout",
-      "intent": "sets `--dbx-list-item-border-radius` to the M3 \"full\" (pill) radius for `.dbx-list-rounded-items`",
-      "seeAlso": [
-        "dbx-list-rounded-items"
-      ],
-      "parent": "list-rounded-items",
-      "tokensRead": [
-        "--mat-sys-corner-full"
-      ],
-      "tokensSet": [
-        "--dbx-list-item-border-radius"
-      ]
-    },
-    {
-      "slug": "list-rounded-items-large",
-      "selector": ".dbx-list-rounded-items-large",
+      "slug": "list-square-items",
+      "selector": ".dbx-list-square-items",
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
@@ -2252,94 +2268,20 @@
       "declarations": [
         {
           "property": "--dbx-list-item-border-radius",
-          "value": "var(--mat-sys-corner-large, 16px)"
-        }
-      ],
-      "role": "layout",
-      "intent": "sets `--dbx-list-item-border-radius` to the M3 \"large\" (16px) radius for `.dbx-list-rounded-items`",
-      "seeAlso": [
-        "dbx-list-rounded-items"
-      ],
-      "parent": "list-rounded-items",
-      "tokensRead": [
-        "--mat-sys-corner-large"
-      ],
-      "tokensSet": [
-        "--dbx-list-item-border-radius"
-      ]
-    },
-    {
-      "slug": "list-rounded-items-medium",
-      "selector": ".dbx-list-rounded-items-medium",
-      "source": "@dereekb/dbx-web",
-      "module": "@dereekb/dbx-web",
-      "file": "src/lib/layout/list/_list.scss",
-      "line": 225,
-      "declarations": [
+          "value": "0"
+        },
         {
-          "property": "--dbx-list-item-border-radius",
-          "value": "var(--mat-sys-corner-medium, 12px)"
-        }
-      ],
-      "role": "layout",
-      "intent": "sets `--dbx-list-item-border-radius` to the M3 \"medium\" (12px) radius for `.dbx-list-rounded-items`",
-      "seeAlso": [
-        "dbx-list-rounded-items"
-      ],
-      "parent": "list-rounded-items",
-      "tokensRead": [
-        "--mat-sys-corner-medium"
-      ],
-      "tokensSet": [
-        "--dbx-list-item-border-radius"
-      ]
-    },
-    {
-      "slug": "list-rounded-items-none",
-      "selector": ".dbx-list-rounded-items-none",
-      "source": "@dereekb/dbx-web",
-      "module": "@dereekb/dbx-web",
-      "file": "src/lib/layout/list/_list.scss",
-      "line": 207,
-      "declarations": [
-        {
-          "property": "--dbx-list-item-border-radius",
+          "property": "--dbx-anchor-list-item-border-radius",
           "value": "0"
         }
       ],
       "role": "layout",
-      "intent": "sets `--dbx-list-item-border-radius` to 0 (square rows) for `.dbx-list-rounded-items`",
+      "intent": "opts a `.dbx-list` / `.dbx-anchor-list` out of the default medium-rounded rows back to square (0 radius) by zeroing their row radius tokens",
       "seeAlso": [
-        "dbx-list-rounded-items"
-      ],
-      "parent": "list-rounded-items",
-      "tokensSet": [
-        "--dbx-list-item-border-radius"
-      ]
-    },
-    {
-      "slug": "list-rounded-items-small",
-      "selector": ".dbx-list-rounded-items-small",
-      "source": "@dereekb/dbx-web",
-      "module": "@dereekb/dbx-web",
-      "file": "src/lib/layout/list/_list.scss",
-      "line": 216,
-      "declarations": [
-        {
-          "property": "--dbx-list-item-border-radius",
-          "value": "var(--mat-sys-corner-small, 8px)"
-        }
-      ],
-      "role": "layout",
-      "intent": "sets `--dbx-list-item-border-radius` to the M3 \"small\" (8px) radius for `.dbx-list-rounded-items`",
-      "seeAlso": [
-        "dbx-list-rounded-items"
-      ],
-      "parent": "list-rounded-items",
-      "tokensRead": [
-        "--mat-sys-corner-small"
+        "dbx-list-card-items-list"
       ],
       "tokensSet": [
+        "--dbx-anchor-list-item-border-radius",
         "--dbx-list-item-border-radius"
       ]
     },
@@ -2349,7 +2291,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 105,
+      "line": 149,
       "declarations": [],
       "role": "state",
       "intent": "pin `.dbx-list-view-group-header` rows to the top of the list while scrolling"
@@ -2360,7 +2302,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 259,
+      "line": 251,
       "declarations": [
         {
           "property": "display",
@@ -2387,7 +2329,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 82,
+      "line": 126,
       "declarations": [],
       "role": "spacing",
       "intent": "strip the leading + trailing padding around `mdc-list-item--with-trailing-meta` rows so meta-only items hug their container"
