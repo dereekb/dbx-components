@@ -1,13 +1,16 @@
 /**
- * Shared types for the route cluster (`dbx_route_tree`, `dbx_route_lookup`,
- * `dbx_route_search`).
+ * Shared types for the UIRouter route-extraction core.
  *
- * The cluster is validator-style: tools read TypeScript source on each call
- * and extract the UIRouter state tree by syntactic analysis. No DI graph
- * evaluation; we record class-name references as strings.
+ * Originally lived in `@dereekb/dbx-components-mcp` behind the `dbx_route_*`
+ * tools; lifted here so both the dev MCP server and the build-time
+ * `dbx-cli-generate-route-manifest` binary share one extractor.
+ *
+ * The core is validator-style: it reads TypeScript source and extracts the
+ * UIRouter state tree by syntactic analysis. No DI graph evaluation; we record
+ * class-name references as strings.
  *
  * Routes are described as a flat list of {@link RouteNode}s during extraction
- * and turned into a parent-linked {@link RouteTree} by `build-tree.ts`.
+ * and turned into a parent-linked {@link RouteTree} by `route-build-tree.ts`.
  */
 
 /**
@@ -39,6 +42,16 @@ export interface RouteIssue {
   readonly file: string | undefined;
   readonly line: number | undefined;
   readonly stateName: string | undefined;
+}
+
+/**
+ * A single JSDoc tag captured from a state declaration's `export const`
+ * documentation. `name` is the tag name without the leading `@`
+ * (e.g. `dbxRouteModel`); `text` is the trimmed remainder of the tag line.
+ */
+export interface RouteNodeJsDocTag {
+  readonly name: string;
+  readonly text: string;
 }
 
 /**
@@ -83,6 +96,14 @@ export interface RouteNode {
    * `provideStates({ states: [...] })` call.
    */
   readonly declaredAs: string | undefined;
+  /**
+   * `@dbxRouteModel*` JSDoc tags captured from the declaring `export const`'s
+   * documentation, when the state was declared as a typed const. Used by the
+   * route-manifest builder to augment / override the component-level model
+   * annotations. `undefined` for inline literals or consts without route-model
+   * tags.
+   */
+  readonly jsDocTags: readonly RouteNodeJsDocTag[] | undefined;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractFile } from './extract.js';
+import { extractFile } from './route-extract.js';
 
 describe('extractFile', () => {
   it('extracts a typed single-state const', () => {
@@ -129,8 +129,8 @@ export const detailState: Ng2StateDeclaration = {
 };
 `;
     const result = extractFile({ name: 'detail.router.ts', text });
-    expect(result.nodes[0].paramKeys.sort((a, b) => a.localeCompare(b))).toEqual(['id', 'mode']);
-    expect(result.nodes[0].resolveKeys.sort((a, b) => a.localeCompare(b))).toEqual(['profile', 'settings']);
+    expect([...result.nodes[0].paramKeys].sort((a, b) => a.localeCompare(b))).toEqual(['id', 'mode']);
+    expect([...result.nodes[0].resolveKeys].sort((a, b) => a.localeCompare(b))).toEqual(['profile', 'settings']);
   });
 
   it('reports states with a non-string-literal name as info issues', () => {
@@ -146,5 +146,44 @@ export const dynState: Ng2StateDeclaration = {
     const result = extractFile({ name: 'dynamic.router.ts', text });
     expect(result.nodes).toHaveLength(0);
     expect(result.issues.some((i) => i.code === 'DYNAMIC_STATE_NAME' && i.severity === 'info')).toBe(true);
+  });
+
+  it('captures @dbxRouteModel* JSDoc tags from the declaring const', () => {
+    const text = `
+import { type Ng2StateDeclaration } from '@uirouter/angular';
+
+/**
+ * Worker detail state.
+ *
+ * @dbxRouteModel profile :uid - The profile for the worker
+ * @dbxRouteModel worker :uid
+ * @dbxRouteModelList jobWorkerSchedule
+ */
+export const workerState: Ng2StateDeclaration = {
+  name: 'worker.user',
+  url: '/:uid'
+};
+`;
+    const result = extractFile({ name: 'worker.router.ts', text });
+    const node = result.nodes[0];
+    expect(node.jsDocTags).toEqual([
+      { name: 'dbxRouteModel', text: 'profile :uid - The profile for the worker' },
+      { name: 'dbxRouteModel', text: 'worker :uid' },
+      { name: 'dbxRouteModelList', text: 'jobWorkerSchedule' }
+    ]);
+  });
+
+  it('leaves jsDocTags undefined when the const has no route-model tags', () => {
+    const text = `
+import { type Ng2StateDeclaration } from '@uirouter/angular';
+
+/** Just a normal state. */
+export const plainState: Ng2StateDeclaration = {
+  name: 'plain',
+  url: '/plain'
+};
+`;
+    const result = extractFile({ name: 'plain.router.ts', text });
+    expect(result.nodes[0].jsDocTags).toBeUndefined();
   });
 });

@@ -10,6 +10,11 @@ export const LAYOUT_STATE: Ng2StateDeclaration = {
   component: DemoGuestbookLayoutComponent
 };
 
+/**
+ * Guestbook list page.
+ *
+ * @dbxRouteModelList guestbook - The published guestbooks shown in the list
+ */
 export const GUESTBOOK_LIST_STATE: Ng2StateDeclaration = {
   name: 'demo.app.guestbook.list',
   component: DemoGuestbookListPageComponent

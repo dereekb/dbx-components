@@ -18,7 +18,7 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { type RouteTreeNode } from './route/index.js';
+import { type RouteTreeNode } from '@dereekb/dbx-cli';
 import { loadRouteContext } from './route/load-context.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 

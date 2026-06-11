@@ -1,5 +1,5 @@
 /**
- * AST extraction for the route cluster.
+ * AST extraction for the route core.
  *
  * Parses one TypeScript source file with ts-morph and emits a list of
  * {@link RouteNode}s plus any issues surfaced during extraction.
@@ -15,18 +15,22 @@
  *   3. `provideStates({ states: [...] })` — element shape matches (2).
  *   4. `UIRouterModule.forChild({ states: [...] })` — same.
  *
+ * `@dbxRouteModel*` JSDoc tags on a typed state const's `export const` are
+ * captured onto {@link RouteNode.jsDocTags}; the route-manifest builder reads
+ * them to augment / override the component-level model annotations.
+ *
  * Pure ts-morph in-memory project, no tsconfig, no fs reads. The caller is
  * responsible for funnelling files in.
  */
 
-import { Node, Project, SyntaxKind, type ArrayLiteralExpression, type Identifier, type ObjectLiteralExpression, type SourceFile, type VariableStatement } from 'ts-morph';
-import type { RouteIssue, RouteNode, RouteSource } from './types.js';
+import { Node, Project, SyntaxKind, type ArrayLiteralExpression, type Identifier, type JSDoc, type ObjectLiteralExpression, type SourceFile, type VariableStatement } from 'ts-morph';
+import type { RouteIssue, RouteNode, RouteNodeJsDocTag, RouteSource } from './route-types.js';
 
 export interface ExtractFileResult {
   readonly nodes: readonly RouteNode[];
   readonly issues: readonly RouteIssue[];
   /**
-   * Identifiers that this file imports — used by `resolve.ts` to walk transitively.
+   * Identifiers that this file imports — used by `route-resolve-sources.ts` to walk transitively.
    */
   readonly importedFromRelative: readonly RelativeImport[];
 }
@@ -35,6 +39,11 @@ export interface RelativeImport {
   readonly moduleSpecifier: string;
   readonly file: string;
 }
+
+/**
+ * Prefix marking the JSDoc tags the route core captures onto a state node.
+ */
+const ROUTE_MODEL_TAG_PREFIX = 'dbxRouteModel';
 
 // MARK: Entry
 /**
@@ -78,7 +87,7 @@ function collectTypedStateConsts(input: CollectTypedStateConstsInput): void {
   const { source, objectLiteralsByName, collected, issues } = input;
   for (const [name, info] of objectLiteralsByName) {
     if (!info.typedAsState) continue;
-    addNode({ file: source.name, literal: info.literal, fallbackConstName: name, into: collected, issues });
+    addNode({ file: source.name, literal: info.literal, fallbackConstName: name, jsDocTags: info.jsDocTags, into: collected, issues });
   }
 }
 
@@ -111,13 +120,13 @@ interface CollectArrayElementInput {
 function collectArrayElement(input: CollectArrayElementInput): void {
   const { element, source, objectLiteralsByName, collected, issues } = input;
   if (Node.isObjectLiteralExpression(element)) {
-    addNode({ file: source.name, literal: element, fallbackConstName: undefined, into: collected, issues });
+    addNode({ file: source.name, literal: element, fallbackConstName: undefined, jsDocTags: undefined, into: collected, issues });
     return;
   }
   if (Node.isIdentifier(element)) {
     const ref = objectLiteralsByName.get(element.getText());
     if (ref) {
-      addNode({ file: source.name, literal: ref.literal, fallbackConstName: element.getText(), into: collected, issues });
+      addNode({ file: source.name, literal: ref.literal, fallbackConstName: element.getText(), jsDocTags: ref.jsDocTags, into: collected, issues });
     }
   }
 }
@@ -126,11 +135,13 @@ function collectArrayElement(input: CollectArrayElementInput): void {
 interface StateConstInfo {
   readonly literal: ObjectLiteralExpression;
   readonly typedAsState: boolean;
+  readonly jsDocTags: readonly RouteNodeJsDocTag[] | undefined;
 }
 
 function collectStateConsts(sourceFile: SourceFile): Map<string, StateConstInfo> {
   const out = new Map<string, StateConstInfo>();
   for (const stmt of sourceFile.getVariableStatements()) {
+    const jsDocTags = collectRouteModelTags(stmt.getJsDocs());
     for (const decl of stmt.getDeclarations()) {
       const initializer = decl.getInitializer();
       if (!initializer || !Node.isObjectLiteralExpression(initializer)) {
@@ -138,10 +149,31 @@ function collectStateConsts(sourceFile: SourceFile): Map<string, StateConstInfo>
       }
       const typeNode = decl.getTypeNode();
       const typedAsState = typeNode ? typeNode.getText() === 'Ng2StateDeclaration' : false;
-      out.set(decl.getName(), { literal: initializer, typedAsState });
+      out.set(decl.getName(), { literal: initializer, typedAsState, jsDocTags });
     }
   }
   return out;
+}
+
+/**
+ * Collects the `@dbxRouteModel*` tags from a declaration's JSDoc blocks. Tags
+ * are returned verbatim (name without the leading `@`, trimmed text) so the
+ * manifest builder can parse them with its own grammar.
+ *
+ * @param jsDocs - The JSDoc blocks attached to the declaring statement.
+ * @returns The route-model tag list, or `undefined` when none were present.
+ */
+function collectRouteModelTags(jsDocs: readonly JSDoc[]): readonly RouteNodeJsDocTag[] | undefined {
+  const out: RouteNodeJsDocTag[] = [];
+  for (const jsDoc of jsDocs) {
+    for (const tag of jsDoc.getTags()) {
+      const name = tag.getTagName();
+      if (name.startsWith(ROUTE_MODEL_TAG_PREFIX)) {
+        out.push({ name, text: tag.getCommentText()?.trim() ?? '' });
+      }
+    }
+  }
+  return out.length > 0 ? out : undefined;
 }
 
 // MARK: Array discovery
@@ -252,13 +284,14 @@ interface AddNodeOptions {
   readonly file: string;
   readonly literal: ObjectLiteralExpression;
   readonly fallbackConstName: string | undefined;
+  readonly jsDocTags: readonly RouteNodeJsDocTag[] | undefined;
   readonly into: Map<string, RouteNode>;
   readonly issues: RouteIssue[];
 }
 
 // MARK: Single-state extraction
 function addNode(options: AddNodeOptions): void {
-  const { file, literal, fallbackConstName, into, issues } = options;
+  const { file, literal, fallbackConstName, jsDocTags, into, issues } = options;
   const stringField = (key: string): string | undefined => stringPropertyValue(literal, key);
   const name = stringField('name');
   const line = literal.getStartLineNumber();
@@ -295,7 +328,8 @@ function addNode(options: AddNodeOptions): void {
     resolveKeys,
     file,
     line,
-    declaredAs: fallbackConstName
+    declaredAs: fallbackConstName,
+    jsDocTags
   };
 
   // Same file may declare both `const layoutState: Ng2StateDeclaration = {...}`

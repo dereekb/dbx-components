@@ -6,6 +6,11 @@
  * it, by chaining `app-port-map` → `loadRouteContext` → URL match → import
  * scan for the rendered component's source file.
  *
+ * The URL matcher itself is the shared, pure {@link matchUrlAgainstEntries}
+ * from `@dereekb/dbx-cli` (the same core the build-time route manifest +
+ * runtime `url-models` tool use); this module only adapts the route tree into
+ * match entries and resolves the rendered component file off disk.
+ *
  * Returns a discriminated union so the tool handler can render each outcome
  * (single match, multiple matches, not-found, error) without rethrowing.
  */
@@ -14,7 +19,8 @@ import { readFile, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve, sep } from 'node:path';
 import { loadAppPortMap, type AppEntry } from './app-port-map.js';
 import { loadRouteContext, type RouteContextInput } from './load-context.js';
-import type { RouteTreeNode } from './types.js';
+import { buildPageModelsIndex } from './page-models.js';
+import { extractUrlParamKeys, matchUrlAgainstEntries, normalizePathname, type RouteManifestModelEntry, type RouteSource, type RouteTreeNode, type UrlMatchEntry } from '@dereekb/dbx-cli';
 
 export interface ResolveUrlInput {
   readonly url: string;
@@ -82,6 +88,13 @@ export interface ResolveUrlMatch {
    * object literal on the state declaration.
    */
   readonly urlParamKeys: readonly string[];
+  /**
+   * Firestore models the matched page renders, resolved the same way the
+   * build-time `route.manifest.json` resolves them (the state's own
+   * `@dbxRouteModel*` tags + component tags, with ancestor models flattened in
+   * and attributed via `from`). Empty when the page declares none.
+   */
+  readonly models: readonly RouteManifestModelEntry[];
 }
 
 export interface ResolveUrlMultiple {
@@ -151,41 +164,22 @@ export async function resolveUrlToState(input: ResolveUrlInput): Promise<Resolve
   }
 
   const { tree } = ctx;
-  const literal = matchLiteralUrl(tree.byName, parsed.pathname);
-  if (literal.length === 1) {
-    const node = literal[0];
-    return buildMatch({
-      app,
-      via: 'literal',
-      node,
-      parsed,
-      params: {},
-      cwd: input.cwd,
-      includeSiblings: input.includeSiblings
-    });
-  }
-  if (literal.length > 1) {
-    return { kind: 'multiple', app, pathname: parsed.pathname, nodes: literal };
-  }
+  const entries: UrlMatchEntry<RouteTreeNode>[] = Array.from(tree.byName.values()).map((node) => ({ fullUrl: node.fullUrl, value: node }));
+  const matched = matchUrlAgainstEntries({ entries, pathname: parsed.pathname });
 
-  const paramMatch = matchParamUrl(tree.byName, parsed.pathname);
-  if (paramMatch?.nodes.length === 1) {
-    return buildMatch({
-      app,
-      via: 'param',
-      node: paramMatch.nodes[0],
-      parsed,
-      params: paramMatch.params,
-      cwd: input.cwd,
-      includeSiblings: input.includeSiblings
-    });
+  let result: ResolveUrlResult;
+  switch (matched.kind) {
+    case 'match':
+      result = await buildMatch({ app, via: matched.via, node: matched.value, parsed, params: matched.params, cwd: input.cwd, includeSiblings: input.includeSiblings, sources: ctx.sources });
+      break;
+    case 'ambiguous':
+      result = { kind: 'multiple', app, pathname: parsed.pathname, nodes: matched.values };
+      break;
+    case 'none':
+      result = { kind: 'not_found', app, pathname: parsed.pathname, candidates: matched.candidates };
+      break;
   }
-  if (paramMatch && paramMatch.nodes.length > 1) {
-    return { kind: 'multiple', app, pathname: parsed.pathname, nodes: paramMatch.nodes };
-  }
-
-  const candidates = pickCandidates(tree.byName, parsed.pathname);
-  return { kind: 'not_found', app, pathname: parsed.pathname, candidates };
+  return result;
 }
 
 // MARK: URL parsing
@@ -226,16 +220,6 @@ function parseInputUrl(raw: string): ParsedUrlInput {
     search
   };
   return result;
-}
-
-function normalizePathname(pathname: string): string {
-  if (pathname.length === 0) {
-    return '/';
-  }
-  if (pathname.length > 1 && pathname.endsWith('/')) {
-    return pathname.slice(0, -1);
-  }
-  return pathname;
 }
 
 // MARK: App resolution
@@ -284,119 +268,6 @@ function listAppsWithPorts(entries: readonly AppEntry[]): string {
   return withPorts.map((e) => `${e.name}=${e.ports.join('|')}`).join(', ');
 }
 
-// MARK: URL matching
-function matchLiteralUrl(byName: ReadonlyMap<string, RouteTreeNode>, pathname: string): readonly RouteTreeNode[] {
-  const out: RouteTreeNode[] = [];
-  for (const node of byName.values()) {
-    if (node.fullUrl !== undefined && normalizePathname(node.fullUrl) === pathname) {
-      out.push(node);
-    }
-  }
-  return out;
-}
-
-interface ParamMatch {
-  readonly nodes: readonly RouteTreeNode[];
-  readonly params: Readonly<Record<string, string>>;
-}
-
-function matchParamUrl(byName: ReadonlyMap<string, RouteTreeNode>, pathname: string): ParamMatch | undefined {
-  const inputSegments = splitSegments(pathname);
-  let best: { readonly node: RouteTreeNode; readonly params: Readonly<Record<string, string>> } | undefined;
-  const competing: RouteTreeNode[] = [];
-  for (const node of byName.values()) {
-    if (node.fullUrl === undefined) {
-      continue;
-    }
-    if (!hasParamSegment(node.fullUrl)) {
-      continue;
-    }
-    const routeSegments = splitSegments(node.fullUrl);
-    const params = tryMatchSegments(routeSegments, inputSegments);
-    if (params) {
-      if (best) {
-        competing.push(node);
-      } else {
-        best = { node, params };
-      }
-    }
-  }
-  if (!best) {
-    return undefined;
-  }
-  if (competing.length === 0) {
-    const result: ParamMatch = { nodes: [best.node], params: best.params };
-    return result;
-  }
-  const all: RouteTreeNode[] = [best.node, ...competing];
-  const result: ParamMatch = { nodes: all, params: {} };
-  return result;
-}
-
-function splitSegments(path: string): readonly string[] {
-  const normalized = path.startsWith('/') ? path.slice(1) : path;
-  if (normalized.length === 0) {
-    return [];
-  }
-  return normalized.split('/');
-}
-
-function hasParamSegment(path: string): boolean {
-  return path.includes(':') || path.includes('{');
-}
-
-function tryMatchSegments(route: readonly string[], input: readonly string[]): Readonly<Record<string, string>> | undefined {
-  if (route.length !== input.length) {
-    return undefined;
-  }
-  const params: Record<string, string> = {};
-  let result: Readonly<Record<string, string>> | undefined = params;
-  for (const [i, r] of route.entries()) {
-    const v = input[i];
-    if (r.startsWith(':')) {
-      const key = r.slice(1);
-      params[key] = decodeURIComponent(v);
-    } else if (r.startsWith('{') && r.endsWith('}')) {
-      const inner = r.slice(1, -1);
-      const colonIdx = inner.indexOf(':');
-      const key = colonIdx >= 0 ? inner.slice(0, colonIdx) : inner;
-      params[key] = decodeURIComponent(v);
-    } else if (r !== v) {
-      result = undefined;
-      break;
-    }
-  }
-  return result;
-}
-
-// MARK: Candidates / fuzzy
-function pickCandidates(byName: ReadonlyMap<string, RouteTreeNode>, pathname: string): readonly RouteTreeNode[] {
-  const segments = splitSegments(pathname);
-  const scored: { readonly node: RouteTreeNode; readonly score: number }[] = [];
-  for (const node of byName.values()) {
-    if (node.fullUrl === undefined) {
-      continue;
-    }
-    const candidateSegments = splitSegments(node.fullUrl);
-    let score = 0;
-    const maxIndex = Math.min(segments.length, candidateSegments.length);
-    for (let i = 0; i < maxIndex; i += 1) {
-      if (segments[i] === candidateSegments[i]) {
-        score += 2;
-      } else if (candidateSegments[i].startsWith(':') || candidateSegments[i].startsWith('{')) {
-        score += 1;
-      } else {
-        break;
-      }
-    }
-    if (score > 0) {
-      scored.push({ node, score });
-    }
-  }
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 5).map((s) => s.node);
-}
-
 // MARK: Match builder + ancestor/sibling walk
 interface BuildMatchInput {
   readonly app: AppEntry;
@@ -406,14 +277,16 @@ interface BuildMatchInput {
   readonly params: Readonly<Record<string, string>>;
   readonly cwd: string | undefined;
   readonly includeSiblings: boolean;
+  readonly sources: readonly RouteSource[];
 }
 
 async function buildMatch(input: BuildMatchInput): Promise<ResolveUrlMatch> {
-  const { app, via, node, parsed, params, cwd, includeSiblings } = input;
+  const { app, via, node, parsed, params, cwd, includeSiblings, sources } = input;
   const ancestors = collectAncestors(node);
   const siblings = includeSiblings ? collectSiblings(node) : undefined;
   const componentFile = node.data.component ? await resolveComponentFile({ routerFile: node.data.file, component: node.data.component, cwd }) : undefined;
   const urlParamKeys = extractUrlParamKeys(node.fullUrl);
+  const models = buildPageModelsIndex(sources).get(node.data.name) ?? [];
   const result: ResolveUrlMatch = {
     kind: 'match',
     app,
@@ -426,50 +299,10 @@ async function buildMatch(input: BuildMatchInput): Promise<ResolveUrlMatch> {
     componentFile,
     ancestors,
     siblings,
-    urlParamKeys
+    urlParamKeys,
+    models
   };
   return result;
-}
-
-/**
- * Extracts param-name segments from a composed UIRouter URL. Recognises:
- * - `:name` (Express-style)
- * - `{name}` (UIRouter type-less)
- * - `{name:type}` and `{name:regex}` (UIRouter typed / regex)
- * Order is preserved; duplicates are de-duplicated by first occurrence.
- *
- * @param fullUrl - Composed URL (e.g. `/{orgId}/users/:userId`) or undefined.
- * @returns The param key list in declaration order, or an empty array.
- */
-function extractUrlParamKeys(fullUrl: string | undefined): readonly string[] {
-  if (fullUrl === undefined || fullUrl.length === 0) {
-    return [];
-  }
-  const seen = new Set<string>();
-  const keys: string[] = [];
-  for (const segment of fullUrl.split('/')) {
-    const key = extractParamKeyFromSegment(segment);
-    if (key !== undefined && !seen.has(key)) {
-      seen.add(key);
-      keys.push(key);
-    }
-  }
-  return keys;
-}
-
-function extractParamKeyFromSegment(segment: string): string | undefined {
-  if (segment.startsWith(':')) {
-    const key = segment.slice(1);
-    return key.length > 0 ? key : undefined;
-  }
-  if (segment.startsWith('{') && segment.endsWith('}')) {
-    const inner = segment.slice(1, -1);
-    const colonIdx = inner.indexOf(':');
-    const rawKey = colonIdx >= 0 ? inner.slice(0, colonIdx) : inner;
-    const key = rawKey.trim();
-    return key.length > 0 ? key : undefined;
-  }
-  return undefined;
 }
 
 function collectAncestors(node: RouteTreeNode): readonly RouteTreeNode[] {

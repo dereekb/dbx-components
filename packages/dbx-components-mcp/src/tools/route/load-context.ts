@@ -9,8 +9,7 @@
  */
 
 import { loadRouteSources } from './load-sources.js';
-import { loadRouteTree } from './index.js';
-import type { RouteSource, RouteTree } from './types.js';
+import { loadRouteTree, type RouteSource, type RouteTree } from '@dereekb/dbx-cli';
 import { toolError, type ToolResult } from '../types.js';
 
 /**

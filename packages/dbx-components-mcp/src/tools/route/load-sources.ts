@@ -14,8 +14,7 @@
 
 import { glob as fsGlob, readFile, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, resolve, sep } from 'node:path';
-import { computeRelativeSpecifiers } from './resolve.js';
-import type { RouteSource } from './types.js';
+import { computeRelativeSpecifiers, type RouteSource } from '@dereekb/dbx-cli';
 
 export interface LoadSourcesArgs {
   readonly sources: readonly RouteSource[] | undefined;

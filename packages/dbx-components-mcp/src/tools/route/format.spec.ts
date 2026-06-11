@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatRouteTree } from './format.js';
-import { loadRouteTree } from './index.js';
+import { loadRouteTree } from '@dereekb/dbx-cli';
 
 const SAMPLE_TEXT = `
 import { type Ng2StateDeclaration } from '@uirouter/angular';

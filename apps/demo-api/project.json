@@ -9,7 +9,7 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/demo-api"],
-      "dependsOn": ["generate-mcp-manifest"],
+      "dependsOn": ["generate-mcp-manifest", "generate-route-manifest"],
       "options": {
         "commands": [
           {
@@ -30,6 +30,16 @@
       "inputs": ["{workspaceRoot}/apps/demo-cli/src/lib/manifest/api.manifest.generated.ts", "{workspaceRoot}/components/demo-firebase/src/lib/auth/claims.ts", "{workspaceRoot}/dist/packages/dbx-cli/generate-mcp-manifest/main.js"],
       "options": {
         "command": "node dist/packages/dbx-cli/generate-mcp-manifest/main.js --input=apps/demo-cli/src/lib/manifest/api.manifest.generated.ts --claims-input=components/demo-firebase/src/lib/auth/claims.ts --app=demo-api --output=dist/apps/demo-api/mcp.manifest.json",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "generate-route-manifest": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/demo-api/route.manifest.json"],
+      "dependsOn": ["generate-mcp-manifest", { "projects": ["dbx-cli-generate-route-manifest"], "target": "build" }],
+      "inputs": ["{workspaceRoot}/apps/demo/src/**/*.ts", "{workspaceRoot}/dist/apps/demo-api/mcp.manifest.json", "{workspaceRoot}/dist/packages/dbx-cli/generate-route-manifest/main.js"],
+      "options": {
+        "command": "node dist/packages/dbx-cli/generate-route-manifest/main.js --src='apps/demo/src/**/*.ts' --app=demo --output=dist/apps/demo-api/route.manifest.json --models-input=dist/apps/demo-api/mcp.manifest.json",
         "cwd": "{workspaceRoot}"
       }
     },

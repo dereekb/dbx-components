@@ -7,6 +7,7 @@
     "dbx-cli-generate-firebase-api-manifest": "firebase-api-manifest/main.js",
     "dbx-cli-generate-firestore-indexes": "generate-firestore-indexes/main.js",
     "dbx-cli-generate-mcp-manifest": "generate-mcp-manifest/main.js",
+    "dbx-cli-generate-route-manifest": "generate-route-manifest/main.js",
     "dbx-cli-lint-cache": "lint-cache/main.js"
   },
   "exports": {
@@ -18,6 +19,9 @@
     },
     "./generate-mcp-manifest": {
       "default": "./generate-mcp-manifest/main.js"
+    },
+    "./generate-route-manifest": {
+      "default": "./generate-route-manifest/main.js"
     },
     "./lint-cache": {
       "default": "./lint-cache/main.js"

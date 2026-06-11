@@ -13,8 +13,9 @@
 
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
-import { type RouteTreeNode } from './route/index.js';
+import { type RouteManifestModelEntry, type RouteTreeNode } from '@dereekb/dbx-cli';
 import { loadRouteContext } from './route/load-context.js';
+import { buildPageModelsIndex, formatPageModelLine } from './route/page-models.js';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool definition
@@ -146,7 +147,15 @@ function fuzzyCandidates(query: string, byName: ReadonlyMap<string, RouteTreeNod
 }
 
 // MARK: Formatting
-function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string): string {
+interface FormatSingleInput {
+  readonly node: RouteTreeNode;
+  readonly depth: 'brief' | 'full';
+  readonly via: string;
+  readonly models: readonly RouteManifestModelEntry[];
+}
+
+function formatSingle(input: FormatSingleInput): string {
+  const { node, depth, via, models } = input;
   const urlText = node.fullUrl === undefined ? '_no url_' : code(node.fullUrl);
   const componentText = node.data.component === undefined ? '_no component_' : code(node.data.component);
   const lines: string[] = [`# ${node.data.name}`, '', `Matched via ${via}.`, '', `- **URL:** ${urlText}`, `- **Component:** ${componentText}`, `- **Defined in:** \`${node.data.file}:${node.data.line}\``];
@@ -164,6 +173,7 @@ function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string)
     return lines.join('\n');
   }
 
+  appendPageModelsSection(lines, models);
   appendParentChainSection(lines, node);
   appendKeyListSection(lines, 'Params', node.data.paramKeys);
   appendKeyListSection(lines, 'Resolves', node.data.resolveKeys);
@@ -172,6 +182,24 @@ function formatSingle(node: RouteTreeNode, depth: 'brief' | 'full', via: string)
 
   lines.push('', '→ See skill `dbx__ref__dbx-app-structure` for state composition patterns.');
   return lines.join('\n');
+}
+
+/**
+ * Appends the "Page models" section — the Firestore models the page renders,
+ * resolved the same way the build-time route manifest resolves them.
+ *
+ * @param lines - The markdown buffer being built.
+ * @param models - The flattened model bindings for the state.
+ */
+function appendPageModelsSection(lines: string[], models: readonly RouteManifestModelEntry[]): void {
+  lines.push('', '## Page models');
+  if (models.length === 0) {
+    lines.push('_None declared. Annotate the component class or state with `@dbxRouteModel` / `@dbxRouteModelList`._');
+    return;
+  }
+  for (const model of models) {
+    lines.push(formatPageModelLine(model));
+  }
 }
 
 /**
@@ -295,9 +323,11 @@ export async function runRouteLookup(rawArgs: unknown): Promise<ToolResult> {
       const match = resolveTopic(args.topic, tree.byName);
       let text: string;
       switch (match.kind) {
-        case 'single':
-          text = formatSingle(match.node, args.depth, match.via);
+        case 'single': {
+          const models = args.depth === 'full' ? (buildPageModelsIndex(ctx.sources).get(match.node.data.name) ?? []) : [];
+          text = formatSingle({ node: match.node, depth: args.depth, via: match.via, models });
           break;
+        }
         case 'group':
           text = formatGroup(match.title, match.nodes);
           break;

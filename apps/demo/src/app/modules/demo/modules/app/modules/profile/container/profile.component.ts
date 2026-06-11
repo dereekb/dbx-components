@@ -22,6 +22,11 @@ import { userAvatarUploadsFilePath } from 'demo-firebase';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxAppEnvironmentService, type DbxActionSuccessHandlerFunction } from '@dereekb/dbx-core';
 
+/**
+ * The signed-in user's own profile page.
+ *
+ * @dbxRouteModel profile {authUid} - The signed-in user's profile
+ */
 @Component({
   templateUrl: './profile.component.html',
   providers: [ProfileDocumentStore],

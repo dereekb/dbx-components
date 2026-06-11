@@ -5,17 +5,17 @@
  *
  *   1. {@link resolveRouteSources} — walks every supplied source and emits a
  *      flat node list. Used when the caller already gathered a glob/path set.
- *   2. {@link computeReachableSpecifiers} — given a starting source, returns
- *      the relative import specifiers it depends on. The tool wrapper uses
- *      this to walk the file tree off-disk.
+ *   2. {@link computeRelativeSpecifiers} — given a starting source, returns
+ *      the relative import specifiers it depends on. The off-disk loader uses
+ *      this to walk the file tree.
  *
- * The pure core never touches the file system — the tool wrapper does the
+ * The pure core never touches the file system — the caller does the
  * `readFile`-and-recurse loop, calling back into {@link extractFile} for each
  * file it loads.
  */
 
-import { extractFile } from './extract.js';
-import type { RouteIssue, RouteNode, RouteSource } from './types.js';
+import { extractFile } from './route-extract.js';
+import type { RouteIssue, RouteNode, RouteSource } from './route-types.js';
 
 export interface ResolvedSources {
   readonly nodes: readonly RouteNode[];

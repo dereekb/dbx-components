@@ -58,4 +58,35 @@ describe('dbx_route_lookup', () => {
     const result = await runRouteLookup({ topic: 'app.home', depth: 'brief', sources: [{ name: 'a.ts', text: SAMPLE_TEXT }] });
     expect(result.content[0].text).not.toContain('## Parent chain');
   });
+
+  it('renders the Page models section from a state-level @dbxRouteModelList tag', async () => {
+    const result = await runRouteLookup({ topic: 'app.guestbook', sources: [{ name: 'guestbook.router.ts', text: TAGGED_ROUTER }] });
+    expect(result.isError).toBeFalsy();
+    const text = result.content[0].text;
+    expect(text).toContain('## Page models');
+    expect(text).toContain('`guestbook` (list) — The published guestbooks');
+  });
+
+  it('shows "None declared" in Page models for an unannotated state', async () => {
+    const result = await runRouteLookup({ topic: 'app.home.profile', sources: [{ name: 'a.ts', text: SAMPLE_TEXT }] });
+    const text = result.content[0].text;
+    expect(text).toContain('## Page models');
+    expect(text).toContain('_None declared.');
+  });
+
+  it('omits the Page models section in brief depth', async () => {
+    const result = await runRouteLookup({ topic: 'app.guestbook', depth: 'brief', sources: [{ name: 'guestbook.router.ts', text: TAGGED_ROUTER }] });
+    expect(result.content[0].text).not.toContain('## Page models');
+  });
 });
+
+const TAGGED_ROUTER = `
+import { type Ng2StateDeclaration } from '@uirouter/angular';
+
+/**
+ * @dbxRouteModelList guestbook - The published guestbooks
+ */
+export const LIST_STATE: Ng2StateDeclaration = { name: 'app.guestbook', url: '/guestbook' };
+
+export const STATES: Ng2StateDeclaration[] = [LIST_STATE];
+`;

@@ -10,12 +10,14 @@ import { ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerSto
 import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIONS, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
+import { ROUTE_MANIFEST_VERSION, type RouteManifest } from './mcp.route-manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, type McpToolDefinition, type McpToolGenerationNamingOptions, type McpToolGenerationResult, type McpToolGenerationSkip, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
 import { createWhoamiTool } from './tools/mcp.tool.whoami';
+import { createUrlModelsTool } from './tools/mcp.tool.url-models';
 import { createBatchExecuteTool, batchOperationCoordKey, type BatchOperationAuthorization } from './tools/mcp.tool.batch-execute';
 
 /**
@@ -46,6 +48,8 @@ export class McpServerFactoryService {
   private _cachedManifest: ReadonlyMap<string, McpManifestToolEntry> | undefined;
   private _cachedManifestModels: ReadonlyArray<McpManifestModelEntry> | undefined;
   private _cachedManifestAuth: McpManifestAuth | undefined;
+  private _cachedRouteManifest: RouteManifest | undefined;
+  private _routeManifestLoaded = false;
   private _manifestLoaded = false;
   private _loggedSkips = false;
   private _warnedMissingRoleReader = false;
@@ -243,6 +247,20 @@ export class McpServerFactoryService {
             resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth)
           })
         );
+
+        // `url-models` reuses the model-get read/identity path, so it is only offered when the get
+        // service is wired AND a route manifest with at least one state was loaded.
+        const routeManifest = this._resolveRouteManifest();
+
+        if (routeManifest != null && routeManifest.states.length > 0) {
+          staticTools.push(
+            createUrlModelsTool({
+              routeManifest,
+              readDocuments: (modelType, keys, auth) => getService.readDocuments(modelType, keys, auth),
+              resolveIdentity: (modelType, auth) => getService.getModelIdentity(modelType, auth)
+            })
+          );
+        }
       }
 
       const modelManifest = this._cachedManifestModels;
@@ -365,6 +383,51 @@ export class McpServerFactoryService {
     this._cachedManifest = undefined;
     this._cachedManifestModels = undefined;
     this._cachedManifestAuth = undefined;
+  }
+
+  /**
+   * Reads the pre-rendered route manifest JSON once, validates its version, and caches the result
+   * for the process lifetime. Drives whether the built-in `url-models` static tool is registered.
+   *
+   * Missing file or wrong version fall back to "no route manifest" with a single boot warning;
+   * the `url-models` tool is then simply not offered.
+   *
+   * @returns The cached route manifest, or `undefined` when none was loaded.
+   */
+  private _resolveRouteManifest(): RouteManifest | undefined {
+    if (!this._routeManifestLoaded) {
+      this._routeManifestLoaded = true;
+      const path = this.mcpConfig.mcpRouteManifestPath;
+
+      if (path == null) {
+        this._cachedRouteManifest = undefined;
+      } else if (existsSync(path)) {
+        this._parseRouteManifestFile(path);
+      } else {
+        this._logger.warn(`MCP route manifest path is set but the file is missing: ${path}. The url-models tool will not be registered.`);
+        this._cachedRouteManifest = undefined;
+      }
+    }
+
+    return this._cachedRouteManifest;
+  }
+
+  private _parseRouteManifestFile(path: string): void {
+    try {
+      const raw = readFileSync(path, 'utf8');
+      const parsed = JSON.parse(raw) as RouteManifest;
+
+      if (parsed.version === ROUTE_MANIFEST_VERSION) {
+        this._cachedRouteManifest = parsed;
+        this._logger.log(`Loaded MCP route manifest from ${path}: ${parsed.states.length} states.`);
+      } else {
+        this._logger.warn(`MCP route manifest version mismatch at ${path}: got ${String(parsed.version)}, expected ${ROUTE_MANIFEST_VERSION}. The url-models tool will not be registered.`);
+        this._cachedRouteManifest = undefined;
+      }
+    } catch (error) {
+      this._logger.warn(`Failed to read MCP route manifest at ${path}: ${(error as Error).message}. The url-models tool will not be registered.`);
+      this._cachedRouteManifest = undefined;
+    }
   }
 
   private _parseManifestFile(path: string): void {

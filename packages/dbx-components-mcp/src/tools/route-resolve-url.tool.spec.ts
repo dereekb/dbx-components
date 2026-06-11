@@ -77,7 +77,10 @@ const UPLOAD_COMPONENT = `export class DocInteractionUploadComponent {}
 const LAYOUT_COMPONENT = `export class DocInteractionLayoutComponent {}
 `;
 
-const PROFILE_COMPONENT = `export class ProfilePageComponent {}
+const PROFILE_COMPONENT = `/**
+ * @dbxRouteModel profile :id - The profile being viewed
+ */
+export class ProfilePageComponent {}
 `;
 
 const DEEP_COMPONENT = `export class DeepNestedComponent {}
@@ -188,6 +191,26 @@ describe('dbx_route_resolve_url', () => {
     expect(text).toContain('## URL params (extracted)');
     expect(text).toContain('`id` = `123`');
     expect(text).toContain('## URL path params');
+  });
+
+  it('renders the Page models section from component @dbxRouteModel tags', async () => {
+    const result = await runRouteResolveUrl({ url: 'http://localhost:9010/interaction/profile/123' });
+    const text = result.content[0].text;
+    expect(text).toContain('## Page models');
+    expect(text).toContain('`profile` (id) `:id` — The profile being viewed');
+  });
+
+  it('shows "None declared" in Page models for an unannotated page', async () => {
+    const result = await runRouteResolveUrl({ url: 'http://localhost:9010/interaction/upload' });
+    const text = result.content[0].text;
+    expect(text).toContain('## Page models');
+    expect(text).toContain('_None declared.');
+  });
+
+  it('includes the resolved models[] in JSON output', async () => {
+    const result = await runRouteResolveUrl({ url: 'http://localhost:9010/interaction/profile/123', format: 'json' });
+    const parsed = JSON.parse(result.content[0].text) as { models: ReadonlyArray<{ modelType: string; kind: string; keyTemplate?: string }> };
+    expect(parsed.models).toEqual([{ modelType: 'profile', kind: 'id', keyTemplate: ':id', description: 'The profile being viewed' }]);
   });
 
   it('captures `:` and `{name:type}` params from the composed URL', async () => {
