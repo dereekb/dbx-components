@@ -13,7 +13,7 @@ import { type DbxProgressButtonGlobalConfig, DBX_PROGRESS_BUTTON_GLOBAL_CONFIG }
  * bootstrapApplication(AppComponent, {
  *   providers: [
  *     provideDbxProgressButtonGlobalConfig([
- *       { id: 'primary-save', buttonType: 'raised', buttonColor: 'primary' }
+ *       { id: 'primary-save', buttonType: 'raised', spinnerColor: 'primary' }
  *     ])
  *   ]
  * });

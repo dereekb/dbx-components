@@ -1,4 +1,5 @@
 @use '../../style/theming';
+@use '../style/style';
 
 // MARK: Variables
 $icon-spacing: var(--dbx-padding-2);
@@ -216,6 +217,21 @@ $dbx-step-block-badge-font-weight: 600;
     }
   }
 
+  // Colored tile surface. `[dbxColor]` only provides the color tokens (and the
+  // `.dbx-color` marker); the tile itself paints from them here, scoped on the
+  // marker so a tile inside a `[dbxColor]` page section doesn't repaint from
+  // inherited tokens. Mirrors the `mat-card.dbx-color` model.
+  // `:not(.dbx-default)` guard: `[dbxColor]` always adds the `.dbx-color` marker,
+  // and a nullish color resolves to the `dbx-default` token class (which sets no
+  // `--dbx-bg-color-current`), so the guard keeps an uncolored tile from painting.
+  .dbx-icon-tile.dbx-color:not(.dbx-default) {
+    @include style.dbx-color-surface();
+
+    &.dbx-color-tonal {
+      color: var(#{theming.$dbx-bg-color-var});
+    }
+  }
+
   // Round modifier — turns the rounded-square tile into a circle. Pair
   // with explicit width/height (or square content) to keep it true round.
   /// @dbx-utility icon-tile-round
@@ -330,6 +346,21 @@ $dbx-step-block-badge-font-weight: 600;
   /// @see-also chip-margin, icon-spacer
   .dbx-chip-spacer {
     margin-right: $chip-spacing;
+  }
+
+  // Colored chip surface. `<dbx-chip>` hosts a DbxColorDirective that supplies the
+  // color tokens (named `dbx-{color}-bg` token class or inline config vars) and the
+  // `.dbx-color` marker; the chip directive supplies `--dbx-color-bg-tone` (default
+  // 18 → tonal). Painting happens here from those tokens. `:not(.dbx-default)`
+  // guard: the host directive always adds the `.dbx-color` marker, so an uncolored
+  // chip (marked `dbx-default`) must not paint. `.dbx-color-tonal` (tone < 100)
+  // flips the text to the vibrant color.
+  .dbx-chip.dbx-color:not(.dbx-default) {
+    @include style.dbx-color-surface(18%);
+
+    &.dbx-color-tonal {
+      color: var(#{theming.$dbx-bg-color-var});
+    }
   }
 
   .dbx-chip.dbx-chip-small {
@@ -451,6 +482,13 @@ $dbx-step-block-badge-font-weight: 600;
     .dbx-number-with-limit-divider {
       margin: 0 3px;
     }
+  }
+
+  // `<dbx-number-with-limit>` applies a ratio-derived `[dbxColor]` (ok/notice/warn)
+  // to itself; paint the colored pill from those tokens. The `:not(.dbx-default)`
+  // guard keeps the no-limit (uncolored) state from painting.
+  .dbx-number-with-limit.dbx-color:not(.dbx-default) {
+    @include style.dbx-color-surface();
   }
 
   .dbx-number-with-limit-rounded {

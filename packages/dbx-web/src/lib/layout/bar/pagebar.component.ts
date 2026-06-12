@@ -1,11 +1,11 @@
-import { Component, input, ChangeDetectionStrategy, computed } from '@angular/core';
-import { type Maybe } from '@dereekb/util';
-import { type DbxBarColor } from './bar';
-import { NgClass } from '@angular/common';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MatToolbarModule } from '@angular/material/toolbar';
 
 /**
  * A page-level toolbar with left and right content slots, built on Angular Material's mat-toolbar.
+ *
+ * To give it a themed background apply `[dbxColor]` directly on the host — the inner `mat-toolbar` maps its
+ * `--mat-toolbar-*` colors to the inherited tokens via the `dbx-pagebar.dbx-color mat-toolbar` SCSS.
  *
  * @dbxWebComponent
  * @dbxWebSlug pagebar
@@ -18,7 +18,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
  *
  * @example
  * ```html
- * <dbx-pagebar>
+ * <dbx-pagebar dbxColor="primary">
  *   <h2>Settings</h2>
  *   <span class="spacer"></span>
  *   <button mat-stroked-button>Save</button>
@@ -28,21 +28,14 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 @Component({
   selector: 'dbx-pagebar',
   template: `
-    <mat-toolbar class="dbx-pagebar dbx-flex-bar" [ngClass]="cssClassSignal()">
+    <mat-toolbar class="dbx-pagebar dbx-flex-bar">
       <ng-content select="[left]"></ng-content>
       <span class="spacer"></span>
       <ng-content select="[right]"></ng-content>
     </mat-toolbar>
   `,
-  imports: [NgClass, MatToolbarModule],
+  imports: [MatToolbarModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
-export class DbxPagebarComponent {
-  readonly color = input<Maybe<DbxBarColor>>();
-
-  readonly cssClassSignal = computed(() => {
-    const color = this.color();
-    return color ? `dbx-bar-${color}` : '';
-  });
-}
+export class DbxPagebarComponent {}

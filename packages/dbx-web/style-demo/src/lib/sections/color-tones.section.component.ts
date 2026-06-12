@@ -31,11 +31,11 @@ import { DbxDocsUiExampleComponent, DbxDocsUiExampleContentComponent, DbxDocsUiE
         <div dbxFlexGroup>
           @for (color of colors; track color) {
             <div [dbxFlexSize]="3">
-              <div class="dbx-p3 dbx-mb1" [dbxColor]="color">
+              <div class="dbx-p3 dbx-mb1 dbx-color-bg" [dbxColor]="color">
                 <span class="dbx-text-label-large">{{ color }}</span>
               </div>
               @for (tone of tones; track tone) {
-                <div class="dbx-p3 dbx-mb1" [dbxColor]="color" [dbxColorTone]="tone">
+                <div class="dbx-p3 dbx-mb1 dbx-color-bg" [dbxColor]="color" [dbxColorTone]="tone">
                   <span class="dbx-text-label-large">{{ color }} · tone {{ tone }}</span>
                 </div>
               }

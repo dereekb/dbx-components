@@ -1,7 +1,7 @@
-import { Directive, computed, inject, input } from '@angular/core';
+import { Directive, computed, effect, inject, input, untracked } from '@angular/core';
 import { type LabeledValue, type Maybe } from '@dereekb/util';
-import { type DbxColorConfig, type DbxColorInput, type DbxColorTone, dbxColorBackground, isDbxColorConfig } from '../style/style';
-import { DbxColorService } from '../style/style.color.service';
+import { type DbxColorInput, type DbxColorTone } from '../style/style';
+import { DbxColorDirective } from '../style/style.color.directive';
 
 /**
  * Display configuration for a single colored chip.
@@ -39,6 +39,11 @@ export const DEFAULT_DBX_CHIP_TONE = 18;
 /**
  * Renders a styled chip element with optional small, block, and color modes.
  *
+ * Hosts a {@link DbxColorDirective} that provides the color tokens + `.dbx-color` marker the chip's
+ * `.dbx-chip.dbx-color` SCSS paints from. The color can be supplied either through the {@link color}/{@link display}
+ * inputs (pushed into the host directive) or by binding `[dbxColor]` directly; the chip's tone handling (default
+ * {@link DEFAULT_DBX_CHIP_TONE} → tonal text) applies to both.
+ *
  * @dbxWebComponent
  * @dbxWebSlug chip
  * @dbxWebCategory text
@@ -60,20 +65,42 @@ export const DEFAULT_DBX_CHIP_TONE = 18;
     class: 'dbx-chip',
     '[class]': 'styleSignal()',
     '[class.dbx-color-tonal]': 'isTonalSignal()',
-    '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()',
-    '[style.--dbx-bg-color-current]': 'bgColorStyleSignal()',
-    '[style.--dbx-color-current]': 'colorStyleSignal()'
+    '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()'
   },
+  hostDirectives: [DbxColorDirective],
   standalone: true
 })
 export class DbxChipDirective {
-  private readonly _colorService = inject(DbxColorService, { optional: true });
+  private readonly _dbxColorDirective = inject(DbxColorDirective, { self: true });
+
+  constructor() {
+    let originalColor: Maybe<DbxColorInput>;
+    let overridden = false;
+
+    // Pushes the chip's resolved color (color input > display config) into the host DbxColorDirective so it stays the
+    // single token provider on the element. The directive's own value is restored once the chip stops supplying a color.
+    effect(() => {
+      const color = this.colorSignal();
+
+      if (color != null) {
+        if (!overridden) {
+          originalColor = untracked(this._dbxColorDirective.dbxColor);
+          overridden = true;
+        }
+
+        this._dbxColorDirective.dbxColor.set(color);
+      } else if (overridden) {
+        this._dbxColorDirective.dbxColor.set(originalColor);
+        overridden = false;
+      }
+    });
+  }
 
   readonly small = input<Maybe<boolean>>();
   readonly block = input<Maybe<boolean>>();
 
   /**
-   * Theme color or {@link DbxColorConfig} applied to the chip background via {@link dbxColorBackground}.
+   * Theme color or {@link DbxColorConfig} applied to the chip, pushed into the host {@link DbxColorDirective}.
    *
    * When {@link display} is also set, its color is used as a fallback.
    */
@@ -96,32 +123,21 @@ export class DbxChipDirective {
     return this.color() ?? display?.color;
   });
 
-  private readonly _configSignal = computed<Maybe<DbxColorConfig>>(() => {
-    const value = this.colorSignal();
-    return isDbxColorConfig(value) ? (this._colorService?.expandColorConfig(value) ?? value) : undefined;
-  });
-
   /**
-   * Inline `--dbx-bg-color-current` value applied when a {@link DbxColorConfig} is bound. Resolves to `null` for named-color strings so the named `.dbx-{color}-bg` class supplies the variable instead.
+   * The effective color on the host {@link DbxColorDirective} — either pushed from {@link colorSignal} or bound
+   * directly via `[dbxColor]`. Drives the chip's tone/tonal handling.
    */
-  readonly bgColorStyleSignal = computed(() => this._configSignal()?.color ?? null);
-
-  /**
-   * Inline `--dbx-color-current` value applied when a {@link DbxColorConfig} is bound. Resolves to `null` for named-color strings.
-   */
-  readonly colorStyleSignal = computed(() => this._configSignal()?.contrast ?? null);
+  readonly effectiveColorSignal = computed(() => this._dbxColorDirective.dbxColor());
 
   readonly toneSignal = computed(() => {
     const display = this.display();
-    const _config = this._configSignal();
-    return this.tone() ?? display?.tone ?? _config?.tone ?? DEFAULT_DBX_CHIP_TONE;
+    return this.tone() ?? display?.tone ?? this._dbxColorDirective.effectiveToneSignal() ?? DEFAULT_DBX_CHIP_TONE;
   });
 
   readonly styleSignal = computed(() => {
     const display = this.display();
     const small = this.small() ?? display?.small;
     const block = this.block() ?? display?.block;
-    const color = this.colorSignal();
 
     let style = small ? 'dbx-chip-small' : '';
 
@@ -129,20 +145,16 @@ export class DbxChipDirective {
       style = style + ' dbx-chip-block';
     }
 
-    if (color) {
-      style = style + ' ' + dbxColorBackground(color);
-    }
-
     return style;
   });
 
   /**
-   * Sets `--dbx-color-bg-tone` on the host to control the background opacity via `color-mix` in the `-bg` class mixin.
+   * Sets `--dbx-color-bg-tone` on the host to control the background opacity of the painted chip surface.
    * Only applied when a color is set.
    */
   readonly bgToneStyleSignal = computed(() => {
     const tone = this.toneSignal();
-    const color = this.colorSignal();
+    const color = this.effectiveColorSignal();
 
     if (color) {
       return `${tone}%`;
@@ -158,7 +170,7 @@ export class DbxChipDirective {
    */
   readonly isTonalSignal = computed(() => {
     const tone = this.toneSignal();
-    const color = this.colorSignal();
+    const color = this.effectiveColorSignal();
     return Boolean(color) && tone < 100;
   });
 }

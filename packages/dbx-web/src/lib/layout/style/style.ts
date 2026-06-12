@@ -322,7 +322,14 @@ export const DBX_COLOR_CUSTOM_BG_CSS_CLASS: CssClass = 'dbx-color-bg';
 export const DBX_COLOR_CUSTOM_TEXT_CSS_CLASS: CssClass = 'dbx-color-text';
 
 /**
- * Returns the CSS class name for a themed background color.
+ * Returns the token-providing CSS class name for a themed background color.
+ *
+ * Under the token-only contract the returned `dbx-{color}-bg` classes declare the `--dbx-bg-color-current` /
+ * `--dbx-color-current` custom properties but paint nothing on their own — painting is performed by the
+ * `.dbx-color-bg` utility (or a `.dbx-color`-scoped component) reading those tokens. For named colors this returns the
+ * `dbx-{color}-bg` token class; for a {@link DbxColorConfig} it returns {@link DBX_COLOR_CUSTOM_BG_CSS_CLASS} so static
+ * (non-directive) callers still paint, while the `[dbxColor]` directive itself bypasses this for configs and supplies the
+ * tokens through inline style bindings instead.
  *
  * @param color - The theme color, color config, or nullish/empty for the default class.
  * @returns The CSS class name for the themed background (e.g., `'dbx-primary-bg'`, `'dbx-color-bg'`, or `'dbx-default'`)

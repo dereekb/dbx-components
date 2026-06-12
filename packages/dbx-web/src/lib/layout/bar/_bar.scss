@@ -1,4 +1,5 @@
 @use '../../style/theming';
+@use '../style/style';
 
 // MARK: Variables
 $pagebar-height-var: theming.$page-navbar-height-var;
@@ -36,6 +37,33 @@ $bar-fixed-height: 40px;
     color: var(--mat-sys-on-surface);
   }
 
+  // Colored bar surface. `[dbxColor]` on the host provides the tokens + the
+  // `.dbx-color` marker; the bar paints from them here, scoped on the marker so
+  // a bar nested inside a `[dbxColor]` section doesn't repaint from inherited
+  // tokens. Mirrors the `mat-card.dbx-color` model.
+  // `:not(.dbx-default)` guard: `[dbxColor]` always adds the `.dbx-color` marker,
+  // and a nullish color resolves to the `dbx-default` token class (no
+  // `--dbx-bg-color-current`), so the guard keeps an uncolored bar from painting.
+  .dbx-bar.dbx-color:not(.dbx-default) {
+    @include style.dbx-color-surface();
+
+    &.dbx-color-tonal {
+      color: var(#{theming.$dbx-bg-color-var});
+    }
+  }
+
+  // `<dbx-bar-header>` forwards a host-level `[dbxColor]` down to its inner
+  // `<dbx-bar>`: the `.dbx-color` marker + tokens land on the header host (tokens
+  // inherit), so paint the inner bar here. Scoped on the header marker so only a
+  // directly-colored header paints.
+  .dbx-bar-header.dbx-color:not(.dbx-default) .dbx-bar {
+    @include style.dbx-color-surface();
+  }
+
+  .dbx-bar-header.dbx-color.dbx-color-tonal:not(.dbx-default) .dbx-bar {
+    color: var(#{theming.$dbx-bg-color-var});
+  }
+
   /// @dbx-utility bar-background
   /// @intent paint a `.dbx-bar` with the `--mat-sys-surface-container` background
   /// @role layout
@@ -55,9 +83,20 @@ $bar-fixed-height: 40px;
   }
 
   // MARK: Bar Colors
-  // Color classes applied by DbxPagebarComponent based on the color input.
+  // Colored pagebar surface. `[dbxColor]` on the `<dbx-pagebar>` /
+  // `<dbx-sidenav-pagebar>` host provides the tokens + the `.dbx-color` marker
+  // (tokens inherit); map the inner `mat-toolbar`'s Material color tokens to them.
+  // Scoped on the host marker so only a directly-colored pagebar paints.
+  dbx-pagebar.dbx-color mat-toolbar,
+  dbx-sidenav-pagebar.dbx-color mat-toolbar {
+    --mat-toolbar-container-background-color: color-mix(in srgb, var(#{theming.$dbx-bg-color-var}) var(#{theming.$dbx-bg-tone-var}, 100%), transparent);
+    --mat-toolbar-container-text-color: var(#{theming.$dbx-color-var});
+  }
+
+  // DEPRECATED back-compat: the `.dbx-bar-{color}` classes were previously applied
+  // by `DbxPagebarComponent`'s `color` input (now removed in favor of `[dbxColor]`).
+  // Kept for downstream templates that still apply them directly.
   // Uses Material toolbar CSS tokens for background and text color.
-  // Background uses color-mix with surface-container for consistent dark-mode contrast.
   /// @dbx-utility bar-primary
   /// @intent paint a `mat-toolbar`/`.dbx-pagebar` with the `--dbx-primary-color` palette via Material's toolbar tokens
   /// @role layout

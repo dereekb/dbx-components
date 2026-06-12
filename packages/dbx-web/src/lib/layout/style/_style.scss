@@ -160,20 +160,24 @@
     @include define-dbx-color-class($color, map.get($colorConfig, 'color'), map.get($colorConfig, 'contrast'));
   }
 
-  // tonal mode: use the vibrant theme color as text instead of the contrast color.
-  // Applied via CSS class (not [style.color]) to avoid conflicting with [ngStyle] on buttons.
-  /// @dbx-utility color-tonal
-  /// @intent paint text with the vibrant `--dbx-bg-color` (tonal mode) instead of the contrast color — pair with `[dbxColor]` + `[dbxColorTone]` for the muted background variant
-  /// @role state
-  .dbx-color-tonal {
-    color: var(#{theming.$dbx-bg-color-var});
-  }
-
   /// @dbx-utility color-bg
-  /// @intent generic themed-background class — pair with `[dbxColor]="config"` to drive `--dbx-bg-color-current` / `--dbx-color-current` from arbitrary CSS color values
+  /// @intent the painting utility — paints `background` (a `color-mix` of `--dbx-bg-color-current` with `--dbx-color-bg-tone`) plus the contrast `color` from `--dbx-color-current`. Pair with `[dbxColor]` (or a static `dbx-{color}-bg` token class) on the same element to supply those tokens. `[dbxColor]` itself never paints; this class (or a component's own `.dbx-color`-scoped SCSS) is what turns the tokens into a visible surface.
   /// @role color
+  /// @see-also color-text, color-tonal
   .dbx-color-bg {
     @include dbx-color-bg-body();
+  }
+
+  // tonal mode: use the vibrant theme color as text instead of the contrast color.
+  // Applied via CSS class (not [style.color]) to avoid conflicting with [ngStyle] on buttons.
+  // Declared after `.dbx-color-bg` so the tonal `color:` wins the same-specificity
+  // cascade when both classes are present on the painted surface.
+  /// @dbx-utility color-tonal
+  /// @intent paint text with the vibrant `--dbx-bg-color` (tonal mode) instead of the contrast color — pair with `.dbx-color-bg` + `[dbxColor]` + `[dbxColorTone]` for the muted background variant
+  /// @role state
+  /// @see-also color-bg
+  .dbx-color-tonal {
+    color: var(#{theming.$dbx-bg-color-var});
   }
 
   /// @dbx-utility color-text
@@ -206,6 +210,19 @@
   color: #{theming.$dbx-color};
 }
 
+// Paints a colored surface from the inherited dbx color tokens
+// (`--dbx-bg-color-current` / `--dbx-color-current` / `--dbx-color-bg-tone`).
+// Unlike `dbx-color-bg-body`, the tone fallback lives inside the `var(...)`
+// rather than being declared as a property, so the surface does not leak an
+// inheritable `--dbx-color-bg-tone` to nested elements. Scope this on a
+// `.dbx-color` marker (the model is `mat-card.dbx-color` in `_card.scss`) so
+// only hosts directly marked with `[dbxColor]` repaint — token inheritance
+// alone never triggers a repaint.
+@mixin dbx-color-surface($default-bg-tone: 100%) {
+  background: color-mix(in srgb, #{theming.$dbx-bg-color} var(#{theming.$dbx-bg-tone-var}, #{$default-bg-tone}), transparent);
+  color: #{theming.$dbx-color};
+}
+
 @mixin define-dbx-color-class($name, $color, $contrast, $swap-bg: false) {
   .dbx-#{$name} {
     #{theming.$dbx-color-var}: #{$color};
@@ -215,10 +232,12 @@
   $bg-color: if($swap-bg, $contrast, $color);
   $bg-text: if($swap-bg, $color, $contrast);
 
+  // Token-only: a `-bg` class declares the color tokens but paints nothing.
+  // Painting happens via the `.dbx-color-bg` utility or a component's own
+  // `.dbx-color`-scoped SCSS reading these tokens.
   .dbx-#{$name}-bg {
     #{theming.$dbx-color-var}: #{$bg-text};
     #{theming.$dbx-bg-color-var}: #{$bg-color};
-    @include dbx-color-bg-body();
   }
 }
 

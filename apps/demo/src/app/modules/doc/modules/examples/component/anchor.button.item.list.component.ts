@@ -58,7 +58,7 @@ export class DocAnchorButtonItemListViewComponent extends AbstractDbxSelectionLi
   selector: 'doc-anchor-button-item-list-view-item',
   template: `
     <div class="dbx-list-item-padded-thick dbx-list-two-line-item dbx-list-two-line-item-with-icon">
-      <dbx-icon-tile class="item-icon" [icon]="icon" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+      <dbx-icon-tile class="item-icon" [icon]="icon" dbxColor="primary" [dbxColorTone]="18"></dbx-icon-tile>
       <div class="item-left">
         <span class="dbx-text-title-medium dbx-pb1">{{ title }}</span>
         <span class="item-details dbx-pb2">{{ progress }} of {{ total }} complete</span>

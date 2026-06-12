@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { DbxContentContainerDirective, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, DbxColorDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   templateUrl: './sidenav.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, MatButtonModule, MatIconModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, MatButtonModule, MatIconModule, DbxColorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `

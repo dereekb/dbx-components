@@ -269,9 +269,9 @@
         "button icon color",
         "button icon color text"
       ],
-      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `currentColor`.",
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `#{$color-value}`.",
       "defaults": {
-        "light": "currentColor"
+        "light": "#{$color-value}"
       },
       "componentScope": "button"
     },

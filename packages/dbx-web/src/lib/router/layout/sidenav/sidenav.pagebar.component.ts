@@ -11,7 +11,7 @@ import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directiv
  *
  * @example
  * ```html
- * <dbx-sidenav-pagebar sidenavMenuIcon="menu" color="primary">
+ * <dbx-sidenav-pagebar sidenavMenuIcon="menu" dbxColor="primary">
  *   <span left>Left Content</span>
  *   <span>Right Content</span>
  * </dbx-sidenav-pagebar>
@@ -20,7 +20,7 @@ import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directiv
 @Component({
   selector: 'dbx-sidenav-pagebar',
   template: `
-    <dbx-pagebar class="dbx-sidenav-pagebar" [color]="color()">
+    <dbx-pagebar class="dbx-sidenav-pagebar">
       <span left>
         <dbx-sidenav-button [sidenavMenuIcon]="sidenavMenuIcon()"></dbx-sidenav-button>
         <dbx-button-spacer></dbx-button-spacer>

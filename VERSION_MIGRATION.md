@@ -3,10 +3,18 @@
 ### Overview
 Version 14 is a **breaking visual** release for `@dereekb/dbx-web` and `@dereekb/dbx-form`. It
 burns down the M2-era visual technical debt that prior passes deliberately preserved, leaning the
-component defaults onto Angular Material **M3** system tokens (`--mat-sys-*`). There are no API
-(TypeScript) breaking changes here — the breaks are in the emitted CSS and in two SCSS mixin /
-host-class contracts. Apps that adopt v14 will see shapes, dividers, and chips render differently
-unless they opt back in (see below).
+component defaults onto Angular Material **M3** system tokens (`--mat-sys-*`). Apps that adopt v14
+will see shapes, dividers, and chips render differently unless they opt back in (see below).
+
+v14 also **refactors the dbx color system**: the `.dbx-{color}-bg` classes and the `[dbxColor]`
+directive become token providers only (they no longer paint `background`/`color`), painting moves to
+the explicit `.dbx-color-bg`/`.dbx-color-text` utilities or to the components themselves, and the
+`color` passthrough inputs on `dbx-loading`, `dbx-bar`, `dbx-pagebar`, `dbx-sidenav-*`, and friends
+were **removed** in favor of applying `[dbxColor]` directly on the component. `dbx-button`,
+`dbx-chip`, and `dbx-step-block` **keep** their `color` inputs — button and chip now host a
+`DbxColorDirective` internally and push their resolved color into it (so do not apply `[dbxColor]`
+to them). This part of the release IS API (TypeScript) breaking — see the dedicated guide in
+[`packages/dbx-web/COLOR_MIGRATION.md`](packages/dbx-web/COLOR_MIGRATION.md).
 
 A full, per-rule before/after ledger lives in
 [`packages/dbx-web/VISUAL_CHANGES.md`](packages/dbx-web/VISUAL_CHANGES.md). To preview the new look
@@ -21,6 +29,21 @@ under your own theme before upgrading, mount the `<dbx-style-demo>` showcase (fr
 - **`.dbx-chip` no longer emits the fake `mat-standard-chip` class** and its default corner radius
   changed from a full pill to the M3 "small" corner (`--mat-sys-corner-small`). The chip layout rules
   merged into the base `.dbx-chip` class. See the chip entry in `VISUAL_CHANGES.md`.
+- **`.dbx-{color}-bg` classes no longer paint** — they only set `--dbx-bg-color-current` /
+  `--dbx-color-current`. Pair them with `dbx-color-bg` to keep a painted background. Plain
+  `.dbx-{color}` text classes are unchanged.
+- **`[dbxColor]` no longer paints plain elements** — it provides tokens + the `.dbx-color` marker;
+  add `dbx-color-bg` on generic elements that relied on the painted background. dbx components paint
+  themselves from the tokens.
+- **Removed color passthrough inputs** (`color` on `dbx-loading`/`dbx-basic-loading`/
+  `dbx-loading-progress`/`dbx-bar`/`dbx-bar-header`/`dbx-pagebar`/`dbx-sidenav`/`dbx-sidenav-page`/
+  `dbx-sidenav-pagebar`, and `buttonColor` on `DbxProgressButtonConfig`). Apply `[dbxColor]`
+  directly on the component element instead. **Not removed:** `color` on `dbx-button`, `dbx-chip`,
+  and `dbx-step-block` — button and chip host a `DbxColorDirective` (via `hostDirectives`) and push
+  their resolved color (including `DbxButtonEcho.color`) into it; applying `[dbxColor]` to
+  `dbx-button`/`dbx-chip` now throws `NG0309` (duplicate directive).
+- **`<dbx-loading>` no longer defaults to `'primary'`** — uncolored loading indicators use the
+  Material default indicator color.
 
 ### Migration Steps
 - **Replace `@include dbx.m2-visual-compat();`** in your theme mixin(s) with one of:
@@ -34,6 +57,11 @@ under your own theme before upgrading, mount the `<dbx-style-demo>` showcase (fr
   targeted `.mat-standard-chip` in your own CSS to style dbx chips, retarget `.dbx-chip`.
 - Review `packages/dbx-web/VISUAL_CHANGES.md` for the remaining color/divider/typography deltas;
   none require code changes but they do change rendering.
+- Follow [`packages/dbx-web/COLOR_MIGRATION.md`](packages/dbx-web/COLOR_MIGRATION.md) for the color
+  system refactor: grep recipes for finding static `dbx-{color}-bg` usages (append `dbx-color-bg`),
+  removed `color` inputs (rename to `dbxColor`), and `[dbxColor]` on plain painted elements (add
+  `dbx-color-bg`), plus the scoped `.dbx-color` SCSS pattern for making your own components respond
+  to an external `[dbxColor]`.
 
 ## Migration of v11.x.x to v12.x.x
 ### Overview

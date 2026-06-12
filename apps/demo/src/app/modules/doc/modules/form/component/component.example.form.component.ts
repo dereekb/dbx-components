@@ -46,7 +46,7 @@ export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFor
 @Component({
   template: `
     <div class="dbx-p3">
-      <dbx-content-box class="dbx-primary-bg">
+      <dbx-content-box class="dbx-primary-bg dbx-color-bg">
         <dbx-section header="A" [hint]="lorem">
           <p>Data injected from configuration: {{ injectedData }}</p>
         </dbx-section>

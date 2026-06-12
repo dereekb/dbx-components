@@ -1,6 +1,6 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { type DbxButtonEcho, cleanSubscription } from '@dereekb/dbx-core';
-import { type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent } from '@dereekb/dbx-web';
+import { type DbxProgressButtonConfig, DbxContentContainerDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxColorDirective, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent } from '@dereekb/dbx-web';
 import { type Milliseconds } from '@dereekb/util';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
@@ -16,7 +16,7 @@ const DEMO_SPINNER_TIME: Milliseconds = 3350;
 @Component({
   templateUrl: './button.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, MatButtonModule, MatFormFieldModule, MatInputModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, MatIcon, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent],
+  imports: [DbxContentContainerDirective, MatButtonModule, MatFormFieldModule, MatInputModule, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxColorDirective, MatIcon, DocFeatureDerivedComponent, DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, DbxContentPitDirective, DbxAnchorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionButtonComponent {
@@ -42,7 +42,6 @@ export class DocInteractionButtonComponent {
   demoButton1: DbxProgressButtonConfig = {
     id: 'button1',
     text: 'Stroked Button',
-    buttonColor: 'accent',
     barColor: 'accent',
     buttonType: 'stroked',
     mode: 'indeterminate',
@@ -57,7 +56,6 @@ export class DocInteractionButtonComponent {
   demoButton2: DbxProgressButtonConfig = {
     id: 'button2',
     text: 'Raised Button',
-    buttonColor: 'primary',
     barColor: 'primary',
     buttonType: 'raised',
     mode: 'indeterminate',
@@ -70,7 +68,6 @@ export class DocInteractionButtonComponent {
     text: 'Stroked Button',
     spinnerSize: 19,
     buttonType: 'stroked',
-    buttonColor: 'accent',
     spinnerColor: 'accent',
     fullWidth: false,
     disabled: false,
@@ -86,7 +83,6 @@ export class DocInteractionButtonComponent {
     text: 'Raised Button',
     spinnerSize: 19,
     buttonType: 'raised',
-    buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,
     disabled: false,
@@ -97,7 +93,6 @@ export class DocInteractionButtonComponent {
     working: false,
     text: 'Default Button',
     spinnerSize: 19,
-    buttonColor: 'primary',
     spinnerColor: 'primary',
     fullWidth: false,
     disabled: false,
@@ -109,7 +104,6 @@ export class DocInteractionButtonComponent {
     text: 'Flat Button',
     spinnerSize: 19,
     buttonType: 'flat',
-    buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,
     disabled: false,
@@ -121,7 +115,6 @@ export class DocInteractionButtonComponent {
     spinnerSize: 19,
     buttonType: 'flat',
     text: 'HELLO WORLD',
-    buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,
     disabled: false,
@@ -134,7 +127,6 @@ export class DocInteractionButtonComponent {
   spinnerButtonConfig4: DbxProgressButtonConfig = {
     working: false,
     spinnerSize: 25, // ignored
-    buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,
     disabled: false,
@@ -155,7 +147,6 @@ export class DocInteractionButtonComponent {
     text: 'Icon', // ignored
     spinnerSize: 25, // ignored
     iconOnly: true,
-    buttonColor: 'primary',
     spinnerColor: 'accent',
     fullWidth: false,
     disabled: false,
@@ -184,7 +175,6 @@ export class DocInteractionButtonComponent {
   barButtonConfig2: DbxProgressButtonConfig = {
     working: false,
     text: 'Default Button',
-    buttonColor: 'primary',
     barColor: 'primary',
     mode: 'indeterminate',
     disabled: false
@@ -193,7 +183,6 @@ export class DocInteractionButtonComponent {
   barButtonConfig3: DbxProgressButtonConfig = {
     working: false,
     text: 'Flat Button',
-    buttonColor: 'primary',
     barColor: 'primary',
     buttonType: 'flat',
     mode: 'indeterminate',
@@ -203,7 +192,6 @@ export class DocInteractionButtonComponent {
   barButtonConfig4: DbxProgressButtonConfig = {
     working: false,
     text: 'Flat Button',
-    buttonColor: 'ok',
     barColor: 'ok',
     buttonType: 'flat',
     mode: 'indeterminate',
@@ -213,7 +201,6 @@ export class DocInteractionButtonComponent {
   barButtonConfig5: DbxProgressButtonConfig = {
     working: false,
     text: 'Flat Button',
-    buttonColor: 'warn',
     barColor: 'warn',
     buttonType: 'flat',
     mode: 'indeterminate',
@@ -223,7 +210,6 @@ export class DocInteractionButtonComponent {
   barButtonConfig6: DbxProgressButtonConfig = {
     working: false,
     text: 'Stroked Button',
-    buttonColor: 'success',
     barColor: 'success',
     buttonType: 'stroked',
     mode: 'indeterminate',
@@ -233,7 +219,6 @@ export class DocInteractionButtonComponent {
   barButtonConfig7: DbxProgressButtonConfig = {
     working: false,
     text: 'Tonal Button',
-    buttonColor: 'ok',
     barColor: 'notice',
     buttonType: 'tonal',
     mode: 'indeterminate',

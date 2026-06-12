@@ -141,8 +141,7 @@ export class DocExtensionCalendarComponent implements OnInit {
             maxWidth: '540px'
           },
           closeConfig: {
-            closeText: 'Save Changes',
-            buttonColor: 'primary'
+            closeText: 'Save Changes'
           }
         }
       }),
@@ -236,8 +235,7 @@ export class DocExtensionCalendarComponent implements OnInit {
           maxWidth: '540px'
         },
         closeConfig: {
-          closeText: 'Save Changes',
-          buttonColor: 'primary'
+          closeText: 'Save Changes'
         }
       }
     }),

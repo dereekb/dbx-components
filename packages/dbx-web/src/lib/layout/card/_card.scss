@@ -178,6 +178,19 @@
     border-top-right-radius: inherit;
   }
 
+  // `[dbxColor]` provides the tokens + the `.dbx-color` marker; the header paints
+  // itself from them (mirrors `mat-card.dbx-color`). The `:not(.dbx-default)` guard
+  // keeps an uncolored header from painting (the marker is always applied). Tonal
+  // mode flips the label to the vibrant color.
+  .dbx-card-horizontal-header.dbx-color:not(.dbx-default) {
+    background: color-mix(in srgb, var(#{theming.$dbx-bg-color-var}) var(#{theming.$dbx-bg-tone-var}, 100%), transparent);
+    color: var(#{theming.$dbx-color-var});
+
+    &.dbx-color-tonal {
+      color: var(#{theming.$dbx-bg-color-var});
+    }
+  }
+
   /// @dbx-utility card-horizontal-header-dot
   /// @intent small status dot inside a `.dbx-card-horizontal-header` — painted from `currentColor` so it follows the header's (tonal) text color with no extra color wiring.
   /// @role layout

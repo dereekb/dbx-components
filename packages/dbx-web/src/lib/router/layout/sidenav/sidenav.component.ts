@@ -9,9 +9,6 @@ import { DbxRouterAnchorModule } from '../anchor/anchor.module';
 import { DbxAnchorListComponent } from '../anchorlist/anchorlist.component';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { combineLatest, distinctUntilChanged, map, type Observable, shareReplay } from 'rxjs';
-import { DbxColorDirective } from '../../../layout/style/style.color.directive';
-import { type DbxColorInput } from '../../../layout/style/style';
-import { type ThemePalette } from '@angular/material/core';
 
 /**
  * Describes the current state of the sidenav sidebar, including display mode, Material drawer mode, and open/closed state.
@@ -47,7 +44,7 @@ export interface DbxSidenavSidebarState {
   exportAs: 'sidenav',
   template: `
     <mat-sidenav-container class="dbx-sidenav" [ngClass]="cssClassesSignal()">
-      <mat-sidenav [dbxColor]="color()" [position]="position()" [disableClose]="disableBackdropSignal()" [mode]="drawerSignal()">
+      <mat-sidenav [position]="position()" [disableClose]="disableBackdropSignal()" [mode]="drawerSignal()">
         <ng-content select="[top]"></ng-content>
         <dbx-anchor-list class="dbx-sidenav-anchor-list" [anchors]="anchors()"></dbx-anchor-list>
         <span class="spacer"></span>
@@ -59,7 +56,7 @@ export interface DbxSidenavSidebarState {
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
-  imports: [NgClass, DbxColorDirective, MatSidenavModule, DbxRouterAnchorModule, DbxAnchorListComponent],
+  imports: [NgClass, MatSidenavModule, DbxRouterAnchorModule, DbxAnchorListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -67,7 +64,6 @@ export class DbxSidenavComponent extends AbstractTransitionWatcherDirective impl
   private readonly _sidenavSub = cleanSubscription();
   private readonly _screenMediaService = inject(DbxScreenMediaService);
 
-  readonly color = input<ThemePalette | DbxColorInput>(undefined);
   readonly position = input<DbxSidenavPosition>('start');
 
   /**

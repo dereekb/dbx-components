@@ -50,7 +50,7 @@ interface DbxStyleDemoColorTemplate {
           <div class="dbx-flex" [style.flex-wrap]="'wrap'">
             @for (template of templates; track template.key) {
               <div class="dbx-pr1 dbx-pb1">
-                <div class="dbx-p2" [dbxColor]="{ template: template.key }">
+                <div class="dbx-p2 dbx-color-bg" [dbxColor]="{ template: template.key }">
                   <span class="dbx-text-label-small">{{ template.key }}</span>
                   @if (template.curated) {
                     <span class="dbx-text-label-small">· curated</span>

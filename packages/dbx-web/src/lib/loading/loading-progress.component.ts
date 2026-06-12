@@ -1,11 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { type ThemePalette } from '@angular/material/core';
 import { MatProgressBar, type ProgressBarMode } from '@angular/material/progress-bar';
 import { MatProgressSpinner, type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { type Maybe } from '@dereekb/util';
-import { type DbxColorInput } from '../layout/style/style';
 import { NgClass } from '@angular/common';
-import { DbxColorDirective } from '../layout/style/style.color.directive';
 
 /**
  * Default diameter in pixels for the progress spinner.
@@ -16,7 +13,10 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
  * Renders a Material progress spinner or progress bar to indicate loading.
  *
  * Supports both linear (bar) and circular (spinner) modes with configurable
- * diameter, color, and optional hint text below the indicator.
+ * diameter and optional hint text below the indicator. To color the indicator,
+ * apply `[dbxColor]` directly on the host — its `dbx-loading-progress.dbx-color`
+ * SCSS maps the indicator color to the supplied token. Without `[dbxColor]` the
+ * indicator uses the Material default color.
  *
  * @dbxWebComponent
  * @dbxWebSlug loading-progress
@@ -29,14 +29,14 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
  *
  * @example
  * ```html
- * <dbx-loading-progress mode="bar"></dbx-loading-progress>
+ * <dbx-loading-progress mode="bar" dbxColor="accent"></dbx-loading-progress>
  * ```
  */
 @Component({
   selector: 'dbx-loading-progress',
   template: `
     <div class="loading-progress-view" role="status" [attr.aria-label]="text() || 'Loading'">
-      <span class="loading-progress-view-indicator" [dbxColor]="color()">
+      <span class="loading-progress-view-indicator">
         @switch (linear()) {
           @case (true) {
             <mat-progress-bar [mode]="bmodeSignal()" [bufferValue]="bufferValue()" [value]="value()" style="margin: auto;"></mat-progress-bar>
@@ -51,7 +51,7 @@ export const DEFAULT_LOADING_PROGRESS_DIAMETER = 96;
       }
     </div>
   `,
-  imports: [MatProgressBar, MatProgressSpinner, NgClass, DbxColorDirective],
+  imports: [MatProgressBar, MatProgressSpinner, NgClass],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -63,7 +63,6 @@ export class DbxLoadingProgressComponent {
   readonly text = input<Maybe<string>>();
   readonly linear = input<Maybe<boolean>>();
   readonly mode = input<ProgressBarMode | ProgressSpinnerMode>('indeterminate');
-  readonly color = input<ThemePalette | DbxColorInput>('primary');
   readonly value = input<Maybe<number>>();
   readonly bufferValue = input<Maybe<number>>();
 
