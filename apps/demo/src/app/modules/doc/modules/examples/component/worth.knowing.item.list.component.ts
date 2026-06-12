@@ -1,7 +1,21 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { of } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
-import { AbstractDbxSelectionListWrapperDirective, AbstractDbxSelectionListViewDirective, AbstractDbxValueListViewItemComponent, type DbxSelectionValueListViewConfig, provideDbxListView, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DbxSelectionValueListViewComponentImportsModule, DbxColorDirective, DbxIconTileComponent, DbxAnchorComponent } from '@dereekb/dbx-web';
+import {
+  AbstractDbxSelectionListWrapperDirective,
+  AbstractDbxSelectionListViewDirective,
+  AbstractDbxValueListViewItemComponent,
+  type DbxSelectionValueListViewConfig,
+  provideDbxListView,
+  DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
+  DEFAULT_DBX_SELECTION_VALUE_LIST_COMPONENT_CONFIGURATION_TEMPLATE,
+  DbxListWrapperComponentImportsModule,
+  DbxSelectionValueListViewComponentImportsModule,
+  DbxColorDirective,
+  DbxIconTileComponent,
+  DbxAnchorComponent,
+  DbxButtonComponent
+} from '@dereekb/dbx-web';
 import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
 import { type WorthKnowingItemValue, type WorthKnowingItemValueWithSelection } from './worth.knowing.item.list';
@@ -22,7 +36,7 @@ import { type WorthKnowingItemValue, type WorthKnowingItemValueWithSelection } f
   template: DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE,
   imports: [DbxListWrapperComponentImportsModule],
   host: {
-    class: 'dbx-list-no-hover-effects'
+    class: 'dbx-list-no-hover-effects dbx-list-no-item-padding'
   },
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
@@ -67,13 +81,13 @@ export class DocWorthKnowingItemListViewComponent extends AbstractDbxSelectionLi
       @if (buttonText) {
         <div class="item-right">
           <dbx-anchor [anchor]="anchor">
-            <button mat-stroked-button class="dbx-nowrap">{{ buttonText }}</button>
+            <dbx-button [stroked]="true" class="dbx-nowrap" [text]="buttonText"></dbx-button>
           </dbx-anchor>
         </div>
       }
     </div>
   `,
-  imports: [MatButtonModule, DbxColorDirective, DbxIconTileComponent, DbxAnchorComponent],
+  imports: [MatButtonModule, DbxColorDirective, DbxIconTileComponent, DbxButtonComponent, DbxAnchorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

@@ -179,6 +179,12 @@ $list-item-padded-min-height: 42px;
     padding: theming.$padding-3;
   }
 
+  // No side padding if the parent list component has the dbx-list-no-item-padding class.
+  .dbx-list-no-item-padding .dbx-list-item-padded {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   // Card-style list — each row becomes a tinted, rounded surface that lives
   // on the actual `.mat-mdc-list-item`, not on a nested template `<div>`.
   // Apply this modifier as the host class on the list wrapper component so
@@ -241,7 +247,7 @@ $list-item-padded-min-height: 42px;
   // base `.dbx-icon-tile` rule lives in `_text.scss` next to its component.
   .dbx-list-two-line-item .item-icon.dbx-icon-tile {
     padding: var(--dbx-icon-tile-padding, 8px);
-    margin: 0 12px 0 4px;
+    margin: 0 12px 0 0;
   }
 
   /// @dbx-utility list-two-line-item

@@ -8,7 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { type ClickableAnchor } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { DbxAnchorComponent, DbxButtonSpacerDirective, DbxColorDirective, DbxContentPitDirective, DbxSectionComponent, DbxTextColorDirective, type DbxColorInput } from '@dereekb/dbx-web';
+import { DbxAnchorComponent, DbxButtonComponent, DbxButtonSpacerDirective, DbxColorDirective, DbxContentPitDirective, DbxSectionComponent, DbxTextColorDirective, type DbxColorInput } from '@dereekb/dbx-web';
 import { DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent } from '@dereekb/dbx-web/docs';
 import { DocWorthKnowingItemListComponent } from '../component/worth.knowing.item.list.component';
 import { makeWorthKnowingItemValues, type WorthKnowingItemValue } from '../component/worth.knowing.item.list';
@@ -100,7 +100,7 @@ const DASHBOARD_STAT_CARDS: readonly DashboardStatCard[] = [
   selector: 'doc-dashboard-overview-layout-example',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxDocsUiExampleContentComponent, DbxSectionComponent, DbxAnchorComponent, DbxButtonSpacerDirective, DbxColorDirective, DbxTextColorDirective, DbxContentPitDirective, DocWorthKnowingItemListComponent, MatCardModule, MatButtonModule, MatIconModule, FlexLayoutModule],
+  imports: [DbxDocsUiExampleComponent, DbxDocsUiExampleInfoComponent, DbxButtonComponent, DbxDocsUiExampleContentComponent, DbxSectionComponent, DbxAnchorComponent, DbxButtonSpacerDirective, DbxColorDirective, DbxTextColorDirective, DbxContentPitDirective, DocWorthKnowingItemListComponent, MatCardModule, MatButtonModule, MatIconModule, FlexLayoutModule],
   template: `
     <dbx-docs-ui-example header="Dashboard Overview Layout" hint="dbx-section header with actions, dark inverse hero card with dbx-color-border stat pits, accent list card, and a responsive stat-card row.">
       <dbx-docs-ui-example-info>
@@ -188,28 +188,18 @@ const DASHBOARD_STAT_CARDS: readonly DashboardStatCard[] = [
         </p>
       </dbx-docs-ui-example-info>
       <dbx-docs-ui-example-content>
-        <dbx-section header="Overview" hint="Lorem Ipsum Consectetur · Wed, Apr 22, 2026">
+        <dbx-section header="Overview" [h]="2" hint="Lorem Ipsum Consectetur · Wed, Apr 22, 2026">
           <div sectionHeader class="dbx-flex-bar">
             <dbx-anchor [anchor]="last30DaysAnchor">
-              <button mat-stroked-button>
-                <mat-icon>calendar_today</mat-icon>
-                Last 30 days
-                <mat-icon iconPositionEnd>arrow_drop_down</mat-icon>
-              </button>
+              <dbx-button [stroked]="true" icon="calendar_today" text="Last 30 days"></dbx-button>
             </dbx-anchor>
             <dbx-button-spacer></dbx-button-spacer>
             <dbx-anchor [anchor]="viewLoremsAnchor">
-              <button mat-stroked-button>
-                View Lorems
-                <mat-icon iconPositionEnd>arrow_forward</mat-icon>
-              </button>
+              <dbx-button [stroked]="true" icon="arrow_forward" text="View Lorems"></dbx-button>
             </dbx-anchor>
             <dbx-button-spacer></dbx-button-spacer>
             <dbx-anchor [anchor]="createLoremAnchor">
-              <button mat-flat-button>
-                <mat-icon>add</mat-icon>
-                Create Lorem
-              </button>
+              <dbx-button [stroked]="true" icon="add" text="Create Lorem"></dbx-button>
             </dbx-anchor>
           </div>
 

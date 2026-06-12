@@ -44,7 +44,7 @@ import { type Maybe } from '@dereekb/util';
   selector: '[dbxColor]',
   host: {
     '[class]': 'cssClassSignal()',
-    '[class.dbx-color]': 'true',
+    '[class.dbx-color]': 'hasColorSignal()',
     '[class.dbx-color-tonal]': 'isTonalSignal()',
     '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()',
     '[style.--dbx-bg-color-current]': 'bgColorStyleSignal()',
@@ -68,14 +68,28 @@ export class DbxColorDirective {
   readonly dbxColorTone = input<Maybe<DbxColorTone>>();
 
   /**
-   * Applies the named `dbx-{color}-bg` token class for a {@link DbxThemeColor} string, `dbx-default` when nullish, or
-   * `''` for a {@link DbxColorConfig} (whose tokens are supplied by the inline `--dbx-bg-color-current` / `--dbx-color-current`
-   * style bindings instead). The directive is a pure token provider — none of these classes paint a background; painting is
-   * done by the `.dbx-color-bg` utility or a component's own `.dbx-color`-scoped SCSS.
+   * Whether a color is currently bound. When nothing is bound the directive is fully inert — it adds no marker class
+   * and no token class — so color tokens inherited from a `[dbxColor]` ancestor pass through untouched (important for
+   * components that host this directive unconditionally, e.g. `dbx-button` inside a tonal `[dbxColor]` card).
+   */
+  readonly hasColorSignal = computed(() => Boolean(this.dbxColor()));
+
+  /**
+   * Applies the named `dbx-{color}-bg` token class for a {@link DbxThemeColor} string, or `''` both for a
+   * {@link DbxColorConfig} (whose tokens are supplied by the inline `--dbx-bg-color-current` / `--dbx-color-current`
+   * style bindings instead) and when no color is bound (inert; inherited tokens pass through). The directive is a pure
+   * token provider — none of these classes paint a background; painting is done by the `.dbx-color-bg` utility or a
+   * component's own `.dbx-color`-scoped SCSS.
    */
   readonly cssClassSignal = computed(() => {
     const value = this.dbxColor();
-    return isDbxColorConfig(value) ? '' : dbxColorBackground(value);
+    let cssClass = '';
+
+    if (value) {
+      cssClass = isDbxColorConfig(value) ? '' : dbxColorBackground(value);
+    }
+
+    return cssClass;
   });
 
   private readonly _configSignal = computed<Maybe<DbxColorConfig>>(() => {
