@@ -11,6 +11,12 @@
     "dbx-cli-lint-cache": "lint-cache/main.js"
   },
   "exports": {
+    "./eslint": {
+      "module": "./eslint/index.esm.js",
+      "types": "./eslint/index.d.ts",
+      "import": "./eslint/index.cjs.mjs",
+      "default": "./eslint/index.cjs.js"
+    },
     "./firebase-api-manifest": {
       "default": "./firebase-api-manifest/main.js"
     },

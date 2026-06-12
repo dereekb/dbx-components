@@ -44,6 +44,48 @@ export function renderRouteManifest(input: RenderRouteManifestInput, now: Date =
 }
 
 /**
+ * Formats one manifest warning as a severity-prefixed stderr line
+ * (`error:` / `warning:`), so a malformed-tag error is visually distinct from a
+ * non-blocking finding in the generator output.
+ *
+ * @param warning - The warning to format.
+ * @returns The formatted log line.
+ *
+ * @example
+ * ```ts
+ * formatRouteManifestWarning({ kind: 'malformed-tag', severity: 'error', message: '…' });
+ * // => '[generate-route-manifest] error: malformed-tag: …'
+ * ```
+ */
+export function formatRouteManifestWarning(warning: RouteManifestWarning): string {
+  return `[generate-route-manifest] ${warning.severity}: ${warning.kind}: ${warning.message}`;
+}
+
+/**
+ * Input to {@link countRouteManifestGenerationErrors}.
+ */
+export interface CountRouteManifestGenerationErrorsInput {
+  readonly warnings: readonly RouteManifestWarning[];
+  readonly strict: boolean;
+}
+
+/**
+ * Counts the warnings that should fail generation: every `error`-severity
+ * finding, plus — when `strict` is set — every `warning`-severity finding too.
+ *
+ * @param input - The collected warnings and whether `--strict` is in effect.
+ * @returns The number of findings that should cause a non-zero exit.
+ *
+ * @example
+ * ```ts
+ * countRouteManifestGenerationErrors({ warnings, strict: false }); // counts only error-severity findings
+ * ```
+ */
+export function countRouteManifestGenerationErrors(input: CountRouteManifestGenerationErrorsInput): number {
+  return input.warnings.filter((warning) => warning.severity === 'error' || (input.strict && warning.severity === 'warning')).length;
+}
+
+/**
  * Extracts the known Firestore model types from a parsed `--models-input` JSON
  * (an MCP manifest with a `models` array). Used to enable the manifest builder's
  * `unknown-model-type` validation. Returns an empty list when the shape is not

@@ -95,6 +95,12 @@ export interface ResolveUrlMatch {
    * and attributed via `from`). Empty when the page declares none.
    */
   readonly models: readonly RouteManifestModelEntry[];
+  /**
+   * Id-like route params (`:id` → `id`) declared in the composed URL that no
+   * model binding covers — the build's `missing-route-model` findings for this
+   * state. Empty when every id-like param is bound.
+   */
+  readonly missingRouteModels: readonly string[];
 }
 
 export interface ResolveUrlMultiple {
@@ -286,7 +292,9 @@ async function buildMatch(input: BuildMatchInput): Promise<ResolveUrlMatch> {
   const siblings = includeSiblings ? collectSiblings(node) : undefined;
   const componentFile = node.data.component ? await resolveComponentFile({ routerFile: node.data.file, component: node.data.component, cwd }) : undefined;
   const urlParamKeys = extractUrlParamKeys(node.fullUrl);
-  const models = buildPageModelsIndex(sources).get(node.data.name) ?? [];
+  const pageModels = buildPageModelsIndex(sources);
+  const models = pageModels.modelsByState.get(node.data.name) ?? [];
+  const missingRouteModels = pageModels.missingRouteModelsByState.get(node.data.name) ?? [];
   const result: ResolveUrlMatch = {
     kind: 'match',
     app,
@@ -300,7 +308,8 @@ async function buildMatch(input: BuildMatchInput): Promise<ResolveUrlMatch> {
     ancestors,
     siblings,
     urlParamKeys,
-    models
+    models,
+    missingRouteModels
   };
   return result;
 }

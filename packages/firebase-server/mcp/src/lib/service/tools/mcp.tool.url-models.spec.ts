@@ -125,6 +125,23 @@ describe('createUrlModelsTool', () => {
     expect(modelOf(payload(result), 'account').unresolved?.reason).toBe('auth-required');
   });
 
+  it('overrides {authUid} with currentUserUid to preview another user (route params unaffected)', async () => {
+    const tool = createUrlModelsTool(makeDeps());
+    const result = await tool.staticHandler!({ url: '/worker/abc', currentUserUid: 'user-2' }, makeCtx('user-1'));
+    const p = payload(result);
+    // `{authUid}` resolves to the supplied user-2, not the caller user-1.
+    expect(modelOf(p, 'account').key).toBe('ac/user-2');
+    // The `:uid` route param is captured from the URL, so it is unchanged.
+    expect(modelOf(p, 'profile').key).toBe('pr/abc');
+  });
+
+  it('rejects an empty currentUserUid', async () => {
+    const tool = createUrlModelsTool(makeDeps());
+    const result = await tool.staticHandler!({ url: '/worker/abc', currentUserUid: '' }, makeCtx('user-1'));
+    expect(result.isError).toBe(true);
+    expect((result.content[0] as { text: string }).text).toContain('currentUserUid');
+  });
+
   it('filters to the requested model types', async () => {
     const tool = createUrlModelsTool(makeDeps());
     const result = await tool.staticHandler!({ url: '/worker/abc', models: ['profile'] }, makeCtx('user-1'));

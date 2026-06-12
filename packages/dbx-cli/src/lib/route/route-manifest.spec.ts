@@ -197,4 +197,56 @@ export const STATES: Ng2StateDeclaration[] = [PARENT_STATE, CHILD_STATE];
     // The child declares its own `item :id`, so the ancestor copy is deduped (no inherited duplicate).
     expect(child.models).toEqual([{ modelType: 'item', kind: 'id', keyTemplate: ':id' }]);
   });
+
+  it('marks malformed-tag findings as error severity and others as warning severity', () => {
+    const router = `
+import { type Ng2StateDeclaration } from '@uirouter/angular';
+import { ThingComponent } from './thing.component';
+export const THING_STATE: Ng2StateDeclaration = { name: 'thing', url: '/thing', component: ThingComponent };
+export const STATES: Ng2StateDeclaration[] = [THING_STATE];
+`;
+    const component = `/**\n * @dbxRouteModel thing\n */\nexport class ThingComponent {}`;
+    const { warnings } = buildRouteManifest(
+      {
+        app: { name: 'app' },
+        sources: [
+          { name: 'app/thing.router.ts', text: router },
+          { name: 'app/thing.component.ts', text: component }
+        ]
+      },
+      FIXED_NOW
+    );
+    const malformed = warnings.filter((w) => w.kind === 'malformed-tag');
+    expect(malformed.length).toBeGreaterThan(0);
+    expect(malformed.every((w) => w.severity === 'error')).toBe(true);
+    // Every non-malformed finding stays a non-blocking warning.
+    expect(warnings.filter((w) => w.kind !== 'malformed-tag').every((w) => w.severity === 'warning')).toBe(true);
+  });
+
+  it('flags an id-like route param with no @dbxRouteModel binding', () => {
+    const router = `
+import { type Ng2StateDeclaration } from '@uirouter/angular';
+export const DETAIL_STATE: Ng2StateDeclaration = { name: 'thing.detail', url: '/things/:id' };
+export const STATES: Ng2StateDeclaration[] = [DETAIL_STATE];
+`;
+    const { warnings } = buildRouteManifest({ app: { name: 'app' }, sources: [{ name: 'app/thing.router.ts', text: router }] }, FIXED_NOW);
+    const missing = warnings.filter((w) => w.kind === 'missing-route-model');
+    expect(missing.some((w) => w.stateName === 'thing.detail' && w.param === 'id')).toBe(true);
+    expect(missing.every((w) => w.severity === 'warning')).toBe(true);
+  });
+
+  it('does not flag an id-like param that an inherited model binding covers', () => {
+    const { warnings } = buildRouteManifest({ app: { name: 'app' }, sources: workerSources() }, FIXED_NOW);
+    expect(warnings.some((w) => w.kind === 'missing-route-model')).toBe(false);
+  });
+
+  it('does not flag a non-id-like route param', () => {
+    const router = `
+import { type Ng2StateDeclaration } from '@uirouter/angular';
+export const SLUG_STATE: Ng2StateDeclaration = { name: 'thing.slug', url: '/things/:slug' };
+export const STATES: Ng2StateDeclaration[] = [SLUG_STATE];
+`;
+    const { warnings } = buildRouteManifest({ app: { name: 'app' }, sources: [{ name: 'app/thing.router.ts', text: router }] }, FIXED_NOW);
+    expect(warnings.some((w) => w.kind === 'missing-route-model')).toBe(false);
+  });
 });

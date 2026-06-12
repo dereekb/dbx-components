@@ -14,9 +14,12 @@
  *   4. Write the result to `<output>.tmp`, then `fs.renameSync` to `<output>`
  *      so partial files never land on disk.
  *
- * Warnings are logged but do not fail the build (warn-but-write). Generation
- * fails (exit 1) only when required flags are missing, no states are found, or
- * the output cannot be written.
+ * Each finding is logged with a severity-aware prefix. `error`-severity findings
+ * (a malformed `@dbxRouteModel*` tag) fail generation (exit 1) so the build/CI
+ * catches a typo'd tag instead of shipping a manifest with a missing binding;
+ * `warning`-severity findings are logged but written. `--strict` promotes all
+ * warnings to errors. Generation also fails when required flags are missing, no
+ * states are found, or the output cannot be written.
  *
  * Flags:
  *   --src=<glob>             (required, repeatable) source glob, e.g. `apps/demo/src/**\/*.ts`.
@@ -25,6 +28,7 @@
  *   --output=<path>          (required) destination JSON path (workspace-relative ok).
  *   --models-input=<path>    (optional) MCP manifest JSON whose `models[].modelType`
  *                            seed the `unknown-model-type` validation.
+ *   --strict                 (optional) promote all warnings to errors for the exit decision.
  */
 
 import { glob as fsGlob, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
@@ -32,7 +36,7 @@ import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 
 import { type RouteSource } from '@dereekb/dbx-cli';
-import { extractModelTypesFromModelsInput, renderRouteManifest } from './render';
+import { countRouteManifestGenerationErrors, extractModelTypesFromModelsInput, formatRouteManifestWarning, renderRouteManifest } from './render';
 
 interface Flags {
   readonly src: readonly string[];
@@ -40,6 +44,11 @@ interface Flags {
   readonly baseUrl: string | undefined;
   readonly output: string | undefined;
   readonly modelsInput: string | undefined;
+  /**
+   * When true, all warnings are promoted to errors for the exit decision, so any
+   * finding fails generation.
+   */
+  readonly strict: boolean;
 }
 
 const WORKSPACE_ROOT = process.cwd();
@@ -65,13 +74,22 @@ async function main(): Promise<void> {
   const { manifest, warnings } = renderRouteManifest({ app, sources, ...(modelTypes == null ? {} : { modelTypes }) });
 
   for (const warning of warnings) {
-    console.error(`[generate-route-manifest] ${warning.kind}: ${warning.message}`);
+    console.error(formatRouteManifestWarning(warning));
   }
 
   // A manifest with no states would silently disable the runtime `url-models` tool — fail loudly so
   // a mis-pointed `--src` is caught at build time rather than at connect time.
   if (manifest.states.length === 0) {
     console.error(`generate-route-manifest: 0 states extracted from ${describePatterns(flags.src)}; not writing ${relative(WORKSPACE_ROOT, outputPath)}.`);
+    process.exit(1);
+  }
+
+  // A malformed `@dbxRouteModel*` tag silently ships a missing/broken model binding — fail the build
+  // (this generator runs via the API build dependency) rather than write a manifest with a hole.
+  // `--strict` escalates every non-blocking warning to this same fail-on-exit decision.
+  const errorCount = countRouteManifestGenerationErrors({ warnings, strict: flags.strict });
+  if (errorCount > 0) {
+    console.error(`generate-route-manifest: ${errorCount} error-severity issue(s)${flags.strict ? ' (--strict)' : ''}; not writing ${relative(WORKSPACE_ROOT, outputPath)}.`);
     process.exit(1);
   }
 
@@ -136,6 +154,7 @@ function parseFlags(argv: readonly string[]): Flags {
   let baseUrl: string | undefined;
   let output: string | undefined;
   let modelsInput: string | undefined;
+  let strict = false;
 
   for (const arg of argv) {
     if (arg.startsWith('--src=')) {
@@ -148,10 +167,12 @@ function parseFlags(argv: readonly string[]): Flags {
       output = arg.slice('--output='.length);
     } else if (arg.startsWith('--models-input=')) {
       modelsInput = arg.slice('--models-input='.length);
+    } else if (arg === '--strict') {
+      strict = true;
     }
   }
 
-  return { src, app, baseUrl, output, modelsInput };
+  return { src, app, baseUrl, output, modelsInput, strict };
 }
 
 function printUsageAndExit(): void {
@@ -171,7 +192,9 @@ Required flags:
 Optional:
   --base-url=<url>           Public base URL stamped onto the manifest.
   --models-input=<path>      MCP manifest JSON whose models[].modelType seed the
-                             unknown-model-type validation.`);
+                             unknown-model-type validation.
+  --strict                   Promote all warnings to errors for the exit decision
+                             (any finding then fails generation).`);
   process.exit(1);
 }
 

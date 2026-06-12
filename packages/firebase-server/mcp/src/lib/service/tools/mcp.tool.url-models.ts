@@ -90,6 +90,13 @@ export interface UrlModelsToolInput {
   readonly models?: ReadonlyArray<string>;
   readonly keysOnly?: boolean;
   readonly load?: boolean;
+  /**
+   * Overrides the uid used to fill `{authUid}` placeholders when resolving model
+   * keys (defaults to the authenticated caller). Use to preview the models
+   * another user would see on a page. Does not affect the document-load path —
+   * `load` still reads via the calling user's permissions.
+   */
+  readonly currentUserUid?: string;
 }
 
 // MARK: Factory
@@ -171,7 +178,15 @@ function parseUrlModelsInput(args: Record<string, unknown>): UrlModelsToolInput 
     models = args.models as ReadonlyArray<string>;
   }
 
-  return { url, ...(models === undefined ? {} : { models }), keysOnly, load };
+  let currentUserUid: string | undefined;
+  if (args.currentUserUid !== undefined) {
+    if (typeof args.currentUserUid !== 'string' || args.currentUserUid.length === 0) {
+      throw new Error('url-models: "currentUserUid" must be a non-empty string.');
+    }
+    currentUserUid = args.currentUserUid;
+  }
+
+  return { url, ...(models === undefined ? {} : { models }), keysOnly, load, ...(currentUserUid === undefined ? {} : { currentUserUid }) };
 }
 
 interface UrlModelsPayload {
@@ -218,7 +233,10 @@ function stateSummary(state: RouteManifestStateEntry): { readonly name: string; 
 
 async function buildMatchedPayload(args: BuildMatchedPayloadInput): Promise<UrlModelsMatchedPayload> {
   const { match, input, ctx, deps } = args;
-  const uid = ctx.auth?.uid;
+  // `currentUserUid` (when supplied) overrides the uid used to fill `{authUid}` placeholders so a
+  // caller can preview another user's page-models. The document-load path still uses `ctx.auth`, so
+  // this is a key-substitution preview only — no privilege escalation on the actual reads.
+  const uid = input.currentUserUid ?? ctx.auth?.uid;
   const filtered = input.models === undefined ? match.state.models : match.state.models.filter((m) => input.models?.includes(m.modelType));
   const resolved = filtered.map((entry) => resolveModelEntry({ entry, params: match.params, uid, keysOnly: input.keysOnly === true, deps, ctx }));
   const loaded = input.load === true ? await loadResolvedModels(resolved, ctx, deps) : undefined;
@@ -377,7 +395,8 @@ const URL_MODELS_INPUT_SCHEMA = {
     url: { type: 'string', minLength: 1, description: 'Full URL or pathname, e.g. "https://app.example.co/worker/abc/timesheets/list".' },
     models: { type: 'array', items: { type: 'string' }, description: 'Restrict the output to these model types.' },
     keysOnly: { type: 'boolean', description: 'Return only the resolved keys (no descriptions or documents). Cannot combine with "load".' },
-    load: { type: 'boolean', description: 'Load each resolved document via the permission-checked read path. Cannot combine with "keysOnly".' }
+    load: { type: 'boolean', description: 'Load each resolved document via the permission-checked read path. Cannot combine with "keysOnly".' },
+    currentUserUid: { type: 'string', minLength: 1, description: "Override the uid used to fill `{authUid}` placeholders when resolving model keys (defaults to the authenticated caller). Use to preview the models another user would see on a page. `load` still reads via the calling user's permissions." }
   },
   additionalProperties: false
 } as const;

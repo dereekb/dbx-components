@@ -28,6 +28,7 @@
       "@dereekb/date": ["packages/date/src/index.ts"],
       "@dereekb/dbx-analytics": ["packages/dbx-analytics/src/index.ts"],
       "@dereekb/dbx-cli": ["packages/dbx-cli/src/index.ts"],
+      "@dereekb/dbx-cli/eslint": ["packages/dbx-cli/eslint/src/index.ts"],
       "@dereekb/dbx-cli/firestore-indexes": ["packages/dbx-cli/firestore-indexes/src/index.ts"],
       "@dereekb/dbx-cli/manifest-extract": ["packages/dbx-cli/manifest-extract/src/index.ts"],
       "@dereekb/dbx-cli/model-test": ["packages/dbx-cli/model-test/src/index.ts"],

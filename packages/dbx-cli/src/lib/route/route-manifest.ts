@@ -81,13 +81,26 @@ export interface RouteManifest {
 /**
  * Kinds of non-fatal finding surfaced while building the manifest.
  */
-export type RouteManifestWarningKind = 'malformed-tag' | 'unknown-route-param' | 'unknown-model-type' | 'duplicate-route-model' | 'dropped-future-state';
+export type RouteManifestWarningKind = 'malformed-tag' | 'unknown-route-param' | 'unknown-model-type' | 'duplicate-route-model' | 'dropped-future-state' | 'missing-route-model';
+
+/**
+ * Severity of a {@link RouteManifestWarning}. `error`-severity findings fail
+ * manifest generation (and CI via the build dependency); `warning`-severity
+ * findings are logged but do not block.
+ */
+export type RouteManifestSeverity = 'error' | 'warning';
 
 export interface RouteManifestWarning {
   readonly kind: RouteManifestWarningKind;
+  readonly severity: RouteManifestSeverity;
   readonly message: string;
   readonly stateName?: string;
   readonly modelType?: string;
+  /**
+   * The id-like route param a `missing-route-model` finding refers to (`:id` →
+   * `id`). Absent for other warning kinds.
+   */
+  readonly param?: string;
 }
 
 /**
@@ -158,6 +171,8 @@ export function buildRouteManifest(input: BuildRouteManifestInput, now: Date = n
   }
   states.sort((a, b) => a.name.localeCompare(b.name));
 
+  detectMissingRouteModels(states, warnings);
+
   const manifest: RouteManifest = {
     version: ROUTE_MANIFEST_VERSION,
     generatedAt: now.toISOString(),
@@ -205,7 +220,7 @@ function warnDroppedFutureStates(tree: RouteTree, realNames: ReadonlySet<string>
     const prefix = node.data.name.slice(0, -3);
     const hasRealSubtree = realNames.has(prefix) || [...realNames].some((name) => name.startsWith(`${prefix}.`));
     if (!hasRealSubtree) {
-      warnings.push({ kind: 'dropped-future-state', message: `Future state \`${node.data.name}\` was dropped and has no real subtree under \`${prefix}\`; its page will not match any URL.`, stateName: node.data.name });
+      warnings.push({ kind: 'dropped-future-state', severity: 'warning', message: `Future state \`${node.data.name}\` was dropped and has no real subtree under \`${prefix}\`; its page will not match any URL.`, stateName: node.data.name });
     }
   }
 }
@@ -276,7 +291,7 @@ function parseTags(input: ParseTagsInput): readonly ParsedRouteModel[] {
     if (parsed.ok) {
       out.push(parsed.model);
     } else {
-      input.warnings.push({ kind: 'malformed-tag', message: parsed.message, stateName: input.stateName });
+      input.warnings.push({ kind: 'malformed-tag', severity: 'error', message: parsed.message, stateName: input.stateName });
     }
   }
   return out;
@@ -295,7 +310,7 @@ function dedupeModels(input: DedupeModelsInput): readonly ParsedRouteModel[] {
     const key = modelDedupeKey(model.modelType, model.keyTemplate);
     if (seen.has(key)) {
       const keyPart = model.keyTemplate == null ? '' : ` ${model.keyTemplate}`;
-      input.warnings.push({ kind: 'duplicate-route-model', message: `State \`${input.stateName}\` declares \`${model.modelType}\`${keyPart} more than once; keeping the first.`, stateName: input.stateName, modelType: model.modelType });
+      input.warnings.push({ kind: 'duplicate-route-model', severity: 'warning', message: `State \`${input.stateName}\` declares \`${model.modelType}\`${keyPart} more than once; keeping the first.`, stateName: input.stateName, modelType: model.modelType });
       continue;
     }
     seen.add(key);
@@ -317,12 +332,12 @@ function finalizeModel(input: FinalizeModelInput): RouteManifestModelEntry {
 
   for (const routeParam of model.routeParams) {
     if (!urlParamKeys.has(routeParam)) {
-      warnings.push({ kind: 'unknown-route-param', message: `State \`${stateName}\` model \`${model.modelType}\` references route param \`:${routeParam}\` not present in the composed URL.`, stateName, modelType: model.modelType });
+      warnings.push({ kind: 'unknown-route-param', severity: 'warning', message: `State \`${stateName}\` model \`${model.modelType}\` references route param \`:${routeParam}\` not present in the composed URL.`, stateName, modelType: model.modelType });
     }
   }
 
   if (modelTypeSet != null && !modelTypeSet.has(model.modelType)) {
-    warnings.push({ kind: 'unknown-model-type', message: `State \`${stateName}\` references unknown model type \`${model.modelType}\`.`, stateName, modelType: model.modelType });
+    warnings.push({ kind: 'unknown-model-type', severity: 'warning', message: `State \`${stateName}\` references unknown model type \`${model.modelType}\`.`, stateName, modelType: model.modelType });
   }
 
   return {
@@ -396,4 +411,68 @@ function resolveComponentFilePath(node: RouteTreeNode, sources: readonly RouteSo
     return undefined;
   }
   return sources.some((s) => s.name === resolved.path) ? resolved.path : undefined;
+}
+
+// MARK: Missing route-model detection
+/**
+ * Matches an id-like route param name: anything ending in `id` or `uid`
+ * (case-insensitive) — `id`, `uid`, `userId`, `workerUid`, `orgId`. These are
+ * the params most likely to key a model, so an id-like URL param with no
+ * `@dbxRouteModel` binding is a likely missing annotation.
+ */
+const ID_LIKE_ROUTE_PARAM_RE = /(?:id|uid)$/iu;
+
+/**
+ * Whether a route param name is id-like (ends in `id` / `uid`, case-insensitive).
+ *
+ * @param name - The route param name (without the leading `:`).
+ * @returns True when the name looks like a model identifier.
+ */
+function isIdLikeRouteParam(name: string): boolean {
+  return ID_LIKE_ROUTE_PARAM_RE.test(name);
+}
+
+/**
+ * Extracts the route param names a model entry's key template references — the
+ * `:name` placeholders only (the `{authUid}` placeholder is not a route param).
+ *
+ * @param keyTemplate - The model entry's verbatim key template, or undefined for list entries.
+ * @returns The referenced route param names.
+ */
+function routeParamsFromKeyTemplate(keyTemplate: string | undefined): readonly string[] {
+  if (keyTemplate == null) {
+    return [];
+  }
+  return keyTemplate
+    .split('/')
+    .filter((segment) => segment.startsWith(':') && segment.length > 1)
+    .map((segment) => segment.slice(1));
+}
+
+/**
+ * Flags id-like URL params on each non-abstract state that no flattened model
+ * binding covers — surfacing a `/:id`-style route that was never annotated with
+ * `@dbxRouteModel`. Abstract layout states are skipped: their params are bound by
+ * the concrete descendant that renders the page (and that descendant is checked).
+ *
+ * @param states - The flattened, name-sorted manifest state entries.
+ * @param warnings - The accumulating warning list to append to.
+ */
+function detectMissingRouteModels(states: readonly RouteManifestStateEntry[], warnings: RouteManifestWarning[]): void {
+  for (const state of states) {
+    if (state.abstract) {
+      continue;
+    }
+    const covered = new Set<string>();
+    for (const model of state.models) {
+      for (const param of routeParamsFromKeyTemplate(model.keyTemplate)) {
+        covered.add(param);
+      }
+    }
+    for (const param of state.urlParamKeys) {
+      if (isIdLikeRouteParam(param) && !covered.has(param)) {
+        warnings.push({ kind: 'missing-route-model', severity: 'warning', message: `State \`${state.name}\` has id-like route param \`:${param}\` but no \`@dbxRouteModel\` binding covers it; annotate the component class or state.`, stateName: state.name, param });
+      }
+    }
+  }
 }

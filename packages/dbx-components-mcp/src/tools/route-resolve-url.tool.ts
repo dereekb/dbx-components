@@ -15,7 +15,7 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { resolveUrlToState, type ResolveUrlMatch, type ResolveUrlMultiple, type ResolveUrlNotFound, type ResolveUrlResult } from './route/resolve-url.js';
-import { formatPageModelLine } from './route/page-models.js';
+import { formatMissingRouteModelLine, formatPageModelLine } from './route/page-models.js';
 import type { RouteTreeNode } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
@@ -148,6 +148,7 @@ function formatMatchMarkdown(match: ResolveUrlMatch): string {
   }
 
   appendPageModels(lines, match.models);
+  appendValidation(lines, match.missingRouteModels);
   appendParams(lines, match);
   appendSearch(lines, match);
   appendKeys(lines, 'URL path params', match.urlParamKeys);
@@ -167,6 +168,16 @@ function appendPageModels(lines: string[], models: ResolveUrlMatch['models']): v
   }
   for (const model of models) {
     lines.push(formatPageModelLine(model));
+  }
+}
+
+function appendValidation(lines: string[], missingRouteModels: ResolveUrlMatch['missingRouteModels']): void {
+  if (missingRouteModels.length === 0) {
+    return;
+  }
+  lines.push('', '## Validation');
+  for (const param of missingRouteModels) {
+    lines.push(formatMissingRouteModelLine(param));
   }
 }
 
@@ -270,6 +281,7 @@ function formatMatchJson(match: ResolveUrlMatch): string {
     componentFile: match.componentFile ?? null,
     urlParamKeys: match.urlParamKeys,
     models: match.models,
+    missingRouteModels: match.missingRouteModels,
     ancestors: match.ancestors.map(serializeNode),
     siblings: match.siblings === undefined ? null : match.siblings.map(serializeNode)
   };

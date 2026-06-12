@@ -213,6 +213,24 @@ describe('dbx_route_resolve_url', () => {
     expect(parsed.models).toEqual([{ modelType: 'profile', kind: 'id', keyTemplate: ':id', description: 'The profile being viewed' }]);
   });
 
+  it('renders a Validation callout for an id-like param with no @dbxRouteModel binding', async () => {
+    const result = await runRouteResolveUrl({ url: 'http://localhost:9010/interaction/test/42/mytest/9000' });
+    const text = result.content[0].text;
+    expect(text).toContain('## Validation');
+    expect(text).toContain('Route param `:id` has no `@dbxRouteModel` binding');
+  });
+
+  it('omits the Validation section when the id-like param is bound', async () => {
+    const result = await runRouteResolveUrl({ url: 'http://localhost:9010/interaction/profile/123' });
+    expect(result.content[0].text).not.toContain('## Validation');
+  });
+
+  it('includes missingRouteModels[] in JSON output', async () => {
+    const result = await runRouteResolveUrl({ url: 'http://localhost:9010/interaction/test/42/mytest/9000', format: 'json' });
+    const parsed = JSON.parse(result.content[0].text) as { missingRouteModels: string[] };
+    expect(parsed.missingRouteModels).toContain('id');
+  });
+
   it('captures `:` and `{name:type}` params from the composed URL', async () => {
     const result = await runRouteResolveUrl({ url: 'http://localhost:9010/interaction/test/42/mytest/9000' });
     expect(result.isError).toBeFalsy();

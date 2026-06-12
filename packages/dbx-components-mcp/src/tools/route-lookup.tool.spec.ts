@@ -78,7 +78,29 @@ describe('dbx_route_lookup', () => {
     const result = await runRouteLookup({ topic: 'app.guestbook', depth: 'brief', sources: [{ name: 'guestbook.router.ts', text: TAGGED_ROUTER }] });
     expect(result.content[0].text).not.toContain('## Page models');
   });
+
+  it('renders a Validation callout when an id-like route param has no @dbxRouteModel binding', async () => {
+    const result = await runRouteLookup({ topic: 'thing.detail', sources: [{ name: 'thing.router.ts', text: MISSING_MODEL_ROUTER }] });
+    expect(result.isError).toBeFalsy();
+    const text = result.content[0].text;
+    expect(text).toContain('## Validation');
+    expect(text).toContain('Route param `:id` has no `@dbxRouteModel` binding');
+  });
+
+  it('omits the Validation section when every id-like param is bound', async () => {
+    const result = await runRouteLookup({ topic: 'app.guestbook', sources: [{ name: 'guestbook.router.ts', text: TAGGED_ROUTER }] });
+    expect(result.content[0].text).not.toContain('## Validation');
+  });
 });
+
+const MISSING_MODEL_ROUTER = `
+import { type Ng2StateDeclaration } from '@uirouter/angular';
+
+export const THING_STATE: Ng2StateDeclaration = { name: 'thing', url: '/things' };
+export const THING_DETAIL_STATE: Ng2StateDeclaration = { name: 'thing.detail', url: '/:id' };
+
+export const STATES: Ng2StateDeclaration[] = [THING_STATE, THING_DETAIL_STATE];
+`;
 
 const TAGGED_ROUTER = `
 import { type Ng2StateDeclaration } from '@uirouter/angular';
