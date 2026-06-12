@@ -714,6 +714,19 @@
       }
     },
     {
+      "cssVariable": "--dbx-dot-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "dot size"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8px`.",
+      "defaults": {
+        "light": "8px"
+      },
+      "componentScope": "text"
+    },
+    {
       "cssVariable": "--dbx-error-color",
       "scssVariable": "$dbx-error-color-var",
       "source": "dbx-web",
@@ -1633,9 +1646,9 @@
       "intents": [
         "sidenav text color"
       ],
-      "description": "Component-scoped override point (`sidenav`) read in `packages/dbx-web/src/lib/router/layout/sidenav/_sidenav.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-primary-container)`.",
+      "description": "Component-scoped override point (`sidenav`) read in `packages/dbx-web/src/lib/router/layout/sidenav/_sidenav.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-color-current, var(--mat-sys-on-surface))`.",
       "defaults": {
-        "light": "var(--mat-sys-primary-container)"
+        "light": "var(--dbx-color-current, var(--mat-sys-on-surface))"
       },
       "componentScope": "sidenav"
     },

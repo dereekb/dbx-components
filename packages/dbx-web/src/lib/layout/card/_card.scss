@@ -5,10 +5,10 @@
 // MARK: Mixin
 @mixin core() {
   /// @dbx-utility mat-card-dbx-color
-  /// @intent re-emits the dbx-color background paint at higher specificity than MDC's `.mat-mdc-card` `background-color` rule, so a host-level `[dbxColor]` on `<mat-card>` shows through every appearance variant (elevated / outlined / filled). Tonal opacity is honoured via the existing `--dbx-color-bg-tone` channel; in tonal mode the text color flips to the vibrant theme color so contrast survives the light wash.
+  /// @intent re-emits the dbx-color background paint at higher specificity than MDC's `.mat-mdc-card` `background-color` rule, so a host-level `[dbxColor]` on `<mat-card>` shows through every appearance variant (elevated / outlined / filled). Tonal opacity is honoured via the existing `--dbx-color-bg-tone` channel; in tonal mode the text color flips to the vibrant theme color so contrast survives the light wash. A zero-specificity `:where(:not(.dbx-card-color-accent))` guard exempts the `.dbx-card-color-accent` card so its body stays unpainted while only its left edge takes the bound color.
   /// @role color
-  /// @see-also color, color-bg, color-tonal
-  mat-card.dbx-color {
+  /// @see-also color, color-bg, color-tonal, card-color-accent
+  mat-card.dbx-color:where(:not(.dbx-card-color-accent)) {
     background: color-mix(in srgb, var(#{theming.$dbx-bg-color-var}) var(#{theming.$dbx-bg-tone-var}, 100%), transparent);
     color: var(#{theming.$dbx-color-var});
 
@@ -37,8 +37,23 @@
   /// @intent accent-edged `<mat-card>` — paints a solid border down the card's left edge to flag or categorize the card. Defaults to the M3 primary color; override `--dbx-card-accent-color` for a different hue or `--dbx-card-accent-border-width` for thickness.
   /// @role layout
   /// @see-also card-banner, card-select, color
-  .dbx-card-accent {
+  // The extra `mat-card.`-qualified selector out-specifies MDC's later-emitted
+  // `.mdc-card--outlined` border shorthand, which would otherwise reset the
+  // accent edge back to the 1px outline on outlined cards.
+  .dbx-card-accent,
+  mat-card.dbx-card-accent {
     border-left: var(--dbx-card-accent-border-width, 4px) solid var(--dbx-card-accent-color, var(--mat-sys-primary));
+  }
+
+  /// @dbx-utility card-color-accent
+  /// @intent accent-edged status `<mat-card>` driven by `[dbxColor]` — the left edge paints from the bound color's `--dbx-bg-color-current` token while the card body keeps its normal unpainted surface (the `mat-card.dbx-color` surface paint exempts this class via its `:where()` guard). Always pair with `[dbxColor]` (e.g. `dbxColor="success"`); override `--dbx-card-accent-border-width` for thickness. Caveat: the theme root declares a default `--dbx-bg-color-current`, so without a bound `[dbxColor]` the edge shows that inherited default, not the `--mat-sys-primary` fallback.
+  /// @role layout
+  /// @see-also card-accent, color, mat-card-dbx-color
+  // `mat-card.`-qualified for the same `.mdc-card--outlined` border-shorthand
+  // reason as `.dbx-card-accent` above.
+  .dbx-card-color-accent,
+  mat-card.dbx-card-color-accent {
+    border-left: var(--dbx-card-accent-border-width, 4px) solid var(--dbx-bg-color-current, var(--dbx-card-accent-color, var(--mat-sys-primary)));
   }
 
   /// @dbx-utility card-banner

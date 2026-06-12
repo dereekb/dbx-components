@@ -340,6 +340,19 @@ $dbx-step-block-badge-font-weight: 600;
     border-radius: var(--dbx-chip-container-shape, var(--mat-chip-container-shape-radius, var(--mat-sys-corner-small, 8px)));
   }
 
+  /// @dbx-utility dot
+  /// @intent small round status dot painted from `currentColor` — pair with `[dbxTextColor]` (or any colored text context); size via `--dbx-dot-size`.
+  /// @role text
+  /// @see-also card-horizontal-header-dot, text-color, chip
+  .dbx-dot {
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--dbx-dot-size, 8px);
+    height: var(--dbx-dot-size, 8px);
+    border-radius: 50%;
+    background: currentColor;
+  }
+
   /// @dbx-utility chip-spacer
   /// @intent right-margin spacer between adjacent chips — 2px right margin
   /// @role spacing

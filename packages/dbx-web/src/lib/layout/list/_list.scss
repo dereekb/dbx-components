@@ -314,6 +314,19 @@ $list-item-padded-min-height: 42px;
     padding: 0;
   }
 
+  // `.dbx-list` defaults to `height: 100%` so it fills a fixed-height scroll
+  // container. When a list instead flows inline with other content (e.g. card
+  // content rendered below it), that percentage resolves against the stretched
+  // ancestor and pushes the trailing content out of the card. This modifier
+  // lets the list size to its rows.
+  /// @dbx-utility list-auto-height
+  /// @intent size a `.dbx-list` to its rows instead of filling its container — apply on the list wrapper host when content flows below the list (the default `height: 100%` would push that content out of a stretched card)
+  /// @role layout
+  /// @see-also list-no-hover-effects, list-no-item-padding
+  .dbx-list-auto-height .dbx-list {
+    height: auto;
+  }
+
   // Zeros all padding on the underlying Material list item. Per-item utility
   // (apply as host class on the value-list view) for templates that supply
   // their own padding/leading element — e.g. a `.dbx-icon-tile` in a

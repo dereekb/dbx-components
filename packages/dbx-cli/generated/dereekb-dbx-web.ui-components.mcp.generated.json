@@ -426,7 +426,7 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "example": "<dbx-basic-loading [loading]=\"true\" [dbxColor]=\"'accent'\" text=\"Loading data...\">\n  <p>Content appears here when loading is false.</p>\n</dbx-basic-loading>",
+      "example": "<dbx-basic-loading [loading]=\"true\" dbxColor=\"accent\" text=\"Loading data...\">\n  <p>Content appears here when loading is false.</p>\n</dbx-basic-loading>",
       "minimalExample": "<dbx-basic-loading [loading]=\"true\"><p>Content</p></dbx-basic-loading>"
     },
     {
@@ -485,7 +485,7 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "example": "<dbx-loading-progress mode=\"bar\" [dbxColor]=\"'accent'\"></dbx-loading-progress>",
+      "example": "<dbx-loading-progress mode=\"bar\" dbxColor=\"accent\"></dbx-loading-progress>",
       "minimalExample": "<dbx-loading-progress></dbx-loading-progress>"
     },
     {
@@ -998,7 +998,7 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "example": "<dbx-bar [dbxColor]=\"'primary'\">\n  <dbx-button text=\"Save\" raised></dbx-button>\n  <dbx-button-spacer></dbx-button-spacer>\n  <dbx-button text=\"Cancel\" stroked></dbx-button>\n</dbx-bar>",
+      "example": "<dbx-bar dbxColor=\"primary\">\n  <dbx-button text=\"Save\" raised></dbx-button>\n  <dbx-button-spacer></dbx-button-spacer>\n  <dbx-button text=\"Cancel\" stroked></dbx-button>\n</dbx-bar>",
       "minimalExample": "<dbx-bar><button>A</button><button>B</button></dbx-bar>"
     },
     {
@@ -1032,7 +1032,7 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "example": "<dbx-bar-header header=\"Members\" icon=\"group\" [dbxColor]=\"'primary'\">\n  <button mat-icon-button><mat-icon>add</mat-icon></button>\n</dbx-bar-header>",
+      "example": "<dbx-bar-header header=\"Members\" icon=\"group\" dbxColor=\"primary\">\n  <button mat-icon-button><mat-icon>add</mat-icon></button>\n</dbx-bar-header>",
       "minimalExample": "<dbx-bar-header header=\"Title\"></dbx-bar-header>"
     },
     {
@@ -1054,7 +1054,7 @@
         "dbx__ref__dbx-ui-building-blocks",
         "dbx__ref__dbx-app-structure"
       ],
-      "example": "<dbx-pagebar [dbxColor]=\"'primary'\">\n  <h2>Settings</h2>\n  <span class=\"spacer\"></span>\n  <button mat-stroked-button>Save</button>\n</dbx-pagebar>",
+      "example": "<dbx-pagebar dbxColor=\"primary\">\n  <h2>Settings</h2>\n  <span class=\"spacer\"></span>\n  <button mat-stroked-button>Save</button>\n</dbx-pagebar>",
       "minimalExample": "<dbx-pagebar>Title</dbx-pagebar>"
     },
     {
@@ -1915,12 +1915,6 @@
       "description": "Provides themed color *tokens* to the host element — it never paints a background itself.\n\nAccepts either a {@link DbxThemeColor} string (e.g. `'primary'`, `'success'`) or a {@link DbxColorConfig}\nobject carrying arbitrary CSS color values (any hex, `rgb()`, `hsl()`, `var(...)`, `color-mix(...)`, etc.).\nThe directive sets the `--dbx-bg-color-current` / `--dbx-color-current` (and tone) custom properties and adds the\n`.dbx-color` marker class, leaving the actual painting to either the explicit `.dbx-color-bg` utility on the same\nelement or a colored-surface component's own `.dbx-color`-scoped SCSS (e.g. `<dbx-bar>`, `<dbx-button>`, `<dbx-loading>`,\n`<dbx-icon-tile>`, `<mat-card>`) that reads the inherited tokens.\n\nOptionally set {@link dbxColorTone} (0-100) to control background opacity for a tonal/muted appearance.\nWhen tonal mode is active, the `dbx-color-tonal` CSS class is added and a CSS rule overrides the text\ncolor to the vibrant color (via `--dbx-bg-color-current`).\n\nThe standalone `[dbxColorTone]` input wins over `config.tone` when both are set; the same precedence\napplies to tonal mode.",
       "inputs": [
         {
-          "name": "dbxColor",
-          "type": "Maybe<DbxColorInput>",
-          "description": "",
-          "required": false
-        },
-        {
           "name": "dbxColorTone",
           "type": "Maybe<DbxColorTone>",
           "description": "Background tone level (0-100). When set, the background becomes semi-transparent\nand text color switches to the vibrant theme color for a tonal appearance.",
@@ -1932,8 +1926,8 @@
         "text-color",
         "color-service"
       ],
-      "example": "<!-- pair with .dbx-color-bg to paint a plain element -->\n<div [dbxColor]=\"'primary'\" class=\"dbx-color-bg\">Themed background</div>\n<div [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\" class=\"dbx-color-bg\">Tonal themed</div>\n<div [dbxColor]=\"{ color: '#ff0066', contrast: 'white' }\" class=\"dbx-color-bg\">Custom hex</div>\n\n<!-- a colored-surface component paints itself from the tokens; no .dbx-color-bg needed -->\n<dbx-bar [dbxColor]=\"'primary'\">Bar paints itself</dbx-bar>\n<dbx-button [dbxColor]=\"'warn'\" raised text=\"Delete\"></dbx-button>",
-      "minimalExample": "<div [dbxColor]=\"'primary'\" class=\"dbx-color-bg\"></div>"
+      "example": "<!-- pair with .dbx-color-bg to paint a plain element -->\n<div dbxColor=\"primary\" class=\"dbx-color-bg\">Themed background</div>\n<div dbxColor=\"primary\" [dbxColorTone]=\"18\" class=\"dbx-color-bg\">Tonal themed</div>\n<div [dbxColor]=\"{ color: '#ff0066', contrast: 'white' }\" class=\"dbx-color-bg\">Custom hex</div>\n\n<!-- a colored-surface component paints itself from the tokens; no .dbx-color-bg needed -->\n<dbx-bar dbxColor=\"primary\">Bar paints itself</dbx-bar>\n<dbx-button color=\"warn\" raised text=\"Delete\"></dbx-button>",
+      "minimalExample": "<div dbxColor=\"primary\" class=\"dbx-color-bg\"></div>"
     },
     {
       "slug": "color-service",
@@ -2201,8 +2195,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "example": "<dbx-icon-tile [icon]=\"'check'\" [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n\n<dbx-icon-tile [icon]=\"'star'\" [round]=\"true\" [dbxColor]=\"'accent'\"></dbx-icon-tile>\n\n<dbx-icon-tile [dbxColor]=\"'accent'\">\n  <my-custom-glyph></my-custom-glyph>\n</dbx-icon-tile>",
-      "minimalExample": "<dbx-icon-tile [icon]=\"'verified'\" [dbxColor]=\"'success'\"></dbx-icon-tile>"
+      "example": "<dbx-icon-tile [icon]=\"'check'\" dbxColor=\"primary\" [dbxColorTone]=\"18\"></dbx-icon-tile>\n\n<dbx-icon-tile [icon]=\"'star'\" [round]=\"true\" dbxColor=\"accent\"></dbx-icon-tile>\n\n<dbx-icon-tile dbxColor=\"accent\">\n  <my-custom-glyph></my-custom-glyph>\n</dbx-icon-tile>",
+      "minimalExample": "<dbx-icon-tile [icon]=\"'verified'\" dbxColor=\"success\"></dbx-icon-tile>"
     },
     {
       "slug": "icon-tile-host",
@@ -2230,8 +2224,8 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "example": "<div class=\"dbx-list-two-line-item dbx-list-two-line-item-with-icon\">\n  <div class=\"item-icon\" dbxIconTile [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\">\n    <mat-icon>check_circle</mat-icon>\n  </div>\n  <div class=\"item-left\">\n    <span class=\"item-title\">Title</span>\n    <span class=\"item-details\">Details</span>\n  </div>\n</div>",
-      "minimalExample": "<div dbxIconTile [dbxColor]=\"'primary'\" [dbxColorTone]=\"18\">\n<mat-icon>star</mat-icon>\n</div>"
+      "example": "<div class=\"dbx-list-two-line-item dbx-list-two-line-item-with-icon\">\n  <div class=\"item-icon\" dbxIconTile dbxColor=\"primary\" [dbxColorTone]=\"18\">\n    <mat-icon>check_circle</mat-icon>\n  </div>\n  <div class=\"item-left\">\n    <span class=\"item-title\">Title</span>\n    <span class=\"item-details\">Details</span>\n  </div>\n</div>",
+      "minimalExample": "<div dbxIconTile dbxColor=\"primary\" [dbxColorTone]=\"18\">\n<mat-icon>star</mat-icon>\n</div>"
     },
     {
       "slug": "label-block",
@@ -2267,7 +2261,7 @@
       "selector": "dbx-chip",
       "className": "DbxChipDirective",
       "module": "@dereekb/dbx-web",
-      "description": "Renders a styled chip element with optional small, block, and color modes.",
+      "description": "Renders a styled chip element with optional small, block, and color modes.\n\nHosts a {@link DbxColorDirective} that provides the color tokens + `.dbx-color` marker the chip's\n`.dbx-chip.dbx-color` SCSS paints from. The color can be supplied either through the {@link color}/{@link display}\ninputs (pushed into the host directive) or by binding `[dbxColor]` directly; the chip's tone handling (default\n{@link DEFAULT_DBX_CHIP_TONE} → tonal text) applies to both.",
       "inputs": [
         {
           "name": "small",
@@ -2284,7 +2278,7 @@
         {
           "name": "color",
           "type": "Maybe<DbxColorInput>",
-          "description": "Theme color or {@link DbxColorConfig} applied to the chip background via {@link dbxColorBackground}.\n\nWhen {@link display} is also set, its color is used as a fallback.",
+          "description": "Theme color or {@link DbxColorConfig} applied to the chip, pushed into the host {@link DbxColorDirective}.\n\nWhen {@link display} is also set, its color is used as a fallback.",
           "required": false
         },
         {
@@ -2307,7 +2301,7 @@
       "skillRefs": [
         "dbx__ref__dbx-ui-building-blocks"
       ],
-      "example": "<dbx-chip text=\"Active\" icon=\"check\" dbxColor=\"primary\"></dbx-chip>",
+      "example": "<dbx-chip text=\"Active\" icon=\"check\" color=\"primary\"></dbx-chip>",
       "minimalExample": "<dbx-chip text=\"Tag\"></dbx-chip>"
     },
     {
