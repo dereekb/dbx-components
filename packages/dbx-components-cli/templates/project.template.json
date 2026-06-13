@@ -1,0 +1,57 @@
+{
+  "name": "workspace",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "prefix": "workspace",
+  "targets": {
+    "build-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx nx run-many -t build",
+        "color": true
+      }
+    },
+    "lint-fix-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "description": "",
+        "command": "npx nx run-many --exclude=workspace -t lint --fix"
+      }
+    },
+    "start-release": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./start-release.sh"
+      }
+    },
+    "prettier": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./start-release.sh"
+      }
+    },
+    "release-dry-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx nx release --dry-run --verbose"
+      }
+    },
+    "release": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx nx release --skip-publish --verbose"
+      }
+    },
+    "deploy-firebase-rules": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx firebase --project=default deploy --only firestore:rules,storage"
+      }
+    },
+    "ci-deploy-firebase-rules": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx firebase --project=default deploy --only firestore:rules,storage"
+      }
+    }
+  }
+}

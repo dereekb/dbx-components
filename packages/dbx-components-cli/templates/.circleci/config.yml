@@ -1,0 +1,337 @@
+# Derived from https://github.com/dereekb/dbx-components/blob/main/.circleci/config.yml
+# SETUP REQUIRED - Visit all sections marked SETUP REQUIRED to finish up configuration. This requires changes on CircleCI's portal.
+version: 2.1
+defaults: &defaults
+  working_directory: ~/code # "code" is our working directory
+  resource_class: large
+  docker:
+    - image: cimg/node:24.13
+
+parameters:
+  run_build:
+    type: boolean
+    default: true
+  run_tests:
+    type: boolean
+    default: true
+
+orbs:
+  nx: nrwl/nx@1.7.0
+  node: circleci/node@7.2.1
+  snyk: snyk/snyk@2.3.0
+
+jobs:
+  build:
+    <<: *defaults
+    parameters:
+      persist_build_to_workspace:
+        type: boolean
+        default: true
+      scan_with_snyk:
+        type: boolean
+        default: false # flag true if you want to scan for vulnerabilities with snyk
+    environment:
+      CYPRESS_INSTALL_BINARY: 0
+      NX_NO_CLOUD: 'true'
+    steps:
+      - checkout
+      # install node packages
+      - node/install-packages
+      # scan vulnerabilities with snyk if enabled
+      # SETUP REQUIRED - Configure SNYK_TOKEN in CircleCI environment variables if using snyk
+      - when:
+          condition: << parameters.scan_with_snyk >>
+          steps:
+            - snyk/scan:
+                fail-on-issues: false
+                monitor-on-build: true
+                severity-threshold: critical
+      # initialize nx
+      - nx/set-shas
+      # builds everything in the project in order
+      - run:
+          name: build
+          command: npx nx run workspace:build-all
+      # persist builds to workspace if persist_build_to_workspace is true
+      - when:
+          condition: << parameters.persist_build_to_workspace >>
+          steps:
+            - persist_to_workspace:
+                root: ~/code
+                paths:
+                  - node_modules
+                  - dist
+                  - .nx/cache
+  # Runs tests for the projects that do not require the firebase emulators.
+  test-with-node:
+    <<: *defaults
+    environment:
+      NX_NO_CLOUD: 'true'
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/code
+      - run:
+          name: run ANGULAR_APP_NAME tests
+          command: npx nx test ANGULAR_APP_NAME
+      - store_test_results:
+          path: ~/code/.reports/junit/
+  # Runs tests for the projects that require the firebase emulators.
+  test-with-node-firebase:
+    <<: *defaults
+    environment:
+      # https://github.com/firebase/firebase-tools/issues/6765
+      GCE_METADATA_HOST: 0.0.0.0
+      DETECT_GCP_RETRIES: 0
+      METADATA_SERVER_DETECTION: none
+      NX_NO_CLOUD: 'true'
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/code
+      # install the emulator requirements
+      - run: sudo apt-get update -y && sudo apt-get install -y curl openjdk-21-jre-headless
+      # restore the emulators cache
+      - restore_cache:
+          keys:
+            - firebase-cache-v1-{{ checksum "package-lock.json" }}
+            - firebase-cache-v1-
+      # Skip tests if run_tests is false
+      - unless:
+          condition:
+            equal: [false, << pipeline.parameters.run_tests >>]
+          steps:
+            - run:
+                name: run API_APP_NAME tests
+                command: npx firebase --project=default emulators:exec --only auth,firestore,storage 'npx nx run-tests API_APP_NAME'
+            # - run:
+            #    name: run E2E_APP_NAME tests
+            #    command: npx firebase --project=default emulators:exec --only auth,firestore,storage,functions 'npx nx run-tests E2E_APP_NAME'
+      # store the emulators cache
+      - save_cache:
+          key: firebase-cache-v1-{{ checksum "package-lock.json" }}
+          paths:
+            - ~/.cache/firebase
+      - store_test_results:
+          path: ~/code/.reports/junit/
+  # Performs release operations on the release branch.
+  run-release-and-push-to-main:
+    <<: *defaults
+    parameters:
+      skip_build:
+        type: boolean
+        default: false
+    environment:
+      NX_NO_CLOUD: 'true'
+      # SETUP REQUIRED - Set the git username and email to the desired values
+      GIT_USER_EMAIL: CI_GIT_USER_EMAIL
+      GIT_USER_NAME: CI_GIT_USER_NAME
+    steps:
+      - checkout
+      # attach workspace from build job when build was not skipped
+      - unless:
+          condition: << parameters.skip_build >>
+          steps:
+            - attach_workspace:
+                at: ~/code
+      # install packages directly when build was skipped
+      - when:
+          condition: << parameters.skip_build >>
+          steps:
+            - node/install-packages
+      # SETUP REQUIRED - Add an SSH key from GitHub to your project's CircleCI configuration. This is require to push changes to github
+      # https://circleci.com/docs/2.0/add-ssh-key/#adding-ssh-keys-to-a-job
+      - add_ssh_keys:
+          fingerprints:
+            - 'SET_THIS_VALUE_TO_BE_VALID'
+      - run:
+          name: setup git
+          command: git config user.email "$GIT_USER_EMAIL" && git config user.name "$GIT_USER_NAME"
+      - run:
+          # build the release and make a commit on develop
+          name: build release with nx release
+          command: npx nx run workspace:release
+      - run:
+          # we grab the relevant tag names before swapping to main
+          name: 'setup env vars for git changes'
+          command: echo -e "export DEV_TAG_ID=$(git describe --tags --abbrev=0 HEAD^)\nTAG_ID=$(git describe --tags --abbrev=0)" >> $BASH_ENV
+      - run:
+          # copy the commit message before we swap branches, or it will include unrelated changes. Move tag to the main branch after making the merge commit into main
+          name: merge release into main and use the release commit message, move tag from release to main
+          command: COMMIT_MESSAGE=$(git log $DEV_TAG_ID..release --pretty=%B | cat) && echo "merging new release ($TAG_ID) into main. Adding all commits since last dev tag ($DEV_TAG_ID)" && git checkout main && git merge release --squash -Xtheirs && git commit --no-verify -m "$COMMIT_MESSAGE" && git tag -f $TAG_ID
+      - run:
+          name: push main to origin, push new tag to origin
+          command: git push origin main && git push origin $(git describe --abbrev=0 --tags)
+      - run:
+          name: delete release branch
+          command: git push origin --delete release
+  # Deploys rules and configured projects to Firebase.
+  # COMPLETE CIRCLECI SETUP AND PROVIDE "FIREBASE_SECRETS_BASE64" ENVIRONMENT VARIABLE
+  # IF YOU DONT HAVE A STAGING ENVIRONMENT, DELETE THE BELOW
+  deploy-to-firebase-staging:
+    <<: *defaults
+    environment:
+      NX_NO_CLOUD: 'true'
+      GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/code
+      - run:
+          name: decode firebase secrets
+          command: echo $FIREBASE_SECRETS_BASE64_staging | base64 -d > ~/code/firebase-secrets.json
+      - run:
+          # NOTE: this uses make-env.js to produce a .env file that is uploaded. Ensure CircleCI has all required variables before release.
+          name: deploy api to Firebase Functions staging
+          command: npx nx run API_APP_NAME:ci-deploy-staging
+      - run:
+          name: deploy website to Firebase Hosting staging
+          command: npx nx run ANGULAR_APP_NAME:ci-deploy-staging
+      - run:
+          name: deploy updated rules
+          command: npx nx run workspace:ci-deploy-firebase-rules-staging
+  deploy-to-firebase-prod:
+    <<: *defaults
+    environment:
+      NX_NO_CLOUD: 'true'
+      GOOGLE_APPLICATION_CREDENTIALS: firebase-secrets.json
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/code
+      - run:
+          name: decode firebase secrets
+          command: echo $FIREBASE_SECRETS_BASE64_prod | base64 -d > ~/code/firebase-secrets.json
+      - run:
+          # NOTE: this uses make-env.js to produce a .env file that is uploaded. Ensure CircleCI has all required variables before release.
+          name: deploy api to Firebase Functions production
+          command: npx nx run API_APP_NAME:ci-deploy-prod
+      - run:
+          name: deploy website to Firebase Hosting production
+          command: npx nx run ANGULAR_APP_NAME:ci-deploy-prod
+      - run:
+          name: deploy updated rules
+          command: npx nx run workspace:ci-deploy-firebase-rules-prod
+  # Publishes content to npm. This should occur after running a release.
+  # REMOVE IF YOU DO NOT NEED TO PUBLISH TO NPM
+  publish-to-npm:
+    <<: *defaults
+    environment:
+      NX_NO_CLOUD: 'true'
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/code
+      # SETUP REQUIRED - Add your NPM token under the variable NPM_TOKEN on CircleCI for CircleCI to use.
+      - run:
+          name: configure npmrc / npm login
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+      # OPTIONAL: Run lint fix to update any npm dependencies in the projects before publishing
+      # - run:
+      #     name: Run lint fix to update any npm dependencies in the projects before building
+      #     command: ./lint-fix-all.sh || true # ignore error
+      # NOTE: npm can potentially have issues with showing the newest package if a required dependency isn't available when published.
+      # If your packages depend on each other, publish them in dependency order instead of using run-many.
+      # Example sequential publishing:
+      # - run: npx nx run package-a:ci-publish-npmjs && npx nx run package-b:ci-publish-npmjs
+      - run: npx nx run-many -t ci-publish-npmjs
+# --- WORKFLOWS ---
+workflows:
+  version: 2
+  # builds and tests the content. Occurs on every branch.
+  build-and-test-and-version:
+    when: << pipeline.parameters.run_build >>
+    jobs:
+      - build
+      - test-with-node:
+          requires:
+            - build
+      - test-with-node-firebase:
+          requires:
+            - build
+      - run-release-and-push-to-main:
+          requires:
+            - build
+            - test-with-node
+            - test-with-node-firebase
+          filters:
+            branches:
+              only: release
+  # Skips build/test and runs release directly. Trigger manually with run_build=false.
+  release-only:
+    when:
+      not: << pipeline.parameters.run_build >>
+    jobs:
+      - run-release-and-push-to-main:
+          skip_build: true
+          filters:
+            branches:
+              only: release
+  # Publishes to npm
+  # REMOVE IF YOU DO NOT NEED TO PUBLISH TO NPM
+  publish:
+    jobs:
+      # Wait for approval before publishing to npm
+      # Publishing may require two-factor authentication approval.
+      - hold-publish-npm:
+          type: approval
+          filters:
+            branches:
+              only: main
+      - build:
+          filters:
+            branches:
+              only: main
+      - publish-to-npm:
+          requires:
+            - build
+            - hold-publish-npm
+          filters:
+            branches:
+              only: main
+  # Publishes to production
+  publish-to-production:
+    jobs:
+      # Wait for approval before deploying to firebase
+      # This prevents unnecessary deployments for smaller changes.
+      - hold-deploy-to-firebase-prod:
+          type: approval
+          filters:
+            branches:
+              only: main
+      - build:
+          filters:
+            branches:
+              only: main
+          requires:
+            - hold-deploy-to-firebase-prod
+      - deploy-to-firebase-prod:
+          requires:
+            - hold-deploy-to-firebase-prod
+            - build
+          filters:
+            branches:
+              only: main
+  # Publishes to staging
+  publish-to-staging:
+    jobs:
+      # Wait for approval before deploying to firebase
+      # This prevents unnecessary deployments for smaller changes.
+      - hold-deploy-to-firebase-staging:
+          type: approval
+          filters:
+            branches:
+              only: main
+      - build:
+          filters:
+            branches:
+              only: main
+          requires:
+            - hold-deploy-to-firebase-staging
+      - deploy-to-firebase-staging:
+          requires:
+            - hold-deploy-to-firebase-staging
+            - build
+          filters:
+            branches:
+              only: main

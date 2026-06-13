@@ -14,6 +14,7 @@ import { FIXTURE_COMMAND } from './commands/fixture.command.js';
 import { LIST_COMMAND } from './commands/list.command.js';
 import { VALIDATE_COMMAND } from './commands/validate.command.js';
 import { SPEC_COMMAND } from './commands/spec.command.js';
+import { SETUP_COMMAND } from './commands/setup.command.js';
 
 /**
  * Builds, parses, and runs the CLI for the given argv (already stripped of the
@@ -30,7 +31,8 @@ export async function runDbxComponentsCli(argv: readonly string[]): Promise<void
     .command(FIXTURE_COMMAND)
     .command(VALIDATE_COMMAND)
     .command(LIST_COMMAND)
-    .demandCommand(1, 'Specify a command (spec, fixture, validate, list).')
+    .command(SETUP_COMMAND)
+    .demandCommand(1, 'Specify a command (spec, fixture, validate, list, setup).')
     .strict()
     .help()
     .alias('h', 'help')

@@ -1,0 +1,29 @@
+import { environment } from './environments/environment';
+import { onRequest } from 'firebase-functions/v2/https';
+import admin from 'firebase-admin';
+import { allAppFunctions, allScheduledAppFunctions, initNestServer } from './app/app';
+import { APP_CODE_PREFIXDevelopmentFunctionMap } from './app/function/model/development.functions';
+import { firebaseServerDevFunctions } from '@dereekb/firebase-server';
+import { onCallWithAPP_CODE_PREFIXNestContext } from './app/function/function';
+
+const app = admin.initializeApp();
+
+const { server, nest } = initNestServer(app, { environment });
+
+export const api = onRequest({}, server);
+
+// App Functions
+export const { exampleSetUsername, callModel } = allAppFunctions(nest);
+
+// Scheduled Functions
+const allScheduledFunctions = allScheduledAppFunctions(nest);
+export const { exampleSchedule } = allScheduledFunctions;
+
+// Admin/Developer Functions
+export const { dev } = firebaseServerDevFunctions({
+  enabled: true,
+  nest,
+  developerFunctionsMap: APP_CODE_PREFIXDevelopmentFunctionMap,
+  onCallFactory: onCallWithAPP_CODE_PREFIXNestContext,
+  allScheduledFunctions
+});

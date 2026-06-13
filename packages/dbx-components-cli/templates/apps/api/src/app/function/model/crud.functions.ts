@@ -1,0 +1,42 @@
+import { inAuthContext, onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallSpecifierHandler, onCallReadModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
+import { type APP_CODE_PREFIXOnCallCreateModelMap, type APP_CODE_PREFIXOnCallReadModelMap, type APP_CODE_PREFIXOnCallUpdateModelMap, type APP_CODE_PREFIXOnCallDeleteModelMap, onCallWithAPP_CODE_PREFIXNestContext } from '../function';
+import { updateProfile, updateProfleOnboarding } from '../profile/profile.update';
+import { storageFileUpdate, storageFileProcess } from '../storagefile/storagefile.update';
+import { storageFileCreate, storageFileInitializeFromUpload, storageFileInitializeAllFromUploads } from '../storagefile/storagefile.create';
+
+// MARK: Create
+export const APP_CODE_PREFIX_CAMELCreateModelMap: APP_CODE_PREFIXOnCallCreateModelMap = {
+  storageFile: onCallSpecifierHandler({
+    _: storageFileCreate,
+    fromUpload: storageFileInitializeFromUpload,
+    allFromUpload: storageFileInitializeAllFromUploads
+  })
+};
+
+// MARK: Read
+export const APP_CODE_PREFIX_CAMELReadModelMap: APP_CODE_PREFIXOnCallReadModelMap = {};
+
+// MARK: Update
+export const APP_CODE_PREFIX_CAMELUpdateModelMap: APP_CODE_PREFIXOnCallUpdateModelMap = {
+  profile: onCallSpecifierHandler({
+    _: updateProfile,
+    onboard: updateProfleOnboarding
+  }),
+  storageFile: onCallSpecifierHandler({
+    _: storageFileUpdate,
+    process: storageFileProcess
+  })
+};
+
+// MARK: Delete
+export const APP_CODE_PREFIX_CAMELDeleteModelMap: APP_CODE_PREFIXOnCallDeleteModelMap = {};
+
+// MARK: Call
+export const APP_CODE_PREFIX_CAMELCallModelMap: OnCallModelMap = {
+  create: onCallCreateModel(APP_CODE_PREFIX_CAMELCreateModelMap),
+  read: onCallReadModel(APP_CODE_PREFIX_CAMELReadModelMap),
+  update: onCallUpdateModel(APP_CODE_PREFIX_CAMELUpdateModelMap),
+  delete: onCallDeleteModel(APP_CODE_PREFIX_CAMELDeleteModelMap)
+};
+
+export const APP_CODE_PREFIX_CAMELCallModel = onCallWithAPP_CODE_PREFIXNestContext(inAuthContext(onCallModel(APP_CODE_PREFIX_CAMELCallModelMap)));

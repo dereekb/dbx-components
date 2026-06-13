@@ -6,7 +6,11 @@
     "dbx-components-cli": "dbx-components-cli.js"
   },
   "dependencies": {
+    "adm-zip": "0.5.17",
     "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.8"
   },
   "peerDependencies": {
     "@dereekb/dbx-cli": "13.17.0",

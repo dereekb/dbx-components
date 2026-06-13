@@ -1,0 +1,68 @@
+@use '@angular/material' as mat;
+@use '@dereekb/dbx-web' as dbx;
+@use '@dereekb/dbx-form' as dbx-form;
+@use './variables';
+
+// Light theme
+$app-mat-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$rose-palette
+    ),
+    typography: (
+      plain-family: 'Fira Sans',
+      brand-family: 'Fira Sans'
+    ),
+    density: (
+      scale: 0
+    )
+  )
+);
+
+$app-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
+$app-theme: dbx.define-dbx-theme-config($app-mat-theme, $app-dbx-theme-with-banner-config);
+$app-form-theme: dbx-form.define-dbx-form-theme-config($app-theme);
+
+/**
+This mixin creates the app-theme components and elements for @angular/material and @dereekb/dbx-web to be enabled for a specific css selector, which is usually ".app-app"
+*/
+@mixin app-theme($root-selector) {
+  @include dbx.theme($root-selector, $app-theme);
+  @include dbx-form.theme($root-selector, $app-form-theme);
+
+  #{$root-selector} {
+    @include dbx.dbx-components-shapes();
+  }
+}
+
+// Dark theme
+$dark-app-mat-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: dark,
+      primary: mat.$violet-palette,
+      tertiary: mat.$orange-palette
+    ),
+    typography: (
+      plain-family: 'Fira Sans',
+      brand-family: 'Fira Sans'
+    ),
+    density: (
+      scale: 0
+    )
+  )
+);
+
+$dark-app-theme: dbx.define-dbx-theme-config($dark-app-mat-theme, $app-dbx-theme-with-banner-config);
+$dark-app-form-theme: dbx-form.define-dbx-form-theme-config($dark-app-theme);
+
+@mixin dark-app-theme($root-selector) {
+  @include dbx.theme($root-selector, $dark-app-theme);
+  @include dbx-form.theme($root-selector, $dark-app-form-theme);
+
+  #{$root-selector} {
+    @include dbx.dbx-components-shapes();
+  }
+}

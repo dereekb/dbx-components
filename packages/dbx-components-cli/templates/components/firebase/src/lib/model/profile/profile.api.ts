@@ -1,0 +1,51 @@
+import { type FirebaseFunctionTypeConfigMap, type InferredTargetModelParams, inferredTargetModelParamsType, type ModelFirebaseCrudFunction, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, callModelFirebaseFunctionMapFactory } from '@dereekb/firebase';
+import { type Type } from 'arktype';
+import { type ProfileTypes } from './profile';
+
+export type UpdateProfileParams = InferredTargetModelParams;
+
+export const updateProfileParamsType = inferredTargetModelParamsType as Type<UpdateProfileParams>;
+
+export type FinishOnboardingProfileParams = InferredTargetModelParams;
+
+export const finishOnboardingProfileParamsType = inferredTargetModelParamsType as Type<FinishOnboardingProfileParams>;
+
+/**
+ * This is our FirebaseFunctionTypeMap for Profile. It defines all the functions that are available.
+ */
+export type ProfileFunctionTypeMap = {};
+
+export const profileFunctionTypeConfigMap: FirebaseFunctionTypeConfigMap<ProfileFunctionTypeMap> = {};
+
+export type ProfileModelCrudFunctionsConfig = {
+  profile: {
+    update: {
+      _: UpdateProfileParams;
+      onboard: [FinishOnboardingProfileParams, boolean];
+    };
+  };
+  profilePrivate: null;
+};
+
+export const profileModelCrudFunctionsConfig: ModelFirebaseCrudFunctionConfigMap<ProfileModelCrudFunctionsConfig, ProfileTypes> = {
+  profile: [
+    'update:_,onboard' as any // use "any" once typescript complains about combinations
+  ]
+};
+
+/**
+ * Used to generate our ProfileFunctionMap for a Functions instance.
+ */
+export const profileFunctionMap = callModelFirebaseFunctionMapFactory(profileFunctionTypeConfigMap, profileModelCrudFunctionsConfig);
+
+/**
+ * Declared as an abstract class so we can inject it into our Angular app using this token.
+ */
+export abstract class ProfileFunctions implements ModelFirebaseFunctionMap<ProfileFunctionTypeMap, ProfileModelCrudFunctionsConfig> {
+  abstract profile: {
+    updateProfile: {
+      update: ModelFirebaseCrudFunction<UpdateProfileParams>;
+      onboard: ModelFirebaseCrudFunction<FinishOnboardingProfileParams, boolean>;
+    };
+  };
+}

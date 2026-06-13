@@ -4,7 +4,9 @@
  * from __dirname so the test does not depend on the process cwd.
  */
 
-import { resolve } from 'node:path';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { runDbxComponentsCli } from './cli.js';
 
@@ -56,6 +58,43 @@ describe('dbx-components-cli', () => {
     await runDbxComponentsCli(['spec', 'list', DEMO_API_ABS, '--json']);
     cap.restore();
     expect(cap.output().length).toBeGreaterThan(0);
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('setup module + validate — scaffolds templates and validates the structure', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dbxc-cli-setup-'));
+
+    const scaffold = captureStdout();
+    await runDbxComponentsCli(['setup', 'firebase-components', 'gethapierapp', 'gethapier', 'getHapier', '9300', '--dir', dir, '--templates-only']);
+    scaffold.restore();
+    expect(scaffold.output()).toContain('wrote');
+    expect(process.exitCode).toBeUndefined();
+
+    const validate = captureStdout();
+    await runDbxComponentsCli(['setup', 'validate', 'gethapierapp', 'gethapier', 'getHapier', '9300', '--module', 'firebase-components', '--dir', dir, '--json']);
+    validate.restore();
+    const report = JSON.parse(validate.output()) as readonly { readonly missing: readonly string[]; readonly present: readonly string[] }[];
+    expect(report[0].missing).toEqual([]);
+    expect(report[0].present.length).toBeGreaterThan(0);
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('setup validate — exits non-zero when the structure is missing', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dbxc-cli-setup-empty-'));
+    const cap = captureStdout();
+    await runDbxComponentsCli(['setup', 'validate', '--module', 'api', 'gethapierapp', '--dir', dir]);
+    cap.restore();
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('setup init --dry-run --templates-only — prints the phase plan without writing', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'dbxc-cli-init-'));
+    const cap = captureStdout();
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await runDbxComponentsCli(['setup', 'init', 'gethapierapp', 'gethapier', 'getHapier', '9300', '--dir', dir, '--templates-only', '--dry-run']);
+    cap.restore();
+    errSpy.mockRestore();
+    expect(cap.output()).toContain('setup init');
     expect(process.exitCode).toBeUndefined();
   });
 });

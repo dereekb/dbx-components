@@ -1,0 +1,163 @@
+{
+  "name": "ANGULAR_APP_NAME",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "ANGULAR_APP_FOLDER/src",
+  "prefix": "app",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/ANGULAR_APP_DIST_FOLDER"],
+      "options": {
+        "command": "npx nx run ANGULAR_APP_NAME:build-base",
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nx/angular:application",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "ANGULAR_APP_DIST_FOLDER",
+        "browser": "ANGULAR_APP_FOLDER/src/main.ts",
+        "index": "ANGULAR_APP_FOLDER/src/index.html",
+        "polyfills": ["zone.js"],
+        "tsConfig": "ANGULAR_APP_FOLDER/tsconfig.app.json",
+        "inlineStyleLanguage": "scss",
+        "assets": [
+          "ANGULAR_APP_FOLDER/src/favicon.ico",
+          "ANGULAR_APP_FOLDER/src/assets",
+          "ANGULAR_APP_FOLDER/src/lib"
+        ],
+        "allowedCommonJsDependencies": ["core-js", "make-error", "validator"],
+        "stylePreprocessorOptions": {
+          "includePaths": ["packages", ""]
+        },
+        "styles": [
+          "node_modules/mapbox-gl/dist/mapbox-gl.css",
+          "ANGULAR_APP_FOLDER/src/styles.scss"
+        ],
+        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "budgets": [{
+              "type": "initial",
+              "maximumWarning": "4mb",
+              "maximumError": "6mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "20kb",
+              "maximumError": "40kb"
+            }
+          ],
+          "fileReplacements": [{
+            "replace": "ANGULAR_APP_FOLDER/src/environments/environment.ts",
+            "with": "ANGULAR_APP_FOLDER/src/environments/environment.prod.ts"
+          }],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "executor": "@nx/angular:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "ANGULAR_APP_NAME:build-base:production",
+          "proxyConfig": "apps/ANGULAR_APP_NAME/proxy.conf.prod.json",
+          "port": ANGULAR_APP_PORT
+        },
+        "development": {
+          "buildTarget": "ANGULAR_APP_NAME:build-base:development",
+          "proxyConfig": "apps/ANGULAR_APP_NAME/proxy.conf.dev.json",
+          "port": ANGULAR_APP_PORT
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "ANGULAR_APP_NAME:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["ANGULAR_APP_FOLDER/**/*.ts", "ANGULAR_APP_FOLDER/**/*.html", "ANGULAR_APP_FOLDER/**/*.scss"]
+      }
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/ANGULAR_APP_FOLDER"
+      }
+    },
+    "ci-deploy-prod": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run ANGULAR_APP_NAME:build-base:prod"
+          },
+          {
+            "command": "npx firebase --project=prod deploy --only hosting:prod"
+          },
+          {
+            "command": "npx nx run ANGULAR_APP_NAME:ci-deploy-prod-rules"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "ci-deploy-prod-rules": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx firebase --project=prod deploy --only firestore:rules,storage"
+      }
+    },
+    "ci-deploy-staging": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run ANGULAR_APP_NAME:build-base:staging"
+          },
+          {
+            "command": "npx firebase --project=staging deploy --only hosting:staging"
+          },
+          {
+            "command": "npx nx run ANGULAR_APP_NAME:ci-deploy-staging-rules"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "ci-deploy-staging-rules": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx firebase --project=staging deploy --only firestore:rules,storage"
+      }
+    }
+  },
+  "tags": []
+}
