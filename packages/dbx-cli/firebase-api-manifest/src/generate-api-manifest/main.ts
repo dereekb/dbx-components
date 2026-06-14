@@ -65,12 +65,12 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 
-import type { CliModelManifestEntry } from '@dereekb/dbx-cli';
+import type { CliEnumManifest, CliModelManifestEntry } from '@dereekb/dbx-cli';
 import { parseFunctionsConfig } from './parse-functions';
 import { resolveModuleToPackage, relPath } from './resolve-package';
 import { findApiFiles } from './find-api-files';
 import { findModelFiles } from './find-model-files';
-import { assembleModels } from './assemble-models';
+import { assembleModels, collectModelEnums } from './assemble-models';
 import { deriveValidatorName, isExportedFromPackage } from './bind-validators';
 import { renderManifest } from './emit';
 import type { CollectedEntry, ModelExtractionSource, PackageRef } from './types';
@@ -198,9 +198,10 @@ async function main(): Promise<void> {
 
   const modelEntries: readonly CliModelManifestEntry[] = flags.emitModels ? assembleModels({ extractions: modelSources }) : [];
   const filteredModelEntries = flags.only ? modelEntries.filter((m) => flags.only?.has(m.modelType)) : modelEntries;
+  const enumEntries: CliEnumManifest = flags.emitModels ? collectModelEnums({ extractions: modelSources, models: filteredModelEntries }) : {};
 
   ensureOutputDir(outputDir);
-  const formatted = await renderManifest({ outputFile, entries: collected, projectName, namespace, modelEntries: filteredModelEntries, modelNamespace: deriveModelNamespace(flags.project), emitConverters: flags.emitModelConverters });
+  const formatted = await renderManifest({ outputFile, entries: collected, projectName, namespace, modelEntries: filteredModelEntries, modelNamespace: deriveModelNamespace(flags.project), enumEntries, enumNamespace: deriveEnumNamespace(flags.project), emitConverters: flags.emitModelConverters });
 
   if (existsSync(outputFile) && readFileSync(outputFile, 'utf8') === formatted) {
     console.log(`[unchanged] ${relative(WORKSPACE_ROOT, outputFile)}`);
@@ -210,7 +211,7 @@ async function main(): Promise<void> {
   }
 
   const groupCount = packageCache.size === 0 ? 0 : new Set(collected.map((c) => c.entry.groupName)).size;
-  const modelSummary = flags.emitModels ? ` · ${filteredModelEntries.length} models` : '';
+  const modelSummary = flags.emitModels ? ` · ${filteredModelEntries.length} models · ${Object.keys(enumEntries).length} enums` : '';
   console.log(`Summary: ${groupCount} groups · ${collected.length} entries · ${collected.length - missingValidators} validators bound · ${missingValidators} missing · ${skippedGroups} skipped${modelSummary}`);
 
   if (flags.strict && missingValidators > 0) {
@@ -249,6 +250,12 @@ function deriveModelNamespace(projectName: string | undefined): string {
   // demo-cli -> DEMO_CLI_MODEL_MANIFEST; absent -> CLI_MODEL_MANIFEST
   const base = (projectName ?? 'cli').replaceAll(/[^a-zA-Z0-9]+/g, '_');
   return `${base.toUpperCase()}_MODEL_MANIFEST`;
+}
+
+function deriveEnumNamespace(projectName: string | undefined): string {
+  // demo-cli -> DEMO_CLI_ENUM_MANIFEST; absent -> CLI_ENUM_MANIFEST
+  const base = (projectName ?? 'cli').replaceAll(/[^a-zA-Z0-9]+/g, '_');
+  return `${base.toUpperCase()}_ENUM_MANIFEST`;
 }
 
 function parseFlags(argv: readonly string[]): Flags {

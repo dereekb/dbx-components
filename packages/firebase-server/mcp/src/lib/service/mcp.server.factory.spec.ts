@@ -389,6 +389,37 @@ describe('McpServerFactoryService model catalog tools', () => {
     expect(tools.map((t) => t.name)).toEqual(expect.arrayContaining(['model-info', 'model-decode']));
   });
 
+  const ENUM_BLOCK = { GuestbookState: { name: 'GuestbookState', values: [{ name: 'OPEN', value: 1 }] } };
+
+  it('registers enum-info when the manifest carries a non-empty enums block', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY], enums: ENUM_BLOCK });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory, { auth: firebaseAuth() });
+    expect(tools.map((t) => t.name)).toContain('enum-info');
+  });
+
+  it('does not register enum-info when the manifest carries no enums', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory, { auth: firebaseAuth() });
+    expect(tools.map((t) => t.name)).not.toContain('enum-info');
+  });
+
+  it('registers enum-info even when the manifest has enums but no models', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, enums: ENUM_BLOCK });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory, { auth: firebaseAuth() });
+    expect(tools.map((t) => t.name)).toContain('enum-info');
+    expect(tools.map((t) => t.name)).not.toContain('model-info');
+  });
+
+  it('hides enum-info from unauthenticated callers', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, enums: ENUM_BLOCK });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory);
+    expect(tools.map((t) => t.name)).not.toContain('enum-info');
+  });
+
   it('hides model-info and model-decode from unauthenticated callers', async () => {
     const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
     const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });

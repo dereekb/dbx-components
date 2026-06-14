@@ -9,13 +9,14 @@ import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } f
 import { ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIONS, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
-import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
+import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestEnum, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { ROUTE_MANIFEST_VERSION, type RouteManifest } from './mcp.route-manifest';
 import { formatMcpToolErrorResponse, formatMcpToolResponse } from './mcp.response-formatter';
 import { generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, type McpToolDefinition, type McpToolGenerationNamingOptions, type McpToolGenerationResult, type McpToolGenerationSkip, type McpToolGenerationWarning, type McpToolListEntry, type McpStaticToolHandler } from './mcp.tool-generator';
 import { createModelGetTool } from './tools/mcp.tool.model-get';
 import { createModelInfoTool } from './tools/mcp.tool.model-info';
 import { createModelDecodeTool } from './tools/mcp.tool.model-decode';
+import { createEnumInfoTool } from './tools/mcp.tool.enum-info';
 import { createWhoamiTool } from './tools/mcp.tool.whoami';
 import { createUrlModelsTool } from './tools/mcp.tool.url-models';
 import { createBatchExecuteTool, batchOperationCoordKey, type BatchOperationAuthorization } from './tools/mcp.tool.batch-execute';
@@ -47,6 +48,7 @@ export class McpServerFactoryService {
   private _cachedStaticTools: ReadonlyArray<McpToolDefinition> | undefined;
   private _cachedManifest: ReadonlyMap<string, McpManifestToolEntry> | undefined;
   private _cachedManifestModels: ReadonlyArray<McpManifestModelEntry> | undefined;
+  private _cachedManifestEnums: { readonly [name: string]: McpManifestEnum } | undefined;
   private _cachedManifestAuth: McpManifestAuth | undefined;
   private _cachedRouteManifest: RouteManifest | undefined;
   private _routeManifestLoaded = false;
@@ -264,9 +266,16 @@ export class McpServerFactoryService {
       }
 
       const modelManifest = this._cachedManifestModels;
+      const enumManifest = this._cachedManifestEnums;
 
       if (modelManifest != null && modelManifest.length > 0) {
-        staticTools.push(createModelInfoTool({ manifest: modelManifest }), createModelDecodeTool({ manifest: modelManifest }));
+        staticTools.push(createModelInfoTool({ manifest: modelManifest, ...(enumManifest == null ? {} : { enums: enumManifest }) }), createModelDecodeTool({ manifest: modelManifest }));
+      }
+
+      // `enum-info` only needs the enum value tables — register it whenever the manifest carries a
+      // non-empty `enums` block, independent of the model catalog.
+      if (enumManifest != null && Object.keys(enumManifest).length > 0) {
+        staticTools.push(createEnumInfoTool({ enums: enumManifest }));
       }
 
       const authManifest = this._cachedManifestAuth;
@@ -382,6 +391,7 @@ export class McpServerFactoryService {
   private _resetManifestCache(): void {
     this._cachedManifest = undefined;
     this._cachedManifestModels = undefined;
+    this._cachedManifestEnums = undefined;
     this._cachedManifestAuth = undefined;
   }
 
@@ -458,12 +468,15 @@ export class McpServerFactoryService {
 
     const models = Array.isArray(parsed.models) && parsed.models.length > 0 ? (parsed.models as ReadonlyArray<McpManifestModelEntry>) : undefined;
     const modelSuffix = models == null ? '' : `, ${models.length} model entries`;
+    const enums = parsed.enums != null && typeof parsed.enums === 'object' && Object.keys(parsed.enums).length > 0 ? parsed.enums : undefined;
+    const enumSuffix = enums == null ? '' : `, ${Object.keys(enums).length} enum entries`;
     const auth = parsed.auth != null && Array.isArray(parsed.auth.claims) ? parsed.auth : undefined;
     const authSuffix = auth == null ? '' : `, ${auth.claims.length} auth claim entries`;
 
-    this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries${modelSuffix}${authSuffix}.`);
+    this._logger.log(`Loaded MCP manifest from ${path}: ${map.size} tool entries${modelSuffix}${enumSuffix}${authSuffix}.`);
     this._cachedManifest = map;
     this._cachedManifestModels = models;
+    this._cachedManifestEnums = enums;
     this._cachedManifestAuth = auth;
   }
 

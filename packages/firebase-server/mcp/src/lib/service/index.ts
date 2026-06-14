@@ -8,5 +8,6 @@ export * from './mcp.visibility';
 export * from './tools/mcp.tool.model-get';
 export * from './tools/mcp.tool.model-info';
 export * from './tools/mcp.tool.model-decode';
+export * from './tools/mcp.tool.enum-info';
 export * from './tools/mcp.tool.url-models';
 export * from './tools/mcp.tool.batch-execute';

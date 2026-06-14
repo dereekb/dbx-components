@@ -46,7 +46,7 @@ import {
   subscribeToGuestbookNotificationsParamsType,
   updateProfileParamsType
 } from 'demo-firebase';
-import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';
+import { type CliApiManifest, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -931,3 +931,76 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     serviceFactory: { exportName: 'systemStateFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   }
 ];
+
+export const DEMO_CLI_ENUM_MANIFEST: CliEnumManifest = {
+  NotificationRecipientSendFlag: {
+    name: 'NotificationRecipientSendFlag',
+    values: [
+      { name: 'NORMAL', value: 0, description: 'Will send to all recipients.' },
+      { name: 'SKIP_NOTIFICATION_BOX_RECIPIENTS', value: 1, description: 'Will not send to any of the configured notification box recipients. Will only to the globally configured message recpients or the notification specified recipients.' },
+      { name: 'SKIP_GLOBAL_RECIPIENTS', value: 2, description: 'Will not send to any of the globally configured message recpients. Will only send to the notification specified recipients or the notification box recipients.' },
+      { name: 'ONLY_EXPLICIT_RECIPIENTS', value: 3, description: 'Will only sent to recipients that are configured in this notification. Will not send to globally configured message recipients or notification box recipients.' },
+      { name: 'ONLY_GLOBAL_RECIPIENTS', value: 4, description: 'Will only sent to globally configured message recipients.' }
+    ],
+    description: 'Notification recipient send flags.'
+  },
+  NotificationSendState: {
+    name: 'NotificationSendState',
+    values: [
+      { name: 'NONE', value: -1, description: 'Notification will not be sent.' },
+      { name: 'QUEUED', value: 0, description: 'Notification is queued up.' },
+      { name: 'SENT', value: 1, description: 'Notification has been sent/complete. Will still show as sent even if there were no messages/recipients to send for this medium.' },
+      { name: 'SENT_PARTIAL', value: 2, description: 'Some of the notifications have been sent, but some failed.' },
+      { name: 'SKIPPED', value: 3, description: "Notification has been skipped due to the box's settings." },
+      { name: 'NO_TRY', value: 4, description: 'Notification is flagged as being skipped and should not be reattempetd' },
+      { name: 'SEND_ERROR', value: 5, description: 'Notification encountered an error while sending and could not be sent.' },
+      { name: 'BUILD_ERROR', value: 6, description: 'Notification encountered an error while building and could not be sent.' },
+      { name: 'CONFIG_ERROR', value: 7, description: 'Notification encountered an error due to the system not being configured properly.' }
+    ],
+    description: 'Lifecycle state of a notification delivery channel (text, email, push, or summary).'
+  },
+  NotificationSendType: {
+    name: 'NotificationSendType',
+    values: [
+      { name: 'SEND_IF_BOX_EXISTS', value: 0, description: 'Sends only if the NotificationBox exists.' },
+      { name: 'INIT_BOX_AND_SEND', value: 1, description: "Creates a NotificationBox if it doesn't exist, and then sends the Notification." },
+      { name: 'SEND_WITHOUT_CREATING_BOX', value: 2, description: 'Sends the notification even if the NotificationBox does not exist.' },
+      { name: 'TASK_NOTIFICATION', value: 3, description: 'A task notification.' },
+      { name: 'LOGGED_EVENT', value: 4, description: 'A write-only logged event notification.' }
+    ],
+    description: 'Controls how a {@link Notification} interacts with its parent {@link NotificationBox} during delivery.'
+  },
+  StorageFileCreationType: {
+    name: 'StorageFileCreationType',
+    values: [
+      { name: 'NONE', value: 0, description: 'No info about how this file was created.' },
+      { name: 'DIRECTLY_CREATED', value: 1, description: 'The StorageFile was directly created.' },
+      { name: 'INIT_FROM_UPLOAD', value: 2, description: 'The StorageFile was initialized from an uploaded file.' },
+      { name: 'FOR_STORAGE_FILE_GROUP', value: 3, description: 'This StorageFile was created by/for a StorageFileGroup.' }
+    ],
+    description: 'How a StorageFile was created, which affects document ID generation and initialization behavior.'
+  },
+  StorageFileProcessingState: {
+    name: 'StorageFileProcessingState',
+    values: [
+      { name: 'INIT_OR_NONE', value: 0, description: 'The StorageFile has no processing state or is just being initialized.' },
+      { name: 'QUEUED_FOR_PROCESSING', value: 1, description: 'The StorageFile is flagged for processing, which will create a NotificationTask for it.' },
+      { name: 'PROCESSING', value: 2, description: 'The StorageFile has an associated NotificationTask for it.' },
+      { name: 'FAILED', value: 3, description: 'The StorageFile has encountered an error during processing.' },
+      { name: 'SUCCESS', value: 4, description: 'The StorageFile has been processed or required no processing and is done.' },
+      { name: 'ARCHIVED', value: 5, description: 'The StorageFile has been archived.' },
+      { name: 'DO_NOT_PROCESS', value: 6, description: "The StorageFile shouldn't be processed." }
+    ],
+    description: 'Processing lifecycle state for a StorageFile.'
+  },
+  StorageFileState: {
+    name: 'StorageFileState',
+    values: [
+      { name: 'INIT', value: 0, description: 'The StorageFile has no state, or is just being initialized.' },
+      { name: 'INVALID', value: 1, description: 'The StorageFile failed to initialize properly and is considered invalid.' },
+      { name: 'OK', value: 2, description: 'The StorageFile has been initialized and is ok.' },
+      { name: 'QUEUED_FOR_DELETE', value: 3, description: 'A previously OK file that is now queued for deletion.' }
+    ],
+    description: 'Lifecycle state of a StorageFile document.'
+  }
+};

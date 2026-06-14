@@ -28,12 +28,13 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { createJiti } from 'jiti';
 
-import { type AuthRegistry, type CliApiManifest, type CliModelManifest, loadAuthRegistry, MCP_TOOL_NAME_MAX_LENGTH } from '@dereekb/dbx-cli';
+import { type AuthRegistry, type CliApiManifest, type CliEnumManifest, type CliModelManifest, loadAuthRegistry, MCP_TOOL_NAME_MAX_LENGTH } from '@dereekb/dbx-cli';
 import { renderMcpManifest } from './render';
 
 interface LoadedManifest {
   readonly apiManifest: CliApiManifest;
   readonly modelManifest?: CliModelManifest;
+  readonly enumManifest?: CliEnumManifest;
 }
 
 interface Flags {
@@ -89,8 +90,9 @@ async function main(): Promise<void> {
   renameSync(tmpPath, outputPath);
 
   const modelCount = manifest.models?.length ?? 0;
+  const enumCount = manifest.enums == null ? 0 : Object.keys(manifest.enums).length;
   const authCount = manifest.auth?.claims.length ?? 0;
-  console.log(`[wrote] ${relative(WORKSPACE_ROOT, outputPath)} — ${Object.keys(manifest.tools).length} tools, ${modelCount} models, ${authCount} auth claims`);
+  console.log(`[wrote] ${relative(WORKSPACE_ROOT, outputPath)} — ${Object.keys(manifest.tools).length} tools, ${modelCount} models, ${enumCount} enums, ${authCount} auth claims`);
 }
 
 async function maybeLoadAuth(flags: Flags): Promise<{ readonly registry: AuthRegistry; readonly app: string } | undefined> {
@@ -127,7 +129,11 @@ async function loadManifest(path: string): Promise<LoadedManifest> {
   const modelManifestValue = namedModel?.[1];
   const modelManifest = Array.isArray(modelManifestValue) ? (modelManifestValue as CliModelManifest) : undefined;
 
-  return { apiManifest, modelManifest };
+  const namedEnum = Object.entries(loaded).find(([key]) => key.endsWith('_ENUM_MANIFEST'));
+  const enumManifestValue = namedEnum?.[1];
+  const enumManifest = enumManifestValue != null && typeof enumManifestValue === 'object' && !Array.isArray(enumManifestValue) ? (enumManifestValue as CliEnumManifest) : undefined;
+
+  return { apiManifest, modelManifest, enumManifest };
 }
 
 /**

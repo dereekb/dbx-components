@@ -1,4 +1,4 @@
-import { type CliApiManifestEntry, type CliModelManifest, type CliModelManifestEntry, MCP_MANIFEST_VERSION } from '@dereekb/dbx-cli';
+import { type CliApiManifestEntry, type CliEnumManifest, type CliModelManifest, type CliModelManifestEntry, MCP_MANIFEST_VERSION } from '@dereekb/dbx-cli';
 import { renderMcpManifest } from './render';
 
 const FIXED_NOW = new Date('2026-05-25T00:00:00.000Z');
@@ -304,6 +304,33 @@ describe('renderMcpManifest', () => {
     it('omits mcpToolNameSegment when absent', () => {
       const result = render([makeEntry({})], [makeModelEntry({})]);
       expect(result.models?.[0]).not.toHaveProperty('mcpToolNameSegment');
+    });
+  });
+
+  describe('enum manifest', () => {
+    const ENUMS: CliEnumManifest = {
+      WorkerTimesheetState: {
+        name: 'WorkerTimesheetState',
+        description: 'Timesheet day state.',
+        values: [
+          { name: 'ACTIVE', value: 1, description: 'Active.' },
+          { name: 'ARCHIVED', value: 4 }
+        ]
+      }
+    };
+
+    it('omits enums when no enum manifest is supplied', () => {
+      expect(render([makeEntry({})]).enums).toBeUndefined();
+    });
+
+    it('omits enums when the supplied enum manifest is empty', () => {
+      const result = renderMcpManifest({ apiManifest: [makeEntry({})], enumManifest: {} }, FIXED_NOW).manifest;
+      expect(result.enums).toBeUndefined();
+    });
+
+    it('threads the enum manifest onto McpManifest.enums verbatim (pure data, no projection)', () => {
+      const result = renderMcpManifest({ apiManifest: [makeEntry({})], enumManifest: ENUMS }, FIXED_NOW).manifest;
+      expect(result.enums).toEqual(ENUMS);
     });
   });
 });

@@ -30,6 +30,7 @@ const OBJECT_ARRAY_FN = 'firestoreObjectArray';
 const SNAPSHOT_FN = 'snapshotConverterFunctions';
 const FIELDS_LITERAL_KEY = 'fields';
 const OBJECT_FIELD_KEY = 'objectField';
+const FIRESTORE_FIELD_KEY = 'firestoreField';
 
 /**
  * Inputs for {@link extractModelsFromSource}.
@@ -291,8 +292,15 @@ function readNestedFromExpression(expr: Node): NestedConverterMatch | undefined 
 }
 
 /**
- * Reads the `objectField` argument of a `firestoreSubObject` /
- * `firestoreObjectArray` call into a {@link NestedConverterMatch}.
+ * Reads the `objectField` (or `firestoreField`) argument of a
+ * `firestoreSubObject` / `firestoreObjectArray` call into a
+ * {@link NestedConverterMatch}.
+ *
+ * `firestoreObjectArray`'s config is a union: `{ objectField }` describes the
+ * element shape directly, while `{ firestoreField }` points the element decode
+ * at another field converter (a sub-object const or an inline
+ * `firestoreSubObject(...)`). Both carriers resolve through the same nested path
+ * — the `firestoreField` variant is what the timesheet day-level form uses.
  *
  * @param call - The nested-converter call expression.
  * @param fnName - The resolved factory name (`firestoreSubObject` or `firestoreObjectArray`).
@@ -304,9 +312,9 @@ function readNestedConverterCall(call: CallExpression, fnName: string): NestedCo
   if (args.length > 0) {
     const config = args[0];
     if (Node.isObjectLiteralExpression(config)) {
-      const objectField = readPropertyValue(config, OBJECT_FIELD_KEY);
-      if (objectField) {
-        result = buildNestedConverterMatch({ objectField, call, fnName });
+      const valueNode = readPropertyValue(config, OBJECT_FIELD_KEY) ?? readPropertyValue(config, FIRESTORE_FIELD_KEY);
+      if (valueNode) {
+        result = buildNestedConverterMatch({ objectField: valueNode, call, fnName });
       }
     }
   }
@@ -320,12 +328,15 @@ interface BuildNestedConverterMatchInput {
 }
 
 /**
- * Builds a {@link NestedConverterMatch} from a resolved `objectField` node:
+ * Builds a {@link NestedConverterMatch} from a resolved value node:
  * an identifier yields a converter `ref`, an object literal yields an `inline`
- * converter parsed from its `fields`.
+ * converter parsed from its `fields`, and a nested
+ * `firestoreSubObject(...)` / `firestoreObjectArray(...)` call (the inline
+ * `firestoreField: firestoreSubObject<T>({...})` form) is resolved recursively —
+ * the outer factory still decides array-ness.
  *
- * @param input - The `objectField` node, owning call expression, and factory name.
- * @returns The nested-converter match, or `undefined` when neither shape applies.
+ * @param input - The resolved value node, owning call expression, and factory name.
+ * @returns The nested-converter match, or `undefined` when no shape applies.
  */
 function buildNestedConverterMatch(input: BuildNestedConverterMatchInput): NestedConverterMatch | undefined {
   const { objectField, call, fnName } = input;
@@ -346,6 +357,11 @@ function buildNestedConverterMatch(input: BuildNestedConverterMatchInput): Neste
         },
         isArray
       };
+    }
+  } else if (Node.isCallExpression(objectField)) {
+    const nested = readNestedFromExpression(objectField);
+    if (nested) {
+      result = { ...nested, isArray };
     }
   }
   return result;
