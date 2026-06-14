@@ -1,0 +1,12 @@
+{
+  "name": "@dereekb/nestjs/openrouter",
+  "version": "13.16.0",
+  "peerDependencies": {
+    "@dereekb/util": "13.16.0",
+    "@dereekb/nestjs": "13.16.0",
+    "@nestjs/common": "^11.1.19",
+    "@nestjs/config": "^4.0.4",
+    "express": "^5.2.1",
+    "@openrouter/sdk": "^0.12.79"
+  }
+}

@@ -47,6 +47,7 @@
     "@ngx-formly/core": "git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d",
     "@ngx-formly/material": "git+https://git@github.com/dereekb/ngx-formly#02e615006744374a587b5d35de3b2d137e2e05a8",
     "@nx/devkit": "22.7.0",
+    "@openrouter/sdk": "^0.12.79",
     "@placemarkio/geo-viewport": "^1.0.2",
     "@typeform/api-client": "^2.10.2",
     "@uirouter/angular": "21.0.0",
