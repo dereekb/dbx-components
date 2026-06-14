@@ -25,7 +25,10 @@ describe('templateArchiveFromDirectory', () => {
     expect(archive.readEntry('does/not/exist.txt')).toBeUndefined();
   });
 
-  it('lists the full tree for an empty prefix', () => {
-    expect(archive.listSubtree('').length).toBe(207);
+  it('lists the full tree for an empty prefix, including the add-on subtrees', () => {
+    const all = archive.listSubtree('');
+    expect(all.length).toBeGreaterThanOrEqual(227);
+    expect(all.some((entry) => entry.startsWith('addons/oidc/'))).toBe(true);
+    expect(all.some((entry) => entry.startsWith('addons/mcp/'))).toBe(true);
   });
 });

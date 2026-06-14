@@ -11,6 +11,17 @@ import { type SetupNaming, type SetupNamingInputs } from './naming.js';
 import { type SetupCoreVersions } from './versions.js';
 
 /**
+ * A record of one installed add-on (written by `setup addon <name>`).
+ */
+export interface DbxSetupManifestAddon {
+  readonly id: string;
+  /**
+   * ISO-8601 timestamp of when the add-on was installed.
+   */
+  readonly installedAt: string;
+}
+
+/**
  * The `dbx.setup.json` manifest shape.
  */
 export interface DbxSetupManifest {
@@ -45,6 +56,11 @@ export interface DbxSetupManifest {
     readonly angular: string;
     readonly node: string;
   };
+  /**
+   * Add-ons installed into this project (additive; absent on schema-1 projects
+   * created before add-on support).
+   */
+  readonly addons?: readonly DbxSetupManifestAddon[];
 }
 
 /**
@@ -164,4 +180,88 @@ export function writeManifest(dir: string, manifest: DbxSetupManifest, options?:
     writeFileSync(path, serializeSetupManifest(manifest));
   }
   return path;
+}
+
+// MARK: Field access + validation
+/**
+ * Reads a dotted manifest field (e.g. `firebase.stagingProjectId`).
+ *
+ * @param manifest - A parsed manifest.
+ * @param dottedPath - A dot-separated field path.
+ * @returns The resolved value, or `undefined` when any path segment is absent.
+ */
+export function getManifestField(manifest: DbxSetupManifest, dottedPath: string): unknown {
+  let cursor: unknown = manifest;
+  for (const segment of dottedPath.split('.')) {
+    cursor = cursor != null && typeof cursor === 'object' ? (cursor as Record<string, unknown>)[segment] : undefined;
+  }
+  return cursor;
+}
+
+/**
+ * Whether a resolved manifest value counts as present (not `undefined`/`null`/empty string).
+ *
+ * @param value - A resolved field value.
+ * @returns `true` when the value is usable.
+ */
+function manifestFieldPresent(value: unknown): boolean {
+  return value != null && value !== '';
+}
+
+/**
+ * Reports which of the required dotted fields are missing from a manifest.
+ *
+ * @param manifest - A parsed manifest.
+ * @param requiredKeys - Dotted field paths the caller needs.
+ * @returns The missing field paths, in the order supplied.
+ */
+export function requireManifestFields(manifest: DbxSetupManifest, requiredKeys: readonly string[]): { readonly missing: readonly string[] } {
+  return { missing: requiredKeys.filter((key) => !manifestFieldPresent(getManifestField(manifest, key))) };
+}
+
+/**
+ * Throws when any required field is missing, naming each one. The message is
+ * prefixed with `label` so the failing command is clear.
+ *
+ * @param manifest - A parsed manifest.
+ * @param requiredKeys - Dotted field paths the caller needs.
+ * @param label - Command label used in the error message (e.g. `setup addon oidc`).
+ * @throws {Error} When at least one required field is missing.
+ */
+export function assertManifestFields(manifest: DbxSetupManifest, requiredKeys: readonly string[], label: string): void {
+  const { missing } = requireManifestFields(manifest, requiredKeys);
+  if (missing.length > 0) {
+    throw new Error(`${label}: ${DBX_SETUP_MANIFEST_FILENAME} is missing required field(s): ${missing.join(', ')}. Re-run from a CLI-scaffolded project or add these fields.`);
+  }
+}
+
+// MARK: Add-on registry
+/**
+ * Whether an add-on is recorded as installed in the manifest.
+ *
+ * @param manifest - A parsed manifest.
+ * @param id - The add-on id.
+ * @returns `true` when the add-on appears in `manifest.addons`.
+ */
+export function manifestHasAddon(manifest: DbxSetupManifest, id: string): boolean {
+  return (manifest.addons ?? []).some((addon) => addon.id === id);
+}
+
+/**
+ * Returns a manifest with the add-on recorded as installed. Pure; a no-op when
+ * the add-on is already recorded (keeps the original `installedAt`).
+ *
+ * @param manifest - A parsed manifest.
+ * @param id - The add-on id.
+ * @param installedAt - ISO-8601 install timestamp.
+ * @returns The updated manifest.
+ */
+export function withInstalledAddon(manifest: DbxSetupManifest, id: string, installedAt: string): DbxSetupManifest {
+  let result: DbxSetupManifest;
+  if (manifestHasAddon(manifest, id)) {
+    result = manifest;
+  } else {
+    result = { ...manifest, addons: [...(manifest.addons ?? []), { id, installedAt }] };
+  }
+  return result;
 }

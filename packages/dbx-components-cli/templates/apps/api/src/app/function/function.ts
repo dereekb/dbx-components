@@ -25,6 +25,7 @@ import { type OnCallCreateModelResult } from '@dereekb/firebase';
 import { APP_CODE_PREFIXFirebaseServerActionsContext, ExampleServerActions, ProfileServerActions, APP_CODE_PREFIXApiAuthService } from '../common';
 import { NotificationInitServerActions, NotificationServerActions, StorageFileServerActions, StorageFileInitServerActions } from '@dereekb/firebase-server/model';
 import { runNamedAsyncTasksFunction } from '@dereekb/util';
+// @dbx-addon:oidc:api-function:imports
 
 export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<APP_CODE_PREFIXFirebaseContextAppContext, typeof APP_CODE_PREFIXFirebaseModelServices> {
   get actionContext(): APP_CODE_PREFIXFirebaseServerActionsContext {
@@ -62,6 +63,8 @@ export class APP_CODE_PREFIXApiNestContext extends AbstractFirebaseNestContext<A
   get profileActions(): ProfileServerActions {
     return this.nest.get(ProfileServerActions);
   }
+
+  // @dbx-addon:oidc:api-function:getters
 
   get firebaseModelsService() {
     return APP_CODE_PREFIXFirebaseModelServices;

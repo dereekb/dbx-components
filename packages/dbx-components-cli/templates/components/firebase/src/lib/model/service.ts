@@ -78,8 +78,10 @@ import { type PromiseOrValue } from '@dereekb/util';
 import { type Example, type ExampleDocument, type ExampleRoles, type ExampleTypes, exampleFirestoreCollection, type ExampleFirestoreCollection, type ExampleFirestoreCollections } from './example';
 import { type ProfileTypes, type Profile, type ProfileDocument, type ProfileFirestoreCollection, type ProfilePrivateData, type ProfilePrivateDataDocument, type ProfilePrivateDataFirestoreCollectionFactory, type ProfilePrivateDataFirestoreCollectionGroup, type ProfilePrivateDataRoles, type ProfileRoles, profileFirestoreCollection, profilePrivateDataFirestoreCollectionFactory, profilePrivateDataFirestoreCollectionGroup } from './profile';
 import { APP_CODE_PREFIX_CAMELSystemStateStoredDataConverterMap } from './system';
+// @dbx-addon:oidc:fb-service:imports
 
 export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreContextReference, ExampleFirestoreCollections, SystemStateFirestoreCollections, NotificationFirestoreCollections, StorageFileFirestoreCollections {
+  // @dbx-addon:oidc:fb-service:implements
   abstract readonly firestoreContext: FirestoreContext;
   abstract readonly systemStateCollection: SystemStateFirestoreCollection;
   abstract readonly exampleCollection: ExampleFirestoreCollection;
@@ -99,6 +101,7 @@ export abstract class APP_CODE_PREFIXFirestoreCollections implements FirestoreCo
   abstract readonly notificationLoggedEventDayPageCollectionGroup: NotificationLoggedEventDayPageFirestoreCollectionGroup;
   abstract readonly storageFileCollection: StorageFileFirestoreCollection;
   abstract readonly storageFileGroupCollection: StorageFileGroupFirestoreCollection;
+  // @dbx-addon:oidc:fb-service:abstract
 }
 
 export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: FirestoreContext): APP_CODE_PREFIXFirestoreCollections {
@@ -122,6 +125,7 @@ export function makeAPP_CODE_PREFIXFirestoreCollections(firestoreContext: Firest
     notificationLoggedEventDayPageCollectionGroup: notificationLoggedEventDayPageFirestoreCollectionGroup(firestoreContext),
     storageFileCollection: storageFileFirestoreCollection(firestoreContext),
     storageFileGroupCollection: storageFileGroupFirestoreCollection(firestoreContext)
+    // @dbx-addon:oidc:fb-service:factory
   };
 }
 
@@ -233,8 +237,11 @@ export const storageFileGroupFirebaseModelServiceFactory = firebaseModelServiceF
   getFirestoreCollection: (c) => c.app.storageFileGroupCollection
 });
 
+// @dbx-addon:oidc:fb-service:model-service-factory
+
 // MARK: Services
 export type APP_CODE_PREFIXFirebaseModelTypes = SystemStateTypes | ExampleTypes | ProfileTypes | NotificationTypes | StorageFileTypes;
+// @dbx-addon:oidc:fb-service:types-union
 
 export type APP_CODE_PREFIXFirebaseContextAppContext = APP_CODE_PREFIXFirestoreCollections;
 
@@ -254,6 +261,7 @@ export const APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES = {
   notificationLoggedEventDayPage: notificationLoggedEventDayPageFirebaseModelServiceFactory,
   storageFile: storageFileFirebaseModelServiceFactory,
   storageFileGroup: storageFileGroupFirebaseModelServiceFactory
+  // @dbx-addon:oidc:fb-service:factories-map
 };
 
 export const APP_CODE_PREFIXFirebaseModelServices = firebaseModelsService<typeof APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES, APP_CODE_PREFIXFirebaseBaseContext, APP_CODE_PREFIXFirebaseModelTypes>(APP_CODE_PREFIX_FIREBASE_MODEL_SERVICE_FACTORIES);

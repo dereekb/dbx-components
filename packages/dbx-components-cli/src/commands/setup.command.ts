@@ -17,9 +17,12 @@ import { resolveSetupContext, type ResolveSetupContextInput } from '../lib/setup
 import { moduleExpectedFiles, runModulePhases, runModuleScaffold, type SetupContext, type SetupModuleId } from '../lib/setup/module.js';
 import { SCAFFOLDING_MODULE_IDS, SETUP_MODULES, SETUP_MODULE_IDS } from '../lib/setup/modules/index.js';
 import { formatValidationMarkdown, validateExpectedFiles, validationHasMissing, type ModuleValidationResult } from '../lib/setup/validate.js';
-import { readManifest } from '../lib/setup/manifest.js';
+import { assertManifestFields, DBX_SETUP_MANIFEST_FILENAME, readManifest, withInstalledAddon, writeManifest } from '../lib/setup/manifest.js';
 import { type ScaffoldWriteResult } from '../lib/setup/scaffold.js';
 import { runSetupInit, type SetupInitFlags } from '../lib/setup/init.js';
+import { addonExpectedFiles, runAddon, unmetAddonDependencies, type AddonContext, type SetupAddonId } from '../lib/setup/addon.js';
+import { SETUP_ADDONS, SETUP_ADDON_IDS } from '../lib/setup/addons/index.js';
+import { formatManualInjectionInstructions } from '../lib/setup/source-inject.js';
 
 interface CommonSetupArgs {
   readonly firebaseProjectId?: string;
@@ -151,6 +154,19 @@ const validateCommand: CommandModule<object, ValidateArgs> = {
       const context = resolveSetupContext(toResolveInput(args));
       const ids = args.module ? [args.module] : SCAFFOLDING_MODULE_IDS;
       const results: ModuleValidationResult[] = ids.map((id) => validateExpectedFiles({ moduleId: id, expectedFiles: moduleExpectedFiles(SETUP_MODULES[id], context), validationRoot: context.workspaceRoot }));
+
+      // Validate installed add-ons (recorded in the manifest) by their scaffolded NEW files.
+      const manifest = args.module ? undefined : readManifest(context.workspaceRoot);
+      if (manifest) {
+        for (const addon of manifest.addons ?? []) {
+          const setupAddon = SETUP_ADDONS[addon.id as SetupAddonId];
+          if (setupAddon) {
+            const addonContext: AddonContext = { ...context, manifest };
+            results.push(validateExpectedFiles({ moduleId: `addon:${addon.id}`, expectedFiles: addonExpectedFiles(setupAddon, addonContext), validationRoot: context.workspaceRoot }));
+          }
+        }
+      }
+
       if (validationHasMissing(results)) {
         process.exitCode = 1;
       }
@@ -182,6 +198,96 @@ const manifestCommand: CommandModule<object, ManifestArgs> = {
       runModuleScaffold(integrations, context);
       return `setup manifest: ${context.dryRun ? 'would write' : 'wrote'} dbx.setup.json to ${context.workspaceRoot}`;
     })
+};
+
+interface AddonArgs extends CommonSetupArgs {
+  readonly templatesOnly: boolean;
+  readonly skipScaffold: boolean;
+  readonly skipConfigure: boolean;
+}
+
+/**
+ * Renders a summary of an add-on run (scaffolded files, injection statuses,
+ * file edits, and any manual-wiring fallbacks).
+ *
+ * @param input - The summary inputs.
+ * @param input.id - The add-on id.
+ * @param input.context - The resolved add-on context.
+ * @param input.scaffold - The scaffold write results.
+ * @param input.configure - The configure result, when configure ran.
+ * @param input.json - Whether to emit JSON instead of text.
+ * @returns The rendered summary.
+ */
+function formatAddonSummary(input: { readonly id: SetupAddonId; readonly context: AddonContext; readonly scaffold: readonly ScaffoldWriteResult[]; readonly configure?: ReturnType<typeof runAddon>['configure']; readonly json: boolean }): string {
+  const { id, context, scaffold, configure, json } = input;
+  const injections = configure?.injections ?? [];
+  const fileEdits = configure?.fileEdits ?? [];
+  const manual = formatManualInjectionInstructions(injections, { relativeTo: context.workspaceRoot });
+
+  if (json) {
+    return JSON.stringify({ addon: id, dryRun: context.dryRun, files: scaffold.map((result) => result.destPath), injections: injections.map((result) => ({ file: result.filePath, marker: result.marker, status: result.status })), fileEdits }, null, 2);
+  }
+
+  const verb = context.dryRun ? 'would apply' : 'applied';
+  const appliedInjections = injections.filter((result) => result.status === 'applied').length;
+  const manualInjections = injections.filter((result) => result.status === 'marker-missing' || result.status === 'file-missing').length;
+  const lines = [`setup addon ${id}: ${verb} ${scaffold.length} file(s), ${appliedInjections} injection(s) (${manualInjections} need manual wiring), ${fileEdits.length} config edit(s) in ${context.workspaceRoot}`];
+  if (manual) {
+    lines.push('', manual);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Builds one per-add-on command (`setup addon <id>`).
+ *
+ * @param id - The add-on id.
+ * @returns The yargs command module.
+ */
+function addonCommand(id: SetupAddonId): CommandModule<object, AddonArgs> {
+  return {
+    command: `${id} [firebaseProjectId] [projectName] [codePrefix] [emulatorPort] [stagingProjectId]`,
+    describe: SETUP_ADDONS[id].title,
+    builder: (yargs: Argv): Argv<AddonArgs> => withCommonSetupOptions(yargs).option('templates-only', { type: 'boolean', default: false, describe: 'Run only the deterministic NEW-file scaffold (skip configure).' }).option('skip-scaffold', { type: 'boolean', default: false, describe: 'Skip the NEW-file scaffold phase.' }).option('skip-configure', { type: 'boolean', default: false, describe: 'Skip the configure (marker-injection + json-edit) phase.' }) as unknown as Argv<AddonArgs>,
+    handler: (args: ArgumentsCamelCase<AddonArgs>): Promise<void> =>
+      runCommand(async () => {
+        const context = resolveSetupContext(toResolveInput(args));
+        const manifest = readManifest(context.workspaceRoot);
+        if (!manifest) {
+          throw new Error(`setup addon ${id}: no ${DBX_SETUP_MANIFEST_FILENAME} found in ${context.workspaceRoot}. Run \`setup init\` or cd into a scaffolded project first.`);
+        }
+        const addon = SETUP_ADDONS[id];
+        assertManifestFields(manifest, addon.requiredManifestFields, `setup addon ${id}`);
+
+        const addonContext: AddonContext = { ...context, manifest };
+        const unmet = unmetAddonDependencies({ addon, context: addonContext, resolve: (depId) => SETUP_ADDONS[depId] });
+        if (unmet.length > 0) {
+          throw new Error(`setup addon ${id}: requires the ${unmet.join(', ')} add-on(s). Run \`dbx-components-cli setup addon ${unmet[0]}\` first.`);
+        }
+
+        const result = runAddon(addon, addonContext, { skipScaffold: args.skipScaffold, skipConfigure: args.templatesOnly || args.skipConfigure });
+        if (!context.dryRun) {
+          writeManifest(context.workspaceRoot, withInstalledAddon(manifest, id, context.createdAt));
+        }
+        return formatAddonSummary({ id, context: addonContext, scaffold: result.scaffold, configure: result.configure, json: args.json });
+      })
+  };
+}
+
+/**
+ * The `setup addon <name>` command group.
+ */
+const addonGroupCommand: CommandModule = {
+  command: 'addon <name>',
+  describe: 'Install an add-on (oidc, mcp) into an existing project.',
+  builder: (yargs: Argv): Argv => {
+    let next = yargs;
+    for (const id of SETUP_ADDON_IDS) {
+      next = next.command(addonCommand(id));
+    }
+    return next.demandCommand(1, 'Specify an add-on (oidc, mcp).');
+  },
+  handler: () => undefined
 };
 
 interface InitArgs extends CommonSetupArgs {
@@ -230,11 +336,11 @@ export const SETUP_COMMAND: CommandModule = {
   command: 'setup <command>',
   describe: 'Scaffold + validate a dbx-components project (init, per-module, validate, manifest).',
   builder: (yargs: Argv): Argv => {
-    let next = yargs.command(initCommand).command(validateCommand).command(manifestCommand);
+    let next = yargs.command(initCommand).command(validateCommand).command(manifestCommand).command(addonGroupCommand);
     for (const id of SETUP_MODULE_IDS) {
       next = next.command(moduleCommand(id));
     }
-    return next.demandCommand(1, 'Specify a setup subcommand (init, <module>, validate, manifest).');
+    return next.demandCommand(1, 'Specify a setup subcommand (init, addon, <module>, validate, manifest).');
   },
   handler: () => undefined
 };

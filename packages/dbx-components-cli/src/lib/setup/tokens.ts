@@ -211,6 +211,10 @@ function buildPerFileTokens(naming: SetupNaming, options: SetupTokenOptions): Re
     { search: 'FIREBASE_COMPONENTS_NAME', replace: naming.firebaseComponentsName }
   ]);
 
+  // apps/api/src/environments/environment.ts — dev appUrl uses the angular dev-server port
+  // (the OIDC issuer origin; see the `oidc` add-on). Exclusive per-file list (no global tokens needed).
+  map.set('apps/api/src/environments/environment.ts', [{ search: 'ANGULAR_APP_PORT', replace: String(naming.angularAppPort) }]);
+
   // apps/<app> proxy confs (script lines 782, 786)
   map.set('root/apps-demo/proxy.conf.dev.json', [{ search: '9902', replace: String(naming.emulatorAuthPort) }]);
   map.set('root/apps-demo/proxy.conf.prod.json', [{ search: 'components.dereekb.com', replace: 'example.dereekb.com' }]);
