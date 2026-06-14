@@ -315,6 +315,41 @@ describe('generateMcpToolDefinitions filter metadata', () => {
     const { tools } = generateMcpToolDefinitions(makeApiDetailsWithMcp('read', undefined));
     expect(tools[0].filterMetadata.visibilityKind).toBe('always');
   });
+
+  it('marks read and query tools read-only with no [WRITE] prefix', () => {
+    for (const callType of ['read', 'query']) {
+      const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp(callType, undefined)).tools[0];
+      expect(tool.annotations).toEqual({ readOnlyHint: true });
+      expect(tool.description.startsWith('[WRITE] ')).toBe(false);
+    }
+  });
+
+  it('marks create/update/delete tools destructive writes and prefixes the description with [WRITE]', () => {
+    for (const callType of ['create', 'update', 'delete']) {
+      const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp(callType, undefined)).tools[0];
+      expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+      expect(tool.description.startsWith('[WRITE] ')).toBe(true);
+    }
+  });
+
+  it('treats an invoke with no override as a destructive write (fail-safe)', () => {
+    const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('invoke', undefined)).tools[0];
+    expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+    expect(tool.description.startsWith('[WRITE] ')).toBe(true);
+  });
+
+  it('honors an explicit mcp.readOnly override on an invoke (read-only, no prefix)', () => {
+    const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('invoke', { readOnly: true })).tools[0];
+    expect(tool.annotations).toEqual({ readOnlyHint: true });
+    expect(tool.description.startsWith('[WRITE] ')).toBe(false);
+  });
+
+  it('mirrors annotations + the marked description onto the static wire entry', () => {
+    const tool = generateMcpToolDefinitions(makeApiDetailsWithMcp('update', undefined)).tools[0];
+    expect(tool.staticWireEntry.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+    expect(tool.staticWireEntry.description).toBe(tool.description);
+    expect(tool.staticWireEntry.description.startsWith('[WRITE] ')).toBe(true);
+  });
 });
 
 describe('generateMcpToolDefinitions manifest integration', () => {

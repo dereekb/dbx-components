@@ -1,6 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { callModelOidcScopeForCallType, type CallModelOidcScope } from '@dereekb/firebase';
 import { type McpToolVisibility, type McpVisibilityContext, type McpVisibilityRule } from '@dereekb/firebase-server';
+import { type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 
 /**
  * Normalized classification of a {@link McpToolVisibility} value computed at boot.
@@ -135,6 +136,25 @@ export function resolveEffectiveReadOnly(explicitReadOnly: Maybe<boolean>, callT
   }
 
   return READ_ONLY_BY_CALL_TYPE[callType];
+}
+
+/**
+ * Maps an effective read-only classification to the standard MCP {@link ToolAnnotations} hints
+ * advertised on `tools/list`.
+ *
+ * A definitively read-only tool advertises `{ readOnlyHint: true }`. Everything else — a known
+ * write (`false`) or an unclassified verb (`undefined`, e.g. `invoke`/custom) — fails safe to
+ * `{ readOnlyHint: false, destructiveHint: true }` so a client never mistakes an ambiguous tool
+ * for a safe read. `idempotentHint` / `openWorldHint` are intentionally left unset.
+ *
+ * Co-located with {@link resolveEffectiveReadOnly} / {@link READ_ONLY_BY_CALL_TYPE} so the
+ * read/write classification rules stay in one file.
+ *
+ * @param effectiveReadOnly - The resolved read-only classification from {@link resolveEffectiveReadOnly}.
+ * @returns The MCP annotations describing the tool's read/write behaviour.
+ */
+export function resolveMcpToolAnnotations(effectiveReadOnly: boolean | undefined): ToolAnnotations {
+  return effectiveReadOnly === true ? { readOnlyHint: true } : { readOnlyHint: false, destructiveHint: true };
 }
 
 /**

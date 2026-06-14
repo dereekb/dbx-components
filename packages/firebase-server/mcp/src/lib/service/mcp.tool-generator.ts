@@ -4,9 +4,9 @@ import { type Type } from 'arktype';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type ModelApiDetailsResult, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpToolDetailsBuilder } from '@dereekb/firebase-server';
 import { type Request } from 'express';
-import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { type CallToolResult, type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { mcpManifestKey, type McpManifestToolEntry } from './mcp.manifest';
-import { classifyVisibility, resolveEffectiveReadOnly, resolveRequiredScope, type McpToolFilterMetadata } from './mcp.visibility';
+import { classifyVisibility, resolveEffectiveReadOnly, resolveMcpToolAnnotations, resolveRequiredScope, type McpToolFilterMetadata } from './mcp.visibility';
 
 /**
  * Frozen wire-shape entry returned on `tools/list`.
@@ -20,6 +20,12 @@ export interface McpToolListEntry {
   readonly description: string;
   readonly inputSchema: object;
   readonly outputSchema?: object;
+  /**
+   * Standard MCP read/write hints (`readOnlyHint`, `destructiveHint`) advertised to clients so a
+   * tool's mutating behaviour is machine-readable. Resolved at boot from the effective read-only
+   * classification; see {@link resolveMcpToolAnnotations}.
+   */
+  readonly annotations?: ToolAnnotations;
 }
 
 /**
@@ -58,6 +64,12 @@ export interface McpToolDefinition {
    * response only includes this when the pinned MCP SDK type allows it.
    */
   readonly outputSchema?: object;
+  /**
+   * Standard MCP read/write hints for this tool, mirrored onto {@link staticWireEntry} and the
+   * dynamic wire path so opt-in `toolDetails` handlers keep their annotations. Resolved at boot
+   * from the effective read-only classification; see {@link resolveMcpToolAnnotations}.
+   */
+  readonly annotations?: ToolAnnotations;
   /**
    * The original handler-level API details. Carries response formatters, analytics
    * config, etc. — the controller resolves Tier 1/2/3 response shape from this.
@@ -246,6 +258,7 @@ interface BuildStaticWireEntryInput {
   readonly description: string;
   readonly inputSchema?: object;
   readonly outputSchema?: object;
+  readonly annotations?: ToolAnnotations;
 }
 
 /**
@@ -259,8 +272,35 @@ interface BuildStaticWireEntryInput {
  */
 export function buildStaticWireEntry(input: BuildStaticWireEntryInput): McpToolListEntry {
   const inputSchema = input.inputSchema ?? { type: 'object' };
-  const entry: McpToolListEntry = input.outputSchema == null ? { name: input.name, description: input.description, inputSchema } : { name: input.name, description: input.description, inputSchema, outputSchema: input.outputSchema };
+  const entry: { name: string; description: string; inputSchema: object; outputSchema?: object; annotations?: ToolAnnotations } = { name: input.name, description: input.description, inputSchema };
+
+  if (input.outputSchema != null) {
+    entry.outputSchema = input.outputSchema;
+  }
+
+  if (input.annotations != null) {
+    entry.annotations = input.annotations;
+  }
+
   return Object.freeze(entry);
+}
+
+/**
+ * Description prefix prepended to a mutating tool's description so MCP clients that don't render
+ * {@link ToolAnnotations} still surface the write signal in plain text.
+ */
+export const MCP_WRITE_TOOL_DESCRIPTION_PREFIX = '[WRITE] ';
+
+/**
+ * Prepends {@link MCP_WRITE_TOOL_DESCRIPTION_PREFIX} to a description when its annotations mark the
+ * tool as a write (`readOnlyHint === false`). Read-only tools are returned unchanged.
+ *
+ * @param description - The base tool description.
+ * @param annotations - The resolved MCP annotations for the tool.
+ * @returns The description, prefixed with the write marker when the tool mutates.
+ */
+export function applyWriteMarker(description: string, annotations: ToolAnnotations): string {
+  return annotations.readOnlyHint === false ? `${MCP_WRITE_TOOL_DESCRIPTION_PREFIX}${description}` : description;
 }
 
 // MARK: Naming
@@ -631,7 +671,7 @@ function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
   }
 
   const manifestEntry = manifest?.get(mcpManifestKey(modelType, callType, specifier));
-  const description = manifestEntry?.description ?? buildDefaultMcpToolDescription(modelType, callType, specifier);
+  const baseDescription = manifestEntry?.description ?? buildDefaultMcpToolDescription(modelType, callType, specifier);
 
   const inputSchema = resolveInputSchema({ handlerDetails, manifestEntry, options, dispatch, toolName: name, outSkipped });
 
@@ -654,6 +694,8 @@ function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
 
   const requiredScope = resolveRequiredScope(callType) ?? undefined;
   const effectiveReadOnly = resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType);
+  const annotations = resolveMcpToolAnnotations(effectiveReadOnly);
+  const description = applyWriteMarker(baseDescription, annotations);
   let filterMetadata: McpToolFilterMetadata;
 
   if (classified.visibilityKind === 'declarative') {
@@ -678,12 +720,13 @@ function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
   }
 
   const outputSchema = manifestEntry?.outputSchema;
-  const staticWireEntry = buildStaticWireEntry({ name, description, inputSchema, outputSchema });
+  const staticWireEntry = buildStaticWireEntry({ name, description, inputSchema, outputSchema, annotations });
   const definition: McpToolDefinition = {
     name,
     description,
     inputSchema,
     outputSchema,
+    annotations,
     details: handlerDetails,
     dispatch,
     filterMetadata,

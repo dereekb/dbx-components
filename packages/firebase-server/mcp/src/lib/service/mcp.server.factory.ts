@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { type Request } from 'express';
 import { type OnCallTypedModelParams } from '@dereekb/firebase';
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
@@ -626,7 +626,7 @@ export class McpServerFactoryService {
         this._logger.warn(`MCP tool ${tool.name} toolDetails builder threw; falling back to defaults: ${(error as Error).message}`);
       }
 
-      const wire: { name: string; description: string; inputSchema: object; outputSchema?: object } = {
+      const wire: { name: string; description: string; inputSchema: object; outputSchema?: object; annotations?: ToolAnnotations } = {
         name: tool.name,
         description,
         inputSchema: inputSchema ?? { type: 'object' }
@@ -634,6 +634,10 @@ export class McpServerFactoryService {
 
       if (tool.outputSchema != null) {
         wire.outputSchema = tool.outputSchema;
+      }
+
+      if (tool.annotations != null) {
+        wire.annotations = tool.annotations;
       }
 
       result = wire;
