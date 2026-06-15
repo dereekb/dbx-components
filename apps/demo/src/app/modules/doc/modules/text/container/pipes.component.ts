@@ -8,7 +8,7 @@ import { DateRangeType, dateRange, guessCurrentTimezone } from '@dereekb/date';
 import { DbxContentContainerDirective, DbxContentBorderDirective, DbxDetailBlockComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
+import { DocFormForgeExampleComponent } from '../../shared/component/forge.example.form.component';
 import { DatePipe } from '@angular/common';
 import { DateDistancePipe, DateRangeDistancePipe, TargetDateToSystemDatePipe, SystemDateToTargetDatePipe, TimezoneAbbreviationPipe, DateDayRangePipe, DateDayTimeRangePipe, DateTimeRangeOnlyPipe, DateTimeRangePipe, DateTimeRangeOnlyDistancePipe, MinutesStringPipe, TimeDistanceCountdownPipe, TimeDistancePipe, completeOnDestroy } from '@dereekb/dbx-core';
 

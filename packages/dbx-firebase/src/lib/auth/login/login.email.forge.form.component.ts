@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeUsernameLoginField, dbxForgeTextPasswordField, dbxForgeTextVerifyPasswordField, type DbxForgeTextPasswordFieldConfig, type DefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
+import { AbstractConfigAsyncForgeFormDirective, DBX_FORGE_FORM_COMPONENT_TEMPLATE, dbxForgeFormComponentProviders, DbxForgeFormComponentImportsModule, dbxForgeUsernameLoginField, dbxForgeTextPasswordField, dbxForgeTextVerifyPasswordField, type DbxForgeTextPasswordFieldConfig, type DbxForgeDefaultUsernameLoginFieldsValue } from '@dereekb/dbx-form';
 import { type Maybe } from '@dereekb/util';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { map, type Observable } from 'rxjs';
@@ -8,7 +8,7 @@ import { type DbxFirebaseLoginMode } from './login';
 /**
  * Form value containing email (username) and password fields.
  */
-export type DbxFirebaseEmailFormValue = DefaultUsernameLoginFieldsValue;
+export type DbxFirebaseEmailFormValue = DbxForgeDefaultUsernameLoginFieldsValue;
 
 /**
  * Configuration for the email login form, specifying mode and optional password constraints.

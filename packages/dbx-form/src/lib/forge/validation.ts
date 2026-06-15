@@ -4,7 +4,6 @@ import type { ValidationMessages } from '@ng-forge/dynamic-forms';
  * Default validation messages for all built-in Angular validators.
  *
  * Uses ng-forge's `{{param}}` interpolation for dynamic values.
- * Provides the same error messages as the formly validation configuration.
  *
  * Can be used as `FormConfig.defaultValidationMessages` to apply form-wide,
  * or spread into individual field `validationMessages`.

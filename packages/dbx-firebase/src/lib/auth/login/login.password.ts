@@ -1,9 +1,9 @@
-import { type TextPasswordFieldPasswordParameters } from '@dereekb/dbx-form';
+import { type DbxForgeTextPasswordFieldPasswordParameters } from '@dereekb/dbx-form';
 
 /**
  * Password validation configuration for Firebase email/password login forms.
  */
-export type DbxFirebaseAuthLoginPasswordConfig = TextPasswordFieldPasswordParameters;
+export type DbxFirebaseAuthLoginPasswordConfig = DbxForgeTextPasswordFieldPasswordParameters;
 
 /**
  * Default password config requiring a minimum of 6 characters (Firebase Auth minimum).

@@ -1,7 +1,7 @@
-import { formlyMakeMetaFilterSearchableFieldValueDisplayFn, type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldStringSearchFn, type SearchableValueFieldValue } from '@dereekb/dbx-form';
+import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldStringSearchFn, type SearchableValueFieldValue } from '@dereekb/dbx-form';
 import { randomDelayWithRandomFunction } from '@dereekb/rxjs';
 import { randomArrayFactory, randomNumberFactory, pickOneRandomly, type Configurable } from '@dereekb/util';
-import { map, type Observable, of } from 'rxjs';
+import { map, of } from 'rxjs';
 import { DocFormExampleAccentSearchableFieldDisplayComponent, DocFormExamplePrimarySearchableFieldDisplayComponent, DocFormExampleWarnSearchableFieldDisplayComponent } from './selection.example.view';
 
 export type DocFormExampleSelectionValueId = string;
@@ -43,17 +43,22 @@ export function EXAMPLE_SEARCH_FOR_SELECTION_VALUE(minimumCharacters: number = 3
   };
 }
 
-export const EXAMPLE_DISPLAY_FOR_SELECTION_VALUE: SearchableValueFieldDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue> = formlyMakeMetaFilterSearchableFieldValueDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>({
-  loadMetaForValues: (values) => {
-    const valuesWithMeta = values.map((x) => ({ ...x, meta: MAKE_EXAMPLE_SELECTION_VALUE(x.value) }));
-    return of(valuesWithMeta);
-  },
-  makeDisplayForValues: (values) => {
-    const displayValues: SearchableValueFieldDisplayValue<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>[] = values.map((x) => ({ ...x, label: `Product: ${x.meta?.value}` }));
-    const obs: Observable<SearchableValueFieldDisplayValue<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>[]> = of(displayValues);
-    return obs;
-  }
-});
+/**
+ * Loads example selection meta when missing, then maps each value to a display value.
+ *
+ * Values that already carry meta pass through unchanged; values missing meta have it loaded first.
+ *
+ * @param values - The searchable field values to display.
+ * @returns Observable emitting the display values with a `Product: <value>` label.
+ */
+export const EXAMPLE_DISPLAY_FOR_SELECTION_VALUE: SearchableValueFieldDisplayFn<DocFormExampleSelectionValueId, DocFormExampleSelectionValue> = (values) => {
+  const displayValues: SearchableValueFieldDisplayValue<DocFormExampleSelectionValueId, DocFormExampleSelectionValue>[] = values.map((x) => {
+    const meta = x.meta ?? MAKE_EXAMPLE_SELECTION_VALUE(x.value);
+    return { ...x, meta, label: `Product: ${meta.value}` };
+  });
+
+  return of(displayValues);
+};
 
 /**
  * Extends EXAMPLE_DISPLAY_FOR_SELECTION_VALUE by setting a custom display to each.

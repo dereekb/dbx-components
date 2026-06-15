@@ -1,8 +1,5 @@
 import { LOREM } from './../../shared/lorem';
 import { type Type, InjectionToken, inject, Component, ChangeDetectionStrategy } from '@angular/core';
-import { type Observable, map } from 'rxjs';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
-import { AbstractConfigAsyncFormlyFormDirective, formlyComponentField, provideFormlyContext, DbxFormlyComponent } from '@dereekb/dbx-form';
 import { DbxContentBoxDirective, DbxSectionComponent, DbxLinkComponent } from '@dereekb/dbx-web';
 import { type Maybe } from '@dereekb/util';
 
@@ -13,34 +10,6 @@ export interface DocFormExampleComponentFormValue {}
 export interface DocFormExampleComponentFormConfig {
   readonly componentClass: Type<any>;
   readonly allowDisabledEffects?: Maybe<boolean>;
-}
-
-@Component({
-  template: `
-    <dbx-formly></dbx-formly>
-  `,
-  selector: 'doc-form-example-component-form',
-  providers: [provideFormlyContext()],
-  standalone: true,
-  imports: [DbxFormlyComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
-export class DocFormExampleComponentFormComponent extends AbstractConfigAsyncFormlyFormDirective<DocFormExampleComponentFormValue, DocFormExampleComponentFormConfig> {
-  readonly fields$: Observable<FormlyFieldConfig[]> = this.config$.pipe(
-    map((config) => {
-      return [
-        formlyComponentField({
-          componentClass: config.componentClass,
-          providers: [
-            {
-              provide: DOC_FORM_EXAMPLE_COMPONENT_DATA_TOKEN,
-              useValue: 'example injected value'
-            }
-          ]
-        })
-      ];
-    })
-  );
 }
 
 @Component({

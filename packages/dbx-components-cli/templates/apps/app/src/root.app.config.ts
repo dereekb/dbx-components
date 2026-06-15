@@ -1,5 +1,5 @@
 import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig, provideDbxAnalyticsService, provideDbxAnalyticsSegmentApiService } from '@dereekb/dbx-analytics';
-import { type ApplicationConfig, importProvidersFrom, inject, type Injector, provideAppInitializer } from '@angular/core';
+import { type ApplicationConfig, inject, type Injector, provideAppInitializer } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
@@ -8,13 +8,12 @@ import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, ty
 import { provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService } from '@dereekb/dbx-web';
 import { type FirestoreContext, appNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase';
 import { APP_CODE_PREFIXFirebaseContextService } from 'ANGULAR_COMPONENTS_NAME';
-import { defaultValidationMessages, provideDbxFormConfiguration } from '@dereekb/dbx-form';
+import { provideDbxFormConfiguration, provideDbxForgeFormFieldDeclarations } from '@dereekb/dbx-form';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { STATES } from './app/app.router';
-import { FormlyModule } from '@ngx-formly/core';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
 import { APP_CODE_PREFIX_CAPS_AUTH_CLAIMS_SERVICE, APP_CODE_PREFIX_CAPS_API_AUTH_CLAIMS_ONBOARDED_TOKEN, APP_CODE_PREFIX_CAPS_FIREBASE_FUNCTIONS_CONFIG, APP_CODE_PREFIXFirebaseFunctionsGetter, APP_CODE_PREFIXFirestoreCollections, makeAPP_CODE_PREFIXFirebaseFunctions, makeAPP_CODE_PREFIXFirestoreCollections, APP_CODE_PREFIX_CAPS_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD } from 'FIREBASE_COMPONENTS_NAME';
 // @dbx-addon:oidc:root-config:imports
@@ -95,12 +94,6 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // formly
-    importProvidersFrom(
-      FormlyModule.forRoot({
-        validationMessages: defaultValidationMessages()
-      })
-    ),
     // ui-router
     provideUIRouter({
       useHash: false,
@@ -157,6 +150,7 @@ export const appConfig: ApplicationConfig = {
     provideDbxModelService(),
     // dbx-form, form related
     provideDbxFormConfiguration(),
+    provideDbxForgeFormFieldDeclarations(),
     // dbx-firebase
     provideDbxFirebase({
       app: {

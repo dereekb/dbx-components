@@ -12,7 +12,6 @@ import { STATES } from './doc.form.router';
 import { DocFormValueComponent } from './container/value.component';
 import { DocFormTemplateComponent } from './container/template.component';
 import { DocFormDirectiveComponent } from './container/directive.component';
-import { FormlyMatNativeSelectModule } from '@ngx-formly/material/native-select';
 import { DocFormExpressionComponent } from './container/expression.component';
 
 import { DocFormFormComponent } from './container/form.component';
@@ -21,7 +20,6 @@ import { DocFormArrayComponent } from './container/array.component';
 
 @NgModule({
   imports: [
-    FormlyMatNativeSelectModule,
     UIRouterModule.forChild({
       states: STATES
     }),

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-deprecated -- demo module aggregates legacy NgModules (DbxFormCalendarModule, DbxFormDateScheduleRangeFieldModule, DbxFormMapboxModule) alongside their provider-based replacements */
+/* eslint-disable @typescript-eslint/no-deprecated -- demo module aggregates the legacy DbxFormCalendarModule NgModule alongside its provider-based replacement */
 import { DocExtensionExampleScheduleSelectionCalendarDatePopoverContentComponent } from './component/example.calendar.schedule.selection.popover.content.component';
 import { NgModule, inject } from '@angular/core';
 import { UIRouterModule } from '@uirouter/angular';
@@ -14,14 +14,13 @@ import { DOC_EXTENSION_WIDGET_EXAMPLE_TYPE, DocExtensionWidgetExampleComponent }
 import { DocExtensionWidgetIconExampleComponent, DOC_EXTENSION_WIDGET_ICON_EXAMPLE_TYPE } from './component/widget.icon.example.component';
 
 import { DocExtensionMapboxComponent } from './container/mapbox.component';
-import { DbxFormMapboxModule } from '@dereekb/dbx-form/mapbox';
 import { DbxMapboxModule } from '@dereekb/dbx-web/mapbox';
 import { DbxTableDateModule, DbxTableModule } from '@dereekb/dbx-web/table';
 import { DocExtensionMapboxContentExampleComponent } from './component/mapbox.content.example.component';
 import { DocExtensionMapboxMarkersExampleComponent } from './component/mapbox.markers.example.component';
 import { DbxCalendarBaseComponent, DbxCalendarComponent } from '@dereekb/dbx-web/calendar';
 import { DocExtensionCalendarScheduleSelectionComponent } from './component/selection.calendar.component';
-import { DbxFormCalendarModule, DbxFormDateScheduleRangeFieldModule } from '@dereekb/dbx-form/calendar';
+import { DbxFormCalendarModule } from '@dereekb/dbx-form/calendar';
 import { DocExtensionCalendarScheduleSelectionWithFilterComponent } from './component/selection.filter.calendar.component';
 import { DocExtensionTableComponent } from './container/table.component';
 import { DocExtensionTableItemActionExampleComponent } from './component/table.item.action.example.component';
@@ -47,14 +46,12 @@ import { DocExtensionQuizExampleResultComponent } from './component/quiz.example
     DbxCalendarBaseComponent,
     DbxCalendarComponent,
     DbxFormCalendarModule,
-    DbxFormDateScheduleRangeFieldModule,
     DbxDownloadTextViewComponent,
     DbxWidgetViewComponent,
     DbxWidgetListGridComponent,
     DbxWidgetListGridViewComponent,
     DbxWidgetListGridViewItemComponent,
     DbxMapboxModule,
-    DbxFormMapboxModule,
     DbxTableModule,
     DbxTableDateModule,
     UIRouterModule.forChild({

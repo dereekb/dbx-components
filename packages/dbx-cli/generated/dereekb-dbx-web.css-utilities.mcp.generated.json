@@ -1662,7 +1662,8 @@
       "component": "DbxDetailBlockComponent",
       "scope": "component-class",
       "tokensRead": [
-        "--dbx-detail-block-content-offset"
+        "--dbx-detail-block-content-offset",
+        "--dbx-padding-1"
       ]
     },
     {
@@ -2233,7 +2234,7 @@
         },
         {
           "property": "border-radius",
-          "value": "var(--dbx-icon-tile-border-radius, 12px)"
+          "value": "var(--dbx-icon-tile-border-radius, var(--mat-sys-corner-medium, 12px))"
         },
         {
           "property": "padding",
@@ -2272,7 +2273,8 @@
         "--dbx-icon-tile-icon-size",
         "--dbx-icon-tile-min-width",
         "--dbx-icon-tile-padding",
-        "--dbx-icon-tile-width"
+        "--dbx-icon-tile-width",
+        "--mat-sys-corner-medium"
       ]
     },
     {

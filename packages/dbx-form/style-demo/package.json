@@ -8,7 +8,6 @@
     "@dereekb/dbx-form": "13.16.0",
     "@dereekb/dbx-web": "13.16.0",
     "@dereekb/util": "13.16.0",
-    "@dereekb/vitest": "13.16.0",
-    "@ngx-formly/core": "git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d"
+    "@dereekb/vitest": "13.16.0"
   }
 }

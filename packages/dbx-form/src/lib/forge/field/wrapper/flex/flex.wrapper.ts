@@ -100,8 +100,6 @@ export function dbxForgeFlexLayout(fields: readonly (FieldDef<unknown> | DbxForg
  * the wrapped fields should remain at the same level in the form value, not be
  * nested under an extra object.
  *
- * This is the forge equivalent of {@link formlyFlexLayoutWrapper}.
- *
  * @param input - {@link DbxForgeFlexLayoutConfig} with a `fields` property and layout defaults.
  *   For backwards compatibility, may also be passed as a deprecated array of fields paired with an optional config.
  * @param legacyConfig - Only consulted when `input` is the deprecated array form; supplies the layout defaults that would otherwise live on the config object.

@@ -7,7 +7,7 @@ import { DbxContentContainerDirective, DbxButtonComponent, DbxErrorComponent, Db
 import { DbxActionDirective, DbxActionHandlerDirective, DbxActionButtonDirective, DbxActionEnforceModifiedDirective } from '@dereekb/dbx-core';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
-import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
+import { DocFormForgeExampleComponent } from '../../shared/component/forge.example.form.component';
 
 @Component({
   templateUrl: './forms.component.html',
