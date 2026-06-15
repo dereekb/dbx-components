@@ -40,8 +40,8 @@ $header-left-reserved-space-small-screen: 120px;
 
         > .mat-icon {
           flex-shrink: 0;
-          padding-right: 2px;
-          padding-bottom: 2px;
+          padding-right: var(--dbx-padding-1);
+          padding-bottom: var(--dbx-padding-1);
         }
       }
 

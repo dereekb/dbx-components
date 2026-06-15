@@ -138,7 +138,7 @@ $list-item-padded-min-height: 42px;
   .dbx-list-view-group {
     .dbx-list-view-group-header {
       .dbx-list-two-line-item .dbx-list-two-line-item-with-icon {
-        padding: 2px 0; // override the padding when there is an icon
+        padding: var(--dbx-padding-1) 0; // override the padding when there is an icon
       }
     }
   }
@@ -247,7 +247,7 @@ $list-item-padded-min-height: 42px;
   // base `.dbx-icon-tile` rule lives in `_text.scss` next to its component.
   .dbx-list-two-line-item .item-icon.dbx-icon-tile {
     padding: var(--dbx-icon-tile-padding, 8px);
-    margin: 0 12px 0 0;
+    margin: 0 var(--dbx-padding-3) 0 0;
   }
 
   /// @dbx-utility list-two-line-item

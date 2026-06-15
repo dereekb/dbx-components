@@ -26,7 +26,7 @@ $active-background-transparent-color: 0.93;
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
-        padding-bottom: 24px;
+        padding-bottom: var(--dbx-padding-5);
       }
 
       .dbx-anchor-list.mat-mdc-nav-list {

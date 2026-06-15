@@ -83,7 +83,7 @@ $two-columns-right-padding-size: var(--dbx-padding-2);
   }
 
   .dbx-two-column-head {
-    padding: 0 6px; // only padded on the left
+    padding: 0 var(--dbx-padding-2); // only padded on the left
     border-bottom: 1px solid var(--mat-sys-outline-variant);
     height: $two-column-navbar-height;
 

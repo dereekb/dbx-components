@@ -28,7 +28,7 @@ $dbx-dialog-content-close-right-offset: $dbx-dialog-content-close-edge-padding;
     $dbx-dialog-content-header-padding: 18px;
 
     .dbx-dialog-content-close.dbx-dialog-content-close-padding {
-      padding-bottom: 12px;
+      padding-bottom: var(--dbx-padding-3);
     }
 
     .dbx-dialog-content-header {
