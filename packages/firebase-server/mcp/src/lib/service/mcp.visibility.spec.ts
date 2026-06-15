@@ -1,4 +1,4 @@
-import { classifyVisibility, resolveEffectiveReadOnly, resolveRequiredScope } from './mcp.visibility';
+import { classifyVisibility, resolveEffectiveReadOnly, resolveMcpToolAnnotations, resolveRequiredScope } from './mcp.visibility';
 import { type McpVisibilityContext } from '@dereekb/firebase-server';
 
 describe('classifyVisibility', () => {
@@ -58,6 +58,20 @@ describe('resolveEffectiveReadOnly', () => {
     expect(resolveEffectiveReadOnly(null, 'read')).toBe(true);
     expect(resolveEffectiveReadOnly(null, 'create')).toBe(false);
     expect(resolveEffectiveReadOnly(null, 'invoke')).toBeUndefined();
+  });
+});
+
+describe('resolveMcpToolAnnotations', () => {
+  it('maps a read-only classification to a readOnlyHint', () => {
+    expect(resolveMcpToolAnnotations(true)).toEqual({ readOnlyHint: true });
+  });
+
+  it('maps a known write to readOnlyHint:false + destructiveHint', () => {
+    expect(resolveMcpToolAnnotations(false)).toEqual({ readOnlyHint: false, destructiveHint: true });
+  });
+
+  it('fails safe: maps an unclassified verb (undefined, e.g. invoke) to a destructive write', () => {
+    expect(resolveMcpToolAnnotations(undefined)).toEqual({ readOnlyHint: false, destructiveHint: true });
   });
 });
 

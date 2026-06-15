@@ -13,7 +13,8 @@
  * `packages/dbx-cli/firebase-api-manifest/src/generate-api-manifest/`.
  */
 
-import { Node, type CallExpression, type ExpressionWithTypeArguments, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile, type TypeNode } from 'ts-morph';
+import { parseFirestoreModelIdentityArgs, resolveExtendsName } from '@dereekb/dbx-cli';
+import { Node, type CallExpression, type InterfaceDeclaration, type JSDoc, type ObjectLiteralExpression, Project, type SourceFile } from 'ts-morph';
 import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionEnum, ModelExtractionEnumValue, ModelExtractionGroup, ModelExtractionIdentity, ModelExtractionInterface, ModelExtractionInterfaceProp, ModelExtractionServiceFactory } from './types';
 
 const READ_LEVEL_VALUES: ReadonlySet<'system' | 'owner' | 'admin-only' | 'permissions'> = new Set(['system', 'owner', 'admin-only', 'permissions']);
@@ -22,19 +23,6 @@ const MCP_TOOL_NAME_SEGMENT_TAG = 'dbxModelMcpToolNameSegment';
 const MODEL_TYPE_VALUE_PATTERN = /^[a-z][A-Za-z0-9_$]*$/;
 const TOOL_NAME_SEGMENT_PATTERN = /^[A-Za-z][A-Za-z0-9_$]*$/;
 
-/**
- * TS utility/structural wrappers that don't change the field surface for
- * inheritance walks — `Partial<T>`, `Required<T>`, `Readonly<T>`,
- * `NonNullable<T>` preserve every property, and `Pick<T, K>` / `Omit<T, K>`
- * leave the original `T` reachable for long-name resolution. `MaybeMap<T>` is
- * the workspace's own pass-through that decorates each prop with `Maybe<…>`
- * without renaming. `extends` walks need to see through these to find the
- * concrete ancestor interface — `getExpression()` alone returns just the
- * leftmost identifier (`Partial`, `Pick`, …) and silently drops the inner
- * model, leaving every inherited `@dbxModelVariable` tag unreachable.
- */
-const PASSTHROUGH_TYPE_WRAPPERS: ReadonlySet<string> = new Set(['Partial', 'Required', 'Readonly', 'NonNullable', 'MaybeMap', 'Pick', 'Omit']);
-
 const IDENTITY_FN = 'firestoreModelIdentity';
 const CONVERTER_FN_NAMES = ['snapshotConverterFunctions', 'firestoreSubObject', 'firestoreObjectArray'] as const;
 const SUB_OBJECT_FN = 'firestoreSubObject';
@@ -42,6 +30,7 @@ const OBJECT_ARRAY_FN = 'firestoreObjectArray';
 const SNAPSHOT_FN = 'snapshotConverterFunctions';
 const FIELDS_LITERAL_KEY = 'fields';
 const OBJECT_FIELD_KEY = 'objectField';
+const FIRESTORE_FIELD_KEY = 'firestoreField';
 
 /**
  * Inputs for {@link extractModelsFromSource}.
@@ -81,46 +70,13 @@ function readIdentities(sourceFile: SourceFile): readonly ModelExtractionIdentit
       const initializer = decl.getInitializer();
       if (!initializer || !Node.isCallExpression(initializer)) continue;
       if (initializer.getExpression().getText() !== IDENTITY_FN) continue;
-      const parsed = parseIdentityArgs(initializer);
+      const parsed = parseFirestoreModelIdentityArgs(initializer.getArguments());
       if (parsed) {
         out.push({ identityConst: decl.getName(), ...parsed });
       }
     }
   }
   return out;
-}
-
-interface ParsedIdentityArgs {
-  readonly modelType: string;
-  readonly collectionPrefix: string | undefined;
-  readonly parentIdentityConst: string | undefined;
-}
-
-function parseIdentityArgs(call: CallExpression): ParsedIdentityArgs | undefined {
-  const args = call.getArguments();
-  let result: ParsedIdentityArgs | undefined;
-  if (args.length === 1) {
-    const modelType = stringLiteralValue(args[0]);
-    if (modelType !== undefined) {
-      result = { modelType, collectionPrefix: undefined, parentIdentityConst: undefined };
-    }
-  } else if (args.length === 2) {
-    const first = stringLiteralValue(args[0]);
-    if (first === undefined) {
-      const modelType = stringLiteralValue(args[1]);
-      if (modelType !== undefined) {
-        result = { modelType, collectionPrefix: undefined, parentIdentityConst: identifierName(args[0]) };
-      }
-    } else {
-      result = { modelType: first, collectionPrefix: stringLiteralValue(args[1]), parentIdentityConst: undefined };
-    }
-  } else if (args.length >= 3) {
-    const modelType = stringLiteralValue(args[1]);
-    if (modelType !== undefined) {
-      result = { modelType, collectionPrefix: stringLiteralValue(args[2]), parentIdentityConst: identifierName(args[0]) };
-    }
-  }
-  return result;
 }
 
 function readInterfaces(sourceFile: SourceFile): readonly ModelExtractionInterface[] {
@@ -224,51 +180,6 @@ function readServiceFactoryModelType(jsDocs: readonly JSDoc[]): string | undefin
       if (MODEL_TYPE_VALUE_PATTERN.test(firstToken)) {
         result = firstToken;
       }
-    }
-  }
-  return result;
-}
-
-/**
- * Resolves an `extends` clause to the concrete ancestor interface name,
- * peeling any leading {@link PASSTHROUGH_TYPE_WRAPPERS}. Returns the leftmost
- * identifier of the unwrapped expression so the inheritance walker can chain
- * through utility-wrapped declarations like
- * `extends Partial<MaybeMap<Omit<Base, '…'>>>`.
- *
- * @param expr - The `ExpressionWithTypeArguments` produced by `getExtends()`
- * @returns The resolved interface name, or the original leftmost identifier when no inner reference is reachable.
- */
-function resolveExtendsName(expr: ExpressionWithTypeArguments): string {
-  const head = expr.getExpression().getText();
-  let result = head;
-  if (PASSTHROUGH_TYPE_WRAPPERS.has(head)) {
-    const typeArgs = expr.getTypeArguments();
-    if (typeArgs.length > 0) {
-      const peeled = peelTypeNode(typeArgs[0]);
-      if (peeled !== undefined) {
-        result = peeled;
-      }
-    }
-  }
-  return result;
-}
-
-function peelTypeNode(node: TypeNode): string | undefined {
-  let current: TypeNode = node;
-  while (Node.isParenthesizedTypeNode(current)) {
-    current = current.getTypeNode();
-  }
-  let result: string | undefined;
-  if (Node.isTypeReference(current)) {
-    const name = current.getTypeName().getText();
-    if (PASSTHROUGH_TYPE_WRAPPERS.has(name)) {
-      const inner = current.getTypeArguments();
-      if (inner.length > 0) {
-        result = peelTypeNode(inner[0]);
-      }
-    } else {
-      result = name;
     }
   }
   return result;
@@ -381,8 +292,15 @@ function readNestedFromExpression(expr: Node): NestedConverterMatch | undefined 
 }
 
 /**
- * Reads the `objectField` argument of a `firestoreSubObject` /
- * `firestoreObjectArray` call into a {@link NestedConverterMatch}.
+ * Reads the `objectField` (or `firestoreField`) argument of a
+ * `firestoreSubObject` / `firestoreObjectArray` call into a
+ * {@link NestedConverterMatch}.
+ *
+ * `firestoreObjectArray`'s config is a union: `{ objectField }` describes the
+ * element shape directly, while `{ firestoreField }` points the element decode
+ * at another field converter (a sub-object const or an inline
+ * `firestoreSubObject(...)`). Both carriers resolve through the same nested path
+ * — the `firestoreField` variant is what the timesheet day-level form uses.
  *
  * @param call - The nested-converter call expression.
  * @param fnName - The resolved factory name (`firestoreSubObject` or `firestoreObjectArray`).
@@ -394,9 +312,9 @@ function readNestedConverterCall(call: CallExpression, fnName: string): NestedCo
   if (args.length > 0) {
     const config = args[0];
     if (Node.isObjectLiteralExpression(config)) {
-      const objectField = readPropertyValue(config, OBJECT_FIELD_KEY);
-      if (objectField) {
-        result = buildNestedConverterMatch({ objectField, call, fnName });
+      const valueNode = readPropertyValue(config, OBJECT_FIELD_KEY) ?? readPropertyValue(config, FIRESTORE_FIELD_KEY);
+      if (valueNode) {
+        result = buildNestedConverterMatch({ objectField: valueNode, call, fnName });
       }
     }
   }
@@ -410,12 +328,15 @@ interface BuildNestedConverterMatchInput {
 }
 
 /**
- * Builds a {@link NestedConverterMatch} from a resolved `objectField` node:
+ * Builds a {@link NestedConverterMatch} from a resolved value node:
  * an identifier yields a converter `ref`, an object literal yields an `inline`
- * converter parsed from its `fields`.
+ * converter parsed from its `fields`, and a nested
+ * `firestoreSubObject(...)` / `firestoreObjectArray(...)` call (the inline
+ * `firestoreField: firestoreSubObject<T>({...})` form) is resolved recursively —
+ * the outer factory still decides array-ness.
  *
- * @param input - The `objectField` node, owning call expression, and factory name.
- * @returns The nested-converter match, or `undefined` when neither shape applies.
+ * @param input - The resolved value node, owning call expression, and factory name.
+ * @returns The nested-converter match, or `undefined` when no shape applies.
  */
 function buildNestedConverterMatch(input: BuildNestedConverterMatchInput): NestedConverterMatch | undefined {
   const { objectField, call, fnName } = input;
@@ -436,6 +357,11 @@ function buildNestedConverterMatch(input: BuildNestedConverterMatchInput): Neste
         },
         isArray
       };
+    }
+  } else if (Node.isCallExpression(objectField)) {
+    const nested = readNestedFromExpression(objectField);
+    if (nested) {
+      result = { ...nested, isArray };
     }
   }
   return result;
@@ -558,20 +484,4 @@ function firstParagraph(text: string): string {
     collected.push(line);
   }
   return collected.join(' ').trim();
-}
-
-function stringLiteralValue(node: Node): string | undefined {
-  let result: string | undefined;
-  if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
-    result = node.getLiteralText();
-  }
-  return result;
-}
-
-function identifierName(node: Node): string | undefined {
-  let result: string | undefined;
-  if (Node.isIdentifier(node)) {
-    result = node.getText();
-  }
-  return result;
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { extractFile } from './extract.js';
-import { buildRouteTree } from './build-tree.js';
-import { loadRouteTree } from './index.js';
+import { extractFile } from './route-extract.js';
+import { buildRouteTree } from './route-build-tree.js';
+import { loadRouteTree } from './route-load-tree.js';
 
 describe('buildRouteTree', () => {
   it('links three states into a single tree by dot-prefix', () => {

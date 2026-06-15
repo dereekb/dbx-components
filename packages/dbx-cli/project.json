@@ -30,6 +30,12 @@
             "command": "npx nx run dbx-cli-generate-mcp-manifest:build-base"
           },
           {
+            "command": "npx nx run dbx-cli-generate-route-manifest:build-base"
+          },
+          {
+            "command": "npx nx run dbx-cli-eslint:build-base"
+          },
+          {
             "command": "npx nx run dbx-cli-test:build-base"
           }
         ],

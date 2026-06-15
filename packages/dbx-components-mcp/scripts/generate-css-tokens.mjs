@@ -3,9 +3,16 @@
  * Generates bundled token-manifest JSON files for `@dereekb/dbx-components-mcp`.
  *
  * Modes (chosen via `--source=...`):
- *   • `--source=dbx-web`   — parse @dereekb/dbx-web SCSS (`_variables.scss` +
- *                            `_root-variables.scss` + `_config.scss`) into the
- *                            bundled `dereekb-dbx-web.tokens.mcp.generated.json`.
+ *   • `--source=dbx-web`   — parse @dereekb/dbx-web SCSS: the central style
+ *                            files (`_variables.scss` + `_root-variables.scss`
+ *                            + `_config.scss`) plus component-scoped `--dbx-*`
+ *                            tokens discovered across the component partials,
+ *                            into the bundled
+ *                            `dereekb-dbx-web.tokens.mcp.generated.json`.
+ *   • `--source=dbx-form`  — discover component-scoped `--dbx-*` tokens across
+ *                            @dereekb/dbx-form SCSS partials (skipping tokens
+ *                            dbx-web already owns) into the bundled
+ *                            `dereekb-dbx-form.tokens.mcp.generated.json`.
  *   • `--source=mat-sys`   — copy the hand-curated source file at
  *                            `src/manifest/sources/angular-material-m3.tokens.source.json`
  *                            to the bundled output, stamping the deterministic
@@ -22,12 +29,19 @@
  * heuristics (`*-color*` → `color`, `*padding*|*margin*|*gap*` → `spacing`,
  * `*radius*` → `radius`, etc.).
  *
+ * Component-scoped tokens are discovered two ways: custom-property
+ * *declarations* (`--dbx-foo: value;` inside a component partial) and pure
+ * *override points* — tokens that are never declared anywhere and only appear
+ * as `var(--dbx-foo, <fallback>)` consumptions that apps set to override.
+ * Both forms reach `dbx_css_token_lookup` so the catalog stays authoritative
+ * (see the `dbx__note__component-token-convention` skill).
+ *
  * Run from the workspace root (`nx run dbx-components-mcp:generate-css-tokens`
  * ensures the cwd contract).
  */
 
-import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve, relative } from 'node:path';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -38,42 +52,60 @@ const GENERATED_ROOT = resolve(WORKSPACE_ROOT, 'packages/dbx-cli/generated');
 const BUNDLED_GENERATED_AT = '1970-01-01T00:00:00.000Z';
 const GENERATOR_LABEL = '@dereekb/dbx-components-mcp/scripts/generate-css-tokens.mjs';
 
-const argv = process.argv.slice(2);
-const flags = parseFlags(argv);
+const DBX_WEB_LIB_ROOT = 'packages/dbx-web/src/lib';
+const DBX_WEB_STYLE_ROOT = 'packages/dbx-web/src/lib/style';
+const DBX_FORM_LIB_ROOT = 'packages/dbx-form/src/lib';
 
-if (flags.source) {
-  let exitCode = 0;
-  switch (flags.source) {
-    case 'dbx-web':
-      exitCode = await runDbxWeb(flags);
-      break;
-    case 'mat-sys':
-      exitCode = await runCuratedSource('angular-material-m3.tokens.source.json', 'angular-material-m3.tokens.mcp.generated.json', flags);
-      break;
-    case 'mdc':
-      exitCode = await runCuratedSource('angular-material-mdc.tokens.source.json', 'angular-material-mdc.tokens.mcp.generated.json', flags);
-      break;
-    case 'app':
-      exitCode = await runAppScans(flags);
-      break;
-    default:
-      console.error(`generate-css-tokens: unknown --source value: ${flags.source}`);
-      exitCode = 1;
+// Only run the CLI when executed directly — the helpers below are imported by unit tests.
+const isExecutedDirectly = process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isExecutedDirectly) {
+  const flags = parseFlags(process.argv.slice(2));
+
+  if (flags.source) {
+    let exitCode = 0;
+    switch (flags.source) {
+      case 'dbx-web':
+        exitCode = await runDbxWeb(flags);
+        break;
+      case 'dbx-form':
+        exitCode = await runDbxForm(flags);
+        break;
+      case 'mat-sys':
+        exitCode = await runCuratedSource('angular-material-m3.tokens.source.json', 'angular-material-m3.tokens.mcp.generated.json', flags);
+        break;
+      case 'mdc':
+        exitCode = await runCuratedSource('angular-material-mdc.tokens.source.json', 'angular-material-mdc.tokens.mcp.generated.json', flags);
+        break;
+      case 'app':
+        exitCode = await runAppScans(flags);
+        break;
+      default:
+        console.error(`generate-css-tokens: unknown --source value: ${flags.source}`);
+        exitCode = 1;
+    }
+    process.exitCode = exitCode;
+  } else {
+    console.error('generate-css-tokens: missing --source flag (dbx-web | dbx-form | mat-sys | mdc | app)');
+    process.exitCode = 1;
   }
-  process.exitCode = exitCode;
-} else {
-  console.error('generate-css-tokens: missing --source flag (dbx-web | mat-sys | mdc | app)');
-  process.exitCode = 1;
 }
 
 // MARK: Modes
 async function runDbxWeb(flags) {
-  const variablesPath = resolve(WORKSPACE_ROOT, 'packages/dbx-web/src/lib/style/_variables.scss');
-  const rootVariablesPath = resolve(WORKSPACE_ROOT, 'packages/dbx-web/src/lib/style/_root-variables.scss');
-  const configPath = resolve(WORKSPACE_ROOT, 'packages/dbx-web/src/lib/style/_config.scss');
   const outPath = resolve(GENERATED_ROOT, 'dereekb-dbx-web.tokens.mcp.generated.json');
 
-  const entries = extractDbxWebTokens({ variablesPath, rootVariablesPath, configPath });
+  const centralEntries = extractDbxWebCentralTokens();
+  const componentEntries = extractComponentTokens({
+    rootDir: resolve(WORKSPACE_ROOT, DBX_WEB_LIB_ROOT),
+    excludePaths: [resolve(WORKSPACE_ROOT, DBX_WEB_STYLE_ROOT)],
+    knownCssVars: new Set(centralEntries.map((e) => e.cssVariable)),
+    source: 'dbx-web'
+  });
+
+  const entries = [...centralEntries, ...componentEntries];
+  entries.sort((a, b) => a.cssVariable.localeCompare(b.cssVariable));
+
   const manifest = {
     version: 1,
     source: 'dereekb-dbx-web',
@@ -83,6 +115,46 @@ async function runDbxWeb(flags) {
     entries
   };
   return writeManifest(outPath, manifest, flags);
+}
+
+async function runDbxForm(flags) {
+  const outPath = resolve(GENERATED_ROOT, 'dereekb-dbx-form.tokens.mcp.generated.json');
+
+  // dbx-form SCSS consumes many dbx-web tokens (padding scale, semantic
+  // colors, dbx-web component tokens) — those belong to the dbx-web manifest,
+  // so the dbx-form manifest only catalogs tokens dbx-web does not own.
+  const centralEntries = extractDbxWebCentralTokens();
+  const centralCssVars = new Set(centralEntries.map((e) => e.cssVariable));
+  const dbxWebComponentEntries = extractComponentTokens({
+    rootDir: resolve(WORKSPACE_ROOT, DBX_WEB_LIB_ROOT),
+    excludePaths: [resolve(WORKSPACE_ROOT, DBX_WEB_STYLE_ROOT)],
+    knownCssVars: centralCssVars,
+    source: 'dbx-web'
+  });
+  const dbxWebCssVars = new Set([...centralCssVars, ...dbxWebComponentEntries.map((e) => e.cssVariable)]);
+
+  const entries = extractComponentTokens({
+    rootDir: resolve(WORKSPACE_ROOT, DBX_FORM_LIB_ROOT),
+    knownCssVars: dbxWebCssVars,
+    source: 'dbx-form'
+  });
+
+  const manifest = {
+    version: 1,
+    source: 'dereekb-dbx-form',
+    module: '@dereekb/dbx-form',
+    generatedAt: BUNDLED_GENERATED_AT,
+    generator: GENERATOR_LABEL,
+    entries
+  };
+  return writeManifest(outPath, manifest, flags);
+}
+
+function extractDbxWebCentralTokens() {
+  const variablesPath = resolve(WORKSPACE_ROOT, `${DBX_WEB_STYLE_ROOT}/_variables.scss`);
+  const rootVariablesPath = resolve(WORKSPACE_ROOT, `${DBX_WEB_STYLE_ROOT}/_root-variables.scss`);
+  const configPath = resolve(WORKSPACE_ROOT, `${DBX_WEB_STYLE_ROOT}/_config.scss`);
+  return extractDbxWebTokens({ variablesPath, rootVariablesPath, configPath });
 }
 
 async function runCuratedSource(srcName, outName, flags) {
@@ -363,6 +435,207 @@ function defaultDescription(cssVar) {
   return `Auto-extracted token \`${cssVar}\`. Add a sassdoc \`///\` block above the declaration in dbx-web for richer guidance.`;
 }
 
+// MARK: Component-token extractor
+/**
+ * Discovers component-scoped `--dbx-*` tokens across a package's SCSS
+ * partials: both declarations (`--dbx-foo: value;`) and pure override
+ * points that only ever appear as `var(--dbx-foo, <fallback>)` consumptions.
+ * Tokens in `knownCssVars` (the central/global layer) are skipped.
+ */
+function extractComponentTokens({ rootDir, excludePaths = [], knownCssVars, source }) {
+  const files = listScssFiles(rootDir, excludePaths);
+  const byCssVar = new Map();
+
+  for (const file of files) {
+    const scss = readFileSync(file, 'utf-8');
+    const { declarations, consumptions } = parseComponentTokensInScss(scss);
+    const scssLiterals = parseScssVariableLiterals(scss);
+    const relPath = relative(WORKSPACE_ROOT, file);
+    const componentScope = componentScopeForFile(file);
+
+    for (const [cssVar, decl] of declarations.entries()) {
+      if (knownCssVars.has(cssVar)) continue;
+      const existing = byCssVar.get(cssVar);
+      if (existing === undefined || existing.declared !== true) {
+        byCssVar.set(cssVar, { cssVar, declared: true, value: resolveScssInValue(decl.value, scssLiterals), doc: decl.doc, relPath, componentScope });
+      }
+    }
+
+    for (const [cssVar, use] of consumptions.entries()) {
+      if (knownCssVars.has(cssVar)) continue;
+      const fallback = use.fallback === undefined ? undefined : resolveScssInValue(use.fallback, scssLiterals);
+      const existing = byCssVar.get(cssVar);
+      if (existing === undefined) {
+        byCssVar.set(cssVar, { cssVar, declared: false, fallback, relPath, componentScope });
+      } else if (existing.declared !== true && existing.fallback === undefined && fallback !== undefined) {
+        existing.fallback = fallback;
+      }
+    }
+  }
+
+  const entries = [];
+  for (const item of byCssVar.values()) {
+    const doc = item.doc ?? {};
+    const role = doc.role ?? inferRole(item.cssVar);
+    const intents = doc.intents && doc.intents.length > 0 ? doc.intents : inferIntents(item.cssVar, role);
+    const description = doc.description ?? defaultComponentDescription(item);
+    const defaultValue = item.declared === true ? item.value : item.fallback;
+    /** @type {Record<string, unknown>} */
+    const entry = {
+      cssVariable: item.cssVar,
+      source,
+      role,
+      intents,
+      description,
+      defaults: defaultValue === undefined ? {} : { light: defaultValue },
+      componentScope: item.componentScope
+    };
+    if (doc.antiUseNotes !== undefined) entry.antiUseNotes = doc.antiUseNotes;
+    if (doc.utilityClasses !== undefined && doc.utilityClasses.length > 0) entry.utilityClasses = doc.utilityClasses;
+    if (doc.recommendedPrimitive !== undefined) entry.recommendedPrimitive = doc.recommendedPrimitive;
+    if (doc.seeAlso !== undefined && doc.seeAlso.length > 0) entry.seeAlso = doc.seeAlso;
+    entries.push(entry);
+  }
+  entries.sort((a, b) => a.cssVariable.localeCompare(b.cssVariable));
+  return entries;
+}
+
+/**
+ * Parses one SCSS file for component-token declarations (with any `///`
+ * sassdoc block immediately above) and `var(--dbx-*)` consumption sites.
+ */
+function parseComponentTokensInScss(scss) {
+  const declarations = new Map();
+  const consumptions = new Map();
+
+  const lines = scss.split(/\r?\n/);
+  let docBuffer = [];
+  for (const rawLine of lines) {
+    const trimmed = rawLine.trim();
+    if (trimmed.startsWith('///')) {
+      docBuffer.push(trimmed.replace(/^\/{3}\s?/, ''));
+      continue;
+    }
+    const declMatch = /^\s*(--dbx-[A-Za-z0-9_-]+)\s*:\s*([^;]+);/.exec(rawLine);
+    if (declMatch !== null && !declarations.has(declMatch[1])) {
+      declarations.set(declMatch[1], { value: declMatch[2].trim(), doc: docBuffer.length > 0 ? parseSassdocLines(docBuffer) : undefined });
+    }
+    docBuffer = [];
+  }
+
+  for (const use of findDbxVarUses(scss)) {
+    const existing = consumptions.get(use.cssVar);
+    if (existing === undefined || (existing.fallback === undefined && use.fallback !== undefined)) {
+      consumptions.set(use.cssVar, { fallback: use.fallback });
+    }
+  }
+
+  return { declarations, consumptions };
+}
+
+/**
+ * Finds every `var(--dbx-…)` reference in the SCSS, capturing the full
+ * (balanced-paren) fallback expression when one is present — fallbacks
+ * commonly nest further `var()` chains.
+ */
+function findDbxVarUses(scss) {
+  const uses = [];
+  const re = /var\(\s*(--dbx-[A-Za-z0-9_-]+)/g;
+  let match;
+  while ((match = re.exec(scss)) !== null) {
+    const openIndex = scss.indexOf('(', match.index);
+    let depth = 0;
+    let end = -1;
+    for (let i = openIndex; i < scss.length; i += 1) {
+      const ch = scss[i];
+      if (ch === '(') {
+        depth += 1;
+      } else if (ch === ')') {
+        depth -= 1;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+    let fallback;
+    if (end !== -1) {
+      const inner = scss.slice(openIndex + 1, end);
+      const commaIndex = inner.indexOf(',');
+      if (commaIndex !== -1) fallback = inner.slice(commaIndex + 1).trim();
+    }
+    uses.push({ cssVar: match[1], fallback });
+  }
+  return uses;
+}
+
+function listScssFiles(rootDir, excludePaths = []) {
+  const out = [];
+  const walk = (dir) => {
+    for (const dirent of readdirSync(dir, { withFileTypes: true })) {
+      const full = resolve(dir, dirent.name);
+      if (excludePaths.some((p) => full === p || full.startsWith(`${p}/`))) continue;
+      if (dirent.isDirectory()) {
+        walk(full);
+      } else if (dirent.isFile() && dirent.name.endsWith('.scss')) {
+        out.push(full);
+      }
+    }
+  };
+  walk(rootDir);
+  out.sort();
+  return out;
+}
+
+function componentScopeForFile(filePath) {
+  return basename(filePath, '.scss')
+    .replace(/^_/, '')
+    .replace(/\.(component|directive)$/, '');
+}
+
+/**
+ * Collects simple `$name: <literal>;` SCSS variable declarations so captured
+ * token values can surface resolved literals (`240px`) instead of SCSS-side
+ * references (`#{$width}`). Chained `$a: $b;` references resolve through a
+ * bounded number of passes; anything unresolvable stays verbatim.
+ */
+function parseScssVariableLiterals(scss) {
+  const map = new Map();
+  const re = /^\s*(\$[A-Za-z0-9_-]+)\s*:\s*([^;]+);/gm;
+  let match;
+  while ((match = re.exec(scss)) !== null) {
+    map.set(match[1], match[2].replace(/\s*!default\s*$/, '').trim());
+  }
+  for (let pass = 0; pass < 3; pass += 1) {
+    for (const [name, value] of map.entries()) {
+      if (/^\$[A-Za-z0-9_-]+$/.test(value) && map.has(value)) {
+        map.set(name, map.get(value));
+      }
+    }
+  }
+  return map;
+}
+
+/**
+ * Replaces `#{$name}` interpolations and bare `$name` references in a captured
+ * value with their same-file literal, when one resolved. Namespaced refs
+ * (`theming.$x`) and unresolved variables are left verbatim.
+ */
+function resolveScssInValue(value, scssLiterals) {
+  const resolveName = (full, name) => {
+    const resolved = scssLiterals.get(name);
+    return resolved !== undefined && !resolved.includes('$') ? resolved : full;
+  };
+  return value.replace(/#\{(\$[A-Za-z0-9_-]+)\}/g, resolveName).replace(/(?<![\w.])(\$[A-Za-z0-9_-]+)(?![\w-])/g, resolveName);
+}
+
+function defaultComponentDescription(item) {
+  if (item.declared === true) {
+    return `Component-scoped token (\`${item.componentScope}\`) declared in \`${item.relPath}\`. Add a sassdoc \`///\` block above the declaration for richer guidance.`;
+  }
+  return `Component-scoped override point (\`${item.componentScope}\`) read in \`${item.relPath}\` — set it (from an app, or via the owning dbx directive where one exists) to override${item.fallback === undefined ? '' : `; unset, it falls back to \`${item.fallback}\``}.`;
+}
+
 function parseScssTokens(filePath) {
   const scss = readFileSync(filePath, 'utf-8');
   const cssToScss = new Map();
@@ -424,4 +697,4 @@ function parseFlags(argv) {
 }
 
 // expose helpers for unit tests
-export { parseSassdocLines, parseVarDecls, parseSassdocBlocks, parseRootDefaults, inferRole, inferIntents };
+export { parseSassdocLines, parseVarDecls, parseSassdocBlocks, parseRootDefaults, inferRole, inferIntents, parseComponentTokensInScss, findDbxVarUses, componentScopeForFile, extractComponentTokens };

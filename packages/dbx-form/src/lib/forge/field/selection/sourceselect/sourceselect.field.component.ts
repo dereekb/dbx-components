@@ -4,7 +4,7 @@ import { MatError, MatFormField, MatLabel, MatSuffix } from '@angular/material/f
 import { MatOptgroup, MatOption, MatSelect } from '@angular/material/select';
 import { MatHint } from '@angular/material/input';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import { DynamicTextPipe, createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors  } from '@ng-forge/dynamic-forms/integration';
+import { DynamicTextPipe, createResolvedErrorsSignal, setupMetaTracking, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import { AsyncPipe } from '@angular/common';
 import { type Maybe, type PrimativeKey, addToSetCopy, asArray, convertMaybeToArray, filterEmptyArrayValues, filterMaybeArrayValues, lastValue, makeValuesGroupMap, mergeArrays, separateValues, setContainsAllValues, setsAreEquivalent, sortByStringFunction } from '@dereekb/util';
@@ -423,7 +423,8 @@ export class DbxForgeSourceSelectFieldComponent<T extends PrimativeKey = Primati
 
     const fieldState = (fieldGetter as any)();
     if (fieldState?.value?.set) {
-      fieldState.value.set(value);
+      // Use null (not undefined) for "no value" — undefined orphans the Signal Forms field (NG01902/NG01901).
+      fieldState.value.set(value ?? null);
     }
   }
 

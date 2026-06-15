@@ -6,6 +6,7 @@
  */
 
 import { Node, type SourceFile } from 'ts-morph';
+import { parseFirestoreModelIdentityArgs } from '../../../scan-helpers/firestore-model-extract-utils.js';
 import type { ExtractedIdentity } from './types.js';
 
 const FUNCTION_NAME = 'firestoreModelIdentity';
@@ -34,59 +35,11 @@ export function findIdentities(sf: SourceFile): readonly ExtractedIdentity[] {
       const initializer = decl.getInitializer();
       if (!initializer || !Node.isCallExpression(initializer)) continue;
       if (initializer.getExpression().getText() !== FUNCTION_NAME) continue;
-      const parsed = parseIdentityCall(initializer.getArguments());
+      const parsed = parseFirestoreModelIdentityArgs(initializer.getArguments());
       if (parsed) {
         out.push({ identityConst: decl.getName(), ...parsed });
       }
     }
   }
   return out;
-}
-
-interface ParsedIdentityArgs {
-  readonly modelType: string;
-  readonly collectionPrefix: string | undefined;
-  readonly parentIdentityConst: string | undefined;
-}
-
-function parseIdentityCall(args: readonly Node[]): ParsedIdentityArgs | undefined {
-  let result: ParsedIdentityArgs | undefined;
-  if (args.length === 1) {
-    const modelType = stringLiteralValue(args[0]);
-    if (modelType !== undefined) {
-      result = { modelType, collectionPrefix: undefined, parentIdentityConst: undefined };
-    }
-  } else if (args.length === 2) {
-    const first = stringLiteralValue(args[0]);
-    if (first === undefined) {
-      const modelType = stringLiteralValue(args[1]);
-      if (modelType !== undefined) {
-        result = { modelType, collectionPrefix: undefined, parentIdentityConst: identifierName(args[0]) };
-      }
-    } else {
-      result = { modelType: first, collectionPrefix: stringLiteralValue(args[1]), parentIdentityConst: undefined };
-    }
-  } else if (args.length >= 3) {
-    const modelType = stringLiteralValue(args[1]);
-    if (modelType !== undefined) {
-      result = { modelType, collectionPrefix: stringLiteralValue(args[2]), parentIdentityConst: identifierName(args[0]) };
-    }
-  }
-  return result;
-}
-
-function stringLiteralValue(node: Node): string | undefined {
-  let result: string | undefined;
-  if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
-    result = node.getLiteralText();
-  }
-  return result;
-}
-
-function identifierName(node: Node): string | undefined {
-  let result: string | undefined;
-  if (Node.isIdentifier(node)) {
-    result = node.getText();
-  }
-  return result;
 }

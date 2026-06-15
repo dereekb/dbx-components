@@ -7,6 +7,7 @@ import {
   type CliApiManifest,
   type CliApiManifestEntry,
   type CliApiManifestField,
+  type CliEnumManifest,
   type CliModelField,
   type CliModelManifest,
   type CliModelManifestEntry,
@@ -42,6 +43,12 @@ export interface RenderMcpManifestInput {
    * on the output JSON for the runtime's built-in catalog tools.
    */
   readonly modelManifest?: CliModelManifest;
+  /**
+   * Optional generated enum manifest, keyed by enum name. When present, emits an
+   * `enums` block on the output JSON so the runtime `model-info` / `enum-info`
+   * tools can decode raw enum values. Pure data — threaded through verbatim.
+   */
+  readonly enumManifest?: CliEnumManifest;
   /**
    * Optional auth registry + primary-app slug used to project the runtime
    * `auth` section on the manifest. The renderer filters entries to the
@@ -99,12 +106,14 @@ export function renderMcpManifest(input: RenderMcpManifestInput, now: Date = new
   }
 
   const models = input.modelManifest != null && input.modelManifest.length > 0 ? input.modelManifest.map(projectModelEntry) : undefined;
+  const enums = input.enumManifest != null && Object.keys(input.enumManifest).length > 0 ? input.enumManifest : undefined;
   const auth = input.auth == null ? undefined : projectAuthSection(input.auth.registry, input.auth.app);
 
   const base: { version: typeof MCP_MANIFEST_VERSION; generatedAt: string; tools: Record<string, McpManifestToolEntry> } = { version: MCP_MANIFEST_VERSION, generatedAt: now.toISOString(), tools };
   const manifest: McpManifest = {
     ...base,
     ...(models == null ? {} : { models }),
+    ...(enums == null ? {} : { enums }),
     ...(auth == null ? {} : { auth })
   };
 

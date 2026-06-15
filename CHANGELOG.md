@@ -1,3 +1,37 @@
+# [13.17.0](https://github.com/dereekb/dbx-components/compare/v13.16.0-dev...v13.17.0) (2026-06-15)
+
+
+### ai
+
+- **config:** pin project name to dbx-components in dbx-claude marker ([20810c14](https://github.com/dereekb/dbx-components/commit/20810c144c199397260354b5e6077ac190767b64))
+
+
+### Bug Fixes
+
+- **dbx-form:** forge fields write null not undefined to field value ([76e0d7c6](https://github.com/dereekb/dbx-components/commit/76e0d7c61536d8057746ac58190bab1907e3efa1))
+- **dbx-web:** fix dead .dbx-list-no-item-padding selector ([08a9a29f](https://github.com/dereekb/dbx-components/commit/08a9a29f8a0db6a7554ba0247322c5a9ffb262db))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([b0933bea](https://github.com/dereekb/dbx-components/commit/b0933bea84f45b81161f29b8176bc2cd8d63a55c))
+
+
+### Code Refactoring
+
+- **dbx-cli:** dedupe findPackageRoot across registry loaders ([3ce85d29](https://github.com/dereekb/dbx-components/commit/3ce85d29c4628e11871c1b5523eedf7b9fb4d147))
+- **dbx-cli:** share model-extract helpers across extractors ([196e7a00](https://github.com/dereekb/dbx-components/commit/196e7a00d11ab74c593bc2336d392d362deafe62)), closes [passthrou#wrapper](https://github.com/dereekb/passthrou/issues/wrapper)
+
+
+### Features
+
+- **dbx-cli:** harden @dbxRouteModel route-manifest feature ([6d9eb0e8](https://github.com/dereekb/dbx-components/commit/6d9eb0e86088ea3bd66e90265492d1efe0f310ac))
+- **dbx-cli:** self-describing MCP model catalog (enums + nested) ([edba92f5](https://github.com/dereekb/dbx-components/commit/edba92f504964733f966e710dc7471eb010a9add))
+- **dbx-components-mcp:** catalog component-scoped CSS tokens ([68011f31](https://github.com/dereekb/dbx-components/commit/68011f31b0127d8f8a197510d6e0ca49b085efd3))
+- **firebase-server:** add url-models MCP tool + route manifest ([6cf2e4c1](https://github.com/dereekb/dbx-components/commit/6cf2e4c1eba222756d3fe5ca26a45ce29b8ccf00))
+- **firebase-server:** emit MCP read/write tool annotations ([b5389d76](https://github.com/dereekb/dbx-components/commit/b5389d762164dbf056169974ece6f3a8f7a6d1a9))
+- **util:** add Brand nominal-typing utility type ([ef0225d4](https://github.com/dereekb/dbx-components/commit/ef0225d487980258dec0f2a70b42650f79a76874))
+
 # [13.16.0](https://github.com/dereekb/dbx-components/compare/v13.15.0-dev...v13.16.0) (2026-06-06)
 
 

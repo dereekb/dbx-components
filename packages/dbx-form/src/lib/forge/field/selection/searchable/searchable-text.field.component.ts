@@ -139,7 +139,8 @@ export class DbxForgeSearchableTextFieldComponent<T = unknown, M = unknown, H ex
 
     const fieldState = (fieldGetter as any)();
     if (fieldState?.value?.set) {
-      fieldState.value.set(value);
+      // Use null (not undefined) for "no value" — undefined orphans the Signal Forms field (NG01902/NG01901).
+      fieldState.value.set(value ?? null);
     }
   }
 }

@@ -8,7 +8,7 @@
  * any consuming app gets it from the shared dbx-cli barrel.
  */
 
-import type { CliModelField, CliModelManifestEntry } from '@dereekb/dbx-cli';
+import type { CliEnumManifest, CliModelEnum, CliModelEnumValue, CliModelField, CliModelManifestEntry } from '@dereekb/dbx-cli';
 import { format, resolveConfig } from 'prettier';
 import { compareStrings } from '@dereekb/util';
 import type { CollectedEntry } from './types';
@@ -32,6 +32,17 @@ export interface RenderManifestInput {
    */
   readonly modelNamespace?: string;
   /**
+   * When non-empty, the manifest TS file also exports a
+   * `<enumNamespace>: CliEnumManifest` carrying the value tables for every enum
+   * referenced by some emitted model field's `enumRef`.
+   */
+  readonly enumEntries?: CliEnumManifest;
+  /**
+   * Identifier name for the emitted enum manifest constant. Required when
+   * {@link enumEntries} is non-empty.
+   */
+  readonly enumNamespace?: string;
+  /**
    * When `true`, each emitted model field includes its verbatim `converter`
    * expression text. Off by default — the CLI does not use the converter
    * string at runtime, but downstream tooling (e.g. the dbx-components MCP)
@@ -51,7 +62,7 @@ export interface RenderManifestInput {
  * @returns Prettier-formatted TypeScript source.
  */
 export async function renderManifest(input: RenderManifestInput): Promise<string> {
-  const { outputFile, entries, projectName, namespace, modelEntries, modelNamespace, emitConverters = false } = input;
+  const { outputFile, entries, projectName, namespace, modelEntries, modelNamespace, enumEntries, enumNamespace, emitConverters = false } = input;
 
   const importsByPackage = new Map<string, Set<string>>();
   for (const entry of entries) {
@@ -70,13 +81,24 @@ export async function renderManifest(input: RenderManifestInput): Promise<string
 
   const entryLines = entries.map((e) => renderEntry(e));
   const emitModels = Boolean(modelEntries && modelEntries.length > 0 && modelNamespace);
-  const dbxCliTypeImports = emitModels ? `import { type CliApiManifest, type CliModelManifest } from '@dereekb/dbx-cli';` : `import { type CliApiManifest } from '@dereekb/dbx-cli';`;
+  const emitEnums = Boolean(enumEntries && Object.keys(enumEntries).length > 0 && enumNamespace);
+
+  const dbxCliTypeNames = ['type CliApiManifest', ...(emitModels ? ['type CliModelManifest'] : []), ...(emitEnums ? ['type CliEnumManifest'] : [])];
+  const dbxCliTypeImports = `import { ${dbxCliTypeNames.join(', ')} } from '@dereekb/dbx-cli';`;
+
   const modelSection = emitModels
     ? `
 
 export const ${modelNamespace}: CliModelManifest = [
 ${(modelEntries ?? []).map((m) => renderModelEntry(m, emitConverters)).join(',\n')}
 ];
+`
+    : '';
+
+  const enumSection = emitEnums
+    ? `
+
+export const ${enumNamespace}: CliEnumManifest = ${renderEnumManifest(enumEntries ?? {})};
 `
     : '';
 
@@ -89,7 +111,7 @@ ${dbxCliTypeImports}
 
 export const ${namespace}: CliApiManifest = [
 ${entryLines.join(',\n')}
-];${modelSection}
+];${modelSection}${enumSection}
 `;
 
   return formatWithPrettier(source, outputFile);
@@ -160,6 +182,27 @@ function renderModelFields(fields: readonly CliModelField[], emitConverters: boo
     result = `[${items.join(', ')}]`;
   }
   return result;
+}
+
+function renderEnumManifest(enums: CliEnumManifest): string {
+  const names = Object.keys(enums).sort((a, b) => a.localeCompare(b));
+  const items = names.map((name) => `${JSON.stringify(name)}: ${renderEnumEntry(enums[name])}`);
+  return names.length === 0 ? '{}' : `{ ${items.join(', ')} }`;
+}
+
+function renderEnumEntry(entry: CliModelEnum): string {
+  const parts: (string | undefined)[] = [`name: ${JSON.stringify(entry.name)}`, `values: ${renderEnumValues(entry.values)}`, entry.description ? `description: ${JSON.stringify(entry.description)}` : undefined];
+  return `{ ${parts.filter(Boolean).join(', ')} }`;
+}
+
+function renderEnumValues(values: readonly CliModelEnumValue[]): string {
+  const items = values.map((value) => renderEnumValue(value));
+  return `[${items.join(', ')}]`;
+}
+
+function renderEnumValue(value: CliModelEnumValue): string {
+  const parts: (string | undefined)[] = [`name: ${JSON.stringify(value.name)}`, `value: ${JSON.stringify(value.value)}`, value.description ? `description: ${JSON.stringify(value.description)}` : undefined];
+  return `{ ${parts.filter(Boolean).join(', ')} }`;
 }
 
 function renderModelField(field: CliModelField, emitConverters: boolean): string {

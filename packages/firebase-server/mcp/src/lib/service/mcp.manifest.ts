@@ -88,6 +88,30 @@ export interface McpManifestModelEntry {
 }
 
 /**
+ * One enum value with its persisted literal and the leading JSDoc paragraph.
+ *
+ * Structural mirror of `@dereekb/dbx-cli`'s `CliModelEnumValue`. Lets the
+ * runtime `model-info` / `enum-info` tools decode raw persisted integer/string
+ * values (`s: 4`) back to human-readable names without dropping into source.
+ */
+export interface McpManifestEnumValue {
+  readonly name: string;
+  readonly value: number | string;
+  readonly description?: string;
+}
+
+/**
+ * One TypeScript enum referenced by some model field's `enumRef`.
+ *
+ * Structural mirror of `@dereekb/dbx-cli`'s `CliModelEnum`.
+ */
+export interface McpManifestEnum {
+  readonly name: string;
+  readonly values: readonly McpManifestEnumValue[];
+  readonly description?: string;
+}
+
+/**
  * One auth claim entry in the pre-rendered MCP manifest JSON.
  *
  * Source paths and line numbers are deliberately stripped — the `whoami`
@@ -146,6 +170,10 @@ export interface McpManifestAuth {
  * manifests rendered before model catalog support landed), the runtime skips
  * registering those tools instead of failing the boot.
  *
+ * The optional `enums` map (keyed by enum name) carries the value→label tables
+ * `model-info` inlines and the `enum-info` static tool serves. Absent on legacy
+ * manifests; the runtime then skips registering `enum-info`.
+ *
  * The optional `auth` section drives the built-in `whoami` static tool.
  */
 export interface McpManifest {
@@ -153,6 +181,7 @@ export interface McpManifest {
   readonly generatedAt: string;
   readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
   readonly models?: readonly McpManifestModelEntry[];
+  readonly enums?: { readonly [name: string]: McpManifestEnum };
   readonly auth?: McpManifestAuth;
 }
 

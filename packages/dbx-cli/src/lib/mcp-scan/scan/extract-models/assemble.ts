@@ -533,15 +533,44 @@ interface SubObjectResolution {
 }
 
 const INLINE_SUB_OBJECT_RE = /^(firestoreSubObject|firestoreObjectArray|firestoreMap)\s*<\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*>/;
-const WRAPPED_OBJECT_FIELD_RE = /^(firestoreObjectArray|firestoreMap)\s*\(\s*\{\s*objectField:\s*([A-Za-z_$][A-Za-z0-9_$]*)/;
+// `firestoreObjectArray`'s config is a union: the element decode may be carried by `objectField` OR
+// by `firestoreField` (the timesheet day-level form `{ filterUnique, firestoreField: <const> }`), and
+// either key may sit behind sibling props — so scan the whole first object level rather than
+// anchoring the key immediately after `{`.
+const WRAPPED_INLINE_SUB_OBJECT_RE = /^(firestoreObjectArray|firestoreMap)\s*\(\s*\{[^}]*?\bfirestoreField\s*:\s*firestoreSubObject\s*<\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*>/;
+const WRAPPED_OBJECT_FIELD_RE = /^(firestoreObjectArray|firestoreMap)\s*\(\s*\{[^}]*?\b(?:objectField|firestoreField)\s*:\s*([A-Za-z_$][A-Za-z0-9_$]*)/;
 
-function resolveSubObjectReference(converter: string, index: ReadonlyMap<string, SubObjectConstEntry>): SubObjectResolution | undefined {
-  let result: SubObjectResolution | undefined;
+/**
+ * Resolves a field's (whitespace-collapsed) converter expression to the sub-object interface +
+ * factory kind it expands into. Recognises the inline generic form, the wrapped
+ * `firestoreObjectArray({ ... objectField|firestoreField: <const> })` form (the `firestoreField`
+ * carrier may sit behind sibling props), the inline `firestoreField: firestoreSubObject<T>({...})`
+ * form, and a bare sub-object const reference. Exported for focused unit testing.
+ *
+ * @param converter - The canonical converter expression text.
+ * @param index - The cross-file sub-object const index.
+ * @returns The resolved interface + factory kind, or `undefined` when the converter references no known sub-object.
+ */
+export function resolveSubObjectReference(converter: string, index: ReadonlyMap<string, SubObjectConstEntry>): SubObjectResolution | undefined {
   const trimmed = converter.trim();
+  let result: SubObjectResolution | undefined;
+
   const inline = INLINE_SUB_OBJECT_RE.exec(trimmed);
   if (inline) {
     result = { interfaceName: inline[2], factoryKind: FACTORY_KIND_BY_NAME[inline[1] as keyof typeof FACTORY_KIND_BY_NAME] };
-  } else {
+  }
+
+  if (!result) {
+    // Inline `firestoreField: firestoreSubObject<T>({...})` — the generic arg names the element
+    // interface; the outer factory still decides array-ness. Tried before the const-reference scan
+    // so the literal `firestoreSubObject` token is never mistaken for a const name.
+    const wrappedInline = WRAPPED_INLINE_SUB_OBJECT_RE.exec(trimmed);
+    if (wrappedInline) {
+      result = { interfaceName: wrappedInline[2], factoryKind: FACTORY_KIND_BY_NAME[wrappedInline[1] as keyof typeof FACTORY_KIND_BY_NAME] };
+    }
+  }
+
+  if (!result) {
     const wrapped = WRAPPED_OBJECT_FIELD_RE.exec(trimmed);
     if (wrapped) {
       const entry = index.get(wrapped[2]);
@@ -549,13 +578,16 @@ function resolveSubObjectReference(converter: string, index: ReadonlyMap<string,
         const outerKind = FACTORY_KIND_BY_NAME[wrapped[1] as keyof typeof FACTORY_KIND_BY_NAME];
         result = { interfaceName: entry.interfaceName, factoryKind: outerKind };
       }
-    } else {
-      const entry = index.get(trimmed);
-      if (entry) {
-        result = { interfaceName: entry.interfaceName, factoryKind: entry.factoryKind };
-      }
     }
   }
+
+  if (!result) {
+    const entry = index.get(trimmed);
+    if (entry) {
+      result = { interfaceName: entry.interfaceName, factoryKind: entry.factoryKind };
+    }
+  }
+
   return result;
 }
 

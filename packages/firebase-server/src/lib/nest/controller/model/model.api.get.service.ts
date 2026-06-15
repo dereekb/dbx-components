@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
+import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, NOT_FOUND_ERROR_CODE, PERMISSION_DENIED_ERROR_CODE, FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
 import { Injectable, Inject, type INestApplicationContext } from '@nestjs/common';
 import { type AbstractFirebaseNestContext } from '../../nest.provider';
 import { type AuthData } from '../../../type';
@@ -53,6 +53,11 @@ export interface ModelAccessUseMultipleModelsFailureEntry {
  * permission-denied / not-found errors surface a real message + code instead of the generic
  * `"Unknown error"` fallback the inline mapping used previously.
  *
+ * When no real message survives, the fallback is derived from the resolved error `code` so the two
+ * distinct outcomes stay distinguishable — a not-found read no longer reads as "permission denied"
+ * (and vice-versa). Only when neither a message nor a recognizable code is present does it fall back
+ * to a generic message.
+ *
  * @param entry - A failed-key entry from the underlying multi-read.
  * @returns A `{ key, message, code? }` triple safe to return to API/MCP callers.
  */
@@ -65,9 +70,31 @@ export function modelAccessReadErrorFromUseMultipleModelsFailure(entry: ModelAcc
 
   return {
     key: entry.key,
-    message: serverMessage ?? httpsMessage ?? plainMessage ?? 'permission denied or not found',
+    message: serverMessage ?? httpsMessage ?? plainMessage ?? modelAccessReadErrorMessageFromCode(code),
     code
   };
+}
+
+/**
+ * Derives a fallback read-error message from a resolved error code, distinguishing not-found from
+ * permission-denied. Accepts both the server-error form (`NOT_FOUND` / `PERMISSION_DENIED` /
+ * `FORBIDDEN`) and the Firebase HttpsError form (`not-found` / `permission-denied`).
+ *
+ * @param code - The resolved error code (`serverErrorCode ?? firebaseErrorCode`), if any.
+ * @returns `'not found'`, `'permission denied'`, or a generic `'unknown error'` fallback.
+ */
+function modelAccessReadErrorMessageFromCode(code: Maybe<string>): string {
+  let message: string;
+
+  if (code === NOT_FOUND_ERROR_CODE || code === 'not-found') {
+    message = 'not found';
+  } else if (code === PERMISSION_DENIED_ERROR_CODE || code === FORBIDDEN_ERROR_CODE || code === 'permission-denied') {
+    message = 'permission denied';
+  } else {
+    message = 'unknown error';
+  }
+
+  return message;
 }
 
 // MARK: Service

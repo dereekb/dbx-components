@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/nestjs/openai",
-  "version": "13.16.0",
+  "version": "13.17.0",
   "peerDependencies": {
-    "@dereekb/date": "13.16.0",
-    "@dereekb/model": "13.16.0",
-    "@dereekb/nestjs": "13.16.0",
-    "@dereekb/rxjs": "13.16.0",
-    "@dereekb/util": "13.16.0",
+    "@dereekb/date": "13.17.0",
+    "@dereekb/model": "13.17.0",
+    "@dereekb/nestjs": "13.17.0",
+    "@dereekb/rxjs": "13.17.0",
+    "@dereekb/util": "13.17.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "express": "^5.2.1",

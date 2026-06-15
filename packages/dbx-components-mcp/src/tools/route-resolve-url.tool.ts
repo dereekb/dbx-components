@@ -15,7 +15,8 @@
 import { type Tool } from '@modelcontextprotocol/sdk/types.js';
 import { type } from 'arktype';
 import { resolveUrlToState, type ResolveUrlMatch, type ResolveUrlMultiple, type ResolveUrlNotFound, type ResolveUrlResult } from './route/resolve-url.js';
-import type { RouteTreeNode } from './route/index.js';
+import { formatMissingRouteModelLine, formatPageModelLine } from './route/page-models.js';
+import type { RouteTreeNode } from '@dereekb/dbx-cli';
 import { toolError, type DbxTool, type ToolResult } from './types.js';
 
 // MARK: Tool definition
@@ -146,6 +147,8 @@ function formatMatchMarkdown(match: ResolveUrlMatch): string {
     lines.push('- **Future state:** yes (lazy-loaded)');
   }
 
+  appendPageModels(lines, match.models);
+  appendValidation(lines, match.missingRouteModels);
   appendParams(lines, match);
   appendSearch(lines, match);
   appendKeys(lines, 'URL path params', match.urlParamKeys);
@@ -155,6 +158,27 @@ function formatMatchMarkdown(match: ResolveUrlMatch): string {
   appendSiblings(lines, match.siblings);
 
   return lines.join('\n');
+}
+
+function appendPageModels(lines: string[], models: ResolveUrlMatch['models']): void {
+  lines.push('', '## Page models');
+  if (models.length === 0) {
+    lines.push('_None declared. Annotate the component class or state with `@dbxRouteModel` / `@dbxRouteModelList`._');
+    return;
+  }
+  for (const model of models) {
+    lines.push(formatPageModelLine(model));
+  }
+}
+
+function appendValidation(lines: string[], missingRouteModels: ResolveUrlMatch['missingRouteModels']): void {
+  if (missingRouteModels.length === 0) {
+    return;
+  }
+  lines.push('', '## Validation');
+  for (const param of missingRouteModels) {
+    lines.push(formatMissingRouteModelLine(param));
+  }
 }
 
 function appendParams(lines: string[], match: ResolveUrlMatch): void {
@@ -256,6 +280,8 @@ function formatMatchJson(match: ResolveUrlMatch): string {
     state: serializeNode(match.node),
     componentFile: match.componentFile ?? null,
     urlParamKeys: match.urlParamKeys,
+    models: match.models,
+    missingRouteModels: match.missingRouteModels,
     ancestors: match.ancestors.map(serializeNode),
     siblings: match.siblings === undefined ? null : match.siblings.map(serializeNode)
   };

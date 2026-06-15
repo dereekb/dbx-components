@@ -154,6 +154,57 @@ export interface CliModelManifestEntry {
  */
 export type CliModelManifest = readonly CliModelManifestEntry[];
 
+/**
+ * One enum value with its persisted literal and the leading JSDoc paragraph.
+ *
+ * Mirrors the dbx-components MCP `FirebaseEnumValue` shape so the runtime MCP
+ * manifest carries the same value→label tables the design-time catalog builds.
+ */
+export interface CliModelEnumValue {
+  /**
+   * Enum member name (e.g. `ACTIVE`).
+   */
+  readonly name: string;
+  /**
+   * Raw persisted literal stored in Firestore (e.g. `1`, `'a'`).
+   */
+  readonly value: number | string;
+  /**
+   * First paragraph of the member's JSDoc, when present.
+   */
+  readonly description?: string;
+}
+
+/**
+ * One TypeScript enum referenced by some model field's `enumRef`, captured so
+ * the runtime `model-info` / `enum-info` tools can decode raw integer/string
+ * values without dropping into source.
+ *
+ * Mirrors the dbx-components MCP `FirebaseEnum` shape.
+ */
+export interface CliModelEnum {
+  /**
+   * Enum declaration name (e.g. `JobWorkerTimesheetState`).
+   */
+  readonly name: string;
+  /**
+   * Value table in source order.
+   */
+  readonly values: readonly CliModelEnumValue[];
+  /**
+   * First paragraph of the enum declaration's JSDoc, when present.
+   */
+  readonly description?: string;
+}
+
+/**
+ * Generated map of {@link CliModelEnum} keyed by enum name, scoped to enums
+ * referenced by some emitted model field's `enumRef`. Each downstream CLI app
+ * exports its own `<NAMESPACE>_ENUM_MANIFEST` of this type; keying by name lets
+ * the runtime do O(1) lookups for both `model-info` and `enum-info`.
+ */
+export type CliEnumManifest = { readonly [enumName: string]: CliModelEnum };
+
 export type CliApiVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'invoke' | 'standalone';
 
 export interface CliApiManifestField {
@@ -345,6 +396,8 @@ export interface McpManifestAuth {
  *
  * `tools` is keyed by {@link mcpManifestKey} so the runtime can do O(1) lookups per registered tool.
  * `models` is optional — the runtime skips the catalog-introspection tools when missing.
+ * `enums` is optional — keyed by enum name, it carries the value→label tables `model-info` /
+ * `enum-info` decode. Scoped to enums referenced by some model field's `enumRef`.
  * `auth` is optional — drives the runtime `whoami` tool.
  */
 export interface McpManifest {
@@ -355,6 +408,7 @@ export interface McpManifest {
   readonly generatedAt: string;
   readonly tools: { readonly [key: string]: McpManifestToolEntry | undefined };
   readonly models?: readonly McpManifestModelEntry[];
+  readonly enums?: CliEnumManifest;
   readonly auth?: McpManifestAuth;
 }
 

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "source": "dereekb-dbx-form",
+  "module": "@dereekb/dbx-form",
+  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generator": "@dereekb/dbx-components-mcp/scripts/generate-css-tokens.mjs",
+  "entries": [
+    {
+      "cssVariable": "--dbx-forge-list-item-field-height",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "forge list item field height"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-form/src/lib/forge/field/selection/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `300px`.",
+      "defaults": {
+        "light": "300px"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-field-container-shape",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "form repeat array field container shape"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/formly/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-medium)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-medium)"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-phone-field-country-selector-width",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "phone field country selector width"
+      ],
+      "description": "Component-scoped override point (`phone`) read in `packages/dbx-form/src/lib/formly/field/value/phone/_phone.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `85px`.",
+      "defaults": {
+        "light": "85px"
+      },
+      "componentScope": "phone"
+    },
+    {
+      "cssVariable": "--dbx-phone-field-extension-input-width",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "phone field extension input width"
+      ],
+      "description": "Component-scoped override point (`phone`) read in `packages/dbx-form/src/lib/formly/field/value/phone/_phone.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `40px`.",
+      "defaults": {
+        "light": "40px"
+      },
+      "componentScope": "phone"
+    }
+  ]
+}

@@ -281,7 +281,9 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
 
       const fieldState = (fieldGetter as any)();
       if (fieldState?.value?.set) {
-        fieldState.value.set(newValue);
+        // Use null (not undefined) for "no value": single-value mode yields `values[0]` === undefined
+        // when the selection is empty, and undefined orphans the Signal Forms field (NG01902/NG01901).
+        fieldState.value.set(newValue ?? null);
       }
     }
   }

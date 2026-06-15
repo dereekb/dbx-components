@@ -17,6 +17,7 @@ const BUNDLED_PATHS = {
 
 const BUNDLED_TOKEN_PATHS = {
   dbxWeb: resolve(MANIFESTS_DIR, 'dereekb-dbx-web.tokens.mcp.generated.json'),
+  dbxForm: resolve(MANIFESTS_DIR, 'dereekb-dbx-form.tokens.mcp.generated.json'),
   matSys: resolve(MANIFESTS_DIR, 'angular-material-m3.tokens.mcp.generated.json'),
   mdc: resolve(MANIFESTS_DIR, 'angular-material-mdc.tokens.mcp.generated.json')
 } as const;
@@ -50,11 +51,12 @@ describe('bundled @dereekb/* manifests', () => {
     const result = await loadTokenManifests({
       sources: [
         { origin: 'bundled', path: BUNDLED_TOKEN_PATHS.dbxWeb },
+        { origin: 'bundled', path: BUNDLED_TOKEN_PATHS.dbxForm },
         { origin: 'bundled', path: BUNDLED_TOKEN_PATHS.matSys },
         { origin: 'bundled', path: BUNDLED_TOKEN_PATHS.mdc }
       ]
     });
-    expect(result.loadedSources).toEqual(['dereekb-dbx-web', 'angular-material-m3', 'angular-material-mdc']);
+    expect(result.loadedSources).toEqual(['dereekb-dbx-web', 'dereekb-dbx-form', 'angular-material-m3', 'angular-material-mdc']);
     expect(result.warnings).toEqual([]);
     expect(result.entries.size).toBeGreaterThan(50);
   });

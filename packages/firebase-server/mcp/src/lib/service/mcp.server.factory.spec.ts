@@ -47,9 +47,11 @@ function makeFactory(apiDetails: ModelApiDetailsResult, options: { config?: Part
   return new McpServerFactoryService(makeMcpConfig(options.config), makeDispatchService(apiDetails, options.dispatch ?? (() => ({ ok: true }))), undefined, options.roleReader);
 }
 
-async function listToolEntries(factory: McpServerFactoryService, ctx: { auth?: FirebaseServerAuthData; rawRequest?: any } = {}): Promise<ReadonlyArray<{ name: string; description: string; inputSchema: object; outputSchema?: object }>> {
+type WireToolEntry = { name: string; description: string; inputSchema: object; outputSchema?: object; annotations?: { readOnlyHint?: boolean; destructiveHint?: boolean } };
+
+async function listToolEntries(factory: McpServerFactoryService, ctx: { auth?: FirebaseServerAuthData; rawRequest?: any } = {}): Promise<ReadonlyArray<WireToolEntry>> {
   const server = factory.createServer({ rawRequest: ctx.rawRequest ?? ({} as any), auth: ctx.auth });
-  const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<{ name: string; description: string; inputSchema: object; outputSchema?: object }> }>>;
+  const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<{ tools: ReadonlyArray<WireToolEntry> }>>;
   const result = await handlers.get(ListToolsRequestSchema.shape.method.value)!({ method: 'tools/list', params: {} }, {} as any);
   return result.tools;
 }
@@ -389,6 +391,37 @@ describe('McpServerFactoryService model catalog tools', () => {
     expect(tools.map((t) => t.name)).toEqual(expect.arrayContaining(['model-info', 'model-decode']));
   });
 
+  const ENUM_BLOCK = { GuestbookState: { name: 'GuestbookState', values: [{ name: 'OPEN', value: 1 }] } };
+
+  it('registers enum-info when the manifest carries a non-empty enums block', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY], enums: ENUM_BLOCK });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory, { auth: firebaseAuth() });
+    expect(tools.map((t) => t.name)).toContain('enum-info');
+  });
+
+  it('does not register enum-info when the manifest carries no enums', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory, { auth: firebaseAuth() });
+    expect(tools.map((t) => t.name)).not.toContain('enum-info');
+  });
+
+  it('registers enum-info even when the manifest has enums but no models', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, enums: ENUM_BLOCK });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory, { auth: firebaseAuth() });
+    expect(tools.map((t) => t.name)).toContain('enum-info');
+    expect(tools.map((t) => t.name)).not.toContain('model-info');
+  });
+
+  it('hides enum-info from unauthenticated callers', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, enums: ENUM_BLOCK });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listTools(factory);
+    expect(tools.map((t) => t.name)).not.toContain('enum-info');
+  });
+
   it('hides model-info and model-decode from unauthenticated callers', async () => {
     const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
     const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
@@ -518,6 +551,31 @@ describe('McpServerFactoryService toolDetails builder', () => {
     await listToolEntries(factory);
     expect(optInBuilder).toHaveBeenCalledTimes(1);
     expect(optInBuilder.mock.calls[0]?.[0]?.dispatch).toEqual({ call: 'read', modelType: 'widget', specifier: 'enriched' });
+  });
+});
+
+describe('McpServerFactoryService tool annotations', () => {
+  it('advertises read/write annotations on the static tools/list wire path', async () => {
+    const apiDetails = makeApiDetails([
+      { model: 'guestbook', call: 'read' },
+      { model: 'guestbook', call: 'update' }
+    ]);
+    const tools = await listToolEntries(makeFactory(apiDetails));
+
+    const readTool = tools.find((t) => t.name === 'guestbook-read');
+    expect(readTool?.annotations).toEqual({ readOnlyHint: true });
+    expect(readTool?.description.startsWith('[WRITE] ')).toBe(false);
+
+    const updateTool = tools.find((t) => t.name === 'guestbook-update');
+    expect(updateTool?.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+    expect(updateTool?.description.startsWith('[WRITE] ')).toBe(true);
+  });
+
+  it('carries annotations through the dynamic toolDetails wire path', async () => {
+    const toolDetails: McpToolDetailsBuilder = () => ({ description: 'enriched action' });
+    const apiDetails = makeApiDetails([{ model: 'widget', call: 'invoke', specifier: 'doThing', mcp: { toolDetails } }]);
+    const tools = await listToolEntries(makeFactory(apiDetails));
+    expect(tools[0]?.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
   });
 });
 

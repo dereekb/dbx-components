@@ -17,7 +17,7 @@
  *   - `ORPHAN_STATE` — warning.
  */
 
-import type { RouteIssue, RouteNode, RouteTree, RouteTreeNode } from './types.js';
+import type { RouteIssue, RouteNode, RouteTree, RouteTreeNode } from './route-types.js';
 
 interface MutableTreeNode {
   readonly data: RouteNode;

@@ -1,6 +1,6 @@
 import { type Maybe, makeValuesGroupMap } from '@dereekb/util';
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { type McpManifestModelEntry } from '../mcp.manifest';
+import { type McpManifestEnum, type McpManifestModelEntry, type McpManifestModelField } from '../mcp.manifest';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
 import { buildStaticWireEntry, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
@@ -43,6 +43,13 @@ export interface CreateModelInfoToolDeps {
    * manifest JSON.
    */
   readonly manifest: readonly McpManifestModelEntry[];
+  /**
+   * Optional enum value tables, keyed by enum name, sourced from the build-time manifest's `enums`
+   * block. When present, the value→label table for every enum referenced (by `enumRef`) on a
+   * returned model's fields is attached as a top-level `enums` section — but only when full field
+   * detail is returned, so the default compact modes stay small.
+   */
+  readonly enums?: { readonly [name: string]: McpManifestEnum };
 }
 
 /**
@@ -130,8 +137,14 @@ export interface ModelInfoNotFound {
  * - `list`: a summary (or, with `fields: true`, full) list — used by `modelGroup` and `all`.
  * - `single`: full detail for one `model` string.
  * - `multiple`: full detail per match for a `model` array, with misses in `notFound`.
+ *
+ * The orthogonal `enums` section is attached only when full field detail is returned and the
+ * returned models reference at least one enum present in the manifest — the default compact modes
+ * (`groups`, summary `list`) never carry it.
  */
-export type ModelInfoToolOutput = { readonly mode: 'groups'; readonly groups: ReadonlyArray<ModelInfoGroupCount>; readonly totalModels: number; readonly hint: string } | { readonly mode: 'list'; readonly models: ReadonlyArray<ModelInfoModelRow>; readonly modelGroup?: string } | { readonly mode: 'single'; readonly model: ModelInfoModelRow } | { readonly mode: 'multiple'; readonly models: ReadonlyArray<ModelInfoModelRow>; readonly notFound?: ReadonlyArray<ModelInfoNotFound> };
+export type ModelInfoToolOutput = ({ readonly mode: 'groups'; readonly groups: ReadonlyArray<ModelInfoGroupCount>; readonly totalModels: number; readonly hint: string } | { readonly mode: 'list'; readonly models: ReadonlyArray<ModelInfoModelRow>; readonly modelGroup?: string } | { readonly mode: 'single'; readonly model: ModelInfoModelRow } | { readonly mode: 'multiple'; readonly models: ReadonlyArray<ModelInfoModelRow>; readonly notFound?: ReadonlyArray<ModelInfoNotFound> }) & {
+  readonly enums?: ReadonlyArray<McpManifestEnum>;
+};
 
 // MARK: Factory
 /**
@@ -187,7 +200,8 @@ function modelInfoToolHandler(args: Record<string, unknown>, _ctx: McpStaticTool
 
   try {
     const input = parseModelInfoInput(args);
-    const output = resolveModelInfoOutput(input, deps.manifest);
+    const resolved = resolveModelInfoOutput(input, deps.manifest);
+    const output = attachReferencedEnums(resolved, deps.enums);
 
     result = {
       content: [{ type: 'text', text: JSON.stringify(output) }],
@@ -214,6 +228,68 @@ function resolveModelInfoOutput(input: ParsedModelInfoInput, manifest: ReadonlyA
   }
 
   return output;
+}
+
+// MARK: Enum attachment
+/**
+ * Attaches the value→label tables for every enum referenced (by `enumRef`) on the returned models'
+ * fields — recursively through `nestedFields` — as a top-level `enums` section.
+ *
+ * Gated behind full field detail: only `single` / `multiple` rows and `list` rows that opted into
+ * `fields:true` carry the persisted `fields` array, so the compact default modes are untouched.
+ * Returns the input unchanged when no enum map is wired or no referenced enum resolves.
+ *
+ * @param output - The resolved model-info output.
+ * @param enums - The optional enum value tables keyed by name.
+ * @returns The output, with an `enums` section attached when detailed rows reference known enums.
+ */
+function attachReferencedEnums(output: ModelInfoToolOutput, enums: CreateModelInfoToolDeps['enums']): ModelInfoToolOutput {
+  let result = output;
+
+  if (enums != null) {
+    const referenced = new Set<string>();
+    for (const entry of collectDetailedEntries(output)) {
+      collectFieldEnumRefs(entry.fields, referenced);
+    }
+
+    const tables: McpManifestEnum[] = [];
+    for (const name of referenced) {
+      const table = enums[name];
+      if (table != null) tables.push(table);
+    }
+
+    if (tables.length > 0) {
+      result = { ...output, enums: tables };
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Collects the full {@link McpManifestModelEntry} rows (those carrying a persisted `fields` array)
+ * from a model-info output. Summary rows (which expose `fieldCount`, not `fields`) are skipped.
+ *
+ * @param output - The resolved model-info output.
+ * @returns The detailed model entries present in the output.
+ */
+function collectDetailedEntries(output: ModelInfoToolOutput): McpManifestModelEntry[] {
+  const rows: ModelInfoModelRow[] = [];
+
+  if (output.mode === 'single') {
+    rows.push(output.model);
+  } else if (output.mode === 'list' || output.mode === 'multiple') {
+    rows.push(...output.models);
+  }
+
+  return rows.filter((row): row is McpManifestModelEntry => Array.isArray((row as McpManifestModelEntry).fields));
+}
+
+function collectFieldEnumRefs(fields: readonly McpManifestModelField[], into: Set<string>): void {
+  for (const field of fields) {
+    if (field.enumRef) into.add(field.enumRef);
+    if (field.nestedFields) collectFieldEnumRefs(field.nestedFields, into);
+  }
 }
 
 // MARK: Input parsing
@@ -516,6 +592,31 @@ const MODEL_ROW_SCHEMA = {
   }
 } as const;
 
+/**
+ * JSON-schema for one enum value→label table. Shared with the `enum-info` tool so both advertise the
+ * identical enum shape.
+ */
+export const ENUM_TABLE_SCHEMA = {
+  type: 'object',
+  required: ['name', 'values'],
+  properties: {
+    name: { type: 'string' },
+    description: { type: 'string' },
+    values: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['name', 'value'],
+        properties: {
+          name: { type: 'string' },
+          value: { type: ['string', 'number'] },
+          description: { type: 'string' }
+        }
+      }
+    }
+  }
+} as const;
+
 // MCP's `tools/list` validator requires `outputSchema.type === 'object'` at the root
 // (see @modelcontextprotocol/sdk Zod schema), so the variants are expressed via a top-level
 // object whose nested `oneOf` discriminates by the `mode` literal.
@@ -557,6 +658,11 @@ const MODEL_INFO_OUTPUT_SCHEMA = {
           message: { type: 'string' }
         }
       }
+    },
+    enums: {
+      type: 'array',
+      description: 'Value→label tables for the enums referenced by the returned models’ fields. Present only when full field detail is returned (single/multiple modes, or list/all with `fields:true`) and at least one referenced enum is registered.',
+      items: ENUM_TABLE_SCHEMA
     }
   },
   oneOf: [

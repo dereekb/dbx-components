@@ -296,6 +296,84 @@ describe('createModelInfoTool', () => {
       expect(output.mode).toBe('single');
     });
   });
+
+  describe('enums section', () => {
+    const ENUMS = {
+      GuestbookState: {
+        name: 'GuestbookState',
+        values: [
+          { name: 'OPEN', value: 1 },
+          { name: 'CLOSED', value: 2 }
+        ]
+      },
+      DayState: { name: 'DayState', values: [{ name: 'A', value: 1 }] },
+      Unused: { name: 'Unused', values: [{ name: 'X', value: 9 }] }
+    } as const;
+
+    function enumEntry(): McpManifestModelEntry {
+      return makeEntry({
+        fields: [
+          { name: 's', longName: 'state', optional: false, enumRef: 'GuestbookState' },
+          { name: 'days', longName: 'days', optional: false, nestedIsArray: true, nestedFields: [{ name: 'ds', longName: 'dayState', optional: false, enumRef: 'DayState' }] }
+        ]
+      });
+    }
+
+    async function runWithEnums(args: Record<string, unknown>, enums: Record<string, { name: string; values: ReadonlyArray<{ name: string; value: number | string }> }> = ENUMS): Promise<ModelInfoToolOutput> {
+      const tool = createModelInfoTool({ manifest: [enumEntry()], enums });
+      return unwrap(await tool.staticHandler!(args, makeCtx()));
+    }
+
+    it('attaches value tables for enums referenced by a detailed single result, including nested fields', async () => {
+      const output = await runWithEnums({ model: 'guestbook' });
+      expect(output.mode).toBe('single');
+      expect(output.enums?.map((e) => e.name).sort()).toEqual(['DayState', 'GuestbookState']);
+    });
+
+    it('attaches enums for multiple mode detailed results', async () => {
+      const output = await runWithEnums({ model: ['guestbook'] });
+      expect(output.mode).toBe('multiple');
+      expect(output.enums?.map((e) => e.name).sort()).toEqual(['DayState', 'GuestbookState']);
+    });
+
+    it('attaches enums for list/all when fields:true', async () => {
+      const output = await runWithEnums({ all: true, fields: true });
+      expect(output.mode).toBe('list');
+      expect(output.enums?.map((e) => e.name).sort()).toEqual(['DayState', 'GuestbookState']);
+    });
+
+    it('omits enums in the compact groups mode', async () => {
+      const output = await runWithEnums({});
+      expect(output.mode).toBe('groups');
+      expect(output).not.toHaveProperty('enums');
+    });
+
+    it('omits enums for summary rows (fields:false)', async () => {
+      const output = await runWithEnums({ model: 'guestbook', fields: false });
+      expect(output).not.toHaveProperty('enums');
+    });
+
+    it('omits enums for the default summary list (all without fields)', async () => {
+      const output = await runWithEnums({ all: true });
+      expect(output).not.toHaveProperty('enums');
+    });
+
+    it('skips enumRefs with no registered table', async () => {
+      const output = await runWithEnums({ model: 'guestbook' }, { GuestbookState: ENUMS.GuestbookState });
+      expect(output.enums?.map((e) => e.name)).toEqual(['GuestbookState']);
+    });
+
+    it('attaches no enums when none of the referenced enums are registered', async () => {
+      const output = await runWithEnums({ model: 'guestbook' }, { Unused: ENUMS.Unused });
+      expect(output).not.toHaveProperty('enums');
+    });
+
+    it('omits the enums section entirely when no enum map is wired', async () => {
+      const tool = createModelInfoTool({ manifest: [enumEntry()] });
+      const output = unwrap(await tool.staticHandler!({ model: 'guestbook' }, makeCtx()));
+      expect(output).not.toHaveProperty('enums');
+    });
+  });
 });
 
 describe('findModelEntry', () => {

@@ -9,7 +9,8 @@
  * cumbersome property-by-property regex.
  */
 
-import { Node, type ExpressionWithTypeArguments, type InterfaceDeclaration, type JSDoc, type SourceFile, type TypeNode } from 'ts-morph';
+import { type InterfaceDeclaration, type JSDoc, type SourceFile } from 'ts-morph';
+import { resolveExtendsName } from '../../../scan-helpers/firestore-model-extract-utils.js';
 import type { DbxModelReadLevel, ExtractedArchetypeTag, ExtractedCompositeKeyTag, ExtractedInterface, ExtractedInterfaceProp, ExtractedInterfaceTags } from './types.js';
 
 /**
@@ -17,19 +18,6 @@ import type { DbxModelReadLevel, ExtractedArchetypeTag, ExtractedCompositeKeyTag
  * values are silently dropped at scan time — the ESLint rule is the user-facing gate.
  */
 const READ_LEVEL_VALUES: ReadonlySet<DbxModelReadLevel> = new Set<DbxModelReadLevel>(['system', 'owner', 'admin-only', 'permissions']);
-
-/**
- * TS utility/structural wrappers that don't change the field surface for
- * inheritance walks — `Partial<T>`, `Required<T>`, `Readonly<T>`,
- * `NonNullable<T>` preserve every property, and `Pick<T, K>` / `Omit<T, K>`
- * leave the original `T` reachable for long-name resolution. `MaybeMap<T>` is
- * the workspace's own pass-through that decorates each prop with `Maybe<…>`
- * without renaming. `extends` walks need to see through these to find the
- * concrete ancestor interface — `getExpression()` alone returns just the
- * leftmost identifier (`Partial`, `Pick`, …) and silently drops the inner
- * model, leaving every inherited `@dbxModelVariable` tag unreachable.
- */
-const PASSTHROUGH_TYPE_WRAPPERS: ReadonlySet<string> = new Set(['Partial', 'Required', 'Readonly', 'NonNullable', 'MaybeMap', 'Pick', 'Omit']);
 
 /**
  * Returns every exported interface in the source file with the metadata the
@@ -75,51 +63,6 @@ function buildInterface(decl: InterfaceDeclaration): ExtractedInterface {
     extendsNames,
     props
   };
-}
-
-/**
- * Resolves an `extends` clause to the concrete ancestor interface name,
- * peeling any leading {@link PASSTHROUGH_TYPE_WRAPPERS}. Returns the leftmost
- * identifier of the unwrapped expression so the inheritance walker can chain
- * through utility-wrapped declarations like
- * `extends Partial<MaybeMap<Omit<Base, '…'>>>`.
- *
- * @param expr - The `ExpressionWithTypeArguments` produced by `getExtends()`
- * @returns The resolved interface name, or the original leftmost identifier when no inner reference is reachable.
- */
-function resolveExtendsName(expr: ExpressionWithTypeArguments): string {
-  const head = expr.getExpression().getText();
-  let result = head;
-  if (PASSTHROUGH_TYPE_WRAPPERS.has(head)) {
-    const typeArgs = expr.getTypeArguments();
-    if (typeArgs.length > 0) {
-      const peeled = peelTypeNode(typeArgs[0]);
-      if (peeled !== undefined) {
-        result = peeled;
-      }
-    }
-  }
-  return result;
-}
-
-function peelTypeNode(node: TypeNode): string | undefined {
-  let current: TypeNode = node;
-  while (Node.isParenthesizedTypeNode(current)) {
-    current = current.getTypeNode();
-  }
-  let result: string | undefined;
-  if (Node.isTypeReference(current)) {
-    const name = current.getTypeName().getText();
-    if (PASSTHROUGH_TYPE_WRAPPERS.has(name)) {
-      const inner = current.getTypeArguments();
-      if (inner.length > 0) {
-        result = peelTypeNode(inner[0]);
-      }
-    } else {
-      result = name;
-    }
-  }
-  return result;
 }
 
 interface MutableInterfaceTagState {

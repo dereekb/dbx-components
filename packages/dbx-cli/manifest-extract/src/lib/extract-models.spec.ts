@@ -161,6 +161,54 @@ describe('extractModelsFromSource()', () => {
     });
   });
 
+  describe('firestoreField nested converter resolution', () => {
+    const SOURCE = `import { firestoreModelIdentity, snapshotConverterFunctions, firestoreSubObject, firestoreObjectArray, firestoreNumber } from '@dereekb/firebase';
+
+export interface TimesheetDay {
+  h: number;
+}
+
+export const workerTimesheetDay = firestoreSubObject<TimesheetDay>({
+  objectField: { fields: { h: firestoreNumber({ default: 0 }) } }
+});
+
+/** @dbxModel */
+export interface WorkerTimesheet {
+  days: TimesheetDay[];
+  weeks: TimesheetDay[];
+}
+
+export const workerTimesheetIdentity = firestoreModelIdentity('workerTimesheet', 'wt');
+
+export const workerTimesheetConverter = snapshotConverterFunctions<WorkerTimesheet>({
+  fields: {
+    days: firestoreObjectArray({ filterUnique: true, firestoreField: workerTimesheetDay }),
+    weeks: firestoreObjectArray({ firestoreField: firestoreSubObject<TimesheetDay>({ objectField: { fields: { h: firestoreNumber({ default: 0 }) } } }) })
+  }
+});
+`;
+
+    const result = extractModelsFromSource({ name: 'timesheet.ts', text: SOURCE });
+    const converter = result.converters.find((c) => c.converterConst === 'workerTimesheetConverter');
+
+    it('resolves firestoreObjectArray({ firestoreField: <const> }) to a nestedConverterRef (even behind sibling props)', () => {
+      const days = converter?.fields.find((f) => f.key === 'days');
+      expect(days?.nestedConverterRef).toBe('workerTimesheetDay');
+      expect(days?.nestedIsArray).toBe(true);
+      expect(days?.nestedConverterInline).toBeUndefined();
+    });
+
+    it('resolves inline firestoreField: firestoreSubObject<T>({...}) to an inline converter carrying the outer array-ness', () => {
+      const weeks = converter?.fields.find((f) => f.key === 'weeks');
+      expect(weeks?.nestedConverterInline).toBeDefined();
+      expect(weeks?.nestedConverterInline?.factory).toBe('firestoreSubObject');
+      expect(weeks?.nestedConverterInline?.interfaceName).toBe('TimesheetDay');
+      expect(weeks?.nestedConverterInline?.fields.map((f) => f.key)).toEqual(['h']);
+      expect(weeks?.nestedIsArray).toBe(true);
+      expect(weeks?.nestedConverterRef).toBeUndefined();
+    });
+  });
+
   describe('extends-name peeling for utility-type wrappers', () => {
     it('returns a bare extends identifier unchanged', () => {
       const source = `

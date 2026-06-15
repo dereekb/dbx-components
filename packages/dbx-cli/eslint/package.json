@@ -1,0 +1,13 @@
+{
+  "name": "@dereekb/dbx-cli/eslint",
+  "version": "13.17.0",
+  "peerDependencies": {
+    "@dereekb/dbx-cli": "13.17.0",
+    "@dereekb/util": "13.17.0",
+    "@typescript-eslint/utils": "8.59.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/parser": "8.59.3",
+    "eslint": "10.4.0"
+  }
+}

@@ -18,9 +18,8 @@
  */
 
 import type { Maybe } from '@dereekb/util';
-import { existsSync } from 'node:fs';
 import { dirname, isAbsolute, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { findPackageRoot } from './package-root.js';
 import { findAndLoadConfig, type ConfigWarning } from '../config/load-config.js';
 import { createModelFirebaseIndexRegistry, EMPTY_MODEL_FIREBASE_INDEX_REGISTRY, type ModelFirebaseIndexRegistry } from '@dereekb/dbx-cli/firestore-indexes';
 import { loadModelFirebaseIndexManifests, type ModelFirebaseIndexLoaderWarning, type ModelFirebaseIndexManifestReadFile, type ModelFirebaseIndexManifestSource } from './model-firebase-index-loader.js';
@@ -56,24 +55,6 @@ export interface LoadModelFirebaseIndexRegistryResult {
 
 // MARK: Defaults
 const DEFAULT_BUNDLED_FILENAMES = ['dereekb-firebase.model-firebase-index.mcp.generated.json'] as const;
-
-function findPackageRoot(startUrl: string): string {
-  const startPath = fileURLToPath(startUrl);
-  let dir = dirname(startPath);
-  let result: string | undefined;
-  while (result === undefined) {
-    if (existsSync(resolve(dir, 'package.json'))) {
-      result = dir;
-    } else {
-      const parent = dirname(dir);
-      if (parent === dir) {
-        throw new Error(`findPackageRoot: no package.json found above ${startPath}`);
-      }
-      dir = parent;
-    }
-  }
-  return result;
-}
 
 const DEFAULT_BUNDLED_PATHS: BundledModelFirebaseIndexManifestPathsFactory = () => {
   const packageRoot = findPackageRoot(import.meta.url);

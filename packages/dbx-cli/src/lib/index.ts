@@ -10,6 +10,8 @@ export * from './mcp-scan';
 export * from './middleware';
 export * from './scan-helpers/scan-io.js';
 export * from './scan-helpers/scan-extract-utils.js';
+export * from './scan-helpers/firestore-model-extract-utils.js';
 export * from './output';
+export * from './route';
 export * from './runner';
 export * from './util';

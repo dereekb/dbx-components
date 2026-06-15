@@ -5,7 +5,7 @@
  * for piping into grep; json is for programmatic consumption.
  */
 
-import type { RouteIssue, RouteTree, RouteTreeNode } from './types.js';
+import type { RouteIssue, RouteTree, RouteTreeNode } from '@dereekb/dbx-cli';
 
 export type RouteTreeFormat = 'markdown' | 'json' | 'flat';
 

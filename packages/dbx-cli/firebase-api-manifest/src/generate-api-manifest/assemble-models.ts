@@ -10,8 +10,8 @@
  * keys all the way down through embedded sub-object and object-array fields.
  */
 
-import type { CliModelField, CliModelManifestEntry } from '@dereekb/dbx-cli';
-import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionInterface, ModelExtractionInterfaceProp } from '@dereekb/dbx-cli/manifest-extract';
+import type { CliEnumManifest, CliModelEnum, CliModelField, CliModelManifestEntry } from '@dereekb/dbx-cli';
+import type { ModelExtraction, ModelExtractionConverter, ModelExtractionConverterField, ModelExtractionEnum, ModelExtractionInterface, ModelExtractionInterfaceProp } from '@dereekb/dbx-cli/manifest-extract';
 
 /**
  * Maximum nested-converter recursion depth. Bounded so a malformed cyclic
@@ -51,6 +51,86 @@ export function assembleModels(input: AssembleModelsInput): readonly CliModelMan
 
   accumulator.entries.sort((a, b) => a.modelType.localeCompare(b.modelType));
   return accumulator.entries;
+}
+
+/**
+ * Inputs for {@link collectModelEnums}.
+ */
+export interface CollectModelEnumsInput {
+  /**
+   * The same per-file extractions {@link assembleModels} consumes — the source of every enum
+   * declaration's value table.
+   */
+  readonly extractions: AssembleModelsInput['extractions'];
+  /**
+   * The emitted model entries (already `--only`-filtered) whose fields' `enumRef`s scope which
+   * enums are kept.
+   */
+  readonly models: readonly CliModelManifestEntry[];
+}
+
+/**
+ * Collects the value tables for every enum referenced (by `enumRef`) on some emitted model field —
+ * recursively through `nestedFields` — into a manifest keyed by enum name.
+ *
+ * Sibling to {@link assembleModels} (its signature is left unchanged to avoid churning existing
+ * callers/tests). Mirrors the design-time `filterRelevantEnums` / `buildModelEnumEntry` pair so the
+ * runtime manifest carries the same value→label tables the dbx-components MCP already builds.
+ *
+ * @param input - The per-file extractions (enum source) plus the emitted model entries (enum references).
+ * @returns The referenced enums keyed by name, sorted for stable diffs. Empty when no field references an enum.
+ */
+export function collectModelEnums(input: CollectModelEnumsInput): CliEnumManifest {
+  const registry = buildEnumRegistry(input.extractions);
+  const referenced = collectReferencedEnumNames(input.models);
+  const out: Record<string, CliModelEnum> = {};
+  for (const name of [...referenced].sort((a, b) => a.localeCompare(b))) {
+    const extracted = registry.get(name);
+    if (extracted) {
+      out[name] = buildModelEnumEntry(extracted);
+    }
+  }
+  return out;
+}
+
+function buildEnumRegistry(extractions: AssembleModelsInput['extractions']): ReadonlyMap<string, ModelExtractionEnum> {
+  const registry = new Map<string, ModelExtractionEnum>();
+  for (const { extraction } of extractions) {
+    for (const e of extraction.enums) {
+      if (!registry.has(e.name)) registry.set(e.name, e);
+    }
+  }
+  return registry;
+}
+
+function collectReferencedEnumNames(models: readonly CliModelManifestEntry[]): ReadonlySet<string> {
+  const referenced = new Set<string>();
+  for (const model of models) {
+    addReferencedEnumNames(model.fields, referenced);
+  }
+  return referenced;
+}
+
+function addReferencedEnumNames(fields: readonly CliModelField[], referenced: Set<string>): void {
+  for (const field of fields) {
+    if (field.enumRef) referenced.add(field.enumRef);
+    if (field.nestedFields) addReferencedEnumNames(field.nestedFields, referenced);
+  }
+}
+
+/**
+ * Projects one extracted enum into the manifest enum shape, omitting empty value/enum descriptions.
+ * Mirrors the dbx-components MCP `buildModelEnumEntry`.
+ *
+ * @param e - The extracted enum.
+ * @returns The manifest enum entry.
+ */
+function buildModelEnumEntry(e: ModelExtractionEnum): CliModelEnum {
+  return {
+    name: e.name,
+    values: e.values.map((v) => (v.description ? { name: v.name, value: v.value, description: v.description } : { name: v.name, value: v.value })),
+    ...(e.description ? { description: e.description } : {})
+  };
 }
 
 interface AssemblyAccumulator {

@@ -9,6 +9,7 @@ import { NESTJS_ESLINT_PLUGIN } from './dist/packages/nestjs/eslint/index.esm.js
 import { DBX_WEB_ESLINT_PLUGIN } from './dist/packages/dbx-web/eslint/index.esm.js';
 import { UTIL_ESLINT_PLUGIN } from './dist/packages/util/eslint/index.esm.js';
 import { FIREBASE_ESLINT_PLUGIN } from './dist/packages/firebase/eslint/index.esm.js';
+import { DBX_CLI_ESLINT_PLUGIN } from './dist/packages/dbx-cli/eslint/index.esm.js';
 
 export default [
   importPlugin.flatConfigs.recommended,
@@ -151,6 +152,15 @@ export default [
     },
     rules: {
       'dereekb-firebase/require-canonical-api-spec-filename': 'warn' // enforce the `<group>.crud[.<sub>...].spec.ts` / `<group>.scenario[.<sub>...].spec.ts` convention on API spec files (mirrors `dbx_model_test_validate_app` filename-drift checks via the shared `classifySpecFile` classifier in `@dereekb/util`)
+    }
+  },
+  {
+    files: ['**/*.component.ts', '**/*.router.ts'],
+    plugins: {
+      'dereekb-dbx-cli': DBX_CLI_ESLINT_PLUGIN
+    },
+    rules: {
+      'dereekb-dbx-cli/valid-dbx-route-model-tags': 'warn' // dbx-cli route-manifest: validate `@dbxRouteModel` / `@dbxRouteModelList` JSDoc grammar (on @Component classes + exported Ng2StateDeclaration consts) through the same `parseRouteModelTag` parser the build-time manifest builder uses, so malformed tags surface in-editor instead of as a build-time error
     }
   },
   {

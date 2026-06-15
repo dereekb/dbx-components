@@ -88,6 +88,17 @@ export abstract class McpModuleConfig {
    */
   readonly mcpManifestPath?: string;
   /**
+   * Absolute path to a pre-rendered route manifest JSON file produced by
+   * `dbx-cli-generate-route-manifest`. When set, the runtime reads it once at
+   * boot and registers the built-in `url-models` tool, which decodes an app URL
+   * into the Firestore models its page renders.
+   *
+   * Optional. When unset or the file is missing, the runtime skips registering
+   * `url-models` and emits a single boot warning when the path was set but
+   * unreadable.
+   */
+  readonly mcpRouteManifestPath?: string;
+  /**
    * When `true`, the MCP server only advertises tools whose effective read-only classification is `true`.
    *
    * Write tools (`create`/`update`/`delete`) and tools with unknown classification (e.g., `invoke`
