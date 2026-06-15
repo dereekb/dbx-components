@@ -27,14 +27,14 @@ function shouldBundle(id: string): boolean {
 }
 
 /**
- * @nx/rollup `rollupConfig` hook that inlines the workspace's internal `@dereekb/*` imports into
- * the published ESLint plugin bundle. Prepends an alias plugin redirecting {@link INTERNAL_ALIASES}
- * to their TS sources and wraps the `external: "all"` callback so {@link BUNDLED_DEPENDENCIES} are
- * treated as internal.
- *
  * @param config - The rollup config @nx/rollup hands to the hook.
  * @param _options - The @nx/rollup options (unused).
  * @returns The mutated rollup config.
+ *
+ * @nx /rollup `rollupConfig` hook that inlines the workspace's internal `@dereekb/*` imports into
+ * the published ESLint plugin bundle. Prepends an alias plugin redirecting {@link INTERNAL_ALIASES}
+ * to their TS sources and wraps the `external: "all"` callback so {@link BUNDLED_DEPENDENCIES} are
+ * treated as internal.
  */
 export default async function applyInternalAliases(config: any, _options: any) {
   const aliasPlugin = {

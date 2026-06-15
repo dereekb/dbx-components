@@ -127,10 +127,10 @@ export function resolveEnumInfoOutput(names: readonly string[], enums: CreateEnu
 
   for (const name of names) {
     const table = enums[name];
-    if (table != null) {
-      found.push(table);
-    } else {
+    if (table == null) {
       notFound.push(name);
+    } else {
+      found.push(table);
     }
   }
 
