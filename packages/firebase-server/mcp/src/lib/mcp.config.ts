@@ -24,6 +24,71 @@ export const DEFAULT_MCP_SERVER_NAME = 'dbx-firebase-server-mcp';
 export const DEFAULT_MCP_SERVER_INSTRUCTIONS = 'A set of call-model tools generated automatically.';
 
 /**
+ * Default name of the auto-injected reason parameter added to every advertised MCP tool's input
+ * schema. See {@link McpReasonParameterConfig.parameterName}.
+ */
+export const DEFAULT_MCP_REASON_PARAMETER_NAME = 'reason';
+
+/**
+ * Default maximum length (in characters) of the auto-injected reason parameter. Values longer than
+ * this are clamped server-side before being forwarded to analytics. See
+ * {@link McpReasonParameterConfig.maxLength}.
+ */
+export const DEFAULT_MCP_REASON_PARAMETER_MAX_LENGTH = 250;
+
+/**
+ * Default required-ness of the auto-injected reason parameter. See
+ * {@link McpReasonParameterConfig.required}.
+ */
+export const DEFAULT_MCP_REASON_PARAMETER_REQUIRED = true;
+
+/**
+ * Default description advertised for the auto-injected reason parameter on every tool's input schema.
+ * See {@link McpReasonParameterConfig.description}.
+ */
+export const DEFAULT_MCP_REASON_PARAMETER_DESCRIPTION = 'A brief human-readable reason (≤250 chars) explaining why this tool is being called. Recorded for analytics/audit only; not part of the operation.';
+
+/**
+ * Configuration for the auto-injected `reason` parameter the MCP server adds to every advertised
+ * tool's input schema.
+ *
+ * When enabled (the default), the server augments each tool's `inputSchema` with a `reason` string
+ * property — a short human-readable justification for the call, surfaced to the model and recorded on
+ * the per-call analytics event. The field is stripped from the JSON body before the args are
+ * dispatched to the underlying handler, so call-model handlers never receive it.
+ *
+ * Supplied to {@link McpModuleConfig.reasonParameter} as a full object (to tune individual fields), or
+ * as a boolean shorthand (`true` = defaults on, `false` = disabled).
+ */
+export interface McpReasonParameterConfig {
+  /**
+   * Whether the reason parameter is injected at all. Defaults to `true`. Set `false` to disable
+   * (equivalent to `reasonParameter: false`).
+   */
+  readonly enabled?: boolean;
+  /**
+   * Whether the parameter is marked `required` in the advertised input schema. Defaults to
+   * {@link DEFAULT_MCP_REASON_PARAMETER_REQUIRED}.
+   */
+  readonly required?: boolean;
+  /**
+   * Maximum character length advertised (`maxLength`) and enforced server-side (the forwarded value is
+   * clamped). Defaults to {@link DEFAULT_MCP_REASON_PARAMETER_MAX_LENGTH}.
+   */
+  readonly maxLength?: number;
+  /**
+   * Description advertised for the parameter on each tool's input schema. Defaults to
+   * {@link DEFAULT_MCP_REASON_PARAMETER_DESCRIPTION}.
+   */
+  readonly description?: string;
+  /**
+   * Name of the injected parameter. Defaults to {@link DEFAULT_MCP_REASON_PARAMETER_NAME} (`'reason'`).
+   * Rename to avoid colliding with a handler that legitimately consumes a `reason` input field.
+   */
+  readonly parameterName?: string;
+}
+
+/**
  * Configuration for the firebase-server/mcp module.
  *
  * Apps construct this in their `*McpModule` provider and pass it through
@@ -109,6 +174,18 @@ export abstract class McpModuleConfig {
    * ` (read-only)` so the client surface reflects the mode.
    */
   readonly readOnly?: boolean;
+
+  /**
+   * Controls the auto-injected `reason` parameter added to every advertised tool's input schema.
+   *
+   * Enabled by default (unset / `true` = defaults on). Pass a {@link McpReasonParameterConfig} object
+   * to tune `required`, `maxLength`, `description`, or `parameterName`, or `false` to disable it.
+   *
+   * When enabled, every advertised tool's `inputSchema` carries a required `reason` string the model
+   * fills with a short justification for the call. The value is forwarded to analytics and stripped
+   * from the dispatched handler body. See {@link McpReasonParameterConfig}.
+   */
+  readonly reasonParameter?: McpReasonParameterConfig | boolean;
 }
 
 /**

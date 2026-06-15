@@ -492,7 +492,9 @@ describe('McpServerFactoryService toolDetails builder', () => {
     const toolDetails: McpToolDetailsBuilder = () => ({ inputSchema: overrideSchema });
     const apiDetails = makeApiDetails([{ model: 'widget', call: 'read', specifier: 'enriched', mcp: { toolDetails } }]);
 
-    const tools = await listToolEntries(makeFactory(apiDetails));
+    // Disable the auto-injected reason parameter so this test isolates the builder override behaviour
+    // (with reason enabled the override schema is additionally wrapped — covered by the reason suite).
+    const tools = await listToolEntries(makeFactory(apiDetails, { config: { reasonParameter: false } }));
     expect(tools[0]?.inputSchema).toEqual(overrideSchema);
     expect((tools[0]?.inputSchema as { title?: string }).title).toBeUndefined();
   });
@@ -530,9 +532,11 @@ describe('McpServerFactoryService toolDetails builder', () => {
     expect(received[0]?.dispatch).toEqual({ call: 'read', modelType: 'widget', specifier: undefined });
   });
 
-  it('reuses the same staticWireEntry across requests for tools without a builder', async () => {
+  it('reuses the same frozen staticWireEntry across requests for tools without a builder (reason disabled)', async () => {
+    // The frozen-verbatim hot path only holds when the auto-injected reason parameter is disabled;
+    // with it enabled the inputSchema is wrapped per request (covered by the reason-parameter suite).
     const apiDetails = makeApiDetails([{ model: 'widget', call: 'read' }]);
-    const factory = makeFactory(apiDetails);
+    const factory = makeFactory(apiDetails, { config: { reasonParameter: false } });
 
     const firstCall = await listToolEntries(factory);
     const secondCall = await listToolEntries(factory);
@@ -590,5 +594,72 @@ describe('McpServerFactoryService filtered-out tool dispatch', () => {
     const result = (await callHandler({ method: 'tools/call', params: { name: 'widget-read', arguments: {} } }, {} as any)) as { isError?: boolean; content: ReadonlyArray<{ text: string }> };
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toContain('Unknown tool');
+  });
+});
+
+describe('McpServerFactoryService reason parameter', () => {
+  const REASON_MODEL_ENTRY = {
+    modelType: 'guestbook',
+    modelName: 'Guestbook',
+    identityConst: 'guestbookIdentity',
+    collectionPrefix: 'gb',
+    sourcePackage: 'demo-firebase',
+    sourceFile: 'guestbook.ts',
+    modelGroup: 'Guestbook',
+    fields: [{ name: 'n', longName: 'name', optional: false, tsType: 'string' }]
+  };
+
+  type ReasonSchema = { type?: string; properties?: Record<string, { type?: string; maxLength?: number; description?: string }>; required?: ReadonlyArray<string> };
+
+  it('adds a required reason (string, maxLength 250) to a generated tool by default', async () => {
+    const tools = await listToolEntries(makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }])));
+    const schema = tools.find((t) => t.name === 'guestbook-create')?.inputSchema as ReasonSchema;
+
+    expect(schema.properties?.reason).toEqual({ type: 'string', maxLength: 250, description: expect.any(String) });
+    expect(schema.required).toContain('reason');
+  });
+
+  it('adds a required reason to a static built-in tool (model-info) by default', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [REASON_MODEL_ENTRY] });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+
+    const tools = await listToolEntries(factory, { auth: firebaseAuth() });
+    const schema = tools.find((t) => t.name === 'model-info')?.inputSchema as ReasonSchema;
+
+    expect(schema.properties?.reason).toMatchObject({ type: 'string', maxLength: 250 });
+    expect(schema.required).toContain('reason');
+  });
+
+  it('omits the reason parameter when reasonParameter is false', async () => {
+    const tools = await listToolEntries(makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }]), { config: { reasonParameter: false } }));
+    const schema = tools.find((t) => t.name === 'guestbook-create')?.inputSchema as ReasonSchema;
+    expect(schema.properties?.reason).toBeUndefined();
+    expect(schema.required ?? []).not.toContain('reason');
+  });
+
+  it('honors a custom parameterName and maxLength override', async () => {
+    const tools = await listToolEntries(makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }]), { config: { reasonParameter: { parameterName: 'justification', maxLength: 80 } } }));
+    const schema = tools.find((t) => t.name === 'guestbook-create')?.inputSchema as ReasonSchema;
+    expect(schema.properties?.justification).toMatchObject({ type: 'string', maxLength: 80 });
+    expect(schema.properties?.reason).toBeUndefined();
+    expect(schema.required).toContain('justification');
+  });
+
+  it('does not mark the parameter required when required is false', async () => {
+    const tools = await listToolEntries(makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }]), { config: { reasonParameter: { required: false } } }));
+    const schema = tools.find((t) => t.name === 'guestbook-create')?.inputSchema as ReasonSchema;
+    expect(schema.properties?.reason).toBeDefined();
+    expect(schema.required ?? []).not.toContain('reason');
+  });
+
+  it('does not double-declare reason for a tool whose schema already declares it', async () => {
+    const ownSchema = { type: 'object', properties: { reason: { type: 'string', description: 'handler-owned' } } };
+    const apiDetails = { models: { widget: { calls: { create: { isSpecifier: false, specifiers: { _: { inputType: { toJsonSchema: () => ownSchema } } } } } } } } as unknown as ModelApiDetailsResult;
+
+    const tools = await listToolEntries(makeFactory(apiDetails));
+    const schema = tools.find((t) => t.name === 'widget-create')?.inputSchema as ReasonSchema;
+
+    expect(schema.properties?.reason).toEqual({ type: 'string', description: 'handler-owned' });
+    expect(schema.required ?? []).not.toContain('reason');
   });
 });
