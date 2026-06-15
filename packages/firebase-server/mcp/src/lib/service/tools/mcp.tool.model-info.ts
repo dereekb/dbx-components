@@ -2,7 +2,7 @@ import { type Maybe, makeValuesGroupMap } from '@dereekb/util';
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type McpManifestEnum, type McpManifestModelEntry, type McpManifestModelField } from '../mcp.manifest';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
-import { buildStaticWireEntry, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
+import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
 // MARK: Constants
 /**
@@ -175,7 +175,7 @@ export function createModelInfoTool(deps: CreateModelInfoToolDeps): McpToolDefin
   const description =
     `Browse the Firestore model catalog (${count} model${count === 1 ? '' : 's'}). No args returns model groups + counts (start here). ` + '`model` (a modelType/identityConst/collectionPrefix string, or an array of them) returns full detail per match — misses are reported in `notFound`. ' + '`modelGroup` returns the summary list for that group. `all:true` returns the full catalog summary. ' + '`fields` (boolean) forces or suppresses persisted-field detail in list/multiple modes.';
 
-  return {
+  return buildStaticToolDefinition({
     name,
     description,
     inputSchema: MODEL_INFO_INPUT_SCHEMA,
@@ -185,13 +185,9 @@ export function createModelInfoTool(deps: CreateModelInfoToolDeps): McpToolDefin
       modelType: MODEL_INFO_DISPATCH_MODEL_TYPE
     },
     staticHandler: handler,
-    filterMetadata: {
-      visibilityKind: 'declarative',
-      rule: { requireAuthenticated: true },
-      effectiveReadOnly: true
-    },
-    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema: MODEL_INFO_INPUT_SCHEMA, outputSchema: MODEL_INFO_OUTPUT_SCHEMA })
-  };
+    effectiveReadOnly: true,
+    rule: { requireAuthenticated: true }
+  });
 }
 
 // MARK: Handler

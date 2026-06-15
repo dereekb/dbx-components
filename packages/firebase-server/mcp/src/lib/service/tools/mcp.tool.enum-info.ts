@@ -1,7 +1,7 @@
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type McpManifestEnum } from '../mcp.manifest';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
-import { buildStaticWireEntry, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
+import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 import { ENUM_TABLE_SCHEMA } from './mcp.tool.model-info';
 
 // MARK: Constants
@@ -74,7 +74,7 @@ export function createEnumInfoTool(deps: CreateEnumInfoToolDeps): McpToolDefinit
   const count = Object.keys(deps.enums).length;
   const description = `Look up enum value→label tables by name (${count} enum${count === 1 ? '' : 's'} registered). Pass \`enum\` (a string or array of enum declaration names, e.g. "JobWorkerTimesheetState") to decode the raw persisted integer/string values a model field stores. Misses are reported in \`notFound\`.`;
 
-  return {
+  return buildStaticToolDefinition({
     name,
     description,
     inputSchema: ENUM_INFO_INPUT_SCHEMA,
@@ -84,13 +84,9 @@ export function createEnumInfoTool(deps: CreateEnumInfoToolDeps): McpToolDefinit
       modelType: ENUM_INFO_DISPATCH_MODEL_TYPE
     },
     staticHandler: handler,
-    filterMetadata: {
-      visibilityKind: 'declarative',
-      rule: { requireAuthenticated: true },
-      effectiveReadOnly: true
-    },
-    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema: ENUM_INFO_INPUT_SCHEMA, outputSchema: ENUM_INFO_OUTPUT_SCHEMA })
-  };
+    effectiveReadOnly: true,
+    rule: { requireAuthenticated: true }
+  });
 }
 
 // MARK: Handler

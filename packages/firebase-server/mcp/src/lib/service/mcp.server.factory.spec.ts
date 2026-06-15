@@ -391,6 +391,13 @@ describe('McpServerFactoryService model catalog tools', () => {
     expect(tools.map((t) => t.name)).toEqual(expect.arrayContaining(['model-info', 'model-decode']));
   });
 
+  it('advertises readOnlyHint: true on the tools/list wire entry for a built-in read-only tool', async () => {
+    const path = writeManifest({ version: MCP_MANIFEST_VERSION, generatedAt: '2026-05-25T00:00:00.000Z', tools: {}, models: [MODEL_ENTRY] });
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'query' }]), { config: { mcpManifestPath: path } });
+    const tools = await listToolEntries(factory, { auth: firebaseAuth() });
+    expect(tools.find((t) => t.name === 'model-info')?.annotations).toEqual({ readOnlyHint: true });
+  });
+
   const ENUM_BLOCK = { GuestbookState: { name: 'GuestbookState', values: [{ name: 'OPEN', value: 1 }] } };
 
   it('registers enum-info when the manifest carries a non-empty enums block', async () => {
