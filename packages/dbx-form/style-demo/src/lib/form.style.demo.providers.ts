@@ -17,8 +17,8 @@ export const DBX_FORM_STYLE_DEMO_SECTION_GROUP: DbxStyleDemoSectionGroup = {
  * {@link DbxFormStyleDemoControlsDetachComponent} as the global style-demo controls (presets) detach panel, and registers
  * {@link DbxFormStyleDemoSectionsPopoverComponent} as the style-demo sections popover opened from the playground header.
  *
- * The Form Fields section, the controls panel, and the sections popover all render `<dbx-formly>` forms, so the host app
- * must register its formly field declarations (e.g. `provideDbxFormConfiguration()` + `provideDbxFormFormlyFieldDeclarations()`) for them to render.
+ * The Form Fields section, the controls panel, and the sections popover all render `<dbx-forge>` forms, so the host app
+ * must register its forge field declarations (e.g. `provideDbxFormConfiguration()` + `provideDbxForgeFormFieldDeclarations()`) for them to render.
  *
  * Pair with `provideDbxStyleDemo()` (the shell from `@dereekb/dbx-web/style-demo`).
  *

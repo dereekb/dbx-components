@@ -11,7 +11,7 @@ import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { dbxForgeFixedDateRangeField } from './fixeddaterange.field';
 import { DbxForgeFixedDateRangeFieldComponent } from './fixeddaterange.field.component';
 import { DateRangeType, type DateRange } from '@dereekb/date';
-import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
+import { DbxDateTimeValueMode } from '../../../../field/value/date/date.value';
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Test Host Component

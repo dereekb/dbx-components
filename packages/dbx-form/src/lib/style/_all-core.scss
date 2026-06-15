@@ -1,15 +1,11 @@
 @use '../form/form';
-@use '../formly/formly';
 @use '../layout/layout';
-@use '../formly/field/field';
 @use '../forge/forge';
 @use '../extension/extension';
 
 // Includes all theming config
 @mixin all-component-core($theme-config) {
   @include form.core();
-  @include formly.core();
-  @include field.all-field-core();
   @include forge.all-forge-core();
   @include layout.core();
   @include extension.all-extension-core($theme-config);

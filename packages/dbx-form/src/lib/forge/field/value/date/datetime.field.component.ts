@@ -19,10 +19,10 @@ import { type Observable, of, BehaviorSubject, Subject, combineLatest, interval,
 import { switchMap, shareReplay, map, startWith, tap, distinctUntilChanged, debounceTime, throttleTime, combineLatestWith, filter, first, skip } from 'rxjs/operators';
 import { startOfDay } from 'date-fns';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeOutputValueFactory, dbxDateTimeIsSameDateTimeFieldValue } from '../../../../formly/field/value/date/date.value';
-import { DbxDateTimeFieldTimeMode, type DbxDateTimePickerConfiguration, type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
-import { type DateTimePresetConfiguration, type DateTimePreset, dateTimePreset } from '../../../../formly/field/value/date/datetime';
-import { DbxDateTimeFieldMenuPresetsService } from '../../../../formly/field/value/date/datetime.field.service';
+import { DbxDateTimeValueMode, dbxDateTimeInputValueParseFactory, dbxDateTimeOutputValueFactory, dbxDateTimeIsSameDateTimeFieldValue } from '../../../../field/value/date/date.value';
+import { DbxDateTimeFieldTimeMode, type DbxDateTimePickerConfiguration, type DbxDateTimeFieldSyncType } from '../../../../field/value/date/datetime.config';
+import { type DateTimePresetConfiguration, type DateTimePreset, dateTimePreset } from '../../../../field/value/date/datetime';
+import { DbxDateTimeFieldMenuPresetsService } from '../../../../field/value/date/datetime.field.service';
 import { DateDistancePipe, TimeDistancePipe, GetValuePipe, cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { type ErrorStateMatcher } from '@angular/material/core';
 import { toggleDisableFormControl } from '../../../../form/form';

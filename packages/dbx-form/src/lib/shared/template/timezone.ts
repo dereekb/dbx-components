@@ -4,7 +4,7 @@
 
 import { type TimezoneInfo, allTimezoneInfos, timezoneInfoForSystem, searchTimezoneInfos } from '@dereekb/date';
 import { of, type Observable } from 'rxjs';
-import type { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '../../formly';
+import type { SearchableValueFieldDisplayFn, SearchableValueFieldDisplayValue, SearchableValueFieldStringSearchFn, SearchableValueFieldValue } from '../../field';
 
 export type TestStringSearchFunction = (text: string) => string[];
 

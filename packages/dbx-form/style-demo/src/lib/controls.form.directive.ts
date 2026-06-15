@@ -4,7 +4,7 @@ import { filter, switchMap } from 'rxjs';
 import { type Maybe } from '@dereekb/util';
 import { filterMaybe } from '@dereekb/rxjs';
 import { cleanSubscription } from '@dereekb/dbx-core';
-import { AbstractSyncFormlyFormDirective, dbxFormSourceObservableFromStream } from '@dereekb/dbx-form';
+import { AbstractSyncForgeFormDirective, dbxFormSourceObservableFromStream } from '@dereekb/dbx-form';
 import { type DbxStyleDemoControls } from '@dereekb/dbx-web/style-demo';
 
 /**
@@ -20,7 +20,7 @@ import { type DbxStyleDemoControls } from '@dereekb/dbx-web/style-demo';
  *
  * - **Controls → form (seed):** {@link dbxFormSourceObservableFromStream} in `'reset'` mode re-pushes the controls
  *   state into the form every time the form enters its RESET state. This covers the initial ready transition — which
- *   only fires once the formly delegate has registered — so the chips seed from the live service state even though the
+ *   only fires once the forge field delegate has registered — so the chips seed from the live service state even though the
  *   delegate's `init` ignores the context's pending initial value. The `isSettingValue` guard filters the synchronous
  *   reset feedback `setValue` produces, exactly as `DbxFormSourceDirective` documents.
  * - **Form → controls (write-back):** only genuine user edits are applied. `setValue` marks the form pristine and
@@ -33,7 +33,7 @@ import { type DbxStyleDemoControls } from '@dereekb/dbx-web/style-demo';
  * @typeParam V - The form value type (a subset of the controls state: enabled sections or active presets).
  */
 @Directive()
-export abstract class AbstractDbxFormStyleDemoControlsFormDirective<V extends object> extends AbstractSyncFormlyFormDirective<V> {
+export abstract class AbstractDbxFormStyleDemoControlsFormDirective<V extends object> extends AbstractSyncForgeFormDirective<V> {
   /**
    * The playground control surface to keep the chip field in sync with.
    */

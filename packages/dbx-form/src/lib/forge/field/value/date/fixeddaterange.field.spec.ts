@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
+import { DbxDateTimeValueMode } from '../../../../field/value/date/date.value';
 import { dbxForgeFixedDateRangeField } from './fixeddaterange.field';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 
