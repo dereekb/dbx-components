@@ -1,69 +1,70 @@
+@use 'sass:map';
 @use '@angular/material' as mat;
 @use 'dbx-web/src/index' as dbx;
 @use 'dbx-form/src/index' as dbx-form;
 @use './variables';
 @use './theme-colors' as theme-colors;
 
-// Light theme — palettes generated from primary: #1a4b8c (opmore navy), tertiary: #e83d5e (opmore pink)
-$doc-mat-theme: mat.define-theme(
-  (
-    color: (
-      theme-type: light,
-      primary: theme-colors.$primary-palette,
-      tertiary: theme-colors.$tertiary-palette
-    ),
-    typography: (
-      plain-family: 'Fira Sans',
-      brand-family: 'Fira Sans'
-    ),
-    density: (
-      scale: 0
-    )
-  )
+// Shared theme config across the light + dark doc themes — only color.theme-type differs
+// between them, so the brand palettes, typography family and density scale are declared once.
+// Palettes generated from primary: #1a4b8c (opmore navy), tertiary: #e83d5e (opmore pink).
+$_shared-color: (
+  primary: theme-colors.$primary-palette,
+  tertiary: theme-colors.$tertiary-palette
+);
+$_shared-typography: (
+  plain-family: 'Fira Sans',
+  brand-family: 'Fira Sans'
+);
+$_shared-density: (
+  scale: 0
 );
 
+// Builds an M3 theme for the given theme-type (light | dark) from the shared config above.
+@function _doc-mat-theme($theme-type) {
+  @return mat.define-theme(
+    (
+      color: map.merge(
+          $_shared-color,
+          (
+            theme-type: $theme-type
+          )
+        ),
+      typography: $_shared-typography,
+      density: $_shared-density
+    )
+  );
+}
+
 $doc-dbx-theme-with-banner-config: dbx.quick-define-dbx-config-via-banners(variables.$app-top-banner-height);
+
+// Light theme.
+$doc-mat-theme: _doc-mat-theme(light);
 $doc-theme: dbx.define-dbx-theme-config($doc-mat-theme, $doc-dbx-theme-with-banner-config);
 $doc-form-theme: dbx-form.define-dbx-form-theme-config($doc-theme);
 
+// Dark theme — same brand palettes, M3 automatically selects dark tones.
+$dark-doc-mat-theme: _doc-mat-theme(dark);
+$dark-doc-theme: dbx.define-dbx-theme-config($dark-doc-mat-theme, $doc-dbx-theme-with-banner-config);
+$dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
+
 /**
-This mixin creates the doc-theme components and elements for @angular/material and @dereekb/dbx-web to be enabled for a specific css selector, which is usually ".doc-app"
+Applies a doc theme (Material + dbx-web + dbx-form) and the dbx component shapes to a css selector
+(usually ".doc-app" / ".doc-app-dark"). Shared by the light and dark theme mixins below.
 */
-@mixin doc-theme($root-selector) {
-  @include dbx.theme($root-selector, $doc-theme);
-  @include dbx-form.theme($root-selector, $doc-form-theme);
+@mixin apply-doc-theme($root-selector, $theme, $form-theme) {
+  @include dbx.theme($root-selector, $theme);
+  @include dbx-form.theme($root-selector, $form-theme);
 
   #{$root-selector} {
     @include dbx.dbx-components-shapes();
   }
 }
 
-// Dark theme — same brand palettes, M3 automatically selects dark tones
-$dark-doc-mat-theme: mat.define-theme(
-  (
-    color: (
-      theme-type: dark,
-      primary: theme-colors.$primary-palette,
-      tertiary: theme-colors.$tertiary-palette
-    ),
-    typography: (
-      plain-family: 'Fira Sans',
-      brand-family: 'Fira Sans'
-    ),
-    density: (
-      scale: 0
-    )
-  )
-);
-
-$dark-doc-theme: dbx.define-dbx-theme-config($dark-doc-mat-theme, $doc-dbx-theme-with-banner-config);
-$dark-doc-form-theme: dbx-form.define-dbx-form-theme-config($dark-doc-theme);
+@mixin doc-theme($root-selector) {
+  @include apply-doc-theme($root-selector, $doc-theme, $doc-form-theme);
+}
 
 @mixin dark-doc-theme($root-selector) {
-  @include dbx.theme($root-selector, $dark-doc-theme);
-  @include dbx-form.theme($root-selector, $dark-doc-form-theme);
-
-  #{$root-selector} {
-    @include dbx.dbx-components-shapes();
-  }
+  @include apply-doc-theme($root-selector, $dark-doc-theme, $dark-doc-form-theme);
 }

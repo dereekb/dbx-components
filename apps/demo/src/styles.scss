@@ -20,6 +20,7 @@ html,
 body {
   background: black;
   height: 100%;
+  margin: 0;
   overflow-x: hidden;
   font-family: 'Fira Sans', sans-serif;
   --mdc-typography-button-letter-spacing: 1px;
@@ -27,10 +28,6 @@ body {
 
 a {
   color: inherit;
-}
-
-body {
-  margin: 0;
 }
 
 mgl-map {

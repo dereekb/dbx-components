@@ -10,7 +10,7 @@ import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/
       <div class="doc-detach-content-body">
         <p>Detach Content</p>
         <p>Counter: {{ counter }}</p>
-        <p class="hint">Increment the counter, then detach/attach to verify state is preserved.</p>
+        <p class="dbx-note dbx-text-body-small">Increment the counter, then detach/attach to verify state is preserved.</p>
         <button mat-raised-button (click)="counter = counter + 1">Increment</button>
       </div>
     </dbx-detach-content>
@@ -19,10 +19,6 @@ import { DbxDetachContentComponent, DbxDetachControlsComponent } from '@dereekb/
     `
       .doc-detach-content-body {
         padding: 16px;
-      }
-      .hint {
-        font-size: 12px;
-        opacity: 0.7;
       }
     `
   ],
