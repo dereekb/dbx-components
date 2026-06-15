@@ -9,7 +9,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import { DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, FIELD_SIGNAL_CONTEXT, type FieldSignalContext, resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking  } from '@ng-forge/dynamic-forms/integration';
+import { DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, FIELD_SIGNAL_CONTEXT, type FieldSignalContext, resolveValueFieldContext, buildValueFieldInputs, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { type Maybe, type Milliseconds, type TimezoneString, type ReadableTimeString, type DateOrDayString, type ArrayOrValue, asArray, filterMaybeArrayValues, isDate } from '@dereekb/util';
@@ -1002,7 +1002,11 @@ export class DbxForgeDateTimeFieldComponent {
     try {
       const state = this.field()?.() as any;
       if (state?.value?.set) {
-        state.value.set(value);
+        // Never write `undefined`: Signal Forms treats an undefined value as "this field no longer
+        // exists" and orphans it from the parent structure, which throws NG01902 (Orphan field) /
+        // NG01901 (Cannot resolve path) on the next computed read. Use `null` for "no value" instead
+        // — that keeps the field attached (and matches what clearValue() writes).
+        state.value.set(value ?? null);
       }
     } catch {
       // Silently handle if FieldTree value is not writable

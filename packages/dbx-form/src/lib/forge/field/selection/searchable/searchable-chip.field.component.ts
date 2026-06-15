@@ -245,7 +245,9 @@ export class DbxForgeSearchableChipFieldComponent<T = unknown, M = unknown, H ex
 
     const fieldState = (fieldGetter as any)();
     if (fieldState?.value?.set) {
-      fieldState.value.set(newValue);
+      // Use null (not undefined) for "no value": single-value mode yields `values[0]` === undefined
+      // when empty, and undefined orphans the Signal Forms field (NG01902/NG01901).
+      fieldState.value.set(newValue ?? null);
     }
   }
 }

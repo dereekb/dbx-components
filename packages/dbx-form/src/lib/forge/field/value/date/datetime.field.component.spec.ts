@@ -597,6 +597,85 @@ describe('DbxForgeDateTimeFieldComponent', () => {
     });
   });
 
+  // MARK: Repro — unparseable partial time input ("2p")
+  describe('unparseable partial time input (HelloSubs Check-Out "2p" crash repro)', () => {
+    // Mirrors the HelloSubs jobworkertimesheet Check-Out (leave) time field config:
+    // required, timeMode REQUIRED, single-day (alwaysShowDateInput false), timeDate + pickerConfig limits.
+    // The user reported that changing the value to "2p" crashes the form with NG01901
+    // ("Cannot resolve path relative to field") — readableTimeStringToDate('2p') returns undefined,
+    // and an undefined ends up written onto the field value signal (should be null).
+    function makeLeaveTimeConfig(host: TestForgeDateTimeHostComponent, startDate: Date): void {
+      const dayTimeRange = { start: startDate, end: addHours(startDate, 8) };
+      host.config = createConfig({
+        key: 'dateTime',
+        required: true,
+        timezone: 'UTC',
+        timeMode: DbxDateTimeFieldTimeMode.REQUIRED,
+        showClearButton: false,
+        timeDate: of(startDate),
+        pickerConfig: of({ limits: { min: dayTimeRange.start, max: dayTimeRange.end } }),
+        alwaysShowDateInput: false
+      });
+    }
+
+    it('should never write `undefined` onto the field value when a typed time is then cleared (type "3" → clear)', async () => {
+      // Exact user repro: an existing value, the user types a valid time (so a real value flows
+      // through the output pipeline and turns off skipAllInitialMaybe), then clears the input.
+      // The clear makes buildCombinedDateTime() return `undefined` for a REQUIRED field that still
+      // has a date; that `undefined` is written onto the Signal Forms value, collapsing the field's
+      // child structure and throwing NG01901 ("Cannot resolve path relative to field") on next read.
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const startDate = addHours(startOfDay(new Date()), 9); // 9:00 AM today
+
+      makeLeaveTimeConfig(host, startDate);
+      host.formValue.set({ dateTime: addHours(startDate, 9) }); // 6:00 PM — an existing valid value
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      // User types a valid time ("3" → 3:00), then clears the input entirely.
+      // Before the fix, this threw NG01902 (Orphan field) during the settle() below.
+      comp!.timeCtrl.setValue('3');
+      await settle(fixture);
+      comp!.timeCtrl.setValue('');
+      await settle(fixture);
+
+      // Reaching here means the field was not orphaned. The cleared value must be `null`, never
+      // `undefined` (which is what collapses the Signal Forms field structure).
+      const value = host.formValue().dateTime;
+      expect(value).not.toBeUndefined();
+      expect(value).toBeNull();
+      fixture.destroy();
+    });
+
+    it('should never write `undefined` when cleared, retyped, and cleared again (clear → type "3" → clear)', async () => {
+      const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);
+      const host = fixture.componentInstance;
+      const startDate = addHours(startOfDay(new Date()), 9);
+
+      makeLeaveTimeConfig(host, startDate);
+      host.formValue.set({ dateTime: addHours(startDate, 9) }); // 6:00 PM
+      await settle(fixture);
+
+      const comp = getDateTimeComponent(fixture);
+      expect(comp).toBeDefined();
+
+      comp!.timeCtrl.setValue(''); // clear (not broken yet)
+      await settle(fixture);
+      comp!.timeCtrl.setValue('3'); // type "3"
+      await settle(fixture);
+      comp!.timeCtrl.setValue(''); // clear again (threw NG01902 before the fix)
+      await settle(fixture);
+
+      const value = host.formValue().dateTime;
+      expect(value).not.toBeUndefined();
+      expect(value).toBeNull();
+      fixture.destroy();
+    });
+  });
+
   describe('date with string value', () => {
     it('should configure DATE_STRING value mode', async () => {
       const fixture = TestBed.createComponent(TestForgeDateTimeHostComponent);

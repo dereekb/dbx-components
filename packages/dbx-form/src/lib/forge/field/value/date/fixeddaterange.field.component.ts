@@ -15,7 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { NgClass } from '@angular/common';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import { DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking  } from '@ng-forge/dynamic-forms/integration';
+import { DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import type { FieldTree } from '@angular/forms/signals';
 import { dbxForgeFieldDisabled } from '../../field.util';
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
@@ -758,7 +758,10 @@ export class DbxForgeFixedDateRangeFieldComponent {
     try {
       const fieldTree = this.field();
       const fieldState = fieldTree() as any;
-      fieldState.value.set(value);
+      // Never write `undefined`: Signal Forms orphans a field whose value becomes undefined, which
+      // throws NG01902 (Orphan field) / NG01901 (Cannot resolve path) on the next computed read.
+      // Use `null` for "no value" so the field stays attached to its parent structure.
+      fieldState.value.set(value ?? null);
       fieldState.markAsTouched();
       fieldState.markAsDirty();
     } catch {

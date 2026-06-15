@@ -6,7 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AsyncPipe } from '@angular/common';
 import type { DynamicText, FieldMeta, ValidationMessages } from '@ng-forge/dynamic-forms';
-import { DynamicTextPipe, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking  } from '@ng-forge/dynamic-forms/integration';
+import { DynamicTextPipe, DEFAULT_PROPS, DEFAULT_VALIDATION_MESSAGES, resolveValueFieldContext, buildValueFieldInputs, createResolvedErrorsSignal, shouldShowErrors, setupMetaTracking } from '@ng-forge/dynamic-forms/integration';
 import { MATERIAL_CONFIG } from '@ng-forge/dynamic-forms-material';
 import type { FieldTree } from '@angular/forms/signals';
 import { type TimeUnit, type HoursAndMinutes, ALL_TIME_UNITS, hoursAndMinutesToTimeUnit, millisecondsToTimeUnit, minutesToHoursAndMinutes, timeUnitToMilliseconds } from '@dereekb/util';
@@ -314,7 +314,8 @@ export class DbxForgeTimeDurationFieldComponent {
 
     const fieldTree = this.field();
     const fieldState = fieldTree();
-    fieldState.value.set(value);
+    // Use null (not undefined) for "no value" — undefined orphans the Signal Forms field (NG01902/NG01901).
+    fieldState.value.set(value ?? null);
     fieldState.markAsTouched();
     fieldState.markAsDirty();
 
