@@ -146,8 +146,10 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
    * `dbx-button.dbx-color .mdc-button` SCSS paints from; an active echo's color temporarily takes over those tokens.
    */
   readonly colorSignal = computed(() => {
+    const color = this.color();
+    const buttonStyle = this.buttonStyle();
     const echoColor = this._activeEchoSignal()?.color as Maybe<ThemePalette | DbxColorInput>;
-    return echoColor ?? this.color() ?? this.buttonStyle()?.color;
+    return echoColor ?? color ?? buttonStyle?.color;
   });
 
   readonly styleTypeSignal = computed(() => {
