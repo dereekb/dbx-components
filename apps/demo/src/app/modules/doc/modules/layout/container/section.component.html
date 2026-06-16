@@ -4,27 +4,32 @@
     <doc-feature-example header="dbx-section">
       <dbx-section header="Header" hint="This is a section hint.">
         <span sectionHeader>Custom Navigation Span</span>
+        <dbx-button sectionHeader icon="person_add" text="Create User" [raised]="true"></dbx-button>
         <p>{{ lorem }}</p>
         <button mat-button mat-flat-button color="primary">Ok</button>
       </dbx-section>
       <dbx-section header="Header With Icon And Elevated" icon="star" hint="This is a section with an icon." [elevate]="true">
         <span sectionHeader>Custom Navigation Span</span>
+        <dbx-button sectionHeader icon="add" text="Action" [raised]="true"></dbx-button>
         <p>This section is configured with elevation and a star icon.</p>
       </dbx-section>
       <dbx-section header="Header With Inline Hint and Specific H" [h]="1" icon="star" hint="This is a section with an icon." [hintInline]="true" [elevate]="true">
         <span sectionHeader>Custom Navigation Span</span>
+        <dbx-button sectionHeader icon="add" text="Action" [raised]="true"></dbx-button>
         <p>This section is configured with elevation and a star icon.</p>
       </dbx-section>
     </doc-feature-example>
     <doc-feature-example header="dbx-subsection" hint="The subsection has a smaller header than a section.">
       <dbx-subsection header="Subsection Header" hint="This is the subsection hint.">
         <span sectionHeader>Custom Navigation Span</span>
+        <dbx-button sectionHeader icon="add" text="Action"></dbx-button>
         <p>{{ lorem }}</p>
         <button mat-button mat-flat-button color="primary">Ok</button>
       </dbx-subsection>
       <dbx-section [paddedHeader]="true" header="Parent Section" icon="circle" hint="This is a section with a subsection inside. It has header padding.">
         <dbx-subsection header="Subsection Header" icon="circle" hint="This is the subsection hint and a circle. It has no header padding." [elevate]="true">
           <span sectionHeader>Custom Navigation Span</span>
+          <dbx-button sectionHeader icon="add" text="Action"></dbx-button>
           <p>{{ lorem }}</p>
           <button mat-button mat-flat-button color="primary">Ok</button>
         </dbx-subsection>

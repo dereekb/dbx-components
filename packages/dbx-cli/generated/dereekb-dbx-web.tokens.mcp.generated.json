@@ -1468,6 +1468,19 @@
       "componentScope": "section"
     },
     {
+      "cssVariable": "--dbx-section-header-height",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "section header height"
+      ],
+      "description": "Component-scoped override point (`section`) read in `packages/dbx-web/src/lib/layout/section/_section.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `48px`.",
+      "defaults": {
+        "light": "48px"
+      },
+      "componentScope": "section"
+    },
+    {
       "cssVariable": "--dbx-section-header-title-height",
       "source": "dbx-web",
       "role": "size",
@@ -1478,6 +1491,17 @@
       "defaults": {
         "light": "32px"
       },
+      "componentScope": "section"
+    },
+    {
+      "cssVariable": "--dbx-section-page-header-height",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "section page header height"
+      ],
+      "description": "Component-scoped override point (`section`) read in `packages/dbx-web/src/lib/layout/section/_section.scss` — set it (from an app, or via the owning dbx directive where one exists) to override.",
+      "defaults": {},
       "componentScope": "section"
     },
     {
