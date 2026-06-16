@@ -4,7 +4,7 @@
 $two-column-left-width-var: theming.$two-column-left-width-var;
 $two-column-left-width: theming.$two-column-left-width;
 $two-column-navbar-height: theming.$content-navbar-height;
-$two-columns-right-padding-size: 6px;
+$two-columns-right-padding-size: var(--dbx-padding-2);
 
 // MARK: Mixin
 @mixin core() {
@@ -83,8 +83,8 @@ $two-columns-right-padding-size: 6px;
   }
 
   .dbx-two-column-head {
-    padding: 0 6px; // only padded on the left
-    border-bottom: 1px solid rgba(0, 0, 0, 0.14);
+    padding: 0 var(--dbx-padding-2); // only padded on the left
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
     height: $two-column-navbar-height;
 
     display: flex;

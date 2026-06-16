@@ -31,7 +31,7 @@ describe('require-dbx-form-field-companion-tags rule', () => {
  * @dbxFormField
  * @dbxFormTier field-factory
  * @dbxFormSlug text-field
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput no
  * @dbxFormWrapperPattern unwrapped
  * @dbxFormNgFormType FormControl
@@ -47,7 +47,7 @@ export function textField() {}
  * @dbxFormField
  * @dbxFormTier composite-builder
  * @dbxFormSlug section-row
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput no
  * @dbxFormSuffix Row
  */
@@ -61,7 +61,7 @@ export function sectionRow() {}
 /**
  * @dbxFormFieldDerivative text-field
  * @dbxFormSlug shouted-text-field
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput no
  */
 export function shoutedTextField() {}
@@ -74,7 +74,7 @@ export function shoutedTextField() {}
 /**
  * @dbxFormField
  * @dbxFormSlug foo
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput no
  */
 export function foo() {}
@@ -87,7 +87,7 @@ export function foo() {}
 /**
  * @dbxFormFieldTemplate
  * @dbxFormSlug foo-template
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput no
  */
 export function fooTemplate() {}
@@ -101,7 +101,7 @@ export function fooTemplate() {}
  * @dbxFormField
  * @dbxFormTier field-factory
  * @dbxFormSlug foo
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput no
  * @dbxFormNgFormType FormControl
  */
@@ -116,7 +116,7 @@ export function foo() {}
  * @dbxFormField
  * @dbxFormTier composite-builder
  * @dbxFormSlug foo
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput no
  */
 export function foo() {}
@@ -130,7 +130,7 @@ export function foo() {}
  * @dbxFormField
  * @dbxFormTier primitive
  * @dbxFormSlug foo
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput maybe
  */
 export function foo() {}
@@ -144,7 +144,7 @@ export function foo() {}
  * @dbxFormField
  * @dbxFormFieldDerivative something
  * @dbxFormSlug foo
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput no
  */
 export function foo() {}
@@ -158,7 +158,7 @@ export function foo() {}
  * @dbxFormField
  * @dbxFormTier primitive
  * @dbxFormSlug foo
- * @dbxFormProduces FormlyFieldConfig
+ * @dbxFormProduces FieldDef
  * @dbxFormArrayOutput no
  * @dbxFormKategory misc
  */

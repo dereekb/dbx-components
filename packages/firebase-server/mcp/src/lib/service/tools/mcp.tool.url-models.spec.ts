@@ -92,6 +92,8 @@ describe('createUrlModelsTool', () => {
     expect(tool.name).toBe(URL_MODELS_TOOL_NAME);
     expect(tool.dispatch).toEqual({ call: 'url-models', modelType: 'route' });
     expect(tool.filterMetadata.effectiveReadOnly).toBe(true);
+    expect(tool.annotations).toEqual({ readOnlyHint: true });
+    expect(tool.staticWireEntry.annotations).toEqual({ readOnlyHint: true });
     expect(tool.filterMetadata.visibilityKind).toBe('declarative');
     if (tool.filterMetadata.visibilityKind === 'declarative') {
       expect(tool.filterMetadata.rule.requireAuthenticated).toBe(true);

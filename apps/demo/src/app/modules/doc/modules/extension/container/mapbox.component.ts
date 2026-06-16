@@ -3,7 +3,7 @@ import { Component, type OnInit, inject, ChangeDetectionStrategy, viewChild, com
 import { toSignal } from '@angular/core/rxjs-interop';
 import { dbxForgeMapboxLatLngField, dbxForgeMapboxZoomField } from '@dereekb/dbx-form/mapbox';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
-import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
+import { DocFormForgeExampleComponent } from '../../shared/component/forge.example.form.component';
 import { DbxMapboxMapStore } from 'packages/dbx-web/mapbox/src/lib/mapbox.store';
 import { type DbxMapboxLayoutSide, type DbxMapboxMarker, type DbxMapboxMarkerFactory, dbxMapboxColoredDotStyle, filterByMapboxViewportBound, DbxMapboxChangeService, DbxMapboxInjectionStore, DbxMapboxModule, DbxMapboxInjectionComponent, DbxMapboxLayoutComponent, DbxMapboxLayoutVirtualResizeSyncComponent, DbxMapboxMapDirective, DbxMapboxMapStoreInjectionBlockDirective, DbxMapboxMarkerComponent, DbxMapboxMarkersComponent, DbxMapboxMenuComponent } from '@dereekb/dbx-web/mapbox';
 import { shareReplay, BehaviorSubject, map, type Observable, combineLatest, of, first } from 'rxjs';

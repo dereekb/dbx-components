@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideZonelessChangeDetection, Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
@@ -33,7 +33,7 @@ function createDialogConfig<O = { name: string }>(overrides?: Partial<DbxForgeAc
 }
 
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- provideNoopAnimations remains the standard no-op animations provider for TestBed; the new `animate.enter`/`animate.leave` API targets templates, not providers
-const TEST_PROVIDERS = [provideZonelessChangeDetection(), provideNoopAnimations(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }, { provide: DbxRouterTransitionService, useClass: MockDbxRouterTransitionService }];
+const TEST_PROVIDERS = [provideNoopAnimations(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }, { provide: DbxRouterTransitionService, useClass: MockDbxRouterTransitionService }];
 
 // MARK: Test Host
 @Component({

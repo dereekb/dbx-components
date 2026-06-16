@@ -21,7 +21,7 @@ import { type WorkUsingContext } from '@dereekb/rxjs';
 @Component({
   selector: 'dbx-firebase-oidc-entry-client-view',
   template: `
-    <dbx-content-pit [rounded]="true">
+    <dbx-content-pit>
       <dbx-detail-block class="dbx-pb4" icon="key" header="Client ID">
         <dbx-click-to-copy-text [copyText]="clientIdSignal()">{{ clientIdSignal() }}</dbx-click-to-copy-text>
       </dbx-detail-block>

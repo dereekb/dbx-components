@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-deprecated -- demo intentionally documents the legacy DbxFormDateScheduleRangeFieldModule / dateScheduleRangeField alongside the new forge equivalents */
 import { type OnInit, Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxCalendarComponent, type DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
@@ -6,19 +5,18 @@ import { type DateCell, type DateCellCollection, dateCellTiming, durationSpanToD
 import { addMonths, setHours, startOfDay, addDays } from 'date-fns';
 import { type Building, type Maybe, type TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { type CalendarEvent } from 'angular-calendar';
-import { CalendarScheduleSelectionDayState, DbxFormDateScheduleRangeFieldModule, type DbxScheduleSelectionCalendarComponentConfig, dateScheduleRangeField, dbxForgeDateScheduleRangeField } from '@dereekb/dbx-form/calendar';
+import { CalendarScheduleSelectionDayState, type DbxScheduleSelectionCalendarComponentConfig, dbxForgeDateScheduleRangeField } from '@dereekb/dbx-form/calendar';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
 import { BehaviorSubject, interval, map, of, shareReplay, startWith } from 'rxjs';
 import { DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, DocExtensionCalendarScheduleSelectionWithFilterComponent } from '../component/selection.filter.calendar.component';
-import { dbxForgeTimezoneStringField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
+import { dbxForgeTimezoneStringField, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnRightComponent, DbxSubSectionComponent, DbxWebPageTitleInfoDirective, type DbxWebPageTitleInfoConfig } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureDerivedComponent } from '../../shared/component/feature.derived.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
-import { DocFormForgeExampleComponent } from '../../form/component/forge.example.form.component';
+import { DocFormForgeExampleComponent } from '../../shared/component/forge.example.form.component';
 import { MatButton } from '@angular/material/button';
-import { DocFormExampleComponent } from '../../form/component/example.form.component';
 import { DocExtensionCalendarScheduleSelectionComponent } from '../component/selection.calendar.component';
 import { JsonPipe, DatePipe } from '@angular/common';
 import { completeOnDestroy } from '@dereekb/dbx-core';
@@ -44,15 +42,12 @@ export interface TestCalendarEventData extends DateCell {
     DbxTwoColumnFullLeftDirective,
     DbxTwoBlockComponent,
     DbxTwoColumnRightComponent,
-    DocFormExampleComponent,
-    DbxFormlyFieldsContextDirective,
     DbxFormSourceDirective,
     DbxFormValueChangeDirective,
     DbxSubSectionComponent,
     DbxWebPageTitleInfoDirective,
     DocExtensionCalendarScheduleSelectionWithFilterComponent,
     DocExtensionCalendarScheduleSelectionComponent,
-    DbxFormDateScheduleRangeFieldModule,
     JsonPipe,
     DatePipe,
     DocFeatureFormTabsComponent,
@@ -141,8 +136,7 @@ export class DocExtensionCalendarComponent implements OnInit {
             maxWidth: '540px'
           },
           closeConfig: {
-            closeText: 'Save Changes',
-            buttonColor: 'primary'
+            closeText: 'Save Changes'
           }
         }
       }),
@@ -201,101 +195,6 @@ export class DocExtensionCalendarComponent implements OnInit {
       })
     ]
   } as FormConfig;
-
-  readonly dateCellScheduleRangeFields = [
-    dateScheduleRangeField({
-      key: 'futureDateSchedule',
-      required: false,
-      label: 'Future Dates',
-      outputTimezone: this.timezone$,
-      defaultScheduleDays: expandDateCellScheduleDayCodes('89'),
-      minMaxDateRange: {
-        start: startOfDay(new Date())
-      },
-      description: 'Simple date schedule that requires picking dates in the future.'
-    }),
-    dateScheduleRangeField({
-      key: 'dateSchedule',
-      required: true,
-      label: 'Custom Label',
-      outputTimezone: this.timezone$,
-      description: 'Input field used for picking a DateCellScheduleRange value.'
-    }),
-    dateScheduleRangeField({
-      outputTimezone: this.timezone$,
-      key: 'dateScheduleWithFilter',
-      label: 'Date Schedule with Filter',
-      required: false,
-      description: 'Date schedule with a filter applied to it, and an initial selection of everything. Contains custom close config.',
-      filter: DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
-      computeSelectionResultRelativeToFilter: true,
-      initialSelectionState: 'all',
-      dialogContentConfig: {
-        dialogConfig: {
-          panelClass: 'dbx-schedule-selection-calendar-compact',
-          maxWidth: '540px'
-        },
-        closeConfig: {
-          closeText: 'Save Changes',
-          buttonColor: 'primary'
-        }
-      }
-    }),
-    dateScheduleRangeField({
-      outputTimezone: this.timezone$,
-      key: 'dateScheduleWithMinMaxDateRange',
-      label: 'Date Schedule with Min/Max Date Range',
-      required: false,
-      description: 'Date schedule with a min and max date range applied to it and all days selected.',
-      minMaxDateRange: of({ start: addDays(new Date(), -25), end: addDays(new Date(), 25) }),
-      computeSelectionResultRelativeToFilter: true,
-      initialSelectionState: 'all'
-    }),
-    dateScheduleRangeField({
-      outputTimezone: this.timezone$,
-      key: 'dateScheduleWithFilterAndExclusions',
-      label: 'Date Schedule with Filter and Exclusions',
-      required: false,
-      description: 'Date schedule with a filter applied to it and additional exclusions.',
-      filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
-      computeSelectionResultRelativeToFilter: true,
-      exclusions: [0, 2, 4],
-      initialSelectionState: 'all'
-    }),
-    dateScheduleRangeField({
-      outputTimezone: this.timezone$,
-      key: 'dateScheduleWithTimingFilterAndMinDateRange',
-      label: 'Date Schedule with Timing Filter and Min Date Range',
-      required: false,
-      description: 'Date schedule with a filter and an explicit min date to be 4 days from now',
-      filter: { ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER, w: '89', ex: [] },
-      minMaxDateRange: { start: addDays(new Date(), 4) },
-      computeSelectionResultRelativeToFilter: true,
-      initialSelectionState: 'all'
-    }),
-    dateScheduleRangeField({
-      key: 'dateScheduleForUtcTimezone',
-      label: 'Date Schedule for UTC Timezone',
-      required: true,
-      description: 'Date schedule for the UTC timezone.',
-      outputTimezone: 'UTC'
-    }),
-    dateScheduleRangeField({
-      key: 'dateScheduleForUtcTimezoneWithFilter',
-      required: true,
-      description: 'Date schedule for the timezone with filter. The timezone from the filter is ignored and overridden by the output timezone.',
-      outputTimezone: 'UTC',
-      filter: {
-        //
-        ...DOC_EXTENSION_CALENDAR_SCHEDULE_TEST_FILTER,
-        startsAt: UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()),
-        end: addDays(UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE.startOfDayInTargetTimezone(new Date()), 5),
-        timezone: 'UTC',
-        w: '89',
-        ex: []
-      }
-    })
-  ];
 
   readonly date$ = this.calendarStore.date$;
   readonly dateSignal = toSignal(this.date$, { initialValue: undefined });

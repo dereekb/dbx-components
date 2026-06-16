@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, provideZonelessChangeDetection, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { type Maybe } from '@dereekb/util';
 import { type DbxImageCompressionConfig } from '../image';
@@ -32,7 +32,7 @@ describe('DbxPdfMergeEditorFileUploadComponent image compression resolution', ()
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [TestHostComponent],
-      providers: [provideZonelessChangeDetection()]
+      providers: []
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestHostComponent);

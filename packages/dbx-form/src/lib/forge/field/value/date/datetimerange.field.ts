@@ -1,6 +1,6 @@
 import type { RowField } from '@ng-forge/dynamic-forms';
 import { of } from 'rxjs';
-import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
+import { DbxDateTimeFieldTimeMode } from '../../../../field/value/date/datetime.config';
 import type { DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';
 import { type DbxForgeDateRangeFieldDateConfig } from './daterange.field';
 import { dbxForgeDateTimeField } from './datetime.field';

@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-cli",
-  "version": "13.17.0",
+  "version": "13.18.0",
   "type": "module",
   "sideEffects": false,
   "bin": {
@@ -55,11 +55,11 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/date": "13.17.0",
-    "@dereekb/firebase": "13.17.0",
-    "@dereekb/model": "13.17.0",
-    "@dereekb/nestjs": "13.17.0",
-    "@dereekb/util": "13.17.0",
+    "@dereekb/date": "13.18.0",
+    "@dereekb/firebase": "13.18.0",
+    "@dereekb/model": "13.18.0",
+    "@dereekb/nestjs": "13.18.0",
+    "@dereekb/util": "13.18.0",
     "@nestjs/common": "^11.1.19",
     "arktype": "^2.2.0",
     "jiti": "2.6.1",

@@ -76,8 +76,8 @@ function isEmptyFormValue(val: unknown): boolean {
  * (e.g. `NaN`, `''`) inside an array stay in place, since shifting indices would
  * change the semantics of chip/list-style array fields.
  *
- * This normalizes ng-forge output to match ngx-formly behavior, where the model
- * only includes keys that have been explicitly set by the user.
+ * This normalizes ng-forge output so the model only includes keys that have
+ * been explicitly set by the user.
  *
  * @param value - The form value object to clean.
  * @returns A new object with empty-valued keys removed.
@@ -130,7 +130,7 @@ export function stripEmptyForgeValues<T>(value: T): T {
  * Context service managing a ng-forge dynamic form's connection to the DbxForm system.
  *
  * Bridges ng-forge's signal-based form state to the existing DbxForm/DbxMutableForm
- * Observable-based interface. Simpler than DbxFormlyContext — no delegate pattern needed.
+ * Observable-based interface — a lightweight implementation with no delegate pattern needed.
  */
 @Injectable()
 export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDestroy {
@@ -164,8 +164,7 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
   /**
    * When true (default), keys whose values are empty (`null`, `undefined`, `""`, or `NaN`)
    * are stripped from the form value before emission. This normalizes ng-forge output
-   * to match ngx-formly behavior, where the model only includes keys that have been
-   * explicitly set by the user.
+   * so the model only includes keys that have been explicitly set by the user.
    *
    * Note: `false`, `0`, and empty arrays are NOT considered empty and are preserved.
    */
@@ -183,8 +182,8 @@ export class DbxForgeFormContext<T = unknown> implements DbxMutableForm<T>, OnDe
 
   /**
    * When true (default), the form still reports `isComplete` based on validity even
-   * while disabled. This matches the ngx-formly behavior where disabling a form only
-   * locks inputs but does not suppress the form value.
+   * while disabled, so disabling a form only locks inputs but does not suppress the
+   * form value.
    *
    * When false, `isComplete` is forced to `false` while disabled, preventing the
    * action system from reading the form value. `false` is the native ng-forge default

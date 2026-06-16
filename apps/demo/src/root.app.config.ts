@@ -1,5 +1,5 @@
 import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig, provideDbxAnalyticsService, provideDbxAnalyticsSegmentApiService } from '@dereekb/dbx-analytics';
-import { type ApplicationConfig, importProvidersFrom, inject, type Injector, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
+import { type ApplicationConfig, inject, type Injector, provideAppInitializer, provideZonelessChangeDetection } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
 import { environment, OIDC_API_ORIGIN } from './environments/environment';
@@ -9,17 +9,20 @@ import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, 
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, type Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, DEMO_OIDC_AVAILABLE_SCOPES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, DEMO_APP_OAUTH_INTERACTION_PATH, ProfileFunctions } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
 import { DemoFirebaseContextService, demoSetupDevelopmentWidget } from 'demo-components';
-import { defaultValidationMessages, provideDbxFormConfiguration, provideDbxFormFormlyFieldDeclarations, provideDbxForgeFormFieldDeclarations } from '@dereekb/dbx-form';
+import { provideDbxFormConfiguration, provideDbxForgeFormFieldDeclarations } from '@dereekb/dbx-form';
 import { DBX_FORGE_CALENDAR_FIELD_TYPES } from '@dereekb/dbx-form/calendar';
 import { DBX_FORGE_MAPBOX_FIELD_TYPES } from '@dereekb/dbx-form/mapbox';
 import { provideDbxMapbox } from '@dereekb/dbx-web/mapbox';
+import { provideDbxStyleDemo, provideDbxWebStyleDemo } from '@dereekb/dbx-web/style-demo';
+import { provideDbxFormStyleDemo } from '@dereekb/dbx-form/style-demo';
+import { provideDbxFirebaseStyleDemo } from '@dereekb/dbx-firebase/style-demo';
+import { provideDemoStyleDemo } from './app/modules/doc/modules/examples/component/demo.style.demo.providers';
 import { provideDbxFirebaseOidc } from '@dereekb/dbx-firebase/oidc';
 import { provideEffects } from '@ngrx/effects';
 import { provideStore } from '@ngrx/store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { STATES } from './app/app.router';
-import { FormlyModule } from '@ngx-formly/core';
 import { provideDbxCalendar } from '@dereekb/dbx-web/calendar';
 import { META_REDUCERS, ROOT_REDUCER } from './app/state/app.state';
 
@@ -185,13 +188,7 @@ export function dbxFirebaseModelEntitiesWidgetServiceConfigFactory(): DbxFirebas
 
 export const APP_CONFIG: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection(), // dbx-components is not zoneless yet
-    // formly
-    importProvidersFrom(
-      FormlyModule.forRoot({
-        validationMessages: defaultValidationMessages()
-      })
-    ),
+    provideZonelessChangeDetection(),
     // ui-router
     provideUIRouter({
       useHash: false,
@@ -210,11 +207,10 @@ export const APP_CONFIG: ApplicationConfig = {
       runtimeChecks: {
         strictStateSerializability: true,
         strictActionSerializability: true,
-        strictActionWithinNgZone: true,
         strictActionTypeUniqueness: true
       }
     }),
-    environment.production ? [] : provideStoreDevtools({ maxAge: 25, logOnly: environment.production, connectInZone: true }),
+    environment.production ? [] : provideStoreDevtools({ maxAge: 25, logOnly: environment.production }),
     // dbx-analytics
     provideDbxAnalyticsSegmentApiService({
       dbxAnalyticsSegmentApiServiceConfigFactory
@@ -243,6 +239,14 @@ export const APP_CONFIG: ApplicationConfig = {
       dbxStyleConfig: {
         style: 'doc-app',
         suffixes: new Set(['dark'])
+      },
+      // Seeds app-registered color templates so they appear alongside the curated set in the style-demo Color Templates section.
+      dbxColorServiceConfig: {
+        templates: [
+          { key: 'demo-brand', config: { color: '#312f7e', contrast: '#ffffff' } },
+          { key: 'demo-positive', config: { color: '#1f9b59', contrast: '#ffffff', tone: 18 } },
+          { key: 'demo-inverse', config: { color: 'var(--mat-sys-inverse-surface)', contrast: 'var(--mat-sys-inverse-on-surface)' } }
+        ]
       }
     }),
     provideDbxMapbox({
@@ -267,9 +271,14 @@ export const APP_CONFIG: ApplicationConfig = {
       rootConfig: { title: 'DbxComponents', description: 'A component library for Angular and Firebase.' }
     }),
     provideDbxHelpServices(),
+    // dbx-*/style-demo (Phase 1 styling showcase — disposable demo tooling)
+    provideDbxStyleDemo(),
+    provideDbxWebStyleDemo(),
+    provideDbxFormStyleDemo(),
+    provideDbxFirebaseStyleDemo(),
+    provideDemoStyleDemo(),
     // dbx-form, form related
     provideDbxFormConfiguration(),
-    provideDbxFormFormlyFieldDeclarations(),
     provideDbxForgeFormFieldDeclarations(...DBX_FORGE_CALENDAR_FIELD_TYPES, ...DBX_FORGE_MAPBOX_FIELD_TYPES),
     // dbx-firebase
     provideDbxFirebase({

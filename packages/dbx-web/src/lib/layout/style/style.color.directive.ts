@@ -1,13 +1,17 @@
-import { computed, Directive, inject, input } from '@angular/core';
+import { computed, Directive, inject, input, model } from '@angular/core';
 import { type DbxColorConfig, type DbxColorInput, type DbxColorTone, dbxColorBackground, isDbxColorConfig } from './style';
 import { DbxColorService } from './style.color.service';
 import { type Maybe } from '@dereekb/util';
 
 /**
- * Applies a themed background color to the host element.
+ * Provides themed color *tokens* to the host element — it never paints a background itself.
  *
  * Accepts either a {@link DbxThemeColor} string (e.g. `'primary'`, `'success'`) or a {@link DbxColorConfig}
  * object carrying arbitrary CSS color values (any hex, `rgb()`, `hsl()`, `var(...)`, `color-mix(...)`, etc.).
+ * The directive sets the `--dbx-bg-color-current` / `--dbx-color-current` (and tone) custom properties and adds the
+ * `.dbx-color` marker class, leaving the actual painting to either the explicit `.dbx-color-bg` utility on the same
+ * element or a colored-surface component's own `.dbx-color`-scoped SCSS (e.g. `<dbx-bar>`, `<dbx-button>`, `<dbx-loading>`,
+ * `<dbx-icon-tile>`, `<mat-card>`) that reads the inherited tokens.
  *
  * Optionally set {@link dbxColorTone} (0-100) to control background opacity for a tonal/muted appearance.
  * When tonal mode is active, the `dbx-color-tonal` CSS class is added and a CSS rule overrides the text
@@ -21,22 +25,26 @@ import { type Maybe } from '@dereekb/util';
  * @dbxWebCategory layout
  * @dbxWebRelated text-color, color-service
  * @dbxWebMinimalExample ```html
- * <div [dbxColor]="'primary'"></div>
+ * <div dbxColor="primary" class="dbx-color-bg"></div>
  * ```
  *
  * @example
  * ```html
- * <div [dbxColor]="'primary'">Themed background</div>
- * <div [dbxColor]="'primary'" [dbxColorTone]="18">Tonal themed</div>
- * <div [dbxColor]="{ color: '#ff0066', contrast: 'white' }">Custom hex</div>
- * <div [dbxColor]="{ color: 'var(--mat-sys-tertiary)', contrast: 'var(--mat-sys-on-tertiary)', tone: 18 }">Custom tonal</div>
+ * <!-- pair with .dbx-color-bg to paint a plain element -->
+ * <div dbxColor="primary" class="dbx-color-bg">Themed background</div>
+ * <div dbxColor="primary" [dbxColorTone]="18" class="dbx-color-bg">Tonal themed</div>
+ * <div [dbxColor]="{ color: '#ff0066', contrast: 'white' }" class="dbx-color-bg">Custom hex</div>
+ *
+ * <!-- a colored-surface component paints itself from the tokens; no .dbx-color-bg needed -->
+ * <dbx-bar dbxColor="primary">Bar paints itself</dbx-bar>
+ * <dbx-button color="warn" raised text="Delete"></dbx-button>
  * ```
  */
 @Directive({
   selector: '[dbxColor]',
   host: {
     '[class]': 'cssClassSignal()',
-    '[class.dbx-color]': 'true',
+    '[class.dbx-color]': 'hasColorSignal()',
     '[class.dbx-color-tonal]': 'isTonalSignal()',
     '[style.--dbx-color-bg-tone]': 'bgToneStyleSignal()',
     '[style.--dbx-bg-color-current]': 'bgColorStyleSignal()',
@@ -47,7 +55,11 @@ import { type Maybe } from '@dereekb/util';
 export class DbxColorDirective {
   private readonly _colorService = inject(DbxColorService, { optional: true });
 
-  readonly dbxColor = input<Maybe<DbxColorInput>>();
+  /**
+   * The color to provide tokens for. Declared as a `model` so a colored-surface component on the same host (e.g.
+   * `dbx-button`) can push its resolved color into the directive, keeping it the single token provider on the element.
+   */
+  readonly dbxColor = model<Maybe<DbxColorInput>>();
 
   /**
    * Background tone level (0-100). When set, the background becomes semi-transparent
@@ -55,7 +67,30 @@ export class DbxColorDirective {
    */
   readonly dbxColorTone = input<Maybe<DbxColorTone>>();
 
-  readonly cssClassSignal = computed(() => dbxColorBackground(this.dbxColor()));
+  /**
+   * Whether a color is currently bound. When nothing is bound the directive is fully inert — it adds no marker class
+   * and no token class — so color tokens inherited from a `[dbxColor]` ancestor pass through untouched (important for
+   * components that host this directive unconditionally, e.g. `dbx-button` inside a tonal `[dbxColor]` card).
+   */
+  readonly hasColorSignal = computed(() => Boolean(this.dbxColor()));
+
+  /**
+   * Applies the named `dbx-{color}-bg` token class for a {@link DbxThemeColor} string, or `''` both for a
+   * {@link DbxColorConfig} (whose tokens are supplied by the inline `--dbx-bg-color-current` / `--dbx-color-current`
+   * style bindings instead) and when no color is bound (inert; inherited tokens pass through). The directive is a pure
+   * token provider — none of these classes paint a background; painting is done by the `.dbx-color-bg` utility or a
+   * component's own `.dbx-color`-scoped SCSS.
+   */
+  readonly cssClassSignal = computed(() => {
+    const value = this.dbxColor();
+    let cssClass = '';
+
+    if (value) {
+      cssClass = isDbxColorConfig(value) ? '' : dbxColorBackground(value);
+    }
+
+    return cssClass;
+  });
 
   private readonly _configSignal = computed<Maybe<DbxColorConfig>>(() => {
     const value = this.dbxColor();

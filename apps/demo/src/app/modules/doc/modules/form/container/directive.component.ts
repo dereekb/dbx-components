@@ -3,22 +3,20 @@ import { Component, type OnInit, ChangeDetectionStrategy, inject } from '@angula
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
 import { BehaviorSubject, map } from 'rxjs';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
-import { DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule, type DbxFormSourceDirectiveMode, formlyTextField, dbxForgeTextField, dbxForgeEmailField, dbxForgeToggleField, dbxForgeNumberField, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxFormActionDialogComponent, DbxForgeActionDialogComponent } from '@dereekb/dbx-form';
-import { type FormlyFieldConfig } from '@ngx-formly/core';
+import { type DbxFormSourceDirectiveMode, dbxForgeTextField, dbxForgeEmailField, dbxForgeToggleField, dbxForgeNumberField, DbxFormSourceDirective, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxForgeActionDialogComponent } from '@dereekb/dbx-form';
 import { DbxContentContainerDirective, DbxContentBorderDirective } from '@dereekb/dbx-web';
 import { MatDialog } from '@angular/material/dialog';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
-import { DocFormExampleComponent } from '../component/example.form.component';
-import { DocFormForgeExampleComponent } from '../component/forge.example.form.component';
+import { DocFormForgeExampleComponent } from '../../shared/component/forge.example.form.component';
 import { MatButton } from '@angular/material/button';
 import { JsonPipe } from '@angular/common';
 
 @Component({
   templateUrl: './directive.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, MatButton, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe, DbxFormFormlyTextFieldModule, DbxFormFormlyWrapperModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, MatButton, DbxFormLoadingSourceDirective, DbxFormValueChangeDirective, DbxContentBorderDirective, JsonPipe],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormDirectiveComponent implements OnInit {
@@ -30,22 +28,11 @@ export class DocFormDirectiveComponent implements OnInit {
 
   readonly loadingData$ = this.data$.pipe(map((x) => successResult(x)));
 
-  value: any;
   forgeValue: any;
   forgeDirectiveValue: any;
-  formlyDialogResult: any;
   forgeDialogResult: any;
 
   formSourceMode: DbxFormSourceDirectiveMode = 'always';
-
-  testFields() {
-    return [
-      formlyTextField({
-        key: 'test',
-        required: true
-      })
-    ];
-  }
 
   readonly forgeTestFieldsConfig: FormConfig = {
     fields: [
@@ -63,25 +50,6 @@ export class DocFormDirectiveComponent implements OnInit {
   };
 
   readonly forgeExampleData = { name: 'Test User', email: 'test@example.com', age: 25, active: true };
-
-  readonly testFieldsA: FormlyFieldConfig[] = this.testFields();
-  readonly testFieldsB: FormlyFieldConfig[] = this.testFields();
-  readonly testFieldsC: FormlyFieldConfig[] = this.testFields();
-  readonly testFieldsD: FormlyFieldConfig[] = this.testFields();
-  readonly testFieldsE: FormlyFieldConfig[] = this.testFields();
-  readonly testFieldsF: FormlyFieldConfig[] = this.testFields();
-
-  openFormlyDialog(): void {
-    const dialogRef = DbxFormActionDialogComponent.openDialogWithForm(this._matDialog, {
-      header: 'Formly Dialog',
-      fields: this.testFields(),
-      initialValue: { test: 'hello' }
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      this.formlyDialogResult = result;
-    });
-  }
 
   openForgeDialog(): void {
     const dialogRef = DbxForgeActionDialogComponent.openDialogWithForm(this._matDialog, {

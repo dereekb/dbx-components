@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/nestjs",
-  "version": "13.17.0",
+  "version": "13.18.0",
   "types": "./src/index.d.ts",
   "module": "./index.esm.js",
   "main": "./index.cjs.js",
@@ -29,6 +29,12 @@
       "import": "./openai/index.cjs.mjs",
       "default": "./openai/index.cjs.js"
     },
+    "./openrouter": {
+      "module": "./openrouter/index.esm.js",
+      "types": "./openrouter/index.d.ts",
+      "import": "./openrouter/index.cjs.mjs",
+      "default": "./openrouter/index.cjs.js"
+    },
     "./twilio": {
       "module": "./twilio/index.esm.js",
       "types": "./twilio/index.d.ts",
@@ -55,8 +61,8 @@
     }
   },
   "peerDependencies": {
-    "@dereekb/rxjs": "13.17.0",
-    "@dereekb/util": "13.17.0",
+    "@dereekb/rxjs": "13.18.0",
+    "@dereekb/util": "13.18.0",
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "@typeform/api-client": "^2.10.2",
@@ -67,6 +73,7 @@
     "form-data": "^4.0.5",
     "mailgun.js": "^12.9.0",
     "openai": "^6.34.0",
+    "@openrouter/sdk": "^0.12.79",
     "raw-body": "^3.0.2",
     "stripe": "^20.4.1",
     "twilio": "^6.0.2"

@@ -36,6 +36,20 @@
       }
     },
     {
+      "cssVariable": "--dbx-anchor-list-item-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "anchor list item border radius",
+        "anchor list item border radius radius"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "0"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-anchor-list-item-child-list-item-icon-size",
       "source": "dbx-web",
       "role": "size",
@@ -235,6 +249,19 @@
       }
     },
     {
+      "cssVariable": "--dbx-button-big-height",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "button big height"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `46px`.",
+      "defaults": {
+        "light": "46px"
+      },
+      "componentScope": "button"
+    },
+    {
       "cssVariable": "--dbx-button-icon-color",
       "source": "dbx-web",
       "role": "text-color",
@@ -242,9 +269,22 @@
         "button icon color",
         "button icon color text"
       ],
-      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `currentColor`.",
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `#{$color-value}`.",
       "defaults": {
-        "light": "currentColor"
+        "light": "#{$color-value}"
+      },
+      "componentScope": "button"
+    },
+    {
+      "cssVariable": "--dbx-button-wide-min-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "button wide min width"
+      ],
+      "description": "Component-scoped override point (`button`) read in `packages/dbx-web/src/lib/button/_button.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `120px`.",
+      "defaults": {
+        "light": "120px"
       },
       "componentScope": "button"
     },
@@ -260,6 +300,84 @@
         "light": "var(--mat-sys-corner-small)"
       },
       "componentScope": "calendar-month-view"
+    },
+    {
+      "cssVariable": "--dbx-card-accent-border-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "card accent border width"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `4px`.",
+      "defaults": {
+        "light": "4px"
+      },
+      "componentScope": "card"
+    },
+    {
+      "cssVariable": "--dbx-card-accent-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "card accent color"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-primary)`.",
+      "defaults": {
+        "light": "var(--mat-sys-primary)"
+      },
+      "componentScope": "card"
+    },
+    {
+      "cssVariable": "--dbx-card-horizontal-detail-icon-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "card horizontal detail icon size"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `18px`.",
+      "defaults": {
+        "light": "18px"
+      },
+      "componentScope": "card"
+    },
+    {
+      "cssVariable": "--dbx-card-horizontal-header-dot-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "card horizontal header dot size"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8px`.",
+      "defaults": {
+        "light": "8px"
+      },
+      "componentScope": "card"
+    },
+    {
+      "cssVariable": "--dbx-card-horizontal-item-width",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "card horizontal item width"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `300px`.",
+      "defaults": {
+        "light": "300px"
+      },
+      "componentScope": "card"
+    },
+    {
+      "cssVariable": "--dbx-card-horizontal-tab-overlap",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "card horizontal tab overlap"
+      ],
+      "description": "Component-scoped override point (`card`) read in `packages/dbx-web/src/lib/layout/card/_card.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `10px`.",
+      "defaults": {
+        "light": "10px"
+      },
+      "componentScope": "card"
     },
     {
       "cssVariable": "--dbx-card-select-icon-size",
@@ -281,9 +399,9 @@
       "intents": [
         "chip container shape"
       ],
-      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-full, 9999px)`.",
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-chip-container-shape-radius, var(--mat-sys-corner-small, 8px))`.",
       "defaults": {
-        "light": "var(--mat-sys-corner-full, 9999px)"
+        "light": "var(--mat-chip-container-shape-radius, var(--mat-sys-corner-small, 8px))"
       },
       "componentScope": "text"
     },
@@ -299,6 +417,32 @@
       "defaults": {}
     },
     {
+      "cssVariable": "--dbx-color-border-tone",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "color border tone"
+      ],
+      "description": "Component-scoped override point (`style`) read in `packages/dbx-web/src/lib/layout/style/_style.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `25%`.",
+      "defaults": {
+        "light": "25%"
+      },
+      "componentScope": "style"
+    },
+    {
+      "cssVariable": "--dbx-color-border-width",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "color border width"
+      ],
+      "description": "Component-scoped override point (`style`) read in `packages/dbx-web/src/lib/layout/style/_style.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `1px`.",
+      "defaults": {
+        "light": "1px"
+      },
+      "componentScope": "style"
+    },
+    {
       "cssVariable": "--dbx-color-current",
       "scssVariable": "$dbx-color-var",
       "source": "dbx-web",
@@ -308,6 +452,19 @@
       ],
       "description": "Auto-extracted token `--dbx-color-current`. Add a sassdoc `///` block above the declaration in dbx-web for richer guidance.",
       "defaults": {}
+    },
+    {
+      "cssVariable": "--dbx-color-text-dim-tone",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "color text dim tone"
+      ],
+      "description": "Component-scoped override point (`style`) read in `packages/dbx-web/src/lib/layout/style/_style.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `72%`.",
+      "defaults": {
+        "light": "72%"
+      },
+      "componentScope": "style"
     },
     {
       "cssVariable": "--dbx-content-headers-count",
@@ -406,6 +563,19 @@
       }
     },
     {
+      "cssVariable": "--dbx-content-pit-color-tone",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "content pit color tone"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `11%`.",
+      "defaults": {
+        "light": "11%"
+      },
+      "componentScope": "content"
+    },
+    {
       "cssVariable": "--dbx-content-pit-rounded-border-radius",
       "scssVariable": "$dbx-content-pit-rounded-border-radius-var",
       "source": "dbx-web",
@@ -415,7 +585,7 @@
         "rounded pit corner",
         "content pit radius"
       ],
-      "description": "Border radius for the `[dbxContentPit]` rounded variant. Defaults to `var(--mat-sys-corner-medium)`.",
+      "description": "Border radius for the `[dbxContentPit]`, applied by default to every pit. Defaults to `var(--mat-sys-corner-medium)`.",
       "defaults": {
         "light": "var(--mat-sys-corner-medium)"
       },
@@ -435,6 +605,24 @@
       "defaults": {
         "light": "140px"
       }
+    },
+    {
+      "cssVariable": "--dbx-corners-border-radius",
+      "scssVariable": "$dbx-corners-border-radius-var",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "corners radius",
+        "generic corner radius",
+        "dbx-corners radius"
+      ],
+      "description": "Border radius for the generic `.dbx-corners` utility class. Defaults to `var(--mat-sys-corner-medium)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-medium)"
+      },
+      "seeAlso": [
+        "--mat-sys-corner-medium"
+      ]
     },
     {
       "cssVariable": "--dbx-default-color",
@@ -468,6 +656,33 @@
       }
     },
     {
+      "cssVariable": "--dbx-detail-block-content-offset",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "detail block content offset"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `30px`.",
+      "defaults": {
+        "light": "30px"
+      },
+      "componentScope": "text"
+    },
+    {
+      "cssVariable": "--dbx-dialog-content-padding",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "dialog content padding",
+        "dialog content padding spacing"
+      ],
+      "description": "Component-scoped override point (`dialog`) read in `packages/dbx-web/src/lib/interaction/dialog/_dialog.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-4)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-4)"
+      },
+      "componentScope": "dialog"
+    },
+    {
       "cssVariable": "--dbx-disabled-color",
       "scssVariable": "$dbx-disabled-color-var",
       "source": "dbx-web",
@@ -497,6 +712,19 @@
       "defaults": {
         "light": "var(--mat-sys-outline)"
       }
+    },
+    {
+      "cssVariable": "--dbx-dot-size",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "dot size"
+      ],
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8px`.",
+      "defaults": {
+        "light": "8px"
+      },
+      "componentScope": "text"
     },
     {
       "cssVariable": "--dbx-error-color",
@@ -582,7 +810,7 @@
       ],
       "description": "Component-scoped token (`text`) declared in `packages/dbx-web/src/lib/layout/text/_text.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
       "defaults": {
-        "light": "var(--dbx-step-block-badge-font-size, 14px)"
+        "light": "var(--dbx-step-block-badge-font-size, var(--mat-sys-label-large-size, 14px))"
       },
       "componentScope": "text"
     },
@@ -680,6 +908,20 @@
       "componentScope": "list"
     },
     {
+      "cssVariable": "--dbx-list-item-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "list item border radius",
+        "list item border radius radius"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "0"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-list-item-card-background",
       "source": "dbx-web",
       "role": "misc",
@@ -705,6 +947,33 @@
         "light": "var(--mat-sys-corner-large, calc(var(--mat-chip-container-shape-radius) * 2))"
       },
       "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-item-padded-min-height",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "list item padded min height"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `42px`.",
+      "defaults": {
+        "light": "42px"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-navbar-item-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "navbar item border radius",
+        "navbar item border radius radius"
+      ],
+      "description": "Component-scoped override point (`navbar`) read in `packages/dbx-web/src/lib/router/layout/navbar/_navbar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-large, 16px)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-large, 16px)"
+      },
+      "componentScope": "navbar"
     },
     {
       "cssVariable": "--dbx-nested-content-height",
@@ -1114,6 +1383,48 @@
       "componentScope": "bar.button"
     },
     {
+      "cssVariable": "--dbx-prompt-box-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "prompt box border radius",
+        "prompt box border radius radius"
+      ],
+      "description": "Component-scoped override point (`prompt`) read in `packages/dbx-web/src/lib/interaction/prompt/_prompt.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-medium, 12px)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-medium, 12px)"
+      },
+      "componentScope": "prompt"
+    },
+    {
+      "cssVariable": "--dbx-prompt-box-padding",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "prompt box padding",
+        "prompt box padding spacing"
+      ],
+      "description": "Component-scoped override point (`prompt`) read in `packages/dbx-web/src/lib/interaction/prompt/_prompt.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `40px`.",
+      "defaults": {
+        "light": "40px"
+      },
+      "componentScope": "prompt"
+    },
+    {
+      "cssVariable": "--dbx-scroll-content-bottom-padding",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "scroll content bottom padding",
+        "scroll content bottom padding spacing"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `42px`.",
+      "defaults": {
+        "light": "42px"
+      },
+      "componentScope": "content"
+    },
+    {
       "cssVariable": "--dbx-secondary-color",
       "scssVariable": "$dbx-secondary-color-var",
       "source": "dbx-web",
@@ -1153,6 +1464,47 @@
       "description": "Component-scoped override point (`section`) read in `packages/dbx-web/src/lib/layout/section/_section.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-medium)`.",
       "defaults": {
         "light": "var(--mat-sys-corner-medium)"
+      },
+      "componentScope": "section"
+    },
+    {
+      "cssVariable": "--dbx-section-header-title-height",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "section header title height"
+      ],
+      "description": "Component-scoped override point (`section`) read in `packages/dbx-web/src/lib/layout/section/_section.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `32px`.",
+      "defaults": {
+        "light": "32px"
+      },
+      "componentScope": "section"
+    },
+    {
+      "cssVariable": "--dbx-section-page-header-reserved-space",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "section page header reserved space",
+        "section page header reserved space spacing"
+      ],
+      "description": "Component-scoped override point (`section`) read in `packages/dbx-web/src/lib/layout/section/_section.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `200px`.",
+      "defaults": {
+        "light": "200px"
+      },
+      "componentScope": "section"
+    },
+    {
+      "cssVariable": "--dbx-section-page-header-reserved-space-small-screen",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "section page header reserved space small screen",
+        "section page header reserved space small screen spacing"
+      ],
+      "description": "Component-scoped override point (`section`) read in `packages/dbx-web/src/lib/layout/section/_section.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `120px`.",
+      "defaults": {
+        "light": "120px"
       },
       "componentScope": "section"
     },
@@ -1207,6 +1559,20 @@
         "light": "color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent)"
       },
       "componentScope": "sidenav"
+    },
+    {
+      "cssVariable": "--dbx-sidenav-anchor-list-item-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "sidenav anchor list item border radius",
+        "sidenav anchor list item border radius radius"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))`.",
+      "defaults": {
+        "light": "var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))"
+      },
+      "componentScope": "list"
     },
     {
       "cssVariable": "--dbx-sidenav-background",
@@ -1280,9 +1646,9 @@
       "intents": [
         "sidenav text color"
       ],
-      "description": "Component-scoped override point (`sidenav`) read in `packages/dbx-web/src/lib/router/layout/sidenav/_sidenav.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-primary-container)`.",
+      "description": "Component-scoped override point (`sidenav`) read in `packages/dbx-web/src/lib/router/layout/sidenav/_sidenav.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-color-current, var(--mat-sys-on-surface))`.",
       "defaults": {
-        "light": "var(--mat-sys-primary-container)"
+        "light": "var(--dbx-color-current, var(--mat-sys-on-surface))"
       },
       "componentScope": "sidenav"
     },
@@ -1306,9 +1672,9 @@
       "intents": [
         "step block badge font size"
       ],
-      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `14px`.",
+      "description": "Component-scoped override point (`text`) read in `packages/dbx-web/src/lib/layout/text/_text.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-label-large-size, 14px)`.",
       "defaults": {
-        "light": "14px"
+        "light": "var(--mat-sys-label-large-size, 14px)"
       },
       "componentScope": "text"
     },
@@ -1500,6 +1866,19 @@
       "seeAlso": [
         "--mat-sys-surface-container"
       ]
+    },
+    {
+      "cssVariable": "--dbx-table-view-max-height",
+      "source": "dbx-web",
+      "role": "size",
+      "intents": [
+        "table view max height"
+      ],
+      "description": "Component-scoped override point (`table`) read in `packages/dbx-web/src/lib/extension/table/_table.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `600px`.",
+      "defaults": {
+        "light": "600px"
+      },
+      "componentScope": "table"
     },
     {
       "cssVariable": "--dbx-tertiary-color",

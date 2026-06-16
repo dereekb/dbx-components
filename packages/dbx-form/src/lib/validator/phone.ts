@@ -1,7 +1,16 @@
 /* eslint-disable dereekb-util/prefer-maybe-type -- Angular's ValidatorFn returns exactly `ValidationErrors | null`; widening to `Maybe<...>` adds `undefined` and breaks the contract (TS2322). */
 import { type AbstractControl, type ValidationErrors, type ValidatorFn } from '@angular/forms';
 import { e164PhoneNumberExtensionPair, isE164PhoneNumber as isE164PhoneNumberFunction, isValidPhoneExtensionNumber } from '@dereekb/util';
-import { INVALID_PHONE_NUMBER_EXTENSION_MESSAGE, INVALID_PHONE_NUMBER_MESSAGE } from '../formly/config/validation';
+
+/**
+ * Validation message shown when a value is not a valid phone number.
+ */
+export const INVALID_PHONE_NUMBER_MESSAGE = { name: 'validatePhoneNumber', message: 'This is not a valid phone number.' };
+
+/**
+ * Validation message shown when a value is not a valid phone number extension.
+ */
+export const INVALID_PHONE_NUMBER_EXTENSION_MESSAGE = { name: 'validatePhoneNumberExtension', message: 'This is not a valid phone number extension.' };
 
 /**
  * Angular form validator that checks whether the control value is a valid E.164 phone number.

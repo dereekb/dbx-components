@@ -1,4 +1,5 @@
 @use '../../style/theming';
+@use '../style/style';
 
 // MARK: Variables
 $icon-to-avatar-size-ratio: 0.65;
@@ -107,6 +108,13 @@ $initials-to-avatar-size-ratio: 0.4;
     line-height: 1;
     text-transform: uppercase;
     user-select: none;
+  }
+
+  // `<dbx-avatar-view>` applies a curated `[dbxColor]` config to the initials
+  // surface; paint its background/text from those tokens. The `:not(.dbx-default)`
+  // guard keeps a blank-name (uncolored) avatar from painting.
+  .dbx-avatar-view-initials.dbx-color:not(.dbx-default) {
+    @include style.dbx-color-surface();
   }
 
   /// @dbx-utility avatar-view-circle

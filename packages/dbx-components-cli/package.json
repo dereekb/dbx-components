@@ -1,15 +1,19 @@
 {
   "name": "@dereekb/dbx-components-cli",
-  "version": "13.17.0",
+  "version": "13.18.0",
   "type": "module",
   "bin": {
     "dbx-components-cli": "dbx-components-cli.js"
   },
   "dependencies": {
+    "adm-zip": "0.5.17",
     "yargs": "^18.0.0"
   },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.8"
+  },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "13.17.0",
-    "@dereekb/util": "13.17.0"
+    "@dereekb/dbx-cli": "13.18.0",
+    "@dereekb/util": "13.18.0"
   }
 }

@@ -1,7 +1,7 @@
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type McpManifestModelEntry } from '../mcp.manifest';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
-import { buildStaticWireEntry, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
+import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 import { findModelEntry } from './mcp.tool.model-info';
 
 // MARK: Constants
@@ -88,7 +88,7 @@ export function createModelDecodeTool(deps: CreateModelDecodeToolDeps): McpToolD
   const name = MODEL_DECODE_TOOL_NAME;
   const description = `Decode a Firestore model key ("prefix/id", or subcollection path "parentPrefix/parentId/childPrefix/childId") into { leaf, ancestors, unresolvedPrefixes } using the registered manifest (${deps.manifest.length} model${deps.manifest.length === 1 ? '' : 's'}).`;
 
-  return {
+  return buildStaticToolDefinition({
     name,
     description,
     inputSchema: MODEL_DECODE_INPUT_SCHEMA,
@@ -98,13 +98,9 @@ export function createModelDecodeTool(deps: CreateModelDecodeToolDeps): McpToolD
       modelType: MODEL_DECODE_DISPATCH_MODEL_TYPE
     },
     staticHandler: handler,
-    filterMetadata: {
-      visibilityKind: 'declarative',
-      rule: { requireAuthenticated: true },
-      effectiveReadOnly: true
-    },
-    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema: MODEL_DECODE_INPUT_SCHEMA, outputSchema: MODEL_DECODE_OUTPUT_SCHEMA })
-  };
+    effectiveReadOnly: true,
+    rule: { requireAuthenticated: true }
+  });
 }
 
 // MARK: Handler

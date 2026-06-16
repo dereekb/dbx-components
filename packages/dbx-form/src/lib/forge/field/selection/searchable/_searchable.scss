@@ -16,10 +16,78 @@
 
   // Bare input styling is provided by the .dbx-forge-bare-input class
   // applied directly in the searchable templates.
+
+  // Shared searchable styles (migrated from the removed formly _searchable.scss). These class
+  // names are produced by the searchable autocomplete/display components (now in
+  // field/selection/searchable) and the searchable field templates.
+  .dbx-searchable-text-field-value {
+    width: 100%;
+  }
+
+  .dbx-searchable-text-field-autocomplete > .mat-mdc-option > .mdc-list-item__primary-text {
+    width: 100%;
+  }
+
+  // When a mat-option wraps a dbx-anchor, the anchor must cover the entire option surface so that
+  // every click lands inside the anchor's child click target (where the override click handler is
+  // attached). Otherwise clicks on the mat-option's padding/edge land on mat-option itself,
+  // bypassing dbx-anchor's onClick handler — selection still fires (via mat-option's own click
+  // listener) but the anchor click is silently dropped. Inner padding is provided by
+  // .dbx-default-searchable-field-display.
   //
-  // The show/hide pattern (.dbx-searchable-text-field-has-value) and
-  // .dbx-searchable-text-field-value width are defined in formly's _searchable.scss
-  // and apply to both formly and forge contexts (same class names).
+  // The .mdc-list-item compound is needed to outweigh Material's own .mat-mdc-option.mdc-list-item
+  // rule (which sets align-items: center).
+  .mat-mdc-option.mdc-list-item.dbx-searchable-field-anchor-option {
+    padding: 0;
+    align-items: stretch;
+
+    > .mdc-list-item__primary-text {
+      width: 100%;
+      margin: 0;
+      display: flex;
+      align-items: stretch;
+    }
+
+    dbx-searchable-field-autocomplete-item,
+    dbx-anchor,
+    .dbx-anchor-a {
+      display: flex;
+      align-items: stretch;
+      flex: 1;
+      width: 100%;
+    }
+
+    .dbx-anchor-a > span {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      width: 100%;
+    }
+  }
+
+  .dbx-chip-input-error {
+    display: block;
+    font-size: var(--mat-sys-body-small-size);
+    padding: 4px 0 0;
+    color: var(--mat-sys-error);
+  }
+
+  .dbx-default-searchable-field-display {
+    padding: 0 16px;
+  }
+
+  .dbx-searchable-text-field-has-value.dbx-searchable-text-field-show-value {
+    .dbx-searchable-text-field-value {
+      margin-bottom: -6px;
+    }
+
+    // hide without clearing display, which will prevent the input from being clickable.
+    .dbx-searchable-text-field-input {
+      margin-top: 0;
+      height: 0;
+      opacity: 0;
+    }
+  }
 
   // Reveal the search input when the ancestor form-field wrapper has focus.
   // The forge wrapper uses :focus-within instead of the .mat-focused class.

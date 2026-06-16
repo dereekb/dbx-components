@@ -12,10 +12,15 @@
 @include style.dark-doc-theme('.doc-app-dark');
 @include style.doc-theme('.doc-app');
 
+// Disposable demo/debug classes backing the @dereekb/dbx-web/style-demo levers (Phase 1 styling showcase).
+// Emitted once globally; the `var(--mat-sys-*)` references resolve per-theme at use-site.
+@include dbx.dbx-style-demo-debug-classes();
+
 html,
 body {
   background: black;
   height: 100%;
+  margin: 0;
   overflow-x: hidden;
   font-family: 'Fira Sans', sans-serif;
   --mdc-typography-button-letter-spacing: 1px;
@@ -23,10 +28,6 @@ body {
 
 a {
   color: inherit;
-}
-
-body {
-  margin: 0;
 }
 
 mgl-map {

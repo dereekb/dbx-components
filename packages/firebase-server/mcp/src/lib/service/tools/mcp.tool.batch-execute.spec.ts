@@ -54,6 +54,9 @@ describe('createBatchExecuteTool', () => {
       expect(tool.name).toBe(BATCH_EXECUTE_TOOL_NAME);
       expect(tool.staticHandler).toBeDefined();
       expect(tool.filterMetadata.effectiveReadOnly).toBe(false);
+      expect(tool.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+      expect(tool.staticWireEntry.annotations).toEqual({ readOnlyHint: false, destructiveHint: true });
+      expect(tool.description.startsWith('[WRITE] ')).toBe(true);
       expect(tool.filterMetadata.visibilityKind).toBe('declarative');
 
       if (tool.filterMetadata.visibilityKind === 'declarative') {

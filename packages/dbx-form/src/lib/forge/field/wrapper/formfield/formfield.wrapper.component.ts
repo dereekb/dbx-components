@@ -33,21 +33,21 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
       }
 
       .dbx-forge-form-field-outline-leading {
-        border: 1px solid var(--mdc-outlined-text-field-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
+        border: 1px solid var(--mat-form-field-outlined-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
         border-right: none;
-        border-radius: var(--mdc-outlined-text-field-container-shape, 8px) 0 0 var(--mdc-outlined-text-field-container-shape, 8px);
+        border-radius: var(--mat-form-field-outlined-container-shape, var(--mat-sys-corner-extra-small, 4px)) 0 0 var(--mat-form-field-outlined-container-shape, var(--mat-sys-corner-extra-small, 4px));
         width: 12px;
       }
 
       .dbx-forge-form-field-outline-notch {
-        border-bottom: 1px solid var(--mdc-outlined-text-field-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
+        border-bottom: 1px solid var(--mat-form-field-outlined-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
         display: flex;
         align-items: flex-start;
         max-width: calc(100% - 24px);
       }
 
       .dbx-forge-form-field-outline-notch-empty {
-        border-top: 1px solid var(--mdc-outlined-text-field-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
+        border-top: 1px solid var(--mat-form-field-outlined-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
         width: 0;
         padding: 0;
       }
@@ -66,13 +66,13 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
         line-height: var(--mat-form-field-outlined-label-text-populated-line-height, var(--mat-sys-body-small-line-height));
         letter-spacing: var(--mat-form-field-outlined-label-text-populated-tracking, var(--mat-sys-body-small-tracking));
         font-weight: var(--mat-form-field-outlined-label-text-populated-weight, var(--mat-sys-body-small-weight));
-        color: var(--mdc-outlined-text-field-label-text-color, var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6)));
+        color: var(--mat-form-field-outlined-label-text-color, var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6)));
       }
 
       .dbx-forge-form-field-outline-trailing {
-        border: 1px solid var(--mdc-outlined-text-field-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
+        border: 1px solid var(--mat-form-field-outlined-outline-color, var(--mat-sys-outline, rgba(0, 0, 0, 0.38)));
         border-left: none;
-        border-radius: 0 var(--mdc-outlined-text-field-container-shape, 8px) var(--mdc-outlined-text-field-container-shape, 8px) 0;
+        border-radius: 0 var(--mat-form-field-outlined-container-shape, var(--mat-sys-corner-extra-small, 4px)) var(--mat-form-field-outlined-container-shape, var(--mat-sys-corner-extra-small, 4px)) 0;
         flex-grow: 1;
       }
 
@@ -80,19 +80,19 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
       .dbx-forge-form-field-wrapper:hover .dbx-forge-form-field-outline-leading,
       .dbx-forge-form-field-wrapper:hover .dbx-forge-form-field-outline-notch,
       .dbx-forge-form-field-wrapper:hover .dbx-forge-form-field-outline-trailing {
-        border-color: var(--mdc-outlined-text-field-hover-outline-color, var(--mat-sys-on-surface, rgba(0, 0, 0, 0.87)));
+        border-color: var(--mat-form-field-outlined-hover-outline-color, var(--mat-sys-on-surface, rgba(0, 0, 0, 0.87)));
       }
 
       /* --- Focus state --- */
       .dbx-forge-form-field-wrapper:focus-within .dbx-forge-form-field-outline-leading,
       .dbx-forge-form-field-wrapper:focus-within .dbx-forge-form-field-outline-notch,
       .dbx-forge-form-field-wrapper:focus-within .dbx-forge-form-field-outline-trailing {
-        border-color: var(--mdc-outlined-text-field-focus-outline-color, var(--mat-sys-primary));
+        border-color: var(--mat-form-field-outlined-focus-outline-color, var(--mat-sys-primary));
         border-width: 2px;
       }
 
       .dbx-forge-form-field-wrapper:focus-within .dbx-forge-form-field-outline-label {
-        color: var(--mdc-outlined-text-field-focus-label-text-color, var(--mat-sys-primary));
+        color: var(--mat-form-field-outlined-focus-label-text-color, var(--mat-sys-primary));
         padding: 0 3px;
       }
 
@@ -103,12 +103,12 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
       .dbx-forge-form-field-wrapper-error:focus-within .dbx-forge-form-field-outline-leading,
       .dbx-forge-form-field-wrapper-error:focus-within .dbx-forge-form-field-outline-notch,
       .dbx-forge-form-field-wrapper-error:focus-within .dbx-forge-form-field-outline-trailing {
-        border-color: var(--mdc-outlined-text-field-error-outline-color, var(--mat-sys-error, #f44336));
+        border-color: var(--mat-form-field-outlined-error-outline-color, var(--mat-sys-error, #f44336));
       }
 
       .dbx-forge-form-field-wrapper-error .dbx-forge-form-field-outline-label,
       .dbx-forge-form-field-wrapper-error:focus-within .dbx-forge-form-field-outline-label {
-        color: var(--mdc-outlined-text-field-error-label-text-color, var(--mat-sys-error, #f44336));
+        color: var(--mat-form-field-outlined-error-label-text-color, var(--mat-sys-error, #f44336));
       }
 
       /* --- Content area --- */
@@ -128,17 +128,17 @@ import { type DbxForgeFormFieldWrapperProps } from './formfield.wrapper';
       .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-outline-leading,
       .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-outline-notch,
       .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-outline-trailing {
-        border-color: var(--mdc-outlined-text-field-disabled-outline-color, rgba(0, 0, 0, 0.12));
+        border-color: var(--mat-form-field-outlined-disabled-outline-color, rgba(0, 0, 0, 0.12));
       }
 
       .dbx-forge-form-field-wrapper-disabled:hover .dbx-forge-form-field-outline-leading,
       .dbx-forge-form-field-wrapper-disabled:hover .dbx-forge-form-field-outline-notch,
       .dbx-forge-form-field-wrapper-disabled:hover .dbx-forge-form-field-outline-trailing {
-        border-color: var(--mdc-outlined-text-field-disabled-outline-color, rgba(0, 0, 0, 0.12));
+        border-color: var(--mat-form-field-outlined-disabled-outline-color, rgba(0, 0, 0, 0.12));
       }
 
       .dbx-forge-form-field-wrapper-disabled .dbx-forge-form-field-outline-label {
-        color: var(--mdc-outlined-text-field-disabled-label-text-color, rgba(0, 0, 0, 0.38));
+        color: var(--mat-form-field-outlined-disabled-label-text-color, rgba(0, 0, 0, 0.38));
       }
     `
   ],

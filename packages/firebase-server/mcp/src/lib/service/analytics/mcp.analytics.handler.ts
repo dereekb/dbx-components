@@ -59,9 +59,16 @@ export interface McpAnalyticsEvent {
    */
   readonly readOnly?: Maybe<boolean>;
   /**
-   * The raw tool arguments passed to the call.
+   * The raw tool arguments passed to the call, with the auto-injected reason parameter already
+   * stripped (so it never appears twice — once here and once on {@link reason}).
    */
   readonly args?: Maybe<Record<string, unknown>>;
+  /**
+   * The auto-injected, human-readable reason the caller supplied for this tool call, clamped to the
+   * configured max length. `undefined` when the reason parameter is disabled, absent, or the tool
+   * declares its own field of the same name. Recorded for analytics/audit only.
+   */
+  readonly reason?: Maybe<string>;
   /**
    * Custom key-value properties. Reserved for future use.
    */

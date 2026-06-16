@@ -1,12 +1,11 @@
 <dbx-content-container>
   <doc-feature-layout header="Expression Examples">
-    <doc-feature-derived type="uses" from="@ngx-formly" url="https://formly.dev/docs/guide/expression-properties">
-      <p>This library lot of additional fields that extend formly, but you can pass in "expressions" to most configurations.</p>
+    <doc-feature-derived type="uses" from="@ng-forge/dynamic-forms" url="https://www.ng-forge.com/dynamic-forms">
+      <p>ng-forge supports conditional logic on most fields, letting you show/hide or otherwise react to another field's value.</p>
     </doc-feature-derived>
     <!-- Examples -->
-    <doc-feature-example header="Hide Example" hint="You can conditionally show/hide fields based on another field's value using Formly's built-in expressions. Hidden fields will be removed from output, and not save values when show/hide is changed.">
+    <doc-feature-example header="Hide Example" hint="You can conditionally show/hide fields based on another field's value using ng-forge's logic configs. Hidden fields will be removed from output, and not save values when show/hide is changed.">
       <doc-feature-form-tabs #formTabs>
-        <doc-form-example-form formly [dbxFormlyFields]="hideExpressionField" [disabled]="formTabs.disabled()"></doc-form-example-form>
         <doc-forge-example-form forge [config]="forgeBasicFieldsConfig" [disabled]="formTabs.disabled()"></doc-forge-example-form>
       </doc-feature-form-tabs>
     </doc-feature-example>

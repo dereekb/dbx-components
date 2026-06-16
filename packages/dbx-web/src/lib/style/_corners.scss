@@ -1,0 +1,79 @@
+// MARK: Generic corner-rounding helpers
+//
+// Single-class utilities for applying an M3 corner radius to any element. The
+// base `.dbx-corners` reads the app-overridable `--dbx-corners-border-radius`
+// token (root-emitted to the M3 "medium" radius in `_root-variables.scss`,
+// alongside the content-pit radius token) so it tracks the corner system and
+// the style-demo levers; the explicit level variants are self-sufficient fixed
+// design choices that bypass the token.
+//
+// Emitted by `core()`, which `_core.scss` includes AFTER `all-component-core()`
+// so these single-class helpers win source-order ties against component-level
+// shape baselines (e.g. the content-pit default).
+
+@use './theming';
+
+// MARK: Mixin
+@mixin core() {
+  /// @dbx-utility corners
+  /// @intent rounded-corner surface — applies the M3 "medium" corner radius via the app-overridable `--dbx-corners-border-radius` token, so it tracks the corner system / style-demo levers
+  /// @role layout
+  /// @see-also dbx-corners-small, dbx-corners-medium, dbx-corners-large, dbx-corners-extra-large, dbx-corners-full, dbx-corners-none
+  .dbx-corners {
+    border-radius: theming.$dbx-corners-border-radius;
+  }
+
+  // Level variants are self-sufficient (no `.dbx-corners` base required) and
+  // deliberately bypass the token: an explicit level is a fixed design choice.
+
+  /// @dbx-utility corners-small
+  /// @intent fixed M3 "small" (8px) corner radius — explicit, token-independent level choice
+  /// @role layout
+  /// @see-also dbx-corners
+  .dbx-corners-small {
+    border-radius: var(--mat-sys-corner-small, 8px);
+  }
+
+  /// @dbx-utility corners-medium
+  /// @intent fixed M3 "medium" (12px) corner radius — explicit, token-independent level choice
+  /// @role layout
+  /// @see-also dbx-corners
+  .dbx-corners-medium {
+    border-radius: var(--mat-sys-corner-medium, 12px);
+  }
+
+  /// @dbx-utility corners-large
+  /// @intent fixed M3 "large" (16px) corner radius — explicit, token-independent level choice
+  /// @role layout
+  /// @see-also dbx-corners
+  .dbx-corners-large {
+    border-radius: var(--mat-sys-corner-large, 16px);
+  }
+
+  /// @dbx-utility corners-extra-large
+  /// @intent fixed M3 "extra-large" (28px) corner radius — explicit, token-independent level choice
+  /// @role layout
+  /// @see-also dbx-corners
+  .dbx-corners-extra-large {
+    border-radius: var(--mat-sys-corner-extra-large, 28px);
+  }
+
+  /// @dbx-utility corners-full
+  /// @intent fixed M3 "full" (pill) corner radius — explicit, token-independent level choice
+  /// @role layout
+  /// @see-also dbx-corners
+  .dbx-corners-full {
+    border-radius: var(--mat-sys-corner-full, 9999px);
+  }
+
+  /// @dbx-utility corners-none
+  /// @intent square corners (radius 0) — doubles as the common opt-out for components that round by default (e.g. `.dbx-content-pit`)
+  /// @role layout
+  /// @see-also dbx-corners, dbx-content-pit
+  .dbx-corners-none {
+    border-radius: 0;
+  }
+}
+
+@mixin theme($theme-config) {
+}

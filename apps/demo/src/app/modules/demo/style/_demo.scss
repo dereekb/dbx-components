@@ -29,6 +29,6 @@ $demo-theme: dbx.define-dbx-theme-config($demo-mat-theme, $demo-dbx-theme-with-b
   @include dbx-form.theme($root-selector, $demo-theme);
 
   #{$root-selector} {
-    @include dbx.m2-visual-compat();
+    @include dbx.dbx-components-shapes();
   }
 }

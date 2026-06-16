@@ -1,0 +1,87 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+/dist
+/tmp
+/out-tsc
+/.tmp
+/packages/**/dist/*
+
+# env
+# do not publish secrets
+.env.local*
+
+# dependencies
+/node_modules
+**/node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+.stats/
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.angular
+
+# firebase
+firebase-export-*
+.firebase/*
+firebase-debug.log
+
+npm-debug.log*
+firebase-debug.log*
+database-debug.log*
+firestore-debug.log*
+pubsub-debug.log*
+ui-debug.log*
+
+# Environment
+service_account.json
+.npmrc
+
+# Claude
+/.claude/settings.local.json
+
+# Docker
+/.cache
+
+# CI/Testing
+.reports/
+/.tmp
+vitest.config.*.timestamp*
+
+# Nx
+.nx
+.VSCodeCounter
+
+# Setup
+setup/.tmp
+
+.claude/worktrees
+.agents
+scheduled_tasks.lock

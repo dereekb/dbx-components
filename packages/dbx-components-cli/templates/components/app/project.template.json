@@ -1,0 +1,48 @@
+{
+  "projectType": "library",
+  "sourceRoot": "ANGULAR_COMPONENTS_FOLDER/src",
+  "name": "ANGULAR_COMPONENTS_NAME",
+  "prefix": "APP_CODE_PREFIX_LOWER",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/ANGULAR_COMPONENTS_DIST_FOLDER"],
+      "options": {
+        "command": "npx nx run ANGULAR_COMPONENTS_NAME:build-base",
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/ANGULAR_COMPONENTS_DIST_FOLDER"],
+      "options": {
+        "project": "ANGULAR_COMPONENTS_FOLDER/ng-package.json"
+      },
+      "dependsOn": [],
+      "configurations": {
+        "production": {
+          "tsConfig": "ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "ANGULAR_COMPONENTS_FOLDER/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/ANGULAR_COMPONENTS_FOLDER"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["ANGULAR_COMPONENTS_FOLDER/**/*.ts", "ANGULAR_COMPONENTS_FOLDER/**/*.html", "ANGULAR_COMPONENTS_FOLDER/package.json", "ANGULAR_COMPONENTS_FOLDER/project.json"]
+      }
+    }
+  },
+  "tags": []
+}

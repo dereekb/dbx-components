@@ -76,7 +76,7 @@
       > .mat-mdc-form-field-flex > .mdc-notched-outline {
         .mdc-notched-outline__notch,
         .mdc-notched-outline__trailing {
-          border-bottom: var(--mdc-outlined-text-field-outline-width) solid;
+          border-bottom: var(--mat-form-field-outlined-outline-width, 1px) solid;
           border-radius: 0;
         }
       }
@@ -86,7 +86,7 @@
         > .mat-mdc-form-field-flex > .mdc-notched-outline {
           .mdc-notched-outline__notch,
           .mdc-notched-outline__trailing {
-            border-bottom-width: var(--mdc-outlined-text-field-focus-outline-width);
+            border-bottom-width: var(--mat-form-field-outlined-focus-outline-width, 2px);
           }
         }
       }
@@ -97,7 +97,7 @@
       > .dbx-forge-form-field-outline {
         .dbx-forge-form-field-outline-notch,
         .dbx-forge-form-field-outline-trailing {
-          border-bottom: var(--mdc-outlined-text-field-outline-width) solid;
+          border-bottom: var(--mat-form-field-outlined-outline-width, 1px) solid;
           border-radius: 0;
         }
       }
@@ -107,7 +107,7 @@
         > .dbx-forge-form-field-outline {
           .dbx-forge-form-field-outline-notch,
           .dbx-forge-form-field-outline-trailing {
-            border-bottom-width: var(--mdc-outlined-text-field-focus-outline-width);
+            border-bottom-width: var(--mat-form-field-outlined-focus-outline-width, 2px);
           }
         }
       }

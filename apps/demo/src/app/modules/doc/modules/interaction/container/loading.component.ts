@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { DbxContentLayoutModule, DbxLabelBlockComponent, DbxLoadingModule, DbxLoadingProgressComponent } from '@dereekb/dbx-web';
+import { DbxContentLayoutModule, DbxLabelBlockComponent, DbxLoadingModule, DbxLoadingProgressComponent, DbxColorDirective } from '@dereekb/dbx-web';
 import { readableError, type ReadableError } from '@dereekb/util';
 import { interval, map, shareReplay } from 'rxjs';
 
@@ -14,7 +14,7 @@ const TEST_ERROR_CODE = 'A_VERY_LONG_TEST_ERROR_CODE_USED_FOR_REFERENCE';
 
 @Component({
   templateUrl: './loading.component.html',
-  imports: [DbxLoadingModule, DbxContentLayoutModule, MatButtonModule, DbxLabelBlockComponent, DbxLoadingProgressComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent],
+  imports: [DbxLoadingModule, DbxContentLayoutModule, MatButtonModule, DbxLabelBlockComponent, DbxLoadingProgressComponent, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxColorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

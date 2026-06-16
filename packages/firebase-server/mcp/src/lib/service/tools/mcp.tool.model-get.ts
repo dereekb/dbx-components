@@ -3,7 +3,7 @@ import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreMode
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type ModelAccessMultiReadResult, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
-import { buildStaticWireEntry, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
+import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
 // MARK: Constants
 /**
@@ -97,7 +97,7 @@ export function createModelGetTool(deps: CreateModelGetToolDeps): McpToolDefinit
   const name = MODEL_GET_TOOL_NAME;
   const description = 'Fetch one or more Firestore model documents by key or bare id. Values containing `/` are treated as full keys; bare ids are auto-promoted to `<collectionName>/<id>` for root models. Subcollection models require full keys.';
 
-  return {
+  return buildStaticToolDefinition({
     name,
     description,
     inputSchema: MODEL_GET_INPUT_SCHEMA,
@@ -107,13 +107,9 @@ export function createModelGetTool(deps: CreateModelGetToolDeps): McpToolDefinit
       modelType: MODEL_GET_DISPATCH_MODEL_TYPE
     },
     staticHandler: handler,
-    filterMetadata: {
-      visibilityKind: 'declarative',
-      rule: { requireAuthenticated: true },
-      effectiveReadOnly: true
-    },
-    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema: MODEL_GET_INPUT_SCHEMA, outputSchema: MODEL_GET_OUTPUT_SCHEMA })
-  };
+    effectiveReadOnly: true,
+    rule: { requireAuthenticated: true }
+  });
 }
 
 // MARK: Handler

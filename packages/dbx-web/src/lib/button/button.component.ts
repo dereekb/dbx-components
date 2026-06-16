@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, untracked } from '@angular/core';
 import { type ThemePalette } from '@angular/material/core';
-import { provideDbxButton, AbstractDbxButtonDirective, hasNonTrivialChildNodes } from '@dereekb/dbx-core';
+import { provideDbxButton, AbstractDbxButtonDirective, hasNonTrivialChildNodes, type DbxButtonEcho } from '@dereekb/dbx-core';
 import { type Configurable, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { type DbxProgressButtonConfig } from './progress/button.progress.config';
-import { type DbxColorInput, type DbxThemeColor, isDbxColorConfig } from '../layout/style/style';
+import { type DbxColorConfig, type DbxColorInput, type DbxThemeColor, isDbxColorConfig } from '../layout/style/style';
+import { DbxColorDirective } from '../layout/style/style.color.directive';
 import { DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent } from './progress';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { NgTemplateOutlet } from '@angular/common';
@@ -61,6 +62,7 @@ import { type DbxButtonStyle, type DbxButtonType } from './button';
   `,
   providers: provideDbxButton(DbxButtonComponent),
   imports: [DbxProgressSpinnerButtonComponent, DbxProgressBarButtonComponent, NgTemplateOutlet],
+  hostDirectives: [DbxColorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })
@@ -75,6 +77,30 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     super();
     const el = inject(ElementRef<HTMLElement>);
     this._hasProjectedContent = hasNonTrivialChildNodes(el.nativeElement);
+
+    const dbxColorDirective = inject(DbxColorDirective, { self: true });
+
+    let originalColor: Maybe<DbxColorInput>;
+    let overridden = false;
+
+    // Pushes the button's resolved color (echo > color input > buttonStyle) into the host DbxColorDirective, which
+    // provides the color tokens + `.dbx-color` marker the button paints from. The directive's own value is restored once
+    // the button stops supplying a color (e.g. an echo ends).
+    effect(() => {
+      const color = this.colorSignal() as Maybe<DbxColorInput>;
+
+      if (color != null) {
+        if (!overridden) {
+          originalColor = untracked(dbxColorDirective.dbxColor);
+          overridden = true;
+        }
+
+        dbxColorDirective.dbxColor.set(color);
+      } else if (overridden) {
+        dbxColorDirective.dbxColor.set(originalColor);
+        overridden = false;
+      }
+    });
   }
 
   readonly bar = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
@@ -102,6 +128,29 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
   readonly allowClickPropagation = input<boolean, Maybe<boolean | ''>>(false, { transform: isDefinedAndNotFalse });
 
   readonly mode = input<Maybe<ProgressSpinnerMode>>();
+
+  /**
+   * The echo currently being displayed, if any. Echoes only display while the button is neither working nor disabled,
+   * mirroring the echo gating in {@link configSignal}.
+   */
+  private readonly _activeEchoSignal = computed<Maybe<DbxButtonEcho>>(() => {
+    const echo = this.buttonEchoSignal();
+    const working = this.workingSignal();
+    const disabled = !this.isWorkingSignal() && this.disabledSignal();
+    return echo && !working && !disabled ? echo : undefined;
+  });
+
+  /**
+   * Resolved button color from the active echo, the {@link color} input, or {@link buttonStyle} (in that order). Pushed
+   * into the host {@link DbxColorDirective}, which provides the color tokens + `.dbx-color` marker that the button's
+   * `dbx-button.dbx-color .mdc-button` SCSS paints from; an active echo's color temporarily takes over those tokens.
+   */
+  readonly colorSignal = computed(() => {
+    const color = this.color();
+    const buttonStyle = this.buttonStyle();
+    const echoColor = this._activeEchoSignal()?.color as Maybe<ThemePalette | DbxColorInput>;
+    return echoColor ?? color ?? buttonStyle?.color;
+  });
 
   readonly styleTypeSignal = computed(() => {
     const iconOnly = this.iconOnly();
@@ -153,9 +202,9 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     const customSpinnerColorValue = this.customSpinnerColor() ?? buttonStyle?.customSpinnerColor;
     const customSpinnerColor: Maybe<string> = customSpinnerColorValue ?? customTextColorValue;
 
-    const buttonColor = this.color() ?? buttonStyle?.color;
+    const buttonColor = this.colorSignal();
     // mat-spinner [color] only accepts ThemePalette/named colors, so coerce a DbxColorConfig or empty-string buttonColor away.
-    const buttonColorSpinnerFallback: Maybe<ThemePalette | DbxThemeColor> = !buttonColor || isDbxColorConfig(buttonColor) ? undefined : buttonColor;
+    const buttonColorSpinnerFallback: Maybe<ThemePalette | DbxThemeColor> = !buttonColor || isDbxColorConfig(buttonColor) ? undefined : (buttonColor as DbxThemeColor);
     const spinnerColor = this.spinnerColor() ?? buttonStyle?.spinnerColor ?? buttonColorSpinnerFallback;
 
     const disabledSignalValue = this.disabledSignal();
@@ -185,7 +234,6 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
       text: textValue ?? '',
       hasTextContent,
       buttonType: buttonType ?? (isIconOnlyButton ? 'icon' : 'basic'),
-      buttonColor,
       barColor: 'accent',
       mode,
       spinnerColor,
@@ -195,13 +243,9 @@ export class DbxButtonComponent extends AbstractDbxButtonDirective {
     };
 
     // Apply button echo when not working and not disabled
-    const echo = this.buttonEchoSignal();
+    const echo = this._activeEchoSignal();
 
-    if (echo && !working && !disabled) {
-      if (echo.color) {
-        config.buttonColor = echo.color as DbxThemeColor;
-      }
-
+    if (echo) {
       if (echo.iconOnly && isIconOnlyButton) {
         // Icon-only button: directly swap icon and color
         if (echo.icon) {

@@ -1,6 +1,6 @@
 {
   "name": "demo-components",
-  "version": "13.17.0",
+  "version": "13.18.0",
   "peerDependencies": {
     "@angular/common": "*",
     "@angular/core": "*",
@@ -17,8 +17,7 @@
     "@angular/material": "*",
     "@ngbracket/ngx-layout": "*",
     "@dereekb/dbx-analytics": "*",
-    "@dereekb/firebase": "*",
-    "@ngx-formly/core": "*"
+    "@dereekb/firebase": "*"
   },
   "dependencies": {}
 }
