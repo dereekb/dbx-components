@@ -1,4 +1,3 @@
-import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { DbxStyleDemoStyleLoaderService, DbxStyleDemoStyleLoaderServiceConfig } from './style.loader.service';
@@ -9,7 +8,7 @@ import { type DbxStyleDemoStyleTemplate } from './style.template';
  */
 function setupService(seedTemplates?: DbxStyleDemoStyleTemplate[]): DbxStyleDemoStyleLoaderService {
   TestBed.configureTestingModule({
-    providers: [provideZonelessChangeDetection(), DbxStyleDemoStyleLoaderService, ...(seedTemplates ? [{ provide: DbxStyleDemoStyleLoaderServiceConfig, useValue: { templates: seedTemplates } }] : [])]
+    providers: [DbxStyleDemoStyleLoaderService, ...(seedTemplates ? [{ provide: DbxStyleDemoStyleLoaderServiceConfig, useValue: { templates: seedTemplates } }] : [])]
   });
 
   return TestBed.inject(DbxStyleDemoStyleLoaderService);

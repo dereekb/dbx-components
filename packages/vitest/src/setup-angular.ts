@@ -22,10 +22,14 @@ import '@angular/compiler';
 import '@analogjs/vitest-angular/setup-zone';
 import '@dereekb/vitest/a11y';
 
-import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
-import { getTestBed } from '@angular/core/testing';
+import { setupTestBed } from '@analogjs/vitest-angular/setup-testbed';
 
-getTestBed().initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
+/**
+ * Initialize the Angular test environment with zoneless change detection as the
+ * default, matching the zoneless production app. zone.js is still loaded (via the
+ * setup-zone import above) so fakeAsync/tick/flush and whenStable() keep working.
+ */
+setupTestBed({ zoneless: true });
 
 /**
  * Must add TextEncoder/TextDecoder to the globals since it is not available in JSDOM by default.

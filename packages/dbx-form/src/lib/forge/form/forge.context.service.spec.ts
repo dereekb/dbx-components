@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideZonelessChangeDetection, signal, type Signal } from '@angular/core';
+import { signal, type Signal } from '@angular/core';
 import { type DynamicForm, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import type { ArrayContext } from '@ng-forge/dynamic-forms/integration';
 import { DbxForgeDynamicFormSignalRef, DbxForgeFormContextService } from './forge.context.service';
@@ -33,7 +33,6 @@ describe('DbxForgeFormContextService', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        provideZonelessChangeDetection(),
         { provide: DynamicFormLogger, useClass: NoopLogger },
         {
           provide: DbxForgeDynamicFormSignalRef,

@@ -1,4 +1,3 @@
-import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { firstValueFrom } from 'rxjs';
@@ -9,7 +8,7 @@ import { DEFAULT_DBX_STYLE_CONFIG_TOKEN, DbxStyleService } from './style.service
  */
 function setupService(): DbxStyleService {
   TestBed.configureTestingModule({
-    providers: [provideZonelessChangeDetection(), DbxStyleService, { provide: DEFAULT_DBX_STYLE_CONFIG_TOKEN, useValue: { style: 'test-app' } }]
+    providers: [DbxStyleService, { provide: DEFAULT_DBX_STYLE_CONFIG_TOKEN, useValue: { style: 'test-app' } }]
   });
 
   return TestBed.inject(DbxStyleService);

@@ -9,7 +9,7 @@ import { dbxForgePickableChipField } from './pickable-chip.field';
 import type { DbxForgePickableChipFieldDef, DbxForgePickableFieldProps } from './pickable.field';
 import { DbxForgePickableChipFieldComponent } from './pickable-chip.field.component';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 import { DBX_FORGE_TEST_PROVIDERS } from '../../../form/forge.component.spec';
 import { DbxForgeAsyncConfigFormComponent } from '../../../form';
@@ -438,7 +438,7 @@ class TestForgePickableChipHostComponent {
   readonly formValue = signal<any>({});
 }
 
-const FORGE_PICKABLE_CHIP_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const FORGE_PICKABLE_CHIP_TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 function getChipComponent(fixture: ComponentFixture<TestForgePickableChipHostComponent>): Maybe<DbxForgePickableChipFieldComponent<string>> {
   return fixture.debugElement.query(By.directive(DbxForgePickableChipFieldComponent))?.componentInstance as Maybe<DbxForgePickableChipFieldComponent<string>>;

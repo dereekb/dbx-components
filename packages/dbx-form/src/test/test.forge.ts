@@ -1,4 +1,3 @@
-import { provideZonelessChangeDetection } from '@angular/core';
 import { DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
 import { provideDbxForgeFormFieldDeclarations } from '../lib/forge/forge.providers';
 import { provideDbxFormConfiguration } from '../lib/form.providers';
@@ -10,4 +9,4 @@ import { provideDbxFormConfiguration } from '../lib/form.providers';
  * declarations, the core dbx-form configuration, and a no-op dynamic-form logger under zoneless
  * change detection.
  */
-export const FORM_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+export const FORM_TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];

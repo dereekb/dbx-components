@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, provideZonelessChangeDetection, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { describe, expect, it } from 'vitest';
@@ -34,7 +34,7 @@ describe('DbxStyleDemoStyleLoaderDirective', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         imports: [TestHostComponent],
-        providers: [provideZonelessChangeDetection(), DbxStyleDemoStyleLoaderService]
+        providers: [DbxStyleDemoStyleLoaderService]
       }).compileComponents();
 
       const service = TestBed.inject(DbxStyleDemoStyleLoaderService);
@@ -61,7 +61,7 @@ describe('DbxStyleDemoStyleLoaderDirective', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         imports: [TestHostComponent],
-        providers: [provideZonelessChangeDetection()]
+        providers: []
       }).compileComponents();
 
       fixture = TestBed.createComponent(TestHostComponent);

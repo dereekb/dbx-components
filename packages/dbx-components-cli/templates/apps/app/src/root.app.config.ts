@@ -1,5 +1,5 @@
 import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig, provideDbxAnalyticsService, provideDbxAnalyticsSegmentApiService } from '@dereekb/dbx-analytics';
-import { type ApplicationConfig, inject, type Injector, provideAppInitializer } from '@angular/core';
+import { type ApplicationConfig, inject, type Injector, provideAppInitializer, provideZonelessChangeDetection } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
 import { environment } from './environments/environment';
@@ -94,6 +94,7 @@ export function dbxFirebaseModelTypesServiceConfigFactory(): DbxFirebaseModelTyp
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideZonelessChangeDetection(),
     // ui-router
     provideUIRouter({
       useHash: false,
@@ -107,7 +108,7 @@ export const appConfig: ApplicationConfig = {
     // ngRx
     provideEffects(),
     provideStore(),
-    environment.production ? [] : provideStoreDevtools({ maxAge: 25, logOnly: environment.production, connectInZone: true }),
+    environment.production ? [] : provideStoreDevtools({ maxAge: 25, logOnly: environment.production }),
     // dbx-analytics
     provideDbxAnalyticsSegmentApiService({
       dbxAnalyticsSegmentApiServiceConfigFactory

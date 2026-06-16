@@ -1,4 +1,3 @@
-import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it, vi } from 'vitest';
 import { type Observable } from 'rxjs';
@@ -44,7 +43,6 @@ function setupService(options?: SetupOptions): DbxStyleDemoControlsService {
 
   TestBed.configureTestingModule({
     providers: [
-      provideZonelessChangeDetection(),
       DbxStyleDemoControlsService,
       DbxStyleDemoStyleLoaderService,
       { provide: DbxStyleDemoStyleLoaderServiceConfig, useValue: { templates: TEST_TEMPLATES } },
@@ -152,7 +150,6 @@ describe('DbxStyleDemoControlsService', () => {
       const setSupplement = vi.fn();
       TestBed.configureTestingModule({
         providers: [
-          provideZonelessChangeDetection(),
           DbxStyleDemoControlsService,
           DbxStyleDemoStyleLoaderService,
           { provide: DbxStyleDemoStyleLoaderServiceConfig, useValue: { templates: TEST_TEMPLATES } },

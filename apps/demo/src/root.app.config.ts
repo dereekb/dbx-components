@@ -1,5 +1,5 @@
 import { DbxAnalyticsService, type DbxAnalyticsServiceConfiguration, DbxAnalyticsSegmentServiceListener, DbxAnalyticsSegmentApiServiceConfig, provideDbxAnalyticsService, provideDbxAnalyticsSegmentApiService } from '@dereekb/dbx-analytics';
-import { type ApplicationConfig, inject, type Injector, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
+import { type ApplicationConfig, inject, type Injector, provideAppInitializer, provideZonelessChangeDetection } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
 import { environment, OIDC_API_ORIGIN } from './environments/environment';
@@ -188,7 +188,7 @@ export function dbxFirebaseModelEntitiesWidgetServiceConfigFactory(): DbxFirebas
 
 export const APP_CONFIG: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection(), // dbx-components is not zoneless yet
+    provideZonelessChangeDetection(),
     // ui-router
     provideUIRouter({
       useHash: false,
@@ -207,11 +207,10 @@ export const APP_CONFIG: ApplicationConfig = {
       runtimeChecks: {
         strictStateSerializability: true,
         strictActionSerializability: true,
-        strictActionWithinNgZone: true,
         strictActionTypeUniqueness: true
       }
     }),
-    environment.production ? [] : provideStoreDevtools({ maxAge: 25, logOnly: environment.production, connectInZone: true }),
+    environment.production ? [] : provideStoreDevtools({ maxAge: 25, logOnly: environment.production }),
     // dbx-analytics
     provideDbxAnalyticsSegmentApiService({
       dbxAnalyticsSegmentApiServiceConfigFactory
