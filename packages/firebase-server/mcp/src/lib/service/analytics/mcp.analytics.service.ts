@@ -33,8 +33,9 @@ export class FirebaseServerMcpAnalyticsService extends McpAnalyticsService {
     if (this._logEvents) {
       const uidSuffix = event.uid ? ` uid=${event.uid}` : '';
       const durationSuffix = event.durationMs == null ? '' : ` (${event.durationMs}ms)`;
+      const reasonSuffix = event.reason ? ` reason="${event.reason}"` : '';
       const outcome = event.isSuccessful ? 'Succeeded' : 'Failed';
-      this._logger.log(`MCP ${event.toolName} [${event.toolKind}] ${outcome}${uidSuffix}${durationSuffix}`);
+      this._logger.log(`MCP ${event.toolName} [${event.toolKind}] ${outcome}${uidSuffix}${durationSuffix}${reasonSuffix}`);
     }
 
     if (this.analyticsService != null) {
@@ -44,7 +45,8 @@ export class FirebaseServerMcpAnalyticsService extends McpAnalyticsService {
         call: event.call ?? '',
         modelType: event.modelType ?? '',
         specifier: event.specifier ?? '',
-        success: event.isSuccessful
+        success: event.isSuccessful,
+        reason: event.reason ?? ''
       });
     }
   }

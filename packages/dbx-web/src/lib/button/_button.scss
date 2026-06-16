@@ -4,7 +4,7 @@
 @use '../style/theming';
 
 // MARK: Variables
-$button-spacer-width: 6px;
+$button-spacer-width: var(--dbx-padding-2);
 $big-button-height: 46px; // 33% bigger
 
 // MARK: Mixin
@@ -16,11 +16,11 @@ $big-button-height: 46px; // 33% bigger
   /// @see-also button-wide
   .dbx-button-big,
   .dbx-button-large {
-    --mat-button-text-container-height: #{$big-button-height};
-    --mat-button-filled-container-height: #{$big-button-height};
-    --mat-button-protected-container-height: #{$big-button-height};
-    --mat-button-outlined-container-height: #{$big-button-height};
-    --mat-button-tonal-container-height: #{$big-button-height};
+    --mat-button-text-container-height: var(--dbx-button-big-height, #{$big-button-height});
+    --mat-button-filled-container-height: var(--dbx-button-big-height, #{$big-button-height});
+    --mat-button-protected-container-height: var(--dbx-button-big-height, #{$big-button-height});
+    --mat-button-outlined-container-height: var(--dbx-button-big-height, #{$big-button-height});
+    --mat-button-tonal-container-height: var(--dbx-button-big-height, #{$big-button-height});
   }
 
   /// @dbx-utility button-form-field-height
@@ -68,7 +68,7 @@ $big-button-height: 46px; // 33% bigger
   /// @see-also button-grow
   .dbx-button-wide {
     .dbx-button {
-      min-width: 120px;
+      min-width: var(--dbx-button-wide-min-width, 120px);
       max-width: 100%;
     }
   }
@@ -81,12 +81,12 @@ $big-button-height: 46px; // 33% bigger
     > dbx-button,
     > dbx-anchor {
       display: inline-block;
-      padding: 0 6px 6px 0;
+      padding: 0 var(--dbx-padding-2) var(--dbx-padding-2) 0;
     }
 
     > button,
     > dbx-icon-button {
-      margin: 0 6px 6px 0;
+      margin: 0 var(--dbx-padding-2) var(--dbx-padding-2) 0;
     }
   }
 
@@ -138,7 +138,7 @@ $big-button-height: 46px; // 33% bigger
 
   .dbx-button-text-option-button {
     .dbx-button {
-      margin-bottom: 6px;
+      margin-bottom: var(--dbx-padding-2);
     }
 
     .dbx-base-button .mdc-button__label {
@@ -180,7 +180,7 @@ $big-button-height: 46px; // 33% bigger
     align-items: flex-start;
 
     > * {
-      margin-bottom: 6px !important;
+      margin-bottom: var(--dbx-padding-2) !important;
     }
   }
 
@@ -190,23 +190,30 @@ $big-button-height: 46px; // 33% bigger
   }
 
   // dbx-color interactions
+  // `DbxColorDirective` is a pure token provider — it sets `--dbx-bg-color-current` /
+  // `--dbx-color-current` and adds the `.dbx-color` marker, but never paints the
+  // host itself; the named `.dbx-{color}-bg` classes it applies are token-only too.
+  // `<dbx-button>` hosts the directive (via `hostDirectives`) and pushes its
+  // resolved color (active echo > `color` input > `buttonStyle.color`) into it —
+  // so use the button's `color` input, never `[dbxColor]`, on a `dbx-button`. The
+  // standalone `<dbx-progress-spinner-button>` / `<dbx-progress-bar-button>` take
+  // `[dbxColor]` directly. The rules below map the host tokens onto the Material
+  // button vars per variant on the inner `.mdc-button.dbx-base-button`. Scoped on
+  // the host marker so a button inside a `[dbxColor]` section doesn't repaint from
+  // inherited tokens — only a directly-colored button host reacts. `:not(.dbx-default)`
+  // guard: the host directive always adds the `.dbx-color` marker, so an uncolored
+  // button (marked `dbx-default`) keeps native Material styling. `buttonColor` on
+  // `DbxProgressButtonConfig` was removed.
   $color-value: theming.$dbx-bg-color;
   $contrast-value: theming.$dbx-color;
-  $disabled-color-value: theming.$dbx-disabled-color;
-  $disabled-contrast-value: theming.$dbx-disabled-color-contrast;
 
-  .mdc-button.dbx-base-button.dbx-color {
-    // default button
-    &.dbx-default {
-      color: var(--mat-button-text-label-text-color, var(--mat-sys-primary));
-
-      &.mat-mdc-button-disabled {
-        color: var(--mat-button-text-disabled-label-text-color, var(--mat-sys-on-surface));
-      }
-    }
-
-    // default button
-    &:not(.dbx-default) {
+  dbx-button.dbx-color:not(.dbx-default),
+  dbx-progress-spinner-button.dbx-color:not(.dbx-default),
+  dbx-spinner-button.dbx-color:not(.dbx-default),
+  dbx-progress-bar-button.dbx-color:not(.dbx-default),
+  dbx-bar-button.dbx-color:not(.dbx-default) {
+    .mdc-button.dbx-base-button {
+      // text/basic buttons
       background: none;
       --mat-button-text-label-text-color: #{$color-value};
       --mat-button-text-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
@@ -216,93 +223,62 @@ $big-button-height: 46px; // 33% bigger
       .mat-mdc-progress-bar {
         --mat-progress-bar-active-indicator-color: #{$color-value};
       }
-    }
 
-    // raised buttons
-    &.mat-mdc-raised-button.dbx-default {
-      color: var(--mat-button-protected-label-text-color, var(--mat-sys-primary));
-    }
+      // raised buttons
+      &.mat-mdc-raised-button {
+        background: var(--mat-button-protected-container-color);
 
-    &.mat-mdc-raised-button:not(.dbx-default) {
-      background: var(--mat-button-protected-container-color);
+        --mat-button-protected-container-color: #{$color-value};
+        --mat-button-protected-label-text-color: #{$contrast-value};
+        --mat-button-protected-state-layer-color: #{$contrast-value};
+        --mat-button-protected-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
 
-      --mat-button-protected-container-color: #{$color-value};
-      --mat-button-protected-label-text-color: #{$contrast-value};
-      --mat-button-protected-state-layer-color: #{$contrast-value};
-      --mat-button-protected-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
-
-      &.mat-mdc-button-disabled {
-        background-color: var(--mat-button-protected-disabled-container-color, color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent));
+        &.mat-mdc-button-disabled {
+          background-color: var(--mat-button-protected-disabled-container-color, color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent));
+        }
       }
-    }
 
-    // stroked/outlined buttons
-    &.mat-mdc-outlined-button.dbx-default {
-      color: var(--mat-button-outlined-label-text-color, var(--mat-sys-primary));
-    }
+      // stroked/outlined buttons
+      &.mat-mdc-outlined-button {
+        --mat-button-outlined-container-color: #{$contrast-value};
+        --mat-button-outlined-label-text-color: #{$color-value};
+        --mat-button-outlined-state-layer-color: #{$color-value};
+        --mat-button-outlined-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
 
-    &.mat-mdc-outlined-button:not(.dbx-default) {
-      --mat-button-outlined-container-color: #{$contrast-value};
-      --mat-button-outlined-label-text-color: #{$color-value};
-      --mat-button-outlined-state-layer-color: #{$color-value};
-      --mat-button-outlined-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
-
-      --mat-progress-spinner-active-indicator-color: #{$color-value};
-    }
-
-    // flat buttons
-    &.mat-mdc-unelevated-button.dbx-default {
-      color: var(--mat-button-filled-label-text-color, var(--mat-sys-primary));
-    }
-
-    &.mat-mdc-unelevated-button:not(.dbx-default) {
-      background: var(--mat-button-filled-container-color);
-
-      --mat-button-filled-container-color: #{$color-value};
-      --mat-button-filled-label-text-color: #{$contrast-value};
-      --mat-button-filled-state-layer-color: #{$contrast-value};
-      --mat-button-filled-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
-
-      &.mat-mdc-button-disabled {
-        background-color: var(--mat-button-protected-disabled-container-color, color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent));
+        --mat-progress-spinner-active-indicator-color: #{$color-value};
       }
-    }
 
-    // icon buttons
-    &.mat-mdc-icon-button.dbx-default {
-      --mat-icon-button-icon-color: var(--dbx-button-icon-color, currentColor);
-      color: var(--mat-icon-button-icon-color);
-    }
+      // flat buttons
+      &.mat-mdc-unelevated-button {
+        background: var(--mat-button-filled-container-color);
 
-    &.mat-mdc-icon-button:not(.dbx-default) {
-      background: none;
+        --mat-button-filled-container-color: #{$color-value};
+        --mat-button-filled-label-text-color: #{$contrast-value};
+        --mat-button-filled-state-layer-color: #{$contrast-value};
+        --mat-button-filled-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
 
-      --mat-icon-button-icon-color: var(--dbx-button-icon-color, #{$color-value});
-      --mat-icon-button-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
-      --mat-icon-button-state-layer-color: #{$color-value};
-    }
+        &.mat-mdc-button-disabled {
+          background-color: var(--mat-button-protected-disabled-container-color, color-mix(in srgb, var(--mat-sys-on-surface) 12%, transparent));
+        }
+      }
 
-    // tonal buttons
-    &.mat-mdc-tonal-button.dbx-default {
-      color: var(--mat-button-tonal-label-text-color, var(--mat-sys-primary));
-      background: rgb(from var(--mat-button-tonal-label-text-color) r g b / calc(alpha * 0.06));
-    }
+      // icon buttons
+      &.mat-mdc-icon-button {
+        background: none;
 
-    &.mat-mdc-tonal-button:not(.dbx-default) {
-      background: rgb(from #{$color-value} r g b / calc(alpha * 0.12));
+        --mat-icon-button-icon-color: var(--dbx-button-icon-color, #{$color-value});
+        --mat-icon-button-ripple-color: color-mix(in srgb, #{$color-value} 12%, transparent);
+        --mat-icon-button-state-layer-color: #{$color-value};
+      }
 
-      --mat-button-tonal-container-color: color-mix(in srgb, #{$color-value} 12%, transparent);
-      --mat-button-tonal-label-text-color: #{$contrast-value};
-      --mat-button-tonal-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
-      --mat-button-tonal-state-layer-color: #{$contrast-value};
-    }
-
-    &.dbx-default.mat-mdc-button-disabled {
-      &.mat-mdc-raised-button,
-      &.mat-mdc-unelevated-button,
-      &.mat-mdc-outlined-button,
+      // tonal buttons
       &.mat-mdc-tonal-button {
-        color: var(--mat-button-text-disabled-label-text-color, var(--mat-sys-on-surface));
+        background: rgb(from #{$color-value} r g b / calc(alpha * 0.12));
+
+        --mat-button-tonal-container-color: color-mix(in srgb, #{$color-value} 12%, transparent);
+        --mat-button-tonal-label-text-color: #{$contrast-value};
+        --mat-button-tonal-ripple-color: color-mix(in srgb, #{$contrast-value} 12%, transparent);
+        --mat-button-tonal-state-layer-color: #{$contrast-value};
       }
     }
   }

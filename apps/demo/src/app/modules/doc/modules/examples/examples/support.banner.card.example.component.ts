@@ -132,16 +132,16 @@ const BANNER_VIEWS: Record<SupportChatBannerKind, SupportChatBannerView> = {
           <button mat-stroked-button (click)="setKind('endedChat')" [disabled]="kindSignal() === 'endedChat'">Show ending chat</button>
         </div>
         @if (viewSignal(); as view) {
-          <mat-card class="dbx-card-banner" appearance="outlined" role="status" [dbxColor]="view.color" [dbxColorTone]="18">
+          <mat-card [dbxColor]="view.color" [dbxColorTone]="18" class="dbx-card-banner" appearance="outlined" role="status">
             <mat-card-content>
               <div class="dbx-card-banner-header">
-                <dbx-icon-tile [icon]="view.icon" [round]="true" [dbxColor]="view.color"></dbx-icon-tile>
+                <dbx-icon-tile [icon]="view.icon" [round]="true"></dbx-icon-tile>
                 <mat-card-title>{{ view.title }}</mat-card-title>
               </div>
               <p>{{ view.text }}</p>
             </mat-card-content>
             <mat-card-footer>
-              <dbx-button [color]="view.color" text="Open chat" icon="chat_bubble" (buttonClick)="resumeChat()"></dbx-button>
+              <dbx-button text="Open chat" icon="chat_bubble" (buttonClick)="resumeChat()"></dbx-button>
               <dbx-button text="Dismiss" (buttonClick)="dismissBanner()"></dbx-button>
             </mat-card-footer>
           </mat-card>

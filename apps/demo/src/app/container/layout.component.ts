@@ -1,4 +1,5 @@
 import { DbxAnchorComponent, DbxBodyDirective, DbxButtonComponent, DbxButtonSpacerDirective, DbxStyleBodyDirective, DbxStyleService } from '@dereekb/dbx-web';
+import { DbxStyleDemoControlsService } from '@dereekb/dbx-web/style-demo';
 import { type ClickableAnchor, DbxRouterService, DbxRouterTransitionService, isLatestSuccessfulRoute } from '@dereekb/dbx-core';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { DbxFirebaseDevelopmentDirective, DbxFirebaseEmulatorService } from '@dereekb/dbx-firebase';
@@ -16,6 +17,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 })
 export class AppLayoutComponent {
   readonly dbxStyleService = inject(DbxStyleService);
+  readonly dbxStyleDemoControlsService = inject(DbxStyleDemoControlsService);
   readonly dbxFirebaseEmulatorService = inject(DbxFirebaseEmulatorService);
 
   readonly isDemoRouteActive$ = isLatestSuccessfulRoute({
@@ -41,6 +43,12 @@ export class AppLayoutComponent {
   readonly toggleDarkTheme: ClickableAnchor = {
     onClick: () => this.dbxStyleService.toggleDarkSuffix()
   };
+
+  readonly styleControls: ClickableAnchor = {
+    onClick: () => this.dbxStyleDemoControlsService.openControls()
+  };
+
+  readonly showStyleControlsButtonSignal = this.dbxStyleDemoControlsService.hasControlsSignal;
 
   readonly github: ClickableAnchor = {
     url: 'https://github.com/dereekb/dbx-components',

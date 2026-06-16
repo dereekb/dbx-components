@@ -47,8 +47,8 @@ export class LandingLayoutComponent {
       description: 'Forms extension for @dereekb/dbx-web to make composing and consuming forms easy.',
       packages: [
         {
-          title: '@ngx-formly/schematics',
-          url: 'https://formly.dev/',
+          title: '@ng-forge/dynamic-forms',
+          url: 'https://www.ng-forge.com/dynamic-forms',
           target: '_blank'
         }
       ],

@@ -8,7 +8,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBar } from '@angular/material/progress-bar';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgClass, NgStyle } from '@angular/common';
-import { DbxColorDirective } from '../../layout/style/style.color.directive';
 
 /**
  * Progress button that displays a Material progress bar beneath the button while working.
@@ -31,7 +30,7 @@ import { DbxColorDirective } from '../../layout/style/style.color.directive';
   selector: 'dbx-progress-bar-button,dbx-bar-button',
   templateUrl: './bar.button.component.html',
   styleUrls: ['./bar.button.component.scss', './shared.button.component.scss'],
-  imports: [MatButtonModule, DbxColorDirective, MatIconModule, MatProgressBar, NgClass, NgStyle],
+  imports: [MatButtonModule, MatIconModule, MatProgressBar, NgClass, NgStyle],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

@@ -3,7 +3,7 @@ import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreMode
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type ModelAccessMultiReadResult } from '@dereekb/firebase-server';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
-import { buildStaticWireEntry, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
+import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 import { matchRouteManifestUrl, type RouteManifest, type RouteManifestModelEntry, type RouteManifestStateEntry, type RouteUrlMatch } from '../mcp.route-manifest';
 import { MCP_MODEL_GET_BATCH_SIZE, type McpModelGetReadDocuments, type McpModelGetResolveIdentity } from './mcp.tool.model-get';
 
@@ -121,7 +121,7 @@ export function createUrlModelsTool(deps: CreateUrlModelsToolDeps): McpToolDefin
   const description =
     'Decode an app URL (or path) into the Firestore models its page renders. Pass a URL like `https://app.example.co/worker/abc/timesheets/list`; the tool matches it against the build-time route manifest and returns each model type plus the concrete key (route params + `{authUid}` substituted). Use `models` to filter to specific types, `keysOnly` for just the resolved keys, or `load: true` to fetch the documents via the same permission-checked path as `model-get` (cannot combine `load` with `keysOnly`).';
 
-  return {
+  return buildStaticToolDefinition({
     name,
     description,
     inputSchema: URL_MODELS_INPUT_SCHEMA,
@@ -131,13 +131,9 @@ export function createUrlModelsTool(deps: CreateUrlModelsToolDeps): McpToolDefin
       modelType: URL_MODELS_DISPATCH_MODEL_TYPE
     },
     staticHandler: handler,
-    filterMetadata: {
-      visibilityKind: 'declarative',
-      rule: { requireAuthenticated: true },
-      effectiveReadOnly: true
-    },
-    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema: URL_MODELS_INPUT_SCHEMA, outputSchema: URL_MODELS_OUTPUT_SCHEMA })
-  };
+    effectiveReadOnly: true,
+    rule: { requireAuthenticated: true }
+  });
 }
 
 // MARK: Handler

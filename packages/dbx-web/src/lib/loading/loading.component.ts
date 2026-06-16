@@ -1,10 +1,8 @@
 import { type Observable, shareReplay } from 'rxjs';
 import { Component, ChangeDetectionStrategy, input, computed, signal, type Signal } from '@angular/core';
-import { type ThemePalette } from '@angular/material/core';
 import { type ProgressBarMode } from '@angular/material/progress-bar';
 import { type LoadingContext, type LoadingContextEvent, type MaybeObservableOrValue, maybeValueFromObservableOrValue, switchMapMaybeLoadingContextStream } from '@dereekb/rxjs';
 import { type ErrorInput, type Maybe } from '@dereekb/util';
-import { type DbxColorInput } from '../layout/style/style';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DbxBasicLoadingComponent } from './basic-loading.component';
 import { type DbxLoadingIsLoadingOrProgress } from './loading';
@@ -44,7 +42,7 @@ export interface DbxLoadingComponentState {
 @Component({
   selector: 'dbx-loading',
   template: `
-    <dbx-basic-loading [show]="show()" [color]="color()" [text]="text()" [mode]="mode()" [linear]="linear()" [diameter]="diameter()" [error]="stateSignal().error" [loading]="stateSignal().loading">
+    <dbx-basic-loading [show]="show()" [text]="text()" [mode]="mode()" [linear]="linear()" [diameter]="diameter()" [error]="stateSignal().error" [loading]="stateSignal().loading">
       <ng-content loading select="[loading]"></ng-content>
       @if (showPaddingSignal()) {
         <div class="dbx-loading-linear-done-padding"></div>
@@ -68,7 +66,6 @@ export class DbxLoadingComponent {
   readonly show = input<Maybe<boolean>>();
   readonly text = input<Maybe<string>>();
   readonly mode = input<Maybe<ProgressBarMode>>();
-  readonly color = input<ThemePalette | DbxColorInput>('primary');
   readonly diameter = input<Maybe<number>>();
   readonly linear = input<Maybe<boolean>>();
   readonly loading = input<Maybe<DbxLoadingIsLoadingOrProgress>>();

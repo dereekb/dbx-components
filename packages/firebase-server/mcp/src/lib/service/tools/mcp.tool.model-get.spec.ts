@@ -39,6 +39,8 @@ describe('createModelGetTool', () => {
       expect(tool.dispatch).toEqual({ call: 'get', modelType: 'model' });
       expect(tool.staticHandler).toBeDefined();
       expect(tool.filterMetadata.effectiveReadOnly).toBe(true);
+      expect(tool.annotations).toEqual({ readOnlyHint: true });
+      expect(tool.staticWireEntry.annotations).toEqual({ readOnlyHint: true });
       expect(tool.filterMetadata.visibilityKind).toBe('declarative');
 
       if (tool.filterMetadata.visibilityKind === 'declarative') {

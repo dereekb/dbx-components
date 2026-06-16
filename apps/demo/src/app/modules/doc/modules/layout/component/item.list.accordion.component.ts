@@ -1,6 +1,6 @@
 import { LOREM } from '../../shared/lorem';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { AbstractDbxListAccordionViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, type DbxValueListAccordionViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListAccordionViewComponentImportsModule, DbxChipDirective, DbxColorDirective, DbxAccordionHeaderHeightDirective } from '@dereekb/dbx-web';
+import { AbstractDbxListAccordionViewDirective, AbstractDbxValueListViewItemComponent, provideDbxListView, AbstractDbxListWrapperDirective, type DbxValueListAccordionViewConfig, DEFAULT_LIST_WRAPPER_COMPONENT_CONFIGURATION_TEMPLATE, DbxListWrapperComponentImportsModule, DEFAULT_DBX_LIST_ACCORDION_VIEW_COMPONENT_CONFIGURATION_TEMPLATE, DbxListAccordionViewComponentImportsModule, DbxChipDirective, DbxAccordionHeaderHeightDirective } from '@dereekb/dbx-web';
 import { of } from 'rxjs';
 import { type DocValue, type DocValueWithSelection } from './item.list';
 import { MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent } from '@angular/material/expansion';
@@ -53,7 +53,7 @@ export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionV
               </span>
               <span class="dbx-flex-bar">
                 <span class="dbx-button-spacer">
-                  <dbx-chip dbxColor="primary">Status</dbx-chip>
+                  <dbx-chip color="primary">Status</dbx-chip>
                 </span>
               </span>
             </div>
@@ -68,7 +68,7 @@ export class DocItemListAccordionViewComponent extends AbstractDbxListAccordionV
       </ng-template>
     </mat-expansion-panel>
   `,
-  imports: [MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, DbxAccordionHeaderHeightDirective, DbxColorDirective, DbxChipDirective],
+  imports: [MatExpansionPanel, MatExpansionPanelHeader, MatExpansionPanelTitle, MatExpansionPanelContent, DbxAccordionHeaderHeightDirective, DbxChipDirective],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })

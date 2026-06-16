@@ -9,7 +9,15 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/dbx-components-cli"],
       "options": {
-        "command": "npx nx run dbx-components-cli:build-base",
+        "commands": [
+          {
+            "command": "npx nx run dbx-components-cli:build-base"
+          },
+          {
+            "command": "node tools/build-templates-archive.mjs packages/dbx-components-cli/templates dist/packages/dbx-components-cli/templates.zip"
+          }
+        ],
+        "parallel": false,
         "color": true
       },
       "dependsOn": ["^build"]

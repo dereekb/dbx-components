@@ -2,7 +2,7 @@ import { type Maybe } from '@dereekb/util';
 import { type KnownOnCallFunctionType } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
-import { type ModelApiDetailsResult, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpToolDetailsBuilder } from '@dereekb/firebase-server';
+import { type ModelApiDetailsResult, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpToolDetailsBuilder, type McpVisibilityRule } from '@dereekb/firebase-server';
 import { type Request } from 'express';
 import { type CallToolResult, type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { mcpManifestKey, type McpManifestToolEntry } from './mcp.manifest';
@@ -301,6 +301,61 @@ export const MCP_WRITE_TOOL_DESCRIPTION_PREFIX = '[WRITE] ';
  */
 export function applyWriteMarker(description: string, annotations: ToolAnnotations): string {
   return annotations.readOnlyHint === false ? `${MCP_WRITE_TOOL_DESCRIPTION_PREFIX}${description}` : description;
+}
+
+// MARK: Static Tool Definition
+/**
+ * Input for {@link buildStaticToolDefinition}.
+ */
+export interface BuildStaticToolDefinitionInput {
+  readonly name: string;
+  readonly description: string;
+  readonly inputSchema: object;
+  readonly outputSchema?: object;
+  readonly dispatch: McpToolDispatchTarget;
+  readonly staticHandler: McpStaticToolHandler;
+  /**
+   * Read-only classification for this built-in tool. Drives both the advertised MCP annotations
+   * (`readOnlyHint` / `destructiveHint`) and the per-request module-level `readOnly` filter.
+   */
+  readonly effectiveReadOnly: boolean;
+  /**
+   * Declarative visibility rule checked per request. Defaults to `{}` (always visible) when omitted.
+   */
+  readonly rule?: McpVisibilityRule;
+}
+
+/**
+ * Assembles a statically-registered {@link McpToolDefinition} with consistent MCP annotations.
+ *
+ * Built-in tools (e.g. `whoami`, `model-get`, `batch-execute`) don't flow through
+ * {@link buildToolFromCandidate}, so this is their analogous single source of truth: it derives the
+ * read/write annotations from {@link BuildStaticToolDefinitionInput.effectiveReadOnly} via
+ * {@link resolveMcpToolAnnotations}, applies the {@link MCP_WRITE_TOOL_DESCRIPTION_PREFIX} write
+ * marker to the description, then mirrors the annotations onto both the definition's `annotations`
+ * field and the frozen {@link McpToolDefinition.staticWireEntry}. Centralizing this guarantees no
+ * built-in tool reaches `tools/list` un-annotated (which would surface as an uncategorized "other"
+ * tool in clients that bucket by `readOnlyHint`).
+ *
+ * @param input - The tool identity, schemas, dispatch target, static handler, and read-only classification.
+ * @returns A statically-registered {@link McpToolDefinition} to append to the MCP server factory's tool registry.
+ */
+export function buildStaticToolDefinition(input: BuildStaticToolDefinitionInput): McpToolDefinition {
+  const { name, inputSchema, outputSchema, dispatch, staticHandler, effectiveReadOnly, rule } = input;
+  const annotations = resolveMcpToolAnnotations(effectiveReadOnly);
+  const description = applyWriteMarker(input.description, annotations);
+
+  return {
+    name,
+    description,
+    inputSchema,
+    outputSchema,
+    annotations,
+    dispatch,
+    staticHandler,
+    filterMetadata: { visibilityKind: 'declarative', rule: rule ?? {}, effectiveReadOnly },
+    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema, outputSchema, annotations })
+  };
 }
 
 // MARK: Naming

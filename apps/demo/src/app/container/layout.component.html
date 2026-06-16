@@ -18,6 +18,12 @@
       </dbx-anchor>
     }
     <span class="spacer"></span>
+    @if (showStyleControlsButtonSignal()) {
+      <dbx-anchor [anchor]="styleControls">
+        <dbx-button basic icon="palette" text="Style Controls"></dbx-button>
+      </dbx-anchor>
+      <dbx-button-spacer></dbx-button-spacer>
+    }
     @if (showToggleDarkThemeButtonSignal()) {
       <dbx-anchor [anchor]="toggleDarkTheme">
         <dbx-button basic text="Toggle Dark Theme"></dbx-button>

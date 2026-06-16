@@ -6,6 +6,7 @@ import { DocExamplesHomeComponent } from './container/home.component';
 import { DocExamplesLayoutComponent } from './container/layout.component';
 import { DocExamplesListComponent } from './container/list.component';
 import { DocExamplesCardComponent } from './container/card.component';
+import { DocExamplesPlaygroundComponent } from './container/playground.component';
 
 @NgModule({
   imports: [
@@ -16,7 +17,8 @@ import { DocExamplesCardComponent } from './container/card.component';
     DocExamplesHomeComponent,
     DocExamplesLayoutComponent,
     DocExamplesListComponent,
-    DocExamplesCardComponent
+    DocExamplesCardComponent,
+    DocExamplesPlaygroundComponent
   ]
 })
 export class DocExamplesModule {}

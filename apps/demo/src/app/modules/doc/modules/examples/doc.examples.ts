@@ -29,6 +29,12 @@ export const DOC_EXAMPLES_ROUTES: DocExamplesRoute[] = [
     title: 'Layout',
     detail: 'page-level layout examples',
     ref: 'doc.examples.layout'
+  },
+  {
+    icon: 'palette',
+    title: 'Playground',
+    detail: 'live styling showcase + token-override preview',
+    ref: 'doc.examples.playground'
   }
 ];
 

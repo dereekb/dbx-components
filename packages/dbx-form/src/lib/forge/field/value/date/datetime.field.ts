@@ -1,7 +1,7 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 import type { DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';
-import { type DbxDateTimeFieldSyncType } from '../../../../formly/field/value/date/datetime.field.component';
+import { type DbxDateTimeFieldSyncType } from '../../../../field/value/date/datetime.config';
 
 // MARK: Sync Field Types
 /**

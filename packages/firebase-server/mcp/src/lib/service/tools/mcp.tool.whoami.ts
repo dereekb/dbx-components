@@ -2,7 +2,7 @@ import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type AuthClaims, type AuthRoleSet } from '@dereekb/util';
 import { type McpAuthRoleReader } from '../../mcp.config';
 import { type McpManifestAuth, type McpManifestAuthClaim } from '../mcp.manifest';
-import { buildStaticWireEntry, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
+import { buildStaticToolDefinition, type McpToolDefinition, type McpStaticToolHandler, type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
 // MARK: Constants
 /**
@@ -87,7 +87,7 @@ export function createWhoamiTool(deps: CreateWhoamiToolDeps): McpToolDefinition 
   const appLabel = deps.auth.app?.app ?? 'this server';
   const description = `Reports the authenticated caller's uid, raw custom claims, and decoded role set for \`${appLabel}\`. Returns \`authenticated: false\` for anonymous callers. Claim descriptions are drawn from the build-time auth manifest; only keys actually present on the live token are detailed.`;
 
-  return {
+  return buildStaticToolDefinition({
     name,
     description,
     inputSchema: WHOAMI_INPUT_SCHEMA,
@@ -97,13 +97,9 @@ export function createWhoamiTool(deps: CreateWhoamiToolDeps): McpToolDefinition 
       modelType: WHOAMI_DISPATCH_MODEL_TYPE
     },
     staticHandler: handler,
-    filterMetadata: {
-      visibilityKind: 'declarative',
-      rule: {},
-      effectiveReadOnly: true
-    },
-    staticWireEntry: buildStaticWireEntry({ name, description, inputSchema: WHOAMI_INPUT_SCHEMA, outputSchema: WHOAMI_OUTPUT_SCHEMA })
-  };
+    effectiveReadOnly: true,
+    rule: {}
+  });
 }
 
 // MARK: Handler

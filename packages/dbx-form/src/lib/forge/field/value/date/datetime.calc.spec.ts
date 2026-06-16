@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { startOfDay, setHours, setMinutes } from 'date-fns';
 import { utcDayForDate } from '@dereekb/date';
-import { DbxDateTimeFieldTimeMode, DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR, DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR } from '../../../../formly/field/value/date/datetime.field.component';
+import { DbxDateTimeFieldTimeMode, DBX_DATE_TIME_FIELD_DATE_NOT_IN_SCHEDULE_ERROR, DBX_DATE_TIME_FIELD_TIME_NOT_IN_RANGE_ERROR } from '../../../../field/value/date/datetime.config';
 import { type DateTimeCalcInput, dateTimeFieldCalc, buildCombinedDateTime, applyTimeOffset, mergePickerConfig, filterPresets, computeErrorMessage, computeDateKeyboardStep, computeTimeKeyboardStep, navigateDate } from './datetime.calc';
 
 // MARK: dateTimeFieldCalc

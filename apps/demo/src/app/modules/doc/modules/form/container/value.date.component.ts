@@ -1,48 +1,22 @@
-import { type FormlyFieldConfig } from '@ngx-formly/core';
 import { type FormConfig } from '@ng-forge/dynamic-forms';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import {
-  formlyDateTimeField,
-  DbxDateTimeFieldTimeMode,
-  DbxDateTimeValueMode,
-  formlyDateRangeField,
-  type DbxDateTimePickerConfiguration,
-  formlyDateTimeRangeField,
-  formlyFixedDateRangeField,
-  formlyTimeDurationField,
-  dbxForgeDateTimeField,
-  dbxForgeDateRangeRow,
-  dbxForgeDateTimeRangeRow,
-  dbxForgeFixedDateRangeField,
-  dbxForgeTimeDurationField,
-  dbxForgeTimezoneStringField,
-  DbxFormFormlyDateFieldModule,
-  DbxFormFormlyDbxListFieldModule,
-  DbxFormFormlyDurationFieldModule,
-  DbxFormFormlyPickableFieldModule,
-  DbxFormFormlySearchableFieldModule,
-  DbxFormFormlySourceSelectModule,
-  DbxFormlyFieldsContextDirective,
-  DbxFormSourceDirective,
-  DbxFormValueChangeDirective
-} from '@dereekb/dbx-form';
+import { DbxDateTimeFieldTimeMode, DbxDateTimeValueMode, type DbxDateTimePickerConfiguration, dbxForgeDateTimeField, dbxForgeDateRangeRow, dbxForgeDateTimeRangeRow, dbxForgeFixedDateRangeField, dbxForgeTimeDurationField, dbxForgeTimezoneStringField, DbxFormSourceDirective, DbxFormValueChangeDirective } from '@dereekb/dbx-form';
 import { addDays, addHours, addMinutes, addMonths, differenceInHours, endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { BehaviorSubject, type Observable, combineLatest, delay, interval, map, of } from 'rxjs';
-import { DateRangeType, DateCellScheduleDayCode, type DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, toJsDate, roundDownToMinute, isSameDate, isSameDateDay, findMaxDate, findMinDate } from '@dereekb/date';
+import { DateRangeType, DateCellScheduleDayCode, type DateCellScheduleEncodedWeek, dateRange, dateTimezoneUtcNormal, roundDownToMinute, isSameDate, isSameDateDay, findMaxDate, findMinDate } from '@dereekb/date';
 import { DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { DocFeatureFormTabsComponent } from '../../shared/component/feature.formtabs.component';
-import { DocFormExampleComponent } from '../component/example.form.component';
-import { DocFormForgeExampleComponent } from '../component/forge.example.form.component';
+import { DocFormForgeExampleComponent } from '../../shared/component/forge.example.form.component';
 import { completeOnDestroy } from '@dereekb/dbx-core';
 
 @Component({
   templateUrl: './value.date.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormExampleComponent, DocFormForgeExampleComponent, DbxFormlyFieldsContextDirective, DbxFormSourceDirective, DbxFormValueChangeDirective, DbxFormFormlyDateFieldModule, DbxFormFormlyDbxListFieldModule, DbxFormFormlyDurationFieldModule, DbxFormFormlyPickableFieldModule, DbxFormFormlySearchableFieldModule, DbxFormFormlySourceSelectModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DocFeatureFormTabsComponent, DocFormForgeExampleComponent, DbxFormSourceDirective, DbxFormValueChangeDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocFormDateValueComponent {
@@ -101,103 +75,7 @@ export class DocFormDateValueComponent {
     this._timezone.next(value?.timezone);
   };
 
-  readonly dateTimeFields: FormlyFieldConfig[] = [
-    formlyDateTimeField({ timezone: this.timezone$, label: 'Date Picker', key: 'datePicker', allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE }),
-    formlyDateTimeField({ timezone: this.timezone$, label: 'Day Only W/ String Value', hideDateHint: true, key: 'dayOnlyAsString', valueMode: DbxDateTimeValueMode.DAY_STRING, description: 'This date field is for picking a day only and as an ISO8601DayString. The calendar picker is hidden and the allDayLabel has been customized to be "On".', hideDatePicker: true }),
-    formlyDateTimeField({ timezone: this.timezone$, key: 'date', required: true, description: 'This is the default date field that requires the user pick a date and time.' }),
-    formlyDateTimeField({ timezone: this.timezone$, label: 'Date With String Value', key: 'dateAsString', required: true, valueMode: DbxDateTimeValueMode.DATE_STRING, description: 'This date field returns the value as an ISO8601DateString. The date hint is also hidden.', hideDateHint: true }),
-    formlyDateTimeField({
-      timezone: this.timezone$,
-      label: 'Time For Work Day Today (For Timezone)',
-      alwaysShowDateInput: false,
-      timeDate: new Date(),
-      showClearButton: false,
-      key: 'timeForWorkDayToday',
-      description: 'This date field has a filter that only allows picking a time for todays work day (between 9AM and 5PM).',
-      pickerConfig: {
-        limits: {
-          min: addHours(startOfDay(new Date()), 9),
-          max: addHours(startOfDay(new Date()), 9 + 8)
-        }
-      }
-    }),
-    formlyDateTimeField({ timezone: this.timezone$, key: 'timeOptional', timeMode: DbxDateTimeFieldTimeMode.OPTIONAL, description: 'This date field is for picking a day, with an optional time.' }),
-    formlyDateTimeField({ timezone: this.timezone$, label: 'Day Only', key: 'dayOnly', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field is for picking a day only.' }),
-    formlyDateTimeField({
-      timezone: this.timezone$,
-      label: 'Time Only',
-      key: 'timeOnly',
-      timeOnly: true,
-      description: 'This date field is for picking a time only. The date and timezone hint is also hidden. It has custom time preset values.',
-      hideDateHint: true,
-      showTimezone: false,
-      presets: [
-        { label: '12:00 AM', timeString: '12:00AM' },
-        { label: '12:30 PM', timeString: '12:30PM' },
-        { label: 'Now', logicalDate: 'now' }
-      ]
-    }),
-    formlyDateTimeField({
-      timezone: this.timezone$,
-      label: 'Time For Today (For Timezone)',
-      alwaysShowDateInput: false,
-      timeDate: new Date(),
-      showClearButton: false,
-      key: 'timeForToday',
-      description: 'This date field has a filter that only allows picking a time for today (that is within the last two hours and next two hours). This date field is configured to not show the clear button. This field is also configured to hide the date field when the selectable date is only a single day.',
-      pickerConfig: {
-        limits: {
-          min: findMaxDate([startOfDay(new Date()), addHours(new Date(), -2)]),
-          max: findMinDate([endOfDay(new Date()), addHours(new Date(), 2)])
-        }
-      }
-    }),
-    formlyDateTimeField({
-      label: 'Changing Configuration',
-      showClearButton: false,
-      key: 'changingConfiguration',
-      description: 'This date field has a filter that changes every second to require a minute more in the future for every second that passes.',
-      pickerConfig: interval(1000).pipe(
-        map((x) => {
-          return {
-            limits: {
-              min: addMinutes(new Date(), x)
-            }
-          };
-        })
-      )
-    }),
-    formlyDateTimeField({ label: 'Unix Timestamp', key: 'unixTimeStamp', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, description: 'This date field picks a unix timestamp for the system timezone.', hideDateHint: true }),
-    formlyDateTimeField({ label: 'Unix Timestamp In New York', key: 'unixTimeStampInNewYork', valueMode: DbxDateTimeValueMode.UNIX_TIMESTAMP, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, description: 'This date field picks a unix timestamp for a specific timezone.', hideDateHint: true, timezone: 'America/New_York' }),
-    formlyDateTimeField({ label: 'Date Only In Tokyo', key: 'dateOnlyWithLockedTimezone', timeMode: DbxDateTimeFieldTimeMode.NONE, description: 'This date field picks a date and has a locked timezone.', timezone: 'Asia/Tokyo' }),
-    formlyDateTimeField({ label: 'Time Only In New York', key: 'timeOnlyWithLockedTimezone', timeOnly: true, description: 'This date field picks a time and has a locked timezone.', hideDateHint: true, timezone: 'America/New_York' }),
-    formlyDateTimeField({ label: 'Minute Of Day', key: 'minuteOfDay', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system timezone.', hideDateHint: true }),
-    formlyDateTimeField({ label: 'Minute Of Day For New York', key: 'minuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, showTimezone: true, timeOnly: true, description: 'This date field picks a minute of day for America/New_York.', hideDateHint: true, timezone: 'America/New_York' }),
-    formlyDateTimeField({ label: 'System Minute Of Day For New York', key: 'systemMinuteOfDayForNewYork', valueMode: DbxDateTimeValueMode.SYSTEM_MINUTE_OF_DAY, timeMode: DbxDateTimeFieldTimeMode.REQUIRED, timeOnly: true, description: 'This date field picks a minute of day for the system but shows the timezone as America/New_York.', hideDateHint: true, timezone: 'America/New_York' }),
-    formlyDateTimeField({ timezone: this.timezone$, label: 'Timezone Day', key: 'timezoneDay', valueMode: DbxDateTimeValueMode.DATE_STRING }),
-    formlyDateTimeField({
-      timezone: this.timezone$,
-      key: 'dateWithASchedule',
-      required: true,
-      description: 'This date is limited to specific days specified by a schedule of M/W/F and the next 7 days from today. A minimum of today and a maximum of 14 days from now.',
-      pickerConfig: () => {
-        const config: DbxDateTimePickerConfiguration = {
-          limits: {
-            min: startOfDay(new Date()),
-            max: addDays(new Date(), 14)
-          },
-          schedule: {
-            w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.FRIDAY}`,
-            d: [0, 1, 2, 3, 4, 5, 6] // next 7 days
-          }
-        };
-
-        return of(config);
-      }
-    })
-  ];
-
-  // Forge date-time fields — 1:1 parity with formly formlyDateTimeFields
+  // Forge date-time fields
   readonly forgeDateTimeFieldsConfig: FormConfig = {
     fields: [
       dbxForgeDateTimeField({ label: 'Date Picker', key: 'datePicker', props: { timezone: this.timezone$, allDayLabel: 'On', valueMode: DbxDateTimeValueMode.DATE, timeMode: DbxDateTimeFieldTimeMode.NONE } }),
@@ -320,7 +198,7 @@ export class DocFormDateValueComponent {
     ]
   };
 
-  // Forge date range — 1:1 parity with formly formlyDateRangeFields
+  // Forge date range
   readonly forgeDateRangeFieldsConfig: FormConfig = {
     fields: [
       dbxForgeDateRangeRow(),
@@ -362,69 +240,7 @@ export class DocFormDateValueComponent {
     ]
   };
 
-  // Forge fixed date range — 1:1 parity
-  readonly fixedDateRangeFields: FormlyFieldConfig[] = [
-    formlyFixedDateRangeField({
-      required: true,
-      key: 'tenDayFixedDateRange',
-      label: 'Fixed Date Range',
-      description: 'Required. Picks a 10-day date range. Returns the date as an ISO8601DateString.',
-      valueMode: DbxDateTimeValueMode.DATE_STRING,
-      dateRangeInput: { type: DateRangeType.WEEKS_RANGE, distance: 1 },
-      timezone: this.timezone$,
-      pickerConfig: {
-        limits: {
-          min: 'today_start',
-          max: addMonths(endOfMonth(new Date()), 1)
-        }
-      }
-    }),
-    formlyFixedDateRangeField({
-      key: 'oneMonthFixedDateRange',
-      label: 'One Month Arbitrary Date Range',
-      selectionMode: 'arbitrary_quick',
-      description: 'Arbitrary end date up to 21 days. Limited to the first 18 days of the month. Not required. Picks all the days in the current month. Returns the date as an ISO8601DayString.',
-      valueMode: DbxDateTimeValueMode.DAY_STRING,
-      dateRangeInput: { type: DateRangeType.DAYS_RANGE, distance: 21 },
-      timezone: this.timezone$,
-      pickerConfig: {
-        limits: {
-          min: startOfMonth(new Date()),
-          max: addDays(startOfMonth(new Date()), 18)
-        }
-      }
-    }),
-    formlyFixedDateRangeField({
-      key: 'thisMonthNormalDateRange',
-      label: 'One Month Normal Date Range',
-      selectionMode: 'normal',
-      description: 'Normal selection. Limited to the first 18 days of the month. Not required. Returns the date as an ISO8601DayString.',
-      valueMode: DbxDateTimeValueMode.DAY_STRING,
-      timezone: this.timezone$,
-      pickerConfig: {
-        limits: {
-          min: startOfMonth(new Date()),
-          max: addDays(startOfMonth(new Date()), 18)
-        }
-      }
-    }),
-    formlyFixedDateRangeField({
-      key: 'maxAnyMonthNormalDateRange',
-      label: 'Max Any Calendar Month Long',
-      selectionMode: 'normal',
-      description: 'Normal selection. Limited date range. Selection range of 1 calendar month. Not required. Returns the date as an ISO8601DayString.',
-      valueMode: DbxDateTimeValueMode.DAY_STRING,
-      dateRangeInput: { type: DateRangeType.CALENDAR_MONTH, distance: 1 },
-      timezone: this.timezone$,
-      pickerConfig: {
-        limits: {
-          min: addMonths(startOfMonth(new Date()), -2),
-          max: addDays(startOfMonth(new Date()), 60)
-        }
-      }
-    })
-  ];
-
+  // Forge fixed date range
   readonly dbxForgeFixedDateRangeFieldsConfig: FormConfig = {
     fields: [
       dbxForgeFixedDateRangeField({
@@ -497,7 +313,7 @@ export class DocFormDateValueComponent {
     ]
   };
 
-  // Forge time duration — 1:1 parity with formly formlyTimeDurationFields
+  // Forge time duration
   readonly forgeTimeDurationFieldsConfig: FormConfig = {
     fields: [
       dbxForgeTimeDurationField({ key: 'durationMs', label: 'Duration (output: milliseconds)', outputUnit: 'ms', allowedUnits: ['min', 'h', 'd'], carryOver: true, description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).' }),
@@ -520,90 +336,7 @@ export class DocFormDateValueComponent {
     timezoneDay: new Date('2023-11-01T06:00:00.000Z')
   }).pipe(delay(200)); // simulate a slight loading delay
 
-  readonly dateTimeRangeFields: FormlyFieldConfig[] = [
-    formlyDateTimeRangeField({
-      timezone: this.timezone$,
-      start: {
-        key: 'sat'
-      },
-      end: {
-        key: 'eat'
-      }
-    }),
-    formlyDateTimeRangeField({
-      timezone: 'America/Chicago',
-      timeDate: '2023-11-08',
-      start: {
-        label: 'Start Time on 2023-11-08 (CDT)',
-        key: 'satcdt'
-      },
-      end: {
-        key: 'eatcdt'
-      }
-    }),
-    formlyDateTimeRangeField({
-      timezone: 'America/Chicago',
-      timeDate: '2024-03-21',
-      start: {
-        label: 'Start Time on 2024-03-21 (CST)',
-        key: 'satcst'
-      },
-      end: {
-        key: 'eatcst'
-      }
-    }),
-    formlyDateTimeRangeField({
-      timezone: 'America/Chicago',
-      timeDate: '2023-11-08',
-      start: {
-        label: 'Start Time on 2023-11-08 (CDT)',
-        // timeDate: '2023-11-08',  // uses the default specified above
-        key: 'sat2'
-      },
-      end: {
-        label: 'End Time on 2024-03-21 (CST)',
-        timeDate: '2024-03-21',
-        key: 'eat2'
-      }
-    }),
-    formlyDateTimeRangeField({
-      timezone: this.timezone$,
-      valueMode: DbxDateTimeValueMode.MINUTE_OF_DAY,
-      start: {
-        label: 'Start Minute Of Day',
-        key: 'satm2'
-      },
-      end: {
-        label: 'End Minute Of Day',
-        key: 'eatm2'
-      }
-    }),
-    formlyDateTimeRangeField({
-      timezone: 'America/Chicago',
-      timeDate: {
-        path: 'timezoneDay', // use the date from timezoneDay as the output date
-        mapValue: (x) => {
-          return x ? addDays(toJsDate(x as string), 1) : undefined;
-        }
-      },
-      start: {
-        label: 'Start Time (On Timezone Day + 1)',
-        key: 'sat3'
-      },
-      end: {
-        label: 'End Time (On Timezone Day + 3)',
-        timeDate: {
-          path: 'timezoneDay',
-          mapValue: (x) => {
-            return x ? addDays(toJsDate(x as string), 3) : undefined;
-          }
-        },
-        key: 'eat3'
-      }
-    })
-  ];
-
-  // Forge date-time range — 1:1 parity with formly dateTimeRangeFields (except path-based timeDate)
+  // Forge date-time range
   readonly forgeDateTimeRangeFieldsConfig: FormConfig = {
     fields: [
       dbxForgeDateTimeRangeRow({
@@ -639,41 +372,6 @@ export class DocFormDateValueComponent {
     oneMonthFixedDateRange: dateRange({ date: new Date(), type: DateRangeType.WEEK, distance: 2 })
   });
 
-  readonly dateRangeFields: FormlyFieldConfig[] = [
-    formlyDateRangeField({}),
-    formlyDateRangeField({
-      start: {
-        key: 'startLimited',
-        description: 'Must start on a M/T and no later than 14 days ago',
-        pickerConfig: () => {
-          const config: DbxDateTimePickerConfiguration = {
-            limits: {
-              min: addDays(startOfDay(new Date()), -14)
-            },
-            schedule: {
-              w: `${DateCellScheduleDayCode.MONDAY}${DateCellScheduleDayCode.TUESDAY}` as DateCellScheduleEncodedWeek
-            }
-          };
-
-          return of(config);
-        }
-      },
-      end: {
-        key: 'endLimited',
-        description: 'Must end on a W/T/F',
-        pickerConfig: () => {
-          const config: DbxDateTimePickerConfiguration = {
-            schedule: {
-              w: `${DateCellScheduleDayCode.WEDNESDAY}${DateCellScheduleDayCode.THURSDAY}${DateCellScheduleDayCode.FRIDAY}` as DateCellScheduleEncodedWeek
-            }
-          };
-
-          return of(config);
-        }
-      }
-    })
-  ];
-
   private readonly _newDateValue = completeOnDestroy(new BehaviorSubject<Maybe<Date>>(undefined));
   private baseDate$ = of(new Date()).pipe(delay(100));
 
@@ -682,29 +380,6 @@ export class DocFormDateValueComponent {
       this._newDateValue.next(value.date);
     }
   }
-
-  readonly asyncTimeFormConfig$: Observable<FormlyFieldConfig[]> = of([
-    formlyDateTimeField({
-      label: 'Async Configured Date',
-      key: 'date',
-      timezone: this.timezone$,
-      timeDate: this.baseDate$,
-      pickerConfig: this.baseDate$.pipe(
-        map((x) => {
-          const config: DbxDateTimePickerConfiguration = {
-            limits: {
-              min: addHours(x, -24),
-              max: addHours(x, 24)
-            }
-          };
-
-          return config;
-        })
-      )
-    })
-  ]).pipe(delay(1000)); // add an artificial delay
-
-  readonly asyncTimeFormConfigSignal = toSignal(this.asyncTimeFormConfig$, { initialValue: undefined });
 
   readonly forgeAsyncTimeFormConfig$: Observable<FormConfig> = of({
     fields: [
@@ -748,47 +423,4 @@ export class DocFormDateValueComponent {
     hoursAndMinutes: { hour: 1, minute: 30 },
     durationSeconds: 3661
   });
-
-  readonly timeDurationFields: FormlyFieldConfig[] = [
-    formlyTimeDurationField({
-      key: 'durationMs',
-      label: 'Duration (output: milliseconds)',
-      outputUnit: 'ms',
-      allowedUnits: ['min', 'h', 'd'],
-      carryOver: true,
-      description: 'Output is in milliseconds. Type "2h30m" or use the picker. carryOver is enabled (60m → 1h).'
-    }),
-    formlyTimeDurationField({
-      key: 'durationMinutes',
-      label: 'Duration (output: minutes)',
-      outputUnit: 'min',
-      min: 0,
-      max: 480,
-      description: 'Output is in minutes with min 0 and max 480 (8 hours). All units available.'
-    }),
-    formlyTimeDurationField({
-      key: 'hoursAndMinutes',
-      label: 'Duration (HoursAndMinutes output)',
-      valueMode: 'hours_and_minutes',
-      allowedUnits: ['min', 'h'],
-      carryOver: true,
-      description: 'Output is an HoursAndMinutes object. Restricted to minutes and hours. carryOver enabled.'
-    }),
-    formlyTimeDurationField({
-      key: 'durationSeconds',
-      label: 'Duration (output: seconds)',
-      outputUnit: 's',
-      allowedUnits: ['s', 'min', 'h'],
-      carryOver: true,
-      description: 'Output is in seconds. Picker shows seconds, minutes, and hours. carryOver enabled.'
-    }),
-    formlyTimeDurationField({
-      key: 'durationData',
-      label: 'Duration (TimeDurationData output)',
-      valueMode: 'duration_data',
-      allowedUnits: ['s', 'min', 'h', 'd'],
-      carryOver: true,
-      description: 'Output is a TimeDurationData object with individual unit fields.'
-    })
-  ];
 }

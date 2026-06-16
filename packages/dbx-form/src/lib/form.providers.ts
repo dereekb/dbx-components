@@ -3,7 +3,7 @@ import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { enUS } from 'date-fns/locale';
-import { type DateTimePresetConfiguration, DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS } from './formly';
+import { type DateTimePresetConfiguration, DBX_DATE_TIME_FIELD_MENU_PRESETS_TOKEN, DEFAULT_DATE_TIME_FIELD_MENU_PRESETS_PRESETS } from './field';
 import { type Maybe } from '@dereekb/util';
 
 export interface ProvideDbxFormConfigurationConfig {

@@ -1,3 +1,308 @@
+# [14.0.0](https://github.com/dereekb/dbx-components/compare/v13.17.0-dev...v14.0.0) (2026-06-16)
+
+
+### Bug Fixes
+
+- **firebase-server:** advertise readOnlyHint on static MCP tools ([df1af11f](https://github.com/dereekb/dbx-components/commit/df1af11f333f43d678377d5f621479a2985c7a40))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([16a70ccb](https://github.com/dereekb/dbx-components/commit/16a70ccbf8623d001fc3ea8112cc5857c2c6b612))
+
+
+### Features
+
+- **firebase-server:** add universal reason parameter to MCP tool calls ([ec0cc4a7](https://github.com/dereekb/dbx-components/commit/ec0cc4a7b73859a8fb84f2213670cb0c0c39f753))
+- styling improvements, dropped ngx-formly ([#52](https://github.com/dereekb/dbx-components/issues/52)) ([17b783ce](https://github.com/dereekb/dbx-components/commit/17b783cec836aa2881b9c92c6534467cf20a2990)), closes [#52](https://github.com/dereekb/dbx-components/issues/52)
+
+
+### BREAKING CHANGES
+
+* Removed the dbx.m2-visual-compat() SCSS mixin (replace
+with dbx.dbx-components-shapes(), drop the include for M3 defaults, or
+set the --mat-*-container-shape* properties yourself). .dbx-chip no
+longer emits the mat-standard-chip class and defaults to corner-small
+instead of a full pill (restore with --dbx-chip-container-shape:
+var(--mat-sys-corner-full)). Apps will see shapes, dividers, and chips
+render differently unless they opt back in.
+
+Change-Log: dbx-components/e82463f9-aabf-42a7-b8cf-c67a38083fa4
+
+* feat(dbx-web): expand style-demo with new sections and corner levers
+
+Adds Buttons, Surfaces, Shape Scale, Navigation, and Color Templates
+sections; replaces the dbx-form and dbx-firebase placeholders with real
+Form Fields and Firebase Login sections; adds a route-bound demo Navbar
+section and seeds demo color templates. Replaces the single pill corner
+lever with the six-step M3 corner-radius scale (group-exclusive), and
+clusters sections + levers by group in the controls popover.
+
+Change-Log: dbcomponents/e82463f9-aabf-42a7-b8cf-c67a38083fa4
+
+* feat(dbx-web): style-demo controls popup + emit M3 corner tokens
+
+Emit the M3 --mat-sys-corner-* system tokens in the dbx-web root-variables
+mixin so var(--mat-sys-corner-*) references resolve under mat.define-theme()
+(fixing the style-demo Shape levers flattening corners to 0).
+
+Move the playground controls into a draggable dbx-popup behind an injection
+token, and add a chip-field controls component (Sections + Presets) in
+dbx-form/style-demo with two-way sync to the playground.
+
+Change-Log: dbcomponents/e82463f9-aabf-42a7-b8cf-c67a38083fa4
+
+* fix(dbx-form): pickable filterSelectedValues hook + reusable controls
+
+Adds a filterSelectedValues config hook on the pickable fields that runs at
+selection time, and uses it in the style-demo controls to enforce group
+exclusivity for presets — removing the form/controls sync loop that locked the
+page. Splits the popup content into a reusable DbxFormStyleDemoControlsComponent.
+
+Change-Log: dbcomponents/e82463f9-aabf-42a7-b8cf-c67a38083fa4
+
+* feat(dbx-web): global style controls via detach + body supplement
+
+- Add DbxStyleSupplement/DbxStyleApplication types to DbxStyleService;
+  DbxStyleBodyDirective now applies classes + inline CSS custom props
+  (--mat-sys-* etc.) to document.body via styleApplication$
+- Introduce DbxStyleDemoControlsService: moves enablement/template state
+  out of the playground component so controls survive navigation
+- Replace popup shell with DbxDetachService panel (survives route changes)
+- Add "Style Controls" toolbar button in demo app layout
+- New specs: DbxStyleService.styleApplication$ and controls-service
+  forwarding / default-template seeding
+
+Change-Log: dbx-components/3fa94c2b-9e5d-44ce-9d31-f9966d957516
+
+* feat(dbx-form): split style-demo presets panel + sections popover
+
+Move Sections out of the global Style Controls detach panel into a popover opened
+from the playground header (presets restyle the app; sections only affect the
+playground). Seed each controls form from the live service state on every form
+RESET and write back only genuine (pristine:false) user edits, so reopening the
+panel/popover restores selections instead of wiping or starting empty. Scope an
+overlay flex/scroll chain so the detach body scrolls within the fixed-height pane.
+
+Change-Log: dbx-components/da920f3c-a822-469a-8d0d-b85a5c6df913
+
+* feat(dbx-web): tokenize component corner radii + fix forge fields
+
+Add generic .dbx-corners helpers (+ --dbx-corners-border-radius token) and a
+new corner-token system across dbx components:
+- content pit now rounds by default; opt out with .dbx-corners-none ([rounded] flip)
+- prompt box gains --dbx-prompt-box-border-radius
+- .dbx-list-rounded-items + level variants for nav/selection lists
+- navbar tabs round their top corners (browser-tab style)
+- forge form-field wrapper + preset re-point dead --mdc-outlined-text-field-*
+  tokens to Material 21 --mat-form-field-outlined-* (fixes dbxForgeCheckboxField)
+- style-demo: corner tokens in the shape map, new controls-only pill-controls
+  lever, removed the over-broad corner-shape-full preset
+- regenerated css token + utility catalogs
+
+Change-Log: dbx-components/1fd667f9-2684-43e6-a453-0c6114f6c949
+
+* feat(dbx-web): default-rounded lists + per-type corner presets
+
+Invert list rounding from opt-in to a medium default: dbx-list,
+dbx-anchor-list and the sidenav anchor list each round to M3 medium via
+their own override token; add .dbx-list-square-items to opt out. Remove
+the global --mat-list-active-indicator-shape:2px pin and the
+.dbx-list-rounded-items family. Add style-demo button-corner-*,
+list-corner-* and anchor-list-corner-* preset groups; the sidenav rounds
+right-side only and tracks the anchor-list radius by default.
+
+Also pin the leading-icon two-line anchor primary-text ::before spacer to
+28px (was 32px) to reduce the over-tall title box. Regenerate the dbx-web
+CSS token catalog for the two new --dbx-*-item-border-radius tokens.
+
+Change-Log: dbx-components/f571a84e-7591-4584-b00b-845c6e8f0ca1
+
+* feat(dbx-web): add dbx-color-border utility + dashboard overview example
+
+Change-Log: dbx-components/285b5fc6-8e37-4d58-9c27-9d7e9e4b8137
+
+* feat(dbx-web): add dbx-card-horizontal scrolling card row utilities
+
+Change-Log: dbx-components/eb870671-45c2-4153-b733-22b3130ca0e4
+
+* feat(dbx-web): host DbxColorDirective on dbx-button and dbx-chip
+
+dbx-button and dbx-chip now host DbxColorDirective via hostDirectives and
+push their resolved color into its dbxColor model (now a model() so
+colored-surface components can set it). The components' duplicated color
+host bindings were removed; the directive is the single token provider on
+the element.
+
+- dbx-button: resolved color (echo > color > buttonStyle.color) is pushed
+  into the host directive, restoring DbxButtonEcho.color support that was
+  lost with the removed DbxProgressButtonConfig.buttonColor field
+- dbx-chip: tone/tonal handling now reads the directive's effective
+  color, fixing unreadable contrast text on the default 18% tonal surface
+- guard button/chip color SCSS with :not(.dbx-default) since the host
+  directive always applies the .dbx-color marker
+- convert dbxColor= on dbx-button/dbx-chip to color= workspace-wide
+  (applying [dbxColor] to them now throws NG0309 duplicate directive) and
+  drop DbxColorDirective imports left unused by the conversion
+- demo: wire DbxColorDirective into pages where dbxColor was inert
+  (button page, sidenav layouts, interaction popover), restore progress
+  button colors via [dbxColor], add named/custom/template color examples
+  for dbx-progress-spinner-button, use color= on dbx-step-block
+- docs: COLOR_MIGRATION.md + VERSION_MIGRATION.md corrected — color
+  inputs on dbx-button/dbx-chip/dbx-step-block are no longer removed
+
+Change-Log: dbx-components/0a714ef1-b204-47d0-b528-8af259721749
+Change-Log: dbx-components/bd6ff230-2bc7-49a1-bbbb-f7186bc9e393
+Change-Log: dbx-components/5d985e7c-093e-4321-8c34-82496ffad852
+Change-Log: dbx-components/c88df970-5966-4a44-aa4d-e843bc3fe3f9
+
+* fix(dbx-web): make [dbxColor] inert when no color is bound
+
+DbxColorDirective no longer adds the .dbx-color marker class or the
+dbx-default token class when no color is bound. An uncolored host (e.g.
+dbx-button, which hosts the directive unconditionally) previously got
+.dbx-color + .dbx-default, and the generated .dbx-default class forced
+color/--dbx-color-current to the near-background surface-container
+token — washing out uncolored buttons inside a tonal [dbxColor] card
+and stomping the parent's inherited color tokens. With no color bound
+the directive now contributes nothing, so parent tokens inherit.
+
+Also:
+- add dbx-list-no-item-padding list modifier; remove icon-tile left
+  margin in dbx-list-two-line-item rows
+- sidenav text color falls back to --dbx-color-current then
+  --mat-sys-on-surface instead of primary-container
+- demo: use dbx-button in dashboard overview + worth-knowing list
+  examples, drop now-redundant colors in the support banner example,
+  sidenav anchor-list class + settings token overflow tweaks
+
+Change-Log: dbx-components/368cdedc-6480-4ccf-b11f-fbd95665d758
+
+* refactor: added doc-bot-status-layout-example
+
+Change-Log: dbx-components/4f904cf7-1ca2-48f0-b3bc-50936593ff7d
+Change-Log: dbx-components/81d5602f-1dbd-460a-8bc1-d6422c79d736
+
+* feat: add deterministic setup commands to cli
+
+Change-Log: dbx-components/05094f03-89f9-40a1-9caa-3ac11181eb89
+
+* feat(dbx-components-cli): add setup addon oidc + mcp scaffolding
+
+Add an extensible `setup addon <name>` command group that layers optional
+capabilities onto an existing project, with `oidc` (OAuth2/OIDC provider) and
+`mcp` (MCP server, depends on oidc) as the first add-ons. Add-ons read the
+existing dbx.setup.json for tokens and reject with a non-zero exit listing any
+missing required field.
+
+- engine: SetupAddon contract + registry, marker-anchored source injection
+  (idempotent, prints manual edits when a marker is absent), manifest field
+  validation + installed-addon recording, idempotent firebase.json/proxy/.env/
+  .mcp.json edits
+- base templates: inert @dbx-addon markers + neutral pre-shapes at every wiring
+  site (api app/module/function/crud, firebase service/functions, app config/router)
+- templates/addons/{oidc,mcp}: ported from the advisorey OIDC+MCP port (aa8436f +
+  the 3476f2b dev-discovery/public-client fix)
+- setup validate covers installed add-ons; oidc module render is manifest-aware so
+  re-running oidc after mcp keeps the MCP resource server enabled
+
+Change-Log: dbx-components/fe38dbb5-ca44-4dcb-a039-5b809e94c007
+
+* feat(nestjs): add @dereekb/nestjs/openrouter integration subpackage
+
+Wraps the official @openrouter/sdk client in a NestJS module (OpenRouterApi
++ OpenRouterModule) with minimal env config, and adds standalone broadcast
+webhook support (OTLP trace parsing, constant-time header-token verification,
+and a span handler factory). Wires the subpackage into the parent @dereekb/nestjs
+build, exports, tsconfig, and root path alias.
+
+Change-Log: dbx-components/c0837a67-5424-4082-988d-0c02f84b8c58
+
+* refactor(demo): tokenize/strip app scss, dedupe doc theme plumbing
+
+Audit and clean up apps/demo SCSS. Delete 3 dead/empty component
+stylesheets (feature.card.list, feature.example, feature.layout),
+replacing two with .dbx-mb3 / .dbx-pb5 utilities on the host. Swap
+hand-rolled flex centering for .dbx-flex-center and the inline .hint
+ruleset for .dbx-note + .dbx-text-body-small. Tokenize value-preserving
+literals in sidenav (corner/outline/padding/gap) and feature.formtabs
+(label-medium typescale, padding-1). Dedupe _doc.scss into shared
+config submaps + one apply-doc-theme mixin; fold body margin into
+html,body.
+
+Change-Log: dbx-components/42a14518-f2ee-4365-a72f-c458a5e1db34
+
+* refactor(dbx-web): tokenize residual spacing/radius literals
+
+Replace 10 residual naked spacing/radius literals across dbx-web component
+partials with the matching global tokens (value-preserving): --dbx-padding-1
+(2px), --dbx-padding-2 (6px), --dbx-padding-3 (12px), --dbx-padding-5 (24px),
+plus a --mat-sys-corner-medium middle level inserted into the icon-tile radius
+fallback chain. Files: layout/text, layout/list, layout/section, layout/column,
+router/layout/sidenav, interaction/dialog.
+
+Outcome of a report-first component-token audit (CT-1..CT-6) of all 66 dbx-web
+.scss files: no CT-1 pass-throughs, CT-2 naming issues, or CT-3 dark-mode-broken
+color fallbacks found — these were the only actionable CT-5 fixes. No tokens
+added/renamed/removed, so no MCP token-catalog regeneration is required.
+
+Change-Log: dbx-components/96e47877-19cb-43c4-a363-92be51318e33
+
+* refactor(dbx-form): remove @ngx-formly, forge-only (stages A,B,B.5)
+
+Relocate framework-agnostic field domain code out of formly into the neutral
+field/ tree, delete the formly layer + secondary-entry formly twins, and port
+the style-demo to forge. Stages A, B, and B.5 of the formly-removal plan;
+demo/CLI/package.json/lockfile cleanup (C-F) remain.
+
+- Stage A: relocate pure date/duration/selection field code (incl. the
+  searchable-autocomplete + duration-picker-popover components and phone message
+  consts) into field/; extract co-mingled neutral types into
+  field/value/date/{datetime,fixeddaterange}.config, field/value/duration/
+  duration.config, field/selection/pickable/pickable.item; repoint forge + the 3
+  neutral consumers onto field/.
+- Stage B: delete src/lib/formly/ wholesale; drop ./formly + ./form.module
+  barrels, DbxFormExtensionModule, DbxFormModule, the formly action dialog;
+  replace the formly test harness with a forge one and rewrite the loading spec;
+  migrate the SCSS forge relied on out of formly partials into forge SCSS;
+  forge-only calendar (keep DbxFormCalendarModule) + delete DbxFormMapboxModule.
+- Stage B.5: port the style-demo form components to forge; add the
+  filterSelectedValues hook to the forge pickable field to preserve preset
+  group-exclusivity.
+
+Change-Log: dbx-components/a6440fc0-a06c-43ed-9551-ad38b106b7cf
+
+* refactor(dbx-form): remove @ngx-formly, forge-only (stages C-F)
+
+Strip the formly half of the demo form/extension showcases (keeping the forge
+demos), remove @ngx-formly from all manifests + the dereekb/ngx-formly fork,
+regenerate the lockfile, and wire provideDbxForgeFormFieldDeclarations() in the
+CLI/setup scaffolding templates instead of FormlyModule.forRoot().
+
+Restore neutral pickable helpers and forge login value types to @dereekb/dbx-form
+that stage A/B over-deleted (consumed by dbx-firebase + the forge demos).
+* @dereekb/dbx-form is now forge-only; all Formly* symbols removed.
+
+Change-Log: dbx-components/5ce23b18-76b5-423f-82dc-40d0872bf793
+
+* refactor: fixed removed styling
+
+* refactor: adopt zoneless change detection, remove NgZone
+
+- demo app + CLI templates use provideZonelessChangeDetection() and drop the zone.js build polyfill
+- remove NgRx strictActionWithinNgZone / connectInZone (incompatible with the NoopNgZone zoneless installs)
+- remove dead NgZone usage from dbx-core AbstractTransitionWatcherDirective
+- flip global test default to zoneless via setupTestBed({ zoneless: true }); drop 22 now-redundant per-file providers
+- move zone.js to devDependencies (test-only via @analogjs/vitest-angular)
+
+Change-Log: dbx-components/b801c7f0-f251-47e6-bcb0-3b27b3b30faa
+
+# Unreleased
+
+### BREAKING CHANGES
+
+- **dbx-form:** `@ngx-formly` has been removed entirely — `@dereekb/dbx-form` is now forge-only, built on `@ng-forge/dynamic-forms`. All formly symbols have been deleted, including `DbxFormlyComponent`, `provideFormlyContext`, `AbstractConfigAsyncFormlyFormDirective`, the `formly*Field` field factories, the `DbxFormFormly*Module` NgModules, `DbxFormlyFieldsContextDirective`, `formlyComponentField`, `DbxFormActionDialogComponent`, and `defaultValidationMessages`. Migrate to the forge equivalents: the `dbxForge*` field factories, `provideDbxForgeFormFieldDeclarations()` (validation messages are seeded automatically by the root `DbxForgeGlobalDefaultConfigService`), `DbxForgeActionDialogComponent`, and `AbstractConfigAsyncForgeFormDirective`. The `@ngx-formly/*` packages — including the `dereekb/ngx-formly` fork and its `FormlyModule.forRoot(...)` root wiring — have been dropped from every manifest. App scaffolding templates (`root.app.config.ts`) now wire `provideDbxForgeFormFieldDeclarations()` in place of `FormlyModule.forRoot()`.
+
 # [13.17.0](https://github.com/dereekb/dbx-components/compare/v13.16.0-dev...v13.17.0) (2026-06-15)
 
 

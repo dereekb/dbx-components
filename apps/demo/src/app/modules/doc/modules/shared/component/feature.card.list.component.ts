@@ -15,7 +15,6 @@ export interface DocFeatureCard {
 @Component({
   selector: 'doc-feature-card-list',
   templateUrl: './feature.card.list.component.html',
-  styleUrls: ['./feature.card.list.component.scss'],
   standalone: true,
   imports: [FlexModule, DbxAnchorComponent, MatCard, MatRipple, MatCardHeader, MatCardTitleGroup, MatCardTitle, MatCardSubtitle, MatCardActions],
   changeDetection: ChangeDetectionStrategy.OnPush

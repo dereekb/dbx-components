@@ -90,11 +90,11 @@
     </doc-feature-example>
     <doc-feature-example header=".dbx-content-pit" hint="Content with a background, margin and internal label with space for content.">
       <dbx-content-pit>
-        <p>This content is in pit.</p>
+        <p>This content is in a pit. Pits are rounded by default.</p>
       </dbx-content-pit>
-      <p>The content pit can have rounded corners.</p>
-      <dbx-content-pit [rounded]="true">
-        <p>This content is in a rounded pit.</p>
+      <p>Pass [rounded]="false" to square a pit — this applies the common .dbx-corners-none opt-out utility.</p>
+      <dbx-content-pit [rounded]="false">
+        <p>This content is in a square pit.</p>
       </dbx-content-pit>
       <p>The content pit can also be set to scrollable, which limits the height.</p>
       <dbx-content-pit [scrollable]="true">
@@ -111,21 +111,28 @@
       <h4>Examples</h4>
       <p>Example of a dbx-content-pit with dbx-label-block and content.</p>
       <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center">
-        <dbx-content-pit [rounded]="true" style="width: 140px; height: 140px">
+        <dbx-content-pit style="width: 140px; height: 140px">
           <dbx-label-block header="Example Label">
             <div class="dbx-primary" style="text-align: center; font-size: 4.4em; font-weight: bold">100</div>
           </dbx-label-block>
         </dbx-content-pit>
-        <dbx-content-pit [rounded]="true" style="width: 140px; height: 140px">
+        <dbx-content-pit style="width: 140px; height: 140px">
           <dbx-label-block header="Example Label">
             <div class="dbx-accent" style="text-align: center; font-size: 4.4em; font-weight: bold">100</div>
           </dbx-label-block>
         </dbx-content-pit>
-        <dbx-content-pit [rounded]="true" style="width: 140px; height: 140px">
+        <dbx-content-pit style="width: 140px; height: 140px">
           <dbx-label-block header="Example Label">
             <div class="dbx-warn" style="text-align: center; font-size: 4.4em; font-weight: bold">100</div>
           </dbx-label-block>
         </dbx-content-pit>
+      </div>
+    </doc-feature-example>
+    <doc-feature-example header=".dbx-corners" hint="Generic single-class corner rounding for any block. .dbx-corners reads the overridable --dbx-corners-border-radius (medium default); the level variants (.dbx-corners-small … .dbx-corners-full, .dbx-corners-none) are fixed, token-independent choices.">
+      <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center">
+        <div class="dbx-corners" style="width: 110px; height: 110px; background: var(--mat-sys-surface-container); display: flex; align-items: center; justify-content: center; text-align: center">.dbx-corners</div>
+        <div class="dbx-corners-large" style="width: 110px; height: 110px; background: var(--mat-sys-surface-container); display: flex; align-items: center; justify-content: center; text-align: center">.dbx-corners-large</div>
+        <div class="dbx-corners-full" style="width: 110px; height: 110px; background: var(--mat-sys-surface-container); display: flex; align-items: center; justify-content: center; text-align: center">.dbx-corners-full</div>
       </div>
     </doc-feature-example>
     <doc-feature-example header=".dbx-content" hint="This view/class sets the height to be the height of the page, minus the top and (if known) content navigation bars.">

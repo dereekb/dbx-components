@@ -8,6 +8,50 @@ $list-item-padded-min-height: 42px;
   .dbx-list {
     overflow: hidden;
     height: 100%;
+
+    // dbx-list (selection/standard) rows default to an M3 medium corner via the overridable
+    // `--dbx-list-item-border-radius` token; `.dbx-list-square-items` zeroes it and the style-demo
+    // `list-corner-*` levers re-point it. Both shape tokens resolve to the same value, so no
+    // `border-radius` redeclaration is needed; the more specific `.dbx-list-card-items-list` item rule
+    // deliberately wins for card lists.
+    --mat-list-active-indicator-shape: var(--dbx-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+    --mat-list-list-item-container-shape: var(--dbx-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+
+    .mat-mdc-list-item {
+      --mat-focus-indicator-border-radius: var(--mat-list-list-item-container-shape);
+    }
+  }
+
+  // dbx-anchor-list (nav) rows default to an M3 medium corner via their OWN
+  // `--dbx-anchor-list-item-border-radius` token — separate from `.dbx-list` so the style-demo
+  // `anchor-list-corner-*` levers control anchor lists independently. `.dbx-list-square-items`
+  // zeroes this token too. The `.dbx-anchor-list` class lives on the inner `mat-nav-list`.
+  .dbx-anchor-list {
+    --mat-list-active-indicator-shape: var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+    --mat-list-list-item-container-shape: var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+
+    .mat-mdc-list-item {
+      --mat-focus-indicator-border-radius: var(--mat-list-list-item-container-shape);
+    }
+  }
+
+  // The sidenav anchor list rows sit flush against the left screen edge, so only the RIGHT corners round —
+  // the radius is composed into a `0 r r 0` shorthand (top-left / top-right / bottom-right / bottom-left),
+  // leaving the left corners square. The "how round" radius defaults to the regular anchor-list radius
+  // (`--dbx-anchor-list-item-border-radius`) so the sidenav tracks the `anchor-list-corner-*` lever by default,
+  // but `--dbx-sidenav-anchor-list-item-border-radius` overrides it for sidenav-specific tuning. Higher
+  // specificity than `.dbx-anchor-list`, so it wins for the inner nav-list inside a sidenav host.
+  .dbx-sidenav-anchor-list .dbx-anchor-list {
+    --mat-list-active-indicator-shape: 0 var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) 0;
+    --mat-list-list-item-container-shape: 0 var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) 0;
+  }
+
+  // MDC's two-line + leading-icon variant sizes the primary-text baseline-spacer `::before` to 32px, taller than
+  // the 28px the two-line (no-leading-icon) rule uses, which over-tall the title box and pushes the title/hint
+  // group off-center in dbx-anchor custom-anchor rows (reads as top-aligned). Pin the spacer back to 28px within
+  // anchor lists so the rows center vertically (selection lists, which keep MDC's structure, are untouched).
+  .dbx-anchor-list .mdc-list-item--with-leading-icon.mdc-list-item--with-two-lines .mdc-list-item__primary-text::before {
+    height: 28px;
   }
 
   .dbx-list-empty-content {
@@ -94,7 +138,7 @@ $list-item-padded-min-height: 42px;
   .dbx-list-view-group {
     .dbx-list-view-group-header {
       .dbx-list-two-line-item .dbx-list-two-line-item-with-icon {
-        padding: 2px 0; // override the padding when there is an icon
+        padding: var(--dbx-padding-1) 0; // override the padding when there is an icon
       }
     }
   }
@@ -122,8 +166,8 @@ $list-item-padded-min-height: 42px;
   /// @role spacing
   /// @see-also dbx-list-item-padded-thick, dbx-list-item-p0
   .dbx-list-item-padded {
-    min-height: $list-item-padded-min-height;
-    padding: 2px 6px;
+    min-height: var(--dbx-list-item-padded-min-height, #{$list-item-padded-min-height});
+    padding: var(--dbx-padding-1) var(--dbx-padding-2);
   }
 
   /// @dbx-utility list-item-padded-thick
@@ -131,8 +175,14 @@ $list-item-padded-min-height: 42px;
   /// @role spacing
   /// @see-also dbx-list-item-padded
   .dbx-list-item-padded-thick {
-    min-height: $list-item-padded-min-height;
+    min-height: var(--dbx-list-item-padded-min-height, #{$list-item-padded-min-height});
     padding: theming.$padding-3;
+  }
+
+  // No side padding if the parent list component has the dbx-list-no-item-padding class.
+  .dbx-list-no-item-padding .dbx-list-item-padded {
+    padding-left: 0;
+    padding-right: 0;
   }
 
   // Card-style list — each row becomes a tinted, rounded surface that lives
@@ -178,12 +228,26 @@ $list-item-padded-min-height: 42px;
     }
   }
 
+  // Opts a list out of the default medium-rounded rows back to square (0). Custom properties inherit, so
+  // applying this on a `dbx-list` / `dbx-anchor-list` host (or any ancestor) squares selection and nav rows
+  // alike by zeroing both the `.dbx-list` (`--dbx-list-item-border-radius`) and `.dbx-anchor-list`
+  // (`--dbx-anchor-list-item-border-radius`) row tokens. The sidenav keeps its own token; the card-list
+  // (`.dbx-list-card-items-list`) item rule is more specific and keeps its own shape.
+  /// @dbx-utility list-square-items
+  /// @intent opts a `.dbx-list` / `.dbx-anchor-list` out of the default medium-rounded rows back to square (0 radius) by zeroing their row radius tokens
+  /// @role layout
+  /// @see-also dbx-list-card-items-list
+  .dbx-list-square-items {
+    --dbx-list-item-border-radius: 0;
+    --dbx-anchor-list-item-border-radius: 0;
+  }
+
   // When the tile is the leading icon in a two-line list item, override the
   // default `.item-icon` flat spacing with tile-appropriate margins. The
   // base `.dbx-icon-tile` rule lives in `_text.scss` next to its component.
   .dbx-list-two-line-item .item-icon.dbx-icon-tile {
-    padding: 8px;
-    margin: 0 12px 0 4px;
+    padding: var(--dbx-icon-tile-padding, 8px);
+    margin: 0 var(--dbx-padding-3) 0 0;
   }
 
   /// @dbx-utility list-two-line-item
@@ -248,6 +312,19 @@ $list-item-padded-min-height: 42px;
   /// @see-also dbx-list-item-p0
   .dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item {
     padding: 0;
+  }
+
+  // `.dbx-list` defaults to `height: 100%` so it fills a fixed-height scroll
+  // container. When a list instead flows inline with other content (e.g. card
+  // content rendered below it), that percentage resolves against the stretched
+  // ancestor and pushes the trailing content out of the card. This modifier
+  // lets the list size to its rows.
+  /// @dbx-utility list-auto-height
+  /// @intent size a `.dbx-list` to its rows instead of filling its container — apply on the list wrapper host when content flows below the list (the default `height: 100%` would push that content out of a stretched card)
+  /// @role layout
+  /// @see-also list-no-hover-effects, list-no-item-padding
+  .dbx-list-auto-height .dbx-list {
+    height: auto;
   }
 
   // Zeros all padding on the underlying Material list item. Per-item utility

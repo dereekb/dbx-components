@@ -1,0 +1,28 @@
+# Add files here to ignore them from prettier formatting
+
+/.angular
+/.circleci
+/.config
+/.firebase
+/.github
+/.claude
+/.husky
+/.reports
+/.vscode
+
+/dist
+/coverage
+/setup/**/*.template.json
+
+# Generated files — byte-stable output from generators; prettier would
+# reformat them and cause spurious diffs on regenerate.
+**/*.generated.*
+
+/art
+/docker
+.commitlintrc.json
+.eslintrc.json
+*.md
+
+/.nx/cache
+/.nx/workspace-data

@@ -16,7 +16,10 @@
 @forward './lib/style/config' show define-dbx-theme-config, get-dbx-theme-config, quick-define-dbx-config-via-banners;
 
 // Shape Overrides
-@forward './lib/style/m2-visual-compat' show dbx-components-shapes, m2-visual-compat;
+@forward './lib/style/shapes' show dbx-components-shapes;
+
+// Disposable demo/debug classes backing @dereekb/dbx-web/style-demo (removed when the styling migration completes)
+@forward './lib/style/style-demo' show dbx-style-demo-debug-classes;
 
 // Theme bundles
 @forward './lib/style/all-theme' show all-component-themes;

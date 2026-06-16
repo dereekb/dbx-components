@@ -1,5 +1,5 @@
 import { Component, type ElementRef, type OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxSpacerDirective, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
+import { type DbxPopoverKey, AbstractPopoverDirective, type DbxPopoverService, DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxColorDirective, DbxSpacerDirective, DbxPopoverScrollContentDirective } from '@dereekb/dbx-web';
 import { type NgPopoverRef } from 'ng-overlay-container';
 import { MatButton } from '@angular/material/button';
 import { DocInteractionExamplePopoverContentComponent } from './interaction.popover.content.component';
@@ -19,7 +19,7 @@ export interface DocInteractionPopoverConfig {
         <dbx-popover-close-button></dbx-popover-close-button>
       </dbx-popover-header>
       <dbx-popover-controls>
-        <dbx-bar color="warn">
+        <dbx-bar dbxColor="warn">
           <button mat-raised-button>Button</button>
           <dbx-spacer></dbx-spacer>
           <button mat-raised-button>Button</button>
@@ -32,7 +32,7 @@ export interface DocInteractionPopoverConfig {
     </dbx-popover-content>
   `,
   standalone: true,
-  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent],
+  imports: [DbxPopoverContentComponent, DbxPopoverHeaderComponent, DbxButtonSpacerDirective, DbxPopoverCloseButtonComponent, DbxPopoverControlsDirective, DbxBarDirective, DbxColorDirective, MatButton, DbxSpacerDirective, DbxPopoverScrollContentDirective, DocInteractionExamplePopoverContentComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocInteractionExamplePopoverComponent extends AbstractPopoverDirective<number> implements OnInit {

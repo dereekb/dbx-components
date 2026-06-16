@@ -1,11 +1,9 @@
 import { Component, ElementRef, input, computed, ChangeDetectionStrategy, viewChild, type Signal } from '@angular/core';
-import { type ThemePalette } from '@angular/material/core';
 import { type ProgressBarMode } from '@angular/material/progress-bar';
 import { type ErrorInput, isDefinedAndNotFalse, type Maybe } from '@dereekb/util';
 import { checkNgContentWrapperHasContent } from '@dereekb/dbx-core';
 import { type ProgressSpinnerMode } from '@angular/material/progress-spinner';
 import { DbxErrorComponent } from '../error/error.component';
-import { type DbxColorInput } from '../layout/style/style';
 import { DbxLoadingProgressComponent } from './loading-progress.component';
 import { NgTemplateOutlet } from '@angular/common';
 import { type DbxLoadingIsLoadingOrProgress, type DbxLoadingProgress } from './loading';
@@ -37,7 +35,7 @@ export type LoadingComponentState = 'none' | 'loading' | 'content' | 'error';
  *
  * @example
  * ```html
- * <dbx-basic-loading [loading]="true" color="accent" text="Loading data...">
+ * <dbx-basic-loading [loading]="true" dbxColor="accent" text="Loading data...">
  *   <p>Content appears here when loading is false.</p>
  * </dbx-basic-loading>
  * ```
@@ -55,7 +53,6 @@ export class DbxBasicLoadingComponent {
 
   readonly diameter = input<Maybe<number>>();
   readonly mode = input<Maybe<ProgressBarMode | ProgressSpinnerMode>>();
-  readonly color = input<ThemePalette | DbxColorInput>('primary');
   readonly text = input<Maybe<string>>();
   readonly linear = input<Maybe<boolean>>(false);
 

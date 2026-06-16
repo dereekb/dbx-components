@@ -1,6 +1,6 @@
 import type { BaseValueField } from '@ng-forge/dynamic-forms';
 import { type TimeUnit, filterFromPOJO } from '@dereekb/util';
-import type { TimeDurationFieldValueMode } from '../../../../formly/field/value/duration/duration.field';
+import type { TimeDurationFieldValueMode } from '../../../../field/value/duration/duration.config';
 import type { DbxForgeTimeDurationFieldComponentProps } from './duration.field.component';
 import { dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, type DbxForgeFieldFunctionDef } from '../../field';
 

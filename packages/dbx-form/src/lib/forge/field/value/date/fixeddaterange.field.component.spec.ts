@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 
 import { type FormConfig, type FormOptions, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
@@ -11,7 +11,7 @@ import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { dbxForgeFixedDateRangeField } from './fixeddaterange.field';
 import { DbxForgeFixedDateRangeFieldComponent } from './fixeddaterange.field.component';
 import { DateRangeType, type DateRange } from '@dereekb/date';
-import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
+import { DbxDateTimeValueMode } from '../../../../field/value/date/date.value';
 import { type Maybe } from '@dereekb/util';
 
 // MARK: Test Host Component
@@ -32,7 +32,7 @@ class TestForgeFixedDateRangeHostComponent {
   readonly formOptions = signal<FormOptions | undefined>(undefined);
 }
 
-const FORGE_FIXEDDATERANGE_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const FORGE_FIXEDDATERANGE_TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 const SETTLE_TIME = 500;
 

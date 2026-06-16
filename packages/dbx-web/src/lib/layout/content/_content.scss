@@ -57,18 +57,26 @@ $dbx-border-opacity-default: 20%;
   }
 
   /// @dbx-utility content-pit
-  /// @intent recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks)
+  /// @intent recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`
   /// @role layout
-  /// @see-also dbx-content-pit-rounded, dbx-content-pit-scrollable, dbx-content-border, dbx-content-elevate
+  /// @see-also dbx-content-pit-scrollable, dbx-content-border, dbx-content-elevate, dbx-corners-none
   .dbx-content-pit {
     padding: $pit-padding;
+  }
+
+  // Pits round by default. Kept OUT of the `.dbx-content-pit` rule and wrapped
+  // in `:where()` so specificity stays at 0 — any single-class utility
+  // (`.dbx-corners-none`, `.dbx-corners-large`, or an app class) overrides it.
+  :where(.dbx-content-pit) {
+    border-radius: theming.$dbx-content-pit-rounded-border-radius;
   }
 
   /// @dbx-utility content-pit-rounded
   /// @intent rounded modifier for `.dbx-content-pit` — applies the `theming.$dbx-content-pit-rounded-border-radius` corner radius
   /// @role layout
   /// @parent content-pit
-  /// @see-also dbx-content-pit
+  /// @see-also dbx-content-pit, dbx-corners-none
+  /// @deprecated Pits round by default now; this modifier is a harmless back-compat alias emitting the same radius. To square a pit use `.dbx-corners-none`.
   .dbx-content-pit-rounded {
     border-radius: theming.$dbx-content-pit-rounded-border-radius;
   }
@@ -135,7 +143,7 @@ $dbx-border-opacity-default: 20%;
   .dbx-content-scroll-lock {
     height: 100%;
     overflow: hidden;
-    padding: 0 2px; // Override padding
+    padding: 0 var(--dbx-padding-1); // Override padding
   }
 
   /// @dbx-utility content-container
@@ -153,7 +161,7 @@ $dbx-border-opacity-default: 20%;
     }
 
     &.container-padding-min {
-      padding: 0 2px;
+      padding: 0 var(--dbx-padding-1);
     }
 
     &.container-padding-small {
@@ -165,15 +173,15 @@ $dbx-border-opacity-default: 20%;
     }
 
     &.container-top-padding-min {
-      padding-top: 2px;
+      padding-top: var(--dbx-padding-1);
     }
 
     &.container-top-padding-small {
-      padding-top: 6px;
+      padding-top: var(--dbx-padding-2);
     }
 
     &.container-top-padding-normal {
-      padding-top: 12px;
+      padding-top: var(--dbx-padding-3);
     }
 
     // width
@@ -214,11 +222,18 @@ $dbx-border-opacity-default: 20%;
   /// @role spacing
   /// @see-also dbx-content-container, dbx-content-page, dbx-content-pit-scrollable
   .dbx-scroll-content {
-    padding-bottom: $scroll-content-bottom-padding;
+    padding-bottom: var(--dbx-scroll-content-bottom-padding, #{$scroll-content-bottom-padding});
   }
 
   .dbx-content-pit {
     background: var(--mat-sys-surface-container);
+  }
+
+  // pits on a [dbxColor]-painted surface wash from the current contrast color instead of the
+  // surface-container token, which would clash with the painted background (e.g. a dark inverse
+  // card). Override --dbx-content-pit-color-tone (percentage) to tune the wash.
+  .dbx-color .dbx-content-pit {
+    background: color-mix(in srgb, #{theming.$dbx-color} var(--dbx-content-pit-color-tone, 11%), transparent);
   }
 
   .dbx-content-border {

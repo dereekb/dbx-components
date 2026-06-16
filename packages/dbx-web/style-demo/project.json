@@ -1,0 +1,50 @@
+{
+  "name": "dbx-web-style-demo",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/dbx-web/style-demo/src",
+  "prefix": "dbx",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-web/style-demo"],
+      "options": {
+        "commands": [
+          {
+            "description": "build dbx-web-style-demo production",
+            "command": "npx nx run dbx-web-style-demo:build-base:production"
+          }
+        ],
+        "parallel": false,
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/packages/dbx-web/style-demo"],
+      "options": {
+        "project": "packages/dbx-web/style-demo/ng-package.json",
+        "tsConfig": "packages/dbx-web/style-demo/tsconfig.lib.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "packages/dbx-web/style-demo/tsconfig.lib.prod.json"
+        },
+        "development": {}
+      },
+      "defaultConfiguration": "production",
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/dbx-web/style-demo"
+      }
+    }
+  }
+}

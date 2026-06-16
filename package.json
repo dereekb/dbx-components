@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "13.17.0",
+  "version": "14.0.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "{ [ -f .env.local ] || { rm -rf .env.local && : > .env.local; }; } && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal > /dev/null 2>&1; fi",
@@ -44,9 +44,8 @@
     "@ngrx/entity": "^21.1.0",
     "@ngrx/operators": "^21.1.0",
     "@ngrx/store": "^21.1.0",
-    "@ngx-formly/core": "git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d",
-    "@ngx-formly/material": "git+https://git@github.com/dereekb/ngx-formly#02e615006744374a587b5d35de3b2d137e2e05a8",
     "@nx/devkit": "22.7.0",
+    "@openrouter/sdk": "^0.12.79",
     "@placemarkio/geo-viewport": "^1.0.2",
     "@typeform/api-client": "^2.10.2",
     "@uirouter/angular": "21.0.0",
@@ -90,8 +89,7 @@
     "stripe": "^20.4.1",
     "ts-essentials": "^10.2.0",
     "tslib": "^2.8.1",
-    "twilio": "^6.0.2",
-    "zone.js": "^0.16.1"
+    "twilio": "^6.0.2"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "~2.5.0",
@@ -193,7 +191,8 @@
     "vite": "7.3.2",
     "vitest": "4.1.5",
     "vitest-axe": "^0.1.0",
-    "yargs": "^18.0.0"
+    "yargs": "^18.0.0",
+    "zone.js": "^0.16.1"
   },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "0.34.5",

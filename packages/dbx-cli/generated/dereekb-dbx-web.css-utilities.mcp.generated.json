@@ -33,7 +33,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 64,
+      "line": 65,
       "declarations": [
         {
           "property": "width",
@@ -59,7 +59,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 44,
+      "line": 45,
       "declarations": [
         {
           "property": "width",
@@ -85,7 +85,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 15,
+      "line": 16,
       "declarations": [
         {
           "property": "position",
@@ -133,7 +133,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 117,
+      "line": 125,
       "declarations": [
         {
           "property": "border-radius",
@@ -154,7 +154,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 100,
+      "line": 101,
       "declarations": [
         {
           "property": "display",
@@ -208,7 +208,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/avatar/_avatar.scss",
-      "line": 126,
+      "line": 134,
       "declarations": [
         {
           "property": "border-radius",
@@ -233,7 +233,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/bar/_bar.scss",
-      "line": 26,
+      "line": 27,
       "declarations": [
         {
           "property": "box-sizing",
@@ -277,7 +277,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/bar/_bar.scss",
-      "line": 74,
+      "line": 113,
       "declarations": [
         {
           "property": "--mat-toolbar-container-background-color",
@@ -309,7 +309,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/bar/_bar.scss",
-      "line": 43,
+      "line": 71,
       "declarations": [
         {
           "property": "background",
@@ -336,7 +336,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/bar/_bar.scss",
-      "line": 52,
+      "line": 80,
       "declarations": [
         {
           "property": "height",
@@ -359,7 +359,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/bar/_bar.scss",
-      "line": 65,
+      "line": 104,
       "declarations": [
         {
           "property": "--mat-toolbar-container-background-color",
@@ -391,7 +391,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/bar/_bar.scss",
-      "line": 83,
+      "line": 122,
       "declarations": [
         {
           "property": "--mat-toolbar-container-background-color",
@@ -444,11 +444,42 @@
       "module": "@dereekb/dbx-web",
       "file": "src/lib/button/_button.scss",
       "line": 17,
-      "declarations": [],
+      "declarations": [
+        {
+          "property": "--mat-button-text-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        },
+        {
+          "property": "--mat-button-filled-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        },
+        {
+          "property": "--mat-button-protected-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        },
+        {
+          "property": "--mat-button-outlined-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        },
+        {
+          "property": "--mat-button-tonal-container-height",
+          "value": "var(--dbx-button-big-height, #{$big-button-height})"
+        }
+      ],
       "role": "layout",
       "intent": "enlarge the inner `mat-mdc-button` height to 46px (33% taller than default) by setting Material's `--mat-button-*-container-height` tokens",
       "seeAlso": [
         "button-wide"
+      ],
+      "tokensRead": [
+        "--dbx-button-big-height"
+      ],
+      "tokensSet": [
+        "--mat-button-filled-container-height",
+        "--mat-button-outlined-container-height",
+        "--mat-button-protected-container-height",
+        "--mat-button-text-container-height",
+        "--mat-button-tonal-container-height"
       ]
     },
     {
@@ -477,6 +508,9 @@
       "seeAlso": [
         "button-wrap-group",
         "dbx-flex-column"
+      ],
+      "tokensRead": [
+        "--dbx-padding-2"
       ]
     },
     {
@@ -592,6 +626,9 @@
       "intent": "stretch the inner `.dbx-button` to a 120px minimum width (still capped by parent)",
       "seeAlso": [
         "button-grow"
+      ],
+      "tokensRead": [
+        "--dbx-button-wide-min-width"
       ]
     },
     {
@@ -607,6 +644,9 @@
       "seeAlso": [
         "button-column",
         "dbx-flex-bar"
+      ],
+      "tokensRead": [
+        "--dbx-padding-2"
       ]
     },
     {
@@ -615,7 +655,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/card/_card.scss",
-      "line": 24,
+      "line": 63,
       "declarations": [],
       "role": "layout",
       "intent": "banner-style `<mat-card>` — pair with `[dbxColor]` (+ `[dbxColorTone]`) for the tonal surface. Drop `<mat-card-header>` entirely; put the icon + `<mat-card-title>` row inside `<mat-card-content>` via a `.dbx-card-banner-header` child, and the action buttons inside `<mat-card-footer>`.",
@@ -630,12 +670,338 @@
       ]
     },
     {
+      "slug": "card-horizontal",
+      "selector": ".dbx-card-horizontal",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 136,
+      "declarations": [
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "align-items",
+          "value": "stretch"
+        },
+        {
+          "property": "gap",
+          "value": "var(--dbx-padding-3)"
+        },
+        {
+          "property": "overflow-x",
+          "value": "auto"
+        },
+        {
+          "property": "padding-top",
+          "value": "calc(var(--dbx-card-horizontal-tab-overlap, 10px) + var(--dbx-padding-1))"
+        },
+        {
+          "property": "padding-bottom",
+          "value": "var(--dbx-padding-2)"
+        }
+      ],
+      "role": "layout",
+      "intent": "horizontally scrolling row of fixed-width, equal-height `.dbx-card-horizontal-item` cards — `align-items: stretch` keeps the cards equal-height while `overflow-x: auto` scrolls the row on narrow viewports. Because `overflow-x: auto` forces vertical overflow to clip, the row reserves headroom via `padding-top` so a `.dbx-card-horizontal-tab` chip poking above a card stays inside the scrollable padding box instead of being clipped; override `--dbx-card-horizontal-tab-overlap` to change the headroom together with the tab.",
+      "seeAlso": [
+        "card-horizontal-item",
+        "flex-bar",
+        "chip"
+      ],
+      "tokensRead": [
+        "--dbx-card-horizontal-tab-overlap",
+        "--dbx-padding-1",
+        "--dbx-padding-2",
+        "--dbx-padding-3"
+      ]
+    },
+    {
+      "slug": "card-horizontal-detail",
+      "selector": ".dbx-card-horizontal-detail",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 239,
+      "declarations": [
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "align-items",
+          "value": "center"
+        },
+        {
+          "property": "gap",
+          "value": "var(--dbx-padding-2)"
+        },
+        {
+          "property": "padding",
+          "value": "var(--dbx-padding-1) 0"
+        },
+        {
+          "property": "color",
+          "value": "var(--mat-sys-on-surface-variant)"
+        }
+      ],
+      "role": "layout",
+      "intent": "compact icon + text detail row (location / dates / time) inside a `.dbx-card-horizontal-item` body — muted `on-surface-variant` text with a small leading `<mat-icon>`; also fits a label/value row when composed with `.dbx-spacer`.",
+      "seeAlso": [
+        "card-horizontal-item",
+        "spacer",
+        "hint"
+      ],
+      "tokensRead": [
+        "--dbx-card-horizontal-detail-icon-size",
+        "--dbx-padding-1",
+        "--dbx-padding-2",
+        "--mat-sys-on-surface-variant"
+      ]
+    },
+    {
+      "slug": "card-horizontal-divider",
+      "selector": ".dbx-card-horizontal-divider",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 258,
+      "declarations": [
+        {
+          "property": "border-bottom",
+          "value": "1px solid var(--mat-sys-outline-variant)"
+        },
+        {
+          "property": "margin",
+          "value": "var(--dbx-padding-2) 0"
+        }
+      ],
+      "role": "layout",
+      "intent": "hairline divider between `.dbx-card-horizontal-item` body sections — the standard `--mat-sys-outline-variant` border-bottom pattern with vertical rhythm baked in.",
+      "seeAlso": [
+        "card-horizontal-item"
+      ],
+      "tokensRead": [
+        "--dbx-padding-2",
+        "--mat-sys-outline-variant"
+      ]
+    },
+    {
+      "slug": "card-horizontal-header",
+      "selector": ".dbx-card-horizontal-header",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 187,
+      "declarations": [
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "align-items",
+          "value": "center"
+        },
+        {
+          "property": "gap",
+          "value": "var(--dbx-padding-2)"
+        },
+        {
+          "property": "padding",
+          "value": "var(--dbx-padding-2) var(--dbx-padding-3)"
+        },
+        {
+          "property": "border-top-left-radius",
+          "value": "inherit"
+        },
+        {
+          "property": "border-top-right-radius",
+          "value": "inherit"
+        }
+      ],
+      "role": "layout",
+      "intent": "full-bleed status bar across the top of a `.dbx-card-horizontal-item` — a plain `<div>` direct child of `<mat-card>` before `<mat-card-content>`. Pair with `[dbxColor]` for a solid bar or `[dbxColor]` + `[dbxColorTone]` for a tonal wash (tonal mode flips the label to the vibrant theme color). Compose the label from `.dbx-text-label-medium .dbx-uppercase .dbx-tracked-wide`; lead with a `<mat-icon>` or a `.dbx-card-horizontal-header-dot`.",
+      "seeAlso": [
+        "card-horizontal-item",
+        "card-horizontal-header-dot",
+        "color",
+        "color-tonal"
+      ],
+      "tokensRead": [
+        "--dbx-padding-2",
+        "--dbx-padding-3"
+      ]
+    },
+    {
+      "slug": "card-horizontal-header-dot",
+      "selector": ".dbx-card-horizontal-header-dot",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 213,
+      "declarations": [
+        {
+          "property": "flex-shrink",
+          "value": "0"
+        },
+        {
+          "property": "width",
+          "value": "var(--dbx-card-horizontal-header-dot-size, 8px)"
+        },
+        {
+          "property": "height",
+          "value": "var(--dbx-card-horizontal-header-dot-size, 8px)"
+        },
+        {
+          "property": "border-radius",
+          "value": "50%"
+        },
+        {
+          "property": "background",
+          "value": "currentColor"
+        }
+      ],
+      "role": "layout",
+      "intent": "small status dot inside a `.dbx-card-horizontal-header` — painted from `currentColor` so it follows the header's (tonal) text color with no extra color wiring.",
+      "seeAlso": [
+        "card-horizontal-header"
+      ],
+      "tokensRead": [
+        "--dbx-card-horizontal-header-dot-size"
+      ]
+    },
+    {
+      "slug": "card-horizontal-item",
+      "selector": ".dbx-card-horizontal-item",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 152,
+      "declarations": [
+        {
+          "property": "position",
+          "value": "relative"
+        },
+        {
+          "property": "flex",
+          "value": "0 0 var(--dbx-card-horizontal-item-width, 300px)"
+        },
+        {
+          "property": "width",
+          "value": "var(--dbx-card-horizontal-item-width, 300px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed-width card for a `.dbx-card-horizontal` row — apply to `<mat-card appearance=\"outlined\">`. Children: an optional `.dbx-card-horizontal-tab` `<dbx-chip>` (absolutely positioned poking above the top edge), an optional full-bleed `.dbx-card-horizontal-header` status bar (plain `<div>` placed BEFORE `<mat-card-content>` — mat-card children stack in a padding-less flex column, so the bar is edge-to-edge for free), the `<mat-card-content>` body, and a `<mat-card-footer>` CTA pushed to the card bottom via `margin-top: auto` so stretch-aligned cards keep their buttons on one line. Toggle `.dbx-card-horizontal-item-highlight` to repaint the outlined-card border in the primary color. Override `--dbx-card-horizontal-item-width` for a different card width.",
+      "seeAlso": [
+        "card-horizontal",
+        "card-horizontal-header",
+        "card-select",
+        "chip",
+        "color"
+      ],
+      "tokensRead": [
+        "--dbx-card-horizontal-item-width",
+        "--dbx-padding-2",
+        "--dbx-padding-3",
+        "--mat-sys-primary"
+      ]
+    },
+    {
+      "slug": "card-horizontal-mini",
+      "selector": ".dbx-card-horizontal-mini",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 267,
+      "declarations": [
+        {
+          "property": "display",
+          "value": "flex"
+        },
+        {
+          "property": "align-items",
+          "value": "center"
+        },
+        {
+          "property": "justify-content",
+          "value": "space-between"
+        },
+        {
+          "property": "gap",
+          "value": "var(--dbx-padding-2)"
+        },
+        {
+          "property": "padding",
+          "value": "var(--dbx-padding-2) var(--dbx-padding-3)"
+        },
+        {
+          "property": "border",
+          "value": "1px solid var(--mat-sys-outline-variant)"
+        },
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-small, 8px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "small outlined \"mini card\" row inside a `.dbx-card-horizontal-item` body (e.g. a recommended job: name + detail left, price right) — outline-variant border, corner-small radius, space-between flex row.",
+      "seeAlso": [
+        "card-horizontal-item",
+        "color-text"
+      ],
+      "tokensRead": [
+        "--dbx-padding-2",
+        "--dbx-padding-3",
+        "--mat-sys-corner-small",
+        "--mat-sys-outline-variant"
+      ]
+    },
+    {
+      "slug": "card-horizontal-tab",
+      "selector": ".dbx-card-horizontal-item",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/card/_card.scss",
+      "line": 228,
+      "declarations": [
+        {
+          "property": "position",
+          "value": "absolute"
+        },
+        {
+          "property": "top",
+          "value": "calc(-1 * var(--dbx-card-horizontal-tab-overlap, 10px))"
+        },
+        {
+          "property": "left",
+          "value": "var(--dbx-padding-3)"
+        },
+        {
+          "property": "z-index",
+          "value": "1"
+        }
+      ],
+      "role": "layout",
+      "intent": "\"TODAY\"-style tab — apply to a `<dbx-chip [tone]=\"100\" [small]=\"true\">` inside a `.dbx-card-horizontal-item`; absolutely positioned so it pokes above the card's top edge by `--dbx-card-horizontal-tab-overlap` (which the `.dbx-card-horizontal` row also reserves as top padding so the scroll container does not clip it).",
+      "seeAlso": [
+        "card-horizontal",
+        "card-horizontal-item",
+        "chip"
+      ],
+      "selectorContext": ".dbx-card-horizontal-item .dbx-card-horizontal-tab",
+      "tokensRead": [
+        "--dbx-card-horizontal-tab-overlap",
+        "--dbx-padding-3"
+      ]
+    },
+    {
       "slug": "card-select",
       "selector": ".dbx-card-select",
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/card/_card.scss",
-      "line": 48,
+      "line": 87,
       "declarations": [
         {
           "property": "position",
@@ -679,15 +1045,15 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 313,
+      "line": 329,
       "declarations": [
         {
           "property": "font-size",
-          "value": "14px"
+          "value": "var(--mat-sys-label-large-size)"
         },
         {
           "property": "font-weight",
-          "value": "500"
+          "value": "var(--mat-sys-label-large-weight)"
         },
         {
           "property": "position",
@@ -700,16 +1066,47 @@
         {
           "property": "white-space",
           "value": "nowrap"
+        },
+        {
+          "property": "display",
+          "value": "inline-flex"
+        },
+        {
+          "property": "align-items",
+          "value": "center"
+        },
+        {
+          "property": "cursor",
+          "value": "default"
+        },
+        {
+          "property": "padding",
+          "value": "7px 12px"
+        },
+        {
+          "property": "min-height",
+          "value": "32px"
+        },
+        {
+          "property": "border-radius",
+          "value": "var(--dbx-chip-container-shape, var(--mat-chip-container-shape-radius, var(--mat-sys-corner-small, 8px)))"
         }
       ],
       "role": "layout",
-      "intent": "chip label — `<dbx-chip>` body that lays out a 14px/500 inline chip; compose with `.dbx-chip-small`, `.dbx-chip-block`, or `.dbx-chip-small-text` for size variants",
+      "intent": "chip label — `<dbx-chip>` body that lays out an inline-flex chip (label-large text, 7px/12px padding, 32px min-height) with an M3 corner-small radius; override the radius via `--dbx-chip-container-shape` (e.g. set it to `var(--mat-sys-corner-full)` to restore a pill). Compose with `.dbx-chip-small`, `.dbx-chip-block`, or `.dbx-chip-small-text` for size variants",
       "seeAlso": [
         "chip-spacer",
         "chip-margin"
       ],
       "component": "DbxChipDirective",
-      "scope": "component-class"
+      "scope": "component-class",
+      "tokensRead": [
+        "--dbx-chip-container-shape",
+        "--mat-chip-container-shape-radius",
+        "--mat-sys-corner-small",
+        "--mat-sys-label-large-size",
+        "--mat-sys-label-large-weight"
+      ]
     },
     {
       "slug": "chip-margin",
@@ -717,7 +1114,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 362,
+      "line": 399,
       "declarations": [
         {
           "property": "margin",
@@ -736,7 +1133,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 325,
+      "line": 360,
       "declarations": [
         {
           "property": "margin-right",
@@ -756,10 +1153,39 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/style/_style.scss",
-      "line": 175,
+      "line": 167,
       "declarations": [],
       "role": "color",
-      "intent": "generic themed-background class — pair with `[dbxColor]=\"config\"` to drive `--dbx-bg-color-current` / `--dbx-color-current` from arbitrary CSS color values"
+      "intent": "the painting utility — paints `background` (a `color-mix` of `--dbx-bg-color-current` with `--dbx-color-bg-tone`) plus the contrast `color` from `--dbx-color-current`. Pair with `[dbxColor]` (or a static `dbx-{color}-bg` token class) on the same element to supply those tokens. `[dbxColor]` itself never paints; this class (or a component's own `.dbx-color`-scoped SCSS) is what turns the tokens into a visible surface.",
+      "seeAlso": [
+        "color-text",
+        "color-tonal"
+      ]
+    },
+    {
+      "slug": "color-border",
+      "selector": ".dbx-color-border",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/style/_style.scss",
+      "line": 194,
+      "declarations": [
+        {
+          "property": "border",
+          "value": "var(--dbx-color-border-width, 1px) solid color-mix(in srgb, #{theming.$dbx-color} var(--dbx-color-border-tone, 25%), transparent)"
+        }
+      ],
+      "role": "color",
+      "intent": "subtle themed solid border derived from the current dbxColor text color (`--dbx-color-current`) — pair with `[dbxColor]`/`[dbxTextColor]` on the element or any ancestor (custom properties inherit); override `--dbx-color-border-tone` (percentage) for subtlety or `--dbx-color-border-width` for thickness",
+      "seeAlso": [
+        "color-bg",
+        "color-text",
+        "color-tonal"
+      ],
+      "tokensRead": [
+        "--dbx-color-border-tone",
+        "--dbx-color-border-width"
+      ]
     },
     {
       "slug": "color-text",
@@ -767,10 +1193,34 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/style/_style.scss",
-      "line": 182,
+      "line": 186,
       "declarations": [],
       "role": "color",
       "intent": "generic themed-text class — pair with `[dbxTextColor]=\"config\"` to drive `--dbx-color-current` from an arbitrary CSS color value"
+    },
+    {
+      "slug": "color-text-dim",
+      "selector": ".dbx-color-text-dim",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/style/_style.scss",
+      "line": 202,
+      "declarations": [
+        {
+          "property": "color",
+          "value": "color-mix(in srgb, #{theming.$dbx-color} var(--dbx-color-text-dim-tone, 72%), transparent)"
+        }
+      ],
+      "role": "color",
+      "intent": "de-emphasized themed text — paints text with a partially-transparent mix of the current dbxColor text color (`--dbx-color-current`), for secondary lines (eyebrows, hints, labels) on painted surfaces where a fixed grey would clash; override `--dbx-color-text-dim-tone` (percentage) to tune the emphasis",
+      "seeAlso": [
+        "color-text",
+        "color-border",
+        "hint"
+      ],
+      "tokensRead": [
+        "--dbx-color-text-dim-tone"
+      ]
     },
     {
       "slug": "color-tonal",
@@ -778,7 +1228,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/style/_style.scss",
-      "line": 168,
+      "line": 179,
       "declarations": [
         {
           "property": "color",
@@ -786,7 +1236,10 @@
         }
       ],
       "role": "state",
-      "intent": "paint text with the vibrant `--dbx-bg-color` (tonal mode) instead of the contrast color — pair with `[dbxColor]` + `[dbxColorTone]` for the muted background variant"
+      "intent": "paint text with the vibrant `--dbx-bg-color` (tonal mode) instead of the contrast color — pair with `.dbx-color-bg` + `[dbxColor]` + `[dbxColorTone]` for the muted background variant",
+      "seeAlso": [
+        "color-bg"
+      ]
     },
     {
       "slug": "content-border",
@@ -846,7 +1299,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 144,
+      "line": 152,
       "declarations": [
         {
           "property": "margin",
@@ -858,7 +1311,12 @@
         }
       ],
       "role": "layout",
-      "intent": "centered, padded content container with width-class and padding-class modifiers"
+      "intent": "centered, padded content container with width-class and padding-class modifiers",
+      "tokensRead": [
+        "--dbx-padding-1",
+        "--dbx-padding-2",
+        "--dbx-padding-3"
+      ]
     },
     {
       "slug": "content-elevate",
@@ -894,12 +1352,12 @@
         }
       ],
       "role": "layout",
-      "intent": "recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks)",
+      "intent": "recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`",
       "seeAlso": [
-        "dbx-content-pit-rounded",
         "dbx-content-pit-scrollable",
         "dbx-content-border",
-        "dbx-content-elevate"
+        "dbx-content-elevate",
+        "dbx-corners-none"
       ]
     },
     {
@@ -908,7 +1366,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 96,
+      "line": 104,
       "declarations": [
         {
           "property": "float",
@@ -949,7 +1407,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 72,
+      "line": 80,
       "declarations": [
         {
           "property": "border-radius",
@@ -959,7 +1417,8 @@
       "role": "layout",
       "intent": "rounded modifier for `.dbx-content-pit` — applies the `theming.$dbx-content-pit-rounded-border-radius` corner radius",
       "seeAlso": [
-        "dbx-content-pit"
+        "dbx-content-pit",
+        "dbx-corners-none"
       ],
       "parent": "content-pit"
     },
@@ -969,7 +1428,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 85,
+      "line": 93,
       "declarations": [
         {
           "property": "max-height",
@@ -997,7 +1456,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 135,
+      "line": 143,
       "declarations": [
         {
           "property": "height",
@@ -1009,7 +1468,7 @@
         },
         {
           "property": "padding",
-          "value": "0 2px"
+          "value": "0 var(--dbx-padding-1)"
         }
       ],
       "role": "layout",
@@ -1018,6 +1477,163 @@
         "dbx-content",
         "dbx-content-page",
         "dbx-scroll-content"
+      ],
+      "tokensRead": [
+        "--dbx-padding-1"
+      ]
+    },
+    {
+      "slug": "corners",
+      "selector": ".dbx-corners",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 22,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "theming.$dbx-corners-border-radius"
+        }
+      ],
+      "role": "layout",
+      "intent": "rounded-corner surface — applies the M3 \"medium\" corner radius via the app-overridable `--dbx-corners-border-radius` token, so it tracks the corner system / style-demo levers",
+      "seeAlso": [
+        "dbx-corners-small",
+        "dbx-corners-medium",
+        "dbx-corners-large",
+        "dbx-corners-extra-large",
+        "dbx-corners-full",
+        "dbx-corners-none"
+      ]
+    },
+    {
+      "slug": "corners-extra-large",
+      "selector": ".dbx-corners-extra-large",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 57,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-extra-large, 28px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"extra-large\" (28px) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-extra-large"
+      ]
+    },
+    {
+      "slug": "corners-full",
+      "selector": ".dbx-corners-full",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 65,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-full, 9999px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"full\" (pill) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-full"
+      ]
+    },
+    {
+      "slug": "corners-large",
+      "selector": ".dbx-corners-large",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 49,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-large, 16px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"large\" (16px) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-large"
+      ]
+    },
+    {
+      "slug": "corners-medium",
+      "selector": ".dbx-corners-medium",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 41,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-medium, 12px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"medium\" (12px) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-medium"
+      ]
+    },
+    {
+      "slug": "corners-none",
+      "selector": ".dbx-corners-none",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 73,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "0"
+        }
+      ],
+      "role": "layout",
+      "intent": "square corners (radius 0) — doubles as the common opt-out for components that round by default (e.g. `.dbx-content-pit`)",
+      "seeAlso": [
+        "dbx-corners",
+        "dbx-content-pit"
+      ]
+    },
+    {
+      "slug": "corners-small",
+      "selector": ".dbx-corners-small",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/style/_corners.scss",
+      "line": 33,
+      "declarations": [
+        {
+          "property": "border-radius",
+          "value": "var(--mat-sys-corner-small, 8px)"
+        }
+      ],
+      "role": "layout",
+      "intent": "fixed M3 \"small\" (8px) corner radius — explicit, token-independent level choice",
+      "seeAlso": [
+        "dbx-corners"
+      ],
+      "tokensRead": [
+        "--mat-sys-corner-small"
       ]
     },
     {
@@ -1026,7 +1642,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 131,
+      "line": 132,
       "declarations": [
         {
           "property": "display",
@@ -1044,7 +1660,11 @@
         "step-block"
       ],
       "component": "DbxDetailBlockComponent",
-      "scope": "component-class"
+      "scope": "component-class",
+      "tokensRead": [
+        "--dbx-detail-block-content-offset",
+        "--dbx-padding-1"
+      ]
     },
     {
       "slug": "dialog-content",
@@ -1052,7 +1672,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/interaction/dialog/_dialog.scss",
-      "line": 24,
+      "line": 20,
       "declarations": [
         {
           "property": "display",
@@ -1060,13 +1680,61 @@
         },
         {
           "property": "padding",
-          "value": "$mat-dialog-container-padding"
+          "value": "var(--dbx-dialog-content-padding, var(--dbx-padding-4))"
         }
       ],
       "role": "layout",
       "intent": "dialog body — `<dbx-dialog-content>` host that wraps mat-dialog content with the standard 18px inset; compose with `.dbx-dialog-content-with-header` to reserve room for a sticky header, `.dbx-dialog-content-100` to fill the dialog height, or `.dbx-p0` to strip the inset",
       "component": "DbxDialogContentComponent",
-      "scope": "component-class"
+      "scope": "component-class",
+      "tokensRead": [
+        "--dbx-dialog-content-padding",
+        "--dbx-padding-4"
+      ]
+    },
+    {
+      "slug": "dot",
+      "selector": ".dbx-dot",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/text/_text.scss",
+      "line": 347,
+      "declarations": [
+        {
+          "property": "display",
+          "value": "inline-block"
+        },
+        {
+          "property": "flex-shrink",
+          "value": "0"
+        },
+        {
+          "property": "width",
+          "value": "var(--dbx-dot-size, 8px)"
+        },
+        {
+          "property": "height",
+          "value": "var(--dbx-dot-size, 8px)"
+        },
+        {
+          "property": "border-radius",
+          "value": "50%"
+        },
+        {
+          "property": "background",
+          "value": "currentColor"
+        }
+      ],
+      "role": "text",
+      "intent": "small round status dot painted from `currentColor` — pair with `[dbxTextColor]` (or any colored text context); size via `--dbx-dot-size`.",
+      "seeAlso": [
+        "card-horizontal-header-dot",
+        "text-color",
+        "chip"
+      ],
+      "tokensRead": [
+        "--dbx-dot-size"
+      ]
     },
     {
       "slug": "error",
@@ -1104,7 +1772,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 413,
+      "line": 450,
       "declarations": [
         {
           "property": "opacity",
@@ -1411,7 +2079,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 302,
+      "line": 318,
       "declarations": [
         {
           "property": "font-size",
@@ -1490,7 +2158,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 404,
+      "line": 441,
       "declarations": [
         {
           "property": "opacity",
@@ -1530,7 +2198,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 294,
+      "line": 310,
       "declarations": [
         {
           "property": "margin-right",
@@ -1550,7 +2218,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 200,
+      "line": 201,
       "declarations": [
         {
           "property": "display",
@@ -1566,7 +2234,7 @@
         },
         {
           "property": "border-radius",
-          "value": "var(--dbx-icon-tile-border-radius, 12px)"
+          "value": "var(--dbx-icon-tile-border-radius, var(--mat-sys-corner-medium, 12px))"
         },
         {
           "property": "padding",
@@ -1605,7 +2273,8 @@
         "--dbx-icon-tile-icon-size",
         "--dbx-icon-tile-min-width",
         "--dbx-icon-tile-padding",
-        "--dbx-icon-tile-width"
+        "--dbx-icon-tile-width",
+        "--mat-sys-corner-medium"
       ]
     },
     {
@@ -1614,7 +2283,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 226,
+      "line": 242,
       "declarations": [
         {
           "property": "border-radius",
@@ -1654,7 +2323,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 73,
+      "line": 74,
       "declarations": [
         {
           "property": "height",
@@ -1697,7 +2366,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 421,
+      "line": 458,
       "declarations": [
         {
           "property": "opacity",
@@ -1718,7 +2387,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 85,
+      "line": 86,
       "declarations": [
         {
           "property": "display",
@@ -1744,7 +2413,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 38,
+      "line": 39,
       "declarations": [
         {
           "property": "padding-bottom",
@@ -1802,12 +2471,33 @@
       ]
     },
     {
+      "slug": "list-auto-height",
+      "selector": ".dbx-list-auto-height",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 326,
+      "declarations": [
+        {
+          "property": "height",
+          "value": "auto"
+        }
+      ],
+      "role": "layout",
+      "intent": "size a `.dbx-list` to its rows instead of filling its container — apply on the list wrapper host when content flows below the list (the default `height: 100%` would push that content out of a stretched card)",
+      "seeAlso": [
+        "list-no-hover-effects",
+        "list-no-item-padding"
+      ],
+      "selectorContext": ".dbx-list-auto-height .dbx-list"
+    },
+    {
       "slug": "list-card-items-list",
       "selector": ".dbx-list-card-items-list",
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 156,
+      "line": 206,
       "declarations": [
         {
           "property": "--dbx-list-card-items-list-gap",
@@ -1836,7 +2526,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 264,
+      "line": 341,
       "declarations": [
         {
           "property": "padding",
@@ -1856,15 +2546,15 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 124,
+      "line": 168,
       "declarations": [
         {
           "property": "min-height",
-          "value": "$list-item-padded-min-height"
+          "value": "var(--dbx-list-item-padded-min-height, #{$list-item-padded-min-height})"
         },
         {
           "property": "padding",
-          "value": "2px 6px"
+          "value": "var(--dbx-padding-1) var(--dbx-padding-2)"
         }
       ],
       "role": "spacing",
@@ -1872,6 +2562,11 @@
       "seeAlso": [
         "dbx-list-item-padded-thick",
         "dbx-list-item-p0"
+      ],
+      "tokensRead": [
+        "--dbx-list-item-padded-min-height",
+        "--dbx-padding-1",
+        "--dbx-padding-2"
       ]
     },
     {
@@ -1880,11 +2575,11 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 133,
+      "line": 177,
       "declarations": [
         {
           "property": "min-height",
-          "value": "$list-item-padded-min-height"
+          "value": "var(--dbx-list-item-padded-min-height, #{$list-item-padded-min-height})"
         },
         {
           "property": "padding",
@@ -1895,6 +2590,9 @@
       "intent": "thicker padded list-row spacing — same `min-height` as `.dbx-list-item-padded` with the workspace `theming.$padding-3` token",
       "seeAlso": [
         "dbx-list-item-padded"
+      ],
+      "tokensRead": [
+        "--dbx-list-item-padded-min-height"
       ]
     },
     {
@@ -1903,7 +2601,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 237,
+      "line": 301,
       "declarations": [
         {
           "property": "cursor",
@@ -1920,7 +2618,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 249,
+      "line": 313,
       "declarations": [
         {
           "property": "padding",
@@ -1935,12 +2633,39 @@
       "selectorContext": ".dbx-list-no-item-padding .dbx-list > .dbx-list-content .dbx-list-view .mat-mdc-list-item"
     },
     {
+      "slug": "list-square-items",
+      "selector": ".dbx-list-square-items",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/list/_list.scss",
+      "line": 240,
+      "declarations": [
+        {
+          "property": "--dbx-list-item-border-radius",
+          "value": "0"
+        },
+        {
+          "property": "--dbx-anchor-list-item-border-radius",
+          "value": "0"
+        }
+      ],
+      "role": "layout",
+      "intent": "opts a `.dbx-list` / `.dbx-anchor-list` out of the default medium-rounded rows back to square (0 radius) by zeroing their row radius tokens",
+      "seeAlso": [
+        "dbx-list-card-items-list"
+      ],
+      "tokensSet": [
+        "--dbx-anchor-list-item-border-radius",
+        "--dbx-list-item-border-radius"
+      ]
+    },
+    {
       "slug": "list-sticky-headers",
       "selector": ".dbx-list-sticky-headers",
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 105,
+      "line": 149,
       "declarations": [],
       "role": "state",
       "intent": "pin `.dbx-list-view-group-header` rows to the top of the list while scrolling"
@@ -1951,7 +2676,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 193,
+      "line": 257,
       "declarations": [
         {
           "property": "display",
@@ -1978,7 +2703,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 82,
+      "line": 126,
       "declarations": [],
       "role": "spacing",
       "intent": "strip the leading + trailing padding around `mdc-list-item--with-trailing-meta` rows so meta-only items hug their container"
@@ -2021,7 +2746,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 600,
+      "line": 644,
       "declarations": [
         {
           "property": "text-transform",
@@ -2040,7 +2765,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 381,
+      "line": 418,
       "declarations": [
         {
           "property": "line-break",
@@ -2091,7 +2816,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 432,
+      "line": 469,
       "declarations": [
         {
           "property": "opacity",
@@ -2111,7 +2836,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 451,
+      "line": 488,
       "declarations": [
         {
           "property": "white-space",
@@ -2127,7 +2852,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 439,
+      "line": 476,
       "declarations": [
         {
           "property": "color",
@@ -2151,7 +2876,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/bar/_bar.scss",
-      "line": 91,
+      "line": 130,
       "declarations": [],
       "role": "state",
       "intent": "hide the direct-child `.dbx-pagebar` and reset the `--dbx-pagebar-height` layout token to `0px` so child sidenav heights recalculate (nested sidenav pagebars are restored)",
@@ -2191,7 +2916,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/interaction/popup/_popup.scss",
-      "line": 19,
+      "line": 18,
       "declarations": [
         {
           "property": "box-sizing",
@@ -2225,18 +2950,27 @@
         },
         {
           "property": "padding",
-          "value": "40px"
+          "value": "var(--dbx-prompt-box-padding, 40px)"
         },
         {
           "property": "max-width",
           "value": "$box-max-width"
+        },
+        {
+          "property": "border-radius",
+          "value": "var(--dbx-prompt-box-border-radius, var(--mat-sys-corner-medium, 12px))"
         }
       ],
       "role": "layout",
-      "intent": "centered prompt panel — auto-margined max-width box with a 40px inset (compose with `.elevate` to lift it with elevation 2)",
+      "intent": "centered prompt panel — auto-margined max-width box with a 40px inset (override via `--dbx-prompt-box-padding`) and a \"medium\" corner radius (override via `--dbx-prompt-box-border-radius`); compose with `.elevate` to lift it with elevation 2",
       "seeAlso": [
         "content-box",
         "content-elevate"
+      ],
+      "tokensRead": [
+        "--dbx-prompt-box-border-radius",
+        "--dbx-prompt-box-padding",
+        "--mat-sys-corner-medium"
       ]
     },
     {
@@ -2245,11 +2979,11 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 216,
+      "line": 224,
       "declarations": [
         {
           "property": "padding-bottom",
-          "value": "$scroll-content-bottom-padding"
+          "value": "var(--dbx-scroll-content-bottom-padding, #{$scroll-content-bottom-padding})"
         }
       ],
       "role": "spacing",
@@ -2258,6 +2992,9 @@
         "dbx-content-container",
         "dbx-content-page",
         "dbx-content-pit-scrollable"
+      ],
+      "tokensRead": [
+        "--dbx-scroll-content-bottom-padding"
       ]
     },
     {
@@ -2266,7 +3003,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/section/_section.scss",
-      "line": 20,
+      "line": 19,
       "declarations": [
         {
           "property": "border-radius",
@@ -2286,7 +3023,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/section/_section.scss",
-      "line": 70,
+      "line": 69,
       "declarations": [
         {
           "property": "padding",
@@ -2305,7 +3042,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 29,
+      "line": 30,
       "declarations": [
         {
           "property": "font-size",
@@ -2341,7 +3078,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 170,
+      "line": 171,
       "declarations": [
         {
           "property": "display",
@@ -2383,7 +3120,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 240,
+      "line": 256,
       "declarations": [
         {
           "property": "--dbx-icon-tile-padding",
@@ -2407,7 +3144,7 @@
         },
         {
           "property": "--dbx-icon-tile-font-size",
-          "value": "var(--dbx-step-block-badge-font-size, #{$dbx-step-block-badge-font-size})"
+          "value": "var(--dbx-step-block-badge-font-size, var(--mat-sys-label-large-size, #{$dbx-step-block-badge-font-size}))"
         },
         {
           "property": "--dbx-icon-tile-font-weight",
@@ -2430,7 +3167,8 @@
         "--dbx-step-block-badge-font-weight",
         "--dbx-step-block-badge-icon-size",
         "--dbx-step-block-badge-shape",
-        "--dbx-step-block-badge-size"
+        "--dbx-step-block-badge-size",
+        "--mat-sys-label-large-size"
       ],
       "tokensSet": [
         "--dbx-icon-tile-border-radius",
@@ -2449,7 +3187,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 547,
+      "line": 591,
       "declarations": [
         {
           "property": "font",
@@ -2468,7 +3206,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 554,
+      "line": 598,
       "declarations": [
         {
           "property": "font",
@@ -2487,7 +3225,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 561,
+      "line": 605,
       "declarations": [
         {
           "property": "font",
@@ -2506,7 +3244,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 45,
+      "line": 46,
       "declarations": [
         {
           "property": "text-align",
@@ -2522,7 +3260,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 484,
+      "line": 528,
       "declarations": [
         {
           "property": "font",
@@ -2541,7 +3279,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 491,
+      "line": 535,
       "declarations": [
         {
           "property": "font",
@@ -2560,7 +3298,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 498,
+      "line": 542,
       "declarations": [
         {
           "property": "font",
@@ -2579,7 +3317,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 505,
+      "line": 549,
       "declarations": [
         {
           "property": "font",
@@ -2598,7 +3336,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 512,
+      "line": 556,
       "declarations": [
         {
           "property": "font",
@@ -2617,7 +3355,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 519,
+      "line": 563,
       "declarations": [
         {
           "property": "font",
@@ -2636,7 +3374,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 568,
+      "line": 612,
       "declarations": [
         {
           "property": "font",
@@ -2655,7 +3393,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 576,
+      "line": 620,
       "declarations": [
         {
           "property": "font",
@@ -2678,7 +3416,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 583,
+      "line": 627,
       "declarations": [
         {
           "property": "font",
@@ -2697,7 +3435,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 271,
+      "line": 287,
       "declarations": [
         {
           "property": "white-space",
@@ -2724,7 +3462,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 526,
+      "line": 570,
       "declarations": [
         {
           "property": "font",
@@ -2743,7 +3481,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 533,
+      "line": 577,
       "declarations": [
         {
           "property": "font",
@@ -2762,7 +3500,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 540,
+      "line": 584,
       "declarations": [
         {
           "property": "font",
@@ -2781,7 +3519,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 286,
+      "line": 302,
       "declarations": [],
       "role": "text",
       "intent": "single-line truncation with ellipsis on any block-level element",
@@ -2796,7 +3534,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 610,
+      "line": 654,
       "declarations": [
         {
           "property": "letter-spacing",
@@ -2867,7 +3605,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 53,
+      "line": 54,
       "declarations": [
         {
           "property": "text-decoration",
@@ -2883,7 +3621,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 592,
+      "line": 636,
       "declarations": [
         {
           "property": "text-transform",
@@ -2903,7 +3641,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/text/_text.scss",
-      "line": 373,
+      "line": 410,
       "declarations": [
         {
           "property": "white-space",

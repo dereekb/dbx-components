@@ -8,7 +8,7 @@ import { FormControl } from '@angular/forms';
 import type { DbxForgeSearchableTextFieldConfig, DbxForgeSearchableTextFieldDef, DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 import { dbxForgeSearchableTextField } from './searchable-text.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject, provideZonelessChangeDetection } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../../forge/form/forge.component';
@@ -378,7 +378,7 @@ class SearchableTextTestHostComponent {
   readonly context = inject(DbxForgeFormContext);
 }
 
-const SEARCHABLE_TEXT_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const SEARCHABLE_TEXT_TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();

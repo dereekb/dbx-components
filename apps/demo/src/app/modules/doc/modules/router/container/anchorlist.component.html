@@ -6,5 +6,11 @@
       <h4>Custom Anchors</h4>
       <dbx-anchor-list [anchors]="customAnchors"></dbx-anchor-list>
     </doc-feature-example>
+    <doc-feature-example header="Square items" hint="Rows round to an M3 medium corner by default; apply .dbx-list-square-items on the host to opt back out to square rows.">
+      <h4>Default (medium rounded rows)</h4>
+      <dbx-anchor-list [anchors]="anchors"></dbx-anchor-list>
+      <h4>Squared (.dbx-list-square-items)</h4>
+      <dbx-anchor-list class="dbx-list-square-items" [anchors]="anchors"></dbx-anchor-list>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

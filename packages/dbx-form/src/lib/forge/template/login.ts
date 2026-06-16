@@ -32,6 +32,11 @@ export const DEFAULT_DBX_FORGE_TEXT_VERIFY_PASSWORD_AUTOCOMPLETE = 'new-password
 export interface DbxForgeTextPasswordFieldConfig extends Omit<DbxForgeTextFieldConfig, 'inputType' | 'key'>, Partial<Pick<DbxForgeTextFieldConfig, 'key'>> {}
 
 /**
+ * Convenience type for the password parameters (length/pattern constraints) of a forge password field.
+ */
+export type DbxForgeTextPasswordFieldPasswordParameters = Partial<Pick<DbxForgeTextFieldConfig, 'maxLength' | 'minLength' | 'pattern'>>;
+
+/**
  * Password input (HTML `type="password"`) with secure autocomplete defaults.
  *
  * Defaults to the key `'password'` and label `'Password'` unless overridden.
@@ -160,6 +165,21 @@ export function dbxForgeTextPasswordWithVerifyField(config?: DbxForgeTextPasswor
 }
 
 // MARK: Username Login Fields
+/**
+ * Value type exported by dbxForgeUsernameLoginField().
+ */
+export interface DbxForgeDefaultUsernameLoginFieldValue {
+  readonly username: string;
+}
+
+/**
+ * Value type exported by dbxForgeUsernamePasswordLoginFields().
+ */
+export interface DbxForgeDefaultUsernameLoginFieldsValue extends DbxForgeDefaultUsernameLoginFieldValue {
+  readonly password: string;
+  readonly verifyPassword?: string;
+}
+
 /**
  * Configuration for the username field in a forge login form.
  */

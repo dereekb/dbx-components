@@ -1,7 +1,7 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
 import { of } from 'rxjs';
-import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
-import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
+import { DbxDateTimeFieldTimeMode } from '../../../../field/value/date/datetime.config';
+import { DbxDateTimeValueMode } from '../../../../field/value/date/date.value';
 import { dbxForgeDateTimeField, type DbxForgeDateTimeSyncField, type DbxForgeDateTimeFieldDef, type DbxForgeDateTimeFieldConfig } from './datetime.field';
 import type { LogicConfig } from '@ng-forge/dynamic-forms';
 import type { DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';

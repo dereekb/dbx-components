@@ -1,0 +1,32 @@
+# NOTE: Be careful updating this file, as it is used by the setup script.
+services:
+  demo-api-server:
+    build: .
+    # network_mode: host    # uncomment for enabling local development. will prevent parallel execution (I.E. tests and local dev at same time)
+    volumes:
+      - ./:/code
+      - /code/node_modules # Excludes node_modules
+      - ./.firebase/emulators/:/opt/workspace:cached
+      - ./.firebase/bin/:/root/.cache:cached
+      - ./.firebase/config/:/root/.config:cached
+      - ./.firebase/data/:/root/data
+    ports:
+      # - '9229:9229' # node-inspect debug port. Can be disabled if not being used.
+      - '9900-9908:9900-9908' # expose for browser access
+    command: npx nx run demo-api:serve
+    tty: true
+    environment:
+      # disable GCE Metadata retrieval.
+      # https://github.com/firebase/firebase-tools/issues/6765
+      - METADATA_SERVER_DETECTION=none
+      - GCE_METADATA_HOST=0.0.0.0
+      # Credentials URL
+      - GCLOUD_PROJECT=dereekb-components
+      - NODE_EXTRA_CA_CERTS=/code/docker/nginx/certs/firebase.crt
+    # extra_hosts:    # uncomment for enabling local development. Don't forget to start the offline nginx server!
+    # - "firebase-public.firebaseio.com:0.0.0.0"
+    networks:
+      - demo-api-network
+networks:
+  demo-api-network:
+    driver: bridge

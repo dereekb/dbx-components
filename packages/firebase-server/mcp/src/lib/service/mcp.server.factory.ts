@@ -8,6 +8,7 @@ import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
 import { McpModuleConfig, DEFAULT_MCP_SERVER_NAME, DEFAULT_MCP_SERVER_INSTRUCTIONS, MCP_AUTH_ROLE_READER, type McpAuthRoleReader } from '../mcp.config';
+import { applyMcpReasonParameterToSchema, extractMcpReasonFromArgs, mcpSchemaDeclaresProperty, resolveMcpReasonParameterConfig, type ResolvedMcpReasonParameterConfig } from './mcp.reason';
 import { MCP_ANALYTICS_SERVICE, noopMcpAnalyticsService, type McpAnalyticsEvent, type McpAnalyticsService } from './analytics/mcp.analytics.handler';
 import { MCP_MANIFEST_VERSION, type McpManifest, type McpManifestAuth, type McpManifestEnum, type McpManifestModelEntry, type McpManifestToolEntry } from './mcp.manifest';
 import { ROUTE_MANIFEST_VERSION, type RouteManifest } from './mcp.route-manifest';
@@ -55,6 +56,7 @@ export class McpServerFactoryService {
   private _manifestLoaded = false;
   private _loggedSkips = false;
   private _warnedMissingRoleReader = false;
+  private _resolvedReasonConfig?: ResolvedMcpReasonParameterConfig;
   private readonly _analyticsService: McpAnalyticsService;
 
   // eslint-disable-next-line @typescript-eslint/max-params -- NestJS DI requires individual constructor parameters
@@ -582,11 +584,33 @@ export class McpServerFactoryService {
   }
 
   /**
+   * Resolves the app's reason-parameter config once and caches it for the process lifetime.
+   *
+   * The underlying {@link McpModuleConfig.reasonParameter} value is fixed at boot, so the normalized
+   * form is safe to memoize and reuse across every `tools/list` and `tools/call`.
+   *
+   * @returns The resolved reason-parameter config (defaults applied).
+   */
+  private _resolveReasonConfig(): ResolvedMcpReasonParameterConfig {
+    let result = this._resolvedReasonConfig;
+
+    if (result == null) {
+      result = resolveMcpReasonParameterConfig(this.mcpConfig.reasonParameter);
+      this._resolvedReasonConfig = result;
+    }
+
+    return result;
+  }
+
+  /**
    * Resolves the wire-shape `tools/list` entry for a single tool.
    *
    * Hot-path short-circuit: tools without a `toolDetailsBuilder` reuse the precomputed,
    * frozen {@link McpToolDefinition.staticWireEntry} verbatim — zero allocations per
-   * request for the common case.
+   * request for the common case. When the auto-injected reason parameter is enabled (the
+   * default), the entry is no longer returned frozen-verbatim: its `inputSchema` is wrapped
+   * with the reason property per request (`tools/list` is low-frequency, so the allocation is
+   * acceptable). Tools that already declare the parameter name are still reused verbatim.
    *
    * Tools that opted in to {@link McpToolDetailsBuilder} get a fresh wire entry built
    * from the builder's overrides. If the builder throws, the framework falls back to
@@ -598,10 +622,21 @@ export class McpServerFactoryService {
    * @returns The wire-shape entry to emit for this tool on `tools/list`.
    */
   private _buildToolListEntry(tool: McpToolDefinition, ctx: McpRequestContext, scopes: Maybe<ReadonlySet<string>>): McpToolListEntry {
+    const reasonConfig = this._resolveReasonConfig();
     let result: McpToolListEntry;
 
     if (tool.toolDetailsBuilder == null) {
       result = tool.staticWireEntry;
+
+      if (reasonConfig.enabled) {
+        const reasoned = applyMcpReasonParameterToSchema(tool.staticWireEntry.inputSchema, reasonConfig);
+
+        // applyMcpReasonParameterToSchema self-skips (returns the same reference) on collision, so the
+        // frozen-verbatim hot path still holds for tools that already declare the parameter name.
+        if (reasoned !== tool.staticWireEntry.inputSchema) {
+          result = { ...tool.staticWireEntry, inputSchema: reasoned };
+        }
+      }
     } else {
       let description = tool.description;
       let inputSchema: object | undefined = tool.inputSchema;
@@ -626,10 +661,16 @@ export class McpServerFactoryService {
         this._logger.warn(`MCP tool ${tool.name} toolDetails builder threw; falling back to defaults: ${(error as Error).message}`);
       }
 
+      let resolvedInputSchema: object = inputSchema ?? { type: 'object' };
+
+      if (reasonConfig.enabled) {
+        resolvedInputSchema = applyMcpReasonParameterToSchema(resolvedInputSchema, reasonConfig);
+      }
+
       const wire: { name: string; description: string; inputSchema: object; outputSchema?: object; annotations?: ToolAnnotations } = {
         name: tool.name,
         description,
-        inputSchema: inputSchema ?? { type: 'object' }
+        inputSchema: resolvedInputSchema
       };
 
       if (tool.outputSchema != null) {
@@ -663,8 +704,15 @@ export class McpServerFactoryService {
   private async _handleToolCall(request: McpCallToolRequest, definitionsByName: Map<string, McpToolDefinition>, ctx: McpRequestContext): Promise<CallToolResult> {
     const toolName = request.params.name;
     const definition = definitionsByName.get(toolName);
-    const args = request.params.arguments ?? {};
+    const rawArgs = request.params.arguments ?? {};
     const startedAt = Date.now();
+
+    // Split the auto-injected reason out of the args: forward it to analytics, but never let it reach
+    // the underlying handler. Tools that declare their own field of the same name keep it (driven by
+    // the tool's own resolved inputSchema, not the reason-augmented wire schema).
+    const reasonConfig = this._resolveReasonConfig();
+    const declaresOwn = mcpSchemaDeclaresProperty(definition?.inputSchema, reasonConfig.parameterName);
+    const { reason, args } = extractMcpReasonFromArgs(rawArgs, reasonConfig, declaresOwn);
 
     let outcome: McpToolCallOutcome;
 
@@ -692,6 +740,7 @@ export class McpServerFactoryService {
       auth: ctx.auth,
       readOnly: this.mcpConfig.readOnly === true,
       args,
+      reason,
       isSuccessful,
       error: outcome.error,
       durationMs: Date.now() - startedAt

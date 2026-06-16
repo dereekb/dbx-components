@@ -21,6 +21,9 @@ export type DbxContentPitScrollableHeightSetting = 'small' | 'medium' | 'large';
  * Wraps content in a recessed "pit" container with optional scrollable overflow and rounded corners.
  * Useful for displaying bounded content areas such as lists or previews with a constrained height.
  *
+ * Pits round their corners by default. Pass `[rounded]="false"` to square the pit — this applies the
+ * common `.dbx-corners-none` opt-out utility rather than a pit-specific class.
+ *
  * @dbxWebComponent
  * @dbxWebSlug content-pit
  * @dbxWebCategory layout
@@ -40,14 +43,14 @@ export type DbxContentPitScrollableHeightSetting = 'small' | 'medium' | 'large';
   host: {
     class: 'd-block dbx-content-pit',
     '[class.dbx-content-pit-scrollable]': 'scrollableHeightSignal() != null',
-    '[class.dbx-content-pit-rounded]': 'rounded()',
+    '[class.dbx-corners-none]': '!rounded()',
     '[style.max-height]': 'scrollableHeightSignal()'
   },
   standalone: true
 })
 export class DbxContentPitDirective {
   readonly scrollable = input<Maybe<DbxContentPitScrollableInput>>();
-  readonly rounded = input<boolean>(false);
+  readonly rounded = input<boolean>(true);
 
   readonly scrollableHeightSignal = computed(() => {
     let scrollable = this.scrollable();

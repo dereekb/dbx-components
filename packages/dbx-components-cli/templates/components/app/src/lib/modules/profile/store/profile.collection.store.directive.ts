@@ -1,0 +1,14 @@
+import { Directive, inject } from '@angular/core';
+import { DbxFirebaseCollectionStoreDirective, provideDbxFirebaseCollectionStoreDirective } from '@dereekb/dbx-firebase';
+import { type Profile, type ProfileDocument } from 'FIREBASE_COMPONENTS_NAME';
+import { ProfileCollectionStore } from './profile.collection.store';
+
+@Directive({
+  selector: '[APP_CODE_PREFIX_LOWERProfileCollection]',
+  providers: provideDbxFirebaseCollectionStoreDirective(APP_CODE_PREFIXProfileCollectionStoreDirective, ProfileCollectionStore)
+})
+export class APP_CODE_PREFIXProfileCollectionStoreDirective extends DbxFirebaseCollectionStoreDirective<Profile, ProfileDocument, ProfileCollectionStore> {
+  constructor() {
+    super(inject(ProfileCollectionStore));
+  }
+}

@@ -1,2 +1,2 @@
-export * from './test.formly';
-export * from './test.formly.component';
+export * from './test.forge';
+export * from './test.forge.component';

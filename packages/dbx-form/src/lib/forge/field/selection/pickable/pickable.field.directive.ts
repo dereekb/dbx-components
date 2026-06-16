@@ -7,8 +7,8 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { type FieldTree } from '@angular/forms/signals';
 import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
 import { createResolvedErrorsSignal, shouldShowErrors } from '@ng-forge/dynamic-forms/integration';
-import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldHashFunction, type PickableValueFieldValue } from '../../../../formly/field/selection/pickable/pickable';
-import { type PickableItemFieldItem } from '../../../../formly/field/selection/pickable/pickable.field.directive';
+import { type PickableValueFieldDisplayFunction, type PickableValueFieldDisplayValue, type PickableValueFieldHashFunction, type PickableValueFieldValue } from '../../../../field/selection/pickable/pickable';
+import { type PickableItemFieldItem } from '../../../../field/selection/pickable/pickable.item';
 import { type DbxForgePickableFieldProps } from './pickable.field';
 import { dbxForgeFieldDisabled } from '../../field.util';
 import { cleanSubscription, completeOnDestroy } from '@dereekb/dbx-core';
@@ -257,6 +257,12 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
   protected _setValues(values: T[]): void {
     const hashForValue = this._hashForValue();
     values = filterUniqueValues(values, hashForValue);
+
+    const filterSelectedValues = this.props()?.filterSelectedValues;
+
+    if (filterSelectedValues != null) {
+      values = filterSelectedValues({ beforeValues: this._valuesSubject.getValue(), afterValues: values });
+    }
 
     if (this._pickOnlyOne) {
       values = [values[0]].filter((x) => x != null);

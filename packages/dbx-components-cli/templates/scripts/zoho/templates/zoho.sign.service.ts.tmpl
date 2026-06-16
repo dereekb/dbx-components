@@ -1,0 +1,13 @@
+import { Injectable } from '@nestjs/common';
+import { ZohoSignApi } from '@dereekb/zoho/nestjs';
+
+/**
+ * Domain-specific Zoho Sign operations for __APP_PASCAL__.
+ *
+ * Use this service to wrap Sign calls with project-specific logic
+ * (envelope creation, status syncing, etc.).
+ */
+@Injectable()
+export class __APP_PASCAL__ZohoSignService {
+  constructor(readonly zohoSignApi: ZohoSignApi) {}
+}

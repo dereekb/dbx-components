@@ -194,6 +194,75 @@ describe('McpServerFactoryService MCP analytics', () => {
   });
 });
 
+describe('McpServerFactoryService MCP analytics reason parameter', () => {
+  it('strips the reason from the dispatched callModel body and forwards it on the event', async () => {
+    const { service, events } = capturingAnalytics();
+    let receivedParams: OnCallTypedModelParams | undefined;
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }]), {
+      analytics: service,
+      dispatch: (params) => {
+        receivedParams = params;
+        return { ok: true };
+      }
+    });
+
+    await callTool(factory, 'guestbook-create', { args: { foo: 1, reason: 'creating a guestbook entry' }, auth: firebaseAuth('u1') });
+
+    expect(receivedParams?.data).toEqual({ foo: 1 });
+    expect(events).toHaveLength(1);
+    expect(events[0].reason).toBe('creating a guestbook entry');
+    expect(events[0].args).toEqual({ foo: 1 });
+  });
+
+  it('clamps the forwarded reason at 250 chars', async () => {
+    const { service, events } = capturingAnalytics();
+    const long = 'y'.repeat(300);
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }]), { analytics: service });
+
+    await callTool(factory, 'guestbook-create', { args: { reason: long } });
+
+    expect(events[0].reason).toHaveLength(250);
+  });
+
+  it('does not strip or forward reason when reasonParameter is false', async () => {
+    const { service, events } = capturingAnalytics();
+    let receivedParams: OnCallTypedModelParams | undefined;
+    const factory = makeFactory(makeApiDetails([{ model: 'guestbook', call: 'create' }]), {
+      config: { reasonParameter: false },
+      analytics: service,
+      dispatch: (params) => {
+        receivedParams = params;
+        return { ok: true };
+      }
+    });
+
+    await callTool(factory, 'guestbook-create', { args: { foo: 1, reason: 'kept in body' } });
+
+    // Disabled: the field is treated as a normal arg and reaches the handler untouched.
+    expect(receivedParams?.data).toEqual({ foo: 1, reason: 'kept in body' });
+    expect(events[0].reason).toBeUndefined();
+  });
+
+  it('passes a handler-owned reason through to the body and does not forward it on the event', async () => {
+    const { service, events } = capturingAnalytics();
+    let receivedParams: OnCallTypedModelParams | undefined;
+    const ownSchema = { type: 'object', properties: { reason: { type: 'string' } } };
+    const apiDetails = { models: { widget: { calls: { create: { isSpecifier: false, specifiers: { _: { inputType: { toJsonSchema: () => ownSchema } } } } } } } } as unknown as ModelApiDetailsResult;
+    const factory = makeFactory(apiDetails, {
+      analytics: service,
+      dispatch: (params) => {
+        receivedParams = params;
+        return { ok: true };
+      }
+    });
+
+    await callTool(factory, 'widget-create', { args: { reason: 'handler-owned' } });
+
+    expect(receivedParams?.data).toEqual({ reason: 'handler-owned' });
+    expect(events[0].reason).toBeUndefined();
+  });
+});
+
 describe('McpServerFactoryService configurable instructions', () => {
   it('uses the default instructions when serverInstructions is unset', () => {
     const factory = makeFactory({ models: {} });

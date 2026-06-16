@@ -72,7 +72,7 @@ const SUPPORT_PAGE_TOPICS: ReadonlyArray<SupportPageTopicGroup> = [
  * so it flips correctly between light/dark themes, and composes the
  * `dbx-grow-button` + `dbx-button-big` utilities for full-width / tall
  * presentation. Topic-card avatars are `<dbx-icon-tile [round]>` with
- * `[dbxColor]="'primary'"` + `[dbxColorTone]="18"` for the tonal swatch,
+ * `dbxColor="primary"` + `[dbxColorTone]="18"` for the tonal swatch,
  * and topic links use `[dbxTextColor]="'primary'"` for the link color
  * with a `<span class="dbx-link-hover">` wrapper around the projected
  * label for the hover-only-underline link affordance (the `.dbx-link-hover`
@@ -154,7 +154,7 @@ const SUPPORT_PAGE_TOPICS: ReadonlyArray<SupportPageTopicGroup> = [
           Topic-card avatars are
           <code>&lt;dbx-icon-tile [round]&gt;</code>
           with
-          <code>[dbxColor]="'primary'"</code>
+          <code>dbxColor="primary"</code>
           +
           <code>[dbxColorTone]="18"</code>
           for the tonal swatch. Each card body is a plain

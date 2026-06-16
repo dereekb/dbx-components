@@ -1,5 +1,6 @@
 export * from './analytics';
 export * from './mcp.manifest';
+export * from './mcp.reason';
 export * from './mcp.route-manifest';
 export * from './mcp.response-formatter';
 export * from './mcp.server.factory';

@@ -25,10 +25,17 @@ $linear-line-height: 4px;
 
   .loading-progress-view-indicator {
     background: none !important; // no background color
-    --mat-progress-spinner-active-indicator-color: #{$color-value};
   }
 
-  .loading-progress-view-indicator.dbx-color > .mat-mdc-progress-bar {
+  // Colored progress indicator. `[dbxColor]` on the `<dbx-loading>` /
+  // `<dbx-basic-loading>` / `<dbx-loading-progress>` host supplies the
+  // `--dbx-bg-color-current` token + the `.dbx-color` marker; map the Material
+  // progress indicator colors to it. Scoped on the marker (no inheritance-only
+  // repaint). Without `[dbxColor]` the indicator keeps the Material default color.
+  dbx-loading.dbx-color,
+  dbx-basic-loading.dbx-color,
+  dbx-loading-progress.dbx-color {
+    --mat-progress-spinner-active-indicator-color: #{$color-value};
     --mat-progress-bar-active-indicator-color: #{$color-value};
   }
 }
