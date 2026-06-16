@@ -45,7 +45,7 @@ export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config
   };
 }
 
-export type DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T extends AuthClaimsObject> = AuthRolesObsWithClaimsServiceConfig<T> & Partial<Pick<DbxFirebaseAuthServiceDelegate, 'sendPasswordReset' | 'completePasswordReset'>>;
+export type DefaultDbxFirebaseAuthServiceDelegateWithClaimsServiceConfig<T extends AuthClaimsObject> = AuthRolesObsWithClaimsServiceConfig<T> & Partial<Pick<DbxFirebaseAuthServiceDelegate, 'sendPasswordReset' | 'completePasswordReset' | 'loadImpersonationAuthDetails'>>;
 
 /**
  * Creates a {@link DbxFirebaseAuthServiceDelegate} that derives auth roles and user state from the given claims service configuration.
@@ -72,6 +72,7 @@ export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends
     isOnboarded: DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.isOnboarded,
     authRoleClaimsService: config.claimsService as unknown as AuthRoleClaimsService<AuthClaimsObject>,
     sendPasswordReset: config.sendPasswordReset ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.sendPasswordReset,
-    completePasswordReset: config.completePasswordReset ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.completePasswordReset
+    completePasswordReset: config.completePasswordReset ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.completePasswordReset,
+    loadImpersonationAuthDetails: config.loadImpersonationAuthDetails ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.loadImpersonationAuthDetails
   };
 }

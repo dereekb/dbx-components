@@ -1,5 +1,6 @@
 import { type Action, combineReducers, createFeatureSelector, createSelector } from '@ngrx/store';
 import * as fromDbxAppAuthUserState from './user.reducer';
+import * as fromDbxAppAuthImpersonationState from './impersonation.reducer';
 
 /**
  * NgRx feature key used to register the auth feature state in the global store.
@@ -11,13 +12,16 @@ export const FEATURE_KEY = 'app.auth';
 /**
  * Shape of the auth feature state slice, containing all auth-related sub-states.
  *
- * Currently contains only the user sub-state ({@link DbxAppAuthStateUser}), but is
- * structured to accommodate additional auth-related sub-features in the future.
+ * Contains the user sub-state ({@link DbxAppAuthStateUser}) and the impersonation sub-state
+ * ({@link DbxAppAuthStateImpersonation}). The impersonation slice is always present (it stays empty
+ * unless an app opts into impersonation) so it can always be selected/listened to.
  *
  * @see {@link DbxAppAuthStateUser} for the user sub-state shape.
+ * @see {@link DbxAppAuthStateImpersonation} for the impersonation sub-state shape.
  */
 export interface DbxAppAuthFeatureState {
   [fromDbxAppAuthUserState.DBX_APP_AUTH_USER_FEATURE_KEY]: fromDbxAppAuthUserState.DbxAppAuthStateUser;
+  [fromDbxAppAuthImpersonationState.DBX_APP_AUTH_IMPERSONATION_FEATURE_KEY]: fromDbxAppAuthImpersonationState.DbxAppAuthStateImpersonation;
 }
 
 /**
@@ -44,7 +48,8 @@ export interface State {
  */
 export function reducers(state: DbxAppAuthFeatureState | undefined, action: Action) {
   return combineReducers({
-    [fromDbxAppAuthUserState.DBX_APP_AUTH_USER_FEATURE_KEY]: fromDbxAppAuthUserState.reducer
+    [fromDbxAppAuthUserState.DBX_APP_AUTH_USER_FEATURE_KEY]: fromDbxAppAuthUserState.reducer,
+    [fromDbxAppAuthImpersonationState.DBX_APP_AUTH_IMPERSONATION_FEATURE_KEY]: fromDbxAppAuthImpersonationState.reducer
   })(state, action);
 }
 
@@ -61,3 +66,10 @@ export const selectAppAuthFeature = createFeatureSelector<DbxAppAuthFeatureState
  * @see {@link DbxAppAuthStateService.authStateUser$} for the observable wrapper.
  */
 export const selectDbxAppAuthUser = createSelector(selectAppAuthFeature, (featureState: DbxAppAuthFeatureState) => featureState[fromDbxAppAuthUserState.DBX_APP_AUTH_USER_FEATURE_KEY]);
+
+/**
+ * NgRx selector that retrieves the {@link DbxAppAuthStateImpersonation} from the auth feature state.
+ *
+ * @see {@link DbxAppAuthStateService.authStateImpersonation$} for the observable wrapper.
+ */
+export const selectDbxAppAuthImpersonation = createSelector(selectAppAuthFeature, (featureState: DbxAppAuthFeatureState) => featureState[fromDbxAppAuthImpersonationState.DBX_APP_AUTH_IMPERSONATION_FEATURE_KEY]);

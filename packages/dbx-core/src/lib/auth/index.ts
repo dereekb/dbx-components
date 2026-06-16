@@ -1,6 +1,7 @@
 export * from './router';
 export * from './service';
 export * from './state';
+export * from './impersonation';
 export * from './auth.user';
 export * from './auth.providers';
 export * from './auth.role.any.directive';
