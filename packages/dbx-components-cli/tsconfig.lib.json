@@ -6,6 +6,6 @@
     "module": "esnext",
     "types": ["node"]
   },
-  "include": ["**/*.ts"],
-  "exclude": ["**/*.spec.ts", "vite.config.ts", "vite.config.mts", "vitest.config.ts", "vitest.config.mts", "src/**/*.test.ts", "src/**/*.spec.ts"]
+  "include": ["src/**/*.ts", "bin/**/*.ts"],
+  "exclude": ["templates/**", "**/*.spec.ts", "vite.config.ts", "vite.config.mts", "vitest.config.ts", "vitest.config.mts", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }

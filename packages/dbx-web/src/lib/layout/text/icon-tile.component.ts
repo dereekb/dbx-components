@@ -31,16 +31,16 @@ import { type Maybe } from '@dereekb/util';
  * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
  * @dbxWebContentProjection Optional fallback content rendered when `icon` is not supplied (e.g. a custom icon component).
  * @dbxWebMinimalExample ```html
- * <dbx-icon-tile [icon]="'verified'" [dbxColor]="'success'"></dbx-icon-tile>
+ * <dbx-icon-tile [icon]="'verified'" dbxColor="success"></dbx-icon-tile>
  * ```
  *
  * @example
  * ```html
- * <dbx-icon-tile [icon]="'check'" [dbxColor]="'primary'" [dbxColorTone]="18"></dbx-icon-tile>
+ * <dbx-icon-tile [icon]="'check'" dbxColor="primary" [dbxColorTone]="18"></dbx-icon-tile>
  *
- * <dbx-icon-tile [icon]="'star'" [round]="true" [dbxColor]="'accent'"></dbx-icon-tile>
+ * <dbx-icon-tile [icon]="'star'" [round]="true" dbxColor="accent"></dbx-icon-tile>
  *
- * <dbx-icon-tile [dbxColor]="'accent'">
+ * <dbx-icon-tile dbxColor="accent">
  *   <my-custom-glyph></my-custom-glyph>
  * </dbx-icon-tile>
  * ```

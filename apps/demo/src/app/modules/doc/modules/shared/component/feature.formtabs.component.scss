@@ -14,8 +14,7 @@
 }
 
 .doc-feature-form-tabs-header {
-  font-weight: 500;
-  font-size: 12px;
+  font: var(--mat-sys-label-medium);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 8px;
@@ -29,7 +28,7 @@
     font-size: 11px;
     text-transform: none;
     letter-spacing: normal;
-    margin-top: 2px;
+    margin-top: var(--dbx-padding-1);
     opacity: 0.8;
   }
 }

@@ -323,12 +323,19 @@ $dbx-outline-color: var($dbx-outline-color-var);
 $dbx-outline-variant-color: var($dbx-outline-variant-color-var);
 $dbx-error-color: var($dbx-error-color-var);
 
-/// Border radius for the `[dbxContentPit]` rounded variant. Defaults to `var(--mat-sys-corner-medium)`.
+/// Border radius for the `[dbxContentPit]`, applied by default to every pit. Defaults to `var(--mat-sys-corner-medium)`.
 /// @intent pit radius, rounded pit corner, content pit radius
 /// @role radius
 /// @see --mat-sys-corner-medium
 $dbx-content-pit-rounded-border-radius-var: --dbx-content-pit-rounded-border-radius;
 $dbx-content-pit-rounded-border-radius: var($dbx-content-pit-rounded-border-radius-var);
+
+/// Border radius for the generic `.dbx-corners` utility class. Defaults to `var(--mat-sys-corner-medium)`.
+/// @intent corners radius, generic corner radius, dbx-corners radius
+/// @role radius
+/// @see --mat-sys-corner-medium
+$dbx-corners-border-radius-var: --dbx-corners-border-radius;
+$dbx-corners-border-radius: var($dbx-corners-border-radius-var);
 
 $dbx-content-pit-scrollable-max-height-var: --dbx-content-pit-scrollable-max-height;
 $dbx-content-pit-scrollable-max-height: var($dbx-content-pit-scrollable-max-height-var);

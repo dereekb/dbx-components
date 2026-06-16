@@ -1,6 +1,7 @@
 @use 'sass:map';
 @use './all-core';
 @use './all-typography';
+@use './corners';
 @use './root-variables';
 @use './config';
 
@@ -11,5 +12,8 @@
   }
 
   @include all-core.all-component-core($theme-config);
+  // Generic corner helpers — emitted AFTER all-component-core() so these
+  // single-class utilities win source-order ties against component baselines.
+  @include corners.core();
   @include root-variables.root-variables('body', $theme-config);
 }

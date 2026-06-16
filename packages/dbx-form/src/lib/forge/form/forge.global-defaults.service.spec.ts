@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { provideZonelessChangeDetection } from '@angular/core';
 import { DbxForgeGlobalDefaultConfigService } from './forge.global-defaults.service';
 import { dbxForgeDefaultValidationMessages } from '../validation';
 
 describe('DbxForgeGlobalDefaultConfigService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideZonelessChangeDetection()]
+      providers: []
     });
   });
 

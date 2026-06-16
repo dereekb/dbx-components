@@ -3,7 +3,7 @@ import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type Observable } from 'rxjs';
 import { type ValidatorFn } from '@angular/forms';
 import { type BaseValueField } from '@ng-forge/dynamic-forms';
-import { type SearchableValueFieldStringSearchFn, type SearchableValueFieldDisplayFn, type SearchableValueFieldHashFn, type SearchableValueFieldAnchorFn } from '../../../../formly/field/selection/searchable/searchable';
+import { type SearchableValueFieldStringSearchFn, type SearchableValueFieldDisplayFn, type SearchableValueFieldHashFn, type SearchableValueFieldAnchorFn } from '../../../../field/selection/searchable/searchable';
 import { configureDbxForgeFormFieldWrapper } from '../../wrapper/formfield/formfield.wrapper';
 import { type DbxForgeFieldFunctionDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder, dbxForgeBuildFieldDef } from '../../field';
 import type { DbxForgeField } from '../../../form/forge.form';

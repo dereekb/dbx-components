@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, signal, provideZonelessChangeDetection } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { By } from '@angular/platform-browser';
 
 import { type FormConfig, type FormOptions, DynamicForm, EventDispatcher, DynamicFormLogger, NoopLogger } from '@ng-forge/dynamic-forms';
@@ -10,8 +10,8 @@ import { provideDbxForgeFormFieldDeclarations } from '../../../forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { dbxForgeDateTimeField } from './datetime.field';
 import { DbxForgeDateTimeFieldComponent, type DbxForgeDateTimeFieldComponentProps } from './datetime.field.component';
-import { DbxDateTimeFieldTimeMode } from '../../../../formly/field/value/date/datetime.field.component';
-import { DbxDateTimeValueMode } from '../../../../formly/field/value/date/date.value';
+import { DbxDateTimeFieldTimeMode } from '../../../../field/value/date/datetime.config';
+import { DbxDateTimeValueMode } from '../../../../field/value/date/date.value';
 import { type Maybe, type TimezoneString } from '@dereekb/util';
 import { DateCellScheduleDayCode, findMaxDate, findMinDate } from '@dereekb/date';
 import { dbxForgeDateRangeRow, type DbxForgeDateRangeRowConfig } from './daterange.field';
@@ -36,7 +36,7 @@ class TestForgeDateTimeHostComponent {
 }
 
 // MARK: Test Providers (zoneless)
-const FORGE_DATETIME_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
+const FORGE_DATETIME_TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }];
 
 // MARK: Helpers
 

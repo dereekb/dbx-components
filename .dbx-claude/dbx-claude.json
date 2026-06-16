@@ -4,6 +4,6 @@
   "project": "dbx-components",
   "capabilities": ["audit", "dbx-components"],
   "tests": {
-    "default": { "wrap": "none", "runner": "npx nx", "target": "test" }
+    "default": { "runner": "npx nx" }
   }
 }

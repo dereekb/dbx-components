@@ -1,0 +1,170 @@
+{
+  "name": "API_APP_NAME",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "API_APP_FOLDER/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/API_APP_DIST_FOLDER"],
+      "options": {
+        "commands": [
+          {
+            "description": "make api package.json",
+            "command": "npx nx run API_APP_NAME:build-package-json"
+          },
+          {
+            "description": "build api",
+            "command": "npx nx run API_APP_NAME:build-base"
+          }
+        ],
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "webpackConfig": "API_APP_FOLDER/webpack.config.js",
+        "outputPath": "API_APP_DIST_FOLDER",
+        "main": "API_APP_FOLDER/src/main.ts",
+        "tsConfig": "API_APP_FOLDER/tsconfig.app.json",
+        "assets": ["API_APP_FOLDER/src/assets"],
+        "generatePackageJson": true,
+        "compiler": "tsc",
+        "target": "node"
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "extractLicenses": false,
+          "sourceMap": false,
+          "inspect": false,
+          "fileReplacements": [
+            {
+              "replace": "API_APP_FOLDER/src/environments/environment.ts",
+              "with": "API_APP_FOLDER/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "run-emulators": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx env-cmd -f .env.local --use-shell 'npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'"
+      }
+    },
+    "watch-emulators": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'starting server in 5...'; sleep 5; while sleep 2; do find API_APP_DIST_FOLDER | entr -r -s './wait-for-ports.sh && npx env-cmd -f .env.local --use-shell npx firebase --project=default emulators:start --import=/root/data/emulators --export-on-exit'; done"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx build-base API_APP_NAME --watch"
+          },
+          {
+            "command": "npx nx run API_APP_NAME:watch-emulators"
+          }
+        ],
+        "parallel": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["API_APP_FOLDER/**/*.ts", "API_APP_FOLDER/package.json", "API_APP_FOLDER/project.json"]
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests API_APP_NAME'"
+      }
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/API_APP_FOLDER"
+      }
+    },
+    "watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests API_APP_NAME --watch'"
+      }
+    },
+    "build-package-json": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cache": false,
+        "inputs": ["{workspaceRoot}/package.json"],
+        "command": "node ./make-api-package.js"
+      }
+    },
+    "make-env-staging": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./make-env.js staging > API_APP_DIST_FOLDER/.env && cp .env.staging API_APP_DIST_FOLDER/.env.staging"
+      }
+    },
+    "make-env-prod": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ./make-env.js prod > API_APP_DIST_FOLDER/.env && cp .env.prod API_APP_DIST_FOLDER/.env.prod"
+      }
+    },
+    "ci-deploy-staging": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run API_APP_NAME:build-base:staging"
+          },
+          {
+            "command": "npx nx make-env-staging API_APP_NAME --skip-nx-cache"
+          },
+          {
+            "command": "npx firebase --project=staging deploy --only functions --force"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "ci-deploy-prod": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        {
+          "target": "build"
+        }
+      ],
+      "options": {
+        "commands": [
+          {
+            "command": "npx nx run API_APP_NAME:build-base:production"
+          },
+          {
+            "command": "npx nx make-env-prod API_APP_NAME --skip-nx-cache"
+          },
+          {
+            "command": "npx firebase --project=prod deploy --only functions --force"
+          }
+        ],
+        "parallel": false
+      }
+    }
+  },
+  "tags": []
+}

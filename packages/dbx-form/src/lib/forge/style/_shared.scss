@@ -4,6 +4,15 @@
 //
 // Apply by adding the class directly to <input> elements in forge templates.
 @mixin core() {
+  // Adds a small amount of vertical padding to each Material form field (and the forge
+  // form-field wrapper, which opts in via .dbx-forge-form-field). Angular Material's
+  // dynamic-padding fields reserve no inter-field space on their own. (Migrated from the
+  // removed formly core styles; applies to all mat-form-field + forge wrapper fields.)
+  .mat-mdc-form-field,
+  .dbx-forge-form-field {
+    padding: 6px 0;
+  }
+
   // Resets native <input> elements that render inside the forge form-field wrapper
   // (outside a <mat-form-field>) so they match Material body-large typography.
   // Used by pickable filter inputs and searchable text/chip field inputs.

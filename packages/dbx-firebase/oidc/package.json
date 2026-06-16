@@ -16,7 +16,6 @@
     "@dereekb/util": "13.17.0",
     "@dereekb/vitest": "13.17.0",
     "@ng-forge/dynamic-forms": "0.10.0-next.4",
-    "@ngx-formly/core": "git+https://git@github.com/dereekb/ngx-formly#996d1041c8d2afbe429985a5ad394e59327bfa1d",
     "rxjs": "^7.8.2"
   }
 }

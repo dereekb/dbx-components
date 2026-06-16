@@ -17,8 +17,7 @@
     "@angular/material": "*",
     "@ngbracket/ngx-layout": "*",
     "@dereekb/dbx-analytics": "*",
-    "@dereekb/firebase": "*",
-    "@ngx-formly/core": "*"
+    "@dereekb/firebase": "*"
   },
   "dependencies": {}
 }

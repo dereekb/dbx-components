@@ -1,3 +1,9 @@
+# Unreleased
+
+### BREAKING CHANGES
+
+- **dbx-form:** `@ngx-formly` has been removed entirely — `@dereekb/dbx-form` is now forge-only, built on `@ng-forge/dynamic-forms`. All formly symbols have been deleted, including `DbxFormlyComponent`, `provideFormlyContext`, `AbstractConfigAsyncFormlyFormDirective`, the `formly*Field` field factories, the `DbxFormFormly*Module` NgModules, `DbxFormlyFieldsContextDirective`, `formlyComponentField`, `DbxFormActionDialogComponent`, and `defaultValidationMessages`. Migrate to the forge equivalents: the `dbxForge*` field factories, `provideDbxForgeFormFieldDeclarations()` (validation messages are seeded automatically by the root `DbxForgeGlobalDefaultConfigService`), `DbxForgeActionDialogComponent`, and `AbstractConfigAsyncForgeFormDirective`. The `@ngx-formly/*` packages — including the `dereekb/ngx-formly` fork and its `FormlyModule.forRoot(...)` root wiring — have been dropped from every manifest. App scaffolding templates (`root.app.config.ts`) now wire `provideDbxForgeFormFieldDeclarations()` in place of `FormlyModule.forRoot()`.
+
 # [13.17.0](https://github.com/dereekb/dbx-components/compare/v13.16.0-dev...v13.17.0) (2026-06-15)
 
 

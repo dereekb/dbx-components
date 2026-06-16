@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { DbxContentContainerDirective, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, DbxColorDirective } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,20 +9,20 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   templateUrl: './sidenav.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, MatButtonModule, MatIconModule],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, MatButtonModule, MatIconModule, DbxColorDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
       .dbx-sidenav-demo-container {
         height: 300px;
-        border: 1px solid rgba(128, 128, 128, 0.3);
-        border-radius: 4px;
+        border: 1px solid var(--mat-sys-outline-variant);
+        border-radius: var(--mat-sys-corner-extra-small);
         overflow: hidden;
         position: relative;
       }
 
       .dbx-sidenav-demo-header {
-        padding: 12px 16px;
+        padding: var(--dbx-padding-3) 16px;
         margin: 0;
       }
 
@@ -80,7 +80,7 @@ import { MatIconModule } from '@angular/material/icon';
       .dbx-sidenav-demo-drawer-header {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: var(--dbx-padding-3);
         padding: 20px 16px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
       }

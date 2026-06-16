@@ -26,7 +26,7 @@ import { Directive, input } from '@angular/core';
  * @dbxWebRelated icon-tile, dbx-color, list-two-line-item
  * @dbxWebSkillRefs dbx__ref__dbx-ui-building-blocks
  * @dbxWebMinimalExample ```html
- * <div dbxIconTile [dbxColor]="'primary'" [dbxColorTone]="18">
+ * <div dbxIconTile dbxColor="primary" [dbxColorTone]="18">
  *   <mat-icon>star</mat-icon>
  * </div>
  * ```
@@ -34,7 +34,7 @@ import { Directive, input } from '@angular/core';
  * @example
  * ```html
  * <div class="dbx-list-two-line-item dbx-list-two-line-item-with-icon">
- *   <div class="item-icon" dbxIconTile [dbxColor]="'primary'" [dbxColorTone]="18">
+ *   <div class="item-icon" dbxIconTile dbxColor="primary" [dbxColorTone]="18">
  *     <mat-icon>check_circle</mat-icon>
  *   </div>
  *   <div class="item-left">

@@ -254,6 +254,11 @@ export function dbxForgeZipCodeField(config: DbxForgeZipCodeFieldConfig = {}) {
 export const DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PLACEHOLDER = '12.345,-67.8910';
 
 /**
+ * Default pattern-validation message for a forge latitude/longitude text field.
+ */
+export const DEFAULT_FORGE_LAT_LNG_TEXT_FIELD_PATTERN_MESSAGE = `Invalid/unknown coordinates`;
+
+/**
  * Configuration for a forge latitude/longitude text input field.
  */
 export type DbxForgeLatLngTextFieldConfig = Partial<DbxForgeTextFieldConfig>;

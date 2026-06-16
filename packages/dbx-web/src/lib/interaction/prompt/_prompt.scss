@@ -13,13 +13,18 @@ $dbx-popup-controls-height: 33px;
   }
 
   /// @dbx-utility prompt-box
-  /// @intent centered prompt panel — auto-margined max-width box with a 40px inset (compose with `.elevate` to lift it with elevation 2)
+  /// @intent centered prompt panel — auto-margined max-width box with a 40px inset (override via `--dbx-prompt-box-padding`) and a "medium" corner radius (override via `--dbx-prompt-box-border-radius`); compose with `.elevate` to lift it with elevation 2
   /// @role layout
   /// @see-also content-box, content-elevate
   .dbx-prompt-box {
     margin: auto;
-    padding: 40px;
+    padding: var(--dbx-prompt-box-padding, 40px);
     max-width: $box-max-width;
+    // Visible via the `.elevate` shadow (default) or any app-supplied background;
+    // the box itself intentionally has no background. Deliberately NOT chained
+    // through `--mat-dialog-container-shape` — a prompt box is a page surface,
+    // not a dialog.
+    border-radius: var(--dbx-prompt-box-border-radius, var(--mat-sys-corner-medium, 12px));
 
     &.elevate {
       @include theming.elevation(2);

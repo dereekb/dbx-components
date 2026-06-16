@@ -1,0 +1,54 @@
+{
+  "projectType": "library",
+  "sourceRoot": "FIREBASE_COMPONENTS_FOLDER/src",
+  "name": "FIREBASE_COMPONENTS_NAME",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/FIREBASE_COMPONENTS_DIST_FOLDER"],
+      "options": {
+        "command": "npx nx run FIREBASE_COMPONENTS_NAME:build-base",
+        "color": true
+      }
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "FIREBASE_COMPONENTS_DIST_FOLDER",
+        "main": "FIREBASE_COMPONENTS_FOLDER/src/index.ts",
+        "tsConfig": "FIREBASE_COMPONENTS_FOLDER/tsconfig.lib.json",
+        "assets": ["FIREBASE_COMPONENTS_FOLDER/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["FIREBASE_COMPONENTS_FOLDER/**/*.ts", "FIREBASE_COMPONENTS_FOLDER/package.json", "FIREBASE_COMPONENTS_FOLDER/project.json"]
+      }
+    },
+    "watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests FIREBASE_COMPONENTS_NAME --watch'",
+        "color": true
+      }
+    },
+    "run-tests": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/FIREBASE_COMPONENTS_FOLDER"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./exec-with-emulator.sh 'npx nx run-tests FIREBASE_COMPONENTS_NAME'",
+        "color": true
+      }
+    }
+  },
+  "tags": []
+}

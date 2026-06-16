@@ -1,0 +1,42 @@
+import { Injectable } from '@nestjs/common';
+import {
+//#if recruit
+  ZohoRecruitApi,
+//#endif
+//#if crm
+  ZohoCrmApi,
+//#endif
+//#if sign
+  ZohoSignApi
+//#endif
+} from '@dereekb/zoho/nestjs';
+//#if recruit
+import { __APP_PASCAL__ZohoRecruitService } from './zoho.recruit.service';
+//#endif
+//#if crm
+import { __APP_PASCAL__ZohoCrmService } from './zoho.crm.service';
+//#endif
+//#if sign
+import { __APP_PASCAL__ZohoSignService } from './zoho.sign.service';
+//#endif
+
+/**
+ * Facade exposing all Zoho product APIs and __APP_PASCAL__-specific services.
+ */
+@Injectable()
+export class __APP_PASCAL__ZohoService {
+  constructor(
+//#if recruit
+    readonly zohoRecruitApi: ZohoRecruitApi,
+    readonly __APP_CAMEL__ZohoRecruitService: __APP_PASCAL__ZohoRecruitService,
+//#endif
+//#if crm
+    readonly zohoCrmApi: ZohoCrmApi,
+    readonly __APP_CAMEL__ZohoCrmService: __APP_PASCAL__ZohoCrmService,
+//#endif
+//#if sign
+    readonly zohoSignApi: ZohoSignApi,
+    readonly __APP_CAMEL__ZohoSignService: __APP_PASCAL__ZohoSignService
+//#endif
+  ) {}
+}

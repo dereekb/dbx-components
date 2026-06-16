@@ -26,7 +26,7 @@ $active-background-transparent-color: 0.93;
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
-        padding-bottom: 24px;
+        padding-bottom: var(--dbx-padding-5);
       }
 
       .dbx-anchor-list.mat-mdc-nav-list {
@@ -152,7 +152,7 @@ $active-background-transparent-color: 0.93;
     --mat-sidenav-scrim-color: var(--dbx-sidenav-scrim-color, color-mix(in srgb, var(--mat-sys-neutral-variant20) 40%, transparent));
 
     mat-sidenav.mat-drawer {
-      --mat-sidenav-container-text-color: var(--dbx-sidenav-text-color, var(--mat-sys-primary-container));
+      --mat-sidenav-container-text-color: var(--dbx-sidenav-text-color, var(--dbx-color-current, var(--mat-sys-on-surface)));
       --mat-sidenav-container-divider-color: var(--dbx-sidenav-divider-color, transparent);
       background: var(--dbx-sidenav-background, var(--dbx-bg-color-current));
 

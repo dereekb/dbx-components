@@ -1,15 +1,20 @@
 // MARK: Mixin
 @mixin core() {
-  // Container margin and chip list max-height are defined in formly's _pickable.scss
-  // and apply to both formly and forge contexts (same class names).
-  //
-  // Bare input styling is provided by the .dbx-forge-bare-input class
-  // applied directly in the pickable templates.
+  // Shared pickable styles (migrated from the removed formly _pickable.scss). Bare input styling
+  // is provided by the .dbx-forge-bare-input class applied directly in the pickable templates.
+  .dbx-pickable-item-field-filter {
+    margin-bottom: 4px;
+  }
+
+  .dbx-pickable-item-field-list-content {
+    max-height: var(--dbx-pickable-item-field-list-content-max-height, 400px);
+    overflow: auto;
+  }
 
   // List variant styling
   .dbx-pickable-item-field-list {
     .dbx-pickable-item-field-list-content {
-      max-height: 300px;
+      max-height: var(--dbx-pickable-item-field-list-content-max-height, 300px);
       overflow-y: auto;
     }
 

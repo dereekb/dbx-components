@@ -2,8 +2,8 @@ import { type PrimativeKey } from '@dereekb/util';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type Observable } from 'rxjs';
 import { type BaseValueField } from '@ng-forge/dynamic-forms';
-import { type PickableValueFieldDisplayFunction, type PickableValueFieldFilterFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction } from '../../../../formly/field/selection/pickable/pickable';
-import { type PickableItemFieldItemSortFn } from '../../../../formly/field/selection/pickable/pickable.field.directive';
+import { type PickableValueFieldDisplayFunction, type PickableValueFieldFilterFunction, type PickableValueFieldFilterSelectedValuesFunction, type PickableValueFieldHashFunction, type PickableValueFieldLoadValuesFunction } from '../../../../field/selection/pickable/pickable';
+import { type PickableItemFieldItemSortFn } from '../../../../field/selection/pickable/pickable.item';
 
 // MARK: Field Type Names
 /**
@@ -27,6 +27,12 @@ export interface DbxForgePickableFieldProps<T = unknown, M = unknown, H extends 
   readonly displayForValue: PickableValueFieldDisplayFunction<T, M>;
   readonly hashForValue?: PickableValueFieldHashFunction<T, H>;
   readonly filterValues?: PickableValueFieldFilterFunction<T, M>;
+  /**
+   * Filters/modifies the selected values at selection time (user pick, remove, select-all).
+   *
+   * Lets the field enforce rules like group exclusivity internally instead of round-tripping conflicting values through external sync.
+   */
+  readonly filterSelectedValues?: PickableValueFieldFilterSelectedValuesFunction<T>;
   readonly sortItems?: PickableItemFieldItemSortFn<T, M>;
   readonly multiSelect?: boolean;
   readonly asArrayValue?: boolean;

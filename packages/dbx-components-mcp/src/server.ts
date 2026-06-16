@@ -77,7 +77,7 @@ export const SERVER_VERSION = packageJson.version;
 export const SERVER_INSTRUCTIONS = `dbx-components-mcp is the authoritative source for dbx-components form, model, UI, action, route, filter, pipe, and semantic-type lookup, scaffolding, and end-to-end wiring validation. Prefer these tools over manual codebase searches when the task matches a cluster.
 
 Tool clusters (each exposes lookup, search, examples, and/or scaffold/validate):
-- form         — @dereekb/dbx-form field catalog (formly + forge), examples, scaffold new fields
+- form         — @dereekb/dbx-form field catalog (forge), examples, scaffold new fields
 - ui           — @dereekb/dbx-web building blocks: layouts, sections, buttons, cards, examples
 - model        — Firestore model catalog (identity, converters, collection, subcollections), wiring validation, Angular store scaffold
 - action       — dbx-action directives, store, states; lookup/search/examples/scaffold

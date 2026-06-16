@@ -1,0 +1,12 @@
+{
+  "name": "@dereekb/dbx-web/style-demo",
+  "version": "13.16.0",
+  "peerDependencies": {
+    "@angular/common": "21.2.11",
+    "@angular/core": "21.2.11",
+    "@angular/material": "^21.2.9",
+    "@dereekb/dbx-web": "13.16.0",
+    "@dereekb/util": "13.16.0",
+    "@dereekb/vitest": "13.16.0"
+  }
+}

@@ -22,7 +22,7 @@ import { DbxFirebaseOidcConfigService } from '../../../service/oidc.configuratio
   template: `
     @if (formConfigSignal()) {
       <dbx-firebase-oidc-client-test-forge-form [dbxFormSource]="formTemplate$" dbxFormSourceMode="always" [config]="formConfigSignal()" (dbxFormValueChange)="onFormValueChange($event)"></dbx-firebase-oidc-client-test-forge-form>
-      <dbx-content-pit class="dbx-block dbx-mb3" [rounded]="true">
+      <dbx-content-pit class="dbx-block dbx-mb3">
         <dbx-detail-block class="dbx-pb4" icon="link" header="Authorization URL">
           @if (authorizationUrlSignal()) {
             <dbx-click-to-copy-text [copyText]="authorizationUrlSignal()">

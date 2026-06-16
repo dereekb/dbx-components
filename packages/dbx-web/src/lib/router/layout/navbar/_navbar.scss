@@ -6,6 +6,20 @@
 
 // MARK: Mixin
 @mixin core() {
+  // Browser-tab style: each tab link rounds its TOP corners; the bar stays
+  // square. `--dbx-navbar-item-border-radius` holds a SINGLE radius ("how
+  // round"); the component owns the "top corners only" geometry by applying it
+  // as `R R 0 0`, so levers / app overrides can re-round the tabs without ever
+  // breaking the tab shape.
+  .dbx-navbar .mat-mdc-tab-nav-bar .mat-mdc-tab-link {
+    border-radius: var(--dbx-navbar-item-border-radius, var(--mat-sys-corner-large, 16px)) var(--dbx-navbar-item-border-radius, var(--mat-sys-corner-large, 16px)) 0 0;
+    // Clip the hover/focus state layer (`.mdc-tab__ripple::before`) and the
+    // click ripple (`.mat-mdc-tab-ripple`) to the rounded shape — neither
+    // inherits the radius. The keyboard-focus indicator pseudo is inset 5px so
+    // it stays clear of the clip, and the active underline sits on the square
+    // bottom edge (both unaffected).
+    overflow: hidden;
+  }
 }
 
 @mixin theme($theme-config) {

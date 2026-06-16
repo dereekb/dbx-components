@@ -7,7 +7,7 @@ import { firstValueFrom, first, of, timeout } from 'rxjs';
 import type { DbxForgeSearchableChipFieldConfig, DbxForgeSearchableChipFieldDef, DbxForgeSearchableChipFieldProps } from './searchable-chip.field';
 import { dbxForgeSearchableChipField, dbxForgeSearchableStringChipField } from './searchable-chip.field';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, ChangeDetectionStrategy, inject, provideZonelessChangeDetection } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { provideDbxForgeFormFieldDeclarations } from '../../../../forge/forge.providers';
 import { provideDbxFormConfiguration } from '../../../../form.providers';
 import { DbxForgeFormComponent } from '../../../../forge/form/forge.component';
@@ -424,7 +424,7 @@ class SearchableChipTestHostComponent {
   readonly context = inject(DbxForgeFormContext);
 }
 
-const SEARCHABLE_CHIP_TEST_PROVIDERS = [provideZonelessChangeDetection(), provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }, { provide: DbxRouterWebProviderConfig, useValue: { anchorSegueRefComponent: { componentClass: SearchableChipTestHostComponent } } as DbxRouterWebProviderConfig }];
+const SEARCHABLE_CHIP_TEST_PROVIDERS = [provideDbxForgeFormFieldDeclarations(), provideDbxFormConfiguration(), { provide: DynamicFormLogger, useClass: NoopLogger }, { provide: DbxRouterWebProviderConfig, useValue: { anchorSegueRefComponent: { componentClass: SearchableChipTestHostComponent } } as DbxRouterWebProviderConfig }];
 
 async function settle(fixture: ComponentFixture<unknown>): Promise<void> {
   fixture.detectChanges();

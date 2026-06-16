@@ -1,7 +1,4 @@
 .doc-example-table-action-cell {
   min-width: 110px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
+  padding: 4px; // deliberate tight cell inset (off the --dbx-padding scale)
 }

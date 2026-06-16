@@ -44,7 +44,7 @@ $cal-cell-min-width: 20px;
 
     // Remove padding from form
     .mat-mdc-form-field-wrapper {
-      padding-bottom: 6px;
+      padding-bottom: var(--dbx-padding-2);
     }
 
     .mat-mdc-form-field-infix {
@@ -75,13 +75,13 @@ $cal-cell-min-width: 20px;
       margin-right: 3px;
       font-size: 0.8em;
       font-weight: bold;
-      border-radius: 25px;
+      border-radius: var(--mat-sys-corner-full);
     }
   }
 
   .dbx-schedule-selection-calendar-date-range-field-content {
     width: 100%;
-    padding-right: 12px;
+    padding-right: var(--dbx-padding-3);
   }
 
   .dbx-schedule-selection-calendar-cell {

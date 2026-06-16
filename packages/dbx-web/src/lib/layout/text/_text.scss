@@ -1,14 +1,15 @@
 @use '../../style/theming';
+@use '../style/style';
 
 // MARK: Variables
-$icon-spacing: 6px;
-$chip-spacing: 2px;
+$icon-spacing: var(--dbx-padding-2);
+$chip-spacing: var(--dbx-padding-1);
 $hint-opacity: 0.8;
 $faint-opacity: 0.54;
 $note-opacity: 0.7;
 $mat-hint-opacity: 0.54; // Opacity to mirror mat-hint
-$dbx-label-padded-padding: 6px;
-$dbx-detail-block-bottom-padding: 12px;
+$dbx-label-padded-padding: var(--dbx-padding-2);
+$dbx-detail-block-bottom-padding: var(--dbx-padding-3);
 $dbx-detail-block-content-offset: 30px;
 $click-to-copy-icon-size: 18px;
 $dbx-detail-block-big-header-icon-size: 18px;
@@ -92,7 +93,7 @@ $dbx-step-block-badge-font-weight: 600;
     align-items: center;
 
     .mat-icon {
-      padding-right: 6px;
+      padding-right: var(--dbx-padding-2);
       flex-shrink: 0; // do not allow shrinking
     }
 
@@ -104,7 +105,7 @@ $dbx-step-block-badge-font-weight: 600;
   }
 
   .dbx-detail-block-header-no-icon {
-    padding-left: $dbx-detail-block-content-offset;
+    padding-left: var(--dbx-detail-block-content-offset, #{$dbx-detail-block-content-offset});
   }
 
   .dbx-detail-line {
@@ -113,7 +114,7 @@ $dbx-step-block-badge-font-weight: 600;
   }
 
   .dbx-detail-block-header-label {
-    padding-right: 2px;
+    padding-right: var(--dbx-padding-1);
   }
 
   .dbx-detail-block-header.dbx-detail-block-header-align {
@@ -132,7 +133,7 @@ $dbx-step-block-badge-font-weight: 600;
     display: block;
 
     .dbx-detail-block-header {
-      padding-bottom: 2px;
+      padding-bottom: var(--dbx-padding-1);
 
       .dbx-detail-block-header-label {
         font-weight: 400;
@@ -142,7 +143,7 @@ $dbx-step-block-badge-font-weight: 600;
     .dbx-detail-block-content {
       opacity: 0.8;
       font-size: 0.9em;
-      padding-left: $dbx-detail-block-content-offset;
+      padding-left: var(--dbx-detail-block-content-offset, #{$dbx-detail-block-content-offset});
     }
 
     padding-bottom: $dbx-detail-block-bottom-padding;
@@ -201,7 +202,7 @@ $dbx-step-block-badge-font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--dbx-icon-tile-border-radius, 12px);
+    border-radius: var(--dbx-icon-tile-border-radius, var(--mat-sys-corner-medium, 12px));
     padding: var(--dbx-icon-tile-padding, 8px);
     width: var(--dbx-icon-tile-width);
     height: var(--dbx-icon-tile-height);
@@ -213,6 +214,21 @@ $dbx-step-block-badge-font-weight: 600;
       width: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
       height: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
       font-size: var(--dbx-icon-tile-icon-size, $dbx-icon-tile-default-icon-size);
+    }
+  }
+
+  // Colored tile surface. `[dbxColor]` only provides the color tokens (and the
+  // `.dbx-color` marker); the tile itself paints from them here, scoped on the
+  // marker so a tile inside a `[dbxColor]` page section doesn't repaint from
+  // inherited tokens. Mirrors the `mat-card.dbx-color` model.
+  // `:not(.dbx-default)` guard: `[dbxColor]` always adds the `.dbx-color` marker,
+  // and a nullish color resolves to the `dbx-default` token class (which sets no
+  // `--dbx-bg-color-current`), so the guard keeps an uncolored tile from painting.
+  .dbx-icon-tile.dbx-color:not(.dbx-default) {
+    @include style.dbx-color-surface();
+
+    &.dbx-color-tonal {
+      color: var(#{theming.$dbx-bg-color-var});
     }
   }
 
@@ -243,7 +259,7 @@ $dbx-step-block-badge-font-weight: 600;
     --dbx-icon-tile-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
     --dbx-icon-tile-height: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
     --dbx-icon-tile-min-width: var(--dbx-step-block-badge-size, #{$dbx-step-block-badge-size});
-    --dbx-icon-tile-font-size: var(--dbx-step-block-badge-font-size, #{$dbx-step-block-badge-font-size});
+    --dbx-icon-tile-font-size: var(--dbx-step-block-badge-font-size, var(--mat-sys-label-large-size, #{$dbx-step-block-badge-font-size}));
     --dbx-icon-tile-font-weight: var(--dbx-step-block-badge-font-weight, #{$dbx-step-block-badge-font-weight});
     --dbx-icon-tile-icon-size: var(--dbx-step-block-badge-icon-size, #{$dbx-step-block-badge-icon-size});
   }
@@ -305,17 +321,36 @@ $dbx-step-block-badge-font-weight: 600;
   }
 
   /// @dbx-utility chip
-  /// @intent chip label — `<dbx-chip>` body that lays out a 14px/500 inline chip; compose with `.dbx-chip-small`, `.dbx-chip-block`, or `.dbx-chip-small-text` for size variants
+  /// @intent chip label — `<dbx-chip>` body that lays out an inline-flex chip (label-large text, 7px/12px padding, 32px min-height) with an M3 corner-small radius; override the radius via `--dbx-chip-container-shape` (e.g. set it to `var(--mat-sys-corner-full)` to restore a pill). Compose with `.dbx-chip-small`, `.dbx-chip-block`, or `.dbx-chip-small-text` for size variants
   /// @role layout
   /// @component DbxChipDirective
   /// @scope component-class
   /// @see-also chip-spacer, chip-margin
   .dbx-chip {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--mat-sys-label-large-size);
+    font-weight: var(--mat-sys-label-large-weight);
     position: relative;
     box-sizing: border-box;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    cursor: default;
+    padding: 7px 12px;
+    min-height: 32px;
+    border-radius: var(--dbx-chip-container-shape, var(--mat-chip-container-shape-radius, var(--mat-sys-corner-small, 8px)));
+  }
+
+  /// @dbx-utility dot
+  /// @intent small round status dot painted from `currentColor` — pair with `[dbxTextColor]` (or any colored text context); size via `--dbx-dot-size`.
+  /// @role text
+  /// @see-also card-horizontal-header-dot, text-color, chip
+  .dbx-dot {
+    display: inline-block;
+    flex-shrink: 0;
+    width: var(--dbx-dot-size, 8px);
+    height: var(--dbx-dot-size, 8px);
+    border-radius: 50%;
+    background: currentColor;
   }
 
   /// @dbx-utility chip-spacer
@@ -326,21 +361,23 @@ $dbx-step-block-badge-font-weight: 600;
     margin-right: $chip-spacing;
   }
 
-  .dbx-chip.mat-standard-chip {
-    // include default mat-standard-chip styling
-    transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
-    display: inline-flex;
-    padding: 7px 12px;
-    border-radius: var(--dbx-chip-container-shape, var(--mat-sys-corner-full, 9999px));
-    align-items: center;
-    cursor: default;
-    min-height: 32px;
-    height: 1px;
+  // Colored chip surface. `<dbx-chip>` hosts a DbxColorDirective that supplies the
+  // color tokens (named `dbx-{color}-bg` token class or inline config vars) and the
+  // `.dbx-color` marker; the chip directive supplies `--dbx-color-bg-tone` (default
+  // 18 → tonal). Painting happens here from those tokens. `:not(.dbx-default)`
+  // guard: the host directive always adds the `.dbx-color` marker, so an uncolored
+  // chip (marked `dbx-default`) must not paint. `.dbx-color-tonal` (tone < 100)
+  // flips the text to the vibrant color.
+  .dbx-chip.dbx-color:not(.dbx-default) {
+    @include style.dbx-color-surface(18%);
+
+    &.dbx-color-tonal {
+      color: var(#{theming.$dbx-bg-color-var});
+    }
   }
 
-  .dbx-chip.dbx-chip-small,
-  .dbx-chip.mat-standard-chip.dbx-chip-small {
-    font-size: 12px;
+  .dbx-chip.dbx-chip-small {
+    font-size: var(--mat-sys-label-medium-size);
     padding: 2px 8px;
     min-height: 20px;
   }
@@ -348,7 +385,7 @@ $dbx-step-block-badge-font-weight: 600;
   .dbx-chip-small-text .dbx-chip,
   .dbx-chip-small-text.dbx-chip,
   .dbx-chip-small-text.dbx-chip.dbx-chip-small {
-    font-size: 10px;
+    font-size: var(--mat-sys-label-small-size, 10px);
   }
 
   .dbx-chip.dbx-chip-block {
@@ -453,11 +490,18 @@ $dbx-step-block-badge-font-weight: 600;
   }
 
   .dbx-number-with-limit {
-    padding: 2px 6px;
+    padding: var(--dbx-padding-1) var(--dbx-padding-2);
 
     .dbx-number-with-limit-divider {
       margin: 0 3px;
     }
+  }
+
+  // `<dbx-number-with-limit>` applies a ratio-derived `[dbxColor]` (ok/notice/warn)
+  // to itself; paint the colored pill from those tokens. The `:not(.dbx-default)`
+  // guard keeps the no-limit (uncolored) state from painting.
+  .dbx-number-with-limit.dbx-color:not(.dbx-default) {
+    @include style.dbx-color-surface();
   }
 
   .dbx-number-with-limit-rounded {

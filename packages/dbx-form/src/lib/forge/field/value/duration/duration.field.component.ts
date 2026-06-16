@@ -12,8 +12,8 @@ import type { FieldTree } from '@angular/forms/signals';
 import { type TimeUnit, type HoursAndMinutes, ALL_TIME_UNITS, hoursAndMinutesToTimeUnit, millisecondsToTimeUnit, minutesToHoursAndMinutes, timeUnitToMilliseconds } from '@dereekb/util';
 import { type TimeDurationData, durationDataToMilliseconds, formatDurationString, millisecondsToDurationData, parseDurationString } from '@dereekb/date';
 import { DbxPopoverService } from '@dereekb/dbx-web';
-import { DbxDurationPickerPopoverComponent } from '../../../../formly/field/value/duration/duration.picker.popover.component';
-import type { TimeDurationFieldValueMode } from '../../../../formly/field/value/duration/duration.field';
+import { DbxDurationPickerPopoverComponent } from '../../../../field/value/duration/duration.picker.popover.component';
+import type { TimeDurationFieldValueMode } from '../../../../field/value/duration/duration.config';
 import { dbxForgeFieldDisabled } from '../../field.util';
 import { toggleDisableFormControl } from '../../../../form/form';
 

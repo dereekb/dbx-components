@@ -6,8 +6,8 @@ import { type LoadingState, successResult, startWithBeginLoading } from '@dereek
 import { BehaviorSubject, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type DynamicText, type FieldMeta, type ValidationMessages } from '@ng-forge/dynamic-forms';
-import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, type SearchableValueFieldHashFn, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../formly/field/selection/searchable/searchable';
-import { DbxDefaultSearchableFieldDisplayComponent } from '../../../../formly/field/selection/searchable/searchable.field.autocomplete.item.component';
+import { type SearchableValueFieldDisplayFn, type SearchableValueFieldDisplayValue, type SearchableValueFieldValue, type SearchableValueFieldHashFn, type ConfiguredSearchableValueFieldDisplayValue } from '../../../../field/selection/searchable/searchable';
+import { DbxDefaultSearchableFieldDisplayComponent } from '../../../../field/selection/searchable/searchable.field.autocomplete.item.component';
 import { type DbxForgeSearchableTextFieldProps } from './searchable-text.field';
 
 const DEFAULT_SEARCH_INPUT_PLACEHOLDER = 'Type to Search';

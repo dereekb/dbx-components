@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, provideZonelessChangeDetection, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { type Subscription } from 'rxjs';
@@ -48,7 +48,7 @@ describe('DbxWebPageTitleInfoDirective', () => {
 
     await TestBed.configureTestingModule({
       imports: [TestHostComponent],
-      providers: [provideZonelessChangeDetection(), provideDbxWebPageTitleService({ rootConfig: { title: 'TestApp' } })]
+      providers: [provideDbxWebPageTitleService({ rootConfig: { title: 'TestApp' } })]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestHostComponent);

@@ -30,7 +30,24 @@
     #{theming.$dbx-page-height-additional-offset-var}: 0px;
     #{theming.$dbx-content-height-additional-offset-var}: 0px;
 
+    // M3 shape-scale system tokens. `mat.theme()` emits these, but the `mat.define-theme()`-based
+    // API does not — emit them so `var(--mat-sys-corner-*)` references resolve.
+    // Values mirror @angular/material/core/tokens/m3/_md-sys-shape.scss.
+    --mat-sys-corner-none: 0;
+    --mat-sys-corner-extra-small: 4px;
+    --mat-sys-corner-extra-small-top: 4px 4px 0 0;
+    --mat-sys-corner-small: 8px;
+    --mat-sys-corner-medium: 12px;
+    --mat-sys-corner-large: 16px;
+    --mat-sys-corner-large-start: 16px 0 0 16px;
+    --mat-sys-corner-large-end: 0 16px 16px 0;
+    --mat-sys-corner-large-top: 16px 16px 0 0;
+    --mat-sys-corner-extra-large: 28px;
+    --mat-sys-corner-extra-large-top: 28px 28px 0 0;
+    --mat-sys-corner-full: 9999px;
+
     #{theming.$dbx-content-pit-rounded-border-radius-var}: var(--mat-sys-corner-medium);
+    #{theming.$dbx-corners-border-radius-var}: var(--mat-sys-corner-medium);
     #{theming.$dbx-content-pit-scrollable-max-height-var}: 140px;
 
     #{theming.$dbx-avatar-size-var}: theming.get-dbx-avatar-size($theme-config);

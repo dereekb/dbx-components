@@ -1,0 +1,40 @@
+@use '../../../../style/theming';
+
+// MARK: Variables
+$extension-input-width: 40px !default;
+$country-selector-width: 85px !default;
+
+// MARK: Mixin
+@mixin core() {
+  .dbx-form-phone-field {
+    width: 100%;
+    display: flex;
+    --ngxMatInputTel-selector-opacity: 100%;
+  }
+
+  .dbx-form-phone-field-phone-content button.country-selector {
+    opacity: 1;
+    width: var(--dbx-phone-field-country-selector-width, #{$country-selector-width});
+  }
+
+  .dbx-form-phone-field .ngx-mat-tel-input-container input:not(.country-search) {
+    padding: 2px 6px 0 110px;
+  }
+
+  .dbx-form-phone-field {
+    .country-selector,
+    .country-list-button {
+      color: var(--mat-sys-on-surface);
+    }
+  }
+
+  .dbx-form-phone-field-extension-input {
+    width: var(--dbx-phone-field-extension-input-width, #{$extension-input-width});
+    border: 0;
+    border-bottom: 1px solid var(--mat-sys-outline);
+    background: none;
+  }
+}
+
+@mixin theme($theme-config) {
+}

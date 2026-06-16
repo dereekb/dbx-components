@@ -7,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NgClass, NgStyle } from '@angular/common';
-import { DbxColorDirective } from '../../layout/style/style.color.directive';
 
 /**
  * Progress button that overlays a Material progress spinner on the button while working.
@@ -31,7 +30,7 @@ import { DbxColorDirective } from '../../layout/style/style.color.directive';
   selector: 'dbx-progress-spinner-button,dbx-spinner-button',
   templateUrl: './spinner.button.component.html',
   styleUrls: ['./spinner.button.component.scss', './shared.button.component.scss'],
-  imports: [MatButtonModule, DbxColorDirective, MatIconModule, MatProgressSpinner, NgClass, NgStyle],
+  imports: [MatButtonModule, MatIconModule, MatProgressSpinner, NgClass, NgStyle],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true
 })

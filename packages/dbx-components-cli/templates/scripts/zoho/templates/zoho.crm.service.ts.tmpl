@@ -1,0 +1,13 @@
+import { Injectable } from '@nestjs/common';
+import { ZohoCrmApi } from '@dereekb/zoho/nestjs';
+
+/**
+ * Domain-specific Zoho CRM operations for __APP_PASCAL__.
+ *
+ * Use this service to wrap CRM calls with project-specific logic
+ * (record mapping, lead handling, etc.).
+ */
+@Injectable()
+export class __APP_PASCAL__ZohoCrmService {
+  constructor(readonly zohoCrmApi: ZohoCrmApi) {}
+}

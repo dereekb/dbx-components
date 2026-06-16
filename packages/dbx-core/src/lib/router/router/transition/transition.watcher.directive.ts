@@ -1,4 +1,4 @@
-import { Directive, NgZone, inject } from '@angular/core';
+import { Directive } from '@angular/core';
 import { AbstractTransitionDirective } from './transition.directive';
 import { cleanSubscription } from '../../../rxjs/subscription';
 
@@ -7,8 +7,6 @@ import { cleanSubscription } from '../../../rxjs/subscription';
  *
  * Extends {@link AbstractTransitionDirective} by subscribing to successful transitions during construction
  * and invoking the abstract `updateForSuccessfulTransition()` method for each one.
- *
- * Also provides a `zoneUpdateForSuccessfulTransition()` method that wraps the update call in `NgZone.run()`.
  *
  * @example
  * ```ts
@@ -24,8 +22,6 @@ import { cleanSubscription } from '../../../rxjs/subscription';
  */
 @Directive()
 export abstract class AbstractTransitionWatcherDirective extends AbstractTransitionDirective {
-  protected readonly ngZone = inject(NgZone);
-
   constructor() {
     super();
 
@@ -34,13 +30,6 @@ export abstract class AbstractTransitionWatcherDirective extends AbstractTransit
         this.updateForSuccessfulTransition();
       })
     );
-  }
-
-  // MARK: Action
-  protected zoneUpdateForSuccessfulTransition(): void {
-    // TODO: NgZone Deprecation
-    // remove this function and replace, if necessary or remove entirely with angular zoneless implementation details.
-    this.ngZone.run(() => this.updateForSuccessfulTransition());
   }
 
   protected abstract updateForSuccessfulTransition(): void;
