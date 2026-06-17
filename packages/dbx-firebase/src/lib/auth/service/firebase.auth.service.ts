@@ -103,8 +103,8 @@ export abstract class DbxFirebaseAuthServiceDelegate {
    * backend (e.g. a callable function), returning a {@link DbxAuthImpersonationDetails} with the raw
    * provider payload on `raw`.
    *
-   * @param dbxFirebaseAuthService - the auth service instance.
-   * @param userId - the identifier of the user being impersonated.
+   * @param dbxFirebaseAuthService - The auth service instance.
+   * @param userId - The identifier of the user being impersonated.
    */
   loadImpersonationAuthDetails?(dbxFirebaseAuthService: DbxFirebaseAuthService, userId: AuthUserIdentifier): Observable<Maybe<DbxAuthImpersonationDetails>>;
 }
