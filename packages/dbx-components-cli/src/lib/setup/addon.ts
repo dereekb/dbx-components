@@ -22,7 +22,7 @@ import { type SourceInjectionResult } from './source-inject.js';
 /**
  * The supported add-on ids, in registry order.
  */
-export type SetupAddonId = 'oidc' | 'mcp';
+export type SetupAddonId = 'oidc' | 'mcp' | 'dbx-claude';
 
 /**
  * The context every add-on phase receives: the shared setup context plus the

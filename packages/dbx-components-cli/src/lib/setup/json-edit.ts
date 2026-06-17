@@ -23,7 +23,20 @@ export type JsonObject = Record<string, unknown>;
 const FIREBASE_IGNORE = ['firebase.json', '**/.*', '**/node_modules/**'];
 
 /**
- * Applies the nx.json edits (script lines 244, 495-504).
+ * Returns a shallow copy of `obj` with the given keys removed (pure; never mutates the input).
+ *
+ * @param obj - The source object.
+ * @param keys - The keys to drop.
+ * @returns A new object without those keys.
+ */
+function withoutKeys(obj: JsonObject, keys: readonly string[]): JsonObject {
+  return Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key)));
+}
+
+/**
+ * Applies the nx.json edits (script lines 244, 495-504). Also strips any
+ * `nxCloudId` left by `create-nx-workspace` — the workspace is created with
+ * `--nxCloud=skip`, so the project never connects to Nx Cloud.
  *
  * @param nxJson - The parsed nx.json.
  * @param naming - Derived naming (for the workspace layout dirs).
@@ -40,11 +53,89 @@ export function applyNxJsonEdits(nxJson: JsonObject, naming: SetupNaming): JsonO
     configurations: { ci: { ci: true, codeCoverage: true } }
   };
   return {
-    ...nxJson,
+    ...withoutKeys(nxJson, ['nxCloudId']),
     workspaceLayout: { appsDir: naming.appsFolder, libsDir: naming.componentsFolder },
     targetDefaults,
     tui: { enabled: false }
   };
+}
+
+/**
+ * Dependency versions pinned to align a scaffolded project with the
+ * `@dereekb/*` 13.18.0 peer ranges, so a strict (non-`--force`) `npm install`
+ * resolves: the Angular framework packages to 21.2.11 (`@dereekb/dbx-analytics`),
+ * express 5 (`@dereekb/calcom`), `@typescript-eslint` 8.59.3 (`@dereekb/firebase`),
+ * and analogjs 2.5.0 (`@dereekb/vitest`). The Angular build/devkit/CLI packages
+ * keep their own 21.2.x line and are intentionally not listed.
+ */
+export const DBX_PEER_ALIGNED_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
+  '@angular/common': '21.2.11',
+  '@angular/compiler': '21.2.11',
+  '@angular/core': '21.2.11',
+  '@angular/forms': '21.2.11',
+  '@angular/platform-browser': '21.2.11',
+  '@angular/platform-server': '21.2.11',
+  '@angular/router': '21.2.11',
+  '@angular/compiler-cli': '21.2.11',
+  '@angular/language-service': '21.2.11',
+  express: '^5.2.1',
+  '@types/express': '^5.0.0',
+  'typescript-eslint': '^8.59.3',
+  '@typescript-eslint/utils': '^8.59.3',
+  '@analogjs/vite-plugin-angular': '~2.5.0',
+  '@analogjs/vitest-angular': '~2.5.0'
+};
+
+/**
+ * Pins the dependency versions in {@link DBX_PEER_ALIGNED_DEPENDENCY_VERSIONS} on
+ * whichever `dependencies` / `devDependencies` section already declares them
+ * (never adds a package that is not present). Pure. This replaces the `overrides`
+ * block / `.npmrc legacy-peer-deps` workarounds — aligning the declared versions
+ * with the `@dereekb` peers is the real fix.
+ *
+ * @param pkg - The parsed package.json.
+ * @returns A new package.json with the aligned versions.
+ */
+export function alignDbxPeerDependencies(pkg: JsonObject): JsonObject {
+  const next: JsonObject = { ...pkg };
+  for (const section of ['dependencies', 'devDependencies']) {
+    const deps = next[section];
+    if (deps != null && typeof deps === 'object') {
+      const updated: JsonObject = { ...(deps as JsonObject) };
+      for (const name of Object.keys(updated)) {
+        const pinned = DBX_PEER_ALIGNED_DEPENDENCY_VERSIONS[name];
+        if (pinned !== undefined) {
+          updated[name] = pinned;
+        }
+      }
+      next[section] = updated;
+    }
+  }
+  return next;
+}
+
+/**
+ * Removes the verdaccio local-registry config that `create-nx-workspace`
+ * scaffolds for publishable libraries: the `verdaccio` dependency (in either
+ * `dependencies` or `devDependencies`) and the `local-registry` script. Pure;
+ * the `.verdaccio/` directory itself is removed by the workspace module.
+ *
+ * @param pkg - The parsed package.json.
+ * @returns A new package.json object without the verdaccio config.
+ */
+export function removeVerdaccioFromPackageJson(pkg: JsonObject): JsonObject {
+  const next: JsonObject = { ...pkg };
+  for (const depKey of ['dependencies', 'devDependencies']) {
+    const deps = next[depKey];
+    if (deps != null && typeof deps === 'object') {
+      next[depKey] = withoutKeys(deps as JsonObject, ['verdaccio']);
+    }
+  }
+  const scripts = next['scripts'];
+  if (scripts != null && typeof scripts === 'object') {
+    next['scripts'] = withoutKeys(scripts as JsonObject, ['local-registry']);
+  }
+  return next;
 }
 
 /**

@@ -26,8 +26,8 @@ export interface SetupCoreVersions {
  * Default core versions, matching `setup-project.sh`.
  */
 export const DEFAULT_SETUP_CORE_VERSIONS: SetupCoreVersions = {
-  dbxComponents: '13.6.5',
-  nx: '22.6.1',
+  dbxComponents: '13.18.0',
+  nx: '23.0.0',
   angular: '^21.0.0',
   typescript: '^5.9.3',
   firebaseTools: '15.11.0',
