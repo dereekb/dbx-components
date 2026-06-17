@@ -70,7 +70,7 @@ function readText(result: CallToolResult): string {
 }
 
 describe('createWhoamiTool', () => {
-  it('exposes a read-only static tool with no input', () => {
+  it('exposes a read-only static tool with a detail input', () => {
     const tool = createWhoamiTool({ auth: makeAuth() });
 
     expect(tool.name).toBe(WHOAMI_TOOL_NAME);
@@ -85,7 +85,7 @@ describe('createWhoamiTool', () => {
       expect(tool.filterMetadata.rule.requireAuthenticated).toBeUndefined();
     }
 
-    expect(tool.inputSchema).toMatchObject({ type: 'object', additionalProperties: false, properties: {} });
+    expect(tool.inputSchema).toMatchObject({ type: 'object', additionalProperties: false, properties: { detail: { enum: ['summary', 'claims', 'full'] } } });
     expect(tool.outputSchema).toMatchObject({ type: 'object' });
   });
 
@@ -101,59 +101,127 @@ describe('createWhoamiTool', () => {
 
     expect(output.authenticated).toBe(false);
     expect(output.uid).toBeUndefined();
-    expect(output.claims).toEqual({});
-    expect(output.roles).toEqual([]);
-    expect(output.claimDetails).toEqual([]);
-    expect(output.unknownClaimKeys).toEqual([]);
-    expect(readText(result)).toContain('Unauthenticated');
+    expect(output.claims).toBeUndefined();
+    expect(output.roles).toBeUndefined();
+    expect(output.claimDetails).toBeUndefined();
+    expect(output.unknownClaimKeys).toBeUndefined();
+    expect(readText(result)).toContain('Not authenticated');
   });
 
-  it('renders only the claim keys present on the live token', async () => {
-    const roleReader = (_claims: AuthClaims): AuthRoleSet => new Set(['tos', 'onboarded']);
-    const tool = createWhoamiTool({ auth: makeAuth(), roleReader });
+  describe('summary (default)', () => {
+    it('returns identity + roles + claim count without any claims', async () => {
+      const roleReader = (_claims: AuthClaims): AuthRoleSet => new Set(['tos', 'onboarded']);
+      const tool = createWhoamiTool({ auth: makeAuth(), roleReader });
 
-    const result = await tool.staticHandler!({}, makeCtx({ auth: makeAuthData('user-1', { o: 1 }) }));
-    const output = unwrap(result);
+      const result = await tool.staticHandler!({}, makeCtx({ auth: makeAuthData('user-1', { o: 1, a: 1 }) }));
+      const output = unwrap(result);
 
-    expect(output.authenticated).toBe(true);
-    expect(output.uid).toBe('user-1');
-    expect(output.app).toBe('demo-api');
-    expect(output.roles).toEqual(['onboarded', 'tos']);
-    expect(output.claimDetails).toHaveLength(1);
-    expect(output.claimDetails[0]).toMatchObject({ key: 'o', interfaceName: 'DemoApiAuthClaims' });
-    expect(output.claimDetails[0].grantedRoles).toEqual(['tos', 'onboarded']);
-    expect(output.unknownClaimKeys).toEqual([]);
+      expect(output.authenticated).toBe(true);
+      expect(output.uid).toBe('user-1');
+      expect(output.app).toBe('demo-api');
+      expect(output.roles).toEqual(['onboarded', 'tos']);
+      expect(output.claimCount).toBe(2);
+      expect(output.claims).toBeUndefined();
+      expect(output.claimDetails).toBeUndefined();
+      expect(output.unknownClaimKeys).toBeUndefined();
+
+      const text = readText(result);
+      expect(text).toContain('Authenticated as `user-1` on `demo-api`');
+      expect(text).toContain('- **claims:** 2 present');
+      expect(text).toContain('detail: "claims"');
+      expect(text).not.toContain('## Raw claims');
+      expect(text).not.toContain('## Claims on this token');
+    });
+
+    it('excludes email / email_verified from the claim count and renders verification', async () => {
+      const tool = createWhoamiTool({ auth: makeAuth() });
+      const result = await tool.staticHandler!({}, makeCtx({ auth: makeAuthData('user-1', { o: 1, email: 'a@b.com', email_verified: true }) }));
+      const output = unwrap(result);
+
+      expect(output.claimCount).toBe(1);
+      expect(output.email).toBe('a@b.com');
+      expect(output.emailVerified).toBe(true);
+      expect(readText(result)).toContain('- **email:** `a@b.com` (verified)');
+    });
+
+    it('renders an empty roles list when no role reader is configured', async () => {
+      const tool = createWhoamiTool({ auth: makeAuth() });
+      const result = await tool.staticHandler!({}, makeCtx({ auth: makeAuthData('user-4', { o: 1, a: 1 }) }));
+      const output = unwrap(result);
+
+      expect(output.roles).toEqual([]);
+      expect(readText(result)).toContain('- **roles:** _(none)_');
+    });
   });
 
-  it('includes multiple claim entries when the token carries multiple roles', async () => {
-    const roleReader = (_claims: AuthClaims): AuthRoleSet => new Set(['tos', 'onboarded', 'admin']);
-    const tool = createWhoamiTool({ auth: makeAuth(), roleReader });
+  describe('detail: "claims"', () => {
+    it('includes the raw claims object but not per-claim descriptions', async () => {
+      const tool = createWhoamiTool({ auth: makeAuth() });
+      const result = await tool.staticHandler!({ detail: 'claims' }, makeCtx({ auth: makeAuthData('user-2', { o: 1, a: 1 }) }));
+      const output = unwrap(result);
 
-    const result = await tool.staticHandler!({}, makeCtx({ auth: makeAuthData('user-2', { o: 1, a: 1 }) }));
-    const output = unwrap(result);
+      expect(output.claims).toEqual({ o: 1, a: 1 });
+      expect(output.claimDetails).toBeUndefined();
+      expect(output.unknownClaimKeys).toBeUndefined();
 
-    expect(output.claimDetails.map((d) => d.key)).toEqual(['o', 'a']);
-    const text = readText(result);
-    expect(text).toContain('`o` on `DemoApiAuthClaims`');
-    expect(text).toContain('`a` on `DemoApiAuthClaims`');
-    expect(text).not.toContain('`fr` on');
+      const text = readText(result);
+      expect(text).toContain('## Raw claims');
+      expect(text).toContain('```json');
+      expect(text).toContain('detail: "full"');
+      expect(text).not.toContain('## Claims on this token');
+    });
   });
 
-  it('lands a token-present claim key as unknown when the manifest has no matching entry', async () => {
-    const tool = createWhoamiTool({ auth: makeAuth() });
-    const result = await tool.staticHandler!({}, makeCtx({ auth: makeAuthData('user-3', { o: 1, x: 'mystery' }) }));
-    const output = unwrap(result);
+  describe('detail: "full"', () => {
+    it('renders only the claim keys present on the live token', async () => {
+      const roleReader = (_claims: AuthClaims): AuthRoleSet => new Set(['tos', 'onboarded']);
+      const tool = createWhoamiTool({ auth: makeAuth(), roleReader });
 
-    expect(output.claimDetails.map((d) => d.key)).toEqual(['o']);
-    expect(output.unknownClaimKeys).toEqual(['x']);
-  });
+      const result = await tool.staticHandler!({ detail: 'full' }, makeCtx({ auth: makeAuthData('user-1', { o: 1 }) }));
+      const output = unwrap(result);
 
-  it('renders an empty roles list when no role reader is configured', async () => {
-    const tool = createWhoamiTool({ auth: makeAuth() });
-    const result = await tool.staticHandler!({}, makeCtx({ auth: makeAuthData('user-4', { o: 1, a: 1 }) }));
-    const output = unwrap(result);
+      expect(output.authenticated).toBe(true);
+      expect(output.uid).toBe('user-1');
+      expect(output.app).toBe('demo-api');
+      expect(output.roles).toEqual(['onboarded', 'tos']);
+      expect(output.claimDetails).toHaveLength(1);
+      expect(output.claimDetails![0]).toMatchObject({ key: 'o', interfaceName: 'DemoApiAuthClaims' });
+      expect(output.claimDetails![0].grantedRoles).toEqual(['tos', 'onboarded']);
+      expect(output.unknownClaimKeys).toEqual([]);
+      expect(output.claims).toEqual({ o: 1 });
+    });
 
-    expect(output.roles).toEqual([]);
-    expect(output.claimDetails).toHaveLength(2);
+    it('includes multiple claim entries when the token carries multiple roles', async () => {
+      const roleReader = (_claims: AuthClaims): AuthRoleSet => new Set(['tos', 'onboarded', 'admin']);
+      const tool = createWhoamiTool({ auth: makeAuth(), roleReader });
+
+      const result = await tool.staticHandler!({ detail: 'full' }, makeCtx({ auth: makeAuthData('user-2', { o: 1, a: 1 }) }));
+      const output = unwrap(result);
+
+      expect(output.claimDetails!.map((d) => d.key)).toEqual(['o', 'a']);
+      const text = readText(result);
+      expect(text).toContain('`o` on `DemoApiAuthClaims`');
+      expect(text).toContain('`a` on `DemoApiAuthClaims`');
+      expect(text).not.toContain('`fr` on');
+    });
+
+    it('lands a token-present claim key as unknown when the manifest has no matching entry', async () => {
+      const tool = createWhoamiTool({ auth: makeAuth() });
+      const result = await tool.staticHandler!({ detail: 'full' }, makeCtx({ auth: makeAuthData('user-3', { o: 1, x: 'mystery' }) }));
+      const output = unwrap(result);
+
+      expect(output.claimDetails!.map((d) => d.key)).toEqual(['o']);
+      expect(output.unknownClaimKeys).toEqual(['x']);
+    });
+
+    it('emits both the per-claim descriptions and the raw claims block, with no further hint', async () => {
+      const tool = createWhoamiTool({ auth: makeAuth() });
+      const result = await tool.staticHandler!({ detail: 'full' }, makeCtx({ auth: makeAuthData('user-2', { o: 1, a: 1 }) }));
+      const text = readText(result);
+
+      expect(text).toContain('## Claims on this token');
+      expect(text).toContain('## Raw claims');
+      expect(text).not.toContain('Call again with');
+    });
   });
 });
