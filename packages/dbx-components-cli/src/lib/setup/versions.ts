@@ -55,6 +55,7 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   'eslint-plugin-unicorn': '^64.0.0',
   'mailgun.js': '^12.0.0',
   rxjs: '^7.8.0',
+  arktype: '^2.2.0',
   'mapbox-gl': '^3.10.0',
   'ngx-mapbox-gl': 'git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e',
   '@ng-web-apis/geolocation': '^5.1.0',
