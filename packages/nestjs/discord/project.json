@@ -7,29 +7,7 @@
   "implicitDependencies": ["util", "!util-test"],
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/nestjs/discord",
-        "outputPath": "dist/packages/nestjs/discord",
-        "tsConfig": "packages/nestjs/discord/tsconfig.lib.json",
-        "project": "packages/nestjs/discord/package.json",
-        "main": "packages/nestjs/discord/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

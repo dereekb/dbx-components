@@ -86,16 +86,6 @@
         "buildLibsFromSource": false
       }
     },
-    "@nx/rollup:rollup": {
-      "cache": true,
-      "inputs": ["production", "^production", "{projectRoot}/project.json"],
-      "options": {
-        "buildLibsFromSource": false,
-        "sourceMap": true,
-        "format": ["esm", "cjs"],
-        "external": "all"
-      }
-    },
     "ci-deploy-prod": {
       "cache": false
     },

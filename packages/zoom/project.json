@@ -22,41 +22,7 @@
       }
     },
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/zoom",
-        "outputPath": "dist/packages/zoom",
-        "main": "packages/zoom/src/index.ts",
-        "tsConfig": "packages/zoom/tsconfig.lib.json",
-        "compiler": "swc",
-        "project": "packages/zoom/package.json",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "assets": [
-          {
-            "glob": "packages/zoom/README.md",
-            "input": ".",
-            "output": "."
-          },
-          {
-            "glob": "LICENSE",
-            "input": ".",
-            "output": "."
-          }
-        ],
-        "rollupConfig": ["rollup.visualizer.config.ts"]
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "namedChunks": false,
-          "extractLicenses": true,
-          "vendorChunk": false
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

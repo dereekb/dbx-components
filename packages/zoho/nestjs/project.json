@@ -6,45 +6,7 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/zoho/nestjs",
-        "outputPath": "dist/packages/zoho/nestjs",
-        "tsConfig": "packages/zoho/nestjs/tsconfig.lib.json",
-        "project": "packages/zoho/nestjs/package.json",
-        "main": "packages/zoho/nestjs/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [
-          {
-            "glob": "packages/zoho/nestjs/README.md",
-            "input": ".",
-            "output": "."
-          },
-          {
-            "glob": "LICENSE",
-            "input": ".",
-            "output": "."
-          },
-          {
-            "glob": "**/*.md",
-            "input": "packages/zoho/nestjs/docs",
-            "output": "docs"
-          }
-        ],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",
