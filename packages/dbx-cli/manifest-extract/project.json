@@ -6,35 +6,7 @@
   "tags": ["publishable"],
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/dbx-cli/manifest-extract",
-        "outputPath": "dist/packages/dbx-cli/manifest-extract",
-        "tsConfig": "packages/dbx-cli/manifest-extract/tsconfig.lib.json",
-        "project": "packages/dbx-cli/manifest-extract/package.json",
-        "main": "packages/dbx-cli/manifest-extract/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [
-          {
-            "glob": "LICENSE",
-            "input": ".",
-            "output": "."
-          }
-        ],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

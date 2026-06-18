@@ -178,5 +178,13 @@
       }
     }
   },
-  "analytics": false
+  "analytics": false,
+  "plugins": [
+    {
+      "plugin": "@nx/rollup/plugin",
+      "options": {
+        "buildTargetName": "build-base"
+      }
+    }
+  ]
 }

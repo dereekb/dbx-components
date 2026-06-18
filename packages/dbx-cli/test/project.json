@@ -5,28 +5,7 @@
   "projectType": "library",
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/dbx-cli/test",
-        "outputPath": "dist/packages/dbx-cli/test",
-        "tsConfig": "packages/dbx-cli/test/tsconfig.lib.json",
-        "project": "packages/dbx-cli/test/package.json",
-        "main": "packages/dbx-cli/test/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

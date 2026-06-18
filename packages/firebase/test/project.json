@@ -6,35 +6,7 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/firebase/test",
-        "outputPath": "dist/packages/firebase/test",
-        "tsConfig": "packages/firebase/test/tsconfig.lib.json",
-        "project": "packages/firebase/test/package.json",
-        "main": "packages/firebase/test/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [
-          {
-            "glob": "packages/firebase/test/*.md",
-            "input": "packages/firebase/test",
-            "output": "."
-          }
-        ],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "test": {
       "executor": "nx:run-commands",

@@ -43,35 +43,7 @@
       }
     },
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/dbx-cli",
-        "outputPath": "dist/packages/dbx-cli",
-        "main": "packages/dbx-cli/src/index.ts",
-        "tsConfig": "packages/dbx-cli/tsconfig.lib.json",
-        "compiler": "swc",
-        "project": "packages/dbx-cli/package.json",
-        "format": ["esm", "cjs"],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [
-          {
-            "glob": "LICENSE",
-            "input": ".",
-            "output": "."
-          }
-        ]
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",
