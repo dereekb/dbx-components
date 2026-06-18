@@ -165,6 +165,32 @@ export const STATES: Ng2StateDeclaration[] = [THING_STATE];
     expect(warnings.some((w) => w.kind === 'unknown-route-param' && w.modelType === 'thing')).toBe(true);
   });
 
+  it('strips a UIRouter query suffix so a `:param?query` url does not trip unknown-route-param', () => {
+    const router = `
+import { type Ng2StateDeclaration } from '@uirouter/angular';
+import { SchoolJobComponent } from './school-job.component';
+export const SCHOOL_JOB_STATE: Ng2StateDeclaration = { name: 'schoolJob', url: '/sj/:schoolJob?slotIndex', component: SchoolJobComponent };
+export const STATES: Ng2StateDeclaration[] = [SCHOOL_JOB_STATE];
+`;
+    const component = `/**\n * @dbxRouteModel schoolJob :schoolJob\n */\nexport class SchoolJobComponent {}`;
+    const { manifest, warnings } = buildRouteManifest(
+      {
+        app: { name: 'app' },
+        sources: [
+          { name: 'app/school-job.router.ts', text: router },
+          { name: 'app/school-job.component.ts', text: component }
+        ]
+      },
+      FIXED_NOW
+    );
+    const state = stateNamed(manifest.states, 'schoolJob');
+    // The stored fullUrl is path-only — the `?slotIndex` query param is stripped at compose time.
+    expect(state.fullUrl).toBe('/sj/:schoolJob');
+    expect(state.urlParamKeys).toEqual(['schoolJob']);
+    // The `:schoolJob` template param resolves against the cleaned URL — no false positive.
+    expect(warnings.some((w) => w.kind === 'unknown-route-param')).toBe(false);
+  });
+
   it('warns on an unknown model type when a model catalog is supplied', () => {
     const { warnings } = buildRouteManifest({ app: { name: 'app' }, sources: workerSources(), modelTypes: ['profile'] }, FIXED_NOW);
     expect(warnings.some((w) => w.kind === 'unknown-model-type' && w.modelType === 'worker')).toBe(true);

@@ -43,7 +43,7 @@ describe('renderRouteManifest', () => {
   it('renders a stable manifest for a guestbook fixture', () => {
     const { manifest } = renderRouteManifest({ app: { name: 'demo', baseUrl: 'https://demo.example.co' }, sources: sources() }, FIXED_NOW);
     expect(manifest).toEqual({
-      version: 1,
+      version: 2,
       generatedAt: '2026-05-25T00:00:00.000Z',
       app: { name: 'demo', baseUrl: 'https://demo.example.co' },
       states: [
@@ -115,6 +115,25 @@ describe('countRouteManifestGenerationErrors', () => {
   it('returns 0 when only warnings are present and not strict (manifest is written)', () => {
     const warningsOnly = warnings.filter((w) => w.severity === 'warning');
     expect(countRouteManifestGenerationErrors({ warnings: warningsOnly, strict: false })).toBe(0);
+  });
+
+  it('drops allowlisted warning kinds from the count under --strict (the error still blocks)', () => {
+    // Both warning kinds allowlisted → only the malformed-tag error remains.
+    expect(countRouteManifestGenerationErrors({ warnings, strict: true, allowWarning: ['missing-route-model', 'unknown-model-type'] })).toBe(1);
+    // A non-allowlisted warning still blocks under --strict.
+    expect(countRouteManifestGenerationErrors({ warnings, strict: true, allowWarning: ['missing-route-model'] })).toBe(2);
+  });
+
+  it('never allowlists an error-severity finding (malformed-tag)', () => {
+    expect(countRouteManifestGenerationErrors({ warnings, strict: false, allowWarning: ['malformed-tag'] })).toBe(1);
+  });
+
+  it('fails when non-allowlisted warnings exceed --max-warnings', () => {
+    const warningsOnly = warnings.filter((w) => w.severity === 'warning'); // 2 warnings
+    expect(countRouteManifestGenerationErrors({ warnings: warningsOnly, strict: false, maxWarnings: 2 })).toBe(0);
+    expect(countRouteManifestGenerationErrors({ warnings: warningsOnly, strict: false, maxWarnings: 1 })).toBeGreaterThan(0);
+    // --max-warnings=0 with both kinds allowlisted → still passes.
+    expect(countRouteManifestGenerationErrors({ warnings: warningsOnly, strict: false, maxWarnings: 0, allowWarning: ['missing-route-model', 'unknown-model-type'] })).toBe(0);
   });
 });
 

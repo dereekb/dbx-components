@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType } from '@dereekb/firebase';
+import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type ModelAccessMultiReadResult } from '@dereekb/firebase-server';
 import { formatMcpToolErrorResponse } from '../mcp.response-formatter';
@@ -29,11 +29,18 @@ export const URL_MODELS_DISPATCH_MODEL_TYPE = 'route';
  */
 const AUTH_UID_PLACEHOLDER = '{authUid}';
 
+/**
+ * Matches a `{flatKey:<param>}` key template, capturing the route param whose
+ * URL value is a whole two-way-flat FirestoreModelKey. Mirror of the build-time
+ * `FLAT_KEY_TOKEN_RE` in `@dereekb/dbx-cli`'s route-model-tag parser.
+ */
+const FLAT_KEY_TEMPLATE_RE = /^\{flatKey:([a-zA-Z_][a-zA-Z0-9_]*)\}$/u;
+
 // MARK: Types
 /**
  * Why a model binding could not be resolved into a concrete key.
  */
-export type UrlModelUnresolvedReason = 'missing-param' | 'subcollection-requires-key-template' | 'unknown-model-type' | 'auth-required';
+export type UrlModelUnresolvedReason = 'missing-param' | 'subcollection-requires-key-template' | 'unknown-model-type' | 'auth-required' | 'invalid-flat-key';
 
 /**
  * One resolved model binding for a matched page.
@@ -273,6 +280,8 @@ function resolveModelEntry(input: ResolveModelEntryInput): ResolvedRouteModel {
     result = base;
   } else if (entry.kind === 'id') {
     result = { ...base, ...resolveIdKey(input) };
+  } else if (entry.kind === 'flatKey') {
+    result = { ...base, ...resolveFlatKey(input) };
   } else {
     result = { ...base, ...resolveFullKey(input) };
   }
@@ -300,6 +309,41 @@ function resolveIdKey(input: ResolveModelEntryInput): KeyResolution {
   }
 
   return result;
+}
+
+function resolveFlatKey(input: ResolveModelEntryInput): KeyResolution {
+  const { entry, params } = input;
+  const match = FLAT_KEY_TEMPLATE_RE.exec(entry.keyTemplate ?? '');
+  let result: KeyResolution;
+
+  if (match === null) {
+    // Defensive: a flatKey entry whose template is not `{flatKey:<param>}` (a malformed manifest).
+    result = { unresolved: { reason: 'invalid-flat-key', message: `Model \`${entry.modelType}\` is a flatKey binding but its key template \`${entry.keyTemplate ?? ''}\` is not \`{flatKey:<param>}\`.` } };
+  } else {
+    const paramName = match[1];
+    const value = params[paramName];
+    if (value === undefined || value.length === 0) {
+      result = { unresolved: { reason: 'missing-param', message: `Route param \`:${paramName}\` (the flattened model key) was not captured from the URL.` } };
+    } else {
+      // The param value IS a two-way-flat key (`r_<id>_cs_<id>`); un-flatten it back to `r/<id>/cs/<id>`.
+      const key = inferKeyFromTwoWayFlatFirestoreModelKey(value);
+      result = isEvenSegmentKey(key) ? { key } : { unresolved: { reason: 'invalid-flat-key', message: `Route param \`:${paramName}\` did not decode to a valid FirestoreModelKey (got \`${key}\`).` } };
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Whether a decoded key has the shape of a FirestoreModelKey: a non-empty,
+ * even number of `/`-separated segments (collection/id pairs).
+ *
+ * @param key - The decoded (un-flattened) key.
+ * @returns True when the key has an even, non-zero segment count.
+ */
+function isEvenSegmentKey(key: string): boolean {
+  const segments = key.split('/').filter((s) => s.length > 0);
+  return segments.length >= 2 && segments.length % 2 === 0;
 }
 
 function resolveFullKey(input: ResolveModelEntryInput): KeyResolution {

@@ -29,6 +29,9 @@
  *   --models-input=<path>    (optional) MCP manifest JSON whose `models[].modelType`
  *                            seed the `unknown-model-type` validation.
  *   --strict                 (optional) promote all warnings to errors for the exit decision.
+ *   --allow-warning=<kind>   (optional, repeatable) tolerate a warning KIND (never fails generation,
+ *                            even under --strict / --max-warnings).
+ *   --max-warnings=<N>       (optional) fail when non-allowlisted warnings exceed N (0 = no new warnings).
  */
 
 import { glob as fsGlob, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
@@ -49,6 +52,18 @@ interface Flags {
    * finding fails generation.
    */
   readonly strict: boolean;
+  /**
+   * Warning kinds (from `--allow-warning=<kind>`, repeatable) explicitly
+   * tolerated: a `warning`-severity finding of one of these kinds never fails
+   * generation, even under `--strict` / `--max-warnings`. Lets CI gate on NEW
+   * diagnostics while carrying a few documented, accepted ones.
+   */
+  readonly allowWarning: readonly string[];
+  /**
+   * `--max-warnings=<N>`: fail generation when the non-allowlisted
+   * `warning`-severity findings exceed N. Undefined disables the cap.
+   */
+  readonly maxWarnings: number | undefined;
 }
 
 const WORKSPACE_ROOT = process.cwd();
@@ -87,9 +102,10 @@ async function main(): Promise<void> {
   // A malformed `@dbxRouteModel*` tag silently ships a missing/broken model binding — fail the build
   // (this generator runs via the API build dependency) rather than write a manifest with a hole.
   // `--strict` escalates every non-blocking warning to this same fail-on-exit decision.
-  const errorCount = countRouteManifestGenerationErrors({ warnings, strict: flags.strict });
+  const errorCount = countRouteManifestGenerationErrors({ warnings, strict: flags.strict, allowWarning: flags.allowWarning, ...(flags.maxWarnings == null ? {} : { maxWarnings: flags.maxWarnings }) });
   if (errorCount > 0) {
-    console.error(`generate-route-manifest: ${errorCount} error-severity issue(s)${flags.strict ? ' (--strict)' : ''}; not writing ${relative(WORKSPACE_ROOT, outputPath)}.`);
+    const gate = flags.strict ? ' (--strict)' : flags.maxWarnings == null ? '' : ` (--max-warnings=${flags.maxWarnings})`;
+    console.error(`generate-route-manifest: ${errorCount} blocking issue(s)${gate}; not writing ${relative(WORKSPACE_ROOT, outputPath)}.`);
     process.exit(1);
   }
 
@@ -150,11 +166,13 @@ function resolveWorkspacePath(value: string): string {
 
 function parseFlags(argv: readonly string[]): Flags {
   const src: string[] = [];
+  const allowWarning: string[] = [];
   let app: string | undefined;
   let baseUrl: string | undefined;
   let output: string | undefined;
   let modelsInput: string | undefined;
   let strict = false;
+  let maxWarnings: number | undefined;
 
   for (const arg of argv) {
     if (arg.startsWith('--src=')) {
@@ -167,12 +185,20 @@ function parseFlags(argv: readonly string[]): Flags {
       output = arg.slice('--output='.length);
     } else if (arg.startsWith('--models-input=')) {
       modelsInput = arg.slice('--models-input='.length);
+    } else if (arg.startsWith('--allow-warning=')) {
+      const kind = arg.slice('--allow-warning='.length).trim();
+      if (kind.length > 0) {
+        allowWarning.push(kind);
+      }
+    } else if (arg.startsWith('--max-warnings=')) {
+      const parsed = Number.parseInt(arg.slice('--max-warnings='.length), 10);
+      maxWarnings = Number.isNaN(parsed) ? undefined : Math.max(0, parsed);
     } else if (arg === '--strict') {
       strict = true;
     }
   }
 
-  return { src, app, baseUrl, output, modelsInput, strict };
+  return { src, app, baseUrl, output, modelsInput, strict, allowWarning, maxWarnings };
 }
 
 function printUsageAndExit(): void {
@@ -194,7 +220,12 @@ Optional:
   --models-input=<path>      MCP manifest JSON whose models[].modelType seed the
                              unknown-model-type validation.
   --strict                   Promote all warnings to errors for the exit decision
-                             (any finding then fails generation).`);
+                             (any finding then fails generation).
+  --allow-warning=<kind>     Tolerate a warning kind (repeatable); it never fails generation,
+                             even under --strict / --max-warnings. Kinds: unknown-route-param,
+                             unknown-model-type, duplicate-route-model, dropped-future-state,
+                             missing-route-model. (malformed-tag is an error and cannot be allowed.)
+  --max-warnings=<N>         Fail when non-allowlisted warnings exceed N (0 = fail on any new warning).`);
   process.exit(1);
 }
 

@@ -79,6 +79,22 @@ export function normalizePathname(pathname: string): string {
 }
 
 /**
+ * Strips a UIRouter query string (`?…`) and/or hash (`#…`) suffix off a URL or
+ * URL pattern, keeping only the path portion. Mirrors the runtime
+ * `parseUrlModelsPathname` normalization (`firebase-server/mcp`) so build-time
+ * param extraction and runtime matching agree: a state url like
+ * `/:schoolJob?slotIndex` reduces to `/:schoolJob` rather than leaking the
+ * `?slotIndex` query param into the last path segment.
+ *
+ * @param url - The URL or composed URL pattern to normalize.
+ * @returns The url with any `?…` / `#…` suffix removed.
+ */
+export function stripUrlQueryAndHash(url: string): string {
+  const hashStripped = url.split('#', 1)[0];
+  return hashStripped.split('?', 1)[0];
+}
+
+/**
  * Splits a path into its non-empty segments (the leading slash is dropped).
  *
  * @param path - The path or URL pattern to split.
@@ -158,7 +174,10 @@ export function extractUrlParamKeys(fullUrl: string | undefined): readonly strin
   return keys;
 }
 
-function extractParamKeyFromSegment(segment: string): string | undefined {
+function extractParamKeyFromSegment(rawSegment: string): string | undefined {
+  // Defense-in-depth: a `:param?query` / `:param#hash` segment that slips past
+  // `composeFullUrl` normalization must not leak its suffix into the param key.
+  const segment = stripUrlQueryAndHash(rawSegment);
   if (segment.startsWith(':')) {
     const key = segment.slice(1);
     return key.length > 0 ? key : undefined;

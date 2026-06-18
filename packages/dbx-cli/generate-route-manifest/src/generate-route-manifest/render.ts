@@ -67,22 +67,46 @@ export function formatRouteManifestWarning(warning: RouteManifestWarning): strin
 export interface CountRouteManifestGenerationErrorsInput {
   readonly warnings: readonly RouteManifestWarning[];
   readonly strict: boolean;
+  /**
+   * Warning KINDS explicitly tolerated by `--allow-warning=<kind>`: a
+   * `warning`-severity finding of one of these kinds never counts toward the
+   * failure total, even under `--strict` / `--max-warnings`. `error`-severity
+   * findings (e.g. a malformed tag) are NOT allowlistable.
+   */
+  readonly allowWarning?: readonly string[];
+  /**
+   * `--max-warnings=<N>`: when set, generation fails if the number of
+   * non-allowlisted `warning`-severity findings exceeds this cap (independent of
+   * `--strict`). `--max-warnings=0` fails on any new (non-allowlisted) warning.
+   */
+  readonly maxWarnings?: number;
 }
 
 /**
- * Counts the warnings that should fail generation: every `error`-severity
- * finding, plus — when `strict` is set — every `warning`-severity finding too.
+ * Counts the findings that should fail generation: every `error`-severity
+ * finding (never allowlistable), plus the non-allowlisted `warning`-severity
+ * findings when `--strict` is set or when they exceed `--max-warnings`.
  *
- * @param input - The collected warnings and whether `--strict` is in effect.
+ * @param input - The collected warnings, `--strict`, and the allowlist / cap.
  * @returns The number of findings that should cause a non-zero exit.
  *
  * @example
  * ```ts
  * countRouteManifestGenerationErrors({ warnings, strict: false }); // counts only error-severity findings
+ * countRouteManifestGenerationErrors({ warnings, strict: true, allowWarning: ['unknown-route-param'] }); // tolerates that kind
+ * countRouteManifestGenerationErrors({ warnings, strict: false, maxWarnings: 0 }); // fails on any new warning
  * ```
  */
 export function countRouteManifestGenerationErrors(input: CountRouteManifestGenerationErrorsInput): number {
-  return input.warnings.filter((warning) => warning.severity === 'error' || (input.strict && warning.severity === 'warning')).length;
+  const allow = new Set(input.allowWarning ?? []);
+  // `error`-severity findings (e.g. malformed-tag) always block and are not allowlistable.
+  const errorCount = input.warnings.filter((warning) => warning.severity === 'error').length;
+  // Non-allowlisted `warning`-severity findings: promoted to blocking under --strict, or when they
+  // exceed --max-warnings.
+  const blockableWarnings = input.warnings.filter((warning) => warning.severity === 'warning' && !allow.has(warning.kind));
+  const exceedsMax = input.maxWarnings !== undefined && blockableWarnings.length > input.maxWarnings;
+  const blockingWarningCount = input.strict || exceedsMax ? blockableWarnings.length : 0;
+  return errorCount + blockingWarningCount;
 }
 
 /**
