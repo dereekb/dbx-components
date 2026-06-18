@@ -3,6 +3,11 @@
  * line 220) and applies the nx.json layout / target-default / TUI edits (script
  * lines 244, 495-504). It scaffolds no template files; the angular app + cypress
  * e2e project are produced by `create-nx-workspace` itself.
+ *
+ * The workspace is created with `--nxCloud=skip` (the project never connects to
+ * Nx Cloud). The verdaccio local-registry config that `create-nx-workspace` (and
+ * the publishable-library generators that run after it) scaffold is removed later
+ * by `init` once those generators have run — see `removeVerdaccioConfig`.
  */
 
 import { dirname, join } from 'node:path';
@@ -18,9 +23,8 @@ export const WORKSPACE_MODULE: SetupModule = {
   buildScaffoldPlan: () => [],
   generate: async (context) => {
     const { naming, versions, shell, workspaceRoot, dryRun } = context;
-    const nxCloud = versions.isCiTest ? 'skip' : 'yes';
     // create-nx-workspace runs in the parent dir and creates the project folder named after the project.
-    await shell.run('npx', ['--yes', `create-nx-workspace@${versions.core.nx}`, `--name=${naming.projectName}`, `--appName=${naming.angularAppName}`, '--packageManager=npm', '--useGitHub', `--nxCloud=${nxCloud}`, '--interactive=false', '--style=scss', '--preset=angular-monorepo', '--workspaceType=package-based', '--unitTestRunner=vitest', '--e2eTestRunner=cypress', '--standaloneApi=true', '--ssr=false', '--routing=false'], { cwd: dirname(workspaceRoot), dryRun });
+    await shell.run('npx', ['--yes', `create-nx-workspace@${versions.core.nx}`, `--name=${naming.projectName}`, `--appName=${naming.angularAppName}`, '--packageManager=npm', '--useGitHub', '--nxCloud=skip', '--interactive=false', '--style=scss', '--preset=angular-monorepo', '--workspaceType=package-based', '--unitTestRunner=vitest', '--e2eTestRunner=cypress', '--standaloneApi=true', '--ssr=false', '--routing=false'], { cwd: dirname(workspaceRoot), dryRun });
   },
   configure: async (context) => {
     const { workspaceRoot, naming, dryRun } = context;

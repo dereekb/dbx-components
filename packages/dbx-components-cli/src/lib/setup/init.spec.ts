@@ -51,10 +51,14 @@ describe('runSetupInit', () => {
     expect(result.steps).toContain('commit: checkpoint: setup api');
 
     const joined = shell.commands.join('\n');
-    expect(joined).toContain('create-nx-workspace@22.6.1');
+    expect(joined).toContain('create-nx-workspace@23.0.0');
     expect(joined).toContain('@nx/nest:app');
     expect(joined).toContain('git commit --no-verify -m checkpoint: updated nx to latest version');
     expect(joined).toContain('git reset');
+    // Late steps: verdaccio cleanup + dependency alignment + a final reconcile install.
+    expect(result.steps).toContain('finalize: verdaccio cleanup + dependency alignment');
+    expect(result.steps).toContain('install: reconcile node_modules');
+    expect(shell.commands).toContain('npm install --legacy-peer-deps');
   });
 
   it('skips login + final phases in ci-test mode', async () => {

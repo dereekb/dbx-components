@@ -15,42 +15,7 @@
       }
     },
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/browser",
-        "outputPath": "dist/packages/browser",
-        "main": "packages/browser/src/index.ts",
-        "tsConfig": "packages/browser/tsconfig.lib.json",
-        "compiler": "swc",
-        "project": "packages/browser/package.json",
-        "format": ["esm", "cjs"],
-        "buildLibsFromSource": false,
-        "generateExportsField": true,
-        "assets": [
-          {
-            "glob": "packages/browser/README.md",
-            "input": ".",
-            "output": "."
-          },
-          {
-            "glob": "LICENSE",
-            "input": ".",
-            "output": "."
-          }
-        ],
-        "rollupConfig": ["rollup.visualizer.config.ts"]
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "namedChunks": false,
-          "extractLicenses": true,
-          "vendorChunk": false
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

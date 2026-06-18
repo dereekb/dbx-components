@@ -26,8 +26,8 @@ export interface SetupCoreVersions {
  * Default core versions, matching `setup-project.sh`.
  */
 export const DEFAULT_SETUP_CORE_VERSIONS: SetupCoreVersions = {
-  dbxComponents: '13.6.5',
-  nx: '22.6.1',
+  dbxComponents: '13.18.0',
+  nx: '23.0.0',
   angular: '^21.0.0',
   typescript: '^5.9.3',
   firebaseTools: '15.11.0',
@@ -55,6 +55,7 @@ export const SETUP_DEPENDENCY_VERSIONS: Readonly<Record<string, string>> = {
   'eslint-plugin-unicorn': '^64.0.0',
   'mailgun.js': '^12.0.0',
   rxjs: '^7.8.0',
+  arktype: '^2.2.0',
   'mapbox-gl': '^3.10.0',
   'ngx-mapbox-gl': 'git+https://git@github.com/dereekb/ngx-mapbox-gl#3f1d25b0661bc48abbd415dc79ca7f66568bae2e',
   '@ng-web-apis/geolocation': '^5.1.0',

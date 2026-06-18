@@ -1,9 +1,9 @@
 // Shared rollup config modifier that adds the visualizer plugin.
-// Reference this from project.json "rollupConfig" to generate stats.
-// Usage: "rollupConfig": ["rollup.visualizer.config.ts"]
+// CommonJS form so the `@nx/rollup/plugin` inferred `rollup.config.cjs` files can `require()` it.
+// (The `@nx/rollup:rollup` executor's "rollupConfig" hook used the .ts sibling of this file.)
 const importEsm = new Function('modulePath', 'return import(modulePath)');
 
-export default async (config: any, options: any) => {
+module.exports = async (config, options) => {
   const { visualizer } = await importEsm('rollup-plugin-visualizer');
   const name = (options?.importPath ?? 'stats').replaceAll(/[@/]/g, '-');
 

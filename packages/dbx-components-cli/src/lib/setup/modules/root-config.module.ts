@@ -99,8 +99,9 @@ export const ROOT_MODULE: SetupModule = {
     // vitest (script line 473)
     await shell.run('npm', ['install', '-D', `@nx/vitest@${nx}`, `@nx/vite@${nx}`, dep('@analogjs/vite-plugin-angular')], { cwd: workspaceRoot, dryRun });
 
-    // @dereekb + firebase deps (script line 511)
-    await shell.run('npm', ['install', '--force', dep('mailgun.js'), dep('rxjs'), dep('firebase'), dep('firebase-admin'), dep('firebase-functions'), ...buildDereekbSpecs(context)], { cwd: workspaceRoot, dryRun });
+    // @dereekb + firebase deps (script line 511). arktype is the runtime validator
+    // the scaffolded firebase model files (`*.api.ts`) import.
+    await shell.run('npm', ['install', '--force', dep('mailgun.js'), dep('rxjs'), dep('arktype'), dep('firebase'), dep('firebase-admin'), dep('firebase-functions'), ...buildDereekbSpecs(context)], { cwd: workspaceRoot, dryRun });
 
     // mapbox deps (script line 514)
     await shell.run('npm', ['install', '--force', dep('mapbox-gl'), dep('ngx-mapbox-gl'), dep('@ng-web-apis/geolocation'), dep('@ng-web-apis/common')], { cwd: workspaceRoot, dryRun });

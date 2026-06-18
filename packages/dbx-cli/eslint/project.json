@@ -7,29 +7,7 @@
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/dbx-cli/eslint",
-        "outputPath": "dist/packages/dbx-cli/eslint",
-        "tsConfig": "packages/dbx-cli/eslint/tsconfig.lib.json",
-        "project": "packages/dbx-cli/eslint/package.json",
-        "main": "packages/dbx-cli/eslint/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [],
-        "rollupConfig": ["packages/dbx-cli/eslint/rollup.alias-internal.config.ts", "rollup.visualizer.config.ts"],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

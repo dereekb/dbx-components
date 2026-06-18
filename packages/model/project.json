@@ -15,39 +15,7 @@
       }
     },
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/model",
-        "outputPath": "dist/packages/model",
-        "main": "packages/model/src/index.ts",
-        "tsConfig": "packages/model/tsconfig.lib.json",
-        "compiler": "swc",
-        "project": "packages/model/package.json",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "assets": [
-          {
-            "glob": "packages/model/README.md",
-            "input": ".",
-            "output": "."
-          },
-          {
-            "glob": "LICENSE",
-            "input": ".",
-            "output": "."
-          }
-        ],
-        "rollupConfig": ["rollup.visualizer.config.ts"]
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

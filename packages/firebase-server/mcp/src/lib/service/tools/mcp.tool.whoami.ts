@@ -55,7 +55,18 @@ export interface WhoamiClaimDetail {
 }
 
 /**
- * Output payload for the `whoami` tool.
+ * Requested verbosity for the `whoami` tool, set via the `detail` input.
+ *
+ * - `summary` (default) — identity + decoded roles + a claim count. No claims.
+ * - `claims` — adds the raw claims object (key → value).
+ * - `full` — adds per-claim descriptions, granted/revoked roles, tags, and unknown claim keys.
+ */
+export type WhoamiDetailLevel = 'summary' | 'claims' | 'full';
+
+/**
+ * Output payload for the `whoami` tool. The claim-bearing fields are populated
+ * only at the detail level that requests them, so the structured payload scales
+ * with the `detail` input the same way the rendered text does.
  */
 export interface WhoamiToolOutput {
   readonly authenticated: boolean;
@@ -63,10 +74,30 @@ export interface WhoamiToolOutput {
   readonly email?: string;
   readonly emailVerified?: boolean;
   readonly app?: string;
-  readonly claims: Readonly<Record<string, unknown>>;
-  readonly roles: readonly string[];
-  readonly claimDetails: readonly WhoamiClaimDetail[];
-  readonly unknownClaimKeys: readonly string[];
+  /**
+   * Decoded role set. Present for authenticated callers (empty when no role
+   * reader is configured); omitted for anonymous callers.
+   */
+  readonly roles?: readonly string[];
+  /**
+   * Count of custom claim keys present on the live token, excluding the reserved
+   * `email` / `email_verified` keys. Present for authenticated callers.
+   */
+  readonly claimCount?: number;
+  /**
+   * Raw claims object copied from the live token. Included when `detail` is
+   * `claims` or `full`.
+   */
+  readonly claims?: Readonly<Record<string, unknown>>;
+  /**
+   * Per-claim descriptions for every manifest-known key present on the token.
+   * Included when `detail` is `full`.
+   */
+  readonly claimDetails?: readonly WhoamiClaimDetail[];
+  /**
+   * Token claim keys with no matching manifest entry. Included when `detail` is `full`.
+   */
+  readonly unknownClaimKeys?: readonly string[];
 }
 
 // MARK: Factory
@@ -82,10 +113,10 @@ export interface WhoamiToolOutput {
  * @returns A statically-registered {@link McpToolDefinition} to append to the MCP server factory's tool registry.
  */
 export function createWhoamiTool(deps: CreateWhoamiToolDeps): McpToolDefinition {
-  const handler: McpStaticToolHandler = (_args, ctx) => Promise.resolve(whoamiToolHandler(ctx, deps));
+  const handler: McpStaticToolHandler = (args, ctx) => Promise.resolve(whoamiToolHandler(args, ctx, deps));
   const name = WHOAMI_TOOL_NAME;
   const appLabel = deps.auth.app?.app ?? 'this server';
-  const description = `Reports the authenticated caller's uid, raw custom claims, and decoded role set for \`${appLabel}\`. Returns \`authenticated: false\` for anonymous callers. Claim descriptions are drawn from the build-time auth manifest; only keys actually present on the live token are detailed.`;
+  const description = `Reports the authenticated caller's identity and decoded role set for \`${appLabel}\`. Returns \`authenticated: false\` for anonymous callers. Defaults to a concise summary (uid + roles only); pass \`detail: "claims"\` to also include the raw claims object, or \`detail: "full"\` to additionally include per-claim descriptions (drawn from the build-time auth manifest) and any unknown claim keys.`;
 
   return buildStaticToolDefinition({
     name,
@@ -103,23 +134,17 @@ export function createWhoamiTool(deps: CreateWhoamiToolDeps): McpToolDefinition 
 }
 
 // MARK: Handler
-function whoamiToolHandler(ctx: McpStaticToolHandlerContext, deps: CreateWhoamiToolDeps): CallToolResult {
+function whoamiToolHandler(args: Record<string, unknown>, ctx: McpStaticToolHandlerContext, deps: CreateWhoamiToolDeps): CallToolResult {
   const auth = ctx.auth;
 
   if (auth?.uid == null) {
-    const output: WhoamiToolOutput = {
-      authenticated: false,
-      claims: {},
-      roles: [],
-      claimDetails: [],
-      unknownClaimKeys: []
-    };
-    return buildResult(output, '# whoami\n\nUnauthenticated.');
+    return buildResult({ authenticated: false }, '# whoami\n\nNot authenticated (anonymous caller).');
   }
 
+  const detail = parseDetailLevel(args);
   const token = (auth.token ?? {}) as unknown as AuthClaims & { readonly email?: string; readonly email_verified?: boolean };
-  const presentKeys = Object.entries(token)
-    .filter(([, value]) => value !== undefined)
+  const claimKeys = Object.entries(token)
+    .filter(([key, value]) => value !== undefined && key !== 'email' && key !== 'email_verified')
     .map(([key]) => key);
 
   const roleSet: AuthRoleSet = deps.roleReader == null ? new Set<string>() : deps.roleReader(token);
@@ -133,10 +158,7 @@ function whoamiToolHandler(ctx: McpStaticToolHandlerContext, deps: CreateWhoamiT
   const claimDetails: WhoamiClaimDetail[] = [];
   const unknownClaimKeys: string[] = [];
 
-  for (const key of presentKeys) {
-    if (key === 'email' || key === 'email_verified') {
-      continue;
-    }
+  for (const key of claimKeys) {
     const claim = claimsByKey.get(key);
     if (claim == null) {
       unknownClaimKeys.push(key);
@@ -155,17 +177,23 @@ function whoamiToolHandler(ctx: McpStaticToolHandlerContext, deps: CreateWhoamiT
   const output: WhoamiToolOutput = {
     authenticated: true,
     uid: auth.uid,
-    claims: { ...token },
     roles,
-    claimDetails,
-    unknownClaimKeys,
+    claimCount: claimKeys.length,
     ...(deps.auth.app?.app == null ? {} : { app: deps.auth.app.app }),
     ...(token.email == null ? {} : { email: token.email }),
-    ...(token.email_verified == null ? {} : { emailVerified: token.email_verified })
+    ...(token.email_verified == null ? {} : { emailVerified: token.email_verified }),
+    ...(detail === 'summary' ? {} : { claims: { ...token } }),
+    ...(detail === 'full' ? { claimDetails, unknownClaimKeys } : {})
   };
 
-  const text = renderText(output);
+  const text = renderText(output, detail);
   return buildResult(output, text);
+}
+
+// Coerces the `detail` input into a WhoamiDetailLevel, defaulting unknown or absent values to `summary`.
+function parseDetailLevel(args: Record<string, unknown>): WhoamiDetailLevel {
+  const value = args.detail;
+  return value === 'claims' || value === 'full' ? value : 'summary';
 }
 
 function buildResult(output: WhoamiToolOutput, text: string): CallToolResult {
@@ -175,30 +203,48 @@ function buildResult(output: WhoamiToolOutput, text: string): CallToolResult {
   };
 }
 
-function renderText(output: WhoamiToolOutput): string {
+function renderText(output: WhoamiToolOutput, detail: WhoamiDetailLevel): string {
   const lines: string[] = ['# whoami', ''];
   appendHeaderLines(lines, output);
-  appendClaimDetailLines(lines, output.claimDetails);
-  appendUnknownClaimLines(lines, output.unknownClaimKeys);
+  if (detail === 'full') {
+    appendClaimDetailLines(lines, output.claimDetails ?? []);
+    appendUnknownClaimLines(lines, output.unknownClaimKeys ?? []);
+  }
+  if (detail !== 'summary') {
+    appendRawClaimsLines(lines, output.claims ?? {});
+  }
+  appendDetailHint(lines, detail);
   return lines.join('\n');
 }
 
 function appendHeaderLines(lines: string[], output: WhoamiToolOutput): void {
-  if (output.uid != null) {
-    lines.push(`- **uid:** \`${output.uid}\``);
-  }
-  if (output.app != null) {
-    lines.push(`- **app:** \`${output.app}\``);
-  }
+  const appPart = output.app == null ? '' : ` on \`${output.app}\``;
+  lines.push(`Authenticated as \`${output.uid}\`${appPart}.`, '');
+
   if (output.email != null) {
-    lines.push(`- **email:** \`${output.email}\``);
+    lines.push(`- **email:** \`${output.email}\`${formatEmailVerified(output.emailVerified)}`);
   }
-  if (output.roles.length > 0) {
-    const rolesText = output.roles.map((role) => `\`${role}\``).join(', ');
+
+  const roles = output.roles ?? [];
+  if (roles.length > 0) {
+    const rolesText = roles.map((role) => `\`${role}\``).join(', ');
     lines.push(`- **roles:** ${rolesText}`);
   } else {
     lines.push('- **roles:** _(none)_');
   }
+
+  lines.push(`- **claims:** ${output.claimCount ?? 0} present`);
+}
+
+// Renders the parenthetical verification suffix for the email line, or an empty string when the token carries no `email_verified` claim.
+function formatEmailVerified(emailVerified: boolean | undefined): string {
+  if (emailVerified === true) {
+    return ' (verified)';
+  }
+  if (emailVerified === false) {
+    return ' (unverified)';
+  }
+  return '';
 }
 
 function appendClaimDetailLines(lines: string[], claimDetails: readonly WhoamiClaimDetail[]): void {
@@ -227,25 +273,46 @@ function appendUnknownClaimLines(lines: string[], unknownClaimKeys: readonly str
   }
 }
 
+// Renders the raw claims object as a fenced JSON block — the one place the tool emits raw JSON, since claims are an arbitrary key → value bag.
+function appendRawClaimsLines(lines: string[], claims: Readonly<Record<string, unknown>>): void {
+  lines.push('', '## Raw claims', '```json', JSON.stringify(claims, null, 2), '```');
+}
+
+// Appends a hint pointing at the next, more detailed level. Omitted at `full`, which is already the most detailed level.
+function appendDetailHint(lines: string[], detail: WhoamiDetailLevel): void {
+  if (detail === 'summary') {
+    lines.push('', '_Call again with `detail: "claims"` for the raw claim values, or `detail: "full"` for values plus per-claim descriptions._');
+  } else if (detail === 'claims') {
+    lines.push('', '_Call again with `detail: "full"` for per-claim descriptions and unknown claim keys._');
+  }
+}
+
 // MARK: Schemas
 const WHOAMI_INPUT_SCHEMA = {
   type: 'object',
-  properties: {},
+  properties: {
+    detail: {
+      type: 'string',
+      enum: ['summary', 'claims', 'full'],
+      description: 'Level of detail. "summary" (default): identity + decoded roles only. "claims": adds the raw claims object (key → value). "full": adds per-claim descriptions, granted/revoked roles, tags, and unknown claim keys.'
+    }
+  },
   additionalProperties: false
 } as const;
 
 const WHOAMI_OUTPUT_SCHEMA = {
   type: 'object',
-  required: ['authenticated', 'claims', 'roles', 'claimDetails', 'unknownClaimKeys'],
-  description: 'Caller identity, raw token claims, decoded role set, and per-claim descriptions for every key present on the live token.',
+  required: ['authenticated'],
+  description: 'Caller identity and decoded role set. Claim-bearing fields (claims, claimDetails, unknownClaimKeys) are present only at the detail level that requests them via the `detail` input.',
   properties: {
     authenticated: { type: 'boolean' },
     uid: { type: 'string' },
     email: { type: 'string' },
     emailVerified: { type: 'boolean' },
     app: { type: 'string' },
-    claims: { type: 'object', additionalProperties: true },
     roles: { type: 'array', items: { type: 'string' } },
+    claimCount: { type: 'integer' },
+    claims: { type: 'object', additionalProperties: true },
     claimDetails: {
       type: 'array',
       items: {

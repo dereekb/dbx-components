@@ -14,6 +14,13 @@
     #{theming.$page-navbar-height-var}: theming.get-dbx-layout-page-navbar-height($theme-config);
     #{theming.$content-navbar-height-var}: theming.get-dbx-layout-content-navbar-height($theme-config);
 
+    // Section-page header height knob; defaults to the content navbar height. Declared at :root so
+    // its value is computed in an outer scope before .dbx-section-page re-points the navbar height
+    // to it (a self-referential fallback would otherwise create a custom-property reference cycle).
+    // Overriding it resizes the page header AND its reserved content space together
+    // (see _section.scss .dbx-section-page).
+    --dbx-section-page-header-height: var(--dbx-content-navbar-height);
+
     #{theming.$box-max-width-var}: theming.get-dbx-layout-box-max-width($theme-config);
     #{theming.$content-max-width-var}: theming.get-dbx-layout-content-max-width($theme-config);
 

@@ -37,6 +37,15 @@ jobs:
     environment:
       CYPRESS_INSTALL_BINARY: 0
       NX_NO_CLOUD: "true"
+      # Force the Nx daemon ON. Nx disables the daemon whenever CI=true (CircleCI sets it), so without
+      # this every nested `npx nx run <pkg>:build-base` invocation (the multi-package build wrappers:
+      # calcom/zoho/zoom/trello/analytics) reconstructs the ENTIRE project graph from scratch. Since the
+      # rollup-executor→inferred migration registered @nx/rollup/plugin, graph construction now evaluates
+      # every rollup.config.cjs and is expensive; under `nx run-many -t build --all` (parallel) the dozens
+      # of concurrent reconstructions serialize on the graph-construction file lock ("Waiting for graph
+      # construction in another process to complete") and stall the large (4 vCPU/8GB) box past CircleCI's
+      # no-output timeout. With the daemon on, the graph is built once and shared across all nested calls.
+      NX_DAEMON: "true"
       # Prevents the root postinstall from running sync-peer-deps.mjs, which can mutate tracked
       # packages/*/package.json and apps/*/package.json files. Those files feed the nx cache hash via
       # the `production` named input, so any mutation in the build job that isn't replayed in the

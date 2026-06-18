@@ -36,4 +36,11 @@ export class DbxAppAuthStateService {
    * Observable of the current {@link DbxAppAuthStateUser} from the NgRx store.
    */
   readonly authStateUser$ = this.store.select(fromDbxAppAuth.selectDbxAppAuthUser);
+
+  /**
+   * Observable of the current {@link DbxAppAuthStateImpersonation} from the NgRx store.
+   *
+   * Stays empty unless an app opts into impersonation via `provideDbxAuthImpersonation({ ngrx: true })`.
+   */
+  readonly authStateImpersonation$ = this.store.select(fromDbxAppAuth.selectDbxAppAuthImpersonation);
 }

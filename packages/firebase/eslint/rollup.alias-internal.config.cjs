@@ -1,6 +1,8 @@
-import { resolve as resolvePath } from 'node:path';
+const { resolve: resolvePath } = require('node:path');
 
-const INTERNAL_ALIASES: Record<string, string> = {
+// CommonJS form of rollup.alias-internal.config.ts so the `@nx/rollup/plugin` inferred
+// `rollup.config.cjs` can `require()` it (Node cannot `require()` a `.ts` file).
+const INTERNAL_ALIASES = {
   '@dereekb/util/eslint': resolvePath(__dirname, '../../util/eslint/src/index.ts'),
   '@dereekb/util': resolvePath(__dirname, '../../util/src/index.ts')
 };
@@ -22,14 +24,14 @@ const BUNDLED_DEPENDENCIES = ['@marcbachmann/cel-js', '@dereekb/util/eslint', '@
  * @param id - Module id rollup is resolving.
  * @returns True when the id matches one of the bundled dependencies (or a subpath of one).
  */
-function shouldBundle(id: string): boolean {
+function shouldBundle(id) {
   return BUNDLED_DEPENDENCIES.some((name) => id === name || id.startsWith(`${name}/`));
 }
 
-export default async function applyInternalAliases(config: any, _options: any) {
+module.exports = async function applyInternalAliases(config, _options) {
   const aliasPlugin = {
     name: 'firebase-eslint-internal-aliases',
-    resolveId(source: string) {
+    resolveId(source) {
       if (Object.hasOwn(INTERNAL_ALIASES, source)) {
         return INTERNAL_ALIASES[source];
       }
@@ -41,7 +43,7 @@ export default async function applyInternalAliases(config: any, _options: any) {
   // project graph, which re-externalizes cel-js even after it is dropped from peerDependencies.
   // Wrap it so the bundled deps are always treated as internal.
   const nxExternal = config.external;
-  config.external = (id: string, ...rest: unknown[]) => {
+  config.external = (id, ...rest) => {
     if (shouldBundle(id)) {
       return false;
     }
@@ -56,4 +58,4 @@ export default async function applyInternalAliases(config: any, _options: any) {
 
   config.plugins = [aliasPlugin, ...(Array.isArray(config.plugins) ? config.plugins : [])];
   return config;
-}
+};

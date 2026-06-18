@@ -7,29 +7,7 @@
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/firebase/eslint",
-        "outputPath": "dist/packages/firebase/eslint",
-        "tsConfig": "packages/firebase/eslint/tsconfig.lib.json",
-        "project": "packages/firebase/eslint/package.json",
-        "main": "packages/firebase/eslint/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [],
-        "rollupConfig": ["packages/firebase/eslint/rollup.alias-internal.config.ts", "rollup.visualizer.config.ts"],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

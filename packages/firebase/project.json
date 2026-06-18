@@ -26,39 +26,7 @@
       }
     },
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/firebase",
-        "outputPath": "dist/packages/firebase",
-        "main": "packages/firebase/src/index.ts",
-        "tsConfig": "packages/firebase/tsconfig.lib.json",
-        "compiler": "swc",
-        "project": "packages/firebase/package.json",
-        "format": ["esm", "cjs"],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
-        "generateExportsField": true,
-        "assets": [
-          {
-            "glob": "packages/firebase/README.md",
-            "input": ".",
-            "output": "."
-          },
-          {
-            "glob": "LICENSE",
-            "input": ".",
-            "output": "."
-          }
-        ]
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

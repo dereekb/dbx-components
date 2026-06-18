@@ -7,29 +7,7 @@
   "implicitDependencies": ["util", "!util-test"],
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/nestjs/twilio",
-        "outputPath": "dist/packages/nestjs/twilio",
-        "tsConfig": "packages/nestjs/twilio/tsconfig.lib.json",
-        "project": "packages/nestjs/twilio/package.json",
-        "main": "packages/nestjs/twilio/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

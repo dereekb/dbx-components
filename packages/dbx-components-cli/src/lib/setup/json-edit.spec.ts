@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { deriveSetupNaming } from './naming.js';
-import { applyApiTsconfigEdits, applyFirebaseJsonEdits, applyMcpFirebaseJsonRewrites, applyMcpProxyEdits, applyNxJsonEdits, applyOidcFirebaseJsonRewrites, applyOidcProxyEdits, applyTsconfigBaseEdits, buildProxyTarget, editJsonFile, editJsonFileStatus, ensureMcpServerEntry, type JsonObject } from './json-edit.js';
+import { alignDbxPeerDependencies, applyApiTsconfigEdits, applyFirebaseJsonEdits, applyMcpFirebaseJsonRewrites, applyMcpProxyEdits, applyNxJsonEdits, applyOidcFirebaseJsonRewrites, applyOidcProxyEdits, applyTsconfigBaseEdits, buildProxyTarget, editJsonFile, editJsonFileStatus, ensureMcpServerEntry, removeVerdaccioFromPackageJson, type JsonObject } from './json-edit.js';
 
 const NAMING = deriveSetupNaming({ firebaseProjectId: 'gethapierapp', projectName: 'gethapier', codePrefix: 'getHapier', emulatorBasePort: 9300 });
 
@@ -17,6 +17,59 @@ describe('applyNxJsonEdits', () => {
     expect(targetDefaults['build']).toEqual({ dependsOn: ['^build'], inputs: ['production', '^production'], cache: true });
     expect(targetDefaults['existing']).toEqual({ cache: false });
     expect((targetDefaults['@nx/vitest:test'] as JsonObject).configurations).toEqual({ ci: { ci: true, codeCoverage: true } });
+  });
+
+  it('strips any nxCloudId left by create-nx-workspace', () => {
+    const result = applyNxJsonEdits({ targetDefaults: {}, nxCloudId: '6a32ec6edb03481948b3fcf5' }, NAMING);
+    expect(result.nxCloudId).toBeUndefined();
+  });
+});
+
+describe('removeVerdaccioFromPackageJson', () => {
+  it('removes the verdaccio dependency and local-registry script', () => {
+    const result = removeVerdaccioFromPackageJson({
+      dependencies: { rxjs: '^7.8.0' },
+      devDependencies: { verdaccio: '^6.3.2', '@nx/js': '23.0.0' },
+      scripts: { 'local-registry': 'nx local-registry', build: 'nx build' }
+    });
+    expect(result.dependencies).toEqual({ rxjs: '^7.8.0' });
+    expect(result.devDependencies).toEqual({ '@nx/js': '23.0.0' });
+    expect(result.scripts).toEqual({ build: 'nx build' });
+  });
+
+  it('is a no-op when no verdaccio config is present', () => {
+    const result = removeVerdaccioFromPackageJson({ devDependencies: { '@nx/js': '23.0.0' } });
+    expect(result.devDependencies).toEqual({ '@nx/js': '23.0.0' });
+  });
+});
+
+describe('alignDbxPeerDependencies', () => {
+  it('pins Angular framework / express / typescript-eslint / analogjs to the @dereekb peer ranges', () => {
+    const result = alignDbxPeerDependencies({
+      dependencies: { '@angular/core': '21.2.9', '@angular/common': '21.2.9', express: '^4.21.2', '@dereekb/util': '^13.18.0' },
+      devDependencies: { '@angular/compiler-cli': '21.2.9', '@types/express': '^4.17.21', 'typescript-eslint': '^8.40.0', '@typescript-eslint/utils': '^8.40.0', '@analogjs/vite-plugin-angular': '~2.3.1', '@analogjs/vitest-angular': '2.2.0' }
+    });
+    const deps = result.dependencies as JsonObject;
+    const dev = result.devDependencies as JsonObject;
+    expect(deps['@angular/core']).toBe('21.2.11');
+    expect(deps['@angular/common']).toBe('21.2.11');
+    expect(deps['express']).toBe('^5.2.1');
+    expect(deps['@dereekb/util']).toBe('^13.18.0'); // untouched
+    expect(dev['@angular/compiler-cli']).toBe('21.2.11');
+    expect(dev['@types/express']).toBe('^5.0.0');
+    expect(dev['typescript-eslint']).toBe('^8.59.3');
+    expect(dev['@analogjs/vite-plugin-angular']).toBe('~2.5.0');
+    expect(dev['@analogjs/vitest-angular']).toBe('~2.5.0');
+  });
+
+  it('does not add a package that is not already declared', () => {
+    const result = alignDbxPeerDependencies({ dependencies: { '@dereekb/util': '^13.18.0' } });
+    expect(result.dependencies).toEqual({ '@dereekb/util': '^13.18.0' });
+  });
+
+  it('leaves the Angular build/devkit packages on their own line', () => {
+    const result = alignDbxPeerDependencies({ devDependencies: { '@angular/build': '21.2.7', '@angular/cli': '21.2.7' } });
+    expect(result.devDependencies).toEqual({ '@angular/build': '21.2.7', '@angular/cli': '21.2.7' });
   });
 });
 

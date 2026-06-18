@@ -5,18 +5,20 @@
 import { type SetupAddon, type SetupAddonId } from '../addon.js';
 import { OIDC_ADDON } from './oidc.addon.js';
 import { MCP_ADDON } from './mcp.addon.js';
+import { DBX_CLAUDE_ADDON } from './dbx-claude.addon.js';
 
 /**
  * Every add-on keyed by its id.
  */
 export const SETUP_ADDONS: Readonly<Record<SetupAddonId, SetupAddon>> = {
   oidc: OIDC_ADDON,
-  mcp: MCP_ADDON
+  mcp: MCP_ADDON,
+  'dbx-claude': DBX_CLAUDE_ADDON
 };
 
 /**
  * The add-on ids in canonical (command + validation) order.
  */
-export const SETUP_ADDON_IDS: readonly SetupAddonId[] = ['oidc', 'mcp'];
+export const SETUP_ADDON_IDS: readonly SetupAddonId[] = ['oidc', 'mcp', 'dbx-claude'];
 
-export { OIDC_ADDON, MCP_ADDON };
+export { OIDC_ADDON, MCP_ADDON, DBX_CLAUDE_ADDON };

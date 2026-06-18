@@ -50,6 +50,13 @@ $header-left-reserved-space-small-screen: 120px;
     }
   }
 
+  // Regular section header row gets a configurable minimum height so action content
+  // (e.g. a dbx-button) in the [sectionHeader] slot has room and is never clipped.
+  // Scoped to .dbx-section so dbx-subsection keeps its smaller, title-driven height.
+  .dbx-section > .dbx-section-header > .dbx-section-header-content {
+    min-height: var(--dbx-section-header-height, 48px);
+  }
+
   .dbx-section-header-strict {
     .dbx-section-header-content {
       h1,
@@ -86,6 +93,14 @@ $header-left-reserved-space-small-screen: 120px;
   }
 
   .dbx-section-page {
+    // Re-point the navbar height locally to the section-page header knob. Because the header
+    // height (below) AND the nested content-height math both key off --dbx-content-navbar-height,
+    // this keeps header size and reserved content space in sync at any value. Default knob value =
+    // the inherited content-navbar height, so default behavior is unchanged.
+    // NOTE: descendant .dbx-content-navbar toolbars inside a page also adopt this height when the
+    // knob is overridden.
+    --dbx-content-navbar-height: var(--dbx-section-page-header-height);
+
     &.dbx-section-page-full-header {
       > .dbx-section-header > .dbx-section-header-content .dbx-section-header-content-title {
         max-width: 100%;

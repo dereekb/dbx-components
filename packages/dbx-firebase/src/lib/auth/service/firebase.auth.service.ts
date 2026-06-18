@@ -1,6 +1,6 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, inject } from '@angular/core';
-import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier } from '@dereekb/dbx-core';
+import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier, type DbxAuthImpersonationDetails } from '@dereekb/dbx-core';
 import { reauthenticateWithPopup, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential, sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
 import { FIREBASE_AUTH_TOKEN } from '../../firebase/firebase.tokens';
 import { firebaseAuthState, firebaseIdToken } from './firebase.auth.rxjs.util';
@@ -95,6 +95,18 @@ export abstract class DbxFirebaseAuthServiceDelegate {
    * @param input - the verification code and new password
    */
   abstract completePasswordReset(dbxFirebaseAuthService: DbxFirebaseAuthService, input: DbxFirebaseCompletePasswordResetInput): Promise<void>;
+  /**
+   * Loads display details for an impersonated user (the "view as another user" feature).
+   *
+   * There is no built-in Firebase API to read another user's profile from the client, so this has no
+   * meaningful default beyond returning `undefined`. Override it to fetch the user's details via your
+   * backend (e.g. a callable function), returning a {@link DbxAuthImpersonationDetails} with the raw
+   * provider payload on `raw`.
+   *
+   * @param dbxFirebaseAuthService - The auth service instance.
+   * @param userId - The identifier of the user being impersonated.
+   */
+  loadImpersonationAuthDetails?(dbxFirebaseAuthService: DbxFirebaseAuthService, userId: AuthUserIdentifier): Observable<Maybe<DbxAuthImpersonationDetails>>;
 }
 
 /**
@@ -119,6 +131,9 @@ export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceD
   },
   completePasswordReset(dbxFirebaseAuthService: DbxFirebaseAuthService, input: DbxFirebaseCompletePasswordResetInput): Promise<void> {
     return confirmPasswordReset(dbxFirebaseAuthService.firebaseAuth, input.oobCode, input.newPassword);
+  },
+  loadImpersonationAuthDetails(): Observable<Maybe<DbxAuthImpersonationDetails>> {
+    return of(undefined);
   }
 };
 
@@ -388,6 +403,18 @@ export class DbxFirebaseAuthService implements DbxAuthService {
    */
   completePasswordReset(input: DbxFirebaseCompletePasswordResetInput): Promise<void> {
     return this.delegate.completePasswordReset(this, input);
+  }
+
+  /**
+   * Loads display details for an impersonated user via the configured delegate.
+   *
+   * Returns `undefined` when the delegate provides no `loadImpersonationAuthDetails` implementation.
+   *
+   * @param userId - The identifier of the user being impersonated.
+   * @returns Observable of the loaded details, or `undefined` when none are available.
+   */
+  loadImpersonationAuthDetails(userId: AuthUserIdentifier): Observable<Maybe<DbxAuthImpersonationDetails>> {
+    return this.delegate.loadImpersonationAuthDetails ? this.delegate.loadImpersonationAuthDetails(this, userId) : of(undefined);
   }
 
   /**

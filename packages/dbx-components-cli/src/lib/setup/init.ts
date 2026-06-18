@@ -9,8 +9,29 @@
  * scaffolds the root config as one unit.
  */
 
+import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { runModuleScaffold, runModulePhases, type SetupContext } from './module.js';
+import { alignDbxPeerDependencies, editJsonFile, removeVerdaccioFromPackageJson } from './json-edit.js';
 import { API_MODULE, APP_COMPONENTS_MODULE, APP_MODULE, FIREBASE_COMPONENTS_MODULE, INTEGRATIONS_MODULE, ROOT_MODULE, WORKSPACE_MODULE } from './modules/index.js';
+
+/**
+ * Finalizes the project package.json once every generator + install has run:
+ * removes the verdaccio local-registry config the publishable-library generators
+ * (`@nx/angular:library` / `@nx/node:library --publishable`) re-add (the
+ * `.verdaccio/` directory and the `verdaccio` dependency + `local-registry`
+ * script), and pins the dependency versions to the `@dereekb` peer ranges so the
+ * reconcile `npm install` resolves. Run late so the generators cannot undo it.
+ *
+ * @param context - The resolved setup context.
+ */
+function finalizeProjectConfig(context: SetupContext): void {
+  const { workspaceRoot, dryRun } = context;
+  editJsonFile(join(workspaceRoot, 'package.json'), (pkg) => alignDbxPeerDependencies(removeVerdaccioFromPackageJson(pkg)), { dryRun });
+  if (!dryRun) {
+    rmSync(join(workspaceRoot, '.verdaccio'), { recursive: true, force: true });
+  }
+}
 
 /**
  * Phase-skipping flags for `setup init`.
@@ -138,6 +159,26 @@ export async function runSetupInit(context: SetupContext, flags: SetupInitFlags)
   record('integrations: scaffold + manifest');
   runModuleScaffold(INTEGRATIONS_MODULE, context);
   await commit('checkpoint: setup api');
+
+  // 18b. Finalize package.json after all generators/installs: drop the verdaccio
+  //      config the publishable-library generators re-add + align dep versions to
+  //      the @dereekb peer ranges (must run after every `--publishable` generate).
+  if (!flags.templatesOnly) {
+    record('finalize: verdaccio cleanup + dependency alignment');
+    finalizeProjectConfig(context);
+  }
+
+  // 18c. Reconcile install — the incremental `npm install -D` / `--force` steps
+  //      leave node_modules out of sync with the final package.json. The peer
+  //      alignment above lets this resolve; the lone remaining `--legacy-peer-deps`
+  //      is for the stale `@nx/vite@22.7.1` pin still declared by
+  //      `@dereekb/vitest@13.18.0` — drop the flag once dbx-components 13.19.0
+  //      (which fixes that pin) is the install target.
+  if (!flags.templatesOnly && !flags.skipInstall) {
+    record('install: reconcile node_modules');
+    await shell.run('npm', ['install', '--legacy-peer-deps'], { cwd, dryRun });
+  }
+  await commit('checkpoint: reconciled dependencies');
 
   // 19. Final builds / tests / docker reset (skipped in ci-test / templates-only / when disabled).
   if (!flags.templatesOnly && !flags.skipFinal && !versions.isCiTest) {

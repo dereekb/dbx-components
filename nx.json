@@ -86,16 +86,6 @@
         "buildLibsFromSource": false
       }
     },
-    "@nx/rollup:rollup": {
-      "cache": true,
-      "inputs": ["production", "^production", "{projectRoot}/project.json"],
-      "options": {
-        "buildLibsFromSource": false,
-        "sourceMap": true,
-        "format": ["esm", "cjs"],
-        "external": "all"
-      }
-    },
     "ci-deploy-prod": {
       "cache": false
     },
@@ -143,7 +133,8 @@
       }
     },
     "releaseTag": {
-      "requireSemver": true
+      "requireSemver": true,
+      "pattern": "v{version}"
     },
     "changelog": {
       "workspaceChangelog": {
@@ -175,8 +166,15 @@
         "tagMessage": "v{version}",
         "stageChanges": true
       }
-    },
-    "releaseTagPattern": "v{version}"
+    }
   },
-  "analytics": false
+  "analytics": false,
+  "plugins": [
+    {
+      "plugin": "@nx/rollup/plugin",
+      "options": {
+        "buildTargetName": "build-base"
+      }
+    }
+  ]
 }

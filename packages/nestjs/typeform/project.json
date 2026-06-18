@@ -7,29 +7,7 @@
   "implicitDependencies": ["!util-test"],
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/nestjs/typeform",
-        "outputPath": "dist/packages/nestjs/typeform",
-        "tsConfig": "packages/nestjs/typeform/tsconfig.lib.json",
-        "project": "packages/nestjs/typeform/package.json",
-        "main": "packages/nestjs/typeform/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

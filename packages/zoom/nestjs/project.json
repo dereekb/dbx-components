@@ -6,29 +6,7 @@
   "tags": [],
   "targets": {
     "build-base": {
-      "executor": "@nx/rollup:rollup",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "importPath": "@dereekb/zoom/nestjs",
-        "outputPath": "dist/packages/zoom/nestjs",
-        "tsConfig": "packages/zoom/nestjs/tsconfig.lib.json",
-        "project": "packages/zoom/nestjs/package.json",
-        "main": "packages/zoom/nestjs/src/index.ts",
-        "format": ["esm", "cjs"],
-        "generateExportsField": true,
-        "external": "all",
-        "assets": [],
-        "rollupConfig": ["rollup.visualizer.config.ts"],
-        "compiler": "swc"
-      },
-      "configurations": {
-        "production": {
-          "optimization": true,
-          "sourceMap": false,
-          "extractLicenses": true
-        }
-      }
+      "dependsOn": []
     },
     "lint": {
       "executor": "@nx/eslint:lint",

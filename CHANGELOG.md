@@ -1,3 +1,27 @@
+# [13.19.0](https://github.com/dereekb/dbx-components/compare/v13.18.0-dev...v13.19.0) (2026-06-18)
+
+
+### Bug Fixes
+
+- **ci:** enable Nx daemon in build job to stop graph-build stalls ([ccd2a1ed](https://github.com/dereekb/dbx-components/commit/ccd2a1ed71b3593ccb9a87fd4f51415882ecf847))
+
+
+### Build System
+
+- **$workspace:** complete rollup executor → inferred target migration ([571b5a30](https://github.com/dereekb/dbx-components/commit/571b5a30256fdb32aa756da739918fbe972c7e05))
+- **$workspace:** migrate util/firebase/dbx-cli off rollup executor ([42c9a9cc](https://github.com/dereekb/dbx-components/commit/42c9a9cc42aaf2308f2f82e155ae62433b91bdf2))
+- **$workspace:** update Nx 22.7.1 → 23.0.0 and Vite 7 → 8 ([f9ec833f](https://github.com/dereekb/dbx-components/commit/f9ec833fb0768b8b5cc30884377294090658aadd))
+- lint fix + mcp regeneration + firestore indexes ([8ced4b13](https://github.com/dereekb/dbx-components/commit/8ced4b13c328b6083131c07a05a8af6f7bbdd125))
+
+
+### Features
+
+- **dbx-components-cli:** install arktype in scaffolded projects ([3c8244fe](https://github.com/dereekb/dbx-components/commit/3c8244fee5121f4d41465541dad48f001909ec6b))
+- **dbx-components-cli:** nx 23 defaults + cleaner project setup ([515f9cc3](https://github.com/dereekb/dbx-components/commit/515f9cc36b0baff982164ed2e01771af2ac9b0b2))
+- **dbx-core:** add optional impersonation ("view as user") auth feature ([11151bdd](https://github.com/dereekb/dbx-components/commit/11151bdd646c0200d97e3f6c163ef49ca86032a2))
+- **dbx-web:** make section header height configurable via token ([b2dd228a](https://github.com/dereekb/dbx-components/commit/b2dd228a09774099b5571d03a31b7db308057a7a))
+- **firebase-server:** tier whoami MCP tool output by detail level ([87c05e89](https://github.com/dereekb/dbx-components/commit/87c05e896a4b3bf0a1692564ffa42a2f3fc18c0d))
+
 # [13.18.0](https://github.com/dereekb/dbx-components/compare/v13.17.0-dev...v13.18.0) (2026-06-16)
 
 

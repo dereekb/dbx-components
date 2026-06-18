@@ -29,11 +29,26 @@ function oidcTokenValue(manifest: DbxSetupManifest, search: string): string | un
 }
 
 describe('add-on registry', () => {
-  it('exposes oidc + mcp, with mcp depending on oidc', () => {
-    expect(SETUP_ADDON_IDS).toEqual(['oidc', 'mcp']);
+  it('exposes oidc + mcp + dbx-claude, with mcp depending on oidc', () => {
+    expect(SETUP_ADDON_IDS).toEqual(['oidc', 'mcp', 'dbx-claude']);
     expect(SETUP_ADDONS.oidc.id).toBe('oidc');
     expect(SETUP_ADDONS.mcp.dependsOn).toEqual(['oidc']);
     expect(SETUP_ADDONS.oidc.dependsOn).toBeUndefined();
+    expect(SETUP_ADDONS['dbx-claude'].dependsOn).toBeUndefined();
+  });
+});
+
+describe('dbx-claude add-on', () => {
+  it('scaffolds the .dbx-claude/dbx-claude.json marker with the project name and no configure edits', () => {
+    const addon = SETUP_ADDONS['dbx-claude'];
+    const plan = addon.buildScaffoldPlan(contextWith(BASE_MANIFEST));
+    expect(plan).toHaveLength(1);
+    expect(plan[0].destPath).toBe('/tmp/none/.dbx-claude/dbx-claude.json');
+    const marker = JSON.parse(plan[0].literal as string) as { kind: string; project: string; capabilities: string[] };
+    expect(marker.kind).toBe('dbx-components');
+    expect(marker.project).toBe('testproj');
+    expect(marker.capabilities).toEqual(['audit', 'dbx-components']);
+    expect(addon.configure(contextWith(BASE_MANIFEST))).toEqual({ injections: [], fileEdits: [] });
   });
 });
 

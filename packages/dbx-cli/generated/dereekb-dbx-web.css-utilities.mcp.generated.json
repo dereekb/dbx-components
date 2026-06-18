@@ -3023,7 +3023,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/section/_section.scss",
-      "line": 69,
+      "line": 76,
       "declarations": [
         {
           "property": "padding",
