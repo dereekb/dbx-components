@@ -469,7 +469,7 @@ $list-item-padded-min-height: 42px;
 
   .dbx-list-view-group-header {
     color: var(--mdc-list-list-item-label-text-color);
-    background: var(--mat-sidenav-content-background-color);
+    background: var(--dbx-list-view-group-header-background, var(--mat-sidenav-content-background-color));
 
     .item-details {
       color: var(--mdc-list-list-item-supporting-text-color);

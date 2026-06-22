@@ -181,6 +181,13 @@ $dbx-border-opacity-var: --dbx-border-opacity;
 /// @see --dbx-border-opacity
 $dbx-border-color-current-var: --dbx-border-color-current;
 
+/// Shared divider color for component dividers/separators (dbx-table-view summary rule, dbx-two-column boundary, dbx-calendar cell borders, etc.). Defaults to `--dbx-border-color-current` so every divider inherits the themeable semi-transparent border by default; override this single token (globally or on a local scope) to retint all dividers at once, or override a component's own divider token to retint just that one.
+/// @intent divider color, separator color, shared divider, component divider color
+/// @role color
+/// @anti-use Don't hardcode a per-component divider color; default it to this token so dividers stay consistent and themeable.
+/// @see --dbx-border-color-current
+$dbx-divider-color-var: --dbx-divider-color;
+
 /// Per-app additional offset subtracted from the app-height base. Set to a non-zero value to shrink `--dbx-app-height` by a fixed amount (e.g. for a sticky footer). Defaults to `0px`.
 /// @intent app height offset, app height adjustment, shrink app height
 /// @role size
@@ -350,6 +357,7 @@ $dbx-error-color: var($dbx-error-color-var);
 $dbx-border-color: var($dbx-border-color-var);
 $dbx-border-opacity: var($dbx-border-opacity-var);
 $dbx-border-color-current: var($dbx-border-color-current-var);
+$dbx-divider-color: var($dbx-divider-color-var);
 
 /// Border radius for the `[dbxContentPit]`, applied by default to every pit. Defaults to `var(--mat-sys-corner-medium)`.
 /// @intent pit radius, rounded pit corner, content pit radius
