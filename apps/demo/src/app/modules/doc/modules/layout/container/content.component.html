@@ -92,21 +92,23 @@
       <dbx-content-pit>
         <p>This content is in a pit. Pits are rounded by default.</p>
       </dbx-content-pit>
-      <p>Pass [rounded]="false" to square a pit — this applies the common .dbx-corners-none opt-out utility.</p>
-      <dbx-content-pit [rounded]="false">
+      <p>Pass [square]="true" to square a pit — this applies the common .dbx-corners-none opt-out utility.</p>
+      <dbx-content-pit [square]="true">
         <p>This content is in a square pit.</p>
       </dbx-content-pit>
       <p>The content pit can also be set to scrollable, which limits the height.</p>
       <dbx-content-pit [scrollable]="true">
-        <p>This content is in a scrollable pit.</p>
-        <p>This content is in a scrollable pit.</p>
-        <p>This content is in a scrollable pit.</p>
-        <p>This content is in a scrollable pit.</p>
-        <p>This content is in a scrollable pit.</p>
-        <p>This content is in a scrollable pit.</p>
-        <p>This content is in a scrollable pit.</p>
-        <p>This content is in a scrollable pit.</p>
-        <p>END</p>
+        <div class="dbx-content-pit-scrollable-content">
+          <p>This content is in a scrollable pit.</p>
+          <p>This content is in a scrollable pit.</p>
+          <p>This content is in a scrollable pit.</p>
+          <p>This content is in a scrollable pit.</p>
+          <p>This content is in a scrollable pit.</p>
+          <p>This content is in a scrollable pit.</p>
+          <p>This content is in a scrollable pit.</p>
+          <p>This content is in a scrollable pit.</p>
+          <p>END</p>
+        </div>
       </dbx-content-pit>
       <h4>Examples</h4>
       <p>Example of a dbx-content-pit with dbx-label-block and content.</p>
