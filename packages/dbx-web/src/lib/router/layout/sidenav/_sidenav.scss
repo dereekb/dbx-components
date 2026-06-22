@@ -21,6 +21,8 @@ $active-background-transparent-color: 0.93;
 
     > mat-sidenav {
       width: var(--dbx-sidenav-width, #{$width});
+      border-top-right-radius: var(--dbx-sidenav-top-corner-radius, var(--mat-sys-corner-extra-large, 24px));
+      border-bottom-right-radius: var(--dbx-sidenav-bottom-corner-radius, var(--mat-sys-corner-extra-large, 24px));
 
       .mat-drawer-inner-container {
         display: flex;
@@ -132,6 +134,10 @@ $active-background-transparent-color: 0.93;
   //   --dbx-sidenav-width              Full-mode drawer width (default: 240px)
   //   --dbx-sidenav-mobile-width       Mobile overlay drawer width (default: 80vw)
   //   --dbx-sidenav-icon-width         Icon rail drawer width (default: 65px)
+  //
+  // Shape:
+  //   --dbx-sidenav-top-corner-radius     Top trailing-edge corner radius (default: --mat-sys-corner-extra-large / 24px)
+  //   --dbx-sidenav-bottom-corner-radius  Bottom trailing-edge corner radius (default: --mat-sys-corner-extra-large / 24px)
   //
   // Drawer colors:
   //   --dbx-sidenav-background         Drawer background color

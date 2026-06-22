@@ -24,7 +24,9 @@ import { DbxStyleDemoTypeRolesSectionComponent } from './type-roles.section.comp
  * `'Shape'` toggle group, so only one is active at a time; `pill-controls` (`'Controls'`), `button-corner-*`
  * (`'Button Shape'`), `list-corner-*` (`'List Shape'`) and `anchor-list-corner-*` (`'Anchor List Shape'`) each live in
  * their own group so they compose on top of a corner lever instead of radio-excluding it — their debug classes are
- * emitted after `corner-shape-*` / `pill-controls` so they win the shape tokens they share.
+ * emitted after `corner-shape-*` / `pill-controls` so they win the shape tokens they share. The `sidenav-corner-*`
+ * levers (`'Sidenav Shape'`) re-round the nested `mat-sidenav` drawer's own trailing-edge tokens and are independent
+ * of every other shape lever.
  */
 export const DBX_WEB_STYLE_DEMO_TEMPLATES: DbxStyleDemoStyleTemplate[] = [
   { key: 'corner-shape-none', className: 'dbx-style-demo-template-corner-shape-none', label: 'Corners: none', curated: true },
@@ -51,6 +53,10 @@ export const DBX_WEB_STYLE_DEMO_TEMPLATES: DbxStyleDemoStyleTemplate[] = [
   { key: 'anchor-list-corner-medium', className: 'dbx-style-demo-template-anchor-list-corner-medium', label: 'Anchor list corners: medium', curated: true },
   { key: 'anchor-list-corner-large', className: 'dbx-style-demo-template-anchor-list-corner-large', label: 'Anchor list corners: large', curated: true },
   { key: 'anchor-list-corner-extra-large', className: 'dbx-style-demo-template-anchor-list-corner-extra-large', label: 'Anchor list corners: extra-large', curated: true },
+  // dbx-sidenav drawer trailing-edge corner levers ('Sidenav Shape' group) — re-round the nested mat-sidenav edge.
+  { key: 'sidenav-corner-none', className: 'dbx-style-demo-template-sidenav-corner-none', label: 'Sidenav corners: none', curated: true },
+  { key: 'sidenav-corner-medium', className: 'dbx-style-demo-template-sidenav-corner-medium', label: 'Sidenav corners: medium', curated: true },
+  { key: 'sidenav-corner-extra', className: 'dbx-style-demo-template-sidenav-corner-extra', label: 'Sidenav corners: extra', curated: true },
   { key: 'surface-tint', className: 'dbx-style-demo-template-surface-tint', label: 'Surface tint', curated: true },
   // Inline-style POJO lever — an intentional demo override value, no debug class needed.
   { key: 'vivid-primary', style: { '--mat-sys-primary': '#ff0066', '--mat-sys-on-primary': '#ffffff' }, label: 'Vivid primary', curated: true }
@@ -62,7 +68,8 @@ export const DBX_WEB_STYLE_DEMO_TEMPLATES: DbxStyleDemoStyleTemplate[] = [
  * The `corner-shape-*` levers share the `'Shape'` group (mutually exclusive); the component-scoped `button-corner-*`
  * (`'Button Shape'`), `list-corner-*` (`'List Shape'`) and `anchor-list-corner-*` (`'Anchor List Shape'`) levers are
  * mutually exclusive within their own groups but compose with `'Shape'` and `'Controls'`, letting a global corner
- * preset be overridden for just buttons, just `dbx-list` rows, or just `dbx-anchor-list` (nav) rows. `pill-controls`
+ * preset be overridden for just buttons, just `dbx-list` rows, or just `dbx-anchor-list` (nav) rows. The
+ * `sidenav-corner-*` levers (`'Sidenav Shape'`) re-round the `dbx-sidenav` drawer edge independently. `pill-controls`
  * (`'Controls'`), `surface-tint` and `vivid-primary` are independent toggles in their own groups.
  */
 export const DBX_WEB_STYLE_DEMO_TEMPLATE_TOGGLES: DbxStyleDemoTemplateToggle[] = [
@@ -87,6 +94,9 @@ export const DBX_WEB_STYLE_DEMO_TEMPLATE_TOGGLES: DbxStyleDemoTemplateToggle[] =
   { templateName: 'anchor-list-corner-medium', label: 'Anchor list corners: medium', group: 'Anchor List Shape' },
   { templateName: 'anchor-list-corner-large', label: 'Anchor list corners: large', group: 'Anchor List Shape' },
   { templateName: 'anchor-list-corner-extra-large', label: 'Anchor list corners: extra-large', group: 'Anchor List Shape' },
+  { templateName: 'sidenav-corner-none', label: 'Sidenav corners: none', group: 'Sidenav Shape' },
+  { templateName: 'sidenav-corner-medium', label: 'Sidenav corners: medium', group: 'Sidenav Shape' },
+  { templateName: 'sidenav-corner-extra', label: 'Sidenav corners: extra', group: 'Sidenav Shape' },
   { templateName: 'surface-tint', label: 'Surface tint', group: 'Surface' },
   { templateName: 'vivid-primary', label: 'Vivid primary', group: 'Color' }
 ];

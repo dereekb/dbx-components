@@ -115,6 +115,16 @@
   @return ('--dbx-anchor-list-item-border-radius': $value);
 }
 
+/// Builds the dbx-sidenav-only trailing-edge shape override map for a single corner-radius value.
+///
+/// Backs the `sidenav-corner-*` levers: re-points the nested `mat-sidenav` drawer's top/bottom trailing-edge
+/// radius tokens (`--dbx-sidenav-top-corner-radius` / `--dbx-sidenav-bottom-corner-radius`, extra-large by
+/// default) together so the rounded drawer edge flips live. Independent of every other shape lever — the
+/// sidenav reads its own tokens. Private to this module (`-` prefix).
+@function -dbx-style-demo-sidenav-shape-map($value) {
+  @return ('--dbx-sidenav-top-corner-radius': $value, '--dbx-sidenav-bottom-corner-radius': $value);
+}
+
 /// Map of demo template key -> CSS custom-property overrides emitted for that template's debug class.
 $dbx-style-demo-templates: (
   // M3 corner-radius scale levers. Each re-points the component shape tokens that `dbx-components-shapes()`
@@ -157,6 +167,12 @@ $dbx-style-demo-templates: (
   'anchor-list-corner-medium': -dbx-style-demo-anchor-list-shape-map(var(--mat-sys-corner-medium)),
   'anchor-list-corner-large': -dbx-style-demo-anchor-list-shape-map(var(--mat-sys-corner-large)),
   'anchor-list-corner-extra-large': -dbx-style-demo-anchor-list-shape-map(var(--mat-sys-corner-extra-large)),
+  // dbx-sidenav-only trailing-edge corner levers (own 'Sidenav Shape' toggle group), independent of every other
+  // shape lever (the sidenav drawer reads its own --dbx-sidenav-top/bottom-corner-radius tokens). Only the three
+  // requested stops are exposed: none (square), medium, and extra (extra-large, the drawer's default).
+  'sidenav-corner-none': -dbx-style-demo-sidenav-shape-map(0),
+  'sidenav-corner-medium': -dbx-style-demo-sidenav-shape-map(var(--mat-sys-corner-medium)),
+  'sidenav-corner-extra': -dbx-style-demo-sidenav-shape-map(var(--mat-sys-corner-extra-large)),
   // Tints surfaces toward the primary color by mixing the theme's own system tokens — stays theme-correct.
   'surface-tint': (
       '--mat-sys-surface': color-mix(in srgb, var(--mat-sys-primary) 8%, var(--mat-sys-surface)),
