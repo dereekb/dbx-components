@@ -161,6 +161,14 @@
     #{theming.$dbx-outline-variant-color-var}: var(--mat-sys-outline-variant);
     #{theming.$dbx-error-color-var}: var(--mat-sys-error);
 
+    // Shared border system — base divider color + opacity knob, blended into a single
+    // semi-transparent border color. Components apply var(--dbx-border-color-current);
+    // override --dbx-border-color or --dbx-border-opacity (globally here, or locally on a
+    // scope) and the computed value recomputes automatically at the point of use.
+    #{theming.$dbx-border-color-var}: var(--mat-sys-outline-variant);
+    #{theming.$dbx-border-opacity-var}: 70%;
+    #{theming.$dbx-border-color-current-var}: color-mix(in srgb, var(--dbx-border-color) var(--dbx-border-opacity), transparent);
+
     // Curated color set (avatar initials, etc.) — selects light/dark values from the theme's theme-type.
     @include curated.curated-color-variables($theme-config);
   }

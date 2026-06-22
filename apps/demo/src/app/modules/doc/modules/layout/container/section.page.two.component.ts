@@ -3,7 +3,7 @@ import { filterWithSearchString, type ListLoadingState, mapLoadingStateValueWith
 import { takeFront } from '@dereekb/util';
 import { type Observable, switchMap, of, delay, startWith, BehaviorSubject } from 'rxjs';
 import { type DocValue, makeDocValues } from '../component/item.list';
-import { DbxPopoverService, DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, DbxTwoColumnRightComponent, DbxSpacerDirective } from '@dereekb/dbx-web';
+import { DbxPopoverService, DbxSectionPageComponent, DbxTwoColumnComponent, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, DbxTwoColumnRightComponent, DbxSpacerDirective, DbxContentContainerDirective } from '@dereekb/dbx-web';
 import { DbxFormSearchFormComponent } from '@dereekb/dbx-form';
 import { MatButton } from '@angular/material/button';
 import { DocSelectionItemListComponent } from '../component/item.list.selection.component';
@@ -14,7 +14,7 @@ import { completeOnDestroy } from '@dereekb/dbx-core';
 @Component({
   templateUrl: './section.page.two.component.html',
   standalone: true,
-  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxFormSearchFormComponent, DbxSpacerDirective, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent],
+  imports: [DbxSectionPageComponent, DbxTwoColumnComponent, DbxFormSearchFormComponent, DbxSpacerDirective, DbxTwoColumnContextDirective, DbxTwoColumnFullLeftDirective, DbxTwoBlockComponent, DbxTwoColumnColumnHeadDirective, DbxListEmptyContentComponent, MatButton, DbxTwoColumnRightComponent, DocSelectionItemListComponent, DbxContentContainerDirective],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DocLayoutSectionPageTwoComponent implements OnInit {

@@ -157,6 +157,30 @@ $dbx-outline-variant-color-var: --dbx-outline-variant-color;
 /// @see --mat-sys-error
 $dbx-error-color-var: --dbx-error-color;
 
+// Shared border system — a base color + an opacity knob blended into a single
+// semi-transparent border color. Components apply --dbx-border-color-current and
+// can tune either input token locally without touching the others.
+/// Base border color for the shared semi-transparent border system. Defaults to `--mat-sys-outline-variant` (the M3 divider color). Blended with `--dbx-border-opacity` to produce `--dbx-border-color-current`.
+/// @intent border base color, divider base color, outline base color
+/// @role color
+/// @see --mat-sys-outline-variant
+/// @see --dbx-border-opacity
+/// @see --dbx-border-color-current
+$dbx-border-color-var: --dbx-border-color;
+/// Opacity applied to `--dbx-border-color` when computing the effective border color. A percentage (e.g. `70%`). Lower it for a fainter border, raise it toward `100%` for a solid divider.
+/// @intent border opacity, divider transparency, border alpha, semi-transparent border opacity
+/// @role misc
+/// @see --dbx-border-color
+/// @see --dbx-border-color-current
+$dbx-border-opacity-var: --dbx-border-opacity;
+/// Effective, semi-transparent border color — a `color-mix` of `--dbx-border-color` at `--dbx-border-opacity`. Apply this directly to `border` / `border-top` / `border-bottom`. Overriding either input token (globally or on a local scope) recomputes this automatically.
+/// @intent border color, divider color, semi-transparent border color, computed border color
+/// @role color
+/// @anti-use Don't hardcode `border: 1px solid rgba(0,0,0,0.1)`; use this token so the color and opacity stay themeable.
+/// @see --dbx-border-color
+/// @see --dbx-border-opacity
+$dbx-border-color-current-var: --dbx-border-color-current;
+
 /// Per-app additional offset subtracted from the app-height base. Set to a non-zero value to shrink `--dbx-app-height` by a fixed amount (e.g. for a sticky footer). Defaults to `0px`.
 /// @intent app height offset, app height adjustment, shrink app height
 /// @role size
@@ -322,6 +346,10 @@ $dbx-on-surface-variant-color: var($dbx-on-surface-variant-color-var);
 $dbx-outline-color: var($dbx-outline-color-var);
 $dbx-outline-variant-color: var($dbx-outline-variant-color-var);
 $dbx-error-color: var($dbx-error-color-var);
+
+$dbx-border-color: var($dbx-border-color-var);
+$dbx-border-opacity: var($dbx-border-opacity-var);
+$dbx-border-color-current: var($dbx-border-color-current-var);
 
 /// Border radius for the `[dbxContentPit]`, applied by default to every pit. Defaults to `var(--mat-sys-corner-medium)`.
 /// @intent pit radius, rounded pit corner, content pit radius

@@ -237,7 +237,11 @@ $dbx-border-opacity-default: 20%;
   }
 
   .dbx-content-border {
-    border: 3px dashed color-mix(in srgb, var(--dbx-border-color, var(--mat-sys-outline-variant)) var(--dbx-border-opacity, $dbx-border-opacity-default), transparent);
+    // Faint dashed frame — keeps its own low opacity locally while sharing the global
+    // border base color. The computed --dbx-border-color-current re-blends with this
+    // overridden opacity at the point of use.
+    --dbx-border-opacity: #{$dbx-border-opacity-default};
+    border: 3px dashed var(--dbx-border-color-current);
   }
 }
 
