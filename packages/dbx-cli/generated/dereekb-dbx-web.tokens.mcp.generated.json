@@ -198,29 +198,64 @@
     },
     {
       "cssVariable": "--dbx-border-color",
+      "scssVariable": "$dbx-border-color-var",
       "source": "dbx-web",
       "role": "color",
       "intents": [
-        "border color"
+        "border base color",
+        "divider base color",
+        "outline base color"
       ],
-      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-outline-variant)`.",
+      "description": "Base border color for the shared semi-transparent border system. Defaults to `--mat-sys-outline-variant` (the M3 divider color). Blended with `--dbx-border-opacity` to produce `--dbx-border-color-current`.",
       "defaults": {
         "light": "var(--mat-sys-outline-variant)"
       },
-      "componentScope": "content"
+      "seeAlso": [
+        "--mat-sys-outline-variant",
+        "--dbx-border-opacity",
+        "--dbx-border-color-current"
+      ]
+    },
+    {
+      "cssVariable": "--dbx-border-color-current",
+      "scssVariable": "$dbx-border-color-current-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "border color",
+        "divider color",
+        "semi-transparent border color",
+        "computed border color"
+      ],
+      "description": "Effective, semi-transparent border color — a `color-mix` of `--dbx-border-color` at `--dbx-border-opacity`. Apply this directly to `border` / `border-top` / `border-bottom`. Overriding either input token (globally or on a local scope) recomputes this automatically.",
+      "defaults": {
+        "light": "color-mix(in srgb, var(--dbx-border-color) var(--dbx-border-opacity), transparent)"
+      },
+      "antiUseNotes": "Don't hardcode `border: 1px solid rgba(0,0,0,0.1)`; use this token so the color and opacity stay themeable.",
+      "seeAlso": [
+        "--dbx-border-color",
+        "--dbx-border-opacity"
+      ]
     },
     {
       "cssVariable": "--dbx-border-opacity",
+      "scssVariable": "$dbx-border-opacity-var",
       "source": "dbx-web",
       "role": "misc",
       "intents": [
-        "border opacity"
+        "border opacity",
+        "divider transparency",
+        "border alpha",
+        "semi-transparent border opacity"
       ],
-      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `20%`.",
+      "description": "Opacity applied to `--dbx-border-color` when computing the effective border color. A percentage (e.g. `70%`). Lower it for a fainter border, raise it toward `100%` for a solid divider.",
       "defaults": {
-        "light": "20%"
+        "light": "70%"
       },
-      "componentScope": "content"
+      "seeAlso": [
+        "--dbx-border-color",
+        "--dbx-border-color-current"
+      ]
     },
     {
       "cssVariable": "--dbx-bottom-banner-height",
@@ -289,6 +324,58 @@
       "componentScope": "button"
     },
     {
+      "cssVariable": "--dbx-calendar-active-day-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "calendar active day color"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-primary-color)`.",
+      "defaults": {
+        "light": "var(--dbx-primary-color)"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-active-day-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "calendar active day tone"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `30%`.",
+      "defaults": {
+        "light": "30%"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-border-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "calendar border color"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-outline)`.",
+      "defaults": {
+        "light": "var(--mat-sys-outline)"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-border-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "calendar border tone"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `18%`.",
+      "defaults": {
+        "light": "18%"
+      },
+      "componentScope": "calendar"
+    },
+    {
       "cssVariable": "--dbx-calendar-day-badge-container-shape",
       "source": "dbx-web",
       "role": "misc",
@@ -300,6 +387,162 @@
         "light": "var(--mat-sys-corner-small)"
       },
       "componentScope": "calendar-month-view"
+    },
+    {
+      "cssVariable": "--dbx-calendar-highlight-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "calendar highlight color"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-accent-color)`.",
+      "defaults": {
+        "light": "var(--dbx-accent-color)"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-highlight-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "calendar highlight tone"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `30%`.",
+      "defaults": {
+        "light": "30%"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-hover-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "calendar hover color"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-on-surface)`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface)"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-hover-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "calendar hover tone"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `4%`.",
+      "defaults": {
+        "light": "4%"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-not-applicable-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "calendar not applicable color"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-on-surface)`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface)"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-not-applicable-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "calendar not applicable tone"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `30%`.",
+      "defaults": {
+        "light": "30%"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-secondary-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "calendar secondary color"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-on-surface)`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface)"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-secondary-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "calendar secondary tone"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `4%`.",
+      "defaults": {
+        "light": "4%"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-selected-day-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "calendar selected day color"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-primary-color)`.",
+      "defaults": {
+        "light": "var(--dbx-primary-color)"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-selected-day-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "calendar selected day tone"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `60%`.",
+      "defaults": {
+        "light": "60%"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-today-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "calendar today color"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-on-surface)`.",
+      "defaults": {
+        "light": "var(--mat-sys-on-surface)"
+      },
+      "componentScope": "calendar"
+    },
+    {
+      "cssVariable": "--dbx-calendar-today-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "calendar today tone"
+      ],
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `4%`.",
+      "defaults": {
+        "light": "4%"
+      },
+      "componentScope": "calendar"
     },
     {
       "cssVariable": "--dbx-card-accent-border-width",
@@ -467,6 +710,45 @@
       "componentScope": "style"
     },
     {
+      "cssVariable": "--dbx-content-elevate-bg",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "content elevate bg"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-elevate-tone, 8%), var(--mat-sys-surface-bright))`.",
+      "defaults": {
+        "light": "color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-elevate-tone, 8%), var(--mat-sys-surface-bright))"
+      },
+      "componentScope": "content"
+    },
+    {
+      "cssVariable": "--dbx-content-elevate-shadow",
+      "source": "dbx-web",
+      "role": "shadow",
+      "intents": [
+        "content elevate shadow"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-level1)`.",
+      "defaults": {
+        "light": "var(--mat-sys-level1)"
+      },
+      "componentScope": "content"
+    },
+    {
+      "cssVariable": "--dbx-content-elevate-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "content elevate tone"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8%`.",
+      "defaults": {
+        "light": "8%"
+      },
+      "componentScope": "content"
+    },
+    {
       "cssVariable": "--dbx-content-headers-count",
       "scssVariable": "$dbx-content-headers-count-var",
       "source": "dbx-web",
@@ -563,15 +845,28 @@
       }
     },
     {
-      "cssVariable": "--dbx-content-pit-color-tone",
+      "cssVariable": "--dbx-content-pit-bg",
       "source": "dbx-web",
-      "role": "color",
+      "role": "misc",
       "intents": [
-        "content pit color tone"
+        "content pit bg"
       ],
-      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `11%`.",
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-pit-tone, 8%), var(--mat-sys-surface-dim)) var(--dbx-content-pit-opacity, 50%), transparent)`.",
       "defaults": {
-        "light": "11%"
+        "light": "color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-pit-tone, 8%), var(--mat-sys-surface-dim)) var(--dbx-content-pit-opacity, 50%), transparent)"
+      },
+      "componentScope": "content"
+    },
+    {
+      "cssVariable": "--dbx-content-pit-opacity",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "content pit opacity"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `50%`.",
+      "defaults": {
+        "light": "50%"
       },
       "componentScope": "content"
     },
@@ -605,6 +900,19 @@
       "defaults": {
         "light": "140px"
       }
+    },
+    {
+      "cssVariable": "--dbx-content-pit-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "content pit tone"
+      ],
+      "description": "Component-scoped override point (`content`) read in `packages/dbx-web/src/lib/layout/content/_content.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8%`.",
+      "defaults": {
+        "light": "8%"
+      },
+      "componentScope": "content"
     },
     {
       "cssVariable": "--dbx-corners-border-radius",
@@ -949,6 +1257,19 @@
       "componentScope": "list"
     },
     {
+      "cssVariable": "--dbx-list-item-hover-state-layer-opacity",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "list item hover state layer opacity"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `0.04`.",
+      "defaults": {
+        "light": "0.04"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-list-item-padded-min-height",
       "source": "dbx-web",
       "role": "size",
@@ -958,6 +1279,73 @@
       "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `42px`.",
       "defaults": {
         "light": "42px"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-item-radius-resolved",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "list item radius resolved",
+        "list item radius resolved radius"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-list-item-border-radius, var(--mat-sys-corner-medium, 12px))"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-item-selected-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "list item selected color"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-primary-container)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-item-selected-on-color",
+      "source": "dbx-web",
+      "role": "text-color",
+      "intents": [
+        "list item selected on color",
+        "list item selected on color text"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--mat-sys-on-primary-container)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-item-spacing",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "list item spacing"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "1px"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-view-group-header-background",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "list view group header background"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sidenav-content-background-color)`.",
+      "defaults": {
+        "light": "var(--mat-sidenav-content-background-color)"
       },
       "componentScope": "list"
     },
@@ -1612,6 +2000,20 @@
       "componentScope": "sidenav"
     },
     {
+      "cssVariable": "--dbx-sidenav-bottom-corner-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "sidenav bottom corner radius",
+        "sidenav bottom corner radius radius"
+      ],
+      "description": "Component-scoped override point (`sidenav`) read in `packages/dbx-web/src/lib/router/layout/sidenav/_sidenav.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-extra-large, 24px)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-extra-large, 24px)"
+      },
+      "componentScope": "sidenav"
+    },
+    {
       "cssVariable": "--dbx-sidenav-divider-color",
       "source": "dbx-web",
       "role": "color",
@@ -1673,6 +2075,20 @@
       "description": "Component-scoped override point (`sidenav`) read in `packages/dbx-web/src/lib/router/layout/sidenav/_sidenav.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-color-current, var(--mat-sys-on-surface))`.",
       "defaults": {
         "light": "var(--dbx-color-current, var(--mat-sys-on-surface))"
+      },
+      "componentScope": "sidenav"
+    },
+    {
+      "cssVariable": "--dbx-sidenav-top-corner-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "sidenav top corner radius",
+        "sidenav top corner radius radius"
+      ],
+      "description": "Component-scoped override point (`sidenav`) read in `packages/dbx-web/src/lib/router/layout/sidenav/_sidenav.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-extra-large, 24px)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-extra-large, 24px)"
       },
       "componentScope": "sidenav"
     },
@@ -1946,6 +2362,19 @@
       "defaults": {
         "light": "$initial-top-banner-height"
       }
+    },
+    {
+      "cssVariable": "--dbx-two-column-border-top",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "two column border top"
+      ],
+      "description": "Component-scoped override point (`column`) read in `packages/dbx-web/src/lib/layout/column/_column.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `1px solid var(--dbx-border-color-current)`.",
+      "defaults": {
+        "light": "1px solid var(--dbx-border-color-current)"
+      },
+      "componentScope": "column"
     },
     {
       "cssVariable": "--dbx-two-column-left-width",

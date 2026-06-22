@@ -72,12 +72,28 @@
         <p>This content is bordered with the success color.</p>
       </dbx-content-border>
     </doc-feature-example>
-    <doc-feature-example header=".dbx-content-elevate" hint="Elevates the content with material elevation with the same padding as dbx-content-border.">
+    <doc-feature-example header=".dbx-content-elevate" hint="Lifts the content as a tonal step up (the M3 way — color over shadow): a bright surface with a soft lift shadow, using the same padding as dbx-content-border. The mirror of dbx-content-pit.">
       <dbx-content-elevate>
         <p>This content is elevated.</p>
       </dbx-content-elevate>
       <dbx-content-elevate [elevate]="false">
         <p>This content is not elevated.</p>
+      </dbx-content-elevate>
+
+      <h4>Using dbxColor</h4>
+      <p>
+        Like the pit, the elevated surface tints toward the active dbxColor. Apply
+        <code>dbxColor</code>
+        to shift it toward another color context.
+      </p>
+      <dbx-content-elevate dbxColor="primary" class="dbx-mb2">
+        <p>This content is elevated with dbxColor="primary".</p>
+      </dbx-content-elevate>
+      <dbx-content-elevate dbxColor="accent" class="dbx-mb2">
+        <p>This content is elevated with dbxColor="accent".</p>
+      </dbx-content-elevate>
+      <dbx-content-elevate dbxColor="warn">
+        <p>This content is elevated with dbxColor="warn".</p>
       </dbx-content-elevate>
     </doc-feature-example>
     <doc-feature-example header=".dbx-content-box" hint="Wraps the content in a box with box-sizing.">
@@ -86,6 +102,24 @@
       </dbx-content-box>
       <dbx-content-box [elevate]="false">
         <p>This content is in a box that is not elevated.</p>
+      </dbx-content-box>
+
+      <h4>Using dbxColor</h4>
+      <p>
+        An elevated box (it composes
+        <code>.dbx-content-elevate</code>
+        ) tints toward the active dbxColor. Apply
+        <code>dbxColor</code>
+        to shift the elevated surface toward another color context.
+      </p>
+      <dbx-content-box dbxColor="primary">
+        <p>This elevated box uses dbxColor="primary".</p>
+      </dbx-content-box>
+      <dbx-content-box dbxColor="accent">
+        <p>This elevated box uses dbxColor="accent".</p>
+      </dbx-content-box>
+      <dbx-content-box dbxColor="warn">
+        <p>This elevated box uses dbxColor="warn".</p>
       </dbx-content-box>
     </doc-feature-example>
     <doc-feature-example header=".dbx-content-pit" hint="Content with a background, margin and internal label with space for content.">
@@ -110,6 +144,30 @@
           <p>END</p>
         </div>
       </dbx-content-pit>
+      <h4>Using dbxColor</h4>
+      <p>
+        The pit's recessed wash tints toward the active dbxColor (primary by default). Apply
+        <code>dbxColor</code>
+        to the pit (or an ancestor) to shift the recess toward another color context.
+      </p>
+      <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center" class="dbx-mb4">
+        <dbx-content-pit dbxColor="primary" style="width: 140px">
+          <p>dbxColor="primary"</p>
+        </dbx-content-pit>
+        <dbx-content-pit dbxColor="accent" style="width: 140px">
+          <p>dbxColor="accent"</p>
+        </dbx-content-pit>
+        <dbx-content-pit dbxColor="warn" style="width: 140px">
+          <p>dbxColor="warn"</p>
+        </dbx-content-pit>
+        <dbx-content-pit dbxColor="success" style="width: 140px">
+          <p>dbxColor="success"</p>
+        </dbx-content-pit>
+        <dbx-content-pit dbxColor="grey" style="width: 140px">
+          <p>dbxColor="grey"</p>
+        </dbx-content-pit>
+      </div>
+
       <h4>Examples</h4>
       <p>Example of a dbx-content-pit with dbx-label-block and content.</p>
       <div fxLayout="row" fxLayoutGap="10px" fxLayoutAlign="start center">

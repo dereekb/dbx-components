@@ -1267,7 +1267,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 48,
+      "line": 54,
       "declarations": [
         {
           "property": "margin",
@@ -1299,7 +1299,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 152,
+      "line": 185,
       "declarations": [
         {
           "property": "margin",
@@ -1332,10 +1332,11 @@
         }
       ],
       "role": "layout",
-      "intent": "padded content surface lifted with elevation 2 — combines inner padding with a Material elevation shadow",
+      "intent": "padded content surface lifted above its surroundings — the mirror of `.dbx-content-pit`. Per Material 3, elevation is communicated primarily with color (the brightest `surface-bright` tone, always lighter than the pit's `surface-dim` in both light and dark) plus a soft lift shadow for protection against the background, so it reads as raised and stays clearly distinct from the recessed pit. Tonal by default — a low-opacity wash of the active dbxColor over `surface-bright`; rounded by default, opt out with `.dbx-corners-none`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash, `--dbx-content-elevate-bg` to replace the background outright, or `--dbx-content-elevate-shadow` to retune/remove (`none`) the shadow.",
       "seeAlso": [
         "dbx-content-border",
-        "dbx-content-pit"
+        "dbx-content-pit",
+        "dbx-corners-none"
       ]
     },
     {
@@ -1344,7 +1345,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 63,
+      "line": 69,
       "declarations": [
         {
           "property": "padding",
@@ -1352,7 +1353,7 @@
         }
       ],
       "role": "layout",
-      "intent": "recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`",
+      "intent": "recessed surface pit (\"negative elevation\") — a semi-transparent tonal wash of the active dbxColor over `--mat-sys-surface-dim` (the dimmest/greyest M3 surface, the opposite end of the dim/bright pair from `.dbx-content-elevate`) so the lighter surface behind shows through, with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`",
       "seeAlso": [
         "dbx-content-pit-scrollable",
         "dbx-content-border",
@@ -1366,7 +1367,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 104,
+      "line": 135,
       "declarations": [
         {
           "property": "float",
@@ -1407,7 +1408,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 80,
+      "line": 86,
       "declarations": [
         {
           "property": "border-radius",
@@ -1428,7 +1429,32 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 93,
+      "line": 99,
+      "declarations": [
+        {
+          "property": "overflow",
+          "value": "hidden"
+        },
+        {
+          "property": "max-width",
+          "value": "100%"
+        }
+      ],
+      "role": "layout",
+      "intent": "scrollable modifier for `.dbx-content-pit` — turns the pit into a fixed frame that clips an inner `.dbx-content-pit-scrollable-content` wrapper; the wrapper (not the frame) scrolls, so the padded/cornered surface never shifts. Drive the height via the `[scrollable]` input (which writes `--dbx-content-pit-scrollable-max-height`) or fall back to `theming.$dbx-content-pit-scrollable-max-height`.",
+      "seeAlso": [
+        "dbx-content-pit",
+        "dbx-content-pit-scrollable-content"
+      ],
+      "parent": "content-pit"
+    },
+    {
+      "slug": "content-pit-scrollable-content",
+      "selector": ".dbx-content-pit",
+      "source": "@dereekb/dbx-web",
+      "module": "@dereekb/dbx-web",
+      "file": "src/lib/layout/content/_content.scss",
+      "line": 113,
       "declarations": [
         {
           "property": "max-height",
@@ -1440,15 +1466,41 @@
         },
         {
           "property": "overflow-y",
-          "value": "scroll"
+          "value": "auto"
+        },
+        {
+          "property": "overscroll-behavior",
+          "value": "contain"
+        },
+        {
+          "property": "overflow-anchor",
+          "value": "none"
+        },
+        {
+          "property": "margin-top",
+          "value": "calc(-1 * #{$pit-padding})"
+        },
+        {
+          "property": "margin-bottom",
+          "value": "calc(-1 * #{$pit-padding})"
+        },
+        {
+          "property": "padding-top",
+          "value": "$pit-padding"
+        },
+        {
+          "property": "padding-bottom",
+          "value": "$pit-padding"
         }
       ],
       "role": "layout",
-      "intent": "scrollable modifier for `.dbx-content-pit` — caps height at `theming.$dbx-content-pit-scrollable-max-height` and forces `overflow-y: scroll` for long inner content",
+      "intent": "inner scroll region for a scrollable `.dbx-content-pit` — wrap the pit body in this element when using `[scrollable]`; it owns the height cap + `overflow-y` so the pit frame stays put. The cap reads `--dbx-content-pit-scrollable-max-height` (published per-pit by `dbxContentPit`; `none` when the pit isn't scrollable).",
       "seeAlso": [
-        "dbx-content-pit"
+        "dbx-content-pit",
+        "dbx-content-pit-scrollable"
       ],
-      "parent": "content-pit"
+      "parent": "content-pit-scrollable",
+      "selectorContext": ".dbx-content-pit .dbx-content-pit-scrollable-content"
     },
     {
       "slug": "content-scroll-lock",
@@ -1456,7 +1508,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 143,
+      "line": 176,
       "declarations": [
         {
           "property": "height",
@@ -2476,7 +2528,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 326,
+      "line": 443,
       "declarations": [
         {
           "property": "height",
@@ -2497,7 +2549,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 206,
+      "line": 311,
       "declarations": [
         {
           "property": "--dbx-list-card-items-list-gap",
@@ -2526,7 +2578,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 341,
+      "line": 458,
       "declarations": [
         {
           "property": "padding",
@@ -2546,7 +2598,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 168,
+      "line": 273,
       "declarations": [
         {
           "property": "min-height",
@@ -2575,7 +2627,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 177,
+      "line": 282,
       "declarations": [
         {
           "property": "min-height",
@@ -2601,7 +2653,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 301,
+      "line": 418,
       "declarations": [
         {
           "property": "cursor",
@@ -2618,7 +2670,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 313,
+      "line": 430,
       "declarations": [
         {
           "property": "padding",
@@ -2638,7 +2690,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 240,
+      "line": 357,
       "declarations": [
         {
           "property": "--dbx-list-item-border-radius",
@@ -2665,7 +2717,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 149,
+      "line": 254,
       "declarations": [],
       "role": "state",
       "intent": "pin `.dbx-list-view-group-header` rows to the top of the list while scrolling"
@@ -2676,7 +2728,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 257,
+      "line": 374,
       "declarations": [
         {
           "property": "display",
@@ -2703,7 +2755,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/list/_list.scss",
-      "line": 126,
+      "line": 231,
       "declarations": [],
       "role": "spacing",
       "intent": "strip the leading + trailing padding around `mdc-list-item--with-trailing-meta` rows so meta-only items hug their container"
@@ -2979,7 +3031,7 @@
       "source": "@dereekb/dbx-web",
       "module": "@dereekb/dbx-web",
       "file": "src/lib/layout/content/_content.scss",
-      "line": 224,
+      "line": 257,
       "declarations": [
         {
           "property": "padding-bottom",
@@ -3594,10 +3646,22 @@
         {
           "property": "overflow-x",
           "value": "hidden"
+        },
+        {
+          "property": "box-sizing",
+          "value": "border-box"
+        },
+        {
+          "property": "border-top",
+          "value": "var(--dbx-two-column-border-top, 1px solid var(--dbx-border-color-current))"
         }
       ],
       "role": "layout",
-      "intent": "two-column page layout — fixed-width left column with elevated right content area"
+      "intent": "two-column page layout — fixed-width left column with elevated right content area",
+      "tokensRead": [
+        "--dbx-border-color-current",
+        "--dbx-two-column-border-top"
+      ]
     },
     {
       "slug": "u",
