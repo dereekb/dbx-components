@@ -206,11 +206,11 @@ function parseAlternatingKey(segments: readonly string[], keyTemplate: string): 
           routeParams.push(placeholder.routeParam);
         }
         normalizedSegments.push(segment);
-      } else if (constId !== undefined) {
-        normalizedSegments.push(constId);
-      } else {
+      } else if (constId === undefined) {
         message = `Key template \`${keyTemplate}\` segment \`${segment}\` must be a placeholder (\`:param\` or \`${AUTH_UID_PLACEHOLDER}\`) or a fixed id (\`{const:<id>}\`).`;
         break;
+      } else {
+        normalizedSegments.push(constId);
       }
     }
   }

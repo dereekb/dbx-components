@@ -250,7 +250,7 @@
       ],
       "description": "Opacity applied to `--dbx-border-color` when computing the effective border color. A percentage (e.g. `70%`). Lower it for a fainter border, raise it toward `100%` for a solid divider.",
       "defaults": {
-        "light": "70%"
+        "light": "60%"
       },
       "seeAlso": [
         "--dbx-border-color",
@@ -356,9 +356,9 @@
       "intents": [
         "calendar border color"
       ],
-      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-outline)`.",
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-divider-color)`.",
       "defaults": {
-        "light": "var(--mat-sys-outline)"
+        "light": "var(--dbx-divider-color)"
       },
       "componentScope": "calendar"
     },
@@ -369,9 +369,9 @@
       "intents": [
         "calendar border tone"
       ],
-      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `18%`.",
+      "description": "Component-scoped override point (`calendar`) read in `packages/dbx-web/src/lib/extension/calendar/_calendar.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `100%`.",
       "defaults": {
-        "light": "18%"
+        "light": "100%"
       },
       "componentScope": "calendar"
     },
@@ -1020,6 +1020,26 @@
       "defaults": {
         "light": "var(--mat-sys-outline)"
       }
+    },
+    {
+      "cssVariable": "--dbx-divider-color",
+      "scssVariable": "$dbx-divider-color-var",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "divider color",
+        "separator color",
+        "shared divider",
+        "component divider color"
+      ],
+      "description": "Shared divider color for component dividers/separators (dbx-table-view summary rule, dbx-two-column boundary, dbx-calendar cell borders, etc.). Defaults to `--dbx-border-color-current` so every divider inherits the themeable semi-transparent border by default; override this single token (globally or on a local scope) to retint all dividers at once, or override a component's own divider token to retint just that one.",
+      "defaults": {
+        "light": "var(--dbx-border-color-current)"
+      },
+      "antiUseNotes": "Don't hardcode a per-component divider color; default it to this token so dividers stay consistent and themeable.",
+      "seeAlso": [
+        "--dbx-border-color-current"
+      ]
     },
     {
       "cssVariable": "--dbx-dot-size",
@@ -2370,9 +2390,9 @@
       "intents": [
         "two column border top"
       ],
-      "description": "Component-scoped override point (`column`) read in `packages/dbx-web/src/lib/layout/column/_column.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `1px solid var(--dbx-border-color-current)`.",
+      "description": "Component-scoped override point (`column`) read in `packages/dbx-web/src/lib/layout/column/_column.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `1px solid var(--dbx-divider-color)`.",
       "defaults": {
-        "light": "1px solid var(--dbx-border-color-current)"
+        "light": "1px solid var(--dbx-divider-color)"
       },
       "componentScope": "column"
     },
