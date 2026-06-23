@@ -36,6 +36,33 @@
       }
     },
     {
+      "cssVariable": "--dbx-anchor-list-item-active-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "anchor list item active color"
+      ],
+      "description": "Component-scoped token (`anchorlist`) declared in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-list-item-active-color, var(--dbx-anchor-list-item-selected-color))"
+      },
+      "componentScope": "anchorlist"
+    },
+    {
+      "cssVariable": "--dbx-anchor-list-item-active-on-color",
+      "source": "dbx-web",
+      "role": "text-color",
+      "intents": [
+        "anchor list item active on color",
+        "anchor list item active on color text"
+      ],
+      "description": "Component-scoped token (`anchorlist`) declared in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-list-item-active-on-color, var(--dbx-anchor-list-item-selected-on-color))"
+      },
+      "componentScope": "anchorlist"
+    },
+    {
       "cssVariable": "--dbx-anchor-list-item-border-radius",
       "source": "dbx-web",
       "role": "radius",
@@ -48,6 +75,19 @@
         "light": "0"
       },
       "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-anchor-list-item-child-background",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "anchor list item child background"
+      ],
+      "description": "Component-scoped token (`sidenav`) declared in `packages/dbx-web/src/lib/router/layout/sidenav/_sidenav.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "transparent"
+      },
+      "componentScope": "sidenav"
     },
     {
       "cssVariable": "--dbx-anchor-list-item-child-list-item-icon-size",
@@ -72,6 +112,33 @@
       "description": "Component-scoped override point (`anchorlist`) read in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--parent-mdc-list-list-item-label-text-size)`.",
       "defaults": {
         "light": "var(--parent-mdc-list-list-item-label-text-size)"
+      },
+      "componentScope": "anchorlist"
+    },
+    {
+      "cssVariable": "--dbx-anchor-list-item-selected-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "anchor list item selected color"
+      ],
+      "description": "Component-scoped token (`anchorlist`) declared in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-list-item-selected-color, var(--mat-sys-primary-container))"
+      },
+      "componentScope": "anchorlist"
+    },
+    {
+      "cssVariable": "--dbx-anchor-list-item-selected-on-color",
+      "source": "dbx-web",
+      "role": "text-color",
+      "intents": [
+        "anchor list item selected on color",
+        "anchor list item selected on color text"
+      ],
+      "description": "Component-scoped token (`anchorlist`) declared in `packages/dbx-web/src/lib/router/layout/anchorlist/_anchorlist.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-list-item-selected-on-color, var(--mat-sys-on-primary-container))"
       },
       "componentScope": "anchorlist"
     },
@@ -1222,6 +1289,48 @@
       "componentScope": "text"
     },
     {
+      "cssVariable": "--dbx-list-accordion-view-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "list accordion view border radius",
+        "list accordion view border radius radius"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-medium, 12px)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-medium, 12px)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-accordion-view-margin",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "list accordion view margin",
+        "list accordion view margin spacing"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-1)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-1)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-accordion-view-radius-resolved",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "list accordion view radius resolved",
+        "list accordion view radius resolved radius"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-list-accordion-view-border-radius, var(--mat-sys-corner-medium, 12px))"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-list-card-items-list-gap",
       "source": "dbx-web",
       "role": "spacing",
@@ -1232,6 +1341,33 @@
       "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
       "defaults": {
         "light": "8px"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-item-active-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "list item active color"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-list-item-selected-color)"
+      },
+      "componentScope": "list"
+    },
+    {
+      "cssVariable": "--dbx-list-item-active-on-color",
+      "source": "dbx-web",
+      "role": "text-color",
+      "intents": [
+        "list item active on color",
+        "list item active on color text"
+      ],
+      "description": "Component-scoped token (`list`) declared in `packages/dbx-web/src/lib/layout/list/_list.scss`. Add a sassdoc `///` block above the declaration for richer guidance.",
+      "defaults": {
+        "light": "var(--dbx-list-item-selected-on-color)"
       },
       "componentScope": "list"
     },
@@ -1550,6 +1686,20 @@
       "seeAlso": [
         "--mat-sys-outline-variant"
       ]
+    },
+    {
+      "cssVariable": "--dbx-overlay-border-radius",
+      "source": "dbx-web",
+      "role": "radius",
+      "intents": [
+        "overlay border radius",
+        "overlay border radius radius"
+      ],
+      "description": "Component-scoped override point (`style`) read in `packages/dbx-web/src/lib/interaction/style/_style.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-medium)`.",
+      "defaults": {
+        "light": "var(--mat-sys-corner-medium)"
+      },
+      "componentScope": "style"
     },
     {
       "cssVariable": "--dbx-padding-0",

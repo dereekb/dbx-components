@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { type ClickableAnchorLinkTree } from '@dereekb/dbx-core';
-import { DbxContentContainerDirective, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, DbxColorDirective } from '@dereekb/dbx-web';
+import { DbxContentContainerDirective, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, DbxColorDirective, DbxAnchorListComponent } from '@dereekb/dbx-web';
 import { DocFeatureLayoutComponent } from '../../shared/component/feature.layout.component';
 import { DocFeatureExampleComponent } from '../../shared/component/feature.example.component';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 @Component({
   templateUrl: './sidenav.component.html',
   standalone: true,
-  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, MatButtonModule, MatIconModule, DbxColorDirective],
+  imports: [DbxContentContainerDirective, DocFeatureLayoutComponent, DocFeatureExampleComponent, DbxSidenavComponent, DbxSidenavButtonComponent, DbxPagebarComponent, MatButtonModule, MatIconModule, DbxColorDirective, DbxAnchorListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
@@ -125,6 +125,67 @@ export class DocRouterSidenavComponent {
     {
       icon: 'person',
       title: 'Profile',
+      ref: 'doc.router.sidenav'
+    }
+  ];
+
+  // Reproduces how the hellosubs sidenav is assembled from differently-created elements. The `[anchors]`
+  // input mixes top-level root items (Pay Stubs, Clients) with a parent item (My Work) whose children
+  // (Job Requests, Timesheets, Requirements) are rendered as nested `dbx-anchor-list-child` rows. By
+  // default those nested rows pick up a subtle depth-shade background from `_anchorlist.scss`, so a child
+  // (Timesheets) presents differently from a root (Pay Stubs). The `dbx-sidenav-flat` example below opts
+  // into the unifying treatment so every row reads like the clean root style.
+  readonly mixedAnchors: ClickableAnchorLinkTree[] = [
+    {
+      icon: 'payments',
+      title: 'Pay Stubs',
+      ref: 'doc.router.sidenav'
+    },
+    {
+      icon: 'dashboard',
+      title: 'My Work',
+      ref: 'doc.router.sidenav',
+      children: [
+        {
+          icon: 'work_outline',
+          title: 'Job Requests',
+          ref: 'doc.router.sidenav'
+        },
+        {
+          icon: 'pending_actions',
+          title: 'Timesheets',
+          ref: 'doc.router.sidenav'
+        },
+        {
+          icon: 'rule',
+          title: 'Requirements',
+          ref: 'doc.router.sidenav'
+        }
+      ]
+    },
+    {
+      icon: 'workspaces',
+      title: 'Clients',
+      ref: 'doc.router.sidenav'
+    }
+  ];
+
+  // The third element-creation method: a separate `<dbx-anchor-list>` placed in the sidenav's `[bottom]`
+  // content slot (Admin / Settings / Logout in hellosubs), independent of the `[anchors]` input above.
+  readonly bottomAnchors: ClickableAnchorLinkTree[] = [
+    {
+      icon: 'admin_panel_settings',
+      title: 'Admin',
+      ref: 'doc.router.sidenav'
+    },
+    {
+      icon: 'settings',
+      title: 'Settings',
+      ref: 'doc.router.sidenav'
+    },
+    {
+      icon: 'logout',
+      title: 'Logout',
       ref: 'doc.router.sidenav'
     }
   ];

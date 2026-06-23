@@ -93,8 +93,18 @@ $default-mdc-list-list-item-leading-icon-size: 24px;
     // specificity (0,4,0), so source order decides — keeping this first lets an active or selected child
     // row layer its own tone on top instead of being masked by the depth shading (which left an active
     // child reading as un-selected: grey background, only the text recolored).
+    //
+    // The tone is an override point: set `--dbx-anchor-list-item-child-background` (e.g. to `transparent`)
+    // to flatten the depth-shade so nested children read like top-level root rows. Because the
+    // active/selected rules below win by source order, overriding the token never clears an active child's
+    // accent — only the inactive depth-shade. The `.dbx-sidenav-flat` modifier uses this.
+
+    /// Background tone applied to nested (depth > 0) anchor-list child rows to set them apart from
+    /// top-level root rows. Override to `transparent` to flatten the nesting depth-shade.
+    /// @role color
+    /// @intent nested child row background, anchor list depth shade, flatten nested rows
     .dbx-anchor-list-child .mat-mdc-list-item {
-      background: color-mix(in srgb, var(--mat-sys-on-surface) 14%, transparent);
+      background: var(--dbx-anchor-list-item-child-background, color-mix(in srgb, var(--mat-sys-on-surface) 14%, transparent));
     }
 
     // selected

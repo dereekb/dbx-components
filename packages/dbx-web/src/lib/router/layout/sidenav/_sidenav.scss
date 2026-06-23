@@ -24,6 +24,17 @@ $active-background-transparent-color: 0.93;
       border-top-right-radius: var(--dbx-sidenav-top-corner-radius, var(--mat-sys-corner-extra-large, 24px));
       border-bottom-right-radius: var(--dbx-sidenav-bottom-corner-radius, var(--mat-sys-corner-extra-large, 24px));
 
+      // Uniform nav items (default). A sidenav is typically assembled from differently-created nav
+      // elements — top-level root anchors and nested child anchors in the `[anchors]` tree, plus separate
+      // `<dbx-anchor-list>` lists dropped into the `[top]` / `[bottom]` content slots. Left to the generic
+      // anchor-list styling these would NOT match up (a separate list rounds all four corners as floating
+      // pills, and nested child rows carry a depth-shade). The sidenav normalizes them so every element
+      // reads as one consistent nav: nested children drop the depth-shade here (the active/selected rules
+      // override this token by source order, so the active route still keeps its accent), the right-only
+      // flush-left corner shape is applied to all drawer anchor lists in `_list.scss`, and child content is
+      // aligned with root rows below. Apps can restore the depth-shade per list via the token if desired.
+      --dbx-anchor-list-item-child-background: transparent;
+
       .mat-drawer-inner-container {
         display: flex;
         flex-direction: column;
@@ -38,6 +49,12 @@ $active-background-transparent-color: 0.93;
           &.mdc-list-item--disabled {
             user-select: none;
           }
+        }
+
+        // Align nested child content with root rows (cancel the small left nudge `_anchorlist.scss` adds
+        // to child rows) so a nested child reads like a top-level root item.
+        .dbx-anchor-list-child .mat-mdc-list-item .mdc-list-item__content {
+          padding-left: 0;
         }
 
         // directly active links have a side border indicator
