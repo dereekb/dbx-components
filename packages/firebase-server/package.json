@@ -79,7 +79,7 @@
     "nanoid": "^5.1.9",
     "oidc-provider": "^9.8.2",
     "rxjs": "^7.8.2",
-    "sharp": "0.34.5",
+    "sharp": "0.35.2",
     "supertest": "^7.2.2",
     "ts-essentials": "^10.2.0"
   }
