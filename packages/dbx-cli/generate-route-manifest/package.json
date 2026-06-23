@@ -1,10 +1,10 @@
 {
   "name": "@dereekb/dbx-cli-generate-route-manifest",
-  "version": "13.19.0",
+  "version": "13.20.0",
   "private": true,
   "type": "module",
   "peerDependencies": {
-    "@dereekb/dbx-cli": "13.19.0",
+    "@dereekb/dbx-cli": "13.20.0",
     "ts-morph": "^21.0.0"
   }
 }

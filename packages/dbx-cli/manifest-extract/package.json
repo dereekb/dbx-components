@@ -1,10 +1,10 @@
 {
   "name": "@dereekb/dbx-cli/manifest-extract",
-  "version": "13.19.0",
+  "version": "13.20.0",
   "sideEffects": false,
   "peerDependencies": {
     "@dereekb/date": "13.15.0",
-    "@dereekb/dbx-cli": "13.19.0",
+    "@dereekb/dbx-cli": "13.20.0",
     "@dereekb/firebase": "13.15.0",
     "@dereekb/model": "13.15.0",
     "@dereekb/nestjs": "13.15.0",
