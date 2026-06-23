@@ -162,13 +162,18 @@ $list-item-padded-min-height: 42px;
     }
   }
 
-  // The sidenav anchor list rows sit flush against the left screen edge, so only the RIGHT corners round —
-  // the radius is composed into a `0 r r 0` shorthand (top-left / top-right / bottom-right / bottom-left),
+  // Sidenav anchor-list rows sit flush against the left drawer edge, so only the RIGHT corners round — the
+  // radius is composed into a `0 r r 0` shorthand (top-left / top-right / bottom-right / bottom-left),
   // leaving the left corners square. The "how round" radius defaults to the regular anchor-list radius
   // (`--dbx-anchor-list-item-border-radius`) so the sidenav tracks the `anchor-list-corner-*` lever by default,
-  // but `--dbx-sidenav-anchor-list-item-border-radius` overrides it for sidenav-specific tuning. Higher
-  // specificity than `.dbx-anchor-list`, so it wins for the inner nav-list inside a sidenav host.
-  .dbx-sidenav-anchor-list .dbx-anchor-list {
+  // but `--dbx-sidenav-anchor-list-item-border-radius` overrides it for sidenav-specific tuning.
+  //
+  // Scoped to EVERY anchor list inside a sidenav drawer (`.dbx-sidenav .mat-drawer .dbx-anchor-list`), not
+  // just the `[anchors]` list (`.dbx-sidenav-anchor-list`): a separate `<dbx-anchor-list>` dropped into a
+  // `[top]` / `[bottom]` content slot must round the same way, otherwise it falls back to the generic
+  // all-corners `.dbx-anchor-list` radius and reads as floating full-radius pills beside the flush main
+  // rows. Higher specificity than `.dbx-anchor-list`, so it wins for any inner nav-list inside a sidenav.
+  .dbx-sidenav .mat-drawer .dbx-anchor-list {
     --mat-list-active-indicator-shape: 0 var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) 0;
     --mat-list-list-item-container-shape: 0 var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) 0;
   }
@@ -485,8 +490,48 @@ $list-item-padded-min-height: 42px;
     position: unset; // do not touch the divider in dbx-list
   }
 
+  // Accordion list view renders as a card with a rounded TOP. The rounded frame lives on the scroll
+  // VIEWPORT (`.dbx-list-content`) so it clips the scrolling content — including panels that scroll BEHIND a
+  // sticky group header — which stops them bleeding through the rounded corner. (A rounded ancestor can't
+  // clip a composited `position: sticky` element in Chrome, so each group header additionally rounds its OWN
+  // top corners below.) Only the top corners are rounded — the bottom stays square so the last panel's
+  // elevation shadow isn't clipped by a rounded bottom edge. Scoped with `:has()` so only accordion lists
+  // get framed.
+  .dbx-list-content:has(.dbx-list-accordion-view) {
+    border-top-left-radius: var(--dbx-list-accordion-view-border-radius, var(--mat-sys-corner-medium, 12px));
+    border-top-right-radius: var(--dbx-list-accordion-view-border-radius, var(--mat-sys-corner-medium, 12px));
+  }
+
   .dbx-list-accordion-view {
+    // Breathing-room margin (`--dbx-list-accordion-view-margin`, default `--dbx-padding-1` / 2px) so the
+    // card sits inset from its container and its walls stay visible — flush against the container the card's
+    // edges read as cut off. `padding-bottom` leaves room below the last panel so its elevation shadow shows
+    // instead of being clipped at the scroll edge.
+    display: block;
+    margin: var(--dbx-list-accordion-view-margin, var(--dbx-padding-1));
+    padding-bottom: var(--dbx-list-accordion-view-bottom-space, var(--dbx-padding-2));
+    --dbx-list-accordion-view-radius-resolved: var(--dbx-list-accordion-view-border-radius, var(--mat-sys-corner-medium, 12px));
     --mat-expansion-container-shape: 0px;
+
+    // Round the top corners of the first entry (the very top of the card) AND of every group header. Group
+    // headers are sticky — when one pins at the rounded top corner, the scroll frame's clip would otherwise
+    // shave that header's square corner (and its border) flat, so each header rounds its OWN top corners to
+    // follow the curve. `overflow: hidden` clips the header's content/border to those corners.
+    mat-accordion > :first-child,
+    .dbx-list-view-group-header {
+      border-top-left-radius: var(--dbx-list-accordion-view-radius-resolved);
+      border-top-right-radius: var(--dbx-list-accordion-view-radius-resolved);
+      overflow: hidden;
+    }
+
+    // Box every group header with the same hairline the two-column view uses (`1px solid
+    // var(--dbx-divider-color)`) rather than the heavier/darker `--mat-divider-*`; the shorthand overrides
+    // the bottom divider on the base `.dbx-list-view-group-header` rule so all four sides match. The `-1px`
+    // margin pulls the header out so its border overlaps the adjacent panel edges (no doubled hairline / gap).
+    .dbx-list-view-group-header {
+      margin: -1px;
+      border: 1px solid var(--dbx-divider-color);
+    }
   }
 
   .dbx-list-view-group-header {

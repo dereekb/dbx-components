@@ -1303,6 +1303,20 @@
       "componentScope": "list"
     },
     {
+      "cssVariable": "--dbx-list-accordion-view-bottom-space",
+      "source": "dbx-web",
+      "role": "spacing",
+      "intents": [
+        "list accordion view bottom space",
+        "list accordion view bottom space spacing"
+      ],
+      "description": "Component-scoped override point (`list`) read in `packages/dbx-web/src/lib/layout/list/_list.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-2)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-2)"
+      },
+      "componentScope": "list"
+    },
+    {
       "cssVariable": "--dbx-list-accordion-view-margin",
       "source": "dbx-web",
       "role": "spacing",
