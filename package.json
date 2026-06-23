@@ -1,6 +1,6 @@
 {
   "name": "@dereekb/dbx-components",
-  "version": "13.19.0",
+  "version": "13.20.0",
   "license": "MIT",
   "scripts": {
     "postinstall": "{ [ -f .env.local ] || { rm -rf .env.local && : > .env.local; }; } && if [ \"$IS_DOCKER_INSTALL\" = \"true\" ]; then echo skipping peer dep sync in docker; else echo syncing peer deps && node ./tools/scripts/sync-peer-deps.mjs --skip-internal > /dev/null 2>&1; fi",
@@ -85,7 +85,7 @@
     "raw-body": "^3.0.2",
     "rrule": "git+https://git@github.com/dereekb/rrule#2b13b1ea881059ba2ecfec380e12ef244ef54570",
     "rxjs": "^7.8.2",
-    "sharp": "0.34.5",
+    "sharp": "0.35.2",
     "stripe": "^20.4.1",
     "ts-essentials": "^10.2.0",
     "tslib": "^2.8.1",

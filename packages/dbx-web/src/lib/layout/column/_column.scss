@@ -18,6 +18,12 @@ $two-columns-right-padding-size: var(--dbx-padding-2);
     flex-direction: row;
     overflow-x: hidden;
 
+    // Top boundary separating the two-column block from the page header above it.
+    // Uses the shared divider token; apps can disable or restyle the boundary by
+    // overriding --dbx-two-column-border-top (e.g. to `none`).
+    box-sizing: border-box;
+    border-top: var(--dbx-two-column-border-top, 1px solid var(--dbx-divider-color));
+
     .dbx-content-container {
       margin: 0;
     }
@@ -84,7 +90,7 @@ $two-columns-right-padding-size: var(--dbx-padding-2);
 
   .dbx-two-column-head {
     padding: 0 var(--dbx-padding-2); // only padded on the left
-    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    border-bottom: 1px solid var(--dbx-divider-color);
     height: $two-column-navbar-height;
 
     display: flex;

@@ -121,6 +121,80 @@ describe('createUrlModelsTool', () => {
     expect(things.key).toBeUndefined();
   });
 
+  it('round-trips a fixed/literal id segment in a key template (resolveFullKey emits it verbatim)', async () => {
+    // The build-time parser normalizes a `{const:0}` token to the bare literal `0`, so the manifest
+    // stores `wk/:uid/wkn/0`; the runtime must emit that literal segment verbatim.
+    const literalManifest: RouteManifest = {
+      version: ROUTE_MANIFEST_VERSION,
+      generatedAt: '2026-01-01T00:00:00.000Z',
+      app: { name: 'demo' },
+      states: [
+        {
+          name: 'worker.note',
+          url: '/note',
+          fullUrl: '/worker/:uid/note',
+          paramKeys: [],
+          urlParamKeys: ['uid'],
+          component: 'WorkerNoteComponent',
+          componentFile: 'apps/x/src/worker-note.component.ts',
+          models: [{ modelType: 'workerNote', kind: 'key', keyTemplate: 'wk/:uid/wkn/0' }]
+        }
+      ]
+    };
+    const tool = createUrlModelsTool(makeDeps({ routeManifest: literalManifest }));
+    const result = await tool.staticHandler!({ url: '/worker/abc/note' }, makeCtx('user-1'));
+    expect(modelOf(payload(result), 'workerNote').key).toBe('wk/abc/wkn/0');
+  });
+
+  it('un-flattens a {flatKey:<param>} binding into a full FirestoreModelKey', async () => {
+    const flatManifest: RouteManifest = {
+      version: ROUTE_MANIFEST_VERSION,
+      generatedAt: '2026-01-01T00:00:00.000Z',
+      app: { name: 'demo' },
+      states: [
+        {
+          name: 'map.region',
+          url: '/r/:region',
+          fullUrl: '/map/r/:region',
+          paramKeys: [],
+          urlParamKeys: ['region'],
+          component: 'RegionMapComponent',
+          componentFile: 'apps/x/src/region-map.component.ts',
+          models: [{ modelType: 'region', kind: 'flatKey', keyTemplate: '{flatKey:region}' }]
+        }
+      ]
+    };
+    const tool = createUrlModelsTool(makeDeps({ routeManifest: flatManifest }));
+    const result = await tool.staticHandler!({ url: '/map/r/r_country1_cs_state2_d_district3' }, makeCtx('user-1'));
+    const p = payload(result);
+    expect(p.matched?.params).toEqual({ region: 'r_country1_cs_state2_d_district3' });
+    // The single param value un-flattens (`_` → `/`) into the full subcollection key.
+    expect(modelOf(p, 'region').key).toBe('r/country1/cs/state2/d/district3');
+  });
+
+  it('reports invalid-flat-key when a {flatKey} param decodes to an odd-segment key', async () => {
+    const flatManifest: RouteManifest = {
+      version: ROUTE_MANIFEST_VERSION,
+      generatedAt: '2026-01-01T00:00:00.000Z',
+      app: { name: 'demo' },
+      states: [
+        {
+          name: 'map.region',
+          url: '/r/:region',
+          fullUrl: '/map/r/:region',
+          paramKeys: [],
+          urlParamKeys: ['region'],
+          component: 'RegionMapComponent',
+          componentFile: 'apps/x/src/region-map.component.ts',
+          models: [{ modelType: 'region', kind: 'flatKey', keyTemplate: '{flatKey:region}' }]
+        }
+      ]
+    };
+    const tool = createUrlModelsTool(makeDeps({ routeManifest: flatManifest }));
+    const result = await tool.staticHandler!({ url: '/map/r/r_country1_cs' }, makeCtx('user-1'));
+    expect(modelOf(payload(result), 'region').unresolved?.reason).toBe('invalid-flat-key');
+  });
+
   it('reports auth-required when {authUid} is needed but the caller is unauthenticated', async () => {
     const tool = createUrlModelsTool(makeDeps());
     const result = await tool.staticHandler!({ url: '/worker/abc' }, makeCtx());

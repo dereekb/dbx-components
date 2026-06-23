@@ -1,0 +1,23 @@
+{
+  "name": "dbx-cli-route",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/dbx-cli/route/src",
+  "projectType": "library",
+  "tags": ["publishable"],
+  "targets": {
+    "build-base": {
+      "dependsOn": []
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "{projectRoot}/../../../coverage/packages/dbx-cli/route"
+      }
+    }
+  }
+}

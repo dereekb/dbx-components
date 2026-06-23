@@ -6,6 +6,11 @@
 // MARK: Mixin
 @mixin core() {
   .dbx-table-view {
+    // Route Material's table row outline through the shared divider token so the row
+    // separators match dbx-two-column / dbx-calendar dividers. (Material always sets
+    // --mat-table-row-item-outline-color, so a fallback alone never takes effect.)
+    --mat-table-row-item-outline-color: var(--dbx-divider-color);
+
     .dbx-table-view-table-wrapper {
       max-height: var(--dbx-table-view-max-height, 600px);
       overflow: auto;
@@ -45,7 +50,7 @@
 
   // MARK: Full summary row
   .dbx-table-view-full-summary-row-container > .mat-mdc-row {
-    border-top-color: var(--mat-table-row-item-outline-color, var(--mat-sys-outline-variant));
+    border-top-color: var(--mat-table-row-item-outline-color, var(--dbx-divider-color));
     border-top-width: var(--mat-table-row-item-outline-width, 1px);
     border-top-style: solid;
   }

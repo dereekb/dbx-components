@@ -13,13 +13,14 @@
  * manifests whose `version` does not match. Mirror in `@dereekb/dbx-cli`'s
  * `ROUTE_MANIFEST_VERSION` — bump both together.
  */
-export const ROUTE_MANIFEST_VERSION = 1 as const;
+export const ROUTE_MANIFEST_VERSION = 2 as const;
 
 /**
- * Whether a route-model entry resolves to a promoted id, a full key, or a
- * keyless list. Mirror of `@dereekb/dbx-cli`'s `RouteModelKind`.
+ * Whether a route-model entry resolves to a promoted id, a full key, a
+ * single-param flattened key, or a keyless list. Mirror of `@dereekb/dbx-cli`'s
+ * `RouteModelKind`.
  */
-export type RouteModelKind = 'id' | 'key' | 'list';
+export type RouteModelKind = 'id' | 'key' | 'flatKey' | 'list';
 
 /**
  * One model an app page renders. Structural mirror of `@dereekb/dbx-cli`'s

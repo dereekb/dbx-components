@@ -10,7 +10,7 @@
   // removed formly core styles; applies to all mat-form-field + forge wrapper fields.)
   .mat-mdc-form-field,
   .dbx-forge-form-field {
-    padding: 6px 0;
+    padding: var(--dbx-padding-2) 0;
   }
 
   // Resets native <input> elements that render inside the forge form-field wrapper

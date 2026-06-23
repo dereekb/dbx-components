@@ -32,6 +32,7 @@
       "@dereekb/dbx-cli/firestore-indexes": ["packages/dbx-cli/firestore-indexes/src/index.ts"],
       "@dereekb/dbx-cli/manifest-extract": ["packages/dbx-cli/manifest-extract/src/index.ts"],
       "@dereekb/dbx-cli/model-test": ["packages/dbx-cli/model-test/src/index.ts"],
+      "@dereekb/dbx-cli/route": ["packages/dbx-cli/route/src/index.ts"],
       "@dereekb/dbx-cli/test": ["packages/dbx-cli/test/src/index.ts"],
       "@dereekb/dbx-cli/validate": ["packages/dbx-cli/validate/src/index.ts"],
       "@dereekb/dbx-components-cli": ["packages/dbx-components-cli/src/index.ts"],

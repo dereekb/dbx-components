@@ -1265,7 +1265,7 @@
       "selector": "dbx-content-pit, [dbxContentPit]",
       "className": "DbxContentPitDirective",
       "module": "@dereekb/dbx-web",
-      "description": "Wraps content in a recessed \"pit\" container with optional scrollable overflow and rounded corners.\nUseful for displaying bounded content areas such as lists or previews with a constrained height.\n\nPits round their corners by default. Pass `[rounded]=\"false\"` to square the pit — this applies the\ncommon `.dbx-corners-none` opt-out utility rather than a pit-specific class.",
+      "description": "Wraps content in a recessed \"pit\" container with optional scrollable overflow and rounded corners.\nUseful for displaying bounded content areas such as lists or previews with a constrained height.\n\nPits round their corners by default. Pass `[square]=\"true\"` to square the pit — this applies the\ncommon `.dbx-corners-none` opt-out utility rather than a pit-specific class.\n\nWhen `[scrollable]` is set the pit frame (padding, background, corners) stays fixed and an inner\n`.dbx-content-pit-scrollable-content` wrapper does the scrolling — wrap the body in that element so\nthe frame doesn't shift at the scroll extremes. The resolved max height is published as the\n`--dbx-content-pit-scrollable-max-height` custom property, which the inner wrapper reads.",
       "inputs": [
         {
           "name": "scrollable",
@@ -1274,11 +1274,11 @@
           "required": false
         },
         {
-          "name": "rounded",
+          "name": "square",
           "type": "boolean",
           "description": "",
           "required": false,
-          "default": "true"
+          "default": "false"
         }
       ],
       "outputs": [],

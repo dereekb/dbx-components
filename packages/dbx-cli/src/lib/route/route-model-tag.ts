@@ -14,6 +14,13 @@
  *   promoted to `<collectionName>/<id>` at runtime via the model identity).
  * - `gb/:id/gbe/{authUid}` — alternating literal / placeholder segments (even
  *   count) → `kind: 'key'` (a full FirestoreModelKey for a subcollection model).
+ *   An odd (id) segment may also be a `{const:<id>}` token for a fixed/singleton
+ *   id (e.g. `wk/:uid/wkn/{const:0}`); it is normalized to the bare literal in
+ *   the parsed `keyTemplate` so the runtime emits it verbatim, while a forgotten
+ *   `:` (a bare `note`) still fails as malformed.
+ * - `{flatKey:<param>}` — single token → `kind: 'flatKey'`: the `<param>` URL
+ *   value IS a whole two-way-flat FirestoreModelKey (`r_<id>_cs_<id>_d_<id>`),
+ *   un-flattened at runtime. For pages that pack a full key into one URL segment.
  * - (absent, list tag) → `kind: 'list'`.
  *
  * This module is deliberately runtime-dependency-free (no ts-morph): the same
@@ -24,10 +31,10 @@
  */
 
 /**
- * Whether a route-model entry resolves to a promoted id, a full key, or a
- * keyless list.
+ * Whether a route-model entry resolves to a promoted id, a full key, a
+ * single-param flattened key, or a keyless list.
  */
-export type RouteModelKind = 'id' | 'key' | 'list';
+export type RouteModelKind = 'id' | 'key' | 'flatKey' | 'list';
 
 /**
  * A successfully parsed `@dbxRouteModel*` tag.
@@ -66,6 +73,16 @@ export interface RawRouteModelTag {
 const MODEL_TYPE_RE = /^[a-zA-Z][a-zA-Z0-9]*$/u;
 const LITERAL_SEGMENT_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/u;
 const AUTH_UID_PLACEHOLDER = '{authUid}';
+/**
+ * Matches a `{const:<id>}` fixed-id token (e.g. `{const:0}`), capturing the
+ * literal id. The id obeys the same shape as a literal collection segment.
+ */
+const CONST_TOKEN_RE = /^\{const:([a-zA-Z0-9][a-zA-Z0-9_-]*)\}$/u;
+/**
+ * Matches a `{flatKey:<param>}` token (e.g. `{flatKey:region}`), capturing the
+ * route param name whose URL value holds a whole two-way-flat FirestoreModelKey.
+ */
+const FLAT_KEY_TOKEN_RE = /^\{flatKey:([a-zA-Z_][a-zA-Z0-9_]*)\}$/u;
 
 /**
  * The bare `@dbxRouteModel` tag name (without the leading `@`).
@@ -127,7 +144,7 @@ function parseModelTag(tokens: readonly string[], description: string | undefine
   } else if (MODEL_TYPE_RE.test(tokens[0])) {
     const parsedKey = parseKeyTemplate(tokens[1]);
     if (parsedKey.ok) {
-      result = { ok: true, model: { modelType: tokens[0], kind: parsedKey.kind, keyTemplate: tokens[1], description, routeParams: parsedKey.routeParams } };
+      result = { ok: true, model: { modelType: tokens[0], kind: parsedKey.kind, keyTemplate: parsedKey.keyTemplate, description, routeParams: parsedKey.routeParams } };
     } else {
       result = { ok: false, message: parsedKey.message };
     }
@@ -137,7 +154,7 @@ function parseModelTag(tokens: readonly string[], description: string | undefine
   return result;
 }
 
-type ParseKeyTemplateResult = { readonly ok: true; readonly kind: 'id' | 'key'; readonly routeParams: readonly string[] } | { readonly ok: false; readonly message: string };
+type ParseKeyTemplateResult = { readonly ok: true; readonly kind: 'id' | 'key' | 'flatKey'; readonly keyTemplate: string; readonly routeParams: readonly string[] } | { readonly ok: false; readonly message: string };
 
 function parseKeyTemplate(keyTemplate: string): ParseKeyTemplateResult {
   const segments = keyTemplate.split('/');
@@ -153,18 +170,26 @@ function parseKeyTemplate(keyTemplate: string): ParseKeyTemplateResult {
 }
 
 function parseSingleSegmentKey(segment: string, keyTemplate: string): ParseKeyTemplateResult {
+  const flatKeyParam = flatKeyTokenParam(segment);
   const placeholder = placeholderParam(segment);
   let result: ParseKeyTemplateResult;
-  if (placeholder === undefined) {
-    result = { ok: false, message: `Single-segment key template \`${keyTemplate}\` must be a placeholder (\`:param\` or \`${AUTH_UID_PLACEHOLDER}\`).` };
+  if (flatKeyParam !== undefined) {
+    // The whole key lives in one URL param; the runtime un-flattens it.
+    result = { ok: true, kind: 'flatKey', keyTemplate, routeParams: [flatKeyParam] };
+  } else if (placeholder === undefined) {
+    result = { ok: false, message: `Single-segment key template \`${keyTemplate}\` must be a placeholder (\`:param\` or \`${AUTH_UID_PLACEHOLDER}\`) or a flattened-key token (\`{flatKey:<param>}\`).` };
   } else {
-    result = { ok: true, kind: 'id', routeParams: placeholder.routeParam === undefined ? [] : [placeholder.routeParam] };
+    result = { ok: true, kind: 'id', keyTemplate, routeParams: placeholder.routeParam === undefined ? [] : [placeholder.routeParam] };
   }
   return result;
 }
 
 function parseAlternatingKey(segments: readonly string[], keyTemplate: string): ParseKeyTemplateResult {
   const routeParams: string[] = [];
+  // The normalized template substitutes any `{const:<id>}` token back to its
+  // bare literal so the runtime `resolveFullKey` (which emits non-placeholder
+  // segments verbatim) round-trips without needing to understand the token.
+  const normalizedSegments: string[] = [];
   let message: string | undefined;
   for (const [i, segment] of segments.entries()) {
     if (i % 2 === 0) {
@@ -172,18 +197,24 @@ function parseAlternatingKey(segments: readonly string[], keyTemplate: string): 
         message = `Key template \`${keyTemplate}\` segment \`${segment}\` must be a literal collection name.`;
         break;
       }
+      normalizedSegments.push(segment);
     } else {
       const placeholder = placeholderParam(segment);
-      if (placeholder === undefined) {
-        message = `Key template \`${keyTemplate}\` segment \`${segment}\` must be a placeholder (\`:param\` or \`${AUTH_UID_PLACEHOLDER}\`).`;
+      const constId = constTokenId(segment);
+      if (placeholder !== undefined) {
+        if (placeholder.routeParam !== undefined) {
+          routeParams.push(placeholder.routeParam);
+        }
+        normalizedSegments.push(segment);
+      } else if (constId === undefined) {
+        message = `Key template \`${keyTemplate}\` segment \`${segment}\` must be a placeholder (\`:param\` or \`${AUTH_UID_PLACEHOLDER}\`) or a fixed id (\`{const:<id>}\`).`;
         break;
-      }
-      if (placeholder.routeParam !== undefined) {
-        routeParams.push(placeholder.routeParam);
+      } else {
+        normalizedSegments.push(constId);
       }
     }
   }
-  return message === undefined ? { ok: true, kind: 'key', routeParams } : { ok: false, message };
+  return message === undefined ? { ok: true, kind: 'key', keyTemplate: normalizedSegments.join('/'), routeParams } : { ok: false, message };
 }
 
 // MARK: Segment helpers
@@ -205,4 +236,30 @@ function placeholderParam(segment: string): { readonly routeParam: string | unde
     result = undefined;
   }
   return result;
+}
+
+/**
+ * Extracts the literal id from a `{const:<id>}` fixed-id token, used for a
+ * fixed/singleton subcollection id at an odd key-template position. Returns
+ * `undefined` for any non-`{const:…}` segment.
+ *
+ * @param segment - The single key-template segment to classify.
+ * @returns The captured literal id, or `undefined` when not a const token.
+ */
+function constTokenId(segment: string): string | undefined {
+  const match = CONST_TOKEN_RE.exec(segment);
+  return match === null ? undefined : match[1];
+}
+
+/**
+ * Extracts the route param name from a `{flatKey:<param>}` token, whose URL
+ * value is a whole two-way-flat FirestoreModelKey un-flattened at runtime.
+ * Returns `undefined` for any non-`{flatKey:…}` segment.
+ *
+ * @param segment - The single key-template segment to classify.
+ * @returns The captured route param name, or `undefined` when not a flatKey token.
+ */
+function flatKeyTokenParam(segment: string): string | undefined {
+  const match = FLAT_KEY_TOKEN_RE.exec(segment);
+  return match === null ? undefined : match[1];
 }

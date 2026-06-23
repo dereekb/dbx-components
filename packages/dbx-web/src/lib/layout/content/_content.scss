@@ -33,12 +33,18 @@ $dbx-border-opacity-default: 20%;
   }
 
   /// @dbx-utility content-elevate
-  /// @intent padded content surface lifted with elevation 2 — combines inner padding with a Material elevation shadow
+  /// @intent padded content surface lifted above its surroundings — the mirror of `.dbx-content-pit`. Per Material 3, elevation is communicated primarily with color (the brightest `surface-bright` tone, always lighter than the pit's `surface-dim` in both light and dark) plus a soft lift shadow for protection against the background, so it reads as raised and stays clearly distinct from the recessed pit. Tonal by default — a low-opacity wash of the active dbxColor over `surface-bright`; rounded by default, opt out with `.dbx-corners-none`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash, `--dbx-content-elevate-bg` to replace the background outright, or `--dbx-content-elevate-shadow` to retune/remove (`none`) the shadow.
   /// @role layout
-  /// @see-also dbx-content-border, dbx-content-pit
+  /// @see-also dbx-content-border, dbx-content-pit, dbx-corners-none
   .dbx-content-elevate {
     padding: $content-border-inner-padding;
-    @include theming.elevation(2);
+  }
+
+  // Elevate rounds by default. Kept OUT of the `.dbx-content-elevate` rule and
+  // wrapped in `:where()` so specificity stays at 0 — any single-class utility
+  // (`.dbx-corners-none`, `.dbx-corners-large`, or an app class) overrides it.
+  :where(.dbx-content-elevate) {
+    border-radius: theming.$dbx-content-pit-rounded-border-radius;
   }
 
   /// @dbx-utility content-box
@@ -57,7 +63,7 @@ $dbx-border-opacity-default: 20%;
   }
 
   /// @dbx-utility content-pit
-  /// @intent recessed surface pit — `--mat-sys-surface-container` background with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`
+  /// @intent recessed surface pit ("negative elevation") — a semi-transparent tonal wash of the active dbxColor over `--mat-sys-surface-dim` (the dimmest/greyest M3 surface, the opposite end of the dim/bright pair from `.dbx-content-elevate`) so the lighter surface behind shows through, with a `padding-4` inset, used to visually nest content (e.g. logs, JSON, quoted blocks); rounded by default, opt out with `.dbx-corners-none`
   /// @role layout
   /// @see-also dbx-content-pit-scrollable, dbx-content-border, dbx-content-elevate, dbx-corners-none
   .dbx-content-pit {
@@ -86,14 +92,39 @@ $dbx-border-opacity-default: 20%;
   }
 
   /// @dbx-utility content-pit-scrollable
-  /// @intent scrollable modifier for `.dbx-content-pit` — caps height at `theming.$dbx-content-pit-scrollable-max-height` and forces `overflow-y: scroll` for long inner content
+  /// @intent scrollable modifier for `.dbx-content-pit` — turns the pit into a fixed frame that clips an inner `.dbx-content-pit-scrollable-content` wrapper; the wrapper (not the frame) scrolls, so the padded/cornered surface never shifts. Drive the height via the `[scrollable]` input (which writes `--dbx-content-pit-scrollable-max-height`) or fall back to `theming.$dbx-content-pit-scrollable-max-height`.
   /// @role layout
   /// @parent content-pit
-  /// @see-also dbx-content-pit
+  /// @see-also dbx-content-pit, dbx-content-pit-scrollable-content
   .dbx-content-pit-scrollable {
+    // Fixed frame that clips its scrolling child. Keeping the pit's padding here
+    // and the overflow on the inner wrapper (rather than both on this box) avoids
+    // the Chrome scroll-anchor / overscroll shift that moves the whole pit when
+    // the scroll reaches its top or bottom.
+    overflow: hidden;
+    max-width: 100%;
+  }
+
+  /// @dbx-utility content-pit-scrollable-content
+  /// @intent inner scroll region for a scrollable `.dbx-content-pit` — wrap the pit body in this element when using `[scrollable]`; it owns the height cap + `overflow-y` so the pit frame stays put. The cap reads `--dbx-content-pit-scrollable-max-height` (published per-pit by `dbxContentPit`; `none` when the pit isn't scrollable).
+  /// @role layout
+  /// @parent content-pit-scrollable
+  /// @see-also dbx-content-pit, dbx-content-pit-scrollable
+  .dbx-content-pit .dbx-content-pit-scrollable-content {
     max-height: theming.$dbx-content-pit-scrollable-max-height;
     max-width: 100%;
-    overflow-y: scroll;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    overflow-anchor: none;
+
+    // Negate the pit's vertical padding so the scroll region spans the full pit
+    // height, then re-add it as padding here — the inset now scrolls with the
+    // content so it can scroll flush to the pit's top and bottom edges, instead
+    // of being clipped by a static padding band.
+    margin-top: calc(-1 * #{$pit-padding});
+    margin-bottom: calc(-1 * #{$pit-padding});
+    padding-top: $pit-padding;
+    padding-bottom: $pit-padding;
   }
 
   /// @dbx-utility content-pit-floating-button
@@ -110,7 +141,9 @@ $dbx-border-opacity-default: 20%;
     margin-bottom: $dbx-content-pit-floating-button-margin;
   }
 
-  .dbx-content-pit-scrollable > .dbx-content-pit-floating-button {
+  // In a scrollable pit the floating button lives inside the inner scroll region
+  // so `position: sticky` anchors to it; pin it flush to the top of that region.
+  .dbx-content-pit-scrollable-content > .dbx-content-pit-floating-button {
     top: 0;
   }
 
@@ -225,19 +258,47 @@ $dbx-border-opacity-default: 20%;
     padding-bottom: var(--dbx-scroll-content-bottom-padding, #{$scroll-content-bottom-padding});
   }
 
+  // Recessed surface ("negative elevation"): the pit reads as a tonal step below the surfaces it
+  // nests in. It sits on `surface-dim` — the dimmest/greyest M3 surface tone — so it reads as a
+  // grey recess in light mode and the darkest surface in dark mode, the opposite end of the
+  // dim/bright pair from `.dbx-content-elevate`. (`surface-dim`/`surface-bright` are the one M3
+  // pairing whose light/dark luminance ordering is stable, so the pit is reliably dimmer than the
+  // elevate in both themes — the container ladder flips and can't guarantee that.) Tonal by
+  // default — a low-opacity wash of the active dbxColor (`--dbx-bg-color-current`, primary by
+  // default, driven by an ancestor/host `[dbxColor]`) laid over `surface-dim`, so the pit both
+  // steps down a tone AND picks up the color context, instead of being a flat grey. That dim wash is
+  // then rendered semi-transparent (`--dbx-content-pit-opacity`, default 50%) so the lighter surface
+  // behind it shows through — the pit reads as a soft, airy recess rather than a heavy grey block,
+  // while keeping its grey/dim character so it stays clearly dimmer than the elevate's
+  // `surface-bright`. Override `--dbx-content-pit-tone` (percentage) to tune the wash strength,
+  // `--dbx-content-pit-opacity` to make the recess lighter (lower %, more transparent) or heavier
+  // (higher %), or set `--dbx-content-pit-bg` to replace the background outright (e.g. on a painted
+  // surface where the tonal wash would clash).
   .dbx-content-pit {
-    background: var(--mat-sys-surface-container);
+    background: var(--dbx-content-pit-bg, color-mix(in srgb, color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-pit-tone, 8%), var(--mat-sys-surface-dim)) var(--dbx-content-pit-opacity, 50%), transparent));
   }
 
-  // pits on a [dbxColor]-painted surface wash from the current contrast color instead of the
-  // surface-container token, which would clash with the painted background (e.g. a dark inverse
-  // card). Override --dbx-content-pit-color-tone (percentage) to tune the wash.
-  .dbx-color .dbx-content-pit {
-    background: color-mix(in srgb, #{theming.$dbx-color} var(--dbx-content-pit-color-tone, 11%), transparent);
+  // Elevated surface ("positive elevation"): the tonal mirror of the pit. It sits on
+  // `surface-bright` — the brightest M3 surface tone — so it reads lighter than its surroundings
+  // (and always lighter than the pit's `surface-dim`, in BOTH themes, since dim/bright are the one
+  // M3 pairing with a stable luminance ordering). It also carries a soft M3 shadow: per M3 the lift
+  // is communicated primarily with color, and the subtle shadow is the sanctioned "protection
+  // against a background" that sells the raise. Tonal by default — a low-opacity wash of the active
+  // dbxColor (`--dbx-bg-color-current`, primary by default, driven by an ancestor/host `[dbxColor]`)
+  // over `surface-bright`. Override `--dbx-content-elevate-tone` (percentage) to tune the wash,
+  // `--dbx-content-elevate-bg` to replace the background outright, or `--dbx-content-elevate-shadow`
+  // to retune/remove (`none`) the lift shadow.
+  .dbx-content-elevate {
+    background: var(--dbx-content-elevate-bg, color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-content-elevate-tone, 8%), var(--mat-sys-surface-bright)));
+    box-shadow: var(--dbx-content-elevate-shadow, var(--mat-sys-level1));
   }
 
   .dbx-content-border {
-    border: 3px dashed color-mix(in srgb, var(--dbx-border-color, var(--mat-sys-outline-variant)) var(--dbx-border-opacity, $dbx-border-opacity-default), transparent);
+    // Faint dashed frame — keeps its own low opacity locally while sharing the global
+    // border base color. The computed --dbx-border-color-current re-blends with this
+    // overridden opacity at the point of use.
+    --dbx-border-opacity: #{$dbx-border-opacity-default};
+    border: 3px dashed var(--dbx-border-color-current);
   }
 }
 

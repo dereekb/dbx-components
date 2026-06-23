@@ -37,6 +37,37 @@ describe('parseRouteModelTag', () => {
     }
   });
 
+  it('accepts a {const:<id>} fixed-id token and normalizes it to the bare literal', () => {
+    const result = parseRouteModelTag({ name: 'dbxRouteModel', text: 'workerNote wk/:uid/wkn/{const:0}' });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.model.kind).toBe('key');
+      // The const token is normalized to the bare literal so the runtime emits it verbatim.
+      expect(result.model.keyTemplate).toBe('wk/:uid/wkn/0');
+      expect(result.model.routeParams).toEqual(['uid']);
+    }
+  });
+
+  it('rejects a bare (forgotten-colon) literal at an odd id position', () => {
+    const result = parseRouteModelTag({ name: 'dbxRouteModel', text: 'workerNote wk/:uid/wkn/note' });
+    expect(result.ok).toBe(false);
+  });
+
+  it('parses a {flatKey:<param>} token into a flatKey kind capturing the param', () => {
+    const result = parseRouteModelTag({ name: 'dbxRouteModel', text: 'region {flatKey:region}' });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.model.kind).toBe('flatKey');
+      expect(result.model.keyTemplate).toBe('{flatKey:region}');
+      expect(result.model.routeParams).toEqual(['region']);
+    }
+  });
+
+  it('rejects an empty {flatKey:} token', () => {
+    const result = parseRouteModelTag({ name: 'dbxRouteModel', text: 'region {flatKey:}' });
+    expect(result.ok).toBe(false);
+  });
+
   it('parses a list tag with no key template', () => {
     const result = parseRouteModelTag({ name: 'dbxRouteModelList', text: 'guestbook - Published entries' });
     expect(result).toEqual({ ok: true, model: { modelType: 'guestbook', kind: 'list', description: 'Published entries', routeParams: [] } });

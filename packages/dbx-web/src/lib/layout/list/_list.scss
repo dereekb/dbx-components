@@ -9,16 +9,121 @@ $list-item-padded-min-height: 42px;
     overflow: hidden;
     height: 100%;
 
-    // dbx-list (selection/standard) rows default to an M3 medium corner via the overridable
-    // `--dbx-list-item-border-radius` token; `.dbx-list-square-items` zeroes it and the style-demo
-    // `list-corner-*` levers re-point it. Both shape tokens resolve to the same value, so no
-    // `border-radius` redeclaration is needed; the more specific `.dbx-list-card-items-list` item rule
-    // deliberately wins for card lists.
-    --mat-list-active-indicator-shape: var(--dbx-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
-    --mat-list-list-item-container-shape: var(--dbx-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+    // `--dbx-list-item-border-radius` (medium default) is the "how round" knob for the corners that
+    // actually round — the first row's top, the last row's bottom, and any hovered/selected/activated
+    // row. Interior corners stay square so the rows read as one connected group (see the per-position
+    // and per-state rules below). `.dbx-list-square-items` zeroes the token and the style-demo
+    // `list-corner-*` levers re-point it, so both keep working. The more specific
+    // `.dbx-list-card-items-list` item rules deliberately win for card lists.
+    //
+    // IMPORTANT: do NOT declare `--dbx-list-item-border-radius` here — the style-demo levers set it on
+    // an ancestor, and a local declaration would shadow that inherited value (killing the levers).
+    // Instead resolve it once (with the medium fallback) into a private var the rules below consume;
+    // referencing it here still reads the inherited lever value, so the levers keep control.
+    --dbx-list-item-radius-resolved: var(--dbx-list-item-border-radius, var(--mat-sys-corner-medium, 12px));
+
+    // Hairline gap between rows. Default 1px.
+    --dbx-list-item-spacing: 1px;
+
+    // Selected (selection list) / activated (nav list) row tone. Defaults to the M3 primary container
+    // tone instead of the grey `--mat-sys-secondary-container` Material ships, with an on-tone for the
+    // row's text + icons.
+    --dbx-list-item-selected-color: var(--mat-sys-primary-container);
+    --dbx-list-item-selected-on-color: var(--mat-sys-on-primary-container);
+
+    // Rows are square by default; their corners round per-position / per-state below.
+    --mat-list-active-indicator-shape: 0;
+    --mat-list-list-item-container-shape: 0;
+
+    // Selected (selection-list `--selected`) + activated (nav-list `--activated`) rows pick up the
+    // primary tone rather than the grey default.
+    --mat-list-list-item-selected-container-color: var(--dbx-list-item-selected-color);
+    --mat-list-active-indicator-color: var(--dbx-list-item-selected-color);
+
+    // Soften the hover state-layer so hovering doesn't grey-out as heavily (M3 default is 0.08).
+    --mat-list-list-item-hover-state-layer-opacity: var(--dbx-list-item-hover-state-layer-opacity, 0.04);
 
     .mat-mdc-list-item {
+      // Focus ring follows the row's own (per-position / per-state) shape token.
       --mat-focus-indicator-border-radius: var(--mat-list-list-item-container-shape);
+      // Hairline gap between rows; the trailing row's gap is stripped by the :last-of-type / :only-of-type rules.
+      margin-bottom: var(--dbx-list-item-spacing);
+    }
+
+    // Angular Material's `.mat-mdc-nav-list .mat-mdc-list-item` rule pins `border-radius` to
+    // `--mat-list-active-indicator-shape` (which we set to 0 for square-by-default rows), so it would
+    // otherwise ignore the per-position / per-state `--mat-list-list-item-container-shape` we set below
+    // and leave nav/value-list rows square. Redeclare `border-radius` from the container-shape token at
+    // higher specificity so those rows round too. (Selection-list `<mat-list-option>` rows have no
+    // nav-list ancestor and already honor the container-shape token directly.)
+    .dbx-list-view .mat-mdc-list-item {
+      border-radius: var(--mat-list-list-item-container-shape);
+    }
+
+    // Connected-group corner shaping. The list rows are square by default (token = 0 above); here we
+    // round only the outer corners of the group and any row in an interactive/selected state.
+    //
+    // Selection list (`<mat-selection-list>` > `<mat-list-option>` siblings). NOTE: the element's CSS
+    // class is `.mat-mdc-selection-list` (there is no `.mat-selection-list` class), so match the host
+    // by its element/tag name instead.
+    mat-selection-list > .dbx-list-view-item:first-of-type {
+      --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved) var(--dbx-list-item-radius-resolved) 0 0;
+    }
+
+    mat-selection-list > .dbx-list-view-item:last-of-type {
+      --mat-list-list-item-container-shape: 0 0 var(--dbx-list-item-radius-resolved) var(--dbx-list-item-radius-resolved);
+      margin-bottom: 0;
+    }
+
+    mat-selection-list > .dbx-list-view-item:only-of-type {
+      --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved);
+    }
+
+    // Value/nav list (`dbx-list-view-content-group` > `dbx-anchor` rows). First/last is resolved per
+    // group, so a grouped list reads as one connected block per group; a single-group list rounds the
+    // whole list. Header/footer are `div`s, so `:first/last-of-type` of `dbx-anchor` is correct.
+    .dbx-list-view-group-content > dbx-anchor:first-of-type .dbx-list-view-item {
+      --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved) var(--dbx-list-item-radius-resolved) 0 0;
+    }
+
+    .dbx-list-view-group-content > dbx-anchor:last-of-type .dbx-list-view-item {
+      --mat-list-list-item-container-shape: 0 0 var(--dbx-list-item-radius-resolved) var(--dbx-list-item-radius-resolved);
+    }
+
+    .dbx-list-view-group-content > dbx-anchor:last-of-type .dbx-list-view-item.mat-mdc-list-item {
+      margin-bottom: 0;
+    }
+
+    .dbx-list-view-group-content > dbx-anchor:only-of-type .dbx-list-view-item {
+      --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved);
+    }
+
+    // Any hovered / focused / selected / activated row rounds all four corners (wins over the
+    // per-position rules above via source order at equal specificity, and the :hover/--selected
+    // selectors out-specify the bare position rules).
+    .dbx-list-view .mat-mdc-list-item:hover,
+    .dbx-list-view .mat-mdc-list-item:focus,
+    .dbx-list-view .mat-mdc-list-item.mdc-list-item--selected,
+    .dbx-list-view .mat-mdc-list-item.mdc-list-item--activated,
+    .dbx-list-view .mat-mdc-list-item[aria-selected='true'] {
+      --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved);
+    }
+
+    // Paint the selected / activated row with the primary tone, and set an on-tone `color` so the
+    // injected row content stays legible (Material only recolors its own `.mdc-list-item__primary-text`
+    // / `__start`).
+    //
+    // A multi-select `mat-list-option` conveys selection via `aria-selected` + its checkbox — it does
+    // NOT get the `.mdc-list-item--selected` class (Material only adds that in single-select mode), and
+    // it never paints `--mat-list-list-item-selected-container-color`. So match `[aria-selected='true']`
+    // too and drive the tint through `--mat-list-list-item-container-color` (the row's own background
+    // token), which paints every selected row regardless of the missing class. Nav rows use
+    // `.mdc-list-item--activated`.
+    .dbx-list-view .mat-mdc-list-item.mdc-list-item--selected,
+    .dbx-list-view .mat-mdc-list-item.mdc-list-item--activated,
+    .dbx-list-view .mat-mdc-list-item[aria-selected='true'] {
+      --mat-list-list-item-container-color: var(--dbx-list-item-selected-color);
+      color: var(--dbx-list-item-selected-on-color);
     }
   }
 
@@ -219,6 +324,18 @@ $list-item-padded-min-height: 42px;
       margin-bottom: var(--dbx-list-card-items-list-gap);
     }
 
+    // Keep every card a fully-rounded standalone surface — defeat the connected-list per-position /
+    // per-state corner shaping defined on `.dbx-list` (those rules out-specify the card item rule
+    // above). Re-scoping under `.dbx-list` adds the card-ancestor class so these always win.
+    .dbx-list .dbx-list-view-group-content > dbx-anchor .dbx-list-view-item.mat-mdc-list-item,
+    .dbx-list mat-selection-list > .dbx-list-view-item.mat-mdc-list-item,
+    .dbx-list .dbx-list-view .mat-mdc-list-item:hover,
+    .dbx-list .dbx-list-view .mat-mdc-list-item:focus,
+    .dbx-list .dbx-list-view .mat-mdc-list-item.mdc-list-item--selected,
+    .dbx-list .dbx-list-view .mat-mdc-list-item.mdc-list-item--activated {
+      --mat-list-list-item-container-shape: var(--dbx-list-item-card-border-radius, var(--mat-sys-corner-large, calc(var(--mat-chip-container-shape-radius) * 2)));
+    }
+
     // Strip the trailing card's bottom gap. The nav-list path wraps each
     // item in a `<dbx-anchor>`; the selection-list path renders
     // `<mat-list-option>` siblings directly under `<mat-selection-list>`.
@@ -352,7 +469,7 @@ $list-item-padded-min-height: 42px;
 
   .dbx-list-view-group-header {
     color: var(--mdc-list-list-item-label-text-color);
-    background: var(--mat-sidenav-content-background-color);
+    background: var(--dbx-list-view-group-header-background, var(--mat-sidenav-content-background-color));
 
     .item-details {
       color: var(--mdc-list-list-item-supporting-text-color);

@@ -18,6 +18,7 @@
  */
 
 import type { RouteIssue, RouteNode, RouteTree, RouteTreeNode } from './route-types.js';
+import { stripUrlQueryAndHash } from './url-match.js';
 
 interface MutableTreeNode {
   readonly data: RouteNode;
@@ -224,7 +225,10 @@ function composeFullUrl(node: MutableTreeNode): string | undefined {
   // Join segments and collapse double slashes (root url '/' followed by
   // child '/foo' would otherwise yield '//foo').
   const joined = segments.join('');
-  const collapsed = joined.replaceAll(/\/{2,}/g, '/');
+  // Strip any UIRouter query/hash suffix (e.g. `/:schoolJob?slotIndex`) so the
+  // stored `fullUrl` is path-only — keeping build-time param extraction and the
+  // runtime pathname matcher in agreement.
+  const collapsed = stripUrlQueryAndHash(joined).replaceAll(/\/{2,}/g, '/');
   return collapsed.length === 0 ? '/' : collapsed;
 }
 

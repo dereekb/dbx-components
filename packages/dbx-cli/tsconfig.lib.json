@@ -5,6 +5,6 @@
     "declaration": true,
     "types": ["node"]
   },
-  "exclude": ["test/**", "manifest-extract/**", "firebase-api-manifest/**", "firestore-indexes/**", "generate-firestore-indexes/**", "generate-mcp-manifest/**", "generate-route-manifest/**", "lint-cache/**", "model-size/**", "model-test/**", "validate/**", "**/*.spec.ts", "vite.config.ts", "vite.config.mts", "vitest.config.ts", "vitest.config.mts", "src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.test.tsx", "src/**/*.spec.tsx"],
+  "exclude": ["test/**", "manifest-extract/**", "route/**", "firebase-api-manifest/**", "firestore-indexes/**", "generate-firestore-indexes/**", "generate-mcp-manifest/**", "generate-route-manifest/**", "lint-cache/**", "model-size/**", "model-test/**", "validate/**", "**/*.spec.ts", "vite.config.ts", "vite.config.mts", "vitest.config.ts", "vitest.config.mts", "src/**/*.test.ts", "src/**/*.spec.ts", "src/**/*.test.tsx", "src/**/*.spec.tsx"],
   "include": ["**/*.ts"]
 }

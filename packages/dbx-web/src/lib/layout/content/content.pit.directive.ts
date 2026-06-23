@@ -21,8 +21,13 @@ export type DbxContentPitScrollableHeightSetting = 'small' | 'medium' | 'large';
  * Wraps content in a recessed "pit" container with optional scrollable overflow and rounded corners.
  * Useful for displaying bounded content areas such as lists or previews with a constrained height.
  *
- * Pits round their corners by default. Pass `[rounded]="false"` to square the pit — this applies the
+ * Pits round their corners by default. Pass `[square]="true"` to square the pit — this applies the
  * common `.dbx-corners-none` opt-out utility rather than a pit-specific class.
+ *
+ * When `[scrollable]` is set the pit frame (padding, background, corners) stays fixed and an inner
+ * `.dbx-content-pit-scrollable-content` wrapper does the scrolling — wrap the body in that element so
+ * the frame doesn't shift at the scroll extremes. The resolved max height is published as the
+ * `--dbx-content-pit-scrollable-max-height` custom property, which the inner wrapper reads.
  *
  * @dbxWebComponent
  * @dbxWebSlug content-pit
@@ -43,14 +48,14 @@ export type DbxContentPitScrollableHeightSetting = 'small' | 'medium' | 'large';
   host: {
     class: 'd-block dbx-content-pit',
     '[class.dbx-content-pit-scrollable]': 'scrollableHeightSignal() != null',
-    '[class.dbx-corners-none]': '!rounded()',
-    '[style.max-height]': 'scrollableHeightSignal()'
+    '[class.dbx-corners-none]': 'square()',
+    '[style.--dbx-content-pit-scrollable-max-height]': 'scrollableMaxHeightSignal()'
   },
   standalone: true
 })
 export class DbxContentPitDirective {
   readonly scrollable = input<Maybe<DbxContentPitScrollableInput>>();
-  readonly rounded = input<boolean>(true);
+  readonly square = input<boolean>(false);
 
   readonly scrollableHeightSignal = computed(() => {
     let scrollable = this.scrollable();
@@ -85,4 +90,9 @@ export class DbxContentPitDirective {
 
     return scrollableHeight ?? null;
   });
+
+  // The pit always publishes its own scroll cap so the `.dbx-content-pit-scrollable-content`
+  // wrapper reads it directly rather than inheriting the global `--dbx-content-pit-scrollable-max-height`
+  // default (140px) from the theme root. `none` when not scrollable lets the wrapper grow freely.
+  readonly scrollableMaxHeightSignal = computed<PixelsString | 'none'>(() => this.scrollableHeightSignal() ?? 'none');
 }

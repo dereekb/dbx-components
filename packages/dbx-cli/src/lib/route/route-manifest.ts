@@ -26,7 +26,7 @@ import { extractUrlParamKeys } from './url-match.js';
  * manifests whose `version` does not match. Mirror in firebase-server/mcp's
  * `ROUTE_MANIFEST_VERSION` — bump both together.
  */
-export const ROUTE_MANIFEST_VERSION = 1 as const;
+export const ROUTE_MANIFEST_VERSION = 2 as const;
 
 /**
  * One model an app page renders, after tag parsing + inheritance flattening.

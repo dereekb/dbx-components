@@ -5,7 +5,9 @@
     </doc-feature-example>
     <doc-feature-example header="QuizStore State" hint="Live QuizStore state displayed via JsonPipe.">
       <dbx-content-pit [scrollable]="'large'">
-        <pre>{{ storeStateSignal() | json }}</pre>
+        <div class="dbx-content-pit-scrollable-content">
+          <pre>{{ storeStateSignal() | json }}</pre>
+        </div>
       </dbx-content-pit>
     </doc-feature-example>
   </doc-feature-layout>

@@ -18,6 +18,9 @@
             "command": "npx nx run dbx-cli-manifest-extract:build-base"
           },
           {
+            "command": "npx nx run dbx-cli-route:build-base"
+          },
+          {
             "command": "npx nx run dbx-cli-firebase-api-manifest:build-base"
           },
           {
@@ -80,6 +83,10 @@
           {
             "description": "run dbx-cli-manifest-extract tests",
             "command": "npx nx test dbx-cli-manifest-extract"
+          },
+          {
+            "description": "run dbx-cli-route tests",
+            "command": "npx nx test dbx-cli-route"
           },
           {
             "description": "run dbx-cli-test tests",

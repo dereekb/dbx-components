@@ -147,24 +147,32 @@ $calendar-content-border-consideration: 2px;
     }
 
     // Calendar color tokens (theme-aware via --mat-sys-* / --dbx-* CSS variables)
+    //
+    // Tone-based colors resolve from a public `--dbx-calendar-<name>-color` (hue)
+    // + `--dbx-calendar-<name>-tone` (opacity level) pair so consumers can re-tint or
+    // soften a state independently without redefining the full color-mix() expression.
     #{calendar.$cal-event-icon-color-var}: var(--dbx-primary-color);
     #{calendar.$cal-event-color-primary-var}: var(--mat-sys-on-primary-container);
     #{calendar.$cal-event-color-secondary-var}: var(--mat-sys-primary-container);
-    #{calendar.$cal-border-color-var}: var(--mat-sys-outline);
+    // Defaults to the shared divider at full strength so calendar cell borders match
+    // dbx-table-view / dbx-two-column. --dbx-divider-color is already semi-transparent, so
+    // applying an extra tone here would double-fade it; lower --dbx-calendar-border-tone
+    // (or this whole calendar's --dbx-divider-color) to soften the dense grid if desired.
+    #{calendar.$cal-border-color-var}: color-mix(in srgb, var(--dbx-calendar-border-color, var(--dbx-divider-color)) var(--dbx-calendar-border-tone, 100%), transparent);
     #{calendar.$cal-bg-primary-var}: var(--mat-sys-background);
-    #{calendar.$cal-bg-secondary-var}: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
-    #{calendar.$cal-bg-hover-var}: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
-    #{calendar.$cal-bg-active-var}: color-mix(in srgb, var(--dbx-accent-color) 30%, transparent);
-    #{calendar.$cal-bg-selected-var}: color-mix(in srgb, var(--dbx-primary-color) 60%, transparent);
+    #{calendar.$cal-bg-secondary-var}: color-mix(in srgb, var(--dbx-calendar-secondary-color, var(--mat-sys-on-surface)) var(--dbx-calendar-secondary-tone, 4%), transparent);
+    #{calendar.$cal-bg-hover-var}: color-mix(in srgb, var(--dbx-calendar-hover-color, var(--mat-sys-on-surface)) var(--dbx-calendar-hover-tone, 4%), transparent);
+    #{calendar.$cal-bg-active-var}: color-mix(in srgb, var(--dbx-calendar-active-day-color, var(--dbx-primary-color)) var(--dbx-calendar-active-day-tone, 30%), transparent);
+    #{calendar.$cal-bg-selected-var}: color-mix(in srgb, var(--dbx-calendar-selected-day-color, var(--dbx-primary-color)) var(--dbx-calendar-selected-day-tone, 60%), transparent);
     #{calendar.$cal-bg-disabled-var}: var(--mat-sys-surface);
     #{calendar.$cal-bg-not-applicable-var}: var(--mat-sys-surface);
-    #{calendar.$cal-bg-highlight-var}: color-mix(in srgb, var(--dbx-accent-color) 30%, transparent);
-    #{calendar.$cal-today-bg-var}: color-mix(in srgb, var(--mat-sys-on-surface) 4%, transparent);
+    #{calendar.$cal-bg-highlight-var}: color-mix(in srgb, var(--dbx-calendar-highlight-color, var(--dbx-accent-color)) var(--dbx-calendar-highlight-tone, 30%), transparent);
+    #{calendar.$cal-today-bg-var}: color-mix(in srgb, var(--dbx-calendar-today-color, var(--mat-sys-on-surface)) var(--dbx-calendar-today-tone, 4%), transparent);
     #{calendar.$cal-weekend-color-var}: var(--mat-sys-on-surface);
     #{calendar.$cal-badge-color-var}: var(--dbx-accent-color);
     #{calendar.$cal-selected-var}: var(--mat-sys-on-primary);
     #{calendar.$cal-disabled-var}: var(--dbx-warn-color);
-    #{calendar.$cal-not-applicable-var}: color-mix(in srgb, var(--mat-sys-on-surface) 30%, transparent);
+    #{calendar.$cal-not-applicable-var}: color-mix(in srgb, var(--dbx-calendar-not-applicable-color, var(--mat-sys-on-surface)) var(--dbx-calendar-not-applicable-tone, 30%), transparent);
     #{calendar.$cal-current-time-marker-color-var}: var(--dbx-accent-color);
     #{calendar.$cal-white-var}: var(--mat-sys-surface);
     #{calendar.$cal-gray-var}: var(--mat-sys-on-surface-variant);
