@@ -165,6 +165,17 @@ $active-background-transparent-color: 0.93;
       .dbx-anchor-list.mat-mdc-nav-list {
         --dbx-sidenav-active-accent: color-mix(in srgb, var(--dbx-accent-color) 65%, var(--mat-sys-surface));
 
+        // The sidenav opts out of the default solid list tone (which anchor lists now inherit from
+        // `--dbx-list-item-active-color`) in favor of its subtle accent overlay + side-border treatment.
+        // Define the anchor-list active/selected override tokens here so the base `_anchorlist.scss` rows
+        // pick up the accent tint, and pin the on-color to the drawer text color so the active label is
+        // not recolored to the list's on-primary-container tone. The explicit root/child background +
+        // border rules below still apply on top (they distinguish root vs child and add the indicator).
+        --dbx-anchor-list-item-active-color: var(--dbx-sidenav-active-item-background, color-mix(in srgb, var(--dbx-sidenav-active-accent) 12%, transparent));
+        --dbx-anchor-list-item-active-on-color: var(--dbx-sidenav-text-color, var(--dbx-color-current, var(--mat-sys-on-surface)));
+        --dbx-anchor-list-item-selected-color: var(--dbx-anchor-list-item-active-color);
+        --dbx-anchor-list-item-selected-on-color: var(--dbx-anchor-list-item-active-on-color);
+
         .dbx-anchor-active {
           .mat-mdc-list-item {
             .mat-mdc-list-item-icon {
