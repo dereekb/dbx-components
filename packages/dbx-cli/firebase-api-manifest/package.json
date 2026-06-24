@@ -1,14 +1,14 @@
 {
   "name": "@dereekb/dbx-cli-firebase-api-manifest",
-  "version": "13.21.0",
+  "version": "13.22.0",
   "private": true,
   "type": "module",
   "devDependencies": {
     "ts-morph": "^21.0.0"
   },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "13.21.0",
-    "@dereekb/util": "13.21.0",
+    "@dereekb/dbx-cli": "13.22.0",
+    "@dereekb/util": "13.22.0",
     "prettier": "3.8.3"
   }
 }
