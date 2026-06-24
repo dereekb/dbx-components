@@ -64,9 +64,9 @@
       "intents": [
         "form repeat array container shape"
       ],
-      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-large)`.",
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-corners-border-radius, var(--mat-sys-corner-large))`.",
       "defaults": {
-        "light": "var(--mat-sys-corner-large)"
+        "light": "var(--dbx-corners-border-radius, var(--mat-sys-corner-large))"
       },
       "componentScope": "array"
     },
@@ -90,9 +90,9 @@
       "intents": [
         "form repeat array field container shape"
       ],
-      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-medium)`.",
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-corners-border-radius, var(--mat-sys-corner-medium))`.",
       "defaults": {
-        "light": "var(--mat-sys-corner-medium)"
+        "light": "var(--dbx-corners-border-radius, var(--mat-sys-corner-medium))"
       },
       "componentScope": "array"
     },
@@ -287,9 +287,9 @@
       "intents": [
         "texteditor field container shape"
       ],
-      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-large)`.",
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-corners-border-radius, var(--mat-sys-corner-large))`.",
       "defaults": {
-        "light": "var(--mat-sys-corner-large)"
+        "light": "var(--dbx-corners-border-radius, var(--mat-sys-corner-large))"
       },
       "componentScope": "texteditor"
     },
