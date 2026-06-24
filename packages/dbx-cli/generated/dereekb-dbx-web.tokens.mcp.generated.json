@@ -1969,6 +1969,45 @@
       "componentScope": "prompt"
     },
     {
+      "cssVariable": "--dbx-prompt-box-elevate-bg",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "prompt box elevate bg"
+      ],
+      "description": "Component-scoped override point (`prompt`) read in `packages/dbx-web/src/lib/interaction/prompt/_prompt.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-prompt-box-elevate-tone, 8%), var(--mat-sys-surface-bright))`.",
+      "defaults": {
+        "light": "color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-prompt-box-elevate-tone, 8%), var(--mat-sys-surface-bright))"
+      },
+      "componentScope": "prompt"
+    },
+    {
+      "cssVariable": "--dbx-prompt-box-elevate-shadow",
+      "source": "dbx-web",
+      "role": "shadow",
+      "intents": [
+        "prompt box elevate shadow"
+      ],
+      "description": "Component-scoped override point (`prompt`) read in `packages/dbx-web/src/lib/interaction/prompt/_prompt.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-level2)`.",
+      "defaults": {
+        "light": "var(--mat-sys-level2)"
+      },
+      "componentScope": "prompt"
+    },
+    {
+      "cssVariable": "--dbx-prompt-box-elevate-tone",
+      "source": "dbx-web",
+      "role": "misc",
+      "intents": [
+        "prompt box elevate tone"
+      ],
+      "description": "Component-scoped override point (`prompt`) read in `packages/dbx-web/src/lib/interaction/prompt/_prompt.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8%`.",
+      "defaults": {
+        "light": "8%"
+      },
+      "componentScope": "prompt"
+    },
+    {
       "cssVariable": "--dbx-prompt-box-padding",
       "source": "dbx-web",
       "role": "spacing",
@@ -2546,6 +2585,19 @@
       "defaults": {
         "light": "$initial-top-banner-height"
       }
+    },
+    {
+      "cssVariable": "--dbx-two-column-border-color",
+      "source": "dbx-web",
+      "role": "color",
+      "intents": [
+        "two column border color"
+      ],
+      "description": "Component-scoped override point (`column`) read in `packages/dbx-web/src/lib/layout/column/_column.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-divider-color)`.",
+      "defaults": {
+        "light": "var(--dbx-divider-color)"
+      },
+      "componentScope": "column"
     },
     {
       "cssVariable": "--dbx-two-column-border-top",

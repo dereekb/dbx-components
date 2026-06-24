@@ -2,15 +2,15 @@
   <ng-template cdkDragPlaceholder>
     <div class="dbx-form-repeat-array-drag-placeholder"></div>
   </ng-template>
+  @if (showIndexChipSignal()) {
+    <dbx-chip [display]="indexChipDisplaySignal()">{{ arrayContext.index() + 1 }}</dbx-chip>
+  }
   <div class="dbx-content-navbar dbx-form-repeat-array-bar dbx-flex-bar">
     @if (!disableRearrangeSignal()) {
       <button mat-icon-button type="button" cdkDragHandle class="dbx-form-repeat-array-drag-button" [disabled]="isDisabled()" aria-label="Drag to reorder">
         <mat-icon>drag_handle</mat-icon>
       </button>
       <dbx-button-spacer></dbx-button-spacer>
-    }
-    @if (showIndexChipSignal()) {
-      <dbx-chip [display]="indexChipDisplaySignal()">{{ arrayContext.index() + 1 }}</dbx-chip>
     }
     <span class="dbx-form-repeat-array-label">{{ labelSignal() }}</span>
     <span class="spacer"></span>

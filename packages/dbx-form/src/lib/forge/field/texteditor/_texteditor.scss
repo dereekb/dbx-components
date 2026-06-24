@@ -19,15 +19,32 @@
 
   .dbx-texteditor-field {
     .NgxEditor {
-      background: transparent;
+      // Drive ngx-editor's own background token to the M3 system background so the editing "paper"
+      // tracks the theme (and dark mode) instead of ngx-editor's default white.
+      --ngx-editor-background-color: var(--mat-sys-background);
+      padding-top: var(--dbx-texteditor-field-padding-top, var(--dbx-padding-3));
       color: var(--mat-sys-on-surface);
-      border-color: var(--mat-sys-outline);
+      border-color: var(--dbx-texteditor-field-bg, color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-texteditor-field-tone, 8%), color-mix(in srgb, var(--mat-sys-surface-dim) var(--dbx-texteditor-field-dim, 45%), var(--mat-sys-surface))));
+      border-radius: var(--dbx-texteditor-field-container-shape, var(--mat-sys-corner-large));
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
     }
 
     .NgxEditor__MenuBar {
-      background: var(--mat-sys-background);
+      // The formatting toolbar is the filled footer of the sunken field "card": it carries the same
+      // dim tonal --dbx-texteditor-field surface as the editor body above (a wash of the active
+      // dbxColor over a lightened surface-dim), rounded only on its bottom corners so the two join
+      // into one container, plus a soft --mat-sys-level1 lift shadow (replacing the former Material
+      // elevation(2) shadow). Tuned via the shared --dbx-texteditor-field-* tokens.
+
       color: var(--mat-sys-on-surface);
-      @include theming.elevation(2);
+
+      padding: var(--dbx-texteditor-field-padding, var(--dbx-padding-2));
+      border-radius: var(--dbx-texteditor-field-container-shape, var(--mat-sys-corner-large));
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      background: var(--dbx-texteditor-field-bg, color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-texteditor-field-tone, 8%), color-mix(in srgb, var(--mat-sys-surface-dim) var(--dbx-texteditor-field-dim, 45%), var(--mat-sys-surface))));
+      box-shadow: var(--dbx-texteditor-field-shadow, var(--mat-sys-level1));
 
       svg {
         fill: var(--mat-sys-on-surface);

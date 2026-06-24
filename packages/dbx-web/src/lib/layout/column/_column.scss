@@ -9,7 +9,7 @@ $two-columns-right-padding-size: var(--dbx-padding-2);
 // MARK: Mixin
 @mixin core() {
   /// @dbx-utility two-column
-  /// @intent two-column page layout — fixed-width left column with elevated right content area
+  /// @intent two-column page layout — fixed-width left column divided from the right content area by a border
   /// @role layout
   .dbx-two-column {
     height: 100%;
@@ -29,13 +29,18 @@ $two-columns-right-padding-size: var(--dbx-padding-2);
     }
 
     .left-column {
-      @include theming.elevation(1);
+      /// Color of the right boundary separating the fixed left column from the right content
+      /// area (replaces the former elevation shadow). Column-specific override point; defaults
+      /// to the shared --dbx-divider-color. Retint just this boundary by overriding it, or set
+      /// it to `transparent` to hide the divider while keeping the layout box.
+      /// @role color
+      /// @intent two column divider color, two column border color, left column separator color
+      border-right: 1px solid var(--dbx-two-column-border-color, var(--dbx-divider-color));
 
       width: $two-column-left-width;
       flex: 0 0 auto;
 
       overflow: auto;
-      // background: red;
     }
 
     .right-column {
