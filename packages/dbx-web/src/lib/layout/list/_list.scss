@@ -31,6 +31,14 @@ $list-item-padded-min-height: 42px;
     --dbx-list-item-selected-color: var(--mat-sys-primary-container);
     --dbx-list-item-selected-on-color: var(--mat-sys-on-primary-container);
 
+    // Active route (nav/value list `dbx-anchor-active`) row tone. A `dbx-anchor` row marks the active
+    // route with its own `dbx-anchor-active` class rather than Material's `.mdc-list-item--activated`, so
+    // it carries its own tone token here. Defaults to the selected/activated tone above (so an active
+    // route reads the same as a selected row out of the box), but can be retargeted independently — e.g.
+    // set `--dbx-list-item-active-color` on the list host — to give active routes a distinct color.
+    --dbx-list-item-active-color: var(--dbx-list-item-selected-color);
+    --dbx-list-item-active-on-color: var(--dbx-list-item-selected-on-color);
+
     // Rows are square by default; their corners round per-position / per-state below.
     --mat-list-active-indicator-shape: 0;
     --mat-list-list-item-container-shape: 0;
@@ -98,14 +106,22 @@ $list-item-padded-min-height: 42px;
       --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved);
     }
 
-    // Any hovered / focused / selected / activated row rounds all four corners (wins over the
-    // per-position rules above via source order at equal specificity, and the :hover/--selected
-    // selectors out-specify the bare position rules).
-    .dbx-list-view .mat-mdc-list-item:hover,
-    .dbx-list-view .mat-mdc-list-item:focus,
-    .dbx-list-view .mat-mdc-list-item.mdc-list-item--selected,
-    .dbx-list-view .mat-mdc-list-item.mdc-list-item--activated,
-    .dbx-list-view .mat-mdc-list-item[aria-selected='true'] {
+    // Any hovered / focused / selected / activated / active-route row rounds all four corners. These must
+    // out-specify the per-position first/last/only rules above — and the value-list ones
+    // (`.dbx-list-view-group-content > dbx-anchor:first-of-type .dbx-list-view-item`) carry an element +
+    // pseudo-class, landing at (0,3,1). A bare `.dbx-list-view .mat-mdc-list-item` state selector is only
+    // (0,3,0), so it would LOSE and leave the outer corner square — e.g. the active first row keeping a
+    // square bottom. Qualifying each row with `.dbx-list-view-item` raises these to (0,4,0) so the
+    // all-corners shape wins (every `.dbx-list-view` row — value-list `<a mat-list-item>` and selection
+    // `<mat-list-option>` alike — carries that class). `.dbx-anchor-active` covers nav/value-list rows
+    // whose active route is signaled by `dbx-anchor` — it never adds Material's `.mdc-list-item--activated`,
+    // so without this the active (un-hovered) row would otherwise fall back to the square per-position shape.
+    .dbx-list-view .dbx-list-view-item.mat-mdc-list-item:hover,
+    .dbx-list-view .dbx-list-view-item.mat-mdc-list-item:focus,
+    .dbx-list-view .dbx-anchor-active .dbx-list-view-item.mat-mdc-list-item,
+    .dbx-list-view .dbx-list-view-item.mat-mdc-list-item.mdc-list-item--selected,
+    .dbx-list-view .dbx-list-view-item.mat-mdc-list-item.mdc-list-item--activated,
+    .dbx-list-view .dbx-list-view-item.mat-mdc-list-item[aria-selected='true'] {
       --mat-list-list-item-container-shape: var(--dbx-list-item-radius-resolved);
     }
 
@@ -125,6 +141,12 @@ $list-item-padded-min-height: 42px;
       --mat-list-list-item-container-color: var(--dbx-list-item-selected-color);
       color: var(--dbx-list-item-selected-on-color);
     }
+
+    // Active-route row tone (a `dbx-anchor` row whose route is active) is painted in `_anchorlist.scss`,
+    // which targets both `.dbx-anchor-list` and `.dbx-list-view` nav lists via the
+    // `--dbx-anchor-list-item-active-color` token. That token defaults to `--dbx-list-item-active-color`
+    // (defined above), so a value list's active route matches its selected tone out of the box; the
+    // sidenav overrides the token for its accent treatment. Only the corner shape is handled here (above).
   }
 
   // dbx-anchor-list (nav) rows default to an M3 medium corner via their OWN
@@ -140,13 +162,18 @@ $list-item-padded-min-height: 42px;
     }
   }
 
-  // The sidenav anchor list rows sit flush against the left screen edge, so only the RIGHT corners round —
-  // the radius is composed into a `0 r r 0` shorthand (top-left / top-right / bottom-right / bottom-left),
+  // Sidenav anchor-list rows sit flush against the left drawer edge, so only the RIGHT corners round — the
+  // radius is composed into a `0 r r 0` shorthand (top-left / top-right / bottom-right / bottom-left),
   // leaving the left corners square. The "how round" radius defaults to the regular anchor-list radius
   // (`--dbx-anchor-list-item-border-radius`) so the sidenav tracks the `anchor-list-corner-*` lever by default,
-  // but `--dbx-sidenav-anchor-list-item-border-radius` overrides it for sidenav-specific tuning. Higher
-  // specificity than `.dbx-anchor-list`, so it wins for the inner nav-list inside a sidenav host.
-  .dbx-sidenav-anchor-list .dbx-anchor-list {
+  // but `--dbx-sidenav-anchor-list-item-border-radius` overrides it for sidenav-specific tuning.
+  //
+  // Scoped to EVERY anchor list inside a sidenav drawer (`.dbx-sidenav .mat-drawer .dbx-anchor-list`), not
+  // just the `[anchors]` list (`.dbx-sidenav-anchor-list`): a separate `<dbx-anchor-list>` dropped into a
+  // `[top]` / `[bottom]` content slot must round the same way, otherwise it falls back to the generic
+  // all-corners `.dbx-anchor-list` radius and reads as floating full-radius pills beside the flush main
+  // rows. Higher specificity than `.dbx-anchor-list`, so it wins for any inner nav-list inside a sidenav.
+  .dbx-sidenav .mat-drawer .dbx-anchor-list {
     --mat-list-active-indicator-shape: 0 var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) 0;
     --mat-list-list-item-container-shape: 0 var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) var(--dbx-sidenav-anchor-list-item-border-radius, var(--dbx-anchor-list-item-border-radius, var(--mat-sys-corner-medium, 12px))) 0;
   }
@@ -463,8 +490,48 @@ $list-item-padded-min-height: 42px;
     position: unset; // do not touch the divider in dbx-list
   }
 
+  // Accordion list view renders as a card with a rounded TOP. The rounded frame lives on the scroll
+  // VIEWPORT (`.dbx-list-content`) so it clips the scrolling content — including panels that scroll BEHIND a
+  // sticky group header — which stops them bleeding through the rounded corner. (A rounded ancestor can't
+  // clip a composited `position: sticky` element in Chrome, so each group header additionally rounds its OWN
+  // top corners below.) Only the top corners are rounded — the bottom stays square so the last panel's
+  // elevation shadow isn't clipped by a rounded bottom edge. Scoped with `:has()` so only accordion lists
+  // get framed.
+  .dbx-list-content:has(.dbx-list-accordion-view) {
+    border-top-left-radius: var(--dbx-list-accordion-view-border-radius, var(--mat-sys-corner-medium, 12px));
+    border-top-right-radius: var(--dbx-list-accordion-view-border-radius, var(--mat-sys-corner-medium, 12px));
+  }
+
   .dbx-list-accordion-view {
+    // Breathing-room margin (`--dbx-list-accordion-view-margin`, default `--dbx-padding-1` / 2px) so the
+    // card sits inset from its container and its walls stay visible — flush against the container the card's
+    // edges read as cut off. `padding-bottom` leaves room below the last panel so its elevation shadow shows
+    // instead of being clipped at the scroll edge.
+    display: block;
+    margin: var(--dbx-list-accordion-view-margin, var(--dbx-padding-1));
+    padding-bottom: var(--dbx-list-accordion-view-bottom-space, var(--dbx-padding-2));
+    --dbx-list-accordion-view-radius-resolved: var(--dbx-list-accordion-view-border-radius, var(--mat-sys-corner-medium, 12px));
     --mat-expansion-container-shape: 0px;
+
+    // Round the top corners of the first entry (the very top of the card) AND of every group header. Group
+    // headers are sticky — when one pins at the rounded top corner, the scroll frame's clip would otherwise
+    // shave that header's square corner (and its border) flat, so each header rounds its OWN top corners to
+    // follow the curve. `overflow: hidden` clips the header's content/border to those corners.
+    mat-accordion > :first-child,
+    .dbx-list-view-group-header {
+      border-top-left-radius: var(--dbx-list-accordion-view-radius-resolved);
+      border-top-right-radius: var(--dbx-list-accordion-view-radius-resolved);
+      overflow: hidden;
+    }
+
+    // Box every group header with the same hairline the two-column view uses (`1px solid
+    // var(--dbx-divider-color)`) rather than the heavier/darker `--mat-divider-*`; the shorthand overrides
+    // the bottom divider on the base `.dbx-list-view-group-header` rule so all four sides match. The `-1px`
+    // margin pulls the header out so its border overlaps the adjacent panel edges (no doubled hairline / gap).
+    .dbx-list-view-group-header {
+      margin: -1px;
+      border: 1px solid var(--dbx-divider-color);
+    }
   }
 
   .dbx-list-view-group-header {

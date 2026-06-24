@@ -90,5 +90,20 @@
         </ng-container>
       </dbx-two-column>
     </doc-feature-example>
+    <doc-feature-example
+      header="dbxTwoColumnSref with a dbx-list value list (hellosubs configuration)"
+      hint="Same routes as above, but the left column is a dbx-list value list (.dbx-list-view) instead of a dbx-anchor-list. Each row is made a segue-ref anchor via dbxListItemAnchorModifier — exactly how the hellosubs lists are configured. Because the active-route row tone in _list.scss is scoped to '.dbx-list-view .dbx-anchor-active', the active row highlights here, whereas the dbx-anchor-list example above does not. Click an entry above or here to see the active row tint.">
+      <dbx-two-column dbxTwoColumnContext [dbxTwoColumnSref]="twoRef" dbxTwoColumnSrefShowRight style="height: 200px">
+        <dbx-two-block left style="height: 100%; background: red">
+          <dbx-two-column-head top>
+            <span>Click Entry</span>
+          </dbx-two-column-head>
+          <doc-two-column-sref-list [state]="childListState$" dbxListItemModifier [dbxListItemAnchorModifier]="makeChildAnchor"></doc-two-column-sref-list>
+        </dbx-two-block>
+        <dbx-two-column-right right>
+          <p class="dbx-p3">Right content. The active route is reflected as the highlighted row in the list at left.</p>
+        </dbx-two-column-right>
+      </dbx-two-column>
+    </doc-feature-example>
   </doc-feature-layout>
 </dbx-content-container>

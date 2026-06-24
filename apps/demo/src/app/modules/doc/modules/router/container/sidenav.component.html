@@ -15,6 +15,32 @@
       </div>
     </doc-feature-example>
 
+    <!--
+      Mixed Element Types: a sidenav is typically assembled from differently-created nav elements, and the
+      sidenav renders them all with one consistent treatment by default:
+        1. Root anchor in [anchors]            — "Pay Stubs" (dbx-anchor-list-root)
+        2. Nested child anchor in [anchors]    — "Job Requests / Timesheets / Requirements" under the
+                                                 "My Work" parent (dbx-anchor-list-child)
+        3. Separate <dbx-anchor-list> in the   — "Admin / Settings / Logout" (placed in the [bottom] slot,
+           [bottom] content slot                 independent of the [anchors] input)
+      All three round only the right corners flush against the edge, nested children drop the depth-shade
+      they'd otherwise carry, and child content aligns with root rows — so they read as one nav rather than
+      a mix of flush rows and floating pills. Every anchor targets this page, so all rows render as the
+      active route, keeping the accent treatment. No modifier class is needed — this is the default.
+    -->
+    <doc-feature-example header="Mixed Element Types" hint="A sidenav renders all three element-creation methods — root anchors, nested child anchors, and a separate dbx-anchor-list in the bottom slot — with one consistent treatment by default: every row is flush-left with matching right-only corners, nested children drop their depth-shade, and content aligns. Every anchor targets this page so all render active.">
+      <div class="dbx-sidenav-demo-container" style="height: 520px">
+        <dbx-sidenav [anchors]="mixedAnchors" dbxColor="primary">
+          <div top>
+            <h4 class="dbx-sidenav-demo-header">Nav</h4>
+          </div>
+          <div bottom>
+            <dbx-anchor-list [anchors]="bottomAnchors"></dbx-anchor-list>
+          </div>
+        </dbx-sidenav>
+      </div>
+    </doc-feature-example>
+
     <!-- Right (End) Position: position="end" places the drawer on the right side. -->
     <doc-feature-example header="dbx-sidenav (right)" hint="Right-aligned sidenav using position='end'.">
       <div class="dbx-sidenav-demo-container">

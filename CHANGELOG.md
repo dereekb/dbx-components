@@ -1,3 +1,16 @@
+# [13.21.0](https://github.com/dereekb/dbx-components/compare/v13.20.0-dev...v13.21.0) (2026-06-24)
+
+
+### Bug Fixes
+
+- **dbx-web:** accordion list view rounded card + sticky-safe headers ([8194bae0](https://github.com/dereekb/dbx-components/commit/8194bae05aa348aaf2c7e8d90e71776bd61ecdeb))
+- **dbx-web:** active list/anchor-list rows use shared selected tone ([7fdc291e](https://github.com/dereekb/dbx-components/commit/7fdc291eb80671c065be38b8a0567af9bbb028fb))
+
+
+### Features
+
+- **dbx-web:** unify sidenav nav-item presentation by default ([dfd9fea3](https://github.com/dereekb/dbx-components/commit/dfd9fea3c4ec2dbe666674c28f439942f114c06a))
+
 # [13.20.0](https://github.com/dereekb/dbx-components/compare/v13.19.0-dev...v13.20.0) (2026-06-23)
 
 

@@ -92,6 +92,26 @@ export const DOC_LAYOUT_TWO_CHILD_STATE: Ng2StateDeclaration = {
   component: DocLayoutTwoColumnsChildComponent
 };
 
+// Sibling child states used by the value-list (hellosubs configuration) example on doc.layout.two.
+// Each is a distinct leaf route so exactly one list row is the active route at a time.
+export const DOC_LAYOUT_TWO_ITEM_ONE_STATE: Ng2StateDeclaration = {
+  url: '/item-one',
+  name: 'doc.layout.two.itemOne',
+  component: DocLayoutTwoColumnsChildComponent
+};
+
+export const DOC_LAYOUT_TWO_ITEM_TWO_STATE: Ng2StateDeclaration = {
+  url: '/item-two',
+  name: 'doc.layout.two.itemTwo',
+  component: DocLayoutTwoColumnsChildComponent
+};
+
+export const DOC_LAYOUT_TWO_ITEM_THREE_STATE: Ng2StateDeclaration = {
+  url: '/item-three',
+  name: 'doc.layout.two.itemThree',
+  component: DocLayoutTwoColumnsChildComponent
+};
+
 export const STATES: Ng2StateDeclaration[] = [
   //
   LAYOUT_STATE,
@@ -106,5 +126,8 @@ export const STATES: Ng2StateDeclaration[] = [
   DOC_LAYOUT_LIST_STATE,
   DOC_LAYOUT_TWO_BLOCK_STATE,
   DOC_LAYOUT_TWO_STATE,
-  DOC_LAYOUT_TWO_CHILD_STATE
+  DOC_LAYOUT_TWO_CHILD_STATE,
+  DOC_LAYOUT_TWO_ITEM_ONE_STATE,
+  DOC_LAYOUT_TWO_ITEM_TWO_STATE,
+  DOC_LAYOUT_TWO_ITEM_THREE_STATE
 ];
