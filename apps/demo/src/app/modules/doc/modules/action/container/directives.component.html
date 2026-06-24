@@ -45,6 +45,8 @@
 
     <doc-feature-example header="dbxActionTriggered" hint="Structural directive that shows template content when the action is triggered.">
       <p>dbxActionTriggered can be used just like ngIf.</p>
+      <!-- This example intentionally omits a value source so the action stays in the TRIGGERED state to demonstrate *dbxActionTriggered. -->
+      <!-- eslint-disable-next-line dereekb-dbx-web/require-action-value-source -->
       <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
         <p *dbxActionTriggered>Triggered!</p>
@@ -128,6 +130,8 @@
 
     <h3>Disable</h3>
     <doc-feature-example header="dbxActionDisabled" hint="Used to disable an action. Can pass a boolean as input to manage the disabled state.">
+      <!-- Permanently disabled ([dbxActionDisabled]="true"), so it never triggers and cannot hang; no value source needed. -->
+      <!-- eslint-disable-next-line dereekb-dbx-web/require-action-value-source -->
       <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionDisabled]="true">
         <dbx-button dbxActionButton text="Action Button"></dbx-button>
       </doc-action-example-tools>

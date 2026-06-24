@@ -18,10 +18,34 @@
   }
 
   .dbx-form-repeat-array {
+    // Encapsulating "tray" that groups the whole repeat-array (items + footer) into one surface —
+    // the second, outer elevation. M3 nested elevation, the dim/bright counterpart to the bright
+    // item cards: the tray sits on a tonal wash of the active dbxColor (--dbx-bg-color-current,
+    // primary by default, driven by an ancestor/host [dbxColor]) over a lightened `surface-dim`
+    // base. `surface-dim` is the dimmest M3 surface — the opposite end of the dim/bright pair from
+    // the items' `surface-bright`, the one M3 pairing with stable light/dark luminance ordering — but
+    // pure surface-dim reads too heavy as a large tray, so the base is blended toward the normal
+    // `surface` (--dbx-form-repeat-array-dim, the surface-dim share; lower = lighter). It stays ≤
+    // `surface` < the items' `surface-bright`, so the bright item cards reliably pop within the tray
+    // in both themes. A soft lift shadow raises the whole group off the page. Override
+    // --dbx-form-repeat-array-bg to replace the tray surface, --dbx-form-repeat-array-tone (percentage)
+    // to tune the color wash, --dbx-form-repeat-array-dim (percentage) to tune the base darkness,
+    // --dbx-form-repeat-array-shadow to retune/remove (`none`) the lift,
+    // --dbx-form-repeat-array-container-shape for the corner radius, or
+    // --dbx-form-repeat-array-padding-vertical / --dbx-form-repeat-array-padding-horizontal for the
+    // inset around the items.
     margin-bottom: 8px;
+    padding: var(--dbx-form-repeat-array-padding-vertical, var(--dbx-padding-3)) var(--dbx-form-repeat-array-padding-horizontal, var(--dbx-padding-2));
+    border-radius: var(--dbx-form-repeat-array-container-shape, var(--dbx-corners-border-radius, var(--mat-sys-corner-large)));
+    background: var(--dbx-form-repeat-array-bg, color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-tone, 8%), color-mix(in srgb, var(--mat-sys-surface-dim) var(--dbx-form-repeat-array-dim, 45%), var(--mat-sys-surface))));
+    box-shadow: var(--dbx-form-repeat-array-shadow, var(--mat-sys-level1));
 
     .dbx-form-repeat-array-field {
-      @include theming.elevation(1);
+      // M3 elevation: each repeated array item reads as a raised card — a brighter tonal surface
+      // (set in the base rule below) plus this soft lift shadow for protection against the
+      // background — replacing the former Material elevation(1) shadow. Override
+      // --dbx-form-repeat-array-field-elevate-shadow to retune/remove (`none`) the shadow.
+      box-shadow: var(--dbx-form-repeat-array-field-elevate-shadow, var(--mat-sys-level1));
 
       h4 {
         margin: 0;
@@ -34,7 +58,12 @@
 
       padding: 0;
       margin-bottom: 4px;
-      border-radius: var(--dbx-form-repeat-array-field-container-shape, var(--mat-sys-corner-medium));
+      border-radius: var(--dbx-form-repeat-array-field-container-shape, var(--dbx-corners-border-radius, var(--mat-sys-corner-medium)));
+
+      .dbx-form-repeat-array-bar {
+        padding-top: 6px;
+        padding-left: 6px;
+      }
 
       .dbx-form-repeat-array-field-content {
         display: block;
@@ -42,14 +71,25 @@
       }
     }
 
+    .dbx-form-repeat-array-field > dbx-chip {
+      position: absolute;
+    }
+
     .dbx-form-repeat-array-footer {
-      margin-top: var(--dbx-padding-2);
+      padding: var(--dbx-form-repeat-array-padding-vertical, var(--dbx-padding-3));
+      padding-bottom: 0;
     }
   }
 
   .dbx-form-repeat-array-field {
-    background: var(--mat-sys-surface);
-    border: 4px solid var(--mat-sys-surface);
+    // Elevated card surface (M3 color-first elevation): a low-opacity tonal wash of the active
+    // dbxColor (--dbx-bg-color-current, primary by default, driven by an ancestor/host [dbxColor])
+    // over surface-bright, so the card reads as raised by color and not a flat grey. The 4px frame
+    // uses the same surface so the card stays one continuous tone. Override
+    // --dbx-form-repeat-array-field-elevate-bg to replace the surface outright, or
+    // --dbx-form-repeat-array-field-elevate-tone (percentage) to tune the wash strength.
+    background: var(--dbx-form-repeat-array-field-elevate-bg, color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-field-elevate-tone, 8%), var(--mat-sys-surface-bright)));
+    border: 4px solid var(--dbx-form-repeat-array-field-elevate-bg, color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-field-elevate-tone, 8%), var(--mat-sys-surface-bright)));
   }
 
   .dbx-form-repeat-array-drag-button.mdc-button > .mat-icon {

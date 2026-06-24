@@ -1,3 +1,26 @@
+# [13.22.0](https://github.com/dereekb/dbx-components/compare/v13.21.0-dev...v13.22.0) (2026-06-24)
+
+
+### Bug Fixes
+
+- **serve-server:** unique NX_INVOCATION_ROOT_PID avoids false loop error ([a663883f](https://github.com/dereekb/dbx-components/commit/a663883f2d89a072b1883b03c2b8c0c373bb59e1))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([9279b5ad](https://github.com/dereekb/dbx-components/commit/9279b5ad03f46a1f9fb8c5396bf70e86c6847243))
+
+
+### Code Refactoring
+
+- style fixes ([80e1bc6e](https://github.com/dereekb/dbx-components/commit/80e1bc6eeeec6052507855f8d27bbc18de451301))
+
+
+### Features
+
+- **$workspace:** replace theming.elevation with M3 tonal surfaces ([3ad0284a](https://github.com/dereekb/dbx-components/commit/3ad0284a0e9c4bc2d3a957e26931dbcb91e9029e))
+- **dbx-web:** add dbxAction value-source/error-handler lint rules ([4f5237d0](https://github.com/dereekb/dbx-components/commit/4f5237d05cb1f7e7416701b7061b1e62b5e4d4df))
+
 # [13.21.0](https://github.com/dereekb/dbx-components/compare/v13.20.0-dev...v13.21.0) (2026-06-24)
 
 

@@ -8,6 +8,8 @@
       </doc-action-example-tools>
 
       <h4>Disabled Example</h4>
+      <!-- Permanently disabled ([dbxActionDisabled]="true"), so it never triggers and cannot hang; no value source needed. -->
+      <!-- eslint-disable-next-line dereekb-dbx-web/require-action-value-source -->
       <doc-action-example-tools dbxAction [dbxActionHandler]="handleAction" [dbxActionDisabled]="true">
         <dbx-button dbxActionButton text="Disabled Action"></dbx-button>
       </doc-action-example-tools>

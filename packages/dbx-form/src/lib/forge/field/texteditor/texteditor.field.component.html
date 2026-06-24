@@ -2,11 +2,13 @@
   @if (labelSignal()) {
     <span class="dbx-label">{{ labelSignal() }}</span>
   }
-  <div class="dbx-texteditor-field-input">
-    <ngx-editor [editor]="editor" outputFormat="html" [placeholder]="placeholderSignal()" [formControl]="editorFormControl" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-describedby]="ariaDescribedBySignal()"></ngx-editor>
-  </div>
-  <div class="dbx-texteditor-field-menu">
-    <ngx-editor-menu [editor]="editor" [disabled]="isDisabled()"></ngx-editor-menu>
+  <div class="dbx-texteditor-field-content">
+    <div class="dbx-texteditor-field-input">
+      <ngx-editor [editor]="editor" outputFormat="html" [placeholder]="placeholderSignal()" [formControl]="editorFormControl" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-describedby]="ariaDescribedBySignal()"></ngx-editor>
+    </div>
+    <div class="dbx-texteditor-field-menu">
+      <ngx-editor-menu [editor]="editor" [disabled]="isDisabled()"></ngx-editor-menu>
+    </div>
   </div>
   @if (errorsToDisplaySignal()[0]; as error) {
     <div class="dbx-form-description dbx-form-error" [id]="errorIdSignal()">{{ error.message }}</div>

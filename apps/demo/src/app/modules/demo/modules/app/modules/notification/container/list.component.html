@@ -6,9 +6,7 @@
       </ng-container>
     </dbx-two-column-head>
     <dbx-firebase-notificationitem-list [state]="notificationItemsLoadingState$" dbxListItemModifier [dbxListItemAnchorModifier]="makeNotificationItemAnchor">
-      <dbx-list-empty-content empty>
-        <p>There are no notifications.</p>
-      </dbx-list-empty-content>
+      <dbx-list-empty-content empty>There are no notifications.</dbx-list-empty-content>
     </dbx-firebase-notificationitem-list>
   </dbx-two-block>
   <ui-view right></ui-view>

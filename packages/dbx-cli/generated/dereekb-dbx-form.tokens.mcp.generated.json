@@ -45,15 +45,160 @@
       "componentScope": "list"
     },
     {
+      "cssVariable": "--dbx-form-repeat-array-bg",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "form repeat array bg"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-tone, 8%), color-mix(in srgb, var(--mat-sys-surface-dim) var(--dbx-form-repeat-array-dim, 45%), var(--mat-sys-surface)))`.",
+      "defaults": {
+        "light": "color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-tone, 8%), color-mix(in srgb, var(--mat-sys-surface-dim) var(--dbx-form-repeat-array-dim, 45%), var(--mat-sys-surface)))"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-container-shape",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "form repeat array container shape"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-corners-border-radius, var(--mat-sys-corner-large))`.",
+      "defaults": {
+        "light": "var(--dbx-corners-border-radius, var(--mat-sys-corner-large))"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-dim",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "form repeat array dim"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `45%`.",
+      "defaults": {
+        "light": "45%"
+      },
+      "componentScope": "array"
+    },
+    {
       "cssVariable": "--dbx-form-repeat-array-field-container-shape",
       "source": "dbx-form",
       "role": "misc",
       "intents": [
         "form repeat array field container shape"
       ],
-      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-corner-medium)`.",
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-corners-border-radius, var(--mat-sys-corner-medium))`.",
       "defaults": {
-        "light": "var(--mat-sys-corner-medium)"
+        "light": "var(--dbx-corners-border-radius, var(--mat-sys-corner-medium))"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-field-elevate-bg",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "form repeat array field elevate bg"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-field-elevate-tone, 8%), var(--mat-sys-surface-bright))`.",
+      "defaults": {
+        "light": "color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-field-elevate-tone, 8%), var(--mat-sys-surface-bright))"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-field-elevate-shadow",
+      "source": "dbx-form",
+      "role": "shadow",
+      "intents": [
+        "form repeat array field elevate shadow"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-level1)`.",
+      "defaults": {
+        "light": "var(--mat-sys-level1)"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-field-elevate-tone",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "form repeat array field elevate tone"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8%`.",
+      "defaults": {
+        "light": "8%"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-index-size",
+      "source": "dbx-form",
+      "role": "size",
+      "intents": [
+        "form repeat array index size"
+      ],
+      "description": "Component-scoped override point (`wrapper`) read in `packages/dbx-form/src/lib/forge/field/wrapper/_wrapper.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `22px`.",
+      "defaults": {
+        "light": "22px"
+      },
+      "componentScope": "wrapper"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-padding-horizontal",
+      "source": "dbx-form",
+      "role": "spacing",
+      "intents": [
+        "form repeat array padding horizontal",
+        "form repeat array padding horizontal spacing"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-2)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-2)"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-padding-vertical",
+      "source": "dbx-form",
+      "role": "spacing",
+      "intents": [
+        "form repeat array padding vertical",
+        "form repeat array padding vertical spacing"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-3)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-3)"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-shadow",
+      "source": "dbx-form",
+      "role": "shadow",
+      "intents": [
+        "form repeat array shadow"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-level1)`.",
+      "defaults": {
+        "light": "var(--mat-sys-level1)"
+      },
+      "componentScope": "array"
+    },
+    {
+      "cssVariable": "--dbx-form-repeat-array-tone",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "form repeat array tone"
+      ],
+      "description": "Component-scoped override point (`array`) read in `packages/dbx-form/src/lib/forge/field/value/array/_array.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8%`.",
+      "defaults": {
+        "light": "8%"
       },
       "componentScope": "array"
     },
@@ -97,6 +242,19 @@
       "componentScope": "pickable"
     },
     {
+      "cssVariable": "--dbx-texteditor-field-bg",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "texteditor field bg"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-texteditor-field-tone, 8%), color-mix(in srgb, var(--mat-sys-surface-dim) var(--dbx-texteditor-field-dim, 45%), var(--mat-sys-surface)))`.",
+      "defaults": {
+        "light": "color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-texteditor-field-tone, 8%), color-mix(in srgb, var(--mat-sys-surface-dim) var(--dbx-texteditor-field-dim, 45%), var(--mat-sys-surface)))"
+      },
+      "componentScope": "texteditor"
+    },
+    {
       "cssVariable": "--dbx-texteditor-field-compact-height",
       "source": "dbx-form",
       "role": "size",
@@ -123,6 +281,32 @@
       "componentScope": "texteditor"
     },
     {
+      "cssVariable": "--dbx-texteditor-field-container-shape",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "texteditor field container shape"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-corners-border-radius, var(--mat-sys-corner-large))`.",
+      "defaults": {
+        "light": "var(--dbx-corners-border-radius, var(--mat-sys-corner-large))"
+      },
+      "componentScope": "texteditor"
+    },
+    {
+      "cssVariable": "--dbx-texteditor-field-dim",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "texteditor field dim"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `45%`.",
+      "defaults": {
+        "light": "45%"
+      },
+      "componentScope": "texteditor"
+    },
+    {
       "cssVariable": "--dbx-texteditor-field-max-height",
       "source": "dbx-form",
       "role": "size",
@@ -132,6 +316,60 @@
       "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `400px`.",
       "defaults": {
         "light": "400px"
+      },
+      "componentScope": "texteditor"
+    },
+    {
+      "cssVariable": "--dbx-texteditor-field-padding",
+      "source": "dbx-form",
+      "role": "spacing",
+      "intents": [
+        "texteditor field padding",
+        "texteditor field padding spacing"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-2)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-2)"
+      },
+      "componentScope": "texteditor"
+    },
+    {
+      "cssVariable": "--dbx-texteditor-field-padding-top",
+      "source": "dbx-form",
+      "role": "spacing",
+      "intents": [
+        "texteditor field padding top",
+        "texteditor field padding top spacing"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-3)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-3)"
+      },
+      "componentScope": "texteditor"
+    },
+    {
+      "cssVariable": "--dbx-texteditor-field-shadow",
+      "source": "dbx-form",
+      "role": "shadow",
+      "intents": [
+        "texteditor field shadow"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--mat-sys-level1)`.",
+      "defaults": {
+        "light": "var(--mat-sys-level1)"
+      },
+      "componentScope": "texteditor"
+    },
+    {
+      "cssVariable": "--dbx-texteditor-field-tone",
+      "source": "dbx-form",
+      "role": "misc",
+      "intents": [
+        "texteditor field tone"
+      ],
+      "description": "Component-scoped override point (`texteditor`) read in `packages/dbx-form/src/lib/forge/field/texteditor/_texteditor.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `8%`.",
+      "defaults": {
+        "light": "8%"
       },
       "componentScope": "texteditor"
     }

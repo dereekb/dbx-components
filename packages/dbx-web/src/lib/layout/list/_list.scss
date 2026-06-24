@@ -188,6 +188,9 @@ $list-item-padded-min-height: 42px;
 
   .dbx-list-empty-content {
     text-align: center;
+    // Breathing room around the empty-state content so it doesn't sit flush against its container.
+    // Override point (`--dbx-list-empty-content-padding`) defaults to the global `--dbx-padding-2` spacing token.
+    padding: var(--dbx-list-empty-content-padding, var(--dbx-padding-2));
   }
 
   .dbx-list-content {

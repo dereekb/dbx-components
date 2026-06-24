@@ -121,8 +121,18 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
   }
 
   .dbx-form-repeat-array-field {
+    // Per-item index number: render it as a compact, centered badge that lines up with the item
+    // label — a circle for a single digit, a pill once it spills to double digits — instead of the
+    // default lopsided small-chip rounded rectangle. Square it off (min-width == min-height) and
+    // center the digit so it reads as a tidy step badge. Size via --dbx-form-repeat-array-index-size.
     .dbx-form-repeat-array-bar .dbx-chip {
-      margin-right: 3px;
+      box-sizing: border-box;
+      margin-right: 6px;
+      min-width: var(--dbx-form-repeat-array-index-size, 22px);
+      min-height: var(--dbx-form-repeat-array-index-size, 22px);
+      padding: 0 6px;
+      justify-content: center;
+      border-radius: var(--mat-sys-corner-full, 999px);
     }
   }
 }

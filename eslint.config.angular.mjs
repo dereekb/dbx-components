@@ -1,5 +1,6 @@
 import nx from '@nx/eslint-plugin';
 import baseLibraryConfig from './eslint.config.library.mjs';
+import { DBX_WEB_ESLINT_PLUGIN } from './dist/packages/dbx-web/eslint/index.esm.js';
 
 export default [
   ...baseLibraryConfig,
@@ -28,13 +29,18 @@ export default [
   },
   {
     files: ['**/*.html'],
+    plugins: {
+      'dereekb-dbx-web': DBX_WEB_ESLINT_PLUGIN
+    },
     rules: {
       '@angular-eslint/template/alt-text': 'warn',
       '@angular-eslint/template/click-events-have-key-events': 'warn',
       '@angular-eslint/template/no-positive-tabindex': 'error',
       '@angular-eslint/template/role-has-required-aria': 'error',
       '@angular-eslint/template/valid-aria': 'error',
-      '@angular-eslint/template/label-has-associated-control': 'warn'
+      '@angular-eslint/template/label-has-associated-control': 'warn',
+      'dereekb-dbx-web/require-action-value-source': 'error',
+      'dereekb-dbx-web/require-action-error-handler': 'warn'
     }
   },
   {

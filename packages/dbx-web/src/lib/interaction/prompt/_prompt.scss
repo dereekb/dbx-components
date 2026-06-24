@@ -13,21 +13,29 @@ $dbx-popup-controls-height: 33px;
   }
 
   /// @dbx-utility prompt-box
-  /// @intent centered prompt panel — auto-margined max-width box with a 40px inset (override via `--dbx-prompt-box-padding`) and a "medium" corner radius (override via `--dbx-prompt-box-border-radius`); compose with `.elevate` to lift it with elevation 2
+  /// @intent centered prompt panel — auto-margined max-width box with a 40px inset (override via `--dbx-prompt-box-padding`) and a "medium" corner radius (override via `--dbx-prompt-box-border-radius`); compose with `.elevate` to lift it M3-style — a brighter `surface-bright` tonal wash plus a soft lift shadow
   /// @role layout
   /// @see-also content-box, content-elevate
   .dbx-prompt-box {
     margin: auto;
     padding: var(--dbx-prompt-box-padding, 40px);
     max-width: $box-max-width;
-    // Visible via the `.elevate` shadow (default) or any app-supplied background;
-    // the box itself intentionally has no background. Deliberately NOT chained
-    // through `--mat-dialog-container-shape` — a prompt box is a page surface,
+    // Visible via `.elevate` (a bright tonal surface + soft lift shadow, default) or any
+    // app-supplied background; the box itself intentionally has no background. Deliberately
+    // NOT chained through `--mat-dialog-container-shape` — a prompt box is a page surface,
     // not a dialog.
     border-radius: var(--dbx-prompt-box-border-radius, var(--mat-sys-corner-medium, 12px));
 
+    // M3 elevation: an elevated prompt panel reads as raised primarily through a brighter
+    // tonal surface — a low-opacity wash of the active dbxColor (`--dbx-bg-color-current`,
+    // primary by default, driven by an ancestor/host `[dbxColor]`) over `surface-bright` —
+    // plus a soft lift shadow for protection against the background, replacing the former
+    // Material elevation(2) shadow. Override `--dbx-prompt-box-elevate-tone` (percentage) to
+    // tune the wash, `--dbx-prompt-box-elevate-bg` to replace the background outright, or
+    // `--dbx-prompt-box-elevate-shadow` to retune/remove (`none`) the lift shadow.
     &.elevate {
-      @include theming.elevation(2);
+      background: var(--dbx-prompt-box-elevate-bg, color-mix(in srgb, #{theming.$dbx-bg-color} var(--dbx-prompt-box-elevate-tone, 8%), var(--mat-sys-surface-bright)));
+      box-shadow: var(--dbx-prompt-box-elevate-shadow, var(--mat-sys-level2));
     }
   }
 }
