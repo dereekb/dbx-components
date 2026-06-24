@@ -36,7 +36,7 @@
     // inset around the items.
     margin-bottom: 8px;
     padding: var(--dbx-form-repeat-array-padding-vertical, var(--dbx-padding-3)) var(--dbx-form-repeat-array-padding-horizontal, var(--dbx-padding-2));
-    border-radius: var(--dbx-form-repeat-array-container-shape, var(--mat-sys-corner-large));
+    border-radius: var(--dbx-form-repeat-array-container-shape, var(--dbx-corners-border-radius, var(--mat-sys-corner-large)));
     background: var(--dbx-form-repeat-array-bg, color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-tone, 8%), color-mix(in srgb, var(--mat-sys-surface-dim) var(--dbx-form-repeat-array-dim, 45%), var(--mat-sys-surface))));
     box-shadow: var(--dbx-form-repeat-array-shadow, var(--mat-sys-level1));
 
@@ -58,7 +58,7 @@
 
       padding: 0;
       margin-bottom: 4px;
-      border-radius: var(--dbx-form-repeat-array-field-container-shape, var(--mat-sys-corner-medium));
+      border-radius: var(--dbx-form-repeat-array-field-container-shape, var(--dbx-corners-border-radius, var(--mat-sys-corner-medium)));
 
       .dbx-form-repeat-array-bar {
         padding-top: 6px;
