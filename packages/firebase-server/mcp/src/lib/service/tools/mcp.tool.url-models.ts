@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { IMPERSONATION_URL_QUERY_PARAM, type Maybe } from '@dereekb/util';
 import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, inferKeyFromTwoWayFlatFirestoreModelKey } from '@dereekb/firebase';
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { type ModelAccessMultiReadResult } from '@dereekb/firebase-server';
@@ -35,6 +35,34 @@ const AUTH_UID_PLACEHOLDER = '{authUid}';
  * `FLAT_KEY_TOKEN_RE` in `@dereekb/dbx-cli`'s route-model-tag parser.
  */
 const FLAT_KEY_TEMPLATE_RE = /^\{flatKey:([a-zA-Z_][a-zA-Z0-9_]*)\}$/u;
+
+/**
+ * Reads the impersonation uid from a URL's `?imp=<uid>` query parameter, if present.
+ *
+ * Impersonation ("view as another user") is conveyed by the {@link IMPERSONATION_URL_QUERY_PARAM} query
+ * param; when set, it overrides the uid used to fill `{authUid}` placeholders so a decoded URL reports the
+ * models the impersonated user's page renders. Handles both a full URL and a bare path (mirroring
+ * {@link parseUrlModelsPathname}, which discards the query when matching). Returns the trimmed non-empty
+ * uid, or `undefined` when absent.
+ *
+ * @param url - A full URL or bare path, optionally carrying `?imp=<uid>`.
+ * @returns The impersonated uid, or `undefined`.
+ */
+export function readUrlModelsImpersonationUid(url: string): Maybe<string> {
+  const trimmed = url.trim();
+  let search: string;
+
+  if (/^[a-z][a-z0-9+.-]*:\/\//iu.test(trimmed)) {
+    search = new URL(trimmed).search;
+  } else {
+    const hashStripped = trimmed.split('#', 1)[0];
+    const queryIndex = hashStripped.indexOf('?');
+    search = queryIndex >= 0 ? hashStripped.slice(queryIndex) : '';
+  }
+
+  const value = new URLSearchParams(search).get(IMPERSONATION_URL_QUERY_PARAM)?.trim();
+  return value ? value : undefined;
+}
 
 // MARK: Types
 /**
@@ -100,8 +128,9 @@ export interface UrlModelsToolInput {
   /**
    * Overrides the uid used to fill `{authUid}` placeholders when resolving model
    * keys (defaults to the authenticated caller). Use to preview the models
-   * another user would see on a page. Does not affect the document-load path —
-   * `load` still reads via the calling user's permissions.
+   * another user would see on a page. A `?imp=<uid>` (impersonation) query param
+   * on the `url` takes precedence over this. Does not affect the document-load
+   * path — `load` still reads via the calling user's permissions.
    */
   readonly currentUserUid?: string;
 }
@@ -126,7 +155,7 @@ export function createUrlModelsTool(deps: CreateUrlModelsToolDeps): McpToolDefin
   const handler: McpStaticToolHandler = (args, ctx) => urlModelsToolHandler(args, ctx, deps);
   const name = URL_MODELS_TOOL_NAME;
   const description =
-    'Decode an app URL (or path) into the Firestore models its page renders. Pass a URL like `https://app.example.co/worker/abc/timesheets/list`; the tool matches it against the build-time route manifest and returns each model type plus the concrete key (route params + `{authUid}` substituted). Use `models` to filter to specific types, `keysOnly` for just the resolved keys, or `load: true` to fetch the documents via the same permission-checked path as `model-get` (cannot combine `load` with `keysOnly`).';
+    'Decode an app URL (or path) into the Firestore models its page renders. Pass a URL like `https://app.example.co/worker/abc/timesheets/list`; the tool matches it against the build-time route manifest and returns each model type plus the concrete key (route params + `{authUid}` substituted). A `?imp=<uid>` query param resolves `{authUid}` to that user (impersonation preview). Use `models` to filter to specific types, `keysOnly` for just the resolved keys, or `load: true` to fetch the documents via the same permission-checked path as `model-get` (cannot combine `load` with `keysOnly`).';
 
   return buildStaticToolDefinition({
     name,
@@ -236,10 +265,11 @@ function stateSummary(state: RouteManifestStateEntry): { readonly name: string; 
 
 async function buildMatchedPayload(args: BuildMatchedPayloadInput): Promise<UrlModelsMatchedPayload> {
   const { match, input, ctx, deps } = args;
-  // `currentUserUid` (when supplied) overrides the uid used to fill `{authUid}` placeholders so a
-  // caller can preview another user's page-models. The document-load path still uses `ctx.auth`, so
-  // this is a key-substitution preview only — no privilege escalation on the actual reads.
-  const uid = input.currentUserUid ?? ctx.auth?.uid;
+  // A `?imp=<uid>` query param on the URL (impersonation), then an explicit `currentUserUid`, override the
+  // uid used to fill `{authUid}` placeholders so a caller can preview another user's page-models. The
+  // document-load path still uses `ctx.auth`, so this is a key-substitution preview only — no privilege
+  // escalation on the actual reads.
+  const uid = readUrlModelsImpersonationUid(input.url) ?? input.currentUserUid ?? ctx.auth?.uid;
   const filtered = input.models === undefined ? match.state.models : match.state.models.filter((m) => input.models?.includes(m.modelType));
   const resolved = filtered.map((entry) => resolveModelEntry({ entry, params: match.params, uid, keysOnly: input.keysOnly === true, deps, ctx }));
   const loaded = input.load === true ? await loadResolvedModels(resolved, ctx, deps) : undefined;
@@ -432,11 +462,11 @@ const URL_MODELS_INPUT_SCHEMA = {
   type: 'object',
   required: ['url'],
   properties: {
-    url: { type: 'string', minLength: 1, description: 'Full URL or pathname, e.g. "https://app.example.co/worker/abc/timesheets/list".' },
+    url: { type: 'string', minLength: 1, description: 'Full URL or pathname, e.g. "https://app.example.co/worker/abc/timesheets/list". A `?imp=<uid>` query resolves `{authUid}` to that user (impersonation preview).' },
     models: { type: 'array', items: { type: 'string' }, description: 'Restrict the output to these model types.' },
     keysOnly: { type: 'boolean', description: 'Return only the resolved keys (no descriptions or documents). Cannot combine with "load".' },
     load: { type: 'boolean', description: 'Load each resolved document via the permission-checked read path. Cannot combine with "keysOnly".' },
-    currentUserUid: { type: 'string', minLength: 1, description: "Override the uid used to fill `{authUid}` placeholders when resolving model keys (defaults to the authenticated caller). Use to preview the models another user would see on a page. `load` still reads via the calling user's permissions." }
+    currentUserUid: { type: 'string', minLength: 1, description: "Override the uid used to fill `{authUid}` placeholders when resolving model keys (defaults to the authenticated caller). Use to preview the models another user would see on a page. A `?imp=<uid>` query on the url takes precedence over this. `load` still reads via the calling user's permissions." }
   },
   additionalProperties: false
 } as const;

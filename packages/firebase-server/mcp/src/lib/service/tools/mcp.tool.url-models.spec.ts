@@ -1,6 +1,6 @@
 import { type FirestoreModelIdentity } from '@dereekb/firebase';
 import { type CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { createUrlModelsTool, URL_MODELS_TOOL_NAME, type CreateUrlModelsToolDeps } from './mcp.tool.url-models';
+import { createUrlModelsTool, readUrlModelsImpersonationUid, URL_MODELS_TOOL_NAME, type CreateUrlModelsToolDeps } from './mcp.tool.url-models';
 import { ROUTE_MANIFEST_VERSION, type RouteManifest } from '../mcp.route-manifest';
 import { type McpStaticToolHandlerContext } from '../mcp.tool-generator';
 
@@ -211,6 +211,28 @@ describe('createUrlModelsTool', () => {
     expect(modelOf(p, 'profile').key).toBe('pr/abc');
   });
 
+  it('reads ?imp from the URL to override {authUid} (impersonation preview), leaving route params untouched', async () => {
+    const tool = createUrlModelsTool(makeDeps());
+    const result = await tool.staticHandler!({ url: 'https://app.demo.co/worker/abc?imp=user-2' }, makeCtx('user-1'));
+    const p = payload(result);
+    // `{authUid}` resolves to the ?imp user-2, not the caller user-1.
+    expect(modelOf(p, 'account').key).toBe('ac/user-2');
+    // The `:uid` route param is captured from the URL path, so it is unchanged.
+    expect(modelOf(p, 'profile').key).toBe('pr/abc');
+  });
+
+  it('reads ?imp from a bare-path url', async () => {
+    const tool = createUrlModelsTool(makeDeps());
+    const result = await tool.staticHandler!({ url: '/worker/abc?imp=user-3' }, makeCtx('user-1'));
+    expect(modelOf(payload(result), 'account').key).toBe('ac/user-3');
+  });
+
+  it('prefers ?imp over an explicit currentUserUid', async () => {
+    const tool = createUrlModelsTool(makeDeps());
+    const result = await tool.staticHandler!({ url: '/worker/abc?imp=user-2', currentUserUid: 'user-9' }, makeCtx('user-1'));
+    expect(modelOf(payload(result), 'account').key).toBe('ac/user-2');
+  });
+
   it('rejects an empty currentUserUid', async () => {
     const tool = createUrlModelsTool(makeDeps());
     const result = await tool.staticHandler!({ url: '/worker/abc', currentUserUid: '' }, makeCtx('user-1'));
@@ -263,5 +285,30 @@ describe('createUrlModelsTool', () => {
     const tool = createUrlModelsTool(makeDeps());
     const result = await tool.staticHandler!({}, makeCtx('user-1'));
     expect(result.isError).toBe(true);
+  });
+});
+
+describe('readUrlModelsImpersonationUid', () => {
+  it('reads ?imp from an absolute URL', () => {
+    expect(readUrlModelsImpersonationUid('https://app.demo.co/worker/abc?imp=u2')).toBe('u2');
+  });
+
+  it('reads ?imp from a bare path', () => {
+    expect(readUrlModelsImpersonationUid('/worker/abc?imp=u3')).toBe('u3');
+  });
+
+  it('ignores a hash fragment after the query', () => {
+    expect(readUrlModelsImpersonationUid('/worker/abc?imp=u4#section')).toBe('u4');
+    expect(readUrlModelsImpersonationUid('https://app.demo.co/worker/abc?imp=u4#section')).toBe('u4');
+  });
+
+  it('returns undefined when ?imp is absent', () => {
+    expect(readUrlModelsImpersonationUid('/worker/abc')).toBeUndefined();
+    expect(readUrlModelsImpersonationUid('https://app.demo.co/worker/abc')).toBeUndefined();
+  });
+
+  it('returns undefined for an empty ?imp value', () => {
+    expect(readUrlModelsImpersonationUid('/worker/abc?imp=')).toBeUndefined();
+    expect(readUrlModelsImpersonationUid('/worker/abc?imp=%20%20')).toBeUndefined();
   });
 });

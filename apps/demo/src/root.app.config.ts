@@ -4,7 +4,7 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { Category, provideUIRouter, type StatesModule, type UIRouter } from '@uirouter/angular';
 import { environment, OIDC_API_ORIGIN } from './environments/environment';
 import { type AuthTransitionHookOptions, DBX_KNOWN_APP_CONTEXT_STATES, enableHasAuthRoleHook, enableHasAuthStateHook, enableIsLoggedInHook, provideDbxAppAuth, provideDbxAppContextState, provideDbxAppEnvironment, provideDbxAssetLoader, provideDbxStorage, provideDbxUIRouterService } from '@dereekb/dbx-core';
-import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, DbxFirebaseModelEntitiesDebugWidgetComponent, type DbxFirebaseModelEntitiesWidgetEntry, type DbxFirebaseModelEntitiesWidgetServiceConfig, type DbxFirebaseModelTypesServiceConfig, type DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
+import { DbxFirebaseAnalyticsUserSource, type DbxFirebaseAuthServiceDelegate, DbxFirebaseModelEntitiesDebugWidgetComponent, type DbxFirebaseModelEntitiesWidgetEntry, type DbxFirebaseModelEntitiesWidgetServiceConfig, type DbxFirebaseModelTypesServiceConfig, type DbxFirebaseModelTypesServiceEntry, defaultDbxFirebaseAuthServiceDelegateWithClaimsService, provideDbxFirebase, provideDbxFirebaseAuthImpersonation, provideDbxFirebaseLogin } from '@dereekb/dbx-firebase';
 import { DBX_WEB_FILE_PREVIEW_SERVICE_ZIP_PRESET_ENTRY, provideDbxHelpServices, provideDbxLinkify, provideDbxModelService, provideDbxRouterWebUiRouterProviderConfig, provideDbxScreenMediaService, provideDbxStyleService, provideDbxWebFilePreviewServiceEntries, provideDbxWebPageTitleService } from '@dereekb/dbx-web';
 import { DEMO_AUTH_CLAIMS_SERVICE, DEMO_API_AUTH_CLAIMS_ONBOARDED_TOKEN, type Guestbook, guestbookIdentity, DEMO_FIREBASE_FUNCTIONS_CONFIG, DemoFirebaseFunctionsGetter, DemoFirestoreCollections, makeDemoFirebaseFunctions, makeDemoFirestoreCollections, DEMO_FIREBASE_NOTIFICATION_TEMPLATE_TYPE_INFO_RECORD, DEMO_OIDC_AVAILABLE_SCOPES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, DEMO_APP_OAUTH_INTERACTION_PATH, ProfileFunctions } from 'demo-firebase';
 import { type FirestoreContext, type FirestoreModelKey, appNotificationTemplateTypeInfoRecordService, firestoreModelId } from '@dereekb/firebase';
@@ -327,6 +327,8 @@ export const APP_CONFIG: ApplicationConfig = {
         privacyUrl: '/tos/privacy'
       }
     }),
+    // Enables client-side impersonation ("view as another user"), consumed by dbxAuthImpersonationQuerySync (?imp=<uid>).
+    provideDbxFirebaseAuthImpersonation(),
     provideDbxFirebaseOidc({
       appCollectionClass: DemoFirestoreCollections,
       oidcConfig: {
