@@ -69,7 +69,7 @@ export class DbxAuthImpersonationQuerySyncDirective {
         let result: Observable<Maybe<AuthUserIdentifier>>;
 
         if (routeUid != null && routeUid !== NO_AUTH_USER_IDENTIFIER && routeUid !== currentUid) {
-          result = canImpersonate != null ? asObservable(canImpersonate(routeUid)).pipe(map((allowed) => (allowed ? routeUid : undefined))) : of(routeUid);
+          result = canImpersonate == null ? of(routeUid) : asObservable(canImpersonate(routeUid)).pipe(map((allowed) => (allowed ? routeUid : undefined)));
         } else {
           result = of(undefined);
         }
@@ -80,10 +80,10 @@ export class DbxAuthImpersonationQuerySyncDirective {
 
     cleanSubscription(
       impersonatedUserId$.subscribe((impersonatedUserId) => {
-        if (impersonatedUserId != null) {
-          this._impersonationService.startImpersonating(impersonatedUserId);
-        } else {
+        if (impersonatedUserId == null) {
           this._impersonationService.stopImpersonating();
+        } else {
+          this._impersonationService.startImpersonating(impersonatedUserId);
         }
       })
     );
