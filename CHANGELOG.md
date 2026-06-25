@@ -1,3 +1,20 @@
+# [13.23.0](https://github.com/dereekb/dbx-components/compare/v13.22.0-dev...v13.23.0) (2026-06-25)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([360e54a8](https://github.com/dereekb/dbx-components/commit/360e54a83e44a097f9130b1c990802624d8ef33d))
+
+
+### Code Refactoring
+
+- styling fixes ([2500c5ad](https://github.com/dereekb/dbx-components/commit/2500c5ad404da7afe3d820ebf3307e035d43f4d5))
+
+
+### Features
+
+- **impersonation:** add ?imp query-param sync + url-models decode ([4177f06c](https://github.com/dereekb/dbx-components/commit/4177f06c00533927ed00bbd858e500160d3330dd))
+
 # [13.22.0](https://github.com/dereekb/dbx-components/compare/v13.21.0-dev...v13.22.0) (2026-06-24)
 
 

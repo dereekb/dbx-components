@@ -6,10 +6,15 @@ import { DemoAppLayoutComponent } from './container/layout.component';
 import { DEMO_APP_STATE_DATA } from './demo.app.router.auth';
 
 export const DEMO_APP_STATE: Ng2StateDeclaration = {
-  url: '/app',
+  url: '/app?imp',
   name: 'demo.app',
   redirectTo: 'demo.app.home',
   component: DemoAppLayoutComponent,
+  // `imp` is the impersonation query param (?imp=<uid>); dynamic so toggling it re-keys without reloading
+  // the state tree. Children of demo.app inherit it. Read by dbxAuthImpersonationQuerySync in the layout.
+  params: {
+    imp: { dynamic: true, value: null }
+  },
   data: DEMO_APP_STATE_DATA
 };
 

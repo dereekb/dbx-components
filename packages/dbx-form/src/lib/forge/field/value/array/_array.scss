@@ -73,6 +73,7 @@
 
     .dbx-form-repeat-array-field > dbx-chip {
       position: absolute;
+      z-index: 1;
     }
 
     .dbx-form-repeat-array-footer {
@@ -88,6 +89,7 @@
     // uses the same surface so the card stays one continuous tone. Override
     // --dbx-form-repeat-array-field-elevate-bg to replace the surface outright, or
     // --dbx-form-repeat-array-field-elevate-tone (percentage) to tune the wash strength.
+    position: relative; // containing block for the absolutely-positioned index chip
     background: var(--dbx-form-repeat-array-field-elevate-bg, color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-field-elevate-tone, 8%), var(--mat-sys-surface-bright)));
     border: 4px solid var(--dbx-form-repeat-array-field-elevate-bg, color-mix(in srgb, var(--dbx-bg-color-current, var(--mat-sys-primary)) var(--dbx-form-repeat-array-field-elevate-tone, 8%), var(--mat-sys-surface-bright)));
   }
