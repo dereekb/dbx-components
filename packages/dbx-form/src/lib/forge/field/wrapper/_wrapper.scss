@@ -48,14 +48,18 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
     width: calc(100% - #{$dbx-forge-form-field-slider-thumb-margin * 2}) !important;
   }
 
-  // List selection field inside the form-field wrapper: reduce padding so the list
-  // items render at full width within the outlined border. Uses !important to
-  // override the component's scoped inline styles (ViewEncapsulation.Emulated
-  // adds attribute selectors that raise specificity above global rules).
+  // List selection field inside the form-field wrapper: inset the list from the
+  // outlined border on the sides so the card-styled items (12px corner radius)
+  // don't clip the rounded outline. The bottom keeps a 1px inset so the scrolled
+  // list background doesn't bleed over the lower border, and the top keeps the
+  // wrapper's default 16px gap below the notch label. Tune the side inset via
+  // --dbx-forge-list-item-field-inline-padding. Uses !important to override the
+  // component's scoped inline styles (ViewEncapsulation.Emulated adds attribute
+  // selectors that raise specificity above global rules).
   dbx-forge-form-field-wrapper .dbx-forge-form-field-content:has(dbx-forge-list-selection-field) {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-bottom: 0 !important;
+    padding-left: var(--dbx-forge-list-item-field-inline-padding, var(--dbx-padding-3)) !important;
+    padding-right: var(--dbx-forge-list-item-field-inline-padding, var(--dbx-padding-3)) !important;
+    padding-bottom: 1px !important;
   }
 
   // Boolean fields (mat-checkbox / mat-slide-toggle): make the whole content
@@ -121,13 +125,12 @@ $dbx-forge-form-field-slider-thumb-margin: 22px;
   }
 
   .dbx-form-repeat-array-field {
-    // Per-item index number: render it as a compact, centered badge that lines up with the item
-    // label — a circle for a single digit, a pill once it spills to double digits — instead of the
-    // default lopsided small-chip rounded rectangle. Square it off (min-width == min-height) and
-    // center the digit so it reads as a tidy step badge. Size via --dbx-form-repeat-array-index-size.
-    .dbx-form-repeat-array-bar .dbx-chip {
+    // Per-item index number: render it as a compact, centered badge — a circle for a single digit,
+    // a pill once it spills to double digits. The chip is a direct child of the field div (placed
+    // before the bar so it overlays the top-left corner via `position: absolute`). Size via
+    // --dbx-form-repeat-array-index-size.
+    > .dbx-chip {
       box-sizing: border-box;
-      margin-right: 6px;
       min-width: var(--dbx-form-repeat-array-index-size, 22px);
       min-height: var(--dbx-form-repeat-array-index-size, 22px);
       padding: 0 6px;

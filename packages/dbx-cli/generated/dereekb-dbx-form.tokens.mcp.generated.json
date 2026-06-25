@@ -45,6 +45,20 @@
       "componentScope": "list"
     },
     {
+      "cssVariable": "--dbx-forge-list-item-field-inline-padding",
+      "source": "dbx-form",
+      "role": "spacing",
+      "intents": [
+        "forge list item field inline padding",
+        "forge list item field inline padding spacing"
+      ],
+      "description": "Component-scoped override point (`wrapper`) read in `packages/dbx-form/src/lib/forge/field/wrapper/_wrapper.scss` — set it (from an app, or via the owning dbx directive where one exists) to override; unset, it falls back to `var(--dbx-padding-3)`.",
+      "defaults": {
+        "light": "var(--dbx-padding-3)"
+      },
+      "componentScope": "wrapper"
+    },
+    {
       "cssVariable": "--dbx-form-repeat-array-bg",
       "source": "dbx-form",
       "role": "misc",
