@@ -10,7 +10,15 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/browser"],
       "options": {
-        "command": "npx nx run browser:build-base",
+        "commands": [
+          {
+            "command": "npx nx run browser:build-base"
+          },
+          {
+            "command": "npx nx run browser-oidc:build-base"
+          }
+        ],
+        "parallel": false,
         "color": true
       }
     },

@@ -21,6 +21,7 @@
     "baseUrl": ".",
     "paths": {
       "@dereekb/browser": ["packages/browser/src/index.ts"],
+      "@dereekb/browser/oidc": ["packages/browser/oidc/src/index.ts"],
       "@dereekb/analytics": ["packages/analytics/src/index.ts"],
       "@dereekb/analytics/nestjs": ["packages/analytics/nestjs/src/index.ts"],
       "@dereekb/calcom": ["packages/calcom/src/index.ts"],
@@ -79,6 +80,7 @@
       "@dereekb/util": ["packages/util/src/index.ts"],
       "@dereekb/util/eslint": ["packages/util/eslint/src/index.ts"],
       "@dereekb/util/fetch": ["packages/util/fetch/src/index.ts"],
+      "@dereekb/util/oidc": ["packages/util/oidc/src/index.ts"],
       "@dereekb/util/test": ["packages/util/test/src/index.ts"],
       "@dereekb/trello": ["packages/trello/src/index.ts"],
       "@dereekb/trello/nestjs": ["packages/trello/nestjs/src/index.ts"],

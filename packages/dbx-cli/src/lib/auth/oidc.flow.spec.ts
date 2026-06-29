@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { OAUTH_OOB_REDIRECT_URI } from '@dereekb/util';
-import { buildAuthorizationUrl, generatePkceMaterial, parsePastedRedirect } from './oidc.flow';
+import { OAUTH_OOB_REDIRECT_URI, generatePkceMaterial } from '@dereekb/util';
+import { buildAuthorizationUrl, parsePastedRedirect } from './oidc.flow';
 
 describe('generatePkceMaterial', () => {
   it('generates a verifier and challenge', async () => {

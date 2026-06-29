@@ -66,6 +66,7 @@
     "@dereekb/model": "13.23.0",
     "@dereekb/nestjs": "13.23.0",
     "@dereekb/util": "13.23.0",
+    "@dereekb/util/oidc": "13.23.0",
     "@nestjs/common": "^11.1.19",
     "arktype": "^2.2.0",
     "jiti": "2.6.1",

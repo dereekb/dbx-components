@@ -1,11 +1,11 @@
 import type { Argv, CommandModule } from 'yargs';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, buildOidcDiscoveryCandidates } from '@dereekb/util';
 import { type CliConfig } from '../config/cli.config';
 import { type CliEnvConfig, type CliEnvDefault } from '../config/env';
 import { resolveCliEnv } from '../config/env.resolve';
 import { buildCliPaths } from '../config/paths';
 import { createCliTokenCacheStore, isTokenExpired } from '../config/token.cache';
-import { buildOidcDiscoveryCandidates, discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
+import { discoverOidcMetadata, refreshAccessToken } from '../auth/oidc.client';
 import { CALL_MODEL_API_PATH } from '../api/call-model.client';
 import { outputResult, tracedFetch } from '../util/output';
 import { wrapCommandHandler } from '../util/handler';

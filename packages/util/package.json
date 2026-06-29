@@ -15,6 +15,12 @@
       "import": "./fetch/index.cjs.mjs",
       "default": "./fetch/index.cjs.js"
     },
+    "./oidc": {
+      "module": "./oidc/index.esm.js",
+      "types": "./oidc/index.d.ts",
+      "import": "./oidc/index.cjs.mjs",
+      "default": "./oidc/index.cjs.js"
+    },
     "./eslint": {
       "module": "./eslint/index.esm.js",
       "types": "./eslint/index.d.ts",
