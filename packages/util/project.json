@@ -21,6 +21,9 @@
             "command": "npx nx run util-fetch:build-base"
           },
           {
+            "command": "npx nx run util-oidc:build-base"
+          },
+          {
             "command": "npx nx run util-eslint:build-base"
           }
         ],
@@ -49,6 +52,10 @@
           {
             "description": "run util-fetch tests",
             "command": "npx nx test util-fetch"
+          },
+          {
+            "description": "run util-oidc tests",
+            "command": "npx nx test util-oidc"
           }
         ],
         "color": true,

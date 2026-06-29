@@ -1,3 +1,16 @@
+# [13.24.0](https://github.com/dereekb/dbx-components/compare/v13.23.0-dev...v13.24.0) (2026-06-29)
+
+
+### Bug Fixes
+
+- **eslint:** keep typescript external in eslint plugin bundles ([eb6c1a2d](https://github.com/dereekb/dbx-components/commit/eb6c1a2d6e85937d91a121596f40245cf7c17ee5))
+
+
+### Features
+
+- **$workspace:** shared OIDC relying-party client core ([b17eea73](https://github.com/dereekb/dbx-components/commit/b17eea730c3cd0bdc71ccefa77428d21de5301d8))
+- **util-eslint:** add no-enum-literal-cast rule, enable workspace-wide ([424ea747](https://github.com/dereekb/dbx-components/commit/424ea747bca886258b1bc97ad9619aeec5d78db2))
+
 # [13.23.0](https://github.com/dereekb/dbx-components/compare/v13.22.0-dev...v13.23.0) (2026-06-25)
 
 

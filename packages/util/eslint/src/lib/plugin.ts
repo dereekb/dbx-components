@@ -23,6 +23,7 @@ import { type UtilRequireDefaultPrefixNamingRuleDefinition, UTIL_REQUIRE_DEFAULT
 import { type UtilRequireExportedJsdocExampleRuleDefinition, UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE } from './require-exported-jsdoc-example.rule';
 import { type UtilNoInlineStringEmptyObjectIntersectionRuleDefinition, UTIL_NO_INLINE_STRING_EMPTY_OBJECT_INTERSECTION_RULE } from './no-inline-string-empty-object-intersection.rule';
 import { type UtilPreferSuggestedStringRuleDefinition, UTIL_PREFER_SUGGESTED_STRING_RULE } from './prefer-suggested-string.rule';
+import { type UtilNoEnumLiteralCastRuleDefinition, UTIL_NO_ENUM_LITERAL_CAST_RULE } from './no-enum-literal-cast.rule';
 
 /**
  * ESLint plugin interface for @dereekb/util rules.
@@ -55,6 +56,7 @@ export interface UtilEslintPlugin {
     readonly 'require-exported-jsdoc-example': UtilRequireExportedJsdocExampleRuleDefinition;
     readonly 'no-inline-string-empty-object-intersection': UtilNoInlineStringEmptyObjectIntersectionRuleDefinition;
     readonly 'prefer-suggested-string': UtilPreferSuggestedStringRuleDefinition;
+    readonly 'no-enum-literal-cast': UtilNoEnumLiteralCastRuleDefinition;
   };
 }
 
@@ -91,7 +93,8 @@ export const UTIL_ESLINT_PLUGIN: UtilEslintPlugin = {
     'require-default-prefix-naming': UTIL_REQUIRE_DEFAULT_PREFIX_NAMING_RULE,
     'require-exported-jsdoc-example': UTIL_REQUIRE_EXPORTED_JSDOC_EXAMPLE_RULE,
     'no-inline-string-empty-object-intersection': UTIL_NO_INLINE_STRING_EMPTY_OBJECT_INTERSECTION_RULE,
-    'prefer-suggested-string': UTIL_PREFER_SUGGESTED_STRING_RULE
+    'prefer-suggested-string': UTIL_PREFER_SUGGESTED_STRING_RULE,
+    'no-enum-literal-cast': UTIL_NO_ENUM_LITERAL_CAST_RULE
   }
 };
 

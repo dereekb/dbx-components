@@ -260,6 +260,10 @@ export class OidcService {
       },
       features: {
         devInteractions: { enabled: false },
+        // RFC 7009 token revocation endpoint (`<issuer>/token/revocation`). The default
+        // allowedPolicy lets a client revoke its own tokens (and silently no-ops a public client's
+        // attempt to revoke another client's token), which is the standard, safe behavior.
+        revocation: { enabled: true },
         registration: { enabled: this.providerConfigService.oidcRegistrationRouteEnabled },
         registrationManagement: { enabled: this.providerConfigService.oidcRegistrationRouteEnabled },
         resourceIndicators: {
