@@ -4,7 +4,8 @@
   "peerDependencies": {
     "@dereekb/dbx-cli": "13.23.0",
     "@dereekb/util": "13.23.0",
-    "@typescript-eslint/utils": "8.59.3"
+    "@typescript-eslint/utils": "8.59.3",
+    "typescript": "5.9.3"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "8.59.3",
