@@ -1,13 +1,13 @@
 {
   "name": "@dereekb/dbx-form/style-demo",
-  "version": "13.23.0",
+  "version": "13.24.0",
   "peerDependencies": {
     "@angular/common": "21.2.11",
     "@angular/core": "21.2.11",
     "@angular/material": "^21.2.9",
-    "@dereekb/dbx-form": "13.23.0",
-    "@dereekb/dbx-web": "13.23.0",
-    "@dereekb/util": "13.23.0",
-    "@dereekb/vitest": "13.23.0"
+    "@dereekb/dbx-form": "13.24.0",
+    "@dereekb/dbx-web": "13.24.0",
+    "@dereekb/util": "13.24.0",
+    "@dereekb/vitest": "13.24.0"
   }
 }
