@@ -157,6 +157,24 @@ export interface ZohoSignAction {
   readonly private_notes?: string;
   readonly in_person_name?: string;
   readonly in_person_email?: EmailAddress;
+  /**
+   * Template placeholder role this recipient fills in. Used when creating a document from a template.
+   */
+  readonly role?: string;
+  /**
+   * Recipient phone number, used for SMS verification.
+   */
+  readonly recipient_phonenumber?: string;
+  /**
+   * Country code for the recipient phone number.
+   */
+  readonly recipient_countrycode?: string;
+  /**
+   * When true, this recipient signs within your application (embedded signing) rather than via the Zoho Sign email.
+   *
+   * Required for {@link ZohoSignGetEmbeddedSigningUrlFunction} to return a signing URL for this action.
+   */
+  readonly is_embedded?: boolean;
   readonly fields?: ZohoSignActionFields;
 }
 
@@ -268,5 +286,28 @@ export interface ZohoSignRequestData {
   readonly email_reminders?: boolean;
   readonly reminder_period?: number;
   readonly folder_id?: ZohoSignFolderId;
+  readonly actions: ZohoSignAction[];
+}
+
+// MARK: Template Input Data
+/**
+ * Prefill values for a template's fields, keyed by field label, grouped by value type.
+ */
+export interface ZohoSignTemplateFieldData {
+  readonly field_text_data?: Record<string, string>;
+  readonly field_boolean_data?: Record<string, boolean>;
+  readonly field_date_data?: Record<string, string>;
+}
+
+/**
+ * Input data for creating a Zoho Sign request from a template.
+ *
+ * Sent inside the `templates` envelope of the create-document-from-template call. Each entry in
+ * {@link actions} addresses a template placeholder recipient (matched by `action_id` or `role`).
+ */
+export interface ZohoSignCreateDocumentFromTemplateData {
+  readonly request_name?: string;
+  readonly notes?: string;
+  readonly field_data?: ZohoSignTemplateFieldData;
   readonly actions: ZohoSignAction[];
 }

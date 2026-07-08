@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { type ZohoSign, type ZohoSignContext, zohoSignGetDocument, zohoSignGetDocuments, zohoSignGetDocumentsPageFactory, zohoSignGetDocumentFormData, zohoSignRetrieveFieldTypes, zohoSignDownloadPdf, zohoSignDownloadCompletionCertificate, zohoSignCreateDocument, zohoSignUpdateDocument, zohoSignSendDocumentForSignature, zohoSignExtendDocument, zohoSignDeleteDocument, zohoSignFactory } from '@dereekb/zoho';
+import { type ZohoSign, type ZohoSignContext, zohoSignGetDocument, zohoSignGetDocuments, zohoSignGetDocumentsPageFactory, zohoSignGetDocumentFormData, zohoSignRetrieveFieldTypes, zohoSignDownloadPdf, zohoSignDownloadCompletionCertificate, zohoSignCreateDocument, zohoSignCreateDocumentFromTemplate, zohoSignUpdateDocument, zohoSignSendDocumentForSignature, zohoSignExtendDocument, zohoSignDeleteDocument, zohoSignGetEmbeddedSigningUrl, zohoSignFactory } from '@dereekb/zoho';
 import { ZohoSignServiceConfig } from './sign.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 
@@ -125,6 +125,15 @@ export class ZohoSignApi {
   }
 
   /**
+   * Configured pass-through for {@link zohoSignCreateDocumentFromTemplate}.
+   *
+   * @returns Bound create document from template function.
+   */
+  get createDocumentFromTemplate() {
+    return zohoSignCreateDocumentFromTemplate(this.signContext);
+  }
+
+  /**
    * Configured pass-through for {@link zohoSignUpdateDocument}.
    *
    * @returns Bound update document function.
@@ -158,5 +167,14 @@ export class ZohoSignApi {
    */
   get deleteDocument() {
     return zohoSignDeleteDocument(this.signContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoSignGetEmbeddedSigningUrl}.
+   *
+   * @returns Bound get embedded signing URL function.
+   */
+  get getEmbeddedSigningUrl() {
+    return zohoSignGetEmbeddedSigningUrl(this.signContext);
   }
 }

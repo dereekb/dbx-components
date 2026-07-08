@@ -1,7 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { type FetchJsonBody, type FetchJsonInput, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type ZohoSignContext } from './sign.config';
-import { type ZohoSignRequest, type ZohoSignRequestId, type ZohoSignRequestData, type ZohoSignFieldType, type ZohoSignDocumentFormData } from './sign';
+import { type ZohoSignRequest, type ZohoSignRequestId, type ZohoSignRequestData, type ZohoSignFieldType, type ZohoSignDocumentFormData, type ZohoSignTemplateId, type ZohoSignActionId, type ZohoSignCreateDocumentFromTemplateData } from './sign';
 import { type ZohoSignPageFilter, type ZohoSignPageResult, type ZohoSignSearchColumns, zohoSignFetchPageFactory } from './sign.api.page';
 
 // MARK: Utility
@@ -363,6 +363,61 @@ export function zohoSignCreateDocument(context: ZohoSignContext): ZohoSignCreate
   };
 }
 
+// MARK: Create Document From Template
+export interface ZohoSignCreateDocumentFromTemplateInput {
+  readonly templateId: ZohoSignTemplateId;
+  readonly data: ZohoSignCreateDocumentFromTemplateData;
+  /**
+   * Send the request immediately (true, the default) or leave it as a draft (false).
+   */
+  readonly isQuickSend?: boolean;
+}
+
+export type ZohoSignCreateDocumentFromTemplateFunction = (input: ZohoSignCreateDocumentFromTemplateInput) => Promise<ZohoSignDocumentOperationResponse>;
+
+/**
+ * Creates a {@link ZohoSignCreateDocumentFromTemplateFunction} bound to the given context.
+ *
+ * Instantiates a new signing request from a pre-built Zoho Sign template, addressing it to the
+ * recipient action(s) supplied in {@link ZohoSignCreateDocumentFromTemplateData} and optionally
+ * prefilling template fields. The template payload is wrapped in a `templates` envelope and sent
+ * as a URL-encoded `data` form field; `is_quicksend` (default true) submits the request for
+ * signature immediately, while `false` leaves it as a draft that can be sent later via
+ * {@link zohoSignSendDocumentForSignature}.
+ *
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that creates a document from a template.
+ *
+ * @see https://www.zoho.com/sign/api/template-managment/send-documents-using-template.html
+ *
+ * @example
+ * ```typescript
+ * const createFromTemplate = zohoSignCreateDocumentFromTemplate(context);
+ *
+ * const response = await createFromTemplate({
+ *   templateId: '286906000001616000',
+ *   data: {
+ *     request_name: 'Employee Agreement',
+ *     actions: [
+ *       {
+ *         action_type: 'SIGN',
+ *         recipient_name: 'Jane Doe',
+ *         recipient_email: 'jane@example.com'
+ *       }
+ *     ]
+ *   }
+ * });
+ *
+ * const requestId = response.requests.request_id;
+ * ```
+ */
+export function zohoSignCreateDocumentFromTemplate(context: ZohoSignContext): ZohoSignCreateDocumentFromTemplateFunction {
+  return ({ templateId, data, isQuickSend = true }: ZohoSignCreateDocumentFromTemplateInput) => {
+    const form = makeUrlSearchParams({ data: JSON.stringify({ templates: data }) });
+    return context.fetchJson<ZohoSignDocumentOperationResponse>({ url: `/templates/${templateId}/createdocument`, queryParams: { is_quicksend: String(isQuickSend) } }, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form.toString() });
+  };
+}
+
 // MARK: Update Document
 export interface ZohoSignUpdateDocumentInput {
   readonly requestId: ZohoSignRequestId;
@@ -538,4 +593,54 @@ export function zohoSignDeleteDocument(context: ZohoSignContext): ZohoSignDelete
       ...(hasForm ? { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form.toString() } : {})
     });
   };
+}
+
+// MARK: Get Embedded Signing URL
+export interface ZohoSignGetEmbeddedSigningUrlInput {
+  readonly requestId: ZohoSignRequestId;
+  readonly actionId: ZohoSignActionId;
+  /**
+   * Hosting origin embedded in the returned token, e.g. 'https://app.example.com'.
+   */
+  readonly host: string;
+}
+
+/**
+ * Response containing a short-lived embedded signing URL.
+ */
+export interface ZohoSignGetEmbeddedSigningUrlResponse extends ZohoSignApiResponse {
+  readonly sign_url: string;
+}
+
+export type ZohoSignGetEmbeddedSigningUrlFunction = (input: ZohoSignGetEmbeddedSigningUrlInput) => Promise<ZohoSignGetEmbeddedSigningUrlResponse>;
+
+/**
+ * Creates a {@link ZohoSignGetEmbeddedSigningUrlFunction} bound to the given context.
+ *
+ * Generates an embedded signing URL (embed token) for a single recipient action, letting
+ * consumers surface an in-app signing link instead of relying on the Zoho Sign email. The
+ * recipient action must have been created with `is_embedded: true` (see
+ * {@link ZohoSignAction.is_embedded}), otherwise no URL is issued. The returned `sign_url` is
+ * short-lived (~2 minutes) and single-use — regenerate it via a new call when it expires.
+ *
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that generates an embedded signing URL for a recipient action.
+ *
+ * @see https://www.zoho.com/sign/api/embedded-signing.html
+ *
+ * @example
+ * ```typescript
+ * const getSigningUrl = zohoSignGetEmbeddedSigningUrl(context);
+ *
+ * const response = await getSigningUrl({
+ *   requestId: '12345',
+ *   actionId: '67890',
+ *   host: 'https://app.example.com'
+ * });
+ *
+ * const signUrl = response.sign_url;
+ * ```
+ */
+export function zohoSignGetEmbeddedSigningUrl(context: ZohoSignContext): ZohoSignGetEmbeddedSigningUrlFunction {
+  return ({ requestId, actionId, host }: ZohoSignGetEmbeddedSigningUrlInput) => context.fetchJson<ZohoSignGetEmbeddedSigningUrlResponse>({ url: `/requests/${requestId}/actions/${actionId}/embedtoken`, queryParams: { host } }, zohoSignApiFetchJsonInput('POST'));
 }
