@@ -313,7 +313,7 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
   // auth request also includes `prompt=consent`. Auto-add it so refresh tokens are
   // actually issued whenever offline access is requested.
   if (resolvedScope.split(/\s+/).includes('offline_access')) {
-    authParams.prompt = 'consent';
+    authParams['prompt'] = 'consent';
   }
 
   if (input.requestedSessionTtlSeconds != null) {
@@ -324,7 +324,7 @@ export function buildAuthorizationUrl(input: BuildAuthorizationUrlInput): string
       });
     }
 
-    authParams.dbx_session_ttl = String(input.requestedSessionTtlSeconds);
+    authParams['dbx_session_ttl'] = String(input.requestedSessionTtlSeconds);
   }
 
   const rebaseOrigin = resolveAuthorizationRebaseOrigin({

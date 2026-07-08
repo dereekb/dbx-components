@@ -1,3 +1,20 @@
+# [13.25.0](https://github.com/dereekb/dbx-components/compare/v13.24.0-dev...v13.25.0) (2026-07-08)
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([260a1993](https://github.com/dereekb/dbx-components/commit/260a1993b5313ee9e49e6e5dc118e5bfae834b80))
+
+
+### Code Refactoring
+
+- build fix ([ccf454f9](https://github.com/dereekb/dbx-components/commit/ccf454f9a9542c1cd4361dca40e41794aa1a19d5))
+
+
+### Features
+
+- **zoho:** add ZohoSign template send + embedded signing URL ([a3f9d98a](https://github.com/dereekb/dbx-components/commit/a3f9d98a7157ea9a6687e8fa6c9074cea9dff091))
+
 # [13.24.0](https://github.com/dereekb/dbx-components/compare/v13.23.0-dev...v13.24.0) (2026-06-29)
 
 
