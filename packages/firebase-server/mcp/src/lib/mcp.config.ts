@@ -1,4 +1,5 @@
 import { type AuthClaims, type AuthRoleSet } from '@dereekb/util';
+import { type OidcScope } from '@dereekb/firebase';
 
 /**
  * Default path the MCP Streamable HTTP transport is mounted at.
@@ -89,6 +90,14 @@ export interface McpReasonParameterConfig {
 }
 
 /**
+ * Filter applied to the OIDC provider's advertised scope list when building the MCP
+ * protected-resource metadata's `scopes_supported`. Receives every scope the provider
+ * issues (from `OidcProviderConfigService.scopesSupported`) and returns the subset to
+ * advertise. Supplied via {@link McpModuleConfig.scopesSupported}; when unset, all are advertised.
+ */
+export type McpScopesSupportedFilter = (allScopes: readonly OidcScope[]) => readonly OidcScope[];
+
+/**
  * Configuration for the firebase-server/mcp module.
  *
  * Apps construct this in their `*McpModule` provider and pass it through
@@ -124,6 +133,26 @@ export abstract class McpModuleConfig {
    * @example 'https://api.example.com/mcp'
    */
   readonly mcpUrl!: string;
+
+  /**
+   * Optional filter applied to the OIDC provider's scope list when building the
+   * protected-resource discovery document's `scopes_supported` (RFC 9728 §2).
+   *
+   * The base list is pulled automatically from the OIDC provider config via the
+   * injected {@link OidcProviderConfigService.scopesSupported} (i.e.
+   * `Object.keys(providerConfig.claims)`), so the MCP resource advertises exactly
+   * the scopes the issuer supports without the app restating them. Provide this
+   * only to narrow that set — it receives every scope the provider issues and
+   * returns the subset to advertise. When unset, all of them are advertised.
+   *
+   * Advertising these matters because dynamic-registration MCP clients (the Claude
+   * Code CLI) read `scopes_supported` to decide which scopes to request on the
+   * authorization call; with none advertised they authorize with no `scope`, leaving
+   * the OIDC provider nothing to grant and ending the interaction in `access_denied`.
+   *
+   * @example (allScopes) => allScopes.filter((scope) => scope === 'openid' || scope.startsWith('model.'))
+   */
+  readonly scopesSupported?: McpScopesSupportedFilter;
 
   /**
    * Optional name advertised on the MCP `initialize` handshake. Defaults to
