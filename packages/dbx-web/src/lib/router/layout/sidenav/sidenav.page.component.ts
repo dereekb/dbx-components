@@ -30,7 +30,7 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'dbx-sidenav-page',
   template: `
-    <dbx-sidenav-pagebar [sidenavMenuIcon]="sidenavMenuIcon()">
+    <dbx-sidenav-pagebar [showSidenavButton]="showSidenavButton()" [sidenavMenuIcon]="sidenavMenuIcon()">
       <ng-content left select="[navLeft]"></ng-content>
       <ng-content select="[navRight]"></ng-content>
     </dbx-sidenav-pagebar>
@@ -48,8 +48,17 @@ import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 })
 export class DbxSidenavPageComponent {
   readonly parent = inject(DbxSidenavComponent);
-
+  /**
+   * The sidenav menu icon
+   */
   readonly sidenavMenuIcon = input<Maybe<string>>();
+  /**
+   * Whether or not to show the sidenav button.
+   *
+   * Defaults to true.
+   */
+  readonly showSidenavButton = input<Maybe<boolean>>();
+
   readonly mobileOnly = input<boolean>(false);
 
   readonly mobileOnly$ = toObservable(this.mobileOnly);
