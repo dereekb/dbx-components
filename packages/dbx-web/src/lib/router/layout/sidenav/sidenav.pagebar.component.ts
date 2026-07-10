@@ -22,8 +22,10 @@ import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directiv
   template: `
     <dbx-pagebar class="dbx-sidenav-pagebar">
       <span left>
-        <dbx-sidenav-button [sidenavMenuIcon]="sidenavMenuIcon()"></dbx-sidenav-button>
-        <dbx-button-spacer></dbx-button-spacer>
+        @if (showSidenavButton() !== false) {
+          <dbx-sidenav-button [sidenavMenuIcon]="sidenavMenuIcon()"></dbx-sidenav-button>
+          <dbx-button-spacer></dbx-button-spacer>
+        }
         <ng-content left></ng-content>
       </span>
       <ng-content right></ng-content>
@@ -34,5 +36,14 @@ import { DbxButtonSpacerDirective } from '../../../button/button.spacer.directiv
   standalone: true
 })
 export class DbxSidenavPagebarComponent extends DbxPagebarComponent {
+  /**
+   * The sidenav menu icon
+   */
   readonly sidenavMenuIcon = input<Maybe<string>>();
+  /**
+   * Whether or not to show the sidenav button.
+   *
+   * Defaults to true.
+   */
+  readonly showSidenavButton = input<Maybe<boolean>>();
 }

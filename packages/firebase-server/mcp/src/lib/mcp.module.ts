@@ -20,10 +20,14 @@ export interface McpModuleMetadataConfig extends Pick<ModuleMetadata, 'imports' 
    * Must provide:
    * - {@link ModelApiDispatchConfig} — so the MCP server can reuse the call model dispatch chain.
    * - {@link McpModuleConfig} — issuer + resource URLs for protected-resource discovery.
+   * - `OidcProviderConfigService` (from `@dereekb/firebase-server/oidc`) — the `McpWellKnownController`
+   *   reads the provider's `scopesSupported` to advertise them on the protected-resource document.
    *
    * In practice, downstream apps typically import their own `*ModelApiModule` first (which provides
    * `ModelApiCallModelDispatchService` + `MODEL_API_NEST_APPLICATION_CONTEXT`) and add the
-   * `McpModuleConfig` provider in the dependency module passed here.
+   * `McpModuleConfig` provider in the dependency module passed here. The `OidcProviderConfigService`
+   * export is satisfied by re-exporting the app's `*OidcModule` from the dependency module (the shared
+   * `oidcModuleMetadata` exports the service, so re-exporting the module propagates it to the controller).
    */
   readonly dependencyModule: ClassType;
 }
