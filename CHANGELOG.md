@@ -1,3 +1,21 @@
+## [13.25.1](https://github.com/dereekb/dbx-components/compare/v13.25.0-dev...v13.25.1) (2026-07-10)
+
+
+### Bug Fixes
+
+- **firebase-server:** resolve OidcProviderConfigService DI for MCP ([227b2cd4](https://github.com/dereekb/dbx-components/commit/227b2cd4320dc78d0d52ce590827713bf7ec5974))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([bae55ca1](https://github.com/dereekb/dbx-components/commit/bae55ca1f5d4643d6b302b2e8cc2d9c8c28f96cd))
+
+
+### Code Refactoring
+
+- added showSidenavButton to DbxSidenavPagebarComponent ([76b2bcf9](https://github.com/dereekb/dbx-components/commit/76b2bcf91dcb56e1fc58c2c135e0fc2597e49a20))
+- updated McpWellKnownController to include scopes ([2990016e](https://github.com/dereekb/dbx-components/commit/2990016e6233b4a986898446864f5cc116450737))
+
 # [13.25.0](https://github.com/dereekb/dbx-components/compare/v13.24.0-dev...v13.25.0) (2026-07-08)
 
 
