@@ -96,8 +96,9 @@ const demoMcpAuthRoleReader: McpAuthRoleReader = (claims) => DEMO_AUTH_CLAIMS_SE
  *
  * Re-exports {@link DemoModelApiModule} so its `ModelApiCallModelDispatchService`
  * export propagates to `McpServerFactoryService`, plus the MCP module config provider.
- * Imports {@link DemoApiOidcModule} so {@link OidcModuleConfig} is available to the
- * MCP config factory.
+ * Imports + re-exports {@link DemoApiOidcModule} so {@link OidcModuleConfig} is available
+ * to the MCP config factory and its `OidcProviderConfigService` export propagates to the
+ * `McpWellKnownController` (which reads the provider's `scopesSupported`).
  */
 @Module({
   imports: [DemoApiOidcModule, DemoModelApiModule],
@@ -112,7 +113,7 @@ const demoMcpAuthRoleReader: McpAuthRoleReader = (claims) => DEMO_AUTH_CLAIMS_SE
       useValue: demoMcpAuthRoleReader
     }
   ],
-  exports: [McpModuleConfig, MCP_AUTH_ROLE_READER, DemoModelApiModule]
+  exports: [McpModuleConfig, MCP_AUTH_ROLE_READER, DemoModelApiModule, DemoApiOidcModule]
 })
 export class DemoMcpDependencyModule {}
 

@@ -353,7 +353,7 @@ export function oidcModuleMetadata(metadataConfig: ProvideAppOidcModuleMetadataC
   return {
     imports: [ConfigModule, FirebaseServerFirestoreContextModule, ...dependencyModuleImport, ...(imports ?? [])],
     controllers: [OidcWellKnownController, OidcInteractionController, OidcProviderController],
-    exports: [OidcClientService, OidcService, OidcModuleConfig, OidcAuthMiddlewareConfig, OidcServerFirestoreCollections, ...(exports ?? [])],
+    exports: [OidcClientService, OidcService, OidcProviderConfigService, OidcModuleConfig, OidcAuthMiddlewareConfig, OidcServerFirestoreCollections, ...(exports ?? [])],
     providers: [
       {
         provide: OidcModuleConfig,
