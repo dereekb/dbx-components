@@ -2713,7 +2713,13 @@
         {
           "name": "sidenavMenuIcon",
           "type": "Maybe<string>",
-          "description": "",
+          "description": "The sidenav menu icon",
+          "required": false
+        },
+        {
+          "name": "showSidenavButton",
+          "type": "Maybe<boolean>",
+          "description": "Whether or not to show the sidenav button.\n\nDefaults to true.",
           "required": false
         },
         {
