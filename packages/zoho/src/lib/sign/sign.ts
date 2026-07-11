@@ -311,3 +311,27 @@ export interface ZohoSignCreateDocumentFromTemplateData {
   readonly field_data?: ZohoSignTemplateFieldData;
   readonly actions: ZohoSignAction[];
 }
+
+// MARK: Template
+/**
+ * A Zoho Sign template — a reusable request blueprint. Returned by the get-template API.
+ *
+ * Its {@link actions} are the template's placeholder recipients; each carries an
+ * {@link ZohoSignAction.action_id} that must be supplied (per action) when creating a document from the
+ * template — see {@link ZohoSignCreateDocumentFromTemplateData}.
+ */
+export interface ZohoSignTemplate {
+  readonly template_id: ZohoSignTemplateId;
+  readonly template_name?: string;
+  readonly description?: string;
+  readonly owner_id?: string;
+  readonly owner_email?: EmailAddress;
+  readonly created_time?: UnixDateTimeMillisecondsNumber;
+  readonly modified_time?: UnixDateTimeMillisecondsNumber;
+  readonly folder_id?: ZohoSignFolderId;
+  readonly email_reminders?: boolean;
+  readonly is_sequential?: boolean;
+  readonly actions?: ZohoSignAction[];
+  readonly document_ids?: ZohoSignDocument[];
+  readonly document_fields?: ZohoSignDocumentFieldsEntry[];
+}

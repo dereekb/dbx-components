@@ -109,6 +109,31 @@ describe('sign.api', () => {
       });
     });
 
+    describe('getTemplates() and getTemplate()', () => {
+      it('should list templates then retrieve one, exposing its recipient action ids', async () => {
+        const listResult = await api.getTemplates({ row_count: 5 });
+
+        expect(listResult).toBeDefined();
+        expect(listResult.templates).toBeDefined();
+        expect(listResult.page_context).toBeDefined();
+
+        if (listResult.templates.length > 0) {
+          const templateId = listResult.templates[0].template_id;
+          expect(templateId).toBeDefined();
+
+          const result = await api.getTemplate({ templateId });
+
+          expect(result).toBeDefined();
+          expect(result.templates).toBeDefined();
+          expect(result.templates.template_id).toBe(templateId);
+
+          // each template placeholder action carries the action_id required when creating a document from the template
+          const actions = result.templates.actions ?? [];
+          actions.forEach((action) => expect(action.action_id).toBeDefined());
+        }
+      });
+    });
+
     describe('retrieveFieldTypes()', () => {
       it('should retrieve available field types', async () => {
         const result = await api.retrieveFieldTypes();

@@ -1,8 +1,8 @@
 import { type Maybe } from '@dereekb/util';
 import { type FetchJsonBody, type FetchJsonInput, makeUrlSearchParams } from '@dereekb/util/fetch';
 import { type ZohoSignContext } from './sign.config';
-import { type ZohoSignRequest, type ZohoSignRequestId, type ZohoSignRequestData, type ZohoSignFieldType, type ZohoSignDocumentFormData, type ZohoSignTemplateId, type ZohoSignActionId, type ZohoSignCreateDocumentFromTemplateData } from './sign';
-import { type ZohoSignPageFilter, type ZohoSignPageResult, type ZohoSignSearchColumns, zohoSignFetchPageFactory } from './sign.api.page';
+import { type ZohoSignRequest, type ZohoSignRequestId, type ZohoSignRequestData, type ZohoSignFieldType, type ZohoSignDocumentFormData, type ZohoSignTemplate, type ZohoSignTemplateId, type ZohoSignActionId, type ZohoSignCreateDocumentFromTemplateData } from './sign';
+import { type ZohoSignPageContext, type ZohoSignPageFilter, type ZohoSignPageResult, type ZohoSignSearchColumns, zohoSignFetchPageFactory } from './sign.api.page';
 
 // MARK: Utility
 /**
@@ -415,6 +415,99 @@ export function zohoSignCreateDocumentFromTemplate(context: ZohoSignContext): Zo
   return ({ templateId, data, isQuickSend = true }: ZohoSignCreateDocumentFromTemplateInput) => {
     const form = makeUrlSearchParams({ data: JSON.stringify({ templates: data }) });
     return context.fetchJson<ZohoSignDocumentOperationResponse>({ url: `/templates/${templateId}/createdocument`, queryParams: { is_quicksend: String(isQuickSend) } }, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form.toString() });
+  };
+}
+
+// MARK: Get Template
+/**
+ * Response containing a single template's details.
+ */
+export interface ZohoSignGetTemplateResponse extends ZohoSignApiResponse {
+  readonly templates: ZohoSignTemplate;
+}
+
+export interface ZohoSignGetTemplateInput {
+  readonly templateId: ZohoSignTemplateId;
+}
+
+export type ZohoSignGetTemplateFunction = (input: ZohoSignGetTemplateInput) => Promise<ZohoSignGetTemplateResponse>;
+
+/**
+ * Creates a {@link ZohoSignGetTemplateFunction} bound to the given context.
+ *
+ * Fetches the details of a single Zoho Sign template by its ID, including its placeholder recipient
+ * {@link ZohoSignTemplate.actions}. Each action's {@link ZohoSignAction.action_id} is required (per action)
+ * when creating a document from the template — see {@link zohoSignCreateDocumentFromTemplate}.
+ *
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that retrieves a template by ID.
+ *
+ * @see https://www.zoho.com/sign/api/template-managment/get-details-of-a-particular-template.html
+ *
+ * @example
+ * ```typescript
+ * const getTemplate = zohoSignGetTemplate(context);
+ * const response = await getTemplate({ templateId: '286906000001616000' });
+ * const signActionId = response.templates.actions?.find((x) => x.action_type === 'SIGN')?.action_id;
+ * ```
+ */
+export function zohoSignGetTemplate(context: ZohoSignContext): ZohoSignGetTemplateFunction {
+  return ({ templateId }: ZohoSignGetTemplateInput) => context.fetchJson<ZohoSignGetTemplateResponse>(`/templates/${templateId}`, zohoSignApiFetchJsonInput('GET'));
+}
+
+// MARK: Get Templates
+export interface ZohoSignGetTemplatesInput extends ZohoSignPageFilter {
+  readonly search_columns?: ZohoSignSearchColumns;
+}
+
+/**
+ * Response containing a paginated list of templates.
+ *
+ * Note the `templates` field is an array here (the list endpoint), whereas the single-template
+ * {@link ZohoSignGetTemplateResponse.templates} is a single object — this mirrors the Zoho Sign API.
+ */
+export interface ZohoSignGetTemplatesResponse extends ZohoSignApiResponse {
+  readonly templates: ZohoSignTemplate[];
+  readonly page_context: ZohoSignPageContext;
+}
+
+export type ZohoSignGetTemplatesFunction = (input?: ZohoSignGetTemplatesInput) => Promise<ZohoSignGetTemplatesResponse>;
+
+/**
+ * Creates a {@link ZohoSignGetTemplatesFunction} bound to the given context.
+ *
+ * Fetches a paginated list of the account's Zoho Sign templates. Pagination parameters
+ * (`start_index`, `row_count`) are serialized as a JSON `data` query parameter per the Zoho Sign API
+ * convention. Pair with {@link zohoSignGetTemplate} to read a specific template's placeholder actions.
+ *
+ * @param context - Authenticated Zoho Sign context providing fetch and rate limiting.
+ * @returns Function that retrieves a paginated list of templates.
+ *
+ * @see https://www.zoho.com/sign/api/template-managment/get-templates.html
+ *
+ * @example
+ * ```typescript
+ * const getTemplates = zohoSignGetTemplates(context);
+ * const response = await getTemplates({ row_count: 10 });
+ * ```
+ */
+export function zohoSignGetTemplates(context: ZohoSignContext): ZohoSignGetTemplatesFunction {
+  return (input: ZohoSignGetTemplatesInput = {}) => {
+    const { search_columns, ...pageFilter } = input;
+    const data = {
+      page_context: {
+        ...pageFilter,
+        ...(search_columns ? { search_columns } : {})
+      }
+    };
+
+    return context.fetchJson<ZohoSignGetTemplatesResponse>(
+      {
+        url: `/templates`,
+        queryParams: { data: JSON.stringify(data) }
+      },
+      zohoSignApiFetchJsonInput('GET')
+    );
   };
 }
 
