@@ -1,5 +1,25 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { type ZohoSign, type ZohoSignContext, zohoSignGetDocument, zohoSignGetDocuments, zohoSignGetDocumentsPageFactory, zohoSignGetDocumentFormData, zohoSignRetrieveFieldTypes, zohoSignDownloadPdf, zohoSignDownloadCompletionCertificate, zohoSignCreateDocument, zohoSignCreateDocumentFromTemplate, zohoSignUpdateDocument, zohoSignSendDocumentForSignature, zohoSignExtendDocument, zohoSignDeleteDocument, zohoSignGetEmbeddedSigningUrl, zohoSignFactory } from '@dereekb/zoho';
+import {
+  type ZohoSign,
+  type ZohoSignContext,
+  zohoSignGetDocument,
+  zohoSignGetDocuments,
+  zohoSignGetDocumentsPageFactory,
+  zohoSignGetDocumentFormData,
+  zohoSignRetrieveFieldTypes,
+  zohoSignDownloadPdf,
+  zohoSignDownloadCompletionCertificate,
+  zohoSignCreateDocument,
+  zohoSignCreateDocumentFromTemplate,
+  zohoSignGetTemplate,
+  zohoSignGetTemplates,
+  zohoSignUpdateDocument,
+  zohoSignSendDocumentForSignature,
+  zohoSignExtendDocument,
+  zohoSignDeleteDocument,
+  zohoSignGetEmbeddedSigningUrl,
+  zohoSignFactory
+} from '@dereekb/zoho';
 import { ZohoSignServiceConfig } from './sign.config';
 import { ZohoAccountsApi } from '../accounts/accounts.api';
 
@@ -131,6 +151,24 @@ export class ZohoSignApi {
    */
   get createDocumentFromTemplate() {
     return zohoSignCreateDocumentFromTemplate(this.signContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoSignGetTemplate}.
+   *
+   * @returns Bound get template function.
+   */
+  get getTemplate() {
+    return zohoSignGetTemplate(this.signContext);
+  }
+
+  /**
+   * Configured pass-through for {@link zohoSignGetTemplates}.
+   *
+   * @returns Bound get templates (list) function.
+   */
+  get getTemplates() {
+    return zohoSignGetTemplates(this.signContext);
   }
 
   /**

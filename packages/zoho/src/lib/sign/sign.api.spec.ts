@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { type ZohoSignContext } from './sign.config';
 import { type ZohoSignCreateDocumentFromTemplateData } from './sign';
-import { type ZohoSignDocumentOperationResponse, type ZohoSignGetEmbeddedSigningUrlResponse, zohoSignCreateDocumentFromTemplate, zohoSignGetEmbeddedSigningUrl } from './sign.api';
+import { type ZohoSignDocumentOperationResponse, type ZohoSignGetEmbeddedSigningUrlResponse, type ZohoSignGetTemplateResponse, type ZohoSignGetTemplatesResponse, zohoSignCreateDocumentFromTemplate, zohoSignGetEmbeddedSigningUrl, zohoSignGetTemplate, zohoSignGetTemplates } from './sign.api';
 
 /**
  * Builds a minimal mock {@link ZohoSignContext} whose `fetchJson` resolves to the given value,
@@ -50,6 +50,62 @@ describe('zohoSignCreateDocumentFromTemplate()', () => {
 
     const [url] = fetchJson.mock.calls[0];
     expect(url).toEqual({ url: `/templates/${templateId}/createdocument`, queryParams: { is_quicksend: 'false' } });
+  });
+});
+
+describe('zohoSignGetTemplate()', () => {
+  const templateId = '286906000001616000';
+  const response: ZohoSignGetTemplateResponse = {
+    code: 0,
+    message: 'success',
+    status: 'success',
+    templates: {
+      template_id: templateId,
+      template_name: 'Employee Agreement',
+      actions: [{ action_id: 'a1', action_type: 'SIGN', recipient_name: 'Signer', recipient_email: 'signer@example.com', role: 'Employee' }]
+    }
+  };
+
+  it('should GET the template endpoint and return the template details (including action ids)', async () => {
+    const { context, fetchJson } = mockZohoSignContext(response);
+
+    const result = await zohoSignGetTemplate(context)({ templateId });
+
+    expect(result).toBe(response);
+    expect(result.templates.actions?.[0]?.action_id).toBe('a1');
+    expect(fetchJson).toHaveBeenCalledTimes(1);
+
+    const [url, input] = fetchJson.mock.calls[0];
+    expect(url).toBe(`/templates/${templateId}`);
+    expect(input.method).toBe('GET');
+  });
+});
+
+describe('zohoSignGetTemplates()', () => {
+  const response: ZohoSignGetTemplatesResponse = {
+    code: 0,
+    message: 'success',
+    status: 'success',
+    templates: [
+      { template_id: '286906000001616000', template_name: 'Employee Agreement' },
+      { template_id: '286906000001616001', template_name: 'Independent Contractor Agreement' }
+    ],
+    page_context: { has_more_rows: false, total_count: 2, start_index: 1, row_count: 2 }
+  };
+
+  it('should GET the templates endpoint with a page_context data query param and return the list', async () => {
+    const { context, fetchJson } = mockZohoSignContext(response);
+
+    const result = await zohoSignGetTemplates(context)({ row_count: 5 });
+
+    expect(result).toBe(response);
+    expect(result.templates).toHaveLength(2);
+    expect(fetchJson).toHaveBeenCalledTimes(1);
+
+    const [url, input] = fetchJson.mock.calls[0];
+    expect(url.url).toBe('/templates');
+    expect(JSON.parse(url.queryParams.data)).toEqual({ page_context: { row_count: 5 } });
+    expect(input.method).toBe('GET');
   });
 });
 
