@@ -9,7 +9,7 @@
   <mat-select [id]="selectId" [formField]="f" [multiple]="multipleSignal()" [panelClass]="selectPanelClassSignal()" (openedChange)="onSelectOpenedChange($event)" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-required]="ariaRequiredSignal()" [attr.aria-describedby]="ariaDescribedBySignal()">
     @if (filterableSignal()) {
       <div class="dbx-source-select-filter-container">
-        <input #filterInput class="dbx-source-select-filter-input" type="text" placeholder="Type to filter..." (input)="onFilterInput($event)" (keydown)="onFilterKeydown($event)" />
+        <input #filterInput class="dbx-forge-bare-input dbx-source-select-filter-input" type="text" placeholder="Type to filter..." (input)="onFilterInput($event)" (keydown)="onFilterKeydown($event)" />
       </div>
     }
     @for (value of filteredNonGroupedValuesSignal(); track value.value) {

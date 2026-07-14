@@ -9,6 +9,20 @@
     border-radius: var(--mat-sys-corner-full);
   }
 
+  // Filter input rendered at the top of the mat-select panel (dbx-source-select-filterable-panel,
+  // applied via selectPanelClassSignal). The panel renders in the CDK overlay, so this must stay a
+  // top-level selector rather than nested under dbx-forge-source-select-field. The container pins
+  // the filter to the top of the scrolling option list and aligns it with the option padding; the
+  // input itself reuses .dbx-forge-bare-input (native reset + Material body-large typography).
+  .dbx-source-select-filter-container {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: var(--dbx-padding-2) var(--dbx-padding-3);
+    background: var(--mat-select-panel-background-color, var(--mat-sys-surface-container));
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
   dbx-forge-source-select-field {
     display: block;
     width: 100%;
