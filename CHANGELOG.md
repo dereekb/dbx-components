@@ -1,3 +1,21 @@
+# [13.27.0](https://github.com/dereekb/dbx-components/compare/v13.26.0-dev...v13.27.0) (2026-07-16)
+
+
+### Bug Fixes
+
+- **dbx-form:** style sourceselect filter input ([9e5c7015](https://github.com/dereekb/dbx-components/commit/9e5c7015627ad8402c38de1ab46ee93a795895d0))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([0294fe9b](https://github.com/dereekb/dbx-components/commit/0294fe9bb5ddca764554a8a278470bc9ad518d51))
+
+
+### Features
+
+- **firebase-server:** compress FlateDecode PDF images ([531467fa](https://github.com/dereekb/dbx-components/commit/531467fa251c8d04c2309d58e5e9191719638870))
+- **util:** add expiringCachedGetter (TTL + value-derived expiry) ([787d814e](https://github.com/dereekb/dbx-components/commit/787d814ed0437dc5f908c0b9d8c0778a7b8160cb))
+
 # [13.26.0](https://github.com/dereekb/dbx-components/compare/v13.25.1-dev...v13.26.0) (2026-07-11)
 
 
