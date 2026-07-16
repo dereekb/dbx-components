@@ -4948,6 +4948,45 @@
       ]
     },
     {
+      "slug": "expiring-cached-getter",
+      "name": "expiringCachedGetter",
+      "kind": "factory",
+      "category": "getter",
+      "module": "@dereekb/util",
+      "subpath": "getter/getter.cache.expiring",
+      "signature": "expiringCachedGetter(config: ExpiringCachedGetterConfig<T, A>): ExpiringCachedGetter<T, A>",
+      "description": "Creates an {@link ExpiringCachedGetter} from the input configuration.\n\nThe value is loaded and cached by an internal {@link cachedGetter}; this getter layers expiration on top —\nonce the cached value expires the next retrieval resets the internal cache and reloads. Expiration is\nconfigured one of two ways:\n\n- **Fixed TTL** — pass `ttl` (milliseconds); the value expires that long after it is loaded.\n- **Value-derived** — pass an `expiration` function deriving the expiration Date/epoch-ms from the loaded\n  value (e.g. `(value) => value.expiresAt`, or `(value, loadedAt) => addMilliseconds(loadedAt, ttlOf(value))`).\n  Returning null/undefined means \"never expires\". `expiration` takes precedence over `ttl`; with neither set\n  the value never expires (matching {@link cachedGetter}).\n\nA freshly-loaded value is returned without an expiration check; set `checkExpirationOnFirstGet` to reject a\ndead-on-arrival value with an error instead. Set `dynamic` to recompute the expiration details on every\nretrieval rather than once at load. Use {@link ExpiringCachedGetter.expirationDetails} to inspect the current\nexpiration state.",
+      "params": [
+        {
+          "name": "config",
+          "type": "ExpiringCachedGetterConfig<T, A>",
+          "description": "- The getter to cache plus its expiration configuration.",
+          "optional": false
+        }
+      ],
+      "returns": "An ExpiringCachedGetter that caches the value until it expires.",
+      "tags": [
+        "getter",
+        "cache",
+        "expire",
+        "expiring",
+        "ttl",
+        "time-to-live",
+        "refresh",
+        "memoize",
+        "lazy",
+        "factory",
+        "cached",
+        "expiringcachedgetter"
+      ],
+      "relatedSlugs": [
+        "cached-getter",
+        "expiration-details",
+        "is-expired",
+        "calculate-expiration-date"
+      ]
+    },
+    {
       "slug": "cached-getter",
       "name": "cachedGetter",
       "kind": "factory",
