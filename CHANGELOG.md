@@ -1,3 +1,10 @@
+# [13.26.0](https://github.com/dereekb/dbx-components/compare/v13.25.1-dev...v13.26.0) (2026-07-11)
+
+
+### Features
+
+- **zoho:** add getTemplate + getTemplates to Zoho Sign API ([d7ea1953](https://github.com/dereekb/dbx-components/commit/d7ea1953d33ceb6ebc6f594149e0b869bf65c458))
+
 ## [13.25.1](https://github.com/dereekb/dbx-components/compare/v13.25.0-dev...v13.25.1) (2026-07-10)
 
 
