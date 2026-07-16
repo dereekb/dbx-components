@@ -13,6 +13,30 @@ export const DEFAULT_COMPRESS_IMAGE_QUALITY_STEP = 10;
 export const DEFAULT_COMPRESS_IMAGE_FORMAT: CompressImageBufferToTargetSizeFormat = 'jpeg';
 
 /**
+ * Number of channels in raw pixel data (1 = grayscale, 2 = grayscale+alpha, 3 = RGB, 4 = RGBA/CMYK).
+ */
+export type CompressImageRawPixelChannels = 1 | 2 | 3 | 4;
+
+/**
+ * Describes raw, uncompressed pixel data passed as the input buffer to
+ * {@link compressImageBufferToTargetSize} (interleaved, 8 bits per channel).
+ */
+export interface CompressImageBufferRawPixelInput {
+  /**
+   * Width of the raw image in pixels.
+   */
+  readonly width: number;
+  /**
+   * Height of the raw image in pixels.
+   */
+  readonly height: number;
+  /**
+   * Number of channels in the raw pixel data.
+   */
+  readonly channels: CompressImageRawPixelChannels;
+}
+
+/**
  * Configuration for {@link compressImageBufferToTargetSize}.
  */
 export interface CompressImageBufferToTargetSizeConfig {
@@ -48,6 +72,13 @@ export interface CompressImageBufferToTargetSizeConfig {
    * Output format. Defaults to {@link DEFAULT_COMPRESS_IMAGE_FORMAT}.
    */
   readonly format?: Maybe<CompressImageBufferToTargetSizeFormat>;
+  /**
+   * When provided, `input` is treated as raw uncompressed pixel data with these
+   * dimensions instead of an encoded image. Raw input is always re-encoded to
+   * `format` — the raw bytes are never returned as the "smaller original", so the
+   * returned buffer is always a valid encoded image.
+   */
+  readonly rawPixelInput?: Maybe<CompressImageBufferRawPixelInput>;
 }
 
 /**
@@ -68,6 +99,10 @@ export interface CompressImageBufferToTargetSizeResult {
   readonly finalQuality: number;
   readonly finalWidth: number;
   readonly finalHeight: number;
+  /**
+   * Number of channels in the returned buffer (e.g. 1 = grayscale, 3 = RGB).
+   */
+  readonly finalChannels: number;
   /**
    * True if `compressedSizeBytes <= targetSizeBytes`.
    */
@@ -104,10 +139,11 @@ export async function compressImageBufferToTargetSize(input: Buffer, config: Com
   const minQuality = config.minQuality ?? DEFAULT_COMPRESS_IMAGE_MIN_QUALITY;
   const qualityStep = config.qualityStep ?? DEFAULT_COMPRESS_IMAGE_QUALITY_STEP;
   const format = config.format ?? DEFAULT_COMPRESS_IMAGE_FORMAT;
+  const rawPixelInput = config.rawPixelInput ?? undefined;
 
-  const metadata = await sharp(input).metadata();
-  const originalWidth = metadata.width ?? 0;
-  const originalHeight = metadata.height ?? 0;
+  const inputMetadata = rawPixelInput == null ? await sharp(input).metadata() : undefined;
+  const originalWidth = rawPixelInput?.width ?? inputMetadata?.width ?? 0;
+  const originalHeight = rawPixelInput?.height ?? inputMetadata?.height ?? 0;
   const originalSizeBytes = input.byteLength;
 
   const longestSide = Math.max(originalWidth, originalHeight);
@@ -117,17 +153,18 @@ export async function compressImageBufferToTargetSize(input: Buffer, config: Com
   const workingHeight = Math.max(1, Math.round(originalHeight * scale));
 
   let bestBuffer: Buffer = input;
-  let bestSize = originalSizeBytes;
+  // raw input must always be re-encoded, so no encoding is compared against the raw byte size
+  let bestSize = rawPixelInput == null ? originalSizeBytes : Number.MAX_SAFE_INTEGER;
   let bestQuality = 100;
   let bestWidth = originalWidth;
   let bestHeight = originalHeight;
-  let hitTarget = bestSize <= targetSizeBytes && !resizeNeeded;
+  let hitTarget = rawPixelInput == null && bestSize <= targetSizeBytes && !resizeNeeded;
 
   if (!hitTarget) {
     const qualities = qualityIterationSteps({ format, initialQuality, minQuality, qualityStep });
 
     for (const quality of qualities) {
-      const encoded = await encodeImage({ input, format, quality, resizeNeeded, workingWidth, workingHeight });
+      const encoded = await encodeImage({ input, format, quality, resizeNeeded, workingWidth, workingHeight, rawPixelInput });
 
       if (encoded.byteLength < bestSize) {
         bestBuffer = encoded;
@@ -144,13 +181,22 @@ export async function compressImageBufferToTargetSize(input: Buffer, config: Com
     }
   }
 
+  let finalChannels: number;
+
+  if (bestBuffer === input) {
+    finalChannels = rawPixelInput?.channels ?? inputMetadata?.channels ?? 0;
+  } else {
+    finalChannels = (await sharp(bestBuffer).metadata()).channels ?? 0;
+  }
+
   const result: CompressImageBufferToTargetSizeResult = {
     buffer: bestBuffer,
     originalSizeBytes,
-    compressedSizeBytes: bestSize,
+    compressedSizeBytes: bestBuffer.byteLength,
     finalQuality: bestQuality,
     finalWidth: bestWidth,
     finalHeight: bestHeight,
+    finalChannels,
     hitTarget
   };
   return result;
@@ -186,10 +232,16 @@ interface EncodeImageInput {
   readonly resizeNeeded: boolean;
   readonly workingWidth: number;
   readonly workingHeight: number;
+  readonly rawPixelInput?: Maybe<CompressImageBufferRawPixelInput>;
 }
 
 async function encodeImage(input: EncodeImageInput): Promise<Buffer> {
-  const pipeline = sharp(input.input);
+  const pipeline = input.rawPixelInput == null ? sharp(input.input) : sharp(input.input, { raw: input.rawPixelInput });
+
+  // grayscale raw input stays grayscale — sharp otherwise converts raw pipelines to sRGB on encode
+  if (input.rawPixelInput?.channels === 1) {
+    pipeline.toColourspace('b-w');
+  }
 
   if (input.resizeNeeded) {
     pipeline.resize({
