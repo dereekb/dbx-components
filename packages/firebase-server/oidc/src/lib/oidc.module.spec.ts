@@ -65,6 +65,18 @@ describe('config.issuer override on oidcModuleMetadata', () => {
     const result = { ...moduleConfig, ...override };
     expect(result.issuer).toBe('https://canonical.example.com/oidc');
   });
+
+  it('leaves cors undefined by default (legacy behavior)', () => {
+    const moduleConfig = oidcModuleConfigFactory(makeConfigService(), makeEnvService());
+    expect(moduleConfig.cors).toBeUndefined();
+  });
+
+  it('threads a cors override through the factory-result spread', () => {
+    const moduleConfig = oidcModuleConfigFactory(makeConfigService(), makeEnvService());
+    const override: Partial<OidcModuleConfig> = { cors: { allowOrigins: ['https://lms.example.com'], clientBased: true } };
+    const result = { ...moduleConfig, ...override };
+    expect(result.cors).toEqual({ allowOrigins: ['https://lms.example.com'], clientBased: true });
+  });
 });
 
 describe('deriveResourceMetadataUrlFromEnv()', () => {
