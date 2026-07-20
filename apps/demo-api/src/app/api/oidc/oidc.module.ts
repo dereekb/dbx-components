@@ -123,7 +123,15 @@ export class DemoApiOidcDependencyModule {}
       protectedPaths: ['/api/model', '/mcp'],
       appOAuthInteractionPath: DEMO_APP_OAUTH_INTERACTION_PATH,
       tokenEndpointAuthMethods: DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS,
-      configureMcpResourceServer: true
+      configureMcpResourceServer: true,
+      // Cross-origin browser relying parties. The explicit allowlist reflects a known demo RP
+      // origin on every OIDC endpoint (discovery + token); `clientBased` additionally trusts any
+      // registered client's redirect_uris origins on the client-assigned routes (e.g. /token), so
+      // a browser PKCE client works from its own origin without being added to `allowOrigins`.
+      cors: {
+        allowOrigins: ['https://rp.test.dereekb.com'],
+        clientBased: true
+      }
     },
     // `registrationEnabled` (DCR) is unauthenticated and rate-limit-free, so any caller
     // can write Firestore client docs unbounded. Allow it in non-prod (dev, emulator,

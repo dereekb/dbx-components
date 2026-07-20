@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { errors as OidcProviderErrors, type default as Provider, type Interaction, type Configuration, type KoaContextWithOIDC } from 'oidc-provider';
+import { errors as OidcProviderErrors, type default as Provider, type Interaction, type Configuration, type KoaContextWithOIDC, type Client } from 'oidc-provider';
 import { DEFAULT_MAX_ADMIN_LOGIN_DURATION_SECONDS, DEFAULT_MAX_NONADMIN_LOGIN_DURATION_SECONDS, DEFAULT_MAX_REQUESTED_LOGIN_DURATION_SECONDS, DEFAULT_MAX_SERVICE_TOKEN_LOGIN_DURATION_SECONDS, DEFAULT_MIN_REQUESTED_LOGIN_DURATION_SECONDS, OidcModuleConfig } from '../oidc.config';
 import { DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA, DBX_FIREBASE_SERVER_OIDC_ROTATION_DISABLED_CLAIM, DBX_FIREBASE_SERVER_OIDC_SESSION_EXPIRES_AT_CLAIM, DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM, parseRequestedSessionTtlSeconds, readRemainingGrantSeconds, readRequestedSessionTtlSeconds, resolveLoginDurationSeconds, resolveTieredServerMaxSeconds, shouldRotateRefreshToken } from './oidc.session-ttl';
 import { JwksService } from './oidc.jwks.service';
@@ -365,6 +365,30 @@ export class OidcService {
         keys: cookieKeys
       },
       ...(config.renderError ? { renderError: config.renderError } : {}),
+      // Enable oidc-provider's clientBasedCORS only when the app opts in via `cors.clientBased`.
+      // This affects client-assigned routes (notably `/token`): a cross-origin request is allowed
+      // iff its Origin matches the origin of one of the requesting client's registered redirect_uris.
+      // Client-less routes (discovery/JWKS) keep oidc-provider's builtin reflect. When the key is
+      // absent (cors unset or clientBased false) the Express CORS layer always sets a header first,
+      // so oidc-provider's CORS never runs and behavior is byte-identical to before. Note: unlike
+      // oidc-provider's default helper (which restricts non-userinfo routes to public clients), this
+      // matches by redirect_uris origin for any client — harmless, since only browsers do CORS.
+      ...(config.cors?.clientBased
+        ? {
+            clientBasedCORS: (_ctx: KoaContextWithOIDC, origin: string, client: Client): boolean =>
+              (client.redirectUris ?? []).some((uri) => {
+                let matches = false;
+
+                try {
+                  matches = new URL(uri).origin === origin;
+                } catch {
+                  // malformed persisted redirect_uri — treat as non-matching
+                }
+
+                return matches;
+              })
+          }
+        : {}),
       // Setting `rotateRefreshToken` disables oidc-provider's built-in default, so we both honor the
       // dbx-components `nonRotatingScopes` extension (service tokens never rotate, keeping a stable
       // refresh token for server env consumption) AND replicate the library default for every other

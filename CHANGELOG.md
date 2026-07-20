@@ -1,3 +1,10 @@
+# [13.28.0](https://github.com/dereekb/dbx-components/compare/v13.27.1-dev...v13.28.0) (2026-07-20)
+
+
+### Features
+
+- **firebase-server:** add OIDC CORS config (allowlist + clientBased) ([cb86f085](https://github.com/dereekb/dbx-components/commit/cb86f085c9852e91974791dc46af3a1f5183c19a))
+
 ## [13.27.1](https://github.com/dereekb/dbx-components/compare/v13.27.0-dev...v13.27.1) (2026-07-20)
 
 

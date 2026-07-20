@@ -1,7 +1,7 @@
 {
   "name": "@dereekb/util/oidc",
-  "version": "13.27.1",
+  "version": "13.28.0",
   "peerDependencies": {
-    "@dereekb/util": "13.27.1"
+    "@dereekb/util": "13.28.0"
   }
 }

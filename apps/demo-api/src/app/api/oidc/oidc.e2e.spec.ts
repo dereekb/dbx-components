@@ -162,6 +162,79 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
     });
   });
 
+  // CORS coverage for the unified `cors` config wired on the demo OidcModule, which enables BOTH an
+  // explicit allowlist (`https://rp.test.dereekb.com`) AND `clientBased: true`. These exercise the
+  // Express-level applyOidcCorsMiddleware layer and oidc-provider's clientBasedCORS on client routes.
+  describe('CORS (cross-origin relying parties)', () => {
+    const ALLOWLISTED_ORIGIN = 'https://rp.test.dereekb.com';
+
+    describe('explicit allowlist (Express layer)', () => {
+      it('reflects an allowlisted origin on the discovery endpoint', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/openid-configuration').set('Origin', ALLOWLISTED_ORIGIN).expect(200);
+
+        expect(res.headers['access-control-allow-origin']).toBe(ALLOWLISTED_ORIGIN);
+        expect(res.headers['vary']).toMatch(/Origin/i);
+      });
+
+      it('does not reflect a non-allowlisted origin on the custom well-known controller (no client-based fallback there)', async () => {
+        const res = await request(app.getHttpServer()).get('/.well-known/openid-configuration').set('Origin', 'https://other.test.dereekb.com').expect(200);
+
+        expect(res.headers['access-control-allow-origin']).toBeUndefined();
+      });
+    });
+
+    describe('clientBasedCORS (oidc-provider, token endpoint)', () => {
+      // The token request itself fails (invalid code → 400), but the client is authenticated first,
+      // so the clientBasedCORS decision — derived from the client's registered redirect_uris — is
+      // resolved regardless of the grant outcome. We assert only on the Access-Control-Allow-Origin.
+      it("reflects a registered client's redirect_uris origin even when it is not in the explicit allowlist", async () => {
+        const clientOrigin = 'https://client.test.dereekb.com';
+        const { client_id, client_secret } = await oidcClientService.createClient({
+          client_name: 'cors-clientbased-allow',
+          redirect_uris: [`${clientOrigin}/callback`],
+          token_endpoint_auth_method: 'client_secret_post'
+        });
+
+        const res = await request(app.getHttpServer())
+          .post('/oidc/token')
+          .set('Origin', clientOrigin)
+          .type('form')
+          .send({ grant_type: 'authorization_code', code: 'invalid-code', redirect_uri: `${clientOrigin}/callback`, client_id, client_secret });
+
+        expect(res.headers['access-control-allow-origin']).toBe(clientOrigin);
+      });
+
+      it('does not reflect an origin that is neither allowlisted nor a registered redirect_uris origin', async () => {
+        const clientOrigin = 'https://client2.test.dereekb.com';
+        const { client_id, client_secret } = await oidcClientService.createClient({
+          client_name: 'cors-clientbased-block',
+          redirect_uris: [`${clientOrigin}/callback`],
+          token_endpoint_auth_method: 'client_secret_post'
+        });
+
+        const res = await request(app.getHttpServer())
+          .post('/oidc/token')
+          .set('Origin', 'https://other.test.dereekb.com')
+          .type('form')
+          .send({ grant_type: 'authorization_code', code: 'invalid-code', redirect_uri: `${clientOrigin}/callback`, client_id, client_secret });
+
+        expect(res.headers['access-control-allow-origin']).toBeUndefined();
+      });
+
+      it('lets the explicit allowlist reflect an origin on the token endpoint even for an unrelated client', async () => {
+        const { client_id, client_secret } = await oidcClientService.createClient({
+          client_name: 'cors-allowlist-preempt',
+          redirect_uris: ['https://unrelated.test.dereekb.com/callback'],
+          token_endpoint_auth_method: 'client_secret_post'
+        });
+
+        const res = await request(app.getHttpServer()).post('/oidc/token').set('Origin', ALLOWLISTED_ORIGIN).type('form').send({ grant_type: 'authorization_code', code: 'invalid-code', redirect_uri: 'https://unrelated.test.dereekb.com/callback', client_id, client_secret });
+
+        expect(res.headers['access-control-allow-origin']).toBe(ALLOWLISTED_ORIGIN);
+      });
+    });
+  });
+
   // The protected-resource discovery doc advertises `mcpModuleConfig.mcpUrl` as the
   // resource indicator that clients must pass to /authorize and /token. The OIDC
   // provider rejects any unknown resource indicator with `invalid_target`, so the

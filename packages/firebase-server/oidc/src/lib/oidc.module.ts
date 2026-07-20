@@ -290,7 +290,7 @@ export function oidcFirestoreCollectionsFactory(firestoreContext: FirestoreConte
  * `oidcModuleMetadata`'s `config` or `configFactory`.
  */
 export type OidcModuleMetadataOverrides = Partial<
-  Pick<OidcModuleConfig, 'issuer' | 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy' | 'trustProxyInNonProduction' | 'tokenLifetimes' | 'maxRequestedLoginDuration' | 'minRequestedLoginDuration' | 'defaultRequestedLoginDuration' | 'resourceServers' | 'resourceMetadataUrl' | 'configureMcpResourceServer'>
+  Pick<OidcModuleConfig, 'issuer' | 'suppressBodyParserWarning' | 'renderError' | 'protectedPaths' | 'appOAuthInteractionPath' | 'appOAuthLoginUrlPart' | 'appOAuthConsentUrlPart' | 'tokenEndpointAuthMethods' | 'registrationEnabled' | 'trustProxy' | 'trustProxyInNonProduction' | 'tokenLifetimes' | 'maxRequestedLoginDuration' | 'minRequestedLoginDuration' | 'defaultRequestedLoginDuration' | 'resourceServers' | 'resourceMetadataUrl' | 'configureMcpResourceServer' | 'cors'>
 >;
 
 export interface ProvideAppOidcModuleMetadataConfig extends Pick<ModuleMetadata, 'imports' | 'exports' | 'providers'> {

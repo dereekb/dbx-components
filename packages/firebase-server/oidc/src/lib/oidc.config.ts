@@ -216,6 +216,46 @@ export const DEFAULT_OIDC_TOKEN_LIFETIMES: OidcTokenLifetimes = {
   grant: 30 * SECONDS_IN_DAY
 };
 
+// MARK: CORS
+/**
+ * Unified CORS configuration for the cross-origin browser OIDC endpoints (the
+ * discovery GET and the token POST). Supports two independent, composable modes;
+ * both, either, or neither may be used.
+ *
+ * When the whole {@link OidcModuleConfig.cors} object is unset, the Express-level
+ * {@link applyOidcCorsMiddleware} preserves the pre-existing behavior: it emits
+ * `Access-Control-Allow-Origin: <appUrl>` unconditionally on every response, which
+ * pre-empts oidc-provider's own CORS handling.
+ */
+export interface OidcCorsConfig {
+  /**
+   * Explicit allowlist of additional browser origins (beyond `appUrl`, which is
+   * ALWAYS allowed) permitted to make cross-origin requests to the OIDC endpoints.
+   *
+   * Each entry must be a bare origin (scheme + host + optional port, no path or
+   * trailing slash), e.g. `'https://lms.app.example.com'`. When a request's `Origin`
+   * matches, the Express CORS layer reflects that exact origin
+   * (`Access-Control-Allow-Origin: <origin>`), pre-empting oidc-provider's own CORS.
+   */
+  readonly allowOrigins?: readonly string[];
+  /**
+   * When `true`, enables oidc-provider's `clientBasedCORS` on client-assigned routes
+   * (notably `POST /token`). For a request whose `Origin` is NOT in the explicit
+   * {@link allowOrigins} list, the Express layer OMITS `Access-Control-Allow-Origin`
+   * so oidc-provider runs its per-client check: the request is allowed iff the `Origin`
+   * matches the origin of one of the requesting client's registered `redirect_uris`.
+   * Discovery and JWKS (no client context) fall back to oidc-provider's builtin
+   * reflect (public metadata).
+   *
+   * When `false`/unset, non-allowlisted origins receive `Access-Control-Allow-Origin:
+   * <appUrl>` from the Express layer (pre-empting oidc-provider), so there is no
+   * reflect-any.
+   *
+   * Defaults to `false`.
+   */
+  readonly clientBased?: boolean;
+}
+
 // MARK: Config
 /**
  * Configuration for the OIDC module.
@@ -451,6 +491,16 @@ export abstract class OidcModuleConfig {
    * Defaults to `false`.
    */
   readonly trustProxyInNonProduction?: boolean;
+
+  /**
+   * Unified CORS configuration for the cross-origin browser OIDC endpoints
+   * (discovery GET, token POST). When unset, the Express CORS layer preserves the
+   * pre-existing behavior: `Access-Control-Allow-Origin: <appUrl>` on every
+   * response, which pre-empts oidc-provider's own CORS handling.
+   *
+   * @see OidcCorsConfig
+   */
+  readonly cors?: OidcCorsConfig;
 
   /**
    * Validates that all required fields are present on the config.
