@@ -1,12 +1,12 @@
 {
   "name": "@dereekb/dbx-cli-generate-firestore-indexes",
-  "version": "13.27.0",
+  "version": "13.27.1",
   "private": true,
   "type": "module",
   "devDependencies": {
     "eslint": "10.4.0"
   },
   "peerDependencies": {
-    "@dereekb/dbx-cli": "13.27.0"
+    "@dereekb/dbx-cli": "13.27.1"
   }
 }
