@@ -1,3 +1,15 @@
+## [13.27.1](https://github.com/dereekb/dbx-components/compare/v13.27.0-dev...v13.27.1) (2026-07-20)
+
+
+### Bug Fixes
+
+- **zoho:** assert https embed host on production Sign ([b1889c1b](https://github.com/dereekb/dbx-components/commit/b1889c1bf5d52ff350acfd402fb9cf576e660a58))
+
+
+### Code Refactoring
+
+- fixed browser/oidc package.json ([969c0a2d](https://github.com/dereekb/dbx-components/commit/969c0a2d2250c26b774707d7c92ba14a438f1424))
+
 # [13.27.0](https://github.com/dereekb/dbx-components/compare/v13.26.0-dev...v13.27.0) (2026-07-16)
 
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { type ZohoSignContext } from './sign.config';
+import { type ZohoSignConfigApiUrlInput, type ZohoSignContext } from './sign.config';
 import { type ZohoSignCreateDocumentFromTemplateData } from './sign';
 import { type ZohoSignDocumentOperationResponse, type ZohoSignGetEmbeddedSigningUrlResponse, type ZohoSignGetTemplateResponse, type ZohoSignGetTemplatesResponse, zohoSignCreateDocumentFromTemplate, zohoSignGetEmbeddedSigningUrl, zohoSignGetTemplate, zohoSignGetTemplates } from './sign.api';
 
@@ -7,9 +7,9 @@ import { type ZohoSignDocumentOperationResponse, type ZohoSignGetEmbeddedSigning
  * Builds a minimal mock {@link ZohoSignContext} whose `fetchJson` resolves to the given value,
  * so request construction can be asserted without hitting the live Zoho API.
  */
-function mockZohoSignContext<T>(resolved: T) {
+function mockZohoSignContext<T>(resolved: T, apiUrl: ZohoSignConfigApiUrlInput = 'production') {
   const fetchJson = vi.fn().mockResolvedValue(resolved);
-  const context = { fetchJson } as unknown as ZohoSignContext;
+  const context = { fetchJson, config: { apiUrl } } as unknown as ZohoSignContext;
   return { context, fetchJson };
 }
 
@@ -128,5 +128,26 @@ describe('zohoSignGetEmbeddedSigningUrl()', () => {
     expect(url).toEqual({ url: '/requests/12345/actions/67890/embedtoken', queryParams: { host: 'https://app.example.com' } });
     expect(input.method).toBe('POST');
     expect(input.body).toBeUndefined();
+  });
+
+  it('should reject before sending when the environment enforces https but the host is not https', async () => {
+    const response = { code: 0, message: 'success', status: 'success', sign_url: 'x' } as ZohoSignGetEmbeddedSigningUrlResponse;
+    const { context, fetchJson } = mockZohoSignContext(response, 'production');
+
+    await expect(zohoSignGetEmbeddedSigningUrl(context)({ requestId: '12345', actionId: '67890', host: 'http://app.example.com' })).rejects.toThrow(/https/i);
+    expect(fetchJson).not.toHaveBeenCalled();
+  });
+
+  it('should pass a non-https host through against the sandbox (which does not enforce https)', async () => {
+    const response = { code: 0, message: 'success', status: 'success', sign_url: 'https://signsandbox.zoho.com/embed/abc' } as ZohoSignGetEmbeddedSigningUrlResponse;
+    const { context, fetchJson } = mockZohoSignContext(response, 'sandbox');
+
+    const result = await zohoSignGetEmbeddedSigningUrl(context)({ requestId: '12345', actionId: '67890', host: 'http://staging.example.com' });
+
+    expect(result).toBe(response);
+    expect(fetchJson).toHaveBeenCalledTimes(1);
+
+    const [url] = fetchJson.mock.calls[0];
+    expect(url.queryParams.host).toBe('http://staging.example.com');
   });
 });

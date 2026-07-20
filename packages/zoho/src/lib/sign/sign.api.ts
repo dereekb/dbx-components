@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type FetchJsonBody, type FetchJsonInput, makeUrlSearchParams } from '@dereekb/util/fetch';
-import { type ZohoSignContext } from './sign.config';
+import { type ZohoSignContext, zohoSignApiUrlRequiresHttpsHost } from './sign.config';
 import { type ZohoSignRequest, type ZohoSignRequestId, type ZohoSignRequestData, type ZohoSignFieldType, type ZohoSignDocumentFormData, type ZohoSignTemplate, type ZohoSignTemplateId, type ZohoSignActionId, type ZohoSignCreateDocumentFromTemplateData } from './sign';
 import { type ZohoSignPageContext, type ZohoSignPageFilter, type ZohoSignPageResult, type ZohoSignSearchColumns, zohoSignFetchPageFactory } from './sign.api.page';
 
@@ -735,5 +735,17 @@ export type ZohoSignGetEmbeddedSigningUrlFunction = (input: ZohoSignGetEmbeddedS
  * ```
  */
 export function zohoSignGetEmbeddedSigningUrl(context: ZohoSignContext): ZohoSignGetEmbeddedSigningUrlFunction {
-  return ({ requestId, actionId, host }: ZohoSignGetEmbeddedSigningUrlInput) => context.fetchJson<ZohoSignGetEmbeddedSigningUrlResponse>({ url: `/requests/${requestId}/actions/${actionId}/embedtoken`, queryParams: { host } }, zohoSignApiFetchJsonInput('POST'));
+  return async ({ requestId, actionId, host }: ZohoSignGetEmbeddedSigningUrlInput) => {
+    // Zoho Sign's production endpoint enforces an https `host` origin, rejecting a non-https host with
+    // error 3006 ("Url has invalid scheme"). Assert it pre-send so a misconfigured http origin fails with
+    // a legible error instead of an opaque Zoho server error; the sandbox does not enforce this, so a
+    // non-https host is passed through there untouched.
+    const apiUrl = context.config.apiUrl;
+
+    if (apiUrl != null && zohoSignApiUrlRequiresHttpsHost(apiUrl) && !/^https:\/\//i.test(host)) {
+      throw new Error(`Zoho Sign requires an https embedded-signing host for this environment, but received "${host}".`);
+    }
+
+    return context.fetchJson<ZohoSignGetEmbeddedSigningUrlResponse>({ url: `/requests/${requestId}/actions/${actionId}/embedtoken`, queryParams: { host } }, zohoSignApiFetchJsonInput('POST'));
+  };
 }
