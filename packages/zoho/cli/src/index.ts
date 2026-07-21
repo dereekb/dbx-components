@@ -6,6 +6,7 @@ import { DOCTOR_COMMAND } from './lib/commands/doctor.command';
 import { RECRUIT_COMMAND } from './lib/commands/recruit.command';
 import { CRM_COMMAND } from './lib/commands/crm.command';
 import { DESK_COMMAND } from './lib/commands/desk.command';
+import { SIGN_COMMAND } from './lib/commands/sign.command';
 import { REQUEST_COMMAND } from './lib/commands/request.command';
 import { createAuthMiddleware } from './lib/middleware/auth.middleware';
 import { clearOutputConfig, loadCliConfig, mergeCliConfig } from './lib/config/cli.config';
@@ -27,7 +28,7 @@ const outputCommand = createOutputCommand({
  * - support pick/dump output filtering
  * - support --set-pick / --set-dump-dir auto-save
  */
-const apiCommands: CommandModule[] = [RECRUIT_COMMAND, CRM_COMMAND, DESK_COMMAND, REQUEST_COMMAND];
+const apiCommands: CommandModule[] = [RECRUIT_COMMAND, CRM_COMMAND, DESK_COMMAND, SIGN_COMMAND, REQUEST_COMMAND];
 
 /**
  * Config/utility commands that manage CLI settings. These commands:

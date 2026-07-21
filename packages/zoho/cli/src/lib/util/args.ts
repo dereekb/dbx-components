@@ -34,6 +34,22 @@ export function withDeskPagination<T>(yargs: Argv<T>): Argv<T & DeskPaginationOp
   return withMultiplePages(yargs.option('from', { type: 'number', default: 1, describe: 'Start index (1-based)' }).option('limit', { type: 'number', default: 25, describe: 'Max records (max 50)' }));
 }
 
+export interface SignPaginationOptions {
+  readonly startIndex: number;
+  readonly rowCount: number;
+}
+
+/**
+ * Adds Zoho Sign-style `--start-index`/`--row-count` pagination options (Sign uses a 1-based offset
+ * window) plus the shared multi-page flags.
+ *
+ * @param yargs - Yargs builder to extend.
+ * @returns The same builder, typed with {@link SignPaginationOptions} and {@link MultiplePagesOptions}.
+ */
+export function withSignPagination<T>(yargs: Argv<T>): Argv<T & SignPaginationOptions & MultiplePagesOptions> {
+  return withMultiplePages(yargs.option('start-index', { type: 'number', default: 1, describe: 'Start index (1-based)' }).option('row-count', { type: 'number', default: 20, describe: 'Records per page' })) as unknown as Argv<T & SignPaginationOptions & MultiplePagesOptions>;
+}
+
 export interface ModuleOptions {
   readonly module: string;
 }

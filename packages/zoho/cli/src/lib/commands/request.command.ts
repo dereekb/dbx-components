@@ -1,5 +1,5 @@
 import type { CommandModule, Argv } from 'yargs';
-import { getRecruitApi, getCrmApi, getDeskApi } from '../middleware/auth.middleware';
+import { getRecruitApi, getCrmApi, getDeskApi, getSignApi } from '../middleware/auth.middleware';
 import { outputResult, outputError } from '../util/output';
 
 export const REQUEST_COMMAND: CommandModule = {
@@ -7,7 +7,7 @@ export const REQUEST_COMMAND: CommandModule = {
   describe: 'Make a raw API request through the authenticated context',
   builder: (yargs: Argv) =>
     yargs
-      .positional('product', { type: 'string', demandOption: true, choices: ['recruit', 'crm', 'desk'] as const, describe: 'Zoho product' })
+      .positional('product', { type: 'string', demandOption: true, choices: ['recruit', 'crm', 'desk', 'sign'] as const, describe: 'Zoho product' })
       .positional('method', { type: 'string', demandOption: true, choices: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const, describe: 'HTTP method' })
       .positional('path', { type: 'string', demandOption: true, describe: 'API path (relative to product base URL)' })
       .option('body', { type: 'string', describe: 'JSON request body' })
@@ -15,7 +15,8 @@ export const REQUEST_COMMAND: CommandModule = {
       .example([
         ['$0 request recruit GET /v2/Candidates', 'List candidates via raw API'],
         ['$0 request desk GET /tickets --query \'{"limit":5}\'', 'List 5 desk tickets via raw API'],
-        ['$0 request crm POST /v8/Contacts --body \'{"data":[{"Last_Name":"Test"}]}\'', 'Create a CRM contact via raw API']
+        ['$0 request crm POST /v8/Contacts --body \'{"data":[{"Last_Name":"Test"}]}\'', 'Create a CRM contact via raw API'],
+        ['$0 request sign GET /templates', 'List sign templates via raw API']
       ]),
   handler: async (argv: any) => {
     try {
@@ -34,6 +35,9 @@ export const REQUEST_COMMAND: CommandModule = {
           break;
         case 'desk':
           productContext = getDeskApi(argv).deskContext;
+          break;
+        case 'sign':
+          productContext = getSignApi(argv).signContext;
           break;
         default:
           throw new Error(`Unknown product: ${product}`);

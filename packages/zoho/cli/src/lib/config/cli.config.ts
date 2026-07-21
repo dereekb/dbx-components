@@ -5,9 +5,17 @@ import { writeFile, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
 
-export type ZohoCliProduct = 'recruit' | 'crm' | 'desk';
+export type ZohoCliProduct = 'recruit' | 'crm' | 'desk' | 'sign';
 
-export const ZOHO_CLI_PRODUCTS: ZohoCliProduct[] = ['recruit', 'crm', 'desk'];
+export const ZOHO_CLI_PRODUCTS: ZohoCliProduct[] = ['recruit', 'crm', 'desk', 'sign'];
+
+/**
+ * Products that use a dedicated OAuth client and therefore must be configured with their own
+ * credentials — they never fall back to the {@link ZohoCliConfig.shared} client. Zoho Sign is
+ * authorized under a separate `client_id` (its scopes cannot be granted alongside recruit/crm/desk),
+ * so a shared-credential fallback would produce a client that lacks Sign access.
+ */
+export const ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS: ReadonlySet<ZohoCliProduct> = new Set<ZohoCliProduct>(['sign']);
 
 /**
  * Credentials for a single OAuth client.
@@ -40,8 +48,9 @@ export type ZohoCliOutputConfig = CliOutputConfig;
 /**
  * Full CLI config file structure.
  *
- * Shared credentials are used as fallback when a product doesn't have its own.
- * Per-product overrides live under `recruit`, `crm`, `desk`.
+ * Shared credentials are used as fallback when a product doesn't have its own, except for
+ * {@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS} (e.g. `sign`) which always require their own credentials.
+ * Per-product overrides live under `recruit`, `crm`, `desk`, `sign`.
  */
 export interface ZohoCliConfig {
   readonly shared: ZohoCliCredentials & {
@@ -51,6 +60,7 @@ export interface ZohoCliConfig {
   readonly recruit?: ZohoCliProductConfig;
   readonly crm?: ZohoCliProductConfig;
   readonly desk?: ZohoCliProductConfig;
+  readonly sign?: ZohoCliProductConfig;
   readonly output?: ZohoCliOutputConfig;
 }
 
@@ -167,6 +177,7 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
       recruit: productConfigFromEnv('recruit') ?? fileConfig?.recruit,
       crm: productConfigFromEnv('crm') ?? fileConfig?.crm,
       desk: productConfigFromEnv('desk') ?? fileConfig?.desk,
+      sign: productConfigFromEnv('sign') ?? fileConfig?.sign,
       output: fileConfig?.output
     };
   }
@@ -176,19 +187,22 @@ export async function loadCliConfig(): Promise<Maybe<ZohoCliConfig>> {
 
 /**
  * Resolves credentials for a specific product.
- * Uses product-specific credentials if available, otherwise falls back to shared.
+ * Uses product-specific credentials if available, otherwise falls back to shared — except for
+ * {@link ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS} (e.g. `sign`), whose `clientId`/`clientSecret`/`refreshToken`
+ * must come from the product's own config. `region`/`apiMode` may still inherit from shared for all products.
  *
  * @param config - Loaded CLI configuration containing the shared block and any per-product overrides.
  * @param product - Target Zoho product whose credentials should be resolved.
- * @returns Fully populated {@link ZohoCliResolvedProductCredentials}, or `undefined` if any of `clientId`, `clientSecret`, or `refreshToken` cannot be sourced from product or shared config.
+ * @returns Fully populated {@link ZohoCliResolvedProductCredentials}, or `undefined` if any of `clientId`, `clientSecret`, or `refreshToken` cannot be sourced (for dedicated-client products, from the product config alone; otherwise from product or shared config).
  */
 export function resolveProductCredentials(config: ZohoCliConfig, product: ZohoCliProduct): Maybe<ZohoCliResolvedProductCredentials> {
   const productConfig = config[product];
   const shared = config.shared;
+  const allowSharedFallback = !ZOHO_CLI_DEDICATED_CLIENT_PRODUCTS.has(product);
 
-  const clientId = productConfig?.clientId ?? shared.clientId;
-  const clientSecret = productConfig?.clientSecret ?? shared.clientSecret;
-  const refreshToken = productConfig?.refreshToken ?? shared.refreshToken;
+  const clientId = productConfig?.clientId ?? (allowSharedFallback ? shared.clientId : undefined);
+  const clientSecret = productConfig?.clientSecret ?? (allowSharedFallback ? shared.clientSecret : undefined);
+  const refreshToken = productConfig?.refreshToken ?? (allowSharedFallback ? shared.refreshToken : undefined);
 
   let result: Maybe<ZohoCliResolvedProductCredentials>;
 
@@ -230,7 +244,7 @@ export async function saveCliConfig(config: ZohoCliConfig): Promise<void> {
 /**
  * Merges new values into the existing config, preserving unmodified fields.
  *
- * Per-product blocks (`recruit`, `crm`, `desk`) are shallow-merged when provided; output config is deep-merged via dbx-cli's {@link dbxMergeOutputConfig} so explicit `undefined` keys in `updates.output` clear existing values.
+ * Per-product blocks (`recruit`, `crm`, `desk`, `sign`) are shallow-merged when provided; output config is deep-merged via dbx-cli's {@link dbxMergeOutputConfig} so explicit `undefined` keys in `updates.output` clear existing values.
  *
  * @param updates - Partial config patch; only keys present in this object are touched.
  * @returns The fully merged config that was written to disk.
@@ -242,6 +256,7 @@ export async function mergeCliConfig(updates: Partial<ZohoCliConfig>): Promise<Z
     recruit: updates.recruit === undefined ? existing?.recruit : { ...existing?.recruit, ...updates.recruit },
     crm: updates.crm === undefined ? existing?.crm : { ...existing?.crm, ...updates.crm },
     desk: updates.desk === undefined ? existing?.desk : { ...existing?.desk, ...updates.desk },
+    sign: updates.sign === undefined ? existing?.sign : { ...existing?.sign, ...updates.sign },
     output: updates.output === undefined ? existing?.output : dbxMergeOutputConfig(existing?.output, updates.output)
   };
 
