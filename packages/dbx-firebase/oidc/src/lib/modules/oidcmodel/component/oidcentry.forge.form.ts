@@ -1,5 +1,5 @@
 import { dbxForgeTextField, dbxForgeValueSelectionField, dbxForgeSearchableStringChipField, dbxForgePickableChipField, dbxForgeContainer, pickableValueFieldValuesConfigForStaticLabeledValues, isWebsiteUrlValidator } from '@dereekb/dbx-form';
-import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD, type OidcRedirectUri, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHOD_OPTIONS, PRIVATE_KEY_JWT_TOKEN_ENDPOINT_AUTH_METHOD, type OidcProviderProfileDetails, type OidcRedirectUri, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import type { ContainerField, FormConfig, RegisteredFieldTypes } from '@ng-forge/dynamic-forms';
 import { of } from 'rxjs';
 
@@ -16,6 +16,14 @@ export interface OidcEntryClientFormFieldsConfig {
    * Provided by the {@link DbxFirebaseOidcConfigService}.
    */
   readonly tokenEndpointAuthMethods: OidcTokenEndpointAuthMethod[];
+  /**
+   * Provider profiles available for admin assignment. Provided by the {@link DbxFirebaseOidcConfigService}.
+   *
+   * When present (and non-empty), a multi-select provider-profile field is rendered. The server strips
+   * this value for non-admin callers, so showing the field to a non-admin is harmless (their edits are
+   * ignored).
+   */
+  readonly providerProfiles?: OidcProviderProfileDetails[];
 }
 
 /**
@@ -35,7 +43,32 @@ export function oidcEntryClientForgeFormFields(config?: OidcEntryClientFormField
 
   fields.push(...oidcEntryClientUpdateForgeFormFields());
 
+  if (config?.providerProfiles?.length) {
+    fields.push(oidcClientProviderProfilesForgeField(config.providerProfiles));
+  }
+
   return { fields };
+}
+
+/**
+ * Creates a forge pickable chip field for assigning provider profiles to the client.
+ *
+ * Admin-only in effect: the server strips `dbx_provider_profiles` from non-admin create/update
+ * requests, so a non-admin's selection is ignored.
+ *
+ * @param providerProfiles - The available provider profiles to display as selectable options.
+ * @returns A forge pickable chip field for provider profile assignment.
+ */
+export function oidcClientProviderProfilesForgeField(providerProfiles: OidcProviderProfileDetails[]) {
+  return dbxForgePickableChipField({
+    key: 'dbx_provider_profiles',
+    label: 'Provider Profiles',
+    hint: 'Admin-only. Assign provider profiles to unlock otherwise-restricted scopes for this client.',
+    props: {
+      showSelectAllButton: false,
+      ...pickableValueFieldValuesConfigForStaticLabeledValues(providerProfiles)
+    }
+  });
 }
 
 /**

@@ -24,6 +24,14 @@ export interface OidcEntryOAuthClientPayloadData {
    * Caps how long a client may request via the `dbx_session_ttl` auth-URL param.
    */
   readonly dbx_max_session_ttl?: Maybe<number>;
+  /**
+   * Optional OIDC provider profile keys assigned to this client.
+   *
+   * Custom oidc-provider client metadata (registered via `extraClientMetadata`). Each key references
+   * an {@link OidcProviderProfile} that unlocks (and optionally force-requires) otherwise-restricted
+   * scopes for this client. Admin-only: stripped from non-admin create/update requests.
+   */
+  readonly dbx_provider_profiles?: Maybe<string[]>;
 }
 
 // MARK: Grant

@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, HttpCode, Body, Logger, Optional } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcProviderConfigService } from '../service';
-import { type FirebaseAuthUserId, type OidcEntryClientId, type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type OidcEntryClientId, type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope, scopesForOidcProviderProfiles } from '@dereekb/firebase';
 import { OidcAccountService } from '../service/oidc.account.service';
 import { OidcInteractionService } from '../service/oidc.interaction.service';
 import { OidcService } from '../service/oidc.service';
+import { oidcClientProviderProfileScopes } from '../profile';
 import { DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM } from '../service/oidc.session-ttl';
 import { OIDC_ANALYTICS_SERVICE, emitOidcAnalyticsEvent, noopOidcAnalyticsService, type OidcAnalyticsService } from '../service/analytics';
 
@@ -164,6 +165,9 @@ export class OidcInteractionController {
       // client the user has previously authorized doesn't fail validation.
       const encounteredOIDCScopes = existingGrant ? existingGrant.getOIDCScopeEncountered().split(' ').filter(Boolean) : [];
 
+      // Loaded once here and reused by the provider-profile gate below and the TTL resolution further down.
+      const clientPayload = await this.oidcService.findClientPayload(clientId);
+
       // Admin-only scope gate. The requested OIDC scope set is `missingOIDCScope ∪ encounteredOIDCScopes`
       // (a fresh consent has everything in `missing`; a re-consent may carry already-granted scopes in
       // `encountered`). If that set intersects the provider's `adminOnlyScopes` and the resolving user is
@@ -180,20 +184,49 @@ export class OidcInteractionController {
         return;
       }
 
+      // Provider-profile scope gate. Any scope referenced by a provider profile is "gated" — available
+      // only to clients whose assigned profiles unlock it. Independent of the admin-only gate above; a
+      // scope may be subject to both.
+      const providerProfiles = this.accountService.providerConfig.providerProfiles;
+      const { unlocked: clientUnlockedScopes, required: clientRequiredScopes } = oidcClientProviderProfileScopes(providerProfiles, clientPayload?.dbx_provider_profiles ?? undefined);
+      const profileGatedScopes = scopesForOidcProviderProfiles(providerProfiles ?? []);
+
+      // Unlock gate: reject any requested gated scope this client's profiles do not unlock.
+      const disallowedGatedScopes = Array.from(requestedOIDCScopeSet).filter((scope) => profileGatedScopes.has(scope) && !clientUnlockedScopes.has(scope));
+
+      if (disallowedGatedScopes.length > 0) {
+        const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(uid, { error: 'access_denied', error_description: `The following scope(s) are not available to this client: ${disallowedGatedScopes.join(', ')}.` }, { mergeWithLastSubmission: true });
+        emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, reason: 'scope_not_unlocked_for_client', durationMs: Date.now() - startedAt }, this._logger);
+        res.json({ redirectTo });
+        return;
+      }
+
+      // Required gate: a scope a client's profiles force-require (`require: 'required'`) must be present
+      // in the request. Reject when the client did not request a required scope.
+      const missingRequiredScopes = Array.from(clientRequiredScopes).filter((scope) => !requestedOIDCScopeSet.has(scope));
+
+      if (missingRequiredScopes.length > 0) {
+        const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(uid, { error: 'access_denied', error_description: `This client must request the required scope(s): ${missingRequiredScopes.join(', ')}.` }, { mergeWithLastSubmission: true });
+        emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, reason: 'required_scope_missing', durationMs: Date.now() - startedAt }, this._logger);
+        res.json({ redirectTo });
+        return;
+      }
+
       // Resolve the requested login duration up-front. The configured Grant TTL function (in
       // OidcService.buildProviderConfiguration) only fires when oidc-provider's koa middleware
       // drives `grant.save()`, so its `ctx.oidc.params` lookup of `dbx_session_ttl` returns
       // undefined when the consent submit runs in this controller. We pre-set `expiresIn` on
       // newly-created grants so they persist with the correct (tiered) TTL.
       const requestedRawTtl = (params as Record<string, unknown>)[DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM];
-      const clientPayload = await this.oidcService.findClientPayload(clientId);
       const clientMaxSessionTtl = clientPayload?.dbx_max_session_ttl ?? undefined;
       const expiresInSeconds = this.oidcService.resolveLoginDurationForGrant(requestedRawTtl, { dbx_max_session_ttl: clientMaxSessionTtl }, { isAdmin, hasServiceScope: requestsServiceToken });
 
       const grant = existingGrant ?? (await this.oidcInteractionService.findOrCreateGrant(interaction.grantId, accountId, clientId, expiresInSeconds));
 
       if (missingOIDCScope.length > 0) {
-        const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: ALWAYS_GRANTED_OIDC_SCOPES, alreadyEncountered: encounteredOIDCScopes });
+        // Force-grant the client's required profile scopes (in addition to `openid`) so they cannot be
+        // dropped at consent — the required gate above already guarantees they were requested.
+        const { granted, rejected } = resolveEffectiveSubset({ missing: missingOIDCScope, requestedSubset: body.grantedOIDCScopes, alwaysGranted: [...ALWAYS_GRANTED_OIDC_SCOPES, ...clientRequiredScopes], alreadyEncountered: encounteredOIDCScopes });
 
         if (granted.length > 0) {
           grant.addOIDCScope(granted.join(' '));

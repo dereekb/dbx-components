@@ -68,6 +68,10 @@ export class OidcClientService {
       (properties as ClientMetadata & { dbx_max_session_ttl?: number }).dbx_max_session_ttl = params.dbx_max_session_ttl;
     }
 
+    if (params.dbx_provider_profiles != null) {
+      (properties as ClientMetadata & { dbx_provider_profiles?: string[] }).dbx_provider_profiles = params.dbx_provider_profiles;
+    }
+
     // Merge any pre-validated metadata (e.g., inline jwks for private_key_jwt in tests)
     if (validatedMetadata?.jwks) {
       properties.jwks = validatedMetadata.jwks;
@@ -137,6 +141,13 @@ export class OidcClientService {
 
     if (params.dbx_max_session_ttl !== undefined) {
       updatedMetadata.dbx_max_session_ttl = params.dbx_max_session_ttl ?? undefined;
+    }
+
+    // Only overwrite the profile assignment when the field is explicitly provided. An omitted value
+    // (including one stripped for a non-admin caller) preserves the existing assignment; `null`/`[]`
+    // clears it. This is what makes the non-admin strip a no-op rather than a wipe.
+    if (params.dbx_provider_profiles !== undefined) {
+      updatedMetadata.dbx_provider_profiles = params.dbx_provider_profiles ?? undefined;
     }
 
     // Mirrors oidc-provider's lib/helpers/add_client.js: re-validates and persists.

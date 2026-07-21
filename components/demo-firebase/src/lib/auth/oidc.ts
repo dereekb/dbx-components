@@ -1,4 +1,4 @@
-import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, type CallModelOidcScope, type OidcScopeDetails, type OidcTokenEndpointAuthMethod, SERVICE_TOKEN_OIDC_SCOPE_DETAILS, type ServiceTokenOidcScope, STANDARD_OIDC_SCOPE_DETAILS, type StandardOidcScope } from '@dereekb/firebase';
+import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, type CallModelOidcScope, type OidcProviderProfile, type OidcProviderProfileDetails, oidcProviderProfileDetails, type OidcScopeDetails, type OidcTokenEndpointAuthMethod, SERVICE_TOKEN_OIDC_SCOPE_DETAILS, type ServiceTokenOidcScope, STANDARD_OIDC_SCOPE_DETAILS, type StandardOidcScope } from '@dereekb/firebase';
 
 // MARK: Scopes
 /**
@@ -16,7 +16,18 @@ import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, ty
  *   Hard-rejected for non-admins and disables refresh-token rotation (wired in
  *   `DemoApiOidcModule`).
  */
-export type DemoOidcScope = StandardOidcScope | 'demo' | CallModelOidcScope | ServiceTokenOidcScope;
+export type DemoOidcScope = StandardOidcScope | 'demo' | CallModelOidcScope | ServiceTokenOidcScope | DemoOidcProviderProfileScope;
+
+/**
+ * Scopes that are unlocked only via an {@link OidcProviderProfile} (see {@link DEMO_OIDC_PROVIDER_PROFILES}).
+ *
+ * These are intentionally excluded from {@link DEMO_OIDC_AVAILABLE_SCOPES} (the general scope picker): a
+ * client can only obtain them when an admin assigns the corresponding provider profile.
+ *
+ * - `lms`: unlocked (and force-required) by the `lms` profile.
+ * - `reports`: unlocked (optional) by the `reports` profile.
+ */
+export type DemoOidcProviderProfileScope = 'lms' | 'reports';
 
 /**
  * Frontend base path for the demo app's OAuth interaction pages.
@@ -30,8 +41,28 @@ export const DEMO_APP_OAUTH_INTERACTION_PATH = '/demo/oauth';
 
 /**
  * All available OIDC scopes for the demo app, suitable for use in scope picker fields.
+ *
+ * NOTE: {@link DemoOidcProviderProfileScope} scopes (`lms`, `reports`) are intentionally excluded — they
+ * are restricted and unlocked only via an {@link OidcProviderProfile} (see {@link DEMO_OIDC_PROVIDER_PROFILES}).
  */
 export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [...STANDARD_OIDC_SCOPE_DETAILS, { label: 'Demo', value: 'demo', description: 'Full access to your Demo resources via the API' }, ...CALL_MODEL_OIDC_SCOPE_DETAILS, SERVICE_TOKEN_OIDC_SCOPE_DETAILS];
+
+/**
+ * OIDC provider profiles for the demo app. Admins assign these to a client to unlock otherwise-restricted
+ * scopes. Declared statically here and supplied to the provider via `DEMO_OIDC_PROVIDER_CONFIG.providerProfiles`.
+ *
+ * - `lms`: unlocks and force-requires the `lms` scope. Every LMS client's token carries `lms`.
+ * - `reports`: unlocks the `reports` scope as optional (the client may request it, but it is not forced).
+ */
+export const DEMO_OIDC_PROVIDER_PROFILES: OidcProviderProfile<DemoOidcScope>[] = [
+  { key: 'lms', label: 'LMS', description: 'Learning management system integration (unlocks + requires the lms scope)', scopes: [{ scope: 'lms', require: 'required' }] },
+  { key: 'reports', label: 'Reports', description: 'Reporting integration (unlocks the reports scope)', scopes: [{ scope: 'reports', require: 'none' }] }
+];
+
+/**
+ * Provider profile picker entries for the demo app, suitable for an admin profile-selection field.
+ */
+export const DEMO_OIDC_PROVIDER_PROFILE_DETAILS: OidcProviderProfileDetails[] = oidcProviderProfileDetails(DEMO_OIDC_PROVIDER_PROFILES);
 
 /**
  * All available OIDC token endpoint auth methods for the demo app, suitable for use in auth method picker fields.

@@ -5,7 +5,7 @@ import { DbxFirebaseAuthService } from '@dereekb/dbx-firebase';
 import { type WorkUsingContext } from '@dereekb/rxjs';
 import { tap } from 'rxjs';
 import { DbxFirebaseOidcInteractionService } from '../../service/oidc.interaction.service';
-import { DbxFirebaseOidcConfigService, DEFAULT_OIDC_CLIENT_ID_PARAM_KEY, DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY, DEFAULT_OIDC_CLIENT_URI_PARAM_KEY, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY, DEFAULT_OIDC_LOGO_URI_PARAM_KEY, DEFAULT_OIDC_SCOPES_PARAM_KEY } from '../../service/oidc.configuration.service';
+import { DbxFirebaseOidcConfigService, DEFAULT_OIDC_CLIENT_ID_PARAM_KEY, DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY, DEFAULT_OIDC_CLIENT_URI_PARAM_KEY, DEFAULT_OIDC_INTERACTION_UID_PARAM_KEY, DEFAULT_OIDC_LOGO_URI_PARAM_KEY, DEFAULT_OIDC_REQUIRED_SCOPES_PARAM_KEY, DEFAULT_OIDC_SCOPES_PARAM_KEY } from '../../service/oidc.configuration.service';
 import { type OAuthInteractionConsentResponse, type OAuthInteractionLoginDetails, type OidcScope } from '@dereekb/firebase';
 import { type Maybe } from '@dereekb/util';
 import { DbxFirebaseOAuthConsentViewComponent, type OidcConsentStateCase } from '../components/oauth.consent.view.component';
@@ -52,7 +52,7 @@ export interface DbxOAuthConsentComponentConfig {
   standalone: true,
   imports: [DbxFirebaseOAuthConsentViewComponent],
   template: `
-    <dbx-firebase-oauth-consent-view [details]="resolvedDetailsSignal()" [consentStateCase]="consentStateCaseSignal()" [scopeInjectionConfig]="scopeInjectionConfigSignal()" [requiredScopes]="requiredScopes" [approveHandler]="handleApprove" [denyHandler]="handleDeny">
+    <dbx-firebase-oauth-consent-view [details]="resolvedDetailsSignal()" [consentStateCase]="consentStateCaseSignal()" [scopeInjectionConfig]="scopeInjectionConfigSignal()" [requiredScopes]="requiredScopesSignal()" [approveHandler]="handleApprove" [denyHandler]="handleDeny">
       <ng-content />
     </dbx-firebase-oauth-consent-view>
   `,
@@ -77,6 +77,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   readonly clientUriParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_CLIENT_URI_PARAM_KEY);
   readonly logoUriParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_LOGO_URI_PARAM_KEY);
   readonly scopesParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_SCOPES_PARAM_KEY);
+  readonly requiredScopesParamReader = dbxRouteParamReaderInstance<string>(this.dbxRouterService, DEFAULT_OIDC_REQUIRED_SCOPES_PARAM_KEY);
 
   // Signals from route params
   private readonly routeUid = toSignal(this.interactionUidParamReader.value$);
@@ -85,6 +86,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   private readonly routeClientUri = toSignal(this.clientUriParamReader.value$);
   private readonly routeLogoUri = toSignal(this.logoUriParamReader.value$);
   private readonly routeScopes = toSignal(this.scopesParamReader.value$);
+  private readonly routeRequiredScopes = toSignal(this.requiredScopesParamReader.value$);
 
   // Auth state — undefined until Firebase resolves to avoid a flash between 'unknown' → 'no_user'/'user'
   readonly isLoggedIn: Signal<Maybe<boolean>> = toSignal(this.dbxFirebaseAuthService.isLoggedIn$);
@@ -113,10 +115,15 @@ export class DbxOAuthConsentComponent implements OnDestroy {
   }));
 
   /**
-   * Scopes the user cannot deselect. Forwarded to the view, which shows
-   * them as a static "Always granted" hint above the selection list.
+   * Scopes the user cannot deselect. `openid` is always required; any scopes the client's assigned
+   * provider profiles force-require are appended (the server surfaces them via the `requiredScopes`
+   * interaction param). Forwarded to the view, which shows them as a static "Always granted" hint
+   * above the selection list.
    */
-  readonly requiredScopes: readonly OidcScope[] = OAUTH_CONSENT_REQUIRED_SCOPES;
+  readonly requiredScopesSignal = computed<readonly OidcScope[]>(() => {
+    const serverRequiredScopes = (this.routeRequiredScopes() ?? '').split(' ').filter(Boolean);
+    return Array.from(new Set<OidcScope>([...OAUTH_CONSENT_REQUIRED_SCOPES, ...serverRequiredScopes]));
+  });
 
   readonly consentStateCaseSignal = computed<OidcConsentStateCase>(() => {
     const isLoggedIn = this.isLoggedIn();
@@ -140,6 +147,7 @@ export class DbxOAuthConsentComponent implements OnDestroy {
     this.clientUriParamReader.destroy();
     this.logoUriParamReader.destroy();
     this.scopesParamReader.destroy();
+    this.requiredScopesParamReader.destroy();
   }
 
   /**

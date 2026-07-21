@@ -5,7 +5,7 @@ import { JwksServiceStorageConfig, type OidcAccountClaims, OidcAccountService, o
 import { DemoApiAuthModule } from '../../common/firebase/auth.module';
 import { DemoApiAuthService, DemoApiFirestoreModule, DemoApiStorageModule } from '../../common/firebase';
 import { type FirebaseServerAuthUserContext, FirebaseServerStorageService } from '@dereekb/firebase-server';
-import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_AUTH_CLAIMS_SERVICE, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
+import { DEMO_APP_OAUTH_INTERACTION_PATH, DEMO_AUTH_CLAIMS_SERVICE, DEMO_OIDC_PROVIDER_PROFILES, DEMO_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, type DemoApiAuthClaims, type DemoOidcScope } from 'demo-firebase';
 
 export type DemoOidcAccountServiceDelegate = OidcAccountServiceDelegate<DemoOidcScope>;
 
@@ -25,13 +25,19 @@ export const DEMO_OIDC_PROVIDER_CONFIG: OidcProviderConfig<DemoOidcScope> = {
     'model.query': [],
     'model.invoke': [],
     // token.service is admin-only and adds no extra ID-token claims; it makes the grant long-lived and non-rotating.
-    [SERVICE_TOKEN_OIDC_SCOPE]: []
+    [SERVICE_TOKEN_OIDC_SCOPE]: [],
+    // lms / reports are provider-profile-gated (see DEMO_OIDC_PROVIDER_PROFILES) — supported/issuable but
+    // only obtainable by a client whose assigned profile unlocks them. They add no extra ID-token claims.
+    lms: [],
+    reports: []
   },
   responseTypes: ['code'],
   grantTypes: ['authorization_code', 'refresh_token'],
   // token.service is restricted to admins (hard-rejected at consent for non-admins) and its grants never rotate.
   adminOnlyScopes: [SERVICE_TOKEN_OIDC_SCOPE],
-  nonRotatingScopes: [SERVICE_TOKEN_OIDC_SCOPE]
+  nonRotatingScopes: [SERVICE_TOKEN_OIDC_SCOPE],
+  // Provider profiles gate the lms/reports scopes to clients an admin has assigned the profile to.
+  providerProfiles: DEMO_OIDC_PROVIDER_PROFILES
 };
 
 // MARK: Factories

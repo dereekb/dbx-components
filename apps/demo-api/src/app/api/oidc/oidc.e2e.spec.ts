@@ -793,6 +793,126 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         return { authorizationCode, codeVerifier, cookieHeader: getCookieHeader() };
       }
 
+      describe('provider profile gated scopes', () => {
+        async function createProfileClient(name: string, profiles: string[]): Promise<{ client_id: string; client_secret: string }> {
+          const result = await oidcClientService.createClient({ client_name: name, redirect_uris: ['https://example.com/callback'], token_endpoint_auth_method: 'client_secret_post', dbx_provider_profiles: profiles });
+          return { client_id: result.client_id, client_secret: result.client_secret! };
+        }
+
+        // Drives auth → login → consent → callback for `u`, returning the callback URL (carrying either a
+        // `code` on success or `error=access_denied` when the consent gate rejects). Also returns the
+        // cookie header + code verifier so a caller can exchange a granted code for a token.
+        async function flowToCallback(clientId: string, scope: string, consentBody: Record<string, unknown> = { approved: true }): Promise<{ callbackUrl: URL; cookieHeader: string; codeVerifier: string }> {
+          const server = app.getHttpServer();
+          const cookieJar = new Map<string, string>();
+
+          function collectCookies(res: request.Response): void {
+            const setCookies = res.headers['set-cookie'];
+
+            if (setCookies) {
+              const items = Array.isArray(setCookies) ? setCookies : [setCookies];
+
+              for (const cookie of items) {
+                const [nameValue] = cookie.split(';');
+                const [name] = nameValue.split('=');
+                cookieJar.set(name, nameValue);
+              }
+            }
+          }
+
+          function getCookieHeader(): string {
+            return [...cookieJar.values()].join('; ');
+          }
+
+          const codeVerifier = randomBytes(32).toString('base64url');
+          const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+
+          const authRes = await request(server).get('/oidc/auth').query({ client_id: clientId, redirect_uri: 'https://example.com/callback', response_type: 'code', scope, code_challenge: codeChallenge, code_challenge_method: 'S256', state: 'test-state', nonce: 'test-nonce' }).redirects(0);
+          expect(authRes.status).toBe(303);
+          collectCookies(authRes);
+          const loginUid = extractInteractionUid(authRes);
+
+          const idToken = await createTestIdToken(app, u.uid);
+          const loginRes = await request(server).post(`/interaction/${loginUid}/login`).set('Cookie', getCookieHeader()).send({ idToken });
+          expect(loginRes.status).toBe(200);
+
+          const resumeAfterLoginPath = new URL(loginRes.body.redirectTo).pathname + new URL(loginRes.body.redirectTo).search;
+          const consentRedirectRes = await request(server).get(resumeAfterLoginPath).set('Cookie', getCookieHeader()).redirects(0);
+          expect(consentRedirectRes.status).toBe(303);
+          collectCookies(consentRedirectRes);
+          const consentUid = extractInteractionUid(consentRedirectRes);
+
+          const consentRes = await request(server)
+            .post(`/interaction/${consentUid}/consent`)
+            .set('Cookie', getCookieHeader())
+            .send({ idToken, ...consentBody });
+          expect(consentRes.status).toBe(200);
+          collectCookies(consentRes);
+
+          const resumeAfterConsentPath = new URL(consentRes.body.redirectTo).pathname + new URL(consentRes.body.redirectTo).search;
+          const callbackRedirectRes = await request(server).get(resumeAfterConsentPath).set('Cookie', getCookieHeader()).redirects(0);
+          expect(callbackRedirectRes.status).toBe(303);
+
+          return { callbackUrl: new URL(callbackRedirectRes.headers['location']), cookieHeader: getCookieHeader(), codeVerifier };
+        }
+
+        // eslint-disable-next-line @typescript-eslint/max-params -- mirrors the positional flow-helper style in this file
+        async function tokenScopesForFlow(clientId: string, clientSecret: string, scope: string, consentBody?: Record<string, unknown>): Promise<string[]> {
+          const server = app.getHttpServer();
+          const { callbackUrl, cookieHeader, codeVerifier } = await flowToCallback(clientId, scope, consentBody);
+          const authorizationCode = callbackUrl.searchParams.get('code');
+          expect(authorizationCode).toBeTruthy();
+
+          const tokenRes = await request(server).post('/oidc/token').set('Cookie', cookieHeader).type('form').send({ grant_type: 'authorization_code', code: authorizationCode, redirect_uri: 'https://example.com/callback', client_id: clientId, client_secret: clientSecret, code_verifier: codeVerifier });
+          expect(tokenRes.status).toBe(200);
+          return (tokenRes.body.scope as string | undefined)?.split(' ') ?? [];
+        }
+
+        it('issues the lms scope to a client assigned the lms provider profile', async () => {
+          const { client_id, client_secret } = await createProfileClient('lms-client', ['lms']);
+          const scopes = await tokenScopesForFlow(client_id, client_secret, 'openid lms');
+          expect(scopes).toContain('lms');
+        });
+
+        it('force-grants the required lms scope even when the user deselects it', async () => {
+          const { client_id, client_secret } = await createProfileClient('lms-client-deselect', ['lms']);
+          const scopes = await tokenScopesForFlow(client_id, client_secret, 'openid lms', { approved: true, grantedOIDCScopes: ['openid'] });
+          expect(scopes).toContain('lms');
+        });
+
+        it('issues the optional reports scope when the reports-profile client requests it', async () => {
+          const { client_id, client_secret } = await createProfileClient('reports-client', ['reports']);
+          const scopes = await tokenScopesForFlow(client_id, client_secret, 'openid reports');
+          expect(scopes).toContain('reports');
+        });
+
+        it('omits the optional reports scope when the reports-profile client does not request it', async () => {
+          const { client_id, client_secret } = await createProfileClient('reports-client-no-request', ['reports']);
+          const scopes = await tokenScopesForFlow(client_id, client_secret, 'openid');
+          expect(scopes).not.toContain('reports');
+        });
+
+        it('rejects a gated scope for a client without the unlocking profile', async () => {
+          const { client_id } = await oidcClientService.createClient({ client_name: 'plain-client', redirect_uris: ['https://example.com/callback'], token_endpoint_auth_method: 'client_secret_post' });
+          const { callbackUrl } = await flowToCallback(client_id, 'openid lms');
+          expect(callbackUrl.searchParams.get('error')).toBe('access_denied');
+          expect(callbackUrl.searchParams.get('code')).toBeNull();
+        });
+
+        it('rejects an lms-profile client that omits the required lms scope', async () => {
+          const { client_id } = await createProfileClient('lms-client-missing-required', ['lms']);
+          const { callbackUrl } = await flowToCallback(client_id, 'openid');
+          expect(callbackUrl.searchParams.get('error')).toBe('access_denied');
+          expect(callbackUrl.searchParams.get('code')).toBeNull();
+        });
+
+        it('still lists the gated scopes in discovery scopes_supported', async () => {
+          const res = await request(app.getHttpServer()).get('/.well-known/openid-configuration').expect(200);
+          expect(res.body.scopes_supported).toContain('lms');
+          expect(res.body.scopes_supported).toContain('reports');
+        });
+      });
+
       it('should complete authorization code flow with client_secret_jwt authentication', async () => {
         const server = app.getHttpServer();
 

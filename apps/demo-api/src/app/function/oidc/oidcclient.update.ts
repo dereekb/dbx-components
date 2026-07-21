@@ -1,6 +1,6 @@
 import { type RotateOidcClientSecretParams, type RotateOidcClientSecretResult, type UpdateOidcClientParams, rotateOidcClientSecretParamsType, updateOidcClientParamsType } from '@dereekb/firebase';
 import { type DemoUpdateModelFunction } from '../function.context';
-import { withApiDetails } from '@dereekb/firebase-server';
+import { isAdminInRequest, withApiDetails } from '@dereekb/firebase-server';
 
 export const oidcEntryUpdateClient: DemoUpdateModelFunction<UpdateOidcClientParams> = withApiDetails({
   inputType: updateOidcClientParamsType,
@@ -15,7 +15,11 @@ export const oidcEntryUpdateClient: DemoUpdateModelFunction<UpdateOidcClientPara
   fn: async (request) => {
     const { nest, data } = request;
 
-    const updateFn = await nest.oidcModelServerActions.updateOidcClient(data);
+    // Provider profile assignment is admin-only; strip it from a non-admin's update so the existing
+    // assignment is preserved (updateClient only overwrites the field when it is provided).
+    const params: UpdateOidcClientParams = isAdminInRequest(request) ? data : { ...data, dbx_provider_profiles: undefined };
+
+    const updateFn = await nest.oidcModelServerActions.updateOidcClient(params);
     const document = await nest.useModel('oidcEntry', {
       request,
       key: data.key,
