@@ -1,4 +1,4 @@
-import { withApiDetails, readApiDetails, getModelApiDetails, isOnCallModelTypeApiDetails, isOnCallCrudModelApiDetails, isOnCallHandlerApiDetails, isActualSpecifier, aggregateSpecifierApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, type OnCallModelFunctionApiDetails, type OnCallModelTypeApiDetails, type OnCallCrudModelApiDetails, type OnCallModelApiDetails, type JsonSchemaRef, type OnCallApiDetailsRef } from './api.details';
+import { withApiDetails, readApiDetails, getModelApiDetails, isOnCallModelTypeApiDetails, isOnCallCrudModelApiDetails, isOnCallHandlerApiDetails, isActualSpecifier, aggregateSpecifierApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, resolveRequiredScopeFromApiDetails, type OnCallModelFunctionApiDetails, type OnCallModelTypeApiDetails, type OnCallCrudModelApiDetails, type OnCallModelApiDetails, type JsonSchemaRef, type OnCallApiDetailsRef } from './api.details';
 import { onCallSpecifierHandler } from './specifier.function';
 import { onCallCreateModel, type OnCallCreateModelMap } from './create.model.function';
 import { onCallUpdateModel } from './update.model.function';
@@ -84,6 +84,16 @@ describe('api.details', () => {
       expect(wrapped._apiDetails).toBeDefined();
       expect(wrapped._apiDetails!.inputType).toBe(inputType);
       expect(wrapped._apiDetails!.analytics).toBeDefined();
+    });
+
+    it('should attach requiredScope inside _apiDetails when provided', () => {
+      const wrapped = withApiDetails({ requiredScope: 'lms', fn: mockHandler() });
+      expect(wrapped._apiDetails?.requiredScope).toBe('lms');
+    });
+
+    it('should not attach requiredScope when not provided', () => {
+      const wrapped = withApiDetails({ fn: mockHandler() });
+      expect(wrapped._apiDetails?.requiredScope).toBeUndefined();
     });
   });
 
@@ -513,6 +523,82 @@ describe('api.details', () => {
       const handlerDetails = specDetails.specifiers['_'] as OnCallModelFunctionApiDetails;
 
       expect(handlerDetails.inputType!.toJsonSchema()).toEqual(schema);
+    });
+  });
+
+  // MARK: resolveRequiredScopeFromApiDetails
+  describe('resolveRequiredScopeFromApiDetails()', () => {
+    function buildModelApiDetails(): OnCallModelApiDetails {
+      const callModelMap: OnCallModelMap = {
+        create: onCallCreateModel({
+          widget: withApiDetails({ requiredScope: 'lms', fn: mockHandler() }),
+          gadget: withApiDetails({ fn: mockHandler() })
+        } as OnCallCreateModelMap<any>),
+        update: onCallUpdateModel({
+          widget: onCallSpecifierHandler({
+            _: withApiDetails({ fn: mockHandler() }) as any,
+            special: withApiDetails({ requiredScope: 'lms', fn: mockHandler() }) as any
+          })
+        } as any),
+        read: onCallReadModel({}),
+        delete: onCallDeleteModel({})
+      };
+
+      return readApiDetails(onCallModel(callModelMap)) as OnCallModelApiDetails;
+    }
+
+    it('resolves the per-function requiredScope for a direct (non-specifier) handler', () => {
+      expect(resolveRequiredScopeFromApiDetails(buildModelApiDetails(), 'create', 'widget')).toBe('lms');
+    });
+
+    it('resolves the per-function requiredScope for a specifier handler', () => {
+      expect(resolveRequiredScopeFromApiDetails(buildModelApiDetails(), 'update', 'widget', 'special')).toBe('lms');
+    });
+
+    it('returns undefined for a handler that declares no requiredScope', () => {
+      const details = buildModelApiDetails();
+      expect(resolveRequiredScopeFromApiDetails(details, 'create', 'gadget')).toBeUndefined();
+      expect(resolveRequiredScopeFromApiDetails(details, 'update', 'widget')).toBeUndefined(); // '_' specifier
+    });
+
+    it('returns undefined for an unknown call type or model type', () => {
+      const details = buildModelApiDetails();
+      expect(resolveRequiredScopeFromApiDetails(details, 'delete', 'widget')).toBeUndefined();
+      expect(resolveRequiredScopeFromApiDetails(details, 'create', 'unknownModel')).toBeUndefined();
+    });
+  });
+
+  // MARK: onCallModel requiredScope threading
+  describe('onCallModel requiredScope threading', () => {
+    // The preAssert throws right after capturing, short-circuiting before analytics resolution so the
+    // dispatch never needs a real nestApplication — we only assert the context the preAssert received.
+    function dispatchAndCapture(handlerDetails: Parameters<typeof withApiDetails>[0]): any {
+      let captured: any;
+      const callModelMap: OnCallModelMap = {
+        create: onCallCreateModel({ widget: withApiDetails(handlerDetails) } as OnCallCreateModelMap<any>)
+      };
+      const callModel = onCallModel(callModelMap, {
+        preAssert: (ctx) => {
+          captured = ctx;
+          throw new Error('stop-after-preAssert');
+        }
+      });
+
+      const req = { data: { call: 'create', modelType: 'widget', specifier: undefined, data: {} }, auth: { uid: 'u1' } };
+      expect(() => callModel(req as any)).toThrow('stop-after-preAssert');
+      return captured;
+    }
+
+    it('resolves and threads the leaf requiredScope into the preAssert context on dispatch', () => {
+      const captured = dispatchAndCapture({ requiredScope: 'lms', fn: mockHandler() });
+      expect(captured.requiredScope).toBe('lms');
+      expect(captured.call).toBe('create');
+      expect(captured.modelType).toBe('widget');
+    });
+
+    it('threads undefined requiredScope when the leaf handler declares none', () => {
+      const captured = dispatchAndCapture({ fn: mockHandler() });
+      expect(captured.requiredScope).toBeUndefined();
     });
   });
 });

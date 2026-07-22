@@ -21,10 +21,13 @@ function getRequestHandlers(factory: McpServerFactoryService, auth: FirebaseServ
   return (server.server as unknown as { _requestHandlers: RequestHandlersMap })._requestHandlers;
 }
 
-async function loadAuthData(u: DemoApiAuthorizedUserTestContextFixture): Promise<FirebaseServerAuthData> {
+async function loadAuthData(u: DemoApiAuthorizedUserTestContextFixture, scopes?: string): Promise<FirebaseServerAuthData> {
   const userRecord = await u.loadUserRecord();
-  const authData = await createTestFunctionContextAuthData(u.instance.testContext.auth, userRecord);
-  return authData as FirebaseServerAuthData;
+  const authData = (await createTestFunctionContextAuthData(u.instance.testContext.auth, userRecord)) as FirebaseServerAuthData;
+  // When `scopes` is provided, attach a validated OIDC token so the MCP scope filter treats the
+  // caller as an OIDC bearer (matching how `McpServerFactoryService` resolves scopes). Omitting it
+  // leaves the caller as a plain Firebase auth, which bypasses scope filtering.
+  return scopes == null ? authData : ({ ...authData, oidcValidatedToken: { sub: authData.uid, scope: scopes } } as unknown as FirebaseServerAuthData);
 }
 
 /**
@@ -47,6 +50,12 @@ export interface CallMcpToolParams {
    * Tool arguments forwarded to call-model dispatch as the `data` envelope.
    */
   readonly args: Record<string, unknown>;
+  /**
+   * Optional space-delimited OIDC scope string. When set, the caller is treated as an OIDC bearer
+   * carrying these scopes (exercising the per-verb + per-function scope filter); omit for a plain
+   * Firebase caller that bypasses scope filtering.
+   */
+  readonly scopes?: string;
 }
 
 /**
@@ -74,9 +83,9 @@ export interface CallMcpToolAnonymousParams {
  * @returns The MCP `CallToolResult` — including `structuredContent` for the handler's raw return.
  */
 export async function callMcpTool(params: CallMcpToolParams): Promise<CallToolResult> {
-  const { f, u, name, args } = params;
+  const { f, u, name, args, scopes } = params;
   const factory = f.instance.nest.get(McpServerFactoryService);
-  const auth = await loadAuthData(u);
+  const auth = await loadAuthData(u, scopes);
   const handlers = getRequestHandlers(factory, auth);
   const callHandler = handlers.get(CallToolRequestSchema.shape.method.value);
 
@@ -112,11 +121,13 @@ export async function callMcpToolAnonymous(params: CallMcpToolAnonymousParams): 
  *
  * @param f - Demo-api function fixture providing the Nest module.
  * @param u - Authorized user fixture (auth is required by the factory; tool listing itself is auth-insensitive).
+ * @param scopes - Optional space-delimited OIDC scope string. When set, the caller is treated as an
+ *   OIDC bearer carrying these scopes so the scope filter applies; omit for a plain Firebase caller.
  * @returns The list of registered MCP {@link Tool} definitions.
  */
-export async function listMcpTools(f: DemoApiFunctionContextFixture, u: DemoApiAuthorizedUserTestContextFixture): Promise<ReadonlyArray<Tool>> {
+export async function listMcpTools(f: DemoApiFunctionContextFixture, u: DemoApiAuthorizedUserTestContextFixture, scopes?: string): Promise<ReadonlyArray<Tool>> {
   const factory = f.instance.nest.get(McpServerFactoryService);
-  const auth = await loadAuthData(u);
+  const auth = await loadAuthData(u, scopes);
   const handlers = getRequestHandlers(factory, auth);
   const listHandler = handlers.get(ListToolsRequestSchema.shape.method.value);
 

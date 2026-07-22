@@ -1,4 +1,4 @@
-import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, type AllPublishedGuestbookEntriesMcpResult, allPublishedGuestbookEntriesParamsType, publishedGuestbookEntry, type GuestbookEntry, type EntryDetailsGuestbookEntryParams, type EntryDetailsGuestbookEntryResult, entryDetailsGuestbookEntryParamsType } from 'demo-firebase';
+import { type AllPublishedGuestbookEntriesParams, type AllPublishedGuestbookEntriesResult, type AllPublishedGuestbookEntriesMcpResult, allPublishedGuestbookEntriesParamsType, publishedGuestbookEntry, type GuestbookEntry, type EntryDetailsGuestbookEntryParams, type EntryDetailsGuestbookEntryResult, entryDetailsGuestbookEntryParamsType, LMS_OIDC_SCOPE } from 'demo-firebase';
 import { type FirestoreQueryConstraint, type OnCallQueryModelResult } from '@dereekb/firebase';
 import { executeOnCallQuery, withApiDetails } from '@dereekb/firebase-server';
 import { type DemoInvokeModelFunction } from '../function.context';
@@ -19,6 +19,10 @@ export const ALL_PUBLISHED_GUESTBOOK_ENTRIES_HARD_CAP = 500;
  */
 export const guestbookEntryAllPublishedEntries: DemoInvokeModelFunction<AllPublishedGuestbookEntriesParams, AllPublishedGuestbookEntriesResult> = withApiDetails({
   inputType: allPublishedGuestbookEntriesParamsType,
+  // Per-function OIDC scope: an OIDC-authenticated caller must hold `lms` (on top of the per-verb
+  // `model.invoke`) to see this tool on MCP `tools/list` or invoke it via REST/MCP. Non-OIDC
+  // (Firebase ID-token) callers are unaffected. Demonstrates the per-function `requiredScope` feature.
+  requiredScope: LMS_OIDC_SCOPE,
   mcp: {
     // Strip the potentially large `entries` array for MCP clients — see AllPublishedGuestbookEntriesMcpResult.
     mapSuccessfulResult: (result): AllPublishedGuestbookEntriesMcpResult => ({ count: result.count, hitLimit: result.hitLimit })

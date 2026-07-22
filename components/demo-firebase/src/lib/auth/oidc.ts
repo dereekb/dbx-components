@@ -19,15 +19,30 @@ import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, ty
 export type DemoOidcScope = StandardOidcScope | 'demo' | CallModelOidcScope | ServiceTokenOidcScope | DemoOidcProviderProfileScope;
 
 /**
+ * The `lms` OIDC scope — unlocked (and force-required) by the `lms` provider profile, and used as a
+ * per-function `requiredScope` on the callModel API to gate LMS-only operations (see
+ * `guestbookEntryAllPublishedEntries` in demo-api).
+ */
+export const LMS_OIDC_SCOPE = 'lms' as const;
+
+/**
+ * The `reports` OIDC scope — unlocked (optionally) by the `reports` provider profile.
+ */
+export const REPORTS_OIDC_SCOPE = 'reports' as const;
+
+export type LmsOidcScope = typeof LMS_OIDC_SCOPE;
+export type ReportsOidcScope = typeof REPORTS_OIDC_SCOPE;
+
+/**
  * Scopes that are unlocked only via an {@link OidcProviderProfile} (see {@link DEMO_OIDC_PROVIDER_PROFILES}).
  *
  * These are intentionally excluded from {@link DEMO_OIDC_AVAILABLE_SCOPES} (the general scope picker): a
  * client can only obtain them when an admin assigns the corresponding provider profile.
  *
- * - `lms`: unlocked (and force-required) by the `lms` profile.
- * - `reports`: unlocked (optional) by the `reports` profile.
+ * - {@link LMS_OIDC_SCOPE} (`lms`): unlocked (and force-required) by the `lms` profile.
+ * - {@link REPORTS_OIDC_SCOPE} (`reports`): unlocked (optional) by the `reports` profile.
  */
-export type DemoOidcProviderProfileScope = 'lms' | 'reports';
+export type DemoOidcProviderProfileScope = LmsOidcScope | ReportsOidcScope;
 
 /**
  * Frontend base path for the demo app's OAuth interaction pages.
@@ -55,8 +70,8 @@ export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [..
  * - `reports`: unlocks the `reports` scope as optional (the client may request it, but it is not forced).
  */
 export const DEMO_OIDC_PROVIDER_PROFILES: OidcProviderProfile<DemoOidcScope>[] = [
-  { key: 'lms', label: 'LMS', description: 'Learning management system integration (unlocks + requires the lms scope)', scopes: [{ scope: 'lms', require: 'required' }] },
-  { key: 'reports', label: 'Reports', description: 'Reporting integration (unlocks the reports scope)', scopes: [{ scope: 'reports', require: 'none' }] }
+  { key: 'lms', label: 'LMS', description: 'Learning management system integration (unlocks + requires the lms scope)', scopes: [{ scope: LMS_OIDC_SCOPE, require: 'required' }] },
+  { key: 'reports', label: 'Reports', description: 'Reporting integration (unlocks the reports scope)', scopes: [{ scope: REPORTS_OIDC_SCOPE, require: 'none' }] }
 ];
 
 /**

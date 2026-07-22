@@ -5,12 +5,13 @@ import { type AssertModelCrudRequestFunctionContext } from '@dereekb/firebase-se
 
 const KNOWN_CALL_TYPES: ReadonlyArray<KnownOnCallFunctionType> = ['create', 'read', 'update', 'delete', 'query', 'invoke'];
 
-function buildContext(call: string | undefined, scope: string | undefined): AssertModelCrudRequestFunctionContext<unknown, OnCallTypedModelParams> {
+function buildContext(call: string | undefined, scope: string | undefined, requiredScope?: string): AssertModelCrudRequestFunctionContext<unknown, OnCallTypedModelParams> {
   const auth = scope === undefined ? undefined : { uid: 'user-1', token: { scope } };
   return {
     call: call as string,
     modelType: 'guestbook',
     specifier: undefined,
+    requiredScope,
     request: {
       auth,
       data: { call, modelType: 'guestbook', data: {} }
@@ -103,5 +104,41 @@ describe('oidcCallModelScopePreAssert', () => {
 
   it('bypasses non-CRUD (custom) call types even when an OIDC token is present', () => {
     expect(() => preAssert(buildContext('archive', 'openid'))).not.toThrow();
+  });
+});
+
+describe('oidcCallModelScopePreAssert (per-function requiredScope)', () => {
+  const preAssert = oidcCallModelScopePreAssert();
+
+  function codeOfThrown(fn: () => void): string | undefined {
+    let caught: any;
+    try {
+      fn();
+    } catch (e) {
+      caught = e;
+    }
+    const details = caught?.details ?? caught?.errorInfo?.details ?? caught;
+    return details?.code ?? caught?.code;
+  }
+
+  it('passes when the OIDC token carries both the per-verb and the per-function scope', () => {
+    expect(() => preAssert(buildContext('create', 'openid model.create lms', 'lms'))).not.toThrow();
+  });
+
+  it('rejects with CALL_MODEL_MISSING_OIDC_SCOPE when the per-function scope is absent (per-verb present)', () => {
+    expect(codeOfThrown(() => preAssert(buildContext('create', 'openid model.create', 'lms')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('is additive: rejects when the per-verb scope is absent even though the per-function scope is present', () => {
+    expect(codeOfThrown(() => preAssert(buildContext('create', 'openid lms', 'lms')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('bypasses the per-function scope for a non-OIDC caller (no scope claim)', () => {
+    expect(() => preAssert(buildContext('create', undefined, 'lms'))).not.toThrow();
+  });
+
+  it('enforces a per-function scope even on an otherwise-unrestricted custom call type', () => {
+    expect(() => preAssert(buildContext('archive', 'openid lms', 'lms'))).not.toThrow();
+    expect(codeOfThrown(() => preAssert(buildContext('archive', 'openid', 'lms')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
   });
 });

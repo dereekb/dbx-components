@@ -524,7 +524,7 @@ export class McpServerFactoryService {
     for (const tool of tools) {
       const { filterMetadata } = tool;
 
-      if (scopes != null && filterMetadata.requiredScope != null && !scopes.has(filterMetadata.requiredScope)) {
+      if (scopes != null && filterMetadata.requiredScopes != null && !filterMetadata.requiredScopes.every((scope) => scopes.has(scope))) {
         continue;
       }
 

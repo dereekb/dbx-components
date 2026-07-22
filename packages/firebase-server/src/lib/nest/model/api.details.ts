@@ -1,5 +1,5 @@
 import { type AuthRole, type Configurable, type Maybe, type PromiseOrValue } from '@dereekb/util';
-import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier } from '@dereekb/firebase';
+import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier, type OidcScope } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '../controller/auth.context.server';
 import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
 
@@ -325,6 +325,16 @@ export interface OnCallModelFunctionApiDetails<R = unknown, M = unknown> {
    * When provided, the dispatch chain will call lifecycle hooks around handler execution.
    */
   readonly analytics?: OnCallModelFunctionAnalyticsDetails;
+  /**
+   * Optional per-function OIDC scope an OIDC-authenticated caller must additionally hold to
+   * invoke this handler, on top of the per-verb `model.<call>` scope.
+   *
+   * Composes additively with the CRUD-verb scope enforced by `oidcCallModelScopePreAssert`: an
+   * OIDC caller still needs `model.<call>` AND this scope. Non-OIDC callers (Firebase ID tokens)
+   * bypass scope enforcement entirely and are unaffected. Also folded into the MCP tool-list
+   * visibility filter, so a tool the caller lacks this scope for is neither listed nor callable.
+   */
+  readonly requiredScope?: OidcScope;
 }
 
 /**
@@ -714,6 +724,33 @@ export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails
     // the details are under the `_` key.
     const key = specifier ?? '_';
     result = modelDetails.specifiers[key]?.analytics;
+  }
+
+  return result;
+}
+
+// MARK: Required Scope Resolution
+/**
+ * Resolves the leaf-level per-function required OIDC scope from the aggregated _apiDetails tree.
+ *
+ * Walks: call -> modelType -> specifier (if specifier-level), then reads the `requiredScope`
+ * field from the handler-level {@link OnCallModelFunctionApiDetails}. Mirrors
+ * {@link resolveAnalyticsFromApiDetails}.
+ *
+ * @param apiDetails - The top-level aggregated API details.
+ * @param call - The CRUD operation type to look up.
+ * @param modelType - The Firestore model type to look up.
+ * @param specifier - Optional specifier key for variant handlers.
+ * @returns The per-function required scope for the resolved handler, or undefined.
+ */
+// eslint-disable-next-line @typescript-eslint/max-params
+export function resolveRequiredScopeFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OidcScope> {
+  const modelDetails = apiDetails[call]?.modelTypes[modelType];
+  let result: Maybe<OidcScope>;
+
+  if (modelDetails) {
+    const key = specifier ?? '_';
+    result = modelDetails.specifiers[key]?.requiredScope;
   }
 
   return result;

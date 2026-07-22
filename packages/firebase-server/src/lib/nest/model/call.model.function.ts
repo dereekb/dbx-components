@@ -4,7 +4,7 @@ import { badRequestError } from '../../function/error';
 import { assertRequestRequiresAuthForFunction, type OnCallWithAuthAwareNestContext, type OnCallWithAuthAwareNestRequireAuthRef, type OnCallWithNestContext, type OnCallWithNestContextRequest } from '../function/call';
 import { type AssertModelCrudRequestFunctionContextCrudType, type AssertModelCrudRequestFunction } from './crud.assert.function';
 import { type NestContextCallableRequest } from '../function/nest';
-import { type OnCallApiDetailsRef, type OnCallModelApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, resolveAnalyticsFromApiDetails } from './api.details';
+import { type OnCallApiDetailsRef, type OnCallModelApiDetails, aggregateCrudModelApiDetails, aggregateModelApiDetails, resolveAnalyticsFromApiDetails, resolveRequiredScopeFromApiDetails } from './api.details';
 import { type OnCallAnalyticsContext } from './analytics.details';
 import { type OnCallModelAnalyticsService, ON_CALL_MODEL_ANALYTICS_SERVICE, noopOnCallModelAnalyticsService } from './analytics.handler';
 import { callWithAnalytics } from './analytics.emit';
@@ -111,7 +111,11 @@ export function onCallModel(map: OnCallModelMap, config: OnCallModelConfig = {})
     const auth = (request as any).auth;
     const context: OnCallAnalyticsContext = { call, modelType, specifier, uid: auth?.uid, auth, data: request.data.data, request: request as any };
 
-    preAssert(context);
+    // Resolve the leaf handler's per-function requiredScope (if any) so the preAssert can enforce
+    // it additively with the per-verb OIDC scope. Same call -> modelType -> specifier walk as analytics.
+    const requiredScope = resolveRequiredScopeFromApiDetails(modelApiDetails, call, modelType, specifier);
+
+    preAssert({ ...context, requiredScope });
 
     let result: PromiseOrValue<any>;
 
