@@ -1,6 +1,6 @@
 import type { Configuration } from 'oidc-provider';
 import { type WebsitePath, type SlashPath, type Seconds, SECONDS_IN_DAY, SECONDS_IN_MINUTE } from '@dereekb/util';
-import { type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { type OidcProviderProfile, type OidcScope, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { type JwksServiceConfig } from './service/oidc.jwks.service';
 import { type JwksKeyConverterConfig } from './model';
 
@@ -117,6 +117,19 @@ export interface OidcProviderConfig<S extends OidcScope = OidcScope> {
    * All other grants keep oidc-provider's default rotation behavior.
    */
   readonly nonRotatingScopes?: readonly string[];
+  /**
+   * Named provider profiles that unlock (and optionally force-require) scopes for the OIDC clients
+   * they are assigned to. Any scope referenced by a profile is treated as restricted: a client may
+   * only obtain it when one of its assigned profiles (persisted as `dbx_provider_profiles` client
+   * metadata) unlocks it. A profile scope marked `require: 'required'` is force-required — surfaced
+   * as a required scope at consent and hard-rejected if not granted.
+   *
+   * Keeps the generic package app-agnostic: apps declare their profiles statically and list them
+   * here, rather than the package hard-coding any profile or scope name. This gate is independent of
+   * {@link adminOnlyScopes} (which gates by the resolving user's admin status); a scope may be
+   * subject to both.
+   */
+  readonly providerProfiles?: readonly OidcProviderProfile<S>[];
 }
 
 /**

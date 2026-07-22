@@ -14,6 +14,11 @@
 #   ZOHO_DESK_ORG_ID               - Zoho Desk organization ID (enables desk tests)
 #   ZOHO_ACCOUNTS_URL              - Zoho accounts URL / region (default: us)
 #   ZOHO_API_URL                   - API mode (production or sandbox)
+#
+#   Zoho Sign uses a SEPARATE OAuth client. Set these to enable the sign tests:
+#   ZOHO_SIGN_ACCOUNTS_CLIENT_ID     - Sign OAuth client ID
+#   ZOHO_SIGN_ACCOUNTS_CLIENT_SECRET - Sign OAuth client secret
+#   ZOHO_SIGN_ACCOUNTS_REFRESH_TOKEN - Sign OAuth refresh token (gates the sign phase)
 
 set -e
 
@@ -123,6 +128,7 @@ check "--help shows doctor command" echo "$HELP_OUTPUT" | grep -q "doctor"
 check "--help shows recruit command" echo "$HELP_OUTPUT" | grep -q "recruit"
 check "--help shows crm command" echo "$HELP_OUTPUT" | grep -q "crm"
 check "--help shows desk command" echo "$HELP_OUTPUT" | grep -q "desk"
+check "--help shows sign command" echo "$HELP_OUTPUT" | grep -q "sign"
 check "--help shows request command" echo "$HELP_OUTPUT" | grep -q "request"
 check "--help shows output command" echo "$HELP_OUTPUT" | grep -q "output"
 
@@ -135,6 +141,11 @@ check "crm --help shows list" echo "$CRM_HELP" | grep -q "list"
 DESK_HELP=$(HOME="$TEST_HOME" $CLI desk --help 2>&1 || true)
 check "desk --help shows tickets" echo "$DESK_HELP" | grep -q "tickets"
 
+SIGN_HELP=$(HOME="$TEST_HOME" $CLI sign --help 2>&1 || true)
+check "sign --help shows documents" echo "$SIGN_HELP" | grep -q "documents"
+check "sign --help shows templates" echo "$SIGN_HELP" | grep -q "templates"
+check "sign --help shows field-types" echo "$SIGN_HELP" | grep -q "field-types"
+
 # Multi-page pagination flags should surface on every list command
 CRM_LIST_HELP=$(HOME="$TEST_HOME" $CLI crm list --help 2>&1 || true)
 check "crm list --help shows --multiple-pages" echo "$CRM_LIST_HELP" | grep -q "multiple-pages"
@@ -145,6 +156,11 @@ check "crm list --help shows --dump-merge" echo "$CRM_LIST_HELP" | grep -q "dump
 DESK_TICKETS_LIST_HELP=$(HOME="$TEST_HOME" $CLI desk tickets list --help 2>&1 || true)
 check "desk tickets list --help shows --multiple-pages" echo "$DESK_TICKETS_LIST_HELP" | grep -q "multiple-pages"
 check "desk tickets list --help shows --dump-output" echo "$DESK_TICKETS_LIST_HELP" | grep -q "dump-output"
+
+SIGN_DOCS_LIST_HELP=$(HOME="$TEST_HOME" $CLI sign documents list --help 2>&1 || true)
+check "sign documents list --help shows --multiple-pages" echo "$SIGN_DOCS_LIST_HELP" | grep -q "multiple-pages"
+check "sign documents list --help shows --row-count" echo "$SIGN_DOCS_LIST_HELP" | grep -q "row-count"
+check "sign documents list --help shows --start-index" echo "$SIGN_DOCS_LIST_HELP" | grep -q "start-index"
 
 echo ""
 
@@ -858,6 +874,45 @@ else
   check_json_valid "auth clear outputs valid JSON" "$CLEAR_OUTPUT"
   check_json_field "auth clear reports cleared" "$CLEAR_OUTPUT" ".data.cleared" "true"
   check "config file was removed" test ! -f "$TEST_CONFIG_DIR/config.json"
+fi
+
+# ============================
+# Phase 8: Zoho Sign (separate OAuth client)
+# ============================
+# Sign uses its own OAuth client, so it is configured independently of the shared credentials above
+# and runs even when only Sign credentials are present.
+if [[ -n "$ZOHO_SIGN_ACCOUNTS_REFRESH_TOKEN" ]]; then
+  echo "Phase 8: Zoho Sign"
+
+  SIGN_SET=$(HOME="$TEST_HOME" $CLI auth set \
+    --product sign \
+    --client-id "$ZOHO_SIGN_ACCOUNTS_CLIENT_ID" \
+    --client-secret "$ZOHO_SIGN_ACCOUNTS_CLIENT_SECRET" \
+    --refresh-token "$ZOHO_SIGN_ACCOUNTS_REFRESH_TOKEN" \
+    --api-mode "${ZOHO_API_URL:-production}" 2>&1)
+  check_json_valid "auth set --product sign outputs valid JSON" "$SIGN_SET"
+  check_json_field "auth set --product sign reports sign configured" "$SIGN_SET" '.data.configuredProducts | index("sign") != null' "true"
+
+  SIGN_CHECK=$(HOME="$TEST_HOME" $CLI auth check 2>&1 || true)
+  check_json_field "auth check reports sign authenticated" "$SIGN_CHECK" ".data.products.sign.authenticated" "true"
+
+  SIGN_FIELD_TYPES=$(HOME="$TEST_HOME" $CLI sign field-types 2>&1 || true)
+  check_json_valid "sign field-types outputs valid JSON" "$SIGN_FIELD_TYPES"
+  check_api_ok "sign field-types reports ok" "$SIGN_FIELD_TYPES"
+
+  SIGN_TEMPLATES=$(HOME="$TEST_HOME" $CLI sign templates list --row-count 1 2>&1 || true)
+  check_json_valid "sign templates list outputs valid JSON" "$SIGN_TEMPLATES"
+  check_api_ok "sign templates list reports ok" "$SIGN_TEMPLATES"
+
+  SIGN_DOCS=$(HOME="$TEST_HOME" $CLI sign documents list --row-count 1 2>&1 || true)
+  check_json_valid "sign documents list outputs valid JSON" "$SIGN_DOCS"
+  check_api_ok "sign documents list reports ok" "$SIGN_DOCS"
+
+  HOME="$TEST_HOME" $CLI auth clear > /dev/null 2>&1 || true
+  echo ""
+else
+  echo "Phase 8: SKIP (ZOHO_SIGN_ACCOUNTS_REFRESH_TOKEN not set)"
+  echo ""
 fi
 
 # Cleanup

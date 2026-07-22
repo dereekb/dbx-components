@@ -1,3 +1,4 @@
+export * from './firebase.auth.flow';
 export * from './firebase.auth.rxjs';
 export * from './firebase.auth.rxjs.util';
 export * from './firebase.auth.service';

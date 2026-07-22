@@ -102,6 +102,7 @@ async function checkTokenExchange(context: ReturnType<typeof createCliContext>, 
 function pickProductApi(context: ReturnType<typeof createCliContext>, product: string): unknown {
   if (product === 'recruit') return context.recruitApi;
   if (product === 'crm') return context.crmApi;
+  if (product === 'sign') return context.signApi;
   return context.deskApi;
 }
 

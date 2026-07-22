@@ -38,7 +38,8 @@ export class DbxFirebaseOidcEntryClientUpdateComponent {
         client_name: payload.client_name ?? '',
         redirect_uris: payload.redirect_uris ?? [],
         logo_uri: payload.logo_uri,
-        client_uri: payload.client_uri
+        client_uri: payload.client_uri,
+        dbx_provider_profiles: payload.dbx_provider_profiles ?? undefined
       };
       return formValue;
     })

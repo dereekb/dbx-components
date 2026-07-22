@@ -14,9 +14,10 @@ export type DbxFirebaseOidcModelClientUpdateFormValue = UpdateOidcClientFieldPar
 /**
  * Config input for {@link DbxFirebaseOidcEntryClientForgeFormComponent}.
  *
- * Omits `tokenEndpointAuthMethods` since the component pulls those from {@link DbxFirebaseOidcConfigService}.
+ * Omits `tokenEndpointAuthMethods` and `providerProfiles` since the component pulls those from
+ * {@link DbxFirebaseOidcConfigService}.
  */
-export type DbxFirebaseOidcEntryClientFormComponentConfig = Omit<OidcEntryClientFormFieldsConfig, 'tokenEndpointAuthMethods'>;
+export type DbxFirebaseOidcEntryClientFormComponentConfig = Omit<OidcEntryClientFormFieldsConfig, 'tokenEndpointAuthMethods' | 'providerProfiles'>;
 
 /**
  * Configurable forge form component for creating or updating an OAuth client.
@@ -44,7 +45,8 @@ export class DbxFirebaseOidcEntryClientForgeFormComponent extends AbstractConfig
       if (config) {
         result = oidcEntryClientForgeFormFields({
           ...config,
-          tokenEndpointAuthMethods: this._oidcConfigService.tokenEndpointAuthMethods
+          tokenEndpointAuthMethods: this._oidcConfigService.tokenEndpointAuthMethods,
+          providerProfiles: this._oidcConfigService.availableProviderProfiles ?? undefined
         });
       } else {
         result = undefined;

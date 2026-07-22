@@ -15,9 +15,10 @@ export const oidcEntryCreateClient: DemoCreateModelFunction<CreateOidcClientPara
   },
   fn: async (request) => {
     const { nest, data } = request;
+    const isAdmin = isAdminInRequest(request);
     let key: FirebaseAuthOwnershipKey | undefined;
 
-    if (!isAdminInRequest(request)) {
+    if (!isAdmin) {
       key = undefined;
     }
 
@@ -26,7 +27,10 @@ export const oidcEntryCreateClient: DemoCreateModelFunction<CreateOidcClientPara
       key = firestoreModelKey(profileIdentity, request.auth.uid);
     }
 
-    const createFn = await nest.oidcModelServerActions.createOidcClient({ ...data, key });
+    // Provider profile assignment is admin-only; strip it from a non-admin's request so it is ignored.
+    const params: CreateOidcClientParams = isAdmin ? { ...data, key } : { ...data, key, dbx_provider_profiles: undefined };
+
+    const createFn = await nest.oidcModelServerActions.createOidcClient(params);
     return createFn();
   }
 });

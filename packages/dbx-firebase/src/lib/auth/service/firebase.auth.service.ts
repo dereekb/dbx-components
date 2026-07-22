@@ -1,7 +1,7 @@
 import { filterMaybe, isNot, timeoutStartWith } from '@dereekb/rxjs';
 import { Injectable, inject } from '@angular/core';
 import { type AuthUserState, type DbxAuthService, loggedOutObsFromIsLoggedIn, loggedInObsFromIsLoggedIn, type AuthUserIdentifier, authUserIdentifier, type NoAuthUserIdentifier, type DbxAuthImpersonationDetails } from '@dereekb/dbx-core';
-import { reauthenticateWithPopup, type User, type IdTokenResult, type ParsedToken, signInWithPopup, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithCredential, unlink, type AuthCredential, sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
+import { reauthenticateWithPopup, reauthenticateWithRedirect, type User, type IdTokenResult, type ParsedToken, signInWithPopup, signInWithRedirect, getRedirectResult, type AuthProvider, type PopupRedirectResolver, signInAnonymously, signInWithEmailAndPassword, type UserCredential, createUserWithEmailAndPassword, linkWithPopup, linkWithRedirect, linkWithCredential, unlink, type AuthCredential, sendPasswordResetEmail, confirmPasswordReset } from 'firebase/auth';
 import { FIREBASE_AUTH_TOKEN } from '../../firebase/firebase.tokens';
 import { firebaseAuthState, firebaseIdToken } from './firebase.auth.rxjs.util';
 import { of, type Observable, distinctUntilChanged, shareReplay, map, switchMap, firstValueFrom, catchError, EMPTY, Subject, merge, tap } from 'rxjs';
@@ -9,6 +9,7 @@ import { type AuthClaims, type AuthClaimsObject, type AuthRoleClaimsService, typ
 import { type AuthUserInfo, authUserInfoFromAuthUser, firebaseAuthTokenFromUser } from '../auth';
 import { authUserStateFromFirebaseAuthServiceFunction } from './firebase.auth.rxjs';
 import { type FirebaseAuthIdToken, type FirebaseAuthContextInfo, type FirebaseAuthOobCode } from '@dereekb/firebase';
+import { DBX_FIREBASE_AUTH_FLOW_TOKEN, DEFAULT_DBX_FIREBASE_AUTH_FLOW, type DbxFirebaseAuthFlow, type DbxFirebaseResolvedAuthFlow, resolveDbxFirebaseAuthFlow } from './firebase.auth.flow';
 
 /**
  * Returns an observable that derives the current {@link AuthUserState} from the given auth service.
@@ -142,6 +143,7 @@ export const DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE: DbxFirebaseAuthServiceD
 export class DbxFirebaseAuthService implements DbxAuthService {
   readonly firebaseAuth = inject(FIREBASE_AUTH_TOKEN);
   readonly delegate = inject(DbxFirebaseAuthServiceDelegate, { optional: true }) ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE;
+  readonly authFlow: DbxFirebaseAuthFlow = inject(DBX_FIREBASE_AUTH_FLOW_TOKEN, { optional: true }) ?? DEFAULT_DBX_FIREBASE_AUTH_FLOW;
 
   readonly _authState$: Observable<Maybe<User>> = firebaseAuthState(this.firebaseAuth);
 
@@ -290,8 +292,48 @@ export class DbxFirebaseAuthService implements DbxAuthService {
     return result;
   }
 
+  /**
+   * The auth flow this service uses for the `*WithDefaultFlow` methods, with `auto` resolved to `popup` or `redirect`.
+   *
+   * Resolved on each call so `auto` reflects the current display mode.
+   *
+   * @returns The resolved auth flow.
+   */
+  resolvedAuthFlow(): DbxFirebaseResolvedAuthFlow {
+    return resolveDbxFirebaseAuthFlow(this.authFlow);
+  }
+
   logInWithPopup(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
     return signInWithPopup(this.firebaseAuth, provider, resolver);
+  }
+
+  /**
+   * Begins sign-in with the given provider via a full-page redirect.
+   *
+   * The page navigates away and the credential is delivered on reload via {@link handleRedirectResult}
+   * (`getRedirectResult`), so the returned promise never resolves with a credential.
+   *
+   * @param provider - The auth provider to sign in with.
+   * @param resolver - Optional popup/redirect resolver.
+   * @returns Nothing usable — the page navigates away and the flow completes on reload via {@link handleRedirectResult}.
+   */
+  logInWithRedirect(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<never> {
+    return signInWithRedirect(this.firebaseAuth, provider, resolver);
+  }
+
+  /**
+   * Signs in with the given provider using the configured {@link DbxFirebaseAuthService.authFlow}.
+   *
+   * Uses {@link logInWithRedirect} when the resolved flow is `redirect` (in which case the promise
+   * never resolves with a credential — the page navigates and sign-in completes on reload), otherwise
+   * {@link logInWithPopup}.
+   *
+   * @param provider - The auth provider to sign in with.
+   * @param resolver - Optional popup/redirect resolver.
+   * @returns Promise resolving to the user credential (popup flow only).
+   */
+  logInWithDefaultFlow(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
+    return this.resolvedAuthFlow() === 'redirect' ? this.logInWithRedirect(provider, resolver) : this.logInWithPopup(provider, resolver);
   }
 
   /**
@@ -318,6 +360,45 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         tap(() => this._authUpdate$.next())
       )
     );
+  }
+
+  /**
+   * Links an additional authentication provider to the current user via a full-page redirect.
+   *
+   * The page navigates away; the link completes on reload via {@link handleRedirectResult}, which
+   * pushes an auth-state refresh so `currentLinkedProviderIds$` updates (linking does not trigger
+   * `onAuthStateChanged`).
+   *
+   * @param provider - The auth provider to link.
+   * @param resolver - Optional popup/redirect resolver.
+   * @returns Nothing usable — the page navigates away and the flow completes on reload via {@link handleRedirectResult}.
+   */
+  linkWithRedirect(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<never> {
+    return firstValueFrom(
+      this.currentAuthUser$.pipe(
+        switchMap((x: Maybe<User>) => {
+          if (x) {
+            return linkWithRedirect(x, provider, resolver);
+          }
+          throw new Error('User is not logged in currently.');
+        })
+      )
+    );
+  }
+
+  /**
+   * Links an additional authentication provider to the current user using the configured
+   * {@link DbxFirebaseAuthService.authFlow}.
+   *
+   * Uses {@link linkWithRedirect} when the resolved flow is `redirect` (promise never resolves with a
+   * credential — the page navigates and the link completes on reload), otherwise {@link linkWithPopup}.
+   *
+   * @param provider - The auth provider to link.
+   * @param resolver - Optional popup/redirect resolver.
+   * @returns Promise resolving to the user credential after linking (popup flow only).
+   */
+  linkWithDefaultFlow(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
+    return this.resolvedAuthFlow() === 'redirect' ? this.linkWithRedirect(provider, resolver) : this.linkWithPopup(provider, resolver);
   }
 
   /**
@@ -451,6 +532,62 @@ export class DbxFirebaseAuthService implements DbxAuthService {
         })
       )
     );
+  }
+
+  /**
+   * Reauthenticates the current user with the given provider via a full-page redirect.
+   *
+   * The page navigates away; reauthentication completes on reload via {@link handleRedirectResult}.
+   *
+   * @param provider - The auth provider to reauthenticate with.
+   * @param resolver - Optional popup/redirect resolver.
+   * @returns Nothing usable — the page navigates away and the flow completes on reload via {@link handleRedirectResult}.
+   */
+  reauthenticateWithRedirect(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<never> {
+    return firstValueFrom(
+      this.currentAuthUser$.pipe(
+        switchMap((x: Maybe<User>) => {
+          if (x) {
+            return reauthenticateWithRedirect(x, provider, resolver);
+          }
+          throw new Error('User is not logged in currently.');
+        })
+      )
+    );
+  }
+
+  /**
+   * Reauthenticates the current user using the configured {@link DbxFirebaseAuthService.authFlow}.
+   *
+   * Uses {@link reauthenticateWithRedirect} when the resolved flow is `redirect` (promise never
+   * resolves with a credential — the page navigates and reauthentication completes on reload),
+   * otherwise {@link reauthenticateWithPopup}.
+   *
+   * @param provider - The auth provider to reauthenticate with.
+   * @param resolver - Optional popup/redirect resolver.
+   * @returns Promise resolving to the user credential (popup flow only).
+   */
+  reauthenticateWithDefaultFlow(provider: AuthProvider, resolver?: PopupRedirectResolver): Promise<UserCredential> {
+    return this.resolvedAuthFlow() === 'redirect' ? this.reauthenticateWithRedirect(provider, resolver) : this.reauthenticateWithPopup(provider, resolver);
+  }
+
+  /**
+   * Completes a pending redirect-based sign-in/link/reauthenticate started by a `*WithRedirect` method.
+   *
+   * Should be called once on app startup (wired via `provideDbxFirebaseAuth({ authFlow })`). When a
+   * redirect result is present it pushes an auth-state refresh so link/reauthenticate results (which do
+   * not trigger `onAuthStateChanged`) are reflected in `currentAuthUser$` / `currentLinkedProviderIds$`.
+   *
+   * @returns The redirect {@link UserCredential} when one is pending, otherwise `undefined`.
+   */
+  async handleRedirectResult(): Promise<Maybe<UserCredential>> {
+    const result = await getRedirectResult(this.firebaseAuth);
+
+    if (result != null) {
+      this._authUpdate$.next();
+    }
+
+    return result;
   }
 }
 

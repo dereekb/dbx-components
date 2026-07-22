@@ -33,6 +33,12 @@ export interface OAuthInteractionLoginDetails<T extends OidcScope = OidcScope> {
   readonly logo_uri?: Maybe<string>;
   readonly client_uri?: Maybe<string>;
   readonly scopes: OAuthInteractionScopes<T>;
+  /**
+   * Space-separated subset of `scopes` the client's assigned provider profiles force-require. The
+   * consent UI renders these as required (pre-checked, non-deselectable); the server force-grants
+   * them. Absent/empty when the client requires no profile scopes.
+   */
+  readonly requiredScopes?: OAuthInteractionScopes<T>;
 }
 
 /**

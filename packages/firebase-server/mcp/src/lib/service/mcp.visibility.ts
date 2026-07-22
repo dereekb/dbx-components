@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { callModelOidcScopeForCallType, type CallModelOidcScope } from '@dereekb/firebase';
+import { callModelOidcScopeForCallType, type CallModelOidcScope, type OidcScope } from '@dereekb/firebase';
 import { type McpToolVisibility, type McpVisibilityContext, type McpVisibilityRule } from '@dereekb/firebase-server';
 import { type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 
@@ -49,10 +49,12 @@ export type McpToolFilterMetadata = McpToolFilterMetadataAlways | McpToolFilterM
 
 interface McpToolFilterMetadataBase {
   /**
-   * OIDC scope required to invoke this tool. Precomputed from the dispatch call type.
-   * `undefined` for non-CRUD call types (apps gate those via their own preAssert if needed).
+   * OIDC scopes required to invoke this tool (AND-semantics — the caller must hold every entry).
+   * Precomputed from the dispatch call type's per-verb scope (`model.<call>`) plus any per-function
+   * scope declared via `withApiDetails({ requiredScope })`. Empty when no scope is enforced (a
+   * non-CRUD call type with no per-function scope); apps gate custom verbs via their own preAssert.
    */
-  readonly requiredScope?: CallModelOidcScope;
+  readonly requiredScopes?: readonly OidcScope[];
   /**
    * Effective read-only classification used by the module-level `readOnly` filter.
    *

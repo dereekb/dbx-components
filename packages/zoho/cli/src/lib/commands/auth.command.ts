@@ -81,7 +81,8 @@ const authSetupCommand: CommandModule = {
         ['$0 auth setup --code 1000.AUTH.CODE', 'Step 2: Exchange code for refresh token'],
         ['$0 auth setup --code "http://localhost/oauth?code=1000.AUTH.CODE&location=us"', 'Step 2: Paste the full redirect URL'],
         ['$0 auth setup --client-id 1000.ABC --client-secret xyz --token 1000.REFRESH.TOKEN', 'Set shared refresh token directly'],
-        ['$0 auth setup --product crm --client-id 1000.CRM --client-secret xyz --token 1000.CRM.TOKEN', 'Set CRM-specific credentials']
+        ['$0 auth setup --product crm --client-id 1000.CRM --client-secret xyz --token 1000.CRM.TOKEN', 'Set CRM-specific credentials'],
+        ['$0 auth setup --product sign --client-id 1000.SIGN --client-secret xyz', 'Sign uses a separate OAuth client (sign-only scopes)']
       ]),
   handler: async (argv: any) => {
     try {
@@ -122,10 +123,14 @@ interface AuthSetupContext {
 
 function buildAuthSetupContext(argv: any, existingConfig: Maybe<ZohoCliConfig>): AuthSetupContext {
   const region = (argv.region as string | undefined) ?? existingConfig?.shared?.region ?? 'us';
+  // When a product is targeted, prefer its own stored client credentials before falling back to shared.
+  // Products with a dedicated OAuth client (e.g. sign) rely on this so their client is not sourced from shared.
+  const product = argv.product as ZohoCliProduct | undefined;
+  const productConfig = product ? existingConfig?.[product] : undefined;
   return {
-    product: argv.product as ZohoCliProduct | undefined,
-    clientId: (argv.clientId as string | undefined) ?? existingConfig?.shared?.clientId,
-    clientSecret: (argv.clientSecret as string | undefined) ?? existingConfig?.shared?.clientSecret,
+    product,
+    clientId: (argv.clientId as string | undefined) ?? productConfig?.clientId ?? existingConfig?.shared?.clientId,
+    clientSecret: (argv.clientSecret as string | undefined) ?? productConfig?.clientSecret ?? existingConfig?.shared?.clientSecret,
     redirectUri: argv.redirectUri as string,
     region,
     scopes: (argv.scopes as string).split(',').map((p: string) => p.trim()),
@@ -202,31 +207,56 @@ async function handleAuthSetupCode(ctx: AuthSetupContext, existingConfig: Maybe<
 }
 
 async function handleAuthSetupStep1(ctx: AuthSetupContext, existingConfig: Maybe<ZohoCliConfig>): Promise<void> {
-  const scopeStrings = ctx.scopes.flatMap((p) => ZOHO_SCOPES[p] ?? []);
+  // A product-targeted setup authorizes that product's own OAuth client, so the URL requests only
+  // that product's scopes; the shared setup requests the combined scopes from --scopes.
+  const scopeStrings = ctx.product ? (ZOHO_SCOPES[ctx.product] ?? []) : ctx.scopes.flatMap((p) => ZOHO_SCOPES[p] ?? []);
   if (scopeStrings.length === 0) {
     throw new Error(`No valid products specified. Choose from: ${Object.keys(ZOHO_SCOPES).join(', ')}`);
   }
   const authUrl = `${ctx.accountsUrl}/oauth/v2/auth?scope=${scopeStrings.join(',')}&client_id=${encodeURIComponent(ctx.clientId as string)}&response_type=code&access_type=offline&redirect_uri=${encodeURIComponent(ctx.redirectUri)}`;
 
-  await mergeCliConfig({
-    shared: {
-      clientId: ctx.clientId as string,
-      clientSecret: ctx.clientSecret as string,
-      refreshToken: existingConfig?.shared?.refreshToken ?? '',
-      region: ctx.region,
-      apiMode: ctx.apiMode ?? existingConfig?.shared?.apiMode
-    },
-    desk: ctx.orgId ? { orgId: ctx.orgId } : undefined
-  });
+  if (ctx.product) {
+    // Store the client under the product (preserving the shared client) so a dedicated-client product
+    // like sign does not clobber the shared recruit/crm/desk client. Region/apiMode stay on shared.
+    await mergeCliConfig({
+      shared: {
+        clientId: existingConfig?.shared?.clientId ?? '',
+        clientSecret: existingConfig?.shared?.clientSecret ?? '',
+        refreshToken: existingConfig?.shared?.refreshToken ?? '',
+        region: ctx.region,
+        apiMode: ctx.apiMode ?? existingConfig?.shared?.apiMode
+      },
+      [ctx.product]: {
+        clientId: ctx.clientId as string,
+        clientSecret: ctx.clientSecret as string,
+        apiUrl: ctx.apiMode,
+        orgId: ctx.product === 'desk' ? ctx.orgId : undefined
+      }
+    });
+  } else {
+    await mergeCliConfig({
+      shared: {
+        clientId: ctx.clientId as string,
+        clientSecret: ctx.clientSecret as string,
+        refreshToken: existingConfig?.shared?.refreshToken ?? '',
+        region: ctx.region,
+        apiMode: ctx.apiMode ?? existingConfig?.shared?.apiMode
+      },
+      desk: ctx.orgId ? { orgId: ctx.orgId } : undefined
+    });
+  }
+
+  const productFlag = ctx.product ? `--product ${ctx.product} ` : '';
 
   outputResult({
     step: 1,
+    product: ctx.product ?? 'shared',
     instructions: 'Open the authorization URL in a browser. Authorize the application. Copy the "code" parameter from the redirect URL.',
     authorizationUrl: authUrl,
     redirectUri: ctx.redirectUri,
     scopes: scopeStrings,
     credentialsSaved: true,
-    nextStep: 'zoho-cli auth setup --code "PASTE_REDIRECT_URL_OR_AUTH_CODE"'
+    nextStep: `zoho-cli auth setup ${productFlag}--code "PASTE_REDIRECT_URL_OR_AUTH_CODE"`
   });
 }
 
@@ -312,6 +342,7 @@ const authShowCommand: CommandModule = {
         recruit: config.recruit ? { ...maskCreds(config.recruit), apiUrl: config.recruit.apiUrl } : null,
         crm: config.crm ? { ...maskCreds(config.crm), apiUrl: config.crm.apiUrl } : null,
         desk: config.desk ? { ...maskCreds(config.desk), apiUrl: config.desk.apiUrl, orgId: config.desk.orgId } : null,
+        sign: config.sign ? { ...maskCreds(config.sign), apiUrl: config.sign.apiUrl } : null,
         configuredProducts: configuredProducts(config)
       });
     } catch (e) {
@@ -348,6 +379,8 @@ const authCheckCommand: CommandModule = {
                 api = context.recruitApi;
               } else if (product === 'crm') {
                 api = context.crmApi;
+              } else if (product === 'sign') {
+                api = context.signApi;
               } else {
                 api = context.deskApi;
               }

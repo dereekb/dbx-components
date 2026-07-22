@@ -64,14 +64,14 @@ async function listTools(factory: McpServerFactoryService, ctx: { auth?: Firebas
   return result.tools;
 }
 
-function makeApiDetails(spec: ReadonlyArray<{ model: string; call: string; specifier?: string; mcp?: object }>): ModelApiDetailsResult {
+function makeApiDetails(spec: ReadonlyArray<{ model: string; call: string; specifier?: string; mcp?: object; requiredScope?: string }>): ModelApiDetailsResult {
   const models: Record<string, { calls: Record<string, { isSpecifier: boolean; specifiers: Record<string, object> }> }> = {};
 
   for (const entry of spec) {
     const modelEntry = (models[entry.model] ??= { calls: {} });
     const callEntry = (modelEntry.calls[entry.call] ??= { isSpecifier: entry.specifier != null, specifiers: {} });
     const key = entry.specifier ?? '_';
-    callEntry.specifiers[key] = { inputType: makeSchemaRef(`${entry.model}-${entry.call}-${key}`), mcp: entry.mcp };
+    callEntry.specifiers[key] = { inputType: makeSchemaRef(`${entry.model}-${entry.call}-${key}`), mcp: entry.mcp, requiredScope: entry.requiredScope };
   }
 
   return { models };
@@ -170,6 +170,59 @@ describe('McpServerFactoryService scope filter', () => {
     const factory = makeFactory(apiDetails);
     const tools = await listTools(factory);
     expect(tools).toHaveLength(5);
+  });
+});
+
+describe('McpServerFactoryService additive per-function requiredScope filter', () => {
+  const apiDetails = makeApiDetails([
+    { model: 'workerAcademyProgress', call: 'create', requiredScope: 'lms' },
+    { model: 'guestbook', call: 'create' }
+  ]);
+
+  it('drops a per-function-gated tool when the OIDC caller holds the per-verb scope but not the per-function scope', async () => {
+    const factory = makeFactory(apiDetails);
+    const tools = await listTools(factory, { auth: oidcAuth('model.create') });
+    expect(tools.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['guestbook-create']);
+  });
+
+  it('keeps the per-function-gated tool only when the caller holds BOTH the per-verb and per-function scopes', async () => {
+    const factory = makeFactory(apiDetails);
+    const tools = await listTools(factory, { auth: oidcAuth('model.create lms') });
+    expect(tools.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['guestbook-create', 'workerAcademyProgress-create']);
+  });
+
+  it('is additive: drops the per-function-gated tool when the caller holds the per-function scope but not the per-verb scope', async () => {
+    const factory = makeFactory(apiDetails);
+    const tools = await listTools(factory, { auth: oidcAuth('lms') });
+    expect(tools.map((t) => t.name)).toEqual([]);
+  });
+
+  it('bypasses the per-function scope for a non-OIDC caller', async () => {
+    const factory = makeFactory(apiDetails);
+    const tools = await listTools(factory, { auth: firebaseAuth() });
+    expect(tools.map((t) => t.name).sort((a, b) => a.localeCompare(b))).toEqual(['guestbook-create', 'workerAcademyProgress-create']);
+  });
+
+  it('rejects tools/call for a per-function-gated tool the caller lacks the scope for (filtered out → Unknown tool)', async () => {
+    const factory = makeFactory(apiDetails, { dispatch: () => ({ ran: true }) });
+    const server = factory.createServer({ rawRequest: {} as any, auth: oidcAuth('model.create') });
+    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
+    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
+
+    const result = (await callHandler({ method: 'tools/call', params: { name: 'workerAcademyProgress-create', arguments: {} } }, {} as any)) as { isError?: boolean; content: ReadonlyArray<{ text: string }> };
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain('Unknown tool');
+  });
+
+  it('dispatches tools/call for a per-function-gated tool when the caller holds both scopes', async () => {
+    const factory = makeFactory(apiDetails, { dispatch: () => ({ ran: true }) });
+    const server = factory.createServer({ rawRequest: {} as any, auth: oidcAuth('model.create lms') });
+    const handlers = (server.server as any)._requestHandlers as Map<string, (request: any, extra: any) => Promise<unknown>>;
+    const callHandler = handlers.get(CallToolRequestSchema.shape.method.value)!;
+
+    const result = (await callHandler({ method: 'tools/call', params: { name: 'workerAcademyProgress-create', arguments: {} } }, {} as any)) as { isError?: boolean; structuredContent?: unknown };
+    expect(result.isError).toBeUndefined();
+    expect(result.structuredContent).toEqual({ ran: true });
   });
 });
 

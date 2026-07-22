@@ -31,6 +31,21 @@ describe('resolveProductCredentials()', () => {
     const config: ZohoCliConfig = { shared: { clientId: '', clientSecret: '', refreshToken: '' } };
     expect(resolveProductCredentials(config, 'crm')).toBeUndefined();
   });
+
+  it('should NOT resolve sign credentials from shared (dedicated OAuth client)', () => {
+    const config: ZohoCliConfig = { shared: { ...fullCreds } };
+    expect(resolveProductCredentials(config, 'sign')).toBeUndefined();
+  });
+
+  it('should resolve sign credentials from its own product config', () => {
+    const config: ZohoCliConfig = {
+      shared: { ...fullCreds },
+      sign: { clientId: 'sign-id', clientSecret: 'sign-secret', refreshToken: 'sign-token', apiUrl: 'sandbox' }
+    };
+    const resolved = resolveProductCredentials(config, 'sign');
+    expect(resolved?.clientId).toBe('sign-id');
+    expect(resolved?.apiMode).toBe('sandbox');
+  });
 });
 
 describe('configuredProducts()', () => {
@@ -45,6 +60,14 @@ describe('configuredProducts()', () => {
 
     const withOrg: ZohoCliConfig = { shared: { ...fullCreds }, desk: { orgId: 'org-1' } };
     expect(configuredProducts(withOrg).includes('desk')).toBe(true);
+  });
+
+  it('should include sign only when it has its own credentials (never from shared)', () => {
+    const sharedOnly: ZohoCliConfig = { shared: { ...fullCreds } };
+    expect(configuredProducts(sharedOnly).includes('sign')).toBe(false);
+
+    const withSign: ZohoCliConfig = { shared: { ...fullCreds }, sign: { clientId: 'sign-id', clientSecret: 'sign-secret', refreshToken: 'sign-token' } };
+    expect(configuredProducts(withSign).includes('sign')).toBe(true);
   });
 
   it('should exclude all products when credentials are missing', () => {

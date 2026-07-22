@@ -33,6 +33,27 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       });
     });
 
+    // guestbookEntryAllPublishedEntries declares requiredScope: 'lms', so an OIDC caller needs both the
+    // per-verb model.invoke scope AND lms to see or call it. A plain Firebase caller (above) bypasses.
+    describe('per-function requiredScope (lms) scope gating', () => {
+      it('hides the lms-gated tool from an OIDC caller holding model.invoke but not lms', async () => {
+        const tools = await listMcpTools(f, u, 'model.invoke');
+        const names = new Set(tools.map((t) => t.name));
+        expect(names.has(guestbookEntryAllPublishedEntriesToolName)).toBe(false);
+      });
+
+      it('lists the lms-gated tool for an OIDC caller holding both model.invoke and lms', async () => {
+        const tools = await listMcpTools(f, u, 'model.invoke lms');
+        const names = new Set(tools.map((t) => t.name));
+        expect(names.has(guestbookEntryAllPublishedEntriesToolName)).toBe(true);
+      });
+
+      it('rejects a tools/call for the lms-gated tool when the OIDC caller lacks lms', async () => {
+        const result = await callMcpTool({ f, u, name: guestbookEntryAllPublishedEntriesToolName, args: { limit: 10 }, scopes: 'model.invoke' });
+        expect(result.isError).toBe(true);
+      });
+    });
+
     describe(guestbookCreateToolName, () => {
       it('creates a guestbook and persists it to Firestore', async () => {
         const params: CreateGuestbookParams = { name: 'mcpCreate' };

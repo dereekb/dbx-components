@@ -1,7 +1,7 @@
 import { Injectable, inject, type Type } from '@angular/core';
 import { type SegueRefOrSegueRefRouterLink } from '@dereekb/dbx-core';
 import { type Maybe } from '@dereekb/util';
-import { type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { type OidcProviderProfileDetails, type OidcScopeDetails, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { type AbstractDbxFirebaseOAuthConsentScopeViewComponent } from '../interaction/components/oauth.consent.scope.view.component';
 
 export const DEFAULT_OIDC_AUTHORIZATION_ENDPOINT_PATH = '/oidc/auth';
@@ -12,6 +12,7 @@ export const DEFAULT_OIDC_CLIENT_NAME_PARAM_KEY = 'client_name';
 export const DEFAULT_OIDC_CLIENT_URI_PARAM_KEY = 'client_uri';
 export const DEFAULT_OIDC_LOGO_URI_PARAM_KEY = 'logo_uri';
 export const DEFAULT_OIDC_SCOPES_PARAM_KEY = 'scopes';
+export const DEFAULT_OIDC_REQUIRED_SCOPES_PARAM_KEY = 'requiredScopes';
 export const DEFAULT_OIDC_TOKEN_ENDPOINT_AUTH_METHODS: OidcTokenEndpointAuthMethod[] = ['client_secret_post', 'client_secret_basic'];
 
 /**
@@ -24,6 +25,11 @@ export abstract class DbxFirebaseOidcConfig {
    * Available scopes for the OIDC provider. Used in scope picker fields.
    */
   abstract readonly availableScopes: OidcScopeDetails[];
+  /**
+   * Available provider profiles for admin assignment on the client form. When set, the client form
+   * renders a provider-profile multi-select. Leave unset when the app defines no provider profiles.
+   */
+  readonly availableProviderProfiles?: Maybe<OidcProviderProfileDetails[]>;
   /**
    * Optional API origin (scheme + host, e.g. `https://api.example.com`) prepended to the OIDC
    * authorization and interaction endpoint paths when set.
@@ -82,6 +88,10 @@ export class DbxFirebaseOidcConfigService {
 
   get availableScopes(): OidcScopeDetails[] {
     return this.config.availableScopes;
+  }
+
+  get availableProviderProfiles(): Maybe<OidcProviderProfileDetails[]> {
+    return this.config.availableProviderProfiles;
   }
 
   get oidcAuthorizationEndpointApiPath(): string {

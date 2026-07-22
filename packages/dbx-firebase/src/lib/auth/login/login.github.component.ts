@@ -16,10 +16,10 @@ export class DbxFirebaseLoginGitHubComponent extends AbstractConfiguredDbxFireba
   readonly loginProvider = 'github';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithPopup(new GithubAuthProvider());
+    return this.dbxFirebaseAuthService.logInWithDefaultFlow(new GithubAuthProvider());
   }
 
   override handleLink() {
-    return this.dbxFirebaseAuthService.linkWithPopup(new GithubAuthProvider());
+    return this.dbxFirebaseAuthService.linkWithDefaultFlow(new GithubAuthProvider());
   }
 }

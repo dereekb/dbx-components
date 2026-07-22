@@ -3,7 +3,7 @@ import type { MiddlewareFunction } from 'yargs';
 import { loadCliConfig, configuredProducts } from '../config/cli.config';
 import { createCliContext, type ZohoCliContext } from '../context/cli.context';
 import { outputError } from '../util/output';
-import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi } from '@dereekb/zoho/nestjs';
+import type { ZohoRecruitApi, ZohoCrmApi, ZohoDeskApi, ZohoSignApi } from '@dereekb/zoho/nestjs';
 
 /**
  * Module-level context set by the auth middleware.
@@ -114,4 +114,24 @@ export function getDeskApi(argv: any): ZohoDeskApi {
   }
 
   return deskApi;
+}
+
+/**
+ * Returns the configured {@link ZohoSignApi} for the active command.
+ *
+ * Zoho Sign uses a dedicated OAuth client, so it must be configured with its own credentials
+ * (it never falls back to the shared client).
+ *
+ * @param argv - The yargs-parsed arguments object; forwarded to {@link getCliContext}.
+ * @returns The Sign API client.
+ * @throws {Error} When Sign is not configured with its own valid credentials, instructing the user how to run `zoho-cli auth setup --product sign`.
+ */
+export function getSignApi(argv: any): ZohoSignApi {
+  const { signApi } = getCliContext(argv);
+
+  if (!signApi) {
+    throw new Error('Sign not configured. Zoho Sign requires its own OAuth client. Run: zoho-cli auth setup --product sign --client-id X --client-secret Y --token Z');
+  }
+
+  return signApi;
 }

@@ -16,10 +16,10 @@ export class DbxFirebaseLoginGoogleComponent extends AbstractConfiguredDbxFireba
   readonly loginProvider = 'google';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithPopup(new GoogleAuthProvider());
+    return this.dbxFirebaseAuthService.logInWithDefaultFlow(new GoogleAuthProvider());
   }
 
   override handleLink() {
-    return this.dbxFirebaseAuthService.linkWithPopup(new GoogleAuthProvider());
+    return this.dbxFirebaseAuthService.linkWithDefaultFlow(new GoogleAuthProvider());
   }
 }

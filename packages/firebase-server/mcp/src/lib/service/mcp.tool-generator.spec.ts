@@ -264,8 +264,8 @@ describe('generateMcpToolDefinitions filter metadata', () => {
     expect(byName.has('widget-never')).toBe(false);
   });
 
-  it('precomputes requiredScope from the call type', () => {
-    const cases: Array<[string, string | undefined]> = [
+  it('precomputes requiredScopes from the call type', () => {
+    const cases: Array<[string, string]> = [
       ['create', 'model.create'],
       ['read', 'model.read'],
       ['update', 'model.update'],
@@ -276,13 +276,53 @@ describe('generateMcpToolDefinitions filter metadata', () => {
 
     for (const [callType, expected] of cases) {
       const { tools } = generateMcpToolDefinitions(makeApiDetailsWithMcp(callType, undefined));
-      expect(tools[0].filterMetadata.requiredScope).toBe(expected);
+      expect(tools[0].filterMetadata.requiredScopes).toEqual([expected]);
     }
   });
 
-  it('leaves requiredScope undefined for unknown call types', () => {
+  it('leaves requiredScopes empty for unknown call types', () => {
     const { tools } = generateMcpToolDefinitions(makeApiDetailsWithMcp('customVerb', undefined));
-    expect(tools[0].filterMetadata.requiredScope).toBeUndefined();
+    expect(tools[0].filterMetadata.requiredScopes).toEqual([]);
+  });
+
+  it('composes a per-function requiredScope additively after the per-verb scope', () => {
+    const apiDetails: ModelApiDetailsResult = {
+      models: {
+        widget: {
+          calls: {
+            create: {
+              isSpecifier: false,
+              specifiers: {
+                _: { inputType: makeSchemaRef('WidgetParams'), requiredScope: 'lms' }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const { tools } = generateMcpToolDefinitions(apiDetails);
+    expect(tools[0].filterMetadata.requiredScopes).toEqual(['model.create', 'lms']);
+  });
+
+  it('carries only the per-function requiredScope for an unknown call type', () => {
+    const apiDetails: ModelApiDetailsResult = {
+      models: {
+        widget: {
+          calls: {
+            customVerb: {
+              isSpecifier: false,
+              specifiers: {
+                _: { inputType: makeSchemaRef('WidgetParams'), requiredScope: 'lms' }
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const { tools } = generateMcpToolDefinitions(apiDetails);
+    expect(tools[0].filterMetadata.requiredScopes).toEqual(['lms']);
   });
 
   it('resolves effectiveReadOnly from explicit override or call-type inference', () => {

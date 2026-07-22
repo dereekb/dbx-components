@@ -8,6 +8,7 @@ import { OidcServerFirestoreCollections } from '../model';
 import { GRANTABLE_MODEL_NAMES, createAdapterFactory } from './oidc.adapter.service';
 import { OidcEncryptionService } from './oidc.encryption.service';
 import { OidcProviderConfigService } from './oidc.config.service';
+import { DBX_FIREBASE_SERVER_OIDC_PROVIDER_PROFILES_CLIENT_METADATA, oidcClientProviderProfileScopes } from '../profile';
 import { resolveEncryptionKey } from '@dereekb/nestjs';
 import { type OAuthInteractionLoginDetails, type OAuthInteractionScopes, type OidcEntryClientId, type OidcEntryOAuthClientPayloadData } from '@dereekb/firebase';
 import { cachedGetter, filterUndefinedValues, firstValue, type Maybe, unixDateTimeSecondsNumberForNow, type WebsiteUrlWithPrefix } from '@dereekb/util';
@@ -218,7 +219,8 @@ export class OidcService {
         logo_uri: existing.logo_uri,
         client_uri: existing.client_uri,
         created_at: existing.created_at,
-        dbx_max_session_ttl: existing.dbx_max_session_ttl
+        dbx_max_session_ttl: existing.dbx_max_session_ttl,
+        dbx_provider_profiles: existing.dbx_provider_profiles
       };
     }
 
@@ -291,7 +293,7 @@ export class OidcService {
       },
       extraParams: [DBX_FIREBASE_SERVER_OIDC_SESSION_TTL_PARAM],
       extraClientMetadata: {
-        properties: [DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA],
+        properties: [DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA, DBX_FIREBASE_SERVER_OIDC_PROVIDER_PROFILES_CLIENT_METADATA],
         validator: (_ctx, key, value) => {
           if (key === DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA && value !== undefined && value !== null) {
             if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
@@ -300,6 +302,17 @@ export class OidcService {
 
             if (value > serverMaxSeconds) {
               throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_MAX_SESSION_TTL_CLIENT_METADATA} cannot exceed the server max of ${serverMaxSeconds} seconds.`);
+            }
+          } else if (key === DBX_FIREBASE_SERVER_OIDC_PROVIDER_PROFILES_CLIENT_METADATA && value !== undefined && value !== null) {
+            if (!Array.isArray(value) || value.some((entry) => typeof entry !== 'string')) {
+              throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_PROVIDER_PROFILES_CLIENT_METADATA} must be an array of provider profile keys.`);
+            }
+
+            const knownProfileKeys = new Set((providerConfig.providerProfiles ?? []).map((profile) => profile.key));
+            const unknownKey = value.find((entry) => !knownProfileKeys.has(entry));
+
+            if (unknownKey !== undefined) {
+              throw new OidcProviderErrors.InvalidClientMetadata(`${DBX_FIREBASE_SERVER_OIDC_PROVIDER_PROFILES_CLIENT_METADATA} contains an unknown provider profile key: ${unknownKey}.`);
             }
           }
         }
@@ -342,12 +355,21 @@ export class OidcService {
 
             if (client) {
               const scopes = interaction.params.scope as OAuthInteractionScopes;
+
+              // Surface the scopes the client's provider profiles force-require so the consent UI can
+              // render them as required. Intersect with the actually-requested scopes so only visible
+              // scope rows are flagged.
+              const requestedScopeSet = new Set(scopes.split(' ').filter(Boolean));
+              const { required } = oidcClientProviderProfileScopes(providerConfig.providerProfiles, client.dbx_provider_profiles ?? undefined);
+              const requiredScopes = Array.from(required).filter((scope) => requestedScopeSet.has(scope));
+
               const interactionLoginDetails: OAuthInteractionLoginDetails = {
                 client_id,
                 client_name: client.client_name,
                 client_uri: client.client_uri,
                 logo_uri: client.logo_uri,
-                scopes
+                scopes,
+                ...(requiredScopes.length > 0 ? { requiredScopes: requiredScopes.join(' ') } : {})
               };
 
               paramsToEncode = {

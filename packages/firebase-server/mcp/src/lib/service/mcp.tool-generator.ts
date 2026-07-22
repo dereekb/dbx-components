@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, filterMaybeArrayValues } from '@dereekb/util';
 import { type KnownOnCallFunctionType } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
@@ -747,18 +747,21 @@ function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
     }
   }
 
-  const requiredScope = resolveRequiredScope(callType) ?? undefined;
+  // Additive scope set: the per-verb call-type scope (model.<call>) plus any per-function scope
+  // declared via withApiDetails({ requiredScope }). Nullish entries drop out, so a non-CRUD call
+  // type with no per-function scope yields an empty set (no scope gate).
+  const requiredScopes = filterMaybeArrayValues([resolveRequiredScope(callType), handlerDetails.requiredScope]);
   const effectiveReadOnly = resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType);
   const annotations = resolveMcpToolAnnotations(effectiveReadOnly);
   const description = applyWriteMarker(baseDescription, annotations);
   let filterMetadata: McpToolFilterMetadata;
 
   if (classified.visibilityKind === 'declarative') {
-    filterMetadata = { visibilityKind: 'declarative', rule: classified.rule, requiredScope, effectiveReadOnly };
+    filterMetadata = { visibilityKind: 'declarative', rule: classified.rule, requiredScopes, effectiveReadOnly };
   } else if (classified.visibilityKind === 'dynamic') {
-    filterMetadata = { visibilityKind: 'dynamic', visibilityFn: classified.visibilityFn, requiredScope, effectiveReadOnly };
+    filterMetadata = { visibilityKind: 'dynamic', visibilityFn: classified.visibilityFn, requiredScopes, effectiveReadOnly };
   } else {
-    filterMetadata = { visibilityKind: classified.visibilityKind, requiredScope, effectiveReadOnly };
+    filterMetadata = { visibilityKind: classified.visibilityKind, requiredScopes, effectiveReadOnly };
   }
 
   // Disambiguation has already separated the common dropped-call-type clash; this is the backstop for

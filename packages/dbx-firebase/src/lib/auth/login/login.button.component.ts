@@ -151,8 +151,8 @@ export interface DbxFirebaseLoginButtonInjectionData {
  * ```typescript
  * export class MyProviderComponent extends AbstractConfiguredDbxFirebaseLoginButtonDirective {
  *   readonly loginProvider = 'myprovider';
- *   handleLogin() { return this.dbxFirebaseAuthService.logInWithPopup(new MyProvider()); }
- *   handleLink() { return this.dbxFirebaseAuthService.linkWithPopup(new MyProvider()); }
+ *   handleLogin() { return this.dbxFirebaseAuthService.logInWithDefaultFlow(new MyProvider()); }
+ *   handleLink() { return this.dbxFirebaseAuthService.linkWithDefaultFlow(new MyProvider()); }
  * }
  * ```
  */

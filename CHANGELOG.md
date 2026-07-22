@@ -1,3 +1,27 @@
+# [13.29.0](https://github.com/dereekb/dbx-components/compare/v13.28.0-dev...v13.29.0) (2026-07-22)
+
+
+### Bug Fixes
+
+- **firebase-server:** drop gated scopes from oauth test default ([ad5544f8](https://github.com/dereekb/dbx-components/commit/ad5544f8ad9dd51ef000ba47cc97ca3755dd617d))
+
+
+### Build System
+
+- lint fix + mcp regeneration + firestore indexes ([57f2f870](https://github.com/dereekb/dbx-components/commit/57f2f870745754d4df654efedfd5140a84f6c863))
+
+
+### Code Refactoring
+
+- added OIDC provider profiles for scopes ([f8ad8e9d](https://github.com/dereekb/dbx-components/commit/f8ad8e9d5238e4e7a8b272b0ba790fefdf1f4f8d))
+
+
+### Features
+
+- **dbx-firebase:** configurable popup/redirect auth flow ([bccee63f](https://github.com/dereekb/dbx-components/commit/bccee63f51b8ab824f149ad3670e47ad64dfa07b))
+- **firebase-server:** per-function requiredScope for callModel API ([33a80006](https://github.com/dereekb/dbx-components/commit/33a80006e62955b9ea1ffd51935ddbb0c96d3316))
+- **zoho:** add Zoho Sign support to the zoho-cli ([363eefe4](https://github.com/dereekb/dbx-components/commit/363eefe4d48b5cad930cef744db3ab3902a9a2c0))
+
 # [13.28.0](https://github.com/dereekb/dbx-components/compare/v13.27.1-dev...v13.28.0) (2026-07-20)
 
 

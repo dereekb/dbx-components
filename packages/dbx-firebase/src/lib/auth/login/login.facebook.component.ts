@@ -16,10 +16,10 @@ export class DbxFirebaseLoginFacebookComponent extends AbstractConfiguredDbxFire
   readonly loginProvider = 'facebook';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithPopup(new FacebookAuthProvider());
+    return this.dbxFirebaseAuthService.logInWithDefaultFlow(new FacebookAuthProvider());
   }
 
   override handleLink() {
-    return this.dbxFirebaseAuthService.linkWithPopup(new FacebookAuthProvider());
+    return this.dbxFirebaseAuthService.linkWithDefaultFlow(new FacebookAuthProvider());
   }
 }

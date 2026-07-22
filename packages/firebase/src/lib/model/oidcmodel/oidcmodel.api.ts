@@ -27,6 +27,13 @@ export interface UpdateOidcClientFieldParams {
    * Set to `null` to clear an existing value.
    */
   readonly dbx_max_session_ttl?: Maybe<number>;
+  /**
+   * OIDC provider profile keys assigned to this client (unlock/force-require otherwise-restricted
+   * scopes). Admin-only: stripped from non-admin create/update requests before the action runs.
+   *
+   * Set to `null` (or `[]`) to clear the assignment.
+   */
+  readonly dbx_provider_profiles?: Maybe<string[]>;
 }
 
 export const updateOidcClientFieldParamsType = /* @__PURE__ */ type({
@@ -34,7 +41,8 @@ export const updateOidcClientFieldParamsType = /* @__PURE__ */ type({
   redirect_uris: 'string[]',
   'logo_uri?': clearable('string'),
   'client_uri?': clearable('string'),
-  'dbx_max_session_ttl?': clearable('number')
+  'dbx_max_session_ttl?': clearable('number'),
+  'dbx_provider_profiles?': clearable('string[]')
 }) as Type<UpdateOidcClientFieldParams>;
 
 export const createOidcClientFieldParamsType = updateOidcClientFieldParamsType.merge(
