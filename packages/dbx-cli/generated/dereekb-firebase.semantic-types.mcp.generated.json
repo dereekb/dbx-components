@@ -298,6 +298,19 @@
       "notes": "Arbitrary unique string that denotes checkpoint progress for a multi-step task."
     },
     {
+      "name": "OidcProviderProfileKey",
+      "package": "@dereekb/firebase",
+      "module": "src/lib/model/oidcmodel/oidc.profile",
+      "kind": "semantic-type",
+      "definition": "string",
+      "baseType": "string",
+      "topics": [
+        "string",
+        "dereekb-firebase:oidc"
+      ],
+      "notes": "Arbitrary key identifying an {@link OidcProviderProfile} (e.g. `'lms'`)."
+    },
+    {
       "name": "OidcEntryClientId",
       "package": "@dereekb/firebase",
       "module": "src/lib/model/oidcmodel/oidcmodel.id",
