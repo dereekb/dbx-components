@@ -2,7 +2,7 @@ import request from 'supertest';
 import { createHash, randomBytes } from 'node:crypto';
 import { type INestApplication } from '@nestjs/common';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
-import type { OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
+import { type OidcTokenEndpointAuthMethod, scopesForOidcProviderProfiles } from '@dereekb/firebase';
 import { OidcClientService, OidcAccountService, JwksService } from '@dereekb/firebase-server/oidc';
 
 // MARK: Config
@@ -114,11 +114,17 @@ function createCookieJar() {
 
 /**
  * Resolves the scopes string from config, or falls back to all registered scopes
- * from the provider config — excluding any `adminOnlyScopes`.
+ * from the provider config — excluding any `adminOnlyScopes` or provider-profile-gated scopes.
  *
  * Admin-only scopes (e.g. `token.service`) are dropped from the default "all scopes" request because
  * the provider hard-rejects them for non-admin users, and this default flow logs in an arbitrary
  * (often non-admin) user. Tests that need an admin-only scope pass it explicitly via `config.scopes`.
+ *
+ * Provider-profile-gated scopes (e.g. `lms`, `reports`) are dropped for the same reason: they are
+ * unlocked only for a client an admin has assigned the corresponding profile to, and this flow creates
+ * a fresh client with no profiles — so the consent unlock gate hard-rejects them (finishing the
+ * interaction with `access_denied` and no `code`). Tests that need a gated scope create a client with
+ * the profile and pass the scope explicitly via `config.scopes`.
  *
  * @param nestApp - Initialized NestJS application used to resolve {@link OidcAccountService} when no scopes override is given.
  * @param config - Optional flow config; when `config.scopes` is set, it is returned verbatim.
@@ -133,8 +139,9 @@ async function resolveScopes(nestApp: INestApplication, config?: OAuthTestFlowCo
     const accountService = nestApp.get(OidcAccountService);
     const providerConfig = accountService.providerConfig;
     const adminOnlyScopes = new Set(providerConfig.adminOnlyScopes ?? []);
+    const profileGatedScopes = scopesForOidcProviderProfiles(providerConfig.providerProfiles ?? []);
     result = Object.keys(providerConfig.claims)
-      .filter((scope) => !adminOnlyScopes.has(scope))
+      .filter((scope) => !adminOnlyScopes.has(scope) && !profileGatedScopes.has(scope))
       .join(' ');
   }
 
