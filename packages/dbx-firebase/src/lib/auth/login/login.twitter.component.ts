@@ -16,10 +16,10 @@ export class DbxFirebaseLoginTwitterComponent extends AbstractConfiguredDbxFireb
   readonly loginProvider = 'twitter';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithPopup(new TwitterAuthProvider());
+    return this.dbxFirebaseAuthService.logInWithDefaultFlow(new TwitterAuthProvider());
   }
 
   override handleLink() {
-    return this.dbxFirebaseAuthService.linkWithPopup(new TwitterAuthProvider());
+    return this.dbxFirebaseAuthService.linkWithDefaultFlow(new TwitterAuthProvider());
   }
 }

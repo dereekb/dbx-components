@@ -16,10 +16,10 @@ export class DbxFirebaseLoginMicrosoftComponent extends AbstractConfiguredDbxFir
   readonly loginProvider = 'microsoft';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithPopup(new OAuthProvider('microsoft.com'));
+    return this.dbxFirebaseAuthService.logInWithDefaultFlow(new OAuthProvider('microsoft.com'));
   }
 
   override handleLink() {
-    return this.dbxFirebaseAuthService.linkWithPopup(new OAuthProvider('microsoft.com'));
+    return this.dbxFirebaseAuthService.linkWithDefaultFlow(new OAuthProvider('microsoft.com'));
   }
 }

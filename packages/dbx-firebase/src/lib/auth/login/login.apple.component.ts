@@ -28,10 +28,10 @@ export class DbxFirebaseLoginAppleComponent extends AbstractConfiguredDbxFirebas
   readonly loginProvider = 'apple';
 
   handleLogin() {
-    return this.dbxFirebaseAuthService.logInWithPopup(createAppleAuthProvider());
+    return this.dbxFirebaseAuthService.logInWithDefaultFlow(createAppleAuthProvider());
   }
 
   override handleLink() {
-    return this.dbxFirebaseAuthService.linkWithPopup(createAppleAuthProvider());
+    return this.dbxFirebaseAuthService.linkWithDefaultFlow(createAppleAuthProvider());
   }
 }

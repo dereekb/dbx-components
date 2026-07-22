@@ -287,7 +287,8 @@ export const APP_CONFIG: ApplicationConfig = {
       },
       storage: {},
       auth: {
-        delegateFactory: demoAuthDelegateFactory
+        delegateFactory: demoAuthDelegateFactory,
+        authFlow: 'auto'
       },
       functions: {
         functionsGetterToken: DemoFirebaseFunctionsGetter,
