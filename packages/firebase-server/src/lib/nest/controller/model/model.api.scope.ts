@@ -8,9 +8,9 @@ import { type FirebaseServerAuthData } from '../auth.context.server';
  * OIDC scope-grouping configuration for the model-api layer, mixed into {@link ModelApiDispatchConfig}
  * and read by both {@link ModelApiCallModelDispatchService} and {@link ModelApiGetService}.
  *
- * This is the model-api-layer home for the group-scope requirements that previously could only be
- * supplied to `oidcCallModelScopePreAssert`. Providing them here enforces them uniformly across ALL
- * three `ModelApiController` access patterns — path/direct dispatch AND the `/get` direct reads — and
+ * This is the model-api-layer home for the callModel group-scope requirements. Providing them here
+ * enforces them uniformly across ALL three `ModelApiController` access patterns — path/direct
+ * dispatch AND the `/get` direct reads — and
  * (via the MCP server routing through the same services) the MCP surface, without riding the shared
  * callModel function that also serves the app's first-party Firebase `onCall` path.
  *
@@ -98,15 +98,15 @@ export interface AssertModelApiOidcScopeInput {
  * Enforces the OIDC scope requirement for a single model-api op, throwing a `403`
  * {@link CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE} error when the caller does not satisfy it.
  *
- * The relocated home of the enforcement that used to live only in `oidcCallModelScopePreAssert`. It
- * reuses the shipped composition + evaluation (`resolveEffectiveOidcScopeTerms` /
- * `oidcScopeTermsSatisfied`) so enforcement, the pre-assert, and the MCP tool-visibility filter never
- * drift. Enforcement is AND-of-ORs across the per-verb `model.<call>` scope and the effective GROUP
- * term (per-function `requiredScope` > per-model requirement > configured default).
+ * The single home of callModel OIDC scope enforcement. It reuses the shipped composition + evaluation
+ * (`resolveEffectiveOidcScopeTerms` / `oidcScopeTermsSatisfied`) so enforcement and the MCP
+ * tool-visibility filter never drift. Enforcement is AND-of-ORs across the per-verb `model.<call>`
+ * scope and the effective GROUP term (per-function `requiredScope` > per-model requirement >
+ * configured default).
  *
  * Bypasses (no-op) when `grantedScopes` is `undefined` — i.e. a non-OIDC caller — and short-circuits
  * without any check when the op resolves no requirement at all (a custom, non-CRUD verb with no
- * per-function/model/default term). The thrown error shape matches the pre-assert exactly.
+ * per-function/model/default term).
  *
  * @param input - The verb, model type, per-function scope, group config, and the caller's granted scopes.
  * @throws A `403` forbidden error (code {@link CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE}) when an OIDC
@@ -136,7 +136,7 @@ export function assertModelApiOidcScope(input: AssertModelApiOidcScopeInput): vo
 
 /**
  * Renders a scope term for the human-readable error message: a single scope as-is, an OR-group as its
- * alternatives joined by `|` (so a single-scope term reads exactly as the pre-assert produced).
+ * alternatives joined by `|` (so a single-scope term reads as itself).
  *
  * @param term - The unsatisfied scope term.
  * @returns The display string for the term.

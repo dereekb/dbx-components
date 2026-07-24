@@ -488,7 +488,7 @@ export class McpServerFactoryService {
    * Synthesizes the same `{ auth: { token } }` shape that `getOidcScopesFromRequest`
    * expects post-dispatch, so the upstream helper stays the single source of scope parsing.
    * Returns `undefined` for non-OIDC callers (no `oidcValidatedToken.scope`) — the filter
-   * loop treats that as "skip scope enforcement", matching `oidcCallModelScopePreAssert`.
+   * loop treats that as "skip scope enforcement", matching the model-api scope gate (`assertModelApiOidcScope`).
    *
    * @param ctx - The per-request context carrying the validated auth payload.
    * @returns The set of granted OIDC scopes, or `undefined` when scope enforcement should be skipped.

@@ -15,7 +15,7 @@
  *
  *   - **scopes** — OAuth/OIDC scope names (`model.read`, `model.write`, …)
  *     surfaced through the OIDC bridge, plus the source location where each
- *     scope is enforced (e.g. `oidcCallModelScopePreAssert`).
+ *     scope is enforced (e.g. `assertModelApiOidcScope`).
  *
  *   - **apps**   — one entry per downstream app (demo-api, hellosubs-api).
  *     Bundles the claims interface name, the claims-service constant name,
@@ -169,13 +169,13 @@ export interface AuthClaimInfo {
 /**
  * Where a scope is enforced. Multiple entries are allowed when a scope is
  * checked in more than one place (e.g. `model.read` is enforced by the
- * callModel preAssert and by per-app middleware).
+ * model-api scope gate and by per-app middleware).
  */
 export interface AuthScopeEnforcementInfo {
   readonly path: string;
   readonly line?: number;
   /**
-   * One-line description of the gate (e.g. `'oidcCallModelScopePreAssert'`).
+   * One-line description of the gate (e.g. `'assertModelApiOidcScope'`).
    */
   readonly description: string;
 }

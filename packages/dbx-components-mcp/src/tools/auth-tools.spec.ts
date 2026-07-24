@@ -74,7 +74,7 @@ describe('dbx_auth_scope_lookup', () => {
     expect(text).toContain('callType');
     expect(text).toContain('read');
     expect(text).toContain('CALL_MODEL_MISSING_OIDC_SCOPE');
-    expect(text).toContain('oidcCallModelScopePreAssert');
+    expect(text).toContain('assertModelApiOidcScope');
   });
 
   it('lists the catalog', async () => {

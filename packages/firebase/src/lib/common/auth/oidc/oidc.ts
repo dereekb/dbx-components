@@ -238,12 +238,12 @@ export interface OidcModelScopeRequirementVerbMap {
 }
 
 /**
- * Per-model callModel scope requirement, consulted by the pre-assert and the MCP visibility filter.
+ * Per-model callModel scope requirement, consulted by the model-api scope gate and the MCP visibility filter.
  *
  * Either a single {@link OidcScopeTerm} applied to EVERY verb, or an {@link OidcModelScopeRequirementVerbMap}
  * (verb-keyed with an optional `default`). The verb-keyed form is the only way to require a scope on
  * a plain read — a plain read has no per-function handler to hang a `requiredScope` on, but the
- * pre-assert still resolves its verb + model type, so a `read` entry here reaches it.
+ * scope gate still resolves its verb + model type, so a `read` entry here reaches it.
  *
  * @example
  * ```typescript
@@ -272,8 +272,8 @@ export function oidcScopeTermSatisfied(term: OidcScopeTerm, grantedScopes: Reado
 /**
  * Returns whether EVERY {@link OidcScopeTerm} is satisfied by the granted scope set (AND-of-ORs).
  *
- * The single source of truth shared by the server-side callModel pre-assert
- * (`oidcCallModelScopePreAssert`) and the MCP tool-visibility filter, so enforcement and tool-list
+ * The single source of truth shared by the server-side callModel scope enforcement
+ * (`assertModelApiOidcScope`) and the MCP tool-visibility filter, so enforcement and tool-list
  * visibility never drift. An empty term list is vacuously satisfied.
  *
  * @param terms - The AND-ed scope terms; each is a single scope or an OR-group.
@@ -331,7 +331,7 @@ export interface ResolveEffectiveOidcScopeTermsInput {
 
 /**
  * Resolves the full AND-ed list of {@link OidcScopeTerm}s enforced for one callModel op — the single
- * composition rule shared by the server pre-assert and the MCP visibility filter (no drift).
+ * composition rule shared by the server model-api scope gate and the MCP visibility filter (no drift).
  *
  * The list is the per-verb scope AND the effective GROUP term, where the group term is resolved by
  * precedence: per-function `requiredScope` (finest) > model-level requirement (verb-resolved; covers

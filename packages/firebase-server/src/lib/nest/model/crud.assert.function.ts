@@ -40,9 +40,9 @@ export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
    * The per-function required OIDC scope TERM declared via `withApiDetails({ requiredScope })`, when present.
    *
    * A single scope string, or a `readonly` array as an OR-group (see {@link OidcScopeTerm}). Resolved
-   * from the handler's `_apiDetails` at dispatch and handed to the pre-assert so
-   * `oidcCallModelScopePreAssert` can enforce it as the finest group term (AND-ed with the per-verb
-   * `model.<call>` scope). `undefined` when the handler declares no extra scope.
+   * from the handler's `_apiDetails` at dispatch so the model-api scope gate (`assertModelApiOidcScope`)
+   * can enforce it as the finest group term (AND-ed with the per-verb `model.<call>` scope).
+   * `undefined` when the handler declares no extra scope.
    */
   readonly requiredScope?: Maybe<OidcScopeTerm>;
 }

@@ -38,7 +38,7 @@ export type OidcAuthenticatedRequest = FirebaseServerAuthenticatedRequest<OidcAu
  * `request.auth.token.scope` for OIDC callers and is `undefined` for non-OIDC
  * (regular Firebase ID-token) callers.
  *
- * Returning `undefined` for non-OIDC callers lets callers (e.g. `oidcCallModelScopePreAssert`)
+ * Returning `undefined` for non-OIDC callers lets consumers (e.g. the MCP tool-visibility filter)
  * skip scope enforcement instead of falsely treating the missing claim as "no scopes granted".
  *
  * The parameter is intentionally typed as `unknown` because `DecodedIdToken` (Firebase

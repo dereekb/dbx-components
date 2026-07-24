@@ -6,7 +6,7 @@ import { CALL_MODEL_OIDC_SCOPE_DETAILS, type CallModelOidcScope, type OidcScopeD
  *
  * - {@link StandardOidcScope}: standard OpenID Connect scopes (`openid` / `profile` / `email` / `offline_access`).
  * - `APP_CODE_PREFIX_LOWER`: grants full access to the user's APP_CODE_PREFIX resources via the API.
- * - {@link CallModelOidcScope}: gates the `callModel` CRUD operations (enforced by `oidcCallModelScopePreAssert`).
+ * - {@link CallModelOidcScope}: gates the `callModel` CRUD operations (enforced at the model-api layer via `ModelApiDispatchConfig`).
  */
 export type APP_CODE_PREFIXOidcScope = StandardOidcScope | 'APP_CODE_PREFIX_LOWER' | CallModelOidcScope;
 

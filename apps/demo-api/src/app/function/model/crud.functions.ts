@@ -4,7 +4,6 @@ import { profileUpdate, profileUpdateCreateTestNotification, profileUpdateResetP
 import { guestbookEntryInsert, guestbookEntryLike } from '../guestbook/guestbookentry.update';
 import { guestbookEntryDelete } from '../guestbook/guestbookentry.delete';
 import { onCallCreateModel, onCallDeleteModel, onCallUpdateModel, onCallQueryModel, onCallSpecifierHandler, onCallReadModel, onCallInvokeModel, onCallModel, type OnCallModelMap } from '@dereekb/firebase-server';
-import { oidcCallModelScopePreAssert } from '@dereekb/firebase-server/oidc';
 import { type DemoOnCallCreateModelMap, type DemoOnCallDeleteModelMap, type DemoOnCallReadModelMap, type DemoOnCallUpdateModelMap, type DemoOnCallQueryModelMap, type DemoOnCallInvokeModelMap, onCallWithDemoNestContext } from '../function.context';
 import { notificationUserUpdate, notificationUserResync } from '../notification/notificationuser.update';
 import { notificationBoxUpdate, notificationBoxRecipient } from '../notification/notificationbox.update';
@@ -157,11 +156,11 @@ export const DEMO_CALL_MODEL_MAP: OnCallModelMap = {
  * Used by the Model API and MCP controllers to dispatch requests
  * and introspect the handler metadata tree.
  *
- * Wires {@link oidcCallModelScopePreAssert} so that callers authenticated via
- * an OIDC bearer token must hold the matching `model.<call>` scope.
+ * OIDC scope enforcement for callModel is applied at the model-api layer
+ * (`ModelApiDispatchConfig` in `server/model/model.module.ts`), which gates every
+ * OIDC-bearer call path (dispatch, `/get` direct reads, and MCP) before invoking
+ * this function — so no per-function scope pre-assert is wired here.
  */
-export const demoCallModelFn = onCallModel(DEMO_CALL_MODEL_MAP, {
-  preAssert: oidcCallModelScopePreAssert()
-});
+export const demoCallModelFn = onCallModel(DEMO_CALL_MODEL_MAP);
 
 export const demoCallModel = onCallWithDemoNestContext(demoCallModelFn);

@@ -220,17 +220,17 @@ export abstract class McpModuleConfig {
    * Default OIDC scope group term required on EVERY `callModel` op, mirrored into MCP tool-list
    * visibility, unless a finer term overrides it (a per-function `requiredScope`, then a
    * {@link McpModuleConfig.modelRequiredScopes} entry). Threaded into the same
-   * `resolveEffectiveOidcScopeTerms` composition the server-side `oidcCallModelScopePreAssert` uses,
-   * so a tool is advertised only when the caller could actually invoke it.
+   * `resolveEffectiveOidcScopeTerms` composition the server-side model-api scope gate
+   * (`assertModelApiOidcScope`) uses, so a tool is advertised only when the caller could actually invoke it.
    *
-   * Set this to the SAME value passed to `oidcCallModelScopePreAssert({ defaultRequiredScope })` to
+   * Set this to the SAME value passed to `ModelApiDispatchConfig.defaultRequiredScope` to
    * keep tool visibility and enforcement in lockstep.
    */
   readonly defaultRequiredScope?: OidcScopeTerm;
   /**
    * Per-model OIDC scope group-term overrides, keyed by {@link FirestoreModelType}, mirrored into MCP
    * tool-list visibility. Set this to the SAME value passed to
-   * `oidcCallModelScopePreAssert({ modelRequiredScopes })` so per-model / verb-keyed restrictions that
+   * `ModelApiDispatchConfig.modelRequiredScopes` so per-model / verb-keyed restrictions that
    * confine a subset client apply identically to the advertised tool list.
    */
   readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;

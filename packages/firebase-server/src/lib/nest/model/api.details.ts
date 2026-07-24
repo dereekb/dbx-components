@@ -85,7 +85,7 @@ export interface McpVisibilityContext {
   readonly auth?: FirebaseServerAuthData;
   /**
    * The caller's OIDC scopes, when the request was authenticated with a `scope`-bearing token.
-   * `undefined` for non-OIDC callers — treated the same as `oidcCallModelScopePreAssert` bypass.
+   * `undefined` for non-OIDC callers — treated the same as the model-api scope gate's non-OIDC bypass.
    */
   readonly scopes?: ReadonlySet<string>;
   /**
@@ -332,9 +332,9 @@ export interface OnCallModelFunctionApiDetails<R = unknown, M = unknown> {
    * A single scope string requires that exact scope; a `readonly` array is an OR-group the caller
    * satisfies by holding ANY member (see {@link OidcScopeTerm}). This term is the finest (highest
    * precedence) source for the effective group requirement — it overrides any model-level or default
-   * requirement configured on `oidcCallModelScopePreAssert`.
+   * requirement configured on the model-api layer (`ModelApiDispatchConfig`).
    *
-   * Composes with the CRUD-verb scope enforced by `oidcCallModelScopePreAssert` as AND-of-ORs: an
+   * Composes with the CRUD-verb scope enforced by the model-api scope gate (`assertModelApiOidcScope`) as AND-of-ORs: an
    * OIDC caller still needs `model.<call>` AND this term. Non-OIDC callers (Firebase ID tokens)
    * bypass scope enforcement entirely and are unaffected. Also folded into the MCP tool-list
    * visibility filter, so a tool the caller cannot satisfy this term for is neither listed nor callable.

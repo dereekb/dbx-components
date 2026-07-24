@@ -557,13 +557,13 @@ export interface GenerateMcpToolDefinitionsContext {
   readonly naming?: McpToolGenerationNamingOptions;
   /**
    * Default OIDC scope group term required on every op unless a finer term overrides it. Mirrors the
-   * server pre-assert's `defaultRequiredScope` so a tool is advertised only when the caller could
-   * invoke it.
+   * model-api layer's `ModelApiDispatchConfig.defaultRequiredScope` so a tool is advertised only when
+   * the caller could invoke it.
    */
   readonly defaultRequiredScope?: OidcScopeTerm;
   /**
-   * Per-model OIDC scope group-term overrides, keyed by {@link FirestoreModelType}. Mirrors the server
-   * pre-assert's `modelRequiredScopes` so per-model / verb-keyed restrictions apply to tool visibility.
+   * Per-model OIDC scope group-term overrides, keyed by {@link FirestoreModelType}. Mirrors the model-api
+   * layer's `ModelApiDispatchConfig.modelRequiredScopes` so per-model / verb-keyed restrictions apply to tool visibility.
    */
   readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
 }
@@ -769,7 +769,7 @@ function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
   }
 
   // AND-of-ORs scope terms: the per-verb call-type scope (model.<call>) plus the effective group term,
-  // resolved by the same precedence the server pre-assert uses (per-function requiredScope > per-model
+  // resolved by the same precedence the server model-api scope gate uses (per-function requiredScope > per-model
   // requirement > module default) via the shared resolveEffectiveOidcScopeTerms — so tool visibility
   // tracks callability. Empty when no term applies (a non-CRUD call type with no per-function/model/
   // default term → no scope gate).

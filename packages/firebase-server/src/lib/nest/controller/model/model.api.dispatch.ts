@@ -45,8 +45,8 @@ export abstract class ModelApiDispatchConfig implements ModelApiOidcScopeConfig 
   readonly makeNestContext!: MakeNestContext<unknown>;
   /**
    * Optional model-api-layer OIDC group-scope default. See {@link ModelApiOidcScopeConfig.defaultRequiredScope}.
-   * This is the relocated home for the group-scope default that used to be supplied to
-   * `oidcCallModelScopePreAssert`; providing it here enforces it across dispatch AND the `/get` reads.
+   * This is the home for the callModel group-scope default; providing it here enforces it across
+   * dispatch AND the `/get` reads.
    */
   readonly defaultRequiredScope?: OidcScopeTerm;
   /**
