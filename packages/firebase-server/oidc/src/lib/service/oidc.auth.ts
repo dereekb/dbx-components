@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { type OidcEntryClientId } from '@dereekb/firebase';
+import { type OidcEntryClientId, oidcScopesFromScopeClaim } from '@dereekb/firebase';
 import { type FirebaseServerAuthData, type FirebaseServerAuthenticatedRequest } from '@dereekb/firebase-server';
 
 // MARK: Types
@@ -50,6 +50,5 @@ export type OidcAuthenticatedRequest = FirebaseServerAuthenticatedRequest<OidcAu
  */
 export function getOidcScopesFromRequest(request: unknown): Maybe<Set<string>> {
   const scope = (request as { auth?: { token?: { scope?: unknown } } } | undefined)?.auth?.token?.scope;
-  const result: Maybe<Set<string>> = typeof scope === 'string' ? new Set(scope.split(' ').filter((value) => value.length > 0)) : undefined;
-  return result;
+  return oidcScopesFromScopeClaim(scope);
 }

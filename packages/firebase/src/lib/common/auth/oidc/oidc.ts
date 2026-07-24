@@ -204,6 +204,24 @@ export const SERVICE_TOKEN_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<Servi
 export type OidcScopeTerm = OidcScope | readonly OidcScope[];
 
 /**
+ * Parses a raw OIDC `scope` claim (a space-delimited string) into the granted scope set consumed by
+ * {@link oidcScopeTermSatisfied} / {@link oidcScopeTermsSatisfied}.
+ *
+ * The single source of truth for scope-string parsing, shared by the server-side `getOidcScopesFromRequest`
+ * (which reads `request.auth.token.scope`) and the model-api-layer enforcement (which reads the OIDC-validated
+ * token off the request auth). Returns `undefined` when the claim is not a string — i.e. the caller is not
+ * OIDC-authenticated (a regular Firebase ID token carries no `scope` claim) — so callers can distinguish
+ * "no OIDC scopes to enforce against" (bypass) from "OIDC caller that was granted zero scopes" (empty set).
+ *
+ * @param scope - The raw `scope` claim value, typically a space-delimited string.
+ * @returns A `Set` of the granted scopes, or `undefined` when `scope` is not a string.
+ */
+export function oidcScopesFromScopeClaim(scope: unknown): Maybe<Set<OidcScope>> {
+  const result: Maybe<Set<OidcScope>> = typeof scope === 'string' ? new Set(scope.split(' ').filter((value) => value.length > 0)) : undefined;
+  return result;
+}
+
+/**
  * Verb-keyed form of {@link OidcModelScopeRequirement}: a term per {@link OnCallFunctionType}, with an
  * optional `default` term applied to verbs without an explicit entry.
  */
@@ -327,7 +345,7 @@ export interface ResolveEffectiveOidcScopeTermsInput {
  */
 export function resolveEffectiveOidcScopeTerms(input: ResolveEffectiveOidcScopeTermsInput): OidcScopeTerm[] {
   const { perVerbScope, requiredScope, modelRequirement, call, defaultRequiredScope } = input;
-  const modelTerm = modelRequirement != null ? resolveOidcModelScopeRequirement(modelRequirement, call) : undefined;
+  const modelTerm = modelRequirement == null ? undefined : resolveOidcModelScopeRequirement(modelRequirement, call);
   const effectiveGroupTerm = requiredScope ?? modelTerm ?? defaultRequiredScope;
   const result: OidcScopeTerm[] = [];
 

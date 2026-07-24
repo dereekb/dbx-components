@@ -52,6 +52,14 @@ export interface OidcCallModelScopePreAssertConfig {
  * (non-CRUD) verb with no per-function/model/default term stays unrestricted unless an app wires its
  * own assertion.
  *
+ * Relocation note: the authoritative home for callModel OIDC scope enforcement — and the ONLY gate
+ * that also covers the `ModelApiController` `/get` direct-read path — is now the model-api layer
+ * (`ModelApiCallModelDispatchService` / `ModelApiGetService`, configured via
+ * `ModelApiDispatchConfig.defaultRequiredScope` / `modelRequiredScopes`). This pre-assert is retained
+ * as a supported back-compat gate on the shared callModel function; it rides that function even though
+ * the same function also serves the app's first-party Firebase `onCall` path (a no-op there — non-OIDC
+ * callers bypass). Configure GROUP requirements on the model-api module, not here.
+ *
  * Wire as the `preAssert` of {@link onCallModel}.
  *
  * @param config - Optional default + per-model group-term requirements. Omit for the additive

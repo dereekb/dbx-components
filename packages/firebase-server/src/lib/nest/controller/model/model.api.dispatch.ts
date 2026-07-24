@@ -1,13 +1,14 @@
 import { type Maybe } from '@dereekb/util';
-import { type OnCallTypedModelParams } from '@dereekb/firebase';
+import { type FirestoreModelType, type OidcModelScopeRequirement, type OidcScopeTerm, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { type CallableRequest } from 'firebase-functions/v2/https';
 import { Injectable, Inject, type INestApplicationContext } from '@nestjs/common';
 import { type Request } from 'express';
 import { type OnCallWithNestContext, type OnCallWithNestContextRequest, setNestContextOnRequest } from '../../function/call';
 import { injectNestApplicationContextIntoRequest } from '../../function/nest';
-import { type OnCallApiDetailsRef, type ModelApiDetailsResult, getModelApiDetails } from '../../model/api.details';
+import { type OnCallApiDetailsRef, type OnCallModelApiDetails, type ModelApiDetailsResult, getModelApiDetails, resolveRequiredScopeFromApiDetails } from '../../model/api.details';
 import { type MakeNestContext } from '../../nest.provider';
 import { type FirebaseServerAuthData } from '../auth.context.server';
+import { type ModelApiOidcScopeConfig, assertModelApiOidcScope, oidcScopesFromModelApiAuth } from './model.api.scope';
 
 // MARK: Types
 /**
@@ -33,7 +34,7 @@ export type OnCallModelFnWithApiDetails = OnCallWithNestContext<unknown, OnCallT
  * }
  * ```
  */
-export abstract class ModelApiDispatchConfig {
+export abstract class ModelApiDispatchConfig implements ModelApiOidcScopeConfig {
   /**
    * The onCallModel() return value with _apiDetails attached.
    */
@@ -42,6 +43,17 @@ export abstract class ModelApiDispatchConfig {
    * Factory to create typed nest context from INestApplicationContext.
    */
   readonly makeNestContext!: MakeNestContext<unknown>;
+  /**
+   * Optional model-api-layer OIDC group-scope default. See {@link ModelApiOidcScopeConfig.defaultRequiredScope}.
+   * This is the relocated home for the group-scope default that used to be supplied to
+   * `oidcCallModelScopePreAssert`; providing it here enforces it across dispatch AND the `/get` reads.
+   */
+  readonly defaultRequiredScope?: OidcScopeTerm;
+  /**
+   * Optional per-model OIDC group-scope overrides. See {@link ModelApiOidcScopeConfig.modelRequiredScopes}.
+   * The only place a plain `/get` read (no per-function handler) can be scope-gated beyond `model.read`.
+   */
+  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
 }
 
 /**
@@ -76,6 +88,26 @@ export class ModelApiCallModelDispatchService {
    * @returns The handler's return value.
    */
   async dispatch(params: OnCallTypedModelParams, auth: Maybe<FirebaseServerAuthData>, rawRequest: Request): Promise<unknown> {
+    // Enforce OIDC scope BEFORE dispatching — the relocated home of the callModel scope check.
+    // AND-of-ORs across the per-verb `model.<call>` scope and the effective group term (per-function
+    // `requiredScope` > per-model requirement > module default), bypassing non-OIDC callers. A nullish
+    // `call` is a malformed request the callModel chain rejects downstream (no model op to authorize).
+    const { call, modelType, specifier } = params;
+
+    if (call != null) {
+      const apiDetails = this.config.callModelFn._apiDetails as Maybe<OnCallModelApiDetails>;
+      const requiredScope = apiDetails == null ? undefined : resolveRequiredScopeFromApiDetails(apiDetails, call, modelType, specifier);
+
+      assertModelApiOidcScope({
+        call,
+        modelType,
+        requiredScope,
+        defaultRequiredScope: this.config.defaultRequiredScope,
+        modelRequiredScopes: this.config.modelRequiredScopes,
+        grantedScopes: oidcScopesFromModelApiAuth(auth)
+      });
+    }
+
     // Build a synthetic CallableRequest that the dispatch chain expects. Layer the
     // OIDC-validated claim subset over the base token so standard JWT claims
     // (`iat`, `auth_time`, `email`, …) survive — the callModel chain and any
