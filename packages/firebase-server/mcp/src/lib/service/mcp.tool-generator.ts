@@ -1,5 +1,5 @@
-import { type Maybe, filterMaybeArrayValues } from '@dereekb/util';
-import { type KnownOnCallFunctionType } from '@dereekb/firebase';
+import { type Maybe } from '@dereekb/util';
+import { resolveEffectiveOidcScopeTerms, type FirestoreModelType, type KnownOnCallFunctionType, type OidcModelScopeRequirement, type OidcScopeTerm } from '@dereekb/firebase';
 import { type Type } from 'arktype';
 import { arktypeToJsonSchemaForExport } from '@dereekb/model';
 import { type ModelApiDetailsResult, type OnCallModelFunctionApiDetails, type FirebaseServerAuthData, type McpToolDetailsBuilder, type McpVisibilityRule } from '@dereekb/firebase-server';
@@ -555,6 +555,17 @@ export interface GenerateMcpToolDefinitionsContext {
    * Per-model name segment overrides (e.g. collection prefixes).
    */
   readonly naming?: McpToolGenerationNamingOptions;
+  /**
+   * Default OIDC scope group term required on every op unless a finer term overrides it. Mirrors the
+   * server pre-assert's `defaultRequiredScope` so a tool is advertised only when the caller could
+   * invoke it.
+   */
+  readonly defaultRequiredScope?: OidcScopeTerm;
+  /**
+   * Per-model OIDC scope group-term overrides, keyed by {@link FirestoreModelType}. Mirrors the server
+   * pre-assert's `modelRequiredScopes` so per-model / verb-keyed restrictions apply to tool visibility.
+   */
+  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
 }
 
 /**
@@ -587,12 +598,14 @@ export function generateMcpToolDefinitions(apiDetails: ModelApiDetailsResult, op
   const seenNames = new Set<string>();
   const manifest = context?.manifest;
   const naming = context?.naming;
+  const defaultRequiredScope = context?.defaultRequiredScope;
+  const modelRequiredScopes = context?.modelRequiredScopes;
 
   const candidates = planMcpToolCandidates(apiDetails, naming);
   const clashCounts = countVisibleAutoNameClashes(candidates);
 
   for (const candidate of candidates) {
-    buildToolFromCandidate({ candidate, clashCounts, options, manifest, seenNames, outTools: tools, outNeverVisibleTools: neverVisibleTools, outSkipped: skipped, outWarnings: warnings });
+    buildToolFromCandidate({ candidate, clashCounts, options, manifest, defaultRequiredScope, modelRequiredScopes, seenNames, outTools: tools, outNeverVisibleTools: neverVisibleTools, outSkipped: skipped, outWarnings: warnings });
   }
 
   return { tools, neverVisibleTools, skipped, warnings };
@@ -691,6 +704,14 @@ interface BuildToolFromCandidateContext {
   readonly options: JsonSchemaGenerationOptions;
   readonly manifest?: ReadonlyMap<string, McpManifestToolEntry>;
   /**
+   * Module default OIDC scope group term, threaded from {@link GenerateMcpToolDefinitionsContext}.
+   */
+  readonly defaultRequiredScope?: OidcScopeTerm;
+  /**
+   * Per-model OIDC scope group-term overrides, threaded from {@link GenerateMcpToolDefinitionsContext}.
+   */
+  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
+  /**
    * Names of already-registered visible tools, used to drop residual collisions. Mutated as tools
    * are registered across the whole generation pass.
    */
@@ -709,7 +730,7 @@ interface BuildToolFromCandidateContext {
  * @param context - The candidate plus the shared generation accumulators.
  */
 function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
-  const { candidate, clashCounts, options, manifest, seenNames, outTools, outNeverVisibleTools, outSkipped, outWarnings } = context;
+  const { candidate, clashCounts, options, manifest, defaultRequiredScope, modelRequiredScopes, seenNames, outTools, outNeverVisibleTools, outSkipped, outWarnings } = context;
   const { modelType, callType, handlerDetails, specifier, dispatch, modelSegment, overrideName, baseName, classified, isVisible } = candidate;
 
   // A visible auto-named tool whose preferred name is produced by more than one visible tool is
@@ -747,21 +768,29 @@ function buildToolFromCandidate(context: BuildToolFromCandidateContext): void {
     }
   }
 
-  // Additive scope set: the per-verb call-type scope (model.<call>) plus any per-function scope
-  // declared via withApiDetails({ requiredScope }). Nullish entries drop out, so a non-CRUD call
-  // type with no per-function scope yields an empty set (no scope gate).
-  const requiredScopes = filterMaybeArrayValues([resolveRequiredScope(callType), handlerDetails.requiredScope]);
+  // AND-of-ORs scope terms: the per-verb call-type scope (model.<call>) plus the effective group term,
+  // resolved by the same precedence the server pre-assert uses (per-function requiredScope > per-model
+  // requirement > module default) via the shared resolveEffectiveOidcScopeTerms — so tool visibility
+  // tracks callability. Empty when no term applies (a non-CRUD call type with no per-function/model/
+  // default term → no scope gate).
+  const requiredScopeTerms = resolveEffectiveOidcScopeTerms({
+    perVerbScope: resolveRequiredScope(callType),
+    requiredScope: handlerDetails.requiredScope,
+    modelRequirement: modelRequiredScopes?.[modelType],
+    call: callType,
+    defaultRequiredScope
+  });
   const effectiveReadOnly = resolveEffectiveReadOnly(handlerDetails.mcp?.readOnly, callType);
   const annotations = resolveMcpToolAnnotations(effectiveReadOnly);
   const description = applyWriteMarker(baseDescription, annotations);
   let filterMetadata: McpToolFilterMetadata;
 
   if (classified.visibilityKind === 'declarative') {
-    filterMetadata = { visibilityKind: 'declarative', rule: classified.rule, requiredScopes, effectiveReadOnly };
+    filterMetadata = { visibilityKind: 'declarative', rule: classified.rule, requiredScopeTerms, effectiveReadOnly };
   } else if (classified.visibilityKind === 'dynamic') {
-    filterMetadata = { visibilityKind: 'dynamic', visibilityFn: classified.visibilityFn, requiredScopes, effectiveReadOnly };
+    filterMetadata = { visibilityKind: 'dynamic', visibilityFn: classified.visibilityFn, requiredScopeTerms, effectiveReadOnly };
   } else {
-    filterMetadata = { visibilityKind: classified.visibilityKind, requiredScopes, effectiveReadOnly };
+    filterMetadata = { visibilityKind: classified.visibilityKind, requiredScopeTerms, effectiveReadOnly };
   }
 
   // Disambiguation has already separated the common dropped-call-type clash; this is the backstop for

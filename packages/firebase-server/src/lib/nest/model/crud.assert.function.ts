@@ -1,6 +1,6 @@
 import { type Maybe } from '@dereekb/util';
 import { type NestContextCallableRequest } from '../function/nest';
-import { type OnCallFunctionType, type FirestoreModelType, type OidcScope } from '@dereekb/firebase';
+import { type OnCallFunctionType, type FirestoreModelType, type OidcScopeTerm } from '@dereekb/firebase';
 
 /**
  * Discriminator for the category of CRUD operation being asserted.
@@ -37,13 +37,14 @@ export interface AssertModelCrudRequestFunctionContext<N, I = unknown> {
    */
   readonly specifier: Maybe<string>;
   /**
-   * The per-function required OIDC scope declared via `withApiDetails({ requiredScope })`, when present.
+   * The per-function required OIDC scope TERM declared via `withApiDetails({ requiredScope })`, when present.
    *
-   * Resolved from the handler's `_apiDetails` at dispatch and handed to the pre-assert so
-   * `oidcCallModelScopePreAssert` can require it additively alongside the per-verb `model.<call>`
-   * scope. `undefined` when the handler declares no extra scope.
+   * A single scope string, or a `readonly` array as an OR-group (see {@link OidcScopeTerm}). Resolved
+   * from the handler's `_apiDetails` at dispatch and handed to the pre-assert so
+   * `oidcCallModelScopePreAssert` can enforce it as the finest group term (AND-ed with the per-verb
+   * `model.<call>` scope). `undefined` when the handler declares no extra scope.
    */
-  readonly requiredScope?: Maybe<OidcScope>;
+  readonly requiredScope?: Maybe<OidcScopeTerm>;
 }
 
 /**

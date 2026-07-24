@@ -1,5 +1,6 @@
 import { abbreviateMcpCallType, buildDefaultMcpToolDescription, buildDisambiguatedMcpToolName, buildMcpToolName, DEFAULT_SPECIFIER_KEY, generateMcpToolDefinitions, MCP_TOOL_NAME_MAX_LENGTH, MCP_TOOL_NAME_WARN_LENGTH, validateMcpToolName, type McpToolGenerationNamingOptions } from './mcp.tool-generator';
 import { type ModelApiDetailsResult, type McpVisibilityContext } from '@dereekb/firebase-server';
+import { type OidcModelScopeRequirement, type OidcScopeTerm } from '@dereekb/firebase';
 
 function makeSchemaRef(name: string, throws?: boolean) {
   return {
@@ -264,7 +265,7 @@ describe('generateMcpToolDefinitions filter metadata', () => {
     expect(byName.has('widget-never')).toBe(false);
   });
 
-  it('precomputes requiredScopes from the call type', () => {
+  it('precomputes requiredScopeTerms from the call type', () => {
     const cases: Array<[string, string]> = [
       ['create', 'model.create'],
       ['read', 'model.read'],
@@ -276,13 +277,13 @@ describe('generateMcpToolDefinitions filter metadata', () => {
 
     for (const [callType, expected] of cases) {
       const { tools } = generateMcpToolDefinitions(makeApiDetailsWithMcp(callType, undefined));
-      expect(tools[0].filterMetadata.requiredScopes).toEqual([expected]);
+      expect(tools[0].filterMetadata.requiredScopeTerms).toEqual([expected]);
     }
   });
 
-  it('leaves requiredScopes empty for unknown call types', () => {
+  it('leaves requiredScopeTerms empty for unknown call types', () => {
     const { tools } = generateMcpToolDefinitions(makeApiDetailsWithMcp('customVerb', undefined));
-    expect(tools[0].filterMetadata.requiredScopes).toEqual([]);
+    expect(tools[0].filterMetadata.requiredScopeTerms).toEqual([]);
   });
 
   it('composes a per-function requiredScope additively after the per-verb scope', () => {
@@ -302,7 +303,7 @@ describe('generateMcpToolDefinitions filter metadata', () => {
     };
 
     const { tools } = generateMcpToolDefinitions(apiDetails);
-    expect(tools[0].filterMetadata.requiredScopes).toEqual(['model.create', 'lms']);
+    expect(tools[0].filterMetadata.requiredScopeTerms).toEqual(['model.create', 'lms']);
   });
 
   it('carries only the per-function requiredScope for an unknown call type', () => {
@@ -322,7 +323,7 @@ describe('generateMcpToolDefinitions filter metadata', () => {
     };
 
     const { tools } = generateMcpToolDefinitions(apiDetails);
-    expect(tools[0].filterMetadata.requiredScopes).toEqual(['lms']);
+    expect(tools[0].filterMetadata.requiredScopeTerms).toEqual(['lms']);
   });
 
   it('resolves effectiveReadOnly from explicit override or call-type inference', () => {
@@ -593,5 +594,59 @@ describe('generateMcpToolDefinitions per-model name segment', () => {
     const { tools } = generateMcpToolDefinitions(makeOneEntry(), undefined, { naming });
 
     expect(tools[0].name).toBe('guestbook-query');
+  });
+});
+
+describe('generateMcpToolDefinitions scope-term composition (visibility parity)', () => {
+  function apiDetailsFor(modelType: string, callType: string, requiredScope?: OidcScopeTerm): ModelApiDetailsResult {
+    return {
+      models: {
+        [modelType]: {
+          calls: {
+            [callType]: { isSpecifier: false, specifiers: { _: { inputType: makeSchemaRef('P'), requiredScope } } }
+          }
+        }
+      }
+    };
+  }
+
+  it('carries an OR-group per-function requiredScope as an array term', () => {
+    const { tools } = generateMcpToolDefinitions(apiDetailsFor('widget', 'create', ['hellosubs', 'lms']));
+    expect(tools[0].filterMetadata.requiredScopeTerms).toEqual(['model.create', ['hellosubs', 'lms']]);
+  });
+
+  it('applies the module default group term when threaded through the context', () => {
+    const { tools } = generateMcpToolDefinitions(apiDetailsFor('widget', 'read'), undefined, { defaultRequiredScope: 'hellosubs' });
+    expect(tools[0].filterMetadata.requiredScopeTerms).toEqual(['model.read', 'hellosubs']);
+  });
+
+  it('applies a per-model requirement to a PLAIN READ (no per-function handler)', () => {
+    const modelRequiredScopes: Record<string, OidcModelScopeRequirement> = { workerAcademyProgress: ['hellosubs', 'lms'] };
+    const { tools } = generateMcpToolDefinitions(apiDetailsFor('workerAcademyProgress', 'read'), undefined, { modelRequiredScopes });
+    expect(tools[0].filterMetadata.requiredScopeTerms).toEqual(['model.read', ['hellosubs', 'lms']]);
+  });
+
+  it('per-function requiredScope wins over the model requirement and the default', () => {
+    const modelRequiredScopes: Record<string, OidcModelScopeRequirement> = { widget: 'hellosubs' };
+    const { tools } = generateMcpToolDefinitions(apiDetailsFor('widget', 'create', 'lms'), undefined, { defaultRequiredScope: 'other', modelRequiredScopes });
+    expect(tools[0].filterMetadata.requiredScopeTerms).toEqual(['model.create', 'lms']);
+  });
+
+  it('the model requirement beats the default; an untagged model gets the default', () => {
+    const modelRequiredScopes: Record<string, OidcModelScopeRequirement> = { widget: 'lms' };
+    const tagged = generateMcpToolDefinitions(apiDetailsFor('widget', 'create'), undefined, { defaultRequiredScope: 'hellosubs', modelRequiredScopes });
+    expect(tagged.tools[0].filterMetadata.requiredScopeTerms).toEqual(['model.create', 'lms']);
+
+    const untagged = generateMcpToolDefinitions(apiDetailsFor('profile', 'create'), undefined, { defaultRequiredScope: 'hellosubs', modelRequiredScopes });
+    expect(untagged.tools[0].filterMetadata.requiredScopeTerms).toEqual(['model.create', 'hellosubs']);
+  });
+
+  it('resolves a verb-keyed model requirement per verb (read vs write)', () => {
+    const modelRequiredScopes: Record<string, OidcModelScopeRequirement> = { worker: { read: ['hellosubs', 'lms'], default: 'hellosubs' } };
+    const read = generateMcpToolDefinitions(apiDetailsFor('worker', 'read'), undefined, { modelRequiredScopes });
+    expect(read.tools[0].filterMetadata.requiredScopeTerms).toEqual(['model.read', ['hellosubs', 'lms']]);
+
+    const create = generateMcpToolDefinitions(apiDetailsFor('worker', 'create'), undefined, { modelRequiredScopes });
+    expect(create.tools[0].filterMetadata.requiredScopeTerms).toEqual(['model.create', 'hellosubs']);
   });
 });

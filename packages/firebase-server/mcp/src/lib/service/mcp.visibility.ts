@@ -1,5 +1,5 @@
 import { type Maybe } from '@dereekb/util';
-import { callModelOidcScopeForCallType, type CallModelOidcScope, type OidcScope } from '@dereekb/firebase';
+import { callModelOidcScopeForCallType, type CallModelOidcScope, type OidcScopeTerm } from '@dereekb/firebase';
 import { type McpToolVisibility, type McpVisibilityContext, type McpVisibilityRule } from '@dereekb/firebase-server';
 import { type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 
@@ -49,12 +49,15 @@ export type McpToolFilterMetadata = McpToolFilterMetadataAlways | McpToolFilterM
 
 interface McpToolFilterMetadataBase {
   /**
-   * OIDC scopes required to invoke this tool (AND-semantics — the caller must hold every entry).
-   * Precomputed from the dispatch call type's per-verb scope (`model.<call>`) plus any per-function
-   * scope declared via `withApiDetails({ requiredScope })`. Empty when no scope is enforced (a
-   * non-CRUD call type with no per-function scope); apps gate custom verbs via their own preAssert.
+   * OIDC scope TERMS required to invoke this tool, evaluated AND-of-ORs — the caller must satisfy
+   * EVERY term, and an array term (OR-group) is satisfied by holding ANY member. Checked with the
+   * shared `oidcScopeTermsSatisfied` so tool-list visibility matches the server-side `callModel` gate
+   * exactly. Precomputed from the dispatch call type's per-verb scope (`model.<call>`) plus the
+   * effective group term (per-function `requiredScope` > per-model requirement > module default).
+   * Empty when no scope is enforced (a non-CRUD call type with no per-function/model/default term);
+   * apps gate custom verbs via their own preAssert.
    */
-  readonly requiredScopes?: readonly OidcScope[];
+  readonly requiredScopeTerms?: readonly OidcScopeTerm[];
   /**
    * Effective read-only classification used by the module-level `readOnly` filter.
    *

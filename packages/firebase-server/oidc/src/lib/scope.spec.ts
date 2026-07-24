@@ -1,22 +1,33 @@
 import { oidcCallModelScopePreAssert } from './scope';
-import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, CALL_MODEL_OIDC_SCOPES, CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE, callModelOidcScopeForCallType, type KnownOnCallFunctionType, type OnCallTypedModelParams } from '@dereekb/firebase';
+import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, CALL_MODEL_OIDC_SCOPES, CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE, callModelOidcScopeForCallType, type KnownOnCallFunctionType, type OidcScopeTerm, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { getOidcScopesFromRequest } from './service/oidc.auth';
 import { type AssertModelCrudRequestFunctionContext } from '@dereekb/firebase-server';
 
 const KNOWN_CALL_TYPES: ReadonlyArray<KnownOnCallFunctionType> = ['create', 'read', 'update', 'delete', 'query', 'invoke'];
 
-function buildContext(call: string | undefined, scope: string | undefined, requiredScope?: string): AssertModelCrudRequestFunctionContext<unknown, OnCallTypedModelParams> {
+function buildContext(call: string | undefined, scope: string | undefined, requiredScope?: OidcScopeTerm, modelType = 'guestbook'): AssertModelCrudRequestFunctionContext<unknown, OnCallTypedModelParams> {
   const auth = scope === undefined ? undefined : { uid: 'user-1', token: { scope } };
   return {
     call: call as string,
-    modelType: 'guestbook',
+    modelType,
     specifier: undefined,
     requiredScope,
     request: {
       auth,
-      data: { call, modelType: 'guestbook', data: {} }
+      data: { call, modelType, data: {} }
     } as any
   };
+}
+
+function thrownErrorCode(fn: () => void): string | undefined {
+  let caught: any;
+  try {
+    fn();
+  } catch (e) {
+    caught = e;
+  }
+  const details = caught?.details ?? caught?.errorInfo?.details ?? caught;
+  return details?.code ?? caught?.code;
 }
 
 describe('callModelOidcScopeForCallType', () => {
@@ -140,5 +151,89 @@ describe('oidcCallModelScopePreAssert (per-function requiredScope)', () => {
   it('enforces a per-function scope even on an otherwise-unrestricted custom call type', () => {
     expect(() => preAssert(buildContext('archive', 'openid lms', 'lms'))).not.toThrow();
     expect(codeOfThrown(() => preAssert(buildContext('archive', 'openid', 'lms')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+});
+
+describe('oidcCallModelScopePreAssert (default required scope)', () => {
+  const preAssert = oidcCallModelScopePreAssert({ defaultRequiredScope: 'hellosubs' });
+
+  it('rejects when the configured default group scope is missing (per-verb held)', () => {
+    expect(thrownErrorCode(() => preAssert(buildContext('read', 'openid model.read')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('passes when the caller holds both the per-verb scope and the default group scope', () => {
+    expect(() => preAssert(buildContext('read', 'openid model.read hellosubs'))).not.toThrow();
+  });
+
+  it('still AND-s the per-verb scope: rejects when only the default group scope is held', () => {
+    expect(thrownErrorCode(() => preAssert(buildContext('read', 'openid hellosubs')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('applies the default to a custom (non-CRUD) verb too', () => {
+    expect(() => preAssert(buildContext('archive', 'openid hellosubs'))).not.toThrow();
+    expect(thrownErrorCode(() => preAssert(buildContext('archive', 'openid')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('a per-function requiredScope overrides the default (finest wins)', () => {
+    // requires model.read AND lms — NOT hellosubs — because the per-function term wins.
+    expect(() => preAssert(buildContext('read', 'openid model.read lms', 'lms'))).not.toThrow();
+    expect(thrownErrorCode(() => preAssert(buildContext('read', 'openid model.read hellosubs', 'lms')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('bypasses entirely for a non-OIDC caller even with a default configured', () => {
+    expect(() => preAssert(buildContext('read', undefined))).not.toThrow();
+  });
+});
+
+describe('oidcCallModelScopePreAssert (model-level requirements + OR-groups)', () => {
+  const preAssert = oidcCallModelScopePreAssert({
+    defaultRequiredScope: 'hellosubs',
+    modelRequiredScopes: {
+      // WorkerAcademyProgress is wholly LMS — hellosubs OR lms for every verb.
+      workerAcademyProgress: ['hellosubs', 'lms'],
+      // Worker allows lms reads, but requires hellosubs for every other verb.
+      worker: { read: ['hellosubs', 'lms'], default: 'hellosubs' }
+    }
+  });
+
+  it('OR-group: passes when the caller holds ANY alternative (lms, no hellosubs)', () => {
+    expect(() => preAssert(buildContext('create', 'openid model.create lms', undefined, 'workerAcademyProgress'))).not.toThrow();
+    expect(() => preAssert(buildContext('create', 'openid model.create hellosubs', undefined, 'workerAcademyProgress'))).not.toThrow();
+  });
+
+  it('OR-group: rejects when the caller holds NONE of the alternatives', () => {
+    expect(thrownErrorCode(() => preAssert(buildContext('create', 'openid model.create', undefined, 'workerAcademyProgress')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('enforces a PLAIN READ (no per-function handler) via the model map', () => {
+    // A plain read carries no requiredScope, yet the model-map OR-group still gates it.
+    expect(() => preAssert(buildContext('read', 'openid model.read lms', undefined, 'workerAcademyProgress'))).not.toThrow();
+    expect(thrownErrorCode(() => preAssert(buildContext('read', 'openid model.read', undefined, 'workerAcademyProgress')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('verb-keyed entry resolves per verb: lms allowed for read, hellosubs required for write', () => {
+    expect(() => preAssert(buildContext('read', 'openid model.read lms', undefined, 'worker'))).not.toThrow();
+    // create falls back to the verb-map default (hellosubs); lms alone is not enough.
+    expect(thrownErrorCode(() => preAssert(buildContext('create', 'openid model.create lms', undefined, 'worker')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+    expect(() => preAssert(buildContext('create', 'openid model.create hellosubs', undefined, 'worker'))).not.toThrow();
+  });
+
+  it('model map beats the default for a tagged model, default applies to an untagged model', () => {
+    // guestbook is untagged → the default (hellosubs) applies.
+    expect(() => preAssert(buildContext('create', 'openid model.create hellosubs', undefined, 'guestbook'))).not.toThrow();
+    expect(thrownErrorCode(() => preAssert(buildContext('create', 'openid model.create lms', undefined, 'guestbook')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+    // workerAcademyProgress is tagged → lms satisfies it despite the hellosubs default.
+    expect(() => preAssert(buildContext('create', 'openid model.create lms', undefined, 'workerAcademyProgress'))).not.toThrow();
+  });
+
+  it('lists the unsatisfied OR-group in the error data', () => {
+    let caught: any;
+    try {
+      preAssert(buildContext('create', 'openid model.create', undefined, 'workerAcademyProgress'));
+    } catch (e) {
+      caught = e;
+    }
+    const details = caught?.details ?? caught?.errorInfo?.details ?? caught;
+    expect(details?.data?.requiredScopes).toEqual([['hellosubs', 'lms']]);
   });
 });
