@@ -1,5 +1,5 @@
 import { type AuthRole, type Configurable, type Maybe, type PromiseOrValue } from '@dereekb/util';
-import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier, type OidcScope } from '@dereekb/firebase';
+import { type OnCallFunctionType, type OnCallTypedModelParams, type FirestoreModelType, type ModelFirebaseCrudFunctionSpecifier, type OidcScopeTerm } from '@dereekb/firebase';
 import { type FirebaseServerAuthData } from '../controller/auth.context.server';
 import { type OnCallModelFunctionAnalyticsDetails } from './analytics.details';
 
@@ -85,7 +85,7 @@ export interface McpVisibilityContext {
   readonly auth?: FirebaseServerAuthData;
   /**
    * The caller's OIDC scopes, when the request was authenticated with a `scope`-bearing token.
-   * `undefined` for non-OIDC callers — treated the same as `oidcCallModelScopePreAssert` bypass.
+   * `undefined` for non-OIDC callers — treated the same as the model-api scope gate's non-OIDC bypass.
    */
   readonly scopes?: ReadonlySet<string>;
   /**
@@ -326,15 +326,20 @@ export interface OnCallModelFunctionApiDetails<R = unknown, M = unknown> {
    */
   readonly analytics?: OnCallModelFunctionAnalyticsDetails;
   /**
-   * Optional per-function OIDC scope an OIDC-authenticated caller must additionally hold to
+   * Optional per-function OIDC scope TERM an OIDC-authenticated caller must additionally hold to
    * invoke this handler, on top of the per-verb `model.<call>` scope.
    *
-   * Composes additively with the CRUD-verb scope enforced by `oidcCallModelScopePreAssert`: an
-   * OIDC caller still needs `model.<call>` AND this scope. Non-OIDC callers (Firebase ID tokens)
+   * A single scope string requires that exact scope; a `readonly` array is an OR-group the caller
+   * satisfies by holding ANY member (see {@link OidcScopeTerm}). This term is the finest (highest
+   * precedence) source for the effective group requirement — it overrides any model-level or default
+   * requirement configured on the model-api layer (`ModelApiDispatchConfig`).
+   *
+   * Composes with the CRUD-verb scope enforced by the model-api scope gate (`assertModelApiOidcScope`) as AND-of-ORs: an
+   * OIDC caller still needs `model.<call>` AND this term. Non-OIDC callers (Firebase ID tokens)
    * bypass scope enforcement entirely and are unaffected. Also folded into the MCP tool-list
-   * visibility filter, so a tool the caller lacks this scope for is neither listed nor callable.
+   * visibility filter, so a tool the caller cannot satisfy this term for is neither listed nor callable.
    */
-  readonly requiredScope?: OidcScope;
+  readonly requiredScope?: OidcScopeTerm;
 }
 
 /**
@@ -744,9 +749,9 @@ export function resolveAnalyticsFromApiDetails(apiDetails: OnCallModelApiDetails
  * @returns The per-function required scope for the resolved handler, or undefined.
  */
 // eslint-disable-next-line @typescript-eslint/max-params
-export function resolveRequiredScopeFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OidcScope> {
+export function resolveRequiredScopeFromApiDetails(apiDetails: OnCallModelApiDetails, call: OnCallFunctionType, modelType: FirestoreModelType, specifier?: ModelFirebaseCrudFunctionSpecifier): Maybe<OidcScopeTerm> {
   const modelDetails = apiDetails[call]?.modelTypes[modelType];
-  let result: Maybe<OidcScope>;
+  let result: Maybe<OidcScopeTerm>;
 
   if (modelDetails) {
     const key = specifier ?? '_';

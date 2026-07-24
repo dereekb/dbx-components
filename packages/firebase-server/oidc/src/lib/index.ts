@@ -4,5 +4,4 @@ export * from './oidc.config';
 export * from './controller';
 export * from './oidc.module';
 export * from './profile';
-export * from './scope';
 export * from './service';

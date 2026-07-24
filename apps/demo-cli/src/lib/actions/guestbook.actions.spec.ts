@@ -24,7 +24,7 @@ function parseCliJson<T>(stdoutText: string): ParsedCliEnvelope<T> {
 
 /**
  * OAuth fixture deliberately missing the `model.query` scope, used to prove that even an
- * admin user gets rejected when their token can't satisfy the scope pre-assert.
+ * admin user gets rejected when their token can't satisfy the model-api scope gate.
  */
 const demoOAuthSuperTestContextWithoutQueryScope = oAuthAuthorizedSuperTestContextFactory({
   scopes: 'openid profile email demo offline_access model.read model.create model.update model.delete'
@@ -32,7 +32,7 @@ const demoOAuthSuperTestContextWithoutQueryScope = oAuthAuthorizedSuperTestConte
 
 /**
  * OAuth fixture deliberately missing the `model.invoke` scope, used to prove that even an
- * admin user gets rejected when their token can't satisfy the invoke scope pre-assert.
+ * admin user gets rejected when their token can't satisfy the invoke model-api scope gate.
  */
 const demoOAuthSuperTestContextWithoutInvokeScope = oAuthAuthorizedSuperTestContextFactory({
   scopes: 'openid profile email demo offline_access model.read model.create model.update model.delete model.query'

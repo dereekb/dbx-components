@@ -3,7 +3,7 @@ import { Injectable, Inject, Optional, Logger } from '@nestjs/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult, type ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { type Request } from 'express';
-import { type OnCallTypedModelParams } from '@dereekb/firebase';
+import { oidcScopeTermsSatisfied, type OnCallTypedModelParams } from '@dereekb/firebase';
 import { getOidcScopesFromRequest } from '@dereekb/firebase-server/oidc';
 import { authRolesSetHasRoles, type AuthClaims, type AuthRoleSet, type Maybe } from '@dereekb/util';
 import { ModelApiCallModelDispatchService, ModelApiGetService, FirebaseServerStorageService, type FirebaseServerAuthData } from '@dereekb/firebase-server';
@@ -138,7 +138,7 @@ export class McpServerFactoryService {
       if (apiDetails == null) {
         result = { tools: [], neverVisibleTools: [], skipped: [], warnings: [] };
       } else {
-        result = generateMcpToolDefinitions(apiDetails, undefined, { manifest, naming: this._resolveToolNamingOptions() });
+        result = generateMcpToolDefinitions(apiDetails, undefined, { manifest, naming: this._resolveToolNamingOptions(), defaultRequiredScope: this.mcpConfig.defaultRequiredScope, modelRequiredScopes: this.mcpConfig.modelRequiredScopes });
       }
 
       this._cachedTools = result;
@@ -488,7 +488,7 @@ export class McpServerFactoryService {
    * Synthesizes the same `{ auth: { token } }` shape that `getOidcScopesFromRequest`
    * expects post-dispatch, so the upstream helper stays the single source of scope parsing.
    * Returns `undefined` for non-OIDC callers (no `oidcValidatedToken.scope`) — the filter
-   * loop treats that as "skip scope enforcement", matching `oidcCallModelScopePreAssert`.
+   * loop treats that as "skip scope enforcement", matching the model-api scope gate (`assertModelApiOidcScope`).
    *
    * @param ctx - The per-request context carrying the validated auth payload.
    * @returns The set of granted OIDC scopes, or `undefined` when scope enforcement should be skipped.
@@ -524,7 +524,7 @@ export class McpServerFactoryService {
     for (const tool of tools) {
       const { filterMetadata } = tool;
 
-      if (scopes != null && filterMetadata.requiredScopes != null && !filterMetadata.requiredScopes.every((scope) => scopes.has(scope))) {
+      if (scopes != null && filterMetadata.requiredScopeTerms != null && !oidcScopeTermsSatisfied(filterMetadata.requiredScopeTerms, scopes)) {
         continue;
       }
 

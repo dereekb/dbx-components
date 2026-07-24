@@ -1,11 +1,12 @@
 import { type Maybe } from '@dereekb/util';
-import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, NOT_FOUND_ERROR_CODE, PERMISSION_DENIED_ERROR_CODE, FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
+import { type FirestoreModelIdentity, type FirestoreModelKey, type FirestoreModelType, type OidcModelScopeRequirement, type OidcScopeTerm, NOT_FOUND_ERROR_CODE, PERMISSION_DENIED_ERROR_CODE, FORBIDDEN_ERROR_CODE } from '@dereekb/firebase';
 import { Injectable, Inject, type INestApplicationContext } from '@nestjs/common';
 import { type AbstractFirebaseNestContext } from '../../nest.provider';
 import { type AuthData } from '../../../type';
 import { ModelApiDispatchConfig, MODEL_API_NEST_APPLICATION_CONTEXT } from './model.api.dispatch';
 import { type FirebaseServerAuthData } from '../auth.context.server';
 import { firebaseServerErrorInfo } from '../../../function/error';
+import { assertModelApiOidcScope, oidcScopesFromModelApiAuth } from './model.api.scope';
 
 // MARK: Types
 /**
@@ -108,10 +109,35 @@ function modelAccessReadErrorMessageFromCode(code: Maybe<string>): string {
 @Injectable()
 export class ModelApiGetService {
   private readonly _nestContext: AbstractFirebaseNestContext<any, any>;
+  private readonly _defaultRequiredScope: Maybe<OidcScopeTerm>;
+  private readonly _modelRequiredScopes: Maybe<Record<FirestoreModelType, OidcModelScopeRequirement>>;
   private _identityByModelType: Map<string, FirestoreModelIdentity> | undefined;
 
   constructor(@Inject(ModelApiDispatchConfig) config: ModelApiDispatchConfig, @Inject(MODEL_API_NEST_APPLICATION_CONTEXT) nestApplication: INestApplicationContext) {
     this._nestContext = config.makeNestContext(nestApplication) as AbstractFirebaseNestContext<any, any>;
+    this._defaultRequiredScope = config.defaultRequiredScope;
+    this._modelRequiredScopes = config.modelRequiredScopes;
+  }
+
+  /**
+   * Enforces the OIDC read-scope requirement for a direct document read before it hits Firestore.
+   *
+   * A direct `/get` read is the `read` verb: it requires the per-verb `model.read` scope AND any
+   * effective group term for the target model (per-model requirement > module default). This is the
+   * ONLY gate on the direct-read path — it does not touch the callModel dispatch chain — so without it
+   * an OIDC client scoped to a subset could read any model through `/get`. Non-OIDC callers bypass.
+   *
+   * @param modelType - The Firestore model type being read.
+   * @param auth - The request's auth data (OIDC scopes are read from it).
+   */
+  private _assertReadScope(modelType: FirestoreModelType, auth: Maybe<FirebaseServerAuthData>): void {
+    assertModelApiOidcScope({
+      call: 'read',
+      modelType,
+      defaultRequiredScope: this._defaultRequiredScope,
+      modelRequiredScopes: this._modelRequiredScopes,
+      grantedScopes: oidcScopesFromModelApiAuth(auth)
+    });
   }
 
   /**
@@ -162,6 +188,8 @@ export class ModelApiGetService {
    * @throws {Error} Permission or not-found errors from useModel.
    */
   async readDocument(modelType: FirestoreModelType, key: FirestoreModelKey, auth: Maybe<FirebaseServerAuthData>): Promise<ModelAccessReadResult> {
+    this._assertReadScope(modelType, auth);
+
     const authRef = this._makeAuthRef(auth);
     const doc = await this._nestContext.useModel(modelType as any, {
       request: authRef,
@@ -190,6 +218,8 @@ export class ModelApiGetService {
    * @returns Results and errors for each requested key.
    */
   async readDocuments(modelType: FirestoreModelType, keys: FirestoreModelKey[], auth: Maybe<FirebaseServerAuthData>): Promise<ModelAccessMultiReadResult> {
+    this._assertReadScope(modelType, auth);
+
     const authRef = this._makeAuthRef(auth);
 
     return this._nestContext.useMultipleModels(modelType as any, {

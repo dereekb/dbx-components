@@ -1,3 +1,22 @@
+# [13.30.0](https://github.com/dereekb/dbx-components/compare/v13.29.0-dev...v13.30.0) (2026-07-24)
+
+
+### Code Refactoring
+
+- **firebase-server:** remove redundant oidcCallModelScopePreAssert ([ba55e549](https://github.com/dereekb/dbx-components/commit/ba55e549a53703b4be100470f442fe19b292a92f))
+- **firebase:** relocate base OIDC primitives to common/auth/oidc ([09b3897c](https://github.com/dereekb/dbx-components/commit/09b3897c5fd6c6cc29ee4e1af72962da6dc58646))
+
+
+### Features
+
+- **firebase-server:** enforce OIDC scope at the model-api layer ([896e53b2](https://github.com/dereekb/dbx-components/commit/896e53b2414289f2f966c323cfbc2781ea63322b))
+- **firebase-server:** model-level OIDC scope grouping for callModel ([2d9dfcc4](https://github.com/dereekb/dbx-components/commit/2d9dfcc4f5280766c6d91918380c65d9f1cde16c))
+
+
+### Tests
+
+- **firebase-server:** cover LMS client read/query confinement ([cb5b7f98](https://github.com/dereekb/dbx-components/commit/cb5b7f98b43902c6741cea9c860dc77a4b941544))
+
 # [13.29.0](https://github.com/dereekb/dbx-components/compare/v13.28.0-dev...v13.29.0) (2026-07-22)
 
 

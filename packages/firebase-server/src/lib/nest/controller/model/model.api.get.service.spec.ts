@@ -1,6 +1,8 @@
 import { HttpsError } from 'firebase-functions/https';
+import { CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE, type OidcModelScopeRequirement, type OidcScopeTerm } from '@dereekb/firebase';
 import { forbiddenError, notFoundError } from '../../../function/error';
-import { modelAccessReadErrorFromUseMultipleModelsFailure } from './model.api.get.service';
+import { ModelApiGetService, modelAccessReadErrorFromUseMultipleModelsFailure } from './model.api.get.service';
+import { type ModelApiDispatchConfig } from './model.api.dispatch';
 
 describe('modelAccessReadErrorFromUseMultipleModelsFailure()', () => {
   it('unwraps HttpsError messages and codes from permission-denied failures', () => {
@@ -74,5 +76,88 @@ describe('modelAccessReadErrorFromUseMultipleModelsFailure()', () => {
 
     expect(mapped.message).toBe('the document is gone');
     expect(mapped.code).toBe('NOT_FOUND');
+  });
+});
+
+// MARK: OIDC scope enforcement on the direct-read (/get) path
+describe('ModelApiGetService — OIDC scope enforcement on direct reads', () => {
+  interface BuildServiceInput {
+    readonly defaultRequiredScope?: OidcScopeTerm;
+    readonly modelRequiredScopes?: Record<string, OidcModelScopeRequirement>;
+  }
+
+  // A stub nest context whose read paths resolve a fixed document, so an ALLOWED read returns cleanly
+  // and we can assert the scope gate ran BEFORE the read (the spy is untouched on a rejection).
+  function buildService(input?: BuildServiceInput) {
+    const useModel = vi.fn(async (_modelType: any, opts: any) => opts.use({ document: { accessor: { get: async () => ({ data: () => ({ name: 'Doc' }) }) } } }));
+    const useMultipleModels = vi.fn(async (_modelType: any, opts: any) => opts.use([{ document: { accessor: { get: async () => ({ data: () => ({ name: 'Doc' }) }), documentRef: { path: 'gb/1' } } } }], { errors: [] }));
+    const nestContext = { useModel, useMultipleModels };
+
+    const config: ModelApiDispatchConfig = {
+      callModelFn: (() => undefined) as any,
+      makeNestContext: (() => nestContext) as any,
+      defaultRequiredScope: input?.defaultRequiredScope,
+      modelRequiredScopes: input?.modelRequiredScopes
+    };
+
+    const service = new ModelApiGetService(config, {} as any);
+    return { service, useModel, useMultipleModels };
+  }
+
+  function oidcAuth(scope: string | undefined): any {
+    return scope === undefined ? undefined : { uid: 'user-1', oidcValidatedToken: { sub: 'user-1', scope } };
+  }
+
+  async function codeOfRejected(fn: () => Promise<unknown>): Promise<string | undefined> {
+    let caught: any;
+
+    try {
+      await fn();
+    } catch (e) {
+      caught = e;
+    }
+
+    const details = caught?.details ?? caught?.errorInfo?.details ?? caught;
+    return details?.code ?? caught?.code;
+  }
+
+  it('REGRESSION: gates a plain /get read on model.read (previously ungated)', async () => {
+    const { service, useModel } = buildService();
+
+    // An OIDC caller lacking model.read is now blocked before the Firestore read runs.
+    expect(await codeOfRejected(() => service.readDocument('guestbook', 'gb/1', oidcAuth('openid demo')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+    expect(useModel).not.toHaveBeenCalled();
+  });
+
+  it('allows a plain /get read when the caller holds model.read', async () => {
+    const { service, useModel } = buildService();
+    const result = await service.readDocument('guestbook', 'gb/1', oidcAuth('openid model.read'));
+
+    expect(result).toEqual({ key: 'gb/1', data: { name: 'Doc' } });
+    expect(useModel).toHaveBeenCalledTimes(1);
+  });
+
+  it('bypasses a non-OIDC caller (no scope claim) — unchanged behavior', async () => {
+    const { service, useModel } = buildService();
+    await service.readDocument('guestbook', 'gb/1', { uid: 'user-1', token: {} } as any);
+
+    expect(useModel).toHaveBeenCalledTimes(1);
+  });
+
+  it('gates readDocuments (multi) on model.read too', async () => {
+    const { service, useMultipleModels } = buildService();
+
+    expect(await codeOfRejected(() => service.readDocuments('guestbook', ['gb/1', 'gb/2'], oidcAuth('openid')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+    expect(useMultipleModels).not.toHaveBeenCalled();
+  });
+
+  it('applies a per-model OR-group requirement to /get reads (confines a subset-scoped client)', async () => {
+    const { service, useModel } = buildService({ defaultRequiredScope: 'hellosubs', modelRequiredScopes: { workerAcademyProgress: ['hellosubs', 'lms'] } });
+
+    // lms client reads the lms-tagged model...
+    await expect(service.readDocument('workerAcademyProgress', 'wap/1', oidcAuth('openid model.read lms'))).resolves.toEqual({ key: 'wap/1', data: { name: 'Doc' } });
+    // ...but is blocked from an untagged model (hellosubs default applies), even holding model.read.
+    expect(await codeOfRejected(() => service.readDocument('guestbook', 'gb/1', oidcAuth('openid model.read lms')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+    expect(useModel).toHaveBeenCalledTimes(1);
   });
 });

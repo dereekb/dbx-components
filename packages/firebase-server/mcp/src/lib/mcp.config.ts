@@ -1,5 +1,5 @@
 import { type AuthClaims, type AuthRoleSet } from '@dereekb/util';
-import { type OidcScope } from '@dereekb/firebase';
+import { type FirestoreModelType, type OidcModelScopeRequirement, type OidcScope, type OidcScopeTerm } from '@dereekb/firebase';
 
 /**
  * Default path the MCP Streamable HTTP transport is mounted at.
@@ -215,6 +215,25 @@ export abstract class McpModuleConfig {
    * from the dispatched handler body. See {@link McpReasonParameterConfig}.
    */
   readonly reasonParameter?: McpReasonParameterConfig | boolean;
+
+  /**
+   * Default OIDC scope group term required on EVERY `callModel` op, mirrored into MCP tool-list
+   * visibility, unless a finer term overrides it (a per-function `requiredScope`, then a
+   * {@link McpModuleConfig.modelRequiredScopes} entry). Threaded into the same
+   * `resolveEffectiveOidcScopeTerms` composition the server-side model-api scope gate
+   * (`assertModelApiOidcScope`) uses, so a tool is advertised only when the caller could actually invoke it.
+   *
+   * Set this to the SAME value passed to `ModelApiDispatchConfig.defaultRequiredScope` to
+   * keep tool visibility and enforcement in lockstep.
+   */
+  readonly defaultRequiredScope?: OidcScopeTerm;
+  /**
+   * Per-model OIDC scope group-term overrides, keyed by {@link FirestoreModelType}, mirrored into MCP
+   * tool-list visibility. Set this to the SAME value passed to
+   * `ModelApiDispatchConfig.modelRequiredScopes` so per-model / verb-keyed restrictions that
+   * confine a subset client apply identically to the advertised tool list.
+   */
+  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
 }
 
 /**

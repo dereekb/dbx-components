@@ -30,7 +30,7 @@ import type { AuthAppInfo, AuthClaimInfo, AuthRoleInfo, AuthScopeInfo } from './
 const UTIL_ROLE_PATH = 'packages/util/src/lib/auth/auth.role.ts';
 const STORAGE_CLAIM_PATH = 'packages/firebase/src/lib/model/storagefile/storagefile.upload.claims.ts';
 const OIDC_SCOPE_PATH = 'packages/firebase/src/lib/common/auth/oidc/oidc.ts';
-const OIDC_SCOPE_PRE_ASSERT_PATH = 'packages/firebase-server/oidc/src/lib/scope.ts';
+const OIDC_SCOPE_ENFORCEMENT_PATH = 'packages/firebase-server/src/lib/nest/controller/model/model.api.scope.ts';
 const DEMO_CLAIMS_PATH = 'components/demo-firebase/src/lib/auth/claims.ts';
 
 // MARK: Built-in roles
@@ -120,9 +120,8 @@ export const BUILTIN_AUTH_CLAIMS: readonly AuthClaimInfo[] = [
 
 // MARK: Built-in scopes
 /**
- * The five callModel CRUD scopes enforced by
- * {@link oidcCallModelScopePreAssert}. App-specific scopes live in the
- * downstream catalog layer.
+ * The five callModel CRUD scopes enforced by {@link assertModelApiOidcScope} at
+ * the model-api layer. App-specific scopes live in the downstream catalog layer.
  */
 export const BUILTIN_AUTH_SCOPES: readonly AuthScopeInfo[] = CALL_MODEL_OIDC_SCOPES.map((scope) => {
   const callType = (Object.entries(CALL_MODEL_OIDC_SCOPE_FOR_CALL_TYPE).find(([, s]) => s === scope) ?? [])[0];
@@ -133,9 +132,9 @@ export const BUILTIN_AUTH_SCOPES: readonly AuthScopeInfo[] = CALL_MODEL_OIDC_SCO
     description: `Required OIDC scope for the \`callModel\` ${callType ?? 'CRUD'} verb.`,
     enforcedAt: [
       {
-        path: OIDC_SCOPE_PRE_ASSERT_PATH,
-        line: 21,
-        description: '`oidcCallModelScopePreAssert` rejects requests that lack this scope.'
+        path: OIDC_SCOPE_ENFORCEMENT_PATH,
+        line: 115,
+        description: '`assertModelApiOidcScope` (model-api dispatch + `/get`) rejects requests that lack this scope.'
       }
     ],
     errorCode: CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE,

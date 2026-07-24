@@ -8,8 +8,8 @@ import { ALL_OIDC_TOKEN_ENDPOINT_AUTH_METHODS, CALL_MODEL_OIDC_SCOPE_DETAILS, ty
  *   (`openid` / `profile` / `email` / `offline_access`).
  * - `demo`: grants full access to the user's Demo resources via the API.
  * - `model.create` / `model.read` / `model.update` / `model.delete` / `model.query`:
- *   gate the corresponding `callModel` CRUD operation. Enforced by
- *   `oidcCallModelScopePreAssert` in `@dereekb/firebase-server/oidc`. Keep this
+ *   gate the corresponding `callModel` CRUD operation. Enforced at the model-api
+ *   layer (`ModelApiDispatchConfig` / `assertModelApiOidcScope`). Keep this
  *   union in sync with `CALL_MODEL_OIDC_SCOPES`.
  * - {@link ServiceTokenOidcScope} (`token.service`): admin-only scope that makes the
  *   issued grant long-lived and non-rotating, for non-interactive server/API use.

@@ -47,10 +47,12 @@ export const APP_CODE_PREFIX_CAMELCallModelMap: OnCallModelMap = {
 
 /**
  * The raw onCallModel dispatch function (with _apiDetails attached). Split out so
- * the Model API + MCP controllers can dispatch + introspect it directly. The
- * `oidc` add-on overwrites {@link APP_CODE_PREFIX_CAMELCallModelConfig} to wire
- * `oidcCallModelScopePreAssert()` so OIDC-bearer callers must hold the matching
- * `model.<call>` scope.
+ * the Model API + MCP controllers can dispatch + introspect it directly.
+ *
+ * OIDC scope enforcement for OIDC-bearer callers is applied at the model-api layer
+ * (`ModelApiDispatchConfig`, wired by the `mcp` add-on's `server/model/model.module.ts`),
+ * which gates every OIDC call path before invoking this function. Use
+ * {@link APP_CODE_PREFIX_CAMELCallModelConfig} for any additional callModel config.
  */
 export const APP_CODE_PREFIX_CAMELCallModelFn = onCallModel(APP_CODE_PREFIX_CAMELCallModelMap, APP_CODE_PREFIX_CAMELCallModelConfig);
 

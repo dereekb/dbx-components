@@ -235,7 +235,7 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
       expect(readBody.key).toBe(key);
       expect(readBody.data.name).toBe('RP Bearer Read');
 
-      // model.create is NOT granted ⇒ a create call is rejected by the scope pre-assert (403).
+      // model.create is NOT granted ⇒ a create call is rejected by the model-api scope gate (403).
       const createParams: CreateGuestbookParams = { name: 'Should Be Rejected' };
       const createRes = await fetch(`${baseUrl}/api/model/call`, {
         method: 'POST',

@@ -1,3 +1,4 @@
+export * from './model.api.scope';
 export * from './model.api.get.service';
 export * from './model.api.dispatch';
 export * from './model.api.controller';

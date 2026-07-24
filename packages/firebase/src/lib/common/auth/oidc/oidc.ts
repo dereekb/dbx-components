@@ -1,5 +1,6 @@
 import { type LabeledValueWithDescription, type Maybe } from '@dereekb/util';
 import { type KnownOnCallFunctionType, type OnCallFunctionType, type OnCallTypedModelParams } from '../../model/function';
+import { type OidcScope } from './oidc.base';
 
 /**
  * Prefix shared by every callModel OIDC scope (e.g., `model.create`).
@@ -187,3 +188,172 @@ export const SERVICE_TOKEN_OIDC_SCOPE_DETAILS: LabeledValueWithDescription<Servi
   value: SERVICE_TOKEN_OIDC_SCOPE,
   description: 'Admin-only: issue a long-lived, non-rotating token for server/API use'
 };
+
+// MARK: Scope Terms (callModel AND-of-ORs enforcement)
+/**
+ * A single requirement TERM in the callModel OIDC scope model.
+ *
+ * A term is satisfied when the caller holds the required scope(s):
+ * - a single {@link OidcScope} — the caller must hold exactly that scope; or
+ * - a `readonly` array of {@link OidcScope}s — an OR-group the caller satisfies by holding ANY one
+ *   (an empty group imposes no requirement).
+ *
+ * Multiple terms combine with AND — see {@link oidcScopeTermsSatisfied}. The callModel gate ANDs the
+ * per-verb `model.<call>` scope with the effective GROUP term resolved for the model/handler.
+ */
+export type OidcScopeTerm = OidcScope | readonly OidcScope[];
+
+/**
+ * Parses a raw OIDC `scope` claim (a space-delimited string) into the granted scope set consumed by
+ * {@link oidcScopeTermSatisfied} / {@link oidcScopeTermsSatisfied}.
+ *
+ * The single source of truth for scope-string parsing, shared by the server-side `getOidcScopesFromRequest`
+ * (which reads `request.auth.token.scope`) and the model-api-layer enforcement (which reads the OIDC-validated
+ * token off the request auth). Returns `undefined` when the claim is not a string — i.e. the caller is not
+ * OIDC-authenticated (a regular Firebase ID token carries no `scope` claim) — so callers can distinguish
+ * "no OIDC scopes to enforce against" (bypass) from "OIDC caller that was granted zero scopes" (empty set).
+ *
+ * @param scope - The raw `scope` claim value, typically a space-delimited string.
+ * @returns A `Set` of the granted scopes, or `undefined` when `scope` is not a string.
+ */
+export function oidcScopesFromScopeClaim(scope: unknown): Maybe<Set<OidcScope>> {
+  const result: Maybe<Set<OidcScope>> = typeof scope === 'string' ? new Set(scope.split(' ').filter((value) => value.length > 0)) : undefined;
+  return result;
+}
+
+/**
+ * Verb-keyed form of {@link OidcModelScopeRequirement}: a term per {@link OnCallFunctionType}, with an
+ * optional `default` term applied to verbs without an explicit entry.
+ */
+export interface OidcModelScopeRequirementVerbMap {
+  /**
+   * Fallback term applied to any verb without an explicit entry below.
+   */
+  readonly default?: OidcScopeTerm;
+  /**
+   * Per-verb term keyed by call type (e.g. `read`, `create`, `query`). A `read` entry is the only
+   * way to require a scope on a PLAIN READ, which has no per-function handler.
+   */
+  readonly [verb: string]: OidcScopeTerm | undefined;
+}
+
+/**
+ * Per-model callModel scope requirement, consulted by the model-api scope gate and the MCP visibility filter.
+ *
+ * Either a single {@link OidcScopeTerm} applied to EVERY verb, or an {@link OidcModelScopeRequirementVerbMap}
+ * (verb-keyed with an optional `default`). The verb-keyed form is the only way to require a scope on
+ * a plain read — a plain read has no per-function handler to hang a `requiredScope` on, but the
+ * scope gate still resolves its verb + model type, so a `read` entry here reaches it.
+ *
+ * @example
+ * ```typescript
+ * // WorkerAcademyProgress is wholly LMS — same term for every verb:
+ * const wap: OidcModelScopeRequirement = ['hellosubs', 'lms'];
+ * // allow lms reads, require hellosubs for everything else:
+ * const worker: OidcModelScopeRequirement = { read: ['hellosubs', 'lms'], default: 'hellosubs' };
+ * ```
+ */
+export type OidcModelScopeRequirement = OidcScopeTerm | OidcModelScopeRequirementVerbMap;
+
+/**
+ * Returns whether a single {@link OidcScopeTerm} is satisfied by the granted scope set.
+ *
+ * A string term requires that exact scope; an array term is an OR-group satisfied by ANY member (an
+ * empty group is vacuously satisfied — no requirement).
+ *
+ * @param term - The scope term to test.
+ * @param grantedScopes - The scopes the caller holds.
+ * @returns `true` when the caller satisfies the term.
+ */
+export function oidcScopeTermSatisfied(term: OidcScopeTerm, grantedScopes: ReadonlySet<OidcScope>): boolean {
+  return typeof term === 'string' ? grantedScopes.has(term) : term.length === 0 || term.some((scope) => grantedScopes.has(scope));
+}
+
+/**
+ * Returns whether EVERY {@link OidcScopeTerm} is satisfied by the granted scope set (AND-of-ORs).
+ *
+ * The single source of truth shared by the server-side callModel scope enforcement
+ * (`assertModelApiOidcScope`) and the MCP tool-visibility filter, so enforcement and tool-list
+ * visibility never drift. An empty term list is vacuously satisfied.
+ *
+ * @param terms - The AND-ed scope terms; each is a single scope or an OR-group.
+ * @param grantedScopes - The scopes the caller holds.
+ * @returns `true` when the caller satisfies every term.
+ */
+export function oidcScopeTermsSatisfied(terms: readonly OidcScopeTerm[], grantedScopes: ReadonlySet<OidcScope>): boolean {
+  return terms.every((term) => oidcScopeTermSatisfied(term, grantedScopes));
+}
+
+/**
+ * Resolves the effective {@link OidcScopeTerm} an {@link OidcModelScopeRequirement} imposes for a
+ * given call verb.
+ *
+ * A single-term requirement applies to every verb; a verb-keyed requirement returns the matching
+ * verb entry, falling back to its `default`. Returns `undefined` when the requirement imposes no
+ * term for the verb.
+ *
+ * @param requirement - The per-model requirement.
+ * @param call - The call verb being resolved.
+ * @returns The effective term for the verb, or `undefined`.
+ */
+export function resolveOidcModelScopeRequirement(requirement: OidcModelScopeRequirement, call: OnCallFunctionType): Maybe<OidcScopeTerm> {
+  const isTerm = typeof requirement === 'string' || Array.isArray(requirement);
+  const verbMap = requirement as OidcModelScopeRequirementVerbMap;
+  return isTerm ? (requirement as OidcScopeTerm) : (verbMap[call] ?? verbMap.default);
+}
+
+/**
+ * Inputs to {@link resolveEffectiveOidcScopeTerms}.
+ */
+export interface ResolveEffectiveOidcScopeTermsInput {
+  /**
+   * The per-verb `model.<call>` scope, if any — kept as its own AND term.
+   */
+  readonly perVerbScope?: Maybe<OidcScopeTerm>;
+  /**
+   * The per-function `requiredScope` from `withApiDetails`, if any — the finest (highest-precedence)
+   * group term.
+   */
+  readonly requiredScope?: Maybe<OidcScopeTerm>;
+  /**
+   * The model-level requirement for the targeted model type, if configured.
+   */
+  readonly modelRequirement?: Maybe<OidcModelScopeRequirement>;
+  /**
+   * The call verb, used to resolve a verb-keyed {@link modelRequirement}.
+   */
+  readonly call: OnCallFunctionType;
+  /**
+   * The configured default group term applied when no finer term overrides it.
+   */
+  readonly defaultRequiredScope?: Maybe<OidcScopeTerm>;
+}
+
+/**
+ * Resolves the full AND-ed list of {@link OidcScopeTerm}s enforced for one callModel op — the single
+ * composition rule shared by the server model-api scope gate and the MCP visibility filter (no drift).
+ *
+ * The list is the per-verb scope AND the effective GROUP term, where the group term is resolved by
+ * precedence: per-function `requiredScope` (finest) > model-level requirement (verb-resolved; covers
+ * plain reads) > configured default. Nullish and empty-OR-group terms are dropped, so an op with no
+ * requirement yields an empty list (no scope gate — the caller can skip reading scopes). With no
+ * config supplied and no per-function scope, the list is exactly `[perVerbScope]` (or empty), matching
+ * the pre-grouping behavior.
+ *
+ * @param input - The per-verb scope, per-function scope, model requirement, verb, and default.
+ * @returns The AND-ed scope terms to enforce (possibly empty).
+ */
+export function resolveEffectiveOidcScopeTerms(input: ResolveEffectiveOidcScopeTermsInput): OidcScopeTerm[] {
+  const { perVerbScope, requiredScope, modelRequirement, call, defaultRequiredScope } = input;
+  const modelTerm = modelRequirement == null ? undefined : resolveOidcModelScopeRequirement(modelRequirement, call);
+  const effectiveGroupTerm = requiredScope ?? modelTerm ?? defaultRequiredScope;
+  const result: OidcScopeTerm[] = [];
+
+  for (const term of [perVerbScope, effectiveGroupTerm]) {
+    if (term != null && !(Array.isArray(term) && term.length === 0)) {
+      result.push(term);
+    }
+  }
+
+  return result;
+}

@@ -1,7 +1,6 @@
 import { type Maybe, type SpaceSeparatedString, type WebsiteUrlWithPrefix } from '@dereekb/util';
-import { type FirebaseAuthIdToken } from '../../common/auth/auth';
-import { type OidcEntryClientId } from './oidcmodel.id';
-import { type OidcScope } from './oidcmodel.interaction';
+import { type FirebaseAuthIdToken } from '../auth';
+import { type OidcEntryClientId, type OidcScope } from './oidc.base';
 
 /**
  * Request body sent by the frontend to complete a login interaction.
