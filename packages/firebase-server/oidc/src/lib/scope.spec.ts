@@ -237,3 +237,48 @@ describe('oidcCallModelScopePreAssert (model-level requirements + OR-groups)', (
     expect(details?.data?.requiredScopes).toEqual([['hellosubs', 'lms']]);
   });
 });
+
+describe('oidcCallModelScopePreAssert (LMS client is confined to LMS models — the headline restriction)', () => {
+  // The actual restriction being shipped: an LMS oidcEntry client holds the coarse per-verb scopes
+  // (model.read/create/update/query) + `lms`, but NOT `hellosubs`. `hellosubs` is the enforced default
+  // on every model; workerAcademyProgress (WAP) is the only lms-tagged model.
+  const preAssert = oidcCallModelScopePreAssert({
+    defaultRequiredScope: 'hellosubs',
+    modelRequiredScopes: {
+      workerAcademyProgress: ['hellosubs', 'lms']
+    }
+  });
+  const LMS_CLIENT = 'openid model.read model.create model.update model.query lms';
+  const FULL_CLIENT = 'openid model.read model.create model.query hellosubs';
+
+  it('lets the LMS client READ and QUERY the lms-tagged model (WAP)', () => {
+    expect(() => preAssert(buildContext('read', LMS_CLIENT, undefined, 'workerAcademyProgress'))).not.toThrow();
+    expect(() => preAssert(buildContext('query', LMS_CLIENT, undefined, 'workerAcademyProgress'))).not.toThrow();
+  });
+
+  it('BLOCKS the LMS client from READING a non-LMS model despite holding model.read', () => {
+    // guestbook / worker are untagged → the hellosubs default applies, and the LMS client lacks it.
+    expect(thrownErrorCode(() => preAssert(buildContext('read', LMS_CLIENT, undefined, 'guestbook')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+    expect(thrownErrorCode(() => preAssert(buildContext('read', LMS_CLIENT, undefined, 'worker')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('BLOCKS the LMS client from QUERYING a non-LMS model despite holding model.query', () => {
+    expect(thrownErrorCode(() => preAssert(buildContext('query', LMS_CLIENT, undefined, 'guestbook')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('BLOCKS the LMS client from CREATING/UPDATING a non-LMS model', () => {
+    expect(thrownErrorCode(() => preAssert(buildContext('create', LMS_CLIENT, undefined, 'guestbook')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+    expect(thrownErrorCode(() => preAssert(buildContext('update', LMS_CLIENT, undefined, 'worker')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+
+  it('by contrast, a full client holding hellosubs READS/QUERIES any model (LMS-tagged or not)', () => {
+    expect(() => preAssert(buildContext('read', FULL_CLIENT, undefined, 'guestbook'))).not.toThrow();
+    expect(() => preAssert(buildContext('read', FULL_CLIENT, undefined, 'workerAcademyProgress'))).not.toThrow();
+    expect(() => preAssert(buildContext('query', FULL_CLIENT, undefined, 'worker'))).not.toThrow();
+  });
+
+  it('the LMS client is still blocked from a model it lacks the per-verb scope for entirely', () => {
+    // No model.delete in the LMS grant → a delete of even the lms-tagged model fails on the per-verb term.
+    expect(thrownErrorCode(() => preAssert(buildContext('delete', LMS_CLIENT, undefined, 'workerAcademyProgress')))).toBe(CALL_MODEL_MISSING_OIDC_SCOPE_ERROR_CODE);
+  });
+});
