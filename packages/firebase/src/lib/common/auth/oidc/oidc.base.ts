@@ -49,6 +49,16 @@ export type OidcScopeDetails<T extends OidcScope = OidcScope> = LabeledValueWith
 export type OidcRedirectUri = string;
 
 /**
+ * Unique client identifier for an OIDC client registration.
+ *
+ * @semanticType
+ * @semanticTopic identifier
+ * @semanticTopic string
+ * @semanticTopic dereekb-firebase:oidc
+ */
+export type OidcEntryClientId = string;
+
+/**
  * The `client_secret_basic` confidential-client auth method (RFC 6749 §2.3.1, the
  * OAuth 2.0 default): the client sends its `client_id` and `client_secret` in the
  * `Authorization: Basic` header on token-endpoint requests. Standard pick for

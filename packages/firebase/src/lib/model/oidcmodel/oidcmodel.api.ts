@@ -1,12 +1,10 @@
 import { type, type Type } from 'arktype';
-import { type TargetModelParams, type OnCallCreateModelResult } from '../../common';
+import { type TargetModelParams, type OnCallCreateModelResult, type OidcEntryClientId, type OidcRedirectUri, type OidcTokenEndpointAuthMethod } from '../../common';
 import { type InferredTargetModelParams, inferredTargetModelParamsType, targetModelParamsType } from '../../common/model/model/model.param';
 import { callModelFirebaseFunctionMapFactory, type ModelFirebaseCrudFunction, type FirebaseFunctionTypeConfigMap, type ModelFirebaseCrudFunctionConfigMap, type ModelFirebaseFunctionMap, type ModelFirebaseCreateFunction, type ModelFirebaseDeleteFunction, type ModelFirebaseUpdateFunction } from '../../client';
 import { type WebsiteUrlWithPrefix, type Maybe } from '@dereekb/util';
 import { clearable } from '@dereekb/model';
-import { type OidcEntryClientId } from './oidcmodel.id';
 import { type OidcModelTypes } from './oidcmodel';
-import { type OidcRedirectUri, type OidcTokenEndpointAuthMethod } from './oidcmodel.interaction';
 
 /**
  * Fields that can be changed on an existing OIDC client.

@@ -1,6 +1,6 @@
 import { type LabeledValueWithDescription, type Maybe } from '@dereekb/util';
 import { type KnownOnCallFunctionType, type OnCallFunctionType, type OnCallTypedModelParams } from '../../model/function';
-import { type OidcScope } from '../../../model/oidcmodel/oidcmodel.interaction';
+import { type OidcScope } from './oidc.base';
 
 /**
  * Prefix shared by every callModel OIDC scope (e.g., `model.create`).

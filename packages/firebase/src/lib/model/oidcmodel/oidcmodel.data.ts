@@ -1,8 +1,7 @@
 // MARK: OAuthClient
 
 import { type Maybe } from '@dereekb/util';
-import { type OidcEntryClientId } from './oidcmodel.id';
-import { type OidcRedirectUri } from './oidcmodel.interaction';
+import { type OidcEntryClientId, type OidcRedirectUri } from '../../common';
 
 /**
  * Corresponds with readable content from a OidcEntry's payload.

@@ -1,5 +1,5 @@
 import { type LabeledValueWithDescription } from '@dereekb/util';
-import { type OidcScope } from './oidcmodel.interaction';
+import { type OidcScope } from './oidc.base';
 
 // MARK: Provider Profiles
 /**
