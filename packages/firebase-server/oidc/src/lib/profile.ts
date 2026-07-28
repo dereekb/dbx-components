@@ -1,4 +1,4 @@
-import { type OidcProviderProfile, oidcProviderProfilesForKeys, requiredScopesForOidcProviderProfiles, scopesForOidcProviderProfiles, type OidcScope, type OidcProviderProfileKey } from '@dereekb/firebase';
+import { type OidcProviderProfile, oidcProviderProfilesForClient, requiredScopesForOidcProviderProfiles, scopesForOidcProviderProfiles, type OidcScope, type OidcProviderProfileKey } from '@dereekb/firebase';
 
 /**
  * Custom oidc-provider client metadata field holding the {@link OidcProviderProfile} keys assigned
@@ -25,12 +25,19 @@ export interface OidcClientProviderProfileScopes<S extends OidcScope = OidcScope
  * Resolves the unlocked + required scope sets for a client from the provider-profile registry and
  * the profile keys assigned to that client.
  *
+ * A client with NO assigned profiles resolves to the registry's default profiles (those marked
+ * `isDefault`), so a registry declaring no default resolves exactly as it would from the assigned
+ * keys alone.
+ *
+ * This is the single choke point for a client's profile resolution — the consent unlock gate, the
+ * consent required gate, and the `requiredScopes` interaction param all read through it.
+ *
  * @param providerProfiles - The provider-profile registry (from {@link OidcProviderConfig.providerProfiles}).
  * @param clientProfileKeys - The profile keys assigned to the client (its `dbx_provider_profiles`).
  * @returns The unlocked and required scope sets for the client.
  */
 export function oidcClientProviderProfileScopes<S extends OidcScope = OidcScope>(providerProfiles: readonly OidcProviderProfile<S>[] | undefined, clientProfileKeys: readonly OidcProviderProfileKey[] | undefined): OidcClientProviderProfileScopes<S> {
-  const clientProfiles = oidcProviderProfilesForKeys(providerProfiles ?? [], clientProfileKeys);
+  const clientProfiles = oidcProviderProfilesForClient(providerProfiles ?? [], clientProfileKeys);
   return {
     unlocked: scopesForOidcProviderProfiles(clientProfiles),
     required: requiredScopesForOidcProviderProfiles(clientProfiles)

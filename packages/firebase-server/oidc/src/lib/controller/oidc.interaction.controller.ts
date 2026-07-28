@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Param, Req, Res, Inject, HttpException, HttpStatus, HttpCode, Body, Logger, Optional } from '@nestjs/common';
 import { type Request, type Response } from 'express';
 import { OidcProviderConfigService } from '../service';
-import { type FirebaseAuthUserId, type OidcEntryClientId, type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope, scopesForOidcProviderProfiles } from '@dereekb/firebase';
+import { adminOnlyScopesForOidcProviderProfiles, type FirebaseAuthUserId, type OidcEntryClientId, type OAuthInteractionConsentRequest, type OAuthInteractionLoginRequest, type OidcInteractionUid, type OidcScope, scopesForOidcProviderProfiles } from '@dereekb/firebase';
 import { OidcAccountService } from '../service/oidc.account.service';
 import { OidcInteractionService } from '../service/oidc.interaction.service';
 import { OidcService } from '../service/oidc.service';
@@ -170,24 +170,32 @@ export class OidcInteractionController {
 
       // Admin-only scope gate. The requested OIDC scope set is `missingOIDCScope ∪ encounteredOIDCScopes`
       // (a fresh consent has everything in `missing`; a re-consent may carry already-granted scopes in
-      // `encountered`). If that set intersects the provider's `adminOnlyScopes` and the resolving user is
-      // not an admin, hard-reject with `access_denied` rather than silently dropping the scope.
+      // `encountered`). If that set intersects the admin-only scopes — the provider's `adminOnlyScopes`
+      // unioned with the scopes of every profile marked `adminOnly` — and the resolving user is not an
+      // admin, hard-reject with `access_denied` rather than silently dropping the scope.
       const requestedOIDCScopeSet = new Set<string>([...missingOIDCScope, ...encounteredOIDCScopes]);
-      const adminOnlyScopes = this.accountService.providerConfig.adminOnlyScopes ?? [];
-      const requestsServiceToken = adminOnlyScopes.some((scope) => requestedOIDCScopeSet.has(scope));
+      const providerProfiles = this.accountService.providerConfig.providerProfiles;
+      const configAdminOnlyScopes = this.accountService.providerConfig.adminOnlyScopes ?? [];
+      const adminOnlyScopes = new Set<string>([...configAdminOnlyScopes, ...adminOnlyScopesForOidcProviderProfiles(providerProfiles ?? [])]);
+      const requestedAdminOnlyScopes = Array.from(adminOnlyScopes).filter((scope) => requestedOIDCScopeSet.has(scope));
+
+      // Deliberately sourced from the provider config's `adminOnlyScopes` ALONE, unlike the gate above:
+      // this flag also selects the (highest) service-token TTL tier further down, and a profile marked
+      // `adminOnly` must gate by admin status WITHOUT widening its grant's lifetime to that tier.
+      const requestsServiceToken = configAdminOnlyScopes.some((scope) => requestedOIDCScopeSet.has(scope));
       const isAdmin = accountId ? await (this.accountService.delegate.isAdminUser?.(this.accountService.userContext(accountId).authUserContext) ?? false) : false;
 
-      if (requestsServiceToken && !isAdmin) {
-        const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(uid, { error: 'access_denied', error_description: 'token.service is restricted to admins.' }, { mergeWithLastSubmission: true });
-        emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, serviceToken: true, isAdmin: false, reason: 'service_token_non_admin', durationMs: Date.now() - startedAt }, this._logger);
+      if (requestedAdminOnlyScopes.length > 0 && !isAdmin) {
+        const { returnTo: redirectTo } = await this.oidcInteractionService.finishInteractionByUid(uid, { error: 'access_denied', error_description: `The following scope(s) are restricted to admins: ${requestedAdminOnlyScopes.join(', ')}.` }, { mergeWithLastSubmission: true });
+        emitOidcAnalyticsEvent(this._analytics, { type: 'consent', isSuccessful: false, uid: accountId, clientId, serviceToken: requestsServiceToken, isAdmin: false, reason: 'service_token_non_admin', durationMs: Date.now() - startedAt }, this._logger);
         res.json({ redirectTo });
         return;
       }
 
       // Provider-profile scope gate. Any scope referenced by a provider profile is "gated" — available
-      // only to clients whose assigned profiles unlock it. Independent of the admin-only gate above; a
-      // scope may be subject to both.
-      const providerProfiles = this.accountService.providerConfig.providerProfiles;
+      // only to clients whose assigned profiles unlock it (a client with NO assigned profiles resolves
+      // to the registry's default profiles). Independent of the admin-only gate above; a scope may be
+      // subject to both.
       const { unlocked: clientUnlockedScopes, required: clientRequiredScopes } = oidcClientProviderProfileScopes(providerProfiles, clientPayload?.dbx_provider_profiles ?? undefined);
       const profileGatedScopes = scopesForOidcProviderProfiles(providerProfiles ?? []);
 
