@@ -39,6 +39,21 @@ const demoOAuthSuperTestContextWithoutInvokeScope = oAuthAuthorizedSuperTestCont
 });
 
 /**
+ * OAuth fixture whose client is assigned the `lms` provider profile so the issued token can carry
+ * the `lms` scope — `guestbookEntryAllPublishedEntries` declares `requiredScope: LMS_OIDC_SCOPE`, so
+ * an OIDC caller needs both `model.invoke` and `lms` to invoke `allPublishedEntries`.
+ *
+ * The scope list must be spelled out: `lms` is assignment-only (no demo profile is `isDefault`), so
+ * the default "all registered scopes" resolution deliberately drops it, and the profile force-requires
+ * it — a client with the profile that omits `lms` from the request is rejected at consent.
+ */
+const demoOAuthSuperTestContextWithLmsScope = oAuthAuthorizedSuperTestContextFactory({
+  clientName: 'demo-cli-lms-oauth-context',
+  providerProfiles: ['lms'],
+  scopes: 'openid profile email demo offline_access model.read model.create model.update model.delete model.query model.invoke lms'
+});
+
+/**
  * Integration coverage for the demo-cli `action guestbook ...` surface introduced in
  * `refactor(dbx-cli): add ActionCommandSpec + callModel iterator`.
  *
@@ -169,7 +184,12 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
                 expect(envelope.data?.perGuestbook).toEqual([]);
               });
             });
+          });
+        });
 
+        // MARK: Invoke — needs the `lms` scope on top of `model.invoke` (per-function requiredScope)
+        demoOAuthSuperTestContextWithLmsScope({ f, u: adminUser }, (oauth) => {
+          withDemoTestCli({ f, oauth }, ({ runCli }) => {
             describe('demo-cli action guestbookEntry all-published-entries-invoke', () => {
               describe('with two published guestbooks containing a mix of published and unpublished entries', () => {
                 demoGuestbookContext({ f, name: 'Invoke A', published: true }, (gA) => {
