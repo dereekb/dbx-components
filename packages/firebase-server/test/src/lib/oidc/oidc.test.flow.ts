@@ -2,7 +2,7 @@ import request from 'supertest';
 import { createHash, randomBytes } from 'node:crypto';
 import { type INestApplication } from '@nestjs/common';
 import { unixDateTimeSecondsNumberForNow } from '@dereekb/util';
-import { type OidcTokenEndpointAuthMethod, scopesForOidcProviderProfiles } from '@dereekb/firebase';
+import { adminOnlyScopesForOidcProviderProfiles, assignmentOnlyScopesForOidcProviderProfiles, type OidcProviderProfileKey, type OidcTokenEndpointAuthMethod } from '@dereekb/firebase';
 import { OidcClientService, OidcAccountService, JwksService } from '@dereekb/firebase-server/oidc';
 
 // MARK: Config
@@ -28,6 +28,16 @@ export interface OAuthTestFlowConfig {
    * Token endpoint auth method. Defaults to `'client_secret_post'`.
    */
   readonly tokenEndpointAuthMethod?: OidcTokenEndpointAuthMethod;
+  /**
+   * Provider profile keys to assign to the test client (persisted as its `dbx_provider_profiles`
+   * client metadata). Defaults to none.
+   *
+   * Required to obtain an assignment-only profile-gated scope (e.g. `lms`): the consent unlock gate
+   * rejects any gated scope the client's assigned profiles do not unlock. Pair this with an explicit
+   * {@link OAuthTestFlowConfig.scopes} string containing the gated scope, since the default
+   * "all registered scopes" resolution deliberately drops assignment-only scopes.
+   */
+  readonly providerProfiles?: readonly OidcProviderProfileKey[];
 }
 
 // MARK: Result
@@ -119,12 +129,16 @@ function createCookieJar() {
  * Admin-only scopes (e.g. `token.service`) are dropped from the default "all scopes" request because
  * the provider hard-rejects them for non-admin users, and this default flow logs in an arbitrary
  * (often non-admin) user. Tests that need an admin-only scope pass it explicitly via `config.scopes`.
+ * Both sources of the gate are excluded: the provider config's `adminOnlyScopes` and the scopes of any
+ * profile marked `adminOnly`.
  *
- * Provider-profile-gated scopes (e.g. `lms`, `reports`) are dropped for the same reason: they are
- * unlocked only for a client an admin has assigned the corresponding profile to, and this flow creates
- * a fresh client with no profiles — so the consent unlock gate hard-rejects them (finishing the
+ * Assignment-only profile-gated scopes (e.g. `lms`, `reports`) are dropped for the same reason: they
+ * are unlocked only for a client an admin has assigned the corresponding profile to, and this flow
+ * creates a fresh client with no profiles — so the consent unlock gate hard-rejects them (finishing the
  * interaction with `access_denied` and no `code`). Tests that need a gated scope create a client with
- * the profile and pass the scope explicitly via `config.scopes`.
+ * the profile and pass the scope explicitly via `config.scopes`. A scope unlocked by a DEFAULT profile
+ * is deliberately kept: a client with no profiles assigned resolves to the default profiles, so it can
+ * obtain that scope.
  *
  * @param nestApp - Initialized NestJS application used to resolve {@link OidcAccountService} when no scopes override is given.
  * @param config - Optional flow config; when `config.scopes` is set, it is returned verbatim.
@@ -138,8 +152,9 @@ async function resolveScopes(nestApp: INestApplication, config?: OAuthTestFlowCo
   } else {
     const accountService = nestApp.get(OidcAccountService);
     const providerConfig = accountService.providerConfig;
-    const adminOnlyScopes = new Set(providerConfig.adminOnlyScopes ?? []);
-    const profileGatedScopes = scopesForOidcProviderProfiles(providerConfig.providerProfiles ?? []);
+    const providerProfiles = providerConfig.providerProfiles ?? [];
+    const adminOnlyScopes = new Set<string>([...(providerConfig.adminOnlyScopes ?? []), ...adminOnlyScopesForOidcProviderProfiles(providerProfiles)]);
+    const profileGatedScopes = assignmentOnlyScopesForOidcProviderProfiles(providerProfiles);
     result = Object.keys(providerConfig.claims)
       .filter((scope) => !adminOnlyScopes.has(scope) && !profileGatedScopes.has(scope))
       .join(' ');
@@ -170,7 +185,7 @@ export interface PerformFullOAuthFlowInput {
  * @param input.oidcClientService - Service used to create the OAuth client whose credentials drive the flow.
  * @param input.nestApp - Initialized NestJS application; used to resolve {@link OidcAccountService} for project-id-derived ID tokens and default scopes.
  * @param input.uid - Firebase user ID for whom the test ID token is minted and the OAuth flow is authorized.
- * @param input.config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method).
+ * @param input.config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method, provider profiles).
  * @returns The exchanged access token and ID token from the OIDC `/token` endpoint.
  * @throws {Error} When the token exchange step fails (the response body and status are included in the message).
  */
@@ -181,13 +196,15 @@ export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Pr
   const redirectUri = config?.redirectUri ?? 'https://example.com/callback';
   const clientName = config?.clientName ?? 'test-oauth-context';
   const tokenEndpointAuthMethod: OidcTokenEndpointAuthMethod = config?.tokenEndpointAuthMethod ?? 'client_secret_post';
+  const providerProfiles = config?.providerProfiles;
   const scopes = await resolveScopes(nestApp, config);
 
   // 1. Create a client via the service
   const { client_id, client_secret } = await oidcClientService.createClient({
     client_name: clientName,
     redirect_uris: [redirectUri],
-    token_endpoint_auth_method: tokenEndpointAuthMethod
+    token_endpoint_auth_method: tokenEndpointAuthMethod,
+    ...(providerProfiles == null ? {} : { dbx_provider_profiles: [...providerProfiles] })
   });
 
   // 2. Generate PKCE code_verifier and code_challenge
@@ -261,7 +278,7 @@ export async function performFullOAuthFlow(input: PerformFullOAuthFlowInput): Pr
  *
  * @param nestApp - Initialized NestJS application from which {@link JwksService} and {@link OidcClientService} are resolved.
  * @param uid - Firebase user ID for whom the OAuth flow is authorized.
- * @param config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method).
+ * @param config - Optional flow overrides (scopes, redirect URI, client name, token endpoint auth method, provider profiles).
  * @returns The exchanged access token and ID token from {@link performFullOAuthFlow}.
  */
 export async function setupAndPerformFullOAuthFlow(nestApp: INestApplication, uid: string, config?: OAuthTestFlowConfig): Promise<PerformFullOAuthFlowResult> {

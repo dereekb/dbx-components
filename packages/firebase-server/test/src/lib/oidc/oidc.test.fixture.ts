@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { type INestApplication } from '@nestjs/common';
+import { type OidcProviderProfileKey } from '@dereekb/firebase';
 import { AbstractTestContextFixture, useTestContextFixture } from '@dereekb/util/test';
 import { type FirebaseAdminNestTestContextFixture } from '../firebase/firebase.admin.nest';
 import { type OAuthTestFlowConfig, setupAndPerformFullOAuthFlow } from './oidc.test.flow';
@@ -23,6 +24,13 @@ export interface OAuthAuthorizedSuperTestContextFactoryConfig {
    * Client name. Defaults to `'test-oauth-context'`.
    */
   readonly clientName?: string;
+  /**
+   * Provider profile keys assigned to the created OAuth client. Defaults to none.
+   *
+   * Needed to issue a token carrying an assignment-only profile-gated scope (e.g. `lms`); pair it
+   * with an explicit `scopes` string that requests that scope.
+   */
+  readonly providerProfiles?: readonly OidcProviderProfileKey[];
   /**
    * Vitest hook/test timeout in milliseconds. Defaults to `30_000`.
    */
@@ -157,7 +165,7 @@ const DEFAULT_OAUTH_TEST_TIMEOUT = 30_000;
  * The returned factory function performs a full OAuth authorization code flow
  * and provides an authenticated supertest agent and helper methods.
  *
- * @param config - Optional flow overrides (scopes, redirect URI, client name, timeout) and custom fixture/instance constructors.
+ * @param config - Optional flow overrides (scopes, redirect URI, client name, provider profiles, timeout) and custom fixture/instance constructors.
  * @returns Function that, given parent fixtures and a `buildTests` callback, registers a `describe('(oauth)', ...)` block which performs the full OAuth flow and exposes the authenticated supertest fixture.
  *
  * @example
@@ -180,7 +188,7 @@ const DEFAULT_OAUTH_TEST_TIMEOUT = 30_000;
 export function oAuthAuthorizedSuperTestContextFactory(config?: OAuthAuthorizedSuperTestContextFactoryConfig): (params: OAuthAuthorizedSuperTestContextParams, buildTests: (oauth: OAuthAuthorizedSuperTestFixture) => void) => void {
   const { timeout = DEFAULT_OAUTH_TEST_TIMEOUT, makeFixture = () => new OAuthAuthorizedSuperTestFixture(), makeInstance = (server: ReturnType<INestApplication['getHttpServer']>, accessToken: string) => new OAuthAuthorizedSuperTestInstance(server, accessToken), ...flowConfigOverrides } = config ?? {};
 
-  const flowConfig: OAuthTestFlowConfig | undefined = flowConfigOverrides.scopes || flowConfigOverrides.redirectUri || flowConfigOverrides.clientName ? flowConfigOverrides : undefined;
+  const flowConfig: OAuthTestFlowConfig | undefined = flowConfigOverrides.scopes || flowConfigOverrides.redirectUri || flowConfigOverrides.clientName || flowConfigOverrides.providerProfiles ? flowConfigOverrides : undefined;
 
   return (params: OAuthAuthorizedSuperTestContextParams, buildTests: (oauth: OAuthAuthorizedSuperTestFixture) => void) => {
     const { f, u } = params;

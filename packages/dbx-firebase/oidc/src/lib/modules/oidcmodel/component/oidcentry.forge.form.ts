@@ -56,6 +56,11 @@ export function oidcEntryClientForgeFormFields(config?: OidcEntryClientFormField
  * Admin-only in effect: the server strips `dbx_provider_profiles` from non-admin create/update
  * requests, so a non-admin's selection is ignored.
  *
+ * Leaving the field empty is meaningful rather than inert: a client with no profiles assigned resolves
+ * to the registry's default profiles. Those entries are marked as such in their description by
+ * `oidcProviderProfileDetails`, and are deliberately not pre-selected — persisting the default as an
+ * explicit assignment would opt the client out of the fallback.
+ *
  * @param providerProfiles - The available provider profiles to display as selectable options.
  * @returns A forge pickable chip field for provider profile assignment.
  */
@@ -63,7 +68,7 @@ export function oidcClientProviderProfilesForgeField(providerProfiles: OidcProvi
   return dbxForgePickableChipField({
     key: 'dbx_provider_profiles',
     label: 'Provider Profiles',
-    hint: 'Admin-only. Assign provider profiles to unlock otherwise-restricted scopes for this client.',
+    hint: 'Admin-only. Assign provider profiles to unlock otherwise-restricted scopes for this client. Leaving this empty applies the default profiles, if any.',
     props: {
       showSelectAllButton: false,
       ...pickableValueFieldValuesConfigForStaticLabeledValues(providerProfiles)

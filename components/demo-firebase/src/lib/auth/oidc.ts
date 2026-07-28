@@ -59,6 +59,9 @@ export const DEMO_APP_OAUTH_INTERACTION_PATH = '/demo/oauth';
  *
  * NOTE: {@link DemoOidcProviderProfileScope} scopes (`lms`, `reports`) are intentionally excluded — they
  * are restricted and unlocked only via an {@link OidcProviderProfile} (see {@link DEMO_OIDC_PROVIDER_PROFILES}).
+ * This is the `assignmentOnlyScopesForOidcProviderProfiles` set: no demo profile is marked `isDefault`,
+ * so every gated scope requires an explicit assignment. Were a default profile added, its scopes would
+ * belong back in this picker — every client can obtain them.
  */
 export const DEMO_OIDC_AVAILABLE_SCOPES: OidcScopeDetails<DemoOidcScope>[] = [...STANDARD_OIDC_SCOPE_DETAILS, { label: 'Demo', value: 'demo', description: 'Full access to your Demo resources via the API' }, ...CALL_MODEL_OIDC_SCOPE_DETAILS, SERVICE_TOKEN_OIDC_SCOPE_DETAILS];
 

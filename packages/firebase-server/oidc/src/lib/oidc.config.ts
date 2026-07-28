@@ -107,6 +107,11 @@ export interface OidcProviderConfig<S extends OidcScope = OidcScope> {
    *
    * Keeps the generic package app-agnostic: apps opt a scope (e.g. `token.service`) into admin-only
    * behavior by listing it here, rather than the package hard-coding any scope name.
+   *
+   * The consent gate applies this list UNIONED with the scopes of every {@link providerProfiles} entry
+   * marked `adminOnly`. Only the scopes listed HERE additionally select the (highest) service-token
+   * login-duration tier — a profile marked `adminOnly` gates by admin status without widening its
+   * grant's lifetime.
    */
   readonly adminOnlyScopes?: readonly string[];
   /**
@@ -123,6 +128,12 @@ export interface OidcProviderConfig<S extends OidcScope = OidcScope> {
    * only obtain it when one of its assigned profiles (persisted as `dbx_provider_profiles` client
    * metadata) unlocks it. A profile scope marked `require: 'required'` is force-required — surfaced
    * as a required scope at consent and hard-rejected if not granted.
+   *
+   * A profile marked `isDefault` applies to a client with NO profiles assigned, so an app can make a
+   * coarse, broadly-available scope profile-gated without breaking already-registered clients. The
+   * fallback is exclusive — assigning any other profile does not additionally confer the default's
+   * scopes. A profile marked `adminOnly` has its scopes unioned into {@link adminOnlyScopes} for the
+   * consent gate.
    *
    * Keeps the generic package app-agnostic: apps declare their profiles statically and list them
    * here, rather than the package hard-coding any profile or scope name. This gate is independent of
