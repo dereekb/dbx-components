@@ -1,3 +1,15 @@
+# [13.31.0](https://github.com/dereekb/dbx-components/compare/v13.30.0-dev...v13.31.0) (2026-07-28)
+
+
+### Bug Fixes
+
+- **demo-cli:** give invoke action tests an lms-scoped OAuth token ([22b5febf](https://github.com/dereekb/dbx-components/commit/22b5febf3b16442a800cdd5368ada6621573c307))
+
+
+### Features
+
+- **firebase:** add OIDC default + admin-only provider profiles ([dc6a8456](https://github.com/dereekb/dbx-components/commit/dc6a8456fe66591db74bac13e7d5f24fe35510bd))
+
 # [13.30.0](https://github.com/dereekb/dbx-components/compare/v13.29.0-dev...v13.30.0) (2026-07-24)
 
 
