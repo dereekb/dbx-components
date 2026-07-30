@@ -40,13 +40,17 @@ import {
   effectiveNotificationBoxRecipientTemplateConfig,
   isPendingNotificationHealthCheckProbe,
   notificationHealthCheckIssue,
+  notificationUserHealthCheckNextProbeAt,
+  notificationUserHealthCheckNextRunAt,
   notificationUserHealthCheckParamsType,
   rollupNotificationDeliveryHealthCheckResultStatus,
   rollupNotificationHealthCheckResultStatus
 } from '@dereekb/firebase';
 import { assertSnapshotData } from '@dereekb/firebase-server';
 import { type EmailAddress, type E164PhoneNumber, type Maybe, filterMaybeArrayValues, takeFront } from '@dereekb/util';
+import { isAfter } from 'date-fns';
 import { type NotificationServerActionsContext } from './notification.action.server';
+import { notificationUserHealthCheckProbeThrottledError, notificationUserHealthCheckThrottledError } from './notification.error';
 import { type NotificationSendServiceHealthCheckService } from './notification.healthcheck.service';
 
 /**
@@ -105,19 +109,49 @@ interface NotificationDeliveryMethodContext<T = unknown> {
  * @returns A transform-and-validate function that runs a delivery health check for a notification user.
  */
 export function notificationUserHealthCheckFactory(context: NotificationServerActionsContext) {
-  const { firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationSendService, authService } = context;
+  const { firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationSendService, authService, notificationUserHealthCheckConfig } = context;
+  const probeThrottleMinutes = notificationUserHealthCheckConfig?.probeThrottleMinutes;
+  const runThrottleMinutes = notificationUserHealthCheckConfig?.runThrottleMinutes;
 
   return firebaseServerActionTransformFunctionFactory(notificationUserHealthCheckParamsType, async (params: NotificationUserHealthCheckParams) => {
-    const { methods: inputMethods, sendProbe: inputSendProbe, verifyPendingProbesOnly: inputVerifyPendingProbesOnly, notificationTemplateType: inputNotificationTemplateType, skipSubscriptionChecks: inputSkipSubscriptionChecks } = params;
+    const { methods: inputMethods, sendProbe: inputSendProbe, verifyPendingProbesOnly: inputVerifyPendingProbesOnly, notificationTemplateType: inputNotificationTemplateType, skipSubscriptionChecks: inputSkipSubscriptionChecks, force: inputForce, returnFullHealthCheck: inputReturnFullHealthCheck } = params;
 
     const sendProbe = inputSendProbe === true;
     const verifyPendingProbesOnly = inputVerifyPendingProbesOnly === true;
     const skipSubscriptionChecks = inputSkipSubscriptionChecks === true || verifyPendingProbesOnly;
+    // Privileged, and unverifiable from here: the action cannot see who is calling, so the API layer is
+    // responsible for clearing this unless the caller is an admin. See NotificationUserHealthCheckParams.
+    const force = inputForce === true;
 
     return async (notificationUserDocument: NotificationUserDocument): Promise<NotificationUserHealthCheckResult> => {
       const now = new Date();
       const notificationUser = await assertSnapshotData(notificationUserDocument);
       const { uid, hc: previousHealthCheck } = notificationUser;
+
+      // Runs and test messages are throttled independently: a run reads provider state, while a probe
+      // delivers a real message. Running the check must not consume the test message allowance, so a
+      // probe run answers only to the probe window. The client derives both windows the same way.
+      //
+      // The probe window is scoped to the methods being probed, since each method has its own test
+      // message action — a test email must not hold the test text message off.
+      //
+      // `force` skips both windows, so an admin diagnosing someone else's delivery does not have to wait
+      // out that user's own throttle.
+      if (!force) {
+        if (sendProbe) {
+          const nextProbeAt = notificationUserHealthCheckNextProbeAt({ healthCheck: previousHealthCheck, methods: inputMethods, throttleMinutes: probeThrottleMinutes });
+
+          if (nextProbeAt != null && isAfter(nextProbeAt, now)) {
+            throw notificationUserHealthCheckProbeThrottledError(nextProbeAt);
+          }
+        } else {
+          const nextRunAt = notificationUserHealthCheckNextRunAt({ healthCheck: previousHealthCheck, throttleMinutes: runThrottleMinutes });
+
+          if (nextRunAt != null && isAfter(nextRunAt, now)) {
+            throw notificationUserHealthCheckThrottledError(nextRunAt);
+          }
+        }
+      }
 
       const notificationTemplateType = inputNotificationTemplateType || DEFAULT_NOTIFICATION_TEMPLATE_TYPE;
       const authDetails = await authService
@@ -206,7 +240,11 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
             s: rollupNotificationDeliveryHealthCheckResultStatus({ is: issues, pr: probe }),
             tg: target == null ? undefined : String(target),
             is: issues,
-            pr: probe
+            pr: probe,
+            // whether probing is supported is only knowable here, so it is reported for a client that
+            // offers a per-method test message action. A supporting provider with nothing to deliver to
+            // still cannot be probed.
+            pb: healthCheckService?.supportsProbe === true && target != null ? true : undefined
           };
 
           return methodResult;
@@ -229,9 +267,37 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
 
       await notificationUserDocument.update({ hc: healthCheck });
 
-      return { healthCheck, probesDispatched, probesResolved };
+      // The complete check is what gets STORED; what comes BACK can be narrower. A probe run is about one
+      // method's test message, and a client renders the report from the document anyway, so returning the
+      // whole account's diagnosis is payload the caller did not ask for.
+      //
+      // The same predicate as the `pb` flag, so what is returned matches what the client was told it could
+      // test. An empty set means nothing probe-capable was in scope, and then there is no narrower answer
+      // to give than the diagnosis explaining why nothing was sent.
+      const probedMethods = new Set(sendProbe ? methodContextsToCheck.filter((x) => x.healthCheckService?.supportsProbe === true && x.target != null).map((x) => x.method) : []);
+      const returnFullHealthCheck = inputReturnFullHealthCheck === true || !sendProbe || probedMethods.size === 0;
+      const returnedHealthCheck = returnFullHealthCheck ? healthCheck : narrowNotificationHealthCheckToMethods(healthCheck, probedMethods);
+
+      return { healthCheck: returnedHealthCheck, probesDispatched, probesResolved };
     };
   });
+}
+
+/**
+ * Narrows a health check down to a subset of its delivery methods.
+ *
+ * Used for the result of a test message call, which is about the method it just sent through rather than
+ * the whole account. `s` is re-rolled over the methods that are kept so the returned check is
+ * self-consistent, and the account-wide findings are dropped — they are not what the call was about. Only
+ * ever applied to the RETURNED value; the stored check keeps every method and finding.
+ *
+ * @param healthCheck - The complete check.
+ * @param methods - The delivery methods to keep.
+ * @returns The check, covering only those methods.
+ */
+function narrowNotificationHealthCheckToMethods(healthCheck: NotificationHealthCheck, methods: ReadonlySet<NotificationDeliveryMethod>): NotificationHealthCheck {
+  const m = healthCheck.m.filter((x) => methods.has(x.me));
+  return { ...healthCheck, is: [], m, s: rollupNotificationHealthCheckResultStatus({ is: [], m }) };
 }
 
 // MARK: Delivery Methods

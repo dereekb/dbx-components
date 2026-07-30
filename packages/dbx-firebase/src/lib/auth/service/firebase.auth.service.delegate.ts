@@ -41,7 +41,7 @@ export function authRolesObsWithClaimsService<T extends AuthClaimsObject>(config
      * through the entire logged-out window and on into the next user's session, and a role guard evaluated in that
      * window passes on the PREVIOUS user's roles.
      */
-    let obs = dbxFirebaseAuthService.currentIdTokenResult$.pipe(map((x) => (x != null ? claimsService.toRoles(x.claims as AuthClaims<T>) : new Set<AuthRole>())));
+    let obs = dbxFirebaseAuthService.currentIdTokenResult$.pipe(map((x) => (x == null ? new Set<AuthRole>() : claimsService.toRoles(x.claims as AuthClaims<T>))));
 
     if (addAuthUserState) {
       obs = obs.pipe(switchMap((authRoleSet: AuthRoleSet) => dbxFirebaseAuthService.authUserState$.pipe(map((userState) => addToSetCopy(authRoleSet, [userState])))));

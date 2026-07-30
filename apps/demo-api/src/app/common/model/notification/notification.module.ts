@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AbstractAppNotificationModule, BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationTaskService, NotificationTemplateService, appNotificationModuleMetadata } from '@dereekb/firebase-server/model';
+import { AbstractAppNotificationModule, BASE_NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN, NOTIFICATION_INIT_SERVER_ACTIONS_CONTEXT_CONFIG_TOKEN, NOTIFICATION_TEMPLATE_SERVICE_CONFIGS_ARRAY_TOKEN, NotificationSendService, NotificationTaskService, NotificationTemplateService, type NotificationUserHealthCheckServerConfig, appNotificationModuleMetadata } from '@dereekb/firebase-server/model';
+import { DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES } from 'demo-firebase';
 import { DemoFirebaseServerActionsContextWithNotificationServices } from './notification.action.context';
 import { DemoFirebaseServerActionsContext } from '../../firebase/action.context';
 import { demoNotificationTemplateServiceConfigsArrayFactory } from './notification.factory';
@@ -8,8 +9,20 @@ import { demoNotificationSendServiceFactory } from './notification.send.service'
 import { demoNotificationInitServerActionsContextConfig } from './notification.init';
 import { demoNotificationTaskServiceFactory } from './notification.task.service';
 
+/**
+ * The demo's delivery health check windows.
+ *
+ * Both values come from demo-firebase because the demo app configures its client with the same two
+ * constants — the server enforces these windows and the client counts down to them, so they cannot be
+ * allowed to drift apart.
+ */
+export const DEMO_NOTIFICATION_USER_HEALTH_CHECK_CONFIG: NotificationUserHealthCheckServerConfig = {
+  probeThrottleMinutes: DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES,
+  runThrottleMinutes: DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES
+};
+
 // eslint-disable-next-line @typescript-eslint/max-params
-export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (context: DemoFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService) => ({ ...context, notificationTemplateService, notificationSendService, notificationTaskService });
+export const demoFirebaseServerActionsContextWithNotificationServicesFactory = (context: DemoFirebaseServerActionsContext, notificationTemplateService: NotificationTemplateService, notificationSendService: NotificationSendService, notificationTaskService: NotificationTaskService) => ({ ...context, notificationTemplateService, notificationSendService, notificationTaskService, notificationUserHealthCheckConfig: DEMO_NOTIFICATION_USER_HEALTH_CHECK_CONFIG });
 
 /**
  * Dependencies for the NotificationModule

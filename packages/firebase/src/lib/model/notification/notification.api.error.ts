@@ -49,3 +49,14 @@ export const NOTIFICATION_USER_BLOCKED_FROM_BEING_ADD_TO_RECIPIENTS_ERROR_CODE =
  * Thrown when attempting to update a recipient config that is locked by the user.
  */
 export const NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED_ERROR_CODE = 'NOTIFICATION_USER_LOCKED_CONFIG_FROM_BEING_UPDATED';
+
+/**
+ * Thrown when a NotificationUser health check is run again before its throttle window has passed.
+ */
+export const NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE = 'NOTIFICATION_USER_HEALTH_CHECK_THROTTLED';
+
+/**
+ * Thrown when a NotificationUser health check test message is dispatched again before its throttle
+ * window has passed. Tracked separately from the run throttle, since a probe sends a real message.
+ */
+export const NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED_ERROR_CODE = 'NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED';

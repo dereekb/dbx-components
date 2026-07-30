@@ -103,7 +103,7 @@ import {
 } from '@dereekb/firebase';
 import { assertSnapshotData, type FirebaseServerActionsContext, type FirebaseServerAuthServiceRef } from '@dereekb/firebase-server';
 import { type TransformAndValidateFunctionResult } from '@dereekb/model';
-import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent, mapIdentityFunction, type Building } from '@dereekb/util';
+import { UNSET_INDEX_NUMBER, batch, computeNextFreeIndexOnSortedValuesFunction, filterMaybeArrayValues, makeValuesGroupMap, performAsyncTasks, readIndexNumber, type Maybe, makeModelMap, removeValuesAtIndexesFromArrayCopy, takeFront, areEqualPOJOValues, type EmailAddress, type E164PhoneNumber, asArray, dateOrMillisecondsToDate, asPromise, filterOnlyUndefinedValues, iterablesAreSetEquivalent, mapIdentityFunction, type Building, type Minutes } from '@dereekb/util';
 import { type InjectionToken } from '@nestjs/common';
 import { addHours, addMinutes, addSeconds, hoursToMilliseconds, isFuture } from 'date-fns';
 import { type NotificationTemplateServiceInstance, type NotificationTemplateServiceRef } from './notification.config.service';
@@ -136,10 +136,43 @@ export const NOTIFICATION_SERVER_ACTION_CONTEXT_TOKEN: InjectionToken = 'NOTIFIC
 export interface BaseNotificationServerActionsContext extends FirebaseServerActionsContext, NotificationFirestoreCollections, FirebaseServerAuthServiceRef, FirestoreContextReference {}
 
 /**
+ * App-level tuning for the NotificationUser delivery health check.
+ *
+ * Both windows are enforced by the server and counted down by the client, so an app that overrides one
+ * must give the SAME value to its client (see the dbx-firebase health check config). Declaring the value
+ * once in a package both sides import is the way to keep them from drifting — otherwise the UI will
+ * offer a check or a test message that the server then rejects.
+ */
+export interface NotificationUserHealthCheckServerConfig {
+  /**
+   * How long a user must wait between test messages on a single delivery method.
+   *
+   * Defaults to {@link DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES}.
+   */
+  readonly probeThrottleMinutes?: Maybe<Minutes>;
+  /**
+   * How long a user must wait between health check runs.
+   *
+   * Defaults to {@link DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES}.
+   */
+  readonly runThrottleMinutes?: Maybe<Minutes>;
+}
+
+/**
+ * Reference to a {@link NotificationUserHealthCheckServerConfig}.
+ */
+export interface NotificationUserHealthCheckServerConfigRef {
+  /**
+   * Tuning for the delivery health check. Every field falls back to the library default when absent.
+   */
+  readonly notificationUserHealthCheckConfig?: Maybe<NotificationUserHealthCheckServerConfig>;
+}
+
+/**
  * Full context for notification server actions, extending the base with template resolution,
  * send channel orchestration, task dispatch, and expedite services.
  */
-export interface NotificationServerActionsContext extends BaseNotificationServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, NotificationTaskServiceRef {}
+export interface NotificationServerActionsContext extends BaseNotificationServerActionsContext, AppNotificationTemplateTypeInfoRecordServiceRef, NotificationTemplateServiceRef, NotificationSendServiceRef, NotificationTaskServiceRef, NotificationUserHealthCheckServerConfigRef {}
 
 /**
  * Abstract service class defining all server-side notification CRUD and delivery actions.

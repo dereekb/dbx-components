@@ -217,10 +217,18 @@ export const FIREBASE_MODELS: readonly FirebaseModel[] = [
         tsType: 'Maybe<NeedsSyncBoolean>',
         optional: true,
         description: 'Whether one or more configs need to be synced to their corresponding NotificationBox recipients.'
+      },
+      {
+        name: 'hc',
+        longName: 'healthCheck',
+        converter: 'optionalFirestoreNotificationHealthCheck',
+        tsType: 'Maybe<NotificationHealthCheck>',
+        optional: true,
+        description: 'The result of the most recent notification delivery health check run for this user.'
       }
     ],
     enums: [],
-    detectionHints: ['b', 'x', 'dc', 'gc', 'bc', 'ns'],
+    detectionHints: ['b', 'x', 'dc', 'gc', 'bc', 'ns', 'hc'],
     description: 'A global notification user profile that tracks notification preferences and box subscriptions.',
     modelGroup: 'Notification',
     collectionKind: 'root',

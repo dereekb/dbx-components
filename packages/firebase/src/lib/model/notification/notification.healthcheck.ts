@@ -13,8 +13,9 @@
  * checks the library performs itself, while apps and delivery providers are free to emit their own
  * codes for provider-specific findings (e.g. an address on a Mailgun suppression list).
  */
-import { type Maybe } from '@dereekb/util';
-import { firestoreDate, firestoreEnum, firestoreObjectArray, firestoreString, firestoreSubObject, optionalFirestoreField, optionalFirestoreString } from '../../common';
+import { filterMaybeArrayValues, type Maybe, type Minutes } from '@dereekb/util';
+import { addMinutes } from 'date-fns';
+import { firestoreDate, firestoreEnum, firestoreObjectArray, firestoreString, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreField, optionalFirestoreString } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
 
 /**
@@ -46,6 +47,16 @@ export enum NotificationDeliveryMethod {
  * All delivery methods, in the order a report should present them.
  */
 export const ALL_NOTIFICATION_DELIVERY_METHODS: NotificationDeliveryMethod[] = [NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.PUSH, NotificationDeliveryMethod.NOTIFICATION_SUMMARY];
+
+/**
+ * A value held per delivery method, for the methods it is known for.
+ *
+ * Partial because a health check only covers the methods it was asked about, so anything derived
+ * from one covers those methods only.
+ *
+ * @template T - The per-method value.
+ */
+export type NotificationDeliveryMethodMap<T> = Partial<Record<NotificationDeliveryMethod, T>>;
 
 /**
  * The outcome of a health check, or of one individual finding within it.
@@ -347,6 +358,7 @@ export function isPendingNotificationHealthCheckProbe(probe: Maybe<NotificationH
  * - `tg` — resolved delivery target
  * - `is` — findings
  * - `pr` — delivery probe
+ * - `pb` — whether a test message can be dispatched through this method
  */
 export interface NotificationDeliveryHealthCheckResult {
   /**
@@ -370,6 +382,14 @@ export interface NotificationDeliveryHealthCheckResult {
    * The probe dispatched through this method, if any. May still be pending.
    */
   pr?: Maybe<NotificationHealthCheckProbe>;
+  /**
+   * Whether a test message can actually be dispatched through this method — the provider exposes a
+   * probe and a delivery target was resolved to send it to.
+   *
+   * Whether probing is supported is only knowable on the server, so it is reported here for a client
+   * that offers a "send a test message" action: absent means no, and the action should not be offered.
+   */
+  pb?: Maybe<boolean>;
 }
 
 /**
@@ -457,6 +477,123 @@ export function rollupNotificationHealthCheckResultStatus(healthCheck: Pick<Noti
   return rollupNotificationHealthCheckStatus([...healthCheck.is.map((x) => x.s), ...healthCheck.m.map((x) => x.s)]);
 }
 
+// MARK: Throttle
+/**
+ * How long a user must wait between health check runs.
+ *
+ * A run calls out to each delivery provider and can dispatch real messages, so it is throttled against
+ * the check stored on the NotificationUser rather than being runnable on demand.
+ */
+export const DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES: Minutes = 2;
+
+/**
+ * Input for {@link notificationUserHealthCheckNextRunAt}.
+ */
+export interface NotificationUserHealthCheckNextRunAtInput {
+  /**
+   * The check currently stored on the NotificationUser, if any.
+   */
+  readonly healthCheck?: Maybe<Pick<NotificationHealthCheck, 'at'>>;
+  /**
+   * Overrides {@link DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES}.
+   */
+  readonly throttleMinutes?: Maybe<Minutes>;
+}
+
+/**
+ * The earliest time another health check may be run for a NotificationUser.
+ *
+ * Both the server (which enforces the throttle) and the client (which disables the action until then)
+ * derive the window from the same stored check, so the UI cannot offer a run the server would reject.
+ *
+ * @param input - The stored check, and optionally a throttle window to use instead of the default.
+ * @returns The time the next run is allowed, or undefined when no check has been run yet.
+ */
+export function notificationUserHealthCheckNextRunAt(input: NotificationUserHealthCheckNextRunAtInput): Maybe<Date> {
+  const { healthCheck, throttleMinutes } = input;
+  return healthCheck?.at == null ? undefined : addMinutes(healthCheck.at, throttleMinutes ?? DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES);
+}
+
+/**
+ * How long a user must wait between test messages on a single delivery method.
+ *
+ * Throttled separately from — and more strictly than — a plain run: a probe delivers a real message to
+ * the user, while a run only reads configuration and provider state. Running the check must therefore
+ * not consume the test message allowance, and vice versa.
+ *
+ * Only the default. An app that wants a different cadence declares its own value and passes it to both
+ * the server (which enforces the window) and the client (which counts down to it) — see
+ * {@link NotificationUserHealthCheckNextProbeAtInput.throttleMinutes}. Both sides must use the same
+ * value, or the UI will offer a test message the server rejects.
+ */
+export const DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES: Minutes = 5;
+
+/**
+ * Input for {@link notificationUserHealthCheckNextProbeAt}.
+ */
+export interface NotificationUserHealthCheckNextProbeAtInput {
+  /**
+   * The check currently stored on the NotificationUser, if any.
+   */
+  readonly healthCheck?: Maybe<Pick<NotificationHealthCheck, 'm'>>;
+  /**
+   * The delivery methods the window is being computed for.
+   *
+   * Absent or empty considers every method that was checked, which is the window an unscoped test
+   * message run answers to.
+   */
+  readonly methods?: Maybe<NotificationDeliveryMethod[]>;
+  /**
+   * Overrides {@link DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES}.
+   */
+  readonly throttleMinutes?: Maybe<Minutes>;
+}
+
+/**
+ * The earliest time another test message may be dispatched for a NotificationUser.
+ *
+ * The window is per delivery method: each method has its own test message action, so a test email must
+ * not hold the test text message off. Pass the methods being probed to get their window — the most
+ * recent probe among just those methods — and pass none for the window across every checked method.
+ *
+ * Both the server (which enforces the window) and the client (which disables the action until then)
+ * derive it from the same stored check, so the UI cannot offer a test message the server would reject.
+ *
+ * @param input - The stored check, the methods being probed, and optionally a throttle window to use
+ *   instead of the default.
+ * @returns The time the next probe is allowed, or undefined when none of those methods has ever
+ *   dispatched one.
+ */
+export function notificationUserHealthCheckNextProbeAt(input: NotificationUserHealthCheckNextProbeAtInput): Maybe<Date> {
+  const { healthCheck, methods, throttleMinutes } = input;
+  const scopedMethods = methods?.length ? new Set(methods) : undefined;
+  const scopedResults = scopedMethods ? (healthCheck?.m ?? []).filter((x) => scopedMethods.has(x.me)) : (healthCheck?.m ?? []);
+  const probeTimes = filterMaybeArrayValues(scopedResults.map((x) => x.pr?.at)).map((x) => x.getTime());
+  const latestProbeAt = probeTimes.length > 0 ? new Date(Math.max(...probeTimes)) : undefined;
+  return latestProbeAt == null ? undefined : addMinutes(latestProbeAt, throttleMinutes ?? DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES);
+}
+
+/**
+ * The earliest time another test message may be dispatched through each of a check's delivery methods.
+ *
+ * The per-method form of {@link notificationUserHealthCheckNextProbeAt}, for a UI that renders one test
+ * message action per method and needs every method's window at once.
+ *
+ * @param input - The stored check, and optionally a throttle window to use instead of the default.
+ * @returns The time the next probe is allowed on each checked method. A method that has never
+ *   dispatched a probe maps to undefined.
+ */
+export function notificationUserHealthCheckNextProbeAtByMethod(input: Omit<NotificationUserHealthCheckNextProbeAtInput, 'methods'>): NotificationDeliveryMethodMap<Maybe<Date>> {
+  const { healthCheck, throttleMinutes } = input;
+  const nextProbeAtByMethod: NotificationDeliveryMethodMap<Maybe<Date>> = {};
+
+  (healthCheck?.m ?? []).forEach((methodResult) => {
+    nextProbeAtByMethod[methodResult.me] = notificationUserHealthCheckNextProbeAt({ healthCheck, methods: [methodResult.me], throttleMinutes });
+  });
+
+  return nextProbeAtByMethod;
+}
+
 // MARK: Firestore
 /**
  * Firestore sub-object converter for {@link NotificationHealthCheckIssue}.
@@ -508,7 +645,8 @@ export const firestoreNotificationDeliveryHealthCheckResult = /* @__PURE__ */ fi
       pr: optionalFirestoreField<NotificationHealthCheckProbe, NotificationHealthCheckProbeData>({
         transformFromData: (x) => notificationHealthCheckProbeMapFunctions.from(x),
         transformToData: (x) => notificationHealthCheckProbeMapFunctions.to(x)
-      })
+      }),
+      pb: optionalFirestoreBoolean()
     }
   }
 });

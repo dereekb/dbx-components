@@ -1,4 +1,7 @@
+import { addMinutes } from 'date-fns';
 import {
+  DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES,
+  DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES,
   type NotificationDeliveryHealthCheckResult,
   NotificationDeliveryMethod,
   type NotificationHealthCheck,
@@ -11,6 +14,9 @@ import {
   isProblemNotificationHealthCheckStatus,
   notificationDeliveryHealthCheckResultForMethod,
   notificationHealthCheckIssue,
+  notificationUserHealthCheckNextProbeAt,
+  notificationUserHealthCheckNextProbeAtByMethod,
+  notificationUserHealthCheckNextRunAt,
   rollupNotificationDeliveryHealthCheckResultStatus,
   rollupNotificationHealthCheckResultStatus,
   rollupNotificationHealthCheckStatus
@@ -110,7 +116,8 @@ function makeTestHealthCheck(): NotificationHealthCheck {
     s: NotificationHealthCheckStatus.ERROR,
     tg: 'user@example.com',
     is: [notificationHealthCheckIssue('mailgunSuppressedBounce', NotificationHealthCheckStatus.ERROR, { message: 'bounced', fix: 'contact support', data: { code: 550 } })],
-    pr: { id: 'probe-1', at: new Date('2026-01-01T00:00:00.000Z'), s: NotificationHealthCheckStatus.PENDING, tg: 'user@example.com', d: 'sent' }
+    pr: { id: 'probe-1', at: new Date('2026-01-01T00:00:00.000Z'), s: NotificationHealthCheckStatus.PENDING, tg: 'user@example.com', d: 'sent' },
+    pb: true
   };
 
   const textResult: NotificationDeliveryHealthCheckResult = {
@@ -197,6 +204,7 @@ describe('firestoreNotificationHealthCheck', () => {
     expect(email.pr?.id).toBe('probe-1');
     expect(email.pr?.s).toBe(NotificationHealthCheckStatus.PENDING);
     expect(email.pr?.at).toBeSameSecondAs(healthCheck.m[0].pr?.at as Date);
+    expect(email.pb).toBe(true);
   });
 
   it('should round-trip a method result that has no probe or target', () => {
@@ -209,6 +217,108 @@ describe('firestoreNotificationHealthCheck', () => {
     expect(text.me).toBe(NotificationDeliveryMethod.TEXT);
     expect(text.tg).toBeUndefined();
     expect(text.pr).toBeUndefined();
+    expect(text.pb).toBeUndefined();
     expect(text.is.length).toBe(1);
+  });
+});
+
+// MARK: Throttle
+const PROBE_AT_EMAIL = new Date('2026-01-01T00:00:00.000Z');
+const PROBE_AT_TEXT = new Date('2026-01-01T00:05:00.000Z');
+
+/**
+ * A check whose email and text probes were dispatched five minutes apart, with a third method that has
+ * never dispatched one.
+ */
+function makeProbedHealthCheck(): Pick<NotificationHealthCheck, 'm'> {
+  return {
+    m: [
+      { me: NotificationDeliveryMethod.EMAIL, s: NotificationHealthCheckStatus.PENDING, is: [], pr: { id: 'probe-email', at: PROBE_AT_EMAIL, s: NotificationHealthCheckStatus.PENDING, tg: 'user@example.com' }, pb: true },
+      { me: NotificationDeliveryMethod.TEXT, s: NotificationHealthCheckStatus.PENDING, is: [], pr: { id: 'probe-text', at: PROBE_AT_TEXT, s: NotificationHealthCheckStatus.PENDING, tg: '+12088888888' }, pb: true },
+      { me: NotificationDeliveryMethod.NOTIFICATION_SUMMARY, s: NotificationHealthCheckStatus.OK, is: [] }
+    ]
+  };
+}
+
+describe('notificationUserHealthCheckNextRunAt()', () => {
+  it('should return undefined when no check has been run', () => {
+    expect(notificationUserHealthCheckNextRunAt({})).toBeUndefined();
+    expect(notificationUserHealthCheckNextRunAt({ healthCheck: undefined })).toBeUndefined();
+  });
+
+  it('should add the default throttle window to the stored check', () => {
+    const at = new Date('2026-01-01T00:00:00.000Z');
+    expect(notificationUserHealthCheckNextRunAt({ healthCheck: { at } })).toBeSameSecondAs(addMinutes(at, DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES));
+  });
+
+  it('should apply a throttle override', () => {
+    const at = new Date('2026-01-01T00:00:00.000Z');
+    expect(notificationUserHealthCheckNextRunAt({ healthCheck: { at }, throttleMinutes: 30 })).toBeSameSecondAs(addMinutes(at, 30));
+  });
+});
+
+describe('notificationUserHealthCheckNextProbeAt()', () => {
+  it('should return undefined when no probe has ever been dispatched', () => {
+    expect(notificationUserHealthCheckNextProbeAt({})).toBeUndefined();
+    expect(notificationUserHealthCheckNextProbeAt({ healthCheck: { m: [{ me: NotificationDeliveryMethod.EMAIL, s: NotificationHealthCheckStatus.OK, is: [] }] } })).toBeUndefined();
+  });
+
+  it('should use the latest probe across every method when no methods are given', () => {
+    const healthCheck = makeProbedHealthCheck();
+
+    expect(notificationUserHealthCheckNextProbeAt({ healthCheck })).toBeSameSecondAs(addMinutes(PROBE_AT_TEXT, DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES));
+    // an empty list is the same as no list at all
+    expect(notificationUserHealthCheckNextProbeAt({ healthCheck, methods: [] })).toBeSameSecondAs(addMinutes(PROBE_AT_TEXT, DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES));
+  });
+
+  it('should scope the window to the requested method', () => {
+    const healthCheck = makeProbedHealthCheck();
+
+    // the later text probe must not push the email window out — each method has its own action
+    expect(notificationUserHealthCheckNextProbeAt({ healthCheck, methods: [NotificationDeliveryMethod.EMAIL] })).toBeSameSecondAs(addMinutes(PROBE_AT_EMAIL, DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES));
+    expect(notificationUserHealthCheckNextProbeAt({ healthCheck, methods: [NotificationDeliveryMethod.TEXT] })).toBeSameSecondAs(addMinutes(PROBE_AT_TEXT, DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES));
+  });
+
+  it('should use the latest probe among several requested methods', () => {
+    const healthCheck = makeProbedHealthCheck();
+    const result = notificationUserHealthCheckNextProbeAt({ healthCheck, methods: [NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT] });
+
+    expect(result).toBeSameSecondAs(addMinutes(PROBE_AT_TEXT, DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES));
+  });
+
+  it('should return undefined for a method that has never dispatched a probe', () => {
+    const healthCheck = makeProbedHealthCheck();
+
+    expect(notificationUserHealthCheckNextProbeAt({ healthCheck, methods: [NotificationDeliveryMethod.NOTIFICATION_SUMMARY] })).toBeUndefined();
+    // a method that was never checked at all
+    expect(notificationUserHealthCheckNextProbeAt({ healthCheck, methods: [NotificationDeliveryMethod.PUSH] })).toBeUndefined();
+  });
+
+  it('should apply a throttle override', () => {
+    const healthCheck = makeProbedHealthCheck();
+    const result = notificationUserHealthCheckNextProbeAt({ healthCheck, methods: [NotificationDeliveryMethod.EMAIL], throttleMinutes: 1 });
+
+    expect(result).toBeSameSecondAs(addMinutes(PROBE_AT_EMAIL, 1));
+  });
+});
+
+describe('notificationUserHealthCheckNextProbeAtByMethod()', () => {
+  it('should return each checked method with its own window', () => {
+    const result = notificationUserHealthCheckNextProbeAtByMethod({ healthCheck: makeProbedHealthCheck() });
+
+    expect(result[NotificationDeliveryMethod.EMAIL]).toBeSameSecondAs(addMinutes(PROBE_AT_EMAIL, DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES));
+    expect(result[NotificationDeliveryMethod.TEXT]).toBeSameSecondAs(addMinutes(PROBE_AT_TEXT, DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES));
+    // checked, but never probed
+    expect(result[NotificationDeliveryMethod.NOTIFICATION_SUMMARY]).toBeUndefined();
+  });
+
+  it('should not include a method the check does not cover', () => {
+    const result = notificationUserHealthCheckNextProbeAtByMethod({ healthCheck: makeProbedHealthCheck() });
+
+    expect(NotificationDeliveryMethod.PUSH in result).toBe(false);
+  });
+
+  it('should return an empty map for a missing health check', () => {
+    expect(notificationUserHealthCheckNextProbeAtByMethod({})).toEqual({});
   });
 });

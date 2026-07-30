@@ -16,7 +16,7 @@
  * probe sends a real message and resolves its outcome from the Events API on a later run.
  */
 import { type EmailAddress, type Maybe, type Minutes, type PromiseOrValue } from '@dereekb/util';
-import { type FirebaseAuthUserId, type NotificationHealthCheckIssue, type NotificationHealthCheckProbe, NotificationHealthCheckStatus, notificationHealthCheckIssue, KnownNotificationHealthCheckIssueCode } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type NotificationHealthCheckIssue, type NotificationHealthCheckProbe, NotificationHealthCheckStatus, notificationHealthCheckIssue, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode } from '@dereekb/firebase';
 import { type MailgunDomainEvent, type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRequest, MailgunEventName, MailgunEventSeverity, bareMailgunMessageId, mailgunDomainEventDate, mailgunDomainEventFailureReason, mailgunDomainState, mailgunEventsForMessageId, mailgunRecentEventsForRecipient, mailgunSuppressionsForRecipient, mailgunValidateEmail } from '@dereekb/nestjs/mailgun';
 import { type NotificationEmailSendServiceHealthCheckService, type NotificationSendServiceHealthCheckRequest, type NotificationSendServiceHealthCheckResponse } from '../notification/notification.healthcheck.service';
 
@@ -28,54 +28,8 @@ import { type NotificationEmailSendServiceHealthCheckService, type NotificationS
  */
 export const DEFAULT_MAILGUN_HEALTH_CHECK_PROBE_TIMEOUT_MINUTES = 15;
 
-/**
- * Issue codes emitted by the Mailgun email health check.
- *
- * These are Mailgun-specific and sit alongside the library's own
- * {@link KnownNotificationHealthCheckIssueCode} values.
- */
-export enum MailgunNotificationHealthCheckIssueCode {
-  /**
-   * The address is on the domain's bounce suppression list, so Mailgun drops every message to it.
-   */
-  SUPPRESSED_BOUNCE = 'mailgunSuppressedBounce',
-  /**
-   * The address is on the domain's spam complaint list, so Mailgun drops every message to it.
-   */
-  SUPPRESSED_COMPLAINT = 'mailgunSuppressedComplaint',
-  /**
-   * The address is on the domain's unsubscribe list.
-   */
-  SUPPRESSED_UNSUBSCRIBE = 'mailgunSuppressedUnsubscribe',
-  /**
-   * A recent message to the address failed or was rejected.
-   */
-  RECENT_DELIVERY_FAILURE = 'mailgunRecentDeliveryFailure',
-  /**
-   * A recent message to the address was delivered successfully.
-   */
-  RECENT_DELIVERY_SUCCESS = 'mailgunRecentDeliverySuccess',
-  /**
-   * No email activity was recorded for the address in the window that was inspected.
-   */
-  NO_RECENT_ACTIVITY = 'mailgunNoRecentActivity',
-  /**
-   * The sending domain is not active, which blocks delivery for everyone.
-   */
-  DOMAIN_NOT_ACTIVE = 'mailgunDomainNotActive',
-  /**
-   * Address validation says the address cannot receive mail.
-   */
-  ADDRESS_UNDELIVERABLE = 'mailgunAddressUndeliverable',
-  /**
-   * The address belongs to a disposable email provider.
-   */
-  ADDRESS_DISPOSABLE = 'mailgunAddressDisposable',
-  /**
-   * A probe was requested but no probe message builder is configured.
-   */
-  PROBE_NOT_CONFIGURED = 'mailgunProbeNotConfigured'
-}
+// The codes this check emits live in @dereekb/firebase as MailgunNotificationHealthCheckIssueCode, so a
+// browser can ship a presentation for each one. Import them from there rather than from here.
 
 /**
  * Input for building the test email dispatched as a delivery probe.
@@ -374,7 +328,7 @@ async function resolvePendingProbe(input: ResolveProbeInput, pendingProbe: Notif
     };
   } else {
     result = {
-      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We sent a test email and are still waiting to hear whether it arrived.', fix: 'Re-run this check in a minute to see the result.', data: { dispatchedAt: pendingProbe.at } })],
+      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We sent a test email and are still waiting to hear whether it arrived.', fix: 'Re-run this check in a couple of minutes to see the result.', data: { dispatchedAt: pendingProbe.at } })],
       probe: pendingProbe
     };
   }
@@ -407,7 +361,7 @@ async function dispatchProbe(input: ResolveProbeInput): Promise<ResolveProbeResu
 
     result = messageId
       ? {
-          issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We just sent a test email to this address.', fix: 'Re-run this check in a minute to see whether it arrived.', data: { dispatchedAt: now } })],
+          issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We just sent a test email to this address.', fix: 'Re-run this check in a couple of minutes to see whether it arrived.', data: { dispatchedAt: now } })],
           probe: {
             id: bareMailgunMessageId(messageId),
             at: now,

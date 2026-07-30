@@ -3,6 +3,8 @@ import { AppNotificationTemplateTypeInfoRecordService } from '@dereekb/firebase'
 import { DbxFirebaseNotificationTemplateService } from './service/notification.template.service';
 import { DbxFirebaseNotificationItemWidgetService } from './service/notificationitem.widget.service';
 import { DbxFirebaseNotificationItemDefaultViewComponent } from './component/notificationitem.view.default.component';
+import { DbxFirebaseNotificationHealthCheckConfig, DbxFirebaseNotificationHealthCheckPresentationServiceConfig } from './service/healthcheck.presentation';
+import { type Maybe } from '@dereekb/util';
 import { type DbxWidgetEntry } from '@dereekb/dbx-web';
 
 /**
@@ -18,6 +20,22 @@ export interface ProvideDbxFirebaseNotificationsConfig {
    * If false, will not register anything.
    */
   readonly defaultNotificationItemWidget?: DbxWidgetEntry['componentClass'] | false;
+  /**
+   * App-specific presentation entries for notification health check issue codes.
+   *
+   * Only needed when the app or one of its delivery providers emits issue codes the library does not
+   * know about. The health check UI works without this — an unregistered code falls back to a
+   * presentation derived from the finding's own status.
+   */
+  readonly healthCheckPresentation?: Maybe<DbxFirebaseNotificationHealthCheckPresentationServiceConfig>;
+  /**
+   * Tuning for the notification health check's throttle windows.
+   *
+   * Only needed when the app configured different windows on its server. The values are enforced there
+   * and merely counted down here, so they must be the same on both sides — pass the app's own shared
+   * constants rather than repeating the numbers.
+   */
+  readonly healthCheck?: Maybe<DbxFirebaseNotificationHealthCheckConfig>;
 }
 
 /**
@@ -27,7 +45,7 @@ export interface ProvideDbxFirebaseNotificationsConfig {
  * @returns EnvironmentProviders.
  */
 export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotificationsConfig): EnvironmentProviders {
-  const { appNotificationTemplateTypeInfoRecordService } = config;
+  const { appNotificationTemplateTypeInfoRecordService, healthCheckPresentation, healthCheck } = config;
 
   const providers: (EnvironmentProviders | Provider)[] = [
     {
@@ -56,6 +74,20 @@ export function provideDbxFirebaseNotifications(config: ProvideDbxFirebaseNotifi
       }
     })
   ];
+
+  if (healthCheckPresentation) {
+    providers.push({
+      provide: DbxFirebaseNotificationHealthCheckPresentationServiceConfig,
+      useValue: healthCheckPresentation
+    });
+  }
+
+  if (healthCheck) {
+    providers.push({
+      provide: DbxFirebaseNotificationHealthCheckConfig,
+      useValue: healthCheck
+    });
+  }
 
   return makeEnvironmentProviders(providers);
 }

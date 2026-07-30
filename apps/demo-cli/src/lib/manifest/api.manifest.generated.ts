@@ -244,11 +244,28 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'sendProbe', typeText: 'Maybe<boolean>', description: 'Dispatch a real test message through each checked method that supports probing.\n\nDefaults to false. Delivery confirmation is asynchronous, so a dispatched probe is usually still\npending when the check returns and is resolved by a later run.' },
       { name: 'verifyPendingProbesOnly', typeText: 'Maybe<boolean>', description: 'Only resolve probes left pending by the previous check, skipping the configuration, history, and\nprovider diagnostics.\n\nDefaults to false. Used for cheaply polling an in-flight probe.' },
       { name: 'notificationTemplateType', typeText: 'Maybe<NotificationTemplateType>', description: "The notification template type to evaluate per-template configuration against.\n\nDefaults to the app's default template type." },
-      { name: 'skipSubscriptionChecks', typeText: 'Maybe<boolean>', description: "Skip inspecting the user's notification box subscriptions.\n\nDefaults to false. Skipping avoids a document read per subscription, at the cost of not detecting\na subscription that is broken, still being set up, or out of sync with the user's settings." }
+      { name: 'skipSubscriptionChecks', typeText: 'Maybe<boolean>', description: "Skip inspecting the user's notification box subscriptions.\n\nDefaults to false. Skipping avoids a document read per subscription, at the cost of not detecting\na subscription that is broken, still being set up, or out of sync with the user's settings." },
+      {
+        name: 'force',
+        typeText: 'Maybe<boolean>',
+        description:
+          'Ignore the run and test message throttle windows.\n\nPRIVILEGED — admin only. The windows exist to stop a user from repeatedly hammering the delivery\nproviders and their own inbox, so this must never be honoured for an ordinary caller. The action\nitself cannot tell who is calling, so the API layer that can is responsible for clearing this\nbefore the params reach it:\n\n```ts\nconst params = isAdminInRequest(request) ? data : { ...data, force: undefined };\n```\n\nDefaults to false.'
+      },
+      {
+        name: 'returnFullHealthCheck',
+        typeText: 'Maybe<boolean>',
+        description:
+          "Return the complete health check rather than just the part the call was about.\n\nA `sendProbe` call is about one delivery method's test message, so by default its result carries only\nthe methods it actually probed — the caller already has the rest, and a client rendering the report\nreads it from the {@link NotificationUser} document instead. Set this to get the whole check back.\n\nDefaults to false. Has no effect on a plain run, which always returns everything, and never affects\nwhat is persisted: the stored check is always the complete picture."
+      }
     ],
     resultTypeDescription: 'The result of a `healthCheck` invocation.',
     resultFields: [
-      { name: 'healthCheck', typeText: 'NotificationHealthCheck', description: "The health check that was produced. Also persisted to the {@link NotificationUser}'s `hc` field." },
+      {
+        name: 'healthCheck',
+        typeText: 'NotificationHealthCheck',
+        description:
+          "The health check that was produced.\n\nThe COMPLETE check is always persisted to the {@link NotificationUser}'s `hc` field. What comes back\nhere can be narrower: a `sendProbe` call is about one delivery method's test message, so unless\n`returnFullHealthCheck` was set its result carries only the methods that were actually probed, with\n`s` rolled up over just those and the account-wide findings left out. Read the document for the\nwhole picture — see {@link NotificationUserHealthCheckParams.returnFullHealthCheck}."
+      },
       { name: 'probesDispatched', typeText: 'number', description: 'The number of probes dispatched by this run.' },
       { name: 'probesResolved', typeText: 'number', description: 'The number of previously-pending probes this run resolved to a final status.' }
     ]

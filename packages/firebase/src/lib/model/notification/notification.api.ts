@@ -184,6 +184,32 @@ export interface NotificationUserHealthCheckParams extends TargetModelParams {
    * a subscription that is broken, still being set up, or out of sync with the user's settings.
    */
   readonly skipSubscriptionChecks?: Maybe<boolean>;
+  /**
+   * Ignore the run and test message throttle windows.
+   *
+   * PRIVILEGED — admin only. The windows exist to stop a user from repeatedly hammering the delivery
+   * providers and their own inbox, so this must never be honoured for an ordinary caller. The action
+   * itself cannot tell who is calling, so the API layer that can is responsible for clearing this
+   * before the params reach it:
+   *
+   * ```ts
+   * const params = isAdminInRequest(request) ? data : { ...data, force: undefined };
+   * ```
+   *
+   * Defaults to false.
+   */
+  readonly force?: Maybe<boolean>;
+  /**
+   * Return the complete health check rather than just the part the call was about.
+   *
+   * A `sendProbe` call is about one delivery method's test message, so by default its result carries only
+   * the methods it actually probed — the caller already has the rest, and a client rendering the report
+   * reads it from the {@link NotificationUser} document instead. Set this to get the whole check back.
+   *
+   * Defaults to false. Has no effect on a plain run, which always returns everything, and never affects
+   * what is persisted: the stored check is always the complete picture.
+   */
+  readonly returnFullHealthCheck?: Maybe<boolean>;
 }
 
 export const notificationUserHealthCheckParamsType = targetModelParamsType.merge({
@@ -191,7 +217,9 @@ export const notificationUserHealthCheckParamsType = targetModelParamsType.merge
   'sendProbe?': clearable('boolean'),
   'verifyPendingProbesOnly?': clearable('boolean'),
   'notificationTemplateType?': clearable('string > 0'),
-  'skipSubscriptionChecks?': clearable('boolean')
+  'skipSubscriptionChecks?': clearable('boolean'),
+  'force?': clearable('boolean'),
+  'returnFullHealthCheck?': clearable('boolean')
 }) as Type<NotificationUserHealthCheckParams>;
 
 /**
@@ -199,7 +227,13 @@ export const notificationUserHealthCheckParamsType = targetModelParamsType.merge
  */
 export interface NotificationUserHealthCheckResult {
   /**
-   * The health check that was produced. Also persisted to the {@link NotificationUser}'s `hc` field.
+   * The health check that was produced.
+   *
+   * The COMPLETE check is always persisted to the {@link NotificationUser}'s `hc` field. What comes back
+   * here can be narrower: a `sendProbe` call is about one delivery method's test message, so unless
+   * `returnFullHealthCheck` was set its result carries only the methods that were actually probed, with
+   * `s` rolled up over just those and the account-wide findings left out. Read the document for the
+   * whole picture — see {@link NotificationUserHealthCheckParams.returnFullHealthCheck}.
    */
   readonly healthCheck: NotificationHealthCheck;
   /**

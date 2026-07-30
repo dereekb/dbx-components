@@ -1,5 +1,5 @@
 import { type NotificationUserHealthCheckParams, type NotificationUserHealthCheckResult, type ResyncNotificationUserParams, type ResyncNotificationUserResult, type UpdateNotificationUserParams, notificationUserHealthCheckParamsType, updateNotificationUserParamsType, resyncNotificationUserParamsType } from '@dereekb/firebase';
-import { withApiDetails } from '@dereekb/firebase-server';
+import { isAdminInRequest, withApiDetails } from '@dereekb/firebase-server';
 import { AUTH_ADMIN_ROLE } from '@dereekb/util';
 import { type DemoInvokeModelFunction, type DemoUpdateModelFunction } from '../function.context';
 
@@ -52,7 +52,12 @@ export const notificationUserHealthCheck: DemoInvokeModelFunction<NotificationUs
   fn: async (request) => {
     const { nest, auth: _auth, data } = request;
 
-    const notificationUserHealthCheck = await nest.notificationActions.notificationUserHealthCheck(data);
+    // `force` skips the throttle windows that stop a user from hammering the delivery providers and
+    // their own inbox, so it is admin-only. The action cannot see who is calling, which makes clearing
+    // it here the enforcement — not a convenience.
+    const params: NotificationUserHealthCheckParams = isAdminInRequest(request) ? data : { ...data, force: undefined };
+
+    const notificationUserHealthCheck = await nest.notificationActions.notificationUserHealthCheck(params);
     const notificationUserDocument = await nest.useModel('notificationUser', {
       request,
       key: data.key,
