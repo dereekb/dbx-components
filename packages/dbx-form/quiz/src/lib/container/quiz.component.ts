@@ -65,13 +65,10 @@ export class QuizComponent {
 
   readonly keysFilter = ['Enter', 'ArrowLeft', 'ArrowRight'];
 
-  readonly quizEffect = effect(
-    () => {
-      const quiz = this.quiz();
-      this.quizStore.setQuiz(quiz);
-    },
-    { allowSignalWrites: true }
-  );
+  readonly quizEffect = effect(() => {
+    const quiz = this.quiz();
+    this.quizStore.setQuiz(quiz);
+  });
 
   readonly quiz$ = toObservable(this.quiz);
   readonly quizTitleSignal = computed(() => this.quiz()?.titleDetails.title);

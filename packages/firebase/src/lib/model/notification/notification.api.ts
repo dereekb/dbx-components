@@ -161,14 +161,18 @@ export interface NotificationUserHealthCheckParams extends TargetModelParams {
    * Dispatch a real test message through each checked method that supports probing.
    *
    * Defaults to false. Delivery confirmation is asynchronous, so a dispatched probe is usually still
-   * pending when the check returns and is resolved by a later run.
+   * pending when the check returns and is resolved by a later {@link verifyPendingProbesOnly} run.
    */
   readonly sendProbe?: Maybe<boolean>;
   /**
    * Only resolve probes left pending by the previous check, skipping the configuration, history, and
    * provider diagnostics.
    *
-   * Defaults to false. Used for cheaply polling an in-flight probe.
+   * Defaults to false. This is the POLL that settles an in-flight test message, and it is deliberately
+   * cheap enough to be called repeatedly: it consults a provider only for a method that actually has a
+   * probe in flight, and touches nothing else. It answers to its own short window rather than the run
+   * window, and advances the stored check's `vat` rather than its `at`, so polling a test message never
+   * consumes the user's allowance for running the check itself.
    */
   readonly verifyPendingProbesOnly?: Maybe<boolean>;
   /**

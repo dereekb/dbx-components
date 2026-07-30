@@ -18,14 +18,9 @@ export class DbxTableDirective<I, C, T> {
   readonly dbxTableViewDelegate = input<Maybe<DbxTableViewDelegate<I, C, T>>>();
   readonly dbxTableDataDelegate = input<Maybe<DbxTableContextDataDelegate<I, C, T>>>();
 
-  protected readonly _setOnTableStoreEffect = effect(
-    () => {
-      this.tableStore.setInput(this.dbxTableInput());
-      this.tableStore.setViewDelegate(this.dbxTableViewDelegate());
-      this.tableStore.setDataDelegate(this.dbxTableDataDelegate());
-    },
-    {
-      allowSignalWrites: true
-    }
-  );
+  protected readonly _setOnTableStoreEffect = effect(() => {
+    this.tableStore.setInput(this.dbxTableInput());
+    this.tableStore.setViewDelegate(this.dbxTableViewDelegate());
+    this.tableStore.setDataDelegate(this.dbxTableDataDelegate());
+  });
 }

@@ -13,11 +13,14 @@
  * - the sending **domain** itself is not active
  *
  * All four are readable from Mailgun without sending anything. When that is not conclusive, an opt-in
- * probe sends a real message and resolves its outcome from the Events API on a later run.
+ * probe sends a real message and resolves its outcome from the Events API. Resolution is asynchronous —
+ * Mailgun records the outcome seconds after the send — so the probe is recorded as pending and settled
+ * by a later verification, which the client polls for automatically. Nothing here ever asks the user to
+ * come back and check for themselves.
  */
 import { type EmailAddress, type Maybe, type Minutes, type PromiseOrValue } from '@dereekb/util';
-import { type FirebaseAuthUserId, type NotificationHealthCheckIssue, type NotificationHealthCheckProbe, NotificationHealthCheckStatus, notificationHealthCheckIssue, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode } from '@dereekb/firebase';
-import { type MailgunDomainEvent, type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRequest, MailgunEventName, MailgunEventSeverity, bareMailgunMessageId, mailgunDomainEventDate, mailgunDomainEventFailureReason, mailgunDomainState, mailgunEventsForMessageId, mailgunRecentEventsForRecipient, mailgunSuppressionsForRecipient, mailgunValidateEmail } from '@dereekb/nestjs/mailgun';
+import { type FirebaseAuthUserId, type NotificationHealthCheckIssue, type NotificationHealthCheckProbe, NotificationHealthCheckStatus, notificationHealthCheckIssue, untrackableNotificationHealthCheckProbe, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode } from '@dereekb/firebase';
+import { type MailgunDomainEvent, type MailgunEmailMessageSendResult, type MailgunRecipient, type MailgunService, type MailgunTemplateEmailRequest, MailgunEventName, MailgunEventSeverity, bareMailgunMessageId, mailgunDomainEventDate, mailgunDomainEventFailureReason, mailgunDomainState, mailgunEventsForMessageId, mailgunRecentEventsForRecipient, mailgunSuppressionsForRecipient, mailgunValidateEmail } from '@dereekb/nestjs/mailgun';
 import { type NotificationEmailSendServiceHealthCheckService, type NotificationSendServiceHealthCheckRequest, type NotificationSendServiceHealthCheckResponse } from '../notification/notification.healthcheck.service';
 
 /**
@@ -328,13 +331,48 @@ async function resolvePendingProbe(input: ResolveProbeInput, pendingProbe: Notif
     };
   } else {
     result = {
-      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We sent a test email and are still waiting to hear whether it arrived.', fix: 'Re-run this check in a couple of minutes to see the result.', data: { dispatchedAt: pendingProbe.at } })],
+      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We sent a test email and are still waiting to hear whether it arrived.', fix: 'Nothing to do — the result appears here on its own as soon as our email provider reports it.', data: { dispatchedAt: pendingProbe.at } })],
       probe: pendingProbe
     };
   }
 
   return result;
 }
+
+/**
+ * Records a dispatch attempt that produced nothing to track it by.
+ *
+ * A probe is recorded all the same, with no correlation id and a status that is already settled. That
+ * matters beyond the report: the test message window is derived from the recorded probe's `at`, so an
+ * attempt that recorded nothing would leave both the server's throttle and the client's countdown with
+ * nothing to key on — the action would come back looking successful and be immediately repeatable, one
+ * provider call per click. An attempt is an attempt whether or not it can be followed up.
+ *
+ * The provider's own status distinguishes the two very different cases: a send it accepted but did not
+ * give an id for (typical of an environment with sending suppressed, where the address is probably fine
+ * and simply unverifiable), and a send it refused outright (a real failure, reported as one).
+ *
+ * @param sendResult - What the provider returned for the send.
+ * @param input - The probe target and dispatch time.
+ * @returns The finding describing the attempt, and the settled probe recording it.
+ */
+function dispatchWithoutMessageIdResult(sendResult: MailgunEmailMessageSendResult, input: Pick<ResolveProbeInput, 'target' | 'now'>): ResolveProbeResult {
+  const { target, now } = input;
+  const { status, message } = sendResult;
+  const accepted = status != null && status >= 200 && status < 300;
+  const data = { status, message };
+  const probeStatus = accepted ? NotificationHealthCheckStatus.UNKNOWN : NotificationHealthCheckStatus.ERROR;
+
+  return {
+    issues: accepted
+      ? [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.UNKNOWN, { message: 'Our email provider accepted the test email but did not give us a way to track it, so we cannot confirm whether it arrives.', fix: 'Check your inbox — and your spam or junk folder — for a test email sent just now.', data })]
+      : [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.ERROR, { message: `Our email provider refused to send the test email${failureReasonSuffix(message)}`, fix: 'Contact support with this report.', data })],
+    probe: untrackableNotificationHealthCheckProbe({ at: now, s: probeStatus, tg: target, d: accepted ? 'Sent, but not trackable' : (message ?? 'Refused by the email provider') })
+  };
+}
+
+/**
+ * Sends a new probe message and records it as pending.
 
 /**
  * Sends a new probe message and records it as pending.
@@ -361,7 +399,7 @@ async function dispatchProbe(input: ResolveProbeInput): Promise<ResolveProbeResu
 
     result = messageId
       ? {
-          issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We just sent a test email to this address.', fix: 'Re-run this check in a couple of minutes to see whether it arrived.', data: { dispatchedAt: now } })],
+          issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_PENDING, NotificationHealthCheckStatus.PENDING, { message: 'We just sent a test email to this address, and our email provider accepted it for delivery.', fix: 'Nothing to do — the result appears here on its own as soon as our email provider reports it.', data: { dispatchedAt: now, status: sendResult.status } })],
           probe: {
             id: bareMailgunMessageId(messageId),
             at: now,
@@ -369,14 +407,13 @@ async function dispatchProbe(input: ResolveProbeInput): Promise<ResolveProbeResu
             tg: target
           }
         }
-      : {
-          // the send was accepted but produced no id to correlate against, which happens when the
-          // environment suppresses actual sending
-          issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.UNKNOWN, { message: 'A test email was requested but this environment did not actually send it, so delivery could not be verified.', data: { status: sendResult.status, message: sendResult.message } })]
-        };
+      : dispatchWithoutMessageIdResult(sendResult, input);
   } catch (e) {
+    // recorded like any other attempt, so the window applies — a provider that is throwing is the last
+    // one that should be called again on the user's next click
     result = {
-      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.ERROR, { message: 'The test email could not be sent at all, which points to a problem with our email system rather than your address.', fix: 'Contact support with this report.', data: { error: `${e}` } })]
+      issues: [notificationHealthCheckIssue(KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED, NotificationHealthCheckStatus.ERROR, { message: 'The test email could not be sent at all, which points to a problem with our email system rather than your address.', fix: 'Contact support with this report.', data: { error: `${e}` } })],
+      probe: untrackableNotificationHealthCheckProbe({ at: now, s: NotificationHealthCheckStatus.ERROR, tg: target, d: 'Could not be sent' })
     };
   }
 

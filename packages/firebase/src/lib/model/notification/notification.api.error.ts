@@ -60,3 +60,10 @@ export const NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE = 'NOTIFICATION
  * window has passed. Tracked separately from the run throttle, since a probe sends a real message.
  */
 export const NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED_ERROR_CODE = 'NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED';
+
+/**
+ * Thrown when a NotificationUser health check's pending probes are verified again before its throttle
+ * window has passed. Tracked separately from the run throttle: verifying an in-flight test message is
+ * cheap and meant to be polled, so it neither answers to nor consumes the user's run allowance.
+ */
+export const NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED_ERROR_CODE = 'NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED';

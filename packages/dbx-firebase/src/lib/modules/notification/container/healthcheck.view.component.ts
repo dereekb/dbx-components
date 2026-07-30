@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { toSignal } from '@angular/core/rxjs-interop';
 import { type WorkInstance, type WorkUsingContext } from '@dereekb/rxjs';
 import { type Maybe, type Seconds } from '@dereekb/util';
-import { ALL_NOTIFICATION_DELIVERY_METHODS, type NotificationDeliveryMethod, type NotificationDeliveryMethodMap } from '@dereekb/firebase';
+import { ALL_NOTIFICATION_DELIVERY_METHODS, type NotificationDeliveryMethod, type NotificationDeliveryMethodMap, NotificationHealthCheckStatus } from '@dereekb/firebase';
 import { DbxActionButtonDirective, DbxActionDirective, DbxActionDisabledDirective, DbxActionHandlerDirective, DbxActionValueDirective } from '@dereekb/dbx-core';
 import { DbxActionErrorDirective, DbxButtonComponent, DbxContentPitDirective, DbxErrorComponent } from '@dereekb/dbx-web';
 import { DbxFirebaseNotificationUserHealthCheckStore, type DbxFirebaseNotificationUserHealthCheckRunParams } from '../store/notificationuser.healthcheck.store';
@@ -22,6 +22,28 @@ function formatSecondsRemaining(secondsRemaining: Seconds): string {
 }
 
 /**
+ * Input for composing a delivery method's test message notice.
+ */
+interface DbxFirebaseNotificationHealthCheckProbeNoticeInput {
+  /**
+   * What the method's test message is called mid-sentence, e.g. `test email`.
+   */
+  readonly noun: string;
+  /**
+   * How long is left in this method's test message window.
+   */
+  readonly secondsRemaining: Seconds;
+  /**
+   * Whether this view dispatched this method's test message just now.
+   */
+  readonly justSent: boolean;
+  /**
+   * Whether this method's test message is still awaiting an outcome.
+   */
+  readonly pending: boolean;
+}
+
+/**
  * Renders the notification delivery health check for the ancestor NotificationUserDocumentStore, and
  * the actions for re-running it.
  *
@@ -30,6 +52,11 @@ function formatSecondsRemaining(secondsRemaining: Seconds): string {
  * configuration and provider state. Sending a test message is per delivery method instead — it
  * dispatches a real message through that one method, and answers to that method's own throttle window —
  * so its action lives in that method's section rather than in a footer.
+ *
+ * A dispatched test message settles later, on the delivery provider's schedule. This view watches for
+ * that outcome itself rather than telling the user to come back and re-run the check: the store polls a
+ * cheap server-side verification while anything is in flight, and the report — read live from the
+ * document — updates the moment the result lands.
  */
 @Component({
   selector: 'dbx-firebase-notification-healthcheck-view',
@@ -43,14 +70,6 @@ function formatSecondsRemaining(secondsRemaining: Seconds): string {
         </dbx-content-pit>
       }
 
-      @if (probeNoticeSignal(); as probeNotice) {
-        <p class="dbx-hint dbx-pb2">{{ probeNotice }}</p>
-      }
-
-      @if (throttleNoticeSignal(); as throttleNotice) {
-        <p class="dbx-hint dbx-pb2">{{ throttleNotice }}</p>
-      }
-
       <div class="dbx-flex-bar">
         <!-- the action takes no input, so the bare dbxActionValue marks it value-ready on trigger -->
         <!-- dbxActionDisabled rather than the button's own disabled input, since dbxActionButton drives that from the action's state -->
@@ -58,6 +77,11 @@ function formatSecondsRemaining(secondsRemaining: Seconds): string {
           <dbx-button dbxActionButton [stroked]="true" text="Run Check" icon="refresh"></dbx-button>
           <dbx-error dbxActionError></dbx-error>
         </div>
+      </div>
+      <div>
+        @if (throttleNoticeSignal(); as throttleNotice) {
+          <div class="dbx-small dbx-hint dbx-pt2">{{ throttleNotice }}</div>
+        }
       </div>
     } @else {
       <dbx-content-pit>
@@ -87,6 +111,12 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
 
   private readonly _lastRequestedProbeMethod = signal<Maybe<NotificationDeliveryMethod>>(undefined);
 
+  constructor() {
+    // The report is streamed from the document, so an outcome the server settles shows up on its own.
+    // This is what makes the server settle it without the user asking.
+    this.healthCheckStore.watchPendingProbes();
+  }
+
   /**
    * The delivery method whose test message was most recently requested from this view.
    *
@@ -113,29 +143,6 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
   );
 
   /**
-   * Explains a probe that this session dispatched or resolved.
-   *
-   * The counts are only returned by the invocation, not stored on the document, so this is the one
-   * place they can be reported. A dispatch names what was sent, using the method whose action was
-   * triggered — the result carries a count but not which method it came from. A resolution cannot be
-   * named the same way: a plain run resolves whatever was in flight across every method at once.
-   */
-  readonly probeNoticeSignal = computed(() => {
-    const result = this.latestHealthCheckResultSignal();
-    const method = this.lastRequestedProbeMethodSignal();
-    let notice: string | undefined;
-
-    if (result?.probesDispatched) {
-      const noun = method ? this._presentationService.testMessageNounForDeliveryMethod(method) : 'test message';
-      notice = `A ${noun} was just sent. Re-run this check in a couple of minutes to see whether it arrived.`;
-    } else if (result?.probesResolved) {
-      notice = result.probesResolved === 1 ? 'The test message that was in flight now has a result.' : 'The test messages that were in flight now have results.';
-    }
-
-    return notice;
-  });
-
-  /**
    * Explains why "Run Check" is disabled while the server's run throttle is in effect.
    */
   readonly throttleNoticeSignal = computed(() => {
@@ -148,14 +155,19 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
    *
    * A method that cannot be probed gets no entry, so no test message is offered where the server has no
    * way to send one.
+   *
+   * Everything the user needs to read about a test message belongs in the section holding the button
+   * that sent it, so the notice is composed here rather than in a footer: what was just sent, that its
+   * outcome is being watched for, and when another may be sent.
    */
   readonly probeActionsSignal = computed<DbxFirebaseNotificationHealthCheckProbeActionMap>(() => {
     const secondsRemainingByMethod = this.probeThrottleSecondsRemainingByMethodSignal();
+    const justSentMethod = this.latestHealthCheckResultSignal()?.probesDispatched ? this.lastRequestedProbeMethodSignal() : undefined;
     const probeActions: DbxFirebaseNotificationHealthCheckProbeActionMap = {};
 
     (this.healthCheckSignal()?.m ?? [])
       .filter((methodResult) => methodResult.pb === true)
-      .forEach(({ me: method, tg: target }) => {
+      .forEach(({ me: method, tg: target, pr: probe }) => {
         const label = this._presentationService.testMessageLabelForDeliveryMethod(method);
         const noun = this._presentationService.testMessageNounForDeliveryMethod(method);
         const methodLabel = this._presentationService.labelForDeliveryMethod(method).toLowerCase();
@@ -165,7 +177,7 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
           label,
           icon: 'send',
           disabled: secondsRemaining > 0,
-          notice: secondsRemaining > 0 ? `A ${noun} was sent recently. Another can be sent in ${formatSecondsRemaining(secondsRemaining)}.` : undefined,
+          notice: this.probeNoticeForMethod({ noun, secondsRemaining, justSent: method === justSentMethod, pending: probe?.s === NotificationHealthCheckStatus.PENDING }),
           confirm: {
             title: label,
             prompt: `This sends a real ${methodLabel} to ${target ?? 'your contact details'} so we can confirm whether it arrives. Continue?`,
@@ -177,6 +189,24 @@ export class DbxFirebaseNotificationHealthCheckViewComponent {
 
     return probeActions;
   });
+
+  /**
+   * Composes one delivery method's test message notice.
+   *
+   * Deliberately never tells the user to come back and check: a pending outcome is watched for
+   * automatically, so the only thing left to say about the wait is that they need do nothing.
+   *
+   * @param input - What the method sends, how long its window has left, and the state of its probe.
+   * @returns The notice, or undefined when there is nothing worth saying.
+   */
+  private probeNoticeForMethod(input: DbxFirebaseNotificationHealthCheckProbeNoticeInput): Maybe<string> {
+    const { noun, secondsRemaining, justSent, pending } = input;
+    const sent = justSent ? `A ${noun} was just sent.` : secondsRemaining > 0 ? `A ${noun} was sent recently.` : undefined;
+    const waiting = pending ? ' The result will appear here on its own as soon as we hear whether it arrived.' : '';
+    const nextAllowed = secondsRemaining > 0 ? ` Another can be sent in ${formatSecondsRemaining(secondsRemaining)}.` : '';
+
+    return sent == null ? undefined : `${sent}${waiting}${nextAllowed}`;
+  }
 
   readonly handleRunHealthCheck: WorkUsingContext = (_, context) => {
     this.runHealthCheckAsWork(context, {});

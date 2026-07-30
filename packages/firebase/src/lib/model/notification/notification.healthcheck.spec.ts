@@ -1,7 +1,8 @@
-import { addMinutes } from 'date-fns';
+import { addMinutes, addSeconds } from 'date-fns';
 import {
   DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES,
   DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES,
+  DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS,
   type NotificationDeliveryHealthCheckResult,
   NotificationDeliveryMethod,
   type NotificationHealthCheck,
@@ -14,9 +15,11 @@ import {
   isProblemNotificationHealthCheckStatus,
   notificationDeliveryHealthCheckResultForMethod,
   notificationHealthCheckIssue,
+  notificationHealthCheckPendingProbeMethods,
   notificationUserHealthCheckNextProbeAt,
   notificationUserHealthCheckNextProbeAtByMethod,
   notificationUserHealthCheckNextRunAt,
+  notificationUserHealthCheckNextVerifyAt,
   rollupNotificationDeliveryHealthCheckResultStatus,
   rollupNotificationHealthCheckResultStatus,
   rollupNotificationHealthCheckStatus
@@ -320,5 +323,46 @@ describe('notificationUserHealthCheckNextProbeAtByMethod()', () => {
 
   it('should return an empty map for a missing health check', () => {
     expect(notificationUserHealthCheckNextProbeAtByMethod({})).toEqual({});
+  });
+});
+
+describe('notificationHealthCheckPendingProbeMethods()', () => {
+  it('should return only the methods whose probe is still pending', () => {
+    const result = notificationHealthCheckPendingProbeMethods(makeProbedHealthCheck());
+
+    expect(result).toEqual([NotificationDeliveryMethod.EMAIL, NotificationDeliveryMethod.TEXT]);
+  });
+
+  it('should not include a method whose probe has settled', () => {
+    const healthCheck = makeProbedHealthCheck();
+    const settled = { ...healthCheck, m: healthCheck.m.map((x) => (x.me === NotificationDeliveryMethod.EMAIL && x.pr ? { ...x, pr: { ...x.pr, s: NotificationHealthCheckStatus.OK } } : x)) };
+
+    expect(notificationHealthCheckPendingProbeMethods(settled)).toEqual([NotificationDeliveryMethod.TEXT]);
+  });
+
+  it('should return nothing when no probe is in flight', () => {
+    expect(notificationHealthCheckPendingProbeMethods({ m: [] })).toEqual([]);
+    expect(notificationHealthCheckPendingProbeMethods(undefined)).toEqual([]);
+  });
+});
+
+describe('notificationUserHealthCheckNextVerifyAt()', () => {
+  const VERIFIED_AT = new Date('2026-01-01T00:10:00.000Z');
+
+  it('should derive the window from the verification time', () => {
+    const result = notificationUserHealthCheckNextVerifyAt({ healthCheck: { vat: VERIFIED_AT } });
+
+    expect(result).toBeSameSecondAs(addSeconds(VERIFIED_AT, DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS));
+  });
+
+  it('should apply a throttle override', () => {
+    const result = notificationUserHealthCheckNextVerifyAt({ healthCheck: { vat: VERIFIED_AT }, throttleSeconds: 3 });
+
+    expect(result).toBeSameSecondAs(addSeconds(VERIFIED_AT, 3));
+  });
+
+  it('should return undefined when nothing has been verified yet', () => {
+    expect(notificationUserHealthCheckNextVerifyAt({ healthCheck: {} })).toBeUndefined();
+    expect(notificationUserHealthCheckNextVerifyAt({})).toBeUndefined();
   });
 });

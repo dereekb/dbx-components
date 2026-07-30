@@ -10,6 +10,7 @@ import {
   type UpdateNotificationUserParams,
   NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLED_ERROR_CODE,
   NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE,
+  NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED_ERROR_CODE,
   NotificationBoxRecipientFlag,
   NotificationDeliveryMethod,
   NotificationHealthCheckStatus,
@@ -21,8 +22,8 @@ import {
 } from '@dereekb/firebase';
 import { type NotificationSendServiceHealthCheckService, type NotificationSummarySendServiceHealthCheckService, type NotificationTextSendServiceHealthCheckService } from '@dereekb/firebase-server/model';
 import { expectFail, itShouldFail } from '@dereekb/util/test';
-import { addMinutes } from 'date-fns';
-import { DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE } from 'demo-firebase';
+import { addMinutes, addSeconds } from 'date-fns';
+import { DEMO_NOTIFICATION_HEALTH_CHECK_PROBE_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_RUN_THROTTLE_MINUTES, DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS, GUESTBOOK_ENTRY_CREATED_NOTIFICATION_TEMPLATE_TYPE } from 'demo-firebase';
 
 /**
  * Reads the codes out of a set of issues, for order-independent assertions.
@@ -115,6 +116,21 @@ demoApiFunctionContextFactory((f) => {
             }
           }
 
+          /**
+           * Backdates the stored check's verification time so the server's verify window allows another
+           * poll.
+           *
+           * Keyed on `vat` rather than `at`, which is the whole point of the window: a poll of an
+           * in-flight test message neither answers to nor consumes the run allowance.
+           */
+          async function passHealthCheckVerifyThrottleWindow(): Promise<void> {
+            const { hc } = await assertSnapshotData(nu.document);
+
+            if (hc != null) {
+              await nu.document.update({ hc: { ...hc, vat: addSeconds(new Date(), -(DEMO_NOTIFICATION_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS + 1)) } });
+            }
+          }
+
           it('should return a health check for each requested delivery method', async () => {
             const { healthCheck } = await runHealthCheck({ methods: [NotificationDeliveryMethod.TEXT, NotificationDeliveryMethod.NOTIFICATION_SUMMARY] });
 
@@ -172,11 +188,13 @@ demoApiFunctionContextFactory((f) => {
               await expectFail(() => runHealthCheck(), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE));
             });
 
-            // the cheap probe poll is throttled too, so nothing can bypass the window
-            itShouldFail('when a verify-only run is made inside the throttle window', async () => {
+            // the probe poll answers to its own window instead: watching an in-flight test message must
+            // not spend the allowance for running the check itself
+            it('should allow a verify-only run inside the run throttle window', async () => {
               await runHealthCheck();
+              await passHealthCheckVerifyThrottleWindow();
 
-              await expectFail(() => runHealthCheck({ verifyPendingProbesOnly: true }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_THROTTLED_ERROR_CODE));
+              await expect(runHealthCheck({ verifyPendingProbesOnly: true })).resolves.toBeDefined();
             });
 
             // asserts state after the rejection, so it uses rejects.toThrow() rather than expectFail(),
@@ -299,7 +317,7 @@ demoApiFunctionContextFactory((f) => {
               const first = await runHealthCheck();
               const firstTextIssues = issueCodes(notificationDeliveryHealthCheckResultForMethod(first.healthCheck, NotificationDeliveryMethod.TEXT)?.is ?? []);
 
-              await passHealthCheckThrottleWindow();
+              await passHealthCheckVerifyThrottleWindow();
               const second = await runHealthCheck({ verifyPendingProbesOnly: true });
               const secondTextIssues = issueCodes(notificationDeliveryHealthCheckResultForMethod(second.healthCheck, NotificationDeliveryMethod.TEXT)?.is ?? []);
 
@@ -307,6 +325,36 @@ demoApiFunctionContextFactory((f) => {
               expect(issueCodes(second.healthCheck.is)).toEqual(issueCodes(first.healthCheck.is));
               expect(second.probesDispatched).toBe(0);
               expect(second.probesResolved).toBe(0);
+            });
+
+            // the client polls this while a test message is in flight, so it must not spend the run
+            // allowance the user needs for the check itself
+            it('should leave the run window where it was, advancing only the verification time', async () => {
+              const first = await runHealthCheck();
+
+              await passHealthCheckVerifyThrottleWindow();
+              const second = await runHealthCheck({ verifyPendingProbesOnly: true });
+
+              expect(second.healthCheck.at).toBeSameSecondAs(first.healthCheck.at);
+
+              const { hc } = await assertSnapshotData(nu.document);
+              expect(hc?.at).toBeSameSecondAs(first.healthCheck.at);
+              expect(hc?.vat?.getTime()).toBeGreaterThan(first.healthCheck.at.getTime());
+            });
+
+            describe('verify throttle', () => {
+              itShouldFail('when a verification is made inside the verify window', async () => {
+                await runHealthCheck();
+
+                await expectFail(() => runHealthCheck({ verifyPendingProbesOnly: true }), expectFailAssertHttpErrorServerErrorCode(NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLED_ERROR_CODE));
+              });
+
+              it('should allow a verification once the verify window has passed', async () => {
+                await runHealthCheck();
+                await passHealthCheckVerifyThrottleWindow();
+
+                await expect(runHealthCheck({ verifyPendingProbesOnly: true })).resolves.toBeDefined();
+              });
             });
           });
 
@@ -432,6 +480,83 @@ demoApiFunctionContextFactory((f) => {
                 expect(result.probesDispatched).toBe(1);
                 expect(result.probesResolved).toBe(0);
                 expect(notificationDeliveryHealthCheckResultForMethod(result.healthCheck, NotificationDeliveryMethod.TEXT)?.pr?.id).toBe(probeId);
+              });
+
+              // A dispatched test message settles on the provider's schedule, so a verification is what
+              // turns it into a result. The client polls this on its own, which is why the report no
+              // longer asks the user to come back and re-run the check.
+              describe('resolving an in-flight probe', () => {
+                it('should settle a pending probe on a verification, without a full run', async () => {
+                  setTextHealthCheckService({
+                    supportsProbe: true,
+                    async runHealthCheck({ sendProbe, pendingProbe, now }) {
+                      return {
+                        issues: [],
+                        probe: sendProbe ? { id: probeId, at: now, s: NotificationHealthCheckStatus.PENDING, tg: TEST_PHONE_NUMBER } : pendingProbe ? { ...pendingProbe, s: NotificationHealthCheckStatus.OK, d: 'Delivered' } : undefined
+                      };
+                    }
+                  });
+
+                  const dispatched = await runHealthCheck({ sendProbe: true, methods: [NotificationDeliveryMethod.TEXT] });
+                  expect(dispatched.probesDispatched).toBe(1);
+
+                  await passHealthCheckVerifyThrottleWindow();
+                  const verified = await runHealthCheck({ verifyPendingProbesOnly: true, methods: [NotificationDeliveryMethod.TEXT] });
+
+                  expect(verified.probesResolved).toBe(1);
+
+                  // the outcome lands on the document, which is what the client renders from
+                  const { hc } = await assertSnapshotData(nu.document);
+                  expect(notificationDeliveryHealthCheckResultForMethod(hc, NotificationDeliveryMethod.TEXT)?.pr?.s).toBe(NotificationHealthCheckStatus.OK);
+                });
+
+                // what makes the verification cheap enough for the client to poll: with nothing in
+                // flight it costs no provider calls at all
+                it('should not consult the provider on a verification with nothing in flight', async () => {
+                  let providerCalls = 0;
+
+                  setTextHealthCheckService({
+                    supportsProbe: true,
+                    async runHealthCheck() {
+                      providerCalls += 1;
+                      return { issues: [] };
+                    }
+                  });
+
+                  await runHealthCheck();
+                  const callsAfterRun = providerCalls;
+
+                  await passHealthCheckVerifyThrottleWindow();
+                  await runHealthCheck({ verifyPendingProbesOnly: true });
+
+                  expect(callsAfterRun).toBeGreaterThan(0);
+                  expect(providerCalls).toBe(callsAfterRun);
+                });
+              });
+
+              // The client derives the test message button's disabled state from the SAME stored probe
+              // the server throttles on, so a dispatch that recorded nothing would leave the button live
+              // and the call succeeding — one provider call per click.
+              it('should throttle the method even when the dispatched probe could not be tracked', async () => {
+                setTextHealthCheckService({
+                  supportsProbe: true,
+                  async runHealthCheck({ sendProbe, now }) {
+                    // what a provider that accepted the send but returned no correlation id produces
+                    return { issues: [], probe: sendProbe ? { id: '', at: now, s: NotificationHealthCheckStatus.UNKNOWN, tg: TEST_PHONE_NUMBER } : undefined };
+                  }
+                });
+
+                const result = await runHealthCheck({ sendProbe: true, methods: [NotificationDeliveryMethod.TEXT] });
+
+                expect(result.probesDispatched).toBe(1);
+                // recorded, and settled rather than pending — there is no outcome coming for it
+                const probe = notificationDeliveryHealthCheckResultForMethod(result.healthCheck, NotificationDeliveryMethod.TEXT)?.pr;
+                expect(probe?.at).toBeDefined();
+                expect(probe?.s).toBe(NotificationHealthCheckStatus.UNKNOWN);
+
+                // asserts state before the rejection, so it uses rejects.toThrow() rather than
+                // expectFail(), which throws its own ExpectedFailError outside an itShouldFail
+                await expect(runHealthCheck({ sendProbe: true, methods: [NotificationDeliveryMethod.TEXT] })).rejects.toThrow();
               });
 
               describe('probe throttle', () => {

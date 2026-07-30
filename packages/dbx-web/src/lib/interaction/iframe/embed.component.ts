@@ -60,16 +60,11 @@ export class DbxEmbedComponent {
   readonly srcUrlFromBlob = signal<Maybe<string>>(undefined);
   readonly typeFromBlob = signal<Maybe<string>>(undefined);
 
-  readonly blobEffect = effect(
-    () => {
-      const blob = this.blob();
-      this.srcUrlFromBlob.set(this._browserObjectUrlRef.createBrowserUrl(blob));
-      this.typeFromBlob.set(blob?.type);
-    },
-    {
-      allowSignalWrites: true
-    }
-  );
+  readonly blobEffect = effect(() => {
+    const blob = this.blob();
+    this.srcUrlFromBlob.set(this._browserObjectUrlRef.createBrowserUrl(blob));
+    this.typeFromBlob.set(blob?.type);
+  });
 
   readonly srcUrlSignal = computed(() => {
     const srcUrl = this.srcUrl();

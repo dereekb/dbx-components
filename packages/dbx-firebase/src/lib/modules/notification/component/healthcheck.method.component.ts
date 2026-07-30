@@ -89,15 +89,15 @@ export interface DbxFirebaseNotificationHealthCheckMethodProbeActionConfig {
 
       @if (probeActionSignal(); as probeAction) {
         <div class="dbx-pt2">
-          @if (probeAction.notice) {
-            <p class="dbx-hint dbx-pb1 no-margin">{{ probeAction.notice }}</p>
-          }
           <!-- dbxActionDisabled rather than the button's own disabled input, since dbxActionButton drives that from the action's state -->
           <div dbxAction [dbxActionDisabled]="probeAction.disabled === true" [dbxActionHandler]="probeAction.handler" [dbxActionConfirm]="probeAction.confirm">
             <dbx-button dbxActionButton [stroked]="true" [text]="probeAction.label" [icon]="probeAction.icon"></dbx-button>
             <dbx-error dbxActionError></dbx-error>
           </div>
         </div>
+        @if (probeAction.notice) {
+          <div class="dbx-small dbx-hint dbx-pt2">{{ probeAction.notice }}</div>
+        }
       }
     }
   `,

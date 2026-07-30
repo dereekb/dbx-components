@@ -13,9 +13,9 @@
  * checks the library performs itself, while apps and delivery providers are free to emit their own
  * codes for provider-specific findings (e.g. an address on a Mailgun suppression list).
  */
-import { filterMaybeArrayValues, type Maybe, type Minutes } from '@dereekb/util';
-import { addMinutes } from 'date-fns';
-import { firestoreDate, firestoreEnum, firestoreObjectArray, firestoreString, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreField, optionalFirestoreString } from '../../common';
+import { filterMaybeArrayValues, type Maybe, type Minutes, type Seconds } from '@dereekb/util';
+import { addMinutes, addSeconds } from 'date-fns';
+import { firestoreDate, firestoreEnum, firestoreObjectArray, firestoreString, firestoreSubObject, optionalFirestoreBoolean, optionalFirestoreDate, optionalFirestoreField, optionalFirestoreString } from '../../common';
 import { type NotificationTemplateType } from './notification.id';
 
 /**
@@ -350,6 +350,30 @@ export function isPendingNotificationHealthCheckProbe(probe: Maybe<NotificationH
 }
 
 /**
+ * The correlation id of a probe the provider gave nothing to track it by.
+ *
+ * Empty rather than absent because the field is what a provider looks the outcome up with, and there is
+ * nothing to look up — such a probe is always recorded already settled, so it is never queried.
+ */
+export const UNTRACKABLE_NOTIFICATION_HEALTH_CHECK_PROBE_ID = '';
+
+/**
+ * Records a dispatch attempt the provider gave no way to track.
+ *
+ * A send that produced no correlation id still happened, and the test message window is derived from the
+ * recorded probe — so an attempt recorded as nothing at all would leave the server's throttle and the
+ * client's countdown with nothing to key on, making the action look successful and be immediately
+ * repeatable. Always settled ({@link NotificationHealthCheckStatus.UNKNOWN} when the provider accepted it,
+ * `ERROR` when it did not), never pending: there is no outcome coming for it.
+ *
+ * @param probe - The attempt's time, settled status, target, and provider detail.
+ * @returns The probe recording the attempt.
+ */
+export function untrackableNotificationHealthCheckProbe(probe: Omit<NotificationHealthCheckProbe, 'id'>): NotificationHealthCheckProbe {
+  return { ...probe, id: UNTRACKABLE_NOTIFICATION_HEALTH_CHECK_PROBE_ID };
+}
+
+/**
  * The result of checking a single delivery method.
  *
  * Field abbreviations:
@@ -397,6 +421,7 @@ export interface NotificationDeliveryHealthCheckResult {
  *
  * Field abbreviations:
  * - `at` — when the check ran
+ * - `vat` — when its pending probes were last verified
  * - `s` — rolled-up status across the whole check
  * - `t` — notification template type the configuration was evaluated against
  * - `is` — account-wide findings
@@ -407,6 +432,14 @@ export interface NotificationHealthCheck {
    * When the check was run.
    */
   at: Date;
+  /**
+   * When the check's pending probes were last verified.
+   *
+   * A verify-only run refreshes the probe findings without re-running the check, so it advances this
+   * rather than `at` — otherwise polling an in-flight test message would keep pushing the user's own
+   * run window out. Absent until a verify-only run has happened.
+   */
+  vat?: Maybe<Date>;
   /**
    * The most severe status across the account-wide findings and every checked method.
    */
@@ -440,6 +473,21 @@ export function rollupNotificationDeliveryHealthCheckResultStatus(result: Pick<N
   }
 
   return rollupNotificationHealthCheckStatus(statuses);
+}
+
+/**
+ * The delivery methods whose test message is still awaiting an outcome.
+ *
+ * A pending probe is the whole reason to keep watching a check: it is the one part of a report that
+ * changes on its own, as the provider records what happened to the message. Both the client (which
+ * polls until they settle) and the server (which only consults a provider it has something to ask
+ * about) scope their work to exactly these methods.
+ *
+ * @param healthCheck - The health check to read.
+ * @returns The methods carrying a pending probe, in report order. Empty when nothing is in flight.
+ */
+export function notificationHealthCheckPendingProbeMethods(healthCheck: Maybe<Pick<NotificationHealthCheck, 'm'>>): NotificationDeliveryMethod[] {
+  return (healthCheck?.m ?? []).filter((x) => isPendingNotificationHealthCheckProbe(x.pr)).map((x) => x.me);
 }
 
 /**
@@ -573,6 +621,50 @@ export function notificationUserHealthCheckNextProbeAt(input: NotificationUserHe
   return latestProbeAt == null ? undefined : addMinutes(latestProbeAt, throttleMinutes ?? DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_PROBE_THROTTLE_MINUTES);
 }
 
+// MARK: Verify
+/**
+ * How long a caller must wait between verifications of a check's pending probes.
+ *
+ * A verify-only run exists to be polled: a dispatched test message settles on the provider's schedule,
+ * so something has to keep asking until it does. It is throttled far more loosely than a run or a probe
+ * because it is far cheaper — it consults a provider only for a method with a probe actually in flight,
+ * and touches nothing else — but it is throttled all the same, so a client cannot poll a provider's API
+ * in a tight loop.
+ *
+ * Seconds rather than minutes: the point of the verification is that the outcome appears while the user
+ * is still looking at the report.
+ */
+export const DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS: Seconds = 15;
+
+/**
+ * Input for {@link notificationUserHealthCheckNextVerifyAt}.
+ */
+export interface NotificationUserHealthCheckNextVerifyAtInput {
+  /**
+   * The check currently stored on the NotificationUser, if any.
+   */
+  readonly healthCheck?: Maybe<Pick<NotificationHealthCheck, 'vat'>>;
+  /**
+   * Overrides {@link DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS}.
+   */
+  readonly throttleSeconds?: Maybe<Seconds>;
+}
+
+/**
+ * The earliest time a check's pending probes may be verified again.
+ *
+ * Derived from `vat` rather than `at`, so verifying an in-flight test message neither answers to nor
+ * consumes the user's run window. Both the server (which enforces the window) and the client (which
+ * paces its polling to it) derive it the same way.
+ *
+ * @param input - The stored check, and optionally a window to use instead of the default.
+ * @returns The time the next verification is allowed, or undefined when none has happened yet.
+ */
+export function notificationUserHealthCheckNextVerifyAt(input: NotificationUserHealthCheckNextVerifyAtInput): Maybe<Date> {
+  const { healthCheck, throttleSeconds } = input;
+  return healthCheck?.vat == null ? undefined : addSeconds(healthCheck.vat, throttleSeconds ?? DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS);
+}
+
 /**
  * The earliest time another test message may be dispatched through each of a check's delivery methods.
  *
@@ -658,6 +750,7 @@ export const firestoreNotificationHealthCheck = /* @__PURE__ */ firestoreSubObje
   objectField: {
     fields: {
       at: firestoreDate({ saveDefaultAsNow: true }),
+      vat: optionalFirestoreDate(),
       s: firestoreEnum<NotificationHealthCheckStatus>({ default: NotificationHealthCheckStatus.UNKNOWN }),
       t: optionalFirestoreString(),
       is: firestoreObjectArray({ objectField: firestoreNotificationHealthCheckIssue }),

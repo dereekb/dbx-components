@@ -15,7 +15,11 @@
  *    dispatching/resolving a delivery probe.
  *
  * The result is persisted to the user's `hc` field, because delivery confirmation is asynchronous: a
- * probe dispatched by one run is resolved by a later one.
+ * probe dispatched by one run is resolved by a later one. That later run is normally a
+ * `verifyPendingProbesOnly` VERIFICATION rather than anything the user does — a cheap poll that consults
+ * a provider only where a probe is actually in flight, answers to its own short window, and advances
+ * `vat` instead of `at` so that watching a test message never consumes the user's run allowance. The
+ * client reads the stored check live, so a resolved probe simply appears.
  */
 import {
   type FirebaseAuthUserId,
@@ -42,6 +46,7 @@ import {
   notificationHealthCheckIssue,
   notificationUserHealthCheckNextProbeAt,
   notificationUserHealthCheckNextRunAt,
+  notificationUserHealthCheckNextVerifyAt,
   notificationUserHealthCheckParamsType,
   rollupNotificationDeliveryHealthCheckResultStatus,
   rollupNotificationHealthCheckResultStatus
@@ -50,7 +55,7 @@ import { assertSnapshotData } from '@dereekb/firebase-server';
 import { type EmailAddress, type E164PhoneNumber, type Maybe, filterMaybeArrayValues, takeFront } from '@dereekb/util';
 import { isAfter } from 'date-fns';
 import { type NotificationServerActionsContext } from './notification.action.server';
-import { notificationUserHealthCheckProbeThrottledError, notificationUserHealthCheckThrottledError } from './notification.error';
+import { notificationUserHealthCheckProbeThrottledError, notificationUserHealthCheckThrottledError, notificationUserHealthCheckVerifyThrottledError } from './notification.error';
 import { type NotificationSendServiceHealthCheckService } from './notification.healthcheck.service';
 
 /**
@@ -112,6 +117,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
   const { firebaseServerActionTransformFunctionFactory, notificationBoxCollection, notificationSendService, authService, notificationUserHealthCheckConfig } = context;
   const probeThrottleMinutes = notificationUserHealthCheckConfig?.probeThrottleMinutes;
   const runThrottleMinutes = notificationUserHealthCheckConfig?.runThrottleMinutes;
+  const verifyThrottleSeconds = notificationUserHealthCheckConfig?.verifyThrottleSeconds;
 
   return firebaseServerActionTransformFunctionFactory(notificationUserHealthCheckParamsType, async (params: NotificationUserHealthCheckParams) => {
     const { methods: inputMethods, sendProbe: inputSendProbe, verifyPendingProbesOnly: inputVerifyPendingProbesOnly, notificationTemplateType: inputNotificationTemplateType, skipSubscriptionChecks: inputSkipSubscriptionChecks, force: inputForce, returnFullHealthCheck: inputReturnFullHealthCheck } = params;
@@ -128,14 +134,16 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
       const notificationUser = await assertSnapshotData(notificationUserDocument);
       const { uid, hc: previousHealthCheck } = notificationUser;
 
-      // Runs and test messages are throttled independently: a run reads provider state, while a probe
-      // delivers a real message. Running the check must not consume the test message allowance, so a
-      // probe run answers only to the probe window. The client derives both windows the same way.
+      // Runs, test messages and verifications are throttled independently, because they cost different
+      // things: a run reads provider state, a probe delivers a real message, and a verification only asks
+      // a provider what became of a message already sent. None of them may consume another's allowance —
+      // in particular, polling an in-flight test message must not push the user's next run out, which is
+      // why a verify-only run answers to its own window and advances `vat` rather than `at` below.
       //
       // The probe window is scoped to the methods being probed, since each method has its own test
       // message action — a test email must not hold the test text message off.
       //
-      // `force` skips both windows, so an admin diagnosing someone else's delivery does not have to wait
+      // `force` skips every window, so an admin diagnosing someone else's delivery does not have to wait
       // out that user's own throttle.
       if (!force) {
         if (sendProbe) {
@@ -143,6 +151,12 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
 
           if (nextProbeAt != null && isAfter(nextProbeAt, now)) {
             throw notificationUserHealthCheckProbeThrottledError(nextProbeAt);
+          }
+        } else if (verifyPendingProbesOnly) {
+          const nextVerifyAt = notificationUserHealthCheckNextVerifyAt({ healthCheck: previousHealthCheck, throttleSeconds: verifyThrottleSeconds });
+
+          if (nextVerifyAt != null && isAfter(nextVerifyAt, now)) {
+            throw notificationUserHealthCheckVerifyThrottledError(nextVerifyAt);
           }
         } else {
           const nextRunAt = notificationUserHealthCheckNextRunAt({ healthCheck: previousHealthCheck, throttleMinutes: runThrottleMinutes });
@@ -193,8 +207,13 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
           const previousProbe = previousMethodResult?.pr;
           const pendingProbe = isPendingNotificationHealthCheckProbe(previousProbe) ? previousProbe : undefined;
 
+          // A verify-only run is a poll of an in-flight test message, so it consults a provider only
+          // where there is actually a probe to ask about. With nothing pending it costs no provider
+          // calls at all, which is what makes it cheap enough to be polled on a short window.
+          const providerHasSomethingToReport = !verifyPendingProbesOnly || pendingProbe != null;
+
           // whether the provider will be consulted, and so whether fresh probe findings are coming
-          const willConsultProvider = healthCheckService != null && target != null;
+          const willConsultProvider = healthCheckService != null && target != null && providerHasSomethingToReport;
 
           // A verify-only run carries the previous findings forward. The stale probe findings are only
           // dropped when the provider is actually going to replace them — otherwise the method would
@@ -204,7 +223,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
           // keep any previously resolved probe visible unless the provider supplies a newer one
           let probe: Maybe<NotificationHealthCheckProbe> = previousProbe;
 
-          if (healthCheckService && target != null) {
+          if (healthCheckService && target != null && providerHasSomethingToReport) {
             try {
               const response = await healthCheckService.runHealthCheck({
                 method,
@@ -222,7 +241,9 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
               if (response.probe) {
                 probe = response.probe;
 
-                if (response.probe.id !== previousProbe?.id) {
+                // A probe the provider gave no correlation id for cannot be told apart from the last one
+                // by id, so the dispatch time is what settles whether this is a new attempt.
+                if (response.probe.id !== previousProbe?.id || response.probe.at.getTime() !== previousProbe?.at.getTime()) {
                   probesDispatched += 1;
                 } else if (pendingProbe && !isPendingNotificationHealthCheckProbe(response.probe)) {
                   probesResolved += 1;
@@ -258,7 +279,11 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
       const mergedMethodResults = filterMaybeArrayValues(methodContexts.map((x) => freshResultsByMethod.get(x.method) ?? previousHealthCheck?.m.find((y) => y.me === x.method)));
 
       const healthCheck: NotificationHealthCheck = {
-        at: now,
+        // A verify-only run refreshes the probe findings of the check that is already stored rather than
+        // producing a new diagnosis, so it leaves `at` — and with it the user's run window — where it
+        // was. Only `vat` moves, which is what a poll paces itself against.
+        at: verifyPendingProbesOnly ? (previousHealthCheck?.at ?? now) : now,
+        vat: now,
         s: rollupNotificationHealthCheckResultStatus({ is: accountIssues, m: mergedMethodResults }),
         t: notificationTemplateType,
         is: accountIssues,

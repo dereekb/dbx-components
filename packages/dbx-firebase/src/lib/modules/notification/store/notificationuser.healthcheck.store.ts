@@ -1,11 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { ComponentStore } from '@ngrx/component-store';
-import { type NotificationDeliveryMethod, type NotificationDeliveryMethodMap, notificationUserHealthCheckNextProbeAtByMethod, notificationUserHealthCheckNextRunAt, type NotificationUserHealthCheckParams, type NotificationUserHealthCheckResult } from '@dereekb/firebase';
+import { DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS, type NotificationDeliveryMethod, type NotificationDeliveryMethodMap, notificationHealthCheckPendingProbeMethods, notificationUserHealthCheckNextProbeAtByMethod, notificationUserHealthCheckNextRunAt, notificationUserHealthCheckNextVerifyAt, type NotificationUserHealthCheckParams, type NotificationUserHealthCheckResult } from '@dereekb/firebase';
 import { errorResult, type LoadingState, startWithBeginLoading } from '@dereekb/rxjs';
-import { areEqualPOJOValues, type Maybe, type Seconds } from '@dereekb/util';
-import { catchError, distinctUntilChanged, exhaustMap, map, type Observable, of, shareReplay, switchMap, takeWhile, tap, timer } from 'rxjs';
+import { areEqualPOJOValues, filterMaybeArrayValues, type Maybe, MS_IN_SECOND, type Seconds } from '@dereekb/util';
+import { addMinutes, isAfter } from 'date-fns';
+import { catchError, distinctUntilChanged, EMPTY, exhaustMap, filter, map, type Observable, of, shareReplay, switchMap, takeWhile, tap, timer, withLatestFrom } from 'rxjs';
 import { type DbxFirebaseDocumentStoreFunctionParamsInput } from '../../../model/modules/store';
-import { DbxFirebaseNotificationHealthCheckConfig } from '../service/healthcheck.presentation';
+import { DbxFirebaseNotificationHealthCheckConfig, DEFAULT_NOTIFICATION_HEALTH_CHECK_PROBE_WATCH_MINUTES } from '../service/healthcheck.presentation';
 import { NotificationUserDocumentStore } from './notificationuser.document.store';
 
 /**
@@ -198,6 +199,52 @@ export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<
     shareReplay(1)
   );
 
+  // MARK: Pending Probes
+  /**
+   * The delivery methods whose test message is still waiting on an outcome.
+   *
+   * The one part of a stored check that changes without anyone re-running it, so it is what
+   * {@link watchPendingProbes} watches.
+   */
+  readonly pendingProbeMethods$: Observable<NotificationDeliveryMethod[]> = this.healthCheck$.pipe(
+    map((healthCheck) => notificationHealthCheckPendingProbeMethods(healthCheck)),
+    distinctUntilChanged(areEqualPOJOValues),
+    shareReplay(1)
+  );
+
+  /**
+   * Whether a test message is in flight right now.
+   */
+  readonly hasPendingProbe$: Observable<boolean> = this.pendingProbeMethods$.pipe(
+    map((x) => x.length > 0),
+    distinctUntilChanged(),
+    shareReplay(1)
+  );
+
+  /**
+   * The next verification to run, or null when there is nothing to watch.
+   *
+   * Re-derived from the document on every change, which is what paces the loop: each verification
+   * advances the stored check's `vat`, so the moment the server will accept another poll moves forward
+   * and this emits the next one. The watch gives up once the oldest probe has been in flight longer than
+   * the configured window — a provider that is never going to record an outcome should not be polled for
+   * as long as the page stays open.
+   */
+  private readonly _nextProbeVerification$: Observable<Maybe<DbxFirebaseNotificationUserHealthCheckProbeVerification>> = this.healthCheck$.pipe(
+    map((healthCheck) => {
+      const methods = notificationHealthCheckPendingProbeMethods(healthCheck);
+      const dispatchedAt = filterMaybeArrayValues((healthCheck?.m ?? []).filter((x) => methods.includes(x.me)).map((x) => x.pr?.at));
+      const watchMinutes = this._config?.probeWatchMinutes ?? DEFAULT_NOTIFICATION_HEALTH_CHECK_PROBE_WATCH_MINUTES;
+      const oldestDispatchedAt = dispatchedAt.length ? new Date(Math.min(...dispatchedAt.map((x) => x.getTime()))) : undefined;
+      const at = notificationUserHealthCheckNextVerifyAt({ healthCheck, throttleSeconds: this._config?.verifyThrottleSeconds }) ?? new Date();
+      const stillWorthWatching = oldestDispatchedAt != null && isAfter(addMinutes(oldestDispatchedAt, watchMinutes), at);
+
+      return stillWorthWatching ? { methods, at } : undefined;
+    }),
+    distinctUntilChanged(areEqualPOJOValues),
+    shareReplay(1)
+  );
+
   // MARK: State Changes
   private readonly _setHealthCheckResultState = this.updater((state, healthCheckResultState: Maybe<LoadingState<NotificationUserHealthCheckResult>>) => ({ ...state, healthCheckResultState }));
 
@@ -223,4 +270,54 @@ export class DbxFirebaseNotificationUserHealthCheckStore extends ComponentStore<
       )
     )
   );
+
+  /**
+   * Watches every in-flight test message until it has an outcome, without the user doing anything.
+   *
+   * A dispatched probe settles on the delivery provider's schedule rather than the caller's, so
+   * something has to ask again once the outcome exists. That used to be the user, told to come back and
+   * re-run the check; this is that same poll, run automatically. Each verification is scoped to the
+   * methods actually awaiting an outcome and answers to its own server-side window, so it neither sends
+   * anything nor consumes the user's allowance for running the check itself. The result lands on the
+   * NotificationUser, which is already streamed into {@link healthCheck$}, so a settled probe simply
+   * appears in the report.
+   *
+   * Idempotent to start and safe to leave running: it does nothing at all while no probe is in flight,
+   * and stops on its own once every probe has settled or aged out.
+   */
+  readonly watchPendingProbes = this.effect<void>((input) =>
+    input.pipe(
+      switchMap(() =>
+        this._nextProbeVerification$.pipe(
+          // The interval is the recovery path: a verification that advances `vat` re-emits the value
+          // above and restarts this timer, while one that fails to reach the server leaves the value
+          // unchanged and is simply retried on the next tick.
+          switchMap((verification) => (verification == null ? EMPTY : timer(Math.max(0, verification.at.getTime() - Date.now()), (this._config?.verifyThrottleSeconds ?? DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS) * MS_IN_SECOND).pipe(map(() => verification.methods)))),
+          withLatestFrom(this.healthCheckResultState$),
+          // A verification carries the whole stored check forward, so one racing a run the user started
+          // could write back a copy taken before that run's result landed. The user's run always wins.
+          filter(([, healthCheckResultState]) => healthCheckResultState?.loading !== true),
+          exhaustMap(([methods]) =>
+            this.notificationUserDocumentStore.healthCheck({ verifyPendingProbesOnly: true, methods }).pipe(
+              catchError(() => EMPTY) // nothing to report: the poll is invisible, and the next tick retries
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+/**
+ * A scheduled verification of the test messages a check has in flight.
+ */
+export interface DbxFirebaseNotificationUserHealthCheckProbeVerification {
+  /**
+   * The delivery methods awaiting an outcome.
+   */
+  readonly methods: NotificationDeliveryMethod[];
+  /**
+   * The earliest time the server will accept the verification.
+   */
+  readonly at: Date;
 }

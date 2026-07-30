@@ -1,5 +1,5 @@
 import { type EmailAddress, type Maybe } from '@dereekb/util';
-import { type FirebaseAuthUserId, type NotificationHealthCheckIssue, type NotificationHealthCheckIssueCode, type NotificationHealthCheckProbe, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode, NotificationDeliveryMethod, NotificationHealthCheckStatus } from '@dereekb/firebase';
+import { type FirebaseAuthUserId, type NotificationHealthCheckIssue, type NotificationHealthCheckIssueCode, type NotificationHealthCheckProbe, isPendingNotificationHealthCheckProbe, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode, NotificationDeliveryMethod, NotificationHealthCheckStatus } from '@dereekb/firebase';
 import { type MailgunBounceSuppression, type MailgunComplaintSuppression, type MailgunDomainEvent, type MailgunEmailValidationResult, type MailgunService, type MailgunTemplateEmailRequest, type MailgunUnsubscribeSuppression, MailgunEventName, MailgunEventSeverity } from '@dereekb/nestjs/mailgun';
 import { type NotificationSendServiceHealthCheckRequest, type NotificationSendServiceHealthCheckResponse } from '../notification/notification.healthcheck.service';
 import { type MailgunNotificationEmailSendServiceHealthCheckServiceConfig, type MailgunNotificationHealthCheckProbeBuilder, mailgunNotificationEmailSendServiceHealthCheckService } from './notification.healthcheck.mailgun';
@@ -377,7 +377,39 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
       expect(captures.sentRequests).toHaveLength(1);
       expect(issue?.s).toBe(NotificationHealthCheckStatus.UNKNOWN);
       expect(issue?.d?.message).toBe('Suppressed');
-      expect(response.probe).toBeUndefined();
+    });
+
+    it('should report a refused send as an error rather than as unverifiable', async () => {
+      const { response } = await runHealthCheck({ mock: { sendResult: { status: 400, message: 'Bad request' } }, service: { probeBuilder: testProbeBuilder }, request: { sendProbe: true } });
+      const issue = issueForCode(response, KnownNotificationHealthCheckIssueCode.PROBE_DISPATCH_FAILED);
+
+      expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
+      expect(issue?.m).toContain('Bad request');
+      expect(response.probe?.s).toBe(NotificationHealthCheckStatus.ERROR);
+    });
+
+    // the test message window is derived from the recorded probe, so an attempt that recorded nothing
+    // would leave the action enabled and immediately repeatable — one provider call per click
+    describe('an attempt with nothing to track it by', () => {
+      it('should still record a settled probe, so the test message window applies', async () => {
+        const { response } = await runHealthCheck({ mock: { sendResult: { status: 200, message: 'Suppressed' } }, service: { probeBuilder: testProbeBuilder }, request: { sendProbe: true } });
+
+        expect(response.probe).toBeDefined();
+        expect(response.probe?.at).toBe(TEST_NOW);
+        expect(response.probe?.tg).toBe(TEST_TARGET);
+        // nothing to correlate against, and so nothing to resolve later
+        expect(response.probe?.id).toBe('');
+        expect(response.probe?.s).toBe(NotificationHealthCheckStatus.UNKNOWN);
+        expect(isPendingNotificationHealthCheckProbe(response.probe)).toBe(false);
+      });
+
+      it('should record one for a send that threw', async () => {
+        const { response } = await runHealthCheck({ mock: { sendError: true }, service: { probeBuilder: testProbeBuilder }, request: { sendProbe: true } });
+
+        expect(response.probe?.s).toBe(NotificationHealthCheckStatus.ERROR);
+        expect(response.probe?.at).toBe(TEST_NOW);
+        expect(isPendingNotificationHealthCheckProbe(response.probe)).toBe(false);
+      });
     });
 
     it('should report PROBE_DISPATCH_FAILED as an error when the send throws', async () => {
@@ -386,7 +418,6 @@ describe('mailgunNotificationEmailSendServiceHealthCheckService()', () => {
 
       expect(issue?.s).toBe(NotificationHealthCheckStatus.ERROR);
       expect(issue?.d?.error).toContain('mailgun refused the send');
-      expect(response.probe).toBeUndefined();
     });
 
     it('should report PROBE_DISPATCH_FAILED as an error when the probe builder throws', async () => {

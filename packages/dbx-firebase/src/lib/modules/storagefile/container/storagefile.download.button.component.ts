@@ -251,18 +251,13 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     return result;
   });
 
-  readonly storageFileDownloadUrlEffect = effect(
-    () => {
-      const downloadUrl = this.storageFileDownloadUrl();
+  readonly storageFileDownloadUrlEffect = effect(() => {
+    const downloadUrl = this.storageFileDownloadUrl();
 
-      if (downloadUrl || downloadUrl === null) {
-        this.downloadUrlSignal.set(downloadUrl);
-      }
-    },
-    {
-      allowSignalWrites: true
+    if (downloadUrl || downloadUrl === null) {
+      this.downloadUrlSignal.set(downloadUrl);
     }
-  );
+  });
 
   // Preview
   readonly showPreviewButtonSignal = computed(() => {
@@ -302,20 +297,15 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
 
   readonly cachedUrlForStorageFileKeySignal = toSignal(this.cachedUrlForStorageFileKey$);
 
-  readonly cachedUrlEffect = effect(
-    () => {
-      const cachedPair = this.cachedUrlForStorageFileKeySignal();
+  readonly cachedUrlEffect = effect(() => {
+    const cachedPair = this.cachedUrlForStorageFileKeySignal();
 
-      if (cachedPair) {
-        this.downloadUrlSignal.set(cachedPair.downloadUrl);
-        this.downloadMimeTypeSignal.set(cachedPair.mimeType);
-        this.downloadUrlExpiresAtSignal.set(cachedPair.expiresAt);
-      }
-    },
-    {
-      allowSignalWrites: true
+    if (cachedPair) {
+      this.downloadUrlSignal.set(cachedPair.downloadUrl);
+      this.downloadMimeTypeSignal.set(cachedPair.mimeType);
+      this.downloadUrlExpiresAtSignal.set(cachedPair.expiresAt);
     }
-  );
+  });
 
   // Expiration Effect
   readonly downloadUrlExpiresAtDate$ = toObservable(this.downloadUrlExpiresAtSignal).pipe(map(dateFromDateOrTimeSecondsNumber), distinctUntilChanged(isSameDate), shareReplay(1));
@@ -342,20 +332,15 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
   );
 
   readonly downloadUrlHasExpiredSignal = toSignal(this.downloadUrlHasExpired$);
-  readonly downloadUrlHasExpiredEffect = effect(
-    () => {
-      const expired = this.downloadUrlHasExpiredSignal();
+  readonly downloadUrlHasExpiredEffect = effect(() => {
+    const expired = this.downloadUrlHasExpiredSignal();
 
-      if (expired) {
-        this.downloadUrlSignal.set(undefined);
-        this.downloadMimeTypeSignal.set(undefined);
-        this.downloadUrlExpiresAtSignal.set(undefined);
-      }
-    },
-    {
-      allowSignalWrites: true
+    if (expired) {
+      this.downloadUrlSignal.set(undefined);
+      this.downloadMimeTypeSignal.set(undefined);
+      this.downloadUrlExpiresAtSignal.set(undefined);
     }
-  );
+  });
 
   // Output Effect
   readonly downloadDetailsSignal = computed(() => {
@@ -380,19 +365,14 @@ export class DbxFirebaseStorageFileDownloadButtonComponent {
     this.downloadDetailsChange.emit(details);
   });
 
-  readonly sourceDownloadDetailsChangeCallbackEffect = effect(
-    () => {
-      const details: Maybe<DbxFirebaseStorageFileDownloadDetails> = this.downloadDetailsSignal();
-      const source = this.source();
+  readonly sourceDownloadDetailsChangeCallbackEffect = effect(() => {
+    const details: Maybe<DbxFirebaseStorageFileDownloadDetails> = this.downloadDetailsSignal();
+    const source = this.source();
 
-      if (source?.downloadDetailsChangeCallback) {
-        source.downloadDetailsChangeCallback(details);
-      }
-    },
-    {
-      allowSignalWrites: true
+    if (source?.downloadDetailsChangeCallback) {
+      source.downloadDetailsChangeCallback(details);
     }
-  );
+  });
 
   // Handlers
   readonly handleGetDownloadUrl: WorkUsingContext<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair> = (value: StorageFileKey, context: WorkInstance<StorageFileKey, DbxFirebaseStorageFileDownloadUrlPair>) => {

@@ -9,7 +9,7 @@
  * **presentation only, never copy**: an unregistered code still renders correctly, just with a
  * status-derived label and icon instead of a code-specific one.
  */
-import { type ArrayOrValue, type Maybe, type Minutes } from '@dereekb/util';
+import { type ArrayOrValue, type Maybe, type Minutes, type Seconds } from '@dereekb/util';
 import { type DbxThemeColor } from '@dereekb/dbx-web';
 import { type NotificationHealthCheckIssueCode, KnownNotificationHealthCheckIssueCode, MailgunNotificationHealthCheckIssueCode, NotificationDeliveryMethod, NotificationHealthCheckStatus } from '@dereekb/firebase';
 
@@ -71,7 +71,31 @@ export abstract class DbxFirebaseNotificationHealthCheckConfig {
    * Defaults to {@link DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_THROTTLE_MINUTES}.
    */
   abstract readonly runThrottleMinutes?: Maybe<Minutes>;
+  /**
+   * How long the client must wait between verifications of an in-flight test message.
+   *
+   * Defaults to {@link DEFAULT_NOTIFICATION_USER_HEALTH_CHECK_VERIFY_THROTTLE_SECONDS}. This is also
+   * the cadence the client polls at, so it must match the server's window: pace faster and every other
+   * poll comes back rejected.
+   */
+  abstract readonly verifyThrottleSeconds?: Maybe<Seconds>;
+  /**
+   * How long to keep watching a test message before giving up on it.
+   *
+   * Defaults to {@link DEFAULT_NOTIFICATION_HEALTH_CHECK_PROBE_WATCH_MINUTES}. Purely a client-side
+   * stop: a provider that never records an outcome would otherwise be polled for as long as the page
+   * stays open. Once it passes, the probe is left pending and the next full run settles it.
+   */
+  abstract readonly probeWatchMinutes?: Maybe<Minutes>;
 }
+
+/**
+ * How long the client keeps watching an in-flight test message before giving up on it.
+ *
+ * Comfortably longer than a provider takes to record a delivery outcome — the point is to stop polling
+ * a provider that is never going to answer, not to impose a deadline of the client's own.
+ */
+export const DEFAULT_NOTIFICATION_HEALTH_CHECK_PROBE_WATCH_MINUTES: Minutes = 20;
 
 /**
  * Configuration for the {@link DbxFirebaseNotificationHealthCheckPresentationService}.
